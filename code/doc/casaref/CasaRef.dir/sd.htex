@@ -2865,6 +2865,8 @@ Methods
 \item value of system temperature (minimum and maximum threshold)
 \end{itemize}
 
+  Note that the selection by an integer is 0-based (scan, beam, cycle, IF, polarization, and row).
+
   In addition, the selector provides interface for more flexible data 
   selection using
   \htmladdnormallink{TaQL}{http://aips2.nrao.edu/docs/notes/199/199.html}.
@@ -2872,9 +2874,50 @@ Methods
   The selector also support sorting data. 
   The selector sorts data based on values of columns specified by the user.
 
+  Summary of the current selection is stored in the object as a string. 
+  Thus, you can see that summary by using print (see example below).
+
   The constructor takes some arguments to set selection criteria. So,  
   the user can set selection either using constructor options and 
   available setter functions.
+
+  Source types should be given as an integer or an enumerations that are properly defined for 
+  source type. That enumeration can be accessed via sd.srctype. The list of enumerations defined 
+  are as follows:
+
+\begin{longtable}{|lcl|}
+\hline
+enum & int & description \\
+\hline
+sd.srctype.pson & 0 & on-source scan of position switched data \\
+sd.srctype.psoff & 1 & off-source scan of position switched data \\
+sd.srctype.nod & 2 & nod scan \\
+sd.srctype.fson & 3 & on-source scan of frequency switched data \\
+sd.srctype.fsoff & 4 & reference scan of frequency switched data \\
+sd.srctype.sky & 6 & sky scan for calibration \\
+sd.srctype.hot & 7 & hot load scan for calibration \\
+sd.srctype.warm & 8 & warm load scan for calibration \\
+sd.srctype.cold & 9 & cold load scan for calibration \\
+sd.srctype.poncal & 10 & on-source calibration scan of position switched data \\
+sd.srctype.poffcal & 11 & off-source calibration scan of position switched data \\
+sd.srctype.nodcal & 12 & nod calibration scan \\
+sd.srctype.foncal & 13 & on-source calibration scan of frequency switched data \\
+sd.srctype.foffcal & 14 & reference calibration scan of frequency switched data \\
+sd.srctype.fslo & 20 & lower frequency throw scan of symmetric freuqnecy switched data \\
+sd.srctype.flooff & 21 & off-source lower frequency throw scan of symmetric frequency switched data \\
+sd.srctype.flosky & 26 & sky lower frequency throw scan of symmetric frequency switched data \\
+sd.srctype.flohot & 27 & hot load lower frequency throw scan of symmetric frequency switched data \\
+sd.srctype.flowarm & 28 & warm load lower frequency throw scan of symmetric frequency switched data \\
+sd.srctype.flocold & 29 & cold load lower frequency throw scan of symmetric frequency switched data \\ 
+sd.srctype.fshi & 30 & higher frequency throw scan of symmetric freuqnecy switched data \\
+sd.srctype.fhioff & 31 & off-source higher frequency throw scan of symmetric frequency switched data \\
+sd.srctype.fhisky & 36 & sky higher frequency throw scan of symmetric frequency switched data \\
+sd.srctype.fhihot & 37 & hot load higher frequency throw scan of symmetric frequency switched data \\
+sd.srctype.fhiwarm & 38 & warm load higher frequency throw scan of symmetric frequency switched data \\
+sd.srctype.fhicold & 39 & cold load higher frequency throw scan of symmetric frequency switched data \\
+sd.srctype.notype & 99 & no type \\ 
+\hline
+\end{longtable}
 
   \medskip\noindent\textbf{Known Issues}
 
@@ -2888,7 +2931,7 @@ Methods
 \begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
 \hline
 Inputs && \multicolumn{2}{p{3.36in}|}{}\\
-beams && \multicolumn{2}{p{3.36in}|}{Beam selection}\\
+beams && \multicolumn{2}{p{3.36in}|}{Beam number selection}\\
 & &allowed: & integer, integer array \\
 & &Default: & None (no selection)
 \\
@@ -2896,7 +2939,7 @@ cycles && \multicolumn{2}{p{3.36in}|}{Cycle number selection}\\
 & &allowed: & integer, integer array \\
 & &Default: & None (no selection)
 \\
-ifs && \multicolumn{2}{p{3.36in}|}{IF selection}\\
+ifs && \multicolumn{2}{p{3.36in}|}{IF number selection}\\
 & &allowed: & integer, integer array \\
 & &Default: & None (no selection)
 \\
@@ -2904,7 +2947,7 @@ name && \multicolumn{2}{p{3.36in}|}{Source name selection. Allows regular expres
 & &allowed: & string\\
 & &Default: & None (no selection)
 \\
-pols && \multicolumn{2}{p{3.36in}|}{Polarization selection}\\
+pols && \multicolumn{2}{p{3.36in}|}{Polarization number selection}\\
 & &allowed: & integer, integer array, string, string array \\
 & &Default: & None (no selection)
 \\
@@ -2913,6 +2956,9 @@ query && \multicolumn{2}{p{3.36in}|}{TaQL selection query}\\
 & &Default: & None (no selection)
 \\
 scans && \multicolumn{2}{p{3.36in}|}{Scan number selection}\\
+& &allowed: & integer, integer array \\
+& &Default: & None (no selection)\\
+types && \multicolumn{2}{p{3.36in}|}{Source type selection}\\
 & &allowed: & integer, integer array \\
 & &Default: & None (no selection)\\
 
@@ -2937,6 +2983,9 @@ scans && \multicolumn{2}{p{3.36in}|}{Scan number selection}\\
      sel2=sd.selector(ifs=[0,1])
      sel2=sd.selector()
      sel2.set_ifs([0,1])
+     # check current selection
+     print sel
+     IFNO: [0,1]
 
 \end{verbatim}
 
@@ -2950,17 +2999,17 @@ Methods
 
 	\ahlink{get\_ifs}{sd:sd.selector.get_ifs} &Return a list of current IF selection \\
 
-	\ahlink{get\_name}{sd:sd.selector.get_name} &Return a list of selection strings for source name  \\
+	\ahlink{get\_name}{sd:sd.selector.get_name} &Return a selection string for source name (not yet implemented) \\
 
 	\ahlink{get\_order}{sd:sd.selector.get_order} &Return a list of columns used for sorting \\
 
 	\ahlink{get\_pols}{sd:sd.selector.get_pols} &Return a list of current polarization selection \\
 
-	\ahlink{get\_poltypes}{sd:sd.selector.get_poltypes} &Return a polarization type for current polarization selection \\
+	\ahlink{get\_poltypes}{sd:sd.selector.get_poltypes} &Return a list of polarization types for current polarization selection \\
 
 	\ahlink{get\_query}{sd:sd.selector.get_query} &Return current selection string for TaQL selection \\
 
-	\ahlink{get\_scans}{sd:sd.selector.get_scans} &Return a list of current scan selection \\
+	\ahlink{get\_scans}{sd:sd.selector.get_scans} &Return a list of current scan number selection \\
 
 	\ahlink{get\_types}{sd:sd.selector.get_types} &Return a list of current source type selection \\
 
@@ -2996,155 +3045,238 @@ Methods
 
 \end{longtable}
 
+
+%% sd.selector.get_beams
 \newpage
 \ahsdfunction{sd.selector.get\_beams}{sd.selector.get_beams}{Return a list of current beam selection}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return a list of current beam selection.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+integer array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.selector.get_cycles
 \newpage
 \ahsdfunction{sd.selector.get\_cycles}{sd.selector.get_cycles}{Return a list of current cycle selection}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return a list of current cycle selection.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+integer array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.selector.get_ifs
 \newpage
 \ahsdfunction{sd.selector.get\_ifs}{sd.selector.get_ifs}{Return a list of current IF selection}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return a list of current IF selection.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+integer array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.selector.get_name
 \newpage
-\ahsdfunction{sd.selector.get\_name}{sd.selector.get_name}{Return a list of selection strings for source name }
+\ahsdfunction{sd.selector.get\_name}{sd.selector.get_name}{Return a selection string for source name (not yet implemented) }
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return a list of selection strings for source name.
+   Not yet implemented.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+None
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.selector.get_order
 \newpage
 \ahsdfunction{sd.selector.get\_order}{sd.selector.get_order}{Return a list of columns used for sorting}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return a list of columns used for sorting.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+string list
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.selector.get_pols
 \newpage
 \ahsdfunction{sd.selector.get\_pols}{sd.selector.get_pols}{Return a list of current polarization selection}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return a list of current polarization selection.
+   It returns an integer array even if you set polarization selection by string (e.g. 'XX', 'I').
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+integer array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.selector.get_poltypes
 \newpage
-\ahsdfunction{sd.selector.get\_poltypes}{sd.selector.get_poltypes}{Return a polarization type for current polarization selection}
+\ahsdfunction{sd.selector.get\_poltypes}{sd.selector.get_poltypes}{Return a list of polarization types for current polarization selection}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return a list of polarization types for current polarization selection.
+
+   The returned array contains polarization types for each polarization selection strings.
+   If you set polarization selection as integer, empty array will be returned since integer 
+   selection doesn't specify polarization type.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+string array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.selector.get_query
 \newpage
 \ahsdfunction{sd.selector.get\_query}{sd.selector.get_query}{Return current selection string for TaQL selection}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return current selection string for TaQL selection.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+string
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.selector.get_scans
 \newpage
-\ahsdfunction{sd.selector.get\_scans}{sd.selector.get_scans}{Return a list of current scan selection}
+\ahsdfunction{sd.selector.get\_scans}{sd.selector.get_scans}{Return a list of current scan number selection}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return a list of current scan number selection.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+integer array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.selector.get_types
 \newpage
 \ahsdfunction{sd.selector.get\_types}{sd.selector.get_types}{Return a list of current source type selection}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return a list of current source type selection.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+integer array 
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.selector.is_empty
 \newpage
 \ahsdfunction{sd.selector.is\_empty}{sd.selector.is_empty}{Check if any selection has been set}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Check if any selection has been set.
+
+   If any selection is set, the method returns False. Otherwise, it returns True.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+bool
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+   asap_init()
+   # create selector without any selection
+   sel=sd.selector()
+   # is_empty() returns True
+   sel.is_empty()
+   True
+   # set any selection
+   sel.set_ifs([0])
+   # then, is_empty() returns False
+   sel.is_empty()
+   False
+\end{verbatim}
+
+
+%% sd.selector.reset
 \newpage
 \ahfunction{sd.selector.reset}{Unset all selections}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Unset all selections.
+   Note that the method doesn't clear sorting order set by \ahlink{set\_order}{sd:sd.selector.set_order}.
+   To unset sort order, you have to execute set\_order([]).
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
@@ -3152,90 +3284,235 @@ Methods
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+   asap_init()
+   # create selector without any selection
+   sel=sd.selector()
+   # is_empty() returns True
+   sel.is_empty()
+   True
+   # set any selection
+   sel.set_ifs([0])
+   # then, is_empty() returns False
+   sel.is_empty()
+   False
+   # reset() clear all selections 
+   sel.reset()
+   # thus, is_empty() returns True
+   sel.is_empty()
+   True
+\end{verbatim}
+
+
+
+%% sd.selector.set_beams
 \newpage
 \ahsdfunction{sd.selector.set\_beams}{sd.selector.set_beams}{Set a sequence of beam numbers}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Set a sequence of beam numbers to the selection.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+beams && \multicolumn{2}{p{3.36in}|}{Beam number selection}\\
+& &allowed: & integer, integer array \\
+& &Default: & [] (no selection)
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.selector.set_cycles
 \newpage
 \ahsdfunction{sd.selector.set\_cycles}{sd.selector.set_cycles}{Set a sequence of cycle numbers}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Set a sequence of cycle numbers to the selection.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+cycles && \multicolumn{2}{p{3.36in}|}{Cycle number selection}\\
+& &allowed: & integer, integer array \\
+& &Default: & [] (no selection)
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.selector.set_ifs
 \newpage
 \ahsdfunction{sd.selector.set\_ifs}{sd.selector.set_ifs}{Set a sequence of IF numbers}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Set a sequence of IF numbers to the selection.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+ifs && \multicolumn{2}{p{3.36in}|}{IF number selection}\\
+& &allowed: & integer, integer array \\
+& &Default: & [] (no selection)
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.selector.set_name
 \newpage
 \ahsdfunction{sd.selector.set\_name}{sd.selector.set_name}{Set a selection based on a source name}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
+ 
+   Set a selection based on a source name.
+   This can be a unix pattern , e.g. "*\_R".
+
+   Note that the method overwrites TaQL selection string set by \ahlink{set\_query}{sd:sd.selector.set_query}.
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+names && \multicolumn{2}{p{3.36in}|}{A string containing a source name or pattern}\\
+& &allowed: & string \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+        asap_init()
+        sel=sd.selector()
+        # select all reference scans which start with "Orion"
+        sel.set_name("Orion*_R")
+\end{verbatim}
+
+
+
+%% sd.selector.set_order
 \newpage
 \ahsdfunction{sd.selector.set\_order}{sd.selector.set_order}{Set column names that is used for sorting data}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Set the order the scantable should be sorted by.
+   The user specify a list of column names that is used for sorting data (e.g. 'IFNO', 'SCANNO').
+   The data are sorted according to the value of these columns.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+order && \multicolumn{2}{p{3.36in}|}{The list of column names to sort by in order}\\
+& &allowed: & string array \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.selector.set_polarisations
 \newpage
 \ahsdfunction{sd.selector.set\_polarisations}{sd.selector.set_polarisations}{Set a sequence of polarization numbers or strings}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Set the polarisations to be selected in the scantable.
+   It allows to set polarization selection via integer or string (e.g. "XX", "Q").
+   Integer must be within the range of 0 to 3 since the number outside this range will result no 
+   selected data exception.
+   If the selection is specified by an integer, the selection will refer polarization type of the 
+   original scantable.
+   On the other hand, the selection by string contains both type and component so that the selection 
+   will refer its type, not the original scantable. 
+   
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+pols && \multicolumn{2}{p{3.36in}|}{A list of integers of 0-3, or strings, e.g ["I","Q"].}\\
+& &allowed: & integer, string, integer array, string array \\
+& &Default: & [] (no selection)
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+         asap_init()
+         sel = sd.selector()
+         # These are equivalent if data is 'linear'
+         sel.set_polarisations(["XX","Re(XY)"])
+         sel.set_polarisations([0,2])
+         # reset the polarisation selection
+         sel.set_polarisations()
+\end{verbatim}
+
+
+%% sd.selector.set_polarizations
 \newpage
 \ahsdfunction{sd.selector.set\_polarizations}{sd.selector.set_polarizations}{Set a sequence of polarization numbers or strings}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   See \ahlink{set\_polarisations}{sd:sd.selector.set_polarisations}.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
@@ -3243,12 +3520,16 @@ Methods
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.selector.set_pols
 \newpage
 \ahsdfunction{sd.selector.set\_pols}{sd.selector.set_pols}{Set a sequence of polarization numbers or strings}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   See \ahlink{set\_polarisations}{sd:sd.selector.set_polarisations}.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
@@ -3256,70 +3537,181 @@ Methods
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.selector.set_query
 \newpage
 \ahsdfunction{sd.selector.set\_query}{sd.selector.set_query}{Set a selection string based on TaQL}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Select by Column query. Power users only!
+
+   The mehtod is used to set TaQL selection string directly.
+   The user must be familiar with \htmladdnormallink{TaQL}{http://aips2.nrao.edu/docs/notes/199/199.html} 
+   and data structure of scantable.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+query && \multicolumn{2}{p{3.36in}|}{TaQL selection string}\\
+& &allowed: & string \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+        asap_init()
+        sel=sd.selector()
+        # select all off scans with integration times over 60 seconds.
+        sel.set_query("SRCTYPE == PSOFF AND INTERVAL > 60.0")
+\end{verbatim}
+
+
+%% sd.selector.set_rows
 \newpage
 \ahsdfunction{sd.selector.set\_rows}{sd.selector.set_rows}{Set a sequence of row numbers}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Set a sequence of row numbers (0-based). Power users Only!
+   NOTICE row numbers can be changed easily by sorting,
+   prior selection, etc.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+rows && \multicolumn{2}{p{3.36in}|}{A list of integers}\\
+& &allowed: & integer, integer array \\
+& &Default: & [] (no selection)
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.selector.set_scans
 \newpage
 \ahsdfunction{sd.selector.set\_scans}{sd.selector.set_scans}{Set a sequence of scan numbers}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Set a sequence of Scan numbers to the selection.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+scans && \multicolumn{2}{p{3.36in}|}{A list of integers}\\
+& &allowed: & integer, integer array \\
+& &Default: & [] (no selection)
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.selector.set_tsys
 \newpage
 \ahsdfunction{sd.selector.set\_tsys}{sd.selector.set_tsys}{Set range of system temperature}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Select by Tsys range.
+   The method sets an upper and a lower limit of the Tsys value.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+tsysmin && \multicolumn{2}{p{3.36in}|}{The lower threshold}\\
+& &allowed: & float \\
+& &Default: & 0.0
+\\
+tsysmax && \multicolumn{2}{p{3.36in}|}{The upper threshold}\\
+& &allowed: & float \\
+& &Default: & None (no upper limit)
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+        asap_init()
+        sel=sd.selector()
+        # select all spectra with Tsys <= 500.0
+        sel.set_tsys(tsysmax=500.0)
+\end{verbatim}
+
+
+%% sd.selector.set_types
 \newpage
 \ahsdfunction{sd.selector.set\_types}{sd.selector.set_types}{Set a sequence of source types}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Set a sequence of source types to the selection.
+   The types argument can contain integer and/or sd.srctype enum.
+ 
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+types && \multicolumn{2}{p{3.36in}|}{A list of integers}\\
+& &allowed: & integer, integer array \\
+& &Default: & [] (no selection)
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
+
+\begin{verbatim}
+   asap_init()
+   sel=sd.selector()
+   # select only on-source scans of position switched observation
+   sel.set_types(0)
+   # or use enum
+   sel.set_types(sd.srctype.pson)
+\end{verbatim}
 
 
 %%%%% sd.fitter
@@ -4943,207 +5335,942 @@ Methods
 
 \end{longtable}
 
+
+%% sd.plotter.annotate
 \newpage
 \ahfunction{sd.plotter.annotate}{Annotate text at specified location}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Annotate the x,y point xy with text s at x,y location xytext
+    (xytext if None defaults to xy and textcoords if None defaults
+    to xycoords).
+    
+    arrowprops, if not None, is a dictionary of line properties
+    (see matplotlib.lines.Line2D) for the arrow that connects
+    annotation to the point.   Valid keys are
+
+    \begin{longtable}{rl}
+      width & the width of the arrow in points \\
+      frac  & the fraction of the arrow length occupied by the head \\
+      headwidth & the width of the base of the arrow head in points \\
+      shrink & often times it is convenient to have the arrowtip 
+        and base a bit away from the text and point being 
+        annotated.  If d is the distance between the text and 
+        annotated point, shrink will shorten the arrow so the tip  
+        and base are shink percent of the distance d away from the 
+        endpoints.  ie, shrink=0.05 is 5\% \\
+       & any key for matplotlib.patches.polygon \\
+    \end{longtable}
+
+    xycoords and textcoords are strings that indicate the
+    coordinates of xy and xytext.
+    
+    \begin{longtable}{rl}
+       'figure points'   & points from the lower left corner of the figure \\
+       'figure pixels'   & pixels from the lower left corner of the figure \\
+       'figure fraction' & 0,0 is lower left of figure and 1,1 is upper, right \\
+       'axes points'     & points from lower left corner of axes \\
+       'axes pixels'     & pixels from lower left corner of axes \\
+       'axes fraction'   & 0,1 is lower left of axes and 1,1 is upper right \\
+       'data'            & use the coordinate system of the object being annotated (default) \\
+       'offset points'   & Specify an offset (in points) from the xy value \\
+       'polar'           & you can specify theta, r for the annotation, even 
+                           in cartesian plots.  Note that if you 
+                           are using a polar axes, you do not need 
+                           to specify polar for the coordinate 
+                           system since that is the native"data" coordinate system. \\
+    \end{longtable}
+ 
+    If a points or pixels option is specified, values will be
+    added to the left, bottom and if negative, values will be
+    subtracted from the top, right.  Eg,
+    
+    \begin{verbatim}
+      # 10 points to the right of the left border of the axes and
+      # 5 points below the top border
+      xy=(10,-5), xycoords='axes points'
+    \end{verbatim}
+    
+    Additional kwargs are Text properties:
+
+    \begin{longtable}{rl}
+        alpha: & float \\
+        animated: & [True | False] \\
+        axes: & an axes instance \\
+        backgroundcolor: & any matplotlib color \\
+        bbox: & rectangle prop dict plus key 'pad' which is a pad in points \\
+        clip\_box: & a matplotlib.transform.Bbox instance \\
+        clip\_on: & [True | False] \\
+        clip\_path: & an agg.path_storage instance \\
+        color: & any matplotlib color \\
+        contains: & unknown \\
+        fontproperties: & a matplotlib.font_manager.FontProperties instance \\
+        horizontalalignment or ha: & [ 'center' | 'right' | 'left' ] \\
+        label: & any string \\
+        linespacing: & float \\
+        lod: & [True | False] \\
+        multialignment: & ['left' | 'right' | 'center' ] \\
+        name or fontname: & string eg, ['Sans' | 'Courier' | 'Helvetica' ...] \\
+        multialignment: & ['left' | 'right' | 'center' ] \\
+        name or fontname: & string eg, ['Sans' | 'Courier' | 'Helvetica' ...] \\
+        picker: & [None|float|boolean|callable] \\
+        position: & (x,y) \\
+        rotation: & [ angle in degrees 'vertical' | 'horizontal' \\
+        size or fontsize: & [ size in points | relative size eg 'smaller', 'x-large' ] \\
+        style or fontstyle: & [ 'normal' | 'italic' | 'oblique'] \\
+        text: & string or anything printable with '\%s' conversion \\
+        transform: & a matplotlib.transform transformation instance \\
+        variant: & [ 'normal' | 'small-caps' ] \\
+        verticalalignment or va: & [ 'center' | 'top' | 'bottom' | 'baseline' ] \\
+        visible: & [True | False] \\
+        weight or fontweight: & [ 'normal' | 'bold' | 'heavy' | 'light' | 'ultrabold' | 'ultralight'] \\
+        x: & float \\
+        y: & float \\
+        zorder: & any number \\
+    \end{longtable}
+    
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+
+    See description about whole options.
+
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+text && \multicolumn{2}{p{3.36in}|}{Annotate text}\\
+& &allowed: & string \\
+& &Default: & 
+\\
+xy && \multicolumn{2}{p{3.36in}|}{Position of the annotation}\\
+& &allowed: & float array \\
+& &Default: & 
+\\
+xytext && \multicolumn{2}{p{3.36in}|}{Position of the text}\\
+& &allowed: & float array \\
+& &Default: & None (use xy value)
+\\
+xycoords && \multicolumn{2}{p{3.36in}|}{Coordinate of xy}\\
+& &allowed: & string \\
+& &Default: & 'data'
+\\
+textcoords && \multicolumn{2}{p{3.36in}|}{Coordinate of xytext}\\
+& &allowed: & string \\
+& &Default: & 'data'
+\\
+arrowprops && \multicolumn{2}{p{3.36in}|}{Line properties for the arrow}\\
+& &allowed: & dictionary \\
+& &Default: & None
+\\
+interactive && \multicolumn{2}{p{3.36in}|}{Interactively set text position if True}\\
+& &allowed: & bool \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.plotter.arrow
 \newpage
 \ahfunction{sd.plotter.arrow}{Draw arrow on specified axis}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
+    Draws arrow on specified axis from (x,y) to (x+dx,y+dy).
+    
+    Optional kwargs control the arrow properties:
+
+    \begin{longtable}{rl}
+        alpha: & float \\
+        animated: & [True | False] \\
+        antialiased or aa: & [True | False] \\
+        axes: & an axes instance \\
+        clip\_box: & a matplotlib.transform.Bbox instance \\
+        clip\_on: & [True | False] \\
+        clip\_path: & an agg.path_storage instance \\
+        contains: & unknown \\
+        edgecolor or ec: & any matplotlib color \\
+        facecolor or fc: & any matplotlib color \\
+        figure: & a matplotlib.figure.Figure instance \\
+        fill: & [True | False] \\
+        hatch: & unknown \\
+        label: & any string \\
+        linewidth or lw: & float \\
+        lod: & [True | False] \\
+        picker: & [None|float|boolean|callable] \\
+        transform: & a matplotlib.transform transformation instance \\
+        visible: & [True | False] \\
+        zorder: & any number \\
+    \end{longtable}
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+
+    See description about whole options.
+
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+x && \multicolumn{2}{p{3.36in}|}{x position for the origin of the arrow}\\
+& &allowed: & float \\
+& &Default: & 
+\\
+y && \multicolumn{2}{p{3.36in}|}{y position for the origin of the arrow}\\
+& &allowed: & float \\
+& &Default: & 
+\\
+dx && \multicolumn{2}{p{3.36in}|}{x position for the terminal of the arrow (offset from origin)}\\
+& &allowed: & float \\
+& &Default: & 
+\\
+dy && \multicolumn{2}{p{3.36in}|}{y position for the terminal of the arrow (offset from origin)}\\
+& &allowed: & float \\
+& &Default: & 
+\\
+interactive && \multicolumn{2}{p{3.36in}|}{Interactively set origin and terminal of the arrow if True}\\
+& &allowed: & bool \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.plotter.axhline
 \newpage
 \ahfunction{sd.plotter.axhline}{Draw a horizontal line}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Axis Horizontal Line
+    
+    Draw a horizontal line at y from xmin to xmax.  With the default
+    values of xmin=0 and xmax=1, this line will always span the horizontal
+    extent of the axes, regardless of the xlim settings, even if you
+    change them, eg with the xlim command.  That is, the horizontal extent
+    is in axes coords: 0=left, 0.5=middle, 1.0=right but the y location is
+    in data coordinates.
+    
+    Return value is the Line2D instance.  kwargs are the same as kwargs to
+    plot, and can be used to control the line properties.
+    
+    Valid kwargs are Line2D properties
+
+    \begin{longtable}{rl}
+        alpha: & float \\
+        animated: & [True | False] \\
+        antialiased or aa: & [True | False] \\
+        axes: & an axes instance \\
+        clip\_box: & a matplotlib.transform.Bbox instance \\
+        clip\_on: & [True | False] \\
+        clip\_path: & an agg.path_storage instance \\
+        contains: & unknown \\
+        edgecolor or ec: & any matplotlib color \\
+        facecolor or fc: & any matplotlib color \\
+        figure: & a matplotlib.figure.Figure instance \\
+        fill: & [True | False] \\
+        hatch: & unknown \\
+        label: & any string \\
+        linewidth or lw: & float \\
+        lod: & [True | False] \\
+        picker: & [None|float|boolean|callable] \\
+        transform: & a matplotlib.transform transformation instance \\
+        visible: & [True | False] \\
+        zorder: & any number \\
+    \end{longtable}
+
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+
+    See description about whole options.
+
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+y && \multicolumn{2}{p{3.36in}|}{y position of the horizontal line}\\
+& &allowed: & float \\
+& &Default: & 
+\\
+xmin && \multicolumn{2}{p{3.36in}|}{Origin of the horizontal line}\\
+& &allowed: & float \\
+& &Default: & 0
+\\
+xmax && \multicolumn{2}{p{3.36in}|}{Terminate of the horizontal line}\\
+& &allowed: & float \\
+& &Default: & 1
+\\
+interactive && \multicolumn{2}{p{3.36in}|}{Interactively set origin and terminal of the line if True}\\
+& &allowed: & bool \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+Line2D object
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.plotter.axhspan
 \newpage
 \ahfunction{sd.plotter.axhspan}{Draw a horizontal rectangle}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Axis Horizontal Span.  ycoords are in data units and x
+    coords are in axes (relative 0-1) units
+    
+    Draw a horizontal span (regtangle) from ymin to ymax.  With the
+    default values of xmin=0 and xmax=1, this always span the xrange,
+    regardless of the xlim settings, even if you change them, eg with the
+    xlim command.  That is, the horizontal extent is in axes coords:
+    0=left, 0.5=middle, 1.0=right but the y location is in data
+    coordinates.
+    
+    kwargs are the kwargs to Patch, eg
+    
+    \begin{longtable}{l}
+      antialiased, aa \\
+      linewidth,   lw \\
+      edgecolor,   ec \\
+      facecolor,   fc \\
+    \end{longtable}
+    
+    the terms on the right are aliases
+    
+    Return value is the patches.Polygon instance.
+    
+    \begin{verbatim}
+        #draws a gray rectangle from y=0.25-0.75 that spans the horizontal
+        #extent of the axes
+        axhspan(0.25, 0.75, facecolor='0.5', alpha=0.5)
+    \end{verbatim}
+    
+    Valid kwargs are Polygon properties
+
+    \begin{longtable}{rl}
+        alpha: & float \\
+        animated: & [True | False] \\
+        antialiased or aa: & [True | False] \\
+        axes: & an axes instance \\
+        clip\_box: & a matplotlib.transform.Bbox instance \\
+        clip\_on: & [True | False] \\
+        clip\_path: & an agg.path_storage instance \\
+        contains: & unknown \\
+        edgecolor or ec: & any matplotlib color \\
+        facecolor or fc: & any matplotlib color \\
+        figure: & a matplotlib.figure.Figure instance \\
+        fill: & [True | False] \\
+        hatch: & unknown \\
+        label: & any string \\
+        linewidth or lw: & float \\
+        lod: & [True | False] \\
+        picker: & [None|float|boolean|callable] \\
+        transform: & a matplotlib.transform transformation instance \\
+        visible: & [True | False] \\
+        zorder: & any number \\
+    \end{longtable}
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+
+    See description about whole options.
+
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+ymin && \multicolumn{2}{p{3.36in}|}{Bottom edge of the rectangle}\\
+& &allowed: & float \\
+& &Default: & 
+\\
+ymax && \multicolumn{2}{p{3.36in}|}{Top edge of the rectangle}\\
+& &allowed: & float \\
+& &Default: & 
+\\
+xmin && \multicolumn{2}{p{3.36in}|}{Left edge of the rectangle}\\
+& &allowed: & float \\
+& &Default: & 0
+\\
+xmax && \multicolumn{2}{p{3.36in}|}{Right edge of the rectangle}\\
+& &allowed: & float \\
+& &Default: & 1
+\\
+interactive && \multicolumn{2}{p{3.36in}|}{Interactively set the shape of the rectangle if True}\\
+& &allowed: & bool \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+Polygon object
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.plotter.axvline
 \newpage
 \ahfunction{sd.plotter.axvline}{Draw a vertical line}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Axis Vertical Line
+    
+    Draw a vertical line at x from ymin to ymax.  With the default values
+    of ymin=0 and ymax=1, this line will always span the vertical extent
+    of the axes, regardless of the xlim settings, even if you change them,
+    eg with the xlim command.  That is, the vertical extent is in axes
+    coords: 0=bottom, 0.5=middle, 1.0=top but the x location is in data
+    coordinates.
+    
+    Return value is the Line2D instance.  kwargs are the same as
+    kwargs to plot, and can be used to control the line properties.  Eg
+    
+    \begin{verbatim}
+        # draw a thick red vline at x=0 that spans the yrange
+        l = axvline(linewidth=4, color='r')
+    
+        # draw a default vline at x=1 that spans the yrange
+        l = axvline(x=1)
+    
+        # draw a default vline at x=.5 that spans the the middle half of
+        # the yrange
+        axvline(x=.5, ymin=0.25, ymax=0.75)
+    \end{verbatim}
+    
+    Valid kwargs are Line2D properties
+
+    \begin{longtable}{rl}
+        alpha: & float \\
+        animated: & [True | False] \\
+        antialiased or aa: & [True | False] \\
+        axes: & unknown \\
+        clip\_box: & a matplotlib.transform.Bbox instance \\
+        clip\_on: & [True | False] \\
+        clip\_path: & an agg.path_storage instance \\
+        color or c: & any matplotlib color \\
+        contains: & unknown \\
+        dash\_joinstyle: & ['miter' | 'round' | 'bevel'] \\
+        dashes: & sequence of on/off ink in points \\
+        data: & (npy.array xdata, npy.array ydata) \\
+        figure: & a matplotlib.figure.Figure instance \\
+        label: & any string \\
+        linestyle or ls: & [ '-' | '--' | '-.' | ':' | 'steps' | 'None' | ' ' | '' ] \\
+        linewidth or lw: & float value in points \\
+        lod: & [True | False] \\
+        marker: & [ '+' | ',' | '.' | '1' | '2' | '3' | '4' \\
+        markeredgecolor or mec: & any matplotlib color \\
+        markeredgewidth or mew: & float value in points \\
+        markerfacecolor or mfc: & any matplotlib color \\
+        markersize or ms: & float \\
+        picker: & unknown \\
+        pickradius: & unknown \\
+        solid\_capstyle: & ['butt' | 'round' |  'projecting'] \\
+        solid\_joinstyle: & ['miter' | 'round' | 'bevel'] \\
+        transform: & a matplotlib.transform transformation instance \\
+        visible: & [True | False] \\
+        xdata: & npy.array \\
+        ydata: & npy.array \\
+        zorder: & any number \\
+    \end{longtable}
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+
+    See description about whole options.
+
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+x && \multicolumn{2}{p{3.36in}|}{x position of the vertical line}\\
+& &allowed: & float \\
+& &Default: & 
+\\
+ymin && \multicolumn{2}{p{3.36in}|}{Origin of the vertical line}\\
+& &allowed: & float \\
+& &Default: & 0
+\\
+ymax && \multicolumn{2}{p{3.36in}|}{Terminate of the vertical line}\\
+& &allowed: & float \\
+& &Default: & 1
+\\
+interactive && \multicolumn{2}{p{3.36in}|}{Interactively set origin and terminal of the line if True}\\
+& &allowed: & bool \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+Line2D object 
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.plotter.axvspan
 \newpage
 \ahfunction{sd.plotter.axvspan}{Draw a vertical rectangle}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    axvspan : Axis Vertical Span.  xcoords are in data units and y coords
+    are in axes (relative 0-1) units
+    
+    Draw a vertical span (regtangle) from xmin to xmax.  With the default
+    values of ymin=0 and ymax=1, this always span the yrange, regardless
+    of the ylim settings, even if you change them, eg with the ylim
+    command.  That is, the vertical extent is in axes coords: 0=bottom,
+    0.5=middle, 1.0=top but the y location is in data coordinates.
+    
+    kwargs are the kwargs to Patch, eg
+    
+    \begin{longtable}{l}
+      antialiased, aa \\
+      linewidth,   lw \\
+      edgecolor,   ec \\
+      facecolor,   fc \\
+    \end{longtable}
+    
+    the terms on the right are aliases
+    
+    return value is the patches.Polygon instance.
+    
+    \begin{verbatim}
+        # draw a vertical green translucent rectangle from x=1.25 to 1.55 that
+        # spans the yrange of the axes
+        axvspan(1.25, 1.55, facecolor='g', alpha=0.5)
+    \end{verbatim}
+    
+    Valid kwargs are Polygon properties
+
+    \begin{longtable}{rl}
+        alpha: & float \\
+        animated: & [True | False] \\
+        antialiased or aa: & [True | False] \\
+        axes: & an axes instance \\
+        clip\_box: & a matplotlib.transform.Bbox instance \\
+        clip\_on: & [True | False] \\
+        clip\_path: & an agg.path\_storage instance \\
+        contains: & unknown \\
+        edgecolor or ec: & any matplotlib color \\
+        facecolor or fc: & any matplotlib color \\
+        figure: & a matplotlib.figure.Figure instance \\
+        fill: & [True | False] \\
+        hatch: & unknown \\
+        label: & any string \\
+        linewidth or lw: & float \\
+        lod: & [True | False] \\
+        picker: & [None|float|boolean|callable] \\
+        transform: & a matplotlib.transform transformation instance \\
+        visible: & [True | False] \\
+        zorder: & any number \\
+    \end{longtable}
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+
+    See description about whole options.
+
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+xmin && \multicolumn{2}{p{3.36in}|}{Left edge of the rectangle}\\
+& &allowed: & float \\
+& &Default: & 
+\\
+xmax && \multicolumn{2}{p{3.36in}|}{Right edge of the rectangle}\\
+& &allowed: & float \\
+& &Default: & 
+\\
+ymin && \multicolumn{2}{p{3.36in}|}{Bottom edge of the rectangle}\\
+& &allowed: & float \\
+& &Default: & 0
+\\
+ymax && \multicolumn{2}{p{3.36in}|}{Top edge of the rectangle}\\
+& &allowed: & float \\
+& &Default: & 1
+\\
+interactive && \multicolumn{2}{p{3.36in}|}{Interactively set the shape of the rectangle if True}\\
+& &allowed: & bool \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+Polygon object
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.plotter.create_mask
 \newpage
 \ahsdfunction{sd.plotter.create\_mask}{sd.plotter.create_mask}{Interactively define a mask}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Interactively define a mask. It retruns a mask that is equivalent to
+    the one created manually with \ahlink{scantable.create\_mask}{sd:sd.scantable.create_mask}.
+
+    The nwin argument indicates a number of mask windows to create interactively. 
+    The panel argument specifies which panel to use for mask selection (0-based). This is 
+    useful if different IFs are spread over panels.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+nwin && \multicolumn{2}{p{3.36in}|}{Number of mask windows to create interactively}\\
+& &allowed: & integer \\
+& &Default: & 1
+\\
+panel && \multicolumn{2}{p{3.36in}|}{Which panel to use for mask selection}\\
+& &allowed: & integer \\
+& &Default: & 0 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+bool array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.plotter.figtext
 \newpage
 \ahfunction{sd.plotter.figtext}{Add text to figure at specified location}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Add text to figure at location x,y (relative 0-1 coords).
+    This method forwards *args and **kwargs to a Matplotlib method,
+    matplotlib.Figure.text.
+    See the method help for detailed information.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+x && \multicolumn{2}{p{3.36in}|}{x position of the text}\\
+& &allowed: & float \\
+& &Default: & 
+\\
+y && \multicolumn{2}{p{3.36in}|}{y position of the text}\\
+& &allowed: & float \\
+& &Default: &  
+\\
+s && \multicolumn{2}{p{3.36in}|}{Text to be added}\\
+& &allowed: & string \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.plotter.gca
 \newpage
 \ahfunction{sd.plotter.gca}{Get current axes}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return the current axis object.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+Subplot object
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.plotter.plot
 \newpage
 \ahfunction{sd.plotter.plot}{Plot a scantable}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Plot a scantable.
+
+    If a scantable was specified in a previous call
+    to plot, no argument has to be given to 'replot'
+    NO checking is done that the abcissas of the scantable
+    are consistent e.g. all 'channel' or all 'velocity' etc.
+
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+scan && \multicolumn{2}{p{3.36in}|}{A scantable}\\
+& &allowed: & scantable \\
+& &Default: & None 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+   asap_init()
+   #create scantable
+   s=sd.scantable('OrionS_rawACSmod_cal',average=False)
+   # plot
+   sd.plotter.plot(s)
+\end{verbatim}
+
+
+%% sd.plotter.plot_lines
 \newpage
 \ahsdfunction{sd.plotter.plot\_lines}{sd.plotter.plot_lines}{Plot a line catalog}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Plot a line catalog.
+
+    The linecat argument specifies actual catalog to be plot. 
+    It must be given as a \ahlink{linecatalog}{sd:sd.linecatalog} object.
+
+    Note that if the spectrum is flagged no line will be drawn in that location.
+
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+linecat && \multicolumn{2}{p{3.36in}|}{The linecatalog to plot}\\
+& &allowed: & linecatalog \\
+& &Default: & None 
+\\
+doppler && \multicolumn{2}{p{3.36in}|}{The velocity shift to apply to the frequencies}\\
+& &allowed: & float \\
+& &Default: & 0.0
+\\
+deltachan && \multicolumn{2}{p{3.36in}|}{The number of channels to include each side of theline to determine a local maximum/minimum}\\
+& &allowed: & integer \\
+& &Default: & 10
+\\
+rotate && \multicolumn{2}{p{3.36in}|}{The rotation (in degrees) for the text label}\\
+& &allowed: & float \\
+& &Default: & 90.0
+\\
+location && \multicolumn{2}{p{3.36in}|}{The location of the line annotation from the 'top', 'bottom' or alternate }\\
+& &allowed: & string \\
+& &Default: & None 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.plotter.plotazel
 \newpage
 \ahfunction{sd.plotter.plotazel}{Plot azimuth and elevation versus time of a scantable}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Plot azimuth and elevation versus time of a scantable.
+    If outfile is specified, the plot will be saved to a disk.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+scan && \multicolumn{2}{p{3.36in}|}{A scantable}\\
+& &allowed: & scantable \\
+& &Default: & None 
+\\
+outfile && \multicolumn{2}{p{3.36in}|}{Output file name}\\
+& &allowed: & string \\
+& &Default: & None
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.plotter.plotpointing
 \newpage
 \ahfunction{sd.plotter.plotpointing}{Plot telescope pointings in a scantable}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Plot telescope pointings in a scantable.
+    If outfile is specified, the plot will be saved to a disk.
+
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+scan && \multicolumn{2}{p{3.36in}|}{A scantable}\\
+& &allowed: & scantable \\
+& &Default: & None 
+\\
+outfile && \multicolumn{2}{p{3.36in}|}{Output file name}\\
+& &allowed: & string \\
+& &Default: & None
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.plotter.plottp
 \newpage
 \ahfunction{sd.plotter.plottp}{Plot total power data}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Plot total power data versus row number (or time).
+   If outfile is specified, the plot will be saved to a disk.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+scan && \multicolumn{2}{p{3.36in}|}{A scantable}\\
+& &allowed: & scantable \\
+& &Default: & None 
+\\
+outfile && \multicolumn{2}{p{3.36in}|}{Output file name}\\
+& &allowed: & string \\
+& &Default: & None
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.plotter.print_header
 \newpage
 \ahsdfunction{sd.plotter.print\_header}{sd.plotter.print_header}{Print header of the scantable on the plot and/or logger}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Print data (scantable) header on the plot and/or logger.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+plot && \multicolumn{2}{p{3.36in}|}{Whether or not print header info on the plot}\\
+& &allowed: & bool \\
+& &Default: & True 
+\\
+fontsize && \multicolumn{2}{p{3.36in}|}{Header font size (valid only plot=True)}\\
+& &allowed: & integer \\
+& &Default: & 9
+\\
+logger && \multicolumn{2}{p{3.36in}|}{Whether or not print header info on the logger}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+selstr && \multicolumn{2}{p{3.36in}|}{Additional selection string (not verified)}\\
+& &allowed: & string \\
+& &Default: & ''
+\\
+extrastr && \multicolumn{2}{p{3.36in}|}{Additional string to print (not verified)}\\
+& &allowed: & string \\
+& &Default: & ''
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.plotter.refresh
 \newpage
 \ahfunction{sd.plotter.refresh}{Do a soft refresh on the plot}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Do a soft refresh on the plot.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
@@ -5151,51 +6278,149 @@ Methods
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.plotter.save
 \newpage
 \ahfunction{sd.plotter.save}{Save the plot to a file}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Save the plot to a file. The known formats are 'png', 'ps', 'eps'.
+
+    If filename have suffix, the image format will be automatically detected.
+    If no filename is specified a file called 'yyyymmdd\_hhmmss.png' is created 
+    in the current directory.
+
+    The orientation argument is an optional parameter for postscript only (not eps).
+    'landscape', 'portrait' or None (default) are valid. If None is choosen for 'ps' output, the plot is
+    automatically oriented to fill the page.
+
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+filename && \multicolumn{2}{p{3.36in}|}{The name of the output file}\\
+& &allowed: & bool \\
+& &Default: & True 
+\\
+orientation && \multicolumn{2}{p{3.36in}|}{Optional parameter for postscript that specifies orientation of the plot}\\
+& &allowed: & string ('landscape' or 'portrait') \\
+& &Default: & None
+\\
+dpi && \multicolumn{2}{p{3.36in}|}{The dpi of the output non-postscript plot}\\
+& &allowed: & integer \\
+& &Default: & False (150 dpi)
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.plotter.set_abcissa
 \newpage
 \ahsdfunction{sd.plotter.set\_abcissa}{sd.plotter.set_abcissa}{Set the x-axis label of the plot}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Set the x-axis label of the plot. If multiple panels are plotted,
+    multiple labels have to be specified.
+
+    If no abcissa labels are specified (i.e. None), data determine the labels.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+abcissa && \multicolumn{2}{p{3.36in}|}{A list of abcissa labels}\\
+& &allowed: & string, string array \\
+& &Default: & None
+\\
+fontsize && \multicolumn{2}{p{3.36in}|}{A font size of the label}\\
+& &allowed: & integer \\
+& &Default: & None
+\\
+refresh && \multicolumn{2}{p{3.36in}|}{If True, the plot is replotted based on the new parameter setting(s)}\\
+& &allowed: & bool \\
+& &Default: & True
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+         asap_init()
+         # two panels are visible on the plotter
+         sd.plotter.set_ordinate(["First X-Axis","Second X-Axis"])
+\end{verbatim}
+
+
+
+%% sd.plotter.set_colors
 \newpage
 \ahsdfunction{sd.plotter.set\_colors}{sd.plotter.set_colors}{Set the colors to be used}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Set the colours to be used. The plotter will cycle through
+    these colours when lines are overlaid (stacking mode).
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+colmap && \multicolumn{2}{p{3.36in}|}{A list of color names}\\
+& &allowed: & string \\
+& &Default: & 
+\\
+refresh && \multicolumn{2}{p{3.36in}|}{If True, the plot is replotted based on the new parameter setting(s)}\\
+& &allowed: & bool \\
+& &Default: & True
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+         asap_init()
+         sd.plotter.set_colors("red green blue")
+         # If for example four lines are overlaid e.g I Q U V
+         # 'I' will be 'red', 'Q' will be 'green', U will be 'blue'
+         # and 'V' will be 'red' again.
+\end{verbatim}
+
+
+
+%% sd.plotter.set_colours
 \newpage
 \ahsdfunction{sd.plotter.set\_colours}{sd.plotter.set_colours}{Set the colors to be used}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   See \ahlink{set\_colors}{sd:sd.plotter.set_colors}.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
@@ -5203,209 +6428,793 @@ Methods
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.plotter.set_data
 \newpage
 \ahsdfunction{sd.plotter.set\_data}{sd.plotter.set_data}{Set a scantable to plot}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Set a scantable to plot.
+
+    Note that the user specified masks and data selections will be reset
+    if a new scantable is set. This method should be called before
+    setting data selections (\ahlink{set\_selection}{sd:sd.scantable.set_selection}) 
+    and/or masks (\ahlink{set\_mask}{sd:sd.plotter.set_mask}).
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+scan && \multicolumn{2}{p{3.36in}|}{A scantable}\\
+& &allowed: & scantable \\
+& &Default: & 
+\\
+refresh && \multicolumn{2}{p{3.36in}|}{If True, the plot is replotted based on the new parameter setting(s)}\\
+& &allowed: & bool \\
+& &Default: & True
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.plotter.set_font
 \newpage
 \ahsdfunction{sd.plotter.set\_font}{sd.plotter.set_font}{Set font properties}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Set font properties.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+family && \multicolumn{2}{p{3.36in}|}{One of 'sans-serif', 'serif', 'cursive', 'fantasy', 'monospace'}\\
+& &allowed: & string \\
+& &Default: & 
+\\
+style && \multicolumn{2}{p{3.36in}|}{One of 'normal' (or 'roman'), 'italic'  or 'oblique'}\\
+& &allowed: & string \\
+& &Default: & 
+\\
+weight && \multicolumn{2}{p{3.36in}|}{One of 'normal or 'bold'}\\
+& &allowed: & string \\
+& &Default: & 
+\\
+size && \multicolumn{2}{p{3.36in}|}{the 'general' font size, individual elements can be adjusted seperately}\\
+& &allowed: & integer \\
+& &Default: & 
+\\
+refresh && \multicolumn{2}{p{3.36in}|}{If True, the plot is replotted based on the new parameter setting(s)}\\
+& &allowed: & bool \\
+& &Default: & True
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.plotter.set_histogram
 \newpage
 \ahsdfunction{sd.plotter.set\_histogram}{sd.plotter.set_histogram}{Enable/Disable histogram plotting}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Enable/Disable histogram-like plotting.
+
+    The first default is taken from sd.rcParams[plotter.histogram].
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+hist && \multicolumn{2}{p{3.36in}|}{Enable/Disable histogram plotting}\\
+& &allowed: & bool \\
+& &Default: & True 
+\\
+refresh && \multicolumn{2}{p{3.36in}|}{If True, the plot is replotted based on the new parameter setting(s)}\\
+& &allowed: & bool \\
+& &Default: & True
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.plotter.set_layout
 \newpage
 \ahsdfunction{sd.plotter.set\_layout}{sd.plotter.set_layout}{Set the multi-panel layout}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Set the multi-panel layout, i.e. how many rows and columns plots are visible.
+
+    Note that if no argument is given, the potter reverts to its auto-plot behaviour.
+
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+rows && \multicolumn{2}{p{3.36in}|}{Number of rows of plots}\\
+& &allowed: & integer \\
+& &Default: & None 
+\\
+cols && \multicolumn{2}{p{3.36in}|}{Number of columns of plots}\\
+& &allowed: & integer \\
+& &Default: & None 
+\\
+refresh && \multicolumn{2}{p{3.36in}|}{If True, the plot is replotted based on the new parameter setting(s)}\\
+& &allowed: & bool \\
+& &Default: & True
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.plotter.set_legend
 \newpage
 \ahsdfunction{sd.plotter.set\_legend}{sd.plotter.set_legend}{Specify a mapping for the legend}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Specify a mapping for the legend instead of using the default indices.
+
+    The list of legends should be given to the mp argument as a string.
+    This should have the same length
+    as the number of elements on the legend and then maps
+    to the indeces in order. It is possible to uses latex
+    math expression. These have to be enclosed in r'',
+    e.g. \verb+r'$x^{2}$'+
+
+    The mode argument controls where to display the legend. 
+    It should be specified as an integer. The following list shows a meaning of each integer.
+
+    \begin{longtable}{rl}
+                    0: & auto \\
+                    1: & upper right \\
+                    2: & upper left \\
+                    3: & lower left \\
+                    4: & lower right \\
+                    5: & right \\
+                    6: & center left \\
+                    7: & center right \\
+                    8: & lower center \\
+                    9: & upper center \\
+                    10: & center \\
+    \end{longtable}
+
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+mp && \multicolumn{2}{p{3.36in}|}{A list of legend strings}\\
+& &allowed: & string array \\
+& &Default: & None 
+\\
+fontsize && \multicolumn{2}{p{3.36in}|}{The font size of the label}\\
+& &allowed: & integer \\
+& &Default: & None 
+\\
+mode && \multicolumn{2}{p{3.36in}|}{Where to display the legend}\\
+& &allowed: & integer \\
+& &Default: & 0 (auto)
+\\
+refresh && \multicolumn{2}{p{3.36in}|}{If True, the plot is replotted based on the new parameter setting(s)}\\
+& &allowed: & bool \\
+& &Default: & True
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+         # If the data has two IFs/rest frequencies with index 0 and 1
+         # for CO and SiO:
+         asap_init()
+         sd.plotter.set_stacking('i')
+         sd.plotter.set_legend(['CO','SiO'])
+         sd.plotter.plot()
+         sd.plotter.set_legend([r'$^{12}CO$', r'SiO'])
+\end{verbatim}
+
+
+%% sd.plotter.set_linestyles
 \newpage
 \ahsdfunction{sd.plotter.set\_linestyles}{sd.plotter.set_linestyles}{Set the linestyles to be used}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Set the linestyles to be used. The plotter will cycle through
+    these linestyles when lines are overlaid (stacking mode) AND
+    only one color has been set.
+
+    Accepted linestyles are 'line', 'dashed', 'dotted', 'dashdot', 'dashdotdot' and 'dashdashdot'. 
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+linestyles && \multicolumn{2}{p{3.36in}|}{A list of linestyles to use}\\
+& &allowed: & string array \\
+& &Default: & None 
+\\
+linewidth && \multicolumn{2}{p{3.36in}|}{A width of the line}\\
+& &allowed: & integer \\
+& &Default: & None 
+\\
+refresh && \multicolumn{2}{p{3.36in}|}{If True, the plot is replotted based on the new parameter setting(s)}\\
+& &allowed: & bool \\
+& &Default: & True
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+         asap_init()
+         sd.plotter.set_colors("black")
+         sd.plotter.set_linestyles("line dashed dotted dashdot")
+         # If for example four lines are overlaid e.g I Q U V
+         # 'I' will be 'solid', 'Q' will be 'dashed',
+         # U will be 'dotted' and 'V' will be 'dashdot'.
+\end{verbatim}
+
+
+%% sd.plotter.set_mask
 \newpage
 \ahsdfunction{sd.plotter.set\_mask}{sd.plotter.set_mask}{Set a plotting mask for a specific selection of the data}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Set a plotting mask for a specific polarization.
+    This is useful for masking out "noise" Pangle outside a source.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+mask && \multicolumn{2}{p{3.36in}|}{A mask from \ahlink{scantable.create\_mask}{sd:sd.scantable.create_mask}}\\
+& &allowed: & bool array \\
+& &Default: & None 
+\\
+selection && \multicolumn{2}{p{3.36in}|}{The spectra to apply the mask to}\\
+& &allowed: & selector \\
+& &Default: & None 
+\\
+refresh && \multicolumn{2}{p{3.36in}|}{If True, the plot is replotted based on the new parameter setting(s)}\\
+& &allowed: & bool \\
+& &Default: & True
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+         asap_init()
+         select = sd.selector()
+         select.setpolstrings("Pangle")
+         sd.plotter.set_mask(mymask, select)
+\end{verbatim}
+
+
+%% sd.plotter.set_mode
 \newpage
 \ahsdfunction{sd.plotter.set\_mode}{sd.plotter.set_mode}{Set the plots look and feel}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Set the plots look and feel, i.e. what you want to see on the plot.
+    Stacking is a plot as line color overlays, while panelling is a plot across multiple panels.
+    By default, the stacking is set to 'pol' and the panelling is set to 'scan'.
+
+    Valid modes are:
+
+    \begin{longtable}{rl}
+             'beam' 'Beam' 'b': &     Beams \\
+             'if' 'IF' 'i': &        IFs \\
+             'pol' 'Pol' 'p': &      Polarisations \\
+             'scan' 'Scan' 's': &     Scans \\
+             'time' 'Time' 't': &    Times \\
+    \end{longtable}
+
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+stacking && \multicolumn{2}{p{3.36in}|}{Tell the plotter which variable to plot as line colour overlays}\\
+& &allowed: & string \\
+& &Default: & None 
+\\
+panelling && \multicolumn{2}{p{3.36in}|}{Tell the plotter which variable to plot across multiple panels }\\
+& &allowed: & string \\
+& &Default: & None 
+\\
+refresh && \multicolumn{2}{p{3.36in}|}{If True, the plot is replotted based on the new parameter setting(s)}\\
+& &allowed: & bool \\
+& &Default: & True
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.plotter.set_ordinate
 \newpage
 \ahsdfunction{sd.plotter.set\_ordinate}{sd.plotter.set_ordinate}{Set y-axis label of the plot}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Set the y-axis label of the plot. If multiple panels are plotted,
+    multiple labels have to be specified. If no ordinate is set, data determine the lebels.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+ordinate && \multicolumn{2}{p{3.36in}|}{A list of ordinate labels}\\
+& &allowed: & string, string array \\
+& &Default: & None 
+\\
+fontsize && \multicolumn{2}{p{3.36in}|}{A font size of the label}\\
+& &allowed: & integer \\
+& &Default: & None 
+\\
+refresh && \multicolumn{2}{p{3.36in}|}{If True, the plot is replotted based on the new parameter setting(s)}\\
+& &allowed: & bool \\
+& &Default: & True
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+         asap_init()
+         # two panels are visible on the plotter
+         sd.plotter.set_ordinate(["First Y-Axis","Second Y-Axis"])
+\end{verbatim}
+
+
+
+%% sd.plotter.set_panellayout
 \newpage
 \ahsdfunction{sd.plotter.set\_panellayout}{sd.plotter.set_panellayout}{Set layout of subplots}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Set the layout of subplots.
+
+    The layout argument specifies a list of subplots layout in figure coordinate (0-1),
+    i.e., fraction of the figure width or height.
+    The order of elements should be: 
+    [left, bottom, right, top, horizontal space btw panels, vertical space btw panels].
+ 
+    Note that, when layout is not specified, the values are reset to the defaults of matplotlib.
+    Note also that, if any element is set to be None, the current value is adopted.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+layout && \multicolumn{2}{p{3.36in}|}{A list of subplots layout}\\
+& &allowed: & float array \\
+& &Default: & None 
+\\
+refresh && \multicolumn{2}{p{3.36in}|}{If True, the plot is replotted based on the new parameter setting(s)}\\
+& &allowed: & bool \\
+& &Default: & True
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.plotter.set_panelling
 \newpage
 \ahsdfunction{sd.plotter.set\_panelling}{sd.plotter.set_panelling}{Set the panelling mode}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Set the 'panelling' mode i.e. which type of spectra should be
+    spread across different panels.
+
+    Valid modes are:
+
+    \begin{longtable}{rl}
+             'beam' 'Beam' 'b': &     Beams \\
+             'if' 'IF' 'i': &        IFs \\
+             'pol' 'Pol' 'p': &      Polarisations \\
+             'scan' 'Scan' 's': &     Scans \\
+             'time' 'Time' 't': &    Times \\
+    \end{longtable}
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+what && \multicolumn{2}{p{3.36in}|}{Which type of spectra should be spread across different panels}\\
+& &allowed: & string \\
+& &Default: & None 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.plotter.set_range
 \newpage
 \ahsdfunction{sd.plotter.set\_range}{sd.plotter.set_range}{Set the range of interest on the abcissa of the plot}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Set the range of interest on the abcissa of the plot.
+
+    These become non-sensical when the unit changes. 
+    In that case, use plotter.set\_range() without parameters to reset.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+xstart && \multicolumn{2}{p{3.36in}|}{The start point of the 'zoom' window}\\
+& &allowed: & float \\
+& &Default: & None 
+\\
+xend && \multicolumn{2}{p{3.36in}|}{The end point of the 'zoom' window}\\
+& &allowed: & float \\
+& &Default: & None 
+\\
+ystart && \multicolumn{2}{p{3.36in}|}{The start point of the 'zoom' window}\\
+& &allowed: & float \\
+& &Default: & None 
+\\
+yend && \multicolumn{2}{p{3.36in}|}{The end point of the 'zoom' window}\\
+& &allowed: & float \\
+& &Default: & None 
+\\
+refresh && \multicolumn{2}{p{3.36in}|}{If True, the plot is replotted based on the new parameter setting(s)}\\
+& &allowed: & bool \\
+& &Default: & True
+\\
+offset && \multicolumn{2}{p{3.36in}|}{Shift the abcissa by the given amount. The abcissa label will have '(relative)' appended to it.}\\
+& &allowed: & float \\
+& &Default: & True
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.plotter.set_selection
 \newpage
 \ahsdfunction{sd.plotter.set\_selection}{sd.plotter.set_selection}{Set selection to the data}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Set selection to the data. 
+   The method allows both to set selector object directly and to pass arguments for constructor of the selector 
+   to create new selector object internally.
+
+   See \ahlink{selector}{sd:sd.selector} for valid arguments for constructor of the selector.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+selection && \multicolumn{2}{p{3.36in}|}{A selector object}\\
+& &allowed: & selector \\
+& &Default: & None 
+\\
+refresh && \multicolumn{2}{p{3.36in}|}{If True, the plot is replotted based on the new parameter setting(s)}\\
+& &allowed: & bool \\
+& &Default: & True
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+   asap_init()
+   # these are equivalent
+   sel=sd.selector(ifs=[0])
+   sd.plotter.set_selection(sel)
+   sd.plotter.set_selection(ifs=[0])
+\end{verbatim}
+
+
+%% sd.plotter.set_stacking
 \newpage
 \ahsdfunction{sd.plotter.set\_stacking}{sd.plotter.set_stacking}{Set the stacking mode}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Set the 'stacking' mode i.e. which type of spectra should be
+    overlayed.
+
+    Valid modes are:
+
+    \begin{longtable}{rl}
+             'beam' 'Beam' 'b': &     Beams \\
+             'if' 'IF' 'i': &        IFs \\
+             'pol' 'Pol' 'p': &      Polarisations \\
+             'scan' 'Scan' 's': &     Scans \\
+             'time' 'Time' 't': &    Times \\
+    \end{longtable}
+
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+what && \multicolumn{2}{p{3.36in}|}{Which type of spectra should be overlayed}\\
+& &allowed: & string \\
+& &Default: & None 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.plotter.set_title
 \newpage
 \ahsdfunction{sd.plotter.set\_title}{sd.plotter.set_title}{Set the title of the plot}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Set the title of the plot. If multiple panels are plotted,
+    multiple titles have to be specified.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+title && \multicolumn{2}{p{3.36in}|}{The title}\\
+& &allowed: & string, string array \\
+& &Default: & None 
+\\
+fontsize && \multicolumn{2}{p{3.36in}|}{A font size of the title}\\
+& &allowed: & integer \\
+& &Default: & None 
+\\
+refresh && \multicolumn{2}{p{3.36in}|}{If True, the plot is replotted based on the new parameter setting(s)}\\
+& &allowed: & bool \\
+& &Default: & True
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+         asap_init()
+         # two panels are visible on the plotter
+         sd.plotter.set_title(["First Panel","Second Panel"])
+\end{verbatim}
+
+
+%% sd.plotter.text
 \newpage
 \ahfunction{sd.plotter.text}{Add text in a specified location}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Add text in string s to axis at location x,y (data coords)
+    
+      fontdict is a dictionary to override the default text properties.
+      If fontdict is None, the defaults are determined by your rc
+      parameters.
+    
+      withdash=True will create a TextWithDash instance instead
+      of a Text instance.
+    
+    Individual keyword arguments can be used to override any given
+    parameter
+    
+    \begin{verbatim}
+        text(x, y, s, fontsize=12)
+    \end{verbatim}
+
+    The default transform specifies that text is in data coords,
+    alternatively, you can specify text in axis coords (0,0 lower left and
+    1,1 upper right).  The example below places text in the center of the
+    axes
+    
+    \begin{verbatim}
+        text(0.5, 0.5,'matplotlib',
+             horizontalalignment='center',
+             verticalalignment='center',
+             transform = ax.transAxes,
+        )
+    \end{verbatim}
+    
+    
+    You can put a rectangular box around the text instance (eg to
+    set a background color) by using the keyword bbox.  bbox is a
+    dictionary of patches.Rectangle properties (see help
+    for Rectangle for a list of these).  For example
+  
+    \begin{verbatim}
+     text(x, y, s, bbox=dict(facecolor='red', alpha=0.5))
+    \end{verbatim}
+    
+    Valid kwargs are Text properties
+
+    \begin{longtable}{rl}
+        alpha: & float \\
+        animated: & [True | False] \\
+        axes: & an axes instance \\
+        backgroundcolor: & any matplotlib color \\
+        bbox: & rectangle prop dict plus key 'pad' which is a pad in points \\
+        clip\_box: & a matplotlib.transform.Bbox instance \\
+        clip\_on: & [True | False] \\
+        clip\_path: & an agg.path\_storage instance \\
+        color: & any matplotlib color \\
+        contains: & unknown \\
+        label: & any string \\
+        linespacing: & float \\
+        lod: & [True | False] \\
+        multialignment: & ['left' | 'right' | 'center' ] \\
+        name or fontname: & string eg, ['Sans' | 'Courier' | 'Helvetica' ...] \\
+        picker: & [None|float|boolean|callable] \\
+        position: & (x,y) \\
+        rotation: & [ angle in degrees 'vertical' | 'horizontal' \\
+        position: & (x,y) \\
+        rotation: & [ angle in degrees 'vertical' | 'horizontal' \\
+        position: & (x,y) \\
+        rotation: & [ angle in degrees 'vertical' | 'horizontal' \\
+        size or fontsize: & [ size in points | relative size eg 'smaller', 'x-large' ] \\
+        size or fontsize: & [ size in points | relative size eg 'smaller', 'x-large' ] \\
+        style or fontstyle: & [ 'normal' | 'italic' | 'oblique'] \\
+        text: & string or anything printable with '\%s' conversion \\
+        transform: & a matplotlib.transform transformation instance \\
+        variant: & [ 'normal' | 'small-caps' ] \\
+        verticalalignment or va: & [ 'center' | 'top' | 'bottom' | 'baseline' ] \\
+        visible: & [True | False] \\
+        weight or fontweight: & [ 'normal' | 'bold' | 'heavy' | 'light' | 'ultrabo \\
+        weight or fontweight: & [ 'normal' | 'bold' | 'heavy' | 'light' | 'ultrabold' | 'ultralight'] \\
+        x: & float \\
+        y: & float \\
+        zorder: & any number \\
+    \end{longtable}
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+
+    See description about whole options.
+
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+x && \multicolumn{2}{p{3.36in}|}{x position of the text}\\
+& &allowed: & float \\
+& &Default: & 
+\\
+y && \multicolumn{2}{p{3.36in}|}{y position of the text}\\
+& &allowed: & float \\
+& &Default: & 
+\\
+s && \multicolumn{2}{p{3.36in}|}{The text to be drawn}\\
+& &allowed: & string \\
+& &Default: & 
+\\
+interactive && \multicolumn{2}{p{3.36in}|}{Interactively set the position of the text if True}\\
+& &allowed: & bool \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
