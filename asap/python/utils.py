@@ -60,7 +60,7 @@ def list_files(path=".",suffix="rpf"):
     """
     if not os.path.isdir(path):
         return None
-    valid = "rpf rpf.1 rpf.2 sdf sdfits mbf asap".split()
+    valid = "ms rpf rpf.1 rpf.2 sdf sdfits mbf asap".split()
     if not suffix in valid:
         return None
     files = [os.path.expanduser(os.path.expandvars(path+"/"+f)) for f in os.listdir(path)]

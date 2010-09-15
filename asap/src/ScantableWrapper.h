@@ -249,7 +249,7 @@ public:
   void reshapeSpectrum( int nmin, int nmax )
   { table_->reshapeSpectrum( nmin, nmax ); }
 
-  void polyBaseline(const std::vector<bool>& mask, int order, int rowno, int pars_ptr, int pars_size, int errs_ptr, int errs_size, int fmask_ptr, int fmask_size)
+  void polyBaseline(const std::vector<bool>& mask, int order, int rowno, long pars_ptr, long pars_size, long errs_ptr, long errs_size, long fmask_ptr, long fmask_size)
   { table_->polyBaseline(mask, order, rowno, pars_ptr, pars_size, errs_ptr, errs_size, fmask_ptr, fmask_size); }
 
   void polyBaselineBatch(const std::vector<bool>& mask, int order, int rowno)

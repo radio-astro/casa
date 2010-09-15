@@ -158,10 +158,10 @@ def calps(scantab, scannos, smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0, veri
     """
     Calibrate GBT position switched data
     Adopted from GBTIDL getps
-    Currently calps identify the scans as position switched data if they
-    contain '_ps' in the source name. The data must contains 'CAL' signal
-    on/off in each integration. To identify 'CAL' on state, the word, 'calon'
-    need to be present in the source name field.
+    Currently calps identify the scans as position switched data if source
+    type enum is pson or psoff. The data must contains 'CAL' signal
+    on/off in each integration. To identify 'CAL' on state, the source type 
+    enum of poncal and poffcal need to be present in the source name field.
     (GBT MS data reading process to scantable automatically append these
     id names to the source names)
 
@@ -175,6 +175,7 @@ def calps(scantab, scannos, smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0, veri
         tauval:        optional user specified Tau
         tcalval:       optional user specified Tcal (default is 0.0,
                        use Tcal value in the data)
+        verify:        Verify calibration if true
     """
     varlist = vars()
     # check for the appropriate data
@@ -408,6 +409,7 @@ def calnod(scantab, scannos=[], smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0, 
         tsysval:     optional user specified Tsys value
         tauval:      optional user specified tau value (not implemented yet)
         tcalval:     optional user specified Tcal value
+        verify:       Verify calibration if true
     """
     varlist = vars()
     from asap._asap import stmath
@@ -618,10 +620,10 @@ def calfs(scantab, scannos=[], smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0, v
     """
     Calibrate GBT frequency switched data.
     Adopted from GBTIDL getfs.
-    Currently calfs identify the scans as frequency switched data if they
-    contain '_fs' in the source name. The data must contains 'CAL' signal
-    on/off in each integration. To identify 'CAL' on state, the word, 'calon'
-    need to be present in the source name field.
+    Currently calfs identify the scans as frequency switched data if source
+    type enum is fson and fsoff. The data must contains 'CAL' signal
+    on/off in each integration. To identify 'CAL' on state, the source type 
+    enum of foncal and foffcal need to be present in the source name field.
     (GBT MS data reading via scantable automatically append these
     id names to the source names)
 
@@ -633,6 +635,7 @@ def calfs(scantab, scannos=[], smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0, v
         tsysval:       optional user specified Tsys (default is 0.0,
                        use Tsys in the data)
         tauval:        optional user specified Tau
+        verify:        Verify calibration if true
     """
     varlist = vars()
     from asap._asap import stmath

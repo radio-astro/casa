@@ -205,3 +205,19 @@ class TestScantable(object):
             # see if the residual spectra are ~ 0.0
             for spec in ds:
                 assert_almost_equals(sum(spec)/len(spec), 0.0, 5)
+
+    def test_auto_poly_baseline(self):
+        q = self.st.auto_quotient()
+        b = q.auto_poly_baseline(insitu=False)
+        res_rms = (q-b).stats('rms')
+        assert_almost_equals(res_rms[0], 0.38370, 5)
+        assert_almost_equals(res_rms[1], 0.38780, 5)        
+        
+
+    def test_poly_baseline(self):
+        q = self.st.auto_quotient()
+        msk = q.create_mask([0.0, 1471.0], [1745.0, 4095.0])
+        b = q.poly_baseline(order=0, mask=msk,insitu=False)
+        res_rms = (q-b).stats('rms')
+        assert_almost_equals(res_rms[0], 0.38346, 5)
+        assert_almost_equals(res_rms[1], 0.38780, 5)        

@@ -210,14 +210,14 @@ class CustomToolbarTkAgg(CustomToolbarCommon, Tk.Frame):
         self.bNote=self._NewButton(master=self,
                                    text='notation',
                                    command=self.modify_note)
-        self.bPrev=self._NewButton(master=self,
-                                   text='- page',
-                                   command=self.prev_page)
+        #self.bPrev=self._NewButton(master=self,
+        #                           text='- page',
+        #                           command=self.prev_page)
         self.bNext=self._NewButton(master=self,
                                    text='+ page',
                                    command=self.next_page)
         if os.uname()[0] != 'Darwin':
-            self.bPrev.config(padx=5)
+            #self.bPrev.config(padx=5)
             self.bNext.config(padx=5)
         self.bQuit=self._NewButton(master=self,
                                    text='Quit',
@@ -298,7 +298,7 @@ class CustomToolbarTkAgg(CustomToolbarCommon, Tk.Frame):
         if not self.button: return
         self.bStat.config(relief='raised', state=Tk.DISABLED)
         self.bSpec.config(relief='raised', state=Tk.DISABLED)
-        self.bPrev.config(state=Tk.DISABLED)
+        #self.bPrev.config(state=Tk.DISABLED)
         #self.bNext.config(state=Tk.DISABLED)
         self.button=False
         self.mode=''
@@ -311,10 +311,12 @@ class CustomToolbarTkAgg(CustomToolbarCommon, Tk.Frame):
         self.bNext.config(state=Tk.DISABLED)
 
     def enable_prev(self):
-        self.bPrev.config(state=Tk.NORMAL)
+        #self.bPrev.config(state=Tk.NORMAL)
+        pass
 
     def disable_prev(self):
-        self.bPrev.config(state=Tk.DISABLED)
+        #self.bPrev.config(state=Tk.DISABLED)
+        pass
 
     def delete_bar(self):
         self.__disconnect_event()
