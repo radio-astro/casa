@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BaseMappedArrayEngine.h 20926 2010-07-05 11:42:12Z gervandiepen $
+//# $Id: BaseMappedArrayEngine.h 20932 2010-07-08 09:06:37Z gervandiepen $
 
 #ifndef TABLES_BASEMAPPEDARRAYENGINE_H
 #define TABLES_BASEMAPPEDARRAYENGINE_H
@@ -448,6 +448,15 @@ protected:
     virtual void putColumnSliceCells (const RefRows& rownrs,
 				      const Slicer& slicer,
 				      const Array<VirtualType>& data);
+
+    // Map the virtual shape to the stored shape.
+    // By default is returns the virtual shape.
+    virtual IPosition getStoredShape (uInt rownr,
+                                      const IPosition& virtualShape);
+
+    // Map the slicerfor a virtual shape to a stored shape.
+    // By default it returns the virtualinput slicer.
+    virtual Slicer getStoredSlicer (const Slicer& virtualSlicer) const;
 
     // Map StoredType array to VirtualType array.
     // This is meant when reading an array from the stored column.

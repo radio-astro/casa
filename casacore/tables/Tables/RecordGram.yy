@@ -24,7 +24,7 @@
                            520 Edgemont Road
                            Charlottesville, VA 22903-2475 USA
 
-    $Id: RecordGram.yy 20922 2010-07-05 11:36:04Z gervandiepen $
+    $Id: RecordGram.yy 20940 2010-08-25 09:08:06Z gervandiepen $
 */
 
 %{
@@ -336,6 +336,11 @@ simbexpr:  LPAREN orexpr RPAREN
                $$ = new TableExprNode (RecordGram::handleFunc ($1->str, *$3));
 	       delete $1;
 	       delete $3;
+	   }
+         | FLDNAME LPAREN elemlist RPAREN {
+               $$ = new TableExprNode (RecordGram::handleFunc ($1->str, *$3));
+               delete $1;
+               delete $3;
 	   }
          | NAME {
 	       $$ = new TableExprNode (RecordGram::handleField ($1->str));
