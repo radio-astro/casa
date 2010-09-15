@@ -250,6 +250,7 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	/* Set up the Mask image */
 	for(Int thismodel=0;thismodel<nfields_p;thismodel++)
 	{
+	  if(adbg) cout << "about to send in the mask for model " << getModelIndex(thismodel,0) << " hasMask() :  " << hasMask(getModelIndex(thismodel,0))  << endl;
 	  //if(hasMask(thismodel)) 
 	  if(hasMask(getModelIndex(thismodel,0))) 
 	  {
@@ -286,14 +287,24 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
            
 	   }// end of model loop
 
-	   /* Do the prediction and residual computation for all models. */
-	   if(adbg)os << "Calc residuals : solveResiduals(se)..." << LogIO::POST;
-	   solveResiduals(se);
 	   
+	   /* Do the prediction and residual computation for all models. */
+	   /* If exiting, call 'solveResiduals' with modelToMS = True to write the model to the MS */
+	   if(abs(stopflag) || itercountmaj==99) 
+	   {
+	       solveResiduals(se,True);
+	   }
+	   else 
+	   {
+	       solveResiduals(se);
+	   }
+	   
+	   /* Check and exit */
 	   if(abs(stopflag)) break;
 
 	   /* If reached 100 major cycles - something is wrong */
 	   if(itercountmaj==99) os << " Reached the allowed maximum of 100 major cycles " << LogIO::POST;
+
 	} 
 	/******************* END MAJOR CYCLE LOOP *****************/
 	
@@ -430,9 +441,9 @@ return 0;
 /*************************************
  *          Make Residuals and compute the current peak  
  *************************************/
-Bool WBCleanImageSkyModel::solveResiduals(SkyEquation& se) 
+Bool WBCleanImageSkyModel::solveResiduals(SkyEquation& se, Bool modelToMS) 
 {
-        makeNewtonRaphsonStep(se,False);
+        makeNewtonRaphsonStep(se,False,modelToMS);
 	
 	return True;
 }
