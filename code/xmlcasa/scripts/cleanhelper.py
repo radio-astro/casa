@@ -2113,7 +2113,9 @@ def getAlgorithm(psfmode, imagermode, gridmode, mode,
         alg = 'msmfs';
         if(imagermode == 'mosaic'): 
                raise Exception, 'msmfs (nterms>1) not allowed with imagermode=' + imagermode + '. For now, msmfs automatically performs cs-clean type iterations';
-        if (multifield): addMultiField = True;
+        if (multifield): 
+		addMultiField = True;
+		raise Exception, 'For now, msmfs (nterms>1) is not allowed in multi-field mode. Please supply a single image name.'
 
 #    if (gridmode == 'widefield'): alg='mfclark';
 
