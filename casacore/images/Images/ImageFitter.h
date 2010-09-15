@@ -76,6 +76,9 @@ namespace casa {
             // <li>box - A 2-D rectangular box in which to use pixels for the fitting, eg box=100,120,200,230
             // In cases where both box and region are specified, box, not region, is used.</li>
             // <li>region - Named region to use for fitting</li>
+			// <li>regionPtr - A pointer to a region. Note there are unfortunately several different types of
+			// region records throughout CASA. In this case, it must be a Record produced by creating a
+			// region via a RegionManager method.
             // <li>chanInp - Zero-based channel number on which to do the fit. Only a single channel can be
             // specified.</li>
             // <li>stokes - Stokes plane on which to do the fit. Only a single Stokes parameter can be
