@@ -394,6 +394,10 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
         field='*'
     spwids=ms.msseltoindex(vis=msname, spw=spw)['spw']
     c=cluster()
+    if (len(c.get_ids()) > 0 or len(c.get_nodes()) > 0 or 
+        len(c.get_engines())):
+        c.stop_cluster()
+        time.sleep(1)
     hostname=os.getenv('HOSTNAME')
     wd=os.getcwd()
     owd=wd
@@ -648,6 +652,10 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
         field='*'
     spwids=ms.msseltoindex(vis=msname, spw=spw)['spw']
     c=cluster()
+    if (len(c.get_ids()) > 0 or len(c.get_nodes()) > 0 or 
+        len(c.get_engines())):
+        c.stop_cluster()
+        time.sleep(1)
     hostname=os.getenv('HOSTNAME')
     wd=os.getcwd()
     owd=wd
@@ -683,7 +691,7 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
     csys.setconversiontype(spectral=originsptype)
     fstart=csys.toworld([0,0,0,0],'n')['numeric'][3]
     fstep=csys.toworld([0,0,0,1],'n')['numeric'][3]-fstart
-    fend=fstep*(nchan)+fstart
+    fend=fstep*(nchan-1)+fstart
     ia.done()
     imepoch=csys.epoch()
     imobservatory=csys.telescope()
