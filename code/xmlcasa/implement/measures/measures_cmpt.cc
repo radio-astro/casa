@@ -624,6 +624,9 @@ std::string
 measures::linelist()
 {
   std::string emptyStr("");
+  *itsLog << LogIO::WARN << "DEPRECATED. The " << __FUNCTION__ << " method has been deprecated and will be removed "
+	<< "in the near future. Please use the spectral line (sl) tool and/or related tasks instead"
+	<< LogIO::POST;
   try {
 
     const Vector<String> &lst = MeasTable::Lines();
@@ -648,6 +651,9 @@ measures::linelist()
 ::casac::record *
 measures::spectralline(const std::string& name)
 {
+	*itsLog << LogIO::WARN << "DEPRECATED. The " << __FUNCTION__ << " method has been deprecated and will be removed "
+		<< "in the near future. Please use the spectral line (sl) tool and/or related tasks instead"
+		<< LogIO::POST;
   ::casac::record *retval = 0;
   String error;
 
