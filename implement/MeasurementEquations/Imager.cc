@@ -218,7 +218,7 @@ traceEvent(1,"Entering imager::defaults",25);
   distance_p=Quantity(0.0, "m");
   stokes_p="I"; npol_p=1;
   nscales_p=5;
-  ntaylor_p=2;
+  ntaylor_p=1;
   reffreq_p=1.4e+09;
   scaleMethod_p="nscales";  
   scaleInfoValid_p=False;
@@ -4774,7 +4774,6 @@ Bool Imager::clean(const String& algorithm,
       maskNames="";
     }
 
-
     if(sm_p){
       if( sm_p->getAlgorithm() != "clean") destroySkyEquation();
       if(images_p.nelements() != uInt(nmodels)){
@@ -4949,6 +4948,17 @@ Bool Imager::clean(const String& algorithm,
 	os << LogIO::NORMAL // Loglevel INFO
            << "Using multi frequency synthesis algorithm" << LogIO::POST;
 	((WBCleanImageSkyModel*)sm_p)->imageNames = Vector<String>(image);
+	/* Check masks. Should be only one per field. Duplicate the name ntaylor_p times 
+	   Note : To store taylor-coefficients, msmfs uses the same data structure as for
+	          multi-field imaging. In the case of multifield and msmfs, the list of 
+		  images is nested and follows a field-major ordering.
+		  All taylor-coeffs for a single field should have the same mask (for now).
+	   For now, since only single-field is allowed for msmfs, we have the following.*/
+        if(Int(mask.nelements()) != nmodels && Int(mask.nelements())>0) 
+	{
+            for(Int tay=0;tay<nmodels;tay++)
+		   maskNames[tay] = mask[0];
+	}
       }
       else {
 	this->unlock();
