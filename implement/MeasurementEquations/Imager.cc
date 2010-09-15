@@ -4927,11 +4927,10 @@ Bool Imager::clean(const String& algorithm,
       }
       else if (algorithm=="msmfs") {
 	doMultiFields_p = False;
-	doMultiFields_p = True;
 	doWideBand_p = True;
-	if ( ftmachine_p != "ft" ) {
+	if ( ftmachine_p != "ft" && ftmachine_p != "wproject") {
 	  os << LogIO::SEVERE
-             << "Multiscale multifield clean currently works only with the default ftmachine"
+             << "Multi-scale Multi-frequency Clean currently works only with the default ftmachine and wproject"
              << LogIO::POST;
 	  return False;
 	}
