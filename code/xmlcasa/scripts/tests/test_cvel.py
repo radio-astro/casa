@@ -12,7 +12,7 @@ vis_a = 'ngc4826.ms'
 vis_b = 'test.ms'
 vis_c = 'jupiter6cm.demo-thinned.ms'
 vis_d = 'g19_d2usb_targets_line-shortened-thinned.ms'
-vis_e = 'evla-highres-sample.ms'
+vis_e = 'evla-highres-sample-thinned.ms'
 outfile = 'cvel-output.ms'
 
 def verify_ms(msname, expnumspws, expnumchan, inspw, expchanfreqs=[]):
@@ -63,9 +63,9 @@ class cvel_test(unittest.TestCase):
         if(not os.path.exists(vis_c)):
             os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/cvel/input/jupiter6cm.demo-thinned.ms .') # 124 MB
         if(not os.path.exists(vis_d)):
-            os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/cvel/input/g19_d2usb_targets_line-shortened-thinned.ms .') # 15 MB
+            os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/cvel/input/g19_d2usb_targets_line-shortened-thinned.ms .') # 48 MB
         if(not os.path.exists(vis_e)):
-            os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/cvel/input/evla-highres-sample.ms .') # 352 MB
+            os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/cvel/input/evla-highres-sample-thinned.ms .') # 74 MB
 
 
     def tearDown(self):
@@ -647,7 +647,7 @@ class cvel_test(unittest.TestCase):
         self.assertTrue(ret[0],ret[1])
 
     def test34(self):
-        '''Cvel 34: EVAL high-res input MS, 2 spws to combine'''
+        '''Cvel 34: EVLA high-res input MS, 2 spws to combine'''
         myvis = vis_e
         os.system('ln -sf ' + myvis + ' myinput.ms')
         rval = cvel(

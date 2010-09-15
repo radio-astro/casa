@@ -42,6 +42,7 @@
 #include <ms/MeasurementSets/MSConcat.h>
 #include <ms/MeasurementSets/MSFlagger.h>
 #include <ms/MeasurementSets/MSSelectionTools.h>
+#include <ms/MeasurementSets/MSMainColumns.h>
 #include <msvis/MSVis/MSAnalysis.h>
 #include <msvis/MSVis/MSContinuumSubtractor.h>
 #include <msvis/MSVis/SubMS.h>
@@ -1497,7 +1498,8 @@ ms::cvel(const std::string& mode,
 	Double intrvl = 0;
 	Bool addScratch = False; 
 	String dcol("corrected");
-	if(!itsMS->isColumnWritable("CORRECTED_DATA")){ // there are no scratch columns
+	MSMainColumns mainCols(*itsMS);
+	if(mainCols.correctedData().isNull()){ // there are no scratch columns
 	  dcol = "data";
 	}
 	VisSet vs(*itsMS, noSort, allChannels, addScratch, intrvl, False);
