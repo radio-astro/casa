@@ -55,7 +55,7 @@ void ImageInputProcessor::process(
 	String& stokes, const String& imagename, const Record* regionPtr,
 	const String& regionName, const String& box,
 	const String& chans,
-	const StokesControl& stokesControl, const casa::Bool& allowMultipleBoxes,
+	const StokesControl& stokesControl, const Bool& allowMultipleBoxes,
 	const Vector<Coordinate::Type> *requiredCoordinateTypes
 ) {
 	LogOrigin origin("ImageInputProcessor", __FUNCTION__);
@@ -108,7 +108,7 @@ void ImageInputProcessor::_process(
 	LogOrigin origin("ImageInputProcessor", __FUNCTION__);
     *_log << origin;
     if (outputStruct != 0) {
-    	_checkOutputs(outputStruct);
+    	checkOutputs(outputStruct, *_log);
     }
     *_log << origin;
     if (requiredCoordinateTypes) {
@@ -148,11 +148,13 @@ void ImageInputProcessor::_process(
     	*_log << LogIO::NORMAL << "Using specified box(es) " << box << LogIO::POST;
     }
     else if (regionPtr != 0) {
+
     	_setRegion(regionRecord, diagnostics, regionPtr);
     	*_log << origin;
         if (_isFractionalRegion(regionRecord)) {
             *_log << "Fractional regions are not supported by this method/task" << LogIO::EXCEPTION;
         }
+
     	*_log << LogIO::NORMAL << "Set region from supplied region record"
     		<< LogIO::POST;
         stokes = _stokesFromRecord(regionRecord, metaData);
@@ -737,9 +739,9 @@ String ImageInputProcessor::_cornersToString(const Vector<Double>& corners) cons
 	return os.str();
 }
 
-void ImageInputProcessor::_checkOutputs(
-	Vector<OutputStruct> *output
-) const {
+void ImageInputProcessor::checkOutputs(
+	Vector<OutputStruct> *output, LogIO& log
+) {
 	for (
 		Vector<OutputStruct>::iterator iter = output->begin();
 		iter != output->end();
@@ -751,7 +753,7 @@ void ImageInputProcessor::_checkOutputs(
 		Bool replaceable = iter->replaceable;
 		if (name.empty()) {
 			if (required) {
-				*_log << label << " cannot be blank" << LogIO::EXCEPTION;
+				log << label << " cannot be blank" << LogIO::EXCEPTION;
 			}
 			else {
 				continue;
@@ -762,19 +764,19 @@ void ImageInputProcessor::_checkOutputs(
 		File f(name);
 		switch (f.getWriteStatus()) {
 		case File::NOT_CREATABLE:
-			*_log << logLevel << "Requested " << label << " " << name
+			log << logLevel << "Requested " << label << " " << name
 				<< " cannot be created so will not be written" << logAction;
 			*(iter->outputFile) = "";
 			break;
 		case File::NOT_OVERWRITABLE:
-			*_log << logLevel << "There is already a file or directory named "
+			log << logLevel << "There is already a file or directory named "
 				<< name << " which cannot be overwritten so the " << label
 				<< " will not be written" << logAction;
 			*(iter->outputFile) = "";
 			break;
 		case File::OVERWRITABLE:
 			if (! replaceable) {
-				*_log << logLevel << "Replaceable flag is false and there is "
+				log << logLevel << "Replaceable flag is false and there is "
 					<< "already a file or directory named " << name
 					<< " so the " << label << " will not be written"
 					<< logAction;
