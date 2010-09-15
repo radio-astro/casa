@@ -128,6 +128,7 @@ casa_add_library( xmlcasa
   implement/StdCasa/value_record.cc
   implement/StdCasa/value_variant.cc
   implement/StdCasa/variant.cc
+  implement/spectralline/spectralline_cmpt.cc
   implement/synthesis/calibrater_cmpt.cc
   implement/synthesis/deconvolver_cmpt.cc
   implement/synthesis/imager_cmpt.cc
@@ -286,8 +287,10 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_ssoflux.py
   scripts/task_simdata.py
   scripts/task_oldsimdata.py
+  scripts/task_slsearch.py
   scripts/task_smoothcal.py
   scripts/task_specfit.py
+  scripts/task_splattotable.py
   scripts/task_split.py
   scripts/task_uvcontsub2.py
   scripts/task_uvcontsub.py
@@ -395,8 +398,10 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/ssoflux.xml
   tasks/simdata.xml
   tasks/oldsimdata.xml
+  tasks/slsearch.xml
   tasks/smoothcal.xml
   tasks/specfit.xml
+  tasks/splattotable.xml
   tasks/split.xml
   tasks/uvcontsub2.xml
   tasks/uvcontsub.xml
@@ -428,6 +433,7 @@ casa_add_tools( tools_idl tools_sources
   implement/nrao/vlafillertask.xml
   implement/plotms/plotms.xml
   implement/scimath/functional.xml
+  implement/spectralline/spectralline.xml
   implement/synthesis/calibrater.xml
   implement/synthesis/deconvolver.xml
   implement/synthesis/imagertask.xml
