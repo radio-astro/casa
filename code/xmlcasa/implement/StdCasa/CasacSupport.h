@@ -59,8 +59,11 @@ Bool             casaMRadialVelocity(const ::casac::variant& theVar,
 Bool             casaMEpoch(const ::casac::variant& theVar, 
                             MEpoch& theMeas);
  //utility to split a single string to multiple if they are , or empty space 
- //seperated
+ //seperated. if commaOnly = True, only seperate on commas, not empty space
  Int sepCommaEmptyToVectorStrings(Vector<String>& retStr, 
-				  const std::string& str); 
+				  const std::string& str);
+
+ Int sepCommaToVectorStrings(Vector<String>& retStr,
+ 				  const std::string& str);
 
 }

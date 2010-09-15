@@ -1245,7 +1245,7 @@ Int sepCommaEmptyToVectorStrings(Vector<String>& lesStrings,
     if((nsep=oneStr.freq(",")) > 0){
       sep=",";
     }
-    else{
+    else {
       nsep=oneStr.freq(" ");
       sep=" ";
     }
@@ -1261,6 +1261,40 @@ Int sepCommaEmptyToVectorStrings(Vector<String>& lesStrings,
       Int index=0;
       for (Int k=0; k < nsep; ++k){
 	if((String(splitstrings[k]) == String(""))  
+	   || (String(splitstrings[k]) == String(" "))){
+	  lesStrings.resize(lesStrings.nelements()-1, True);
+	}
+	else{
+	  lesStrings[index]=splitstrings[k];
+	  ++index;
+	}
+      }
+      delete [] splitstrings;
+    }
+
+    return nsep;
+
+}
+
+Int sepCommaToVectorStrings(Vector<String>& lesStrings,
+				 const std::string& str){
+
+    casa::String oneStr=String(str);
+    // decide if its comma seperated or empty space seperated
+    String sep=",";
+    Int nsep=oneStr.freq(sep);
+    if(nsep == 0){
+      lesStrings.resize(1);
+      lesStrings=oneStr;
+      nsep=1;
+    }
+    else{
+      String *splitstrings = new String[nsep+1];
+      nsep=split(oneStr, splitstrings, nsep+1, sep);
+      lesStrings.resize(nsep);
+      Int index=0;
+      for (Int k=0; k < nsep; ++k){
+	if((String(splitstrings[k]) == String(""))
 	   || (String(splitstrings[k]) == String(" "))){
 	  lesStrings.resize(lesStrings.nelements()-1, True);
 	}
