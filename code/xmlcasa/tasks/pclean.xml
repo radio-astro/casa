@@ -113,7 +113,7 @@
 
 		<param type="intArray" name="scales">
 			<description>Scales to use in deconvolution</description>
-			<value>[]</value>
+			<value>0</value>
 		</param>
 
 		<param type="string" name="mode">
@@ -417,7 +417,7 @@
                example: weighting='uniform';
 
         scales -- list of scales in pixel for multiscale clean 
-               default: []
+               default: [0]
                example: scales=[0, 3, 10]
 
         mode -- type of image to be generated 
