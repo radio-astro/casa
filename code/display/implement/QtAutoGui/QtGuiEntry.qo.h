@@ -148,7 +148,9 @@ class QtSliderBase : public QWidget {
  protected slots:   
    
   // slider changed by user
-  virtual void slChg(int slval) { updateAndEmit(externalVal(slval));  }
+  virtual void slChg(int slval) { update(externalVal(slval));
+				  if ( ! onrelease_ ) emitVal( ); }
+  virtual void release( ) 	{ if (   onrelease_ ) emitVal( ); }
   
   // 'revert-to-original' selected in menu.
   virtual void setOriginal();
@@ -207,9 +209,9 @@ class QtSliderBase : public QWidget {
   void emitVal();
 
   // Accepts new value (if any), updates interface (without
-  // retriggering any internal slots) and emits value.
+  // retriggering any internal slots).
   // New value should already have been validated.
-  void updateAndEmit(Double dval);
+  void update(Double dval);
 
     
   // main state.  Determines the float scaling for the (necessarily int)
@@ -227,6 +229,9 @@ class QtSliderBase : public QWidget {
   // Whether this element emits float values (ptype 'floatrange')
   // vs. ints (ptype 'intrange').
   Bool floatrng_;
+
+  // Should the event be generated only upon releasing the slider?
+  bool onrelease_;
 
   // For restoring 'original' value.
   Double origVal_;
