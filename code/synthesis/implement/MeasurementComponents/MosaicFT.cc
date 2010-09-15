@@ -1192,7 +1192,7 @@ ImageInterface<Complex>& MosaicFT::getImage(Matrix<Float>& weights,
       for(lix.reset();!lix.atEnd();lix++) {
 	Int pol=lix.position()(2);
 	Int chan=lix.position()(3);
-	if(weights(pol, chan)>0.0) {
+	if(weights(pol, chan)!=0.0) {
 	  /*
 	  if(!sj_p) {
 	    gridder->correctX1D(correction, lix.position()(1));

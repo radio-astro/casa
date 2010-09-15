@@ -143,7 +143,7 @@ WBCleanImageSkyModel::~WBCleanImageSkyModel()
  *************************************/
 Bool WBCleanImageSkyModel::solve(SkyEquation& se) 
 {
-	if(adbg)os << "SOLVER for Multi-Frequency Synthesis deconvolution" << LogIO::POST;
+	os << "MSMFS algorithm with " << ntaylor_p << " Taylor coefficients and Reference Frequency of " << refFrequency_p  << " Hz" << LogIO::POST;
 	Int stopflag=0;
 	Int nchan=0,npol=0;
 
@@ -180,7 +180,7 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	  }
 	
 	/* Calculate the initial residual image for all models. */
-	if(adbg)os << "Calc initial solveResiduals(se)..." << LogIO::POST;
+	os << "Calculating initial residual images" << LogIO::POST;
 	solveResiduals(se);
 
 	/* Check if this is an interactive-clean run */
@@ -517,13 +517,13 @@ Int WBCleanImageSkyModel::makeSpectralPSFs(SkyEquation& se)
 	{ 
 	  LatticeExprNode maxPSF=max(PSF(index));
 	  normfactor = maxPSF.getFloat();
-	  os << "Normalize PSFs for model " << thismodel << " by " << normfactor << LogIO::POST;
+	  if(adbg) os << "Normalize PSFs for field " << thismodel << " by " << normfactor << LogIO::POST;
 	}
 	LatticeExpr<Float> lenorm(PSF(index)/normfactor);
 	PSF(index).copyData(lenorm);
 	LatticeExprNode maxPSF2=max(PSF(index));
         Float maxpsf=maxPSF2.getFloat();
-	os << "Psf for Model " << thismodel << " and Taylor " << taylor << " has peak " << maxpsf << LogIO::POST;
+	if(adbg) os << "Psf for Model " << thismodel << " and Taylor " << taylor << " has peak " << maxpsf << LogIO::POST;
 
 	//storeAsImg(String("TstPsf.")+String::toString(thismodel)+String(".")+String::toString(taylor),PSF(index));
      }
