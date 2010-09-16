@@ -292,8 +292,8 @@ void GridFT::initializeToVis(ImageInterface<Complex>& iimage,
      //griddedData can be a reference of image data...if not using model col
      //hence using an undocumented feature of resize that if 
      //the size is the same as old data it is not changed.
-     if(!usePut2_p) griddedData.set(0);
-     
+     //if(!usePut2_p) griddedData.set(0);
+     griddedData.set(Complex(0.0));
 
      IPosition stride(4, 1);
      IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2, (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
@@ -385,12 +385,10 @@ void GridFT::initializeToSky(ImageInterface<Complex>& iimage,
   else {
     IPosition gridShape(4, nx, ny, npol, nchan);
     griddedData.resize(gridShape);
+    griddedData=Complex(0.0);
     if(useDoubleGrid_p){
       griddedData2.resize(gridShape);
       griddedData2=DComplex(0.0);
-    }
-    else{
-      griddedData=Complex(0.0);
     }
     //iimage.get(griddedData, False);
     //if(arrayLattice) delete arrayLattice; arrayLattice=0;
