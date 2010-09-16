@@ -107,9 +107,9 @@ class hanningsmooth_test(unittest.TestCase):
                     self.assertTrue(abs(CorData-Smoothed) < max )
 
     def test4(self):
-        '''Test 4: Theoretical and calculated values should be the same with datacolumn==DATA (the default)'''
+        '''Test 4: Theoretical and calculated values should be the same with datacolumn==DATA'''
         data_col = self.getvarcol(self.msfile, 'DATA')
-        self.res = hanningsmooth(vis=self.msfile)
+        self.res = hanningsmooth(vis=self.msfile,datacolumn='data')
         corr_col = self.getvarcol(self.msfile, 'DATA')
         nrows = len(corr_col)
         

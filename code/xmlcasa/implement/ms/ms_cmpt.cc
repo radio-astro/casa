@@ -1492,21 +1492,10 @@ ms::cvel(const std::string& mode,
     if(rstat){ // re-open MS for writing, unlocked
       open(originalName,  False, False); 
       *itsLog << LogOrigin("ms", "cvel");
-      if(!hanningDone && t_doHanning){ // still need to Hanning Smooth
-	Block<int> noSort;
-	Matrix<Int> allChannels;
-	Double intrvl = 0;
-	Bool addScratch = False; 
-	String dcol("corrected");
-	MSMainColumns mainCols(*itsMS);
-	if(mainCols.correctedData().isNull()){ // there are no scratch columns
-	  dcol = "data";
-	}
-	VisSet vs(*itsMS, noSort, allChannels, addScratch, intrvl, False);
-	*itsLog << LogIO::NORMAL << "Hanning smoothing ... (smoothed data will be written to MS column \'" 
-		<< dcol << "\')" << LogIO::POST;
-	VisSetUtil::HanningSmooth(vs, dcol);
-      }
+       if(!hanningDone && t_doHanning){ 
+	 // still need to Hanning Smooth
+	 hanningsmooth("all");
+       }
     }
 
   } catch (AipsError x) {
@@ -2176,12 +2165,23 @@ ms::hanningsmooth(const std::string& datacolumn)
      Double intrvl = 0;
      String dcol(datacolumn);
      dcol.downcase();
-     Bool addScratch = !(dcol=="data"); // don't add scratch columns if the don't exist already
-                                        // and the requested output column is == "data"
+     Bool addScratch = !(dcol=="data") && !(dcol=="all"); // don't add scratch columns if they don't exist already
+                                                          // and the requested output column is == "data" or "all"
      VisSet vs(*itsMS, noSort, allChannels, addScratch, intrvl, False);
-     *itsLog << LogIO::NORMAL << "Smoothing ... (smoothed data will be written to MS column \'" 
-	     << datacolumn << "\')" << LogIO::POST;
-     VisSetUtil::HanningSmooth(vs, datacolumn);
+     if(dcol=="all"){
+       MSMainColumns mainCols(*itsMS);
+       if(!mainCols.correctedData().isNull()){ // there are scratch columns
+	 *itsLog << LogIO::NORMAL << "Smoothing MS Main Table column CORRECTED_DATA ... " << LogIO::POST;
+	 VisSetUtil::HanningSmooth(vs, "corrected");
+       }
+       *itsLog << LogIO::NORMAL << "Smoothing MS Main Table column DATA ... " << LogIO::POST;
+       VisSetUtil::HanningSmooth(vs, "data");
+     }
+     else{
+       *itsLog << LogIO::NORMAL << "Smoothing MS Main Table column \'" 
+	       << datacolumn << "\'" << LogIO::POST;
+       VisSetUtil::HanningSmooth(vs, datacolumn);
+     }
 
      rstat = True;
   } catch (AipsError x) {

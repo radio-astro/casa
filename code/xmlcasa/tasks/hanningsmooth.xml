@@ -7,16 +7,15 @@
 
 <task type="function" name="hanningsmooth" category="calibration">
 	<shortdescription>Hanning smooth frequency channel data to remove Gibbs ringing</shortdescription>
-	<description>This function Hanning smooths the frequency channels with
+	<description>This function Hanning smoothes the frequency channels with
         a weighted running average of smoothedData[i] =
         0.25*correctedData[i-1] + 0.50*correctedData[i] +
         0.25*correctedData[i+1].  The first and last channels are flagged.
         Inclusion of a flagged value in an average causes that data value
         to be flagged.
-	WARNING: the smoothed visibilities will by default be written to 
-                 the DATA column of the output MS in order to make sure that
-		 later gaincal will work on the smoothed data, e.g. as part
-                 of self-cal.
+	WARNING: by default, all visibility columns will be smoothed. This will 
+                 modify the DATA column of the output MS in order to make sure that
+		 later gaincal will work on the smoothed data, e.g. as part of self-cal.
 	</description>
 	<input>
 		<param type="string" name="vis">
@@ -26,10 +25,11 @@
 		</param>
                 <param type="string" name="datacolumn" ignorecase="True">
 		  <description>the name of the MS column into which to write the smoothed data</description>
-		  <value>data</value>
+		  <value>all</value>
 		  <allowed kind="enum">
 		    <value>corrected</value>
 		    <value>data</value>
+		    <value>all</value>
 		  </allowed>
 		</param>
 		<param type="string" name="outputvis">
@@ -48,18 +48,16 @@
     0.25*correctedData[i+1].  The first and last channels are flagged.
     Inclusion of a flagged value in an average causes that data value
     to be flagged.
-    WARNING: the smoothed visibilities will by default be written to 
-             the DATA column of the output MS in order to make sure that
-	     later gaincal will work on the smoothed data, e.g. as part
-             of self-cal.
-
+    WARNING: by default, all visibility columns will be smoothed. This will 
+             modify the DATA column of the output MS in order to make sure that
+             later gaincal will work on the smoothed data, e.g. as part of self-cal.
 
     Keyword arguments:
     vis -- Name of input visibility file (MS)
            default: none; example: vis='ngc5921.ms'
     datacolumn -- the name of the MS column into which to write the smoothed data
-                  default='data'; example: datacolumn='corrected'
-                  options: 'corrected' or 'data'
+                  default='all'; example: datacolumn='corrected'
+                  options: 'corrected', 'data', 'all'
     outputvis -- name of the output visibility file (MS)
                  default=none (write to the input MS); example: outputvis='ngc5921_src.ms'
 
