@@ -2,6 +2,7 @@
 
 import os
 import numpy
+import shutil
 from __main__ import default
 from tasks import *
 from taskinit import *
@@ -850,7 +851,24 @@ class cvel_test(unittest.TestCase):
         ret = verify_ms(outfile, 1, 3, 0, b)
         self.assertTrue(ret[0],ret[1])
 
+class cleanup(unittest.TestCase):
+    def setUp(self):
+        pass
+    
+    def tearDown(self):
+        # It will ignore errors in case files don't exist
+        shutil.rmtree(vis_a,ignore_errors=True)
+        shutil.rmtree(vis_b,ignore_errors=True)
+        shutil.rmtree(vis_c,ignore_errors=True)
+        shutil.rmtree(vis_d,ignore_errors=True)
+        shutil.rmtree(vis_e,ignore_errors=True)
+        
+    def test_cleanup(self):
+        '''Cvel: Cleanup'''
+        pass
+        
+
 
 def suite():
-    return [cvel_test]
+    return [cvel_test,cleanup]
 
