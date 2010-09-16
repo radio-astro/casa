@@ -193,6 +193,81 @@ def simdata(
 
 
         ##################################################################
+        # read antenna file here to get Primary Beam
+        predict_uv=False
+        predict_sd=False
+        tp_only=False
+        tpset=False
+        aveant=-1
+        stnx=[]  # for later, to know if we read an array in or not
+
+        # experimental: alma;0.4arcsec  allowed string
+        if str.upper(antennalist[0:4])=="ALMA":
+            tail=antennalist[5:]
+            if util.isquantity(tail,halt=False):
+                resl=qa.convert(tail,"arcsec")['value']
+                repodir=os.getenv("CASAPATH").split(' ')[0]+"/data/alma/simmos/"
+                if os.path.exists(repodir):
+                    confnum=(2.867-pl.log10(resl*1000*qa.convert(model_center,"GHz")['value']/672.))/0.0721
+                    confnum=max(1,min(28,confnum))
+                    conf=str(int(round(confnum)))
+                    if len(conf)<2: conf='0'+conf
+                    antennalist=repodir+"alma.out"+conf+".cfg"
+                    msg("converted resolution to antennalist "+antennalist)
+
+        pb=0. # primary beam
+        if os.path.exists(antennalist):
+            stnx, stny, stnz, stnd, padnames, nant, telescopename = util.readantenna(antennalist)
+            antnames=[]
+            for k in xrange(0,nant): antnames.append('A%02d'%k)
+            aveant=stnd.mean()
+            # TODO use max ant = min PB instead?  
+            # (set back to simdata - there must be an automatic way to do this)
+            casalog.origin('simdata')
+            predict_uv=True
+            pb = 1.2*0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/aveant*3600.*180/pl.pi # arcsec
+
+            
+        if os.path.exists(sdantlist):
+            tpset=True
+            tpx, tpy, tpz, tpd, tp_padnames, tp_nant, tp_telescopename = util.readantenna(sdantlist)
+            tp_antnames=[]
+            #for k in range(0,tp_nant): tp_antnames.append('TP%02d'%k)
+            #select an antenna from thelist
+            if sdant > tp_nant-1:
+                msg("antenna index %d is out of range. setting sdant=0"%sdant,priority="warn")
+                sdant=0
+            tp_antnames.append('TP%02d'%sdant)
+            tpx=[tpx[sdant]]
+            tpy=[tpy[sdant]]
+            tpz=[tpz[sdant]]
+            tpd=pl.array(tpd[sdant])
+            tp_padnames=[tp_padnames[sdant]]
+            tp_nant=1
+            tp_aveant=tpd.mean()
+            casalog.origin('simdata')
+            predict_sd=True
+            if not predict_uv:
+                aveant=tp_aveant
+                msg("Only single-dish observation is predicted",priority="info")
+                tp_only=True
+            # check for image size (need to be > 2*pb)
+            pb2 = 2.*1.2*0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/tp_aveant*3600.*180/pl.pi
+            minsize=min(qa.convert(model_size[0],'arcsec')['value'],qa.convert(model_size[1],'arcsec')['value'])
+            if pb==0:
+                pb=0.5*pb2 #arcsec
+            if minsize < pb2:
+                msg("skymodel should be larger than 2*primary beam. Your skymodel: %.3f arcsec < %.3f arcsec: 2*primary beam" % (minsize, pb2),priority="error")
+                del minsize,pb2
+                return False            
+            del minsize,pb2
+            
+        
+
+
+
+
+        ##################################################################
         # set up pointings
         dir=model_refdir
         dir0=dir
@@ -210,6 +285,11 @@ def simdata(
         if setpointings:
             if verbose:
                 util.msg("calculating map pointings centered at "+str(dir0))
+            if len(pointingspacing)<1:
+                if pb<=0:
+                    util.msg("Can't calculate pointingspacing in terms of primary beam because neither antennalist nor sdantlist exist",priority="error")
+                    return False
+                pointingspacing="%farcsec" % (0.5*pb)
             pointings = util.calc_pointings2(pointingspacing,mapsize,maptype=maptype, direction=dir)
             nfld=len(pointings)
             etime = qa.convert(qa.quantity(integration),"s")['value']
@@ -289,76 +369,6 @@ def simdata(
 
 
         ##################################################################
-        # read antenna file here to get Primary Beam
-        predict_uv=False
-        predict_sd=False
-        tp_only=False
-        tpset=False
-        aveant=-1
-        stnx=[]  # for later, to know if we read an array in or not
-
-        # experimental: alma;0.4arcsec  allowed string
-        if str.upper(antennalist[0:4])=="ALMA":
-            tail=antennalist[5:]
-            if util.isquantity(tail,halt=False):
-                resl=qa.convert(tail,"arcsec")['value']
-                repodir=os.getenv("CASAPATH").split(' ')[0]+"/data/alma/simmos/"
-                if os.path.exists(repodir):
-                    confnum=(2.867-pl.log10(resl*1000*qa.convert(model_center,"GHz")['value']/672.))/0.0721
-                    confnum=max(1,min(28,confnum))
-                    conf=str(int(round(confnum)))
-                    if len(conf)<2: conf='0'+conf
-                    antennalist=repodir+"alma.out"+conf+".cfg"
-                    msg("converted resolution to antennalist "+antennalist)
-
-        if os.path.exists(antennalist):
-            stnx, stny, stnz, stnd, padnames, nant, telescopename = util.readantenna(antennalist)
-            antnames=[]
-            for k in xrange(0,nant): antnames.append('A%02d'%k)
-            aveant=stnd.mean()
-            # TODO use max ant = min PB instead?  
-            # (set back to simdata - there must be an automatic way to do this)
-            casalog.origin('simdata')
-            predict_uv=True
-            
-        if os.path.exists(sdantlist):
-            tpset=True
-            tpx, tpy, tpz, tpd, tp_padnames, tp_nant, tp_telescopename = util.readantenna(sdantlist)
-            tp_antnames=[]
-            #for k in range(0,tp_nant): tp_antnames.append('TP%02d'%k)
-            #select an antenna from thelist
-            if sdant > tp_nant-1:
-                msg("antenna index %d is out of range. setting sdant=0"%sdant,priority="warn")
-                sdant=0
-            tp_antnames.append('TP%02d'%sdant)
-            tpx=[tpx[sdant]]
-            tpy=[tpy[sdant]]
-            tpz=[tpz[sdant]]
-            tpd=pl.array(tpd[sdant])
-            tp_padnames=[tp_padnames[sdant]]
-            tp_nant=1
-            tp_aveant=tpd.mean()
-            casalog.origin('simdata')
-            predict_sd=True
-            if not predict_uv:
-                aveant=tp_aveant
-                msg("Only single-dish observation is predicted",priority="info")
-                tp_only=True
-            # check for image size (need to be > 2*pb)
-            pb2 = 2.*1.2*0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/tp_aveant*3600.*180/pl.pi
-            minsize=min(qa.convert(model_size[0],'arcsec')['value'],qa.convert(model_size[1],'arcsec')['value'])
-            if minsize < pb2:
-                msg("skymodel should be larger than 2*primary beam. Your skymodel: %.3f arcsec < %.3f arcsec: 2*primary beam" % (minsize, pb2),priority="error")
-                del pb2,minsize
-                return False
-            del pb2,minsize
-            
-        
-
-
-
-
-        ##################################################################
         # create one figure for model and pointings - need antenna diam 
         # to determine primary beam
         #if modifymodel or setpointings:
@@ -380,15 +390,16 @@ def simdata(
                 else:
                     discard = util.statim(modelflat,plot=True,incell=model_cell)
                 lims=pl.xlim(),pl.ylim()
-                pb=1.2*0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/aveant*3600.*180/pl.pi                
+                # done above
+                # pb=1.2*0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/aveant*3600.*180/pl.pi                
                 if pb<=0 and verbose:
                     msg("unknown primary beam size for plot",priority="warn")
-                if max(max(lims)) > pb/2:
+                if max(max(lims)) > pb:
                     plotcolor='w'
                 else:
                     plotcolor='k'
 
-                if offsets.shape[1]>10 or pb<=0 or pb>pl.absolute(lims[0][0]):
+                if offsets.shape[1]>16 or pb<=0 or pb>pl.absolute(max(max(lims))):
                     pl.plot((offsets[0]+shift[0])*3600.,(offsets[1]+shift[1])*3600.,
                             plotcolor+'+',markeredgewidth=1)
                     lims=pl.xlim(),pl.ylim()
@@ -401,7 +412,7 @@ def simdata(
                             ((offsets[0,i]+shift[0])*3600,
                              (offsets[1,i]+shift[1])*3600),
                             radius=pb/2.,edgecolor=plotcolor,fill=False,
-                            label='beam',transform=pl.gca().transData))
+                            label='beam',transform=pl.gca().transData,clip_on=True))
 
                 xlim=max(abs(pl.array(lims[0])))
                 ylim=max(abs(pl.array(lims[1])))
@@ -1500,7 +1511,7 @@ def plotpb(pb,axes,lims=None):
     from matplotlib.patches import Rectangle, Circle #,Ellipse
     #box=Rectangle((lims[0][0],lims[1][0]),incx*bwidth,incy*bheight,
     box=Rectangle((lims[0][0],lims[1][0]),incx*boxsize,incy*boxsize,
-                  alpha=0.7,facecolor='w',
+                  alpha=0.3,facecolor='w',
                   transform=axes.transData) #Axes
     #beam=Ellipse((ecx,ecy),major,minor,angle=rangle,
     beam=Circle((ccx,ccy), radius=pb/2.,

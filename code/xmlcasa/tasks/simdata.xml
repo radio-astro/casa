@@ -10,7 +10,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   <shortdescription>mosaic simulation task:</shortdescription>
   <description>
     This task will simulate interferometric data.  
-    2010 version 2.0
     Please contact CASA helpdesk with questions.
   </description>
   
@@ -496,6 +495,7 @@ modifying the description doesn't work yet but its an improvement ticket.
 	<equals type="bool" value="False">
 	  <default param="antennalist"><value type="string"></value>
 	  <description>antenna info can be used to calculate the primary beam</description></default>
+	  <default param="sdantlist"><value type="string"></value></default>
 	</equals>
       </when>
       <!-- **********************************************************  -->
