@@ -1542,7 +1542,7 @@ the {\it Brown Equation} (ie, R.L. Brown's calculation of MMA sensitivity, 3Oct9
      </param>
 
      <param type="any" name="altitude" >
-     <description>site atltitude for ATM model (if tsys-atm)</description>
+     <description>site altitude for ATM model (if tsys-atm)</description>
      <any type="variant" />
      <value>5000m</value>
      </param>
@@ -1550,7 +1550,7 @@ the {\it Brown Equation} (ie, R.L. Brown's calculation of MMA sensitivity, 3Oct9
      <param type="any" name="waterheight" >
      <description>Height of water layer for ATM model (if tsys-atm)</description>
      <any type="variant" />
-     <value>2km</value>
+     <value>200m</value>
      </param>
 
      <param type="any" name="pwv" >
@@ -1584,7 +1584,7 @@ the {\it Brown Equation} (ie, R.L. Brown's calculation of MMA sensitivity, 3Oct9
 
      <param type="double" name="correfficiency">
      <description>Correlation efficiency</description>
-     <value>0.85</value>
+     <value>0.88</value>
      </param>
 
      <param type="double" name="trx">
@@ -1594,12 +1594,12 @@ the {\it Brown Equation} (ie, R.L. Brown's calculation of MMA sensitivity, 3Oct9
 
      <param type="double" name="tground">
      <description>Temperature of ground/spill [K]</description>
-     <value>280.0</value>
+     <value>270.0</value>
      </param>
 
      <param type="double" name="tcmb">
      <description>Temperature of cosmic microwave background [K]</description>
-     <value>2.7</value>
+     <value>2.73</value>
      </param>
 
      <param type="bool" name="OTF">
