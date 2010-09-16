@@ -260,7 +260,9 @@ Int MultiTermLatticeCleaner<T>::mtclean(LatticeCleanProgress* progress)
   }
  
   /* Compute all convolutions and the matrix A */
-  computeMatrixA();
+  /* If matrix is not invertible, return ! */
+  if( computeMatrixA() == -2 )
+	  return -2;
   
   /* Compute the convolutions of the current residual with all PSFs and scales */
   computeRHS();
@@ -796,6 +798,7 @@ Int MultiTermLatticeCleaner<T>::computeMatrixA()
       
       IPosition wip(4,0,0,0,0);
       wip[0]=(nx_p/2); wip[1]=(ny_p/2);
+      Int stopnow=False;
       for (Int scale=0; scale<nscales_p;scale++) 
       {
 	      // Fill up A
@@ -803,21 +806,65 @@ Int MultiTermLatticeCleaner<T>::computeMatrixA()
 	      for (Int taylor2=0; taylor2<ntaylor_p;taylor2++) 
 	      {
                 (*matA_p[scale])(taylor1,taylor2) = (*cubeA_p[IND4(taylor1,taylor2,scale,scale)])(wip);
+		/* Check for exact zeros. Usually indicative of error */
+		if( fabs( (*matA_p[scale])(taylor1,taylor2) )  == 0.0 ) stopnow = True;
 	      }
 	      
-	      os << "The Matrix A is : " << (*matA_p[scale]) << LogIO::POST;
+	      os << "The Matrix [A] is : " << (*matA_p[scale]) << LogIO::POST;
 	      
+	      if(stopnow)
+	      {
+                os << "Multi-Term Hessian has exact zeros. Not proceeding further." << LogIO::WARN << endl;
+	        return -2;
+	      }
+
+	      /* If all elements are non-zero, check by brute-force if the rows/cols 
+		 are nearly linearly dependant, making the matrix nearly singular. */
+	       Vector<Float> ratios(ntaylor_p);
+	       Float tsum=0.0;
+	       for(Int taylor1=0; taylor1<ntaylor_p-1; taylor1++)
+	       {
+	           for(Int taylor2=0; taylor2<ntaylor_p; taylor2++)
+		     ratios[taylor2] = (*matA_p[scale])(taylor1,taylor2) / (*matA_p[scale])(taylor1+1,taylor2);
+                   tsum=0.0;
+		   for(Int taylor2=0; taylor2<ntaylor_p-1; taylor2++)
+		      tsum += fabs(ratios[taylor2] - ratios[taylor2+1]);
+		   tsum /= ntaylor_p-1;
+		   if(tsum < 1e-04) stopnow=True;
+
+		   //cout << "Ratios for row " << taylor1 << " are " << ratios << endl;
+		   //cout << "tsum : " << tsum << endl;
+	       }
+
+	      if(stopnow)
+	      {
+                os << "Multi-Term Hessian has linearly-dependent rows/cols. Not proceeding further." << LogIO::WARN << endl;
+	        return -2;
+	      }
+	          
+	      /* Try to invert the matrix. If it fails, return. 
+	         The invertSymPosDef will check if it's positive definite or not. 
+	         By construction, it should be pos-def. */
 	      // Compute inv(A) 
 	      // Use MatrixMathLA::invert
-	      // of Use invertSymPosDef...
+	      // or Use invertSymPosDef...
 	      //
-	      Double deter=0.0;
-	      invert((*invMatA_p[scale]),deter,(*matA_p[scale]));
-	      //invertSymPosDef((*invMatA_p[scale]),deter,(*matA_p[scale]));
-	      if(adbg)os << "A matrix determinant : " << deter << LogIO::POST;
-	      //if(fabs(deter) < 1.0e-08) os << "SINGULAR MATRIX !! STOP!! " << LogIO::EXCEPTION;
-	      //if(adbg)os << "Lapack Cholesky Decomp Matrix inv(A) is : " << (*invMatA_p[scale]) << LogIO::POST;
-	      os << "Matrix Inverse : inv(A) : " << (*invMatA_p[scale]) << LogIO::POST;
+	      try
+	      {
+	             Double deter=0.0;
+	             //invert((*invMatA_p[scale]),deter,(*matA_p[scale]));
+	             //os << "Matrix Inverse : inv(A) : " << (*invMatA_p[scale]) << LogIO::POST;
+	      
+	             invertSymPosDef((*invMatA_p[scale]),deter,(*matA_p[scale]));
+	             os << "Lapack Cholesky Decomposition Inverse of [A] is : " << (*invMatA_p[scale]) << LogIO::POST;
+	             //if(adbg)os << "A matrix determinant : " << deter << LogIO::POST;
+	             //if(fabs(deter) < 1.0e-08) os << "SINGULAR MATRIX !! STOP!! " << LogIO::EXCEPTION;
+	      }
+	      catch(AipsError &x)
+	      {
+		      os << "Cannot Invert matrix : " << x.getMesg() << LogIO::WARN;
+		      return -2;
+	      }
 	      
       }
       
