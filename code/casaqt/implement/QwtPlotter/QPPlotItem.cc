@@ -152,7 +152,10 @@ QPPlotItem::~QPPlotItem() { }
 PlotCanvas* QPPlotItem::canvas() const { return m_canvas; }
 
 String QPPlotItem::title() const {
-    return QwtPlotItem::title().text().toStdString(); }
+    String s = QwtPlotItem::title().text().toStdString(); 
+    return s;
+    
+}
 
 void QPPlotItem::setTitle(const String& newTitle) {
     if(newTitle != title()) {
@@ -410,7 +413,8 @@ void QPDrawThread::run() {
         
         // Update operation.
         if(!op.null()) {
-            title = item->title();
+//            title = item->title();
+            title = item->canvas()->title();
             if(title.empty()) title = item->className();
             op->setCurrentStatus("Drawing item \"" + title + "\".");
         }
