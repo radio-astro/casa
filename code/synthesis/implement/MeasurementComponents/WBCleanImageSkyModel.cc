@@ -287,6 +287,12 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
            
 	   }// end of model loop
 
+	   /* Exit without further ado if MTLC cannot invert matrices */
+	   if(stopflag == -2)
+	   {
+	      os << "Cannot invert Multi-Term Hessian matrix. Please check the reference-frequency and ensure that the number of frequency-channels in the selected data >= nterms" << LogIO::WARN;
+	      break;
+	   }
 	   
 	   /* Do the prediction and residual computation for all models. */
 	   /* If exiting, call 'solveResiduals' with modelToMS = True to write the model to the MS */
