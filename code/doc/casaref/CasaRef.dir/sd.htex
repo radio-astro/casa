@@ -1347,10 +1347,11 @@ string
   baseline fitting, etc. 
   
   The 'insitu' option often appears in the functions. This parameter 
-  controls if a certain operation is applied to the scantable itself 
+  controls if a certain operation is applied to this scantable 
   (true) or return another scantable that is a result of the operation 
   (false). 
-  In former case, the original scantable will be lost. 
+  In former case, the original scantable loaded will be lost 
+  although the data on disk will be kept. 
   The default value of the option depends on sd.rcParams dictionary. 
   See \ahlink{sd.list\_rcparameters}{sd:sd.list_rcparameters} for 
   details about sd.rcParams.
@@ -1442,7 +1443,7 @@ Methods
 
 	\ahlink{flag}{sd:sd.scantable.flag} & Flag selected data using specified mask (channel based flag) \\
 
-	\ahlink{flag\_nan}{sd:sd.scantable.flag_nan} &Flag NaN values\\
+	\ahlink{flag\_nans}{sd:sd.scantable.flag_nans} &Flag NaN values\\
 
 	\ahlink{flag\_row}{sd:sd.scantable.flag_row} &Flag spectra based on specified rows (row based flag)\\
 
@@ -1604,207 +1605,725 @@ Methods
 
 \end{longtable}
 
+
+%% sd.scantable.add
 \newpage
 \ahfunction{sd.scantable.add}{Return a scan where all spectra have the offset added}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return a scan where all spectra have the offset added.
+   If insitu is True, or insitu is None and sd.rcParams['insitu'] is True, 
+   the method will not return the result, but apply operation on this scantable. 
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+offset && \multicolumn{2}{p{3.36in}|}{The offset}\\
+& &allowed: & float \\
+& &Default: & 
+\\
+insitu && \multicolumn{2}{p{3.36in}|}{If False a new scantable is returned}\\
+& &allowed: & bool \\
+& &Default: & None (use default value)\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+scantable
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.auto_poly_baseline
 \newpage
 \ahsdfunction{sd.scantable.auto\_poly\_baseline}{sd.scantable.auto_poly_baseline}{Perform automatic line finding and baseline subtraction}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Return a scan which has been baselined (all rows by default) by a polynomial.
+    Spectral lines are detected first using linefinder and masked out
+    to avoid them affecting the baseline solution.
+
+    The edge argument is an optional number of channel to drop at the edge of
+    spectrum. If only one value is specified, the same number will be dropped from
+    both sides of the spectrum. Default is to keep all channels. Nested tuples 
+    represent individual edge selection for different IFs (a number of spectral
+    channels can be different).
+
+    The threshold and chan\_avg\_limit arguments are linefinder options.
+    The former is the threshold used by line finder. It is better to
+    keep it large as only strong lines affect the baseline solution.
+    The later is  a maximum number of consequtive spectral channels to
+    average during the search of weak and broad lines.
+    The default is no averaging (and no search for weak
+    lines). If such lines can affect the fitted baseline
+    (e.g. a high order polynomial is fitted), increase this
+    parameter (usually values up to 8 are reasonable). Most
+    users of this method should find the default value sufficient.
+    See \ahlink{linefinder}{sd:sd.linefinder} for more details on these options.
+
+    You can verify and decide whether you apply the fit result or not, if plot argument is True.
+    In that case, you have to answer 'y' or 'n' for each spectra so that setting True is not 
+    recommended for large dataset.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+mask && \multicolumn{2}{p{3.36in}|}{An optional mask retreived from scantable}\\
+& &allowed: & bool array \\
+& &Default: & None (no mask)
+\\
+edge && \multicolumn{2}{p{3.36in}|}{An optional number of channel to drop at the edge of spectrum}\\
+& &allowed: & integer, integer array \\
+& &Default: & (0,0) 
+\\
+order && \multicolumn{2}{p{3.36in}|}{The order of the polynomial}\\
+& &allowed: & integer \\
+& &Default: & 0
+\\
+ && \multicolumn{2}{p{3.36in}|}{The threshold used by line finder}\\
+& &allowed: & float \\
+& &Default: & 3
+\\
+chan\_avg\_limit && \multicolumn{2}{p{3.36in}|}{A maximum number of consequtive spectral channels to average during the search}\\
+& &allowed: & int \\
+& &Default: & 1
+\\
+plot && \multicolumn{2}{p{3.36in}|}{Plot the fit and the residual.}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+insitu && \multicolumn{2}{p{3.36in}|}{If False a new scantable is returned}\\
+& &allowed: & bool \\
+& &Default: & None (use default value)\\
+rows && \multicolumn{2}{p{3.36in}|}{Row numbers of spectra to be processed}\\
+& &allowed: & integer, integer array \\
+& &Default: & None (process all rows)
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+scantable
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+        asap_init()
+        scan = sd.scantable('OrionS_rawACSmod_cal',average=False)
+        scan2 = scan.auto_poly_baseline(order=7, insitu=False)
+\end{verbatim}
+
+
+
+%% sd.scantable.auto_quotient
 \newpage
 \ahsdfunction{sd.scantable.auto\_quotient}{sd.scantable.auto_quotient}{Automatic quotient for coordinated scans}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    This function allows to build quotients automatically.
+    It assumes the observation to have the same number of
+    "ons" and "offs".
+
+    The formula to get result depends on the preserve paramter. If it is True, the continuum will be 
+    preserved while if it is False, the continuum will be removed. The equation used are
+
+    \begin{displaymath}
+    T_{\rm a}^* = T_{\rm sys}^{\rm OFF} { ON \over OFF } - T_{\rm sys}^{\rm OFF},
+    \end{displaymath}
+   
+    if preserve is True, while
+
+    \begin{displaymath}
+    T_{\rm a}^* = T_{\rm sys}^{\rm OFF} { ON \over OFF } - T_{\rm sys}^{\rm ON},
+    \end{displaymath}
+
+    if preserve is False.
+
+    The mode argument controls the on/off decition mode. If mode is 'paired' (default), 
+    it identifies 'off' scans by the
+    trailing '\_R' (Mopra/Parkes) or '\_e'/'\_w' (Tid) and matches on/off pairs from the observing pattern.
+    On the other hand, 'time' finds the closest off in time.
+
+    Note that the verify argument is not yet implemented.
+
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+preserve && \multicolumn{2}{p{3.36in}|}{You can preserve the continuum or remove it}\\
+& &allowed: & bool \\
+& &Default: & True
+\\
+mode && \multicolumn{2}{p{3.36in}|}{The on/off decition mode}\\
+& &allowed: & string \\
+& &Default: & 'paired'
+\\
+verify && \multicolumn{2}{p{3.36in}|}{Verify result (not yet implemented)} \\
+& &allowed: & bool \\
+& &Default: & False
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+scantable
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.average_beam
 \newpage
 \ahsdfunction{sd.scantable.average\_beam}{sd.scantable.average_beam}{Average beams together for multi-beam observation}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Average the Beams together.
+
+    The mask argument is an optional mask defining the region, where the
+    averaging will be applied. The output will have all specified points masked.
+
+    The weight argument specifies weighting scheme. Valid options are:
+
+    \begin{longtable}{rl}
+    'none': & no weight (default) \\
+    'var': & 1/var(spec) weighted \\
+    'tsys': & 1/Tsys**2 weighted \\
+    \end{longtable}
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+mask && \multicolumn{2}{p{3.36in}|}{An optional mask defining the region}\\
+& &allowed: & bool array \\
+& &Default: & None
+\\
+weight && \multicolumn{2}{p{3.36in}|}{Weighting scheme}\\
+& &allowed: & string \\
+& &Default: & 'none'
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+scantable
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.average_pol
 \newpage
 \ahsdfunction{sd.scantable.average\_pol}{sd.scantable.average_pol}{Average polarizations together}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Average the Polarisations together.
+ 
+    The mask argument is an optional mask defining the region, where the
+    averaging will be applied. The output will have all specified points masked.
+
+    The weight argument specifies weighting scheme. Valid options are:
+
+    \begin{longtable}{rl}
+    'none': & no weight (default) \\
+    'var': & 1/var(spec) weighted \\
+    'tsys': & 1/Tsys**2 weighted \\
+    \end{longtable}
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+mask && \multicolumn{2}{p{3.36in}|}{An optional mask defining the region}\\
+& &allowed: & bool array \\
+& &Default: & None
+\\
+weight && \multicolumn{2}{p{3.36in}|}{Weighting scheme}\\
+& &allowed: & string \\
+& &Default: & 'none'
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+scantable
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.average_time
 \newpage
 \ahsdfunction{sd.scantable.average\_time}{sd.scantable.average_time}{Return time average of a scan}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Return the (time) weighted average of a scan.
+
+    The weight argument specifies weighting scheme. Valid options are:
+
+    \begin{longtable}{rl}
+    'none': & no weight \\
+    'var': & 1/var(spec) weighted \\
+    'tsys': & 1/Tsys**2 weighted \\
+    'tint': & integration time weighted (default) \\
+    'tintsys': & Tint/Tsys**2 weightd \\
+    'median': & median averaging \\
+    \end{longtable}
+ 
+    The align argument is effective only for channel. 
+    If it is True,  align the spectra in velocity before averaging. It takes
+    the time of the first spectrum as reference time.
+
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+mask && \multicolumn{2}{p{3.36in}|}{An optional mask (only used for 'var' and 'tsys' weighting)}\\
+& &allowed: & bool array \\
+& &Default: & None
+\\
+scanav && \multicolumn{2}{p{3.36in}|}{True averages each scan separately, False averages all scans together}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+weight && \multicolumn{2}{p{3.36in}|}{Weighting scheme}\\
+& &allowed: & string \\
+& &Default: & 'none'
+\\
+align && \multicolumn{2}{p{3.36in}|}{Align the spectral in velocity before averaging}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+        asap_init()
+        scan = sd.scantable('OrionS_rawACSmod_cal',average=False)
+        # time average the scantable without using a mask
+        newscan = scan.average_time()
+\end{verbatim}
+
+
+%% sd.scantable.bin
 \newpage
 \ahfunction{sd.scantable.bin}{Perform binning of spectra}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Return a scan where all spectra have been binned up.
+    If insitu is True, or insitu is None and sd.rcParams['insitu'] is True, 
+    the method will not return the result, but apply operation on this scantable. 
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+width && \multicolumn{2}{p{3.36in}|}{The bin width in pixels}\\
+& &allowed: & integer \\
+& &Default: & 5
+\\
+insitu && \multicolumn{2}{p{3.36in}|}{If False a new scantable is returned}\\
+& &allowed: & bool \\
+& &Default: & None (use default value)
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+scantable
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.chan2data
 \newpage
 \ahfunction{sd.scantable.chan2data}{Return channel/frequency/velocity and spectral value at an arbitrary row and channel}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Returns channel/frequency/velocity and spectral value
+    at an arbitrary row and channel in the scantable.
+
+    The returned value is a tuple with length of 2.
+    The first element is a dictionary that contains an unit and a value for the abcissa, while 
+    the second one is also a dictionary that contains an unit and a value for the ordinate.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+rowno && \multicolumn{2}{p{3.36in}|}{A row number in the scantable}\\
+& &allowed: & integer \\
+& &Default: & 0
+\\
+chan && \multicolumn{2}{p{3.36in}|}{A channel in the scantable}\\
+& &allowed: & integer \\
+& &Default: & 0 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+list of dictionary
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+   asap_init()
+   s=sd.scantable('OrionS_rawACSmod_cal',average=False)
+   s.chan2data(rowno=0,chan=0)
+   ({'unit': 'channel', 'value': 0.0}, {'unit': 'K', 'value': 1.7028001546859741})
+\end{verbatim}
+
+
+%% sd.scantable.clip
 \newpage
 \ahfunction{sd.scantable.clip}{Flag data by its spectral value}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Flag the selected data outside a specified range (in channel-base).
+
+    The method requires to set upper and lower threshold for spectral value.
+    If clipoutside is True, the data outside the range will be flagged/unflagged.
+    On the other hand, if it is False, the data inside the range will be flagged/unflagged.
+    The operation if flag or unflag is controlled by the unflag argument.
+
+    Note that the operation will always be applied to this scantable regardless of 
+    the value of sd.rcParams['insitu']. 
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+uthres && \multicolumn{2}{p{3.36in}|}{Upper threshold}\\
+& &allowed: & float \\
+& &Default: & None
+\\
+dthres && \multicolumn{2}{p{3.36in}|}{Lower threshold}\\
+& &allowed: & float \\
+& &Default: & None
+\\
+clipoutside && \multicolumn{2}{p{3.36in}|}{True for flagging data outside the range, False for flagging data inside the range}\\
+& &allowed: & bool \\
+& &Default: & True
+\\
+unflag && \multicolumn{2}{p{3.36in}|}{If True, unflag the data}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.convert_flux
 \newpage
 \ahsdfunction{sd.scantable.convert\_flux}{sd.scantable.convert_flux}{Return a scan where all spectra are converted to Jy or K}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Return a scan where all spectra are converted to either
+    Jansky or Kelvin depending upon the flux units of the scan table.
+    By default the function tries to look the values up internally.
+    If it can't find them (or if you want to over-ride), you must
+    specify EITHER jyperk OR eta (and D which it will try to look up
+    also if you don't set it). jyperk takes precedence if you set both.
+
+    If insitu is True, or insitu is None and sd.rcParams['insitu'] is True, 
+    the method will not return the result, but apply operation on this scantable. 
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+jyperk && \multicolumn{2}{p{3.36in}|}{The Jy/K conversion factor}\\
+& &allowed: & float \\
+& &Default: & None
+\\
+eta && \multicolumn{2}{p{3.36in}|}{The aperture efficiency}\\
+& &allowed: & float \\
+& &Default: & None
+\\
+d && \multicolumn{2}{p{3.36in}|}{The geometric diameter (metres)}\\
+& &allowed: & float \\
+& &Default: & None
+\\
+insitu && \multicolumn{2}{p{3.36in}|}{If False a new scantable is returned}\\
+& &allowed: & bool \\
+& &Default: & None
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+scantable
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.convert_pol
 \newpage
 \ahsdfunction{sd.scantable.convert\_pol}{sd.scantable.convert_pol}{Convert data to a different polarization type}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Convert the data to a different polarisation type.
+    Note that you will need cross-polarisation terms for most conversions.
+
+    The poltype argument specifies the new polarization type. Valid types are: 
+    'linear', 'circular', 'stokes', and 'linpol'.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+poltype && \multicolumn{2}{p{3.36in}|}{The new polarization type}\\
+& &allowed: & string \\
+& &Default: & None
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+scantable
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.copy
 \newpage
 \ahfunction{sd.scantable.copy}{Return a copy of this scantable}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Return a copy of this scantable.
+
+    Note that this makes a full (deep) copy. scan2 = scan1 makes a reference.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+scantable
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+   asap_init()
+   s=sd.scantable('OrionS_rawACSmod_cal',average=True)
+   # deep copy
+   copiedscan=s.copy()
+   # this makes a reference
+   s2=s
+\end{verbatim}
+
+
+
+%% sd.scantable.create_mask
 \newpage
 \ahsdfunction{sd.scantable.create\_mask}{sd.scantable.create_mask}{Return a bool array based on [min,max] windows}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Compute and return a mask based on [min, max] windows.
+    The specified windows are to be INCLUDED, when the mask is
+    applied.
+
+    The mask window should be given as a pairs of start/end points, e.g. [min, max], [min2, max2], ...
+    If the invert argument specified as True, return an inverted mask, i.e. the regions
+    specified are EXCLUDED.
+    The mask is created using the specified row for unit conversions. This is only necessary if frequency 
+    varies over rows.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+ && \multicolumn{2}{p{3.36in}|}{Pairs of start/end points}\\
+& &allowed: & list or sequence of lists \\
+& &Default: & 
+\\
+invert && \multicolumn{2}{p{3.36in}|}{Determine the operation is inclusive or exclusive}\\
+& &allowed: & bool \\
+& &Default: & False (inclusive)
+\\
+row && \multicolumn{2}{p{3.36in}|}{create the mask using the specified row for unit conversions}\\
+& &allowed: & integer \\
+& &Default: & 0
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+        asap_init()
+        scan = sd.scantable('OrionS_rawACSmod_cal',average=True)
+        scan.set_unit('channel')
+        # a)
+        msk = scan.create_mask([400, 500], [800, 900])
+        # masks everything outside 400 and 500
+        # and 800 and 900 in the unit 'channel'
+    
+        # b)
+        msk = scan.create_mask([400, 500], [800, 900], invert=True)
+        # masks the regions between 400 and 500
+        # and 800 and 900 in the unit 'channel'
+    
+        # c)
+        #mask only channel 400
+        msk =  scan.create_mask([400])
+\end{verbatim}
+
+
+%% sd.scantable.drop_scan
 \newpage
 \ahsdfunction{sd.scantable.drop\_scan}{sd.scantable.drop_scan}{Return a new scantable where the specified scan number(s) are dropped}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Return a new scantable where the specified scan number(s) has(have)
+    been dropped.
+
+    It always returns a new scantable regardless of sd.rcParams['insitu'].
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+scanid && \multicolumn{2}{p{3.36in}|}{A (list of) scan number(s)}\\
+& &allowed: & integer, integer array \\
+& &Default: & None
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+scantable
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.flag
 \newpage
 \ahfunction{sd.scantable.flag}{Flag selected data using specified mask (channel based flag)}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Flag the selected data using an optional channel mask. 
+    The appropriate value of the mask can be created with \ahlink{create\_mask}{sd:sd.scantable.create_mask}.
+    If no mask is specified, all channels are flagged/unflagged depending on the unflag argument. 
+
+    Note that the operation will always be applied to this scantable regardless of 
+    the value of sd.rcParams['insitu']. 
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+mask && \multicolumn{2}{p{3.36in}|}{An optional channel mask}\\
+& &allowed: & bool array \\
+& &Default: & None (all channels)
+\\
+unflag && \multicolumn{2}{p{3.36in}|}{If True, unflag the data}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.flag_nans
 \newpage
-\ahsdfunction{sd.scantable.flag\_nan}{sd.scantable.flag_nan}{Flag NaN values}
+\ahsdfunction{sd.scantable.flag\_nans}{sd.scantable.flag_nans}{Flag NaN values}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Utility function to flag NaN values in the scantable.
+ 
+    Note that the operation will always be applied to this scantable regardless of 
+    the value of sd.rcParams['insitu']. 
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
@@ -1812,545 +2331,1325 @@ Methods
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.flag_row
 \newpage
 \ahsdfunction{sd.scantable.flag\_row}{sd.scantable.flag_row}{Flag spectra based on specified rows (row based flag)}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Flag the selected data in row-based manner.
+ 
+    Note that the operation will always be applied to this scantable regardless of 
+    the value of sd.rcParams['insitu']. 
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+rows && \multicolumn{2}{p{3.36in}|}{List of row numbers to be flagged}\\
+& &allowed: & integer, integer array \\
+& &Default: & []
+\\
+unflag && \multicolumn{2}{p{3.36in}|}{If True, unflag the data}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.freq_align
 \newpage
 \ahsdfunction{sd.scantable.freq\_align}{sd.scantable.freq_align}{Perform frequency alignment}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Return a scan where all rows have been aligned in frequency/velocity.
+    The alignment frequency frame (e.g. LSRK) is that set by function
+    set_freqframe.
+
+    The reference time to align can be specified as reftime argument. By default, the 
+    time of the first row of data is used.
+    The method argument specifies interpolation method for regridding the spectra. 
+    Valid options are 'nearest', 'linear', 'cubic' (default), and 'spline'.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+reftime && \multicolumn{2}{p{3.36in}|}{Reference time to align at.}\\
+& &allowed: & string\\
+& &Default: & None (use first row of data)
+\\
+method && \multicolumn{2}{p{3.36in}|}{Interpolation method for regridding the spectra}\\
+& &allowed: & string \\
+& &Default: & 'cubic'
+\\
+insitu && \multicolumn{2}{p{3.36in}|}{If False a new scantable is returned}\\
+& &allowed: & bool \\
+& &Default: & None
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.freq_switch
 \newpage
 \ahsdfunction{sd.scantable.freq\_switch}{sd.scantable.freq_switch}{Apply frequency switching to the data}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Apply frequency switching to the data.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+insitu && \multicolumn{2}{p{3.36in}|}{If False a new scantable is returned}\\
+& &allowed: & bool \\
+& &Default: & None
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+scantable
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.gain_el
 \newpage
 \ahsdfunction{sd.scantable.gain\_el}{sd.scantable.gain_el}{Apply gain-elevation correction based on user-provided correction factors}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Return a scan after applying a gain-elevation correction.
+    The correction can be made via either a polynomial or a
+    table-based interpolation (and extrapolation if necessary).
+    You specify polynomial coefficients, an ascii table or neither.
+    If you specify neither, then a polynomial correction will be made
+    with built in coefficients known for certain telescopes (an error
+    will occur if the instrument is not known).
+    The data and Tsys are *divided* by the scaling factors.
+
+    The polynomial coefficients to compute a gain-elevation correction should be given 
+    as that of a function of elevation in degrees.
+    Contents of the ascii table specified by filename argument is correction factors 
+    as a function of time and elevation (in degree).
+    The first row of the ascii file must give the column names and these MUST include columns
+    "ELEVATION" (degrees) and "FACTOR" (multiply data by this) somewhere.
+    The second row must give the data type of the column. Use 'R' for Real and 'I' for Integer.
+    An example file would be (actual factors are arbitrary) :
+
+    \begin{longtable}{lll}
+                     TIME & ELEVATION & FACTOR \\
+                     R & R & R \\
+                     0.1 & 0 & 0.8 \\
+                     0.2 & 20 & 0.85 \\
+                     0.3 & 40 & 0.9 \\
+                     0.4 & 60 & 0.85 \\
+                     0.5 & 80 & 0.8 \\
+                     0.6 & 90 & 0.75 \\
+    \end{longtable}
+
+    The interpolation method can be specified by method argument. Valid options are 
+    'nearest', 'linear' (default), 'cubic', and 'spline'.
+
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+poly && \multicolumn{2}{p{3.36in}|}{Polynomial coefficients to comput a gain-elevation correction}\\
+& &allowed: & float array \\
+& &Default: & None
+\\
+filename && \multicolumn{2}{p{3.36in}|}{The name of an ascii file holding correction factors}\\
+& &allowed: & string \\
+& &Default: & ''
+\\
+method && \multicolumn{2}{p{3.36in}|}{Interpolation method when correcting from a table}\\
+& &allowed: & string \\
+& &Default: & 'linear'
+\\
+insitu && \multicolumn{2}{p{3.36in}|}{If False a new scantable is returned}\\
+& &allowed: & bool \\
+& &Default: & None
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+scantable
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.get_abcissa
 \newpage
 \ahsdfunction{sd.scantable.get\_abcissa}{sd.scantable.get_abcissa}{Get the abcissa values and format string that represents current coordinate setup}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Get the abcissa in the current coordinate setup for the currently
+    selected Beam/IF/Pol.
+    The method returns the abcissa values and the format string as a dictionary.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+rowno && \multicolumn{2}{p{3.36in}|}{An optional row number in the scantable}\\
+& &allowed: & integer \\
+& &Default: & 0
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+dictionary
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.get_antennaname
 \newpage
 \ahsdfunction{sd.scantable.get\_antennaname}{sd.scantable.get_antennaname}{Get antenna name}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return a name of antenna observed.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+string
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.get_azimuth
 \newpage
 \ahsdfunction{sd.scantable.get\_azimuth}{sd.scantable.get_azimuth}{Get a list of azimuth during the observation}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Get a list of azimuths for the observations.
+    Return a float for each integration in the scantable.
+    The unit is radian.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+row && \multicolumn{2}{p{3.36in}|}{Row no of integration}\\
+& &allowed: & integer \\
+& &Default: & -1 (all rows)
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+float, float array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.get_column_names
 \newpage
-\ahsdfunction{sd.scantable.get\_column\_names}{sd.scanatable.get_column_names}{Get a list of column names in the main table}
+\ahsdfunction{sd.scantable.get\_column\_names}{sd.scantable.get_column_names}{Get a list of column names in the main table}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Return a  list of column names in the main table, which can be used for selection.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+string array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.get_coordinate
 \newpage
 \ahsdfunction{sd.scantable.get\_coordinate}{sd.scantable.get_coordinate}{Return the spectral coordinate for a given row as a \ahlink{coordinate}{sd:sd.coordinate} object}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Return the (spectral) coordinate for a a given 'rowno'.
+
+    Notes:
+   
+    \begin{itemize}
+    \item This coordinate is only valid until a scantable method modifies the frequency axis.
+    \item This coordinate does contain the original frequency set-up
+          NOT the new frame. The conversions however are done using the user
+          specified frame (e.g. LSRK/TOPO). To get the 'real' coordinate,
+          use \ahlink{scantable.freq\_align}{sd:sd.scantable.freq_align} first. Without it there is no closure,
+          i.e.:: \\
+    
+          \begin{verbatim}
+              c = myscan.get_coordinate(0)
+              c.to_frequency(c.get_reference_pixel()) != c.get_reference_value()
+          \end{verbatim}
+    \end{itemize}
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+rowno && \multicolumn{2}{p{3.36in}|}{The row number for the spectral coordinate}\\
+& &allowed: & integer \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+sd.coordinate.coordinate
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.get_direction
 \newpage
 \ahsdfunction{sd.scantable.get\_direction}{sd.scantable.get_direction}{Get a list of positions on the sky as a string}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Get a list of Positions on the sky (direction) for the observations.
+    Return a string for each integration in the scantable.
+
+    To get float value for positions, use \ahlink{get\_directionval}{sd:sd.scantable.get_directionval}.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+row && \multicolumn{2}{p{3.36in}|}{Row no of integration}\\
+& &allowed: & integer \\
+& &Default: & -1 (all rows)
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+string, string array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+   asap_init()
+   s=sd.scantable('OrionS_rawACSmod_cal',average=False)
+   # get_direction() returns string expression of position
+   s.get_direction(0)
+   '05:35:13.5 -05.24.08.2'
+   # s.get_directionval() returns float value of position
+   s.get_directionval(0)
+   [1.4626913601468896, -0.0942875343295448]
+\end{verbatim}
+
+
+%% sd.scantable.get_directionval
 \newpage
 \ahsdfunction{sd.scantable.get\_directionval}{sd.scantable.get_directionval}{Get a list of positions on the sky as a float}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Get a list of Positions on the sky (direction) for the observations.
+    Return a float for each integration in the scantable.
+    The unit is radian.
+
+    To get string expression for positions, use \ahlink{get\_direction}{sd:sd.scantable.get_direction}.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+row && \multicolumn{2}{p{3.36in}|}{Row no of integration}\\
+& &allowed: & integer \\
+& &Default: & -1 (all rows)
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+float array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+   asap_init()
+   s=sd.scantable('OrionS_rawACSmod_cal',average=False)
+   # get_direction() returns string expression of position
+   s.get_direction(0)
+   '05:35:13.5 -05.24.08.2'
+   # s.get_directionval() returns float value of position
+   s.get_directionval(0)
+   [1.4626913601468896, -0.0942875343295448]
+\end{verbatim}
+
+
+%% sd.scantable.get_elevation
 \newpage
 \ahsdfunction{sd.scantable.get\_elevation}{sd.scantable.get_elevation}{Get a list of elevation during the observation}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Get a list of elevations for the observations.
+    Return a float for each integration in the scantable.
+    The unit is radian.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+row && \multicolumn{2}{p{3.36in}|}{Row no of integration}\\
+& &allowed: & integer \\
+& &Default: & -1 (all rows)
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+float, float array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.get_fit
 \newpage
 \ahsdfunction{sd.scantable.get\_fit}{sd.scantable.get_fit}{Get the stored fits for a row in scantable}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Print or return the stored fits for a row in the scantable
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+row && \multicolumn{2}{p{3.36in}|}{The row which the fit has been applied to}\\
+& &allowed: & integer \\
+& &Default: & 0
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+dictionary
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.get_fluxunit
 \newpage
 \ahsdfunction{sd.scantable.get\_fluxunit}{sd.scantable.get_fluxunit}{Get a flux unit}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return a flux unit string.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+string
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.get_inttime
 \newpage
 \ahsdfunction{sd.scantable.get\_inttime}{sd.scantable.get_inttime}{Get a list of integration times for the observation}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Get a list of integration times for the observations.
+    Return a time in seconds for each integration in the scantable.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+row && \multicolumn{2}{p{3.36in}|}{The row which the fit has been applied to}\\
+& &allowed: & integer \\
+& &Default: & -1 (all rows)
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+float, float array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.get_mask
 \newpage
 \ahsdfunction{sd.scantable.get\_mask}{sd.scantable.get_mask}{Get mask for the specified row as a bool list}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Return the mask for the current row in the scantable as a list.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+rowno && \multicolumn{2}{p{3.36in}|}{The row number to retrieve the mask from}\\
+& &allowed: & integer \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+bool array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.get_mask_indices
 \newpage
 \ahsdfunction{sd.scantable.get\_mask\_indices}{sd.scantable.get_mask_indices}{Compute and return lists of mask start indices and mask end indices from the given bool array}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Compute and Return lists of mask start indices and mask end indices.
+    Returned value is a list of mask start indices and that of mask end indices,
+    i.e., ([istart1,istart2,....], [iend1,iend2,....]).
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+mask && \multicolumn{2}{p{3.36in}|}{Channel mask, created with create\_mask}\\
+& &allowed: & bool array \\
+& &Default: & None
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+integer array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+   asap_init()
+   s=sd.scantable('OrionS_rawACSmod_cal',average=False)
+   # this is an example to show how get_mask_indices() works
+   s.get_mask_indices(s.create_mask([1000,2000],[4000,5000]))
+   ([1000, 4000], [2000, 5000])
+\end{verbatim}
+
+
+%% sd.scantable.get_masklist
 \newpage
 \ahsdfunction{sd.scantable.get\_masklist}{sd.scantable.get_masklist}{Compute and return a list of mask windows [min,max] from the given bool array}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Compute and return a list of mask windows, [min, max].
+    Returned value is pairs of start/end points (inclusive) specifying the masked regions, 
+    i.e. [min, max], [min2, max2], ...
+ 
+    The row argument specifies the row to use for unit conversions, default is row=0.
+    It is only necessary if frequency varies over rows.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+mask && \multicolumn{2}{p{3.36in}|}{Channel mask, created with create\_mask}\\
+& &allowed: & bool array \\
+& &Default: & None
+\\
+row && \multicolumn{2}{p{3.36in}|}{calculate the masklist using the specified row for unit conversion}\\
+& &allowed: & integer \\
+& &Default: & 0
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+float array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+   asap_init()
+   s=sd.scantable('OrionS_rawACSmod_cal',average=False)
+   # this is an example to show how get_mask_indices() works
+   s.get_masklist(s.create_mask([1000,2000],[4000,5000]))
+   ([1000.0, 2000.0], [4000.0, 5000.0])
+\end{verbatim}
+
+
+%% sd.scantable.get_parangle
 \newpage
 \ahsdfunction{sd.scantable.get\_parangle}{sd.scantable.get_parangle}{Get a list of parallactic angles for the observation}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Get a list of parallactic angles for the observations.
+    Return a float for each integration in the scantable.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+row && \multicolumn{2}{p{3.36in}|}{Row no of integration}\\
+& &allowed: & integer \\
+& &Default: & -1 (all rows)
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+float, float array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.get_restfreqs
 \newpage
 \ahsdfunction{sd.scantable.get\_restfreqs}{sd.scantable.get_restfreqs}{Get the rest frequency(s) stored in the scantable}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Get the restfrequency(s) stored in this scantable.
+    The return value(s) are always of unit 'Hz'
+    The method returns a dictionary containing ids and a list of doubles for each id.
+
+    The rest frequency is stored in MOLECULES subtable of the scantable. 
+    Rows in MOLECULES subtable is referred from main table by MOLECULE_ID.
+    You can specify a list of that id using ids argument to retrieve particular rest frequency(s). 
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+ids && \multicolumn{2}{p{3.36in}|}{A list of MOLECULE_ID for that rest frequency(s) to be retrieved}\\
+& &allowed: & integer \\
+& &Default: & None (retrieve all)
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+dictionary
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.get_row
 \newpage
 \ahsdfunction{sd.scantable.get\_row}{sd.scantable.get_row}{Return a scantable with single row}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Select a row in the scantable.
+    Return a scantable with single row.
+ 
+    If insitu is True, or insitu is None and sd.rcParams['insitu'] is True, 
+    the method will not return the result, but apply operation on this scantable. 
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+row && \multicolumn{2}{p{3.36in}|}{Row no of integration}\\
+& &allowed: & integer \\
+& &Default: & 0
+\\
+insitu && \multicolumn{2}{p{3.36in}|}{If False a new scantable is returned}\\
+& &allowed: & bool \\
+& &Default: & None
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+scantable
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.get_row_selector
 \newpage
 \ahsdfunction{sd.scantable.get\_row\_selector}{sd.scantable.get_row_selector}{Return a \ahlink{selector}{sd:sd.selector} object that only selects target row}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return a \ahlink{selector}{sd:sd.selector} object that only selects target row.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+rowno && \multicolumn{2}{p{3.36in}|}{The row number to select}\\
+& &allowed: & integer \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+selector
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.get_scan
 \newpage
 \ahsdfunction{sd.scantable.get\_scan}{sd.scantable.get_scan}{Return a specified scan(s) specified by scan number or source name as a new scantable}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Return a specific scan (by scanno) or collection of scans (by
+    source name) in a new scantable.
+    In both case, you can set selection criteria to scanid argument.
+    For source name, unix-style patterns are accepted for source name matching, e.g.
+    '*\_R' gets all 'ref scans.
+
+
+    Note that \ahlink{drop\_scan}{sd:sd.scantable.drop_scan} is an inverse operation.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+scanid && \multicolumn{2}{p{3.36in}|}{A (list of) scanno or a source name}\\
+& &allowed: & integer, integer array, string \\
+& &Default: & None
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+scantable
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+        asap_init()
+        scan=sd.scantable('data.asap')
+        # get all scans containing the source '323p459'
+        newscan = scan.get_scan('323p459')
+        # get all 'off' scans
+        refscans = scan.get_scan('*_R')
+        # get a susbset of scans by scanno (as listed in scan.summary())
+        newscan = scan.get_scan([0, 2, 7, 10])
+\end{verbatim}
+
+
+%% sd.scantable.get_selection
 \newpage
 \ahsdfunction{sd.scantable.get\_selection}{sd.scantable.get_selection}{Get current selection that is currently set on this scantable}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Get the selection object currently set on this scantable.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+selector
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+        asap_init()
+        scan = sd.scantable('OrionS_rawACSmod')
+        sel = scan.get_selection()
+        sel.set_ifs(0)              # select IF 0
+        scan.set_selection(sel)     # apply modified selection
+\end{verbatim}
+
+
+%% sd.scantable.get_sourcename
 \newpage
 \ahsdfunction{sd.scantable.get\_sourcename}{sd.scantable.get_sourcename}{Get a list of source names for the observation}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Get a list source names for the observations.
+    Return a string for each integration in the scantable.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+row && \multicolumn{2}{p{3.36in}|}{Row no of integration}\\
+& &allowed: & integer \\
+& &Default: & -1 (all rows)
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+string, string array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.get_spectrum
 \newpage
 \ahsdfunction{sd.scantable.get\_spectrum}{sd.scantable.get_spectrum}{Get the spectrum for the current row}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return  the spectrum for the current row in the scantable as a list.
+    
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+rowno && \multicolumn{2}{p{3.36in}|}{The row number to retrieve the spectrum from}\\
+& &allowed: & integer \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+float array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.get_time
 \newpage
 \ahsdfunction{sd.scantable.get\_time}{sd.scantable.get_time}{Get a list of time stamps for the observation}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Get a list of time stamps for the observations.
+    Return a datetime object or a string (default) for each integration time stamp in the scantable.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+row && \multicolumn{2}{p{3.36in}|}{Row no of integration}\\
+& &allowed: & integer \\
+& &Default: & -1 (all rows)
+\\
+asdatetime && \multicolumn{2}{p{3.36in}|}{Return values as datetime objects rather than strings}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+string, datetime, their array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.get_tsys
 \newpage
 \ahsdfunction{sd.scantable.get\_tsys}{sd.scantable.get_tsys}{Get a list of system temperatures}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Return the System temperatures.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+row && \multicolumn{2}{p{3.36in}|}{The rowno to get the information for}\\
+& &allowed: & integer \\
+& &Default: & -1 (all rows)
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+float array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.get_unit
 \newpage
 \ahsdfunction{sd.scantable.get\_unit}{sd.scantable.get_unit}{Get the default unit of spectral axis}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Get the default unit set for spectral axis in this scantable
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+string
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.get_weather
 \newpage
 \ahsdfunction{sd.scantable.get\_weather}{sd.scantable.get_weather}{Get the weather informations}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Return the weather informations.
+
+    The contents of returned dictionary is as follows:
+
+    \begin{longtable}{rl}
+    humidity: & relative humidity \\
+    pressure: & atmospheric pressure \\
+    temperature: & atmospheric temperature \\
+    windaz: & wind direction in radian \\
+    windspeed: & wind speed in m/s \\
+    \end{longtable}
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+row && \multicolumn{2}{p{3.36in}|}{The rowno to get the information for}\\
+& &allowed: & integer \\
+& &Default: & -1 (all rows)
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+dictionary, dictionary array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.getbeam
 \newpage
 \ahfunction{sd.scantable.getbeam}{Get beam number of the given row}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return a beam number for the given row.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+ && \multicolumn{2}{p{3.36in}|}{The rowno to get the information for}\\
+& &allowed: & integer \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+integer
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+        asap_init()
+        scan = sd.scantable('OrionS_rawACSmod')
+        beam = scan.getbeam(0) # get beam number for the first row
+\end{verbatim}
+
+
+%% sd.scantable.getbeamnos
 \newpage
 \ahfunction{sd.scantable.getbeamnos}{Get a list of beam numbers in the scantable}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return a list of beam numbers in the scantable.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+integer array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.getcycle
 \newpage
 \ahfunction{sd.scantable.getcycle}{Get cycle number of the given row}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return a cycle number for the given row.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+ && \multicolumn{2}{p{3.36in}|}{The rowno to get the information for}\\
+& &allowed: & integer \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+integer
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+        asap_init()
+        scan = sd.scantable('OrionS_rawACSmod')
+        cycle = scan.getcycle(0) # get cycle number for the first row
+\end{verbatim}
+
+
+%% sd.scantable.getif
 \newpage
 \ahfunction{sd.scantable.getif}{Get IF number of the given row}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return a IF number for the given row.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+ && \multicolumn{2}{p{3.36in}|}{The rowno to get the information for}\\
+& &allowed: & integer \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+integer
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+        asap_init()
+        scan = sd.scantable('OrionS_rawACSmod')
+        ifno = scan.getifs(0) # get IF number for the first row
+\end{verbatim}
+
+
+%% sd.scantable.getifnos
 \newpage
 \ahfunction{sd.scantable.getifnos}{Get a list of IF nubers in the scantable}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return a list of IF numbers in the scantable.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+integer array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.getmolnos
 \newpage
 \ahfunction{sd.scantable.getmolnos}{Get a list of molecule ids in the scantable}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return a list of molecule ids in the scantable.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+integer array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.getpol
 \newpage
 \ahfunction{sd.scantable.getpol}{Get polarization number of the given row}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return a polarization number for the given row.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+ && \multicolumn{2}{p{3.36in}|}{The rowno to get the information for}\\
+& &allowed: & integer \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+integer 
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+        asap_init()
+        scan = sd.scantable('OrionS_rawACSmod')
+        polno = scan.getpol(0) # get polarization number for the first row
+\end{verbatim}
+
+
+%% sd.scantable.getpolnos
 \newpage
 \ahfunction{sd.scantable.getpolnos}{Get a list of polarization numbers in the scantable}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return a list of polarization numbers in the scantable.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+integer array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.getscan
 \newpage
 \ahfunction{sd.scantable.getscan}{Get scan number of the given row }
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return a scan number for the given row.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+ && \multicolumn{2}{p{3.36in}|}{The rowno to get the information for}\\
+& &allowed: & integer \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+integer 
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+        asap_init()
+        scan = sd.scantable('OrionS_rawACSmod')
+        scanno = scan.getscan(0) # get scan number for the first row
+\end{verbatim}
+
+
+%% sd.scantable.getscannos
 \newpage
 \ahfunction{sd.scantable.getscannos}{Get a list of scan numbers in the scantable}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return a list of scan numbers in the scantable.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+integer array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.history
 \newpage
 \ahfunction{sd.scantable.history}{Print a history}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Print the history. Optionally to a file.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+filename && \multicolumn{2}{p{3.36in}|}{The name of the file to save the history to}\\
+& &allowed: & string \\
+& &Default: & None
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+string
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.invert_phase
 \newpage
 \ahsdfunction{sd.scantable.invert\_phase}{sd.scantable.invert_phase}{Invert the phase of the complex polarization}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Invert the phase of the complex polarisation.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
@@ -2358,194 +3657,546 @@ Methods
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.lag_flag
 \newpage
 \ahsdfunction{sd.scantable.lag\_flag}{sd.scantable.lag_flag}{Perform Fourier filtering on the spectra}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Flag the data in 'lag' space by providing a frequency to remove.
+    Flagged data in the scantable gets interpolated over the region.
+    No taper is applied.
+
+    If insitu is True, or insitu is None and sd.rcParams['insitu'] is True, 
+    the method will not return the result, but apply operation on this scantable. 
+
+    It is recommended to flag edges of the band or strong signals beforehand.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+start && \multicolumn{2}{p{3.36in}|}{The start frequency (really a period within the bandwidth) or period to remove}\\
+& &allowed: & float \\
+& &Default: & 
+\\
+end && \multicolumn{2}{p{3.36in}|}{The end frequency or period to remove}\\
+& &allowed: & string \\
+& &Default: & None
+\\
+unit && \multicolumn{2}{p{3.36in}|}{The frequency unit or '' for explicit lag channels}\\
+& &allowed: & string \\
+& &Default: & 'MHz'
+\\
+insitu && \multicolumn{2}{p{3.36in}|}{If False a new scantable is returned}\\
+& &allowed: & bool \\
+& &Default: & None
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+scantable
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.mx_quotient
 \newpage
 \ahsdfunction{sd.scantable.mx\_quotient}{sd.scantable.mx_quotient}{Form a quotient using "off" beams when observing in "MX" mode}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Form a quotient using "off" beams when observing in "MX" mode.
+ 
+    The formula to get result depends on the preserve paramter. If it is True, the continuum will be 
+    preserved while if it is False, the continuum will be removed. The equation used are
+
+    \begin{displaymath}
+    T_{\rm a}^* = T_{\rm sys}^{\rm OFF} { ON \over OFF } - T_{\rm sys}^{\rm OFF},
+    \end{displaymath}
+   
+    if preserve is True, while
+
+    \begin{displaymath}
+    T_{\rm a}^* = T_{\rm sys}^{\rm OFF} { ON \over OFF } - T_{\rm sys}^{\rm ON},
+    \end{displaymath}
+
+    if preserve is False.
+
+    The weight argument is used for time averaging off beams. You can set any options same as 
+    \ahlink{average\_time}{sd:sd.scantable.average_time}.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+mask && \multicolumn{2}{p{3.36in}|}{An optional mask to be used when weight == 'stddev'}\\
+& &allowed: & bool array \\
+& &Default: & None
+\\
+weight && \multicolumn{2}{p{3.36in}|}{How to average the off beams}\\
+& &allowed: & string \\
+& &Default: & 'median'
+\\
+preserve && \multicolumn{2}{p{3.36in}|}{Preserve the continuum or remove it}\\
+& &allowed: & bool  \\
+& &Default: & True
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+scantable
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.nbeam
 \newpage
 \ahfunction{sd.scantable.nbeam}{Return a number of beams}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return a number of beams in this scantable.
+
+   If scanno argument is specified, the number of beams for that scan will be returned.
+   Otherwise, the total number of beams, which is written in the header of the data, will be returned.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+scanno && \multicolumn{2}{p{3.36in}|}{Scan number}\\
+& &allowed: & integer  \\
+& &Default: & -1 (total)
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+integer
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.nchan
 \newpage
 \ahfunction{sd.scantable.nchan}{Return a number of channels}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return a number of channels in this scantable.
+
+   If ifno argument is specified, the number of channels for that IF will be returned.
+   Otherwise, the maximum number of channels, which is written in the header of the data, will be returned.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+ifno && \multicolumn{2}{p{3.36in}|}{IF number}\\
+& &allowed: & integer \\
+& &Default: & -1 (maximum)
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+integer 
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.ncycle
 \newpage
 \ahfunction{sd.scantable.ncycle}{Return a number of cycles}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return a number of cycles in this scantable.
+
+   If scanno argument is specified, the number of cycles for that scan will be returned.
+   Otherwise, the total number of cycles will be returned.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+scanno && \multicolumn{2}{p{3.36in}|}{Scan number}\\
+& &allowed: & integer \\
+& &Default: & -1 (total)
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+integer
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.nif
 \newpage
 \ahfunction{sd.scantable.nif}{Return a number of IFs}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return a number of IFs in this scantable.
+
+   If scanno argument is specified, the number of IFs for that scan will be returned.
+   Otherwise, the total number of IFs, which is written in the header of the data, will be returned.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+scanno && \multicolumn{2}{p{3.36in}|}{Scan number}\\
+& &allowed: & integer \\
+& &Default: & -1 (total)
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+integer
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.npol
 \newpage
 \ahfunction{sd.scantable.npol}{Return a number of polarizations}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return a number of polarizations in this scantable.
+
+   If scanno argument is specified, the number of polarizations for that scan will be returned.
+   Otherwise, the total number of polarizations, which is written in the header of the data, will be returned.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+scanno && \multicolumn{2}{p{3.36in}|}{Scan number}\\
+& &allowed: & integer \\
+& &Default: & -1 (total)
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+integer
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.nrow
 \newpage
 \ahfunction{sd.scantable.nrow}{Return a number of rows}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return a total number of rows (= total number of spectra) in this scantable.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+integer
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.nscan
 \newpage
 \ahfunction{sd.scantable.nscan}{Return a number of scans}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return a total number of scans in this scantable.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+integer
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.old_poly_baseline
 \newpage
 \ahsdfunction{sd.scantable.old\_poly\_baseline}{sd.scantable.old_poly_baseline}{Older version of baseline subtraction function}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Return a scan which has been baselined (all rows) by a polynomial.
+ 
+    If insitu is True, or insitu is None and sd.rcParams['insitu'] is True, 
+    the method will not return the result, but apply operation on this scantable. 
+
+    You can verify and decide whether you apply the fit result or not, if plot argument is True.
+    In that case, you have to answer 'y' or 'n' for each spectra so that setting True is not 
+    recommended for large dataset.
+
+    This is an older version of \ahlink{poly\_baseline}{sd:sd.scantable.poly_baseline}. 
+    The only difference between them is its performance. For larger dataset, you must not to use 
+    this method.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+mask && \multicolumn{2}{p{3.36in}|}{An optional mask}\\
+& &allowed: & bool array \\
+& &Default: & None
+\\
+order && \multicolumn{2}{p{3.36in}|}{The order of the polynomial}\\
+& &allowed: & integer \\
+& &Default: & 0
+\\
+plot && \multicolumn{2}{p{3.36in}|}{Plot the fit and the residual}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+uselin && \multicolumn{2}{p{3.36in}|}{Use linear polynomial fit}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+insitu && \multicolumn{2}{p{3.36in}|}{If False a new scantable is returned}\\
+& &allowed: & bool \\
+& &Default: & None
+\\
+rows && \multicolumn{2}{p{3.36in}|}{row numbers of spectra to be processed}\\
+& &allowed: & integer, integer array \\
+& &Default: & None (all rows)
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+scantable
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+        asap_init()
+        scan = sd.scantable('OrionS_rawACSmod_cal')
+        # return a scan baselined by a third order polynomial,
+        # not using a mask
+        bscan = scan.old_poly_baseline(order=3)
+\end{verbatim}
+
+
+%% sd.scantable.opacity
 \newpage
 \ahfunction{sd.scantable.opacity}{Apply an opacity correction}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Apply an opacity correction. The data
+    and Tsys are multiplied by the correction factor.
+
+    Correction includes an elevation dependence of the opacity.
+    Actual correction factor is $\exp(\tau * {\rm ZD})$, where ZD is the zenith-distance and $\tau$ is a value 
+    given as the tau argument. 
+    If a list of opacities is provided, it has to be of length nIF, nIF*nPol or 1 and in order of IF/POL, e.g.
+    [opif0pol0, opif0pol1, opif1pol0 ...]. If tau is `None` the opacities are determined from a model.
+ 
+    If insitu is True, or insitu is None and sd.rcParams['insitu'] is True, 
+    the method will not return the result, but apply operation on this scantable. 
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+tau && \multicolumn{2}{p{3.36in}|}{A (list of) opacity}\\
+& &allowed: & float, float array \\
+& &Default: & None
+\\
+insitu && \multicolumn{2}{p{3.36in}|}{If False a new scantable is returned}\\
+& &allowed: & bool \\
+& &Default: & None
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.parallactify
 \newpage
 \ahfunction{sd.scantable.parallactify}{Set a flag to indicate the data should be treated as "parallactified"}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Set a flag to indicate whether this data should be treated as having
+    been 'parallactified' (total phase == 0.0)
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+pflag && \multicolumn{2}{p{3.36in}|}{Bool indicating whether to turn this on (True) or off (False)}\\
+& &allowed: & bool \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.poltype
 \newpage
 \ahfunction{sd.scantable.poltype}{Get a plarization type}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Return a polarization type in this scantable.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+string
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.poly_baseline
 \newpage
 \ahsdfunction{sd.scantable.poly\_baseline}{sd.scantable.poly_baseline}{Perform a baseline subtraction}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Return a scan which has been baselined (all rows) by a polynomial.
+ 
+    If insitu is True, or insitu is None and sd.rcParams['insitu'] is True, 
+    the method will not return the result, but apply operation on this scantable. 
+
+    You can verify and decide whether you apply the fit result or not, if plot argument is True.
+    In that case, you have to answer 'y' or 'n' for each spectra so that setting True is not 
+    recommended for large dataset.
+
+    The batch argument is a new parameter to handle a behavior of the method.
+    If it is Ture, a faster algorithm is used and logs including the fit results are not output.
+
+    This is an newer version of \ahlink{poly\_baseline}{sd:sd.scantable.poly_baseline}. 
+    The only difference between them is its performance. For larger dataset, 
+    it is recommended to use this method.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+mask && \multicolumn{2}{p{3.36in}|}{An optional mask}\\
+& &allowed: & bool array \\
+& &Default: & None
+\\
+order && \multicolumn{2}{p{3.36in}|}{The order of the polynomial}\\
+& &allowed: & integer \\
+& &Default: & 0
+\\
+plot && \multicolumn{2}{p{3.36in}|}{Plot the fit and the residual}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+batch && \multicolumn{2}{p{3.36in}|}{if True a faster algorithm is used}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+insitu && \multicolumn{2}{p{3.36in}|}{If False a new scantable is returned}\\
+& &allowed: & bool \\
+& &Default: & None
+\\
+rows && \multicolumn{2}{p{3.36in}|}{row numbers of spectra to be processed}\\
+& &allowed: & integer, integer array \\
+& &Default: & None (all rows)
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+scantable
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+        asap_init()
+        scan = sd.scantable('OrionS_rawACSmod_cal')
+        # return a scan baselined by a third order polynomial,
+        # not using a mask
+        bscan = scan.poly_baseline(order=3)
+\end{verbatim}
+
+
+%% sd.scantable.recalc_azel
 \newpage
 \ahsdfunction{sd.scantable.recalc\_azel}{sd.scantable.recalc_azel}{Recalculate azimuth and elevation for each sky position}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Recalculate the azimuth and elevation for each position.
+
+    Note that the operation will always be applied to this scantable regardless of 
+    the value of sd.rcParams['insitu']. 
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
@@ -2553,284 +4204,860 @@ Methods
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.resample
 \newpage
 \ahfunction{sd.scantable.resample}{Perform a binning}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Return a scan where all spectra have been binned up.
+
+    The method argument specifies interpolation method when correcting from a table.
+    Values are 'nearest', 'linear', 'cubic' (default), and 'spline'.
+
+    If insitu is True, or insitu is None and sd.rcParams['insitu'] is True, 
+    the method will not return the result, but apply operation on this scantable. 
+
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+width && \multicolumn{2}{p{3.36in}|}{The bin width in pixels}\\
+& &allowed: & integer \\
+& &Default: & 5
+\\
+method && \multicolumn{2}{p{3.36in}|}{Interpolation method when correcting from a table}\\
+& &allowed: & string \\
+& &Default: & 'cubic'
+\\
+insitu && \multicolumn{2}{p{3.36in}|}{If False a new scantable is returned}\\
+& &allowed: & bool \\
+& &Default: & None
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+scantable
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.rotate_linpolphase
 \newpage
 \ahsdfunction{sd.scantable.rotate\_linpolphase}{sd.scantable.rotate_linpolphase}{Rotate a phase of the complex polarization}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Rotate the phase of the complex polarization O=Q+iU correlation.
+    This is always done in situ in the raw data.  So if you call this
+    function more than once then each call rotates the phase further.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+angle && \multicolumn{2}{p{3.36in}|}{The angle (in dgree) to rotate (add) by}\\
+& &allowed: & float \\
+& &Default: &
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+        asap_init()
+        scan = sd.scantable('OrionS_rawACSmod_cal')
+        scan.rotate_linpolphase(2.3)
+\end{verbatim}
+
+
+
+%% sd.scantable.rotate_xyphase
 \newpage
 \ahsdfunction{sd.scantable.rotate\_xyphase}{sd.scantable.rotate_xyphase}{Rotate a phase of the XY correlation}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Rotate the phase of the XY correlation.  This is always done in situ
+    in the data.  So if you call this function more than once
+    then each call rotates the phase further.
+    
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+angle && \multicolumn{2}{p{3.36in}|}{The angle (in dgree) to rotate (add) by}\\
+& &allowed: & float \\
+& &Default: &
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+        asap_init()
+        scan = sd.scantable('OrionS_rawACSmod_cal')
+        scan.rotate_xyphase(2.3)
+\end{verbatim}
+
+
+
+%% sd.scantable.save
 \newpage
 \ahfunction{sd.scantable.save}{Store the scantable on disk}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Store the scantable on disk. This can be an asap (\casa) Table,
+    SDFITS or MS2 format.
+
+    The output filename can be specified as name. For format 'ASCII', this is the root file name 
+    (data in 'name'.txt and header in 'name'\_header.txt). If no name is given, the default name 
+    will be used.
+    The format is an optinal file format. Default is 'ASAP'. Allows are:
+
+    \begin{itemize}
+    \item 'ASAP' (save as ASAP [\casa] Table)
+    \item 'SDFITS' (save as SDFITS file)
+    \item 'ASCII' (saves as ascii text file)
+    \item 'MS2' (saves as an casacore MeasurementSet V2)
+    \item 'FITS' (save as image FITS - not readable by class)
+    \item 'CLASS' (save as FITS readable by CLASS)
+    \end{itemize}
+
+    If overwrite argument is True, the file should be overwritten if it exists.
+    The default False is to return with warning without writing the output. USE WITH CARE.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+name && \multicolumn{2}{p{3.36in}|}{The name of the output file}\\
+& &allowed: & string \\
+& &Default: & None
+\\
+format && \multicolumn{2}{p{3.36in}|}{An optional file format}\\
+& &allowed: & string \\
+& &Default: & None
+\\
+overwrite && \multicolumn{2}{p{3.36in}|}{Overwrite existing file}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+        asap_init()
+        scan = sd.scantable('OrionS_rawACSmod_cal')
+        scan.save('myscan.asap')
+        scan.save('myscan.sdfits', 'SDFITS')
+\end{verbatim}
+
+
+%% sd.scantable.scale
 \newpage
 \ahfunction{sd.scantable.scale}{Scale spectra by the given factor}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Return a scan where all spectra are scaled by the given 'factor'.
+    The factor can be a float or one- or two-dimensional float array. 
+    If it is one-dimensional array, the scaling will be done in channel-by-channel manner.
+    If it is two-dimensional, the scaling will be done in element-by-element or row-by-row manner. 
+ 
+    If insitu is True, or insitu is None and sd.rcParams['insitu'] is True, 
+    the method will not return the result, but apply operation on this scantable. 
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+factor && \multicolumn{2}{p{3.36in}|}{The scaling factor}\\
+& &allowed: & float, float array\\
+& &Default: & 
+\\
+insitu && \multicolumn{2}{p{3.36in}|}{If False a new scantable is returned}\\
+& &allowed: & bool \\
+& &Default: & None
+\\
+tsys && \multicolumn{2}{p{3.36in}|}{If True then apply the operation to Tsys as well as the data}\\
+& &allowed: & bool \\
+& &Default: & True
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+scantable
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.set_dirframe
 \newpage
 \ahsdfunction{sd.scantable.set\_dirframe}{sd.scantable.set_dirframe}{Set the frame type of the direction on the sky}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Set the frame type of the Direction on the sky.
+    The valid frames are 'J2000', 'B1950', 'GALACTIC'.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+frame && \multicolumn{2}{p{3.36in}|}{An optional frame type}\\
+& &allowed: & string \\
+& &Default: & '' 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+        asap_init()
+        scan = sd.scantable('OrionS_rawACSmod_cal')
+        scan.set_dirframe('GALAGTIC')
+\end{verbatim}
+
+
+%% sd.scantable.set_doppler
 \newpage
 \ahsdfunction{sd.scantable.set\_doppler}{sd.scantable.set_doppler}{Set definition of the Doppler correction}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Set the doppler for all following operations on this scantable.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+doppler && \multicolumn{2}{p{3.36in}|}{One of 'RADIO', 'OPTICAL', 'Z', 'BETA', 'GAMMA'}\\
+& &allowed: & string \\
+& &Default: & 'RADIO' 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.set_feedtype
 \newpage
 \ahsdfunction{sd.scantable.set\_feedtype}{sd.scantable.set_feedtype}{Set the feed type}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Overwrite the feed type, which might not be set correctly.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+feedtype && \multicolumn{2}{p{3.36in}|}{'linear' or 'circular'}\\
+& &allowed: & string \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+
+%% sd.scantable.set_fluxunit
 \newpage
 \ahsdfunction{sd.scantable.set\_fluxunit}{sd.scantable.set_fluxunit}{Set flux unit}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Set flux unit to this scantable. Valid values are 'K' and 'Jy'.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+ && \multicolumn{2}{p{3.36in}|}{'K' or 'Jy'}\\
+& &allowed: & string \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.set_freqframe
 \newpage
 \ahsdfunction{sd.scantable.set\_freqframe}{sd.scantable.set_freqframe}{Set the frame type of the spectral axis}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Set the frame type of the Spectral Axis.
+    Valid frames are 'TOPO', 'LSRD', 'LSRK', 'BARY',
+    'GEO', 'GALACTO', 'LGROUP', 'CMB'.
+    The default is taken from sd.rcParams['scantable.freqframe'].
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+frame && \multicolumn{2}{p{3.36in}|}{An optional frame type}\\
+& &allowed: & string \\
+& &Default: & None 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+        asap_init()
+        scan = sd.scantable('OrionS_rawACSmod_cal')
+        scan.set_freqframe('BARY')
+\end{verbatim}
+
+
+%% sd.scantable.set_instrument
 \newpage
 \ahsdfunction{sd.scantable.set\_instrument}{sd.scantable.set_instrument}{Set antenna name}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Set the instrument (antenna name) for subsequent processing.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+instr && \multicolumn{2}{p{3.36in}|}{Instrument (or antenna) name}\\
+& &allowed: & string \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.set_restfreqs
 \newpage
 \ahsdfunction{sd.scantable.set\_restfreqs}{sd.scantable.set_restfreqs}{Set rest frequency}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Set or replace the restfrequency specified and
+    if the 'freqs' argument holds a scalar,
+    then that rest frequency will be applied to all the selected
+    data.  If the 'freqs' argument holds
+    a vector, then it MUST be of equal or smaller length than
+    the number of IFs (and the available restfrequencies will be
+    replaced by this vector).  In this case, *all* data have
+    the restfrequency set per IF according
+    to the corresponding value you give in the 'freqs' vector.
+    E.g. 'freqs=[1e9, 2e9]'  would mean IF 0 gets restfreq 1e9 and
+    IF 1 gets restfreq 2e9.
+    
+    You can also specify the frequencies via a linecatalog.
+
+    Note that, to do more sophisticate Restfrequency setting, e.g. on a
+    source and IF basis, use scantable.set_selection() before using
+    this function::
+
+    \begin{verbatim}
+             # provided your scantable is called scan
+             selection = sd.selector()
+             selection.set_name("ORION*")
+             selection.set_ifs([1])
+             scan.set_selection(selection)
+             scan.set_restfreqs(freqs=86.6e9)
+    \end{verbatim}
+
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+freqs && \multicolumn{2}{p{3.36in}|}{List of rest frequency values or string identifiers}\\
+& &allowed: & string \\
+& &Default: & None
+\\
+unit && \multicolumn{2}{p{3.36in}|}{Unit for rest frequency}\\
+& &allowed: & string \\
+& &Default: & 'Hz'
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+         asap_init()
+         scan = sd.scantable('OrionS_rawACSmod_cal')
+         # set the given restfrequency for the all currently selected IFs
+         scan.set_restfreqs(freqs=1.4e9)
+         # set restfrequencies for the n IFs  (n > 1) in the order of the
+         # list, i.e
+         # IF0 -> 1.4e9, IF1 ->  1.41e9, IF3 -> 1.42e9
+         # len(list_of_restfreqs) == nIF
+         # for nIF == 1 the following will set multiple restfrequency for
+         # that IF
+         scan.set_restfreqs(freqs=[1.4e9, 1.41e9, 1.42e9])
+         # set multiple restfrequencies per IF. as a list of lists where
+         # the outer list has nIF elements, the inner s arbitrary
+         scan.set_restfreqs(freqs=[[1.4e9, 1.41e9], [1.67e9]])
+\end{verbatim}
+
+
+%% sd.scantable.set_selection
 \newpage
 \ahsdfunction{sd.scantable.set\_selection}{sd.scantable.set_selection}{Select a subset of the data}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Select a subset of the data. All following operations on this scantable
+    are only applied to thi selection.
+
+    The selection can be done via a selector object (default unset the selection), or
+    any combination of "pols", "ifs", "beams", "scans", "cycles", "name", "query", "types" 
+    that will be passed to the constructor of the selector object to create a new selection.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+selection && \multicolumn{2}{p{3.36in}|}{A selector object}\\
+& &allowed: & selector \\
+& &Default: & None
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
+\begin{verbatim}
+        asap_init()
+        scan = sd.scantable('OrionS_rawACSmod_cal')
+        sel = sd.selector()         # create a selection object
+        self.set_scans([0, 3])    # select SCANNO 0 and 3
+        scan.set_selection(sel)  # set the selection
+        scan.summary()           # will only print summary of scanno 0 an 3
+        scan.set_selection()     # unset the selection
+        # or the equivalent
+        scan.set_selection(scans=[0,3])
+        scan.summary()           # will only print summary of scanno 0 an 3
+        scan.set_selection()     # unset the selection
+\end{verbatim}
 
+
+%% sd.scantable.set_sourcetype
 \newpage
 \ahsdfunction{sd.scantable.set\_sourcetype}{sd.scantable.set_sourcetype}{Set the types of source to be source or reference scan}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Set the type of the source to be an source or reference scan
+    using the provided pattern.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+match && \multicolumn{2}{p{3.36in}|}{A Unix style pattern, regular expression or selector}\\
+& &allowed: & string, selector \\
+& &Default: & 
+\\
+matchtype && \multicolumn{2}{p{3.36in}|}{'pattern' for UNIX style pattern, 'regex' for regular expression}\\
+& &allowed: & string \\
+& &Default: & 'pattern'
+\\
+sourcetype && \multicolumn{2}{p{3.36in}|}{The type of the source to use (source/reference)}\\
+& &allowed: & string \\
+& &Default: & 'reference'
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.set_spectrum
 \newpage
 \ahsdfunction{sd.scantable.set\_spectrum}{sd.scantable.set_spectrum}{Set spectrum for specified row}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+   Set the spectrum for the current row in the scantable.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+spec && \multicolumn{2}{p{3.36in}|}{The new spectrum}\\
+& &allowed: & float array \\
+& &Default: & 
+\\
+rowno && \multicolumn{2}{p{3.36in}|}{The row number to set the spectrum for}\\
+& &allowed: & integer \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.set_unit
 \newpage
 \ahsdfunction{sd.scantable.set\_unit}{sd.scantable.set_unit}{Set unit for spectral axis}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Set the unit for all following operations on this scantable.
+    Valid options are '*Hz', 'km/s', 'channel', or ''.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+unit && \multicolumn{2}{p{3.36in}|}{Optional unit}\\
+& &allowed: & string \\
+& &Default: & 'channel'
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.shift_refpix
 \newpage
 \ahsdfunction{sd.scantable.shift\_refpix}{sd.scantable.shift_refpix}{Shift the reference pixel of the spectral coordinate}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Shift the reference pixel of the Spectra Coordinate by an
+    integer amount.
+
+    Be careful using this with broadband data.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+delta && \multicolumn{2}{p{3.36in}|}{The amount to shift by}\\
+& &allowed: & integer \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.smooth
 \newpage
 \ahfunction{sd.scantable.smooth}{Smooth the spectra}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Smooth the spectrum by the specified kernel (conserving flux).
+
+    The user should specify a type of smoothing kernel. Supported types are 
+    'hanning' (default), 'gaussian', 'boxcar', 'rmedian', or 'poly'.
+    The width of the kernel in pixel can be specified as width argument. 
+    For hanning this is ignored otherwise it defauls to 5 pixels.
+    For 'gaussian' it is the Full Width Half Maximum. For 'boxcar' it is the full width.
+    For 'rmedian' and 'poly' it is the half width.
+    The order argument is an optional parameter for 'poly' kernel (default is 2), to
+    specify the order of the polnomial. It is ignored by all other kernels.
+
+    You can verify and decide whether you apply the fit result or not, if plot argument is True.
+    In that case, you have to answer 'y' or 'n' for each spectra so that setting True is not 
+    recommended for large dataset.
+
+    If insitu is True, or insitu is None and sd.rcParams['insitu'] is True, 
+    the method will not return the result, but apply operation on this scantable. 
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+kernel && \multicolumn{2}{p{3.36in}|}{The type of smoothing kernel}\\
+& &allowed: & string \\
+& &Default: & 'hanning'
+\\
+width && \multicolumn{2}{p{3.36in}|}{The width of the kernel in pixels}\\
+& &allowed: & float \\
+& &Default: & 5.0
+\\
+order && \multicolumn{2}{p{3.36in}|}{Order of the polynomial for 'poly' kernel}\\
+& &allowed: & integer \\
+& &Default: & 2
+\\
+plot && \multicolumn{2}{p{3.36in}|}{Plot the fit and the residual}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+insitu && \multicolumn{2}{p{3.36in}|}{If False a new scantable is returned}\\
+& &allowed: & bool \\
+& &Default: & None
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+scantable
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.stats
 \newpage
 \ahfunction{sd.scantable.stats}{Compute specified statistics of the spectra}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Determine the specified statistic of the current beam/if/pol
+    Takes a 'mask' as an optional parameter to specify which
+    channels should be excluded.
+
+    Available statistics are 'min', 'max', 'min\_abc', 'max\_abc', 'sumsq', 'sum',
+    'mean', 'var', 'stddev', 'avdev', 'rms', 'median'.
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+stat && \multicolumn{2}{p{3.36in}|}{Statistics to be calculated}\\
+& &allowed: & string \\
+& &Default: & 'stddev'
+\\
+mask && \multicolumn{2}{p{3.36in}|}{An optional mask specifying where the statistic should be determined}\\
+& &allowed: & bool array \\
+& &Default: & None
+\\
+form && \multicolumn{2}{p{3.36in}|}{Format string to print statistic values}\\
+& &allowed: & string \\
+& &Default: & '3.3f'
+\\
+row && \multicolumn{2}{p{3.36in}|}{Row number of spectrum to process}\\
+& &allowed: & integer \\
+& &Default: & None (all rows)
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+float array 
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+        asap_init()
+        scan = sd.scantable('OrionS_rawACSmod_cal')
+        scan.set_unit('channel')
+        msk = scan.create_mask([100, 200], [500, 600])
+        scan.stats(stat='mean', mask=m)
+\end{verbatim}
+
+
+%% sd.scantable.stddev
 \newpage
 \ahfunction{sd.scantable.stddev}{Compute standard deviation of the spectra}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Determine the standard deviation of the current beam/if/pol
+    Takes a 'mask' as an optional parameter to specify which
+    channels should be excluded.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+mask && \multicolumn{2}{p{3.36in}|}{An optional mask specifying where the standard deviation should be determined}\\
+& &allowed: & bool array \\
+& &Default: & None
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+float array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+        asap_init()
+        scan = sd.scantable('OrionS_rawACSmod_cal')
+        scan.set_unit('channel')
+        msk = scan.create_mask([100, 200], [500, 600])
+        scan.stddev(mask=m)
+\end{verbatim}
+
+
+%% sd.scantable.summary
 \newpage
 \ahfunction{sd.scantable.summary}{Print a summary of the contents of the scantable}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
+    Print a summary of the contents of this scantable.
+    Optionally, output to the file specified.
+
+    The method returns raw string for summary if sd.rcParams['verbose'] is False.
+ 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+filename && \multicolumn{2}{p{3.36in}|}{The name of a file to write the output}\\
+& &allowed: & string \\
+& &Default: & None (no file output)
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
+string
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+
+%% sd.scantable.swap_linears
 \newpage
 \ahsdfunction{sd.scantable.swap\_linears}{sd.scantable.swap_linears}{Swap the linear polarizations XX and YY}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
+
+    Swap the linear polarisations XX and YY, or better the first two
+    polarisations as this also works for ciculars.
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
