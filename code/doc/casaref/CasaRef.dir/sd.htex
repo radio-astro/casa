@@ -7554,99 +7554,17 @@ Methods
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
-    Annotate the x,y point xy with text s at x,y location xytext
-    (xytext if None defaults to xy and textcoords if None defaults
-    to xycoords).
-    
-    arrowprops, if not None, is a dictionary of line properties
-    (see matplotlib.lines.Line2D) for the arrow that connects
-    annotation to the point.   Valid keys are
+   Annotate text at specified location.
+   This is an interface for matplotlib.axes.Axes.annotate function.
 
-    \begin{longtable}{rl}
-      width & the width of the arrow in points \\
-      frac  & the fraction of the arrow length occupied by the head \\
-      headwidth & the width of the base of the arrow head in points \\
-      shrink & often times it is convenient to have the arrowtip 
-        and base a bit away from the text and point being 
-        annotated.  If d is the distance between the text and 
-        annotated point, shrink will shorten the arrow so the tip  
-        and base are shink percent of the distance d away from the 
-        endpoints.  ie, shrink=0.05 is 5\% \\
-       & any key for matplotlib.patches.polygon \\
-    \end{longtable}
-
-    xycoords and textcoords are strings that indicate the
-    coordinates of xy and xytext.
-    
-    \begin{longtable}{rl}
-       'figure points'   & points from the lower left corner of the figure \\
-       'figure pixels'   & pixels from the lower left corner of the figure \\
-       'figure fraction' & 0,0 is lower left of figure and 1,1 is upper, right \\
-       'axes points'     & points from lower left corner of axes \\
-       'axes pixels'     & pixels from lower left corner of axes \\
-       'axes fraction'   & 0,1 is lower left of axes and 1,1 is upper right \\
-       'data'            & use the coordinate system of the object being annotated (default) \\
-       'offset points'   & Specify an offset (in points) from the xy value \\
-       'polar'           & you can specify theta, r for the annotation, even 
-                           in cartesian plots.  Note that if you 
-                           are using a polar axes, you do not need 
-                           to specify polar for the coordinate 
-                           system since that is the native"data" coordinate system. \\
-    \end{longtable}
- 
-    If a points or pixels option is specified, values will be
-    added to the left, bottom and if negative, values will be
-    subtracted from the top, right.  Eg,
-    
-    \begin{verbatim}
-      # 10 points to the right of the left border of the axes and
-      # 5 points below the top border
-      xy=(10,-5), xycoords='axes points'
-    \end{verbatim}
-    
-    Additional kwargs are Text properties:
-
-    \begin{longtable}{rl}
-        alpha: & float \\
-        animated: & [True | False] \\
-        axes: & an axes instance \\
-        backgroundcolor: & any matplotlib color \\
-        bbox: & rectangle prop dict plus key 'pad' which is a pad in points \\
-        clip\_box: & a matplotlib.transform.Bbox instance \\
-        clip\_on: & [True | False] \\
-        clip\_path: & an agg.path\_storage instance \\
-        color: & any matplotlib color \\
-        contains: & unknown \\
-        fontproperties: & a matplotlib.font\_manager.FontProperties instance \\
-        horizontalalignment or ha: & [ 'center' | 'right' | 'left' ] \\
-        label: & any string \\
-        linespacing: & float \\
-        lod: & [True | False] \\
-        multialignment: & ['left' | 'right' | 'center' ] \\
-        name or fontname: & string eg, ['Sans' | 'Courier' | 'Helvetica' ...] \\
-        multialignment: & ['left' | 'right' | 'center' ] \\
-        name or fontname: & string eg, ['Sans' | 'Courier' | 'Helvetica' ...] \\
-        picker: & [None|float|boolean|callable] \\
-        position: & (x,y) \\
-        rotation: & [ angle in degrees 'vertical' | 'horizontal' \\
-        size or fontsize: & [ size in points | relative size eg 'smaller', 'x-large' ] \\
-        style or fontstyle: & [ 'normal' | 'italic' | 'oblique'] \\
-        text: & string or anything printable with '\%s' conversion \\
-        transform: & a matplotlib.transform transformation instance \\
-        variant: & [ 'normal' | 'small-caps' ] \\
-        verticalalignment or va: & [ 'center' | 'top' | 'bottom' | 'baseline' ] \\
-        visible: & [True | False] \\
-        weight or fontweight: & [ 'normal' | 'bold' | 'heavy' | 'light' | 'ultrabold' | 'ultralight'] \\
-        x: & float \\
-        y: & float \\
-        zorder: & any number \\
-    \end{longtable}
-    
+   The interactive argument is specific to this method (not available 
+   from matplotlib). If it is True, you can set positions interactively 
+   using GUI panel.
  
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 
-    See description about whole options.
+    See matplotlib help about detailed description of arguments.
 
 \begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
 \hline
@@ -7696,37 +7614,18 @@ interactive && \multicolumn{2}{p{3.36in}|}{Interactively set text position if Tr
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
-    Draws arrow on specified axis from (x,y) to (x+dx,y+dy).
-    
-    Optional kwargs control the arrow properties:
 
-    \begin{longtable}{rl}
-        alpha: & float \\
-        animated: & [True | False] \\
-        antialiased or aa: & [True | False] \\
-        axes: & an axes instance \\
-        clip\_box: & a matplotlib.transform.Bbox instance \\
-        clip\_on: & [True | False] \\
-        clip\_path: & an agg.path\_storage instance \\
-        contains: & unknown \\
-        edgecolor or ec: & any matplotlib color \\
-        facecolor or fc: & any matplotlib color \\
-        figure: & a matplotlib.figure.Figure instance \\
-        fill: & [True | False] \\
-        hatch: & unknown \\
-        label: & any string \\
-        linewidth or lw: & float \\
-        lod: & [True | False] \\
-        picker: & [None|float|boolean|callable] \\
-        transform: & a matplotlib.transform transformation instance \\
-        visible: & [True | False] \\
-        zorder: & any number \\
-    \end{longtable}
+   Draws arrow on specified axis from (x,y) to (x+dx,y+dy).
+   This is an interface for matplotlib.axes.Axes.arrow function.
+
+   The interactive argument is specific to this method (not available 
+   from matplotlib). If it is True, you can set positions interactively 
+   using GUI panel.
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 
-    See description about whole options.
+    See matplotlib help about detailed description of arguments.
 
 \begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
 \hline
@@ -7768,48 +7667,17 @@ interactive && \multicolumn{2}{p{3.36in}|}{Interactively set origin and terminal
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
-    Axis Horizontal Line
-    
-    Draw a horizontal line at y from xmin to xmax.  With the default
-    values of xmin=0 and xmax=1, this line will always span the horizontal
-    extent of the axes, regardless of the xlim settings, even if you
-    change them, eg with the xlim command.  That is, the horizontal extent
-    is in axes coords: 0=left, 0.5=middle, 1.0=right but the y location is
-    in data coordinates.
-    
-    Return value is the Line2D instance.  kwargs are the same as kwargs to
-    plot, and can be used to control the line properties.
-    
-    Valid kwargs are Line2D properties
+   Draw a horizontal line.
+   This is an interface for matplotlib.axes.Axes.axhline function.
 
-    \begin{longtable}{rl}
-        alpha: & float \\
-        animated: & [True | False] \\
-        antialiased or aa: & [True | False] \\
-        axes: & an axes instance \\
-        clip\_box: & a matplotlib.transform.Bbox instance \\
-        clip\_on: & [True | False] \\
-        clip\_path: & an agg.path\_storage instance \\
-        contains: & unknown \\
-        edgecolor or ec: & any matplotlib color \\
-        facecolor or fc: & any matplotlib color \\
-        figure: & a matplotlib.figure.Figure instance \\
-        fill: & [True | False] \\
-        hatch: & unknown \\
-        label: & any string \\
-        linewidth or lw: & float \\
-        lod: & [True | False] \\
-        picker: & [None|float|boolean|callable] \\
-        transform: & a matplotlib.transform transformation instance \\
-        visible: & [True | False] \\
-        zorder: & any number \\
-    \end{longtable}
-
+   The interactive argument is specific to this method (not available 
+   from matplotlib). If it is True, you can set positions interactively 
+   using GUI panel.
  
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 
-    See description about whole options.
+    See matplotlib help about detailed description of arguments.
 
 \begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
 \hline
@@ -7848,64 +7716,17 @@ Line2D object
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
-    Axis Horizontal Span.  ycoords are in data units and x
-    coords are in axes (relative 0-1) units
-    
-    Draw a horizontal span (regtangle) from ymin to ymax.  With the
-    default values of xmin=0 and xmax=1, this always span the xrange,
-    regardless of the xlim settings, even if you change them, eg with the
-    xlim command.  That is, the horizontal extent is in axes coords:
-    0=left, 0.5=middle, 1.0=right but the y location is in data
-    coordinates.
-    
-    kwargs are the kwargs to Patch, eg
-    
-    \begin{longtable}{l}
-      antialiased, aa \\
-      linewidth,   lw \\
-      edgecolor,   ec \\
-      facecolor,   fc \\
-    \end{longtable}
-    
-    the terms on the right are aliases
-    
-    Return value is the patches.Polygon instance.
-    
-    \begin{verbatim}
-        #draws a gray rectangle from y=0.25-0.75 that spans the horizontal
-        #extent of the axes
-        axhspan(0.25, 0.75, facecolor='0.5', alpha=0.5)
-    \end{verbatim}
-    
-    Valid kwargs are Polygon properties
+   Draw a horizontal rectangle.  
+   This is an interface for matplotlib.axes.Axes.axhspan function.
 
-    \begin{longtable}{rl}
-        alpha: & float \\
-        animated: & [True | False] \\
-        antialiased or aa: & [True | False] \\
-        axes: & an axes instance \\
-        clip\_box: & a matplotlib.transform.Bbox instance \\
-        clip\_on: & [True | False] \\
-        clip\_path: & an agg.path\_storage instance \\
-        contains: & unknown \\
-        edgecolor or ec: & any matplotlib color \\
-        facecolor or fc: & any matplotlib color \\
-        figure: & a matplotlib.figure.Figure instance \\
-        fill: & [True | False] \\
-        hatch: & unknown \\
-        label: & any string \\
-        linewidth or lw: & float \\
-        lod: & [True | False] \\
-        picker: & [None|float|boolean|callable] \\
-        transform: & a matplotlib.transform transformation instance \\
-        visible: & [True | False] \\
-        zorder: & any number \\
-    \end{longtable}
+   The interactive argument is specific to this method (not available 
+   from matplotlib). If it is True, you can set positions interactively 
+   using GUI panel.
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 
-    See description about whole options.
+    See matplotlib help about detailed description of arguments.
 
 \begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
 \hline
@@ -7948,70 +7769,17 @@ Polygon object
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
-    Axis Vertical Line
-    
-    Draw a vertical line at x from ymin to ymax.  With the default values
-    of ymin=0 and ymax=1, this line will always span the vertical extent
-    of the axes, regardless of the xlim settings, even if you change them,
-    eg with the xlim command.  That is, the vertical extent is in axes
-    coords: 0=bottom, 0.5=middle, 1.0=top but the x location is in data
-    coordinates.
-    
-    Return value is the Line2D instance.  kwargs are the same as
-    kwargs to plot, and can be used to control the line properties.  Eg
-    
-    \begin{verbatim}
-        # draw a thick red vline at x=0 that spans the yrange
-        l = axvline(linewidth=4, color='r')
-    
-        # draw a default vline at x=1 that spans the yrange
-        l = axvline(x=1)
-    
-        # draw a default vline at x=.5 that spans the the middle half of
-        # the yrange
-        axvline(x=.5, ymin=0.25, ymax=0.75)
-    \end{verbatim}
-    
-    Valid kwargs are Line2D properties
+   Draw a vertical line.
+   This is an interface for matplotlib.axes.Axes.axvline function.
 
-    \begin{longtable}{rl}
-        alpha: & float \\
-        animated: & [True | False] \\
-        antialiased or aa: & [True | False] \\
-        axes: & unknown \\
-        clip\_box: & a matplotlib.transform.Bbox instance \\
-        clip\_on: & [True | False] \\
-        clip\_path: & an agg.path\_storage instance \\
-        color or c: & any matplotlib color \\
-        contains: & unknown \\
-        dash\_joinstyle: & ['miter' | 'round' | 'bevel'] \\
-        dashes: & sequence of on/off ink in points \\
-        data: & (npy.array xdata, npy.array ydata) \\
-        figure: & a matplotlib.figure.Figure instance \\
-        label: & any string \\
-        linestyle or ls: & [ '-' | '--' | '-.' | ':' | 'steps' | 'None' | ' ' | '' ] \\
-        linewidth or lw: & float value in points \\
-        lod: & [True | False] \\
-        marker: & [ '+' | ',' | '.' | '1' | '2' | '3' | '4' \\
-        markeredgecolor or mec: & any matplotlib color \\
-        markeredgewidth or mew: & float value in points \\
-        markerfacecolor or mfc: & any matplotlib color \\
-        markersize or ms: & float \\
-        picker: & unknown \\
-        pickradius: & unknown \\
-        solid\_capstyle: & ['butt' | 'round' |  'projecting'] \\
-        solid\_joinstyle: & ['miter' | 'round' | 'bevel'] \\
-        transform: & a matplotlib.transform transformation instance \\
-        visible: & [True | False] \\
-        xdata: & npy.array \\
-        ydata: & npy.array \\
-        zorder: & any number \\
-    \end{longtable}
+   The interactive argument is specific to this method (not available 
+   from matplotlib). If it is True, you can set positions interactively 
+   using GUI panel.
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 
-    See description about whole options.
+    See matplotlib help about detailed description of arguments.
 
 \begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
 \hline
@@ -8050,63 +7818,17 @@ Line2D object
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
-    axvspan : Axis Vertical Span.  xcoords are in data units and y coords
-    are in axes (relative 0-1) units
-    
-    Draw a vertical span (regtangle) from xmin to xmax.  With the default
-    values of ymin=0 and ymax=1, this always span the yrange, regardless
-    of the ylim settings, even if you change them, eg with the ylim
-    command.  That is, the vertical extent is in axes coords: 0=bottom,
-    0.5=middle, 1.0=top but the y location is in data coordinates.
-    
-    kwargs are the kwargs to Patch, eg
-    
-    \begin{longtable}{l}
-      antialiased, aa \\
-      linewidth,   lw \\
-      edgecolor,   ec \\
-      facecolor,   fc \\
-    \end{longtable}
-    
-    the terms on the right are aliases
-    
-    return value is the patches.Polygon instance.
-    
-    \begin{verbatim}
-        # draw a vertical green translucent rectangle from x=1.25 to 1.55 that
-        # spans the yrange of the axes
-        axvspan(1.25, 1.55, facecolor='g', alpha=0.5)
-    \end{verbatim}
-    
-    Valid kwargs are Polygon properties
+   Draw a vertical rectangle.
+   This is an interface for matplotlib.axes.Axes.axvspan function.
 
-    \begin{longtable}{rl}
-        alpha: & float \\
-        animated: & [True | False] \\
-        antialiased or aa: & [True | False] \\
-        axes: & an axes instance \\
-        clip\_box: & a matplotlib.transform.Bbox instance \\
-        clip\_on: & [True | False] \\
-        clip\_path: & an agg.path\_storage instance \\
-        contains: & unknown \\
-        edgecolor or ec: & any matplotlib color \\
-        facecolor or fc: & any matplotlib color \\
-        figure: & a matplotlib.figure.Figure instance \\
-        fill: & [True | False] \\
-        hatch: & unknown \\
-        label: & any string \\
-        linewidth or lw: & float \\
-        lod: & [True | False] \\
-        picker: & [None|float|boolean|callable] \\
-        transform: & a matplotlib.transform transformation instance \\
-        visible: & [True | False] \\
-        zorder: & any number \\
-    \end{longtable}
+   The interactive argument is specific to this method (not available 
+   from matplotlib). If it is True, you can set positions interactively 
+   using GUI panel.
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 
-    See description about whole options.
+    See matplotlib help about detailed description of arguments.
 
 \begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
 \hline
@@ -9319,89 +9041,17 @@ refresh && \multicolumn{2}{p{3.36in}|}{If True, the plot is replotted based on t
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
-    Add text in string s to axis at location x,y (data coords)
-    
-      fontdict is a dictionary to override the default text properties.
-      If fontdict is None, the defaults are determined by your rc
-      parameters.
-    
-      withdash=True will create a TextWithDash instance instead
-      of a Text instance.
-    
-    Individual keyword arguments can be used to override any given
-    parameter
-    
-    \begin{verbatim}
-        text(x, y, s, fontsize=12)
-    \end{verbatim}
+   Add text in string s to axis at location x,y (data coords)
+   This is an interface for matplotlib.axes.Axes.text function.
 
-    The default transform specifies that text is in data coords,
-    alternatively, you can specify text in axis coords (0,0 lower left and
-    1,1 upper right).  The example below places text in the center of the
-    axes
-    
-    \begin{verbatim}
-        text(0.5, 0.5,'matplotlib',
-             horizontalalignment='center',
-             verticalalignment='center',
-             transform = ax.transAxes,
-        )
-    \end{verbatim}
-    
-    
-    You can put a rectangular box around the text instance (eg to
-    set a background color) by using the keyword bbox.  bbox is a
-    dictionary of patches.Rectangle properties (see help
-    for Rectangle for a list of these).  For example
-  
-    \begin{verbatim}
-     text(x, y, s, bbox=dict(facecolor='red', alpha=0.5))
-    \end{verbatim}
-    
-    Valid kwargs are Text properties
-
-    \begin{longtable}{rl}
-        alpha: & float \\
-        animated: & [True | False] \\
-        axes: & an axes instance \\
-        backgroundcolor: & any matplotlib color \\
-        bbox: & rectangle prop dict plus key 'pad' which is a pad in points \\
-        clip\_box: & a matplotlib.transform.Bbox instance \\
-        clip\_on: & [True | False] \\
-        clip\_path: & an agg.path\_storage instance \\
-        color: & any matplotlib color \\
-        contains: & unknown \\
-        label: & any string \\
-        linespacing: & float \\
-        lod: & [True | False] \\
-        multialignment: & ['left' | 'right' | 'center' ] \\
-        name or fontname: & string eg, ['Sans' | 'Courier' | 'Helvetica' ...] \\
-        picker: & [None|float|boolean|callable] \\
-        position: & (x,y) \\
-        rotation: & [ angle in degrees 'vertical' | 'horizontal' \\
-        position: & (x,y) \\
-        rotation: & [ angle in degrees 'vertical' | 'horizontal' \\
-        position: & (x,y) \\
-        rotation: & [ angle in degrees 'vertical' | 'horizontal' \\
-        size or fontsize: & [ size in points | relative size eg 'smaller', 'x-large' ] \\
-        size or fontsize: & [ size in points | relative size eg 'smaller', 'x-large' ] \\
-        style or fontstyle: & [ 'normal' | 'italic' | 'oblique'] \\
-        text: & string or anything printable with '\%s' conversion \\
-        transform: & a matplotlib.transform transformation instance \\
-        variant: & [ 'normal' | 'small-caps' ] \\
-        verticalalignment or va: & [ 'center' | 'top' | 'bottom' | 'baseline' ] \\
-        visible: & [True | False] \\
-        weight or fontweight: & [ 'normal' | 'bold' | 'heavy' | 'light' | 'ultrabo \\
-        weight or fontweight: & [ 'normal' | 'bold' | 'heavy' | 'light' | 'ultrabold' | 'ultralight'] \\
-        x: & float \\
-        y: & float \\
-        zorder: & any number \\
-    \end{longtable}
+   The interactive argument is specific to this method (not available 
+   from matplotlib). If it is True, you can set positions interactively 
+   using GUI panel.
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 
-    See description about whole options.
+    See matplotlib help about detailed description of arguments.
 
 \begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
 \hline
