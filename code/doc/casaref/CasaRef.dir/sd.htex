@@ -30,11 +30,11 @@ Synopsis
 
 \begin{itemize}
 \item reading: Scantable, Measurement Set, SDFITS (GBT, ATNF), NRO
-\item writing: Scantable, Measurement Set, SDFITS (ATNF)
+\item writing: Scantable, Measurement Set, SDFITS (ATNF), image FITS, CLASS, ASCII
 \end{itemize}
 
     An internal data format for sd tool is Scantable.
-    The Scantable is defined as \casa\ table and is specially 
+    The Scantable is defined as \casa table and is specially 
     designed for single-dish data. The data is converted to Scantable  
     during the processing whatever its oritinal data format is.
     The result of the processing can be stored in other data format 
@@ -79,7 +79,7 @@ Synopsis
     line catalog. The input data should be provided from the user.
     Supported format is ASCII table or specific format for 
     \ahlink{sd.linecatalog}{sd:sd.linecatalog}.
-    \casa\ package contains a default line catalog that is a part of 
+    \casa package contains a default line catalog that is a part of 
     JPL line catalog. 
     Benefit of this object is that it provides an interface to the 
     catalog such as selecting lines by frequency and/or line intensity.
@@ -124,7 +124,7 @@ Methods
 
 	\ahlink{calfs}{sd:sd.calfs} &Calibration function for frequency switched data \\
 
-	\ahlink{calibrate}{sd:sd.calibrate} &High level function for calibration that calls appropriate calibration function depending on the data \\
+	\ahlink{calibrate}{sd:sd.calibrate} &High level function for calibration \\
 
 	\ahlink{calnod}{sd:sd.calnod} &Calibration function for nodding data \\
 
@@ -140,9 +140,9 @@ Methods
 
 	\ahlink{get\_revision}{sd:sd.get_revision} &Get revision of the source code for the tool \\
 
-	\ahlink{is\_asap\_cli}{sd:sd.is_asap_cli} &Check if the tool is loaded as part of \casa\ or is launched as standalone software \\
+	\ahlink{is\_asap\_cli}{sd:sd.is_asap_cli} & Return True if the tool is launched as standalone software \\
 
-	\ahlink{is\_casapy}{sd:sd.is_casapy} & Check if the tool is loaded as part of \casa\ or is launched as standalone software \\
+	\ahlink{is\_casapy}{sd:sd.is_casapy} & Return True if the tool is loaded as part of \casa \\
 
 	\ahlink{linecatalog}{sd:sd.linecatalog} &Create a linecatalog object \\
 
@@ -181,7 +181,6 @@ Methods
 	\ahlink{welcome}{sd:sd.welcome} &Return a welcome message \\
 
 \end{longtable}
-
 
 
 
@@ -238,8 +237,7 @@ verify&& \multicolumn{2}{p{3.36in}|}{Verify calibration if True}\\
 \end{tabular}
 
 \flushleft\vspace{.20in}\textbf {Returns}\newline
-scantable that contains calibrated spectra
-\newline
+scantable
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
@@ -308,8 +306,7 @@ verify&& \multicolumn{2}{p{3.36in}|}{Verify calibration if True}\\
 \end{tabular}
 
 \flushleft\vspace{.20in}\textbf {Returns}\newline
-scantable that contains calibrated spectra
-\newline
+scantable
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
@@ -373,8 +370,7 @@ align && \multicolumn{2}{p{3.36in}|}{Align the spectra in velocity before averag
 \end{tabular}
 
 \flushleft\vspace{.20in}\textbf {Returns}\newline
-scantable that contains time averaged scans
-\newline
+scantable
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
@@ -753,12 +749,12 @@ revision number string
 
 %% sd.is_asap_cli
 \newpage
-\ahsdfunction{sd.is\_asap\_cli}{sd.is_asap_cli}{Check if the tool is loaded as part of \casa\ or is launched as standalone software}
+\ahsdfunction{sd.is\_asap\_cli}{sd.is_asap_cli}{Check if the tool is loaded as part of \casa or is launched as standalone software}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
    The method checks if sd tool (ASAP) is running standalone.
-   This always returns False if you use \casa\ .
+   This always returns False if you use \casa.
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
@@ -772,7 +768,7 @@ bool (False)
 
 %% sd.is_casapy
 \newpage
-\ahsdfunction{sd.is\_casapy}{sd.is_casapy}{Check if the tool is loaded as part of \casa\ or is launched as standalone software}
+\ahsdfunction{sd.is\_casapy}{sd.is_casapy}{Check if the tool is loaded as part of \casa or is launched as standalone software}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1339,7 +1335,7 @@ string
 
   The scantable is a representation of the Scantable, which is a data 
   format designed properly for single-dish data. 
-  The scantable is implemented as \casa\ table so that it is possible 
+  The scantable is implemented as \casa table so that it is possible 
   to access data via \ahlink{table}{table} tool. 
   On the other hand, the scantable has its own functions to get/set some data. 
   In addition to the simple setter/getter and utility functions, 
@@ -1427,7 +1423,7 @@ Methods
 
 	\ahlink{bin}{sd:sd.scantable.bin} &Perform binning of spectra \\
 
-	\ahlink{chan2data}{sd:sd.scantable.chan2data} &Return channel/frequency/velocity and spectral value at an arbitrary row and channel \\
+	\ahlink{chan2data}{sd:sd.scantable.chan2data} &Return channel/frequency/velocity and spectral value\\
 
 	\ahlink{clip}{sd:sd.scantable.clip} &Flag data by its spectral value \\
 
@@ -1439,7 +1435,7 @@ Methods
 
 	\ahlink{create\_mask}{sd:sd.scantable.create_mask} &Return a bool array based on [min,max] windows \\
 
-	\ahlink{drop\_scan}{sd:sd.scantable.drop_scan} &Return a new scantable where the specified scan number(s) are dropped \\
+	\ahlink{drop\_scan}{sd:sd.scantable.drop_scan} &Return a new scantable where the specified scan number(s) dropped \\
 
 	\ahlink{flag}{sd:sd.scantable.flag} & Flag selected data using specified mask (channel based flag) \\
 
@@ -1451,9 +1447,9 @@ Methods
 
 	\ahlink{freq\_switch}{sd:sd.scantable.freq_switch} &Apply frequency switching to the data\\
 
-	\ahlink{gain\_el}{sd:sd.scantable.gain_el} &Apply gain-elevation correction based on user-provided correction factors\\
+	\ahlink{gain\_el}{sd:sd.scantable.gain_el} &Apply gain-elevation correction based on user-provided data \\
 
-	\ahlink{get\_abcissa}{sd:sd.scantable.get_abcissa} &Get the abcissa values and format string that represents current coordinate setup \\
+	\ahlink{get\_abcissa}{sd:sd.scantable.get_abcissa} &Get the abcissa values \\
 
 	\ahlink{get\_antennaname}{sd:sd.scantable.get_antennaname} &Get antenna name\\
 
@@ -1477,9 +1473,9 @@ Methods
 
 	\ahlink{get\_mask}{sd:sd.scantable.get_mask} &Get mask for the specified row as a bool list \\
 
-	\ahlink{get\_mask\_indices}{sd:sd.scantable.get_mask_indices} &Compute and return lists of mask start indices and mask end indices from the given bool array \\
+	\ahlink{get\_mask\_indices}{sd:sd.scantable.get_mask_indices} &Compute a lists of mask start/end indices from the given bool array \\
 
-	\ahlink{get\_masklist}{sd:sd.scantable.get_masklist} &Compute and return a list of mask windows [min,max] from the given bool array \\
+	\ahlink{get\_masklist}{sd:sd.scantable.get_masklist} &Compute a list of mask windows from the given bool array \\
 
 	\ahlink{get\_parangle}{sd:sd.scantable.get_parangle} &Get a list of parallactic angles for the observation \\
 
@@ -1489,7 +1485,7 @@ Methods
 
 	\ahlink{get\_row\_selector}{sd:sd.scantable.get_row_selector} &Return a \ahlink{selector}{sd:sd.selector} object that only selects target row \\
 
-	\ahlink{get\_scan}{sd:sd.scantable.get_scan} &Return a specified scan(s) specified by scan number or source name as a new scantable\\
+	\ahlink{get\_scan}{sd:sd.scantable.get_scan} &Return a specified scan(s) specified by scan number or source name \\
 
 	\ahlink{get\_selection}{sd:sd.scantable.get_selection} &Get current selection that is currently set on this scantable \\
 
@@ -4340,7 +4336,7 @@ angle && \multicolumn{2}{p{3.36in}|}{The angle (in dgree) to rotate (add) by}\\
     The format is an optinal file format. Default is 'ASAP'. Allows are:
 
     \begin{itemize}
-    \item 'ASAP' (save as ASAP [\casa] Table)
+    \item 'ASAP' (save as ASAP [\casa Table])
     \item 'SDFITS' (save as SDFITS file)
     \item 'ASCII' (saves as ascii text file)
     \item 'MS2' (saves as an casacore MeasurementSet V2)
@@ -5109,41 +5105,39 @@ string
   available setter functions.
 
   Source types should be given as an integer or an enumerations that are properly defined for 
-  source type. That enumeration can be accessed via sd.srctype. The list of enumerations defined 
-  are as follows:
+  source type. That enumeration can be accessed via sd.srctype. 
+  The list of enumerations defined (following sd.srctype.) are as follows:
 
-\begin{longtable}{|lcl|}
-\hline
+\begin{longtable}{lcl}
 enum & int & description \\
 \hline
-sd.srctype.pson & 0 & on-source scan of position switched data \\
-sd.srctype.psoff & 1 & off-source scan of position switched data \\
-sd.srctype.nod & 2 & nod scan \\
-sd.srctype.fson & 3 & on-source scan of frequency switched data \\
-sd.srctype.fsoff & 4 & reference scan of frequency switched data \\
-sd.srctype.sky & 6 & sky scan for calibration \\
-sd.srctype.hot & 7 & hot load scan for calibration \\
-sd.srctype.warm & 8 & warm load scan for calibration \\
-sd.srctype.cold & 9 & cold load scan for calibration \\
-sd.srctype.poncal & 10 & on-source calibration scan of position switched data \\
-sd.srctype.poffcal & 11 & off-source calibration scan of position switched data \\
-sd.srctype.nodcal & 12 & nod calibration scan \\
-sd.srctype.foncal & 13 & on-source calibration scan of frequency switched data \\
-sd.srctype.foffcal & 14 & reference calibration scan of frequency switched data \\
-sd.srctype.fslo & 20 & lower frequency throw scan of symmetric freuqnecy switched data \\
-sd.srctype.flooff & 21 & off-source lower frequency throw scan of symmetric frequency switched data \\
-sd.srctype.flosky & 26 & sky lower frequency throw scan of symmetric frequency switched data \\
-sd.srctype.flohot & 27 & hot load lower frequency throw scan of symmetric frequency switched data \\
-sd.srctype.flowarm & 28 & warm load lower frequency throw scan of symmetric frequency switched data \\
-sd.srctype.flocold & 29 & cold load lower frequency throw scan of symmetric frequency switched data \\ 
-sd.srctype.fshi & 30 & higher frequency throw scan of symmetric freuqnecy switched data \\
-sd.srctype.fhioff & 31 & off-source higher frequency throw scan of symmetric frequency switched data \\
-sd.srctype.fhisky & 36 & sky higher frequency throw scan of symmetric frequency switched data \\
-sd.srctype.fhihot & 37 & hot load higher frequency throw scan of symmetric frequency switched data \\
-sd.srctype.fhiwarm & 38 & warm load higher frequency throw scan of symmetric frequency switched data \\
-sd.srctype.fhicold & 39 & cold load higher frequency throw scan of symmetric frequency switched data \\
-sd.srctype.notype & 99 & no type \\ 
-\hline
+pson & 0 & on-source scan of position switched data \\
+psoff & 1 & off-source scan of position switched data \\
+nod & 2 & nod scan \\
+fson & 3 & on-source scan of frequency switched data \\
+fsoff & 4 & reference scan of frequency switched data \\
+sky & 6 & sky scan for calibration \\
+hot & 7 & hot load scan for calibration \\
+warm & 8 & warm load scan for calibration \\
+cold & 9 & cold load scan for calibration \\
+poncal & 10 & on-source calibration scan of position switched data \\
+poffcal & 11 & off-source calibration scan of position switched data \\
+nodcal & 12 & nod calibration scan \\
+foncal & 13 & on-source calibration scan of frequency switched data \\
+foffcal & 14 & reference calibration scan of frequency switched data \\
+fslo & 20 & lower frequency throw of symmetric freuqnecy switching \\
+flooff & 21 & off-source lower frequency throw of symmetric frequency switching \\
+flosky & 26 & sky lower frequency throw of symmetric frequency switching \\
+flohot & 27 & hot load lower frequency throw of symmetric frequency switching \\
+flowarm & 28 & warm load lower frequency throw of symmetric frequency switching \\
+flocold & 29 & cold load lower frequency throw of symmetric frequency switching \\ 
+fshi & 30 & higher frequency throw of symmetric freuqnecy switching \\
+fhioff & 31 & off-source higher frequency throw of symmetric frequency switching \\
+fhisky & 36 & sky higher frequency throw of symmetric frequency switching \\
+fhihot & 37 & hot load higher frequency throw of symmetric frequency switching \\
+fhiwarm & 38 & warm load higher frequency throw of symmetric frequency switching \\
+fhicold & 39 & cold load higher frequency throw of symmetric frequency switching \\
+notype & 99 & no type \\ 
 \end{longtable}
 
   \medskip\noindent\textbf{Known Issues}
