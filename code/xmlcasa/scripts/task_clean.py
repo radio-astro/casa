@@ -477,7 +477,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
 
             os.chdir(presdir)
 
-        del imCln
+        del imCln,imset
 
     except Exception, instance:
         print '*** Error *** ',instance
