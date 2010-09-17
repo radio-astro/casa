@@ -38,7 +38,7 @@ test_plotants                   scastro@eso.org
 #test_plotms                     dmehring@nrao.edu
 test_report                     jmlarsen@eso.org
 test_slsearch                   dmehring@nrao.edu
-test_sdplot                     kana.sugi@nao.ac.jp
+#test_sdplot                     kana.sugi@nao.ac.jp
 test_sdsave                     takeshi.nakazato@nao.ac.jp
 test_smoothcal                  scastro@eso.org
 test_specfit                    dmehring@nrao.edu
