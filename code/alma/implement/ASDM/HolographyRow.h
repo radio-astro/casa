@@ -48,9 +48,6 @@ using asdmIDL::HolographyRowIDL;
 
 
 
-
-
-
 #include <Tag.h>
 using  asdm::Tag;
 

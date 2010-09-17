@@ -33,7 +33,7 @@ using asdm::NumberFormatException;
 namespace asdm {
 
 Interval Interval::getInterval(StringTokenizer &t) throw(NumberFormatException) {
-	int64_t value = Long::parseLong(t.nextToken());
+	long long value = Long::parseLong(t.nextToken());
 	return Interval (value);
 }
 
@@ -41,11 +41,11 @@ bool Interval::isZero() const {
 	return value == 0L;
 }
 
-int64_t Interval::fromString(const string& s) {
+long long Interval::fromString(const string& s) {
 	return Long::parseLong(s);
 }
 
-string Interval::toString(int64_t x) {
+string Interval::toString(long long x) {
 	return Long::toString(x);
 }
 

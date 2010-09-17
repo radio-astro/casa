@@ -27,12 +27,13 @@
 #ifndef ArrayTime_CLASS
 #define ArrayTime_CLASS
 
-#include <stdint.h>
 #include <string>
 using std::string;
 
 #include <vector>
 using std::vector;
+
+#include <stdint.h>
 
 #include <Interval.h> 
 #include <UTCCorrection.h>
@@ -194,7 +195,7 @@ public:
 	 * @param nanoseconds a int64_t integer value to express a number of nanoseconds
 	 * since 17 November 1858 00:00:00 UTC.
 	 */
-	ArrayTime(int64_t nanoseconds);
+	ArrayTime(int64_t nanoseconds); 
 
 	/**
 	 * Return the julian day.
@@ -287,18 +288,18 @@ public:
 	double getLocalSiderealTime(double longitudeInHours) const; 
 	double getGreenwichMeanSiderealTime() const; 
 
-	static double unitToJD(int64_t unit);
+	static double unitToJD(int64_t unit); 
 	static double unitToMJD(int64_t unit);
-	static int64_t jdToUnit(double jd);
-	static int64_t mjdToUnit(double mjd);
+	static int64_t jdToUnit(double jd); 
+	static int64_t mjdToUnit(double mjd); 
 
 	static double utcCorrection(double jd); 
 
 private:
 
-	static int64_t init(int year, int month, double day);
+	static int64_t init(int year, int month, double day); 
 	static int64_t init(int year, int month, int day, int hour, int minute, double second);
-	int64_t FITSString(string t) const;
+	int64_t FITSString(string t) const; 
 
 /*
 	static const int numberSigDigitsInASecond;

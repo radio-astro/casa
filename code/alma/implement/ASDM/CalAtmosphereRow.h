@@ -48,9 +48,6 @@ using asdmIDL::CalAtmosphereRowIDL;
 
 
 
-
-
-
 #include <ArrayTime.h>
 using  asdm::ArrayTime;
 

@@ -77,11 +77,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    </allowed>
     </param>
 
-    <param type="string" name="scans">
-      <description> processes only the scans specified in the option value.This value is a comma separated list of strictly positive numbers or of interval of such numbers. \'1\' or \'2~6\' or \'1,2~6,8,11,24~30\' are valid values for the option; by default all the scans are considered.</description>
-      <value></value>
-    </param>
-
     <param type="bool" name="verbose">
 	    <description>Output lots of information while the filler is working</description>
 	    <value>False</value>
@@ -169,10 +164,6 @@ wvr_corrected_data -- specifies wich values are considered in the
                       by '-wvr-corrected', containing the corrected 
                       data.
 
-scans -- processes only the scans specified in the option value.
-         This value is a comma separated list of strictly positive numbers or 
-         of interval of such numbers. "1" or "2~6" or "1,2~6,8,11,24~30"
-         are valid values for the option; by default all the scans are considered.
 
 verbose     -- produce log output as asdm2MS is being run
 
@@ -183,4 +174,3 @@ showversion -- report the version of the asdm2MS being used.
 </task>
 
 </casaxml>
-

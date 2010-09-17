@@ -48,9 +48,6 @@ using asdmIDL::PointingModelRowIDL;
 
 
 
-
-
-
 #include <Tag.h>
 using  asdm::Tag;
 

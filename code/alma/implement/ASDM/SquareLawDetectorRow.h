@@ -48,9 +48,6 @@ using asdmIDL::SquareLawDetectorRowIDL;
 
 
 
-
-
-
 #include <Tag.h>
 using  asdm::Tag;
 

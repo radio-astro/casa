@@ -48,9 +48,6 @@ using asdmIDL::TotalPowerRowIDL;
 
 
 
-
-
-
 #include <ArrayTime.h>
 using  asdm::ArrayTime;
 

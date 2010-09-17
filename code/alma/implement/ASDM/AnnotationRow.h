@@ -48,11 +48,6 @@ using asdmIDL::AnnotationRowIDL;
 
 
 
-#include <stdint.h>
-
-
-
-
 #include <ArrayTime.h>
 using  asdm::ArrayTime;
 

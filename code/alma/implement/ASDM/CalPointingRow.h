@@ -48,9 +48,6 @@ using asdmIDL::CalPointingRowIDL;
 
 
 
-
-
-
 #include <ArrayTime.h>
 using  asdm::ArrayTime;
 

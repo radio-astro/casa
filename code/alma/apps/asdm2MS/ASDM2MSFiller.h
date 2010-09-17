@@ -45,7 +45,7 @@
 #include <ms/MeasurementSets/MSSourceColumns.h>
 #include <ms/MeasurementSets/MSStateColumns.h>
 #include <ms/MeasurementSets/MSSpWindowColumns.h>
-#include <ms/MeasurementSets/MSSysCalColumns.h>
+
 #include <ms/MeasurementSets/MSWeatherColumns.h>
 
 #include <tables/Tables/StandardStMan.h>
@@ -91,8 +91,8 @@ class MSMainColumns;
 // A structure to define a range of rows in the Pointing table where the attribute overTheTop is defined and with which value.
 //
 struct s_overTheTop {
-  unsigned int  start;   // The index of the first row of the range. 
-  unsigned int  len;     // The number of consecutive rows in the range.
+  int  start;   // The index of the first row of the range. 
+  int  len;     // The number of consecutive rows in the range.
   bool value;   // The value of overTheTop in that range.
 };
 
@@ -151,7 +151,7 @@ class ASDM2MSFiller
 {
  private:
   double         itsCreationTime;
-  const string   itsName;
+  const char*    itsName;
   int            itsNumAntenna;
   int            itsNumChan;
   int            itsNumCorr;
@@ -178,7 +178,6 @@ class ASDM2MSFiller
   Bool     itsWithRadioMeters;     /* Are we building an ALMA MS ?*/
   Bool     itsFirstScan;
   uInt     itsMSMainRow;
-  /*TiledDataStManAccessor itsImWgtAcc;*/
   Block<IPosition> itsDataShapes;
 
   int itsScanNumber;
@@ -187,26 +186,26 @@ class ASDM2MSFiller
   ddMgr    itsDDMgr;
 
          
-  int createMS(const string& msName, bool complexData, bool withCompression, bool withCorrectedData=false);
+  int createMS(const char* msName, Bool complexData, Bool withCompression, Bool withCorrectedData=false);
 
   const char** getPolCombinations(int numCorr);
     
    
  public:  
-  ASDM2MSFiller (const string&	name_,
+  ASDM2MSFiller (const char*	name_,
 		 double		creation_time_,
-		 bool		withRadioMeters,
-		 bool		complexData,
-		 bool		withCompression,
-		 bool		withCorrectedData=false);
+		 Bool		withRadioMeters,
+		 Bool		complexData,
+		 Bool		withCompression,
+		 Bool		withCorrectedData=false);
   
   // Destructor
   ~ASDM2MSFiller();
 
   const casa::MeasurementSet* ms();
 
-  int addAntenna(const string&	 name_,
-		 const string&	 station_,
+  int addAntenna(const char	*name_,
+		 const char	*station_,
 		 double		 lx_,
 		 double		 ly_,
 		 double		 lz_,
@@ -277,163 +276,155 @@ class ASDM2MSFiller
 	       double   interval_,
 	       int      num_receptors_,
 	       int      beam_id_,
-	       vector<double> &   beam_offset_,
-	       vector<std::string> & pol_type_,
-	       vector<std::complex<float> > & polarization_response_,
-	       vector<double>&   position_,  // Must be a 3 elements vector !!!
-	       vector<double>&   receptor_angle_);
+	       double   beam_offset_[],
+	       const    vector<string>& pol_type_,
+	       double   polarization_responseR_[],
+	       double   polarization_responseI_[],
+	       double   position_[3],
+	       double   receptor_angle_[]);
   
-  void addField( const string&           name_,
-		 const string&           code_,
-		 double            time_,
-		 vector<double>&   delay_dir_,
-		 vector<double>&   phase_dir_,
-		 vector<double>&   reference_dir_,
-		 int               source_id_);
+  void addField( const char   *name_,
+		 const char   *code_,
+		 double time_,
+		 double delay_dir_[2],
+		 double phase_dir_[2],
+		 double reference_dir_[2],
+		 int     source_id_);
 
-  void addFlagCmd(double	time_,
-		  double	interval_,
-		  const string& type_,
-		  const string& reason_,
-		  int		level_,
-		  int		severity_,
-		  int		applied_,
-		  string&	command_);
+  void addFlagCmd(double    time_,
+		  double    interval_,
+		  const char     *type_,
+		  const char     *reason_,
+		  int       level_,
+		  int       severity_,
+		  int       applied_,
+		  const char     *command_);
 
-  void addHistory( double		time_,
-		   int			observation_id_,
-		   const string&	message_,
-		   const string&	priority_,
-		   const string&	origin_,
-		   int			object_id_,
-		   const string&	application_,
-		   const string&	cli_command_,
-		   const string&	app_parms_ );
+  void addHistory( double time_,
+		   int    observation_id_,
+		   const char  *message_,
+		   const char  *priority_,
+		   const char  *origin_,
+		   int    object_id_,
+		   const char  *application_,
+		   const char  *cli_command_,
+		   const char  *app_parms_ );
 
-  void addObservation(const string&		telescopeName_,
-		      double			startTime_,
-		      double			endTime_,
-		      const string&		observer_,
-		      const vector<string>&	log_,
-		      const string&		schedule_type_,
-		      const vector<string>&	schedule_,
-		      const string&		project_,
-		      double			release_date_);
+  void addObservation(const char   *telescopeName_,
+		      double startTime_,
+		      double endTime_,
+		      const char  *observer_,
+		      const char  **log_,
+		      const char  *schedule_type_,
+		      const char  **schedule_,
+		      const char  *project_,
+		      double release_date_);
+
+
+  void addPointing(int     antenna_id_,
+		   double  time_,
+		   double  interval_,
+		   const char   *name_,
+		   double  direction_[2],
+		   double  target_[2],
+		   double  pointing_offset_[2],
+		   double  encoder_[2],
+		   int     tracking_);
 
   void addPointingSlice(unsigned int                  n_row_,
-			vector<int>&                  antenna_id_,
-			vector<double>&               time_,
-			vector<double>&               interval_,
-			vector<double>&               direction_,
-			vector<double>&               target_,
-			vector<double>&               pointing_offset_,
-			vector<double>&               encoder_,
-			vector<bool>&                 tracking_,
+			int*                          antenna_id_,
+			double*                       time_,
+			double*                       interval_,
+			double*                       direction_,
+			double*                       target_,
+			double*                       pointing_offset_,
+			double*                       encoder_,
+			bool*                         tracking_,
 			bool                          overTheTopExists4All_,
-			vector<bool>&                 v_overTheTop_,
-			vector<s_overTheTop>&         v_s_overTheTop_);
+			bool*                         a_overTheTop_,
+			const vector<s_overTheTop>&   v_overTheTop_);
 
   int  addPolarization(int num_corr_,
-		       vector<int>& corr_type_,
-		       vector<int>& corr_product_);
+		       int corr_type_[],
+		       int corr_product_[]);
 
   int addUniquePolarization(int num_corr_,
-			    //			    const vector<Stokes::StokesTypes>& corr_type_,
-			    const vector<int>& corr_type_,
-			    const vector<int>& corr_product_);
+		       Stokes::StokesTypes corr_type_[],
+		       int corr_product_[]);
 
-  void addProcessor(string& type_,
-		    string& sub_type_,
+  void addProcessor(const char *type_,
+		    const char*sub_type_,
 		    int  type_id_,
 		    int  mode_id_);
 
-  void addSource(int             source_id_,
-		 double          time_,
-		 double          interval_,
-		 int             spectral_window_id_,
-		 int             num_lines_,
-		 string&         name_,
-		 int             calibration_group_,
-		 string&         code_,
-		 vector<double>& direction_,
-		 vector<double>& position_,
-		 vector<double>& proper_motion_,
-		 vector<string>& transition_,
-		 vector<double>& rest_frequency_,
-		 vector<double>& sysvel_);
+  void addSource(int    source_id_,
+		 double time_,
+		 double interval_,
+		 int    spectral_window_id_,
+		 int    num_lines_,
+		 const char  *name_,
+		 int    calibration_group_,
+		 const char  *code_,
+		 double direction_[2],
+		 double position_[2],
+		 double proper_motion_[2],
+		 const char  *transition_[],
+		 double rest_frequency_[],
+		 double sysvel_[]);
 		 
-  int  addSpectralWindow(int			num_chan_,
-			 const string&          name_,
-			 double			ref_frequency_,
-			 const vector<double>&	chan_freq_,
-			 const vector<double>&	chan_width_,
-			 int			meas_freq_ref_,
-			 const vector<double>&	effective_bw_,
-			 const vector<double>&	resolution_,
-			 double			total_bandwidth_,
-			 int			net_sideband_,
-			 int			bbc_no_,
-			 int			if_conv_chain_,
-			 int			freq_group_,
-			 const string&		freq_group_name_,
-			 int			num_assoc_,
-			 const vector<int>&	assoc_sp_id_,
-			 const vector<string>&	assoc_nature_);
 
-  int  addUniqueState(bool sig_,
-		      bool ref_,
+  int  addSpectralWindow(int    num_chan_,
+			 const char  *name_,
+			 double ref_frequency_,
+			 double chan_freq_[],
+			 double chan_width_[],
+			 int    meas_freq_ref_,
+			 double effective_bw_[],
+			 double resolution_[],
+			 double total_bandwidth_,
+			 int    net_sideband_,
+			 int    bbc_no_,
+			 int    if_conv_chain_,
+			 int    freq_group_,
+			 const char  *freq_group_name_,
+			 int    num_assoc_,
+			 int    assoc_spectral_window_[],
+			 char** assoc_nature_);
+
+int  addUniqueState(Bool sig_,
+		      Bool ref_,
 		      double cal_,
 		      double load_,
 		      unsigned int sub_scan_,
-		      string& obs_mode_,
-		      bool flag_row_);
-  
-  
-  void addState(bool    sig_,
-		bool    ref_,
-		double  cal_,
-		double  load_,
-		int     sub_scan_,
-		string& obs_mode_);
-  
-  void addSysCal(int    antenna_id,
-		 int    feed_id,
-		 int    spectral_window_id,
-		 double time_,
-		 double interval_,
-		 int    numReceptor_,
-		 int    numChan_,
-		 pair<bool, vector<float> >& tcal_spectrum_pair,
-		 pair<bool, bool>&           tcal_flag_pair,
-		 pair<bool, vector<float> >& trx_spectrum_pair,
-		 pair<bool, bool>&           trx_flag_pair,
-		 pair<bool, vector<float> >& tsky_spectrum_pair,
-		 pair<bool, bool>&           tsky_flag_pair,
-		 pair<bool, vector<float> >& tsys_spectrum_pair,
-		 pair<bool, bool>&           tsys_flag_pair,
-		 pair<bool, vector<float> >& tant_spectrum_pair,
-		 pair<bool, bool>&           tant_flag_pair,
-		 pair<bool, vector<float> >& tant_tsys_spectrum_pair,
-		 pair<bool, bool>&           tant_tsys_flag_pair);
+		      const char* obs_mode_,
+		      Bool flag_row_);
 
-  void addWeather(int             antennaId_,
-		  double          time_,
-		  double          interval_,
-		  float           pressure_,
-		  bool            pressure_flag_,
-		  float           rel_humidity_,
-		  bool            rel_humidity_flag_,
-		  float           temperature_,
-		  bool            temperature_flag_,
-		  float           wind_direction_,
-		  bool            wind_direction_flag_,
-		  float           wind_speed_,
-		  bool            wind_speed_flag_,
-		  bool            has_dew_point_,
-		  float           dew_point_,
-		  bool            dew_point_flag_,
-		  int             wx_station_id_,
-		  vector<double>& wx_station_position_);
+
+  void addState(Bool   sig_,
+		Bool   ref_,
+		double cal_,
+		double load_,
+		int    sub_scan_,
+		const char   *obs_mode_);
+
+  void addWeather(int    antennaId_,
+		  double time_,
+		  double interval_,
+		  float  pressure_,
+		  bool   pressure_flag_,
+		  float  rel_humidity_,
+		  bool   rel_humidity_flag_,
+		  float  temperature_,
+		  bool   temperature_flag_,
+		  float  wind_direction_,
+		  bool   wind_direction_flag_,
+		  float  wind_speed_,
+		  bool   wind_speed_flag_,
+		  bool   has_dew_point_,
+		  float  dew_point_,
+		  bool   dew_point_flag_,
+		  int    wx_station_id_,
+		  double* wx_station_position_);
 
   void end(double time_);
 };

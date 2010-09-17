@@ -406,7 +406,7 @@ namespace asdmbinaries {
 #define TSTVALID() if (valid_ == false) throw SDMDataObjectException("no valid binary data in this SDMDataObject.");
 
 
-  SDMDataObject::SDMDataObject() {numTime_ = 0; valid_  = false; aborted_ = false; }
+  SDMDataObject::SDMDataObject() {valid_  = false; aborted_ = false; }
   SDMDataObject::SDMDataObject(unsigned long long startTime,
 			       const string& dataOID,
 			       unsigned int dimensionality,
@@ -420,7 +420,6 @@ namespace asdmbinaries {
     startTime_(startTime),
     dataOID_(dataOID),
     dimensionality_(dimensionality),
-    numTime_(0),
     execBlockUID_(execBlockUID),
     execBlockNum_(execBlockNum),
     scanNum_(scanNum),

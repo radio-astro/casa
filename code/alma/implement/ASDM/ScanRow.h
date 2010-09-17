@@ -48,9 +48,6 @@ using asdmIDL::ScanRowIDL;
 
 
 
-
-
-
 #include <ArrayTime.h>
 using  asdm::ArrayTime;
 

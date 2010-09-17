@@ -27,7 +27,6 @@
 # define Long_CLASS
 #include <NumberFormatException.h>
 
-#include <stdint.h>
 #include <string>
 
 using std::string;
@@ -35,36 +34,36 @@ using std::string;
 namespace asdm {
 /**
  * A collection of static methods to perform conversions
- * between strings and int64_t values.
+ * between strings and long long values.
  */
 class Long {
 
 public:
 	/**
-	 * Parse a string supposed to represent a int64_t value and returns this value.
+	 * Parse a string supposed to represent a long long value and returns this value.
 	 * @param s the string to parse
-	 * @return a int64_t.
+	 * @return a long long.
 	 * @throws NumberFormatException.
 	 */
-	static int64_t parseLong(const string &s) throw (NumberFormatException);
+	static long long parseLong(const string &s) throw (NumberFormatException);
 
 	/**
-	 * Encode a int64_t value into its string representation.
-	 * @param l the int64_t value to be encoded.
-	 * @return the string representing the int64_t value passed as parameter.
+	 * Encode a long long value into its string representation.
+	 * @param l the long long value to be encoded.
+	 * @return the string representing the long long value passed as parameter.
 	 */
-	static string toString(int64_t l);
+	static string toString(long long l);
 
 
      /**
-	 * The minimum value for a int64_t.
+	 * The minimum value for a long long.
 	 */
-    static const int64_t MIN_VALUE;
+    static const long long MIN_VALUE;
     
    /**
-	 * The maximum value for a int64_t.
+	 * The maximum value for a long long.
 	 */
-    static const int64_t MAX_VALUE;
+    static const long long MAX_VALUE;
 
 };
 

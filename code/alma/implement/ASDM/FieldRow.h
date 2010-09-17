@@ -48,9 +48,6 @@ using asdmIDL::FieldRowIDL;
 
 
 
-
-
-
 #include <ArrayTime.h>
 using  asdm::ArrayTime;
 

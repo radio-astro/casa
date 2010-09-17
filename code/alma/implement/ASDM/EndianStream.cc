@@ -57,17 +57,17 @@ namespace asdm {
     write5(ui);		
   }
 
-  void EndianOSStream::writeLongLong(int64_t li) {
+  void EndianOSStream::writeLongLong(long long int li) {
     if ( byteOrder_ != ByteOrder::Machine_Endianity)    
       ByteSwap5(li);
     write5(li);		
   }
 
-  void EndianOSStream::writeLong(int64_t li) {
+  void EndianOSStream::writeLong(long long int li) {
     writeLongLong(li);
   }
 
-  void EndianOSStream::writeULongLong(uint64_t li) {
+  void EndianOSStream::writeULongLong(unsigned long long int li) {
     if ( byteOrder_ != ByteOrder::Machine_Endianity)    
       ByteSwap5(li);
     write5(li);		
@@ -187,13 +187,13 @@ namespace asdm {
       return un.i;
   }
 
-  int64_t EndianISStream::readLongLong() {
-    union u {int64_t i; char c[sizeof(int64_t)]; } un;
+  long long int EndianISStream::readLongLong() {
+    union u {long long  int i; char c[sizeof(long long  int)]; } un;
 	
     read((char *) &un, sizeof(un));
 
     if ( byteOrder_ != ByteOrder::Machine_Endianity) {
-      union v {int64_t i; char c[sizeof(int64_t)]; } vn;
+      union v {long long  int i; char c[sizeof(long long  int)]; } vn;			
       vn.c[7] = un.c[0];
       vn.c[6] = un.c[1];
       vn.c[5] = un.c[2];
@@ -208,17 +208,17 @@ namespace asdm {
       return un.i;
   }
 
-  int64_t EndianISStream::readLong() {
+  long long int EndianISStream::readLong() {
     return readLongLong();
   }
 
-  uint64_t EndianISStream::readULongLong() {
-    union u {uint64_t i; char c[sizeof(uint64_t)]; } un;
+  unsigned long long int EndianISStream::readULongLong() {
+    union u {unsigned  long long  int i; char c[sizeof(unsigned long long  int)]; } un;
 	
     read((char *) &un, sizeof(un));
 
     if ( byteOrder_ != ByteOrder::Machine_Endianity) {		
-      union v {uint64_t i; char c[sizeof(uint64_t)]; } vn;
+      union v {unsigned long long  int i; char c[sizeof(unsigned long long  int)]; } vn;     
       vn.c[7] = un.c[0];
       vn.c[6] = un.c[1];
       vn.c[5] = un.c[2];

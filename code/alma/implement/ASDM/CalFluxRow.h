@@ -48,9 +48,6 @@ using asdmIDL::CalFluxRowIDL;
 
 
 
-
-
-
 #include <ArrayTime.h>
 using  asdm::ArrayTime;
 

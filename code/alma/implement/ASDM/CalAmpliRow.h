@@ -48,9 +48,6 @@ using asdmIDL::CalAmpliRowIDL;
 
 
 
-
-
-
 #include <ArrayTime.h>
 using  asdm::ArrayTime;
 

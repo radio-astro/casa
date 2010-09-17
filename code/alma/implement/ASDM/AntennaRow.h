@@ -48,9 +48,6 @@ using asdmIDL::AntennaRowIDL;
 
 
 
-
-
-
 #include <ArrayTime.h>
 using  asdm::ArrayTime;
 

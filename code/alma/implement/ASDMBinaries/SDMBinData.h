@@ -308,8 +308,8 @@ class SDMBinData{
   const  short*                  shortDataPtr_;  // mutable attribute; visiblity data of a single dump
   const  int*                     longDataPtr_;  // mutable attribute; visiblity data of a single dump
   const  unsigned int*               flagsPtr_;  // mutable attribute; flags data in a single dump
-  const  int64_t*            actualTimesPtr_;  // mutable attribute; actualTimes in a single dump 
-  const  int64_t*        actualDurationsPtr_;  // mutable attribute; actualDurations in a single dump
+  const  long long*            actualTimesPtr_;  // mutable attribute; actualTimes in a single dump 
+  const  long long*        actualDurationsPtr_;  // mutable attribute; actualDurations in a single dump
   const  float*                   zeroLagsPtr_;  // mutable attribute; zeroLags in a single dump
   static MSData*                    msDataPtr_;  // mutable attribute; one MS-MAIN row given
   static SDMData*                  sdmDataPtr_;  // mutable attribute; one SDM-Main (v2) row 

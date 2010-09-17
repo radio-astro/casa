@@ -48,9 +48,6 @@ using asdmIDL::FlagCmdRowIDL;
 
 
 
-
-
-
 #include <ArrayTimeInterval.h>
 using  asdm::ArrayTimeInterval;
 

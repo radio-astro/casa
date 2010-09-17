@@ -1169,7 +1169,20 @@ void SourceTable::setFromXMLFile(const string& directory) {
 					k0 = (k0 + k1) / 2;				
 			} 	
 		}
-	
+
+		if (start == row[k0]->timeInterval.getStart()) {
+			if (row[k0]->equalByRequiredValue(x))
+				return row[k0];
+			else
+				throw DuplicateKey("DuplicateKey exception in ", "SourceTable");	
+		}
+		else if (start == row[k1]->timeInterval.getStart()) {
+			if (row[k1]->equalByRequiredValue(x))
+				return row[k1];
+			else
+				throw DuplicateKey("DuplicateKey exception in ", "SourceTable");	
+		}	
+
 		row[k0]->timeInterval.setDuration(start-row[k0]->timeInterval.getStart());
 		x->timeInterval.setDuration(row[k0+1]->timeInterval.getStart() - start);
 		row.insert(row.begin()+(k0+1), x);

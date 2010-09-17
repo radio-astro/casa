@@ -398,10 +398,10 @@ namespace sdmbin {
 	      unsigned int      numBaseband,
 	      unsigned int      numAnt,
 	      CorrelationMode   correlationMode,
-	      long long         time,
-	      long long         timeCentroid,  
-	      long long         interval, 
-	      long long         exposure,
+	      int64_t         time,
+	      int64_t         timeCentroid,  
+	      int64_t         interval, 
+	      int64_t         exposure,
 	      const float*      floatData);
 
     /** A constructor convenient for the total power from the baseband processor
@@ -436,10 +436,10 @@ namespace sdmbin {
 	      unsigned int      numBaseband,
 	      unsigned int      numAnt,
 	      CorrelationMode   correlationMode,
-	      long long         time, 
-	      long long         timeCentroid, 
-	      long long         interval,
-	      long long         exposure,
+	      int64_t         time, 
+	      int64_t         timeCentroid, 
+	      int64_t         interval,
+	      int64_t         exposure,
 	      const float*             floatData, 
 	      const unsigned int* dataFlags); // TODO
 
@@ -455,10 +455,10 @@ namespace sdmbin {
 	      unsigned int                        numBaseband,
 	      unsigned int                        numAnt,
 	      CorrelationMode                     correlationMode,
-	      long long                           time, 
-	      long long                           timeCentroid, 
-	      long long                           interval, 
-	      long long                           exposure,
+	      int64_t                           time, 
+	      int64_t                           timeCentroid, 
+	      int64_t                           interval, 
+	      int64_t                           exposure,
 	      const float*                        floatData);
 
     /** A constructor to be used in a more general case of total power data
@@ -473,10 +473,10 @@ namespace sdmbin {
 	      unsigned int                        numBaseband,
 	      unsigned int                        numAnt,
 	      CorrelationMode                     correlationMode,
-	      long long                           time,
-	      long long                           timeCentroid,  
-	      long long                           interval, 
-	      long long                           exposure,
+	      int64_t                           time,
+	      int64_t                           timeCentroid,  
+	      int64_t                           interval, 
+	      int64_t                           exposure,
 	      const float*                        floatData, 
 	      const unsigned int*                 dataFlags);
 
@@ -492,10 +492,10 @@ namespace sdmbin {
 	      unsigned int                        numBaseband,
 	      unsigned int                        numAnt,
 	      CorrelationMode                     correlationMode,
-	      long long                           time,
-	      long long                           timeCentroid,  
-	      long long                           interval, 
-	      long long                           exposure);
+	      int64_t                           time,
+	      int64_t                           timeCentroid,  
+	      int64_t                           interval, 
+	      int64_t                           exposure);
 
     /** Destructor 
 
@@ -530,16 +530,16 @@ namespace sdmbin {
 		      unsigned int numData, const unsigned int* flagsPtr);
 
     void attachActualTimes( unsigned int declaredSize, EnumSet<AxisName> es_an, 
-			    unsigned int numData, const long long * actualTimesPtr);
+			    unsigned int numData, const int64_t * actualTimesPtr);
 
     void importActualTimes( unsigned int declaredSize, EnumSet<AxisName> es_an, 
-			    unsigned int numData, const  long long * actualTimesPtr);
+			    unsigned int numData, const  int64_t * actualTimesPtr);
 
     void attachActualDurations( unsigned int declaredSize, EnumSet<AxisName> es_an, 
-				unsigned int numData, const long long * durationsPtr);
+				unsigned int numData, const int64_t * durationsPtr);
 
     void importActualDurations( unsigned int declaredSize, EnumSet<AxisName> es_an, 
-				unsigned int numData, const long long * durationsPtr);
+				unsigned int numData, const int64_t * durationsPtr);
 
 
     void attachZeroLags ( unsigned int declaredSize, EnumSet<AxisName> es_an, 
@@ -585,18 +585,18 @@ namespace sdmbin {
      * Accessors on time-related attributes 
      */
     //@{
-    long long      time() const;
-    long long      timeCentroid() const;
-    long long      interval() const;
-    long long      exposure() const;
+    int64_t      time() const;
+    int64_t      timeCentroid() const;
+    int64_t      interval() const;
+    int64_t      exposure() const;
     //@}
 
     /** @name DataAccessors 
      * Accessors to the actual time values
      */
     //@{
-    const long long* actualTimes() const;
-    const long long* actualDurations() const;
+    const int64_t* actualTimes() const;
+    const int64_t* actualDurations() const;
     /** Accessor to the flags values. Methods which can be used in case
 	of multi-dimensional data structure. 
 	@return pointer to the multidimensional array of flags.
@@ -875,10 +875,10 @@ namespace sdmbin {
 
     unsigned int              integrationNum_;
     unsigned int              subintegrationNum_;
-    long long                 time_;
-    long long                 timeCentroid_; 
-    long long                 interval_;
-    long long                 exposure_;
+    int64_t                 time_;
+    int64_t                 timeCentroid_; 
+    int64_t                 interval_;
+    int64_t                 exposure_;
 
     EnumSet<AxisName>         es_flagsAxes_;
     EnumSet<AxisName>         es_actualTimesAxes_;
@@ -900,8 +900,8 @@ namespace sdmbin {
     vector<float>             v_scaleFactor_;      // /ndd      linearized version of vv_scaleFactor_ for fast access
 
     const unsigned int*       cuintFlagsPtr_;
-    const long long*          clonlonActualTimesPtr_;
-    const long long*          clonlonActualDurationsPtr_;
+    const int64_t*          clonlonActualTimesPtr_;
+    const int64_t*          clonlonActualDurationsPtr_;
     const float*              cfloatWeightsPtr_;
     const float*              cfloatZeroLagsPtr_;
     const float*              cfloatAutoDataPtr_;
@@ -910,8 +910,8 @@ namespace sdmbin {
     const float*              cfloatCrossDataPtr_;
 
     unsigned int*             uintFlagsPtr_;
-    long long*                lonlonActualTimesPtr_;
-    long long*                lonlonActualDurationsPtr_;
+    int64_t*                lonlonActualTimesPtr_;
+    int64_t*                lonlonActualDurationsPtr_;
     float*                    floatWeightsPtr_;
     float*                    floatZeroLagsPtr_;
     float*                    floatAutoDataPtr_;
@@ -930,10 +930,10 @@ namespace sdmbin {
 	      unsigned int                        numBaseband,
 	      unsigned int                        numAnt,
 	      CorrelationMode                     correlationMode,
-	      long long                           time,
-	      long long                           timeCentroid,  
-	      long long                           interval, 
-	      long long                           exposure,
+	      int64_t                           time,
+	      int64_t                           timeCentroid,  
+	      int64_t                           interval, 
+	      int64_t                           exposure,
 	      unsigned int                    numCrossData,
 	      const int*                      crossData,
 	      unsigned int                    numAutoData,
@@ -964,10 +964,10 @@ namespace sdmbin {
 		 unsigned int                        numBaseband,
 		 unsigned int                        numAnt,
 		 CorrelationMode                     correlationMode,
-		 long long                           time,
-		 long long                           timeCentroid,  
-		 long long                           interval, 
-		 long long                           exposure,
+		 int64_t                           time,
+		 int64_t                           timeCentroid,  
+		 int64_t                           interval, 
+		 int64_t                           exposure,
 		 float*                              floatData, 
 		 unsigned int                        integNum);
 
@@ -981,10 +981,10 @@ namespace sdmbin {
 		 unsigned int                        numBaseband,
 		 unsigned int                        numAnt,
 		 CorrelationMode                     correlationMode,
-		 long long                           time, 
-		 long long                           timeCentroid, 
-		 long long                           interval,
-		 long long                           exposure, 
+		 int64_t                           time, 
+		 int64_t                           timeCentroid, 
+		 int64_t                           interval,
+		 int64_t                           exposure, 
 		 float*                              floatData, 
 		 unsigned int*                       dataFlags,
 		 unsigned int                        integNum);
@@ -998,10 +998,10 @@ namespace sdmbin {
 		 unsigned int      numBaseband,
 		 unsigned int      numAnt, 
 		 CorrelationMode   correlationMode,
-		 long long         time, 
-		 long long         timeCentroid,
-		 long long         interval,
-		 long long         exposure, 
+		 int64_t         time, 
+		 int64_t         timeCentroid,
+		 int64_t         interval,
+		 int64_t         exposure, 
 		 float*            floatData);
 
     Integration( unsigned int      numPolProduct,
@@ -1013,10 +1013,10 @@ namespace sdmbin {
 		 unsigned int      numBaseband,
 		 unsigned int      numAnt,
 		 CorrelationMode   correlationMode,
-		 long long         time, 
-		 long long         timeCentroid, 
-		 long long         interval,
-		 long long         exposure, 
+		 int64_t         time, 
+		 int64_t         timeCentroid, 
+		 int64_t         interval,
+		 int64_t         exposure, 
 		 float*            floatData, 
 		 unsigned long int*   dataFlags,  // TODO
 		 unsigned int      integNum);
@@ -1064,10 +1064,10 @@ namespace sdmbin {
 		    unsigned int                        numBaseband,
 		    unsigned int                        numAnt,
 		    CorrelationMode                     correlationMode, 
-		    long long                           time,
-		    long long                           timeCentroid, 
-		    long long                           interval,
-		    long long                           exposure,
+		    int64_t                           time,
+		    int64_t                           timeCentroid, 
+		    int64_t                           interval,
+		    int64_t                           exposure,
 		    float*                              floatData,
 		    unsigned int                        integNum,
 		    unsigned int                        subintegNum);
@@ -1085,10 +1085,10 @@ namespace sdmbin {
 		    unsigned int                        numBaseband,
 		    unsigned int                        numAnt,
 		    CorrelationMode                     correlationMode, 
-		    long long                           time, 
-		    long long                           timeCentroid, 
-		    long long                           interval,
-		    long long                           exposure, 
+		    int64_t                           time, 
+		    int64_t                           timeCentroid, 
+		    int64_t                           interval,
+		    int64_t                           exposure, 
 		    float*                              floatData,
 		    unsigned long int*                 dataFlags,  // TODO
 		    unsigned int                        integNum,
@@ -1109,10 +1109,10 @@ namespace sdmbin {
 		    unsigned int                        numBaseband,
 		    unsigned int                        numAnt,
 		    CorrelationMode                     correlationMode, 
-		    long long                           time,
-		    long long                           timeCentroid, 
-		    long long                           interval,
-		    long long                           exposure,
+		    int64_t                           time,
+		    int64_t                           timeCentroid, 
+		    int64_t                           interval,
+		    int64_t                           exposure,
 		    float*                              floatData,
 		    unsigned int                        integNum,
 		    unsigned int                        subintegNum);
@@ -1131,10 +1131,10 @@ namespace sdmbin {
 		    unsigned int    numBaseband,
 		    unsigned int    numAnt, 
 		    CorrelationMode correlationMode,
-		    long long       time, 
-		    long long       timeCentroid, 
-		    long long       interval,
-		    long long       exposure, 
+		    int64_t       time, 
+		    int64_t       timeCentroid, 
+		    int64_t       interval,
+		    int64_t       exposure, 
 		    float*          floatData,
 		    unsigned int    integNum,
 		    unsigned int    subintegNum);
@@ -1153,10 +1153,10 @@ namespace sdmbin {
 		    unsigned int    numBaseband,
 		    unsigned int    numAnt,
 		    CorrelationMode correlationMode,
-		    long long       time, 
-		    long long       timeCentroid, 
-		    long long       interval,
-		    long long       exposure, 
+		    int64_t       time, 
+		    int64_t       timeCentroid, 
+		    int64_t       interval,
+		    int64_t       exposure, 
 		    float*          floatData, 
 		    unsigned long int*   dataFlags, // TODO
 		    unsigned int    integNum,

@@ -468,13 +468,13 @@ namespace sdmbin {
 
       if(numTime){  // MIME content with a structure of dimensionality 0
 
-	const SDMDataSubset      dataSubset         = dataObject.tpDataSubset();
-	uint64_t                 obsDuration        = dataSubset.interval();
+	const SDMDataSubset    dataSubset         = dataObject.tpDataSubset();
+	uint64_t               obsDuration        = dataSubset.interval();
 
-	int64_t                  interval           = (int64_t)obsDuration/(int64_t)numTime;
-	int64_t                  exposure;
-	int64_t                  timeOfDump         = (int64_t)dataSubset.time()-(int64_t)obsDuration/2LL-interval/2LL; // mutable
-	int64_t                  timeCentroid       = timeOfDump;         // default value for the first dump
+	int64_t                interval           = (int64_t)obsDuration/(int64_t)numTime;
+	int64_t                exposure;
+	int64_t                timeOfDump         = (int64_t)dataSubset.time()-(int64_t)obsDuration/2LL-interval/2LL; // mutable
+	int64_t                timeCentroid       = timeOfDump;         // default value for the first dump
 
 	// actual pointer to the data blocks and nb of pdt values found in these blocks:
 	const unsigned int*      flagsPtr           = NULL;  unsigned int long numFlags=0; // mcaillat 
@@ -645,7 +645,7 @@ namespace sdmbin {
       }else{
 
 	const vector<SDMDataSubset>& v_dataSubset    = dataObject.corrDataSubsets();
-// 	uint_64           startTime       = dataObject.startTime();
+// 	unsigned int64_t           startTime       = dataObject.startTime();
 	int64_t                    interval;
 	int64_t                    exposure;
 	int64_t                    timeOfInteg;

@@ -965,6 +965,20 @@ void MainTable::setFromXMLFile(const string& directory) {
 					k0 = (k0 + k1) / 2;				
 			} 	
 		}
+		
+		if (start.get() == row.at(k0)->getTime().get()) {
+			if (row.at(k0)->equalByRequiredValue(x))
+				return row.at(k0);
+			else
+				throw DuplicateKey("DuplicateKey exception in ", "MainTable");	
+		}
+		else if (start.get() == row.at(k1)->getTime().get()) {
+			if (row.at(k1)->equalByRequiredValue(x))
+				return row.at(k1);
+			else
+				throw  DuplicateKey("DuplicateKey exception in ", "MainTable");	
+		}		
+		
 		row.insert(row.begin()+(k0+1), x);
 		privateRows.push_back(x);
 		x->isAdded(true);

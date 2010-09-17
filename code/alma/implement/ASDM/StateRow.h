@@ -48,9 +48,6 @@ using asdmIDL::StateRowIDL;
 
 
 
-
-
-
 #include <Tag.h>
 using  asdm::Tag;
 

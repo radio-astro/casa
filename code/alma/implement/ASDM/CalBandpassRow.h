@@ -48,9 +48,6 @@ using asdmIDL::CalBandpassRowIDL;
 
 
 
-
-
-
 #include <ArrayTime.h>
 using  asdm::ArrayTime;
 

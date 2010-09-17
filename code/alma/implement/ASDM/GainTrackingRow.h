@@ -48,9 +48,6 @@ using asdmIDL::GainTrackingRowIDL;
 
 
 
-
-
-
 #include <Angle.h>
 using  asdm::Angle;
 
