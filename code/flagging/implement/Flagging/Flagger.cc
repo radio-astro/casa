@@ -489,11 +489,6 @@ namespace casa {
             mssel_p = new MeasurementSet(*originalms_p);
         }
         else {
-	    os << LogIO::WARN << "Looping through a subset of the MS is likely to be slow" << LogIO::POST;
-            /* Because Table::rowNumbers(ms), used in VisIter's slurp mode, will take a
-	       long time when the MS is a selection of another MS. Using VisIter in non-slurp mode
-	       performs badly for non-sorted MS. The solution to this is probably to optimize 
-	       Table::rowNumbers() */
 	    mssel_p = new MeasurementSet(mssel_p2);
         }
 	if (dbg)cout << "assigned new MS to mssel_p" << endl;

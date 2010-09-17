@@ -28,18 +28,21 @@
 #include <msvis/MSVis/VisibilityIterator.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <scimath/Mathematics/InterpolateArray1D.h>
+#include <ms/MeasurementSets/MSColumns.h>
+#include <tables/Tables/TableDesc.h>
+#include <tables/Tables/ColDescSet.h>
+#include <tables/Tables/TableRecord.h>
+#include <tables/Tables/TiledStManAccessor.h>
+#include <tables/Tables/StandardStManAccessor.h>
+#include <tables/Tables/IncrStManAccessor.h>
 #include <casa/Arrays/ArrayLogical.h>
+#include <casa/Quanta/MVTime.h>
+#include <casa/Containers/Record.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/MaskedArray.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/Utilities/Sort.h>
-#include <ms/MeasurementSets/MSColumns.h>
-#include <casa/Quanta/MVTime.h>
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/ColDescSet.h>
-#include <tables/Tables/TableRecord.h>
-#include <tables/Tables/TiledStManAccessor.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -52,7 +55,7 @@ ROVisibilityIterator::ROVisibilityIterator()
 ROVisibilityIterator::ROVisibilityIterator(const MeasurementSet &ms,
 					   const Block<Int>& sortColumns,
 					   Double timeInterval)
-    : msIter_p(ms,sortColumns,timeInterval),selRows_p(0, 0),slurp_p(false),
+    : msIter_p(ms,sortColumns,timeInterval),selRows_p(0, 0),
 curChanGroup_p(0),nChan_p(0),nRowBlocking_p(0),initialized_p(False),
 msIterAtOrigin_p(False),stateOk_p(False),freqCacheOK_p(False),
 floatDataFound_p(False),lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False)
@@ -97,7 +100,7 @@ void ROVisibilityIterator::initsinglems(){
 ROVisibilityIterator::ROVisibilityIterator(const MeasurementSet &ms,
 					   const Block<Int>& sortColumns, const Bool addDefaultSort,
 					   Double timeInterval)
- :msIter_p(ms,sortColumns,timeInterval, addDefaultSort),selRows_p(0, 0),slurp_p(false),
+ :msIter_p(ms,sortColumns,timeInterval, addDefaultSort),selRows_p(0, 0),
 curChanGroup_p(0),nChan_p(0),nRowBlocking_p(0),initialized_p(False),
 msIterAtOrigin_p(False),stateOk_p(False),freqCacheOK_p(False),
   floatDataFound_p(False),lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False){
@@ -111,7 +114,7 @@ msIterAtOrigin_p(False),stateOk_p(False),freqCacheOK_p(False),
 ROVisibilityIterator::ROVisibilityIterator(const Block<MeasurementSet> &mss,
 					   const Block<Int>& sortColumns,
 					   Double timeInterval)
-: msIter_p(mss,sortColumns,timeInterval),selRows_p(0, 0),slurp_p(false),
+: msIter_p(mss,sortColumns,timeInterval),selRows_p(0, 0),
 curChanGroup_p(0),nChan_p(0),nRowBlocking_p(0),initialized_p(False),
 msIterAtOrigin_p(False),stateOk_p(False),freqCacheOK_p(False),
 floatDataFound_p(False),lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False)
@@ -124,7 +127,7 @@ floatDataFound_p(False),lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False)
 ROVisibilityIterator::ROVisibilityIterator(const Block<MeasurementSet> &mss,
 					   const Block<Int>& sortColumns, const Bool addDefaultSort,
 					   Double timeInterval)
-  : msIter_p(mss,sortColumns,timeInterval,addDefaultSort),selRows_p(0, 0),slurp_p(false),
+  : msIter_p(mss,sortColumns,timeInterval,addDefaultSort),selRows_p(0, 0),
 curChanGroup_p(0),nChan_p(0),nRowBlocking_p(0),initialized_p(False),
 msIterAtOrigin_p(False),stateOk_p(False),freqCacheOK_p(False),
     floatDataFound_p(False),lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False){
@@ -181,7 +184,6 @@ ROVisibilityIterator::operator=(const ROVisibilityIterator& other)
   This=(ROVisibilityIterator*)this;
   msIter_p=other.msIter_p;
   selRows_p=other.selRows_p;
-  slurp_p = other.slurp_p;
   curChanGroup_p=other.curChanGroup_p;
   curNumChanGroup_p=other.curNumChanGroup_p;
   channelGroupSize_p=other.channelGroupSize_p;
@@ -744,28 +746,28 @@ Vector<uInt>& ROVisibilityIterator::rowIds(Vector<uInt>& rowids) const
 Vector<Int>& ROVisibilityIterator::antenna1(Vector<Int>& ant1) const
 {
   ant1.resize(curNumRow_p);
-  getCol(colAntenna1, ant1, MS::columnName(MS::ANTENNA1), allAntenna1);
+  getCol(colAntenna1, ant1);
   return ant1;
 }
 
 Vector<Int>& ROVisibilityIterator::antenna2(Vector<Int>& ant2) const
 {
   ant2.resize(curNumRow_p);
-  getCol(colAntenna2, ant2, MS::columnName(MS::ANTENNA2), allAntenna2);
+  getCol(colAntenna2, ant2);
   return ant2;
 }
 
 Vector<Int>& ROVisibilityIterator::feed1(Vector<Int>& fd1) const
 {
   fd1.resize(curNumRow_p);
-  getCol(colFeed1, fd1, MS::columnName(MS::FEED1), allFeed1);
+  getCol(colFeed1, fd1);
   return fd1;
 }
 
 Vector<Int>& ROVisibilityIterator::feed2(Vector<Int>& fd2) const
 {
   fd2.resize(curNumRow_p);
-  getCol(colFeed2, fd2, MS::columnName(MS::FEED2), allFeed2);
+  getCol(colFeed2, fd2);
   return fd2;
 }
 
@@ -838,14 +840,14 @@ Matrix<Bool>& ROVisibilityIterator::flag(Matrix<Bool>& flags) const
 Vector<Bool>& ROVisibilityIterator::flagRow(Vector<Bool>& rowflags) const
 {
   rowflags.resize(curNumRow_p);
-  getCol(colFlagRow, rowflags, MS::columnName(MS::FLAG_ROW), allRowflags);
+  getCol(colFlagRow, rowflags);
   return rowflags;
 }
 
 Vector<Int>& ROVisibilityIterator::scan(Vector<Int>& scans) const
 {
     scans.resize(curNumRow_p);
-    getCol(colScan, scans, MS::columnName(MS::SCAN_NUMBER), allScans);
+    getCol(colScan, scans);
     return scans;
 }
 
@@ -888,7 +890,7 @@ Vector<Double>& ROVisibilityIterator::time(Vector<Double>& t) const
 {
   t.resize(curNumRow_p);
 
-  getCol(colTime, t, MS::columnName(MS::TIME), allTimes);
+  getCol(colTime, t);
 
   return t;
 }
@@ -896,7 +898,7 @@ Vector<Double>& ROVisibilityIterator::time(Vector<Double>& t) const
 Vector<Double>& ROVisibilityIterator::timeInterval(Vector<Double>& t) const
 {
   t.resize(curNumRow_p);
-  getCol(colTimeInterval, t, MS::columnName(MS::INTERVAL), allTimeInterval);
+  getCol(colTimeInterval, t);
   return t;
 }
 
@@ -1122,7 +1124,7 @@ Vector<RigidVector<Double,3> >&
 ROVisibilityIterator::uvw(Vector<RigidVector<Double,3> >& uvwvec) const
 {
     uvwvec.resize(curNumRow_p);
-    getColArray<Double>(colUVW, This->uvwMat_p, MS::columnName(MS::UVW), allUVW, True);
+    getColArray<Double>(colUVW, This->uvwMat_p, True);
     // get a pointer to the raw storage for quick access
     Bool deleteIt;
     Double* pmat=This->uvwMat_p.getStorage(deleteIt);
@@ -1856,54 +1858,25 @@ Int ROVisibilityIterator::numberCoh(){
 }
 
 template<class T>
-void ROVisibilityIterator::getColScalar(const ROScalarColumn<T> &column, Vector<T> &array, const String &colName, Vector<T> &all, Bool resize) const
+void ROVisibilityIterator::getColScalar(const ROScalarColumn<T> &column, Vector<T> &array, Bool resize) const
 {
-    if (!slurp_p) {
-        column.getColumnCells(selRows_p, array, resize);
-        return;
-    }
-
-    if (all.nelements() == 0) {
-        ScalarColumn<T> colAll(msIter_p.ms(), colName);
-        try {
-            all = colAll.getColumn();
-        }
-        catch (...) {
-            // If out of memory, do it the slow way.
-            // Sorry for the generic catch but it is undocumented, 
-            // what getColumn() throws in case of OOM,
-            // so this is probably the safest things to do.
-            // If there are other problems the following call
-            // is likely to throw too.
-            column.getColumnCells(selRows_p, array, resize);
-            return;
-        }
-    }
-
-    update_rowIds();
-
-    if (resize && array.shape().nelements() != curNumRow_p) {
-        array.resize(curNumRow_p);
-    }
-
-    for (unsigned i = 0; i < curNumRow_p; i++) {
-        array(i) = all(rowIds_p(i));
-    }
+    column.getColumnCells(selRows_p, array, resize);
     return;
 }
-void ROVisibilityIterator::getCol(const ROScalarColumn<Bool> &column, Vector<Bool> &array, const String &colName, Vector<Bool> &all, Bool resize) const
+
+void ROVisibilityIterator::getCol(const ROScalarColumn<Bool> &column, Vector<Bool> &array, Bool resize) const
 {
-    getColScalar<Bool>(column, array, colName, all, resize);
+    getColScalar<Bool>(column, array, resize);
 }
 
-void ROVisibilityIterator::getCol(const ROScalarColumn<Int> &column, Vector<Int> &array, const String &colName, Vector<Int> &all, Bool resize) const
+void ROVisibilityIterator::getCol(const ROScalarColumn<Int> &column, Vector<Int> &array, Bool resize) const
 {
-    getColScalar<Int>(column, array, colName, all, resize);
+    getColScalar<Int>(column, array, resize);
 }
 
-void ROVisibilityIterator::getCol(const ROScalarColumn<Double> &column, Vector<Double> &array, const String &colName, Vector<Double> &all, Bool resize) const
+void ROVisibilityIterator::getCol(const ROScalarColumn<Double> &column, Vector<Double> &array, Bool resize) const
 {
-    getColScalar<Double>(column, array, colName, all, resize);
+    getColScalar<Double>(column, array, resize);
 }
 
 void ROVisibilityIterator::getCol(const ROArrayColumn<Bool> &column, Array<Bool> &array, Bool resize) const
@@ -1917,53 +1890,9 @@ void ROVisibilityIterator::getCol(const ROArrayColumn<Float> &column, Array<Floa
 }
 
 template<class T>
-void ROVisibilityIterator::getColArray(const ROArrayColumn<T> &column, Array<T> &array, const String &colName, Array<T> &all, Bool resize) const
+void ROVisibilityIterator::getColArray(const ROArrayColumn<T> &column, Array<T> &array, Bool resize) const
 {
-    if (!slurp_p) {
-        column.getColumnCells(selRows_p, array, resize);
-        return;
-    }
-
-    if (all.nelements() == 0) {
-        ArrayColumn<T> colAll(msIter_p.ms(), colName);
-        try {
-            all = colAll.getColumn();
-        }
-        catch (...) {
-            column.getColumnCells(selRows_p, array, resize);
-            return;
-        }
-    }
-
-    update_rowIds();
-
-    // Support only uvw column for now
-    if (all.shape().nelements() != 2) {
-        stringstream ss;
-        ss << __func__ << ": Column " << colName << " is " << all.shape().nelements() 
-           << "-dimensional, expected 2-dimensional";
-        throw(AipsError(ss.str()));
-    }
-
-    if (all.shape()(0) != 3) {
-        stringstream ss;
-        ss << __func__ << ": Column " << colName << " has cell length " << all.shape()(0) 
-           << ", expected 3";
-        throw(AipsError(ss.str()));
-    }
-
-    IPosition shape(2, 3, curNumRow_p);
-    if (resize && array.shape() != shape) {
-        dynamic_cast<Matrix<T> &>(array).resize(3, curNumRow_p);
-    }
-
-    Matrix<T> &m1 = dynamic_cast<Matrix<T> &>(array);
-    Matrix<T> &m2 = dynamic_cast<Matrix<T> &>(all);
-    for (unsigned j = 0; j < curNumRow_p; j++) {
-        for (unsigned i = 0; i < 3; i++) {
-            m1(i, j) = m2(i, rowIds_p(j));
-        }
-    }
+    column.getColumnCells(selRows_p, array, resize);
     return;
 }
 
@@ -2000,9 +1929,85 @@ ROVisibilityIterator::attachTable() const
 
 void ROVisibilityIterator::slurp() const
 {
-    slurp_p = true;
+    /* Set the table data manager (ISM and SSM) cache size to the full column size, for
+       the columns ANTENNA1, ANTENNA2, FEED1, FEED2, TIME, INTERVAL, FLAG_ROW, SCAN_NUMBER and UVW
+    */
+  Record dmInfo(msIter_p.ms().dataManagerInfo());
 
-    return;
+  //  cout << "nfields = " << dmInfo.nfields() << endl;
+  //  cout << "dminfo = " << dmInfo.description() << endl;
+  RecordDesc desc = dmInfo.description();
+  for (unsigned i = 0; i < dmInfo.nfields(); i++) {
+      //      cout << "field " << i << " isSubRecord = " << desc.isSubRecord(i) << endl;
+      //      cout << "field " << i << " isArray = " << desc.isArray(i) << endl;
+      if (desc.isSubRecord(i)) {
+
+          Record sub = dmInfo.subRecord(i);
+
+          //          cout << "sub = " << sub << endl;
+          if (sub.fieldNumber("NAME") >= 0 &&
+              sub.fieldNumber("TYPE") >= 0 &&
+              sub.fieldNumber("COLUMNS") >= 0 &&
+              sub.type(sub.fieldNumber("NAME")) == TpString &&
+              sub.type(sub.fieldNumber("TYPE")) == TpString &&
+              sub.type(sub.fieldNumber("COLUMNS")) == TpArrayString) {
+              
+              Array<String> columns;
+              dmInfo.subRecord(i).get("COLUMNS", columns);
+              
+              bool match = false;
+              for (unsigned j = 0; j < columns.nelements(); j++) {
+                  String column = columns(IPosition(1, j));
+                  match |= (column == MS::columnName(MS::ANTENNA1) ||
+                            column == MS::columnName(MS::ANTENNA2) ||
+                            column == MS::columnName(MS::FEED1) ||
+                            column == MS::columnName(MS::FEED2) ||
+                            column == MS::columnName(MS::TIME) ||
+                            column == MS::columnName(MS::INTERVAL) ||
+                            column == MS::columnName(MS::FLAG_ROW) ||
+                            column == MS::columnName(MS::SCAN_NUMBER) ||
+                            column == MS::columnName(MS::UVW));
+              }
+              //              cout << "columns = " << columns << endl;
+              
+              if (match) {
+                  
+                  String dm_name;
+                  dmInfo.subRecord(i).get("NAME", dm_name);
+                  // cout << "dm_name = " << dm_name << endl;
+
+                  String dm_type;
+                  dmInfo.subRecord(i).get("TYPE", dm_type);
+                  // cout << "dm_type = " << dm_type << endl;
+
+                  Bool can_exceed_nr_buckets = False;
+                  uInt num_buckets = msIter_p.ms().nrow(); 
+                  // One bucket is at least one row, so this is enough
+
+                  if (dm_type == "IncrementalStMan") {
+                      ROIncrementalStManAccessor acc(msIter_p.ms(), dm_name);
+                      acc.setCacheSize(num_buckets, can_exceed_nr_buckets);
+                  }
+                  else if (dm_type == "StandardStMan") {
+                      ROStandardStManAccessor acc(msIter_p.ms(), dm_name);
+                      acc.setCacheSize(num_buckets, can_exceed_nr_buckets);
+                  }
+                  /* These are the only storage managers which use the BucketCache
+                     (and therefore are slow for random access and small cache sizes)
+                   */
+              }
+              else {
+                  String dm_name;
+                  dmInfo.subRecord(i).get("NAME", dm_name);
+                  //cout << "IGNORING...." << dm_name << endl;
+              }
+          }
+          else {
+              cerr << "Data manager info has unexpected shape! " << sub << endl;
+          }
+      }
+  }
+  return;
 }
 
 VisibilityIterator::VisibilityIterator() {}
@@ -2041,10 +2046,6 @@ VisibilityIterator::VisibilityIterator(const VisibilityIterator & other)
 
 VisibilityIterator::~VisibilityIterator() 
 {
-    if (slurp_p && dirtyRowflags) {
-        ScalarColumn<Bool> colAll(msIter_p.ms(), MS::columnName(MS::FLAG_ROW));
-        colAll.putColumn(allRowflags);
-    }
 }
 
 VisibilityIterator& 
@@ -2052,7 +2053,6 @@ VisibilityIterator::operator=(const VisibilityIterator& other)
 {
     if (this!=&other) {
 	ROVisibilityIterator::operator=(other);
-        dirtyRowflags = other.dirtyRowflags;
 	RWcolFlag.reference(other.RWcolFlag);
         RWcolFlagRow.reference(other.RWcolFlagRow);
 	RWcolVis.reference(other.RWcolVis);
@@ -2137,8 +2137,7 @@ void VisibilityIterator::setFlag(const Cube<Bool>& flags)
 
 void VisibilityIterator::setFlagRow(const Vector<Bool>& rowflags)
 {
-    putCol(RWcolFlagRow, rowflags, MS::columnName(MS::FLAG_ROW), allRowflags);
-    dirtyRowflags = true;
+    putCol(RWcolFlagRow, rowflags);
 }
 
 void VisibilityIterator::setVis(const Matrix<CStokesVector> & vis,
@@ -2353,36 +2352,15 @@ void VisibilityIterator::putDataColumn(DataColumn whichOne,
   }
 }  
 
-void VisibilityIterator::putColScalar(ScalarColumn<Bool> &column, const Vector<Bool> &array, const String &colName, Vector<Bool> &all)
+void VisibilityIterator::putColScalar(ScalarColumn<Bool> &column, const Vector<Bool> &array)
 {
-    if (!slurp_p) {
-        column.putColumnCells(selRows_p, array);
-        return;
-    }
-
-    if (all.nelements() == 0) {
-        ScalarColumn<Bool> colAll(msIter_p.ms(), colName);
-        try {
-            all = colAll.getColumn();
-        }
-        catch (...) {
-            // If out of memory, do it the slow way
-            column.putColumnCells(selRows_p, array);
-            return;
-        }
-    }
-
-    update_rowIds();
-
-    for (unsigned i = 0; i < curNumRow_p; i++) {
-        all(rowIds_p(i)) = array(i);
-    }
+    column.putColumnCells(selRows_p, array);
     return;
 }
 
-void VisibilityIterator::putCol(ScalarColumn<Bool> &column, const Vector<Bool> &array, const String &colName, Vector<Bool> &all)
+void VisibilityIterator::putCol(ScalarColumn<Bool> &column, const Vector<Bool> &array)
 {
-    putColScalar(column, array, colName, all);
+    putColScalar(column, array);
 }
 
 void VisibilityIterator::putCol(ArrayColumn<Bool> &column, const Array<Bool> &array)
@@ -2413,14 +2391,6 @@ void VisibilityIterator::putCol(ArrayColumn<Float> &column, const Slicer &slicer
 void VisibilityIterator::putCol(ArrayColumn<Complex> &column, const Slicer &slicer, const Array<Complex> &array)
 {
     column.putColumnCells(selRows_p, slicer, array);
-}
-
-void VisibilityIterator::slurp() const
-{
-    ROVisibilityIterator::slurp();
-
-    dirtyRowflags = false;
-    return;
 }
 
 } //# NAMESPACE CASA - END
