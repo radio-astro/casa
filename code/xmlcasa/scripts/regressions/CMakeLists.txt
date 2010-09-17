@@ -51,6 +51,7 @@ casa_add_python( xmlcasa xmlcasa_regressions_python python/${PYTHONV}/regression
   leo2pt_regression.py
   listcal_regression.py
   listvis_regression.py
+  m51_tpsim_regression.py
   maclog_regression.py
   nf_regression.py
   ngc1333_regression.py
