@@ -97,7 +97,9 @@ def run_search(
         return restool
     except Exception, instance:
         mysl.close()
-        throw(instance)
+        
+        raise instance
+#        throw(instance)
 
 def run_slsearch(
     table, outfile, freqrange, species, reconly,
