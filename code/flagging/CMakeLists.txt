@@ -19,7 +19,7 @@
 #
 
 if( APPLE AND NOT CMAKE_CXX_FLAGS MATCHES x86_64 )
-  set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=i586" )
+      set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=i586 -msse3" )
 endif()
 
 
