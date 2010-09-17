@@ -18,7 +18,8 @@ Synopsis
 
   \medskip\noindent\textbf{Important note}
 
-    To access sd tool from \casa, the user must execute asap\_init(). 
+    {\bf To access sd tool from \casa, the user must execute asap\_init()} 
+    from the command-line interface of \casa. 
     This command imports ASAP package as sd tool and make single-dish 
     tasks available.
 
@@ -4312,7 +4313,7 @@ angle && \multicolumn{2}{p{3.36in}|}{The angle (in dgree) to rotate (add) by}\\
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
-    Store the scantable on disk. This can be an asap (\casa) Table,
+    Store the scantable on disk. This can be an asap (\casa\ Table),
     SDFITS or MS2 format.
 
     The output filename can be specified as name. For format 'ASCII', this is the root file name 
@@ -5163,11 +5164,16 @@ query && \multicolumn{2}{p{3.36in}|}{TaQL selection query}\\
 \\
 scans && \multicolumn{2}{p{3.36in}|}{Scan number selection}\\
 & &allowed: & integer, integer array \\
-& &Default: & None (no selection)\\
+& &Default: & None (no selection)
+\\
 types && \multicolumn{2}{p{3.36in}|}{Source type selection}\\
 & &allowed: & integer, integer array \\
-& &Default: & None (no selection)\\
-
+& &Default: & None (no selection)
+\\
+rows && \multicolumn{2}{p{3.36in}|}{Row number selection}\\
+& &allowed: & integer, integer array \\
+& &Default: & None (no selection)
+\\
 
 \hline
 \end{tabular}
@@ -5215,6 +5221,8 @@ Methods
 	\ahlink{get\_poltypes}{sd:sd.selector.get_poltypes} &Return a list of polarization types for current polarization selection \\
 
 	\ahlink{get\_query}{sd:sd.selector.get_query} &Return current selection string for TaQL selection \\
+
+	\ahlink{get\_rows}{sd:sd.selector.get_rows} &Return a list of current row number selection \\
 
 	\ahlink{get\_scans}{sd:sd.selector.get_scans} &Return a list of current scan number selection \\
 
@@ -5398,6 +5406,24 @@ string array
 \hfill \\
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 string
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+
+%% sd.selector.get_rows
+\newpage
+\ahsdfunction{sd.selector.get\_rows}{sd.selector.get_rows}{Return a list of current row number selection}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+   Return a list of current row number selection.
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+integer array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
@@ -6719,7 +6745,8 @@ mask && \multicolumn{2}{p{3.36in}|}{A retrieved from the scantable}\\
    Otherwise, the result will be stored in the scantable.
    More specifically, the result will be stored in FIT subtable in the scantable.   
 
-   Currently, it works only for spectral line fitting (gaussian or lorentzian fitting).
+   It works both for spectral line fitting (gaussian or lorentzian fitting) and 
+   polynomial fitting although it is not sure if the latter is useful or not.
  
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
