@@ -1929,14 +1929,14 @@ void FITSIDItoMS1::fillMSMainTable(const String& MSFileName, Int& nField, Int& n
     Int count = 0;
 
     Float test_baseline;
-    memcpy(&test_baseline,fitsrow,sizeof(Long));
+    memcpy(&test_baseline,fitsrow,sizeof(Int));
     //cout << "*****TEST_BASELINE FITS=" << test_baseline << endl;
 
-    memcpy(&test_baseline,table,sizeof(Long));
+    memcpy(&test_baseline,table,sizeof(Int));
     //cout << "*****TEST_BASELINE TABLE=" << test_baseline << endl;
 
-    Long new_baseline;
-    memcpy(&new_baseline,static_cast<Long *>(data_addr[iBsln]),sizeof(Long));
+    Int new_baseline;
+    memcpy(&new_baseline,static_cast<Int *>(data_addr[iBsln]),sizeof(Int));
     //cout << "*****NEW_BASELINE ADDR=" << new_baseline << endl;
         
 
