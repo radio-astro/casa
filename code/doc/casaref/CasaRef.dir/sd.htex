@@ -18,7 +18,7 @@ Synopsis
 
   \medskip\noindent\textbf{Important note}
 
-    To access sd tool from \casa\ , the user must execute asap\_init(). 
+    To access sd tool from \casa, the user must execute asap\_init(). 
     This command imports ASAP package as sd tool and make single-dish 
     tasks available.
 
@@ -34,7 +34,7 @@ Synopsis
 \end{itemize}
 
     An internal data format for sd tool is Scantable.
-    The Scantable is defined as \casa table and is specially 
+    The Scantable is defined as \casa\ table and is specially 
     designed for single-dish data. The data is converted to Scantable  
     during the processing whatever its oritinal data format is.
     The result of the processing can be stored in other data format 
@@ -79,7 +79,7 @@ Synopsis
     line catalog. The input data should be provided from the user.
     Supported format is ASCII table or specific format for 
     \ahlink{sd.linecatalog}{sd:sd.linecatalog}.
-    \casa package contains a default line catalog that is a part of 
+    \casa\ package contains a default line catalog that is a part of 
     JPL line catalog. 
     Benefit of this object is that it provides an interface to the 
     catalog such as selecting lines by frequency and/or line intensity.
@@ -736,7 +736,7 @@ string
 
 %% sd.is_asap_cli
 \newpage
-\ahsdfunction{sd.is\_asap\_cli}{sd.is_asap_cli}{Check if the tool is loaded as part of \casa or is launched as standalone software}
+\ahsdfunction{sd.is\_asap\_cli}{sd.is_asap_cli}{Check if the tool is loaded as part of \casa\ or is launched as standalone software}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -755,7 +755,7 @@ bool (False)
 
 %% sd.is_casapy
 \newpage
-\ahsdfunction{sd.is\_casapy}{sd.is_casapy}{Check if the tool is loaded as part of \casa or is launched as standalone software}
+\ahsdfunction{sd.is\_casapy}{sd.is_casapy}{Check if the tool is loaded as part of \casa\ or is launched as standalone software}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -1316,7 +1316,7 @@ string
 
   The scantable is a representation of the Scantable, which is a data 
   format designed properly for single-dish data. 
-  The scantable is implemented as \casa table so that it is possible 
+  The scantable is implemented as \casa\ table so that it is possible 
   to access data via \ahlink{table}{table} tool. 
   On the other hand, the scantable has its own functions to get/set some data. 
   In addition to the simple setter/getter and utility functions, 
@@ -4321,7 +4321,7 @@ angle && \multicolumn{2}{p{3.36in}|}{The angle (in dgree) to rotate (add) by}\\
     The format is an optinal file format. Default is 'ASAP'. Allows are:
 
     \begin{itemize}
-    \item 'ASAP' (save as ASAP [\casa Table])
+    \item 'ASAP' (save as ASAP [\casa\ Table])
     \item 'SDFITS' (save as SDFITS file)
     \item 'ASCII' (saves as ascii text file)
     \item 'MS2' (saves as an casacore MeasurementSet V2)
@@ -9041,7 +9041,7 @@ refresh && \multicolumn{2}{p{3.36in}|}{If True, the plot is replotted based on t
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
-   Add text in string s to axis at location x,y (data coords)
+   Add text in string s to axis at location x,y (data coords).
    This is an interface for matplotlib.axes.Axes.text function.
 
    The interactive argument is specific to this method (not available 
