@@ -198,7 +198,6 @@ try:
     from sdtpimaging import sdtpimaging
     from sdmath import sdmath
     from sdimaging import sdimaging
-    from sdsim import sdsim
     from sdimprocess import sdimprocess
 except ImportError:
     sd = None
