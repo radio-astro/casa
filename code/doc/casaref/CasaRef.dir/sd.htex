@@ -241,15 +241,13 @@ scantable
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
-\begin{verbatim}
 
-    
+\begin{verbatim}
     asap_init()
     s=sd.scantable('alma-scans.asap',average=False,getpt=True)
     scal=sd.almacal(s,calmode='ps')
-    
-  
 \end{verbatim}
+
 
 %% sd.apexcal
 \newpage
@@ -310,14 +308,11 @@ scantable
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
-\begin{verbatim}
 
-    
+\begin{verbatim}
     asap_init()
     s=sd.scantable('alma-scans.asap',average=False,getpt=True)
     scal=sd.apexcal(s,calmode='ps')
-    
-  
 \end{verbatim}
 
 
@@ -374,20 +369,19 @@ scantable
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
-\begin{verbatim}
 
-    
+\begin{verbatim}
+        asap_init()
+        scana = sd.scantable('scana.asap')
+        scanb = sd.scantable('scanb.asap')
         # return a time averaged scan from scana and scanb
         # without using a mask
-        scanav = average_time(scana,scanb)
+        scanav = sd.average_time(scana,scanb)
         # or equivalent
-        # scanav = average_time([scana, scanb])
+        scanav = sd.average_time([scana, scanb])
         # return the (time) averaged scan, i.e. the average of
         # all correlator cycles
-        scanav = average_time(scan, scanav=True)
-
-
-
+        scanav = sd.average_time(scan, scanav=True)
 \end{verbatim}
 
 %% sd.calfs
@@ -497,14 +491,11 @@ scantable that contains calibrated spectra
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
-\begin{verbatim}
 
-    
+\begin{verbatim}
     asap_init()
     s=sd.scantable('alma-scans.asap',average=False,getpt=True)
     scal=sd.apexcal(s,calmode='ps')
-    
-  
 \end{verbatim}
 
 
@@ -833,14 +824,12 @@ string list
 \hfill \\
 
 \begin{verbatim}
-
         asap_init()
         files = sd.list_files("data/","sdfits")
         print files
         ['data/2001-09-01_0332_P363.sdfits',
         'data/2003-04-04_131152_t0002.sdfits',
         'data/Sgr_86p262_best_SPC.sdfits']
-
 \end{verbatim}
 
 
@@ -1031,7 +1020,6 @@ merged (sinble) scantable
 \hfill \\
 
 \begin{verbatim}
-
         asap_init()
         scan1 = sd.scantable('scan1.asap')
         scan2 = sd.scantable('scan2.asap')
@@ -1039,7 +1027,6 @@ merged (sinble) scantable
         allscans = sd.merge(myscans)
         # or equivalent
         sameallscans = sd.merge(scan1, scan2)
-
 \end{verbatim}
 
 
@@ -1108,7 +1095,9 @@ scantable that contains calibrated specrta
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
-    Set the current rc parameters.  Group is the grouping for the rc, eg
+    Set the current rc parameters (sd.rcParams, 
+    see \ahlink{list\_rcparameters}{sd:sd.list_rcparameters}).  
+    The group is the grouping for the rc, eg
     for scantable.save the group is 'scantable', for plotter.stacking, the
     group is 'plotter', and so on.  kwargs is a list of attribute
     name/value pairs, eg
@@ -1146,13 +1135,11 @@ group && \multicolumn{2}{p{3.36in}|}{Grouping for the rc}\\
 \hfill \\
 
 \begin{verbatim}
-
      asap_init()
      # set scantable.save as 'SDFITS' and scantable.storage as 'disk'
      sd.rc('scantable',save='SDFITS', storage='disk')
      # set insitu as False
      sd.rc('',insitu=False)
-
 \end{verbatim}
 
 
@@ -1261,13 +1248,11 @@ string array
 \hfill \\
 
 \begin{verbatim}
-
      asap_init()
      # assume that input MS contains data from 'DV01' and 'PM03'
      outfiles=sd.splitant('osfdata.ms',outprefix='test')
      print outfiles
      ['test.DV01.asap','test.PM03.asap']
- 
 \end{verbatim}
 
 
@@ -1299,12 +1284,11 @@ array
 \hfill \\
 
 \begin{verbatim}
-
+   asap_init()
    x=[1,2,3,3,4]
    y=sd.unique(x)
    print y
    [1,2,3,4]
-
 \end{verbatim}
 
 
@@ -1398,11 +1382,9 @@ parallactify && \multicolumn{2}{p{3.36in}|}{Indicate that the data had been para
 \hfill \\
 
 \begin{verbatim}
-
      asap_init()
      # create scantable from the data from the second antenna in Measurement Set
      s=sd.scantable('sddata.ms',average=False,getpt=True,antenna=1)
-
 \end{verbatim}
 
 
@@ -5191,7 +5173,6 @@ types && \multicolumn{2}{p{3.36in}|}{Source type selection}\\
 \hfill \\
 
 \begin{verbatim}
-
      asap_init()
      # create a selector object
      sel=sd.selector()
@@ -5207,7 +5188,9 @@ types && \multicolumn{2}{p{3.36in}|}{Source type selection}\\
      # check current selection
      print sel
      IFNO: [0,1]
-
+     # apply selection on scantable
+     s=sd.scantable('OrionS_rawACSmod_cal',average=False)
+     s.set_selection(sel)
 \end{verbatim}
 
 
@@ -5957,7 +5940,6 @@ types && \multicolumn{2}{p{3.36in}|}{A list of integers}\\
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 \begin{verbatim}
-
         asap_init()
         s = sd.scantable('myscan.asap')
         s.set_cursor(thepol=1)        # select second pol
@@ -5965,7 +5947,6 @@ types && \multicolumn{2}{p{3.36in}|}{A list of integers}\\
         f.set_scan(s)
         f.set_function(poly=0)
         f.fit(row=0)                  # fit first row
-
 \end{verbatim}
 
 Methods
@@ -6133,9 +6114,10 @@ estimate && \multicolumn{2}{p{3.36in}|}{Auto-compute an initial parameter set}\\
 \hfill \\
 
 \begin{verbatim}
-        s = scantable('myscan.asap')
+        asap_init()
+        s = sd.scantable('myscan.asap')
         s.set_cursor(thepol=1)        # select second pol (nb. 0-based)
-        f = fitter()
+        f = sd.fitter()
         f.set_scan(s)
         f.set_function(poly=0)
         f.fit(row=0)                  # fit first row
@@ -6474,10 +6456,16 @@ lorentz && \multicolumn{2}{p{3.36in}|}{Fit the number of lorentzian specified}\\
 \hfill \\
 
 \begin{verbatim}
-        fitter.set_function(poly=3)  # will fit a 3rd order polynomial via nonlinear method
-        fitter.set_function(lpoly=3)  # will fit a 3rd order polynomial via linear method
-        fitter.set_function(gauss=2) # will fit two gaussians
-        fitter.set_function(lorentz=2) # will fit two lorentzians
+        asap_init()
+        f=sd.fitter()
+        # will fit a 3rd order polynomial via nonlinear method
+        f.set_function(poly=3)  
+        # will fit a 3rd order polynomial via linear method
+        f.set_function(lpoly=3) 
+        # will fit two gaussians 
+        f.set_function(gauss=2) 
+        # will fit two lorentzians
+        f.set_function(lorentz=2) 
 \end{verbatim}
 
 
@@ -6814,14 +6802,12 @@ name&& \multicolumn{2}{p{3.36in}|}{Name of the catalog}\\
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 \begin{verbatim}
-
         asap_init()
         l = sd.linecatalog('jpl_asap.tbl')
         # set name restriction
         l.set_name('NH3')
         # print summary
         l.summary()
-
 \end{verbatim}
 
   
@@ -7221,8 +7207,8 @@ smax && \multicolumn{2}{p{3.36in}|}{The upper bound}\\
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
-\begin{verbatim}
 
+\begin{verbatim}
        asap_init()
        fl=sd.linefinder()
        sc=sd.scantable('sddata.asap',average=False)
@@ -7240,7 +7226,6 @@ smax && \multicolumn{2}{p{3.36in}|}{The upper bound}\\
           print "No lines found!"
        # baseline subtraction using masks provided by linefinder
        sc2=sc.poly_baseline(fl.get_mask(),7)
-
 \end{verbatim}
 
     
@@ -9736,13 +9721,11 @@ elevation&& \multicolumn{2}{p{3.36in}|}{Observatory elevation about sea level (i
 \hfill \\
 
 \begin{verbatim}
-
      asap_init()
      o=sd.opacity_model(temperature=300.0,elevation=1300.0)
      tau=sd.get_opacities([1.0e11,1.1e11])
      print tau
      [0.2363221976673901, 0.3068089293871521]
-
 \end{verbatim}
 
 Methods
