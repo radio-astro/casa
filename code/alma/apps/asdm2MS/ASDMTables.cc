@@ -31,6 +31,8 @@
  *
  * File ASDMTables.cpp
  */
+#include <stdint.h>
+
 	 
 ASDM_MAIN::ASDM_MAIN() {
   name_ = "ASDM_MAIN";

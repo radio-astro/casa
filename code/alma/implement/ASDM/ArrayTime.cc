@@ -361,14 +361,14 @@ void ArrayTime::toBin(const vector< vector<vector<ArrayTime> > >& arrayTime,  En
 }
 
 ArrayTime ArrayTime::fromBin(EndianISStream & eiss) {
-	return ArrayTime(int64_t(int64_t(eiss.readLongLong())));
+	return ArrayTime(eiss.readLongLong());
 }
 
 vector<ArrayTime> ArrayTime::from1DBin(EndianISStream & eiss) {
 	int dim1 = eiss.readInt();
 	vector<ArrayTime> result;
 	for (int i = 0; i < dim1; i++)
-		result.push_back(ArrayTime(int64_t(eiss.readLongLong())));
+		result.push_back(ArrayTime(eiss.readLongLong()));
 	return result;	
 }
 
@@ -380,7 +380,7 @@ vector<vector<ArrayTime > > ArrayTime::from2DBin(EndianISStream & eiss) {
 	for (int i = 0; i < dim1; i++) {
 		aux.clear();
 		for (int j = 0; j < dim2; j++)
-			aux.push_back(ArrayTime(int64_t(eiss.readLongLong())));
+			aux.push_back(ArrayTime(eiss.readLongLong()));
 		result.push_back(aux);
 	}
 	return result;	
@@ -398,7 +398,7 @@ vector<vector<vector<ArrayTime > > > ArrayTime::from3DBin(EndianISStream & eiss)
 		for (int j = 0; j < dim2; j++) {
 			aux2.clear();
 			for (int k = 0; k < dim3; k++)
-				aux2.push_back(ArrayTime(int64_t(eiss.readLongLong())));
+				aux2.push_back(ArrayTime(eiss.readLongLong()));
 			aux1.push_back(aux2);
 		}
 		result.push_back(aux1);

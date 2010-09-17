@@ -1,6 +1,7 @@
 #ifndef EndianStream_CLASS
 #define EndianStream_CLASS
 
+#include <stdint.h>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -30,9 +31,9 @@ namespace asdm {
     void writeUShort(unsigned short int s);
     void writeInt(int i);
     void writeUInt(unsigned int ui);
-    void writeLongLong(long long int li);
-    void writeLong(long long int li);
-    void writeULongLong(unsigned long long int li);
+    void writeLongLong(int64_t li);
+    void writeLong(int64_t li);
+    void writeULongLong(uint64_t li);
     void writeFloat(float f);
     void writeDouble(double d);	
     void writeString(const string& s);
@@ -55,9 +56,9 @@ namespace asdm {
     unsigned short int readUShort();
     int readInt();
     unsigned int readUInt();
-    long long int readLongLong();
-    long long int readLong();
-    unsigned long long int readULongLong();
+    int64_t readLongLong();
+    int64_t readLong();
+    uint64_t readULongLong();
     float readFloat();
     double readDouble();
     string readString();
