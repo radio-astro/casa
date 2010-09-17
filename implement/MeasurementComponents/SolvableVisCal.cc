@@ -100,7 +100,6 @@ SolvableVisCal::SolvableVisCal(VisSet& vs) :
   simint_("integration"),
   onthefly_(False)
 {
-
   if (prtlev()>2) cout << "SVC::SVC(vs)" << endl;
 
   caiRC_p = Aipsrc::registerRC("calibrater.activity.interval", "3600.0");
@@ -155,7 +154,6 @@ SolvableVisCal::SolvableVisCal(const Int& nAnt) :
   simint_("inf"),
   onthefly_(False)
 {  
-
   if (prtlev()>2) cout << "SVC::SVC(i,j,k)" << endl;
 
   caiRC_p = Aipsrc::registerRC("calibrater.activity.interval", "3600.0");
@@ -175,6 +173,10 @@ SolvableVisCal::SolvableVisCal(const Int& nAnt) :
 SolvableVisCal::~SolvableVisCal() {
 
   if (prtlev()>2) cout << "SVC::~SVC()" << endl;
+  
+  // TODO RI do we ever have the same corruptor working on multiple VCs?  then we need some kind of 
+  // multiuse locking...
+  if (corruptor_p) delete corruptor_p;  
 
   deleteSVC();
 

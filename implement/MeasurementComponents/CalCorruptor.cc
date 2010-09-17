@@ -159,6 +159,9 @@ AtmosCorruptor::AtmosCorruptor(const Int nSim) :
 {}
 
 AtmosCorruptor::~AtmosCorruptor() {
+  if (itsSkyStatus) delete itsSkyStatus;
+  if (itsRIP) delete itsRIP;
+  if (itsatm) delete itsatm;
   if (prtlev()>2) cout << "AtmCorruptor::~AtmCorruptor()" << endl;
 }
 
@@ -756,9 +759,6 @@ void AtmosCorruptor::initialize(const Int Seed, const Float Beta, const Float sc
   // scale is RELATIVE i,e, screen has rms=scale
   *screen_p = myfbm->data() * scale/rms;
   
-  // RI
-  cout << " Atmcorr:: scale=" << scale << " rms=" << rms<< endl;
-
   if (prtlev()>2) cout << "AtmCorruptor::init [2d] scale= " << scale << endl;
 
 }
