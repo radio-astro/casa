@@ -28,6 +28,7 @@
 //#include <components/ComponentModels/FluxStandard.h>
 #include <components/ComponentModels/FluxCalc_SS_JPL_Butler.h>
 #include <components/ComponentModels/ComponentType.h>
+#include <casa/Containers/Record.h>
 #include <casa/BasicMath/Math.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Quanta.h>
@@ -41,6 +42,9 @@
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MCEpoch.h>
 #include <measures/Measures/MFrequency.h>
+#include <tables/Tables/Table.h>
+#include <tables/Tables/TableRecord.h>
+#include <tables/Tables/ScalarColumn.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -259,17 +263,184 @@ Bool FluxCalc_SS_JPL_Butler::readEphem()
        << "Could not find an ephemeris table for " << name_p
        << LogIO::POST;
     cout << " at " << MEpoch::Convert(time_p, MEpoch::Ref(MEpoch::UTC))() << endl;
+    return false;
   }
   else{
     os << LogIO::NORMAL
        << "Using ephemeris table " << path.baseName()
        << LogIO::POST;
   }
-  
+
+  // path.absoluteName() is liable to give something like cwd +
+  // path.baseName(), because path was never given horpath.
+  const String abspath(horpath + "/" + path.baseName());
+
+  if(!Table::isReadable(abspath)){
+    os << LogIO::SEVERE
+       << abspath << " is not a readable table."
+       << LogIO::POST;
+    return false;
+  }
+
+  const Table tab(abspath);
+  const TableRecord ks(tab.keywordSet());
+
+  temperature_p = get_Quantity_keyword(ks, "T_mean", "K");
+  mean_rad_p = get_Quantity_keyword(ks, "meanrad", "AU");
+
+  // Find the row numbers with the right MJDs.
+  ROScalarColumn<Double> mjd(tab, "MJD");
+  uInt rowbef;
+  uInt rowclosest;
+  uInt rowaft;
+  if(!get_row_numbers(rowbef, rowclosest, rowaft, mjd)){
+    os << LogIO::SEVERE
+       << "The table does not appear to cover the right time."
+       << LogIO::POST;
+    return false;
+  }
+
+  // Distance from Earth to the object, in AU.  JPL calls it delta, and MeasComet
+  // calls it Rho.
+  ROScalarColumn<Double> delta(tab, "Rho");
+  Double tm1 = mjd(rowbef);
+  Double t0  = mjd(rowclosest);
+  Double tp1 = mjd(rowaft);
+  Double delta_m1 = delta(rowbef);
+  Double delta_0  = delta(rowclosest);
+  Double delta_p1 = delta(rowaft);
+  Double f = time_p.get("d").getValue() - t0;
+  Double dt = tp1 - tm1;
+  Double d2y = 0.0;
+
+  if(dt > 0){
+    f /= dt;
+    if(tm1 < t0 && t0 < tp1){
+      d2y = (delta_p1 - delta_0) / (tp1 - t0);
+      d2y -= (delta_0 - delta_m1) / (t0 - tm1);
+      d2y *= dt;
+    }
+  }
+  else{
+    os << LogIO::WARN
+       << "The table is not long enough for quadratic interpolation.\n"
+       << "Nearest neighbor will be used."
+       << LogIO::POST;
+    f = 0.0;
+  }
+  delta_p = delta_0 + f * (delta_p1 - delta_m1 + f * d2y);
+
   hasEphemInfo_p = found;
   return found;
 }
 
+Bool FluxCalc_SS_JPL_Butler::get_row_numbers(uInt& rowbef, uInt& rowclosest,
+					     uInt& rowaft,
+					     const ROScalarColumn<Double>& mjd)
+{
+  // MeasComet requires a constant time increment, but since
+  // FluxCalc_SS_JPL_Butler is expected to only need to use the time once, it's
+  // not too expensive to allow tables with varying time increments.  As long
+  // as mjd is monotonically increasing, the search is at worst O(log(n)).
+
+  Double mjd0 = mjd(0);
+  Double dmjd = mjd0;
+  uInt ndates = mjd.nrow();
+  uInt step = 1;
+  Long rn = 0;
+
+  uInt ub = ndates - 1;
+  Double the_time = time_p.get("d").getValue();
+
+  if(mjd(ub) < the_time){
+    return false;
+  }
+  else if(mjd(ub) == the_time){
+    rn = ub;
+    step = 0;	// Prevents going through the while loop below.
+  }
+  uInt lb = 0;
+  if(mjd(0) > the_time){
+    return false;
+  }
+  else if(mjd(0) == the_time){
+    rn = 0;
+    step = 0;	// Prevents going through the while loop below.
+  }    
+
+  uInt i;
+  for(i = 1; dmjd == mjd0 && i < ndates; ++i)
+    dmjd = mjd(i);
+  if(i > 1)
+    --i;
+  dmjd = (dmjd - mjd0) / i;
+
+  if(dmjd > 0.0 && step){
+    rn = lrint((the_time - mjd0) / dmjd);
+    if(rn < 0)
+      rn = 0;
+    else if(rn > ndates)
+      rn = ndates - 1;
+  }
+
+  Double mjdrn = mjd(rn);
+  Bool increasing = mjdrn < the_time;
+  uInt paranoia = 0;
+
+  while(step && paranoia < ndates){
+    if(mjdrn < the_time){
+      if(rn > lb)
+	lb = rn;
+      if(increasing){
+	step *= 2;
+      }
+      else{
+	step /= 2;
+	increasing = true;
+      }
+    }
+    else{
+      if(rn < ub)
+	ub = rn;
+      if(increasing){
+	step /= 2;
+	increasing = false;
+      }
+      else{
+	step *= 2;
+      }
+    }
+    if(increasing){
+      if(rn + step > ub)
+	step = ub - rn - 1;
+      rn += step;
+    }
+    else{
+      if(rn - step < lb)
+	step = rn - lb - 1;
+      rn -= step;
+    }
+    mjdrn = mjd(rn);
+    ++paranoia;
+  }
+  if(paranoia == ndates)
+    return false;
+
+  rowclosest = rn;
+  rowaft = (rn < ndates - 1) ? rn + 1 : rn;
+  rowbef = (rn > 0) ? rn - 1 : rn;
+  return true;
+}
+
+Double FluxCalc_SS_JPL_Butler::get_Quantity_keyword(const TableRecord& ks,
+						    const String& kw,
+						    const Unit& unit)
+{
+  const Record rec(ks.asRecord(kw));
+  const Quantity q(rec.asDouble("value"), rec.asString("unit"));
+  
+  return q.get(unit).getValue();
+}
 
 ComponentType::Shape FluxCalc_SS_JPL_Butler::compute(Vector<Flux<Double> >& values,
                                                      Vector<Flux<Double> >& errors,
@@ -320,19 +491,38 @@ void FluxCalc_SS_JPL_Butler::compute_BB(Vector<Flux<Double> >& values,
 {
   const uInt nfreqs = mfreqs.nelements();
   Quantum<Double> temperature(temperature_p, "K");
-  Quantum<Double> freq_peak(QC::h / (QC::k * temperature));
-  Quantum<Double> rocd2(0.5 * angdiam / QC::c);
+  Quantum<Double> freq_peak(QC::k * temperature / QC::h);
+  Quantum<Double> rocd2(0.5 * angdiam);	// Dimensionless for now.
 
+  rocd2 /= QC::c;	// Don't put this in the c'tor, it'll give the wrong answer.
   rocd2 *= rocd2;
 
   // Frequency independent factor.
   Quantum<Double> freq_ind_fac(2.0e26 * QC::h * C::pi * rocd2);
 
+  LogIO os(LogOrigin("FluxCalc_SS_JPL_Butler", "compute_BB"));
+  os << LogIO::DEBUG1
+     << "angdiam = " << angdiam << " rad"
+     << "\nrocd2 = " << rocd2.getValue() << rocd2.getUnit()
+     << "\nfreq_ind_fac = " << freq_ind_fac.getValue() << freq_ind_fac.getUnit()
+     << "\nfreq_peak = " << freq_peak.get(hertz_p).getValue() << " Hz"
+     << "\ntemperature_p = " << temperature_p << " K"
+     << "\nvalues[0].unit() = " << values[0].unit().getName()
+     << "\nhertz_p = " << hertz_p.getName()
+     << LogIO::POST;
+
+  const Unit jy("Jy");
+
   for(uInt f = 0; f < nfreqs; ++f){
     Quantum<Double> freq(mfreqs[f].get(hertz_p));
     
-    values[f].setValue((freq_ind_fac * freq * freq * freq).getValue() /
-                       (exp((freq / freq_peak).getValue()) - 1.0));
+    values[f].setUnit(jy);
+    Double fd = (freq_ind_fac * freq * freq * freq).getValue() /
+                (exp((freq / freq_peak).getValue()) - 1.0);
+    os << LogIO::DEBUG1
+       << "f.d.(" << freq.getValue() << " Hz" << ") = " << fd
+       << LogIO::POST;
+    values[f].setValue(fd);
     errors[f].setValue(0.0);
   }
 }
