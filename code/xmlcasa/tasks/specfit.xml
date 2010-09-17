@@ -77,11 +77,66 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value></value>
             <example>residual="myresid.im"</example>
         </param>
+        <param type="string" direction="in" name="amp" subparam="true">
+            <description>Name of amplitude solution image. Default: do not write the image ("").</description>
+            <value/>
+            <example>amp="amp"</example>
+        </param>
+        <param type="string" direction="in" name="amperr" subparam="true">
+            <description>Name of amplitude solution error image. Default: do not write the image ("").</description>
+            <value/>
+            <example>amperr="ampErr"</example>
+        </param>
+        <param type="string" direction="in" name="center" subparam="true">
+            <description>Name of center solution image. Default: do not write the image ("").</description>
+            <value/>
+            <example>center="center"</example>
+        </param>
+        <param type="string" direction="in" name="centererr" subparam="true">
+            <description>Name of center solution error image. Default: do not write the image ("").</description>
+            <value/>
+            <example>centererr="centerErr"</example>
+        </param>
+        <param type="string" direction="in" name="fwhm" subparam="true">
+            <description>Name of fwhm solution image. Default: do not write the image ("").</description>
+            <value/>
+            <example>fwhm="fwhm"</example>
+        </param>
+        <param type="string" direction="in" name="fwhmerr" subparam="true">
+            <description>Name of fwhm solution error image. Default: do not write the image ("").</description>
+            <value/>
+            <example>fwhmerr="fwhmErr"</example>
+        </param>
         <param type="bool" name="wantreturn">
             <description>Should a record summarizing the results be returned?</description>
             <value>True</value>
-        <example>wantreturn=True</example>
-    </param>
+            <example>wantreturn=True</example>
+        </param>
+        <constraints>
+            <when param="multifit">
+                <equals type="bool" value="True">
+                    <default param="amp">
+                        <value>""</value>
+                    </default>
+                    <default param="amperr">
+                        <value>""</value>
+                    </default>
+                    <default param="center">
+                        <value>""</value>
+                    </default>
+                    <default param="centererr">
+                        <value>""</value>
+                    </default>
+                    <default param="fwhm">
+                        <value>""</value>
+                    </default>
+                    <default param="fwhmerr">
+                        <value>""</value>
+                    </default>
+
+            </equals>
+        </when>
+    </constraints>
 </input>
 
 <returns type="record"/>
@@ -109,6 +164,13 @@ poly             Order of polynomial to fit. &lt;0 means do not fit a polynomial
 multifit         Fit models at each pixel in region (true) or average profiles and fit a single model (false).
 model            Name of model image to write.
 residual         Name of residual image to write.
+amp              Name of amplitude solution image. Default: do not write the image ("")
+amperr           Name of amplitude solution error image. Default: do not write the image ("")
+center           Name of center solution image. Default: do not write the image ("")
+centererr        Name of center solution error image. Default: do not write the image ("")
+fwhm             Name of fwhm solution image. Default: do not write the image ("")
+fwhmerr           Name of fwhm solution error image. Default: do not write the image ("")
+
 wantreturn       If true, return a record summarizing the fit results, if false, return false.
 
 The axis parameter indicates on which axis profiles should be fit; a value &lt;0 indicates the spectral axis should be used, or if one does not exist,
@@ -140,12 +202,10 @@ centerErr[0,1,...], fwhmErr[0,1,...], ampErr[0,1,...] The associated errors for 
 
 Currently, the polynomial coefficients and their errors are not returned, although they are logged.
 
-It is planned that in a future release the fit parameters will be able to be optionally written out to their own images. For now, it is easy to get a pixel
-by pixel correspondance between model parameters and the image pixels they are associated with via, eg,
+One can also write none, any or all of the solution and error images for gaussian fits via the parameters amp, amperr, center, centererr,
+fwhm, and fwhmerr when doing multi-pixel fits. The specified parameter value will by appended by "_n" where n is the gaussian
+component number. Writing analogous images for polynomial coefficients is not yet supported.
 
-res['center0'].reshape(shape, order='F')
-
-where shape is the shape of region over which the fit was done.
 
 It is not yet possible to specify initial model parameter estimates; this feature is planned for a future release. Currently, the solver
 will determine initial estimates.
