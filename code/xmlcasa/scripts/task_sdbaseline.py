@@ -244,30 +244,20 @@ def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 			blf.write(separator)
 			
 			if( blpoly >= 0 ):
+				basemask = None
 				if (len(masklist) > 0):
-					# Use baseline mask for regions to INCLUDE in baseline fit
-					# Create mask using list, e.g. masklist=[[500,3500],[5000,7500]]
 					basemask=s.create_mask(masklist)
-					for r in xrange(nrow):
-						s.auto_poly_baseline(mask=basemask,order=blpoly,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,rows=r)
-						msk = s.actualmask[0]
-						rmsofrow = s._math._statsrow(s, msk, 'rms', r)[0]
-						masklistofrow = s.masklists[0]
-						dataout = _format_output_row(s, s.blpars, rmsofrow, masklistofrow, r)
-						blf.write(dataout)
-						del msk,rmsofrow,masklistofrow,dataout
+				
+				for r in xrange(nrow):
+					s.auto_poly_baseline(mask=basemask,order=blpoly,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,rows=r)
+					msk = s.actualmask[0]
+					rmsofrow = s._math._statsrow(s, msk, 'rms', r)[0]
+					masklistofrow = s.masklists[0]
+					dataout = _format_output_row(s, s.blpars, rmsofrow, masklistofrow, r)
+					blf.write(dataout)
+					del msk,rmsofrow,masklistofrow,dataout
 
-					del basemask
-				else:
-					for r in xrange(nrow):
-						s.auto_poly_baseline(order=blpoly,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,rows=r)
-						msk = s.actualmask[0]
-						rmsofrow = s._math._statsrow(s, msk, 'rms', r)[0]
-						masklistofrow = s.masklists[0]
-						dataout = _format_output_row(s, s.blpars, rmsofrow, masklistofrow, r)
-						blf.write(dataout)
-						del msk,rmsofrow,masklistofrow,dataout
-
+				del basemask
 
 				blf.write("-"*60 + "\n")
 			
@@ -276,12 +266,17 @@ def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 			blf.write(separator)
 			
 			if( blpoly >= 0 ):
+				basemask = None
 				if (len(masklist) > 0):
 					# Use baseline mask for regions to INCLUDE in baseline fit
 					# Create mask using list, e.g. masklist=[[500,3500],[5000,7500]]
 					basemask=s.create_mask(masklist)
+
+				if batch:
+					s.poly_baseline(mask=basemask,order=blpoly,batch=True)
+				else:
 					for r in xrange(nrow):
-						s.poly_baseline(mask=basemask,order=blpoly,plot=verify,batch=batch,rows=r)
+						s.poly_baseline(mask=basemask,order=blpoly,plot=verify,rows=r)
 						msk = s.actualmask[0]
 						rmsofrow = s._math._statsrow(s, msk, 'rms', r)[0]
 						masklistofrow = s.masklists[0]
@@ -289,17 +284,8 @@ def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 						blf.write(dataout)
 						del msk,rmsofrow,masklistofrow,dataout
 					
-					del basemask
-				else:
-					for r in xrange(nrow):
-						s.poly_baseline(order=blpoly,plot=verify,batch=batch,rows=r)
-						msk = s.actualmask[0]
-						rmsofrow = s._math._statsrow(s, msk, 'rms', r)[0]
-						masklistofrow = s.masklists[0]
-						dataout = _format_output_row(s, s.blpars, rmsofrow, masklistofrow, r)
-						blf.write(dataout)
-						del msk,rmsofrow,masklistofrow,dataout
-						
+				del basemask
+				
 				blf.write("-"*60 + "\n")
 			
 		elif ( blmode == 'interact'):
@@ -319,24 +305,19 @@ def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 			if len(msks) < 1:
 				casalog.post( 'No channel is selected. Exit without baselining.', priority = 'WARN' )
 				return
+			
 			casalog.post( 'final mask list ('+s._getabcissalabel()+') ='+str(msks) )
 			header += "   Fit Range: "+str(msks)+"\n"
+			del msks
 			
 			blf.write(header)
 			blf.write(separator)
 			
-			# Calculate base-line RMS
-			if len(msks) > 0:
-				s.poly_baseline(mask=msk,order=blpoly,plot=verify,batch=False)
-				rmsl=list(s.stats('rms',msk))
-				# NOTICE: Do not modify scantable before formatting output
-				dataout=_format_output(s,s.blpars,rmsl)
-			else:
-				s.poly_baseline(order=blpoly,plot=verify,batch=False)
-				rmsl=list(s.stats('rms'))
-				# NOTICE: Do not modify scantable before formatting output
-				dataout=_format_output(s,s.blpars,rmsl)
-			del msk, msks
+			s.poly_baseline(mask=msk,order=blpoly,plot=verify,batch=False)
+			rmsl=list(s.stats('rms',msk))
+			# NOTICE: Do not modify scantable before formatting output
+			dataout=_format_output(s,s.blpars,rmsl)
+			del msk
 
 			blf.write(dataout)
 
