@@ -32,6 +32,8 @@
 #include <casa/Utilities/Precision.h>
 #include <images/Images/ImageAnalysis.h>
 #include <images/Images/ImageCollapser.h>
+#include <images/Images/PagedImage.h>
+#include <images/Images/TempImage.h>
 #include <scimath/Mathematics/Combinatorics.h>
 
 namespace casa {
@@ -41,11 +43,17 @@ ImageProfileFitter::ImageProfileFitter(
     const String& chans, const String& stokes,
     const String& mask, const Int axis, const Bool multiFit,
     const String& residual, const String& model, const uInt ngauss,
-    const Int polyOrder
+    const Int polyOrder, const String& ampName,
+	const String& ampErrName, const String& centerName,
+	const String& centerErrName, const String& fwhmName,
+	const String& fwhmErrName
 ) : _log(new LogIO()), _image(0),
 	_regionName(region), _box(box), _chans(chans), _stokes(stokes),
 	_mask(mask), _residual(residual),
 	_model(model), _regionString(""), _xUnit(""),
+	_centerName(centerName), _centerErrName(centerErrName),
+	_fwhmName(fwhmName), _fwhmErrName(fwhmErrName),
+	_ampName(ampName), _ampErrName(ampErrName),
 	_multiFit(multiFit), _deleteImageOnDestruct(True),
 	_polyOrder(polyOrder), _fitAxis(axis), _ngauss(ngauss),
 	_results(Record()) {
@@ -53,14 +61,21 @@ ImageProfileFitter::ImageProfileFitter(
 }
 
 ImageProfileFitter::ImageProfileFitter(
-	const ImageInterface<Float> * const image, const String& region, const String& box,
-	const String& chans, const String& stokes, const String& mask,
-	const Int axis, const Bool multiFit, const String& residual, const String& model,
-	const uInt ngauss, const Int polyOrder
+	const ImageInterface<Float> * const image, const String& region,
+	const String& box, const String& chans, const String& stokes,
+	const String& mask, const Int axis, const Bool multiFit,
+	const String& residual, const String& model, const uInt ngauss,
+	const Int polyOrder, const String& ampName,
+	const String& ampErrName, const String& centerName,
+	const String& centerErrName, const String& fwhmName,
+	const String& fwhmErrName
 ) : _log(new LogIO()), _image(image->cloneII()),
 	_regionName(region), _box(box), _chans(chans), _stokes(stokes),
 	_mask(mask), _residual(residual),
 	_model(model), _regionString(""), _xUnit(""),
+	_centerName(centerName), _centerErrName(centerErrName),
+	_fwhmName(fwhmName), _fwhmErrName(fwhmErrName),
+	_ampName(ampName), _ampErrName(ampErrName),
 	_multiFit(multiFit), _deleteImageOnDestruct(False),
 	_polyOrder(polyOrder), _fitAxis(axis), _ngauss(ngauss),
 	_results(Record()) {
@@ -97,7 +112,6 @@ Record ImageProfileFitter::fit() {
 			);
 			Vector<uInt> axes(1, _fitAxis);
 			ImageCollapser collapser(
-
 				&_subImage, axes, True,
 				ImageCollapser::MEAN, "", True
 			);
@@ -273,8 +287,72 @@ void ImageProfileFitter::_setResults() {
 	_results.define("yUnit", _image->units().getName());
 
 	String key;
+	TempImage<Float> *tmp = static_cast<TempImage<Float>* >(_image->cloneII());
+	Vector<uInt> axes(1, _fitAxis);
+	ImageCollapser collapser(
+		tmp, axes, False, ImageCollapser::ZERO, String(""), False
+	);
+	TempImage<Float> *myTemplate = static_cast<TempImage<Float>* >(collapser.collapse(True));
+	delete tmp;
+	IPosition shape = myTemplate->shape();
+	CoordinateSystem csys = myTemplate->coordinates();
+	delete myTemplate;
+	uInt gaussCount = 0;
+	if (
+		! _multiFit && (
+			! _centerName.empty() || ! _centerErrName.empty()
+			|| ! _fwhmName.empty() || ! _fwhmErrName.empty()
+			|| ! _ampName.empty() || ! _ampErrName.empty()
+		)
+	) {
+		*_log << LogIO::WARN << "This was not a multi-pixel fit request so solution "
+			<< "images will not be written" << LogIO::POST;
+	}
+
 	for (uInt i=0; i<nComps; i++) {
 		String num = String::toString(i);
+		if (_multiFit && solutions[i].getType() == SpectralElement::GAUSSIAN) {
+			String gnum = String::toString(gaussCount);
+			String mUnit = _xUnit;
+			if (!_centerName.empty()) {
+				_makeSolutionImage(
+					_centerName + "_" + gnum, shape,
+					csys, centerMat.column(i), mUnit
+				);
+			}
+			if (!_centerErrName.empty()) {
+				_makeSolutionImage(
+					_centerErrName + "_" + gnum, shape,
+					csys, centerErrMat.column(i), mUnit
+				);
+			}
+			if (!_fwhmName.empty()) {
+				_makeSolutionImage(
+					_fwhmName + "_" + gnum, shape,
+					csys, fwhmMat.column(i), mUnit
+				);
+			}
+			if (!_fwhmErrName.empty()) {
+				_makeSolutionImage(
+					_fwhmErrName + "_" + gnum, shape,
+					csys, fwhmErrMat.column(i), mUnit
+				);
+			}
+			mUnit = _image->units().getName();
+			if (!_ampName.empty()) {
+				_makeSolutionImage(
+					_ampName + "_" + gnum, shape,
+					csys, ampMat.column(i), mUnit
+				);
+			}
+			if (!_ampErrName.empty()) {
+				_makeSolutionImage(
+					_ampErrName + "_" + gnum, shape,
+					csys, ampErrMat.column(i), mUnit
+				);
+			}
+			gaussCount++;
+		}
 		key = "center" + num;
 		_results.define(key, centerMat.column(i));
 		key = "fwhm" + num;
@@ -631,8 +709,19 @@ String ImageProfileFitter::_polynomialToString(
         summary << _elementToString(pCoeff[j], pCoeffErr[j], unit) << endl;
     }
 	return summary.str();
-
 }
 
+void ImageProfileFitter::_makeSolutionImage(
+	const String& name, const IPosition& shape, const CoordinateSystem& csys,
+	const Vector<Double>& values, const String& unit
+) {
+	Vector<Float> tmpVec(values.size());
+	for (uInt i=0; i<tmpVec.size(); i++) {
+		tmpVec[i] = values[i];
+	}
+	PagedImage<Float> image( shape, csys, name);
+	image.put(tmpVec.reform(shape));
+	image.setUnits(Unit(unit));
+}
 }
 
