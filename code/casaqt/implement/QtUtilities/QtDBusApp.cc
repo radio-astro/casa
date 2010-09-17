@@ -40,9 +40,8 @@ namespace casa {
 
   QtDBusApp::QtDBusApp( ) : service_name(0), object_name(0) { }
 
-    QDBusConnection &QtDBusApp::connection( ) {
-	static QDBusConnection bus(QDBusConnection::sessionBus());
-	return bus;
+    QDBusConnection QtDBusApp::connection( ) {
+	return QDBusConnection::sessionBus();
     }
 
     QString QtDBusApp::generateServiceName( const QString &name, const pid_t pid ) {
