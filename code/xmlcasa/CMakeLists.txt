@@ -279,7 +279,6 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_sdplot.py
   scripts/task_sdsave.py
   scripts/task_sdscale.py
-  scripts/task_sdsim.py
   scripts/task_sdsmooth.py
   scripts/task_sdstat.py
   scripts/task_sdtpimaging.py
@@ -390,7 +389,6 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/sdplot.xml
   tasks/sdsave.xml
   tasks/sdscale.xml
-  tasks/sdsim.xml
   tasks/sdsmooth.xml
   tasks/sdstat.xml
   tasks/sdtpimaging.xml
