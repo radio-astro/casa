@@ -2376,7 +2376,7 @@ unflag && \multicolumn{2}{p{3.36in}|}{If True, unflag the data}\\
 
     Return a scan where all rows have been aligned in frequency/velocity.
     The alignment frequency frame (e.g. LSRK) is that set by function
-    set_freqframe.
+    \ahlink{set\_freqframe}{sd:sd.scantable.set_freqframe}.
 
     The reference time to align can be specified as reftime argument. By default, the 
     time of the first row of data is used.
@@ -3005,7 +3005,7 @@ float, float array
     The method returns a dictionary containing ids and a list of doubles for each id.
 
     The rest frequency is stored in MOLECULES subtable of the scantable. 
-    Rows in MOLECULES subtable is referred from main table by MOLECULE_ID.
+    Rows in MOLECULES subtable is referred from main table by MOLECULE\_ID.
     You can specify a list of that id using ids argument to retrieve particular rest frequency(s). 
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
@@ -3013,7 +3013,7 @@ float, float array
 \begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
 \hline
 Inputs && \multicolumn{2}{p{3.36in}|}{}\\
-ids && \multicolumn{2}{p{3.36in}|}{A list of MOLECULE_ID for that rest frequency(s) to be retrieved}\\
+ids && \multicolumn{2}{p{3.36in}|}{A list of MOLECULE\_ID for that rest frequency(s) to be retrieved}\\
 & &allowed: & integer \\
 & &Default: & None (retrieve all)
 \\
@@ -4635,7 +4635,7 @@ instr && \multicolumn{2}{p{3.36in}|}{Instrument (or antenna) name}\\
     You can also specify the frequencies via a linecatalog.
 
     Note that, to do more sophisticate Restfrequency setting, e.g. on a
-    source and IF basis, use scantable.set_selection() before using
+    source and IF basis, use scantable.set\_selection() before using
     this function::
 
     \begin{verbatim}
@@ -6495,7 +6495,7 @@ lorentz && \multicolumn{2}{p{3.36in}|}{Fit the number of lorentzian specified}\\
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
-   Set the Parameters of a 'Gaussian' component, set with set_function.
+   Set the Parameters of a 'Gaussian' component, set with \ahlink{set\_function}{sd:sd.fitter.set_function}.
 
    Three arguments, peak, centre, and fwhm, are mandatory to be set. They specifies an initial model of 
    Gaussian component. 
@@ -6571,7 +6571,7 @@ component && \multicolumn{2}{p{3.36in}|}{The number of the component}\\
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
-   Set the Parameters of a 'Lorentzian' component, set with set_function.
+   Set the Parameters of a 'Lorentzian' component, set with \ahlink{set\_function}{sd:sd.fitter.set_function}.
 
    Three arguments, peak, centre, and fwhm, are mandatory to be set. They specifies an initial model of 
    Gaussian component. 
@@ -7630,10 +7630,10 @@ Methods
         bbox: & rectangle prop dict plus key 'pad' which is a pad in points \\
         clip\_box: & a matplotlib.transform.Bbox instance \\
         clip\_on: & [True | False] \\
-        clip\_path: & an agg.path_storage instance \\
+        clip\_path: & an agg.path\_storage instance \\
         color: & any matplotlib color \\
         contains: & unknown \\
-        fontproperties: & a matplotlib.font_manager.FontProperties instance \\
+        fontproperties: & a matplotlib.font\_manager.FontProperties instance \\
         horizontalalignment or ha: & [ 'center' | 'right' | 'left' ] \\
         label: & any string \\
         linespacing: & float \\
@@ -7723,7 +7723,7 @@ interactive && \multicolumn{2}{p{3.36in}|}{Interactively set text position if Tr
         axes: & an axes instance \\
         clip\_box: & a matplotlib.transform.Bbox instance \\
         clip\_on: & [True | False] \\
-        clip\_path: & an agg.path_storage instance \\
+        clip\_path: & an agg.path\_storage instance \\
         contains: & unknown \\
         edgecolor or ec: & any matplotlib color \\
         facecolor or fc: & any matplotlib color \\
@@ -7805,7 +7805,7 @@ interactive && \multicolumn{2}{p{3.36in}|}{Interactively set origin and terminal
         axes: & an axes instance \\
         clip\_box: & a matplotlib.transform.Bbox instance \\
         clip\_on: & [True | False] \\
-        clip\_path: & an agg.path_storage instance \\
+        clip\_path: & an agg.path\_storage instance \\
         contains: & unknown \\
         edgecolor or ec: & any matplotlib color \\
         facecolor or fc: & any matplotlib color \\
@@ -7902,7 +7902,7 @@ Line2D object
         axes: & an axes instance \\
         clip\_box: & a matplotlib.transform.Bbox instance \\
         clip\_on: & [True | False] \\
-        clip\_path: & an agg.path_storage instance \\
+        clip\_path: & an agg.path\_storage instance \\
         contains: & unknown \\
         edgecolor or ec: & any matplotlib color \\
         facecolor or fc: & any matplotlib color \\
@@ -7997,7 +7997,7 @@ Polygon object
         axes: & unknown \\
         clip\_box: & a matplotlib.transform.Bbox instance \\
         clip\_on: & [True | False] \\
-        clip\_path: & an agg.path_storage instance \\
+        clip\_path: & an agg.path\_storage instance \\
         color or c: & any matplotlib color \\
         contains: & unknown \\
         dash\_joinstyle: & ['miter' | 'round' | 'bevel'] \\
