@@ -38,6 +38,7 @@
 #include <casa/BasicSL/Constants.h>
 #include <scimath/Mathematics/FFTServer.h>
 #include <synthesis/MeasurementComponents/GridFT.h>
+#include <synthesis/MeasurementComponents/Utils.h>
 #include <scimath/Mathematics/RigidVector.h>
 #include <msvis/MSVis/StokesVector.h>
 #include <synthesis/MeasurementEquations/StokesImageUtil.h>
@@ -547,7 +548,7 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   else
     imagingweight=&(vb.imagingWeight());
   
-  if(dopsf) type=FTMachine::PSF;
+  if(dopsf) {type=FTMachine::PSF;}
 
   Cube<Complex> data;
   //Fortran gridder need the flag as ints 
@@ -888,15 +889,29 @@ ImageInterface<Complex>& GridFT::getImage(Matrix<Float>& weights, Bool normalize
     
 
   
-    if(useDoubleGrid_p){
-      convertArray(griddedData, griddedData2);
-      //Don't need the double-prec grid anymore...
-      griddedData2.resize();
-    }
+    // if(useDoubleGrid_p){
+    //   convertArray(griddedData, griddedData2);
+    //   //Don't need the double-prec grid anymore...
+    //   griddedData2.resize();
+    // }
+
     // x and y transforms
-    LatticeFFT::cfft2d(*lattice,False);
-    
-    
+    //    LatticeFFT::cfft2d(*lattice,False);
+    //
+    // Retain the double precision grid for FFT as well.  Convert it
+    // to single precision just after (since images are still single
+    // precision).
+    //
+    if(useDoubleGrid_p)
+      {
+	ArrayLattice<DComplex> *darrayLattice = new ArrayLattice<DComplex>(griddedData2);
+	LatticeFFT::cfft2d(*darrayLattice,False);
+	convertArray(griddedData, griddedData2);
+	//Don't need the double-prec grid anymore...
+	griddedData2.resize();
+      }
+    else
+      LatticeFFT::cfft2d(*lattice,False);
 
     {
       Int inx = lattice->shape()(0);
