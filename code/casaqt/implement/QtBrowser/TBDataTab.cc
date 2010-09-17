@@ -766,7 +766,7 @@ void TBDataTab::pageBack() {
 }
 
 void TBDataTab::pageForward() {
-    if((page+1) < table->numPages() ){
+    if((page+1) < table->getNumPages() ){
        loadPage(page + 1);
        goForward = true;
     }
