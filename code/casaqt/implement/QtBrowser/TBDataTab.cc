@@ -169,7 +169,7 @@ void TBDataItem::set(String value, bool text) {
 TBDataTab::TBDataTab(TBTableTabs* tt) : QWidget(), ttabs(tt),
                     table(tt->getTable()), page(0),
                     loadRows(TBConstants::DEFAULT_SELECT_NUM), filter(NULL),
-                    defaultFormat(NULL), arrayOpened(false), arrayPanel(NULL) {
+                    defaultFormat(NULL), arrayOpened(false), arrayPanel(NULL), goForward(true) {
     setupUi(this);
     
     // Connect widgets
@@ -731,27 +731,45 @@ void TBDataTab::sort(int index, bool asc) {
 }
 
 void TBDataTab::applyFilter() {
+    bool skip(true);
     if(filter == NULL) {
+	skip = false;
         for(int i = 0; i < tableWidget->rowCount(); i++)
             tableWidget->showRow(i);
     } else {
         for(int i = 0; i < tableWidget->rowCount(); i++) {
             int ind = logicalIndex(i);
             
-            if(filter->rowPasses(table, ind) < 0) tableWidget->hideRow(i);
-            else tableWidget->showRow(i);
+            if(filter->rowPasses(table, ind) < 0){
+		    tableWidget->hideRow(i);
+	    }else{
+		    tableWidget->showRow(i);
+		    skip = false;
+	    }
         }
+    }
+    if(skip){
+       if(goForward)
+          pageForward();
+       else
+          pageBack();
     }
 }
 
 // Private Slots //
 
 void TBDataTab::pageBack() {
-    loadPage(page - 1);
+    if(page > 0 ){
+       loadPage(page - 1);
+       goForward = false;
+    }
 }
 
 void TBDataTab::pageForward() {
-    loadPage(page + 1);
+    if((page+1) < table->numPages() ){
+       loadPage(page + 1);
+       goForward = true;
+    }
 }
 
 void TBDataTab::pageFirst() {

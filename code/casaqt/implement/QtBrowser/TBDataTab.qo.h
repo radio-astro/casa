@@ -196,6 +196,10 @@ public:
     // format that the user enters.
     void formatField(int index);
 
+    //Remembers whether you pressed the next or previous button. Uses this
+    //when filter rules are applied to avoid displaying blank pages.
+    bool goForward;
+
 public slots:
     // Shows the given widget in the side panel.  isArray should be true if
     // the widget is a TBViewArray, false otherwise.
