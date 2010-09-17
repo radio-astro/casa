@@ -8490,6 +8490,10 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
       // Support serial and parallel specializations
       setWFCleanImageSkyModel();
     }
+    else if(ntaylor_p>1){
+      // Init the msmfs sky-model so that Taylor weights are triggered in CubeSkyEqn
+      sm_p = new WBCleanImageSkyModel(ntaylor_p, 1 ,reffreq_p);
+    }
     else {
       sm_p = new CleanImageSkyModel();
     }
