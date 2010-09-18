@@ -158,6 +158,7 @@
 
 #include <components/ComponentModels/ComponentList.h>
 #include <components/ComponentModels/ConstantSpectrum.h>
+#include <components/ComponentModels/TabularSpectrum.h>
 #include <components/ComponentModels/Flux.h>
 #include <components/ComponentModels/FluxStandard.h>
 #include <components/ComponentModels/PointShape.h>
@@ -6286,6 +6287,36 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
           foundSrc = fluxStd.computeCL(fieldName, mfreqs, mtime, fieldDir,
                                        cspectrum, returnFluxes, returnFluxErrs,
                                        tempCLs);
+	  if(chanDep){
+	    for (uInt kk =0; kk < nspws; ++kk){
+	      spwid=spwids[kk];
+	      
+	      Vector<Double> freqArray=msc.spectralWindow().chanFreq()(spwid);
+	      IPosition whichChan(1,0);
+	      MFrequency::Ref myRef=msc.spectralWindow().chanFreqMeas()(spwid)(whichChan).getRef();
+	      Vector<Flux<Double> >returnFlux(freqArray.nelements());
+	      Vector<MVFrequency> freqvals(freqArray.nelements());
+	      Flux<Double> returnFluxErr;
+	      for (uInt jj =0 ; jj < freqArray.nelements(); ++jj){
+		whichChan[0]=jj;
+		freqvals[jj]=msc.spectralWindow().chanFreqMeas()(spwid)(whichChan).getValue();
+		fluxStd.compute(fieldName, msc.spectralWindow().chanFreqMeas()(spwid)(whichChan), returnFlux[jj], returnFluxErr);
+	      }
+	      {
+		TabularSpectrum newspec(mfreqs[kk], freqvals, returnFlux, myRef);
+		ComponentList cl(tempCLs[kk], False);
+		for (uInt uu=0; uu < cl.nelements(); ++uu){
+		  cl.component(uu).setSpectrum(newspec);
+		}
+	      }//This should save that componentlist back
+	    }
+
+
+	  }
+
+       
+
+
         }
         if(!foundSrc){
           if (standard==String("SOURCE")) {
@@ -6574,7 +6605,7 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
 	
         // Delete the temporary component list and image tables
         if (tempCLs[spwInd] != "")
-          Table::deleteTable(tempCLs[spwInd]);
+          if(Table::canDeleteTable(tempCLs[spwInd]))Table::deleteTable(tempCLs[spwInd]);
         if (tmodimage) delete tmodimage;
         tmodimage=NULL;
         //	if (Table::canDeleteTable("temp.setjy.image")) Table::deleteTable("temp.setjy.image");
