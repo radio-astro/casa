@@ -187,7 +187,7 @@ Bool FluxStandard::compute(const String& sourceName,
 Bool FluxStandard::computeCL(const String& sourceName,
                              const Vector<MFrequency>& mfreqs,
                              const MEpoch& mtime, const MDirection& position,
-                             const SpectralModel& cspectrum,
+                             const ConstantSpectrum& cspectrum,
                              Vector<Flux<Double> >& values,
                              Vector<Flux<Double> >& errors,
                              Vector<String>& clpaths) const
@@ -243,7 +243,7 @@ String FluxStandard::makeComponentList(const String& sourceName,
                                        const MEpoch& mtime,
                                        const Flux<Double>& fluxval,
                                        const ComponentShape& cmp,
-                                       const SpectralModel& cspectrum)
+                                       const ConstantSpectrum& cspectrum)
 {
   LogIO os(LogOrigin("FluxStandard", "makeComponentList"));
 
