@@ -131,7 +131,7 @@ class FluxStandard
   // Solar System objects are typically resolved and variable!
   Bool computeCL(const String& sourceName, const Vector<MFrequency>& mfreqs,
                  const MEpoch& mtime, const MDirection& position,
-                 const ConstantSpectrum& cspectrum,
+                 const SpectralModel& cspectrum,
                  Vector<Flux<Double> >& values, Vector<Flux<Double> >& errors,
                  Vector<String>& clnames) const;
 
@@ -145,7 +145,7 @@ class FluxStandard
   static String makeComponentList(const String& sourceName, const MFrequency& mfreq,
                                   const MEpoch& mtime, const Flux<Double>& fluxval,
                                   const ComponentShape& cmp,
-                                  const ConstantSpectrum& cspectrum);
+                                  const SpectralModel& cspectrum);
 
   // Decode a string representation of the standard or catalog name
   static Bool matchStandard(const String& name, 
