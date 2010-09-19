@@ -120,6 +120,8 @@ public:
     CONSTANT_SPECTRUM = 0,
     // The flux varies as <src>I = I_0 * (nu / nu_0)^alpha</src>
     SPECTRAL_INDEX,
+    //Tabular values interpolated in between
+    TABULAR_SPECTRUM,
     // an unknown spectral type
     UNKNOWN_SPECTRAL_SHAPE,
     // The number of spectral types in this enumerator

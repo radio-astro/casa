@@ -65,7 +65,7 @@ void checkImage(
 	Array<Double> fracDiffRef = (
 			gotCsys.referenceValue() - expectedCsys.referenceValue()
 		)/expectedCsys.referenceValue();
-	AlwaysAssert(max(abs(fracDiffRef)) <= 1e-13, AipsError);
+	AlwaysAssert(max(abs(fracDiffRef)) <= 3e-13, AipsError);
 }
 
 void checkImage(
@@ -248,6 +248,41 @@ int main() {
     		AlwaysAssert(results.asString("xUnit") == "km/s", AipsError);
     		AlwaysAssert(results.asString("yUnit") == "Jy", AipsError);
     	}
+    	{
+    		writeTestString("test writing result images of multi-pixel two gaussian fit");
+    		String center = dirName + "/center";
+    		String centerErr = dirName + "/centerErr";
+    		String fwhm = dirName + "/fwhm";
+    		String fwhmErr = dirName + "/fwhmErr";
+    		String amp = dirName + "/amp";
+    		String ampErr = dirName + "/ampErr";
+
+    		ImageProfileFitter fitter(
+    			goodImage, "", "", "", "", "", 2, True,
+    			"", "", 2, -1, amp, ampErr, center, centerErr,
+    			fwhm, fwhmErr
+    		);
+    		Record results = fitter.fit();
+
+    		Vector<String> names(12);
+    		names[0] = "center_0";
+    		names[1] = "centerErr_0";
+    		names[2] = "center_1";
+    		names[3] = "centerErr_1";
+       		names[4] = "amp_0";
+        	names[5] = "ampErr_0";
+        	names[6] = "amp_1";
+        	names[7] = "ampErr_1";
+       		names[8] = "fwhm_0";
+        	names[9] = "fwhmErr_0";
+        	names[10] = "fwhm_1";
+        	names[11] = "fwhmErr_1";
+
+    		for (uInt i=0; i<names.size(); i++) {
+    			checkImage(dirName + "/" + names[i], names[i] + ".fits");
+    		}
+    	}
+
     	{
     		writeTestString("test results of multi-pixel two gaussian, order 3 polynomial fit");
     		ImageProfileFitter fitter(

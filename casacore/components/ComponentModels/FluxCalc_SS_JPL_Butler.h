@@ -32,10 +32,15 @@
 #include <casa/aips.h>
 #include <casa/BasicSL/String.h>
 #include <measures/Measures/MEpoch.h>
-#include <measures/Measures/MFrequency.h>
+//#include <measures/Measures/MFrequency.h>
 #include <components/ComponentModels/Flux.h>
+#include <tables/Tables/ScalarColumn.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
+
+class MFrequency;
+//class ROScalarColumn<Double>;  There doesn't seem to be a way to forward
+//declare a template.
 
 // <summary> 
 // FluxCalc_SS_JPL_Butler: Compute flux densities and get angular diameters 
@@ -127,6 +132,9 @@ class FluxCalc_SS_JPL_Butler
                                Vector<Flux<Double> >& errors, Double& angdiam,
                                const Vector<MFrequency>& mfreqs);
 
+  static Double get_Quantity_keyword(const TableRecord& ks,
+				     const String& kw,
+				     const Unit& unit);
  private:
   enum KnownObjects {
     Mercury = 0,
@@ -190,6 +198,11 @@ class FluxCalc_SS_JPL_Butler
   void compute_titan(Vector<Flux<Double> >& values,
                      Vector<Flux<Double> >& errors, const Double angdiam,
                      const Vector<MFrequency>& mfreqs);  
+
+  // Find the row in mjd closest to time_p, and the rows just before and after
+  // it, taking boundaries into account.
+  Bool get_row_numbers(uInt& rowbef, uInt& rowclosest, uInt& rowaft,
+		       const ROScalarColumn<Double>& mjd);
 
   // Data members which are initialized in the c'tor's initialization list:
   String     name_p;

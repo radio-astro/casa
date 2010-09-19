@@ -1842,9 +1842,9 @@ void FITSIDItoMS1::fillMSMainTable(const String& MSFileName, Int& nField, Int& n
     }
     //cout << "TIME=" << time << endl; 
 
-    Long _baseline;
+    Int _baseline;
     Float baseline;
-    memcpy(&_baseline, (static_cast<Long *>(data_addr[iBsln])), sizeof(Long));
+    memcpy(&_baseline, (static_cast<Int *>(data_addr[iBsln])), sizeof(Int));
     baseline=static_cast<Float>(_baseline); 
     baseline *= tscal(iBsln);
     baseline += tzero(iBsln); 
@@ -1929,14 +1929,14 @@ void FITSIDItoMS1::fillMSMainTable(const String& MSFileName, Int& nField, Int& n
     Int count = 0;
 
     Float test_baseline;
-    memcpy(&test_baseline,fitsrow,sizeof(Long));
+    memcpy(&test_baseline,fitsrow,sizeof(Int));
     //cout << "*****TEST_BASELINE FITS=" << test_baseline << endl;
 
-    memcpy(&test_baseline,table,sizeof(Long));
+    memcpy(&test_baseline,table,sizeof(Int));
     //cout << "*****TEST_BASELINE TABLE=" << test_baseline << endl;
 
-    Long new_baseline;
-    memcpy(&new_baseline,static_cast<Long *>(data_addr[iBsln]),sizeof(Long));
+    Int new_baseline;
+    memcpy(&new_baseline,static_cast<Int *>(data_addr[iBsln]),sizeof(Int));
     //cout << "*****NEW_BASELINE ADDR=" << new_baseline << endl;
         
 
@@ -2307,7 +2307,11 @@ void FITSIDItoMS1::fillAntennaTable()
      }
      ant.flagRow().put(row,False);
      ant.mount().put(row,mount);
-     ant.name().put(row,String::toString(anNo(i)));
+     String temps = String::toString(anNo(i));
+     if(anNo(i)<10){
+       temps = String("0")+temps;
+     }
+     ant.name().put(row,String("ANT")+temps);
      //Vector<Double> offsets(3); offsets=0.; offsets(0)=offset(i);
      //ant.offset().put(row,offset);
      ant.station().put(row,name(i));

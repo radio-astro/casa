@@ -82,7 +82,9 @@ public:
 	// Process the inputs. Output parameters are the pointer to the
 	// opened <src>image</src>, the specified region as a record (<src>
 	// regionRecord</src>, and a <src>diagnostics</src> String describing
-	// how the region was chosen. <src>stokesControl</src> indicates default
+	// how the region was chosen. If provided, <src>regionPtr</src> should
+	// be a pointer to a record created by a RegionManager method.
+	// <src>stokesControl</src> indicates default
 	// stokes range to use if <src>stokes</src> is blank. In this case <src>stokes</src>
 	// will be set the the value of stokes that will be used. If
 	// <src>allowMultipleBoxes</src> is False, an exception will be thrown if
@@ -103,7 +105,9 @@ public:
 	// Process the inputs. Use this version if the associated image already exists.
     // Output parameters the specified region as a record (<src>
 	// regionRecord</src>, and a <src>diagnostics</src> String describing
-	// how the region was chosen. <src>stokesControl</src> indicates default
+	// how the region was chosen. If provided, <src>regionPtr</src> should
+	// be a pointer to a record created by a RegionManager method.
+    // <src>stokesControl</src> indicates default
 	// stokes range to use if <src>stokes</src> is blank. In this case <src>stokes</src>
 	// will be set the the value of stokes that will be used. If
 	// <src>allowMultipleBoxes</src> is False, an exception will be thrown if
@@ -121,6 +125,9 @@ public:
     	const StokesControl& stokesControl, const Bool& allowMultipleBoxes,
     	const Vector<Coordinate::Type> *requiredCoordinateTypes
     );
+
+    static void checkOutputs(Vector<OutputStruct> *output, LogIO& log);
+
 
     // Get the number of channels that have been selected. The process() method must
     // be called prior to calling this method or an exception is thrown.
@@ -176,8 +183,6 @@ private:
     String _pairsToString(const Vector<uInt>& pairs) const;
 
     String _cornersToString(const Vector<Double>& corners) const;
-
-    void _checkOutputs(Vector<OutputStruct> *output) const;
 
     Bool _isFractionalRegion(const Record& region) const;
 

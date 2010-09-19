@@ -80,18 +80,27 @@ public:
 	// average together the pixels in the specified box or region and do a single fit to that average profile.
 	// <src>residual</src> - Name of residual image to save. Blank means do not save residual image.
 	// <src>model</src> - Name of the model image to save. Blank means do not save model image.
+	// The output solution images are only written if multiFit is true.
+
 	ImageProfileFitter(
 		const String& imagename, const String& region, const String& box,
 		const String& chans, const String& stokes, const String& mask,
-		const Int axis, const Bool multiFit, const String& residual, const String& model,
-		const uInt ngauss, const Int polyOrder
+		const Int axis, const Bool multiFit, const String& residual,
+		const String& model, const uInt ngauss, const Int polyOrder,
+		const String& ampName = "", const String& ampErrName = "",
+		const String& centerName = "", const String& centerErrName = "",
+		const String& fwhmName = "", const String& fwhmErrName = ""
 	);
 
 	ImageProfileFitter(
-		const ImageInterface<Float> * const image, const String& region, const String& box,
-		const String& chans, const String& stokes, const String& mask,
-		const Int axis, const Bool multiFit, const String& residual, const String& model,
-		const uInt ngauss, const Int polyOrder
+		const ImageInterface<Float> * const image, const String& region,
+		const String& box, const String& chans, const String& stokes,
+		const String& mask, const Int axis, const Bool multiFit,
+		const String& residual, const String& model, const uInt ngauss,
+		const Int polyOrder, const String& ampName = "",
+		const String& ampErrName = "", const String& centerName = "",
+		const String& centerErrName = "", const String& fwhmName = "",
+		const String& fwhmErrName = ""
 	);
 
 	// destructor
@@ -109,7 +118,9 @@ private:
 	ImageInterface<Float> *_image;
 	Record _regionRecord;
 	String _regionName, _box, _chans, _stokes, _mask,
-		_residual, _model, _regionString, _xUnit;
+		_residual, _model, _regionString, _xUnit,
+		_centerName, _centerErrName, _fwhmName,
+		_fwhmErrName, _ampName, _ampErrName;
 	Bool _logfileAppend, _fitConverged, _fitDone, _multiFit, _deleteImageOnDestruct;
 	Int _polyOrder, _fitAxis;
 	uInt _ngauss;
@@ -154,6 +165,11 @@ private:
     	const SpectralElement& poly, const CoordinateSystem& csys,
     	const Vector<Double> imPix, const Vector<Double> world
     ) const;
+
+    static void _makeSolutionImage(
+    	const String& name, const IPosition& shape, const CoordinateSystem& csys,
+    	const Vector<Double>& values, const String& unit
+    );
 };
 }
 
