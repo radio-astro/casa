@@ -301,6 +301,11 @@ class MSAsRaster: public ActiveCaching2dDD {
 
  private:
 
+
+  // Constructs position information for non-deviation display
+  // state averaging...
+  String avgPos( const String &dim, int v );
+
   // The (multiple) DMs which this DD creates just hold drawlist handles.
   // They send the actual drawing chores back to MSAsRaster::draw_().
   // The friend designation is so that draw_() can be made private.
@@ -1259,7 +1264,7 @@ class MSAsRaster: public ActiveCaching2dDD {
 
 private:
 
-  bool adjustAvgRange( VisDev newstate, Record &outrec );
+  bool adjustAvgRange( VisDev newstate, Record &outrec, bool force=false );
 
 };
 

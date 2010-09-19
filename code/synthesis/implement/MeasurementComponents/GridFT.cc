@@ -38,6 +38,7 @@
 #include <casa/BasicSL/Constants.h>
 #include <scimath/Mathematics/FFTServer.h>
 #include <synthesis/MeasurementComponents/GridFT.h>
+#include <synthesis/MeasurementComponents/Utils.h>
 #include <scimath/Mathematics/RigidVector.h>
 #include <msvis/MSVis/StokesVector.h>
 #include <synthesis/MeasurementEquations/StokesImageUtil.h>
@@ -292,8 +293,8 @@ void GridFT::initializeToVis(ImageInterface<Complex>& iimage,
      //griddedData can be a reference of image data...if not using model col
      //hence using an undocumented feature of resize that if 
      //the size is the same as old data it is not changed.
-     if(!usePut2_p) griddedData.set(0);
-     
+     //if(!usePut2_p) griddedData.set(0);
+     griddedData.set(Complex(0.0));
 
      IPosition stride(4, 1);
      IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2, (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
@@ -385,12 +386,10 @@ void GridFT::initializeToSky(ImageInterface<Complex>& iimage,
   else {
     IPosition gridShape(4, nx, ny, npol, nchan);
     griddedData.resize(gridShape);
+    griddedData=Complex(0.0);
     if(useDoubleGrid_p){
       griddedData2.resize(gridShape);
       griddedData2=DComplex(0.0);
-    }
-    else{
-      griddedData=Complex(0.0);
     }
     //iimage.get(griddedData, False);
     //if(arrayLattice) delete arrayLattice; arrayLattice=0;
@@ -549,7 +548,7 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   else
     imagingweight=&(vb.imagingWeight());
   
-  if(dopsf) type=FTMachine::PSF;
+  if(dopsf) {type=FTMachine::PSF;}
 
   Cube<Complex> data;
   //Fortran gridder need the flag as ints 
@@ -890,15 +889,29 @@ ImageInterface<Complex>& GridFT::getImage(Matrix<Float>& weights, Bool normalize
     
 
   
-    if(useDoubleGrid_p){
-      convertArray(griddedData, griddedData2);
-      //Don't need the double-prec grid anymore...
-      griddedData2.resize();
-    }
+    // if(useDoubleGrid_p){
+    //   convertArray(griddedData, griddedData2);
+    //   //Don't need the double-prec grid anymore...
+    //   griddedData2.resize();
+    // }
+
     // x and y transforms
-    LatticeFFT::cfft2d(*lattice,False);
-    
-    
+    //    LatticeFFT::cfft2d(*lattice,False);
+    //
+    // Retain the double precision grid for FFT as well.  Convert it
+    // to single precision just after (since images are still single
+    // precision).
+    //
+    if(useDoubleGrid_p)
+      {
+	ArrayLattice<DComplex> *darrayLattice = new ArrayLattice<DComplex>(griddedData2);
+	LatticeFFT::cfft2d(*darrayLattice,False);
+	convertArray(griddedData, griddedData2);
+	//Don't need the double-prec grid anymore...
+	griddedData2.resize();
+      }
+    else
+      LatticeFFT::cfft2d(*lattice,False);
 
     {
       Int inx = lattice->shape()(0);

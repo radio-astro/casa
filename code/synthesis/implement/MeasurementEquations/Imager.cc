@@ -158,6 +158,7 @@
 
 #include <components/ComponentModels/ComponentList.h>
 #include <components/ComponentModels/ConstantSpectrum.h>
+#include <components/ComponentModels/TabularSpectrum.h>
 #include <components/ComponentModels/Flux.h>
 #include <components/ComponentModels/FluxStandard.h>
 #include <components/ComponentModels/PointShape.h>
@@ -218,7 +219,7 @@ traceEvent(1,"Entering imager::defaults",25);
   distance_p=Quantity(0.0, "m");
   stokes_p="I"; npol_p=1;
   nscales_p=5;
-  ntaylor_p=2;
+  ntaylor_p=1;
   reffreq_p=1.4e+09;
   scaleMethod_p="nscales";  
   scaleInfoValid_p=False;
@@ -4774,7 +4775,6 @@ Bool Imager::clean(const String& algorithm,
       maskNames="";
     }
 
-
     if(sm_p){
       if( sm_p->getAlgorithm() != "clean") destroySkyEquation();
       if(images_p.nelements() != uInt(nmodels)){
@@ -4928,11 +4928,10 @@ Bool Imager::clean(const String& algorithm,
       }
       else if (algorithm=="msmfs") {
 	doMultiFields_p = False;
-	doMultiFields_p = True;
 	doWideBand_p = True;
-	if ( ftmachine_p != "ft" ) {
+	if ( ftmachine_p != "ft" && ftmachine_p != "wproject") {
 	  os << LogIO::SEVERE
-             << "Multiscale multifield clean currently works only with the default ftmachine"
+             << "Multi-scale Multi-frequency Clean currently works only with the default ftmachine and wproject"
              << LogIO::POST;
 	  return False;
 	}
@@ -4949,6 +4948,17 @@ Bool Imager::clean(const String& algorithm,
 	os << LogIO::NORMAL // Loglevel INFO
            << "Using multi frequency synthesis algorithm" << LogIO::POST;
 	((WBCleanImageSkyModel*)sm_p)->imageNames = Vector<String>(image);
+	/* Check masks. Should be only one per field. Duplicate the name ntaylor_p times 
+	   Note : To store taylor-coefficients, msmfs uses the same data structure as for
+	          multi-field imaging. In the case of multifield and msmfs, the list of 
+		  images is nested and follows a field-major ordering.
+		  All taylor-coeffs for a single field should have the same mask (for now).
+	   For now, since only single-field is allowed for msmfs, we have the following.*/
+        if(Int(mask.nelements()) != nmodels && Int(mask.nelements())>0) 
+	{
+            for(Int tay=0;tay<nmodels;tay++)
+		   maskNames[tay] = mask[0];
+	}
       }
       else {
 	this->unlock();
@@ -6277,6 +6287,36 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
           foundSrc = fluxStd.computeCL(fieldName, mfreqs, mtime, fieldDir,
                                        cspectrum, returnFluxes, returnFluxErrs,
                                        tempCLs);
+	  if(chanDep){
+	    for (uInt kk =0; kk < nspws; ++kk){
+	      spwid=spwids[kk];
+	      
+	      Vector<Double> freqArray=msc.spectralWindow().chanFreq()(spwid);
+	      IPosition whichChan(1,0);
+	      MFrequency::Ref myRef=msc.spectralWindow().chanFreqMeas()(spwid)(whichChan).getRef();
+	      Vector<Flux<Double> >returnFlux(freqArray.nelements());
+	      Vector<MVFrequency> freqvals(freqArray.nelements());
+	      Flux<Double> returnFluxErr;
+	      for (uInt jj =0 ; jj < freqArray.nelements(); ++jj){
+		whichChan[0]=jj;
+		freqvals[jj]=msc.spectralWindow().chanFreqMeas()(spwid)(whichChan).getValue();
+		fluxStd.compute(fieldName, msc.spectralWindow().chanFreqMeas()(spwid)(whichChan), returnFlux[jj], returnFluxErr);
+	      }
+	      {
+		TabularSpectrum newspec(mfreqs[kk], freqvals, returnFlux, myRef);
+		ComponentList cl(tempCLs[kk], False);
+		for (uInt uu=0; uu < cl.nelements(); ++uu){
+		  cl.component(uu).setSpectrum(newspec);
+		}
+	      }//This should save that componentlist back
+	    }
+
+
+	  }
+
+       
+
+
         }
         if(!foundSrc){
           if (standard==String("SOURCE")) {
@@ -6565,7 +6605,7 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
 	
         // Delete the temporary component list and image tables
         if (tempCLs[spwInd] != "")
-          Table::deleteTable(tempCLs[spwInd]);
+          if(Table::canDeleteTable(tempCLs[spwInd]))Table::deleteTable(tempCLs[spwInd]);
         if (tmodimage) delete tmodimage;
         tmodimage=NULL;
         //	if (Table::canDeleteTable("temp.setjy.image")) Table::deleteTable("temp.setjy.image");
@@ -8480,6 +8520,10 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
     if((facets_p >1)){
       // Support serial and parallel specializations
       setWFCleanImageSkyModel();
+    }
+    else if(ntaylor_p>1){
+      // Init the msmfs sky-model so that Taylor weights are triggered in CubeSkyEqn
+      sm_p = new WBCleanImageSkyModel(ntaylor_p, 1 ,reffreq_p);
     }
     else {
       sm_p = new CleanImageSkyModel();

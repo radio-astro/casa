@@ -113,7 +113,7 @@
 
 		<param type="intArray" name="scales">
 			<description>Scales to use in deconvolution</description>
-			<value>[]</value>
+			<value>0</value>
 		</param>
 
 		<param type="string" name="mode">
@@ -417,7 +417,7 @@
                example: weighting='uniform';
 
         scales -- list of scales in pixel for multiscale clean 
-               default: []
+               default: [0]
                example: scales=[0, 3, 10]
 
         mode -- type of image to be generated 
@@ -566,6 +566,37 @@ e
           weighting='natural',
           contclean=False, chanchunk=1, visinmem=False)
 
+   pclean(
+          vis="../test/ngc6503/ngc6503_output/ngc6503.ms",
+          imagename="ngc6503_cube.im",
+          field="",spw="",imsize=[256, 256],
+          cell=['5arcsec', '5arcsec'],
+          phasecenter="",niter=20000,weighting="natural",
+          ftmachine="ft",alg="clark",wprojplanes=128,
+          facats=1,majorcycles=1,painc=360.0,pblimit=0.1,
+          dopbcorr=True,applyoffsets=False,cfcache="cfcache.dir",
+          epjtablename="",contclean=False,visinmem=False,
+          mode="channel",start=0,nchan=128,step=1,
+          imagetilevol=1000000,chanchunk=1,scales=[0],
+          hostnames=['casa-dev-02', 'casa-dev-03', 'casa-dev-04', 'casa-dev-16'],
+          numcpuperhost=1
+         )
+
+   pclean(
+          vis="../test/ngc6503/ngc6503_output/ngc6503.ms",
+          imagename="ngc6503.im",
+          field="",spw="",imsize=[256, 256],
+          cell=['5arcsec', '5arcsec'],
+          phasecenter="",niter=20000,weighting="natural",
+          ftmachine="ft",alg="clark",wprojplanes=128,
+          facats=1,majorcycles=1,painc=360.0,pblimit=0.1,
+          dopbcorr=True,applyoffsets=False,cfcache="cfcache.dir",
+          epjtablename="",contclean=False,visinmem=False,
+          mode="continuum",start=0,nchan=10,step=1,
+          imagetilevol=1000000,chanchunk=1,scales=[0],
+          hostnames=['casa-dev-02', 'casa-dev-03', 'casa-dev-04', 'casa-dev-16'],
+          numcpuperhost=1
+         )
 
  </example>
  </task>

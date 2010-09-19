@@ -75,12 +75,19 @@ import unittest
 
 twogauss = "specfit_multipix_2gauss.fits"
 polyim = "specfit_multipix_poly_2gauss.fits"
+solims = [
+    "amp_0", "ampErr_0", "amp_1", "ampErr_1",
+    "center_0", "centerErr_0", "center_1", "centerErr_1",
+    "fwhm_0", "fwhmErr_0", "fwhm_1", "fwhmErr_1"
+]
+
 datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/specfit/'
 
 def run_fitprofile (
     imagename, box, region, chans, stokes,
     axis, mask, ngauss, poly, multifit, model,
-    residual
+    residual, amp="", amperr="", center="", centererr="",
+    fwhm="", fwhmerr=""
 ):
     myia = iatool.create()
     myia.open(imagename)
@@ -91,7 +98,9 @@ def run_fitprofile (
         box=box, region=region, chans=chans,
         stokes=stokes, axis=axis, mask=mask,
         ngauss=ngauss, poly=poly, multifit=multifit,
-        model=model, residual=residual
+        model=model, residual=residual, amp=amp,
+        amperr=amperr, center=center, centererr=centererr,
+        fwhm=fwhm, fwhmerr=fwhmerr
     )
     myia.close()
     myia.done()
@@ -100,13 +109,17 @@ def run_fitprofile (
 def run_specfit(
     imagename, box, region, chans, stokes,
     axis, mask, ngauss, poly, multifit, model,
-    residual, wantreturn=True
+    residual, amp="", amperr="", center="", centererr="",
+    fwhm="", fwhmerr="", wantreturn=True
 ):
     return specfit(
         imagename=imagename, box=box, region=region,
         chans=chans, stokes=stokes, axis=axis, mask=mask,
         ngauss=ngauss, poly=poly, multifit=multifit,
-        model=model, residual=residual, wantreturn=wantreturn
+        model=model, residual=residual, amp=amp,
+        amperr=amperr, center=center, centererr=centererr,
+        fwhm=fwhm, fwhmerr=fwhmerr,
+        wantreturn=wantreturn
     )
 
 class specfit_test(unittest.TestCase):
@@ -114,11 +127,14 @@ class specfit_test(unittest.TestCase):
     def setUp(self):
         shutil.copy(datapath + twogauss, twogauss)
         shutil.copy(datapath + polyim, polyim)
+        for im in solims:
+            shutil.copy(datapath + im + ".fits", im + ".fits")
 
-    
     def tearDown(self):
         os.remove(twogauss)
         os.remove(polyim)
+        for im in solims:
+            os.remove(im + ".fits")
 
     def checkImage(self, gotImage, expectedName):
         expected = iatool.create()                                
@@ -138,7 +154,7 @@ class specfit_test(unittest.TestCase):
         fracDiffRef = (
             gotCsys.referencevalue()['numeric'] - expectedCsys.referencevalue()['numeric']
         )/expectedCsys.referencevalue()['numeric'];
-        self.assertTrue(abs(fracDiffRef).max() <= 1e-13)
+        self.assertTrue(abs(fracDiffRef).max() <= 3e-13)
         got.close()
         got.done()
         expected.close()
@@ -150,7 +166,7 @@ class specfit_test(unittest.TestCase):
         def testit(
             imagename, box, region, chans, stokes,
             axis, mask, ngauss, poly, multifit, model,
-            residual, wantreturn
+            residual
         ):
             for i in [0,1]:
                 if (i==0):
@@ -164,48 +180,48 @@ class specfit_test(unittest.TestCase):
                         run_specfit(
                             imagename, box, region, chans,
                             stokes, axis, mask, ngauss, poly,
-                            multifit, model, residual, wantreturn
+                            multifit, model, residual
                         )
                     )
         # Exception if no image name given",
         testit(
-            "", "", "", "", "", 2, "", False, 1, -1, "", "", False
+            "", "", "", "", "", 2, "", False, 1, -1, "", ""
         )
         # Exception if bogus image name given
         testit(
-            "my bad", "", "", "", "", 2, "", 1, -1, False, "", "", False
+            "my bad", "", "", "", "", 2, "", 1, -1, False, "", ""
         )
         # Exception if given axis is out of range
         testit(
-            twogauss, "", "", "", "", 5, "", 1, -1, False, "", "", False
+            twogauss, "", "", "", "", 5, "", 1, -1, False, "", ""
         )
         # Exception if bogus box string given #1
         testit(
-            twogauss, "abc", "", "", "", 2, "", 1, -1, False, "", "", False
+            twogauss, "abc", "", "", "", 2, "", 1, -1, False, "", ""
         )
         # Exception if bogus box string given #2
         testit(
-            twogauss, "0,0,1000,1000", "", "", "", 2, "", 1, -1, False, "", "", False
+            twogauss, "0,0,1000,1000", "", "", "", 2, "", 1, -1, False, "", ""
         )
         # Exception if bogus chans string given #1
         testit(
-            twogauss, "", "", "abc", "", 2, "", 1, -1, False, "", "", False
+            twogauss, "", "", "abc", "", 2, "", 1, -1, False, "", ""
         )
         # Exception if bogus chans string given #2
         testit(
-            twogauss, "", "", "0-200", "", 2, "", 1, -1, False, "", "", False
+            twogauss, "", "", "0-200", "", 2, "", 1, -1, False, "", ""
         )        
         # Exception if bogus stokes string given #1   
         testit(
-            twogauss, "", "", "", "abc", 2, "", 1, -1, False, "", "", False
+            twogauss, "", "", "", "abc", 2, "", 1, -1, False, "", ""
         )       
         # Exception if bogus stokes string given #2 
         testit(
-            twogauss, "", "", "", "v", 2, "", 1, -1, False, "", "", False
+            twogauss, "", "", "", "v", 2, "", 1, -1, False, "", ""
         )       
         # Exception if no gaussians and no polynomial specified
         testit(
-            twogauss, "", "", "", "", 2, "", 0, -1, False, "", "", False
+            twogauss, "", "", "", "", 2, "", 0, -1, False, "", ""
         )         
         
     def test_1(self):
@@ -222,7 +238,6 @@ class specfit_test(unittest.TestCase):
         multifit = False
         model = ""
         residual = ""
-        wantreturn = True
         for code in [run_fitprofile, run_specfit]:
             res = code(
                 imagename, box, region, chans,
@@ -246,7 +261,7 @@ class specfit_test(unittest.TestCase):
             self.assertTrue(res["yUnit"] == "Jy")
  
     def test_2(self):
-        """ multipixel, single gaussian fit"""
+        """ multipixel, two gaussian fit"""
         imagename = twogauss
         box = ""
         region = ""
@@ -259,7 +274,6 @@ class specfit_test(unittest.TestCase):
         multifit = True
         model = ""
         residual = ""
-        wantreturn = True
         for code in [run_fitprofile, run_specfit]:
             res = code(
                 imagename, box, region, chans,
@@ -290,7 +304,6 @@ class specfit_test(unittest.TestCase):
         multifit = True
         model = ""
         residual = ""
-        wantreturn = True
         for code in [run_fitprofile, run_specfit]:
             res = code(
                 imagename, box, region, chans,
@@ -305,6 +318,39 @@ class specfit_test(unittest.TestCase):
 
         self.assertTrue(res["xUnit"] == "km/s")
         self.assertTrue(res["yUnit"] == "Jy")
+
+    def test_4(self):
+        """writing solution images for multipixel, two gaussian fit"""
+        imagename = twogauss
+        box = ""
+        region = ""
+        chans = ""
+        stokes = ""
+        axis = 2
+        mask = ""
+        ngauss = 2
+        poly = -1
+        multifit = True
+        model = ""
+        residual = ""
+        amp = "amp"
+        amperr = "ampErr"
+        center = "center"
+        centererr = "centerErr"
+        fwhm = "fwhm"
+        fwhmerr = "fwhmErr"
+        for code in [run_fitprofile, run_specfit]:
+            res = code(
+                imagename, box, region, chans,
+                stokes, axis, mask, ngauss, poly,
+                multifit, model, residual, amp,
+                amperr, center, centererr, fwhm, fwhmerr
+            )
+            for im in solims:
+                self.checkImage(im, im + ".fits")
+                
+        for im in solims:
+            shutil.rmtree(im)
 
 def suite():
     return [specfit_test]

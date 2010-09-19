@@ -28,6 +28,7 @@
 #define FLAGGING_FLAGGER_H
 
 #include <flagging/Flagging/RFCommon.h>
+#include <flagging/Flagging/RFABase.h>
 
 #include <flagging/Flagging/FlagIndex.h>
 
@@ -45,10 +46,11 @@
 
 #include <tableplot/TablePlot/FlagVersion.h>
 
+#include <boost/smart_ptr.hpp>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 class VisSet;
-class RFABase;
 class PGPlotter;
 class PGPlotterInterface;
 class RFChunkStats;
@@ -109,7 +111,7 @@ class Flagger : public FlaggerEnums
 {
 protected:
 // creates an agent by name
-  RFABase * createAgent ( const String &name,RFChunkStats &chunk,const RecordInterface &parms, bool &only_selector );
+  boost::shared_ptr<RFABase> createAgent ( const String &name,RFChunkStats &chunk,const RecordInterface &parms, bool &only_selector );
 
 // sets up record of agents and default parameters
   const RecordInterface & setupAgentDefaults ();
@@ -131,7 +133,7 @@ protected:
  
   MeasurementSet   ms;
   MeasurementSet   originalms;
-  Block<RFABase*> acc;
+  std::vector<boost::shared_ptr<RFABase> > acc;
 
   //new added
   MeasurementSet *mssel_p;

@@ -68,6 +68,7 @@ smtool = casac.homefinder.find_home_by_name('simulatorHome')
 cltool = casac.homefinder.find_home_by_name('componentlistHome')
 coordsystool = casac.homefinder.find_home_by_name('coordsysHome')
 rgtool = casac.homefinder.find_home_by_name('regionmanagerHome')
+sltool = casac.homefinder.find_home_by_name('spectrallineHome')
 dctool = casac.homefinder.find_home_by_name('deconvolverHome')
 vptool = casac.homefinder.find_home_by_name('vpmanagerHome')
 utilstool = casac.homefinder.find_home_by_name('utilsHome')
@@ -86,7 +87,7 @@ def gentools():
 	"""
 	Generate a fresh set of tools the ones who's
 	state can be funny
-	im,cb,ms,tb,fg,af,me,ia,po,sm,cl,cs,rg,dc.vp=gentools()  
+	im,cb,ms,tb,fg,af,me,ia,po,sm,cl,cs,rg,sl,dc.vp=gentools()  
 	"""
 	im=imager.create()
 	cb = calibrater.create()
@@ -101,11 +102,12 @@ def gentools():
 	cl = cltool.create()
 	cs = coordsystool.create()
 	rg=rgtool.create()
+	sl=sltool.create()
 	dc=dctool.create()
 	vp=vptool.create()
-	return im,cb,ms,tb,fg,af,me,ia,po,sm,cl,cs,rg,dc,vp
+	return im,cb,ms,tb,fg,af,me,ia,po,sm,cl,cs,rg,sl,dc,vp
 
-im,cb,ms,tb,fg,af,me,ia,po,sm,cl,cs,rg,dc,vp=gentools()
+im,cb,ms,tb,fg,af,me,ia,po,sm,cl,cs,rg,sl,dc,vp=gentools()
 
 ###done with common tools
 

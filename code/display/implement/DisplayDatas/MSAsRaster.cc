@@ -791,8 +791,9 @@ void MSAsRaster::constructParameters_() {
 	       "MS_and_Visibility_Selection");
 
   itsNAvg  =  new DParameterRange<Int>("navg", "Average Size",
-            "Number of cube planes to include in the average",
-              1, 1, 1, nPAvg_, nPAvg_, "MS_and_Visibility_Selection");
+              "Number of cube planes to include in the average",
+              1, msShape_[axisOn_(Z)], 1, nPAvg_, nPAvg_, "MS_and_Visibility_Selection",
+              true, false, true );
 
 //   itsNAvg  =  new DParameterRange<Int>("navg", "RMS/Diff Moving Average Size",
 //               "The number of time slots in moving\n"
@@ -1765,13 +1766,26 @@ Bool MSAsRaster::setOptions(Record &rec, Record &recOut) {
   // for moving averages.  The actual boxcar boundaries for each time
   // are recomputed whenever nDAvg_ changes (or extract_ is called).
 
-  if( itsNAvg->fromRecord(rec) || (avgrf && visDev_ > NORMAL) ) {
-    nDAvg_ = max(2, itsNAvg->value());	// (min. of 2 just for safety)
-    if(visValid_) {
-      computeTimeBoxcars_();
-      if(isDev) needsRefresh = True;  }  }
-
-  
+  if ( itsNAvg->fromRecord(rec) || avgrf ) {
+	if ( visDev_ > NORMAL ) {
+	    nDAvg_ = max(2, itsNAvg->value());	// (min. of 2 just for safety)
+	    if(visValid_) {
+		computeTimeBoxcars_();
+		needsRefresh = True;
+	    }
+	    if ( ! wasDev && nPAvg_ > 1 ) {
+		computeTimeBoxcars_();
+		needsRefresh = True;
+		dispValid_ = False;
+		purgeCache( );
+	    }
+	} else {
+	    nPAvg_ = itsNAvg->value( );
+	    needsRefresh = True;
+	    dispValid_ = False;
+	    purgeCache( );
+	}
+  }
       
   
   // DECIDE WHETHER DATA NEEDS TO BE [RE]LOADED (via extract_).
@@ -2633,6 +2647,7 @@ void MSAsRaster::createDisplaySlice_() {
   // (10/02) vis_ is no longer required to contain all the data on the
   // display axes in order to draw...
 
+  Axis dispZ_=axisOn_(Z);
   dispX_=axisOn_(X), dispY_=axisOn_(Y);	 // data axes on display.
   Int nx=msShape_[dispX_], ny=msShape_[dispY_];
 
@@ -2737,8 +2752,26 @@ void MSAsRaster::createDisplaySlice_() {
         for(Int iy=vsY; iy<veY; iy++) {
           slot(dispY_) = iy-vsY;
 
-          Float d = disp_(ix,iy) = vis_(slot);
-	  				// disp_: the data display Matrix
+		Float d = NO_DATA;
+		if ( nPAvg_ > 1 && visDev_ == NORMAL ) {
+		    IPosition slotb = slot;
+		    slotb(dispZ_) = min( (Int) (slotb(dispZ_)+nPAvg_-1), (Int) (vis_.shape( )(dispZ_)-1) ) ;
+		    const Array<Float> avga = vis_(slot,slotb);
+		    Bool delstor = False;
+		    const Float *stor = avga.getStorage(delstor);
+		    int num = 0;
+		    Double sum = 0;
+		    for ( size_t x=0; x < avga.nelements(); ++x ) {
+			if ( stor[x] != NO_DATA ) {
+			    sum += stor[x];
+			    ++num;
+			}
+		    }
+		    avga.freeStorage( stor, delstor );
+		    d = disp_(ix,iy) = (num == 0 ? NO_DATA : (Float) (sum / (Double) num));
+		} else {
+		    d = disp_(ix,iy) = vis_(slot);	// disp_: the data display Matrix
+		}
 
 	  if(d == NO_DATA) {
             if(flagsInClr_) {
@@ -3970,6 +4003,18 @@ String MSAsRaster::showValue(const Vector<Double> &world) {
 
 
 //--------------------------------------------------------------------------
+String MSAsRaster::avgPos( const String &dim, int v) {
+    char buf[2048];
+    if ( visDev_ > NORMAL || nPAvg_ == 1 || dim != axisName_(axisOn_(Z)) ) {
+	sprintf( buf, "%d", v );
+	return String(buf);
+    } else {
+	sprintf( buf, "avg(%d:%d)", v, min( (Int) (v + nPAvg_-1), (Int) (vis_.shape( )(axisOn_(Z))-1) ) );
+	return String(buf);
+    }
+}
+
+//--------------------------------------------------------------------------
 String MSAsRaster::showPosition(const Vector<Double> &world,
 				const Bool& displayAxesOnly) {
   // for position tracking--formatted data value at given coordinate.
@@ -4044,7 +4089,7 @@ String MSAsRaster::showPosition(const Vector<Double> &world,
       os<<tstr.substr(8,2)<<"-"<<mtm.monthName()<<"-"<<
           tstr.substr(0,4)<<" "<<tstr.substr(11,8);  }  }
   if(!validt) os<<"Invalid";
-  os<<" (t "<<pt+uiBase()<<")";
+  os<<" (t "<<avgPos(axisName_[TIME],pt+uiBase())<<")";
 	// (see def of DisplayData::uiBase() for explanation...).
   if(validt) {
     os<<String(max( 0, 33+startp-Int(os.tellp()) ), ' ');
@@ -4091,7 +4136,7 @@ String MSAsRaster::showPosition(const Vector<Double> &world,
 	   if(a1==a2) os<<"        ";
 	   else os<<right<<setw(6)<<setprecision(4)<<bLen_(a1,a2)<<"m ";  }  }
 	   
-      os<<"(b "<<setw(1)<<left<<pb+uiBase()<<")";  }  }
+      os<<"(b "<<setw(1)<<left<<avgPos(axisName_[BASELN],pb+uiBase())<<")";  }  }
 
   os<<endl;
   startp=os.tellp();
@@ -4099,7 +4144,7 @@ String MSAsRaster::showPosition(const Vector<Double> &world,
 
   // Spectral window, Channel, Frequency
 
-  if(valids) os<<"Sp Win "<<setw(1)<<spwId_[ps]+uiBase()<<" ";
+  if(valids) os<<"Sp Win "<<setw(1)<<avgPos(axisName_[SP_W],spwId_[ps]+uiBase())<<" ";
   os<<"(s "<<setw(1)<<ps+uiBase()<<") ";
   if(valids) {
     Vector<Double>& fr = *static_cast<Vector<Double>*>(freq_[ps]);
@@ -4108,7 +4153,7 @@ String MSAsRaster::showPosition(const Vector<Double> &world,
           setprecision(5);  }
     else validc=False;  }
   if(!valids || !validc) os<<" Invalid ";
-  os<<" (ch "<<setw(1)<<pc+uiBase()<<")  ";
+  os<<" (ch "<<setw(1)<<avgPos(axisName_[CHAN],pc+uiBase())<<")  ";
 
 
 
@@ -4117,7 +4162,7 @@ String MSAsRaster::showPosition(const Vector<Double> &world,
   os<<String(max( 0, 41+startp-Int(os.tellp()) ), ' ');
   if(validp) os<<setw(1)<<polName_[pp];
   else os<<"Invalid";
-  os<<" (cor "<<pp+uiBase()<<")";
+  os<<" (cor "<<avgPos(axisName_[POL],pp+uiBase())<<")";
 
   return String(os);  }
 
@@ -5038,8 +5083,8 @@ MSAsRaster::~MSAsRaster() {
     }
 }
 
-bool MSAsRaster::adjustAvgRange( VisDev newstate, Record &outrec ) {
-    if ( visDev_ == NORMAL && (newstate == DIFF || newstate == RMS) ) {
+bool MSAsRaster::adjustAvgRange( VisDev newstate, Record &outrec, bool force ) {
+    if ( (visDev_ == NORMAL && newstate > NORMAL) || (force && visDev_ > NORMAL) ) {
 	// switch to difference (RMS/Diff) averaging
         const char *help = "The number of time slots in moving\n"
 				"averages, for visibility difference\n"
@@ -5058,18 +5103,19 @@ bool MSAsRaster::adjustAvgRange( VisDev newstate, Record &outrec ) {
 	navg.define("help",help);
 	outrec.defineRecord( "navg", navg );
 	return true;
-    } else if ( (visDev_ == DIFF || visDev_ == RMS) && newstate == NORMAL ) {
+    } else if ( (visDev_ > NORMAL && newstate == NORMAL) || (force && visDev_ == NORMAL) ) {
+	int zlen = msShape_[axisOn_(Z)];
 	const char *help = "Number of cube planes to include in the average";
 	itsNAvg->setName( "navg" );
 	itsNAvg->setDescription( help );
 	itsNAvg->setMinimum( 1 );
-	itsNAvg->setMaximum( 1 );
+	itsNAvg->setMaximum( zlen );
 	itsNAvg->setDefaultValue( 1 );
-	itsNAvg->setValue( 1 );
+	itsNAvg->setValue( nPAvg_ );
 	Record navg;
 	navg.define("value",nPAvg_);
 	navg.define("pmin",1);
-	navg.define("pmax",1);
+	navg.define("pmax",zlen);
 	navg.define("help",help);
 	navg.define("listname","Average Size");
 	outrec.defineRecord( "navg", navg );

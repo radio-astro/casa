@@ -109,7 +109,6 @@ def tasklist():
     print '                                                sdsmooth '
     print '                                                sdstat '
     print '                                                sdtpimaging '
-    print '                                                (sdsim)'
     print '                                                (msmoments)'
     if globals().has_key('mytasks') :
         print ''

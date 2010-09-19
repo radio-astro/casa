@@ -70,6 +70,7 @@ __simulatorhome__ = casac.homefinder.find_home_by_name('simulatorHome')
 __componentlisthome__ = casac.homefinder.find_home_by_name('componentlistHome')
 __coordsyshome__ = casac.homefinder.find_home_by_name('coordsysHome')
 __regionmanagerhome__ = casac.homefinder.find_home_by_name('regionmanagerHome')
+__spectrallinehome__ = casac.homefinder.find_home_by_name('spectrallineHome')
 __utilshome__ = casac.homefinder.find_home_by_name('utilsHome')
 __deconvolverhome__ = casac.homefinder.find_home_by_name('deconvolverHome')
 __vpmanagerhome__ = casac.homefinder.find_home_by_name('vpmanagerHome')
@@ -94,6 +95,7 @@ simulator = __simulatorhome__.create( )
 componentlist = __componentlisthome__.create( )
 coordsys = __coordsyshome__.create( )
 regionmanager = __regionmanagerhome__.create( )
+spectralline = __spectralline__.create( )
 utils = __utilshome__.create( )
 deconvolver = __deconvolverhome__.create( )
 vpmanager = __vpmanagerhome__.create( )
@@ -196,7 +198,6 @@ try:
     from sdtpimaging import sdtpimaging
     from sdmath import sdmath
     from sdimaging import sdimaging
-    from sdsim import sdsim
     from sdimprocess import sdimprocess
 except ImportError:
     sd = None

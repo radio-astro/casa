@@ -499,17 +499,17 @@ Int ROVisIterator::numberCorr(Int pol) const {
 
 }
 
-void ROVisIterator::getCol(const ROScalarColumn<Bool> &column, Vector<Bool> &array, const String &, Vector<Bool> &, Bool resize) const
+void ROVisIterator::getCol(const ROScalarColumn<Bool> &column, Vector<Bool> &array, Bool resize) const
 {
     column.getColumn(array, resize);
 }
 
-void ROVisIterator::getCol(const ROScalarColumn<Int> &column, Vector<Int> &array, const String &, Vector<Int> &, Bool resize) const
+void ROVisIterator::getCol(const ROScalarColumn<Int> &column, Vector<Int> &array, Bool resize) const
 {
     column.getColumn(array, resize);
 }
 
-void ROVisIterator::getCol(const ROScalarColumn<Double> &column, Vector<Double> &array, const String &, Vector<Double> &, Bool resize) const
+void ROVisIterator::getCol(const ROScalarColumn<Double> &column, Vector<Double> &array, Bool resize) const
 {
     column.getColumn(array, resize);
 }

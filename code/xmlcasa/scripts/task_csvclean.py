@@ -6,7 +6,7 @@ import numpy as np
 import sys
 from cleanhelper import *
 from taskinit import *
-im,cb,ms,tb,fg,af,me,ia,po,sm,cl,cs,rg,dc,vp=gentools()
+im,cb,ms,tb,fg,af,me,ia,po,sm,cl,cs,rg,sl,dc,vp=gentools()
 
 def csvclean(vis, imagename,field, spw, advise, mode, nchan, width, imsize, cell, phasecenter, niter, weighting, restoringbeam, interactive):
 

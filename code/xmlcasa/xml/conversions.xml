@@ -19,7 +19,8 @@
     <substitute  interface="casaimagepol" as="imagepol" in="imagepol" />
     <substitute  interface="casaimage" as="image" in="imagepol" />
     <substitute  interface="casatable" as="table" in="ms" />
-
+    <substitute  interface="casatable" as="table" in="spectralline" />
+    <substitute  interface="casaspectralline" as="spectralline" in="spectralline" />
 
     <conversion type="complex">
         <target name="python">

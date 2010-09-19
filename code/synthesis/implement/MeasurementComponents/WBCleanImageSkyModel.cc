@@ -143,7 +143,7 @@ WBCleanImageSkyModel::~WBCleanImageSkyModel()
  *************************************/
 Bool WBCleanImageSkyModel::solve(SkyEquation& se) 
 {
-	if(adbg)os << "SOLVER for Multi-Frequency Synthesis deconvolution" << LogIO::POST;
+	os << "MSMFS algorithm with " << ntaylor_p << " Taylor coefficients and Reference Frequency of " << refFrequency_p  << " Hz" << LogIO::POST;
 	Int stopflag=0;
 	Int nchan=0,npol=0;
 
@@ -180,7 +180,7 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	  }
 	
 	/* Calculate the initial residual image for all models. */
-	if(adbg)os << "Calc initial solveResiduals(se)..." << LogIO::POST;
+	os << "Calculating initial residual images" << LogIO::POST;
 	solveResiduals(se);
 
 	/* Check if this is an interactive-clean run */
@@ -250,6 +250,7 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	/* Set up the Mask image */
 	for(Int thismodel=0;thismodel<nfields_p;thismodel++)
 	{
+	  if(adbg) cout << "about to send in the mask for model " << getModelIndex(thismodel,0) << " hasMask() :  " << hasMask(getModelIndex(thismodel,0))  << endl;
 	  //if(hasMask(thismodel)) 
 	  if(hasMask(getModelIndex(thismodel,0))) 
 	  {
@@ -286,14 +287,30 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
            
 	   }// end of model loop
 
-	   /* Do the prediction and residual computation for all models. */
-	   if(adbg)os << "Calc residuals : solveResiduals(se)..." << LogIO::POST;
-	   solveResiduals(se);
+	   /* Exit without further ado if MTLC cannot invert matrices */
+	   if(stopflag == -2)
+	   {
+	      os << "Cannot invert Multi-Term Hessian matrix. Please check the reference-frequency and ensure that the number of frequency-channels in the selected data >= nterms" << LogIO::WARN;
+	      break;
+	   }
 	   
+	   /* Do the prediction and residual computation for all models. */
+	   /* If exiting, call 'solveResiduals' with modelToMS = True to write the model to the MS */
+	   if(abs(stopflag) || itercountmaj==99) 
+	   {
+	       solveResiduals(se,True);
+	   }
+	   else 
+	   {
+	       solveResiduals(se);
+	   }
+	   
+	   /* Check and exit */
 	   if(abs(stopflag)) break;
 
 	   /* If reached 100 major cycles - something is wrong */
 	   if(itercountmaj==99) os << " Reached the allowed maximum of 100 major cycles " << LogIO::POST;
+
 	} 
 	/******************* END MAJOR CYCLE LOOP *****************/
 	
@@ -430,9 +447,9 @@ return 0;
 /*************************************
  *          Make Residuals and compute the current peak  
  *************************************/
-Bool WBCleanImageSkyModel::solveResiduals(SkyEquation& se) 
+Bool WBCleanImageSkyModel::solveResiduals(SkyEquation& se, Bool modelToMS) 
 {
-        makeNewtonRaphsonStep(se,False);
+        makeNewtonRaphsonStep(se,False,modelToMS);
 	
 	return True;
 }
@@ -506,13 +523,13 @@ Int WBCleanImageSkyModel::makeSpectralPSFs(SkyEquation& se)
 	{ 
 	  LatticeExprNode maxPSF=max(PSF(index));
 	  normfactor = maxPSF.getFloat();
-	  os << "Normalize PSFs for model " << thismodel << " by " << normfactor << LogIO::POST;
+	  if(adbg) os << "Normalize PSFs for field " << thismodel << " by " << normfactor << LogIO::POST;
 	}
 	LatticeExpr<Float> lenorm(PSF(index)/normfactor);
 	PSF(index).copyData(lenorm);
 	LatticeExprNode maxPSF2=max(PSF(index));
         Float maxpsf=maxPSF2.getFloat();
-	os << "Psf for Model " << thismodel << " and Taylor " << taylor << " has peak " << maxpsf << LogIO::POST;
+	if(adbg) os << "Psf for Model " << thismodel << " and Taylor " << taylor << " has peak " << maxpsf << LogIO::POST;
 
 	//storeAsImg(String("TstPsf.")+String::toString(thismodel)+String(".")+String::toString(taylor),PSF(index));
      }

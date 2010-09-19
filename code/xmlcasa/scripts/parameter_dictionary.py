@@ -295,7 +295,7 @@ class par(str):
 
 	        -----------------------------------------------------
 
-		(for sdsim)
+		(for simdata)
 		cell -- output cell/pixel size
 		default: '0.1arcsec'
 	        example: 'incell'    #uses incell value for the output cell size
@@ -582,13 +582,14 @@ class par(str):
 
 		---------------------------------------------
 
-		(for sdsim)
-		direction -- image center direction
+		(for simdata)
+		direction -- center of map or "" to center on the model
 		* can optionally be a list of pointings, which will override
-		pointingspacing. Otherwise sdsim will hexagonally
-		pack the input image with pointings. When direction is a
-		list, the centroid of direction will be used as the center.
-		default: ['J2000 19h00m00 -40d00m00']
+		pointingspacing. When direction is a list, the centroid of
+		direction will be used as the center.
+		* otherwise simdata will pack mapsize according to maptype
+		default: ""
+		example: 'J2000 19h00m00 -40d00m00'
 		"""
 
 	@staticmethod
@@ -1080,7 +1081,7 @@ class par(str):
 
 		----------------------------------------------------------------
 		
-		(for sdsim)
+		(for simdata)
 		inbright -- peak surface brightness to scale input image
 		in Jy/square arcsec.
 		options: 'default' or surface brightness in Jy/sq.arcsec.
@@ -1554,12 +1555,6 @@ class par(str):
 		This can be either a model image from a previous deconvolution
 		or an image from a single dish image if single dish uv coverage
 		is being introduced in the imaging
-
-		----------------------------------------------------------------------
-
-		(for sdsim)
-		modelimage -- name of input image
-		default: ''
 		"""
 
 	@staticmethod
@@ -1643,7 +1638,7 @@ class par(str):
 
 		----------------------------------------------------
 
-		(for mosaic, sdimaging, sdsim, simdata, widefield)
+		(for mosaic, sdimaging, widefield)
 		nchan -- number of channels (planes) in output image
 		default: 1
 		"""

@@ -32,7 +32,8 @@ def get_user():
             # Known failure case for gksu.
             return __get_username()
         else:
-            print "os.getlogin() raised exception", e
-            print "Since we'd rather get on with our lives, get_user() is moving on to __get_username()."
+            # In most cases, just do an os.getlogin() yourself if you want to see the error.
+            #print "os.getlogin() raised exception", e
+            #print "get_user() is using __get_username() instead of os.getlogin()."
             return __get_username()
         #raise

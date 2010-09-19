@@ -3979,6 +3979,31 @@ ia.removefile('gc.small')
             <description>Name of residual image. Default: do not write the residual image ("").</description>
             <value></value>
         </param>
+        <param type="string" direction="in" name="amp">
+            <description>Prefix of name of amplitude solution image. Name of image will have gaussian component number appended.  Default: do not write the image ("").</description>
+            <value></value>
+        </param>
+        <param type="string" direction="in" name="amperr">
+            <description>Prefix of name of amplitude error solution image. Name of image will have gaussian component number appended.  Default: do not write the image ("").</description>
+            <value></value>
+        </param>
+        <param type="string" direction="in" name="center">
+            <description>Prefix of name of center solution image. Name of image will have gaussian component number appended.  Default: do not write the image ("").</description>
+            <value></value>
+        </param>
+        <param type="string" direction="in" name="centererr">
+            <description>Prefix of name of center error solution image. Name of image will have gaussian component number appended.  Default: do not write the image ("").</description>
+            <value></value>
+        </param>
+        <param type="string" direction="in" name="fwhm">
+            <description>Prefix of name of FWHM solution image. Name of image will have gaussian component number appended.  Default: do not write the image ("").</description>
+            <value></value>
+        </param>
+        <param type="string" direction="in" name="fwhmerr">
+            <description>Prefix of name of FWHM error solution image. Name of image will have gaussian component number appended.  Default: do not write the image ("").</description>
+            <value></value>
+        </param>
+
     </input>
 <returns type="any"><any type="record"/></returns>
 
@@ -4012,14 +4037,9 @@ fwhm[0,1,...] The fitted FWHM value for the nth component which is a gaussian.
 amp[0,1,...] The fitted amplitude value for the nth component which is a gaussian.
 centerErr[0,1,...], fwhmErr[0,1,...], ampErr[0,1,...] The associated errors for the nth component which is a gaussian.
 
-Currently, the polynomial coefficients and their errors are not returned, although they are logged.
-
-It is planned that in a future release the fit parameters will be able to be optionally written out to their own images. For now, it is easy to get a pixel
-by pixel correspondance between model parameters and the image pixels they are associated with via, eg,
-
-res['center0'].reshape(shape, order='F')
-
-where shape is the shape of region over which the fit was done.
+One can also write none, any or all of the solution and error images for gaussian fits via the parameters amp, amperr, center, centererr,
+fwhm, and fwhmerr when doing multi-pixel fits. The specified parameter value will by appended by "_n" where n is the gaussian
+component number. Writing analogous images for polynomial coefficients is not yet supported.
 
 It is not yet possible to specify initial model parameter estimates; this feature is planned for a future release. Currently, the solver
 will determine initial estimates.

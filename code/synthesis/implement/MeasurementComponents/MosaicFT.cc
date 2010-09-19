@@ -450,12 +450,10 @@ void MosaicFT::initializeToSky(ImageInterface<Complex>& iimage,
   else {
     IPosition gridShape(4, nx, ny, npol, nchan);
     griddedData.resize(gridShape);
+    griddedData=Complex(0.0);
     if(useDoubleGrid_p){
       griddedData2.resize(gridShape);
       griddedData2=DComplex(0.0);
-    }
-    else{
-      griddedData=Complex(0.0);
     }
     //if(arrayLattice) delete arrayLattice; arrayLattice=0;
     arrayLattice = new ArrayLattice<Complex>(griddedData);
@@ -1192,7 +1190,7 @@ ImageInterface<Complex>& MosaicFT::getImage(Matrix<Float>& weights,
       for(lix.reset();!lix.atEnd();lix++) {
 	Int pol=lix.position()(2);
 	Int chan=lix.position()(3);
-	if(weights(pol, chan)>0.0) {
+	if(weights(pol, chan)!=0.0) {
 	  /*
 	  if(!sj_p) {
 	    gridder->correctX1D(correction, lix.position()(1));

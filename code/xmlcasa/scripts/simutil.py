@@ -801,11 +801,17 @@ class simutil:
         
         obs =['ALMA','ACA','EVLA','VLA','SMA']
         d   =[ 12.   ,7.,   25.  , 25.  , 6. ]
-        ds  =[ 0.75,  0.75, 0.364, 0.364,0.35] # what is subreflector size for ACA?!
-        eps =[ 20.,   20.,  300,   300  ,15. ]  # antenna surface accuracy
+        ds  =[ 0.75,  0.75, 0.364, 0.364,0.35] # subreflector size for ACA?
+        eps =[ 20.,   20.,  300,   300  ,15. ] # antenna surface accuracy
         
-        cq  =[ 0.95, 0.95,  0.91,  0.79, 0.86]  # correlator quantization eff
+        cq  =[ 0.88, 0.88,  0.99,  0.79, 0.86] # correlator quantization eff
         # VLA includes additional waveguide loss from correlator loss of 0.809
+
+        # things hardcoded in ALMA etimecalculator
+        # t_ground=270.
+        # t_cmb=2.73
+        # eta_q = 0.88  
+        # eta_a = 0.95*0.8*eta_s
         
         if obs.count(telescope)>0:
             iobs=obs.index(telescope)
@@ -821,9 +827,10 @@ class simutil:
         eta_b = 1.-(diam_subreflector/diam)**2
 
         # spillover efficiency.    
-        eta_s = 0.96 # these are ALMA values
+        eta_s = 0.95 # these are ALMA values
         # taper efficiency.    
-        eta_t = 0.86 # these are ALMA values
+        #eta_t = 0.86 # these are ALMA values
+        eta_t = 0.8 # 20100914 OT value
 
         # Ruze phase efficiency.    
         if epsilon==None: epsilon = eps[iobs] # microns RMS
@@ -854,9 +861,12 @@ class simutil:
                 # these are T_Rx/epsilon so may be incorrect
                 # http://www.vla.nrao.edu/astro/guides/vlas/current/node11.html
                 # http://www.vla.nrao.edu/astro/guides/evlareturn/stress_tests/L-Band/
-                f0=[0.33,1.47,4.89,8.44,22.5,33.5,43.3]
-                t0=[500, 70,  60,  55,  100, 130, 350]
-                flim=[0.305,50]
+#                f0=[0.33,1.47,4.89,8.44,22.5,33.5,43.3]
+#                t0=[500, 70,  60,  55,  100, 130, 350]
+                # 201009114 from rick perley:
+                f0=[1.5,3,6,10,15,23,33,45]
+                t0=[10.,15,12,15,10,12,15,28]
+                flim=[0.8,50]
                 if self.verbose: self.msg("using EVLA Rx specs",origin="noisetemp")
             else:
                 if telescope=='VLA':
@@ -904,9 +914,10 @@ class simutil:
 
 
 
-    def noiselevel(self, freq, bandwidth, etime, elevation, pwv=None,
+    def sensitivity(self, freq, bandwidth, etime, elevation, pwv=None,
                    telescope=None, diam=None, nant=None,
-                   antennalist=None):
+                   antennalist=None,
+                   doimnoise=None):
         
         msfile="tmp.ms"
         sm.open(msfile)
@@ -983,7 +994,7 @@ class simutil:
                            deltafreq=qa.tos(model_width), 
                            freqresolution=qa.tos(model_width), 
                            nchannels=model_nchan, 
-                           stokes='XX YY')
+                           stokes='XX YY')            
             sm.setfeed(mode='perfect X Y',pol=[''])
 
         sm.setlimits(shadowlimit=0.01, elevationlimit='10deg')
@@ -998,6 +1009,7 @@ class simutil:
         reftime = me.epoch('TAI', "2012/01/01/00:00:00")
         sm.settimes(integrationtime=etime, usehourangle=True, 
                     referencetime=reftime)
+
         sm.observe(sourcename="src1", spwname="band1",
                    starttime=qa.quantity(0, "s"),
                    stoptime=qa.quantity(etime));
@@ -1012,26 +1024,68 @@ class simutil:
             # RI TODO choose based on freq octile
             pwv=2.0
 
-        # things hardcoded in ALMA etimecalculator
+        # things hardcoded in ALMA etimecalculator, & defaults in simulator.xml
         t_ground=270.
         t_cmb=2.73
-        eta_q = 0.88  # change in simutil, as well as surface =20um, eta_eff=.95
-        eta_a = 0.95*0.8*eta_s
+        # eta_q = 0.88
+        # eta_a = 0.95*0.8*eta_s
 
         sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
                     antefficiency=eta_a,trx=t_rx,
                     tground=t_ground,tcmb=t_cmb,pwv=str(pwv)+"mm",
-                    mode="tsys-atm",table="tmp.caltbl")
+                    mode="tsys-atm",table="tmp")
         
-        #sm.corrupt()
-        sm.done()
-        
-        tb.open("tmp.caltbl.T.cal")
-        gain=tb.getcol("GAIN")
-        #RI TODO average instead of first?
-        tb.done()
+        if doimnoise:
+            sm.corrupt()
 
-        return 1./(gain[0][0][0].real)**2 /pl.sqrt(.5*nant*(nant-1))
+        sm.done()
+
+        
+        if doimnoise:
+            cellsize=qa.quantity(3.e3/250./qa.convert(model_start,"GHz")["value"],"arcsec")  # need better cell determination - 250m?!
+            cellsize=[cellsize,cellsize]
+            self.image("tmp.ms","tmp",
+                       "csclean",cellsize,[128,128],
+                       "J2000 00:00:00.00 "+qa.angle(dec),
+                       10000,"0.05mJy","natural",[],"I")
+            ia.open("tmp.image")
+            stats= ia.statistics(robust=True, verbose=False,list=False)
+            ia.done()
+            imnoise=stats["rms"][0]
+        else:
+            imnoise=0.
+                
+        if os.path.exists("tmp.T.cal"):
+            tb.open("tmp.T.cal")
+            gain=tb.getcol("GAIN")
+        #RI TODO average instead of first?
+            tb.done()
+            gain=1./(gain[0][0][0].real)**2
+        else:
+            gain=0.
+ 
+        if os.path.exists("tmp.ms"):
+            #shutil.rmtree("tmp.ms")
+            cu.removetable("tmp.ms")
+        if os.path.exists("tmp.T.cal"):
+            cu.removetable("tmp.T.cal")
+        if os.path.exists("tmp.model"):
+            cu.removetable("tmp.model")
+        if os.path.exists("tmp.flux"):
+            shutil.rmtree("tmp.flux")
+#        if os.path.exists("tmp.psf"):
+#            shutil.rmtree("tmp.psf")
+#        if os.path.exists("tmp.image"):
+#            shutil.rmtree("tmp.image")
+#        if os.path.exists("tmp.residual"):
+#            shutil.rmtree("tmp.residual")
+
+
+        #return 1./(gain[0][0][0].real)**2 /pl.sqrt(.5*nant*(nant-1))
+        if doimnoise:
+            return gain /pl.sqrt(.5*nant*(nant-1)), imnoise
+        else:
+            return gain /pl.sqrt(.5*nant*(nant-1))
 
 
 
@@ -2721,6 +2775,7 @@ class simutil:
             ms0=mstoimage[0]
         else:
             ms0=mstoimage
+            mstoimage=[mstoimage]
         
         tb.open(ms0+"/SPECTRAL_WINDOW")
         if tb.nrows() > 1:
@@ -2862,6 +2917,7 @@ class simutil:
                   stokes=stokes, weighting=weighting, robust=robust,
                   uvtaper=uvtaper,outertaper=outertaper)
 
+        del freq,nchan # something is holding onto the ms in table cache
 
 
 

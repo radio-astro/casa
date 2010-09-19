@@ -38,10 +38,6 @@ within the system. There are five broad packages:
 	\item \ahlink{Simulator}{simulator:simulator} - facilities for simulation of telescope data
 	\item \ahlink{vpmanager}{imager:vpmanager} - facilities for specifying voltage patterns and primary beams
 	\end{itemize}
-\item Single-dish - functionality for processing single-dish data
-        \begin{itemize}
-        \item \ahlink{ASAP}{sd} - single-dish data analysis package 
-        \end{itemize}
 \item Utility - non-astronomy specific functionality
 	\begin{itemize}
 	\item \ahlink{Table}{table} - functionality for manipulating tables in CASA
@@ -50,14 +46,18 @@ within the system. There are five broad packages:
 	\begin{itemize}
 	\item \ahlink{Atmosphere}{atmosphere} - Interface to Juan R. Padro's Atmospheric Transmission Model (ATM) library.
 	\end{itemize}
+\item Single-dish - functionality for processing single-dish data
+        \begin{itemize}
+        \item \ahlink{ASAP}{sd} - single-dish data analysis package 
+        \end{itemize}
 \end{itemize}
 \newpage
 \tableofcontents
 \input{General.tex}
 \input{SynthesisRef.tex}
-\input{SingleDish.tex}
 \input{Utility.tex}
 \input{ThirdParty.tex}
+\input{SingleDish.tex}
 \printindex
 
 {\bf Permissions}

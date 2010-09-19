@@ -226,6 +226,7 @@ Simulator &Simulator::operator=(const Simulator &other)
 
 Simulator::~Simulator()
 {
+//RI  cout<<"Sim::~Sim: nlock="<<Table::nAutoLocks()<< " .. deleting components .. ";
   if (ms_p) {
     ms_p->relinquishAutoLocks();
     ms_p->unlock();
@@ -254,7 +255,8 @@ Simulator::~Simulator()
   if(sm_p) delete sm_p; sm_p = 0;
   if(ft_p) delete ft_p; ft_p = 0;
   if(cft_p) delete cft_p; cft_p = 0;
-
+  
+//RI  cout<<"nlock="<<Table::nAutoLocks()<<endl;
 }
 
 
@@ -1811,13 +1813,17 @@ Bool Simulator::corrupt() {
 
   try {
     
+//RI    cout<<"Sim::corrupt: nlock="<<Table::nAutoLocks()<< " .. locking .. ";
     ms_p->lock();
     if(mssel_p) mssel_p->lock();
+//RI    cout<<"nlock="<<Table::nAutoLocks()<<endl;
 
 //    makeVisSet();
 //    AlwaysAssert(vs_p, AipsError);
 
-    // Arrange the sort for efficient cal apply
+    // Arrange the sort for efficient cal apply (different from sort order 
+    // created by makeVisSet) and if there's a vs_p delete it and replace with 
+    // this one.  also delete it at the end of this routine
     Block<Int> columns;
     // include scan iteration
     columns.resize(5);
@@ -1827,6 +1833,9 @@ Bool Simulator::corrupt() {
     columns[3]=MS::DATA_DESC_ID;
     columns[4]=MS::TIME;
 
+    if(vs_p) {
+      delete vs_p; vs_p=0;
+    }
     Matrix<Int> noselection;
     if(mssel_p) {
       vs_p = new VisSet(*mssel_p,columns,noselection);
@@ -1910,9 +1919,18 @@ Bool Simulator::corrupt() {
     // Flush to disk
     vs_p->flush();
 
+    // since we made a specially sorted vs_p for corrupt, should we delete it 
+    // and make one with the regular order?
+//    if(vs_p) {
+//      delete vs_p; vs_p=0;
+//      makeVisSet()
+//    }
+
+//RI    cout<<"Sim::corrupt: nlock="<<Table::nAutoLocks()<< " .. unlocking .. ";
     ms_p->relinquishAutoLocks();
     ms_p->unlock();
     if(mssel_p) mssel_p->unlock();
+//RI    cout<<"nlock="<<Table::nAutoLocks()<<endl;
 
   } catch (std::exception& x) {
     ms_p->relinquishAutoLocks();

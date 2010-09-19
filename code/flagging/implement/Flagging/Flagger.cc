@@ -489,11 +489,6 @@ namespace casa {
             mssel_p = new MeasurementSet(*originalms_p);
         }
         else {
-	    os << LogIO::WARN << "Looping through a subset of the MS is likely to be slow" << LogIO::POST;
-            /* Because Table::rowNumbers(ms), used in VisIter's slurp mode, will take a
-	       long time when the MS is a selection of another MS. Using VisIter in non-slurp mode
-	       performs badly for non-sorted MS. The solution to this is probably to optimize 
-	       Table::rowNumbers() */
 	    mssel_p = new MeasurementSet(mssel_p2);
         }
 	if (dbg)cout << "assigned new MS to mssel_p" << endl;
@@ -1323,7 +1318,7 @@ namespace casa {
     
     ostringstream fieldName;
     fieldName << agentCount_p++;
-    agents_p->defineRecord(*(new String(fieldName)), newAgent);
+    agents_p->defineRecord(fieldName.str(), newAgent);
     
     //      printflagselections();
     
@@ -1335,7 +1330,7 @@ namespace casa {
   uInt Flagger::ifrNumber ( Int ant1,Int ant2 ) const
   {
     if ( ant1<ant2 )
-      return ifrNumber(ant2,ant1);
+        return ifrNumber(ant2,ant1);
     return ant1*(ant1+1)/2 + ant2;
   }
   //TODO
@@ -1390,7 +1385,7 @@ namespace casa {
   // Flagger::createAgent
   // Creates flagging agent based on name
   // -----------------------------------------------------------------------
-  RFABase * Flagger::createAgent (const String &id,
+  boost::shared_ptr<RFABase> Flagger::createAgent (const String &id,
 				  RFChunkStats &chunk,
 				  const RecordInterface &parms,
                                   bool &only_selector)
@@ -1400,25 +1395,25 @@ namespace casa {
       }
     // cerr << "Agent id: " << id << endl;
     if ( id == "timemed" )
-      return new RFATimeMedian(chunk, parms);
+      return boost::shared_ptr<RFABase>(new RFATimeMedian(chunk, parms));
     else if ( id == "newtimemed" )
-      return new RFANewMedianClip(chunk, parms);
+      return boost::shared_ptr<RFABase>(new RFANewMedianClip(chunk, parms));
     else if ( id == "freqmed" )
-      return new RFAFreqMedian(chunk, parms);
+      return boost::shared_ptr<RFABase>(new RFAFreqMedian(chunk, parms));
     else if ( id == "sprej" )
-      return new RFASpectralRej(chunk, parms);
+      return boost::shared_ptr<RFABase>(new RFASpectralRej(chunk, parms));
     else if ( id == "select" )
-      return new RFASelector(chunk, parms);
+      return boost::shared_ptr<RFABase>(new RFASelector(chunk, parms));
     else if ( id == "flagexaminer" )
-      return new RFAFlagExaminer(chunk, parms);
+      return boost::shared_ptr<RFABase>(new RFAFlagExaminer(chunk, parms));
     else if ( id == "uvbin" )
-      return new RFAUVBinner(chunk, parms);
+      return boost::shared_ptr<RFABase>(new RFAUVBinner(chunk, parms));
     else if ( id == "tfcrop" )
-      return new RFATimeFreqCrop(chunk, parms);
+      return boost::shared_ptr<RFABase>(new RFATimeFreqCrop(chunk, parms));
     else if ( id == "applyflags" )
-      return new RFAApplyFlags(chunk, parms);
+      return boost::shared_ptr<RFABase>(new RFAApplyFlags(chunk, parms));
     else
-      return NULL;
+        return boost::shared_ptr<RFABase>();
   }
   
   
@@ -1623,20 +1618,16 @@ namespace casa {
       Record globopt(Record::Variable);
       if ( opt.isDefined(RF_GLOBAL) )
 	globopt = opt.asRecord(RF_GLOBAL);
-      
-      // clean up any dead agents from previous run  
-      for( uInt i=0; i<acc.nelements(); i++ )
-	if ( acc[i] )
-	  {
-	    delete acc[i];
-	    acc[i] = NULL;
-	  }
-      
+            
       // generate new array of agents by iterating through agents record
       Record agcounts; // record of agent instance counts
-      acc.resize(agents.nfields());
-      
-      acc.set(NULL);
+
+      acc.resize(agents.nfields());      
+
+      for (uInt i=0; i<agents.nfields(); i++) {
+          acc[i] = boost::shared_ptr<RFABase>();
+      }
+
       uInt nacc = 0;
       bool only_selector = true;  // only RFASelector agents?
       for (uInt i=0; i<agents.nfields(); i++) {
@@ -1686,11 +1677,12 @@ namespace casa {
 	  else
 	    agcounts.define(agent_id,1);
 	  // create agent based on name
-	  RFABase *agent = createAgent(agent_id,
-				       chunk,
-				       parms,
-                                       only_selector);
-	  if ( !agent )
+	  boost::shared_ptr<RFABase> agent = 
+              createAgent(agent_id,
+                          chunk,
+                          parms,
+                          only_selector);
+	  if ( agent.get() == NULL )
 	    os<<"Unrecognized method name '"<<agents.name(i)<<"'\n"<<LogIO::EXCEPTION;
 	  agent->init();
 	  agent->setNAgent(agents.nfields());
@@ -1702,7 +1694,7 @@ namespace casa {
       for (unsigned i = 0; i < nacc; i++) {
           acc[i]->setOnlySelector(only_selector);
       }
-      acc.resize(nacc, True);
+      acc.resize(nacc);
 
       // begin iterating over chunks
       uInt nchunk=0;
@@ -1716,7 +1708,7 @@ namespace casa {
 	   ) { //vi.nextChunk(), nchunk++) {
 	  //Start of loop over chunks
 	  didSomething = false;
-	  for (uInt i = 0; i < acc.nelements(); i++) {
+	  for (uInt i = 0; i < acc.size(); i++) {
             acc[i]->initialize();
           }
 
@@ -1752,10 +1744,10 @@ namespace casa {
 		}
 	    }
 	  // call newChunk() for all accumulators; determine which ones are active
-	  Vector<Int> iter_mode(acc.nelements(),RFA::DATA);
-	  Vector<Bool> active(acc.nelements());
+	  Vector<Int> iter_mode(acc.size(),RFA::DATA);
+	  Vector<Bool> active(acc.size());
 	  
-	  for (uInt i = 0; i < acc.nelements(); i++)
+	  for (uInt i = 0; i < acc.size(); i++)
 	    {
 	      Int maxmem;
 	      maxmem = availmem;
@@ -1829,7 +1821,7 @@ namespace casa {
 
 		  // start pass for all active agents
                   //cout << "-----------subtitle=" << subtitle << endl;
-		  for( uInt ival = 0; ival<acc.nelements(); ival++ ) 
+		  for( uInt ival = 0; ival<acc.size(); ival++ ) 
 		    if ( active(ival) )
 		      if ( iter_mode(ival) == RFA::DATA )
 			acc[ival]->startData(new_field_spw);
@@ -1844,7 +1836,7 @@ namespace casa {
 		    chunk.newTime();
 		    Bool anyActive = False;
 		    anyActive=False;
-		    for( uInt i = 0; i<acc.nelements(); i++ ) 
+		    for( uInt i = 0; i<acc.size(); i++ ) 
 		      {
 			  //if ((acc[i]->getID() != "FlagExaminer") && 
                         if (active_init(i)) {
@@ -1852,7 +1844,7 @@ namespace casa {
                         }
 		      }
 
-		    for(uInt i=0;i<acc.nelements();i++) {
+		    for(uInt i=0;i<acc.size();i++) {
 			if (anyActive) acc[i]->initializeIter(itime);
 		    }
 
@@ -1863,7 +1855,7 @@ namespace casa {
                     inDataFlags += my_aipspp_sum(vb.flagCube());
 		    
 		    // now, call individual VisBuffer iterators
-		    for( uInt ival = 0; ival<acc.nelements(); ival++ ) 
+		    for( uInt ival = 0; ival<acc.size(); ival++ ) 
 		      if ( active(ival) ) {
 			// call iterTime/iterDry as appropriate
 			RFA::IterMode res = RFA::STOP;
@@ -1886,7 +1878,7 @@ namespace casa {
 
 		    // also iterate over rows for data passes
 		    for( Int ir=0; ir<vb.nRow() && ndata; ir++ ) {
-		      for( uInt ival = 0; ival<acc.nelements(); ival++ ) 
+		      for( uInt ival = 0; ival<acc.size(); ival++ ) 
 			if ( iter_mode(ival) == RFA::DATA )
 			  {
 			    RFA::IterMode res = acc[ival]->iterRow(ir);
@@ -1901,7 +1893,7 @@ namespace casa {
 			  }
 		    }
                     
-                    for( uInt ival = 0; ival<acc.nelements(); ival++ ) {
+                    for( uInt ival = 0; ival<acc.size(); ival++ ) {
                         if ( active(ival) ) {
                             acc[ival]->endRows(itime);
                         }
@@ -1909,7 +1901,7 @@ namespace casa {
 		  } /* for vi... */
 
 		  // end pass for all agents
-		  for( uInt ival = 0; ival<acc.nelements(); ival++ ) 
+		  for( uInt ival = 0; ival<acc.size(); ival++ ) 
 		    {
 		      if ( active(ival) )
 			if ( iter_mode(ival) == RFA::DATA )
@@ -1928,7 +1920,7 @@ namespace casa {
                       progmeter = auto_ptr<ProgressMeter>(new ProgressMeter (1.0,static_cast<Double>(chunk.num(TIME)+0.001),title+subtitle,"","","",True,pm_update_freq));
                   }
 		  // start pass for all active agents
-		  for( uInt ival = 0; ival<acc.nelements(); ival++ ) 
+		  for( uInt ival = 0; ival<acc.size(); ival++ ) 
 		    if ( iter_mode(ival) == RFA::DRY )
 		      acc[ival]->startDry(new_field_spw);
 		  for( uInt itime=0; itime<chunk.num(TIME) && ndry; itime++ )
@@ -1937,7 +1929,7 @@ namespace casa {
                           progmeter->update(itime);
                       }
 		      // now, call individual VisBuffer iterators
-		      for( uInt ival = 0; ival<acc.nelements(); ival++ ) 
+		      for( uInt ival = 0; ival<acc.size(); ival++ ) 
 			if ( iter_mode(ival) == RFA::DRY )
 			  {
 			    // call iterTime/iterDry as appropriate
@@ -1953,7 +1945,7 @@ namespace casa {
 			  }
 		    }
 		  // end pass for all agents
-		  for( uInt ival = 0; ival<acc.nelements(); ival++ ) 
+		  for( uInt ival = 0; ival<acc.size(); ival++ ) 
 		    if ( iter_mode(ival) == RFA::DRY )
 		      iter_mode(ival) = acc[ival]->endDry();
 		} // end of dry pass
@@ -1971,7 +1963,7 @@ namespace casa {
               if (chunk.num(TIME) > progmeter_limit) {
                   progmeter = auto_ptr<ProgressMeter>(new ProgressMeter(1.0,static_cast<Double>(chunk.num(TIME)+0.001),title+"storing flags","","","",True,pm_update_freq));
               }
-	      for (uInt i = 0; i<acc.nelements(); i++)
+	      for (uInt i = 0; i<acc.size(); i++)
 		if (active_init(i))
 		  acc[i]->startFlag(new_field_spw);
 	      uInt itime=0;
@@ -1985,7 +1977,7 @@ namespace casa {
 
 		  Bool anyActive = False;
 		  anyActive=False;
-		  for( uInt i = 0; i<acc.nelements(); i++ ) {
+		  for( uInt i = 0; i<acc.size(); i++ ) {
                     //		      cout << i << " " << acc[i]->getID() << " " << active_init(i) << endl;
 			if ((acc[i]->getID() != "FlagExaminer") && 
 			    active_init(i))
@@ -1995,7 +1987,7 @@ namespace casa {
 		  //cout << "anyActive" << anyActive << endl;
 
 		  didSomething = (anyActive==True);
-		  for( uInt i = 0; i<acc.nelements(); i++ ) {
+		  for( uInt i = 0; i<acc.size(); i++ ) {
 		      if ( active_init(i) ) {
 			  //if (acc[i]->getID() != "FlagExaminer" )
 			  acc[i]->iterFlag(itime);
@@ -2010,11 +2002,11 @@ namespace casa {
 
 	      }  // for (vi ... ) loop over time
 	      if (didSomething) {
-		  for (uInt i = 0; i < acc.nelements(); i++) {
-		      if (acc[i]) acc[i]->finalize();
+		  for (uInt i = 0; i < acc.size(); i++) {
+		      if (acc[i].get()) acc[i]->finalize();
                   }
               }
-	      for (uInt i = 0; i < acc.nelements(); i++) {
+	      for (uInt i = 0; i < acc.size(); i++) {
 
 		if ( active_init(i) ) {
 
@@ -2035,7 +2027,7 @@ namespace casa {
       end_of_loop:
 
 	  // call endChunk on all agents
-	  for( uInt i = 0; i<acc.nelements(); i++ ) 
+	  for( uInt i = 0; i<acc.size(); i++ ) 
 	    acc[i]->endChunk();
 
           int field_id = chunk.visBuf().fieldId();
@@ -2085,7 +2077,7 @@ namespace casa {
       // get results for all agents
       // (gets just last agent; doesn't work for multiple agents, 
       // but only used in mode summary)
-      for (uInt i = 0; i < acc.nelements(); i++) {
+      for (uInt i = 0; i < acc.size(); i++) {
         result = acc[i]->getResult();
       }
 
@@ -2096,31 +2088,10 @@ namespace casa {
     }
     catch(AipsError x)
       {
-	// clean up agents
-	for( uInt i=0; i<acc.nelements(); i++ )
-	  {
-	    if ( acc[i] )
-	      {
-		delete acc[i];
-		acc[i] = NULL;
-	      }
-	  }
-	acc.resize(0);
-	// clean up PGPlotters
-	//cleanupPlotters();
-	// throw the exception on
 	throw;
       }
     catch(std::exception e) 	 
         { 	 
-            for( uInt i=0; i<acc.nelements(); i++ ) { 	 
-                if ( acc[i] ) { 	 
-                    delete acc[i]; 	 
-                    acc[i] = NULL; 	 
-                } 	 
-            } 	 
-            acc.resize(0); 	 
-            
             throw AipsError(e.what()); 	 
         }
     //cleanupPlotters();
@@ -2248,7 +2219,7 @@ namespace casa {
     
     // print per-agent flagging summary
     /*
-      for( uInt i=0; i<acc.nelements(); i++ )
+      for( uInt i=0; i<acc.size(); i++ )
       {
       String name(acc[i]->name() + "["+i+"]"+": ");
       String stats( acc[i]->isActive() ? acc[i]->getStats() : String("can't process this chunk") );
@@ -2309,7 +2280,7 @@ namespace casa {
     pgp.line(vec01,Vector<Float>(2,y0-dy/4));
     
     // print per-agent flagging summary
-    for( uInt i=0; i<acc.nelements(); i++ )
+    for( uInt i=0; i<acc.size(); i++ )
       {
 	String name(acc[i]->name() + ": ");
 	pgp.text(0,y0-=dy,name+acc[i]->getDesc());
@@ -2332,7 +2303,7 @@ namespace casa {
       if ( !pgp.isAttached() )
 	  return;
       // call each agent to produce summary plots
-      for( uInt i=0; i<acc.nelements(); i++ )
+      for( uInt i=0; i<acc.size(); i++ )
 	  acc[i]->plotFlaggingReport(pgp);
   }
   // -----------------------------------------------------------------------
@@ -2344,7 +2315,7 @@ namespace casa {
   void Flagger::printAgentReports( )
   {
     // call each agent to produce summary plots
-    for( uInt i=0; i<acc.nelements(); i++ )
+    for( uInt i=0; i<acc.size(); i++ )
       acc[i]->printFlaggingReport();
   }
   

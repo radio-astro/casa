@@ -46,7 +46,7 @@
 			<value></value>
 		</param>
 
-		<param type="bool" name="scalebychan" subparam="true">
+		<param type="bool" name="scalebychan">
 		  <description>scale the flux density on a per channel basis or else on a per spw basis</description>
 		  <value>False</value>
 		</param>
@@ -69,15 +69,6 @@
 			</allowed>
 		</param>
 
-		<constraints>
-		  <when param="modimage">
-		    <notequals type="string" value="">
-		      <default param="scalebychan">
-			<value>False</value>
-		      </default>
-		    </notequals>
-		  </when>
-		</constraints>
 
 
 	</input>
@@ -140,7 +131,7 @@
               At the AOC or CV, the models are located in
               /usr/lib/casapy/data/nrao/VLA/CalModels/3C286_L.im (egs)
                    lib64
- &gt;&gt;&gt; scaleperchan=False expandable parameter
+      scaleperchan=False
                This determines whether the fluxdensity set in the model is 
                calculated on a per channel basis. If False then it only one fluxdensity
                value is given per spw
