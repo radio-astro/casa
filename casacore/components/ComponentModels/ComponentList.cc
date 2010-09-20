@@ -1034,7 +1034,7 @@ void ComponentList::readTable(const Path& fileName, const Bool readOnly) {
   for (uInt i = 0; i < nComp; i++) {
     shapeCol.get(i, compName);
     specShapeCol.get(i, compSpectrum);
-    cout << "CompSpec " << compSpectrum << " shape " <<ComponentType::spectralShape(compSpectrum) <<  endl;
+    //cout << "CompSpec " << compSpectrum << " shape " <<ComponentType::spectralShape(compSpectrum) <<  endl;
     currentComp = SkyComponent(ComponentType::shape(compName),
  			       ComponentType::spectralShape(compSpectrum));
     {
