@@ -66,7 +66,9 @@ Complex CalCorruptor::simPar(const VisIter& vi,VisCal::Type type, Int ipar){
 void CalCorruptor::setEvenSlots(const Double& dt) {
   // set slots to constant intervals dt
   Int nslots = Int( (stopTime()-startTime())/dt + 1 );
-  if (nslots<=0) throw(AipsError("logic problem Corruptor::setEvenSlots called before start/stopTime set"));
+
+  if ((stopTime()-startTime())/dt<1) throw(AipsError("logic problem Corruptor::setEvenSlots called before start/stopTime set"));
+  if (dt<=0) throw(AipsError("logic problem Corruptor::setEvenSlots called with bad time interval"));
 
   nSim()=nslots;
   slot_times().resize(nSim(),False);
@@ -162,6 +164,7 @@ AtmosCorruptor::~AtmosCorruptor() {
   if (itsSkyStatus) delete itsSkyStatus;
   if (itsRIP) delete itsRIP;
   if (itsatm) delete itsatm;
+  if (screen_p) delete screen_p;
   if (prtlev()>2) cout << "AtmCorruptor::~AtmCorruptor()" << endl;
 }
 
@@ -562,20 +565,21 @@ Float AtmosCorruptor::tsys(const Float& airmass) {
 				 atm::Length(mean_pwv(),"mm"),airmass,
 				 spilleff(),tground());
       // 1/e(hn/kt)-1 recalculated for us by every setFocusChan
+
       // cmb is already in ATM Tebb (but not in manual one below)
-      // R = Rtcmb() +
-      R = exp(tau) *
-	( 1./(exp(hn_k/tatmosatm.get("K"))-1.) + 
-	  Rtrx() );
-      
+      // and Trx don't need the plank correction
+      // does Tebb need the plank?  doesn't matter..
+      R = exp(tau) * ( 1./(exp(hn_k/tatmosatm.get("K"))-1.) + trx()/hn_k );
+      //R = exp(tau) * ( tatmosatm.get("K")/hn_k + trx()/hn_k );
+
     } else {
       tau = tau*tauscale();
       // manual: tauscale = tau0/opac(band center)
       R = Rtcmb() +
 	exp(tau) *
 	( spilleff() * (1.-exp(-tau)) * Rtatmos() + 
-	  (1.-spilleff()) * Rtground() +
-	  Rtrx() );
+	  (1.-spilleff()) * Rtground() + trx()/hn_k );
+	  //	  Rtrx() );
     }
   } else {
     // not freqDep
@@ -586,11 +590,13 @@ Float AtmosCorruptor::tsys(const Float& airmass) {
       R = Rtcmb() +
 	exp(tau) *
 	( spilleff() * (1.-exp(-tau)) / Rtatmos() + 
-	  (1.-spilleff()) / Rtground() +
-	  Rtrx() );
+	  (1.-spilleff()) / Rtground() + trx()/hn_k);
+	  // Rtrx() );
     }
   }
-  return hn_k/log(1.+1./R);
+  //  return hn_k/log(1.+1./R);
+  // we want to return a noise temp, i.e. with the plank correction
+  return hn_k*R;
 }
 
 
@@ -602,7 +608,7 @@ Float AtmosCorruptor::opac(const Int ichan) {
   // CHANINDEX
   Float opac = itsRIP->getDryOpacity(currSpw(),ichan).get() + 
     //mean_pwv()*(itsRIP->getWetOpacity(currSpw(),ichan).get())  ;
-    mean_pwv()*(itsRIP->getWetOpacity(itsRIP->getGroundWH2O(),currSpw(),ichan).get())  ;
+    itsRIP->getWetOpacity(atm::Length(mean_pwv(),"mm"),currSpw(),ichan).get();
   return opac;
 }
 
@@ -741,26 +747,31 @@ void AtmosCorruptor::initialize(const Int Seed, const Float Beta, const Float sc
   fBM* myfbm = new fBM(xsize,ysize);
   screen_p = new Matrix<Float>(xsize,ysize);
   Float pmean(0.),rms(0.);
+  Int ct(0);
   do {
     myfbm->initialize(Seed,Beta); 
     *screen_p=myfbm->data();
     if (prtlev()>3) cout << " fBM created" << endl;   
     pmean = mean(*screen_p);
     rms = sqrt(mean( ((*screen_p)-pmean)*((*screen_p)-pmean) ));
-  } while (!isnormal(rms));
+    ct++;
+  } while (!(isnormal(rms) and pmean<1 and pmean>0) and ct<5);
+  if (ct>=5) os << "possible issue with fBM init:" << LogIO::DEBUG1;
   // if (prtlev()>4) cout << (*screen_p)[10] << endl;
   if (currAnt()<2) {
     if (prtlev()>3)
       cout << "RMS screen fluctuation " 
-	   << " = " << rms << " ( " << pmean << " ; beta = " << Beta << " ) " << endl;
+	   << " = " << rms << " ( mean = " << pmean << " ; beta = " << Beta << " ) " << endl;
     os << "RMS screen fluctuation " 
-       << " = " << rms << " ( " << pmean << " ; beta = " << Beta << " ) " << LogIO::POST;
+       << " = " << rms << " ( mean = " << pmean << " ; beta = " << Beta << " ; scale = " << scale << "  ) " << LogIO::DEBUG1;
   }
   // scale is RELATIVE i,e, screen has rms=scale
   *screen_p = myfbm->data() * scale/rms;
   
   if (prtlev()>2) cout << "AtmCorruptor::init [2d] scale= " << scale << endl;
 
+  //RI TODO ?? delete myfbm here?  or do we need it for the screen?
+  delete myfbm;
 }
 
 
@@ -795,7 +806,9 @@ Complex AtmosCorruptor::cphase(const Int ix, const Int iy, const Int ichan) {
     //    delay = itsRIP->getDispersiveH2OPhaseDelay(currSpw(),ichan).get("rad") 
     //      * deltapwv / 57.2958; // convert from deg to rad
     // Skystatus delay scales with userWH0 which was set in initialize to mean_pwv
-    delay = itsSkyStatus->getDispersiveH2OPhaseDelay(ichan).get("rad") * deltapwv;
+    delay = itsSkyStatus->getDispersiveH2OPhaseDelay(currSpw(),ichan).get("rad") * deltapwv;
+    //cout << "delay=" << delay << " " << Complex(cos(delay),sin(delay))<<endl;
+
     return Complex(cos(delay),sin(delay));
   } else {    
     o << "atmosCorruptor::cphase: slot " << curr_slot() << "out of range!" <<endl;

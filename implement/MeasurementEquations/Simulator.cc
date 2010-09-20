@@ -144,7 +144,7 @@ Simulator::Simulator(MeasurementSet &theMs)
     sim_p(0),
     // epJ_p(0),
     epJTableName_p(),
-    prtlev_(0)     //RI DEBUG
+    prtlev_(0)    
 {
   LogIO os(LogOrigin("simulator", "simulator(MeasurementSet& theMs)"));
 
@@ -1206,13 +1206,13 @@ Bool Simulator::setnoise(const String& mode,
 	if (waterheight.getValue("m")>100.)
 	  simpar.define ("waterheight", waterheight.getValue("km"));
 	else {
-	  simpar.define ("waterheight", Double(2.));
-	  os<<"User has not set water scale height, using 2km"<<LogIO::POST;
+	  simpar.define ("waterheight", Double(0.2));
+	  os<<"User has not set water scale height, using 200m"<<LogIO::POST;
 	}
 	// as a function of frequency  (freqDepPar=True)
 	//simpar.define ("type", "TF");
 	simpar.define ("type", "TF NOISE");
-	//simpar.define ("type", "MF");
+	// simpar.define ("type", "MF");
       }
 
       if (strlen>1) 
@@ -1383,9 +1383,10 @@ Bool Simulator::settrop(const String& mode,
 //      if (waterheight.getValue("m")>100.)
 //	simpar.define ("waterheight", waterheight.getValue("km"));
 //      else {
-	simpar.define ("waterheight", Double(2.));
+	simpar.define ("waterheight", Double(0.2));  // km
 //	os<<"User has not set water scale height, using 2km"<<LogIO::POST;
 //      }
+	simpar.define ("spillefficiency", Float(.85));
 
       // create the T
       if (!create_corrupt(simpar)) 
