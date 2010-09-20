@@ -151,20 +151,34 @@ DJonesCorruptor::~DJonesCorruptor() {};
 AtmosCorruptor::AtmosCorruptor() : 
   CalCorruptor(1),  // parent
   mean_pwv_(-1.),
-  airMassValid_(False)
+  airMassValid_(False),
+  screen_p(0),itsatm(0),itsRIP(0),itsSkyStatus(0)
 {}
 
 AtmosCorruptor::AtmosCorruptor(const Int nSim) : 
   CalCorruptor(nSim),  // parent
   mean_pwv_(-1.),
-  airMassValid_(False)
+  airMassValid_(False),
+  screen_p(0),itsatm(0),itsRIP(0),itsSkyStatus(0)
 {}
 
 AtmosCorruptor::~AtmosCorruptor() {
-  if (itsSkyStatus) delete itsSkyStatus;
-  if (itsRIP) delete itsRIP;
-  if (itsatm) delete itsatm;
-  if (screen_p) delete screen_p;
+  if (itsSkyStatus) {
+    delete itsSkyStatus;
+    itsSkyStatus=0;
+  }
+  if (itsRIP) {
+    delete itsRIP;
+    itsRIP=0;
+  }
+  if (itsatm) {
+    delete itsatm;
+    itsatm=0;
+  }
+  if (screen_p) {
+    delete screen_p;
+    screen_p=0;
+  }
   if (prtlev()>2) cout << "AtmCorruptor::~AtmCorruptor()" << endl;
 }
 
@@ -767,11 +781,13 @@ void AtmosCorruptor::initialize(const Int Seed, const Float Beta, const Float sc
   }
   // scale is RELATIVE i,e, screen has rms=scale
   *screen_p = myfbm->data() * scale/rms;
-  
+
   if (prtlev()>2) cout << "AtmCorruptor::init [2d] scale= " << scale << endl;
 
-  //RI TODO ?? delete myfbm here?  or do we need it for the screen?
+  // carefully delete this - screen_p should have a copy, not just a ref.
   delete myfbm;
+  myfbm=0;
+
 }
 
 
@@ -837,7 +853,7 @@ Complex AtmosCorruptor::cphase(const Int ichan) {
       //      delay = itsRIP->getDispersiveH2OPhaseDelay(currSpw(),ichan).get("rad")
       //	* deltapwv / 57.2958; // convert from deg to rad
       // the acessor from RIP doesn't scale with WH20, but skystatus' accessor does
-      delay = itsSkyStatus->getDispersiveH2OPhaseDelay(ichan).get("rad") * deltapwv;
+      delay = itsSkyStatus->getDispersiveH2OPhaseDelay(currSpw(),ichan).get("rad") * deltapwv;
     } else
       throw(AipsError("AtmCorruptor internal error accessing pwv()"));  
     return Complex(cos(delay),sin(delay));
