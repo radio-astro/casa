@@ -1925,8 +1925,8 @@ void MMueller::createCorruptor(const VisIter& vi, const Record& simpar, const In
 {
   LogIO os(LogOrigin("MM", "createCorruptor()", WHERE));
 
-  if (prtlev()>2) cout << "   MM::setSimulate()" << endl;
-  os << LogIO::DEBUG1 << "   MM::setSimulate()" 
+  if (prtlev()>2) cout << "   MM::createCorruptor()" << endl;
+  os << LogIO::DEBUG1 << "   MM::createCorruptor()" 
      << LogIO::POST;
 
   atmcorruptor_p = new AtmosCorruptor();
