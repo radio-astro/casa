@@ -60,7 +60,10 @@ TabularSpectrum::TabularSpectrum()
   TabularSpectrum::TabularSpectrum(const MFrequency& refFreq, Vector<MFrequency::MVType>& freq, Vector<Flux<Double> >& flux, const MFrequency::Ref& refFrame)
   :SpectralModel(refFreq)
 {
-  if (refFrame != refFreq.getRef()) {
+
+  Bool stupidTransform = (refFrame.getType() == MFrequency::REST) ||  (refFrame.getType() == MFrequency::N_Types) || (refFreq.getRef().getType() == MFrequency::REST) ||  (refFreq.getRef().getType() == MFrequency::N_Types);
+
+  if (refFrame.getType() != refFreq.getRef().getType() && !stupidTransform) {
     referenceFreq_p = MFrequency::Convert(refFreq, refFrame)().getValue().get("Hz").getValue();
   } else {
     referenceFreq_p = refFreq.getValue().get("Hz").getValue();
@@ -114,7 +117,10 @@ void TabularSpectrum::setValues(const Vector<MFrequency::MVType>& frequencies, c
   if(flux.nelements() != frequencies.nelements()){
     throw(AipsError("frequencies length is not equal to flux length in TabularSpectrum::setValues"));
   }
-  if (refFrame != refFrequency().getRef()) {
+
+  Bool stupidTransform = (refFrame.getType() == MFrequency::REST) ||  (refFrame.getType() == MFrequency::N_Types) || (refFrequency().getRef().getType() == MFrequency::REST) ||  (refFrequency().getRef().getType() == MFrequency::N_Types);
+
+  if (refFrame.getType() != refFrequency().getRef().getType() && !stupidTransform) {
     referenceFreq_p = MFrequency::Convert(refFrequency(), refFrame)().getValue().get("Hz").getValue();
   } else {
     referenceFreq_p = refFrequency().getValue().get("Hz").getValue();
@@ -140,7 +146,8 @@ Double TabularSpectrum::sample(const MFrequency& centerFreq) const {
   const MFrequency::Ref& centerFreqFrame(centerFreq.getRef());
   Double nu;
 
-  if (centerFreqFrame != freqRef_p) {
+  Bool stupidTransform = (centerFreqFrame.getType() == MFrequency::REST) ||  (centerFreqFrame.getType() == MFrequency::N_Types) || (freqRef_p.getType() == MFrequency::REST) ||  (freqRef_p.getType() == MFrequency::N_Types);
+  if (centerFreqFrame.getType() != freqRef_p.getType() && !stupidTransform) {
     nu = MFrequency::Convert(centerFreq, freqRef_p)().getValue().get("Hz").getValue();
   } else {
     nu = refFreq.getValue().get("Hz").getValue();
@@ -176,7 +183,10 @@ void TabularSpectrum::sample(Vector<Double>& scale,
   MFrequency::Convert toThisFrame(refFrame, freqRef_p);
   const MFrequency& refFreq(refFrequency());
   Vector<Double> nu(frequencies.nelements());
-  if (refFrame != freqRef_p) {
+  //try frame conversion only if it is not something stupid...
+  //if it is then assume the frequencies are fine as is.
+  Bool stupidTransform = (refFrame.getType() == MFrequency::REST) ||  (refFrame.getType() == MFrequency::N_Types) || (freqRef_p.getType() == MFrequency::REST) ||  (freqRef_p.getType() == MFrequency::N_Types);
+  if ((refFrame.getType() != freqRef_p.getType()) && !stupidTransform) {
     for(uInt k=0; k < nSamples; ++k){
       nu(k) = toThisFrame(frequencies(k).getValue()).getValue().getValue();
     }
