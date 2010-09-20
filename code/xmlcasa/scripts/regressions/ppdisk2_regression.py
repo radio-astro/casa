@@ -21,6 +21,7 @@ my_modelimage="diskmodel.im2"
 os.system('rm -rf '+my_project+'.* '+my_modelimage)
 tb.clearlocks()
 
+print casa['build']
 print 'I think the data repository is at '+repodir
 #importfits(fitsimage=repodir+"/data/alma/simmos/input50pc_672GHz.fits",imagename=my_modelimage)
 
@@ -123,6 +124,7 @@ The disk input image is a simulation done by Wolf and D'Angelo, converted from
 
 
 print >> logfile, loghdr
+print >> logfile,casa['build']
 
 regstate = True
 rskes = refstats.keys()

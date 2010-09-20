@@ -630,8 +630,8 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
   // independent of simpar details
 
   nSim=sizeUpSim(vs,nChunkPerSol,solTimes);
-  if (prtlev()>1 and prtlev()<3) cout << "  VisCal sized for Simulation with " << nSim << " slots." << endl;
-  if (prtlev()>5) cout << "  solTimes = " << solTimes-solTimes[0] << endl;  
+  if (prtlev()>1 and prtlev()<=4) cout << "  VisCal sized for Simulation with " << nSim << " slots." << endl;
+  if (prtlev()>4) cout << "  solTimes = " << solTimes-solTimes[0] << endl;  
   
   if (!(simpar.isDefined("startTime"))) {    
     throw(AipsError("can't add startTime field to Record"));
@@ -639,8 +639,8 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
     //    RecordDesc simParDesc = simpar.description();
     //    simParDesc.addField("startTime",TpDouble);
     //    simpar.restructure(simParDesc);
-    simpar.define("startTime",min(solTimes));
   }
+  simpar.define("startTime",min(solTimes));
   if (!(simpar.isDefined("stopTime"))) {    
     throw(AipsError("can't add stopTime field to Record"));
   }
@@ -1737,9 +1737,9 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
 
   if (prtlev()>2) {
     cout << "   interval() = " << interval() ;
-    cout << " combscan() = " << combscan();
-    cout << " combfld()  = " << combfld() ;
-    cout << " combspw()  = " << combspw() ;
+    cout << "   combscan() = " << combscan();
+    cout << "   combfld()  = " << combfld() ;
+    cout << "   combspw()  = " << combspw() ;
   }
 
   Int nsortcol(4+Int(!combscan()));  // include room for scan

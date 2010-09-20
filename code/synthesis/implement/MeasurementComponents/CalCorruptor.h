@@ -296,7 +296,7 @@ class AtmosCorruptor : public CalCorruptor {
    // gets slow to calculate 1/exp(hv/kt)-1 all the time so 
    inline Double& Rtground() { return Rtground_; };
    inline Double& Rtatmos() { return Rtatmos_; };
-   inline Double& Rtrx() { return Rtrx_; };
+   //inline Double& Rtrx() { return Rtrx_; };
    inline Double& Rtcmb() { return Rtcmb_; };
 
    virtual Complex simPar(const VisIter& vi, VisCal::Type type,Int ipar);
@@ -311,7 +311,7 @@ class AtmosCorruptor : public CalCorruptor {
      double hn_k = 0.04799274551*1e-9*focusFreq(); 
      Rtcmb() = 1./(exp(hn_k/tcmb())-1.);
      Rtground() = 1./(exp(hn_k/tground())-1.);
-     Rtrx() = 1./(exp(hn_k/trx())-1.);
+     //Rtrx() = 1./(exp(hn_k/trx())-1.);
      Rtatmos() = 1./(exp(hn_k/tatmos())-1.);
   };
 
@@ -322,7 +322,7 @@ class AtmosCorruptor : public CalCorruptor {
  private:   
    Float mean_pwv_,windspeed_,pixsize_,tauscale_,
      tground_,spilleff_,trx_,tatmos_,tcmb_;
-   Double Rtatmos_,Rtcmb_,Rtrx_,Rtground_;
+   Double Rtatmos_,Rtcmb_,Rtground_;//,Rtrx_
    Matrix<Float>* screen_p; 
 
    atm::AtmProfile *itsatm;

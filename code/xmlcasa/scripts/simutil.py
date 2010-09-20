@@ -852,8 +852,11 @@ class simutil:
         # Receiver radiation temperature in K.         
         if telescope=='ALMA' or telescope=='ACA':
             # ALMA-40.00.00.00-001-A-SPE.pdf
+            # http://www.eso.org/sci/facilities/alma/system/frontend/
             f0=[ 35, 75,110,145,185,230,345,409,675,867]
-            t0=[ 17, 30, 37, 51, 65, 83,147,196,175,230]
+            # B9,10 are DSB
+            t0=[ 17, 30, 37, 51, 65, 83,147,196,175*pl.sqrt(2),230*pl.sqrt(2)]
+
             flim=[31.3,950]
             if self.verbose: self.msg("using ALMA/ACA Rx specs",origin="noisetemp")
         else:
@@ -1044,10 +1047,11 @@ class simutil:
         if doimnoise:
             cellsize=qa.quantity(3.e3/250./qa.convert(model_start,"GHz")["value"],"arcsec")  # need better cell determination - 250m?!
             cellsize=[cellsize,cellsize]
+            # very light clean - its an empty image!
             self.image("tmp.ms","tmp",
                        "csclean",cellsize,[128,128],
                        "J2000 00:00:00.00 "+qa.angle(dec),
-                       10000,"0.05mJy","natural",[],"I")
+                       500,"0.01mJy","natural",[],"I")
             ia.open("tmp.image")
             stats= ia.statistics(robust=True, verbose=False,list=False)
             ia.done()
