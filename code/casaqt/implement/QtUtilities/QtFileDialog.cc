@@ -27,6 +27,8 @@
 #include <casaqt/QtUtilities/QtFileDialog.qo.h>
 
 #include <QLayout>
+#include <QSortFilterProxyModel>
+
 
 namespace casa {
 
@@ -58,7 +60,20 @@ QString QtFileDialog::qgetHelper(AcceptMode acceptMode, FileMode fileMode,
     chooser.setAcceptMode(acceptMode);
     chooser.setFileMode(fileMode);
     
-    if(histLimit >= 0) {
+#if (0)
+	// The next three lines fixes issue CSV-433, except
+	// for the resulting plotms crashes if the user clicks 
+	// on the left-side list of commonly used locations in 
+	// the file open dialog.
+	// This is due to a bug in Qt4.3, fixed in Qt4.5 or 4.6.  
+	// We will keep this code here, since it is the proper solution
+	// to the issue, but disable it with #if until Qt can be 
+	// officially updated for CASA.
+	QSortFilterProxyModel *sorter = new QSortFilterProxyModel();
+	sorter->setDynamicSortFilter(true); // This ensures the proxy will resort when the model changes
+	chooser.setProxyModel(sorter);
+#endif
+	if(histLimit >= 0) {
         QStringList hist = chooser.history();
         if(histLimit < hist.size()) {
             while(histLimit < hist.size()) hist.removeFirst();
