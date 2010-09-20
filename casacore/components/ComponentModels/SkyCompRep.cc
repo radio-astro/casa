@@ -288,7 +288,11 @@ void SkyCompRep::visibility(Cube<DComplex>& visibilities,
   
   // It's not clear how we would get the right information down here.
   // In any event, it's probably not a pressing concern for most cases.
-  MeasRef<MFrequency> measRef;
+
+  //Indeed ...write something complex and make believe that 
+  // that transformation from different frames can happen and let it bite when some 
+  // poor sucker try to use it
+  MeasRef<MFrequency> measRef(MFrequency::REST); //at least lets call it lab frequency !
 
   for (uInt v = 0; v < nVis; v++) {
     for (uInt u = 0; u < 3; u++) {
