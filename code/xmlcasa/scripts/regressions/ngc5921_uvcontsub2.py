@@ -682,8 +682,8 @@ multisource = True
 #async = True
 async = export_asynchronously
 
-async_split_id = exportuvfits()
-print "async_split_id =", async_split_id
+async_exportuvfits_id = exportuvfits()
+print "async_exportuvfits_id =", async_exportuvfits_id
 
 # Record exportuvfits completion time
 # NOTE: If async=true this can't be used to time exportuvfits
@@ -1064,14 +1064,14 @@ tstutl.note("Opening UVFITS file " + srcuvfits +
 if export_asynchronously:
     while True:
         try:
-            if tm.retrieve(async_split_id):
+            if tm.retrieve(async_exportuvfits_id):
                 break
             else:
                 time.sleep(1)
         except Exception, e:
             tstutl.note("Error checking whether exportuvfits finished.",
                         "SEVERE")
-            tstutl.note("async_split_id was " + str(async_split_id), "SEVERE")
+            tstutl.note("async_exportuvfits_id was " + str(async_exportuvfits_id), "SEVERE")
             raise e
 
 uvfitsexists=False
