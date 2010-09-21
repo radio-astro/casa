@@ -198,7 +198,7 @@ namespace asdmbinaries {
    *                        dataStruct);        // the description of the structure of the binary data.
    *
    * // And write the integrations (3 in that example).
-   * for (unsigned int i = 0; i < 3; i++) {
+   * for (uint32_t i = 0; i < 3; i++) {
    *  .
    *  .
    *  .
@@ -232,8 +232,8 @@ namespace asdmbinaries {
    *                        dataStruct);        // the description of the structure of the binary data.
    *
    * // And write the subintegrations (6 in that example). 
-   * for (unsigned int i = 0; i < 3; i++) {
-   *   for (unsigned int j = 0; j < 2; j++) {
+   * for (uint32_t i = 0; i < 3; i++) {
+   *   for (uint32_t j = 0; j < 2; j++) {
    *    .
    *    .
    *    .
@@ -335,11 +335,11 @@ namespace asdmbinaries {
      */
     void tpDataHeader(uint64_t startTime,
 		      const string& execBlockUID,
-		      unsigned int execBlockNum,
-		      unsigned int scanNum,
-		      unsigned int subscanNum,
-		      unsigned int numOfIntegrations,
-		      unsigned int numAntenna,
+		      uint32_t execBlockNum,
+		      uint32_t scanNum,
+		      uint32_t subscanNum,
+		      uint32_t numOfIntegrations,
+		      uint32_t numAntenna,
 		      SDMDataObject::DataStruct& dataStruct);
 
     /**
@@ -393,11 +393,11 @@ namespace asdmbinaries {
      */
     void tpData(uint64_t startTime,
 		const string& execBlockUID,
-		unsigned int execBlockNum,
-		unsigned int scanNum,
-		unsigned int subscanNum,
-		unsigned int numOfIntegrations,
-		unsigned int numAntenna,
+		uint32_t execBlockNum,
+		uint32_t scanNum,
+		uint32_t subscanNum,
+		uint32_t numOfIntegrations,
+		uint32_t numAntenna,
 		const vector<SDMDataObject::Baseband>& basebands,
 		uint64_t time,
 		uint64_t interval,
@@ -434,11 +434,11 @@ namespace asdmbinaries {
      */
     void tpData(uint64_t startTime,
 		const string& execBlockUID,
-		unsigned int execBlockNum,
-		unsigned int scanNum,
-		unsigned int subscanNum,
-		unsigned int numOfIntegrations,
-		unsigned int numAntenna,
+		uint32_t execBlockNum,
+		uint32_t scanNum,
+		uint32_t subscanNum,
+		uint32_t numOfIntegrations,
+		uint32_t numAntenna,
 		const vector<SDMDataObject::Baseband>& basebands,
 		uint64_t time,
 		uint64_t interval,
@@ -489,12 +489,12 @@ namespace asdmbinaries {
      */
     
     void wvrData (const string & execBlockUID,
-		  unsigned int execBlockNum,
-		  unsigned int scanNum,
-		  unsigned int subscanNum,
-		  unsigned int numTimes,
-		  unsigned int numAntennas,
-		  unsigned int numChannels,
+		  uint32_t execBlockNum,
+		  uint32_t scanNum,
+		  uint32_t subscanNum,
+		  uint32_t numTimes,
+		  uint32_t numAntennas,
+		  uint32_t numChannels,
 		  NetSideband  netSideband,
 		  uint64_t time,
 		  uint64_t interval,
@@ -519,10 +519,10 @@ namespace asdmbinaries {
      */
     void corrDataHeader(uint64_t startime,
 			const string& execBlockUID,
-			unsigned int execBlockNum,
-			unsigned int scanNum,
-			unsigned int subscanNum,
-			unsigned int numAntenna,
+			uint32_t execBlockNum,
+			uint32_t scanNum,
+			uint32_t subscanNum,
+			uint32_t numAntenna,
 			CorrelationMode correlationMode,
 			const OptionalSpectralResolutionType& spectralResolutionType,
 			SDMDataObject::DataStruct& dataStruct);
@@ -550,7 +550,7 @@ namespace asdmbinaries {
      * parameter is ignored. A empty vector can be passed as an actual parameter.
      * 
      */
-    void addIntegration(unsigned int integrationNum,
+    void addIntegration(uint32_t integrationNum,
 			uint64_t time,
 			uint64_t interval,
 			const vector<FLAGSTYPE>& flags,
@@ -583,7 +583,7 @@ namespace asdmbinaries {
      * parameter is ignored. A empty vector can be passed as an actual parameter.
      * 
      */
-    void addIntegration(unsigned int integrationNum,
+    void addIntegration(uint32_t integrationNum,
 			uint64_t time,
 			uint64_t interval,
 			const vector<FLAGSTYPE>& flags,
@@ -615,7 +615,7 @@ namespace asdmbinaries {
      * parameter is ignored. A empty vector can be passed as an actual parameter.
      * 
      */
-    void addIntegration(unsigned int integrationNum,
+    void addIntegration(uint32_t integrationNum,
 			uint64_t time,
 			uint64_t interval,
 			const vector<FLAGSTYPE>& flags,
@@ -649,8 +649,8 @@ namespace asdmbinaries {
      * parameter is ignored. A empty vector can be passed as an actual parameter.
      * 
      */
-    void addSubintegration(unsigned int integrationNum,
-			   unsigned int subintegrationNum,
+    void addSubintegration(uint32_t integrationNum,
+			   uint32_t subintegrationNum,
 			   uint64_t time,
 			   uint64_t interval,
 			   const vector<FLAGSTYPE>& flags,
@@ -684,8 +684,8 @@ namespace asdmbinaries {
      * parameter is ignored. A empty vector can be passed as an actual parameter.
      * 
      */
-    void addSubintegration(unsigned int integrationNum,
-			   unsigned int subintegrationNum,
+    void addSubintegration(uint32_t integrationNum,
+			   uint32_t subintegrationNum,
 			   uint64_t time,
 			   uint64_t interval,
 			   const vector<FLAGSTYPE>& flags,
@@ -718,8 +718,8 @@ namespace asdmbinaries {
      * parameter is ignored. A empty vector can be passed as an actual parameter.
      * 
      */
-    void addSubintegration(unsigned int integrationNum,
-			   unsigned int subintegrationNum,
+    void addSubintegration(uint32_t integrationNum,
+			   uint32_t subintegrationNum,
 			   uint64_t time,
 			   uint64_t interval,
 			   const vector<FLAGSTYPE>& flags,
@@ -747,9 +747,9 @@ namespace asdmbinaries {
     
     void output   (const string& s);    
     void outputln (const string& s);
-    void output   (const float* data, unsigned int numData);
-    void outputln (const float* data, unsigned int numData);
-    void outputln (const int64_t* data, unsigned int numData);
+    void output   (const float* data, uint32_t numData);
+    void outputln (const float* data, uint32_t numData);
+    void outputln (const int64_t* data, uint32_t numData);
 
     template <class T> void output(const vector<T>& data) {
       numBytes_ += data.size()*sizeof(T);
@@ -797,7 +797,7 @@ namespace asdmbinaries {
     SDMDataObject sdmDataObject_;
 
     // The number of the SDMDataSubset being written
-    unsigned int sdmDataSubsetNum_;
+    uint32_t sdmDataSubsetNum_;
 
     // Two strings used as MIME boundaries
     static const string MIMEBOUNDARY_1;
@@ -832,8 +832,8 @@ namespace asdmbinaries {
     void postamble();
 
 
-    void addData(unsigned int integrationNum,
-		 unsigned int subintegrationNum,
+    void addData(uint32_t integrationNum,
+		 uint32_t subintegrationNum,
 		 uint64_t time,
 		 uint64_t interval,
 		 const vector<FLAGSTYPE>& flags,

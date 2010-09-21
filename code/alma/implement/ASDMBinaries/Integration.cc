@@ -1512,7 +1512,7 @@ namespace sdmbin{
   }
 
 
-  const int64_t*     DataDump::actualTimes() const
+  const int64_t *     DataDump::actualTimes() const
   {
     if(lonlonActualTimesPtr_)
       return lonlonActualTimesPtr_;

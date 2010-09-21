@@ -406,8 +406,8 @@ namespace asdmbinaries {
 #define TSTVALID() if (valid_ == false) throw SDMDataObjectException("no valid binary data in this SDMDataObject.");
 
 
-  SDMDataObject::SDMDataObject() {valid_  = false; aborted_ = false; }
-  SDMDataObject::SDMDataObject(unsigned long long startTime,
+  SDMDataObject::SDMDataObject() {numTime_ = 0; valid_  = false; aborted_ = false; }
+  SDMDataObject::SDMDataObject(uint64_t startTime,
 			       const string& dataOID,
 			       unsigned int dimensionality,
 			       const string& execBlockUID, 
@@ -420,6 +420,7 @@ namespace asdmbinaries {
     startTime_(startTime),
     dataOID_(dataOID),
     dimensionality_(dimensionality),
+    numTime_(0),
     execBlockUID_(execBlockUID),
     execBlockNum_(execBlockNum),
     scanNum_(scanNum),
@@ -432,7 +433,7 @@ namespace asdmbinaries {
   }
   
   
-  SDMDataObject::SDMDataObject(unsigned long long startTime,
+  SDMDataObject::SDMDataObject(uint64_t startTime,
 			       const string& dataOID,
 			       unsigned int dimensionality,
 			       unsigned int numTime,
@@ -457,8 +458,8 @@ namespace asdmbinaries {
   string SDMDataObject::title() const { TSTVALID(); return title_; }
   void SDMDataObject::title(const string& value) { title_ = value; }
 
-  unsigned long long SDMDataObject::startTime() const {TSTVALID(); return startTime_; }
-  void SDMDataObject::startTime(unsigned long long value) { startTime_ = value; }
+  uint64_t SDMDataObject::startTime() const {TSTVALID(); return startTime_; }
+  void SDMDataObject::startTime(uint64_t value) { startTime_ = value; }
   
   unsigned int SDMDataObject::numTime() const  {TSTVALID(); return numTime_; }
   void SDMDataObject::numTime(unsigned int value) { numTime_ = value; }
@@ -535,7 +536,7 @@ namespace asdmbinaries {
     return aborted_;
   }
 
-  unsigned long long SDMDataObject::abortTime() {
+  uint64_t SDMDataObject::abortTime() {
     if (isTP()) Utils::invalidCall("SDMDataObject::abortTime", this);
 
     return abortTime_;
@@ -1063,8 +1064,8 @@ namespace asdmbinaries {
 
 
   SDMDataSubset::SDMDataSubset(SDMDataObject* owner,
-			       unsigned long long time,
-			       unsigned long long interval,
+			       uint64_t time,
+			       uint64_t interval,
 			       const vector<float>& autoData):
     owner_(owner),
     time_(time),
@@ -1101,9 +1102,9 @@ namespace asdmbinaries {
 
   unsigned int SDMDataSubset::subintegrationNum() const { return subintegrationNum_; }
 
-  unsigned long long SDMDataSubset::time() const { return time_; }
+  uint64_t SDMDataSubset::time() const { return time_; }
   
-  unsigned long long SDMDataSubset::interval() const { 
+  uint64_t SDMDataSubset::interval() const { 
     // if (owner_ && !owner_->isTP()) Utils::invalidCall("SDMDataSubset::interval", owner_);
     return interval_; 
   }
@@ -1138,7 +1139,7 @@ namespace asdmbinaries {
   }
   
   bool SDMDataSubset::aborted() const {return aborted_; }
-  unsigned long long SDMDataSubset::abortTime() const {return abortTime_; }  
+  uint64_t SDMDataSubset::abortTime() const {return abortTime_; }  
   string SDMDataSubset::abortReason() const {return abortReason_;}
 
 #define MIN_(a,b) ((a<b)?a:b)
@@ -1381,7 +1382,7 @@ namespace asdmbinaries {
   }
 
 
-  string Utils::quote(long long l) {
+  string Utils::quote(int64_t l) {
     ostringstream oss;
     oss << "\"" << l << "\"";
     return oss.str();
@@ -1419,11 +1420,11 @@ namespace asdmbinaries {
     oss << "<" << elementName << ">" << value << "</" << elementName << ">" << endl;
   }
 
-  void  Utils::toXML(const string& elementName, long long value, ostringstream& oss){
+  void  Utils::toXML(const string& elementName, int64_t value, ostringstream& oss){
     oss << "<" << elementName << ">" << value << "</" << elementName << ">" << endl;
   }
 
-  void  Utils::toXML(const string& elementName, unsigned long long value, ostringstream& oss){
+  void  Utils::toXML(const string& elementName, uint64_t value, ostringstream& oss){
     oss << "<" << elementName << ">" << value << "</" << elementName << ">" << endl;
   }
 

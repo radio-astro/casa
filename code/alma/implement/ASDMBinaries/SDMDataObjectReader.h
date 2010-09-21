@@ -50,8 +50,8 @@ using namespace boost;
 
 
 /*
-typedef long long          ACTUALDURATIONSTYPE;
-typedef long long          ACTUALTIMESTYPE;     
+typedef int64_t          ACTUALDURATIONSTYPE;
+typedef int64_t          ACTUALTIMESTYPE;     
 typedef float              AUTODATATYPE;        
 typedef int                LONGCROSSDATATYPE;   // mcaillat 
 typedef short int          SHORTCROSSDATATYPE;

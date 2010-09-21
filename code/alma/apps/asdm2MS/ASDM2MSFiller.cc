@@ -165,12 +165,12 @@ int ddMgr::getSwId(int i) {
 
 // Methods of ASDM2MSFiller classe.
 // The constructor
-ASDM2MSFiller::ASDM2MSFiller(const char    *name_,
+ASDM2MSFiller::ASDM2MSFiller(const string& name_,
 			     double        creation_time_,
-			     Bool          withRadioMeters_,
-			     Bool          complexData,
-			     Bool          withCompression,
-			     Bool          withCorrectedData):
+			     bool          withRadioMeters_,
+			     bool          complexData,
+			     bool          withCompression,
+			     bool          withCorrectedData):
   itsFeedTimeMgr(0),
   itsFieldTimeMgr(0),
   itsObservationTimeMgr(0),
@@ -188,16 +188,17 @@ ASDM2MSFiller::ASDM2MSFiller(const char    *name_,
 {
   int status;
 
-  itsName = name_;
   itsCreationTime = creation_time_;
    
-  itsMS = 0;
-
-  itsNumAntenna = 0;
+  itsMS			= 0;
+  itsMSCol		= 0;
+  itsNumAntenna		= 0;
   itsObservationTimeMgr = new timeMgr[1]; 
   itsScanNumber         = 0;
 
-  status = createMS(itsName, complexData, withCompression, withCorrectedData);
+  //cout << "About to call createMS" << endl;
+  status = createMS(name_, complexData, withCompression, withCorrectedData);
+  //cout << "Back from call createMS" << endl;
 
 }
 
@@ -206,10 +207,9 @@ ASDM2MSFiller::~ASDM2MSFiller() {
   ;
 }
 
-int ASDM2MSFiller::createMS(const char* msName, Bool complexData, Bool withCompression, Bool withCorrectedData) {
+int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCompression, bool withCorrectedData) {
 
-  String aName;
-  aName = String(msName);
+  String aName(msName);
 
   // FLAG CATEGORY stuff.
   Vector<String>  cat(itsNCat);
@@ -243,7 +243,14 @@ int ASDM2MSFiller::createMS(const char* msName, Bool complexData, Bool withCompr
     if (withCompression) MS::addColumnCompression(td, MS::FLOAT_DATA, true);
   }
 
-  // Setup hypercolumns for the data/flag/flag_category/sigma & weight columns.
+  /*  
+  // Add MODEL_DATA, CORRECTED_DATA and IMAGING_WEIGHT columns
+  MS::addColumnToDesc(td, MS::MODEL_DATA,2);
+  MS::addColumnToDesc(td, MS::CORRECTED_DATA,2);
+  MS::addColumnToDesc(td, MS::IMAGING_WEIGHT,1);
+  */
+
+  // Setup hypercolumns for the data/flag/flag_category/sigma & weight columns, model_data, corrected_data and imaging_weight.
   const Vector<String> coordCols(0);
   const Vector<String> idCols(0);
     
@@ -262,6 +269,26 @@ int ASDM2MSFiller::createMS(const char* msName, Bool complexData, Bool withCompr
   }
 
   //cout << "defined float data Hypercolumn" << endl;
+
+  /*
+    String colModelData = MS::columnName(MS::MODEL_DATA);
+    td.defineHypercolumn("TiledModelData", 3, stringToVector(colModelData),
+    coordCols, idCols);
+    //cout << "defined model data Hypercolumn" << endl;
+
+    String colCorrData = MS::columnName(MS::CORRECTED_DATA);
+    td.defineHypercolumn("TiledCorrectedData", 3,
+    stringToVector(colCorrData),
+    coordCols, idCols);
+    //cout << "defined corrected data Hypercolumn" << endl;
+
+    String colImWgt = MS::columnName(MS::IMAGING_WEIGHT);
+    td.defineHypercolumn("TiledImWgt", 2,
+    stringToVector(colImWgt),
+    coordCols, idCols);
+    //cout << "defined imaging weight Hypercolumn" << endl;
+    */
+    
 
   td.defineHypercolumn("TiledFlag", 3,
 		       stringToVector(MS::columnName(MS::FLAG)));
@@ -322,10 +349,10 @@ int ASDM2MSFiller::createMS(const char* msName, Bool complexData, Bool withCompr
 
   //cout << "createMS SetupNewTable\n";
     
-  // Choose the Tile size per column to be 1 MB
-  const Int nTileCorr = 4;
-  const Int nTileChan = 64;
-  const Int tileSizeKBytes = 1024;
+  // Choose the Tile size per column to be ~ 4096K
+  const Int nTileCorr = 1;
+  const Int nTileChan = 1024;
+  const Int tileSizeKBytes = 16;
   Int nTileRow;
 
   // Create an incremental storage manager
@@ -436,6 +463,13 @@ int ASDM2MSFiller::createMS(const char* msName, Bool complexData, Bool withCompr
 
   TiledShapeStMan corrDataStMan("TiledCorrectedData", corrDataTileShape);
   newTab.bindColumn(MS::columnName(MS::CORRECTED_DATA), corrDataStMan);
+
+  // IMAGING WEIGHT hypercolumn
+  nTileRow = (tileSizeKBytes * 1024 / (4 * nTileChan));
+  IPosition imWgtTileShape(2, nTileChan, nTileRow);
+
+  TiledShapeStMan imWgtStMan("TiledImWgt", imWgtTileShape);
+  newTab.bindColumn(MS::columnName(MS::IMAGING_WEIGHT), imWgtStMan);
   */
     
   // WEIGHT and SIGMA hypercolumn
@@ -484,6 +518,7 @@ int ASDM2MSFiller::createMS(const char* msName, Bool complexData, Bool withCompr
   // to its columns
   //Table::TableOption openOption = Table::New;
   //itsMS = new MeasurementSet(newTab, openOption);
+  //cout << "About to call the Measurement set constructor" << endl;
   itsMS = new casa::MeasurementSet(newTab);
   //cout << "createMS MeasurementSet, adress=" << (int) itsMS << endl;
   if (! itsMS) {
@@ -618,6 +653,18 @@ int ASDM2MSFiller::createMS(const char* msName, Bool complexData, Bool withCompr
   // Syscal
   {
     TableDesc td = MSSysCal::requiredTableDesc();
+    MSSysCal::addColumnToDesc (td, MSSysCal::TCAL_SPECTRUM);
+    MSSysCal::addColumnToDesc (td, MSSysCal::TRX_SPECTRUM);
+    MSSysCal::addColumnToDesc (td, MSSysCal::TSKY_SPECTRUM);
+    MSSysCal::addColumnToDesc (td, MSSysCal::TSYS_SPECTRUM);
+    MSSysCal::addColumnToDesc (td, MSSysCal::TANT_SPECTRUM);
+    MSSysCal::addColumnToDesc (td, MSSysCal::TANT_TSYS_SPECTRUM);
+    MSSysCal::addColumnToDesc (td, MSSysCal::TCAL_FLAG);
+    MSSysCal::addColumnToDesc (td, MSSysCal::TRX_FLAG);
+    MSSysCal::addColumnToDesc (td, MSSysCal::TSKY_FLAG);
+    MSSysCal::addColumnToDesc (td, MSSysCal::TSYS_FLAG);
+    MSSysCal::addColumnToDesc (td, MSSysCal::TANT_FLAG);
+    MSSysCal::addColumnToDesc (td, MSSysCal::TANT_TSYS_FLAG);
     SetupNewTable tabSetup(itsMS->sysCalTableName(), td, Table::New);
     itsMS->rwKeywordSet().defineTable(MS::keywordName(MS::SYSCAL),
 				      Table(tabSetup));
@@ -698,8 +745,8 @@ const char** ASDM2MSFiller::getPolCombinations(int numCorr) {
 
 
 // Insert records in the table ANTENNA
-int ASDM2MSFiller::addAntenna( const char   *name_,
-			       const char   *station_,
+int ASDM2MSFiller::addAntenna( const string& name_,
+			       const string& station_,
 			       double lx_,
 			       double ly_,
 			       double lz_,
@@ -1074,6 +1121,7 @@ int  ASDM2MSFiller::addUniqueDataDescription( int spectral_window_id_,
   msddCol.polarizationId().put(crow, polarization_id_);
   msddCol.flagRow().put(crow, False);
     
+  msdd.flush(True);
   return crow;
 }
 
@@ -1124,33 +1172,34 @@ void ASDM2MSFiller::addFeed(int      antenna_id_,
 			    double   interval_,
 			    int      num_receptors_,
 			    int      beam_id_,
-			    double   beam_offset_[],
-			    const    vector<string>& pol_type_,
-			    double   polarization_responseR_[],
-			    double   polarization_responseI_[],
-			    double   position_[3],
-			    double   feed_angle_[]) {
+			    vector<double>& beam_offset_,
+			    vector<string>& pol_type_,
+			    vector<std::complex<float> >& polarization_response_,
+			    vector<double>&   position_,
+			    vector<double>&   feed_angle_) {
   
 
   int crow;
-  int  i, j, k;
   MSFeed msfeed = itsMS -> feed();
   MSFeedColumns msfeedCol(msfeed);
 
   //cout << "\nEntering addFeed";
 
   // Now we can put the values in a new row.
-  Matrix<Double>   beamOffset(2, num_receptors_);
-  Matrix<Complex>  polResponse(num_receptors_, num_receptors_);
-  Vector<Double>   position(3);
-  Vector<Double>   receptorAngle(num_receptors_);
+  Matrix<Double>   beamOffset(IPosition(2, 2, num_receptors_), &beam_offset_[0], SHARE);
+  Matrix<Complex>  polResponse(IPosition(2, num_receptors_, num_receptors_), &polarization_response_[0], SHARE);
+  Vector<Double>   position(IPosition(1, 3), &position_[0], SHARE);
+  Vector<Double>   receptorAngle(IPosition(1, num_receptors_), &feed_angle_[0], SHARE);
   Vector<String>   polarizationType(num_receptors_);
 
+  /*
   for (i=0; i<num_receptors_; i++) {
     beamOffset(0, i) = beam_offset_[2*i];
     beamOffset(1, i) = beam_offset_[2*i+1];
   }
-
+  */
+  /*
+  int  i, j, k;
   k = 0;
   for (j=0; j<num_receptors_; j++) {
     for(i=0; i<num_receptors_; i++) {
@@ -1159,14 +1208,16 @@ void ASDM2MSFiller::addFeed(int      antenna_id_,
       k++;
     }
   }
+  */
 
+  int i;
+  /*
   for (i=0; i<3; i++) {
     position(i) = position_[i];
   }
-
+  */
   for (i=0; i<num_receptors_; i++) {
     polarizationType(i) = String(pol_type_[i]);
-    receptorAngle(i) = feed_angle_[i];
   }
 
   crow = msfeed.nrow();
@@ -1192,27 +1243,18 @@ void ASDM2MSFiller::addFeed(int      antenna_id_,
 	     
 
 // Adds a field record in the TABLE
-void ASDM2MSFiller::addField( const char   *name_,
-			      const char   *code_,
-			      double time_,
-			      double delay_dir_[2],
-			      double phase_dir_[2],
-			      double reference_dir_[2],
-			      int    source_id_) {
-  uInt crow;
+void ASDM2MSFiller::addField(const string&      name_,
+			     const string&      code_,
+			     double		time_,
+			     vector<double>&	delay_dir_,
+			     vector<double>&	phase_dir_,
+			     vector<double>&	reference_dir_,
+			     int               source_id_) {
+  uInt						crow;
   // cout << "\naddField : entering";
-  Matrix<Double>  delayDir(2,1);
-  Matrix<Double>  referenceDir(2,1);
-  Matrix<Double>  phaseDir(2,1);
-
-  delayDir(0,0) = delay_dir_[0];
-  delayDir(1,0) = delay_dir_[1];
-
-  phaseDir(0,0) = phase_dir_[0];
-  phaseDir(1,0) = phase_dir_[1];
-
-  referenceDir(0,0) = reference_dir_[0];
-  referenceDir(1,0) = reference_dir_[1];
+  Matrix<Double>				delayDir(IPosition(2, 2, 1), &delay_dir_[0], SHARE);
+  Matrix<Double>				referenceDir(IPosition(2, 2, 1), &reference_dir_[0], SHARE);
+  Matrix<Double>				phaseDir(IPosition(2, 2,1), &phase_dir_[0], SHARE);
 
   MSField msfield = itsMS -> field();
   MSFieldColumns msfieldCol(msfield);
@@ -1220,8 +1262,8 @@ void ASDM2MSFiller::addField( const char   *name_,
   crow = msfield.nrow();
   msfield.addRow();
 
-  msfieldCol.name().put(crow, String(name_));
-  msfieldCol.code().put(crow, String(code_));
+  msfieldCol.name().put(crow, name_);
+  msfieldCol.code().put(crow, code_);
   msfieldCol.time().put(crow, time_);
   msfieldCol.numPoly().put(crow, 0);
   msfieldCol.delayDir().put(crow, delayDir);
@@ -1239,17 +1281,17 @@ void ASDM2MSFiller::addField( const char   *name_,
 	       
 
 // Add a record in the table FLAG_CMD;
-void ASDM2MSFiller::addFlagCmd(double    time_,
-			       double    interval_,
-			       const char      *type_,
-			       const char      *reason_,
-			       int       level_,
-			       int       severity_,
-			       int       applied_,
-			       const char      *command_) {
-  uInt crow;
-  MSFlagCmd msflagcmd = itsMS -> flagCmd();
-  MSFlagCmdColumns msflagcmdCol(msflagcmd);
+void ASDM2MSFiller::addFlagCmd(double		time_,
+			       double		interval_,
+			       const string&	type_,
+			       const string&	reason_,
+			       int		level_,
+			       int		severity_,
+			       int		applied_,
+			       string&   command_) {
+  uInt						crow;
+  MSFlagCmd					msflagcmd = itsMS -> flagCmd();
+  MSFlagCmdColumns				msflagcmdCol(msflagcmd);
 
   crow = msflagcmd.nrow();
   
@@ -1268,18 +1310,19 @@ void ASDM2MSFiller::addFlagCmd(double    time_,
 }
 			  
 // Add a record in the table HISTORY
-void ASDM2MSFiller::addHistory( double time_,
-				int    observation_id_,
-				const char   *message_,
-				const char   *priority_,
-				const char   *origin_,
-				int    object_id_,
-				const char   *application_,
-				const char   *cli_command_,
-				const char   *app_parms_ ) {
-  uInt crow;
-  MSHistory mshistory = itsMS -> history();
-  MSHistoryColumns mshistoryCol(mshistory);
+void ASDM2MSFiller::addHistory( double		time_,
+				int		observation_id_,
+				const string&	message_,
+				const string&	priority_,
+				const string&	origin_,
+				int		object_id_,
+				const string&	application_,
+				const string&	cli_command_,
+				const string& app_parms_ ) {
+
+  uInt			crow;
+  MSHistory		mshistory = itsMS -> history();
+  MSHistoryColumns	mshistoryCol(mshistory);
 
   Vector<String> cliCommand(1);
   Vector<String> appParms(1);
@@ -1305,15 +1348,15 @@ void ASDM2MSFiller::addHistory( double time_,
 }
 	     
 // Adds a single observation record in the table OBSERVATION
-void ASDM2MSFiller::addObservation(const char   *telescopeName_,
-				   double startTime_,
-				   double endTime_,
-				   const char   *observer_,
-				   const char   **log_,
-				   const char   *schedule_type_,
-				   const char   **schedule_,
-				   const char   *project_,
-				   double release_date_) {
+void ASDM2MSFiller::addObservation(const string&		telescopeName_,
+				   double			startTime_,
+				   double			endTime_,
+				   const string&		observer_,
+				   const vector<string>&	log_,
+				   const string&		schedule_type_,
+				   const vector<string>&	schedule_,
+				   const string&		project_,
+				   double			release_date_) {
 
   uInt crow;
   MSObservation msobs = itsMS -> observation();
@@ -1322,10 +1365,10 @@ void ASDM2MSFiller::addObservation(const char   *telescopeName_,
   // cout << "\n addObservation: entering";
   // Build the log vector.
   Vector<String> log(1);
-  int nLog = 0;  
-  if (log_) {
-    while (log_[nLog++]); nLog--; log.resize(nLog);
-    for (int i = 0; i < nLog; i++) log(i) = log_[i];    
+  
+  if (log_.size() > 0) {
+    log.resize(log_.size());
+    for (vector<string>::size_type i = 0; i < log_.size(); i++) log(i) = log_[i];    
   }
   else
     log(0) =  "" ;
@@ -1333,10 +1376,10 @@ void ASDM2MSFiller::addObservation(const char   *telescopeName_,
 
   // Build the schedule vector
   Vector<String> schedule(1);
-  int nSchedule = 0;
-  if (schedule_) {
-    while (schedule_[nSchedule++]); nSchedule--; schedule.resize(nSchedule);
-    for (int i = 0; i < nSchedule; i++) schedule(i) = schedule_[i];
+
+  if (schedule_.size() > 0) {
+    schedule.resize(schedule_.size());
+    for (vector<string>::size_type  i = 0; i < schedule_.size(); i++) schedule(i) = schedule_[i];
   }
   else
     schedule(0) = "";
@@ -1368,110 +1411,30 @@ void ASDM2MSFiller::addObservation(const char   *telescopeName_,
   // cout << "\n";
 }
 
-
-// Adds a record in the table POINTING
-void ASDM2MSFiller::addPointing(int     antenna_id_,
-				double  time_,
-				double  interval_,
-				const char    *name_,
-				double  direction_[2],
-				double  target_[2],
-				double  pointing_offset_[2],
-				double  encoder_[2],
-				int    tracking_) {
-  
-  int crow;
-  Matrix<Double>  direction(2,1);
-  Matrix<Double>  target(2,1);
-  Matrix<Double>  pointingOffset(2,1);  
-  Vector<Double>  encoder(2);
-
-  //cout << "\n addPointing: entering";
-  MSPointing mspointing = itsMS -> pointing();
-  //cout << "\n addPointing: mspointing handled";
-
-  MSPointingColumns mspointingCol(mspointing);
-  //cout << "\n addPointing: mspointingColumns handled";
-
-  crow = mspointing.nrow();
-
-  // Keep the index in POINTING for this antenna for future time management.
-  /*
-    itsPointingTimeMgr[antenna_id_-1].setIndex(crow);
-    itsPointingTimeMgr[antenna_id_-1].setStartTime(time_);
-  */
-
-  mspointing.addRow();
-  //  cout << "\n addPointing: addRow ";
-
-  mspointingCol.antennaId().put(crow, antenna_id_);
-  //cout << "\n addPointing: antennaId ";
-  mspointingCol.time().put(crow, time_);
-  //cout << "\n addPointing: time ";
-  mspointingCol.interval().put(crow, interval_);
-  //cout << "\n addPointing: interval ";
-  mspointingCol.name().put(crow, String(name_));
-  //cout << "\n addPointing: name ";
-  mspointingCol.numPoly().put(crow, 0);
-  //cout << "\n addPointing: numPoly ";
-
-  direction(0,0) = direction_[0];
-  direction(1,0) = direction_[1];
-  //cout << "\nDirection :" << direction(0,0) << "," << direction(1,0);
-  target(0,0) = target_[0];
-  target(1,0) = target_[1];
-  //cout << "\nTarget :" << target(0,0) << "," << target(1,0);
- 
-  mspointingCol.direction().put(crow, direction);
-  //cout << "\n addPointing: direction ";
-  mspointingCol.target().put(crow, target);
-  //cout << "\n addPointing: target ";
-
-  if (pointing_offset_) {
-    pointingOffset(0,0) = pointing_offset_[0];
-    pointingOffset(1,0) = pointing_offset_[1];
-    mspointingCol.pointingOffset().put(crow, pointingOffset);
-  }
-  //cout << "\n addPointing: pointingOffset ";
-
-  if (encoder_) {
-    encoder(0) = encoder_[0];
-    encoder(1) = encoder_[1];
-    mspointingCol.encoder().put(crow,encoder);
-  }
-
-  mspointingCol.tracking().put(crow, ((tracking_)?True:False));
-  
-  //mspointing.flush();
-
-  //   cout << "\n addPointing: exiting";
-  //   cout << "\n";
-}
-
-void ASDM2MSFiller::addPointingSlice(unsigned int n_row_,
-				     int*                         antenna_id_,
-				     double*                      time_,
-				     double*                      interval_,
-				     double*                      direction_,
-				     double*                      target_,
-				     double*                      pointing_offset_,
-				     double*                      encoder_,
-				     bool*                        tracking_,
+void ASDM2MSFiller::addPointingSlice(unsigned int                 n_row_,
+				     vector<int>&                 antenna_id_,
+				     vector<double>&               time_,
+				     vector<double>&              interval_,
+				     vector<double>&              direction_,
+				     vector<double>&              target_,
+				     vector<double>&              pointing_offset_,
+				     vector<double>&              encoder_,
+				     vector<bool>&                tracking_,
 				     bool                         overTheTopExists4All_,
-				     bool*                        a_overTheTop_,
-				     const vector<s_overTheTop>&  v_overTheTop_) {
-  Vector<Int>    antenna_id(IPosition(1, n_row_), antenna_id_, SHARE);
-  Vector<Double> time(IPosition(1, n_row_), time_, SHARE);
-  Vector<Double> interval(IPosition(1, n_row_), interval_, SHARE);
+				     vector<bool>&                v_overTheTop_,
+				     vector<s_overTheTop>&        v_s_overTheTop_) {
+  Vector<Int>    antenna_id(IPosition(1, n_row_), &antenna_id_[0], SHARE);
+  Vector<Double> time(IPosition(1, n_row_), &time_[0], SHARE);
+  Vector<Double> interval(IPosition(1, n_row_), &interval_[0], SHARE);
 
   Vector<String> name(IPosition(1, n_row_), "");
 
   Vector<int>    num_poly(IPosition(1, n_row_), 0);
-  Cube<Double>   direction(IPosition(3, 2, 1, n_row_), direction_, SHARE);
-  Cube<Double>   target(IPosition(3, 2, 1, n_row_), target_, SHARE);
-  Cube<Double>   pointing_offset(IPosition(3, 2, 1, n_row_), pointing_offset_, SHARE);
-  Matrix<Double> encoder(IPosition(2, 2, n_row_), encoder_, SHARE);
-  Vector<Bool>   tracking(IPosition(1, n_row_), tracking_, SHARE);
+  Cube<Double>   direction(IPosition(3, 2, 1, n_row_), &direction_[0], SHARE);
+  Cube<Double>   target(IPosition(3, 2, 1, n_row_), &target_[0], SHARE);
+  Cube<Double>   pointing_offset(IPosition(3, 2, 1, n_row_), &pointing_offset_[0], SHARE);
+  Matrix<Double> encoder(IPosition(2, 2, n_row_), &encoder_[0], SHARE);
+  Vector<Bool>   tracking(IPosition(1, n_row_));
 
   MSPointing mspointing = itsMS -> pointing();
   MSPointingColumns mspointingCol(mspointing);
@@ -1500,13 +1463,18 @@ void ASDM2MSFiller::addPointingSlice(unsigned int n_row_,
   // We can use the slicer only if overTheTop is present on all rows.
   // For the time being, if this is not the case (i.e. overTheTop present only on a subset possibly empty) then we ignore overTheTop.
   if (overTheTopExists4All_) {
-    Vector<Bool> over_the_top(IPosition(1, n_row_), a_overTheTop_, SHARE);
+    vector<bool>::iterator iiter = v_overTheTop_.begin();
+    Vector<Bool> over_the_top(IPosition(1, n_row_));
+    Vector<Bool>::iterator oiter = over_the_top.begin();
+    for ( ; oiter != over_the_top.end(); ++iiter, ++oiter) 
+      *oiter = *iiter;
+
     mspointingCol.overTheTop().putColumnRange(slicer, over_the_top);
   }
   // Otherwise we fill overTheTop range after range.
   else {
     for (unsigned int i = 0; i < v_overTheTop_.size(); i++) {
-      s_overTheTop saux = v_overTheTop_.at(i);
+      s_overTheTop saux = v_s_overTheTop_.at(i);
       for (unsigned int j = saux.start; j < (saux.start + saux.len) ; j++)
 	mspointingCol.overTheTop().put(j, saux.value);
     }
@@ -1519,8 +1487,8 @@ void ASDM2MSFiller::addPointingSlice(unsigned int n_row_,
 		 
 // Adds a record in the table Polarization
 int ASDM2MSFiller::addPolarization(int num_corr_,
-				   int corr_type_[],
-				   int corr_product_[]) {
+				   vector<int>& corr_type_,
+				   vector<int>& corr_product_) {
   uInt crow;
   int  i;
   Vector<Int>  corrType(num_corr_);
@@ -1552,11 +1520,12 @@ int ASDM2MSFiller::addPolarization(int num_corr_,
 
 
 int ASDM2MSFiller::addUniquePolarization(int num_corr_,
-					 Stokes::StokesTypes corr_type_[],
-					 int corr_product_[]) {
+					 const vector<int>& corr_type_,
+					 //					 const vector<Stokes::StokesTypes>& corr_type_,
+					 const vector<int>& corr_product_) {
   uInt crow;
   int  i;
-  Vector<Int>  corrType(IPosition(1, num_corr_), (int *)corr_type_, SHARE);
+  Vector<Int>  corrType(IPosition(1, num_corr_), (int *)&corr_type_[0], SHARE);
   Matrix<Int>  corrProduct(2, num_corr_);
   MSPolarization mspolar = itsMS -> polarization();
   MSPolarizationColumns mspolarCol(mspolar);
@@ -1590,14 +1559,14 @@ int ASDM2MSFiller::addUniquePolarization(int num_corr_,
   mspolarCol.corrType().put(crow,corrType);
   mspolarCol.corrProduct().put(crow, corrProduct);
 
-  // cout << "\n";
+  mspolar.flush(True);
   return crow;
 }
 
 
 // Adds a record in the table PROCESSOR
-void ASDM2MSFiller::addProcessor(const char *type_,
-				 const char *sub_type_,
+void ASDM2MSFiller::addProcessor(string& type_,
+				 string& sub_type_,
 				 int  type_id_,
 				 int  mode_id_) {
   uInt crow;
@@ -1621,18 +1590,17 @@ void ASDM2MSFiller::addProcessor(const char *type_,
 
 // Adds a single state record in the table STATE in such a way that there is no repeated row.
 // Returns the index of row added or found with these values. 
-int ASDM2MSFiller::addUniqueState(Bool sig_,
-				  Bool ref_,
+int ASDM2MSFiller::addUniqueState(bool sig_,
+				  bool ref_,
 				  double cal_,
 				  double load_,
 				  unsigned int sub_scan_,
-				  const char* obs_mode_,
-				  Bool flag_row_) {
+				  string& obs_mode_,
+				  bool flag_row_) {
   MSState msstate = itsMS -> state();
   MSStateColumns msstateCol(msstate);
   uInt crow = msstate.nrow();
   
-  double epsilon = 1.e-4;
   uInt i = 0;
   
   for (i = 0; i < crow; i++) {
@@ -1660,20 +1628,20 @@ int ASDM2MSFiller::addUniqueState(Bool sig_,
 }
 
 // Add a record in the table SOURCE
-void ASDM2MSFiller::addSource(int    source_id_,
-			      double time_,
-			      double interval_,
-			      int    spectral_window_id_,
-			      int    num_lines_,
-			      const char   *name_,
-			      int    calibration_group_,
-			      const char   *code_,
-			      double direction_[2],
-			      double position_[3],
-			      double proper_motion_[2],
-			      const char   *transition_[],
-			      double rest_frequency_[],
-			      double sysvel_[]){
+void ASDM2MSFiller::addSource(int             source_id_,
+			      double          time_,
+			      double          interval_,
+			      int             spectral_window_id_,
+			      int             num_lines_,
+			      string&         name_,
+			      int             calibration_group_,
+			      string&         code_,
+			      vector<double>& direction_,
+			      vector<double>& position_,
+			      vector<double>& proper_motion_,
+			      vector<string>& transition_,
+			      vector<double>& rest_frequency_,
+			      vector<double>& sysvel_){
   MSSource mssource = itsMS -> source();
   MSSourceColumns mssourceCol(mssource);
 
@@ -1682,45 +1650,8 @@ void ASDM2MSFiller::addSource(int    source_id_,
   int crow = mssource.nrow();
   mssource.addRow();
 
-  Vector<Double> direction(2);
-  direction(0) = direction_[0];
-  direction(1) = direction_[1];
-
-  Vector<Double> position(3);
-  if (position_) {
-    position(0) = position_[0];
-    position(1) = position_[1];
-    position(2) = position_[2];
-  }
-  
-  Vector<Double>    properMotion(2);
-  properMotion(0) = proper_motion_[0];
-  properMotion(1) = proper_motion_[1];
-
-  Vector<String>    transition(1);
-  int numTransition = 0;
-  while ( transition_ && transition_[numTransition++] ) ;
-  if (numTransition > 0) {
-    numTransition--;
-    transition.resize( numTransition );
-    for ( int i = 0; i < numTransition; i++ ) transition(i) = transition_[i]; 
-  }
-  else
-    transition(0) = "";
-
-  Vector<Double>    restFrequency(num_lines_);
-  if ( rest_frequency_ ) {
-    for (int i=0; i<num_lines_; i++) {
-      restFrequency(i) = rest_frequency_[i];
-    }
-  }
-  
-  Vector<Double>    sysvel(num_lines_);
-  if ( sysvel_ ) {
-    for (int i=0; i<num_lines_; i++) {
-      sysvel(i) = sysvel_[i];
-    }
-  }
+  Vector<Double> direction(IPosition(1, 2), &direction_[0], SHARE);
+  Vector<Double> properMotion(IPosition(1, 2), &proper_motion_[0], SHARE);
 
   // Fill the new row
   mssourceCol.sourceId().put(crow,source_id_);
@@ -1732,41 +1663,46 @@ void ASDM2MSFiller::addSource(int    source_id_,
   mssourceCol.calibrationGroup().put(crow,calibration_group_);
   mssourceCol.code().put(crow,String(code_));
   mssourceCol.direction().put(crow,direction);
-  if (position_) mssourceCol.position().put(crow,position);
+  if (position_.size() > 0) mssourceCol.position().put(crow,Vector<Double>(IPosition(1, 3), &position_[0], SHARE));
   mssourceCol.properMotion().put(crow,properMotion);
-  if ( transition_) mssourceCol.transition().put(crow,transition);
-  if ( rest_frequency_ ) mssourceCol.restFrequency().put(crow,restFrequency);
-  if ( sysvel_ ) mssourceCol.sysvel().put(crow,sysvel);
-  
+  if ( transition_.size() > 0 ) {
+    Vector<String> transition(IPosition(1, transition_.size()));
+    for (vector<string>::size_type i = 0; i < transition_.size(); i++)
+      transition(i) = transition_[i];
+    mssourceCol.transition().put(crow, transition);
+  }
+  if ( rest_frequency_.size() > 0 ) 
+    mssourceCol.restFrequency().put(crow,Vector<Double>(IPosition(1, rest_frequency_.size()), &rest_frequency_[0], SHARE));
+  if ( sysvel_.size() > 0)
+    mssourceCol.sysvel().put(crow, Vector<Double>(IPosition(1, sysvel_.size()), &sysvel_[0], SHARE));
 }
 
 // Add a  record  in the table SPECTRAL_WINDOW
-int ASDM2MSFiller::addSpectralWindow(int    num_chan_,
-				     const char   *name_,
-				     double ref_frequency_,
-				     double chan_freq_[],
-				     double chan_width_[],
-				     int    meas_freq_ref_,
-				     double effective_bw_[],
-				     double resolution_[],
-				     double total_bandwidth_,
-				     int    net_side_band_,
-				     int    bbc_no_,
-				     int    if_conv_chain_,
-				     int    freq_group_,
-				     const char   *freq_group_name_,
-				     int    num_assoc_,
-				     int    assoc_spw_id_[],
-				     char** assoc_nature_) {
-  int i;
-
+int ASDM2MSFiller::addSpectralWindow(int			num_chan_,
+				     const string&		name_,
+				     double			ref_frequency_,
+				     const vector<double>&	chan_freq_,
+				     const vector<double>&	chan_width_,
+				     int			meas_freq_ref_,
+				     const vector<double>&	effective_bw_,
+				     const vector<double>&	resolution_,
+				     double			total_bandwidth_,
+				     int			net_sideband_,
+				     int			bbc_no_,
+				     int			if_conv_chain_,
+				     int			freq_group_,
+				     const string&		freq_group_name_,
+				     int			num_assoc_,
+				     const vector<int>&		assoc_sp_id_,
+				     const vector<string>&      assoc_nature_) {
+ 
   MSSpectralWindow msspwin = itsMS -> spectralWindow();
   MSSpWindowColumns msspwinCol(msspwin);
 
-  Vector<Double> chanFreq(num_chan_);
-  Vector<Double> chanWidth(num_chan_);
-  Vector<Double> effectiveBW(num_chan_);
-  Vector<Double> resolution(num_chan_);
+  Vector<Double> chanFreq(IPosition(1, num_chan_), const_cast<double *>(&chan_freq_[0]), SHARE);
+  Vector<Double> chanWidth(IPosition(1, num_chan_), const_cast<double *>(&chan_width_[0]), SHARE);
+  Vector<Double> effectiveBW(IPosition(1, num_chan_), const_cast<double *>(&effective_bw_[0]), SHARE);
+  Vector<Double> resolution(IPosition(1, num_chan_), const_cast<double *>(&resolution_[0]), SHARE);
   uInt crow;
   
   crow = msspwin.nrow();
@@ -1776,13 +1712,6 @@ int ASDM2MSFiller::addSpectralWindow(int    num_chan_,
   msspwinCol.numChan().put(crow, num_chan_);
   msspwinCol.name().put(crow, String(name_));
   msspwinCol.refFrequency().put(crow, ref_frequency_);
-  
-  for (i=0; i<num_chan_; i++) {
-    chanFreq(i)    = chan_freq_[i];
-    chanWidth(i)   = chan_width_[i];
-    effectiveBW(i) = effective_bw_[i];
-    resolution(i)  = resolution_[i];
-  }
 
   msspwinCol.chanFreq().put(crow, chanFreq);
   msspwinCol.chanWidth().put(crow, chanWidth);
@@ -1790,7 +1719,7 @@ int ASDM2MSFiller::addSpectralWindow(int    num_chan_,
   msspwinCol.resolution().put(crow, resolution);
   msspwinCol.measFreqRef().put(crow, meas_freq_ref_);
   msspwinCol.totalBandwidth().put(crow, total_bandwidth_);
-  msspwinCol.netSideband().put(crow, net_side_band_);
+  msspwinCol.netSideband().put(crow, net_sideband_);
   if (bbc_no_ >= 0) msspwinCol.bbcNo().put(crow, bbc_no_);
   msspwinCol.ifConvChain().put(crow, if_conv_chain_);
   msspwinCol.freqGroup().put(crow, freq_group_);
@@ -1798,15 +1727,16 @@ int ASDM2MSFiller::addSpectralWindow(int    num_chan_,
   /*
    * Put assoc informations if any.
    */
-  if ( num_assoc_ && assoc_spw_id_ ) {
-    msspwinCol.assocSpwId().put(crow, Vector<Int>(IPosition(1, num_assoc_), assoc_spw_id_, SHARE));
+  if ( num_assoc_>0  && assoc_sp_id_.size() > 0 ) {
+    msspwinCol.assocSpwId().put(crow, Vector<Int>(IPosition(1, num_assoc_), const_cast<int *>(&assoc_sp_id_[0]), SHARE));
   }
 
-  if ( assoc_nature_ ) {
-    int numAssocNature = 0;
-    Vector<String> assocNature(1);
-    while (assoc_nature_[numAssocNature++]); numAssocNature--; assocNature.resize(numAssocNature);
-    for (int iAssocNature = 0; iAssocNature < numAssocNature; iAssocNature++) assocNature(iAssocNature) = assoc_nature_[iAssocNature];
+  if ( num_assoc_>0 && assoc_nature_.size() > 0  ) {
+    Vector<String> assocNature(assoc_nature_.size());
+    for (vector<string>::size_type iAssocNature = 0;
+	 iAssocNature < assoc_nature_.size();
+	 iAssocNature++) 
+      assocNature(iAssocNature) = assoc_nature_[iAssocNature];
     msspwinCol.assocNature().put(crow, assocNature);
   }
 
@@ -1818,13 +1748,13 @@ int ASDM2MSFiller::addSpectralWindow(int    num_chan_,
 }
 
 
-// Adds a single state record in the table STATE
-void ASDM2MSFiller::addState(Bool   sig_,
-			     Bool   ref_,
-			     double cal_,
-			     double load_,
-			     int    sub_scan_,
-			     const char   *obs_mode_) {
+// Adds a single state record in the table STATE.
+void ASDM2MSFiller::addState(bool    sig_,
+			     bool    ref_,
+			     double  cal_,
+			     double  load_,
+			     int     sub_scan_,
+			     string& obs_mode_) {
   uInt crow;
   MSState msstate = itsMS -> state();
   MSStateColumns msstateCol(msstate);
@@ -1837,33 +1767,109 @@ void ASDM2MSFiller::addState(Bool   sig_,
   msstateCol.cal().put(crow, cal_);
   msstateCol.load().put(crow, load_);
   msstateCol.subScan().put(crow, sub_scan_);
-  msstateCol.obsMode().put(crow, String(obs_mode_));
+  msstateCol.obsMode().put(crow, obs_mode_);
   msstateCol.flagRow().put(crow, False);
   msstate.flush();
 
   // cout << "\n";
 }
 
-
-// Adds a  record weather in the table WEATHER
-void ASDM2MSFiller::addWeather(int    antenna_id_,
+// Adds a record in the table SYSCAL.
+void ASDM2MSFiller:: addSysCal(int    antenna_id,
+			       int    feed_id,
+			       int    spectral_window_id,
 			       double time_,
 			       double interval_,
-			       float  pressure_,
-			       bool   pressure_flag_,
-			       float  rel_humidity_,
-			       bool   rel_humidity_flag_,
-			       float  temperature_,
-			       bool   temperature_flag_,
-			       float  wind_direction_,
-			       bool   wind_direction_flag_,
-			       float  wind_speed_,
-			       bool   wind_speed_flag_,
-			       bool   has_dew_point_,
-			       float  dew_point_,
-			       bool   dew_point_flag_,
-			       int    wx_station_id_,
-			       double* wx_station_position_) {
+			       int    numReceptor_,
+			       int    numChan_,
+			       pair<bool, vector<float> >& tcal_spectrum_pair,
+			       pair<bool, bool>&           tcal_flag_pair,
+			       pair<bool, vector<float> >& trx_spectrum_pair,
+			       pair<bool, bool>&           trx_flag_pair,
+			       pair<bool, vector<float> >& tsky_spectrum_pair,
+			       pair<bool, bool>&           tsky_flag_pair,
+			       pair<bool, vector<float> >& tsys_spectrum_pair,
+			       pair<bool, bool>&           tsys_flag_pair,
+			       pair<bool, vector<float> >& tant_spectrum_pair,
+			       pair<bool, bool>&           tant_flag_pair,
+			       pair<bool, vector<float> >& tant_tsys_spectrum_pair,
+			       pair<bool, bool>&           tant_tsys_flag_pair) {
+  MSSysCal mssyscal = itsMS -> sysCal();
+  MSSysCalColumns mssyscalCol(mssyscal);
+  
+  int crow = mssyscal.nrow();
+  mssyscal.addRow();
+
+  mssyscalCol.antennaId().put(crow, antenna_id);
+  mssyscalCol.feedId().put(crow, feed_id);
+  mssyscalCol.spectralWindowId().put(crow, spectral_window_id);
+  mssyscalCol.time().put(crow, time_);
+  mssyscalCol.interval().put(crow, interval_);
+
+  if (tcal_spectrum_pair.first) {
+    Matrix<Float> tcal_spectrum(IPosition(2, numReceptor_, numChan_), &tcal_spectrum_pair.second[0], SHARE);
+    mssyscalCol.tcalSpectrum().put(crow, tcal_spectrum);
+    if (tcal_flag_pair.first)
+      mssyscalCol.tcalFlag().put(crow, tcal_flag_pair.second);
+  }
+
+  if (trx_spectrum_pair.first) {
+    Matrix<Float> trx_spectrum(IPosition(2, numReceptor_, numChan_), &trx_spectrum_pair.second[0], SHARE);
+    mssyscalCol.trxSpectrum().put(crow, trx_spectrum);
+    if (trx_flag_pair.first)
+      mssyscalCol.trxFlag().put(crow, trx_flag_pair.second);
+  }
+
+  if (tsky_spectrum_pair.first) {
+    Matrix<Float> tsky_spectrum(IPosition(2, numReceptor_, numChan_), &tsky_spectrum_pair.second[0], SHARE);
+    mssyscalCol.tskySpectrum().put(crow, tsky_spectrum);
+    if (tsky_flag_pair.first)
+      mssyscalCol.tskyFlag().put(crow, tsky_flag_pair.second);
+  }
+
+  if (tsys_spectrum_pair.first) {
+    Matrix<Float> tsys_spectrum(IPosition(2, numReceptor_, numChan_), &tsys_spectrum_pair.second[0], SHARE);
+    mssyscalCol.tsysSpectrum().put(crow, tsys_spectrum);
+    if (tsys_flag_pair.first)
+      mssyscalCol.tsysFlag().put(crow, tsys_flag_pair.second);
+  }
+
+  if (tant_spectrum_pair.first) {
+    Matrix<Float> tant_spectrum(IPosition(2, numReceptor_, numChan_), &tant_spectrum_pair.second[0], SHARE);
+    mssyscalCol.tantSpectrum().put(crow, tant_spectrum);
+    if (tant_flag_pair.first)
+      mssyscalCol.tantFlag().put(crow, tant_flag_pair.second);
+  }
+
+  if (tant_tsys_spectrum_pair.first) {
+    Matrix<Float> tant_tsys_spectrum(IPosition(2, numReceptor_, numChan_), &tant_tsys_spectrum_pair.second[0], SHARE);
+    mssyscalCol.tantTsysSpectrum().put(crow, tant_tsys_spectrum);
+    if (tant_tsys_flag_pair.first)
+      mssyscalCol.tantTsysFlag().put(crow, tant_tsys_flag_pair.second);
+  }
+
+  mssyscal.flush();
+}
+
+// Adds a  record weather in the table WEATHER.
+void ASDM2MSFiller::addWeather(int             antenna_id_,
+			       double          time_,
+			       double          interval_,
+			       float           pressure_,
+			       bool            pressure_flag_,
+			       float           rel_humidity_,
+			       bool            rel_humidity_flag_,
+			       float           temperature_,
+			       bool            temperature_flag_,
+			       float           wind_direction_,
+			       bool            wind_direction_flag_,
+			       float           wind_speed_,
+			       bool            wind_speed_flag_,
+			       bool            has_dew_point_,
+			       float           dew_point_,
+			       bool            dew_point_flag_,
+			       int             wx_station_id_,
+			       vector<double>& wx_station_position_) {
   
   MSWeather msweather = itsMS -> weather();
   MSWeatherColumns msweatherCol(msweather);
@@ -1895,13 +1901,13 @@ void ASDM2MSFiller::addWeather(int    antenna_id_,
   ScalarColumn<int> nsWXStationId(msweather, "NS_WX_STATION_ID");
   nsWXStationId.put(crow, wx_station_id_);
   ArrayColumn<double> nsWXStationPosition(msweather, "NS_WX_STATION_POSITION");
-  nsWXStationPosition.put(crow, Vector<double>(IPosition(1, 3), wx_station_position_, SHARE));
+  nsWXStationPosition.put(crow, Vector<double>(IPosition(1, 3), &wx_station_position_[0], SHARE));
 
   msweather.flush();
 }
 
 void ASDM2MSFiller::end(double time_) {
-  itsMS->flush(True);
-  itsMS->closeSubTables();
+  itsMS->flush();
+  delete itsMS;
 }
 

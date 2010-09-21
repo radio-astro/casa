@@ -33,6 +33,7 @@
 #ifndef Parser_CLASS
 #define Parser_CLASS
 
+#include <stdint.h>
 #include <string>
 #include <vector>
 #include <set>

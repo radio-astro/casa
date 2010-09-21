@@ -220,7 +220,7 @@ namespace asdmbinaries {
 //       throw SDMDataObjectParserException("HeaderParser::parseProjectPath: Invalid string for projectPath '" + projectPath + "'");
 //   }
   
-  long long HeaderParser::parseStartTime(xmlNode* a_node){
+   int64_t HeaderParser::parseStartTime(xmlNode* a_node){
     SDMDataObjectParser::isElement(a_node, HeaderParser::STARTTIME);
     return SDMDataObjectParser::parseLongLong(a_node->children);
   }
@@ -747,13 +747,13 @@ namespace asdmbinaries {
     sdmCorrDataSubset.interval_ = parseInterval(child);
   }
 
-  long long CorrSubsetHeaderParser::parseTime(xmlNode* a_node) {
+   int64_t CorrSubsetHeaderParser::parseTime(xmlNode* a_node) {
     SDMDataObjectParser::isElement(a_node, CorrSubsetHeaderParser::TIME);
     return SDMDataObjectParser::parseLongLong(a_node->children);
   }
 
 
-  long long CorrSubsetHeaderParser::parseInterval(xmlNode* a_node) {
+   int64_t CorrSubsetHeaderParser::parseInterval(xmlNode* a_node) {
     SDMDataObjectParser::isElement(a_node, CorrSubsetHeaderParser::INTERVAL);
     return SDMDataObjectParser::parseLongLong(a_node->children);
   }
@@ -906,13 +906,13 @@ namespace asdmbinaries {
     sdmTPDataSubset.interval_ = parseInterval(child);
   }
 
-  long long TPSubsetHeaderParser::parseTime(xmlNode* a_node) {
+   int64_t TPSubsetHeaderParser::parseTime(xmlNode* a_node) {
     SDMDataObjectParser::isElement(a_node, TPSubsetHeaderParser::TIME);
     return SDMDataObjectParser::parseLongLong(a_node->children);
   }
 
 
-  long long TPSubsetHeaderParser::parseInterval(xmlNode* a_node) {
+   int64_t TPSubsetHeaderParser::parseInterval(xmlNode* a_node) {
     SDMDataObjectParser::isElement(a_node, TPSubsetHeaderParser::INTERVAL);
     return SDMDataObjectParser::parseLongLong(a_node->children);
   }
@@ -1018,22 +1018,22 @@ namespace asdmbinaries {
     if ((a_node != NULL) && (a_node->next == NULL))
       return string((const char*) a_node->content);
     
-    throw SDMDataObjectParserException("Invalid node , can't be parsed into a long long");
+    throw SDMDataObjectParserException("Invalid node , can't be parsed into a  int64_t");
 
   }
 
-  long long  SDMDataObjectParser::parseLongLong(xmlNode* a_node) {
+   int64_t  SDMDataObjectParser::parseLongLong(xmlNode* a_node) {
     if ((a_node != NULL) && (a_node->next == NULL)) {
       istringstream in;
       in.str((const char*) a_node->content);
-      long long x;
+       int64_t x;
       in >> x;
       if (in.rdstate() == istream::failbit)
-			throw SDMDataObjectParserException("failed to parse '"+string((const char*)a_node->content)+"' as a long long in" + string((const char*)a_node->parent->name));
+			throw SDMDataObjectParserException("failed to parse '"+string((const char*)a_node->content)+"' as a  int64_t in" + string((const char*)a_node->parent->name));
       return x;
     }
     
-    throw SDMDataObjectParserException("Invalid node , can't be parsed into a long long");
+    throw SDMDataObjectParserException("Invalid node , can't be parsed into a  int64_t");
   }
 
   int SDMDataObjectParser::parseInt(xmlNode* a_node) {

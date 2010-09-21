@@ -468,21 +468,21 @@ namespace sdmbin {
 
       if(numTime){  // MIME content with a structure of dimensionality 0
 
-	const SDMDataSubset    dataSubset         = dataObject.tpDataSubset();
-	uint64_t               obsDuration        = dataSubset.interval();
+	const SDMDataSubset      dataSubset         = dataObject.tpDataSubset();
+	uint64_t                 obsDuration        = dataSubset.interval();
 
-	int64_t                interval           = (int64_t)obsDuration/(int64_t)numTime;
-	int64_t                exposure;
-	int64_t                timeOfDump         = (int64_t)dataSubset.time()-(int64_t)obsDuration/2LL-interval/2LL; // mutable
-	int64_t                timeCentroid       = timeOfDump;         // default value for the first dump
+	int64_t                  interval           = (int64_t)obsDuration/(int64_t)numTime;
+	int64_t                  exposure;
+	int64_t                  timeOfDump         = (int64_t)dataSubset.time()-(int64_t)obsDuration/2LL-interval/2LL; // mutable
+	int64_t                  timeCentroid       = timeOfDump;         // default value for the first dump
 
 	// actual pointer to the data blocks and nb of pdt values found in these blocks:
-	const unsigned int*      flagsPtr           = NULL;  unsigned int long numFlags=0; // mcaillat 
-	const int64_t*         actualTimesPtr     = NULL;  unsigned int long numActualTimes=0;
-	const int64_t*         actualDurationsPtr = NULL;  unsigned int long numActualDurations=0;
-	const float*             zeroLagsPtr        = NULL;  unsigned int long numZeroLags=0;
-	const float*             autoDataPtr        = NULL;  unsigned int long numAutoData=0;
-	const short int*         crossShortDataPtr  = NULL;  unsigned int long numCrossData=0;
+	const unsigned int*      flagsPtr           = NULL;  unsigned long int numFlags=0; // mcaillat 
+	const int64_t*         actualTimesPtr     = NULL;  unsigned long int numActualTimes=0;
+	const int64_t*         actualDurationsPtr = NULL;  unsigned long int numActualDurations=0;
+	const float*             zeroLagsPtr        = NULL;  unsigned long int numZeroLags=0;
+	const float*             autoDataPtr        = NULL;  unsigned long int numAutoData=0;
+	const short int*         crossShortDataPtr  = NULL;  unsigned long int numCrossData=0;
 	const int*               crossIntDataPtr    = NULL;
 	const float*             crossFloatDataPtr  = NULL;
 
@@ -645,7 +645,7 @@ namespace sdmbin {
       }else{
 
 	const vector<SDMDataSubset>& v_dataSubset    = dataObject.corrDataSubsets();
-// 	unsigned int64_t           startTime       = dataObject.startTime();
+// 	uint_64           startTime       = dataObject.startTime();
 	int64_t                    interval;
 	int64_t                    exposure;
 	int64_t                    timeOfInteg;

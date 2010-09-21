@@ -581,7 +581,7 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
 		  const vector<AxisName>& axes);
       
       /**
-       * Returns the size of a binary attachment as a <b>number of values</b> (e.g. a number of long long for the actualDurations, or 
+       * Returns the size of a binary attachment as a <b>number of values</b> (e.g. a number of int64_t for the actualDurations, or 
        * a number of short int for crossData when they are encoded as short ints).
        */
       virtual unsigned int size() const; 
@@ -887,7 +887,7 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
     }; //DataStruct::
 
     SDMDataObject();
-    SDMDataObject(unsigned long long startTime,
+    SDMDataObject(uint64_t startTime,
 		  const string& dataOID,
 		  unsigned int dimensionality,
 		  const string& execBlockUID,
@@ -898,7 +898,7 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
 		  CorrelationMode correlatorMode,
 		  const SDMDataObject::DataStruct& dataStruct);
 
-    SDMDataObject(unsigned long long startTime,
+    SDMDataObject(uint64_t startTime,
 		  const string& dataOID,
 		  unsigned int dimensionality,
 		  unsigned int numTime,
@@ -918,10 +918,10 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
 
     /**
      * Returns the start time.
-     * @return a long long.
+     * @return a int64_t.
      */
-    unsigned long long startTime() const;
-    void startTime(unsigned long long value);    
+    uint64_t startTime() const;
+    void startTime(uint64_t value);    
 
     /**
      * Returns the number of (sub) integrations.
@@ -1076,16 +1076,16 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
     bool aborted();
 
     /**
-     * Returns the time, as an unsigned long long, at which the observation has been aborted.
+     * Returns the time, as an uint64_t, at which the observation has been aborted.
      * The returned value is significant only if the observation has been aborted, therefore the method must always be used in 
      * conjuction with the aborted method. This method must be used on an SDMDataObject containing correlator data,
      * otherwise a SDMDataObjectException is thrown.
      *
-     * @return an unsigned long long.
+     * @return an uint64_t.
      *
      * @throw SDMDataObjectException
      */
-    unsigned long long abortTime();
+    uint64_t abortTime();
 
 
 
@@ -1142,7 +1142,7 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
 
     int schemaVersion_;
     
-    long long startTime_;
+    int64_t startTime_;
 
     string dataOID_;
 
@@ -1174,7 +1174,7 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
 
     bool aborted_;
 
-    unsigned long long int abortTime_;
+    uint64_t abortTime_;
     string   abortReason_;
 
     void append(const SDMDataSubset& value);
@@ -1241,8 +1241,8 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
     SDMDataSubset(SDMDataObject* owner= 0);
 
     SDMDataSubset(SDMDataObject* owner,
-		  unsigned long long time,
-		  unsigned long long interval,
+		  uint64_t time,
+		  uint64_t interval,
 		  const vector<float>& autoData);
 
     virtual ~SDMDataSubset();
@@ -1270,13 +1270,13 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
      * <li> the subscan in the case of total power data. </li>
      * </ul>
      */
-    unsigned long long time() const;
+    uint64_t time() const;
   
     /**
      * Returns the duration of the subscan in the case of total power data.
      * @note not relevant in the case of correlator data.
      */
-    unsigned long long interval() const;
+    uint64_t interval() const;
 
 
     /**
@@ -1301,7 +1301,7 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
     /**
      *
      * Set ptr to the adress of the array of ActualDurations and returns the number of actualDurations.
-     * @param ptr a reference to a pointer on long long.
+     * @param ptr a reference to a pointer on int64_t.
      * @return the number of ActualDurations.
      *
      */
@@ -1310,7 +1310,7 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
     /**
      *
      * Set ptr to the adress of the array of ActualTimes and returns the number of ActualTimes.
-     * @param ptr a reference to a pointer on long long.
+     * @param ptr a reference to a pointer on int64_t.
      * @return the number of ActualTimes.
      *
      */
@@ -1388,10 +1388,10 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
 
     /**
      * Returns the time when the [sub]integration has been declared aborted.
-     * @return an unsigned long long.
+     * @return an uint64_t.
      * @note Of course, the returned value is not meaningful if aborted() returns false.
      */
-    unsigned long long abortTime() const; 
+    uint64_t abortTime() const; 
 
     /**
      * Returns the reason why the [sub]integration was aborted.
@@ -1407,8 +1407,8 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
     unsigned int integrationNum_;
     unsigned int subintegrationNum_;
     CorrelationMode ref_;
-    unsigned long long time_;
-    unsigned long long interval_;
+    uint64_t time_;
+    uint64_t interval_;
     string dataStruct_;
     string flagsREF_;
     string actualTimesREF_;
@@ -1436,7 +1436,7 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
     string xsiType() const;
 
     bool aborted_;
-    unsigned long long int abortTime_;
+    uint64_t abortTime_;
     string   abortReason_;
 
   };
@@ -1452,7 +1452,7 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
     static string quote(bool b);
     static string quote(int i);
     static string quote(unsigned int i);
-    static string quote(long long l);
+    static string quote(int64_t l);
     static string quote(float f);
     static string quote(const set<string>& s);
     static string quote(const vector<string>& s);
@@ -1512,8 +1512,8 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
 
     static void toXML(const string& elementName, int value, ostringstream& oss);
     static void toXML(const string& elementName, unsigned int value, ostringstream& oss);
-    static void toXML(const string& elementName, long long value, ostringstream& oss);
-    static void toXML(const string& elementName, unsigned long long value, ostringstream& oss);
+    static void toXML(const string& elementName, int64_t value, ostringstream& oss);
+    static void toXML(const string& elementName, uint64_t value, ostringstream& oss);
     static void oXML(const string& elementName, ostringstream& oss);
     static void cXML(const string& elementName, ostringstream& oss);
     
