@@ -1284,7 +1284,7 @@ the ms definition itself. -->
      </param>
     
      <param type="string" name="baseline">
-     <description>Baseline number : example : '2-3,4-5,132 ????' </description>
+     <description>Baseline number(s): example: "2&amp;3;4&amp;5"</description>
      <value>""</value>
      </param>
     
