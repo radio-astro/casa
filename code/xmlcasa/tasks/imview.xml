@@ -6,8 +6,8 @@
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="imview" category="utility" async="never">
-	<shortdescription>View an image</shortdescription>
-	<description>
+    <shortdescription>View an image</shortdescription>
+    <description>
         The imview task will display images in raster, contour, vector or
 	marker form.  Images can be blinked, and movies are available
 	for spectral-line image cubes.
@@ -25,77 +25,79 @@
 	options -- can be saved in a 'restore' file for later use.
 	You can provide the restore filename on the command line or
 	select it from the Load Data window.
-
-	See the cookbook for more details on using the imview task.
 	
-	</description>
-	<input>
-		<param type="any" name="raster">
-			<description> (Optional)  Raster filename or complete raster config dictionary.</description>
-			<any type="variant" limittypes="string record"/>
+    </description>
+    <input>
+	<param type="any" name="raster">
+	    <description>(Optional)  Raster filename (string) or complete raster config dictionary. The allowed dictionary keys are file (string), scaling (numeric), range (2 element numeric vector), colormap (string), and colorwedge (bool).</description>
+	    <any type="variant" limittypes="string record"/>
 			<value type="record"></value>
-		</param>
+	</param>
 
-		<param type="any" name="contour">
-			<description> (Optional)  Contour filename or complete contour config dictionary.</description>
-			<any type="variant" limittypes="string record"/>
-			<value type="record"></value>
-		</param>
+	<param type="any" name="contour">
+	    <description>(Optional)  Contour filename (string) or complete contour config dictionary. The allowed dictionary keys are file (string), levels (numeric vector), unit (float), and base (float).</description>
+	    <any type="variant" limittypes="string record"/>
+	    <value type="record"></value>
+	</param>
 
-		<param type="any" name="zoom">
-			<description> (Optional)  integer for intermental zoom or dictionary specifying a rectangle.</description>
+	<param type="any" name="zoom">
+	    <description>(Optional)  zoom can specify intermental zoom (integer), zoom region read from a file (string) or dictionary specifying the zoom region. The dictionary can have two forms. It can be either a simple region specified with blc (2 element vector) and trc (2 element vector) [along with an optional coord key ("pixel" or "world"; pixel is the default) or a complete region rectangle e.g. loaded with "rg.fromfiletorecord( )". The dictionary can also contain a channel (integer) field which indicates which channel should be displayed.</description>
 			<any type="variant" limittypes="int string record"/>
 			<value type="int">1</value>
 		</param>
 
 		<param type="any" name="axes">
-			<description> (Optional)  dictionary or 3 member string list.</description>
-			<any type="variant" limittypes="string record"/>
-			<value type="record"></value>
+		    <description>(Optional)  this can either be a three element vector (string) where each element describes what should be found on each of the x, y, and z axes or a dictionary containing fields "x", "y" and "z" (string).</description>
+		    <any type="variant" limittypes="string record"/>
+		    <value type="record"></value>
 		</param>
 
 		<param type="any" name="out">
-			<description> (Optional)  Output filename or complete output config dictionary.</description>
-			<any type="variant" limittypes="string record"/>
-			<value type="string"></value>
+		    <description>(Optional)  Output filename or complete output config dictionary. If a string is passed, the file extension is used to determine the output type (jpg, pdf, eps, ps, png, xbm, xpm, or ppm). If a dictionary is passed, it can contain the fields, file (string), scale (float), dpi (int), or orient (landscape or portrait). The scale field is used for the bitmap formats (i.e. not ps or pdf) and the dpi parameter is used for scalable formats (pdf or ps).</description>
+		    <any type="variant" limittypes="string record"/>
+		    <value type="string"></value>
 		</param>
 
                 <constraints>
                 </constraints>
-	</input>
-	<returns type="void"/>
+    </input>
+    <returns type="void"/>
 
-	<example>
+    <example>
+	The imview provides access to a subset of all of the configuration options for loading
+	and configuring the display of images in the casaviewer. This interface will eventually
+	provide access to nearly all of the image options available in the casaviewer.
 
-	examples of usage:
+	To simply create a casaviewer to set up interactively, you can use:
 
-	imview
-	imview "myimage.im"
-	imview "myrestorefile.rstr"
-	
-	imview "myimage.im", "contour"
+	    imview
 
-	imview "'myimage1.im' - 2 * 'myimage2.im'", "lel"
-	
-	
-	Keyword arguments:
-	infile -- Name of file to visualize
-		default: ''
-		example: infile='ngc5921.image'
-		If no infile is specified the Load Data window
-		will appear for selecting data.
-	displaytype -- (optional): method of rendering data
-		visually (raster, contour, vector or marker).  
-		You can also set this parameter to 'lel' and
-		provide an lel expression for infile (advanced).
-		default: 'raster'
-		example: displaytype='contour'
+	To open a particular image:
 
-	Note: the filetype parameter is optional; typing of
-	data files is now inferred.
-	        example:  imview infile='my.im'
-		implies:  imview infile='my.im', filetype='raster'
-        the filetype is still used to load contours, etc.
+	    imview "ngc5921.clean.image"
+
+        to open an image and overlay a contour:
+
+	    imview "ngc5921.clean.image", "ngc5921.clean.image"
+
+	or equivalently:
+
+            imview( raster="ngc5921.clean.image", contour="ngc5921.clean.image" )
+
+	to output an image:
+
+            imview( raster="ngc5921.clean.image", out="ngc5921-01.png" )
+
+	to get more interesting output:
+
+	    imview( raster="ngc5921.clean.image", zoom={'channel': 10, 'blc': [113,109], 'trc': [141,136]}, out="ngc5921-02.png" )
+
+	There are five optional parameters for imview -- raster, contour, zoom, axes, and out.
+	each of these parameters can take a number of forms:
+
+	raster -- (string) image file to open
+	          (dict)   file (string)   => image file to open
+	                   scaling (float) => scaling power cycles
 
 	</example>
 </task>
