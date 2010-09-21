@@ -15,6 +15,7 @@ l=locals()
 if not l.has_key("repodir"): 
     repodir=os.getenv("CASAPATH").split(' ')[0]
 
+print casa['build']
 print 'I think the data repository is at '+repodir
 datadir=repodir+"/data/regression/simdata/"
 cfgdir=repodir+"/data/alma/simmos/"
@@ -157,6 +158,7 @@ loghdr = """
 """
 
 print >> logfile, loghdr
+print >> logfile,casa['build']
 
 # more info
 ms.open(project+".ms")

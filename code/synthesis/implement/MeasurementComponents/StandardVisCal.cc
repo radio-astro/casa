@@ -368,9 +368,9 @@ void TJones::createCorruptor(const VisIter& vi, const Record& simpar, const Int 
 
       Float Scale(1.); // RELATIVE scale of fluctuations (to mean_pwv)
       if (simpar.isDefined("delta_pwv")) {
-	if (simpar.asFloat("delta_pwv")>.8) {
-	  Scale=0.8;
-	  os << LogIO::WARN << " decreasing PWV fluctuation magnitude to 80% of the mean PWV " << LogIO::POST;  
+	if (simpar.asFloat("delta_pwv")>1.) {
+	  Scale=1.;
+	  os << LogIO::WARN << " decreasing PWV fluctuation magnitude to 100% of the mean PWV " << LogIO::POST;  
 	} else {
 	  Scale=simpar.asFloat("delta_pwv");
 	}
@@ -379,14 +379,14 @@ void TJones::createCorruptor(const VisIter& vi, const Record& simpar, const Int 
 	Scale=0.15;
       }
       
-      os << " PWV fluctuations = " << Scale << " of mean PWV = " << simpar.asFloat("mean_pwv") << "mm " << LogIO::POST;  
+      os << " PWV fluctuations = " << Scale << " of mean PWV which is " << simpar.asFloat("mean_pwv") << "mm " << LogIO::POST;  
       
       
       // slot_times for a fBM-based corruption need to be even even if solTimes are not
       // so will define startTime and stopTime and reset nsim() here.
       
       if (simpar.isDefined("startTime")) {    
-	corruptor_p->startTime() = simpar.asDouble("startTime");
+	corruptor_p->startTime() = simpar.asDouble("startTime");	
       } else {
 	throw(AipsError("start/stop time not defined"));
       }
@@ -395,9 +395,11 @@ void TJones::createCorruptor(const VisIter& vi, const Record& simpar, const Int 
       } else {
 	throw(AipsError("start/stop time not defined"));
       }
-      
+
       // RI todo T::createCorr make min screen granularity a user parameter
       Float fBM_interval=max(interval(),10.); // generate screens on >10s intervals
+      if (prtlev()>2) cout<<"set fBM_interval"<<" to "<<fBM_interval<<" startTime="<<corruptor_p->startTime()<<" stopTime="<<corruptor_p->stopTime()<<endl;
+
       corruptor_p->setEvenSlots(fBM_interval);
 
       if (simpar.asString("mode") == "individual") 
@@ -1923,8 +1925,8 @@ void MMueller::createCorruptor(const VisIter& vi, const Record& simpar, const In
 {
   LogIO os(LogOrigin("MM", "createCorruptor()", WHERE));
 
-  if (prtlev()>2) cout << "   MM::setSimulate()" << endl;
-  os << LogIO::DEBUG1 << "   MM::setSimulate()" 
+  if (prtlev()>2) cout << "   MM::createCorruptor()" << endl;
+  os << LogIO::DEBUG1 << "   MM::createCorruptor()" 
      << LogIO::POST;
 
   atmcorruptor_p = new AtmosCorruptor();

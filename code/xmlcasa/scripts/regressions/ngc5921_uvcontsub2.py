@@ -682,8 +682,8 @@ multisource = True
 #async = True
 async = export_asynchronously
 
-async_split_id = exportuvfits()
-print "async_split_id =", async_split_id
+async_exportuvfits_id = exportuvfits()
+print "async_exportuvfits_id =", async_exportuvfits_id
 
 # Record exportuvfits completion time
 # NOTE: If async=true this can't be used to time exportuvfits
@@ -1027,10 +1027,10 @@ print ' Difference (fractional) = ',diff_imrms
 print ''
 # Pull the max from the momzerostats dictionary
 thistest_momzeromax=momzerostats['max'][0]
-oldtest_momzeromax = 1.985035
+oldtest_momzeromax = 1.4868
 print ' Moment 0 image max should be ',oldtest_momzeromax
 print ' Found : Moment 0 Max = ',thistest_momzeromax
-diff_momzeromax = abs((oldtest_momzeromax-thistest_momzeromax)/oldtest_momzeromax)
+diff_momzeromax = abs(1.0 - thistest_momzeromax / oldtest_momzeromax)
 print ' Difference (fractional) = ',diff_momzeromax
 
 print ''
@@ -1063,10 +1063,16 @@ tstutl.note("Opening UVFITS file " + srcuvfits +
 
 if export_asynchronously:
     while True:
-        if tm.retrieve(async_split_id):
-            break
-        else:
-            time.sleep(1)
+        try:
+            if tm.retrieve(async_exportuvfits_id):
+                break
+            else:
+                time.sleep(1)
+        except Exception, e:
+            tstutl.note("Error checking whether exportuvfits finished.",
+                        "SEVERE")
+            tstutl.note("async_exportuvfits_id was " + str(async_exportuvfits_id), "SEVERE")
+            raise e
 
 uvfitsexists=False
 if os.path.isfile(srcuvfits):
