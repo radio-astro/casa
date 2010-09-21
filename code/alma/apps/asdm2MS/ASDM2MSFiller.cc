@@ -349,10 +349,10 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
 
   //cout << "createMS SetupNewTable\n";
     
-  // Choose the Tile size per column to be ~ 4096K
-  const Int nTileCorr = 1;
-  const Int nTileChan = 1024;
-  const Int tileSizeKBytes = 16;
+  // Choose the Tile size per column to be 1 MB
+  const Int nTileCorr = 4;
+  const Int nTileChan = 64;
+  const Int tileSizeKBytes = 1024;
   Int nTileRow;
 
   // Create an incremental storage manager
