@@ -668,19 +668,25 @@ class asaplotbase:
                             # adjacent frames
                             for tick in self.subplots[i]['axes'].xaxis.majorTicks:
                                 tick.label1On = False
-                            self.subplots[i]['axes'].xaxis.label.set_visible(False)
+                            #self.subplots[i]['axes'].xaxis.label.set_visible(False)
                     if i%cols:
                         # Suppress y-labels for frames not in the left column.
                         for tick in self.subplots[i]['axes'].yaxis.majorTicks:
                             tick.label1On = False
-                        self.subplots[i]['axes'].yaxis.label.set_visible(False)
+                        #self.subplots[i]['axes'].yaxis.label.set_visible(False)
                     # disable the first tick of [1:ncol-1] of the last row
                     #if i+1 < nplots:
                     #    self.subplots[i]['axes'].xaxis.majorTicks[0].label1On = False
-                self.rows = rows
-                self.cols = cols
+                # set axes label state for interior subplots.
+                if i%cols:
+                    self.subplots[i]['axes'].yaxis.label.set_visible(False)
+                if (i <= (rows-1)*cols - 1) and (i+cols < nplots):
+                    self.subplots[i]['axes'].xaxis.label.set_visible(False)
+            self.rows = rows
+            self.cols = cols
             self.subplot(0)
         del rows,cols,n,nplots,layout,ganged,i
+
 
     def tidy(self):
         # this needs to be exceuted after the first "refresh"
@@ -693,7 +699,13 @@ class asaplotbase:
             else:
                 if i != 0:
                     ax.yaxis.majorTicks[-1].label1On = False
-
+            ## set axes label state for interior subplots.
+            #innerax=False
+            #if i%self.cols:
+            #    ax.yaxis.label.set_visible(innerax)
+            #if (i <= (self.rows-1)*self.cols - 1) and (i+self.cols < nplots):
+            #    ax.xaxis.label.set_visible(innerax)
+            
 
     def set_title(self, title=None):
         """

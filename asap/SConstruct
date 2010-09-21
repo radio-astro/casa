@@ -40,7 +40,8 @@ opts.AddVariables(
                 PathVariable("moduledir",
                             "The python module path (site-packages))",
                             moduledir),
-		("casacoreroot", "The location of casacore", None),
+		PathVariable("casacoreroot", "The location of casacore",
+                             "/usr/local"),
 		("boostroot", "The root dir where boost is installed", None),
 		("boostlib", "The name of the boost python library", 
 		 "boost_python"),
@@ -109,7 +110,7 @@ env.SConsignFile()
 casacoretooldir = os.path.join(env["casacoreroot"],"share",
 				   "casacore")
 if not os.path.exists(casacoretooldir):
-    print "Could not find casacore scons tools " + casacoretooldir
+    print "Could not find casacore scons tools"
     Exit(1)
 
 # load casacore specific build flags
@@ -146,7 +147,7 @@ if not env.GetOption('clean'):
 
     conf.env.AddCustomPackage('pyrap')
     if conf.CheckLib(conf.env["pyraplib"], language='c++', autoadd=0): 
-        conf.env.Append(CPPFLAGS=['-DHAVE_PYRAP'])
+        conf.env.Append(CPPFLAGS=['-DHAVE_LIBPYRAP'])
         conf.env.PrependUnique(LIBS=env['pyraplib'])
     else:
         conf.env.AppendUnique(CPPPATH=[conf.env["numpyincdir"]])
@@ -156,6 +157,7 @@ if not env.GetOption('clean'):
             conf.env.Append(CPPDEFINES=["-DAIPS_USENUMPY"])
         else:
             conf.env.Exit(1)
+        conf.env.Append(CPPFLAGS=['-DHAVE_LIBPYRAP'])
         # compile in pyrap here...
         conf.env["pyrapint"] = "#/external/libpyrap/pyrap-0.3.2"
     # test for cfitsio

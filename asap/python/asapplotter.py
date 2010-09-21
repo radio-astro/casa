@@ -126,7 +126,7 @@ class asapplotter:
 
     def create_mask(self, nwin=1, panel=0, color=None):
         """
-        Interactively define a mask.It retruns a mask that is equivalent to
+        Interactively define a mask. It retruns a mask that is equivalent to
         the one created manually with scantable.create_mask.
         Parameters:
             nwin:       The number of mask windows to create interactively
@@ -659,7 +659,7 @@ class asapplotter:
             doppler:      the velocity shift to apply to the frequencies
             deltachan:    the number of channels to include each side of the
                           line to determine a local maximum/minimum
-            rotate:       the rotation (in degrees) )for the text label (default 90.0)
+            rotate:       the rotation (in degrees) for the text label (default 90.0)
             location:     the location of the line annotation from the 'top',
                           'bottom' or alternate (None - the default)
         Notes:
@@ -729,7 +729,7 @@ class asapplotter:
 
     def save(self, filename=None, orientation=None, dpi=None):
         """
-        Save the plot to a file. The know formats are 'png', 'ps', 'eps'.
+        Save the plot to a file. The known formats are 'png', 'ps', 'eps'.
         Parameters:
              filename:    The name of the output file. This is optional
                           and autodetects the image format from the file
@@ -1320,7 +1320,6 @@ class asapplotter:
         Parameters:
             plot:      whether or not print header info on the plot.
             fontsize:  header font size (valid only plot=True)
-            autoscale: whether or not autoscale the plot (valid only plot=True)
             logger:    whether or not print header info on the logger.
             selstr:    additional selection string (not verified)
             extrastr:  additional string to print (not verified)

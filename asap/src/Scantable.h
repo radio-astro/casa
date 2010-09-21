@@ -17,6 +17,7 @@
 #include <vector>
 // AIPS++
 #include <casa/aips.h>
+#include <casa/Containers/Record.h>
 #include <casa/Arrays/MaskedArray.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/CountedPtr.h>
@@ -488,9 +489,8 @@ public:
 
   bool getFlagtraFast(int whichrow);
 
-  void polyBaselineBatch(const std::vector<bool>& mask, int order, int rowno);
-  void polyBaseline(const std::vector<bool>& mask, int order, int rowno, long pars_ptr, long pars_size, long errs_ptr, long errs_size, long fmask_ptr, long fmask_size);
-
+  void polyBaselineBatch(const std::vector<bool>& mask, int order);
+  STFitEntry polyBaseline(const std::vector<bool>& mask, int order, int rowno);
 
 private:
 

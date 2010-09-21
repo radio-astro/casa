@@ -49,7 +49,7 @@ class model(object):
         self.set_observatory_elevation(elevation)
 
     def get_opacities(self, freq, elevation=None):
-        """Get the opacity value(s) for the fiven frequency(ies).
+        """Get the opacity value(s) for the given frequency(ies).
         If no elevation is given the opacities for the zenith are returned.
         If an elevation is specified refraction is also taken into account.
         Parameters:

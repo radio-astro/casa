@@ -18,6 +18,7 @@
 
 #include "MathUtils.h"
 #include "STFit.h"
+#include "STFitEntry.h"
 #include "Scantable.h"
 #include "STCoordinate.h"
 
@@ -249,11 +250,11 @@ public:
   void reshapeSpectrum( int nmin, int nmax )
   { table_->reshapeSpectrum( nmin, nmax ); }
 
-  void polyBaseline(const std::vector<bool>& mask, int order, int rowno, long pars_ptr, long pars_size, long errs_ptr, long errs_size, long fmask_ptr, long fmask_size)
-  { table_->polyBaseline(mask, order, rowno, pars_ptr, pars_size, errs_ptr, errs_size, fmask_ptr, fmask_size); }
+  STFitEntry polyBaseline(const std::vector<bool>& mask, int order, int rowno)
+  { return table_->polyBaseline(mask, order, rowno); }
 
-  void polyBaselineBatch(const std::vector<bool>& mask, int order, int rowno)
-  { table_->polyBaselineBatch(mask, order, rowno); }
+  void polyBaselineBatch(const std::vector<bool>& mask, int order)
+  { table_->polyBaselineBatch(mask, order); }
 
   bool getFlagtraFast(int whichrow=0) const
     { return table_->getFlagtraFast(whichrow); }
