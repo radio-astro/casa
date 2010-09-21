@@ -132,7 +132,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
 	    <value type='vector'><value>0</value></value>
     </param>
 
-    <param type="bool" name="batch">
+    <param type="bool" name="batch" subparam='true'>
             <description>run faster but no detailed output in logger</description>
             <value>False</value>
     </param>
