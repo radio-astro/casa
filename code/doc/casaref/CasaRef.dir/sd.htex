@@ -46,18 +46,18 @@ Synopsis
 
   \medskip\noindent\textbf{Selecting data}
 
-    The Scantable can contain data with different frequency setting, 
-    different polarization component, and so on. In case when you want 
+    The Scantable can contain data with various types of frequency setting, 
+    several polarization component, and so on. In case when you want 
     to select data by some conditions, \ahlink{sd.selector}{sd:sd.selector} 
-    is available for this. The \ahlink{sd.selector}{sd:sd.selector} provides 
-    various functions to select data as well as it also provides 
+    is available for that. The \ahlink{sd.selector}{sd:sd.selector} provides 
+    various functions to select and/or to sort data as well as it also provides 
     an interface to select data by  
     \htmladdnormallink{TaQL}{http://aips2.nrao.edu/docs/notes/199/199.html}.
     See \ahlink{sd.selector}{sd:sd.selector} for details.
 
   \medskip\noindent\textbf{Fitting}
 
-    The \ahlink{sd.fitter}{sd:sd.fitter} is an object to perform fitting. 
+    The \ahlink{sd.fitter}{sd:sd.fitter} is an object to perform fitting data. 
     Both baseline and line fitting for spectral data can be done by this 
     object if appropriate fitting function and masked region are set.
     Currently, Gaussian and Lorentzian are supported for line fitting, 
@@ -69,14 +69,14 @@ Synopsis
 
     The sd tool provides automatic line finding functionality that is 
     called \ahlink{sd.linefinder}{sd:sd.linefinder}. 
-    \ahlink{sd.linefinder}{sd:sd.linefinder} has a few control parameter 
-    for line finding. The user can customize behavior of line finding 
+    The \ahlink{sd.linefinder}{sd:sd.linefinder} has a few control parameter 
+    for line finding. The user is able to customize a behavior of line finding 
     process by changing these parameters.
     See \ahlink{sd.linefinder}{sd:sd.linefinder} for details.
 
   \medskip\noindent\textbf{Line catalog}
 
-    The \ahlink{sd.linecatalog}{sd:sd.linecatalog} object is a wrapper for 
+    The \ahlink{sd.linecatalog}{sd:sd.linecatalog} object is an interface for 
     line catalog. The input data should be provided from the user.
     Supported format is ASCII table or specific format for 
     \ahlink{sd.linecatalog}{sd:sd.linecatalog}.
