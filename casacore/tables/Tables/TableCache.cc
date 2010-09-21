@@ -60,6 +60,7 @@ uInt TableCache::ntable() const
 
 void TableCache::define (const String& tableName, PlainTable* tab)
 {
+  //RI cout<<"+ cache "<<tableName<<endl;
     tableMap_p.define (tableName, tab);
 }
 
@@ -81,6 +82,8 @@ void TableCache::remove (const String& tableName)
                   << " from the table cache; suggest restarting" << std::endl;
       }
     }
+    //RI cout<<"- cache "<<tableName<<endl;
+
 }
 
 void TableCache::rename (const String& newName, const String& oldName)
