@@ -1666,7 +1666,7 @@ order && \multicolumn{2}{p{3.36in}|}{The order of the polynomial}\\
 & &allowed: & integer \\
 & &Default: & 0
 \\
- && \multicolumn{2}{p{3.36in}|}{The threshold used by line finder}\\
+threshold && \multicolumn{2}{p{3.36in}|}{The threshold used by line finder}\\
 & &allowed: & float \\
 & &Default: & 3
 \\
@@ -2922,6 +2922,10 @@ mask && \multicolumn{2}{p{3.36in}|}{Channel mask, created with create\_mask}\\
 row && \multicolumn{2}{p{3.36in}|}{calculate the masklist using the specified row for unit conversion}\\
 & &allowed: & integer \\
 & &Default: & 0
+\\
+silent && \multicolumn{2}{p{3.36in}|}{True for silent mode}\\
+& &allowed: & bool \\
+& &Default: & False
 \\
 
 \hline
