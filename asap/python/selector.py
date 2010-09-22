@@ -7,7 +7,7 @@ class selector(_selector):
     A selection object to be applied to scantables to restrict the
     scantables to specific rows.
     """
-    fields = ["pols", "ifs", "beams", "scans", "cycles", "name", "query"]
+    fields = ["pols", "ifs", "beams", "scans", "cycles", "name", "query", "types", "rows"]
 
     def __init__(self, *args, **kw):
         if len(args) == 1:
@@ -215,6 +215,8 @@ class selector(_selector):
         return list(self._getorder())
     def get_types(self):
         return list(self._gettypes())
+    def get_rows(self):
+        return list(self._getrows())
     def get_query(self):
 	prefix = "SELECT FROM $1 WHERE "
         return self._gettaql().replace(prefix, "")
@@ -232,6 +234,8 @@ class selector(_selector):
 	     "Pol Type": self.get_poltypes(),
 	     "POLNO": self.get_pols(),
 	     "QUERY": self.get_query(),
+             "SRCTYPE": self.get_types(),
+             "ROWS": self.get_rows(),
 	     "Sort Order": self.get_order()
 	     }
 	for k,v in d.iteritems():

@@ -86,13 +86,15 @@ class fitter:
         n=0
         if kwargs.has_key('poly'):
             self.fitfunc = 'poly'
+            self.fitfuncs = ['poly']
             n = kwargs.get('poly')
-            self.components = [n]
+            self.components = [n+1]
             self.uselinear = False
         elif kwargs.has_key('lpoly'):
             self.fitfunc = 'poly'
+            self.fitfuncs = ['lpoly']
             n = kwargs.get('lpoly')
-            self.components = [n]
+            self.components = [n+1]
             self.uselinear = True
         elif kwargs.has_key('gauss'):
             n = kwargs.get('gauss')
@@ -201,8 +203,8 @@ class fitter:
               params:    a vector of parameters
               fixed:     a vector of which parameters are to be held fixed
                          (default is none)
-              component: in case of multiple gaussians, the index of the
-                         component
+              component: in case of multiple gaussians/lorentzians,
+                         the index of the component
         """
         component = None
         fixed = None
@@ -271,7 +273,7 @@ class fitter:
         """
         Set the Parameters of a 'Lorentzian' component, set with set_function.
         Parameters:
-            peak, centre, fwhm:  The gaussian parameters
+            peak, centre, fwhm:  The lorentzian parameters
             peakfixed,
             centrefixed,
             fwhmfixed:           Optional parameters to indicate if
@@ -420,7 +422,7 @@ class fitter:
         """
         pars = self.fitter.getestimate()
         fixed = self.fitter.getfixedparameters()
-        asaplog.push(self._format_pars(pars,fixed,None))
+        asaplog.push(self._format_pars(pars,fixed,None,None))
         return pars
 
     @asaplog_post_dec

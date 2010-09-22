@@ -56,6 +56,7 @@ public:
   std::vector<int> getPols() const;
   std::vector<int> getCycles() const;
   std::vector<int> getTypes() const;
+  std::vector<int> getRows() const;
   std::vector<std::string> getPolTypes() const;
   std::string getTaQL() const { return taql_; }
   std::vector<std::string> getSortOrder() const;

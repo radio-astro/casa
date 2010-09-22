@@ -29,6 +29,7 @@ namespace asap {
         .def("_getscans", &STSelector::getScans)
         .def("_getcycles", &STSelector::getCycles)
         .def("_gettypes", &STSelector::getTypes)
+        .def("_getrows", &STSelector::getRows)
         .def("_gettaql", &STSelector::getTaQL)
         .def("_getorder", &STSelector::getSortOrder)
         .def("_reset", &STSelector::reset)
