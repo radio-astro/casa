@@ -87,6 +87,14 @@ refstats = { 'flux': 0.03599,
              'rms': 1.34e-04,
              'sigma': 1.0e-04 }
 
+# 20100920 but its been off for a while
+refstats = { 'flux': 0.0366,
+             'max': 5.05e-04,
+             'min': -1.04e-04,
+             'rms': 1.35e-04,
+             'sigma': 1.0e-04 }
+
+
 reftol   = {'flux':  0.05,
             'max':   0.1,
             'min':   0.15,

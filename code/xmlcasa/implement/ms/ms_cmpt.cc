@@ -645,11 +645,16 @@ ms::statistics(const std::string& column,
          else {
            sel_p = itsMS;
          }
-
          
+         // Be more flexible about column, i.e.
+         // "MODEL_DATA"}
+         // "model"     } => "MODEL",
+         // "antenna2"    => "ANTENNA2"
+         String mycolumn(upcase(column).before("_DATA"));
+
          *itsLog << "Use " << itsMS->tableName() <<
            ", useflags = " << useflags << LogIO::POST;
-         *itsLog << "Compute statistics on " << column;
+         *itsLog << "Compute statistics on " << mycolumn;
          
          if (complex_value != "") {
            *itsLog << ", use " << complex_value;
@@ -726,11 +731,11 @@ ms::statistics(const std::string& column,
                             "FLAG_ROW");
              }
 
-             if (column == "DATA" || column == "CORRECTED" || column == "MODEL") {
+             if (mycolumn == "DATA" || mycolumn == "CORRECTED" || mycolumn == "MODEL") {
                  ROVisibilityIterator::DataColumn dc;
-                 if(column == "DATA")
+                 if(mycolumn == "DATA")
                    dc = ROVisibilityIterator::Observed;
-                 else if(column == "CORRECTED")
+                 else if(mycolumn == "CORRECTED")
                    dc = ROVisibilityIterator::Corrected;
                  else
                    dc = ROVisibilityIterator::Model;
@@ -739,9 +744,9 @@ ms::statistics(const std::string& column,
                                dc);
                  
                  append<Complex>(data_complex, length, nrow, data_complex_chunk,
-                                 column);
+                                 mycolumn);
              }
-             else if (column == "UVW") {
+             else if (mycolumn == "UVW") {
                  Vector<RigidVector<Double, 3> > uvw;
                  vi.uvw(uvw);
                  
@@ -751,9 +756,9 @@ ms::statistics(const std::string& column,
                    static_cast<Matrix<Double> >(data_double_chunk)(1, i) = uvw(i)(1);
                    static_cast<Matrix<Double> >(data_double_chunk)(2, i) = uvw(i)(2);
                  }
-                 append<Double>(data_double, length, nrow, data_double_chunk, column);
+                 append<Double>(data_double, length, nrow, data_double_chunk, mycolumn);
              }
-             else if (column == "UVRANGE") {
+             else if (mycolumn == "UVRANGE") {
                  Vector<RigidVector<Double, 3> > uvw;
                  vi.uvw(uvw);
                  
@@ -762,70 +767,70 @@ ms::statistics(const std::string& column,
                    static_cast<Vector<Double> >(data_double_chunk)(i) = 
                      sqrt( uvw(i)(0)*uvw(i)(0) + uvw(i)(1)*uvw(i)(1) );
                  }
-                 append<Double>(data_double, length, nrow, data_double_chunk, column);
+                 append<Double>(data_double, length, nrow, data_double_chunk, mycolumn);
              }
-             else if (column == "FLAG") {
+             else if (mycolumn == "FLAG") {
                  vi.flag(static_cast<Cube<Bool>&>(data_bool_chunk));
-                 append<Bool>(data_bool, length, nrow, data_bool_chunk, column);
+                 append<Bool>(data_bool, length, nrow, data_bool_chunk, mycolumn);
              }
-             else if (column == "WEIGHT") {
+             else if (mycolumn == "WEIGHT") {
                  vi.weightMat(static_cast<Matrix<Float>&>(data_float_chunk));
-                 append<Float>(data_float, length, nrow, data_float_chunk, column);
+                 append<Float>(data_float, length, nrow, data_float_chunk, mycolumn);
              }
-             else if (column == "SIGMA") {
+             else if (mycolumn == "SIGMA") {
                  vi.sigmaMat(static_cast<Matrix<Float>&>(data_float_chunk));
-                 append<Float>(data_float, length, nrow, data_float_chunk, column);
+                 append<Float>(data_float, length, nrow, data_float_chunk, mycolumn);
              }
-             else if (column == "ANTENNA1") {
+             else if (mycolumn == "ANTENNA1") {
                  vi.antenna1(static_cast<Vector<Int>&>(data_int_chunk));
-                 append<Int>(data_int, length, nrow, data_int_chunk, column);
+                 append<Int>(data_int, length, nrow, data_int_chunk, mycolumn);
              }
-             else if (column == "ANTENNA2") {
+             else if (mycolumn == "ANTENNA2") {
                  vi.antenna2(static_cast<Vector<Int>&>(data_int_chunk));
-                 append<Int>(data_int, length, nrow, data_int_chunk, column);
+                 append<Int>(data_int, length, nrow, data_int_chunk, mycolumn);
              }
-             else if (column == "FEED1") {
+             else if (mycolumn == "FEED1") {
                  vi.feed1(static_cast<Vector<Int>&>(data_int_chunk));
-                 append<Int>(data_int, length, nrow, data_int_chunk, column);
+                 append<Int>(data_int, length, nrow, data_int_chunk, mycolumn);
              }
-             else if (column == "FEED2") {
+             else if (mycolumn == "FEED2") {
                  vi.feed2(static_cast<Vector<Int>&>(data_int_chunk));
-                 append<Int>(data_int, length, nrow, data_int_chunk, column);
+                 append<Int>(data_int, length, nrow, data_int_chunk, mycolumn);
              }
-             else if (column == "FIELD_ID") {
+             else if (mycolumn == "FIELD_ID") {
                  data_int_chunk.resize(IPosition(1, 1));
                  data_int_chunk(IPosition(1, 0)) = vi.fieldId();
-                 append<Int>(data_int, length, nrow, data_int_chunk, column);
+                 append<Int>(data_int, length, nrow, data_int_chunk, mycolumn);
              }
-             else if (column == "ARRAY_ID") {
+             else if (mycolumn == "ARRAY_ID") {
                  data_int_chunk.resize(IPosition(1, 1));
                  data_int_chunk(IPosition(1, 0)) = vi.arrayId();
-                 append<Int>(data_int, length, nrow, data_int_chunk, column);
+                 append<Int>(data_int, length, nrow, data_int_chunk, mycolumn);
              }
-             else if (column == "DATA_DESC_ID") {
+             else if (mycolumn == "DATA_DESC_ID") {
                  data_int_chunk.resize(IPosition(1, 1));
                  data_int_chunk(IPosition(1, 0)) = vi.dataDescriptionId();
-                 append<Int>(data_int, length, nrow, data_int_chunk, column);
+                 append<Int>(data_int, length, nrow, data_int_chunk, mycolumn);
              }
-             else if (column == "FLAG_ROW") {
+             else if (mycolumn == "FLAG_ROW") {
                  vi.flagRow(static_cast<Vector<Bool>&>(data_bool_chunk));
-                 append<Bool>(data_bool, length, nrow, data_bool_chunk, column);
+                 append<Bool>(data_bool, length, nrow, data_bool_chunk, mycolumn);
              }
-             else if (column == "INTERVAL") {
+             else if (mycolumn == "INTERVAL") {
                  vi.timeInterval(static_cast<Vector<Double>&>(data_double_chunk));
-                 append<Double>(data_double, length, nrow, data_double_chunk, column);
+                 append<Double>(data_double, length, nrow, data_double_chunk, mycolumn);
              }
-             else if (column == "SCAN_NUMBER" || column == "SCAN") {
+             else if (mycolumn == "SCAN_NUMBER" || mycolumn == "SCAN") {
                  vi.scan(static_cast<Vector<Int>&>(data_int_chunk));
-                 append<Int>(data_int, length, nrow, data_int_chunk, column);
+                 append<Int>(data_int, length, nrow, data_int_chunk, mycolumn);
              }
-             else if (column == "TIME") {
+             else if (mycolumn == "TIME") {
                  vi.time(static_cast<Vector<Double>&>(data_double_chunk));
-                 append<Double>(data_double, length, nrow, data_double_chunk, column);
+                 append<Double>(data_double, length, nrow, data_double_chunk, mycolumn);
              }
-             else if (column == "WEIGHT_SPECTRUM") {
+             else if (mycolumn == "WEIGHT_SPECTRUM") {
                  vi.weightSpectrum(static_cast<Cube<Float>&>(data_float_chunk));
-                 append<Float>(data_float, length, nrow, data_float_chunk, column);
+                 append<Float>(data_float, length, nrow, data_float_chunk, mycolumn);
              }
              else {
                  stringstream ss;
@@ -889,7 +894,7 @@ ms::statistics(const std::string& column,
 
            Vector<Complex> v(data_complex.reform(IPosition(1, data_complex.shape().product())));
            retval = fromRecord(Statistics<Complex>::get_stats_complex(v, f,
-                                                                      column, 
+                                                                      mycolumn, 
                                                                       supported,
                                                                       complex_value));
          }
@@ -899,21 +904,21 @@ ms::statistics(const std::string& column,
                  f = Vector<Bool>(data_double.shape()(1), false);
                  retval = fromRecord(Statistics<Double>::get_stats_array(static_cast<Matrix<Double> >(data_double),
                                                                      f,
-                                                                     column,
+                                                                     mycolumn,
                                                                      supported));
              
            }
            else {
                retval = fromRecord(Statistics<Double>::get_stats(data_double.reform(IPosition(1, data_double.shape().product())),
                                                                f,
-                                                               column,
+                                                               mycolumn,
                                                                supported));
            }
          }
          else if (data_bool.nelements() > 0) {
              retval = fromRecord(Statistics<Bool>::get_stats(data_bool.reform(IPosition(1, data_bool.shape().product())),
                                                              f,
-                                                             column,
+                                                             mycolumn,
                                                              supported));
          }
          else if (data_float.nelements() > 0) {
@@ -922,20 +927,20 @@ ms::statistics(const std::string& column,
                  f = Vector<Bool>(data_float.shape()(1), false);
                  retval = fromRecord(Statistics<Float>::get_stats_array(static_cast<Matrix<Float> >(data_float),
                                                                         f,
-                                                                        column,
+                                                                        mycolumn,
                                                                         supported));
              }
              else {
                retval = fromRecord(Statistics<Float>::get_stats(data_float.reform(IPosition(1, data_float.shape().product())),
                                                                 f,
-                                                                column,
+                                                                mycolumn,
                                                                 supported));
              }
          }
          else if (data_int.nelements() > 0) {
              retval = fromRecord(Statistics<Int>::get_stats(data_int.reform(IPosition(1, data_int.shape().product())),
                                                             f,
-                                                            column,
+                                                            mycolumn,
                                                             supported));
          }
          else {

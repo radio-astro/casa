@@ -185,7 +185,6 @@ class __imview_class(object):
 		x=''
 		y=''
 		z=''
-		channel=-1
 		invoke = False
 		if type(axes) == list and len(axes) == 3 and \
 		   all( map( lambda x: type(x) == str, axes ) ) :
@@ -209,8 +208,6 @@ class __imview_class(object):
 					raise Exception, "dimensions of axes must be strings (z is not)"
 				z = axes['z']
 				invoke = True
-			if axes.has_key('channel'):
-				channel = self.__checknumeric(axes['channel'], int, "channel")
 		else :
 			raise Exception, "'axes' must either be a string list of 3 dimensions or a dictionary"
 
@@ -219,14 +216,15 @@ class __imview_class(object):
 			vwr.axes( x, y, z, panel=panel )
 			result = True
 
-		if channel >= 0:
-			vwr.channel( channel,panel=panel )
-			result = True
-		
 		return result
 
 
-	def __zoom( self, vwr, panel, zoom ) :
+	def __zoom( self, vwr, panel, zoom ) :		
+
+		channel = -1
+		if type(zoom) == dict and zoom.has_key('channel') :
+			channel = self.__checknumeric(zoom['channel'], int, "channel")
+
 		if type(zoom) == int :
 			vwr.zoom(level=zoom,panel=panel)
 		elif type(zoom) == str and os.path.isfile( zoom ):
@@ -253,17 +251,26 @@ class __imview_class(object):
 					coord = zoom['coord']
 					if coord != 'world' and coord != 'pixel' :
 						raise Exception, "zoom coord must be either 'world' or 'pixel'"
+				if channel >= 0:
+					vwr.channel( channel, panel=panel )
 				vwr.zoom(blc=blc,trc=trc, coordinates=coord, panel=panel)
 			elif type(blc) == dict and type(trc) == dict and \
 			     blc.has_key( '*1' ) and trc.has_key( '*1' ) :
+				if channel >= 0:
+					vwr.channel( channel, panel=panel )
 				vwr.zoom(region=zoom,panel=panel)
 			else:
 				raise Exception, "zoom blc & trc must be either lists or dictionaries" 
+
 		elif type(zoom) == dict and zoom.has_key('regions'):
+			if channel >= 0:
+				vwr.channel( channel, panel=panel )
 			vwr.zoom(region=zoom,panel=panel)
 		else:
-			raise Exception, "invalid zoom parameters"
-
+			if channel < 0:
+				raise Exception, "invalid zoom parameters"
+			else:
+				vwr.channel( channel, panel=panel )
 
 	def __load_files( self, filetype, vwr, panel, files ):
 

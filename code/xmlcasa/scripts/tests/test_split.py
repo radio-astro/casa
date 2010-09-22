@@ -42,6 +42,9 @@ def check_eq(val, expval, tol=None):
                 raise ValueError, '!='
         except ValueError:
             raise ValueError, "%r != %r" % (val, expval)
+        except Exception, e:
+            print "Error comparing", val, "to", expval
+            raise e
 
 def slurp_table(tabname):
     """
