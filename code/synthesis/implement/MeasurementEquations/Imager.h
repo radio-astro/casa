@@ -203,7 +203,9 @@ class Imager
                              const String& scan="",
                              const Bool useModelCol=False);
 
-
+  // Select some data.
+  // Sets nullSelect_p and returns !nullSelect_p.
+  // be_calm: lowers the logging level of some messages if True.
   Bool setdata(const String& mode, const Vector<Int>& nchan, 
 	       const Vector<Int>& start,
 	       const Vector<Int>& step, const MRadialVelocity& mStart,
@@ -218,7 +220,8 @@ class Imager
 	       const String& spwstring="",
 	       const String& uvdist="",
                const String& scan="",
-               const Bool usemodelCol=False);
+               const Bool usemodelCol=False,
+               const Bool be_calm=false);
   
   // Set the processing options
   Bool setoptions(const String& ftmachine, const Long cache, const Int tile,

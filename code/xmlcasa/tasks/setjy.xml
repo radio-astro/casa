@@ -125,16 +125,17 @@
        modimage -- Model image (I only) for setting the model visibilities.
               default: '' means use fluxdensity instead of modimage. 
               Each field must be done separately.  The image clean model
-              will be scaled from the frequency in the model to that actually used,
-              unless fluxdensity = 0 (or fluxdensity[0] = 0).
+              will be scaled from the frequency in the model to that actually
+              used (ignoring fluxdensity), unless fluxdensity = 0
+              (or fluxdensity[0] = 0).
               Both the amplitude and phase are calculated.
               At the AOC or CV, the models are located in
               /usr/lib/casapy/data/nrao/VLA/CalModels/3C286_L.im (egs)
                    lib64
       scaleperchan=False
-               This determines whether the fluxdensity set in the model is 
-               calculated on a per channel basis. If False then it only one fluxdensity
-               value is given per spw
+               This determines whether the fluxdensity set in the model is
+               calculated on a per channel basis. If False then it only one
+               fluxdensity value is used per spw
 
        fluxdensity -- Specified flux density [I,Q,U,V] in Jy
                default: -1, uses [1,0,0,0] flux density for all sources,

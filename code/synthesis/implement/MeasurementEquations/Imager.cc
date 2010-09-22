@@ -2080,8 +2080,9 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
 		     const String& msSelect, const String& timerng,
 		     const String& fieldnames, const Vector<Int>& antIndex,
 		     const String& antnames, const String& spwstring,
-                     const String& uvdist, const String& scan, const Bool useModelCol)
-  
+                     const String& uvdist, const String& scan,
+                     const Bool useModelCol,
+                     const Bool be_calm)
 {
   logSink_p.clearLocally();
   LogIO os(LogOrigin("imager", "data selection"), logSink_p);
@@ -2359,8 +2360,8 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     if(mssel_p->nrow()==0) {
       //delete mssel_p; 
       mssel_p=0;
-      os << LogIO::WARN
-	 << "Selection is empty: reverting to sorted MeasurementSet"
+      os << (be_calm ? LogIO::NORMAL4 : LogIO::WARN)
+         << "Selection is empty: reverting to sorted MeasurementSet"
 	 << LogIO::POST;
       mssel_p=new MeasurementSet(*ms_p);
       nullSelect_p=True;
@@ -2394,7 +2395,8 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
 	 << LogIO::POST;
     }
     else {
-      os << LogIO::NORMAL << "Selected all visibilities" << LogIO::POST; // Loglevel INFO
+      os << (be_calm ? LogIO::NORMAL4 : LogIO::NORMAL)
+         << "Selected all visibilities" << LogIO::POST; // Loglevel INFO
     }
     //    }
     
@@ -6490,8 +6492,10 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
 	    else
 	      sumI=sum(modimage).getFloat();
 
-            os << LogIO::NORMAL << "Using model image " << modimage.name() // Loglevel INFO
-	       << LogIO::POST;
+            if(spwInd == 0)
+              os << LogIO::NORMAL
+                 << "Using model image " << modimage.name() // Loglevel INFO
+                 << LogIO::POST;
 	    // scale the image
 	    if(imshape(3)>1){
 	      if(modimage.shape()(freqAxis) ==1){
@@ -6536,11 +6540,11 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
           }
             
 
-          os << LogIO::NORMAL // Loglevel INFO
-             << "The model image's reference pixel is " << sep << " arcsec from "
-             << fieldName << "'s phase center."
-             << LogIO::POST;
-	  
+          if(spwInd == 0)
+            os << LogIO::NORMAL // Loglevel INFO
+               << "The model image's reference pixel is " << sep 
+               << " arcsec from " << fieldName << "'s phase center."
+               << LogIO::POST;
         }
         else{
           useimage=False;
@@ -6582,7 +6586,7 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
         setdata("channel", numDeChan, begin, stepsize, MRadialVelocity(), 
                 MRadialVelocity(),
                 selectSpw, selectField, msSelectString, "", "",
-                Vector<Int>(), "", "", "", "", True);
+                Vector<Int>(), "", "", "", "", True, true);
 
         if (!nullSelect_p) {
 
@@ -6910,15 +6914,15 @@ Bool Imager::ssoflux(const Vector<Int>& fieldid,
             tmodimage->copyData( (LatticeExpr<Float>)(modimage) );
           }
             
-
-          os << LogIO::NORMAL << "Using model image " << modimage.name() // Loglevel INFO
-             << LogIO::POST;
-
-          os << LogIO::NORMAL // Loglevel INFO
-             << "The model image's reference pixel is " << sep << " arcsec from "
-             << fieldName << "'s phase center."
-             << LogIO::POST;
-	  
+          if(spwInd == 0){
+            os << LogIO::NORMAL
+               << "Using model image " << modimage.name() // Loglevel INFO
+               << LogIO::POST;
+            os << LogIO::NORMAL // Loglevel INFO
+               << "Its reference pixel is " << sep 
+               << " arcsec from " << fieldName << "'s phase center."
+               << LogIO::POST;
+          }
         }
         else{
           useimage=False;
@@ -6960,7 +6964,7 @@ Bool Imager::ssoflux(const Vector<Int>& fieldid,
         setdata("channel", numDeChan, begin, stepsize, MRadialVelocity(), 
                 MRadialVelocity(),
                 selectSpw, selectField, msSelectString, "", "",
-                Vector<Int>(), "", "", "", "", True);
+                Vector<Int>(), "", "", "", "", True, true);
 
         if (!nullSelect_p) {
 
