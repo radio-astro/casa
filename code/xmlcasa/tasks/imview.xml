@@ -64,9 +64,10 @@
     <returns type="void"/>
 
     <example>
-	The imview provides access to a subset of all of the configuration options for loading
-	and configuring the display of images in the casaviewer. This interface will eventually
-	provide access to nearly all of the image options available in the casaviewer.
+	The imview task provides access to a subset of all of the configuration
+	options for loading and configuring the display of images in the casaviewer.
+	This interface will eventually provide access to nearly all of the image
+	options available in the casaviewer.
 
 	To simply create a casaviewer to set up interactively, you can use:
 
@@ -90,10 +91,11 @@
 
 	to get more interesting output:
 
-	    imview( raster="ngc5921.clean.image", zoom={'channel': 10, 'blc': [113,109], 'trc': [141,136]}, out="ngc5921-02.png" )
+	    imview( raster="ngc5921.clean.image", out="ngc5921-02.png", \\
+	            zoom={'channel': 10, 'blc': [113,109], 'trc': [141,136]} )
 
-	There are five optional parameters for imview -- raster, contour, zoom, axes, and out.
-	each of these parameters can take a number of forms:
+	There are five optional parameters for imview -- raster, contour, zoom,
+	axes, and out. Each of these parameters can take a few different forms:
 
 	raster  -- (string) image file to open
 	           (dict)   file (string)     => image file to open
@@ -112,16 +114,18 @@
 	                    trc (numeric*2)   => top right corner
 	                    coord (string)    => pixel or world
 	                    channel (int)     => chanel to display
-	           (dict)   &gt;region record&lt;   => record loaded e.g. rg.fromfiletorecord( )
+	           (dict)   &lt;region record&gt;   => record loaded
+	                                         e.g. rg.fromfiletorecord( )
 	axes    -- (string*3) demension to display on the x, y, and z axes
 	           (dict)     x               => dimension for x-axes
 	                      y               => dimension for y-axes
 	                      z               => dimension for z-axes
-	out     -- (string) file with a supported extension (jpg, pdf, eps, ps, png, xbm, xpm, ppm)
+	out     -- (string) file with a supported extension
+	                    [jpg, pdf, eps, ps, png, xbm, xpm, ppm]
 	            (dict)    file (string)   => filename
-	                      format (string) => valid extension (extension of filename takes precidence)
-	                      scale (numeric) => amount to scale non-eps, non-ps output
-	                      dpi (numeric)   => dots-per-inch for eps or ps output
+	                      format (string) => valid ext (filename ext overrides)
+	                      scale (numeric) => scale for non-eps, non-ps output
+	                      dpi (numeric)   => dpi for eps or ps output
 	                      orient (string) => portrait or landscape
 	</example>
 </task>
