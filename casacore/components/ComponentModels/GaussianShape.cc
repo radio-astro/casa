@@ -226,6 +226,12 @@ void GaussianShape::visibility(Vector<DComplex>& scale,
   ComponentShape::visibility(scale, uvw, frequency);
 }
 
+void GaussianShape::visibility(Matrix<DComplex>& scale,
+			       const Matrix<Double>& uvw,
+			       const Vector<Double>& frequency) const {
+  ComponentShape::visibility(scale, uvw, frequency);
+}
+
 ComponentShape* GaussianShape::clone() const {
   DebugAssert(ok(), AipsError);
   ComponentShape* tmpPtr = new GaussianShape(*this);

@@ -211,6 +211,11 @@ public:
   virtual void visibility(Vector<DComplex>& scale, const Matrix<Double>& uvw,
 			  const Double& frequency) const = 0;
 
+  //Same as above except for lots of frequencies too...scale rows is uvw points, columns
+  // is frequency values
+  virtual void visibility(Matrix<DComplex>& scale, const Matrix<Double>& uvw,
+			  const Vector<Double>& frequency) const = 0;
+
   // determine whether the shape is symmetric or not. If it is then all the
   // scale factors returned by the visibility functions will be real numbers.
   virtual Bool isSymmetric() const = 0;

@@ -27,7 +27,11 @@
 
 #include <components/ComponentModels/DiskShape.h>
 #include <components/ComponentModels/Flux.h>
+#include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Vector.h>
+#include <casa/Arrays/VectorIter.h>
+#include <casa/Arrays/ArrayMath.h>
+#include <casa/Arrays/Array.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogOrigin.h>
@@ -207,6 +211,23 @@ DComplex DiskShape::visibility(const Vector<Double>& uvw,
   return DComplex(calcVis(u, v, C::pi * frequency/C::c), 0.0);
 }
 
+void DiskShape::visibility(Matrix<DComplex>& scale,
+			   const Matrix<Double>& uvw,
+			   const Vector<Double>& frequency) const {
+  
+  scale.resize(uvw.ncolumn(), frequency.nelements());
+ 
+  VectorIterator<DComplex> iter(scale, 1);
+  for ( uInt k =0 ; k < frequency.nelements() ; ++k){
+   
+    visibility(iter.vector(), uvw, frequency(k));
+    iter.next();
+    
+  }
+
+
+
+}
 void DiskShape::visibility(Vector<DComplex>& scale,
 			   const Matrix<Double>& uvw,
 			   const Double& frequency) const {

@@ -159,6 +159,12 @@ void TwoSidedShape::visibility(Vector<DComplex>& scale,
   ComponentShape::visibility(scale, uvw, frequency);
 }
 
+void TwoSidedShape::visibility(Matrix<DComplex>& scale,
+			       const Matrix<Double>& uvw,
+			       const Vector<Double>& frequency) const {
+  ComponentShape::visibility(scale, uvw, frequency);
+}
+
 Bool TwoSidedShape::isSymmetric() const {
   DebugAssert(ok(), AipsError);
   return True;

@@ -35,6 +35,7 @@
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/Cube.h>
 #include <casa/Arrays/Matrix.h>
+#include <casa/Arrays/MatrixIter.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Containers/Record.h>
 #include <casa/Containers/RecordFieldId.h>
@@ -293,13 +294,26 @@ void SkyCompRep::visibility(Cube<DComplex>& visibilities,
   // that transformation from different frames can happen and let it bite when some 
   // poor sucker try to use it
   MeasRef<MFrequency> measRef(MFrequency::REST); //at least lets call it lab frequency !
+  itsSpectrumPtr->sample(fscale, mvFreq, measRef);
+ 
 
-  for (uInt v = 0; v < nVis; v++) {
-    for (uInt u = 0; u < 3; u++) {
-      uvw(u) = uvws(u, v);
+  Matrix<DComplex> scales(nVis, nFreq);
+  itsShapePtr->visibility(scales, uvws, frequencies);
+  Matrix<DComplex> scales2(nFreq, nVis);
+  for(uInt k=0; k < nFreq; ++k ){
+    for (uInt j=0; j < nVis; ++j){
+      scales2(k,j)=scales(j,k)*fscale(k);
     }
-    // Scale by the specified frequency behaviour
-    itsSpectrumPtr->sample(fscale, mvFreq, measRef);
+  }
+  for (uInt p = 0; p < 4;  ++p) {
+    visibilities.yzPlane(p) = flux[p]*scales2;
+  }
+ /*
+  for (uInt v = 0; v < nVis; v++) {
+    uvw=uvws.column(v);
+    Matrix<Complex> plane;
+    plane.reference(visibilities.xyPlane(v));
+    // Scale by the specified frequency behaviour 
     for (uInt f = 0; f < nFreq; f++) {
       Double scale = itsShapePtr->visibility(uvw, frequencies(f)).real();
       scale *= fscale[f];
@@ -308,6 +322,9 @@ void SkyCompRep::visibility(Cube<DComplex>& visibilities,
       }
     }
   }
+    */
+
+
 }
 
 Bool SkyCompRep::fromRecord(String& errorMessage,
