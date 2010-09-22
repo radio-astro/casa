@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMSpectralGrid.cpp,v 1.11 2010/09/02 14:21:42 dbroguie Exp $"
+ * "@(#) $Id: ATMSpectralGrid.cpp,v 1.11.2.1 2010/09/20 11:48:48 dbroguie Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------
@@ -111,7 +111,6 @@ void SpectralGrid::add(unsigned int numChan,
 
   if(sbSide == LSB) { // LSB tuning
     // the LSB:
-    chSep = -fabs(chanSep.get());
     add(numChan, refChan, refFreq, chanSep); // LSB
     v_sidebandSide_[spwId] = LSB;
     v_sidebandType_[spwId] = sbType;
@@ -122,16 +121,16 @@ void SpectralGrid::add(unsigned int numChan,
     vv_assocNature_[vv_assocNature_.size() - 1] = v_assocNature;
 
     // the USB:
-    chSep = fabs(chanSep.get());
     spwId = v_transfertId_.size();
     v_loFreq_.push_back(refFreq.get() + intermediateFreq.get());
-    refChan = (unsigned int) ((double) refChan + 2. * intermediateFreq.get()
-        / chSep);
-    chSep = -chSep;
+    v_loFreq_[spwId] = refFreq.get() + intermediateFreq.get();
+
+    refFreq = refFreq + 2.*intermediateFreq.get();  // fix refFreq in the image band (refChan is unchanged)
+    chSep = -chanSep.get();
     add(numChan, refChan, refFreq, Frequency(chSep));
+
     v_sidebandSide_[spwId] = USB;
     v_sidebandType_[spwId] = sbType;
-    v_loFreq_[spwId] = refFreq.get() + intermediateFreq.get();
     v_assocSpwId[0] = v_numChan_.size() - 2;
     vv_assocSpwId_[vv_assocSpwId_.size() - 1] = v_assocSpwId;
     v_assocNature[0] = "LSB";
@@ -139,7 +138,6 @@ void SpectralGrid::add(unsigned int numChan,
 
   } else { // USB tuning
     // the USB:
-    chSep = fabs(chanSep.get());
     add(numChan, refChan, refFreq, chanSep);
     v_sidebandSide_[spwId] = USB;
     v_sidebandType_[spwId] = sbType;
@@ -151,14 +149,13 @@ void SpectralGrid::add(unsigned int numChan,
 
     // the LSB:
     spwId = v_transfertId_.size();
-    //    chSep = -fabs(chanSep.get());
-    chSep = fabs(chanSep.get());
-    refChan = (unsigned int) ((double) refChan + 2. * intermediateFreq.get()
-        / chSep);
-    add(numChan, refChan, refFreq, Frequency(chSep)); // LSB
+    v_loFreq_[spwId] = refFreq.get() - intermediateFreq.get();
+
+    refFreq = refFreq - 2.*intermediateFreq.get();  // fix refFreq in the image band (refChan is unchanged)
+    chSep = -chanSep.get();
+    add(numChan, refChan, refFreq, Frequency(chSep));
     v_sidebandSide_[spwId] = LSB;
     v_sidebandType_[spwId] = sbType;
-    v_loFreq_[spwId] = refFreq.get() - intermediateFreq.get();
     v_assocSpwId[0] = v_numChan_.size() - 2;
     vv_assocSpwId_[vv_assocSpwId_.size() - 1] = v_assocSpwId;
     v_assocNature[0] = "USB";
