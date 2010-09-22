@@ -95,10 +95,34 @@
 	There are five optional parameters for imview -- raster, contour, zoom, axes, and out.
 	each of these parameters can take a number of forms:
 
-	raster -- (string) image file to open
-	          (dict)   file (string)   => image file to open
-	                   scaling (float) => scaling power cycles
-
+	raster  -- (string) image file to open
+	           (dict)   file (string)     => image file to open
+	                    scaling (float)   => scaling power cycles
+	                    range (float*2)   => data range
+	                    colormap (string) => name of colormap
+	                    colorwedge (bool) => show color wedge?
+	contour -- (string) file to load as a contour
+	           (dict)   file (string)     => file to load
+	                    levels (float*N)  => relative levels
+	                    base (numeric)    => zero in relative levels
+	                    unit (numeric)    => one in the relative levels
+	zoom    -- (int)    integral zoom level
+	           (string) region file to load as the zoom region
+	           (dict)   blc (numeric*2)   => bottom left corner
+	                    trc (numeric*2)   => top right corner
+	                    coord (string)    => pixel or world
+	                    channel (int)     => chanel to display
+	           (dict)   &gt;region record&lt;   => record loaded e.g. rg.fromfiletorecord( )
+	axes    -- (string*3) demension to display on the x, y, and z axes
+	           (dict)     x               => dimension for x-axes
+	                      y               => dimension for y-axes
+	                      z               => dimension for z-axes
+	out     -- (string) file with a supported extension (jpg, pdf, eps, ps, png, xbm, xpm, ppm)
+	            (dict)    file (string)   => filename
+	                      format (string) => valid extension (extension of filename takes precidence)
+	                      scale (numeric) => amount to scale non-eps, non-ps output
+	                      dpi (numeric)   => dots-per-inch for eps or ps output
+	                      orient (string) => portrait or landscape
 	</example>
 </task>
 </casaxml>
