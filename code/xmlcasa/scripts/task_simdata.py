@@ -35,11 +35,16 @@ def simdata(
     casalog.origin('simdata')
     if verbose: casalog.filter(level="DEBUG2")
 
-    #from casa_in_py import saveinputs
-    #saveinputs(taskname="simdata",outfile=project+".simdata.last")
-
-
-
+    a=inspect.stack()
+    stacklevel=0
+    for k in range(len(a)):
+        if (string.find(a[k][1], 'ipython console') > 0):
+            stacklevel=k
+    myf=sys._getframe(stacklevel).f_globals
+    
+    saveinputs=myf['saveinputs']
+    saveinputs('simdata',project+".simdata.last")
+    
 
     # some hardcoded variables that may be reintroduced in future development
     relmargin=.5  # number of PB between edge of model and pointing centers
@@ -150,7 +155,8 @@ def simdata(
             model_refdir, coffs = util.average_direction(compdirs)
             model_center = cl.getspectrum(0)['frequency']['m0']
             # components don't yet support spectrum
-            model_width = "10GHz"
+            model_width = "2GHz"
+            msg("component-only simulation: setting bandwidth to 2GHz",priority="warn")
             model_nchan = 1
 
             cmax=0.0014 # ~5 arcsec
@@ -1326,11 +1332,27 @@ def simdata(
                                                           maxdiff/pl.sqrt(2.0)), overwrite = True)
             fidelityim = imagename + '.fidelity'
             ia.imagecalc(fidelityim, "abs('%s') / '%s'" % (convolved, absdiff), overwrite = True)
-            ia.done()
 
             msg("fidelity image calculated",origin="analysis")
 
+            # scalar fidelity
+            absconv = imagename + '.absconv'
+            ia.imagecalc(absconv, "abs('%s')" % convolved)
+            ia.done()
+        
+            ia.open(absconv)
+            modelstats = ia.statistics(robust=True, verbose=False,list=False)
+            maxmodel=modelstats['max']            
+            if maxmodel!=maxmodel: maxmodel=0.
+            if type(maxmodel)!=type(0.):
+                if maxmodel.__len__()>0: 
+                    maxmodel=maxmodel[0]
+                else:
+                    maxmodel=0.
+            ia.done()
 
+            scalarfidel=maxmodel/maxdiff
+            msg("fidelity range (max model / rms difference) = "+str(scalarfidel),origin="analysis")
 
             # now, what does the user want to actually display?
             if len(stnx)<=0:

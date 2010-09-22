@@ -922,7 +922,21 @@ class simutil:
                    antennalist=None,
                    doimnoise=None):
         
-        msfile="tmp.ms"
+        import glob
+        tmpname="tmp"+str(os.getpid())
+        i=0
+        while i<10 and len(glob.glob(tmpname+"*"))>0:
+            tmpname="tmp"+str(os.getpid())+str(i)
+            i=i+1
+        if i>=9:
+            xx=glob.glob(tmpname+"*")
+            for k in range(len(xx)):
+                if os.path.isdir(xx[k]):
+                    cu.removetable(xx[k])
+                else:
+                    os.remove(xx[k])
+
+        msfile=tmpname+".ms"
         sm.open(msfile)
 
         if antennalist==None:
@@ -1036,7 +1050,7 @@ class simutil:
         sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
                     antefficiency=eta_a,trx=t_rx,
                     tground=t_ground,tcmb=t_cmb,pwv=str(pwv)+"mm",
-                    mode="tsys-atm",table="tmp")
+                    mode="tsys-atm",table=tmpname)
         
         if doimnoise:
             sm.corrupt()
@@ -1048,19 +1062,19 @@ class simutil:
             cellsize=qa.quantity(3.e3/250./qa.convert(model_start,"GHz")["value"],"arcsec")  # need better cell determination - 250m?!
             cellsize=[cellsize,cellsize]
             # very light clean - its an empty image!
-            self.image("tmp.ms","tmp",
+            self.image(tmpname+".ms",tmpname,
                        "csclean",cellsize,[128,128],
                        "J2000 00:00:00.00 "+qa.angle(dec),
                        500,"0.01mJy","natural",[],"I")
-            ia.open("tmp.image")
+            ia.open(tmpname+".image")
             stats= ia.statistics(robust=True, verbose=False,list=False)
             ia.done()
             imnoise=stats["rms"][0]
         else:
             imnoise=0.
                 
-        if os.path.exists("tmp.T.cal"):
-            tb.open("tmp.T.cal")
+        if os.path.exists(tmpname+".T.cal"):
+            tb.open(tmpname+".T.cal")
             gain=tb.getcol("GAIN")
         #RI TODO average instead of first?
             tb.done()
@@ -1068,22 +1082,13 @@ class simutil:
         else:
             gain=0.
  
-        if os.path.exists("tmp.ms"):
-            #shutil.rmtree("tmp.ms")
-            cu.removetable("tmp.ms")
-        if os.path.exists("tmp.T.cal"):
-            cu.removetable("tmp.T.cal")
-        if os.path.exists("tmp.model"):
-            cu.removetable("tmp.model")
-        if os.path.exists("tmp.flux"):
-            shutil.rmtree("tmp.flux")
-#        if os.path.exists("tmp.psf"):
-#            shutil.rmtree("tmp.psf")
-#        if os.path.exists("tmp.image"):
-#            shutil.rmtree("tmp.image")
-#        if os.path.exists("tmp.residual"):
-#            shutil.rmtree("tmp.residual")
-
+        
+        xx=glob.glob(tmpname+"*")
+        for k in range(len(xx)):
+            if os.path.isdir(xx[k]):
+                cu.removetable(xx[k])
+            else:
+                os.remove(xx[k])
 
         #return 1./(gain[0][0][0].real)**2 /pl.sqrt(.5*nant*(nant-1))
         if doimnoise:
