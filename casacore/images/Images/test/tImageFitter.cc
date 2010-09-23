@@ -516,6 +516,20 @@ int main() {
              	AlwaysAssert(nearAbs(positionAngle, expectedPositionAngle[i], 5e-6), AipsError);
         	}
         }
+        {
+        	writeTestString("Test of CAS-2318 fix");
+
+            ImageFitter fitter(
+            	"gauss_no_pol.fits", "", "", 0, "", "",
+             	Vector<Float>(0), Vector<Float>(0), "",
+             	"", ""
+            );
+            ComponentList compList = fitter.fit();
+            // Just the fact that an exception isn't thrown verifies the fix
+    		Vector<Quantity> flux;
+    		compList.getFlux(flux,0);
+    		AlwaysAssert(near(flux(0).getValue(), 394312.65593496, 1e-5), AipsError);
+        }
         cout << "ok" << endl;
     }
     catch (AipsError x) {
