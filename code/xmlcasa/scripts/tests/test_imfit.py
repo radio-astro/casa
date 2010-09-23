@@ -80,6 +80,7 @@ two_gaussians_image = "two_gaussian_model.fits"
 stokes_image = "imfit_stokes.fits"
 two_gaussians_estimates = "estimates_2gauss.txt"
 expected_new_estimates = "expected_new_estimates.txt"
+gauss_no_pol = "gauss_no_pol.fits"
 msgs = ''
 
 # are the two specified numeric values relatively close to each other? 
@@ -113,20 +114,20 @@ def count_matches(filename, match_string):
     return count
 
 class imfit_test(unittest.TestCase):
-    '''ADD TO SYSTEM LATER'''
     
     def setUp(self):
         datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/imfit/'
-        os.system('cp -r ' +datapath+noisy_image +' '+noisy_image)
-        os.system('cp -r ' +datapath+expected_model +' '+expected_model)
-        os.system('cp -r ' +datapath+expected_residual +' '+expected_residual)
-        os.system('cp -r ' +datapath+convolved_model +' '+convolved_model)
-        os.system('cp -r ' +datapath+estimates_convolved +' '+estimates_convolved)
-        os.system('cp -r ' +datapath+two_gaussians_image +' '+two_gaussians_image)
-        os.system('cp -r ' +datapath+two_gaussians_estimates +' '+two_gaussians_estimates)
-        os.system('cp -r ' +datapath+expected_new_estimates +' '+expected_new_estimates)
-        os.system('cp -r ' +datapath+stokes_image +' '+stokes_image)
-    
+        os.system('cp -r ' +datapath + noisy_image + ' ' +noisy_image)
+        os.system('cp -r ' +datapath + expected_model + ' ' +expected_model)
+        os.system('cp -r ' +datapath + expected_residual + ' ' +expected_residual)
+        os.system('cp -r ' +datapath + convolved_model + ' ' +convolved_model)
+        os.system('cp -r ' +datapath + estimates_convolved + ' ' +estimates_convolved)
+        os.system('cp -r ' +datapath + two_gaussians_image + ' ' +two_gaussians_image)
+        os.system('cp -r ' +datapath + two_gaussians_estimates + ' ' +two_gaussians_estimates)
+        os.system('cp -r ' +datapath + expected_new_estimates + ' ' + expected_new_estimates)
+        os.system('cp -r ' +datapath + stokes_image + ' ' + stokes_image)
+        os.system('cp -r ' +datapath + gauss_no_pol + ' ' + gauss_no_pol)
+
     def tearDown(self):
         os.system('rm -rf ' +noisy_image)
         os.system('rm -rf ' +expected_model)
@@ -475,8 +476,11 @@ class imfit_test(unittest.TestCase):
         global msgs
     
         def run_fitcomponents():
-            ia.open(convolved_model)
-            return ia.fitcomponents(estimates=estimates_convolved)
+            myia = iatool.create()
+            myia.open(convolved_model)
+            res = myia.fitcomponents(estimates=estimates_convolved)
+            myia.done()
+            return res
         def run_imfit():
             default('imfit')
             return imfit(imagename=convolved_model, estimates=estimates_convolved)
@@ -547,11 +551,15 @@ class imfit_test(unittest.TestCase):
             logfile = os.getcwd() + "/imfit.log" + str(i)
             if (i == 0):
                 def run_fitcomponents(append=None):
-                    ia.open(two_gaussians_image)
+                    myia = iatool.create()
+                    myia.open(two_gaussians_image)
                     if (append == None):
-                        return ia.fitcomponents(estimates=two_gaussians_estimates, logfile=logfile)
+                        res = myia.fitcomponents(estimates=two_gaussians_estimates, logfile=logfile)
                     else:
-                        return ia.fitcomponents(estimates=two_gaussians_estimates, logfile=logfile, append=append)
+                        res = myia.fitcomponents(estimates=two_gaussians_estimates, logfile=logfile, append=append)
+                    myia.done()
+                    return res
+                
                 code = run_fitcomponents
                 method = test + "ia.fitcomponents: "
             else:
@@ -657,8 +665,10 @@ class imfit_test(unittest.TestCase):
         test = 'test_polarization_image: '
         global msgs
         def run_fitcomponents(stokes):
-            ia.open(stokes_image)
-            return ia.fitcomponents(stokes=stokes)
+            myia = iatool.create()
+            myia.open(stokes_image)
+            res = myia.fitcomponents(stokes=stokes)
+            return res
         def run_imfit(stokes):
             default('imfit')
             return imfit(imagename=stokes_image, stokes=stokes)
@@ -724,6 +734,29 @@ class imfit_test(unittest.TestCase):
         
         self.assertTrue(success,msgs)         
     
+    def test_CAS_2318(self):
+        "Verification of CAS-2318 fix"
+        success = True
+        test = 'test_CAS_2318: '
+        global msgs
+        def run_fitcomponents():
+            myia = iatool.create()
+            myia.open(gauss_no_pol)
+            res = myia.fitcomponents()
+            myia.done()
+            return res
+        def run_imfit():
+            default('imfit')
+            return imfit(imagename=gauss_no_pol)
+        
+        for code in [run_fitcomponents, run_imfit]:
+
+            # Just the fact that an exception isn't thrown verifies the fix
+            clist = code()['results']
+            got = clist['component0']['flux']['value'][0]
+            expected = 394312.65593496
+            self.assertTrue(near(got, expected, 1e-5))
+
 
 def suite():
     return [imfit_test]

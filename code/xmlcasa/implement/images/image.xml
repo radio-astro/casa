@@ -4183,8 +4183,8 @@ tool attached to the residual (continuum subtracted) image.
         </param>
         
         <param type="string" direction="in" name="stokes">
-            <description>The polarization to use in the fit. Default is I.</description>
-            <value>I</value>
+            <description>The polarization to use in the fit. Default is to use the first stokes plane.</description>
+            <value/>
         </param>
         
         <param type="any" direction="in" name="mask">
