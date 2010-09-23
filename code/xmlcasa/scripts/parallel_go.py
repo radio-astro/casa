@@ -1300,6 +1300,61 @@ class cluster(object):
       '''
       return self.__client.keys()
 
+   def push(self, **kwargs):
+      '''set values to the engines
+      @param kekword value to distribute
+      @param targets, the engines of interest
+      By default, this function set the keyword values to all engines.
+      To set values on a subset of engines, use kekword parameter targets,
+      whick takes integer or array of integer of engine ids.
+      You can also use function pgk to set values onto the engines. 
+      Example:
+      c.push(a=[1,3,7.1])
+      c.pull('a')
+      {0: [1, 3, 7.0999999999999996], 1: [1, 3, 7.0999999999999996]}
+      c.push(b=[1.2,3.7], targets=1)
+      c.pull('b',[1])
+      {1: [1.2, 3.7000000000000002]}
+      c.pull('b')
+      {1: [1.2, 3.7000000000000002]}
+
+      '''
+
+      keys = kwargs.keys()
+      #keys.sort()
+      if len(keys)==0:
+          return False
+
+      tgt=[]
+      targets=None
+      for kw in keys:
+         if kw.lower()=='targets':
+            targets=kwargs[kw]
+            break
+
+      if targets=='all' or targets==None or \
+         type(targets)==list and len(targets)==0:
+          tgt=list(xrange(0, len(self.__engines))) 
+      elif type(targets)==list:
+          for j in targets:
+              if type(j)==types.IntType and j>=0:
+                  tgt.append(j)
+      elif type(targets)==int and targets>=0:
+          tgt.append(targets)
+           
+      if len(tgt)==0:
+           print 'no target engines'
+           return False
+
+      ok=True
+      for i in tgt: 
+          try:
+              self.__client.push(dict(kwargs),i)
+          except:
+              ok=Fale 
+
+      return ok
+
    def pull(self, key, targets='all'):
       '''get the value of a key
       @param key the var of interest
