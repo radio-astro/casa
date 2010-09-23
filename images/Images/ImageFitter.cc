@@ -232,7 +232,8 @@ namespace casa {
         // <todo> kludge because Flux class is really only made for I, Q, U, and V stokes
 
         String iquv = "IQUV";
-        _kludgedStokes = (iquv.index(_stokesString) == String::npos) ? "I" : _stokesString;
+        _kludgedStokes = (iquv.index(_stokesString) == String::npos) || _stokesString.empty()
+        	? "I" : _stokesString;
         // </todo>
         //_doRegion(box, regionName, regionPtr);
         if(estimatesFilename.empty()) {
