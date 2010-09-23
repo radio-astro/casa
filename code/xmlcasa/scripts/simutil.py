@@ -920,7 +920,8 @@ class simutil:
     def sensitivity(self, freq, bandwidth, etime, elevation, pwv=None,
                    telescope=None, diam=None, nant=None,
                    antennalist=None,
-                   doimnoise=None):
+                   doimnoise=None,
+                   integration=None):
         
         import glob
         tmpname="tmp"+str(os.getpid())
@@ -935,7 +936,7 @@ class simutil:
                     cu.removetable(xx[k])
                 else:
                     os.remove(xx[k])
-
+ 
         msfile=tmpname+".ms"
         sm.open(msfile)
 
@@ -1024,7 +1025,10 @@ class simutil:
                     sourcedirection="J2000 00:00:00.00 "+qa.angle(dec),
                     calcode="OBJ", distance='0m')
         reftime = me.epoch('TAI', "2012/01/01/00:00:00")
-        sm.settimes(integrationtime=etime, usehourangle=True, 
+        if integration==None:
+            integration=qa.mul(etime,0.1)        
+        self.msg("observing for "+qa.tos(etime)+" with integration="+qa.tos(integration))
+        sm.settimes(integrationtime=integration, usehourangle=True, 
                     referencetime=reftime)
 
         sm.observe(sourcename="src1", spwname="band1",
@@ -1081,8 +1085,10 @@ class simutil:
             gain=1./(gain[0][0][0].real)**2
         else:
             gain=0.
+
+        nint= qa.convert(etime,'s')['value'] / qa.convert(integration,'s')['value'] 
+        gain=gain/pl.sqrt(nint)
  
-        
         xx=glob.glob(tmpname+"*")
         for k in range(len(xx)):
             if os.path.isdir(xx[k]):
@@ -1090,7 +1096,6 @@ class simutil:
             else:
                 os.remove(xx[k])
 
-        #return 1./(gain[0][0][0].real)**2 /pl.sqrt(.5*nant*(nant-1))
         if doimnoise:
             return gain /pl.sqrt(.5*nant*(nant-1)), imnoise
         else:

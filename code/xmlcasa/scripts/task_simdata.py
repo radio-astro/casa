@@ -41,10 +41,11 @@ def simdata(
         if (string.find(a[k][1], 'ipython console') > 0):
             stacklevel=k
     myf=sys._getframe(stacklevel).f_globals
-    
+     
     saveinputs=myf['saveinputs']
     saveinputs('simdata',project+".simdata.last")
-    
+
+
 
     # some hardcoded variables that may be reintroduced in future development
     relmargin=.5  # number of PB between edge of model and pointing centers
@@ -1332,14 +1333,13 @@ def simdata(
                                                           maxdiff/pl.sqrt(2.0)), overwrite = True)
             fidelityim = imagename + '.fidelity'
             ia.imagecalc(fidelityim, "abs('%s') / '%s'" % (convolved, absdiff), overwrite = True)
-
             msg("fidelity image calculated",origin="analysis")
 
             # scalar fidelity
             absconv = imagename + '.absconv'
             ia.imagecalc(absconv, "abs('%s')" % convolved)
             ia.done()
-        
+            
             ia.open(absconv)
             modelstats = ia.statistics(robust=True, verbose=False,list=False)
             maxmodel=modelstats['max']            
@@ -1350,9 +1350,9 @@ def simdata(
                 else:
                     maxmodel=0.
             ia.done()
-
             scalarfidel=maxmodel/maxdiff
             msg("fidelity range (max model / rms difference) = "+str(scalarfidel),origin="analysis")
+
 
             # now, what does the user want to actually display?
             if len(stnx)<=0:
