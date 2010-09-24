@@ -258,6 +258,19 @@ class imagecont():
         sbim.close()
         ia.close()
         return True
+
+    def cleanupcubeimages(self, readyputchan, doneputchan, imagename, nchanchunk, chanchunk):
+        """
+        This function will put the True values of readyputchan into the final cubes and set the doneputchan to True
+        Confused ..read the code 
+        """
+        for k in range(nchanchunk):
+            if(readyputchan[k] and (not doneputchan[k])):
+                self.putchanimage(imagename+'.model', imagename+str(k)+'.model', k*chanchunk)
+                self.putchanimage(imagename+'.residual', imagename+str(k)+'.residual', k*chanchunk)
+                self.putchanimage(imagename+'.image', imagename+str(k)+'.image', k*chanchunk)
+                doneputchan[k]=True
+
     def putchanimage(self, cubimage,inim,chan):
         """
         put channel image back to a pre-exisiting cubeimage
