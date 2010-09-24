@@ -298,10 +298,12 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	   /* If exiting, call 'solveResiduals' with modelToMS = True to write the model to the MS */
 	   if(abs(stopflag) || itercountmaj==99) 
 	   {
+	       os << "Calculating final residual images" << LogIO::POST;
 	       solveResiduals(se,True);
 	   }
 	   else 
 	   {
+	       os << "Calculating new residual images (major cycle)" << LogIO::POST;
 	       solveResiduals(se);
 	   }
 	   

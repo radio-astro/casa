@@ -2186,8 +2186,10 @@ def msmfsCalcAlphaBeta(imtemplate="",taylorlist=[],namealpha="",namebeta="",thre
     if(nterms>1):
      ia.open(namealpha);
      ia.putchunk(alpha);
+     ia.setbrightnessunit(unit=' ');
      ia.close();
     if(nterms>2):
      ia.open(namebeta);
      ia.putchunk(beta);
+     ia.setbrightnessunit(unit=' ');
      ia.close();

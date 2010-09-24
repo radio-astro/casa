@@ -220,7 +220,7 @@ traceEvent(1,"Entering imager::defaults",25);
   stokes_p="I"; npol_p=1;
   nscales_p=5;
   ntaylor_p=1;
-  reffreq_p=1.4e+09;
+  reffreq_p=0.0;
   scaleMethod_p="nscales";  
   scaleInfoValid_p=False;
   dataMode_p="none";
@@ -822,6 +822,12 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
        << " GHz, synthesized continuum bandwidth = "
        << MFrequency(Quantity(finc, "Hz")).get("GHz").getValue()
        << " GHz" << LogIO::POST;
+
+    if(ntaylor_p>1 && reffreq_p==0.0) 
+    {
+	    reffreq_p = fmean;
+	    os << "Setting center frequency as MS-MFS reference frequency" << LogIO::POST;
+    }
   }
   
   else if(imageMode_p.contains("FREQ")) {

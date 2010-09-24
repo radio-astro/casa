@@ -330,6 +330,17 @@ class clean_test1(unittest.TestCase):
         self.assertEqual(self.res, None)
         self.assertTrue(os.path.exists(self.img+'.image'))
          
+    def test41(self):
+        '''Clean 41: Test nterms=2 and ref-freq > maximum-frequency'''
+        # This tests if negative-weights are being correctly allowed through the gridders
+        self.res=clean(vis=self.msfile,imagename=self.img,nterms=2,reffreq='25.0GHz',niter=5);
+        self.assertEqual(self.res,None);
+
+    def test42(self):
+        '''Clean42: Test nterms=2, with only one channel whose frequency is same as ref-freq'''
+        # This tests if a numerical failure-mode is detected and returned without fuss.
+        self.res=clean(vis=self.msfile,imagename=self.img,nterms=2,reffreq='23691.4682MHz',spw='0:0');
+        self.assertFalse(self.res);
 
 
 class clean_test2(unittest.TestCase):

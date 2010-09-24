@@ -53,8 +53,6 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                 print '*** Error *** In conversion of reffreq=\'',reffreq,'\' to a numerical value';
                 raise Exception, instance
             reffreqVal=rff['value'];  # This is the frequency in Hz
-            if(reffreqVal == 0.0):
-                raise Exception,'Reference Frequency is 0.0. Please set a value within your data range.';
             #qat.close()
             
         # if (gridmode =='widefield'):
@@ -419,16 +417,18 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
         # intensity is larger than 5 times the user-specified threshold.
         #
         if (localAlgorithm=='msmfs'):
+            casalog.post('Output Taylor-coefficient images : ' + str(restoredimage));
             calcspec = True;
             for ii in range(0,len(restoredimage[0:])):
 	       if( not os.path.exists(restoredimage[ii]) ):
                    calcspec = False;
             if(calcspec):
                casalog.post('Calculating Spectral Index for regions where total intensity > 5 x threshold = '+str(5*(qa.quantity(threshold)['value']))+' '+qa.quantity(threshold)['unit'],'INFO') 
+	       casalog.post('Output Spectral Index image : ' + imset.imagelist[0]+'.image.alpha' );
                msmfsCalcAlphaBeta(imtemplate=restoredimage[0],
                                   taylorlist=restoredimage[0:],
-                                  namealpha=imset.imagelist[0]+'.restored.alpha',
-                                  namebeta=imset.imagelist[0]+'.restored.beta',
+                                  namealpha=imset.imagelist[0]+'.image.alpha',
+                                  namebeta=imset.imagelist[0]+'.image.beta',
                                   threshold=5*(qa.convert(threshold,'Jy')['value']))
 
         if dochaniter:
