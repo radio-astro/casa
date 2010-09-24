@@ -61,17 +61,18 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
     try:
         casalog.origin('split')
 
+        myms = mstool.create()
         if ((type(vis)==str) & (os.path.exists(vis))):
-            ms.open(vis, nomodify=True)
+            myms.open(vis, nomodify=True)
         else:
             raise Exception, 'Visibility data set not found - please verify the name'
         if os.path.exists(outputvis):
-            ms.close()
+            myms.close()
             raise Exception, "Output MS %s already exists - will not overwrite." % outputvis
 
         # No longer needed.  When did it get put in?  Note that the default
-        # spw='*' in ms.split ends up as '' since the default type for a variant
-        # is BOOLVEC.  (Of course!)  Therefore both split and ms.split must
+        # spw='*' in myms.split ends up as '' since the default type for a variant
+        # is BOOLVEC.  (Of course!)  Therefore both split and myms.split must
         # work properly when spw=''.
         #if(spw == ''):
         #    spw = '*'
@@ -133,7 +134,7 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
             cavms = tempfile.mkdtemp(suffix=outputvis)
 
             casalog.post('Channel averaging to ' + cavms)
-            ms.split(outputms=cavms,     field=field,
+            myms.split(outputms=cavms,     field=field,
                      spw=spw,            step=width,
                      baseline=antenna,   subarray=array,
                      timebin='',         time=timerange,
@@ -153,8 +154,8 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
             scan = ''
             uvrange = ''
 
-            ms.close()
-            ms.open(cavms)
+            myms.close()
+            myms.open(cavms)
             casalog.post('Starting time averaging')
 
         if keepflags:
@@ -162,7 +163,7 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
         else:
             taqlstr = 'NOT (FLAG_ROW OR ALL(FLAG))'
 
-        ms.split(outputms=outputvis,  field=field,
+        myms.split(outputms=outputvis,  field=field,
                  spw=spw,             step=width,
                  baseline=antenna,    subarray=array,
                  timebin=timebin,     time=timerange,
@@ -171,34 +172,34 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
                  ignorables=ignorables,
                  correlation=correlation,
                  taql=taqlstr)
-        ms.close()
+        myms.close()
 
         if do_both_chan_and_time_avg:
             import shutil
             shutil.rmtree(cavms)
         
         # Write history to output MS, not the input ms.
-        ms.open(outputvis, nomodify=False)
-        ms.writehistory(message='taskname=split', origin='split')
-        ms.writehistory(message='vis         = "'+str(vis)+'"',
+        myms.open(outputvis, nomodify=False)
+        myms.writehistory(message='taskname=split', origin='split')
+        myms.writehistory(message='vis         = "'+str(vis)+'"',
                         origin='split')
-        ms.writehistory(message='outputvis   = "'+str(outputvis)+'"',
+        myms.writehistory(message='outputvis   = "'+str(outputvis)+'"',
                         origin='split')
-        ms.writehistory(message='field       = "'+str(field)+'"',
+        myms.writehistory(message='field       = "'+str(field)+'"',
                         origin='split')
-        ms.writehistory(message='spw       = '+str(spw), origin='split')
-        ms.writehistory(message='width       = '+str(width), origin='split')
-        ms.writehistory(message='antenna     = "'+str(antenna)+'"',
+        myms.writehistory(message='spw       = '+str(spw), origin='split')
+        myms.writehistory(message='width       = '+str(width), origin='split')
+        myms.writehistory(message='antenna     = "'+str(antenna)+'"',
                         origin='split')
-        ms.writehistory(message='timebin     = "'+str(timebin)+'"',
+        myms.writehistory(message='timebin     = "'+str(timebin)+'"',
                         origin='split')
-        ms.writehistory(message='timerange   = "'+str(timerange)+'"',
+        myms.writehistory(message='timerange   = "'+str(timerange)+'"',
                         origin='split')
-        ms.writehistory(message='datacolumn  = "'+str(datacolumn)+'"',
+        myms.writehistory(message='datacolumn  = "'+str(datacolumn)+'"',
                         origin='split')
-        ms.writehistory(message='ignorables  = "'+str(ignorables)+'"',
+        myms.writehistory(message='ignorables  = "'+str(ignorables)+'"',
                         origin='split')
-        ms.close()
+        myms.close()
 
 
     except Exception, instance:

@@ -65,28 +65,30 @@ def setjy(vis=None,field=None,spw=None,modimage=None,scalebychan=None,fluxdensit
        """
 
        try:
-
          casalog.origin('setjy')
 
+         myim = imtool.create()
+         myms = mstool.create()
+
          if ((type(vis)==str) & (os.path.exists(vis))):
-                     im.open(vis, usescratch=True)
+                myim.open(vis, usescratch=True)
          else:
-                     raise Exception, 'Visibility data set not found - please verify the name'
+                raise Exception, 'Visibility data set not found - please verify the name'
 
-         im.setjy(field=field,spw=spw,modimage=modimage,fluxdensity=fluxdensity,standard=standard, scalebychan=scalebychan)
-         im.close()
+         myim.setjy(field=field, spw=spw, modimage=modimage, fluxdensity=fluxdensity,
+                    standard=standard, scalebychan=scalebychan)
+         myim.close()
 
-
-              #write history
-         ms.open(vis,nomodify=False)
-         ms.writehistory(message='taskname = setjy',origin='setjy')
-         ms.writehistory(message='vis         = "'+str(vis)+'"',origin='setjy')
-         ms.writehistory(message='field       = "'+str(field)+'"',origin='setjy')
-         ms.writehistory(message='spw       = '+str(spw),origin='setjy')
-         ms.writehistory(message='modimage = '+str(modimage),origin='setjy')
-         ms.writehistory(message='fluxdensity = '+str(fluxdensity),origin='setjy')
-         ms.writehistory(message='standard    = "'+str(standard)+'"',origin='setjy')
-         ms.close()
+         #write history
+         myms.open(vis,nomodify=False)
+         myms.writehistory(message='taskname = setjy',origin='setjy')
+         myms.writehistory(message='vis         = "'+str(vis)+'"',origin='setjy')
+         myms.writehistory(message='field       = "'+str(field)+'"',origin='setjy')
+         myms.writehistory(message='spw       = '+str(spw),origin='setjy')
+         myms.writehistory(message='modimage = '+str(modimage),origin='setjy')
+         myms.writehistory(message='fluxdensity = '+str(fluxdensity),origin='setjy')
+         myms.writehistory(message='standard    = "'+str(standard)+'"',origin='setjy')
+         myms.close()
 
        except Exception, instance:
               print '*** Error ***',instance
