@@ -1085,8 +1085,9 @@ void NewMSSimulator::observe(const String& sourceName,
 			     const double& state_cal=0.,
 			     const double& state_load=0.,
 			     const unsigned int state_sub_scan=0,
-			     const String& state_obs_mode="OBSERVE_TARGET.ON_SOURCE"
-)
+			     const String& state_obs_mode="OBSERVE_TARGET.ON_SOURCE",
+			     const String& observername="CASA simulator",
+			     const String& projectname="CASA simulation")
 {
   Vector<String> sourceNames(1,sourceName);  
   Vector<Quantity> qStartTimes(1,qStartTime);
@@ -1094,7 +1095,7 @@ void NewMSSimulator::observe(const String& sourceName,
   Vector<MDirection> directions;  // constructs Array<T>(IPosition(1,0))
 
   NewMSSimulator::observe(sourceNames,spWindowName,qStartTimes,qStopTimes,directions,
-			  add_observation,state_sig,state_ref,state_cal,state_load,state_sub_scan,state_obs_mode);
+			  add_observation,state_sig,state_ref,state_cal,state_load,state_sub_scan,state_obs_mode,observername,projectname);
 }
 
 
@@ -1113,8 +1114,9 @@ void NewMSSimulator::observe(const Vector<String>& sourceNames,
 			     const double& state_cal=0.,
 			     const double& state_load=0.,
 			     const unsigned int state_sub_scan=0,
-			     const String& state_obs_mode="OBSERVE_TARGET.ON_SOURCE"
-)
+			     const String& state_obs_mode="OBSERVE_TARGET.ON_SOURCE",
+			     const String& observername="CASA simulator",
+			     const String& projectname="CASA simulation")
 {  
 
   // It is assumed that if there are multiple pointings, that they 
@@ -1301,7 +1303,8 @@ void NewMSSimulator::observe(const Vector<String>& sourceNames,
     timeRange(0)=Tstart;
     timeRange(1)=Tend;
     obsc.timeRange().put(nobsrow,timeRange);
-    obsc.observer().put(nobsrow,"CASA simulator");
+    obsc.observer().put(nobsrow,observername);
+    obsc.project().put(nobsrow,projectname);
     
     nobsrow= obsc.nrow();
     Vector<Int> tmpids(row+1);
