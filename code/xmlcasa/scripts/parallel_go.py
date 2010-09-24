@@ -9,6 +9,7 @@ import time
 import types
 import inspect
 import casadef
+import numpy as np
 from math import *
 from get_user import get_user
 
@@ -998,126 +999,112 @@ class cluster(object):
    def pgk(self, **kwargs):
       '''Parallel execution to set keywords
 
-      @param **kwargs available 
-          special keyword options are
-             job=<str> or jobname=<str>
-             block=<True/False>
+      @param **kwargs keyword args 
 
       Example:
-      c.pgk(xx={0:5,2:'c'},action='write')
-      action : write
-      xx : {0: 5, 2: 'c'}
-      0 xx=5
-      1
-      2 xx='c'
-      3
-
-      c.pgk(xx={0:5,2:'c'},action='run')
-      c.pull('xx')
-      {0: 5, 2: 'c'}
-
+      x=np.zeros((3,3))
+      c.pgk(c={1:x},d=6,t='b',s={0:'y'})
+      c.pull('c')
+      {1: array([[ 0.,  0.,  0.],
+                 [ 0.,  0.,  0.],
+                 [ 0.,  0.,  0.]])}
+      c.pull('d')
+      {0: 6, 1: 6}
+      c.pull('s')
+      {0: 'y'}
+      c.pull('t')
+      {0: 'b', 1: 'b'}
       '''
-
-      # set default action
-      pgTask=None
-      pgAction='run'
-      pgBlock=False
-      pgJob="NoName"
 
       tasks={}
       for j in self.__client.get_ids():
-         tasks[j]=[]
+         tasks[j]=dict()
       
       #print '-' * 10, 'kargs:'
       keys = kwargs.keys()
       #keys.sort()
 
-      for kw in keys:
-         #print kw
-         if kw.lower()=='action':
-            pgAction=kwargs[kw]
-         if kw.lower()=='task' and \
-            type(kwargs[kw])==types.StringType:
-             pgTask=kwargs[kw]
-         if kw.lower()=='block' and kwargs[kw]==True:
-             pgBlock=True
-         if (kw.lower()=='job' or kw.lower()=='jobname') and \
-            type(kwargs[kw])==types.StringType :
-             pgJob=kwargs[kw]
-
-      if type(pgAction)!=types.StringType or \
-        (pgAction.lower()!='run' and \
-        pgAction.lower()!='check'):
-         pgAction='write'
-      #print 'pgAction', pgAction
-
       for kw in keys: 
          vals=kwargs[kw]
-         print kw, ":", vals
+         #print kw, ":", vals
          if type(vals)==types.DictType:
             for j in vals.keys():
                if type(j)!=types.IntType or j<0:
                   print ('task id', j, 
                          'must be a positive integer')
-                  return None
+                  pass
                else:
-                  st=kw+'='
-                  if type(vals[j])==types.StringType:
-                     st=st+"'"+vals[j]+"'"
-                  else:
-                     st=st+str(vals[j])
-                  tasks[j].append(st)
+                  tasks[j][kw]=vals[j]
          else:
-            if kw=='task':
-               pgTask=vals
-            elif kw=='action':
-               pass
-            else:
-               for i in xrange(0, len(self.__engines)): 
-                  st=kw+'='
-                  if type(vals)==types.StringType:
-                     st=st+"'"+vals+"'"
-                  else:
-                     st=st+str(vals)
-                  tasks[i].append(st)
+            for j in tasks.keys():
+               tasks[j][kw]=vals
 
-      if pgAction=='write':
-         if (pgTask==None or pgTask==''):
-            for i in tasks.keys():      
-               print i, string.join(tasks[i], ',') 
-         else:
-            for i in tasks.keys():      
-               print i, pgTask+"("+ \
-                     string.join(tasks[i], ',')+")" 
-         return None
+      #print 'tasks', tasks
+
+      for i in tasks.keys():      
+         #print 'dict'
+         self.__client.push(tasks[i], i, True)
+      return tasks
+
+   def make_command(self, func, **kwargs):
+      '''Make command strings to be distributed to engines
+
+      @func function name 
+      @kwargs **kwargs available 
+
+      Example:
+      x=np.ones((3,3))
+      c.make_command(func=None,c={1:x},d=6,t='b',s={0:'y'})
+      {0: 's="y"; t="b"; d=6',
+       1: 'c=array([[ 1., 1., 1.],\n[ 1., 1., 1.],\n[ 1., 1., 1.]]); t="b"; d=6'}
+      c.make_command(func='g',c={1:x},d=6,t='b',s={0:'y'})
+      {0: 'g(s="y", t="b", d=6)',
+       1: 'g(c=array([[1., 1., 1.],\n[1., 1., 1.],\n[1., 1., 1.]]), t="b", d=6)'}
+      '''
+
+      tasks=self.pgk(**kwargs)
+
+      if func!=None and type(func)!=str:
+        print 'func must be a str'
+        return None
+
+      if len(tasks)==0:
+        print 'no parameters specified'
+        return None
+
+      if func==None or len(str.strip(func))==0:
+         func=''
+
+      func=str.strip(func)
+
+      cmds=dict()
+      for i in tasks.keys(): 
+        cmd=''
+        for (k, v) in tasks[i].iteritems():
+          cmd+=k+'='
+          if type(v)==str:
+              cmd+='"'+v+'"'
+          elif type(v)==np.ndarray:
+              cmd+=repr(v)
+          else:
+              cmd+=str(v)
+          if func=='':
+            cmd+='; '
+          else:
+            cmd+=', '
+        cmd=cmd[0:-2]
+        if func!='':
+           cmd=func+'('+cmd+')'
+        cmds[i]=cmd
+      return cmds
+
+    #for i in tasks.keys():      
+    #   print i, string.join(tasks[i], ',') 
+    #else:
+    #   for i in tasks.keys():      
+    #      print i, pgTask+"("+ \
+    #                 string.join(tasks[i], ',')+")" 
       
-      if pgAction=='run':
-         #print 'run keyword'
-         if (pgTask==None or pgTask==''):
-            for i in tasks.keys():      
-               cmd=string.join(tasks[i], '\n')
-               #print 'cmd', cmd
-               #self.__client.execute(cmd, i)
-               self.__client.push(dict(job=cmd), i)
-
-            #print 'cmd', cmd
-            return self.__client.execute('exec(job)',
-                         block=pgBlock,targets=tasks.keys())
-            #self.__result[job]=self.__client.execute(
-            #  'exec(job)',block=pgBlock,targets=tasks.keys())
-           
-         else:
-            for i in tasks.keys():      
-               cmd=pgTask+"("+string.join(tasks[i], ',')+")" 
-               #self.__client.execute(cmd, i)
-               self.__client.push(dict(job=cmd), i)
-
-            #print 'cmd', cmd
-            #self.__result[job]=self.__client.execute(
-            #  'exec(job)',block=pgBlock,targets=tasks.keys())
-            return self.__client.execute(
-               'exec(job)',block=pgBlock,targets=tasks.keys())
-         return
                
    def parallel_go_keywords(self, **kwargs):
       '''Parallel execution to set keywords
