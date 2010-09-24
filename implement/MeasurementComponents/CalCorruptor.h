@@ -335,6 +335,7 @@ class AtmosCorruptor : public CalCorruptor {
 
    Vector<Float> airMass_; // length= nAnt, recalculated if ness
    Bool airMassValid_;
+   Double airMassTime_;
 };
 
 

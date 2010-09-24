@@ -151,14 +151,14 @@ DJonesCorruptor::~DJonesCorruptor() {};
 AtmosCorruptor::AtmosCorruptor() : 
   CalCorruptor(1),  // parent
   mean_pwv_(-1.),
-  airMassValid_(False),
+  airMassValid_(False),airMassTime_(-1000),
   screen_p(0),itsatm(0),itsRIP(0),itsSkyStatus(0)
 {}
 
 AtmosCorruptor::AtmosCorruptor(const Int nSim) : 
   CalCorruptor(nSim),  // parent
   mean_pwv_(-1.),
-  airMassValid_(False),
+  airMassValid_(False),airMassTime_(-1000),
   screen_p(0),itsatm(0),itsRIP(0),itsSkyStatus(0)
 {}
 
@@ -210,7 +210,9 @@ void AtmosCorruptor::setCurrTime(const Double& time) {
 
   Double dt(1e10),dt0(-1);
   
-  dt=abs(curr_time() - time);
+  //dt=abs(curr_time() - time);
+  dt=abs(airMassTime_ - time);
+  //cout <<" setCurrTime t="<<time<<" prev curr_t="<<curr_time()<<" dt="<<dt<<endl;
   // for airmass, we want to recalculate if it changes by more than 1%
   // if elevation>5 deg, airmass<10, d(airmass)/d(theta)<100, 
   // recalc if dtheta > .1/100 -> 0.06deg.  1deg=4 min so make tolerance 100s
@@ -256,12 +258,12 @@ Complex AtmosCorruptor::simPar(const VisIter& vi, VisCal::Type type,Int ipar){
       // 20100824 getAngle() is very slow: cache airmass
       if (!airMassValid_) {
 	if (prtlev()>3) cout <<"     simPar recalc airMass_ .. ";
-
+	
 	Vector<MDirection> antazel(vi.azel(curr_time()));
 	float el(0.);
 
 	if (airMass_.nelements() != nAnt()) airMass_.resize(nAnt());
-	for (uInt iAnt=1;iAnt<nAnt();iAnt++) {
+	for (uInt iAnt=0;iAnt<nAnt();iAnt++) {
 	  el = antazel(iAnt).getAngle("rad").getValue()(1);	  
 	  if (el>0)
 	    airMass_(iAnt)= 1./sin(el);
@@ -269,7 +271,9 @@ Complex AtmosCorruptor::simPar(const VisIter& vi, VisCal::Type type,Int ipar){
 	    airMass_(iAnt)= 1000.;
 	}
 	airMassValid_=True;
+	airMassTime_=curr_time();
 
+	//cout<<"t="<<curr_time()<<" A[0]="<<airMass_(0)<<" A(1)="<<airMass_(1)<<" A(15)="<<airMass_(15)<<" "<<airMass_.nelements()<<endl;
 	if (prtlev()>3) cout <<"done"<<endl;
       }
 	
