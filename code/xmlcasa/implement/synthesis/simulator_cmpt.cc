@@ -237,7 +237,9 @@ simulator::observe(const std::string& sourcename, const std::string& spwname, co
 		   const double state_cal,
 		   const double state_load,
 		   const int state_sub_scan,
-		   const std::string& state_obs_mode)
+		   const std::string& state_obs_mode,
+		   const std::string& observername,
+		   const std::string& projectname)
 // defaults are inserted to .h file from xml
 //		   const bool add_observation=True,
 //		   const bool state_sig=True,
@@ -255,7 +257,7 @@ Bool rstat(False);
       casa::Quantity qstarttime(casaQuantity(starttime));
       casa::Quantity qstoptime(casaQuantity(stoptime));
       rstat=itsSim->observe(sourcename, spwname, qstarttime, qstoptime,
-			    add_observation,state_sig,state_ref,state_cal,state_load,state_sub_scan,state_obs_mode);
+			    add_observation,state_sig,state_ref,state_cal,state_load,state_sub_scan,state_obs_mode,observername,projectname);
     }
 
 
@@ -279,7 +281,9 @@ simulator::observemany(const std::vector<string>& sourcenames, const std::string
 		       const double state_cal,
 		       const double state_load,
 		       const int state_sub_scan,
-		       const std::string& state_obs_mode)
+		       const std::string& state_obs_mode,
+		       const std::string& observername,
+		       const std::string& projectname)
 {
 Bool rstat(False);
   
@@ -335,7 +339,7 @@ Bool rstat(False);
 	mdirections[i]=mdir;
       }
       rstat=itsSim->observemany(ssourcenames, sspwname, qstarttimes, qstoptimes, mdirections,
-				add_observation,state_sig,state_ref,state_cal,state_load,state_sub_scan,state_obs_mode);
+				add_observation,state_sig,state_ref,state_cal,state_load,state_sub_scan,state_obs_mode,observername,projectname);
     }
 
 

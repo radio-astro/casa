@@ -1972,7 +1972,9 @@ Bool Simulator::observe(const String&   sourcename,
 			const double& state_cal=0.,
 			const double& state_load=0.,
 			const unsigned int state_sub_scan=0,
-			const String& state_obs_mode="OBSERVE_TARGET.ON_SOURCE")
+			const String& state_obs_mode="OBSERVE_TARGET.ON_SOURCE",
+			const String& observername="CASA simulator",
+			const String& projectname="CASA simulation")
 {
   LogIO os(LogOrigin("Simulator", "observe()", WHERE));
   
@@ -1991,7 +1993,7 @@ Bool Simulator::observe(const String&   sourcename,
     }
 
     sim_p->observe(sourcename, spwname, startTime, stopTime, 
-		   add_observation, state_sig, state_ref, state_cal,state_load,state_sub_scan,state_obs_mode);
+		   add_observation, state_sig, state_ref, state_cal,state_load,state_sub_scan,state_obs_mode,observername,projectname);
 
 
     if(ms_p) delete ms_p; ms_p=0;
@@ -2024,7 +2026,9 @@ Bool Simulator::observemany(const Vector<String>&   sourcenames,
 			    const double& state_cal=0.,
 			    const double& state_load=0.,
 			    const unsigned int state_sub_scan=0,
-			    const String& state_obs_mode="OBSERVE_TARGET.ON_SOURCE")
+			    const String& state_obs_mode="OBSERVE_TARGET.ON_SOURCE",
+			    const String& observername="CASA simulator",
+			    const String& projectname="CASA simulation")
 {
   LogIO os(LogOrigin("Simulator", "observemany()", WHERE));
   
@@ -2043,7 +2047,7 @@ Bool Simulator::observemany(const Vector<String>&   sourcenames,
     }
 
     sim_p->observe(sourcenames, spwname, startTimes, stopTimes, directions,
-		   add_observation, state_sig, state_ref, state_cal,state_load,state_sub_scan,state_obs_mode);
+		   add_observation, state_sig, state_ref, state_cal,state_load,state_sub_scan,state_obs_mode,observername,projectname);
 
     if(ms_p) delete ms_p; ms_p=0;
     if(mssel_p) delete mssel_p; mssel_p=0;

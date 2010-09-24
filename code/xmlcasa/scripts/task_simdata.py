@@ -468,7 +468,9 @@ def simdata(
                 posobs=me.observatory(telescopename)
                 diam=stnd;
                 # WARNING: sm.setspwindow is not consistent with clean::center
-                model_start=qa.sub(model_center,qa.mul(model_width,0.5*model_nchan))
+                #model_start=qa.sub(model_center,qa.mul(model_width,0.5*model_nchan))
+                # but the "start" is the center of the first channel:
+                model_start=qa.sub(model_center,qa.mul(model_width,0.5*(model_nchan-1)))
 
                 sm.setconfig(telescopename=telescopename, x=stnx, y=stny, z=stnz, 
                              dishdiameter=diam.tolist(), 
@@ -539,7 +541,7 @@ def simdata(
                     # this only creates blank uv entries
                         sm.observe(sourcename=src, spwname=fband,
                                    starttime=qa.quantity(sttime, "s"),
-                                   stoptime=qa.quantity(endtime, "s"));
+                                   stoptime=qa.quantity(endtime, "s"),project=project);
                     kfld=kfld+1
                     if kfld==nfld: 
                         if docalibrator:
@@ -553,14 +555,14 @@ def simdata(
                             else:
                                 sm.observe(sourcename="phase calibrator", spwname=fband,
                                            starttime=qa.quantity(sttime, "s"),
-                                           stoptime=qa.quantity(endtime, "s"));
+                                           stoptime=qa.quantity(endtime, "s"),project=project);
                         kfld=kfld+1                
                     if kfld > nfld: kfld=0
                 # if directions is unset, NewMSSimulator::observemany 
 
                 # looks up the direction in the field table.
                 if observemany:
-                    sm.observemany(sourcenames=srces,spwname=fband,starttimes=starttimes,stoptimes=stoptimes)
+                    sm.observemany(sourcenames=srces,spwname=fband,starttimes=starttimes,stoptimes=stoptimes,project=project)
 
                 sm.setdata(fieldid=range(0,nfld))
                 sm.setvp()
@@ -886,12 +888,12 @@ def simdata(
                             ",correfficiency="+str(eta_q)+",antefficiency="+str(eta_a)+
                             ",trx="+str(t_rx)+",tground="+str(t_ground)+
                             ",tcmb="+str(t_cmb)+",mode='tsys-atm'"+
-                            ",pground='650mbar',altitude='5000m',waterheight='2km',relhum=20,pwv="+str(user_pwv)+"mm)");
+                            ",pground='560mbar',altitude='5000m',waterheight='200m',relhum=20,pwv="+str(user_pwv)+"mm)");
                         msg("** this may be slow if your MS is finely sampled in time ** ",priority="warn")
                     sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
                                 antefficiency=eta_a,trx=t_rx,
                                 tground=t_ground,tcmb=t_cmb,pwv=str(user_pwv)+"mm",
-                                mode="tsys-atm")
+                                mode="tsys-atm",table=noisymsroot)
                     # don't set table, that way it won't save to disk
                     #                        mode="calculate",table=noisymsroot)
                 sm.corrupt();
@@ -1337,7 +1339,7 @@ def simdata(
 
             # scalar fidelity
             absconv = imagename + '.absconv'
-            ia.imagecalc(absconv, "abs('%s')" % convolved)
+            ia.imagecalc(absconv, "abs('%s')" % convolved, overwrite=T)
             ia.done()
             
             ia.open(absconv)

@@ -555,7 +555,7 @@ modifying the description doesn't work yet but its an improvement ticket.
 <example>
 mosaic simulation task:
 
-    This task simulates interfermetric observations (currently 
+    This task simulates interferometric observations (currently 
     only ALMA can be done easily).  New functionality is actively 
     being added, so if you have changed versions of CASA, check 
     the inputs carefully.
