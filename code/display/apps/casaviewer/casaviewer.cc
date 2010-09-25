@@ -538,7 +538,7 @@ pid_t launch_xvfb( const char *name, pid_t pid, char *&display, char *&authority
 
     const int display_start=6;
     int display_num;
-    for ( display_num=display_start; display_num < (display_start+10); ++display_num ) {
+    for ( display_num=display_start; display_num < (display_start+80); ++display_num ) {
 
 	int io[2];
 	if ( pipe(io) < 0 ) {
