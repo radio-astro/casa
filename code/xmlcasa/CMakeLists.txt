@@ -40,8 +40,15 @@ add_custom_command( OUTPUT definitions
 
 add_custom_target(
   xmlcasa_python_casadef
-  COMMAND echo "task_directory = \\\"${PYTHON_TASKD}\\\"" > casadef.py
-  COMMAND echo "python_library_directory = \\\"${PYTHON_LIBD}\\\"" >> casadef.py
+  COMMAND echo "import os" > casadef.py
+  COMMAND echo "if os.environ.has_key\\\(\\'__CASAPY_TASKDIR\\'\\\):" >> casadef.py
+  COMMAND echo "    task_directory = os.environ[\\'__CASAPY_TASKDIR\\']" >> casadef.py
+  COMMAND echo "else:" >> casadef.py
+  COMMAND echo "    task_directory = \\\"${PYTHON_TASKD}\\\"" >> casadef.py
+  COMMAND echo "if os.environ.has_key\\\(\\'__CASAPY_PYTHONDIR\\'\\\):" >> casadef.py
+  COMMAND echo "    python_library_directory = os.environ[\\'__CASAPY_PYTHONDIR\\']" >> casadef.py
+  COMMAND echo "else:" >> casadef.py
+  COMMAND echo "    python_library_directory = \\\"${PYTHON_LIBD}\\\"" >> casadef.py
   COMMAND echo "casa_version = \\\"${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_VERSION}\\\"" >> casadef.py
   COMMAND cat definitions >> casadef.py
   DEPENDS definitions
