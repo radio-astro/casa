@@ -648,6 +648,19 @@ void FluxCalc_SS_JPL_Butler::compute_neptune(Vector<Flux<Double> >& values,
   for(uInt f = 0; f < nfreqs; ++f){
     Double freq = 1.0e-9 * mfreqs[f].get(hertz_p).getValue(); // GHz
 
+    // These temperatures agree well with the ones collected in 
+    // http://adsabs.harvard.edu/abs/1995EM&P...67...89S (Spilker)
+    // (0.1-20cm = 1.5-300GHz) and 
+    // http://www.ericweisstein.com/research/papers/applopt/node10.html
+    // (200-300GHz) except around 70 GHz.  It's not so much a knee
+    // at 70 GHz as a flat interval around 70 GHz.  Unfortunately I don't yet
+    // have any data right there, but Planck should publish better models for
+    // the planets.
+    //
+    // (Spilker attributed the flat interval or dip in Jupiter, Saturn, and
+    //  Neptune to NH3.  Uranus has barely any, at least while we're looking at
+    //  its pole.)
+    //
     if(freq < 4.0 || freq > 1000.0){
       outOfFreqRange = true;
       temps[f] = temperature_p;
