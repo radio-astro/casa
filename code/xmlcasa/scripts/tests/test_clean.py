@@ -278,14 +278,16 @@ class clean_test1(unittest.TestCase):
         self.res = clean(vis=self.msfile,imagename=self.img,selectdata=True,
                          timerange='>11:28:00',field='0~2',imsize=[100,100],niter=10)
         
-        os.system('cp -r ' + self.img+'.image' + ' myimage.im')
+        os.system('cp -r ' + self.img + '.image' + ' myimage.im')
         self.assertEqual(self.res, None)
-        self.assertTrue(os.path.exists(self.img+'.image'))
+        self.assertTrue(os.path.exists(self.img + '.image'))
 #        ref = 0.007161217276006937
-        ref = 0.011824539862573147
-        value = self.getpixval(self.img+'.image',50)
+#        ref = 0.011824539862573147
+        ref = 0.009637                                 # active rev. 12908
+        value = self.getpixval(self.img+'.image', 50)
         diff = abs(ref - value)
-        self.assertTrue(diff < 10e-5,'Something changed the flux values. ref_val=%s, new_val=%s'
+        self.assertTrue(diff < 10e-4,
+                        'Something changed the pixel brightness. ref_val=%s, new_val=%s'
                                         %(ref,value))
         
     def test35(self):
