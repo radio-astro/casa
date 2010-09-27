@@ -532,17 +532,13 @@ bool imager::mask(const std::string& image, const std::string& mask,
                   const ::casac::variant& threshold, const bool async)
 {
    Bool rstat(False);
-   if(hasValidMS_p){
-      try {
-         rstat = itsImager->mask(mask, image, casaQuantity(threshold));
-       } catch  (AipsError x) {
-          *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-	  RETHROW(x);
-       }
-    } else {
-      *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
-    }
-    return rstat;
+   try {
+     rstat = itsImager->mask(mask, image, casaQuantity(threshold));
+   } catch  (AipsError x) {
+     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+     RETHROW(x);
+   }
+   return rstat;
 }
 
 bool

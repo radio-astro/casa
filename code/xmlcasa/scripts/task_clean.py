@@ -240,8 +240,8 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
             else:
                 imset.makemultifieldmask2(mask,chanslice)
                 maskimage=[]
-                for k in range(len(imset.maskimages)):
-                    maskimage.append(imset.maskimages[imset.imagelist[k]])
+                for img in imset.maskimages:
+                    maskimage.append(imset.maskimages[img])
 
             if dochaniter:
                 imset.checkpsf(chanslice)
@@ -390,13 +390,26 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                     else:
                         maskimage = imset.imagelist[0] + '.mask'
                         imset.maskimages[imset.imagelist[0]] = maskimage
+            if maskimage == '' and not interactive:
+                casalog.post('Making a default mask from minpb.', 'INFO')
+                # Run clean with niter = 0 to get the pbcoverage.
+                imCln.clean(algorithm=localAlgorithm, niter=0, gain=gain,
+                            threshold=qa.quantity(threshold,'mJy'),
+                            model=modelimages, residual=residualimage,
+                            image=restoredimage, psfimage=psfimage,
+                            mask=maskimage, interactive=False,
+                            npercycle=npercycle)
+                pbcov_image = imset.imagelist[0] + '.flux'
+                if localFTMachine == 'mosaic':
+                    pbcov_image += '.pbcoverage'
+                maskimage = imset.make_mask_from_threshhold(pbcov_image, minpb)    
             if not imset.skipclean: 
                 imCln.clean(algorithm=localAlgorithm, niter=niter, gain=gain,
                             threshold=qa.quantity(threshold,'mJy'),
                             model=modelimages, residual=residualimage,
                             image=restoredimage, psfimage=psfimage,
                             mask=maskimage, interactive=interactive,
-                            npercycle=npercycle);
+                            npercycle=npercycle)
 		
                 #In the interactive mode, deconvlution can be skipped and in that case
                 #psf is not generated. So check if all psfs are there if not, generate
@@ -435,7 +448,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
             imset.cleanupTempFiles(tmppath)
             imset.imagelist=finalimagename
         presdir=os.path.realpath('.')
-        for k in range(len(imset.imagelist)):
+        for k in xrange(len(imset.imagelist)):
             newimage=imset.imagelist[k]
             if(imset.imagelist[k].count('/') > 0):
                 newimage=os.path.basename(imset.imagelist[k])

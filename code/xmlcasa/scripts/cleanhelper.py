@@ -3,7 +3,7 @@ import casac
 import os
 import commands
 import math
-import pdb
+#import pdb
 import numpy
 import shutil
 
@@ -20,7 +20,6 @@ rgtool=casac.homefinder.find_home_by_name('regionmanagerHome')
 rg = rgtool.create()
 iatool=casac.homefinder.find_home_by_name('imageHome')
 ia = iatool.create()
-
 
 class cleanhelper:
     def __init__(self, imtool='', vis='', usescratch=False, casalog=None):
@@ -467,7 +466,43 @@ class cleanhelper:
                 if(fsum[0]==0.0):
                     ia.set(pixels=1.0)
                 ia.done(verbose=False)
-                
+
+    def make_mask_from_threshhold(self, imagename, thresh, outputmask=None):
+        """
+        Makes a mask image with the same coords as imagename where each
+        pixel is True if and only if the corresponding pixel in imagename
+        is >= thresh.
+
+        The mask will be named outputmask (if provided) or imagename +
+        '.thresh_mask'.  The name is returned on success, or False on failure.
+        """
+        if not outputmask:
+            outputmask = imagename + '.thresh_mask'
+
+        # im.mask would be a lot shorter, but it (unnecessarily) needs im to be
+        # open with an MS.
+        # I am not convinced that im.mask should really be using Quantity.
+        # qa.quantity(quantity) = quantity.
+        self.im.mask(imagename, outputmask, qa.quantity(thresh))
+        
+        ## # Copy imagename to a safe name to avoid problems with /, +, -, and ia.
+        ## ia.open(imagename)
+        ## shp = ia.shape()
+        ## ia.close()
+        ## self.copymaskimage(imagename, shp, '__temp_mask')
+        
+        ## self.copymaskimage(imagename, shp, outputmask)
+        ## ia.open(outputmask)
+        ## ###getchunk is a mem hog
+        ## #arr=ia.getchunk()
+        ## #arr[arr>0.01]=1
+        ## #ia.putchunk(arr)
+        ## #inpix="iif("+"'"+outputmask.replace('/','\/')+"'"+">0.01, 1, 0)"
+        ## #ia.calc(pixels=inpix)
+        ## ia.calc(pixels="iif(__temp_mask>" + str(thresh) + ", 1, 0)")
+        ## ia.close()
+        ## ia.removefile('__temp_mask')
+        return outputmask
         
     def makemaskimage(self, outputmask='', imagename='', maskobject=[], slice=-1):
         """
@@ -564,21 +599,8 @@ class cleanhelper:
                 ia.done(verbose=False)
                 ia.removefile('__temp_mask')
                 ia.removefile('__temp_mask2')
-            #make image a mask image i.e 1 and 0 only
-            #   make a copy of mask image again since 
-            #   the image name may contain / , +, - which may causes
-            #   problem in evaluating iif.
-            self.copymaskimage(outputmask, shp, '__temp_mask')
-            ia.open(outputmask)
-            ###getchunk is a mem hog
-            #arr=ia.getchunk()
-            #arr[arr>0.01]=1
-            #ia.putchunk(arr)
-            #inpix="iif("+"'"+outputmask.replace('/','\/')+"'"+">0.01, 1, 0)"
-            #ia.calc(pixels=inpix)
-            ia.calc(pixels="iif(__temp_mask>0.01, 1, 0)")
-            ia.close()
-            ia.removefile('__temp_mask')
+            outputmask = self.make_mask_from_threshhold(outputmask, 0.01,
+                                                        outputmask)
         #pdb.set_trace()
         #### This goes when those tablerecord goes
         if(len(tablerecord) > 0):
@@ -918,6 +940,8 @@ class cleanhelper:
         return imsizes,phasecenters,imageids
 
     def copymaskimage(self, maskimage, shp, outfile):
+        if outfile == maskimage:     # Make it a no-op,
+            return                   # this is more than just peace of mind.
         #pdb.set_trace() 
         ia.open(maskimage)
         oldshp=ia.shape()

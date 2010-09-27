@@ -333,8 +333,8 @@ class Imager
   Bool clipimage(const String& image, const Quantity& threshold);
 
   // Make a mask image
-  Bool mask(const String& mask, const String& imageName,
-	    const Quantity& threshold);
+  static Bool mask(const String& mask, const String& imageName,
+                   const Quantity& threshold);
   
   // Restore
   Bool restore(const Vector<String>& model, const String& complist,
@@ -484,7 +484,7 @@ class Imager
 		       String& maskImage);
 
   // Clone an image
-  Bool clone(const String& imageName, const String& newImageName);
+  static Bool clone(const String& imageName, const String& newImageName);
   
   // Fit the psf
   Bool fitpsf(const String& psf, Quantity& mbmaj, Quantity& mbmin,

@@ -103,10 +103,17 @@ public:
   
   // Zero selected planes of a Stokes image
   static void Zero(ImageInterface<Float>& image, Vector<Bool>& mask);
-  
+
+  // Mask mask iif(image > threshhold), where threshhold is in image's units.
+  static void MaskFrom(ImageInterface<Float>& mask,
+		       ImageInterface<Float>& image,
+		       const Double threshhold);
+
+  // This version uses threshold.get("Jy").getValue().
   static void MaskFrom(ImageInterface<Float>& mask,
 		       ImageInterface<Float>& image,
 		       const Quantity& threshold);
+  
 
   // Zero pixels where Stokes I < some value
   static void MaskOnStokesI(ImageInterface<Float>& image, const Quantity& threshold);
