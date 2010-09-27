@@ -2662,14 +2662,14 @@ Bool Imager::setsdoptions(const Float scale, const Float weight,
 Bool Imager::mask(const String& mask, const String& image,
 		  const Quantity& threshold) 
 {
-  if(!valid()) return False;
+  //if(!valid()) return False;
   LogIO os(LogOrigin("imager", "mask()", WHERE));
-  if(!assertDefinedImageParameters()) return False;
+  //if(!assertDefinedImageParameters()) return False;
   
   try {
-    this->lock();
+    //this->lock();
     if(image=="") {
-      this->unlock();
+      //this->unlock();
       os << LogIO::SEVERE << "Need name for template image" << LogIO::EXCEPTION;
       return False;
     }
@@ -2681,24 +2681,34 @@ Bool Imager::mask(const String& mask, const String& image,
     PagedImage<Float> maskImage(maskName);
     maskImage.table().markForDelete();
     PagedImage<Float> imageImage(image);
-    os << LogIO::NORMAL // Loglevel INFO
-       << "Making mask image " << maskName << ", applying threshold "
-       << threshold.get("Jy").getValue() << "Jy, " << endl
-       << "to template image " << image << LogIO::POST;
+
+    if(threshold.check(UnitVal(1.0, "Jy"))){
+      os << LogIO::NORMAL // Loglevel INFO
+         << "Making mask image " << maskName << ", applying threshold "
+         << threshold.get("Jy").getValue() << "Jy, " << endl
+         << "to template image " << image << LogIO::POST;
     
-    StokesImageUtil::MaskFrom(maskImage, imageImage, threshold);
+      StokesImageUtil::MaskFrom(maskImage, imageImage, threshold);
+    }
+    else{
+      os << LogIO::NORMAL // Loglevel INFO
+         << "Making mask image " << maskName << ", applying threshold "
+         << threshold.getValue() << " " << threshold.getUnit() << endl
+         << "to template image " << image << LogIO::POST;
     
+      StokesImageUtil::MaskFrom(maskImage, imageImage, threshold.getValue());
+    }
     maskImage.table().unmarkForDelete();
 
-    this->lock();
+    //this->lock();
     return True;
   } catch (AipsError x) {
-    this->unlock();
+    //this->unlock();
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
        << LogIO::EXCEPTION;
     return False;
   } 
-  this->unlock();
+  //this->unlock();
   return True;
 }
 
