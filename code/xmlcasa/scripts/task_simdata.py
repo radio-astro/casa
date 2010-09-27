@@ -397,8 +397,6 @@ def simdata(
                 else:
                     discard = util.statim(modelflat,plot=True,incell=model_cell)
                 lims=pl.xlim(),pl.ylim()
-                # done above
-                # pb=1.2*0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/aveant*3600.*180/pl.pi                
                 if pb<=0 and verbose:
                     msg("unknown primary beam size for plot",priority="warn")
                 if max(max(lims)) > pb:
@@ -679,7 +677,7 @@ def simdata(
                 posobs=me.observatory(tp_telescopename)
                 diam=tpd
                 # WARNING: sm.setspwindow is not consistent with clean::center
-                model_start=qa.sub(model_center,qa.mul(model_width,0.5*model_nchan))
+                model_start=qa.sub(model_center,qa.mul(model_width,0.5*(model_nchan-1)))
 
                 sm.setconfig(telescopename=tp_telescopename, x=tpx, y=tpy, z=tpz, 
                              dishdiameter=diam.tolist(),
@@ -1341,7 +1339,7 @@ def simdata(
 
             # scalar fidelity
             absconv = imagename + '.absconv'
-            ia.imagecalc(absconv, "abs('%s')" % convolved, overwrite=T)
+            ia.imagecalc(absconv, "abs('%s')" % convolved, overwrite=True)
             ia.done()
             
             ia.open(absconv)

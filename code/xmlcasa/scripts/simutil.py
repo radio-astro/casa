@@ -992,8 +992,7 @@ class simutil:
         # RI TODO isquantity checks
         model_width=qa.quantity(bandwidth) # note: ATM uses band center
 
-        # but we want band center at center of first channel, and 
-        #model_start=qa.add(qa.quantity(freq),qa.mul(model_width,-0.5))
+        # start is center of first channel.  for nch=1, that equals center
         model_start=qa.quantity(freq)
        
 #        model_nchan=2
@@ -2566,7 +2565,8 @@ class simutil:
             model_start=in_csys.referencevalue(type="spectral")['numeric'][0]-in_startpix*model_width
             # this maybe can be done more accurately - for nonregular
             # grids it may trip things up
-            model_center=model_start+0.5*model_nchan*model_width
+            # start is center of first channel.  for nch=1, that equals center
+            model_center=model_start+0.5*(model_nchan-1)*model_width
             model_width=str(model_width)+in_csys.units(type="spectral")
             model_start=str(model_start)+in_csys.units(type="spectral")
             model_center=str(model_center)+in_csys.units(type="spectral")
@@ -2697,7 +2697,8 @@ class simutil:
 
         modelcsys.setspectral(refcode="LSRK",restfreq=model_restfreq)
         modelcsys.setreferencevalue(qa.convert(model_center,modelcsys.units()[3])['value'],type="spectral")
-        modelcsys.setreferencepixel(0.5*model_nchan,type="spectral") # default is middle chan
+#        modelcsys.setreferencepixel(0.5*model_nchan,type="spectral") # default is middle chan
+        modelcsys.setreferencepixel(0.5*(model_nchan-1),type="spectral") # but not half-pixel
         modelcsys.setincrement(qa.convert(model_width,modelcsys.units()[3])['value'],type="spectral")
         #modelcsys.summary()
 
