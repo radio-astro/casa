@@ -658,7 +658,7 @@ void FluxCalc_SS_JPL_Butler::compute_neptune(Vector<Flux<Double> >& values,
     }
     else
       // 34.93815 = 100.0 / ln(70.0 / 4.0)
-      temps[f] = 240.0 - 34.93815 * log(freq);
+      temps[f] = 240.0 - 34.93815 * log(freq / 4.0);
   }
 
   if(outOfFreqRange)
