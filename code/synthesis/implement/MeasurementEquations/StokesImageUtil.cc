@@ -477,22 +477,24 @@ try{
 	// if it's narrow and the pa is near 45 degrees
 	Bool inlobe = lpsf(px,jrow)>amin;
 	for(Int i = ilo;i<nrow;i++) {
-	  Int irow = px + i*iflip;
-	  // did we step out of the lobe?
-	  if (inlobe&&(lpsf(irow,jrow)<amin)) break;
-	  if (lpsf(irow,jrow)>amin) {
-	    inlobe = True;
-	    // the sign on the ra can cause problems.  we just fit 
-	    // for what the beam "looks" like here, and worry about 
-	    // it later.
-	    ix(npoints,0) = (irow-px)*abs(deltas(0));
-	    ix(npoints,1) = (jrow-py)*abs(deltas(1));
-	    iy(npoints) = lpsf(irow,jrow);
-	    isigma(npoints) = 1.0;
-	    npoints++;
-	    if(npoints>maxnpoints) {
-	      inlobe=False;
-	      break;
+	  if(npoints < maxnpoints){
+	    Int irow = px + i*iflip;
+	    // did we step out of the lobe?
+	    if (inlobe&&(lpsf(irow,jrow)<amin)) break;
+	    if (lpsf(irow,jrow)>amin) {
+	      inlobe = True;
+	      // the sign on the ra can cause problems.  we just fit 
+	      // for what the beam "looks" like here, and worry about 
+	      // it later.
+	      ix(npoints,0) = (irow-px)*abs(deltas(0));
+	      ix(npoints,1) = (jrow-py)*abs(deltas(1));
+	      iy(npoints) = lpsf(irow,jrow);
+	      isigma(npoints) = 1.0;
+	      ++npoints;
+	      if(npoints > (maxnpoints-1)) {
+		inlobe=False;
+		break;
+	      }
 	    }
 	  }
 	}
