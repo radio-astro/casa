@@ -80,5 +80,6 @@ casa_add_python( xmlcasa xmlcasa_regressions_python python/${PYTHONV}/regression
   testcube_regression.py
   unit_tests.py
   wf_regression.py
+  wideband_regression.py
   wproj3ddat_regression.py
 )

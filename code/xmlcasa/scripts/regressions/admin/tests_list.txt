@@ -62,4 +62,5 @@ testcube2_regression             rindebet nrao.edu
 third4826                       rreid nrao.edu
 time_then_chan_avg              rreid nrao.edu
 unit_tests                      scastro eso.org
+wideband                        rurvashi aoc.nrao.edu
 wproject_regression             kgolap aoc.nrao.edu

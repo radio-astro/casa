@@ -51,5 +51,6 @@ casa_add_python( xmlcasa xmlcasa_regressions_tests_python python/${PYTHONV}/regr
   secondNGC4826.py
   third4826.py
   time_then_chan_avg.py
+  wideband.py
   wproject_regression.py
 )

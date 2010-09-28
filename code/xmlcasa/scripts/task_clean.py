@@ -21,7 +21,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
 
     applyoffsets=False;
     pbgridcorrect=True;
-    reffreqVal=1.4e9;
+    reffreqVal=0.0;
     padding=1.2;
     #
     # While the following condition is irrelavent due to the change in
@@ -257,9 +257,9 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                              applypointingoffsets=applyoffsets,
                              dopbgriddingcorrections=pbgridcorrect);
 
-            if (mode=='mfs') and (nterms > 1):
-                imCln.settaylorterms(ntaylorterms=nterms,
-                                     reffreq=reffreqVal);
+#            if (mode=='mfs') and (nterms > 1):
+#                imCln.settaylorterms(ntaylorterms=nterms,
+#                                     reffreq=reffreqVal);
 
             #if(alg=='mfmultiscale' and multifield): 
             #    raise Exception, 'Multiscale clean with flanking fields is not supported yet'
@@ -353,6 +353,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                 for tt in range(0, nterms):
 		    if not os.path.exists(modelimages[tt]):
 			 imCln.make(modelimages[tt])
+		casalog.post('Running MS-MFS with '+str(nterms)+' Taylor-terms on dataset : ' + vis);
             #####################################################################
             if len(multiscale) > 0:
                 imCln.setscales(scalemethod='uservector',

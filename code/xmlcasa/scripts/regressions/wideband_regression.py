@@ -23,35 +23,22 @@ import os
 
 # Data : VLA_multifrequency_3C286.ms
 pathname=os.environ.get('CASAPATH').split()[0]
-datapath=pathname+'/data/regression/3C286/VLA_multifrequency_3C286.ms'
-#datapath = './VLA_multifrequency_3C286.ms';
 
 # Initialize status flag
-isitOK = True;
-os.system('rm -rf copy_3C286.ms reg_3C286*');
-
-# Check that data exists. 
-if(not os.path.exists(datapath)):
-  isitOK = False;
+regstate = True;
 
 # Start timers
 startTime=time.time()
 startProc=time.clock()
 
-# Copy the MS (127MB)
-if(isitOK):
-   print '--Copy MS--'
-   copystring='cp -r '+datapath+' copy_3C286.ms';
-   os.system(copystring)
-
 # Mark time
 copyTime=time.time()
 
 # Test (1) : Run the clean task
-if(isitOK):
+if(regstate):
    print '--Image with MS-MFS--'
    default('clean')
-   ret = clean(vis='copy_3C286.ms',imagename='reg_3C286',nterms=3,reffreq='1.4GHz',
+   ret = clean(vis='VLA_multifrequency_3C286.ms',imagename='reg_3C286',nterms=3,reffreq='1.4GHz',
                niter=50,gain=0.8,threshold='7.0mJy',imsize=[1024,1024],
                cell=['2.5arcsec','2.5arcsec'],weighting='briggs',calready=False);
 
@@ -96,7 +83,7 @@ print >>logfile,'**      (1) MS-MFS on the 3C286 field with nterms=3 and reffreq
 print >>logfile,'**                                                                            **'
 print >>logfile,'********************************************************************************'
 
-if(not isitOK):
+if(not regstate):
    print >>logfile,'* Data file VLA_multifrequency_3C286.ms cannot be found';
 else:
    # This is the truth (for active, r12885)
@@ -124,17 +111,17 @@ else:
          print >>logfile,'* Passed residual sigma test ';
       else: 
          print >>logfile,'* FAILED residual sigma test '
-	 isitOK = False;
+	 regstate = False;
       print >>logfile,'-- residual sigma : ' + str((stats['sigma'][0])) + ' (' + str(correct_sigma) + ')';
       if(diff_sumsq<0.05): 
          print >>logfile,'* Passed residual total-power test ';
       else: 
          print >>logfile,'* FAILED residual total-power test '
-	 isitOK = False
+	 regstate = False
       print >>logfile,'-- residual sumsq : ' + str((stats['sumsq'][0])) + ' (' + str(correct_sumsq) + ')';
    else:
       print >>logfile,' FAILED : No residual image generated.'
-      isitOK = False;
+      regstate = False;
    
    # Intensity
    if(os.path.exists('reg_3C286.image.tt0')):
@@ -146,11 +133,11 @@ else:
          print >>logfile,'* Passed peak intensity test ';
       else: 
          print >>logfile,'* FAILED peak intensity test '
-	 isitOK = False;
+	 regstate = False;
       print >>logfile,'-- peak intensity : ' + str(midpix['value']['value']) + ' (' + str(correct_intensity) + ')';
    else:
       print >>logfile,'-- FAILED : No intensity map generated';
-      isitOK = False;
+      regstate = False;
 
    # Alpha
    if(os.path.exists('reg_3C286.image.alpha')):
@@ -162,11 +149,11 @@ else:
          print >>logfile,'* Passed spectral index test ';
       else: 
          print >>logfile,'* FAILED spectral index test '
-	 isitOK = False;
+	 regstate = False;
       print >>logfile,'-- spectral index : ' + str(midpix['value']['value']) + ' (' + str(correct_alpha) + ')';
    else:
       print >>logfile,'-- FAILED : No spectral index map generated';
-      isitOK = False;
+      regstate = False;
 
    # Beta
    if(os.path.exists('reg_3C286.image.beta')):
@@ -178,14 +165,14 @@ else:
          print >>logfile,'* Passed spectral curvature test ';
       else: 
          print >>logfile,'* FAILED spectral index test '
-	 isitOK = False;
+	 regstate = False;
       print >>logfile,'-- spectral index : ' + str(midpix['value']['value']) + ' (' + str(correct_beta) + ')';
    else:
       print >>logfile,'-- FAILED : No spectral curvature map generated';
-      isitOK = False;
+      regstate = False;
 
 # Final verdict
-if(isitOK):
+if(regstate):
    print >>logfile,'PASSED regression test for wideband-imaging.'
 else:
    print >>logfile,'FAILED regression test for wideband-imaging.'
