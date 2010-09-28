@@ -236,7 +236,7 @@ newsl.search([0,1000])
             <description>Include only RRLs in the result set?</description>
             <value>false</value>
         </param>
-        <param type="bool" name="list">
+        <param type="bool" name="verbose">
             <description>List result set to logger (and optionally logfile)?</description>
             <value>true</value>
         </param>
@@ -245,7 +245,7 @@ newsl.search([0,1000])
             <value/>
         </param>
         <param type="bool" name="append">
-            <description>If true, append to logfile if it already exists, if false overwrite logfile it it exists. Only used if list=true and logfile not blank.</description>
+            <description>If true, append to logfile if it already exists, if false overwrite logfile it it exists. Only used if verbose=true and logfile not blank.</description>
             <value>false</value>
         </param>
     </input>
@@ -257,8 +257,8 @@ newsl.search([0,1000])
     or upon exiting casapy. Because Splatalogue does not have values for intensity, smu2, loga, eu, and el
     for radio recombination lines (rrls), one must specify to include rrls in the specified frequency range in the output. In this case,
     RRLs will be included ignoring any filters on intensity, smu2, loga, eu, and el. One can also specify to list only RRLs. One can specify
-    to list the search results to the logger via the list parameter. If list is false, no logger output is listed, although the results
-    can be listed later by running the list() method on the newly created spectral line tool. If list=true, one can also specify that
+    to list the search results to the logger via the verbose parameter. If verbose is false, no logger output is listed, although the results
+    can be listed later by running the list() method on the newly created spectral line tool. If verbose=true, one can also specify that
     the results be listed to a logfile and if this file already exists, one can specify that the results be appended to it or to overwrite
     it with the results.
     </description>
@@ -290,12 +290,12 @@ newsl.search([0,1000])
     Return the unique species in the associated table as a list.
     </description>
     <input>
-        <param type="bool" name="list">
+        <param type="bool" name="verbose">
             <description>List result set to logger (and optionally logfile)?</description>
             <value>false</value>
         </param>
         <param type="string" name="logfile">
-            <description>List result set to this logfile (only used if list=true).</description>
+            <description>List result set to this logfile (only used if verbose=true).</description>
             <value/>
         </param>
         <param type="bool" name="append">
@@ -314,12 +314,12 @@ newsl.search([0,1000])
     Return the unique chemical names in the associated table as a list.
     </description>
     <input>
-        <param type="bool" name="list">
+        <param type="bool" name="verbose">
             <description>List result set to logger (and optionally logfile)?</description>
             <value>false</value>
         </param>
         <param type="string" name="logfile">
-            <description>List result set to this logfile (only used if list=true).</description>
+            <description>List result set to this logfile (only used if verbose=true).</description>
             <value/>
         </param>
         <param type="bool" name="append">

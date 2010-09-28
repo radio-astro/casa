@@ -68,7 +68,7 @@ def slsearch(
     species=None, reconly=None, chemnames=None,
     qns=None, intensity=None, smu2=None,
     loga=None, eu=None, el=None, rrlinclude=None,
-    rrlonly=None, list=None, logfile=None, 
+    rrlonly=None, verbose=None, logfile=None, 
     append=None, wantreturn=None
 ):
     casalog.origin('slsearch')
@@ -83,7 +83,7 @@ def slsearch(
             intensity=intensity, smu2=smu2,
             loga=loga, eu=eu, el=el,
             rrlinclude=rrlinclude, rrlonly=rrlonly,
-            list=list, logfile=logfile,
+            verbose=verbose, logfile=logfile,
             append=append
         )
             

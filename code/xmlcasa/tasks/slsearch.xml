@@ -71,16 +71,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <description>Include only RRLs in the result set?</description>
             <value>False</value>
         </param>
-        <param type="bool" name="list">
+        <param type="bool" name="verbose">
             <description>List result set to logger (and optionally logfile)?</description>
             <value>False</value>
         </param>
         <param type="string" name="logfile" subparam="true">
-            <description>List result set to this logfile (only used if list=True).</description>
+            <description>List result set to this logfile (only used if verbose=True).</description>
             <value>""</value>
         </param>
         <param type="bool" name="append" subparam="true">
-            <description>If true, append to logfile if it already exists, if false overwrite logfile it it exists. Only used if list=True and logfile not blank.</description>
+            <description>If true, append to logfile if it already exists, if false overwrite logfile it it exists. Only used if verbose=True and logfile not blank.</description>
             <value>False</value>
         </param>
         <param type="bool" name="wantreturn">
@@ -89,7 +89,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         </param>
 
     <constraints>
-        <when param="list">
+        <when param="verbose">
             <equals type="bool" value="True">
                 <default param="logfile">
                     <value>""</value>
@@ -132,12 +132,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     or upon exiting casapy if wantreturn=True or immediately upon completion of task execution if wantreturn=False. Because Splatalogue does not have values for intensity, smu2, loga, eu, and el
     for radio recombination lines (rrls), one must specify to include rrls in the specified frequency range in the output. In this case,
     RRLs will be included ignoring any filters on intensity, smu2, loga, eu, and el. One can also specify to list only RRLs. One can specify 
-    to list the search results to the logger via the list parameter. If list is Galse, no logger output is listed, although the results 
-    can be listed later by running the list() method on the newly created spectral line tool if wantreturn=True. If list=True, one can also specify that
+    to list the search results to the logger via the verbose parameter. If verbose is False, no logger output is listed, although the results 
+    can be listed later by running the sl.list() method on the newly created spectral line tool if wantreturn=True. If verbose=True, one can also specify that
     the results be listed to a logfile and if this file already exists, one can specify that the results be appended to it or to overwrite
     it with the results.
     \begin{verbatim}
-    slrestool = slsearch("myspectrallines.tbl", list=False)
+    slrestool = slsearch("myspectrallines.tbl", verbose=False)
     # do a search postponing listing the results to the logger.
     slrestool = sl.search(outfile="myresults.tbl", freqrange = [200,300], species=['HOCN', 'HOCO+'])
     # now list the results

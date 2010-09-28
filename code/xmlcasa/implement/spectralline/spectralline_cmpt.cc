@@ -114,7 +114,7 @@ spectralline* spectralline::search(
 	const vector<double>& smu2Range, const vector<double>& logaRange,
 	const vector<double>& euRange, const vector<double>& elRange,
 	const bool includeRRLs, const bool onlyRRLs,
-	const bool list, const string& logfile, const bool append
+	const bool verbose, const string& logfile, const bool append
 ) {
 	spectralline *tool = 0;
 	SplatalogueTable *t = 0;
@@ -175,7 +175,7 @@ spectralline* spectralline::search(
 			}
 		}
 
-		SearchEngine engine(_table, list, logfile, append);
+		SearchEngine engine(_table, verbose, logfile, append);
 		t = engine.search(
 			outfile, freqRange[0], freqRange[1], mySpecies,
 			recommendedOnly, myChemNames, myQNs, intensityLow,
@@ -218,12 +218,12 @@ void spectralline::list() {
 	}
 }
 
-record* spectralline::species(const bool list, const string& logfile, const bool append) {
+record* spectralline::species(const bool verbose, const string& logfile, const bool append) {
 	try {
 		if (_detached()) {
 			return 0;
 		}
-		SearchEngine engine(_table, list, logfile, append);
+		SearchEngine engine(_table, verbose, logfile, append);
 		Vector<String> species = engine.uniqueSpecies();
 		*_log << LogIO::NORMAL << species << LogIO::POST;
 		Record ret;
@@ -236,12 +236,12 @@ record* spectralline::species(const bool list, const string& logfile, const bool
 	}
 }
 
-record* spectralline::chemnames(const bool list, const string& logfile, const bool append) {
+record* spectralline::chemnames(const bool verbose, const string& logfile, const bool append) {
 	try {
 		if (_detached()) {
 			return 0;
 		}
-		SearchEngine engine(_table, list, logfile, append);
+		SearchEngine engine(_table, verbose, logfile, append);
 		Vector<String> chemNames = engine.uniqueChemicalNames();
 		*_log << LogIO::NORMAL << chemNames << LogIO::POST;
 		Record ret;
