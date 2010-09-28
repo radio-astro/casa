@@ -33,7 +33,6 @@
 #include <casa/OS/Directory.h>
 #include <casa/OS/RegularFile.h>
 #include <casa/OS/SymLink.h>
-#include <images/Images/ImageInputProcessor.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/SubImage.h>
 #include <images/Images/TempImage.h>
@@ -72,6 +71,36 @@ namespace casa {
 		_invertAxesSelection(False),
 		_axes(axes), _aggType(UNKNOWN) {
         _construct(aggString, imagename, box, region);
+    }
+
+    ImageCollapser::ImageCollapser(
+    	String aggString, const ImageInterface<Float> * const image,
+    	const String& region, const String& box,
+    	const String& chanInp, const String& stokes,
+    	const String& maskInp, const uInt axis,
+        const String& outname, const Bool overwrite
+    ) : _log(new LogIO()), _image(image->cloneII()),
+		_chan(chanInp), _stokesString(stokes), _mask(maskInp),
+		_outname(outname),
+		_overwrite(overwrite), _destructImage(True),
+		_invertAxesSelection(False),
+		_axes(Vector<uInt>(1, axis)), _aggType(UNKNOWN) {
+        _construct(aggString, _image, box, region);
+    }
+
+    ImageCollapser::ImageCollapser(
+    	String aggString, const ImageInterface<Float> * const image,
+    	const String& region, const String& box,
+    	const String& chanInp, const String& stokes,
+    	const String& maskInp, const Vector<uInt> axes,
+        const String& outname, const Bool overwrite
+    ) : _log(new LogIO()), _image(image->cloneII()),
+		_chan(chanInp), _stokesString(stokes), _mask(maskInp),
+		_outname(outname),
+		_overwrite(overwrite), _destructImage(True),
+		_invertAxesSelection(False),
+		_axes(axes), _aggType(UNKNOWN) {
+        _construct(aggString, _image, box, region);
     }
 
     ImageCollapser::ImageCollapser(
@@ -252,14 +281,7 @@ namespace casa {
     	return _minMatchMap;
     }
 
-    void ImageCollapser::_construct(
-        String& aggString, const String& imagename,
-        const String& box, const String& regionName
-    ) {
-    	LogOrigin logOrigin("ImageCollapser", __FUNCTION__);
-        _setAggregateType(aggString);
-        *_log << logOrigin;
-
+    Vector<ImageInputProcessor::OutputStruct> ImageCollapser::_getOutputStruct() {
     	Vector<ImageInputProcessor::OutputStruct> outputs(0);
         _outname.trim();
         if (! _outname.empty()) {
@@ -271,19 +293,10 @@ namespace casa {
         	outputs.resize(1);
         	outputs[0] = outputImage;
         }
-        ImageInputProcessor inputProcessor;
-        String diagnostics;
-        Vector<ImageInputProcessor::OutputStruct> *outputPtr = outputs.size() > 0
-        	? &outputs
-        	: 0;
-        inputProcessor.process(
-        	_image, _regionRecord, diagnostics,
-        	outputPtr, _stokesString, imagename,
-        	0, regionName, box, _chan,
-        	ImageInputProcessor::USE_ALL_STOKES,
-        	False, 0
-        );
-        *_log << logOrigin;
+        return outputs;
+    }
+
+    void ImageCollapser::_finishConstruction() {
         for (
         	Vector<uInt>::const_iterator iter=_axes.begin();
         		iter != _axes.end(); iter++
@@ -295,6 +308,54 @@ namespace casa {
         	}
         }
         _invert();
+    }
+
+    void ImageCollapser::_construct(
+        String& aggString, const String& imagename,
+        const String& box, const String& regionName
+    ) {
+    	LogOrigin logOrigin("ImageCollapser", __FUNCTION__);
+        _setAggregateType(aggString);
+        *_log << logOrigin;
+
+        String diagnostics;
+        Vector<ImageInputProcessor::OutputStruct> outputs = _getOutputStruct();
+        Vector<ImageInputProcessor::OutputStruct> *outputPtr = outputs.size() > 0
+        	? &outputs
+        	: 0;
+        ImageInputProcessor inputProcessor;
+        inputProcessor.process(
+        	_image, _regionRecord, diagnostics,
+        	outputPtr, _stokesString, imagename,
+        	0, regionName, box, _chan,
+        	ImageInputProcessor::USE_ALL_STOKES,
+        	False, 0
+        );
+        _finishConstruction();
+    }
+
+    void ImageCollapser::_construct(
+        String& aggString, const ImageInterface<Float> *image,
+        const String& box, const String& regionName
+    ) {
+    	LogOrigin logOrigin("ImageCollapser", __FUNCTION__);
+        _setAggregateType(aggString);
+        *_log << logOrigin;
+
+        String diagnostics;
+        Vector<ImageInputProcessor::OutputStruct> outputs = _getOutputStruct();
+        Vector<ImageInputProcessor::OutputStruct> *outputPtr = outputs.size() > 0
+        	? &outputs
+        	: 0;
+        ImageInputProcessor inputProcessor;
+        inputProcessor.process(
+        	_regionRecord, diagnostics,
+        	outputPtr, _stokesString, image,
+        	0, regionName, box, _chan,
+        	ImageInputProcessor::USE_ALL_STOKES,
+        	False, 0
+        );
+        _finishConstruction();
     }
 
     void ImageCollapser::_setAggregateType(String& aggString) {

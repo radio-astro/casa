@@ -30,7 +30,9 @@
 
 #include <casa/Containers/HashMap.h>
 #include <casa/Logging/LogIO.h>
+#include <images/Images/ImageInputProcessor.h>
 #include <images/Images/ImageInterface.h>
+
 #include <casa/namespace.h>
 
 namespace casa {
@@ -101,6 +103,22 @@ namespace casa {
     	);
 
     	ImageCollapser(
+    	    String aggString, const ImageInterface<Float> * const image,
+    	    const String& region, const String& box,
+    	    const String& chanInp, const String& stokes,
+    	    const String& maskInp, const uInt axis,
+            const String& outname, const Bool overwrite
+    	);
+
+    	ImageCollapser(
+    	    String aggString, const ImageInterface<Float> * const image,
+    	    const String& region, const String& box,
+    	    const String& chanInp, const String& stokes,
+    	    const String& maskInp, const Vector<uInt> axes,
+            const String& outname, const Bool overwrite
+    	);
+
+    	ImageCollapser(
             const ImageInterface<Float> * const image,
     	    const Vector<uInt>& axes, const Bool invertAxesSelection,
     	    const AggregateType aggregateType,
@@ -144,9 +162,18 @@ namespace casa {
         	const String& box, const String& regionName
         );
 
+        void _construct(
+        	String& aggString, const ImageInterface<Float> *image,
+        	const String& box, const String& regionName
+        );
+
         void _setAggregateType(String& aggString);
 
         void _invert();
+
+        Vector<ImageInputProcessor::OutputStruct> _getOutputStruct();
+
+        void _finishConstruction();
     };
 }
 
