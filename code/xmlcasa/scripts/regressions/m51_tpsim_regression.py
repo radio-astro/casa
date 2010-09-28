@@ -8,7 +8,7 @@ import os, time
 #modelname="M51HA.MODEL"
 modelname="m51ha.model"
 if os.path.exists(modelname):
-    shutil.rmtree('rm -rf '+modelname)
+    shutil.rmtree(modelname)
 
 startTime = time.time()
 startProc = time.clock()
