@@ -465,7 +465,6 @@ void QtViewerPrintGui::selectOutputType( const QString & text ) {
 
 void QtViewerPrintGui::saveXPM()
 {
-    savefiletype = cbSaveType->currentText();
     QString ext = savefiletype;
     QString saved_printfilename = printfilename;
 
