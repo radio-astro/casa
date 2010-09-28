@@ -80,10 +80,19 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
         antnames=tb.getcol('NAME')
         nant=tb.nrows()
         tb.close()
+        antsel=''
         if antenna == "": # assume all antennas
             antenna = str(range(nant))
             antenna = antenna.lstrip('[')
             antenna = antenna.rstrip(']') 
+            if antenna.find(',')==-1:
+                antsel = antenna + '&&&'
+            else:
+                antsel = antenna.replace(',','&&& ; ')
+        elif antenna.find('&')==-1 and antenna.find(';')==-1:
+            antsel = antenna + '&&&'
+        else:
+            antsel = antenna
         antlist={}
         for i in range(nant):
             antlist[i]=antnames[i]
@@ -567,7 +576,7 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
             casalog.post( "pointingcolumn used: %s" % pointingcolumn )
             casalog.post( "Imaging...." )
             im.open(sdfile)
-            im.selectvis(field=0, spw='', baseline=antenna)
+            im.selectvis(field=0, spw='', baseline=antsel)
             im.defineimage(nx=nx, ny=ny, cellx=cellx, celly=celly,  phasecenter=phasecenter, spw=0, stokes=stokes, movingsource=ephemsrcname)
             #im.defineimage(nx=nx, ny=ny, cellx=cellx, celly=celly,  phasecenter=phasecenter, spw=0, stokes=stokes, movingsource=ephemsrcname,restfreq=1.14e11)
             im.setoptions(ftmachine='sd', gridfunction=gridfunction)
