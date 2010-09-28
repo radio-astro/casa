@@ -307,5 +307,25 @@ class imcollapse_test(unittest.TestCase):
         )
         self.assertTrue(mytool == None)
 
+        
+    def test_6(self):
+        """imcollapse: memory only images can be collapsed"""
+        mytool = run_collapse(
+            good_image, "mean", 2, "", "", "",
+            "", "", "", False
+        )
+        mytool2 = mytool.collapse("mean", 3)
+        expected = [3, 3, 1, 1]
+        self.assertTrue(mytool2.shape() == expected)
+        
+        mytool = run_imcollapse(
+            good_image, "mean", 2, "", "", "",
+            "", "", "", False, True
+        )
+        mytool2 = mytool.collapse("mean", 3)
+        expected = [3, 3, 1, 1]
+        self.assertTrue(mytool2.shape() == expected)
+
+
 def suite():
     return [imcollapse_test]

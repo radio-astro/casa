@@ -250,7 +250,7 @@ casac::image * image::collapse(
 		String aggString = function;
 		// FIXME allow user to specify multiple axes at python level
 		ImageCollapser collapser(
-			aggString, itsImage->name(), region,
+			aggString, itsImage->getImage(), region,
 		    box, chans, stokes, mask, axis,
 		    outfile, overwrite
 		);
