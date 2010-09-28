@@ -28,6 +28,7 @@
 #include <images/Images/ImageCollapser.h>
 
 #include <images/Images/ImageInputProcessor.h>
+#include <images/Images/ImageUtilities.h>
 #include <images/Images/FITSImage.h>
 #include <images/Images/PagedImage.h>
 
@@ -70,7 +71,7 @@ void checkImage(
 	Array<Double> fracDiffRef = (
 			gotCsys.referenceValue() - expectedCsys.referenceValue()
 		)/expectedCsys.referenceValue();
-	AlwaysAssert(max(abs(fracDiffRef)) <= 1e-13, AipsError);
+	AlwaysAssert(max(abs(fracDiffRef)) <= 1.5e-6, AipsError);
 }
 
 void checkImage(
@@ -212,6 +213,24 @@ int main() {
     		collapser.collapse(False);
     		checkImage(outname(), "collapse_max_0_a.fits");
     	}
+       	{
+        	writeTestString("average full temporary image collapse along axis 0");
+        	ImageInterface<Float> *pIm;
+        	LogIO log;
+        	ImageUtilities::openImage(pIm, goodImage, log);
+        	IPosition shape = pIm->shape();
+        	CoordinateSystem csys = pIm->coordinates();
+        	Array<Float> vals = pIm->get();
+        	delete pIm;
+        	TempImage<Float> tIm(shape, csys);
+        	tIm.put(vals);
+        	ImageCollapser collapser(
+        		"mean", &tIm, "", "", ALL,
+        		ALL, "", 0, outname(), False
+        	);
+        	collapser.collapse(False);
+        	checkImage(outname(), "collapse_avg_0.fits");
+        }
         cout << "ok" << endl;
     }
     catch (AipsError x) {
