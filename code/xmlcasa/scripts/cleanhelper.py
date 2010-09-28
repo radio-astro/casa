@@ -269,7 +269,8 @@ class cleanhelper:
         else:
             self.maskimages={}
         masktext=[]
-        if( (len(maskobject)==0) or (maskobject==[''])):
+        if (not hasattr(maskobject, '__len__')) \
+           or (len(maskobject) == 0) or (maskobject == ['']):
             return
         if(type(maskobject)==str):
             maskobject=[maskobject]
@@ -332,7 +333,8 @@ class cleanhelper:
             self.maskimages={}
 
         #print "makemultifieldmask2: intial self.imagelist=",self.imagelist
-        if((len(maskobject)==0) or (maskobject==[''])):
+        if (not hasattr(maskobject, '__len__')) \
+           or (len(maskobject) == 0) or (maskobject == ['']):
             return
         # determine number of input elements
         if (type(maskobject)==str):
@@ -514,7 +516,8 @@ class cleanhelper:
         b)lists of blc trc's
         c)record output from rg tool for e.g
         """
-        if( (len(maskobject)==0) or (maskobject==[''])):
+        if (not hasattr(maskobject, '__len__')) \
+           or (len(maskobject) == 0) or (maskobject == ['']):
             return
         maskimage=[]
         masklist=[]

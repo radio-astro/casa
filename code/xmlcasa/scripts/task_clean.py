@@ -391,8 +391,17 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                     else:
                         maskimage = imset.imagelist[0] + '.mask'
                         imset.maskimages[imset.imagelist[0]] = maskimage
-            if maskimage == '' and not interactive:
-                casalog.post('Making a default mask from minpb.', 'INFO')
+            maskimg = mask
+            if mask == True:
+                maskimg = minpb
+            if ((len(maskimage) == 0 or maskimage[0] == '') and
+                isinstance(maskimg, float) and maskimg > 0.0 and maskimg < 1.0
+                # and imagermode == 'mosaic'
+                and not interactive):
+                casalog.post('Making a mask at primary beam level ' + str(maskimg),
+                             'INFO')
+                casalog.post('Running clean with niter=0 to get the primary beam coverage',
+                             'INFO')
                 # Run clean with niter = 0 to get the pbcoverage.
                 imCln.clean(algorithm=localAlgorithm, niter=0, gain=gain,
                             threshold=qa.quantity(threshold,'mJy'),
@@ -403,7 +412,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                 pbcov_image = imset.imagelist[0] + '.flux'
                 if localFTMachine == 'mosaic':
                     pbcov_image += '.pbcoverage'
-                maskimage = imset.make_mask_from_threshhold(pbcov_image, minpb)    
+                maskimage = imset.make_mask_from_threshhold(pbcov_image, maskimg) 
             if not imset.skipclean: 
                 imCln.clean(algorithm=localAlgorithm, niter=niter, gain=gain,
                             threshold=qa.quantity(threshold,'mJy'),

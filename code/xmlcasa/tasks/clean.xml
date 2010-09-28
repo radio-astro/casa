@@ -218,9 +218,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 <!--========================================================= -->
     <param type="any" name="mask">
-	    <description>Cleanbox(es), mask image(s), and/or mask region(s) </description>
+	    <description>Cleanbox(es), mask image(s), region(s), or a level</description>
 	    <any type="variant"/>
 	    <value type="stringArray"></value>
+            <!-- <value type="double">0.2</value> -->
     </param>
 <!--========================================================= -->
     <param type="int" name="nchan" subparam="true">
@@ -884,11 +885,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                    (Not fully implemented...for now only controls 
  		   what is seen if interactive=True...but in the future will 
  		   control the image on which clean components are searched)
+                   It does *not* affect the scaling of the *final* image -
+                   that is done by pbcor.
                    default='SAULT'; example: scaletype='PBCOR'
                    Options: 'PBCOR','SAULT'
                      'SAULT' when interactive=True shows the residual
  		             with constant noise across the mosaic. 
- 			     be acheived by setting pbcor=True.
+ 			     Can also be achieved by setting pbcor=False.
                      'PBCOR' uses the SAULT scaling scheme for
  			     deconvolution, but if interactive=True shows the
  			     primary beam corrected image during interactive. 
@@ -983,31 +986,44 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  a low number like 20, but then increasing as more extended
                  emission is encountered.
 
-       mask -- Specification of cleanbox(es), mask image(s), and/or
-               region(s) to be used for CLEANing. As long as the image has
-               the same shape (size), mask images from a previous
-               interactive session can be used for a new execution. NOTE:
-               the initial clean mask actually used is the union of what
-               is specified in mask and &lt;imagename&gt;.mask default: [] (no
-               masking); Possible specification types: (a) Explicit
-               cleanbox pixel ranges example: mask=[110,110,150,145] clean
-               region with blc=110,100; trc=150,145 (pixel values) (b)
-               Filename with cleanbox pixel values with ascii format:
-               example: mask='mycleanbox.txt' &lt;fieldid blc-x blc-y
-               trc-x trc-y&gt; on each line 
-               1 45 66 123 124 
-               2 23 100 300 340
-               (c) Filename for image mask example: mask='myimage.mask'
-               (d) Filename for region specification (e.g. from viewer)
-               example: mask='myregion.rgn' (e) Combinations of any of the
-               above example: mask=[[110,110,150,145],'mycleanbox.txt',
-                                    'myimage.mask','myregion.rgn']
-               If include outlier fields, then mask need to be specified in
-               nested lists: 
-                 e.g. mask=[[[110,110,150,145],'myimage.mask'],[],[20,20,40,40]]
-               (A clean box with [110,110,150,145] and a image mask for main
-                field, no mask for 1st outlier field, 1 clean box for second
-                outlier field.)
+       mask -- Specification of cleanbox(es), mask image(s), primary beam
+               coverage level, and/or region(s) to be used for CLEANing.
+               CLEAN tends to perform better, and is less likely to diverge,
+               if the CLEAN component placement is limited by a mask to where
+               real emission is expected to be.  As long as the image has the
+               same shape (size), mask images (e.g. from a previous interactive
+               session) can be used for a new execution.  NOTE: the initial
+               clean mask actually used is the union of what is specified in mask
+               and &lt;imagename&gt;.mask
+               default: [] (no masking); Possible specification types:
+               (a) Explicit cleanbox pixel ranges example: mask=[110,110,150,145]
+                   = clean region with blc=110,100; trc=150,145 (pixel values)
+               (b) Filename with cleanbox pixel values in ASCII format.
+                   Example: mask='mycleanbox.txt'
+                            &lt;fieldid blc-x blc-y trc-x trc-y&gt; on each line:
+                            1 45 66 123 124 
+                            2 23 100 300 340
+               (c) Filename for image mask.  Example: mask='myimage.mask'
+                   '' -> no mask
+               (d) Filename for region specification (e.g. from viewer).
+                   Example: mask='myregion.rgn'
+               (e) Combinations of any of the above.
+                   Example: mask=[[110,110,150,145],'mycleanbox.txt',
+                                  'myimage.mask', 'myregion.rgn']
+                   If including outlier fields, then mask needs to be specified
+                   in nested lists: 
+                   e.g. mask=[[[110,110,150,145],'myimage.mask'],[],[20,20,40,40]]
+                   (A clean box with [110,110,150,145] and a image mask for main
+                    field, no mask for 1st outlier field, 1 clean box for 2nd
+                    outlier field.)
+               (f) (new as of 2010-09-28)
+                   A number between 0 and 1, used as a threshhold of primary
+                   beam coverage.  The primary beam coverage map (imagename +
+                   '.flux(.pbcoverage)') will be made and the CLEAN component
+                   placement will be limited to where it is > the number.
+               (g) True or False.
+                   True: like (f), but use minpb as the number.
+                   False: go maskless (and expect trouble).
        uvtaper -- Apply additional uv tapering of the visibilities.
                default: uvtaper=False; example: uvtaper=True
 
