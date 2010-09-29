@@ -89,9 +89,9 @@ String SplatalogueTable::list() const {
 	ROScalarColumn<Float> el(*this, EL);
 	ROScalarColumn<String> linelist(*this, LINELIST);
 
-	char cspecies[14], crec[2], cchemName[20], cfreq[12], cqns[20],
-		cintensity[9], csmu2[9], clogA[9], ceu[9], cel[9],
-		clinelist[10];
+	char cspecies[15], crec[3], cchemName[21], cfreq[12], cqns[21],
+		cintensity[10], csmu2[10], clogA[10], ceu[10], cel[10],
+		clinelist[11];
 	ostringstream os;
 	String rec;
 	os << SPECIES << "       " << RECOMMENDED << "        "
