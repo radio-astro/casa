@@ -282,8 +282,8 @@ class clean_test1(unittest.TestCase):
         self.assertEqual(self.res, None)
         self.assertTrue(os.path.exists(self.img + '.image'))
 #        ref = 0.007161217276006937
-#        ref = 0.011824539862573147
-        ref = 0.009637                                 # active rev. 12908
+        ref = 0.011824539862573147
+#        ref = 0.009637                                 # active rev. 12908
         value = self.getpixval(self.img+'.image', 50)
         diff = abs(ref - value)
         self.assertTrue(diff < 10e-4,
