@@ -64,3 +64,6 @@ time_then_chan_avg              rreid nrao.edu
 unit_tests                      scastro eso.org
 wideband                        rurvashi aoc.nrao.edu
 wproject_regression             kgolap aoc.nrao.edu
+m51_tpsim_regression		rindebet nrao.edu
+m51_bothsim_regression		rindebet nrao.edu
+
