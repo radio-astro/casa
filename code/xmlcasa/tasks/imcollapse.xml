@@ -27,9 +27,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <example>function="rms</example>
         <example>function="mean"</example>
     </param>
-    <param type="int" name="axis">
-        <description>Zero-based axis number to collapse.</description>
-        <value>0</value>
+    <param type="variant" name="axes">
+        <description>Zero-based axis number(s) to collapse.</description>
+        <value>[0]</value>
         <example>axis=2</example>
     </param>
     <param type="string" name="outfile">

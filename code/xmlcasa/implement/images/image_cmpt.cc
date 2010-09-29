@@ -235,26 +235,41 @@ image::addnoise(const std::string& type, const std::vector<double>& pars,
 }
 
 casac::image * image::collapse(
-	const string& function, const int axis, const string& outfile,
+	const string& function, const variant& axes, const string& outfile,
 	const string& region, const string& box, const string& chans,
 	const string& stokes, const string& mask,
 	const bool overwrite
 ) {
-	casac::image *newImageTool = 0;
+	image *newImageTool = 0;
     *itsLog << LogOrigin("image", __FUNCTION__);
     if (detached()) {
     	return NULL;
     }
 
 	try {
+		Vector<uInt> myAxes;
+		if (axes.type() == variant::INT) {
+			myAxes.resize(1);
+			myAxes[0] = (uInt)axes.toInt();
+		}
+		else if (axes.type() == variant::INTVEC) {
+			vector<int> tmp = axes.getIntVec();
+			myAxes.resize(tmp.size());
+			for (uInt i=0; i<tmp.size(); i++) {
+				myAxes[i] = tmp[i];
+			}
+		}
+		else {
+			throw AipsError("Unsupported type for parameter axes");
+		}
 		String aggString = function;
 		// FIXME allow user to specify multiple axes at python level
 		ImageCollapser collapser(
 			aggString, itsImage->getImage(), region,
-		    box, chans, stokes, mask, axis,
+		    box, chans, stokes, mask, myAxes,
 		    outfile, overwrite
 		);
-		newImageTool = new ::casac::image(collapser.collapse(True), False);
+		newImageTool = new image(collapser.collapse(True), False);
 	}
 	catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;

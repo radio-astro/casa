@@ -1279,7 +1279,7 @@ in this case.  It is evaluated each time it is needed.
             <description>Aggregate function to apply: avdev, max, mean, median, min, rms, stdev, sum, variance.</description>
             <value></value>
         </param>
-        <param type="int" direction="in" name="axis">
+        <param type="variant" direction="in" name="axes">
             <description>Zero-based axis number along which to collapse image.</description>
             <value>0</value>
         </param>
@@ -1314,7 +1314,7 @@ in this case.  It is evaluated each time it is needed.
     </input>
     <returns type="casaimage"/>
     <description>
-        This method collapses an image along a specified axis of N pixels to 1 pixel. It computes
+        This method collapses an image along a specified axis or set of axes of N pixels to 1 pixel. It computes
         the specified aggregate function of pixels along that axis and places those values in the
         single remaining plane of this axis in the output image. The method returns an image analysis
         tool containing the newly created collapsed image. Choices of aggregate functions are:
@@ -1331,7 +1331,6 @@ in this case.  It is evaluated each time it is needed.
         collapsed_image = ia.collapse(...)
         # do things (or not) with collapsed_image and when done with object, do
         collapsed_image.done()
-        
 
         The reference pixel of the collapsed axis is set to 0 and its reference value is set to the mean
         of axis values of the pixels along that axis that were used in computing the aggregate value.
