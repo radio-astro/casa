@@ -143,12 +143,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     hostRAM = hostRAM/(sizeof(Float)*2); // In complex pixels
     if (cachesize > hostRAM) cachesize=hostRAM;
 
-    MSFieldColumns msfc(ms.field());
-    MSRange msr(ms);
-    //
-    // An array of shape [2,1,1]!
-    //
-    fieldIds_p = msr.range(MSS::FIELD_ID).asArrayInt(RecordFieldId(0));
+    // MSFieldColumns msfc(ms.field());
+    // MSRange msr(ms);
+    // //
+    // // An array of shape [2,1,1]!
+    // //
+    // fieldIds_p = msr.range(MSS::FIELD_ID).asArrayInt(RecordFieldId(0));
     nApertures = 0;
   }
   //
@@ -218,9 +218,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // Get the antenna pointing errors, if any.
     Int NAnt=0;
-    //    NAnt = nPBWProjectFT::findPointingOffsets(vb,l_off,m_off,Evaluate);
-    //    Int NAnt = l_off.shape()(2);
-    //
+    NAnt = nPBWProjectFT::findPointingOffsets(vb,l_off,m_off,Evaluate);
+    //    NAnt = l_off.shape()(2);
+    //    
     // Resize the offset arrays if no pointing table was given.
     //
     if (NAnt <=0 )
