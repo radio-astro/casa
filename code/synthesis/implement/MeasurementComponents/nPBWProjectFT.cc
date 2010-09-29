@@ -555,6 +555,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int NAnt = 0;
     MEpoch LAST;
     Double thisTime = getCurrentTimeStamp(vb);
+    if (epJ==NULL) return 0;
     Array<Float> pointingOffsets = epJ->nearest(thisTime);
     NAnt=pointingOffsets.shape()(2);
     l_off.resize(IPosition(3,1,1,NAnt)); // Poln x NChan x NAnt 
