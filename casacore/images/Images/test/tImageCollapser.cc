@@ -231,6 +231,17 @@ int main() {
         	collapser.collapse(False);
         	checkImage(outname(), "collapse_avg_0.fits");
         }
+       	{
+        	writeTestString("full image collapse along axes 0, 1");
+        	Vector<uInt> axes(2, 0);
+        	axes[1] = 1;
+        	ImageCollapser collapser(
+        		"mean", goodImage, "", "", ALL,
+        		ALL, "", axes, outname(), False
+        	);
+        	collapser.collapse(False);
+        	checkImage(outname(), "collapse_avg_0_1.fits");
+        }
         cout << "ok" << endl;
     }
     catch (AipsError x) {
