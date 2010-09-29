@@ -2482,7 +2482,6 @@ class simutil:
             self.msg("model image has more than 4 dimensions.  Not sure how to proceed",priority="error")
             return False
 
-
         # now parse coordsys:
         model_refdir=""
         #model_refpix=[]
@@ -2516,9 +2515,8 @@ class simutil:
 
             # move model_refdir to center of image
             model_refpix=[0.5*in_shape[axmap[0]],0.5*in_shape[axmap[1]]]
-            ra,dec = in_ia.toworld(model_refpix)['numeric'][0:2]
-            ra=qa.quantity(str(ra)+"rad")
-            dec=qa.quantity(str(dec)+"rad")
+            ra = in_ia.toworld(model_refpix,'q')['quantity']['*'+str(axmap[0]+1)]
+            dec = in_ia.toworld(model_refpix,'q')['quantity']['*'+str(axmap[1]+1)]
             model_refdir= in_csys.referencecode(type="direction")+" "+qa.formxxx(ra,format='hms',prec=5)+" "+qa.formxxx(dec,format='dms',prec=5)
 
         else:
