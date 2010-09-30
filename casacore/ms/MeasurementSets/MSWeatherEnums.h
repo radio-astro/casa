@@ -125,6 +125,13 @@ public:
     // Flag for  wind speed <BR>
     // Bool
     WIND_SPEED_FLAG,
+    // Weather station ID <BR>
+    // Int
+    NS_WX_STATION_ID,
+    //
+    // Weather station position <BR>
+    // array Double
+    NS_WX_STATION_POSITION,
     //
     // Not a column, but just a final enum specifying the number of enums.
     NUMBER_PREDEFINED_COLUMNS=WIND_SPEED_FLAG
