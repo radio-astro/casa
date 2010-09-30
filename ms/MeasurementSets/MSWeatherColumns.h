@@ -131,6 +131,8 @@ public:
   const ROScalarQuantColumn<Float>& windSpeedQuant() const {
     return windSpeedQuant_p;}
   const ROScalarColumn<Bool>& windSpeedFlag() const {return windSpeedFlag_p;}
+  const ROScalarColumn<Int>& nsWxStationId() const {return nsWxStationId_p;}
+  const ROArrayColumn<Double>& nsWxStationPosition() const {return nsWxStationPosition_p;}
   // </group>
 
   // Convenience function that returns the number of rows in any of the
@@ -138,7 +140,7 @@ public:
   uInt nrow() const {return isNull() ? 0 : antennaId_p.nrow();}
 
 protected:
-  //# default constructor creates a object that is not usable. Use the attach
+  //# default constructor creates an object that is not usable. Use the attach
   //# function correct this.
   ROMSWeatherColumns();
 
@@ -178,6 +180,8 @@ private:
   ROScalarColumn<Bool> windDirectionFlag_p;
   ROScalarColumn<Float> windSpeed_p;
   ROScalarColumn<Bool> windSpeedFlag_p;
+  ROScalarColumn<Int> nsWxStationId_p;
+  ROArrayColumn<Double> nsWxStationPosition_p;
 
   //# Access to Measure columns
   ROScalarMeasColumn<MEpoch> timeMeas_p;
@@ -272,6 +276,8 @@ public:
   ScalarColumn<Float>& windSpeed() {return windSpeed_p;}
   ScalarQuantColumn<Float>& windSpeedQuant() {return windSpeedQuant_p;}
   ScalarColumn<Bool>& windSpeedFlag() {return windSpeedFlag_p;}
+  ScalarColumn<Int>& nsWxStationId() {return nsWxStationId_p;}
+  ArrayColumn<Double>& nsWxStationPosition() {return nsWxStationPosition_p;}
   // </group>
 
   // Read-only access to required columns
@@ -338,6 +344,10 @@ public:
     return ROMSWeatherColumns::windSpeedQuant();}
   const ROScalarColumn<Bool>& windSpeedFlag() const {
     return ROMSWeatherColumns::windSpeedFlag();}
+  const ROScalarColumn<Int>& nsWxStationId() const {
+    return  ROMSWeatherColumns::nsWxStationId();}
+  const ROArrayColumn<Double>& nsWxStationPosition() const {
+    return  ROMSWeatherColumns::nsWxStationPosition();}
   // </group>
 
   // set the epoch type for the TIME column.
@@ -389,6 +399,8 @@ private:
   ScalarColumn<Bool> windDirectionFlag_p;
   ScalarColumn<Float> windSpeed_p;
   ScalarColumn<Bool> windSpeedFlag_p;
+  ScalarColumn<Int> nsWxStationId_p;
+  ArrayColumn<Double> nsWxStationPosition_p;
 
   //# Access to Measure columns
   ScalarMeasColumn<MEpoch> timeMeas_p;

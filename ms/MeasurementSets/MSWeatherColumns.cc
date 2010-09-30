@@ -201,6 +201,14 @@ void ROMSWeatherColumns::attach(const MSWeather& msWeather)
       MSWeather::columnName(MSWeather::WIND_SPEED_FLAG);
     if (cds.isDefined(windSpeedFlag)) 
       windSpeedFlag_p.attach(msWeather, windSpeedFlag);
+    const String& nsWxStationId =
+      MSWeather::columnName(MSWeather::NS_WX_STATION_ID);
+    if (cds.isDefined(nsWxStationId)) 
+      nsWxStationId_p.attach(msWeather, nsWxStationId);
+    const String& nsWxStationPosition =
+      MSWeather::columnName(MSWeather::NS_WX_STATION_POSITION);
+    if (cds.isDefined(nsWxStationPosition)) 
+      nsWxStationPosition_p.attach(msWeather, nsWxStationPosition);
   }
 }
 
@@ -234,7 +242,9 @@ MSWeatherColumns::MSWeatherColumns(MSWeather& msWeather):
   pressureQuant_p(),
   temperatureQuant_p(),
   windDirectionQuant_p(),
-  windSpeedQuant_p()
+  windSpeedQuant_p(),
+  nsWxStationId_p(),
+  nsWxStationPosition_p()
 {
   attach(msWeather);
 }
@@ -277,7 +287,9 @@ MSWeatherColumns::MSWeatherColumns():
   pressureQuant_p(),
   temperatureQuant_p(),
   windDirectionQuant_p(),
-  windSpeedQuant_p()
+  windSpeedQuant_p(),
+  nsWxStationId_p(),
+  nsWxStationPosition_p()
 {
 }
 
@@ -376,6 +388,16 @@ void MSWeatherColumns::attach(MSWeather& msWeather)
       MSWeather::columnName(MSWeather::WIND_SPEED_FLAG);
     if (cds.isDefined(windSpeedFlag)) {
       windSpeedFlag_p.attach(msWeather, windSpeedFlag);
+    }
+    const String& nsWxStationId =
+      MSWeather::columnName(MSWeather::NS_WX_STATION_ID);
+    if (cds.isDefined(nsWxStationId)) {
+      nsWxStationId_p.attach(msWeather, nsWxStationId);
+    }
+    const String& nsWxStationPosition =
+      MSWeather::columnName(MSWeather::NS_WX_STATION_POSITION);
+    if (cds.isDefined(nsWxStationPosition)) {
+      nsWxStationPosition_p.attach(msWeather, nsWxStationPosition);
     }
   }
 }
