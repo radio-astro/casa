@@ -1250,6 +1250,10 @@ void MosaicFT::getWeightImage(ImageInterface<Float>& weightImage,
 
 void MosaicFT::getFluxImage(ImageInterface<Float>& fluxImage) {
 
+  if (stokes_p=="QU"){
+    npol=2;
+    pbConvFunc_p->sliceFluxScale(npol);
+  }
   IPosition inShape=(pbConvFunc_p->getFluxScaleImage()).shape();
   IPosition outShape=fluxImage.shape();
   if(outShape==inShape){
