@@ -548,5 +548,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
+void HetArrayConvFunc::sliceFluxScale(Int npol) {
+     IPosition fshp=fluxScale_p.shape();
+     if (fshp(2)>npol){
+       npol_p=npol;
+       // use first npol planes...
+       IPosition blc(4,0,0,0,0);
+       IPosition trc(4,fluxScale_p.shape()(0)-1, fluxScale_p.shape()(1)-1,npol-1,fluxScale_p.shape()(3)-1);
+       Slicer sl=Slicer(blc, trc, Slicer::endIsLast);
+       //writeable if possible
+       SubImage<Float> fluxScaleSub = SubImage<Float> (fluxScale_p, sl, True);
+       SubImage<Float> convWeightImageSub = SubImage<Float> (*convWeightImage_p, sl, True);
+       fluxScale_p = TempImage<Float>(fluxScaleSub.shape(),fluxScaleSub.coordinates());
+       TempImage<Float>* convWeightImage_p = new TempImage<Float> (convWeightImageSub.shape(),convWeightImageSub.coordinates());
+       LatticeExpr<Float> le(fluxScaleSub);
+       fluxScale_p.copyData(le);
+       LatticeExpr<Float> le2(convWeightImageSub);
+       convWeightImage_p->copyData(le2);
+     }
+  }
 
 } //# NAMESPACE CASA - END

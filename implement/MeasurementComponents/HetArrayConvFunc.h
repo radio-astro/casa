@@ -76,6 +76,8 @@ namespace casa{
 				  Vector<Int>& rowMap);
 
     virtual ImageInterface<Float>&  getFluxScaleImage();
+    // slice flux scale images 
+    virtual void sliceFluxScale(const Int npol);
     
     //----------------------------------------------
 
