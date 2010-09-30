@@ -259,17 +259,19 @@ def simdata(
                 msg("Only single-dish observation is predicted",priority="info")
                 tp_only=True
             # check for image size (need to be > 2*pb)
-            pb2 = 2.*1.2*0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/tp_aveant*3600.*180/pl.pi
-            minsize=min(qa.convert(model_size[0],'arcsec')['value'],qa.convert(model_size[1],'arcsec')['value'])
-            if pb==0:
-                pb=0.5*pb2 #arcsec
-            if minsize < pb2:
-                msg("skymodel should be larger than 2*primary beam. Your skymodel: %.3f arcsec < %.3f arcsec: 2*primary beam" % (minsize, pb2),priority="error")
+            if not components_only:
+                pb2 = 2.*1.2*0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/tp_aveant*3600.*180/pl.pi
+                minsize = min(qa.convert(model_size[0],'arcsec')['value'],\
+                              qa.convert(model_size[1],'arcsec')['value'])
+                if pb == 0:
+                    pb = 0.5*pb2 #arcsec
+                if minsize < pb2:
+                    msg("skymodel should be larger than 2*primary beam. Your skymodel: %.3f arcsec < %.3f arcsec: 2*primary beam" % (minsize, pb2),priority="error")
+                    del minsize,pb2
+                    return False            
                 del minsize,pb2
-                return False            
-            del minsize,pb2
-            
-        
+
+
 
 
 
