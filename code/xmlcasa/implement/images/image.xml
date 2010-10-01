@@ -8089,7 +8089,7 @@ ia.close()
      </param>
   
      <param type="bool" direction="in" name="list">
-     <description>If T then list the statistics as well</description>
+     <description>If True print bounding box and statistics to logger.</description>
      <value>true</value>
      </param>
   
