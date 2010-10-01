@@ -1441,6 +1441,7 @@ void MSFitsInput::fillAntennaTable(BinaryTable& bt)
    if (doSMA) diameter=6;
    if (array_p=="ATA") diameter=6.1;
    if (array_p=="HATCREEK" || array_p=="BIMA") diameter=6.1;
+   if (array_p=="GMRT") diameter=45.0;
    
    //   Table anTab=bt.fullTable("",Table::Scratch);
    Table anTab=bt.fullTable();
