@@ -345,8 +345,11 @@ def simdata(
 
         msg("phase center = " + imcenter)
         if nfld>1 and verbose:
-            for dir in pointings:
+            for idir in range(min(len(pointings),20)):
                 msg("   "+dir)
+            if nfld>=20:
+                msg("   (printing only first 20 - see pointing file for full list)")
+            
  
         if not overlap:
             msg("No overlap between model and pointings",priority="error")
