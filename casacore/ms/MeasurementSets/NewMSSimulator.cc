@@ -592,8 +592,8 @@ void NewMSSimulator::initFields(const String& sourceName,
 
   const double forever=1.e30;
 
-  os << "Creating new field table row for " << sourceName << ", ID "
-     << baseFieldID << LogIO::POST;
+  //  os << "Creating new field table row for " << sourceName << ", ID "
+  //     << baseFieldID << LogIO::POST;
 
 //  if(!ms_p->source().isNull()){
 //    os << "Creating new source table row for " << sourceName << ", ID "
