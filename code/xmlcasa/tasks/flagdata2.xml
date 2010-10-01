@@ -589,14 +589,19 @@
                     antenna diameters are used.
                   default: -1.0
 
-        autoflag -- Experimental automatic flagging of outliers.
+        autoflag -- Automatic flagging of outliers (Experimental)
                 default: False
                 options: True,False                
-              It is still under development.
+		
+		One-dimensional sliding-window median filters along time or frequency.
+		
+		NOTE : These methods are still in development.
            
               algorithm -- autoflag algorithm name
                   default: 'timemed'
                   options: 'timemed','freqmed'
+		           'timemed' : filter along the time axis
+			   'freqmed' : filter along the frequency axis
               column -- the column on which to operate
                   default: 'DATA'
                   options: 'DATA', 'CORRECTED', 'MODEL'
@@ -611,10 +616,29 @@
                      spectral channels.
                   default: 10
 
-        rfi -- RFI automatic flagging of outliers.
+        rfi -- Automatic flagging of outliers (Experimental)
                 default: False
                 options: True,False
-               For more information, see ?
+
+		This algorithm identifies and flags outliers on the 
+		two-dimensional time-frequency plane for all selected 
+		baselines. The number of timesteps and frequency channels 
+		for each 2D chunk of the time-frequency plane is 
+		specified by the user. 
+		
+		The following steps are performed for each chunk :
+		-- For all channels, a robust straight-line fit along 
+		   the time-axis (a 'robust fit' is a few iterations of 
+		   line-fits and outlier flagging, until the fit stabilizes).
+		-- Average the chunk across time to get a 'mean bandpass'.
+		-- A robust piece-wise polynomial fit across frequency. 
+		-- Use this 'fitted bandpass' to identify and flag outliers
+		   for each timestep in the chunk. 
+		-- Optionally apply heuristics to grow flags based on 
+		   neighbouring points on the time-frequency plane.
+
+		NOTE : This method is still in development.
+	      
 
               rfi_clipcolumn -- the column on which to operate
                   default: 'DATA'
@@ -644,7 +668,8 @@
               rfi_ant_cutoff -- total autocorrelation amplitude threshold for a functional antenna
                   default: 0.0
               rfi_flag_level -- 0: flag only what is found; 1: extend flags one timestep before and after; 
-                               #2: extend flags one timestep and channel before/after 
+                               #2: extend flags in time and frequency by examining values immediately 
+	                       #   surrounding flagged points.
                   default: 1
 
         unflag -- Unflag the specified data.

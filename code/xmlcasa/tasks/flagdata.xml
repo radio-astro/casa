@@ -462,9 +462,11 @@
            would report only antennas/baselines/... with more than 80% flagged
            data and at the same time less than or equal to 3000 flagged values.
 
-        autoflag: experimental automatic flagging of outliers.
-           It is still under development
-           algorithm -- autoflag algorithm name
+        autoflag: Automatic flagging of outliers (Experimental)
+           One-dimensional sliding-window median filters along time or frequency.
+	   NOTE : These methods are still in development.
+
+	   algorithm -- autoflag algorithm name
                 default: 'timemed'
                 options: 'timemed','freqmed'
            column -- the column on which to operate (DATA, CORRECTED, MODEL)
@@ -478,7 +480,25 @@
                   spectral channels.
 
         rfi: RFI automatic flagging of outliers.
-           For more information, see ?
+        	This algorithm identifies and flags outliers on the 
+		two-dimensional time-frequency plane for all selected 
+		baselines. The number of timesteps and frequency channels 
+		for each 2D chunk of the time-frequency plane is 
+		specified by the user. 
+		
+		The following steps are performed for each chunk :
+		-- For all channels, a robust straight-line fit along 
+		   the time-axis (a 'robust fit' is a few iterations of 
+		   line-fits and outlier flagging, until the fit stabilizes).
+		-- Average the chunk across time to get a 'mean bandpass'.
+		-- A robust piece-wise polynomial fit across frequency. 
+		-- Use this 'fitted bandpass' to identify and flag outliers
+		   for each timestep in the chunk. 
+		-- Optionally apply heuristics to grow flags based on 
+		   neighbouring points on the time-frequency plane.
+
+		NOTE : This method is still in development.
+   
 
            clipcolumn -- the column on which to operate (DATA, CORRECTED, MODEL)
            clipexpr -- expression to use for flagging option
