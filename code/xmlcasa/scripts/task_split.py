@@ -131,7 +131,14 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
             # Do channel averaging first because it might be included in the spw
             # string.
             import tempfile
-            cavms = tempfile.mkdtemp(suffix=outputvis)
+            # We want the directory outputvis is in, not /tmp, because /tmp
+            # might not have enough space.
+            # outputvis is itself a directory, so strip off a trailing slash if
+            # it is present.
+            # I don't know if giving tempfile an absolute directory is necessary -
+            # dir='' is effectively '.' in Ubuntu.
+            workingdir = os.path.abspath(os.path.dirname(outputvis.rstrip('/')))
+            cavms = tempfile.mkdtemp(suffix=outputvis, dir=workingdir)
 
             casalog.post('Channel averaging to ' + cavms)
             myms.split(outputms=cavms,     field=field,

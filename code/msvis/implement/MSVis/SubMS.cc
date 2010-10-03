@@ -6626,7 +6626,9 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
       outRowFlag = false;
       outUVW.set(0.0);
 
+      // This is misnamed...it is actually an spw.  The true ddid is spw2ddid_p[ddid].
       Int ddID = spwRelabel_p[oldDDSpwMatch_p[dataDescIn(slotv0)]];
+
       Bool newDDID = (ddID != oldDDID);
       if(newDDID){
         oldDDID = ddID;
@@ -6645,7 +6647,7 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
         //trc = IPosition(2, ncorr_p[ddID] - 1, nchan_p[ddID] + chanStart_p[ddID] - 1);
 	chanSlice = Slice(chanStart_p[ddID], nchan_p[ddID],
 			  averageChannel_p ? 1 : chanStep_p[ddID]);
-	corrChanSlicer = Slicer(corrSlice_p[polID_p[ddID]], chanSlice);
+	corrChanSlicer = Slicer(corrSlice_p[polID_p[spw2ddid_p[ddID]]], chanSlice);
         chanStop = nchan_p[ddID] * chanStep_p[ddID] + chanStart_p[ddID];
 
         //sliceShape = trc - blc + 1;
@@ -6720,7 +6722,7 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
         }
         // Set flagged weights to 0 in the unflagged weights...
         for(Int outCorrInd = 0; outCorrInd < ncorr_p[ddID]; ++outCorrInd){
-	  Int inCorrInd = inPolOutCorrToInCorrMap_p[polID_p[ddID]][outCorrInd];
+	  Int inCorrInd = inPolOutCorrToInCorrMap_p[polID_p[spw2ddid_p[ddID]]][outCorrInd];
 	  IPosition startpos(2, inCorrInd, chanStart_p[ddID]);
 	  IPosition endpos(2, inCorrInd,
 			   nchan_p[ddID] + chanStart_p[ddID] - 1);
