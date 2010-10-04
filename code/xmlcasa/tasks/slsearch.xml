@@ -35,7 +35,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>False</value>
         </param>
         <param type="stringArray" name="chemnames">
-            <any type="variant"/>
             <description>Chemical names to search for.</description>
             <value/>
         </param>
@@ -43,23 +42,23 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <description>Resolved quantum numbers to search for.</description>
             <value/>
         </param>
-        <param type="doubleArray" name="intensity">
+        <param type="doubleArray" name="intensity" subparam="true">
             <description>CDMS/JPL intensity range.</description>
             <value>-1</value>
         </param>
-        <param type="doubleArray" name="smu2">
+        <param type="doubleArray" name="smu2" subparam="true">
             <description>S*mu*mu range.</description>
             <value>-1</value>
         </param>
-        <param type="doubleArray" name="loga">
+        <param type="doubleArray" name="loga" subparam="true">
             <description>log(A) (Einstein coefficient) range.</description>
             <value>-1</value>
         </param>
-        <param type="doubleArray" name="eu">
+        <param type="doubleArray" name="eu" subparam="true">
             <description>Upper energy state range.</description>
             <value>-1</value>
         </param>
-        <param type="doubleArray" name="el">
+        <param type="doubleArray" name="el" subparam="true">
             <description>Lower energy state range.</description>
             <value>-1</value>
         </param>
