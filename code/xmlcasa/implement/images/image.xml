@@ -2376,7 +2376,7 @@ im3.done()
 <returns type="any"><any type="record"/>Record or fail</returns>
 <description>
 
-This function <!-- (short-hand name {\stff bb}) --> finds the bounding box of a
+This function finds the bounding box of a
 region of interest when it is applied to a particular image.  It is
 returned in a record which has fields {\cf `blc', `trc', `inc',
 `bbShape', `regionShape', `imageShape', `blcf'} and {\cf `trcf'}
@@ -2384,11 +2384,17 @@ containing the bottom-left corner, the top-right corner (in absolute
 image pixel coordinates), the increment (stride) of the region, the
 shape of the boundingbox, the shape of the region, the shape of the
 image,  the blc in formatted absolute world coordinates and the trc in
-formatted absolute world  coordinates, respectively. 
+formatted absolute world  coordinates, respectively.
 
 Note that the shape of the bounding box will be different from the shape
 of the region if a non-unit stride (increment) is involved (see the example
 below).
+
+Note that the integer size of the elements in blc, trc, inc, regionShape,
+bbShape, and imageShape are 32 bits, even on a 64 bit machine. This means that,
+on 64 bit machines, you may have to convert them to 64 bit ints using eg
+numpy.int64, before being able to use them as direct input to other
+methods such as ia.getchunk().
 
 </description>
 
