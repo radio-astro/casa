@@ -100,7 +100,14 @@
                example: model='/usr/lib/casapy/data/nrao/VLA/CalModels/3C286_X.im'
                Note: The model visibilities are scaled from the model frequency
                      to the observed frequency of the data.
-
+       nterms -- Number of terms used to model the sky frequency dependence
+                 default: 1  ==> one model image is required
+                 example : nterms=3  represents a 2nd order Taylor-polynomial in frequency
+                           and should be used in conjuction with coefficient model images as 
+		           model=['xxx.model.tt0','xxx.model.tt1', 'xxx.model.tt2']
+             reffreq -- Reference-frequency about which this Taylor-expansion is defined.
+	                default: '' ==> reads the reference frequency from the model image
+                        example : reffreq = '1.5GHz'
        complist -- Name of component list
                default: None; ; example: complist='test.cl'
                component lists are difficult to make.

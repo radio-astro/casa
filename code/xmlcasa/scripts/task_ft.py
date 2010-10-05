@@ -64,6 +64,11 @@ def ft(vis=None,field=None,spw=None,model=None,nterms=None,reffreq=None,complist
                if (nterms > 1) :
 		       if(type(model)==str or (not (type(model)==list and len(model)==nterms)) ):
 			       raise Exception, 'For nterms>1, please provide a list of nterms model-image names';
+	               # Check if model images exist on disk
+		       for imod in model:
+		            if ( not os.path.exists(imod) ):
+		                 raise Exception, 'Model image '+imod+' cannot be found';
+		       # parse the reference-frequency field.
                        qat=qatool.create();
                        try:
 		          rff=qat.canonical(reffreq);
@@ -71,10 +76,23 @@ def ft(vis=None,field=None,spw=None,model=None,nterms=None,reffreq=None,complist
                           print '*** Error *** In conversion of reffreq=\'',reffreq,'\' to a numerical value';
                           raise Exception, instance
                        reffreqVal=rff['value'];  # This is the frequency in Hz
+		       if(reffreqVal==0.0):   # if unspecified, set the default from the model image
+			       ia.open(model[0]);
+			       icsys = ia.coordsys();
+			       ia.close();
+                               reffreqVal=icsys.referencevalue(type='spectral')['numeric'][0];
+			       casalog.post('Using reference frequency from model image : '+str(reffreqVal)+' Hz');
+		       # set nterms and ref-freq
 		       im.settaylorterms(ntaylorterms=nterms,reffreq=reffreqVal)
 	       else:
-	               if(not type(model)==str) :
-			       raise Exception, 'Name of model image must be a string';
+	               if(not type(model)==str and not (type(model)==list and len(model)==1) ) :
+			       raise Exception, 'For nterms=1, the name of model image must contain a single string';
+		       if( type(model)==list ): 
+			       model = model[0];
+	               # Check if model image exists on disk
+		       if ( not os.path.exists(model) ):
+			       raise Exception, 'Model image '+model+' cannot be found';
+
 
                # Do the forward transform and close.
                im.ft(model=model,complist=complist,incremental=incremental)
