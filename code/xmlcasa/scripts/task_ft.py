@@ -82,6 +82,8 @@ def ft(vis=None,field=None,spw=None,model=None,nterms=None,reffreq=None,complist
 			       ia.close();
                                reffreqVal=icsys.referencevalue(type='spectral')['numeric'][0];
 			       casalog.post('Using reference frequency from model image : '+str(reffreqVal)+' Hz');
+		       else:
+		               casalog.post('Using reference frequency : '+str(reffreqVal)+' Hz');
 		       # set nterms and ref-freq
 		       im.settaylorterms(ntaylorterms=nterms,reffreq=reffreqVal)
 	       else:
