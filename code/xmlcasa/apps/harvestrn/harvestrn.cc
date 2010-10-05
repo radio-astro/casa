@@ -60,9 +60,11 @@ int main(int argc, char **argv)
 	      jiraLine = casa::String(theLine);
       }
       if(theLine.contains(casa::Regex("Put in Release Notes:.*[Yy][Ee][Ss]"))){
-	 inRelNotes = true;
-	 cout << "--------------------" << endl;
-	 cout << jiraLine << endl;
+         if(!theLine.contains(casa::Regex("Put in Release Notes:.*[yY][Ee][Ss]/[Nn][oO]"))){
+	    inRelNotes = true;
+	    cout << "--------------------" << endl;
+	    cout << jiraLine << endl;
+	 }
       }
       if(theLine.contains("---------------------")){
 	 inRelNotes = false;
