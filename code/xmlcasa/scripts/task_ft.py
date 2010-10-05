@@ -1,7 +1,7 @@
 import os
 from taskinit import *
 
-def ft(vis=None,field=None,spw=None,model=None,complist=None,incremental=None):
+def ft(vis=None,field=None,spw=None,model=None,nterms=None,reffreq=None,complist=None,incremental=None):
        """ Insert a source model into the MODEL_DATA column of a visibility set:
 
        A source model (souce.model image) or components list is converted into a
@@ -29,6 +29,12 @@ def ft(vis=None,field=None,spw=None,model=None,complist=None,incremental=None):
                example: model='/usr/lib/casapy/data/nrao/VLA/CalModels/3C286_X.im'
                Note: The model visibilities are scaled from the model frequency
                      to the observed frequency of the data.
+       nterms -- Number of terms used to model the sky frequency dependence
+                 default: 1
+                 example : nterms=3  represents a 2nd order Taylor-polynomial in frequency
+                           and is to be used along with 3 model-image names. 
+		           model=['xxx.image.tt0','xxx.image.tt1', 'xxx.image.tt2']
+          reffreq -- Reference-frequency about which this Taylor-expansion is defined.
        complist -- Name of component list
                default: None; ; example: complist='test.cl'
                components tool not yet available
@@ -40,12 +46,37 @@ def ft(vis=None,field=None,spw=None,model=None,complist=None,incremental=None):
 
        #Python script
        try:
+               # Check if datafile exists and open it
                if ((type(vis)==str) & (os.path.exists(vis))):
                        im.open(vis, usescratch=True)
                else:
                        raise Exception, 'Visibility data set not found - please verify the name'
+	
+               # Select data
                im.selectvis(field=field,spw=spw, usescratch=True)
+	       
+               # Define image co-ordinates (all defaults)
                im.defineimage()
+
+               # Check if number of model images matches nterms, and settaylorterms.
+	       if (nterms < 1) :
+		       raise Exception, 'nterms must be greater than or equal to 1';
+               if (nterms > 1) :
+		       if(type(model)==str or (not (type(model)==list and len(model)==nterms)) ):
+			       raise Exception, 'For nterms>1, please provide a list of nterms model-image names';
+                       qat=qatool.create();
+                       try:
+		          rff=qat.canonical(reffreq);
+		       except Exception, instance:
+                          print '*** Error *** In conversion of reffreq=\'',reffreq,'\' to a numerical value';
+                          raise Exception, instance
+                       reffreqVal=rff['value'];  # This is the frequency in Hz
+		       im.settaylorterms(ntaylorterms=nterms,reffreq=reffreqVal)
+	       else:
+	               if(not type(model)==str) :
+			       raise Exception, 'Name of model image must be a string';
+
+               # Do the forward transform and close.
                im.ft(model=model,complist=complist,incremental=incremental)
                im.close()
 

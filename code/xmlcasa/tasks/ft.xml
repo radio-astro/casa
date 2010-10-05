@@ -34,8 +34,20 @@
 			<value></value>
 		</param>
 
-		<param type="string" name="model">
-			<description>Name of input model image</description>
+		<param type="any" name="model">
+			<description>Name of input model image(s)</description>
+			<any type="variant"/>
+			<value type="string"></value>
+			<value></value>
+		</param>
+
+		<param type="int" name="nterms">
+			<description>Number of terms used to model the sky frequency dependence</description>
+			<value>1</value>
+		</param>
+
+		<param type="string" name="reffreq" subparam="true">
+			<description>Reference frequency</description>
 			<value></value>
 		</param>
 
@@ -48,6 +60,14 @@
 			<description>Add to the existing MODEL_DATA column?</description>
 			<value>False</value>
 		</param>
+
+		<constraints>
+		        <when param="nterms">
+			      <notequals type="int" value="1">
+			           <default param="reffreq"><value type="string"></value></default>
+			      </notequals>
+			</when>
+		</constraints>
 
 	</input>
 <returns type="void"/>
