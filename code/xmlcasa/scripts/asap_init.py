@@ -29,6 +29,7 @@ def asap_init():
     from sdstat_cli import sdstat_cli as sdstat
     from sdlist_cli import sdlist_cli as sdlist
     from sdflag_cli import sdflag_cli as sdflag
+    from sdflagmanager_cli import sdflagmanager_cli as sdflagmanager
     from sdtpimaging_cli import sdtpimaging_cli as sdtpimaging
     from sdmath_cli import sdmath_cli as sdmath
     from sdimaging_cli import sdimaging_cli as sdimaging
@@ -46,6 +47,7 @@ def asap_init():
     myf['sdstat']=sdstat
     myf['sdlist']=sdlist
     myf['sdflag']=sdflag
+    myf['sdflagmanager']=sdflagmanager
     myf['sdtpimaging']=sdtpimaging
     myf['sdmath']=sdmath
     myf['sdimaging']=sdimaging
