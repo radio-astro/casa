@@ -185,17 +185,20 @@ calibrations can be applied on the fly.
       when running polcal, since polcal uses the 'data' column, not the 'corrected'
       column.
 
-      After calibrating the total intensities, the simplest way to calibrate the 
-      polarization data is:
+      After calibrating the gain, bandpass, and (if relevant, for channelized data)
+      cross-hand delay, the simplest way to calibrate the polarization data is:
 
         a) Run polcal with poltype = 'D+QU' on the main 'calibrator' source.  The D terms
            and polarization (QU) of the calibrator will be determined.  Relatively good
            parallactic angle coverage is needed.
 
-        b) If there is little parallactic angle coverage, place the known calibration of
+        b) If there is little parallactic angle coverage, place the known polarization of
            the main calibrator (or 0) using setjy with the appropriate fluxdensity.  Then
            run polcal with poltype = 'D'.  Run plotcal with xaxis = 'real'; yaxis ='imag'
-           to view solutions.
+           to view solutions.  It is best to use an unpolarized calibrator in this 
+           instance; large systematic offsets from zero indicate significant source  
+           polarization that will bias the polarization calibration.  A mechanism 
+           to constrain this bias will be made available in the near future. 
 
         c) To determine R-L polarization angle, use setjy to put the fluxdensity of the
            polarization calibrator [I,Q,U,0.0] in the model column.  For resolved sources
@@ -210,8 +213,13 @@ calibrations can be applied on the fly.
         e) Run applycal with all calibration table, include the D and X tables.  Make sure
            that parang = T
 
-         NOTE: For very high dynamic range, add 'f' after D to determine D terms for each
-               channel.
+         NOTE: For very high dynamic range, use poltype='Df' or 'Df+QU' to determine 
+               D terms for each channel.  Similarly, poltype='Xf' can
+               be used to determine a channel-dependent R-L phase
+               "bandpass".
+         NOTE: Rather than use setjy in b and c above, the new smodel
+               parameter may be used in polcal to specify a simple
+               point source Stokes model.  
 
       Keyword arguments:
       vis -- Name of input visibility file
@@ -277,14 +285,19 @@ calibrations can be applied on the fly.
               'D' (or 'Df') solve only for instrumental polarization (channelized).  The
                  I, Q, U flux density of the source can be placed in the model column using
                  setjy.  Use for poor parallactic angle coverage.
-              'X' = solve only for position angle correction.  The source must have its
-                 I, Q, U flux density in the model column.  If the source is resolved, use
-                 a uvrange that is appropriate.
+              'X' (or 'Xf') = solve only for position angle correction (channelized).  
+                 The source must have its I, Q, U flux density in the model column 
+                 or specified in smodel.  If the source is resolved, use a limited 
+                 uvrange that is appropriate.
               'D+X' (or 'Df+X') = solve also for position angle offset (channelized D) as
                  well as the D-term.  Not normally done.
               default: 'D+QU'
               The solution used the traditional linear approximation.  Non-linearized options
                   will be avaible soon.
+      smodel -- Point source Stokes parameters for source model (experimental)
+              default: [] (use MODEL_DATA column)
+              examples: [1,0,0,0] (I=1, unpolarized)
+                        [5.2,0.2,0.3,0.0] (I=5.2, Q=0.2, U=0.3, V=0.0)
       solint --  Solution interval (units optional) 
               default: 'inf' (~infinite, up to boundaries controlled by combine); 
               Options: 'inf' (~infinite), 'int' (per integration), any float

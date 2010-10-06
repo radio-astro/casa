@@ -106,7 +106,7 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
 	</param>
 
 	<param type="string" name="gaintype">
-		<description>Type of gain solution (G, T, or GSPLINE)</description>
+		<description>Type of gain solution (G, T, or GSPLINE,KCROSS)</description>
 		<value>G</value>
 		<allowed kind="enum">
 			<value>G</value>
@@ -303,6 +303,12 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
                    calibrated amplitude and phase.  However,
                    at present GSPLINE is somewhat experimental.  Use with
                    caution and check solutions.
+              'KCROSS' (experimental) solves for a global cross-hand
+                   delay.  Use parang=T and apply prior gain and
+                   bandpass solutions.
+      smodel -- Point source Stokes parameters for source model (experimental)
+              default: [] (use MODEL_DATA column)
+              example: [1,0,0,0] (I=1, unpolarized)
       calmode -- Type of solution
               default: 'ap' (amp and phase); example: calmode='p'
               Options: 'p','a','ap'

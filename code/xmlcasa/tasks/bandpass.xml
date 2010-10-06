@@ -95,7 +95,7 @@ is recommended in most applications.
 	</param>
 
 	<param type="bool" name="solnorm">
-		<description>Normalize average solution amplitudes to 1.0 (G, T only)</description>
+		<description>Normalize average solution amplitudes to 1.0 </description>
 		<value>False</value>
 	</param>
 
