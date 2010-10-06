@@ -1186,10 +1186,10 @@ void BJonesPoly::selfSolve2(VisBuffGroupAcc& vbga)
 	(*normVis[iph])(ibl)/=(static_cast<Complex>((*normWeight[iph])(ibl)));
       for (Int ichan=0;ichan<nFreqGrid;ichan++) {
 	Double &wt=(*accumWeight[iph])(ichan,ibl);
-	// insist at least 4 baselines with good data for these antennas in this channel
+	// insist at least 2 baselines with good data for these antennas in this channel
 	if (wt > 0 &&
-	    antOkChan(ichan,ant1idx(ibl)) > 3 &&   
-	    antOkChan(ichan,ant2idx(ibl)) > 3 ) {
+	    antOkChan(ichan,ant1idx(ibl)) > 1 &&   
+	    antOkChan(ichan,ant2idx(ibl)) > 1 ) {
 	  (*accumVis[iph])(ichan,ibl)/= (static_cast<Complex>(wt));
 	  
 	  // If requested, normalize the data, if possible
