@@ -386,8 +386,12 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
                     casalog.post( "Processing Scan#=%s" % i )
                     for j in xrange(nsubscan):
                         masks=numpy.zeros(len(data[i][j]),dtype=numpy.int)
-                        msg = "Subtracting baselines, set masks for fitting at row ranges: [0,%s] and [%s,%s] " % (lmask-1, len(masks)-rmask, len(masks)-1)
-                        casalog.post(msg, "INFO")
+                        if lmask >= len(data[i][j]) or rmask >= len(data[i][j]):
+                            msg = "Too large mask. All data will be used for baseline subtraction.\n The fitting may not be correct since it might confuse signal component as a background..."
+                            casalog.post(msg, "WARN")
+                        else:
+                            msg = "Subtracting baselines, set masks for fitting at row ranges: [0,%s] and [%s,%s] " % (lmask-1, len(masks)-rmask, len(masks)-1)
+                            casalog.post(msg, "INFO")
                         masks[:lmask]=True
                         masks[-rmask:]=True
                         x=xrange(len(data[i][j]))
