@@ -283,7 +283,7 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
         elif(param == 'paramkeys'):
                 return a.keys()
         else:
-            if(paramvalue==None):
+            if(paramvalue==None and subparam==None):
                if(a.has_key(param)):
                   return a[param]
                else:
@@ -303,6 +303,8 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
                               retval=retval[subparam]
                            else:
                               retval=self.itsdefault(subparam)
+		     else:
+                        retval=self.itsdefault(subparam)
                return retval
 
 
