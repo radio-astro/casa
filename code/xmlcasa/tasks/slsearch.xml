@@ -43,23 +43,23 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value/>
         </param>
         <param type="doubleArray" name="intensity" subparam="true">
-            <description>CDMS/JPL intensity range.</description>
+            <description>CDMS/JPL intensity range. -1 -> do not use an intensity range.</description>
             <value>-1</value>
         </param>
         <param type="doubleArray" name="smu2" subparam="true">
-            <description>S*mu*mu range.</description>
+            <description>S*mu*mu range in Debye**2. -1 -> do not use an S*mu*mu range.</description>
             <value>-1</value>
         </param>
         <param type="doubleArray" name="loga" subparam="true">
-            <description>log(A) (Einstein coefficient) range.</description>
+            <description>log(A) (Einstein coefficient) range. -1 -> do not use a loga range.</description>
             <value>-1</value>
         </param>
         <param type="doubleArray" name="eu" subparam="true">
-            <description>Upper energy state range.</description>
+            <description>Upper energy state range in Kelvin. -1 -> do not use an eu range.</description>
             <value>-1</value>
         </param>
         <param type="doubleArray" name="el" subparam="true">
-            <description>Lower energy state range.</description>
+            <description>Lower energy state range in Kelvin. -1 -> do not use an el range.</description>
             <value>-1</value>
         </param>
         <param type="bool" name="rrlinclude">
@@ -125,6 +125,28 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <returns type="casaspectralline"/>
 
 <example>
+
+PARAMETER SUMMARY
+
+tablename      Input spectral line table name to search. If not specified, use the default table in the system.
+outfile        Results table name. Blank means do not write the table to disk.
+freqrange      Frequency range in GHz.
+species        Species to search for.
+reconly        List only NRAO recommended frequencies.
+chemnames      Chemical names to search for.
+qns            Resolved quantum numbers to search for.
+intensity      CDMS/JPL intensity range. -1 -> do not use an intensity range.
+smu2           S*mu*mu range in Debye**2. -1 -> do not use an S*mu*mu range.
+loga           log(A) (Einstein coefficient) range. -1 -> do not use a loga range.
+eu             Upper energy state range in Kelvin. -1 -> do not use an eu range.
+el             Lower energy state range in Kelvin. -1 -> do not use an el range.
+rrlinclude     Include RRLs in the result set?
+rrlonlyi       Include only RRLs in the result set?
+verbose        List result set to logger (and optionally logfile)?
+logfile        List result set to this logfile (only used if verbose=True).
+append         If true, append to logfile if it already exists, if false overwrite logfile it it exists. Only used if verbose=True and logfile not blank.
+wantreturn     If true, return the spectralline tool associated with the result set.
+
     Search the specfied spectral line table. The return value (if wantreturn=true) is a spectralline tool with a new table containing the search
     results. This new table can be written to disk by specifying its name in the outfile parameter. If outfile is not specified
     (ie outfile=""), the resulting table is held in memory and deleted upon a call to close() or done() for the newly created tool

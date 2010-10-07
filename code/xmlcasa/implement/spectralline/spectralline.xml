@@ -209,23 +209,23 @@ newsl.search([0,1000])
             <value/>
         </param>
         <param type="doubleArray" name="intensity">
-            <description>CDMS/JPL intensity range.</description>
+            <description>CDMS/JPL intensity range. -1 -> do not use an intensity range.</description>
             <value>-1</value>
         </param>
         <param type="doubleArray" name="smu2">
-            <description>S*mu*mu range.</description>
+            <description>S*mu*mu range in Debye**2. -1 -> do not use an S*mu*mu range.</description>
             <value>-1</value>
         </param>
         <param type="doubleArray" name="loga">
-            <description>log(A) (Einstein coefficient) range.</description>
+            <description>log(A) (Einstein coefficient) range. -1 -> do not use a loga range.</description>
             <value>-1</value>
         </param>
         <param type="doubleArray" name="eu">
-            <description>Upper energy state range.</description>
+            <description>Upper energy state range in Kelvin. -1 -> do not use an eu range.</description>
             <value>-1</value>
         </param>
         <param type="doubleArray" name="el">
-            <description>Lower energy state range.</description>
+            <description>Lower energy state range in Kelvin. -1 -> do not use an el range.</description>
             <value>-1</value>
         </param>
         <param type="bool" name="rrlinclude">
@@ -241,7 +241,7 @@ newsl.search([0,1000])
             <value>true</value>
         </param>
         <param type="string" name="logfile">
-            <description>List result set to this logfile (only used if list=true).</description>
+            <description>List result set to this logfile (only used if verbose=true).</description>
             <value/>
         </param>
         <param type="bool" name="append">
