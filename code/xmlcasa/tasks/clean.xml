@@ -349,9 +349,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <value>1.0</value>
     </param>
 <!--========================================================= -->
-    <param type="string" name="modelimage">
-	    <description>Name of model image(s) to initialize cleaning</description>
-	    <value></value>
+    <param type="any" name="modelimage">
+      <description>Name of model image(s) to initialize cleaning</description>
+      <any type="variant"/>
+      <value type="string"></value>
     </param>
 <!--========================================================= -->
     <param type="stringArray" name="restoringbeam">
@@ -1053,7 +1054,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                units in the image are Jy/beam as in a single-dish
                image, then it will be converted to Jy/pixel as in a
                model image, using the restoring beam in the image
-               header
+               header.  
+	       When nterms>1, the length of this list must be equal to nterms.
+	       Therefore, currently, only one additional model for each
+	       Taylor coefficient is supported.
        weighting -- Weighting to apply to visibilities:
                default='natural'; example: weighting='uniform';
                Options: 'natural','uniform','briggs', 

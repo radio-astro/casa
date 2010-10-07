@@ -257,10 +257,6 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                              applypointingoffsets=applyoffsets,
                              dopbgriddingcorrections=pbgridcorrect);
 
-#            if (mode=='mfs') and (nterms > 1):
-#                imCln.settaylorterms(ntaylorterms=nterms,
-#                                     reffreq=reffreqVal);
-
             #if(alg=='mfmultiscale' and multifield): 
             #    raise Exception, 'Multiscale clean with flanking fields is not supported yet'
 
@@ -270,7 +266,9 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
             #if not multifield:
             #         imset.convertmodelimage(modelimages=modelimage,
             #                 outputmodel=imagename+'.model')
-            if modelimage != '' and modelimage != []:
+	    if (type(modelimage)!=str and type(modelimage)!=list):
+		    raise Exception,'modelimage must be a string or a list of strings';
+            if modelimage != '' and modelimage != [] and nterms==1:
                 if dochaniter:
                     imset.defineChaniterModelimages(modelimage,j,tmppath)
                 else:
@@ -343,6 +341,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                 restoredimage[0]=restoredimage[0]+'.tt'+str(0);
                 residualimage[0]=residualimage[0]+'.tt'+str(0);
 
+                # Make image names...
                 for tt in range(1, nterms):
                     modelimages.append(imset.imagelist[0] + '.model'
                                        + '.tt' +str(tt))
@@ -350,9 +349,29 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                                          '.tt' + str(tt))
                     residualimage.append(imset.imagelist[0] + '.residual'
                                          + '.tt' + str(tt))
+		# Check if starting models exist 
+		#   - either same name as that derived from 'imagename', stored in 'modelimages'
+		#   - or, if the user has explicitly specified via 'modelimage'.
+		# If neither, make empty ones.
+		# Note : modelimages is an internal variable and modelimage is user-specified :)
                 for tt in range(0, nterms):
 		    if not os.path.exists(modelimages[tt]):
 			 imCln.make(modelimages[tt])
+		         casalog.post("No model found. Making empty initial model : "+modelimages[tt]);
+	            else:
+		         casalog.post("Found and starting from existing model on disk : "+modelimages[tt]);
+		# Check for a user-specified modelimage list to add to current model
+		if( modelimage != '' and modelimage != [] ):
+		   if( type(modelimage)==list and len(modelimage)==nterms ):
+		       for tt in range(0,nterms):
+			   if( os.path.exists(modelimage[tt]) ):
+			       imset.convertmodelimage(modelimages=[modelimage[tt]],outputmodel=modelimages[tt]);
+			       casalog.post("Found user-specified model image : "+modelimage[tt]+" . Adding to starting model : "+modelimages[tt]);
+			   else:
+			       casalog.post("Cannot find user-specified model image : "+modelimage[tt]+" . Continuing with current model : "+modelimages[tt]);
+		   else:
+		      raise Exception,'Number of specified model images must match nterms';
+		
 		casalog.post('Running MS-MFS with '+str(nterms)+' Taylor-terms on dataset : ' + vis);
             #####################################################################
             if len(multiscale) > 0:
