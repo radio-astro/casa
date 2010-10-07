@@ -603,22 +603,30 @@ void VisSet::addCalSet(MeasurementSet& ms, Bool compress) {
             ROTiledStManAccessor tsm(ms, dataManGroup);
             uInt nHyper = tsm.nhypercubes();
             // Find smallest tile shape
-            Int lowestProduct = 0;
-            Int lowestId = 0;
-            Bool firstFound = False;
+            Int lowestProduct=INT_MAX,highestProduct=-INT_MAX;
+            Int lowestId=0, highestId=0;
             for (uInt id=0; id < nHyper; id++) {
                 Int product = tsm.getTileShape(id).product();
-                if (product > 0 && (!firstFound || product < lowestProduct)) {
+                if (product > 0 && (product < lowestProduct)) {
                     lowestProduct = product;
                     lowestId = id;
-                    if (!firstFound) firstFound = True;
+                };
+                if (product > 0 && (product > highestProduct)) {
+                    highestProduct = product;
+                    highestId = id;
                 };
             };
-            dataTileShape = tsm.getTileShape(lowestId);
+
+	    // 2010Oct07 (gmoellen) We will try using
+	    //  maximum volumne intput tile shape, as this 
+	    //  improves things drastically for ALMA data with
+	    //  an enormous range of nchan (e.g., 3840+:1), and
+	    //  will have no impact on data with a single shape
+	    //	    dataTileShape = tsm.getTileShape(lowestId);
+	    dataTileShape = tsm.getTileShape(highestId);
             simpleTiling = (dataTileShape.nelements() == 3);
+
         };
-
-
 
         if (!tiled || !simpleTiling) {
             // Untiled, or tiled at a higher than expected dimensionality
