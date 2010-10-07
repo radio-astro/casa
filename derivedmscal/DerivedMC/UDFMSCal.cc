@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: UDFMSCal.cc 20941 2010-08-25 18:35:26Z gervandiepen $
+//# $Id: UDFMSCal.cc 20983 2010-10-01 10:02:48Z gervandiepen $
 
 #include <derivedmscal/DerivedMC/UDFMSCal.h>
 
@@ -70,12 +70,15 @@ namespace casa {
     case PA:
     case LAST:
       setNDim (0);
+      setUnit ("rad");
       break;
     case AZEL:
       setShape (IPosition(1,2));
+      setUnit ("rad");
       break;
     case UVW:
       setShape (IPosition(1,3));
+      setUnit ("m");
       break;
     }
   }

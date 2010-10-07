@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableRecordRep.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: TableRecordRep.cc 20969 2010-09-27 12:45:04Z gervandiepen $
 
 #include <tables/Tables/TableRecordRep.h>
 #include <tables/Tables/TableRecord.h>
@@ -399,7 +399,7 @@ void TableRecordRep::print (std::ostream& os, Int maxNrValues,
     }
 }
 
-void TableRecordRep::putRecord (AipsIO& os, int recordType,
+void TableRecordRep::putRecord (AipsIO& os, Int recordType,
 				const TableAttr& parentAttr) const
 {
     os.putstart ("TableRecord", 1);              // version 1
@@ -428,7 +428,7 @@ void TableRecordRep::putData (AipsIO& os, const TableAttr& parentAttr) const
     }
 }
 
-void TableRecordRep::getRecord (AipsIO& os, int& recordType,
+void TableRecordRep::getRecord (AipsIO& os, Int& recordType,
 				const TableAttr& parentAttr)
 {
     // Support reading scalar, array, and table keyword sets as records.
