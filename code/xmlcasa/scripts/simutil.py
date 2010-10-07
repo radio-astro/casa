@@ -46,13 +46,13 @@ class compositenumber:
 
 class simutil:
     def __init__(self, direction="",
-                 startfreq=qa.quantity("245GHz"),
+                 centerfreq=qa.quantity("245GHz"),
                  bandwidth=qa.quantity("1GHz"),
                  totaltime=qa.quantity("0h"),
                  verbose=False):
         self.direction=direction
         self.verbose=verbose
-        self.startfreq=startfreq
+        self.centerfreq=centerfreq
         self.bandwidth=bandwidth
         self.totaltime=totaltime
         self.pmulti=0  # rows, cols, currsubplot
@@ -834,14 +834,13 @@ class simutil:
 
         # Ruze phase efficiency.    
         if epsilon==None: epsilon = eps[iobs] # microns RMS
-        if freq==None:            
-            startfreq_ghz=qa.convert(qa.quantity(self.startfreq),'GHz')
+        if freq==None:
+            freq_ghz=qa.convert(qa.quantity(self.centerfreq),'GHz')
             bw_ghz=qa.convert(qa.quantity(self.bandwidth),'GHz')
-            freq_ghz=qa.add(startfreq_ghz,qa.mul(qa.quantity(0.5),bw_ghz))
         else:            
             freq_ghz=qa.convert(qa.quantity(freq),'GHz')
         eta_p = pl.exp(-(4.0*3.1415926535*epsilon*freq_ghz.get("value")/2.99792458e5)**2)
-        if self.verbose: self.msg("ruze phase efficiency for surface accuracy of "+str(epsilon)+"um = " + str(eta_p),origin="noisetemp")
+        if self.verbose: self.msg("ruze phase efficiency for surface accuracy of "+str(epsilon)+"um = " + str(eta_p) + " at "+str(freq),origin="noisetemp")
 
         # antenna efficiency
         # eta_a = eta_p*eta_s*eta_b*eta_t
@@ -861,11 +860,6 @@ class simutil:
             if self.verbose: self.msg("using ALMA/ACA Rx specs",origin="noisetemp")
         else:
             if telescope=='EVLA':
-                # these are T_Rx/epsilon so may be incorrect
-                # http://www.vla.nrao.edu/astro/guides/vlas/current/node11.html
-                # http://www.vla.nrao.edu/astro/guides/evlareturn/stress_tests/L-Band/
-#                f0=[0.33,1.47,4.89,8.44,22.5,33.5,43.3]
-#                t0=[500, 70,  60,  55,  100, 130, 350]
                 # 201009114 from rick perley:
                 f0=[1.5,3,6,10,15,23,33,45]
                 t0=[10.,15,12,15,10,12,15,28]
@@ -921,7 +915,7 @@ class simutil:
                    telescope=None, diam=None, nant=None,
                    antennalist=None,
                    doimnoise=None,
-                   integration=None):
+                   integration=None,debug=None):
         
         import glob
         tmpname="tmp"+str(os.getpid())
@@ -995,10 +989,6 @@ class simutil:
         # start is center of first channel.  for nch=1, that equals center
         model_start=qa.quantity(freq)
        
-#        model_nchan=2
-#        model_width=qa.mul(qa.quantity(bandwidth),0.5)
-#        model_start=qa.add(qa.quantity(freq),qa.mul(model_width,-0.25))
-
         if str.upper(telescope).find('VLA')>0:
             sm.setspwindow(spwname="band1", freq=qa.tos(model_start), 
                            deltafreq=qa.tos(model_width), 
@@ -1025,7 +1015,7 @@ class simutil:
                     calcode="OBJ", distance='0m')
         reftime = me.epoch('TAI', "2012/01/01/00:00:00")
         if integration==None:
-            integration=qa.mul(etime,0.1)        
+            integration=qa.mul(etime,0.01)        
         self.msg("observing for "+qa.tos(etime)+" with integration="+qa.tos(integration))
         sm.settimes(integrationtime=integration, usehourangle=True, 
                     referencetime=reftime)
@@ -1039,6 +1029,10 @@ class simutil:
         
         eta_p, eta_s, eta_b, eta_t, eta_q, t_rx = self.noisetemp(telescope=telescope,freq=freq)
         eta_a = eta_p * eta_s * eta_b * eta_t
+        if self.verbose: 
+            self.msg('antenna efficiency    = ' + str(eta_a),origin="noise")
+            self.msg('spillover efficiency  = ' + str(eta_s),origin="noise")
+            self.msg('correlator efficiency = ' + str(eta_q),origin="noise")
         
         if pwv==None:
             # RI TODO choose based on freq octile
@@ -1046,7 +1040,7 @@ class simutil:
 
         # things hardcoded in ALMA etimecalculator, & defaults in simulator.xml
         t_ground=270.
-        t_cmb=2.73
+        t_cmb=2.725
         # eta_q = 0.88
         # eta_a = 0.95*0.8*eta_s
 
@@ -1062,43 +1056,46 @@ class simutil:
 
         
         if doimnoise:
-            cellsize=qa.quantity(3.e3/250./qa.convert(model_start,"GHz")["value"],"arcsec")  # need better cell determination - 250m?!
+            cellsize=qa.quantity(6.e3/250./qa.convert(model_start,"GHz")["value"],"arcsec")  # need better cell determination - 250m?!
             cellsize=[cellsize,cellsize]
             # very light clean - its an empty image!
             self.image(tmpname+".ms",tmpname,
                        "csclean",cellsize,[128,128],
                        "J2000 00:00:00.00 "+qa.angle(dec),
-                       500,"0.01mJy","natural",[],"I")
+                       100,"0.01mJy","natural",[],"I")
+
             ia.open(tmpname+".image")
             stats= ia.statistics(robust=True, verbose=False,list=False)
             ia.done()
-            imnoise=stats["rms"][0]
+            imnoise=(stats["rms"][0])*pl.sqrt(2)  # 2 polarizations
         else:
             imnoise=0.
                 
         if os.path.exists(tmpname+".T.cal"):
             tb.open(tmpname+".T.cal")
             gain=tb.getcol("GAIN")
-        #RI TODO average instead of first?
+            # RI TODO average instead of first?
             tb.done()
-            gain=1./(gain[0][0][0].real)**2
+            # gain is per ANT so square for per baseline;  
+            noiseperbase=1./(gain[0][0][0].real)**2
         else:
-            gain=0.
+            noiseperbase=0.
 
         nint= qa.convert(etime,'s')['value'] / qa.convert(integration,'s')['value'] 
-        gain=gain/pl.sqrt(nint)
- 
-        xx=glob.glob(tmpname+"*")
-        for k in range(len(xx)):
-            if os.path.isdir(xx[k]):
-                cu.removetable(xx[k])
-            else:
-                os.remove(xx[k])
+        theoreticalnoise=noiseperbase/pl.sqrt(nint)/pl.sqrt(0.5*nant*(nant-1))
+        
+        if debug==None:
+            xx=glob.glob(tmpname+"*")
+            for k in range(len(xx)):
+                if os.path.isdir(xx[k]):
+                    cu.removetable(xx[k])
+                else:
+                    os.remove(xx[k])
 
         if doimnoise:
-            return gain /pl.sqrt(.5*nant*(nant-1)), imnoise
+            return theoreticalnoise , imnoise
         else:
-            return gain /pl.sqrt(.5*nant*(nant-1))
+            return theoreticalnoise 
 
 
 

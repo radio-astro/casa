@@ -13,7 +13,8 @@ def simdata(
     ptgfile=None, integration=None, direction=None, mapsize=None, 
     maptype=None, pointingspacing=None, caldirection=None, calflux=None, 
     predict=None, 
-    refdate=None, complist=None, totaltime=None, antennalist=None, 
+    refdate=None, complist=None, compwidth=None,
+    totaltime=None, antennalist=None, 
     sdantlist=None, sdant=None,
     thermalnoise=None,
     user_pwv=None, t_ground=None, t_sky=None, tau0=None, leakage=None,
@@ -67,9 +68,9 @@ def simdata(
         return False
 
     if((not os.path.exists(skymodel)) and (os.path.exists(complist))):
-        msg("No skymodel found. Some functionality is not supported when predicting from only components.",priority="warn")
-        if analyze:
-            msg("In particular, fidelity image may be misleading due to division by small values",priority="warn")
+        msg("No skymodel found. Simulating from components only is new and still considered an 'expert' feature.",priority="warn")
+#        if analyze:
+#            msg("In particular, fidelity image may be misleading due to division by small values",priority="warn")
 
     grscreen=False
     grfile=False
@@ -156,8 +157,12 @@ def simdata(
             model_refdir, coffs = util.average_direction(compdirs)
             model_center = cl.getspectrum(0)['frequency']['m0']
             # components don't yet support spectrum
-            model_width = "2GHz"
-            msg("component-only simulation: setting bandwidth to 2GHz",priority="warn")
+            if util.isquantity(compwidth,halt=False):
+                model_width=compwidth                
+            else:
+                model_width = "2GHz"
+                msg("component-only simulation, compwidth unset: setting bandwidth to 2GHz",priority="warn")
+
             model_nchan = 1
 
             cmax=0.0014 # ~5 arcsec
@@ -346,7 +351,7 @@ def simdata(
         msg("phase center = " + imcenter)
         if nfld>1 and verbose:
             for idir in range(min(len(pointings),20)):
-                msg("   "+dir)
+                msg("   "+pointings[idir])
             if nfld>=20:
                 msg("   (printing only first 20 - see pointing file for full list)")
             
@@ -837,7 +842,7 @@ def simdata(
                 
             noise_any=True
 
-            eta_p, eta_s, eta_b, eta_t, eta_q, t_rx = util.noisetemp()
+            eta_p, eta_s, eta_b, eta_t, eta_q, t_rx = util.noisetemp(freq=model_center)
 
             # antenna efficiency
             eta_a = eta_p * eta_s * eta_b * eta_t
@@ -847,7 +852,7 @@ def simdata(
                 msg('correlator efficiency = ' + str(eta_q),origin="noise")
  
             # Cosmic background radiation temperature in K. 
-            t_cmb = 2.275
+            t_cmb = 2.725
 
             noisymsroot = msroot+".noisy"
 
@@ -1263,7 +1268,7 @@ def simdata(
                 if not os.path.exists(complist):
                     return False
                 else:
-                    msg("If you are simulating from componentlist only, analysis is not fully implemented.  If you have a sky model image, please set the skymodel parameter.",priority="warn")
+                    msg("If you have a sky model image, please set the skymodel parameter.",priority="warn")
 
             modelim=newmodel
 

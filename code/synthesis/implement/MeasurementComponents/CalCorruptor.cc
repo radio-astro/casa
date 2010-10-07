@@ -279,8 +279,6 @@ Complex AtmosCorruptor::simPar(const VisIter& vi, VisCal::Type type,Int ipar){
 	
 
       if (type==VisCal::M) {
-	// Thompson Moran Swenson say factor of 2 here:?
-	// factor = amp() / sqrt( 2 * deltaNu * tint ) ;	
 	factor = amp() / sqrt( deltaNu * tint ) ;	
 	airmass= 0.5*(airMass_(currAnt()) + airMass_(currAnt2()));
 	
@@ -291,8 +289,6 @@ Complex AtmosCorruptor::simPar(const VisIter& vi, VisCal::Type type,Int ipar){
 
       } else if (type==VisCal::T) {
 
-	// Thompson Moran Swenson say factor of 2 here:?
-	// factor = amp() / sqrt( 2 * deltaNu * tint ) ;
 	factor = sqrt( amp() / sqrt( deltaNu * tint ) ) ;
 	airmass = airMass_(currAnt());
 
@@ -554,6 +550,7 @@ void AtmosCorruptor::initialize(const VisIter& vi, const Record& simpar, VisCal:
       os << " tauscale=" << tauscale() << LogIO::POST;
    
     // conversion to Jy when divided by D1D2 for an M, 
+    // extra sqrt(2) or application to real & imag
     amp() = 4 * C::sqrt2 * 1.38062e-16 * 1e23 * 1e-4 / 		
       ( simpar.asFloat("antefficiency") * 
 	simpar.asFloat("correfficiency") * C::pi );

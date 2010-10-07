@@ -169,6 +169,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value></value>
     </param>
 
+    <param type="string" name="compwidth" subparam="true">
+      <description>optional bandwidth if simulating from components only</description>
+      <value>"2GHz"</value>
+    </param>
+
     <param type="string" name="totaltime" subparam="true">
       <description>total time of observation</description>
       <value>7200s</value>
@@ -484,6 +489,7 @@ modifying the description doesn't work yet but its an improvement ticket.
 	    <description>optional model componentlist file</description>
 	    <value type="string"></value>
 	  </default>
+	  <default param="compwidth"><value type="string">2GHz</value></default>
 	  <default param="antennalist"><value type="string">alma.out10.cfg</value></default>
 	  <default param="refdate"><value type="string">2012/05/21/22:05:00</value></default>
 	  <default param="totaltime"><value>"7200s"</value></default>
@@ -614,6 +620,10 @@ mosaic simulation task:
          may have been generated above)
        * if graphics selected, display the array (like plotants), the uv 
          coverage, the synthesized (dirty) beam, and ephemeris information
+       * if simulating from component list only, you should specify
+         modifymodel=False, and set compwidth, the desired bandwidth - 
+         there is not currently a way to specify the spectrum of a component, 
+         so simulations from a componentlist only will be continuum (1 chan)
     refdate -- central time of simulated observation eg: '2012/05/21/22:05:00'
        * NOTE: observations are currently centered at the nearest transit *
     totaltime --- total time of observation e.g '7200s'

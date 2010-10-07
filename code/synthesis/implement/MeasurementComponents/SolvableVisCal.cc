@@ -760,22 +760,6 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
 
     	if (corruptor_p->curr_time()!=refTime()) 
 	  corruptor_p->setCurrTime(refTime());
-
-//    	  corruptor_p->curr_time()=refTime();
-//    	  // find new slot if required
-//    	  Double dt(1e10),dt0(-1);
-//    	  dt0 = abs(corruptor_p->slot_time() - refTime());
-//    	  
-//    	  for (Int newslot=0;newslot<corruptor_p->nSim();newslot++) {
-//    	    dt=abs(corruptor_p->slot_time(newslot) - refTime());
-//    	    // is this newslot closer to the current time?
-//    	    if (dt<dt0) {
-//    	      corruptor_p->curr_slot()=newslot;
-//    	      dt0 = dt;
-//    	    }
-//    	  }
-//    	}
-//    	if (prtlev()>5) cout << "  slot = "<< corruptor_p->curr_slot()<<endl;
     	
     	solveCPar()=Complex(0.0);
     	solveParOK()=False;
@@ -790,24 +774,19 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
     	    
     	    // baseline or antenna-based?
     	    if (useBase) {
-    	      //blc(2)=blnidx(a1(irow),a2(irow));
-    	      //trc(2)=blc(2);
     	      gpos(2)=blnidx(a1(irow),a2(irow));
     	    } else {
-    	      //blc(2)=a1(irow);
-    	      //trc(2)=a1(irow);
     	      gpos(2)=a1(irow);
     	    }
     	    
     	    // RI TODO make some freqDepPar VCs return all ch at once
-    	    //if not freqDepPar, then nChanPar=1 right?
+    	    //if not freqDepPar, then nChanPar=1 
     	    for (Int ich=nChanPar()-1;ich>-1;--ich) {		
     	      focusChan()=ich;
     	      corruptor_p->setFocusChan(ich);
-    	      //blc(1)=ich;
-    	      //trc(1)=ich;
     	      gpos(1)=ich;
-    
+
+	      // gpos is (ipar, ich, iant|ibln)
     	      for (Int ipar=0;ipar<nPar();ipar++) {
     		gpos(0)=ipar;
     		if ( a1(irow)==a2(irow) ) {
@@ -816,33 +795,52 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
     		    solveCPar()(gpos)=0.0;
     		  else
     		    solveCPar()(gpos)=1.0;
+		  solveParOK()(gpos)=True;		     
     		} else {
     		  // specialized simPar for each VC - may depend on mode etc
     		  solveCPar()(gpos) = corruptor_p->simPar(vi,type(),ipar); 
+		  solveParOK()(gpos)=True;	      
+
+		  // if MS doesn't have ACs we need to fill ant2 b/c it'll 
+		  // never get selected in this loop over ant1
+		  // TODO clean this up
+		  if (not useBase) {
+		    gpos(2)=a2(irow);
+		    if (solveCPar()(gpos)==Complex(0.0)) {
+		      corruptor_p->currAnt()=a2(irow);
+		      solveCPar()(gpos) = corruptor_p->simPar(vi,type(),ipar); 
+		      solveParOK()(gpos)=True;	      
+		      corruptor_p->currAnt()=a1(irow);		      
+		    }
+		    gpos(2)=a1(irow);
+		  }
     		}
     	      }
-    
-    	      if ( a1(irow)==a2(irow) ) {
-    		// autocorrels should get 1. for multiplicative VC
-    		if (type()==VisCal::ANoise or type()==VisCal::A)
-    		  solveCPar()(blc,trc)=0.0;
-    		else
-    		  solveCPar()(blc,trc)=1.0;
-    	      } else {
-    		// specialized simPar for each VC - may depend on mode etc
-    		for (Int ipar=0;ipar<nPar();ipar++) 
-		  // RI TODO left-hand operand of comma has no effect:
-    		  solveCPar()(blc,trc)[ipar,0,0] = corruptor_p->simPar(vi,type(),ipar);		
-    	      }		      
-    
-    	    }   
-    	    if (prtlev()>5) cout << "  row "<<irow<< " set; cparshape="<<solveCPar().shape()<<endl;
+
+
+// 20101006 
+//    	      if ( a1(irow)==a2(irow) ) {
+//    		// autocorrels should get 1. for multiplicative VC
+//    		if (type()==VisCal::ANoise or type()==VisCal::A)
+//    		  solveCPar()(blc,trc)=0.0;
+//    		else
+//    		  solveCPar()(blc,trc)=1.0;
+//    	      } else {
+//    		// specialized simPar for each VC - may depend on mode etc
+//    		for (Int ipar=0;ipar<nPar();ipar++) 
+//		  // RI TODO left-hand operand of comma has no effect:
+//    		  (solveCPar()(blc,trc))[ipar,0,0] = corruptor_p->simPar(vi,type(),ipar);		
+//    	      }
+
+    	    } //ich
+
+//    	    if (prtlev()>5) cout << "  row "<<irow<< " set; cparshape="<<solveCPar().shape()<<endl;
     	    // if using gpos and not changing these then they stay set this way
     	    //blc(1)=0;
     	    //trc(1)=nChanPar()-1;
-    	    blc(2)=gpos(2);
-    	    trc(2)=gpos(2);
-    	    solveParOK()(blc,trc)=True;	      
+	    //    	    blc(2)=gpos(2);
+	    //    	    trc(2)=gpos(2);
+    	    //solveParOK()(blc,trc)=True;
     	  }// if not flagged
     	}// row
     	if (prtlev()>5) cout << "  about to keep, cs.parshape="<<cs().par(currSpw()).shape()<<endl;
