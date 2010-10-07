@@ -108,7 +108,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="string" name="tweight" subparam="true">
             <description>weighting for time averaging</description>
-            <value>none</value>
+            <value>tintsys</value>
             <allowed kind="enum">
             <value>none</value>
             <value>var</value>
@@ -125,7 +125,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="pweight" subparam="true">
-            <value>none</value>
+            <value>tsys</value>
             <allowed kind="enum">
             <value>none</value>
             <value>var</value>
@@ -296,13 +296,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <when param="timeaverage">
                 <equals type="bool" value="False"/>
                 <equals type="bool" value="True">
-                        <default param="tweight"><value type='string'>none</value></default>
+                        <default param="tweight"><value type='string'>tintsys</value></default>
                 </equals>
             </when>
             <when param="polaverage">
                 <equals type="bool" value="False"/>
                 <equals type="bool" value="True">
-                        <default param="pweight"><value type='string'>none</value></default>
+                        <default param="pweight"><value type='string'>tsys</value></default>
                 </equals>
             </when>
 
@@ -397,21 +397,20 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 example: if True, this happens after calibration
                 &gt;&gt;&gt;timeaverage expandable parameter
                  tweight -- weighting for time average
-                         options: 'none'
-                                  'var'   (1/var(spec) weighted)
+                         options: 'var'   (1/var(spec) weighted)
                                   'tsys'  (1/Tsys**2 weighted)
                                   'tint'  (integration time weighted)
                                   'tintsys'  (Tint/Tsys**2)
                                   'median'  ( median averaging)
-                         default: 'none'
+                         default: 'tintsys'
         polaverage -- average polarizations
                 options: (bool) True,False
                 default: False
                 &gt;&gt;&gt;polaverage expandable parameter
                  pweight -- weighting for polarization average
-                         options: 'none'
-                                  'var'  (1/var(spec) weighted)
+                         options: 'var'  (1/var(spec) weighted)
                                   'tsys' (1/Tsys**2 weighted)
+                         default: 'tsys'
         kernel -- type of spectral smoothing
                 options: 'hanning','gaussian','boxcar', 'none'
                 default: 'none'
