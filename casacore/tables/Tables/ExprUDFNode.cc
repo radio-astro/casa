@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprUDFNode.cc 20940 2010-08-25 09:08:06Z gervandiepen $
+//# $Id: ExprUDFNode.cc 20983 2010-10-01 10:02:48Z gervandiepen $
 
 //# Includes
 #include <tables/Tables/ExprUDFNode.h>
@@ -35,7 +35,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                                       const TableExprNodeSet& source)
     : TableExprNodeMulti (udf->dataType(), VTScalar, OtFunc, source),
       itsUDF (udf)
-  {}
+  {
+    // The source may be empty which causes the expression type
+    // to be made constant. Force it to be variable.
+    exprtype_p = Variable; 
+    // Set the unit (is also fine if undefined).
+    setUnit (Unit(udf->getUnit()));
+ }
 
   TableExprUDFNode::~TableExprUDFNode()
   {

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSCalEngine.cc 20941 2010-08-25 18:35:26Z gervandiepen $
+//# $Id: MSCalEngine.cc 20971 2010-09-29 06:54:50Z gervandiepen $
 
 #include <derivedmscal/DerivedMC/MSCalEngine.h>
 #include <tables/Tables/TableRecord.h>
@@ -354,14 +354,21 @@ void MSCalEngine::fillCalDesc()
 }
 
 Table MSCalEngine::getSubTable (Int calDescId, const String& subTabName,
-                                 Bool mustExist)
+                                Bool mustExist)
 {
   // If defined, open a subtable in the MS referred to by the name in the
   // MS_NAME column of the CAL_DESC subtable.
   Table calDescTab (itsTable.keywordSet().asTable("CAL_DESC"));
   ROScalarColumn<String> nameCol(calDescTab, "MS_NAME");
-  // The MS referred to must be in the same directory as the CalTable.
-  Table ms (Path(itsTable.tableName()).dirName() + '/' + nameCol(calDescId));
+  // If the path is relative, use the CalTable's directory.
+  String msName = nameCol(calDescId);
+  if (msName.empty()) {
+    throw DataManError ("MSCalEngine: no MS name given in CAL_DESC table");
+  }
+  if (msName[0] != '/') {
+    msName = Path(itsTable.tableName()).dirName() + '/' + msName;
+  }
+  Table ms(msName);
   if (ms.keywordSet().isDefined (subTabName)) {
     return ms.keywordSet().asTable(subTabName);
   }

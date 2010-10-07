@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RecordRep.cc 20901 2010-06-09 07:23:37Z gervandiepen $
+//# $Id: RecordRep.cc 20969 2010-09-27 12:45:04Z gervandiepen $
 
 #include <casa/Containers/RecordRep.h>
 #include <casa/Containers/BlockIO.h>
@@ -1220,7 +1220,7 @@ void RecordRep::putData (AipsIO& os) const
     }
 }
 
-void RecordRep::getRecord (AipsIO& os, int& recordType)
+void RecordRep::getRecord (AipsIO& os, Int& recordType)
 {
     // Support reading scalar and array keyword sets as records.
     // They are the very old way of storing keywords, since long replaced

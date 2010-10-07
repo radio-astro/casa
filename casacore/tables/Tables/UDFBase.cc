@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: UDFBase.cc 20940 2010-08-25 09:08:06Z gervandiepen $
+//# $Id: UDFBase.cc 20983 2010-10-01 10:02:48Z gervandiepen $
 
 //# Includes
 #include <tables/Tables/UDFBase.h>
@@ -85,6 +85,7 @@ namespace casa {
       AlwaysAssert (Int(shape.size()) == itsNDim, AipsError);
     }
     itsShape = shape;
+    itsNDim  = itsShape.size();
   }
 
   void UDFBase::setUnit (const String& unit)
@@ -146,7 +147,7 @@ namespace casa {
     // Not found. See if it can be loaded dynamically.
     // The library name should be the first part of the function name.
     Int j = fname.index('.');
-    if (j > 0  &&  j < Int(name.size())-1) {
+    if (j > 0  &&  j < Int(fname.size())-1) {
       String libname(fname.substr(0,j));
       // Try to load the dynamic library and see if registered now.
       DynLib dl(libname, string("libcasa_"), "register_"+libname, False);
