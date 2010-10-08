@@ -939,6 +939,19 @@ casa_config_end()
 #
 set( PYTHON_LIBD ${CMAKE_INSTALL_PREFIX}/python/${PYTHONV} )
 set( PYTHON_TASKD ${PYTHON_LIBD} )
+#
+# allow user to override contents of casadef.py (needed for linux rpms)
+#
+if( NOT PYTHONLIBD )
+    set( PYTHON_LIBD_CASADEF ${PYTHON_LIBD} )
+else()
+    set( PYTHON_LIBD_CASADEF ${PYTHONLIBD} )
+endif()
+if( NOT PYTHONTASKD )
+    set( PYTHON_TASKD_CASADEF ${PYTHON_TASKD} )
+else()
+    set( PYTHON_TASKD_CASADEF ${PYTHONTASKD} )
+endif()
 
 # The modules must be defined in dependency order!
 # This will set up include paths, and which libraries to link to
