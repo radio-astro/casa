@@ -525,11 +525,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         but does not write out this data.
 
         *** Only apply to 'spectra' plottype ***
-        Note that colormap and linestyles cannot be controlled at a time. 
-        The 'linestyles' is ignored if both of them are specified. 
-        Some plot options, like annotation and changing titles,
-        legends, fonts, and the like are not supported in this task.  
-        You should use sd.plotter from the ASAP toolkit directly for this.
+        Note that colormap and linestyles cannot be controlled at a time.
+        The 'linestyles' is ignored if both of them are specified.
+        Some plot options, like changing titles, legends, fonts,
+        and the like are not supported in this task.  You should use
+        sd.plotter from the ASAP toolkit directly for this.
 
         This task uses the JPL line catalog as supplied by ASAP.
         If you wish to use a different catalog, or have it plot
@@ -542,24 +542,29 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         individual panels.  We recommend that you use scanlist, field,
         and iflist to give a single selection for each run.
 
-        Currently, setting specunit='GHz' fixes the x-axis span of
-        each IF panel to be the same (an example of the limitations
-        of ASAP plotting at present).
-
-        This task adds an additional toolbar to ASAP plotter which
-        has three buttons, 'spec value', 'statistics', and 'Quit'. 
-        When the 'spec value' button is pressed and activated, you can 
+        This task adds an additional toolbar to Matplotlib plotter which
+        has five buttons, 'spec value', 'statistics', 'notaion', '+ page'
+        and 'Quit'.
+        When the 'spec value' button is pressed and activated, you can
         display a spectral value on the toolbar along with mouse
         movement. Click the LEFT-mouse button over a spectrum to select
         it, and drag mouse in the panel to output the spectral value of
         x-position of mouse cursor. The selection is released when you
-        release the mouse button. 
+        release the mouse button.
         When 'statistic' button is pressed and activated, you can get
         statistic values of a channel region selected by mouse. Select a
         rectangle region with LEFT/RIGHT-mouse to SELECT/EXCLUDE the
         channel region to calculate statistics for the all spectra
-        plotted. The results are printed on the casapy console. 
-        Press 'Quit' button to close the plotter. 
+        plotted. The results are printed on the casapy console.
+        When 'notation' button is pressed and activated, you can
+        graphically add a text on a position of plot. Click the
+        LEFT-mouse on a position of plot to load notaion window, and
+        input a text to the textbox, select an anchor, and press 'print'
+        button to print it on the plot. Click RIGHT-mouse on a text and
+        cascade menu will let you select either delete or modify it.
+        When you select a panel parameter with more than 16 panels,
+        '+ page' button is activated and let you go through pages.
+        Press 'Quit' button to close the plotter.
 
         *** other plottype options ***
         Currently most of the parameters are ignored in these modes.
@@ -575,7 +580,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         If you wish to change the fluxunit (see below), and telescopeparm='',
         for the AT telescopes it will use internal telescope parameters for
         flux conversion. For GBT, it will use an approximate aperture
-        efficiency conversion.  If you give telescopeparm a list ,
+        efficiency conversion.  If you give telescopeparm a list,
         then if the list has a single float it is assumed to
         be the gain in Jy/K, if two or more elements they are assumed
         to be telescope diameter (m) and aperture efficiency
