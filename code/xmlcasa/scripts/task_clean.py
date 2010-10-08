@@ -451,28 +451,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                 imset.storeCubeImages(finalimagename,imset.imagelist,j,imagermode)
         
         imCln.close()
-        #
-        # If MS-MFS was used, compute alpha (spectral index)
-        # and beta (sp. index variation) images from the
-        # Taylor term images.
-        # Compute alpha and beta only for regions where total 
-        # intensity is larger than 5 times the user-specified threshold.
-        #
-        if (localAlgorithm=='msmfs'):
-            casalog.post('Output Taylor-coefficient images : ' + str(restoredimage));
-            calcspec = True;
-            for ii in range(0,len(restoredimage[0:])):
-	       if( not os.path.exists(restoredimage[ii]) ):
-                   calcspec = False;
-            if(calcspec):
-               casalog.post('Calculating Spectral Index for regions where total intensity > 5 x threshold = '+str(5*(qa.quantity(threshold)['value']))+' '+qa.quantity(threshold)['unit'],'INFO') 
-	       casalog.post('Output Spectral Index image : ' + imset.imagelist[0]+'.image.alpha' );
-               msmfsCalcAlphaBeta(imtemplate=restoredimage[0],
-                                  taylorlist=restoredimage[0:],
-                                  namealpha=imset.imagelist[0]+'.image.alpha',
-                                  namebeta=imset.imagelist[0]+'.image.beta',
-                                  threshold=5*(qa.convert(threshold,'Jy')['value']))
-
+        ####################################################################
         if dochaniter:
             imset.cleanupTempFiles(tmppath)
             imset.imagelist=finalimagename

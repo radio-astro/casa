@@ -90,8 +90,8 @@ else:
    correct_sigma = 0.00099339;
    correct_sumsq = 1.03476342;
    correct_intensity = 14.8406724;
-   correct_alpha = -0.4705492;
-   correct_beta = -0.12776753;
+   correct_alpha = -0.47218161;
+   correct_beta = -0.1136824;
 
    # This is the truth (for prerelease, r12895)
    #correct_sigma = 0.0010294;
@@ -164,9 +164,9 @@ else:
       if(diff_beta<0.02): 
          print >>logfile,'* Passed spectral curvature test ';
       else: 
-         print >>logfile,'* FAILED spectral index test '
+         print >>logfile,'* FAILED spectral curvature test '
 	 regstate = False;
-      print >>logfile,'-- spectral index : ' + str(midpix['value']['value']) + ' (' + str(correct_beta) + ')';
+      print >>logfile,'-- spectral curvature : ' + str(midpix['value']['value']) + ' (' + str(correct_beta) + ')';
    else:
       print >>logfile,'-- FAILED : No spectral curvature map generated';
       regstate = False;
