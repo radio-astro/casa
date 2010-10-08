@@ -231,6 +231,15 @@ Bool MultiTermLatticeCleaner<T>::getresidual(int order, Lattice<T> & residual)
   return True;
 }
 
+/* Output Hessian matrix */
+template <class T>
+Bool MultiTermLatticeCleaner<T>::getinvhessian(Matrix<Double> & invhessian)
+{
+        invhessian.resize((*invMatA_p[0]).shape());
+	invhessian = (*invMatA_p[0]); //*(*matA_p[0])(0,0);
+  return True;
+}
+
 /* Do the deconvolution */
 template <class T>
 Int MultiTermLatticeCleaner<T>::mtclean(LatticeCleanProgress* progress)
@@ -339,6 +348,9 @@ Int MultiTermLatticeCleaner<T>::mtclean(LatticeCleanProgress* progress)
       os << " Coeffs: ";
       for(Int taylor=0;taylor<ntaylor_p;taylor++)
 	      os << (*matCoeffs_p[IND2(taylor,maxscaleindex)]).getAt(globalmaxpos) << "  ";
+      //os << " OrigRes: ";
+      //for(Int taylor=0;taylor<ntaylor_p;taylor++)
+      //      os << (*matR_p[IND2(taylor,maxscaleindex)]).getAt(globalmaxpos) << "  ";
       os << LogIO::POST;
     }
     
