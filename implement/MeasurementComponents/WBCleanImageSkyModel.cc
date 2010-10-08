@@ -98,9 +98,20 @@ WBCleanImageSkyModel::WBCleanImageSkyModel(const Int ntaylor,const Vector<Float>
 {
   initVars();
 //  if(adbg) cout << "CONSTRUCTOR with userscalevector !!" << endl;
-  nscales_p=userScaleSizes.nelements();
-  scaleSizes_p.resize(nscales_p);
-  for(Int i=0;i<nscales_p;i++) scaleSizes_p[i] = userScaleSizes[i];
+  if(userScaleSizes.nelements()==0)  os << "No scales set !" << LogIO::WARN;
+  if(userScaleSizes[0]!=0.0)
+  {
+    nscales_p=userScaleSizes.nelements()+1;
+    scaleSizes_p.resize(nscales_p);
+    for(Int i=1;i<nscales_p;i++) scaleSizes_p[i] = userScaleSizes[i-1];
+    scaleSizes_p[0]=0.0;
+  }
+  else
+  {
+    nscales_p=userScaleSizes.nelements();
+    scaleSizes_p.resize(nscales_p);
+    for(Int i=0;i<nscales_p;i++) scaleSizes_p[i] = userScaleSizes[i];
+  }
   ntaylor_p=ntaylor;
   refFrequency_p=reffreq;
 };
@@ -317,7 +328,7 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	/******************* END MAJOR CYCLE LOOP *****************/
 	
 	/* Compute and write alpha,beta results to disk */
-	//writeResultsToDisk();
+	writeResultsToDisk();
 	
 	if(stopflag>0) return(True);
 	else return(False);
@@ -326,6 +337,7 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 
 /***********************************************************************/
 /* Write alpha and beta to disk. Compute from model images. */
+#if 0
 Int WBCleanImageSkyModel::writeResultsToDisk()
 {
   if(ntaylor_p<=1) return 0;
@@ -365,18 +377,20 @@ Int WBCleanImageSkyModel::writeResultsToDisk()
   }// model loop
 return 0;
 }
+#endif
 /***********************************************************************/
 
 /***********************************************************************/
-#if 0
+#if 1
 ///// Write alpha and beta to disk. Calculate from smoothed model + residuals.
 
 Int WBCleanImageSkyModel::writeResultsToDisk()
 {
   if(ntaylor_p<=1) return 0;
 
-  if(ntaylor_p==2) os << "Calculating Spectral Index" << LogIO::POST;
-  if(ntaylor_p>2) os << "Calculating Spectral Index and Curvature" << LogIO::POST;
+  os << "Output Taylor-coefficient images : " << imageNames << LogIO::POST;
+//  if(ntaylor_p==2) os << "Calculating Spectral Index" << LogIO::POST;
+//  if(ntaylor_p>2) os << "Calculating Spectral Index and Curvature" << LogIO::POST;
   
   PtrBlock<TempLattice<Float>* > smoothed;
   if(ntaylor_p>2) smoothed.resize(3);
@@ -388,15 +402,63 @@ Int WBCleanImageSkyModel::writeResultsToDisk()
   for(Int model=0;model<nfields_p;model++)
   {
 
-    String alphaname = (image(model)).name(False) +  String(".alpha");
-    String betaname = (image(model)).name(False) +  String(".beta");
+    String alphaname,betaname;
+    if(  ( (imageNames[0]).substr( (imageNames[0]).length()-3 , 3 ) ).matches("tt0") )
+    {
+	    alphaname = (imageNames[0]).substr(0,(imageNames[0]).length()-3) + "alpha";
+	    betaname = (imageNames[0]).substr(0,(imageNames[0]).length()-3) + "beta";
+    }
+    else
+    {
+            alphaname = (imageNames[0]) +  String(".alpha");
+            betaname = (imageNames[0]) +  String(".beta");
+    }
   
+    StokesImageUtil::FitGaussianPSF(PSF(model), bmaj, bmin, bpa);
+
+    /* Create empty alpha image */
     PagedImage<Float> imalpha(image(model).shape(),image(model).coordinates(),alphaname); 
     imalpha.set(0.0);
     
 
-    StokesImageUtil::FitGaussianPSF(PSF(model), bmaj, bmin, bpa);
+    /* Apply Inverse Hessian to the residuals */
     IPosition gip(4,image(model).shape()[0],image(model).shape()[1],1,1);
+    Matrix<Double> invhessian;
+    lc_p[model]->getinvhessian(invhessian);
+    //cout << "Inverse Hessian : " << invhessian << endl;
+    
+    /* Convolve the residuals with the PSF */
+    Int tindex;
+    LatticeExprNode len_p;
+    PtrBlock<TempLattice<Float>* > coeffresiduals(ntaylor_p),smoothresiduals(ntaylor_p);
+    for(Int taylor1=0;taylor1<ntaylor_p;taylor1++)
+    {
+	coeffresiduals[taylor1] = new TempLattice<Float>(gip,memoryMB_p);
+	smoothresiduals[taylor1] = new TempLattice<Float>(gip,memoryMB_p);
+	
+	index = getModelIndex(model,taylor1);
+        LatticeExpr<Float> cop(residual(index));
+	imalpha.copyData(cop);
+	//StokesImageUtil::Convolve(imalpha, bmaj, bmin, bpa,True);
+	StokesImageUtil::Convolve(imalpha,PSF(model));
+	LatticeExpr<Float> le(imalpha); 
+	(*smoothresiduals[taylor1]).copyData(le);
+
+    }
+    
+    for(Int taylor1=0;taylor1<ntaylor_p;taylor1++)
+    {
+	    len_p = LatticeExprNode(0.0);
+	    for(Int taylor2=0;taylor2<ntaylor_p;taylor2++)
+	    {
+                    //tindex = getModelIndex(model,taylor2);
+		    //len_p = len_p + LatticeExprNode((Float)(invhessian)(taylor1,taylor2)*(residual(tindex)));
+		    len_p = len_p + LatticeExprNode((Float)(invhessian)(taylor1,taylor2)*(*smoothresiduals[taylor2]));
+	    }
+	    (*coeffresiduals[taylor1]).copyData(LatticeExpr<Float>(len_p));
+    }
+    
+    /* Smooth the model images and add the above residuals */
     for(uInt i=0;i<smoothed.nelements();i++)
     {
 	    smoothed[i] = new TempLattice<Float>(gip,memoryMB_p);
@@ -405,16 +467,22 @@ Int WBCleanImageSkyModel::writeResultsToDisk()
 	    LatticeExpr<Float> cop(image(index));
 	    imalpha.copyData(cop);
 	    StokesImageUtil::Convolve(imalpha, bmaj, bmin, bpa);
-	    LatticeExpr<Float> le(imalpha+(residual(index))); 
+	    LatticeExpr<Float> le(imalpha+( *coeffresiduals[i] )); 
 	    (*smoothed[i]).copyData(le);
     }
 
 
-    /* Create a mask */
-    os << "Calculate spectral params for values greater than " << threshold()*2.0 << LogIO::POST;
-    LatticeExpr<Float> mask1(iif((*smoothed[0])>(threshold()*2.0),1.0,0.0));
-    LatticeExpr<Float> mask0(iif((*smoothed[0])>(threshold()*2.0),0.0,1.0));
-	 
+    /* Create a mask - make this adapt to the signal-to-noise */
+    LatticeExprNode leMaxRes=max(residual( getModelIndex(model,0) ));
+    Float maxres = leMaxRes.getFloat();
+    // Threshold is either 10% of the peak residual (psf sidelobe level) or 
+    // user threshold, if deconvolution has gone that deep.
+    Float specthreshold = MAX( threshold()*2 , maxres/10.0 );
+    os << "Calculating spectral parameters for  Intensity > MAX(threshold*2,peakresidual/10) = " << specthreshold << " Jy/beam" << LogIO::POST;
+    LatticeExpr<Float> mask1(iif((*smoothed[0])>(specthreshold),1.0,0.0));
+    LatticeExpr<Float> mask0(iif((*smoothed[0])>(specthreshold),0.0,1.0));
+
+    /* Calculate alpha and beta */
     LatticeExpr<Float> alphacalc( ((*smoothed[1])*mask1)/((*smoothed[0])+(mask0)) );
     imalpha.copyData(alphacalc);
     
@@ -424,6 +492,7 @@ Int WBCleanImageSkyModel::writeResultsToDisk()
     imalpha.setImageInfo(ii);
     //imalpha.setUnits(Unit("Spectral Index"));
     imalpha.table().unmarkForDelete();
+    os << "Written Spectral Index Image : " << alphaname << LogIO::POST;
 
     if(ntaylor_p>2)
     {
@@ -436,9 +505,29 @@ Int WBCleanImageSkyModel::writeResultsToDisk()
       imbeta.setImageInfo(ii);
       //imbeta.setUnits(Unit("Spectral Curvature"));
       imbeta.table().unmarkForDelete();
+      os << "Written Spectral Curvature Image : " << betaname << LogIO::POST;
     }
 
+    /* Print out debugging info for center pixel */
+    /*
+    IPosition cgip(4,512,512,0,0);
+    for(Int i=0;i<ntaylor_p;i++)
+    {
+	    cout << "Original residual : " << i << " : " << residual( getModelIndex(model,i) ).getAt(cgip) << endl;
+	    cout << "Smoothed residual : " << i << " : " << (*smoothresiduals[i]).getAt(cgip) << endl;
+	    cout << "Coeff residual : " << i << " : " << (*coeffresiduals[i]).getAt(cgip) << endl;
+    }
+    */
+    
+
+    /* Clean up temp arrays */
     for(uInt i=0;i<smoothed.nelements();i++) if(smoothed[i]) delete smoothed[i];
+    for(uInt i=0;i<coeffresiduals.nelements();i++) 
+    {
+	    if(coeffresiduals[i]) delete coeffresiduals[i];
+	    if(smoothresiduals[i]) delete smoothresiduals[i];
+    }
+
   }// model loop
 return 0;
 }
