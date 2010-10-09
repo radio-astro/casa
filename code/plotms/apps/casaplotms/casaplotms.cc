@@ -46,20 +46,29 @@ int main(int argc, char* argv[]) {
     PlotMSSelection select;
     PlotMSAveraging averaging;
     bool cachedImageSizeToScreenResolution = false, usePixels = false,
-         casapy = false, debug = false, multiPlot = false;
+         casapy = false, debug = false, multiPlot = false, 
+         nopopups = false;
   
     // Parse arguments.
     String arg, arg2, arg3;
     size_t index;
-    String ARG_HELP1 = "-h", ARG_HELP2 = "--help", ARG_VIS = "vis",
-           ARG_XAXIS = "xaxis", ARG_YAXIS = "yaxis", ARG_CISTSR = "-c",
+    String ARG_HELP1 = "-h", 
+           ARG_HELP2 = "--help", 
+           ARG_VIS = "vis",
+           ARG_XAXIS = "xaxis", 
+           ARG_YAXIS = "yaxis", 
+           ARG_CISTSR = "-c",
            ARG_CISTSR2 = "--cachedimagesizetoscreenresolution",
-           ARG_PIXELS1 = "-p", ARG_PIXELS2 = "--pixels",
+           ARG_PIXELS1 = "-p", 
+           ARG_PIXELS2 = "--pixels",
            ARG_CASAPY = PlotMSDBusApp::APP_CASAPY_SWITCH,
-           ARG_DEBUG1 = "-d", ARG_DEBUG2 = "--debug",
+           ARG_DEBUG1 = "-d", 
+           ARG_DEBUG2 = "--debug",
            ARG_LOGFILE = PlotMSDBusApp::APP_LOGFILENAME_SWITCH,
            ARG_LOGFILTER = PlotMSDBusApp::APP_LOGFILTER_SWITCH,
-           ARG_MULTIPLOT = "-m";
+           ARG_MULTIPLOT = "-m",
+           ARG_NOPOPUPS = "--nopopups";
+           
     const vector<String>& selectFields = PlotMSSelection::fieldStrings(),
                           averagingFields = PlotMSAveraging::fieldStrings();
     
@@ -106,6 +115,9 @@ int main(int argc, char* argv[]) {
             cout << "\n* " << ARG_MULTIPLOT << "\n     "
                  << "Have initial plot be multiplot instead of single plot."
             
+			     << "\n* "  << ARG_NOPOPUPS  << "\n     "
+			     << "Use logger and status bar instead of showing error messages in a popup."
+			     
                  << "\n* " << ARG_PIXELS1 << " or " << ARG_PIXELS2 << "\n     "
                  << "Use pixels instead of symbols for initial plot."
             
@@ -144,6 +156,9 @@ int main(int argc, char* argv[]) {
             
         } else if(arg2 == ARG_MULTIPLOT) {
             multiPlot = true;
+            
+        } else if(arg2 == ARG_NOPOPUPS) {
+            nopopups = true;
             
         } else if(arg2 == ARG_CASAPY) {
             casapy = true;
@@ -231,6 +246,9 @@ int main(int argc, char* argv[]) {
     PlotMS plotms(params, casapy);
     if(!casapy) plotms.showGUI(true); // don't automatically show for casapy
     
+    if (nopopups)
+		plotms.its_want_avoid_popups = true;
+		
     // Set up parameters for plot.
     PlotMSPlotParameters plotparams = multiPlot ?
             PlotMSMultiPlot::makeParameters(&plotms) :

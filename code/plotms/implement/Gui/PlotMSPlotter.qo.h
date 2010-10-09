@@ -272,6 +272,7 @@ private:
     // "About" string.
     QString itsAboutString_;
     
+    
     bool _triggerAction(PlotMSAction& action);
     
     // Initializes the plotter with the given implementation.  MUST be called
