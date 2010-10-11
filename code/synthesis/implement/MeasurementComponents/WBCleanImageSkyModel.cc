@@ -274,7 +274,7 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	/******************* START MAJOR CYCLE LOOP *****************/
 	os << "Starting the solver major cycles" << LogIO::POST;
 	Int index=0;
-	for(Int itercountmaj=0;itercountmaj<100;itercountmaj++)
+	for(Int itercountmaj=0;itercountmaj<1000;itercountmaj++)
 	{
 	   for(Int thismodel=0;thismodel<nfields_p;thismodel++)
 	   {
@@ -307,7 +307,7 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	   
 	   /* Do the prediction and residual computation for all models. */
 	   /* If exiting, call 'solveResiduals' with modelToMS = True to write the model to the MS */
-	   if(abs(stopflag) || itercountmaj==99) 
+	   if(abs(stopflag) || itercountmaj==999) 
 	   {
 	       os << "Calculating final residual images" << LogIO::POST;
 	       solveResiduals(se,True);
@@ -322,7 +322,7 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	   if(abs(stopflag)) break;
 
 	   /* If reached 100 major cycles - something is wrong */
-	   if(itercountmaj==99) os << " Reached the allowed maximum of 100 major cycles " << LogIO::POST;
+	   if(itercountmaj==999) os << " Reached the allowed maximum of 1000 major cycles " << LogIO::POST;
 
 	} 
 	/******************* END MAJOR CYCLE LOOP *****************/

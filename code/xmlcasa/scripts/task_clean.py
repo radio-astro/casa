@@ -353,7 +353,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
 		#   - either same name as that derived from 'imagename', stored in 'modelimages'
 		#   - or, if the user has explicitly specified via 'modelimage'.
 		# If neither, make empty ones.
-		# Note : modelimages is an internal variable and modelimage is user-specified :)
+		# Note : modelimages is an internal variable and modelimage is user-specified
                 for tt in range(0, nterms):
 		    if not os.path.exists(modelimages[tt]):
 			 imCln.make(modelimages[tt])
@@ -362,15 +362,18 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
 		         casalog.post("Found and starting from existing model on disk : "+modelimages[tt]);
 		# Check for a user-specified modelimage list to add to current model
 		if( modelimage != '' and modelimage != [] ):
-		   if( type(modelimage)==list and len(modelimage)==nterms ):
-		       for tt in range(0,nterms):
+		   if( type(modelimage)==str ):
+		       modelimage = [modelimage];
+		   if( type(modelimage)==list ):
+		       nimages = min( len(modelimage), len(modelimages) );
+		       for tt in range(0,nimages):
 			   if( os.path.exists(modelimage[tt]) ):
 			       imset.convertmodelimage(modelimages=[modelimage[tt]],outputmodel=modelimages[tt]);
 			       casalog.post("Found user-specified model image : "+modelimage[tt]+" . Adding to starting model : "+modelimages[tt]);
 			   else:
 			       casalog.post("Cannot find user-specified model image : "+modelimage[tt]+" . Continuing with current model : "+modelimages[tt]);
 		   else:
-		      raise Exception,'Number of specified model images must match nterms';
+		      raise Exception,'Model image(s) must be a string or a list of strings';
 		
 		casalog.post('Running MS-MFS with '+str(nterms)+' Taylor-terms on dataset : ' + vis);
             #####################################################################
