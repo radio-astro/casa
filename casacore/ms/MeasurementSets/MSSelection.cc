@@ -701,59 +701,45 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return False;
   }
   //----------------------------------------------------------------------------
-  Matrix<Int> MSSelection::getChanList(const MeasurementSet* ms, const Int defaultStep) 
+  // This function also optionally sorts the matrix of SPWIDs and
+  // associated channel selection indices in ascending order of
+  // SPWIDs.
+  //
+  Matrix<Int> MSSelection::getChanList(const MeasurementSet* ms, const Int defaultStep,
+				       const Bool sorted) 
     {
       if (chanIDs_p.nelements() <= 0) getTEN(ms); 
-      Matrix<Int> chanIDList(0,0);
-      Int n=0,spw;
-      Int nChIds=chanIDs_p.shape()[0],
-	nSpwIds=spwIDs_p.shape()[0];
-
-      // Unless there were selected SPWs, don't do anything here.
-      if (nSpwIds != 0)
+      uInt nrows=chanIDs_p.nrow(), ncols=chanIDs_p.ncolumn();
+      Matrix<Int> chanIDList;
+      if (sorted)
 	{
-	  if (nChIds < nSpwIds)
-	    throw(MSSelectionError("MSSelection::getChanList() found more SPW IDs than channel IDs."));
+	  Vector<Int> spwIDList(chanIDs_p.column(0));//Extract the SPW IDs
+	  Vector<uInt> sortedNdx;
 	  //
-	  // Make a list of unique selected Spw IDs
+	  // Make a list of indices which will sort the chanID_p Matrix on
+	  // SPW ID (the first column of each row).
 	  //
-	  Vector<uInt> uniqueSpw;
-	  uniqueSpw.resize(nSpwIds);
-	  for (int i=0;i<nSpwIds;i++) uniqueSpw(i)=spwIDs_p(i);
-	  {
-	    Vector<uInt> spwNdx, spwNdx1;
-	    Bool deleteit;
-	    Sort sort(uniqueSpw.getStorage(deleteit), sizeof(Int));
-	    sort.sortKey((uInt)0, TpInt); // Set internal (to Sort) defaults.
-	    sort.sort(spwNdx, nSpwIds); // Get the sorted indices.
-	    sort.unique(spwNdx1,spwNdx); // Make the sorted indices unique.
-	    //
-	    // Copy the unique SPW IDs to a temp array (uniqueSpw).
-	    //
-	    n=spwNdx1.nelements();
-	    uniqueSpw.resize(n);
-	    for (int i=0;i<n;i++) uniqueSpw(i)=spwIDs_p(spwNdx1(i));
-	    nSpwIds=uniqueSpw.nelements();
-	  }
+	  Bool deleteit;
+	  Sort sort(spwIDList.getStorage(deleteit), sizeof(Int));
+	  sort.sortKey((uInt)0, TpInt);
+	  sort.sort(sortedNdx, nrows);
 	  //
-	  // Now move channel selection info. for IDs in uniqueSpw
-	  // list to a temp. Matrix to be returned to the caller.
+	  // Using the sorted indices, copy from the unsorted private
+	  // ChaIDs_p to the output (sorted) Matrix chandIDList.
 	  //
-	  for (Int i=0;i<nChIds;i++)
-	    for(Int s=0;s<nSpwIds;s++)
-	      if (chanIDs_p(i,0) == uniqueSpw(s)) 
-		{
-		  chanIDList.resize((n=chanIDList.shape()(0))+1,4,True);
-		  chanIDList(n,0)=chanIDs_p(i,0);
-		  chanIDList(n,1)=chanIDs_p(i,1);
-		  chanIDList(n,2)=chanIDs_p(i,2);
-		  chanIDList(n,3)=chanIDs_p(i,3);
-		}
-	  n=chanIDList.shape()(0);
-	  for(Int i=0;i<n;i++) 
-	    if (chanIDList(i,3) < 1) 
-	      chanIDList(i,3)=defaultStep;
+	  chanIDList.resize(chanIDs_p.shape());
+	  for(uInt targetRow=0; targetRow<nrows; targetRow++)
+	    for (uInt j=0; j<ncols; j++)
+	      chanIDList(targetRow,j)=chanIDs_p(sortedNdx(targetRow),j);
 	}
+      else
+	chanIDList = chanIDs_p;
+
+      for(uInt targetRow=0; targetRow<nrows; targetRow++)
+	if (chanIDList(targetRow,ncols-1) < 1) 
+	  chanIDList(targetRow,ncols-1)=defaultStep;
+
+
       return chanIDList.copy();
     }
   //----------------------------------------------------------------------------
