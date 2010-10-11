@@ -5,7 +5,7 @@
       xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="msview" category="utility, visualzation" async="never">
+<task type="function" name="msview" category="utility, visualization, editing" async="never">
 	<shortdescription>View a visibility data set</shortdescription>
 	<description>
         The msview task will display measurements in raster form.
