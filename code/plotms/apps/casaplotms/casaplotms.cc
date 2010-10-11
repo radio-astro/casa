@@ -249,6 +249,14 @@ int main(int argc, char* argv[]) {
     if (nopopups)
 		plotms.its_want_avoid_popups = true;
 		
+		
+	// check for hackjob env var CASAPLOTMS_NOPOPUPS set to "yes" (or
+	// anything starting with 'Y')
+	const char *ev = getenv("CASAPLOTMS_NOPOPUPS");
+	if (ev && (ev[0]=='Y' || ev[0]=='y'))
+		plotms.its_want_avoid_popups = true;
+		
+	
     // Set up parameters for plot.
     PlotMSPlotParameters plotparams = multiPlot ?
             PlotMSMultiPlot::makeParameters(&plotms) :
