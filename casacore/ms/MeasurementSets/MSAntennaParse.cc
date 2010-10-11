@@ -71,9 +71,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //    if (negate) cerr << "Generating a negation condition" << endl;
     if (negate) condition = !condition;
     if(node_p.isNull()) node_p = condition;
-
-    if (negate) node_p = node_p && condition;
-    else        node_p = node_p || condition;
+    else
+      if (negate) node_p = node_p && condition;
+      else        node_p = node_p || condition;
 
     return &node_p;
   }
