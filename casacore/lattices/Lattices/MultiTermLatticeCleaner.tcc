@@ -290,7 +290,8 @@ Int MultiTermLatticeCleaner<T>::mtclean(LatticeCleanProgress* progress)
   Int niters = itsMaxNiter;
  
   /********************** START MINOR CYCLE ITERATIONS ***********************/
-  Int numiters = MIN(40,niters-totalIters_p);
+  //Int numiters = MIN(40,niters-totalIters_p);
+  Int numiters = niters-totalIters_p;
   //cout << "niters,itsMaxiter : " << niters << " ,totalIters_p : " << totalIters_p << " , numiters : " << numiters << endl;
   
   /* If no iterations */
@@ -942,23 +943,27 @@ Int MultiTermLatticeCleaner<T>::computeFluxLimit(Float &fluxlimit, Float thresho
 
 	// Find max residual ( from all scale and taylor convos of the residual image )
 	// Find max ext PSF value ( from all scale convos of all the PSFs )
-	// factor = 0.5;
+	// factor = 0.01;
 	// fluxlimit = maxRes * maxExtPsf * factor;
 	
+  /*
 	Float maxRes=0.0;
 	Float maxExtPsf=0.0;
 	Float tmax=0.0;
 	IPosition tmaxpos;
 	Float ffactor=0.01;
 	Int maxscale=0;
-	
+
+
 	for(Int taylor=0;taylor<ntaylor_p;taylor++)
 	for(Int scale=0; scale<nscales_p;scale++)
 	{
 		findMaxAbsLattice((*mask_p),(*matR_p[IND2(taylor,scale)]),tmax,tmaxpos);
 		if(tmax > maxRes) maxscale = scale;
 		maxRes = MAX(maxRes,tmax);
+		cout << "MaxRes for taylor " << taylor << " and scale " << scale << " : " << maxRes << endl;
 	}
+
 	for (Int taylor1=0; taylor1<ntaylor_p;taylor1++) 
 	for (Int taylor2=0; taylor2<=taylor1;taylor2++) 
 	for (Int scale1=0; scale1<nscales_p;scale1++) 
@@ -966,13 +971,24 @@ Int MultiTermLatticeCleaner<T>::computeFluxLimit(Float &fluxlimit, Float thresho
 	{
 		findMaxAbsLattice((*mask_p),(*cubeA_p[IND4(taylor1,taylor2,scale1,scale2)]),tmax,tmaxpos, True);
 		maxExtPsf = MAX(maxExtPsf,tmax);
+		cout << "MaxExtPSF for taylor " << taylor1 << "," << taylor2 << " and scale " << scale1 << "," << scale2 << " : " << maxExtPsf << endl;
 	}
+        
+	Float norma1 = sqrt((1.0/(*matA_p[maxscale])(0,0)));
+	fluxlimit = max(threshold, (maxRes*norma1) * ffactor);
 	
-	Float norma = sqrt((1.0/(*matA_p[maxscale])(0,0)));
-	
-	fluxlimit = max(threshold, (maxRes*norma) * ffactor);
-	
-	os << "Max Residual : " << maxRes*norma << " FluxLimit : " << fluxlimit << LogIO::POST;
+	os << "Max Residual : " << maxRes*norma1 << " FluxLimit : " << fluxlimit << LogIO::POST;
+	cout << "Old : Max Residual : " << maxRes*norma1 << " FluxLimit : " << fluxlimit << endl;
+*/
+
+	Float maxres=0.0;
+	IPosition maxrespos;
+	findMaxAbsLattice((*mask_p),(*matR_p[IND2(0,0)]),maxres,maxrespos);
+	Float norma = (1.0/(*matA_p[0])(0,0));
+	Float rmaxval = maxres*norma;
+
+	fluxlimit = max(threshold, rmaxval/10.0);
+	os << "Max Residual : " << rmaxval << " Flux Limit for this major cycle : " <<  fluxlimit  << endl;
 	
 	return 0;
 }/* end of computeFluxLimit() */
