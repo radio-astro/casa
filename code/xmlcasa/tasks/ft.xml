@@ -5,7 +5,7 @@
       xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="ft" category="imaging">
+<task type="function" name="ft" category="imaging, calibration">
 	<shortdescription>Insert a source model into the MODEL_DATA column of a visibility set:</shortdescription>
 	<description>
        A source model (souce.model image) or components list is converted into a

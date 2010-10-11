@@ -9,7 +9,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!-- This is the MS statitics task                         -->
 
-<task type="function" name="msmoments" category="ms analysis">
+<task type="function" name="msmoments" category="manipulation">
 <shortdescription>Compute moments from an MS</shortdescription>
 
 <description>

@@ -5,7 +5,7 @@
       xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="flagdata2" category="data editing">
+<task type="function" name="flagdata2" category="editing" visibility="experimental">
     <shortdescription> All purpose flagging task based on selections. It allows the combination of several modes.</shortdescription>
     <description>
         The task will select a subset of data explicitly for flagging,

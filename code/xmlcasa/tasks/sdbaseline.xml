@@ -7,7 +7,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
 
 <!-- This is the param set for sdbaseline -->
 
-<task type="function" name="sdbaseline" startup="false" category="single dish">
+<task type="function" name="sdbaseline" startup="false" category="sd">
 
   <shortdescription>ASAP SD task: fit/remove a spectral baseline </shortdescription>
 

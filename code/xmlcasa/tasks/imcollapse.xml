@@ -10,7 +10,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!-- This is the task interface for imcollapse        -->
 <!--                                                          -->
 
-<task type="function" name="imcollapse" category="image analysis">
+<task type="function" name="imcollapse" category="analysis">
 
 <shortdescription>Collapse image along one axis, aggregating pixel values along that axis.</shortdescription>
 

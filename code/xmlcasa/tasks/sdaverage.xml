@@ -8,7 +8,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!-- This is the param set for sdaverage -->
 
-<task type="function" name="sdaverage" startup="false" category="single dish">
+<task type="function" name="sdaverage" startup="false" category="sd">
 
   <shortdescription>ASAP SD task: do data selection, calibration, and averaging</shortdescription>
 

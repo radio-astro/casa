@@ -5,7 +5,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="uvcontsub" category="modelling">
+<task type="function" name="uvcontsub" category="modeling">
 <shortdescription>Continuum fitting and subtraction in the uv plane</shortdescription>
 <description>
 A polynomial of the desired order is fit across the specified

@@ -5,7 +5,7 @@
       xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="flagautocorr" category="data editing">
+<task type="function" name="flagautocorr" category="editing">
 	<shortdescription>Flag autocorrelations</shortdescription>
 	<description>
 	Flag autocorrelations:

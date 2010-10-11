@@ -5,7 +5,7 @@
       xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-      <task type="function" name="pclean" category="utilities" async="never">
+      <task type="function" name="pclean" category="utilities" async="never" visibility="experimental">
 	<shortdescription>Invert and deconvolve images with parallel engines</shortdescription>
 	<description>Form images from visibilities. Handles continuum and spectral line cubes using module pcont and pcube respectively.</description>
 

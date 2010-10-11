@@ -7,7 +7,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!-- This is the param set for boxit -->
 
-<task type="function" name="boxit" category="imaging">
+<task type="function" name="boxit" category="imaging" visibility="experimental">
 
   <shortdescription>Box regions in image above given threshold value.</shortdescription>
 

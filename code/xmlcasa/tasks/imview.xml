@@ -5,7 +5,7 @@
       xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="imview" category="utility" async="never">
+<task type="function" name="imview" category="utility, visualization" async="never">
     <shortdescription>View an image</shortdescription>
     <description>
         The imview task will display images in raster, contour, vector or

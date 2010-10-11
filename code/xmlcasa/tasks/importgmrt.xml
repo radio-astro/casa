@@ -5,7 +5,7 @@
       xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-      <task type="function" name="importgmrt" category="import/export">
+      <task type="function" name="importgmrt" category="import/export" visibility="experimental">
 	<shortdescription>Convert a UVFITS file to a CASA visibility data set</shortdescription>
 	<description>Convert a GRMT FITS file to a CASA visiblity data set.
                 Also read GMRT flag file(s) and flag data based on the 

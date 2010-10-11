@@ -10,7 +10,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!-- This is the task interface to ia.fitcomponents           -->
 <!--                                                          -->
 
-<task type="function" name="imfit" category="image analysis">
+<task type="function" name="imfit" category="analysis">
 
 <shortdescription>Fit one or more elliptical Gaussian components on an image region(s)</shortdescription>
 

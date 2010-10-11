@@ -5,7 +5,7 @@
       xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-      <task type="function" name="csvclean" category="utilities">
+      <task type="function" name="csvclean" category="utilities, imaging" visibility="experimental">
 	<shortdescription>This task does an invert of the visibilities and deconvolve in the image plane.</shortdescription>
 	<description>This task does an invert of the visibilities and deconvolve in the
 			image plane. It does not do a uvdata subtraction (aka Cotton-Schwab

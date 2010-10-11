@@ -7,7 +7,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!-- This is the param set for autoclean -->
 
-<task type="function" name="autoclean" category="imaging">
+<task type="function" name="autoclean" category="imaging" visibility="experimental">
 
   <shortdescription>CLEAN an image with automatically-chosen clean regions.</shortdescription>
 

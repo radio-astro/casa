@@ -8,7 +8,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!-- This is the param set for sdmath -->
 
-<task type="function" name="sdmath" startup="false" category="single dish">
+<task type="function" name="sdmath" startup="false" category="sd">
 
   <shortdescription>ASAP SD task: do simple arithmatic (subtraction, addition, multiplication, and division) for spectra</shortdescription>
 

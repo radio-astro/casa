@@ -8,7 +8,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!-- Documentation here.                                                -->
 
-<task type="function" name="fixvis" category="data editing, utility" visibility="experimental">
+<task type="function" name="fixvis" category="editing, maninpulation, calibration" >
 
 <shortdescription>Recalculates or converts (u, v, w)<!--  and Changes Phase Center. --></shortdescription>
 <description>

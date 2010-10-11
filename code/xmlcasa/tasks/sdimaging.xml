@@ -8,7 +8,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!-- This is the param set for sdimaging -->
 
-<task type="function" name="sdimaging" startup="false" category="single dish">
+<task type="function" name="sdimaging" startup="false" category="sd">
 
   <shortdescription>SD task: imaging for total power and spectral data</shortdescription>
 

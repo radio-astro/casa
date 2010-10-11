@@ -10,7 +10,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!-- This is the task interface for imtrans          -->
 <!--                                                          -->
 
-<task type="function" name="imtrans" category="image analysis">
+<task type="function" name="imtrans" category="analysis">
 
 <shortdescription>Reorder image axes</shortdescription>
 

@@ -9,7 +9,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!-- This is the task interface for sl.search        -->
 <!--                                                          -->
 
-<task type="function" name="slsearch" category="spectral line">
+<task type="function" name="slsearch" category="analysis">
 
 <shortdescription>Search a spectral line table.</shortdescription>
 

@@ -8,7 +8,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!-- This is the param set for sdtpimaging -->
 
-<task type="function" name="sdtpimaging" startup="false" category="single dish">
+<task type="function" name="sdtpimaging" startup="false" category="sd">
 
   <shortdescription>SD task: do a simple calibration and imaging for total power data </shortdescription>
 
