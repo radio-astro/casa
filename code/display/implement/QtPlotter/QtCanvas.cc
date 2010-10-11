@@ -186,15 +186,15 @@ void QtCanvas::setDataRange()
        settings.minY = zoomStack[curZoom].minY;
        settings.maxY = zoomStack[curZoom].maxY;
     }
-    if (fabs(xmax - xmin) < 0.1)
+    if (fabs(xmax - xmin) < 0.0001)
     {
-        xmax = xmax + 0.5;
-        xmin = xmin - 0.5;
+        xmax = xmax + 0.0005;
+        xmin = xmin - 0.0005;
     }
-    if (fabs(ymax - ymin) < 0.1)
+    if (fabs(ymax - ymin) < 0.0001)
     {
-        ymax = ymax + 0.5;
-        ymin = ymin - 0.5;
+        ymax = ymax + 0.0005;
+        ymin = ymin - 0.0005;
     }
     if (autoScaleX) {
        settings.minX = xmin;
@@ -867,6 +867,8 @@ void QtCanvas::plotPolyLine(const Vector<Float> &x, const Vector<Float> &y,
 {
 
     //qDebug() << "plot poly line float";
+    //for (int i=0; i< x.nelements(); i++)
+    //   cout << x(i) << " " << y(i) << endl;
     Int xl, yl;
     x.shape(xl);
     y.shape(yl);
@@ -902,6 +904,8 @@ void QtCanvas::plotPolyLine(
         const Vector<Double> &x, const Vector<Double>&y)
 {
     //qDebug() << "plot poly line double";
+    //for (int i=0; i< x.nelements(); i++)
+    //   cout << x(i) << " " << y(i) << endl;
     Int xl, yl;
     x.shape(xl);
     y.shape(yl);

@@ -24,7 +24,7 @@
 //#
 
 #include <display/QtPlotter/QtPlotSettings.h>
- 
+
 namespace casa { 
 
 QtPlotSettings::QtPlotSettings()
