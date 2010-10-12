@@ -55,69 +55,43 @@ def toolhelp():
 
 def tasklist():
     """ List tasks, organized by catagory """
-    print 'Available tasks, organized by category (experimental tasks in parenthesis): \n'
-    print 'Import/Export       Information   Data Editing  Display/Plotting'
-    print '-------------       -----------   ------------  ----------------'
-    print 'importvla           imhead        concat        clearplot'
-    print 'importfits          listcal       fixvis        plotants '
-    print 'importuvfits        listhistory   flagautocorr  plotcal'    
-    print 'exportfits          listobs       flagdata      plotms'
-    print 'exportuvfits        listvis       flagdata2     plotxy'
-    print '(importasdm)        vishead       flagmanager   imview'
-    print '(importgmrt)        visstat       plotms        msview'
-    print '                                  plotxy'	 
-    print ' '
+    print 'Available tasks, organized by category (experimental tasks in parens ()'
+    print '  deprecated tasks in curly brackets {}).'
+    print '  Single Dish sd* tasks are available after asap_init() is run. '
     print ''
-    print 'Data Manipulation   Calibration   Imaging       Modelling   '
-    print '-----------------   -----------   -------       ---------   '
-    print 'concat              accum         clean         setjy       '
-    print 'cvel                applycal      deconvolve    uvcontsub   '
-    print 'fixvis              bandpass      feather       uvmodelfit  '
-    print 'hanningsmooth       blcal         ft            uvsub'
-    print 'split               calstat       csvclean      (uvcontsub2)'
-    print 'uvcontsub           clearcal      widefield                '
-    print 'uvsub               cvel          (boxit )                 '
-    print '(uvcontsub2)        fluxscale     (autoclean)              '
-    print '(msmoments)         fixvis                                 '
-    print '                    gaincal                                 '
-    print '                    gencal                                  '
-    print '                    listcal                                 '
-    print '                    polcal                                  '
-    print '                    setjy                                   '
-    print '                    smoothcal                               '
-    print '                    (fringecal)                             '
-    print '                    (peel)                                  '
-    print '                                                            '
-    print '                                                            '
-    print ''
-    print 'Image Analysis  Simulation  Utilities           Single Dish'
-    print '--------------  ----------  ---------           (after running asap_init())'
-    print 'imcontsub       simdata     browsetable         ---------------------------'
-    print 'imhead                      casalogger          sdaverage'
-    print 'imfit                       clearplot           sdbaseline'
-    print 'immath                      clearstat           sdcal'
-    print 'immoments                   csvclean            sdcoadd'
-    print 'imregrid                    filecatalog         sdfit'
-    print 'imsmooth                    find                sdflag'
-    print 'imstat                      help par.parameter  sdflagmanager'
-    print 'imval                       help task           sdimaging'
-    print 'specfit                     rmtables            sdimprocess'
-    print 'imcollapse                  startup             sdlist'
-    print 'imstat                      taskhelp            sdmath'
-    print 'imtrans                     tasklist            sdplot'
-    print '                            toolhelp            sdsave'
-    print '                                                sdscale'
-    print '                                                sdsmooth '
-    print '                                                sdstat '
-    print '                                                sdtpimaging '
-    print '                                                (msmoments)'
-    print ''
-    print ''
-    print ''
-    print 'Spectral Line'
-    print '-------------'
-    print 'slsearch'
-    print 'splattotable'
+    for i in range(0,3):
+        col1 = thecats[i*4]
+        col2 = thecats[i*4+1]
+        col3 = thecats[i*4+2]
+        col4 = thecats[i*4+3]
+        count1 = len(allcat[col1])
+        count2 = len(allcat[col2])
+        count3 = len(allcat[col3])
+        count4 = len(allcat[col4])
+        maxcount = max([count1, count2, count3, count4])
+        taskrow = ''
+	print
+        print '%-18.18s  %-18.18s  %-18.18s  %-18.18s'% (col1.capitalize(), col2.capitalize(), col3.capitalize(), col4.capitalize())
+	print '------------------  ------------------  ------------------  ------------------'
+        for i in range(0, maxcount) :
+            if(i<count1) :
+                task1 = allcat[col1][i]
+            else :
+                task1 = ' '
+            if(i<count2) :
+                task2 = allcat[col2][i] 
+            else :
+                task2 = ' '
+            if(i<count3) :
+                task3 = allcat[col3][i]
+            else :
+                task3 = ' '
+            if(i<count4) :
+                task4 = allcat[col4][i]
+            else :
+                task4 = ' '
+            print '%-18.18s  %-18.18s  %-18.18s  %-18.18s'% (task1, task2, task3, task4)
+
     if globals().has_key('mytasks') :
         print ''
         print 'User defined tasks'

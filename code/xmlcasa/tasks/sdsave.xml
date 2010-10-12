@@ -8,7 +8,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!-- This is the param set for sdsave -->
 
-<task type="function" name="sdsave" startup="false" category="sd">
+<task type="function" name="sdsave" startup="false" category="single dish">
 
   <shortdescription>ASAP SD task: save the sd spectra in various format</shortdescription>
 

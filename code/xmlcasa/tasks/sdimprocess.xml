@@ -8,7 +8,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!-- This is the param set for sdimprocess -->
 
-<task type="function" name="sdimprocess" startup="false" category="sd">
+<task type="function" name="sdimprocess" startup="false" category="single dish">
 
   <shortdescription>SD task: task for single-dish image processing</shortdescription>
 

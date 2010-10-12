@@ -8,7 +8,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!-- This is the param set for sdplot -->
 
-<task type="function" name="sdplot" startup="false" category="sd">
+<task type="function" name="sdplot" startup="false" category="single dish">
 
   <shortdescription>ASAP SD plotting task </shortdescription>
 

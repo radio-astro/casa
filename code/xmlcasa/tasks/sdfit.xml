@@ -8,7 +8,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!-- This is the param set for sdfit -->
 
-<task type="function" name="sdfit" startup="false" category="sd">
+<task type="function" name="sdfit" startup="false" category="single dish">
 
   <shortdescription>ASAP SD task: fit a spectral line</shortdescription>
 

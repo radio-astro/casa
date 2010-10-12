@@ -8,7 +8,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!-- This is the param set for sdcoadd -->
 
-<task type="function" name="sdcoadd" startup="false" category="sd">
+<task type="function" name="sdcoadd" startup="false" category="single dish">
 
   <shortdescription>ASAP SD task: coadd multiple scantables into one</shortdescription>
 
