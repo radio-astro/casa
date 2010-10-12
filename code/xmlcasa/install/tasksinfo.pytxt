@@ -1,0 +1,18 @@
+allcat = {}
+thecats ='import/export information editing manipulation calibration modeling imaging analysis visualization simulation sd utility'
+for category in thecats.split() :
+   allcat[category] = []
+   for key in taskcat.keys() :
+      if taskcat[key].count(category) > 0 :
+         if taskvis[key].count('hidden') > 0 :
+            continue
+         else :
+            if taskvis[key].count('experimental') > 0 :
+               allcat[category].append('{'+key+'}')
+            else :
+               if taskvis[key].count('deprecated') > 0 :
+                  allcat[category].append('|'+key+'|')
+               else :
+                  allcat[category].append(key)
+   allcat[category].sort()
+
