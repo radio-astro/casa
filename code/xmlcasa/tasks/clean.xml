@@ -1055,9 +1055,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                image, then it will be converted to Jy/pixel as in a
                model image, using the restoring beam in the image
                header.  
-	       When nterms>1, the length of this list must be equal to nterms.
-	       Therefore, currently, only one additional model for each
-	       Taylor coefficient is supported.
+	       When nterms>1, a one-to-one mapping is done between images
+	       in this list and Taylor-coefficients. If more than nterms 
+	       images are  specified, only the first nterms are used.
+	       It is valid to supply fewer than nterms model images.
+	       Example : Supply an estimate of the continuum flux from a
+	                 previous imaging run. 
        weighting -- Weighting to apply to visibilities:
                default='natural'; example: weighting='uniform';
                Options: 'natural','uniform','briggs', 
