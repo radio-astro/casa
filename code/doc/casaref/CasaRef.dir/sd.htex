@@ -20,8 +20,19 @@ Synopsis
 
     {\bf To access sd tool from \casa, the user must execute asap\_init()} 
     from the command-line interface of \casa. 
-    This command imports ASAP package as sd tool and make single-dish 
+    This command imports ASAP package as sd tool and makes single-dish 
     tasks available.
+
+    As described above, the sd tool is originally a standalone software package, 
+    and it is actually an independent Python module named 'asap'. 
+    Thus, you can import sd tool without executing asap\_init().
+    It can be imported as usual Python module such as 
+
+    \begin{verbatim}
+    import asap as sd
+    \end{verbatim}
+
+    from command line interface of \casa.
 
   \medskip\noindent\textbf{Data format}
 
@@ -37,7 +48,7 @@ Synopsis
     An internal data format for sd tool is Scantable.
     The Scantable is defined as \casa\ table and is specially 
     designed for single-dish data. The data is converted to Scantable  
-    during the processing whatever its oritinal data format is.
+    during the processing whatever its original data format is.
     The result of the processing can be stored in other data format 
     than Scantable. 
     The Scantable is implemented as \ahlink{sd.scantable}{sd:sd.scantable}
@@ -47,10 +58,10 @@ Synopsis
   \medskip\noindent\textbf{Selecting data}
 
     The Scantable can contain data with various types of frequency setting, 
-    several polarization component, and so on. In case when you want 
+    multiple polarization components, and so on. In case you want 
     to select data by some conditions, \ahlink{sd.selector}{sd:sd.selector} 
     is available for that. The \ahlink{sd.selector}{sd:sd.selector} provides 
-    various functions to select and/or to sort data as well as it also provides 
+    various functions to select and/or to sort data as well as it provides 
     an interface to select data by  
     \htmladdnormallink{TaQL}{http://aips2.nrao.edu/docs/notes/199/199.html}.
     See \ahlink{sd.selector}{sd:sd.selector} for details.
@@ -81,7 +92,7 @@ Synopsis
     Supported format is ASCII table or specific format for 
     \ahlink{sd.linecatalog}{sd:sd.linecatalog}.
     \casa\ package contains a default line catalog that is a part of 
-    JPL line catalog. 
+    JPL line catalog and is specific table format for the sd tool (ASAP). 
     Benefit of this object is that it provides an interface to the 
     catalog such as selecting lines by frequency and/or line intensity.
     It also enables an interaction between 
@@ -333,7 +344,7 @@ scantable
   \item tsys --- 1/Tsys**2 weighted
   \item tint --- integration time weighted
   \item tintsys --- Tint/Tsys**2 weighted
-  \item median] --- median averaging
+  \item median --- median averaging
   \end{itemize}
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
@@ -495,7 +506,7 @@ scantable
 \begin{verbatim}
     asap_init()
     s=sd.scantable('alma-scans.asap',average=False,getpt=True)
-    scal=sd.apexcal(s,calmode='ps')
+    scal=sd.calibrate(s,calmode='ps')
 \end{verbatim}
 
 
@@ -1101,13 +1112,13 @@ scantable
     name/value pairs, eg
 
       \begin{verbatim}
-      rc('scantable', save='SDFITS')
+      sd.rc('scantable', save='SDFITS')
       \end{verbatim}
 
     sets the current rc params and is equivalent to
 
       \begin{verbatim}
-      rcParams['scantable.save'] = 'SDFITS'
+      sd.rcParams['scantable.save'] = 'SDFITS'
       \end{verbatim}
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
@@ -1153,7 +1164,7 @@ group && \multicolumn{2}{p{3.36in}|}{Grouping for the rc}\\
     Return a list of 'n' opacities for 'n' IFs. In case of averagepol
     being 'False' a list of 'n*m' elements where 'm' is the number of
     polarisations, e.g.
-    nIF = 3, nPol = 2 => [if0pol0, if0pol1, if1pol0, if1pol1, if2pol0, if2pol1]
+    nIF $=$ 3, nPol $=$ 2 $\Rightarrow$ [if0pol0, if0pol1, if1pol0, if1pol1, if2pol0, if2pol1]
     
     The opacity is determined by fitting a first order polynomial to:
     
@@ -1529,7 +1540,7 @@ Methods
 
 	\ahlink{parallactify}{sd:sd.scantable.parallactify} &Set a flag to indicate the data should be treated as "parallactified"  \\
 
-	\ahlink{poltype}{sd:sd.scantable.poltype} &Get a plarization type \\
+	\ahlink{poltype}{sd:sd.scantable.poltype} &Get a polarization type \\
 
 	\ahlink{poly\_baseline}{sd:sd.scantable.poly_baseline} &Perform a baseline subtraction \\
 
@@ -4117,7 +4128,8 @@ string
     recommended for large dataset.
 
     The batch argument is a new parameter to handle a behavior of the method.
-    If it is Ture, a faster algorithm is used and logs including the fit results are not output.
+    If it is Ture, a faster algorithm is used and logs including the fit results will not be 
+    displayed in the logger or console.
 
     This is an newer version of \ahlink{old\_poly\_baseline}{sd:sd.scantable.old_poly_baseline}. 
     The only difference between them is its performance. For larger dataset, 
@@ -4323,7 +4335,7 @@ angle && \multicolumn{2}{p{3.36in}|}{The angle (in dgree) to rotate (add) by}\\
     The output filename can be specified as name. For format 'ASCII', this is the root file name 
     (data in 'name'.txt and header in 'name'\_header.txt). If no name is given, the default name 
     will be used.
-    The format is an optinal file format. Default is 'ASAP'. Allows are:
+    The format is optinal file format. Default is 'ASAP'. Allows are:
 
     \begin{itemize}
     \item 'ASAP' (save as ASAP [\casa\ Table])
@@ -4682,7 +4694,7 @@ unit && \multicolumn{2}{p{3.36in}|}{Unit for rest frequency}\\
    \hfill \\
 
     Select a subset of the data. All following operations on this scantable
-    are only applied to thi selection.
+    are only applied to the selection.
 
     The selection can be done via a selector object (default unset the selection), or
     any combination of "pols", "ifs", "beams", "scans", "cycles", "name", "query", "types" 
@@ -7193,12 +7205,12 @@ smax && \multicolumn{2}{p{3.36in}|}{The upper bound}\\
   
   The linefinder performs automated spectral line search.
   The algorithm involves a simple threshold criterion. The line is
-  considered to be detected if a specified number of consequtive
+  considered to be detected if a specified number of consecutive
   channels (default is 3) is brighter (with respect to the current baseline
   estimate) than the threshold times the noise level. This criterion is
   applied in the iterative procedure updating baseline estimate and trying
   reduced spectral resolutions to detect broad lines as well. The off-line
-  noise level is determined at each iteration as an average of 80% of the
+  noise level is determined at each iteration as an average of 80\% of the
   lowest variances across the spectrum (i.e. histogram equalization is
   used to avoid missing weak lines if strong ones are present). For
   bad baseline shapes it is recommended to increase the threshold and
@@ -7233,7 +7245,7 @@ smax && \multicolumn{2}{p{3.36in}|}{The upper bound}\\
                        noise\_box = 'box')
 
   \item noise\_stat \\ Statistics used to estimate noise. Allowed values are 
-                       'mean80' that use the 80% of the lowest deviations in the noise box (default)
+                       'mean80' that use the 80\% of the lowest deviations in the noise box (default)
                        and 'median' means median of deviations in the noise box.
 
   \end{itemize}
