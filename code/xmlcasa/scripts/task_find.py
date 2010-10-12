@@ -16,6 +16,9 @@ def find(matchstring=None):
                default: ''; example: matchstring='vis'
 
        """
+       import IPython.ipapi
+       _ip = IPython.ipapi.get()
+
 
        casalog.origin('find')
 
