@@ -145,8 +145,8 @@ void ListConverter::_parseLists() {
 			String intensity = parts[5];
 			String smu2 = parts[6];
 			String logA = parts[7];
-			String eU = parts[8];
-			String eL = parts[9];
+			String eL = parts[8];
+			String eU = parts[9];
 			String lineList = parts[10];
 
 			if (lineCount == 0) {
@@ -179,22 +179,6 @@ void ListConverter::_parseLists() {
 					}
 					catch (AipsError x) {}
 				}
-				Vector<String> euHeaderParts = stringToVector(eU, ' ');
-				for (
-					Vector<String>::const_iterator viter=euHeaderParts.begin();
-					viter!=euHeaderParts.end(); viter++
-				) {
-					try {
-						String eu = *viter;
-						if (eu.matches(k)) {
-							_euUnit = "K";
-						}
-						else if (eu.matches(cm1)) {
-							_euUnit = "cm-1";
-						}
-					}
-					catch (AipsError x) {}
-				}
 				Vector<String> elHeaderParts = stringToVector(eL, ' ');
 				for (
 					Vector<String>::const_iterator viter=elHeaderParts.begin();
@@ -207,6 +191,22 @@ void ListConverter::_parseLists() {
 						}
 						else if (el.matches(cm1)) {
 							_elUnit = "cm-1";
+						}
+					}
+					catch (AipsError x) {}
+				}
+				Vector<String> euHeaderParts = stringToVector(eU, ' ');
+				for (
+					Vector<String>::const_iterator viter=euHeaderParts.begin();
+					viter!=euHeaderParts.end(); viter++
+				) {
+					try {
+						String eu = *viter;
+						if (eu.matches(k)) {
+							_euUnit = "K";
+						}
+						else if (eu.matches(cm1)) {
+							_euUnit = "cm-1";
 						}
 					}
 					catch (AipsError x) {}
@@ -240,14 +240,14 @@ void ListConverter::_parseLists() {
 				<< ": log(A) value " << logA << " is not numeric"
 				<< LogIO::EXCEPTION;
 			}
-			if (! eU.matches(RXdouble) ) {
-				*_log << "File " << filename << ", line " << lineCount
-					<< ": E_u value " << eU << " is not numeric"
-					<< LogIO::EXCEPTION;
-			}
 			if (! eL.matches(RXdouble) ) {
 				*_log << "File " << filename << ", line " << lineCount
 					<< ": E_l value " << eL << " is not numeric"
+					<< LogIO::EXCEPTION;
+			}
+			if (! eU.matches(RXdouble) ) {
+				*_log << "File " << filename << ", line " << lineCount
+					<< ": E_u value " << eU << " is not numeric"
 					<< LogIO::EXCEPTION;
 			}
 			_species[transitionIndex] = species;
@@ -259,8 +259,8 @@ void ListConverter::_parseLists() {
 			_intensity[transitionIndex] = String::toFloat(intensity);
 			_smu2[transitionIndex] = String::toFloat(smu2);
 			_logA[transitionIndex] = String::toFloat(logA);
-			_eU[transitionIndex] = String::toFloat(eU);
 			_eL[transitionIndex] = String::toFloat(eL);
+			_eU[transitionIndex] = String::toFloat(eU);
 			transitionIndex++;
 			lineCount++;
 		}
@@ -274,8 +274,8 @@ void ListConverter::_parseLists() {
 	_intensity.resize(transitionIndex, True);
 	_smu2.resize(transitionIndex, True);
 	_logA.resize(transitionIndex, True);
-	_eU.resize(transitionIndex, True);
 	_eL.resize(transitionIndex, True);
+	_eU.resize(transitionIndex, True);
 }
 
 
@@ -290,8 +290,8 @@ SplatalogueTable* ListConverter::_defineTable(const uInt nrows) {
 	td.addColumn (ScalarColumnDesc<Float>(SplatalogueTable::INTENSITY, SplatalogueTable::INTENSITY));
 	td.addColumn (ScalarColumnDesc<Float>(SplatalogueTable::SMU2, SplatalogueTable::SMU2));
 	td.addColumn (ScalarColumnDesc<Float>(SplatalogueTable::LOGA, SplatalogueTable::LOGA));
-	td.addColumn (ScalarColumnDesc<Float>(SplatalogueTable::EU, SplatalogueTable::EU));
 	td.addColumn (ScalarColumnDesc<Float>(SplatalogueTable::EL, SplatalogueTable::EL));
+	td.addColumn (ScalarColumnDesc<Float>(SplatalogueTable::EU, SplatalogueTable::EU));
 	td.addColumn (ScalarColumnDesc<String>(SplatalogueTable::LINELIST, SplatalogueTable::LINELIST));
 	SetupNewTable tableSetup(_tableName, td, Table::New);
 	StandardStMan stm;
@@ -303,14 +303,14 @@ SplatalogueTable* ListConverter::_defineTable(const uInt nrows) {
 	tableSetup.bindColumn(SplatalogueTable::INTENSITY, stm);
 	tableSetup.bindColumn(SplatalogueTable::SMU2, stm);
 	tableSetup.bindColumn(SplatalogueTable::LOGA, stm);
-	tableSetup.bindColumn(SplatalogueTable::EU, stm);
 	tableSetup.bindColumn(SplatalogueTable::EL, stm);
+	tableSetup.bindColumn(SplatalogueTable::EU, stm);
 	tableSetup.bindColumn(SplatalogueTable::LINELIST, stm);
 	if (_freqUnit.empty()) {
 		*_log << LogIO::WARN << "Could not determine frequency unit, assuming GHz" << LogIO::POST;
 		_freqUnit = "GHz";
 	}
-	return new SplatalogueTable(tableSetup, nrows, _freqUnit, _smu2Unit, _euUnit, _elUnit);
+	return new SplatalogueTable(tableSetup, nrows, _freqUnit, _smu2Unit, _elUnit, _euUnit);
 }
 
 void ListConverter::_addData(const SplatalogueTable* table) const {
@@ -330,10 +330,10 @@ void ListConverter::_addData(const SplatalogueTable* table) const {
 	smu2col.putColumn(_smu2);
 	ScalarColumn<Float> lacol(*table, SplatalogueTable::LOGA);
 	lacol.putColumn(_logA);
-	ScalarColumn<Float> eucol(*table, SplatalogueTable::EU);
-	eucol.putColumn(_eU);
 	ScalarColumn<Float> elcol(*table, SplatalogueTable::EL);
 	elcol.putColumn(_eL);
+	ScalarColumn<Float> eucol(*table, SplatalogueTable::EU);
+	eucol.putColumn(_eU);
 	ScalarColumn<String> llcol(*table, SplatalogueTable::LINELIST);
 	llcol.putColumn(_lineList);
 }

@@ -112,7 +112,7 @@ spectralline* spectralline::search(
 	const variant& chemNames, const vector<string>& qns,
 	const vector<double>& intensityRange,
 	const vector<double>& smu2Range, const vector<double>& logaRange,
-	const vector<double>& euRange, const vector<double>& elRange,
+	const vector<double>& elRange, const vector<double>& euRange, 
 	const bool includeRRLs, const bool onlyRRLs,
 	const bool verbose, const string& logfile, const bool append
 ) {
@@ -139,13 +139,13 @@ spectralline* spectralline::search(
 		_checkLowHigh(
 			logaLow, logaHigh, logaRange, "loga"
 		);
-		double euLow, euHigh;
-		_checkLowHigh(
-			euLow, euHigh, euRange, "eu"
-		);
 		double elLow, elHigh;
 		_checkLowHigh(
 			elLow, elHigh, elRange, "el"
+		);
+		double euLow, euHigh;
+		_checkLowHigh(
+			euLow, euHigh, euRange, "eu"
 		);
 
 		Vector<String> mySpecies;
@@ -180,7 +180,7 @@ spectralline* spectralline::search(
 			outfile, freqRange[0], freqRange[1], mySpecies,
 			recommendedOnly, myChemNames, myQNs, intensityLow,
 			intensityHigh, smu2Low, smu2High, logaLow, logaHigh,
-			euLow, euHigh, elLow, elHigh, includeRRLs, onlyRRLs
+			elLow, elHigh, euLow, euHigh, includeRRLs, onlyRRLs
 		);
 		*_log << LogIO::NORMAL << "Search found " << t->nrow() << " spectral lines" << LogIO::POST;
 		tool = new spectralline(t);

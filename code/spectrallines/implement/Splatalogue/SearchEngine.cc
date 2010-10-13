@@ -67,8 +67,8 @@ SplatalogueTable* SearchEngine::search(
 	const Double intensityLow, const Double intensityHigh,
 	const Double smu2Low, const Double smu2High,
 	const Double logaLow, const Double logaHigh,
-	const Double euLow, const Double euHigh,
 	const Double elLow, const Double elHigh,
+	const Double euLow, const Double euHigh,
 	const Bool includeRRLs, const Bool onlyRRLs
 ) const {
 	LogOrigin origin("SearchEngine", __FUNCTION__);
@@ -131,14 +131,14 @@ SplatalogueTable* SearchEngine::search(
 				SplatalogueTable::LOGA, logaLow, logaHigh
 			);
 		}
-		if (euLow < euHigh) {
-			nonRRLPortion << " AND " << _getBetweenClause(
-				SplatalogueTable::EU, euLow, euHigh
-			);
-		}
 		if (elLow < elHigh) {
 			nonRRLPortion << " AND " << _getBetweenClause(
 				SplatalogueTable::EL, elLow, elHigh
+			);
+		}
+		if (euLow < euHigh) {
+			nonRRLPortion << " AND " << _getBetweenClause(
+				SplatalogueTable::EU, euLow, euHigh
 			);
 		}
 	}

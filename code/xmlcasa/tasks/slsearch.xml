@@ -54,12 +54,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <description>log(A) (Einstein coefficient) range. -1 -> do not use a loga range.</description>
             <value>-1</value>
         </param>
-        <param type="doubleArray" name="eu" subparam="true">
-            <description>Upper energy state range in Kelvin. -1 -> do not use an eu range.</description>
-            <value>-1</value>
-        </param>
         <param type="doubleArray" name="el" subparam="true">
             <description>Lower energy state range in Kelvin. -1 -> do not use an el range.</description>
+            <value>-1</value>
+        </param>
+        <param type="doubleArray" name="eu" subparam="true">
+            <description>Upper energy state range in Kelvin. -1 -> do not use an eu range.</description>
             <value>-1</value>
         </param>
         <param type="bool" name="rrlinclude">
@@ -138,10 +138,10 @@ qns            Resolved quantum numbers to search for.
 intensity      CDMS/JPL intensity range. -1 -> do not use an intensity range.
 smu2           S*mu*mu range in Debye**2. -1 -> do not use an S*mu*mu range.
 loga           log(A) (Einstein coefficient) range. -1 -> do not use a loga range.
-eu             Upper energy state range in Kelvin. -1 -> do not use an eu range.
 el             Lower energy state range in Kelvin. -1 -> do not use an el range.
+eu             Upper energy state range in Kelvin. -1 -> do not use an eu range.
 rrlinclude     Include RRLs in the result set?
-rrlonlyi       Include only RRLs in the result set?
+rrlonly        Include only RRLs in the result set?
 verbose        List result set to logger (and optionally logfile)?
 logfile        List result set to this logfile (only used if verbose=True).
 append         If true, append to logfile if it already exists, if false overwrite logfile it it exists. Only used if verbose=True and logfile not blank.

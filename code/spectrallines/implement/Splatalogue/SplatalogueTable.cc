@@ -46,17 +46,17 @@ const String SplatalogueTable::QUANTUM_NUMBERS = "QUANTUM_NUMBERS";
 const String SplatalogueTable::INTENSITY = "INTENSITY";
 const String SplatalogueTable::SMU2 = "SMU2";
 const String SplatalogueTable::LOGA = "LOGA";
-const String SplatalogueTable::EU = "EU";
 const String SplatalogueTable::EL = "EL";
+const String SplatalogueTable::EU = "EU";
 const String SplatalogueTable::LINELIST = "LINELIST";
 const String SplatalogueTable::ISSPLAT = "isSplat";
 
 SplatalogueTable::SplatalogueTable(
 	SetupNewTable& snt, uInt nrow,
 	const String& freqUnit, const String& smu2Unit,
-	const String& euUnit, const String& elUnit
+	const String& elUnit, const String& euUnit  
 ) : Table(snt, nrow), _freqUnit(freqUnit), _smu2Unit(smu2Unit),
-	_euUnit(euUnit), _elUnit(elUnit) {
+	 _elUnit(elUnit), _euUnit(euUnit) {
 	_construct(True);
 }
 
@@ -85,12 +85,12 @@ String SplatalogueTable::list() const {
 	ROScalarColumn<Float> intensity(*this, INTENSITY);
 	ROScalarColumn<Float> smu2(*this, SMU2);
 	ROScalarColumn<Float> logA(*this, LOGA);
-	ROScalarColumn<Float> eu(*this, EU);
 	ROScalarColumn<Float> el(*this, EL);
+	ROScalarColumn<Float> eu(*this, EU);
 	ROScalarColumn<String> linelist(*this, LINELIST);
 
 	char cspecies[15], crec[3], cchemName[21], cfreq[12], cqns[21],
-		cintensity[10], csmu2[10], clogA[10], ceu[10], cel[10],
+		cintensity[10], csmu2[10], clogA[10], cel[10], ceu[10],
 		clinelist[11];
 	ostringstream os;
 	String rec;
@@ -98,7 +98,7 @@ String SplatalogueTable::list() const {
 		<< CHEMICAL_NAME << "   " << FREQUENCY << "     "
 		<< QUANTUM_NUMBERS << "  " << INTENSITY << "      "
 		<< SMU2 << "      " << LOGA << "        "
-		<< EU  << "        " << EL << "  " << LINELIST << endl;
+		<< EL  << "        " << EU << "  " << LINELIST << endl;
     for (uInt i=0; i<nrow(); i++) {
     	sprintf(cspecies, "%-14.14s", species.asString(i).chars());
     	rec = recommended.asBool(i) ? "*" : " ";
@@ -109,14 +109,14 @@ String SplatalogueTable::list() const {
     	sprintf(cintensity, "%9.5f", intensity.asfloat(i));
     	sprintf(csmu2, "%9.5f", smu2.asfloat(i));
     	sprintf(clogA, "%9.5f", logA.asfloat(i));
-    	sprintf(ceu, "%9.5f", eu.asfloat(i));
     	sprintf(cel, "%9.5f", el.asfloat(i));
+    	sprintf(ceu, "%9.5f", eu.asfloat(i));
     	sprintf(clinelist, "%-10.10s", linelist.asString(i).chars());
 
     	os << cspecies << " " << crec << " " << cchemName
     		<< " " << cfreq << " " << cqns << " " << cintensity
-    		<< " " << csmu2 << " " << clogA << " " << ceu
-    		<< " " << cel << "  " << clinelist << endl;
+    		<< " " << csmu2 << " " << clogA << " " << cel
+    		<< " " << ceu << "  " << clinelist << endl;
 	}
 	return os.str();
 }
@@ -145,8 +145,8 @@ void SplatalogueTable::_construct(const Bool setup) {
 	reqColNames[5] = INTENSITY;
 	reqColNames[6] = SMU2;
 	reqColNames[7] = LOGA;
-	reqColNames[8] = EU;
-	reqColNames[9] = EL;
+	reqColNames[8] = EL;
+	reqColNames[9] = EU;
 	reqColNames[10] = LINELIST;
 	for (
 		Vector<String>::const_iterator riter=reqColNames.begin();
@@ -185,10 +185,10 @@ void SplatalogueTable::_addKeywords() {
 	freq.rwKeywordSet().define("Unit", _freqUnit);
 	ScalarColumn<Float> smu2(*this, SMU2);
 	smu2.rwKeywordSet().define("Unit", _smu2Unit);
-	ScalarColumn<Float> eu(*this, EU);
-	eu.rwKeywordSet().define("Unit", _euUnit);
 	ScalarColumn<Float> el(*this, EL);
 	el.rwKeywordSet().define("Unit", _elUnit);
+	ScalarColumn<Float> eu(*this, EU);
+	eu.rwKeywordSet().define("Unit", _euUnit);
 	rwKeywordSet().define(ISSPLAT, True);
 	Time now;
 	MVTime mv(now);

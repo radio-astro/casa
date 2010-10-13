@@ -77,8 +77,8 @@ good_table = "biglist.tbl"
 
 def run_search(
     table, outfile, freqrange, species, reconly,
-    chemnames, qns, intensity, smu2, loga, eu,
-    el, rrlinclude, rrlonly, verbose, logfile,
+    chemnames, qns, intensity, smu2, loga, el,
+    eu, rrlinclude, rrlonly, verbose, logfile,
     append
 ):
     mysl = sltool.create()
@@ -89,7 +89,7 @@ def run_search(
             species=species, reconly=reconly,
             chemnames=chemnames, qns=qns,
             intensity=intensity, smu2=smu2, loga=loga,
-            eu=eu, el=el, rrlinclude=rrlinclude,
+            el=el, eu=eu, rrlinclude=rrlinclude,
             rrlonly=rrlonly, verbose=verbose, logfile=logfile,
             append=append
         )
@@ -103,8 +103,8 @@ def run_search(
 
 def run_slsearch(
     table, outfile, freqrange, species, reconly,
-    chemnames, qns, intensity, smu2, loga, eu,
-    el, rrlinclude, rrlonly, verbose, logfile,
+    chemnames, qns, intensity, smu2, loga, el,
+    eu, rrlinclude, rrlonly, verbose, logfile,
     append
 ):
     default(slsearch)
@@ -113,7 +113,7 @@ def run_slsearch(
         species=species, reconly=reconly,
         chemnames=chemnames, qns=qns,
         intensity=intensity, smu2=smu2, loga=loga,
-        eu=eu, el=el, rrlinclude=rrlinclude,
+        el=el, eu=eu, rrlinclude=rrlinclude,
         rrlonly=rrlonly, verbose=verbose, logfile=logfile,
         append=append
     )
@@ -122,8 +122,8 @@ class slsearch_test(unittest.TestCase):
     
     def _testit(
         self, table, outfile, freqrange, species, reconly,
-        chemnames, qns, intensity, smu2, loga, eu,
-        el, rrlinclude, rrlonly, verbose, logfile,
+        chemnames, qns, intensity, smu2, loga, el,
+        eu, rrlinclude, rrlonly, verbose, logfile,
         append, nrows
     ):
         mysl = sltool.create()
@@ -132,7 +132,7 @@ class slsearch_test(unittest.TestCase):
             if (i==0):
                 mysl = run_search(table, outfile,
                     freqrange, species, reconly, chemnames,
-                    qns, intensity, smu2, loga, eu, el,
+                    qns, intensity, smu2, loga, el, eu,
                     rrlinclude, rrlonly, verbose, logfile, 
                     append
                 )
@@ -140,7 +140,7 @@ class slsearch_test(unittest.TestCase):
                 mysl = run_slsearch(
                     table, outfile, freqrange, species,
                     reconly, chemnames, qns, intensity,
-                    smu2, loga, eu, el, rrlinclude, rrlonly,
+                    smu2, loga, el, eu, rrlinclude, rrlonly,
                     verbose, logfile, append
                 )
             self.assertEqual(nrows, mysl.nrows())
@@ -163,8 +163,8 @@ class slsearch_test(unittest.TestCase):
         """slsearch: Test various exception cases"""
         def testit(
             table, outfile, freqrange, species, reconly,
-            chemnames, qns, intensity, smu2, loga, eu,
-            el, rrlinclude, rrlonly, verbose, logfile, 
+            chemnames, qns, intensity, smu2, loga, el,
+            eu, rrlinclude, rrlonly, verbose, logfile, 
             append
         ):
             for i in [0, 1]:
@@ -172,7 +172,7 @@ class slsearch_test(unittest.TestCase):
                     self.assertRaises(
                         Exception, run_search, table, outfile,
                         freqrange, species, reconly, chemnames,
-                        qns, intensity, smu2, loga, eu, el,
+                        qns, intensity, smu2, loga, el, eu,
                         rrlinclude, rrlonly, verbose, logfile, 
                         append
                     )
@@ -181,7 +181,7 @@ class slsearch_test(unittest.TestCase):
                         run_slsearch(
                             table, outfile, freqrange, species,
                             reconly, chemnames, qns, intensity,
-                            smu2, loga, eu, el, rrlinclude, rrlonly,
+                            smu2, loga, el, eu, rrlinclude, rrlonly,
                             verbose, logfile, append
                         ), None
                     )
@@ -189,14 +189,14 @@ class slsearch_test(unittest.TestCase):
         testit(
             table="fred.tbl", outfile="x", freqrange=[0, 100], species=[],
             reconly=True, chemnames=[], qns=[], intensity=[-1], smu2=[-1],
-            loga=[-1], eu=[-1], el=[-1], rrlinclude=True, rrlonly=True,
+            loga=[-1], el=[-1], eu=[-1], rrlinclude=True, rrlonly=True,
             verbose=True, logfile="", append=True
         )
         # bad output name
         testit(
             table=good_table, outfile="/x", freqrange=[0, 100], species=[],
             reconly=True, chemnames=[], qns=[], intensity=[-1], smu2=[-1],
-            loga=[-1], eu=[-1], el=[-1], rrlinclude=True, rrlonly=True,
+            loga=[-1], el=[-1], eu=[-1], rrlinclude=True, rrlonly=True,
             verbose=True, logfile="", append=True
         )
 
@@ -207,14 +207,14 @@ class slsearch_test(unittest.TestCase):
         self._testit(
             table="", outfile="", freqrange=[0, 100], species=[],
             reconly=True, chemnames=[], qns=[], intensity=[-1], smu2=[-1],
-            loga=[-1], eu=[-1], el=[-1], rrlinclude=True, rrlonly=False,
+            loga=[-1], el=[-1], eu=[-1], rrlinclude=True, rrlonly=False,
             verbose=False, logfile="", append=True, nrows=59998
         )
         # test user specified table search
         self._testit(
             table=good_table, outfile="", freqrange=[0, 100], species=[],
             reconly=True, chemnames=[], qns=[], intensity=[-1], smu2=[-1],
-            loga=[-1], eu=[-1], el=[-1], rrlinclude=True, rrlonly=False,
+            loga=[-1], el=[-1], eu=[-1], rrlinclude=True, rrlonly=False,
             verbose=False, logfile="", append=True, nrows=67858
         )
 
@@ -225,7 +225,7 @@ class slsearch_test(unittest.TestCase):
         self._testit(
             table=good_table, outfile=outfile, freqrange=[0, 100], species=[],
             reconly=True, chemnames=[], qns=[], intensity=[-1], smu2=[-1],
-            loga=[-1], eu=[-1], el=[-1], rrlinclude=True, rrlonly=False,
+            loga=[-1], el=[-1], eu=[-1], rrlinclude=True, rrlonly=False,
             verbose=False, logfile="", append=True, nrows=67858
         )
         
@@ -235,13 +235,13 @@ class slsearch_test(unittest.TestCase):
         self._testit(
             table=good_table, outfile="", freqrange=[0, 100], species=[],
             reconly=True, chemnames=[], qns=[], intensity=[-1], smu2=[-1],
-            loga=[-1], eu=[-1], el=[-1], rrlinclude=True, rrlonly=False,
+            loga=[-1], el=[-1], eu=[-1], rrlinclude=True, rrlonly=False,
             verbose=False, logfile="", append=True, nrows=67858
         )
         self._testit(
             table=good_table, outfile="", freqrange=[0, 10], species=[],
             reconly=True, chemnames=[], qns=[], intensity=[-1], smu2=[-1],
-            loga=[-1], eu=[-1], el=[-1], rrlinclude=True, rrlonly=False,
+            loga=[-1], el=[-1], eu=[-1], rrlinclude=True, rrlonly=False,
             verbose=False, logfile="", append=True, nrows=15292
         )
 
@@ -251,13 +251,13 @@ class slsearch_test(unittest.TestCase):
         self._testit(
             table=good_table, outfile="", freqrange=[0, 100], species=['S18O'],
             reconly=True, chemnames=[], qns=[], intensity=[-1], smu2=[-1],
-            loga=[-1], eu=[-1], el=[-1], rrlinclude=True, rrlonly=False,
+            loga=[-1], el=[-1], eu=[-1], rrlinclude=True, rrlonly=False,
             verbose=False, logfile="", append=True, nrows=9
         )
         self._testit(
             table=good_table, outfile="", freqrange=[0, 100], species=["S18O","HC5Nv11=1"],
             reconly=True, chemnames=[], qns=[], intensity=[-1], smu2=[-1],
-            loga=[-1], eu=[-1], el=[-1], rrlinclude=True, rrlonly=False,
+            loga=[-1], el=[-1], eu=[-1], rrlinclude=True, rrlonly=False,
             verbose=False, logfile="", append=True, nrows=81
         )
         
@@ -268,14 +268,14 @@ class slsearch_test(unittest.TestCase):
             table=good_table, outfile="", freqrange=[0, 100], species=[],
             reconly=True, chemnames=["Silicon Monocarbide"], qns=[],
             intensity=[-1], smu2=[-1],
-            loga=[-1], eu=[-1], el=[-1], rrlinclude=True, rrlonly=False,
+            loga=[-1], el=[-1], eu=[-1], rrlinclude=True, rrlonly=False,
             verbose=False, logfile="", append=True, nrows=6
         )
         self._testit(
             table=good_table, outfile="", freqrange=[0, 100], species=[],
             reconly=True, chemnames=["Silicon Monocarbide", "Potassium chloride"],
             qns=[], intensity=[-1], smu2=[-1],
-            loga=[-1], eu=[-1], el=[-1], rrlinclude=True, rrlonly=False,
+            loga=[-1], el=[-1], eu=[-1], rrlinclude=True, rrlonly=False,
             verbose=False, logfile="", append=True, nrows=32
         )
 
@@ -286,7 +286,7 @@ class slsearch_test(unittest.TestCase):
             table=good_table, outfile="", freqrange=[0, 100], species=[],
             reconly=True, chemnames=[], qns=["11-10"],
             intensity=[-1], smu2=[-1],
-            loga=[-1], eu=[-1], el=[-1], rrlinclude=True, rrlonly=False,
+            loga=[-1], el=[-1], eu=[-1], rrlinclude=True, rrlonly=False,
             verbose=False, logfile="", append=True, nrows=17
         )
 
@@ -297,14 +297,14 @@ class slsearch_test(unittest.TestCase):
             table=good_table, outfile="", freqrange=[0, 100], species=[],
             reconly=True, chemnames=[], qns=[],
             intensity=[-10,-8], smu2=[-1],
-            loga=[-1], eu=[-1], el=[-1], rrlinclude=True, rrlonly=False,
+            loga=[-1], el=[-1], eu=[-1], rrlinclude=True, rrlonly=False,
             verbose=False, logfile="", append=True, nrows=13447
         )
         self._testit(
             table=good_table, outfile="", freqrange=[0, 100], species=[],
             reconly=True, chemnames=[], qns=[],
             intensity=[-10,-8], smu2=[-1],
-            loga=[-1], eu=[-1], el=[-1], rrlinclude=False, rrlonly=False,
+            loga=[-1], el=[-1], eu=[-1], rrlinclude=False, rrlonly=False,
             verbose=False, logfile="", append=True, nrows=7626
         )
 
@@ -315,14 +315,14 @@ class slsearch_test(unittest.TestCase):
             table=good_table, outfile="", freqrange=[0, 100], species=[],
             reconly=True, chemnames=[], qns=[],
             intensity=[], smu2=[5, 10],
-            loga=[-1], eu=[-1], el=[-1], rrlinclude=True, rrlonly=False,
+            loga=[-1], el=[-1], eu=[-1], rrlinclude=True, rrlonly=False,
             verbose=False, logfile="", append=True, nrows=12227
         )
         self._testit(
             table=good_table, outfile="", freqrange=[0, 100], species=[],
             reconly=True, chemnames=[], qns=[],
             intensity=[-1], smu2=[5, 10],
-            loga=[-1], eu=[-1], el=[-1], rrlinclude=False, rrlonly=False,
+            loga=[-1], el=[-1], eu=[-1], rrlinclude=False, rrlonly=False,
             verbose=False, logfile="", append=True, nrows=6406
         )
 
@@ -333,14 +333,14 @@ class slsearch_test(unittest.TestCase):
             table=good_table, outfile="", freqrange=[0, 100], species=[],
             reconly=True, chemnames=[], qns=[],
             intensity=[], smu2=[],
-            loga=[-6, -4], eu=[-1], el=[-1], rrlinclude=True, rrlonly=False,
+            loga=[-6, -4], el=[-1], eu=[-1], rrlinclude=True, rrlonly=False,
             verbose=False, logfile="", append=True, nrows=22781
         )
         self._testit(
             table=good_table, outfile="", freqrange=[0, 100], species=[],
             reconly=True, chemnames=[], qns=[],
             intensity=[], smu2=[],
-            loga=[-6, -4], eu=[-1], el=[-1], rrlinclude=False, rrlonly=False,
+            loga=[-6, -4], el=[-1], eu=[-1], rrlinclude=False, rrlonly=False,
             verbose=False, logfile="", append=True, nrows=16960
         )
 
@@ -351,16 +351,31 @@ class slsearch_test(unittest.TestCase):
             table=good_table, outfile="", freqrange=[0, 100], species=[],
             reconly=True, chemnames=[], qns=[],
             intensity=[], smu2=[],
-            loga=[], eu=[150,200], el=[-1], rrlinclude=True, rrlonly=False,
-            verbose=False, logfile="", append=True, nrows=9023
+            loga=[], el=[-1], eu=[150,200], rrlinclude=True, rrlonly=False,
+            verbose=False, logfile="", append=True, nrows=9079
         )
         self._testit(
             table=good_table, outfile="", freqrange=[0, 100], species=[],
             reconly=True, chemnames=[], qns=[],
             intensity=[], smu2=[],
-            loga=[], eu=[150,200], el=[-1], rrlinclude=False, rrlonly=False,
-            verbose=False, logfile="", append=True, nrows=3202
+            loga=[], el=[-1], eu=[150,200], rrlinclude=False, rrlonly=False,
+            verbose=False, logfile="", append=True, nrows=3258
         )
+        self._testit(
+            table=good_table, outfile="", freqrange=[1, 1.1], species=[],
+            reconly=True, chemnames=[], qns=[],
+            intensity=[], smu2=[],
+            loga=[], el=[], eu=[1581.52, 1581.53], rrlinclude=False, rrlonly=False,
+            verbose=False, logfile="", append=True, nrows=0
+        )
+        self._testit(
+            table=good_table, outfile="", freqrange=[1, 1.1], species=[],
+            reconly=True, chemnames=[], qns=[],
+            intensity=[], smu2=[],
+            loga=[], el=[], eu=[1581.57, 1581.58] , rrlinclude=False, rrlonly=False,
+            verbose=False, logfile="", append=True, nrows=1
+        )
+
 
     def test_el(self):
         """ test various settings of the el parameter"""
@@ -369,15 +384,29 @@ class slsearch_test(unittest.TestCase):
             table=good_table, outfile="", freqrange=[0, 100], species=[],
             reconly=True, chemnames=[], qns=[],
             intensity=[], smu2=[],
-            loga=[], eu=[], el=[150,200], rrlinclude=True, rrlonly=False,
-            verbose=False, logfile="", append=True, nrows=9079
+            loga=[], el=[150,200], eu=[], rrlinclude=True, rrlonly=False,
+            verbose=False, logfile="", append=True, nrows=9023
         )
         self._testit(
             table=good_table, outfile="", freqrange=[0, 100], species=[],
             reconly=True, chemnames=[], qns=[],
             intensity=[], smu2=[],
-            loga=[], eu=[], el=[150,200], rrlinclude=False, rrlonly=False,
-            verbose=False, logfile="", append=True, nrows=3258
+            loga=[], el=[150,200], eu=[], rrlinclude=False, rrlonly=False,
+            verbose=False, logfile="", append=True, nrows=3202
+        )
+        self._testit(
+            table=good_table, outfile="", freqrange=[1, 1.1], species=[],
+            reconly=True, chemnames=[], qns=[],
+            intensity=[], smu2=[],
+            loga=[], el=[1581.52, 1581.53], eu=[], rrlinclude=False, rrlonly=False,
+            verbose=False, logfile="", append=True, nrows=1
+        )
+        self._testit(
+            table=good_table, outfile="", freqrange=[1, 1.1], species=[],
+            reconly=True, chemnames=[], qns=[],
+            intensity=[], smu2=[],
+            loga=[], el=[1581.57, 1581.58] , eu=[], rrlinclude=False, rrlonly=False,
+            verbose=False, logfile="", append=True, nrows=0
         )
 
     def test_rrlonly(self):
@@ -387,14 +416,14 @@ class slsearch_test(unittest.TestCase):
             table=good_table, outfile="", freqrange=[0, 100], species=[],
             reconly=True, chemnames=[], qns=[],
             intensity=[], smu2=[],
-            loga=[], eu=[], el=[], rrlinclude=True, rrlonly=False,
+            loga=[], el=[], eu=[], rrlinclude=True, rrlonly=False,
             verbose=False, logfile="", append=True, nrows=67858
         )
         self._testit(
             table=good_table, outfile="", freqrange=[0, 100], species=[],
             reconly=True, chemnames=[], qns=[],
             intensity=[], smu2=[],
-            loga=[], eu=[], el=[], rrlinclude=True, rrlonly=True,
+            loga=[], el=[], eu=[], rrlinclude=True, rrlonly=True,
             verbose=False, logfile="", append=True, nrows=5821
         )
 
@@ -407,7 +436,7 @@ class slsearch_test(unittest.TestCase):
             table=good_table, outfile="", freqrange=[0, 100], species=[],
             reconly=True, chemnames=[], qns=[],
             intensity=[], smu2=[],
-            loga=[], eu=[], el=[], rrlinclude=True, rrlonly=True,
+            loga=[], el=[], eu=[], rrlinclude=True, rrlonly=True,
             verbose=False, logfile=logfile, append=False, nrows=5821
         )
         self.assertFalse(os.path.exists(logfile))
@@ -416,7 +445,7 @@ class slsearch_test(unittest.TestCase):
             table=good_table, outfile="", freqrange=[0, 100], species=[],
             reconly=True, chemnames=[], qns=[],
             intensity=[], smu2=[],
-            loga=[], eu=[], el=[], rrlinclude=True, rrlonly=True,
+            loga=[], el=[], eu=[], rrlinclude=True, rrlonly=True,
             verbose=True, logfile=logfile, append=False, nrows=5821
         )
         self.assertTrue(os.path.exists(logfile))
@@ -428,7 +457,7 @@ class slsearch_test(unittest.TestCase):
             table=good_table, outfile="", freqrange=[0, 100], species=[],
             reconly=True, chemnames=[], qns=[],
             intensity=[], smu2=[],
-            loga=[], eu=[], el=[], rrlinclude=True, rrlonly=True,
+            loga=[], el=[], eu=[], rrlinclude=True, rrlonly=True,
             verbose=True, logfile=logfile, append=True, nrows=5821
         )
         self.assertTrue(os.path.exists(logfile))

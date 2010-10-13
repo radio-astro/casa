@@ -220,15 +220,15 @@ newsl.search([0,1000])
             <description>log(A) (Einstein coefficient) range. -1 -> do not use a loga range.</description>
             <value>-1</value>
         </param>
-        <param type="doubleArray" name="eu">
-            <description>Upper energy state range in Kelvin. -1 -> do not use an eu range.</description>
-            <value>-1</value>
-        </param>
         <param type="doubleArray" name="el">
             <description>Lower energy state range in Kelvin. -1 -> do not use an el range.</description>
             <value>-1</value>
         </param>
-        <param type="bool" name="rrlinclude">
+        <param type="doubleArray" name="eu">
+            <description>Upper energy state range in Kelvin. -1 -> do not use an eu range.</description>
+            <value>-1</value>
+        </param>
+         <param type="bool" name="rrlinclude">
             <description>Include RRLs in the result set?</description>
             <value>true</value>
         </param>
@@ -254,9 +254,9 @@ newsl.search([0,1000])
     Search the table associated with this tool. The return value is a spectralline tool with a new table containing the search
     results. This new table can be written to disk by specifying its name in the outfile parameter. If outfile is not specified
     (ie outfile=""), the resulting table is held in memory and deleted upon a call to close() or done() for the newly created tool
-    or upon exiting casapy. Because Splatalogue does not have values for intensity, smu2, loga, eu, and el
+    or upon exiting casapy. Because Splatalogue does not have values for intensity, smu2, loga, el, and eu
     for radio recombination lines (rrls), one must specify to include rrls in the specified frequency range in the output. In this case,
-    RRLs will be included ignoring any filters on intensity, smu2, loga, eu, and el. One can also specify to list only RRLs. One can specify
+    RRLs will be included ignoring any filters on intensity, smu2, loga, el, and eu. One can also specify to list only RRLs. One can specify
     to list the search results to the logger via the verbose parameter. If verbose is false, no logger output is listed, although the results
     can be listed later by running the list() method on the newly created spectral line tool. If verbose=true, one can also specify that
     the results be listed to a logfile and if this file already exists, one can specify that the results be appended to it or to overwrite
