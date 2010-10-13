@@ -842,11 +842,11 @@ void QtProfile::wcChanged( const String c,
     Int ordersOfM = 0;
 
     symax = ymax;
-    while(symax < dmin){
+    while(symax < 0.1 && ymax != 0.0){
 	ordersOfM += 3;
 	symax = ymax * pow(10.,ordersOfM);
     }
-    while(symax > dmax){
+    while(symax > dmax && ymax != 0.0){
 	ordersOfM -= 3;
 	symax = ymax * pow(10.,ordersOfM);
     }
