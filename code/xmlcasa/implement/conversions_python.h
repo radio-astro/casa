@@ -51,6 +51,9 @@ WX::Utils::Value *initialize_python_record( const std::string & );
 WX::Utils::Value *initialize_python_variant( );
 WX::Utils::Value *initialize_python_variant( const std::string &a);
 
+int is_intvec_compatible_numpy_array( PyObject *obj );
+int convert_intvec_from_compatible_numpy_array( PyObject *obj, void *s );
+
 }
 
 #endif

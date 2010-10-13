@@ -1389,4 +1389,27 @@ WX::Utils::Value *initialize_python_record( const std::string & ) { return new R
 WX::Utils::Value *initialize_python_variant( ) { return new VariantValue( ); }
 WX::Utils::Value *initialize_python_variant( const std::string &) { return new VariantValue( ); }
 
+int is_intvec_compatible_numpy_array( PyObject *obj ) {
+    if ( pyarray_check(obj) &&
+	 ( PyArray_TYPE(obj) == NPY_BOOL ||
+	   PyArray_TYPE(obj) == NPY_BYTE ||
+	   PyArray_TYPE(obj) == NPY_UBYTE ||
+	   PyArray_TYPE(obj) == NPY_SHORT ||
+	   PyArray_TYPE(obj) == NPY_INT ) ) {
+	return 1;
+    } else {
+	return 0;
+    }
+}
+
+int convert_intvec_from_compatible_numpy_array( PyObject *obj, void *s ) {
+    if ( is_intvec_compatible_numpy_array(obj) ) {
+	std::vector<int> *to = (vector<int>*) s;
+	std::vector<int> shape;
+	numpy2vector(obj,*to, shape);
+	return 1;
+    }
+    return 0;
+}
+
 }
