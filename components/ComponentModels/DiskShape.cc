@@ -214,20 +214,16 @@ DComplex DiskShape::visibility(const Vector<Double>& uvw,
 void DiskShape::visibility(Matrix<DComplex>& scale,
 			   const Matrix<Double>& uvw,
 			   const Vector<Double>& frequency) const {
-  
+
   scale.resize(uvw.ncolumn(), frequency.nelements());
- 
-  VectorIterator<DComplex> iter(scale, 1);
+
+  VectorIterator<DComplex> iter(scale, 0);
   for ( uInt k =0 ; k < frequency.nelements() ; ++k){
-   
     visibility(iter.vector(), uvw, frequency(k));
-    iter.next();
-    
+    iter.next(); 
   }
-
-
-
 }
+
 void DiskShape::visibility(Vector<DComplex>& scale,
 			   const Matrix<Double>& uvw,
 			   const Double& frequency) const {
@@ -250,16 +246,16 @@ void DiskShape::visibility(Vector<DComplex>& scale,
   for (uInt i = 0; i < nSamples; i++) {
     u = uvw(0, i);
     v = uvw(1, i);
-    DComplex& thisVis = scale(i);
+    // DComplex& thisVis = scale(i);
     ///    thisVis.imag() = 0.0;
     if (near(u + v, 0.0)) {
       ///      thisVis.real() = 1.0; // avoids dividing by zero in calcVis(...)
-      thisVis = DComplex(1.0, 0.0); // avoids dividing by zero
+      scale[i] = DComplex(1.0, 0.0); // avoids dividing by zero
       // in calcVis(...)
     } else {
       if (doRotation) rotateVis(u, v, cpa, spa);
       ///      thisVis.real() = calcVis(u, v, factor);
-      thisVis = DComplex(calcVis(u, v, factor), 0.0);
+      scale[i] = DComplex(calcVis(u, v, factor), 0.0);
     }
   }
 }
