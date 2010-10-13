@@ -102,16 +102,22 @@ Bool FluxCalc_SS_JPL_Butler::setObjNum()
     objnum_p = FluxCalc_SS_JPL_Butler::Mars;
   else if(lname == "jupiter")
     objnum_p = FluxCalc_SS_JPL_Butler::Jupiter;
+  else if(lname == "io")
+    objnum_p = FluxCalc_SS_JPL_Butler::Io;
+  else if(lname == "ganymede")
+    objnum_p = FluxCalc_SS_JPL_Butler::Ganymede;
+  else if(lname == "europa")
+    objnum_p = FluxCalc_SS_JPL_Butler::Europa;
+  else if(lname == "callisto")
+    objnum_p = FluxCalc_SS_JPL_Butler::Callisto;
   else if(lname == "uranus")
     objnum_p = FluxCalc_SS_JPL_Butler::Uranus;
   else if(lname == "neptune")
     objnum_p = FluxCalc_SS_JPL_Butler::Neptune;
+  else if(lname == "triton")
+    objnum_p = FluxCalc_SS_JPL_Butler::Triton;
   else if(lname == "pluto")
     objnum_p = FluxCalc_SS_JPL_Butler::Pluto;
-  else if(lname == "ganymede")
-    objnum_p = FluxCalc_SS_JPL_Butler::Ganymede;
-  else if(lname == "callisto")
-    objnum_p = FluxCalc_SS_JPL_Butler::Callisto;
   else if(lname == "titan")
     objnum_p = FluxCalc_SS_JPL_Butler::Titan;
   else if(lname == "ceres")
@@ -128,7 +134,8 @@ Bool FluxCalc_SS_JPL_Butler::setObjNum()
     objnum_p = FluxCalc_SS_JPL_Butler::Davida;
   else{
     os << LogIO::SEVERE
-       << name_p << " is not a recognized Solar System flux calibration object."
+       << "Sorry, no flux density model for " << name_p
+       << "\n (not even a rudimentary one)."
        << LogIO::POST;
     matched = false;
   }
@@ -227,7 +234,7 @@ Bool FluxCalc_SS_JPL_Butler::readEphem()
     uInt unitPos  = firstTimeStart + firstTimeLen + 1 + lastTimeLen;
     
     Double firstTime = String::toDouble(basename.substr(firstTimeStart, firstTimeLen));
-    Double lastTime = String::toDouble(basename.substr(firstTimeLen + firstTimeLen + 1,
+    Double lastTime = String::toDouble(basename.substr(firstTimeStart + firstTimeLen + 1,
 						       lastTimeLen));
     Unit unit(basename[unitPos]);
     String ref(basename.substr(unitPos + 1,
@@ -285,7 +292,12 @@ Bool FluxCalc_SS_JPL_Butler::readEphem()
   const Table tab(abspath);
   const TableRecord ks(tab.keywordSet());
 
-  temperature_p = get_Quantity_keyword(ks, "T_mean", "K");
+  try{
+    temperature_p = get_Quantity_keyword(ks, "T_mean", "K");
+  }
+  catch(...){
+    temperature_p = -1;
+  }
   mean_rad_p = get_Quantity_keyword(ks, "meanrad", "AU");
 
   // Find the row numbers with the right MJDs.
@@ -447,7 +459,7 @@ ComponentType::Shape FluxCalc_SS_JPL_Butler::compute(Vector<Flux<Double> >& valu
                                                      Double& angdiam,
                                                      const Vector<MFrequency>& mfreqs)
 {
-  LogIO os(LogOrigin("FluxCalc_SS_JPL_Butler", "compute"));
+  // LogIO os(LogOrigin("FluxCalc_SS_JPL_Butler", "compute"));
 
   // Calls readEphem() if necessary.
   ComponentType::Shape rettype(getShape(angdiam));
@@ -470,15 +482,10 @@ ComponentType::Shape FluxCalc_SS_JPL_Butler::compute(Vector<Flux<Double> >& valu
   case FluxCalc_SS_JPL_Butler::Neptune:
     compute_neptune(values, errors, angdiam, mfreqs);
     break;
-  case FluxCalc_SS_JPL_Butler::Pluto:
-    compute_pluto(values, errors, angdiam, mfreqs);
-    break;
-  case FluxCalc_SS_JPL_Butler::Titan:
-    compute_titan(values, errors, angdiam, mfreqs);
-    break;
-  default: 
-    os << LogIO::NORMAL << "Using blackbody model." << LogIO::POST;
-    compute_BB(values, errors, angdiam, mfreqs);
+  default:
+    Bool success = compute_constant_temperature(values, errors, angdiam, mfreqs);
+    if(!success)
+      return ComponentType::UNKNOWN_SHAPE;
   };
 
   return rettype;
@@ -684,47 +691,131 @@ void FluxCalc_SS_JPL_Butler::compute_neptune(Vector<Flux<Double> >& values,
   compute_GB(values, errors, angdiam, mfreqs, temps);
 }
 
-void FluxCalc_SS_JPL_Butler::compute_pluto(Vector<Flux<Double> >& values,
-                                           Vector<Flux<Double> >& errors,
-                                           const Double angdiam,
-                                           const Vector<MFrequency>& mfreqs)
+Bool FluxCalc_SS_JPL_Butler::compute_constant_temperature(Vector<Flux<Double> >& values,
+							  Vector<Flux<Double> >& errors,
+							  const Double angdiam,
+							  const Vector<MFrequency>& mfreqs)
 {
-  // Using the value from:
-  //   Altenhoff, W. J., R. Chini, H. Hein, E. Kreysa, P. G. Mezger, 
-  //      C. Salter, and J. B. Schraml, First radio astronomical estimate 
-  //      of the temperature of Pluto, A&ALett, 190, L15-L17, 1988
-  // which is: Tb = 35 K at 1.27 mm.  this is a correction from the 
-  // value of 39 K in the paper, due to the incorrect geometric mean size 
-  // used for Pluto and Charon (1244 km vs the correct 1320 km).  this is
-  // similar to the value found in:
-  //   Stern, S. A., D. A. Weintraub, and M. C. Festou, Evidence for a Low 
-  //      Surface Temperature on Pluto from Millimeter-Wave Thermal
-  //      Emission Measurements, Science, 261, 1713-1716, 1993
-  // and is a good match to the physical temperature reported in:
-  //   Tryka, K. A., R. H. Brown, D. P. Cruikshank, T. C. Owen, T. R.
-  //      Geballe, and C. DeBergh, Temperature of Nitrogen Ice on Pluto and
-  //      Its Implications for Flux Measurements, Icarus, 112, 513-527, 
-  //      1994
-  // where they give a surface temperature of 40+-2 K.  this would imply
-  // an emissivity of 0.875, which is certainly reasonable.
-  
+  LogIO os(LogOrigin("FluxCalc_SS_JPL_Butler", "compute_constant_temperature"));
+
+  Bool success = true;
   Double ephem_temp = temperature_p;    // Store it.
 
-  temperature_p = 35.0;
-  compute_BB(values, errors, angdiam, mfreqs);
-  temperature_p = ephem_temp;           // Restore it.
-}
+  switch(objnum_p){
+  case FluxCalc_SS_JPL_Butler::Pluto:
+    // Using the value from:
+    //   Altenhoff, W. J., R. Chini, H. Hein, E. Kreysa, P. G. Mezger, 
+    //      C. Salter, and J. B. Schraml, First radio astronomical estimate 
+    //      of the temperature of Pluto, A&ALett, 190, L15-L17, 1988
+    // which is: Tb = 35 K at 1.27 mm.  this is a correction from the 
+    // value of 39 K in the paper, due to the incorrect geometric mean size 
+    // used for Pluto and Charon (1244 km vs the correct 1320 km).  this is
+    // similar to the value found in:
+    //   Stern, S. A., D. A. Weintraub, and M. C. Festou, Evidence for a Low 
+    //      Surface Temperature on Pluto from Millimeter-Wave Thermal
+    //      Emission Measurements, Science, 261, 1713-1716, 1993
+    // and is a good match to the physical temperature reported in:
+    //   Tryka, K. A., R. H. Brown, D. P. Cruikshank, T. C. Owen, T. R.
+    //      Geballe, and C. DeBergh, Temperature of Nitrogen Ice on Pluto and
+    //      Its Implications for Flux Measurements, Icarus, 112, 513-527, 
+    //      1994
+    // where they give a surface temperature of 40+-2 K.  this would imply
+    // an emissivity of 0.875, which is certainly reasonable.  
+    temperature_p = 35.0;
+    break;
+  case FluxCalc_SS_JPL_Butler::Io:
+    os << LogIO::NORMAL1
+       << "Reference for Io's temperature (110K):\n"
+       << "Rathbun, J.A., Spencer, J.R. Tamppari, L.K., Martin, T.Z., Barnard, L.,\n"
+       << "Travis, L.D. (2004). \"Mapping of Io's thermal radiation by the Galileo\n"
+       << "photopolarimeter-radiometer (PPR) instrument\". Icarus 169:127-139.\n"
+       << "doi:10.1016/j.icarus.2003.12.021\n"
+       << LogIO::POST;
+    temperature_p = 110.0;
+    break;
+  case FluxCalc_SS_JPL_Butler::Ganymede:
+    os << LogIO::NORMAL1
+       << "Reference for Ganymede's temperature (110K):\n"
+       << "Delitsky, Mona L., Lane, Arthur L. (1998). \"Ice chemistry of Galilean satellites\"\n"
+       << "J. of Geophys. Res. 103 (E13): 31,391-31,403. doi:10.1029/1998/JE900020\n"
+       << "http://trs-new.jpl.nasa.gov/dspace/bitstream/2014/20675/1/98-1725.pdf"
+       << LogIO::POST;
+    temperature_p = 110.0;
+    break;
+  case FluxCalc_SS_JPL_Butler::Callisto:
+    os << LogIO::NORMAL1
+       << "Reference for Callisto's temperature (134 +- 11 K):\n"
+       << "Moore, Jeffrey M., Chapman, Clark R., Bierhaus, Edward B. et al\n"
+       << "(2004). \"Callisto\" In Bagenal, F., Dowling, T.E., McKinnon, W.B.,\n"
+       << "\"Jupiter: The Planet, Satellites, and Magnetosphere\". Cambridge Univ. Press"
+       << LogIO::POST;
+    temperature_p = 134.0;   	// +- 11.
+    break;
+  case FluxCalc_SS_JPL_Butler::Europa:
+    os << LogIO::NORMAL1
+       << "Reference for Europa's temperature (109 K):\n"
+       << "http://science.nasa.gov/science-news/science-at-nasa/1998/ast03dec98_1/"
+       << LogIO::POST;
+    temperature_p = 109.0;
+    break;
+  case FluxCalc_SS_JPL_Butler::Titan:
+    temperature_p = 76.6;
+    break;
+  case FluxCalc_SS_JPL_Butler::Triton:
+    os << LogIO::NORMAL1
+       << "Reference for Triton's temperature (38 K):\n"
+       << "http://solarsystem.nasa.gov/planets/profile.cfm?Object=Triton"
+       << LogIO::POST;
+    temperature_p = 38.0;
+    break;
+  case FluxCalc_SS_JPL_Butler::Ceres:
+    os << LogIO::NORMAL1
+       << "Reference for Ceres' mean temperature (167K):\n"
+       << "Saint-Pe, O., Combes, N., Rigaut, F. (1993). \"Ceres surface properties\n"
+       << "by high-resolution imaging from Earth\" Icarus 105:271-281.\n"
+       << "doi:10.1006/icar.1993.1125"
+       << LogIO::POST;
+    temperature_p = 167.0;
+    break;
+  case FluxCalc_SS_JPL_Butler::Pallas:
+    os << LogIO::WARN
+       << "The orbit of Pallas has an eccentricity of 0.231.  This is not yet accounted\n"
+       << "for when calculating its temperature (taken to be 164K)."
+       << LogIO::POST;
+    temperature_p = 164.0;
+    break;
+  case FluxCalc_SS_JPL_Butler::Juno:
+    os << LogIO::WARN
+       << "Juno has a large crater and temperature changes."
+       << LogIO::POST;
+    os << LogIO::NORMAL1
+       << "Reference for Juno's mean temperature (167K):\n"
+       << "Lim, Lucy F., McConnochie, Timothy H., Bell, James F., Hayward, Thomas L. (2005).\n"
+       << "\"Thermal infrared (8-13 um) spectra of 29 asteroids: the Cornell Mid-Infrared\n"
+       << "Asteroid Spectroscopy (MIDAS) Survey\" Icarus 173:385-408.\n"
+       << "doi:10.1016/j.icarus.2004.08.005."
+       << LogIO::POST;
+    temperature_p = 163.0;
+    break;
+  default:
+    break;
+  };
+    
+  if(temperature_p > 0.0){
+    os << LogIO::NORMAL << "Using blackbody model." << LogIO::POST;
+    compute_BB(values, errors, angdiam, mfreqs);
+  }
+  else{
+    os << LogIO::SEVERE
+       << "An ephemeris was found, but not a temperature."
+       << LogIO::POST;
+    success = false;
+  }
 
-void FluxCalc_SS_JPL_Butler::compute_titan(Vector<Flux<Double> >& values,
-                                           Vector<Flux<Double> >& errors,
-                                           const Double angdiam,
-                                           const Vector<MFrequency>& mfreqs)
-{
-  Double ephem_temp = temperature_p;    // Store it.
+  if(ephem_temp > 0.0)
+    temperature_p = ephem_temp;         // Restore it.
 
-  temperature_p = 76.6;
-  compute_BB(values, errors, angdiam, mfreqs);
-  temperature_p = ephem_temp;           // Restore it.
+  return success;
 }
 
 Bool FluxCalc_SS_JPL_Butler::setObj(const String& objname)
