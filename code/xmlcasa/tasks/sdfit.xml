@@ -371,12 +371,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         and aperture efficiency respectively.
 
         WARNING for the GBT raw SDFITS format data as input:
-        Currently, all SDtasks cannot handle GBT raw SDFITS format data
-        (in which the data are stored in multiple tables within SDFITS).
-        It may be still possible to reduce GBT data after some
-        preprocessing (outside CASA) of the raw SDFITS to a SDFITS with
-        a single data table or to other data formats handled by SDtasks.
-                                                                            61
+        SDtasks are able to handle GBT raw SDFITS format data since the 
+        data filler is available. However, the functionality is not well 
+        tested yet, so that there may be unknown bugs.  
+
   </example>
 
 </task>
