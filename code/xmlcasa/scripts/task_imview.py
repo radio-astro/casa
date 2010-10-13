@@ -266,6 +266,10 @@ class __imview_class(object):
 			if channel >= 0:
 				vwr.channel( channel, panel=panel )
 			vwr.zoom(region=zoom,panel=panel)
+		elif type(zoom) == dict and zoom.has_key('file') and type(zoom['file']) == str and os.path.isfile( zoom['file'] ):
+			if channel >= 0:
+				vwr.channel( channel, panel=panel )
+			vwr.zoom(region=zoom['file'],panel=panel)
 		else:
 			if channel < 0:
 				raise Exception, "invalid zoom parameters"
