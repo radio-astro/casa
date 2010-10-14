@@ -1044,6 +1044,8 @@ file( WRITE ${CMAKE_INSTALL_PREFIX}/makedefs
 
 add_subdirectory( doc/taskref )
 add_subdirectory( doc/casaref )
+add_subdirectory( doc/userman )
 
 # All documentation
-add_custom_target( doc DEPENDS taskref_html taskref_pdf casaref_html casaref_pdf )
+add_custom_target( doc DEPENDS taskref_html taskref_pdf casaref_html casaref_pdf userman_html userman_pdf)
+#add_custom_target( doc )

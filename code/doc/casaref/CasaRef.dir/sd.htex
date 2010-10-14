@@ -9628,9 +9628,7 @@ float
 
 %%%%% sd.opacity_model
 \newpage
-\ahsdobject{sd.opacity\_model}{sd.opacity_model}{Single-dish specific opacity model}
-%\ahobject{sd.opacity_model}{Single-dish specific opacity model}
-%\ahfunction{sd.opacity_model}{Single-dish specific opacity model}
+\ahsdobject{sd.opacity\_model}{sd.opacity_model}{Single dish specific opacity model}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\

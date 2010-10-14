@@ -60,10 +60,10 @@ RETURN VALUE
 This task returns an open spectralline tool which references the new table if wantarray=true. The new table can also be opened by 
 a spectralline tool using the open method (eg sl.open(tablename)). False is returned if wantarray=false.
 
-\begin{verbatim}
+
 newsl = splattotable("mysplatlist.txt", "mynewsl.tbl", true)
 
-\end{verbatim}
+
 </example>
 
 </task>

@@ -157,7 +157,7 @@ wantreturn     If true, return the spectralline tool associated with the result 
     can be listed later by running the sl.list() method on the newly created spectral line tool if wantreturn=True. If verbose=True, one can also specify that
     the results be listed to a logfile and if this file already exists, one can specify that the results be appended to it or to overwrite
     it with the results.
-    \begin{verbatim}
+    
     slrestool = slsearch("myspectrallines.tbl", verbose=False)
     # do a search postponing listing the results to the logger.
     slrestool = sl.search(outfile="myresults.tbl", freqrange = [200,300], species=['HOCN', 'HOCO+'])
@@ -166,7 +166,7 @@ wantreturn     If true, return the spectralline tool associated with the result 
     # or one could also do the following after exiting and restarting casapy
     sl.open("myresults.tbl")
     sl.list()
-    \end{verbatim}
+    
 
 </example>
 
