@@ -449,7 +449,7 @@ class SubMS
   // Fills mapper[ntok] with a map from dataColumn indices to ArrayColumns in
   // the output.  mapper must have ntok slots!
   void getDataColMap(ArrayColumn<Complex>* mapper, uInt ntok,
-                     const Vector<MS::PredefinedColumns> colEnums); 
+                     const Vector<MS::PredefinedColumns>& colEnums); 
 
   // Returns whether or not the numbers of correlations and channels
   // are independent of DATA_DESCRIPTION_ID, for both the input and output

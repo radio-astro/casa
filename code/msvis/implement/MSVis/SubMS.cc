@@ -6963,7 +6963,7 @@ Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
 }
 
 void SubMS::getDataColMap(ArrayColumn<Complex>* mapper, uInt ntok,
-                          const Vector<MS::PredefinedColumns> colEnums)
+                          const Vector<MS::PredefinedColumns>& colEnums)
 {
   // Set up a map from dataColumn indices to ArrayColumns in the output.
   // mapper has to be a pointer (gasp!), not a Vector, because
