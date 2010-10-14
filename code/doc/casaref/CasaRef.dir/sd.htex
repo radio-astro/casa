@@ -451,6 +451,14 @@ scantable
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+   asap_init()
+   s=sd.scantable('FLS3a_HI.asap')                 # load in the saved ASAP dataset with FLS3a
+   scanns = s.getscannos()                         # get a list of the scan numbers in the scantable
+   sn=list(scanns)
+   res=sd.calfs(s,sn)                              # Do a frequency switched calibration on the scans
+\end{verbatim}
+
 
 %% sd.calibrate
 \newpage
@@ -563,6 +571,12 @@ scantable
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+   asap_init()
+   s=sd.scantable('IRC+10216_rawACSmod',False)#load the data without averaging     
+   scal=sd.calnod(s,[229,230])             # Calibrate CS scans 
+\end{verbatim}
+
 
 %% sd.calps
 \newpage
@@ -623,6 +637,12 @@ scantable
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+   asap_init()
+   s=sd.scantable('OrionS_rawACSmod',False)#load the data without averaging        
+   scal=sd.calps(s,[24,25,26,27])          # Calibrate SiO scans  
+\end{verbatim}
+
 
 %% sd.commands
 \newpage
@@ -640,6 +660,42 @@ scantable
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
+
+\begin{verbatim}
+   asap_init()
+   sd.commands()
+   # Output will be as follows
+   [The scan container]
+       scantable           - a container for integrations/scans
+                             (can open asap/rpfits/sdfits and ms files)
+           copy            - returns a copy of a scan
+           get_scan        - gets a specific scan out of a scantable
+                             (by name or number)
+           drop_scan       - drops a specific scan out of a scantable
+                             (by number)
+           set_selection   - set a new subselection of the data
+           get_selection   - get the current selection object
+           summary         - print info about the scantable contents
+           stats           - get specified statistic of the spectra in
+                             the scantable
+           stddev          - get the standard deviation of the spectra
+                             in the scantable
+           get_tsys        - get the TSys
+           get_time        - get the timestamps of the integrations
+           get_inttime     - get the integration time
+           get_sourcename  - get the source names of the scans
+           get_azimuth     - get the azimuth of the scans
+           get_elevation   - get the elevation of the scans
+           get_parangle    - get the parallactic angle of the scans
+           get_coordinate  - get the spectral coordinate for the given row,
+                             which can be used for coordinate conversions
+           get_weather     - get the weather condition parameters
+           get_unit        - get the current unit
+           set_unit        - set the abcissa unit to be used from this
+                             point on
+           ...
+\end{verbatim}
+
 
 
 %% sd.dosigref
@@ -687,6 +743,40 @@ scantable
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+   asap_init()
+   s = sd.scantable('OrionS_rawACSmod',average=False)
+   sel = sd.selector()
+   # calibration scans
+   sel.set_types([srctype.poncal,srctype.poffcal])
+   s.set_selection(sel)
+   ssubon=s.copy()
+   s.set_selection()
+   sel.reset()
+   # off-calibration scans
+   sel.set_types([srctype.pson,srctype.psoff])
+   s.set_selection(sel)
+   ssuboff=s.copy()
+   s.set_selection()
+   sel.reset()
+   # calibration
+   cals = sd.dototalpower(ssubon,ssuboff)
+   # ON scan
+   sel.set_types(srctype.pson)
+   cals.set_selection(sel)
+   sig = cals.copy()
+   cals.set_selection()
+   sel.reset()
+   # OFF scan
+   sel.set_types(srctype.psoff)
+   cals.set_selection(sel)
+   ref = cals.copy()
+   cals.set_selection()
+   sel.reset()
+   # get calibrated data
+   ress = sd.dosigref(sig,ref,smooth=1)
+\end{verbatim}
+
 
 %% sd.dototalpower
 \newpage
@@ -725,6 +815,41 @@ scantable
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+   asap_init()
+   s = sd.scantable('OrionS_rawACSmod',average=False)
+   sel = sd.selector()
+   # calibration scans
+   sel.set_types([srctype.poncal,srctype.poffcal])
+   s.set_selection(sel)
+   ssubon=s.copy()
+   s.set_selection()
+   sel.reset()
+   # off-calibration scans
+   sel.set_types([srctype.pson,srctype.psoff])
+   s.set_selection(sel)
+   ssuboff=s.copy()
+   s.set_selection()
+   sel.reset()
+   # calibration
+   cals = sd.dototalpower(ssubon,ssuboff)
+   # ON scan
+   sel.set_types(srctype.pson)
+   cals.set_selection(sel)
+   sig = cals.copy()
+   cals.set_selection()
+   sel.reset()
+   # OFF scan
+   sel.set_types(srctype.psoff)
+   cals.set_selection(sel)
+   ref = cals.copy()
+   cals.set_selection()
+   sel.reset()
+   # get calibrated data
+   ress = sd.dosigref(sig,ref,smooth=1)
+\end{verbatim}
+
+
 
 %% sd.get_revision
 \newpage
@@ -745,6 +870,13 @@ string
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+   asap_init()
+   rev=sd.get_revision()
+   print rev
+   '13018'
+\end{verbatim}
+
 
 %% sd.is_asap_cli
 \newpage
@@ -764,6 +896,13 @@ bool (False)
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+   asap_init()
+   isasap=sd.is_asap_cli()
+   print isasap
+   False
+\end{verbatim}
+
 
 %% sd.is_casapy
 \newpage
@@ -781,6 +920,13 @@ bool (True)
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
+
+\begin{verbatim}
+   asap_init()
+   iscasa=sd.is_casapy()
+   print iscasa
+   True
+\end{verbatim}
 
 
 %% sd.list_files
@@ -888,6 +1034,38 @@ string
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+   asap_init()
+   sd.list_rcparameters()
+   # output will be as follows
+   # general
+   # only valid in asap standard mode not in scripts or casapy
+   # It will disable exceptions and just print the messages
+   verbose                    : True
+
+   # preload a default plotter
+   useplotter                 : True
+
+   # apply operations on the input scantable or return new one
+   insitu                     : True
+
+   # plotting
+
+   # do we want a GUI or plot to a file
+   plotter.gui                : True
+
+   # default mode for colour stacking
+   plotter.stacking           : Pol
+
+   # default mode for panelling
+   plotter.panelling          : scan
+
+   # push panels together, to share axis labels
+   plotter.ganged             : True
+
+   ...
+\end{verbatim}
+
 
 %% sd.list_scans
 \newpage
@@ -903,6 +1081,20 @@ string
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
+
+\begin{verbatim}
+   asap_init()
+   # no scantable is created yet
+   scanlist=sd.list_scans()
+   print scanlist
+   []
+   # create scantable
+   s=sd.scantable('OrionS_rawACSmod',average=False)
+   # run list_scans() again
+   scanlist=sd.list_scans()
+   print scanlist
+   ['s']
+\end{verbatim}
 
 
 %% sd.mask_and
@@ -938,6 +1130,16 @@ bool array
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+   asap_init()
+   a=[True,False,False]
+   b=[True,True,False]
+   sd.mask_and(a,b)
+   [True,False,False]
+\end{verbatim}
+
+
+
 %% sd.mask_or
 \newpage
 \ahsdfunction{sd.mask\_or}{sd.mask_or}{Logical operation function on array}
@@ -971,6 +1173,14 @@ bool array
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+   asap_init()
+   a=[True,False,False]
+   b=[True,True,False]
+   sd.mask_or(a,b)
+   [True,True,False]
+\end{verbatim}
+
 
 %% sd.mask_not
 \newpage
@@ -999,6 +1209,14 @@ bool array
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
+
+\begin{verbatim}
+   asap_init()
+   a=[True,False,False]
+   sd.mask_not(a)
+   [False,True,True]
+\end{verbatim}
+
 
 
 %% sd.merge
@@ -1096,6 +1314,26 @@ scantable
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
+
+\begin{verbatim}
+   asap_init()
+   s = sd.scantable('OrionS_rawACSmod',average=False)
+   sel = sd.selector()
+   # ON scan
+   sel.set_types(srctype.pson)
+   s.set_selection(sel)
+   sig = s.copy()
+   s.set_selection()
+   sel.reset()
+   # OFF scan
+   sel.set_types(srctype.psoff)
+   s.set_selection(sel)
+   ref = s.copy()
+   s.set_selection()
+   sel.reset()
+   # get quotient data
+   cals = sd.quotient(source=sig,reference=ref,preserve=True)
+\end{verbatim}
 
 
 %% sd.rc
@@ -1212,6 +1450,12 @@ float array
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 
+\begin{verbatim}
+   asap_init()
+   s=sd.scantable('skydip.asap',average=False)
+   sd.skydip(data=s,averagepol=True,plot=True)
+\end{verbatim}
+
 
 %% sd.splitant
 \newpage
@@ -1307,7 +1551,13 @@ any array
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
-   Return a welcome message
+   Return a welcome message.
+  
+   Note that the message assumes the sd tool (ASAP) is used as a standalone 
+   software so that some informations are not fit with \casa.
+   For example, you should also report bugs on sd tool to \casa\ helpdesk, 
+   and you have to run 'sd.commands() instead of 'commands()' if you want to 
+   get a list of commands from \casa\ console. 
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
@@ -1316,6 +1566,20 @@ string
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
+
+\begin{verbatim}
+   asap_init()
+   msg=sd.welcome()
+   print msg
+   # output will be as follows
+   Welcome to ASAP vtrunk (2010-08-13) - the ATNF Spectral Analysis Package
+
+   Please report any bugs via:
+   http://svn.atnf.csiro.au/trac/asap/simpleticket
+
+   [IMPORTANT: ASAP is 0-based]
+   Type commands() to get a list of all available ASAP commands.
+\end{verbatim}
 
 
 %%%%%% sd.scantable
