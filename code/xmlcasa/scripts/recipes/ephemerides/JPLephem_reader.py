@@ -1,11 +1,12 @@
 from glob import glob
+import os
 import re
 import scipy.special
 import time                  # We can always use more time.
 
 ## # This seems like overkill just to get me and qa, but it creates local copies.
 from taskinit import gentools, qa, casalog
-im, cb, ms, tb, fg, af, me, ia, po, sm, cl, cs, rg, dc, vp = gentools()
+im, cb, ms, tb, fg, af, me, ia, po, sm, cl, cs, rg, sl, dc, vp = gentools()
 
 from dict_to_table import dict_to_table
 
@@ -120,8 +121,10 @@ def readJPLephem(fmfile):
         'NAME': {'pat': r'^Target body name:\s+\d*\s*(\w+)'},   # object name, w.o. number
         'ephtype': {'pat': r'\?s_type=1#top>\]\s*:\s+\*(\w+)'}, # e.g. OBSERVER
         'obsloc': {'pat': r'^Center-site name:\s+(\w+)'},        # e.g. GEOCENTRIC
-        'meanrad': {'pat': r'Mean radius \(km\)\s*=\s*([0-9.]+)',
+        # Catch either an explicit mean radius or a solitary target radius.
+        'meanrad': {'pat': r'(?:Mean radius \(km\)\s*=|^Target radii\s*:)\s*([0-9.]+)(?:\s*km)?\s*$',
                     'unit': 'km'},
+        # Triaxial target radii
         'radii': {'pat': r'Target radii\s*:\s*([0-9.]+\s*x\s*[0-9.]+\s*x\s*[0-9.]+)\s*km.*Equator, meridian, pole',
                   'unit': 'km'},
         'T_mean': {'pat': r'Mean Temperature \(K\)\s*=\s*([0-9.]+)',
@@ -633,7 +636,7 @@ def jplfiles_to_repository(objs, jpldir='.', jplext='.ephem',
     Example:
     import recipes.ephemerides.request as jplreq
     objs = jplreq.asteroids.keys() + jplreq.planets_and_moons.keys()
-    jplfiles_to_repository(objs, '../../gnuactive')
+    jplfiles_to_repository(objs, os.getenv('CASAPATH').split()[0])
     """
     neph = 0
     casapath = os.getenv('CASAPATH')

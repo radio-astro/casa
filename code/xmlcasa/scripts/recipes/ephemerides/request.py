@@ -34,7 +34,7 @@ for thing in jplreq.asteroids.keys() + jplreq.planets_and_moons.keys():
 
 asteroids = {'ceres':        1,
              'pallas':       2,
-             'juno':         3,
+             'juno':         3, # Large crater and temperature changes.
              'vesta':        4,
              'astraea':      5,
              'hygiea':      10, # Careful with the spelling.  It used to be
@@ -350,3 +350,77 @@ def request_from_JPL(objnam, enddate,
     s.close()
 
     return True
+
+def list_moons():
+    """
+    List planets_and_moons in a more organized way.
+    """
+    # Gather the moons by planet number.
+    planets = {}
+    moons = {}
+    for lcname in planets_and_moons:
+        num = planets_and_moons[lcname]
+        planet = num / 100
+        if num % 100 == 99:
+            planets[planet] = lcname.title()
+        else:
+            if not moons.has_key(planet):
+                moons[planet] = {}
+            moons[planet][num % 100] = lcname.title()
+
+    #print "planets =", planets
+    #print "moons:"
+    #for p in planets:
+    #    print planets[p]
+    #    print " ", moons.get(p, "None")
+
+    # For formatting the output table, find the column widths,
+    # and maximum number of moons per planet.
+    maxmoons = max([len(moons.get(p, '')) for p in planets])
+    maxwidths = {}
+    for planet in planets:
+        if moons.has_key(planet):
+            maxwidths[planet] = max([len(m) for m in moons[planet].values()])
+        else:
+            maxwidths[planet] = 0
+        if len(planets[planet]) > maxwidths[planet]:
+            maxwidths[planet] = len(planets[planet])
+
+    # Set up the table columns.
+    plannums = planets.keys()
+    plannums.sort()
+    sortedmoons = {}
+    formstr = ''
+    hrule   = ''
+    for p in plannums:
+        formstr += '| %-' + str(maxwidths[p]) + 's '
+        if p == 1:
+            hrule += '|'
+        else:
+            hrule += '+'
+        hrule += '-' * (maxwidths[p] + 2)
+        moonkeys = moons.get(p, {}).keys()
+        moonkeys.sort()
+        sortedmoons[p] = {}
+        for row in xrange(len(moonkeys)):
+            sortedmoons[p][row] = moons[p][moonkeys[row]]
+    formstr += '|'
+    hrule   += '|'
+
+    print formstr % tuple([planets[p] for p in plannums])
+    print hrule
+    for row in xrange(maxmoons):
+        print formstr % tuple([sortedmoons[p].get(row, '') for p in plannums])
+
+def list_asteroids():
+    """
+    Like list_moons, but list the asteroids by their numbers
+    (= order of discovery, ~ albedo * size)
+    """
+    astnums = asteroids.values()
+    astnums.sort()
+    invast = {}
+    for a in asteroids:
+        invast[asteroids[a]] = a.title()
+    for n in astnums:
+        print "%3d %s" % (n, invast[n])
