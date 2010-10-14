@@ -50,7 +50,7 @@ below. The columns which must be present in the downloaded file in this exact or
 "Freq in GHz", "Resolved QNs", "CDMS/JPL Intensity", "S<sub>ij</sub>mu<sup>2</sup> (D<sup>2</sup>)",
 "Log<sub>10</sub> (A<sub>ij</sub>)", "E<sub>L</sub> (K)", "E<sub>U</sub> (K)", "Linelist". In order to get these columns in this order, one should
 select exactly the following items on the Splatalogue search interface. Under "Specify Ranges" one should select "GHz" for the frequency unit.
-Under "Line List Display" select exactly "CDMS/JPL Intensity",
+Under "Line Strength Display" select exactly "CDMS/JPL Intensity",
 "Sij mu2", and "Aij". Under "Energy Levels", one should select exactly "Elower (K)" and "Eupper (K)". Under "Miscellaneous", one should
 select exactly "Display Ordered Frequency ONLY" and "Display NRAO Recommended Frequencies". One should then initiate the search and on
 the resulting page, one should select the Tab Field Separator and then export the list. The resulting list should be in the proper
