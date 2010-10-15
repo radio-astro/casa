@@ -40,7 +40,6 @@
 #include <display/QtViewer/QtDisplayData.qo.h>
 #include <display/QtViewer/QtDisplayPanelGui.qo.h>
 #include <display/QtViewer/QtViewer.qo.h>
-#include <display/QtViewer/QtApp.h>
 
 #include <unistd.h>
 #include <sys/stat.h>
@@ -77,6 +76,26 @@ static void signal_manager_root( int sig ) {
     exit(0);
 }
 
+
+class ViewerApp : public QApplication {
+    public:
+	ViewerApp( int &argc, char **argv, bool gui_enabled ) : QApplication(argc, argv, gui_enabled) { }
+	bool notify( QObject *receiver, QEvent *e );
+};
+
+bool ViewerApp::notify( QObject *receiver, QEvent *e ) {
+    try { return QApplication::notify(receiver,e); }
+    catch ( AipsError e ) {
+	qWarning( ) << "unhandled exception:" << e.getMesg().c_str();
+	return false;
+    } catch ( ... ) {
+	qWarning("unhandled exception... ");
+	qDebug() << "from" << receiver->objectName() << "from event type" << e->type();
+	qFatal("exiting...");
+	exit(1);
+    }
+}
+
 int main( int argc, const char *argv[] ) {
 
     bool server_startup = false;
@@ -104,7 +123,7 @@ int main( int argc, const char *argv[] ) {
     INITIALIZE_PGPLOT
     try {
 
-	QApplication qapp(numargs, args, true);
+	ViewerApp qapp(numargs, args, true);
 
 	// if it's a server, stick around even if all windows are closed...
 	if ( server_startup ) {
@@ -233,7 +252,7 @@ int main( int argc, const char *argv[] ) {
 
 	}
 
-	Int stat = QtApp::exec();
+	Int stat = qapp.exec();
 
   //delete dpg;		// Used to lead to crash (double-deletion
   			// of MWCTools); should work now.
