@@ -2225,7 +2225,9 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     //dataspectralwindowids_p.resize();
     //dataspectralwindowids_p=thisSelection.getSpwList();
     //get channel selection in spw
-    Matrix<Int> chansels=thisSelection.getChanList();
+    // TT: Added sorting option in getChanList call 
+    //     to accomodate changes related CAS-2521
+    Matrix<Int> chansels=thisSelection.getChanList(NULL, 1, True);
     //cout<<"chansels="<<chansels<<endl;
     //convert the selection into flag
     uInt nms = 1;
