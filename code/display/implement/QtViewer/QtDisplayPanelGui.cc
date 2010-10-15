@@ -1103,6 +1103,8 @@ void QtDisplayPanelGui::showMakeRegionPanel() {
         ImageInterface<float>* img = pdd->imageInterface();
         PanelDisplay* ppd = qdp_->panelDisplay();
         if (ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0) {
+           connect(qmr_,  SIGNAL(hideRegionInImage()),
+                          SLOT(hideMakeRegionPanel()));
            qmr_->showNormal();
            qmr_->raise();  
            break;
