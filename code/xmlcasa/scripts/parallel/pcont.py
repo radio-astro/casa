@@ -1,6 +1,7 @@
 from taskinit import *
 from parallel_go import *
 from cleanhelper import *
+from parallel.parallel_cont import imagecont
 from odict import *
 import numpy as np
 import random
@@ -455,10 +456,10 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
 
 
     tb.open(msname+"/SPECTRAL_WINDOW")
-    freqs=tb.getcol('CHAN_FREQ')
-    allfreq=freqs[:, spwids[0]]
+    #freqs=tb.getcol('CHAN_FREQ')
+    allfreq=tb.getcol('CHAN_FREQ', spwids[0],1)
     for k in range(1, len(spwids)) :
-        allfreq=np.append(allfreq, freqs[:,spwids[k]])
+        allfreq=np.append(allfreq, tb.getcol('CHAN_FREQ', spwids[k],1))
     ##number of channels in the ms
     numchanperms=len(allfreq)
     print 'number of channels', numchanperms
@@ -619,7 +620,7 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
           hostnames='', 
           numcpuperhost=1, majorcycles=1, niter=1000, threshold='0.0mJy', alg='clark', scales=[0],
           mode='channel', start=0, nchan=1, step=1, weight='natural', 
-          imagetilevol=1000000,
+          imagetilevol=250000,
           contclean=False, chanchunk=1, visinmem=False, 
           painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
           epjtablename=''): 
@@ -758,7 +759,7 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
             if(chancounter < nchanchunk):
                 chanind[k]=chancounter
                 #if(not donegetchan[chancounter]):
-                #    getchanimage(model, imagename+str(chancounter)+'.model', 
+                #    imagecont.getchanimage(model, imagename+str(chancounter)+'.model', 
                 #                 chancounter*chanchunk, chanchunk)
                 #    donegetchan[chancounter]=True
                 runcomm='a.imagechan_new(msname='+'"'+msname+'", start='+str(startsel[chancounter])+', numchan='+str(nchansel[chancounter])+', field="'+str(field)+'", spw='+str(spwsel[chancounter])+', cubeim='+imnam+', imroot='+imnam+',imchan='+str(chancounter)+',chanchunk='+str(chanchunk)+',niter='+str(niter)+',alg="'+alg+'", scales='+str(scales)+', majcycle='+str(majorcycles)+', thr="'+str(threshold)+'")'
@@ -783,20 +784,23 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
                    (not readyputchan[chanind[k]])):
                     readyputchan[chanind[k]]=True
             over=overone
+    time2=time.time()
+    print 'Time to image is ', (time2-time1)/60.0, 'mins'
     ##sweep the remainder channels in case they are missed
     while(not buddy_is_ready):
-        time.sleep(1)
-        buddy_is_ready=c.check_job(buddy_ref, False)
+       time.sleep(1)
+       buddy_is_ready=c.check_job(buddy_ref, False)
     doneputchan=c.pull('doneputchan', buddy_id)[buddy_id]    
+    
     c.stop_engine(buddy_id)
     for k in range(nchanchunk):
         if(not doneputchan[k]):
-            putchanimage(model, imagename+str(k)+'.model', k*chanchunk)
-            putchanimage(imagename+'.residual', imagename+str(k)+'.residual', k*chanchunk)
-            putchanimage(imagename+'.image', imagename+str(k)+'.image', k*chanchunk)
+            imagecont.putchanimage(model, imagename+str(k)+'.model', k*chanchunk, False)
+            imagecont.putchanimage(imagename+'.residual', imagename+str(k)+'.residual', k*chanchunk, False)
+            imagecont.putchanimage(imagename+'.image', imagename+str(k)+'.image', k*chanchunk, False)
             doneputchan[k]=True
     time2=time.time()
-    print 'Time to image is ', (time2-time1)/60.0, 'mins'
+    print 'Time to image after cleaning is ', (time2-time1)/60.0, 'mins'
     c.stop_cluster()
 
 
@@ -890,9 +894,9 @@ def pcontmultims(msnames=[], workdirs=[], imagename=None, imsize=[1000, 1000],
         msname=msnames[msid]
         myrec=hostdata.values()[msid]
         tb.open(msname+"/SPECTRAL_WINDOW")
-        freqs=tb.getcol('CHAN_FREQ')
+        #freqs=tb.getcol('CHAN_FREQ')
         for k in range(len(myrec['spwids'])) :
-            allfreq=np.append(allfreq, freqs[:,myrec['spwids'][k]])
+            allfreq=np.append(allfreq, tb.getcol('CHAN_FREQ',myrec['spwids'][k],1))
         tb.done()
     ##number of channels in the ms
     numchanperms=len(allfreq)
