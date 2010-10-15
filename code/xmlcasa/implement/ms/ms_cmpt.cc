@@ -1355,6 +1355,69 @@ ms::cvel(const std::string& mode,
 
     // end prepare regridding parameters
 
+    String originalName = itsMS->tableName();
+
+    // test parameters of input SPWs
+    Bool foundInconsistentSPW = False;
+    {
+      Table spwtable(originalName+"/SPECTRAL_WINDOW");
+      ROArrayColumn<Double> chanwidths(spwtable, "CHAN_WIDTH");
+      ROArrayColumn<Double> chanfreqs(spwtable, "CHAN_FREQ");
+
+      for(uInt ii=0; ii<spwtable.nrow(); ii++){
+	Vector<Double> cw(chanwidths(ii));
+	Vector<Double> cf(chanfreqs(ii));
+	Int totNumChan = cw.size();
+      
+	Bool isEquidistant = True;
+	for(Int i=0; i<totNumChan; i++){
+	  if(abs(cw(i)-cw(0))>0.1){
+	    isEquidistant = False;
+	  }
+	}
+	Double minWidth = min(cw);
+	Double maxWidth = max(cw);
+
+	ostringstream oss;
+      
+	if(isEquidistant){
+	  oss <<  "Input spectral window " << ii << " has " << totNumChan 
+	      << " channels of width " << scientific << setprecision(6) << setw(6) << cw(0) << " Hz";
+	}
+	else{
+	  oss << "Input spectral window " << ii << " has " << totNumChan 
+	      << " channels of varying width: minimum width = " << scientific << setprecision(6) << setw(6) << minWidth 
+	      << " Hz, maximum width = " << scientific << setprecision(6) << setw(6) << maxWidth << " Hz";
+	}
+	oss << endl;
+	if(totNumChan > 1){
+	  oss << "   First channel center = " << setprecision(9) << setw(9) << cf(0) 
+	      << " Hz, last channel center = " << setprecision(9) << setw(9) << cf(totNumChan-1) << " Hz";
+	}
+	else{
+	  oss << "   Channel center = " << setprecision(9) << setw(9) << cf(0) << " Hz";
+	}
+	
+	for(Int i=0; i<totNumChan-2; i++){
+	  if( abs((cf(i)+cw(i)/2.) - (cf(i+1)-cw(i+1)/2.))>1.0 ){
+	    oss << "\n   Internal ERROR: Center of channel " << i <<  " is off nominal center by " 
+		<< ((cf(i)+cw(i)/2.) - (cf(i+1)-cw(i+1)/2.)) << " Hz\n" 
+		<< "   Distance between channels " << i << " and " << i+1 << " (" 
+		<< scientific << setprecision(6) << setw(6) << cf(i+1)-cf(i) << " Hz) is not equal to what is"
+		<< " expected\n   from their channel widths which would be " 
+		<< scientific << setprecision(6) << setw(6) << +cw(i)/2.+cw(i+1)/2. << " Hz.\n"
+		<< "   Will skip other channels in this SPW.";
+	    foundInconsistentSPW = True;
+	    break;
+	  }
+	}
+	*itsLog << LogIO::NORMAL  << oss.str() << LogIO::POST;
+      }
+    }
+    if(foundInconsistentSPW){
+      throw(AipsError("Inconsistent SPECTRAL_WINDOW table in input MS."));
+    }
+
     // check disk space: need at least twice the size of the original for safety
     if (2 * DOos::totalSize(itsMS->tableName(), True) >
 	DOos::freeSpace(Vector<String>(1, itsMS->tableName()), True)(0)) {
@@ -1365,7 +1428,6 @@ ms::cvel(const std::string& mode,
     }
 
     // need exclusive rights to this MS, will re-open it after combineSpws
-    String originalName = itsMS->tableName();
     itsMS->flush();
     close();
 
@@ -1385,8 +1447,8 @@ ms::cvel(const std::string& mode,
 
     *itsLog << LogIO::NORMAL << " " << LogIO::POST; 
 
-    // cout << "trq " << t_regridQuantity << " ts " << t_start << " tcs " << t_cstart << " tb " 
-    //	 << t_bandwidth << " tcw " << t_cwidth << " tw " << t_width << " tn " << t_nchan << endl; 
+    //    cout << "trq " << t_regridQuantity << " ts " << t_start << " tcs " << t_cstart << " tb " 
+    //    	 << t_bandwidth << " tcw " << t_cwidth << " tw " << t_width << " tn " << t_nchan << endl; 
 
     // Regrid
 
@@ -1486,7 +1548,7 @@ ms::cvel(const std::string& mode,
       }
       *itsLog << LogIO::NORMAL  << oss.str() << LogIO::POST;
 
-      for(Int i=0; i<totNumChan-1; i++){
+      for(Int i=0; i<totNumChan-2; i++){
 	if( abs((cf(i)+cw(i)/2.) - (cf(i+1)-cw(i+1)/2.))>0.1 ){
 	  *itsLog << LogIO::WARN << "Internal error: Center of channel " << i <<  " is off nominal center by " 
 		  << ((cf(i)+cw(i)/2.) - (cf(i+1)-cw(i+1)/2.)) << " Hz" << LogIO::POST;
