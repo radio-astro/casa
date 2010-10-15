@@ -215,13 +215,15 @@ Bool FluxCalc_SS_JPL_Butler::readEphem()
   
   Directory hordir(horpath);
   DirectoryIterator dirIter(hordir, tabpat);
-  Bool found = false;
+  Bool foundObj = false;
+  Bool found = false;        // = foundObj && right time.
   uInt firstTimeStart = name_p.length() + 1;  // The + 1 is for the _.
   Regex timeUnitPat("[ydhms]");
   Path path;
 
   while(!dirIter.pastEnd()){
     path = dirIter.name();
+    foundObj = true;
     String basename(path.baseName());
 
     // Look for, respectively, the positions of '--', 'd', and '.' in
@@ -265,11 +267,16 @@ Bool FluxCalc_SS_JPL_Butler::readEphem()
   }
 
   if(!found){
+    os << LogIO::SEVERE;
+    if(foundObj)
+      os << "Found an ephemeris for " << name_p << ", but not";
+    else
+      os << "Could not find an ephemeris table for " << name_p;
+
     // Needing an MEpoch::Convert just to print an MEpoch is a pain.
-    os << LogIO::SEVERE
-       << "Could not find an ephemeris table for " << name_p
-       << LogIO::POST;
-    cout << " at " << MEpoch::Convert(time_p, MEpoch::Ref(MEpoch::UTC))() << endl;
+    os << " at ";
+    os.output() << MEpoch::Convert(time_p, MEpoch::Ref(MEpoch::UTC))();
+    os << LogIO::POST;
     return false;
   }
   else{
@@ -292,13 +299,19 @@ Bool FluxCalc_SS_JPL_Butler::readEphem()
   const Table tab(abspath);
   const TableRecord ks(tab.keywordSet());
 
-  try{
-    temperature_p = get_Quantity_keyword(ks, "T_mean", "K");
+  Bool got_q = true;
+  temperature_p = get_Quantity_keyword(ks, "T_mean", "K", got_q);
+  if(!got_q)
+    temperature_p = -1;  // Hopefully a model for the obj will supply a
+			 // temperature later.
+  mean_rad_p = get_Quantity_keyword(ks, "meanrad", "AU", got_q);
+  if(!got_q){
+    mean_rad_p = -1.0;
+    os << LogIO::SEVERE		// Remove/modify this when it starts supporting triaxiality.
+       << "The table is missing the meanrad keyword, needed to calculate the apparent diameter."
+       << LogIO::POST;
+    return false;
   }
-  catch(...){
-    temperature_p = -1;
-  }
-  mean_rad_p = get_Quantity_keyword(ks, "meanrad", "AU");
 
   // Find the row numbers with the right MJDs.
   ROScalarColumn<Double> mjd(tab, "MJD");
@@ -446,12 +459,20 @@ Bool FluxCalc_SS_JPL_Butler::get_row_numbers(uInt& rowbef, uInt& rowclosest,
 
 Double FluxCalc_SS_JPL_Butler::get_Quantity_keyword(const TableRecord& ks,
 						    const String& kw,
-						    const Unit& unit)
+						    const Unit& unit,
+						    Bool& success)
 {
-  const Record rec(ks.asRecord(kw));
-  const Quantity q(rec.asDouble("value"), rec.asString("unit"));
+  try{
+    const Record rec(ks.asRecord(kw));
+    const Quantity q(rec.asDouble("value"), rec.asString("unit"));
   
-  return q.get(unit).getValue();
+    success = true;
+    return q.get(unit).getValue();
+  }
+  catch(...){
+    success = false;
+    return 0.0;
+  }
 }
 
 ComponentType::Shape FluxCalc_SS_JPL_Butler::compute(Vector<Flux<Double> >& values,

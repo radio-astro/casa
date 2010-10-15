@@ -132,9 +132,11 @@ class FluxCalc_SS_JPL_Butler
                                Vector<Flux<Double> >& errors, Double& angdiam,
                                const Vector<MFrequency>& mfreqs);
 
+  // Returns the value in units unit of ks's keyword kw.  success is set to
+  // whether or not it succeeded.
   static Double get_Quantity_keyword(const TableRecord& ks,
 				     const String& kw,
-				     const Unit& unit);
+				     const Unit& unit, Bool& success);
  private:
   enum KnownObjects {
     Mercury = 0,
