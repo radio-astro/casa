@@ -177,7 +177,7 @@
 			<value>128</value>
 		</param>
 
-		<param type="int" name="facats" subparam="true">
+		<param type="int" name="facets" subparam="true">
 			<description>Number of facats along each axis</description>
 			<value>1</value>
 		</param>
@@ -268,11 +268,14 @@
                       <default param="facets"><value>1</value></default>
                      </equals>
                      <equals value="aprojection">
-                      <!-- <default param="wprojplanes"><value>1</value></default> -->
-                      <!-- <default param="facets"><value>1</value></default> -->
-                      <default param="cfcache"><value type="string">cfcache.dir</value></default>
+                      <default param="wprojplanes"><value>1</value></default>
+                      <default param="facets"><value>1</value></default>
                       <default param="painc"><value>360.0</value></default>
-                      <!-- <default param="epjtable"><value type="string"></value></default> -->
+                      <default param="pblimit"><value>0.1</value></default>
+                      <default param="dopbcorr"><value>True</value></default>
+                      <default param="applyoffsets"><value>False</value></default>
+                      <default param="cfcache"><value type="string">cfcache.dir</value></default>
+                      <default param="epjtablename"><value type="string"></value></default>
               </equals>
 
                      <equals value="experimental">
@@ -281,7 +284,7 @@
                       <default param="facets"><value>1</value></default>
                       <default param="cfcache"><value type="string">cfcache.dir</value></default>
                       <default param="painc"><value>360.0</value></default>
-                      <default param="epjtable"><value type="string"></value></default>
+                      <default param="epjtablename"><value type="string"></value></default>
                     </equals>
 
                  </when>
