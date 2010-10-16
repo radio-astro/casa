@@ -273,7 +273,7 @@ Bool FluxCalc_SS_JPL_Butler::readEphem()
     else
       os << "Could not find an ephemeris table for " << name_p;
 
-    // Needing an MEpoch::Convert just to print an MEpoch is a pain.
+    // MEpoch cannot directly << to a LogIO.
     os << " at ";
     os.output() << MEpoch::Convert(time_p, MEpoch::Ref(MEpoch::UTC))();
     os << LogIO::POST;
