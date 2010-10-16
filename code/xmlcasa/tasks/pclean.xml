@@ -117,14 +117,15 @@
 		</param>
 
 		<param type="string" name="mode">
-			<description>Clean mode (continuum, channel, frequency, velocity, mfs)</description>
+			<description>Clean mode (continuum, channel)</description>
+			<!--description>Clean mode (continuum, channel, frequency, velocity, mfs)</description-->
 			<value>continuum</value>
 	              <allowed kind="enum">
 		      <value>continuum</value>
 		      <value>channel</value>
-		      <value>frequency</value>
+		      <!--value>frequency</value>
 		      <value>velocity</value>
-		      <value>mfs</value>
+		      <value>mfs</value-->
 		    </allowed>
 		</param>
 
