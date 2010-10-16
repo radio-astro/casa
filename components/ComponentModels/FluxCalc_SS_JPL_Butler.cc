@@ -370,11 +370,11 @@ Bool FluxCalc_SS_JPL_Butler::get_row_numbers(uInt& rowbef, uInt& rowclosest,
 
   Double mjd0 = mjd(0);
   Double dmjd = mjd0;
-  uInt ndates = mjd.nrow();
-  uInt step = 1;
-  Long rn = 0;
+  Int ndates = mjd.nrow();      // Don't bother trying uInts in this 
+  Int step = 1;                 // function - it just leads to several
+  Long rn = 0;                  // compiler warnings.
 
-  uInt ub = ndates - 1;
+  Int ub = ndates - 1;
   Double the_time = time_p.get("d").getValue();
 
   if(mjd(ub) < the_time){
@@ -384,7 +384,7 @@ Bool FluxCalc_SS_JPL_Butler::get_row_numbers(uInt& rowbef, uInt& rowclosest,
     rn = ub;
     step = 0;	// Prevents going through the while loop below.
   }
-  uInt lb = 0;
+  Int lb = 0;
   if(mjd(0) > the_time){
     return false;
   }
@@ -393,7 +393,7 @@ Bool FluxCalc_SS_JPL_Butler::get_row_numbers(uInt& rowbef, uInt& rowclosest,
     step = 0;	// Prevents going through the while loop below.
   }    
 
-  uInt i;
+  Int i;
   for(i = 1; dmjd == mjd0 && i < ndates; ++i)
     dmjd = mjd(i);
   if(i > 1)
@@ -410,7 +410,7 @@ Bool FluxCalc_SS_JPL_Butler::get_row_numbers(uInt& rowbef, uInt& rowclosest,
 
   Double mjdrn = mjd(rn);
   Bool increasing = mjdrn < the_time;
-  uInt paranoia = 0;
+  Int paranoia = 0;
 
   while(step && paranoia < ndates){
     if(mjdrn < the_time){
@@ -519,7 +519,10 @@ void FluxCalc_SS_JPL_Butler::compute_BB(Vector<Flux<Double> >& values,
 {
   const uInt nfreqs = mfreqs.nelements();
   Quantum<Double> temperature(temperature_p, "K");
+
+  // The real peak frequency is about 2.82 x this.
   Quantum<Double> freq_peak(QC::k * temperature / QC::h);
+
   Quantum<Double> rocd2(0.5 * angdiam);	// Dimensionless for now.
 
   rocd2 /= QC::c;	// Don't put this in the c'tor, it'll give the wrong answer.
@@ -533,7 +536,7 @@ void FluxCalc_SS_JPL_Butler::compute_BB(Vector<Flux<Double> >& values,
      << "angdiam = " << angdiam << " rad"
      << "\nrocd2 = " << rocd2.getValue() << rocd2.getUnit()
      << "\nfreq_ind_fac = " << freq_ind_fac.getValue() << freq_ind_fac.getUnit()
-     << "\nfreq_peak = " << freq_peak.get(hertz_p).getValue() << " Hz"
+     << "\npeak freq = " << 2.82e-12 * freq_peak.get(hertz_p).getValue() << " THz"
      << "\ntemperature_p = " << temperature_p << " K"
      << "\nvalues[0].unit() = " << values[0].unit().getName()
      << "\nhertz_p = " << hertz_p.getName()
@@ -562,22 +565,49 @@ void FluxCalc_SS_JPL_Butler::compute_GB(Vector<Flux<Double> >& values,
                                         const Vector<Double>& temps)
 {
   const uInt nfreqs = mfreqs.nelements();
-  Quantum<Double> rocd2(0.5 * angdiam / QC::c);
+  Quantum<Double> rocd2(0.5 * angdiam);	// Dimensionless for now.
 
+  rocd2 /= QC::c;	// Don't put this in the c'tor, it'll give the wrong answer.
   rocd2 *= rocd2;
 
   // Frequency independent factor.
   Quantum<Double> freq_ind_fac(2.0e26 * QC::h * C::pi * rocd2);
 
+  LogIO os(LogOrigin("FluxCalc_SS_JPL_Butler", "compute_GB"));
+  os << LogIO::DEBUG1
+     << "angdiam = " << angdiam << " rad"
+     << "\nrocd2 = " << rocd2.getValue() << rocd2.getUnit()
+     << "\nfreq_ind_fac = " << freq_ind_fac.getValue() << freq_ind_fac.getUnit()
+     << LogIO::POST;
+
+  const Unit jy("Jy");
+
   for(uInt f = 0; f < nfreqs; ++f){
     Quantum<Double> freq(mfreqs[f].get(hertz_p));
     Quantum<Double> temperature(temps[f], "K");
-    Quantum<Double> freq_peak(QC::h / (QC::k * temperature));
+
+    // The real peak frequency is about 2.82 x this.
+    Quantum<Double> freq_peak(QC::k * temperature / QC::h);
     
-    values[f].setValue((freq_ind_fac * freq * freq * freq).getValue() /
-                       (exp((freq / freq_peak).getValue()) - 1.0));
+    values[f].setUnit(jy);
+    Double fd = (freq_ind_fac * freq * freq * freq).getValue() /
+                (exp((freq / freq_peak).getValue()) - 1.0);
+    values[f].setValue(fd);
     errors[f].setValue(0.0);
+
+    // Take this out when it's served its purpose, since it's in a possibly
+    // long loop.
+    // os << LogIO::DEBUG2   
+    //    << "f = 0 (" << 1e-12 * freq.get(hertz_p).getValue() << " THz):\n"
+    //    << "temperature = " << temps[f] << " K\n"
+    //    << "freq_peak = " << 1e-12 * freq_peak.get(hertz_p).getValue() << " THz\n"
+    //    << "f.d. = " << fd
+    //    << LogIO::POST;
   }
+  os << LogIO::DEBUG1
+     << "hertz_p = " << hertz_p.getName()
+     << "\nvalues[0].unit() = " << values[0].unit().getName()
+     << LogIO::POST;
 }
 
 void FluxCalc_SS_JPL_Butler::compute_jupiter(Vector<Flux<Double> >& values,
