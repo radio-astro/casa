@@ -44,7 +44,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <example>stokes=&quot;RR,LL&quot;</example>
     </param>
 
-    <param type="bool" name="list">
+    <param type="bool" name="listit">
         <description>Print stats and bounding box to logger?</description>
         <value>True</value>
     </param>
@@ -101,7 +101,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 Default: none (all); Example: stokes='IQUV';  
                                      Example:stokes='I,Q'
                 Options: 'I','Q','U','V','RR','RL','LR','LL','XX','YX','XY','YY', ...
-    list   --  Print stats and bounding box to logger? 
+    listit   -- Print stats and bounding box to logger? 
     verbose  -- Print additional messages to logger?
 
 
