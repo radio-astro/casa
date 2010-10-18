@@ -54,7 +54,7 @@ average over frequency (channels) and time (integrations).
 	</param>
 
         <param type="any" name="field">
-                <description>Select field using field id(s) or field name(s)</description>
+                <description>Select field using ID(s) or name(s)</description>
 		<any type="variant" limittypes="string stringArray int intArray"/>
                 <value type="string"></value>
         </param>
@@ -78,7 +78,7 @@ average over frequency (channels) and time (integrations).
 	</param>
 
 	<param type="string" name="timebin">
-		<description>Value for timeaveraging</description>		
+		<description>Bin width for time averaging</description>		
 		<value type="string">0s</value>
 	</param>
 
@@ -87,7 +87,7 @@ average over frequency (channels) and time (integrations).
 		<value></value>
 	</param>
 	<param type="string" name="scan" >
-		<description>select data by scan numbers</description>
+		<description>Select data by scan numbers</description>
 		<value></value>
 	</param>
         <param type="string" name="array">
@@ -95,7 +95,7 @@ average over frequency (channels) and time (integrations).
                 <value></value>
         </param>
 	<param type="string" name="uvrange" >
-		<description>select data by baseline length</description>
+		<description>Select data by baseline length</description>
 		<value></value>
 	</param>
 

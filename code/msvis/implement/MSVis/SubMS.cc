@@ -605,7 +605,7 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
 
       if(!makeSelection()){
         os << LogIO::SEVERE 
-           << "Failed on selection: combination of spw and/or field and/or time chosen"
+           << "Failed on selection: combination of spw, field, antenna, correlation and/or timerange"
            << " may be invalid." 
            << LogIO::POST;
         ms_p=MeasurementSet();
@@ -5502,10 +5502,12 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
   //Int numBaselines=numOfBaselines(ant1, ant2, False);
   Int numOutputRows = binTimes(timeBin);  // Sets up remappers as a side-effect.
     
-  if(numOutputRows < 1)
+  if(numOutputRows < 1){
     os << LogIO::SEVERE
-       << "Number of time bins is < 1: time averaging bin size is not > 0"
+       << "Number of time bins is < 1: is there a problem with timebin?"
        << LogIO::POST;
+    return false;
+  }
 
   os << LogIO::DEBUG1 // helpdesk ticket from Oleg Smirnov (ODU-232630)
      << "Before msOut_p.addRow(): "
