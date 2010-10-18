@@ -622,7 +622,7 @@ void SkyCompRep::fromPixel (
 Vector<Double> SkyCompRep::toPixel (const Unit& brightnessUnitOut,
                                     const Vector<Quantum<Double> >& restoringBeam,
                                     const CoordinateSystem& cSys,
-                                    Stokes::StokesTypes stokes)
+                                    Stokes::StokesTypes stokes) const
 //  
 // pars(0) = FLux     Jy
 // pars(1) = x cen    abs pix
