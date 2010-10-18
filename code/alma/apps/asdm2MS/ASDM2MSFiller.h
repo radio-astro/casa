@@ -61,6 +61,7 @@
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/Containers/Block.h>
 #include <casa/Containers/OrderedMap.h>
+#include <measures/Measures/MDirection.h>
 #include <measures/Measures/MPosition.h>
 #include <measures/Measures/MBaseline.h>
 #include <measures/Measures/Muvw.h>
@@ -68,6 +69,12 @@
 #include <measures/Measures/Stokes.h>
 #include <measures/Measures/MeasConvert.h>
 #include "measures/Measures/Stokes.h"
+
+#include <measures/TableMeasures/TableMeasValueDesc.h>
+#include <measures/TableMeasures/TableMeasOffsetDesc.h>
+#include <measures/TableMeasures/TableMeasRefDesc.h>
+#include <measures/TableMeasures/TableMeasDesc.h>
+
 #include <casa/BasicSL/Constants.h>
 #include <casa/OS/File.h>
 #include <casa/OS/Path.h>
@@ -191,6 +198,8 @@ class ASDM2MSFiller
 
   const char** getPolCombinations(int numCorr);
     
+  static map<string, MDirection::Types> string2MDirection;
+  static map<string, MDirection::Types> string2MDirectionInit();
    
  public:  
   ASDM2MSFiller (const string&	name_,
