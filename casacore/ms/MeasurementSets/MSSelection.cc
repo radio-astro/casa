@@ -711,33 +711,36 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       if (chanIDs_p.nelements() <= 0) getTEN(ms); 
       uInt nrows=chanIDs_p.nrow(), ncols=chanIDs_p.ncolumn();
       Matrix<Int> chanIDList;
-      if (sorted)
+      if (nrows > 0)
 	{
-	  Vector<Int> spwIDList(chanIDs_p.column(0));//Extract the SPW IDs
-	  Vector<uInt> sortedNdx;
-	  //
-	  // Make a list of indices which will sort the chanID_p Matrix on
-	  // SPW ID (the first column of each row).
-	  //
-	  Bool deleteit;
-	  Sort sort(spwIDList.getStorage(deleteit), sizeof(Int));
-	  sort.sortKey((uInt)0, TpInt);
-	  sort.sort(sortedNdx, nrows);
-	  //
-	  // Using the sorted indices, copy from the unsorted private
-	  // ChaIDs_p to the output (sorted) Matrix chandIDList.
-	  //
-	  chanIDList.resize(chanIDs_p.shape());
-	  for(uInt targetRow=0; targetRow<nrows; targetRow++)
-	    for (uInt j=0; j<ncols; j++)
-	      chanIDList(targetRow,j)=chanIDs_p(sortedNdx(targetRow),j);
-	}
-      else
-	chanIDList = chanIDs_p;
+	  if (sorted)
+	    {
+	      Vector<Int> spwIDList(chanIDs_p.column(0));//Extract the SPW IDs
+	      Vector<uInt> sortedNdx;
+	      //
+	      // Make a list of indices which will sort the chanID_p Matrix on
+	      // SPW ID (the first column of each row).
+	      //
+	      Bool deleteit;
+	      Sort sort(spwIDList.getStorage(deleteit), sizeof(Int));
+	      sort.sortKey((uInt)0, TpInt);
+	      sort.sort(sortedNdx, nrows);
+	      //
+	      // Using the sorted indices, copy from the unsorted private
+	      // ChaIDs_p to the output (sorted) Matrix chandIDList.
+	      //
+	      chanIDList.resize(chanIDs_p.shape());
+	      for(uInt targetRow=0; targetRow<nrows; targetRow++)
+		for (uInt j=0; j<ncols; j++)
+		  chanIDList(targetRow,j)=chanIDs_p(sortedNdx(targetRow),j);
+	    }
+	  else
+	    chanIDList = chanIDs_p;
 
-      for(uInt targetRow=0; targetRow<nrows; targetRow++)
-	if (chanIDList(targetRow,ncols-1) < 1) 
-	  chanIDList(targetRow,ncols-1)=defaultStep;
+	  for(uInt targetRow=0; targetRow<nrows; targetRow++)
+	    if (chanIDList(targetRow,ncols-1) < 1) 
+	      chanIDList(targetRow,ncols-1)=defaultStep;
+	}
 
 
       return chanIDList.copy();
