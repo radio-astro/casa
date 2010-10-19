@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tExprNodeSet.cc 20580 2009-04-24 08:50:54Z gervandiepen $
+//# $Id: tExprNodeSet.cc 20909 2010-06-16 07:29:13Z gervandiepen $
 
 #include <tables/Tables/ExprNode.h>
 #include <tables/Tables/ExprNodeSet.h>
@@ -908,6 +908,17 @@ void doSlicer()
   }
 }
 
+void doEmpty()
+{
+  TableExprNodeSet set;
+  AlwaysAssertExit (set.isSingle());
+  AlwaysAssertExit (set.isDiscrete());
+  AlwaysAssertExit (set.isBounded());
+  AlwaysAssertExit (set.dataType() == TableExprNodeRep::NTNumeric);
+  AlwaysAssertExit (set.nelements() == 0);
+  AlwaysAssertExit (!set.hasArrays());
+}
+
 
 int main()
 {
@@ -932,6 +943,7 @@ int main()
     doSetDate();
     doIPosition();
     doSlicer();
+    doEmpty();
   } catch (std::exception& x) {
     cout << "Unexpected exception: " << x.what() << endl;
     return 1;

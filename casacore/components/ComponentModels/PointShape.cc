@@ -235,6 +235,10 @@ Double PointShape::dirIsInPixel (Double longSize, Double latSize, Double nearSiz
   return retVal;
 }
 
+String PointShape::sizeToString() const {
+	return "Point";
+}
+
 
 
 // Local Variables: 

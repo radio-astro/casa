@@ -947,7 +947,13 @@ uInt CoordinateSystem::nPixelAxes() const
 Bool CoordinateSystem::toWorld(Vector<Double> &world, 
 			       const Vector<Double> &pixel) const
 {
-    AlwaysAssert(pixel.nelements() == nPixelAxes(), AipsError);
+    if(pixel.nelements() != nPixelAxes()){
+	ostringstream oss;
+	oss << "pixel.nelements() != nPixelAxes(): "
+	    << pixel.nelements() << ", " << nPixelAxes();
+	throw (AipsError(String(oss)));
+    }
+
     if (world.nelements()!=nWorldAxes()) world.resize(nWorldAxes());
 
     const uInt nc = coordinates_p.nelements();
@@ -2097,6 +2103,8 @@ Bool CoordinateSystem::setWorldAxisUnits(const Vector<String> &units)
 
 Bool CoordinateSystem::setReferencePixel(const Vector<Double> &refPix)
 {
+    //cout << "refPix.nelements()=" << refPix.nelements() << endl;
+    //cout << "nPixelAxes()=" << nPixelAxes() << endl;
     Bool ok = (refPix.nelements()==nPixelAxes());
     if (!ok) {
       set_error("ref. pix vector must be of length nPixelAxes()");
@@ -2452,7 +2460,7 @@ String CoordinateSystem::format(String& units,
                                 uInt worldAxis,
                                 Bool isAbsolute,
                                 Bool showAsAbsolute,
-                                Int precision)
+                                Int precision) const
 {
     AlwaysAssert(worldAxis < nWorldAxes(), AipsError);
 // 

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: IPosition.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: IPosition.h 20858 2010-02-03 13:08:35Z gervandiepen $
 
 #ifndef CASA_IPOSITION_H
 #define CASA_IPOSITION_H
@@ -32,6 +32,7 @@
 #include <casa/aips.h>
 #include <casa/iosfwd.h>
 #include <unistd.h>
+#include <vector>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -163,6 +164,13 @@ public:
     Vector<Int> asVector() const;
     // </group>
 
+    // Convert an IPosition to and from an Array<Int>. In either case, the
+    // array must be one dimensional.
+    // <group>
+    IPosition(const std::vector<Int>& other);
+    std::vector<Int> asStdVector() const;
+    // </group>
+
     // This member functions return an IPosition which has
     // degenerate (length==1) axes removed and the dimensionality reduced 
     // appropriately.
@@ -250,6 +258,10 @@ public:
     // Returns 0 if nelements() == 0, otherwise it returns the product of
     // its elements.
     Int64 product() const;
+
+    // Are all elements equal to 1?
+    // Useful to check if a given stride is really a stride.
+    Bool allOne() const;
 
     // Element-by-element comparison for equality.
     // It returns True if the lengths and all elements are equal.

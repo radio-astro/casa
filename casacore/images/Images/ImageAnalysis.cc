@@ -73,6 +73,7 @@
 #include <coordinates/Coordinates/LinearCoordinate.h>
 #include <images/Images/ComponentImager.h>
 #include <images/Images/Image2DConvolver.h>
+#include <images/Images/ImageCollapser.h>
 #include <images/Images/ImageConcat.h>
 #include <images/Images/ImageConvolver.h>
 #include <images/Images/ImageDecomposer.h>
@@ -81,9 +82,9 @@
 #include <images/Images/ImageFFT.h>
 #include <images/Images/ImageFITSConverter.h>
 #include <images/Images/ImageHistograms.h>
-#include <images/Images/ImageInterface.h>
 #include <images/Images/ImageMoments.h>
 #include <images/Images/ImageMetaData.h>
+#include <images/Images/ImageOpener.h>
 #include <images/Regions/ImageRegion.h>
 #include <images/Images/ImageRegrid.h>
 #include <images/Images/ImageSourceFinder.h>
@@ -139,23 +140,36 @@ ImageAnalysis::ImageAnalysis() :
 
 }
 
-// private ImageInterface constructor for on the fly components
-ImageAnalysis::ImageAnalysis(const ImageInterface<casa::Float>* inImage) :
-	pImage_p(0), pStatistics_p(0), pHistograms_p(0),
-			pOldStatsRegionRegion_p(0), pOldStatsMaskRegion_p(0),
-			pOldHistRegionRegion_p(0), pOldHistMaskRegion_p(0) {
+ImageAnalysis::ImageAnalysis(const ImageInterface<Float>* inImage) :
+	pImage_p(inImage->cloneII()), itsLog(new LogIO()), pStatistics_p(0),
+	pHistograms_p(0), pOldStatsRegionRegion_p(0),
+	pOldStatsMaskRegion_p(0), pOldHistRegionRegion_p(0),
+	pOldHistMaskRegion_p(0) {}
 
-	itsLog = new LogIO();
-	pImage_p = inImage->cloneII();
+ImageAnalysis::ImageAnalysis(ImageInterface<Float>* inImage, const Bool cloneInputPointer) :
+itsLog(new LogIO()), pStatistics_p(0), pHistograms_p(0),
+	pOldStatsRegionRegion_p(0),
+	pOldStatsMaskRegion_p(0), pOldHistRegionRegion_p(0),
+	pOldHistMaskRegion_p(0) {
+	pImage_p = cloneInputPointer ? inImage->cloneII() : inImage;
 }
 
 ImageAnalysis::~ImageAnalysis() {
-	if (pImage_p != 0) {
-		delete pImage_p;
-		pImage_p = 0;
+  
+        if (pImage_p != 0) {
+	  if((pImage_p->isPersistent()) && ((pImage_p->imageType()) == "PagedImage")){
+	    ImageOpener::ImageTypes type = ImageOpener::imageType(pImage_p->name());
+	    if (type == ImageOpener::AIPSPP) {
+	      (static_cast<PagedImage<Float> *>(pImage_p))->table().relinquishAutoLocks(True);
+	      (static_cast<PagedImage<Float> *>(pImage_p))->table().unlock();
+	    }
+	  }
+    
+    
+	  delete pImage_p;
+	  pImage_p = 0;
 	}
 	deleteHistAndStats();
-
 }
 
 Bool ImageAnalysis::toRecord(RecordInterface& rec) {
@@ -260,9 +274,11 @@ Bool ImageAnalysis::addnoise(const String& type, const Vector<Double>& pars,
 	String mask;
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
-	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(ImageRegion::tweakedRegionRecord(pRegion)), mask, False, *itsLog,
-			True);
+	SubImage<Float> subImage = SubImage<Float>::createSubImage(
+		pRegionRegion, pMaskRegion, *pImage_p,
+		*(ImageRegion::tweakedRegionRecord(pRegion)),
+		mask, itsLog, True
+	);
 	delete pRegionRegion;
 	delete pMaskRegion;
 	//delete pRegion;
@@ -638,9 +654,11 @@ Bool ImageAnalysis::imagefromimage(const String& outfile, const String& infile,
 		AxesSpecifier axesSpecifier;
 		if (dropdeg)
 			axesSpecifier = AxesSpecifier(False);
-		SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-				*pInImage, *(ImageRegion::tweakedRegionRecord(&region)), Mask, True,
-				*itsLog, True, axesSpecifier);
+		SubImage<Float> subImage = SubImage<Float>::createSubImage(
+			pRegionRegion, pMaskRegion,
+			*pInImage, *(ImageRegion::tweakedRegionRecord(&region)),
+			Mask, itsLog, True, axesSpecifier
+		);
 		delete pRegionRegion;
 		delete pMaskRegion;
 
@@ -782,9 +800,11 @@ ImageAnalysis::convolve(const String& outFile, Array<Float>& kernelArray,
 	// to ImageRegion and make SubImage.
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
-	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(ImageRegion::tweakedRegionRecord(&region)), mask, True, *itsLog,
-			False);
+	SubImage<Float> subImage = SubImage<Float>::createSubImage(
+		pRegionRegion, pMaskRegion, *pImage_p,
+		*(ImageRegion::tweakedRegionRecord(&region)),
+		mask, itsLog, False
+	);
 	delete pRegionRegion;
 	delete pMaskRegion;
 
@@ -840,8 +860,10 @@ ImageAnalysis::boundingbox(const Record& Region) {
 	*itsLog << LogOrigin("ImageAnalysis", "boundingbox");
 	// Find the bounding box of this region
 	Record tmpR(Region);
-	const ImageRegion* pRegion = makeRegionRegion(*pImage_p,
-			*ImageRegion::tweakedRegionRecord(&tmpR), False, *itsLog);
+	const ImageRegion* pRegion = ImageRegion::fromRecord(
+		0, pImage_p->coordinates(), pImage_p->shape(),
+		*ImageRegion::tweakedRegionRecord(&tmpR)
+	);
 	LatticeRegion latRegion = pRegion->toLatticeRegion(pImage_p->coordinates(),
 			pImage_p->shape());
 	//
@@ -1322,9 +1344,11 @@ ImageAnalysis::convolve2d(const String& outFile, const Vector<Int>& axes,
 	// to ImageRegion and make SubImage.
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
-	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask, True, *itsLog,
-			False);
+	SubImage<Float> subImage = SubImage<Float>::createSubImage(
+		pRegionRegion, pMaskRegion,
+		*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)),
+		mask, itsLog, False
+	);
 	delete pRegionRegion;
 	delete pMaskRegion;
 
@@ -1359,9 +1383,16 @@ ImageAnalysis::convolve2d(const String& outFile, const Vector<Int>& axes,
 
 	// Make the convolver
 	Image2DConvolver<Float> ic;
-	ic.convolve(*itsLog, *pImOut, subImage, kernelType, axes3, parameters,
-			autoScale, scale, True);
-
+    try {
+        ic.convolve(
+            *itsLog, *pImOut, subImage, kernelType, axes3,
+            parameters, autoScale, scale, True
+        );
+    }
+    catch (AipsError x) {
+        delete pImOut;
+        RETHROW(x);
+    }
 	// Return image
 	return pImOut;
 }
@@ -1527,9 +1558,11 @@ ImageAnalysis::decompose(Matrix<Int>& blcs, Matrix<Int>& trcs, Record& Region, c
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
 	AxesSpecifier axesSpec(False);
-	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask, True, *itsLog,
-			False, axesSpec);
+	SubImage<Float> subImage = SubImage<Float>::createSubImage(
+		pRegionRegion, pMaskRegion,
+		*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask, itsLog,
+		False, axesSpec
+	);
 	delete pRegionRegion;
 	delete pMaskRegion;
 
@@ -1541,7 +1574,7 @@ ImageAnalysis::decompose(Matrix<Int>& blcs, Matrix<Int>& trcs, Record& Region, c
 		LatticeStatistics<Float> stats(subImage);
 		Array<Double> out;
 		//Bool ok = stats.getSigma (out, True); //what did this do?
-		Bool ok = stats.getStatistic (out,LatticeStatsBase::SIGMA);
+		// Bool ok = stats.getStatistic (out,LatticeStatsBase::SIGMA);
 		threshold = 5.0 * out(IPosition(subImage.ndim(), 0));
 	}
 
@@ -1730,9 +1763,11 @@ Bool ImageAnalysis::fft(const String& realOut, const String& imagOut,
 	// to ImageRegion and make SubImage.
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
-	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask, True, *itsLog,
-			False);
+	SubImage<Float> subImage = SubImage<Float>::createSubImage(
+		pRegionRegion, pMaskRegion,
+		*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)),
+		mask, itsLog, False
+	);
 	delete pRegionRegion;
 	delete pMaskRegion;
 
@@ -1804,9 +1839,11 @@ Record ImageAnalysis::findsources(const int nMax, const double cutoff,
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
 	AxesSpecifier axesSpec(False);
-	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask, True, *itsLog,
-			False, axesSpec);
+	SubImage<Float> subImage = SubImage<Float>::createSubImage(
+		pRegionRegion, pMaskRegion,
+		*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)),
+		mask, itsLog, False, axesSpec
+	);
 	delete pRegionRegion;
 	delete pMaskRegion;
 
@@ -1826,45 +1863,49 @@ Record ImageAnalysis::findsources(const int nMax, const double cutoff,
 	return listOut;
 }
 
-Bool ImageAnalysis::fitallprofiles(Record& Region, const Int axis,
-		const String& mask, const Int nGauss, const Int poly,
-		const String& sigmaFileName, const String& fitFileName,
-		const String& residFileName) {
+Vector<ImageFit1D<Float> > ImageAnalysis::fitallprofiles(
+	Record& region, SubImage<Float>& subImage, String& xUnit, const Int axis,
+	const String& mask, const Int nGauss, const Int poly,
+	const String& weightsImageName, const String& modelImageName,
+	const String& residImageName
+) const {
 
-	*itsLog << LogOrigin("ImageAnalysis", "fitallprofiles");
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 	Int baseline(poly);
-	//
 	if (!(nGauss > 0 || baseline >= 0)) {
 		*itsLog
 				<< "You must specify a number of gaussians and/or a polynomial order to fit"
 				<< LogIO::EXCEPTION;
 	}
-	//
+
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
-	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask, False, *itsLog,
-			True);
+	subImage = SubImage<Float>::createSubImage(
+		pRegionRegion, pMaskRegion,
+		*pImage_p, *(ImageRegion::tweakedRegionRecord(&region)),
+		mask, 0, True
+	);
 	delete pRegionRegion;
 	delete pMaskRegion;
+
 	IPosition imageShape = subImage.shape();
-	//
 	PtrHolder<ImageInterface<Float> > weightsImage;
 	ImageInterface<Float>* pWeights = 0;
-	if (!sigmaFileName.empty()) {
-		PagedImage<Float> sigmaImage(sigmaFileName);
+	if (! weightsImageName.empty()) {
+		PagedImage<Float> sigmaImage(weightsImageName);
 		if (!sigmaImage.shape().conform(pImage_p->shape())) {
 			*itsLog << "image and sigma images must have same shape"
 					<< LogIO::EXCEPTION;
 		}
-		//
-		ImageRegion* pR = makeRegionRegion(sigmaImage, Region, True, *itsLog);
+		ImageRegion* pR = ImageRegion::fromRecord(
+			itsLog, sigmaImage.coordinates(),
+			sigmaImage.shape(), region
+		);
 		weightsImage.set(new SubImage<Float> (sigmaImage, *pR, False));
 		pWeights = weightsImage.ptr();
 		delete pR;
 	}
-
 	// Set default axis
 	CoordinateSystem cSys = subImage.coordinates();
 	Int pAxis = CoordinateUtil::findSpectralAxis(cSys);
@@ -1876,77 +1917,75 @@ Bool ImageAnalysis::fitallprofiles(Record& Region, const Int axis,
 			axis2 = subImage.ndim() - 1;
 		}
 	}
-
 	// Create output images with a mask
 	PtrHolder<ImageInterface<Float> > fitImage, residImage;
 	ImageInterface<Float>* pFit = 0;
 	ImageInterface<Float>* pResid = 0;
-	if (makeExternalImage(fitImage, fitFileName, cSys, imageShape, subImage,
+	if (makeExternalImage(fitImage, modelImageName, cSys, imageShape, subImage,
 			*itsLog, True, False, True))
 		pFit = fitImage.ptr();
-	if (makeExternalImage(residImage, residFileName, cSys, imageShape,
+	if (makeExternalImage(residImage, residImageName, cSys, imageShape,
 			subImage, *itsLog, True, False, True))
 		pResid = residImage.ptr();
-
 	// Do fits
-	Bool showProgress(True);
+	// FIXME give users the option to show a progress bar
+	Bool showProgress = False;
 	uInt axis3(axis2);
 	uInt nGauss2 = max(0, nGauss);
-	ImageUtilities::fitProfiles(pFit, pResid, subImage, pWeights, axis3,
-			nGauss2, baseline, showProgress);
-	return True;
+	return ImageUtilities::fitProfiles(
+		pFit, pResid, xUnit, subImage,
+		axis3, nGauss2, baseline, showProgress
+	);
+
 }
 
-Record ImageAnalysis::fitprofile(Vector<Float>& values,
-		Vector<Float>& residual, Record& Region, const Int axis,
-		const String& mask, Record& estimate, const Int ngauss, const Int poly,
-		const Bool fitIt, const String sigmaFileName) {
+ImageFit1D<Float> ImageAnalysis::fitprofile(
+	Record& regionRecord, SubImage<Float>& subImage,
+	String& xUnit, const uInt axis,
+	const String& mask, const Record& estimate,
+	const uInt ngauss, const Int poly,
+	const String& modelName, const String& residualName,
+	const Bool fitIt, const String weightsImageName
+) {
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
-	*itsLog << LogOrigin("ImageAnalysis", "fitprofile");
+	//Int nMax = ngauss; // unset value for ngauss is -1
 
-	Int nMax = ngauss; // unset value for ngauss is -1
-	Int baseline = poly; // unset value for poly is -1
-
-	//
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
-	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask, False, *itsLog,
-			False);
+	subImage = SubImage<Float>::createSubImage(
+		pRegionRegion, pMaskRegion,
+		*pImage_p, *(ImageRegion::tweakedRegionRecord(&regionRecord)),
+		mask, 0, False
+	);
 	delete pRegionRegion;
 	delete pMaskRegion;
 	IPosition imageShape = subImage.shape();
-	//
-	PtrHolder<ImageInterface<Float> > weightsImage;
-	ImageInterface<Float>* pWeights = 0;
-	if (!sigmaFileName.empty()) {
-		PagedImage<Float> sigmaImage(sigmaFileName);
-		if (!sigmaImage.shape().conform(pImage_p->shape())) {
+
+	PtrHolder<ImageInterface<Float> > weightsImagePtrHolder;
+	ImageInterface<Float> *pWeights = 0;
+	if (! weightsImageName.empty()) {
+		PagedImage<Float> weightsImage(weightsImageName);
+		if (! weightsImage.shape().conform(pImage_p->shape())) {
 			*itsLog << "image and sigma images must have same shape"
 					<< LogIO::EXCEPTION;
 		}
-		//
-		ImageRegion* pR = makeRegionRegion(sigmaImage, Region, True, *itsLog);
-		weightsImage.set(new SubImage<Float> (sigmaImage, *pR, False));
-		pWeights = weightsImage.ptr();
+		ImageRegion* pR = ImageRegion::fromRecord(
+			itsLog, weightsImage.coordinates(),
+			weightsImage.shape(), regionRecord
+		);
+		weightsImagePtrHolder.set(new SubImage<Float> (weightsImage, *pR, False));
+		pWeights = weightsImagePtrHolder.ptr();
 		delete pR;
 	}
 
 	// Set default axis
 	const uInt nDim = subImage.ndim();
 	CoordinateSystem cSys = subImage.coordinates();
-	Int pAxis = CoordinateUtil::findSpectralAxis(cSys);
-	Int axis2 = axis;
-	if (axis2 < 0) {
-		if (pAxis != -1) {
-			axis2 = pAxis;
-		} else {
-			axis2 = nDim - 1;
-		}
-	}
-
-	// Convert estimate from GlishRecord to Record
-	Record *recIn = new Record(estimate);
+	String doppler = "";
+	ImageUtilities::getUnitAndDoppler(
+		xUnit, doppler, axis, cSys
+	);
 
 	// Fish out request units from input estimate record
 	// Fields  are
@@ -1959,50 +1998,33 @@ Record ImageAnalysis::fitprofile(Vector<Float>& values,
 	//     parameters
 	//     errors
 	//     fixed
-	//
+
 	// SpectralElement fromRecord handles each numbered elements
 	// field (type, parameters, errors). It does not yet handle
 	// the 'fixed' field (see below)
-	String xUnit, yUnit, doppler;
-	if (recIn->isDefined("xunit")) {
-		xUnit = recIn->asString("xunit");
-	}
-	if (recIn->isDefined("doppler")) {
-		doppler = recIn->asString("doppler");
-	}
 
-	//
-	Bool xAbs = True;
-	if (recIn->isDefined("xabs")) {
-		xAbs = recIn->asBool("xabs");
-	}
-	if (recIn->isDefined("yunit")) { // Not used presently.Drop ?
-		yUnit = recIn->asString("yunit");
-	}
-
+	Bool xAbs = estimate.isDefined("xabs")
+		? estimate.asBool("xabs")
+		: True;
 	// Figure out the abcissa type specifying what abcissa domain the fitter
 	// is operating in.  Convert the CoordinateSystem to this domain
 	// and set it back in the image
 	String errMsg;
-	uInt axis3(axis2);
-	ImageFit1D<Float>::AbcissaType abcissaType = ImageFit1D<Float>::PIXEL;
-	Bool ok = ImageFit1D<Float>::setAbcissaState(errMsg, abcissaType, cSys,
-			xUnit, doppler, axis3);
+	ImageFit1D<Float>::AbcissaType abcissaType;
+	Bool ok = ImageFit1D<Float>::setAbcissaState(
+		errMsg, abcissaType, cSys, xUnit, doppler, axis
+	);
 	subImage.setCoordinateInfo(cSys);
 
 	if (!ok) {
-		*itsLog << "xUnit, doAbs, doppler, axis = " << xUnit << ", " << xAbs
-				<< ", " << doppler << ", " << axis3 << endl;
-		*itsLog << "abcissa type = " << abcissaType << endl;
-		*itsLog << "nMax = " << nMax << endl << LogIO::POST;
+		*itsLog << LogIO::WARN << errMsg << LogIO::POST;
 	}
 
-	// Make fitter
 	ImageFit1D<Float> fitter;
 	if (pWeights) {
-		fitter.setImage(subImage, *pWeights, axis3);
+		fitter.setImage(subImage, *pWeights, axis);
 	} else {
-		fitter.setImage(subImage, axis3);
+		fitter.setImage(subImage, axis);
 	}
 	// Set data region averaging data in region.  We could also set the
 	// ImageRegion from that passed in to this function rather than making
@@ -2011,24 +2033,24 @@ Record ImageAnalysis::fitprofile(Vector<Float>& values,
 	Slicer sl(IPosition(nDim, 0), imageShape, Slicer::endIsLength);
 	LCSlicer sl2(sl);
 	ImageRegion region(sl2);
-	if (!fitter.setData(region, abcissaType, xAbs)) {
+	if (! fitter.setData(region, abcissaType, xAbs)) {
 		*itsLog << fitter.errorMessage() << LogIO::EXCEPTION;
 	}
 
 	// If we have the "elements" field, decode it into a list
 	SpectralList list;
-	if (recIn->isDefined("elements")) {
-		if (!list.fromRecord(errMsg, recIn->asRecord(String("elements")))) {
+	if (estimate.isDefined("elements")) {
+		if (!list.fromRecord(errMsg, estimate.asRecord("elements"))) {
 			*itsLog << errMsg << LogIO::EXCEPTION;
 		}
 
 		// Handle the 'fixed' record here. This is a work around until we
 		// redo this stuff properly in SpectralList and friends.
-		Record tmpRec = recIn->asRecord("elements");
+		Record tmpRec = estimate.asRecord("elements");
 		const uInt nRec = tmpRec.nfields();
-		AlwaysAssert(nRec==list.nelements(),AipsError);
-		//
-		for (uInt i = 0; i < nRec; i++) { // Loop over elements
+		AlwaysAssert(nRec == list.nelements(), AipsError);
+
+		for (uInt i = 0; i < nRec; i++) {
 			Record tmpRec2 = tmpRec.asRecord(i);
 			Vector<Bool> fixed;
 			if (tmpRec2.isDefined("fixed")) {
@@ -2038,14 +2060,12 @@ Record ImageAnalysis::fitprofile(Vector<Float>& values,
 			}
 		}
 	}
-	delete recIn;
 
 	// Now we do one of three things:
 	// 1) make a fit and evaluate
 	// 2) evaluate a model
 	// 3) make an estimate and evaluate
-	values.resize(0);
-	residual.resize(0);
+	Vector<Float> model(0), residual(0);
 	Bool addExtras = False;
 	Record recOut;
 
@@ -2058,56 +2078,73 @@ Record ImageAnalysis::fitprofile(Vector<Float>& values,
 					list2.add(list[i]);
 				}
 			}
-			//
-			fitter.setElements(list2); // Set estimate
+			// Set estimate
+			fitter.setElements(list2);
 		} else {
-			fitter.setGaussianElements(nMax); // Set auto estimate
+			// Set auto estimate
+			if (! fitter.setGaussianElements(ngauss)) {
+				*itsLog << LogIO::WARN << fitter.errorMessage() << LogIO::POST;
+			}
 		}
-		if (baseline >= 0) {
-			SpectralElement polyEl(baseline); // Add baseline
+		if (poly >= 0) {
+			// Add baseline
+			SpectralElement polyEl(poly);
 			fitter.addElement(polyEl);
 		}
-		//
-		if (!fitter.fit()) { // Fit
+		if (! fitter.fit()) {
 			*itsLog << LogIO::WARN << "Fit failed to converge" << LogIO::POST;
 		}
-		//
-		values = fitter.getFit(); // Evaluate
-		residual = fitter.getResidual(-1, True);
-		//
-		const SpectralList& fitList = fitter.getList(True); // Convert to GlishRecord
+		if (! modelName.empty()) {
+			model = fitter.getFit();
+			ImageCollapser collapser(
+				&subImage, Vector<uInt>(1, axis), True,
+				ImageCollapser::ZERO, modelName, True
+			);
+			PagedImage<Float> *modelImage = static_cast<PagedImage<Float>*>(
+												collapser.collapse(True)
+											);
+			modelImage->put(model.reform(modelImage->shape()));
+			modelImage->flush();
+			delete modelImage;
+		}
+		if (! residualName.empty()) {
+			residual = fitter.getResidual(-1, True);
+            ImageCollapser collapser(
+				&subImage, Vector<uInt>(1, axis), True,
+				ImageCollapser::ZERO, residualName, True
+			);
+			PagedImage<Float> *residualImage = static_cast<PagedImage<Float>*>(
+												collapser.collapse(True)
+											);
+			residualImage->put(residual.reform(residualImage->shape()));
+			residualImage->flush();
+			delete residualImage;
+		}
+		const SpectralList& fitList = fitter.getList(True);
 		fitList.toRecord(recOut);
 		addExtras = True;
-	} else {
+	}
+	else {
 		if (list.nelements() > 0) {
 			fitter.setElements(list); // Set list
-			values = fitter.getEstimate(); // Evaluate list
+			model = fitter.getEstimate(); // Evaluate list
 			residual = fitter.getResidual(-1, False);
-		} else {
-			if (fitter.setGaussianElements(nMax)) { // Auto estimate
-				values = fitter.getEstimate(); // Evaluate
+		}
+		else {
+			if (fitter.setGaussianElements(ngauss)) { // Auto estimate
+				model = fitter.getEstimate(); // Evaluate
 				residual = fitter.getResidual(-1, False);
 				const SpectralList& list = fitter.getList(False);
-				//
 				list.toRecord(recOut);
 				addExtras = True;
-			} else {
+			}
+			else {
 				*itsLog << LogIO::SEVERE << fitter.errorMessage()
-						<< LogIO::POST;
+					<< LogIO::POST;
 			}
 		}
 	}
-	// Generate return value
-	Record recOut2;
-	recOut2.defineRecord("elements", recOut);
-	if (addExtras) {
-		recOut2.define("xunit", xUnit);
-		recOut2.define("doppler", doppler);
-		recOut2.define("xabs", xAbs);
-		recOut2.define("yunit", yUnit);
-	}
-
-	return recOut2;
+	return fitter;
 }
 
 ImageInterface<Float> *
@@ -2132,9 +2169,11 @@ ImageAnalysis::fitpolynomial(const String& residFile, const String& fitFile,
 	// Make SubImages from input image
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
-	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask, False, *itsLog,
-			False);
+	SubImage<Float> subImage = SubImage<Float>::createSubImage(
+		pRegionRegion, pMaskRegion,
+		*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)),
+		mask, 0, False
+	);
 	delete pMaskRegion;
 	IPosition imageShape = subImage.shape();
 
@@ -2146,10 +2185,11 @@ ImageAnalysis::fitpolynomial(const String& residFile, const String& fitFile,
 			*itsLog << "image and sigma images must have same shape"
 					<< LogIO::EXCEPTION;
 		}
-		//
 		if (Region.nfields() > 0) {
-			ImageRegion* pR = makeRegionRegion(sigmaImage, Region, True,
-					*itsLog);
+			ImageRegion* pR = ImageRegion::fromRecord(
+				itsLog, sigmaImage.coordinates(),
+				sigmaImage.shape(), Region
+			);
 			pSubSigmaImage = new SubImage<Float> (sigmaImage, *pR, False);
 			delete pR;
 		} else {
@@ -2160,7 +2200,6 @@ ImageAnalysis::fitpolynomial(const String& residFile, const String& fitFile,
 	// Find spectral axis if not given.
 	CoordinateSystem cSys = subImage.coordinates();
 	Int pAxis = CoordinateUtil::findSpectralAxis(cSys);
-	//
 	Int axis2;
 	if (axis < 0) {
 		if (pAxis != -1) {
@@ -2210,7 +2249,6 @@ ImageAnalysis::fitpolynomial(const String& residFile, const String& fitFile,
 	}
 	delete pRegionRegion;
 
-	//
 	if (pSubImage2->hasPixelMask()) {
 		Lattice<Bool>& pixelMaskIn = pSubImage2->pixelMask();
 		String maskNameResid;
@@ -2219,7 +2257,6 @@ ImageAnalysis::fitpolynomial(const String& residFile, const String& fitFile,
 			Lattice<Bool>& pixelMaskOut = pResid->pixelMask();
 			pixelMaskOut.copyData(pixelMaskIn);
 		}
-		//
 		if (pFit) {
 			String maskNameFit;
 			makeMask(*pFit, maskNameFit, False, True, *itsLog, True);
@@ -2246,7 +2283,9 @@ ComponentList ImageAnalysis::fitsky(
 	const Bool deconvolveIt, const Bool list,
     const String& residImageName, const String& modelImageName
 ) {
-	*itsLog << LogOrigin("ImageAnalysis", "fitsky");
+	LogOrigin origin("ImageAnalysis", __FUNCTION__);
+	*itsLog << origin;
+
 	String error;
 
 	Vector<SkyComponent> estimate;
@@ -2309,23 +2348,21 @@ ComponentList ImageAnalysis::fitsky(
     Slicer slice(startPos, endPos, stride, Slicer::endIsLast);
 	SubImage<Float> subImageTmp(*pImage_p, slice, False);
 
-	// Convert region from Glish record to ImageRegion. Convert mask
-	// to ImageRegion and make SubImage.  Drop degenerate axes.
+	// Convert mask to ImageRegion and make SubImage.  Drop degenerate axes.
 	ImageRegion* pRegionRegion = 0;
 
     ImageRegion* pMaskRegion = 0;
 
-	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			subImageTmp, *(ImageRegion::tweakedRegionRecord(&region)), mask, list, *itsLog,
-			False, AxesSpecifier(False));
-
-    ostringstream oss;
-
-    region.print(oss);
+	SubImage<Float> subImage = SubImage<Float>::createSubImage(
+		pRegionRegion, pMaskRegion,
+		subImageTmp, *(ImageRegion::tweakedRegionRecord(&region)),
+		mask, (list ? itsLog : 0), False, AxesSpecifier(False)
+	);
 
 	delete pRegionRegion;
 	delete pMaskRegion;
-
+    ostringstream oss;
+    region.print(oss);
     // Make sure the region is 2D and that it holds the sky.  Exception if not.
 	const CoordinateSystem& cSys = subImage.coordinates();
 
@@ -2336,7 +2373,6 @@ ComponentList ImageAnalysis::fitsky(
 	IPosition shape = pixels.shape();
 
 	residMask.resize(IPosition(0));
-
 	residMask = subImage.getMask(True).copy();
 
 	// What Stokes type does this plane hold ?
@@ -2353,6 +2389,7 @@ ComponentList ImageAnalysis::fitsky(
 
     // Set pixel range depending on Stokes type and min/max
     _setFitSkyIncludeExclude(includepix, excludepix, stokes, minVal, maxVal, fitter);
+	*itsLog << origin;
 
     // Recover just single component estimate if desired and bug out
 	// Must use subImage in calls as converting positions to absolute
@@ -2360,6 +2397,7 @@ ComponentList ImageAnalysis::fitsky(
     ComponentList cl;
 
     if (!fitIt) {
+                //cerr << "cinco" << endl;
 		Vector<Double> parameters;
 		parameters = singleParameterEstimate(fitter, Fit2D::GAUSSIAN,
 				maskedPixels, minVal, maxVal, minPos, maxPos, stokes, subImage,
@@ -2384,8 +2422,8 @@ ComponentList ImageAnalysis::fitsky(
 		}
 	}
 	// Add models
-
 	Vector<String> modelTypes(models.copy());
+
 	for (uInt i = 0; i < nModels; i++) {
 		// If we ask to fit a POINT component, that really means a
 		// Gaussian of shape the restoring beam.  So fix the shape
@@ -2438,6 +2476,7 @@ ComponentList ImageAnalysis::fitsky(
 	Array<Float> sigma;
 	// residMask constant so do not recalculate out_pixelmask
 	Fit2D::ErrorTypes status = fitter.fit(pixels, residMask, sigma);
+
 	if (status == Fit2D::OK) {
 		*itsLog << LogIO::NORMAL << "Number of iterations = "
 				<< fitter.numberIterations() << LogIO::POST;
@@ -2482,11 +2521,14 @@ ComponentList ImageAnalysis::fitsky(
 	*itsLog << LogOrigin("ImageAnalysis", "fitsky");
 
 	// CAS-1966 keep degenerate axes
-	SubImage<Float> subImage2 = makeSubImage(
+	SubImage<Float> subImage2 = SubImage<Float>::createSubImage(
 		pRegionRegion, pMaskRegion, subImageTmp,
 		*(ImageRegion::tweakedRegionRecord(&region)),
-		mask, list, *itsLog, False, AxesSpecifier(True)
+		mask, (list ? itsLog : 0), False, AxesSpecifier(True)
 	);
+	delete pRegionRegion;
+	delete pMaskRegion;
+
 	residStats = _fitskyWriteResidualAndGetStats(subImage2, residPixels, residImageName);
 
 
@@ -2494,6 +2536,7 @@ ComponentList ImageAnalysis::fitsky(
 	ImageMetaData subImageMD(subImage2);
 	Vector<Int> inputDirectionAxes = subImageMD.directionAxesNumbers();
 	Record reg;
+
 	ImageAnalysis(&subImage2).statistics(
 		inputStats, inputDirectionAxes, reg, "", Vector<String>(0),
 		Vector<Float>(0), Vector<Float>(0)
@@ -2666,21 +2709,16 @@ Bool ImageAnalysis::getchunk(Array<Float>& pixels, Array<Bool>& pixelMask,
 
 }
 
+const ImageInterface<Float>* ImageAnalysis::getImage() const {
+	return pImage_p;
+}
+
+
 Bool ImageAnalysis::getregion(Array<Float>& pixels, Array<Bool>& pixelmask,
 		Record& Region, const Vector<Int>& axes, const String& Mask,
 		const Bool list, const Bool dropdeg, const Bool getmask) {
 	// Recover some pixels and their mask from a region in the image
 	*itsLog << LogOrigin("ImageAnalysis", "getregion");
-
-	// Convert region from Glish record to ImageRegion. Convert mask to
-	// ImageRegion and make SubImage.
-	ImageRegion* pRegionRegion = 0;
-	ImageRegion* pMaskRegion = 0;
-	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), Mask, list, *itsLog,
-			False);
-	delete pRegionRegion;
-	delete pMaskRegion;
 
 	// Get the region
 	pixels.resize(IPosition(0, 0));
@@ -2688,14 +2726,23 @@ Bool ImageAnalysis::getregion(Array<Float>& pixels, Array<Bool>& pixelmask,
 
 	// Drop degenerate axes
 	IPosition iAxes = IPosition(Vector<Int> (axes));
+
+    ImageRegion* pRegionRegion = 0;
+	ImageRegion* pMaskRegion = 0;
+    SubImage<Float> subImage = SubImage<Float>::createSubImage(
+		pRegionRegion, pMaskRegion,
+		*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)),
+		Mask, (list ? itsLog : 0), False
+	);
+	delete pRegionRegion;
+	delete pMaskRegion; 
 	if (getmask) {
-		LatticeUtilities::collapse(pixels, pixelmask, iAxes, subImage, dropdeg);
-		return True;
+        LatticeUtilities::collapse(pixels, pixelmask, iAxes, subImage, dropdeg);
 	} else {
 		LatticeUtilities::collapse(pixels, iAxes, subImage, dropdeg);
-		return True;
 	}
-}
+    return True;
+ }
 
 Record*
 ImageAnalysis::getslice(const Vector<Double>& x, const Vector<Double>& y,
@@ -2778,17 +2825,17 @@ ImageAnalysis::hanning(const String& outFile, Record& Region,
 	// to ImageRegion and make SubImage.
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
-	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask, True, *itsLog,
-			False);
-	//
+	SubImage<Float> subImage = SubImage<Float>::createSubImage(
+		pRegionRegion, pMaskRegion,
+		*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask, itsLog,
+		False
+	);
 	IPosition blc(subImage.ndim(), 0);
 	if (pRegionRegion) {
 		LatticeRegion latRegion = pRegionRegion->toLatticeRegion(
 				pImage_p->coordinates(), pImage_p->shape());
 		blc = latRegion.slicer().start();
 	}
-	//
 	delete pRegionRegion;
 	delete pRegionRegion;
 	delete pMaskRegion;
@@ -2914,9 +2961,11 @@ Bool ImageAnalysis::histograms(Record& histout, const Vector<Int>& axes,
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
 
-	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(ImageRegion::tweakedRegionRecord(&regionRec)), sMask, True,
-			*itsLog, False);
+	SubImage<Float> subImage = SubImage<Float>::createSubImage(
+		pRegionRegion, pMaskRegion, *pImage_p,
+		*(ImageRegion::tweakedRegionRecord(&regionRec)),
+		sMask, itsLog, False
+	);
 
 	// Make new object only if we need to.
 	Bool forceNewStorage = force;
@@ -3090,8 +3139,10 @@ ImageAnalysis::insert(const String& infile, Record& Region,
 	ImageUtilities::openImage(pInImage, infile, *itsLog);
 
 	// Create region and subImage for input image
-	const ImageRegion* pRegion = makeRegionRegion(*pInImage, Region, False,
-			*itsLog);
+	const ImageRegion* pRegion = ImageRegion::fromRecord(
+		itsLog, pInImage->coordinates(),
+		pInImage->shape(), Region
+	);
 	SubImage<Float> inSub(*pInImage, *pRegion);
 	delete pRegion;
 
@@ -3119,7 +3170,6 @@ ImageAnalysis::insert(const String& infile, Record& Region,
 	ImageRegrid<Float> ir;
 	ir.showDebugInfo(dbg);
 	ir.insert(*pImage_p, outPix, inSub);
-	//
 	delete pInImage;
 
 	// Make sure hist and stats are redone
@@ -3197,15 +3247,18 @@ Bool ImageAnalysis::makecomplex(const String& outFile, const String& imagFile,
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
 	String mask;
-	SubImage<Float> subRealImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask, True, *itsLog,
-			False);
+	SubImage<Float> subRealImage = SubImage<Float>::createSubImage(
+		pRegionRegion, pMaskRegion, *pImage_p,
+		*(ImageRegion::tweakedRegionRecord(&Region)),
+		mask, itsLog, False
+	);
 	delete pRegionRegion;
 	delete pMaskRegion;
-	//
-	SubImage<Float> subImagImage = makeSubImage(pRegionRegion, pMaskRegion,
-			imagImage, *(ImageRegion::tweakedRegionRecord(&Region)), mask, False, *itsLog,
-			False);
+	SubImage<Float> subImagImage = SubImage<Float>::createSubImage(
+		pRegionRegion, pMaskRegion, imagImage,
+		*(ImageRegion::tweakedRegionRecord(&Region)),
+		mask, 0, False
+	);
 	delete pRegionRegion;
 	delete pMaskRegion;
 
@@ -3362,9 +3415,11 @@ Bool ImageAnalysis::modify(Record& Model, Record& Region, const String& mask,
 	// to ImageRegion and make SubImage.  Drop degenerate axes.
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
-	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask, list, *itsLog,
-			True);
+	SubImage<Float> subImage = SubImage<Float>::createSubImage(
+		pRegionRegion, pMaskRegion, *pImage_p,
+		*(ImageRegion::tweakedRegionRecord(&Region)),
+		mask, (list ? itsLog : 0), True
+	);
 	delete pRegionRegion;
 	delete pMaskRegion;
 
@@ -3400,9 +3455,11 @@ Record ImageAnalysis::maxfit(Record& Region, const Bool doPoint,
 	ImageRegion* pMaskRegion = 0;
 	AxesSpecifier axesSpec(False); // drop degenerate
 	String mask;
-	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask, True, *itsLog,
-			False, axesSpec);
+	SubImage<Float> subImage = SubImage<Float>::createSubImage(
+		pRegionRegion, pMaskRegion, *pImage_p,
+		*(ImageRegion::tweakedRegionRecord(&Region)),
+		mask, itsLog, False, axesSpec
+	);
 	Vector<Float> blc;
 	if (pRegionRegion) {
 		blc = pRegionRegion->asLCSlicer().blc();
@@ -3490,9 +3547,11 @@ ImageAnalysis::moments(const Vector<Int>& whichmoments, const Int axis,
 	// to ImageRegion and make SubImage.
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
-	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask, True, *itsLog,
-			False);
+	SubImage<Float> subImage = SubImage<Float>::createSubImage(
+		pRegionRegion, pMaskRegion, *pImage_p,
+		*(ImageRegion::tweakedRegionRecord(&Region)),
+		mask, itsLog, False
+	);
 	delete pRegionRegion;
 	delete pMaskRegion;
 
@@ -3845,8 +3904,10 @@ Bool ImageAnalysis::putregion(const Array<Float>& pixels,
 	// Make region.  If the region extends beyond the image, it is
 	// truncated here.
 
-	const ImageRegion* pRegion = makeRegionRegion(*pImage_p,
-			*ImageRegion::tweakedRegionRecord(&region), list, *itsLog);
+	const ImageRegion* pRegion = ImageRegion::fromRecord(
+		(list ? itsLog : 0), pImage_p->coordinates(), pImage_p->shape(),
+		*ImageRegion::tweakedRegionRecord(&region)
+	);
 	LatticeRegion latRegion = pRegion->toLatticeRegion(pImage_p->coordinates(),
 			pImage_p->shape());
 	// The pixels array must be same shape as the bounding box of the
@@ -3926,10 +3987,8 @@ Bool ImageAnalysis::putregion(const Array<Float>& pixels,
 				False);
 		oldMask = pImage_p->getMaskSlice(latRegion.slicer().start(),
 				pixelsShape, False);
-		//
 		pOldData = oldData.getStorage(deleteOldData); // From disk
 		pOldMask = oldMask.getStorage(deleteOldMask); // From disk
-		//
 		pNewData = pixels.getStorage(deleteNewData); // From user
 	}
 
@@ -3996,7 +4055,6 @@ Bool ImageAnalysis::putregion(const Array<Float>& pixels,
 		}
 	}
 
-	//
 	if (pOldMask != 0)
 		oldMask.freeStorage(pOldMask, deleteOldMask);
 	if (pOldData != 0)
@@ -4036,9 +4094,11 @@ ImageAnalysis::rebin(const String& outFile, const Vector<Int>& factors,
 		axesSpecifier = AxesSpecifier(False);
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
-	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask, True, *itsLog,
-			False, axesSpecifier);
+	SubImage<Float> subImage = SubImage<Float>::createSubImage(
+		pRegionRegion, pMaskRegion, *pImage_p,
+		*(ImageRegion::tweakedRegionRecord(&Region)),
+		mask, itsLog, False, axesSpecifier
+	);
 	delete pRegionRegion;
 	delete pMaskRegion;
 
@@ -4131,9 +4191,11 @@ ImageAnalysis::regrid(const String& outFile, const Vector<Int>& inshape,
 		axesSpecifier = AxesSpecifier(False);
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
-	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask, True, *itsLog,
-			False, axesSpecifier);
+	SubImage<Float> subImage = SubImage<Float>::createSubImage(
+		pRegionRegion, pMaskRegion, *pImage_p,
+		*(ImageRegion::tweakedRegionRecord(&Region)),
+		mask, itsLog, False, axesSpecifier
+	);
 	delete pRegionRegion;
 	delete pMaskRegion;
 
@@ -4287,9 +4349,11 @@ ImageAnalysis::rotate(const String& outFile, const Vector<Int>& shape,
 	AxesSpecifier axesSpecifier;
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
-	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask, True, *itsLog,
-			False, axesSpecifier);
+	SubImage<Float> subImage = SubImage<Float>::createSubImage(
+		pRegionRegion, pMaskRegion, *pImage_p,
+		*(ImageRegion::tweakedRegionRecord(&Region)),
+		mask, itsLog, False, axesSpecifier
+	);
 	delete pRegionRegion;
 	delete pMaskRegion;
 
@@ -4517,9 +4581,11 @@ Bool ImageAnalysis::replacemaskedpixels(const String& pixels, Record& pRegion,
 	// to ImageRegion and make SubImage.
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
-	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(ImageRegion::tweakedRegionRecord(&pRegion)), maskRegion, list,
-			*itsLog, True);
+	SubImage<Float> subImage = SubImage<Float>::createSubImage(
+		pRegionRegion, pMaskRegion, *pImage_p,
+		*(ImageRegion::tweakedRegionRecord(&pRegion)),
+		maskRegion, (list ? itsLog : 0), True
+	);
 	delete pRegionRegion;
 	delete pMaskRegion;
 
@@ -4614,9 +4680,11 @@ ImageAnalysis::sepconvolve(const String& outFile,
 	// to ImageRegion and make SubImage.
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
-	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(ImageRegion::tweakedRegionRecord(&pRegion)), mask, True, *itsLog,
-			False);
+	SubImage<Float> subImage = SubImage<Float>::createSubImage(
+		pRegionRegion, pMaskRegion, *pImage_p,
+		*(ImageRegion::tweakedRegionRecord(&pRegion)),
+		mask, itsLog, False
+	);
 	delete pRegionRegion;
 	delete pMaskRegion;
 
@@ -4698,8 +4766,10 @@ Bool ImageAnalysis::set(const String& lespixels, const Int pixelmask,
 
 	// Make region and subimage
 	Record *tmpRegion = new Record(p_Region);
-	const ImageRegion* pRegion = makeRegionRegion(*pImage_p,
-			*(ImageRegion::tweakedRegionRecord(tmpRegion)), list, *itsLog);
+	const ImageRegion* pRegion = ImageRegion::fromRecord(
+		(list ? itsLog : 0), pImage_p->coordinates(), pImage_p->shape(),
+		*(ImageRegion::tweakedRegionRecord(tmpRegion))
+	);
 	delete tmpRegion;
 	SubImage<Float> subImage(*pImage_p, *pRegion, True);
 
@@ -4721,9 +4791,7 @@ Bool ImageAnalysis::set(const String& lespixels, const Int pixelmask,
 				ImageExprParse::command(newexpr, temps, tempRegs);
 		// Delete the ImageRegions (by using an empty GlishRecord).
 		makeRegionBlock(tempRegs, Record(), *itsLog);
-		//
 		// We must have a scalar expression
-		//
 		if (!node.isScalar()) {
 			*itsLog << "The pixels expression must be scalar"
 					<< LogIO::EXCEPTION;
@@ -4733,28 +4801,21 @@ Bool ImageAnalysis::set(const String& lespixels, const Int pixelmask,
 					<< LogIO::EXCEPTION;
 		}
 		LatticeExprNode node2 = toFloat(node);
-		//
 		// if region==T (good) set value given by pixel expression, else
 		// leave the pixels as they are
-		//
 		LatticeRegion region = subImage.region();
 		LatticeExprNode node3(iif(region, node2.getFloat(), subImage));
 		subImage.copyData(LatticeExpr<Float> (node3));
 	}
-	//
 	// Set the mask
-	//
 	if (setMask) {
 		Lattice<Bool>& pixelMask = subImage.pixelMask();
 		LatticeRegion region = subImage.region();
-		//
 		// if region==T (good) set value given by "mask", else
 		// leave the pixelMask as it is
-		//
 		LatticeExprNode node4(iif(region, mask, pixelMask));
 		pixelMask.copyData(LatticeExpr<Bool> (node4));
 	}
-	//
 	// Ensure that we reconstruct the statistics and histograms objects
 	// now that the data/mask have changed
 
@@ -4796,6 +4857,10 @@ Bool ImageAnalysis::sethistory(const String& origin,
 	*itsLog << lor << LogIO::POST;
 
 	LoggerHolder& log = pImage_p->logger();
+	// 
+	// Make sure we can write into the history table if needed
+	//
+	log.reopenRW();
 	LogSink& sink = log.sink();
 	for (uInt i = 0; i < History.nelements(); i++) {
 		if (History(i).length() > 0) {
@@ -4900,24 +4965,24 @@ Bool ImageAnalysis::statistics(
 	const Vector<Float>& includepix, const Vector<Float>& excludepix,
 	const String& plotterdev, const Int nx, const Int ny, const Bool list,
 	const Bool force, const Bool disk, const Bool robust,
-	const Bool verbose) {
+	const Bool verbose
+) {
 	String pgdevice("/NULL");
 	*itsLog << LogOrigin("ImageAnalysis", "statistics");
-
-	// Convert region from Glish record to ImageRegion. Convert mask to ImageRegion
-	// and make SubImage.
 
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
 	String mtmp = mask;
 	if (mtmp == "false" || mtmp == "[]")
 		mtmp = "";
-	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(ImageRegion::tweakedRegionRecord(&regionRec)), mtmp, verbose,
-			*itsLog, False);
+	SubImage<Float> subImage = SubImage<Float>::createSubImage(
+		pRegionRegion, pMaskRegion, *pImage_p,
+		*(ImageRegion::tweakedRegionRecord(&regionRec)),
+		mtmp, (verbose ? itsLog : 0), False
+	);
 
 	// Reset who is logging stuff.
-	*itsLog << LogOrigin("ImageAnalysis", "statistics");
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 	// Find BLC of subimage in pixels and world coords, and output the
 	// information to the logger.
@@ -4932,24 +4997,26 @@ Bool ImageAnalysis::statistics(
 		blc = sl.start();
 		trc = sl.end();
 	}
-
 	// for precision
 	CoordinateSystem cSys = pImage_p->coordinates();
-	DirectionCoordinate dirCoord = cSys.directionCoordinate(0);
-	Vector<String> dirUnits = dirCoord.worldAxisUnits();
-	Vector<Double> dirIncs = dirCoord.increment();
+	Bool hasDirectionCoordinate = (cSys.findCoordinate(Coordinate::DIRECTION) >= 0);
 	Int precis = -1;
-	dirCoord.directionType();
-	for (uInt i=0; i< dirUnits.size(); i++) {
-		Quantity inc(dirIncs[i], dirUnits[i]);
-		inc.convert("s");
-		Int newPrecis = abs(int(floor(log10(inc.getValue()))));
-		precis = (newPrecis > 2 && newPrecis > precis) ? newPrecis : precis;
+	if (hasDirectionCoordinate) {
+		DirectionCoordinate dirCoord = cSys.directionCoordinate(0);
+		Vector<String> dirUnits = dirCoord.worldAxisUnits();
+		Vector<Double> dirIncs = dirCoord.increment();
+		for (uInt i=0; i< dirUnits.size(); i++) {
+			Quantity inc(dirIncs[i], dirUnits[i]);
+			inc.convert("s");
+			Int newPrecis = abs(int(floor(log10(inc.getValue()))));
+			precis = (newPrecis > 2 && newPrecis > precis) ? newPrecis : precis;
+		}
 	}
 
 	String blcf, trcf;
 	blcf = CoordinateUtil::formatCoordinate(blc, cSys, precis);
 	trcf = CoordinateUtil::formatCoordinate(trc, cSys, precis);
+
 	if (list) {
 		// Only write to the logger if the user wants it displayed.
 		*itsLog << LogOrigin("ImageAnalysis", "statistics") << LogIO::NORMAL;
@@ -5183,15 +5250,16 @@ Bool ImageAnalysis::twopointcorrelation(const String& outFile,
 	AxesSpecifier axesSpecifier;
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
-	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(ImageRegion::tweakedRegionRecord(&theRegion)), mask, True, *itsLog,
-			False, axesSpecifier);
+	SubImage<Float> subImage = SubImage<Float>::createSubImage(
+		pRegionRegion, pMaskRegion, *pImage_p,
+		*(ImageRegion::tweakedRegionRecord(&theRegion)),
+		mask, itsLog, False, axesSpecifier
+	);
 	delete pRegionRegion;
 	delete pMaskRegion;
 
 	// Deal with axes and shape
 	Vector<Int> axes2(axes1);
-	//
 	CoordinateSystem cSysIn = subImage.coordinates();
 	IPosition axes = ImageTwoPtCorr<Float>::setUpAxes(IPosition(axes2), cSysIn);
 	IPosition shapeOut = ImageTwoPtCorr<Float>::setUpShape(subImage.shape(),
@@ -5230,7 +5298,6 @@ ImageAnalysis::subimage(const String& outfile, Record& Region,
 
 	*itsLog << LogOrigin("ImageAnalysis", "subimage");
 	// Copy a portion of the image
-	//
 	// Verify output file
 	if (!overwrite && !outfile.empty()) {
 		NewFile validfile;
@@ -5245,15 +5312,17 @@ ImageAnalysis::subimage(const String& outfile, Record& Region,
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
 	AxesSpecifier axesSpecifier;
-	if (dropDegenerateAxes)
+	if (dropDegenerateAxes) {
 		axesSpecifier = AxesSpecifier(False);
-	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask, list, *itsLog,
-			True, axesSpecifier);
+	}
+	SubImage<Float> subImage = SubImage<Float>::createSubImage(
+		pRegionRegion, pMaskRegion, *pImage_p,
+		*(ImageRegion::tweakedRegionRecord(&Region)),
+		mask, itsLog, True, axesSpecifier
+	);
 	delete pRegionRegion;
 	delete pMaskRegion;
 
-	//
 	if (outfile.empty()) {
 		return new SubImage<Float> (subImage);
 	} else {
@@ -5406,12 +5475,13 @@ Bool ImageAnalysis::tofits(const String& fitsfile, const Bool velocity,
 		axesSpecifier = AxesSpecifier(keepAxes);
 	}
 
-	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(ImageRegion::tweakedRegionRecord(&pRegion)), mask, True, *itsLog,
-			False, axesSpecifier);
+	SubImage<Float> subImage = SubImage<Float>::createSubImage(
+		pRegionRegion, pMaskRegion, *pImage_p,
+		*(ImageRegion::tweakedRegionRecord(&pRegion)),
+		mask, itsLog, False, axesSpecifier
+	);
 	delete pRegionRegion;
 	delete pMaskRegion;
-	//
 	Bool ok = ImageFITSConverter::ImageToFITS(error, subImage, fitsfile,
 			HostInfo::memoryFree() / 1024, velocity, optical, bitpix, minpix,
 			maxpix, overwrite, False, //  deglast default
@@ -5574,100 +5644,6 @@ Bool ImageAnalysis::deleteHistAndStats() {
 	return rstat;
 }
 
-SubImage<Float> ImageAnalysis::makeSubImage(ImageRegion*& pRegionRegion,
-		ImageRegion*& pMaskRegion, ImageInterface<Float>& inImage,
-		const Record& theRegion, const String& mask, Bool listBoundingBox,
-		LogIO& os, Bool writableIfPossible, const AxesSpecifier& axesSpecifier)
-//
-// The ImageRegion pointers must be null on entry
-// either pointer may be null on exit
-//
-{
-	*itsLog << LogOrigin("ImageAnalysis", "makeSubImage");
-	SubImage<Float> subImage;
-	pMaskRegion = makeMaskRegion(mask);
-
-	// We can get away with no region processing if the GlishRegion
-	// is empty and the user is not dropping degenerate axes
-	//*itsLog << "in makeSubImage, doing the subimage: " << theRegion.nfields() << " "<< axesSpecifier.keep()<< LogIO::POST;
-
-	if (theRegion.nfields() == 0 && axesSpecifier.keep()) {
-
-		if (pMaskRegion != 0) {
-			subImage = SubImage<Float> (inImage, *pMaskRegion,
-					writableIfPossible);
-		} else {
-			subImage = SubImage<Float> (inImage, True);
-		}
-	} else {
-
-		pRegionRegion = makeRegionRegion(inImage, theRegion, listBoundingBox,
-				os);
-
-		if (pMaskRegion != 0) {
-
-			SubImage<Float>
-					subImage0(inImage, *pMaskRegion, writableIfPossible);
-			subImage = SubImage<Float> (subImage0, *pRegionRegion,
-					writableIfPossible, axesSpecifier);
-		} else {
-
-			subImage = SubImage<Float> (inImage, *pRegionRegion,
-					writableIfPossible, axesSpecifier);
-		}
-	}
-
-	return subImage;
-}
-
-ImageRegion* ImageAnalysis::makeRegionRegion(ImageInterface<Float>& inImage,
-		const Record& theRegion, const Bool listBoundingBox, LogIO& os) {
-	*itsLog << LogOrigin("ImageAnalysis", "makeRegionRegion");
-
-	// Convert from GlishRecord to Record and make ImageRegion
-	// Handles null regions here
-	ImageRegion* pRegion = 0;
-	CoordinateSystem cSys(inImage.coordinates());
-
-	//
-	if (theRegion.nfields() == 0) {
-
-		IPosition blc(inImage.ndim(), 0);
-		IPosition trc(inImage.shape() - 1);
-		LCSlicer slicer(blc, trc, RegionType::Abs);
-		pRegion = new ImageRegion(slicer);
-		//
-		if (listBoundingBox) {
-			os << LogIO::NORMAL << "Selected bounding box : " << endl;
-			//os << LogIO::NORMAL <<  "    " <<  blc+1 << " to " << trc+1
-			os << LogIO::NORMAL << "    " << blc << " to " << trc << "  ("
-					<< CoordinateUtil::formatCoordinate(blc, cSys) << " to "
-					<< CoordinateUtil::formatCoordinate(trc, cSys) << ")"
-					<< LogIO::POST;
-		}
-	}
-	else {
-		pRegion = ImageRegion::fromRecord(TableRecord(theRegion), "");
-
-		if (listBoundingBox) {
-
-			LatticeRegion latRegion = pRegion->toLatticeRegion(
-					inImage.coordinates(), inImage.shape());
-
-			Slicer sl = latRegion.slicer();
-
-			os << LogIO::NORMAL << "Selected bounding box : " << endl;
-			//os << LogIO::NORMAL <<  "    " <<  sl.start()+1 << " to " << sl.end()+1
-			os << LogIO::NORMAL << "    " << sl.start() << " to " << sl.end()
-					<< "  (" << CoordinateUtil::formatCoordinate(sl.start(),
-					cSys) << " to " << CoordinateUtil::formatCoordinate(
-					sl.end(), cSys) << ")" << LogIO::POST;
-		}
-	}
-
-	return pRegion;
-}
-
 Bool ImageAnalysis::makeMask(ImageInterface<Float>& out, String& maskName,
 		Bool init, Bool makeDefault, LogIO& os, Bool list) const {
 	*itsLog << LogOrigin("ImageAnalysis", "makeMask");
@@ -5697,33 +5673,6 @@ Bool ImageAnalysis::makeMask(ImageInterface<Float>& out, String& maskName,
 				<< "Cannot make requested mask for this type of image" << endl;
 		return False;
 	}
-}
-
-ImageRegion* ImageAnalysis::makeMaskRegion(const String& mask) const {
-	*itsLog << LogOrigin("ImageAnalysis", "makeMaskRegion");
-	ImageRegion* p = 0;
-	if (!mask.empty()) {
-
-		// Get LatticeExprNode (tree) from parser.  Substitute possible
-		// object-id's by a sequence number, while creating a
-		// LatticeExprNode for it.  Convert the GlishRecord containing
-		// regions to a PtrBlock<const ImageRegion*>.
-		Block<LatticeExprNode> tempLattices;
-		String exprName;
-		//
-                String mas = mask;
-                Int pos = mas.find_last_of("/", 10000);
-                String dir = "";
-                String im = mas.after(pos);
-                if (pos>0) 
-                   dir = mas.before(pos);
-		PtrBlock<const ImageRegion*> tempRegs;
-		LatticeExprNode node = ImageExprParse::command(im, tempLattices,
-				tempRegs, dir);
-		const WCLELMask maskRegion(node);
-		p = new ImageRegion(maskRegion);
-	}
-	return p;
 }
 
 Bool ImageAnalysis::haveRegionsChanged(ImageRegion* pNewRegionRegion,
@@ -5815,8 +5764,7 @@ Bool ImageAnalysis::make_image(String &error, const String& outfile,
 Bool ImageAnalysis::makeExternalImage(PtrHolder<ImageInterface<Float> >& image,
 		const String& fileName, const CoordinateSystem& cSys,
 		const IPosition& shape, const ImageInterface<Float>& inImage,
-		LogIO& os, Bool overwrite, Bool allowTemp, Bool copyMask)
-
+		LogIO& os, Bool overwrite, Bool allowTemp, Bool copyMask) const
 {
 	if (fileName.empty()) {
 		if (allowTemp) {
@@ -6357,9 +6305,11 @@ ImageAnalysis::newimage(const String& infile, const String& outfile,
 		AxesSpecifier axesSpecifier;
 		if (dropdeg)
 			axesSpecifier = AxesSpecifier(False);
-		SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-				*pInImage, *(ImageRegion::tweakedRegionRecord(&region)), Mask, True,
-				*itsLog, True, axesSpecifier);
+		SubImage<Float> subImage = SubImage<Float>::createSubImage(
+			pRegionRegion, pMaskRegion, *pInImage,
+			*(ImageRegion::tweakedRegionRecord(&region)),
+			Mask, itsLog, True, axesSpecifier
+		);
 		delete pRegionRegion;
 		delete pMaskRegion;
 

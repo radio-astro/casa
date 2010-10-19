@@ -8,7 +8,7 @@
 # The script supplies the names of all test tables found in the system.
 # It is meant to be run from assay, but can also be used standalone.
 #
-# $Id: tMSSelection.run 20429 2008-11-18 08:18:44Z astrododo $
+# $Id: tMSSelection.run 20932 2010-07-08 09:06:37Z gervandiepen $
 #-----------------------------------------------------------------------------
 
   if [ ${#AIPSPATH} = 0 ]
@@ -23,4 +23,11 @@
   echo $AIPSDEMO
   echo $FITS
   echo $MS
+
+  if [ ! -e $FITS ]
+  then
+     echo "UNTESTED: tMSSelection.run ($FITS not found)"
+     exit 3
+  fi
+
   ./tMSSelection fits=$FITS ms=$MS

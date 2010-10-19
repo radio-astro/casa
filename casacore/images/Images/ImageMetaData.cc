@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ImageMetaData.cc 20356 2008-06-23 11:37:34Z gervandiepen $
+//# $Id: ImageMetaData.cc 20886 2010-04-29 14:06:56Z gervandiepen $
 
 
 #include <coordinates/Coordinates/DirectionCoordinate.h>
@@ -99,11 +99,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         }
         Int polCoordNum = polarizationCoordinateNumber();
         StokesCoordinate stokesCoord = itsCoordinates.stokesCoordinate(polCoordNum);
-        Int stokesPix = -1;
-        if (
-        	!stokesCoord.toPixel(stokesPix, Stokes::type(stokesString))
-        	|| stokesPix < 0 || stokesPix >= (Int)nStokes()
-        ) {
+        Int stokesPix=-1;
+        stokesCoord.toPixel(stokesPix, Stokes::type(stokesString));
+        if (stokesPix < 0 || stokesPix >= (Int)nStokes()) {
             return -1;
         }
         return stokesPix;

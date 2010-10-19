@@ -52,7 +52,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Null constructor merely sets private formatting string
 //
 MSLister::MSLister ()
-  : dashline_p(replicate('-',80))
+  : mss_p(),
+    dashline_p(replicate('-',80))
 {
   pMSSel_p = 0;
 }
@@ -67,6 +68,7 @@ MSLister::MSLister (const MeasurementSet& ms, LogIO& os)
   //  : pMS_p(&ms),
   : pMS_p(const_cast<MeasurementSet*>(&ms)),
     logStream_p(os),
+    mss_p(),
     dashline_p(replicate('-',80))
 {
   // Move these into initList()?
@@ -728,9 +730,12 @@ void MSLister::listData(const int pageRows,
 
       //logStream_p << LogIO::DEBUG2 << "  Setting data amplitude min and max values" << LogIO::POST;
       Vector<Float> amplminmax(2);
-      amplminmax(0)=min(ampl(ampl>0.0f));
+      amplminmax(0)=min(ampl(ampl>=0.0f));
       amplminmax(1)=max(ampl);
-      ranges_p.define(dataColSel(0),amplminmax);
+	  if(amplminmax(0) == amplminmax(1))
+		{ myout << "All selected data has AMPLITUDE = " << amplminmax(0) << endl; }
+
+	  ranges_p.define(dataColSel(0),amplminmax);
 
       // Find the range of phase.  Take care to avoid creating a 0-element
       //  MaskedArray, if all elements of phase are 0.0f.  A 0-element

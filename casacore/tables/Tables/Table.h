@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Table.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: Table.h 20952 2010-09-06 11:50:09Z gervandiepen $
 
 #ifndef TABLES_TABLE_H
 #define TABLES_TABLE_H
@@ -33,6 +33,7 @@
 #include <casa/aips.h>
 #include <tables/Tables/BaseTable.h>
 #include <tables/Tables/TableLock.h>
+#include <tables/Tables/TSMOption.h>
 #include <casa/Utilities/DataType.h>
 #include <casa/Utilities/Sort.h>
 
@@ -155,6 +156,7 @@ friend class TableExprNode;
 friend class TableExprNodeRep;
 
 public:
+    // Define the possible options how a table can be opened.
     enum TableOption {
 	// existing table
 	Old=1,
@@ -170,6 +172,7 @@ public:
 	Delete
     };
 
+    // Define the possible table types.
     enum TableType {
 	// plain table (stored on disk)
         Plain,
@@ -177,16 +180,19 @@ public:
 	Memory
     };
 
+    // Define the possible endian formats in which table data can be stored.
     enum EndianFormat {
 	// store table data in big endian (e.g. SUN) format
 	BigEndian=1,
 	// store table data in little endian (e.g. Intel) format
 	LittleEndian,
-	// store data in endian format of the machine used
+	// store data in the endian format of the machine used
 	LocalEndian,
 	// use endian format defined in the aipsrc variable table.endianformat
+        // If undefined, it defaults to LocalEndian.
 	AipsrcEndian
     };
+
 
     // Define the signature of the function being called when the state
     // of a scratch table changes (i.e. created, closed, renamed,
@@ -207,15 +213,11 @@ public:
     static ScratchCallback* setScratchCallback (ScratchCallback*);
 
 
-    // Create a null Table object (i.e. no table is attached yet).
+    // Create a null Table object (i.e. a NullTable is attached).
     // The sole purpose of this constructor is to allow construction
     // of an array of Table objects.
     // The assignment operator can be used to make a null object
-    // reference a column.
-    // Note that sort functions, etc. will cause a segmentation fault
-    // when operating on a null object. It was felt it was too expensive
-    // to test on null over and over again. The user should use the isNull
-    // or throwIfNull function in case of doubt.
+    // reference a proper table.
     Table();
 
     // Create a table object for an existing table.
@@ -232,19 +234,22 @@ public:
     // of 5 seconds. Otherwise DefaultLocking keeps the locking options
     // of the already open table.
     // <group>
-    explicit Table (const String& tableName, TableOption = Table::Old);
+    explicit Table (const String& tableName, TableOption = Table::Old,
+                    const TSMOption& = TSMOption());
     Table (const String& tableName, const TableLock& lockOptions,
-	   TableOption = Table::Old);
+	   TableOption = Table::Old, const TSMOption& = TSMOption());
     Table (const String& tableName, const String& tableDescName,
-	   TableOption = Table::Old);
+	   TableOption = Table::Old, const TSMOption& = TSMOption());
     Table (const String& tableName, const String& tableDescName,
-	   const TableLock& lockOptions, TableOption = Table::Old);
+	   const TableLock& lockOptions, TableOption = Table::Old,
+           const TSMOption& = TSMOption());
     // </group>
 
     // Make a new empty table (plain (scratch) or memory type).
     // Columns should be added to make it a real one.
     // Note that the endian format is only relevant for plain tables.
-    explicit Table (TableType, EndianFormat = Table::AipsrcEndian);
+  explicit Table (TableType, EndianFormat = Table::AipsrcEndian,
+                  const TSMOption& = TSMOption());
 
     // Make a table object for a new table, which can thereafter be used
     // for reading and writing.
@@ -262,19 +267,20 @@ public:
     // <br>The data will be stored in the given endian format.
     // <group>
     explicit Table (SetupNewTable&, uInt nrrow = 0, Bool initialize = False,
-		    EndianFormat = Table::AipsrcEndian);
+		    EndianFormat = Table::AipsrcEndian,
+                    const TSMOption& = TSMOption());
     Table (SetupNewTable&, TableType,
 	   uInt nrrow = 0, Bool initialize = False,
-	   EndianFormat = Table::AipsrcEndian);
+	   EndianFormat = Table::AipsrcEndian, const TSMOption& = TSMOption());
     Table (SetupNewTable&, TableType, const TableLock& lockOptions,
 	   uInt nrrow = 0, Bool initialize = False,
-	   EndianFormat = Table::AipsrcEndian);
+	   EndianFormat = Table::AipsrcEndian, const TSMOption& = TSMOption());
     Table (SetupNewTable&, TableLock::LockOption,
 	   uInt nrrow = 0, Bool initialize = False,
-	   EndianFormat = Table::AipsrcEndian);
+	   EndianFormat = Table::AipsrcEndian, const TSMOption& = TSMOption());
     Table (SetupNewTable&, const TableLock& lockOptions,
 	   uInt nrrow = 0, Bool initialize = False,
-	   EndianFormat = Table::AipsrcEndian);
+	   EndianFormat = Table::AipsrcEndian, const TSMOption& = TSMOption());
     // </group>
 
     // Create a table object as the virtual concatenation of
@@ -302,11 +308,11 @@ public:
 		    const Block<String>& subTables = Block<String>());
     explicit Table (const Block<String>& tableNames,
 		    const Block<String>& subTables = Block<String>(),
-		    TableOption = Table::Old);
+		    TableOption = Table::Old, const TSMOption& = TSMOption());
     Table (const Block<String>& tableNames,
 	   const Block<String>& subTables,
 	   const TableLock& lockOptions,
-	   TableOption = Table::Old);
+	   TableOption = Table::Old, const TSMOption& = TSMOption());
     // </group>
 
     // Copy constructor (reference semantics).
@@ -438,7 +444,7 @@ public:
     // does not synchronize itself automatically.
     void resync();
 
-    // Test if the object is null, i.e. does not reference a table yet.
+    // Test if the object is null, i.e. does not reference a proper table.
     // This is the case if the default constructor is used.
     Bool isNull() const
       { return (baseTabPtr_p == 0  ?  True : baseTabPtr_p->isNull()); }
@@ -819,8 +825,15 @@ public:
     // <note role=caution>This function is in principle meant for cases
     // where this table is a subset of that table. However, it can be used
     // for any table. In that case the returned vector contains a very high
-    // number for rows in this table which are not part of that table.
+    // number (max_uint) for rows in this table not part of that table.
     // In that way they are invalid if used elsewhere.
+    // <br>In the general case creating the row number vector can be slowish,
+    // because it has to do two mappings. However, if this table is a subset
+    // of that table and if they are in the same order, the mapping can be done
+    // in a more efficient way. The argument <src>tryFast</src> can be used to
+    // tell the function to try a fast conversion first. If that cannot be done,
+    // it reverts to the slower way at the expense of an unsuccessful fast
+    // attempt.
     // </note>
     // <srcblock>
     // Table tab("somename");
@@ -833,17 +846,21 @@ public:
     // <br> <src>    Vector<uInt> rownrs = subset.rowNumbers()</src>
     // does not give the row numbers in <src>tab</src>, but in the root table
     // (which is probably not what you want).
-    Vector<uInt> rowNumbers (const Table& that) const;
+  Vector<uInt> rowNumbers (const Table& that, Bool tryFast=False) const;
 
     // Add a column to the table.
     // The data manager used for the column depend on the function used.
     // Exceptions are thrown when the column already exist or when the
     // table is not writable.
+    // <br>If this table is a reference table (result of selection) and if
+    // <src>addToParent=True</src> the column is also added to the parent
+    // table.
     // <group>
     // Use the first appropriate existing storage manager.
     // When there is none, a data manager is created using the default
     // data manager in the column description.
-    void addColumn (const ColumnDesc& columnDesc);
+    void addColumn (const ColumnDesc& columnDesc,
+                    Bool addToParent = True);
     // Use an existing data manager with the given name or type.
     // When the flag byName is True, a name is given, otherwise a type.
     // When a name is given, an exception is thrown if the data manager is
@@ -851,10 +868,12 @@ public:
     // When a type is given, a storage manager of the given type will be
     // created when there is no such data manager allowing addition of rows.
     void addColumn (const ColumnDesc& columnDesc,
-		    const String& dataManager, Bool byName);
+		    const String& dataManager, Bool byName,
+                    Bool addToParent = True);
     // Use the given data manager (which is a new one).
     void addColumn (const ColumnDesc& columnDesc,
-		    const DataManager& dataManager);
+		    const DataManager& dataManager,
+                    Bool addToParent = True);
     // </group>
 
     // Add a bunch of columns using the given new data manager.
@@ -863,15 +882,20 @@ public:
     // This can be used in case of specific data managers which need to
     // be created with more than one column (e.g. the tiled hypercube
     // storage managers).
-    // The data manager can be given directly or by means of a record
+    // <br>The data manager can be given directly or by means of a record
     // describing the data manager in the standard way with the fields
     // TYPE, NAME, and SPEC. The record can contain those fields itself
     // or it can contain a single subrecord with those fields.
+    // <br>If this table is a reference table (result of selection) and if
+    // <src>addToParent=True</src> the columns are also added to the parent
+    // table.
     // <group>
     void addColumn (const TableDesc& tableDesc,
-		    const DataManager& dataManager);
+		    const DataManager& dataManager,
+                    Bool addToParent = True);
     void addColumn (const TableDesc& tableDesc,
-		    const Record& dataManagerInfo);
+		    const Record& dataManagerInfo,
+                    Bool addToParent = True);
     // </group>
 
     // Test if columns can be removed.
@@ -955,7 +979,7 @@ protected:
 
     // Open an existing table.
     void open (const String& name, const String& type, int tableOption,
-	       const TableLock& lockOptions);
+	       const TableLock& lockOptions, const TSMOption& tsmOpt);
 
 
 private:
@@ -963,6 +987,7 @@ private:
     static BaseTable* makeBaseTable (const String& name, const String& type,
 				     int tableOption,
 				     const TableLock& lockOptions,
+                                     const TSMOption& tsmOpt,
 				     Bool addToCache, uInt locknr);
 
 
@@ -976,6 +1001,10 @@ private:
     BaseTable* lookCache (const String& name, int tableOption,
 			  const TableLock& tableInfo);
 
+    // Try if v1 is a subset of v2 and fill rows with its indices in v2.
+    // Return False if not a proper subset.
+    Bool fastRowNumbers (const Vector<uInt>& v1, const Vector<uInt>& v2,
+                         Vector<uInt>& rows) const;
 };
 
 
@@ -1082,20 +1111,20 @@ inline void Table::removeRow (uInt rownr)
     { baseTabPtr_p->removeRow (rownr); }
 inline void Table::removeRow (const Vector<uInt>& rownrs)
     { baseTabPtr_p->removeRow (rownrs); }
-inline void Table::addColumn (const ColumnDesc& columnDesc)
-    { baseTabPtr_p->addColumn (columnDesc); }
+inline void Table::addColumn (const ColumnDesc& columnDesc, Bool addToParent)
+    { baseTabPtr_p->addColumn (columnDesc, addToParent); }
 inline void Table::addColumn (const ColumnDesc& columnDesc,
-			      const String& dataManager, Bool byName)
-    { baseTabPtr_p->addColumn (columnDesc, dataManager, byName); }
+			      const String& dataManager, Bool byName,
+                              Bool addToParent)
+    { baseTabPtr_p->addColumn (columnDesc, dataManager, byName, addToParent); }
 inline void Table::addColumn (const ColumnDesc& columnDesc,
-			      const DataManager& dataManager)
-    { baseTabPtr_p->addColumn (columnDesc, dataManager); }
+			      const DataManager& dataManager, Bool addToParent)
+    { baseTabPtr_p->addColumn (columnDesc, dataManager, addToParent); }
 inline void Table::addColumn (const TableDesc& tableDesc,
-			      const DataManager& dataManager)
-    { baseTabPtr_p->addColumn (tableDesc, dataManager); }
+			      const DataManager& dataManager, Bool addToParent)
+    { baseTabPtr_p->addColumn (tableDesc, dataManager, addToParent); }
 inline void Table::addColumn (const TableDesc& tableDesc,
-			      const Record& dataManagerInfo)
-    { baseTabPtr_p->addColumns (tableDesc, dataManagerInfo); }
+			      const Record& dataManagerInfo, Bool addToParent)      { baseTabPtr_p->addColumns (tableDesc, dataManagerInfo, addToParent); }
 inline void Table::removeColumn (const Vector<String>& columnNames)
     { baseTabPtr_p->removeColumn (columnNames); }
 inline void Table::renameColumn (const String& newName, const String& oldName)

@@ -135,7 +135,7 @@ Array<T> shift(const Array<T> &input,
             int N0 = input.shape()(0);
             int s[1];
             here    = IPosition(1, i);
-            if (input.shape()(0) < max(input_shape(0), expected_shape(0))) {
+            if (input.shape()(0) < std::max(input_shape(0), expected_shape(0))) {
                 s[0] = i % N0;
             }
             else {
@@ -151,7 +151,7 @@ Array<T> shift(const Array<T> &input,
             n[1] = i / N[0];
             int s[2];
             for (int j = 0; j < 2; j++) {
-                if (input.shape()(j) < max(input_shape(j), expected_shape(j))) {
+                if (input.shape()(j) < std::max(input_shape(j), expected_shape(j))) {
                     s[j] = n[j];
                 }
                 else {
@@ -171,7 +171,7 @@ Array<T> shift(const Array<T> &input,
             n[1] = (i / N[0]) % N[1];
             n[2] = i / (N[1]*N[0]);
             for (int j = 0; j < 3; j++) {
-                if (input.shape()(j) < max(input_shape(j), expected_shape(j))) {
+                if (input.shape()(j) < std::max(input_shape(j), expected_shape(j))) {
                     s[j] = n[j];
                 }
                 else {
@@ -195,7 +195,7 @@ Array<T> shift(const Array<T> &input,
             n[2] = (i / (N[1]*N[0])) % N[2];
             n[3] = i / (N[2]*N[1]*N[0]);
             for (int j = 0; j < 4; j++) {
-                if (input.shape()(j) < max(input_shape(j), expected_shape(j))) {
+                if (input.shape()(j) < std::max(input_shape(j), expected_shape(j))) {
                     s[j] = n[j];
                 }
                 else {

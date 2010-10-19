@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableCache.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: TableCache.cc 20950 2010-09-06 11:49:06Z gervandiepen $
 
 #include <tables/Tables/TableCache.h>
 #include <casa/Exceptions/Error.h>
@@ -60,6 +60,7 @@ uInt TableCache::ntable() const
 
 void TableCache::define (const String& tableName, PlainTable* tab)
 {
+  //RI cout<<"+ cache "<<tableName<<endl;
     tableMap_p.define (tableName, tab);
 }
 
@@ -77,10 +78,12 @@ void TableCache::remove (const String& tableName)
 	// Throwing an exception causes an immediate crash (probably by
 	// Table destructors).
 	// So write a message on stderr;
-	std::cerr << "Cannot remove the table from the table cache;"
-	  "suggest restarting" << std::endl;
+	std::cerr << "Cannot remove table " << tableName
+                  << " from the table cache; suggest restarting" << std::endl;
       }
     }
+    //RI cout<<"- cache "<<tableName<<endl;
+
 }
 
 void TableCache::rename (const String& newName, const String& oldName)

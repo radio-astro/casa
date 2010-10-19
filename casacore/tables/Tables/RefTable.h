@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RefTable.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: RefTable.h 20859 2010-02-03 13:14:15Z gervandiepen $
 
 #ifndef TABLES_REFTABLE_H
 #define TABLES_REFTABLE_H
@@ -39,6 +39,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
+class TSMOption;
 class RefColumn;
 class AipsIO;
 
@@ -136,7 +137,7 @@ public:
     // Create a reference table out of a file (written by writeRefTable).
     // The referenced table will also be created (if not stored in the cache).
     RefTable (AipsIO&, const String& name, uInt nrrow, int option,
-	      const TableLock& lockOptions);
+	      const TableLock& lockOptions, const TSMOption& tsmOption);
 
     // The destructor flushes (i.e. writes) the table if it is opened
     // for output and not marked for delete.
@@ -199,7 +200,8 @@ public:
 
     // Read a reference table from a file.
     // The referenced table will also be created (if not stored in the cache).
-    void getRef (AipsIO&, int option, const TableLock& lockOptions);
+    void getRef (AipsIO&, int option, const TableLock& lockOptions,
+                 const TSMOption& tsmOption);
 
     // This is doing a shallow copy.
     // It gives an error if the RefTable has not been stored yet.
@@ -240,6 +242,22 @@ public:
 
     // Remove the given row.
     virtual void removeRow (uInt rownr);
+
+    // Add one or more columns to the table.
+    // The column is added to the parent table if told so and if not existing.
+    // <group>
+    virtual void addColumn (const ColumnDesc& columnDesc,
+                            Bool addToParent);
+    virtual void addColumn (const ColumnDesc& columnDesc,
+			    const String& dataManager, Bool byName,
+                            Bool addToParent);
+    virtual void addColumn (const ColumnDesc& columnDesc,
+			    const DataManager& dataManager,
+                            Bool addToParent);
+    virtual void addColumn (const TableDesc& tableDesc,
+			    const DataManager& dataManager,
+                            Bool addToParent);
+    // </group>
 
     // Test if columns can be removed (yes).
     virtual Bool canRemoveColumn (const Vector<String>& columnNames) const;
@@ -346,6 +364,15 @@ private:
 
     // Copy a RefTable that is not persistent. It requires some special logic.
     void copyRefTable (const String& newName, int tableOption);
+
+    // Check if a column can be added. Return True if it can and must be
+    // added to the parent table first.
+    Bool checkAddColumn (const String& name, Bool addToParent);
+
+    // Add a column.
+    void addRefCol (const ColumnDesc& cd);
+    // Add multiple columns.
+    void addRefCol (const TableDesc& tdesc);
 };
 
 

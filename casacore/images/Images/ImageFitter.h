@@ -76,6 +76,9 @@ namespace casa {
             // <li>box - A 2-D rectangular box in which to use pixels for the fitting, eg box=100,120,200,230
             // In cases where both box and region are specified, box, not region, is used.</li>
             // <li>region - Named region to use for fitting</li>
+			// <li>regionPtr - A pointer to a region. Note there are unfortunately several different types of
+			// region records throughout CASA. In this case, it must be a Record produced by creating a
+			// region via a RegionManager method.
             // <li>chanInp - Zero-based channel number on which to do the fit. Only a single channel can be
             // specified.</li>
             // <li>stokes - Stokes plane on which to do the fit. Only a single Stokes parameter can be
@@ -108,7 +111,6 @@ namespace casa {
                 const Bool& append=True, const String& newEstimatesInp=""
             );
 
-
             // destructor
             ~ImageFitter();
 
@@ -119,20 +121,18 @@ namespace casa {
             // Did the fit converge? Throw AipsError if the fit has not yet been done.
 			Bool converged() const;
 
-
         private:
-            LogIO *itsLog;
-            ImageInterface<Float> *image;
-            Record regionRecord;
-            uInt chan;
-            String stokesString, mask, residual, model, logfileName,
-				regionString, estimatesString, newEstimatesFileName;
+            LogIO *_log;
+            ImageInterface<Float> *_image;
+            Record _regionRecord;
+            uInt _chan;
+            String _stokesString, _mask, _residual, _model, _logfileName,
+				regionString, estimatesString, _newEstimatesFileName;
             Vector<Float> includePixelRange, excludePixelRange;
             ComponentList estimates, results;
             Vector<String> fixed;
             Bool logfileAppend, fitConverged, fitDone, _noBeam;
             Vector<Quantity> peakIntensities, fluxDensities, majorAxes, minorAxes, positionAngles;
-            Vector<Vector<Double> > pixelPositions;
             Record residStats, inputStats;
             Double chiSquared;
             String _kludgedStokes;
@@ -144,46 +144,15 @@ namespace casa {
                 const Record* regionPtr, const String& estimatesFilename
             );
 
-            // determine the region based on the inputs
-            void _doRegion(const String& box, const String& region, const Record* regionPtr);
-
-            // process the 'box' command line argument and return the associated region as
-            // a record.
-            ImageRegion _processBox(const String& box);
-
-            ImageRegion _boxRegion(String blc1, String blc2, String trc1, String trc2);
-
-            // check the validity of the image-related parameters. If stokes not specified
-            // and image contains a single stokes plane, stokesString will be set to the
-            // stokes parameter of that plane.
-            void _checkImageParameterValidity();
-
             // summarize the results in a nicely formatted string
             String _resultsToString();
-
-            // summarize the position details in a nicely formatted string
-            String _positionToString(const uInt compNumber);
 
             //summarize the size details in a nicely formatted string
             String _sizeToString(const uInt compNumber) const;
 
-            // summarize gaussian details in a nicely formatted string
-            String _gaussianToString(
-            	Quantity major, Quantity minor, Quantity posangle,
-            	Quantity majorErr, Quantity minorErr, Quantity posanErr,
-            	Bool includeUncertainties = True
-            ) const;
-
             String _fluxToString(uInt compNumber) const;
 
             String _spectrumToString(uInt compNumber) const;
-
-			//Round a number to 2 or 3 significant digits for printing
-            // If number is n>3.2*10**e, 2 digits; if 1<n<3.2*10**e, 3 digits
-            Double _round(Double number) const;
-
-            // return the precision for printing
-            uInt _precision(const Vector<Double>& pair1, const Vector<Double>& pair2) const;
 
             // write output to log file
             void _writeLogfile(const String& output) const;
@@ -204,7 +173,6 @@ namespace casa {
 			Double _getStatistic(const String& type, const Record& stats) const;
 
 			String _statisticsToString() const;
-
     };
 }
 

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprFuncNode.cc 20839 2009-12-01 10:15:16Z gervandiepen $
+//# $Id: ExprFuncNode.cc 20940 2010-08-25 09:08:06Z gervandiepen $
 
 #include <tables/Tables/ExprFuncNode.h>
 #include <tables/Tables/TableError.h>
@@ -296,7 +296,7 @@ void TableExprFuncNode::fillChildNodes (TableExprFuncNode* thisNode,
 {
     uInt i;
     // Copy block of children.
-    // Determine if common argument type is Double or Complex.
+    // Determine if common argument type is Int, Double or Complex.
     // (this is used by some functions like near and norm).
     thisNode->operands_p.resize (nodes.nelements());
     thisNode->argDataType_p = NTInt;
@@ -1273,9 +1273,11 @@ TableExprNodeRep::NodeDataType TableExprFuncNode::checkOperands
 	}
     }
     switch (fType) {
-    case randFUNC:
     case rownrFUNC:
     case rowidFUNC:
+	checkNumOfArg (0, 0, nodes);
+	return NTInt;
+    case randFUNC:
     case piFUNC:
     case eFUNC:
 	checkNumOfArg (0, 0, nodes);

@@ -103,7 +103,6 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
 	  dataColName == MS::columnName(MS::LAG_DATA) ||
 	  dataColName == MS::columnName(MS::SIGMA) || 
 	  dataColName == MS::columnName(MS::WEIGHT) || 
-	  dataColName == MS::columnName(MS::IMAGING_WEIGHT) || 
 	  dataColName == MS::columnName(MS::VIDEO_POINT)) {
 	const ColumnDesc& colDesc = td.columnDesc(dataColNames(dc));
 	isFixed = colDesc.isFixedShape();
@@ -127,7 +126,7 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
       << " to " << itsMS.tableName() << endl << LogIO::POST;
 
   // check if certain columns are present and set flags accordingly
-  Bool doCorrectedData=False, doImagingWeight=False, doModelData=False;
+  Bool doCorrectedData=False, doModelData=False;
   Bool doFloatData=False;
   if (itsMS.tableDesc().isColumn("FLOAT_DATA") && 
       otherMS.tableDesc().isColumn("FLOAT_DATA"))
@@ -161,15 +160,6 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
     log << itsMS.tableName() 
 	<<" has CORRECTED_DATA column but not " << otherMS.tableName()
 	<< LogIO::EXCEPTION;
-  if (itsMS.tableDesc().isColumn("IMAGING_WEIGHT") && 
-      otherMS.tableDesc().isColumn("IMAGING_WEIGHT"))
-    doImagingWeight=True;
-  else if (itsMS.tableDesc().isColumn("IMAGING_WEIGHT") && 
-	   !otherMS.tableDesc().isColumn("IMAGING_WEIGHT"))
-    log << itsMS.tableName() 
-	<< " has IMAGING_WEIGHT column but not " << otherMS.tableName() 
-	<< LogIO::EXCEPTION;
-
   
   // verify that shape of the two MSs as described in POLARISATION, SPW, and DATA_DESCR
   //   is the same
@@ -253,9 +243,7 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
   log << LogIO::DEBUG1 << "added " << newRows << " data rows to the ms, now at: " << itsMS.nrow() << endl << LogIO::POST;
 
   ROArrayColumn<Complex> otherModelData, otherCorrectedData;
-  ROArrayColumn<Float> otherImagingWeight;
   ArrayColumn<Complex> thisModelData, thisCorrectedData;
-  ArrayColumn<Float> thisImagingWeight;
   
   if(doCorrectedData){
     thisCorrectedData.reference(correctedData());
@@ -264,10 +252,6 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
   if(doModelData){
     thisModelData.reference(modelData());
     otherModelData.reference(otherMainCols.modelData());
-  }
-  if(doImagingWeight){
-    thisImagingWeight.reference(imagingWeight());
-    otherImagingWeight.reference(otherMainCols.imagingWeight());
   }
   const ROScalarColumn<Double>& otherTime = otherMainCols.time();
   ScalarColumn<Double>& thisTime = time();
@@ -514,8 +498,6 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
       if(doCorrectedData)
 	thisCorrectedData.put(curRow, otherCorrectedData, r);
     }
-    if(doImagingWeight)
-      thisImagingWeight.put(curRow, otherImagingWeight, r);
     thisSigma.put(curRow, otherSigma, r);
     thisWeight.put(curRow, otherWeight, r);
     thisFlag.put(curRow, otherFlag, r);
@@ -985,9 +967,25 @@ Bool MSConcat::updateSource(){ // to be called after copySource and copySpwAndPo
 	// check if row j has an equivalent row somewhere else in the table
 	for (uint k=0 ; k < numrows_this ; ++k){
 	  if (k!=j && !rowToBeRemoved(j) && !rowToBeRemoved(k)){
-	    if( sourceRowsEquivalent(sourceCol, j, k) ){ // all columns are the same (not testing source and spw id)
+	    if( sourceRowsEquivalent(sourceCol, j, k) ){ // all columns are the same (not testing source, spw id, time, and interval)
 	      if(areEQ(sourceCol.spectralWindowId(),j, k)){ // also the SPW id is the same
-//		cout << "Found SOURCE rows " << j << " and " << k << " to be identical." << endl;
+		//cout << "Found SOURCE rows " << j << " and " << k << " to be identical." << endl;
+
+		// set the time and interval to a superset of the two
+		Double blowk = sourceCol.time()(k) - sourceCol.interval()(k)/2.;
+		Double bhighk = sourceCol.time()(k) + sourceCol.interval()(k)/2.;
+		Double blowj = sourceCol.time()(j) - sourceCol.interval()(j)/2.;
+		Double bhighj = sourceCol.time()(j) + sourceCol.interval()(j)/2.;
+		Double newInterval = max(bhighk,bhighj)-min(blowk,blowj);
+		Double newTime = (max(bhighk,bhighj)+min(blowk,blowj))/2.;
+
+		//cout << "new time = " << newTime << ", new interval = " << newInterval << endl;
+
+		sourceCol.interval().put(j, newTime);
+		sourceCol.interval().put(k, newTime);
+		sourceCol.interval().put(j, newInterval);
+		sourceCol.interval().put(k, newInterval);
+
 		// delete one of the rows
 		if(j<k){ // make entry in map for (k, j) and delete k
 		  tempSourceIndex.define(thisId(k), thisId(j));
@@ -1115,7 +1113,7 @@ Bool MSConcat::updateSource(){ // to be called after copySource and copySpwAndPo
 
 
 Bool MSConcat::sourceRowsEquivalent(const MSSourceColumns& sourceCol, const uInt& rowi, const uInt& rowj){
-  // check if the two SOURCE table rows are identical IGNORING SOURCE_ID and SPW_ID
+  // check if the two SOURCE table rows are identical IGNORING SOURCE_ID, SPW_ID, time, and interval
 
   Bool areEquivalent(False);
 
@@ -1127,13 +1125,11 @@ Bool MSConcat::sourceRowsEquivalent(const MSSourceColumns& sourceCol, const uInt
      // do NOT test SPW ID!
      // areEQ(sourceCol.spectralWindowId(), rowi, rowj) &&
      areEQ(sourceCol.direction(), rowi, rowj) &&
-     areEQ(sourceCol.interval(), rowi, rowj) &&
-     areEQ(sourceCol.properMotion(), rowi, rowj) &&
-     areEQ(sourceCol.time(), rowi, rowj) 
+     areEQ(sourceCol.properMotion(), rowi, rowj)
      ){
     
     //    cout << "All non-optionals equal" << endl;
-    
+
     // test the optional columns next
     areEquivalent = True;
     if(!(sourceCol.position().isNull())){

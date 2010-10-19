@@ -260,7 +260,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // was supplied as part of the expression, the value of Step is
     // replaced with the value of the defaultStep parameter. Multiple
     // channel specifications for the same Spectral Window selection,
-    // results in multiple row in the Matrix.
+    // results in multiple rows in the Matrix.
     Matrix<Int> getChanList(const MeasurementSet* ms=NULL, const Int defaultStep=1);
 
     // Accessor for the list of the selected Data Description IDs.
