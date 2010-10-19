@@ -22,13 +22,14 @@ casa_add_python( xmlcasa xmlcasa_regressions_tests_python python/${PYTHONV}/regr
   3C129.py
   3C219D_test.py
   accum_test.py
-  asdmv1-import.py
+  asdm-imexport+analysis.py
   async-segfault.py
   b1608.py
   calstat_test.py
   cleanchan_test.py
   cleanhelper_test.py
   cvel_test.py
+  cvel_test2.py
   equinox_vis.py
   fits-import-export.py
   g192redux.py
@@ -50,5 +51,6 @@ casa_add_python( xmlcasa xmlcasa_regressions_tests_python python/${PYTHONV}/regr
   secondNGC4826.py
   third4826.py
   time_then_chan_avg.py
+  wideband.py
   wproject_regression.py
 )

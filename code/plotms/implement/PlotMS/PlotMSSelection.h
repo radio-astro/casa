@@ -108,6 +108,7 @@ public:
     const String& corr() const      { return getValue(CORR);      }
     const String& array() const     { return getValue(ARRAY);     }
     const String& msselect() const  { return getValue(MSSELECT);  }
+    const Int& forceNew() const     { return forceNew_; }
     // </group>
     
     // Convenience methods for setting the standard selection fields.
@@ -121,14 +122,19 @@ public:
     void setCorr(const String& v)      { setValue(CORR, v);      }
     void setArray(const String& v)     { setValue(ARRAY, v);     }
     void setMsselect(const String& v)  { setValue(MSSELECT, v);  }
+    void setForceNew(const Int& forcenew) { forceNew_ = forcenew; }
     // </group>
-    
     
     // Equality operators.
     // <group>
     bool operator==(const PlotMSSelection& other) const;
     bool operator!=(const PlotMSSelection& other) const {
         return !(operator==(other)); }
+
+    bool fieldsEqual(const PlotMSSelection& other) const;
+    bool fieldsNotEqual(const PlotMSSelection& other) const {
+        return !fieldsEqual(other); }
+
     // </group>
     
     // Copy operator.
@@ -137,7 +143,9 @@ public:
 private:    
     // Selection field values.
     map<Field, String> itsValues_;
-    
+
+    // Force appearance of new selection (even when not new)
+    Int forceNew_;
     
     // Initializes the values to their defaults.
     void initDefaults();

@@ -178,6 +178,8 @@ void NROFITSDataset::initialize()
     + sizeof( double ) * ARYNM             // F0CAL
     + sizeof( double ) * ARYNM * 10 * 3    // FQCAL, CHCAL, CWCAL
     + sizeof( char ) * 180 ;               // CDMY1
+
+  refFreq_.resize( ARYNM, 0.0 ) ;
 }
 
 // fill data header
@@ -1164,7 +1166,7 @@ int NROFITSDataset::fillRecord( int i )
     return status ;
   }
   else {
-    sprintf( record_->LAVST, "%d%d%d%d%d%d.000", itmp[0], itmp[1], itmp[2], itmp[3], itmp[4], itmp[5] ) ;
+    sprintf( record_->LAVST, "%4d%02d%02d%02d%02d%02d.000", itmp[0], itmp[1], itmp[2], itmp[3], itmp[4], itmp[5] ) ;
   }
   // DEBUG
   //cout << "LAVST(" << i << ") = " << record_->LAVST << endl ;
@@ -1459,6 +1461,15 @@ int NROFITSDataset::fillRecord( int i )
 //     //cout << "JDATA[" << i << "] = " << JDATA[i] << " " ;
 //   //cout << endl ;
   //
+
+
+  // Update IPTIM since it depends on the row for NROFITS
+  int integ ;
+  status = readTable( integ, "INTEG", same_, i ) ;
+  if ( !status ) {
+    IPTIM = (double)integ ;
+  }
+
   return status ;
 }
 
@@ -1512,16 +1523,16 @@ vector<double> NROFITSDataset::getSpectrum( int i )
     InterpolateArray1D<Double, Double>::interpolate( yout, xout, xin, yin, InterpolateArray1D<Double,Double>::cubic ) ;
     // debug
     //cout << "i=" << i << endl ;
-    if ( i == 16 ) {
-      ofstream ofs0( "spgrid0.dat" ) ;
-      for ( int ii = 0 ; ii < getNUMCH() ; ii++ ) 
-        ofs0 << xout[ii] << "," ;
-      ofs0 << endl ;
-      for ( int ii = 0 ; ii < getNUMCH() ; ii++ ) 
-        ofs0 << setprecision(16) << record->FREQ0+yout[ii] << "," ;
-      ofs0 << endl ;
-      ofs0.close() ;
-    }
+//     if ( i == 16 ) {
+//       ofstream ofs0( "spgrid0.dat" ) ;
+//       for ( int ii = 0 ; ii < getNUMCH() ; ii++ ) 
+//         ofs0 << xout[ii] << "," ;
+//       ofs0 << endl ;
+//       for ( int ii = 0 ; ii < getNUMCH() ; ii++ ) 
+//         ofs0 << setprecision(16) << record->FREQ0+yout[ii] << "," ;
+//       ofs0 << endl ;
+//       ofs0.close() ;
+//     }
     //
     Vector<Double> z( nchan ) ;
     Double bw = abs( yout[nchan-1] - yout[0] ) ;
@@ -2714,3 +2725,15 @@ uInt NROFITSDataset::getArrayId( string type )
   }
   return ib ;
 }
+
+double NROFITSDataset::getStartIntTime( int i ) 
+{
+  double v ;
+  readTable( v, "MJDST", same_, i ) ;
+  return v/86400.0 ;
+}
+
+// double NROFITSDataset::toLSR( double v, double t, double x, double y ) 
+// {
+//   return v ;
+// }

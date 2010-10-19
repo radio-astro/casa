@@ -120,6 +120,12 @@ public:
   // Is this type capable of smoothing?  (nominally no)
   virtual Bool smoothable() { return False; };
 
+  // Should only parallel-hands be used in solving?
+  //  (generally no (default=False), but GJones and related
+  //   will override, and eventually this will be a user-set-able
+  //   parameter)
+  virtual Bool phandonly() { return False; }
+
   // Access to focus channel
   inline Int&         focusChan()      { return focusChan_; };
 
@@ -389,6 +395,12 @@ protected:
   // Set state flag to simulate cal terms
   inline void setSimulated(const Bool& flag) {simulated_=flag;};
 
+  // RI todo implement calcOneJones like calcAllMueller
+  // calculate terms during apply, or up front during setSim?
+  inline Bool& simOnTheFly() { 
+    //    cout << "simOTF=" << onthefly_ << endl;
+    return onthefly_; };
+
 
 
 private:
@@ -472,6 +484,7 @@ private:
   // simulation interval
   String simint_;
 
+  Bool onthefly_;  
 
 };
 
@@ -586,6 +599,7 @@ protected:
 
   // SVM-specific state
   virtual void stateSVM(const Bool& doVC);
+
 
 private:
 

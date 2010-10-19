@@ -9,7 +9,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!-- This is the MS statitics task                         -->
 
-<task type="function" name="msmoments" category="ms analysis">
+<task type="function" name="msmoments" category="manipulation">
 <shortdescription>Compute moments from an MS</shortdescription>
 
 <description>
@@ -138,15 +138,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	includemask -- List of masks to include
 		default: [-1] (include all channels); example=[2,100]
 	excludemask -- List of masks to exclude
-		default: [-1] (don&quot;t exclude channels); example=[100,200]
+		default: [-1] (don't exclude channels); example=[100,200]
 	outfile -- Output MS file name (or root for multiple moments)
-		default: &quot;&quot; (input+auto-determined suffix);example: outfile=&quot;source_moment&quot;
+		default: '' (input+auto-determined suffix);example: outfile='source_moment'
         overwrite -- Overwrite existing output files
                 default: false
 
         Example for finding the 1-momment, intensity-weighted
         coordinate, often used for finding velocity fields.
-        msmoments( msname=&quot;mydata&quot;, moment=1, outfile=&quot;velocityfields&quot; )
+        msmoments( msname='mydata', moment=1, outfile='velocityfields' )
 
 </example>
 

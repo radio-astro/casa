@@ -98,16 +98,27 @@ WBCleanImageSkyModel::WBCleanImageSkyModel(const Int ntaylor,const Vector<Float>
 {
   initVars();
 //  if(adbg) cout << "CONSTRUCTOR with userscalevector !!" << endl;
-  nscales_p=userScaleSizes.nelements();
-  scaleSizes_p.resize(nscales_p);
-  for(Int i=0;i<nscales_p;i++) scaleSizes_p[i] = userScaleSizes[i];
+  if(userScaleSizes.nelements()==0)  os << "No scales set !" << LogIO::WARN;
+  if(userScaleSizes[0]!=0.0)
+  {
+    nscales_p=userScaleSizes.nelements()+1;
+    scaleSizes_p.resize(nscales_p);
+    for(Int i=1;i<nscales_p;i++) scaleSizes_p[i] = userScaleSizes[i-1];
+    scaleSizes_p[0]=0.0;
+  }
+  else
+  {
+    nscales_p=userScaleSizes.nelements();
+    scaleSizes_p.resize(nscales_p);
+    for(Int i=0;i<nscales_p;i++) scaleSizes_p[i] = userScaleSizes[i];
+  }
   ntaylor_p=ntaylor;
   refFrequency_p=reffreq;
 };
 
 void WBCleanImageSkyModel::initVars()
 {
-  adbg=1; 
+  adbg=0; 
   ddbg=1; // output per iteration
   tdbg=0;
   
@@ -133,6 +144,7 @@ WBCleanImageSkyModel::~WBCleanImageSkyModel()
 
   for(uInt i=0;i<lc_p.nelements();i++)
 	  if(lc_p[i] != NULL) delete lc_p[i];
+  lc_p.resize(0);
   
 //  if(adbg) cout << "... Successfully destroyed lattice-cleaners !!" << endl;
 };
@@ -142,9 +154,8 @@ WBCleanImageSkyModel::~WBCleanImageSkyModel()
  *************************************/
 Bool WBCleanImageSkyModel::solve(SkyEquation& se) 
 {
-	if(adbg)os << "SOLVER for Multi-Frequency Synthesis deconvolution" << LogIO::POST;
+	os << "MSMFS algorithm with " << ntaylor_p << " Taylor coefficients and Reference Frequency of " << refFrequency_p  << " Hz" << LogIO::POST;
 	Int stopflag=0;
-	static bool firstloop=True;
 	Int nchan=0,npol=0;
 
 	/* Gather shape information */
@@ -170,27 +181,55 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	  if(npol > 1) os << "Cannot process more than one output polarization" << LogIO::EXCEPTION;
 	  AlwaysAssert((nchan==1), AipsError);  
 	  AlwaysAssert((npol==1), AipsError);  
-    
-	  AlwaysAssert(isSolveable(model), AipsError);
 	}
 
-	/* Initialize the MultiTermLatticeCleaners */
-	if(firstloop)
-	{
-	  lc_p.resize(nfields_p);
-	  for(Int thismodel=0;thismodel<nfields_p;thismodel++)
+	for(Int field=0;field<=nfields_p;field++)
+	  if( !isSolveable(getModelIndex(field,0)) ) 
 	  {
-	    lc_p[thismodel] = new MultiTermLatticeCleaner<Float>();
-	    lc_p[thismodel]->setcontrol(CleanEnums::MULTISCALE, numberIterations(), gain(), Quantity(threshold(),"Jy"), false);
-	    //lc_p[thismodel]->ignoreCenterBox(true);
-	    lc_p[thismodel]->setscales(scaleSizes_p);
-	    lc_p[thismodel]->setntaylorterms(ntaylor_p);
-	    nx = image(thismodel).shape()(0);
-	    ny = image(thismodel).shape()(1);
-	    lc_p[thismodel]->initialise(nx,ny); // allocates memory once....
+		  os << "No more processing on this field" << LogIO::POST;
+		  return True;
 	  }
-	  firstloop=False;
+	
+	/* Calculate the initial residual image for all models. */
+	os << "Calculating initial residual images" << LogIO::POST;
+	solveResiduals(se);
+
+	/* Check if this is an interactive-clean run */
+	if(adbg) cout << "NumberIterations : " << numberIterations() << endl;
+	if(numberIterations() < 1)
+	{
+		return True;
 	}
+
+
+	/* Initialize the MultiTermLatticeCleaners */
+	if(adbg) cout << "Shape of lc_p : " << lc_p.nelements() << endl;
+	if(lc_p.nelements()==0)
+	{
+		lc_p.resize(nfields_p);
+		for(Int thismodel=0;thismodel<nfields_p;thismodel++)
+		{
+			lc_p[thismodel] = new MultiTermLatticeCleaner<Float>();
+			//lc_p[thismodel]->ignoreCenterBox(true);
+			lc_p[thismodel]->setscales(scaleSizes_p);
+			lc_p[thismodel]->setntaylorterms(ntaylor_p);
+			nx = image(thismodel).shape()(0);
+			ny = image(thismodel).shape()(1);
+			lc_p[thismodel]->initialise(nx,ny); // allocates memory once....
+
+		}
+	}
+	for(Int thismodel=0;thismodel<nfields_p;thismodel++)
+	{
+		if(adbg) cout << "Number of iterations : " << numberIterations() << endl;
+		lc_p[thismodel]->setcontrol(CleanEnums::MULTISCALE, numberIterations(), gain(), Quantity(threshold(),"Jy"), false);
+	}
+
+        /* Check that the model is read in correctly */
+//	IPosition apos(4,0);apos[0]=nx/2;apos[1]=ny/2;
+//	cout << "Model 0 : Center value : " << image(0).getAt(apos) << endl; 
+//	cout << "Model 1 : Center value : " << image(1).getAt(apos) << endl; 
+
 
 	/* Create the Point Spread Functions */
 	if(!donePSF_p)
@@ -222,21 +261,20 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	/* Set up the Mask image */
 	for(Int thismodel=0;thismodel<nfields_p;thismodel++)
 	{
-	  if(hasMask(thismodel)) 
+	  if(adbg) cout << "about to send in the mask for model " << getModelIndex(thismodel,0) << " hasMask() :  " << hasMask(getModelIndex(thismodel,0))  << endl;
+	  //if(hasMask(thismodel)) 
+	  if(hasMask(getModelIndex(thismodel,0))) 
 	  {
 	    os << "Sending in the mask" << LogIO::POST;
-	    lc_p[thismodel]->setmask( mask(thismodel) );
+	    //lc_p[thismodel]->setmask( mask(thismodel) );
+	    lc_p[thismodel]->setmask( mask(getModelIndex(thismodel,0)) );
 	  }
 	}
-
-	/* Calculate the initial residual image for all models. */
-	if(adbg)os << "Calc initial solveResiduals(se)..." << LogIO::POST;
-	solveResiduals(se);
 
 	/******************* START MAJOR CYCLE LOOP *****************/
 	os << "Starting the solver major cycles" << LogIO::POST;
 	Int index=0;
-	for(Int itercountmaj=0;itercountmaj<100;itercountmaj++)
+	for(Int itercountmaj=0;itercountmaj<1000;itercountmaj++)
 	{
 	   for(Int thismodel=0;thismodel<nfields_p;thismodel++)
 	   {
@@ -260,11 +298,32 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
            
 	   }// end of model loop
 
-	   /* Do the prediction and residual computation for all models. */
-	   if(adbg)os << "Calc residuals : solveResiduals(se)..." << LogIO::POST;
-	   solveResiduals(se);
+	   /* Exit without further ado if MTLC cannot invert matrices */
+	   if(stopflag == -2)
+	   {
+	      os << "Cannot invert Multi-Term Hessian matrix. Please check the reference-frequency and ensure that the number of frequency-channels in the selected data >= nterms" << LogIO::WARN;
+	      break;
+	   }
 	   
+	   /* Do the prediction and residual computation for all models. */
+	   /* If exiting, call 'solveResiduals' with modelToMS = True to write the model to the MS */
+	   if(abs(stopflag) || itercountmaj==999) 
+	   {
+	       os << "Calculating final residual images" << LogIO::POST;
+	       solveResiduals(se,True);
+	   }
+	   else 
+	   {
+	       os << "Calculating new residual images (major cycle)" << LogIO::POST;
+	       solveResiduals(se);
+	   }
+	   
+	   /* Check and exit */
 	   if(abs(stopflag)) break;
+
+	   /* If reached 100 major cycles - something is wrong */
+	   if(itercountmaj==999) os << " Reached the allowed maximum of 1000 major cycles " << LogIO::POST;
+
 	} 
 	/******************* END MAJOR CYCLE LOOP *****************/
 	
@@ -278,6 +337,7 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 
 /***********************************************************************/
 /* Write alpha and beta to disk. Compute from model images. */
+#if 0
 Int WBCleanImageSkyModel::writeResultsToDisk()
 {
   if(ntaylor_p<=1) return 0;
@@ -317,18 +377,20 @@ Int WBCleanImageSkyModel::writeResultsToDisk()
   }// model loop
 return 0;
 }
+#endif
 /***********************************************************************/
 
 /***********************************************************************/
-#if 0
+#if 1
 ///// Write alpha and beta to disk. Calculate from smoothed model + residuals.
 
 Int WBCleanImageSkyModel::writeResultsToDisk()
 {
   if(ntaylor_p<=1) return 0;
 
-  if(ntaylor_p==2) os << "Calculating Spectral Index" << LogIO::POST;
-  if(ntaylor_p>2) os << "Calculating Spectral Index and Curvature" << LogIO::POST;
+  os << "Output Taylor-coefficient images : " << imageNames << LogIO::POST;
+//  if(ntaylor_p==2) os << "Calculating Spectral Index" << LogIO::POST;
+//  if(ntaylor_p>2) os << "Calculating Spectral Index and Curvature" << LogIO::POST;
   
   PtrBlock<TempLattice<Float>* > smoothed;
   if(ntaylor_p>2) smoothed.resize(3);
@@ -340,15 +402,63 @@ Int WBCleanImageSkyModel::writeResultsToDisk()
   for(Int model=0;model<nfields_p;model++)
   {
 
-    String alphaname = (image(model)).name(False) +  String(".alpha");
-    String betaname = (image(model)).name(False) +  String(".beta");
+    String alphaname,betaname;
+    if(  ( (imageNames[0]).substr( (imageNames[0]).length()-3 , 3 ) ).matches("tt0") )
+    {
+	    alphaname = (imageNames[0]).substr(0,(imageNames[0]).length()-3) + "alpha";
+	    betaname = (imageNames[0]).substr(0,(imageNames[0]).length()-3) + "beta";
+    }
+    else
+    {
+            alphaname = (imageNames[0]) +  String(".alpha");
+            betaname = (imageNames[0]) +  String(".beta");
+    }
   
+    StokesImageUtil::FitGaussianPSF(PSF(model), bmaj, bmin, bpa);
+
+    /* Create empty alpha image */
     PagedImage<Float> imalpha(image(model).shape(),image(model).coordinates(),alphaname); 
     imalpha.set(0.0);
     
 
-    StokesImageUtil::FitGaussianPSF(PSF(model), bmaj, bmin, bpa);
+    /* Apply Inverse Hessian to the residuals */
     IPosition gip(4,image(model).shape()[0],image(model).shape()[1],1,1);
+    Matrix<Double> invhessian;
+    lc_p[model]->getinvhessian(invhessian);
+    //cout << "Inverse Hessian : " << invhessian << endl;
+    
+    /* Convolve the residuals with the PSF */
+    Int tindex;
+    LatticeExprNode len_p;
+    PtrBlock<TempLattice<Float>* > coeffresiduals(ntaylor_p),smoothresiduals(ntaylor_p);
+    for(Int taylor1=0;taylor1<ntaylor_p;taylor1++)
+    {
+	coeffresiduals[taylor1] = new TempLattice<Float>(gip,memoryMB_p);
+	smoothresiduals[taylor1] = new TempLattice<Float>(gip,memoryMB_p);
+	
+	index = getModelIndex(model,taylor1);
+        LatticeExpr<Float> cop(residual(index));
+	imalpha.copyData(cop);
+	//StokesImageUtil::Convolve(imalpha, bmaj, bmin, bpa,True);
+	StokesImageUtil::Convolve(imalpha,PSF(model));
+	LatticeExpr<Float> le(imalpha); 
+	(*smoothresiduals[taylor1]).copyData(le);
+
+    }
+    
+    for(Int taylor1=0;taylor1<ntaylor_p;taylor1++)
+    {
+	    len_p = LatticeExprNode(0.0);
+	    for(Int taylor2=0;taylor2<ntaylor_p;taylor2++)
+	    {
+                    //tindex = getModelIndex(model,taylor2);
+		    //len_p = len_p + LatticeExprNode((Float)(invhessian)(taylor1,taylor2)*(residual(tindex)));
+		    len_p = len_p + LatticeExprNode((Float)(invhessian)(taylor1,taylor2)*(*smoothresiduals[taylor2]));
+	    }
+	    (*coeffresiduals[taylor1]).copyData(LatticeExpr<Float>(len_p));
+    }
+    
+    /* Smooth the model images and add the above residuals */
     for(uInt i=0;i<smoothed.nelements();i++)
     {
 	    smoothed[i] = new TempLattice<Float>(gip,memoryMB_p);
@@ -357,16 +467,22 @@ Int WBCleanImageSkyModel::writeResultsToDisk()
 	    LatticeExpr<Float> cop(image(index));
 	    imalpha.copyData(cop);
 	    StokesImageUtil::Convolve(imalpha, bmaj, bmin, bpa);
-	    LatticeExpr<Float> le(imalpha+(residual(index))); 
+	    LatticeExpr<Float> le(imalpha+( *coeffresiduals[i] )); 
 	    (*smoothed[i]).copyData(le);
     }
 
 
-    /* Create a mask */
-    os << "Calculate spectral params for values greater than " << threshold()*2.0 << LogIO::POST;
-    LatticeExpr<Float> mask1(iif((*smoothed[0])>(threshold()*2.0),1.0,0.0));
-    LatticeExpr<Float> mask0(iif((*smoothed[0])>(threshold()*2.0),0.0,1.0));
-	 
+    /* Create a mask - make this adapt to the signal-to-noise */
+    LatticeExprNode leMaxRes=max(residual( getModelIndex(model,0) ));
+    Float maxres = leMaxRes.getFloat();
+    // Threshold is either 10% of the peak residual (psf sidelobe level) or 
+    // user threshold, if deconvolution has gone that deep.
+    Float specthreshold = MAX( threshold()*2 , maxres/10.0 );
+    os << "Calculating spectral parameters for  Intensity > MAX(threshold*2,peakresidual/10) = " << specthreshold << " Jy/beam" << LogIO::POST;
+    LatticeExpr<Float> mask1(iif((*smoothed[0])>(specthreshold),1.0,0.0));
+    LatticeExpr<Float> mask0(iif((*smoothed[0])>(specthreshold),0.0,1.0));
+
+    /* Calculate alpha and beta */
     LatticeExpr<Float> alphacalc( ((*smoothed[1])*mask1)/((*smoothed[0])+(mask0)) );
     imalpha.copyData(alphacalc);
     
@@ -376,6 +492,7 @@ Int WBCleanImageSkyModel::writeResultsToDisk()
     imalpha.setImageInfo(ii);
     //imalpha.setUnits(Unit("Spectral Index"));
     imalpha.table().unmarkForDelete();
+    os << "Written Spectral Index Image : " << alphaname << LogIO::POST;
 
     if(ntaylor_p>2)
     {
@@ -388,9 +505,29 @@ Int WBCleanImageSkyModel::writeResultsToDisk()
       imbeta.setImageInfo(ii);
       //imbeta.setUnits(Unit("Spectral Curvature"));
       imbeta.table().unmarkForDelete();
+      os << "Written Spectral Curvature Image : " << betaname << LogIO::POST;
     }
 
+    /* Print out debugging info for center pixel */
+    /*
+    IPosition cgip(4,512,512,0,0);
+    for(Int i=0;i<ntaylor_p;i++)
+    {
+	    cout << "Original residual : " << i << " : " << residual( getModelIndex(model,i) ).getAt(cgip) << endl;
+	    cout << "Smoothed residual : " << i << " : " << (*smoothresiduals[i]).getAt(cgip) << endl;
+	    cout << "Coeff residual : " << i << " : " << (*coeffresiduals[i]).getAt(cgip) << endl;
+    }
+    */
+    
+
+    /* Clean up temp arrays */
     for(uInt i=0;i<smoothed.nelements();i++) if(smoothed[i]) delete smoothed[i];
+    for(uInt i=0;i<coeffresiduals.nelements();i++) 
+    {
+	    if(coeffresiduals[i]) delete coeffresiduals[i];
+	    if(smoothresiduals[i]) delete smoothresiduals[i];
+    }
+
   }// model loop
 return 0;
 }
@@ -401,9 +538,9 @@ return 0;
 /*************************************
  *          Make Residuals and compute the current peak  
  *************************************/
-Bool WBCleanImageSkyModel::solveResiduals(SkyEquation& se) 
+Bool WBCleanImageSkyModel::solveResiduals(SkyEquation& se, Bool modelToMS) 
 {
-        makeNewtonRaphsonStep(se,False);
+        makeNewtonRaphsonStep(se,False,modelToMS);
 	
 	return True;
 }
@@ -477,13 +614,13 @@ Int WBCleanImageSkyModel::makeSpectralPSFs(SkyEquation& se)
 	{ 
 	  LatticeExprNode maxPSF=max(PSF(index));
 	  normfactor = maxPSF.getFloat();
-	  os << "Normalize PSFs for model " << thismodel << " by " << normfactor << LogIO::POST;
+	  if(adbg) os << "Normalize PSFs for field " << thismodel << " by " << normfactor << LogIO::POST;
 	}
 	LatticeExpr<Float> lenorm(PSF(index)/normfactor);
 	PSF(index).copyData(lenorm);
 	LatticeExprNode maxPSF2=max(PSF(index));
         Float maxpsf=maxPSF2.getFloat();
-	os << "Psf for Model " << thismodel << " and Taylor " << taylor << " has peak " << maxpsf << LogIO::POST;
+	if(adbg) os << "Psf for Model " << thismodel << " and Taylor " << taylor << " has peak " << maxpsf << LogIO::POST;
 
 	//storeAsImg(String("TstPsf.")+String::toString(thismodel)+String(".")+String::toString(taylor),PSF(index));
      }

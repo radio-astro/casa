@@ -89,6 +89,8 @@ private:
 private slots:
     // Slot for when the set range changes.
     void rangeChanged();
+    void timeFromChanged();
+    void timeToChanged();
 };
 
 }

@@ -161,6 +161,8 @@ public:
   inline Int blnidx(const Int& a1, 
 		    const Int& a2) { return  a1*nAnt() - a1*(a1+1)/2 + a2; };
 
+  inline String& extraTag() { return extratag_; };
+ 
 protected:
 
   // Set applied state flag
@@ -331,6 +333,9 @@ private:
   // Print level
   Int prtlev_;
 
+  String extratag_;  // e.g. to tag as noise scale
+
+
 };
 
 
@@ -437,8 +442,6 @@ private:
 
   // Mueller validity
   Vector<Bool> MValid_;
-
-
 
 };
 

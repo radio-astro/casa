@@ -1342,14 +1342,14 @@ Int TPPlotter::allocPlotArrays(Int size)
    
    if(PlotPackage_p==MATPLOTLIB)
    {
-      int dim[1]; dim[0] = size;
+       npy_intp dim[1]; dim[0] = size;
 
       if(nelem_p < size) 
       /* can't resize back to full size :-( memory leak !! */
       {
          //log->out( "Need to make larger");
-         px_p = PyArray_FromDims(1, dim, PyArray_DOUBLE);
-         py_p = PyArray_FromDims(1, dim, PyArray_DOUBLE);
+         px_p = PyArray_SimpleNew(1, dim, PyArray_DOUBLE);
+         py_p = PyArray_SimpleNew(1, dim, PyArray_DOUBLE);
 	 //Py_INCREF(px_p);
 	 //Py_INCREF(py_p);
          nelem_p = size;

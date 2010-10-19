@@ -101,13 +101,13 @@ public:
   virtual void endChunk () {}
   
 // Called before starting a data pass on a chunk. 
-  virtual void startData (bool verbose) {};
+  virtual void startData (bool /* verbose */) {};
 
 // Called before starting a dry pass on a chunk. 
-  virtual void startDry  (bool verbose) {};
+  virtual void startDry  (bool /* verbose */) {};
 
 // Called before starting the fetch-flags pass.
-  virtual void startFlag (bool verbose) {};
+  virtual void startFlag (bool /* verbose */) {};
 
 // Called after a pass is completed successfully (i.e., not stopped
 // by start or iter methods). Return value: STOP to stop, DATA for 
@@ -119,25 +119,28 @@ public:
 
 // Called after a flag pass is complete
   virtual void endFlag () {};
+
+// Called at end of time chunk
+virtual void endRows(uInt /* itime */) {};
   
 // Iteration methods for a data pass. Either or both may be implemented.
 // iterTime() is called once for each new VisBuffer (= new time slot)
 // Return value: STOP to finish iterating, CONT/DATA to continue, or DRY
 // to cancel the data pass and request a dry pass.
-  virtual IterMode iterTime ( uInt itime ) { return CONT; };
+  virtual IterMode iterTime ( uInt /* itime */ ) { return CONT; };
 
 // iterRow() is called once per each row in the VisBuffer.
 // Iterating over rows is perhaps preferrable in terms of performance,
 // at least for data iterations.
-  virtual IterMode iterRow  ( uInt irow ) { return CONT; };
+  virtual IterMode iterRow  ( uInt /* irow */ ) { return CONT; };
 
 // Iteration method for a dry pass. Called once per each time slot.
 // Return value: STOP to finish iterating, CONT/DRY to continue, or DATA
 // to cancel the dry pass and request another data pass.
-  virtual IterMode iterDry  ( uInt itime ) { return CONT; };
+  virtual IterMode iterDry  ( uInt /* itime */ ) { return CONT; };
 
 // Iteration method for a flag pass. Called once per each VisBuffer.
-  virtual void iterFlag ( uInt itime ) {}
+  virtual void iterFlag ( uInt /* itime */ ) {}
 
 // called to obtain a short description of this RFA
   virtual String getDesc () { return ""; }
@@ -164,16 +167,18 @@ public:
   virtual void finalize() {};
   // Initialize chunk
   virtual void initialize() {};
-  virtual void initializeIter(uInt iter) {};
-  virtual void finalizeIter(uInt iter) {};
+  virtual void initializeIter(uInt /* iter */) {};
+  virtual void finalizeIter(uInt /* iter */) {};
 
   virtual void setNAgent(uInt n) { nAgent = n; };
+  virtual void setOnlySelector(bool only_sel) { only_selector = only_sel; };
 
 protected:
   uInt nAgent;
   RFChunkStats &chunk;
   Record params;
   String myname;
+  bool only_selector;  //Do only RFASelector agents exist?
 
   uInt num (StatEnums which) { return chunk.num(which); };
 

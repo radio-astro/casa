@@ -31,6 +31,11 @@
 
 namespace casa {
 
+
+
+
+
+
 ////////////////////////////////
 // PLOTMSTOOLSTAB DEFINITIONS //
 ////////////////////////////////
@@ -63,9 +68,9 @@ PlotMSToolsTab::PlotMSToolsTab(PlotMSPlotter* parent) : PlotMSTab(parent) {
     itsPlotter_->synchronizeAction(PlotMSAction::STACK_FORWARD, stackForward);
     
     // Synchronize tracker buttons
-    itsPlotter_->synchronizeAction(PlotMSAction::TRACKER_HOVER, trackerHover);
-    itsPlotter_->synchronizeAction(PlotMSAction::TRACKER_DISPLAY,
-            trackerDisplay);
+    itsPlotter_->synchronizeAction(PlotMSAction::TRACKER_ENABLE_HOVER, trackerHoverChk);
+    itsPlotter_->synchronizeAction(PlotMSAction::TRACKER_ENABLE_DISPLAY,
+            trackerDisplayChk);
     
     // Synchronize iteration buttons
     itsPlotter_->synchronizeAction(PlotMSAction::ITER_FIRST, iterationFirst);
@@ -76,9 +81,16 @@ PlotMSToolsTab::PlotMSToolsTab(PlotMSPlotter* parent) : PlotMSTab(parent) {
     // Synchronize hold/release button
     itsPlotter_->synchronizeAction(PlotMSAction::HOLD_RELEASE_DRAWING,
             holdReleaseDrawing);
+
+	connect( clearRecordedValuesBut,  SIGNAL(clicked()),  SLOT(clearRecordedValues()) );
+    tracker_key_handler = new TrackerKeyHandler(this);
 }
 
-PlotMSToolsTab::~PlotMSToolsTab() { }
+
+PlotMSToolsTab::~PlotMSToolsTab() { 
+	delete tracker_key_handler;
+}
+
 
 QList<QToolButton*> PlotMSToolsTab::toolButtons() const {
     return QList<QToolButton*>() << regionsClear << regionsFlag
@@ -91,12 +103,40 @@ void PlotMSToolsTab::showIterationButtons(bool show) {
     iterationBox->setVisible(show); }
 
 
-void PlotMSToolsTab::toolsUnchecked() { handNone->setChecked(true); }
 
-
-void PlotMSToolsTab::notifyTrackerChanged(PlotTrackerTool& tool) {
-    if(trackerDisplay->isChecked())
-        trackerEdit->setText(tool.getAnnotation()->text().c_str());
+void PlotMSToolsTab::toolsUnchecked() { 
+	handNone->setChecked(true); 
 }
+
+
+void PlotMSToolsTab::notifyTrackerChanged(PlotTrackerTool& tool)   {
+    if(trackerDisplayChk->isChecked())
+        trackerValueDisplay->setText(tool.getAnnotation()->text().c_str());
+}
+
+
+TrackerKeyHandler::TrackerKeyHandler(PlotMSToolsTab *t)    
+	: tools_tab(t){
+}
+
+
+void TrackerKeyHandler::handleKey(const PlotKeyEvent& event)   {
+	(void)event;
+	tools_tab->takeSnapshotOfTrackerValue();	
+}
+
+void PlotMSToolsTab::takeSnapshotOfTrackerValue()    {
+    if(trackerDisplayChk->isChecked())   {
+		QString txt = trackerValueDisplay->text();   // puts it on clipboard; handy for user
+		//txt.append("\n"); // appears that .append automatically linebreaks
+		trackerRecordedValues->append(txt);
+	}
+}
+
+
+void PlotMSToolsTab::clearRecordedValues()  {
+	trackerRecordedValues->setText("");
+}
+
 
 }

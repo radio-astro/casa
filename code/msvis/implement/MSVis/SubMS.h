@@ -34,7 +34,6 @@
 #include <casa/Arrays/Vector.h>
 #include <map>
 #include <vector>
-//#include <ms/MeasurementSets/MSColumns.h>
 #include <scimath/Mathematics/InterpolateArray1D.h>
 
 
@@ -71,8 +70,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // These forward declarations are so the corresponding .h files don't have to
 // be included in this .h file, but it's only worth it if a lot of other files
 // include this file.
-class MSColumns;
-class ROMSColumns;
+class MSSelection; // #include <ms/MeasurementSets/MSSelection.h>
 
   // These typedefs are necessary because a<b::c> doesn't work.
   typedef std::vector<uInt> uivector;
@@ -234,9 +232,16 @@ class SubMS
   static Bool sepFloat(const Vector<MS::PredefinedColumns>& anyDataCols,
                        Vector<MS::PredefinedColumns>& complexDataCols);
 
-  Bool doWriteImagingWeight(const ROMSColumns& msc,
-                            const Vector<MS::PredefinedColumns>& colNames);
-
+  // Fills outToIn[pol] with a map from output correlation index to input
+  // correlation index, for each input polID pol.
+  // It does not yet check the appropriateness of the correlation selection
+  // string, so ignore the return value for now.  outToIn[pol] defaults to
+  // an empty Vector if no correlations are selected for pol.
+  // That is not the same as the default "select everything in ms".
+  static Bool getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
+			  Vector<Vector<Int> >& outToIn,
+			  const Bool areSelecting=false);
+  
   // Transform spectral data to different reference frame,
   // optionally regrid the frequency channels 
   // return values: -1 = MS not modified, 1 = MS modified and OK, 
@@ -249,9 +254,11 @@ class SubMS
 		const Double regridCenter=-3E30, // default = "not set" 
 		const Double regridBandwidth=-1., // default = "not set" 
 		const Double regridChanWidth=-1., // default = "not set" 
+		const Bool doHanningSmooth=False,
 		const Int phaseCenterFieldId=-2, // -2 = use pahse center from field table
 		MDirection phaseCenter=MDirection(), // this direction is used if phaseCenterFieldId==-1
 		const Bool centerIsStart=False, // if true, the parameter regridCenter specifies the start
+		const Bool startIsEnd=False, // if true, and centerIsStart is true, regridCenter specifies the upper end in frequency
 		const Int nchan=0, // if >0: used instead of regridBandwidth, ==
 		const Int width=0, // if >0 and regridQuant=="freq": used instead of regridChanWidth
 		const Int start=-1 // if >=0 and regridQuant=="freq": used instead of regridCenter
@@ -289,6 +296,7 @@ class SubMS
 			const Vector<Double>& transCHAN_WIDTH,
 			String& message, // message to the user, epsecially in case of error 
 			const Bool centerIsStart=False, // if true, the parameter regridCenter specifies the start
+			const Bool startIsEnd=False, // if true, and centerIsStart is true, regridCenter specifies the upper end in frequency
 			const Int nchan=0, // if != 0 : used instead of regridBandwidth, -1 means use all channels
 			const Int width=0, // if >0 and regridQuant=="freq": used instead of regridChanWidth
 			const Int start=-1 // if >=0 and regridQuant=="freq": used instead of regridCenter
@@ -311,8 +319,7 @@ class SubMS
 			   vector< Vector<Double> >& xold, 
 			   vector< Vector<Double> >& xout, 
 			   vector< Vector<Double> >& xin, 
-			   // This is a temporary fix until InterpolateArray1D<Double, Complex>& works.
-			   vector< InterpolateArray1D<Float,Complex>::InterpolationMethod >& method,
+			   vector< InterpolateArray1D<Double,Complex>::InterpolationMethod >& method,
 			   vector< InterpolateArray1D<Double,Float>::InterpolationMethod >& methodF,
 			   Bool& msMod,
 			   const String& outframe,
@@ -328,6 +335,7 @@ class SubMS
 			   LogIO& os,
 			   String& regridMessage,
 			   const Bool centerIsStart=False, // if true, the parameter regridCenter specifies the start
+			   const Bool startIsEnd=False, // if true, and centerIsStart is true, regridCenter specifies the upper end in frequency
 			   const Int nchan=0, // if >0: used instead of regridBandwidth
 			   const Int width=0, // if >0 and regridQuant=="freq": used instead of regridChanWidth
 			   const Int start=-1 // if >=0 and regridQuant=="freq": used instead of regridCenter
@@ -342,17 +350,21 @@ class SubMS
 
   //method that returns the selected ms (?! - but it's Boolean - RR)
   Bool makeSelection();
+
+  // (Sub)table fillers.
   Bool fillAllTables(const Vector<MS::PredefinedColumns>& colNames);
-  Bool fillDDTables();
+  Bool fillDDTables();		// Includes spw and pol.
   Bool fillFieldTable();
   Bool fillMainTable(const Vector<MS::PredefinedColumns>& colNames);
   Bool fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames);
   Bool copyAntenna();
   Bool copyFeed();
-  Bool copySource();
-  Bool copyObservation();
   Bool copyPointing();
+  Bool copyObservation();
+  Bool copySource();
+  Bool copyState();
   Bool copyWeather();
+
   //  Bool writeDiffSpwShape(const Vector<MS::PredefinedColumns>& colNames);
   Bool fillAccessoryMainCols();
 
@@ -365,12 +377,6 @@ class SubMS
                      const MS::PredefinedColumns datacol,
                      const Bool writeToDataCol=False);
   Bool putDataColumn(MSColumns& msc, ROArrayColumn<Float>& data,
-                     const MS::PredefinedColumns datacol,
-                     const Bool writeToDataCol=False);
-  Bool putDataColumn(MSColumns& msc, Cube<Complex>& data,
-                     const MS::PredefinedColumns datacol,
-                     const Bool writeToDataCol=False);
-  Bool putDataColumn(MSColumns& msc, Cube<Float>& data,
                      const MS::PredefinedColumns datacol,
                      const Bool writeToDataCol=False);
 
@@ -388,14 +394,16 @@ class SubMS
   template<class M>
   void filterChans(const ROArrayColumn<M>& data, ArrayColumn<M>& outDataCol,
 		   const Bool doSpWeight, ROArrayColumn<Float>& wgtSpec,
-		   const Int nrow);
+		   const Int nrow, 
+		   const Bool calcWtSig, const ROArrayColumn<Float>& rowWt,
+		   const ROArrayColumn<Float>& sigma);
 
   // return the number of unique antennas selected
   //Int numOfBaselines(Vector<Int>& ant1, Vector<Int>& ant2,
   //                   Bool includeAutoCorr=False);
 
-  // Figure out which bins each row (slot) will go in, and return the
-  // number of bins (-1 on failure).
+  // Figure out which timebins each input row will go in, and return the
+  // number of output rows (slots) (-1 on failure).
   //
   // Normally the bins are automatically separated by changes in any data
   // descriptor, i.e. antenna #, state ID, etc., but sometimes bins should be
@@ -404,10 +412,10 @@ class SubMS
   // averaging!  (sub)array(_ID), scan #, and state ID can be ignored by
   // setting ignorables_p.
   //
-  Int numOfTimeBins(const Double timeBin);
+  Int binTimes(const Double timeBin);
 
   // Used in a couple of places to estimate how much memory to grab.
-  Double n_bytes() {return mssel_p.nrow() * nchan_p[0] * npol_p[0] *
+  Double n_bytes() {return mssel_p.nrow() * nchan_p[0] * ncorr_p[0] *
                            sizeof(Complex);}
 
   // Picks a reference to DATA, MODEL_DATA, CORRECTED_DATA, or LAG_DATA out
@@ -441,11 +449,12 @@ class SubMS
   // Fills mapper[ntok] with a map from dataColumn indices to ArrayColumns in
   // the output.  mapper must have ntok slots!
   void getDataColMap(ArrayColumn<Complex>* mapper, uInt ntok,
-                     const Vector<MS::PredefinedColumns> colEnums); 
+                     const Vector<MS::PredefinedColumns>& colEnums); 
 
-  // Returns whether or not all the elements of inNumChan_p are the
-  // same, AND whether all the elements of nchan_p are the same.
-  Bool checkSpwShape();
+  // Returns whether or not the numbers of correlations and channels
+  // are independent of DATA_DESCRIPTION_ID, for both the input and output
+  // MSes.
+  Bool areDataShapesConstant();
 
   // Sets up sourceRelabel_p for mapping input SourceIDs (if any) to output
   // ones.  Must be called after fieldid_p is set and before calling
@@ -454,13 +463,16 @@ class SubMS
 
   void relabelIDs();
   void remapColumn(const ROScalarColumn<Int>& incol, ScalarColumn<Int>& outcol);
-  void make_map(const Vector<Int>& mscol, Vector<Int>& mapper);
+  static void make_map(const Vector<Int>& mscol, Vector<Int>& mapper);
+  static void make_map(const ROScalarColumn<Int>& mscol,
+		       std::map<Int, Int>& mapper);
   uInt remapped(const Int ov, const Vector<Int>& mapper, uInt i);
 
   // A "Slot" is a subBin, i.e. rows within the same time bin that have
   // different Data Descriptors, Field_IDs, Array_IDs, or States, and so should
-  // not be averaged together.  This function returns the Slot number
-  // corresponding to the Data Descriptor (dd), Field_ID, Array_ID, and State.
+  // not be averaged together.  In other words a slot becomes an output row
+  // when time averaging.  This function returns the Slot number corresponding
+  // to the Data Descriptor (dd), Field_ID, Array_ID, and State.
   uInt rowProps2slotKey(const Int ant1,  const Int ant2, const Int dd, 
 			const Int field, const Int scan, const Int state,
                         const uInt array);
@@ -472,12 +484,12 @@ class SubMS
   MeasurementSet ms_p, mssel_p;
   MSColumns * msc_p;		// columns of msOut_p
   ROMSColumns * mscIn_p;
-  Bool chanModification_p,      // Iff true, the input channels cannot simply
-                                // be copied through to the output channels.
-       antennaSel_p,
-       sameShape_p;
+  Bool keepShape_p,      	// Iff true, each output array has the
+				// same shape as the corresponding input one.
+       sameShape_p,             // Iff true, the shapes of the arrays do not
+				// vary with row number.
+       antennaSel_p;		// Selecting by antenna?
   Double timeBin_p;
-  uInt numOutRows_p;
   String scanString_p, uvrangeString_p, taqlString_p;
   String timeRange_p, arrayExpr_p, corrString_p;
   uInt nant_p;
@@ -494,8 +506,9 @@ class SubMS
               totnchan_p, // The # of output channels for each output spw.
               chanStart_p,
               chanStep_p,
-              npol_p,
-              inNumChan_p;
+              ncorr_p,    // The # of output correlations for each DDID.
+              inNumChan_p,    // The # of input channels for each spw.
+              inNumCorr_p;    // The # of input correlations for each DDID.
   Vector<Int> fieldid_p;
   Bool averageChannel_p;
   Vector<Int> spwRelabel_p, fieldRelabel_p, sourceRelabel_p;
@@ -506,19 +519,21 @@ class SubMS
   Vector<Int> antNewIndex_p;
 
   Vector<Int> arrayId_p;
-  Vector<Double> newTimeVal_p;
+  Vector<Int> polID_p;	       // Map from input DDID to input polID, filled in fillDDTables(). 
   Vector<uInt> tOI_p; //timeOrderIndex
   Vector<uInt> spw2ddid_p;
 
-  Vector<Int> arrayRemapper_p, scanRemapper_p, stateRemapper_p; 
+  // inCorrInd = outPolCorrToInCorrMap_p[polID_p[ddID]][outCorrInd]
+  Vector<Vector<Int> > inPolOutCorrToInCorrMap_p;
+
+  std::map<Int, Int> arrayRemapper_p, scanRemapper_p, stateRemapper_p; 
 
   // Each bin gets a map which maps its set of slot keys from
   // rowProps2slotKey() to lists of the row numbers in mscIn_p that belong to
   // the slot.
   Vector<ui2vmap> bin_slots_p;
 
-  Bool doImgWts_p; // Use doWriteImagingWeight() to get this!  Cutting corners
-                   // just leads to trouble...
+  Vector<Slice> corrSlice_p;
 };
 
 

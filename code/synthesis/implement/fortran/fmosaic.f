@@ -29,7 +29,185 @@
 C
 C Grid a number of visibility records
 C
-      subroutine gmos (uvw, dphase, values, nvispol, nvischan,
+            subroutine gmosd (uvw, dphase, values, nvispol, nvischan,
+     $     dopsf, flag, rflag, weight, nrow, rownum,
+     $     scale, offset, grid, nx, ny, npol, nchan, freq, c,
+     $     support, convsize, sampling, convfunc, 
+     $     chanmap, polmap,
+     $     sumwt, weightgrid, convweight, doweightgrid, convplanemap, 
+     $     nconvplane)
+
+      implicit none
+      integer nx, ny, npol, nchan, nvispol, nvischan, nrow
+      complex values(nvispol, nvischan, nrow)
+      double complex grid(nx, ny, npol, nchan)
+     
+      double precision uvw(3, nrow), freq(nvischan), c, scale(3),
+     $     offset(3)
+      double precision dphase(nrow), uvdist
+      double precision xlast, ylast
+      complex phasor
+      integer flag(nvispol, nvischan, nrow)
+      integer rflag(nrow)
+      real weight(nvischan, nrow), phase
+      double precision sumwt(npol, nchan)
+      integer rownum
+      integer support
+      integer chanmap(nchan), polmap(npol)
+      integer dopsf
+      double complex weightgrid(nx, ny, npol, nchan)
+      integer doweightgrid
+
+      double complex nvalue
+      double complex nweight
+      integer convsize, sampling
+      integer nconvplane
+      integer convplanemap(nrow)
+      complex convfunc(convsize, convsize, nconvplane), cwt, crot
+      complex convweight(convsize, convsize, nconvplane)
+
+      complex shiftx(-support:support), shifty(-support:support)
+      complex sconv(-support:support, -support:support, nconvplane)
+      complex sconv2(-support:support, -support:support, nconvplane)
+      real sumsconv
+      real sumsconv2
+      real ratioofbeam
+
+      real norm
+      real wt
+
+      logical omos, doshift
+
+      real pos(3)
+      integer loc(3), off(3), iloc(3)
+      integer rbeg, rend
+      integer ix, iy, iz, ipol, ichan
+      integer apol, achan, aconvplane, irow
+      double precision pi
+      data pi/3.14159265358979323846/
+      
+      irow=rownum
+
+      sumsconv=0
+      sumsconv2=0
+      ratioofbeam=1.0
+      do ix=-support,support
+         shiftx(ix)=1.0
+         shifty(ix)=1.0
+      end do
+      do iz=1, nconvplane
+         do iy=-support,support
+            iloc(2)=iy+convsize/2+1
+            do ix=-support,support
+               iloc(1)=ix+convsize/2+1
+               sconv(ix,iy,iz)=(convfunc(iloc(1), iloc(2),iz))
+               sconv2(ix,iy,iz)=convweight(iloc(1), iloc(2),iz)
+            end do
+         end do
+      end do
+      doshift=.FALSE.
+
+      if(irow.ge.0) then
+         rbeg=irow+1
+         rend=irow+1
+      else 
+         rbeg=1
+         rend=nrow
+      end if
+
+
+
+
+      xlast=0.0
+      ylast=0.0
+      do irow=rbeg, rend
+         aconvplane=convplanemap(irow)+1
+         if(rflag(irow).eq.0) then 
+            do ichan=1, nvischan
+               achan=chanmap(ichan)+1
+               if((achan.ge.1).and.(achan.le.nchan).and.
+     $              (weight(ichan,irow).ne.0.0)) then
+                  call smos(uvw(1,irow), dphase(irow), freq(ichan), c, 
+     $                 scale, offset, sampling, pos, loc, off, phasor)
+                  if (omos(nx, ny, loc, support)) then
+                     do ipol=1, nvispol
+                        apol=polmap(ipol)+1
+                        if((flag(ipol,ichan,irow).ne.1).and.
+     $                       (apol.ge.1).and.(apol.le.npol)) then
+C     If we are making a PSF then we don't want to phase
+C     rotate but we do want to reproject uvw
+                           if(dopsf.eq.1) then
+                              nvalue=cmplx(weight(ichan,irow))
+                           else
+                              nvalue=weight(ichan,irow)*
+     $                             (values(ipol,ichan,irow)*phasor)
+                           end if
+                           if(doweightgrid .gt. 0) then
+                              nweight=cmplx(weight(ichan,irow))
+                           end if
+                           
+C     norm will be the value we would get for the peak
+C     at the phase center. We will want to normalize 
+C     the final image by this term.
+                           norm=0.0
+                           if(sampling.eq.1) then
+                              do iy=-support,support
+                                 do ix=-support,support
+                                    grid(loc(1)+ix,
+     $                                   loc(2)+iy,apol,achan)=
+     $                                   grid(loc(1)+ix,
+     $                                   loc(2)+iy,apol,achan)+
+     $                                   nvalue*sconv(ix,iy, aconvplane)
+
+                                    if(doweightgrid .gt. 0) then
+                                       iloc(1)=nx/2+1+ix
+                                       iloc(2)=ny/2+1+iy
+                                       weightgrid(iloc(1),iloc(2),
+     $                                  apol,achan)= weightgrid(
+     $                                  iloc(1),iloc(2),apol,achan)
+     $                               + nweight*sconv2(ix,iy,aconvplane)
+
+                                    end if
+                                 end do
+                              end do
+                           else 
+                              do ix=-support,support
+                                 iloc(1)=convsize/2+1+ix*sampling
+     $                                +off(1)
+                                 if(doshift) then
+                                    cwt=conjg(convfunc(iloc(1),
+     $                                   iloc(2),aconvplane))*
+     $                                   shiftx(ix)*shifty(iy)
+                                    sumsconv=sumsconv+real(cwt)
+                                 else
+                                    cwt=conjg(convfunc(iloc(1),
+     $                                   iloc(2),aconvplane))
+                                    sumsconv=sumsconv+real(cwt)
+                                 end if
+                                 grid(loc(1)+ix,
+     $                                loc(2)+iy,apol,achan)=
+     $                                grid(loc(1)+ix,
+     $                                loc(2)+iy,apol,achan)+
+     $                                nvalue*cwt
+                                 norm=norm+real(cwt)
+                              end do
+                           end if  
+                           sumwt(apol, achan)= sumwt(apol,achan)+
+     $                             weight(ichan,irow)
+                        end if
+                     end do
+                  end if
+               end if
+            end do
+         end if
+      end do
+      return
+      end
+C
+
+
+
+      subroutine gmoss (uvw, dphase, values, nvispol, nvischan,
      $     dopsf, flag, rflag, weight, nrow, rownum,
      $     scale, offset, grid, nx, ny, npol, nchan, freq, c,
      $     support, convsize, sampling, convfunc, 
@@ -126,7 +304,7 @@ C
             do ichan=1, nvischan
                achan=chanmap(ichan)+1
                if((achan.ge.1).and.(achan.le.nchan).and.
-     $              (weight(ichan,irow).gt.0.0)) then
+     $              (weight(ichan,irow).ne.0.0)) then
                   call smos(uvw(1,irow), dphase(irow), freq(ichan), c, 
      $                 scale, offset, sampling, pos, loc, off, phasor)
                   if (omos(nx, ny, loc, support)) then

@@ -105,10 +105,10 @@ void PlotMSDataTab::update(const PlotMSPlot& plot) {
     const PMS_PP_MSData* d = plot.parameters().typedGroup<PMS_PP_MSData>();
     if(d == NULL) return;
     
-    changedText(locationLabel, itsFileWidget_->getFile() != d->filename());
-    changedText(selectionLabel,
-            itsSelectionWidget_->getValue() != d->selection());
-    changedText(averagingLabel,
+    highlightWidgetText(locationLabel, itsFileWidget_->getFile() != d->filename());
+    highlightWidgetText(selectionLabel,
+	    itsSelectionWidget_->getValue().fieldsNotEqual(d->selection()));
+    highlightWidgetText(averagingLabel,
             itsAveragingWidget_->getValue() != d->averaging());
 }
 

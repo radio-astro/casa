@@ -22,7 +22,7 @@ casa_add_python( xmlcasa xmlcasa_regressions_python python/${PYTHONV}/regression
   3c129_tutorial_regression.py
   3C219D_regression.py
   accum_regression.py
-  asdmv1-import_regression.py
+  asdm-imexport+analysis_regression.py
   async-segfault_regression.py
   b0319_regression.py
   b1608_demo_regression.py
@@ -30,11 +30,12 @@ casa_add_python( xmlcasa xmlcasa_regressions_python python/${PYTHONV}/regression
   cleanhelper_regression.py
   coordsystest_regression.py
   cvel_regression.py
+  cvel_regression2.py
   fits-import-export_regression.py
-  flagdata_test.py
   fls3a_hi_regression.py
   g192_regression.py
   ggtau_regression.py
+  ghii2_regression.py
   ghii_regression.py
   h121_regression.py
   ic2233_regression.py
@@ -50,6 +51,7 @@ casa_add_python( xmlcasa xmlcasa_regressions_python python/${PYTHONV}/regression
   leo2pt_regression.py
   listcal_regression.py
   listvis_regression.py
+  m51_tpsim_regression.py
   maclog_regression.py
   nf_regression.py
   ngc1333_regression.py
@@ -70,10 +72,13 @@ casa_add_python( xmlcasa xmlcasa_regressions_python python/${PYTHONV}/regression
   plotxy_regression.py
   pointing_regression.py
   polcal_20080224_cband_regression.py
-  ppdisk_regression.py
+  ppdisk2_regression.py
   run_orionmos4sim.py
   sdtpimaging_regression.py
+  testcube2_regression.py
   testcube_regression.py
+  unit_tests.py
+  wideband_regression.py
   wf_regression.py
   wproj3ddat_regression.py
 )

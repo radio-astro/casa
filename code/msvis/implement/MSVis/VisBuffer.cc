@@ -472,6 +472,148 @@ void VisBuffer::freqAveCubes()
 
 }
 
+void VisBuffer::formStokes() {
+
+  // We must form the weights and flags correctly
+  formStokesWeightandFlag();
+
+  // Now do whatever data is present
+  if (visCubeOK_p)
+    formStokes(visCube_p);
+
+  if (modelVisCubeOK_p)
+    formStokes(modelVisCube_p);
+
+  if (correctedVisCubeOK_p)
+    formStokes(correctedVisCube_p);
+
+}
+
+void VisBuffer::formStokesWeightandFlag() {
+
+  // Ensure corrType, weightMat and flagCube are filled 
+  corrType();
+  weightMat();
+  flagCube();
+
+  switch (nCorr()) {
+  case 4: {
+
+    Slice all=Slice();
+    Slice pp(0,1,1),pq(1,1,1),qp(2,1,1),qq(3,1,1);
+    Slice a(0,1,1),b(1,1,1),c(2,1,1),d(3,1,1);
+    
+    // Sort for linears
+    if (polFrame()==MSIter::Linear) {
+      d=Slice(1,1,1);  // Q
+      b=Slice(2,1,1);  // U
+      c=Slice(3,1,1);  // V
+    }
+    
+    Matrix<Float> newWtMat(weightMat_p.shape());
+    newWtMat(a,all)=newWtMat(d,all)=(weightMat_p(pp,all)+weightMat_p(qq,all));
+    newWtMat(b,all)=newWtMat(c,all)=(weightMat_p(pq,all)+weightMat_p(qp,all));
+    weightMat_p.reference(newWtMat);
+
+    Cube<Bool> newFlagCube(flagCube_p.shape());
+    newFlagCube(a,all,all)=newFlagCube(d,all,all)=(flagCube_p(pp,all,all)|flagCube_p(qq,all,all));
+    newFlagCube(b,all,all)=newFlagCube(c,all,all)=(flagCube_p(pq,all,all)|flagCube_p(qp,all,all));
+    flagCube_p.reference(newFlagCube);
+
+    corrType_p(0)=Stokes::I;
+    corrType_p(1)=Stokes::Q;
+    corrType_p(2)=Stokes::U;
+    corrType_p(3)=Stokes::V;
+
+    break;
+  }
+  case 2: {
+    // parallel hands only
+    Slice all=Slice();
+    Slice pp(0,1,1),qq(1,1,1);
+    Slice a(0,1,1),d(1,1,1);
+    
+    Matrix<Float> newWtMat(weightMat_p.shape());
+    newWtMat(a,all)=newWtMat(d,all)=weightMat_p(pp,all)+weightMat_p(qq,all);
+    weightMat_p.reference(newWtMat);
+
+    Cube<Bool> newFlagCube(flagCube_p.shape());
+    newFlagCube(a,all,all)=newFlagCube(d,all,all)=flagCube_p(pp,all,all)|flagCube_p(qq,all,all);
+    flagCube_p.reference(newFlagCube);
+
+    corrType_p(0)=Stokes::I;
+    corrType_p(1)=((polFrame()==MSIter::Circular) ? Stokes::V : Stokes::Q);
+
+    break;
+  }
+  case 1: {
+
+    // Just need to re-label as I
+    corrType_p(0)=Stokes::I;
+
+  }
+  default: {
+    cout << "Insufficient correlations to form Stokes" << endl;
+    break;
+  }
+  }
+
+}
+
+
+
+void VisBuffer::formStokes(Cube<Complex>& vis) {
+
+  Cube<Complex> newvis(vis.shape());
+  newvis.set(0.0);
+  Slice all=Slice();
+
+  switch (nCorr()) {
+  case 4: {
+
+    Slice pp(0,1,1),pq(1,1,1),qp(2,1,1),qq(3,1,1);
+    Slice a(0,1,1),b(1,1,1),c(2,1,1),d(3,1,1);
+    
+    if (polFrame()==MSIter::Linear) {
+      d=Slice(1,1,1);  // Q
+      b=Slice(2,1,1);  // U
+      c=Slice(3,1,1);  // V
+    }
+    
+    newvis(a,all,all)=(vis(pp,all,all)+vis(qq,all,all)); //  I / I
+    newvis(d,all,all)=(vis(pp,all,all)-vis(qq,all,all)); //  V / Q
+    
+    newvis(b,all,all)=(vis(pq,all,all)+vis(qp,all,all)); //  Q / U
+    newvis(c,all,all)=(vis(pq,all,all)-vis(qp,all,all))/Complex(0.0,1.0); //  U / V
+    newvis/=Complex(2.0);
+
+    vis.reference(newvis);
+
+    break;
+  }
+  case 2: {
+    // parallel hands only
+    Slice pp(0,1,1),qq(1,1,1);
+    Slice a(0,1,1),d(1,1,1);
+    
+    newvis(a,all,all)=(vis(pp,all,all)+vis(qq,all,all)); //  I / I
+    newvis(d,all,all)=(vis(pp,all,all)-vis(qq,all,all)); //  V / Q
+    newvis/=Complex(2.0);
+
+    vis.reference(newvis);
+
+    break;
+  }
+  case 1: {
+    // need do nothing for single correlation case
+    break;
+  }
+  default: {
+    cout << "Insufficient correlations to form Stokes" << endl;
+    break;
+  }
+  }
+}
 
 void VisBuffer::channelAve(const Matrix<Int>& chanavebounds) 
 {
@@ -1139,6 +1281,79 @@ void VisBuffer::setModelVisCube(const Cube<Complex>& vis)
   modelVisCube_p=vis;
   modelVisCubeOK_p=True;
 }
+
+void VisBuffer::setModelVisCube(const Vector<Float>& stokes)
+{
+
+  /*
+  cout << "Specified Stokes Parameters: " << stokes << endl;
+
+  cout << "polFrame() = " << polFrame() 
+       << " " << MSIter::Circular
+       << " " << MSIter::Linear
+       << endl;
+  */
+
+  // Stokes parameters, nominally unpolarized, unit I
+  Float I(1.0),Q(0.0),U(0.0),V(0.0);
+
+  // Only fill as many as are specified, up to 4 (unspecified will be assumed zero)
+  for (uInt i=0;i<stokes.nelements();++i)
+    switch (i) {
+    case 0: { I=stokes(i); break; }
+    case 1: { Q=stokes(i); break; }
+    case 2: { U=stokes(i); break; }
+    case 3: { V=stokes(i); break; }
+    default: { break; }
+    }
+
+  // Convert to correlations, according to basis
+  Vector<Complex> stkvis(4,Complex(0.0));  // initially all zero
+  switch (polFrame()) {
+  case MSIter::Circular: {
+    stkvis(0)=Complex(I+V);
+    stkvis(1)=Complex(Q,U);
+    stkvis(2)=Complex(Q,-U);
+    stkvis(3)=Complex(I-V);
+    break;
+  }
+  case MSIter::Linear: {
+    stkvis(0)=Complex(I+Q);
+    stkvis(1)=Complex(U,V);
+    stkvis(2)=Complex(U,-V);
+    stkvis(3)=Complex(I-Q);
+    break;
+  }
+  default:
+    throw(AipsError("Model-setting only works for CIRCULAR and LINEAR bases, for now."));
+    break;
+  }
+    
+  // A map onto the actual correlations in the VisBuffer
+  Vector<Int> corrmap;
+  corrmap=corrType();
+  corrmap-=corrmap(0);
+  // This MUST yield indices < 4
+  if (max(corrmap)>3)
+    throw(AipsError("HELP! The correlations in the data are not normal!"));
+  
+
+  // Set the modelVisCube accordingly
+  modelVisCube_p.resize(visIter_p->visibilityShape());
+  modelVisCube_p.set(0.0);
+  for (Int icorr=0;icorr<nCorr();++icorr) 
+    if (abs(stkvis(corrmap(icorr)))>0.0)
+      modelVisCube_p(Slice(icorr,1,1),Slice(),Slice()).set(stkvis(corrmap(icorr)));
+  modelVisCubeOK_p=True;
+
+  // Lookup flux density calibrator scaling, and apply it per channel...
+  //  TBD
+
+
+
+}
+
+
 void VisBuffer::setCorrectedVisCube(const Cube<Complex>& vis)
 {
   correctedVisCube_p.resize(vis.shape());

@@ -84,11 +84,11 @@ deconvolver.
 </input>
 <returns type="casadeconvolver">deconvolver tool</returns>
 <example>
-\begin{verbatim}
+
 deco:=deconvolver('3C273XC1.dirty', '3C273XC1.psf')      
 deco.clean(model='3C273XC1.clean', niter=10000, gain=0.2)
 deco.close()
-\end{verbatim}
+
 </example>
 </method>
 
@@ -136,11 +136,11 @@ the VLA. It is part of the {\aipspp} distribution.
 </input>
 <returns type="casadeconvolver">deconvolver tool</returns>
 <example>
-\begin{verbatim}
+
 deco:=deconvolvertester(coordinates='gal',size=1024)
 deco.clean(model='3C273XC1.clean');
 deco.close()
-\end{verbatim}
+
 </example>
 </method>
 
@@ -198,11 +198,11 @@ until a <link anchor="deconvolver:deconvolver.done.function">done</link> tool fu
 </description>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 deco:=deconvolver('3C273XC1.dirty', '3C273XC1.psf')      
 deco.clean(model='3C273XC1.clean');
 deco.close()
-\end{verbatim}
+
 </example>
 </method>
 
@@ -217,12 +217,12 @@ you no longer need it.
 </description>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 deco:=deconvolver('3C273XC1.dirty', '3C273XC1.psf')      
 deco.clean(model='3C273XC1.clean');
 deco.close()
 deco.done()
-\end{verbatim}
+
 </example>
 </method>
 
@@ -241,10 +241,10 @@ default logger. This includes:
 </description>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 deco:=deconvolver('3C273XC1.dirty', '3C273XC1.psf')      
 deco.summary()
-\end{verbatim}
+
 </example>
 </method>
 
@@ -297,10 +297,10 @@ this requirement.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 deco.boxmask(mask='bigmask', blc=[56,45,1,1], trc=[87,93,4,1])
 deco.clean(mask='bigmask', model='3C273XC1.clean.masked', niter=1000)
-\end{verbatim}
+
 </example>
 <comments>
 Makes the image bigmask, and then sets it to unity for all points in
@@ -368,7 +368,7 @@ If both the parameters, {\tt regions} and {\tt boxes} are used the a union is do
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 
 Makes a mask  then cleans using it.
 
@@ -397,7 +397,7 @@ If quantities are to be used to define regions the following is a an example
 
 dc.regionmask(mask='joetest',boxes=['15:23:32.902','+05.19.32.089','15:22:28.631','+05.28.52.474'])
 
-\end{verbatim}
+
 
 
 </example>
@@ -436,10 +436,10 @@ threshold.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 imgr.clipimage(image='clean', threshold='50mJy')
 imgr.selfcal(cal='mycal', model='clean');
-\end{verbatim}
+
 </example>
 </method>
 
@@ -911,10 +911,10 @@ The clean threshold may be either absolute ('0.5Jy') or relative
 
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 deco.clean(image='3C273XC1.clean.image', model='3C273XC1.clean.model',
 mask='3C283XC1.mask', niter=1000, gain=0.25, threshold=0.03)
-\end{verbatim}
+
 </example>
 </method>
 
@@ -953,9 +953,9 @@ sizes are set via a power law, or give a vector of scale sizes in pixels.
 
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 deco.setscales(6);
-\end{verbatim}
+
 </example>
 </method>
 
@@ -987,9 +987,9 @@ Fourier transform the specified model to an image.
 
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 deco.ft(model='3C273XC1.nnls.model', transform='3C273XC1.nnls.model.ft')
-\end{verbatim}
+
 </example>
 <comments>
 Fourier transforms the model in the image 3C273XC1.nnls.model
@@ -1043,10 +1043,10 @@ be fit to the PSF.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 deco.restore(model='3C273XC1.clean', image='3C273XC1.clean.restored',
 bmaj='2.0arcsec', bmin='2.0arcsec')
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1077,10 +1077,10 @@ componentlist.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 deco.residual(model='3C273XC1.clean', complist='3C273XC1.cl',
 image='3C273XC1.clean.residual')
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1136,10 +1136,10 @@ not normalized.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 - deco.smooth(model='3C273XC1.clean', image='3C273XC1.clean.restored',
 bmaj='2.0arcsec', bmin='2.0arcsec')
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1259,10 +1259,10 @@ These options are accessed by setting {\tt imageplane} to T.
 
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 deco.mem(entropy='entropy', niter=30, sigma=0.01, targetflux=10.0,
 model='3C273XC1.mem.image', prior='3C283XC1.prior')
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1337,10 +1337,10 @@ Currently, only one Stokes parameter may be used at a time.
 
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 deco.makeprior(prior='3C283XC1.prior', templateimage='3C283XC1.mem.smooth',
 clipfrom='0.01Jy', clipto='0.0001Jy', blc=[100,100], trc=[150,150])
-\end{verbatim}
+
 </example>
 </method>
 

@@ -153,11 +153,11 @@ public:
 
 
   // Axis-specific generic gets
-  inline Double getScan(Int chnk,Int irel)     { return scan_(chnk); };
-  inline Double getField(Int chnk,Int irel)    { return field_(chnk); };
-  inline Double getTime(Int chnk,Int irel)     { return time_(chnk); };
-  inline Double getTimeIntr(Int chnk,Int irel) { return timeIntr_(chnk); };
-  inline Double getSpw(Int chnk,Int irel)      { return spw_(chnk); };
+  inline Double getScan(Int chnk,Int irel)     { return scan_(chnk);   (void)irel; };
+  inline Double getField(Int chnk,Int irel)    { return field_(chnk);  (void)irel; };
+  inline Double getTime(Int chnk,Int irel)     { return time_(chnk);  (void)irel; };
+  inline Double getTimeIntr(Int chnk,Int irel) { return timeIntr_(chnk);  (void)irel; };
+  inline Double getSpw(Int chnk,Int irel)      { return spw_(chnk);  (void)irel; };
 
   inline Double getFreq(Int chnk,Int irel) { return *(freq_[chnk]->data()+irel); };
   inline Double getVel(Int chnk,Int irel)  { return *(vel_[chnk]->data()+irel); };
@@ -181,13 +181,11 @@ public:
   inline Double getFlagRow(Int chnk,Int irel) { return *(flagrow_[chnk]->data()+irel); };
   inline Double getRow(Int chnk,Int irel) { return *(row_[chnk]->data()+irel); };
 
-  inline Double getImWt(Int chnk,Int irel) { return *(imwt_[chnk]->data()+irel); };
-
   // These are array-global (one value per chunk)
-  inline Double getAz0(Int chnk,Int irel) { return az0_(chnk); };
-  inline Double getEl0(Int chnk,Int irel) { return el0_(chnk); };
-  inline Double getHA0(Int chnk,Int irel) { return ha0_(chnk); };
-  inline Double getPA0(Int chnk,Int irel) { return pa0_(chnk); };
+  inline Double getAz0(Int chnk,Int irel) { return az0_(chnk);  (void)irel; };
+  inline Double getEl0(Int chnk,Int irel) { return el0_(chnk);  (void)irel; };
+  inline Double getHA0(Int chnk,Int irel) { return ha0_(chnk);  (void)irel; };
+  inline Double getPA0(Int chnk,Int irel) { return pa0_(chnk);  (void)irel; };
 
   // These are antenna-based
   inline Double getAntenna(Int chnk,Int irel) { return *(antenna_[chnk]->data()+irel); };
@@ -226,7 +224,6 @@ public:
   inline Double getRow() { return *(row_[currChunk_]->data()+(irel_/nperbsln_(currChunk_))%ibslnmax_(currChunk_)); };
 
   inline Double getWt() { return *(wt_[currChunk_]->data()+(irel_/nperbsln_(currChunk_))*nperchan_(currChunk_) + irel_%nperchan_(currChunk_)); };
-  inline Double getImWt() { return *(imwt_[currChunk_]->data()+(irel_/nperchan_(currChunk_))%ichanbslnmax_(currChunk_)); };
 
   // These are array-global (one value per chunk):
   inline Double getAz0() { return az0_(currChunk_); };
@@ -312,9 +309,9 @@ protected:
 
 
   // Count the chunks required in the cache
-  void countChunks(ROVisibilityIterator& vi);  // old
+  void countChunks(ROVisibilityIterator& vi,PlotMSCacheThread* thread);  // old
   void countChunks(ROVisibilityIterator& vi, Vector<Int>& nIterPerAve,  // supports time-averaging 
-		   const PlotMSAveraging& averaging);
+		   const PlotMSAveraging& averaging,PlotMSCacheThread* thread);
 
   // Fill a chunk with a VisBuffer.  
   void append(const VisBuffer& vb, Int vbnum, PMS::Axis xAxis, PMS::Axis yAxis,
@@ -411,7 +408,6 @@ protected:
   PtrBlock<Vector<Bool>*> flagrow_;
   
   PtrBlock<Array<Float>*> wt_;
-  PtrBlock<Array<Float>*> imwt_;
 
   PtrBlock<Array<Bool>*> plmask_;
 

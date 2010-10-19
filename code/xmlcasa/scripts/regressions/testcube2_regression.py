@@ -9,7 +9,7 @@ os.system('rm -rf testcube2 tc2*')
 startTime = time.time()
 startProc = time.clock()
 
-print '--Running simdata2 of test cube--'
+print '--Running simdata of test cube--'
 # configs are in the repository
 l=locals() 
 if not l.has_key("repodir"): 
@@ -19,7 +19,7 @@ print 'I think the data repository is at '+repodir
 datadir=repodir+"/data/regression/simdata/"
 cfgdir=repodir+"/data/alma/simmos/"
 importfits(fitsimage=datadir+"testcube.fits",imagename="testcube2")
-default("simdata2")
+default("simdata")
 project="tc2"
 
 modifymodel=True
@@ -57,7 +57,7 @@ endProc = time.clock()
 
 # Regression
 
-test_name = """simdata2 observation of test cube"""
+test_name = """simdata observation of test cube"""
 ms.open(project+".ms")
 newdata= ms.getdata(items="data")['data']
 
@@ -129,7 +129,7 @@ if regstate:
     print >> logfile, 'Passed',
 else:
     print >> logfile, 'FAILED',
-print >> logfile, 'regression test for simdata2 of test cube.'
+print >> logfile, 'regression test for simdata of test cube.'
 print >>logfile,'---'
 print >>logfile,'*********************************'
     
@@ -144,4 +144,4 @@ print >>logfile,'*************************************'
     
 logfile.close()
 						    
-print '--Finished simdata2 of test cube regression--'
+print '--Finished simdata of test cube regression--'

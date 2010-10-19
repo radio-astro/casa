@@ -136,8 +136,13 @@ fluxcaldir = pathname + '/data/nrao/VLA/CalModels/'
 
 #  NB: By default, the model for 0420+417 is a 1 Jy point source 
 print "--Setjy--"
-setjy(vis=msnameB,field='0518+165',modimage=fluxcaldir+'3C138_C.im'); 
-setjy(vis=msnameB,field='0134+329',modimage=fluxcaldir+'3C48_C.im'); 
+# Should say:
+## 0518+165  spwid=  0  [I=3.688, Q=0, U=0, V=0] Jy, (Perley-Taylor 99)
+## 0518+165  spwid=  1  [I=3.862, Q=0, U=0, V=0] Jy, (Perley-Taylor 99)
+setjy(vis=msnameB,field='0518+165',modimage=fluxcaldir+'3C138_C.im')
+## 0134+329  spwid=  0  [I=5.405, Q=0, U=0, V=0] Jy, (Perley-Taylor 99)
+## 0134+329  spwid=  0  [I=5.739, Q=0, U=0, V=0] Jy, (Perley-Taylor 99)
+setjy(vis=msnameB,field='0134+329',modimage=fluxcaldir+'3C48_C.im') 
  
 #=====================================================================
 # Plot data and interactively edit 

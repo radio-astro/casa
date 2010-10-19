@@ -59,8 +59,11 @@ const String PlotMSAction::P_INTERACTIVE = "interactive";
 bool PlotMSAction::requires(Type type, const String& parameter) {
     switch(type) {
     case TOOL_MARK_REGIONS: case TOOL_ZOOM: case TOOL_PAN:
-    case TOOL_ANNOTATE_TEXT: case TOOL_ANNOTATE_RECTANGLE: case TRACKER_HOVER:
-    case TRACKER_DISPLAY: case HOLD_RELEASE_DRAWING:
+    case TOOL_ANNOTATE_TEXT: 
+    case TOOL_ANNOTATE_RECTANGLE: 
+    case TRACKER_ENABLE_HOVER:
+    case TRACKER_ENABLE_DISPLAY: 
+    case HOLD_RELEASE_DRAWING:
         return parameter == P_ON_OFF;
 
     case CACHE_LOAD: case CACHE_RELEASE:
@@ -90,8 +93,11 @@ PlotMSAction::Type PlotMSAction::type() const { return itsType_; }
 bool PlotMSAction::isValid() const {
 	switch(itsType_) {
 	case TOOL_MARK_REGIONS: case TOOL_ZOOM: case TOOL_PAN:
-	case TOOL_ANNOTATE_TEXT: case TOOL_ANNOTATE_RECTANGLE: case TRACKER_HOVER:
-	case TRACKER_DISPLAY: case HOLD_RELEASE_DRAWING:
+	case TOOL_ANNOTATE_TEXT: 
+	case TOOL_ANNOTATE_RECTANGLE: 
+	case TRACKER_ENABLE_HOVER:
+	case TRACKER_ENABLE_DISPLAY: 
+	case HOLD_RELEASE_DRAWING:
 		return isDefinedBool(P_ON_OFF);
 
 	case CACHE_LOAD: case CACHE_RELEASE:
@@ -381,12 +387,13 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
 	    return true;
 	}
 
-	case TRACKER_HOVER:	case TRACKER_DISPLAY: {
+	case TRACKER_ENABLE_HOVER:	
+	case TRACKER_ENABLE_DISPLAY: {
 	    PlotMSPlotter* plotter = plotms->getPlotter();
-	    bool hover = itsType_ == TRACKER_HOVER ? valueBool(P_ON_OFF) :
-                     plotter->actionIsChecked(TRACKER_HOVER),
-           display = itsType_ == TRACKER_DISPLAY ? valueBool(P_ON_OFF) :
-	                 plotter->actionIsChecked(TRACKER_DISPLAY);
+	    bool hover = itsType_ == TRACKER_ENABLE_HOVER ? valueBool(P_ON_OFF) :
+                     plotter->actionIsChecked(TRACKER_ENABLE_HOVER),
+           display = itsType_ == TRACKER_ENABLE_DISPLAY ? valueBool(P_ON_OFF) :
+	                 plotter->actionIsChecked(TRACKER_ENABLE_DISPLAY);
 
    	    const vector<PlotMSPlot*>& plots = plotms->getPlotManager().plots();
    	    vector<PlotCanvasPtr> canv;
@@ -415,7 +422,8 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
 	    return true;
 	}
 
-	case CACHE_LOAD: case CACHE_RELEASE: {
+	case CACHE_LOAD: 
+	case CACHE_RELEASE: {
 		PlotMSPlot* plot = valuePlot(P_PLOT);
 		vector<PMS::Axis> axes = valueAxes(P_AXES);
 

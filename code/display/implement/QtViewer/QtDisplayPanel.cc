@@ -53,6 +53,7 @@
 #include <images/Regions/RegionHandler.h>
 #include <images/Images/ImageInterface.h>
 
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
@@ -76,7 +77,7 @@ QtDisplayPanel::QtDisplayPanel(QtDisplayPanelGui* panel, QWidget *parent) :
 		hasRgn_(False), rgnExtent_(0), qsm_(0),
 		lastMotionEvent_(0), bkgdClrOpt_(0), 
                 extChan_(""), extPol_("")  ,
-                printStats(True){
+                printStats(True), useRegion(False){
     
   setWindowTitle("Viewer Display Panel");
   
@@ -309,7 +310,7 @@ void QtDisplayPanel::mouseRegionReady_(Record mouseRegion,
 
   emit mouseRegionReady(mouseRegion, wch);  // echo mouseTool signal.
   
-  //Bool rgnSaved = False;
+  Bool rgnSaved = False;
     
   for(ListIter<QtDisplayData*> qdds(qdds_); 
         !qdds.atEnd(); qdds++) {
@@ -334,12 +335,14 @@ void QtDisplayPanel::mouseRegionReady_(Record mouseRegion,
     if(imReg==0) continue;
      
     if(printStats) {
-       qdd->printRegionStats(*imReg);	// stats.
+       //it is said that the stats for the cube is useless
+       //so disable it
+       //qdd->printRegionStats(*imReg);	// stats.
        qdd->printLayerStats(*imReg);	// stats.
     }
     
     
-    //if(!rgnSaved) {
+    if(!rgnSaved) {
     
       // First DD to respond with a region -- save it.
       
@@ -349,15 +352,17 @@ void QtDisplayPanel::mouseRegionReady_(Record mouseRegion,
       emit newRegion(rgnImgPath_);
 	// rgnImgPath_: pathname of the active image used to make the region.
 	// Will be transformed into regionPathname() if saved to disk.
-      //   rgnSaved = True;  }
-//    resetRTRegion();
+         rgnSaved = True;  }
+     if (useRegion)
+         resetRTRegion();
 
 
      //this reset is necessary but cannot do
      //because the bug that polygon tool prematurely
      //emit 'reagion ready'.
      //enable this after that bug cas-1393 fix
-//   resetPTRegion();
+     if (useRegion)
+        resetPTRegion();
     
     
     delete imReg;  }  }  
@@ -394,8 +399,28 @@ void QtDisplayPanel::resetTools() {
     for(Int i=0; i<Int(mouseToolNames_.nelements()); i++) {
       resetTool(mouseToolNames_[i]);  }  }
   
+Bool QtDisplayPanel::worldToLin(Vector<Double> &lin, const Vector<Double> &world) {
+    Bool filled = False;
+    lin.resize(world.nelements( ));
+    ConstListIter<WorldCanvas*>& wcs = *(pd_->myWCLI);
+    for(wcs.toStart(); !wcs.atEnd(); wcs++) {
+	if ( filled == False ) {
+	    wcs.getRight()->worldToLin(lin,world);
+	    filled = True;
+	} else {
+	    Vector<Double> tmp((uInt)world.nelements());
+	    wcs.getRight()->worldToLin(tmp,world);
+	    if ( tmp.nelements() != lin.nelements() )
+		return False;
+	    for ( int i=0; i < tmp.nelements(); ++i )
+		if ( tmp[i] != lin[i] )
+		    return False;
+	}
+    }
+    return filled;
+}
 
-
+ 
 void QtDisplayPanel::installEventHandlers_() {
   pc_->addPositionEventHandler(*this);
   ConstListIter<WorldCanvas*>& wcs = *(pd_->myWCLI);

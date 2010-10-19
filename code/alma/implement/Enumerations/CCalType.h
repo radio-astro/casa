@@ -55,7 +55,7 @@ namespace CalTypeMod
   //! CalType.
   //!  [CalDM.CalData] Used to point to a given CalResult table
   
-  const char *const revision = "1.7";
+  const char *const revision = "1.8";
   const int version = 1;
   
   enum CalType

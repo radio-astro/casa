@@ -54,6 +54,7 @@
 #include <synthesis/MeasurementComponents/WPConvFunc.h>
 #include <synthesis/MeasurementComponents/SimplePBConvFunc.h>
 #include <synthesis/MeasurementComponents/ComponentFTMachine.h>
+#include <synthesis/MeasurementComponents/SynthesisError.h>
 #include <synthesis/MeasurementEquations/StokesImageUtil.h>
 
 
@@ -171,9 +172,10 @@ void CubeSkyEquation::init(FTMachine& ft){
     }
   }
   else {
-    //ft_=new GridFT(static_cast<GridFT &>(ft));
+    ft_=new GridFT(static_cast<GridFT &>(ft));
     ift_=new GridFT(static_cast<GridFT &>(ft));
-    ftm_p[0]=CountedPtr<FTMachine>(ft_, False);
+    // ftm_p[0]=CountedPtr<FTMachine>(ft_, False);
+    ftm_p[0]=ft_;
     iftm_p[0]=ift_;
     for (Int k=1; k < (nmod); ++k){ 
       ftm_p[k]=new GridFT(static_cast<GridFT &>(*ft_));
@@ -507,10 +509,10 @@ void CubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
     }
     else{
       if(sm_->numberOfTaylorTerms()>1) { /* MFS */
-        os << "PSF calculation resulted in a PSF with its peak being 0 or less." << LogIO::POST;
+        os << "PSF calculation resulted in a PSF with its peak being 0 or less. This is ok for MS-MFS." << LogIO::POST;
       }
       else{
-	throw(AipsError("SkyEquation:: PSF calculation resulted in a PSF with its peak being 0 or less!"));
+	throw(PSFZero("SkyEquation:: PSF calculation resulted in a PSF with its peak being 0 or less!"));
       }
     }
   }
@@ -586,7 +588,7 @@ void CubeSkyEquation::gradientsChiSquared(Bool incr, Bool commitModel){
    
   isLargeCube(sm_->cImage(0), nCubeSlice);
     
-  
+
   for (Int cubeSlice=0; cubeSlice< nCubeSlice; ++cubeSlice){
 
     //      vi.originChunks();
@@ -834,7 +836,7 @@ void CubeSkyEquation::finalizePutSlice(const VisBuffer& vb,
     // weight to the summed weight
     Matrix<Float> delta;
     imPutSlice_p[model]->copyData(iftm_p[model]->getImage(delta, False));
-  
+
     weightSlice_p[model]+=delta;
 
     // 2. Apply the SkyJones and add to grad chisquared

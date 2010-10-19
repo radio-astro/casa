@@ -75,11 +75,11 @@ dirshow will convert a direction measure to a string
 %%quanta:quanta.setformat.function).
 -->
 <example>
-\begin{verbatim}
+
 print "\t----\t dirshow Ex 1 \t----"
 print me.dirshow(me.direction('venus'))
 #[0, 90] deg  VENUS
-\end{verbatim}
+
 </example>
 </method>
 
@@ -119,13 +119,13 @@ All measures are catered for (at this moment {\em direction, position, epoch,
 radialvelocity, frequency, doppler, baseline, uvw, earthmagnetic} ).
 </description>
 <example>
-\begin{verbatim}
+
 print "\t----\t show Ex 1 \t----"
 print me.show(me.frequency('lsrk', qa.constants('HI')))
 #1.42041e+09 Hz LSRK
 print me.show(me.frequency('lsrk', qa.constants('HI')), refcode=false)
 #1.42041e+09 Hz
-\end{verbatim}
+
 </example>
 <!--
 %%#: qa.setformat('freq', 'keV')
@@ -187,16 +187,17 @@ print me.listcodes(me.epoch())
 # 'TDT', 'TCG', 'TDB', 'TCB', 'IAT', 'GMST', 'TT', 'ET', 'UT'], 'extra': []}
 #
 \end{verbatim}
+
 See <link anchor="quanta">quantity</link> for possible time formats.
 </description>
 <example>
-\begin{verbatim}
+
 print "\t----\t epoch Ex 2 \t----"
 print me.epoch('utc','today') 
 #{'m0': {'value': 54048.861237743055, 'unit': 'd'},
 # 'refer': 'UTC',
 # 'type': 'epoch'}
-\end{verbatim}
+
 </example>
 </method>
 
@@ -248,6 +249,7 @@ offset, which in itself has to be a direction. Allowable reference codes are:
 SUPERGAL ECLIPTIC MECLIPTIC TECLIPTIC MERCURY
 VENUS MARS JUPITER SATURN URANUS NEPTUNE PLUTO MOON SUN COMET}.\\
 Note that additional ones may become available. Check in \casa\ with:
+
 \begin{verbatim}
 print "\t----\t direction Ex 1 \t----"
 print me.listcodes(me.direction())
@@ -257,13 +259,14 @@ print me.listcodes(me.direction())
 #'TECLIPTIC', 'SUPERGAL', 'ITRF', 'TOPO', 'ICRS'], 'extra': ['MERCURY',
 #'VENUS', 'MARS', 'JUPITER', 'SATURN', 'URANUS', 'NEPTUNE', 'PLUTO',
 #'SUN', 'MOON', 'COMET']}
-\end{verbatim}  
+\end{verbatim}
+  
 The direction quantity values should be longitude(angle) and
 latitude(angle) (none needed for planets: the frame epoch defines coordinates).
 See <link anchor="quanta">quantity</link> for possible angle formats.
 </description>
 <example>
-\begin{verbatim}
+
 print "\t----\t direction Ex 2 \t----"
 print me.direction('j2000','30deg','40deg')
 #{'m0': {'value': 0.52359877559829882, 'unit': 'rad'},
@@ -276,7 +279,7 @@ print me.direction('mars')
 # 'm1': {'value': 1.5707963267948966, 'unit': 'rad'},
 # 'refer': 'MARS',
 # 'type': 'direction'}
-\end{verbatim}
+
 </example>
 </method>
  
@@ -297,13 +300,13 @@ print me.direction('mars')
 getvalue gets the actual implementation value of the measure.
 </description>
 <example>
-\begin{verbatim}
+
 print "\t----\t getvalue Ex 1 \t----"
 b=me.direction('j2000','0deg','80deg')
 print me.getvalue(b)
 #{'m0': {'value': 0.0, 'unit': 'rad'},
 # 'm1': {'value': 1.3962634015954634, 'unit': 'rad'}}
-\end{verbatim}
+
 </example>
 </method>
  
@@ -322,7 +325,7 @@ print me.getvalue(b)
 gettype gets the actual type of the measure.
 </description>
 <example>
-\begin{verbatim}
+
 print "\t----\t gettype Ex 1 \t----"
 b=me.direction('j2000','0deg','80deg')
 print me.getvalue(b)
@@ -330,7 +333,7 @@ print me.getvalue(b)
 # 'm1': {'value': 1.3962634015954634, 'unit': 'rad'}}
 print me.gettype(b)
 #'Direction'
-\end{verbatim}
+
 </example>
 </method>
  
@@ -349,7 +352,7 @@ print me.gettype(b)
 gettype gets the actual reference code of the measure.
 </description>
 <example>
-\begin{verbatim}
+
 print "\t----\t getref Ex 1 \t----"
 b=me.direction('j2000','0deg','80deg')
 print me.getvalue(b)
@@ -359,7 +362,7 @@ print me.gettype(b)
 #'Direction'
 print me.getref(b)
 #'J2000'
-\end{verbatim}
+
 </example>
 </method>
  
@@ -382,7 +385,7 @@ getoff gets the actual offset of the measure (as a measure) or F if no offset
 given. 
 </description>
 <example>
-\begin{verbatim}
+
 print "\t----\t getoffset Ex 1 \t----"
 b=me.direction('j2000','0deg','80deg')
 print me.getvalue(b)
@@ -394,7 +397,7 @@ print me.getref(b)
 #'J2000'
 print me.getoffset(b)
 #{}
-\end{verbatim}
+
 </example>
 </method>
  
@@ -408,13 +411,13 @@ print me.getoffset(b)
 cometname gets the name of the current comet (if any).
 </description>
 <example>
-\begin{verbatim}
+
 print "\t----\t cometname Ex 1 \t----"
 print me.cometname()
 #Thu Nov 9 21:27:25 2006      WARN :
 #Method cometname fails! No Comet table present
 #''
-\end{verbatim}
+
 </example>
 </method>
  
@@ -428,11 +431,11 @@ print me.cometname()
 comettype gets the comet table type (apparent or topocentric)
 </description>
 <example>
-\begin{verbatim}
+
 print "\t----\t comettype Ex 1 \t----"
 print me.comettype()
 # 'none'
-\end{verbatim}
+
 </example>
 </method>
  
@@ -448,13 +451,13 @@ print me.comettype()
 comettopo gets the comet table's topographic coordinates used.
 </description>
 <example>
-\begin{verbatim}
+
 print "\t----\t comettopo Ex 1 \t----"
 print me.comettopo()
 #Thu Nov 9 21:45:40 2006      WARN :
 #Method comettopo fails!  No Topocentric Comet table present
 #{'value': [0.0], 'unit': ''}
-\end{verbatim}
+
 </example>
 </method>
  
@@ -473,7 +476,7 @@ print me.comettopo()
 framecomet will put the specified comet table in the frame.
 </description>
 <example>
-\begin{verbatim}
+
 print "\t----\t framecomet Ex 1 \t----"
 print me.framecomet('VGEO')
 #True
@@ -490,7 +493,7 @@ print me.measure(me.direction('comet'),'app')
 # 'm1': {'value': -0.34710256485894436, 'unit': 'rad'},
 # 'refer': 'APP',
 # 'type': 'direction'}
-\end{verbatim}
+
 </example>
 </method>
 
@@ -547,17 +550,19 @@ offset, which in itself has to be a position. Allowable reference codes are:
 {\em WGS84 ITRF} (World Geodetic System and International Terrestrial
 Reference Frame).\\               
 Note that additional ones may become available. Check in \casa\ with:
-\begin{verbatim}            
+            
+\begin{verbatim}
 print "\t----\t position Ex 1 \t----"
 print me.listcodes(me.position())
 #{'normal': ['ITRF', 'WGS84'], 'extra': []}
-\end{verbatim}                                               
+\end{verbatim}
+                                               
  The position quantity values should be either longitude
 (angle), latitude(angle) and height(length); or x,y,z (length).
 See <link anchor="quanta">quantity</link> for possible angle formats.
 </description>
 <example>
-\begin{verbatim}
+
 print "\t----\t position Ex 2 \t----"
 print me.position('wgs84','30deg','40deg','10m')
 #{'m0': {'value': 0.52359877559829882, 'unit': 'rad'},
@@ -571,7 +576,25 @@ print me.observatory('ATCA')
 # 'm2': {'value': 6372960.2577234386, 'unit': 'm'},
 # 'refer': 'ITRF',
 # 'type': 'position'}
-\end{verbatim}
+
+###One can use a quantity-vectors  especially when dealing with multiple antenna positions  for e.g for 3 positions
+
+ants=me.position('itrf',qa.quantity([3828763.11,3828746.55, 3828727.43],'m'), qa.quantity([442449.106,442592.14, 442580.12],'m'), 
+             qa.quantity([5064923.01, 5064923.01, 5064923.51],'m')) 
+
+print ants
+ 
+#{'m0': {'unit': 'rad',
+#        'value': array([ 0.11504897,  0.11508633,  0.1150838 ])},
+# 'm1': {'unit': 'rad',
+#        'value': array([ 0.92031276,  0.92031276,  0.92031535])},
+# 'm2': {'unit': 'm',
+#        'value': array([ 6364639.28758924,  6364639.27051283,  6364627.33064587])},
+# 'refer': 'ITRF',
+# 'type': 'position'}
+
+
+
 </example>
 </method>
  
@@ -598,7 +621,7 @@ me.obslist() tool function):
  JCMT MOPRA MOST NRAO12M NRAO_GBT PKS SAO SMA VLA VLBA WSRT}.
 </description>
 <example>
-\begin{verbatim}
+
 print "\t----\t observatory Ex 1 \t----"
 print me.observatory('ATCA')
 #{'m0': {'value': 2.6101423190348916, 'unit': 'rad'},
@@ -606,7 +629,7 @@ print me.observatory('ATCA')
 # 'm2': {'value': 6372960.2577234386, 'unit': 'm'},
 # 'refer': 'ITRF',
 # 'type': 'position'}
-\end{verbatim}
+
 </example>
 </method>
  
@@ -623,13 +646,13 @@ observatories known in the Observatories table.
 <!-- (see <link
 anchor="measuresdata">measuresdata</link> module). -->
 <example>
-\begin{verbatim}
+
 print "\t----\t obslist Ex 1 \t----"
 print me.obslist()
 #'ALMA ARECIBO ATCA BIMA CLRO DRAO DWL GB GBT GMRT IRAM
 # PDB IRAM_PDB JCMT MOPRA MOST NRAO12M NRAO_GBT PKS SAO
 # SMA VLA VLBA WSRT'
-\end{verbatim}
+
 </example>
 </method>
  
@@ -647,12 +670,12 @@ already online, and will be interfaced once a nomenclature can be defined for
 the tens of thousands of lines.
 </description>
 <example>
-\begin{verbatim}
+
 print "\t----\t linelist Ex 1 \t----"
 print me.linelist()
 #'C109A CI CII166A DI H107A H110A H138B H166A H240A H272A
 # H2CO HE110A HE138B HI OH1612 OH1665 OH1667 OH1720'
-\end{verbatim}
+
 </example>
 </method>
  
@@ -672,13 +695,13 @@ spectralline will give you the frequency of a spectral line. The known list
 can be obtained by <link anchor="measures:measures.linelist.function">me.linelist()</link>.
 </description>
 <example>
-\begin{verbatim}
+
 print "\t----\t spectralline Ex 1 \t----"
 print me.spectralline('HI')
 #{'m0': {'value': 1420405751.786, 'unit': 'Hz'},
 # 'refer': 'REST',
 # 'type': 'frequency'}
-\end{verbatim}
+
 </example>
 </method>
  
@@ -692,12 +715,12 @@ known in the Sources table.
 </description>
 <!-- (see <link anchor="measuresdata">measuresdata</link> module). -->
 <example>
-\begin{verbatim}
+
 print "\t----\t sourcelist Ex 1 \t----"
 print me.sourcelist()[0:62]
 #'0002-478 0003+380 0003-066 0007+106 0007+171 0008-264 0008-421'
 #......
-\end{verbatim}
+
 </example>
 </method>
  
@@ -721,7 +744,7 @@ source will give you the direction of a source. The known list
 can be obtained by <link anchor="measures:measures.sourcelist.function">me.sourcelist()</link>.
 </description>
 <example>
-\begin{verbatim}
+
 print "\t----\t source Ex 1 \t----"
 print me.source()
 print me.source('1934-638')
@@ -730,7 +753,7 @@ print me.source('1934-638')
 # 'm1': {'value': -1.1119959323803881, 'unit': 'rad'},
 # 'refer': 'ICRS',
 # 'type': 'direction'}
-\end{verbatim}
+
 </example>
 </method>
 
@@ -780,6 +803,7 @@ print me.listcodes(me.frequency())
 #{'normal': ['REST', 'LSRK', 'LSRD', 'BARY', 'GEO', 'TOPO',
 # 'GALACTO', 'LGROUP', 'CMB'], 'extra': []}
 \end{verbatim}
+
 The frequency quantity values should be in one of the recognised units
 (examples all give same frequency):
 \begin{itemize}
@@ -793,7 +817,7 @@ The frequency quantity values should be in one of the recognised units
 \end{itemize}
 </description>
 <example>
-\begin{verbatim}
+
 print "\t----\t frequency Ex 2 \t----"
 print me.frequency('lsrk','5GHz')
 #{'m0': {'value': 5000000000.0, 'unit': 'Hz'},
@@ -803,7 +827,7 @@ print me.frequency('lsrk','21cm')
 #{'m0': {'value': 1427583133.3333333, 'unit': 'Hz'},
 # 'refer': 'LSRK',
 # 'type': 'frequency'}
-\end{verbatim}
+
 </example>
 </method>
 
@@ -847,19 +871,20 @@ and optionally it can specify an offset,
 which in itself has to be a doppler. Allowable reference codes are:
 {\em RADIO Z RATIO BETA GAMMA OPTICAL TRUE RELATIVISTIC}.\\
 Note that additional ones may become available. Check in \casa\ with:
-\begin{verbatim}   
-
+   
+\begin{verbatim}
 print "\t----\t doppler Ex 1 \t----"
 print me.listcodes(me.doppler())
 #{'normal': ['RADIO', 'Z', 'RATIO', 'BETA', 'GAMMA', 'OPTICAL',
 # 'TRUE', 'RELATIVISTIC'], 'extra': []}
 \end{verbatim}
+
 The doppler quantity values should be either non-dimensioned to specify a
 ratio of the light velocity, or in velocity.
 </description>
 <example>
 Examples both give same doppler:
-\begin{verbatim}
+
 print "\t----\t doppler Ex 2 \t----"
 print me.doppler('radio','0.4')
 #{'m0': {'value': 119916983.2, 'unit': 'm/s'},
@@ -869,7 +894,7 @@ print me.doppler('radio',qa.mul(qa.quantity('0.4'),qa.constants('c')))
 #{'m0': {'value': 119916983.2, 'unit': 'm/s'},
 # 'refer': 'RADIO',
 # 'type': 'doppler'}
-\end{verbatim}
+
 </example>
 </method>
 
@@ -915,8 +940,8 @@ can specify an offset, which in itself has to be a radialvelocity.
 Allowable reference codes are:
 {\em LSRK LSRD BARY GEO TOPO GALACTO LGROUP CMB}.\\                          
 Note that additional ones may become available. Check in \casa\ with:
-\begin{verbatim}                                                    
-
+                                                    
+\begin{verbatim}
 print "\t----\t radialvelocity Ex 1 \t----"
 print me.listcodes(me.radialvelocity())
 #  Out[17]:
@@ -927,14 +952,14 @@ print me.listcodes(me.radialvelocity())
 The radialvelocity quantity values should be given as velocity.
 </description>
 <example>
-\begin{verbatim}
+
 print "\t----\t radialvelocity Ex 2 \t----"
 print me.radialvelocity('lsrk','20km/s')
 #  Out[18]:
 #{'m0': {'value': 20000.0, 'unit': 'm/s'},
 # 'refer': 'LSRK',
 # 'type': 'radialvelocity'}
-\end{verbatim}
+
 </example>
 </method>
 
@@ -996,12 +1021,13 @@ print me.listcodes(me.uvw())
 # 'MECLIPTIC', 'TECLIPTIC', 'SUPERGAL', 'ITRF', 'TOPO',
 # 'ICRS'], 'extra': []}
 \end{verbatim}
+
 The uvw quantity values should be either longitude
 (angle), latitude(angle) and height(length); or x,y,z (length).
 See <link anchor="quanta">quantity</link> for possible angle formats.
 </description>
 <example>
-\begin{verbatim}
+
 print "\t----\t uvw Ex 2 \t----"
 print me.uvw('itrf','30deg','40deg','10m')
 #{'m0': {'value': 0.52359877559829882, 'unit': 'rad'},
@@ -1021,7 +1047,7 @@ print me.measure(me.uvw('itrf','30deg','40deg','10m'), 'j2000')
 # 'm2': {'value': 10.0, 'unit': 'm'},
 # 'refer': 'J2000',
 # 'type': 'uvw'}
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1082,7 +1108,7 @@ work. Since the baseline and the sky rotate with respect of each
 other, the time should be specified as well.
 </description>
 <example>
-\begin{verbatim}
+
 print "\t----\t touvw Ex 1 \t----"
 print me.doframe(me.observatory('atca'))
 #True
@@ -1111,10 +1137,48 @@ print me.getvalue(me.touvw(b))
 # 'm2': {'value': 37.416573867739416, 'unit': 'm'}}
 print me.getvalue(me.touvw(b))['m0']
 #{'value': -0.094777304811312649, 'unit': 'rad'}
-\end{verbatim}
+
+###Or when you are dealing with multiple antennas
+####set the frame..i,e where, direction and when.
+me.doframe(me.observatory('VLA'))
+me.doframe(me.direction('J2000', '19h20m00', '20d10m00'))
+me.doframe(me.epoch('utc', '2007/07/08/20:30:00'))
+####antenna positions 
+ants=me.position('itrf',qa.quantity([3828763.11,3828746.55, 3828727.43],'m'), qa.quantity([442449.106,442592.14, 442580.12],'m'), qa.quantity([5064923.01, 5064923.01, 5064923.51],'m')) 
+###convert to baseline measures
+bl=me.asbaseline(ants)
+###convert to uvw
+me.touvw(bl)
+
+#{'dot': {'unit': 'm/s',
+#         'value': array([ 181.25190155,  -73.29924893,  199.57974846,  181.25985238,
+#        -73.29691498,  199.57339353,  181.2583565 ,  -73.29668498,
+#        199.57276731])},
+# 'return': {'m0': {'unit': 'rad',
+#                   'value': array([ 2.21611194,  2.21610131,  2.21609887])},
+#            'm1': {'unit': 'rad',
+#                   'value': array([ 0.6984441 ,  0.69846521,  0.69846285])},
+#            'm2': {'unit': 'm',
+#                   'value': array([ 6364639.28758924,  6364639.27051283,  6364627.33064587])},
+#            'refer': 'J2000',
+#            'type': 'uvw'},
+# 'xyz': {'unit': 'm',
+#         'value': array([-2931661.69632123,  3894141.52172208,  4092634.20894752,
+#       -2931568.34776551,  3894103.64373003,  4092737.08879791,
+#       -2931559.14911939,  3894111.22249941,  4092717.89890567])}}
+
+
+####print the (n-1)n/2 baselines(u,v,w)
+me.expand(me.touvw(bl)['return'])['xyz']
+#{'unit': 'm',
+# 'value': array([  93.34855573,  -37.87799205,  102.8798504 ,  102.54720184,
+#        -30.29922267,   83.68995815,    9.19864612,    7.57876938,
+#        -19.18989224])}
+
+
 <!--
 An example with more than one value:
-\begin{verbatim}
+
 #
 sb = me.baseline('itrf',qa.unit([10,50],'m'),qa.unit([20,100],'m'),
 		qa.unit([30,150],'m'))
@@ -1176,7 +1240,7 @@ print a
 #    21.6260849  108.130425
 #    -22.7812122 -113.906061], unit=m] 
 #
-\end{verbatim}
+
 -->
 </example>
 </method>
@@ -1211,17 +1275,26 @@ returned value is a measure, but the value of the optional output
 variable {\em xyz} will be set to an array of values.
 </description>
 <example>
-\begin{verbatim}
+
 print "\t----\t expand Ex 1 \t----"
-b=me.baseline('itrf','10m','20m','30m')
+b=me.baseline('itrf', qa.quantity([10, 20, 30], 'm'), qa.quantity([10, 20, 30], 'm'), qa.quantity([0, 0, 0], 'm'))
 print me.expand(b)
-#{'return': {'m0': {'value': 1.1071487177940904, 'unit': 'rad'},
-#            'm1': {'value': 0.93027401411547195, 'unit': 'rad'},
-#            'm2': {'value': 37.416573867739416, 'unit': 'm'},
-#            'refer': 'J2000',
-#            'type': 'uvw'},
-# 'xyz': {'value': [10.000000000000004, 20.000000000000004, 30.0], 'unit': 'm'}}
-\end{verbatim}
+me.expand(b)
+ 
+#{'return': {'m0': {'unit': 'rad',
+#                   'value': array([ 0.78539816,  0.78539816,  0.78539816])},
+#            'm1': {'unit': 'rad', 'value': array([ 0.,  0.,  0.])},
+#            'm2': {'unit': 'm',
+#                   'value': array([ 14.14213562,  28.28427125,  14.14213562])},
+#            'refer': 'ITRF',
+#            'type': 'baseline'},
+# 'xyz': {'unit': 'm',
+#         'value': array([ 10.,  10.,   0.,  20.,  20.,   0.,  10.,  10.,   0.])}}
+
+print me.expand(b)['xyz']['value']
+
+#[ 10.  10.   0.  20.  20.   0.  10.  10.   0.]
+
 <!--
 sb = me.baseline('itrf',qa.unit([10,50],'m'),qa.unit([20,100],'m'),
 +    qa.unit([30,150],'m'))
@@ -1289,16 +1362,16 @@ for a model, and optionally it
 can specify an offset, which in itself has to be a earthmagnetic. In general
 you specify a model (IGRF is the default and the only one known) and convert
 it to an explicit field.  (See
-\begin{verbatim}
+
  http://fdd.gsfc.nasa.gov/IGRF.html
-\end{verbatim}
+
 for information on the International Geomagnetic Reference Field). The
 earthmagnetic quantity values should be either longitude (angle),
 latitude(angle) and length(field strength); or x,y,z (field).
 See <link anchor="quanta">quantity</link> for possible angle formats.
 </description>
 <example>
-\begin{verbatim}
+
 print "\t----\t earthmagnetic Ex 1 \t----"
 print me.earthmagnetic('igrf')
 #{'type': 'earthmagnetic', 'refer': 'IGRF', 'm1': {'value': 0.0, 'unit': 'nT'},
@@ -1312,7 +1385,7 @@ print me.measure(me.earthmagnetic('igrf'), 'j2000')
 # 'm1': {'value': -8664.8767628222304, 'unit': 'nT'},
 # 'm0': {'value': 50544.054410564473, 'unit': 'nT'},
 # 'm2': {'value': 1799.5131920958615, 'unit': 'nT'}}
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1365,6 +1438,7 @@ quantities is given), and optionally it can specify an
 offset, which in itself has to be a baseline. Allowable reference codes are
 ITRF and the direction ones.\\
 Note that additional ones may become available. Check in \casa\ with:
+
 \begin{verbatim}
 print "\t----\t baseline Ex 1 \t----"
 print me.listcodes(me.baseline())
@@ -1373,12 +1447,13 @@ print me.listcodes(me.baseline())
 # 'AZELNEGEO', 'JNAT', 'ECLIPTIC', 'MECLIPTIC', 'TECLIPTIC', 'SUPERGAL',
 # 'ITRF', 'TOPO', 'ICRS'], 'extra': []}
 \end{verbatim}
+
 The baseline quantity values should be either longitude
 (angle), latitude(angle) and height(length); or x,y,z (length).
 See <link anchor="quanta">quantity</link> for possible angle formats.
 </description>
 <example>
-\begin{verbatim}
+
 print "\t----\t Ex 2 \t----"
 print me.baseline('itrf','30deg','40deg','10m')
 #{'m0': {'value': 0.52359877559829882, 'unit': 'rad'},
@@ -1395,7 +1470,7 @@ print me.measure(me.baseline('itrf','30deg','40deg','10m'), 'J2000')
 # 'm2': {'value': 9.9999999999999964, 'unit': 'm'},
 # 'refer': 'J2000',
 # 'type': 'baseline'}
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1422,22 +1497,44 @@ actual baseline is calculated, since operations can be done on
 positions, with subtractions to obtain baselines at a later stage.
 </description>
 <example>
-\begin{verbatim}
+
 print "\t----\t asbaseline Ex 1 \t----"
-b = me.position('itrf', '10m', '20m', '30m');
-print b
-#{'m0': {'value': 1.1071487177940904, 'unit': 'rad'},
-# 'm1': {'value': 0.93027401411547195, 'unit': 'rad'},
-# 'm2': {'value': 37.416573867739416, 'unit': 'm'},
-# 'refer': 'ITRF',
-# 'type': 'position'}
-print me.asbaseline(b)
-#{'m0': {'value': 1.1071487177940904, 'unit': 'rad'},
-# 'm1': {'value': 0.93027401411547195, 'unit': 'rad'},
-# 'm2': {'value': 37.416573867739416, 'unit': 'm'},
-# 'refer': 'J2000',
-# 'type': 'baseline'}
-\end{verbatim}
+
+####An example of getting baselines with 3 antenna positions
+#### Define the frame ; where, which-direction and when
+me.doframe(me.observatory('VLA'))
+me.doframe(me.direction('J2000', '19h20m00', '20d10m00'))
+me.doframe(me.epoch('utc', '2007/07/08/20:30:00'))
+
+##antenna position
+ants=me.position('itrf',qa.quantity([3828763.11,3828746.55, 3828727.43],'m'), qa.quantity([442449.106,442592.14, 442580.12],'m'), qa.quantity([5064923.01, 5064923.01, 5064923.51],'m')) 
+print ants
+#{'type': 'position', 'refer': 'ITRF', 'm1': {'value': array([ 0.92031276,  0.92031276,  0.92031535]), 'unit': 'rad'}, 
+#'m0': {'value': array([ 0.11504897,  0.11508633,  0.1150838 ]), 'unit': 'rad'}, 
+#'m2': {'value': array([ 6364639.28758924,  6364639.27051283,  6364627.33064587]), 'unit': 'm'}}
+
+bl=me.asbaseline(ants)
+print bl
+#{'type': 'baseline', 'refer': 'J2000', 'm1': {'value': array([ 0.92068328,  0.92068326,  0.92068585]), 'unit': 'rad'}, 
+#'m0': {'value': array([-2.08658811, -2.08655073, -2.08655326]), 'unit': 'rad'}, 
+#'m2': {'value': array([ 6364639.28758924,  6364639.27051283,  6364627.33064587]), 'unit': 'm'}}
+
+me.expand(bl)
+
+#{'return': {'m0': {'unit': 'rad',
+#                  'value': array([-0.51637894, -0.36575235,  1.50036599])},
+#            'm1': {'unit': 'rad',
+#                   'value': array([-0.00060966,  0.00302388,  0.02206414])},
+#            'm2': {'unit': 'm',
+#                   'value': array([ 143.98943974,  135.78652583,   22.58992696])},
+#            'refer': 'J2000',
+#            'type': 'baseline'},
+# 'xyz': {'unit': 'm',
+#         'value': array([  1.25215025e+02,  -7.10925354e+01,  -8.77850493e-02,
+#         1.26804339e+02,  -4.85640980e+01,   4.10601842e-01,
+#         1.58931410e+00,   2.25284374e+01,   4.98386892e-01])}}
+
+
 <!--
 sb = me.position('itrf',qa.unit([10,50],'m'),qa.unit([20,100],'m'),
 + qa.unit([30,150],'m'));
@@ -1489,7 +1586,7 @@ of all normal codes; the second a string vector (maybe empty) with all extra
 codes (like planets).
 </description>
 <example>
-\begin{verbatim}
+
 print "\t----\t listcodes Ex 1 \t----"
 # Generate some direction
 # Note that an empty or non-specified reference code will produce the
@@ -1507,7 +1604,7 @@ print me.listcodes(a)
 #'TECLIPTIC', 'SUPERGAL', 'ITRF', 'TOPO', 'ICRS'],
 #'extra': ['MERCURY', 'VENUS', 'MARS', 'JUPITER', 'SATURN', 'URANUS',
 #'NEPTUNE', 'PLUTO', 'SUN', 'MOON', 'COMET']}
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1561,13 +1658,21 @@ AZEL, needs to know for when, and where on Earth we want it. This information
 is stored in a reference frame. Measures are set in the reference frame with
 the <link anchor="measures:measures.doframe.function">doframe</link> function. The frame is tool
  wide.\\
+
+{\bf IMPORTANT NOTE:}\\
+To get an accurate conversion of solar system objects direction to a celestial frame, one should convert to AZEL or HADEC before to get parallax accounted for. Thus if you want to get the moon's position in J2000..one would do it in 2 stages\\
+i.e (after setting the appropriate frames) \\
+
+moonazel=me.measure(me.direction('moon'), 'AZELGEO')
+moonJ2000=me.measure(moonazel, 'J2000')
+
 <!-- An optional argument {em qv} can contain a quantity with a vector of values
 and a unit. When present, the vector will be converted (and returned) in the
 same way as the main reference. Not all Measures accept this argument yet. If
 needed please ask an enhancement. -->
 </description>
 <example>
-\begin{verbatim}
+
 print "\t----\t measure Ex 1 \t----"
 a = me.epoch('utc','today') 			        # a time
 print a
@@ -1598,10 +1703,10 @@ print qa.angle(me.getvalue(me.measure(b,'azel'))['m0'])     # show as angles
 #['+110.15.38']
 print qa.angle(me.getvalue(me.measure(b,'azel'))['m1'])
 #['+043.48.41']
-\end{verbatim}
+
 <!-- In the following the {\em qv} argument is used.-->
 Another example:
-\begin{verbatim}
+
 print "\t----\t measure Ex 2 \t----"
 # Fill the frame with necessary information
 print me.doframe(me.epoch('utc','today'))
@@ -1622,7 +1727,7 @@ print me.measure(m,'lsrd')
 #{'m0': {'value': 1000001766.3928765, 'unit': 'Hz'},
 # 'refer': 'LSRD',
 # 'type': 'frequency'}
-\end{verbatim}
+
 <!--
 # Make a list of frequencies to be converted
 a=qa.unit([1,1.1,1.2,1.3],'GHz')
@@ -1663,7 +1768,7 @@ with the {\em Convert$-&gt;$} button or --> with the
 should be set if one of the reference types involved in the conversion is as
 in the following lists.\\
 {\em Epoch}
-\begin{verbatim}
+
  UTC		
  TAI
  LAST	position
@@ -1676,9 +1781,9 @@ in the following lists.\\
  TCG 
  TDB 
  TCD
-\end{verbatim} 
+ 
 {\em Direction}
-\begin{verbatim}
+
  J2000
  JMEAN		epoch 
  JTRUE 		epoch
@@ -1694,23 +1799,23 @@ in the following lists.\\
  MECLIPTIC      epoch
  TECLIPTIC	epoch
  PLANET		epoch   [position]
-\end{verbatim}
+
 {\em Position}
-\begin{verbatim}
+
  WGS84
  ITRF
-\end{verbatim}
+
 {\em Radial Velocity}
-\begin{verbatim}
+
  LSRK 		direction
  LSRD 		direction
  BARY 		direction
  GEO 		direction	epoch
  TOPO 		direction	epoch	position
  GALACTO	direction
-\end{verbatim}
+
 {\em Doppler}
-\begin{verbatim}
+
  RADIO 
  OPTICAL 
  Z 
@@ -1718,9 +1823,9 @@ in the following lists.\\
  RELATIVISTIC 
  BETA 
  GAMMA
-\end{verbatim}
+
 {\em Frequency}
-\begin{verbatim}
+
  REST 		direction			radialvelocity
  LSRK 		direction
  LSRD 		direction
@@ -1728,10 +1833,10 @@ in the following lists.\\
  GEO 		direction	epoch
  TOPO 		direction	epoch	position
  GALACTO
-\end{verbatim}
+
 </description>
 <example>
-\begin{verbatim}
+
 print "\t----\t doframe Ex 1 \t----"
 a = me.epoch('utc', 'today') 			# a time
 print a
@@ -1740,7 +1845,7 @@ print a
 # 'type': 'epoch'}
 print me.doframe(a)					# set time in frame
 #True
-\end{verbatim}
+
 </example>
 </method>
  
@@ -1756,13 +1861,13 @@ The different frame values necessary are described in the
 <link anchor="measures:measures.doframe.function">doframe</link> function
 </description>
 <example>
-\begin{verbatim}
+
 print "\t----\t framenow Ex 1 \t----"
 print me.framenow()			# specify now as frame reference
 #True
 print me.showframe()	        # and show the current frame
 #'Frame: Epoch: 54054::22:01:42.2880'
-\end{verbatim}
+
 <!-- epoch: 2002/10/18/00:15:49 UTC
      T
 -->
@@ -1786,13 +1891,13 @@ displayed on the terminal using the formatting as done for the
 <link anchor="measures:measures.show.function">show</link> function.
 </description>
 <example>
-\begin{verbatim}
+
 print "\t----\t showframe Ex 1 \t----"
 print me.doframe(me.epoch('utc','today'))		# specify now as frame reference
 #T 
 print me.showframe()				# and show the current frame
 #'Frame: Epoch: 54054::22:01:42.2880'
-\end{verbatim}
+
 <!-- epoch: 2002/10/18/00:15:49 UTC
 T -->
 </example>
@@ -1823,7 +1928,7 @@ toradialvelocity will convert a Doppler type value (e.g. in radio mode) to a
 real radialvelocity. The type of velocity (e.g. LSRK) should be specified
 </description>
 <example>
-\begin{verbatim}
+
 print "\t----\t toradialvelocity Ex 1 \t----"
 a = me.doppler('radio','0.4')
 print a
@@ -1835,7 +1940,7 @@ print me.toradialvelocity('topo',a)
 #{'m0': {'value': 141078803.7647059, 'unit': 'm/s'},
 # 'refer': 'TOPO',
 # 'type': 'radialvelocity'}
-\end{verbatim}
+
 </example>
 </method>
  
@@ -1869,7 +1974,7 @@ frequency quantity (e.g. qa.constants('HI')) or a frequency measure (e.g.
 me.frequency('rest','5100MHz')) should be specified
 </description>
 <example>
-\begin{verbatim}
+
 print "\t----\t tofrequency Ex 1 \t----"
 a=me.doppler('radio','0.4')
 print a
@@ -1880,7 +1985,7 @@ print me.tofrequency('lsrk',a,qa.constants('HI'))
 #{'m0': {'value': 852243451.07159996, 'unit': 'Hz'},
 # 'refer': 'LSRK',
 # 'type': 'frequency'}
-\end{verbatim}
+
 </example>
 </method>
  
@@ -1915,7 +2020,7 @@ doppler measure. In the case of a frequency, a rest frequency has to be
 specified. The type of doppler wanted (e.g. RADIO) has to be specified.
 </description>
 <example>
-\begin{verbatim}
+
 print "\t----\t todoppler Ex 1 \t----"
 f = me.frequency('lsrk','1410MHz')     # specify a frequency
 print f
@@ -1926,7 +2031,7 @@ print me.todoppler('radio', f, qa.constants('HI')) # give doppler, using HI rest
 #{'m0': {'value': 2196249.8401180855, 'unit': 'm/s'},
 # 'refer': 'RADIO',
 # 'type': 'doppler'}
-\end{verbatim}
+
 </example>
 </method>
  
@@ -1956,7 +2061,7 @@ torestfrequency will convert a frequency measure and a doppler measure
 rest frequency.
 </description>
 <example>
-\begin{verbatim}
+
 print "\t----\t torestfrequency Ex 1 \t----"
 dp = me.doppler('radio', '2196.24984km/s')  # a measured doppler speed 
 print dp
@@ -1972,7 +2077,7 @@ print me.torestfrequency(f, dp)                   # the corresponding rest frequ
 #{'m0': {'value': 1420405751.7854364, 'unit': 'Hz'},
 # 'refer': 'REST',
 # 'type': 'frequency'}
-\end{verbatim}
+
 </example>
 </method>
  
@@ -2003,7 +2108,7 @@ in the frame, and a time. If the latter is not set, the current time will be
 used.
 </description>
 <example>
-\begin{verbatim}
+
 # NOT IMPLEMENTED
 print "\t----\t rise Ex 1 \t----"
 print me.rise(me.direction('sun'))
@@ -2011,7 +2116,7 @@ print me.rise(me.direction('sun'))
 print qa.form.long(me.rise(me.direction('sun')).rise)
 #17:48:29.868 
 #
-\end{verbatim}
+
 </example>
 </method>
  
@@ -2044,7 +2149,7 @@ fields will all have a string value. The record also returns a rise and set
 record, with 'last' and 'utc' fields showing the rise and set times as epochs.
 </description>
 <example>
-\begin{verbatim}
+
 # NOT IMPLEMENTED
 print "\t----\t riseset Ex 1 \t----"
 print me.riseset(me.direction('sun'))                     
@@ -2060,7 +2165,7 @@ print me.riseset(me.direction('sun'), qa.unit('80deg'))
 print qa.form.long(me.riseset(me.direction('sun')).rise.utc.m0)  
 #21:30:47.439 
 #
-\end{verbatim}
+
 </example>
 </method>
  
@@ -2088,7 +2193,7 @@ angle in a direction between the direction to the North pole and the other
 direction. 
 </description>
 <example>
-\begin{verbatim}
+
 print "\t----\t posangle Ex 1 \t----"
 a=me.direction('j2000','0deg','70deg')
 b=me.direction('j2000','0deg','80deg')
@@ -2104,7 +2209,7 @@ print me.doframe(pos)
 #True
 print me.posangle(a,b)
 #{'value': -0.0, 'unit': 'deg'}
-\end{verbatim}
+
 <!-- : me.posangle(a,b)
 [value=7.99647705, unit=deg] ??? -->
 </example>
@@ -2132,7 +2237,7 @@ print me.posangle(a,b)
 separation will give the separation of a direction from another as an angle.
 </description>
 <example>
-\begin{verbatim}
+
 print "\t----\t separation Ex 1 \t----"
 a=me.direction('j2000','0deg','70deg')
 b=me.direction('j2000','0deg','80deg')
@@ -2147,7 +2252,7 @@ print me.doframe(pos)
 c=me.measure(b,'azel')                     # try with different type
 print me.separation(a,c)
 #{'value': 10.000000000062277, 'unit': 'deg'}
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2171,7 +2276,7 @@ measures that are normally given in angles. The casual user will probably in
 general not interested in this function.
 </description>
 <example>
-\begin{verbatim}
+
 print "\t----\t addxvalue Ex 1 \t----"
 a=me.observatory('atca')
 print a
@@ -2184,7 +2289,7 @@ print me.addxvalue(a)
 #{'value': [-4750915.8370000012, 2792906.1819999996, -3200483.747], 'unit': 'm'}
 print me.addxvalue(me.epoch('utc','today'))
 #{}
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2200,11 +2305,11 @@ print me.addxvalue(me.epoch('utc','today'))
 type will return the tool name.
 </description>
 <example>
-\begin{verbatim}
+
 print "\t----\t type Ex 1 \t----"
 print me.type()
 #'measures'
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2226,11 +2331,11 @@ default tool ({\em dm}) the done will only be executed if the kill
 argument is true. -->
 </description>
 <example>
-\begin{verbatim}
+
 print "\t----\t done Ex 1 \t----"
 print me.done()
 #True
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2250,7 +2355,7 @@ print me.done()
 Checks if the operand is a correct measure
 </description>
 <example>
-\begin{verbatim}
+
 print "\t----\t ismeasure Ex 1 \t----"
 x=me.epoch('utc','today')
 print x
@@ -2266,7 +2371,7 @@ print me.ismeasure(y)
 #False
 print "Last example, exiting!"
 exit()
-\end{verbatim}
+
 </example>
 </method>
 

@@ -259,7 +259,7 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
 	  LatticeExpr<Float> expr= model_sl + localmodel; 
 	  model_sl.copyData(expr);
 	
- 
+	 
 	  converged =  (cleaner.getMaxResidual() < thresh) 
 	    || (cleaner.numberIterations()==0);
 	  //      if (cpp != 0 ) delete cpp; cpp=0;
@@ -270,6 +270,10 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
     if (mask_sl != 0)  {
       delete mask_sl;
       mask_sl=0;
+    }
+    if (maskli !=0) {
+      delete maskli;
+      maskli=0;
     }
     os << LogIO::NORMAL // Loglevel INFO
        << LatticeExprNode(sum(image)).getFloat()

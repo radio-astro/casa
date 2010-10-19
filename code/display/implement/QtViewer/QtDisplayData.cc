@@ -84,7 +84,6 @@ QtDisplayData::QtDisplayData(QtDisplayPanelGui *panel, String path,
 	       clrMapName_(""),
 	       clrMap_(0),
 	       clrMapOpt_(0),
-	       clrMaps_(static_cast<Colormap*>(0)),
 	       colorBar_(0),
 	       colorBarDisplayOpt_(0),
 	       colorBarThicknessOpt_(0),
@@ -327,11 +326,11 @@ QtDisplayData::QtDisplayData(QtDisplayPanelGui *panel, String path,
 	// custom colormap table as well, using .aipsrc (see
 	// builtinColormapNames()); improvements are also planned.
 
-    for(uInt i=0; i<clrMapNames_.nelements(); i++) {
-      if(defaultCMName==clrMapNames_[i]) {
+    colormapnamemap::iterator cmniter = clrMapNames_.find(defaultCMName);
+    if ( cmniter != clrMapNames_.end() ) {
+	// defaultCMName is a valid choice -- use it.
         initialCMName = defaultCMName;
-	break;  }  }	// defaultCMName is a valid choice -- use it.
-
+    }
     
     setColormap_(initialCMName);
     
@@ -470,9 +469,14 @@ void QtDisplayData::done() {
   
   if(usesClrMap_()) {
     removeColormap_();
-    for(uInt i=0; i<clrMaps_.ndefined(); i++) delete clrMaps_.getVal(i);
-	// Remove/delete any existing dd colormap[s].
-    delete clrMapOpt_; clrMapOpt_=0;  }
+
+    for ( colormapmap::iterator iter = clrMaps_.begin( );
+	  iter != clrMaps_.end( ); ++iter ) {
+	delete iter->second;		// Remove/delete any existing dd colormap[s].
+    }
+
+    delete clrMapOpt_;
+    clrMapOpt_=0;  }
     
   if(hasColorBar()) {
     delete colorBar_;
@@ -594,7 +598,10 @@ void QtDisplayData::setOptions(Record opts, Bool emitAll) {
   
 
   if(dd_==0) return;  // (safety, in case construction failed.).
-  
+
+  // dump out information about the set-options message flow...
+//cout << "\t>>== " << (emitAll ? "true" : "false") << "==>> " << opts << endl;
+
   Record chgdOpts;
   
   Bool held=False;
@@ -795,7 +802,11 @@ void QtDisplayData::setOptions(Record opts, Bool emitAll) {
 	// original opts sent into this method and are more recent;
 	// they overwrite the original opts if the same option
 	// is present in both.
-  
+
+  // emit an event to sync up GUIs based upon changes registered
+  // by the display datas, e.g. update changed axis dimensionality
+  // triggered in PrincipalAxesDD::setOptions( ) to keep all
+  // axis dimensions unique...
   if(chgdOpts.nfields()!=0) emit optionsChanged(chgdOpts);
     
   if(chgdOpts.isDefined("trackingchange")) emit trackingChange(this);  }
@@ -816,8 +827,9 @@ void QtDisplayData::setColorBarOrientation_() {
                                       "vertical" : "horizontal" );
   setOptions(orientation);  }
 
-
-
+void QtDisplayData::emitOptionsChanged( Record changedOpts ) {
+    emit optionsChanged(changedOpts);
+}
 
 void QtDisplayData::setColormap_(const String& clrMapName) {
   // Set named colormap onto underlying dd (done publicly via setOptions).
@@ -847,21 +859,19 @@ void QtDisplayData::setColormap_(const String& clrMapName) {
     // emit qddOK();
     return;  }
     
-  Colormap* clrMap = clrMaps_(clrMapName);
+  colormapmap::iterator cmiter = clrMaps_.find(clrMapName);
+  Colormap* clrMap = (cmiter == clrMaps_.end() ? 0 : cmiter->second);
 
   if(clrMap==0) {
   
     // clrMapName not (yet) in set of DD's used colormaps:
     // see if it's a valid name.
-
-    for(uInt i=0; i<clrMapNames_.nelements(); i++) {
-      if(clrMapName==clrMapNames_[i]) {
-      
+    colormapnamemap::iterator cmniter = clrMapNames_.find(clrMapName);
+    if ( cmniter != clrMapNames_.end( ) ) {
         // valid name -- create and store corresponding Colormap.
-        
 	clrMap = new Colormap(clrMapName);
-	clrMaps_.define(clrMapName, clrMap);
-	break;  }  }
+	clrMaps_.insert(colormapmap::value_type(clrMapName, clrMap));
+    }
     
     if(clrMap==0) {
    
@@ -887,6 +897,15 @@ void QtDisplayData::setColormap_(const String& clrMapName) {
   
   dd_->setColormap(clrMap, 1.);
   if(hasColorBar()) colorBar_->setColormap(clrMap, 1.);
+
+  // sets value for any currently-open data option panel
+  Record cm;
+  cm.define( "value", clrMapName );
+  Record rec;
+  rec.defineRecord("colormap",cm);
+  emit optionsChanged(rec);
+  // sets value for any to-be-opened data option panel
+  if ( clrMapOpt_ ) clrMapOpt_->setValue( clrMapName );
   
   panel_->viewer()->release();
 
@@ -899,6 +918,11 @@ void QtDisplayData::setColormap_(const String& clrMapName) {
 
   
     
+
+bool QtDisplayData::isValidColormap( const QString &name ) const {
+    colormapnamemap::const_iterator iter = clrMapNames_.find(name.toAscii().constData());
+    return iter != clrMapNames_.end() ? true : false;
+}
 
 // Get/set colormap shift/slope ('fiddle') and brightness/contrast
 // settings.  (At present this is usually set for the PC's current
@@ -976,7 +1000,16 @@ Int QtDisplayData::spectralAxis() {
     Int coordno, axisincoord;
     cs->findWorldAxis(coordno, axisincoord, ax);
     
-    if(cs->showType(coordno)=="Spectral") return ax;  }
+    //cout << "coordno=" << coordno << endl;
+    if(cs->showType(coordno)=="Spectral") {
+        //if (im_ != 0) 
+        //   cout << "shape=" << im_->shape() << endl; 
+        //if (cim_ != 0)
+        //   cout << "cshape=" << cim_->shape() << endl; 
+        return ax;  
+    }
+
+  }
 
   return -1;  }
 
@@ -1199,55 +1232,284 @@ Bool QtDisplayData::printLayerStats(ImageRegion& imgReg) {
   // Compute and print statistics on DD's image for 
   // given region in all layers.  
 
+  //there are several possible path here
+  //(1) modify ImageRegion record then create SubImage of 1 plane
+  //(2) modify ImageRegion directly then creage SubImage of 1 plane
+  //(3) make SubImage of SubImage to get one plane
+  //(4) pass layer index to LatticeStatistcis
+  //(5) do single plane statistic right here
+
+  if (displayType_!="raster") return False;
+
   if(im_==0) return False;
     
   //cout << "imgReg=" << imgReg.toRecord("") << endl;
   try {  
     
     SubImage<Float> subImg(*im_, imgReg);
+    IPosition shp = (im_!=0)? im_->shape() : cim_->shape();
+    IPosition sshp = subImg.shape();
+    //cout << "subImg.shape()=" << sshp << endl;
+    //cout << "im_.shape()=" << shp << endl;
 
-    //cout << "subImg=" << subImg.shape() << endl;
-    ImageStatistics<Float> stats(subImg, False);
-    PrincipalAxesDD* padd =
-          dynamic_cast<PrincipalAxesDD*>(dd_);
-
+    PrincipalAxesDD* padd = dynamic_cast<PrincipalAxesDD*>(dd_);
     if (padd == 0)
         return False;
 
-    Int nAxes = (im_!=0)? im_->ndim()  : cim_->ndim();
-    IPosition shp = (im_!=0)? im_->shape() : cim_->shape();
-    const CoordinateSystem& cs = 
-      (im_ != 0) ? im_->coordinates() : cim_->coordinates();
-					   
-    Int zIndex = padd->activeZIndex();
-    IPosition pos = padd->fixedPosition();
     Vector<Int> dispAxes = padd->displayAxes();
     //cout << "dispAxes=" << dispAxes << endl;
 
-    
     Vector<Int> cursorAxes(2);
     cursorAxes(0) = dispAxes[0]; //display axis 1
     cursorAxes(1) = dispAxes[1]; //display axis 2
     //cout << "cursorAxes=" << cursorAxes << endl;;
+
+    Int nAxes = (im_!=0)? im_->ndim()  : cim_->ndim();
+    Vector<int> otherAxes(0);
+    otherAxes = IPosition::otherAxes(nAxes, cursorAxes).asVector();
+    //cout << "otherAxes=" << otherAxes << endl;;
+
+    IPosition start(nAxes);
+    IPosition stride(nAxes);
+    IPosition end(sshp);
+    start = 0;
+    stride = 1;
+
+    Record rec = dd_->getOptions();
+    //cout << "dd=" << rec << endl;
+    String zaxis = "";
+    String haxis = "";
+    Int zIndex = padd->activeZIndex();
+    Int hIndex = -1;
+    try {
+       //String xaxis = rec.subRecord("xaxis").asString("value");
+       //String yaxis = rec.subRecord("yaxis").asString("value");
+       zaxis = rec.subRecord("zaxis").asString("value");
+       haxis = rec.subRecord("haxis1").asString("listname");
+       hIndex = rec.subRecord("haxis1").asInt("value");
+       //cout << "zaxis=" << zaxis << " haxis=" << haxis << endl;
+    }
+    catch(...){}
+    //cout << "zIndex=" << zIndex << " hIndex=" << hIndex << endl;
+    
+    /*
+    if (nAxes == 3 || hIndex == -1) {
+        start(otherAxes[0]) = zIndex;
+        end(otherAxes[0]) = zIndex;
+    }
+    if (nAxes == 4 && hIndex != -1) {
+        if (otherAxes[0] == dispAxes[2]) {
+           start(otherAxes[0]) = zIndex;
+           end(otherAxes[0]) = zIndex;
+           start(otherAxes[1]) = hIndex;
+           end(otherAxes[1]) = hIndex;
+        }
+        else {
+           start(otherAxes[0]) = hIndex;
+           end(otherAxes[0]) = hIndex;
+           start(otherAxes[1]) = zIndex;
+           end(otherAxes[1]) = zIndex;
+        }
+    }
+
+    //cout << "start=" << start << " end=" << end 
+    //     << " stride=" << stride << endl;
+    
+    IPosition cursorShape(2, sshp[dispAxes[0]], sshp[dispAxes[1]]);
+    IPosition matAxes(2, dispAxes[0], dispAxes[1]);
+    //cout << "cursorShape=" << cursorShape << endl;
+    IPosition axisPath(4, dispAxes[0], dispAxes[1], 
+                          otherAxes[0], otherAxes[1]);
+    //cout << "axisPath=" << axisPath << endl;;
+    LatticeStepper stepper(sshp, cursorShape, matAxes, axisPath);
+    cout << "stepper ok=" << stepper.ok() << endl;
+    //stepper.subSection(start, end, stride);
+    //cout << "stepper section ok=" << stepper.ok() << endl;
+
+    RO_LatticeIterator<Float> iterator(subImg, stepper);
+
+    //Vector<Float> spectrum(nFreqs);
+    //spectrum = 0.0;
+    uInt channel = 0;
+    uInt k = -1;
+    for (iterator.reset(); !iterator.atEnd(); iterator++) {
+       k++;
+       Int r = k / sshp[2];
+       int s = k % sshp[2];
+       cout << "z=" << r << " h=" << s << endl;
+       if (r != zIndex || s != hIndex)
+          continue; 
+       const Matrix<Float>& cursor = iterator.matrixCursor();
+       cout << " cursor=" << cursor << endl;
+       for (uInt col = 0; col < cursorShape(0); col++) {
+          for (uInt row = 0; row < cursorShape(1); row++) {
+          //spectrum(channel) += cursor(col, row);
+          cout << "col=" << col << " row=" << row
+               << " cursor=" << cursor(col, row) << endl; 
+          }
+       }
+    }
+
+
+    //Slicer slicer(start, end, stride);
+    //SubImage<Float> twoD(subImg, slicer);
+    //IPosition shp2 = twoD.shape();
+    //cout << "twoD.shape()=" << shp2 << endl;
+    */
+
+    const CoordinateSystem& cs = 
+      (im_ != 0) ? im_->coordinates() : cim_->coordinates();
+    String unit =  
+      (im_ != 0) ? im_->units().getName() : cim_->units().getName();
+
+    IPosition pos = padd->fixedPosition();
+
+    ImageStatistics<Float> stats(subImg, False);
     if (!stats.setAxes(cursorAxes)) return False;
     stats.setList(True);
     String layerStats;
     Vector<String> nm = cs.worldAxisNames();
-    //cout << "cs=" << nm << endl;
-    stats.getLayerStats(layerStats, nm, dispAxes[2], zIndex); 
+    //cout << "nm=" << nm << endl;
+
+    Int zPos = -1;
+    Int hPos = -1;
+    for (Int k = 0; k < nm.nelements(); k++) {
+       if (nm(k) == zaxis)
+          zPos = k;
+       if (nm(k) == haxis)
+          hPos = k;
+    }
+    //cout << "zPos=" << zPos << " hPos=" << hPos << endl;
+
+    String zLabel="";
+    String hLabel="";
+    Vector<Double> tPix,tWrld;
+    tPix = cs.referencePixel();
+    String tStr;
+    if (zPos > -1) {
+       tPix(zPos) = zIndex;
+       if (!cs.toWorld(tWrld,tPix)) {
+       } else {
+          zLabel = ((CoordinateSystem)cs).format(tStr, 
+                 Coordinate::DEFAULT, tWrld(zPos), zPos);
+          zLabel += tStr + "  ";
+       }
+    }
+    if (hPos > -1) {
+       tPix(hPos) = hIndex;
+       //cout << "tPix=" << tPix << endl;
+       if (!cs.toWorld(tWrld,tPix)) {
+       } else {
+          hLabel = ((CoordinateSystem)cs).format(tStr, 
+                 Coordinate::DEFAULT, tWrld(hPos), hPos);
+          hLabel += tStr + "  ";
+       }
+    }
+    //cout << "zLabel=" << zLabel << " hLabel=" << hLabel << endl;
+    //cout << "tStr=" << tStr << endl;
+
+    Int spInd = cs.findCoordinate(Coordinate::SPECTRAL);
+    SpectralCoordinate spCoord;
+    Int wSp=-1;
+    if (spInd>=0){
+       wSp= (cs.worldAxes(spInd))[0];
+       spCoord=cs.spectralCoordinate(spInd);
+       spCoord.setVelocity();
+       Double vel;
+       if (downcase(zaxis).contains("freq")) {
+          if (spCoord.pixelToVelocity(vel, zIndex)) {
+             zLabel += "Velocity=" + String::toString(vel) + 
+                  "km/s  Frame=" + 
+                  MFrequency::showType(spCoord.frequencySystem()) + 
+                  "  Doppler=" +
+                  MDoppler::showType(spCoord.velocityDoppler()) + 
+                  "  ";
+          } 
+       }
+       if (downcase(haxis).contains("freq")) {
+          if (spCoord.pixelToVelocity(vel, hIndex)) {
+             hLabel += "Velocity=" + String::toString(vel) + 
+                  "km/s  Frame=" + 
+                  MFrequency::showType(spCoord.frequencySystem()) + 
+                  "  Doppler=" +
+                  MDoppler::showType(spCoord.velocityDoppler()) + 
+                  "  ";
+          } 
+       }
+    }
+
+    //the position will have the frequency coord in it
+    //Vector<Double> lin(2);
+    //lin(0) = 1; lin(1) = 1;
+    //Vector<Double> wld(2);
+    //dd_->linToWorld(wld, lin);
+    //cout << "world=" << wld << endl;
+    //cout << "Tracking=" << dd_->showPosition(wld) << endl;
+
+   Double beamArea = 0;
+   ImageInfo ii = im_->imageInfo();
+   Vector<Quantum<Double> > beam = ii.restoringBeam();
+   CoordinateSystem cSys = im_->coordinates();
+   String imageUnits = im_->units().getName();
+   imageUnits.upcase();
+
+   Int afterCoord = -1;
+   Int dC = cSys.findCoordinate(Coordinate::DIRECTION, afterCoord);
+   // use contains() not == so moment maps are dealt with nicely
+   if (beam.nelements()==3 && dC!=-1 && imageUnits.contains("JY/BEAM")) {
+      DirectionCoordinate dCoord = cSys.directionCoordinate(dC);
+      Vector<String> units(2);
+      units(0) = units(1) = "rad";
+      dCoord.setWorldAxisUnits(units);
+      Vector<Double> deltas = dCoord.increment();
+
+      Double major = beam(0).getValue(Unit("rad"));
+      Double minor = beam(1).getValue(Unit("rad"));
+      beamArea = C::pi/(4*log(2)) * major * minor / 
+                 abs(deltas(0) * deltas(1));
+    }
+
+    String head = description().after(" ") + "\n";   
+    if (zaxis != "" )
+        head += zaxis + "=" + zLabel;  
+    if (haxis != "" )
+        head += haxis + "=" + hLabel; 
+    head += "BrightnessUnit=" + unit;
+    if (beamArea > 0) {
+        head += "  BeamArea=" + String::toString(beamArea) + "\n"; 
+    }
+    else {
+        head += "  BeamArea=Unknown\n";
+    }
+    //cout << "head=" << head << endl;
+    //cout << "beamArea=" << beamArea 
+    //     << " zPos=" << zPos << " zIndex=" << zIndex
+    //     << " hPos=" << hPos << " hIndex=" << hIndex << endl;
+    Bool statsOk =
+    stats.getLayerStats(layerStats, beamArea, zPos, zIndex, hPos, hIndex); 
     //cout << layerStats << endl;
+    if (!statsOk) { 
+       cout << "stats not ok" << endl;
+       return False;
+    }
+
+
+
+    layerStats = head + layerStats;
+
     //cout << "done getLayerStats" << endl ;
-    
     emit statsReady(layerStats);
     return True;
 
   }
   catch (const casa::AipsError& err) {
     errMsg_ = err.getMesg();
+    //cout << "Error: " << errMsg_ << endl;
     return False;  
   }
   catch (...) { 
     errMsg_ = "Unknown error computing region statistics.";
+    //cout << "Error: " << errMsg_ << endl;
     return False;  
   }
     
@@ -1519,8 +1781,6 @@ Display::DisplayDataType QtDisplayData::ddType() {
   if(isEmpty()) return Display::Annotation;	// (anything...)
   return dd_->classType();  }
   
-
-
 
 Float QtDisplayData::colorBarLabelSpaceAdj() {
   // Used (by QtDisplayPanel) to compute margin space for colorbar labels.

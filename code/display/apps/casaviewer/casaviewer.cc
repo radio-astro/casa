@@ -40,7 +40,6 @@
 #include <display/QtViewer/QtDisplayData.qo.h>
 #include <display/QtViewer/QtDisplayPanelGui.qo.h>
 #include <display/QtViewer/QtViewer.qo.h>
-#include <display/QtViewer/QtApp.h>
 
 #include <unistd.h>
 #include <sys/stat.h>
@@ -63,6 +62,7 @@ static void start_manager_root( const char *origname, int numargs, char **args,
 static void launch_server( const char *origname, int numargs, char **args,
 			   const char *dbusname, bool without_gui,
 			   bool persistent, bool casapy_start );
+static char *find_xvfb( const char *paths );
 static pid_t launch_xvfb( const char *name, pid_t pid, char *&display, char *&authority );
 static int make_it_a_dir( const char *path );
 
@@ -74,6 +74,26 @@ static void signal_manager_root( int sig ) {
     }
     signal( sig, signal_manager_root );
     exit(0);
+}
+
+
+class ViewerApp : public QApplication {
+    public:
+	ViewerApp( int &argc, char **argv, bool gui_enabled ) : QApplication(argc, argv, gui_enabled) { }
+	bool notify( QObject *receiver, QEvent *e );
+};
+
+bool ViewerApp::notify( QObject *receiver, QEvent *e ) {
+    try { return QApplication::notify(receiver,e); }
+    catch ( AipsError e ) {
+	qWarning( ) << "unhandled exception:" << e.getMesg().c_str();
+	return false;
+    } catch ( ... ) {
+	qWarning("unhandled exception... ");
+	qDebug() << "from" << receiver->objectName() << "from event type" << e->type();
+	qFatal("exiting...");
+	exit(1);
+    }
 }
 
 int main( int argc, const char *argv[] ) {
@@ -103,7 +123,7 @@ int main( int argc, const char *argv[] ) {
     INITIALIZE_PGPLOT
     try {
 
-	QApplication qapp(numargs, args, true);
+	ViewerApp qapp(numargs, args, true);
 
 	// if it's a server, stick around even if all windows are closed...
 	if ( server_startup ) {
@@ -232,7 +252,7 @@ int main( int argc, const char *argv[] ) {
 
 	}
 
-	Int stat = QtApp::exec();
+	Int stat = qapp.exec();
 
   //delete dpg;		// Used to lead to crash (double-deletion
   			// of MWCTools); should work now.
@@ -452,15 +472,58 @@ void launch_server( const char *origname, int numargs, char **args,
     while ( ! sigterm_received ) { sleep(5); }
 }
 
+char *find_xvfb( const char *paths ) {
+
+    if ( ! paths ) return 0;
+
+    const char *pathptr = paths; 
+    char buffer[PATH_MAX];		// security: too long paths could result
+					// in exec'ing an unintended binary
+    char *result = 0;
+    const char *p = paths;
+    do {
+	if ( *p == ':' || *p == '\0' ) {
+	    if ( p == pathptr ) {
+		pathptr = p+1;
+		continue;
+	    }
+	    if ( (p - pathptr + 6) > sizeof(buffer) ) {
+		pathptr = p+1;
+		continue;
+	    }
+	    memcpy(buffer, pathptr, p - pathptr);
+	    memcpy(&buffer[p-pathptr], "/Xvfb", 6);
+	    if ( access( buffer, X_OK ) == 0 ) {
+		result = strdup(buffer);
+		break;
+	    }
+	    pathptr = p+1;
+	}
+    } while ( *p++ );
+
+    return result;
+}
 
 pid_t launch_xvfb( const char *name, pid_t pid, char *&display, char *&authority ) {
+
     pid_t child_xvfb = 0;
+
+#ifdef Q_WS_X11
+
     char *home = getenv("HOME");
 
     display = 0;
     authority = 0;
 
-#ifdef Q_WS_X11
+    char *xvfb_path = find_xvfb( getenv("PATH") );
+    if ( xvfb_path == 0 ) {
+	xvfb_path = find_xvfb( "/usr/X11R6/bin:/usr/X11/bin:/usr/bin" );
+	if ( xvfb_path == 0 ) {
+	    fprintf( stderr, "casaviewer: could not start Xvfb\n" );
+	    exit(1);
+	}
+    }
+
 #if defined(__APPLE___)
     srandomdev( );
 #else
@@ -480,7 +543,7 @@ pid_t launch_xvfb( const char *name, pid_t pid, char *&display, char *&authority
 
 
     if ( ! home ) {
-	fprintf( stderr, "HOME is not defined in your environment" );
+	fprintf( stderr, "HOME is not defined in your environment\n" );
 	exit(1);
     }
 
@@ -494,7 +557,7 @@ pid_t launch_xvfb( const char *name, pid_t pid, char *&display, char *&authority
 
     const int display_start=6;
     int display_num;
-    for ( display_num=display_start; display_num < (display_start+10); ++display_num ) {
+    for ( display_num=display_start; display_num < (display_start+80); ++display_num ) {
 
 	int io[2];
 	if ( pipe(io) < 0 ) {
@@ -516,8 +579,8 @@ pid_t launch_xvfb( const char *name, pid_t pid, char *&display, char *&authority
 	    char screen_arg[50];
 	    sprintf( screen_arg, ":%d", display_num );
 
-	    execlp( "Xvfb", xvfb_name, screen_arg, "-screen", "0","2048x2048x24+32",
-		    "-auth", authority, (char*) 0 );
+	    execl( xvfb_path, xvfb_name, screen_arg, "-screen", "0","2048x2048x24+32",
+		   "-auth", authority, (char*) 0 );
 	    fprintf( stderr, "exec of Xvfb should not have returned...%d...\n", getpid() );
 	    perror( "virtual frame buffer" );
 	    exit(1);

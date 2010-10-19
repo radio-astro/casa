@@ -355,6 +355,12 @@ public:
   void chanAveVisCube(Cube<Complex>& data,Int nChanOut);
   void chanAveFlagCube(Cube<Bool>& flagcube,Int nChanOut);
 
+  // Form Stokes parameters from correlations
+  //  (these are preliminary versions)
+  void formStokes();
+  void formStokesWeightandFlag();
+  void formStokes(Cube<Complex>& vis);
+
   // Sort/unsort the correlations, if necessary
   //  (Rudimentary handling of non-canonically sorted correlations--use with care!)
   void sortCorr();
@@ -387,6 +393,10 @@ public:
   void setVisCube(const Cube<Complex>& vis);
   void setModelVisCube(const Cube<Complex>& vis);
   void setCorrectedVisCube(const Cube<Complex>& vis);
+
+  // Set model according to a Stokes vector
+  void setModelVisCube(const Vector<Float>& stokes);
+
 
   // Reference external model visibilities
   void refModelVis(const Matrix<CStokesVector>& mvis);

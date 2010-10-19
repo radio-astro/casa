@@ -123,7 +123,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="string" name="interpolation" subparam="true">
       <description>Spectral interpolation (nearest, linear, cubic)</description>
-      <value>nearest</value>
+      <value>linear</value>
       <allowed kind="enum">
 	<value>nearest</value>
 	<value>linear</value>
@@ -218,9 +218,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 <!--========================================================= -->
     <param type="any" name="mask">
-	    <description>Cleanbox(es), mask image(s), and/or mask region(s) </description>
+	    <description>Cleanbox(es), mask image(s), region(s), or a level</description>
 	    <any type="variant"/>
 	    <value type="stringArray"></value>
+            <!-- <value type="double">0.2</value> -->
     </param>
 <!--========================================================= -->
     <param type="int" name="nchan" subparam="true">
@@ -275,7 +276,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 <!--========================================================= -->
     <param type="doubleArray" name="cell" units="arcsec">
-    <description>x &amp; y cell size(s). Default unit arcsec.</description>
+    <description>x and y cell size(s). Default unit arcsec.</description>
     <value type="vector"><value>1.0</value></value>
     </param>
 <!--========================================================= -->
@@ -348,9 +349,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <value>1.0</value>
     </param>
 <!--========================================================= -->
-    <param type="string" name="modelimage">
-	    <description>Name of model image(s) to initialize cleaning</description>
-	    <value></value>
+    <param type="any" name="modelimage">
+      <description>Name of model image(s) to initialize cleaning</description>
+      <any type="variant"/>
+      <value type="string"></value>
     </param>
 <!--========================================================= -->
     <param type="stringArray" name="restoringbeam">
@@ -405,7 +407,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 <!--========================================================= -->
     <param type="string" name="reffreq" subparam="true">
-	    <description>Reference frequency for MFS (relevant only if nterms > 1)</description>
+	    <description>Reference frequency for MFS (relevant only if nterms > 1),\'\' defaults to central data-frequency</description>
 	    <value></value>
     </param>
 <!--========================================================= -->
@@ -616,7 +618,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   <returns type="void"/>
 
   <example>
-
        The clean task has many options:
  
         1)  Make 'dirty' image and 'dirty' beam (psf)
@@ -738,10 +739,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                equivalent to assuming no frequency dependence.
                nterms=2 is equivalent to the Sault-Wieringa algorithm
                (AandAS, 1994) reffreq is the reference frequency about
-               which the Taylor expansion is done. ** Note that the 
-               software implementation of the algorithm for nterms>1 
-               is still experimental and will be fully available in a 
-               later release. **
+               which the Taylor expansion is done. If reffreq='' it
+	       defaults to the middle frequency of the selected range.
+	       ** Note that the software implementation of the algorithm
+	       for nterms>1 is still experimental and fill be fully
+	       available in a later release **
 
   &gt;&gt;&gt; mode='channel', 'velocity', and 'frequency' expandable parameters
                nchan -- Total number of channels in the output image.
@@ -784,10 +786,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                chaniter -- specify how spectral CLEAN is performed, 
                  default: chaniter=False;
                  example: chaniter=True; step through channels 
-                  WARNING: The interactive clean with chaniter=True for
-                    optical velocity mode
-                    (mode='velocity' and veltype='optical') is
-                    NOT YET IMPLEMENTED.
                outframe -- For mode='velocity', 'frequency', or 'channel':  velocity
                  reference frame of output image
                  Options: '','LSRK','LSRD','BARY','GEO','TOPO','GALACTO',
@@ -888,11 +886,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                    (Not fully implemented...for now only controls 
  		   what is seen if interactive=True...but in the future will 
  		   control the image on which clean components are searched)
+                   It does *not* affect the scaling of the *final* image -
+                   that is done by pbcor.
                    default='SAULT'; example: scaletype='PBCOR'
                    Options: 'PBCOR','SAULT'
                      'SAULT' when interactive=True shows the residual
  		             with constant noise across the mosaic. 
- 			     be acheived by setting pbcor=True.
+ 			     Can also be achieved by setting pbcor=False.
                      'PBCOR' uses the SAULT scaling scheme for
  			     deconvolution, but if interactive=True shows the
  			     primary beam corrected image during interactive. 
@@ -987,31 +987,44 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  a low number like 20, but then increasing as more extended
                  emission is encountered.
 
-       mask -- Specification of cleanbox(es), mask image(s), and/or
-               region(s) to be used for CLEANing. As long as the image has
-               the same shape (size), mask images from a previous
-               interactive session can be used for a new execution. NOTE:
-               the initial clean mask actually used is the union of what
-               is specified in mask and &lt;imagename&gt;.mask default: [] (no
-               masking); Possible specification types: (a) Explicit
-               cleanbox pixel ranges example: mask=[110,110,150,145] clean
-               region with blc=110,100; trc=150,145 (pixel values) (b)
-               Filename with cleanbox pixel values with ascii format:
-               example: mask='mycleanbox.txt' &lt;fieldid blc-x blc-y
-               trc-x trc-y&gt; on each line 
-               1 45 66 123 124 
-               2 23 100 300 340
-               (c) Filename for image mask example: mask='myimage.mask'
-               (d) Filename for region specification (e.g. from viewer)
-               example: mask='myregion.rgn' (e) Combinations of any of the
-               above example: mask=[[110,110,150,145],'mycleanbox.txt',
-                                    'myimage.mask','myregion.rgn']
-               If include outlier fields, then mask need to be specified in
-               nested lists: 
-                 e.g. mask=[[[110,110,150,145],'myimage.mask'],[],[20,20,40,40]]
-               (A clean box with [110,110,150,145] and a image mask for main
-                field, no mask for 1st outlier field, 1 clean box for second
-                outlier field.)
+       mask -- Specification of cleanbox(es), mask image(s), primary beam
+               coverage level, and/or region(s) to be used for CLEANing.
+               CLEAN tends to perform better, and is less likely to diverge,
+               if the CLEAN component placement is limited by a mask to where
+               real emission is expected to be.  As long as the image has the
+               same shape (size), mask images (e.g. from a previous interactive
+               session) can be used for a new execution.  NOTE: the initial
+               clean mask actually used is the union of what is specified in mask
+               and &lt;imagename&gt;.mask
+               default: [] (no masking); Possible specification types:
+               (a) Explicit cleanbox pixel ranges example: mask=[110,110,150,145]
+                   = clean region with blc=110,100; trc=150,145 (pixel values)
+               (b) Filename with cleanbox pixel values in ASCII format.
+                   Example: mask='mycleanbox.txt'
+                            &lt;fieldid blc-x blc-y trc-x trc-y&gt; on each line:
+                            1 45 66 123 124 
+                            2 23 100 300 340
+               (c) Filename for image mask.  Example: mask='myimage.mask'
+                   '' -> no mask
+               (d) Filename for region specification (e.g. from viewer).
+                   Example: mask='myregion.rgn'
+               (e) Combinations of any of the above.
+                   Example: mask=[[110,110,150,145],'mycleanbox.txt',
+                                  'myimage.mask', 'myregion.rgn']
+                   If including outlier fields, then mask needs to be specified
+                   in nested lists: 
+                   e.g. mask=[[[110,110,150,145],'myimage.mask'],[],[20,20,40,40]]
+                   (A clean box with [110,110,150,145] and a image mask for main
+                    field, no mask for 1st outlier field, 1 clean box for 2nd
+                    outlier field.)
+               (f) (new as of 2010-09-28)
+                   A number between 0 and 1, used as a threshhold of primary
+                   beam coverage.  The primary beam coverage map (imagename +
+                   '.flux(.pbcoverage)') will be made and the CLEAN component
+                   placement will be limited to where it is > the number.
+               (g) True or False.
+                   True: like (f), but use minpb as the number.
+                   False: go maskless (and expect trouble).
        uvtaper -- Apply additional uv tapering of the visibilities.
                default: uvtaper=False; example: uvtaper=True
 
@@ -1041,7 +1054,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                units in the image are Jy/beam as in a single-dish
                image, then it will be converted to Jy/pixel as in a
                model image, using the restoring beam in the image
-               header
+               header.  
+	       When nterms>1, a one-to-one mapping is done between images
+	       in this list and Taylor-coefficients. If more than nterms 
+	       images are  specified, only the first nterms are used.
+	       It is valid to supply fewer than nterms model images.
+	       Example : Supply an estimate of the continuum flux from a
+	                 previous imaging run. 
        weighting -- Weighting to apply to visibilities:
                default='natural'; example: weighting='uniform';
                Options: 'natural','uniform','briggs', 
@@ -1149,7 +1168,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                          2 20 20 40 40
                  then [45 66 123 124] is assigned to first field (imagename[0], or first line
                  of outlierfile).
-                
   </example>
 
 </task>

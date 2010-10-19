@@ -11,7 +11,7 @@
  ***/
 
 #include <iostream>
-#include <xmlcasa/singledish/sdwriter_cmpt.h>
+#include <sdwriter_cmpt.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Utilities/Assert.h>
 

@@ -250,7 +250,6 @@ public:
     // <group>
     ArrayColumn<Complex> &modelData() {return modelData_p;}
     ArrayColumn<Complex> &correctedData() {return correctedData_p;}
-    ArrayColumn<Float> &imagingWeight() {return imagingWeight_p;}
     // </group>
 private:
     // The MeasurementSet
@@ -279,7 +278,6 @@ private:
 
     // calibration columns
     ArrayColumn<Complex> modelData_p, correctedData_p;
-    ArrayColumn<Float> imagingWeight_p;
 
     // map device name string to the appropriate GBTDAPFiller
     SimpleOrderedMap<String, Int> deviceMap_p;

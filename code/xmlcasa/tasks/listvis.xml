@@ -11,7 +11,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!-- ms.open('anyfile.ms'); -->
 <!-- ms.lister(); -->
 
-<task type="function" name="listvis" category="information">
+<task type="function" name="listvis" category="information, analysis">
 
   <shortdescription>List measurement set visibilities.</shortdescription>
 

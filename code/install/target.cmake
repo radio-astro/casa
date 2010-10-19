@@ -167,11 +167,6 @@ macro( casa_add_module module )
   set( ${module}_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include )
   set( ${module}_DEFINITIONS "" )
 
-  if( NOT EXISTS ${CMAKE_SOURCE_DIR}/include/${module} )
-    execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink ../${module}/implement ${module}
-                     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/include )
-  endif()
-
   # Which libraries to link against (internally used, not exported, by the module)
   set( ${module}_LINK_TO "" )
 
@@ -275,57 +270,8 @@ endmacro()
 #
 
 MACRO( casa_add_python module  _target _install_dir )
-  set( _pyexecs ${ARGN} )
 
-  set( _out_all "" )
-
-  FOREACH (_py ${_pyexecs} )
-
-    GET_FILENAME_COMPONENT(_infile ${_py} ABSOLUTE)
-    GET_FILENAME_COMPONENT(_outfile ${_py} NAME)
-
-    # Retain paths for scripts in usecases/ and regressions/
-    # strip path for everything else
-    string( REGEX MATCH "usecases|regressions" _o ${_infile} )
-    if( _o )
-      set( _outfile ${CMAKE_CURRENT_BINARY_DIR}/${_py} )
-    else()
-      set( _outfile ${CMAKE_CURRENT_BINARY_DIR}/${_outfile} )      
-    endif()
-
-    GET_FILENAME_COMPONENT(_outpath ${_outfile} PATH)
-    
-    set( _out_all ${_out_all} ${_outfile} )
-
-    ADD_CUSTOM_COMMAND( OUTPUT ${_outfile}
-      COMMAND mkdir -p ${_outpath}
-      COMMAND 
-      sed -e 's|/CASASUBST/task_directory/|${PYTHON_TASKD}|' 
-          -e 's|/CASASUBST/python_library_directory/|${PYTHON_LIBD}|'
-          -e 's|/CASASUBST/build_time|${BUILDTIME}|'
-          -e 's|/CASASUBST/subversion_revision|${SVNREVISION}|'
-          -e 's|/CASASUBST/subversion_url|${SVNURL}|'
-          -e 's|/CASASUBST/casa_version|${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_VERSION}|'
-          -e 's|/CASASUBST/casa_build|${CASABUILD}|'
-          ${_infile} > ${_outfile} 
-      DEPENDS ${_infile} 
-      COMMENT "Creating ${_outfile}"
-      )
-
-  endforeach()
-
-
-  add_custom_target( 
-    ${_target}
-    ALL 
-    DEPENDS ${_out_all} )
-    #COMMENT "Creating python files")
-
-  add_dependencies( inst ${_target} )
-  add_custom_target( ${_target}_fast ${CMAKE_BUILD_TOOL} ${_target}/fast )
-  add_dependencies( ${module}_fast ${_target}_fast )
-
-  install( PROGRAMS ${_out_all}
+  install( PROGRAMS ${ARGN}
            DESTINATION ${_install_dir} )
 
 endmacro()

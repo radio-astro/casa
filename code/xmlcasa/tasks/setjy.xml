@@ -5,25 +5,34 @@
       xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="setjy" category="modeling">
-	<shortdescription>Fills the model column with the visibility of a calibrator</shortdescription>
+<task type="function" name="setjy" category="modeling, calibration">
+	<shortdescription>Fills the model column with the visibilities of a calibrator</shortdescription>
 	<description>
-       The task places the model visibility amp and phase associated
+       This task places the model visibility amp and phase associated
        with a specified clean components image into the model column
-       of the data set.  The flux density for point source
-       (I,Q,U,V) can be entered explicitly.
+       of the data set.  The flux density (I,Q,U,V) for a point source
+       calibrator can be entered explicitly.
 
        Models are available for 3C48, 3C138, and 3C286 between
        1.4 and 43 GHz.  3C147 is available above 13 GHz.  These models
        are scaled to the precise frequency of the data.  Only I models are
        presently available.
 
-       The location of the models are system dependent:  At the AOC, the
+       The location of the models is system dependent:  At the AOC, the
        models are in the directory::/usr/lib/casapy/data/nrao/VLA/CalModels/
        3C286_L.im (egs)
 
-       Setjy need only be run on the calibrator sources with a known flux
+       setjy need only be run on the calibrator sources with a known flux
        density and/or model.
+
+
+       Solar System Objects are supported via the 'Butler-JPL-Horizons
+       2010' standard.  Currently they are modeled as uniform
+       temperature disks based on their ephemerides at the time of
+       observation (note that this may oversimply objects, in
+       particular asteroids). Specify the name of the object in the
+       'field' parameter (case insensitive). 
+
 	</description>
 	<input>
 		<param type="string" name="vis" mustexist="true">
@@ -46,6 +55,10 @@
 			<value></value>
 		</param>
 
+		<param type="bool" name="scalebychan">
+		  <description>scale the flux density on a per channel basis or else on a per spw basis</description>
+		  <value>False</value>
+		</param>
 		<param type="any" name="fluxdensity">
 			<any type="variant" limittypes="int intArray doubleArray"/>
 			<description>Specified flux density [I,Q,U,V]; -1 will lookup values</description>
@@ -56,12 +69,16 @@
 			<description>Flux density standard</description>
 			<value>Perley-Taylor 99</value>
 			<allowed kind="enum">
+			<value>Perley-Butler 2010</value>
 			<value>Perley-Taylor 99</value>
 			<value>Baars</value>
 			<value>Perley 90</value>
 			<value>Perley-Taylor 95</value>
+                        <value>Butler-JPL-Horizons 2010</value>
 			</allowed>
 		</param>
+
+
 
 	</input>
 <returns type="void"/>
@@ -86,8 +103,16 @@
        the models are in the directory::/usr/lib/casapy/data/nrao/VLA/CalModels
        or /usr/lib64/casapy/data/nrao/VLA/CalModel.
 
-       Setjy need only be run on the calibrator sources with a know flux
+       setjy need only be run on the calibrator sources with a known flux
        density and/or model.
+
+       Solar System Objects are supported via the 'Butler-JPL-Horizons
+       2010' standard.  Currently they are modeled as uniform
+       temperature disks based on their ephemerides at the time of
+       observation (note that this may oversimply objects, in
+       particular asteroids). Specify the name of the object in the
+       'field' parameter (case insensitive). Recognized objects are
+       listed below.
 
        Keyword arguments:
        vis -- Name of input visibility file
@@ -95,8 +120,8 @@
        field -- Select field using field id(s) or field name(s).
               default: ''=all fields, but run setjy one field at a time.
                  [run listobs to obtain the list id's or names of calibrators]
-              If field string is a non-negative integer, it is assumed a field index
-                otherwise, it is assumed a field name
+              If field is a non-negative integer, it is assumed to be a field
+              index.  Otherwise, it is taken to be a field name.
               field='0~2'; field ids 0,1,2
               field='0,4,5~7'; field ids 0,4,5,6,7
               field='3C286,3C295'; field named 3C286 and 3C295
@@ -114,29 +139,35 @@
 
        Use one of the two methods below:  modimage or fluxdensity
 
-       modimage -- Model image (I only) from which the model visibilities
-              default: '' means do not use model, but fluxdensity
+       modimage -- Model image (I only) for setting the model visibilities.
+              default: '' means use fluxdensity instead of modimage. 
               Each field must be done separately.  The image clean model
-              will be scaled from the frequency in the model to that actually used.
+              will be scaled from the frequency in the model to that actually
+              used (ignoring fluxdensity), unless fluxdensity = 0
+              (or fluxdensity[0] = 0).
               Both the amplitude and phase are calculated.
-              At the AOC or CV, the models are located in the
+              At the AOC or CV, the models are located in
               /usr/lib/casapy/data/nrao/VLA/CalModels/3C286_L.im (egs)
                    lib64
+       scaleperchan=False
+               This determines whether the fluxdensity set in the model is
+               calculated on a per channel basis. If False then it only one
+               fluxdensity value is given per spw
 
        fluxdensity -- Specified flux density [I,Q,U,V] in Jy
-               default =&gt; -1, places [1,0,0,0] flux density for all sources,
-                  except for 3C286, 3C48 and 3C147 where the absolute flux
-                  density it added.  It is recommended to use the modimage for
+               default: -1, uses [1,0,0,0] flux density for all sources,
+                  except for 3C286, 3C48 and 3C147, which use standard flux
+                  densities.  It is recommended to use modimage for
                   these sources if they are resolved by the observation.
                Only one flux density can be specified at a time.  The phases are
                   set to zero.
                example   fluxdensity=-1  will insert 1.0 for all calibrators
-                         except 3C286, 3C147 and 3C48
+                         except 3C286, 3C147 and 3C48.
                example   field = '1'; fluxdensity=[3.2,0,0,0] wil put in 
-                         flux density of I=3.2 for field='1'
+                         a flux density of I=3.2 for field='1'
 
-               At present, this is the only method to insert a polarized flux
-               density model (June 2000).
+               At present (June 2000), this is the only method to insert a
+               polarized flux density model.
                example:  fluxdensity=[2.63,0.21,-0.33,0.02]
                          will put in I,Q,U,V flux densities of 2.63,0.21,-0.33,
                          and 0.02, respectively, in the model column.
@@ -144,7 +175,29 @@
        standard -- Flux density standard, used if fluxdensity&lt;0
                default: 'Perley-Taylor 99'; example: standard='Baars'
                Options: 'Baars','Perley 90','Perley-Taylor 95',
-                  'Perley-Taylor 99'
+                  'Perley-Taylor 99', 'Perley-Butler 2010',
+                  and 'Butler-JPL-Horizons 2010'.
+               'Perley-Butler 2010' is preliminary as of CASA 3.1.0.
+               All but the last one are for extragalactic calibrators,
+               and the final one is for Solar System objects. Recognized Solar System 
+	       objects are: 
+
+	       Planets:  Mars, Jupiter, Uranus, Neptune, Pluto
+	       
+	       Moons: Mars moons:  Phobos, Deimos
+                      Jupiter moons: Io, Europa, Ganymede, Callisto
+                      Saturn moons:  Mimas, Enceladus, Tethys, Dione, Rhea, Titan, 
+		                     Hyperion, Iapetus, Phoebe, Janus, Epimetheus, Helene, 
+                                     Telesto, Calypso, Atlas,Prometheus, Pandora, Pan
+                      Uranus moons:  Ariel, Umbriel, Titania, Oberon, Miranda, Cordelia,
+                                     Ophelia, Bianca, Cressida, Desdemona, Juliet, Portia, 
+                                     Rosalind, Belinda, Puck
+                      Neptune moons: Triton, Nereid, Naiad, Thalassa, Despina, Galatea,
+                                     Larissa, Proteus 
+                      Pluto moon:    Charon
+	       
+               Asteroids: Ceres, Pallas, Juno, Vesta, Astraea, Hygiea, Parthenope, Victoria,
+                          Davida, Interamnia
  </example>
  </task>
  </casaxml>

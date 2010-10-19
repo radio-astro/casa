@@ -3,7 +3,9 @@
 # Usage: build.py URL REVISION TYPE [dry]
 #
 # This script builds CASA and creates documentation of the build procedure.
-# The documentation is generated in $HOME/documentation/
+#
+# The documentation is written to $HOME/documentation/
+#
 # Possible values for TYPE are full/incremental/test.
 #
 # Examples:
@@ -41,6 +43,9 @@ class machine:
 # Base class for build methods (documentation, execute)
 class builder:
 
+    def __init__(self):
+        self.temp = False
+        
     def chdir(self, *texts):
         self.do("", "cd ", *texts)
 
@@ -48,7 +53,12 @@ class builder:
         self.do("", "export ", env, '="', self._transform(texts), '"')
 
     def svn_exe(self, repository, revision, local_dir):
+#        if os.uname()[0] == "Linux":
+#            os.system("sudo /sbin/route add default gw 192.168.158.2") # internet dies often...
         if self.type == "full":
+            if not self.temp:
+                self.comment("svn might prompt you to accept a fingerprint; in that case answer t(emporarily). Or you can send a 't' to the standard input of svn")
+                self.temp = True
             self.do("", "echo t | svn checkout -r %s %s %s" % (revision, repository, local_dir))
         else:
             self.do("", "echo t | svn update -r %s %s" % (revision, local_dir))
@@ -57,6 +67,7 @@ class builder:
 # Write sh script
 class sh_builder(builder):
     def __init__(self, file, type):
+        builder.__init__(self);
         self.type = type
         self.file = open(file, 'w')
         # Do not write to the script immediately. 
@@ -122,6 +133,7 @@ class sh_builder(builder):
 # Write HTML documentation
 class html_builder(builder):
     def __init__(self, file, oss, arch, type):
+        builder.__init__(self);
         self.type = type
         self.html = open(file, 'w')
         self.html.write('<html><head></head><body>')
@@ -176,6 +188,7 @@ class html_builder(builder):
 class exe_builder(builder):
 
     def __init__(self, dry, type):
+        builder.__init__(self);
         self.type = type
         self.dry = dry         # dry run (true/false)
         self.outfile = None
@@ -255,6 +268,7 @@ class exe_builder(builder):
 # in the HTML
 class exe_and_doc_builder(builder):
     def __init__(self, dir, oss, arch, type, dry):
+        builder.__init__(self);
         self.type = type
         self.dir = dir
         if not os.path.isdir(dir):
@@ -311,31 +325,33 @@ def build_casa(b, url, revision, type, ops, architecture):
 
     if ops == "Darwin":
         datadir = machine('datadir', "/opt/casa_data/trunk")
-        prefix = machine('prefix', "/opt/casa/active")    # Prefix is hardcoded in 3rd-party executables
+        prefix = machine('prefix', "/opt/casa/active")
         if architecture == '10.5':
             coredir = platform('coredir', "core2-apple-darwin8")
             third = platform('third', "core2-apple-darwin8/3rd-party")
         else:
-            coredir = platform('coredir', "core2-apple-darwin10")
-            third = platform('third', "core2-apple-darwin10")
+            coredir = platform('coredir', "darwin10-64b")
+            third = platform('third', "darwin10-64b")
     else:
         datadir = machine('datadir', "/mnt/hgfs/trunk")
         prefix = machine('prefix', "/opt/casa")
 
     if ops == "Linux":
-        threads = machine("threads", "2")
+        threads = machine("threads", "1")
     else:
         threads = machine("threads", "4")
 
 
-    b.comment("The following documentation was created while building ", url, ", revision ", revision, " on " + time.asctime() + ". Here we go...")
+    b.comment("The following documentation was verified as of ", url, ", revision ", revision, " on " + time.asctime() + ".")
 
     #
     # Install external packages
     #
 
     if type == "full":
-        b.comment("First, get the packages required for CASA development.")
+        b.comment("Buidling CASA from source consists of two major steps: 1) Build and install CASACore, 2) Build \"code\" which uses the libraries from CASACore.")
+
+        b.comment("You will need to install quite a number of packages which are required for CASA development. Here we go...")
         if ops == "Darwin":
 
            b.do("Create the directory, where you want to install CASA. On Mac, you should use a subdirectory of /opt/casa/. You do not need to (and should not) install CASA as root, just make the install directory writeable for non-root users.",
@@ -345,7 +361,7 @@ def build_casa(b, url, revision, type, ops, architecture):
                third_party = "3rd-party.tbz"
                d = "https://svn.cv.nrao.edu/casa/osx_distro/developers/10.5/"
            else:
-               third_party = "core2.10.6.tar.bz2"
+               third_party = "darwin10-64b.tar.bz2"
                d = "https://svn.cv.nrao.edu/casa/osx_distro/developers/10.6/"
                
            if False:
@@ -369,40 +385,23 @@ def build_casa(b, url, revision, type, ops, architecture):
 
                b.do("You may want to double check that you have the right packages,", "cksum %s %s" % (third_party, gfortran))
 
-
-           b.comment("The paths in the binary contents of the 3rd party package requires that it is extracted in this directory,")
-           
            if architecture == '10.5':
                b.do("", "mkdir ", coredir)
                b.chdir(coredir)
-               b.do("", "tar jxvf ../" + third_party)
+               b.do("", "tar jxf ../" + third_party)
                
                b.do("Workaround for CAS-2071, do not use the Qt in 3rd-party:",
                     "rm -rf ", prefix, "/../", third, "/include/Qt*")
 
                b.chdir("3rd-party")
-               b.do("", "tar jxvf ../../qwt5.2.tbz")
+               b.do("", "tar jxf ../../qwt5.2.tbz")
                b.chdir("../..")
            else:
-               b.do("", "tar jxvf " + third_party)
+               b.comment("You need to set your LANG environment variable to something American, otherwise the tar file fails to unpack")
+               b.set_env("LANG", "en_US.UTF-8")
+               b.do("", "tar xpjf ", third_party)
+               b.comment("If the unpacking fails, then either make sure that you are using bsdtar, or if you are using GNU tar add this option to tar: --pax-option=\"delete=SCHILY.*\"")
 
-               if architecture == "10.6":
-                   b.comment("In the, not so likely, case that you are running Snow Leopard on older hardware without 64bit support, you will need to do the following, because the distributed python and perl executables do not run on 32bit):")
-                   
-                   b.do("", "rm ", prefix, "/../", third, "/bin/python")
-                   b.do("", "rm ", prefix, "/../", third, "/bin/pythonw")
-                   b.do("", "ln -s /usr/bin/python ", prefix, "/../", third, "/bin/python")
-                   b.do("", "ln -s /usr/bin/pythonw ", prefix, "/../", third, "/bin/pythonw")
-                   
-                   b.comment("The python version must be 2.6.4. If it is not, go and install python 2.6.4")
-                   b.do("",  prefix, "/../", third, "/bin/python -V")
-                   b.do("",  prefix, "/../", third, "/bin/pythonw -V")
-                   
-                   b.do("Also, if your hardware is 32 bit, you need to put a perl in the path which works (version is less critical)",
-                        "rm ", prefix, "/../", third, "/bin/perl")
-                   b.do("", "which perl")
-
-           
            if architecture == "10.5":
                b.do("", "hdiutil attach ./qt-sdk-mac-opensource-2009.02.dmg -mountroot .")
            
@@ -426,21 +425,10 @@ def build_casa(b, url, revision, type, ops, architecture):
                b.comment("installer: Installing at base path /")
                b.comment("installer: The install was successful.")
 
-
-
-           b.comment("If you did not already install CMake, do it now.")
-           b.chdir(prefix, "/..")
-           b.do("", "curl http://www.cmake.org/files/v2.8/cmake-2.8.0-Darwin-universal.dmg -o cmake-2.8.0-Darwin-universal.dmg")
-           b.do("", "hdiutil attach cmake-2.8.0-Darwin-universal.dmg  -mountroot .")
-           b.comment("sudo installer -package cmake-2.8.0-Darwin-universal/cmake-2.8.0-Darwin-universal.pkg -target /")
-           b.comment("Password:")
-           b.comment("installer: Package name is CMake")
-           b.comment("installer: Installing at base path /")
-           b.comment("installer: The install was successful.")
-
         else:
             # Linux
-            b.do("Setup yum configuration. Create a /etc/yum.repos.d/casa.repo containing the following four lines",
+            b.comment("On Linux, we use yum to install the required RPM development packages. You will need root access to do so. In the following the sudo command is used.")
+            b.do("First, setup the yum configuration to point to CASA's repositories. A way to do that is to create a /etc/yum.repos.d/casa.repo containing the following four lines (execute these commands)",
                  "echo [casa] > casa.repo")
             b.do("", "echo \"name=CASA RPMs for RedHat Enterprise Linux 5 (", arch, ")\" >> casa.repo")
             b.do("", "echo \"baseurl=https://svn.cv.nrao.edu/casa/repo/el5/", arch, "\" >> casa.repo")
@@ -448,35 +436,35 @@ def build_casa(b, url, revision, type, ops, architecture):
             b.do("Move the file to /etc/yum.repos.d/ as superuser", "sudo mv casa.repo /etc/yum.repos.d/")
             b.do("Your yum configuration should now look like this,", "cat /etc/yum.repos.d/casa.repo")
                         
-            b.do("This is to avoid conflicts with qt434-devel-4.3.4,",
+            b.do("Remove this package if you have it installed (which is to avoid conflicts with qt434-devel-4.3.4),",
                  "sudo yum -y erase qt4-devel")
             
-            b.comment("Get all required development packages. -y means answer yes when prompted")
+            b.comment("Install all required development packages. Either answer yes when prompted, or pass the -y flag to yum.")
             if False:
                 # Brute force
                 b.do("", "sudo yum -y install casapy-test-devel")
             else:
-                b.do("", "sudo yum -y install antlr-c++-devel antlr-c++-shared casapy-boost casapy-boost-devel casapy-ccmtools casapy-ccmtools-python casapy-ccmtools-shared casapy-python casapy-python-devel cfitsio-devel dbus-c++ fftw3 fftw3-devel qt434-devel qt434-qwt-devel rpfits tix tix-devel wcslib xerces-c xerces-c-devel aatm aatm-devel dbus-c++-devel blas-devel cmake")
+                b.do("", "sudo yum -y install antlr-c++-devel antlr-c++-shared casapy-boost casapy-boost-devel casapy-ccmtools casapy-ccmtools-python casapy-ccmtools-shared casapy-python casapy-python-devel cfitsio-devel dbus-c++ fftw3 fftw3-devel qt434-devel qt434-qwt-devel rpfits tix tix-devel wcslib xerces-c xerces-c-devel aatm aatm-devel dbus-c++-devel blas-devel lapack lapack-devel pgplot pgplot-devel cmake")
 
             # It should cause packages to be installed only from the casa RPM
             # repository. If there were conflicts with other repositories, you 
             # might need to b.do("", "sudo rm -f /etc/yum.repos.d/*") and start over
 
-            b.comment("Create build directory. Anywhere should be fine, just make sure to be consistent during the rest of the installation.")
+            b.comment("Create the directory where you want to build CASA. Here we choose to build everything in /opt/casa. You could also create a subdirectory in your home directory, but be aware that if have an NFS mounted home directory, all the file I/O that the build system is going to do, will be somewhat slower.")
 
             b.do("", "sudo chmod 777 /opt")
             b.do("", "mkdir ", prefix)
 
-            b.comment("Install SCons")
+            b.comment("For building CASACore you will need to install SCons")
             b.chdir("/tmp")
             b.do("", "wget http://prdownloads.sourceforge.net/scons/scons-1.2.0.tar.gz")
 
             # Darwin: b.do("", "curl -o ./scons-1.2.0.tar.gz http://heanet.dl.sourceforge.net/project/scons/scons/1.2.0/scons-1.2.0.tar.gz")
             # But don't need to install scons on mac
 
-            b.do("", "tar zxvf scons-1.2.0.tar.gz")
+            b.do("", "tar zxf scons-1.2.0.tar.gz")
             b.chdir("scons-1.2.0")
-            b.do("", "python setup.py install --prefix=", prefix, "/scons")
+            b.do("You can install the scons executable whereever you like, just change the --prefix", "python setup.py install --prefix=", prefix, "/scons")
 
     # endif full build
 
@@ -485,22 +473,24 @@ def build_casa(b, url, revision, type, ops, architecture):
         b.do("", "sudo yum -y upgrade antlr-c++-devel antlr-c++-shared casapy-boost casapy-boost-devel casapy-ccmtools casapy-ccmtools-python casapy-ccmtools-shared casapy-python casapy-python-devel cfitsio-devel dbus-c++ fftw3 fftw3-devel qt434-devel qt434-qwt-devel rpfits tix tix-devel wcslib xerces-c xerces-c-devel aatm aatm-devel dbus-c++-devel blas-devel cmake")
 
     if ops == "Darwin":
-        b.comment("It is essential that 3rd-party/bin comes before other stuff in your $PATH.")
+        b.comment("It is essential that 3rd-party/bin comes before other stuff in your $PATH:")
         b.set_env('PATH', prefix, "/../", third, "/bin:$PATH")
-        b.set_env('PATH', "$PATH:/Applications/CMake\\ 2.8-0.app/Contents/bin")
-        b.comment("This is a workaround for QWT and CASACore libraries not containing the proper rpaths (Note: Do not define the environment variable named DYLD_LIBRARY_PATH or something else might break.)")
+        
         if architecture == "10.5":
+            b.comment("This is a workaround for QWT and CASACore libraries not containing the right rpaths (Note: Do not define the environment variable named DYLD_LIBRARY_PATH or something else might break.)")
             qwtdir = "qwt-5.2.0"
-        else:
-            qwtdir = "qwt-5.2.1-svn"
-        b.set_env('DYLD_FALLBACK_LIBRARY_PATH', prefix, "/", builddir, "/lib:", prefix, "/../", third, "/" + qwtdir + "/lib:", prefix, "/../", third, "/lib")
+        if architecture == "10.5":
+            b.set_env('DYLD_FALLBACK_LIBRARY_PATH', prefix, "/", builddir, "/lib:", prefix, "/../", third, "/" + qwtdir + "/lib:", prefix, "/../", third, "/lib")
+        if architecture == "10.6":
+            b.comment("You need to define DYLD_FRAMEWORK_PATH in order to work around a linking issue with the ccmtools libraries,")
+            b.set_env('DYLD_FRAMEWORK_PATH', prefix, "/../", third, "/Library/Frameworks")
     else:
         b.set_env('PATH', "$PATH:", prefix, "/scons/bin:/usr/lib/casapy/bin")
 
     if type == "full":
-        b.comment("You have now installed the prequisite packages. It is time to compile.")
+        b.comment("You have now installed all prequisite packages. It is time to compile.")
 
-    if type == "full" and ops == "Darwin":
+    if type == "full" and ops == "Darwin" and architecture == "10.5":
         b.comment("Install aatm from sources.")
         b.chdir(prefix)
         b.svn_exe(url + "/aatm", revision, "aatm")
@@ -533,22 +523,23 @@ def build_casa(b, url, revision, type, ops, architecture):
     b.chdir(prefix)
         
     if type != "test":
-        # Checkout CASACore, answer (t)emporarily to accept svn fingerprint
+        b.comment("Check out CASACore's sources.")
         b.svn_exe(url + "/casacore", revision, "casacore")
     
     if type == "full":
-        b.comment("We need ", prefix, "/data/geodetic and ", prefix, "/data/ephemerides in order to build CASACore.")
+        b.comment("We need parts of CASA's data repository, ", prefix, "/data/geodetic and ", prefix, "/data/ephemerides, in order to build CASACore.")
         if ops == "Darwin":
             b.comment("The location of the data repository at /opt/casa/data is fixed on Mac.")
-        b.do("", "rm -rf ", prefix, "/data")
+        b.chdir("..")
+        b.do("", "rm -rf ./data")
         b.do("", "mkdir -p ./data")
         b.chdir("./data")
         b.do("", "svn checkout https://svn.cv.nrao.edu/svn/casa-data/trunk/ephemerides ephemerides")
         b.do("", "svn checkout https://svn.cv.nrao.edu/svn/casa-data/trunk/geodetic geodetic")
-        b.chdir("..")
+        b.chdir(prefix)
+        b.do("", "ln -s /opt/casa/data .")
+        b.comment("Compile CASACore.")
 
-
-    b.comment("Compile CASACore.")
 
     b.chdir("casacore")
     
@@ -561,23 +552,27 @@ def build_casa(b, url, revision, type, ops, architecture):
       if False:
         b.do("", "scons -j ", threads, " test")
     else:
-        b.comment("Add -g to --extra-cppflags, in order to compile with debugging info enabled")
+        b.comment("You need to give quite many command line options to scons. You are advised to put the scons command in a one-liner script (or save the command somewhere else), so that you can easily repeat it later.")
+        b.comment("scons' -j option is used to enable parallel builds. See scons --help for more.")
+        b.comment("The --extra-cppflags option specifies the compile flags (for C++ code), you can add -g in order to compile with debugging info enabled.")
         if ops == "Linux":
-            b.do("", "scons -j ", threads, " --prefix=", prefix, "/", builddir, " --extra-cppflags=\"-g -DCASA_USECASAPATH -DCASACORE_NEEDS_RETHROW", extra_cpp_flags, "\" --libdir=", prefix, "/", builddir, "/lib --data-dir=", prefix, "/data --cfitsio-libdir=/usr/lib --cfitsio-incdir=/usr/include/cfitsio --extra-cflags=\"-g -fno-omit-frame-pointer\" --extra-fflags=\"-g  -fno-omit-frame-pointer\" --extra-libs=\"-lfftw3f_threads -lfftw3_threads -lfftw3f -lfftw3 -lgomp\" --enable-shared --disable-static")
+            b.comment("Also, you should use -fno-omit-frame-pointer for better debugging support on 64-bit Linux.")
+            b.do("", "scons -j ", threads, " --prefix=", prefix, "/", builddir, " --extra-cppflags=\"-g -fno-omit-frame-pointer -DCASA_USECASAPATH -DCASACORE_NEEDS_RETHROW", extra_cpp_flags, "\" --libdir=", prefix, "/", builddir, "/lib --data-dir=", prefix, "/data --cfitsio-libdir=/usr/lib --cfitsio-incdir=/usr/include/cfitsio --extra-cflags=\"-g -fno-omit-frame-pointer\" --extra-fflags=\"-g  -fno-omit-frame-pointer\" --extra-libs=\"-lfftw3f_threads -lfftw3_threads -lfftw3f -lfftw3 -lgomp\" --enable-shared --disable-static install")
         elif ops == "Darwin":
-            b.do("", "scons -j ", threads, " --extra-root=", prefix, "/../", third, " --prefix=", prefix, "/", builddir, " --extra-cppflags=\"-g -DCASA_USECASAPATH -DCASACORE_NEEDS_RETHROW -DCASACORE_NOEXIT -fopenmp\" --data-dir=", prefix, "/../data --wcs-root=", prefix, "/", builddir, " --cfitsio-libdir=", prefix, "/../", third, "/lib --cfitsio-incdir=", prefix, "/../", third, "/include --fftw3-root=", prefix, "/../", third, " --extra-libs=\"-lfftw3f_threads -lfftw3_threads -lfftw3f -lfftw3 -lgomp\" --enable-shared --disable-static")
+            if architecture == "10.6":
+                b.do("", "scons -j ", threads, " --extra-root=", prefix, "/../", third, " --prefix=", prefix, "/", builddir, " --extra-cppflags=\"-g -DCASA_USECASAPATH -DCASACORE_NEEDS_RETHROW -DCASACORE_NOEXIT -DCASA_NOTAPE -fopenmp\" --data-dir=", prefix, "/../data --wcs-root=", prefix, "/../", third, " --cfitsio-libdir=", prefix, "/../", third, "/lib --cfitsio-incdir=", prefix, "/../", third, "/include --fftw3-root=", prefix, "/../", third, " --extra-linkflags=\"-headerpad_max_install_names -arch x86_64\" --extra-fflags=\"-g -arch x86_64\" --extra-libs=\"-lfftw3f_threads -lfftw3_threads -lfftw3f -lfftw3 -lgomp\" --enable-shared --disable-static install")
+            else:
+                b.do("", "scons -j ", threads, " --extra-root=", prefix, "/../", third, " --prefix=", prefix, "/", builddir, " --extra-cppflags=\"-g -DCASA_USECASAPATH -DCASACORE_NEEDS_RETHROW -DCASACORE_NOEXIT -DCASA_NOTAPE -fopenmp\" --data-dir=", prefix, "/../data --wcs-root=", prefix, "/", builddir, " --cfitsio-libdir=", prefix, "/../", third, "/lib --cfitsio-incdir=", prefix, "/../", third, "/include --fftw3-root=", prefix, "/../", third, " --extra-libs=\"-lfftw3f_threads -lfftw3_threads -lfftw3f -lfftw3 -lgomp\" --enable-shared --disable-static install")
+
         else:
             assert False
-        b.do("", "scons install")
+        b.comment("If scons fails early when checking the configuration, look in ./config.log to see what went wrong.")
+        b.comment("If scons did not end with an error message, the build of CASACore was successful.")
         if ops == "Darwin":
             b.comment("If the compilation of CASACore stops with the error message \"flex: fatal internal error, exec failed\", it might help to download and install flex-2.5.35 from sources, put it in your path and try again.")
     b.chdir("..")
 
-
-    b.comment("Build CASA non-core")
-    b.comment("Define the two first words of the environment variable CASAPATH. This variable is not used by the build system, but you need to define it in order to run CASA. (For backwards compatibility, it does not hurt if you define the 3rd and 4th words also, but anything past the 2nd word is not used.)")
-    b.set_env('CASAPATH', "", prefix, " ", builddir)
-    b.set_env('PATH', "$PATH:", prefix, "/", builddir, "/bin")
+    b.comment("Next up is CASA non-core,")
 
     if type != "test":
         b.svn_exe(url + "/code", revision, "code")
@@ -585,17 +580,50 @@ def build_casa(b, url, revision, type, ops, architecture):
     b.chdir("code")
 
     if type == "full":
+        b.comment("You need to create a build directory, which holds cmake internals and object files (built libraries etc.), before they are installed into ", prefix, "/", builddir)
+        b.comment("You may have more than one build directory, e.g. for debug and release builds, or for cross compiling. We'll just use one directory named build. (You could also place the build directory outside of the code tree, in case you do not want to put build files in your source code tree.)")
         b.do("", "mkdir ./build")
         b.chdir("build")
-        b.do("", "cmake ..")
+        b.do("Invoke CMake. The argument to cmake is the path to your source directory, in this case the parent directory", "cmake ..")
         b.chdir("..")
    
-    if type == "test":
+    if type != "test":
+        b.chdir("build")
+        b.do("", "make -j ", threads, " VERBOSE=on")
+        b.do("You should now have the casapy executable (and other executables) at this location:",
+             "ls -l ", prefix, "/", builddir, "/bin")
 
-        b.do("Create a link to the local data repository checkout (if the link does not already exists)", "rm ", prefix, "/data")
+    b.comment("Then setup your CASAPATH and PATH environment variable in order to be able to run casapy (and compile ASAP). Just source the script that was created during the build:")
+    b.do("", "source ", prefix, "/casainit.sh")
+    b.comment("or you can set the variables manually (note: it is a space, not a '/', in CASAPATH)")
+    b.set_env('CASAPATH', "", prefix, " ", builddir)
+    b.set_env('PATH', "$PATH:", prefix, "/", builddir, "/bin")
+
+    if type != "test":
+        b.comment("Build ASAP (optionally, if you want to reduce single dish data). This must be done after building the rest of CASA.")
+        b.chdir(prefix)
+        b.svn_exe(url + "/asap", revision, "asap")
+        b.chdir("asap")
+        b.do("", "make")
+        b.do("", "make install")
+
+    if type == "test" or type == "full":
+        b.comment("In order to verify that your build is correct, you may want to run the python unit test suite.")
+
+        b.comment("First you must check out CASA's data repository from https://svn.cv.nrao.edu/svn/casa-data/trunk and create a link to it from where you built CASA.")
+        b.comment("The data repository is big. You can save 50% of disk space if you retrieve the repository with 'svn export' instead of 'svn checkout'.")
+        b.do("Remove the link first (in case it already exists)", "rm -f ", prefix, "/data")
         b.do("", "ln -s ", datadir, " ", prefix, "/data")
 
-        b.do("Run the python unit tests,", "casapy --nogui --log2term -c ", prefix, "/code/xmlcasa/scripts/regressions/admin/runUnitTest.py --short")
+        if os.path.isdir(prefix.value + "/" + builddir.value + "/python/2.6"):
+            pyver = platform("pyver", "2.6")
+        else:
+            pyver = platform("pyver", "2.5")
+
+
+        b.do("Then launch the python unit test suite,", "casapy --nogui --log2term -c ", prefix, "/", builddir, "/python/", pyver, "/runUnitTest.py --mem")
+
+        b.comment("which will summarize near the end if your build is okay or if there were any problems.")
         #
         # Does not seem to return here... 
         #
@@ -610,16 +638,6 @@ def build_casa(b, url, revision, type, ops, architecture):
             b.do("Get old results out of the way and launch the suite,", "rm -rf /tmp/results")
             b.do("", "mkdir -p /tmp/results")
             b.do("", prefix, "/code/xmlcasa/scripts/regressions/admin/scheduler.pl -all -noloop -noclean -res_dir=/tmp/results -work=/tmp/work /tmp/ ", prefix, "/data 9999 14400 </dev/null")
-    else:
-        b.chdir("build")
-        b.do("", "make -j ", threads, " VERBOSE=on")
-
-        b.comment("Build ASAP (optionally). This must be done after building CASA.")
-        b.chdir(prefix)
-        b.svn_exe(url + "/asap", revision, "asap")
-        b.chdir("asap")
-        b.do("", "make")
-        b.do("", "make install")        
 
 def main(argv):
     if len(argv) < 4:
@@ -655,13 +673,21 @@ def main(argv):
     dry = (len(argv) > 4)
     doc_dir = os.getenv('HOME') + "/documentation/" + type + "-" + oss + "-" + arch
     if dry:
-        print "Writing documentation for", oss, arch, "to", doc_dir
+        print "Writing documentation for", oss, arch, "to", doc_dir + "/build.html"
     else:
         print "Going to build on", oss, arch
     sys.stdout.flush()
     b = exe_and_doc_builder(doc_dir,
                             oss, arch, type = type, dry = dry)
     build_casa(b, url, revision, type, oss, arch)
+
+    os.system("mkdir -p " + os.getenv('HOME') + "/documentation")
+    prefix = "/opt/casa/active/code"
+    if not os.path.isdir(prefix):
+        prefix = "/opt/casa/code"
+    if not dry:
+        os.system("svn info " + prefix + " | egrep \"^Revision\" | awk '{print $2}' > " + os.getenv('HOME') + "/documentation/revision.txt")
+        
     return 0          
 
 if __name__ == "__main__":

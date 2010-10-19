@@ -2,7 +2,7 @@
 # AIPS++ top directory makefile.
 #-----------------------------------------------------------------------------
 #
-#   Copyright (C) 1992-2004
+#   Copyright (C) 1992-2010
 #   Associated Universities, Inc. Washington DC, USA.
 #
 #   This program is free software; you can redistribute it and/or modify

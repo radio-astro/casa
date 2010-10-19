@@ -294,8 +294,7 @@ Bool GBTSPFiller::fill(const String &backendFile,
 	mainTD.defineHypercolumn("HYPERDATA", 3,
 				 stringToVector(MS::columnName(MS::FLOAT_DATA)),
 				 stringToVector(",,"));
-	// not sure what the best default tile shape might be
-	IPosition defaultTileShape(3,4,128,8);
+	IPosition defaultTileShape(3, 4, 1023, 32);
 	TiledShapeStMan stman("HYPERDATA", defaultTileShape);
 
 	// create the MS, make sure the hypercolumns get set to use
@@ -716,7 +715,6 @@ Bool GBTSPFiller::fill(const String &backendFile,
 		cols().floatData().setShape(thisRow, thisShape);
 		modelData().setShape(thisRow, thisShape);
 		correctedData().setShape(thisRow, thisShape);
-		imagingWeight().setShape(thisRow, thisShape.getLast(1));
 	    }
 	    rownr += nrowPerRow;
 	}
@@ -800,7 +798,6 @@ Bool GBTSPFiller::fill(const String &backendFile,
 
 	    Array<Complex> modData(outdata.shape().getFirst(2), 1.0);
 	    Array<Complex> cdata(modData.shape());
-	    Array<Float> imagingWt(modData.shape().getLast(1), 1.0);
 	    Array<Float> sigma(outdata.shape().getFirst(1), 1.0);
 	    Array<Float> weight(sigma.shape(), 1.0);
 	    ArrayIterator<Float> dataIter(outdata,2);
@@ -817,7 +814,6 @@ Bool GBTSPFiller::fill(const String &backendFile,
 		convertArray(cdata,dataIter.array());
 		correctedData().put(thisRow, cdata);
 		dataIter.next();
-		imagingWeight().put(thisRow, imagingWt);
 	    }
 
 	    // some way should be found to cache these so that they

@@ -29,10 +29,10 @@ This is used to construct an {\tt atmosphere} tool.
 <example>
 A default atmosphere tool is not created automatically during casapy
 startup.  Manual tool construction is done this way:
-\begin{verbatim}
+
 attool = casac.homefinder.find_home_by_name('atmosphereHome')
 at = attool.create()
-\end{verbatim}
+
 </example>
 </method>
 
@@ -46,7 +46,7 @@ used by the ATM library.
    <returns type="stringArray">List of index - atmosphere type pairs
    </returns>
 <example>
-\begin{verbatim}
+
 """
 #
 at.listAtmosphereTypes()
@@ -54,7 +54,7 @@ at.listAtmosphereTypes()
 # '4 - subarcticSummer', '5 - subarcticWinter']
 #
 """
-\end{verbatim}
+
 </example>
    </method>
 
@@ -66,12 +66,12 @@ at.listAtmosphereTypes()
 <description>
 An atmospheric profile is composed of 4 quantities as a function of
 altitude z:
-\begin{verbatim}
+
     * the layer thickness
     * the pressure P
     * the temperature T and
     * the gas densities for H2O, O3, CO and N2O.
-\end{verbatim}
+
 
 This method is needed for computing the absorption and phase
 coefficients, as well as for performing radiative transfer
@@ -157,7 +157,7 @@ can be calculated by simply integrating the H2O profile.
 </input>
 <returns type="string">String displaying input values.</returns>
 <example>
-\begin{verbatim}
+
 tmp = quantity(270.0,'K')
 pre = quantity(560.0,'mbar')
 hum = 20.0
@@ -169,7 +169,7 @@ dpr = quantity(10.0,'mbar')
 dpm = 1.2
 att = 1
 myatm = at.initAtmProfile(alt, tmp, pre, mxA, hum, wvl, dpr, dpm, h0, att)
-\end{verbatim}
+
 </example>
 </method>
 
@@ -221,10 +221,10 @@ atmospheric parameters.change.
 </input>
 <returns type="string">String of current values.</returns>
 <example>
-\begin{verbatim}
+
 new_tmp = quantity(275.0,'K')
 print at.updateAtmProfile(alt, new_tmp, pre, hum, wvl, h0)
-\end{verbatim}
+
 </example>
 </method>
 
@@ -288,12 +288,12 @@ print at.updateAtmProfile(alt, new_tmp, pre, hum, wvl, h0)
 
    <returns type="string">Returns string listing of parameters.</returns>
 <example>
-\begin{verbatim}
+
 print "Atmospheric type:   ", at.getBasicAtmParms()['atmType']
 p = at.getBasicAtmParms()
 print "Ground temperature: ", p['temperature'].value, p['temperature'].units
 print p['return']           # a "pretty" listing of all the parameters
-\end{verbatim}
+
 </example>
    </method>
 
@@ -302,11 +302,11 @@ print p['return']           # a "pretty" listing of all the parameters
    </shortdescription>
    <returns type="int"/>
 <example>
-\begin{verbatim}
+
 p = at.getProfile()
 for i in range(at.getNumLayers()):
         print p['thickness'].value[i],p['temperature'].value[i],p['water'].value[i],p['pressure'].value[i]
-\end{verbatim}
+
 </example>
    </method>
 
@@ -320,10 +320,10 @@ simply integrating the H2O profile:
 </description>
 <returns type="Quantity"/>
 <example>
-\begin{verbatim}
+
 w = at.getGroundWH2O()
 print "Guessed water content: ", w.value, w.units
-\end{verbatim}
+
 </example>
 </method>
 
@@ -390,13 +390,13 @@ Get the atmospheric profile.
 <returns type="string">String displaying atmospheric profile</returns>
 
 <example>
-\begin{verbatim}
+
 p = at.getProfile()
 for i in range(at.getNumLayers()):
         print p['thickness'].value[i],p['temperature'].value[i],p['water'].value[i],p['pressure'].value[i]
 
 print p['return']    # "pretty" listing of all layer parameters
-\end{verbatim}
+
 </example>
 
 </method>
@@ -446,7 +446,7 @@ using the above atmospheric parameters.
 <returns type="int">Number of channels in the first spectral window</returns>
 
 <example>
-\begin{verbatim}
+
 nb=1
 fC=quantity(88.,'GHz')
 fW=quantity(.5,'GHz')
@@ -458,7 +458,7 @@ fC=quantity([88.,90.],'GHz')
 fW=quantity([.5,.5],'GHz')
 fR=quantity([.125,.125],'GHz')
 at.initSpectralWindow(nb,fC,fW,fR)
-\end{verbatim}
+
 </example>
 
 </method>
@@ -502,13 +502,13 @@ having no sideband.
 <returns type="int">Number of channels in new spectral window</returns>
 
 <example>
-\begin{verbatim}
+
 fC2 = quantity(350.0,'GHz')
 fW2 = quantity(0.008,'GHz')
 fR2 = quantity(0.002,'GHz')
 nc = at.addSpectralWindow(fC2,fW2,fR2)
 print "New spectral window has ", nc, " channels"
-\end{verbatim}
+
 </example>
 
 </method>
@@ -519,10 +519,10 @@ print "New spectral window has ", nc, " channels"
 
 <returns type="int">Number of spectral windows</returns>
 <example>
-\begin{verbatim}
+
 numSpw = at.getNumSpectralWindows()
 print "There are ", numSpw, " spectral windows"
-\end{verbatim}
+
 </example>
 </method>
 
@@ -544,11 +544,11 @@ Return the number of channels of ith band ( passes in as parameter ).
 <returns type="int"> Int, the number of channels of the given band.</returns>
 
 <example>
-\begin{verbatim}
+
 for spwid in range(at.getNumSpectralWindows()):
         numCh = at.getNumChan(spwid)
         print "Spectral window ", spwid, " has ", numCh, " frequency channels"
-\end{verbatim}
+
 </example>
 </method>
 
@@ -567,10 +567,10 @@ Return the reference channel of the given spectral window
 </input>
 <returns type="int"> Reference channel number.</returns>
 <example>
-\begin{verbatim}
+
 rc = at.getRefChan()
 print "Reference channel retrieved: ", rc
-\end{verbatim}
+
 </example>
 </method>
 
@@ -589,10 +589,10 @@ Return the reference frequency of the given spectral window
 </input>
 <returns type="Quantity">Reference channel frequency.</returns>
 <example>
-\begin{verbatim}
+
 rf = at.getRefFreq()
 print "Reference frequency retrieved: ", rf.value, rf.units
-\end{verbatim}
+
 </example>
 </method>
 
@@ -611,10 +611,10 @@ Return the channel separation of the given spectral window
 </input>
 <returns type="Quantity">Channel separation.</returns>
 <example>
-\begin{verbatim}
+
 cs = at.getChanSep()
 print "Channel separation retrieved: ", cs.value, cs.units
-\end{verbatim}
+
 </example>
 </method>
 
@@ -639,7 +639,7 @@ print "Channel separation retrieved: ", cs.value, cs.units
    </input>
    <returns type="Quantity">Channel frequency.</returns>
    <example>
-   \begin{verbatim}
+   
 for spwid in range(at.getNumSpectralWindows()):
         numCh = at.getNumChan(spwid)
         print "Spectral window ", spwid, " has ", numCh, " frequency channels"
@@ -647,7 +647,7 @@ for spwid in range(at.getNumSpectralWindows()):
                 freq = at.getChanFreq(n, spwid)
                 print "Channel ", n, " Frequency:", freq.value, freq.units
 
-    \end{verbatim}
+    
     </example>
     </method>
 
@@ -666,14 +666,14 @@ for spwid in range(at.getNumSpectralWindows()):
    </input>
    <returns type="Quantity">Spectral grid.</returns>
    <example>
-   \begin{verbatim}
+   
 print at.getSpectralWindow().value,at.getSpectralWindow().units
 
 sg = at.getSpectralWindow()
 for i in range(len(sg.value)):
     print sg.value[i], sg.units
 
-    \end{verbatim}
+    
     </example>
     </method>
 
@@ -696,7 +696,7 @@ for i in range(len(sg.value)):
    </input>
    <returns type="double">Channel number.</returns>
    <example>
-   \begin{verbatim}
+   
 In [2]: at.getRefFreq().value, at.getRefFreq().units
 Out[2]: (90.0, 'GHz')
 
@@ -721,7 +721,7 @@ Out[8]: -1.5
 In [9]: at.getChanNum(quantity(89.98,'GHz'),0)
 Out[9]: -2.0
 
-    \end{verbatim}
+    
     </example>
     </method>
 
@@ -741,10 +741,10 @@ Get the frequency range encompassing the list of frequency grid points for the s
    </input>
    <returns type="Quantity">Bandwidth.</returns>
    <example>
-   \begin{verbatim}
+   
 print "Total bandwidth retrieved: ", at.getBandwidth().value, at.getBandwidth().units
 
-    \end{verbatim}
+    
     </example>
     </method>
 
@@ -764,10 +764,10 @@ Get lowest frequency channel for the specified spectral window.
    </input>
    <returns type="Quantity">Lowest frequency.</returns>
    <example>
-   \begin{verbatim}
+   
 print "Frequency range: from ", at.getMinFreq().value, " to ", at.getMaxFreq().value, at.getMinFreq().units
 
-    \end{verbatim}
+    
     </example>
     </method>
 
@@ -788,9 +788,9 @@ Get highest frequency channel for the specified spectral window.
    </input>
    <returns type="Quantity">Highest frequency.</returns>
    <example>
-   \begin{verbatim}
+   
 print "Frequency range: from ", at.getMinFreq().value, " to ", at.getMaxFreq().value, at.getMaxFreq().units
-    \end{verbatim}
+    
     </example>
     </method>
 
@@ -818,7 +818,7 @@ Get the integrated Dry Opacity for one channel in a band.
 <returns type="double">The dryOpacity of channel nc in band spwid.</returns>
 
 <example>
-\begin{verbatim}
+
 nb = 1
 fC = quantity([850.0],'GHz')
 fW = quantity([0.5],'GHz')
@@ -826,7 +826,7 @@ fR = quantity([0.5],'GHz')
 at.initSpectralWindow(nb,fC,fW,fR)
 print "Total Dry Opacity at ", fC.value, fC.units, " for 1.0 air mass: ", at.getDryOpacity()
 
-\end{verbatim}
+
 </example>
 
 </method>
@@ -853,7 +853,7 @@ Get the integrated Dry Continuum Opacity for one channel in a band.
 <returns type="double">The dryContOpacity of channel nc in band spwid.</returns>
 
 <example>
-\begin{verbatim}
+
 nb = 1
 fC = quantity([850.0],'GHz')
 fW = quantity([0.5],'GHz')
@@ -861,7 +861,7 @@ fR = quantity([0.5],'GHz')
 at.initSpectralWindow(nb,fC,fW,fR)
 print "Total Dry Cont Opacity at ", fC.value, fC.units, " for 1.0 air mass: ", at.getDryContOpacity()
 
-\end{verbatim}
+
 </example>
 
 </method>
@@ -888,7 +888,7 @@ Get the integrated O2 Lines Opacity for one channel in a band.
 <returns type="double">The O2LinesOpacity of channel nc in band spwid.</returns>
 
 <example>
-\begin{verbatim}
+
 nb = 1
 fC = quantity([850.0],'GHz')
 fW = quantity([0.5],'GHz')
@@ -896,7 +896,7 @@ fR = quantity([0.5],'GHz')
 at.initSpectralWindow(nb,fC,fW,fR)
 print "Total O2 Lines Opacity at ", fC.value, fC.units, " for 1.0 air mass: ", at.getO2LinesOpacity()
 
-\end{verbatim}
+
 </example>
 
 </method>
@@ -923,7 +923,7 @@ Get the integrated O3 Lines Opacity for one channel in a band.
 <returns type="double">The O3LinesOpacity of channel nc in band spwid.</returns>
 
 <example>
-\begin{verbatim}
+
 nb = 1
 fC = quantity([850.0],'GHz')
 fW = quantity([0.5],'GHz')
@@ -931,7 +931,7 @@ fR = quantity([0.5],'GHz')
 at.initSpectralWindow(nb,fC,fW,fR)
 print "Total O3 Lines Opacity at ", fC.value, fC.units, " for 1.0 air mass: ", at.getO3LinesOpacity()
 
-\end{verbatim}
+
 </example>
 
 </method>
@@ -958,7 +958,7 @@ Get the integrated CO Lines Opacity for one channel in a band.
 <returns type="double">The COLinesOpacity of channel nc in band spwid.</returns>
 
 <example>
-\begin{verbatim}
+
 nb = 1
 fC = quantity([850.0],'GHz')
 fW = quantity([0.5],'GHz')
@@ -966,7 +966,7 @@ fR = quantity([0.5],'GHz')
 at.initSpectralWindow(nb,fC,fW,fR)
 print "Total CO Lines Opacity at ", fC.value, fC.units, " for 1.0 air mass: ", at.getCOLinesOpacity()
 
-\end{verbatim}
+
 </example>
 
 </method>
@@ -993,7 +993,7 @@ Get the integrated N2O Lines Opacity for one channel in a band.
 <returns type="double">The N2OLinesOpacity of channel nc in band spwid.</returns>
 
 <example>
-\begin{verbatim}
+
 nb = 1
 fC = quantity([850.0],'GHz')
 fW = quantity([0.5],'GHz')
@@ -1001,7 +1001,7 @@ fR = quantity([0.5],'GHz')
 at.initSpectralWindow(nb,fC,fW,fR)
 print "Total N2O Lines Opacity at ", fC.value, fC.units, " for 1.0 air mass: ", at.getN2OLinesOpacity()
 
-\end{verbatim}
+
 </example>
 
 </method>
@@ -1032,13 +1032,13 @@ Get the integrated Wet Opacity for one channel in a band.
 <returns type="Quantity">The Wet Opacity of channel nc in band spwid. Units of mm-1.</returns>
 
 <example>
-\begin{verbatim}
+
 for i in range(at.getNumSpectralWindows()):
         for j in range(at.getNumChan(i)):
                 print "Frequency: ", at.getChanFreq(j,i).value, at.getChanFreq(j,i).units
                 print "Wet opacity:", at.getWetOpacity(j,i).value, at.getWetOpacity(j,i).units, " for ", at.getUserWH2O().value, at.getUserWH2O().units, " H2O"
 
-\end{verbatim}
+
 </example>
 
 </method>
@@ -1049,7 +1049,7 @@ for i in range(at.getNumSpectralWindows()):
    
 <description>
 
-Get the integrated Dry Opacity for one channel in a band.
+Get the integrated H2O Lines Opacity for one channel in a band.
 
 </description>
 
@@ -1066,7 +1066,7 @@ Get the integrated Dry Opacity for one channel in a band.
 <returns type="double">The H2OLinesOpacity of channel nc in band spwid.</returns>
 
 <example>
-\begin{verbatim}
+
 nb = 1
 fC = quantity([850.0],'GHz')
 fW = quantity([0.5],'GHz')
@@ -1074,7 +1074,7 @@ fR = quantity([0.5],'GHz')
 at.initSpectralWindow(nb,fC,fW,fR)
 print "Total H2O Lines Opacity at ", fC.value, fC.units, " for 1.0 air mass: ", at.getH2OLinesOpacity()
 
-\end{verbatim}
+
 </example>
 
 </method>
@@ -1101,7 +1101,7 @@ Get the integrated H2O Continuum Opacity for one channel in a band.
 <returns type="double">The H2OContOpacity of channel nc in band spwid.</returns>
 
 <example>
-\begin{verbatim}
+
 nb = 1
 fC = quantity([850.0],'GHz')
 fW = quantity([0.5],'GHz')
@@ -1109,7 +1109,7 @@ fR = quantity([0.5],'GHz')
 at.initSpectralWindow(nb,fC,fW,fR)
 print "Total H2O Cont Opacity at ", fC.value, fC.units, " for 1.0 air mass: ", at.getH2OContOpacity()
 
-\end{verbatim}
+
 </example>
 
 </method>
@@ -1142,7 +1142,7 @@ Get the integrated Dry optical depth along the atmospheric path on each channel 
 <returns type="int">The number of channels.</returns>
 
 <example>
-\begin{verbatim}
+
 In [2]: s=at.getDryOpacitySpec()
 In [3]: s
 Out[3]:
@@ -1155,7 +1155,7 @@ Out[3]:
                 0.11293678422232195,
                 0.11233248854020933],
  'return': 8L}
-\end{verbatim}
+
 </example>
 
 </method>
@@ -1189,7 +1189,7 @@ Get the integrated optical Wet depth along the atmospheric path on each channel 
 <returns type="int">The number of channels.</returns>
 
 <example>
-\begin{verbatim}
+
 In [16]: sw=at.getWetOpacitySpec()
 
 In [17]: sw['wetOpacity'].value
@@ -1212,7 +1212,7 @@ for s in range(at.getNumSpectralWindows()):
         for i in range(at.getNumChan(0)):
                 print " - dryOpacity ", at.getDryOpacitySpec(s)['dryOpacity'][i], " wet Opacity/mm ", at.getWetOpacitySpec(s)['wetOpacity'].value[i]
 
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1240,7 +1240,7 @@ for the current conditions, for channel number nc of spectral window spwid.
 <returns type="Quantity">The integrated Atmospheric Phase Delay for channel nc in band spwid.</returns>
 
 <example>
-\begin{verbatim}
+
 for spwid in range(numSpw):
         numCh = at.getNumChan(spwid)
         print "Spectral window ", spwid, " has ", numCh, " frequency channels"
@@ -1249,7 +1249,7 @@ for spwid in range(numSpw):
                 print "Total Dispersive Phase Delay at ", freq.value, freq.units, " for 1.0 air mass: ", (at.getDispersivePhaseDelay(n,spwid).value)/(w.value),
 " degrees per mm of water vapor (", ((100*at.getDispersivePhaseDelay(n,spwid).value)/(w.value))/(at.getNonDispersivePhaseDelay(n,spwid).value/w.value), "% of the Non-dispersive one )"
 
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1278,7 +1278,7 @@ guess water column.
 <returns type="Quantity">The integrated dispersive Atmospheric Phase Delay for channel nc in band spwid.</returns>
 
 <example>
-\begin{verbatim}
+
 for spwid in range(numSpw):
         numCh = at.getNumChan(spwid)
         print "Spectral window ", spwid, " has ", numCh, " frequency channels"
@@ -1287,7 +1287,7 @@ for spwid in range(numSpw):
                 print "Total Dispersive Wet Phase Delay at ", freq.value, freq.units, " for 1.0 air mass: ", (at.getDispersiveWetPhaseDelay(n,spwid).value)/(w.value),
 " degrees per mm of water vapor (", ((100*at.getDispersiveWetPhaseDelay(n,spwid).value)/(w.value))/(at.getNonDispersiveWetPhaseDelay(n,spwid).value/w.value), "% of the Non-dispersive one )"
 
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1316,7 +1316,7 @@ guess water column.
 <returns type="Quantity">The integrated dispersive Atmospheric Phase Delay for channel nc in band spwid.</returns>
 
 <example>
-\begin{verbatim}
+
 for spwid in range(numSpw):
         numCh = at.getNumChan(spwid)
         print "Spectral window ", spwid, " has ", numCh, " frequency channels"
@@ -1325,7 +1325,7 @@ for spwid in range(numSpw):
                 print "Total Dispersive Wet Phase Delay at ", freq.value, freq.units, " for 1.0 air mass: ", (at.getDispersiveWetPhaseDelay(n,spwid).value)/(w.value),
 " degrees per mm of water vapor (", ((100*at.getDispersiveWetPhaseDelay(n,spwid).value)/(w.value))/(at.getNonDispersiveWetPhaseDelay(n,spwid).value/w.value), "% of the Non-dispersive one )"
 
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1353,7 +1353,7 @@ guess water column.
 <returns type="Quantity">The integrated dispersive Atmospheric Phase Delay for channel nc in band spwid.</returns>
 
 <example>
-\begin{verbatim}
+
 for spwid in range(numSpw):
         numCh = at.getNumChan(spwid)
         print "Spectral window ", spwid, " has ", numCh, " frequency channels"
@@ -1362,7 +1362,7 @@ for spwid in range(numSpw):
                 print "Total Dispersive Dry Phase Delay at ", freq.value, freq.units, " for 1.0 air mass: ", (at.getDispersiveDryPhaseDelay(n,spwid).value)/(w.value),
 " degrees per mm of water vapor (", ((100*at.getDispersiveDryPhaseDelay(n,spwid).value)/(w.value))/(at.getNonDispersiveDryPhaseDelay(n,spwid).value/w.value), "% of the Non-dispersive one )"
 
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1390,7 +1390,7 @@ window spwid.
 <returns type="Quantity">The integrated Atmospheric Phase Delay channel nc in band spwid.</returns>
 
 <example>
-\begin{verbatim}
+
 for spwid in range(numSpw):
         numCh = at.getNumChan(spwid)
         print "Spectral window ", spwid, " has ", numCh, " frequency channels"
@@ -1399,7 +1399,7 @@ for spwid in range(numSpw):
                 print "Total Dispersive Phase Delay at ", freq.value, freq.units, " for 1.0 air mass: ", (at.getDispersivePhaseDelay(n,spwid).value)/(w.value),
 " degrees per mm of water vapor (", ((100*at.getDispersivePhaseDelay(n,spwid).value)/(w.value))/(at.getNonDispersivePhaseDelay(n,spwid).value/w.value), "% of the Non-dispersive one )"
 
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1428,7 +1428,7 @@ for channel nc in spectral window spwid.
 <returns type="Quantity">The integrated Atmospheric Path Length for channel nc in band spwid.</returns>
 
 <example>
-\begin{verbatim}
+
 w = at.getUserWH2O()
 nb = 1
 fC = quantity([850.0],'GHz')
@@ -1438,7 +1438,7 @@ at.initSpectralWindow(nb,fC,fW,fR)
 print "Total Dispersive Delay at ", fC.value, fC.units, " for 1.0 air mass: ", at.getDispersivePathLength().value /  w.value, " meters per mm of water vapor"
 print "(",100*(at.getDispersivePathLength().value /  w.value)/(at.getNonDispersivePathLength().value / w.value), "% of the Non-dispersive one )"
 
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1466,7 +1466,7 @@ for channel nc in spectral window spwid.
 <returns type="Quantity">The integrated Atmospheric Path Length for channel nc in band spwid.</returns>
 
 <example>
-\begin{verbatim}
+
 w = at.getGroundWH2O()
 nb = 1
 fC = quantity([850.0],'GHz')
@@ -1476,7 +1476,7 @@ at.initSpectralWindow(nb,fC,fW,fR)
 print "Total Dispersive Delay at ", fC.value, fC.units, " for 1.0 air mass: ", at.getDispersiveWetPathLength().value /  w.value, " meters per mm of water vapor"
 print "(",100*(at.getDispersiveWetPathLength().value /  w.value)/(at.getNonDispersiveWetPathLength().value / w.value), "% of the Non-dispersive one )"
 
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1504,7 +1504,7 @@ for channel nc in spectral window spwid.
 <returns type="Quantity">The integrated Atmospheric Path Length for channel nc in band spwid.</returns>
 
 <example>
-\begin{verbatim}
+
 w = at.getGroundWH2O()
 nb = 1
 fC = quantity([850.0],'GHz')
@@ -1514,7 +1514,7 @@ at.initSpectralWindow(nb,fC,fW,fR)
 print "Total Dispersive Delay at ", fC.value, fC.units, " for 1.0 air mass: ", at.getDispersiveWetPathLength().value /  w.value, " meters per mm of water vapor"
 print "(",100*(at.getDispersiveWetPathLength().value /  w.value)/(at.getNonDispersiveWetPathLength().value / w.value), "% of the Non-dispersive one )"
 
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1542,7 +1542,7 @@ for channel nc in spectral window spwid.
 <returns type="Quantity">The integrated Atmospheric Path Length for channel nc in band spwid.</returns>
 
 <example>
-\begin{verbatim}
+
 w = at.getGroundWH2O()
 nb = 1
 fC = quantity([850.0],'GHz')
@@ -1552,7 +1552,7 @@ at.initSpectralWindow(nb,fC,fW,fR)
 print "Total Dispersive Delay at ", fC.value, fC.units, " for 1.0 air mass: ", at.getDispersiveDryPathLength().value /  w.value, " meters per mm of water vapor"
 print "(",100*(at.getDispersiveDryPathLength().value /  w.value)/(at.getNonDispersiveDryPathLength().value / w.value), "% of the Non-dispersive one )"
 
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1581,9 +1581,9 @@ for channel nc in spectral window spwid.
 <returns type="Quantity">The integrated Path Length for channel nc in band spwid.</returns>
 
 <example>
-\begin{verbatim}
 
-\end{verbatim}
+
+
 </example>
 </method>
 
@@ -1612,9 +1612,9 @@ for channel nc in spectral window spwid.
 <returns type="Quantity">The integrated Path Length for channel nc in band spwid.</returns>
 
 <example>
-\begin{verbatim}
 
-\end{verbatim}
+
+
 </example>
 </method>
 
@@ -1643,9 +1643,9 @@ for channel nc in spectral window spwid.
 <returns type="Quantity">The integrated Path Length for channel nc in band spwid.</returns>
 
 <example>
-\begin{verbatim}
 
-\end{verbatim}
+
+
 </example>
 </method>
 
@@ -1674,9 +1674,9 @@ for channel nc in spectral window spwid.
 <returns type="Quantity">The integrated Path Length for channel nc in band spwid.</returns>
 
 <example>
-\begin{verbatim}
 
-\end{verbatim}
+
+
 </example>
 </method>
 
@@ -1704,7 +1704,7 @@ part) for the current conditions, for channel nc in spectral window spwid.
 <returns type="Quantity">The integrated Atmospheric Path Length for channel nc in band spwid.</returns>
 
 <example>
-\begin{verbatim}
+
 w = at.getUserWH2O()
 nb = 1
 fC = quantity([850.0],'GHz')
@@ -1714,7 +1714,7 @@ at.initSpectralWindow(nb,fC,fW,fR)
 print "Total Dispersive Delay at ", fC.value, fC.units, " for 1.0 air mass: ", at.getDispersivePathLength().value /  w.value, " meters per mm of water vapor"
 print "(",100*(at.getDispersivePathLength().value /  w.value)/(at.getNonDispersivePathLength().value / w.value), "% of the Non-dispersive one )"
 
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1756,10 +1756,10 @@ spectral window spwid and channel nf.
 </returns>
 
 <example>
-\begin{verbatim}
+
 ac = at.getAbsH2OLines(0,0,0)
 print "H2O lines absorption coefficient for layer 0, channel 0 is ", ac.value, ac.units
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1801,10 +1801,10 @@ spectral window spwid and frequency channel nf
 </returns>
 
 <example>
-\begin{verbatim}
+
 ac = at.getAbsH2OCont(0,0,0)
 print "H2OCont absorption coefficient for layer 0, channel 0 is ", ac.value, ac.units
-\end{verbatim}
+
 </example>
 
 </method>
@@ -1847,10 +1847,10 @@ spectral window spwid and frequency channel nf
 </returns>
 
 <example>
-\begin{verbatim}
+
 ac = at.getAbsO2Lines(0,0,0)
 print "O2 lines absorption coefficient for layer 0, channel 0 is ", ac.value, ac.units
-\end{verbatim}
+
 </example>
 
 </method>
@@ -1893,10 +1893,10 @@ spectral window spwid and frequency channel nf
 </returns>
 
 <example>
-\begin{verbatim}
+
 ac = at.getAbsDryCont(0,0,0)
 print "Dry Continuum absorption coefficient for layer 0, channel 0 is ", ac.value, ac.units
-\end{verbatim}
+
 </example>
 
 </method>
@@ -1939,10 +1939,10 @@ spectral window spwid and frequency channel nf
 </returns>
 
 <example>
-\begin{verbatim}
+
 ac = at.getAbsO3Lines(0,0,0)
 print "O3 lines absorption coefficient for layer 0, channel 0 is ", ac.value, ac.units
-\end{verbatim}
+
 </example>
 
 </method>
@@ -1985,10 +1985,10 @@ spectral window spwid and frequency channel nf
 </returns>
 
 <example>
-\begin{verbatim}
+
 ac = at.getAbsCOLines(0,0,0)
 print "CO lines absorption coefficient for layer 0, channel 0 is ", ac.value, ac.units
-\end{verbatim}
+
 </example>
 
 </method>
@@ -2031,10 +2031,10 @@ spectral window spwid and frequency channel nf
 </returns>
 
 <example>
-\begin{verbatim}
+
 ac = at.getAbsN2OLines(0,0,0)
 print "N2O lines absorption coefficient for layer 0, channel 0 is ", ac.value, ac.units
-\end{verbatim}
+
 </example>
 
 </method>
@@ -2077,10 +2077,10 @@ spectral window spwid and frequency channel nf
 </returns>
 
 <example>
-\begin{verbatim}
+
 ac = at.getAbsTotalDry(0,0,0)
 print "Total dry absorption coefficient for layer 0, channel 0 is ", ac.value, ac.units
-\end{verbatim}
+
 </example>
 
 </method>
@@ -2123,10 +2123,10 @@ spectral window spwid and frequency channel nf
 </returns>
 
 <example>
-\begin{verbatim}
+
 ac = at.getAbsTotalWet(0,0,0)
 print "Total wet absorption coefficient for layer 0, channel 0 is ", ac.value, ac.units
-\end{verbatim}
+
 </example>
 
 </method>
@@ -2152,10 +2152,10 @@ calculations.
 <returns type="bool"/>
 
 <example>
-\begin{verbatim}
+
 wh2o=quantity(0.8,"mm")
 at.setUserWH2O(wh2o)
-\end{verbatim}
+
 </example>
 
 </method>
@@ -2174,9 +2174,9 @@ calculations.
 <returns type="Quantity">User water vapor column</returns>
 
 <example>
-\begin{verbatim}
+
 print "water vapor column: ", at.getUserWH2O().value, at.getUserWH2O().units
-\end{verbatim}
+
 </example>
 
 </method>
@@ -2197,9 +2197,9 @@ Setter for air mass in SkyStatus without performing water vapor retrieval.
 <returns type="bool"/>
 
 <example>
-\begin{verbatim}
+
 at.setAirMass(1.51)
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2213,10 +2213,10 @@ Accessor to get airmass.
 
 <returns type="double">Air mass value</returns>
 <example>
-\begin{verbatim}
+
 at.setAirMass(2.0)
 print "(INPUT CHANGE) Air mass: ", at.getAirMass()
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2237,9 +2237,9 @@ print "(INPUT CHANGE) Air mass: ", at.getAirMass()
 <returns type="bool"/>
 
 <example>
-\begin{verbatim}
+
 at.setSkyBackgroundTemperature(quantity(2.73,'K'))
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2253,12 +2253,12 @@ Get the sky background temperature
 
 <returns type="Quantity">sky background temperature</returns>
 <example>
-\begin{verbatim}
+
 In [6]: t=at.getSkyBackgroundTemperature()
 
 In [7]: print t.value,t.units
 2.73 K
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2285,11 +2285,11 @@ window spwid, for the current conditions and a perfect sky coupling.
 <returns type="Quantity">Average Tebb</returns>
 
 <example>
-\begin{verbatim}
+
 wh2o=quantity(0.4,'mm')
 print "(INPUT CHANGE) water vapor column:", wh2o.value, wh2o.units
 print "(NEW OUTPUT) T_EBB =", at.getAverageTebbSky(0,wh2o).value, at.getAverageTebbSky(0,wh2o).units
-\end{verbatim}
+
 </example>
 
 </method>
@@ -2322,12 +2322,12 @@ perfect Sky Coupling to the sky.
 <returns type="Quantity">Average Tebb</returns>
 
 <example>
-\begin{verbatim}
+
 for s in range(at.getNumSpectralWindows()):
         for i in range(n):
                 print "Band", s, " channel ", i, "TebbSky = ", at.getTebbSky(i,s).value, at.getTebbSky().units
 
-\end{verbatim}
+
 </example>
 </method>
 

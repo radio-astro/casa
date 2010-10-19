@@ -538,7 +538,7 @@ void GBTBackendFiller::addCalSet(const IPosition &defaultTileShape,
 				 Bool compress)
 {
     // Add a calibration set (comprising a set of CORRECTED_DATA, 
-    // MODEL_DATA and IMAGING_WEIGHT columns) to the MeasurementSet.
+    // and MODEL_DATA columns) to the MeasurementSet.
   
     // Define a column accessor to the observed data
     ROTableColumn* data;
@@ -591,12 +591,11 @@ void GBTBackendFiller::addCalSet(const IPosition &defaultTileShape,
 	    // Use a canonical tile shape of 128 kB size
 
 	    Int maxNchan = 1024;
-	    Int tileSize = maxNchan/10 + 1;
 	    Int nCorr = 2;
 	    // try to infer nCorr from table, if there is something there
 	    if (data->nrow() > 0 && data->isDefined(0)) {
 		nCorr = data->shape(0)(0);
-		dataTileShape = IPosition(3, nCorr, tileSize, max(1, 4096/nCorr/tileSize));
+		dataTileShape = IPosition(3, nCorr, maxNchan, max(1, 131072/nCorr/maxNchan));
 	    }
 	}
     };
@@ -675,44 +674,9 @@ void GBTBackendFiller::addCalSet(const IPosition &defaultTileShape,
 	qu = data->keywordSet().asString("QuantumUnits)");
     }
     cd.rwKeywordSet().define("QuantumUnits",qu);
-    
-    // Add the IMAGING_WEIGHT column
-    TableDesc tdImWgt, tdImWgtComp, tdImWgtScale;
-    CompressFloat* ccImWgt=NULL;
-    String colImWgt=MS::columnName(MS::IMAGING_WEIGHT);
-    
-    tdImWgt.addColumn(ArrayColumnDesc<Float>(colImWgt,"imaging weight", 1));
-    IPosition imwgtTileShape = dataTileShape.getLast(2);
-    if (compress) {
-	tdImWgtScale.addColumn(ScalarColumnDesc<Float>(colImWgt+"_SCALE"));
-	tdImWgtScale.addColumn(ScalarColumnDesc<Float>(colImWgt+"_OFFSET"));
-	StandardStMan imwgtScaleStMan("ImWgtScaleOffset");
-	ms_p->addColumn(tdImWgtScale, imwgtScaleStMan);
-	
-	tdImWgtComp.addColumn(ArrayColumnDesc<Short>(colImWgt+"_COMPRESSED",
-						     "imaging weight compressed",
-						     1));
-	tdImWgtComp.defineHypercolumn("TiledShape-ImWgtComp",2,
-				      stringToVector(colImWgt+"_COMPRESSED"),
-				      coordColNames,idColNames);
-	ccImWgt = new CompressFloat(colImWgt, colImWgt+"_COMPRESSED",
-				    colImWgt+"_SCALE", colImWgt+"_OFFSET", True);
-	
-	TiledShapeStMan imwgtCompStMan("TiledShape-ImWgtComp", imwgtTileShape);
-	ms_p->addColumn(tdImWgtComp, imwgtCompStMan);
-	ms_p->addColumn(tdImWgt, *ccImWgt);
-	
-    } else {
-	tdImWgt.defineHypercolumn("TiledShape-ImWgt",2,
-				  stringToVector(colImWgt), coordColNames,
-				  idColNames);
-	TiledShapeStMan imwgtStMan("TiledShape-ImWgt", imwgtTileShape);
-	ms_p->addColumn(tdImWgt, imwgtStMan);
-    };
-    
+        
     if (ccModel) delete ccModel;
     if (ccCorr) delete ccCorr;
-    if (ccImWgt) delete ccImWgt;
     delete data;
 }
 
@@ -730,15 +694,13 @@ void GBTBackendFiller::initCalSet()
     }
 
     // Set the shapes for each row and put in the default values
-    // correcte data is a copy of data
-    // model data and imaging weight are all 1s
+    // corrected data is a copy of data, and model data is all 1s
     for (uInt row=0; row < ms_p->nrow(); row++) {
 	// only do this if there is something in the data row
 	if (data->isDefined(row)) {
 	    IPosition rowShape=data->shape(row);
 	    modelData().setShape(row,rowShape);
 	    correctedData().setShape(row,rowShape);
-	    imagingWeight().setShape(row,rowShape.getLast(1));
 
 	    modelData().basePut(row,Array<Complex>(rowShape,1.0));
 	    Array<Complex> cdata(rowShape);
@@ -748,7 +710,6 @@ void GBTBackendFiller::initCalSet()
 		cdata = mscols_p->data()(row);
 	    }
 	    correctedData().basePut(row,cdata);
-	    imagingWeight().basePut(row,Array<Float>(rowShape.getLast(1),1.0));
 	}
     }
     delete data;
@@ -780,6 +741,5 @@ void GBTBackendFiller::attachCalSet()
 	}
 	modelData_p.attach(*ms_p,"MODEL_DATA");
 	correctedData_p.attach(*ms_p, "CORRECTED_DATA");
-	imagingWeight_p.attach(*ms_p, "IMAGING_WEIGHT");
     }
 }

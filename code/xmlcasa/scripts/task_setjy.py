@@ -1,7 +1,7 @@
 import os
 from taskinit import *
 
-def setjy(vis=None,field=None,spw=None,modimage=None,fluxdensity=None,standard=None):
+def setjy(vis=None,field=None,spw=None,modimage=None,scalebychan=None,fluxdensity=None,standard=None):
        """ Fills the model column for flux density calibrators:
 
        The task places the model visibility amp and phase associated
@@ -73,7 +73,7 @@ def setjy(vis=None,field=None,spw=None,modimage=None,fluxdensity=None,standard=N
          else:
                      raise Exception, 'Visibility data set not found - please verify the name'
 
-         im.setjy(field=field,spw=spw,modimage=modimage,fluxdensity=fluxdensity,standard=standard)
+         im.setjy(field=field,spw=spw,modimage=modimage,fluxdensity=fluxdensity,standard=standard, scalebychan=scalebychan)
          im.close()
 
 

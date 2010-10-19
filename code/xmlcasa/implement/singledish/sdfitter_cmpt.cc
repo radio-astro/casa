@@ -11,7 +11,7 @@
  ***/
 
 #include <iostream>
-#include <xmlcasa/singledish/sdfitter_cmpt.h>
+#include <sdfitter_cmpt.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Utilities/Assert.h>
 

@@ -43,15 +43,15 @@ can be made with this task.
 	</param>
 
 	<param type="any" name="minpix">
-		<description>Minimum pixel value</description>
+		<description>Minimum pixel value (if minpix &gt; maxpix, value is automatically determined)</description>
 		<any type="variant" limittypes="int double"/>
 		<value type="int">0</value>
 	</param>
 
 	<param type="any" name="maxpix">
 		<any type="variant" limittypes="int double"/>
-		<description>Maximum pixel value</description>
-		<value type="int">0</value>
+		<description>Maximum pixel value (if minpix &gt; maxpix, value is automatically determined)</description>
+		<value type="int">-1</value>
 	</param>
 
 	<param type="bool" name="overwrite" >

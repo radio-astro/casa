@@ -18,31 +18,95 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+
+# Make sure that compile time definitions (build time, svn revision number)
+# are recomputed in every build.
+
+# This target is executed unconditionally and before any other target that
+# depends on the definitions file
+add_custom_target( xmlcasa_definitions COMMAND ${CMAKE_COMMAND} -E remove -f definitions )
+
+
+# This is delegated to the cmake script code/install/casadef.cmake in
+# order to allow setting environment variables portably.
+add_custom_command( OUTPUT definitions
+  COMMAND ${CMAKE_COMMAND} -Dcasadef_perl=${PERL_EXECUTABLE} -Dcasadef_source_dir=${CMAKE_SOURCE_DIR} -P ${CMAKE_SOURCE_DIR}/install/casadef.cmake > definitions_tmp
+  COMMAND ${CMAKE_COMMAND} -E copy definitions_tmp definitions
+)
+# Using only shell redirection (>) to generate the definitions file, will cause
+# the file to be empty until the command has finished executing (which is a
+# feature of the shell), and thus trigger other make rules before the file is
+# complete.
+
+add_custom_target(
+  xmlcasa_python_casadef
+  COMMAND echo "import os" > casadef.py
+  COMMAND echo "if os.environ.has_key\\\(\\'__CASAPY_TASKDIR\\'\\\):" >> casadef.py
+  COMMAND echo "    task_directory = os.environ[\\'__CASAPY_TASKDIR\\']" >> casadef.py
+  COMMAND echo "else:" >> casadef.py
+  COMMAND echo "    task_directory = \\\"${PYTHON_TASKD_CASADEF}\\\"" >> casadef.py
+  COMMAND echo "if os.environ.has_key\\\(\\'__CASAPY_PYTHONDIR\\'\\\):" >> casadef.py
+  COMMAND echo "    python_library_directory = os.environ[\\'__CASAPY_PYTHONDIR\\']" >> casadef.py
+  COMMAND echo "else:" >> casadef.py
+  COMMAND echo "    python_library_directory = \\\"${PYTHON_LIBD_CASADEF}\\\"" >> casadef.py
+  COMMAND echo "casa_version = \\\"${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_VERSION}\\\"" >> casadef.py
+  COMMAND cat definitions >> casadef.py
+  DEPENDS definitions
+  )
+
+add_dependencies( xmlcasa_python_casadef xmlcasa_definitions )
+
+add_dependencies( inst xmlcasa_python_casadef )
+add_dependencies( xmlcasa_fast xmlcasa_python_casadef )
+
+install( PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/casadef.py DESTINATION python/${PYTHONV} )
+install( PROGRAMS
+       install/buildmytasks
+       install/xmlgenpy
+       DESTINATION bin )
+
+install( FILES 
+  install/casa2idl3.xsl
+  install/casa2py.xsl
+  install/casa2pyimp.xsl
+  install/casa2summary.xsl
+  install/casa2toolxml.xsl
+  install/casa2tsum2.xsl
+  install/casa2latex.xsl
+  install/casa2pycli.xsl
+  install/casa2pypg.xsl
+  install/casa2tlatex.xsl
+  install/casa2tsum.xsl
+  install/casatlist.xsl
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/../share/xml )
+install( FILES install/saxon8.jar DESTINATION lib )
+
+# set SVNREVISION and BUILDTIME
+set( casadef_quiet TRUE )
+set( casadef_perl ${PERL_EXECUTABLE} )
+set( casadef_source_dir ${CMAKE_SOURCE_DIR} )
+include( ${CMAKE_SOURCE_DIR}/install/casadef.cmake )
+
 add_custom_command( OUTPUT version.cc
-  COMMAND 
+  COMMAND egrep subversion_revision definitions > tmp1.txt
+  COMMAND sed -e 's|[^0-9]*\"||g' tmp1.txt > tmp2.txt
+  COMMAND echo "namespace casa { extern const int   aips_patch_version =" > tmp3.txt
+  COMMAND cat tmp2.txt >> tmp3.txt
+  COMMAND
   sed -e 's|MAJOR|${CASA_MAJOR_VERSION}|'
       -e 's|MINOR|${CASA_MINOR_VERSION}|'
       -e 's|PATCH|${CASA_PATCH_VERSION}|'
       -e 's|REVISION|${SVNREVISION}|'
-      -e 's|DATE|${BUILDTIME}|'
-      -e 's|INFO||'
-      ${CMAKE_CURRENT_SOURCE_DIR}/implement/version.template > version.cc
-      || ${PERL_EXECUTABLE} -e 'unlink("version.cc")\; exit 1\;'
+      -e 's|DATE|${TAGGEDTIME}|'
+      ${CMAKE_CURRENT_SOURCE_DIR}/implement/version.template > tmp4.txt
+  COMMAND cat tmp3.txt tmp4.txt > version_tmp.cc
+      || ${PERL_EXECUTABLE} -e 'unlink("version_tmp.cc")\; exit 1\;'
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different version_tmp.cc version.cc
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/implement/version.template
+  DEPENDS definitions
 )
 
-# Compile time definitions
-#add_custom_command( OUTPUT casadef.py
-#  COMMAND echo task_directory           = ${PYTHON_TASKD} > casadef.py 
-#  COMMAND echo python_library_directory = ${PYTHON_LIBD}  >> casadef.py
-#  COMMAND echo build_time               = ${BUILDTIME}    >> casadef.py
-#  COMMAND echo subversion_revision      = ${SVNREVISION}  >> casadef.py
-#  COMMAND echo subversion_url           = ${SVNURL}       >> casadef.py
-#  COMMAND echo casa_version             = ${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_VERSION} >> casadef.py
-#  COMMAND echo casa_build               = ${CASABUILD}    >> casadef.py
-#)
-
 casa_add_library( xmlcasa
-  implement/alma/asdm2msfillertask_cmpt.cc
   implement/atmosphere/atmosphere_cmpt.cc
   implement/calibrater/calplot_cmpt.cc
   implement/casa/logsink_cmpt.cc
@@ -71,6 +135,7 @@ casa_add_library( xmlcasa
   implement/StdCasa/value_record.cc
   implement/StdCasa/value_variant.cc
   implement/StdCasa/variant.cc
+  implement/spectralline/spectralline_cmpt.cc
   implement/synthesis/calibrater_cmpt.cc
   implement/synthesis/deconvolver_cmpt.cc
   implement/synthesis/imager_cmpt.cc
@@ -93,17 +158,14 @@ casa_add_library( xmlcasa
   implement/xerces/stdcasaXMLUtil.cc
   version.cc
   )
+add_dependencies( libxmlcasa_fast xmlcasa_definitions )
+add_dependencies( libxmlcasa      xmlcasa_definitions )
 
 casa_add_executable( xmlcasa casaparamgui apps/casaparamgui/casaparamgui.cc )
 casa_add_executable( xmlcasa casapy apps/casapy/casapy.cc )
-casa_add_executable( xmlcasa harvestrn apps/harvestrn/harvestrn.cc )
-casa_add_executable( xmlcasa harvestrr apps/harvestrr/harvestrr.cc )
 casa_add_assay( xmlcasa implement/xerces/test/tXMLToRecord.cc )
 casa_add_test ( xmlcasa implement/flagging/test/tAutoflagger.cc )
 
-
-
-#install( PROGRAMS casadef.py  DESTINATION python/${PYTHONV} )
 
 casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/asap_init.py
@@ -115,8 +177,10 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/check_input_saverestore.py
   scripts/cleanhelper.py
   scripts/dbusutil.py
+  scripts/dict_to_table.py
   scripts/filecatalog.py
   scripts/fixvis_util.py
+  scripts/get_user.py
   scripts/importarchive.py
   scripts/imregion.py
   scripts/listing.py
@@ -124,9 +188,6 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/ngc5921_usecase.py
   scripts/odict.py
   scripts/parallel_go.py
-  scripts/parallel/__init__.py
-  scripts/parallel/parallel_cont.py
-  scripts/parallel/pcont.py
   scripts/parameter_check.py
   scripts/parameter_dictionary.py
   scripts/pointcal.py
@@ -154,6 +215,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_clearstat.py
   scripts/task_concat.py
   scripts/task_csvclean.py
+  scripts/task_pclean.py
   scripts/task_cvel.py
   scripts/task_deconvolve.py
   scripts/task_exportasdm.py
@@ -163,7 +225,9 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_find.py
   scripts/task_fixvis.py
   scripts/task_flagautocorr.py
+  scripts/task_flagcmd.py
   scripts/task_flagdata.py
+  scripts/task_flagdata2.py
   scripts/task_flagmanager.py
   scripts/task_fluxscale.py
   scripts/task_fringecal.py
@@ -172,6 +236,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_gencal.py
   scripts/task_hanningsmooth.py
   scripts/task_help.py
+  scripts/task_imcollapse.py
   scripts/task_imcontsub.py
   scripts/task_imfit.py
   scripts/task_imhead.py
@@ -189,13 +254,13 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_imregrid.py
   scripts/task_imsmooth.py
   scripts/task_imstat.py
+  scripts/task_imtrans.py
   scripts/task_imval.py
   scripts/taskinit.py
   scripts/task_listcal.py
   scripts/task_listhistory.py
   scripts/task_listobs.py
   scripts/task_listvis.py
-  scripts/task_makemask.py
   scripts/taskmanager.py
   scripts/task_mosaic.py
   scripts/task_newflagdata.py
@@ -212,6 +277,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_sdcoadd.py
   scripts/task_sdfit.py
   scripts/task_sdflag.py
+  scripts/task_sdflagmanager.py
   scripts/task_sdimaging.py
   scripts/task_sdimprocess.py
   scripts/task_sdlist.py
@@ -219,22 +285,25 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_sdplot.py
   scripts/task_sdsave.py
   scripts/task_sdscale.py
-  scripts/task_sdsim.py
   scripts/task_sdsmooth.py
   scripts/task_sdstat.py
   scripts/task_sdtpimaging.py
   scripts/task_setjy.py
-  scripts/task_simdata2.py
+  scripts/task_ssoflux.py
   scripts/task_simdata.py
+  scripts/task_oldsimdata.py
+  scripts/task_slsearch.py
   scripts/task_smoothcal.py
   scripts/task_specfit.py
+  scripts/task_splattotable.py
   scripts/task_split.py
   scripts/task_uvcontsub2.py
   scripts/task_uvcontsub.py
   scripts/task_uvmodelfit.py
   scripts/task_uvsub.py
-  scripts/task_viewerconnection.py
   scripts/task_viewer.py
+  scripts/task_msview.py
+  scripts/task_imview.py
   scripts/task_vishead.py
   scripts/task_visstat.py
   scripts/task_widefield.py
@@ -260,6 +329,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/clearstat.xml
   tasks/concat.xml
   tasks/csvclean.xml
+  tasks/pclean.xml
   tasks/cvel.xml
   tasks/deconvolve.xml
   tasks/exportasdm.xml
@@ -269,7 +339,9 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/find.xml
   tasks/fixvis.xml
   tasks/flagautocorr.xml
+  tasks/flagcmd.xml
   tasks/flagdata.xml
+  tasks/flagdata2.xml
   tasks/flagmanager.xml
   tasks/fluxscale.xml
   tasks/fringecal.xml
@@ -277,6 +349,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/gaincal.xml
   tasks/gencal.xml
   tasks/hanningsmooth.xml
+  tasks/imcollapse.xml
   tasks/imcontsub.xml
   tasks/imfit.xml
   tasks/imhead.xml
@@ -294,12 +367,12 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/imregrid.xml
   tasks/imsmooth.xml
   tasks/imstat.xml
+  tasks/imtrans.xml
   tasks/imval.xml
   tasks/listcal.xml
   tasks/listhistory.xml
   tasks/listobs.xml
   tasks/listvis.xml
-  tasks/makemask.xml
   tasks/mosaic.xml
   tasks/newflagdata.xml
   tasks/peel.xml
@@ -315,6 +388,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/sdcoadd.xml
   tasks/sdfit.xml
   tasks/sdflag.xml
+  tasks/sdflagmanager.xml
   tasks/sdimaging.xml
   tasks/sdimprocess.xml
   tasks/sdlist.xml
@@ -322,29 +396,31 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/sdplot.xml
   tasks/sdsave.xml
   tasks/sdscale.xml
-  tasks/sdsim.xml
   tasks/sdsmooth.xml
   tasks/sdstat.xml
   tasks/sdtpimaging.xml
   tasks/setjy.xml
-  tasks/simdata2.xml
+  tasks/ssoflux.xml
   tasks/simdata.xml
+  tasks/oldsimdata.xml
+  tasks/slsearch.xml
   tasks/smoothcal.xml
   tasks/specfit.xml
+  tasks/splattotable.xml
   tasks/split.xml
   tasks/uvcontsub2.xml
   tasks/uvcontsub.xml
   tasks/uvmodelfit.xml
   tasks/uvsub.xml
-  tasks/viewerconnection.xml
   tasks/viewer.xml
+  tasks/imview.xml
+  tasks/msview.xml
   tasks/vishead.xml
   tasks/visstat.xml
   tasks/widefield.xml
   tasks/msmoments.xml )
 
 casa_add_tools( tools_idl tools_sources 
-  implement/alma/asdm2msfillertask.xml
   implement/atmosphere/atmosphere.xml
   implement/calibrater/calplot.xml
   implement/casa/logsink.xml
@@ -362,6 +438,7 @@ casa_add_tools( tools_idl tools_sources
   implement/nrao/vlafillertask.xml
   implement/plotms/plotms.xml
   implement/scimath/functional.xml
+  implement/spectralline/spectralline.xml
   implement/synthesis/calibrater.xml
   implement/synthesis/deconvolver.xml
   implement/synthesis/imagertask.xml
@@ -396,17 +473,22 @@ casa_add_pymodule( interrupt modules/interrupt/interrupt_python.cc )
 # Make sure that all IDLs are up to date before considering casac
 # This has the desired effects that
 # - Dependencies of the C++ sources are calculated after the IDLs are created
+#   (IDLs might #include each other)
 # - When ccmtools is invoked, all the required IDL (which may not be explicit
 #   cmake dependencies for the ccmtools command) exist.
 add_custom_target( idl SOURCES ${tools_idl} )
-add_dependencies( casac idl )
+add_custom_target( generated_sources SOURCES ${tools_sources} ${outputs_idl} )
+add_dependencies( generated_sources idl )
+add_dependencies( libxmlcasa generated_sources )
 
 add_subdirectory( scripts/tests )
 add_subdirectory( scripts/regressions )
 add_subdirectory( scripts/regressions/tests )
+add_subdirectory( scripts/regressions/admin )
 add_subdirectory( scripts/usecases )
 add_subdirectory( scripts/demos )
 add_subdirectory( scripts/recipes )
+add_subdirectory( scripts/parallel )
 
 # Documentation targets, which depend on the contents of casa_out_* being set
 # Latex target
@@ -429,6 +511,3 @@ if( casa_out_pdf )
 else()
   add_custom_target( doc_pdf COMMAND echo "PDF to HTML converter was not found." )
 endif()
-
-# All documentation
-add_custom_target( doc DEPENDS doc_doxy doc_latex doc_html doc_pdf )

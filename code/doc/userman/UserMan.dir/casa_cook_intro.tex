@@ -199,9 +199,25 @@ to look for updates to the release and the documentation,
 and to check the list of known problems.  You can find the contact
 information for feedback here also.
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{What's New in Release 3.1}
+\label{section:intro.release.whatsnew}
+
+\begin{itemize}
+\item {\bf  Simulation}
+ \begin{itemize}
+\item  {\tt simdata2} is renamed to {\tt simdata} and should no longer crash
+  when adding noise.  The legacy interface is now called {\tt oldsimdata}.
+ \end{itemize}
+\end{itemize}
+
+
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{What's New in Release 3.0.1}
-\label{section:intro.release.whatsnew}
+%\label{section:intro.release.whatsnew}
 
 Release 3.0.1 is mainly intended to be a patch to the previous 3.0.0
 release of CASA. It is timed to coincide with the first scientific
@@ -1545,8 +1561,7 @@ uvcontsub        : Continuum fitting and subtraction in the uv plane
 uvcontsub2       : Continuum fitting and subtraction in the uv plane CALIBRATION VERSION
 uvmodelfit       : Fit a single component source model to the uv data
 uvsub            : Subtract/add model from/to the corrected visibility data.
-viewer           : View an image or visibility data set:
-viewerconnection : Scripting connection to the CASA Viewer
+viewer           : View an image or visibility data set
 vishead          : List, summary, get, and put metadata in a measurement set
 visstat          : Displays statistical information from a measurement set, or from a measurement set selection
 widefield        : Wide-field imaging and deconvolution with selected algorithm

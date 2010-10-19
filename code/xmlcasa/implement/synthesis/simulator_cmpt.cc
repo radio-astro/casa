@@ -11,7 +11,7 @@
  ***/
 
 #include <iostream>
-#include <xmlcasa/synthesis/simulator_cmpt.h>
+#include <simulator_cmpt.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/Containers/Record.h>
 #include <synthesis/MeasurementEquations/Simulator.h>
@@ -230,7 +230,24 @@ simulator::settimes(const ::casac::variant& integrationtime, const bool usehoura
 }
 
 bool
-simulator::observe(const std::string& sourcename, const std::string& spwname, const ::casac::variant& starttime, const ::casac::variant& stoptime)
+simulator::observe(const std::string& sourcename, const std::string& spwname, const ::casac::variant& starttime, const ::casac::variant& stoptime,
+		   const bool add_observation,
+		   const bool state_sig,
+		   const bool state_ref,
+		   const double state_cal,
+		   const double state_load,
+		   const int state_sub_scan,
+		   const std::string& state_obs_mode,
+		   const std::string& observername,
+		   const std::string& projectname)
+// defaults are inserted to .h file from xml
+//		   const bool add_observation=True,
+//		   const bool state_sig=True,
+//		   const bool state_ref=True,
+//		   const double state_cal=0.,
+//		   const double state_load=0.,
+//		   const int state_sub_scan=0,
+//		   const std::string& state_obs_mode="OBSERVE_TARGET.ON_SOURCE")
 {
 Bool rstat(False);
   
@@ -239,7 +256,8 @@ Bool rstat(False);
     if(itsSim !=0){
       casa::Quantity qstarttime(casaQuantity(starttime));
       casa::Quantity qstoptime(casaQuantity(stoptime));
-      rstat=itsSim->observe(sourcename, spwname, qstarttime, qstoptime);
+      rstat=itsSim->observe(sourcename, spwname, qstarttime, qstoptime,
+			    add_observation,state_sig,state_ref,state_cal,state_load,state_sub_scan,state_obs_mode,observername,projectname);
     }
 
 
@@ -256,7 +274,16 @@ Bool rstat(False);
 
 bool
 //simulator::observemany(const std::vector<string>& sourcenames, const std::string& spwname, const ::casac::variant& starttimes, const ::casac::variant& stoptimes, const ::casac::variant& directions)
-simulator::observemany(const std::vector<string>& sourcenames, const std::string& spwname, const std::vector<string>& starttimes, const std::vector<string>& stoptimes, const std::vector<string>& directions)
+simulator::observemany(const std::vector<string>& sourcenames, const std::string& spwname, const std::vector<string>& starttimes, const std::vector<string>& stoptimes, const std::vector<string>& directions,
+		       const bool add_observation,
+		       const bool state_sig,
+		       const bool state_ref,
+		       const double state_cal,
+		       const double state_load,
+		       const int state_sub_scan,
+		       const std::string& state_obs_mode,
+		       const std::string& observername,
+		       const std::string& projectname)
 {
 Bool rstat(False);
   
@@ -311,7 +338,8 @@ Bool rstat(False);
 	}
 	mdirections[i]=mdir;
       }
-      rstat=itsSim->observemany(ssourcenames, sspwname, qstarttimes, qstoptimes, mdirections);
+      rstat=itsSim->observemany(ssourcenames, sspwname, qstarttimes, qstoptimes, mdirections,
+				add_observation,state_sig,state_ref,state_cal,state_load,state_sub_scan,state_obs_mode,observername,projectname);
     }
 
 
@@ -938,7 +966,8 @@ simulator::setnoise(const std::string& mode,
 		    const double correfficiency,	    
 		    const double trx, 
 		    const double tground, 
-		    const double tcmb
+		    const double tcmb,
+		    const bool OTF
 		    ) {
   Bool rstat(False);
   try {
@@ -955,7 +984,7 @@ simulator::setnoise(const std::string& mode,
 			     qpress,relhum,qalt,qwaterht,qpwv,
 			     tatmos,tau,
 			     antefficiency, spillefficiency, correfficiency, 
-			     trx, tground, tcmb);
+			     trx, tground, tcmb, OTF);
     }    
  } catch  (AipsError x) {
    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 

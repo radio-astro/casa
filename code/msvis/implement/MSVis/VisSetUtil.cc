@@ -78,376 +78,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <todo asof="">
 // </todo>
-void VisSetUtil::WeightNatural(VisSet& vs, Double& sumwt) {
-  VisIter& vi(vs.iter());
-  VisSetUtil::WeightNatural(vi,sumwt);
-
-}
-void VisSetUtil::WeightNatural(VisibilityIterator& vi, Double& sumwt) {
-  
-  LogIO os(LogOrigin("VisSetUtil", "WeightNatural()", WHERE));
-  
-  
-  VisBuffer vb(vi);
-  
-  sumwt=0.0;
-  Int ndrop=0;
-  for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
-    for (vi.origin();vi.more();vi++) {
-      Int nRow=vb.nRow();
-      Int nChan=vb.nChannel();
-      Int nPol=vb.nCorr();
-      for (Int row=0; row<nRow; row++) {
-	    for (Int chn=0; chn<nChan; chn++) {
-          for (Int pol=0; pol<nPol; pol++) {
-	        //if( !vb.flag()(chn,row) ) {
-			//include correlation(pol) based flag 
-	        if( !vb.flagCube()(pol,chn,row) ) {
-	          vb.imagingWeight()(chn,row)=vb.weight()(row);
-	          sumwt+=vb.imagingWeight()(chn,row);
-	        }
-	        else {
-	          vb.imagingWeight()(chn,row)+=0.0;
-		      ndrop++;
-	        }
-	      }
-        }
-      }
-      vi.setImagingWeight(vb.imagingWeight());
-    }
-  }
-  os << LogIO::DEBUG1 << "no. vis dropped = " << ndrop << LogIO::POST;
-
-  if(sumwt<=0.0) {
-    os << LogIO::WARN << "Sum of weights is not positive: check that some data is unflagged and that the WEIGHT column is positive" << LogIO::POST;
-  }
-}
-void VisSetUtil::WeightUniform(VisSet& vs,
-			       const String& rmode, const Quantity& noise,
-			       const Double robust, const Int nx, const Int ny,
-			       const Quantity& cellx, const Quantity& celly,
-			       Double& sumwt,
-			       const Int uBox, const Int vBox) {
-  VisIter& vi(vs.iter());
-  VisSetUtil::WeightUniform(vi,rmode, noise,robust,nx, ny, cellx,celly,
-			    sumwt,uBox, vBox);
-
-}
-void VisSetUtil::WeightUniform(VisibilityIterator& vi,
-			       const String& rmode, const Quantity& noise,
-			       const Double robust, const Int nx, const Int ny,
-			       const Quantity& cellx, const Quantity& celly,
-			       Double& sumwt,
-			       const Int uBox, const Int vBox) {
-  
-  LogIO os(LogOrigin("VisSetUtil", "WeightUniform()", WHERE));
-  
-  sumwt=0.0;
-
-  
-  VisBuffer vb(vi);
-  
-  Float uscale, vscale;
-  Int uorigin, vorigin;
-  Vector<Double> deltas;
-  uscale=(nx*cellx.get("rad").getValue())/2.0;
-  vscale=(ny*celly.get("rad").getValue())/2.0;
-  uorigin=nx/2;
-  vorigin=ny/2;
-  
-  // Simply declare a big matrix 
-  Matrix<Float> gwt(nx,ny);
-  gwt=0.0;
-  
-  Float u, v;
-  sumwt=0.0;
-  for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
-    for (vi.origin();vi.more();vi++) {
-      Int nRow=vb.nRow();
-      Int nChan=vb.nChannel();
-      Int nPol=vb.nCorr();
-      for (Int row=0; row<nRow; row++) {
-	    for (Int chn=0; chn<nChan; chn++) {
-	      for (Int pol=0; pol<nPol; pol++) {
-	        //if(!vb.flag()(chn,row)) {
-			//include correlation(pol) based flag 
-	        if(!vb.flagCube()(pol,chn,row)) {
-	          Float f=vb.frequency()(chn)/C::c;
-	          u=vb.uvw()(row)(0)*f; 
-	          v=vb.uvw()(row)(1)*f;
-	          Int ucell=Int(uscale*u+uorigin);
-	          Int vcell=Int(vscale*v+vorigin);
-	          if(((ucell-uBox)>0)&&((ucell+uBox)<nx)&&((vcell-vBox)>0)&&((vcell+vBox)<ny)) {
-	            for (Int iv=-vBox;iv<=vBox;iv++) {
-		          for (Int iu=-uBox;iu<=uBox;iu++) {
-		            gwt(ucell+iu,vcell+iv)+=vb.weight()(row);
-		            sumwt+=vb.weight()(row);
-		          }
-	            }
-	          }
-	          ucell=Int(-uscale*u+uorigin);
-	          vcell=Int(-vscale*v+vorigin);
-	          if(((ucell-uBox)>0)&&((ucell+uBox)<nx)&&((vcell-vBox)>0)&&((vcell+vBox)<ny)) {
-	            for (Int iv=-vBox;iv<=vBox;iv++) {
-		          for (Int iu=-uBox;iu<=uBox;iu++) {
-		            gwt(ucell+iu,vcell+iv)+=vb.weight()(row);
-		            sumwt+=vb.weight()(row);
-		          }
-	            }
-	          }
-	        }// end if (!vb.flagCube()...)
-	      }// end for pol
-		}// end for chn
-      }// end for row
-    }// end for vi++
-  }// end for vi.nextChunk()
-  
-  // We use the approximation that all statistical weights are equal to
-  // calculate the average summed weights (over visibilities, not bins!)
-  // This is simply to try an ensure that the normalization of the robustness
-  // parameter is similar to that of the ungridded case, but it doesn't have
-  // to be exact, since any given case will require some experimentation.
-  
-  Float f2, d2;
-  if (rmode=="norm") {
-    os << LogIO::DEBUG1 << "Normal robustness, robust = " << robust << LogIO::POST;
-    Double sumlocwt = 0.;
-    for(Int vgrid=0;vgrid<ny;vgrid++) {
-      for(Int ugrid=0;ugrid<nx;ugrid++) {
-	    if(gwt(ugrid, vgrid)>0.0) sumlocwt+=square(gwt(ugrid,vgrid));
-      }
-    }
-    f2 = square(5.0*pow(10.0,Double(-robust))) / (sumlocwt / sumwt);
-    d2 = 1.0;
-  }
-  else if (rmode=="abs") {
-    os << LogIO::DEBUG1
-       << "Absolute robustness, robust = " << robust << ", noise = "
-       << noise.get("Jy").getValue() << "Jy" << LogIO::POST;
-    f2 = square(robust);
-    d2 = 2.0 * square(noise.get("Jy").getValue());
-  }
-  else {
-    f2 = 1.0;
-    d2 = 0.0;
-  }
-  Int ndrop=0;
-  sumwt=0.0;
-  for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
-    for (vi.origin();vi.more();vi++) {
-      for (Int row=0; row<vb.nRow(); row++) {
-	    for (Int chn=0; chn<vb.nChannel(); chn++) {
-	      for (Int pol=0; pol<vb.nCorr(); pol++) {
-	        //if (!vb.flag()(chn,row)) {
-	        if (!vb.flagCube()(pol,chn,row)) {
-	          Float f=vb.frequency()(chn)/C::c;
-	          u=vb.uvw()(row)(0)*f;
-	          v=vb.uvw()(row)(1)*f;
-	          Int ucell=Int(uscale*u+uorigin);
-	          Int vcell=Int(vscale*v+vorigin);
-	          vb.imagingWeight()(chn,row)=vb.weight()(row);
-	          if((ucell>0)&&(ucell<nx)&&(vcell>0)&&(vcell<ny)) {
-	            if(gwt(ucell,vcell)>0.0) {
-		          vb.imagingWeight()(chn,row)/=gwt(ucell,vcell)*f2+d2;
-		          sumwt+=vb.imagingWeight()(chn,row);
-	            }
-	          }
-			}
-	        else {
-	          vb.imagingWeight()(chn,row)+=0.0;
-	          ndrop++;
-	        }
-	      }// end for pol
-	    }// end for chn
-	  }// end for row
-      
-      vi.setImagingWeight(vb.imagingWeight());
-
-    } //end of vi++
-
-  }// end for vi.nextChunk
-  os << LogIO::DEBUG1 << "no. vis dropped = " << ndrop << LogIO::POST;
-  if(sumwt<=0.0) {
-    os << LogIO::WARN << "Sum of weights is not positive: check that some data is unflagged and that the WEIGHT column is positive" << LogIO::POST;
-  }
-}
-void VisSetUtil::WeightRadial(VisSet& vs, Double& sumwt) {
-  VisIter& vi(vs.iter());
-  VisSetUtil::WeightRadial(vi, sumwt);
-}
-void VisSetUtil::WeightRadial(VisibilityIterator& vi, Double& sumwt) {
-  
-  LogIO os(LogOrigin("VisSetUtil", "WeightRadial()", WHERE));
-  
-  sumwt=0.0;
-  Int ndrop=0;
-  
-  VisBuffer vb(vi);
-  
-  for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
-    for (vi.origin();vi.more();vi++) {
-      for (Int row=0; row<vb.nRow(); row++) {
-	    for (Int chn=0; chn<vb.nChannel(); chn++) {
-	      for (Int pol=0; pol<vb.nCorr(); pol++) {
-	        Float f=vb.frequency()(chn)/C::c;
-	        //if( !vb.flag()(chn,row) ) {
-	        if (!vb.flagCube()(pol,chn,row)) {
-	          vb.imagingWeight()(chn,row)=
-	          f*sqrt(square(vb.uvw()(row)(0))+square(vb.uvw()(row)(1)))
-	          * vb.weight()(row);
-	          sumwt+=vb.imagingWeight()(chn,row);
-	        }
-	        else {
-	          vb.imagingWeight()(chn,row)+=0.0;
-			  ndrop++;
-	        }
-	      }//end for pol
-	    }//end for chn
-      }//end for row
-      vi.setImagingWeight(vb.imagingWeight());
-    }
-  }
-  os << LogIO::DEBUG1 << "no. vis dropped = " << ndrop << LogIO::POST;
-  if(sumwt<=0.0) {
-    os << LogIO::WARN << "Sum of weights is not positive: check that some data is unflagged and that the WEIGHT column is positive" << LogIO::POST;
-  }
-}
-
-// Filter the MeasurementSet
-void VisSetUtil::Filter(VisSet& vs, const String& type, const Quantity& bmaj,
-			const Quantity& bmin, const Quantity& bpa,
-			Double& sumwt, Double& minfilter, Double& maxfilter)
-{
-  VisIter& vi(vs.iter());
-  VisSetUtil::Filter(vi, type,bmaj,bmin, bpa, sumwt, minfilter, maxfilter);
-}
-
-void VisSetUtil::Filter(VisibilityIterator& vi, const String& type, const Quantity& bmaj,
-			const Quantity& bmin, const Quantity& bpa,
-			Double& sumwt, Double& minfilter, Double& maxfilter)
-{
-
-  LogIO os(LogOrigin("VisSetUtil", "filter()", WHERE));
-  
-  sumwt=0.0;
-  maxfilter=0.0;
-  minfilter=1.0;
-  
-  
-  VisBuffer vb(vi);
-
-  if (type=="gaussian") {
-    
-    Bool lambdafilt=False;
-    Double rbmaj;
-    Double rbmin;
-    
-    if( bmaj.getUnit().contains("lambda"))
-      lambdafilt=True;
-    if(lambdafilt){
-      os << "Filtering for Gaussian of shape: " 
-	 << bmaj.get("klambda").getValue() << " by " 
-	 << bmin.get("klambda").getValue() << " (klambda) at p.a. "
-	 << bpa.get("deg").getValue() << " (degrees)" << LogIO::POST;
-      rbmaj=log(2.0)/square(bmaj.get("lambda").getValue());
-      rbmin=log(2.0)/square(bmin.get("lambda").getValue());
-    }
-    else{
-      os << "Filtering for Gaussian of shape: " 
-	 << bmaj.get("arcsec").getValue() << " by " 
-	 << bmin.get("arcsec").getValue() << " (arcsec) at p.a. "
-	 << bpa.get("deg").getValue() << " (degrees)" << LogIO::POST;
-    
-      // Convert to values that we can use
-      Double fact = 4.0*log(2.0);
-      rbmaj = fact*square(bmaj.get("rad").getValue());
-      rbmin = fact*square(bmin.get("rad").getValue());
-    }
-    Double rbpa  = MVAngle(bpa).get("rad").getValue();
-    Double cospa = sin(rbpa);
-    Double sinpa = cos(rbpa);
-    
-    // Now iterate through the data
-    for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
-      for (vi.origin();vi.more();vi++) {
-	Int nRow=vb.nRow();
-	Int nChan=vb.nChannel();
-	for (Int row=0; row<nRow; row++) {
-	  for (Int chn=0; chn<nChan; chn++) {
-	    Double invLambdaC=vb.frequency()(chn)/C::c;
-	    Double& u = vb.uvw()(row)(0);
-	    Double& v = vb.uvw()(row)(1);
-	    if(!vb.flag()(chn,row)&&vb.weight()(row)>0.0) {
-	      Double ru = invLambdaC*(  cospa * u + sinpa * v);
-	      Double rv = invLambdaC*(- sinpa * u + cospa * v);
-	      Double filter = exp(-rbmaj*square(ru) - rbmin*square(rv));
-	      vb.imagingWeight()(chn,row)*=filter;
-	      if(filter>maxfilter) maxfilter=filter;
-	      if(filter<minfilter) minfilter=filter;
-	      sumwt+=vb.imagingWeight()(chn,row);
-	    }
-	    else {
-	      vb.imagingWeight()(chn,row)=0.0;
-	    }
-	  }
-	}
-	vi.setImagingWeight(vb.imagingWeight());
-      }
-    }
-  }
-  else {
-    os << "Unknown filtering " << type << LogIO::EXCEPTION;    
-  }
-  
-}
-
-
-// Implement a uv range
-
-void VisSetUtil::UVRange(VisSet &vs, const Double& uvmin, const Double& uvmax,
-			 Double& sumwt)
-{
-  VisIter& vi(vs.iter());
-  VisSetUtil::UVRange(vi, uvmin, uvmax,sumwt);
-}
-void VisSetUtil::UVRange(VisIter& vi, const Double& uvmin, const Double& uvmax,
-			 Double& sumwt)
-{
-  LogIO os(LogOrigin("VisSetUtil", "UVRange()", WHERE));
-  
-  sumwt=0.0;
- 
-  VisBuffer vb(vi);
-
-  if(uvmax<uvmin||uvmin<0.0) {
-    os << "Invalid uvmin and uvmax: " << uvmin << ", " << uvmax
-       << LogIO::EXCEPTION;
-  }
-
-  // Now iterate through the data
-  for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
-    for (vi.origin();vi.more();vi++) {
-      Int nRow=vb.nRow();
-      Int nChan=vb.nChannel();
-      for (Int row=0; row<nRow; row++) {
-	Double& u = vb.uvw()(row)(0);
-	Double& v = vb.uvw()(row)(1);
-	Double radius=sqrt(square(u)+square(v));
-	for (Int chn=0; chn<nChan; chn++) {
-	  if(!vb.flag()(chn,row)) {
-	    Double radiusL=radius*vb.frequency()(chn)/C::c;
-	    if(radiusL>uvmax||radiusL<uvmin) {
-	      vb.imagingWeight()(chn,row)=0.0;
-	    }
-	  }
-	}
-      }
-      sumwt+=sum(vb.imagingWeight());
-      vi.setImagingWeight(vb.imagingWeight());
-    }
-  }
-}
-
 // Calculate sensitivity
 void VisSetUtil::Sensitivity(VisSet &vs, Quantity& pointsourcesens, 
 			     Double& relativesens, Double& sumwt)
@@ -499,24 +129,24 @@ void VisSetUtil::Sensitivity(ROVisIter &vi, Quantity& pointsourcesens,
   pointsourcesens=Quantity(sqrt(sumwtsq)/sumwt, "Jy");
   relativesens=sqrt(sumwtsq)/sumwt/naturalsens;
 }
-void VisSetUtil::HanningSmooth(VisSet &vs)
+  void VisSetUtil::HanningSmooth(VisSet &vs, const String& dataCol)
 {
   VisIter& vi(vs.iter());
-  VisSetUtil::HanningSmooth(vi);
+  VisSetUtil::HanningSmooth(vi, dataCol);
 }
-void VisSetUtil::HanningSmooth(VisIter &vi)
+  void VisSetUtil::HanningSmooth(VisIter &vi, const String& dataCol)
 {
   LogIO os(LogOrigin("VisSetUtil", "HanningSmooth()"));
 
-  
   VisBuffer vb(vi);
-
   Int row, chn, pol;
 
   for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
     if (vi.existsWeightSpectrum()) {
       for (vi.origin();vi.more();vi++) {
-	Cube<Complex>& vc= vb.correctedVisCube();
+
+	Cube<Complex>& vc = ( dataCol=="data" ? vb.visCube() : vb.correctedVisCube());
+
 	Cube<Bool>& fc= vb.flagCube();
 	Cube<Float>& wc= vb.weightSpectrum();
 
@@ -555,12 +185,21 @@ void VisSetUtil::HanningSmooth(VisIter &vi)
 	    newFlag(pol,nChan-1,row) = True;  // flag last channel
 	  }
 	}
-	vi.setVisAndFlag(smoothedData,newFlag,VisibilityIterator::Corrected);
+
+	if(dataCol=="data"){
+	  vi.setVisAndFlag(smoothedData,newFlag,VisibilityIterator::Observed);
+	}
+	else{
+	  vi.setVisAndFlag(smoothedData,newFlag,VisibilityIterator::Corrected);
+	}
+
 	vi.setWeightSpectrum(newWeight);
       }
     } else {
       for (vi.origin();vi.more();vi++) {
-	Cube<Complex>& vc= vb.correctedVisCube();
+
+	Cube<Complex>& vc = (dataCol=="data" ? vb.visCube() : vb.correctedVisCube());
+
 	Cube<Bool>& fc= vb.flagCube();
 	Matrix<Float>& wm = vb.weightMat();
 
@@ -591,7 +230,14 @@ void VisSetUtil::HanningSmooth(VisIter &vi)
 	    newFlag(pol,nChan-1,row) = True;  // flag last channel
 	  }
 	}
-	vi.setVisAndFlag(smoothedData,newFlag,VisibilityIterator::Corrected);
+
+	if(dataCol=="data"){
+	  vi.setVisAndFlag(smoothedData,newFlag,VisibilityIterator::Observed);
+	}
+	else{
+	  vi.setVisAndFlag(smoothedData,newFlag,VisibilityIterator::Corrected);
+	}
+
 	vi.setWeightMat(newWeight);
       }
     }

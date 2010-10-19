@@ -8,7 +8,7 @@
 #include <measures/Measures/MFrequency.h>
 #include <measures/Measures/MRadialVelocity.h>
 #include <measures/Measures/MEpoch.h>
-#include <xmlcasa/Quantity.h>
+#include <casac/Quantity.h>
 #include <xmlcasa/record.h>
 
 // Conversions utilities
@@ -29,11 +29,13 @@ Quantity          casaQuantity(const casac::Quantity &);
 // generate a default Quantity (0.0) for unhandled variants.
 Quantity          casaQuantity(const casac::variant &);
 
+ Quantum<Vector<Double> > casaQuantumVector(const casac::variant &);
+
 ::casac::Quantity casacQuantity(const Quantity &);
 
 // See note in implementation about possible memory leak.
 ::casac::record  *fromRecord(const Record &);
-// makes a Vector of Quntity out of strings or vector of such or later records
+// makes a Vector of Quantity out of strings or vector of such or later records
  Bool toCasaVectorQuantity(const ::casac::variant& theval, 
 			   casa::Vector<casa::Quantity>& theQuants);
 
@@ -57,8 +59,11 @@ Bool             casaMRadialVelocity(const ::casac::variant& theVar,
 Bool             casaMEpoch(const ::casac::variant& theVar, 
                             MEpoch& theMeas);
  //utility to split a single string to multiple if they are , or empty space 
- //seperated
+ //seperated. if commaOnly = True, only seperate on commas, not empty space
  Int sepCommaEmptyToVectorStrings(Vector<String>& retStr, 
-				  const std::string& str); 
+				  const std::string& str);
+
+ Int sepCommaToVectorStrings(Vector<String>& retStr,
+ 				  const std::string& str);
 
 }

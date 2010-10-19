@@ -38,6 +38,11 @@ def exportasdm(vis=None, asdm=None, datacolumn=None, archiveid=None, rangeid=Non
                  default: True
 	"""
 	#Python script
+
+	# make ms and tb tool local 
+	ms = casac.homefinder.find_home_by_name('msHome').create()
+	tb = casac.homefinder.find_home_by_name('tableHome').create()
+
 	try:
 		casalog.origin('exportasdm')
 		parsummary = 'vis=\"'+str(vis)+'\", asdm=\"'+str(asdm)+'\", datacolumn=\"'+str(datacolumn)+'\",'
@@ -81,6 +86,7 @@ def exportasdm(vis=None, asdm=None, datacolumn=None, archiveid=None, rangeid=Non
 		os.system('rm -rf '+vis+'-tsorted')
 		ms.open(vis)
 		ms.timesort(vis+'-tsorted')
+		ms.close()
 
 		execute_string=  '--datacolumn \"' + datacolumn 
 		execute_string+= '\" --archiveid \"' + archiveid + '\" --rangeid \"' + rangeid

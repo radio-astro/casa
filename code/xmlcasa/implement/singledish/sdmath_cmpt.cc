@@ -11,7 +11,7 @@
  ***/
 
 #include <iostream>
-#include <xmlcasa/singledish/sdmath_cmpt.h>
+#include <sdmath_cmpt.h>
 
 using namespace std;
 using namespace casa;

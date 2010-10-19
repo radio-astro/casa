@@ -12,7 +12,7 @@
 
 #include <iostream>
 #include <fstream>
-#include <xmlcasa/casa/logsink_cmpt.h>
+#include <logsink_cmpt.h>
 #include <casa/Logging/LogSink.h>
 #include <casa/Logging/LogFilter.h>
 #include <xmlcasa/casa/TSLogSink.h>
@@ -59,7 +59,7 @@ std::string logsink::version(){
   ostringstream os1, os2;
   os1 << "CASA Version ";
   casa::VersionInfo::report(os1);
-  os2 << "  Built on: "<< casa::VersionInfo::date();
+  os2 << "  Tagged on: "<< casa::VersionInfo::date();
   std::string mymess = os1.str();
 
   thelogsink->postLocally(LogMessage(mymess, *itsorigin, LogMessage::NORMAL));

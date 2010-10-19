@@ -644,8 +644,6 @@ def checkMSes(holderdict, dir, files):
         elif holderdict.get('doprint'):
             print_ms(currms, retval[currms], listall, use_tb, holderdict['remind'])
 
-        if holderdict.get('doprint'):
-            print_ms(currms, retval[currms], listall, use_tb, holderdict['remind'])
 
 # following, sort of, from Python cookbook, #475186
 def termprops(stream):

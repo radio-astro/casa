@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+      file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="flagcmd" category="editing" visibility="experimental">
+        <shortdescription>Flagging task based on flagging commands</shortdescription>
+        <description>
+        The task will select a subset of data explicitly for flagging,
+        quacking, clipping, autocorrelation flagging, or flagging
+        of shadowed antennas. Unflagging is also available.
+
+        In a dual polarization data set, each polarization can be flagged
+        separately.  However, at present the calibration and imaging will
+        only use data with both parallel hands unflagged.
+
+        This task is equivalent to the corresponding parts of
+        flagdata, but works from a series of flagging commands
+        specified by the "flagfile" parameters, which can refer to
+        flagging file or directly input the flagging commands as a
+        list of strings.
+
+        The flagging command syntax is currently defined in CAS-2405.
+
+        If flagbackup=T, the current flags are backed up before applying 
+        new flags. Previous flag versions can be recovered using the 
+        flagmanager task.
+
+        </description>
+        <input>
+                <param type="string" name="vis" mustexist="true">
+                        <description>Name of file to flag</description>
+                        <value></value>
+                </param>
+
+                <param type="bool" name="flagbackup">
+                        <description>Automatically back up the state of flags before the run?</description>
+                        <value>True</value>
+                </param>
+
+
+                <param type="string" name="mode">
+                        <description>Mode (file/string)</description>
+                        <value>file</value>
+                        <allowed kind="enum">
+                        <value>file</value>
+                        <value>cmd</value>
+                        </allowed>
+                </param>
+
+                <param type="string" name="flagfile" subparam="true">
+                        <description>Name of flag command file to input</description>
+                        <value></value>
+                </param>
+
+                <param type="any" name="command" subparam="true">
+                        <description>flag command(s) as list of strings</description>
+                        <any type="variant" limittypes="string stringArray"/>
+                        <value type="string"></value>
+                </param>
+
+                <constraints>
+                        <when param="mode">
+                                <equals value="file">
+                                        <default param="flagfile"><value type="string"></value></default>
+                                </equals>
+                                <equals value="cmd">
+                                        <default param="command"><value type="string">['']</value></default>
+                                </equals>
+                        </when>
+                </constraints>
+        </input>
+<returns type="void"/>
+
+<example>
+        The task will flag data based on commands input from source based on mode :
+            file  = input from flagging command file "flagfile"
+            cmd   = input from "command" list of strings
+
+        The flags stored in the MS are automatically backed up before each run,
+        unless flagbackup = False.
+
+        Keyword arguments:
+        vis -- Name of input visibility file
+                default: none example: vis='ngc5921.ms'
+
+        flagbackup -- Automatically backup flags?
+                default: True
+                options: True,False
+
+        mode -- Mode of operation.
+                options: 'file','cmd'
+                default: 'file'
+
+        mode "file" --  input commands from file
+
+           flagfile -- name of flagging command file
+                default: none
+
+        mode "cmd" -- input commands via list of strings
+
+           command -- list of command strings
+                default: ['']
+
+        -- Flag command useage --
+
+        For reasons of performance (in order to reduce the number loops through
+        the MS), a series of flagging commands can be combined into a single
+        flagger tool run.
+
+        For example, a series of commands might be:
+
+          antenna='ea01' timerange='00:00:00~01:00:00'
+          antenna='ea11' timerange='00:00:00~03:00:00' spw='0~4'
+          mode='clip' cliprange='0~1E-10' clipexpr='ABS_RR'
+          mode='clip' cliprange='0~1E-10' clipexpr='ABS_LL'
+          mode='quack' quackmode='end' quackinterval=1.0
+          mode='shadow'
+
+        Shadow, clip, and quack commands can also use selection:
+
+          mode='shadow' antenna='ea01,ea02,ea03'
+          mode='quack' quackmode='end' quackinterval=1.0 antenna='ea22'
+
+        These commands can be in a flagging file, e.g. "myflags.txt"
+        and input using mode='file', e.g.
+
+          flagcmd(vis='myvis.ms',mode='file',flagfile='myflags.txt')
+
+        or input from the interface
+
+          flagcmd(vis='myvis.ms',mode='cmd',
+                  command=["mode='shadow'",
+                           "mode='clip' cliprange='0~1E-10' clipexpr='ABS_RR'",
+                           "mode='clip' cliprange='0~1E-10' clipexpr='ABS_LL'",
+                           "mode='quack' quackmode='end' quackinterval=1.0",
+                           "antenna='ea01' timerange='00:00:00~01:00:00'",
+                           "antenna='ea11' timerange='00:00:00~03:00:00' spw='0~4'"])
+
+        -- Flag command syntax --
+
+        The command syntax is based on the flagdata parameters.
+
+        Basic Syntax Rules
+        
+          commands are a string (which may contain internal "strings") consisting of
+          KEY=VALUE pairs separated by whitespace (see examples below)
+        
+          each key should only appear once on a given command line/string
+        
+          there is an implicit "mode" for each command, with the default
+          being 'manualflag' if not given
+
+          comment lines can start with '#' and will be ignored
+          parts of a command line after a ' # ' token are also ignored
+        
+        Version 1.0 - basic flagging commands 
+        
+        1. Selection options (used by all flag modes)
+        
+          timerange=''
+          antenna=''
+          spw=''
+          correlation=''
+          field=''
+          scan=''
+          feed=''
+          array=''
+          uvrange=''
+        
+          Note: a command consisting only of selection key-value pairs is a 
+          basic "manualflag" operation, ie. flag the data meeting the selection
+        
+        2. Basic elaboration options for online and interface use
+        
+          reason=''          # reason string for flag
+          flagtime=''        # a timestamp for when this flag was generated (for 
+                               user history use)
+        
+                               NOTE: there is no flagtime column in FLAG_CMD at
+                               this time, but we will propose to add this as an
+                               optional column
+
+           NOTE: These are currently ignored and not used
+        
+        3. Extended elaboration options for online and interface use 
+           Note: these are FLAG_CMD columns, but their use is not clear but included
+           here for compatibility and future expansion
+        
+          level=N            # flagging "level" for flags with same reason
+          severity=N         # Severity code for the flag, on a scale of 0-10 in order 
+                               of increasing severity; user specified
+        
+           NOTE: These are currently ignored and not used
+        
+        4. Extended manual flaggin options (processed separately)
+        
+          unflag=T/F         # this operation is to unflag instead of flag
+        
+          mode='clip'
+             cliprange='A~B'    # enable clipping based on value
+             clipcolumn=''
+             clipextend=''
+             clipchanavg=T/F
+             clipexpr=''        # Note: these expression use "_" instead of whitespace
+                                  Example: clipexpr='ABS_RR'         
+ 
+          mode='quack'
+             quackinterval=''   # enable scan-based "quacking" 
+             quackmode=''
+             quackincrement=T/F
+        
+        5. Extended "shadow" option (processed separately)
+        
+          mode='shadow'      # this is a shadowing command
+             diameter=-1
+        
+        NOTE: we do not support syntax for use of mode='rfi' or mode='autoflag' at
+        this time
+
+ </example>
+ </task>
+ </casaxml>

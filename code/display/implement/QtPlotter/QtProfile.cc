@@ -78,8 +78,9 @@ QtProfile::QtProfile(ImageInterface<Float>* img,
          pc(0), te(0), analysis(0), over(0), 
          coordinate("world"), coordinateType(""),
          fileName(name), position(""), yUnit(""), yUnitPrefix(""), 
-	 xpos(""), ypos(""),
-	 cube(0), lastX(Vector<Double>()), lastY(Vector<Double>()),
+	 xpos(""), ypos(""), cube(0),
+	 lastPX(Vector<Double>()), lastPY(Vector<Double>()),
+	 lastWX(Vector<Double>()), lastWY(Vector<Double>()),
          z_xval(Vector<Float>()), z_yval(Vector<Float>()),
          region("") 
 {
@@ -266,6 +267,7 @@ QtProfile::QtProfile(ImageInterface<Float>* img,
     connect(pc, SIGNAL(zoomChanged()), this, SLOT(updateZoomer()));
     //setCross(1); 
 
+    image = img;
     analysis = new ImageAnalysis(img);
 
     pc->setTitle("");
@@ -371,8 +373,8 @@ void QtProfile::setMultiProfile(int st)
    else {
       relative->setEnabled(false);
    }
-   if(lastX.nelements() > 0){
-      wcChanged(coordinate, lastX, lastY);
+   if(lastPX.nelements() > 0){
+      wcChanged(coordinate, lastPX, lastPY, lastWX, lastWY);
    }
 
 }
@@ -380,8 +382,8 @@ void QtProfile::setMultiProfile(int st)
 void QtProfile::setRelativeProfile(int st)
 {
    //qDebug() << "relative profile state change=" << st;  
-   if(lastX.nelements() > 0){
-      wcChanged(coordinate, lastX, lastY);
+   if(lastPX.nelements() > 0){
+      wcChanged(coordinate, lastPX, lastPY, lastWX, lastWY);
    }
 }
 
@@ -616,16 +618,18 @@ void QtProfile::changeCoordinateType(const QString &text) {
     leftButton->setVisible(0);
     rightButton->setVisible(0);
 
-    if(lastX.nelements() > 0){ // update display with new coord type
-      wcChanged(coordinate, lastX, lastY);
+    if(lastPX.nelements() > 0){ // update display with new coord type
+	wcChanged(coordinate, lastPX, lastPY, lastWX, lastWY);
     }
 
 }
 
 void QtProfile::closeEvent (QCloseEvent* event) {
    //qDebug() << "closeEvent";
-  lastX.resize(0);
-  lastY.resize(0);
+  lastPX.resize(0);
+  lastPY.resize(0);
+  lastWX.resize(0);
+  lastWY.resize(0);
   z_xval.resize(0);
   z_yval.resize(0);
   emit hideProfile();
@@ -670,6 +674,7 @@ QString QtProfile::getRaDec(double x, double y) {
 
 void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
 {
+    image = img;
     analysis = new ImageAnalysis(img);
     setWindowTitle(QString("Image Profile - ").append(name));
 
@@ -698,24 +703,42 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
 
     xpos = "";
     ypos = "";
-    lastX.resize(0);
-    lastY.resize(0);
+    lastPX.resize(0);
+    lastPY.resize(0);
+    lastWX.resize(0);
+    lastWY.resize(0);
     position = QString("");
     te->setText(position);
     pc->clearCurve();
 }
 
-void QtProfile::wcChanged(const String c,
-    const Vector<Double> x, const Vector<Double> y) 
+void QtProfile::wcChanged( const String c,
+			   const Vector<Double> px, const Vector<Double> py,
+			   const Vector<Double> wx, const Vector<Double> wy ) 
 {
     if (!isVisible()) return;
     if (!analysis) return;
-    if (cube == 0) return;
+    //cout << "profile wcChanged     cube=" << cube << endl;
 
-    //cout << "wcChanged: coordType=" << c 
-    //     << " coordinate=" << coordinate << endl;
+    //qDebug() << "top=" << fileName;
+    //QHashIterator<QString, ImageAnalysis*> j(*over);
+    //while (j.hasNext()) {
+    //  j.next();
+    //  qDebug() << j.key() << ": " << j.value();
+    //}
 
-    //cout << "coordinateType=" << coordinateType << endl;
+    if (cube == 0) {
+       pc->setWelcome("No profile available "
+                   "for the given data \nor\n"
+                   "No profile available for the "
+                   "display axes orientation");
+       pc->clearCurve();
+      return;
+    }
+
+    // cout << "wcChanged: coordType=" << c 
+    //      << " coordinate=" << coordinate
+    //	 << " coordinateType=" << coordinateType << endl;
 
     if (c != coordinate) {
        coordinate = c.chars();
@@ -726,23 +749,25 @@ void QtProfile::wcChanged(const String c,
     }
        
     Int ns;
-    x.shape(ns);
+    px.shape(ns);
     //cout << "ns =" << ns << endl;  
     //cout << "cube =" << cube << endl;  
   
-    Vector<Double> xv(ns);
-    Vector<Double> yv(ns);
+    Vector<Double> pxv(ns);
+    Vector<Double> pyv(ns);
+    Vector<Double> wxv(ns);
+    Vector<Double> wyv(ns);
     if (cube == -1){
-	for (Int i = 0; i < ns; i++) {
-	    xv(i) = y(i);
-	    yv(i) = x(i); 
-        }
+	pxv.assign(py);
+	pyv.assign(px);
+	wxv.assign(wy);
+	wyv.assign(wx);
     }
     else{
-        for (Int i = 0; i < ns; i++) {
-            xv(i) = x(i);
-            yv(i) = y(i); 
-        }
+	pxv.assign(px);
+	pyv.assign(py);
+	wxv.assign(wx);
+	wyv.assign(wy);
     }
 
     if (ns < 1) return;
@@ -760,26 +785,51 @@ void QtProfile::wcChanged(const String c,
     }
     pc->setWelcome("");
 
-    //xpos, ypos and position only used for display
-    xpos = QString::number(floor(xv[0]+0.5));
-    ypos = QString::number(floor(yv[0]+0.5));
-    //qDebug() << c.chars() << "xpos:" 
-    //           << xpos << "ypos:" << ypos;
-
     if (coordinate == "world") {
-       position = getRaDec(xv[0], yv[0]);
+       //xpos, ypos and position only used for display
+       xpos = QString::number(floor(wxv[0]+0.5));
+       ypos = QString::number(floor(wyv[0]+0.5));
+       position = getRaDec(wxv[0], wyv[0]);
     }
     else {
+       //xpos, ypos and position only used for display
+       xpos = QString::number(floor(pxv[0]+0.5));
+       ypos = QString::number(floor(pyv[0]+0.5));
        position = QString("[%1, %2]").arg(xpos).arg(ypos);
     }
+
+    //qDebug() << c.chars() << "xpos:" 
+    //           << xpos << "ypos:" << ypos;
     //qDebug() << "position:" << position;
     te->setText(position);
 
     //Get Profile Flux density v/s velocity
     Bool ok = False;
-    ok=analysis->getFreqProfile(xv, yv, z_xval, z_yval, 
-                                coordinate, coordinateType, 
-                                0, 0, 0, String(""), frameType_p);
+#ifdef CLOSEST_TO_ORIGINAL_BEHAVIOR
+    if ( coordinate != "world" && pxv.size( ) > 1 ) {
+	ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval, 
+				     "world", coordinateType, 
+				     0, 0, 0, String(""), frameType_p);
+    } else {
+	if ( coordinate == "world" ) {
+	    ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval, 
+					 coordinate, coordinateType, 
+					 0, 0, 0, String(""), frameType_p);
+	} else {
+	    ok=analysis->getFreqProfile( pxv, pyv, z_xval, z_yval, 
+					 coordinate, coordinateType, 
+					 0, 0, 0, String(""), frameType_p);
+	}
+    }
+#else
+    ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval, 
+				 "world", coordinateType, 
+				 0, 0, 0, String(""), frameType_p);
+#endif
+    if ( ! ok ) {
+	// change to notify user of error... 
+	return;
+    }
 
     // scale for better display
     // max absolute display numbers should be between 0.1 and 100.0
@@ -792,11 +842,11 @@ void QtProfile::wcChanged(const String c,
     Int ordersOfM = 0;
 
     symax = ymax;
-    while(symax < dmin){
+    while(symax < 0.1 && ymax != 0.0){
 	ordersOfM += 3;
 	symax = ymax * pow(10.,ordersOfM);
     }
-    while(symax > dmax){
+    while(symax > dmax && ymax != 0.0){
 	ordersOfM -= 3;
 	symax = ymax * pow(10.,ordersOfM);
     }
@@ -857,6 +907,7 @@ void QtProfile::wcChanged(const String c,
     pc->clearData();
     pc->plotPolyLine(z_xval, z_yval, fileName);
 
+
     QHashIterator<QString, ImageAnalysis*> i(*over);
     while (i.hasNext() && multiProf->isChecked()) {
       i.next();
@@ -865,9 +916,29 @@ void QtProfile::wcChanged(const String c,
       ImageAnalysis* ana = i.value();
       Vector<Float> xval(100);
       Vector<Float> yval(100);
-      ok=ana->getFreqProfile(xv, yv, xval, yval, 
-				coordinate, coordinateType, 
-                                0, 0, 0, "", frameType_p);
+
+#ifdef CLOSEST_TO_ORIGINAL_BEHAVIOR
+      if ( coordinate != "world" && pxv.size( ) > 1 ) {
+	ok=ana->getFreqProfile( wxv, wyv, xval, yval, 
+				"world", coordinateType, 
+				0, 0, 0, String(""), frameType_p);
+      } else {
+	if ( coordinate == "world" ) {
+	  ok=ana->getFreqProfile( wxv, wyv, xval, yval, 
+				  coordinate, coordinateType, 
+				  0, 0, 0, String(""), frameType_p);
+	} else {
+	  ok=ana->getFreqProfile( pxv, pyv, xval, yval, 
+				  coordinate, coordinateType, 
+				  0, 0, 0, String(""), frameType_p);
+	}
+      }
+#else
+      ok=ana->getFreqProfile( wxv, wyv, xval, yval, 
+			      "world", coordinateType, 
+			      0, 0, 0, String(""), frameType_p);
+#endif
+
       if (ok) {
         if(ordersOfM!=0){
           // correct display y axis values
@@ -937,14 +1008,15 @@ void QtProfile::wcChanged(const String c,
       }
     }
 
-    lastX.assign(xv);
-    lastY.assign(yv);
-
+    lastWX.assign(wxv);
+    lastWY.assign(wyv);
+    lastPX.assign(pxv);
+    lastPY.assign(pyv);
 }
 
 void QtProfile::changeAxis(String xa, String ya, String za) {
    //cout << "change axis=" << xa << " " << ya 
-   //     << " " << za << endl;
+   //     << " " << za << " cube=" << cube << endl;
    int cb = 0;
    if (xa.contains("Decl") && ya.contains("Right"))
        cb = -1;
@@ -956,15 +1028,18 @@ void QtProfile::changeAxis(String xa, String ya, String za) {
        cb = 1;
    if (!za.contains("Freq"))
        cb = 0;
-   if (cb != cube) {
+   //if (cb != cube) {
        cube = cb;
        xpos = "";
        ypos = "";
        position = QString("");
        te->setText(position);
        if (cube == 0)
-            pc->setWelcome("No profile available\n"
-                   "for the given data cube");
+            pc->setWelcome("No profile available "
+                   "for the given data \nor\n"
+                   "No profile available for the "
+                   "display axes orientation"
+                   );
        else 
             pc->setWelcome("assign a mouse button to\n"
                    "'crosshair' or 'rectangle' or 'polygon'\n"
@@ -972,7 +1047,7 @@ void QtProfile::changeAxis(String xa, String ya, String za) {
                    "the image to get a image profile");
 
        pc->clearCurve();
-   }
+   //}
      
    //cout << "cube=" << cube << endl;
 

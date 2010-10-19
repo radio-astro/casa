@@ -130,6 +130,13 @@ def distribution(s):
         return "???", "???", "???", "???"
 
 
+# Returns true if the given hostname is testing
+# the non-active (stable, test etc..) branch
+def is_stable_branch(host):
+    return (host.find('tst') >= 0 or \
+            host.find('ma01') >= 0 or \
+            host.find('sneffels') >= 0)
+
 def selected_revisions(data):
   
     all = sets.Set()
@@ -187,8 +194,7 @@ def selected_revisions(data):
     stable_versions = []
     for log in data:
         host = log['host']
-        if host.find('tst') >= 0 or \
-               host.find('ma014655') >= 0:
+        if is_stable_branch(host):
             stable_versions.append(log['CASA'])
 
     if len(stable_versions) > 0:
@@ -362,8 +368,7 @@ class report:
         self.hosts_rel=[]  
         self.hosts_devel=[]  
         for host in hosts_set:
-            if host.find('tst') >= 0 or \
-                   host.find('ma014655') >= 0 :
+            if is_stable_branch(host):
                 self.hosts_rel.append(host)
             else:
                 self.hosts_devel.append(host)
@@ -920,8 +925,7 @@ class report:
         if log != None:
             #print log
             summary_host[host][log['status']] += 1
-            if host.find('tst') >= 0 or \
-               host.find('ma014655') >= 0:
+            if is_stable_branch(host):
                 summary_subtest[log['status']] += 1
 
             if log['type'] != 'exec':
@@ -1160,8 +1164,7 @@ class report:
             if extended and subtest[1] != 'exec':
                 fd.write('Test not done')
             summary_host[host]['undet'] += 1
-            if host.find('tst') >= 0 or \
-                   host.find('ma014655') >= 0:
+            if is_stable_branch(host):
                 summary_subtest['undet'] += 1
 
         if extended and log != None:
@@ -1452,8 +1455,7 @@ class report:
 
             if is_valid:
                 if revision == 'all' or \
-                       data_file['host'].find('tst') >= 0 or \
-                       data_file['host'].find('ma014655') >= 0:
+                       is_stable_branch(data_file['host']):
 
                     data.append(data_file)
                     

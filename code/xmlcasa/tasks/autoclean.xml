@@ -7,7 +7,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!-- This is the param set for autoclean -->
 
-<task type="function" name="autoclean" category="imaging">
+<task type="function" name="autoclean" category="imaging" visibility="experimental">
 
   <shortdescription>CLEAN an image with automatically-chosen clean regions.</shortdescription>
 
@@ -117,7 +117,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="imagermode">
-      <description>Options: \'csclean\' or \'mosaic\', \'\', uses psfmode</description>
+      <description>Options: \'csclean\' or \'mosaic\', \' \', uses psfmode</description>
       <value></value>
       <allowed kind="enum">
 	<value></value>
@@ -144,7 +144,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 <!--========================================================= -->
     <param type="doubleArray" name="cell" units="arcsec">
-    <description>x &amp; y cell size(s). Default unit arcsec.</description>
+    <description>x and y cell size(s). Default unit arcsec.</description>
     <value type="vector"><value>1.0</value></value>
     </param>
 <!--========================================================= -->
@@ -449,7 +449,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   <returns type="void"/>
 
   <example>
-
        This is a wrapper for clean which includes automatic clean boxing.
        Current capabilities include:
  

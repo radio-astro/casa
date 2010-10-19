@@ -605,6 +605,7 @@ void FileBox::saveRegionToFile() {
                   chans(0) = cha;
                   chans(1) = cha;
                }
+               //cout << "chans " << chans(0) << " " << chans(1) << endl;
                ((WCBox*)wcreg)->setChanExt(String::toDouble(chans(0)), 
                                            String::toDouble(chans(1)));
             }
@@ -1091,6 +1092,7 @@ bool FileBox::polAllowed(const Double xa, const Double ya) {
 }
 
 bool FileBox::planeAllowed(String xa, String ya) {
+   //cout << "xa=" << xa << " ya=" << ya << endl;
    xa.gsub(" ", "");
    ya.gsub(" ", "");
 

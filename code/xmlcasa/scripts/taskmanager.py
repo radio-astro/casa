@@ -11,11 +11,15 @@ import sets
 import sys
 import os
 import re
+import casadef
 
 import casac
+from IPython.Release import version
 casalog = casac.homefinder.find_home_by_name('logsinkHome').create()
 
 def log_message( state, file, lines ) :
+    if not (state['engine'].has_key('current task')) :
+	    state['engine']['current task'] = 'taskmanager'
     casalog.origin(str(state['engine']['current task']))
     if state['out'] == "stderr" :
         for line in lines:
@@ -37,30 +41,30 @@ class taskmanager(object):
               'mec': None, 'tasks initialized': [], 'task path': [], 'initialized': False,
               'log root': None, 'execute count': 0, 'result map': { }, 'pipe minder': None }
 
-    def retrieve(self, reciept):
+    def retrieve(self, receipt):
         try:
-            if isinstance( self.__hub['result map'][reciept]['result'], PendingResult ):
-                result = self.__hub['result map'][reciept]['result'].get_result(block=False)
+            if isinstance( self.__hub['result map'][receipt]['result'], PendingResult ):
+                result = self.__hub['result map'][receipt]['result'].get_result(block=False)
                 if result is not None:
-                    target = self.__hub['result map'][reciept]['engine']['index']
-                    result_name = "result_%04d" % reciept
-                    self.__hub['result map'][reciept]['result'] = { 'result': self.__hub['mec'].pull( result_name, targets=[target] )[0] }
-                    self.__hub['result map'][reciept]['result output'] = result[0]
-                    if self.__hub['result map'][reciept]['result output'].has_key('stdout') :
-                        engine = self.__hub['result map'][reciept]['engine']
-                        log_message({'out': 'stdout', 'engine': engine}, 1, self.__hub['result map'][reciept]['result output']['stdout'].splitlines() )
-                    if self.__hub['result map'][reciept]['result output'].has_key('stderr') :
-                        log_message({'out': 'stderr', 'engine': engine}, 2, self.__hub['result map'][reciept]['result output']['stderr'].splitlines() )
-                    return self.__hub['result map'][reciept]['result']
+                    target = self.__hub['result map'][receipt]['engine']['index']
+                    result_name = "result_%04d" % receipt
+                    self.__hub['result map'][receipt]['result'] = { 'result': self.__hub['mec'].pull( result_name, targets=[target] )[0] }
+                    self.__hub['result map'][receipt]['result output'] = result[0]
+                    if self.__hub['result map'][receipt]['result output'].has_key('stdout') :
+                        engine = self.__hub['result map'][receipt]['engine']
+                        log_message({'out': 'stdout', 'engine': engine}, 1, self.__hub['result map'][receipt]['result output']['stdout'].splitlines() )
+                    if self.__hub['result map'][receipt]['result output'].has_key('stderr') :
+                        log_message({'out': 'stderr', 'engine': engine}, 2, self.__hub['result map'][receipt]['result output']['stderr'].splitlines() )
+                    return self.__hub['result map'][receipt]['result']
                 else:
                     return { 'result': 'pending' }
         except:
             pass
 
-        if self.__hub['result map'].has_key(reciept):
-            return self.__hub['result map'][reciept]['result']
+        if self.__hub['result map'].has_key(receipt):
+            return self.__hub['result map'][receipt]['result']
         else:
-            raise Exception, "invalid reciept: " + str(reciept)
+            raise Exception, "invalid receipt: " + str(receipt)
 
     def execute(self, taskname, *args, **kwargs):
 
@@ -178,8 +182,17 @@ class taskmanager(object):
             engine['stderr'] = os.pipe( )
             self.__hub['pipe minder'].watch(engine['stdout'][0],log_message,{'out': 'stdout', 'engine': engine })
             self.__hub['pipe minder'].watch(engine['stderr'][0],log_message,{'out': 'stderr', 'engine': engine })
-            engine['proc'] = subprocess.Popen( [ 'ipengine', '--furl-file=' + self.__furl['engine'],
+	    #
+	    # Well things are in flux with ipcontroller and ipengine, no --ipythondir any longer it
+	    # uses IPYTHONDIR instead for IPython 0.10.x
+	    #
+	    if(int(version.split('.')[1]) < 10) :
+                engine['proc'] = subprocess.Popen( [ 'ipengine', '--furl-file=' + self.__furl['engine'],
                                                  '--ipythondir=' + self.__dir['rc'],
+                                                 '--logfile=' + self.__dir['session log root'] + "/engine." ],
+                                               stdout=engine['stdout'][1], stderr=engine['stderr'][1])
+	    else :
+                engine['proc'] = subprocess.Popen( [ 'ipengine', '--furl-file=' + self.__furl['engine'],
                                                  '--logfile=' + self.__dir['session log root'] + "/engine." ],
                                                stdout=engine['stdout'][1], stderr=engine['stderr'][1])
 
@@ -216,13 +229,27 @@ class taskmanager(object):
 
     def __start_hub(self):
         self.__mkdir(self.__dir['session log root'])
-        self.__hub['proc'] = subprocess.Popen( [ 'ipcontroller',
+	#
+	# Well things are in flux with ipcontroller and ipengine, no --ipythondir any longer it
+	# uses IPYTHONDIR instead for IPython 0.10.x
+	#
+	if(int(version.split('.')[1]) < 10) :
+           self.__hub['proc'] = subprocess.Popen( [ 'ipcontroller',
                                                  '--client-cert-file=' + self.__cert['client'],
                                                  '--engine-cert-file=' + self.__cert['engine'],
                                                  '--engine-furl-file=' + self.__furl['engine'],
                                                  '--multiengine-furl-file=' + self.__furl['mec'],
                                                  '--task-furl-file=' + self.__furl['tc'],
                                                  '--ipythondir=' + self.__dir['rc'],
+                                                 '--logfile=' + self.__dir['session log root'] + "/controller." ],
+                                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
+	else :
+           self.__hub['proc'] = subprocess.Popen( [ 'ipcontroller',
+                                                 '--client-cert-file=' + self.__cert['client'],
+                                                 '--engine-cert-file=' + self.__cert['engine'],
+                                                 '--engine-furl-file=' + self.__furl['engine'],
+                                                 '--multiengine-furl-file=' + self.__furl['mec'],
+                                                 '--task-furl-file=' + self.__furl['tc'],
                                                  '--logfile=' + self.__dir['session log root'] + "/controller." ],
                                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
 
@@ -360,4 +387,4 @@ class taskmanager(object):
 if os.environ.has_key('__CASAPY_PYTHONDIR'):
     tm = taskmanager( task_path=[ '', os.environ['__CASAPY_PYTHONDIR'] ] )
 else:
-    tm = taskmanager( task_path=[ '', '/CASASUBST/task_directory/' ] )
+    tm = taskmanager( task_path=[ '', casadef.task_directory ] )

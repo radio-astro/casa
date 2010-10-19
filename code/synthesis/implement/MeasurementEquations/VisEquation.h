@@ -110,6 +110,10 @@ public:
   // Arrange a pivot point for evaluating the equation in collapseForSim
   void setPivot(VisCal::Type pivot);
 
+  // Arrange the model to use for calibration
+  void setModel(const Vector<Float>& stokes);
+  inline void unSetModel() { useInternalModel_=False; };
+  
   // Report if spw has solutions available from all applied tables
   inline Bool spwOK(const Int& spw) { return (napp_>0) ? spwOK_(spw) : True; };
 
@@ -154,6 +158,8 @@ public:
 
   inline const VisCal::Type pivot() const { return pivot_; };
 
+  // Set the print level
+  inline void setPrtlev(const Int& prtlev) { prtlev_=prtlev; };
   
 protected:
 
@@ -196,6 +202,10 @@ private:
 
   // SpwOK?
   Vector<Bool> spwOK_;
+
+  // An internal (global) point source model
+  Bool useInternalModel_;
+  Vector<Float> stokesModel_;
 
   // Diagnostic print level
   Int prtlev_;

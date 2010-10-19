@@ -358,7 +358,6 @@ macro( casa_find package )
       endif()
 
       casa_append( ${package}_INCLUDE_DIR ${${package}_${_include}} )
-      
     endforeach()
 
     if( _found )
@@ -764,7 +763,7 @@ macro( casa_find package )
   endif()
 
   else()
-    #message( STATUS "${package} already found or not required" )
+    message( STATUS "Looking for ${package} -- (cached) ok " )
   endif()
 
   #
@@ -809,22 +808,9 @@ macro( casa_config_end )
   # after this macro
 
   list( REMOVE_DUPLICATES casa_find_found )
-  
-  foreach( _f ${casa_find_found} )
 
-    add_custom_command( 
-      OUTPUT ${_f}
-      COMMAND ${CMAKE_COMMAND} -E echo "ERROR: The file ${_f} has disappeared since it was detected by cmake. Cannot continue. It might help to clear CMake's cache (rm CMakeCache.txt) and rerun cmake"
-      COMMAND exit 1
-      COMMENT ""
-      VERBATIM
+  add_custom_target( config_check ALL
+      ${PERL_EXECUTABLE} -le 'foreach (@ARGV) { if ( ! -e ) { print \"ERROR: The file $$_ has disappeared since it was detected by cmake. Cannot continue. It might help to clear CMakes cache (rm CMakeCache.txt) and rerun cmake\"\; exit 1;} }' -- ${casa_find_found}
       )
-
-  endforeach()
-  
-  add_custom_target( 
-    config_check ALL
-    DEPENDS ${casa_find_found} 
-    )
 
 endmacro( casa_config_end )

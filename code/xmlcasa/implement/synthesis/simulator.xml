@@ -104,10 +104,10 @@
   </description>
   <returns type="simulatorobject">simulator tool</returns>
   <example>
-    \begin{verbatim}
+    
     # create a simulator tool
     mysim = simulator();
-    \end{verbatim}
+    
   </example>
 </method>  
 
@@ -138,7 +138,7 @@
   </input>
   <returns type="bool">Boolean</returns>
   <example>
-    \begin{verbatim}
+    
     tabname = 'VLAC.LOCAL.TAB'
     asciifile = 'VLAC.LOCAL.STN'
     mytab=table.create()
@@ -191,7 +191,7 @@
     sm.setdata(spwid=2, fieldid=2);
     sm.predict(imagename='BigLBand.MOD');
     sm.close();
-    \end{verbatim}
+    
   </example>
 </method>
 
@@ -213,7 +213,7 @@
   </input>
   <returns type="bool"> Boolean</returns>
   <example>
-    \begin{verbatim}
+    
     sm.openfromms('3C273XC1.MS');
     sm.predict('3C273XC1.imagename');
     sm.setnoise(simplenoise='10mJy');
@@ -221,7 +221,7 @@
     sm.corrupt();
     sm.close();
     
-    \end{verbatim}
+    
   </example>
 </method>
 
@@ -356,6 +356,46 @@
       <any type="variant" />
       <value>3600s</value>
     </param>
+
+    <param type="bool" name="add_observation">
+      <description>Add a new line to the OBSERVATION subtable for this
+      call</description>
+      <value type="bool">false</value>
+    </param>
+
+    <param type="bool" name="state_sig">
+      <description>a new line will be added to STATE if the following don't match</description>
+      <value type="bool">true</value>
+    </param>
+    
+    <param type="bool" name="state_ref">
+      <value type="bool">false</value>
+    </param>
+    
+    <param type="double" name="state_cal">
+      <value>0.0</value>
+    </param>
+    
+    <param type="double" name="state_load">
+      <value>0.0</value>
+    </param>
+    
+    <param type="int" name="state_sub_scan">
+      <value>0</value>
+    </param>
+    
+    <param type="string" name="state_obs_mode">
+      <value>OBSERVE_TARGET.ON_SOURCE</value>
+    </param>
+
+    <param type="string" name="observer">
+      <value>CASA simulator</value>
+    </param>
+
+    <param type="string" name="project">
+      <value>CASA simulation</value>
+    </param>
+
   </input>
   <returns type='bool'>Bool</returns>
 </method>
@@ -401,6 +441,47 @@
       <description></description>
       <value></value>
     </param>
+
+
+    <param type="bool" name="add_observation">
+      <description>Add a new line to the OBSERVATION subtable for this
+      call</description>
+      <value type="bool">false</value>
+    </param>
+
+    <param type="bool" name="state_sig">
+      <description>a new line will be added to STATE if the following don't match</description>
+      <value type="bool">false</value>
+    </param>
+    
+    <param type="bool" name="state_ref">
+      <value type="bool">false</value>
+    </param>
+    
+    <param type="double" name="state_cal">
+      <value>0.0</value>
+    </param>
+    
+    <param type="double" name="state_load">
+      <value>0.0</value>
+    </param>
+    
+    <param type="int" name="state_sub_scan">
+      <value>0</value>
+    </param>
+    
+    <param type="string" name="state_obs_mode">
+      <value>OBSERVE_TARGET.ON_SOURCE</value>
+    </param>
+
+    <param type="string" name="observer">
+      <value>CASA simulator</value>
+    </param>
+
+    <param type="string" name="project">
+      <value>CASA simulation</value>
+    </param>
+
   </input>
   <returns type='bool'>Bool</returns>
 </method>
@@ -537,7 +618,7 @@
   </input>
   <returns type='bool'>Bool</returns>
   <example>
-    \begin{verbatim}
+    
     diam := [25, 25, 25, 25, 25]
     xx := [50, 100, 150, 200, 250]
     yy := [2, -5, -20, -50, -100]
@@ -546,7 +627,7 @@
     sm.setconfig(telescopename='VLA', x=xx, y=yy, z=zz, dishdiameter=diam, 
                  mount='alt-az', antname='VLA',
                  coordsystem='local', referencelocation=posvla);
-    \end{verbatim}
+    
   </example>
   In this example we configure an array  of 5 dishes set at the VLA position. 
   We use the measures tool to give us the location of the vla.
@@ -573,9 +654,9 @@
   </input>
   <returns type='bool'>Bool</returns>
   <example>
-    \begin{verbatim}
+    
     sm.setknownconfig('ATCA6.0A');
-    \end{verbatim}
+    
   </example>
 </method>
 
@@ -660,7 +741,7 @@
   </input>
   <returns type='bool'>Bool</returns>
   <example>
-    \begin{verbatim}
+    
     sm.setconfig(telescopename='VLA', x=xx, y=yy, z=zz, dishdiameter=diam, 
                  mount='alt-az', antname='VLA',
                  coordsystem='local', referencelocation=dm.observatory('vla'));
@@ -674,7 +755,7 @@
                starttime='0s', stoptime='3600s', 
     referencetime=reftime);
     
-    \end{verbatim}
+    
   </example>
 </method>
 
@@ -735,7 +816,7 @@
   </input>
   <returns type='bool'>Bool</returns>
   <example>
-    \begin{verbatim}
+    
     sm.setconfig(telescopename='VLA', x=xx, y=yy, z=zz, dishdiameter=diam,
                  mount='alt-az', antname='VLA',
                  coordsystem='local', referencelocation=dm.observatory('vla'));
@@ -752,7 +833,7 @@
     sm.observe('SIMU1_3', 'XBAND', starttime='220s', stoptime='320s');
     sm.observe('SIMU1_4', 'XBAND', starttime='330s', stoptime='430s');
     
-    \end{verbatim}
+    
   </example>
   In this example, a 2x2 mosaic pattern is set centered around the direction 
   specified (dir0). The setmosaicfield name each mosaic field with i
@@ -812,7 +893,7 @@ Must be invoked at least once before {\tt observe}.
 To simulate a two spectral window (or two IF's in VLA jargon) data
 set, use setpwid as follows (here we are simulating 16 channels, 50MHz
 wide channel for each spectral window)
-\begin{verbatim}
+
 
 sm.setspwindow(spwname='CBAND', freq='2GHz', deltafreq='50MHz',
                    freqresolution='50MHz', nchannels=16, stokes='RR LL');
@@ -820,7 +901,7 @@ sm.setspwindow(spwname='CBAND', freq='2GHz', deltafreq='50MHz',
 sm.setspwindow(spwname='SBAND', freq='5GHz', deltafreq='50MHz',
                    freqresolution='50MHz', nchannels=16, stokes='RR LL');
 
-\end{verbatim}
+
 
 Note that the spwname is used in {\tt observe} to determine which spectral window
 is used.
@@ -962,9 +1043,9 @@ To simulate single dish data, use gridft=SD and gridfunction=PB.
 </input>
 <returns type="bool">Bool</returns>
 <example>
-\begin{verbatim}
+
 sm.setoptions(cache=10000000, tile=32, gridfunction='BOX', me.location('vla'))
-\end{verbatim}
+
 </example>
 
 </method>
@@ -1028,9 +1109,9 @@ a model voltage pattern using the <link anchor="imager:vpmanager">vpmanager</lin
 </input>
 <returns type="bool">Bool</returns>
 <example>
-\begin{verbatim}
+
 sm.setvp(dovp=T, usedefaultvp=F, vptable='MyAlternateVLAPBModel.TAB', dosquint=F);
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1053,13 +1134,13 @@ pointing errors and voltage patterns, which get applied in {\tt predict}.
 </description>
 <returns type="bool">Boolean</returns>
 <example>
-\begin{verbatim}
+
 sm,openfromms('3C273XC1.MS');
 sm.predict('3C273XC1.FAKE.IMAGE');
 sm.setnoise( mode='simplenoise', simplenoise='0.1Jy');
 sm.setpa( mode='calculate');
 sm.corrupt();
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1249,8 +1330,8 @@ Set the atmosphere.
      </param>
 
      <param type="double" name="deltapwv">
-     <description>RMS PWV fluctuations in mm (typically about 15% of total PWV)</description>
-     <value>0.5</value>
+     <description>RMS PWV fluctuations *as a fraction of PWV parameter*</description>
+     <value>0.15</value>
      </param>
 
      <param type="double" name="beta">
@@ -1435,9 +1516,9 @@ the {\it Brown Equation} (ie, R.L. Brown's calculation of MMA sensitivity, 3Oct9
  
 
    <method type="function" name="setnoise">
-   <shortdescription>Set the noise level fixed sigma (mode=simple) or
+   <shortdescription>Set the noise level fixed sigma (mode=simplenoise) or
    Brown's equation using the ATM model for frequency-dependent atmospheric
-   opacity (mode=tsys) or Brown's equation, manually specifying the zenith
+   opacity (mode=tsys-atm) or Brown's equation, manually specifying the zenith
    opacity (constant across the band) and atmospheric temperature 
    (mode=tsys-manual)</shortdescription>
    
@@ -1445,7 +1526,7 @@ the {\it Brown Equation} (ie, R.L. Brown's calculation of MMA sensitivity, 3Oct9
 
      <param type="string" name="mode">
      <description>Mode of operation.</description>
-     <value>tsys</value>
+     <value>simplenoise</value>
      <choice>'simplenoise'</choice>
      <choice>'tsys-atm'</choice>
      <choice>'tsys-manual'</choice>
@@ -1460,7 +1541,7 @@ the {\it Brown Equation} (ie, R.L. Brown's calculation of MMA sensitivity, 3Oct9
      <param type="any" name="simplenoise" >
      <description>Level of noise if not calculated</description>
      <any type="variant" />
-     <value>0.0Jy</value>
+     <value>0.1Jy</value>
      </param>
 
 
@@ -1477,7 +1558,7 @@ the {\it Brown Equation} (ie, R.L. Brown's calculation of MMA sensitivity, 3Oct9
      </param>
 
      <param type="any" name="altitude" >
-     <description>site atltitude for ATM model (if tsys-atm)</description>
+     <description>site altitude for ATM model (if tsys-atm)</description>
      <any type="variant" />
      <value>5000m</value>
      </param>
@@ -1485,7 +1566,7 @@ the {\it Brown Equation} (ie, R.L. Brown's calculation of MMA sensitivity, 3Oct9
      <param type="any" name="waterheight" >
      <description>Height of water layer for ATM model (if tsys-atm)</description>
      <any type="variant" />
-     <value>2km</value>
+     <value>200m</value>
      </param>
 
      <param type="any" name="pwv" >
@@ -1519,7 +1600,7 @@ the {\it Brown Equation} (ie, R.L. Brown's calculation of MMA sensitivity, 3Oct9
 
      <param type="double" name="correfficiency">
      <description>Correlation efficiency</description>
-     <value>0.85</value>
+     <value>0.88</value>
      </param>
 
      <param type="double" name="trx">
@@ -1529,14 +1610,18 @@ the {\it Brown Equation} (ie, R.L. Brown's calculation of MMA sensitivity, 3Oct9
 
      <param type="double" name="tground">
      <description>Temperature of ground/spill [K]</description>
-     <value>280.0</value>
+     <value>270.0</value>
      </param>
 
      <param type="double" name="tcmb">
      <description>Temperature of cosmic microwave background [K]</description>
-     <value>2.7</value>
+     <value>2.73</value>
      </param>
 
+     <param type="bool" name="OTF">
+     <description>calculate noise on-the-fly (WARNING: only experts with high-RAM machines should use False)</description>
+     <value type="bool">true</value>
+     </param>
 
 
 

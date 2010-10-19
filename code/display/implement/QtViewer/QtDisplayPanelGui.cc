@@ -830,6 +830,7 @@ void QtDisplayPanelGui::hideImageMenus() {
                annotAct_->setEnabled(True);
                profileAct_->setEnabled(True);
                shpMgrAct_->setEnabled(True);
+               setUseRegion(False);
                break;
             }
             if (pdd->dataType() == "ms" || img ==0) {
@@ -847,6 +848,7 @@ void QtDisplayPanelGui::hideImageMenus() {
                annotAct_->setEnabled(False);
                profileAct_->setEnabled(False);
                shpMgrAct_->setEnabled(False);
+               setUseRegion(False);
                //cout << "hide image menus" << endl;
                break;
             }
@@ -927,6 +929,9 @@ void QtDisplayPanelGui::hideCanvasManager() {
   qcm_->hide();  }
 
 void QtDisplayPanelGui::showStats(const String& stats) {
+  cout << stats << endl;
+  
+  /* this print stats on to a panel
   QFont font("Monospace");
   if(qst_==0) {
      qst_ = new QTextEdit;
@@ -952,6 +957,7 @@ void QtDisplayPanelGui::showStats(const String& stats) {
   qst_->append(s);
   qst_->showNormal();
   qst_->raise();  
+  */
 }
 
 void QtDisplayPanelGui::hideStats() {
@@ -1031,6 +1037,7 @@ void QtDisplayPanelGui::showFileBoxPanel() {
   qfb_->raise();  
   annotAct_->setEnabled(False);
   mkRgnAct_->setEnabled(False);
+  setUseRegion(True);
 
 }
 
@@ -1040,6 +1047,7 @@ void QtDisplayPanelGui::hideFileBoxPanel() {
   qfb_->hide();  
   annotAct_->setEnabled(True);
   mkRgnAct_->setEnabled(True);
+  setUseRegion(False);
 }
     
 void QtDisplayPanelGui::showAnnotatorPanel() {
@@ -1068,6 +1076,7 @@ void QtDisplayPanelGui::showAnnotatorPanel() {
   qap_->raise();  
   fboxAct_->setEnabled(False);
   mkRgnAct_->setEnabled(False);
+  setUseRegion(True);
 
 }
 
@@ -1078,6 +1087,7 @@ void QtDisplayPanelGui::hideAnnotatorPanel() {
   qap_->hide();  
   fboxAct_->setEnabled(True);
   mkRgnAct_->setEnabled(True);
+  setUseRegion(False);
 }
 
 void QtDisplayPanelGui::showMakeRegionPanel() {
@@ -1093,12 +1103,17 @@ void QtDisplayPanelGui::showMakeRegionPanel() {
         ImageInterface<float>* img = pdd->imageInterface();
         PanelDisplay* ppd = qdp_->panelDisplay();
         if (ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0) {
+           connect(qmr_,  SIGNAL(hideRegionInImage()),
+                          SLOT(hideMakeRegionPanel()));
            qmr_->showNormal();
            qmr_->raise();  
            break;
         }
       }
   }
+  fboxAct_->setEnabled(False);
+  annotAct_->setEnabled(False);
+  setUseRegion(True);
 
 }
 
@@ -1109,6 +1124,7 @@ void QtDisplayPanelGui::hideMakeRegionPanel() {
   qmr_->hide();  
   fboxAct_->setEnabled(True);
   annotAct_->setEnabled(True);
+  setUseRegion(False);
 }
 
 void QtDisplayPanelGui::showImageProfile() {
@@ -1116,12 +1132,16 @@ void QtDisplayPanelGui::showImageProfile() {
     List<QtDisplayData*> rdds = qdp_->registeredDDs();
     QHash<QString, ImageInterface<float>*> overlap;
     for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
+
          QtDisplayData* pdd = qdds.getRight();
          if(pdd != 0 && pdd->dataType() == "image") {
+
             
             ImageInterface<float>* img = pdd->imageInterface();
             PanelDisplay* ppd = qdp_->panelDisplay();
             if (ppd != 0 && img != 0) {
+
+ 
               if (ppd->isCSmaster(pdd->dd())) { 
 	      
 	      // pdd is a suitable QDD for profiling.
@@ -1143,13 +1163,17 @@ void QtDisplayPanelGui::showImageProfile() {
                       (ppd->getTool(QtMouseToolNames::POSITION));
                 if (pos) {
                    connect(pos, 
-                    SIGNAL(wcNotify(const String,
-                                    const Vector<Double>, 
-                                    const Vector<Double>)),
+                    SIGNAL(wcNotify( const String,
+				     const Vector<Double>, 
+				     const Vector<Double>,
+				     const Vector<Double>, 
+				     const Vector<Double> )),
                     profile_,
-                    SLOT(wcChanged(const String,
-                                      const Vector<Double>, 
-                                      const Vector<Double>)));
+                    SLOT(wcChanged( const String,
+				    const Vector<Double>, 
+				    const Vector<Double>,
+				     const Vector<Double>, 
+				     const Vector<Double> )));
                    connect(profile_, 
                     SIGNAL(coordinateChange(const String&)),
                      pos,
@@ -1159,13 +1183,17 @@ void QtDisplayPanelGui::showImageProfile() {
                       (ppd->getTool(QtMouseToolNames::RECTANGLE));
                 if (rect) {
                    connect(rect, 
-                   SIGNAL(wcNotify(const String,
-                                     const Vector<Double>, 
-                                     const Vector<Double>)),
+                   SIGNAL(wcNotify( const String,
+				    const Vector<Double>, 
+				    const Vector<Double>,
+				    const Vector<Double>, 
+				    const Vector<Double> )),
                    profile_,
-                   SLOT(wcChanged(const String,
-                                    const Vector<Double>, 
-                                    const Vector<Double>)));
+                   SLOT(wcChanged( const String,
+				   const Vector<Double>, 
+				   const Vector<Double>,
+				     const Vector<Double>, 
+				     const Vector<Double> )));
                    connect(profile_, 
                     SIGNAL(coordinateChange(const String&)),
                      rect,
@@ -1176,13 +1204,17 @@ void QtDisplayPanelGui::showImageProfile() {
                       (ppd->getTool(QtMouseToolNames::POLYGON));
                 if (poly) {
                    connect(poly, 
-                   SIGNAL(wcNotify(const String,
-                                     const Vector<Double>, 
-                                     const Vector<Double>)),
-                   profile_,
-                   SLOT(wcChanged(const String, 
+                   SIGNAL(wcNotify( const String,
+				    const Vector<Double>, 
+				    const Vector<Double>,
                                     const Vector<Double>, 
-                                    const Vector<Double>)));
+                                    const Vector<Double> )),
+                   profile_,
+                   SLOT(wcChanged( const String, 
+				   const Vector<Double>, 
+				   const Vector<Double>,
+				     const Vector<Double>, 
+				     const Vector<Double> )));
                    connect(profile_, 
                     SIGNAL(coordinateChange(const String&)),
                      poly,
@@ -1190,11 +1222,16 @@ void QtDisplayPanelGui::showImageProfile() {
                 }
               }
               
-	      else if (profileDD_ != pdd) {
+	      else {
+                if (profileDD_ != pdd) {
 
 	        // [Re-]orient pre-existing profiler to pdd
-
                 profile_->resetProfile(img, pdd->name().chars());
+                profileDD_ = pdd;
+                }
+                else {
+                  pdd->checkAxis();
+                }
               }
 
               if (pdd->spectralAxis() == -1) {
@@ -1210,7 +1247,8 @@ void QtDisplayPanelGui::showImageProfile() {
 	      //break;
             }
             else {
-               overlap[pdd->name().chars()] = img;
+              if (pdd->spectralAxis() != -1) 
+                 overlap[pdd->name().chars()] = img;
             }
             }
          }
@@ -1227,6 +1265,8 @@ void QtDisplayPanelGui::hideImageProfile() {
     
     if(profile_) {    
       profile_->hide();
+      delete profile_;
+      profile_ = 0;
     }
     profileDD_ = 0;
     
@@ -1346,7 +1386,7 @@ TrackBox::TrackBox(QtDisplayData* qdd, QWidget* parent) :
     
   
   trkgEdit_->setMinimumWidth(355);
-  trkgEdit_->setFixedHeight(47);
+  trkgEdit_->setFixedHeight( qdd->dataType() == "ms" ? 84 : 47 );
   // trkgEdit_->setFixedHeight(81);	// (obs.)
   //trkgEdit_->setPlainText("\n  ");	// (Doesn't work on init,
   //setTrackingHeight_();		// for some reason...).

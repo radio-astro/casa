@@ -42,8 +42,33 @@
 using namespace std ;
 
 // <summary>
-// Class specific for NRO 45m FITS dataset.
+// Accessor class for NRO 45m FITS data.
 // </summary>
+//
+// <prerequisite>
+//   <li> <linkto class=NRO45FITSReader>NRO45FITSReader</linkto>
+//   <li> <linkto class=NRODataset>NRODataset</linkto>
+// </prerequisite>
+//
+// <reviewed reviewer="" date="" tests="" demos="">
+// </reviewed>
+//
+// <etymology>
+// This class actually accesses data from NRO telescopes. This is specialized class 
+// for NRO 45m telescope with non-OTF observing mode. In contrast to other concrete classes, 
+// both fillHeader and fillRecord methods are implemented here. 
+// This is because that the output of non-OTF observing mode is in FITS format and is 
+// quite different format from that of OTF observing mode.
+// </etymology>
+//
+// <note>
+// Although the input data is FITS format, the class does not depend on cfitsio library.
+// </note>
+//
+// <synopsis>
+// Accessor class for NRO 45m FITS data.
+// </synopsis>
+//
 
 class NROFITSDataset : public NRODataset
 {
@@ -69,6 +94,7 @@ class NROFITSDataset : public NRODataset
   virtual int getIndex( int irow ) ;
   virtual int getPolarizationNum() ;
   virtual uInt getArrayId( string type ) ;
+  virtual double getStartIntTime( int i ) ;
 
  protected:
   // fill header information
@@ -126,6 +152,9 @@ class NROFITSDataset : public NRODataset
 
   // get offset bytes for attributes
   int getOffset( char *name ) ;
+
+  // convert frequency frame
+//   virtual double toLSR( double v, double t, double x, double y ) ;
 
   // number of column for scan header
   int numField_ ;

@@ -3,7 +3,8 @@ import string
 from taskinit import *
 
 def split(vis, outputvis, datacolumn, field, spw, width, antenna,
-          timebin, timerange, scan, array, uvrange, ignorables):
+          timebin, timerange, scan, array, uvrange, correlation,
+          ignorables, keepflags):
     """Create a visibility subset from an existing visibility set:
 
     Keyword arguments:
@@ -30,8 +31,9 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
     antenna -- antenna names
                default '' (all),
                antenna = '3 & 7' gives one baseline with antennaid = 3,7.
-    timebin -- Value for time averaging
-               default='-1s' (no averaging); example: timebin='30s'
+    timebin -- Interval width for time averaging.
+               default: '0s' or '-1s' (no averaging)
+               example: timebin='30s'
     timerange -- Time range
                  default='' means all times.  examples:
                  timerange = 'YYYY/MM/DD/hh:mm:ss~YYYY/MM/DD/hh:mm:ss'
@@ -45,9 +47,13 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
              default '' (all).
     uvrange -- uv distance range to select.
                default '' (all).
+    correlation -- Select correlations, e.g. 'rr, ll' or ['XY', 'YX'].
+                   default '' (all).
     ignorables -- Data descriptors that time averaging can ignore:
                   array, scan, and/or state
                   Default '' (none)
+    keepflags -- Keep flagged data, if possible
+                 Default True
     """
 
     #Python script
@@ -55,17 +61,18 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
     try:
         casalog.origin('split')
 
+        myms = mstool.create()
         if ((type(vis)==str) & (os.path.exists(vis))):
-            ms.open(vis, nomodify=True)
+            myms.open(vis, nomodify=True)
         else:
             raise Exception, 'Visibility data set not found - please verify the name'
         if os.path.exists(outputvis):
-            ms.close()
+            myms.close()
             raise Exception, "Output MS %s already exists - will not overwrite." % outputvis
 
         # No longer needed.  When did it get put in?  Note that the default
-        # spw='*' in ms.split ends up as '' since the default type for a variant
-        # is BOOLVEC.  (Of course!)  Therefore both split and ms.split must
+        # spw='*' in myms.split ends up as '' since the default type for a variant
+        # is BOOLVEC.  (Of course!)  Therefore both split and myms.split must
         # work properly when spw=''.
         #if(spw == ''):
         #    spw = '*'
@@ -97,9 +104,17 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
             except:
                 raise TypeError, 'parameter width is invalid..using 1'
 
+        if type(correlation) == list:
+            correlation = ', '.join(correlation)
+        correlation = correlation.upper()
+
         if hasattr(ignorables, '__iter__'):
             ignorables = ', '.join(ignorables)
 
+        if type(spw) == list:
+            spw = ','.join([str(s) for s in spw])
+        elif type(spw) == int:
+            spw = str(spw)
         do_chan_avg = spw.find('^') > -1     # '0:2~11^1' would be pointless.
         if not do_chan_avg:                  # ...look in width.
             if type(width) == int and width > 1:
@@ -116,15 +131,24 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
             # Do channel averaging first because it might be included in the spw
             # string.
             import tempfile
-            cavms = tempfile.mkdtemp(suffix=outputvis)
+            # We want the directory outputvis is in, not /tmp, because /tmp
+            # might not have enough space.
+            # outputvis is itself a directory, so strip off a trailing slash if
+            # it is present.
+            # I don't know if giving tempfile an absolute directory is necessary -
+            # dir='' is effectively '.' in Ubuntu.
+            workingdir = os.path.abspath(os.path.dirname(outputvis.rstrip('/')))
+            cavms = tempfile.mkdtemp(suffix=outputvis, dir=workingdir)
 
             casalog.post('Channel averaging to ' + cavms)
-            ms.split(outputms=cavms,     field=field,
+            myms.split(outputms=cavms,     field=field,
                      spw=spw,            step=width,
                      baseline=antenna,   subarray=array,
                      timebin='',         time=timerange,
                      whichcol=datacolumn,
-                     scan=scan,          uvrange=uvrange)
+                     scan=scan,          uvrange=uvrange,
+                     ignorables=ignorables,
+                     correlation=correlation)
             
             # The selection was already made, so blank them before time averaging.
             field = ''
@@ -137,45 +161,52 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
             scan = ''
             uvrange = ''
 
-            ms.close()
-            ms.open(cavms)
+            myms.close()
+            myms.open(cavms)
             casalog.post('Starting time averaging')
 
-        ms.split(outputms=outputvis,  field=field,
+        if keepflags:
+            taqlstr = ''
+        else:
+            taqlstr = 'NOT (FLAG_ROW OR ALL(FLAG))'
+
+        myms.split(outputms=outputvis,  field=field,
                  spw=spw,             step=width,
                  baseline=antenna,    subarray=array,
                  timebin=timebin,     time=timerange,
                  whichcol=datacolumn,
                  scan=scan,           uvrange=uvrange,
-                 ignorables=ignorables)
-        ms.close()
+                 ignorables=ignorables,
+                 correlation=correlation,
+                 taql=taqlstr)
+        myms.close()
 
         if do_both_chan_and_time_avg:
             import shutil
             shutil.rmtree(cavms)
         
         # Write history to output MS, not the input ms.
-        ms.open(outputvis, nomodify=False)
-        ms.writehistory(message='taskname=split', origin='split')
-        ms.writehistory(message='vis         = "'+str(vis)+'"',
+        myms.open(outputvis, nomodify=False)
+        myms.writehistory(message='taskname=split', origin='split')
+        myms.writehistory(message='vis         = "'+str(vis)+'"',
                         origin='split')
-        ms.writehistory(message='outputvis   = "'+str(outputvis)+'"',
+        myms.writehistory(message='outputvis   = "'+str(outputvis)+'"',
                         origin='split')
-        ms.writehistory(message='field       = "'+str(field)+'"',
+        myms.writehistory(message='field       = "'+str(field)+'"',
                         origin='split')
-        ms.writehistory(message='spw       = '+str(spw), origin='split')
-        ms.writehistory(message='width       = '+str(width), origin='split')
-        ms.writehistory(message='antenna     = "'+str(antenna)+'"',
+        myms.writehistory(message='spw       = '+str(spw), origin='split')
+        myms.writehistory(message='width       = '+str(width), origin='split')
+        myms.writehistory(message='antenna     = "'+str(antenna)+'"',
                         origin='split')
-        ms.writehistory(message='timebin     = "'+str(timebin)+'"',
+        myms.writehistory(message='timebin     = "'+str(timebin)+'"',
                         origin='split')
-        ms.writehistory(message='timerange   = "'+str(timerange)+'"',
+        myms.writehistory(message='timerange   = "'+str(timerange)+'"',
                         origin='split')
-        ms.writehistory(message='datacolumn  = "'+str(datacolumn)+'"',
+        myms.writehistory(message='datacolumn  = "'+str(datacolumn)+'"',
                         origin='split')
-        ms.writehistory(message='ignorables  = "'+str(ignorables)+'"',
+        myms.writehistory(message='ignorables  = "'+str(ignorables)+'"',
                         origin='split')
-        ms.close()
+        myms.close()
 
 
     except Exception, instance:

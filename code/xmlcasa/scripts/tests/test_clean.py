@@ -1,6 +1,8 @@
 import os
 import sys
 import shutil
+import commands
+import numpy
 from __main__ import default
 from tasks import *
 from taskinit import *
@@ -33,6 +35,8 @@ class clean_test1(unittest.TestCase):
     msfile = 'ngc7538_ut1.ms'
     res = None
     img = 'cleantest1'
+    img2 = '0-cleantest1'
+    msk = 'cleantest1.in.mask'
 
     def setUp(self):
         self.res = None
@@ -49,7 +53,6 @@ class clean_test1(unittest.TestCase):
 
         os.system('rm -rf ' + self.img+'*')
      
-
     def getpixval(self,img,pixel):
         ia.open(img)
         px = ia.pixelvalue(pixel)
@@ -294,7 +297,52 @@ class clean_test1(unittest.TestCase):
         '''Clean 36: Non-default value of phasecenter'''
         self.res=clean(vis=self.msfile,imagename=self.img,phasecenter=2)
         self.assertTrue(os.path.exists(self.img+'.image'))
-        
+
+    def test37(self):
+        '''Clean 37: Test box mask'''
+        self.res=clean(vis=self.msfile,imagename=self.img,mask=[115,115,145,145])
+        self.assertTrue(os.path.exists(self.img+'.image') and
+			os.path.exists(self.img+'.mask'))
+
+    def test38(self):
+        '''Clean 38: Test freeing of resource for mask (checks CAS-954)'''
+        self.res=clean(vis=self.msfile,imagename=self.img,mask=[115,115,145,145])
+        cmd='/usr/sbin/lsof|grep %s' % self.img+'.mask'
+        output=commands.getoutput(cmd)
+        ret=output.find(self.img+'.mask')
+        self.assertTrue(ret==-1)
+
+    def test39(self):
+        '''Clean 39: Input mask image specified'''
+        datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/'
+        shutil.copytree(datapath+self.msk, self.msk)
+        self.res=clean(vis=self.msfile,imagename=self.img2,mask=self.msk)
+        self.assertEqual(self.res, None)
+        self.assertTrue(os.path.exists(self.img2+'.image'))
+        # cleanup
+        os.system('rm -rf ' + self.msk + ' '+ self.img2+'*')
+
+    def test40(self):
+        '''Clean 40: Test chaniter=T clean with flagged channels'''
+        # test CAS-2369 bug fix 
+        flagdata(vis=self.msfile,mode='manualflag',spw='0:0~0')
+        self.res=clean(vis=self.msfile,imagename=self.img,mode='channel',spw=0)
+        self.assertEqual(self.res, None)
+        self.assertTrue(os.path.exists(self.img+'.image'))
+         
+    def test41(self):
+        '''Clean 41: Test nterms=2 and ref-freq > maximum-frequency'''
+        # This tests if negative-weights are being correctly allowed through the gridders
+        self.res=clean(vis=self.msfile,imagename=self.img,nterms=2,reffreq='25.0GHz',niter=5);
+        self.assertEqual(self.res,None);
+
+    def test42(self):
+        '''Clean42: Test nterms=2, with only one channel whose frequency is same as ref-freq'''
+        # This tests if a numerical failure-mode is detected and returned without fuss.
+        self.res=clean(vis=self.msfile,imagename=self.img,nterms=2,reffreq='23691.4682MHz',spw='0:0');
+        self.assertFalse(self.res);
+
+
 class clean_test2(unittest.TestCase):
     
     # Input and output names
@@ -338,6 +386,77 @@ class clean_test2(unittest.TestCase):
                     
 
         self.assertTrue(retValue['success'],retValue['error_msgs'])
+
+class clean_test3(unittest.TestCase):
+
+    # Input and output names#    msfile = 'ngc7538_ut.ms'
+    #msfile = '0556kf.ms'
+    msfile = 'outlier_ut.ms'
+    res = None
+    img = ['cleantest3a','cleantest3b']
+
+    def setUp(self):
+        self.res = None
+        default(clean)
+        if (os.path.exists(self.msfile)):
+            os.system('rm -rf ' + self.msfile)
+
+        datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/'
+        shutil.copytree(datapath+self.msfile, self.msfile)
+
+    def tearDown(self):
+        if (os.path.exists(self.msfile)):
+            os.system('rm -rf ' + self.msfile)
+
+        #os.system('rm -rf ' + self.img[0]+'* ')
+        #os.system('rm -rf ' + self.img[1]+'* ')
+	for imext in ['.image','.model','.residual','.psf']:
+	    shutil.rmtree(self.img[0]+imext)
+	    shutil.rmtree(self.img[1]+imext)
+
+    #def testCAS1972(self):
+    #    """Clean test3:test bug fixes: CAS-1972"""
+    #    self.res= clean(vis=self.msfile,imagename=self.img,mode="mfs",interpolation="linear",
+    #                    niter=100, psfmode="clark", 
+    #                    imsize=[[512, 512], [512, 512]],
+    #                    cell="0.0001arcsec", phasecenter=['J2000 05h59m32.03313 23d53m53.9267', 
+    #                                                      'J2000 05h59m32.03313 23d53m53.9263'],
+    #                    weighting="natural",pbcor=False,minpb=0.1)
+    #
+    #    self.assertEqual(self.res,None)
+    #    for im in self.img:
+    #        self.assertTrue(os.path.exists(im+'.image'))
+    #    stat0 = imstat(self.img[0]+'.model')
+    #    stat1 = imstat(self.img[1]+'.model')
+    #    self.assertEqual(stat0['max'],stat1['max'])
+    #    self.assertTrue(all(stat0['maxpos']==numpy.array([256,256,0,0])) and
+    #           all(stat1['maxpos']==numpy.array([256,260,0,0])))
+
+    def testCAS1972(self):
+        """Clean test3:test CAS-1972 bug fixes ver2 (with smaller dataset)"""
+        self.res= clean(vis=self.msfile,
+                        imagename=self.img,
+                        mode="mfs",
+                        interpolation="linear",
+                        niter=100, psfmode="clark",
+                        mask=[[250, 250, 262, 262], [250, 350, 262, 362]],
+                        imsize=[[512, 512], [512, 512]],
+                        cell="0.0001arcsec", 
+                        phasecenter=['J2000 05h59m32.03313 23d53m53.9267', 'J2000 05h59m32.03313 23d53m53.9167'],
+                        weighting="natural",
+                        pbcor=False,
+                        minpb=0.1)
+
+        self.assertEqual(self.res,None)
+        # quick check on the peaks apear at the location as expected
+        for im in self.img:
+            self.assertTrue(os.path.exists(im+'.image'))
+        stat0 = imstat(self.img[0]+'.model')
+        stat1 = imstat(self.img[1]+'.model')
+        #self.assertEqual(stat0['max'],stat1['max'])
+        self.assertTrue(all(stat0['maxpos']==numpy.array([256,256,0,0])) and
+               all(stat1['maxpos']==numpy.array([256,356,0,0])))
+
 
 def suite():
     return [clean_test1]

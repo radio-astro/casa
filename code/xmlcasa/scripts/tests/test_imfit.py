@@ -52,17 +52,7 @@
 # </synopsis> 
 #
 # <example>
-# # This test was designed to run in the automated CASA test system.
-# # This example shows who to run it manually from within casapy.
-# casapy -c runUnitTest test_imcontsub
-#
-# or
-#
-# # This example shows who to run it manually from with casapy.
-# sys.path.append( os.environ["CASAPATH"].split()[0]+'/code/xmlcasa/scripts/regressions/admin' )
-# import runUnitTest
-# runUnitTest.main(['imcontsub_test'])
-#
+# `echo $CASAPATH/bin/casapy | sed -e 's$ $/$'` --nologger --log2term -c `echo $CASAPATH | awk '{print $1}'`/code/xmlcasa/scripts/regressions/admin/runUnitTest.py test_imfit[test1,test2,...]
 # </example>
 #
 # <motivation>
@@ -90,6 +80,7 @@ two_gaussians_image = "two_gaussian_model.fits"
 stokes_image = "imfit_stokes.fits"
 two_gaussians_estimates = "estimates_2gauss.txt"
 expected_new_estimates = "expected_new_estimates.txt"
+gauss_no_pol = "gauss_no_pol.fits"
 msgs = ''
 
 # are the two specified numeric values relatively close to each other? 
@@ -104,11 +95,14 @@ def near_abs(first, second, epsilon):
 # @param expected The name of the expected image
 # @param difference The name of the difference image to write
 def check_image(got, expected, difference):
-    ia.open(got);
+    myia = iatool.create()
+    myia.open(got);
     expr = "\"" + got + "\" - \"" + expected + "\"";
-    ia.imagecalc(difference, expr, True);
-    ia.open(difference);
-    stats = ia.statistics()
+    myia.imagecalc(difference, expr, True);
+    myia.done()
+    myia.open(difference);
+    stats = myia.statistics()
+    myia.done()
     return stats['sumsq'] == 0
 
 # count the number of lines in the specified file in which the spcified string occurs
@@ -120,20 +114,20 @@ def count_matches(filename, match_string):
     return count
 
 class imfit_test(unittest.TestCase):
-    '''ADD TO SYSTEM LATER'''
     
     def setUp(self):
         datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/imfit/'
-        os.system('cp -r ' +datapath+noisy_image +' '+noisy_image)
-        os.system('cp -r ' +datapath+expected_model +' '+expected_model)
-        os.system('cp -r ' +datapath+expected_residual +' '+expected_residual)
-        os.system('cp -r ' +datapath+convolved_model +' '+convolved_model)
-        os.system('cp -r ' +datapath+estimates_convolved +' '+estimates_convolved)
-        os.system('cp -r ' +datapath+two_gaussians_image +' '+two_gaussians_image)
-        os.system('cp -r ' +datapath+two_gaussians_estimates +' '+two_gaussians_estimates)
-        os.system('cp -r ' +datapath+expected_new_estimates +' '+expected_new_estimates)
-        os.system('cp -r ' +datapath+stokes_image +' '+stokes_image)
-    
+        os.system('cp -r ' +datapath + noisy_image + ' ' +noisy_image)
+        os.system('cp -r ' +datapath + expected_model + ' ' +expected_model)
+        os.system('cp -r ' +datapath + expected_residual + ' ' +expected_residual)
+        os.system('cp -r ' +datapath + convolved_model + ' ' +convolved_model)
+        os.system('cp -r ' +datapath + estimates_convolved + ' ' +estimates_convolved)
+        os.system('cp -r ' +datapath + two_gaussians_image + ' ' +two_gaussians_image)
+        os.system('cp -r ' +datapath + two_gaussians_estimates + ' ' +two_gaussians_estimates)
+        os.system('cp -r ' +datapath + expected_new_estimates + ' ' + expected_new_estimates)
+        os.system('cp -r ' +datapath + stokes_image + ' ' + stokes_image)
+        os.system('cp -r ' +datapath + gauss_no_pol + ' ' + gauss_no_pol)
+
     def tearDown(self):
         os.system('rm -rf ' +noisy_image)
         os.system('rm -rf ' +expected_model)
@@ -152,8 +146,11 @@ class imfit_test(unittest.TestCase):
         test = "fit_using_full_image: "
         global msgs
         def run_fitcomponents():
-            ia.open(noisy_image)
-            return ia.fitcomponents()
+            myia = iatool.create()
+            myia.open(noisy_image)
+            res = myia.fitcomponents()
+            myia.done()
+            return res
         def run_imfit():
             default('imfit')
             return imfit(imagename=noisy_image)
@@ -221,6 +218,7 @@ class imfit_test(unittest.TestCase):
     
     def test_fit_using_box(self):
         '''Imfit: Fit using box'''
+        method = "test_fit_using_box"
         success = True
         global msgs
         for i in range(4):
@@ -246,25 +244,21 @@ class imfit_test(unittest.TestCase):
                 region = 'mybox'
     
             def run_fitcomponents():
-                ia.open(noisy_image)
-                return ia.fitcomponents(box=box, region=region)
+                myia = iatool.create()
+                myia.open(noisy_image)
+                res = myia.fitcomponents(box=box, region=region)
+                myia.close()
+                return res
             def run_imfit():
                 default('imfit')
                 return imfit(imagename=noisy_image, box=box, region=region)
     
-            for j in [0, 1]:
-                if (j == 0):
-                    code = run_fitcomponents
-                    method = test + "ia.fitcomponents: "
-                else:
-                    code = run_imfit
-                    method = test + "imfit: "
-    
+            for code in [run_fitcomponents, run_imfit]:
                 res = code()
                 clist = res['results']
                 if (not res['converged']):
                     success = False
-                    msgs += method + "fit did not converge unexpectedly"
+                    msgs += method + " fit did not converge unexpectedly. box=" + box + " region=" + str(region)
                 epsilon = 1e-5
                 # I flux test
                 got = clist['component0']['flux']['value'][0]
@@ -324,19 +318,16 @@ class imfit_test(unittest.TestCase):
     
         box = '0,0,20,20'
         def run_fitcomponents():
-            ia.open(noisy_image)
-            return ia.fitcomponents(box=box)
+            myia = iatool.create()
+            myia.open(noisy_image)
+            res = myia.fitcomponents(box=box)
+            myia.done()
+            return res
         def run_imfit():
             default('imfit')
             return imfit(imagename=noisy_image, box=box)
     
-        for i in [0, 1]:
-            if (i == 0):
-                code = run_fitcomponents
-                method = test + "ia.fitcomponents: "
-            else:
-                code = run_imfit
-                method = test + "imfit: "
+        for code in [run_fitcomponents, run_imfit]:
             res = code()
             if (res['converged']):
                 success = False
@@ -370,21 +361,17 @@ class imfit_test(unittest.TestCase):
                 excludepix = [-10,40]
     
             def run_fitcomponents():
-                ia.open(noisy_image)
-                return ia.fitcomponents(mask=mask, includepix=includepix, excludepix=excludepix)
+                myia = iatool.create()
+                myia.open(noisy_image)
+                res = myia.fitcomponents(mask=mask, includepix=includepix, excludepix=excludepix)
+                myia.close()
+                return res
             def run_imfit():
                 default('imfit')
                 return imfit(imagename=noisy_image, mask=mask, includepix=includepix, excludepix=excludepix)
     
-            for j in [0, 1]:
-                if (j == 0):
-                    code = run_fitcomponents
-                    method = test + "ia.fitcomponents: "
-                else:
-                    code = run_imfit
-                    method = test + "imfit: "
+            for code in [run_fitcomponents, run_imfit]:
                 res = code()
-    
                 clist = res['results']
                 if (not res['converged']):
                     success = False
@@ -446,37 +433,38 @@ class imfit_test(unittest.TestCase):
         test = "residual_and_model_test: "
         success = True
         global msgs
-        residual = 'residual.im'
-        model = 'model.im'
         box="100,100,200,200"
-        for i in [0, 1]:
-            residual = "residual.im" + str(i)
-            model = "model.im" + str(i)
-            def run_fitcomponents():
-                ia.open(noisy_image)
-                return ia.fitcomponents(box=box, residual=residual, model=model)
-            def run_imfit():
-                default('imfit')
-                return imfit(imagename=noisy_image, box=box, residual=residual, model=model)
+        def run_fitcomponents(model, residual):
+            myia = iatool.create()
+            myia.open(noisy_image)
+            res = myia.fitcomponents(
+                box=box, residual=residual, model=model
+            )
+            myia.done()
+            return res
+        def run_imfit(model, residual):
+            default('imfit')
+            return imfit(
+                imagename=noisy_image, box=box, residual=residual,
+                model=model
+            )
     
-            if (i == 0):
-                code = run_fitcomponents
-                method = test + "ia.fitcomponents: "
-            else:
-                code = run_imfit
-                method = test + "imfit: "
-            res = code()
+        for code in [run_fitcomponents, run_imfit]:
+            model = 'model_' + str(code) + '.im'
+            residual = 'resid_' + str(code) + '.im'
+
+            res = code(model, residual)
             clist = res['results']
     
             if (not res['converged']):
                 success = False
-                msgs += method + "fit did not converge unexpectedly"
+                msgs + test + "fit did not converge unexpectedly"
             if (not check_image(residual, expected_residual, 'residualDifference.im')):
                 success = False
-                msgs += method + "Did not get expected residual image\n"
+                msgs += test + "Did not get expected residual image\n"
             if (not check_image(model, expected_model, 'modelDifference.im')):
                 success = False
-                msgs += method + "Did not get expected model image\n"
+                msgs += test + "Did not get expected model image\n"
     
         self.assertTrue(success,msgs)
     
@@ -488,69 +476,66 @@ class imfit_test(unittest.TestCase):
         global msgs
     
         def run_fitcomponents():
-            ia.open(convolved_model)
-            return ia.fitcomponents(estimates=estimates_convolved)
+            myia = iatool.create()
+            myia.open(convolved_model)
+            res = myia.fitcomponents(estimates=estimates_convolved)
+            myia.done()
+            return res
         def run_imfit():
             default('imfit')
             return imfit(imagename=convolved_model, estimates=estimates_convolved)
     
-        for i in [0, 1]:
-            if (i == 0):
-                code = run_fitcomponents
-                method = test + "ia.fitcomponents: "
-            else:
-                code = run_imfit
-                method = test + "imfit: "
+        for code in [run_fitcomponents, run_imfit]:
             res = code()
     
             clist = res['results']
             if (not res['converged']):
                 success = False
-                msgs += method + "fit did not converge unexpectedly"
+                msgs += test + "fit did not converge unexpectedly"
             epsilon = 1e-5
             # I flux test
             got = clist['component0']['flux']['value'][0]
             expected = 60082.6
             if (not near(got, expected, epsilon)):
                 success = False
-                msgs += method + "I flux density test failure, got " + str(got) + " expected " + str(expected) + "\n"
+                msgs += test + "I flux density test failure, got " + str(got) + " expected " + str(expected) + "\n"
             # Q flux test
             got = clist['component0']['flux']['value'][1]
             expected = 0
             if (got != expected):
                 success = False
-                msgs += method + "Q flux density test failure, got " + str(got) + " expected " + str(expected) + "\n"
+                msgs += test + "Q flux density test failure, got " + str(got) + " expected " + str(expected) + "\n"
             # RA test
             got = clist['component0']['shape']['direction']['m0']['value']
             expected = 0.000213318
             if (not near(got, expected, epsilon)):
                 success = False
-                msgs += method + "RA test failure, got " + str(got) + " expected " + str(expected) + "\n"
+                msgs += test + "RA test failure, got " + str(got) + " expected " + str(expected) + "\n"
             # Dec test
             got = clist['component0']['shape']['direction']['m1']['value']
             expected = 1.939254e-5 
             if (not near(got, expected, epsilon)):
                 success = False
-                msgs += method + "Dec test failure, got " + str(got) + " expected " + str(expected) + "\n"
+                msgs += test + "Dec test failure, got " + str(got) + " expected " + str(expected) + "\n"
             # Major axis test
             got = clist['component0']['shape']['majoraxis']['value']
             expected = 28.21859344 
             epsilon = 1e-7
             if (not near(got, expected, epsilon)):
                 success = False
-                msgs += method + "Major axis test failure, got " + str(got) + " expected " + str(expected) + "\n"
+                msgs += test+ "Major axis test failure, got " + str(got) + " expected " + str(expected) + "\n"
             # Minor axis test
             got = clist['component0']['shape']['minoraxis']['value']
             expected = 25.55011520
             if (not near(got, expected, epsilon)):
                 success = False
-                msgs += method + "Minor axis test failure, got " + str(got) + " expected " + str(expected) + "\n"
+                msgs += test + "Minor axis test failure, got " + str(got) + " expected " + str(expected) + "\n"
             # Position angle test
             got = clist['component0']['shape']['positionangle']['value']
             expected = 126.3211050
             if (not near(got, expected, epsilon)):
                 success = False
-                msgs += method + "Position angle test failure, got " + str(got) + " expected " + str(expected) + "\n"
+                msgs += test + "Position angle test failure, got " + str(got) + " expected " + str(expected) + "\n"
     
         self.assertTrue(success,msgs)
        
@@ -566,11 +551,15 @@ class imfit_test(unittest.TestCase):
             logfile = os.getcwd() + "/imfit.log" + str(i)
             if (i == 0):
                 def run_fitcomponents(append=None):
-                    ia.open(two_gaussians_image)
+                    myia = iatool.create()
+                    myia.open(two_gaussians_image)
                     if (append == None):
-                        return ia.fitcomponents(estimates=two_gaussians_estimates, logfile=logfile)
+                        res = myia.fitcomponents(estimates=two_gaussians_estimates, logfile=logfile)
                     else:
-                        return ia.fitcomponents(estimates=two_gaussians_estimates, logfile=logfile, append=append)
+                        res = myia.fitcomponents(estimates=two_gaussians_estimates, logfile=logfile, append=append)
+                    myia.done()
+                    return res
+                
                 code = run_fitcomponents
                 method = test + "ia.fitcomponents: "
             else:
@@ -639,8 +628,10 @@ class imfit_test(unittest.TestCase):
             newestimates = "newestimates" + str(i) + ".txt"
             if (i == 0):
                 def run_fitcomponents():
-                    ia.open(two_gaussians_image)
-                    return ia.fitcomponents(estimates=two_gaussians_estimates, newestimates=newestimates)
+                    myia = iatool.create()
+                    myia.open(two_gaussians_image)
+                    res = myia.fitcomponents(estimates=two_gaussians_estimates, newestimates=newestimates)
+                    return res
                 code = run_fitcomponents
                 method = test + "ia.fitcomponents: "
             else:
@@ -674,8 +665,10 @@ class imfit_test(unittest.TestCase):
         test = 'test_polarization_image: '
         global msgs
         def run_fitcomponents(stokes):
-            ia.open(stokes_image)
-            return ia.fitcomponents(stokes=stokes)
+            myia = iatool.create()
+            myia.open(stokes_image)
+            res = myia.fitcomponents(stokes=stokes)
+            return res
         def run_imfit(stokes):
             default('imfit')
             return imfit(imagename=stokes_image, stokes=stokes)
@@ -741,6 +734,29 @@ class imfit_test(unittest.TestCase):
         
         self.assertTrue(success,msgs)         
     
+    def test_CAS_2318(self):
+        "Verification of CAS-2318 fix"
+        success = True
+        test = 'test_CAS_2318: '
+        global msgs
+        def run_fitcomponents():
+            myia = iatool.create()
+            myia.open(gauss_no_pol)
+            res = myia.fitcomponents()
+            myia.done()
+            return res
+        def run_imfit():
+            default('imfit')
+            return imfit(imagename=gauss_no_pol)
+        
+        for code in [run_fitcomponents, run_imfit]:
+
+            # Just the fact that an exception isn't thrown verifies the fix
+            clist = code()['results']
+            got = clist['component0']['flux']['value'][0]
+            expected = 394312.65593496
+            self.assertTrue(near(got, expected, 1e-5))
+
 
 def suite():
     return [imfit_test]

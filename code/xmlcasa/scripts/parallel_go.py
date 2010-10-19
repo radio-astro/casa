@@ -8,7 +8,10 @@ import atexit
 import time
 import types
 import inspect
+import casadef
+import numpy as np
 from math import *
+from get_user import get_user
 
 a=inspect.stack()
 stacklevel=0
@@ -27,22 +30,40 @@ else:
 class cluster(object):
 
    "control cluster engines for parallel tasks"
+
+   _instance = None
    
    __client=None
    __controller=None
    __timestamp=None
    __engines=[]
-   __ipythondir=os.environ['IPYTHONDIR']
+   __ipythondir=os.environ['PWD']+'/ipython'
+   if(os.environ.has_key('IPYTHONDIR')):
+      __ipythondir=os.environ['IPYTHONDIR']
    __homepath=os.environ['HOME'] 
    __start_engine_file='start_engine.sh'
    __stop_node_file='stop_node.sh'
    __stop_engine_file='stop_engine.sh'
    __stop_controller_file='stop_controller.sh'
    __cluster_rc_file='clusterrc.sh'
-   __prefix='/tmp/'+os.environ['USER']+'-'
+   __user = get_user()
+   __prefix = '/tmp/' + __user + '-'
    __init_now=True
    __new_engs=[]
    #__result={}
+
+   def __new__(cls, *args, **kwargs):
+       if not cls._instance:
+           cls._instance = super(cluster, cls).__new__(
+                                cls, *args, **kwargs)
+       return cls._instance
+
+   def __call__(self):
+       # if there is already a controller, use it
+       if (self.__controller!=None):
+           print ("the controller %s is already running" % 
+                  self.__controller)
+       return self
 
    def __init__(self):
       '''Initialize a Cluster.
@@ -50,12 +71,16 @@ class cluster(object):
       A Cluster enables parallel and distributed execution of CASA tasks and tools on a set of networked computers. A culster consists of one controller and one or more engines. Each engine is an independent Python instance that takes Python commands over a network connection. The controller provides an interface for working with a set of engines. A user uses casapy console to command the controller. A password-less ssh access to the computers that hosts engines is required for the communication between controller and engines.
       
       '''
-
+      # print 'start cluster---------'
       self.__client=None
       self.__controller=None
       self.__timestamp=None
       self.__engines=[]
-      self.__ipythondir=os.environ['IPYTHONDIR']
+      self.__ipythondir=os.environ['PWD']+'/ipython'
+      if(os.environ.has_key('IPYTHONDIR')):
+         self.__ipythondir=os.environ['IPYTHONDIR']
+      else:
+         os.environ['IPYTHONDIR']=self.__ipythondir
       self.__homepath=os.environ['HOME'] 
       if (self.__ipythondir==None or self.__ipythondir==''):
          os.environ["IPYTHONDIR"]=os.environ['HOME']+'.casa/ipython'
@@ -512,7 +537,7 @@ class cluster(object):
      if (dhome!=phome):
         phome=dhome
 
-     sdir='/CASASUBST/python_library_directory/'+'/'
+     sdir = casadef.python_library_directory + '/'
      ##sdir='/home/casa-dev-08/dschieb/casapy-test-30.1.10182-001-64b/lib64/python2.5/'
      self.__client.push(dict(phome=phome), i)
      self.__client.execute('import sys', i)
@@ -668,6 +693,12 @@ class cluster(object):
       x=c.pad_task_id('basename', [3, 5, 8])
       x
       {3: 'basename-3', 5: 'basename-5', 8: 'basename-8'}
+      x=c.pad_task_id([1,3],[0,1,2,3])
+      x
+      {0: '1-0', 1: '3-1', 2: '3-2', 3: '3-3'}
+      x=c.pad_task_id(['a', 'b','c','d','e'],[0,1,2,3])
+      x
+      {0: 'a-0', 1: 'b-1', 2: 'c-2', 3: 'd-3'}
       y=c.pad_task_id(x)
       y
       {0: 'a-0-0', 1: 'b-1-1', 2: 'c-2-2', 3: 'd-3-3'}
@@ -685,10 +716,28 @@ class cluster(object):
       if not int_id:
          return base
 
+      if type(b)==list:
+         for j in range(len(b)):
+            if type(b[j])!=str:
+               b[j]=str(b[j])
+
       if len(task_id)==0:
          task_id=list(xrange(0, len(self.__engines))) 
-      for j in task_id:
-         base[j]=b+'-'+str(j)
+      if type(b)==str:
+         for j in task_id:
+            base[j]=b+'-'+str(j)
+      if type(b)==list:
+         k=len(b)
+         m=len(task_id)
+         if m<=k:
+            for j in range(m):
+               base[task_id[j]]=b[j]+'-'+str(task_id[j])
+         else:
+            for j in range(k):
+               base[task_id[j]]=b[j]+'-'+str(task_id[j])
+            for j in range(k,m):
+               base[task_id[j]]=b[k-1]+'-'+str(task_id[j])
+
       if type(b)==dict:
           for i in b.keys():
              base[i]=b[i]+'-'+str(i)
@@ -760,6 +809,54 @@ class cluster(object):
          base[j]=args[i]
       return base
 
+   def split_int(self, start, end, task_id=[]):
+      '''Generate a dictionary to distribute the spectral windows
+
+      @param start The start integer value
+      @param end The end integer value
+      @param task_id The list of integer ids
+      This is a convenience function for quick generating a dictionary of integer start points. Example:
+      x=c.split_int(9, 127, [2,3,4])
+      x
+      {2: 9, 3: 49, 4: 89 }
+
+      '''
+      base={}
+      if len(task_id)==0:
+         task_id=list(xrange(0, len(self.__engines))) 
+
+      if len(task_id)==0:
+         print "no engines available, no split done"
+         return base
+
+      if type(start)!=int or type(end)!=int:
+         print "start and end point must be integer"
+         return base
+
+      if start<0:
+         print "the start must be greate than 0"
+         return base
+
+      if start>=end:
+         print "the end must be greate than start"
+         return base
+
+      nx=1
+      try:
+         nx=int(ceil(abs(float(end - start))/len(task_id)))
+      except:
+         pass
+
+      #print nx, nchan, len(task_id)
+      i=-1
+      for j in task_id:
+         i=i+1
+         if i>=len(task_id):
+            break
+         st=i*nx
+         base[j]=st+start
+      return base
+       
    def split_channel(self, spw, nchan, task_id=[]):
       '''Generate a dictionary to distribute the spectral windows
 
@@ -798,7 +895,7 @@ class cluster(object):
             break
          st=i*nx
          se=st+nx-1
-         base[i]=str(spw)+":"+str(st)+"~"+str(se)
+         base[j]=str(spw)+":"+str(st)+"~"+str(se)
       return base
        
    def pgc(self,*args,**kwargs):
@@ -902,126 +999,112 @@ class cluster(object):
    def pgk(self, **kwargs):
       '''Parallel execution to set keywords
 
-      @param **kwargs available 
-          special keyword options are
-             job=<str> or jobname=<str>
-             block=<True/False>
+      @param **kwargs keyword args 
 
       Example:
-      c.pgk(xx={0:5,2:'c'},action='write')
-      action : write
-      xx : {0: 5, 2: 'c'}
-      0 xx=5
-      1
-      2 xx='c'
-      3
-
-      c.pgk(xx={0:5,2:'c'},action='run')
-      c.pull('xx')
-      {0: 5, 2: 'c'}
-
+      x=np.zeros((3,3))
+      c.pgk(c={1:x},d=6,t='b',s={0:'y'})
+      c.pull('c')
+      {1: array([[ 0.,  0.,  0.],
+                 [ 0.,  0.,  0.],
+                 [ 0.,  0.,  0.]])}
+      c.pull('d')
+      {0: 6, 1: 6}
+      c.pull('s')
+      {0: 'y'}
+      c.pull('t')
+      {0: 'b', 1: 'b'}
       '''
-
-      # set default action
-      pgTask=None
-      pgAction='run'
-      pgBlock=False
-      pgJob="NoName"
 
       tasks={}
       for j in self.__client.get_ids():
-         tasks[j]=[]
+         tasks[j]=dict()
       
       #print '-' * 10, 'kargs:'
       keys = kwargs.keys()
       #keys.sort()
 
-      for kw in keys:
-         #print kw
-         if kw.lower()=='action':
-            pgAction=kwargs[kw]
-         if kw.lower()=='task' and \
-            type(kwargs[kw])==types.StringType:
-             pgTask=kwargs[kw]
-         if kw.lower()=='block' and kwargs[kw]==True:
-             pgBlock=True
-         if (kw.lower()=='job' or kw.lower()=='jobname') and \
-            type(kwargs[kw])==types.StringType :
-             pgJob=kwargs[kw]
-
-      if type(pgAction)!=types.StringType or \
-        (pgAction.lower()!='run' and \
-        pgAction.lower()!='check'):
-         pgAction='write'
-      #print 'pgAction', pgAction
-
       for kw in keys: 
          vals=kwargs[kw]
-         print kw, ":", vals
+         #print kw, ":", vals
          if type(vals)==types.DictType:
             for j in vals.keys():
                if type(j)!=types.IntType or j<0:
                   print ('task id', j, 
                          'must be a positive integer')
-                  return None
+                  pass
                else:
-                  st=kw+'='
-                  if type(vals[j])==types.StringType:
-                     st=st+"'"+vals[j]+"'"
-                  else:
-                     st=st+str(vals[j])
-                  tasks[j].append(st)
+                  tasks[j][kw]=vals[j]
          else:
-            if kw=='task':
-               pgTask=vals
-            elif kw=='action':
-               pass
-            else:
-               for i in xrange(0, len(self.__engines)): 
-                  st=kw+'='
-                  if type(vals)==types.StringType:
-                     st=st+"'"+vals+"'"
-                  else:
-                     st=st+str(vals)
-                  tasks[i].append(st)
+            for j in tasks.keys():
+               tasks[j][kw]=vals
 
-      if pgAction=='write':
-         if (pgTask==None or pgTask==''):
-            for i in tasks.keys():      
-               print i, string.join(tasks[i], ',') 
-         else:
-            for i in tasks.keys():      
-               print i, pgTask+"("+ \
-                     string.join(tasks[i], ',')+")" 
-         return None
+      #print 'tasks', tasks
+
+      for i in tasks.keys():      
+         #print 'dict'
+         self.__client.push(tasks[i], i, True)
+      return tasks
+
+   def make_command(self, func, **kwargs):
+      '''Make command strings to be distributed to engines
+
+      @func function name 
+      @kwargs **kwargs available 
+
+      Example:
+      x=np.ones((3,3))
+      c.make_command(func=None,c={1:x},d=6,t='b',s={0:'y'})
+      {0: 's="y"; t="b"; d=6',
+       1: 'c=array([[ 1., 1., 1.],\n[ 1., 1., 1.],\n[ 1., 1., 1.]]); t="b"; d=6'}
+      c.make_command(func='g',c={1:x},d=6,t='b',s={0:'y'})
+      {0: 'g(s="y", t="b", d=6)',
+       1: 'g(c=array([[1., 1., 1.],\n[1., 1., 1.],\n[1., 1., 1.]]), t="b", d=6)'}
+      '''
+
+      tasks=self.pgk(**kwargs)
+
+      if func!=None and type(func)!=str:
+        print 'func must be a str'
+        return None
+
+      if len(tasks)==0:
+        print 'no parameters specified'
+        return None
+
+      if func==None or len(str.strip(func))==0:
+         func=''
+
+      func=str.strip(func)
+
+      cmds=dict()
+      for i in tasks.keys(): 
+        cmd=''
+        for (k, v) in tasks[i].iteritems():
+          cmd+=k+'='
+          if type(v)==str:
+              cmd+='"'+v+'"'
+          elif type(v)==np.ndarray:
+              cmd+=repr(v)
+          else:
+              cmd+=str(v)
+          if func=='':
+            cmd+='; '
+          else:
+            cmd+=', '
+        cmd=cmd[0:-2]
+        if func!='':
+           cmd=func+'('+cmd+')'
+        cmds[i]=cmd
+      return cmds
+
+    #for i in tasks.keys():      
+    #   print i, string.join(tasks[i], ',') 
+    #else:
+    #   for i in tasks.keys():      
+    #      print i, pgTask+"("+ \
+    #                 string.join(tasks[i], ',')+")" 
       
-      if pgAction=='run':
-         #print 'run keyword'
-         if (pgTask==None or pgTask==''):
-            for i in tasks.keys():      
-               cmd=string.join(tasks[i], '\n')
-               #print 'cmd', cmd
-               #self.__client.execute(cmd, i)
-               self.__client.push(dict(job=cmd), i)
-
-            #print 'cmd', cmd
-            return self.__client.execute('exec(job)',
-                         block=pgBlock,targets=tasks.keys())
-            #self.__result[job]=self.__client.execute(
-            #  'exec(job)',block=pgBlock,targets=tasks.keys())
-           
-         else:
-            for i in tasks.keys():      
-               cmd=pgTask+"("+string.join(tasks[i], ',')+")" 
-               #self.__client.execute(cmd, i)
-               self.__client.push(dict(job=cmd), i)
-
-            #print 'cmd', cmd
-            #self.__result[job]=self.__client.execute(
-            #  'exec(job)',block=pgBlock,targets=tasks.keys())
-            return self.__client.execute(
-               'exec(job)',block=pgBlock,targets=tasks.keys())
-         return
                
    def parallel_go_keywords(self, **kwargs):
       '''Parallel execution to set keywords
@@ -1052,7 +1135,7 @@ class cluster(object):
       self.__client.execute('import os')
       self.__client.push(dict(clusterdir=clusterdir))
       self.__client.execute('os.chdir(clusterdir)')
-      self.__client.execute("user=os.environ['USER']")
+      self.__client.execute("user=self.__user")
       self.__client.execute('print user')
       #self.__client.execute('import commands')
       #self.__client.execute('(exitstatus, outtext) = commands.getstatusoutput("uname -n")')
@@ -1203,6 +1286,61 @@ class cluster(object):
 
       '''
       return self.__client.keys()
+
+   def push(self, **kwargs):
+      '''set values to the engines
+      @param kekword value to distribute
+      @param targets, the engines of interest
+      By default, this function set the keyword values to all engines.
+      To set values on a subset of engines, use kekword parameter targets,
+      whick takes integer or array of integer of engine ids.
+      You can also use function pgk to set values onto the engines. 
+      Example:
+      c.push(a=[1,3,7.1])
+      c.pull('a')
+      {0: [1, 3, 7.0999999999999996], 1: [1, 3, 7.0999999999999996]}
+      c.push(b=[1.2,3.7], targets=1)
+      c.pull('b',[1])
+      {1: [1.2, 3.7000000000000002]}
+      c.pull('b')
+      {1: [1.2, 3.7000000000000002]}
+
+      '''
+
+      keys = kwargs.keys()
+      #keys.sort()
+      if len(keys)==0:
+          return False
+
+      tgt=[]
+      targets=None
+      for kw in keys:
+         if kw.lower()=='targets':
+            targets=kwargs[kw]
+            break
+
+      if targets=='all' or targets==None or \
+         type(targets)==list and len(targets)==0:
+          tgt=list(xrange(0, len(self.__engines))) 
+      elif type(targets)==list:
+          for j in targets:
+              if type(j)==types.IntType and j>=0:
+                  tgt.append(j)
+      elif type(targets)==int and targets>=0:
+          tgt.append(targets)
+           
+      if len(tgt)==0:
+           print 'no target engines'
+           return False
+
+      ok=True
+      for i in tgt: 
+          try:
+              self.__client.push(dict(kwargs),i)
+          except:
+              ok=Fale 
+
+      return ok
 
    def pull(self, key, targets='all'):
       '''get the value of a key
@@ -1378,6 +1516,9 @@ class cluster(object):
 
   
       '''
+      if type(job)==type(None):
+          print "job None has no status"
+          return True
       try:
          x=job.get_result(block=False)
          if x==None:
@@ -1509,7 +1650,6 @@ do ssh casa-dev-$i "ps -ef | grep hye" ; done
 '''
 c.pgc('import time', {0: 'time.sleep(10); x=5; y="y is y"', 1: 'time.sleep(12);a=7;b="b is not y"'},block=False,job="wakeup")
 
-c.check_job('wakeup')
 c.pull('x',0)
 c.pull('y',0)
 c.pull('a',1)

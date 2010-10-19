@@ -19,6 +19,7 @@ class imstat_test(unittest.TestCase):
     s0_015 = '0.015arcsec_pix.im'
     s0_0015 = '0.0015arcsec_pix.im'
     s0_00015 = '0.00015arcsec_pix.im'
+    linear_coords = 'linearCoords.fits'
     res = None
 
     def setUp(self):
@@ -27,8 +28,13 @@ class imstat_test(unittest.TestCase):
         self.datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/imstat/'
     
     def tearDown(self):
-        for dir in [self.moment, self.s150, self.s15, self.s0_015, self.s0_0015, self.s0_00015]:
-            if (os.path.exists(dir)):
+        for dir in [
+            self.moment, self.s150, self.s15, self.s0_015, self.s0_0015,
+            self.s0_00015, self.linear_coords
+        ]:
+            if os.path.isfile(dir):
+                os.remove(dir)
+            elif (os.path.exists(dir)):
                 shutil.rmtree(dir)
 
     def test001(self):
@@ -81,6 +87,7 @@ class imstat_test(unittest.TestCase):
         ia.open(self.s0_015)
         stats = ia.statistics()
         ia.close()
+        print "*** " + str(stats['blcf'])
         self.assertTrue(stats['blcf'] == '15:22:00.1285, +05.03.58.0800, I, 1.41332e+09Hz') 
         self.assertTrue(stats['maxposf'] == '15:22:00.0040, +05.04.00.0450, I, 1.41332e+09Hz')
         self.assertTrue(stats['minposf'] == '15:22:00.1285, +05.03.59.7600, I, 1.41332e+09Hz')
@@ -114,7 +121,27 @@ class imstat_test(unittest.TestCase):
         box = '0, 0,  1 ,   1'
         stats = imstat(imagename=self.s0_00015, box=box)
         self.assertTrue(stats['npts'] == 4) 
-
+        
+    def test008(self):
+        """ Test 8: verify fix for CAS-2195"""
+        def test_statistics(image):
+            ia.open(myim)
+            stats = ia.statistics()
+            ia.done()
+            return stats
+        
+        def test_imstat(image):
+            return imstat(image)
+            
+        myim = self.linear_coords
+        shutil.copy(self.datapath + myim, myim)
+        expected_max = [3, 10]
+        expected_min = [4, 0]
+        for code in [test_statistics, test_imstat]:
+            stats = code(myim)
+            self.assertTrue((stats['maxpos'] == expected_max).all())
+            self.assertTrue((stats['minpos'] == expected_min).all())
+            
 def suite():
     return [imstat_test]
 

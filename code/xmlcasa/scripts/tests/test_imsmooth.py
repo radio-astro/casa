@@ -83,13 +83,7 @@
 # or
 #
 # # This example shows who to run it manually from with casapy.
-# sys.path.append( os.environ["CASAPATH"].split()[0]+'/code/xmlcasa/scripts/regressions/admin' )
-# import runUnitTest
 # runUnitTest.main(['imcontsub_test'])
-#
-# To test the script by itself, ie. not with test infrastructure.
-# where WORKING_DIR is where you'll run the script
-#       CASA_REPOS is where casa is installed
 #
 # </example>
 #
@@ -139,6 +133,9 @@ class imsmooth_test1(unittest.TestCase):
     def tearDown(self):
         for file in list:
             os.system('rm -rf ' +file)
+            os.system('rm -rf input_test*')
+            os.system('rm -rf rgn*')
+            os.system('rm -rf smooth*')
     
     ####################################################################
     # Incorrect inputs to parameters.  The parameters are:
@@ -1122,6 +1119,7 @@ class imsmooth_test2(unittest.TestCase):
 
     def tearDown(self):
         os.system('rm -rf ' +targetres_im)
+        os.system('rm -rf tr!.im')
 
     def test_targetres(self):
         '''Imsmooth: Targetres tests'''

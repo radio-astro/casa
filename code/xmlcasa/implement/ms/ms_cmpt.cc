@@ -31,7 +31,7 @@
 #include <sys/wait.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Exceptions/Error.h>
-#include <xmlcasa/ms/ms_cmpt.h>
+#include <ms_cmpt.h>
 #include <xmlcasa/ms/Statistics.h>
 #include <msfits/MSFits/MSFitsInput.h>
 #include <msfits/MSFits/MSFitsOutput.h>
@@ -42,6 +42,7 @@
 #include <ms/MeasurementSets/MSConcat.h>
 #include <ms/MeasurementSets/MSFlagger.h>
 #include <ms/MeasurementSets/MSSelectionTools.h>
+#include <ms/MeasurementSets/MSMainColumns.h>
 #include <msvis/MSVis/MSAnalysis.h>
 #include <msvis/MSVis/MSContinuumSubtractor.h>
 #include <msvis/MSVis/SubMS.h>
@@ -644,11 +645,16 @@ ms::statistics(const std::string& column,
          else {
            sel_p = itsMS;
          }
-
          
+         // Be more flexible about column, i.e.
+         // "MODEL_DATA"}
+         // "model"     } => "MODEL",
+         // "antenna2"    => "ANTENNA2"
+         String mycolumn(upcase(column).before("_DATA"));
+
          *itsLog << "Use " << itsMS->tableName() <<
            ", useflags = " << useflags << LogIO::POST;
-         *itsLog << "Compute statistics on " << column;
+         *itsLog << "Compute statistics on " << mycolumn;
          
          if (complex_value != "") {
            *itsLog << ", use " << complex_value;
@@ -725,11 +731,11 @@ ms::statistics(const std::string& column,
                             "FLAG_ROW");
              }
 
-             if (column == "DATA" || column == "CORRECTED" || column == "MODEL") {
+             if (mycolumn == "DATA" || mycolumn == "CORRECTED" || mycolumn == "MODEL") {
                  ROVisibilityIterator::DataColumn dc;
-                 if(column == "DATA")
+                 if(mycolumn == "DATA")
                    dc = ROVisibilityIterator::Observed;
-                 else if(column == "CORRECTED")
+                 else if(mycolumn == "CORRECTED")
                    dc = ROVisibilityIterator::Corrected;
                  else
                    dc = ROVisibilityIterator::Model;
@@ -738,9 +744,9 @@ ms::statistics(const std::string& column,
                                dc);
                  
                  append<Complex>(data_complex, length, nrow, data_complex_chunk,
-                                 column);
+                                 mycolumn);
              }
-             else if (column == "UVW") {
+             else if (mycolumn == "UVW") {
                  Vector<RigidVector<Double, 3> > uvw;
                  vi.uvw(uvw);
                  
@@ -750,9 +756,9 @@ ms::statistics(const std::string& column,
                    static_cast<Matrix<Double> >(data_double_chunk)(1, i) = uvw(i)(1);
                    static_cast<Matrix<Double> >(data_double_chunk)(2, i) = uvw(i)(2);
                  }
-                 append<Double>(data_double, length, nrow, data_double_chunk, column);
+                 append<Double>(data_double, length, nrow, data_double_chunk, mycolumn);
              }
-             else if (column == "UVRANGE") {
+             else if (mycolumn == "UVRANGE") {
                  Vector<RigidVector<Double, 3> > uvw;
                  vi.uvw(uvw);
                  
@@ -761,74 +767,70 @@ ms::statistics(const std::string& column,
                    static_cast<Vector<Double> >(data_double_chunk)(i) = 
                      sqrt( uvw(i)(0)*uvw(i)(0) + uvw(i)(1)*uvw(i)(1) );
                  }
-                 append<Double>(data_double, length, nrow, data_double_chunk, column);
+                 append<Double>(data_double, length, nrow, data_double_chunk, mycolumn);
              }
-             else if (column == "FLAG") {
+             else if (mycolumn == "FLAG") {
                  vi.flag(static_cast<Cube<Bool>&>(data_bool_chunk));
-                 append<Bool>(data_bool, length, nrow, data_bool_chunk, column);
+                 append<Bool>(data_bool, length, nrow, data_bool_chunk, mycolumn);
              }
-             else if (column == "WEIGHT") {
+             else if (mycolumn == "WEIGHT") {
                  vi.weightMat(static_cast<Matrix<Float>&>(data_float_chunk));
-                 append<Float>(data_float, length, nrow, data_float_chunk, column);
+                 append<Float>(data_float, length, nrow, data_float_chunk, mycolumn);
              }
-             else if (column == "SIGMA") {
+             else if (mycolumn == "SIGMA") {
                  vi.sigmaMat(static_cast<Matrix<Float>&>(data_float_chunk));
-                 append<Float>(data_float, length, nrow, data_float_chunk, column);
+                 append<Float>(data_float, length, nrow, data_float_chunk, mycolumn);
              }
-             else if (column == "IMAGING_WEIGHT") {
-                 vi.imagingWeight(static_cast<Matrix<Float>&>(data_float_chunk));
-                 append<Float>(data_float, length, nrow, data_float_chunk, column);
-             }
-             else if (column == "ANTENNA1") {
+             else if (mycolumn == "ANTENNA1") {
                  vi.antenna1(static_cast<Vector<Int>&>(data_int_chunk));
-                 append<Int>(data_int, length, nrow, data_int_chunk, column);
+                 append<Int>(data_int, length, nrow, data_int_chunk, mycolumn);
              }
-             else if (column == "ANTENNA2") {
+             else if (mycolumn == "ANTENNA2") {
                  vi.antenna2(static_cast<Vector<Int>&>(data_int_chunk));
-                 append<Int>(data_int, length, nrow, data_int_chunk, column);
+                 append<Int>(data_int, length, nrow, data_int_chunk, mycolumn);
              }
-             else if (column == "FEED1") {
+             else if (mycolumn == "FEED1") {
                  vi.feed1(static_cast<Vector<Int>&>(data_int_chunk));
-                 append<Int>(data_int, length, nrow, data_int_chunk, column);
+                 append<Int>(data_int, length, nrow, data_int_chunk, mycolumn);
              }
-             else if (column == "FEED2") {
+             else if (mycolumn == "FEED2") {
                  vi.feed2(static_cast<Vector<Int>&>(data_int_chunk));
-                 append<Int>(data_int, length, nrow, data_int_chunk, column);
+                 append<Int>(data_int, length, nrow, data_int_chunk, mycolumn);
              }
-             else if (column == "FIELD_ID") {
+             else if (mycolumn == "FIELD_ID") {
                  data_int_chunk.resize(IPosition(1, 1));
                  data_int_chunk(IPosition(1, 0)) = vi.fieldId();
-                 append<Int>(data_int, length, nrow, data_int_chunk, column);
+                 append<Int>(data_int, length, nrow, data_int_chunk, mycolumn);
              }
-             else if (column == "ARRAY_ID") {
+             else if (mycolumn == "ARRAY_ID") {
                  data_int_chunk.resize(IPosition(1, 1));
                  data_int_chunk(IPosition(1, 0)) = vi.arrayId();
-                 append<Int>(data_int, length, nrow, data_int_chunk, column);
+                 append<Int>(data_int, length, nrow, data_int_chunk, mycolumn);
              }
-             else if (column == "DATA_DESC_ID") {
+             else if (mycolumn == "DATA_DESC_ID") {
                  data_int_chunk.resize(IPosition(1, 1));
                  data_int_chunk(IPosition(1, 0)) = vi.dataDescriptionId();
-                 append<Int>(data_int, length, nrow, data_int_chunk, column);
+                 append<Int>(data_int, length, nrow, data_int_chunk, mycolumn);
              }
-             else if (column == "FLAG_ROW") {
+             else if (mycolumn == "FLAG_ROW") {
                  vi.flagRow(static_cast<Vector<Bool>&>(data_bool_chunk));
-                 append<Bool>(data_bool, length, nrow, data_bool_chunk, column);
+                 append<Bool>(data_bool, length, nrow, data_bool_chunk, mycolumn);
              }
-             else if (column == "INTERVAL") {
+             else if (mycolumn == "INTERVAL") {
                  vi.timeInterval(static_cast<Vector<Double>&>(data_double_chunk));
-                 append<Double>(data_double, length, nrow, data_double_chunk, column);
+                 append<Double>(data_double, length, nrow, data_double_chunk, mycolumn);
              }
-             else if (column == "SCAN_NUMBER" || column == "SCAN") {
+             else if (mycolumn == "SCAN_NUMBER" || mycolumn == "SCAN") {
                  vi.scan(static_cast<Vector<Int>&>(data_int_chunk));
-                 append<Int>(data_int, length, nrow, data_int_chunk, column);
+                 append<Int>(data_int, length, nrow, data_int_chunk, mycolumn);
              }
-             else if (column == "TIME") {
+             else if (mycolumn == "TIME") {
                  vi.time(static_cast<Vector<Double>&>(data_double_chunk));
-                 append<Double>(data_double, length, nrow, data_double_chunk, column);
+                 append<Double>(data_double, length, nrow, data_double_chunk, mycolumn);
              }
-             else if (column == "WEIGHT_SPECTRUM") {
+             else if (mycolumn == "WEIGHT_SPECTRUM") {
                  vi.weightSpectrum(static_cast<Cube<Float>&>(data_float_chunk));
-                 append<Float>(data_float, length, nrow, data_float_chunk, column);
+                 append<Float>(data_float, length, nrow, data_float_chunk, mycolumn);
              }
              else {
                  stringstream ss;
@@ -892,7 +894,7 @@ ms::statistics(const std::string& column,
 
            Vector<Complex> v(data_complex.reform(IPosition(1, data_complex.shape().product())));
            retval = fromRecord(Statistics<Complex>::get_stats_complex(v, f,
-                                                                      column, 
+                                                                      mycolumn, 
                                                                       supported,
                                                                       complex_value));
          }
@@ -902,21 +904,21 @@ ms::statistics(const std::string& column,
                  f = Vector<Bool>(data_double.shape()(1), false);
                  retval = fromRecord(Statistics<Double>::get_stats_array(static_cast<Matrix<Double> >(data_double),
                                                                      f,
-                                                                     column,
+                                                                     mycolumn,
                                                                      supported));
              
            }
            else {
                retval = fromRecord(Statistics<Double>::get_stats(data_double.reform(IPosition(1, data_double.shape().product())),
                                                                f,
-                                                               column,
+                                                               mycolumn,
                                                                supported));
            }
          }
          else if (data_bool.nelements() > 0) {
              retval = fromRecord(Statistics<Bool>::get_stats(data_bool.reform(IPosition(1, data_bool.shape().product())),
                                                              f,
-                                                             column,
+                                                             mycolumn,
                                                              supported));
          }
          else if (data_float.nelements() > 0) {
@@ -925,20 +927,20 @@ ms::statistics(const std::string& column,
                  f = Vector<Bool>(data_float.shape()(1), false);
                  retval = fromRecord(Statistics<Float>::get_stats_array(static_cast<Matrix<Float> >(data_float),
                                                                         f,
-                                                                        column,
+                                                                        mycolumn,
                                                                         supported));
              }
              else {
                retval = fromRecord(Statistics<Float>::get_stats(data_float.reform(IPosition(1, data_float.shape().product())),
                                                                 f,
-                                                                column,
+                                                                mycolumn,
                                                                 supported));
              }
          }
          else if (data_int.nelements() > 0) {
              retval = fromRecord(Statistics<Int>::get_stats(data_int.reform(IPosition(1, data_int.shape().product())),
                                                             f,
-                                                            column,
+                                                            mycolumn,
                                                             supported));
          }
          else {
@@ -1095,7 +1097,8 @@ ms::regridspw(const std::string& outframe,
 	      const double regrid_start, 
 	      const double regrid_center, 
 	      const double regrid_bandwidth, 
-	      const double regrid_chan_width 
+	      const double regrid_chan_width,
+	      const bool hanning
 	      )
 {
   Bool rstat(False);
@@ -1150,7 +1153,8 @@ ms::regridspw(const std::string& outframe,
 				 t_regridInterpMeth,
 				 Double(center), 
 				 Double(regrid_bandwidth),
-				 Double(regrid_chan_width)
+				 Double(regrid_chan_width),
+				 hanning
 				 )
 	 )==1){ // successful modification of the MS took place
        *itsLog << LogIO::NORMAL << "Spectral frame transformation/regridding completed." << LogIO::POST;
@@ -1197,9 +1201,14 @@ ms::cvel(const std::string& mode,
 	 const ::casac::variant& phasec, 
 	 const ::casac::variant& restfreq, 
 	 const std::string& outframe,
-	 const std::string& veltype)
+	 const std::string& veltype,
+	 const bool hanning)
 {
   Bool rstat(False);
+
+  Bool hanningDone(False);
+  SubMS *sms = 0;
+
   try {
 
     *itsLog << LogOrigin("ms", "cvel");
@@ -1212,6 +1221,8 @@ ms::cvel(const std::string& mode,
       t_restfreq = casaQuantity(restfreq).getValue("Hz");
     }
 
+    Bool t_doHanning = hanning;
+
     // Determine grid
     Double t_cstart = -9e99; // default value indicating that the original start of the SPW should be used
     Double t_bandwidth = -1.; // default value indicating that the original width of the SPW should be used
@@ -1219,6 +1230,8 @@ ms::cvel(const std::string& mode,
     Int t_nchan = -1; 
     Int t_width = 0;
     Int t_start = -1;
+    Bool t_startIsEnd = False; // False means that start specifies the lower end in frequency (default)
+                               // True means that start specifies the upper end in frequency
 
     if(!start.toString().empty()){ // start was set
       if(t_mode == "channel"){
@@ -1236,16 +1249,32 @@ ms::cvel(const std::string& mode,
     }
     if(!width.toString().empty()){ // channel width was set
       if(t_mode == "channel"){
-	t_width = abs(atoi(width.toString().c_str()));
+	Int w = atoi(width.toString().c_str());
+	t_width = abs(w);
+	if(w<0){
+	  t_startIsEnd = True;
+	}
       }
       else if(t_mode == "channel_b"){
-	t_cwidth = abs(Double(atoi(width.toString().c_str())));
+	Double w = atoi(width.toString().c_str());
+	t_cwidth = abs(w);
+	if(w<0){
+	  t_startIsEnd = True;
+	}	
       }
       else if(t_mode == "frequency"){
-	t_cwidth = abs(casaQuantity(width).getValue("Hz"));
+	Double w = casaQuantity(width).getValue("Hz");
+	t_cwidth = abs(w);
+	if(w<0){
+	  t_startIsEnd = True;
+	}	
       }
       else if(t_mode == "velocity"){
-	t_cwidth = abs(casaQuantity(width).getValue("m/s"));   
+	Double w = casaQuantity(width).getValue("m/s");
+	t_cwidth = abs(w);
+	if(w>=0){
+	  t_startIsEnd = True; 
+	}		
       }
     }
     if(nchan > 0){ // number of output channels was set
@@ -1342,7 +1371,7 @@ ms::cvel(const std::string& mode,
 
     *itsLog << LogOrigin("ms", "cvel");
 
-    SubMS *sms = new SubMS(originalName, Table::Update);
+    sms = new SubMS(originalName, Table::Update);
 
     *itsLog << LogIO::NORMAL << "Starting combination of spectral windows ..." << LogIO::POST;
 
@@ -1374,15 +1403,22 @@ ms::cvel(const std::string& mode,
 			      t_cstart, 
 			      t_bandwidth,
 			      t_cwidth,
+			      t_doHanning,
 			      t_phasec_fieldid, // == -1 if t_phaseCenter is valid
 			      t_phaseCenter,
 			      True, // use "center is start" mode
+			      t_startIsEnd,			      
 			      t_nchan,
 			      t_width,
 			      t_start
 			      )
 	)==1){ // successful modification of the MS took place
+      hanningDone = t_doHanning;
+
       *itsLog << LogIO::NORMAL << "Spectral frame transformation/regridding completed." << LogIO::POST;
+      if(hanningDone){
+	*itsLog << LogIO::NORMAL << "Hanning smoothing was applied." << LogIO::POST;
+      }
       
       // Update HISTORY table of modfied MS
       String message = "Transformed/regridded with cvel";
@@ -1406,6 +1442,9 @@ ms::cvel(const std::string& mode,
       *itsLog << LogIO::NORMAL << "SubMS not modified by regridding." << LogIO::POST;
       rstat = True;
     }       
+
+    delete sms;
+    sms = 0;
 
     if(rstat){
       // print parameters of final SPW
@@ -1449,19 +1488,28 @@ ms::cvel(const std::string& mode,
 
       for(Int i=0; i<totNumChan-1; i++){
 	if( abs((cf(i)+cw(i)/2.) - (cf(i+1)-cw(i+1)/2.))>0.1 ){
-	  *itsLog << LogIO::WARN << "Internal error: Center of channel i " << i <<  " is off nominal center by " 
+	  *itsLog << LogIO::WARN << "Internal error: Center of channel " << i <<  " is off nominal center by " 
 		  << ((cf(i)+cw(i)/2.) - (cf(i+1)-cw(i+1)/2.)) << " Hz" << LogIO::POST;
 	}
       }
     } 
     
-    delete sms;
-    open(originalName,  Table::Update, False);
+    if(rstat){ // re-open MS for writing, unlocked
+      open(originalName,  False, False); 
+      *itsLog << LogOrigin("ms", "cvel");
+       if(!hanningDone && t_doHanning){ 
+	 // still need to Hanning Smooth
+	 hanningsmooth("all");
+       }
+    }
 
   } catch (AipsError x) {
-      *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-      Table::relinquishAutoLocks(True);
-      RETHROW(x);
+    if(sms){
+      delete sms;
+    }
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    Table::relinquishAutoLocks(True);
+    RETHROW(x);
   }
   Table::relinquishAutoLocks(True);
   return rstat;
@@ -1646,14 +1694,14 @@ ms::timesort(const std::string& msname)
 }
 
 bool
-ms::split(const std::string&      outputms,  const ::casac::variant& field, 
-	  const ::casac::variant& spw,       const std::vector<int>& step,
-          const ::casac::variant& antenna,   const ::casac::variant& timebin,
-          const std::string&      timerange, const ::casac::variant& scan,
-          const ::casac::variant& uvrange,   const std::string&      taql,
-          const std::string&      whichcol,  const ::casac::variant& tileShape,
-          const ::casac::variant& subarray,  const bool averchan,
-          const std::string&      ignorables)
+ms::split(const std::string&      outputms,   const ::casac::variant& field, 
+	  const ::casac::variant& spw,        const std::vector<int>& step,
+          const ::casac::variant& antenna,    const ::casac::variant& timebin,
+          const std::string&      timerange,  const ::casac::variant& scan,
+          const ::casac::variant& uvrange,    const std::string&      taql,
+          const std::string&      whichcol,   const ::casac::variant& tileShape,
+          const ::casac::variant& subarray,   const bool averchan,
+          const std::string&      ignorables, const std::string& correlation)
 {
   Bool rstat(False);
   try {
@@ -1678,10 +1726,13 @@ ms::split(const std::string&      outputms,  const ::casac::variant& field,
      String t_uvrange = toCasaString(uvrange);
      String t_taql(taql);
      const String t_subarray = toCasaString(subarray);
+     String t_correlation = upcase(correlation);
+     //if(t_correlation == "")
+     //  t_correlation = "*";   // * doesn't work.
      
      if(!splitter->setmsselect(t_spw, t_field, t_antenna, t_scan, t_uvrange, 
                                t_taql, Vector<Int>(step), averchan,
-                               t_subarray)){
+                               t_subarray, t_correlation)){
        *itsLog << LogIO::SEVERE
                << "Error selecting data."
                << LogIO::POST;
@@ -2101,7 +2152,7 @@ ms::msseltoindex(const std::string& vis, const ::casac::variant& spw,
 }
 
 bool
-ms::hanningsmooth()
+ms::hanningsmooth(const std::string& datacolumn)
 {
   Bool rstat(False);
   try {
@@ -2109,7 +2160,7 @@ ms::hanningsmooth()
      if(!ready2write_()){
        *itsLog << LogIO::SEVERE
 	       << "Please open ms with parameter nomodify=false so "
-	       << "smoothed channel data can be stored (in the CORRECTED_DATA column)."
+	       << "smoothed channel data can be stored."
 	       << LogIO::POST;
        return rstat;
      }
@@ -2117,9 +2168,25 @@ ms::hanningsmooth()
      Block<int> noSort;
      Matrix<Int> allChannels;
      Double intrvl = 0;
-
-     VisSet vs(*itsMS,noSort,allChannels,intrvl);
-     VisSetUtil::HanningSmooth(vs);
+     String dcol(datacolumn);
+     dcol.downcase();
+     Bool addScratch = !(dcol=="data") && !(dcol=="all"); // don't add scratch columns if they don't exist already
+                                                          // and the requested output column is == "data" or "all"
+     VisSet vs(*itsMS, noSort, allChannels, addScratch, intrvl, False);
+     if(dcol=="all"){
+       MSMainColumns mainCols(*itsMS);
+       if(!mainCols.correctedData().isNull()){ // there are scratch columns
+	 *itsLog << LogIO::NORMAL << "Smoothing MS Main Table column CORRECTED_DATA ... " << LogIO::POST;
+	 VisSetUtil::HanningSmooth(vs, "corrected");
+       }
+       *itsLog << LogIO::NORMAL << "Smoothing MS Main Table column DATA ... " << LogIO::POST;
+       VisSetUtil::HanningSmooth(vs, "data");
+     }
+     else{
+       *itsLog << LogIO::NORMAL << "Smoothing MS Main Table column \'" 
+	       << datacolumn << "\'" << LogIO::POST;
+       VisSetUtil::HanningSmooth(vs, datacolumn);
+     }
 
      rstat = True;
   } catch (AipsError x) {

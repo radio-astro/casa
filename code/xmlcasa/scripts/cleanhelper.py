@@ -1,3 +1,4 @@
+##loolooaaa
 import casac
 import os
 import commands
@@ -564,13 +565,20 @@ class cleanhelper:
                 ia.removefile('__temp_mask')
                 ia.removefile('__temp_mask2')
             #make image a mask image i.e 1 and 0 only
+            #   make a copy of mask image again since 
+            #   the image name may contain / , +, - which may causes
+            #   problem in evaluating iif.
+            self.copymaskimage(outputmask, shp, '__temp_mask')
             ia.open(outputmask)
             ###getchunk is a mem hog
             #arr=ia.getchunk()
             #arr[arr>0.01]=1
             #ia.putchunk(arr)
-            ia.calc(pixels='iif('+outputmask.replace('/','\/')+'>0.01, 1, 0)')
+            #inpix="iif("+"'"+outputmask.replace('/','\/')+"'"+">0.01, 1, 0)"
+            #ia.calc(pixels=inpix)
+            ia.calc(pixels="iif(__temp_mask>0.01, 1, 0)")
             ia.close()
+            ia.removefile('__temp_mask')
         #pdb.set_trace()
         #### This goes when those tablerecord goes
         if(len(tablerecord) > 0):
@@ -626,23 +634,9 @@ class cleanhelper:
         #weighting and tapering should be done together
         if(weighting=='natural'):
             mosweight=False
-        if(mosweight):
-            calready=True
-            for k in self.fieldindex :
-                self.im.selectvis(field=k, spw=self.spwindex,time=timerange, usescratch=calready)
-                self.im.weight(type=weighting,rmode=rmode,robust=robust, npixels=npixels, noise=qa.quantity(noise,'Jy'))
-            ###now redo the selectvis
-            #self.im.selectvis(field=field,spw=spw,time=timerange,
-            #                  baseline=antenna, scan=scan, uvrange=uvrange, usescratch=calready)
-            self.im.selectvis(nchan=nchan,start=start,step=width,field=field,spw=spw,time=timerange,
+        self.im.selectvis(nchan=nchan,start=start,step=width,field=field,spw=spw,time=timerange,
                               baseline=antenna, scan=scan, uvrange=uvrange, usescratch=calready)
-        else:
-            #self.im.selectvis(field=field,spw=spw,time=timerange,
-            #                  baseline=antenna, scan=scan, uvrange=uvrange, usescratch=calready)
-            self.im.selectvis(nchan=nchan,start=start,step=width,field=field,spw=spw,time=timerange,
-                              baseline=antenna, scan=scan, uvrange=uvrange, usescratch=calready)
-            self.im.weight(type=weighting,rmode=rmode,robust=robust,
-                           npixels=npixels, noise=qa.quantity(noise, 'Jy'))
+        self.im.weight(type=weighting,rmode=rmode,robust=robust, npixels=npixels, noise=qa.quantity(noise,'Jy'), mosaic=mosweight)
         if((type(outertaper)==list) and (len(outertaper) > 0)):
             if(len(outertaper)==1):
                 outertaper.append(outertaper[0])
@@ -1986,13 +1980,18 @@ class cleanhelper:
         qat=qatool.create();
         q = qat.quantity
 
-        if len(spw)==1:
-            if width>1:
-                visnchan=width
-            else:
-                visnchan=1
-        else:
-            visnchan=-1
+        # 2010-08-18 note: disable this. Has the problem 
+        # getting imaging weights correctly when the beginning 
+        # channels were flagged.
+        #if type(spw)==int or len(spw)==1:
+        #    if width>1:
+        #        visnchan=width
+        #    else:
+        #        visnchan=1
+        #else:
+        #    visnchan=-1
+
+        visnchan=-1
         retparms['visnchan']=visnchan
         visstart=0
 
@@ -2112,7 +2111,11 @@ def getAlgorithm(psfmode, imagermode, gridmode, mode,
 
     if ((mode == 'mfs') and (nterms > 1)): 
         alg = 'msmfs';
-        if (multifield): addMultiField = True;
+        if(imagermode == 'mosaic'): 
+               raise Exception, 'msmfs (nterms>1) not allowed with imagermode=' + imagermode + '. For now, msmfs automatically performs cs-clean type iterations';
+        if (multifield): 
+		addMultiField = True;
+		raise Exception, 'For now, msmfs (nterms>1) is not allowed in multi-field mode. Please supply a single image name.'
 
 #    if (gridmode == 'widefield'): alg='mfclark';
 
@@ -2133,60 +2136,7 @@ def getAlgorithm(psfmode, imagermode, gridmode, mode,
 # if facets > 1 && mutliscale ==> fail
 
 
-    if (addMultiField and (alg[0:2] != 'mf')):  alg = 'mf' + alg;
+    if (addMultiField and (alg[0:2] != 'mf') and (alg != 'msmfs')):  alg = 'mf' + alg;
     return alg;
 
-# Function to compute Calculate alpha
-def SimCalcAlphaBeta(imtemplate="",taylorlist=[],namealpha="",namebeta="",threshold=0.001):
-    nterms = len(taylorlist);
-    if(nterms>1):
-     if(not os.path.exists(namealpha)):
-       cpcmd = 'cp -r ' + imtemplate + ' ' + namealpha;
-       os.system(cpcmd);
-    if(nterms>2):
-     if(not os.path.exists(namebeta)):
-       cpcmd = 'cp -r ' + imtemplate + ' ' + namebeta;
-       os.system(cpcmd);
-    if(nterms>0):
-     ia.open(taylorlist[0]);
-     ptay0 = ia.getchunk();
-     ia.close();
-    if(nterms>1):
-     ia.open(taylorlist[1]);
-     ptay1 = ia.getchunk();
-     ia.close();
-     ia.open(namealpha);
-     alpha = ia.getchunk();
-     alpha.fill(0.0);
-     ia.close();
-    if(nterms>2):
-     ia.open(taylorlist[2]);
-     ptay2 = ia.getchunk();
-     ia.close();
-     ia.open(namebeta);
-     beta = ia.getchunk();
-     beta.fill(0.0);
-     ia.close();
-   # Calc alpha,beta from ptay0,ptay1,ptay2
-    N = ptay0.shape[0];
-    if(nterms>1):
-     for ii in range(0,N):
-       for jj in range(0,N):
-         if(ptay0[ii,jj,0,0]>threshold):
-	    mtay0 = ptay0[ii,jj,0,0];
-	    mtay1 = ptay1[ii,jj,0,0];
-	    alphaval = mtay1/mtay0;
-	    alpha[ii,jj,0,0] = alphaval;
-	    if(nterms>2):
-	       mtay2 = ptay2[ii,jj,0,0];
-	       beta[ii,jj,0,0] = (mtay2/mtay0) - 0.5*alphaval*(alphaval-1);
-       if(ii%100 == 0):
-	 print ii;
-    if(nterms>1):
-     ia.open(namealpha);
-     ia.putchunk(alpha);
-     ia.close();
-    if(nterms>2):
-     ia.open(namebeta);
-     ia.putchunk(beta);
-     ia.close();
+

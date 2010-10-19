@@ -158,15 +158,15 @@ void PlotMSMultiAxesTab::update(const PlotMSPlot& plot) {
                        (PMS::axisIsData(x[i]) &&
                         c->xDataColumns()[i] != c2->xDataColumns()[i]));
         
-        changedText(itsXAxes_.axis(i)->dataLabel(), d->isSet() &&
+        highlightWidgetText(itsXAxes_.axis(i)->dataLabel(), d->isSet() &&
                     c->xDataColumns()[i] != c2->xDataColumns()[i]);
-        changedText(itsXAxes_.axis(i)->attachLabel(), d->isSet() &&
+        highlightWidgetText(itsXAxes_.axis(i)->attachLabel(), d->isSet() &&
                     a->xAxis(i) != a2->xAxis(i));
-        changedText(itsXAxes_.axis(i)->rangeLabel(), d->isSet() &&
+        highlightWidgetText(itsXAxes_.axis(i)->rangeLabel(), d->isSet() &&
                     (a->xRangeSet(i) != a2->xRangeSet(i) || (a->xRangeSet(i) &&
                     a->xRange(i) != a2->xRange(i))));
     }
-    changedText(xLabel, changed);
+    highlightWidgetText(xLabel, changed);
     
     changed = d->isSet() && c->numYAxes() != c2->numYAxes();
     for(unsigned int i = 0; i < y.size(); i++) {
@@ -181,15 +181,15 @@ void PlotMSMultiAxesTab::update(const PlotMSPlot& plot) {
                        (PMS::axisIsData(y[i]) &&
                         c->yDataColumns()[i] != c2->yDataColumns()[i]));
         
-        changedText(itsYAxes_.axis(i)->dataLabel(), d->isSet() &&
+        highlightWidgetText(itsYAxes_.axis(i)->dataLabel(), d->isSet() &&
                     c->yDataColumns()[i] != c2->yDataColumns()[i]);
-        changedText(itsYAxes_.axis(i)->attachLabel(), d->isSet() &&
+        highlightWidgetText(itsYAxes_.axis(i)->attachLabel(), d->isSet() &&
                     a->yAxis(i) != a2->yAxis(i));
-        changedText(itsYAxes_.axis(i)->rangeLabel(), d->isSet() &&
+        highlightWidgetText(itsYAxes_.axis(i)->rangeLabel(), d->isSet() &&
                     (a->yRangeSet(i) != a2->yRangeSet(i) || (a->yRangeSet(i) &&
                     a->yRange(i) != a2->yRange(i))));
     }
-    changedText(yLabel, changed);
+    highlightWidgetText(yLabel, changed);
 }
 
 

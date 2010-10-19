@@ -294,7 +294,7 @@ def imhead(imagename=None,mode=None,hdkey=None,hdvalue=None,hdtype=None,hdcommen
         hd_units['minpixpos']       = "pixels"
         hd_comments['minpixpos']    = ""                                
 
-    if ( stats.has_key('msx' ) ):    
+    if ( stats.has_key('max' ) ):    
         hd_values['datamax']      = stats['max'][0]
         hd_types['datamax']       = "double"
         hd_units['datamax']       = data_unit

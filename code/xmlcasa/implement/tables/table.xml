@@ -169,10 +169,10 @@ to use virtual columns as well.
 <returns type="casatable"/>
 
 <example>
-\begin{verbatim}
+
   table1:=table("3C273XC1.MS");
   table1.browse();
-\end{verbatim}
+
 </example>
 <comments>
 
@@ -568,7 +568,7 @@ hardly ever needed.
 <returns type="bool"/>
 
 <example>
-\begin{verbatim}
+
 
   # First let's make a table for testing
   def maketesttable():
@@ -585,17 +585,17 @@ hardly ever needed.
   tb.open("3C273XC1.MS")
   tb.browse()
   tb.close()
-\end{verbatim}
+
 
 The first line opens an existing table 3C273XC1.MS, the second browses
 it using the <link anchor="table:table.browse.function">browse</link> function.
 
-\begin{verbatim}
+
   tb.open("3C273XC1.MS", nomodify=False, lockoptions='user')
   tb.lock();
   tb.addrows();
   tb.unlock();
-\end{verbatim}
+
 
 In this example explicit user locking is used. The function lock
 is needed to acquire a (write) lock before the addrows is done.
@@ -603,6 +603,135 @@ Thereafter the lock is released to give other processes the chance
 to operate on the table.
 \\Note that releasing a lock implies flushing the table, so doing
 that very often can be quite expensive.
+
+</example>
+
+</method>
+
+   <method type="function" name="create">
+   <shortdescription>create a new table</shortdescription>
+   
+<description>
+	Create a new \casa\ Table.
+
+Most of the time you just need to specify the table's name and a description of
+its format.
+
+A table can be shared by multiple processes by using the appropriate
+locking options. The possible options are:
+\\- auto: let the system take care of locking. At regular time
+intervals these autolocks are released to give other processes the
+opportunity to access the table. <!-- The aipsrc variable
+\\\texttt{table.relinquish.reqautolocks.interval} defines the number
+of seconds between releasing autolocks on tables needed in another process.
+\\\texttt{table.relinquish.allautolocks.interval} defines the number
+of seconds between releasing all autolocks.-->
+\\- autonoread: as auto, but no read locking is needed. This must be
+used with care, because it means that reading can be done while
+the table tool is not synchronized with the table file (as is
+normally done when a lock is acquired). The function \texttt{resync}
+can be used to explicitly synchronize the table tool
+\\- user: the user takes care by explicit calls to lock and unlock
+\\- usernoread: as user and the no readlocking behaviour of autonoread.
+\\- permanent: use a permanent lock; the constructor fails when the table is
+already in use in another process
+\\- permanentwait: as above, but wait until the other process
+releases its lock
+\\- default: this is the default option.
+If the given table is already open, the locking option in use is not
+changed. Otherwise it reverts to auto.
+\\When auto locking is used, it is possible to give a record containing
+the fields option, interval, and/or maxwait. In this way advanced
+users have full control over the locking options. In practice this is
+hardly ever needed.
+
+
+</description>
+<input>
+  <param type="string" name="tablename">
+    <value></value>
+  </param>
+  <param type="any" name="tabledesc">
+    <description>description of the table's format</description>
+    <any type="record"/>
+    <value></value>
+  </param>
+  <param type="any" name="lockoptions">
+    <description>locking to be used</description>
+    <any type="record"/>
+    <value>default</value>
+  </param>
+  <param type="string" name="endianformat">
+    <value></value>
+  </param>
+  <param type="string" name="memtype">
+    <value></value>
+  </param>
+  <param type="int" name="nrow">
+    <value>0</value>
+  </param>
+  <param type="any" name="dminfo">
+    <description>Data Manager information</description>
+    <any type="record"/>
+    <value></value>
+  </param>
+</input>
+<returns type="bool"/>
+
+<example>
+
+
+  # First let's get sample descriptions of a table and its data managers.
+  import os, shutil
+
+  def get_tabledesc_and_dminfo(tabname="3C273XC1.MS"):
+      made_copy = False
+
+      # Fetch new table if tabname not present
+      if not os.path.isdir(tabname):
+          # Get path to CASA root directory by stripping name from '$CASAPATH'
+          pathname = os.environ.get("CASAPATH").split()[0]
+
+          # There should be some data here
+          fitsdata = pathname + "/data/demo/3C273XC1.fits"
+          tabname = "3C273XC1.MS"
+
+          ms.fromfits(tabname, fitsdata)
+          ms.close()
+          made_copy = True
+
+      tb.open(tabname)
+      tabdesc = tb.getdesc()
+      dminfo  = tb.getdminfo()
+      print tabname, "has", tb.nrows(), "rows."
+      tb.close()
+
+      # Clean up
+      if made_copy:
+          shutil.rmtree(tabname)
+
+      return tabdesc, dminfo
+
+  tabdesc, dmi = get_tabledesc_and_dminfo()
+  tabdesc  # prints tabdesc
+  dmi      # prints dmi
+
+  # You could alter tabdesc and/or dmi at this point.
+
+  # Unnecessary, but just to show there is nothing up my sleeve...
+  tb.close()
+
+  tb.create("myempty.ms", tabdesc, dminfo=dmi)
+  tb.nrows()     # 0L
+  tb.addrows(5)  # Add the rows _before_ filling the columns.
+  tb.putcol('ARRAY_ID', numpy.array([0 for i in range(5)]))
+  tb.putcol('ANTENNA1', numpy.array(range(5)))
+  tb.putcol('ANTENNA2', numpy.array(range(1,6)))
+  tb.browse()    # Still mostly, but not completely, empty.
+  tb.close()
+
+
+This creates a CASA table using a description of a table and its data managers from an existing MS.
 
 </example>
 
@@ -859,14 +988,14 @@ is possible to copy those columns only.
 <example>
 This example appends rows to the table itself, thus doubles the number
 of rows.
-\begin{verbatim}
+
   tb.open('3C273XC1.MS',nomodify=False)
   tb.copyrows('3C273XC1.MS')
   tb.close()
-\end{verbatim}
+
 This example copies 10 rows of the selected subset of the MS to the
 beginning of the output MS.
-\begin{verbatim}
+
   !rm -rf in.MS out.MS
   ms.fromfits('in.MS','3C273XC1.fits')       #Make two MSs
   ms.fromfits('out.MS','3C273XC1.fits')      #for example
@@ -876,7 +1005,7 @@ beginning of the output MS.
   tb.close()
   t1.copyrows("out.MS",nrow=10,startrowout=0)
   t1.close()
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1036,11 +1165,11 @@ table tool has open.
 </description>
 <returns type="string"/>
 <example>
-\begin{verbatim}
+
   tb.open("3C273XC1.MS")
   tb.name()
 # 3C273XC1.MS
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1078,16 +1207,16 @@ written to that file instead of the first two lines of the data file.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 tb.toasciifmt(asciifile='myfile3.dat', headerfile='myfile3.head', columns=['SOURCE_ID', 'NAME', 'PROPER_MOTION'], sep=', ')
-\end{verbatim}
+
 
 will produce a comma separated ASCII output of the three columns 'SOURCE_ID', 'NAME', and 'PROPER_MOTION' in file 'myfile3.dat'
 and a format description in 'myfile3.head'. 
 
-\begin{verbatim}
+
 tb.toasciifmt(asciifile='myfile.dat')
-\end{verbatim}
+
 
 will produce a space separated ASCII output of all table columns into file 'myfile.dat'
 with the first two lines containing a format description. 
@@ -1146,7 +1275,7 @@ interactively.-->
 </shortdescription>
 </returns>
 <example>
-\begin{verbatim}
+
   tb.open("3C273XC1.MS")
   subt=tb.query("OBSERVATION_ID==0",
                 sortlist="ARRAY_ID", columns="TIME, DATA, UVW")
@@ -1156,7 +1285,7 @@ interactively.-->
   copyt = subt.copy ("3C273XC1_spw1.MS", True)
   subt.close()
   copyt.close()
-\end{verbatim}
+
 
 From the original table corresponding to the disk file 3C273XC1.MS,
 only rows with OBSERVATION\_ID equal to 0 are selected and sorted
@@ -1164,12 +1293,12 @@ by ARRAY\_ID. Only
 the columns TIME DATA UVW are written. Thereafter a deep copy of the
 result is made.
 The table query command is equivalent to:
-\begin{verbatim}
+
   SELECT TIME, DATA, UVW
   FROM 3C273XC1.MS
   WHERE OBSERVATION_ID==0
   ORDERBY ARRAY_ID
-\end{verbatim}
+
 
 </example>
 
@@ -1181,12 +1310,12 @@ NODUPLICATES at the beginning.
 
 E.g.:
 
-\begin{verbatim}
+
   sortlist='TIME desc'
   sortlist='noduplicates ANTENNA1,ANTENNA2'
   sortlist='ANTENNA1 desc, ANTENNA2 asc'
   sortlist='desc ANTENNA1, ANTENNA2, TIME'
-\end{verbatim}
+
 </example>
 
 <!-- <seealso>
@@ -1257,31 +1386,31 @@ or a record containing arrays. See the examples below.
 
 !!!NOT IMPLEMENTED!!!
 
-\begin{verbatim}
+
   tb.open("3C273XC1.MS")
   tb.calc ('DATA+1')
-\end{verbatim}
+
 returns a (potentially enormous) record where a field contains the
 value of the expression for the row with that number. Note that it
 returns a record because for each row the expression results in an array.
 It should be clear that this example is useless. However, something
 like this could be useful for a column with (very) small arrays.
-\begin{verbatim}
+
   tb.open("3C273XC1.MS")
   tb.calc ('ntrue(FLAG)')
-\end{verbatim}
+
 returns for each row the number of flags set. The result is a vector,
 because for each row the expression results in a scalar.
-\begin{verbatim}
+
   tb.open("3C273XC1.MS")
   tb.calc ('sum([select from $1 giving [ntrue(FLAG)]])')
-\end{verbatim}
+
 returns the total number of flags set in the table (in a single
 scalar).
 It is the same as
-\begin{verbatim}
+
   sum(tb.calc ('ntrue(FLAG)'))
-\end{verbatim}
+
 The latter is easier to write, but sends (much) more data over the
 casapy bus.
 </example>
@@ -1338,7 +1467,7 @@ selection table but in the main table.
      </param>
 </input>
 <example>
-\begin{verbatim}
+
 # EXAMPLE NOT VERIFIED SINCE query IS BROKEN
 #   Do the query on the main table.
   tb.open('SOMENAME')
@@ -1352,7 +1481,7 @@ selection table but in the main table.
   scanback = tb.selectrows(backrows);
 #   Do something with that table.
   print scanback.nrows();
-\end{verbatim}
+
 
 <!--
 The last statement is equivalent to the query command:
@@ -1373,6 +1502,26 @@ able to substitute it in the query command.
 </method>
 
  
+   <method type="function" name="info">
+   <shortdescription>get the info record</shortdescription>
+   
+<description>
+The info record contains information on the table. 
+
+</description>
+<returns type="any">
+<any type="record"/>
+</returns>
+
+<!--
+<example>
+\begin{verbatim}
+\end{verbatim}
+</example>
+-->
+</method>
+
+
    <method type="function" name="putinfo">
    <shortdescription>set the info record</shortdescription>
    
@@ -1380,9 +1529,6 @@ able to substitute it in the query command.
 The info record contains information on the table. It is
 written by applications, and used <!-- by, for example, the <link anchor="catalog">catalog</link> directory browser --> to determine what type of
 information is stored in a table.
-
-!!!NOTE THAT tb.info() IS NOT IMPLEMENTED!!! The (missing) accessor
-function tb.info() gets the info record.
 
 </description>
 <input>
@@ -1440,7 +1586,7 @@ A (terse) summary of the table contents is sent to the defaultlogger.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
   tb.open("tcal")
   tb.summary()
 # successful nomodify open of table  tcal :  9 columns, 11 rows
@@ -1450,7 +1596,7 @@ A (terse) summary of the table contents is sent to the defaultlogger.
 # Table keywords: [Type=T Jones, Interval=30, DeltaT=1]
 # Columns: StartTime StopTime Gain SolutionOK Fit FitWeight
 # iSolutionOK iFit iFitWeight
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1464,11 +1610,11 @@ of Strings.
 </description>
 <returns type="stringArray"/>
 <example>
-\begin{verbatim}
+
   tb.open("tcal")
   tb.colnames()
 # StartTime StopTime Gain SolutionOK Fit FitWeight iSolutionOK iFit iFitWeight
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1531,7 +1677,7 @@ getcol or getcolslice on the original table.
 </input>
 <returns type="intArray"/>
 <example>
-\begin{verbatim}
+
 !!!NOTE INPUT PARAMETERS IGNORED!!!
   tb.open("3C273XC1.MS")
   tb.nrows()
@@ -1544,7 +1690,7 @@ getcol or getcolslice on the original table.
 #544L
   print len(selt.rownumbers())
 #544L
-\end{verbatim}
+
 </example>
 
 <!--  subdata:=data[,,selt.rownumbers(t)]
@@ -1576,13 +1722,13 @@ and is not meant for the casual user.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
   tb.open("3C273XC1.MS")
   tb.nrows()
 # 7669L
   tb.setmaxcachesize ("DATA", 4*1024*1024);
 # True
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1602,14 +1748,14 @@ This tool function tests if the specified column has scalar contents.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
   tb.open("tcal")
   tb.isscalarcol("StartTime")
 # True
   tb.open("tcal")
   tb.isscalarcol("Gain")
 # False
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1647,14 +1793,14 @@ type of the column as a string.
 </input>
 <returns type="string"/>
 <example>
-\begin{verbatim}
+
   tb.open("tcal")
   tb.coldatatype("StartTime")
 # double
   tb.open("tcal")
   tb.coldatatype("Gain")
 # complex
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1682,11 +1828,11 @@ separate file.
 </input>
 <returns type="string"/>
 <example>
-\begin{verbatim}
+
   tb.open("tcal")
   tb.colarraytype("Gain")
 # Direct,FixedShape
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1696,11 +1842,11 @@ separate file.
    
 <returns type="int"/>
 <example>
-\begin{verbatim}
+
   tb.open("3C273XC1.MS")
   tb.ncols()
 # 23L
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1713,11 +1859,11 @@ Note that rows are numbered starting at 0.
 </description>
 <returns type="int"/>
 <example>
-\begin{verbatim}
+
   tb.open("3C273XC1.MS")
   tb.nrows()
 # 7669L
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1793,7 +1939,7 @@ columns to be added.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 !!!REQUIRES COLUMN DESCRIPTION FUNCTIONS THAT HAVE NOT BEEN IMPLEMENTED!!!
   tb.open("mytable", nomodify=False)
   dc3=tablecreatescalarcoldesc('C3', 'a')   
@@ -1803,7 +1949,7 @@ columns to be added.
 # True
   tb.addcols(tablecreatedesc(dc4, dc5))
 # True
-\end{verbatim}
+
 A single column can be added as such, but multiple columns have
 to be combined.
 </example>
@@ -1830,7 +1976,7 @@ from a select or sort operation.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
   tb.open("3C273XC1.MS", nomodify=False)
   tb.renamecol ('DATA', 'DATA2')
 # T
@@ -1838,7 +1984,7 @@ from a select or sort operation.
   tb.renamecol ('DATA2', 'DATA')
 # T
   print tb.colnames()
-\end{verbatim}
+
 Column \texttt{DATA} is renamed to \texttt{DATA2} and then back to
 \texttt{DATA} again..
 </example>
@@ -1865,12 +2011,12 @@ can be used to find which columns are served by which data manager.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
   tb.open("mytable", nomodify=False)
   tb.removecols ("col1 col2")
 # T
   print tb.colnames()
-\end{verbatim}
+
 Two columns are removed.
 </example>
 </method>
@@ -1962,12 +2108,12 @@ The slice must be specified as blc, trc with an optional stride.
      <any type="variant"/>
 </returns>
 <example>
-\begin{verbatim}
+
   tb.open("3C273XC1.MS")
   data=tb.getcellslice("DATA", 0, [0,0], [1,0])
   print data.shape
 # [2 1]
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2012,13 +2158,13 @@ shaped
      <any type="variant"/>
 </returns>
 <example>
-\begin{verbatim}
+
   tb.open("3C273XC1.MS")
 # True
   gain=tb.getcol("DATA")
   print gain.shape
 # (4, 1, 7669)
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2062,12 +2208,12 @@ variable shaped arrays.
 <any type="record"/>
 </returns>
 <example>
-\begin{verbatim}
+
   tb.open("3C273XC1.MS")
   gain=tb.getvarcol("DATA")
   print len(gain)
 # 7669
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2121,12 +2267,12 @@ blc and trc of the arrays in the column.
      <any type="variant"/>
 </returns>
 <example>
-\begin{verbatim}
+
   tb.open("3C273XC1.MS")
   data=tb.getcolslice("DATA", [0,0], [1,0])
   data.shape
 # (2 1 7669)
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2229,13 +2375,13 @@ The slice must be specified as blc, trc with an optional stride.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
   tb.open("3C273XC1.MS",nomodify=False)
   data=tb.getcol("DATA")
   # [could modify data here]
   tb.putcol("DATA", data)
   tb.flush()
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2279,12 +2425,12 @@ value, no put is done for that row.
 </input>
 <returns type="bool">Bool</returns>
 <example>
-\begin{verbatim}
+
   tb.open("3C273XC1.MS",nomodify=False)
   gain=tb.getvarcol("DATA", 0, 10)
   tb.putvarcol("Gain", gain, 10, 10)
   tb.flush()
-\end{verbatim}
+
 This example copies the values from row 0-9 to row 10-19.
 </example>
 </method>
@@ -2340,7 +2486,7 @@ blc and trc of the arrays in the column.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
   tb.open("3C273XC1.MS",nomodify=False)
   data_all=tb.getcolslice("DATA", [-1,-1], [-1,=1])
   print data_all.shape
@@ -2349,7 +2495,7 @@ blc and trc of the arrays in the column.
   # can modify data here
   tb.putcolslice("DATA", data, [0,0],[3,0])
   tb.flush()
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2386,11 +2532,11 @@ returned.
 </input>
 <returns type="stringArray"/>
 <example>
-\begin{verbatim}
+
   tb.open("3C273XC1.MS")
   shapes=tb.getcolshapestring("DATA"))
   print len(shapes)
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2419,7 +2565,7 @@ read by separating the name with dots.
      <any type="variant"/>
 </returns>
 <example>
-\begin{verbatim}
+
   tb.open('3C273XC1.MS')
   tb.getkeywords()
   tb.getkeyword('MS_VERSION')
@@ -2428,7 +2574,7 @@ read by separating the name with dots.
   tb.open('tcal')
   tb.getkeyword('rec.fld')     # get field from a record
 # 3.14
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2447,7 +2593,7 @@ removed by table functions like \texttt{open} and \texttt{tableexists}.-->
 <any type="record"/>
 </returns>
 <example>
-\begin{verbatim}
+
   tb.open('3C273XC1.MS')
   tb.getkeywords()
 #{'ANTENNA': 'Table: /home/aips2mgr/testing/3C273XC1.MS/ANTENNA',
@@ -2464,7 +2610,7 @@ removed by table functions like \texttt{open} and \texttt{tableexists}.-->
 # 'SOURCE': 'Table: /home/aips2mgr/testing/3C273XC1.MS/SOURCE',
 # 'SPECTRAL_WINDOW': 'Table: /home/aips2mgr/testing/3C273XC1.MS/SPECTRAL_WINDOW',
 # 'STATE': 'Table: /home/aips2mgr/testing/3C273XC1.MS/STATE'}
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2497,12 +2643,12 @@ read by separating the name with dots.
      <any type="variant"/>
 </returns>
 <example>
-\begin{verbatim}
+
   tb.open("3C273XC1.MS")
   tb.getcolkeyword("UVW", "QuantumUnits")
 #array(['m', 'm', 'm'],
 #      dtype='|S2')
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2527,13 +2673,13 @@ removed by table functions like \texttt{open} and \texttt{tableexists}.-->
 <any type="variant"/>
 </returns>
 <example>
-\begin{verbatim}
+
   tb.open("3C273XC1.MS")
   tb.getcolkeywords("UVW")
 #{'MEASINFO': {'Ref': 'ITRF', 'type': 'uvw'},
 # 'QuantumUnits': array(['m', 'm', 'm'],
 #      dtype='|S2')}
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2572,7 +2718,7 @@ In such a case intermediate records are created when needed.
 </input>
 <returns type="bool">Bool</returns>
 <example>
-\begin{verbatim}
+
   tb.open("3C273XC1.MS", nomodify=False)
   tb.putkeyword("VERSION", "1.66")
 # True
@@ -2586,7 +2732,7 @@ In such a case intermediate records are created when needed.
 #      write a keyword with a record value
   tb.putkeyword("REC", {'SUB': {'FLD': 'val'}})
 # True
-\end{verbatim}
+
 Note that the last example does the same as the previous one (assuming
 that \texttt{REC} does not exist yet with other fields).
 </example>
@@ -2614,7 +2760,7 @@ otherwise casapy turns it into a string vector. -->
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
   tb.open('3C273XC1.MS', nomodify=False)
   kw=tb.getkeywords()
   print kw['MS_VERSION']
@@ -2624,7 +2770,7 @@ otherwise casapy turns it into a string vector. -->
 # !!!BROKEN. Keywords containing float are not handled properly!!!
   tb.flush()
 # True
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2663,7 +2809,7 @@ In such a case intermediate records are created when needed.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
   tb.open("3C273XC1.MS", nomodify=False)
   ckw=tb.getcolkeyword("UVW","QuantumUnits")
   print ckw
@@ -2672,7 +2818,7 @@ In such a case intermediate records are created when needed.
 # True
   tb.flush()
 # True
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2703,7 +2849,7 @@ otherwise casapy turns it into a string vector. -->
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
   tb.open("3C273XC1.MS", nomodify=False)
   kws = tb.getcolkeywords("UVW")
   kws
@@ -2713,7 +2859,7 @@ otherwise casapy turns it into a string vector. -->
   kws['MEASINFO']['Ref']='B1950'
   tb.putcolkeywords(kws)
 # True
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2730,13 +2876,13 @@ otherwise casapy turns it into a string vector. -->
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
   tb.open("3C273XC1.MS", nomodify=False)
   tb.removekeyword("MS_VERSION")
 # True
   tb.flush()
 # True
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2757,13 +2903,13 @@ otherwise casapy turns it into a string vector. -->
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
   tb.open("3C273XC1.MS", nomodify=False)
   tb.removecolkeyword("UVW", "QuantumUnits")
 # True
   tb.flush()
 # True
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2782,10 +2928,10 @@ COLUMNS.
 <any type="record"/>
 </returns>
 <example>
-\begin{verbatim}
+
   tb.open('3C273XC1.MS')
   rec = tb.getdminfo()
-\end{verbatim}
+
 Print the output record shows that the table uses 9 storage managers.
 </example>
 </method>
@@ -2838,10 +2984,10 @@ of all keywords in the column with the given name..
 <returns type="stringArray"/>
 
 <example>
-\begin{verbatim}
+
   tb.open('3C273XC1.MS')
   tb.colkeywordnames("UVW")
-\end{verbatim}
+
 </example>
 
 </method>
@@ -2898,10 +3044,10 @@ the table description used when creating the table.
 <any type="record"/>
 </returns>
 <example>
-\begin{verbatim}
+
   tb.open("3C273XC1.MS")
   tb.getdesc()
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2928,7 +3074,7 @@ to construct a table description.
 <any type="record"/>
 </returns>
 <example>
-\begin{verbatim}
+
   tb.open("3C273XC1.MS")
   tb.getcoldesc("DATA")
 #{'comment': 'The data column',
@@ -2938,7 +3084,7 @@ to construct a table description.
 # 'ndim': 2,
 # 'option': 0,
 # 'valueType': 'complex'}
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2959,6 +3105,16 @@ Failure (returning F) is a sign of a bug.
 <description>
 	Occasionally a table will be inretrievably locked to another process no matter how much closing is done.
 	So clearLocks will unlock all the files in the table cache that use AutoLocking.
+</description>
+<returns type="bool"/>
+</method>
+
+   <method type="function" name="listlocks">
+	   <shortdescription>Lists any table lock associated with the current process</shortdescription>
+   
+<description>
+	Occasionally a table will be inretrievably locked to another process no matter how much closing is done.
+	So listLocks will list the offending tables (and unoffending ones, too), so we can figure out where the problem might be.
 </description>
 <returns type="bool"/>
 </method>
@@ -2996,11 +3152,11 @@ Failure (returning F) is a sign of a bug.
     which derived real value is used for the statistics computation.
   </description>
   <example>
-    \begin{verbatim}
+    
       
       tb.open("ggtau.1mm.amp.gcal")
       s = tb.statistics(column="GAIN", complex_value="phase")
-    \end{verbatim}
+    
   </example>
 </method>
 

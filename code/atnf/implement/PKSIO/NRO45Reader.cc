@@ -92,14 +92,25 @@ vector<double> NRO45Reader::getAntennaPosition()
   // E138d28m09.96444s N35d56m52.3314s 1350m in World Geodetic System
   // (conversion is done by http://vldb.gsi.go.jp/sokuchi/tky2jgd/)
   
-  double elon = 138. + 28. / 60. + 9.96444 / 3600. ;
-  double nlat = 35. + 56. / 60. + 52.3314 / 3600. ;
-  double alti = 1350. ;
+//   double elon = 138. + 28. / 60. + 9.96444 / 3600. ;
+//   double nlat = 35. + 56. / 60. + 52.3314 / 3600. ;
+//   double alti = 1350. ;
 
-  MPosition p( MVPosition( Quantity( alti, "m" ),
-                           Quantity( elon, "deg" ),
-                           Quantity( nlat, "deg" ) ),
-               MPosition::Ref( MPosition::WGS84 ) ) ;
+//   Double elon = 138.4725 ;
+//   Double nlat = 35.9445 ;
+//   Double alti = 1412.599 ;
+
+//   MPosition p( MVPosition( Quantity( alti, "m" ),
+//                            Quantity( elon, "deg" ),
+//                            Quantity( nlat, "deg" ) ),
+//                MPosition::Ref( MPosition::WGS84 ) ) ;
+
+  Double posx = -3.8710235e6 ;
+  Double posy = 3.4281068e6 ;
+  Double posz = 3.7240395e6 ;
+  MPosition p( MVPosition( posx, posy, posz ),
+               MPosition::ITRF ) ;
+
   MeasFrame frame( p ) ;
   MVPosition mvp ;
   frame.getITRF( mvp ) ;

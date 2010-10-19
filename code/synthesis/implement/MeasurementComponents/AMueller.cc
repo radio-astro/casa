@@ -89,7 +89,7 @@ void AMueller::corrupt(VisBuffer& vb) {
 
 void ANoise::createCorruptor(const VisIter& vi, const Record& simpar, const Int nSim)
 {
-  if (prtlev()>2) cout << "   AN::createCorruptor()" << endl;
+  if (prtlev()>2) cout << " AN::createCorruptor()" << endl;
   AlwaysAssert((isSimulated()),AipsError);
 
   acorruptor_p = new ANoiseCorruptor();
@@ -116,9 +116,10 @@ void ANoise::createCorruptor(const VisIter& vi, const Record& simpar, const Int 
   }
 
   acorruptor_p->mode()=Mode;
+
+  if (prtlev()>2) cout << " ~AN::createCorruptor()" << endl;
+
 }
-
-
 
 
 ANoise::ANoise(VisSet& vs) :
@@ -140,5 +141,27 @@ ANoise::ANoise(const Int& nAnt) :
 ANoise::~ANoise() {
   if (prtlev()>2) cout << "ANoise::~ANoise()" << endl;
 }
+
+
+
+void ANoise::calcOneMueller(Vector<Complex>& mat, Vector<Bool>& mOk,
+			    const Vector<Complex>& par, const Vector<Bool>& pOk) {
+  
+  if (prtlev()>10) cout << "        AN::calcOneMueller()" << endl;
+
+  // If Mueller matrix is trivial, shouldn't get here
+  if (trivialMuellerElem()) 
+    throw(AipsError("Trivial Mueller Matrix logic error."));
+  else {
+    Int len=0;
+    mat.shape(len);
+    for (Int i=0; i<len; i++) {
+      mat[i]=acorruptor_p->simPar(); // single complex #
+      mOk[i]=True;
+    }    
+  }
+}
+
+
 
 } //# NAMESPACE CASA - END

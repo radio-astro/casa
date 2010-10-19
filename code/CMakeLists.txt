@@ -1,6 +1,7 @@
 #
 # CASA - Common Astronomy Software Applications
 # Copyright (C) 2010 by ESO (in the framework of the ALMA collaboration)
+# Copyright (C) 2010 Associated Universities, Inc. Washington DC, USA.
 #
 # This file is part of CASA.
 #
@@ -27,14 +28,26 @@ include( target )
 include( CASA )
 
 set( CASA_MAJOR_VERSION 3 )
-set( CASA_MINOR_VERSION 0 )
-set( CASA_PATCH_VERSION 2 )
+set( CASA_MINOR_VERSION 1 )
+set( CASA_PATCH_VERSION 0 )
 set( CASA_API_VERSION "${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_VERSION}" )
 
 # Define compiler paths on OSX 10.5. This must be done before invoking project()
-if( APPLE AND EXISTS            /opt/casa/core2-apple-darwin8/3rd-party/bin/gfortran )
-    set( CMAKE_Fortran_COMPILER /opt/casa/core2-apple-darwin8/3rd-party/bin/gfortran )
-    set( CMAKE_CXX_COMPILER     /opt/casa/core2-apple-darwin8/3rd-party/bin/g++ )
+if( APPLE )
+    set( SO dylib )
+    if( EXISTS            /opt/casa/core2-apple-darwin8/3rd-party/bin/gfortran )
+        set( CMAKE_Fortran_COMPILER /opt/casa/core2-apple-darwin8/3rd-party/bin/gfortran )
+	set( CMAKE_CXX_COMPILER     /opt/casa/core2-apple-darwin8/3rd-party/bin/g++ )
+    elseif( EXISTS        /opt/local/bin/gfortran )
+        set( CMAKE_Fortran_COMPILER /opt/local/bin/gfortran )
+    elseif( EXISTS        /opt/local/bin/gfortran-mp-4.4 )
+        set( CMAKE_Fortran_COMPILER /opt/local/bin/gfortran-mp-4.4 )
+	if( EXISTS /opt/local/bin/g++-mp-4.4 )
+	    set( CMAKE_CXX_COMPILER /opt/local/bin/g++-mp-4.4 )
+	endif()
+    endif()
+else()
+    set( SO so )
 endif()
 
 project( CASA C CXX Fortran )
@@ -51,6 +64,11 @@ casa_always_install()
 # Build options
 #
 
+# force searching for libcasacore instead of libcasa_*
+if( NOT USE_LIBCASACORE )
+  set( USE_LIBCASACORE False )
+endif()
+
 # Build type (None, Release, Debug, RelWithDebInfo, MinSizeRel).
 if( NOT CMAKE_BUILD_TYPE )
   set( CMAKE_BUILD_TYPE RelWithDebInfo )
@@ -58,28 +76,65 @@ endif()
 
 if( CMAKE_BUILD_TYPE STREQUAL Debug )
   add_definitions( -DAIPS_DEBUG )
+  set( CMAKE_CXX_FLAGS_DEBUG "-ggdb3 -O0" )
+endif()
+
+string( REGEX REPLACE /[^/]+/?$ "" casaroot ${CMAKE_SOURCE_DIR} )
+#
+# aipshosts is supported for backwards compatibility
+#
+if( NOT arch AND EXISTS ${casaroot}/aipshosts )
+  message( WARNING "Found ${casaroot}/aipshosts. You probably don't need  this file unless you need to build multiple architectures. If you remove aipshosts the name of the installation directory will be automatically set  based on this machine's architecture, or defined by the cmake command line option -Darch=<arch name>. Specifying on the command line will override the aipshosts entry." )
+  execute_process( COMMAND uname -n
+                   COMMAND awk -F. "{print $1}"
+                   OUTPUT_VARIABLE _host OUTPUT_STRIP_TRAILING_WHITESPACE )
+  execute_process( COMMAND egrep "^[\ ]*${_host}[\ \t]*" ${casaroot}/aipshosts 
+                   COMMAND awk "{print $2}"
+    OUTPUT_VARIABLE _a
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+  if( _a )
+    set( arch ${_a} )    
+  endif()
 endif()
 
 set( CMAKE_CXX_FLAGS_PROFILE "-g -O2 -pg -fprofile-arcs" )
 
-dump( CMAKE_HOST_SYSTEM_NAME
-  CMAKE_HOST_SYSTEM
-  CMAKE_HOST_UNIX
-  CMAKE_HOST_APPLE
-  CMAKE_HOST_WIN32
-  CMAKE_SYSTEM_NAME
-  CMAKE_SYSTEM
-  CMAKE_SYSTEM_PROCESSOR
-  CMAKE_SYSTEM_VERSION 
-  CMAKE_GENERATOR 
-  CMAKE_BUILD_TYPE )
+# On Linux x86_64 add the (gcc specific) -fno-omit-frame-pointer
+# flag to debug builds
+if( CMAKE_SYSTEM_NAME STREQUAL Linux AND
+    CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 )
+  foreach( _c CXX C FORTRAN )
+    set( CMAKE_${_c}_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer")
+    set( CMAKE_${_c}_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -fno-omit-frame-pointer")
+  endforeach()
+endif()
+
+if (CMAKE_CROSSCOMPILING)
+  dump( CMAKE_HOST_SYSTEM )
+endif()
+dump( CMAKE_SYSTEM
+      CMAKE_SYSTEM_PROCESSOR
+      CMAKE_GENERATOR 
+      CMAKE_BUILD_TYPE )
 
 set( BUILD_SHARED_LIBS ON )
 
 set( DEFAULT_CXX_FLAGS 
-     "-pipe -Wall -Wno-non-template-friend -Wcast-align -Wno-comment"
+     "-pipe -Wall -Wextra -Wno-non-template-friend -Wcast-align -Wno-comment"
      )
 
+set( DEFAULT_C_FLAGS 
+     "-pipe -Wall -Wextra -Wcast-align -Wno-comment"
+     )
+
+# OpenMP
+find_package( OpenMP )
+if( OPENMP_FOUND )
+  set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} ${OpenMP_CXX_FLAGS}" )
+  set( DEFAULT_C_FLAGS   "${DEFAULT_C_FLAGS}   ${OpenMP_C_FLAGS}" )
+endif()
 
 # Test driver which requires that test programs are up-to-date
 # before running. (The built-in "test" does not.)
@@ -93,23 +148,76 @@ set( CASA_assay ${CMAKE_SOURCE_DIR}/install/assay )
 # Set compiler flags.
 # 
 if( APPLE )
+    set( CMAKE_Fortran_FLAGS -fno-second-underscore )
+    execute_process( COMMAND ${CMAKE_Fortran_COMPILER} -print-search-dirs
+                     COMMAND perl -e "while(<>) { if( m|^libraries:\\s*=(.*?$)| ) { foreach $d (split(':',$1) ) { if ( -e \"$d/libgfortran.${SO}\" ) { print \"$d/libgfortran.${SO}\"; break;}}}}"
+                     OUTPUT_VARIABLE _gfortran_lib_path
+                     OUTPUT_STRIP_TRAILING_WHITESPACE )
+    if( NOT arch )
+    	set( arch darwin )
+    endif()
+
     if( CMAKE_SYSTEM MATCHES ^Darwin-9 )
         set( casa_packages /opt/casa/core2-apple-darwin8/3rd-party )
         set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error" )
-      elseif( CMAKE_SYSTEM MATCHES ^Darwin-10 )
-        set( casa_packages /opt/casa/core2-apple-darwin10 )
-        set( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -arch i386" )
-        set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -arch i386" )
-        set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -arch i386" )
+    elseif( CMAKE_SYSTEM MATCHES ^Darwin-10 )
+        if( NOT archflag )
+            if( EXISTS /opt/casa/darwin10-64b )
+                set( archflag x86_64 )
+            elseif( EXISTS /opt/casa/core2-apple-darwin10 )
+                set( archflag i386 )
+            else()
+              ## Apple no longer supplies fortran compilers, checking for x86_64 with fortran
+	      ## compiler will be a good indication if x86_64 is available or not...
+	      execute_process( 
+                COMMAND ${CMAKE_Fortran_COMPILER} -print-libgcc-file-name
+        	COMMAND perl -e "while(<>){ print if s|^.*?(x86_64).*|$1| }"
+		OUTPUT_VARIABLE archflag
+		OUTPUT_STRIP_TRAILING_WHITESPACE )
+              if( NOT archflag )
+                set( archflag x86_64 )
+              endif()
+            endif()
+        endif()
+        if( archflag STREQUAL x86_64 )
+            set ( casa_packages /opt/casa/darwin10-64b )
+            add_definitions( -DAIPS_64B )
+        else()
+            set( casa_packages /opt/casa/core2-apple-darwin10 )
+	endif()
+	execute_process( COMMAND ${CMAKE_Fortran_COMPILER} --version
+			 COMMAND head -1
+			 COMMAND perl -pe "s|.*?(\\S+)$|$1|"
+			 OUTPUT_VARIABLE _gfortran_version
+			 OUTPUT_STRIP_TRAILING_WHITESPACE )
+	execute_process( COMMAND ${CMAKE_CXX_COMPILER} -dumpmachine
+			 COMMAND head -1
+			 COMMAND perl -pe "s|.*?(\\S+)$|$1|"
+			 OUTPUT_VARIABLE _gcc_machine
+			 OUTPUT_STRIP_TRAILING_WHITESPACE )
+	execute_process( COMMAND ${CMAKE_CXX_COMPILER} --version
+			 COMMAND head -1
+			 COMMAND perl -pe "s|.*?(\\S+)$|$1|"
+			 OUTPUT_VARIABLE _cxx_version
+			 OUTPUT_STRIP_TRAILING_WHITESPACE )
+	if( NOT _gfortran_version STREQUAL "4.4.4" )
+	    set( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -arch ${archflag}" )
+        endif()
+        set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -arch ${archflag} -framework AppKit" )
+        # Which part of CASA needs -framework AppKit to run? This should probably *not* be added
+        # as a generic linker flag.
+	if( NOT _cxx_version STREQUAL "4.4.4" )
+	    set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -arch ${archflag}" )
+	endif()
     else()
         message( WARNING "Unsupported Mac: ${CMAKE_SYSTEM}" )
     endif()
 
-    set( CMAKE_Fortran_FLAGS -fno-second-underscore )
-    set( arch darwin )
-    set( DEFAULT_CXX_FLAGS
-      "${DEFAULT_CXX_FLAGS} -dynamic -mtune=nocona -ftree-vectorize -ffast-math -mfpmath=sse -fasm-blocks"
-      )
+    if( _cxx_version STREQUAL "4.4.4" )
+	set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -dynamic -mtune=nocona -ftree-vectorize -ffast-math -mfpmath=sse" )
+    else()
+	set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -dynamic -mtune=nocona -ftree-vectorize -ffast-math -mfpmath=sse -fasm-blocks" )
+    endif()
 
 elseif( CMAKE_SYSTEM_NAME STREQUAL Linux )
 
@@ -117,11 +225,15 @@ elseif( CMAKE_SYSTEM_NAME STREQUAL Linux )
 
   if( CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 )
     set( casa_packages /usr/lib64/casapy )
-    set( arch linux_64b )
+    if( NOT arch )
+    	set( arch linux_64b )
+    endif()
     set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -Wno-deprecated" )
   else()
     set( casa_packages /usr/lib/casapy )
-    set( arch linux_gnu )
+    if( NOT arch )
+        set( arch linux_gnu )
+    endif()
     set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -Wno-deprecated -Woverloaded-virtual" )
   endif()
 else()
@@ -134,50 +246,34 @@ if( NOT CMAKE_CXX_FLAGS )
   set( CMAKE_CXX_FLAGS "${DEFAULT_CXX_FLAGS} ${EXTRA_CXX_FLAGS}" )
 endif()
 
-
-string( REGEX REPLACE /[^/]+/?$ "" _casaroot ${CMAKE_SOURCE_DIR} )
-
-#
-# aipshosts is supported for backwards compatibility
-#
-if( EXISTS ${_casaroot}/aipshosts )
-  message( WARNING "Found ${_casaroot}/aipshosts. You should probably delete this file, and the name of the installation directory will be automatically set (to \"${arch}\") based on this machine's architecture." )
-  execute_process( COMMAND uname -n
-                   COMMAND awk -F. "{print $1}"
-                   OUTPUT_VARIABLE _host OUTPUT_STRIP_TRAILING_WHITESPACE )
-  execute_process( COMMAND egrep "^[\ ]*${_host}[\ ]" ${_casaroot}/aipshosts 
-                   COMMAND awk "{print $2}"
-    OUTPUT_VARIABLE _a
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-
-  if( _a )
-    set( arch ${_a} )    
-  endif()
+if( NOT CMAKE_C_FLAGS )
+  set( CMAKE_C_FLAGS "${DEFAULT_C_FLAGS} ${EXTRA_C_FLAGS}" )
 endif()
+
 
 #
 # The layout of the source+install directory trees
 # is rather hard-coded in much source code. Do not
 # allow the user to install anywhere else.
 #
-set( CMAKE_INSTALL_PREFIX ${_casaroot}/${arch} )
+set( CMAKE_INSTALL_PREFIX ${casaroot}/${arch} )
 dump( CMAKE_INSTALL_PREFIX )
 
 #
 # Targets for creating doxygen documentation
 #
-find_package( LATEX )
 
-# Use htlatex, if it exists
-unset( LATEX2HTML_CONVERTER CACHE )
-find_program( LATEX2HTML_CONVERTER NAMES htlatex latex2html )
+# Use htlatex, do not support latex2html
+find_program( LATEX2HTML_CONVERTER NAMES htlatex )
+set( LATEX2HTML_OPTIONS "htcasa,section+,next,p-width,5" 
+      CACHE STRING "LATEX2HTML_CONVERTER options" )
 
-if( LATEX2HTML_CONVERTER MATCHES htlatex )
-  set( LATEX2HTML_OPTIONS "htcasa,section+,next,p-width,3" )
-endif()
+# Use pdflatex
+find_program( PDFLATEX_COMPILER NAMES pdflatex )
+#set( LATEX2PDF_OPTIONS "htcasa,section+,next,p-width,3" 
+#CACHE STRING "LATEX2PDF_CONVERTER options" )
 
-set( CASA_DOC_DIR ${_casaroot}/docs ) # Where to put documentation
+set( CASA_DOC_DIR ${casaroot}/docs ) # Where to put documentation
 
 find_package( Doxygen )
 
@@ -193,63 +289,67 @@ else()
 endif()
 
 #
-# Create casainit.sh
+# Create casainit.(c)sh
 # The environment defined here is not needed at build time, but at runtime.
-# The definitions are architecture dependent, hence put them in
-# the install directory
+# The definitions are architecture dependent, hence put them in the install directory
 #
 file( WRITE ${CMAKE_INSTALL_PREFIX}/casainit.sh
       "#!/bin/sh\n"
       "# Generated by CMake, do not edit\n"
-      "  export CASAPATH=\"${_casaroot} ${arch}\"\n"
+      "  export CASAPATH=\"${casaroot} ${arch}\"\n"
       "  export PATH=${CMAKE_INSTALL_PREFIX}/bin:${casa_packages}/bin:$PATH\n"
 )
+file( WRITE ${CMAKE_INSTALL_PREFIX}/casainit.csh
+      "# Usage: source casainit.csh\n"
+      "# Generated by CMake, do not edit\n"
+      "  setenv CASAPATH \"${casaroot} ${arch}\"\n"
+      "  setenv PATH ${CMAKE_INSTALL_PREFIX}/bin:${casa_packages}/bin:$PATH\n"
+)
 
-# Create a top-level casainit.sh which detects the architecture
-# and sources the right <arch>/casainit.sh
-file( WRITE ${_casaroot}/casainit.sh 
+# Create a top-level casainit.sh which sources the <arch>/casainit.sh
+# that belongs to this build.
+file( WRITE ${casaroot}/casainit.sh 
       "#!/bin/sh\n"
       "# Generated by CMake, do not edit\n"
-      "a_root=${_casaroot}\n"
+      "a_root=${casaroot}\n"
       "a_host=`uname -n | awk -F. '{ print $1 }'`\n"
       "a_temp=\"\"\n"
+      "a_arch=\"\"\n"
       "if [ -f \"$a_root/aipshosts\" ]\n"
       "then\n"
       "    a_temp=`egrep \"^[  ]*$a_host[ ]\" \"$a_root/aipshosts\"`\n"
       "    a_arch=`/bin/echo $a_temp | awk '{ print $2 }'`\n"
       "fi\n"
-      "if [ \"$a_arch\" == \"\" ]\n"
+      "if [ \"$a_arch\" = \"\" ]\n"
       "then\n"
-      "    case `uname -s` in\n"
-      "    Linux)\n"
-      "        case `uname -m` in\n"
-      "        x86_64)\n"
-      "            a_arch=linux_64b\n"
-      "            ;;\n"
-      "        *)\n"
-      "            a_arch=linux_gnu\n"
-      "            ;;\n"
-      "        esac\n"
-      "        ;;\n"
-      "    Darwin)\n"
-      "        a_arch=darwin\n"
-      "        ;;\n"
-      "    *)\n"
-      "        echo \"Unknown uname -s: `uname -s`\"\n"
-      "        ;;\n"
-      "    esac\n"
+      "    source ${CMAKE_INSTALL_PREFIX}/casainit.sh\n"
+      "else\n"
+      "    source $a_root/$a_arch/casainit.sh\n"
       "fi\n"
-      "if [ \"$a_arch\" != \"\" ]\n"
-      "then\n"
-      "    . $a_root/$a_arch/casainit.sh\n"
-      "fi\n"
+)
+file( WRITE ${casaroot}/casainit.csh 
+      "#!/bin/sh\n"
+      "# Generated by CMake, do not edit\n"
+      "set a_root=\"${casaroot}\"\n"
+      "set a_host=`uname -n | awk -F. '{ print $1 }'`\n"
+      "set a_temp=\"\"\n"
+      "set a_arch=\"\"\n"
+      "if ( -f \"$a_root/aipshosts\" ) then\n"
+      "    set a_temp = `egrep \"^[  ]*\${a_host}[ ]\" \"$a_root/aipshosts\"`\n"
+      "    set a_arch = `/bin/echo $a_temp | awk '{ print $2 }'`\n"
+      "endif\n"
+      "if ( \"$a_arch\" == \"\" ) then\n"
+      "    source ${CMAKE_INSTALL_PREFIX}/casainit.csh\n"
+      "else\n"
+      "    source $a_root/$a_arch/casainit.csh\n"
+      "endif\n"
 )
 
 
 # Do not verify the contents of CASAPATH, it is not used by the build system
 #message( STATUS "$CASAPATH = $ENV{CASAPATH}" )
-#if( NOT $ENV{CASAPATH} MATCHES "^${_casaroot}/? +${arch}" )
-#  message( FATAL_ERROR "The environment variable CASAPATH must start with \"${_casaroot} ${arch}\". You should source ${_casaroot}/casainit.sh" )
+#if( NOT $ENV{CASAPATH} MATCHES "^${casaroot}/? +${arch}" )
+#  message( FATAL_ERROR "The environment variable CASAPATH must start with \"${casaroot} ${arch}\". You should source ${casaroot}/casainit.sh" )
 #endif()
 
 # Choose to have correct RPATHs both in the build tree and
@@ -281,7 +381,6 @@ if( CMAKE_SYSTEM_NAME STREQUAL Linux )
 elseif( CMAKE_SYSTEM_NAME STREQUAL Darwin )
   add_definitions(
     -DAIPS_DARWIN 
-    -DMACOSXBUILT
     )
 else(
     message( WARNING "Not on Linux nor Darwin!" )
@@ -313,9 +412,11 @@ casa_find( CFITSIO
   RUN_VERSION "(ffvers(&v), v)" )
 
 # X11.
-find_package( X11 REQUIRED )
-# Rename
-set( X11_INCLUDE_DIRS ${X11_INCLUDE_DIR} )
+if( NOT APPLE )
+  find_package( X11 REQUIRED )
+  # Rename
+  set( X11_INCLUDE_DIRS ${X11_INCLUDE_DIR} )
+endif()
 
 # Since we are using the C++ linker, the Fortran runtime libraries must be explicitly
 # linked in.
@@ -328,16 +429,27 @@ if( NOT FORTRAN_LIBRARIES )
     "int main() { return 0; }\n"
     )
   
-  try_compile( _have_gfortran ${CMAKE_BINARY_DIR} ${_try}
-    CMAKE_FLAGS -Wdev "-DCMAKE_EXE_LINKER_FLAGS=-lgfortran"
-    )
+  if( _gfortran_lib_path )
+    try_compile( _have_gfortran ${CMAKE_BINARY_DIR} ${_try}
+      CMAKE_FLAGS -Wdev "-DCMAKE_EXE_LINKER_FLAGS=${_gfortran_lib_path}"
+      )
+  else()
+    try_compile( _have_gfortran ${CMAKE_BINARY_DIR} ${_try}
+      CMAKE_FLAGS -Wdev "-DCMAKE_EXE_LINKER_FLAGS=-lgfortran"
+      )
+  endif()
   try_compile( _have_g2c ${CMAKE_BINARY_DIR} ${_try}
     CMAKE_FLAGS -Wdev "-DCMAKE_EXE_LINKER_FLAGS=-lg2c"
     )
  
   if( _have_gfortran )
-    set( FORTRAN_LIBRARIES -lgfortran 
-      CACHE STRING "Fortran library linker option" FORCE )
+    if( _gfortran_lib_path )
+      set( FORTRAN_LIBRARIES ${_gfortran_lib_path}
+	CACHE STRING "Fortran library linker option" FORCE )
+    else()
+      set( FORTRAN_LIBRARIES -lgfortran 
+        CACHE STRING "Fortran library linker option" FORCE )
+    endif()
     message( STATUS "Looking for Fortran runtime libraries -- ${FORTRAN_LIBRARIES}" )
   elseif( _have_g2c )
     set( FORTRAN_LIBRARIES -lg2c
@@ -354,28 +466,58 @@ endif()
 
 # PGPLOT (FORTRAN plotting package).
 # depends on X11
-casa_find( PGPLOT
-  VERSION 5.3.1
-  INCLUDES cpgplot.h
-  LIBS pgplot cpgplot
-  DEPENDS X11 FORTRAN )
+if( NOT SKIP_PGPLOT )
+  if( APPLE )
+    set( _deps FORTRAN )
+  else()
+    set( _deps X11 FORTRAN )
+  endif()
+  casa_find( PGPLOT
+    VERSION 5.3.1
+    INCLUDES cpgplot.h
+    LIBS pgplot cpgplot
+    DEPENDS ${_deps} )
+endif()
 
 # WCSLIB
-casa_find( WCSLIB
-  VERSION 4.3
-  INCLUDES wcslib/wcsconfig.h
-  LIBS wcs
-       pgsbox
-  # WCSLIB does "#define WCSLIB_VERSION 4.3.4" without quotes,
-  # hence "cout << WCSLIB_VERSION" would not work. The following
-  # code makes a string out of WCSLIB_VERSION.
-  CPP_VERSION "\"\";
+if( NOT SKIP_PGPLOT )
+  casa_find( WCSLIB
+    VERSION 4.3
+    INCLUDES wcslib/wcsconfig.h
+    LIBS wcs
+         pgsbox
+    # WCSLIB does "#define WCSLIB_VERSION 4.3.4" without quotes,
+    # hence "cout << WCSLIB_VERSION" would not work. The following
+    # code makes a string out of WCSLIB_VERSION.
+    CPP_VERSION "\"\";
 #define CASA_STRINGIFY(x) #x
 #define CASA_TOSTRING(x) CASA_STRINGIFY(x)
-  std::cout << CASA_TOSTRING(WCSLIB_VERSION)"
-  DEFINITIONS -DSIGNBIT 
-  DEPENDS PGPLOT )
+    std::cout << CASA_TOSTRING(WCSLIB_VERSION)"
+    DEFINITIONS -DSIGNBIT 
+    DEPENDS PGPLOT )
+else()
+  casa_find( WCSLIB
+    VERSION 4.3
+    INCLUDES wcslib/wcsconfig.h
+    LIBS wcs
+    # WCSLIB does "#define WCSLIB_VERSION 4.3.4" without quotes,
+    # hence "cout << WCSLIB_VERSION" would not work. The following
+    # code makes a string out of WCSLIB_VERSION.
+    CPP_VERSION "\"\";
+#define CASA_STRINGIFY(x) #x
+#define CASA_TOSTRING(x) CASA_STRINGIFY(x)
+    std::cout << CASA_TOSTRING(WCSLIB_VERSION)"
+    DEFINITIONS -DSIGNBIT )
+endif()
 
+
+# FFTW
+# Does not provide its version number in a header nor
+# in the library, which is a pity because CASACore needs
+# version >= 3.2.2 and is subject to a bug in fftw 3.2.1
+casa_find( FFTW3
+           INCLUDES fftw3.h
+           LIBS fftw3_threads fftw3f_threads fftw3f fftw3 )
 
 # BLAS
 casa_find( BLAS
@@ -399,14 +541,17 @@ endif()
 
 if( EXISTS ${CMAKE_INSTALL_PREFIX}/lib/libcasacore.dylib OR
     EXISTS ${CMAKE_INSTALL_PREFIX}/lib/libcasacore.so OR
-    EXISTS ${CMAKE_INSTALL_PREFIX}/lib64/libcasacore.so )
+    EXISTS ${CMAKE_INSTALL_PREFIX}/lib64/libcasacore.so OR USE_LIBCASACORE )
   set( casacore_libs casacore )
   ##
   ## by default the GNUmakefile for casacore installs include
-  ## files into $CASAROOT...
+  ## files into ${casaroot}.
   ##
   set( casacore_prefix ${CMAKE_INSTALL_PREFIX}/.. )
 else()
+  if( EXISTS ${CMAKE_INSTALL_PREFIX}/../include/casacore/casa/BasicMath.h )
+      set( casacore_prefix ${CMAKE_INSTALL_PREFIX}/.. )
+  endif()
   set( casacore_libs
        casa_casa 
        casa_components
@@ -415,6 +560,7 @@ else()
        casa_images
        casa_lattices
        casa_measures
+       casa_mirlib
        casa_ms
        casa_msfits
        casa_scimath
@@ -423,7 +569,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.9
+           VERSION 1.0.30
            INCLUDES casa/aips.h
                     casa/version.h
                     scimath/Mathematics/MatrixMathLA.h  # declares symbols defined in LAPACK
@@ -432,7 +578,9 @@ casa_find( CASACORE
            PREFIX_HINTS ${casacore_prefix}
            CPP_VERSION CASACORE_VERSION
            RUN_VERSION "casa::getVersionCASA()"
-           DEPENDS LAPACK CFITSIO WCSLIB DL )
+           DEPENDS LAPACK CFITSIO WCSLIB FFTW3 DL )
+# Listing explicitly CASACore's dependency libraries is not necessary if the CASACore libraries 
+# were built with correct linking information, which they are not.
 
 set( CASACORE_DEFINITIONS ${CASACORE_DEFINITIONS}
   -DCASA_USECASAPATH
@@ -530,13 +678,11 @@ set( PYTHON_LIBNAME ${PYTHON_LIBNAME} CACHE STRING "Python major and minor versi
 string( REGEX REPLACE "/[^/]+/[^/]+/?$" "" pyroot ${PYTHON_Python.h} )
 
 if( APPLE )
-    if( CMAKE_SYSTEM MATCHES ^Darwin-9 )
-        set( pyroot ${casa_packages}/lib/Python.framework/Versions/${PYTHONV} )
-    else()
-       set( pyroot ${casa_packages}/Library/Frameworks/Python.framework/Versions/${PYTHONV} )
-    endif()
-else()
-    set( pyroot ${casa_packages} )
+  if( CMAKE_SYSTEM MATCHES ^Darwin-9 )
+    set( pyroot ${pyroot}/lib/Python.framework/Versions/${PYTHONV} )
+  else()
+    set( pyroot ${pyroot}/Library/Frameworks/Python.framework/Versions/${PYTHONV} )
+  endif()
 endif()
 
 set( PYTHON_DEFINITIONS ${PYTHON_DEFINITIONS}
@@ -594,11 +740,11 @@ casa_find( DBUS
 
 # ATM
 casa_find( ATM
-  VERSION 0.3
+  VERSION 0.4
   INCLUDES ATMEnumerations.h ATMVersion.h
   INCLUDES_SUFFIXES ATM
   LIBS aatm
-  #CPP_VERSION ATM_VERSION  to be uncommented when ATM_VERSION is defined in devel-RPMs
+  CPP_VERSION ATM_VERSION
   RUN_VERSION "atm::getVersion()" 
 )
 
@@ -630,7 +776,7 @@ file( WRITE ${CMAKE_BINARY_DIR}/ccmtools_test.py
 # The names of CCMTools libraries have changed.
 # Need to support both naming conventions, until the new
 # version is universally available. (This implementation
-# would be cleaner if CCM exported a version number.)
+# would be cleaner if CCMTools exported a version number.)
 #
 if( EXISTS ${casa_packages}/lib/libccmtools_local.so OR
     EXISTS ${casa_packages}/lib64/libccmtools_local.so OR
@@ -676,6 +822,10 @@ set( CCMTOOLS_ccmtools_FLAGS -Xms1024M -Xmx1024M )
 find_package(
   Qt4 4.3.4
   COMPONENTS QtCore QtGui QtDBus QtXml ) #QtOpenGL )
+
+if( NOT QT4_FOUND )
+  message( FATAL_ERROR "Qt4 could not be found. Please check!" )
+endif()
 
 set( QT4_INCLUDE_DIRS ${QT_INCLUDES} CACHE PATH "QT4 include directories" FORCE )
 set( QT4_DEFINITIONS ${QT_DEFINITIONS} -DQT_NO_DEBUG CACHE STRING "QT4 preprocessor flags" FORCE )
@@ -785,12 +935,67 @@ set( DL_LIBRARIES ${CMAKE_DL_LIBS} )
 casa_config_end()
 
 #
+# The following variables are substitued into python scripts
+#
+set( PYTHON_LIBD ${CMAKE_INSTALL_PREFIX}/python/${PYTHONV} )
+set( PYTHON_TASKD ${PYTHON_LIBD} )
+#
+# allow user to override contents of casadef.py (needed for linux rpms)
+#
+if( NOT PYTHONLIBD )
+    set( PYTHON_LIBD_CASADEF ${PYTHON_LIBD} )
+else()
+    set( PYTHON_LIBD_CASADEF ${PYTHONLIBD} )
+endif()
+if( NOT PYTHONTASKD )
+    set( PYTHON_TASKD_CASADEF ${PYTHON_TASKD} )
+else()
+    set( PYTHON_TASKD_CASADEF ${PYTHONTASKD} )
+endif()
+
+# The modules must be defined in dependency order!
+# This will set up include paths, and which libraries to link to
+
+# for linux RPM & binary distros libgraphics contains pgplot (linked in)...
+if( APPLE )
+  casa_add_module( graphics CASACORE PGPLOT WCSLIB )
+else()
+  if( NOT SKIP_PGPLOT )
+    casa_add_module( graphics CASACORE PGPLOT X11 WCSLIB )
+  else()
+    casa_add_module( graphics CASACORE X11 WCSLIB )
+  endif()
+endif()
+casa_add_module( casadbus CASACORE DBUS )
+casa_add_module( tableplot CASACORE PYTHON )
+casa_add_module( msvis CASACORE graphics )
+casa_add_module( casaqt CASACORE QT4 QWT PYTHON XERCES graphics )
+casa_add_module( plotms CASACORE QT4 casaqt msvis )
+casa_add_module( display CASACORE WCSLIB QT4 casaqt msvis )
+#casa_add_module( display3d CASACORE QT4 OPENGL display )
+casa_add_module( flagging CASACORE Boost tableplot msvis )
+casa_add_module( calibration CASACORE tableplot msvis )
+casa_add_module( synthesis CASACORE ATM casadbus msvis calibration )
+casa_add_module( alma CASACORE LIBXML2 Boost )
+casa_add_module( oldalma CASACORE LIBXML2 Boost )
+casa_add_module( dish CASACORE )
+casa_add_module( nrao CASACORE )
+casa_add_module( spectrallines CASACORE )
+casa_add_module( xmlcasa CASACORE CCMTOOLS PYTHON ATM READLINE DL plotms display flagging synthesis dish nrao spectrallines )
+
+#
 # ASAP's build depends on something called a makedefs file. Fake one of those.
 #
 
-# Get path from first of rpfits libraries.
-list( GET ${RPFITS_LIBRARIES} 0 rpfits_lib )
+# Get library paths from the first of the rpfits/cfitsio/python library full paths.
+list( GET RPFITS_LIBRARIES 0 rpfits_lib )
 get_filename_component(rpfitslibd ${rpfits_lib} PATH)
+
+list( GET CFITSIO_LIBRARIES 0 cfitsio_lib )
+get_filename_component(cfitsiolibd ${cfitsio_lib} PATH)
+
+list( GET PYTHON_LIBRARIES 0 python_lib )
+get_filename_component(pythonlibd ${python_lib} PATH)
 
 # convert semicolons to spaces...
 set( _ii "" )
@@ -807,95 +1012,40 @@ foreach( _c ${CASACORE_LIBRARIES} )
   endif()
 endforeach()
 
+get_property( MYDEFINES DIRECTORY xmlcasa PROPERTY COMPILE_DEFINITIONS )
+# convert semicolons to -Dmydefine...
+set( _dd "" )
+foreach( _d ${MYDEFINES} )
+  set( _dd "${_dd} -D${_d}" )
+endforeach()
+
+
 file( WRITE ${CMAKE_INSTALL_PREFIX}/makedefs
   "# This file exists only for ASAP\n"
   PYTHONVER=${PYTHONV}\n
+  CXXFLAGS = \"${CMAKE_CXX_FLAGS}\"\n
+  COPTFLAGS = \"${_dd}\"\n
+  LD_FLAGS = \"${CMAKE_SHARED_LINKER_FLAGS}\"\n
   COREINCD = ${CASACORE_casa/aips.h}\n
   CORELIB = ${_cc}\n
-  WCSLIBLIBD = .\n
   WCSLIBLIB = ${WCSLIB_wcs}\n
+  WCSLIBLIBD = .\n
   PYTHONROOT = ${pyroot}\n
-  PYTHONLIBD = ${casa_packages}/lib\n
+  PYTHONLIBD = ${pythonlibd}\n
   PYTHONINCD = ${_ii}\n
   PYTHONLIB = ${PYTHON_LIBRARIES}\n
   BOOSTROOT = ${BOOST_ROOT}\n
   RPFITSLIBD = ${rpfitslibd}\n
+  CFITSIOLIBD = ${cfitsiolibd}\n
+  CFITSIOINCD =  ${CFITSIO_INCLUDE_DIRS}\n
   eval_vars :\n
   \t@\ echo\ \"$(foreach\ V,$(VARS),$V=\\\"$($V)\\\")\ \;\ export\ $(VARS)\"\n
 )
 
-#
-# The following variables are substitued into python scripts
-#
-set( PYTHON_LIBD ${CMAKE_INSTALL_PREFIX}/python/${PYTHONV} )
-set( PYTHON_TASKD ${PYTHON_LIBD} )
+add_subdirectory( doc/taskref )
+add_subdirectory( doc/casaref )
+add_subdirectory( doc/userman )
 
-# Temporarily set LC_TIME and LC_MESSAGES to values which cause
-# the "date" and "svn info" commands to speak English.
-# There was a problem with LC_TIME=Japanese causing
-# a runtime crash
-set( _lc_time_old $ENV{LC_TIME} )
-set( _lc_messages_old $ENV{LC_MESSAGES} )
-set( ENV{LC_TIME} en_US.UTF-8 )
-set( ENV{LC_MESSAGES} en_US )
-execute_process( COMMAND
-  date -u "+%a %Y/%m/%d %H:%M:%S UTC"
-  OUTPUT_VARIABLE BUILDTIME 
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-  )
-
-execute_process(
-  COMMAND ${PERL_EXECUTABLE} -e "open(INFO, 'svn info |') ; while (<INFO>){ if ( s/^Revision:\\s+//) { print; } }"
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-  OUTPUT_VARIABLE SVNREVISION
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-  )
-
-execute_process( COMMAND
-  ${PERL_EXECUTABLE} -e "open(INFO, 'svn info |') ; while (<INFO>){ if ( s/^URL:\\s+//) { print; } }"
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-  OUTPUT_VARIABLE SVNURL
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-  )
-
-execute_process( COMMAND
-  ${PERL_EXECUTABLE} -e "open(VERSION, '< VERSION'); $_ = <VERSION>; s/^\\d+?\\d\\.\\d+\\.(\\d+).*/$1/; print;"
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-  OUTPUT_VARIABLE CASABUILD
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-
-if( NOT SVNREVISION )
-  message( FATAL_ERROR "Could not read \"Revision\" from the output of \"svn info\"" )
-endif()
-if( NOT SVNURL )
-  message( FATAL_ERROR "Could not read \"URL\" from the output of \"svn info\"" )
-endif()
-if( NOT CASABUILD )
-  message( FATAL_ERROR "Could not read version information from ${CMAKE_SOURCE_DIR}/VERSION" )
-endif()
-
-set( ENV{LC_TIME} ${_lc_time_old} )
-set( ENV{LC_MESSAGES} ${_lc_messages_old} )
-
-# The modules must be defined in dependency order!
-# This will set up include paths, and which libraries to link to
-casa_add_module( graphics CASACORE PGPLOT X11 )
-casa_add_module( casadbus CASACORE DBUS )
-casa_add_module( tableplot CASACORE PYTHON )
-casa_add_module( msvis CASACORE graphics )
-casa_add_module( casaqt CASACORE QT4 QWT PYTHON XERCES graphics )
-casa_add_module( plotms CASACORE QT4 casaqt msvis )
-casa_add_module( display CASACORE WCSLIB QT4 casaqt msvis )
-#casa_add_module( display3d CASACORE QT4 OPENGL display )
-casa_add_module( flagging CASACORE Boost tableplot msvis )
-casa_add_module( calibration CASACORE tableplot msvis )
-casa_add_module( synthesis CASACORE ATM casadbus msvis calibration )
-casa_add_module( alma CASACORE LIBXML2 Boost )
-casa_add_module( oldalma CASACORE LIBXML2 Boost )
-casa_add_module( atnf CASACORE RPFITS CFITSIO )
-casa_add_module( dish CASACORE )
-casa_add_module( nrao CASACORE )
-casa_add_module( xmlcasa CASACORE CCMTOOLS PYTHON ATM READLINE DL plotms display flagging synthesis atnf dish nrao )
-
-# demo atmosphere ionosphere jive nfra simulators vlbi vo
+# All documentation
+add_custom_target( doc DEPENDS taskref_html taskref_pdf casaref_html casaref_pdf userman_html userman_pdf)
+#add_custom_target( doc )

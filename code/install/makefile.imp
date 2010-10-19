@@ -186,8 +186,6 @@ ifneq "$(MODULE)" ""
 endif
 include $(AIPSROOT)/code/install/makefile.help
 
-.PRECIOUS : $(PCKGDBGD)/%.o $(PCKGOPTD)/%.o
-
 
 # Pattern rules.
 #---------------

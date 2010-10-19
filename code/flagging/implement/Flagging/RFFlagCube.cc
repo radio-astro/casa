@@ -40,11 +40,15 @@
         
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-Bool dbg=False;
-Bool mdbg=False;
-Bool verbose=False;
+const Bool dbg=False;
+const Bool mdbg=False;
+const Bool verbose=False;
         
 RFCubeLattice<RFlagWord> RFFlagCube::flag; // global flag lattice
+Cube<Bool> RFFlagCube::in_flags;  //global flag array (kiss mode)
+int RFFlagCube::in_flags_time;
+bool RFFlagCube::in_flags_flushed;
+
 FlagMatrix RFFlagCube::flagrow;   
 Int RFFlagCube::pos_get_flag=-1,RFFlagCube::pos_set_flag=-1;
 Int RFFlagCube::maxmemuse=0;
@@ -53,7 +57,10 @@ RFlagWord RFFlagCube::base_flagmask=1,
           RFFlagCube::full_corrmask;
 Int RFFlagCube::agent_count=0,RFFlagCube::num_inst=0;
 RFlagWord RFFlagCube::agent_corrmasks[sizeof(RFlagWord)*8];
-Vector<RFlagWord> RFFlagCube::corr_flagmask;
+Vector<RFlagWord> RFFlagCube::corr_flagmask;  
+//This is a map from a set of correlations to a set of agents, i.e.
+// which agents deal with any of the given correlations
+
 Bool RFFlagCube::reset_preflags;
   LogIO RFFlagCube::default_sink(LogOrigin("Flagger","FlagCube"));
 
@@ -86,17 +93,26 @@ RFFlagCube::RFFlagCube ( RFChunkStats &ch,Bool ignore,Bool reset,LogIO &sink )
 
 RFFlagCube::~RFFlagCube ()
 {
-  num_inst--;
+    in_flags.resize(0, 0, 0);
+    in_flags_time = -1;
+    in_flags_flushed = false;
+    num_inst--;
 }
 
 uInt RFFlagCube::estimateMemoryUse ( const RFChunkStats &ch )
 {
-  return flag.estimateMemoryUse(ch.num(CHAN),ch.num(IFR),ch.num(TIME));
+    return
+        ch.num(CHAN) * ch.num(IFR) * ch.num(TIME) * 
+        sizeof(RFlagWord) / (1024*1024) + 1;
+    
 }
 
 // creates flag cube for a given visibility chunk
-void RFFlagCube::init( RFlagWord corrmsk, uInt nAgent, const String &name) 
+void RFFlagCube::init( RFlagWord corrmsk, uInt nAgent, bool only_selector, const String &name) 
 {
+    kiss = only_selector; /* Use a Cube<Bool> instead of the
+                             expensive flag lattice in this case */
+
     if (dbg) cout << "name=" << name << endl;
  
     // setup some masks
@@ -110,22 +126,31 @@ void RFFlagCube::init( RFlagWord corrmsk, uInt nAgent, const String &name)
     
     // init flag cube if it is empty
     if ( !flag.shape().nelements() ) {
-
-	//cout << " init flag cube" << endl;
+    
 	reset_preflags=False;
 
 	// setup correlation masks. The first NCORR bits of the flag word
 	// are used to store the apriori flags. Basemask is the first bitmask
 	// actually used for flagging
-	base_flagmask = num(CORR)>=2 ? 1<<num(CORR) : 4;
+	base_flagmask = num(CORR)>=2 ? 1<<num(CORR) : 4;  // is this a bug, should base_flagmask be 2 if num(CORR) is 1?
 
 	// full_corrmask is the mask of all correlations flagged
 	full_corrmask = (1<<num(CORR))-1;
 
-	// init empty flag lattice
-	// initial state is all pre-flags set; we'll clear them as we go along
-	flag.init(num(CHAN),num(IFR),num(TIME),num(CORR), nAgent, full_corrmask, maxmemuse, 2);
-	pos_get_flag=pos_set_flag=-1;
+        if (!kiss) {
+            // init empty flag lattice
+            // initial state is all pre-flags set; we'll clear them as we go along
+            flag.init(num(CHAN),num(IFR),num(TIME),num(CORR), nAgent, full_corrmask, maxmemuse, 2);
+        }
+        else {
+            /* Set shape to a dummy value, 
+               only so that we can later use flag.shape().nelements()
+               in the if conditions.
+            */
+            flag.shape().resize(1);
+            in_flags_time = -1;
+        }
+	pos_get_flag = pos_set_flag = -1;
 
 	// allocate cube of row flags
 	flagrow.resize(num(IFR),num(TIME));
@@ -151,9 +176,10 @@ void RFFlagCube::init( RFlagWord corrmsk, uInt nAgent, const String &name)
     // raise flag if any one instance has a RESET pre-flag policy
     if ( pfpolicy==FL_RESET )
 	reset_preflags=True;
+
     // set bits in corr_flagmask
-    for ( uInt cm=0; cm<corr_flagmask.nelements(); cm++ )
-	if ( cm&corrmask )
+    for ( uInt cm=0; cm < corr_flagmask.nelements(); cm++ )
+	if ( cm & corrmask )
 	    corr_flagmask(cm)|=flagmask;
   
     // accumulates names of all agents using our cube. (This is just eye 
@@ -179,20 +205,19 @@ void RFFlagCube::init( RFlagWord corrmsk, uInt nAgent, const String &name)
 // deallocates flag cube
 void RFFlagCube::cleanup ()
 {
-    if( flag.shape().nelements() )
-	{
-	    flag.cleanup();
-	    flagrow.resize(0,0);
-	    corr_flagmask.resize(0);
-	    agent_count=0;
-	}
+    if (flag.shape().nelements()) {
+        flag.cleanup();
+        flagrow.resize(0,0);
+        corr_flagmask.resize(0);
+        agent_count=0;
+    }
 }
 
 void RFFlagCube::reset ()
 {
     fl_raised=fl_cleared=row_fl_raised=row_fl_cleared=0;
     my_corrflagmask = corr_flagmask(corrmask);
-    flag.reset();
+    if (!kiss) flag.reset();
 
     return;
 }
@@ -216,12 +241,30 @@ void RFFlagCube::printStats ()
         tot_row_fl_raised,row_fl_raised,row_fl_cleared);
 }
 
-// Sets flag at (ich,iifr). Returns True if flag has not been raised
+// Sets flag at (ich,iifr) to 1. Returns True if flag has not been raised
 // previously.
-Bool RFFlagCube::setFlag ( uInt ich,uInt ifr,FlagCubeIterator &iter )
+Bool RFFlagCube::setFlag ( uInt ich,uInt ifr, FlagCubeIterator &iter )
 {
-    //cerr << __FILE__ << " " << __LINE__ << endl;
-    if (dbg) cerr << "flag for " << ich << "," << ifr;
+    if (dbg) cerr << "flag for " << ich << "," << ifr << "corrmask = " << corrmask;
+
+    if (kiss) {
+        uInt c = 1;
+        bool raised = false;
+        for (uInt icorr = 0; icorr < num(CORR); icorr++, c<<=1) {
+            if (c & corrmask) {
+                if (!in_flags(icorr, ich, ifr)) {
+                    raised = true;
+                }
+                in_flags(icorr, ich, ifr) = 1;
+            }
+        }
+        if (raised) {
+            tot_fl_raised++;
+            fl_raised++;
+        }
+        return raised;
+    }
+
     RFlagWord oldfl = iter(ich,ifr);
     if (dbg) cerr << " : " << oldfl << "," << flagmask;
     if ( !(oldfl&flagmask) ) {
@@ -229,11 +272,6 @@ Bool RFFlagCube::setFlag ( uInt ich,uInt ifr,FlagCubeIterator &iter )
 	fl_raised++;
 	if (dbg) cerr << " setting " << oldfl << " | " << flagmask << endl;
 	iter.set(ich, ifr, oldfl | flagmask);
-	//if( !oldfl ) // first flag for this pixel?
-	//{
-	//  chunk.nfIfrTime(ifr,iter.position())++;
-	//  chunk.nfChanIfr(ich,ifr)++;
-	//}
 	if (dbg) cerr << " -----> true --> " << iter(ich,ifr) << endl;
 	return True;
     }
@@ -244,7 +282,27 @@ Bool RFFlagCube::setFlag ( uInt ich,uInt ifr,FlagCubeIterator &iter )
 // Clears flag at (ich,iifr). Returns True if flag was up before.
 Bool RFFlagCube::clearFlag ( uInt ich,uInt ifr,FlagCubeIterator &iter )
 {
-    if(dbg)cerr << "unflag for " << ich << "," << ifr;
+    if(dbg) cerr << "unflag for " << ich << "," << ifr;
+
+    if (kiss) {
+        
+        uInt c = 1;
+        bool cleared = false;
+        for (uInt icorr = 0; icorr < num(CORR); icorr++, c<<=1) {
+            if (c & corrmask) {
+                if (in_flags(icorr, ich, ifr)) {
+                    cleared = true;
+                    in_flags(icorr, ich, ifr) = 0;
+                }
+            }
+        }
+        if (cleared) {
+            tot_fl_raised--;
+            fl_cleared++;
+        }
+        return cleared;
+    }
+
     RFlagWord oldfl = iter(ich,ifr);
     if(dbg)cerr << " : " << oldfl << "," << flagmask;
 
@@ -265,9 +323,7 @@ Bool RFFlagCube::clearFlag ( uInt ich,uInt ifr,FlagCubeIterator &iter )
 // previously.
 Bool RFFlagCube::setRowFlag ( uInt ifr, uInt itime )
 {
-    if(dbg)cerr << " flag row for " << ifr << "," << itime;
     RFlagWord oldfl = flagrow(ifr,itime);
-    if(dbg)cerr << " : " << oldfl << "," << flagmask;
 
     // first flag raised for this row - update global stats
     if( !(oldfl&flagmask) )
@@ -275,35 +331,23 @@ Bool RFFlagCube::setRowFlag ( uInt ifr, uInt itime )
             tot_row_fl_raised++;
             row_fl_raised++;
             flagrow(ifr,itime) = oldfl | flagmask;
-            //if( !oldfl ) // first flag for this row?
-            //{
-            //  chunk.nrfIfr(ifr)++;
-            //  chunk.nrfTime(itime)++;
-            //}
-            if(dbg) cerr << " -----> true --> " <<  flagrow(ifr,itime)<< endl;
             return True;
         }
-    if(dbg) cerr << " -----> false --> " <<  flagrow(ifr,itime)<< endl;
     return False;
 }
 
 // Clears row flag for (iifr,it). Returns True if flag was up before.
 Bool RFFlagCube::clearRowFlag ( uInt ifr,uInt itime )
 {
-    if(dbg) cerr << " unflag row for " << ifr << "," << itime;
     RFlagWord oldfl = flagrow(ifr,itime);
-    if(dbg)cerr << " : " << oldfl << "," << flagmask;
 
     // all flags cleared for this point - update global stats
-    //if( oldfl&flagmask )
     if( !(oldfl&flagmask) )  {
         tot_row_fl_raised--;
         row_fl_cleared++;
         flagrow(ifr,itime) = oldfl & flagmask;
-        if(dbg)cerr << " -----> true --> " << flagrow(ifr,itime) << endl;
         return True;
     }
-    if(dbg)cerr << " -----> false --> " << flagrow(ifr,itime) << endl;
     return False;
 }
 
@@ -311,35 +355,56 @@ Bool RFFlagCube::clearRowFlag ( uInt ifr,uInt itime )
 // If pfr and pfc are specified, fills in data
 void RFFlagCube::advance( uInt it,Bool getFlags )
 {
-  if( flag.position() != (Int)it )
+  if( !kiss && flag.position() != (Int)it )
     flag.advance(it);
   if( getFlags )
-    getMSFlags();
+    getMSFlags(it);
   return;
 }
 
-
 // Fills lattice with apriori flags (from VisBuffer in ChunkStats)
-void RFFlagCube::getMSFlags()
+void RFFlagCube::getMSFlags(uInt it)
 {
-// return if already filled at this iterator position
-  if( flag.position() <= pos_get_flag )
-    return;
+  // return if already filled at this iterator position
+  if( !kiss ) {
+      if (pos_get_flag >= flag.position() )
+          return;
+      
+      pos_get_flag = flag.position();
+  }
+  else {
+      pos_get_flag = it;
+      if (in_flags_time == (int)it) {
+          return;
+      }
+      in_flags_time = it;
+      in_flags_flushed = false;
+  }
+  
+  FlagVector fl_row (flagrow.column(pos_get_flag));
 
-  pos_get_flag = flag.position();
-
-  FlagVector fl_row( flagrow.column(pos_get_flag) );
   const Vector<Bool> & fr( chunk.visBuf().flagRow() );
 
+  in_flags.resize(num(CORR), num(CHAN), num(IFR));
+    
   if( reset_preflags ) // RESET pre-flag policy: reset the flags
   {
     for( uInt i=0; i<fr.nelements(); i++ )
     {
       uInt ifr = chunk.ifrNum(i);
-      // clear row flag
-      fl_row(ifr) &= ~(RowAbsent|RowFlagged); // 0000 0011 & 1111 1100 = 0000 0000
-      // clear pixel flags
-      flag.set_column(ifr, 0); // 0000 0000
+
+      if (!kiss) {
+          // clear row flag
+          fl_row(ifr) &= ~(RowAbsent|RowFlagged); // 0000 0011 & 1111 1100 = 0000 0000
+          // clear pixel flags
+          flag.set_column(ifr, 0); // 0000 0000
+      }
+
+      for (uInt ichan = 0; ichan < num(CHAN); ichan++) {
+          for (uInt icorr = 0; icorr < num(CORR); icorr++) {
+              in_flags(icorr, ichan, ifr) = 0;
+          }
+      }
     }
   }
   else // HONOR/IGNORE policy: faithfully copy flags from FLAG and FLAG_ROW
@@ -356,36 +421,68 @@ void RFFlagCube::getMSFlags()
 	throw AipsError(ss.str());
       }
 
+    Bool deleteIn, deleteFc;
+    Bool *inp = in_flags.getStorage(deleteIn);
+    const Bool *fcp = fc.getStorage(deleteFc);
+
     for( uInt i=0; i < fr.nelements(); i++ )
     {
       uInt ifr = chunk.ifrNum(i);
-      fl_row(ifr) &= ~RowAbsent; // 0000 0011 & 11111101 = 0000 0001
-      // initial state of lattice is all correlations flagged, so we just
-      // ignore flagged rows
-      //if( !fr(i) )  // row not flagged, or we ignore/reset flags
-      //{
-        // clear row flag in internal matrix, if needed
-      if( !fr(i) ) 
-	  fl_row(ifr) &= ~RowFlagged; // 0000 0001 & 1111 1110 -> 0000 0000
-      /* clear all row flags...so that only new flags are True at the end */
-      
-      ///... read in chan flags for all rows......
-      ///...  because all may need to be written back.
-      
-      for (uInt ich=0; ich<num(CHAN); ich++ ) {
-          for (uInt icorr=0; icorr<num(CORR); icorr++ ) {
-     
-              /* The lattice was initialized to all flags set,
-                 Now clear as appropriate (if not FLAG_ROW and not FLAG)
-              */
-              if( !fl_row(ifr) && !fc(icorr, ich, i) ) {
-                  //(*flag.cursor())(ich,ifr) &= ~(1<<icorr); 
 
-                  flag.set(ich, ifr, icorr, 0);
+      if (fr(i)) {
+          unsigned n = num(CHAN)*num(CORR);
+          for (unsigned j = 0; j < n; j++) {
+              inp[j + ifr * n] = 1; 
+          }
+      }
+      else {
+          unsigned n = num(CORR) * num(CHAN);
+          for (unsigned j = 0; j < n; j++) {
+              inp[j + n * ifr] = fcp[j + n * i];
+          }
+      }
+
+      if (!kiss) {
+          fl_row(ifr) &= ~RowAbsent; // 0000 0011 & 11111101 = 0000 0001
+          // initial state of lattice is all correlations flagged, so we just
+          // ignore flagged rows
+          //if( !fr(i) )  // row not flagged, or we ignore/reset flags
+          //{
+          // clear row flag in internal matrix, if needed
+          if( !fr(i) ) 
+              fl_row(ifr) &= ~RowFlagged; // 0000 0001 & 1111 1110 -> 0000 0000
+          /* clear all row flags...so that only new flags are True at the end */
+          
+          ///... read in chan flags for all rows......
+          ///...  because all may need to be written back.
+          
+          
+          /* The lattice was initialized to all flags set,
+             Now clear as appropriate (if not FLAG_ROW and not FLAG)
+          */
+          if (num(CORR) == 1) {
+              for (uInt ich=0; ich<num(CHAN); ich++ ) {
+                  if( !fl_row(ifr) && !fc(0, ich, i) ) {
+                      flag.set(ich, ifr, 0, 0);
+                  }
+              }
+          }
+          else {
+              for (uInt ich=0; ich<num(CHAN); ich++ ) {
+                  for (uInt icorr=0; icorr<num(CORR); icorr++ ) {
+                      
+                      if( !fl_row(ifr) && !fc(icorr, ich, i) ) {
+                          //(*flag.cursor())(ich,ifr) &= ~(1<<icorr); 
+                          
+                          flag.set(ich, ifr, icorr, 0);
+                      }
+                  }
               }
           }
       }
     }
+    in_flags.putStorage(inp, deleteIn);
+    fc.freeStorage(fcp, deleteFc);
   }
 }
 
@@ -394,115 +491,148 @@ void RFFlagCube::getMSFlags()
 // ifrnums is a vector of IFR indices (derived from antenna indices)
 void RFFlagCube::setMSFlags(uInt itime)
 {
-  if(mdbg) 
+    //    cerr << itime << " write to visIter" << endl;
+  //jmlarsen: This function should probably use the flagrow member variable.
+
+    if(mdbg) 
     {
       cerr << "RFFlagCube :: setMSFlags for " ;
       cerr << "itime : " << itime << endl;
     }
 
-// return if already done at this iterator position
-  if( flag.position() <= pos_set_flag )
-    return;
+  // return if already done at this iterator position
+  if (!kiss) {
+      if( flag.position() <= pos_set_flag )
+          return;
+      
+      pos_set_flag = flag.position();
+  }
+  else {
+      if (in_flags_flushed) {
+          return;
+      }
+      else {
+          in_flags_flushed = true;
+      }
+  }
 
-  pos_set_flag = flag.position();
   uInt nr = chunk.visBuf().nRow();
-  // Int itime = 0;//chunk.iTime();
   Vector<Bool> out_flagrow( nr,False );
   Cube<Bool>   out_flagcube( num(CORR),num(CHAN),nr,False );
 
-  /// TODO : check this.
-  /// if( reset_preflags )..... set only T flags.
-  /// else ..... set all flags.
-  
-  // set to zero
-  // nrfIfr(ifr), nrfTime(itime), nfIfrTime(ifr,itime), nfChanIfr(ich,ifr)
-  
-  //F
   chunk.nrfTime(itime) = 0;
-  /* 
-  chunk.nfChanIfr.set(0);
-  chunk.nfCorrIfr.set(0);
-  chunk.nfChanTime.set(0);
-  chunk.nfCorrTime.set(0);
-  chunk.nfChanCorr.set(0);
-  */
+
+  Bool deleteOut, deleteIn;
+  Bool *outp = out_flagcube.getStorage(deleteOut);
+  const Bool *inp = in_flags.getStorage(deleteIn);
+
+  Bool deleteNfChanIfr;
+  uInt *nfChanIfrp = chunk.nfChanIfr().getStorage(deleteNfChanIfr);
+
+  unsigned ncorr = num(CORR);
+  unsigned nchan = num(CHAN);
 
   for( uInt ir=0; ir<nr; ir++ )
   {
       uInt ifr = chunk.ifrNum(ir);
-      //F flag counter reset
-      //chunk.nrfIfr(ifr)=0;
-      chunk.nfIfrTime(ifr,itime)=0;
-      // (ncorr,nchan) matrix of output flags
 
-      if (dbg) cerr << "  at " << __FILE__ << " " << __func__ << " " << __LINE__ << " " << __LINE__ << out_flagrow(ir) << endl;
-      //if (dbg) cerr << "  at " << __FILE__ << " " << __func__ << " " << __LINE__ << " " << __LINE__ << fwv << endl;
-
-      if( ! reset_preflags ) out_flagrow(ir) = False;
+      chunk.nrfIfr(ifr) = 0;
 
       if (dbg) cerr << "  at " << __FILE__ << " " << __func__ << " " << __LINE__ << " " << __LINE__ << out_flagrow(ir) << endl;
       
       // Set data flags
-      for( uInt ich=0; ich<num(CHAN); ich++ ) {
-	  //F
-	  chunk.nfChanIfr(ich, ifr) = 0;
+      unsigned n = nchan * ncorr;
+      unsigned iout = n*ir;
+      unsigned iin = n*ifr;
+      unsigned iChanIfr = nchan * ifr;
+      uInt &iNfIfrTime = chunk.nfIfrTime(ifr, itime);
+      iNfIfrTime = 0;
+      for( uInt ich=0; ich < nchan; ich++, iChanIfr++) {
+          nfChanIfrp[iChanIfr] = 0;
+      }
 
-	  RFlagWord fw = flag(ich, ifr);
+      iChanIfr = nchan * ifr;
+      for( uInt ich=0; ich < nchan; ich++, iChanIfr++) {
 
-	  if (fw) {
-	      // if anything was raised for this channel
+          if (kiss) {
 
-	      //cerr << "raised" << __FILE__ << " " << __func__ << " " << __LINE__ << " " << __LINE__ << out_flagrow(ir) << endl;
-	      //cerr << "raised" << __FILE__ << " " << __func__ << " " << __LINE__ << " " << __LINE__ << fw << endl;
-	      //cerr << "num(CORR)" << num(CORR) << endl;
+              if (ncorr == 1) {
+                  if (outp[iout++] = inp[iin++]) {
+                      nfChanIfrp[iChanIfr]++;
+                      iNfIfrTime++;
+                  }
+              }
+              else {
+                  for( uInt icorr = 0; icorr < ncorr; icorr++, iout++, iin++) {
+                      if (outp[iout] = inp[iin]) {
+                          nfChanIfrp[iChanIfr]++;
+                          iNfIfrTime++;
+                      }
+                  }
+              }
+          } else {
 
-	      // loop over correlations and see which are (a) preflagged
-	      // (b) been flagged by agents. 
-	      RFlagWord cmask = 1;
-	      for( uInt  icorr=0; icorr<num(CORR); icorr++,cmask<<=1 ) {
-		  //cerr << "num(CORR) " << num(CORR) << " " << cmask << " " << corr_flagmask(cmask) << endl;
-		  if( fw&cmask || fw&corr_flagmask(cmask) ) {
-
-		      out_flagcube(icorr,ich,ir) = True;
-	              //cerr << "is true" << __FILE__ << " " << __func__ << " " << __LINE__ << " " << __LINE__ << endl;
-		  }
-		  else
-		      if( ! reset_preflags ) out_flagcube(icorr,ich,ir) = False;
-	      }
-	  }
-	  else {
-	      if( ! reset_preflags ) {
-		  for( uInt  icorr=0; icorr<num(CORR); icorr++ )
-
-		      out_flagcube(icorr,ich,ir) = False;
-	      }
-	  }
-	  for( uInt  icorr=0; icorr<num(CORR); icorr++ ) {
-
-	    chunk.nfChanIfr(ich,ifr) += (Int)(out_flagcube(icorr,ich,ir));
-	  }
-	  chunk.nfIfrTime(ifr,itime) += chunk.nfChanIfr(ich,ifr);
+              RFlagWord fw = flag(ich, ifr);
+              
+              if (fw) {
+                  // if anything was raised for this channel
+                  
+                  // loop over correlations and see which are (a) preflagged
+                  // (b) been flagged by agents. 
+                  RFlagWord cmask = 1;
+                  if (num(CORR) == 1) {
+                      
+                      if (fw & 1 || fw & corr_flagmask(1)) {
+                          out_flagcube(0, ich, ir) = True;
+                          chunk.nfChanIfr(ich,ifr)++;
+                          chunk.nfIfrTime(ifr,itime)++;
+                      }
+                  }
+                  else {
+                      for( uInt  icorr=0; icorr<num(CORR); icorr++, cmask<<=1 ) {
+                          
+                          if( fw & cmask       // (a) if fw is set for this correlation
+                              ||
+                              fw & corr_flagmask(cmask) // (b) if agent flag in fw
+                              // is set for any agent that 
+                              // deals with this correlation
+                              ) {
+                              
+                              out_flagcube(icorr,ich,ir) = True;
+                              chunk.nfChanIfr(ich,ifr)++;
+                              chunk.nfIfrTime(ifr,itime)++;
+                          }
+                      }
+                  }
+              }
+          }
       }
     
       /* if any dataflags have been unflagged, they already are.
-	 if any rowflags have been unflagged, this is already in the dataflags too ($$) */
+	 if any rowflags have been unflagged, this is already in the dataflags too */
       /* if any dataflags have been flagged - this info is there in dataflags.
-	 if any rowflags have been flagged, this is also there in dataflags ($) */
+	 if any rowflags have been flagged, this is also there in dataflags */
       // so make flag_row the AND of the dataflags.
-      if (dbg) cerr << "  at " << __FILE__ << " " << __func__ << " " << __LINE__ << " " << __LINE__ << out_flagrow(ir) << endl;
 
       /* Set flagrow if everything was flagged */
-      out_flagrow(ir) = (chunk.nfIfrTime(ifr, itime) == num(CHAN)*num(CORR));
 
-      if (dbg) cerr << "  at " << __FILE__ << " " << __func__ << " " << __LINE__ << " " << __LINE__ << out_flagrow(ir) << endl;
-    
       /* Fill in all the flag counts here */
       // chunk.nf*
       // nrfIfr(ifr), nrfTime(itime), nfIfrTime(ifr,itime), nfChanIfr(ich,ifr)
-      //F
-      chunk.nrfIfr(ifr) += (Int)(out_flagrow(ir));
-      chunk.nrfTime(itime) += (Int)(out_flagrow(ir));
+
+      if (chunk.nfIfrTime(ifr, itime) == nchan * ncorr) {
+
+          out_flagrow(ir) = True;
+
+          chunk.nrfIfr(ifr)++;
+          chunk.nrfTime(itime)++;
+      }
   }
+
+  out_flagcube.putStorage(outp, deleteOut);
+  in_flags.freeStorage(inp, deleteIn);
+  chunk.nfChanIfr().putStorage(nfChanIfrp, deleteNfChanIfr);
+
   if(mdbg)
       {
           Int cnt1=0,cnt2=0;

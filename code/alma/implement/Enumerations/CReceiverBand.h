@@ -55,7 +55,7 @@ namespace ReceiverBandMod
   //! ReceiverBand.
   //!  [ASDM.Receiver] Receiver band names
   
-  const char *const revision = "1.7";
+  const char *const revision = "1.8";
   const int version = 1;
   
   enum ReceiverBand
@@ -91,6 +91,26 @@ namespace ReceiverBandMod
     BURE_03 /*!< Plateau de Bure receiver band #3. */
      ,
     BURE_04 /*!< Plateau de Bure receiver band #4 */
+     ,
+    EVLA_4 /*!<  */
+     ,
+    EVLA_P /*!<  */
+     ,
+    EVLA_L /*!<  */
+     ,
+    EVLA_C /*!<  */
+     ,
+    EVLA_S /*!<  */
+     ,
+    EVLA_X /*!<  */
+     ,
+    EVLA_Ku /*!<  */
+     ,
+    EVLA_K /*!<  */
+     ,
+    EVLA_Ka /*!<  */
+     ,
+    EVLA_Q /*!<  */
      ,
     UNSPECIFIED /*!< receiver band of unspecified origin. */
      
@@ -143,6 +163,26 @@ class CReceiverBand {
 	static const std::string& sBURE_03; /*!< A const string equal to "BURE_03".*/
 	
 	static const std::string& sBURE_04; /*!< A const string equal to "BURE_04".*/
+	
+	static const std::string& sEVLA_4; /*!< A const string equal to "EVLA_4".*/
+	
+	static const std::string& sEVLA_P; /*!< A const string equal to "EVLA_P".*/
+	
+	static const std::string& sEVLA_L; /*!< A const string equal to "EVLA_L".*/
+	
+	static const std::string& sEVLA_C; /*!< A const string equal to "EVLA_C".*/
+	
+	static const std::string& sEVLA_S; /*!< A const string equal to "EVLA_S".*/
+	
+	static const std::string& sEVLA_X; /*!< A const string equal to "EVLA_X".*/
+	
+	static const std::string& sEVLA_Ku; /*!< A const string equal to "EVLA_Ku".*/
+	
+	static const std::string& sEVLA_K; /*!< A const string equal to "EVLA_K".*/
+	
+	static const std::string& sEVLA_Ka; /*!< A const string equal to "EVLA_Ka".*/
+	
+	static const std::string& sEVLA_Q; /*!< A const string equal to "EVLA_Q".*/
 	
 	static const std::string& sUNSPECIFIED; /*!< A const string equal to "UNSPECIFIED".*/
 	

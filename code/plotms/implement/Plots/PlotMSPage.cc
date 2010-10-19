@@ -113,6 +113,10 @@ void PlotMSPage::resize(unsigned int nrows, unsigned int ncols) {
                 // add plotmsplotter as draw watcher
                 canvas->registerDrawWatcher(PlotDrawWatcherPtr(plotter,false));
                 
+                // watch for keystrokes related to using tracker feature
+                canvas->registerKeyHandler( 
+                   PlotKeyEventHandlerPtr( plotter->getToolsTab()->tracker_key_handler, false) );
+                
                 // set cached image size
                 canvas->setCachedAxesStackImageSize(cimg.first, cimg.second);
             }

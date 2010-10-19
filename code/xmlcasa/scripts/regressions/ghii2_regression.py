@@ -15,15 +15,21 @@ l=locals()
 if not l.has_key("repodir"): 
     repodir=os.getenv("CASAPATH").split(' ')[0]
 
+print casa['build']
 print 'I think the data repository is at '+repodir
 datadir=repodir+"/data/regression/simdata/"
 cfgdir=repodir+"/data/alma/simmos/"
 importfits(fitsimage=datadir+"30dor.fits",imagename="30dor.image")
-default("simdata2")
 
 project="ghii2"
 # Clear out results from previous runs.
 os.system('rm -rf '+project+'*')
+
+#importfits(fitsimage=datadir+"ghii2_regression.mask.fits",imagename="ghii2_regression.mask")
+shutil.copytree(datadir+"ghii2_regression.mask","ghii2_regression.mask")
+default("simdata")
+project="ghii2"
+
 
 cl.done()
 cl.addcomponent(dir="J2000 05h18m48.586s -68d42m00.05s",flux=0.5,freq="650GHz")
@@ -54,11 +60,15 @@ thermalnoise="tsys-atm" # simdata2 default=off
 
 image=True
 vis="$project.noisy.ms"
-imsize=[300,300]
 cell="0.05arcsec"
 niter=5000
-threshold="0.1mJy"
+threshold="1mJy"
 weighting="briggs"
+#imsize=[300,300]
+imsize=[400,400]
+#mask=[50,350,50,350]
+#mask="ghii2_regression.mask.text"
+mask="ghii2_regression.mask"
 
 analyze=True
 overwrite=True
@@ -120,6 +130,13 @@ refstats = { 'sum': 662.3,
              'rms': 0.0503,
              'sigma': 0.0497 }
 
+# 20100927
+refstats = { 'sum': 654.3, 
+             'max': 0.59149,
+             'min': -0.061,
+             'rms': 0.0497,
+             'sigma': 0.0492 }
+
 ia.open(project + '.diff')
 hiidiff_stats=ia.statistics(verbose=False,list=False)
 ia.close()
@@ -137,6 +154,20 @@ diffstats = {'sum': 3267.5,
              'min': -0.07999,
              'rms': 0.045,
              'sigma': 0.0265 }
+
+# 20101013 masked image
+refstats = { 'sum': 1046.5, 
+             'max': 0.6652,
+             'min': -0.04416,
+             'rms': 0.04313,
+             'sigma': 0.04262 }
+
+diffstats = {'sum': 3176.1,
+             'max': 0.1660,
+             'min': -0.005074,
+             'rms': 0.03591,
+             'sigma': 0.02070 }
+
 
 ### tight 
 reftol   = {'sum':  1e-2,
@@ -157,6 +188,7 @@ loghdr = """
 """
 
 print >> logfile, loghdr
+print >> logfile,casa['build']
 
 # more info
 ms.open(project+".ms")

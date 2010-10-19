@@ -37,7 +37,7 @@
  ***/
 
 #include <iostream>
-#include <xmlcasa/components/componentlist_cmpt.h>
+#include <componentlist_cmpt.h>
 #include <components/ComponentModels/ComponentList.h>
 #include <components/ComponentModels/ComponentShape.h>
 #include <components/ComponentModels/SpectralModel.h>
@@ -1691,25 +1691,31 @@ bool componentlist::replace(const int which, const ::casac::record& list,
   return rstat;
 }
 
-bool componentlist::print(const int which)
-{
-  itsLog->origin(LogOrigin("componentlist", "print"));
-
-  // TODO : IMPLEMENT ME HERE !
-  bool rstat(false);
-  try{
-    if(itsList && itsBin){
-      *itsLog << LogIO::WARN << "print not implemented yet" << LogIO::POST;
-    } else {
-      *itsLog << LogIO::WARN
-              << "componentlist is not opened, please open first" << LogIO::POST;
-    }
-  }
-  catch (AipsError x){
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-    RETHROW(x)
-  }
-  return rstat;
+bool componentlist::summarize(const int which) {
+	itsLog->origin(LogOrigin("componentlist", __FUNCTION__));
+	Bool rstat = False;
+	try{
+		if(itsList && itsBin) {
+			if(uInt(which) >= itsList->nelements() ) {
+				ostringstream oss;
+				oss << "List has only " << itsList->nelements()
+    					<< " components, but zero-based component " << which << " specified. "
+    					<< "Please specify a component less than " << itsList->nelements();
+					throw AipsError(oss.str());
+			}
+			*itsLog << LogIO::NORMAL << itsList->summarize(which) << LogIO::POST;
+			rstat = True;
+		} else {
+			*itsLog << LogIO::WARN
+					<< "componentlist is not opened, please open first" << LogIO::POST;
+			rstat = False;
+		}
+	}
+	catch (AipsError x){
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		RETHROW(x)
+	}
+	return rstat;
 }
 
 bool componentlist::iscomponentlist(const ::casac::variant& tool)

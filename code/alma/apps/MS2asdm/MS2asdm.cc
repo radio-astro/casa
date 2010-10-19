@@ -198,6 +198,7 @@ int main(int argc, char *argv[]) {
       MeasurementSet ms;
       m2a = new MS2ASDM(ms);
       error("Using ASDM version "+ m2a->showversion());
+      delete m2a;
     }
     else{
       itsMS = new MeasurementSet(msfile);

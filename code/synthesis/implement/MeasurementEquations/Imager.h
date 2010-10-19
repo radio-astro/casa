@@ -33,6 +33,7 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <casa/Arrays/IPosition.h>
 #include <casa/Quanta/Quantum.h>
+#include <components/ComponentModels/ConstantSpectrum.h>
 
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MPosition.h>
@@ -57,7 +58,6 @@ class MeasurementSet;
 class MFrequency;
 class File;
 class VPSkyJones;
-class PGPlotter;
 class EPJones;
 class ViewerProxy;
 template<class T> class ImageInterface;
@@ -73,7 +73,7 @@ class Imager
   Imager();
 
   Imager(MeasurementSet& ms, Bool compress=False, Bool useModel=False);
-  Imager(MeasurementSet& ms, PGPlotter& pgplotter, Bool compress=False);
+  Imager(MeasurementSet& ms, Bool compress=False);
 
   // Copy constructor and assignment operator
   Imager(const Imager&);
@@ -203,7 +203,9 @@ class Imager
                              const String& scan="",
                              const Bool useModelCol=False);
 
-
+  // Select some data.
+  // Sets nullSelect_p and returns !nullSelect_p.
+  // be_calm: lowers the logging level of some messages if True.
   Bool setdata(const String& mode, const Vector<Int>& nchan, 
 	       const Vector<Int>& start,
 	       const Vector<Int>& step, const MRadialVelocity& mStart,
@@ -218,7 +220,8 @@ class Imager
 	       const String& spwstring="",
 	       const String& uvdist="",
                const String& scan="",
-               const Bool usemodelCol=False);
+               const Bool usemodelCol=False,
+               const Bool be_calm=false);
   
   // Set the processing options
   Bool setoptions(const String& ftmachine, const Long cache, const Int tile,
@@ -288,9 +291,12 @@ class Imager
   IPosition imageshape() const;
 
   // Weight the MeasurementSet
+  //For some time of weighting briggs/uniform ...one can do it on a per field basis to calculate 
+  //weight density distribution. If that is what is wanted multiField should be set to True
+  //multifield is inoperative for natural, radial weighting
   Bool weight(const String& algorithm, const String& rmode,
 	      const Quantity& noise, const Double robust,
-              const Quantity& fieldofview, const Int npixels);
+              const Quantity& fieldofview, const Int npixels, const Bool multiField=False);
   
   // Filter the MeasurementSet
   Bool filter(const String& type, const Quantity& bmaj, const Quantity& bmin,
@@ -377,7 +383,7 @@ class Imager
 	      const Vector<String>& residual,
 	      const Vector<String>& psfnames,
 	      const Bool interactive, const Int npercycle,
-	      const String& masktemplate, const Bool async);
+	      const String& masktemplate);
   
   // MEM algorithm
   Bool mem(const String& algorithm,
@@ -449,11 +455,23 @@ class Imager
 	     const String& fieldnames, const String& spwstring, 
 	     const Vector<Double>& fluxDensity, const String& standard);
 
+  
+  //Setjy with model image. If chanDep=True then the scaling is calulated on a 
+  //per channel basis for the model image...otherwise the whole spw get the same scaling
   Bool setjy(const Vector<Int>& fieldid, 
 	     const Vector<Int>& spectralwindowid, 
 	     const String& fieldnames, const String& spwstring, 
 	     const String& model,
-	     const Vector<Double>& fluxDensity, const String& standard);
+	     const Vector<Double>& fluxDensity, const String& standard, 
+	     const Bool chanDep=False);
+
+  // Temporary copy of setjy() while flux calibration with Solar System objects
+  // is being tested.
+  Bool ssoflux(const Vector<Int>& fieldid, 
+               const Vector<Int>& spectralwindowid, 
+               const String& fieldnames, const String& spwstring, 
+               const String& model,
+               const Vector<Double>& fluxDensity, const String& standard);
 
   // Make an empty image
   Bool make(const String& model);
@@ -491,12 +509,6 @@ class Imager
   Bool clipvis(const Quantity& threshold);
 
 
-  //This is necessary for setting from the DO...but once its set properly from 
-  // the constructor...these two functions should go 
-
-  PGPlotter& getPGPlotter();
-  void setPGPlotter(PGPlotter& thePlotter);
-
   //Check if can proceed with this object
   Bool valid() const;
 
@@ -510,6 +522,14 @@ class Imager
   //helper function to copy a mask from one image to another
 
   Bool copyMask(ImageInterface<Float>& out, const ImageInterface<Float>& in, String maskname="mask0", Bool setdefault=True); 
+
+
+  // Supports the "[] or -1 => everything" convention using the rule:
+  // If v is empty or only has 1 element, and it is < 0, 
+  //     replace v with 0, 1, ..., nelem - 1.
+  // Returns whether or not it modified v.
+  //   If so, v is modified in place.
+  static Bool expand_blank_sel(Vector<Int>& v, const uInt nelem);  
 
 protected:
 
@@ -615,7 +635,6 @@ protected:
   BeamSquint::SquintType  squintType_p;
   Bool doDefaultVP_p;          // make default VPs, rather than reading in a vpTable
 
-  PGPlotter* pgplotter_p;
 
   Bool  doMultiFields_p;      // Do multiple fields?
   Bool  multiFields_p; 	      // multiple fields have been specified in setdata
@@ -703,7 +722,14 @@ protected:
   static Bool regionToMask(ImageInterface<Float>& maskImage, ImageRegion& imagreg, const Float& value=1.0);
 
   //set the mosaic ft machine and right convolution function
-  virtual void setMosaicFTMachine(); 
+  virtual void setMosaicFTMachine(Bool useDoublePrec=False); 
+
+  // Makes a component list on disk containing cmp (with fluxval and cspectrum)
+  // named msname_p.fieldName.spw<spwid>.tempcl and returns the name.
+  String makeComponentList(const String& fieldName, const Int spwid,
+                           const Flux<Double>& fluxval,
+                           const ComponentShape& cmp,
+                           const ConstantSpectrum& cspectrum) const;
  
   ComponentList* componentList_p;
 

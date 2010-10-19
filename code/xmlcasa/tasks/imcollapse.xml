@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<!-- This is the task interface for imcollapse        -->
+<!--                                                          -->
+
+<task type="function" name="imcollapse" category="analysis">
+
+<shortdescription>Collapse image along one axis, aggregating pixel values along that axis.</shortdescription>
+
+<input>
+    <param type="string" name="imagename" mustexist="true">
+    	<description>Name of the input image</description>
+    	<value/>
+        <example>imagenam='ngc5921.im'</example>
+    </param>
+    <param type="string" name="function">
+        <description>Function used to compute aggregation of pixel values.</description>
+        <value/>
+        <example>function="max"</example>
+        <example>function="rms</example>
+        <example>function="mean"</example>
+    </param>
+    <param type="int" name="axis">
+        <description>Zero-based axis number to collapse.</description>
+        <value>0</value>
+        <example>axis=2</example>
+    </param>
+    <param type="string" name="outfile">
+        <description>Name of output CASA image.</description>
+        <value/>
+        <example>outfile='collapsed.im'</example>
+    </param>
+    <param type="string" name="box">
+        <description>Optional direction plane box ("blcx, blcy, trcx trcy").</description>
+        <value/>
+        <example>box="100,100,200,200"</example>
+    </param>
+    <param type="string" name="region" subparam="true">
+        <description>Name of optional region file to use.</description>
+        <value>""</value>
+        <example>region="my.rgn"</example>
+    </param>
+    <param type="string" name="chans">
+        <description>Optional zero-based contiguous frequency channel specification.</description>
+        <value/>
+        <example>chans="5-20"</example>
+    </param>
+    <param type="string" name="stokes">
+        <description>Optional contiguous stokes planes specification.</description>
+        <value/>
+        <example>stokes="iq"</example>
+    </param>
+    <param type="string" name="mask">
+        <description>Optional mask to use.</description>
+        <value/>
+        <example>mask="mymask"</example>
+    </param>
+    <param type="bool" name="wantreturn">
+        <description>Should an image analysis tool referencing the collapsed image be returned?</description>
+        <value>False</value>
+        <example>wantreturn=true</example>
+    </param>
+    <param type="bool" name="overwrite" subparam="true">
+        <description>Overwrite exisitng ouput file if it exists?</description>
+        <value>False</value>
+        <example>overwrite=true</example>
+    </param>
+    
+    <constraints>
+        <when param="outfile">
+            <notequals type="string" value="">
+                <default param="overwrite">
+                    <value>False</value>
+                </default>
+            </notequals>
+        </when>
+        <when param="box">
+            <equals type="string" value="">
+                <default param="region">
+                    <value>""</value>
+                </default>
+            </equals>
+        </when>
+    </constraints>
+</input>
+<returns type="image"/>
+
+<example>
+PARAMETER SUMMARY
+imagename        Name of the input (CASA, FITS, MIRIAD) image
+function         Function used to compute aggregation of pixel values along the collapsed
+                 axis. Supported functions are avdev, max, mean, median, min, rms, stdev,
+                 sum, variance. Minimum match is supported for the function parameter (eg,
+                 function="r" will compute the rms of the pixel values).
+axis             Zero-based axis number to compress.
+outfile          Name of output CASA image. If not specified, no image is written
+                 but an image analysis tool which references the output image is returned.
+overwrite        If output file is specified, controls if an already existing file by the
+                 same name can be overwritten. If true, the user is not prompted, the file
+                 if it exists is automatically overwritten.
+box              Direction plane box specification, "blcx, blcy, trcx, trcy". Only one box
+                 may be specified. If not specified, region is used if specified. If region
+                 is also not specified, entire directional plane unioned with any chans and
+                 stokes specification determines the region.
+region           Optional region file to use.
+chans            Optional contiguous frequency channel number specification. Not used if
+                 region is specified. Default is all channels.
+stokes           Contiguous stokes planes specification. Not used if region is specified.
+                 Default is all stokes.
+mask             Optional mask specification.
+wantreturn       If true, return an image analysis tool referencing the collapsed image, if
+                 false, return false.
+
+This task collapses an image along a specified axis of N pixels to 1 pixel. It computes
+the specified aggregate function of pixels along that axis and places those values in the
+single remaining plane of this axis in the output image. The method returns an image analysis
+tool containing the newly created collapsed image. Choices of aggregate functions are:
+avdev, max, mean, median, min, rms, stdev, sum, variance. Minimum match is supported for
+the function parameter (eg, function="r" will compute the rms of the pixel values). 
+
+If outfile is not specified (or contains only white spaces), no image is written but one can
+request the method return an image analysis tool which references the collapsed image by
+specifying wantreturn=true. If the returned object is not wanted this value should be set to
+false (default) in which case false will be returned. It is recommended that if wantreturn is
+true, the returned tool is deleted as soon as possible to free up memory, eg
+    collapsed_image = ia.collapse(..., wantreturn=true)
+    # do things with collapsed_image
+    collapsed_image.done()
+If wantreturn is true but the return value is not caught, there is no gaurantee of when the
+python garbage collected will free the memory used by the object (in casapy, the object will
+implicitly be stored in the _Out array and so can still be accessed and deleted, assuming the
+task was started as imcollapse(), ie without "go").
+
+The reference pixel of the collapsed axis is set to 0 and its reference value is set to the mean
+of axis values of the pixels along that axis that were used in computing the aggregate value.
+
+# myimage.im is a 512x512x128x4 (ra,dec,freq,stokes) image
+imagename = "myimage.im"
+# collapse a subimage of it along its spectral axis avoiding the 8 edge
+# channels at each end of the band, computing the mean value of the pixels
+# resulting image is 256x256x1x4 in size.
+outfile="collapse_spec_mean.im"
+function="mean"
+axis=2
+box="127,127,383,383"
+chans="8-119"
+collapsed = ia.collapse(outfile="collapse_spec_mean.im", function="mean", axis=2, box="127,127,383,383", chans="8-119")
+# manipulate collapsed
+collapsed.done()
+
+
+
+T
+</example>
+
+</task>
+
+</casaxml>

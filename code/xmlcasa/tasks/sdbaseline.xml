@@ -132,6 +132,11 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
 	    <value type='vector'><value>0</value></value>
     </param>
 
+    <param type="bool" name="batch" subparam='true'>
+            <description>run faster but no detailed output in logger</description>
+            <value>False</value>
+    </param>
+
     <param type="string" name="outfile">
 	    <description>output file name</description>
 	    <value></value>
@@ -186,8 +191,11 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
 			<default param="thresh"><value>5.0</value></default>
 			<default param="avg_limit"><value>4</value></default>
 			<default param="edge"><value type='vector'><value>0</value></value></default>
+                        <default param="batch"><value>False</value></default>
 	        </equals>
-		<equals value="list"/>
+		<equals value="list">
+                        <default param="batch"><value>False</value></default>
+                </equals>
                 <equals value="interact"/>
 	    </when>
     </constraints>
@@ -279,12 +287,15 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
                          default: 0
                          example: [1000] drops 1000 channels at beginning AND end
                                   [1000,500] drops 1000 from beginning and 500 from end
-                
+                 batch -- run faster but no detailed output in logger
+                         default: False
+                         example: If True, this task runs faster, but the detailed 
+                                  info such as the coefficients of the best-fit function 
+                                  is not shown in the CASA logger
                  Note: For bad baselines threshold should be increased,
                  and avg_limit decreased (or even switched off completely by
                  setting this parameter to 1) to avoid detecting baseline
                  undulations instead of real lines.
- 
         blpoly -- order of baseline polynomial
                 options: (int) (&lt;0 turns off baseline fitting)
                 default: 5
@@ -350,11 +361,9 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
         to 'K' before the conversion.
 
         WARNING for the GBT raw SDFITS format data as input:
-        Currently, all SDtasks cannot handle GBT raw SDFITS format data
-        (in which the data are stored in multiple tables within SDFITS).
-        It may be still possible to reduce GBT data after some
-        preprocessing (outside CASA) of the raw SDFITS to a SDFITS with
-        a single data table or to other data formats handled by SDtasks.
+        SDtasks are able to handle GBT raw SDFITS format data since the 
+        data filler is available. However, the functionality is not well 
+        tested yet, so that there may be unknown bugs.         
 
   </example>
 

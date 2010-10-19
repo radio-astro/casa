@@ -42,9 +42,9 @@ set.
 </input>
 <returns type="unknown">flagger tool</returns>
 <example>
-\begin{verbatim}
+
 fg:=flag('3C273XC1.MS')      
-\end{verbatim}
+
 </example>
 </method>
 
@@ -68,9 +68,9 @@ and then attach the tool to the new measurement set.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 fg.open('3C273XC1.MS')
-\end{verbatim}
+
 </example>
 </method>
 
@@ -121,9 +121,8 @@ All data selection parameters follow the ms-selection syntax.
      </param>
     
      <param type="string" name="uvrange">
-     <description> UV-distance range, with a unit : example : '2.0-3000.0 m'
+     <description> UV-distance range, with a unit : example : '2.0-3000.0 m'</description>
      <value>""</value>
-     </description>
      </param>
     
      <param type="string" name="time">
@@ -140,10 +139,6 @@ All data selection parameters follow the ms-selection syntax.
      
 </input>
 <returns type="bool"/> 
-<example>
-\begin{verbatim}
-\end{verbatim}
-</example>
 </method>
 <!-- ********************************************************************** -->
 
@@ -191,8 +186,8 @@ Note that fg.setmanualflags() can be called multiple times before a call to fg.r
     
      <param type="string" name="uvrange">
      <description> UV-distance range, with a unit : example : '2.0-3000.0 m'
-     <value>""</value>
      </description>
+     <value>""</value>
      </param>
     
      <param type="string" name="time">
@@ -228,7 +223,9 @@ Note that fg.setmanualflags() can be called multiple times before a call to fg.r
      <param type="doubleArray" name="cliprange">
      <description>Clip Range of the value defined by clipExpr [min,max] : example : [100.0,200.0] 
      </description>
-     <value type="vector"></value>
+     <value type="vector">
+     <value>0</value>
+     <value>0</value> </value>
      </param>
 
      <param type="string" name="clipcolumn">
@@ -266,10 +263,6 @@ Note that fg.setmanualflags() can be called multiple times before a call to fg.r
 
 </input>
 <returns type="bool"/>
-<example>
-\begin{verbatim}
-\end{verbatim}
-</example>
 </method>
 
 <!-- ********************************************************************** -->
@@ -288,10 +281,6 @@ Print out a list of current manual and auto flag selections.
 <input>
 </input>
 <returns type="bool"/>
-<example>
-\begin{verbatim}
-\end{verbatim}
-</example>
 </method>
 
 <!-- ********************************************************************** -->
@@ -310,10 +299,6 @@ Clears all current manual and auto flag selections.
      </param>
 </input>
 <returns type="bool"/>
-<example>
-\begin{verbatim}
-\end{verbatim}
-</example>
 </method>
 
 <!-- ********************************************************************** -->
@@ -336,10 +321,6 @@ Retrieve the current set of input parameters for a specified algorithm.
 
 </input>
 <returns type="any"><any type="record"/>record of default parameters</returns>
-<example>
-\begin{verbatim}
-\end{verbatim}
-</example>
 </method>
 
 <!-- return type should be a record -->
@@ -376,10 +357,6 @@ Setup an autoflag algorithm.
      </param>
 </input>
 <returns type="bool"/> 
-<example>
-\begin{verbatim}
-\end{verbatim}
-</example>
 </method>
 
 <!-- ********************************************************************** -->
@@ -428,8 +405,8 @@ Defines data selection parameters.
     
      <param type="string" name="uvrange">
      <description> UV-distance range, with a unit : example : '2.0-3000.0 m'
-     <value>""</value>
      </description>
+     <value>""</value>
      </param>
     
      <param type="string" name="time">
@@ -452,10 +429,6 @@ Defines data selection parameters.
  
 </input>
 <returns type="bool"/>
-<example>
-\begin{verbatim}
-\end{verbatim}
-</example>
 </method>
 
 <!-- ********************************************************************** -->
@@ -504,8 +477,8 @@ Flag summary.
     
      <param type="string" name="uvrange">
      <description> UV-distance range, with a unit : example : '2.0-3000.0 m'
-     <value>""</value>
      </description>
+     <value>""</value>
      </param>
     
      <param type="string" name="time">
@@ -522,10 +495,6 @@ Flag summary.
  
 </input>
 <returns type="bool"/>
-<example>
-\begin{verbatim}
-\end{verbatim}
-</example>
 </method>
 
 <!-- ********************************************************************** -->
@@ -575,8 +544,8 @@ Flag query
     
      <param type="string" name="uvrange">
      <description> UV-distance range, with a unit : example : '2.0-3000.0 m'
-     <value>""</value>
      </description>
+     <value>""</value>
      </param>
     
      <param type="string" name="time">
@@ -627,10 +596,6 @@ Flag query
 
 </input>
 <returns type="bool"/>
-<example>
-\begin{verbatim}
-\end{verbatim}
-</example>
 </method>
 
 <!-- ********************************************************************** -->
@@ -678,8 +643,8 @@ Extend flags along a specific direction.
     
      <param type="string" name="uvrange">
      <description> UV-distance range, with a unit : example : '2.0-3000.0 m'
-     <value>""</value>
      </description>
+     <value>""</value>
      </param>
     
      <param type="string" name="time">
@@ -724,10 +689,6 @@ Extend flags along a specific direction.
 
 </input>
 <returns type="bool"/>
-<example>
-\begin{verbatim}
-\end{verbatim}
-</example>
 </method>
 
 <!-- ********************************************************************** -->
@@ -796,10 +757,8 @@ of all methods, or {\tt help("method  names")} for specific ones.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
 fg.help()
 fg.help("timemed freqmed")
-\end{verbatim}
 </example>
 </method>
 
@@ -817,11 +776,9 @@ This function destroys the flag tool.
 </description>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
 - fg.done()
 T
 -
-\end{verbatim}
 </example>
 </method>
 
@@ -850,10 +807,6 @@ T
      </param>
 </input>
 <returns type="bool"/>
-<example>
-\begin{verbatim}
-\end{verbatim}
-</example>
 </method>
 
  
@@ -881,10 +834,6 @@ T
      </param>
 </input>
 <returns type="bool"/>
-<example>
-\begin{verbatim}
-\end{verbatim}
-</example>
 </method>
 
  
@@ -903,10 +852,6 @@ T
      </param>
 </input>
 <returns type="bool"/>
-<example>
-\begin{verbatim}
-\end{verbatim}
-</example>
 </method>
  
 <!-- ********************************************************************** -->
@@ -924,10 +869,6 @@ Print out the list of flag versions in the MS, unless the parameter printflags=F
      </param>
 </input>
 <returns type="stringArray"/>
-<example>
-\begin{verbatim}
-\end{verbatim}
-</example>
 </method>
 
  
@@ -1055,11 +996,9 @@ raised, running this method a second time may sometimes be of use.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
 - fg:=flag('3C273XC1.MS')
 - fg.setdata()
 - fg.settimemed(thr=5,hw=5,expr="- ABS RR LL")
-\end{verbatim}
 </example>
 </method>
 
@@ -1108,12 +1047,10 @@ away from the median are flagged.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
 - fg:=flag('H031121.MS')
 - fg.setdata()
 - fg.setnewtimemed(thr=5, expr="ABS RR")
 - fg.run()
-\end{verbatim}
 </example>
 </method>
 
@@ -1178,11 +1115,9 @@ all details.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
 - fg:=flag('3C273XC1.MS')
 - fg.setdata()
 - fg.setfreqmed(thr=5,hw=5,expr="- ABS RR LL")
-\end{verbatim}
 </example>
 </method>
 
@@ -1278,7 +1213,6 @@ example)</description>
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
 - fg:=flag('3C273XC1.MS')
 - fg.setdata()
 # use segments 807-807.5 and 809-809.5 MHz for fitting
@@ -1293,7 +1227,6 @@ example)</description>
 - region[2] := [ spwid=2,chan=[10,20] ]
 - region[3] := [ spwid=4,chan=[50,60] ]
 - fg.setsprej(region=region)
-\end{verbatim}
 </example>
 </method>
 
@@ -1390,11 +1323,9 @@ plot</description>
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
 - fg:=flag('3C273XC1.MS')
 - fg.setdata()
 - fg.setuvbin(nbins=[50,100],expr="- ABS RR LL",plotchan=40,econoplot=T)
-\end{verbatim}
 </example>
 </method>
  
@@ -1477,7 +1408,6 @@ report, or default for no report</description>
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
 fg:=flag('3C273XC1.MS)
 fg.setdata();
 ...
@@ -1486,7 +1416,6 @@ fg.setselect(autocorr=T,quack=[240,120])
 fg.setuvbin(thr=.01)
 ...
 fg.run()
-\end{verbatim}
 </example>
 </method>
 

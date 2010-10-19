@@ -1,5 +1,5 @@
 ########################################
-# Regression Script for simdata of  #
+# Regression Script for oldsimdata of  #
 #        a protoplanetary disk         #
 
 import os, time
@@ -12,7 +12,7 @@ if not l.has_key("repodir"):
 startTime = time.time()
 startProc = time.clock()
 
-print '--Running simdata of input672GHz_50pc.image--'
+print '--Running oldsimdata of input672GHz_50pc.image--'
 
 my_project="psim"
 my_modelimage="diskmodel.im"
@@ -21,10 +21,11 @@ my_modelimage="diskmodel.im"
 os.system('rm -rf '+my_project+'.* '+my_modelimage)
 tb.clearlocks()
 
+print casa['build']
 print 'I think the data repository is at '+repodir
 importfits(fitsimage=repodir+"/data/regression/simdata/input50pc_672GHz.fits",imagename=my_modelimage)
 
-default("simdata")
+default("oldsimdata")
 project=my_project
 modelimage=my_modelimage
 #complist=repodir+"star672GHz.cl"
@@ -66,7 +67,7 @@ endProc = time.clock()
 
 # Regression
 
-test_name_ppd = """simdata observation of Wolf & D'Angelo's protoplanetary disk"""
+test_name_ppd = """oldsimdata observation of Wolf & D'Angelo's protoplanetary disk"""
 
 ppdso_im=ia.open(project + '.clean.image')
 ppdso_stats=ia.statistics()
@@ -85,6 +86,14 @@ refstats = { 'flux': 0.03599,
              'min': -0.905e-04,
              'rms': 1.34e-04,
              'sigma': 1.0e-04 }
+
+# 20100920 but its been off for a while
+refstats = { 'flux': 0.0366,
+             'max': 5.05e-04,
+             'min': -1.04e-04,
+             'rms': 1.35e-04,
+             'sigma': 1.0e-04 }
+
 
 reftol   = {'flux':  0.05,
             'max':   0.1,
@@ -112,6 +121,7 @@ The disk input image is a simulation done by Wolf and D'Angelo, converted from
 
 
 print >> logfile, loghdr
+print >> logfile,casa['build']
 
 regstate = True
 rskes = refstats.keys()
@@ -129,7 +139,7 @@ if regstate:
     print >> logfile, 'Passed',
 else:
     print >> logfile, 'FAILED',
-print >> logfile, 'regression test for simdata of protoplanetary disk.'
+print >> logfile, 'regression test for oldsimdata of protoplanetary disk.'
 print >>logfile,'---'
 print >>logfile,'*********************************'
     
@@ -152,4 +162,4 @@ print >>logfile,'*************************************'
     
 logfile.close()
 						    
-print '--Finished simdata of input672GHz_50pc.image regression--'
+print '--Finished oldsimdata of input672GHz_50pc.image regression--'

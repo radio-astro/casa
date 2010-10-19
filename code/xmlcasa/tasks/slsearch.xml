@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<!-- This is the task interface for sl.search        -->
+<!--                                                          -->
+
+<task type="function" name="slsearch" category="analysis">
+
+<shortdescription>Search a spectral line table.</shortdescription>
+
+<input>
+        <param type="string" name="tablename" mustexist="">
+            <description>Input spectral line table name to search. If not specified, use the default table in the system.</description>
+            <value/>
+        </param>
+        <param type="string" name="outfile">
+            <description>Results table name. Blank means do not write the table to disk.</description>
+            <value/>
+        </param>
+        <param type="doubleArray" name="freqrange">
+            <description>Frequency range in GHz.</description>
+            <value>84,90</value>
+        </param>
+        <param type="stringArray" name="species">
+            <description>Species to search for.</description>
+            <value/>
+        </param>
+        <param type="bool" name="reconly">
+            <description>List only NRAO recommended frequencies.</description>
+            <value>False</value>
+        </param>
+        <param type="stringArray" name="chemnames">
+            <description>Chemical names to search for.</description>
+            <value/>
+        </param>
+        <param type="stringArray" name="qns">
+            <description>Resolved quantum numbers to search for.</description>
+            <value/>
+        </param>
+        <param type="doubleArray" name="intensity" subparam="true">
+            <description>CDMS/JPL intensity range. -1 -> do not use an intensity range.</description>
+            <value>-1</value>
+        </param>
+        <param type="doubleArray" name="smu2" subparam="true">
+            <description>S*mu*mu range in Debye**2. -1 -> do not use an S*mu*mu range.</description>
+            <value>-1</value>
+        </param>
+        <param type="doubleArray" name="loga" subparam="true">
+            <description>log(A) (Einstein coefficient) range. -1 -> do not use a loga range.</description>
+            <value>-1</value>
+        </param>
+        <param type="doubleArray" name="el" subparam="true">
+            <description>Lower energy state range in Kelvin. -1 -> do not use an el range.</description>
+            <value>-1</value>
+        </param>
+        <param type="doubleArray" name="eu" subparam="true">
+            <description>Upper energy state range in Kelvin. -1 -> do not use an eu range.</description>
+            <value>-1</value>
+        </param>
+        <param type="bool" name="rrlinclude">
+            <description>Include RRLs in the result set?</description>
+            <value>True</value>
+        </param>
+        <param type="bool" name="rrlonly">
+            <description>Include only RRLs in the result set?</description>
+            <value>False</value>
+        </param>
+        <param type="bool" name="verbose">
+            <description>List result set to logger (and optionally logfile)?</description>
+            <value>False</value>
+        </param>
+        <param type="string" name="logfile" subparam="true">
+            <description>List result set to this logfile (only used if verbose=True).</description>
+            <value>""</value>
+        </param>
+        <param type="bool" name="append" subparam="true">
+            <description>If true, append to logfile if it already exists, if false overwrite logfile it it exists. Only used if verbose=True and logfile not blank.</description>
+            <value>False</value>
+        </param>
+        <param type="bool" name="wantreturn">
+            <description>If true, return the spectralline tool associated with the result set.</description>
+            <value>True</value>
+        </param>
+
+    <constraints>
+        <when param="verbose">
+            <equals type="bool" value="True">
+                <default param="logfile">
+                    <value>""</value>
+                </default>
+                <default param="append">
+                    <value>True</value>
+                </default>
+            </equals>
+        </when>
+        <when param="rrlonly">
+            <equals type="bool" value="False">
+                <default param="intensity">
+                    <value>-1</value>
+                </default>
+                <default param="smu2">
+                    <value>-1</value>
+                </default>
+                <default param="loga">
+                    <value>-1</value>
+                </default>
+                <default param="eu">
+                    <value>-1</value>
+                </default>
+                <default param="el">
+                    <value>-1</value>
+                </default>
+            </equals>
+        </when>
+                    
+    </constraints>
+
+
+</input>
+<returns type="casaspectralline"/>
+
+<example>
+
+PARAMETER SUMMARY
+
+tablename      Input spectral line table name to search. If not specified, use the default table in the system.
+outfile        Results table name. Blank means do not write the table to disk.
+freqrange      Frequency range in GHz.
+species        Species to search for.
+reconly        List only NRAO recommended frequencies.
+chemnames      Chemical names to search for.
+qns            Resolved quantum numbers to search for.
+intensity      CDMS/JPL intensity range. -1 -> do not use an intensity range.
+smu2           S*mu*mu range in Debye**2. -1 -> do not use an S*mu*mu range.
+loga           log(A) (Einstein coefficient) range. -1 -> do not use a loga range.
+el             Lower energy state range in Kelvin. -1 -> do not use an el range.
+eu             Upper energy state range in Kelvin. -1 -> do not use an eu range.
+rrlinclude     Include RRLs in the result set?
+rrlonly        Include only RRLs in the result set?
+verbose        List result set to logger (and optionally logfile)?
+logfile        List result set to this logfile (only used if verbose=True).
+append         If true, append to logfile if it already exists, if false overwrite logfile it it exists. Only used if verbose=True and logfile not blank.
+wantreturn     If true, return the spectralline tool associated with the result set.
+
+    Search the specfied spectral line table. The return value (if wantreturn=true) is a spectralline tool with a new table containing the search
+    results. This new table can be written to disk by specifying its name in the outfile parameter. If outfile is not specified
+    (ie outfile=""), the resulting table is held in memory and deleted upon a call to close() or done() for the newly created tool
+    or upon exiting casapy if wantreturn=True or immediately upon completion of task execution if wantreturn=False. Because Splatalogue does not have values for intensity, smu2, loga, eu, and el
+    for radio recombination lines (rrls), one must specify to include rrls in the specified frequency range in the output. In this case,
+    RRLs will be included ignoring any filters on intensity, smu2, loga, eu, and el. One can also specify to list only RRLs. One can specify 
+    to list the search results to the logger via the verbose parameter. If verbose is False, no logger output is listed, although the results 
+    can be listed later by running the sl.list() method on the newly created spectral line tool if wantreturn=True. If verbose=True, one can also specify that
+    the results be listed to a logfile and if this file already exists, one can specify that the results be appended to it or to overwrite
+    it with the results.
+    
+    slrestool = slsearch("myspectrallines.tbl", verbose=False)
+    # do a search postponing listing the results to the logger.
+    slrestool = sl.search(outfile="myresults.tbl", freqrange = [200,300], species=['HOCN', 'HOCO+'])
+    # now list the results
+    slrestool.list()
+    # or one could also do the following after exiting and restarting casapy
+    sl.open("myresults.tbl")
+    sl.list()
+    
+
+</example>
+
+</task>
+
+</casaxml>

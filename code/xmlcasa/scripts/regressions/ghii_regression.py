@@ -1,5 +1,5 @@
 ############################################
-# Regression Script for simdata of a 3d cube #
+# Regression Script for oldsimdata of a 3d cube #
 
 import os, time
 
@@ -9,17 +9,18 @@ os.system('rm -rf ghii* 30dor.image')
 startTime = time.time()
 startProc = time.clock()
 
-print '--Running simdata of 30 Doradus--'
+print '--Running oldsimdata of 30 Doradus--'
 # configs are in the repository
 l=locals() 
 if not l.has_key("repodir"): 
     repodir=os.getenv("CASAPATH").split(' ')[0]
 
+print casa['build']
 print 'I think the data repository is at '+repodir
 datadir=repodir+"/data/regression/simdata/"
 cfgdir=repodir+"/data/alma/simmos/"
 importfits(fitsimage=datadir+"30dor.fits",imagename="30dor.image")
-default("simdata")
+default("oldsimdata")
 project="ghii"
 
 modelimage="30dor.image"
@@ -71,7 +72,7 @@ endProc = time.clock()
 
 # Regression
 
-test_name = """simdata observation of 30 Doradus"""
+test_name = """oldsimdata observation of 30 Doradus"""
 
 ia.open(project + '.clean.image')
 hii_stats=ia.statistics()
@@ -156,6 +157,7 @@ loghdr = """
 """
 
 print >> logfile, loghdr
+print >> logfile,casa['build']
 
 # more info
 ms.open(project+".ms")
@@ -199,7 +201,7 @@ if regstate:
     print >> logfile, 'Passed',
 else:
     print >> logfile, 'FAILED',
-print >> logfile, 'regression test for simdata of 30 Doradus.'
+print >> logfile, 'regression test for oldsimdata of 30 Doradus.'
 print >>logfile,'---'
 print >>logfile,'*********************************'
     
@@ -221,4 +223,4 @@ print >>logfile,'*************************************'
     
 logfile.close()
 						    
-print '--Finished simdata of 30 Doradus regression--'
+print '--Finished oldsimdata of 30 Doradus regression--'

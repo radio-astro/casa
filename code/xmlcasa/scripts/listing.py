@@ -21,8 +21,12 @@ def compare(test, standard):
     standardFile = open(standard,'r')
     standardList = standardFile.readlines()
     if (testList == standardList):
+        testList.close()
+        standardFile.close()
         return True
     else:
+        testList.close()
+        standardFile.close()
         return False
 #=============================================================================
 
@@ -97,32 +101,38 @@ def diffMetadata(testOut, standardOut, prefix=""):
 
     print "  - Comparing all non-floats in listing (ignore spaces)"
 
-    testList = open(testOut,'r').readlines()
-    stndList = open(standardOut,'r').readlines()
+    testList = open(testOut,'r')    
+    stndList = open(standardOut,'r')
 
-    # Pattern to capture floats
-    floatPat = re.compile(r"[ |]([+-]?[0-9]*\.[0-9]+)")
-
-    # Filter all floats from a list of strings
-    def filterFloats(list):
+    #                     Pattern                        Substitution
+    unwanted = ((re.compile(r"[ |]([+-]?[0-9]*\.[0-9]+)"), 'x'), # floats
+                (re.compile(r' '),                          ''), # spaces
+                (re.compile(r'-+'),                       '-+')) # dashes
+    
+    def filter_out_unwanted(linelist, unwanted):
+        """
+        Given a list of strings and a tuple of (pattern, substitution)
+        pairs, returns a corresponding list of strings with the patterns
+        replaced by the substitutions.
+        """
         newList = []
-        for linenum in range(len(list)):
-            newList.append( floatPat.sub('x',list[linenum]) )
+        for line in linelist.readlines():
+            filtered = line
+            for pat, subst in unwanted:
+                filtered = pat.sub(subst, filtered)
+            newList.append(filtered)
         return newList
             
-    newTestList = filterFloats(testList)
-    newStndList = filterFloats(stndList)
+    newTestList = filter_out_unwanted(testList, unwanted)
+    newStndList = filter_out_unwanted(stndList, unwanted)
 
-    # Remove all spaces from list of strings
-    for linenum in range(len(newTestList)):
-        newTestList[linenum] = newTestList[linenum].replace(' ','')
-        newStndList[linenum] = newStndList[linenum].replace(' ','')
-
-    # If everything is equal, return True
-    if (newTestList == newStndList): return True
+    # If everything after filtering is equal, return True
+    if newTestList == newStndList:
+        testList.close()
+        stndList.close()
+        return True
     
     # else... do the rest
-
     print "  - Writing differences to ", diffOut
     
     sys.stdout = open(diffOut,'w') # redirect stdout
@@ -142,6 +152,10 @@ def diffMetadata(testOut, standardOut, prefix=""):
     # Restore stdout
     sys.stdout = sys.__stdout__
 
+    # close files
+    testList.close()
+    stndList.close()
+    
     return False
 #=============================================================================
 
@@ -173,6 +187,8 @@ def diffAmpPhsFloat(test, standard, prefix="", precision="1e-6"):
     # Verify same number of lines
     if ( len(standardList) != len(testList) ):
         print "- Standard and test files do not have the same number of lines."
+        testFile.close()
+        standardFile.close()
         return False
 
     # Initialize some variables
@@ -294,6 +310,10 @@ def diffAmpPhsFloat(test, standard, prefix="", precision="1e-6"):
     # Restore stdout
     sys.stdout = sys.__stdout__
     
+    # cleanup
+    testFile.close()
+    standardFile.close()
+    
     return equal
 
 #=============================================================================
@@ -407,6 +427,7 @@ def reduce(filename, N):
 
     #for i in range(20): print reducedListing[i]
 
+    infile.close()
     return reducedListing
 #=============================================================================
 

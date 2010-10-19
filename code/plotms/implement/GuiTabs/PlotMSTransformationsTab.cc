@@ -83,7 +83,7 @@ void PlotMSTransformationsTab::update(const PlotMSPlot& plot) {
     const PMS_PP_MSData* d = plot.parameters().typedGroup<PMS_PP_MSData>();
     if(d == NULL) return;
     
-    changedText(transLabel,
+    highlightWidgetText(transLabel,
 		itsTransformationsWidget_->getValue() != d->transformations());
 }
 

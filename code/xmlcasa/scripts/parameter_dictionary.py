@@ -36,16 +36,23 @@ class par(str):
 	@staticmethod
 	def antenna():
 		""" 
-		      antenna -- Select data based on antenna/baseline
-       		       default: 0 for sdimaging, '' (means all) for the other tasks
-       		       If antenna string is a non-negative integer, it is assumed an antenna index
-       		         otherwise, it is assumed as an antenna name
-       		       antenna='5&6'; baseline between antenna index 5 and index 6.
-       		       antenna='VA05&VA06'; baseline between VLA antenna 5 and 6.
-       		       antenna='5&6;7&8'; baseline 5-6 and 7-8
-       		       antenna='5'; all baselines with antenna 5
-       		       antenna='5,6,10'; all baselines with antennas 5 and 6
+                antenna -- Select data by antenna/baseline
+                default: 0 for sdimaging, '' (means all) for the other tasks
+                Non-negative integers are assumed to be antenna indices, and
+                anything else is taken as an antenna name.
 
+                Examples:
+                antenna='5&6': baseline between antenna index 5 and index 6.
+                antenna='VA05&VA06': baseline between VLA antenna 5 and 6.
+                antenna='5&6:7&8': baselines 5-6 and 7-8
+                antenna='5': all baselines with antenna 5
+                antenna='5,6,10': all baselines including antennas 5, 6, or 10
+                antenna='5,6,10&': all baselines with *only* antennas 5, 6, or 10
+                                   (cross-correlations only.  Use && to include
+                                   autocorrelations, and &&& to get only
+                                   autocorrelations.)
+                antenna='!ea03,ea12,ea17': all baselines except those that include
+                                           EVLA antennas ea03, ea12, or ea17
 		"""
 
 	@staticmethod
@@ -288,7 +295,7 @@ class par(str):
 
 	        -----------------------------------------------------
 
-		(for sdsim)
+		(for simdata)
 		cell -- output cell/pixel size
 		default: '0.1arcsec'
 	        example: 'incell'    #uses incell value for the output cell size
@@ -537,13 +544,17 @@ class par(str):
 	@staticmethod	
 	def datacolumn():
 		""" Which data column to use (for plotting, splitting, etc):
-		Options: 'DATA' (raw), 'MODEL_DATA', 'CORRECTED_DATA'
 
-		plotxy:
-	        datacolumn -- Visibility file (MS) data column
+		plotxy: Visibility file (MS) data column
                 default: 'data'; example: datacolumn='model'
                 Options: 'data' (raw),'corrected','model','residual'(corrected-model),'weight'
 
+                split: Visibility file (MS) data column
+                default: 'corrected'; example: datacolumn='data'
+                Options: 'data' (raw), 'corrected', 'model', 'all',
+                         'float_data' (single dish), 'lag_data',
+                         'float_data,data', and 'lag_data,data'.
+                         note: 'all' = whichever of the above that are present.
 		"""
 
 	@staticmethod
@@ -571,13 +582,14 @@ class par(str):
 
 		---------------------------------------------
 
-		(for sdsim)
-		direction -- image center direction
+		(for simdata)
+		direction -- center of map or "" to center on the model
 		* can optionally be a list of pointings, which will override
-		pointingspacing. Otherwise sdsim will hexagonally
-		pack the input image with pointings. When direction is a
-		list, the centroid of direction will be used as the center.
-		default: ['J2000 19h00m00 -40d00m00']
+		pointingspacing. When direction is a list, the centroid of
+		direction will be used as the center.
+		* otherwise simdata will pack mapsize according to maptype
+		default: ""
+		example: 'J2000 19h00m00 -40d00m00'
 		"""
 
 	@staticmethod
@@ -993,6 +1005,22 @@ class par(str):
 		
 	        This selection is in addition to scanlist, field, and pollist
 		"""
+
+        @staticmethod
+        def ignoreables():
+                """
+                Let time bins ignore boundaries in array, scan, and/or state.
+                default = '' (separate time bins by all of the above)
+                examples:
+                ignorables = 'scan': Can be useful when the scan number
+                                     goes up with each integration,
+                                     as in many WSRT MSes.
+                ignorables = ['array', 'state']: disregard array and state
+                                                 IDs when time averaging.
+                ignorables = 'state,subarr': Same as above.  ignorables
+                                             matches on 'arr', 'scan', and
+                                             'state'.
+                """
 		
 	@staticmethod
 	def imagename():
@@ -1046,14 +1074,14 @@ class par(str):
 		in Jy/pixel.
 		default: 'unchanged'
 		
-		[alpha alert] If you specify 'unchanged' it will take the
+		[alert] If you specify 'unchanged' it will take the
 		numerical values in your image and assume they are in Jy/pixel,
 		even if it says some other unit in the header. This will be made
 		more flexible in the future.
 
 		----------------------------------------------------------------
 		
-		(for sdsim)
+		(for simdata)
 		inbright -- peak surface brightness to scale input image
 		in Jy/square arcsec.
 		options: 'default' or surface brightness in Jy/sq.arcsec.
@@ -1527,12 +1555,6 @@ class par(str):
 		This can be either a model image from a previous deconvolution
 		or an image from a single dish image if single dish uv coverage
 		is being introduced in the imaging
-
-		----------------------------------------------------------------------
-
-		(for sdsim)
-		modelimage -- name of input image
-		default: ''
 		"""
 
 	@staticmethod
@@ -1616,7 +1638,7 @@ class par(str):
 
 		----------------------------------------------------
 
-		(for mosaic, sdimaging, sdsim, simdata, widefield)
+		(for mosaic, sdimaging, widefield)
 		nchan -- number of channels (planes) in output image
 		default: 1
 		"""
@@ -1998,13 +2020,12 @@ class par(str):
 	@staticmethod
 	def pweight():
 		"""
-		pweight -- weighting for polarization average
-		options: 'none'
-	                 'var'  = 1/var(spec) weighted
-			 'tsys' = 1/Tsys**2 weighted
-	        default: 'none'
+        pweight -- weighting for polarization average
+            options: 'var'  = 1/var(spec) weighted
+                     'tsys' = 1/Tsys**2 weighted
+            default: 'tsys'
 		"""
-		
+
 	@staticmethod
 	def quackinterval():
 		"""
@@ -2173,7 +2194,8 @@ class par(str):
 
 	@staticmethod
 	def scan():
-		""" Scan number range - underdevelopment. """
+		""" Scan number range
+                default: ''=all"""
 
 	@staticmethod
 	def scanaverage():
@@ -2250,6 +2272,17 @@ class par(str):
 		example: sigmafile='myimage.weights'
 		"""		
 
+	@staticmethod
+	def smallscalebias():
+		"""
+		smallscalebias -- A bias toward smaller scales in multiscale
+		clean.  The peak flux found at each scale is weighted by
+		a factor = 1 - smallscalebias*scale/max_scale, so that weighted
+		peak flux = peak flux*factor.
+		Typically the values range from 0.2 to 1.0.
+		default: 0.6
+		"""
+ 
 	@staticmethod
 	def smoothsize():
 		"""
@@ -2544,7 +2577,12 @@ class par(str):
 	
 	@staticmethod
 	def timebin():
-		""" Value for time averaging; '-1s' indicates no averaging: """
+		"""
+                Interval width for time averaging.
+                default: '0s' or '-1s' (no averaging)
+                example: timebin='30s'
+                         '10' means '10s'
+                """
 
 	@staticmethod
 	def timerange():
@@ -2610,14 +2648,14 @@ class par(str):
 	@staticmethod
 	def tweight():
 		"""
-		tweight -- weighting for time average
-	        options: 'none' 
-	                 'var'      = 1/var(spec) weighted
-			 'tsys'     = 1/Tsys**2 weighted
-			 'tint'     = integration time weighted
-			 'tintsys'  = Tint/Tsys**2
-			 'median'   = median averaging
-	        default: 'none'
+        tweight -- weighting for time average
+            options:
+                'var'      = 1/var(spec) weighted
+                'tsys'     = 1/Tsys**2 weighted
+                'tint'     = integration time weighted
+                'tintsys'  = Tint/Tsys**2
+                'median'   = median averaging
+                default: 'tintsys'
 		"""
 		
 	@staticmethod

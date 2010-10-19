@@ -1,32 +1,34 @@
 //#---------------------------------------------------------------------------
 //# MBrecord.cc: Class to store an MBFITS single-dish data record.
 //#---------------------------------------------------------------------------
-//# Copyright (C) 2000-2008
-//# Mark Calabretta, ATNF
+//# livedata - processing pipeline for single-dish, multibeam spectral data.
+//# Copyright (C) 2000-2009, Australia Telescope National Facility, CSIRO
 //#
-//# This library is free software; you can redistribute it and/or modify it
-//# under the terms of the GNU Library General Public License as published by
-//# the Free Software Foundation; either version 2 of the License, or (at your
-//# option) any later version.
+//# This file is part of livedata.
 //#
-//# This library is distributed in the hope that it will be useful, but WITHOUT
+//# livedata is free software: you can redistribute it and/or modify it under
+//# the terms of the GNU General Public License as published by the Free
+//# Software Foundation, either version 3 of the License, or (at your option)
+//# any later version.
+//#
+//# livedata is distributed in the hope that it will be useful, but WITHOUT
 //# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
-//# License for more details.
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+//# more details.
 //#
-//# You should have received a copy of the GNU Library General Public License
-//# along with this library; if not, write to the Free Software Foundation,
-//# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+//# You should have received a copy of the GNU General Public License along
+//# with livedata.  If not, see <http://www.gnu.org/licenses/>.
 //#
-//# Correspondence concerning this software should be addressed as follows:
-//#        Internet email: mcalabre@atnf.csiro.au.
-//#        Postal address: Dr. Mark Calabretta,
-//#                        Australia Telescope National Facility,
-//#                        P.O. Box 76,
-//#                        Epping, NSW, 2121,
+//# Correspondence concerning livedata may be directed to:
+//#        Internet email: mcalabre@atnf.csiro.au
+//#        Postal address: Dr. Mark Calabretta
+//#                        Australia Telescope National Facility, CSIRO
+//#                        PO Box 76
+//#                        Epping NSW 1710
 //#                        AUSTRALIA
 //#
-//# $Id: MBrecord.cc,v 19.12 2008-11-17 06:52:35 cal103 Exp $
+//# http://www.atnf.csiro.au/computing/software/livedata.html
+//# $Id: MBrecord.cc,v 19.14 2009-09-29 07:33:38 cal103 Exp $
 //#---------------------------------------------------------------------------
 //# The MBrecord class stores an MBFITS single-dish data record.
 //#
@@ -34,6 +36,7 @@
 //#---------------------------------------------------------------------------
 
 #include <atnf/PKSIO/MBrecord.h>
+#include <atnf/PKSIO/SrcType.h>
 
 #include <string.h>
 
@@ -55,6 +58,9 @@ MBrecord::MBrecord(int nif)
   raRate  = 0.0f;
   decRate = 0.0f;
   nIF     = 0;
+
+  srcType = SrcType::NOTYPE ;
+  srcVelocity = 0.0 ;
 }
 
 //-------------------------------------------------------- MBrecord::~MBrecord
@@ -92,7 +98,7 @@ void MBrecord::setNIFs(int nif)
     calfctr  = new float[nif][2];
     xcalfctr = new float[nif][2];
     baseLin  = new float[nif][2][2];
-    baseSub  = new float[nif][2][9];
+    baseSub  = new float[nif][2][24];
     spectra  = new float*[nif];
     flagged  = new unsigned char*[nif];
     xpol     = new float*[nif];
@@ -259,7 +265,7 @@ MBrecord &MBrecord::operator=(const MBrecord &other)
       baseLin[iIF][ipol][0] = other.baseLin[iIF][ipol][0];
       baseLin[iIF][ipol][1] = other.baseLin[iIF][ipol][1];
 
-      for (int j = 0; j < 9; j++) {
+      for (int j = 0; j < 24; j++) {
         baseSub[iIF][ipol][j] = other.baseSub[iIF][ipol][j];
       }
     }
@@ -322,6 +328,8 @@ MBrecord &MBrecord::operator=(const MBrecord &other)
   polNo = other.polNo ;
   srcVelocity = other.srcVelocity ;
 
+  srcType = other.srcType ;
+
   return *this;
 }
 
@@ -382,7 +390,7 @@ int MBrecord::extract(const MBrecord &other, int iIF)
     baseLin[0][ipol][0] = other.baseLin[iIF][ipol][0];
     baseLin[0][ipol][1] = other.baseLin[iIF][ipol][1];
 
-    for (int j = 0; j < 9; j++) {
+    for (int j = 0; j < 24; j++) {
       baseSub[0][ipol][j] = other.baseSub[iIF][ipol][j];
     }
   }
@@ -438,6 +446,8 @@ int MBrecord::extract(const MBrecord &other, int iIF)
 
   polNo = other.polNo ;
   srcVelocity = other.srcVelocity ;
+
+  srcType = other.srcType ;
 
   return 0;
 }

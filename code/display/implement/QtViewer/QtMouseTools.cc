@@ -40,7 +40,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 void QtRTRegion::regionReady() {
   Record mouseRegion;
   WorldCanvasHolder* wch = 0;
-
+  
   if(getMouseRegion(mouseRegion, wch)) {
     emit mouseRegionReady(mouseRegion, wch);  }  }
   

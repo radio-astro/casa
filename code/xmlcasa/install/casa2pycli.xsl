@@ -109,7 +109,10 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 	           exec('myparams[key] = '+ key + ' = self.itsdefault(key)')
 		   keyVal = eval(key)
 		   if(type(keyVal) == dict) :
-		      exec('myparams[key] = ' + key + ' = keyVal[len(keyVal)-1][\'value\']')
+                      if len(keyVal) > 0 :
+		         exec('myparams[key] = ' + key + ' = keyVal[len(keyVal)-1][\'value\']')
+		      else :
+		         exec('myparams[key] = ' + key + ' = {}')
 
 	else :
             async = self.parameters['async']
@@ -202,7 +205,10 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
           saveinputs = self.__globals__['saveinputs']
           saveinputs(</xsl:text>&apos;<xsl:value-of select="$taskname"/>&apos;, &apos;<xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">.last&apos;, myparams, self.__globals__)
 	except Exception, instance:
-	  print '**** Error **** ',instance
+          if(self.__globals__.has_key('__rethrow_casa_exceptions') and self.__globals__['__rethrow_casa_exceptions']) :
+             raise Exception, instance
+          else :
+             print '**** Error **** ',instance
 </xsl:text>
 <xsl:for-each select="aps:output">
    <xsl:call-template name="checkoutput"/>
@@ -277,7 +283,7 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
         elif(param == 'paramkeys'):
                 return a.keys()
         else:
-            if(paramvalue==None):
+            if(paramvalue==None and subparam==None):
                if(a.has_key(param)):
                   return a[param]
                else:
@@ -297,6 +303,8 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
                               retval=retval[subparam]
                            else:
                               retval=self.itsdefault(subparam)
+		     else:
+                        retval=self.itsdefault(subparam)
                return retval
 
 
@@ -578,14 +586,14 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 </xsl:choose><xsl:text>]</xsl:text>
 </xsl:when>
 <xsl:when test="@type='record'">
-<xsl:text>[</xsl:text><xsl:choose>
+<xsl:text>{</xsl:text><xsl:choose>
 <xsl:when test="count(aps:value)">
 <xsl:call-template name="handlevalue"/>
 </xsl:when>
 <xsl:otherwise>
 <xsl:value-of select="."/>
 </xsl:otherwise>
-</xsl:choose><xsl:text>]</xsl:text>
+</xsl:choose><xsl:text>}</xsl:text>
 </xsl:when>
 <xsl:otherwise>
 <xsl:value-of select="." disable-output-escaping="yes"></xsl:value-of>

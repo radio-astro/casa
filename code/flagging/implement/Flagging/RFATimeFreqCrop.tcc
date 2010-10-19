@@ -32,6 +32,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 #define baselinecnt ( (NumAnt)*((NumAnt)+1)/2 - ((NumAnt)-ant1[bs])*((NumAnt)-ant1[bs]+1)/2 + (ant2[bs] - ant1[bs]) )
 #define self(ant) ( (NumAnt)*((NumAnt)+1)/2 - ((NumAnt)-ant)*((NumAnt)-ant+1)/2 )
 #define Nmt (cubepos[2]/NumB)
+#define MIN(a,b) ((a)<=(b) ? (a) : (b))
 
 //#define PLOT  // to activate the mean and clean bandpass plots
 //#define UPLOT // to activate bandpass plots of each fit iteration
@@ -58,6 +59,7 @@ RFATimeFreqCrop :: RFATimeFreqCrop( RFChunkStats &ch,const RecordInterface &parm
 	NumTime = parm.asInt("num_time");
 	ShowPlots = parm.asBool("showplots");
 	FreqLineFit = parm.asBool("freqlinefit");
+	MaxNPieces = parm.asInt("maxnpieces");
 	cout << "Flagging on " << parm.asArrayString(RF_EXPR) << " for column : " << parm.asString(RF_COLUMN) << endl;
 }
 
@@ -86,6 +88,7 @@ if( !rec.nfields() )
 	rec.define("fignore",False);
 	rec.define("showplots",False);
 	rec.define("freqlinefit",False);
+	rec.define("maxnpieces",6);
 //	rec.setcomment("ant_cutoff","Total autocorrelation amplitude threshold for a functional antenna");
 //	rec.setcomment("time_amp_cutoff","Multiple/fraction of standard deviation, to set the threshold, while flagging across time");
 //	rec.setcomment("freq_amp_cutoff","Multiple/fraction of standard deviation, to set the threshold, while flagging across frequency");
@@ -358,6 +361,17 @@ RFA::IterMode RFATimeFreqCrop :: iterTime (uInt itime)
 				if(fabs(temp-sd) < 0.1)break;
 				temp=sd;
 				}
+
+				/* If sum of 2 adjacent flags also crosses threshold, flag */
+				for(uInt i=1;i<cubepos[2]/NumB-1;i++)
+				{
+				   if(flagTS[i])
+				   {
+					   if( ( fabs(tempTS[i-1]-fitTS[i]) + fabs(tempTS[i+1]-fitTS[i]) ) > T_TOL*sd )
+					   {flagTS[i-1]=True; flagTS[i+1]=True;}
+				   }
+				}
+
 				
 				meanBP(pl,bs,ch) = UMean(tempTS,flagTS) ;
 					
@@ -467,6 +481,7 @@ for(int pl=0;pl<matpos[0];pl++)
 		
 		for(uInt tm=0;tm<cubepos[2]/NumB;tm++)
 		{
+			/* Divide (or subtract) out the clean bandpass */
 			tempBP=0,flagBP=0;
 			for(int ch=0;ch<matpos[2];ch++)
 			{
@@ -475,26 +490,41 @@ for(int pl=0;pl<matpos[0];pl++)
 				tempBP[ch] = visc(pl,ch,((tm*NumB)+bs))/cleanBP(pl,bs,ch);
 			}//for ch
 		
+			/* Flag outliers */
 			temp=0;
 			for(Int loop=0;loop<5;loop++)
 			{
-			mn=1;
-			sd = UStd(tempBP,flagBP,mn);
-			
-			for(Int i=0;i<matpos[2];i++)
-				if(flagBP[i]==False && fabs(tempBP[i]-mn) > F_TOL*sd)
-				{
-					flagBP[i]=True ;flagcnt++;
-				}
-			if(fabs(temp-sd) < 0.1)break;
-			temp=sd;
+			   mn=1;
+			   sd = UStd(tempBP,flagBP,mn);
+			   
+			   for(Int i=0;i<matpos[2];i++)
+			   {
+				   if(flagBP[i]==False && fabs(tempBP[i]-mn) > F_TOL*sd)
+				   {
+					   flagBP[i]=True ;flagcnt++;
+				   }
+			   }
+			   if(fabs(temp-sd) < 0.1)break;
+			   temp=sd;
 			}
 
+			/* If sum of power in two adjacent channels is more than thresh, flag both side chans */
+			for(int ch=1;ch<matpos[2]-1;ch++)
+			{
+			   if(flagBP[ch])
+			   {
+			       if( ( fabs(tempBP[ch-1]-mn) + fabs(tempBP[ch+1]-mn) ) > F_TOL*sd )
+			       {flagBP[ch-1]=True; flagBP[ch+1]=True;}
+			   }
+			}
+
+			/* Fill the flags into the visbuffer array */
 			for(Int ch=0;ch<matpos[2];ch++)
 				flagc(pl,ch,((tm*NumB)+bs))=flagBP[ch];
 			
 			
 		}//for tm
+			
 		if((CorrChoice==0 && a1 == a2) || (CorrChoice!=0 && a1 != a2)) 
 		 antcnt++;
 	}//for bs
@@ -534,9 +564,9 @@ for(int pl=0;pl<matpos[0];pl++)
 				  if(flagc(pl,ch,(((Nmt-tm)*NumB+bs)))==True)
 				    flagc(pl,ch,(((Nmt-tm+1)*NumB+bs)))=True;
 
-				// flagging one channel before and after
-				if(FlagLevel>1)
+				if(FlagLevel>1) // flag level 2
 				{
+				// flagging one channel before and after
 				if(ch>0)
 				  if(flagc(pl,ch,((tm*NumB+bs)))==True)
 				     flagc(pl,ch-1,(((tm)*NumB+bs)))=True;
@@ -546,16 +576,66 @@ for(int pl=0;pl<matpos[0];pl++)
 				    flagc(pl,(matpos[2]-ch+1),(tm*NumB+bs))=True;
 				}
 
-				// if more than 60% of a channel flagged - flag whole channel
-				if(FlagLevel>1) // flag level 2
-				fsum += (flagc(pl,ch,((tm*NumB+bs)))==True)?0:1 ; 
+				//if(FlagLevel>0)
+				{
+			            /* If previous and next channel are flagged, flag it */
+				    if(ch>0 && ch < matpos[2]-1)
+				    {
+				       if( flagc(pl,ch-1,(((Nmt-tm)*NumB+bs)) ) == True 
+				        && flagc(pl,ch+1,(((Nmt-tm)*NumB+bs)) ) == True  )
+					       flagc(pl,ch,(((Nmt-tm)*NumB+bs)) ) = True;
+				    }
+			            /* If next two channels are flagged, flag it */
+				    if(ch < matpos[2]-2)
+				       if( flagc(pl,ch+1,(((Nmt-tm)*NumB+bs)) ) == True 
+				        && flagc(pl,ch+2,(((Nmt-tm)*NumB+bs)) ) == True  )
+					       flagc(pl,ch,(((Nmt-tm)*NumB+bs)) ) = True;
+
+				}
+
+				// count unflagged points for this channel (all times) 
+				//if(FlagLevel>1) // flag level 2
+				//fsum += (flagc(pl,ch,((tm*NumB+bs)))==True)?0:1 ; 
 
 			}//for tm
 			
-			if(fsum < 0.4*cubepos[2]/NumB && FlagLevel > 1) // flag level 2 
-				for(uInt tm=0;tm<cubepos[2]/NumB;tm++)
-					flagc(pl,ch,((tm*NumB+bs)))=True;
+			// if more than 60% of the timetange flagged - flag whole timerange for that channel
+			//if(fsum < 0.4*cubepos[2]/NumB && FlagLevel > 1) // flag level 2 
+			//	for(uInt tm=0;tm<cubepos[2]/NumB;tm++)
+			//		flagc(pl,ch,((tm*NumB+bs)))=True;
 		}//for ch
+
+		//if(FlagLevel>0)
+		{
+		 /* If more than 4 surrounding points are flagged, flag it */
+		 uInt fsum2=0;
+		 for(int ch=1;ch<matpos[2]-1;ch++)
+		 {
+		   for(uInt tm=1;tm<Nmt-1;tm++)
+		   {
+			   fsum2 = (uInt)(flagc(pl,ch-1,(((tm-1)*NumB+bs)))) + (uInt)(flagc(pl,ch-1,((tm*NumB+bs)))) + 
+			           (uInt)(flagc(pl,ch-1,(((tm+1)*NumB+bs)))) + (uInt)(flagc(pl,ch,(((tm-1)*NumB+bs)))) + 
+			           (uInt)(flagc(pl,ch,(((tm+1)*NumB+bs)))) + (uInt)(flagc(pl,ch+1,(((tm-1)*NumB+bs)))) + 
+			           (uInt)(flagc(pl,ch+1,((tm*NumB+bs)))) + (uInt)(flagc(pl,ch+1,(((tm+1)*NumB+bs))));
+			   if(fsum2 > 4) flagc(pl,ch,((tm*NumB+bs))) = True;
+		   } // for tm
+		 }// for ch
+		 
+		 
+		 /* Grow flags in time */
+		 for(int ch=0;ch<matpos[2];ch++)
+		 { 
+		   fsum2=0;
+		   /* count unflagged points for this channel (all times) */
+		   for(uInt tm=0;tm<Nmt;tm++)
+			fsum2 += (flagc(pl,ch,((tm*NumB+bs)))==True)?0:1 ; 
+		   /*if more than 50% of the timetange flagged - flag whole timerange for that channel */
+		   if(fsum2 < 0.5*cubepos[2]/NumB)
+		       for(uInt tm=0;tm<cubepos[2]/NumB;tm++)
+			    flagc(pl,ch,((tm*NumB+bs)))=True;
+		 }// for ch
+		}// if FlagLevel>0
+
 	}//for bs
 }//for pl
 
@@ -1020,15 +1100,24 @@ void RFATimeFreqCrop :: CleanBand(Vector<Float> data,Vector<Float> fit)
   Int psize=1;
   Int leftover=1,leftover_back=0,leftover_front=0,npieces=1;
   
+  deg=1;
+  npieces=1;
+
   for(uInt j=0;j<=4;j++)
   {
-     if(j==0) {deg = 1;npieces=1;}
-     if(j==1) {deg = 1;npieces=5;}
-     if(j==2) {deg = 2;npieces=6;}
-     if(j==3) {deg = 3;npieces=7;}
-     if(j==4) {deg = 3;npieces=8;}
+//     if(j==0) {deg = 1;npieces=1;}
+//     if(j==1) {deg = 1;npieces=5;}
+//     if(j==2) {deg = 2;npieces=6;}
+//     if(j==3) {deg = 3;npieces=7;}
+//     if(j==4) {deg = 3;npieces=8;}
      
+     npieces = MIN(2*j+1, MaxNPieces);
+     if(j>1) {deg=2;}
+     if(j>2) {deg=3;}
+
      psize = (int)(tdata.nelements()/npieces);
+//     cout << "Iter : " << j << " with Deg : " << deg << " and Piece-size : " << psize << endl;
+     
      leftover = (int)(tdata.nelements() % npieces);
 
      leftover_front = (int)(leftover/2.0);
@@ -1051,14 +1140,34 @@ void RFATimeFreqCrop :: CleanBand(Vector<Float> data,Vector<Float> fit)
 		     PolyFit(tdata,tfband,fit,left,right,deg);
      }
 
-#ifdef UPLOT 
-     UPlot(data,fit,start,data.nelements()-1);	 
-#endif
-	  
+     /* Now, smooth the fit - make this nicer later */
+     int winstart=0,winend=0;
+     float winsum=0.0;
+     for(uInt i=0;i<tdata.nelements();i++)
+     {
+	     winstart = i-5;
+	     winend = i+5;
+	     if(winstart<0)winstart=0;
+	     if(winend>=tdata.nelements())winend=tdata.nelements()-1;
+	     if(winend <= winstart) break;
+	     winsum=0.0;
+	     for(uInt wi=winstart;wi<=winend;++wi)
+		     winsum += fit[wi];
+	     fit[i] = winsum/(winend-winstart+1);
+     }
+
+
+     /* Calculate the STD of the fit */
      sd = UStd(tdata,tfband,fit);
      if(j>=2)  TOL=2;
      else TOL=3;
      
+     /* Display the Fit and the data */
+#ifdef UPLOT 
+     UPlot(data,fit,start,data.nelements()-1);	 
+#endif
+
+     /* Detect outliers */
      for(uInt i=0;i<tdata.nelements();i++)
      {
 	     if(tdata[i]-fit[i] > TOL*sd) 

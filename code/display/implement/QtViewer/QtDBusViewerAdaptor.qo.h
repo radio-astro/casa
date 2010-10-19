@@ -29,6 +29,7 @@
 #define QTDBUSVIEWERADAPTOR_QO_H_
 
 #include <map>
+#include <limits>
 #include <casaqt/QtUtilities/QtDBusXmlApp.qo.h>
 #include <casa/namespace.h>
 #include <QVariantMap>
@@ -59,19 +60,34 @@ namespace casa {
     public slots:
 
 	QDBusVariant start_interact( const QDBusVariant &input, int panel );
-	QDBusVariant load( const QString &path, const QString &displaytype = "raster", int panel=0 );
+	QDBusVariant datarange( const QList<double> &range, int data=0 );
+	QDBusVariant contourlevels( const QList<double> &levels,
+				    double baselevel=2147483648.0,
+				    double unitlevel=2147483648.0, int panel_or_data=0 );
+	QDBusVariant axes( const QString &x = "", const QString &y = "", const QString &z = "", int panel=0 );
+	QDBusVariant colormap( const QString &map, int panel_or_data=0 );
+	QDBusVariant colorwedge( bool show=true, int panel_or_data=0 );
+
+	QDBusVariant load( const QString &path, const QString &displaytype = "raster", int panel=0, double scaling=0 );
 	QDBusVariant reload( int panel_or_data );
 	QDBusVariant unload( int data );
+
 	QDBusVariant restore( const QString &path, int panel=0 );
-	QDBusVariant cwd( const QString &new_path = "" );
+
 	QDBusVariant panel( const QString &type="viewer", bool hidden=false  );
 	QDBusVariant hide( int panel=0 );
 	QDBusVariant show( int panel=0 );
 	QDBusVariant close( int panel=0 );
 	QDBusVariant popup( const QString &what, int panel=0 );
 
+	QDBusVariant cwd( const QString &new_path = "" );
+
+	QDBusVariant freeze( int panel=0 );
+	QDBusVariant unfreeze( int panel=0 );
+
 	QDBusVariant channel( int num=-1, int panel=0 );
 	QDBusVariant zoom( int level, int panel=0 );
+	QDBusVariant zoom( const QList<double> &blc, const QList<double> &trc, const QString &coordinates="pixel", int panel=0 );
 
 	// like "close()", but leaves the closing up to the user if the window is not hidden
 	QDBusVariant release( int panel );
@@ -90,6 +106,7 @@ namespace casa {
 		     const QString &orientation = "portrait", const QString &media = "letter" );
 
 
+	QDBusVariant fileinfo( const QString &path );
 	QStringList keyinfo( int );
 
 	bool done( );
@@ -175,6 +192,7 @@ namespace casa {
 	int get_id( QtDisplayPanelGui *, QtDisplayData *, const QString &path, const QString &type );
 	int get_id( QtDisplayPanelGui * );
 	QtDisplayPanelGui *findpanel( int key, bool create=true );
+	QtDisplayData *finddata( int key );
 
     protected:
 	QtDisplayPanelGui *create_panel( );

@@ -67,6 +67,7 @@
 #include <casa/Arrays/Slice.h>
 #include <images/Images/ImageAnalysis.h>
 #include <images/Images/ImageExpr.h>
+#include <images/Images/ImagePolarimetry.h>
 #include <synthesis/MeasurementEquations/ClarkCleanProgress.h>
 #include <lattices/Lattices/LatticeCleanProgress.h>
 #include <msvis/MSVis/VisSet.h>
@@ -157,9 +158,11 @@
 
 #include <components/ComponentModels/ComponentList.h>
 #include <components/ComponentModels/ConstantSpectrum.h>
+#include <components/ComponentModels/TabularSpectrum.h>
 #include <components/ComponentModels/Flux.h>
-#include <components/ComponentModels/PointShape.h>
 #include <components/ComponentModels/FluxStandard.h>
+#include <components/ComponentModels/PointShape.h>
+#include <components/ComponentModels/DiskShape.h>
 
 #include <casadbus/viewer/ViewerProxy.h>
 #include <casadbus/plotserver/PlotServerProxy.h>
@@ -167,7 +170,6 @@
 #include <casadbus/session/DBusSession.h>
 
 #include <casa/OS/HostInfo.h>
-#include <casa/System/PGPlotter.h>
 
 #include <components/ComponentModels/ComponentList.h>
 
@@ -191,7 +193,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 Imager::Imager() 
   :  msname_p(""), vs_p(0), rvi_p(0), wvi_p(0), ft_p(0), 
      cft_p(0), se_p(0),
-     sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), pgplotter_p(0),
+     sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), 
      viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0), prev_image_id_p(0), prev_mask_id_p(0)
 {
   ms_p=0;
@@ -217,8 +219,8 @@ traceEvent(1,"Entering imager::defaults",25);
   distance_p=Quantity(0.0, "m");
   stokes_p="I"; npol_p=1;
   nscales_p=5;
-  ntaylor_p=2;
-  reffreq_p=1.4e+09;
+  ntaylor_p=1;
+  reffreq_p=0.0;
   scaleMethod_p="nscales";  
   scaleInfoValid_p=False;
   dataMode_p="none";
@@ -302,7 +304,7 @@ traceEvent(1,"Entering imager::defaults",25);
 Imager::Imager(MeasurementSet& theMS,  Bool compress, Bool useModel)
   : msname_p(""), vs_p(0), rvi_p(0), wvi_p(0), 
     ft_p(0), cft_p(0), se_p(0),
-    sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), pgplotter_p(0),
+    sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), 
     viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0), prev_image_id_p(0), prev_mask_id_p(0)
 {
 
@@ -320,9 +322,9 @@ Imager::Imager(MeasurementSet& theMS,  Bool compress, Bool useModel)
 
 
 
-Imager::Imager(MeasurementSet& theMS, PGPlotter& thePlotter, Bool compress)
+Imager::Imager(MeasurementSet& theMS, Bool compress)
   :  msname_p(""),  vs_p(0), rvi_p(0), wvi_p(0), ft_p(0), cft_p(0), se_p(0),
-    sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), pgplotter_p(0),
+    sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), 
     viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0), prev_image_id_p(0), prev_mask_id_p(0)
 {
   mssel_p=0;
@@ -335,14 +337,13 @@ Imager::Imager(MeasurementSet& theMS, PGPlotter& thePlotter, Bool compress)
 
   defaults();
 
-  pgplotter_p=&thePlotter;
   latestObsInfo_p=ObsInfo();
 }
 
 Imager::Imager(const Imager & other)
   :  msname_p(""), vs_p(0), rvi_p(0), wvi_p(0), 
      ft_p(0), cft_p(0), se_p(0),
-     sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), pgplotter_p(0),
+     sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), 
      viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0), prev_image_id_p(0), prev_mask_id_p(0)
 {
   mssel_p=0;
@@ -403,9 +404,6 @@ Imager &Imager::operator=(const Imager & other)
   }
   if (gvp_p && this != &other) {
     *gvp_p = *(other.gvp_p);
-  }
-  if (pgplotter_p && this != &other) {
-    *pgplotter_p = *(other.pgplotter_p);
   }
   imageTileVol_p=other.imageTileVol_p;
   return *this;
@@ -475,9 +473,6 @@ Imager::~Imager()
 
   }
 
-
-  //Note we don't deal with pgplotter here.
-  
 
 }
 
@@ -551,16 +546,7 @@ Bool Imager::open(MeasurementSet& theMs, Bool compress, Bool useModelCol)
 	 << polType(0) << endl
 	 << "Results open to question!" << LogIO::POST;
     }
-    
-    // Initialize the weights if the IMAGING_WEIGHT column
-    // was just created
-    if(initialize && useModelCol_p) {
-      os << LogIO::NORMAL // Loglevel PROGRESS
-	 << "Initializing natural weights"
-	 << LogIO::POST;
-      Double sumwt=0.0;
-      VisSetUtil::WeightNatural(*wvi_p, sumwt);
-    }
+
     this->unlock();
 
 #ifdef PABLO_IO
@@ -611,7 +597,6 @@ Bool Imager::close()
   if(vp_p) delete vp_p; vp_p = 0;
   if(gvp_p) delete gvp_p; gvp_p = 0;
 
-  // if(pgplotter_p) delete pgplotter_p; pgplotter_p = 0;
   destroySkyEquation();
 
   return True;
@@ -715,7 +700,10 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
 
   // defining epoch as begining time from timerange in OBSERVATION subtable
   // Using first observation for now
-  MEpoch obsEpoch = msc.observation().timeRangeMeas()(0)(IPosition(1,0));
+  //MEpoch obsEpoch = msc.observation().timeRangeMeas()(0)(IPosition(1,0));
+  // modified to use main table's TIME column for better match with what
+  // VisIter does.
+  MEpoch obsEpoch = msc.timeMeas()(0);
 
   //Now finding the position of the telescope on Earth...needed for proper
   //frequency conversions
@@ -834,6 +822,12 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
        << " GHz, synthesized continuum bandwidth = "
        << MFrequency(Quantity(finc, "Hz")).get("GHz").getValue()
        << " GHz" << LogIO::POST;
+
+    if(ntaylor_p>1 && reffreq_p==0.0) 
+    {
+	    reffreq_p = fmean;
+	    os << "Setting center frequency as MS-MFS reference frequency" << LogIO::POST;
+    }
   }
   
   else if(imageMode_p.contains("FREQ")) {
@@ -929,9 +923,10 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
       Vector<Double> freqs;
       if(imageStep_p==0)
 	imageStep_p=1;
-      Int nsubchans=
-	(chanFreq.shape()(0) - Int(imageStart_p)+1)/Int(imageStep_p)+1;
-      if((nsubchans >0) && (imageNchan_p>nsubchans)) imageNchan_p=nsubchans;
+//	TT: commented these out otherwise the case for multiple MSes would not work
+//	Int nsubchans=
+//	(chanFreq.shape()(0) - Int(imageStart_p)+1)/Int(imageStep_p)+1;
+//      if((nsubchans >0) && (imageNchan_p>nsubchans)) imageNchan_p=nsubchans;
 
       os << (verbose ? LogIO::NORMAL : LogIO::NORMAL3)
          << "Image spectral coordinate: "<< imageNchan_p
@@ -1655,6 +1650,7 @@ Bool Imager::defineImage(const Int nx, const Int ny,
   logSink_p.clearLocally();
   LogIO os(LogOrigin("imager", "defineimage()"), logSink_p);
 
+
   os << LogIO::NORMAL << "Defining image properties:"; // Loglevel INFO
   os << "nx=" << nx << " ny=" << ny
      << " cellx='" << cellx.getValue() << cellx.getUnit()
@@ -1735,6 +1731,12 @@ Bool Imager::defineImage(const Int nx, const Int ny,
       }
       
     }
+
+
+    if((abs(Double(nx)*cellx.getValue("rad")) > C::pi) || (abs(Double(ny)*celly.getValue("rad")) > C::pi))
+      throw(AipsError("Cannot image the extent requested for this image;  more that PI ialong one or both of the axes " ));
+    
+
 
     nx_p=nx;
     ny_p=ny;
@@ -2084,8 +2086,9 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
 		     const String& msSelect, const String& timerng,
 		     const String& fieldnames, const Vector<Int>& antIndex,
 		     const String& antnames, const String& spwstring,
-                     const String& uvdist, const String& scan, const Bool useModelCol)
-  
+                     const String& uvdist, const String& scan,
+                     const Bool useModelCol,
+                     const Bool be_calm)
 {
   logSink_p.clearLocally();
   LogIO os(LogOrigin("imager", "data selection"), logSink_p);
@@ -2318,7 +2321,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
 	  Bool first =True;
 	  uInt nchn = 0;
 	  uInt lastchan = 0;
-	  for (uInt j=0 ; j < nchanvec(curspwid); j++) {
+	  for (uInt j=0 ; j < uInt(nchanvec(curspwid)); j++) {
 	    if (spwchansels_p(0,curspwid,j)==1) {
 	      if (first) {
 		dataStart_p[k]=j;
@@ -2340,8 +2343,8 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
 	  //Since msselet will be applied to the data before flags from spwchansels_p
 	  //are applied to the data in FTMachine, shift spwchansels_p by dataStart_p
 	  //for (uInt j=0  ; j < nchanvec(k)-dataStart_p[k]; j++){
-	  for (uInt j=0  ; j < nchanvec(curspwid); j++){
-	    if (j<nchanvec(curspwid)-dataStart_p[k]) {
+	  for (uInt j=0  ; j < uInt(nchanvec(curspwid)); j++){
+	    if ( Int(j) < nchanvec(curspwid)-dataStart_p[k]) {
 	      spwchansels_tmp(0,curspwid,j) = spwchansels_p(0,curspwid,j+dataStart_p[k]);
 	    }
 	    else {
@@ -2363,8 +2366,8 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     if(mssel_p->nrow()==0) {
       //delete mssel_p; 
       mssel_p=0;
-      os << LogIO::WARN
-	 << "Selection is empty: reverting to sorted MeasurementSet"
+      os << (be_calm ? LogIO::NORMAL4 : LogIO::WARN)
+         << "Selection is empty: reverting to sorted MeasurementSet"
 	 << LogIO::POST;
       mssel_p=new MeasurementSet(*ms_p);
       nullSelect_p=True;
@@ -2398,7 +2401,8 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
 	 << LogIO::POST;
     }
     else {
-      os << LogIO::NORMAL << "Selected all visibilities" << LogIO::POST; // Loglevel INFO
+      os << (be_calm ? LogIO::NORMAL4 : LogIO::NORMAL)
+         << "Selected all visibilities" << LogIO::POST; // Loglevel INFO
     }
     //    }
     
@@ -2410,11 +2414,9 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
                             mDataStart_p, mDataStep_p);
     ///Tell iterator to use on the fly imaging weights if scratch columns is
     ///not in use
-    if(!useModelCol_p){
-        imwgt_p=VisImagingWeight("natural");
-        rvi_p->useImagingWeight(imwgt_p);
-    }
-
+    imwgt_p=VisImagingWeight("natural");
+    rvi_p->useImagingWeight(imwgt_p);
+    
     // Guess that the beam is no longer valid
     beamValid_p=False;
     destroySkyEquation();
@@ -3726,7 +3728,7 @@ Bool Imager::pbguts(ImageInterface<Float>& inImage,
 Bool Imager::weight(const String& type, const String& rmode,
                  const Quantity& noise, const Double robust,
                  const Quantity& fieldofview,
-                 const Int npixels)
+		    const Int npixels, const Bool multiField)
 {
   if(!valid()) return False;
   logSink_p.clearLocally();
@@ -3736,18 +3738,12 @@ Bool Imager::weight(const String& type, const String& rmode,
   try {
     
     os << LogIO::NORMAL // Loglevel INFO
-       << "Weighting MS: IMAGING_WEIGHT column will be changed" << LogIO::POST;
-    
-    Double sumwt=0.0;
+       << "Weighting MS: Imaging weights will be changed" << LogIO::POST;
     
     if (type=="natural") {
       os << LogIO::NORMAL // Loglevel INFO
          << "Natural weighting" << LogIO::POST;
-      if(useModelCol_p)
-	VisSetUtil::WeightNatural(*wvi_p, sumwt);
-      else{
-	imwgt_p=VisImagingWeight("natural");
-      }
+      imwgt_p=VisImagingWeight("natural");
     }
     else if(type=="superuniform"){
       if(!assertDefinedImageParameters()) return False;
@@ -3758,20 +3754,9 @@ Bool Imager::weight(const String& type, const String& rmode,
          << "SuperUniform weighting over a square cell spanning [" 
 	 << -actualNpix 
 	 << ", " << actualNpix << "] in the uv plane" << LogIO::POST;
-      if(useModelCol_p){
-	VisSetUtil::WeightUniform(*wvi_p, rmode, noise, robust, nx_p,
-				  ny_p,
-				  mcellx_p, mcelly_p, sumwt, actualNpix, 
-				  actualNpix);
-      }
-      else{
-	imwgt_p=VisImagingWeight(*rvi_p, rmode, noise, robust, nx_p, 
-				 ny_p, mcellx_p, mcelly_p, actualNpix, 
-				 actualNpix);
-
-      }
-	
-
+      imwgt_p=VisImagingWeight(*rvi_p, rmode, noise, robust, nx_p, 
+                               ny_p, mcellx_p, mcelly_p, actualNpix, 
+                               actualNpix, multiField);
     }
     else if ((type=="robust")||(type=="uniform")||(type=="briggs")) {
       if(!assertDefinedImageParameters()) return False;
@@ -3818,29 +3803,15 @@ Bool Imager::weight(const String& type, const String& rmode,
          << "Weighting used " << actualNPixels << " uv pixels."
          << LogIO::POST;
       Quantity actualCellSize(actualFieldOfView.get("rad").getValue()/actualNPixels, "rad");
-      if(useModelCol_p){
-	VisSetUtil::WeightUniform(*wvi_p, rmode, noise, robust, actualNPixels,
-				  actualNPixels,
-				  actualCellSize, actualCellSize, sumwt);
-      }
-      else{
 
-	imwgt_p=VisImagingWeight(*rvi_p, rmode, noise, robust, 
-				 actualNPixels, actualNPixels, actualCellSize, 
-				 actualCellSize, 0, 0);
-
-      }
-
+      imwgt_p=VisImagingWeight(*rvi_p, rmode, noise, robust, 
+                               actualNPixels, actualNPixels, actualCellSize, 
+                               actualCellSize, 0, 0, multiField);
+      
     }
     else if (type=="radial") {
       os << "Radial weighting" << LogIO::POST;
-      if(useModelCol_p){
-	VisSetUtil::WeightRadial(*wvi_p, sumwt);
-      }
-      else{
-	imwgt_p=VisImagingWeight("radial");
-      }
-
+      imwgt_p=VisImagingWeight("radial");
     }
     else {
       this->unlock();
@@ -3849,21 +3820,7 @@ Bool Imager::weight(const String& type, const String& rmode,
       return False;
     }
     
-    if(useModelCol_p){
-      if(sumwt>0.0) {
-	os << LogIO::NORMAL << "Sum of weights = " << sumwt << LogIO::POST; // Loglevel INFO
-      }
-      else {
-	this->unlock();
-      os << LogIO::SEVERE << "Sum of weights is not positive" 
-	 << LogIO::EXCEPTION;
-      return False;
-      }
-    }
-    else{
       rvi_p->useImagingWeight(imwgt_p);
-
-    }
     
     // Beam is no longer valid
     beamValid_p=False;
@@ -3894,38 +3851,12 @@ Bool Imager::filter(const String& type, const Quantity& bmaj,
   
   this->lock();
   try {
-    
-   
-    
-    Double sumwt=0.0;
-    Double maxfilter=0.0;
-    Double minfilter=1.0;
-    
-    if(useModelCol_p){
-      os << LogIO::NORMAL // Loglevel INFO
-         << "Filtering MS: IMAGING_WEIGHT column will be changed" << LogIO::POST;
-      VisSetUtil::Filter(*wvi_p, type, bmaj, bmin, bpa, sumwt, minfilter,
-			 maxfilter);
       
-      if(sumwt>0.0) {
-	os << LogIO::NORMAL // Loglevel INFO
-           << "Sum of weights = " << sumwt << endl;
-	os << "Max, min taper = " << maxfilter << ", " << minfilter << LogIO::POST;
-      }
-      else {
-	os << LogIO::SEVERE
-	   << "Sum of weights is zero: perhaps you need to weight the data"
-	   << LogIO::EXCEPTION;
-      }
-    }
-    else{
-       os << LogIO::NORMAL // Loglevel INFO
-          << "Imaging weights will be tapered" << LogIO::POST;
-      imwgt_p.setFilter(type, bmaj, bmin, bpa);
-      rvi_p->useImagingWeight(imwgt_p);
-
-    }
-    
+    os << LogIO::NORMAL // Loglevel INFO
+       << "Imaging weights will be tapered" << LogIO::POST;
+    imwgt_p.setFilter(type, bmaj, bmin, bpa);
+    rvi_p->useImagingWeight(imwgt_p);
+      
     // Beam is no longer valid
     beamValid_p=False;
     destroySkyEquation();
@@ -4086,7 +4017,7 @@ Bool Imager::sensitivity(Quantity& pointsourcesens, Double& relativesens,
   try {
     
     os << LogIO::NORMAL // Loglevel INFO
-       << "Calculating sensitivity from IMAGING_WEIGHT and SIGMA columns"
+       << "Calculating sensitivity from imaging weights and from SIGMA column"
        << LogIO::POST;
     os << LogIO::NORMAL // Loglevel INFO
        << "(assuming that SIGMA column is correct, otherwise scale appropriately)"
@@ -4852,7 +4783,6 @@ Bool Imager::clean(const String& algorithm,
       maskNames="";
     }
 
-
     if(sm_p){
       if( sm_p->getAlgorithm() != "clean") destroySkyEquation();
       if(images_p.nelements() != uInt(nmodels)){
@@ -4925,9 +4855,11 @@ Bool Imager::clean(const String& algorithm,
 	  return False;
 	}
 	if (scaleMethod_p=="uservector") {	
-	  sm_p = new MSCleanImageSkyModel(userScaleSizes_p,smallScaleBias_p);
+	  sm_p = new MSCleanImageSkyModel(userScaleSizes_p, stoplargenegatives_p, 
+					    stoppointmode_p, smallScaleBias_p);
 	} else {
-	  sm_p = new MSCleanImageSkyModel(nscales_p, smallScaleBias_p);
+	  sm_p = new MSCleanImageSkyModel(nscales_p, stoplargenegatives_p, 
+					    stoppointmode_p, smallScaleBias_p);
 	}
 	if(ftmachine_p=="mosaic" ||ftmachine_p=="wproject" )
 	  sm_p->setSubAlgorithm("full");
@@ -5005,9 +4937,9 @@ Bool Imager::clean(const String& algorithm,
       else if (algorithm=="msmfs") {
 	doMultiFields_p = False;
 	doWideBand_p = True;
-	if ( ftmachine_p != "ft" ) {
+	if ( ftmachine_p != "ft" && ftmachine_p != "wproject") {
 	  os << LogIO::SEVERE
-             << "Multiscale multifield clean currently works only with the default ftmachine"
+             << "Multi-scale Multi-frequency Clean currently works only with the default ftmachine and wproject"
              << LogIO::POST;
 	  return False;
 	}
@@ -5024,6 +4956,17 @@ Bool Imager::clean(const String& algorithm,
 	os << LogIO::NORMAL // Loglevel INFO
            << "Using multi frequency synthesis algorithm" << LogIO::POST;
 	((WBCleanImageSkyModel*)sm_p)->imageNames = Vector<String>(image);
+	/* Check masks. Should be only one per field. Duplicate the name ntaylor_p times 
+	   Note : To store taylor-coefficients, msmfs uses the same data structure as for
+	          multi-field imaging. In the case of multifield and msmfs, the list of 
+		  images is nested and follows a field-major ordering.
+		  All taylor-coeffs for a single field should have the same mask (for now).
+	   For now, since only single-field is allowed for msmfs, we have the following.*/
+        if(Int(mask.nelements()) != nmodels && Int(mask.nelements())>0) 
+	{
+            for(Int tay=0;tay<nmodels;tay++)
+		   maskNames[tay] = mask[0];
+	}
       }
       else {
 	this->unlock();
@@ -5152,12 +5095,13 @@ Bool Imager::clean(const String& algorithm,
 	  LoggerHolder& log = restoredImage.logger();
 	  log.append(imagelog);
 	  log.flush();
-	  restoredImage.table().relinquishAutoLocks();
+	  restoredImage.table().relinquishAutoLocks(True);
 	}
       }
+    }
+    catch(exception& x){
       
-    }catch(exception& x){
-      
+      this->unlock();
       os << LogIO::WARN << "Caught exception: " << x.what()
 	 << LogIO::POST;
       os << LogIO::SEVERE << "This means your MS/HISTORY table may be corrupted;  you may consider deleting all the rows from this table"
@@ -5166,6 +5110,7 @@ Bool Imager::clean(const String& algorithm,
       
     }
     catch(...){
+      this->unlock();
       os << LogIO::WARN << "Caught unknown exception" <<  LogIO::POST;
       os << LogIO::SEVERE << "The MS/HISTORY table may be corrupted;  you may consider deleting all the rows from this table"
 	 <<LogIO::POST;
@@ -5179,19 +5124,16 @@ Bool Imager::clean(const String& algorithm,
 #endif
 
     return converged;
-  } 
-  
+  }
+  catch (PSFZero&  x)
+    {
+      //os << LogIO::WARN << x.what() << LogIO::POST;
+      savePSF(psfnames);
+      this->unlock();
+      throw(AipsError(String("PSFZero  ")+ x.getMesg()));
+      return True;
+    }  
   catch (exception &x) { 
-    for (Int thismodel=0;thismodel<Int(images_p.nelements());++thismodel) {
-      if ((images_p.nelements() > uInt(thismodel)) && (!images_p[thismodel].null())) {
-             images_p[thismodel]->table().relinquishAutoLocks(True);
-             images_p[thismodel]->table().unlock();
-	 }
-      if ((residuals_p.nelements()> uInt(thismodel)) && (!residuals_p[thismodel].null())) {
-             residuals_p[thismodel]->table().relinquishAutoLocks(True);
-             residuals_p[thismodel]->table().unlock();
-	 }
-    }
     this->unlock();
     throw(AipsError(x.what()));
 
@@ -5201,7 +5143,9 @@ Bool Imager::clean(const String& algorithm,
 
     return False;
   } 
+
   catch(...){
+    this->unlock();
     //Unknown exception...
     throw(AipsError("Unknown exception caught ...imager/casa may need to be exited"));
   }
@@ -5385,7 +5329,6 @@ Bool Imager::mem(const String& algorithm,
     sm_p->setAlgorithm("mem");
     if (displayProgress) {
       sm_p->setDisplayProgress(True);
-      sm_p->setPGPlotter( getPGPlotter() );
     }
     sm_p->setNumberIterations(niter);
     sm_p->setCycleFactor(cyclefactor_p);   // used by mf algs
@@ -6024,31 +5967,15 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
 
   String tempCL;
   try {
-    Vector<Int> fldids;
-    Vector<Int> spwids;
     Bool precompute=(fluxDensity(0) <= 0);
 
-
+    // Figure out which fields/spws to treat
     Record selrec=ms_p->msseltoindex(spwstring, fieldnames);
-    fldids=selrec.asArrayInt("field");
-    spwids=selrec.asArrayInt("spw");
+    Vector<Int> fldids(selrec.asArrayInt("field"));
+    Vector<Int> spwids(selrec.asArrayInt("spw"));
 
-    if(fldids.nelements() < 1){
-      fldids=fieldid;
-    }
-    if(spwids.nelements() < 1){
-      spwids=spectralwindowid;
-    }
-    // Determine spectral window id. range
-    if ((spwids.nelements()==1 && spwids[0] < 0)||(spwids.nelements()==0)) {
-      spwids.resize(ms_p->spectralWindow().nrow());
-      indgen(spwids);
-    }
-    // Determine field id. range
-    if ((fldids.nelements()== 1 && fldids[0] < 0) || (fldids.nelements()==0)) {
-      fldids.resize(ms_p->field().nrow());
-      indgen(fldids);
-    } 
+    expand_blank_sel(spwids, ms_p->spectralWindow().nrow());
+    expand_blank_sel(fldids, ms_p->field().nrow());
 
     // Loop over field id. and spectral window id.
     Vector<Double> fluxUsed(4);
@@ -6218,12 +6145,28 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
   return True;
 }
 
+// Supports the "[] or -1 => everything" convention using the rule:
+// If v is empty or only has 1 element, and it is < 0, 
+//     replace v with 0, 1, ..., nelem - 1.
+// Returns whether or not it modified v.
+//   If so, v is modified in place.
+Bool Imager::expand_blank_sel(Vector<Int>& v, const uInt nelem)
+{
+  if((v.nelements() == 1 && v[0] < 0) || v.nelements() == 0){
+    v.resize(nelem);
+    indgen(v);
+    return true;
+  }
+  return false;
+}
+
+// This is the one used by im.setjy() (because it has a model arg).
 Bool Imager::setjy(const Vector<Int>& fieldid, 
-		      const Vector<Int>& spectralwindowid,
-		      const String& fieldnames, const String& spwstring,
-		      const String& model,
-		      const Vector<Double>& fluxDensity, 
-		      const String& standard)
+                   const Vector<Int>& spectralwindowid,
+                   const String& fieldnames, const String& spwstring,
+                   const String& model,
+                   const Vector<Double>& fluxDensity, 
+                   const String& standard, const Bool chanDep)
 {
 
   if(!valid()) return False;
@@ -6238,36 +6181,19 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
       fluxdens(i)=0.0;
   }
 
-  String tempCL;
-  PagedImage<Float> *tmodimage(NULL);
+  Vector<String> tempCLs;
+  TempImage<Float> *tmodimage(NULL);
 
   try {
-    Vector<Int> fldids;
-    Vector<Int> spwids;
-    Bool precompute=(fluxdens(0) <= 0);
+    Bool precompute = (fluxdens(0) < 0 || (model != ""));
 
     // Figure out which fields/spws to treat
     Record selrec=ms_p->msseltoindex(spwstring, fieldnames);
-    fldids=selrec.asArrayInt("field");
-    spwids=selrec.asArrayInt("spw");
-    // Use ids if no string selection given
-    if(fldids.nelements() < 1){
-      fldids=fieldid;
-    }
-    if(spwids.nelements() < 1){
-      spwids=spectralwindowid;
-    }
+    Vector<Int> fldids(selrec.asArrayInt("field"));
+    Vector<Int> spwids(selrec.asArrayInt("spw"));
 
-    // Determine spectral window id. range
-    if ((spwids.nelements()==1 && spwids[0] < 0)||(spwids.nelements()==0)) {
-      spwids.resize(ms_p->spectralWindow().nrow());
-      indgen(spwids);
-    }
-    // Determine field id. range
-    if ((fldids.nelements()== 1 && fldids[0] < 0) || (fldids.nelements()==0)) {
-      fldids.resize(ms_p->field().nrow());
-      indgen(fldids);
-    } 
+    expand_blank_sel(spwids, ms_p->spectralWindow().nrow());
+    expand_blank_sel(fldids, ms_p->field().nrow());
 
     // Forbid multiple fields for some circumstances
     if (fldids.nelements()>1) {
@@ -6304,229 +6230,395 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
 
     // Loop over field id. and spectral window id.
     Vector<Double> fluxUsed(4);
-    String fluxScaleName;
-    Bool matchedScale=False;
+    Matrix<Double> fluxUsedPerChan; // 4 rows nchan col ...will resize when needed
+    String fluxScaleName("user-specified");
+    FluxStandard::FluxScale fluxScaleEnum;
+    if(!FluxStandard::matchStandard(standard, fluxScaleEnum, fluxScaleName))
+      throw(AipsError(standard + " is not a recognized flux density scale"));
+
+    FluxStandard fluxStd(fluxScaleEnum);
     Int spwid, fldid;
     ROMSColumns msc(*ms_p);
     ConstantSpectrum cspectrum;
 
-    for (uInt kk=0; kk<fldids.nelements(); ++kk) {
-      fldid=fldids[kk];
+    uInt nspws = spwids.nelements();
+    Vector<Flux<Double> > returnFluxes(nspws), returnFluxErrs(nspws);
+    Vector<MFrequency> mfreqs(nspws);
+    Array<Double> freqArray;
+    // .getUnits() is a little confusing - it seems to return a Vector which is
+    // a list of all the units, not the unit for each row.
+    const Unit freqUnit(msc.spectralWindow().chanFreqQuant().getUnits()[0]);
+    
+    tempCLs.resize(nspws);
+      
+    IPosition ipos(1,0);
+
+    for(Int fldInd = fldids.nelements(); fldInd--;){
+      fldid = fldids[fldInd];
       // Extract field name and field center position 
-      MDirection position=msc.field().phaseDirMeas(fldid);
+      MDirection fieldDir=msc.field().phaseDirMeas(fldid);
       String fieldName=msc.field().name()(fldid);
+      Bool foundSrc = false;
      
-      for (uInt jj=0; jj< spwids.nelements(); ++jj) {
-	spwid=spwids[jj];
-
+      for(uInt spwInd = 0; spwInd < nspws; ++spwInd){
+	spwid = spwids[spwInd];
+	Double medianFreq=median(msc.spectralWindow().chanFreq()(spwid));
 	// Determine spectral window center frequency
-	IPosition ipos(1,0);
-	MFrequency mfreq=msc.spectralWindow().chanFreqMeas()(spwid)(ipos);
-	Array<Double> freqArray;
-	msc.spectralWindow().chanFreq().get(spwid, freqArray, True);
-	Double medianFreq=median(freqArray);
-	mfreq.set(MVFrequency(medianFreq));
+	mfreqs[spwInd] = msc.spectralWindow().chanFreqMeas()(spwid)(ipos);
+	mfreqs[spwInd].set(MVFrequency(Quantum<Double>(medianFreq,
+                                                       freqUnit)));
+      }
 
-	fluxUsed=fluxdens;
-	fluxScaleName="user-specified";
-	if (precompute) {
-	  // Pre-compute flux density for standard sources if not specified
-	  // using the specified flux scale standard or catalog.
+      fluxUsed=fluxdens;
+      if(precompute){
+        // Pre-compute flux density for standard sources if not specified
+        // using the specified flux scale standard or catalog.
 
+        if(model != ""){
+          // Just get the fluxes and their uncertainties for scaling the image.
+          foundSrc = fluxStd.compute(fieldName, mfreqs, returnFluxes,
+                                     returnFluxErrs);
+        }
+        else{
+          // Go ahead and get FluxStandard to make the ComponentList, since
+          // it knows what type of component to use. 
 
-	  FluxStandard::FluxScale fluxScaleEnum;
-	  matchedScale=FluxStandard::matchStandard(standard, fluxScaleEnum, 
-						   fluxScaleName);
-	  FluxStandard fluxStd(fluxScaleEnum);
-	  Flux<Double> returnFlux, returnFluxErr;
-
-	  if (fluxStd.compute(fieldName, mfreq, returnFlux, returnFluxErr)) {
-	    // Standard reference source identified
-	    returnFlux.value(fluxUsed);
-	  } 
-
-	  // dgoscha, NCSA, 02 May, 2002
-	  // this else condtion is to handle the case where the user
-	  // specifies standard='SOURCE' in the setjy argument.  This will
-	  // then look into the SOURCE_MODEL column of the SOURCE subtable
-	  // for a table-record entry that points to a component list with the
-	  // model information in it.
-
-
-	  else if (standard==String("SOURCE")) {
-		// Look in the SOURCE_MODEL column of the SOURCE subtable for 
-		// the name of the CL which contains the model.
-
-		// First test to make sure the SOURCE_MODEL column exists.
-		if (ms_p->source().tableDesc().isColumn("SOURCE_MODEL")) {
-			TableRecord modelRecord;
-			msc.source().sourceModel().get(0, modelRecord);
-	
-			// Get the name of the model component list from the table record
-			Table modelRecordTable = 
-				modelRecord.asTable(modelRecord.fieldNumber(String ("model")));
-			String modelCLName = modelRecordTable.tableName();
-			modelRecord.closeTable(modelRecord.fieldNumber(String ("model")));
-
-			// Now grab the flux from the model component list and use.
-			ComponentList modelCL = ComponentList(Path(modelCLName), True);
-			SkyComponent fluxComponent = modelCL.component(fldid);
-
-			fluxUsed = 0;
-			fluxUsed = real(fluxComponent.flux().value());
-			fluxScaleName = modelCLName;
+          // This is _a_ time.  It would be more accurate and safer, but
+          // slower, to use the weighted average of the times at which this
+          // source was observed, and to use the range of times in the
+          // estimate of the error introduced by using a single time.
+          //
+          // Obviously that would be overkill if the source does not vary.
+          //
+          MEpoch mtime = msc.field().timeMeas()(fldid);
+            
+          foundSrc = fluxStd.computeCL(fieldName, mfreqs, mtime, fieldDir,
+                                       cspectrum, returnFluxes, returnFluxErrs,
+                                       tempCLs);
+	  if(chanDep){
+	    for (uInt kk =0; kk < nspws; ++kk){
+	      spwid=spwids[kk];
+	      
+	      Vector<Double> freqArray=msc.spectralWindow().chanFreq()(spwid);
+	      IPosition whichChan(1,0);
+	      MFrequency::Ref myRef=msc.spectralWindow().chanFreqMeas()(spwid)(whichChan).getRef();
+	      Vector<Flux<Double> >returnFlux(freqArray.nelements());
+	      Vector<MVFrequency> freqvals(freqArray.nelements());
+	      Flux<Double> returnFluxErr;
+	      for (uInt jj =0 ; jj < freqArray.nelements(); ++jj){
+		whichChan[0]=jj;
+		freqvals[jj]=msc.spectralWindow().chanFreqMeas()(spwid)(whichChan).getValue();
+		fluxStd.compute(fieldName, msc.spectralWindow().chanFreqMeas()(spwid)(whichChan), returnFlux[jj], returnFluxErr);
+	      }
+	      {
+		TabularSpectrum newspec(mfreqs[kk], freqvals, returnFlux, myRef);
+		ComponentList cl(tempCLs[kk], False);
+		for (uInt uu=0; uu < cl.nelements(); ++uu){
+		  cl.component(uu).setSpectrum(newspec);
 		}
-		else {
-			os << LogIO::SEVERE << "Missing SOURCE_MODEL column."
-			   << LogIO::SEVERE << "Using default, I=1.0"
-			   << LogIO::POST;
-			fluxUsed = 0;
-			fluxUsed(0) = 1.0;
-		}
+	      }//This should save that componentlist back
+	    }
+
+
 	  }
 
+       
+
+
+        }
+        if(!foundSrc){
+          if (standard==String("SOURCE")) {
+            // dgoscha, NCSA, 02 May, 2002
+            // this else condtion is to handle the case where the user
+            // specifies standard='SOURCE' in the setjy argument.  This will
+            // then look into the SOURCE_MODEL column of the SOURCE subtable
+            // for a table-record entry that points to a component list with the
+            // model information in it.
+
+            // Look in the SOURCE_MODEL column of the SOURCE subtable for 
+            // the name of the CL which contains the model.
+
+            // First test to make sure the SOURCE_MODEL column exists.
+            if (ms_p->source().tableDesc().isColumn("SOURCE_MODEL")) {
+              TableRecord modelRecord;
+              msc.source().sourceModel().get(0, modelRecord);
+	
+              // Get the name of the model component list from the table record
+              Table modelRecordTable = 
+                modelRecord.asTable(modelRecord.fieldNumber(String ("model")));
+              String modelCLName = modelRecordTable.tableName();
+              modelRecord.closeTable(modelRecord.fieldNumber(String ("model")));
+
+              // Now grab the flux from the model component list and use.
+              ComponentList modelCL = ComponentList(Path(modelCLName), True);
+              SkyComponent fluxComponent = modelCL.component(fldid);
+
+              fluxUsed = 0;
+              fluxUsed = real(fluxComponent.flux().value());
+              fluxScaleName = modelCLName;
+            }
+            else {
+              os << LogIO::SEVERE << "Missing SOURCE_MODEL column."
+                 << LogIO::SEVERE << "Using default, I=1.0"
+                 << LogIO::POST;
+              fluxUsed = 0;
+              fluxUsed(0) = 1.0;
+            }
+	  }
 	  else {
 	    // Source not found; use Stokes I=1.0 Jy for now
 	    fluxUsed=0;
 	    fluxUsed(0)=1.0;
 	    fluxScaleName="default";
 	  };
+
+          // Currently, if !foundSrc, then the flux density is the same for all
+          // spws.
+          // Log the flux density found for this field.
+          os.output().width(12);
+          os << fieldName << "  ";
+          os.output().width(0);
+          os.output().precision(4);
+          os << LogIO::NORMAL << "[I=" << fluxUsed(0) << ", "; // Loglevel INFO
+          os << "Q=" << fluxUsed(1) << ", ";
+          os << "U=" << fluxUsed(2) << ", ";
+          os << "V=" << fluxUsed(3) << "] Jy, ";
+          os << ("(" + fluxScaleName + ")") << LogIO::POST;
 	}
+      }
+      
+      for(uInt spwInd = 0; spwInd < nspws; ++spwInd){
+        spwid = spwids[spwInd];
 
+        if(foundSrc){
+          // Read this as fluxUsed = returnFluxes[spwInd].value().
+          returnFluxes[spwInd].value(fluxUsed);
+            
+          // Log flux density found for this field and spectral window
+          os.output().width(12);
+          os << fieldName << "  spwid=";
+          os.output().width(3);
+          os << spwid << "  ";
+          os.output().width(0);
+          os.output().precision(4);
+          os << LogIO::NORMAL << "[I=" << fluxUsed(0) << ", "; // Loglevel INFO
+          os << "Q=" << fluxUsed(1) << ", ";
+          os << "U=" << fluxUsed(2) << ", ";
+          os << "V=" << fluxUsed(3) << "] Jy, ";
+          os << ("(" + fluxScaleName + ")") << LogIO::POST;
+        }
+          
+        // If a model image has been specified, 
+        //  rescale it according to the I f.d. determined above
 
-	// Log flux density found for this field and spectral window
-	os.output().width(12);
-	os << fieldName << "  spwid=";
-	os.output().width(3);
-	os << (spwid) << "  ";
-	os.output().width(0);
-	os.output().precision(4);
-	os << LogIO::NORMAL << "[I=" << fluxUsed(0) << ", "; // Loglevel INFO
-	os << "Q=" << fluxUsed(1) << ", ";
-	os << "U=" << fluxUsed(2) << ", ";
-	os << "V=" << fluxUsed(3) << "] Jy, ";
-	os << ("(" + fluxScaleName + ")") << LogIO::POST;
-
-	// If a model image has been specified, 
-	//  rescale it according to the I f.d. determined above
-
-	Bool useimage(False);
-	if (model!="") {
+        Bool useimage(False);
+        if (model!="") {
 	  
-	  useimage=True;
+	  Vector<Double> freqArray=msc.spectralWindow().chanFreq()(spwid);
+	  Vector<Double> freqInc=msc.spectralWindow().chanWidth()(spwid);
+	  Double medianFreq=median(freqArray);
+	  Double freqWidth=(max(freqArray)-min(freqArray)) + 2*max(freqInc); // 2 channel extra
+	  if(chanDep){
+	    IPosition whichChan(1,0);
+	    Flux<Double> returnFlux;
+	    Flux<Double> returnFluxErr;
+	    fluxUsedPerChan.resize(4, freqArray.nelements());
+	    for (uInt k =0 ; k < freqArray.nelements(); ++k){
+	      whichChan[0]=k;
+	      fluxStd.compute(fieldName, msc.spectralWindow().chanFreqMeas()(spwid)(whichChan), returnFlux, returnFluxErr);
+	      returnFlux.value(fluxUsed);
+	      fluxUsedPerChan.column(k)=fluxUsed;
+	    }
+	  }
 
-	  PagedImage<Float> modimage(model);
-	  modimage.table().unmarkForDelete();
-	  String tempmodname=File::newUniqueName("./", "setjyimage").baseName();
-	  tmodimage = new PagedImage<Float>(modimage.shape(),modimage.coordinates(),tempmodname);
-	  tmodimage->table().markForDelete();
-	  tmodimage->set(0.0f);
-	  
-	  CoordinateSystem csys(tmodimage->coordinates());
+          useimage=True;
 
+          PagedImage<Float> modimage(model);
+          modimage.table().unmarkForDelete();
+	  IPosition imshape=modimage.shape();
+	  CoordinateSystem csys(modimage.coordinates());
+	  Int freqAxis=CoordinateUtil::findSpectralAxis(csys);
+	  Vector<Stokes::StokesTypes> whichPols;
+	  Int polAxis=CoordinateUtil::findStokesAxis(whichPols, csys);
 	  Int icoord(csys.findCoordinate(Coordinate::SPECTRAL));
 	  SpectralCoordinate spcsys=csys.spectralCoordinate(icoord);
 	  spcsys.setReferenceValue(Vector<Double>(1,medianFreq));
-	  spcsys.setWorldAxisUnits(Vector<String>(1,mfreq.getUnit().getName()));
+	  spcsys.setReferencePixel(Vector<Double>(1,0.0));
+	  spcsys.setWorldAxisUnits(Vector<String>(1,mfreqs[spwInd].getUnit().getName()));
+	  spcsys.setIncrement(Vector<Double>(1,freqWidth));
+	  // make a cube model
+	  if(chanDep && (fluxUsedPerChan.ncolumn() > 1)){
+	    spcsys=SpectralCoordinate(MFrequency::castType(mfreqs[spwInd].getRef().getType()), freqArray, spcsys.restFrequency());
+	    if(freqAxis < 2 || polAxis < 2)
+	      throw(AipsError("Cannot setjy with a model that has spectral or stokes axis before direction axes.\n Please reorder the axes of the image"));
+	    if(freqAxis ==2) {//pol and freq are swapped
+	      imshape(3)=freqArray.nelements();
+	      Vector<Int> trans(4);
+	      trans[0]=0; trans[1]=1; trans[2]=3; trans[3]=2;
+	      csys.transpose(trans, trans);
+	    }
+	    else{
+	      imshape(freqAxis)=freqArray.nelements();
+	    }
+	  } 
+
 	  csys.replaceCoordinate(spcsys,icoord);
-	  tmodimage->setCoordinateInfo(csys);
+	  tmodimage = new TempImage<Float>(imshape, csys);
+	  tmodimage->set(0.0f);
 	  
 
-	  // Check direction consistency (reported in log message below)
-	  Int dircoord(csys.findCoordinate(Coordinate::DIRECTION));
-	  DirectionCoordinate dircsys=csys.directionCoordinate(dircoord);
-	  MVDirection mvd;
-	  dircsys.toWorld(mvd,dircsys.referencePixel());
-	  Double sep=position.getValue().separation(mvd,"\"").getValue();
-	  
-	  Float sumI=sum(modimage.get());
-	  
-	  // Scale factor
-	  Float scale=fluxUsed(0)/sumI;
+          os << LogIO::DEBUG1
+             << "freqUnit.getName() = " << freqUnit.getName()
+             << LogIO::POST;
+          os << LogIO::DEBUG1
+             << "mfreqs[spwInd].get(freqUnit).getValue() = "
+             << mfreqs[spwInd].get(freqUnit).getValue()
+             << LogIO::POST;
+          
+        	  
 
-	  // scale the image
-	  tmodimage->copyData( (LatticeExpr<Float>)(modimage*scale) );
-
-	  os << LogIO::NORMAL << "Using model image " << modimage.name() // Loglevel INFO
-	     << LogIO::POST;
-
-	  os << LogIO::NORMAL // Loglevel INFO
-             << "The model image's reference pixel is " << sep << " arcsec from "
-	     << fieldName << "'s phase center."
-	     << LogIO::POST;
-	  
-	  os << LogIO::NORMAL << "Scaling model image to I=" << fluxUsed(0) // Loglevel INFO
-	     << " Jy for visibility prediction."
-	     << LogIO::POST;
-
-	}
-	else {
-	  // Make a component list for use in ft
-
-	  useimage=False;
-
-	  // Set the component flux density
-	  Flux<Double> fluxval;
-	  fluxval.setValue(fluxUsed);
-
-	  // Create a point component at the field center
-	  // with the specified flux density
-	  PointShape point(position);
-	  SkyComponent skycomp(fluxval, point, cspectrum);
-	  
-	  // Create a component list containing this entry
-	  String baseString=msname_p + "." + fieldName + ".spw" +
-	    String::toString(spwid);
-	  tempCL=baseString + ".tempcl";
-	  
-	  // Force a call to the ComponentList destructor
-	  // using scoping rules.
-	  { 
-	    ComponentList cl;
-	    cl.add(skycomp);
-	    cl.rename(tempCL, Table::New);
+          // Check direction consistency (reported in log message below)
+	  String err;
+	  if(!CoordinateUtil::setDirectionConversion(err, csys, fieldDir.getRefString())){
+	    os << "LogIO::WARN " 
+	       << "Could not set direction conversion between flux image and " 
+	       << fieldDir.getRefString() << LogIO::POST;
 	  }
-	}
+          Int dircoord(csys.findCoordinate(Coordinate::DIRECTION));
+          DirectionCoordinate dircsys=csys.directionCoordinate(dircoord);
+          MVDirection mvd;
+          dircsys.toWorld(mvd,dircsys.referencePixel());
+          Double sep=fieldDir.getValue().separation(mvd,"\"").getValue();
+	  
+          if(fluxdens[0] != 0.0){
 
+            Float sumI=1.0;
+	    if(whichPols.nelements() >1)
+	      sumI=sum(ImagePolarimetry(modimage).stokesI()).getFloat();
+	    else
+	      sumI=sum(modimage).getFloat();
 
-	// Select the uv-data for this field and spw. id.;
-	// all frequency channels selected.
-	Vector<Int> selectSpw(1), selectField(1);
-	selectSpw(0)=spwid;
-	selectField(0)=fldid;
-	String msSelectString = "";
-	Vector<Int> numDeChan(1);
-	numDeChan[0]=0;
-	Vector<Int> begin(1);
-	begin[0]=0;
-	Vector<Int> stepsize(1);
-	stepsize[0]=1;
-	setdata("channel", numDeChan, begin, stepsize, MRadialVelocity(), 
-		MRadialVelocity(),
-		selectSpw, selectField, msSelectString, "", "",
-		Vector<Int>(), "", "", "", "", True);
-
-	if (!nullSelect_p) {
-
-	  // Use ft to form visibilities
-	  Vector<String> modelv;
-	  if (useimage) {
-	    modelv.resize(1);
-	    modelv(0)=tmodimage->name();
-	    ft(modelv, "", False);
+            if(spwInd == 0)
+              os << LogIO::NORMAL
+                 << "Using model image " << modimage.name() // Loglevel INFO
+                 << LogIO::POST;
+	    // scale the image
+	    if(imshape(3)>1){
+	      if(modimage.shape()(freqAxis) ==1){
+		IPosition blc(imshape.nelements(), 0);
+		IPosition trc=imshape-1;
+		os << LogIO::NORMAL << "Scaling channels model image to I= " 
+		   << fluxUsedPerChan.row(0) 
+		   << " Jy for visibility prediction."
+		   << LogIO::POST;
+		for (uInt k =0; k < fluxUsedPerChan.ncolumn() ; ++k){
+		  Float scale=fluxUsedPerChan.column(k)(0)/sumI;
+		  blc[3]=k;
+		  trc[3]=k;
+		  Slicer sl(blc, trc, Slicer::endIsLast);
+		  SubImage<Float> subim(*tmodimage, sl, True);
+		  subim.copyData((LatticeExpr<Float>)(modimage*scale));
+		}
+	      }
+	      else{// model image is a cube...just regrid it then
+		if(freqAxis != 3)
+		  throw(AipsError("Cannot setjy with a cube model that does not have the spectral axis as the last one.\n Please reorder the axes of the image"));
+		ImageRegrid<Float> ir;
+		IPosition axes(1,freqAxis);   // regrid the spectral only
+		ir.regrid(*tmodimage, Interpolate2D::LINEAR, axes, modimage);
+	      }
+	    }
+	    else{
+	      // Scale factor
+		Float scale=fluxUsed(0)/sumI;
+		tmodimage->copyData( (LatticeExpr<Float>)(modimage*scale) );	
+		os << LogIO::NORMAL << "Scaling model image to I=" << fluxUsed(0) // Loglevel INFO
+		   << " Jy for visibility prediction."
+		   << LogIO::POST;
+	    }
+	  
 	  }
-	  else
-	    ft(modelv, tempCL, False);
+          else{
+            os << LogIO::NORMAL                                  // Loglevel INFO
+               << "Using the model image's original unscaled flux density for visibility prediction."
+               << LogIO::POST;
+            tmodimage->copyData( (LatticeExpr<Float>)(modimage) );
+          }
+            
 
-	};
+          if(spwInd == 0)
+            os << LogIO::NORMAL // Loglevel INFO
+               << "The model image's reference pixel is " << sep 
+               << " arcsec from " << fieldName << "'s phase center."
+               << LogIO::POST;
+        }
+        else{
+          useimage=False;
+
+          if(!precompute){
+            // fluxUsed was supplied by the user instead of FluxStandard, so
+            // make a component list for it now, for use in ft.
+
+            // Set the component flux density
+            Flux<Double> fluxval;
+            Flux<Double> fluxerr;
+            fluxval.setValue(fluxUsed);
+	            
+            // Create a point component at the field center
+            // with the specified flux density
+            PointShape point(fieldDir);
+
+            // No worries about varying fluxes or sizes here, so any time will do.
+            MEpoch mtime = msc.field().timeMeas()(fldid);
+
+            tempCLs[spwInd] = FluxStandard::makeComponentList(fieldName, mfreqs[spwInd],
+                                                              mtime, fluxval, point,
+                                                              cspectrum);
+          }
+        }
+
+        // Select the uv-data for this field and spw. id.;
+        // all frequency channels selected.
+        Vector<Int> selectSpw(1), selectField(1);
+        selectSpw(0)=spwid;
+        selectField(0)=fldid;
+        String msSelectString = "";
+        Vector<Int> numDeChan(1);
+        numDeChan[0]=0;
+        Vector<Int> begin(1);
+        begin[0]=0;
+        Vector<Int> stepsize(1);
+        stepsize[0]=1;
+        setdata("channel", numDeChan, begin, stepsize, MRadialVelocity(), 
+                MRadialVelocity(),
+                selectSpw, selectField, msSelectString, "", "",
+                Vector<Int>(), "", "", "", "", True, true);
+
+        if (!nullSelect_p) {
+
+          // Use ft to form visibilities
+          Vector<String> modelv;
+          if (useimage) {
+	    if(sm_p) destroySkyEquation();
+	    if(!ft_p) createFTMachine();
+	    sm_p = new CleanImageSkyModel();
+	    sm_p->add(*tmodimage,1);
+	    useModelCol_p=True;
+	    setSkyEquation();
+	    se_p->predict(False);
+	    destroySkyEquation();
+          }
+          else
+            ft(modelv, tempCLs[spwInd], False);
+
+        };
 	
-	// Delete the temporary component list and image tables
-	if (tempCL!="") Table::deleteTable(tempCL);
-
-	if (tmodimage) delete tmodimage;
-	tmodimage=NULL;
-	//	if (Table::canDeleteTable("temp.setjy.image")) Table::deleteTable("temp.setjy.image");
-
+        // Delete the temporary component list and image tables
+        if (tempCLs[spwInd] != "")
+          if(Table::canDeleteTable(tempCLs[spwInd]))Table::deleteTable(tempCLs[spwInd]);
+        if (tmodimage) delete tmodimage;
+        tmodimage=NULL;
+        //	if (Table::canDeleteTable("temp.setjy.image")) Table::deleteTable("temp.setjy.image");
       }
     }
     this->writeHistory(os);
@@ -6535,7 +6627,383 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
 
   } catch (AipsError x) {
     this->unlock();
-    if(tempCL!="") Table::deleteTable(tempCL);
+    for(Int i = tempCLs.nelements(); i--;){
+      if(tempCLs[i] != "")
+        Table::deleteTable(tempCLs[i]);
+    }
+    if (tmodimage) delete tmodimage; tmodimage=NULL;
+    os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
+    return False;
+  } 
+  return True;
+}
+
+// Temporary copy of setjy() while flux calibration with Solar System objects
+// is being tested.
+Bool Imager::ssoflux(const Vector<Int>& fieldid, 
+                     const Vector<Int>& spectralwindowid,
+                     const String& fieldnames, const String& spwstring,
+                     const String& model,
+                     const Vector<Double>& fluxDensity, 
+                     const String& standard)
+{
+  if(!valid()) return False;
+  logSink_p.clearLocally();
+  LogIO os(LogOrigin("imager", "ssoflux()"), logSink_p);
+  this->lock();
+
+  Vector<Double> fluxdens=fluxDensity;
+  if (fluxDensity.nelements()<4) {
+    fluxdens.resize(4,True);
+    for (Int i=fluxDensity.nelements();i<4;++i)
+      fluxdens(i)=0.0;
+  }
+
+  Vector<String> tempCLs;
+  PagedImage<Float> *tmodimage(NULL);
+
+  try {
+    Bool precompute = (fluxdens(0) < 0 || (fluxdens(0) == 0.0 && model != ""));
+
+    // Figure out which fields/spws to treat
+    Record selrec=ms_p->msseltoindex(spwstring, fieldnames);
+    Vector<Int> fldids(selrec.asArrayInt("field"));
+    Vector<Int> spwids(selrec.asArrayInt("spw"));
+
+    expand_blank_sel(spwids, ms_p->spectralWindow().nrow());
+    expand_blank_sel(fldids, ms_p->field().nrow());
+
+    // Forbid multiple fields for some circumstances
+    if (fldids.nelements()>1) {
+
+      if (model!="") {
+	String errmsg("ssoflux cannot apply a model image to multiple fields");
+	os << LogIO::SEVERE
+	   << errmsg << endl
+	   << "run ssoflux once per field, or use ft"
+	   << LogIO::POST;
+	throw(AipsError(errmsg));
+      }
+
+      if (!precompute) {
+	String errmsg("ssoflux cannot apply user flux density to multiple fields");
+	os << LogIO::SEVERE
+	   << errmsg << endl
+	   << "run ssoflux once per field"
+	   << LogIO::POST;
+	throw(AipsError(errmsg));
+      }
+    }
+
+    // Ignore user-polarization if using an image:
+    if (model!="") {
+      if (fluxdens(1)!=0.0 ||
+	  fluxdens(2)!=0.0 ||
+	  fluxdens(3)!=0.0 )
+	os << LogIO::WARN
+	   << "Using model image, so zeroing user QUV flux densities."
+	   << LogIO::POST;
+      fluxdens(1)=fluxdens(2)=fluxdens(3)=0.0;
+    }
+
+    // Loop over field id. and spectral window id.
+    Vector<Double> fluxUsed(4);
+    String fluxScaleName("user-specified");
+    FluxStandard::FluxScale fluxScaleEnum;
+    if(!FluxStandard::matchStandard(standard, fluxScaleEnum, fluxScaleName))
+      throw(AipsError(standard + " is not a recognized flux density scale"));
+
+    FluxStandard fluxStd(fluxScaleEnum);
+    Int spwid, fldid;
+    ROMSColumns msc(*ms_p);
+    ConstantSpectrum cspectrum;
+
+    uInt nspws = spwids.nelements();
+    Vector<Flux<Double> > returnFluxes(nspws), returnFluxErrs(nspws);
+    Vector<MFrequency> mfreqs(nspws);
+    Array<Double> freqArray;
+    // .getUnits() is a little confusing - it seems to return a Vector which is
+    // a list of all the units, not the unit for each row.
+    const Unit freqUnit(msc.spectralWindow().chanFreqQuant().getUnits()[0]);
+    
+    tempCLs.resize(nspws);
+      
+    IPosition ipos(1,0);
+
+    for(Int fldInd = fldids.nelements(); fldInd--;){
+      fldid = fldids[fldInd];
+      // Extract field name and field center position 
+      MDirection position=msc.field().phaseDirMeas(fldid);
+      String fieldName=msc.field().name()(fldid);
+      Bool foundSrc = false;
+     
+      for(uInt spwInd = 0; spwInd < nspws; ++spwInd){
+	spwid = spwids[spwInd];
+
+	// Determine spectral window center frequency
+	mfreqs[spwInd] = msc.spectralWindow().chanFreqMeas()(spwid)(ipos);
+	msc.spectralWindow().chanFreq().get(spwid, freqArray, True);
+	Double medianFreq=median(freqArray);
+	mfreqs[spwInd].set(MVFrequency(Quantum<Double>(medianFreq,
+                                                       freqUnit)));
+      }
+
+      fluxUsed=fluxdens;
+      if(precompute){
+        // Pre-compute flux density for standard sources if not specified
+        // using the specified flux scale standard or catalog.
+
+        if(model != ""){
+          // Just get the fluxes and their uncertainties for scaling the image.
+          foundSrc = fluxStd.compute(fieldName, mfreqs, returnFluxes,
+                                     returnFluxErrs);
+        }
+        else{
+          // Go ahead and get FluxStandard to make the ComponentList, since
+          // it knows what type of component to use. 
+
+          // This is _a_ time.  It would be more accurate and safer, but
+          // slower, to use the weighted average of the times at which this
+          // source was observed, and to use the range of times in the
+          // estimate of the error introduced by using a single time.
+          //
+          // Obviously that would be overkill if the source does not vary.
+          //
+          MEpoch mtime = msc.field().timeMeas()(fldid);
+            
+          foundSrc = fluxStd.computeCL(fieldName, mfreqs, mtime, position,
+                                       cspectrum, returnFluxes, returnFluxErrs,
+                                       tempCLs);
+        }
+        if(!foundSrc){
+          if (standard==String("SOURCE")) {
+            // dgoscha, NCSA, 02 May, 2002
+            // this else condtion is to handle the case where the user
+            // specifies standard='SOURCE' in the ssoflux argument.  This will
+            // then look into the SOURCE_MODEL column of the SOURCE subtable
+            // for a table-record entry that points to a component list with the
+            // model information in it.
+
+            // Look in the SOURCE_MODEL column of the SOURCE subtable for 
+            // the name of the CL which contains the model.
+
+            // First test to make sure the SOURCE_MODEL column exists.
+            if (ms_p->source().tableDesc().isColumn("SOURCE_MODEL")) {
+              TableRecord modelRecord;
+              msc.source().sourceModel().get(0, modelRecord);
+	
+              // Get the name of the model component list from the table record
+              Table modelRecordTable = 
+                modelRecord.asTable(modelRecord.fieldNumber(String ("model")));
+              String modelCLName = modelRecordTable.tableName();
+              modelRecord.closeTable(modelRecord.fieldNumber(String ("model")));
+
+              // Now grab the flux from the model component list and use.
+              ComponentList modelCL = ComponentList(Path(modelCLName), True);
+              SkyComponent fluxComponent = modelCL.component(fldid);
+
+              fluxUsed = 0;
+              fluxUsed = real(fluxComponent.flux().value());
+              fluxScaleName = modelCLName;
+            }
+            else {
+              os << LogIO::SEVERE << "Missing SOURCE_MODEL column."
+                 << LogIO::SEVERE << "Using default, I=1.0"
+                 << LogIO::POST;
+              fluxUsed = 0;
+              fluxUsed(0) = 1.0;
+            }
+	  }
+	  else {
+	    // Source not found; use Stokes I=1.0 Jy for now
+	    fluxUsed=0;
+	    fluxUsed(0)=1.0;
+	    fluxScaleName="default";
+	  };
+
+          // Currently, if !foundSrc, then the flux density is the same for all
+          // spws.
+          // Log the flux density found for this field.
+          os.output().width(12);
+          os << fieldName << "  ";
+          os.output().width(0);
+          os.output().precision(4);
+          os << LogIO::NORMAL << "[I=" << fluxUsed(0) << ", "; // Loglevel INFO
+          os << "Q=" << fluxUsed(1) << ", ";
+          os << "U=" << fluxUsed(2) << ", ";
+          os << "V=" << fluxUsed(3) << "] Jy, ";
+          os << ("(" + fluxScaleName + ")") << LogIO::POST;
+	}
+      }
+      
+      for(uInt spwInd = 0; spwInd < nspws; ++spwInd){
+        spwid = spwids[spwInd];
+
+        if(foundSrc){
+          // Read this as fluxUsed = returnFluxes[spwInd].value().
+          returnFluxes[spwInd].value(fluxUsed);
+            
+          // Log flux density found for this field and spectral window
+          os.output().width(12);
+          os << fieldName << "  spwid=";
+          os.output().width(3);
+          os << spwid << "  ";
+          os.output().width(0);
+          os.output().precision(4);
+          os << LogIO::NORMAL << "[I=" << fluxUsed(0) << ", "; // Loglevel INFO
+          os << "Q=" << fluxUsed(1) << ", ";
+          os << "U=" << fluxUsed(2) << ", ";
+          os << "V=" << fluxUsed(3) << "] Jy, ";
+          os << ("(" + fluxScaleName + ")") << LogIO::POST;
+        }
+          
+        // If a model image has been specified, 
+        //  rescale it according to the I f.d. determined above
+
+        Bool useimage(False);
+        if (model!="") {
+	  
+          useimage=True;
+
+          PagedImage<Float> modimage(model);
+          modimage.table().unmarkForDelete();
+          String tempmodname=File::newUniqueName("./", "ssofluximage").baseName();
+          tmodimage = new PagedImage<Float>(modimage.shape(),modimage.coordinates(),tempmodname);
+          tmodimage->table().markForDelete();
+          tmodimage->set(0.0f);
+	  
+          CoordinateSystem csys(tmodimage->coordinates());
+
+          Int icoord(csys.findCoordinate(Coordinate::SPECTRAL));
+          SpectralCoordinate spcsys=csys.spectralCoordinate(icoord);
+
+          os << LogIO::DEBUG1
+             << "freqUnit.getName() = " << freqUnit.getName()
+             << LogIO::POST;
+          os << LogIO::DEBUG1
+             << "mfreqs[spwInd].get(freqUnit).getValue() = "
+             << mfreqs[spwInd].get(freqUnit).getValue()
+             << LogIO::POST;
+          
+          spcsys.setReferenceValue(Vector<Double>(1,
+                                                  mfreqs[spwInd].get(freqUnit).getValue()));
+          spcsys.setWorldAxisUnits(Vector<String>(1, freqUnit.getName()));
+          csys.replaceCoordinate(spcsys,icoord);
+          tmodimage->setCoordinateInfo(csys);
+	  
+
+          // Check direction consistency (reported in log message below)
+          Int dircoord(csys.findCoordinate(Coordinate::DIRECTION));
+          DirectionCoordinate dircsys=csys.directionCoordinate(dircoord);
+          MVDirection mvd;
+          dircsys.toWorld(mvd,dircsys.referencePixel());
+          Double sep=position.getValue().separation(mvd,"\"").getValue();
+	  
+          if(fluxUsed[0] != 0.0){
+            os << LogIO::NORMAL                                  // Loglevel INFO
+               << "Scaling model image to I=" << fluxUsed(0)
+               << " Jy for visibility prediction."
+               << LogIO::POST;
+
+            Float sumI=sum(modimage.get());
+            
+            // Scale factor
+            Float scale=fluxUsed(0)/sumI;
+
+            // scale the image
+            tmodimage->copyData( (LatticeExpr<Float>)(modimage*scale) );
+          }
+          else{
+            os << LogIO::NORMAL                                  // Loglevel INFO
+               << "Using the model image's original unscaled flux density for visibility prediction."
+               << LogIO::POST;
+            tmodimage->copyData( (LatticeExpr<Float>)(modimage) );
+          }
+            
+          if(spwInd == 0){
+            os << LogIO::NORMAL
+               << "Using model image " << modimage.name() // Loglevel INFO
+               << LogIO::POST;
+            os << LogIO::NORMAL // Loglevel INFO
+               << "Its reference pixel is " << sep 
+               << " arcsec from " << fieldName << "'s phase center."
+               << LogIO::POST;
+          }
+        }
+        else{
+          useimage=False;
+
+          if(!precompute){
+            // fluxUsed was supplied by the user instead of FluxStandard, so
+            // make a component list for it now, for use in ft.
+
+            // Set the component flux density
+            Flux<Double> fluxval;
+            Flux<Double> fluxerr;
+            fluxval.setValue(fluxUsed);
+	            
+            // Create a point component at the field center
+            // with the specified flux density
+            PointShape point(position);
+
+            // No worries about varying fluxes or sizes here, so any time will do.
+            MEpoch mtime = msc.field().timeMeas()(fldid);
+
+            tempCLs[spwInd] = FluxStandard::makeComponentList(fieldName, mfreqs[spwInd],
+                                                              mtime, fluxval, point,
+                                                              cspectrum);
+          }
+        }
+
+        // Select the uv-data for this field and spw. id.;
+        // all frequency channels selected.
+        Vector<Int> selectSpw(1), selectField(1);
+        selectSpw(0)=spwid;
+        selectField(0)=fldid;
+        String msSelectString = "";
+        Vector<Int> numDeChan(1);
+        numDeChan[0]=0;
+        Vector<Int> begin(1);
+        begin[0]=0;
+        Vector<Int> stepsize(1);
+        stepsize[0]=1;
+        setdata("channel", numDeChan, begin, stepsize, MRadialVelocity(), 
+                MRadialVelocity(),
+                selectSpw, selectField, msSelectString, "", "",
+                Vector<Int>(), "", "", "", "", True, true);
+
+        if (!nullSelect_p) {
+
+          // Use ft to form visibilities
+          Vector<String> modelv;
+          if (useimage) {
+            modelv.resize(1);
+            modelv(0)=tmodimage->name();
+            ft(modelv, "", False);
+          }
+          else
+            ft(modelv, tempCLs[spwInd], False);
+
+        };
+	
+        // Delete the temporary component list and image tables
+        if (tempCLs[spwInd] != "")
+          Table::deleteTable(tempCLs[spwInd]);
+        if (tmodimage) delete tmodimage;
+        tmodimage=NULL;
+        //	if (Table::canDeleteTable("temp.setjy.image")) Table::deleteTable("temp.setjy.image");
+      }
+    }
+    this->writeHistory(os);
+    this->unlock();
+    return True;
+
+  } catch (AipsError x) {
+    this->unlock();
+    for(Int i = tempCLs.nelements(); i--;){
+      if(tempCLs[i] != "")
+        Table::deleteTable(tempCLs[i]);
+    }
     if (tmodimage) delete tmodimage; tmodimage=NULL;
     os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
     return False;
@@ -7238,7 +7706,7 @@ Bool Imager::plotweights(const Bool gridded, const Int increment)
     
     
     os << LogIO::NORMAL // Loglevel PROGRESS
-       << "Plotting IMAGING_WEIGHT column for currently selected data"
+       << "Plotting imaging weights for currently selected data"
        << LogIO::POST;
     
     ROVisIter& vi(*rvi_p);
@@ -7707,7 +8175,7 @@ Bool Imager::createFTMachine()
   else if(ftmachine_p=="mosaic") {
     os << LogIO::NORMAL << "Performing mosaic gridding" << LogIO::POST; // Loglevel PROGRESS
    
-    setMosaicFTMachine();
+    setMosaicFTMachine(useDoublePrecGrid);
 
     // VisIter& vi(vs_p->iter());
     //   vi.setRowBlocking(100);
@@ -7842,6 +8310,7 @@ Bool Imager::createFTMachine()
     // pick up the setPAIncrement() method of PBWProjectFT without
     // this
     //
+    os << LogIO::NORMAL << "Setting PA increment to " << parAngleInc_p.getValue("deg") << " deg" << endl;
     ((nPBWProjectFT *)ft_p)->setPAIncrement(parAngleInc_p);
 
     if (doPointing) 
@@ -8061,6 +8530,10 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
     if((facets_p >1)){
       // Support serial and parallel specializations
       setWFCleanImageSkyModel();
+    }
+    else if(ntaylor_p>1){
+      // Init the msmfs sky-model so that Taylor weights are triggered in CubeSkyEqn
+      sm_p = new WBCleanImageSkyModel(ntaylor_p, 1 ,reffreq_p);
     }
     else {
       sm_p = new CleanImageSkyModel();
@@ -8324,17 +8797,7 @@ Bool Imager::valid() const {
   return True;
 }
 
-PGPlotter& Imager::getPGPlotter() {
 
- 
-  return *pgplotter_p;
-}
-
-
-void Imager::setPGPlotter(PGPlotter& thePlotter) {
-
-  pgplotter_p=&thePlotter;
-}
 Bool Imager::addMasksToSkyEquation(const Vector<String>& mask, const Vector<Bool>& fixed){
   LogIO os(LogOrigin("imager", "addMasksToSkyEquation()", WHERE));
 
@@ -8675,7 +9138,16 @@ Bool Imager::unlock(){
     if(!weathertab_p.isNull())
       weathertab_p.unlock();
   }
-
+  for (Int thismodel=0;thismodel<Int(images_p.nelements());++thismodel) {
+    if ((images_p.nelements() > uInt(thismodel)) && (!images_p[thismodel].null())) {
+      images_p[thismodel]->table().relinquishAutoLocks(True);
+      images_p[thismodel]->table().unlock();
+    }
+    if ((residuals_p.nelements()> uInt(thismodel)) && (!residuals_p[thismodel].null())) {
+      residuals_p[thismodel]->table().relinquishAutoLocks(True);
+      residuals_p[thismodel]->table().unlock();
+    }
+  }
   if(lockCounter_p > 0 )
     --lockCounter_p;
   return True ; 
@@ -8924,18 +9396,19 @@ void Imager::makeVisSet(MeasurementSet& ms,
   if(useModelCol_p)
     VisSet(ms,sort,noselection,useModelCol_p,timeInterval,compress);
   
+  if(imwgt_p.getType()=="none"){
+      imwgt_p=VisImagingWeight("natural");
+  }
+
   if(!useModelCol_p){
     rvi_p=new ROVisibilityIterator(ms, sort, timeInterval);
-    if(imwgt_p.getType()=="none"){
-      imwgt_p=VisImagingWeight("natural");
-    }
-    rvi_p->useImagingWeight(imwgt_p);
   }
   else{
     wvi_p=new VisibilityIterator(ms, sort, timeInterval);
     rvi_p=wvi_p;    
   }
-  
+  rvi_p->useImagingWeight(imwgt_p);
+
 }
 /*
 void Imager::makeVisSet(MeasurementSet& ms, 
@@ -9290,14 +9763,14 @@ Int Imager::interactivemask(const String& image, const String& mask,
        viewer_p->unload( prev_mask_id_p );
      prev_image_id_p=0;
      prev_mask_id_p=0;
-     dbus::variant image_id = viewer_p->load(image, "raster",clean_panel_p);
+     dbus::variant image_id = viewer_p->load(image, "raster", clean_panel_p);
      if ( image_id.type() != dbus::variant::INT ) {
        os << LogIO::WARN << "failed to load image" << LogIO::POST;
        return False;
      }
      image_id_p = image_id.getInt( );
      
-     dbus::variant mask_id = viewer_p->load(mask,"contour",clean_panel_p);
+     dbus::variant mask_id = viewer_p->load(mask, "contour", clean_panel_p);
       if ( mask_id.type() != dbus::variant::INT ) {
 	os << "failed to load mask" << LogIO::WARN << LogIO::POST;
 	return False;
@@ -9393,6 +9866,7 @@ Int Imager::interactivemask(const String& image, const String& mask,
       //viewer_p->unload(mask_id_p);
       //Setting clean_panel_p to 0 seems to do the trick...the above stuff 
       // like done causes a crash after a call again...have to understand that
+      viewer_p->close(clean_panel_p);
       clean_panel_p=0;
       image_id_p=0;
       mask_id_p=0;
@@ -9453,7 +9927,7 @@ void Imager::savePSF(const Vector<String>& psf){
 
 }
 
-void Imager::setMosaicFTMachine(){
+void Imager::setMosaicFTMachine(Bool useDoublePrec){
   LogIO os(LogOrigin("Imager", "setmosaicftmachine", WHERE));
   ROMSColumns msc(*ms_p);
   String telescop=msc.observation().telescopeName()(0);
@@ -9478,7 +9952,10 @@ void Imager::setMosaicFTMachine(){
     } 
     gvp_p->setThreshold(minPB_p);
   }
-  ft_p = new MosaicFT(gvp_p, mLocation_p, stokes_p, cache_p/2, tile_p, True);
+  
+  ft_p = new MosaicFT(gvp_p, mLocation_p, stokes_p, cache_p/2, tile_p, True, 
+		      useDoublePrec);
+
   if((kpb == PBMath::UNKNOWN) || (kpb==PBMath::OVRO) || (kpb==PBMath::ACA)
      || (kpb==PBMath::ALMA)){
     os << LogIO::NORMAL // Loglevel INFO
@@ -9490,8 +9967,7 @@ void Imager::setMosaicFTMachine(){
   
 }
 
-  Bool Imager::iClean(const String& algorithm, const Int niter, const Double gain,
-		      //		      const String& threshold, 
+  Bool Imager::iClean(const String& algorithm, const Int niter, const Double gain, 
 		      const Quantity& threshold,
 		      const Bool displayprogress,
 		      const Vector<String>& model,
@@ -9501,46 +9977,35 @@ void Imager::setMosaicFTMachine(){
 		      const Vector<String>& residual,
 		      const Vector<String>& psfnames,
 		      const Bool interactive, const Int npercycle,
-		      const String& masktemplate, const Bool async)
+		      const String& masktemplate)
   {
     Bool rstat(False);
-    QuantumHolder qhThreshold;
-    String qhError;
       
     logSink_p.clearLocally();
-    LogIO os(LogOrigin("imager", "setimage()"), logSink_p);
+    LogIO os(LogOrigin("imager", "iClean()"), logSink_p);
 
     if(!ms_p.null()) {
-      //    if(hasValidMS_p){
-      try {
-	// if (!qhThreshold.fromString(qhError,threshold))
-	//   os << qhError << LogIO::EXCEPTION;
-
-	//	Vector<String> amodel(toVectorString(model));
+      //try
+       {
+       
 	Vector<String> amodel(model);
 	Vector<Bool>   fixed(keepfixed);
-	//	Vector<String> amask(toVectorString(mask));
 	Vector<String> amask(mask);
-	//	Vector<String> aimage(toVectorString(image));
 	Vector<String> aimage(image);
-	//	Vector<String> aresidual(toVectorString(residual));
 	Vector<String> aresidual(residual);
-	//	Vector<String> apsf(toVectorString(psfnames));
 	Vector<String> apsf(psfnames);
+	
+	if(String(algorithm) != "msmfs") ntaylor_p=1; /* masks increment by ntaylor_p only for msmfs */
+
 	if( (apsf.nelements()==1) && apsf[0]==String(""))
 	  apsf.resize();
 	if(!interactive){
-	  rstat = clean(String(algorithm), niter, gain, 
-			//			qhThreshold.asQuantity(), displayprogress, 
+	  rstat = clean(String(algorithm), niter, gain,  
 			threshold, displayprogress, 
 			amodel, fixed, String(complist), amask,  
 			aimage, aresidual, apsf);
 	}
 	else{
-	  /*if(amodel.nelements() > 1){
-	    throw(AipsError("Interactive clean in multifield mode is not supported yet"));
-	    }
-	  */
 	  if((amask.nelements()==0) || (amask[0]==String(""))){
 	    amask.resize(amodel.nelements());
 	    for (uInt k=0; k < amask.nelements(); ++k){
@@ -9560,7 +10025,6 @@ void Imager::setMosaicFTMachine(){
 	  Int continter=0;
 	  Int elniter=npercycle;
 	  ostringstream oos;
-	  //	  qhThreshold.asQuantity().print(oos);
 	  threshold.print(oos);
 	  String thresh=String(oos);
 	  if(String(masktemplate) != String("")){
@@ -9570,11 +10034,10 @@ void Imager::setMosaicFTMachine(){
 	  else {
 	    // do a zero component clean to get started
 	    clean(String(algorithm), 0, gain, 
-		  //			     qhThreshold.asQuantity(), displayprogress,
 		  threshold, displayprogress,
 		  amodel, fixed, String(complist), amask,  
 		  aimage, aresidual, Vector<String>(0), false);
-	    for (uInt nIm=0; nIm < aresidual.nelements(); ++nIm){
+	    for (uInt nIm=0; nIm < aresidual.nelements(); nIm+=ntaylor_p){
 	      if(Table::isReadable(aimage[nIm]) && Table::isWritable(aresidual[nIm]) ){
 		PagedImage<Float> rest(aimage[nIm]);
 		PagedImage<Float> resi(aresidual[nIm]);
@@ -9585,9 +10048,9 @@ void Imager::setMosaicFTMachine(){
 						   elniter, nloop,thresh, forceReload);
 	      forceReload=False;
 	      if(continter>=1)
-		nointerac(nIm)=True;
+	        nointerac(nIm)=True;
 	      if(continter==2)
-		fixed(nIm)=True;
+	        fixed(nIm)=True;
 	      
 	    }
 	    if(allEQ(nointerac, True)){
@@ -9610,7 +10073,7 @@ void Imager::setMosaicFTMachine(){
 	    //first time
 	    if(k==0)
 	      elpsf=apsf;
-	    if(anyEQ(fixed, False)){ 
+	    if(anyEQ(fixed, False)){
 	      rstat = clean(String(algorithm), elniter, gain, 
 			    thrsh, 
 			    displayprogress,
@@ -9624,7 +10087,7 @@ void Imager::setMosaicFTMachine(){
 	      }
 	      if(anyEQ(fixed, False) && anyEQ(nointerac,False)){
 		Int remainloop=nloop-k-1;
-		for (uInt nIm=0; nIm < aresidual.nelements(); ++nIm){
+		for (uInt nIm=0; nIm < aresidual.nelements(); nIm+=ntaylor_p){
 		  if(!nointerac(nIm)){
 		    continter=interactivemask(aresidual[nIm], amask[nIm],
 					      
@@ -9656,10 +10119,10 @@ void Imager::setMosaicFTMachine(){
 	    }
 	  }
 	}
-      } catch  (AipsError x) {
-	os << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-	RETHROW(x);
-      }
+       } //catch  (AipsError x) {
+       //os << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       //	RETHROW(x);
+       //  }
     } else {
       os << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
     }

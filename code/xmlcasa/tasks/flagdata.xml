@@ -5,7 +5,7 @@
       xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="flagdata" category="data editing">
+<task type="function" name="flagdata" category="editing">
         <shortdescription> All purpose flagging task based on selections</shortdescription>
         <description>
         The task will select a subset of data explicitly for flagging,
@@ -137,7 +137,7 @@
                 </param>
 
                 <param type="any" name="channelavg" subparam="true">
-                        <description>Average over channels</description>
+                        <description>Average over channels (scalar average)</description>
                         <any type="variant" limittypes="bool boolArray"/>
                         <value type="bool">False</value>
                 </param>
@@ -376,11 +376,13 @@
 
               clipexpr -- Clip using the following:
                 default: 'ABS RR'; example: clipexpr='RE XX'
-                options: 'ABS','ARG','RE','IM','NORM' + ' ' +
-                          'I','XX','YY','RR','LL'
+                options: Any of 'ABS', 'ARG', 'RE', 'IM', 'NORM' followed by
+                         any of 'I', 'XX', 'YY', 'RR', 'LL'
               channelavg -- Average data over (selected) channels? Channel
                             selections are taken into account. Flagged channels
-                            are excluded from the average.
+                            are excluded from the average. The average is done
+                            after applying the specified clipexpr, i.e. scalar
+                            averaging.
                 default: False
                 options: True,False
               clipminmax -- Range of data (Jy) that will NOT be flagged
@@ -462,9 +464,11 @@
            would report only antennas/baselines/... with more than 80% flagged
            data and at the same time less than or equal to 3000 flagged values.
 
-        autoflag: experimental automatic flagging of outliers.
-           It is still under development
-           algorithm -- autoflag algorithm name
+        autoflag: Automatic flagging of outliers (Experimental)
+           One-dimensional sliding-window median filters along time or frequency.
+	   NOTE : These methods are still in development.
+
+	   algorithm -- autoflag algorithm name
                 default: 'timemed'
                 options: 'timemed','freqmed'
            column -- the column on which to operate (DATA, CORRECTED, MODEL)
@@ -478,7 +482,25 @@
                   spectral channels.
 
         rfi: RFI automatic flagging of outliers.
-           For more information, see ?
+        	This algorithm identifies and flags outliers on the 
+		two-dimensional time-frequency plane for all selected 
+		baselines. The number of timesteps and frequency channels 
+		for each 2D chunk of the time-frequency plane is 
+		specified by the user. 
+		
+		The following steps are performed for each chunk :
+		-- For all channels, a robust straight-line fit along 
+		   the time-axis (a 'robust fit' is a few iterations of 
+		   line-fits and outlier flagging, until the fit stabilizes).
+		-- Average the chunk across time to get a 'mean bandpass'.
+		-- A robust piece-wise polynomial fit across frequency. 
+		-- Use this 'fitted bandpass' to identify and flag outliers
+		   for each timestep in the chunk. 
+		-- Optionally apply heuristics to grow flags based on 
+		   neighbouring points on the time-frequency plane.
+
+		NOTE : This method is still in development.
+   
 
            clipcolumn -- the column on which to operate (DATA, CORRECTED, MODEL)
            clipexpr -- expression to use for flagging option
@@ -526,9 +548,9 @@
 
         -- Vector mode --
 
-        For reasons of performance (to reduce the number loops through the MS),
-        several flagdata task invocations can be combined into a single
-        flagdata() run by giving vectors of parameters. 
+        For reasons of performance (in order to reduce the number loops through
+        the MS), several flagdata task invocations can be combined into a single
+        flagdata() run by giving vectors of parameters.
 
         This is possible for the modes 'manualflag' and 'quack', only.
 
@@ -556,6 +578,17 @@
             flagdata()
 
         Note that field='3' is equivalent to field=['3','3','3']
+
+
+        Another example of vector mode is
+
+            vis = 'my.ms'
+            mode = 'manualflag'
+            clipminmax = [0.0, 0.7]
+            clipexpr = ['ABS RR', 'ABS LL', 'ABS LR']
+
+        which will flag all data where either of the clipping expressions
+        (ABS RR, ABS LL or ABS LR) is outside the clipping range.
  </example>
  </task>
  </casaxml>

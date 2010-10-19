@@ -40,7 +40,6 @@
 #include <tables/Tables/TableRecord.h>
 #include <tables/Tables/TiledDataStMan.h>
 #include <tables/Tables/TiledShapeStMan.h>
-#include <tables/Tables/TiledColumnStMan.h>
 #include <tables/Tables/StandardStMan.h>
 #include <tables/Tables/TiledDataStManAccessor.h>
 #include <tables/Tables/TableIter.h>
@@ -569,13 +568,13 @@ Int VisSet::numberCoh() const
 
 void VisSet::addCalSet(MeasurementSet& ms, Bool compress) {
 
-    // Add and initialize calibration set (comprising a set of CORRECTED_DATA, 
-    // MODEL_DATA and IMAGING_WEIGHT columns) to the MeasurementSet.
+    // Add and initialize calibration set (comprising a set of CORRECTED_DATA 
+    // and MODEL_DATA columns) to the MeasurementSet.
     
     LogSink logSink;
     LogMessage message(LogOrigin("VisSet","addCalSet"));
     
-    message.message("Adding MODEL_DATA (initialized to unity), CORRECTED_DATA (initialized to DATA) and IMAGING_WEIGHT columns");
+    message.message("Adding MODEL_DATA (initialized to unity) and CORRECTED_DATA (initialized to DATA) columns");
     logSink.post(message);
     
     {
@@ -604,31 +603,39 @@ void VisSet::addCalSet(MeasurementSet& ms, Bool compress) {
             ROTiledStManAccessor tsm(ms, dataManGroup);
             uInt nHyper = tsm.nhypercubes();
             // Find smallest tile shape
-            Int lowestProduct = 0;
-            Int lowestId = 0;
-            Bool firstFound = False;
+            Int lowestProduct=INT_MAX,highestProduct=-INT_MAX;
+            Int lowestId=0, highestId=0;
             for (uInt id=0; id < nHyper; id++) {
                 Int product = tsm.getTileShape(id).product();
-                if (product > 0 && (!firstFound || product < lowestProduct)) {
+                if (product > 0 && (product < lowestProduct)) {
                     lowestProduct = product;
                     lowestId = id;
-                    if (!firstFound) firstFound = True;
+                };
+                if (product > 0 && (product > highestProduct)) {
+                    highestProduct = product;
+                    highestId = id;
                 };
             };
-            dataTileShape = tsm.getTileShape(lowestId);
+
+	    // 2010Oct07 (gmoellen) We will try using
+	    //  maximum volumne intput tile shape, as this 
+	    //  improves things drastically for ALMA data with
+	    //  an enormous range of nchan (e.g., 3840+:1), and
+	    //  will have no impact on data with a single shape
+	    //	    dataTileShape = tsm.getTileShape(lowestId);
+	    dataTileShape = tsm.getTileShape(highestId);
             simpleTiling = (dataTileShape.nelements() == 3);
+
         };
-
-
 
         if (!tiled || !simpleTiling) {
             // Untiled, or tiled at a higher than expected dimensionality
-            // Use a canonical tile shape of 32 kB size
+            // Use a canonical tile shape of 1 MB size
 
             Int maxNchan = max (numberChan());
             Int tileSize = maxNchan/10 + 1;
             Int nCorr = data->shape(0)(0);
-            dataTileShape = IPosition(3, nCorr, tileSize, 4096/nCorr/tileSize + 1);
+            dataTileShape = IPosition(3, nCorr, tileSize, 131072/nCorr/tileSize + 1);
         };
   
         // Add the MODEL_DATA column
@@ -697,37 +704,8 @@ void VisSet::addCalSet(MeasurementSet& ms, Bool compress) {
         };
         MeasurementSet::addColumnToDesc(td, MeasurementSet::CORRECTED_DATA, 2);
 
-        // Add the IMAGING_WEIGHT column
-        TableDesc tdImWgt, tdImWgtComp, tdImWgtScale;
-        CompressFloat* ccImWgt=NULL;
-        String colImWgt=MS::columnName(MS::IMAGING_WEIGHT);
-
-        tdImWgt.addColumn(ArrayColumnDesc<Float>(colImWgt,"imaging weight", 1));
-        IPosition imwgtTileShape = dataTileShape.getLast(2);
-        if (compress) {
-            tdImWgtComp.addColumn(ArrayColumnDesc<Short>(colImWgt+"_COMPRESSED",
-                                                         "imaging weight compressed",
-                                                         1));
-            tdImWgtScale.addColumn(ScalarColumnDesc<Float>(colImWgt+"_SCALE"));
-            tdImWgtScale.addColumn(ScalarColumnDesc<Float>(colImWgt+"_OFFSET"));
-            ccImWgt = new CompressFloat(colImWgt, colImWgt+"_COMPRESSED",
-                                        colImWgt+"_SCALE", colImWgt+"_OFFSET", True);
-
-            StandardStMan imwgtScaleStMan("ImWgtScaleOffset");
-            ms.addColumn(tdImWgtScale, imwgtScaleStMan);
-
-            TiledShapeStMan imwgtCompStMan("", imwgtTileShape);
-            ms.addColumn(tdImWgtComp, imwgtCompStMan);
-            ms.addColumn(tdImWgt, *ccImWgt);
-
-        } else {
-            TiledShapeStMan imwgtStMan("", imwgtTileShape);
-            ms.addColumn(tdImWgt, imwgtStMan);
-        };
-        MeasurementSet::addColumnToDesc(td, MeasurementSet::IMAGING_WEIGHT, 1);
         if (ccModel) delete ccModel;
         if (ccCorr) delete ccCorr;
-        if (ccImWgt) delete ccImWgt;
 
         /* Set the shapes for each row
            and initialize CORRECTED_DATA to DATA
@@ -735,7 +713,6 @@ void VisSet::addCalSet(MeasurementSet& ms, Bool compress) {
         */
         ArrayColumn<Complex> modelData(ms, "MODEL_DATA");
         ArrayColumn<Complex> correctedData(ms, "CORRECTED_DATA");
-        ArrayColumn<Float> imagingWeight(ms, "IMAGING_WEIGHT");
 
         // Get data description column
         ROScalarColumn<Int> dd_col = MSMainColumns(ms).dataDescId();
@@ -762,7 +739,6 @@ void VisSet::addCalSet(MeasurementSet& ms, Bool compress) {
 
             correctedData.setShape(row, rowShape);
             modelData.setShape(row, rowShape);
-            imagingWeight.setShape(row, rowShape.getLast(1));
 
             Matrix<Complex> vis(rowShape);
 
@@ -838,13 +814,12 @@ void VisSet::addCalSet(MeasurementSet& ms, Bool compress) {
 }
 
 void VisSet::removeCalSet(MeasurementSet& ms) {
-  // Remove an existing calibration set (comprising a set of CORRECTED_DATA, 
-  // MODEL_DATA and IMAGING_WEIGHT columns) from the MeasurementSet.
+  // Remove an existing calibration set (comprising a set of CORRECTED_DATA 
+  // and MODEL_DATA columns) from the MeasurementSet.
 
-  Vector<String> colNames(3);
+  Vector<String> colNames(2);
   colNames(0)=MS::columnName(MS::MODEL_DATA);
   colNames(1)=MS::columnName(MS::CORRECTED_DATA);
-  colNames(2)=MS::columnName(MS::IMAGING_WEIGHT);
 
   for (uInt j=0; j<colNames.nelements(); j++) {
     if (ms.tableDesc().isColumn(colNames(j))) {

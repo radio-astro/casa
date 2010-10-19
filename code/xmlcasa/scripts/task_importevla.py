@@ -2,7 +2,7 @@ import os
 from taskinit import *
 from flagdata_cli import flagdata_cli as flagdata
 
-def importevla(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=None, srt=None, time_sampling=None, ocorr_mode=None, compression=None, asis=None, wvr_corrected_data=None, verbose=None, overwrite=None, showversion=None, applyflags=None, tbuff=None, flagzero=None, cliplevel=None, flagpol=None, shadow=None, diameter=None):
+def importevla(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=None, srt=None, time_sampling=None, ocorr_mode=None, compression=None, asis=None, wvr_corrected_data=None, verbose=None, overwrite=None, showversion=None, applyflags=None, tbuff=None, flagzero=None, cliplevel=None, flagpol=None, shadow=None, diameter=None, flagbackup=None):
 	""" Convert a Science Data Model (SDM) dataset into a CASA Measurement Set (MS)
 	This version is under development and is geared to handling EVLA specific flag and
 	system files, and is otherwise identical to importasdm.
@@ -13,6 +13,14 @@ def importevla(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
 
 	"""
 	#Python script
+	#Origninator: Steven T. Myers
+	#Written (3.0.1) STM 2010-03-11 modify importasdm to include flagging from xml
+	#Vers1.0 (3.0.1) STM 2010-03-16 add tbuff argument
+	#Vers2.0 (3.0.1) STM 2010-03-29 minor improvements
+	#Vers3.0 (3.0.2) STM 2010-04-13 add flagzero, doshadow
+	#Vers4.0 (3.0.2) STM 2010-04-20 add flagpol
+	#Vers5.0 (3.0.2) STM 2010-05-27 combine flagzero clips
+	#Vers6.0 (3.1.0) STM 2010-07-01 flagbackup option
 	try:
                 casalog.origin('importevla')
 		viso = ''
@@ -171,7 +179,7 @@ def importevla(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
 			 flags['antenna'] = antenna
 			 flags['timerange'] = timerange
 			 print 'Flagging data using Flag.xml entries'
-			 flagdata(vis=viso,mode='manualflag',antenna=antenna,timerange=timerange)
+			 flagdata(vis=viso,mode='manualflag',antenna=antenna,timerange=timerange,flagbackup=flagbackup)
 		      else:
 		         print 'No flagging found in Flag.xml'
 			 casalog.post('No flagging found in Flag.xml')
@@ -189,12 +197,11 @@ def importevla(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
 		   # from flagdata to vectorize the flagging commands
 		   print 'Flagging low-amplitude points, using clip level ',cliplevel
 		   casalog.post('Flagging low-amplitude points, using clip level '+str(cliplevel))
-		   flagdata(vis=viso,mode='manualflag',clipexpr='ABS RR',clipoutside=False,clipminmax=[0.0,cliplevel])
-		   flagdata(vis=viso,mode='manualflag',clipexpr='ABS LL',clipoutside=False,clipminmax=[0.0,cliplevel])
 		   if (flagpol):
-		      flagdata(vis=viso,mode='manualflag',clipexpr='ABS RL',clipoutside=False,clipminmax=[0.0,cliplevel])
-		      flagdata(vis=viso,mode='manualflag',clipexpr='ABS LR',clipoutside=False,clipminmax=[0.0,cliplevel])
-
+		      flagdata(vis=viso,mode='manualflag',clipexpr=['ABS RR','ABS RL','ABS LR','ABS LL'],clipoutside=False,clipminmax=[0.0,cliplevel],flagbackup=flagbackup)
+		   else:
+		      flagdata(vis=viso,mode='manualflag',clipexpr=['ABS RR','ABS LL'],clipoutside=False,clipminmax=[0.0,cliplevel],flagbackup=flagbackup)
+		
 		if shadow:
 		   # flag shadowed data
 		   # NOTE: should not call a task from within a task but
@@ -206,7 +213,7 @@ def importevla(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
 		   else:
 		      print 'Flagging shadowed data, using diameter ',diameter
 		      casalog.post('Flagging shadowed data, using diameter '+str(diameter))
-		   flagdata(vis=viso,mode='shadow',diameter=diameter)
+		   flagdata(vis=viso,mode='shadow',diameter=diameter,flagbackup=flagbackup)
 
 	except Exception, instance:
 		print '*** Error ***',instance

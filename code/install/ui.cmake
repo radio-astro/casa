@@ -43,11 +43,14 @@ macro( casa_add_tasks module _target )
   set( _out_latex "" )
   set( _out_html "" )
   set( _out_pdf "" )
+  set( _all_tasks "" )
 
   foreach( _x ${_xmls} )
     
     get_filename_component( _base ${_x} NAME_WE )
     get_filename_component( _xml ${_x} ABSOLUTE )
+
+    list( APPEND _all_tasks ${_base} )
 
     set( _cli ${CMAKE_CURRENT_BINARY_DIR}/${_base}_cli.py )
     set( _pg  ${CMAKE_CURRENT_BINARY_DIR}/${_base}_pg.py )
@@ -90,9 +93,18 @@ macro( casa_add_tasks module _target )
     set( _out_py ${_out_py} ${_py} ${_cli} ${_pg} )
 
     # Create task documentation
-    casa_add_doc( ${_xml} ${CASA_DOC_DIR}/tasks )
-  
+    casa_add_doc( ${_xml} ${CASA_DOC_DIR} task )
+
   endforeach()
+
+  set( _tasksref ${CASA_DOC_DIR}/helpfiles/tasksref.htex )
+  add_custom_target(    
+   xmlcasa_tasksref
+   COMMAND mkdir -p ${CASA_DOC_DIR}/helpfiles
+   COMMAND echo > ${_tasksref}
+   COMMAND for x in ${_all_tasks} \; do echo "\\\\input{$$x.htex}" >> ${_tasksref} \; done
+   DEPENDS ${_xml}
+  )
 
   add_custom_target( 
     ${_target}
@@ -105,7 +117,7 @@ macro( casa_add_tasks module _target )
 
   install( 
     FILES ${_xmls}
-    DESTINATION ../share/xml
+    DESTINATION ${casaroot}/share/xml
     )
 
   install( 
@@ -120,8 +132,11 @@ macro( casa_add_tasks module _target )
     COMMAND echo "from odict import odict" > ${_tasksinfo}
     COMMAND echo "mytasks = odict\\(\\)" >> ${_tasksinfo}
     COMMAND echo "tasksum = odict\\(\\)" >> ${_tasksinfo}
+    COMMAND echo "taskcat = odict\\(\\)" >> ${_tasksinfo}
+    COMMAND echo "taskvis = odict\\(\\)" >> ${_tasksinfo}
 
     COMMAND for x in ${_out_taskinfo} \; do grep -Ev "\"(^#?from|^\$\$)\"" $$x >> ${_tasksinfo} \; done
+    COMMAND cat ${CMAKE_SOURCE_DIR}/xmlcasa/install/tasksinfo.pytxt >> ${_tasksinfo}
     DEPENDS ${_out_taskinfo}
     )
 
@@ -247,7 +262,7 @@ macro( casa_ccmtools )
     COMMAND ${PERL_EXECUTABLE} -le 'for (@ARGV) { ( -e ) or die \"$$_ missing!\"\; }' --
     ARGS ${_output}
 
-    DEPENDS ${_conversions} ${_depends}
+    DEPENDS ${_conversions} ${_depends} ${CCMTOOLS_ccmtools_EXECUTABLE}
 
     # Indirect dependencies to included IDL files
     IMPLICIT_DEPENDS C ${_depends}  # Use the C preprocessor because
@@ -286,7 +301,8 @@ macro( casa_add_tools out_idl out_sources )
     set( _xsl ${CMAKE_SOURCE_DIR}/xmlcasa/install/casa2toolxml.xsl )
     add_custom_command(
       OUTPUT ${_out_xml}
-      COMMAND ${SAXON} ${_xml} ${_xsl} | sed -e \"s/exmlns/xmlns/\" > ${_out_xml}
+      COMMAND ${SAXON} ${_xml} ${_xsl} > ${_out_xml}_tmp1
+      COMMAND sed -e \"s/exmlns/xmlns/\" ${_out_xml}_tmp1 > ${_out_xml}
       DEPENDS ${_xml} ${_xsl} 
       )
 
@@ -295,7 +311,8 @@ macro( casa_add_tools out_idl out_sources )
     set( _xsl ${CMAKE_SOURCE_DIR}/xmlcasa/install/casa2idl3.xsl )
     add_custom_command(
       OUTPUT ${_idl}
-      COMMAND ${SAXON} ${_out_xml} ${_xsl} | sed -e \"s/<?xml version=.*//\" > ${_idl}
+      COMMAND ${SAXON} ${_out_xml} ${_xsl} > ${_out_xml}_tmp2
+      COMMAND sed -e \"s/<?xml version=.*//\" ${_out_xml}_tmp2 > ${_idl}
       DEPENDS ${_out_xml} ${_xsl} 
       )
 
@@ -331,8 +348,16 @@ macro( casa_add_tools out_idl out_sources )
 
     set( ${out_sources} ${${out_sources}} ${_outputs} )
 
+    install( FILES ${CMAKE_CURRENT_BINARY_DIR}/impl/${_base}_cmpt.h
+             DESTINATION include/casa/xmlcasa/${_base} )
+
+    install( FILES ${CMAKE_CURRENT_BINARY_DIR}/impl/${_base}_cmpt.h
+             DESTINATION include/casa/impl )
+
     # Create tool documentation
-    casa_add_doc( ${_xml} ${CASA_DOC_DIR}/tools )
+    if ( NOT ${_base} STREQUAL plotms )    # because there is already a plotms task, and there would be a name conflict!
+	casa_add_doc( ${_xml} ${CASA_DOC_DIR} tool )
+    endif() 
 
   endforeach()
   
@@ -359,13 +384,29 @@ macro( casa_idl outfiles input )
     set( _outputs "" )
 
     foreach( _t ${_types} )     
-      set( _outputs ${_outputs}
+      list( APPEND _outputs
         Python_Converter/${_t}_python.h
         Python_Converter/${_t}_python.cc
         )
 
+      if( NOT ${_t} MATCHES "(^shape_type|Vec)$" )
+          # This condition matches which files ccmtools outputs
+
+          list( APPEND _outputs
+                impl/casac/${_t}.h )
+          install( FILES ${CMAKE_CURRENT_BINARY_DIR}/impl/casac/${_t}.h
+                   DESTINATION include/casa/impl/casac )
+          install( FILES ${CMAKE_CURRENT_BINARY_DIR}/impl/casac/${_t}.h
+                   DESTINATION include/casa/casac )
+      endif()
+
+      list( APPEND _outputs
+            CCM_Local/casac/${_t}.h )
+      install( FILES ${CMAKE_CURRENT_BINARY_DIR}/CCM_Local/casac/${_t}.h
+               DESTINATION include/casa/CCM_Local/casac )
+
     endforeach()
-     
+
     casa_ccmtools(
       INPUT ${_idl}
       OUTPUT ${_outputs}
@@ -396,6 +437,7 @@ macro( casa_pybinding outfiles )
   set( ${outfiles} 
     pybinding/Python_Converter/casac_python.cc
     pybinding/Python_Converter/casac_python.h
+    pybinding/impl/casac/casac.h
     )
 
   casa_ccmtools(
@@ -410,26 +452,32 @@ macro( casa_pybinding outfiles )
     # whenever an input file changes (which takes much time). The
     # output only depends on the input filenames.
 
+  install( FILES ${CMAKE_CURRENT_BINARY_DIR}/pybinding/impl/casac/casac.h
+           DESTINATION include/casa/impl/casac )
+
 endmacro()
 
 
 
-# casa_add_doc( XML prefix )
+# casa_add_doc( XML prefix type )
 #
 # - extracts PDF + HTML + LATEX documentation from the given XML
 #   and adds the names of generated pdf/html/latex output to the cmake variables
 #   casa_out_pdf, casa_out_html and casa_out_latex.
+# type: "task" or "tool"
 #
-macro( casa_add_doc xml prefix )
+macro( casa_add_doc xml prefix type )
 
     # Create htex
     set( _htex  ${prefix}/helpfiles/${_base}.htex )
-    set( _xsl ${CMAKE_SOURCE_DIR}/xmlcasa/install/casa2latex.xsl )
+    set( _xsl ${CMAKE_SOURCE_DIR}/xmlcasa/install/casa2tlatex.xsl )
 
     add_custom_command(
       OUTPUT ${_htex}
       COMMAND mkdir -p ${prefix}/helpfiles
-      COMMAND ${SAXON} ${xml} ${_xsl} | sed -e "s/<?xml version.*//" | awk -f ${CMAKE_SOURCE_DIR}/install/docutils/xml2latex.awk >  ${_htex}
+      COMMAND ${SAXON} ${xml} ${_xsl} > ${_base}.htex_tmp1
+      COMMAND sed -e "s/<?xml version.*//" ${_base}.htex_tmp1 > ${_base}.htex_tmp2
+      COMMAND awk -f ${CMAKE_SOURCE_DIR}/install/docutils/xml2latex.awk ${_base}.htex_tmp2 >  ${_htex}
       DEPENDS ${xml} ${_xsl}
       VERBATIM
       )
@@ -448,6 +496,12 @@ macro( casa_add_doc xml prefix )
       ${CMAKE_SOURCE_DIR}/install/docutils/tmptail4tex
       VERBATIM
       )
+
+    if (${type} STREQUAL tool)
+      add_custom_target( ${_base}_tool_latex DEPENDS ${_latex} )
+    else()
+      add_custom_target( ${_base}_task_latex DEPENDS ${_latex} )
+    endif()
     
     set( casa_out_latex ${casa_out_latex} ${_latex} )
 
@@ -464,6 +518,12 @@ macro( casa_add_doc xml prefix )
         COMMAND cd ${prefix}/htmlfiles && TEXINPUTS=.:${CMAKE_SOURCE_DIR}/doc/texinputs.dir//:$ENV{TEXINPUTS} ${LATEX2HTML_CONVERTER} ${_latex} ${LATEX2HTML_OPTIONS}
         DEPENDS ${_latex}
         VERBATIM )
+
+      if (${type} STREQUAL tool)
+        add_custom_target( ${_base}_tool_html DEPENDS ${_html} )
+      else()
+        add_custom_target( ${_base}_task_html DEPENDS ${_html} )
+      endif()
       
       set( casa_out_html ${casa_out_html} ${_html} )
     endif()
@@ -479,7 +539,14 @@ macro( casa_add_doc xml prefix )
         COMMAND cd ${prefix}/pdf_files && TEXINPUTS=.:${CMAKE_SOURCE_DIR}/doc/texinputs.dir//:$ENV{TEXINPUTS} ${PDFLATEX_COMPILER} ${_latex}
         DEPENDS ${_latex}
         VERBATIM )
-      
+
+      if (${type} STREQUAL tool)
+	add_custom_target( ${_base}_tool_pdf DEPENDS ${_pdf} ) 
+      else()
+        add_custom_target( ${_base}_task_pdf DEPENDS ${_pdf} )
+      endif()
+
       set( casa_out_pdf ${casa_out_pdf} ${_pdf} )
+
     endif()
 endmacro()

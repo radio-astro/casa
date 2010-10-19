@@ -134,7 +134,10 @@ chdir($install_dir) or die;
 if (`uname` eq "Darwin\n") {
     # Attach disk image, copy contents, unattach
     sys_exe("mkdir $install_dir/tmp");
-    sys_exe("hdiutil attach $prefix/$latest_release -mountroot $install_dir/tmp");
+    # Answer N(o) if hdiutil asks
+    # "The disk image you are opening may be damaged and could damage your
+    # system. Are you sure you want to open this disk image? (Y/N)"
+    sys_exe("echo N | hdiutil attach $prefix/$latest_release -mountroot $install_dir/tmp");
     system("cp -R $install_dir/tmp/* $install_dir/");  # might partially fail
     sys_exe("ls -1 $install_dir/tmp | grep CASA | sed 's/ /\\\\ /g' | xargs -Ixxx -n 1 hdiutil eject -force $install_dir/tmp/xxx");
 }
@@ -196,16 +199,23 @@ if (`uname` eq "Linux\n") {
     else {
 	die "Unknown architechture '$arch'\n";
     }
-    sys_exe("cp $install_dir/$unpacked_dir/$lib/python2.5/regressions/admin/*.py \$HOME/admin/");
-    sys_exe("cp $install_dir/$unpacked_dir/$lib/casapy/bin/*.sh \$HOME/admin/");
-    sys_exe("cp $install_dir/$unpacked_dir/$lib/casapy/bin/*.txt \$HOME/admin/");
-    sys_exe("cp $install_dir/$unpacked_dir/$lib/casapy/bin/*.pl \$HOME/admin/");
+    if ( -d "$install_dir/$unpacked_dir/$lib/python2.5" ) {
+	$pyver = "2.5";
+    } elsif ( -d "$install_dir/$unpacked_dir/$lib/python2.6" ) {
+	$pyver = "2.6";
+    } else {
+	die "could not update regression scripts";
+    }
+    sys_exe("cp $install_dir/$unpacked_dir/$lib/python$pyver/*.py \$HOME/admin/");
+    sys_exe("cp $install_dir/$unpacked_dir/$lib/python$pyver/regressions/admin/*.sh \$HOME/admin/");
+    sys_exe("cp $install_dir/$unpacked_dir/$lib/python$pyver/regressions/admin/*.txt \$HOME/admin/");
+    sys_exe("cp $install_dir/$unpacked_dir/$lib/python$pyver/regressions/admin/*.pl \$HOME/admin/");
 }
 else {
-    sys_exe("cp $install_dir/$unpacked_dir/CASA.app/Contents/Resources/python/regressions/admin/*.py \$HOME/admin/");
-    sys_exe("cp $install_dir/$unpacked_dir/CASA.app/Contents/MacOS/*.sh \$HOME/admin/");
-    sys_exe("cp $install_dir/$unpacked_dir/CASA.app/Contents/MacOS/*.txt \$HOME/admin/");
-    sys_exe("cp $install_dir/$unpacked_dir/CASA.app/Contents/MacOS/*.pl \$HOME/admin/");
+    sys_exe("cp $install_dir/$unpacked_dir/CASA.app/Contents/Resources/python/*.py \$HOME/admin/");
+    sys_exe("cp $install_dir/$unpacked_dir/CASA.app/Contents/Resources/python/regressions/admin/*.sh \$HOME/admin/");
+    sys_exe("cp $install_dir/$unpacked_dir/CASA.app/Contents/Resources/python/regressions/admin/*.txt \$HOME/admin/");
+    sys_exe("cp $install_dir/$unpacked_dir/CASA.app/Contents/Resources/python/regressions/admin/*.pl \$HOME/admin/");
 }
 
 exit 0;

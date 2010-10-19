@@ -454,10 +454,8 @@ int NROReader::getHeaderInfo( Int &nchan,
       vref[3] = 'K' ;
     }
   }
-  freqref = vref ;
-  // DEBUG
-  freqref = "TOPO" ;
-  //
+  //freqref = vref ;
+  freqref = "LSRK" ;
   //cout << "freqref = " << freqref << endl ;
   NRODataRecord *record = dataset_->getRecord( 0 ) ;
   reffreq = record->FREQ0 ;

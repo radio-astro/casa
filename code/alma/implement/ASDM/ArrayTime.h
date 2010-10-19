@@ -33,6 +33,8 @@ using std::string;
 #include <vector>
 using std::vector;
 
+#include <stdint.h>
+
 #include <Interval.h> 
 #include <UTCCorrection.h>
 

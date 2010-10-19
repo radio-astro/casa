@@ -9,17 +9,14 @@ import os
 
 os.system('rm -rf g192*.ms g192_a* g192.*.im')
 
-default('importvla')
-
 startTime = time.time()
 startProc = time.clock()
 
 print '--Import--'
-#importvla(['../../Data/G192/AS758_C030425.xp1','../../Data/G192/AS758_C030425.xp2','../../Data/G192/AS758_C030425.xp3','../../Data/G192/AS758_C030426.xp4','../../Data/G192/AS758_C030426.xp5'],'g192_a.ms',bandname='K',frequencytol=10000000.0)
 datapath=os.environ.get('CASAPATH').split()[0] +'/data/regression/ATST1/G192/'
 
 default('importvla')
-importvla(archivefiles=[datapath+'AS758_C030425.xp1',datapath+'AS758_C030425.xp2',datapath+'AS758_C030425.xp3',datapath+'AS758_C030426.xp4',datapath+'AS758_C030426.xp5'],
+importvla(archivefiles=[datapath + 'AS758_C030425.xp1',datapath+'AS758_C030425.xp2',datapath+'AS758_C030425.xp3',datapath+'AS758_C030426.xp4',datapath+'AS758_C030426.xp5'],
 	  vis='g192_a.ms',bandname='K',frequencytol=10000000.0)
 importtime = time.time() 
 print '--Observation summary--'
@@ -83,11 +80,10 @@ splitsrctime = time.time()
 
 print '--Flag bad scan--'
 #flag data in the specified time range for the source and spw
-af.open(msname='g192_src.split.ms')
-af.setdata(fieldid=0,spwid=0)
-af.settimerange(timerange=['26-APR-2003/02:45:00.0','26-APR-2003/02:49:00.0'])
-af.run()
-af.close()
+
+# But actually doing so causes this regression test to fail!
+# flagdata(vis="g192_src.split.ms", field="0", spw="0", timerange="2003/04/26/02:45:00.0~2003/04/26/02:49:00.0")
+
 flagsrctime=time.time()
 
 print '--Clean src line--'

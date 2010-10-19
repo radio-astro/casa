@@ -251,10 +251,8 @@ with this method.}
    </returns>
 
    <example>
-\begin{verbatim}
 # Open a msplot tool with a measurment set
   mp.open( msname='./data/3C273XC1.ms' );
-\end{verbatim}
 </example>
 </method>
 
@@ -284,7 +282,6 @@ with this method.}
   </returns>
 
   <example>
-\begin{verbatim}
 # open a MS dataset, Plot the array on the left and uvcoverage on the
 # right. 
 # Also set the X and Y axes labels, and the title, 
@@ -300,7 +297,6 @@ mp.uvdist()
 
 # Now clear all plots
 mp.clearplot()
-\end{verbatim}
   </example>
 </method> 
 
@@ -688,7 +684,6 @@ False otherwise
 </shortdescription>
 </returns>
 <example>
-\begin{verbatim}
 # open a MS dataset, set the plot options. 
 # Also set the X and Y axes labels, and the title, 
   mp.open( msname='./data/3C273XC1.ms');  
@@ -724,7 +719,6 @@ mp.open(ngc5921PATH);
 mp.vischannel();
 mp.plotoptions( showflags=1, overplot=1 );
 mp.vischannel();
-\end{verbatim}
 </example>
 </method>
 
@@ -768,7 +762,6 @@ The information that is displayed includes:
    </returns>
    
    <example>
-\begin{verbatim}
   # create a msplot tool and set the subset data for plotting.
   mp.open( msname='./data/3C273XC1.ms');
 
@@ -778,7 +771,6 @@ The information that is displayed includes:
   # View what we've selected.
   mp.setdata( "spw=3~7", antenna="0~200" );
   mp.summary( selected=true );
-\end{verbatim}
    </example>
 </method>
 
@@ -863,7 +855,7 @@ The information that is displayed includes:
 
      <param type="string" name="time">
      <description>Time selection values are in the form:
-            YYYY\/MM\/MM\/DD\/hh:mm:ss\~YYYY\/MM\/DD\/hh:mm:ss\^step
+            YYYY\/MM\/MM\/DD\/hh:mm:ss~YYYY\/MM\/DD\/hh:mm:ss\^step
       where the first or second term may be dropped, and more
       then one range may be specified.  Ranges are separted by
       a &quot;,&quot;.  The step value is a real value representing the
@@ -881,7 +873,6 @@ The information that is displayed includes:
    </returns>
    
    <example>
-\begin{verbatim}
 # create a msplot tool and set the subset data for plotting.
   mp.open( msname='./data/3C273XC1.ms');
 
@@ -894,7 +885,6 @@ The information that is displayed includes:
 # and times of June 27, 1989 at 3:31:40.
   mp.setdata( fieldNames'*', correlations='LR', uvDists='&gt;125kl' \
       times='1989/06/27/03:31:40' );
-\end{verbatim}
    </example>
 </method>
 
@@ -958,13 +948,11 @@ The information that is displayed includes:
    </returns>
    
    <example>
-\begin{verbatim}
 # create a msplot tool and set the subset data for plotting.
   mp.open( msname='./data/3C273XC1.ms');
 
 # TO COME
   mp.average( ??? )
-\end{verbatim}
    </example>
 </method>
 <method type="function" name="avedata">
@@ -1086,13 +1074,11 @@ The information that is displayed includes:
    </returns>
    
    <example>
-\begin{verbatim}
 # create a msplot tool and set the subset data for plotting.
   mp.open( msname='./data/3C273XC1.ms');
 
 # TO COME
   mp.average( ??? )
-\end{verbatim}
    </example>
 </method>
 
@@ -1141,7 +1127,6 @@ The information that is displayed includes:
   </returns>
   
   <example>
-\begin{verbatim}
 # create a msplot tool.
 mp.open( msname='./data/ngc7538.ms');
 
@@ -1163,7 +1148,6 @@ mp.plot( type='vischannel', column='data', value='amp', iteration='baseline' );
 mp.iterplotnext();
 mp.iterplotnext();
 mp.iterplotstop();
-\end{verbatim} 
   </example>
 </method>
 
@@ -1210,7 +1194,6 @@ mp.iterplotstop();
   </returns>
   
   <example>
-\begin{verbatim}
 # create a msplot tool.
 mp.open( msname='./data/ngc7538.ms');
 
@@ -1218,7 +1201,6 @@ mp.open( msname='./data/ngc7538.ms');
 # and RL correlations
 mp.setdata( spwNames=['(0,1):[3-5]'],  correlations=['RL'] );
 mp.checkplot( plottype='uvdist', column='data', value='amp');
-\end{verbatim} 
   </example>
 </method>
 
@@ -1305,7 +1287,6 @@ mp.checkplot( plottype='uvdist', column='data', value='amp');
    </returns>
 
    <example>
-\begin{verbatim}
 # create a msplot tool.
 mp.open( msname='./data/ngc7538.ms');
 
@@ -1315,7 +1296,6 @@ mp.setdata( spwNames=['(0,1):[3-5]'],  correlations=['RL'] );
 
 # Do an iterative plot over baselines, plotting uvdist vs. data for each antenna.
 mp.plotxy( X='uvdist', Y='', column='data', iteration=['antenna1, 'antenna2']); 
-\end{verbatim}
  </example>
 </method>
 
@@ -1399,7 +1379,6 @@ mp.plotxy( X='uvdist', Y='', column='data', iteration=['antenna1, 'antenna2']);
 
 
    <example>
-\begin{verbatim}
 # create a msplot tool, do some data selections and 
 # plot option selection and  check the validty of them.
 mp.open( msname='./data/3C273XC1.ms');
@@ -1409,7 +1388,6 @@ mp.plotoptions( windowsize=5,aspectratio=0.8, fontsize=14.0, \
        xlabel='uvdist', ylabel='amplitude', title='Amplitude vs. UVdist', 
        plotsymbol='g+' );
 mp.checkplotxy( X='uvdist', Y='', column='data', iteration=['antenna1, 'antenna2']); 
-\end{verbatim}
 </example>
 </method>
 
@@ -1437,7 +1415,6 @@ true if iterative plot is successfully started, false otherwise
 </returns>
 
 <example>
-\begin{verbatim}
 # create a msplot tool, select the data with field name 3C273 for plot, 
 # and initialize a plot of Amplitude vs UV distance for 
 # channel 1 and stokes 1, iterating over Antenna1, and creating
@@ -1452,16 +1429,13 @@ true if iterative plot is successfully started, false otherwise
   labels := ['Amplitude vs UVdist (iterating over Antenna1)','uvdist','amplitude'];
   mp.plotxy( x='SQRT(SUMSQUARE(UVW[1:2]))' y='AMPLITUDE(DATA[1,1])', iteration='ANTENNA1' );
   mp.iterplotstart();
-\end{verbatim}
 To iterate over baseline, for stokes 1, channel 1.
-\begin{verbatim}
   plotopts.nxpanels := 1;
   plotopts.nypanels := 4;
   labels := ['Amplitude vs UVdist (iterating over Baseline)','uvdist','amplitude'];
   iteraxes := ['ANTENNA1','ANTENNA2'];
   mp.plotxy( x=['SQRT(SUMSQUARE(UVW[1:2]))' y='AMPLITUDE(DATA[1,1])'], iteration=iteraxes )
   mp.iterplotstart();
-\end{verbatim}
 </example>
 </method>
 
@@ -1480,7 +1454,6 @@ Start/Continue plotting by stepping through the iteration axes.
 </shortdescription>
 </returns>
 <example>
-\begin{verbatim}
 # Iterate through the data, plotting the uvdist for each antenna1
 # The same plot can be achieved with mp.uvdist( iteration='antenna1' )
   mp.open( msname=['./data/3C273XC1.ms']);
@@ -1490,7 +1463,6 @@ Start/Continue plotting by stepping through the iteration axes.
   mp.iterplotnext();
   mp.iterplotnext();
   mp.iterplotstop();
-\end{verbatim}
 </example>
 </method>
 
@@ -1516,9 +1488,7 @@ ture, if all is valid, fales, otherwise.
 </returns>
 
 <example>
-\begin{verbatim}
 # see the example for iterplotnext()
-\end{verbatim}
 </example>
 </method>
 
@@ -1587,13 +1557,11 @@ ture, if all is valid, fales, otherwise.
    </returns>
 
    <example>
-\begin{verbatim}
 # Open a msplot tool with a measurment set
   mp.open( msname='./data/3C273XC1.ms' );
 # Plot something and save it in a pdf file.
   mp.plot( 'uvdist' )
   mp.savefig( 'uvdist.pdf', edgecolor='black' )
-\end{verbatim}
 </example>
 </method>
 
@@ -1640,12 +1608,10 @@ Alternative a specific region can be given to this function with the
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
 # mark 2 flag regions on a multi-panel plot, one in panel 1 and one
 # in panel 2.
   tp.markflags(subplot=131, region=[100,-100,50,-50]);
   tp.markflags(subplot=221);
-\end{verbatim}
 </example>
 </method>
  
@@ -1677,13 +1643,11 @@ ture, if flagging is successful, false, otherwise
 </shortdescription>
 </returns>
 <example>
-\begin{verbatim}
 # mark 2 flag regions on a multi-panel plot, one in panel 1 and one
 # in panel 2. Then apply the flags and write to disk.
   mp.markflags(subplot=221, region=[0,15,10,30]);
   mp.markflags(subplot=222, region=[15,30,10,30]);
   mp.flagdata();
-\end{verbatim}
 </example>
 </method>
 
@@ -1708,7 +1672,7 @@ ture, if flagging is successful, false, otherwise
 </shortdescription>
 </returns>
 <example>
-\begin{verbatim}
+
 # mark 2 flag regions on a multi-panel plot with three rows of plots.
 # One region is marked on panel 1 and one region onpanel 2. Then the
 # marked regions are applied unflagging data and writing the changes 
@@ -1716,7 +1680,7 @@ ture, if flagging is successful, false, otherwise
   mp.markflags(subplot=311);
   mp.markflags(subplot=312);
   mp.unflagdata();
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1737,13 +1701,13 @@ true, if successfull, false, otherwise.
 </shortdescription>
 </returns>
 <example>
-\begin{verbatim}
+
 # clear all flags from the subset of the measurement set.
   mp := msplot( msname=['./data/3C273XC1.ms']);
   mp.setdata( spwIndex=[0] );
   mp.clearflags();
   mp.done();
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1762,8 +1726,8 @@ still exploring how this function should work.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
-\end{verbatim}
+
+
 </example>
 </method>
 
@@ -1795,8 +1759,8 @@ still exploring how this function should work.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
-\end{verbatim}
+
+
 </example>
 </method>
 
@@ -1820,8 +1784,8 @@ still exploring how this function should work.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
-\end{verbatim}
+
+
 </example>
 </method>
 
@@ -1839,8 +1803,8 @@ still exploring how this function should work.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
-\end{verbatim}
+
+
 </example>
 </method>
     <method type="function" name="getflagversionlist">
@@ -1853,8 +1817,8 @@ still exploring how this function should work.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
-\end{verbatim}
+
+
 </example>
 </method>
 
@@ -1877,11 +1841,11 @@ Plot antenna distribution in local reference frame.
 </shortdescription>
 </returns>
 <example>
-\begin{verbatim}
+
 # create a msplot tool.
   mp.open( msname='./data/3C273XC1.ms');
   mp.array();
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1919,12 +1883,12 @@ Plot amplitude, phase, etc. versus azimuth angle( not functioning yet ).
 </shortdescription>
 </returns>
 <example>
-\begin{verbatim}
+
 # create a msplot tool.
   mp.open( msname='./data/ngc7538.ms');
   mp.setdata( spwNames=['(0,1):[3-5]'],  correlations=['RL'] );
   mp.azimuth( column=['data'], value=['phase'] ); 
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1964,7 +1928,7 @@ Plot amplitude, phase, etc. versus baseline.
 </shortdescription>
  </returns>
 <example>
-\begin{verbatim}
+
 # create a msplot tool.
   mp.open( msname='./data/ngc7538.ms');
 
@@ -1974,7 +1938,7 @@ Plot amplitude, phase, etc. versus baseline.
 
 # Plot the phase vs. baseline using the corrected data column.
   mp.baseline( column='corrected', value='phase' ); 
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2014,12 +1978,12 @@ Plot amplitude, phase, etc. versus elevation( not functioning yet ).
 </shortdescription>
 </returns>
 <example>
-\begin{verbatim}
+
 # create a msplot tool.
   mp.open( msname='./data/ngc7538.ms');
   mp.setdata( spwNames=['(0,1):[3-5]'],  correlations=['RL'] );
   mp.elevation( column=['data'], value=['phase'] ); 
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2040,11 +2004,11 @@ Plot amplitude, phase, etc. versus elevation( not functioning yet ).
 </shortdescription>
 </returns>
 <example>
-\begin{verbatim}
+
 # create a msplot tool.
   mp.open( msname='./data/3C273XC1.ms');
   mp.uvcoverage();
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2086,14 +2050,14 @@ Bool, true if plotting successful, false otherwise
 </shortdescription>
 </returns>
 <example>
-\begin{verbatim}
+
 # create a msplot tool.
   mp.open( msname='./data/ngc7538.ms');
 # select the data: spectral windows 0 and 1, channels 3 through 5
 # and RL correlations
   mp.setdata( spwNames=['(0,1):[3-5]'],  correlations=['RL'] );
   mp.uvdist( column='data', value='amp');
-\end{verbatim} 
+ 
 </example>
 </method>
 
@@ -2133,14 +2097,14 @@ Plot amplitude, phase, etc. versus time.
 </shortdescription>
 </returns>
 <example>
-\begin{verbatim}
+
 # create a msplot tool.
   mp.open( msname='./data/ngc7538.ms');
 # select data. correlations are separated by a space:
 #    correlations=['RR RL']
   mp.setdata( spwNames=['(0,1):[3-5]'],  correlations=['RL'] );
   mp.vistime( column=['data'], value=['amp'], iteration=['baseline']); 
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2181,7 +2145,7 @@ Plot amplitude, phase, etc. versus channel.
 </shortdescription>
 </returns>
 <example>
-\begin{verbatim}
+
 # open an msplot tool with the ngc7538.ms measurement set.
   mp.open( msname='./data/ngc7538.ms');
 
@@ -2191,7 +2155,7 @@ Plot amplitude, phase, etc. versus channel.
 
 # Do an iterative plot, plotting channel vs. amplitude for each baseline.
   mp.vischannel( column='data', value='amp', iteration='baseline'); 
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2232,12 +2196,12 @@ Plot amplitude, phase, etc. versus hour angle.
 </shortdescription>
 </returns>
 <example>
-\begin{verbatim}
+
 # create a msplot tool.
   mp.open( msname='./data/ngc7538.ms');
   mp.setdata( spwNames=['(0,1):[3-5]'],  correlations=['RL'] );
   mp.hourangle( column=['data'], value=['phase'] ); 
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2278,12 +2242,12 @@ Bool,  true if plotting successful, false otherwise
 </shortdescription>
 </returns>
 <example>
-\begin{verbatim}
+
 # create a msplot tool.
   mp.open( msname='./data/ngc7538.ms');
   mp.setdata( spwNames=['(0,1):[3-5]'],  correlations=['RL'] );
   mp.parallacticangle( column=['data'], value=['phase'] ); 
-\end{verbatim}
+
 </example>
 </method>
 

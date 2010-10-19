@@ -193,8 +193,7 @@ public:
 // resets the lattice iterator to beginning. 
   //Matrix<T> * reset( Bool will_read=True,
   //                   Bool will_write=True );  
-  void reset( Bool will_read = True,
-              Bool will_write = True );
+  void reset();
   
 // advances internal iterator to specified slot along the Z axis
   void advance( Int iz )   { iter.advance(iz); };
@@ -203,7 +202,7 @@ public:
   Int position ()                 { return iter.position(); }
   
 // returns shape
-  const IPosition & shape ()      { return lat_shape; }
+  IPosition & shape ()      { return lat_shape; }
   
 // returns element at i,j of cursor
   T operator () ( uInt i,uInt j ) const { return iter(i,j); }
@@ -215,6 +214,7 @@ public:
   void set( uInt ichan, uInt ifr, uInt icorr, bool val) 
     { iter.set(ichan, ifr, icorr, val); }
 
+  // sets element for all (ichan, icorr)
   void set_column( uInt ifr, const T &val );
 
 // provides access to lattice itself  

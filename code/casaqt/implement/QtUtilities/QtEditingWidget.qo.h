@@ -49,7 +49,7 @@ public:
     
     // Adds any radio buttons in the widget to the given button group.  This
     // method should be overridden by children that have radio buttons.
-    virtual void addRadioButtonsToGroup(QButtonGroup* group) const { }
+    virtual void addRadioButtonsToGroup(QButtonGroup* group) const { (void)group; }
     
 signals:
     // This signal should be emitted whenever the user changes any value
