@@ -27,7 +27,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: STAsciiWriter.cpp 1657 2009-11-05 10:50:20Z WataruKawasaki $
+//# $Id: STAsciiWriter.cpp 1819 2010-08-02 07:28:20Z KanaSugimoto $
 //#---------------------------------------------------------------------------
 
 #include <casa/aips.h>
@@ -88,7 +88,6 @@ Bool STAsciiWriter::write(const Scantable& stable, const String& fileName)
 // Open and write header file
 
    String rootName(fileName);
-   if (rootName.length()==0) rootName = String("ascii");
 
   Block<String> cols(4);
   cols[0] = String("SCANNO");
@@ -103,10 +102,21 @@ Bool STAsciiWriter::write(const Scantable& stable, const String& fileName)
     const TableRecord& rec = row.get(0);
     String dirtype = stable.getDirectionRefString();
     ostringstream onstr;
-    onstr << "SCAN" << rec.asuInt("SCANNO")
-    << "_CYCLE" << rec.asuInt("CYCLENO")
-    << "_BEAM" << rec.asuInt("BEAMNO")
-    << "_IF" << rec.asuInt("IFNO");
+
+    if (rootName.length()==0) {
+      rootName = String("ascii");
+    }
+    if (tab.nrow() > 1) {
+      if (stable.nscan() > 1) 
+        onstr << "_SCAN" << rec.asuInt("SCANNO");
+      if (stable.ncycle(rec.asuInt("SCANNO")) > 1) 
+        onstr << "_CYCLE" << rec.asuInt("CYCLENO");
+      if (stable.nbeam(rec.asuInt("SCANNO")) > 1) 
+        onstr << "_BEAM" << rec.asuInt("BEAMNO");
+      if (stable.nif(rec.asuInt("SCANNO")) > 1) 
+        onstr << "_IF" << rec.asuInt("IFNO");
+    }
+
     String fName = rootName + String(onstr) + String(".txt");
     ofstream of(fName.chars(), ios::trunc);
     int row0 = t.rowNumbers(tab)[0];

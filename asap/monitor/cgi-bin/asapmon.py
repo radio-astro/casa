@@ -6,14 +6,10 @@ import cgitb; cgitb.enable()
 
 from simpletal import simpleTAL, simpleTALES
 
-#absolute home
-abspath= "/var/www/asapmon/"
-cgiloc = "/cgi-bin/asapmon/"
-tmppath = os.path.join(abspath,"tmp/")
-htmlloc = "/asapmon/"
-tmploc = "/asapmon/tmp/"
-
 from obsconfig import *
+
+tmppath = os.path.join(asapmonhome,"tmp/")
+tmppath = os.path.join(asapmonrel,"tmp/")
 
 # a redirection object for stdout/stderr
 class WritableObject:
@@ -27,6 +23,7 @@ logsink2 = WritableObject()
 sys.stdout = logsink
 sys.stderr = logsink2
 import asap
+asap.rc('scantable', storage="memory")
 sys.stdout = sys.__stdout__
 sys.stderr = sys.__stderr__
 
@@ -57,7 +54,7 @@ class myForm:
 
     def decodeWindow(self,window):
         if not len(window.strip()): return None,None
-        x = window.split(", ")
+        x = window.split(",")
         return [float(x[0].strip()), float(x[1].strip())]
 
     def decodeWindows(self, window):
@@ -166,13 +163,16 @@ class myForm:
                     del ss
             else:
                 # get only the last source in the table if not averaging
-                s = s.get_scan(self.fields['sourcenames'][-1])
-                #self.fields['debug'] = "DEBUG"
+                # This doesn't work anymore, but works on the command-line??
+                # Use explict selection
+                #s = s.get_scan(str(self.fields['sourcenames'][-1]))
+                sel = asap.selector()
+                sel.set_name(str(self.fields['sourcenames'][-1]))
+                s.set_selection(sel)
+                s = s.copy()
                 self.fields['csource'] = s.get_sourcename()[-1]
             if self.fields['cunit'] == 1:
-                srest = s._getrestfreqs()
-                if isinstance(srest, tuple) and len(srest) != s.nif():
-                    s.set_restfreqs(restfs, unit="GHz")
+                s.set_restfreqs(restfs, unit="GHz")
             s.set_unit(self.fields['units'][self.fields['cunit']])
             s.set_freqframe(self.form.getfirst("frame", "LSRK"))
             s.set_doppler(self.form.getfirst("doppler", "RADIO"))
@@ -212,7 +212,7 @@ class myForm:
             rcp['axes.titlesize'] = 12
             rcp['figure.subplot.wspace'] = 0.3
             rcp['figure.subplot.hspace'] = 0.3
-            del asap.plotter
+            #del asap.plotter
             # plotter without GUI
             asap.plotter = asap.asapplotter(False)
             if outscans.nif() > 1:
@@ -258,7 +258,7 @@ class myForm:
     def main(self):
         self.setDefaultFields()
         title = "ASAP %s Online Monitor" % (observatory['name'])
-        tmplname = abspath+"asapmon.html.template"
+        tmplname = asapmonhome+"asapmon.html.template"
         if ( self.form.has_key("plot")):
             self.plotForm()
         self.buildContext(title)

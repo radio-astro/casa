@@ -1,135 +1,222 @@
+"""This module defines the scantable class."""
+
+import os
+try:
+    from functools import wraps as wraps_dec
+except ImportError:
+    from asap.compatibility import wraps as wraps_dec
+
+from asap.env import is_casapy
 from asap._asap import Scantable
-from asap import rcParams
-from asap import print_log
-from asap import asaplog
-from asap import selector
-from asap import linecatalog
-from asap import _n_bools, mask_not, mask_and, mask_or
+from asap._asap import filler
+from asap.parameters import rcParams
+from asap.logging import asaplog, asaplog_post_dec
+from asap.selector import selector
+from asap.linecatalog import linecatalog
+from asap.coordinate import coordinate
+from asap.utils import _n_bools, mask_not, mask_and, mask_or, page
+from asap.asapfitter import fitter
 
+
+def preserve_selection(func):
+    @wraps_dec(func)
+    def wrap(obj, *args, **kw):
+        basesel = obj.get_selection()
+        try:
+            val = func(obj, *args, **kw)
+        finally:
+            obj.set_selection(basesel)
+        return val
+    return wrap
+
+def is_scantable(filename):
+    """Is the given file a scantable?
+
+    Parameters:
+
+        filename: the name of the file/directory to test
+
+    """
+    if ( os.path.isdir(filename)
+         and os.path.exists(filename+'/table.info')
+         and os.path.exists(filename+'/table.dat') ):
+        f=open(filename+'/table.info')
+        l=f.readline()
+        f.close()
+        #if ( l.find('Scantable') != -1 ):
+        if ( l.find('Measurement Set') == -1 ):
+            return True
+        else:
+            return False
+    else:
+        return False
+##     return (os.path.isdir(filename)
+##             and not os.path.exists(filename+'/table.f1')
+##             and os.path.exists(filename+'/table.info'))
+
+def is_ms(filename):
+    """Is the given file a MeasurementSet?
+
+    Parameters:
+
+        filename: the name of the file/directory to test
+
+    """
+    if ( os.path.isdir(filename)
+         and os.path.exists(filename+'/table.info')
+         and os.path.exists(filename+'/table.dat') ):
+        f=open(filename+'/table.info')
+        l=f.readline()
+        f.close()
+        if ( l.find('Measurement Set') != -1 ):
+            return True
+        else:
+            return False
+    else:
+        return False
+    
 class scantable(Scantable):
-    """
-        The ASAP container for scans
+    """\
+        The ASAP container for scans (single-dish data).
     """
 
-    def __init__(self, filename, average=None, unit=None, getpt=None, antenna=None):
-        """
+    @asaplog_post_dec
+    #def __init__(self, filename, average=None, unit=None, getpt=None,
+    #             antenna=None, parallactify=None):
+    def __init__(self, filename, average=None, unit=None, parallactify=None, **args):
+        """\
         Create a scantable from a saved one or make a reference
+
         Parameters:
-            filename:    the name of an asap table on disk
-                         or
-                         the name of a rpfits/sdfits/ms file
-                         (integrations within scans are auto averaged
-                         and the whole file is read)
-                         or
-                         [advanced] a reference to an existing
-                         scantable
-            average:     average all integrations withinb a scan on read.
-                         The default (True) is taken from .asaprc.
+
+            filename:     the name of an asap table on disk
+                          or
+                          the name of a rpfits/sdfits/ms file
+                          (integrations within scans are auto averaged
+                          and the whole file is read) or
+                          [advanced] a reference to an existing scantable
+
+            average:      average all integrations withinb a scan on read.
+                          The default (True) is taken from .asaprc.
+
             unit:         brightness unit; must be consistent with K or Jy.
-                         Over-rides the default selected by the reader
-                         (input rpfits/sdfits/ms) or replaces the value
-                         in existing scantables
-            getpt:       for MeasurementSet input data only:
-                         If True, all pointing data are filled.
-                         The deafult is False, which makes time to load
-                         the MS data faster in some cases.
-            antenna:     Antenna selection. integer (id) or string (name
-                         or id).
+                          Over-rides the default selected by the filler
+                          (input rpfits/sdfits/ms) or replaces the value
+                          in existing scantables
+
+            getpt:        for MeasurementSet input data only:
+                          If True, all pointing data are filled.
+                          The deafult is False, which makes time to load
+                          the MS data faster in some cases.
+
+            antenna:      for MeasurementSet input data only:
+                          Antenna selection. integer (id) or string (name or id).
+
+            parallactify: Indicate that the data had been parallatified. Default
+                          is taken from rc file.
+
         """
         if average is None:
             average = rcParams['scantable.autoaverage']
-        if getpt is None:
-            getpt = True
-        if antenna is None:
-            antenna = ''
-        elif type(antenna) == int:
-            antenna = '%s'%antenna
-        elif type(antenna) == list:
-            tmpstr = ''
-            for i in range( len(antenna) ):
-                if type(antenna[i]) == int: 
-                    tmpstr = tmpstr + ('%s,'%(antenna[i])) 
-                elif type(antenna[i]) == str:
-                    tmpstr=tmpstr+antenna[i]+','
-                else:
-                    asaplog.push('Bad antenna selection.')
-                    print_log('ERROR')
-                    return 
-            antenna = tmpstr.rstrip(',')
+        #if getpt is None:
+        #    getpt = True
+        #if antenna is not None:
+        #    asaplog.push("Antenna selection currently unsupported."
+        #                 "Using ''")
+        #    asaplog.post('WARN')
+        #if antenna is None:
+        #    antenna = ''
+        #elif type(antenna) == int:
+        #    antenna = '%s' % antenna
+        #elif type(antenna) == list:
+        #    tmpstr = ''
+        #    for i in range( len(antenna) ):
+        #        if type(antenna[i]) == int:
+        #            tmpstr = tmpstr + ('%s,'%(antenna[i]))
+        #        elif type(antenna[i]) == str:
+        #            tmpstr=tmpstr+antenna[i]+','
+        #        else:
+        #            raise TypeError('Bad antenna selection.')
+        #    antenna = tmpstr.rstrip(',')
+        parallactify = parallactify or rcParams['scantable.parallactify']
         varlist = vars()
         from asap._asap import stmath
         self._math = stmath( rcParams['insitu'] )
         if isinstance(filename, Scantable):
             Scantable.__init__(self, filename)
         else:
-            if isinstance(filename, str):# or \
-#                (isinstance(filename, list) or isinstance(filename, tuple)) \
-#                  and isinstance(filename[-1], str):
-                import os.path
+            if isinstance(filename, str):
                 filename = os.path.expandvars(filename)
                 filename = os.path.expanduser(filename)
                 if not os.path.exists(filename):
                     s = "File '%s' not found." % (filename)
-                    if rcParams['verbose']:
-                        asaplog.push(s)
-                        #print asaplog.pop().strip()
-                        print_log('ERROR')
-                        return
                     raise IOError(s)
-                if os.path.isdir(filename) \
-                    and not os.path.exists(filename+'/table.f1'):
-                    # crude check if asap table
-                    if os.path.exists(filename+'/table.info'):
-                        ondisk = rcParams['scantable.storage'] == 'disk'
-                        Scantable.__init__(self, filename, ondisk)
-                        if unit is not None:
-                            self.set_fluxunit(unit)
-                        # do not reset to the default freqframe
-                        #self.set_freqframe(rcParams['scantable.freqframe'])
-                    else:
-                        msg = "The given file '%s'is not a valid " \
-                              "asap table." % (filename)
-                        if rcParams['verbose']:
-                            #print msg
-                            asaplog.push( msg )
-                            print_log( 'ERROR' )
-                            return
-                        else:
-                            raise IOError(msg)
+                if is_scantable(filename):
+                    ondisk = rcParams['scantable.storage'] == 'disk'
+                    Scantable.__init__(self, filename, ondisk)
+                    if unit is not None:
+                        self.set_fluxunit(unit)
+                    # do not reset to the default freqframe
+                    #self.set_freqframe(rcParams['scantable.freqframe'])
+                #elif os.path.isdir(filename) \
+                #         and not os.path.exists(filename+'/table.f1'):
+                elif is_ms(filename):
+                    # Measurement Set
+                    opts={'ms': {}}
+                    mskeys=['getpt','antenna']
+                    for key in mskeys:
+                        if key in args.keys():
+                            opts['ms'][key] = args[key]
+                    #self._fill([filename], unit, average, getpt, antenna)
+                    self._fill([filename], unit, average, opts)
+                elif os.path.isfile(filename):
+                    #self._fill([filename], unit, average, getpt, antenna)
+                    self._fill([filename], unit, average)
                 else:
-                    self._fill([filename], unit, average, getpt, antenna)
+                    msg = "The given file '%s'is not a valid " \
+                          "asap table." % (filename)
+                    raise IOError(msg)
             elif (isinstance(filename, list) or isinstance(filename, tuple)) \
                   and isinstance(filename[-1], str):
-                self._fill(filename, unit, average, getpt, antenna)
+                #self._fill(filename, unit, average, getpt, antenna)
+                self._fill(filename, unit, average)
+        self.parallactify(parallactify)
         self._add_history("scantable", varlist)
-        print_log()
 
+    @asaplog_post_dec
     def save(self, name=None, format=None, overwrite=False):
-        """
+        """\
         Store the scantable on disk. This can be an asap (aips++) Table,
         SDFITS or MS2 format.
+
         Parameters:
+
             name:        the name of the outputfile. For format "ASCII"
                          this is the root file name (data in 'name'.txt
                          and header in 'name'_header.txt)
+
             format:      an optional file format. Default is ASAP.
-                         Allowed are - 'ASAP' (save as ASAP [aips++] Table),
-                                       'SDFITS' (save as SDFITS file)
-                                       'ASCII' (saves as ascii text file)
-                                       'MS2' (saves as an aips++
-                                              MeasurementSet V2)
-                                       'FITS' (save as image FITS - not 
-                                               readable by class)
-                                       'CLASS' (save as FITS readable by CLASS)
+                         Allowed are:
+
+                            * 'ASAP' (save as ASAP [aips++] Table),
+                            * 'SDFITS' (save as SDFITS file)
+                            * 'ASCII' (saves as ascii text file)
+                            * 'MS2' (saves as an casacore MeasurementSet V2)
+                            * 'FITS' (save as image FITS - not readable by class)
+                            * 'CLASS' (save as FITS readable by CLASS)
+
             overwrite:   If the file should be overwritten if it exists.
                          The default False is to return with warning
                          without writing the output. USE WITH CARE.
-        Example:
+
+        Example::
+
             scan.save('myscan.asap')
             scan.save('myscan.sdfits', 'SDFITS')
+
         """
         from os import path
-        if format is None: format = rcParams['scantable.save']
+        format = format or rcParams['scantable.save']
         suffix = '.'+format.lower()
         if name is None or name == "":
             name = 'scantable'+suffix
@@ -139,13 +226,7 @@ class scantable(Scantable):
         if path.isfile(name) or path.isdir(name):
             if not overwrite:
                 msg = "File %s exists." % name
-                if rcParams['verbose']:
-                    #print msg
-                    asaplog.push( msg )
-                    print_log( 'ERROR' )
-                    return
-                else:
-                    raise IOError(msg)
+                raise IOError(msg)
         format2 = format.upper()
         if format2 == 'ASAP':
             self._save(name)
@@ -153,151 +234,113 @@ class scantable(Scantable):
             from asap._asap import stwriter as stw
             writer = stw(format2)
             writer.write(self, name)
-        print_log()
         return
 
     def copy(self):
-        """
-        Return a copy of this scantable.
-        Note:
+        """Return a copy of this scantable.
+
+        *Note*:
+
             This makes a full (deep) copy. scan2 = scan1 makes a reference.
-        Parameters:
-            none
-        Example:
+
+        Example::
+
             copiedscan = scan.copy()
+
         """
         sd = scantable(Scantable._copy(self))
         return sd
 
     def drop_scan(self, scanid=None):
-        """
+        """\
         Return a new scantable where the specified scan number(s) has(have)
         been dropped.
+
         Parameters:
+
             scanid:    a (list of) scan number(s)
+
         """
         from asap import _is_sequence_or_number as _is_valid
         from asap import _to_list
         from asap import unique
         if not _is_valid(scanid):
-            if rcParams['verbose']:
-                #print "Please specify a scanno to drop from the scantable"
-                asaplog.push( 'Please specify a scanno to drop from the scantable' )
-                print_log( 'ERROR' )
-                return
-            else:
-                raise RuntimeError("No scan given")
-        try:
-            scanid = _to_list(scanid)
-            allscans = unique([ self.getscan(i) for i in range(self.nrow())])
-            for sid in scanid: allscans.remove(sid)
-            if len(allscans) == 0:
-                raise ValueError("Can't remove all scans")
-        except ValueError:
-            if rcParams['verbose']:
-                #print "Couldn't find any match."
-                print_log()
-                asaplog.push( "Couldn't find any match." )
-                print_log( 'ERROR' )
-                return
-            else: raise
-        try:
-            bsel = self.get_selection()
-            sel = selector()
-            sel.set_scans(allscans)
-            self.set_selection(bsel+sel)
-            scopy = self._copy()
-            self.set_selection(bsel)
-            return scantable(scopy)
-        except RuntimeError:
-            if rcParams['verbose']:
-                #print "Couldn't find any match."
-                print_log()
-                asaplog.push( "Couldn't find any match." )
-                print_log( 'ERROR' )
-            else:
-                raise
+            raise RuntimeError( 'Please specify a scanno to drop from the scantable' )
+        scanid = _to_list(scanid)
+        allscans = unique([ self.getscan(i) for i in range(self.nrow())])
+        for sid in scanid: allscans.remove(sid)
+        if len(allscans) == 0:
+            raise ValueError("Can't remove all scans")
+        sel = selector(scans=allscans)
+        return self._select_copy(sel)
 
+    def _select_copy(self, selection):
+        orig = self.get_selection()
+        self.set_selection(orig+selection)
+        cp = self.copy()
+        self.set_selection(orig)
+        return cp
 
     def get_scan(self, scanid=None):
-        """
+        """\
         Return a specific scan (by scanno) or collection of scans (by
         source name) in a new scantable.
-        Note:
+
+        *Note*:
+
             See scantable.drop_scan() for the inverse operation.
+
         Parameters:
+
             scanid:    a (list of) scanno or a source name, unix-style
                        patterns are accepted for source name matching, e.g.
                        '*_R' gets all 'ref scans
-        Example:
+
+        Example::
+
             # get all scans containing the source '323p459'
             newscan = scan.get_scan('323p459')
             # get all 'off' scans
             refscans = scan.get_scan('*_R')
             # get a susbset of scans by scanno (as listed in scan.summary())
             newscan = scan.get_scan([0, 2, 7, 10])
+
         """
         if scanid is None:
-            if rcParams['verbose']:
-                #print "Please specify a scan no or name to " \
-                #      "retrieve from the scantable"
-                asaplog.push( 'Please specify a scan no or name to retrieve from the scantable' )
-                print_log( 'ERROR' )
-                return
-            else:
-                raise RuntimeError("No scan given")
-
+            raise RuntimeError( 'Please specify a scan no or name to '
+                                'retrieve from the scantable' )
         try:
             bsel = self.get_selection()
             sel = selector()
             if type(scanid) is str:
                 sel.set_name(scanid)
-                self.set_selection(bsel+sel)
-                scopy = self._copy()
-                self.set_selection(bsel)
-                return scantable(scopy)
+                return self._select_copy(sel)
             elif type(scanid) is int:
                 sel.set_scans([scanid])
-                self.set_selection(bsel+sel)
-                scopy = self._copy()
-                self.set_selection(bsel)
-                return scantable(scopy)
+                return self._select_copy(sel)
             elif type(scanid) is list:
                 sel.set_scans(scanid)
-                self.set_selection(sel)
-                scopy = self._copy()
-                self.set_selection(bsel)
-                return scantable(scopy)
+                return self._select_copy(sel)
             else:
                 msg = "Illegal scanid type, use 'int' or 'list' if ints."
-                if rcParams['verbose']:
-                    #print msg
-                    asaplog.push( msg )
-                    print_log( 'ERROR' )
-                else:
-                    raise TypeError(msg)
+                raise TypeError(msg)
         except RuntimeError:
-            if rcParams['verbose']:
-                #print "Couldn't find any match."
-                print_log()
-                asaplog.push( "Couldn't find any match." )
-                print_log( 'ERROR' )
-            else: raise
+            raise
 
     def __str__(self):
         return Scantable._summary(self, True)
 
     def summary(self, filename=None):
-        """
+        """\
         Print a summary of the contents of this scantable.
+
         Parameters:
+
             filename:    the name of a file to write the putput to
                          Default - no file output
-            verbose:     print extra info such as the frequency table
-                         The default (False) is taken from .asaprc
+
         """
         info = Scantable._summary(self, True)
-        #if verbose is None: verbose = rcParams['scantable.verbosesummary']
         if filename is not None:
             if filename is "":
                 filename = 'scantable_summary.txt'
@@ -309,80 +352,126 @@ class scantable(Scantable):
                 data.close()
             else:
                 msg = "Illegal file name '%s'." % (filename)
-                if rcParams['verbose']:
-                    #print msg
-                    asaplog.push( msg )
-                    print_log( 'ERROR' )
-                else:
-                    raise IOError(msg)
-        if rcParams['verbose']:
-            try:
-                from IPython.genutils import page as pager
-            except ImportError:
-                from pydoc import pager
-            pager(info)
-        else:
-            return info
+                raise IOError(msg)
+        return page(info)
 
     def get_spectrum(self, rowno):
         """Return the spectrum for the current row in the scantable as a list.
+
         Parameters:
-             rowno:   the row number to retrieve the spectrum from        
+
+             rowno:   the row number to retrieve the spectrum from
+
         """
         return self._getspectrum(rowno)
 
     def get_mask(self, rowno):
         """Return the mask for the current row in the scantable as a list.
+
         Parameters:
-             rowno:   the row number to retrieve the mask from        
+
+             rowno:   the row number to retrieve the mask from
+
         """
         return self._getmask(rowno)
 
     def set_spectrum(self, spec, rowno):
-        """Return the spectrum for the current row in the scantable as a list.
+        """Set the spectrum for the current row in the scantable.
+
         Parameters:
-             spec:   the spectrum
-             rowno:    the row number to set the spectrum for        
+
+             spec:   the new spectrum
+
+             rowno:  the row number to set the spectrum for
+
         """
         assert(len(spec) == self.nchan())
         return self._setspectrum(spec, rowno)
 
-    def get_selection(self):
-        """
-        Get the selection object currently set on this scantable.
+    def get_coordinate(self, rowno):
+        """Return the (spectral) coordinate for a a given 'rowno'.
+
+        *Note*:
+
+            * This coordinate is only valid until a scantable method modifies
+              the frequency axis.
+            * This coordinate does contain the original frequency set-up
+              NOT the new frame. The conversions however are done using the user
+              specified frame (e.g. LSRK/TOPO). To get the 'real' coordinate,
+              use scantable.freq_align first. Without it there is no closure,
+              i.e.::
+
+                  c = myscan.get_coordinate(0)
+                  c.to_frequency(c.get_reference_pixel()) != c.get_reference_value()
+
         Parameters:
-            none
-        Example:
+
+             rowno:    the row number for the spectral coordinate
+
+        """
+        return coordinate(Scantable.get_coordinate(self, rowno))
+
+    def get_selection(self):
+        """\
+        Get the selection object currently set on this scantable.
+
+        Example::
+
             sel = scan.get_selection()
             sel.set_ifs(0)              # select IF 0
             scan.set_selection(sel)     # apply modified selection
+
         """
         return selector(self._getselection())
 
-    def set_selection(self, selection=selector()):
-        """
+    def set_selection(self, selection=None, **kw):
+        """\
         Select a subset of the data. All following operations on this scantable
         are only applied to thi selection.
+
         Parameters:
-            selection:    a selector object (default unset the selection)
-        Examples:
+
+            selection:    a selector object (default unset the selection), or
+                          any combination of "pols", "ifs", "beams", "scans",
+                          "cycles", "name", "query"
+
+        Examples::
+
             sel = selector()         # create a selection object
             self.set_scans([0, 3])    # select SCANNO 0 and 3
             scan.set_selection(sel)  # set the selection
             scan.summary()           # will only print summary of scanno 0 an 3
             scan.set_selection()     # unset the selection
+            # or the equivalent
+            scan.set_selection(scans=[0,3])
+            scan.summary()           # will only print summary of scanno 0 an 3
+            scan.set_selection()     # unset the selection
+
         """
+        if selection is None:
+            # reset
+            if len(kw) == 0:
+                selection = selector()
+            else:
+                # try keywords
+                for k in kw:
+                    if k not in selector.fields:
+                        raise KeyError("Invalid selection key '%s', valid keys are %s" % (k, selector.fields))
+                selection = selector(**kw)
         self._setselection(selection)
 
     def get_row(self, row=0, insitu=None):
-        """
+        """\
         Select a row in the scantable.
         Return a scantable with single row.
+
         Parameters:
-            row: row no of integration, default is 0.
-            insitu: if False a new scantable is returned.
-                    Otherwise, the scaling is done in-situ
-                    The default is taken from .asaprc (False)
+
+            row:    row no of integration, default is 0.
+            insitu: if False a new scantable is returned. Otherwise, the
+                    scaling is done in-situ. The default is taken from .asaprc
+                    (False)
+
         """
         if insitu is None: insitu = rcParams['insitu']
         if not insitu:
@@ -407,26 +496,33 @@ class scantable(Scantable):
         else:
             return workscan
 
-    #def stats(self, stat='stddev', mask=None):
-    def stats(self, stat='stddev', mask=None, form='3.3f'):
-        """
+    @asaplog_post_dec
+    def stats(self, stat='stddev', mask=None, form='3.3f', row=None):
+        """\
         Determine the specified statistic of the current beam/if/pol
         Takes a 'mask' as an optional parameter to specify which
         channels should be excluded.
+
         Parameters:
+
             stat:    'min', 'max', 'min_abc', 'max_abc', 'sumsq', 'sum',
                      'mean', 'var', 'stddev', 'avdev', 'rms', 'median'
+
             mask:    an optional mask specifying where the statistic
                      should be determined.
+
             form:    format string to print statistic values
+
+            row:     row number of spectrum to process.
+                     (default is None: for all rows)
+
         Example:
             scan.set_unit('channel')
             msk = scan.create_mask([100, 200], [500, 600])
             scan.stats(stat='mean', mask=m)
+
         """
-        if mask == None:
-            mask = []
-        axes = ['Beam', 'IF', 'Pol', 'Time']
+        mask = mask or []
         if not self._check_ifs():
             raise ValueError("Cannot apply mask as the IFs have different "
                              "number of channels. Please use setselection() "
@@ -434,81 +530,93 @@ class scantable(Scantable):
         rtnabc = False
         if stat.lower().endswith('_abc'): rtnabc = True
         getchan = False
-        if stat.lower().startswith('min') or stat.lower().startswith('max'): 
+        if stat.lower().startswith('min') or stat.lower().startswith('max'):
             chan = self._math._minmaxchan(self, mask, stat)
             getchan = True
             statvals = []
-        if not rtnabc: statvals = self._math._stats(self, mask, stat)
+        if not rtnabc:
+            if row == None:
+                statvals = self._math._stats(self, mask, stat)
+            else:
+                statvals = self._math._statsrow(self, mask, stat, int(row))
 
-        out = ''
-        axes = []
-        for i in range(self.nrow()):
-            axis = []
-            axis.append(self.getscan(i))
-            axis.append(self.getbeam(i))
-            axis.append(self.getif(i))
-            axis.append(self.getpol(i))
-            axis.append(self.getcycle(i))
-            axes.append(axis)
-            tm = self._gettime(i)
-            src = self._getsourcename(i)
+        #def cb(i):
+        #    return statvals[i]
+
+        #return self._row_callback(cb, stat)
+
+        label=stat
+        #callback=cb
+        out = ""
+        #outvec = []
+        sep = '-'*50
+
+        if row == None:
+            rows = xrange(self.nrow())
+        elif isinstance(row, int):
+            rows = [ row ]
+
+        for i in rows:
             refstr = ''
             statunit= ''
             if getchan:
                 qx, qy = self.chan2data(rowno=i, chan=chan[i])
                 if rtnabc:
                     statvals.append(qx['value'])
-                    #refstr = '(value: %3.3f' % (qy['value'])+' ['+qy['unit']+'])'
                     refstr = ('(value: %'+form) % (qy['value'])+' ['+qy['unit']+'])'
                     statunit= '['+qx['unit']+']'
                 else:
-                    #refstr = '(@ %3.3f' % (qx['value'])+' ['+qx['unit']+'])'
                     refstr = ('(@ %'+form) % (qx['value'])+' ['+qx['unit']+'])'
-                    #statunit= ' ['+qy['unit']+']'
-            out += 'Scan[%d] (%s) ' % (axis[0], src)
-            out += 'Time[%s]:\n' % (tm)
-            if self.nbeam(-1) > 1: out +=  ' Beam[%d] ' % (axis[1])
-            if self.nif(-1) > 1: out +=  ' IF[%d] ' % (axis[2])
-            if self.npol(-1) > 1: out +=  ' Pol[%d] ' % (axis[3])
-            #out += '= %3.3f   ' % (statvals[i]) +refstr+'\n' 
-            out += ('= %'+form) % (statvals[i]) +'   '+refstr+'\n' 
-            out +=  "--------------------------------------------------\n"
 
-        if rcParams['verbose']:
-            import os
-            if os.environ.has_key( 'USER' ):
-                usr=os.environ['USER']
+            tm = self._gettime(i)
+            src = self._getsourcename(i)
+            out += 'Scan[%d] (%s) ' % (self.getscan(i), src)
+            out += 'Time[%s]:\n' % (tm)
+            if self.nbeam(-1) > 1: out +=  ' Beam[%d] ' % (self.getbeam(i))
+            if self.nif(-1) > 1:   out +=  ' IF[%d] ' % (self.getif(i))
+            if self.npol(-1) > 1:  out +=  ' Pol[%d] ' % (self.getpol(i))
+            #outvec.append(callback(i))
+            if len(rows) > 1:
+                # out += ('= %'+form) % (outvec[i]) +'   '+refstr+'\n'
+                out += ('= %'+form) % (statvals[i]) +'   '+refstr+'\n'
             else:
-                import commands
-                usr=commands.getoutput( 'whoami' )
-            tmpfile='/tmp/tmp_'+usr+'_casapy_asap_scantable_stats'
-            f=open(tmpfile,'w')
-            print >> f, "--------------------------------------------------"
-            print >> f, " ", stat, statunit
-            print >> f, "--------------------------------------------------"
-            print >> f, out
-            f.close()
-            f=open(tmpfile,'r')
-            x=f.readlines()
-            f.close()
-            for xx in x:
-                asaplog.push( xx, False )
-            print_log()
-        #else:
-            #retval = { 'axesnames': ['scanno', 'beamno', 'ifno', 'polno', 'cycleno'],
-            #           'axes' : axes,
-            #           'data': statvals}
+                # out += ('= %'+form) % (outvec[0]) +'   '+refstr+'\n'
+                out += ('= %'+form) % (statvals[0]) +'   '+refstr+'\n'
+            out +=  sep+"\n"
+
+        import os
+        if os.environ.has_key( 'USER' ):
+            usr = os.environ['USER']
+        else:
+            import commands
+            usr = commands.getoutput( 'whoami' )
+        tmpfile = '/tmp/tmp_'+usr+'_casapy_asap_scantable_stats'
+        f = open(tmpfile,'w')
+        print >> f, sep
+        print >> f, ' %s %s' % (label, statunit)
+        print >> f, sep
+        print >> f, out
+        f.close()
+        f = open(tmpfile,'r')
+        x = f.readlines()
+        f.close()
+        asaplog.push(''.join(x), False)
+
         return statvals
 
     def chan2data(self, rowno=0, chan=0):
-        """
+        """\
         Returns channel/frequency/velocity and spectral value
         at an arbitrary row and channel in the scantable.
+
         Parameters:
+
             rowno:   a row number in the scantable. Default is the
                      first row, i.e. rowno=0
+
             chan:    a channel in the scantable. Default is the first
                      channel, i.e. pos=0
+
         """
         if isinstance(rowno, int) and isinstance(chan, int):
             qx = {'unit': self.get_unit(),
@@ -518,68 +626,102 @@ class scantable(Scantable):
             return qx, qy
 
     def stddev(self, mask=None):
-        """
+        """\
         Determine the standard deviation of the current beam/if/pol
         Takes a 'mask' as an optional parameter to specify which
         channels should be excluded.
+
         Parameters:
+
             mask:    an optional mask specifying where the standard
                      deviation should be determined.
 
-        Example:
+        Example::
+
             scan.set_unit('channel')
             msk = scan.create_mask([100, 200], [500, 600])
             scan.stddev(mask=m)
+
         """
         return self.stats(stat='stddev', mask=mask);
 
 
     def get_column_names(self):
-        """
+        """\
         Return a  list of column names, which can be used for selection.
         """
         return list(Scantable.get_column_names(self))
 
-    def get_tsys(self):
-        """
+    def get_tsys(self, row=-1):
+        """\
         Return the System temperatures.
-        Returns:
-            a list of Tsys values for the current selection
-        """
 
+        Parameters:
+
+            row:    the rowno to get the information for. (default all rows)
+
+        Returns:
+
+            a list of Tsys values for the current selection
+
+        """
+        if row > -1:
+            return self._get_column(self._gettsys, row)
         return self._row_callback(self._gettsys, "Tsys")
 
+
+    def get_weather(self, row=-1):
+        """\
+        Return the weather informations.
+
+        Parameters:
+
+            row:    the rowno to get the information for. (default all rows)
+
+        Returns:
+
+            a dict or list of of dicts of values for the current selection
+
+        """
+
+        values = self._get_column(self._get_weather, row)
+        if row > -1:
+            return {'temperature': values[0],
+                    'pressure': values[1], 'humidity' : values[2],
+                    'windspeed' : values[3], 'windaz' : values[4]
+                    }
+        else:
+            out = []
+            for r in values:
+
+                out.append({'temperature': r[0],
+                            'pressure': r[1], 'humidity' : r[2],
+                            'windspeed' : r[3], 'windaz' : r[4]
+                    })
+            return out
+
     def _row_callback(self, callback, label):
-        axes = []
-        axesnames = ['scanno', 'beamno', 'ifno', 'polno', 'cycleno']
         out = ""
         outvec = []
+        sep = '-'*50
         for i in range(self.nrow()):
-            axis = []
-            axis.append(self.getscan(i))
-            axis.append(self.getbeam(i))
-            axis.append(self.getif(i))
-            axis.append(self.getpol(i))
-            axis.append(self.getcycle(i))
-            axes.append(axis)
             tm = self._gettime(i)
             src = self._getsourcename(i)
-            out += 'Scan[%d] (%s) ' % (axis[0], src)
+            out += 'Scan[%d] (%s) ' % (self.getscan(i), src)
             out += 'Time[%s]:\n' % (tm)
-            if self.nbeam(-1) > 1: out +=  ' Beam[%d] ' % (axis[1])
-            if self.nif(-1) > 1: out +=  ' IF[%d] ' % (axis[2])
-            if self.npol(-1) > 1: out +=  ' Pol[%d] ' % (axis[3])
+            if self.nbeam(-1) > 1:
+                out +=  ' Beam[%d] ' % (self.getbeam(i))
+            if self.nif(-1) > 1: out +=  ' IF[%d] ' % (self.getif(i))
+            if self.npol(-1) > 1: out +=  ' Pol[%d] ' % (self.getpol(i))
             outvec.append(callback(i))
             out += '= %3.3f\n' % (outvec[i])
-            out +=  "--------------------------------------------------\n"
-        if rcParams['verbose']:
-            asaplog.push("--------------------------------------------------")
-            asaplog.push(" %s" % (label))
-            asaplog.push("--------------------------------------------------")
-            asaplog.push(out)
-            print_log()
-        # disabled because the vector seems more useful
-        #retval = {'axesnames': axesnames, 'axes': axes, 'data': outvec}
+            out +=  sep+'\n'
+
+        asaplog.push(sep)
+        asaplog.push(" %s" % (label))
+        asaplog.push(sep)
+        asaplog.push(out)
+        asaplog.post()
         return outvec
 
     def _get_column(self, callback, row=-1):
@@ -593,14 +735,17 @@ class scantable(Scantable):
 
 
     def get_time(self, row=-1, asdatetime=False):
-        """
+        """\
         Get a list of time stamps for the observations.
-        Return a datetime object for each integration time stamp in the scantable.
+        Return a datetime object or a string (default) for each
+        integration time stamp in the scantable.
+
         Parameters:
+
             row:          row no of integration. Default -1 return all rows
+
             asdatetime:   return values as datetime objects rather than strings
-        Example:
-            none
+
         """
         from time import strptime
         from datetime import datetime
@@ -615,89 +760,98 @@ class scantable(Scantable):
 
 
     def get_inttime(self, row=-1):
-        """
+        """\
         Get a list of integration times for the observations.
         Return a time in seconds for each integration in the scantable.
+
         Parameters:
+
             row:    row no of integration. Default -1 return all rows.
-        Example:
-            none
+
         """
-        return self._get_column(self._getinttime, row)        
-        
+        return self._get_column(self._getinttime, row)
+
 
     def get_sourcename(self, row=-1):
-        """
+        """\
         Get a list source names for the observations.
         Return a string for each integration in the scantable.
         Parameters:
+
             row:    row no of integration. Default -1 return all rows.
-        Example:
-            none
+
         """
         return self._get_column(self._getsourcename, row)
 
     def get_elevation(self, row=-1):
-        """
+        """\
         Get a list of elevations for the observations.
         Return a float for each integration in the scantable.
+
         Parameters:
+
             row:    row no of integration. Default -1 return all rows.
-        Example:
-            none
+
         """
         return self._get_column(self._getelevation, row)
 
     def get_azimuth(self, row=-1):
-        """
+        """\
         Get a list of azimuths for the observations.
         Return a float for each integration in the scantable.
+
         Parameters:
             row:    row no of integration. Default -1 return all rows.
-        Example:
-            none
+
         """
         return self._get_column(self._getazimuth, row)
 
     def get_parangle(self, row=-1):
-        """
+        """\
         Get a list of parallactic angles for the observations.
         Return a float for each integration in the scantable.
+
         Parameters:
+
             row:    row no of integration. Default -1 return all rows.
-        Example:
-            none
+
         """
         return self._get_column(self._getparangle, row)
 
     def get_direction(self, row=-1):
         """
         Get a list of Positions on the sky (direction) for the observations.
-        Return a float for each integration in the scantable.
+        Return a string for each integration in the scantable.
+
         Parameters:
+
             row:    row no of integration. Default -1 return all rows
-        Example:
-            none
+
         """
         return self._get_column(self._getdirection, row)
 
     def get_directionval(self, row=-1):
-        """
+        """\
         Get a list of Positions on the sky (direction) for the observations.
         Return a float for each integration in the scantable.
+
         Parameters:
+
             row:    row no of integration. Default -1 return all rows
-        Example:
-            none
+
         """
         return self._get_column(self._getdirectionvec, row)
 
+    @asaplog_post_dec
     def set_unit(self, unit='channel'):
-        """
+        """\
         Set the unit for all following operations on this scantable
+
         Parameters:
-            unit:    optional unit, default is 'channel'
-                     one of '*Hz', 'km/s', 'channel', ''
+
+            unit:    optional unit, default is 'channel'. Use one of '*Hz',
+                     'km/s', 'channel' or equivalent ''
+
         """
         varlist = vars()
         if unit in ['', 'pixel', 'channel']:
@@ -707,53 +861,71 @@ class scantable(Scantable):
         self._setcoordinfo(inf)
         self._add_history("set_unit", varlist)
 
+    @asaplog_post_dec
     def set_instrument(self, instr):
-        """
+        """\
         Set the instrument for subsequent processing.
+
         Parameters:
+
             instr:    Select from 'ATPKSMB', 'ATPKSHOH', 'ATMOPRA',
                       'DSS-43' (Tid), 'CEDUNA', and 'HOBART'
+
         """
         self._setInstrument(instr)
         self._add_history("set_instument", vars())
-        print_log()
 
+    @asaplog_post_dec
     def set_feedtype(self, feedtype):
-        """
+        """\
         Overwrite the feed type, which might not be set correctly.
+
         Parameters:
+
             feedtype:     'linear' or 'circular'
+
         """
         self._setfeedtype(feedtype)
         self._add_history("set_feedtype", vars())
-        print_log()
 
+    @asaplog_post_dec
     def set_doppler(self, doppler='RADIO'):
-        """
+        """\
         Set the doppler for all following operations on this scantable.
+
         Parameters:
+
             doppler:    One of 'RADIO', 'OPTICAL', 'Z', 'BETA', 'GAMMA'
+
         """
         varlist = vars()
         inf = list(self._getcoordinfo())
         inf[2] = doppler
         self._setcoordinfo(inf)
         self._add_history("set_doppler", vars())
-        print_log()
 
+    @asaplog_post_dec
     def set_freqframe(self, frame=None):
-        """
+        """\
         Set the frame type of the Spectral Axis.
+
         Parameters:
+
             frame:   an optional frame type, default 'LSRK'. Valid frames are:
-                     'REST', 'TOPO', 'LSRD', 'LSRK', 'BARY',
+                     'TOPO', 'LSRD', 'LSRK', 'BARY',
                      'GEO', 'GALACTO', 'LGROUP', 'CMB'
-        Examples:
+
+        Example::
+
             scan.set_freqframe('BARY')
+
         """
-        if frame is None: frame = rcParams['scantable.freqframe']
+        frame = frame or rcParams['scantable.freqframe']
         varlist = vars()
-        valid = ['REST', 'TOPO', 'LSRD', 'LSRK', 'BARY', \
+        # "REST" is not implemented in casacore
+        #valid = ['REST', 'TOPO', 'LSRD', 'LSRK', 'BARY', \
+        #           'GEO', 'GALACTO', 'LGROUP', 'CMB']
+        valid = ['TOPO', 'LSRD', 'LSRK', 'BARY', \
                    'GEO', 'GALACTO', 'LGROUP', 'CMB']
 
         if frame in valid:
@@ -763,208 +935,206 @@ class scantable(Scantable):
             self._add_history("set_freqframe", varlist)
         else:
             msg  = "Please specify a valid freq type. Valid types are:\n", valid
-            if rcParams['verbose']:
-                #print msg
-                asaplog.push( msg )
-                print_log( 'ERROR' )
-            else:
-                raise TypeError(msg)
-        print_log()
+            raise TypeError(msg)
 
+    @asaplog_post_dec
     def set_dirframe(self, frame=""):
-        """
+        """\
         Set the frame type of the Direction on the sky.
+
         Parameters:
+
             frame:   an optional frame type, default ''. Valid frames are:
                      'J2000', 'B1950', 'GALACTIC'
-        Examples:
+
+        Example:
+
             scan.set_dirframe('GALACTIC')
+
         """
         varlist = vars()
-        try:
-            Scantable.set_dirframe(self, frame)
-        except RuntimeError, msg:
-            if rcParams['verbose']:
-                #print msg
-                print_log()
-                asaplog.push( str(msg) )
-                print_log( 'ERROR' )
-            else:
-                raise
+        Scantable.set_dirframe(self, frame)
         self._add_history("set_dirframe", varlist)
 
     def get_unit(self):
-        """
+        """\
         Get the default unit set in this scantable
+
         Returns:
+
             A unit string
+
         """
         inf = self._getcoordinfo()
         unit = inf[0]
         if unit == '': unit = 'channel'
         return unit
 
+    @asaplog_post_dec
     def get_abcissa(self, rowno=0):
-        """
+        """\
         Get the abcissa in the current coordinate setup for the currently
         selected Beam/IF/Pol
+
         Parameters:
+
             rowno:    an optional row number in the scantable. Default is the
                       first row, i.e. rowno=0
+
         Returns:
+
             The abcissa values and the format string (as a dictionary)
+
         """
         abc = self._getabcissa(rowno)
         lbl = self._getabcissalabel(rowno)
-        print_log()
         return abc, lbl
 
+    @asaplog_post_dec
     def flag(self, mask=None, unflag=False):
-        """
+        """\
         Flag the selected data using an optional channel mask.
+
         Parameters:
+
             mask:   an optional channel mask, created with create_mask. Default
                     (no mask) is all channels.
+
             unflag:    if True, unflag the data
+
         """
         varlist = vars()
-        if mask is None:
-            mask = []
-        try:
-            self._flag(mask, unflag)
-        except RuntimeError, msg:
-            if rcParams['verbose']:
-                #print msg
-                print_log()
-                asaplog.push( str(msg) )
-                print_log( 'ERROR' )
-                return
-            else: raise
+        mask = mask or []
+        self._flag(mask, unflag)
         self._add_history("flag", varlist)
 
+    @asaplog_post_dec
     def flag_row(self, rows=[], unflag=False):
-        """
+        """\
         Flag the selected data in row-based manner.
+
         Parameters:
-            rows:   list of row numbers to be flagged. Default is no row (must be explicitly specified to execute row-based flagging).
+
+            rows:   list of row numbers to be flagged. Default is no row
+                    (must be explicitly specified to execute row-based flagging).
+
             unflag: if True, unflag the data.
+
         """
         varlist = vars()
-        try:
-            self._flag_row(rows, unflag)
-        except RuntimeError, msg:
-            if rcParams['verbose']:
-                print_log()
-                asaplog.push( str(msg) )
-                print_log('ERROR')
-                return
-            else: raise
+        self._flag_row(rows, unflag)
         self._add_history("flag_row", varlist)
-        
+
+    @asaplog_post_dec
     def clip(self, uthres=None, dthres=None, clipoutside=True, unflag=False):
-        """
+        """\
         Flag the selected data outside a specified range (in channel-base)
+
         Parameters:
+
             uthres:      upper threshold.
+
             dthres:      lower threshold
+
             clipoutside: True for flagging data outside the range [dthres:uthres].
-                         False for glagging data inside the range.
-            unflag     : if True, unflag the data.
+                         False for flagging data inside the range.
+
+            unflag:      if True, unflag the data.
+
         """
         varlist = vars()
-        try:
-            self._clip(uthres, dthres, clipoutside, unflag)
-        except RuntimeError, msg:
-            if rcParams['verbose']:
-                print_log()
-                asaplog.push(str(msg))
-                print_log('ERROR')
-                return
-            else: raise
+        self._clip(uthres, dthres, clipoutside, unflag)
         self._add_history("clip", varlist)
-        
-    def lag_flag(self, frequency, width=0.0, unit="GHz", insitu=None):
-        """
+
+    @asaplog_post_dec
+    def lag_flag(self, start, end, unit="MHz", insitu=None):
+        """\
         Flag the data in 'lag' space by providing a frequency to remove.
-        Flagged data in the scantable gets set to 0.0 before the fft.
+        Flagged data in the scantable gets interpolated over the region.
         No taper is applied.
+
         Parameters:
-            frequency:    the frequency (really a period within the bandwidth) 
-                          to remove
-            width:        the width of the frequency to remove, to remove a 
-                          range of frequencies around the centre.
-            unit:         the frequency unit (default "GHz")
-        Notes:
-            It is recommended to flag edges of the band or strong 
+
+            start:    the start frequency (really a period within the
+                      bandwidth)  or period to remove
+
+            end:      the end frequency or period to remove
+
+            unit:     the frequency unit (default "MHz") or "" for
+                      explicit lag channels
+
+        *Notes*:
+
+            It is recommended to flag edges of the band or strong
             signals beforehand.
+
         """
         if insitu is None: insitu = rcParams['insitu']
         self._math._setinsitu(insitu)
         varlist = vars()
-        base = { "GHz": 1000000000., "MHz": 1000000., "kHz": 1000., "Hz": 1. }
-        if not base.has_key(unit):
+        base = { "GHz": 1000000000., "MHz": 1000000., "kHz": 1000., "Hz": 1.}
+        if not (unit == "" or base.has_key(unit)):
             raise ValueError("%s is not a valid unit." % unit)
-        try:
-            s = scantable(self._math._lag_flag(self, frequency*base[unit],
-                                               width*base[unit]))
-        except RuntimeError, msg:
-            if rcParams['verbose']:
-                #print msg
-                print_log()
-                asaplog.push( str(msg) )
-                print_log( 'ERROR' )
-                return
-            else: raise
+        if unit == "":
+            s = scantable(self._math._lag_flag(self, start, end, "lags"))
+        else:
+            s = scantable(self._math._lag_flag(self, start*base[unit],
+                                               end*base[unit], "frequency"))
         s._add_history("lag_flag", varlist)
-        print_log()
         if insitu:
             self._assign(s)
         else:
             return s
 
-
+    @asaplog_post_dec
     def create_mask(self, *args, **kwargs):
-        """
+        """\
         Compute and return a mask based on [min, max] windows.
         The specified windows are to be INCLUDED, when the mask is
         applied.
+
         Parameters:
+
             [min, max], [min2, max2], ...
                 Pairs of start/end points (inclusive)specifying the regions
                 to be masked
+
             invert:     optional argument. If specified as True,
                         return an inverted mask, i.e. the regions
                         specified are EXCLUDED
+
             row:        create the mask using the specified row for
                         unit conversions, default is row=0
                         only necessary if frequency varies over rows.
-        Example:
+
+        Examples::
+
             scan.set_unit('channel')
-            a)
+            # a)
             msk = scan.create_mask([400, 500], [800, 900])
             # masks everything outside 400 and 500
             # and 800 and 900 in the unit 'channel'
 
-            b)
+            # b)
             msk = scan.create_mask([400, 500], [800, 900], invert=True)
             # masks the regions between 400 and 500
             # and 800 and 900 in the unit 'channel'
-            c)
-            mask only channel 400
-            msk =  scan.create_mask([400, 400])
+
+            # c)
+            #mask only channel 400
+            msk =  scan.create_mask([400])
+
         """
-        row = 0
-        if kwargs.has_key("row"):
-            row = kwargs.get("row")
+        row = kwargs.get("row", 0)
         data = self._getabcissa(row)
         u = self._getcoordinfo()[0]
-        if rcParams['verbose']:
-            if u == "": u = "channel"
-            msg = "The current mask window unit is %s" % u
-            i = self._check_ifs()
-            if not i:
-                msg += "\nThis mask is only valid for IF=%d" % (self.getif(i))
-            asaplog.push(msg)
+        if u == "":
+            u = "channel"
+        msg = "The current mask window unit is %s" % u
+        i = self._check_ifs()
+        if not i:
+            msg += "\nThis mask is only valid for IF=%d" % (self.getif(i))
+        asaplog.push(msg)
         n = self.nchan()
         msk = _n_bools(n, False)
         # test if args is a 'list' or a 'normal *args - UGLY!!!
@@ -972,29 +1142,40 @@ class scantable(Scantable):
         ws = (isinstance(args[-1][-1], int) or isinstance(args[-1][-1], float)) \
              and args or args[0]
         for window in ws:
-            if (len(window) != 2 or window[0] > window[1] ):
-                raise TypeError("A window needs to be defined as [min, max]")
+            if len(window) == 1:
+                window = [window[0], window[0]]
+            if len(window) == 0 or  len(window) > 2:
+                raise ValueError("A window needs to be defined as [start(, end)]")
+            if window[0] > window[1]:
+                tmp = window[0]
+                window[0] = window[1]
+                window[1] = tmp
             for i in range(n):
                 if data[i] >= window[0] and data[i] <= window[1]:
                     msk[i] = True
         if kwargs.has_key('invert'):
             if kwargs.get('invert'):
                 msk = mask_not(msk)
-        print_log()
         return msk
 
-    def get_masklist(self, mask=None, row=0):
-        """
+    def get_masklist(self, mask=None, row=0, silent=False):
+        """\
         Compute and return a list of mask windows, [min, max].
+
         Parameters:
+
             mask:       channel mask, created with create_mask.
+
             row:        calcutate the masklist using the specified row
                         for unit conversions, default is row=0
                         only necessary if frequency varies over rows.
+
         Returns:
+
             [min, max], [min2, max2], ...
                 Pairs of start/end points (inclusive)specifying
                 the masked regions
+
         """
         if not (isinstance(mask,list) or isinstance(mask, tuple)):
             raise TypeError("The mask should be list or tuple.")
@@ -1005,12 +1186,13 @@ class scantable(Scantable):
             raise TypeError(msg)
         data = self._getabcissa(row)
         u = self._getcoordinfo()[0]
-        if rcParams['verbose']:
-            if u == "": u = "channel"
-            msg = "The current mask window unit is %s" % u
-            i = self._check_ifs()
-            if not i:
-                msg += "\nThis mask is only valid for IF=%d" % (self.getif(i))
+        if u == "":
+            u = "channel"
+        msg = "The current mask window unit is %s" % u
+        i = self._check_ifs()
+        if not i:
+            msg += "\nThis mask is only valid for IF=%d" % (self.getif(i))
+        if not silent:
             asaplog.push(msg)
         masklist=[]
         ist, ien = None, None
@@ -1023,13 +1205,18 @@ class scantable(Scantable):
         return masklist
 
     def get_mask_indices(self, mask=None):
-        """
+        """\
         Compute and Return lists of mask start indices and mask end indices.
-         Parameters:
+
+        Parameters:
+
             mask:       channel mask, created with create_mask.
+
         Returns:
+
             List of mask start indices and that of mask end indices,
             i.e., [istart1,istart2,....], [iend1,iend2,....].
+
         """
         if not (isinstance(mask,list) or isinstance(mask, tuple)):
             raise TypeError("The mask should be list or tuple.")
@@ -1064,14 +1251,19 @@ class scantable(Scantable):
 #        return list(self._getrestfreqs())
 
     def get_restfreqs(self, ids=None):
-        """
+        """\
         Get the restfrequency(s) stored in this scantable.
         The return value(s) are always of unit 'Hz'
+
         Parameters:
+
             ids: (optional) a list of MOLECULE_ID for that restfrequency(s) to
                  be retrieved
+
         Returns:
+
             dictionary containing ids and a list of doubles for each id
+
         """
         if ids is None:
             rfreqs={}
@@ -1090,10 +1282,9 @@ class scantable(Scantable):
             #return list(self._getrestfreqs(ids))
 
     def set_restfreqs(self, freqs=None, unit='Hz'):
-        """
-        ********NEED TO BE UPDATED begin************
+        """\
         Set or replace the restfrequency specified and
-        If the 'freqs' argument holds a scalar,
+        if the 'freqs' argument holds a scalar,
         then that rest frequency will be applied to all the selected
         data.  If the 'freqs' argument holds
         a vector, then it MUST be of equal or smaller length than
@@ -1103,72 +1294,90 @@ class scantable(Scantable):
         to the corresponding value you give in the 'freqs' vector.
         E.g. 'freqs=[1e9, 2e9]'  would mean IF 0 gets restfreq 1e9 and
         IF 1 gets restfreq 2e9.
-        ********NEED TO BE UPDATED end************
+
         You can also specify the frequencies via a linecatalog.
 
         Parameters:
+
             freqs:   list of rest frequency values or string idenitfiers
+
             unit:    unit for rest frequency (default 'Hz')
 
-        Example:
+
+        Example::
+
             # set the given restfrequency for the all currently selected IFs
             scan.set_restfreqs(freqs=1.4e9)
-            # set multiple restfrequencies to all the selected data
+            # set restfrequencies for the n IFs  (n > 1) in the order of the
+            # list, i.e
+            # IF0 -> 1.4e9, IF1 ->  1.41e9, IF3 -> 1.42e9
+            # len(list_of_restfreqs) == nIF
+            # for nIF == 1 the following will set multiple restfrequency for
+            # that IF
             scan.set_restfreqs(freqs=[1.4e9, 1.41e9, 1.42e9])
-            # If the number of IFs in the data is >= 2 the IF0 gets the first
-            # value IF1 the second... NOTE that freqs needs to be
-            # specified in list of list (e.g. [[],[],...] ).
-            scan.set_restfreqs(freqs=[[1.4e9],[1.67e9]])
-            #set the given restfrequency for the whole table (by name)
-            scan.set_restfreqs(freqs="OH1667")
+            # set multiple restfrequencies per IF. as a list of lists where
+            # the outer list has nIF elements, the inner s arbitrary
+            scan.set_restfreqs(freqs=[[1.4e9, 1.41e9], [1.67e9]])
 
-        Note:
+       *Note*:
+
             To do more sophisticate Restfrequency setting, e.g. on a
             source and IF basis, use scantable.set_selection() before using
-            this function.
-            # provide your scantable is call scan
-            selection = selector()
-            selection.set_name("ORION*")
-            selection.set_ifs([1])
-            scan.set_selection(selection)
-            scan.set_restfreqs(freqs=86.6e9)
+            this function::
+
+                # provided your scantable is called scan
+                selection = selector()
+                selection.set_name("ORION*")
+                selection.set_ifs([1])
+                scan.set_selection(selection)
+                scan.set_restfreqs(freqs=86.6e9)
 
         """
         varlist = vars()
         from asap import linecatalog
         # simple  value
         if isinstance(freqs, int) or isinstance(freqs, float):
-            # TT mod
-            #self._setrestfreqs(freqs, "",unit)
-            self._setrestfreqs([freqs], [""],unit)
+            self._setrestfreqs([freqs], [""], unit)
         # list of values
         elif isinstance(freqs, list) or isinstance(freqs, tuple):
             # list values are scalars
             if isinstance(freqs[-1], int) or isinstance(freqs[-1], float):
-                self._setrestfreqs(freqs, [""],unit)
-            # list values are tuples, (value, name)
+                if len(freqs) == 1:
+                    self._setrestfreqs(freqs, [""], unit)
+                else:
+                    # allow the 'old' mode of setting mulitple IFs
+                    sel = selector()
+                    savesel = self._getselection()
+                    iflist = self.getifnos()
+                    if len(freqs)>len(iflist):
+                        raise ValueError("number of elements in list of list "
+                                         "exeeds the current IF selections")
+                    iflist = self.getifnos()
+                    for i, fval in enumerate(freqs):
+                        sel.set_ifs(iflist[i])
+                        self._setselection(sel)
+                        self._setrestfreqs([fval], [""], unit)
+                    self._setselection(savesel)
+
+            # list values are dict, {'value'=, 'name'=)
             elif isinstance(freqs[-1], dict):
-                #sel = selector()
-                #savesel = self._getselection()
-                #iflist = self.getifnos()
-                #for i in xrange(len(freqs)):
-                #    sel.set_ifs(iflist[i])
-                #    self._setselection(sel)
-                #    self._setrestfreqs(freqs[i], "",unit)
-                #self._setselection(savesel)
-                self._setrestfreqs(freqs["value"],
-                                   freqs["name"], "MHz")
+                values = []
+                names = []
+                for d in freqs:
+                    values.append(d["value"])
+                    names.append(d["name"])
+                self._setrestfreqs(values, names, unit)
             elif isinstance(freqs[-1], list) or isinstance(freqs[-1], tuple):
                 sel = selector()
                 savesel = self._getselection()
                 iflist = self.getifnos()
                 if len(freqs)>len(iflist):
-                    raise ValueError("number of elements in list of list exeeds the current IF selections")
-                for i in xrange(len(freqs)):
+                    raise ValueError("number of elements in list of list exeeds"
+                                     " the current IF selections")
+                for i, fval in enumerate(freqs):
                     sel.set_ifs(iflist[i])
                     self._setselection(sel)
-                    self._setrestfreqs(freqs[i]["value"],
-                                       freqs[i]["name"], "MHz")
+                    self._setrestfreqs(fval, [""], unit)
                 self._setselection(savesel)
         # freqs are to be taken from a linecatalog
         elif isinstance(freqs, linecatalog):
@@ -1177,8 +1386,8 @@ class scantable(Scantable):
             for i in xrange(freqs.nrow()):
                 sel.set_ifs(iflist[i])
                 self._setselection(sel)
-                self._setrestfreqs(freqs.get_frequency(i),
-                                   freqs.get_name(i), "MHz")
+                self._setrestfreqs([freqs.get_frequency(i)],
+                                   [freqs.get_name(i)], "MHz")
                 # ensure that we are not iterating past nIF
                 if i == self.nif()-1: break
             self._setselection(savesel)
@@ -1187,27 +1396,36 @@ class scantable(Scantable):
         self._add_history("set_restfreqs", varlist)
 
     def shift_refpix(self, delta):
-	"""
-	Shift the reference pixel of the Spectra Coordinate by an 
-	integer amount.
-	Parameters:
-	    delta:   the amount to shift by
-        Note:
-	    Be careful using this with broadband data.
-        """
-	Scantable.shift(self, delta)
+        """\
+        Shift the reference pixel of the Spectra Coordinate by an
+        integer amount.
 
-    def history(self, filename=None):
-        """
-        Print the history. Optionally to a file.
         Parameters:
-            filename:    The name  of the file to save the history to.
+
+            delta:   the amount to shift by
+
+        *Note*:
+
+            Be careful using this with broadband data.
+
+        """
+        Scantable.shift_refpix(self, delta)
+
+    @asaplog_post_dec
+    def history(self, filename=None):
+        """\
+        Print the history. Optionally to a file.
+
+        Parameters:
+
+            filename:    The name of the file to save the history to.
+
         """
         hist = list(self._gethistory())
         out = "-"*80
         for h in hist:
             if h.startswith("---"):
-                out += "\n"+h
+                out = "\n".join([out, h])
             else:
                 items = h.split("##")
                 date = items[0]
@@ -1216,9 +1434,11 @@ class scantable(Scantable):
                 out += "\n"+date+"\n"
                 out += "Function: %s\n  Parameters:" % (func)
                 for i in items:
+                    if i == '':
+                        continue
                     s = i.split("=")
                     out += "\n   %s = %s" % (s[0], s[1])
-                out += "\n"+"-"*80
+                out = "\n".join([out, "-"*80])
         if filename is not None:
             if filename is "":
                 filename = 'scantable_history.txt'
@@ -1230,35 +1450,28 @@ class scantable(Scantable):
                 data.close()
             else:
                 msg = "Illegal file name '%s'." % (filename)
-                if rcParams['verbose']:
-                    #print msg
-                    asaplog.push( msg )
-                    print_log( 'ERROR' )
-                else:
-                    raise IOError(msg)
-        if rcParams['verbose']:
-            try:
-                from IPython.genutils import page as pager
-            except ImportError:
-                from pydoc import pager
-            pager(out)
-        else:
-            return out
-        return
+                raise IOError(msg)
+        return page(out)
     #
     # Maths business
     #
-
+    @asaplog_post_dec
     def average_time(self, mask=None, scanav=False, weight='tint', align=False):
-        """
+        """\
         Return the (time) weighted average of a scan.
-        Note:
+
+        *Note*:
+
             in channels only - align if necessary
+
         Parameters:
+
             mask:     an optional mask (only used for 'var' and 'tsys'
                       weighting)
+
             scanav:   True averages each scan separately
                       False (default) averages all scans together,
+
             weight:   Weighting scheme.
                       'none'     (mean no weight)
                       'var'      (1/var(spec) weighted)
@@ -1267,70 +1480,71 @@ class scantable(Scantable):
                       'tintsys'  (Tint/Tsys**2)
                       'median'   ( median averaging)
                       The default is 'tint'
+
             align:    align the spectra in velocity before averaging. It takes
                       the time of the first spectrum as reference time.
-        Example:
+
+        Example::
+
             # time average the scantable without using a mask
             newscan = scan.average_time()
+
         """
         varlist = vars()
-        if weight is None: weight = 'TINT'
-        if mask is None: mask = ()
-        if scanav: scanav = "SCAN"
-        else: scanav = "NONE"
+        weight = weight or 'TINT'
+        mask = mask or ()
+        scanav = (scanav and 'SCAN') or 'NONE'
         scan = (self, )
-        try:
-            if align:
-                scan = (self.freq_align(insitu=False), )
-            s = None
-            if weight.upper() == 'MEDIAN':
-                s = scantable(self._math._averagechannel(scan[0], 'MEDIAN',
-                                                         scanav))
-            else:
-                s = scantable(self._math._average(scan, mask, weight.upper(),
-                              scanav))
-        except RuntimeError, msg:
-            if rcParams['verbose']:
-                #print msg
-                print_log()
-                asaplog.push( str(msg) )
-                print_log( 'ERROR' )
-                return
-            else: raise
+
+        if align:
+            scan = (self.freq_align(insitu=False), )
+        s = None
+        if weight.upper() == 'MEDIAN':
+            s = scantable(self._math._averagechannel(scan[0], 'MEDIAN',
+                                                     scanav))
+        else:
+            s = scantable(self._math._average(scan, mask, weight.upper(),
+                          scanav))
         s._add_history("average_time", varlist)
-        print_log()
         return s
 
+    @asaplog_post_dec
     def convert_flux(self, jyperk=None, eta=None, d=None, insitu=None):
-        """
+        """\
         Return a scan where all spectra are converted to either
         Jansky or Kelvin depending upon the flux units of the scan table.
         By default the function tries to look the values up internally.
         If it can't find them (or if you want to over-ride), you must
         specify EITHER jyperk OR eta (and D which it will try to look up
         also if you don't set it). jyperk takes precedence if you set both.
+
         Parameters:
+
             jyperk:      the Jy / K conversion factor
+
             eta:         the aperture efficiency
-            d:           the geomtric diameter (metres)
+
+            d:           the geometric diameter (metres)
+
             insitu:      if False a new scantable is returned.
                          Otherwise, the scaling is done in-situ
                          The default is taken from .asaprc (False)
+
         """
         if insitu is None: insitu = rcParams['insitu']
         self._math._setinsitu(insitu)
         varlist = vars()
-        if jyperk is None: jyperk = -1.0
-        if d is None: d = -1.0
-        if eta is None: eta = -1.0
+        jyperk = jyperk or -1.0
+        d = d or -1.0
+        eta = eta or -1.0
         s = scantable(self._math._convertflux(self, d, eta, jyperk))
         s._add_history("convert_flux", varlist)
-        print_log()
         if insitu: self._assign(s)
         else: return s
 
+    @asaplog_post_dec
     def gain_el(self, poly=None, filename="", method="linear", insitu=None):
-        """
+        """\
         Return a scan after applying a gain-elevation correction.
         The correction can be made via either a polynomial or a
         table-based interpolation (and extrapolation if necessary).
@@ -1339,10 +1553,13 @@ class scantable(Scantable):
         with built in coefficients known for certain telescopes (an error
         will occur if the instrument is not known).
         The data and Tsys are *divided* by the scaling factors.
+
         Parameters:
+
             poly:        Polynomial coefficients (default None) to compute a
                          gain-elevation correction as a function of
                          elevation (in degrees).
+
             filename:    The name of an ascii file holding correction factors.
                          The first row of the ascii file must give the column
                          names and these MUST include columns
@@ -1361,195 +1578,244 @@ class scantable(Scantable):
                          0.4 60 0.85
                          0.5 80 0.8
                          0.6 90 0.75
+
             method:      Interpolation method when correcting from a table.
                          Values are  "nearest", "linear" (default), "cubic"
                          and "spline"
+
             insitu:      if False a new scantable is returned.
                          Otherwise, the scaling is done in-situ
                          The default is taken from .asaprc (False)
+
         """
 
         if insitu is None: insitu = rcParams['insitu']
         self._math._setinsitu(insitu)
         varlist = vars()
-        if poly is None:
-            poly = ()
+        poly = poly or ()
         from os.path import expandvars
         filename = expandvars(filename)
         s = scantable(self._math._gainel(self, poly, filename, method))
         s._add_history("gain_el", varlist)
-        print_log()
-        if insitu: self._assign(s)
-        else: return s
+        if insitu:
+            self._assign(s)
+        else:
+            return s
 
+    @asaplog_post_dec
     def freq_align(self, reftime=None, method='cubic', insitu=None):
-        """
+        """\
         Return a scan where all rows have been aligned in frequency/velocity.
         The alignment frequency frame (e.g. LSRK) is that set by function
         set_freqframe.
+
         Parameters:
+
             reftime:     reference time to align at. By default, the time of
                          the first row of data is used.
+
             method:      Interpolation method for regridding the spectra.
                          Choose from "nearest", "linear", "cubic" (default)
                          and "spline"
+
             insitu:      if False a new scantable is returned.
                          Otherwise, the scaling is done in-situ
                          The default is taken from .asaprc (False)
+
         """
         if insitu is None: insitu = rcParams["insitu"]
         self._math._setinsitu(insitu)
         varlist = vars()
-        if reftime is None: reftime = ""
+        reftime = reftime or ""
         s = scantable(self._math._freq_align(self, reftime, method))
         s._add_history("freq_align", varlist)
-        print_log()
         if insitu: self._assign(s)
         else: return s
 
-    def opacity(self, tau, insitu=None):
-        """
+    @asaplog_post_dec
+    def opacity(self, tau=None, insitu=None):
+        """\
         Apply an opacity correction. The data
         and Tsys are multiplied by the correction factor.
+
         Parameters:
-            tau:         Opacity from which the correction factor is
+
+            tau:         (list of) opacity from which the correction factor is
                          exp(tau*ZD)
-                         where ZD is the zenith-distance
+                         where ZD is the zenith-distance.
+                         If a list is provided, it has to be of length nIF,
+                         nIF*nPol or 1 and in order of IF/POL, e.g.
+                         [opif0pol0, opif0pol1, opif1pol0 ...]
+                         if tau is `None` the opacities are determined from a
+                         model.
+
             insitu:      if False a new scantable is returned.
                          Otherwise, the scaling is done in-situ
                          The default is taken from .asaprc (False)
+
         """
         if insitu is None: insitu = rcParams['insitu']
         self._math._setinsitu(insitu)
         varlist = vars()
+        if not hasattr(tau, "__len__"):
+            tau = [tau]
         s = scantable(self._math._opacity(self, tau))
         s._add_history("opacity", varlist)
-        print_log()
         if insitu: self._assign(s)
         else: return s
 
+    @asaplog_post_dec
     def bin(self, width=5, insitu=None):
-        """
+        """\
         Return a scan where all spectra have been binned up.
+
         Parameters:
+
             width:       The bin width (default=5) in pixels
+
             insitu:      if False a new scantable is returned.
                          Otherwise, the scaling is done in-situ
                          The default is taken from .asaprc (False)
+
         """
         if insitu is None: insitu = rcParams['insitu']
         self._math._setinsitu(insitu)
         varlist = vars()
         s = scantable(self._math._bin(self, width))
         s._add_history("bin", varlist)
-        print_log()
-        if insitu: self._assign(s)
-        else: return s
+        if insitu:
+            self._assign(s)
+        else:
+            return s
 
-
+    @asaplog_post_dec
     def resample(self, width=5, method='cubic', insitu=None):
-        """
+        """\
         Return a scan where all spectra have been binned up.
-        
+
         Parameters:
+
             width:       The bin width (default=5) in pixels
+
             method:      Interpolation method when correcting from a table.
                          Values are  "nearest", "linear", "cubic" (default)
                          and "spline"
+
             insitu:      if False a new scantable is returned.
                          Otherwise, the scaling is done in-situ
                          The default is taken from .asaprc (False)
+
         """
         if insitu is None: insitu = rcParams['insitu']
         self._math._setinsitu(insitu)
         varlist = vars()
         s = scantable(self._math._resample(self, method, width))
         s._add_history("resample", varlist)
-        print_log()
         if insitu: self._assign(s)
         else: return s
 
-
+    @asaplog_post_dec
     def average_pol(self, mask=None, weight='none'):
-        """
+        """\
         Average the Polarisations together.
+
         Parameters:
+
             mask:        An optional mask defining the region, where the
                          averaging will be applied. The output will have all
                          specified points masked.
+
             weight:      Weighting scheme. 'none' (default), 'var' (1/var(spec)
                          weighted), or 'tsys' (1/Tsys**2 weighted)
+
         """
         varlist = vars()
-        if mask is None:
-            mask = ()
+        mask = mask or ()
         s = scantable(self._math._averagepol(self, mask, weight.upper()))
         s._add_history("average_pol", varlist)
-        print_log()
         return s
 
+    @asaplog_post_dec
     def average_beam(self, mask=None, weight='none'):
-        """
+        """\
         Average the Beams together.
+
         Parameters:
             mask:        An optional mask defining the region, where the
                          averaging will be applied. The output will have all
                          specified points masked.
+
             weight:      Weighting scheme. 'none' (default), 'var' (1/var(spec)
                          weighted), or 'tsys' (1/Tsys**2 weighted)
+
         """
         varlist = vars()
-        if mask is None:
-            mask = ()
+        mask = mask or ()
         s = scantable(self._math._averagebeams(self, mask, weight.upper()))
         s._add_history("average_beam", varlist)
-        print_log()
         return s
 
-    def convert_pol(self, poltype=None):
-        """
-        Convert the data to a different polarisation type.
+    def parallactify(self, pflag):
+        """\
+        Set a flag to indicate whether this data should be treated as having
+        been 'parallactified' (total phase == 0.0)
+
         Parameters:
-            poltype:    The new polarisation type. Valid types are:
-                        "linear", "stokes" and "circular"
+
+            pflag:  Bool indicating whether to turn this on (True) or
+                    off (False)
+
         """
         varlist = vars()
-        try:
-            s = scantable(self._math._convertpol(self, poltype))
-        except RuntimeError, msg:
-            if rcParams['verbose']:
-                #print msg
-                print_log()
-                asaplog.push( str(msg) )
-                print_log( 'ERROR' )
-                return
-            else:
-                raise
+        self._parallactify(pflag)
+        self._add_history("parallactify", varlist)
+
+    @asaplog_post_dec
+    def convert_pol(self, poltype=None):
+        """\
+        Convert the data to a different polarisation type.
+        Note that you will need cross-polarisation terms for most conversions.
+
+        Parameters:
+
+            poltype:    The new polarisation type. Valid types are:
+                        "linear", "circular", "stokes" and "linpol"
+
+        """
+        varlist = vars()
+        s = scantable(self._math._convertpol(self, poltype))
         s._add_history("convert_pol", varlist)
-        print_log()
         return s
 
-    #def smooth(self, kernel="hanning", width=5.0, insitu=None):
-    def smooth(self, kernel="hanning", width=5.0, plot=False, insitu=None):
-        """
+    @asaplog_post_dec
+    def smooth(self, kernel="hanning", width=5.0, order=2, plot=False, insitu=None):
+        """\
         Smooth the spectrum by the specified kernel (conserving flux).
+
         Parameters:
+
             kernel:     The type of smoothing kernel. Select from
-                        'hanning' (default), 'gaussian', 'boxcar' and
-                        'rmedian'
+                        'hanning' (default), 'gaussian', 'boxcar', 'rmedian'
+                        or 'poly'
+
             width:      The width of the kernel in pixels. For hanning this is
                         ignored otherwise it defauls to 5 pixels.
                         For 'gaussian' it is the Full Width Half
                         Maximum. For 'boxcar' it is the full width.
-                        For 'rmedian' it is the half width.
+                        For 'rmedian' and 'poly' it is the half width.
+
+            order:      Optional parameter for 'poly' kernel (default is 2), to
+                        specify the order of the polnomial. Ignored by all other
+                        kernels.
+
             plot:       plot the original and the smoothed spectra.
                         In this each indivual fit has to be approved, by
                         typing 'y' or 'n'
+
             insitu:     if False a new scantable is returned.
                         Otherwise, the scaling is done in-situ
                         The default is taken from .asaprc (False)
-        Example:
-             none
+
         """
         if insitu is None: insitu = rcParams['insitu']
         self._math._setinsitu(insitu)
@@ -1557,7 +1823,7 @@ class scantable(Scantable):
 
         if plot: orgscan = self.copy()
 
-        s = scantable(self._math._smooth(self, kernel.lower(), width))
+        s = scantable(self._math._smooth(self, kernel.lower(), width, order))
         s._add_history("smooth", varlist)
 
         if plot:
@@ -1596,28 +1862,38 @@ class scantable(Scantable):
             self._p = None
             del orgscan
 
-        print_log()
         if insitu: self._assign(s)
         else: return s
 
-
-    def poly_baseline(self, mask=None, order=0, plot=False, uselin=False, insitu=None):
-        """
+    @asaplog_post_dec
+    def old_poly_baseline(self, mask=None, order=0, plot=False, uselin=False, insitu=None, rows=None):
+        """\
         Return a scan which has been baselined (all rows) by a polynomial.
+        
         Parameters:
+
             mask:       an optional mask
+
             order:      the order of the polynomial (default is 0)
+
             plot:       plot the fit and the residual. In this each
                         indivual fit has to be approved, by typing 'y'
                         or 'n'
+
             uselin:     use linear polynomial fit
+
             insitu:     if False a new scantable is returned.
                         Otherwise, the scaling is done in-situ
                         The default is taken from .asaprc (False)
+
+            rows:       row numbers of spectra to be processed.
+                        (default is None: for all rows)
+        
         Example:
             # return a scan baselined by a third order polynomial,
             # not using a mask
             bscan = scan.poly_baseline(order=3)
+
         """
         if insitu is None: insitu = rcParams['insitu']
         if not insitu:
@@ -1626,9 +1902,8 @@ class scantable(Scantable):
             workscan = self
         varlist = vars()
         if mask is None:
-            mask = [True for i in xrange(self.nchan(-1))]
-        
-        from asap.asapfitter import fitter
+            mask = [True for i in xrange(self.nchan())]
+
         try:
             f = fitter()
             if uselin:
@@ -1636,25 +1911,20 @@ class scantable(Scantable):
             else:
                 f.set_function(poly=order)
 
-            rows = range(workscan.nrow())
+            if rows == None:
+                rows = xrange(workscan.nrow())
+            elif isinstance(rows, int):
+                rows = [ rows ]
+            
             if len(rows) > 0:
                 self.blpars = []
+                self.masklists = []
+                self.actualmask = []
             
             for r in rows:
-                # take into account flagtra info (CAS-1434)
-                flagtra = workscan._getmask(r)
-                actualmask = mask[:]
-                if len(actualmask) == 0:
-                    actualmask = list(flagtra[:])
-                else:
-                    if len(actualmask) != len(flagtra):
-                        raise RuntimeError, "Mask and flagtra have different length"
-                    else:
-                        for i in range(0, len(actualmask)):
-                            actualmask[i] = actualmask[i] and flagtra[i]
-                f.set_scan(workscan, actualmask)
                 f.x = workscan._getabcissa(r)
                 f.y = workscan._getspectrum(r)
+                f.mask = mask_and(mask, workscan._getmask(r))    # (CAS-1434)
                 f.data = None
                 f.fit()
                 if plot:
@@ -1662,50 +1932,159 @@ class scantable(Scantable):
                     x = raw_input("Accept fit ( [y]/n ): ")
                     if x.upper() == 'N':
                         self.blpars.append(None)
+                        self.masklists.append(None)
+                        self.actualmask.append(None)
                         continue
                 workscan._setspectrum(f.fitter.getresidual(), r)
                 self.blpars.append(f.get_parameters())
+                self.masklists.append(workscan.get_masklist(f.mask, row=r, silent=True))
+                self.actualmask.append(f.mask)
 
             if plot:
                 f._p.unmap()
                 f._p = None
             workscan._add_history("poly_baseline", varlist)
-            print_log()
-            if insitu: self._assign(workscan)
-            else: return workscan 
+            if insitu:
+                self._assign(workscan)
+            else:
+                return workscan
         except RuntimeError:
             msg = "The fit failed, possibly because it didn't converge."
-            if rcParams['verbose']:
-                #print msg
-                print_log()
-                asaplog.push( str(msg) )
-                print_log( 'ERROR' )
+            raise RuntimeError(msg)
+
+    @asaplog_post_dec
+    def poly_baseline(self, mask=None, order=0, plot=False, batch=False, insitu=None, rows=None):
+        """\
+        Return a scan which has been baselined (all rows) by a polynomial.
+        Parameters:
+            mask:       an optional mask
+            order:      the order of the polynomial (default is 0)
+            plot:       plot the fit and the residual. In this each
+                        indivual fit has to be approved, by typing 'y'
+                        or 'n'. Ignored if batch = True. 
+            batch:      if True a faster algorithm is used and logs
+                        including the fit results are not output
+                        (default is False) 
+            insitu:     if False a new scantable is returned.
+                        Otherwise, the scaling is done in-situ
+                        The default is taken from .asaprc (False)
+            rows:       row numbers of spectra to be baselined.
+                        (default is None: for all rows)
+        Example:
+            # return a scan baselined by a third order polynomial,
+            # not using a mask
+            bscan = scan.poly_baseline(order=3)
+        """
+        
+        varlist = vars()
+        
+        if insitu is None: insitu = rcParams["insitu"]
+        if insitu:
+            workscan = self
+        else:
+            workscan = self.copy()
+
+        nchan = workscan.nchan()
+        
+        if mask is None:
+            mask = [True for i in xrange(nchan)]
+
+        try:
+            if rows == None:
+                rows = xrange(workscan.nrow())
+            elif isinstance(rows, int):
+                rows = [ rows ]
+            
+            if len(rows) > 0:
+                workscan.blpars = []
+                workscan.masklists = []
+                workscan.actualmask = []
+
+            if batch:
+                workscan._poly_baseline_batch(mask, order)
+            elif plot:
+                f = fitter()
+                f.set_function(lpoly=order)
+                for r in rows:
+                    f.x = workscan._getabcissa(r)
+                    f.y = workscan._getspectrum(r)
+                    f.mask = mask_and(mask, workscan._getmask(r))    # (CAS-1434)
+                    f.data = None
+                    f.fit()
+                    
+                    f.plot(residual=True)
+                    accept_fit = raw_input("Accept fit ( [y]/n ): ")
+                    if accept_fit.upper() == "N":
+                        self.blpars.append(None)
+                        self.masklists.append(None)
+                        self.actualmask.append(None)
+                        continue
+                    workscan._setspectrum(f.fitter.getresidual(), r)
+                    workscan.blpars.append(f.get_parameters())
+                    workscan.masklists.append(workscan.get_masklist(f.mask, row=r))
+                    workscan.actualmask.append(f.mask)
+                    
+                f._p.unmap()
+                f._p = None
+            else:
+                for r in rows:
+                    fitparams = workscan._poly_baseline(mask, order, r)
+                    params = fitparams.getparameters()
+                    fmtd = ", ".join(["p%d = %3.6f" % (i, v) for i, v in enumerate(params)])
+                    errors = fitparams.geterrors()
+                    fmask = mask_and(mask, workscan._getmask(r))
+
+                    workscan.blpars.append({"params":params,
+                                            "fixed": fitparams.getfixedparameters(),
+                                            "formatted":fmtd, "errors":errors})
+                    workscan.masklists.append(workscan.get_masklist(fmask, r, silent=True))
+                    workscan.actualmask.append(fmask)
+                    
+                    asaplog.push(fmtd)
+            
+            workscan._add_history("poly_baseline", varlist)
+            
+            if insitu:
+                self._assign(workscan)
+            else:
+                return workscan
+            
+        except RuntimeError, e:
+            msg = "The fit failed, possibly because it didn't converge."
+            if rcParams["verbose"]:
+                asaplog.push(str(e))
+                asaplog.push(str(msg))
                 return
             else:
-                raise RuntimeError(msg)
+                raise RuntimeError(str(e)+'\n'+msg)
 
 
-    def auto_poly_baseline(self, mask=[], edge=(0, 0), order=0,
+    def auto_poly_baseline(self, mask=None, edge=(0, 0), order=0,
                            threshold=3, chan_avg_limit=1, plot=False,
-                           insitu=None):
-        """
+                           insitu=None, rows=None):
+        """\
         Return a scan which has been baselined (all rows) by a polynomial.
         Spectral lines are detected first using linefinder and masked out
         to avoid them affecting the baseline solution.
 
         Parameters:
+
             mask:       an optional mask retreived from scantable
-            edge:       an optional number of channel to drop at
-                        the edge of spectrum. If only one value is
+
+            edge:       an optional number of channel to drop at the edge of
+                        spectrum. If only one value is
                         specified, the same number will be dropped from
                         both sides of the spectrum. Default is to keep
                         all channels. Nested tuples represent individual
                         edge selection for different IFs (a number of spectral
                         channels can be different)
+
             order:      the order of the polynomial (default is 0)
+
             threshold:  the threshold used by line finder. It is better to
                         keep it large as only strong lines affect the
                         baseline solution.
+
             chan_avg_limit:
                         a maximum number of consequtive spectral channels to
                         average during the search of weak and broad lines.
@@ -1715,19 +2094,25 @@ class scantable(Scantable):
                         parameter (usually values up to 8 are reasonable). Most
                         users of this method should find the default value
                         sufficient.
+
             plot:       plot the fit and the residual. In this each
                         indivual fit has to be approved, by typing 'y'
                         or 'n'
+
             insitu:     if False a new scantable is returned.
                         Otherwise, the scaling is done in-situ
                         The default is taken from .asaprc (False)
+            rows:       row numbers of spectra to be processed.
+                        (default is None: for all rows)
 
-        Example:
-            scan2=scan.auto_poly_baseline(order=7)
+
+        Example::
+
+            scan2 = scan.auto_poly_baseline(order=7, insitu=False)
+
         """
         if insitu is None: insitu = rcParams['insitu']
         varlist = vars()
-        from asap.asapfitter import fitter
         from asap.asaplinefind import linefinder
         from asap import _is_sequence_or_number as _is_valid
 
@@ -1751,27 +2136,35 @@ class scantable(Scantable):
         else:
             curedge = edge;
 
-        # setup fitter
-        f = fitter()
-        f.set_function(poly=order)
-
-        # setup line finder
-        fl = linefinder()
-        fl.set_options(threshold=threshold,avg_limit=chan_avg_limit)
-
         if not insitu:
             workscan = self.copy()
         else:
             workscan = self
 
+        # setup fitter
+        f = fitter()
+        f.set_function(lpoly=order)
+
+        # setup line finder
+        fl = linefinder()
+        fl.set_options(threshold=threshold,avg_limit=chan_avg_limit)
+
         fl.set_scan(workscan)
 
-        rows = range(workscan.nrow())
+        if mask is None:
+            mask = _n_bools(workscan.nchan(), True)
+        
+        if rows is None:
+            rows = xrange(workscan.nrow())
+        elif isinstance(rows, int):
+            rows = [ rows ]
+        
         # Save parameters of baseline fits & masklists as a class attribute.
         # NOTICE: It does not reflect changes in scantable!
         if len(rows) > 0:
             self.blpars=[]
             self.masklists=[]
+            self.actualmask=[]
         asaplog.push("Processing:")
         for r in rows:
             msg = " Scan[%d] Beam[%d] IF[%d] Pol[%d] Cycle[%d]" % \
@@ -1786,29 +2179,19 @@ class scantable(Scantable):
                                         "be less than the number of IFs"
                     curedge = edge[workscan.getif(r)]
 
-            # take into account flagtra info (CAS-1434)
-            flagtra = workscan._getmask(r)
-            actualmask = mask[:]
-            if len(actualmask) == 0:
-                actualmask = list(flagtra[:])
-            else:
-                if len(actualmask) != len(flagtra):
-                    raise RuntimeError, "Mask and flagtra have different length"
-                else:
-                    for i in range(0, len(actualmask)):
-                        actualmask[i] = actualmask[i] and flagtra[i]
+            actualmask = mask_and(mask, workscan._getmask(r))    # (CAS-1434)
 
             # setup line finder
             fl.find_lines(r, actualmask, curedge)
-            outmask=fl.get_mask()
-            f.set_scan(workscan, fl.get_mask())
+            
             f.x = workscan._getabcissa(r)
             f.y = workscan._getspectrum(r)
+            f.mask = fl.get_mask()
             f.data = None
             f.fit()
-            
+
             # Show mask list
-            masklist=workscan.get_masklist(fl.get_mask(),row=r)
+            masklist=workscan.get_masklist(f.mask, row=r, silent=True)
             msg = "mask range: "+str(masklist)
             asaplog.push(msg, False)
 
@@ -1818,11 +2201,13 @@ class scantable(Scantable):
                 if x.upper() == 'N':
                     self.blpars.append(None)
                     self.masklists.append(None)
+                    self.actualmask.append(None)
                     continue
 
             workscan._setspectrum(f.fitter.getresidual(), r)
             self.blpars.append(f.get_parameters())
             self.masklists.append(masklist)
+            self.actualmask.append(f.mask)
         if plot:
             f._p.unmap()
             f._p = None
@@ -1832,90 +2217,110 @@ class scantable(Scantable):
         else:
             return workscan
 
+    @asaplog_post_dec
     def rotate_linpolphase(self, angle):
-        """
+        """\
         Rotate the phase of the complex polarization O=Q+iU correlation.
         This is always done in situ in the raw data.  So if you call this
         function more than once then each call rotates the phase further.
+
         Parameters:
+
             angle:   The angle (degrees) to rotate (add) by.
-        Examples:
+
+        Example::
+
             scan.rotate_linpolphase(2.3)
+
         """
         varlist = vars()
         self._math._rotate_linpolphase(self, angle)
         self._add_history("rotate_linpolphase", varlist)
-        print_log()
         return
 
-
+    @asaplog_post_dec
     def rotate_xyphase(self, angle):
-        """
+        """\
         Rotate the phase of the XY correlation.  This is always done in situ
         in the data.  So if you call this function more than once
         then each call rotates the phase further.
+
         Parameters:
+
             angle:   The angle (degrees) to rotate (add) by.
-        Examples:
+
+        Example::
+
             scan.rotate_xyphase(2.3)
+
         """
         varlist = vars()
         self._math._rotate_xyphase(self, angle)
         self._add_history("rotate_xyphase", varlist)
-        print_log()
         return
 
+    @asaplog_post_dec
     def swap_linears(self):
-        """
-        Swap the linear polarisations XX and YY, or better the first two 
+        """\
+        Swap the linear polarisations XX and YY, or better the first two
         polarisations as this also works for ciculars.
         """
         varlist = vars()
         self._math._swap_linears(self)
         self._add_history("swap_linears", varlist)
-        print_log()
         return
 
+    @asaplog_post_dec
     def invert_phase(self):
-        """
+        """\
         Invert the phase of the complex polarisation
         """
         varlist = vars()
         self._math._invert_phase(self)
         self._add_history("invert_phase", varlist)
-        print_log()
         return
 
+    @asaplog_post_dec
     def add(self, offset, insitu=None):
-        """
+        """\
         Return a scan where all spectra have the offset added
+
         Parameters:
+
             offset:      the offset
+
             insitu:      if False a new scantable is returned.
                          Otherwise, the scaling is done in-situ
                          The default is taken from .asaprc (False)
+
         """
         if insitu is None: insitu = rcParams['insitu']
         self._math._setinsitu(insitu)
         varlist = vars()
         s = scantable(self._math._unaryop(self, offset, "ADD", False))
         s._add_history("add", varlist)
-        print_log()
         if insitu:
             self._assign(s)
         else:
             return s
 
+    @asaplog_post_dec
     def scale(self, factor, tsys=True, insitu=None):
-        """
-        Return a scan where all spectra are scaled by the give 'factor'
+        """\
+
+        Return a scan where all spectra are scaled by the given 'factor'
+
         Parameters:
+
             factor:      the scaling factor (float or 1D float list)
+
             insitu:      if False a new scantable is returned.
                          Otherwise, the scaling is done in-situ
                          The default is taken from .asaprc (False)
+
             tsys:        if True (default) then apply the operation to Tsys
                          as well as the data
+
         """
         if insitu is None: insitu = rcParams['insitu']
         self._math._setinsitu(insitu)
@@ -1931,7 +2336,6 @@ class scantable(Scantable):
         else:
             s = scantable(self._math._unaryop(self.copy(), factor, "MUL", tsys))
         s._add_history("scale", varlist)
-        print_log()
         if insitu:
             self._assign(s)
         else:
@@ -1939,14 +2343,19 @@ class scantable(Scantable):
 
     def set_sourcetype(self, match, matchtype="pattern",
                        sourcetype="reference"):
-        """
+        """\
         Set the type of the source to be an source or reference scan
-        using the provided pattern:
+        using the provided pattern.
+
         Parameters:
+
             match:          a Unix style pattern, regular expression or selector
+
             matchtype:      'pattern' (default) UNIX style pattern or
                             'regex' regular expression
+
             sourcetype:     the type of the source to use (source/reference)
+
         """
         varlist = vars()
         basesel = self.get_selection()
@@ -1971,19 +2380,26 @@ class scantable(Scantable):
         self.set_selection(basesel+sel)
         self._setsourcetype(stype)
         self.set_selection(basesel)
-        s._add_history("set_sourcetype", varlist)
+        self._add_history("set_sourcetype", varlist)
 
+    @asaplog_post_dec
+    @preserve_selection
     def auto_quotient(self, preserve=True, mode='paired', verify=False):
-        """
+        """\
         This function allows to build quotients automatically.
         It assumes the observation to have the same number of
         "ons" and "offs"
+
         Parameters:
+
             preserve:       you can preserve (default) the continuum or
                             remove it.  The equations used are
+
                             preserve: Output = Toff * (on/off) - Toff
+
                             remove:   Output = Toff * (on/off) - Ton
-            mode:           the on/off detection mode 
+
+            mode:           the on/off detection mode
                             'paired' (default)
                             identifies 'off' scans by the
                             trailing '_R' (Mopra/Parkes) or
@@ -1992,42 +2408,49 @@ class scantable(Scantable):
                             'time'
                             finds the closest off in time
 
+        .. todo:: verify argument is not implemented
+
         """
+        varlist = vars()
         modes = ["time", "paired"]
         if not mode in modes:
             msg = "please provide valid mode. Valid modes are %s" % (modes)
             raise ValueError(msg)
-        varlist = vars()
         s = None
         if mode.lower() == "paired":
-            basesel = self.get_selection()
-            sel = selector()+basesel
-            sel.set_query("SRCTYPE==1")
+            sel = self.get_selection()
+            sel.set_query("SRCTYPE==psoff")
             self.set_selection(sel)
             offs = self.copy()
-            sel.set_query("SRCTYPE==0")
+            sel.set_query("SRCTYPE==pson")
             self.set_selection(sel)
             ons = self.copy()
             s = scantable(self._math._quotient(ons, offs, preserve))
-            self.set_selection(basesel)
         elif mode.lower() == "time":
             s = scantable(self._math._auto_quotient(self, mode, preserve))
         s._add_history("auto_quotient", varlist)
-        print_log()
         return s
 
+    @asaplog_post_dec
     def mx_quotient(self, mask = None, weight='median', preserve=True):
-        """
+        """\
         Form a quotient using "off" beams when observing in "MX" mode.
+
         Parameters:
+
             mask:           an optional mask to be used when weight == 'stddev'
+
             weight:         How to average the off beams.  Default is 'median'.
+
             preserve:       you can preserve (default) the continuum or
-                            remove it.  The equations used are
-                            preserve: Output = Toff * (on/off) - Toff
-                            remove:   Output = Toff * (on/off) - Ton
+                            remove it.  The equations used are:
+
+                                preserve: Output = Toff * (on/off) - Toff
+
+                                remove:   Output = Toff * (on/off) - Ton
+
         """
-        if mask is None: mask = ()
+        mask = mask or ()
         varlist = vars()
         on = scantable(self._math._mx_extract(self, 'on'))
         preoff = scantable(self._math._mx_extract(self, 'off'))
@@ -2035,102 +2458,140 @@ class scantable(Scantable):
         from asapmath  import quotient
         q = quotient(on, off, preserve)
         q._add_history("mx_quotient", varlist)
-        print_log()
         return q
 
+    @asaplog_post_dec
     def freq_switch(self, insitu=None):
-        """
+        """\
         Apply frequency switching to the data.
+
         Parameters:
+
             insitu:      if False a new scantable is returned.
                          Otherwise, the swictching is done in-situ
                          The default is taken from .asaprc (False)
-        Example:
-            none
+
         """
         if insitu is None: insitu = rcParams['insitu']
         self._math._setinsitu(insitu)
         varlist = vars()
         s = scantable(self._math._freqswitch(self))
         s._add_history("freq_switch", varlist)
-        print_log()
-        if insitu: self._assign(s)
-        else: return s
+        if insitu:
+            self._assign(s)
+        else:
+            return s
 
+    @asaplog_post_dec
     def recalc_azel(self):
-        """
-        Recalculate the azimuth and elevation for each position.
-        Parameters:
-            none
-        Example:
-        """
+        """Recalculate the azimuth and elevation for each position."""
         varlist = vars()
         self._recalcazel()
         self._add_history("recalc_azel", varlist)
-        print_log()
         return
 
+    @asaplog_post_dec
     def __add__(self, other):
-        """
-        implicit on all axes and on Tsys
-        """
-        return self._operation( other, "ADD" )
+        varlist = vars()
+        s = None
+        if isinstance(other, scantable):
+            s = scantable(self._math._binaryop(self, other, "ADD"))
+        elif isinstance(other, float):
+            s = scantable(self._math._unaryop(self, other, "ADD", False))
+        else:
+            raise TypeError("Other input is not a scantable or float value")
+        s._add_history("operator +", varlist)
+        return s
 
+    @asaplog_post_dec
     def __sub__(self, other):
         """
         implicit on all axes and on Tsys
         """
-        return self._operation( other, 'SUB' )
+        varlist = vars()
+        s = None
+        if isinstance(other, scantable):
+            s = scantable(self._math._binaryop(self, other, "SUB"))
+        elif isinstance(other, float):
+            s = scantable(self._math._unaryop(self, other, "SUB", False))
+        else:
+            raise TypeError("Other input is not a scantable or float value")
+        s._add_history("operator -", varlist)
+        return s
 
+    @asaplog_post_dec
     def __mul__(self, other):
         """
         implicit on all axes and on Tsys
         """
-        return self._operation( other, 'MUL' )
+        varlist = vars()
+        s = None
+        if isinstance(other, scantable):
+            s = scantable(self._math._binaryop(self, other, "MUL"))
+        elif isinstance(other, float):
+            s = scantable(self._math._unaryop(self, other, "MUL", False))
+        else:
+            raise TypeError("Other input is not a scantable or float value")
+        s._add_history("operator *", varlist)
+        return s
 
+
+    @asaplog_post_dec
     def __div__(self, other):
         """
         implicit on all axes and on Tsys
         """
-        return self._operation( other, 'DIV' )
+        varlist = vars()
+        s = None
+        if isinstance(other, scantable):
+            s = scantable(self._math._binaryop(self, other, "DIV"))
+        elif isinstance(other, float):
+            if other == 0.0:
+                raise ZeroDivisionError("Dividing by zero is not recommended")
+            s = scantable(self._math._unaryop(self, other, "DIV", False))
+        else:
+            raise TypeError("Other input is not a scantable or float value")
+        s._add_history("operator /", varlist)
+        return s
 
+    @asaplog_post_dec
     def get_fit(self, row=0):
-        """
+        """\
         Print or return the stored fits for a row in the scantable
+
         Parameters:
+
             row:    the row which the fit has been applied to.
+
         """
         if row > self.nrow():
             return
         from asap.asapfit import asapfit
         fit = asapfit(self._getfit(row))
-        if rcParams['verbose']:
-            #print fit
-            asaplog.push( '%s' %(fit) )
-            print_log()
-            return
-        else:
-            return fit.as_dict()
+        asaplog.push( '%s' %(fit) )
+        return fit.as_dict()
 
     def flag_nans(self):
-        """
+        """\
         Utility function to flag NaN values in the scantable.
         """
         import numpy
         basesel = self.get_selection()
         for i in range(self.nrow()):
-            sel = selector()+basesel
-            sel.set_scans(self.getscan(i))
-            sel.set_beams(self.getbeam(i))
-            sel.set_ifs(self.getif(i))
-            sel.set_polarisations(self.getpol(i))
-            self.set_selection(sel)
+            sel = self.get_row_selector(i)
+            self.set_selection(basesel+sel)
             nans = numpy.isnan(self._getspectrum(0))
         if numpy.any(nans):
             bnans = [ bool(v) for v in nans]
             self.flag(bnans)
         self.set_selection(basesel)
-        
+
+    def get_row_selector(self, rowno):
+        return selector(beams=self.getbeam(rowno),
+                        ifs=self.getif(rowno),
+                        pols=self.getpol(rowno),
+                        scans=self.getscan(rowno),
+                        cycles=self.getcycle(rowno))
 
     def _add_history(self, funcname, parameters):
         if not rcParams['scantable.history']:
@@ -2202,9 +2663,9 @@ class scantable(Scantable):
         nchans = filter(lambda t: t > 0, nchans)
         return (sum(nchans)/len(nchans) == nchans[0])
 
-    def _fill(self, names, unit, average, getpt, antenna):
-        import os
-        from asap._asap import stfiller
+    @asaplog_post_dec
+    #def _fill(self, names, unit, average, getpt, antenna):
+    def _fill(self, names, unit, average, opts={}):
         first = True
         fullnames = []
         for name in names:
@@ -2212,11 +2673,6 @@ class scantable(Scantable):
             name = os.path.expanduser(name)
             if not os.path.exists(name):
                 msg = "File '%s' does not exists" % (name)
-                if rcParams['verbose']:
-                    asaplog.push(msg)
-                    #print asaplog.pop().strip()
-                    print_log( 'ERROR' )
-                    return
                 raise IOError(msg)
             fullnames.append(name)
         if average:
@@ -2224,25 +2680,28 @@ class scantable(Scantable):
         stype = int(rcParams['scantable.storage'].lower() == 'disk')
         for name in fullnames:
             tbl = Scantable(stype)
-            r = stfiller(tbl)
+            r = filler(tbl)
             rx = rcParams['scantable.reference']
-            r._setreferenceexpr(rx)
+            r.setreferenceexpr(rx)
             msg = "Importing %s..." % (name)
             asaplog.push(msg, False)
-            print_log()
-            r._open(name, antenna, -1, -1, getpt)
-            r._read()
+            #opts = {'ms': {'antenna' : antenna, 'getpt': getpt} }
+            r.open(name, opts)# antenna, -1, -1, getpt)
+            r.fill()
             if average:
                 tbl = self._math._average((tbl, ), (), 'NONE', 'SCAN')
             if not first:
                 tbl = self._math._merge([self, tbl])
             Scantable.__init__(self, tbl)
-            r._close()
+            r.close()
             del r, tbl
             first = False
+            #flush log
+        asaplog.post()
         if unit is not None:
             self.set_fluxunit(unit)
-        #self.set_freqframe(rcParams['scantable.freqframe'])
+        if not is_casapy():
+            self.set_freqframe(rcParams['scantable.freqframe'])
 
     def __getitem__(self, key):
         if key < 0:
@@ -2267,32 +2726,3 @@ class scantable(Scantable):
     def __iter__(self):
         for i in range(len(self)):
             yield self[i]
-
-    def _operation(self, other, opmode):
-        varlist = vars()
-        s = None
-        import numpy
-        if isinstance(other, scantable):
-	    s = scantable(self._math._binaryop(self.copy(), other, opmode))
-        elif isinstance(other, float) or isinstance(other, int):
-            if opmode == 'DIV' and float(other) == 0.0:
-                raise ZeroDivisionError("Dividing by zero is not recommended")
-            s = scantable(self._math._unaryop(self.copy(), other, opmode, False))
-        elif isinstance(other, list) or isinstance(other, numpy.ndarray):
-            if isinstance(other[0], list) or isinstance(other[0], numpy.ndarray):
-                from asapmath import _array2dOp
-                s = _array2dOp( self.copy(), other, opmode, False )
-            else:
-                s = scantable(self._math._arrayop(self.copy(), other, opmode, False))
-        else:
-            raise TypeError("Other input is not a scantable or float value or float list")
-        opdic = {}
-        opdic['ADD'] = '+'
-        opdic['SUB'] = '-'
-        opdic['MUL'] = '*'
-        opdic['DIV'] = '/'
-        s._add_history("operator %s" % opdic[opmode], varlist)
-        print_log()
-        return s
-
-        

@@ -1,46 +1,58 @@
 Requirements
 ============
 
-* scons
+* scons >= 1.1
+* rpfits >= 2.19
+* cfitso >= 2
+* python >= 2.4
+* boost >= 1.37
+* casacore >= 1.0
 
 Installation
 ============
 
 scons has several targets. It is recommended to execute them sequentially.
-The normal install procedure is as follows:
-   . <path_to_casa_asap>/aipsinit.sh
+The normal install procedure is as follows
+.. code::
+
    scons
-   # Do this if you haven't got a data directory already
+   # Do this if you haven't got a measures data directory already
    export ASAPDATA=.
    ./bin/asap_update_data
    #
    scons install
 
-
 Obtaining the data directory
 ============================
-The data repository can be obtained seperately after installing ASAP.
-Before you run asap for the first time simply run
+
+The data repository can be obtained separately after installing ASAP.
+Before you run asap for the first time simply run::
+
     asap_update_data
+
 This will install the data repository into the correct location.
 
 There are several ways to do this. 
-a) If you already hae the 'data' directory, copy it to the root directory and run the normal install procedure.
+a) If you already have the 'data' directory, copy it to the root directory and run the normal install procedure::
+
    scons
    scons install
 
 b) You can obtain the data repository from the ftp site.
-   Simply run 
+   Simply run::
+
    	export ASAPDATA=.
      	./bin/asap_update_data
+
    This will retrieve and unpack the data directory.
-   After this run: 
+   After this run:: 
+
    	scons install
 
 Creating a binary distribution
 ==============================
 
-after building using 'scons', you can create a compressed tarball of the binaries. This is done via the target 'makedist='. The argument should be an obvious identifier for the system you want to support, e.g. 'sarge' or 'fc5-x86_64'
+after building using 'scons', you can create a compressed tarball of the binaries. This is done via the target 'makedist='. The argument should be an obvious identifier for the system you want to support, e.g. 'sarge' or 'fc5-x86_64'::
 
     scons makedist=sarge
 

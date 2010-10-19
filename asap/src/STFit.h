@@ -48,6 +48,7 @@ private:
   casa::ArrayColumn<casa::String> funcCol_;
   casa::ArrayColumn<casa::Int> compCol_;
   casa::ArrayColumn<casa::Double> parCol_;
+  //  casa::ArrayColumn<casa::Double> errCol_;
   casa::ArrayColumn<casa::Bool> maskCol_;
   casa::ArrayColumn<casa::String> frameCol_;
 };

@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: python_STFitEntry.cpp 972 2006-04-03 05:07:08Z mar637 $
+//# $Id: python_STFitEntry.cpp 1933 2010-09-17 08:55:41Z WataruKawasaki $
 //#---------------------------------------------------------------------------
 #include <boost/python.hpp>
 
@@ -43,11 +43,13 @@ namespace asap {
         .def( init < const STFitEntry& > () )
         .def("getfixedparameters", &STFitEntry::getParmasks)
         .def("getparameters", &STFitEntry::getParameters)
+        .def("geterrors", &STFitEntry::getErrors)
         .def("getfunctions", &STFitEntry::getFunctions)
 	.def("getcomponents", &STFitEntry::getComponents)
 	.def("getframeinfo", &STFitEntry::getFrameinfo)
         .def("setfixedparameters", &STFitEntry::setParmasks)
         .def("setparameters", &STFitEntry::setParameters)
+        .def("seterrors", &STFitEntry::setErrors)
         .def("setfunctions", &STFitEntry::setFunctions)
 	.def("setcomponents", &STFitEntry::setComponents)
 	.def("setframeinfo", &STFitEntry::setFrameinfo)

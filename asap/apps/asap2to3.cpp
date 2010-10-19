@@ -28,6 +28,7 @@ int main(int argc, const char* argv[]) {
   //tfocus.rwKeywordSet().define("PARALLACTIFY", False)
   Int verid=tab.rwKeywordSet().fieldNumber("VERSION");
   tab.rwKeywordSet().define(verid,uInt(3));
+  tab.tableInfo().setType("Scantable");
   cout << "WARNING: This has invalidated the parallactic angle in the data. Reprocess the data in ASAP 3 "
        << "if you need to handle polarisation conversions"
        << endl;

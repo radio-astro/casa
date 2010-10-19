@@ -1,13 +1,27 @@
-from asap._asap import selector as _selector
-from asap import unique, _to_list
+import re
+from asap._asap import selector as _selector, srctype
+from asap.utils import unique, _to_list
 
 class selector(_selector):
     """
     A selection object to be applied to scantables to restrict the
     scantables to specific rows.
     """
-    def __init(self):
-        _selector.__init__(self)
+    fields = ["pols", "ifs", "beams", "scans", "cycles", "name", "query", "types", "rows"]
+
+    def __init__(self, *args, **kw):
+        if len(args) == 1:
+            if isinstance(args[0], self.__class__) \
+               or isinstance(args[0], _selector):
+                _selector.__init__(self, args[0])
+            else:
+                raise TypeError("Argument can only be a selector object")
+        else:
+            _selector.__init__(self)
+            for k,v  in kw.items():
+                if k in self.fields:
+                    func = getattr(self, "set_%s" % k)
+                    func(v)
 
     def reset(self):
         """
@@ -44,7 +58,7 @@ class selector(_selector):
             self._setpols(vec)
         else:
             raise TypeError('Unknown pol type. Please use [0,1...] or ["XX","YY"...]')
-    
+
     # for the americans
     set_polarizations = set_polarisations
     # for the lazy
@@ -134,8 +148,20 @@ class selector(_selector):
         Select by Column query. Power users only!
         Example:
             # select all off scans with integration times over 60 seconds.
-            selection.set_query("SRCTYPE == 1 AND INTERVAL > 60.0")
+            selection.set_query("SRCTYPE == PSOFF AND INTERVAL > 60.0")
         """
+        rx = re.compile("((SRCTYPE *[!=][=] *)([a-zA-Z.]+))", re.I)
+        for r in rx.findall(query):
+            sval = None
+            stype = r[-1].lower()
+            if stype.find('srctype.') == -1:
+                stype = ".".join(["srctype", stype])
+            try:
+                sval = eval(stype)
+                sval = "%s%d" % (r[1], sval)
+            except:
+                continue
+            query = query.replace(r[0], sval)
         taql = "SELECT FROM $1 WHERE " + query
         self._settaql(taql)
 
@@ -151,11 +177,11 @@ class selector(_selector):
         """
         Set a sequence of row numbers (0-based). Power users Only!
         NOTICE row numbers can be changed easily by sorting,
-        prior selection, etc. 
+        prior selection, etc.
         Parameters:
             rows:    a list of integers. Default [] is to unset the selection.
         """
-        vec = _to_list(rows, int) 
+        vec = _to_list(rows, int)
         if isinstance(vec,list):
             self._setrows(vec)
         else:
@@ -163,11 +189,11 @@ class selector(_selector):
 
     def set_types(self, types=[]):
         """
-        Set a sequence of source types. 
+        Set a sequence of source types.
         Parameters:
             types:    a list of integers. Default [] is to unset the selection.
         """
-        vec = _to_list(types, int) 
+        vec = _to_list(types, int)
         if isinstance(vec,list):
             self._settypes(vec)
         else:
@@ -189,6 +215,8 @@ class selector(_selector):
         return list(self._getorder())
     def get_types(self):
         return list(self._gettypes())
+    def get_rows(self):
+        return list(self._getrows())
     def get_query(self):
 	prefix = "SELECT FROM $1 WHERE "
         return self._gettaql().replace(prefix, "")
@@ -206,6 +234,8 @@ class selector(_selector):
 	     "Pol Type": self.get_poltypes(),
 	     "POLNO": self.get_pols(),
 	     "QUERY": self.get_query(),
+             "SRCTYPE": self.get_types(),
+             "ROWS": self.get_rows(),
 	     "Sort Order": self.get_order()
 	     }
 	for k,v in d.iteritems():
@@ -219,6 +249,10 @@ class selector(_selector):
         """
         Merge two selections.
         """
+        if self.is_empty():
+            return other
+        elif other.is_empty():
+            return self
         union = selector()
         gets = [[self._getscans(), other._getscans(), union._setscans],
                 [self._getcycles(), other._getcycles(),union._setcycles],

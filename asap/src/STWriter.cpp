@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: STWriter.cpp 1683 2010-02-04 05:38:46Z TakeshiNakazato $
+//# $Id: STWriter.cpp 1819 2010-08-02 07:28:20Z KanaSugimoto $
 //#---------------------------------------------------------------------------
 
 #include <string>
@@ -41,6 +41,7 @@
 #include <atnf/PKSIO/PKSrecord.h>
 #include <atnf/PKSIO/PKSMS2writer.h>
 #include <atnf/PKSIO/PKSSDwriter.h>
+#include <atnf/PKSIO/SrcType.h>
 
 #include <tables/Tables/Table.h>
 #include <tables/Tables/TableIter.h>
@@ -50,6 +51,8 @@
 #include "STFITSImageWriter.h"
 #include "STAsciiWriter.h"
 #include "STHeader.h"
+#include "STMath.h"
+
 
 #include "STWriter.h"
 
@@ -103,9 +106,19 @@ Int STWriter::setFormat(const std::string &format)
 Int STWriter::write(const CountedPtr<Scantable> in,
                     const std::string &filename)
 {
+  // If we write out foreign formats we have to convert the frequency system
+  // into the output frame, as we do everything related to SPectarlCoordinates
+  // in asap on-the-fly.
+
+  CountedPtr<Scantable> inst = in;
+  if (in->frequencies().getFrame(true) != in->frequencies().getFrame(false)) {
+    STMath stm(false);
+    inst = stm.frequencyAlign(in);
+  }
 
   if (format_=="ASCII") {
     STAsciiWriter iw;
+    // ASCII calls SpectralCoordinate::toWorld so no freqAlign use 'in'
     if (iw.write(*in, filename)) {
       return 0;
     } else {
@@ -116,7 +129,7 @@ Int STWriter::write(const CountedPtr<Scantable> in,
     if (format_ == "CLASS") {
       iw.setClass(True);
     }
-    if (iw.write(*in, filename)) {
+    if (iw.write(*inst, filename)) {
       return 0;
     }
   }
@@ -126,23 +139,26 @@ Int STWriter::write(const CountedPtr<Scantable> in,
   // Extract the header from the table.
   // this is a little different from what I have done
   // before. Need to check with the Offline User Test data
-  STHeader hdr = in->getHeader();
+  STHeader hdr = inst->getHeader();
   //const Int nPol  = hdr.npol;
   //const Int nChan = hdr.nchan;
-  std::vector<uint> ifs = in->getIFNos();
-  int nIF = in->nif();//ifs.size();
+  std::vector<uint> ifs = inst->getIFNos();
+  int nIF = inst->nif();//ifs.size();
   Vector<uInt> nPol(nIF),nChan(nIF);
   Vector<Bool> havexpol(nIF);
   String fluxUnit = hdr.fluxunit;
-
+  fluxUnit.upcase();
   nPol = 0;nChan = 0; havexpol = False;
   for (uint i=0;i<ifs.size();++i) {
-    nPol(ifs[i]) = in->npol();
-    nChan(ifs[i]) = in->nchan(ifs[i]);
+    nPol(ifs[i]) = inst->npol();
+    nChan(ifs[i]) = inst->nchan(ifs[i]);
     havexpol(ifs[i]) = nPol(ifs[i]) > 2;
   }
+//   Vector<String> obstypes(2);
+//   obstypes(0) = "TR";//on
+//   obstypes(1) = "RF TR";//off
+  const Table table = inst->table();
 
-  const Table table = in->table();
 
   // Create the output file and write static data.
   Int status;
@@ -154,7 +170,6 @@ Int STWriter::write(const CountedPtr<Scantable> in,
   if ( status ) {
     throw(AipsError("Failed to create output file"));
   }
-
 
   Int count = 0;
   PKSrecord pksrec;
@@ -205,16 +220,16 @@ Int STWriter::write(const CountedPtr<Scantable> in,
           Float tmp0,tmp1,tmp2,tmp3,tmp4;
           String tcalt;
           Vector<String> stmp0, stmp1;
-          in->frequencies().getEntry(crpix,crval, pksrec.freqInc,
+          inst->frequencies().getEntry(crpix,crval, pksrec.freqInc,
                                      rec.asuInt("FREQ_ID"));
-          in->focus().getEntry(pksrec.focusAxi, pksrec.focusTan,
-                               pksrec.focusRot, tmp0,tmp1,tmp2,tmp3,tmp4,
-                               rec.asuInt("FOCUS_ID"));
-          in->molecules().getEntry(pksrec.restFreq,stmp0,stmp1,
+          inst->focus().getEntry(pksrec.parAngle, pksrec.focusAxi, pksrec.focusTan,
+                                 pksrec.focusRot, tmp0,tmp1,tmp2,tmp3,tmp4,
+                                 rec.asuInt("FOCUS_ID"));
+          inst->molecules().getEntry(pksrec.restFreq,stmp0,stmp1,
                                    rec.asuInt("MOLECULE_ID"));
-          in->tcal().getEntry(pksrec.tcalTime, pksrec.tcal,
+          inst->tcal().getEntry(pksrec.tcalTime, pksrec.tcal,
                               rec.asuInt("TCAL_ID"));
-          in->weather().getEntry(pksrec.temperature, pksrec.pressure,
+          inst->weather().getEntry(pksrec.temperature, pksrec.pressure,
                                  pksrec.humidity, pksrec.windSpeed,
                                  pksrec.windAz, rec.asuInt("WEATHER_ID"));
           Double pixel = Double(nchan/2);
@@ -229,11 +244,11 @@ Int STWriter::write(const CountedPtr<Scantable> in,
           pksrec.interval  = rec.asDouble("INTERVAL");
           pksrec.fieldName = rec.asString("FIELDNAME");
           pksrec.srcName   = rec.asString("SRCNAME");
-          pksrec.obsType   = hdr.obstype;
+          //pksrec.obsType   = obstypes[rec.asInt("SRCTYPE")];
+          pksrec.obsType = getObsTypes( rec.asInt("SRCTYPE") ) ;
           pksrec.bandwidth = nchan * abs(pksrec.freqInc);
           pksrec.azimuth   = rec.asFloat("AZIMUTH");
           pksrec.elevation = rec.asFloat("ELEVATION");
-          pksrec.parAngle  = rec.asFloat("PARANGLE");
           pksrec.refBeam   = rec.asInt("REFBEAMNO") + 1;
           pksrec.sigma.resize(npol);
           pksrec.sigma     = 0.0f;
@@ -292,7 +307,8 @@ void STWriter::polConversion( Matrix< Float >& specs, Matrix< uChar >& flags,
                               Vector< Complex > & xpol, const Table & tab )
 {
   String poltype = tab.keywordSet().asString("POLTYPE");
-  if ( poltype == "stokes") {
+// Full stokes is not supported. Just allow stokes I
+  if ( poltype == "stokes" && tab.nrow() != 1) {
     String msg = "poltype = " + poltype + " not yet supported in output.";
     throw(AipsError(msg));
   }
@@ -337,6 +353,96 @@ void STWriter::replacePtTab (const Table& tab, const std::string& fname)
       pushLog(String(oss));
     }
   }
+}
+
+// get obsType string from SRCTYPE value
+String STWriter::getObsTypes( Int srctype )
+{
+  String obsType ;
+  switch( srctype ) {
+  case Int(SrcType::PSON):
+    obsType = "PSON" ;
+    break ;
+  case Int(SrcType::PSOFF):
+    obsType = "PSOFF" ;
+    break ;
+  case Int(SrcType::NOD):
+    obsType = "NOD" ;
+    break ;
+  case Int(SrcType::FSON):
+    obsType = "FSON" ;
+    break ;
+  case Int(SrcType::FSOFF):
+    obsType = "FSOFF" ;
+    break ;
+  case Int(SrcType::SKY):
+    obsType = "SKY" ;
+    break ;
+  case Int(SrcType::HOT):
+    obsType = "HOT" ;
+    break ;
+  case Int(SrcType::WARM):
+    obsType = "WARM" ;
+    break ;
+  case Int(SrcType::COLD):
+    obsType = "COLD" ;
+    break ;
+  case Int(SrcType::PONCAL):
+    obsType = "PSON:CALON" ;
+    break ;
+  case Int(SrcType::POFFCAL):
+    obsType = "PSOFF:CALON" ;
+    break ;
+  case Int(SrcType::NODCAL):
+    obsType = "NOD:CALON" ;
+    break ;
+  case Int(SrcType::FONCAL):
+    obsType = "FSON:CALON" ;
+    break ;
+  case Int(SrcType::FOFFCAL):
+    obsType = "FSOFF:CALOFF" ;
+    break ;
+  case Int(SrcType::FSLO):
+    obsType = "FSLO" ;
+    break ;
+  case Int(SrcType::FLOOFF):
+    obsType = "FS:LOWER:OFF" ;
+    break ;
+  case Int(SrcType::FLOSKY):
+    obsType = "FS:LOWER:SKY" ;
+    break ;
+  case Int(SrcType::FLOHOT):
+    obsType = "FS:LOWER:HOT" ;
+    break ;
+  case Int(SrcType::FLOWARM):
+    obsType = "FS:LOWER:WARM" ;
+    break ;
+  case Int(SrcType::FLOCOLD):
+    obsType = "FS:LOWER:COLD" ;
+    break ;
+  case Int(SrcType::FSHI):
+    obsType = "FSHI" ;
+    break ;
+  case Int(SrcType::FHIOFF):
+    obsType = "FS:HIGHER:OFF" ;
+    break ;
+  case Int(SrcType::FHISKY):
+    obsType = "FS:HIGHER:SKY" ;
+    break ;
+  case Int(SrcType::FHIHOT):
+    obsType = "FS:HIGHER:HOT" ;
+    break ;
+  case Int(SrcType::FHIWARM):
+    obsType = "FS:HIGHER:WARM" ;
+    break ;
+  case Int(SrcType::FHICOLD):
+    obsType = "FS:HIGHER:COLD" ;
+    break ;
+  default:
+    obsType = "NOTYPE" ;
+  }
+
+  return obsType ;
 }
 
 }

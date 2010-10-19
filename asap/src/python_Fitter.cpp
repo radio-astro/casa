@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: python_Fitter.cpp 1387 2007-07-26 16:00:22Z TakTsutsumi $
+//# $Id: python_Fitter.cpp 1391 2007-07-30 01:59:36Z MalteMarquarding $
 //#---------------------------------------------------------------------------
 #include <boost/python.hpp>
 

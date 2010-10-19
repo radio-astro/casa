@@ -51,9 +51,9 @@
 #include "MathUtils.h"
 #include "RowAccumulator.h"
 #include "STAttr.h"
-#include "STMath.h"
 #include "STSelector.h"
 
+#include "STMath.h"
 using namespace casa;
 
 using namespace asap;
@@ -739,8 +739,8 @@ CountedPtr< Scantable > STMath::array2dOperate( const CountedPtr< Scantable >& i
   return out;
 }
 
-CountedPtr<Scantable> STMath::binaryOperate(const CountedPtr<Scantable>& left, 
-					    const CountedPtr<Scantable>& right, 
+CountedPtr<Scantable> STMath::binaryOperate(const CountedPtr<Scantable>& left,
+					    const CountedPtr<Scantable>& right,
 					    const std::string& mode)
 {
   bool insitu = insitu_;
@@ -1378,7 +1378,7 @@ CountedPtr< Scantable > STMath::dofs( const CountedPtr< Scantable >& s,
                                       casa::Float tcal )
 {
 
-  
+
   STSelector sel;
   CountedPtr< Scantable > ws = getScantable(s, false);
   CountedPtr< Scantable > sig, sigwcal, ref, refwcal;
@@ -1517,7 +1517,7 @@ CountedPtr<Scantable> STMath::dofold( const CountedPtr<Scantable> &sig,
 
   // for each row
   // assume that the data order are same between sig and ref
-  RowAccumulator acc( asap::TINTSYS ) ; 
+  RowAccumulator acc( asap::W_TINTSYS ) ; 
   for ( int i = 0 ; i < sig->nrow() ; i++ ) {
     // get values
     Vector<Float> spsig ;
@@ -1798,6 +1798,32 @@ std::vector< float > STMath::statistic( const CountedPtr< Scantable > & in,
   return out;
 }
 
+std::vector< float > STMath::statisticRow( const CountedPtr< Scantable > & in,
+                                        const std::vector< bool > & mask,
+					const std::string& which,
+					int row )
+{
+
+  Vector<Bool> m(mask);
+  const Table& tab = in->table();
+  ROArrayColumn<Float> specCol(tab, "SPECTRA");
+  ROArrayColumn<uChar> flagCol(tab, "FLAGTRA");
+  std::vector<float> out;
+
+  Vector<Float> spec; specCol.get(row, spec);
+  Vector<uChar> flag; flagCol.get(row, flag);
+  MaskedArray<Float> ma  = maskedArray(spec, flag);
+  float outstat = 0.0;
+  if ( spec.nelements() == m.nelements() ) {
+    outstat = mathutil::statistics(which, ma(m));
+  } else {
+    outstat = mathutil::statistics(which, ma);
+  }
+  out.push_back(outstat);
+
+  return out;
+}
+
 std::vector< int > STMath::minMaxChan( const CountedPtr< Scantable > & in,
                                         const std::vector< bool > & mask,
                                         const std::string& which )
@@ -1951,11 +1977,11 @@ WeightType STMath::stringToWeight(const std::string& in)
 
   // initialize the lookup table if necessary
   if ( lookup.empty() ) {
-    lookup["NONE"]   = asap::NONE;
-    lookup["TINT"] = asap::TINT;
-    lookup["TINTSYS"]  = asap::TINTSYS;
-    lookup["TSYS"]  = asap::TSYS;
-    lookup["VAR"]  = asap::VAR;
+    lookup["NONE"]   = asap::W_NONE;
+    lookup["TINT"] = asap::W_TINT;
+    lookup["TINTSYS"]  = asap::W_TINTSYS;
+    lookup["TSYS"]  = asap::W_TSYS;
+    lookup["VAR"]  = asap::W_VAR;
   }
 
   std::map<std::string, WeightType>::const_iterator iter = lookup.find(in);
@@ -1999,13 +2025,13 @@ CountedPtr< Scantable > STMath::gainElevation( const CountedPtr< Scantable >& in
     Vector<Float> coeff;
     String msg;
     if ( nc > 0 ) {
-      ppoly = new Polynomial<Float>(nc);
+      ppoly = new Polynomial<Float>(nc-1);
       coeff = coeffs;
       msg = String("user");
     } else {
       STAttr sdAttr;
       coeff = sdAttr.gainElevationPoly(inst);
-      ppoly = new Polynomial<Float>(3);
+      ppoly = new Polynomial<Float>(coeff.nelements()-1);
       msg = String("built in");
     }
 
@@ -2143,7 +2169,7 @@ CountedPtr< Scantable > STMath::convertFlux( const CountedPtr< Scantable >& in,
   } else if ( etaap > 0.0) {
     if (d < 0) {
       Instrument inst =
-	STAttr::convertInstrument(tab.keywordSet().asString("AntennaName"), 
+	STAttr::convertInstrument(tab.keywordSet().asString("AntennaName"),
 				  True);
       STAttr sda;
       d = sda.diameter(inst);
@@ -2206,33 +2232,54 @@ void STMath::convertBrightnessUnits( CountedPtr<Scantable>& in,
 }
 
 CountedPtr< Scantable > STMath::opacity( const CountedPtr< Scantable > & in,
-                                         float tau )
+                                         const std::vector<float>& tau )
 {
   CountedPtr< Scantable > out = getScantable(in, false);
 
-  Table tab = out->table();
-  ROScalarColumn<Float> elev(tab, "ELEVATION");
-  ArrayColumn<Float> specCol(tab, "SPECTRA");
-  ArrayColumn<uChar> flagCol(tab, "FLAGTRA");
-  ArrayColumn<Float> tsysCol(tab, "TSYS");
-  for ( uInt i=0; i<tab.nrow(); ++i) {
-    Float zdist = Float(C::pi_2) - elev(i);
-    Float factor = exp(tau/cos(zdist));
-    MaskedArray<Float> ma = maskedArray(specCol(i), flagCol(i));
-    ma *= factor;
-    specCol.put(i, ma.getArray());
-    flagCol.put(i, flagsFromMA(ma));
-    Vector<Float> tsys;
-    tsysCol.get(i, tsys);
-    tsys *= factor;
-    tsysCol.put(i, tsys);
+  Table outtab = out->table();
+
+  const uInt ntau = uInt(tau.size());
+  std::vector<float>::const_iterator tauit = tau.begin();
+  AlwaysAssert((ntau == 1 || ntau == in->nif() || ntau == in->nif() * in->npol()),
+               AipsError);
+  TableIterator iiter(outtab, "IFNO");
+  while ( !iiter.pastEnd() ) {
+    Table itab = iiter.table();
+    TableIterator piter(outtab, "POLNO");
+    while ( !piter.pastEnd() ) {
+      Table tab = piter.table();
+      ROScalarColumn<Float> elev(tab, "ELEVATION");
+      ArrayColumn<Float> specCol(tab, "SPECTRA");
+      ArrayColumn<uChar> flagCol(tab, "FLAGTRA");
+      ArrayColumn<Float> tsysCol(tab, "TSYS");
+      for ( uInt i=0; i<tab.nrow(); ++i) {
+        Float zdist = Float(C::pi_2) - elev(i);
+        Float factor = exp(*tauit/cos(zdist));
+        MaskedArray<Float> ma = maskedArray(specCol(i), flagCol(i));
+        ma *= factor;
+        specCol.put(i, ma.getArray());
+        flagCol.put(i, flagsFromMA(ma));
+        Vector<Float> tsys;
+        tsysCol.get(i, tsys);
+        tsys *= factor;
+        tsysCol.put(i, tsys);
+      }
+      if (ntau == in->nif()*in->npol() ) {
+        tauit++;
+      }
+      piter++;
+    }
+    if (ntau >= in->nif() ) {
+      tauit++;
+    }
+    iiter++;
   }
   return out;
 }
 
 CountedPtr< Scantable > STMath::smoothOther( const CountedPtr< Scantable >& in,
                                              const std::string& kernel,
-                                             float width )
+                                             float width, int order)
 {
   CountedPtr< Scantable > out = getScantable(in, false);
   Table& table = out->table();
@@ -2253,6 +2300,9 @@ CountedPtr< Scantable > STMath::smoothOther( const CountedPtr< Scantable >& in,
     } else if (  kernel == "rmedian" ) {
       mathutil::runningMedian(specout, maskout, spec , mask, width);
       convertArray(flag, maskout);
+    } else if ( kernel == "poly" ) {
+      mathutil::polyfit(specout, maskout, spec, !mask, width, order);
+      convertArray(flag, !maskout);
     }
     flagCol.put(i, flag);
     specCol.put(i, specout);
@@ -2261,10 +2311,11 @@ CountedPtr< Scantable > STMath::smoothOther( const CountedPtr< Scantable >& in,
 }
 
 CountedPtr< Scantable > STMath::smooth( const CountedPtr< Scantable >& in,
-                                        const std::string& kernel, float width )
+                                        const std::string& kernel, float width,
+                                        int order)
 {
-  if (kernel == "rmedian"  || kernel == "hanning") {
-    return smoothOther(in, kernel, width);
+  if (kernel == "rmedian"  || kernel == "hanning" || kernel == "poly") {
+    return smoothOther(in, kernel, width, order);
   }
   CountedPtr< Scantable > out = getScantable(in, false);
   Table& table = out->table();
@@ -2350,11 +2401,11 @@ CountedPtr< Scantable >
           (*it)->molecules().getEntry(rf, name, fname, rec.asuInt("MOLECULE_ID"));
           id = out->molecules().addEntry(rf, name, fname);
           molidcol.put(k, id);
-          Float frot,fax,ftan,fhand,fmount,fuser, fxy, fxyp;
-          (*it)->focus().getEntry(fax, ftan, frot, fhand,
+          Float fpa,frot,fax,ftan,fhand,fmount,fuser, fxy, fxyp;
+          (*it)->focus().getEntry(fpa, fax, ftan, frot, fhand,
                                   fmount,fuser, fxy, fxyp,
                                   rec.asuInt("FOCUS_ID"));
-          id = out->focus().addEntry(fax, ftan, frot, fhand,
+          id = out->focus().addEntry(fpa, fax, ftan, frot, fhand,
                                      fmount,fuser, fxy, fxyp);
           focusidcol.put(k, id);
         }
@@ -2398,23 +2449,19 @@ CountedPtr< Scantable > STMath::applyToPol( const CountedPtr<Scantable>& in,
   cols[2] = String("IFNO");
   cols[3] = String("CYCLENO");
   TableIterator iter(tout, cols);
-  CountedPtr<STPol> stpol = STPol::getPolClass(out->factories_, 
+  CountedPtr<STPol> stpol = STPol::getPolClass(out->factories_,
                                                out->getPolType() );
   while (!iter.pastEnd()) {
     Table t = iter.table();
     ArrayColumn<Float> speccol(t, "SPECTRA");
     ScalarColumn<uInt> focidcol(t, "FOCUS_ID");
-    ScalarColumn<Float> parancol(t, "PARANGLE");
     Matrix<Float> pols(speccol.getColumn());
     try {
       stpol->setSpectra(pols);
-      Float fang,fhand,parang;
-      fang = in->focusTable_.getTotalFeedAngle(focidcol(0));
+      Float fang,fhand;
+      fang = in->focusTable_.getTotalAngle(focidcol(0));
       fhand = in->focusTable_.getFeedHand(focidcol(0));
-      parang = parancol(0);
-      /// @todo re-enable this
-      // disable total feed angle to support paralactifying Caswell style
-      stpol->setPhaseCorrections(parang, -parang, fhand);
+      stpol->setPhaseCorrections(fang, fhand);
       // use a member function pointer in STPol.  This only works on
       // the STPol pointer itself, not the Counted Pointer so
       // derefernce it.
@@ -2680,13 +2727,10 @@ CountedPtr<Scantable>
       Table tab = it.table();
       uInt row = tab.rowNumbers()[0];
       stpol->setSpectra(in->getPolMatrix(row));
-      Float fang,fhand,parang;
-      fang = in->focusTable_.getTotalFeedAngle(in->mfocusidCol_(row));
+      Float fang,fhand;
+      fang = in->focusTable_.getTotalAngle(in->mfocusidCol_(row));
       fhand = in->focusTable_.getFeedHand(in->mfocusidCol_(row));
-      parang = in->paraCol_(row);
-      /// @todo re-enable this
-      // disable total feed angle to support paralactifying Caswell style
-      stpol->setPhaseCorrections(parang, -parang, fhand);
+      stpol->setPhaseCorrections(fang, fhand);
       Int npolout = 0;
       for (uInt i=0; i<tab.nrow(); ++i) {
         Vector<Float> outvec = stpol->getSpectrum(i, newtype);
@@ -2736,7 +2780,8 @@ CountedPtr< Scantable >
 
 CountedPtr< Scantable >
   asap::STMath::lagFlag( const CountedPtr< Scantable > & in,
-                          double frequency, double width )
+                         double start, double end,
+                         const std::string& mode)
 {
   CountedPtr< Scantable > out = getScantable(in, false);
   Table& tout = out->table();
@@ -2754,21 +2799,52 @@ CountedPtr< Scantable >
     for (int i=0; i<int(tab.nrow()); ++i) {
       Vector<Float> spec = specCol(i);
       Vector<uChar> flag = flagCol(i);
-      Int lag0 = Int(spec.nelements()*abs(inc)/(frequency+width)+0.5);
-      Int lag1 = Int(spec.nelements()*abs(inc)/(frequency-width)+0.5);
+      int fstart = -1;
+      int fend = -1;
       for (unsigned int k=0; k < flag.nelements(); ++k ) {
         if (flag[k] > 0) {
-          spec[k] = 0.0;
+          fstart = k;
+          while (flag[k] > 0 && k < flag.nelements()) {
+            fend = k;
+            k++;
+          }
         }
+        Float interp = 0.0;
+        if (fstart-1 > 0 ) {
+          interp = spec[fstart-1];
+          if (fend+1 < spec.nelements()) {
+            interp = (interp+spec[fend+1])/2.0;
+          }
+        } else {
+          interp = spec[fend+1];
+        }
+        if (fstart > -1 && fend > -1) {
+          for (int j=fstart;j<=fend;++j) {
+            spec[j] = interp;
+          }
+        }
+        fstart =-1;
+        fend = -1;
       }
       Vector<Complex> lags;
       ffts.fft0(lags, spec);
-      Int start =  max(0, lag0);
-      Int end =  min(Int(lags.nelements()-1), lag1);
-      if (start == end) {
-        lags[start] = Complex(0.0);
+      Int lag0(start+0.5);
+      Int lag1(end+0.5);
+      if (mode == "frequency") {
+        lag0 = Int(spec.nelements()*abs(inc)/(start)+0.5);
+        lag1 = Int(spec.nelements()*abs(inc)/(end)+0.5);
+      }
+      Int lstart =  max(0, lag0);
+      Int lend =  min(Int(lags.nelements()-1), lag1);
+      if (lstart == lend) {
+        lags[lstart] = Complex(0.0);
       } else {
-        for (int j=start; j <=end ;++j) {
+        if (lstart > lend) {
+          Int tmp = lend;
+          lend = lstart;
+          lstart = tmp;
+        }
+        for (int j=lstart; j <=lend ;++j) {
           lags[j] = Complex(0.0);
         }
       }

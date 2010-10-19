@@ -7,6 +7,7 @@
 CASAROOT  := $(word 1, $(CASAPATH))
 CASAARCH  := $(word 2, $(CASAPATH))
 
+CORELIB := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=CORELIB eval_vars) && echo $$CORELIB)
 COREINCD := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=COREINCD eval_vars) && echo $$COREINCD)
 CASALIB   := $(CASAROOT)/$(CASAARCH)/lib
 
@@ -16,13 +17,12 @@ ifndef CXX
 endif
 
 # compiler flags
-CXXFLAGS := -fPIC -O3 -g
-CXXFLAGS += -ansi -Wno-long-long -Wall
-CXXFLAGS := -Xlinker -rpath -Xlinker $(CASALIB)
+CXXFLAGS := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=CXXFLAGS eval_vars) && echo $$CXXFLAGS)
+CXXFLAGS += -fPIC -O3 -Xlinker -rpath -Xlinker $(CASALIB)
 
 
 INCDIRS   := -I$(COREINCD)
-LIBS      := -L$(CASALIB) -lcasa_tables -lcasa_casa
+LIBS      := -L$(CASALIB) $(CORELIB)
 
 OBJECTS := asap2to3 
 
