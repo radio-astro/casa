@@ -10,9 +10,9 @@
 
 ATM_NAMESPACE_BEGIN
 
-std::string getVersion() {return "0.4.1";}
+std::string getVersion() {return "0.4.2";}
 
-std::string getTag() {return "ATM-0_4_1";}
+std::string getTag() {return "ATM-0_4_2";}
 
 std::string getALMARelease() {return "ALMA-8_0";}
 

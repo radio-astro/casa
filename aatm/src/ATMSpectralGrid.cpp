@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMSpectralGrid.cpp,v 1.11.2.1 2010/09/20 11:48:48 dbroguie Exp $"
+ * "@(#) $Id: ATMSpectralGrid.cpp,v 1.11.2.2 2010/10/15 16:19:02 dbroguie Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------
@@ -103,6 +103,7 @@ void SpectralGrid::add(unsigned int numChan,
                        SidebandType sbType)
 {
 
+
   double chSep;
   vector<string> v_assocNature;
   vector<unsigned int> v_assocSpwId;
@@ -114,7 +115,8 @@ void SpectralGrid::add(unsigned int numChan,
     add(numChan, refChan, refFreq, chanSep); // LSB
     v_sidebandSide_[spwId] = LSB;
     v_sidebandType_[spwId] = sbType;
-    v_loFreq_[spwId] = refFreq.get() + intermediateFreq.get();
+    double loFreq    = refFreq.get() + intermediateFreq.get(); // store loFreq for USB
+    v_loFreq_[spwId] = loFreq;
     v_assocSpwId.push_back(v_numChan_.size());
     vv_assocSpwId_[vv_assocSpwId_.size() - 1] = v_assocSpwId;
     v_assocNature.push_back("USB");
@@ -122,15 +124,14 @@ void SpectralGrid::add(unsigned int numChan,
 
     // the USB:
     spwId = v_transfertId_.size();
-    v_loFreq_.push_back(refFreq.get() + intermediateFreq.get());
-    v_loFreq_[spwId] = refFreq.get() + intermediateFreq.get();
-
     refFreq = refFreq + 2.*intermediateFreq.get();  // fix refFreq in the image band (refChan is unchanged)
     chSep = -chanSep.get();
     add(numChan, refChan, refFreq, Frequency(chSep));
 
     v_sidebandSide_[spwId] = USB;
     v_sidebandType_[spwId] = sbType;
+    v_loFreq_[spwId] = loFreq;
+
     v_assocSpwId[0] = v_numChan_.size() - 2;
     vv_assocSpwId_[vv_assocSpwId_.size() - 1] = v_assocSpwId;
     v_assocNature[0] = "LSB";
@@ -139,9 +140,12 @@ void SpectralGrid::add(unsigned int numChan,
   } else { // USB tuning
     // the USB:
     add(numChan, refChan, refFreq, chanSep);
+
     v_sidebandSide_[spwId] = USB;
     v_sidebandType_[spwId] = sbType;
-    v_loFreq_[spwId] = refFreq.get() - intermediateFreq.get();
+    double loFreq    = refFreq.get() - intermediateFreq.get();
+    v_loFreq_[spwId] = loFreq;
+
     v_assocSpwId.push_back(v_numChan_.size());
     vv_assocSpwId_[vv_assocSpwId_.size() - 1] = v_assocSpwId;
     v_assocNature.push_back("LSB");
@@ -149,13 +153,14 @@ void SpectralGrid::add(unsigned int numChan,
 
     // the LSB:
     spwId = v_transfertId_.size();
-    v_loFreq_[spwId] = refFreq.get() - intermediateFreq.get();
-
     refFreq = refFreq - 2.*intermediateFreq.get();  // fix refFreq in the image band (refChan is unchanged)
     chSep = -chanSep.get();
     add(numChan, refChan, refFreq, Frequency(chSep));
+
     v_sidebandSide_[spwId] = LSB;
     v_sidebandType_[spwId] = sbType;
+    v_loFreq_[spwId] = loFreq;
+
     v_assocSpwId[0] = v_numChan_.size() - 2;
     vv_assocSpwId_[vv_assocSpwId_.size() - 1] = v_assocSpwId;
     v_assocNature[0] = "USB";
@@ -172,6 +177,7 @@ unsigned int SpectralGrid::add(unsigned int numChan,
 
   unsigned int spwId = v_transfertId_.size();
   v_loFreq_.push_back(refFreq.get());
+
   if(spwId == 0) {
     v_transfertId_.push_back(0);
   } else {

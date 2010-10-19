@@ -1,6 +1,24 @@
 AATM News
 =========
 
+Version 0.4.2
+-------------
+
+Fix to small discontinuity in the opacities as a function of
+frequencies.  Some lines were not taken into account to save
+computational time when they should have been
+(ATMRefractiveIndex.cpp).
+
+Fixed an issue which can sometimes produce a crash in the DSB mode
+(ATMSpectralGrid.cpp).
+
+Version 0.4.1
+-------------
+
+Fixed a bug in ATMSpectralGrid.cpp: the frequencies of the image band
+(DSB mode) were wrong when the spectral grid was defined from a LSB
+band with negative resolution or an USB band with positive resolution.
+
 Version 0.3
 -----------
 
