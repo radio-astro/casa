@@ -137,7 +137,7 @@
                 </param>
 
                 <param type="any" name="channelavg" subparam="true">
-                        <description>Average over channels</description>
+                        <description>Average over channels (scalar average)</description>
                         <any type="variant" limittypes="bool boolArray"/>
                         <value type="bool">False</value>
                 </param>
@@ -380,7 +380,9 @@
                          any of 'I', 'XX', 'YY', 'RR', 'LL'
               channelavg -- Average data over (selected) channels? Channel
                             selections are taken into account. Flagged channels
-                            are excluded from the average.
+                            are excluded from the average. The average is done
+                            after applying the specified clipexpr, i.e. scalar
+                            averaging.
                 default: False
                 options: True,False
               clipminmax -- Range of data (Jy) that will NOT be flagged
