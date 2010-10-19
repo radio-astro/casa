@@ -2096,6 +2096,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
   if(ms_p.null()) {
     os << LogIO::SEVERE << "Program logic error: MeasurementSet pointer ms_p not yet set"
        << LogIO::EXCEPTION;
+    nullSelect_p=true;
     return False;
   }
 
@@ -2107,52 +2108,27 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
   os <<  "' spectralwindowids=" << spectralwindowids
      << " fieldids=" << fieldids << " msselect=" << msSelect;
 
+  nullSelect_p=False;
+
   try {
     
     this->lock();
     this->writeCommand(os);
 
     os << LogIO::NORMAL << "Selecting data" << LogIO::POST; // Loglevel PROGRESS
-    //Need delete the ft machine as the channel flag may change
-    if(ft_p)
-      delete ft_p;
-    ft_p=0;
-    nullSelect_p=False;
-    dataMode_p=mode;
-    dataNchan_p.resize();
-    dataStart_p.resize();
-    dataStep_p.resize();
-    dataNchan_p=nchan;
-    dataStart_p=start;
-    dataStep_p=step;
-    mDataStart_p=mStart;
-    mDataStep_p=mStep;
-    dataspectralwindowids_p.resize(spectralwindowids.nelements());
-    dataspectralwindowids_p=spectralwindowids;
-    datafieldids_p.resize(fieldids.nelements());
-    datafieldids_p=fieldids;
-    //    useModelCol_p=useModelCol;
-    
-	if(rvi_p)
-	  delete rvi_p; 
-    rvi_p=0;
-    wvi_p=0;
-    // if(mssel_p) delete mssel_p; 
-    mssel_p=0;
-    
+    //Some MSSelection 
+    MSSelection thisSelection;
+
     // check that sorted table exists (it should), if not, make it now.
     //this->makeVisSet(*ms_p);
     
     //MeasurementSet sorted=ms_p->keywordSet().asTable("SORTED_TABLE");
-    
-    
-    //Some MSSelection 
-    MSSelection thisSelection;
-
     //MSSelection thisSelection (sorted, MSSelection::PARSE_NOW,timerng,antnames,
     //			       fieldnames, spwstring,uvdist, msSelect,"",
     //			       scan); 
 
+    datafieldids_p.resize(fieldids.nelements());
+    datafieldids_p = fieldids;
     if(datafieldids_p.nelements() > 0){
       thisSelection.setFieldExpr(MSSelection::indexExprStr(datafieldids_p));
       os << LogIO::DEBUG1 << "Selecting on field ids" << LogIO::POST;
@@ -2163,6 +2139,8 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
 		 << "Selecting on field names " << fieldnames << LogIO::POST;
     }
     
+    dataspectralwindowids_p.resize(spectralwindowids.nelements());
+    dataspectralwindowids_p = spectralwindowids;
     if(dataspectralwindowids_p.nelements() > 0){
       thisSelection.setSpwExpr(MSSelection::indexExprStr(dataspectralwindowids_p));
       os << LogIO::DEBUG1 << "Selecting on spectral windows" << LogIO::POST;
@@ -2191,11 +2169,9 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
 	os << LogIO::DEBUG1 << "Selecting on time range" << LogIO::POST;	
     }
     
-    
     if(uvdist != ""){
 	thisSelection.setUvDistExpr(uvdist);
     }
-    
     
     if(scan != ""){
       thisSelection.setScanExpr(scan);
@@ -2205,12 +2181,46 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     }
     
     //***************
-    
-    TableExprNode exprNode=thisSelection.toTableExprNode(&(*ms_p));
+    TableExprNode exprNode;
+    try{
+      exprNode = thisSelection.toTableExprNode(&(*ms_p));
+    }
+    catch(...){
+      nullSelect_p = true;
+      // A "bad selection" warning message could be sent to the logger here,
+      // but it should be left to the calling function to do that.  For
+      // example, this function is called by setjy, and it would be a mistake
+      // to print a logger message for every spw that was not observed for the
+      // given field.
+      return false;
+    }
     //TableExprNode exprNode=thisSelection.getTEN();
     //if(exprNode.isNull()){
       //      throw(AipsError("Selection failed...review ms and selection parameters"));
     //}
+
+    // Need to delete the ft machine as the channel flag may change
+    if(ft_p)
+      delete ft_p;
+    ft_p=0;
+    dataMode_p=mode;
+    dataNchan_p.resize();
+    dataStart_p.resize();
+    dataStep_p.resize();
+    dataNchan_p=nchan;
+    dataStart_p=start;
+    dataStep_p=step;
+    mDataStart_p=mStart;
+    mDataStep_p=mStep;
+    //    useModelCol_p=useModelCol;
+    
+    if(rvi_p)
+      delete rvi_p; 
+    rvi_p=0;
+    wvi_p=0;
+    // if(mssel_p) delete mssel_p; 
+    mssel_p=0;
+    
     datafieldids_p.resize();
     datafieldids_p=thisSelection.getFieldList();
     if(datafieldids_p.nelements()==0){
@@ -6202,6 +6212,10 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
     // Figure out which fields/spws to treat
     Record selrec=ms_p->msseltoindex(spwstring, fieldnames);
     Vector<Int> fldids(selrec.asArrayInt("field"));
+    // MSSelection select;
+    // select.setFieldExpr(fieldnames);
+    // select.setSpwExpr(spwstring);
+    
     Vector<Int> spwids(selrec.asArrayInt("spw"));
 
     expand_blank_sel(spwids, ms_p->spectralWindow().nrow());
@@ -6306,7 +6320,7 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
             
           foundSrc = fluxStd.computeCL(fieldName, mfreqs, mtime, fieldDir,
                                        cspectrum, returnFluxes, returnFluxErrs,
-                                       tempCLs);
+                                       tempCLs, ".setjy_");
 	  if(chanDep){
 	    for (uInt kk =0; kk < nspws; ++kk){
 	      spwid=spwids[kk];
@@ -6585,7 +6599,7 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
 
             tempCLs[spwInd] = FluxStandard::makeComponentList(fieldName, mfreqs[spwInd],
                                                               mtime, fluxval, point,
-                                                              cspectrum);
+                                                              cspectrum, ".setjy_");
           }
         }
 
@@ -6625,13 +6639,17 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
 
         };
 	
-        // Delete the temporary component list and image tables
-        if (tempCLs[spwInd] != "")
-          if(Table::canDeleteTable(tempCLs[spwInd]))Table::deleteTable(tempCLs[spwInd]);
         if (tmodimage) delete tmodimage;
         tmodimage=NULL;
         //	if (Table::canDeleteTable("temp.setjy.image")) Table::deleteTable("temp.setjy.image");
       }
+
+      // Delete the temporary component lists.  Do it after ft() has been run
+      // for all the spws because some spws with the same center frequency may
+      // be sharing component lists.
+      for(uInt spwInd = 0; spwInd < nspws; ++spwInd)
+	if(tempCLs[spwInd] != "" && Table::canDeleteTable(tempCLs[spwInd]))
+	  Table::deleteTable(tempCLs[spwInd]);
     }
     this->writeHistory(os);
     this->unlock();
@@ -6785,7 +6803,7 @@ Bool Imager::ssoflux(const Vector<Int>& fieldid,
             
           foundSrc = fluxStd.computeCL(fieldName, mfreqs, mtime, position,
                                        cspectrum, returnFluxes, returnFluxErrs,
-                                       tempCLs);
+                                       tempCLs, ".setjy_");
         }
         if(!foundSrc){
           if (standard==String("SOURCE")) {
@@ -6963,7 +6981,7 @@ Bool Imager::ssoflux(const Vector<Int>& fieldid,
 
             tempCLs[spwInd] = FluxStandard::makeComponentList(fieldName, mfreqs[spwInd],
                                                               mtime, fluxval, point,
-                                                              cspectrum);
+                                                              cspectrum, ".setjy_");
           }
         }
 
