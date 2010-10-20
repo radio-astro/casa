@@ -29,9 +29,9 @@
        Solar System Objects are supported via the 'Butler-JPL-Horizons
        2010' standard.  Currently they are modeled as uniform
        temperature disks based on their ephemerides at the time of
-       observation (note that this may oversimply objects, in
+       observation (note that this may oversimplify objects, in
        particular asteroids). Specify the name of the object in the
-       'field' parameter (case insensitive). 
+       'field' parameter. 
 
 	</description>
 	<input>
@@ -110,9 +110,9 @@
        2010' standard.  Currently they are modeled as uniform
        temperature disks based on their ephemerides at the time of
        observation (note that this may oversimply objects, in
-       particular asteroids). Specify the name of the object in the
-       'field' parameter (case insensitive). Recognized objects are
-       listed below.
+       particular asteroids).  The object name is obtained from the
+       'field' parameter.  Recognized objects are listed below, under
+       'standard'.
 
        Keyword arguments:
        vis -- Name of input visibility file
@@ -121,7 +121,8 @@
               default: ''=all fields, but run setjy one field at a time.
                  [run listobs to obtain the list id's or names of calibrators]
               If field is a non-negative integer, it is assumed to be a field
-              index.  Otherwise, it is taken to be a field name.
+              index.  Otherwise, it is taken to be a field name (case sensitive
+              - it must match the name as listed by listobs).
               field='0~2'; field ids 0,1,2
               field='0,4,5~7'; field ids 0,4,5,6,7
               field='3C286,3C295'; field named 3C286 and 3C295
@@ -179,25 +180,51 @@
                   and 'Butler-JPL-Horizons 2010'.
                'Perley-Butler 2010' is preliminary as of CASA 3.1.0.
                All but the last one are for extragalactic calibrators,
-               and the final one is for Solar System objects. Recognized Solar System 
-	       objects are: 
+               and the final one is for Solar System objects.  Recognized Solar
+               System objects are: 
 
-	       Planets:  Mars, Jupiter, Uranus, Neptune, Pluto
+	       Planets:  Mars, Jupiter, Uranus, Neptune, Pluto*
 	       
-	       Moons: Mars moons:  Phobos, Deimos
-                      Jupiter moons: Io, Europa, Ganymede, Callisto
-                      Saturn moons:  Mimas, Enceladus, Tethys, Dione, Rhea, Titan, 
+	       Moons: Jupiter: Io, Europa, Ganymede, Callisto
+                      Saturn:  Titan <!-- Mimas, Enceladus, Tethys, Dione,  
 		                     Hyperion, Iapetus, Phoebe, Janus, Epimetheus, Helene, 
-                                     Telesto, Calypso, Atlas,Prometheus, Pandora, Pan
-                      Uranus moons:  Ariel, Umbriel, Titania, Oberon, Miranda, Cordelia,
+                                     Telesto, Calypso, Atlas,Prometheus, Pandora, Pan -->
+                      <!-- Uranus moons:  Ariel, Umbriel, Titania, Oberon, Miranda, Cordelia,
                                      Ophelia, Bianca, Cressida, Desdemona, Juliet, Portia, 
-                                     Rosalind, Belinda, Puck
-                      Neptune moons: Triton, Nereid, Naiad, Thalassa, Despina, Galatea,
-                                     Larissa, Proteus 
-                      Pluto moon:    Charon
+                                     Rosalind, Belinda, Puck -->
+                      Neptune: Triton 
+                      <!-- Pluto moon:    Charon -->
 	       
-               Asteroids: Ceres, Pallas, Juno, Vesta, Astraea, Hygiea, Parthenope, Victoria,
-                          Davida, Interamnia
+               Asteroids: Ceres, Pallas**, Vesta**, Juno**, Victoria**, Davida**
+ 
+               * Pluto alone.  No allowance is made for the possibility of Charon
+                 being in the field.
+
+               ** not recommended (The temperature is not yet adjusted for
+                  varying distance from the Sun.  The model data can be scaled
+                  after running setjy, but it is an involved process.)
+
+	       The 'field' parameter must match the case of the field name(s)
+	       in vis, but matching the field name to one of the above objects
+	       is done in a case insensitive way.
+
+               Flux density calculation with Solar System objects depends on
+               ephemerides, typically in
+               os.getenv('CASAPATH').split()[0] + '/data/ephemerides/JPL-Horizons'.
+               If no ephemeris for the right object at the right time is present,
+               the calculation will fail.  Ask the helpdesk and/or look in
+               recipes/ephemerides/ to make an ephemeris.
+
+               CASA comes with ephemerides for several more objects, but they
+               are intended for use with me.framecomet(), and are not (yet)
+               suitable flux density calibrators.  It is up to the observer to
+               pick a good flux density calibrator (bright, spherical and
+               featureless, on a circular orbit, in the right part of the sky,
+               and not too resolved).  Even some of the objects listed above
+               may prove to require more sophisticated flux density models than
+               are currently implemented in CASA.  Running
+               casalog.filter('INFO1') before running setjy will for many
+               object send more possibly relevant information to the logger.
  </example>
  </task>
  </casaxml>
