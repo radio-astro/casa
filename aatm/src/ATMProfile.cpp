@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMProfile.cpp,v 1.9.2.1 2010/02/19 15:07:49 dbroguie Exp $"
+ * "@(#) $Id: ATMProfile.cpp,v 1.11 2010/10/20 00:02:48 dbroguie Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------
@@ -1644,8 +1644,9 @@ unsigned int AtmProfile::mkAtmProfile()
 
       if(i < v_layerPressure.size() - 1) {
         if(control) {
-          v_layerPressure[i] = px[typeAtm_ - 1][j - 1];
-          v_layerTemperature[i] = tx[typeAtm_ - 1][j - 1] - tx[typeAtm_ - 1][0]
+          int j0 = (j>0) ? j-1:0;
+          v_layerPressure[i] = px[typeAtm_ - 1][j0];
+          v_layerTemperature[i] = tx[typeAtm_ - 1][j0] - tx[typeAtm_ - 1][0]
               + v_layerTemperature[i0];
 
 	  www = v_layerWaterVapor[i - 1] / 1000.0;
@@ -1663,8 +1664,9 @@ unsigned int AtmProfile::mkAtmProfile()
         v_layerWaterVapor[i] = wgr0 * exp(-v_layerThickness[i] / (1000.0 * h0));
       } else {
         if(control) {
-          v_layerPressure.push_back(px[typeAtm_ - 1][j - 1]);
-          v_layerTemperature.push_back(tx[typeAtm_ - 1][j - 1] - tx[typeAtm_ - 1][0]
+          int j0 = (j>0) ? j-1:0;
+          v_layerPressure.push_back(px[typeAtm_ - 1][j0]);
+          v_layerTemperature.push_back(tx[typeAtm_ - 1][j0] - tx[typeAtm_ - 1][0]
               + v_layerTemperature[i0]);
 
 	  www = v_layerWaterVapor[i - 1] / 1000.0;
@@ -1871,4 +1873,3 @@ unsigned int AtmProfile::mkAtmProfile()
 }
 
 ATM_NAMESPACE_END
-

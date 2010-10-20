@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMSkyStatus.cpp,v 1.10 2010/02/19 01:55:49 dbroguie Exp $"
+ * "@(#) $Id: ATMSkyStatus.cpp,v 1.11 2010/09/02 22:44:27 dbroguie Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------
@@ -869,6 +869,39 @@ Temperature SkyStatus::getAverageTebbSky(unsigned int spwid,
             Tspill.get("K"),
             airmass,
             spwid);
+}
+
+Temperature SkyStatus::getAverageTebbSky(unsigned int spwid,
+                                         Length wh2o,
+                                         double airmass,
+                                         double skycoupling,
+                                         double signalgain,     // adition
+                                         Temperature Tspill)
+{
+  Temperature tt(-999, "K");
+  if(!spwidAndIndexAreValid(spwid, 0)) {
+    return tt;
+  }
+  if(wh2o.get() < 0.0) {
+    return tt;
+  }
+  // if(skycoupling<0.0 || skycoupling>1.0){return tt;}
+  if(airmass < 1.0) {
+    return tt;
+  }
+  if(Tspill.get("K") < 0.0 || Tspill.get("K") > 350.0) {
+    return tt;
+  }
+  return signalgain*RT(((wh2o.get()) / (getGroundWH2O().get())),
+            skycoupling,
+            Tspill.get("K"),
+            airmass,
+            spwid)+
+    +(1-signalgain)*RT(((wh2o.get()) / (getGroundWH2O().get())),
+            skycoupling,
+            Tspill.get("K"),
+            airmass,
+            getAssocSpwId(spwid)[0]);
 }
 
 Temperature SkyStatus::getTebbSky(unsigned int spwid,

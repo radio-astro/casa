@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMSpectralGrid.cpp,v 1.10 2010/02/08 17:37:51 jroche Exp $"
+ * "@(#) $Id: ATMSpectralGrid.cpp,v 1.11.2.2 2010/10/15 16:19:02 dbroguie Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------
@@ -103,35 +103,35 @@ void SpectralGrid::add(unsigned int numChan,
                        SidebandType sbType)
 {
 
+
   double chSep;
   vector<string> v_assocNature;
   vector<unsigned int> v_assocSpwId;
 
   unsigned int spwId = v_transfertId_.size();
 
-  if(sbSide == LSB) { // LSB tunin
+  if(sbSide == LSB) { // LSB tuning
     // the LSB:
-    chSep = -fabs(chanSep.get());
     add(numChan, refChan, refFreq, chanSep); // LSB
     v_sidebandSide_[spwId] = LSB;
     v_sidebandType_[spwId] = sbType;
-    v_loFreq_[spwId] = refFreq.get() + intermediateFreq.get();
+    double loFreq    = refFreq.get() + intermediateFreq.get(); // store loFreq for USB
+    v_loFreq_[spwId] = loFreq;
     v_assocSpwId.push_back(v_numChan_.size());
     vv_assocSpwId_[vv_assocSpwId_.size() - 1] = v_assocSpwId;
     v_assocNature.push_back("USB");
     vv_assocNature_[vv_assocNature_.size() - 1] = v_assocNature;
 
     // the USB:
-    chSep = fabs(chanSep.get());
     spwId = v_transfertId_.size();
-    v_loFreq_.push_back(refFreq.get() + intermediateFreq.get());
-    refChan = (unsigned int) ((double) refChan + 2. * intermediateFreq.get()
-        / chSep);
-    chSep = -chSep;
+    refFreq = refFreq + 2.*intermediateFreq.get();  // fix refFreq in the image band (refChan is unchanged)
+    chSep = -chanSep.get();
     add(numChan, refChan, refFreq, Frequency(chSep));
+
     v_sidebandSide_[spwId] = USB;
     v_sidebandType_[spwId] = sbType;
-    v_loFreq_[spwId] = refFreq.get() + intermediateFreq.get();
+    v_loFreq_[spwId] = loFreq;
+
     v_assocSpwId[0] = v_numChan_.size() - 2;
     vv_assocSpwId_[vv_assocSpwId_.size() - 1] = v_assocSpwId;
     v_assocNature[0] = "LSB";
@@ -139,11 +139,13 @@ void SpectralGrid::add(unsigned int numChan,
 
   } else { // USB tuning
     // the USB:
-    chSep = fabs(chanSep.get());
-    add(numChan, refChan, refFreq, Frequency(chSep));
+    add(numChan, refChan, refFreq, chanSep);
+
     v_sidebandSide_[spwId] = USB;
     v_sidebandType_[spwId] = sbType;
-    v_loFreq_[spwId] = refFreq.get() - intermediateFreq.get();
+    double loFreq    = refFreq.get() - intermediateFreq.get();
+    v_loFreq_[spwId] = loFreq;
+
     v_assocSpwId.push_back(v_numChan_.size());
     vv_assocSpwId_[vv_assocSpwId_.size() - 1] = v_assocSpwId;
     v_assocNature.push_back("LSB");
@@ -151,13 +153,14 @@ void SpectralGrid::add(unsigned int numChan,
 
     // the LSB:
     spwId = v_transfertId_.size();
-    chSep = -fabs(chanSep.get());
-    refChan = (unsigned int) ((double) refChan + 2. * intermediateFreq.get()
-        / chSep);
-    add(numChan, refChan, refFreq, Frequency(chSep)); // LSB
+    refFreq = refFreq - 2.*intermediateFreq.get();  // fix refFreq in the image band (refChan is unchanged)
+    chSep = -chanSep.get();
+    add(numChan, refChan, refFreq, Frequency(chSep));
+
     v_sidebandSide_[spwId] = LSB;
     v_sidebandType_[spwId] = sbType;
-    v_loFreq_[spwId] = refFreq.get() - intermediateFreq.get();
+    v_loFreq_[spwId] = loFreq;
+
     v_assocSpwId[0] = v_numChan_.size() - 2;
     vv_assocSpwId_[vv_assocSpwId_.size() - 1] = v_assocSpwId;
     v_assocNature[0] = "USB";
@@ -174,6 +177,7 @@ unsigned int SpectralGrid::add(unsigned int numChan,
 
   unsigned int spwId = v_transfertId_.size();
   v_loFreq_.push_back(refFreq.get());
+
   if(spwId == 0) {
     v_transfertId_.push_back(0);
   } else {
@@ -674,8 +678,8 @@ string SpectralGrid::getSidebandSide(unsigned int spwId)
     if(vv_assocSpwId_[spwId].size() == 0) {
       /* cout << "WARNING: the spectral window with the identifier "<< spwId
        << " has no associated spectral window "<< endl; */
+      return "";
     }
-    return "";
     if(v_sidebandSide_[spwId] == NOSB) return "NoSB";
     if(v_sidebandSide_[spwId] == LSB) return "LSB";
     if(v_sidebandSide_[spwId] == USB) return "USB";
