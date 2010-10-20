@@ -249,7 +249,7 @@ Vector<uInt> ImageInputProcessor::_setSpectralRanges(
     Vector<String> parts = stringToVector(specification, ',');
     ranges.resize(2*parts.size());
 	Regex regexuInt("^[0-9]+$");
-	Regex regexRange("^[0-9]+[ \n\t\r\v\f]*-[ \n\t\r\v\f]*[0-9]+$");
+	Regex regexRange("^[0-9]+[ \n\t\r\v\f]*~[ \n\t\r\v\f]*[0-9]+$");
 	Regex regexLT("^<.*$");
 	Regex regexLTEq("^<=.*$");
 	Regex regexGT("^>.*$");
@@ -266,7 +266,7 @@ Vector<uInt> ImageInputProcessor::_setSpectralRanges(
     	}
     	else if(parts[i].matches(regexRange)) {
     		// a range of channels
-    		Vector<String> values = stringToVector(parts[i], '-');
+    		Vector<String> values = stringToVector(parts[i], '~');
     		if (values.size() != 2) {
     			*_log << "Incorrect specification for channel range "
     				<< parts[i] << LogIO::EXCEPTION;
