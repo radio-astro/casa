@@ -250,7 +250,7 @@ namespace casa {
       for(std::set<Int>::iterator bbit = badSelSpwSlots.begin();
           bbit != badSelSpwSlots.end(); ++bbit)
         os << spw_p[*bbit] << " ";
-      os << "\nnot found in DATA_DESCRIPTION and being excluded."
+      os << "\nwere not found in DATA_DESCRIPTION and are being excluded."
          << LogIO::POST;
 
       uInt ngoodSelSpwSlots = nSelSpw - nbadSelSpwSlots;
