@@ -246,7 +246,7 @@ Vector<uInt> ImageInputProcessor::_setSpectralRanges(
 	}
 
     // First split on commas
-    Vector<String> parts = stringToVector(specification, ',');
+    Vector<String> parts = stringToVector(specification, Regex("[,;]"));
     ranges.resize(2*parts.size());
 	Regex regexuInt("^[0-9]+$");
 	Regex regexRange("^[0-9]+[ \n\t\r\v\f]*~[ \n\t\r\v\f]*[0-9]+$");
@@ -431,10 +431,9 @@ Vector<uInt> ImageInputProcessor::_setPolarizationRanges(
 
 		return ranges;
 	}
-    // First split on commas. Commas seem to have been supported at some point
+    // First split on commas and semi-colons.
 	// in the past for polarization specification.
-    Vector<String> parts = stringToVector(specification, ',');
-
+    Vector<String> parts = stringToVector(specification, Regex("[,;]"));
     Vector<String> polNames = Stokes::allNames(False);
     uInt nNames = polNames.size();
     Vector<uInt> nameLengths(nNames);
