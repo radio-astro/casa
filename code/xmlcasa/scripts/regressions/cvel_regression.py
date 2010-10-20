@@ -419,7 +419,8 @@ for frame in frames_to_do:
 # Analysis
 
 passed = True
-tolerance = 0.0009
+tolerance = 0.0013
+avtolerance = 0.00035
 numpoints = 0.
 avdev = 0.
 maxdev = 0.
@@ -464,7 +465,12 @@ for frame in frames_to_do:
                 print "... OK"      
 
 if(numpoints > 0.):
-    print numpoints, " spectral points compared, average deviation = ", avdev/numpoints, " Jy"
+    avdev = avdev/numpoints
+    print numpoints, " spectral points compared, average deviation = ", avdev, " Jy"
+    if(avdev>avtolerance):
+        passed = False
+        print " ** Problem: average deviation too large. Expected is value < ", avtolerance
+        problems += 1
     print "   maximum deviation = ", maxdev, " in ", maxdevat 
                     
 if passed:
