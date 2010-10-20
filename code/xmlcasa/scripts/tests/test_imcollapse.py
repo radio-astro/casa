@@ -240,7 +240,7 @@ class imcollapse_test(unittest.TestCase):
         expected = "collapse_sum_1.fits"
         shutil.copy(datapath + expected, expected)
         box = "1,1,2,2"
-        chans = "1-2"
+        chans = "1~2"
         stokes = "qu"
         for i in [0, 1]:
             outname = "test_3_" + str(i) + ".im"
