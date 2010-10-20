@@ -1,6 +1,12 @@
 AATM News
 =========
 
+Version 0.4.3
+-------------
+
+Fix a bug causing a segmantation fault at certain lower pressures
+(when gcc 4.4 family is used at least). This is related ALMA CSV-526.
+
 Version 0.4.2
 -------------
 

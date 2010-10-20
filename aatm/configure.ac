@@ -1,5 +1,5 @@
 AC_INIT(AATM,
-	0.4.2,
+	0.4.3,
 	b.nikolic@mrao.cam.ac.uk)
 
 dnl Library versioning (current:revision:age)
@@ -10,8 +10,9 @@ dnl aatm-0.3 libatm 1:0:0
 dnl aatm-0.4 libatm 2:0:0
 dnl aatm-0.4.1 libatm 2:1:0
 dnl aatm-0.4.2 libatm 2:2:0
+dnl aatm-0.4.3 libatm 2:3:0
 
-AATM_LT_VERSION="2:2:0"
+AATM_LT_VERSION="2:3:0"
 AC_SUBST(AATM_LT_VERSION)
 
 
