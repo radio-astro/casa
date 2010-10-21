@@ -999,11 +999,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                default: [] (no masking); Possible specification types:
                (a) Explicit cleanbox pixel ranges example: mask=[110,110,150,145]
                    = clean region with blc=110,100; trc=150,145 (pixel values)
+		   If used with a spectral cube, it will apply to all channels.
                (b) Filename with cleanbox pixel values in ASCII format.
                    Example: mask='mycleanbox.txt'
                             &lt;fieldid blc-x blc-y trc-x trc-y&gt; on each line:
                             1 45 66 123 124 
                             2 23 100 300 340
+		   If used with a spectral cube, it will apply to all channels.	    
                (c) Filename for image mask.  Example: mask='myimage.mask'
                    '' -> no mask
                (d) Filename for region specification (e.g. from viewer).
@@ -1017,7 +1019,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                    (A clean box with [110,110,150,145] and a image mask for main
                     field, no mask for 1st outlier field, 1 clean box for 2nd
                     outlier field.)
-               (f) (new as of 2010-09-28)
+               (f) Threshold on primary-beam.
                    A number between 0 and 1, used as a threshhold of primary
                    beam coverage.  The primary beam coverage map (imagename +
                    '.flux(.pbcoverage)') will be made and the CLEAN component
