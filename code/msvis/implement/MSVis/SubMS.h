@@ -534,6 +534,7 @@ class SubMS
   Vector<ui2vmap> bin_slots_p;
 
   Vector<Slice> corrSlice_p;
+  Matrix<Double> selTimeRanges_p;
 };
 
 

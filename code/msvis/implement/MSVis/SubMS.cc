@@ -26,7 +26,8 @@
 //# $Id: $
 #include <msvis/MSVis/SubMS.h>
 #include <ms/MeasurementSets/MSSelection.h>
-#include <tables/Tables/ExprNode.h>
+//#include <ms/MeasurementSets/MSTimeGram.h>
+//#include <tables/Tables/ExprNode.h>
 #include <tables/Tables/RefRows.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
@@ -841,7 +842,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     thisSelection.setTaQLExpr(taqlString_p);
     
     TableExprNode exprNode=thisSelection.toTableExprNode(elms);
-    
+    selTimeRanges_p = thisSelection.getTimeList();
+
     {      
       const MSDataDescription ddtable = elms->dataDescription();
       ROScalarColumn<Int> polId(ddtable, 
@@ -5771,12 +5773,26 @@ Bool SubMS::copyState()
   Bool SubMS::copyPointing(){
     //Pointing is allowed to not exist
     if(Table::isReadable(mssel_p.pointingTableName())){
+
+      // An attempt to select from POINTING by timerange.  Fails because the
+      // TEN refers to the main table, not POINTING.
+      // TableExprNode condition;
+
+      // if(timeRange_p != "" &&
+      // 	 msTimeGramParseCommand(&ms_p, timeRange_p, condition) == 0){
+      // 	const TableExprNode *timeNode = 0x0;
+	  
+      // 	timeNode = msTimeGramParseNode();
+      // 	if(timeNode && !timeNode->isNull())
+      // 	  condition = *timeNode;
+      // }
+
       //Wconst Table oldPoint(mssel_p.pointingTableName(), Table::Old);
       const MSPointing& oldPoint = mssel_p.pointing();
 
       if(oldPoint.nrow() > 0){
-        MSPointing& newPoint = msOut_p.pointing();  // Could be declared as
-                                                    // Table&
+	// Could be declared as Table&
+        MSPointing& newPoint = msOut_p.pointing();
 
         LogIO os(LogOrigin("SubMS", "copyPointing()"));
 
@@ -5800,23 +5816,38 @@ Bool SubMS::copyState()
         newPCs.setEncoderDirectionRef(MDirection::castType(oldPCs.encoderMeas().getMeasRef().getType()));
 
 	
-        if(!antennaSel_p){
+        if(!antennaSel_p && timeRange_p == ""){
           TableCopy::copyRows(newPoint, oldPoint);
         }
         else{
           const ROScalarColumn<Int>& antIds  = oldPCs.antennaId();
+          const ROScalarColumn<Double>& time = oldPCs.time();
           ScalarColumn<Int>& 	     outants = newPCs.antennaId();
 
-          uInt selRow = 0;
-          for (uInt k = 0; k < antIds.nrow(); ++k){
-            Int newAntInd = antNewIndex_p[antIds(k)];
+	  uInt nTRanges = selTimeRanges_p.ncolumn();
+
+	  uInt outRow = 0;
+          for (uInt inRow = 0; inRow < antIds.nrow(); ++inRow){
+            Int newAntInd = antNewIndex_p[antIds(inRow)];
+	    Double t = time(inRow);
 	    
             if(newAntInd > -1){
-              TableCopy::copyRows(newPoint, oldPoint, selRow, k, 1);
-              outants.put(selRow, newAntInd);
-              ++selRow;
+	      Bool matchT = false;
+	      for(uInt tr = 0; tr < nTRanges; ++tr){
+		if(t >= selTimeRanges_p(0, tr) && t <= selTimeRanges_p(1, tr)){
+		  matchT = true;
+		  break;
+		}
+	      }
+
+	      if(matchT){
+		TableCopy::copyRows(newPoint, oldPoint, outRow, inRow, 1, false);
+		outants.put(outRow, newAntInd);
+		++outRow;
+	      }
             }
           }
+	  newPoint.flush();
         }
         //DW 	//	TableCopy::copySubTables(newPoint, oldPoint);
         //DW	oldPoint.deepCopy(msOut_p.pointingTableName(), Table::NewNoReplace);
