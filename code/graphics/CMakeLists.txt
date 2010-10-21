@@ -18,6 +18,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+if( EXISTS ${CMAKE_SOURCE_DIR}/graphics/pgplot/CMakeLists.txt )
+    include( ${CMAKE_SOURCE_DIR}/graphics/pgplot/CMakeLists.txt )
+endif()
+
 casa_add_library( graphics
   implement/GenericPlotter/PlotCanvas.cc
   implement/GenericPlotter/PlotCanvasLayout.cc
@@ -32,5 +36,6 @@ casa_add_library( graphics
   implement/GenericPlotter/PlotTool.cc
   implement/GenericPlotter/SimplePlotter.cc
   implement/Graphics/PGPlotterLocal.cc
-   )
-
+  ${casa_graphics_pgplot_obj}
+  ${casa_graphics_pgplot_src}
+  )
