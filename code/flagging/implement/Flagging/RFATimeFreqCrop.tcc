@@ -1141,12 +1141,14 @@ void RFATimeFreqCrop :: CleanBand(Vector<Float> data,Vector<Float> fit)
      }
 
      /* Now, smooth the fit - make this nicer later */
+     /* 
      int winstart=0,winend=0;
      float winsum=0.0;
-     for(uInt i=0;i<tdata.nelements();i++)
+     int offset=2;
+     for(uInt i=offset;i<tdata.nelements()-offset;i++)
      {
-	     winstart = i-5;
-	     winend = i+5;
+	     winstart = i-offset;
+	     winend = i+offset;
 	     if(winstart<0)winstart=0;
 	     if(winend>=tdata.nelements())winend=tdata.nelements()-1;
 	     if(winend <= winstart) break;
@@ -1155,6 +1157,7 @@ void RFATimeFreqCrop :: CleanBand(Vector<Float> data,Vector<Float> fit)
 		     winsum += fit[wi];
 	     fit[i] = winsum/(winend-winstart+1);
      }
+     */
 
 
      /* Calculate the STD of the fit */
