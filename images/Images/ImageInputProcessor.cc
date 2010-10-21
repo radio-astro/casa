@@ -140,7 +140,7 @@ void ImageInputProcessor::_process(
     		stokes, metaData, image->name(), stokesControl
     	);
     	Vector<Double> boxCorners = _setBoxCorners(box);
-    	_setRegion(
+        _setRegion(
     		regionRecord, diagnostics, boxCorners,
     		chanEndPts, polEndPts, metaData, image
     	);
@@ -598,8 +598,8 @@ void ImageInputProcessor::_setRegion(
 	LogOrigin origin("ImageInputProcessor", method);
 	*_log << origin;
     IPosition imShape = image->shape();
-    Vector<Double> blc(imShape.nelements());
-    Vector<Double> trc(imShape.nelements());
+    Vector<Double> blc(imShape.nelements(), 0);
+    Vector<Double> trc(imShape.nelements(), 0);
     CoordinateSystem csys = image->coordinates();
     Vector<Int> directionAxisNumbers = md.directionAxesNumbers();
     Int spectralAxisNumber = md.spectralAxisNumber();
@@ -625,8 +625,6 @@ void ImageInputProcessor::_setRegion(
     	yCorners[i] = y;
     }
 
-    RegionManager rm;
-    ImageRegion imRegion;
     Vector<Double> polEndPtsDouble(polEndPts.size());
     for (uInt i=0; i<polEndPts.size(); i++) {
     	polEndPtsDouble[i] = (Double)polEndPts[i];
@@ -636,27 +634,6 @@ void ImageInputProcessor::_setRegion(
     for (uInt i=0; i<chanEndPts.size(); i++) {
     	chanEndPtsDouble[i] = (Double)chanEndPts[i];
     }
-
-    HashMap<uInt, Vector<Double> > axisCornerMap;
-    for (Int axisNumber=0; axisNumber<(Int)image->ndim(); axisNumber++) {
-    	if (directionAxisNumbers.size() > 1 && axisNumber == directionAxisNumbers[0]) {
-			axisCornerMap(axisNumber) = xCorners;
-    	}
-    	else if (directionAxisNumbers.size() > 1 && axisNumber == directionAxisNumbers[1]) {
-    		axisCornerMap(axisNumber) = yCorners;
-    	}
-    	else if (axisNumber == spectralAxisNumber) {
-    		axisCornerMap(axisNumber) = chanEndPtsDouble;
-    	}
-    	else if (axisNumber == polarizationAxisNumber) {
-    		axisCornerMap(axisNumber) = polEndPtsDouble;
-    	}
-    	else {
-    		*_log << "Unhandled image axis number " << axisNumber
-    			<< LogIO::EXCEPTION;
-    	}
-    }
-
     uInt nRegions = 1;
     if (md.hasDirectionCoordinate()) {
     	nRegions *= boxCorners.size()/4;
@@ -667,20 +644,46 @@ void ImageInputProcessor::_setRegion(
     if (md.hasSpectralAxis()) {
     	nRegions *= chanEndPts.size()/2;
     }
-
+    _fillVector(xCorners, nRegions);
+    _fillVector(yCorners, nRegions);
+    _fillVector(polEndPtsDouble, nRegions);
+    _fillVector(chanEndPtsDouble, nRegions);
+    HashMap<uInt, Vector<Double> > axisCornerMap;
+    for (uInt i=0; i<nRegions; i++) {
+        for (uInt axisNumber=0; axisNumber<image->ndim(); axisNumber++) {
+    	    if (directionAxisNumbers.size() > 1 && (Int)axisNumber == directionAxisNumbers[0]) {
+			    axisCornerMap(axisNumber) = xCorners;
+    	    }
+    	    else if (directionAxisNumbers.size() > 1 && (Int)axisNumber == directionAxisNumbers[1]) {
+    		    axisCornerMap(axisNumber) = yCorners;
+    	    }
+    	    else if ((Int)axisNumber == spectralAxisNumber) {
+    		    axisCornerMap(axisNumber) = chanEndPtsDouble;
+    	    }
+    	    else if ((Int)axisNumber == polarizationAxisNumber) {
+    		    axisCornerMap(axisNumber) = polEndPtsDouble;
+    	    }
+    	    else {
+    		    *_log << "Unhandled image axis number " << axisNumber
+    			    << LogIO::EXCEPTION;
+    	    }
+        }
+    }
+  
+    RegionManager rm;
+    ImageRegion imRegion;
     for (uInt i=0; i<nRegions; i++) {
     	for (uInt axisNumber=0; axisNumber<image->ndim(); axisNumber++) {
     		blc(axisNumber) = axisCornerMap(axisNumber)[2*i];
     		trc(axisNumber) = axisCornerMap(axisNumber)[2*i + 1];
     	}
-		LCBox lcBox(blc, trc, imShape);
+        LCBox lcBox(blc, trc, imShape);
 		WCBox wcBox(lcBox, csys);
 		ImageRegion thisRegion(wcBox);
 		imRegion = (i == 0)
 			? thisRegion
 			: imRegion = *rm.doUnion(imRegion, thisRegion);
     }
-
     ostringstream os;
 
     os << "Used image region from " << endl;
@@ -788,4 +791,15 @@ void ImageInputProcessor::checkOutputs(
 	}
 }
 
-
+void ImageInputProcessor::_fillVector(
+    Vector<Double> myVector, const uInt nRegions
+) const {
+    if (myVector.size() > 0) {
+        Vector<Double> vCopy = myVector.copy();
+        myVector.resize(nRegions*2, True);
+        for (uInt j=vCopy.size(); j<myVector.size(); j++) {
+            myVector[j] = vCopy[j % vCopy.size()];
+        }
+    }
+}
+ 

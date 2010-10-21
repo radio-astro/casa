@@ -166,14 +166,14 @@ int main() {
     	{
     		writeTestString("sum subimage collapse along axis 1");
     		ImageCollapser *collapser = new ImageCollapser(
-    			"sum", goodImage, "", "1,1,2,2", "1-2",
+    			"sum", goodImage, "", "1,1,2,2", "1~2",
     			"qu", "", 2, outname(), False
     		);
     		collapser->collapse(False);
     		delete collapser;
     		// and check that we can overwrite the previous output
     		collapser = new ImageCollapser(
-        		"sum", goodImage, "", "1,1,2,2", "1-2",
+        		"sum", goodImage, "", "1,1,2,2", "1~2",
         		"qu", "", 1, outname(), True
         	);
     		collapser->collapse(False);

@@ -126,7 +126,6 @@ void runProcess(
 
 int main() {
     try {
-    	String specImage = "iiprocessor.im";
     	String goodImage = "image_input_processor.im";
     	ImageInputProcessor processor;
     	ImageInterface<Float> *image = 0;
