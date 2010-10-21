@@ -2463,10 +2463,10 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
                                               regridVeloRestfrq);
 	  regridBandwidthF = 2.* (bwUpperEndF - regridCenterF); 
 	}
-	if(regridChanWidth > 0.){
+	if(regridChanWidth > 0. && regridChanWidthF<0.){
 	  lDouble chanUpperEdgeF = freq_from_vrad(regridCenterVel - regridChanWidth/2.,
 						  regridVeloRestfrq);
-	  regridChanWidthF = 2.* (chanUpperEdgeF - regridCenterF);
+	  regridChanWidthF = 2.* (chanUpperEdgeF - freq_from_vrad(regridCenterVel, regridVeloRestfrq));
 	}
       }
       else if(regridQuant=="vopt"){ ///////////
@@ -2555,10 +2555,10 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
                                                regridVeloRestfrq);
 	  regridBandwidthF = 2.* (bwUpperEndF- regridCenterF); 
 	}
-	if(regridChanWidth > 0.){
+	if(regridChanWidth > 0. && regridChanWidthF<0.){
 	  lDouble chanUpperEdgeF = freq_from_vopt(regridCenterVel - regridChanWidth/2.,
                                                  regridVeloRestfrq);
-	  regridChanWidthF = 2.* (chanUpperEdgeF - regridCenterF); 
+	  regridChanWidthF = 2.* (chanUpperEdgeF - freq_from_vopt(regridCenterVel,regridVeloRestfrq)); 
 	}
       } 
       else if(regridQuant=="freq"){ ////////////////////////
