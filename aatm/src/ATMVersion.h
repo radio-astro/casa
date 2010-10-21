@@ -18,7 +18,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMVersion.h,v 1.1.14.2 2010/09/20 11:58:17 dbroguie Exp $"
+ * "@(#) $Id: ATMVersion.h,v 1.1.14.3 2010/10/15 16:48:45 dbroguie Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------
@@ -29,7 +29,7 @@
 #include <string>
 
 #ifndef ATM_VERSION
-#define ATM_VERSION "0.4.1"
+#define ATM_VERSION "0.4.3"
 #endif
 
 

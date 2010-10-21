@@ -39,6 +39,7 @@
 #include <casa/BasicSL/String.h>
 #include <casa/BasicSL/Constants.h>
 #include <casa/Logging/LogIO.h>
+#include <casa/OS/File.h>
 #include <casa/OS/Path.h>
 #include <casa/Utilities/CountedPtr.h>
 #include <casa/sstream.h>
@@ -190,7 +191,8 @@ Bool FluxStandard::computeCL(const String& sourceName,
                              const ConstantSpectrum& cspectrum,
                              Vector<Flux<Double> >& values,
                              Vector<Flux<Double> >& errors,
-                             Vector<String>& clpaths) const
+                             Vector<String>& clpaths,
+			     const String& prefix) const
 {
   LogIO os(LogOrigin("FluxStandard", "computeCL"));
   uInt nfreqs = mfreqs.nelements();
@@ -202,7 +204,7 @@ Bool FluxStandard::computeCL(const String& sourceName,
 
       for(uInt f = 0; f < nfreqs; ++f)
         clpaths[f] = makeComponentList(sourceName, mfreqs[f], mtime, values[f],
-                                       point, cspectrum);
+                                       point, cspectrum, prefix);
     }
   }
   else if(itsFluxScale == FluxStandard::SS_JPL_BUTLER){
@@ -224,7 +226,7 @@ Bool FluxStandard::computeCL(const String& sourceName,
 
         for(uInt f = 0; f < nfreqs; ++f)
           clpaths[f] = makeComponentList(sourceName, mfreqs[f], mtime, values[f],
-                                         disk, cspectrum);
+                                         disk, cspectrum, prefix);
         break;
       };
     default: {
@@ -243,13 +245,14 @@ String FluxStandard::makeComponentList(const String& sourceName,
                                        const MEpoch& mtime,
                                        const Flux<Double>& fluxval,
                                        const ComponentShape& cmp,
-                                       const ConstantSpectrum& cspectrum)
+                                       const ConstantSpectrum& cspectrum,
+				       const String& prefix)
 {
   LogIO os(LogOrigin("FluxStandard", "makeComponentList"));
 
   // Make up the ComponentList's pathname.
   ostringstream oss;
-  oss << sourceName << "_" //<< setprecision(1)
+  oss << prefix << sourceName << "_" //<< setprecision(1)
       << mfreq.get("GHz").getValue() << "GHz";
   //  String datetime;  // to nearest minute.
   oss << mtime.get("d").getValue() << "d.cl";
@@ -264,14 +267,20 @@ String FluxStandard::makeComponentList(const String& sourceName,
      << " spaces)"
      << LogIO::POST;
 
-  // Create a component list containing cmp, and force a call to its d'tor
-  // using scoping rules.
-  ComponentList cl;
-  SkyComponent skycomp(fluxval, cmp, cspectrum);
+  // If clpath already exists on disk, assume our work here is done, and don't
+  // try to redo it.  It's not just laziness - it avoids collisions.
+  // This happens when a continuum spw has the same center freq as a spectral
+  // spw.
+  File testExistence(clpath);
+  if(!testExistence.isDirectory()){
+    // Create a component list containing cmp, and force a call to its d'tor
+    // using scoping rules.
+    ComponentList cl;
+    SkyComponent skycomp(fluxval, cmp, cspectrum);
 	
-  cl.add(skycomp);
-  cl.rename(clpath, Table::New);
-
+    cl.add(skycomp);
+    cl.rename(clpath, Table::New);
+  }
   return clpath;
 }
 

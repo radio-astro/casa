@@ -50,7 +50,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <param type="string" name="chans">
         <description>Optional zero-based contiguous frequency channel specification.</description>
         <value/>
-        <example>chans="5-20"</example>
+        <example>chans="5~20"</example>
     </param>
     <param type="string" name="stokes">
         <description>Optional contiguous stokes planes specification.</description>
@@ -150,8 +150,8 @@ outfile="collapse_spec_mean.im"
 function="mean"
 axis=2
 box="127,127,383,383"
-chans="8-119"
-collapsed = ia.collapse(outfile="collapse_spec_mean.im", function="mean", axis=2, box="127,127,383,383", chans="8-119")
+chans="8~119"
+collapsed = ia.collapse(outfile="collapse_spec_mean.im", function="mean", axis=2, box="127,127,383,383", chans="8~119")
 # manipulate collapsed
 collapsed.done()
 

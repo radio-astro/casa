@@ -250,7 +250,7 @@ namespace casa {
       for(std::set<Int>::iterator bbit = badSelSpwSlots.begin();
           bbit != badSelSpwSlots.end(); ++bbit)
         os << spw_p[*bbit] << " ";
-      os << "\nnot found in DATA_DESCRIPTION and being excluded."
+      os << "\nwere not found in DATA_DESCRIPTION and are being excluded."
          << LogIO::POST;
 
       uInt ngoodSelSpwSlots = nSelSpw - nbadSelSpwSlots;
@@ -1875,7 +1875,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       // channel-number-dependent arrays need to be regridded.
       if(regrid[iDone]){
 
-	Bool doExtrapolate = True;
+	Bool doExtrapolate = False;
 
 	// regrid the complex columns
 	Array<Complex> yout;
@@ -2462,14 +2462,12 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  lDouble bwUpperEndF = freq_from_vrad(regridCenterVel - regridBandwidth/2.,
                                               regridVeloRestfrq);
 	  regridBandwidthF = 2.* (bwUpperEndF - regridCenterF); 
-	
-	  if(regridChanWidth > 0.){
-	    lDouble chanUpperEdgeF = freq_from_vrad(regridCenterVel - regridChanWidth/2.,
-						   regridVeloRestfrq);
-	    regridChanWidthF = 2.* (chanUpperEdgeF - regridCenterF); 
-	  }
 	}
-
+	if(regridChanWidth > 0.){
+	  lDouble chanUpperEdgeF = freq_from_vrad(regridCenterVel - regridChanWidth/2.,
+						  regridVeloRestfrq);
+	  regridChanWidthF = 2.* (chanUpperEdgeF - regridCenterF);
+	}
       }
       else if(regridQuant=="vopt"){ ///////////
 	// optical velocity ...
@@ -2722,14 +2720,24 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	if(nchan!=0){ // use nchan parameter if available
 	  if(nchan<0){
 	    // define via width of first channel to avoid numerical problems
-	    theRegridBWF = transCHAN_WIDTH[0]*floor((theRegridBWF+transCHAN_WIDTH[0]*0.01)/transCHAN_WIDTH[0]);
+	    if(regridChanWidthF <= 0.){ // channel width not set
+	      theRegridBWF = transCHAN_WIDTH[0]*floor((theRegridBWF+transCHAN_WIDTH[0]*0.01)/transCHAN_WIDTH[0]);
+	    }
+	    else{
+	      theRegridBWF = regridChanWidthF*floor((theRegridBWF+regridChanWidthF*0.01)/regridChanWidthF);
+	    }
 	  }
 	  else if(regridChanWidthF <= 0.){ // channel width not set
 	    theRegridBWF = transCHAN_WIDTH[0]*nchan;
 	  }
 	  else{ 
 	    theRegridBWF = regridChanWidthF*nchan;
-	  }	    
+	  }
+	  if(regridCenterF <= 0.|| regridCenter <-C::c ){ // center was not set by user but calculated
+	    // need to update
+	    theRegridCenterF = transNewXin[0] - transCHAN_WIDTH[0]/2. + theRegridBWF/2.;
+	    centerIsStart = False;
+	  }
 	}
 	// now can convert start to center
 	if(centerIsStart){
@@ -2796,7 +2804,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  oss << " *** Requested new channel width exceeds defined SPW width." << endl
 	      << "     Crating a single channel with the defined SPW width." << endl;
 	}
-	else{ // check if too small
+	else if(theCentralChanWidthF<transCHAN_WIDTH[0]){ // check if too small
 	  // determine smallest channel width
 	  lDouble smallestChanWidth = 1E30;
 	  Int ii = 0;
@@ -2825,12 +2833,36 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  }
 	}   	    
       }
+
       oss << " Channels equidistant in " << regridQuant << endl
 	  << " Central frequency (in output frame) = " << theRegridCenterF
-          << " Hz" << endl 
-	  << " Width of central channel (in output frame) = "
-          << theCentralChanWidthF << " Hz" << endl;
-      
+          << " Hz";
+      if(regridQuant == "vrad"){
+	oss << " == " << vrad(theRegridCenterF, regridVeloRestfrq) << " m/s radio velocity";
+      }
+      else if(regridQuant == "vopt"){
+	oss << " == " << vopt(theRegridCenterF, regridVeloRestfrq) << " m/s optical velocity";
+      }      
+      else if(regridQuant == "wave"){
+	oss << " == " << lambda(theRegridCenterF) << " m wavelength";
+      }
+      oss << endl;
+
+      oss << " Width of central channel (in output frame) = "
+          << theCentralChanWidthF << " Hz";
+      if(regridQuant == "vrad"){
+	oss << " == " << vrad(theRegridCenterF - theCentralChanWidthF, regridVeloRestfrq) 
+	  -  vrad(theRegridCenterF, regridVeloRestfrq) << " m/s radio velocity";
+      }
+      else if(regridQuant == "vopt"){
+	oss << " == " << vopt(theRegridCenterF - theCentralChanWidthF, regridVeloRestfrq) 
+	  - vopt(theRegridCenterF, regridVeloRestfrq) << " m/s optical velocity";
+      }      
+      else if(regridQuant == "wave"){
+	oss << " == " << lambda(theRegridCenterF - theCentralChanWidthF) - lambda(theRegridCenterF) << " m wavelength";
+      }
+      oss << endl;
+       
       // now calculate newChanLoBound, and newChanHiBound from
       // theRegridCenterF, theRegridBWF, theCentralChanWidthF
       vector<lDouble> loFBup; // the lower bounds for the new channels 

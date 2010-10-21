@@ -326,7 +326,7 @@ int main() {
     	testSuccess(
     		"Valid box specification with valid channel specification #1 succeeds",
         	0, goodImage, 0, "", "0, 0,  10,10",
-        	"0-0", none, ImageInputProcessor::USE_ALL_STOKES, True,
+        	"0~0", none, ImageInputProcessor::USE_ALL_STOKES, True,
         	expectedBlc, expectedTrc
         );
     	testSuccess(
