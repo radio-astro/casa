@@ -52,7 +52,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Null constructor merely sets private formatting string
 //
 MSLister::MSLister ()
-  : dashline_p(replicate('-',80))
+  : mss_p(),
+    dashline_p(replicate('-',80))
 {
   pMSSel_p = 0;
 }
@@ -67,6 +68,7 @@ MSLister::MSLister (const MeasurementSet& ms, LogIO& os)
   //  : pMS_p(&ms),
   : pMS_p(const_cast<MeasurementSet*>(&ms)),
     logStream_p(os),
+    mss_p(),
     dashline_p(replicate('-',80))
 {
   // Move these into initList()?
@@ -540,7 +542,7 @@ void MSLister::listData(const int pageRows,
         throw(AipsError(errmsg));
       }
       else
-        cout << "Writing output to file: " << listfile << endl;
+        cerr << "Writing output to file: " << listfile << endl;
 
       file.open(listfile.data());
       myout.rdbuf(file.rdbuf());   // DON'T redirect cout to file!
@@ -583,10 +585,17 @@ void MSLister::listData(const int pageRows,
     sort[0] = MS::ANTENNA1;
     sort[1] = MS::ANTENNA2;
     Double timeInterval = 300; // 5 minutes
+    if(pMSSel_p->isNull()){
+        return;
+    }
     MSIter msIter(*pMSSel_p, sort, timeInterval);
     for (msIter.origin(); msIter.more(); msIter++){
-
       MS splitMS = msIter.table();
+      if(splitMS.isNull()){
+        break;
+      }
+      if (!splitMS.nrow())
+          break;
       //myout << "splitMS.nrow()=" << splitMS.nrow() << endl;
 
       getRanges(splitMS);
@@ -997,7 +1006,8 @@ void MSLister::listData(const int pageRows,
 
         // The spectral window ID for this row of the MS is 'spwinid(tableRow)'.
 
-        for (uInt rowCL = 0; rowCL < spwRows; rowCL++) if (chanList_p(rowCL,0) == spwinid(tableRow)) {
+        for (uInt rowCL = 0; rowCL < spwRows; rowCL++){
+           if (chanList_p(rowCL,0) == spwinid(tableRow)) {
             // 'rowCL' is the present row of the 'chanList_p' Matrix.
             // chanList_p(rowCL,0) is the SpwID of the current MS row.
 
@@ -1056,7 +1066,10 @@ void MSLister::listData(const int pageRows,
                 myout.precision(precWeight_p);
                 myout.width(wWeight_p);   myout << weight(IPosition(2,indexPols_p(ipol),tableRow));
                 myout.setf(ios::right); myout.width(2);
-                myout << flagSym(flag(IPosition(3,indexPols_p(ipol),ichan,tableRow)));
+                if(flag(IPosition(3,indexPols_p(ipol),ichan,tableRow)))
+                   myout << flagSym(1);
+                else 
+                   myout << flagSym(0);
                 // Print all loop indices; useful for debugging these loops.
                 // myout << "ipol= " << ipol << " ichan= " << ichan << " rowCL= " << rowCL << " tableRow= " << tableRow;
               } // pol loop
@@ -1066,7 +1079,8 @@ void MSLister::listData(const int pageRows,
               }
               myout << endl;
             } // chan loop
-            if (endOutput) {break;} // break out of spw loop
+          }
+          if (endOutput) {break;} // break out of spw loop
 
           } // spw loop
         if (endOutput) {break;} // break out of row loop
