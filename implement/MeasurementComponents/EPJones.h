@@ -33,6 +33,7 @@
 #include <casa/BasicSL/Complex.h>
 #include <synthesis/MeasurementComponents/SolvableVisCal.h>
 #include <synthesis/MeasurementComponents/nPBWProjectFT.h>
+#include <synthesis/MeasurementComponents/PBMosaicFT.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageInterface.h>
@@ -43,8 +44,9 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Forward declaration
-class VisEquation;
-class nPBWProjectFT;
+  class VisEquation;
+  class nPBWProjectFT;
+  class PBMosaicFT;
 
 // **********************************************************
 //  EPJones (pointing errors)
@@ -145,7 +147,7 @@ public:
   virtual Float printFraction(const Int& nSlots) {return 0.1;};
   Array<Float> getOffsets(const Int& spw) {return rcs().par(spw);}
   Array<Double> getTime(const Int& spw) {return rcs().time(spw);}
-  Array<Float> nearest(const Double time);
+  void nearest(const Double time, Array<Float>& vals);
   void printRPar();  
 
 protected:
@@ -169,6 +171,7 @@ private:
   // Local Matrix for referencing pointing pars in a convenient way
   Cube<Float>  pointPar_;
   nPBWProjectFT *pbwp_p;
+  //  PBMosaicFT *pbwp_p;
   MeasurementSet *ms_p;
   VisSet *vs_p;
   //  Array<Float> azOff, elOff;
