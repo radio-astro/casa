@@ -278,7 +278,7 @@ namespace casa{
   // Set the value of the PA tolerance
   void ParAngleChangeDetector::setTolerance(const Quantity &pa_tolerance)
   {
-    pa_tolerance_p = pa_tolerance.getValue("rad");
+    pa_tolerance_p = abs(pa_tolerance.getValue("rad"));
   }
   // reset to the state which exist just after construction
   void ParAngleChangeDetector::reset() throw(AipsError)
