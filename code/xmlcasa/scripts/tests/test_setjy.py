@@ -1,10 +1,11 @@
+import numpy
 import os
 import sys
 import shutil
 from __main__ import default
 from tasks import *
 from taskinit import *
-from tests.test_split import check_eq, datapath
+from tests.test_split import check_eq, datapath, SplitChecker
 import unittest
 
 '''
@@ -14,6 +15,7 @@ Features tested:
   1. Does setjy(modimage=modelimu, fluxdensity=0) NOT scale the model image's
      flux density?
   2. Does setjy(modimage=modelimu) scale the model image's flux density?
+  3. Solar system (Uranus) flux density calibration.
 '''
 
 class CheckAfterImportuvfits(unittest.TestCase):
@@ -137,7 +139,86 @@ class setjy_test_modimage(CheckAfterImportuvfits):
         except Exception, e:
             print "results with scaling:", self.records[True]
             raise e
-    
 
+class Uranus(SplitChecker):
+    need_to_initialize = True
+    inpms = 'unittest/setjy/2528.ms'
+    corrsels = ['']
+    records = {}
+
+    def do_split(self, corrsel):
+        """
+        Doesn't really run split; just setjy.
+        """
+        record = {}
+
+        # Paranoia: check that inpms doesn't already have MODEL_DATA.
+        # Otherwise, we could mistake old results for new ones.  That could be
+        # fixed by splitting out DATA, but inpms is not supposed to require
+        # that.
+        tb.open(self.inpms)
+        cols = tb.colnames()
+        tb.close()
+        if 'MODEL_DATA' in cols:
+            raise ValueError, "The input MS, " + inpms + " already has a MODEL_DATA col"
+
+        try:
+            print "\nRunning setjy(field='Uranus')."
+            sjran = setjy(self.inpms, field='Uranus', spw='', modimage='',
+                          scalebychan=False, fluxdensity=-1,
+                          standard='Butler-JPL-Horizons 2010', async=False)
+        except Exception, e:
+            print "Error running setjy(field='Uranus')"
+            raise e
+        try:
+            tb.open(self.inpms)
+            cols = tb.colnames()
+            if 'MODEL_DATA' not in cols:
+                raise AssertionError, "setjy(field='Uranus') did not add a MODEL_DATA column"
+        except AssertionError, e:
+            raise e
+        else:
+            record['wvr'] = tb.getcell('MODEL_DATA', 0)
+            record['auto3'] = tb.getcell('MODEL_DATA', 10)
+            record['long3'] = tb.getcell('MODEL_DATA', 11)
+            record['auto4'] = tb.getcell('MODEL_DATA', 2)
+            record['med4'] = tb.getcell('MODEL_DATA', 4)
+            record['long4'] = tb.getcell('MODEL_DATA', 3)
+        finally:
+            tb.close()
+        self.__class__.records[corrsel] = record
+        return sjran
+
+    def test_wvr(self):
+        """WVR spw"""
+        check_eq(self.records['']['wvr'], numpy.array([[26.42447472+0.j,
+                                                        26.42447472+0.j]]),
+                 0.0001)
+    def test_auto3(self):
+        """Zero spacing of spw 3"""
+        check_eq(self.records['']['auto3'], numpy.array([[65.85110474+0.j],
+                                                         [65.85110474+0.j]]),
+                 0.0001)
+    def test_long3(self):
+        """Long spacing of spw 3"""
+        check_eq(self.records['']['long3'], numpy.array([[4.74397755+0.j],
+                                                         [4.74397755+0.j]]),
+                 0.0001)
+    def test_auto4(self):
+        """Zero spacing of spw 4"""
+        check_eq(self.records['']['auto4'], numpy.array([[ 69.381073+0.j],
+                                                         [ 69.381073+0.j]]),
+                 0.0001)
+    def test_med4(self):
+        """Medium spacing of spw 4"""
+        check_eq(self.records['']['med4'], numpy.array([[38.01920319+0.j],
+                                                        [38.01920319+0.j]]),
+                 0.0001)
+    def test_long4(self):
+        """Long spacing of spw 4"""
+        check_eq(self.records['']['long4'], numpy.array([[ 2.82068014+0.j],
+                                                         [ 2.82068014+0.j]]),
+                 0.0001)
+            
 def suite():
-    return [setjy_test_modimage]
+    return [setjy_test_modimage, Uranus]
