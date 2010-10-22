@@ -74,31 +74,42 @@ namespace casa {
     // vis. ArrayColumn from the MS.
     //
     ndx=0;ndx(0)=whichPol;
-    for(ndx(2);ndx(2)<N;ndx(2)++)
-      if ((!vb.flagRow()(ndx(2)))     && 
-	  (!vb.flag()(0,ndx(2)))    &&
-//	  (!vb.flagCube()(ndx))   &&
-	  ((ant1[ndx(2)] != ant2[ndx(2)]) && 
-	   (ant1[ndx(2)] == whichAnt)     || 
-	   (ant2[ndx(2)] == whichAnt)))
+    Int i;
+    //#pragma omp parallel default(shared) private(i)
+    {
+      //#pragma omp for 
+      //      for(ndx(2);ndx(2)<N;ndx(2)++)
+      for(i=ndx(2);i<N;i++)
 	{
-	  wt = vb.weight()(ndx(2));
-	  sumWt += wt;
+	  ndx(2)=i;
+	  if ((!vb.flagRow()(ndx(2)))     && 
+	      (!vb.flag()(0,ndx(2)))    &&
+	      //	  (!vb.flagCube()(ndx))   &&
+	      ((ant1[ndx(2)] != ant2[ndx(2)]) && 
+	       (ant1[ndx(2)] == whichAnt)     || 
+	       (ant2[ndx(2)] == whichAnt)))
+	    {
+	      wt = vb.weight()(ndx(2));
+	      sumWt += wt;
+	    
+	      if (!weighted) wt = 1.0;
 
-	  if (!weighted) wt = 1.0;
-
-	  J=(ant1[ndx[2]]!=whichAnt)?ant1[ndx(2)]:ant2[ndx(2)];
-	  nPoints[J]++;
-	  if (ant1[ndx(2)] > ant2[ndx(2)])  
-	    Vj[J] += Complex(wt,0)*vb.modelVisCube()(ndx);
-	  else
-	    if (negate)
-	      Vj[J] += -Complex(wt,0)*(vb.modelVisCube()(ndx));
-	    else
-	      Vj[J] += Complex(wt,0)*conj(vb.modelVisCube()(ndx));
-	  J++;
+	      J=(ant1[ndx[2]]!=whichAnt)?ant1[ndx(2)]:ant2[ndx(2)];
+	      nPoints[J]++;
+	      if (ant1[ndx(2)] > ant2[ndx(2)])  
+		Vj[J] += Complex(wt,0)*vb.modelVisCube()(ndx);
+	      else
+		if (negate)
+		  Vj[J] += -Complex(wt,0)*(vb.modelVisCube()(ndx));
+		else
+		  Vj[J] += Complex(wt,0)*conj(vb.modelVisCube()(ndx));
+	      J++;
+	    }
 	}
-    for(Int i=0;i<NAnt;i++) 
+    }
+    //#pragma omp parallel default(shared) private(i)
+    //#pragma omp for 
+    for(i=0;i<NAnt;i++) 
       if (nPoints[i] <= 0) Vj[i] = 0.0;
 	
     return Vj;
