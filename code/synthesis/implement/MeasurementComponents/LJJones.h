@@ -149,7 +149,7 @@ public:
   virtual Float printFraction(const Int& nSlots) {return 0.1;};
   Array<Complex> getOffsets(const Int& spw) {return cs().par(spw);}
   Array<Double> getTime(const Int& spw) {return cs().time(spw);}
-  Array<Complex> nearest(const Double time);
+  void nearest(const Double time, Array<Complex>& vals);
   void printRPar();  
 
   void setByPassMode(Int& b) {byPass_p = b;}
