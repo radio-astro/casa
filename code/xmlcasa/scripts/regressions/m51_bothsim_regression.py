@@ -91,25 +91,24 @@ ia.open(project + '.image')
 m51sd_stats=ia.statistics(verbose=False,list=False)
 ia.close()
 
-# reference statistic values for simulated image
-#rev.12787
-refstats = { 'sum': 15834.,
-             'max': 1.6246,
-             'min': -0.52885,
-             'rms': 0.18651,
-             'sigma': 0.17646 }
 
 ia.open(project + '.diff')
 m51sd_diffstats=ia.statistics(verbose=False,list=False)
 ia.close()
 
+# reference statistic values for simulated image
+refstats = { 'sum': 29.349,
+             'max': 0.10809,
+             'min': -0.039872,
+             'rms': 0.011892,
+             'sigma': 0.011889 }
+
 # reference statistic values for diff image
-#rev.12787
-diffstats = {'sum': 3.5216e4,
-             'max': 2.7180,
-             'min': -0.49571,
-             'rms': 0.30398,
-             'sigma': 0.27268 }
+diffstats = {'sum': 838.2,
+             'max': 0.079668,
+             'min': -0.010396,
+             'rms': 0.011987,
+             'sigma': 0.0094131 }
 
 
 # relative tolerances to reference values
@@ -176,7 +175,7 @@ if regstate:
     print >> logfile, 'Passed',
 else:
     print >> logfile, 'FAILED',
-print >> logfile, 'regression test for simdata of M51 (total power).'
+print >> logfile, 'regression test for simdata of M51 (total power+interferometric).'
 print >>logfile,'---'
 print >>logfile,'*********************************'
     
@@ -196,4 +195,4 @@ print >>logfile,'*************************************'
     
 logfile.close()
 						    
-print '--Finished simdata of M51 (total power) regression--'
+print '--Finished simdata of M51 (total power+interferometric) regression--'
