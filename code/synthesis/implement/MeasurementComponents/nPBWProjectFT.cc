@@ -155,8 +155,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       mspc(0), msac(0), pointingToImage(0), usezero_p(usezero),
       doPBCorrection(doPBCorr),
       Second("s"),Radian("rad"),Day("d"), noOfPASteps(0),
-      pbNormalized(False),resetPBs(True),cfCache(), paChangeDetector(),
-      cfStokes(),Area(), avgPBSaved(False),avgPBReady(False)
+      pbNormalized(False),resetPBs(True), rotateAperture_p(True),
+      cfCache(), paChangeDetector(), cfStokes(),Area(), 
+      avgPBSaved(False),avgPBReady(False)
   {
     epJ=NULL;
     convSize=0;
@@ -203,6 +204,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     maxConvSupport=-1;
     convSampling=OVERSAMPLING;
     convSize=CONVSIZE;
+  }
+  //
+  //----------------------------------------------------------------------
+  //
+  nPBWProjectFT::nPBWProjectFT(const nPBWProjectFT& other):FTMachine()
+  {
+    operator=(other);
   }
   //
   //---------------------------------------------------------------
@@ -286,6 +294,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	resetPBs=other.resetPBs;
 	pbNormalized=other.pbNormalized;
 	currentCFPA=other.currentCFPA;
+	lastPAUsedForWtImg = other.lastPAUsedForWtImg;
 	cfStokes=other.cfStokes;
 	Area=other.Area;
 	avgPB = other.avgPB;
@@ -343,13 +352,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     nwEij.setSigma(sigma);
     Int bandID = getVLABandID(Freq,telescopeNames(0));
     return bandID;
-  }
-  //
-  //----------------------------------------------------------------------
-  //
-  nPBWProjectFT::nPBWProjectFT(const nPBWProjectFT& other)
-  {
-    operator=(other);
   }
   //
   //----------------------------------------------------------------------
@@ -555,8 +557,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int NAnt = 0;
     MEpoch LAST;
     Double thisTime = getCurrentTimeStamp(vb);
+    //    Array<Float> pointingOffsets = epJ->nearest(thisTime);
     if (epJ==NULL) return 0;
-    Array<Float> pointingOffsets = epJ->nearest(thisTime);
+    Array<Float> pointingOffsets; epJ->nearest(thisTime,pointingOffsets);
     NAnt=pointingOffsets.shape()(2);
     l_off.resize(IPosition(3,1,1,NAnt)); // Poln x NChan x NAnt 
     m_off.resize(IPosition(3,1,1,NAnt)); // Poln x NChan x NAnt 
@@ -788,6 +791,71 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //---------------------------------------------------------------
   //
+  void nPBWProjectFT::makeSensitivityImage(Lattice<Complex>& wtImage,
+					   ImageInterface<Float>& sensitivityImage,
+					   const Matrix<Float>& sumWt,
+					   const Bool& doFFTNorm)
+  {
+    Bool doSumWtNorm=True;
+    if (sumWt.shape().nelements()==0) doSumWtNorm=False;
+
+    if ((sumWt.shape().nelements() < 2) || 
+	(sumWt.shape()(0) != wtImage.shape()(2)) || 
+	(sumWt.shape()(1) != wtImage.shape()(3)))
+      throw(AipsError("makeSensitivityImage(): "
+		      "Sum of weights per poln and chan required"));
+    Float sumWtVal=1.0;
+
+    LatticeFFT::cfft2d(wtImage,False);
+    Int sizeX=wtImage.shape()(0), sizeY=wtImage.shape()(1);
+    sensitivityImage.resize(wtImage.shape());
+    Array<Float> senBuf;
+    sensitivityImage.get(senBuf,False);
+    ArrayLattice<Float> senLat(senBuf, True);
+
+    //
+    // Copy one 2D plane at a time, normalizing by the sum of weights
+    // and possibly 2D FFT.
+    //
+    // Set up Lattice iteratos on wtImage and sensitivityImage
+    //
+    IPosition axisPath(4, 0, 1, 2, 3);
+    IPosition cursorShape(4, sizeX, sizeY, 1, 1);
+    LatticeStepper wtImStepper(wtImage.shape(), cursorShape, axisPath);
+    LatticeIterator<Complex> wtImIter(wtImage, wtImStepper);
+    LatticeStepper senImStepper(senLat.shape(), cursorShape, axisPath);
+    LatticeIterator<Float> senImIter(senLat, senImStepper);
+    //
+    // Iterate over channel and polarization axis
+    //
+    if (!doFFTNorm) sizeX=sizeY=1;
+    for(wtImIter.reset(),senImIter.reset();  !wtImIter.atEnd(); wtImIter++,senImIter++) 
+      {
+	Int pol=wtImIter.position()(2), chan=wtImIter.position()(3);
+	if (doSumWtNorm) sumWtVal=sumWt(pol,chan);
+	senImIter.rwCursor() = (real(wtImIter.rwCursor())
+				*Float(sizeX)*Float(sizeY)/sumWtVal);
+      }
+    //
+    // The following code is averaging RR and LL planes and writing
+    // the result to back to both planes.  This needs to be
+    // generalized for full-pol case.
+    //
+    IPosition start0(4,0,0,0,0), start1(4,0,0,1,0), length(4,sizeX,sizeY,1,1);
+    Slicer slicePol0(start0,length), slicePol1(start1,length);
+    Array<Float> polPlane0, polPlane1;
+    senLat.getSlice(polPlane0,slicePol0);
+    senLat.getSlice(polPlane1,slicePol1);
+    polPlane0=(polPlane0+polPlane1)/2.0;
+    polPlane1=polPlane0;
+    // senLat.putSlice(polPlane0,IPosition(4,0,0,0,0));
+    // senLat.putSlice(polPlane1,IPosition(4,0,0,1,0));
+    // cerr << "Pol0: " << polPlane0.shape() << " " << max(polPlane0) << endl;
+    // cerr << "Pol1: " << polPlane1.shape() << " " << max(polPlane1) << endl;
+  }
+  //
+  //---------------------------------------------------------------
+  //
   void nPBWProjectFT::normalizeAvgPB()
   {
     if (!pbNormalized)
@@ -810,24 +878,40 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
 	Float pbMax = max(avgPBBuf);
 
+	ndx=0;
+	for(ndx(1)=0;ndx(1)<avgPBShape(1);ndx(1)++)
+	  for(ndx(0)=0;ndx(0)<avgPBShape(0);ndx(0)++)
+	    {
+	      IPosition plane1(ndx);
+	      plane1=ndx;
+	      plane1(2)=1; // The other poln. plane
+	      avgPBBuf(ndx) = (avgPBBuf(ndx) + avgPBBuf(plane1))/2.0;
+	    }
+	for(ndx(1)=0;ndx(1)<avgPBShape(1);ndx(1)++)
+	  for(ndx(0)=0;ndx(0)<avgPBShape(0);ndx(0)++)
+	    {
+	      IPosition plane1(ndx);
+	      plane1=ndx;
+	      plane1(2)=1; // The other poln. plane
+	      avgPBBuf(plane1) = avgPBBuf(ndx);
+	    }
 	if (fabs(pbMax-1.0) > 1E-3)
 	  {
-	avgPBBuf = avgPBBuf/noOfPASteps;
-	for(ndx(3)=0;ndx(3)<avgPBShape(3);ndx(3)++)
-	  for(ndx(2)=0;ndx(2)<avgPBShape(2);ndx(2)++)
-	    {
-	      peak(ndx(2)) = 0;
-	      for(ndx(1)=0;ndx(1)<avgPBShape(1);ndx(1)++)
-		for(ndx(0)=0;ndx(0)<avgPBShape(0);ndx(0)++)
-		  if (abs(avgPBBuf(ndx)) > peak(ndx(2)))
-		    peak(ndx(2)) = avgPBBuf(ndx);
+	    //	    avgPBBuf = avgPBBuf/noOfPASteps;
+	    for(ndx(3)=0;ndx(3)<avgPBShape(3);ndx(3)++)
+	      for(ndx(2)=0;ndx(2)<avgPBShape(2);ndx(2)++)
+		{
+		  peak(ndx(2)) = 0;
+		  for(ndx(1)=0;ndx(1)<avgPBShape(1);ndx(1)++)
+		    for(ndx(0)=0;ndx(0)<avgPBShape(0);ndx(0)++)
+		      if (abs(avgPBBuf(ndx)) > peak(ndx(2)))
+			peak(ndx(2)) = avgPBBuf(ndx);
 	      
-	      for(ndx(1)=0;ndx(1)<avgPBShape(1);ndx(1)++)
-		for(ndx(0)=0;ndx(0)<avgPBShape(0);ndx(0)++)
-		  avgPBBuf(ndx) *= (pbPeaks(ndx(2))/peak(ndx(2)));
-	    }
-	
-	if (isRefF) avgPB.put(avgPBBuf);
+		  for(ndx(1)=0;ndx(1)<avgPBShape(1);ndx(1)++)
+		    for(ndx(0)=0;ndx(0)<avgPBShape(0);ndx(0)++)
+		      avgPBBuf(ndx) *= (pbPeaks(ndx(2))/peak(ndx(2)));
+		}
+	    if (isRefF) avgPB.put(avgPBBuf);
 	  }
       }
     pbNormalized = True;
@@ -1108,7 +1192,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // 	 << convFuncCache.nelements() << " " 
     // 	 << convWeightsCache.nelements() << " " 
     // 	 << endl;
-    currentCFPA = pa;
+    lastPAUsedForWtImg = currentCFPA = pa;
+    
     Bool pbMade=False;
     if (cfSource==1) // CF found and loaded from the disk cache
       {
@@ -1540,8 +1625,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// Now FFT and get the result back
 	//
 	// {
-	//   String name("twoDPBSq.im");
-	//   storeImg(name,twoDPBSq);
+	//   String name("twoDPB.im");
+	//   storeImg(name,twoDPB);
 	// }
 	LatticeFFT::cfft2d(twoDPB);
 	LatticeFFT::cfft2d(twoDPBSq);
@@ -1866,6 +1951,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       LatticeIterator<Complex> lix(*lattice, lsx);
 	  
       verifyShapes(avgPB.shape(), image->shape());
+      Array<Float> avgBuf; avgPB.get(avgBuf);
+      if (max(avgBuf) < 1e-04)
+	throw(AipsError("Normalization by PB requested but either PB not found in the cache "
+			"or is ill-formed."));
 
       LatticeStepper lpb(avgPB.shape(),cursorShape,axisPath);
       LatticeIterator<Float> lipb(avgPB, lpb);
@@ -1884,7 +1973,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  
 	  Vector<Float> PBCorrection(lipb.rwVectorCursor().shape());
 	  PBCorrection = lipb.rwVectorCursor();
-
 	  for(int ix=0;ix<nx;ix++) 
 	    {
 	      // PBCorrection(ix) = (FUNC(PBCorrection(ix)))/(sincConv(ix)*sincConv(iy));
@@ -2247,7 +2335,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       CFMap = makeConjPolMap(vb);
     */
     Int N;
-    actualPA = getPA(vb);
+    actualPA = getVBPA(vb);
 
     N=polMap.nelements();
     CFMap = polMap; ConjCFMap = polMap;
@@ -2402,7 +2490,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Double actualPA;
 
     Vector<Int> ConjCFMap, CFMap;
-    actualPA = getPA(vb);
+    actualPA = getVBPA(vb);
     ConjCFMap = polMap;
     makeCFPolMap(vb,CFMap);
     makeConjPolMap(vb,CFMap,ConjCFMap);
@@ -2559,7 +2647,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     const Complex *visdata_p=&visdata;
     
     Vector<Int> ConjCFMap, CFMap;
-    actualPA = getPA(vb);
+    actualPA = getVBPA(vb);
     ConjCFMap = polMap;
 
     Array<Complex> rotatedConvFunc;
@@ -3847,6 +3935,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void nPBWProjectFT::setPAIncrement(const Quantity& paIncrement)
   {
     paChangeDetector.setTolerance(paIncrement);
+    rotateAperture_p = True;
+    if (paIncrement.getValue("rad") < 0)
+      rotateAperture_p = False;
+    logIO() << "Setting PA increment to " << paIncrement.getValue("deg") << " deg" << endl;
   }
 
   Bool nPBWProjectFT::verifyShapes(IPosition pbShape, IPosition skyShape)
