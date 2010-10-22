@@ -125,7 +125,7 @@ namespace asdmbinaries {
     void parseSDMDataHeader(xmlNode* a_node, SDMDataObject& sdmDataObject);
     
     //    void parseProjectPath(xmlNode* a_node, SDMDataObject& sdmDataObject);
-    int64_t parseStartTime(xmlNode* a_node);
+    long long parseStartTime(xmlNode* a_node);
     string parseDataOID(xmlNode* a_node);
     int  parseDimensionality(xmlNode* a_node);
     int  parseNumTime(xmlNode* a_node);
@@ -228,8 +228,8 @@ namespace asdmbinaries {
     void parseSDMDataSubsetHeader(xmlNode* a_node, SDMDataSubset& sdmCorrDataSubset);
     //    void parseProjectPath(xmlNode* a_node, SDMDataSubset& sdmCorrDataSubset);
     void parseSchedulePeriodTime(xmlNode* a_node, SDMDataSubset& sdmCorrDataSubset);
-    int64_t parseTime(xmlNode* a_node);
-    int64_t parseInterval(xmlNode* a_node);
+    long long parseTime(xmlNode* a_node);
+    long long parseInterval(xmlNode* a_node);
     void parseAbortObservation(xmlNode* a_node, SDMDataSubset& sdmCorrDataSubset);
     
     xmlDoc* doc;
@@ -273,8 +273,8 @@ namespace asdmbinaries {
     void parseSDMDataSubsetHeader(xmlNode* a_node,SDMDataSubset& sdmTPDataSubset);
     //    void parseProjectPath(xmlNode* a_node, SDMDataSubset& sdmTPDataSubset);
     void parseSchedulePeriodTime(xmlNode* a_node, SDMDataSubset& sdmCorrDataSubset);
-    int64_t parseTime(xmlNode* a_node);
-    int64_t parseInterval(xmlNode* a_node);
+    long long parseTime(xmlNode* a_node);
+    long long parseInterval(xmlNode* a_node);
     string parseDataStructureDesc(xmlNode* a_node);
     void parseBinaryData(xmlNode* a_node, SDMDataSubset& sdmTPDataSubset);
     
@@ -330,7 +330,7 @@ namespace asdmbinaries {
     static string trim(const string &s);
 
     static string parseString(xmlNode* a_node);
-    static int64_t parseLongLong(xmlNode* a_node);
+    static long long parseLongLong(xmlNode* a_node);
     static int   parseInt(xmlNode* a_node);
     static bool  parseBool(xmlNode* a_node);
     static float parseFloat(xmlNode* a_node);

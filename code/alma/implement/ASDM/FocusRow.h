@@ -79,7 +79,7 @@ using  asdm::ArrayTimeInterval;
 
 
 /*\file Focus.h
-    \brief Generated from model's revision "1.54", branch "HEAD"
+    \brief Generated from model's revision "1.55", branch "HEAD"
 */
 
 namespace asdm {
@@ -100,7 +100,7 @@ typedef void (FocusRow::*FocusAttributeFromBin) (EndianISStream& eiss);
 /**
  * The FocusRow class is a row of a FocusTable.
  * 
- * Generated from model's revision "1.54", branch "HEAD"
+ * Generated from model's revision "1.55", branch "HEAD"
  *
  */
 class FocusRow {

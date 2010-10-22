@@ -100,7 +100,7 @@ using  asdm::Length;
 
 
 /*\file TotalPower.h
-    \brief Generated from model's revision "1.54", branch "HEAD"
+    \brief Generated from model's revision "1.55", branch "HEAD"
 */
 
 namespace asdm {
@@ -127,7 +127,7 @@ typedef void (TotalPowerRow::*TotalPowerAttributeFromBin) (EndianISStream& eiss)
 /**
  * The TotalPowerRow class is a row of a TotalPowerTable.
  * 
- * Generated from model's revision "1.54", branch "HEAD"
+ * Generated from model's revision "1.55", branch "HEAD"
  *
  */
 class TotalPowerRow {
@@ -729,13 +729,13 @@ public:
   * @return a pointer on a StateRow whose key (a Tag) is equal to the Tag stored at position
   * i in the stateId. 
   */
- StateRow* getState(int i); 
+ StateRow* getStateUsingStateId(int i); 
  
  /**
   * Returns the vector of StateRow* linked to this row via the Tags stored in stateId
   * @return an array of pointers on StateRow.
   */
- vector<StateRow *> getStates(); 
+ vector<StateRow *> getStatesUsingStateId(); 
   
 
 	

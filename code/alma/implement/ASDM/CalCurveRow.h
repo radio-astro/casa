@@ -115,7 +115,7 @@ using namespace PolarizationTypeMod;
 
 
 /*\file CalCurve.h
-    \brief Generated from model's revision "1.54", branch "HEAD"
+    \brief Generated from model's revision "1.55", branch "HEAD"
 */
 
 namespace asdm {
@@ -136,7 +136,7 @@ typedef void (CalCurveRow::*CalCurveAttributeFromBin) (EndianISStream& eiss);
 /**
  * The CalCurveRow class is a row of a CalCurveTable.
  * 
- * Generated from model's revision "1.54", branch "HEAD"
+ * Generated from model's revision "1.55", branch "HEAD"
  *
  */
 class CalCurveRow {

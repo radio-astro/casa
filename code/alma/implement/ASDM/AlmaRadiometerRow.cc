@@ -614,7 +614,7 @@ void AlmaRadiometerRow::spectralWindowIdFromBin(EndianISStream& eiss) {
   * Returns the SpectralWindowRow linked to this row via the Tag stored in spectralWindowId
   * at position i.
   */
- SpectralWindowRow* AlmaRadiometerRow::getSpectralWindow(int i) {
+ SpectralWindowRow* AlmaRadiometerRow::getSpectralWindowUsingSpectralWindowId(int i) {
  	return table.getContainer().getSpectralWindow().getRowByKey(spectralWindowId.at(i));
  } 
  
@@ -622,7 +622,7 @@ void AlmaRadiometerRow::spectralWindowIdFromBin(EndianISStream& eiss) {
   * Returns the vector of SpectralWindowRow* linked to this row via the Tags stored in spectralWindowId
   *
   */
- vector<SpectralWindowRow *> AlmaRadiometerRow::getSpectralWindows() {
+ vector<SpectralWindowRow *> AlmaRadiometerRow::getSpectralWindowsUsingSpectralWindowId() {
  	vector<SpectralWindowRow *> result;
  	for (unsigned int i = 0; i < spectralWindowId.size(); i++)
  		result.push_back(table.getContainer().getSpectralWindow().getRowByKey(spectralWindowId.at(i)));

@@ -107,7 +107,7 @@ using namespace DirectionReferenceCodeMod;
 
 
 /*\file Pointing.h
-    \brief Generated from model's revision "1.54", branch "HEAD"
+    \brief Generated from model's revision "1.55", branch "HEAD"
 */
 
 namespace asdm {
@@ -128,7 +128,7 @@ typedef void (PointingRow::*PointingAttributeFromBin) (EndianISStream& eiss);
 /**
  * The PointingRow class is a row of a PointingTable.
  * 
- * Generated from model's revision "1.54", branch "HEAD"
+ * Generated from model's revision "1.55", branch "HEAD"
  *
  */
 class PointingRow {

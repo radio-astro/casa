@@ -122,7 +122,7 @@ using namespace SourceModelMod;
 
 
 /*\file CalFlux.h
-    \brief Generated from model's revision "1.54", branch "HEAD"
+    \brief Generated from model's revision "1.55", branch "HEAD"
 */
 
 namespace asdm {
@@ -143,7 +143,7 @@ typedef void (CalFluxRow::*CalFluxAttributeFromBin) (EndianISStream& eiss);
 /**
  * The CalFluxRow class is a row of a CalFluxTable.
  * 
- * Generated from model's revision "1.54", branch "HEAD"
+ * Generated from model's revision "1.55", branch "HEAD"
  *
  */
 class CalFluxRow {

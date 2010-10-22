@@ -451,10 +451,10 @@ namespace sdmbin{
 		      unsigned int      numBaseband,
 		      unsigned int      numAnt,
 		      CorrelationMode   correlationMode,
-		      int64_t         time,
-		      int64_t         timeCentroid,
-		      int64_t         interval, 
-		      int64_t         exposure, 
+		      long long         time,
+		      long long         timeCentroid,
+		      long long         interval, 
+		      long long         exposure, 
 		      const float*      floatData):
     DataStructure( numPolProduct,
 		   numBin,
@@ -499,10 +499,10 @@ namespace sdmbin{
 		      unsigned int      numBaseband,
 		      unsigned int      numAnt,
 		      CorrelationMode   correlationMode,
-		      int64_t         time,
-		      int64_t         timeCentroid, 
-		      int64_t         interval,
-		      int64_t         exposure,
+		      long long         time,
+		      long long         timeCentroid, 
+		      long long         interval,
+		      long long         exposure,
 		      const float*             floatData, 
 		      const unsigned    int* dataFlags):
     DataStructure( numPolProduct,
@@ -549,10 +549,10 @@ namespace sdmbin{
 		      unsigned int                        numBaseband,
 		      unsigned int                        numAnt,
 		      CorrelationMode                     correlationMode,
-		      int64_t                           time,
-		      int64_t                           timeCentroid,  
-		      int64_t                           interval,
-		      int64_t                           exposure,  
+		      long long                           time,
+		      long long                           timeCentroid,  
+		      long long                           interval,
+		      long long                           exposure,  
 		      const float*                        floatData, 
 		      const unsigned int*                 dataFlags):
     DataStructure( vv_numAutoPolProduct,
@@ -600,10 +600,10 @@ namespace sdmbin{
 		      unsigned int                        numBaseband,
 		      unsigned int                        numAnt,
 		      CorrelationMode                     correlationMode,
-		      int64_t                           time,
-		      int64_t                           timeCentroid,  
-		      int64_t                           interval,
-		      int64_t                           exposure,  
+		      long long                           time,
+		      long long                           timeCentroid,  
+		      long long                           interval,
+		      long long                           exposure,  
 		      const float*                        floatData):
     DataStructure( vv_numAutoPolProduct,    
 		   vv_numSpectralPoint,
@@ -651,10 +651,10 @@ namespace sdmbin{
 		      unsigned int                        numBaseband,
 		      unsigned int                        numAnt,
 		      CorrelationMode                     correlationMode,
-		      int64_t                           time,
-		      int64_t                           timeCentroid,  
-		      int64_t                           interval, 
-		      int64_t                           exposure):
+		      long long                           time,
+		      long long                           timeCentroid,  
+		      long long                           interval, 
+		      long long                           exposure):
     DataStructure( vv_numCrossPolProduct,
 		   vv_numAutoPolProduct,
 		   vv_numSpectralPoint,
@@ -729,10 +729,10 @@ namespace sdmbin{
 		      unsigned int                        numBaseband,
 		      unsigned int                        numAnt,
 		      CorrelationMode                     correlationMode,
-		      int64_t                           time,
-		      int64_t                           timeCentroid,  
-		      int64_t                           interval,
-		      int64_t                           exposure,
+		      long long                           time,
+		      long long                           timeCentroid,  
+		      long long                           interval,
+		      long long                           exposure,
 		      unsigned int                        numVal,
 		      const int*                          crossData,
 		      unsigned int                        numAutoData,
@@ -877,10 +877,10 @@ namespace sdmbin{
     cout<<"D"<<endl;
     if(a.lonlonActualTimesPtr_){
       cout<<"a.numActualTimes_="<<a.numActualTimes_<<endl;
-      lonlonActualTimesPtr_ = new int64_t[numActualTimes_]; 
+      lonlonActualTimesPtr_ = new long long[numActualTimes_]; 
       for(unsigned int n=0; n<numActualTimes_; n++)lonlonActualTimesPtr_[n] = a.lonlonActualTimesPtr_[n]; }
     if(a.lonlonActualDurationsPtr_){
-      lonlonActualDurationsPtr_ = new int64_t[numActualDurations_]; 
+      lonlonActualDurationsPtr_ = new long long[numActualDurations_]; 
       for(unsigned int n=0; n<numActualDurations_; n++)lonlonActualDurationsPtr_[n] = a.lonlonActualDurationsPtr_[n]; }
     if(a.floatWeightsPtr_){
       floatWeightsPtr_ = new float[numWeights_]; 
@@ -951,13 +951,13 @@ namespace sdmbin{
 	 <<" data";
       Error( FATAL, os.str());
     }
-    int64_t st1 = (time_-interval_)/(int64_t)2;
-    int64_t et1 = (time_+interval_)/(int64_t)2; 
-    int64_t st2 = (rhs.time()-rhs.interval())/(int64_t)2;
-    int64_t et2 = (rhs.time()+rhs.interval())/(int64_t)2; 
+    long long st1 = (time_-interval_)/(long long)2;
+    long long et1 = (time_+interval_)/(long long)2; 
+    long long st2 = (rhs.time()-rhs.interval())/(long long)2;
+    long long et2 = (rhs.time()+rhs.interval())/(long long)2; 
     if( st1>et2 || et1<st2)
       Error( WARNING, "data difference of dumps overlaping in time");
-    int64_t st,et;
+    long long st,et;
     if(st1<st2)
       st = st1;
     else
@@ -967,12 +967,12 @@ namespace sdmbin{
     else
       et = et1;
 
-    int64_t timeCentroid;
+    long long timeCentroid;
     if(interval_==rhs.interval())
-      timeCentroid = (time_+rhs.time())/(int64_t)2;
+      timeCentroid = (time_+rhs.time())/(long long)2;
     else{
       double w=interval_/rhs.interval();
-      timeCentroid = (int64_t) ( (w*time_ + rhs.time())/(w+1.) );
+      timeCentroid = (long long) ( (w*time_ + rhs.time())/(w+1.) );
     }
 
     unsigned int       numF = numD;                                  // TODO (more complex than that!)
@@ -1032,7 +1032,7 @@ namespace sdmbin{
 		     numBaseband_,
 		     numAnt_,
 		     correlationMode_,
-		     (time_+rhs.time())/(int64_t) 2,
+		     (time_+rhs.time())/(long long) 2,
 		     timeCentroid,
 		     et-st,
 		     exposure_+rhs.exposure(),
@@ -1052,13 +1052,13 @@ namespace sdmbin{
 	 <<" data";
       Error( FATAL, os.str());
     }
-    int64_t st1 = (time_-interval_)/(int64_t)2;
-    int64_t et1 = (time_+interval_)/(int64_t)2; 
-    int64_t st2 = (rhs.time()-rhs.interval())/(int64_t)2;
-    int64_t et2 = (rhs.time()+rhs.interval())/(int64_t)2; 
+    long long st1 = (time_-interval_)/(long long)2;
+    long long et1 = (time_+interval_)/(long long)2; 
+    long long st2 = (rhs.time()-rhs.interval())/(long long)2;
+    long long et2 = (rhs.time()+rhs.interval())/(long long)2; 
     if( st1>et2 || et1<st2)
       Error( WARNING, "sum of data dumps which overlap in time");
-    int64_t st,et;
+    long long st,et;
     if(st1<st2)
       st = st1;
     else
@@ -1068,12 +1068,12 @@ namespace sdmbin{
     else
       et = et1;
 
-    int64_t timeCentroid;
+    long long timeCentroid;
     if(interval_==rhs.interval())
-      timeCentroid = (time_+rhs.time())/(int64_t)2;
+      timeCentroid = (time_+rhs.time())/(long long)2;
     else{
       double w=interval_/rhs.interval();
-      timeCentroid = (int64_t) ( (w*time_ + rhs.time())/(w+1.) );
+      timeCentroid = (long long) ( (w*time_ + rhs.time())/(w+1.) );
     }
     unsigned int numF = numD;                                           // TODO (more complex than that!)
     float*             sumFloatData = new float[numD];
@@ -1132,7 +1132,7 @@ namespace sdmbin{
 		     numBaseband_,
 		     numAnt_,
 		     correlationMode_,
-		     (time_+rhs.time())/(int64_t) 2,
+		     (time_+rhs.time())/(long long) 2,
 		     timeCentroid,
 		     et-st,
 		     exposure_+rhs.exposure(),
@@ -1174,21 +1174,21 @@ namespace sdmbin{
   }
 
   void DataDump::attachActualTimes( unsigned int declaredSize, EnumSet<AxisName> es_an, 
-				    unsigned int numData, const int64_t* actualTimesPtr){
+				    unsigned int numData, const long long* actualTimesPtr){
     clonlonActualTimesPtr_ = actualTimesPtr; 
     es_actualTimesAxes_    = es_an;
     numActualTimes_        = numData;
   }
   void DataDump::importActualTimes( unsigned int declaredSize, EnumSet<AxisName> es_an, 
-				    unsigned int numData, const int64_t* actualTimesPtr){
+				    unsigned int numData, const long long* actualTimesPtr){
     clonlonActualTimesPtr_ = NULL;
     if(lonlonActualTimesPtr_){
       if(numActualTimes_!=numData){
 	delete lonlonActualTimesPtr_;
-	lonlonActualTimesPtr_ = new int64_t[numData];
+	lonlonActualTimesPtr_ = new long long[numData];
       }
     }else{
-      lonlonActualTimesPtr_ = new int64_t[numData];
+      lonlonActualTimesPtr_ = new long long[numData];
     }
     for(unsigned int n=0; n<numData; n++)lonlonActualTimesPtr_[n] = actualTimesPtr[n]; 
     es_actualTimesAxes_ = es_an;
@@ -1197,21 +1197,21 @@ namespace sdmbin{
 
 
   void DataDump::attachActualDurations( unsigned int declaredSize, EnumSet<AxisName> es_an, 
-					unsigned int numData, const int64_t* actualDurationsPtr){
+					unsigned int numData, const long long* actualDurationsPtr){
     clonlonActualDurationsPtr_ = actualDurationsPtr; 
     es_actualDurationsAxes_     = es_an;
     numActualDurations_         = numData;
   }
   void DataDump::importActualDurations( unsigned int declaredSize, EnumSet<AxisName> es_an, 
-					unsigned int numData, const int64_t* actualDurationsPtr){
+					unsigned int numData, const long long* actualDurationsPtr){
     clonlonActualDurationsPtr_ = NULL;
     if(lonlonActualDurationsPtr_){
       if(numActualDurations_!=numData){
 	delete lonlonActualDurationsPtr_;
-	lonlonActualDurationsPtr_ = new int64_t[numData];
+	lonlonActualDurationsPtr_ = new long long[numData];
       }
     }else{
-      lonlonActualDurationsPtr_ = new int64_t[numData];
+      lonlonActualDurationsPtr_ = new long long[numData];
     }
     for(unsigned int n=0; n<numData; n++)lonlonActualDurationsPtr_[n] = actualDurationsPtr[n]; 
     es_actualDurationsAxes_ = es_an;
@@ -1413,22 +1413,22 @@ namespace sdmbin{
 
 
   // Accessors
-  int64_t    DataDump::time() const
+  long long    DataDump::time() const
   {
     return time_;
   }
 
-  int64_t    DataDump::timeCentroid() const
+  long long    DataDump::timeCentroid() const
   {
     return timeCentroid_;
   }
 
-  int64_t    DataDump::interval() const
+  long long    DataDump::interval() const
   {
     return interval_;
   }
 
-  int64_t    DataDump::exposure() const
+  long long    DataDump::exposure() const
   {
     return exposure_;
   }
@@ -1512,7 +1512,7 @@ namespace sdmbin{
   }
 
 
-  const int64_t *     DataDump::actualTimes() const
+  const long long int*     DataDump::actualTimes() const
   {
     if(lonlonActualTimesPtr_)
       return lonlonActualTimesPtr_;
@@ -1521,7 +1521,7 @@ namespace sdmbin{
     return NULL;
   }
 
-  const int64_t*         DataDump::actualDurations() const
+  const long long*         DataDump::actualDurations() const
   {
     bool coutest=false;
     if(coutest){
@@ -1631,10 +1631,10 @@ namespace sdmbin{
 			    unsigned int                        numBaseband,
 			    unsigned int                        numAnt,
 			    CorrelationMode                     correlationMode,
-			    int64_t                           time, 
-			    int64_t                           timeCentroid, 
-			    int64_t                           interval, 
-			    int64_t                           exposure, 
+			    long long                           time, 
+			    long long                           timeCentroid, 
+			    long long                           interval, 
+			    long long                           exposure, 
 			    float*                              floatData,
 			    unsigned int                        integrationNum):
     DataDump( vv_numPolProduct,    
@@ -1665,10 +1665,10 @@ namespace sdmbin{
 			    unsigned int                        numBaseband,
 			    unsigned int                        numAnt,
 			    CorrelationMode                     correlationMode,
-			    int64_t                           time,
-			    int64_t                           timeCentroid,  
-			    int64_t                           interval,
-			    int64_t                           exposure,  
+			    long long                           time,
+			    long long                           timeCentroid,  
+			    long long                           interval,
+			    long long                           exposure,  
 			    float*                              floatData, 
 			    unsigned int*                       dataFlags,
 			    unsigned int                        integrationNum):

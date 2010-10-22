@@ -74,7 +74,7 @@ using namespace DetectorBandTypeMod;
 
 
 /*\file SquareLawDetector.h
-    \brief Generated from model's revision "1.54", branch "HEAD"
+    \brief Generated from model's revision "1.55", branch "HEAD"
 */
 
 namespace asdm {
@@ -89,7 +89,7 @@ typedef void (SquareLawDetectorRow::*SquareLawDetectorAttributeFromBin) (EndianI
 /**
  * The SquareLawDetectorRow class is a row of a SquareLawDetectorTable.
  * 
- * Generated from model's revision "1.54", branch "HEAD"
+ * Generated from model's revision "1.55", branch "HEAD"
  *
  */
 class SquareLawDetectorRow {

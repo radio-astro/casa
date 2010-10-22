@@ -144,7 +144,7 @@ using namespace PolarizationTypeMod;
 
 
 /*\file CalFocus.h
-    \brief Generated from model's revision "1.54", branch "HEAD"
+    \brief Generated from model's revision "1.55", branch "HEAD"
 */
 
 namespace asdm {
@@ -165,7 +165,7 @@ typedef void (CalFocusRow::*CalFocusAttributeFromBin) (EndianISStream& eiss);
 /**
  * The CalFocusRow class is a row of a CalFocusTable.
  * 
- * Generated from model's revision "1.54", branch "HEAD"
+ * Generated from model's revision "1.55", branch "HEAD"
  *
  */
 class CalFocusRow {

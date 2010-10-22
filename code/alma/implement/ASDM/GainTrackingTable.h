@@ -131,7 +131,7 @@ class GainTrackingRow;
  * Gain tracking information. Contains variable control parameters   affecting the signal coming from a receiver in an antenna. The number of   LOs is in the Receiver table.    See the document \href{https://wikio.nrao.edu/pub/ALMA/CalExamples/DelayCalSteps.pdf}   {Antenna and Electronic Delay Calibration} for details.
  * <BR>
  
- * Generated from model's revision "1.54", branch "HEAD"
+ * Generated from model's revision "1.55", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of GainTracking </CAPTION>
@@ -177,7 +177,7 @@ class GainTrackingRow;
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandatory) </TH></TR>
 	
  * <TR>
  * <TD> attenuator </TD> 

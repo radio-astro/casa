@@ -115,7 +115,7 @@ class SwitchCycleRow;
  * Cycle information in switching modes. Describe each step in a switching cycle.
  * <BR>
  
- * Generated from model's revision "1.54", branch "HEAD"
+ * Generated from model's revision "1.55", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of SwitchCycle </CAPTION>
@@ -134,7 +134,7 @@ class SwitchCycleRow;
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandatory) </TH></TR>
 	
  * <TR>
  * <TD> numStep </TD> 

@@ -69,7 +69,7 @@ using  asdm::Tag;
 
 
 /*\file AlmaRadiometer.h
-    \brief Generated from model's revision "1.54", branch "HEAD"
+    \brief Generated from model's revision "1.55", branch "HEAD"
 */
 
 namespace asdm {
@@ -87,7 +87,7 @@ typedef void (AlmaRadiometerRow::*AlmaRadiometerAttributeFromBin) (EndianISStrea
 /**
  * The AlmaRadiometerRow class is a row of a AlmaRadiometerTable.
  * 
- * Generated from model's revision "1.54", branch "HEAD"
+ * Generated from model's revision "1.55", branch "HEAD"
  *
  */
 class AlmaRadiometerRow {
@@ -263,13 +263,13 @@ public:
   * @return a pointer on a SpectralWindowRow whose key (a Tag) is equal to the Tag stored at position
   * i in the spectralWindowId. 
   */
- SpectralWindowRow* getSpectralWindow(int i); 
+ SpectralWindowRow* getSpectralWindowUsingSpectralWindowId(int i); 
  
  /**
   * Returns the vector of SpectralWindowRow* linked to this row via the Tags stored in spectralWindowId
   * @return an array of pointers on SpectralWindowRow.
   */
- vector<SpectralWindowRow *> getSpectralWindows(); 
+ vector<SpectralWindowRow *> getSpectralWindowsUsingSpectralWindowId(); 
   
 
 	

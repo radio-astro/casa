@@ -127,7 +127,7 @@ using  asdm::EntityRef;
 
 
 /*\file ExecBlock.h
-    \brief Generated from model's revision "1.54", branch "HEAD"
+    \brief Generated from model's revision "1.55", branch "HEAD"
 */
 
 namespace asdm {
@@ -148,7 +148,7 @@ typedef void (ExecBlockRow::*ExecBlockAttributeFromBin) (EndianISStream& eiss);
 /**
  * The ExecBlockRow class is a row of a ExecBlockTable.
  * 
- * Generated from model's revision "1.54", branch "HEAD"
+ * Generated from model's revision "1.55", branch "HEAD"
  *
  */
 class ExecBlockRow {
@@ -1045,13 +1045,13 @@ public:
   * @return a pointer on a AntennaRow whose key (a Tag) is equal to the Tag stored at position
   * i in the antennaId. 
   */
- AntennaRow* getAntenna(int i); 
+ AntennaRow* getAntennaUsingAntennaId(int i); 
  
  /**
   * Returns the vector of AntennaRow* linked to this row via the Tags stored in antennaId
   * @return an array of pointers on AntennaRow.
   */
- vector<AntennaRow *> getAntennas(); 
+ vector<AntennaRow *> getAntennasUsingAntennaId(); 
   
 
 	

@@ -87,7 +87,7 @@ using namespace ReceiverBandMod;
 
 
 /*\file FocusModel.h
-    \brief Generated from model's revision "1.54", branch "HEAD"
+    \brief Generated from model's revision "1.55", branch "HEAD"
 */
 
 namespace asdm {
@@ -108,7 +108,7 @@ typedef void (FocusModelRow::*FocusModelAttributeFromBin) (EndianISStream& eiss)
 /**
  * The FocusModelRow class is a row of a FocusModelTable.
  * 
- * Generated from model's revision "1.54", branch "HEAD"
+ * Generated from model's revision "1.55", branch "HEAD"
  *
  */
 class FocusModelRow {

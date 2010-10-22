@@ -508,7 +508,7 @@ SysCalRow* SysCalTable::newRow(SysCalRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<SysCalTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:syscal=\"http://Alma/XASDM/SysCalTable\" xsi:schemaLocation=\"http://Alma/XASDM/SysCalTable http://almaobservatory.org/XML/XASDM/2/SysCalTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n");
+		buf.append("<SysCalTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:syscal=\"http://Alma/XASDM/SysCalTable\" xsi:schemaLocation=\"http://Alma/XASDM/SysCalTable http://almaobservatory.org/XML/XASDM/2/SysCalTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -586,7 +586,7 @@ SysCalRow* SysCalTable::newRow(SysCalRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<SysCalTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:syscal=\"http://Alma/XASDM/SysCalTable\" xsi:schemaLocation=\"http://Alma/XASDM/SysCalTable http://almaobservatory.org/XML/XASDM/2/SysCalTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n";
+		oss << "<SysCalTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:syscal=\"http://Alma/XASDM/SysCalTable\" xsi:schemaLocation=\"http://Alma/XASDM/SysCalTable http://almaobservatory.org/XML/XASDM/2/SysCalTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='SysCalTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -1020,7 +1020,20 @@ void SysCalTable::setFromXMLFile(const string& directory) {
 					k0 = (k0 + k1) / 2;				
 			} 	
 		}
-	
+
+		if (start == row[k0]->timeInterval.getStart()) {
+			if (row[k0]->equalByRequiredValue(x))
+				return row[k0];
+			else
+				throw DuplicateKey("DuplicateKey exception in ", "SysCalTable");	
+		}
+		else if (start == row[k1]->timeInterval.getStart()) {
+			if (row[k1]->equalByRequiredValue(x))
+				return row[k1];
+			else
+				throw DuplicateKey("DuplicateKey exception in ", "SysCalTable");	
+		}	
+
 		row[k0]->timeInterval.setDuration(start-row[k0]->timeInterval.getStart());
 		x->timeInterval.setDuration(row[k0+1]->timeInterval.getStart() - start);
 		row.insert(row.begin()+(k0+1), x);

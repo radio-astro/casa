@@ -145,7 +145,7 @@ using namespace SpectralResolutionTypeMod;
 
 
 /*\file SpectralWindow.h
-    \brief Generated from model's revision "1.54", branch "HEAD"
+    \brief Generated from model's revision "1.55", branch "HEAD"
 */
 
 namespace asdm {
@@ -169,7 +169,7 @@ typedef void (SpectralWindowRow::*SpectralWindowAttributeFromBin) (EndianISStrea
 /**
  * The SpectralWindowRow class is a row of a SpectralWindowTable.
  * 
- * Generated from model's revision "1.54", branch "HEAD"
+ * Generated from model's revision "1.55", branch "HEAD"
  *
  */
 class SpectralWindowRow {
@@ -1416,13 +1416,13 @@ public:
   * @return a pointer on a SpectralWindowRow whose key (a Tag) is equal to the Tag stored at position
   * i in the assocSpectralWindowId. 
   */
- SpectralWindowRow* getSpectralWindow(int i); 
+ SpectralWindowRow* getSpectralWindowUsingAssocSpectralWindowId(int i); 
  
  /**
   * Returns the vector of SpectralWindowRow* linked to this row via the Tags stored in assocSpectralWindowId
   * @return an array of pointers on SpectralWindowRow.
   */
- vector<SpectralWindowRow *> getSpectralWindows(); 
+ vector<SpectralWindowRow *> getSpectralWindowsUsingAssocSpectralWindowId(); 
   
 
 	

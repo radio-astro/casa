@@ -80,7 +80,7 @@ using namespace CalibrationDeviceMod;
 
 
 /*\file State.h
-    \brief Generated from model's revision "1.54", branch "HEAD"
+    \brief Generated from model's revision "1.55", branch "HEAD"
 */
 
 namespace asdm {
@@ -95,7 +95,7 @@ typedef void (StateRow::*StateAttributeFromBin) (EndianISStream& eiss);
 /**
  * The StateRow class is a row of a StateTable.
  * 
- * Generated from model's revision "1.54", branch "HEAD"
+ * Generated from model's revision "1.55", branch "HEAD"
  *
  */
 class StateRow {

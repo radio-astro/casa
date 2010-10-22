@@ -125,7 +125,7 @@ using namespace ReceiverSidebandMod;
 
 
 /*\file CalDelay.h
-    \brief Generated from model's revision "1.54", branch "HEAD"
+    \brief Generated from model's revision "1.55", branch "HEAD"
 */
 
 namespace asdm {
@@ -146,7 +146,7 @@ typedef void (CalDelayRow::*CalDelayAttributeFromBin) (EndianISStream& eiss);
 /**
  * The CalDelayRow class is a row of a CalDelayTable.
  * 
- * Generated from model's revision "1.54", branch "HEAD"
+ * Generated from model's revision "1.55", branch "HEAD"
  *
  */
 class CalDelayRow {

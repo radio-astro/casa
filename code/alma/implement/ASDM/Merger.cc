@@ -163,6 +163,8 @@ namespace asdm {
 
 		Merger::mergeDelayModelPtr = &Merger::mergeDelayModel;
 
+		Merger::mergeFlagPtr = &Merger::mergeFlag;
+
 	}
 	
 	Merger::~Merger() {
@@ -296,6 +298,8 @@ namespace asdm {
 
 		hasMergedDelayModel = false;
 
+		hasMergedFlag = false;
+
 
 		mergeSBSummary( );
 
@@ -419,6 +423,8 @@ namespace asdm {
 
 		mergeDelayModel( );
 
+		mergeFlag( );
+
 
 		postMergeSBSummary( );
 
@@ -541,6 +547,8 @@ namespace asdm {
 		postMergeAnnotation( );
 
 		postMergeDelayModel( );
+
+		postMergeFlag( );
 			
 	}
 	
@@ -2669,6 +2677,83 @@ namespace asdm {
 		cout << "Entering Merger::postMergeDelayModel" << endl;
 	
 		cout << "Exiting Merger::postMergeDelayModel" << endl;
+	}			
+
+	void Merger::mergeFlag() {
+		cout << "Entering Merger::mergeFlag" << endl;
+		if (hasMergedFlag) return;
+	
+		vector <FlagRow *> rows2 = ds2->getFlag().get();
+		for (unsigned int i = 0; i < rows2.size(); i++) {
+			FlagRow * row = ds1->getFlag().newRow(rows2.at(i));
+		
+			
+				
+			vector<Tag> antennaId2 = rows2.at(i)->getAntennaId();
+			vector<Tag> antennaId1;
+			for (unsigned int j = 0; j < antennaId2.size(); j++)
+				
+				antennaId1.push_back(getTag(antennaId2.at(j), mergeAntennaPtr));
+				
+			row->setAntennaId(	antennaId1);
+			
+		
+			FlagRow * retRow = ds1->getFlag().add(row);
+		
+			
+			tagTag.insert(make_pair(rows2.at(i)->getFlagId().toString(), retRow->getFlagId()));
+			
+		
+		}
+	
+		hasMergedFlag = true;
+		cout << "Exiting Merger::mergeFlag" << endl;
+	}
+	
+	void Merger::postMergeFlag() {
+		cout << "Entering Merger::postMergeFlag" << endl;
+	
+		vector <FlagRow *> rows1 = ds1->getFlag().get();
+		FlagRow *row1 = 0;
+		for (unsigned int i = 0; i < rows1.size(); i++) {
+			row1 = rows1.at(i);
+
+		
+			
+			if (row1->isPairedAntennaIdExists()) {
+				
+				
+				vector<Tag> pairedAntennaId1 = row1->getPairedAntennaId();
+				vector<Tag> pairedAntennaId1_new;
+				for (unsigned int j = 0; j < pairedAntennaId1.size(); j++) {
+					
+					pairedAntennaId1_new.push_back(getTag( pairedAntennaId1.at(j), 0));
+					
+				}
+				row1->setPairedAntennaId(	pairedAntennaId1_new);
+				
+			}
+			
+		
+			
+			if (row1->isSpectralWindowIdExists()) {
+				
+				
+				vector<Tag> spectralWindowId1 = row1->getSpectralWindowId();
+				vector<Tag> spectralWindowId1_new;
+				for (unsigned int j = 0; j < spectralWindowId1.size(); j++) {
+					
+					spectralWindowId1_new.push_back(getTag( spectralWindowId1.at(j), 0));
+					
+				}
+				row1->setSpectralWindowId(	spectralWindowId1_new);
+				
+			}
+			
+		
+		}
+	
+		cout << "Exiting Merger::postMergeFlag" << endl;
 	}			
 
 

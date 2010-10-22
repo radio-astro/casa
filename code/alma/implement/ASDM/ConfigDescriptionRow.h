@@ -104,7 +104,7 @@ using namespace SpectralResolutionTypeMod;
 
 
 /*\file ConfigDescription.h
-    \brief Generated from model's revision "1.54", branch "HEAD"
+    \brief Generated from model's revision "1.55", branch "HEAD"
 */
 
 namespace asdm {
@@ -137,7 +137,7 @@ typedef void (ConfigDescriptionRow::*ConfigDescriptionAttributeFromBin) (EndianI
 /**
  * The ConfigDescriptionRow class is a row of a ConfigDescriptionTable.
  * 
- * Generated from model's revision "1.54", branch "HEAD"
+ * Generated from model's revision "1.55", branch "HEAD"
  *
  */
 class ConfigDescriptionRow {
@@ -785,13 +785,13 @@ public:
   * @return a pointer on a ConfigDescriptionRow whose key (a Tag) is equal to the Tag stored at position
   * i in the assocConfigDescriptionId. 
   */
- ConfigDescriptionRow* getConfigDescription(int i); 
+ ConfigDescriptionRow* getConfigDescriptionUsingAssocConfigDescriptionId(int i); 
  
  /**
   * Returns the vector of ConfigDescriptionRow* linked to this row via the Tags stored in assocConfigDescriptionId
   * @return an array of pointers on ConfigDescriptionRow.
   */
- vector<ConfigDescriptionRow *> getConfigDescriptions(); 
+ vector<ConfigDescriptionRow *> getConfigDescriptionsUsingAssocConfigDescriptionId(); 
   
 
 	
@@ -838,13 +838,13 @@ public:
   * @return a pointer on a AntennaRow whose key (a Tag) is equal to the Tag stored at position
   * i in the antennaId. 
   */
- AntennaRow* getAntenna(int i); 
+ AntennaRow* getAntennaUsingAntennaId(int i); 
  
  /**
   * Returns the vector of AntennaRow* linked to this row via the Tags stored in antennaId
   * @return an array of pointers on AntennaRow.
   */
- vector<AntennaRow *> getAntennas(); 
+ vector<AntennaRow *> getAntennasUsingAntennaId(); 
   
 
 	
@@ -940,13 +940,13 @@ public:
   * @return a pointer on a SwitchCycleRow whose key (a Tag) is equal to the Tag stored at position
   * i in the switchCycleId. 
   */
- SwitchCycleRow* getSwitchCycle(int i); 
+ SwitchCycleRow* getSwitchCycleUsingSwitchCycleId(int i); 
  
  /**
   * Returns the vector of SwitchCycleRow* linked to this row via the Tags stored in switchCycleId
   * @return an array of pointers on SwitchCycleRow.
   */
- vector<SwitchCycleRow *> getSwitchCycles(); 
+ vector<SwitchCycleRow *> getSwitchCyclesUsingSwitchCycleId(); 
   
 
 	
@@ -993,13 +993,13 @@ public:
   * @return a pointer on a DataDescriptionRow whose key (a Tag) is equal to the Tag stored at position
   * i in the dataDescriptionId. 
   */
- DataDescriptionRow* getDataDescription(int i); 
+ DataDescriptionRow* getDataDescriptionUsingDataDescriptionId(int i); 
  
  /**
   * Returns the vector of DataDescriptionRow* linked to this row via the Tags stored in dataDescriptionId
   * @return an array of pointers on DataDescriptionRow.
   */
- vector<DataDescriptionRow *> getDataDescriptions(); 
+ vector<DataDescriptionRow *> getDataDescriptionsUsingDataDescriptionId(); 
   
 
 	

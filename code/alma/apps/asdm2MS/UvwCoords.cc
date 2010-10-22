@@ -47,7 +47,7 @@ UvwCoords::UvwCoords( ASDM* const datasetPtr )
     arrayParam.e_correlationMode.set(v_configDesc[n]->getCorrelationMode());
     unsigned int numspw = v_configDesc[n]->getDataDescriptionId().size();
     arrayParam.nrepeat = 0;
-    vector<SwitchCycleRow*> v_sr= v_configDesc[n]->getSwitchCycles();
+    vector<SwitchCycleRow*> v_sr= v_configDesc[n]->getSwitchCyclesUsingSwitchCycleId();
 
     if (v_sr.size() != numspw)
       Error(FATAL, "It seems that the arrays 'switchCycleId' and 'dataDescriptionId' do not have the same size in one row of the ConfigDescription table !");

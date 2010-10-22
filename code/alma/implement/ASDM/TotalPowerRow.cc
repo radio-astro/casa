@@ -2074,7 +2074,7 @@ void TotalPowerRow::subintegrationNumberFromBin(EndianISStream& eiss) {
   * Returns the StateRow linked to this row via the Tag stored in stateId
   * at position i.
   */
- StateRow* TotalPowerRow::getState(int i) {
+ StateRow* TotalPowerRow::getStateUsingStateId(int i) {
  	return table.getContainer().getState().getRowByKey(stateId.at(i));
  } 
  
@@ -2082,7 +2082,7 @@ void TotalPowerRow::subintegrationNumberFromBin(EndianISStream& eiss) {
   * Returns the vector of StateRow* linked to this row via the Tags stored in stateId
   *
   */
- vector<StateRow *> TotalPowerRow::getStates() {
+ vector<StateRow *> TotalPowerRow::getStatesUsingStateId() {
  	vector<StateRow *> result;
  	for (unsigned int i = 0; i < stateId.size(); i++)
  		result.push_back(table.getContainer().getState().getRowByKey(stateId.at(i)));

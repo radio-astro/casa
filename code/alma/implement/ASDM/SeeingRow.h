@@ -83,7 +83,7 @@ using  asdm::ArrayTimeInterval;
 
 
 /*\file Seeing.h
-    \brief Generated from model's revision "1.54", branch "HEAD"
+    \brief Generated from model's revision "1.55", branch "HEAD"
 */
 
 namespace asdm {
@@ -98,7 +98,7 @@ typedef void (SeeingRow::*SeeingAttributeFromBin) (EndianISStream& eiss);
 /**
  * The SeeingRow class is a row of a SeeingTable.
  * 
- * Generated from model's revision "1.54", branch "HEAD"
+ * Generated from model's revision "1.55", branch "HEAD"
  *
  */
 class SeeingRow {

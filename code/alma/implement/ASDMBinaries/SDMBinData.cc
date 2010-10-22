@@ -134,7 +134,7 @@ namespace sdmbin {
 
     if(coutest){
       cout<<cdr->getConfigDescriptionId().toString()<<endl;
-      vector<DataDescriptionRow*> v_ddr=cdr->getDataDescriptions();
+      vector<DataDescriptionRow*> v_ddr=cdr->getDataDescriptionsUsingDataDescriptionId();
       for(unsigned int n=0; n<v_ddr.size(); n++)cout<<v_ddr[n]->getDataDescriptionId().toString()<<" ";
       cout<<endl;
     }
@@ -477,12 +477,12 @@ namespace sdmbin {
 	int64_t                  timeCentroid       = timeOfDump;         // default value for the first dump
 
 	// actual pointer to the data blocks and nb of pdt values found in these blocks:
-	const unsigned int*      flagsPtr           = NULL;  unsigned long int numFlags=0; // mcaillat 
-	const int64_t*         actualTimesPtr     = NULL;  unsigned long int numActualTimes=0;
-	const int64_t*         actualDurationsPtr = NULL;  unsigned long int numActualDurations=0;
-	const float*             zeroLagsPtr        = NULL;  unsigned long int numZeroLags=0;
-	const float*             autoDataPtr        = NULL;  unsigned long int numAutoData=0;
-	const short int*         crossShortDataPtr  = NULL;  unsigned long int numCrossData=0;
+	const unsigned int*      flagsPtr           = NULL;  unsigned int long numFlags=0; // mcaillat 
+	const int64_t*         actualTimesPtr     = NULL;  unsigned int long numActualTimes=0;
+	const int64_t*         actualDurationsPtr = NULL;  unsigned int long numActualDurations=0;
+	const float*             zeroLagsPtr        = NULL;  unsigned int long numZeroLags=0;
+	const float*             autoDataPtr        = NULL;  unsigned int long numAutoData=0;
+	const short int*         crossShortDataPtr  = NULL;  unsigned int long numCrossData=0;
 	const int*               crossIntDataPtr    = NULL;
 	const float*             crossFloatDataPtr  = NULL;
 
@@ -921,7 +921,7 @@ namespace sdmbin {
 
 
     unsigned int               stateId;
-    vector<StateRow*>          v_statePtr = mainRowPtr_->getStates();
+    vector<StateRow*>          v_statePtr = mainRowPtr_->getStatesUsingStateId();
 
     vector<int>                v_feedSet  = cdPtr->getFeedId();
     vector<Tag>                v_antSet   = cdPtr->getAntennaId();
@@ -967,7 +967,7 @@ namespace sdmbin {
       v_tsys.resize(v_antSet.size()*v_ddList.size()*numFeed);
       for(unsigned int nt=0; nt<v_dataDump_.size(); nt++){
 	vector<pair<bool,vector<vector<float> > > > v_tsys;
-	timeCentroidOfDump= ArrayTime(v_dataDump_[nt]->timeCentroid());
+	timeCentroidOfDump= ArrayTime((int64_t)v_dataDump_[nt]->timeCentroid());
 	unsigned int scn=0;
 	for(unsigned int na=0; na<v_antSet.size(); na++){
 	  for(unsigned int nfe=0; nfe<numFeed; nfe++){
@@ -1002,8 +1002,8 @@ namespace sdmbin {
 
     if(e_cm[CROSS_ONLY]==false && e_qcm_[CROSS_ONLY]==false ){       // retrieve only AUTO_DATA
       for(unsigned int nt=0; nt<v_dataDump_.size(); nt++){
-	timeOfDump        = ArrayTime(v_dataDump_[nt]->time());               if(coutest)cout<<timeOfDump<<" ns"<<endl;
-	timeCentroidOfDump= ArrayTime(v_dataDump_[nt]->timeCentroid());       if(coutest)cout<<timeCentroidOfDump.toString()<<" ns"<<endl;
+	timeOfDump        = ArrayTime((int64_t)v_dataDump_[nt]->time());               if(coutest)cout<<timeOfDump<<" ns"<<endl;
+	timeCentroidOfDump= ArrayTime((int64_t)v_dataDump_[nt]->timeCentroid());       if(coutest)cout<<timeCentroidOfDump.toString()<<" ns"<<endl;
 	timeMJD           = timeOfDump.getMJD();                              if(coutest)cout<<timeMJD<<" h = "<<86400.*timeMJD<<" s"<<endl;
 	interval          = (double)v_dataDump_[nt]->interval()/1000000000LL; if(coutest)cout<<interval<<" s"<<endl;
 	timeCentroidMJD   = timeCentroidOfDump.getMJD();                      if(coutest)cout<< timeCentroidMJD<<endl;
@@ -1123,8 +1123,8 @@ namespace sdmbin {
 
 
       for(unsigned int nt=0; nt<v_dataDump_.size(); nt++){
-	timeOfDump        = ArrayTime(v_dataDump_[nt]->time());                if(coutest)cout<<timeOfDump<<endl;
-	timeCentroidOfDump= ArrayTime(v_dataDump_[nt]->timeCentroid());        if(coutest)cout<< timeCentroidOfDump.toString() <<endl;
+	timeOfDump        = ArrayTime((int64_t)v_dataDump_[nt]->time());                if(coutest)cout<<timeOfDump<<endl;
+	timeCentroidOfDump= ArrayTime((int64_t)v_dataDump_[nt]->timeCentroid());        if(coutest)cout<< timeCentroidOfDump.toString() <<endl;
 	timeMJD           = timeOfDump.getMJD();                               if(coutest)cout<<timeMJD<<" h"<<endl;
 	interval          = (double)v_dataDump_[nt]->interval()/1000000000LL;
 	timeCentroidMJD   = timeCentroidOfDump.getMJD();                       if(coutest)cout<< timeCentroidMJD<<" h"<<endl;
@@ -2026,7 +2026,7 @@ namespace sdmbin {
 	  cdr  = v_mr[n]->getConfigDescriptionUsingConfigDescriptionId();
 	  e_cm = cdr->getCorrelationMode();
 	  if(e_cm[AUTO_ONLY]){
-	    v_ddr = cdr->getDataDescriptions();
+	    v_ddr = cdr->getDataDescriptionsUsingDataDescriptionId();
 	    for(unsigned int ndd=0; ndd<v_ddr.size(); ndd++)
 	      if(v_ddr[ndd]->getPolarizationUsingPolOrHoloId()->getCorrType().size()>2)return forceComplex_;
 	  }
@@ -2034,7 +2034,7 @@ namespace sdmbin {
 	    if(e_qcm_[CROSS_AND_AUTO]){
 	      return true;
 	    }else{
-	      v_ddr = cdr->getDataDescriptions();
+	      v_ddr = cdr->getDataDescriptionsUsingDataDescriptionId();
 	      for(unsigned int ndd=0; ndd<v_ddr.size(); ndd++)
 		if(v_ddr[ndd]->getPolarizationUsingPolOrHoloId()->getCorrType().size()>2)return forceComplex_;
 	    }

@@ -79,7 +79,7 @@ using  asdm::ArrayTimeInterval;
 
 
 /*\file FlagCmd.h
-    \brief Generated from model's revision "1.54", branch "HEAD"
+    \brief Generated from model's revision "1.55", branch "HEAD"
 */
 
 namespace asdm {
@@ -94,7 +94,7 @@ typedef void (FlagCmdRow::*FlagCmdAttributeFromBin) (EndianISStream& eiss);
 /**
  * The FlagCmdRow class is a row of a FlagCmdTable.
  * 
- * Generated from model's revision "1.54", branch "HEAD"
+ * Generated from model's revision "1.55", branch "HEAD"
  *
  */
 class FlagCmdRow {

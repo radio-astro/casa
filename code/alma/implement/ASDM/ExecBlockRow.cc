@@ -2726,7 +2726,7 @@ void ExecBlockRow::flagRowFromBin(EndianISStream& eiss) {
   * Returns the AntennaRow linked to this row via the Tag stored in antennaId
   * at position i.
   */
- AntennaRow* ExecBlockRow::getAntenna(int i) {
+ AntennaRow* ExecBlockRow::getAntennaUsingAntennaId(int i) {
  	return table.getContainer().getAntenna().getRowByKey(antennaId.at(i));
  } 
  
@@ -2734,7 +2734,7 @@ void ExecBlockRow::flagRowFromBin(EndianISStream& eiss) {
   * Returns the vector of AntennaRow* linked to this row via the Tags stored in antennaId
   *
   */
- vector<AntennaRow *> ExecBlockRow::getAntennas() {
+ vector<AntennaRow *> ExecBlockRow::getAntennasUsingAntennaId() {
  	vector<AntennaRow *> result;
  	for (unsigned int i = 0; i < antennaId.size(); i++)
  		result.push_back(table.getContainer().getAntenna().getRowByKey(antennaId.at(i)));

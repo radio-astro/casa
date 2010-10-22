@@ -219,10 +219,13 @@
 #include "DelayModelTable.h"
 #include "DelayModelRow.h"
 
+#include "FlagTable.h"
+#include "FlagRow.h"
+
 
 
 /*\file "Merger.h"
-    \brief Generated from model's revision "1.54", branch "HEAD"
+    \brief Generated from model's revision "1.55", branch "HEAD"
 */
 using namespace std;
 
@@ -365,6 +368,8 @@ namespace asdm {
 			bool hasMergedAnnotation;	
 
 			bool hasMergedDelayModel;	
+
+			bool hasMergedFlag;	
 			
 
 
@@ -551,6 +556,9 @@ namespace asdm {
 			void mergeDelayModel();
 			void postMergeDelayModel();			
 
+			void mergeFlag();
+			void postMergeFlag();			
+
 
 
 		void (Merger::*mergeSBSummaryPtr) () ;
@@ -674,6 +682,8 @@ namespace asdm {
 		void (Merger::*mergeAnnotationPtr) () ;
 
 		void (Merger::*mergeDelayModelPtr) () ;
+
+		void (Merger::*mergeFlagPtr) () ;
 
 	};
 } // End namespace asdm

@@ -84,7 +84,7 @@ namespace asdmbinaries {
       if (position_ == endPosition_) return string::npos;
 
       string::size_type lastPosition_ = position_;      
-      uint64_t i = 1;
+      unsigned long long int i = 1;
 
       while ((position_ < endPosition_) && (i < s.length())) {
 	if (s.at(i) != data_[position_]) break;

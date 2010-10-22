@@ -1,8 +1,3 @@
-#include <boost/algorithm/string.hpp>
-using namespace boost;
-
-#include <casa/Quanta/MVAngle.h>
-
 #include	"stdio.h"			/* <stdio.h> */
 #include	"stddef.h"			/* <stddef.h> */
 #include        <math.h>
@@ -167,27 +162,6 @@ int ddMgr::getSwId(int i) {
     return dd[i].swId;
   }
 }
-
-map<string, MDirection::Types> ASDM2MSFiller::string2MDirectionInit() {
-  map<string, MDirection::Types> string2MDirection;
-  string2MDirection.clear();
-
-  string2MDirection["MERCURY"] = MDirection::MERCURY; 
-  string2MDirection["VENUS"]   = MDirection::VENUS;
-  string2MDirection["MARS"]    = MDirection::MARS;
-  string2MDirection["JUPITER"] = MDirection::JUPITER;
-  string2MDirection["SATURN"]  = MDirection::SATURN;
-  string2MDirection["URANUS"]  = MDirection::URANUS;
-  string2MDirection["NEPTUNE"] = MDirection::NEPTUNE;
-  string2MDirection["PLUTO"]   = MDirection::PLUTO;
-  string2MDirection["SUN"]     = MDirection::SUN;
-  string2MDirection["MOON"]    = MDirection::MOON;
-  string2MDirection["COMEt"]   = MDirection::COMET;
-
-  return string2MDirection;
-}
-
-map<string, MDirection::Types> ASDM2MSFiller::string2MDirection = ASDM2MSFiller::string2MDirectionInit();
 
 // Methods of ASDM2MSFiller classe.
 // The constructor
@@ -375,10 +349,10 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
 
   //cout << "createMS SetupNewTable\n";
     
-  // Choose the Tile size per column to be 1 MB
-  const Int nTileCorr = 4;
-  const Int nTileChan = 64;
-  const Int tileSizeKBytes = 1024;
+  // Choose the Tile size per column to be ~ 4096K
+  const Int nTileCorr = 1;
+  const Int nTileChan = 1024;
+  const Int tileSizeKBytes = 16;
   Int nTileRow;
 
   // Create an incremental storage manager
@@ -446,6 +420,9 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
   // STATE_ID 
   StandardStMan stateIdStMan("StateId Standard Storage Manager", 32768);
   newTab.bindColumn(MS::columnName(MS::STATE_ID), stateIdStMan);
+
+
+
     
   if (complexData) {
     // DATA hypercolumn
@@ -588,74 +565,14 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
     itsMS->rwKeywordSet().defineTable(MS::keywordName(MS::FLAG_CMD),
 				      Table(tabSetup));
   }
-#if 0
   // Field
-  //
-  // This initial setup of the Field table
-  // is replaced by a new one in the #else clause
-  // which allows to have referenceDir, phaseDir and delayDir 
-  // columns with varying MDirection Reference Frame.
-  //
   {
-    TableDesc td = MSField::requiredTableDesc();
     SetupNewTable tabSetup(itsMS->fieldTableName(),
 			   MSField::requiredTableDesc(),
 			   Table::New);
-
     itsMS->rwKeywordSet().defineTable(MS::keywordName(MS::FIELD),
 				      Table(tabSetup));
   }
-#else
-// Field
-{
-  TableDesc td = MSField::requiredTableDesc();
-  td.removeColumn("DELAY_DIR");
-  td.removeColumn("PHASE_DIR");
-  td.removeColumn("REFERENCE_DIR");
-  {
-    ArrayColumnDesc<Double> cdMDir("PHASE_DIR", "variable phase dir",
-				   IPosition(2, 2, 1), ColumnDesc::Direct);
-    ScalarColumnDesc<Int> cdMDirRef("PhaseDir_Ref");
-    td.addColumn(cdMDir);
-    td.addColumn(cdMDirRef);
-    TableMeasRefDesc tmrd(td, "PhaseDir_Ref");
-    TableMeasValueDesc tmvd(td, "PHASE_DIR");
-    TableMeasDesc<MDirection> tmdMDirection(tmvd, tmrd);
-    tmdMDirection.write(td);
-  }
-  {
-    ArrayColumnDesc<Double> cdMDir2("DELAY_DIR", "variable delay dir",
-				    IPosition(2, 2, 1), ColumnDesc::Direct);
-    ScalarColumnDesc<Int> cdMDirRef2("DelayDir_Ref");
-    td.addColumn(cdMDir2);
-    td.addColumn(cdMDirRef2);
-    TableMeasRefDesc tmrd2(td, "DelayDir_Ref");
-    TableMeasValueDesc tmvd2(td, "DELAY_DIR");
-    TableMeasDesc<MDirection> tmdMDirection2(tmvd2, tmrd2);
-    tmdMDirection2.write(td);
-  }
-  {
-    ArrayColumnDesc<Double> cdMDir3("REFERENCE_DIR", "variable reference dir",
-				    IPosition(2, 2, 1), ColumnDesc::Direct);
-    ScalarColumnDesc<Int> cdMDirRef3("RefDir_Ref");
-    td.addColumn(cdMDir3);
-    td.addColumn(cdMDirRef3);
-    TableMeasRefDesc tmrd3(td, "RefDir_Ref");
-    TableMeasValueDesc tmvd3(td, "REFERENCE_DIR");
-    TableMeasDesc<MDirection> tmdMDirection3(tmvd3, tmrd3);
-    tmdMDirection3.write(td);
-  }
-
-  SetupNewTable tabSetup(itsMS->fieldTableName(),
-                         td,
-                         Table::New);
-#endif
-
-  itsMS->rwKeywordSet().defineTable(MS::keywordName(MS::FIELD),
-                                    Table(tabSetup));
-}
-
-  
   // History
   {
     SetupNewTable tabSetup(itsMS->historyTableName(),
@@ -790,7 +707,7 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
   mspointingCol.direction().rwKeywordSet().asrwRecord("MEASINFO").define("Ref", dirref);
   mspointingCol.target().rwKeywordSet().asrwRecord("MEASINFO").define("Ref", dirref);
   mspointingCol.pointingOffset().rwKeywordSet().asrwRecord("MEASINFO").define("Ref", dirref);
-    
+  
   itsMS->initRefs();
 
   itsMS->flush();
@@ -1193,7 +1110,7 @@ int  ASDM2MSFiller::addUniqueDataDescription( int spectral_window_id_,
 	i < crow
 	  &&  ( msddCol.spectralWindowId()(i) != spectral_window_id_ ||
 		msddCol.polarizationId()(i)   != polarization_id_ ) ; 
-	i++ ) {;} 
+	i++ );
   
   if (i < crow) return i;
 
@@ -1335,9 +1252,9 @@ void ASDM2MSFiller::addField(const string&      name_,
 			     int               source_id_) {
   uInt						crow;
   // cout << "\naddField : entering";
-  Vector<MDirection>				delayDir(1);
-  Vector<MDirection>				referenceDir(1);
-  Vector<MDirection>				phaseDir(1);
+  Matrix<Double>				delayDir(IPosition(2, 2, 1), &delay_dir_[0], SHARE);
+  Matrix<Double>				referenceDir(IPosition(2, 2, 1), &reference_dir_[0], SHARE);
+  Matrix<Double>				phaseDir(IPosition(2, 2,1), &phase_dir_[0], SHARE);
 
   MSField msfield = itsMS -> field();
   MSFieldColumns msfieldCol(msfield);
@@ -1349,36 +1266,13 @@ void ASDM2MSFiller::addField(const string&      name_,
   msfieldCol.code().put(crow, code_);
   msfieldCol.time().put(crow, time_);
   msfieldCol.numPoly().put(crow, 0);
-
-  string s(name_); trim(s); to_upper(s);
-  map<string, MDirection::Types>::const_iterator iter = string2MDirection.find(s);
-
-  MDirection	delayDirMD;
-  MDirection	referenceDirMD;
-  MDirection	phaseDirMD;
-  if (iter == string2MDirection.end()) {
-    delayDirMD	   = MDirection(Quantity(delay_dir_[0], "deg"), Quantity(delay_dir_[1], "deg"), MDirection::J2000);
-    referenceDirMD = MDirection(Quantity(reference_dir_[0], "deg"), Quantity(reference_dir_[1], "deg"), MDirection::J2000);
-    phaseDirMD	   = MDirection(Quantity(phase_dir_[0], "deg"), Quantity(phase_dir_[0], "deg"), MDirection::J2000);
-  }
-  else {
-    delayDirMD	   = MDirection(Quantity(delay_dir_[0], "deg"), Quantity(delay_dir_[1], "deg"), iter->second);
-    referenceDirMD = MDirection(Quantity(reference_dir_[0], "deg"), Quantity(reference_dir_[1], "deg"),  iter->second);
-    phaseDirMD	   = MDirection(Quantity(phase_dir_[0], "deg"), Quantity(phase_dir_[1], "deg"), iter->second);
-  }
-
-  delayDir(0)	  = delayDirMD;
-  referenceDir(0) = referenceDirMD;
-  phaseDir(0)	  = phaseDirMD;
-
-  msfieldCol.delayDirMeasCol().put(crow, delayDir);
-
-  msfieldCol.referenceDirMeasCol().put(crow, referenceDir);
-
-  msfieldCol.phaseDirMeasCol().put(crow, phaseDir);
-
+  msfieldCol.delayDir().put(crow, delayDir);
+  msfieldCol.phaseDir().put(crow, phaseDir);
+  msfieldCol.referenceDir().put(crow, referenceDir);
   msfieldCol.sourceId().put(crow, source_id_);
-
+  /*
+    msfieldCol.sourceId().put(crow, -1);
+  */
   msfieldCol.flagRow().put(crow, False);
   // cout << "\naddField : exiting";
   msfield.flush();

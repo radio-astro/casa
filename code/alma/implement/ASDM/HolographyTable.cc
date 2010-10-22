@@ -419,7 +419,7 @@ HolographyRow* HolographyTable::lookup(Length distance, Length focus, int numCor
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<HolographyTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:hologr=\"http://Alma/XASDM/HolographyTable\" xsi:schemaLocation=\"http://Alma/XASDM/HolographyTable http://almaobservatory.org/XML/XASDM/2/HolographyTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n");
+		buf.append("<HolographyTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:hologr=\"http://Alma/XASDM/HolographyTable\" xsi:schemaLocation=\"http://Alma/XASDM/HolographyTable http://almaobservatory.org/XML/XASDM/2/HolographyTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -497,7 +497,7 @@ HolographyRow* HolographyTable::lookup(Length distance, Length focus, int numCor
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<HolographyTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:hologr=\"http://Alma/XASDM/HolographyTable\" xsi:schemaLocation=\"http://Alma/XASDM/HolographyTable http://almaobservatory.org/XML/XASDM/2/HolographyTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n";
+		oss << "<HolographyTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:hologr=\"http://Alma/XASDM/HolographyTable\" xsi:schemaLocation=\"http://Alma/XASDM/HolographyTable http://almaobservatory.org/XML/XASDM/2/HolographyTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='HolographyTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
