@@ -192,7 +192,7 @@ average over frequency (channels) and time (integrations).
                 Examples:
                 antenna='5&amp;6': baseline between antenna index 5 and index 6.
                 antenna='VA05&amp;VA06': baseline between VLA antenna 5 and 6.
-                antenna='5&amp;6:7&amp;8': baselines 5-6 and 7-8
+                antenna='5&amp;6;7&amp;8': baselines 5-6 and 7-8
                 antenna='5': all baselines with antenna 5
                 antenna='5,6,10': all baselines including antennas 5, 6, or 10
                 antenna='5,6,10&amp;': all baselines with *only* antennas 5, 6, or

@@ -242,6 +242,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                 maskimage=[]
                 for img in imset.maskimages:
                     maskimage.append(imset.maskimages[img])
+	    casalog.post('Used mask(s) : ' + str(mask) + ' to create mask image(s) : ' + str(maskimage),'INFO');
 
             if dochaniter:
                 imset.checkpsf(chanslice)
@@ -336,6 +337,9 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                 # imCln.setsmallscalebias(smallscalebias)
                 imCln.settaylorterms(ntaylorterms=nterms,
                                      reffreq=reffreqVal);
+                # forbid pbcorrection with msmfs for now
+                if(pbcor):
+                    raise Exception, 'Primary-beam correction is currently not supported with nterms>1'
 
                 modelimages[0]=modelimages[0]+'.tt'+str(0);
                 restoredimage[0]=restoredimage[0]+'.tt'+str(0);

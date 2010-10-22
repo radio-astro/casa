@@ -86,19 +86,19 @@ print >>logfile,'***************************************************************
 if(not regstate):
    print >>logfile,'* Data file VLA_multifrequency_3C286.ms cannot be found';
 else:
-   # This is the truth (for active, r12885)
+   # This is the truth (for active, 20 Oct 2010)
    #correct_sigma = 0.00099339;
    #correct_sumsq = 1.03476342;
    #correct_intensity = 14.8406724;
    #correct_alpha = -0.47218161;
    #correct_beta = -0.1136824;
 
-   # This is the truth (for prerelease, r12895)
+   # This is the truth (for prerelease, 20 Oct 2010)
    correct_sigma = 0.0010294;
    correct_sumsq = 1.11118678;
    correct_intensity = 14.838494;
-   correct_alpha = -0.47235405;
-   correct_beta = -0.11374319;
+   correct_alpha = -0.4712090;
+   correct_beta = -0.12474468;
    
    # Residual rms noise and sum-sq (total power)
    if(os.path.exists('reg_3C286.residual.tt0')):

@@ -467,7 +467,8 @@ Int WBCleanImageSkyModel::writeResultsToDisk()
 	    LatticeExpr<Float> cop(image(index));
 	    imalpha.copyData(cop);
 	    StokesImageUtil::Convolve(imalpha, bmaj, bmin, bpa);
-	    LatticeExpr<Float> le(imalpha+( *coeffresiduals[i] )); 
+	    LatticeExpr<Float> le(imalpha); 
+	    //LatticeExpr<Float> le(imalpha+( *coeffresiduals[i] )); 
 	    (*smoothed[i]).copyData(le);
     }
 
@@ -477,8 +478,8 @@ Int WBCleanImageSkyModel::writeResultsToDisk()
     Float maxres = leMaxRes.getFloat();
     // Threshold is either 10% of the peak residual (psf sidelobe level) or 
     // user threshold, if deconvolution has gone that deep.
-    Float specthreshold = MAX( threshold()*2 , maxres/10.0 );
-    os << "Calculating spectral parameters for  Intensity > MAX(threshold*2,peakresidual/10) = " << specthreshold << " Jy/beam" << LogIO::POST;
+    Float specthreshold = MAX( threshold()*5 , maxres/5.0 );
+    os << "Calculating spectral parameters for  Intensity > MAX(threshold*5,peakresidual/5) = " << specthreshold << " Jy/beam" << LogIO::POST;
     LatticeExpr<Float> mask1(iif((*smoothed[0])>(specthreshold),1.0,0.0));
     LatticeExpr<Float> mask0(iif((*smoothed[0])>(specthreshold),0.0,1.0));
 
@@ -509,15 +510,22 @@ Int WBCleanImageSkyModel::writeResultsToDisk()
     }
 
     /* Print out debugging info for center pixel */
-    /*
+    /* 
     IPosition cgip(4,512,512,0,0);
+    IPosition cgip2(4,490,542,0,0);
     for(Int i=0;i<ntaylor_p;i++)
     {
+	    cout << "Extended : " << endl;
 	    cout << "Original residual : " << i << " : " << residual( getModelIndex(model,i) ).getAt(cgip) << endl;
 	    cout << "Smoothed residual : " << i << " : " << (*smoothresiduals[i]).getAt(cgip) << endl;
 	    cout << "Coeff residual : " << i << " : " << (*coeffresiduals[i]).getAt(cgip) << endl;
+	    cout << "Point : " << endl;
+	    cout << "Original residual : " << i << " : " << residual( getModelIndex(model,i) ).getAt(cgip2) << endl;
+	    cout << "Smoothed residual : " << i << " : " << (*smoothresiduals[i]).getAt(cgip2) << endl;
+	    cout << "Coeff residual : " << i << " : " << (*coeffresiduals[i]).getAt(cgip2) << endl;
     }
     */
+    
     
 
     /* Clean up temp arrays */

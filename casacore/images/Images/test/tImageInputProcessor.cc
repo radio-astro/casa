@@ -36,8 +36,9 @@ void writeTestString(const String& test) {
 void _checkCorner(const Record& gotRecord, const Vector<Double>& expected) {
 	for (uInt i=0; i<expected.size(); i++) {
 		uInt fieldNumber = i+1;
-		Double got = gotRecord.asRecord(RecordFieldId("*" + String::toString(fieldNumber)))
-			.asDouble(RecordFieldId("value"));
+		Double got = gotRecord.asRecord(RecordFieldId(
+				"*" + String::toString(fieldNumber))
+			).asDouble(RecordFieldId("value"));
 	    AlwaysAssert(fabs((got-expected[i])/expected[i]) < 1e-9, AipsError);
 	}
 }
@@ -90,7 +91,7 @@ void testSuccess(
 	ImageInterface<Float> *image = 0;
 	Record region;
 	String diagnostics;
-	writeTestString("Valid box specification succeeds");
+	writeTestString(test);
 	processor.process(
 		image, region, diagnostics, outputStruct, stokes,
         imagename, regionPtr, regionName, box, chans,
@@ -114,7 +115,7 @@ void runProcess(
 	ImageInterface<Float> *image = 0;
 	Record region;
 	String diagnostics;
-	writeTestString("Valid box specification succeeds");
+	writeTestString(test);
 	processor.process(
 		image, region, diagnostics, outputStruct, stokes,
         imagename, regionPtr, regionName, box, chans,
@@ -126,8 +127,6 @@ void runProcess(
 int main() {
     try {
     	String goodImage = "image_input_processor.im";
-
-
     	ImageInputProcessor processor;
     	ImageInterface<Float> *image = 0;
     	Record region;
@@ -335,6 +334,24 @@ int main() {
         	"0", none, ImageInputProcessor::USE_ALL_STOKES, True,
         	expectedBlc, expectedTrc
         );
+    	testSuccess(
+    		"Valid box specification with valid channel specification #3 succeeds",
+        	0, goodImage, 0, "", "0, 0,  10,10",
+        	"0,0,0", none, ImageInputProcessor::USE_ALL_STOKES, True,
+        	expectedBlc, expectedTrc
+        );
+    	testSuccess(
+    		"Valid box specification with valid channel specification #4 succeeds",
+        	0, goodImage, 0, "", "0, 0,  10,10",
+        	"0;0;0", none, ImageInputProcessor::USE_ALL_STOKES, True,
+        	expectedBlc, expectedTrc
+        );
+    	testSuccess(
+    		"Valid box specification with valid channel specification #5 succeeds",
+        	0, goodImage, 0, "", "0, 0,  10,10",
+        	"0,0;0", none, ImageInputProcessor::USE_ALL_STOKES, True,
+        	expectedBlc, expectedTrc
+        );
         stokes = "QVIU";
         testSuccess(
         	"Valid box specification with valid stokes specification #1 succeeds",
@@ -359,6 +376,39 @@ int main() {
         		"Valid box specification with valid stokes specification #3 succeeds",
         		0, goodImage, 0, "", "0, 0,  10,10",
         		"", stokes, ImageInputProcessor::USE_ALL_STOKES, True,
+            	expectedBlc, expectedTrc
+        	);
+        }
+        {
+        	expectedBlc[3] = 1;
+        	expectedTrc[3] = 3;
+            stokes = "Q,I,U";
+            testSuccess(
+        		"Valid box specification with valid stokes specification #4 succeeds",
+        		0, goodImage, 0, "", "0, 0,  10,10", "",
+        		stokes, ImageInputProcessor::USE_ALL_STOKES, True,
+            	expectedBlc, expectedTrc
+        	);
+        }
+        {
+        	expectedBlc[3] = 1;
+        	expectedTrc[3] = 3;
+            stokes = "Q;I;U";
+            testSuccess(
+        		"Valid box specification with valid stokes specification #5 succeeds",
+        		0, goodImage, 0, "", "0, 0,  10,10", "",
+        		stokes, ImageInputProcessor::USE_ALL_STOKES, True,
+            	expectedBlc, expectedTrc
+        	);
+        }
+        {
+        	expectedBlc[3] = 1;
+        	expectedTrc[3] = 3;
+            stokes = "Q,I;U";
+            testSuccess(
+        		"Valid box specification with valid stokes specification #6 succeeds",
+        		0, goodImage, 0, "", "0, 0,  10,10", "",
+        		stokes, ImageInputProcessor::USE_ALL_STOKES, True,
             	expectedBlc, expectedTrc
         	);
         }

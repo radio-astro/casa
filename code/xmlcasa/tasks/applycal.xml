@@ -142,7 +142,11 @@ another visibility file.
        be specified.  Include parang, gaincurve, opacity is used in
        obtaining previous calibration tables.
 
-       Applycal will overwrite existing corrected data.
+       Applycal will overwrite existing corrected data. Applycal will also 
+       flag all data where no calibration is available. The flags will affect 
+       all scratch columns, ie the "DATA" and the "CORRECTED_DATA" columns.
+       It may thus be wise to keep a backup of your flags before using 
+       applycal (flagmanager will be your friend).
 
        All calibration tables (both temporal, frequency, polarization
        calibrations) are specified in the gaintable parameter.  The

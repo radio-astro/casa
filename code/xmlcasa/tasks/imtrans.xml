@@ -60,7 +60,7 @@ It can be one of three types: a non-negative integer, a string, or a list of
 strings. If a string or non-negative integer, it should contain
 zero-based digits describing the new order of the input axes. It must
 contain the same number of (unique) digits as the number of input axes. For example,
-specifying reorder="1032" or reorder=1032 for a four axes image maps input axes
+specifying order="1032" or order=1032 for a four axes image maps input axes
 0, 1, 2, 3 to output axes 1, 0, 3, 2. In the case of order being a nonnegative integer
 and the zeroth axis in the input being mapped to zeroth axis in the output, the zeroth
 digit is implicitly understood to be 0 so that to transpose an image where one would

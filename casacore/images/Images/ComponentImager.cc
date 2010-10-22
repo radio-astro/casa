@@ -181,8 +181,9 @@ void ComponentImager::project(ImageInterface<Float>& image, const ComponentList&
   {
     Unit imageUnit = image.units();
     const String& imageUnitName = imageUnit.getName();
-    UnitMap::putUser("pixel", UnitVal(pixelLatSize.radian() * 
+    UnitMap::putUser("1pixel", UnitVal(pixelLatSize.radian() * 
 				      pixelLongSize.radian(), "rad.rad"));
+    // redefine is required to reset Unit Cache 
     const Unit pixel("pixel");
     if (imageUnitName.contains("pixel")) {
       // Get the new definition of the imageUnit which uses the new
@@ -219,9 +220,9 @@ void ComponentImager::project(ImageInterface<Float>& image, const ComponentList&
     // understand that Jy/pixel.pixel == Jy.
     const Unit jy("Jy");
     os << "Adding components to image with units [" << fluxUnits.getName() << "]" << LogIO::POST;
-    if (fluxUnits.getName()=="Jy/pixel.pixel") {
-      fluxUnits=jy;
-    }
+//    if (fluxUnits.getName()=="Jy/pixel.pixel") {
+//      fluxUnits=jy;
+//    }
     if (fluxUnits != jy) {
       os << LogIO::WARN 
 	 << "Image units [" << fluxUnits.getName() << "] are not dimensionally equivalent to "
