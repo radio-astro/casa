@@ -20,7 +20,7 @@ def simdata(
     user_pwv=None, t_ground=None, t_sky=None, tau0=None, leakage=None,
     image=None,
     vis=None, modelimage=None, cell=None, imsize=None, niter=None, threshold=None,
-    weighting=None, outertaper=None, stokes=None,     
+    weighting=None, mask=None, outertaper=None, stokes=None,     
     analyze=None, 
     showarray=None, showuv=None, showpsf=None, showmodel=None, 
     showconvolved=None, showclean=None, showresidual=None, showdifference=None, 
@@ -1136,7 +1136,7 @@ def simdata(
                        cleanmode,cell,imsize,imcenter,
                        niter,threshold,weighting,
                        outertaper,stokes,sourcefieldlist=sourcefieldlist,
-                       modelimage=modelimage)
+                       modelimage=modelimage,mask=mask)
 
             # create imagename.flat and imagename.residual.flat:
             util.flatimage(imagename+".image",verbose=verbose)

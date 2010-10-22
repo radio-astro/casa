@@ -954,6 +954,19 @@ class simutil:
             antnames="A00"
 
         else:
+            if str.upper(antennalist[0:4])=="ALMA":
+                tail=antennalist[5:]
+                if self.isquantity(tail,halt=False):
+                    resl=qa.convert(tail,"arcsec")['value']
+                    repodir=os.getenv("CASAPATH").split(' ')[0]+"/data/alma/simmos/"
+                    if os.path.exists(repodir):
+                        confnum=(2.867-pl.log10(resl*1000*qa.convert(freq,"GHz")['value']/672.))/0.0721
+                        confnum=max(1,min(28,confnum))
+                        conf=str(int(round(confnum)))
+                        if len(conf)<2: conf='0'+conf
+                        antennalist=repodir+"alma.out"+conf+".cfg"
+                        self.msg("converted resolution to antennalist "+antennalist)
+
             if os.path.exists(antennalist):
                 stnx, stny, stnz, stnd, padnames, nant, telescope = self.readantenna(antennalist)
             else:
@@ -1070,6 +1083,9 @@ class simutil:
             imnoise=(stats["rms"][0])*pl.sqrt(2)  # 2 polarizations
         else:
             imnoise=0.
+
+        nint = qa.convert(etime,'s')['value'] / qa.convert(integration,'s')['value'] 
+        nbase= 0.5*nant*(nant-1)
                 
         if os.path.exists(tmpname+".T.cal"):
             tb.open(tmpname+".T.cal")
@@ -1077,12 +1093,12 @@ class simutil:
             # RI TODO average instead of first?
             tb.done()
             # gain is per ANT so square for per baseline;  
-            noiseperbase=1./(gain[0][0][0].real)**2
+            # pick a gain from about the middle of the track
+            noiseperbase=1./(gain[0][0][0.5*nint*nant].real)**2
         else:
             noiseperbase=0.
 
-        nint= qa.convert(etime,'s')['value'] / qa.convert(integration,'s')['value'] 
-        theoreticalnoise=noiseperbase/pl.sqrt(nint)/pl.sqrt(0.5*nant*(nant-1))
+        theoreticalnoise=noiseperbase/pl.sqrt(nint*nbase)
         
         if debug==None:
             xx=glob.glob(tmpname+"*")
@@ -2777,7 +2793,7 @@ class simutil:
 
     def image(self,mstoimage,image,
               cleanmode,cell,imsize,imcenter,niter,threshold,weighting,
-              outertaper,stokes,sourcefieldlist="",modelimage=""):
+              outertaper,stokes,sourcefieldlist="",modelimage="",mask=[]):
         from clean import clean
 
         # determine channelization from (first) ms:
@@ -2861,7 +2877,12 @@ class simutil:
         cleanlast.write('negcomponent            = -1\n')
         cleanlast.write('smallscalebias          = 0.6\n')
         cleanlast.write('interactive             = False\n')
-        cleanlast.write('mask                    = []\n')
+        if type(mask)==type(" "):
+            cleanlast.write('mask                    = "'+mask+'"\n')
+            cleanstr=cleanstr+",mask='"+mask+"'"
+        else:
+            cleanlast.write('mask                    = '+str(mask)+'\n')
+            cleanstr=cleanstr+",mask="+str(mask)
         cleanlast.write('start                   = 0\n')
         cleanlast.write('width                   = 1\n')
         cleanlast.write('outframe                = ""\n')
@@ -2921,7 +2942,7 @@ class simutil:
         cleanlast.close()
         
         clean(vis=', '.join(mstoimage), imagename=image, mode=chanmode, nchan=nchan,
-                  niter=niter, threshold=threshold, selectdata=False,
+                  niter=niter, threshold=threshold, selectdata=False, mask=mask,
                   psfmode=psfmode, imagermode=imagermode, ftmachine=ftmachine, 
                   imsize=imsize, cell=map(qa.tos,cell), phasecenter=imcenter,
                   stokes=stokes, weighting=weighting, robust=robust,

@@ -74,7 +74,6 @@ casa_add_python( xmlcasa xmlcasa_regressions_python python/${PYTHONV}/regression
   pointing_regression.py
   polcal_20080224_cband_regression.py
   ppdisk2_regression.py
-  ppdisk_regression.py
   run_orionmos4sim.py
   sdtpimaging_regression.py
   testcube2_regression.py
