@@ -1076,7 +1076,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // Quick-n-dirty implementation - to be replaced by use of CalInterp
   // class if-and-when that's ready for use
   //
-  Array<Complex>  LJJones::nearest(const Double thisTime)
+  void  LJJones::nearest(const Double thisTime, Array<Complex>& vals)
   {
     Array<Complex>  par  = getOffsets(currSpw());
     Vector<Double> time = getTime(currSpw());
@@ -1095,8 +1095,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (slot >= nTimes) throw(AipsError("LJJones::nearest(): Internal problem - "
 					"nearest slot is out of range"));
     Array<Complex> tmp=par(IPosition(4,0,0,0,slot), IPosition(4,shp[0]-1,shp[1]-1,shp[2]-1,slot));
-    
-    return tmp;
+    vals.resize();
+    vals = tmp;
   }
   
   void LJJones::printRPar()
