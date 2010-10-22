@@ -204,11 +204,11 @@ namespace casa{
     // data, rotate the PA by 180 deg. only for EVLA.
     //
     String telescopeName=vb.msColumns().observation().telescopeName().getColumn()[0];
-    if (telescopeName == "EVLA") 
-      {
-	logIO << "Fixing PA computation for EVLA"  << LogIO::WARN;
-	pa += M_PI;
-      }
+    // if (telescopeName == "EVLA") 
+    //   {
+    // 	logIO << "Fixing PA computation for EVLA"  << LogIO::WARN;
+    // 	pa += M_PI;
+    //   }
     // pa=0.0;
     // cerr << "************PA being set to zero!!!!**************" << endl;
     Float Freq;
@@ -227,9 +227,10 @@ namespace casa{
 	const ROMSSpWindowColumns& spwCol = vb.msColumns().spectralWindow();
 	ROArrayColumn<Double> chanfreq = spwCol.chanFreq();
 	ROScalarColumn<Double> reffreq = spwCol.refFrequency();
-	
+
 	//	Freq = sum(chanFreq)/chanFreq.nelements();
 	Freq = max(chanfreq.getColumn());
+	//	cerr << "RefFreq = " << Freq << endl;
 	ap.freq = Freq/1E9;
 	
 	IPosition imsize(skyShape);
@@ -332,7 +333,7 @@ namespace casa{
 	
 	ap.aperture->setCoordinateInfo(uvCoords);
 
-	// // if (doSquint==False)
+	// if (doSquint==True)
 	//   {
 	//     String name("apperture.im");
 	//     storeImg(name,*(ap.aperture));
@@ -342,6 +343,11 @@ namespace casa{
 	// Now FT the re-gridded Fourier plane to get the primary beam.
 	//
 	ftAperture(*(ap.aperture));
+	// if (doSquint==True)
+	//   {
+	//     String name("ftapperture.im");
+	//     storeImg(name,*(ap.aperture));
+	//   }
       }
   }
   void VLACalcIlluminationConvFunc::regridAperture(CoordinateSystem& skyCS,
