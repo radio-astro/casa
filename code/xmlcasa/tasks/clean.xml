@@ -1000,25 +1000,37 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                (a) Explicit cleanbox pixel ranges example: mask=[110,110,150,145]
                    = clean region with blc=110,100; trc=150,145 (pixel values)
 		   If used with a spectral cube, it will apply to all channels.
+		   Multiple regions may be specified as a list of pixel ranges.
+		   example : mask=[ [110,110,150,145], [160,160,170,170] ]
                (b) Filename with cleanbox pixel values in ASCII format.
                    Example: mask='mycleanbox.txt'
                             &lt;fieldid blc-x blc-y trc-x trc-y&gt; on each line:
-                            1 45 66 123 124 
-                            2 23 100 300 340
+			    Example : 
+                              #boxfile
+                              0 45 66 123 124 
+                              1 23 100 300 340
+		   The first line must contain \'#boxfile\'.
 		   If used with a spectral cube, it will apply to all channels.	    
                (c) Filename for image mask.  Example: mask='myimage.mask'
                    '' -> no mask
+		   Multiple mask files may be specified.
+		   example : mask=[ 'mask1.mask', 'mask2.mask' ]
                (d) Filename for region specification (e.g. from viewer).
                    Example: mask='myregion.rgn'
-               (e) Combinations of any of the above.
-                   Example: mask=[[110,110,150,145],'mycleanbox.txt',
-                                  'myimage.mask', 'myregion.rgn']
-                   If including outlier fields, then mask needs to be specified
-                   in nested lists: 
-                   e.g. mask=[[[110,110,150,145],'myimage.mask'],[],[20,20,40,40]]
-                   (A clean box with [110,110,150,145] and a image mask for main
-                    field, no mask for 1st outlier field, 1 clean box for 2nd
-                    outlier field.)
+               (e) Combinations of the above options.
+                   Example: mask=['mycleanbox.txt','myimage.mask', 'myregion.rgn']
+		   (explicit pixel ranges cannot be included in such a list).
+		   -- If including outlier fields :
+		      -- specify a list of masks : mask=['myimage.mask', 'myregion.rgn']
+		         The number of entries in this list must match the number of fields.
+                      -- specify a box-file (only when an outlierfile is also used).
+		         Example :
+                            #boxfile
+                            0 45 66 123 124 
+                            1 23 100 300 340
+		         The field index must match the field index in the outlierfile.
+			 Each field index can have only one mask entry.
+			 Unlisted field indices will get full-field masks.
                (f) Threshold on primary-beam.
                    A number between 0 and 1, used as a threshhold of primary
                    beam coverage.  The primary beam coverage map (imagename +
@@ -1127,49 +1139,62 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  inputs or with an outlier file.  For more than a few fields,
                  an outlier file more convenient.
 
-                Direct Method:
+                (a) Direct Method:
 
-                   cell = ['1.0arcsec', '1.0arcsec']
-                   imagename = ['M1_0','M1_1','M1_2]
-                   imsize = [[1024,1024],[128,128],[128,128]]
-                   phasecenter = ['J2000 13h27m20.98 43d26m28.0',
-                             'J2000 13h30m52.159 43d23m08.02', 'J2000 13h24m08.16 43d09m48.0']
-
-                 Text file method  (in outlier.txt)
+                     cell = ['1.0arcsec', '1.0arcsec']
+                     imagename = ['M1_0','M1_1','M1_2]
+                     imsize = [[1024,1024],[128,128],[128,128]]
+                     phasecenter = ['J2000 13h27m20.98 43d26m28.0',
+                                   'J2000 13h30m52.159 43d23m08.02', 'J2000 13h24m08.16 43d09m48.0']
+	
+                (b) Text file method  (in outlier.txt)
 
                    imagename = 'M1'
                    outlierfile = 'outlier.txt'
-                      [phasecenter, imsize ignored]
+                      Note : phasecenter, imsize are ignored.
 
                    Contents of outlier.txt 
                    C 0   1024 1024   13 27 20.98     43 26 28.0
                    C 1    128  128   13 30 52.158    43 23 08.00
                    C 2    128  128   13 24 08.163    43 09 48.00
 
+		   Note : field-ids (the number after 'C') must start from zero.
+
                 In both cases the following images will be made:
                     M1_0.image, M1_1.image, M1_2.image     cleaned images
                     M1.0.model, M1_1.model, M1_2.model     model images
                     M1.0.residual, M1_1.residual, M1_2.residual     residual images
 
-              2. Masks for flanking fields are specified in same way as 
-                 in the single output field case, but need extra '[ ]' to
-                 distinguish each field. 
-                    mask=[['myregion.rg',[100,100,150,150]],['myimage1.mask'],[]]
-                    would apply masks:
-                    for the first field (main field),
-                      myregion.rg and a box defined by [100,100,150,150] in pixels
-                    for the seconf field (first outlier), myimage1.mask 
-                    for the third field (second outlier), no mask (produce a mask for
-                    whole field) 
-                 However, if boxfiles are given, ids in the first column of the files
-                 are used to match with fields (using order given imagename or
-                 outlierfile. 
-                 So, if the content of  a boxfile looks like this,
- 	                 0 45 66 123 124 
- 	                 1 23 100 300 340
-                         2 20 20 40 40
-                 then [45 66 123 124] is assigned to first field (imagename[0], or first line
-                 of outlierfile).
+		   
+	      2. Masks for central and flanking fields  
+
+	         (a)  Specify a list of masks, one for each field.
+		      Note : Number of masks must match the number of fields.
+
+	           masks = [ [200,200,700,700] , [30,30,70,70], [40,40,80,80] ]
+		   (or)
+	           masks = [ 'image0.mask', 'region1.rgn', 'image2.mask' ]
+
+
+		  (b) Use a box-file to set masks.
+		      This option allows mask-setting for only specified fields. 
+	           
+		   masks = 'boxfile.txt'
+	
+		   This text-file contains one entry per field (start with index 0) :
+		        # boxfile
+		        0 200 200 700 700
+			1 30  30  70  70
+			2 40  40  80  80
+
+		    Not all fields need to be specified. Unspecified fields get full-field masks.
+
+		    If an outlier file is not used, field ids are matched 
+		    with a zero-based image-list. ('field 1 = second field in list).
+
+		    If an outlier file is used, field-ids in the box-file 
+		    must match field-ids in the outlier-file.
+ 		    
   </example>
 
 </task>
