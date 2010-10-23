@@ -1023,7 +1023,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		   -- If including outlier fields :
 		      -- specify a list of masks : mask=['myimage.mask', 'myregion.rgn']
 		         The number of entries in this list must match the number of fields.
-                      -- specify a box-file (only when an outlierfile is also used).
+                      -- specify a box-file : mask = 'boxfile.txt' 
 		         Example :
                             #boxfile
                             0 45 66 123 124 
