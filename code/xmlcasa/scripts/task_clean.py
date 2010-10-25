@@ -242,8 +242,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                 maskimage=[]
                 for img in sorted(imset.maskimages):
                     maskimage.append(imset.maskimages[img])
-	    if(type(mask)==type([]) and len(mask)):
-	        casalog.post('Used mask(s) : ' + str(mask) + ' to create mask image(s) : ' + str(maskimage),'INFO');
+	    casalog.post('Used mask(s) : ' + str(mask) + ' to create mask image(s) : ' + str(maskimage),'INFO');
 
             if dochaniter:
                 imset.checkpsf(chanslice)
