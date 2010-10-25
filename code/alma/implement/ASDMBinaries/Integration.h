@@ -55,11 +55,11 @@ namespace sdmbin {
 	The attribute 'sideband' being mandatory in the SDM-BDF, when there is no 
         enumerator set, the value stored for that format will be NOSB.
     */
-    DataStructure(  unsigned int      numPolProduct,     //!< Number of polarization products
-		    unsigned int      numBin,            //!< Number of step in a switching cycle
+    DataStructure(  uint32_t      numPolProduct,     //!< Number of polarization products
+		    uint32_t      numBin,            //!< Number of step in a switching cycle
 		    Enum<NetSideband> e_sideband,        //!< Sideband qualifier (not set or NOSB | LSB | USB | DSB )
-		    unsigned int      numBaseband,       //!< Number of basebands
-		    unsigned int      numAnt,            //!< Number of antennas
+		    uint32_t      numBaseband,       //!< Number of basebands
+		    uint32_t      numAnt,            //!< Number of antennas
 		    CorrelationMode   correlationMode);  //!< Correlation mode (CROSS_ONLY | AUTO_ONLY | CROSS_AND_AUTO )
 
     /** An other constructor  for a multi-dimensional structure use-case.
@@ -83,12 +83,12 @@ namespace sdmbin {
 	The attribute 'sideband' being mandatory in the SDM-BDF, when there is no 
         enumerator set, the value stored for that format will be NOSB.
      */
-    DataStructure(  unsigned int      numPolProduct,
-		    unsigned int      numSpectralPoint,
-		    unsigned int      numBin,
+    DataStructure(  uint32_t      numPolProduct,
+		    uint32_t      numSpectralPoint,
+		    uint32_t      numBin,
 		    Enum<NetSideband> e_sideband,
-		    unsigned int      numBaseband,
-		    unsigned int      numAnt,
+		    uint32_t      numBaseband,
+		    uint32_t      numAnt,
 		    CorrelationMode   correlationMode);
 
     /** Constructor in the general case, the data structure being eventualy
@@ -117,15 +117,15 @@ namespace sdmbin {
 	     - AUTO_ONLY       only zero baselines (single-dish)
 	     - CROSS_AND_AUTO  both zero and non-zero.
     */
-    DataStructure( vector<vector<unsigned int> >       vv_numCrossPolProduct,// /bb/spw
-		   vector<vector<unsigned int> >       vv_numAutoPolProduct, // /bb/spw
-		   vector<vector<unsigned int> >       vv_numSpectralPoint,  // /bb/spw
-		   vector<vector<unsigned int> >       vv_numBin,            // /bb/spw
+    DataStructure( vector<vector<uint32_t> >       vv_numCrossPolProduct,// /bb/spw
+		   vector<vector<uint32_t> >       vv_numAutoPolProduct, // /bb/spw
+		   vector<vector<uint32_t> >       vv_numSpectralPoint,  // /bb/spw
+		   vector<vector<uint32_t> >       vv_numBin,            // /bb/spw
 		   vector<vector<Enum<NetSideband> > > vv_e_sideband,        // /bb/spw
-		   unsigned int                        numApc,
-		   vector<unsigned int>                v_numSpectralWindow,  // /bb
-		   unsigned int                        numBaseband,
-		   unsigned int                        numAnt,
+		   uint32_t                        numApc,
+		   vector<uint32_t>                v_numSpectralWindow,  // /bb
+		   uint32_t                        numBaseband,
+		   uint32_t                        numAnt,
 		   CorrelationMode                     correlationMode);
 
     /** Constructor for the single-dish case, the data structure being eventually
@@ -154,14 +154,14 @@ namespace sdmbin {
 	     - AUTO_ONLY       only zero baselines (single-dish)
 	     - CROSS_AND_AUTO  both zero and non-zero.
     */
-    DataStructure( vector<vector<unsigned int> >       vv_numAutoPolProduct, // /bb/spw
-		   vector<vector<unsigned int> >       vv_numSpectralPoint,  // /bb/spw
-		   vector<vector<unsigned int> >       vv_numBin,            // /bb/spw
+    DataStructure( vector<vector<uint32_t> >       vv_numAutoPolProduct, // /bb/spw
+		   vector<vector<uint32_t> >       vv_numSpectralPoint,  // /bb/spw
+		   vector<vector<uint32_t> >       vv_numBin,            // /bb/spw
 		   vector<vector<Enum<NetSideband> > > vv_e_sideband,        // /bb/spw
-		   unsigned int                        numApc,
-		   vector<unsigned int>                v_numSpectralWindow,  // /bb
-		   unsigned int                        numBaseband,
-		   unsigned int                        numAnt,
+		   uint32_t                        numApc,
+		   vector<uint32_t>                v_numSpectralWindow,  // /bb
+		   uint32_t                        numBaseband,
+		   uint32_t                        numAnt,
 		   CorrelationMode                     correlationMode);
 
     /** Copy constructor */
@@ -174,23 +174,23 @@ namespace sdmbin {
     /** Accessor to the number of polarization cross product for non-zero baselines
 	in every spectral window for every baseband
     */
-    vector<vector<unsigned int> > numCrossPolProducts();
+    vector<vector<uint32_t> > numCrossPolProducts();
 
     /** Accessor to the number of polarization cross product for zero-baselines
 	in every spectral window for every baseband
     */
-    vector<vector<unsigned int> > numAutoPolProducts();
+    vector<vector<uint32_t> > numAutoPolProducts();
 
     /** Accessor to the number of spectral points in every spectral window
 	for every baseband
     */
-    vector<vector<unsigned int> > numSpectralPoints();
+    vector<vector<uint32_t> > numSpectralPoints();
 
 
     /** Accessor to the number of bins in every spectral window
 	for every baseband
     */
-    vector<vector<unsigned int> > numBins();
+    vector<vector<uint32_t> > numBins();
 
     /** Accessor to the NetSideband qualifiers in every spectral window
 	for every baseband
@@ -198,16 +198,16 @@ namespace sdmbin {
     vector<vector<Enum<NetSideband> > > sidebands();
 
     /** Accessor to the size of the APC axis */
-    unsigned int                  numApc();
+    uint32_t                  numApc();
 
     /** Accessor to the number of spectral windows in the different basebands */
-    vector<unsigned int>          numSpectralWindows();
+    vector<uint32_t>          numSpectralWindows();
 
     /** Accessor to the number of basebands */
-    unsigned int                  numBaseband();
+    uint32_t                  numBaseband();
 
     /** Accessor to the number of antennas */
-    unsigned int                  numAnt();
+    uint32_t                  numAnt();
 
     /** Accessor to the correlationMode 
      - 0 implies only interferometric 
@@ -226,7 +226,7 @@ namespace sdmbin {
 	@return the axis sizes of the leaf, the size of the vector 
 	corresponding to the dimensionality of the leaf. 
     */
-    vector<unsigned int> leafAxisSizes();
+    vector<uint32_t> leafAxisSizes();
 
     /** Axis sizes of the leave of a data structure which may not
         be necessarily multi-dimensional. A multi-dimensional leaf 
@@ -240,7 +240,7 @@ namespace sdmbin {
 	@return the axis sizes of the leaf, the size of the vector 
 	corresponding to the dimensionality of the leaf.
     */
-    vector<unsigned int> leafAxisSizes(unsigned int basebandIndex, unsigned int spectralWindowIndex);
+    vector<uint32_t> leafAxisSizes(uint32_t basebandIndex, uint32_t spectralWindowIndex);
 
     /** Axis sizes of the leave of a data structure which may not
         be necessarily multi-dimensional. A multi-dimensional leaf 
@@ -256,7 +256,7 @@ namespace sdmbin {
 	@return the axis sizes of the leaf, the size of the vector 
 	corresponding to the dimensionality of the leaf.
     */
-    vector<unsigned int> leafAxisSizes(unsigned int dataDescriptionIndex);
+    vector<uint32_t> leafAxisSizes(uint32_t dataDescriptionIndex);
 
 
     /** A method to know if the whole data structure can be considered as a
@@ -267,17 +267,17 @@ namespace sdmbin {
               access to the data may be retrieved in the
               form of an array with this dimensionality.
     */
-    unsigned int         isIndexible() const;
+    uint32_t         isIndexible() const;
 
 
     /** A method to retrieve the size of all the different axes
        in case of a multi-dimensional structure.
-       @return vector<unsigned int> a vector of axis sizes
+       @return vector<uint32_t> a vector of axis sizes
               This vector has a size of 0 in case of a tree 
               structure else it is the number of axes (including
               those with a size of 1)
     */
-    vector<unsigned int> eAxisSizes() const;
+    vector<uint32_t> eAxisSizes() const;
 
     /** A method to retrieve the size of the axes for a
         multi-dimensional structure. This is the compact
@@ -285,33 +285,33 @@ namespace sdmbin {
         to set the dimension of the structure. This vector 
 	has a size of 0 in case of a tree structure.
     */
-    vector<unsigned int> axisSizes() const;
+    vector<uint32_t> axisSizes() const;
 
     /** Accessor to the dimensionality of the structure.
 	If this is a tree-structure this is the number of
         levels in the hierarchy.
     */
-    unsigned int         dimension() const;
+    uint32_t         dimension() const;
 
     /** Minimum size for every axis (level) in the structure.
 	The return size of the vector is equal to the dimension
         of the structure
     */
-    vector<unsigned int> minAxSize() const;
+    vector<uint32_t> minAxSize() const;
 
     /** Maximum size for every axis (level) in the structure.
 	The return size of the vector is equal to the dimension
         of the structure
     */
-    vector<unsigned int> maxAxSize() const;
+    vector<uint32_t> maxAxSize() const;
 
     /** Number of data value (leaves) that can host the structure
      */
-    unsigned int         numAutoData() const;
+    uint32_t         numAutoData() const;
 
     /** Number of data value (leaves) that can host the structure
      */
-    unsigned int         numCrossData() const;
+    uint32_t         numCrossData() const;
 
     /** Axis sequense: For example 128 means a structure with
                        3 axes, pol,sp,na
@@ -323,19 +323,19 @@ namespace sdmbin {
     void                 summary() const;
 
   protected:
-    vector<vector<unsigned int> >       vv_numCrossPolProduct_;// /bb/spw
-    vector<vector<unsigned int> >       vv_numAutoPolProduct_; // /bb/spw
-    vector<vector<unsigned int> >       vv_numSpectralPoint_;  // /bb/spw
-    vector<vector<unsigned int> >       vv_numBin_;            // /bb/spw
+    vector<vector<uint32_t> >       vv_numCrossPolProduct_;// /bb/spw
+    vector<vector<uint32_t> >       vv_numAutoPolProduct_; // /bb/spw
+    vector<vector<uint32_t> >       vv_numSpectralPoint_;  // /bb/spw
+    vector<vector<uint32_t> >       vv_numBin_;            // /bb/spw
     vector<vector<Enum<NetSideband> > > vv_e_sideband_;        // /bb/spw
-    unsigned int                        numApc_;
-    vector<unsigned int>                v_numSpectralWindow_;  // /bb
-    unsigned int                        numBaseband_;
-    unsigned int                        numAnt_;
+    uint32_t                        numApc_;
+    vector<uint32_t>                v_numSpectralWindow_;  // /bb
+    uint32_t                        numBaseband_;
+    uint32_t                        numAnt_;
     CorrelationMode                     correlationMode_;
     string                              axisSequence_;
-    vector<unsigned int>                v_minSize_;
-    vector<unsigned int>                v_maxSize_;
+    vector<uint32_t>                v_minSize_;
+    vector<uint32_t>                v_maxSize_;
     
   private:
     string                              setStructureProperties();
@@ -392,16 +392,16 @@ namespace sdmbin {
                             of baselines if correlationMode=0 or 2
 	@param 	correlationMode  ( CROSS_ONLY | AUTO_ONLY | CROSS_AND_AUTO ) 
     */
-    DataDump( unsigned int      numPolProduct,
-	      unsigned int      numBin,
+    DataDump( uint32_t      numPolProduct,
+	      uint32_t      numBin,
 	      Enum<NetSideband> e_sideband,
-	      unsigned int      numBaseband,
-	      unsigned int      numAnt,
+	      uint32_t      numBaseband,
+	      uint32_t      numAnt,
 	      CorrelationMode   correlationMode,
-	      long long         time,
-	      long long         timeCentroid,  
-	      long long         interval, 
-	      long long         exposure,
+	      uint64_t         time,
+	      uint64_t         timeCentroid,  
+	      uint64_t         interval, 
+	      uint64_t         exposure,
 	      const float*      floatData);
 
     /** A constructor convenient for the total power from the baseband processor
@@ -429,73 +429,73 @@ namespace sdmbin {
                             the time lost due to blanking.
         @param dataFlags    The data values.
     */
-    DataDump( unsigned int      numSdPolProduct,
-	      unsigned int      numSpectralPoint,
-	      unsigned int      numBin,
+    DataDump( uint32_t      numSdPolProduct,
+	      uint32_t      numSpectralPoint,
+	      uint32_t      numBin,
 	      Enum<NetSideband> e_sideband,
-	      unsigned int      numBaseband,
-	      unsigned int      numAnt,
+	      uint32_t      numBaseband,
+	      uint32_t      numAnt,
 	      CorrelationMode   correlationMode,
-	      long long         time, 
-	      long long         timeCentroid, 
-	      long long         interval,
-	      long long         exposure,
+	      uint64_t         time, 
+	      uint64_t         timeCentroid, 
+	      uint64_t         interval,
+	      uint64_t         exposure,
 	      const float*             floatData, 
-	      const unsigned int* dataFlags); // TODO
+	      const uint32_t* dataFlags); // TODO
 
     /** A constructor to be used in more general case of total power data
 	all the data being valid.
     */
-    DataDump( vector<vector<unsigned int> >       vv_numPolProduct,     // /bb/spw
-	      vector<vector<unsigned int> >       vv_numSpectralPoint,  // /bb/spw
-	      vector<vector<unsigned int> >       vv_numBin,            // /bb/spw
+    DataDump( vector<vector<uint32_t> >       vv_numPolProduct,     // /bb/spw
+	      vector<vector<uint32_t> >       vv_numSpectralPoint,  // /bb/spw
+	      vector<vector<uint32_t> >       vv_numBin,            // /bb/spw
 	      vector<vector<Enum<NetSideband> > > vv_e_sideband,        // /bb/spw
-	      unsigned int                        numApc,
-	      vector<unsigned int>                v_numSpectralWindow,  // /bb
-	      unsigned int                        numBaseband,
-	      unsigned int                        numAnt,
+	      uint32_t                        numApc,
+	      vector<uint32_t>                v_numSpectralWindow,  // /bb
+	      uint32_t                        numBaseband,
+	      uint32_t                        numAnt,
 	      CorrelationMode                     correlationMode,
-	      long long                           time, 
-	      long long                           timeCentroid, 
-	      long long                           interval, 
-	      long long                           exposure,
+	      uint64_t                           time, 
+	      uint64_t                           timeCentroid, 
+	      uint64_t                           interval, 
+	      uint64_t                           exposure,
 	      const float*                        floatData);
 
     /** A constructor to be used in a more general case of total power data
 	when some data have been flagged
     */
-    DataDump( vector<vector<unsigned int> >       vv_numPolProduct,     // /bb/spw
-	      vector<vector<unsigned int> >       vv_numSpectralPoint,  // /bb/spw
-	      vector<vector<unsigned int> >       vv_numBin,            // /bb/spw
+    DataDump( vector<vector<uint32_t> >       vv_numPolProduct,     // /bb/spw
+	      vector<vector<uint32_t> >       vv_numSpectralPoint,  // /bb/spw
+	      vector<vector<uint32_t> >       vv_numBin,            // /bb/spw
 	      vector<vector<Enum<NetSideband> > > vv_e_sideband,        // /bb/spw
-	      unsigned int                        numApc,
-	      vector<unsigned int>                v_numSpectralWindow,  // /bb
-	      unsigned int                        numBaseband,
-	      unsigned int                        numAnt,
+	      uint32_t                        numApc,
+	      vector<uint32_t>                v_numSpectralWindow,  // /bb
+	      uint32_t                        numBaseband,
+	      uint32_t                        numAnt,
 	      CorrelationMode                     correlationMode,
-	      long long                           time,
-	      long long                           timeCentroid,  
-	      long long                           interval, 
-	      long long                           exposure,
+	      uint64_t                           time,
+	      uint64_t                           timeCentroid,  
+	      uint64_t                           interval, 
+	      uint64_t                           exposure,
 	      const float*                        floatData, 
-	      const unsigned int*                 dataFlags);
+	      const uint32_t*                 dataFlags);
 
     /** A constructor with no importation nor attachment of binary meta.
     */
-    DataDump( vector<vector<unsigned int> >       vv_numCrossPolProduct,// /bb/spw
-	      vector<vector<unsigned int> >       vv_numAutoPolProduct, // /bb/spw
-	      vector<vector<unsigned int> >       vv_numSpectralPoint,  // /bb/spw
-	      vector<vector<unsigned int> >       vv_numBin,            // /bb/spw
+    DataDump( vector<vector<uint32_t> >       vv_numCrossPolProduct,// /bb/spw
+	      vector<vector<uint32_t> >       vv_numAutoPolProduct, // /bb/spw
+	      vector<vector<uint32_t> >       vv_numSpectralPoint,  // /bb/spw
+	      vector<vector<uint32_t> >       vv_numBin,            // /bb/spw
 	      vector<vector<Enum<NetSideband> > > vv_e_sideband,        // /bb/spw
-	      unsigned int                        numApc,
-	      vector<unsigned int>                v_numSpectralWindow,  // /bb
-	      unsigned int                        numBaseband,
-	      unsigned int                        numAnt,
+	      uint32_t                        numApc,
+	      vector<uint32_t>                v_numSpectralWindow,  // /bb
+	      uint32_t                        numBaseband,
+	      uint32_t                        numAnt,
 	      CorrelationMode                     correlationMode,
-	      long long                           time,
-	      long long                           timeCentroid,  
-	      long long                           interval, 
-	      long long                           exposure);
+	      uint64_t                           time,
+	      uint64_t                           timeCentroid,  
+	      uint64_t                           interval, 
+	      uint64_t                           exposure);
 
     /** Destructor 
 
@@ -524,84 +524,84 @@ namespace sdmbin {
     /** Assignement operatator */
     DataDump & operator = (const DataDump& a);
 
-    void attachFlags( unsigned int declaredSize, EnumSet<AxisName> es_an, 
-		      unsigned int numData, const unsigned int* flagsPtr);
-    void importFlags( unsigned int declaredSize, EnumSet<AxisName> es_an, 
-		      unsigned int numData, const unsigned int* flagsPtr);
+    void attachFlags( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+		      uint32_t numData, const uint32_t* flagsPtr);
+    void importFlags( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+		      uint32_t numData, const uint32_t* flagsPtr);
 
-    void attachActualTimes( unsigned int declaredSize, EnumSet<AxisName> es_an, 
-			    unsigned int numData, const long long * actualTimesPtr);
+    void attachActualTimes( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+			    uint32_t numData, const int64_t * actualTimesPtr);
 
-    void importActualTimes( unsigned int declaredSize, EnumSet<AxisName> es_an, 
-			    unsigned int numData, const  long long * actualTimesPtr);
+    void importActualTimes( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+			    uint32_t numData, const  int64_t * actualTimesPtr);
 
-    void attachActualDurations( unsigned int declaredSize, EnumSet<AxisName> es_an, 
-				unsigned int numData, const long long * durationsPtr);
+    void attachActualDurations( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+				uint32_t numData, const int64_t * durationsPtr);
 
-    void importActualDurations( unsigned int declaredSize, EnumSet<AxisName> es_an, 
-				unsigned int numData, const long long * durationsPtr);
-
-
-    void attachZeroLags ( unsigned int declaredSize, EnumSet<AxisName> es_an, 
-			  unsigned int numData, const float* zeroLagsPtr);
-
-    void importZeroLags ( unsigned int declaredSize, EnumSet<AxisName> es_an, 
-			  unsigned int numData, const float* zeroLagsPtr);
+    void importActualDurations( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+				uint32_t numData, const int64_t * durationsPtr);
 
 
-    void attachAutoData ( unsigned int declaredSize, EnumSet<AxisName> es_an, 
-			  unsigned int numData, const float * autoDataPtr);
+    void attachZeroLags ( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+			  uint32_t numData, const float* zeroLagsPtr);
 
-    void importAutoData ( unsigned int declaredSize, EnumSet<AxisName> es_an, 
-			  unsigned int numData, const float * autoDataPtr);
+    void importZeroLags ( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+			  uint32_t numData, const float* zeroLagsPtr);
 
-    void attachCrossData ( unsigned int declaredSize, EnumSet<AxisName> es_an, 
-			   unsigned int numData, const short int* crossDataPtr);
-    void importCrossData ( unsigned int declaredSize, EnumSet<AxisName> es_an, 
-			   unsigned int numData, const short int* crossDataPtr);
-    void attachCrossData ( unsigned int declaredSize, EnumSet<AxisName> es_an, 
-			   unsigned int numData, const int * crossDataPtr);
-    void importCrossData ( unsigned int declaredSize, EnumSet<AxisName> es_an, 
-			   unsigned int numData, const int * crossDataPtr);
-    void attachCrossData ( unsigned int declaredSize, EnumSet<AxisName> es_an, 
-			   unsigned int numData, const float * crossDataPtr);
-    void importCrossData ( unsigned int declaredSize, EnumSet<AxisName> es_an, 
-			   unsigned int numData, const float * crossDataPtr);
+
+    void attachAutoData ( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+			  uint32_t numData, const float * autoDataPtr);
+
+    void importAutoData ( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+			  uint32_t numData, const float * autoDataPtr);
+
+    void attachCrossData ( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+			   uint32_t numData, const short int* crossDataPtr);
+    void importCrossData ( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+			   uint32_t numData, const short int* crossDataPtr);
+    void attachCrossData ( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+			   uint32_t numData, const int * crossDataPtr);
+    void importCrossData ( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+			   uint32_t numData, const int * crossDataPtr);
+    void attachCrossData ( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+			   uint32_t numData, const float * crossDataPtr);
+    void importCrossData ( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+			   uint32_t numData, const float * crossDataPtr);
 
     void         setScaleFactor(vector<vector<float> > vv_scaleFactor);
-    unsigned int setIntegration(unsigned int integNum);
-    unsigned int setSubintegration(unsigned int integNum, unsigned int subintegNum);
-    unsigned int setContextUsingProjectPath(string projectPathUri);
+    uint32_t setIntegration(uint32_t integNum);
+    uint32_t setSubintegration(uint32_t integNum, uint32_t subintegNum);
+    uint32_t setContextUsingProjectPath(string projectPathUri);
 
     // Accessor
-    unsigned int integrationNum();
-    unsigned int subintegrationNum();
+    uint32_t integrationNum();
+    uint32_t subintegrationNum();
 
-    float scaleFactor(unsigned int nbb, unsigned int nspw);
+    float scaleFactor(uint32_t nbb, uint32_t nspw);
 
-    float scaleFactor(unsigned int ndd);
+    float scaleFactor(uint32_t ndd);
 
     /** @name TimeMetadataAccessors
      * Accessors on time-related attributes 
      */
     //@{
-    long long      time() const;
-    long long      timeCentroid() const;
-    long long      interval() const;
-    long long      exposure() const;
+    uint64_t      time() const;
+    uint64_t      timeCentroid() const;
+    uint64_t      interval() const;
+    uint64_t      exposure() const;
     //@}
 
     /** @name DataAccessors 
      * Accessors to the actual time values
      */
     //@{
-    const long long* actualTimes() const;
-    const long long* actualDurations() const;
+    const int64_t* actualTimes() const;
+    const int64_t* actualDurations() const;
     /** Accessor to the flags values. Methods which can be used in case
 	of multi-dimensional data structure. 
 	@return pointer to the multidimensional array of flags.
     */
-    const unsigned int*      flags()    const;
+    const uint32_t*      flags()    const;
     const float*             zeroLags() const;
 
 
@@ -634,7 +634,7 @@ namespace sdmbin {
               - ...
 
     */
-    unsigned int floatData(vector<vector<float>& >);
+    uint32_t floatData(vector<vector<float>& >);
 
 
     /** Accessor to the data from a 3 levels tree-hierarchy with 
@@ -653,7 +653,7 @@ namespace sdmbin {
               - ...
 
     */
-    unsigned int floatData(vector<vector<float*> >&);
+    uint32_t floatData(vector<vector<float*> >&);
 
 
     /** Accessor to the data from a 3 levels tree-hierarchy.
@@ -661,7 +661,7 @@ namespace sdmbin {
               of a tree structure, this method can also be used
               for 3D multi-dimensional data structures!
     */
-    unsigned int floatData(vector<vector<vector<float> > >&);
+    uint32_t floatData(vector<vector<vector<float> > >&);
 
 
     /** Accessor to the data from a 3 levels tree-hierarchy with 
@@ -681,7 +681,7 @@ namespace sdmbin {
               - ...
 
     */
-    unsigned int floatData(vector<vector<vector<float*> > >&);
+    uint32_t floatData(vector<vector<vector<float*> > >&);
 
 
     /** Accessor to the data from a 4 levels tree-hierarchy.
@@ -699,7 +699,7 @@ namespace sdmbin {
               - ...
 
     */
-    unsigned int floatData(vector<vector<vector<vector<float> > > >&);
+    uint32_t floatData(vector<vector<vector<vector<float> > > >&);
 
 
 
@@ -708,7 +708,7 @@ namespace sdmbin {
               of a tree structure, this method can also be used
               for 4D multi-dimensional data structures!
     */
-    unsigned int floatData(vector<vector<vector<vector<float*> > > >&);
+    uint32_t floatData(vector<vector<vector<vector<float*> > > >&);
 
     /** Accessor to the data from a 5 levels tree-hierarchy.
 	@return the data tree by reference
@@ -717,7 +717,7 @@ namespace sdmbin {
               Hence the size of this returned vector corresponds
               to the number of antennas.
     */
-    unsigned int floatData(vector<vector<vector<vector<vector<float> > > > >&);
+    uint32_t floatData(vector<vector<vector<vector<vector<float> > > > >&);
 
     // /nant/nbb/nspw/nbin/napc/nsp/npol
     // |    |   |    |    |    |   | 
@@ -863,7 +863,7 @@ namespace sdmbin {
      */
     //@{
     DataDump      spectralAverage();
-    DataDump      spectralAverage(unsigned int startIndex, unsigned int endIndex);
+    DataDump      spectralAverage(uint32_t startIndex, uint32_t endIndex);
     DataDump            decim(const DataDump &);
     DataDump      subtractRef(const DataDump &);
     //@}
@@ -873,12 +873,12 @@ namespace sdmbin {
 
   protected:
 
-    unsigned int              integrationNum_;
-    unsigned int              subintegrationNum_;
-    long long                 time_;
-    long long                 timeCentroid_; 
-    long long                 interval_;
-    long long                 exposure_;
+    uint32_t              integrationNum_;
+    uint32_t              subintegrationNum_;
+    uint64_t                 time_;
+    uint64_t                 timeCentroid_; 
+    uint64_t                 interval_;
+    uint64_t                 exposure_;
 
     EnumSet<AxisName>         es_flagsAxes_;
     EnumSet<AxisName>         es_actualTimesAxes_;
@@ -888,58 +888,58 @@ namespace sdmbin {
     EnumSet<AxisName>         es_autoDataAxes_;
     EnumSet<AxisName>         es_crossDataAxes_;
 
-    unsigned int              numFlags_;
-    unsigned int              numActualTimes_;
-    unsigned int              numActualDurations_;
-    unsigned int              numWeights_;
-    unsigned int              numZeroLags_;
-    unsigned int              numAutoData_;
-    unsigned int              numCrossData_;
+    uint32_t              numFlags_;
+    uint32_t              numActualTimes_;
+    uint32_t              numActualDurations_;
+    uint32_t              numWeights_;
+    uint32_t              numZeroLags_;
+    uint32_t              numAutoData_;
+    uint32_t              numCrossData_;
 
     vector<vector<float> >    vv_scaleFactor_;     // /bb/spw
     vector<float>             v_scaleFactor_;      // /ndd      linearized version of vv_scaleFactor_ for fast access
 
-    const unsigned int*       cuintFlagsPtr_;
-    const long long*          clonlonActualTimesPtr_;
-    const long long*          clonlonActualDurationsPtr_;
-    const float*              cfloatWeightsPtr_;
-    const float*              cfloatZeroLagsPtr_;
-    const float*              cfloatAutoDataPtr_;
-    const short int*          cshortCrossDataPtr_;
-    const int*                cintCrossDataPtr_;
-    const float*              cfloatCrossDataPtr_;
+    const uint32_t*     cuintFlagsPtr_;
+    const int64_t*      clonlonActualTimesPtr_;
+    const int64_t*      clonlonActualDurationsPtr_;
+    const float*        cfloatWeightsPtr_;
+    const float*        cfloatZeroLagsPtr_;
+    const float*        cfloatAutoDataPtr_;
+    const short int*    cshortCrossDataPtr_;
+    const int*          cintCrossDataPtr_;
+    const float*        cfloatCrossDataPtr_;
 
-    unsigned int*             uintFlagsPtr_;
-    long long*                lonlonActualTimesPtr_;
-    long long*                lonlonActualDurationsPtr_;
-    float*                    floatWeightsPtr_;
-    float*                    floatZeroLagsPtr_;
-    float*                    floatAutoDataPtr_;
-    short int*                shortCrossDataPtr_;
-    int*                      intCrossDataPtr_;
-    float*                    floatCrossDataPtr_;
+    uint32_t*   uintFlagsPtr_;
+    int64_t*    lonlonActualTimesPtr_;
+    int64_t*    lonlonActualDurationsPtr_;
+    float*      floatWeightsPtr_;
+    float*      floatZeroLagsPtr_;
+    float*      floatAutoDataPtr_;
+    short int*  shortCrossDataPtr_;
+    int*        intCrossDataPtr_;
+    float*      floatCrossDataPtr_;
 
     /** A constructor used by the operators + and - */
-    DataDump( vector<vector<unsigned int> >       vv_numCrossPolProduct,// /bb/spw
-	      vector<vector<unsigned int> >       vv_numAutoPolProduct, // /bb/spw
-	      vector<vector<unsigned int> >       vv_numSpectralPoint,  // /bb/spw
-	      vector<vector<unsigned int> >       vv_numBin,            // /bb/spw
+    DataDump( vector<vector<uint32_t> >       vv_numCrossPolProduct,// /bb/spw
+	      vector<vector<uint32_t> >       vv_numAutoPolProduct, // /bb/spw
+	      vector<vector<uint32_t> >       vv_numSpectralPoint,  // /bb/spw
+	      vector<vector<uint32_t> >       vv_numBin,            // /bb/spw
 	      vector<vector<Enum<NetSideband> > > vv_e_sideband,        // /bb/spw
-	      unsigned int                        numApc,
-	      vector<unsigned int>                v_numSpectralWindow,  // /bb
-	      unsigned int                        numBaseband,
-	      unsigned int                        numAnt,
+	      uint32_t                        numApc,
+	      vector<uint32_t>                v_numSpectralWindow,  // /bb
+	      uint32_t                        numBaseband,
+	      uint32_t                        numAnt,
 	      CorrelationMode                     correlationMode,
-	      long long                           time,
-	      long long                           timeCentroid,  
-	      long long                           interval, 
-	      long long                           exposure,
-	      unsigned int                    numCrossData,
+	      uint64_t                           time,
+	      uint64_t                           timeCentroid,  
+	      uint64_t                           interval, 
+	      uint64_t                           exposure,
+	      uint32_t                    numCrossData,
 	      const int*                      crossData,
-	      unsigned int                    numAutoData,
+	      uint32_t                    numAutoData,
 	      const float*                    floatData,
-	      unsigned int                    numFlags,
-	      const unsigned  int*            dataFlags);
+	      uint32_t                    numFlags,
+	      const uint32_t*            dataFlags);
 
   private:
 
@@ -955,82 +955,82 @@ namespace sdmbin {
   {
   public:
     Integration();
-    Integration( vector<vector<unsigned int> >       vv_numPolProduct,     // /bb/spw
-		 vector<vector<unsigned int> >       vv_numSpectralPoint,  // /bb/spw
-		 vector<vector<unsigned int> >       vv_numBin,            // /bb/spw
+    Integration( vector<vector<uint32_t> >       vv_numPolProduct,     // /bb/spw
+		 vector<vector<uint32_t> >       vv_numSpectralPoint,  // /bb/spw
+		 vector<vector<uint32_t> >       vv_numBin,            // /bb/spw
 		 vector<vector<Enum<NetSideband> > > vv_e_sideband,        // /bb/spw
-		 unsigned int                        numApc,
-		 vector<unsigned int>                v_numSpectralWindow,  // /bb
-		 unsigned int                        numBaseband,
-		 unsigned int                        numAnt,
+		 uint32_t                        numApc,
+		 vector<uint32_t>                v_numSpectralWindow,  // /bb
+		 uint32_t                        numBaseband,
+		 uint32_t                        numAnt,
 		 CorrelationMode                     correlationMode,
-		 long long                           time,
-		 long long                           timeCentroid,  
-		 long long                           interval, 
-		 long long                           exposure,
+		 uint64_t                           time,
+		 uint64_t                           timeCentroid,  
+		 uint64_t                           interval, 
+		 uint64_t                           exposure,
 		 float*                              floatData, 
-		 unsigned int                        integNum);
+		 uint32_t                        integNum);
 
 
-    Integration( vector<vector<unsigned int> >       vv_numPolProduct,     // /bb/spw
-		 vector<vector<unsigned int> >       vv_numSpectralPoint,  // /bb/spw
-		 vector<vector<unsigned int> >       vv_numBin,            // /bb/spw
+    Integration( vector<vector<uint32_t> >       vv_numPolProduct,     // /bb/spw
+		 vector<vector<uint32_t> >       vv_numSpectralPoint,  // /bb/spw
+		 vector<vector<uint32_t> >       vv_numBin,            // /bb/spw
 		 vector<vector<Enum<NetSideband> > > vv_e_sideband,        // /bb/spw
-		 unsigned int                        numApc,
-		 vector<unsigned int>                v_numSpectralWindow,  // /bb
-		 unsigned int                        numBaseband,
-		 unsigned int                        numAnt,
+		 uint32_t                        numApc,
+		 vector<uint32_t>                v_numSpectralWindow,  // /bb
+		 uint32_t                        numBaseband,
+		 uint32_t                        numAnt,
 		 CorrelationMode                     correlationMode,
-		 long long                           time, 
-		 long long                           timeCentroid, 
-		 long long                           interval,
-		 long long                           exposure, 
+		 uint64_t                           time, 
+		 uint64_t                           timeCentroid, 
+		 uint64_t                           interval,
+		 uint64_t                           exposure, 
 		 float*                              floatData, 
-		 unsigned int*                       dataFlags,
-		 unsigned int                        integNum);
+		 uint32_t*                       dataFlags,
+		 uint32_t                        integNum);
 
-    Integration( unsigned int      numPolProduct,
-		 unsigned int      numSpectralPoint,
-		 unsigned int      numBin,
+    Integration( uint32_t      numPolProduct,
+		 uint32_t      numSpectralPoint,
+		 uint32_t      numBin,
 		 Enum<NetSideband> e_sideband,
-		 unsigned int      numApc,
-		 unsigned int      numSpectralWindow,
-		 unsigned int      numBaseband,
-		 unsigned int      numAnt, 
+		 uint32_t      numApc,
+		 uint32_t      numSpectralWindow,
+		 uint32_t      numBaseband,
+		 uint32_t      numAnt, 
 		 CorrelationMode   correlationMode,
-		 long long         time, 
-		 long long         timeCentroid,
-		 long long         interval,
-		 long long         exposure, 
+		 uint64_t         time, 
+		 uint64_t         timeCentroid,
+		 uint64_t         interval,
+		 uint64_t         exposure, 
 		 float*            floatData);
 
-    Integration( unsigned int      numPolProduct,
-		 unsigned int      numSpectralPoint,
-		 unsigned int      numBin,
+    Integration( uint32_t      numPolProduct,
+		 uint32_t      numSpectralPoint,
+		 uint32_t      numBin,
 		 Enum<NetSideband> e_sideband,
-		 unsigned int      numApc,
-		 unsigned int      numSpectralWindow,
-		 unsigned int      numBaseband,
-		 unsigned int      numAnt,
+		 uint32_t      numApc,
+		 uint32_t      numSpectralWindow,
+		 uint32_t      numBaseband,
+		 uint32_t      numAnt,
 		 CorrelationMode   correlationMode,
-		 long long         time, 
-		 long long         timeCentroid, 
-		 long long         interval,
-		 long long         exposure, 
+		 uint64_t         time, 
+		 uint64_t         timeCentroid, 
+		 uint64_t         interval,
+		 uint64_t         exposure, 
 		 float*            floatData, 
-		 unsigned long int*   dataFlags,  // TODO
-		 unsigned int      integNum);
+		 uint32_t*   dataFlags,  // TODO
+		 uint32_t      integNum);
     ~Integration();
 
     Integration( const Integration & a);
 
   
   private:
-/*     unsigned int integrationNum_; */
-/*     unsigned int subintegrationNum_; */
+/*     uint32_t integrationNum_; */
+/*     uint32_t subintegrationNum_; */
   };
 
-/*   unsigned int Integration::subintegrationNum_=0; */
+/*   uint32_t Integration::subintegrationNum_=0; */
 
   /** The class  Subintegration extends the  DataDump by adding two attributes
       the integration number and the subintegration number. Subintegration objects
@@ -1049,7 +1049,7 @@ namespace sdmbin {
 	is shorter than the timescale for the atmospheric phase fluctautions,
 	i.e. shorter that ~0.5s.
     */   
-    Subintegration (const Integration&, unsigned int subintegNum );
+    Subintegration (const Integration&, uint32_t subintegNum );
 
     /** The constructor for a subintegration which should be the most commonly
 	used for ALMA, the number of spectral points in each spectral window
@@ -1057,20 +1057,20 @@ namespace sdmbin {
 	radiometric corrections.
 	Case when no data flagged.
     */
-    Subintegration( vector<vector<unsigned int> >       vv_numPolProduct,     // /bb/spw
-		    vector<vector<unsigned int> >       vv_numBin,            // /bb/spw
+    Subintegration( vector<vector<uint32_t> >       vv_numPolProduct,     // /bb/spw
+		    vector<vector<uint32_t> >       vv_numBin,            // /bb/spw
 		    vector<vector<Enum<NetSideband> > > vv_e_sideband,        // /bb/spw
-		    vector<unsigned int>                v_numSpectralWindow,  // /bb
-		    unsigned int                        numBaseband,
-		    unsigned int                        numAnt,
+		    vector<uint32_t>                v_numSpectralWindow,  // /bb
+		    uint32_t                        numBaseband,
+		    uint32_t                        numAnt,
 		    CorrelationMode                     correlationMode, 
-		    long long                           time,
-		    long long                           timeCentroid, 
-		    long long                           interval,
-		    long long                           exposure,
+		    uint64_t                           time,
+		    uint64_t                           timeCentroid, 
+		    uint64_t                           interval,
+		    uint64_t                           exposure,
 		    float*                              floatData,
-		    unsigned int                        integNum,
-		    unsigned int                        subintegNum);
+		    uint32_t                        integNum,
+		    uint32_t                        subintegNum);
 
     /** The constructor for a subintegration which should be the most commonly
 	used for ALMA, the number of spectral points in each spectral window
@@ -1078,21 +1078,21 @@ namespace sdmbin {
 	radiometric corrections.
 	Case when some data may have been flagged.
     */
-    Subintegration( vector<vector<unsigned int> >       vv_numPolProduct,     // /bb/spw
-		    vector<vector<unsigned int> >       vv_numBin,            // /bb/spw
+    Subintegration( vector<vector<uint32_t> >       vv_numPolProduct,     // /bb/spw
+		    vector<vector<uint32_t> >       vv_numBin,            // /bb/spw
 		    vector<vector<Enum<NetSideband> > > vv_e_sideband,        // /bb/spw
-		    vector<unsigned int>                v_numSpectralWindow,  // /bb
-		    unsigned int                        numBaseband,
-		    unsigned int                        numAnt,
+		    vector<uint32_t>                v_numSpectralWindow,  // /bb
+		    uint32_t                        numBaseband,
+		    uint32_t                        numAnt,
 		    CorrelationMode                     correlationMode, 
-		    long long                           time, 
-		    long long                           timeCentroid, 
-		    long long                           interval,
-		    long long                           exposure, 
+		    uint64_t                           time, 
+		    uint64_t                           timeCentroid, 
+		    uint64_t                           interval,
+		    uint64_t                           exposure, 
 		    float*                              floatData,
-		    unsigned long int*                 dataFlags,  // TODO
-		    unsigned int                        integNum,
-		    unsigned int                        subintegNum);
+		    uint32_t*                 dataFlags,  // TODO
+		    uint32_t                        integNum,
+		    uint32_t                        subintegNum);
 
     /** A general constructor for subintegrations with all the data unflagged
 	In general the subintegrations are not processed by the WVC radiometric
@@ -1101,71 +1101,71 @@ namespace sdmbin {
 	This constructor is intended in case the data would have been processed by 
 	the WV radiometric corrections.
     */
-    Subintegration( vector<vector<unsigned int> >       vv_numPolProduct,     // /bb/spw
-		    vector<vector<unsigned int> >       vv_numBin,            // /bb/spw
+    Subintegration( vector<vector<uint32_t> >       vv_numPolProduct,     // /bb/spw
+		    vector<vector<uint32_t> >       vv_numBin,            // /bb/spw
 		    vector<vector<Enum<NetSideband> > > vv_e_sideband,        // /bb/spw
-		    unsigned int                        numApc,
-		    vector<unsigned int>                v_numSpectralWindow,  // /bb
-		    unsigned int                        numBaseband,
-		    unsigned int                        numAnt,
+		    uint32_t                        numApc,
+		    vector<uint32_t>                v_numSpectralWindow,  // /bb
+		    uint32_t                        numBaseband,
+		    uint32_t                        numAnt,
 		    CorrelationMode                     correlationMode, 
-		    long long                           time,
-		    long long                           timeCentroid, 
-		    long long                           interval,
-		    long long                           exposure,
+		    uint64_t                           time,
+		    uint64_t                           timeCentroid, 
+		    uint64_t                           interval,
+		    uint64_t                           exposure,
 		    float*                              floatData,
-		    unsigned int                        integNum,
-		    unsigned int                        subintegNum);
+		    uint32_t                        integNum,
+		    uint32_t                        subintegNum);
 
     /** An even more general constructor. Using this constructor, the only difference
 	between an integration and a subintegration is that the subintegration has
 	a defined subintegration number.
 	To be used when ther is no data flagged
     */
-    Subintegration( vector<vector<unsigned int> >       vv_numPolProduct,     // /bb/spw
-		    vector<vector<unsigned int> >       vv_numSpectralPoint,  // /bb/spw
-		    vector<vector<unsigned int> >       vv_numBin,            // /bb/spw
+    Subintegration( vector<vector<uint32_t> >       vv_numPolProduct,     // /bb/spw
+		    vector<vector<uint32_t> >       vv_numSpectralPoint,  // /bb/spw
+		    vector<vector<uint32_t> >       vv_numBin,            // /bb/spw
 		    vector<vector<Enum<NetSideband> > > vv_e_sideband,        // /bb/spw
-		    unsigned int                        numApc,
-		    vector<unsigned int>                v_numSpectralWindow,  // /bb
-		    unsigned int    numBaseband,
-		    unsigned int    numAnt, 
+		    uint32_t                        numApc,
+		    vector<uint32_t>                v_numSpectralWindow,  // /bb
+		    uint32_t    numBaseband,
+		    uint32_t    numAnt, 
 		    CorrelationMode correlationMode,
-		    long long       time, 
-		    long long       timeCentroid, 
-		    long long       interval,
-		    long long       exposure, 
+		    uint64_t       time, 
+		    uint64_t       timeCentroid, 
+		    uint64_t       interval,
+		    uint64_t       exposure, 
 		    float*          floatData,
-		    unsigned int    integNum,
-		    unsigned int    subintegNum);
+		    uint32_t    integNum,
+		    uint32_t    subintegNum);
 
     /** The most general constructor. Using this constructor, the only difference
 	between an integration and a subintegration is that the subintegration has
 	a defined subintegration number.
 	To be used if there are some flagged data
     */
-    Subintegration( vector<vector<unsigned int> >       vv_numPolProduct,     // /bb/spw
-		    vector<vector<unsigned int> >       vv_numSpectralPoint,  // /bb/spw
-		    vector<vector<unsigned int> >       vv_numBin,            // /bb/spw
+    Subintegration( vector<vector<uint32_t> >       vv_numPolProduct,     // /bb/spw
+		    vector<vector<uint32_t> >       vv_numSpectralPoint,  // /bb/spw
+		    vector<vector<uint32_t> >       vv_numBin,            // /bb/spw
 		    vector<vector<Enum<NetSideband> > > vv_e_sideband,        // /bb/spw
-		    unsigned int                        numApc,
-		    vector<unsigned int>                v_numSpectralWindow,  // /bb
-		    unsigned int    numBaseband,
-		    unsigned int    numAnt,
+		    uint32_t                        numApc,
+		    vector<uint32_t>                v_numSpectralWindow,  // /bb
+		    uint32_t    numBaseband,
+		    uint32_t    numAnt,
 		    CorrelationMode correlationMode,
-		    long long       time, 
-		    long long       timeCentroid, 
-		    long long       interval,
-		    long long       exposure, 
+		    uint64_t       time, 
+		    uint64_t       timeCentroid, 
+		    uint64_t       interval,
+		    uint64_t       exposure, 
 		    float*          floatData, 
-		    unsigned long int*   dataFlags, // TODO
-		    unsigned int    integNum,
-		    unsigned int    subintegNum);
+		    uint32_t*   dataFlags, // TODO
+		    uint32_t    integNum,
+		    uint32_t    subintegNum);
 
   private:
 
-/*     unsigned int integrationNum_; */
-/*     unsigned int subintegrationNum_; */
+/*     uint32_t integrationNum_; */
+/*     uint32_t subintegrationNum_; */
 
   };
 

@@ -17,11 +17,11 @@ namespace sdmbin{
   {
   }
 
-  DataStructure::DataStructure(  unsigned int      numPolProduct, 
-				 unsigned int      numBin,
+  DataStructure::DataStructure(  uint32_t      numPolProduct, 
+				 uint32_t      numBin,
 				 Enum<NetSideband> e_sideband,            
-				 unsigned int      numBaseband,   
-				 unsigned int      numAnt,
+				 uint32_t      numBaseband,   
+				 uint32_t      numAnt,
 				 CorrelationMode   correlationMode 
 				 )
   {
@@ -30,9 +30,9 @@ namespace sdmbin{
     vv_numSpectralPoint_.resize(numBaseband);
     vv_numBin_.resize(numBaseband);
     vv_e_sideband_.resize(numBaseband);
-    for(unsigned int nbb=0; nbb<numBaseband; nbb++){
+    for(uint32_t nbb=0; nbb<numBaseband; nbb++){
       v_numSpectralWindow_.push_back(1);
-      for(unsigned int nspw=0; nspw<numBaseband; nspw++){
+      for(uint32_t nspw=0; nspw<numBaseband; nspw++){
 	vv_numAutoPolProduct_[nbb].push_back(numPolProduct);
 	vv_numSpectralPoint_[nbb].push_back(1);
 	vv_numBin_[nbb].push_back(numBin);
@@ -46,12 +46,12 @@ namespace sdmbin{
     axisSequence_    = setStructureProperties();
   }
 
-  DataStructure::DataStructure(  unsigned int      numPolProduct,
-				 unsigned int      numSpectralPoint,
-				 unsigned int      numBin,
+  DataStructure::DataStructure(  uint32_t      numPolProduct,
+				 uint32_t      numSpectralPoint,
+				 uint32_t      numBin,
 				 Enum<NetSideband> e_sideband,
-				 unsigned int      numBaseband,
-				 unsigned int      numAnt,
+				 uint32_t      numBaseband,
+				 uint32_t      numAnt,
 				 CorrelationMode   correlationMode)
   {
     v_numSpectralWindow_.resize(0); 
@@ -59,9 +59,9 @@ namespace sdmbin{
     vv_numSpectralPoint_.resize(numSpectralPoint);
     vv_numBin_.resize(numBaseband);
     vv_e_sideband_.resize(numBaseband);
-    for(unsigned int nbb=0; nbb<numBaseband; nbb++){
+    for(uint32_t nbb=0; nbb<numBaseband; nbb++){
       v_numSpectralWindow_.push_back(1);
-      for(unsigned int nspw=0; nspw<numBaseband; nspw++){
+      for(uint32_t nspw=0; nspw<numBaseband; nspw++){
 	vv_numAutoPolProduct_[nbb].push_back(numPolProduct);
 	vv_numSpectralPoint_[nbb].push_back(1);
 	vv_numBin_[nbb].push_back(numBin);
@@ -75,15 +75,15 @@ namespace sdmbin{
     axisSequence_    = setStructureProperties();
   }
 
-  DataStructure::DataStructure( vector<vector<unsigned int> >       vv_numCrossPolProduct,// /bb/spw
-				vector<vector<unsigned int> >       vv_numAutoPolProduct, // /bb/spw
-				vector<vector<unsigned int> >       vv_numSpectralPoint,  // /bb/spw
-				vector<vector<unsigned int> >       vv_numBin,            // /bb/spw
+  DataStructure::DataStructure( vector<vector<uint32_t> >       vv_numCrossPolProduct,// /bb/spw
+				vector<vector<uint32_t> >       vv_numAutoPolProduct, // /bb/spw
+				vector<vector<uint32_t> >       vv_numSpectralPoint,  // /bb/spw
+				vector<vector<uint32_t> >       vv_numBin,            // /bb/spw
 				vector<vector<Enum<NetSideband> > > vv_e_sideband,        // /bb/spw
-				unsigned int                        numApc,
-				vector<unsigned int>                v_numSpectralWindow,  // /bb
-				unsigned int                        numBaseband,
-				unsigned int                        numAnt,
+				uint32_t                        numApc,
+				vector<uint32_t>                v_numSpectralWindow,  // /bb
+				uint32_t                        numBaseband,
+				uint32_t                        numAnt,
 				CorrelationMode                     correlationMode):
     vv_numCrossPolProduct_(vv_numCrossPolProduct),
     vv_numAutoPolProduct_(vv_numAutoPolProduct),
@@ -99,14 +99,14 @@ namespace sdmbin{
     axisSequence_ = setStructureProperties();
   }
 
-  DataStructure::DataStructure( vector<vector<unsigned int> >       vv_numAutoPolProduct, // /bb/spw
-				vector<vector<unsigned int> >       vv_numSpectralPoint,  // /bb/spw
-				vector<vector<unsigned int> >       vv_numBin,            // /bb/spw
+  DataStructure::DataStructure( vector<vector<uint32_t> >       vv_numAutoPolProduct, // /bb/spw
+				vector<vector<uint32_t> >       vv_numSpectralPoint,  // /bb/spw
+				vector<vector<uint32_t> >       vv_numBin,            // /bb/spw
 				vector<vector<Enum<NetSideband> > > vv_e_sideband,        // /bb/spw
-				unsigned int                        numApc,
-				vector<unsigned int>                v_numSpectralWindow,  // /bb
-				unsigned int                        numBaseband,
-				unsigned int                        numAnt,
+				uint32_t                        numApc,
+				vector<uint32_t>                v_numSpectralWindow,  // /bb
+				uint32_t                        numBaseband,
+				uint32_t                        numAnt,
 				CorrelationMode                     correlationMode):
     vv_numAutoPolProduct_(vv_numAutoPolProduct),
     vv_numSpectralPoint_(vv_numSpectralPoint),
@@ -145,7 +145,7 @@ namespace sdmbin{
 
   string DataStructure::setStructureProperties()
   {
-    unsigned int  minSize,maxSize;
+    uint32_t  minSize,maxSize;
     bool          newLevel;
     ostringstream axisSequence;
   
@@ -153,8 +153,8 @@ namespace sdmbin{
     minSize  = 100000;
     maxSize  = 0;
     if(vv_numAutoPolProduct_.size()){
-      for(unsigned int nbb=0; nbb<numBaseband_; nbb++){
-	for(unsigned int nspw=0; nspw<v_numSpectralWindow_[nbb]; nspw++){
+      for(uint32_t nbb=0; nbb<numBaseband_; nbb++){
+	for(uint32_t nspw=0; nspw<v_numSpectralWindow_[nbb]; nspw++){
 	  if(vv_numAutoPolProduct_[nbb][nspw]<minSize)minSize=vv_numAutoPolProduct_[nbb][nspw];
 	  if(vv_numAutoPolProduct_[nbb][nspw]>maxSize)maxSize=vv_numAutoPolProduct_[nbb][nspw];
 	  if(vv_numAutoPolProduct_[nbb][nspw]>1)newLevel=true;
@@ -162,8 +162,8 @@ namespace sdmbin{
       }
     }
     if(vv_numCrossPolProduct_.size()){
-      for(unsigned int nbb=0; nbb<numBaseband_; nbb++){
-	for(unsigned int nspw=0; nspw<v_numSpectralWindow_[nbb]; nspw++){
+      for(uint32_t nbb=0; nbb<numBaseband_; nbb++){
+	for(uint32_t nspw=0; nspw<v_numSpectralWindow_[nbb]; nspw++){
 	  if(vv_numCrossPolProduct_[nbb][nspw]<minSize)minSize=vv_numCrossPolProduct_[nbb][nspw];
 	  if(vv_numCrossPolProduct_[nbb][nspw]>maxSize)maxSize=vv_numCrossPolProduct_[nbb][nspw];
 	  if(vv_numCrossPolProduct_[nbb][nspw]>1)newLevel=true;
@@ -179,8 +179,8 @@ namespace sdmbin{
     newLevel=false;
     minSize  = 1000000;
     maxSize  = 0;
-    for(unsigned int nbb=0; nbb<numBaseband_; nbb++){
-      for(unsigned int nspw=0; nspw<v_numSpectralWindow_[nbb]; nspw++){
+    for(uint32_t nbb=0; nbb<numBaseband_; nbb++){
+      for(uint32_t nspw=0; nspw<v_numSpectralWindow_[nbb]; nspw++){
 	if(vv_numSpectralPoint_[nbb][nspw]<minSize)minSize=vv_numSpectralPoint_[nbb][nspw];
 	if(vv_numSpectralPoint_[nbb][nspw]>maxSize)maxSize=vv_numSpectralPoint_[nbb][nspw];
 	if(vv_numSpectralPoint_[nbb][nspw]>1)newLevel=true;
@@ -201,8 +201,8 @@ namespace sdmbin{
     newLevel=false;
     minSize  = 100000;
     maxSize  = 0;
-    for(unsigned int nbb=0; nbb<numBaseband_; nbb++){
-      for(unsigned int nspw=0; nspw<v_numSpectralWindow_[nbb]; nspw++){
+    for(uint32_t nbb=0; nbb<numBaseband_; nbb++){
+      for(uint32_t nspw=0; nspw<v_numSpectralWindow_[nbb]; nspw++){
 	if(vv_numBin_[nbb][nspw]<minSize)minSize=vv_numBin_[nbb][nspw];
 	if(vv_numBin_[nbb][nspw]>maxSize)maxSize=vv_numBin_[nbb][nspw];
 	if(vv_numBin_[nbb][nspw]>1)newLevel=true;
@@ -217,7 +217,7 @@ namespace sdmbin{
     newLevel=false;
     minSize  = 100000;
     maxSize  = 0;
-    for(unsigned int nbb=0; nbb<numBaseband_; nbb++){
+    for(uint32_t nbb=0; nbb<numBaseband_; nbb++){
       if(v_numSpectralWindow_[nbb]<minSize)minSize=v_numSpectralWindow_[nbb];
       if(v_numSpectralWindow_[nbb]>maxSize)maxSize=v_numSpectralWindow_[nbb];
       if(v_numSpectralWindow_[nbb]>1)newLevel=true;
@@ -250,37 +250,37 @@ namespace sdmbin{
 
   }
 
-  vector<vector<unsigned int> >       DataStructure::numCrossPolProducts(){ return vv_numCrossPolProduct_; }
+  vector<vector<uint32_t> >       DataStructure::numCrossPolProducts(){ return vv_numCrossPolProduct_; }
 
-  vector<vector<unsigned int> >       DataStructure::numAutoPolProducts() { return vv_numAutoPolProduct_;  }
+  vector<vector<uint32_t> >       DataStructure::numAutoPolProducts() { return vv_numAutoPolProduct_;  }
 
-  vector<vector<unsigned int> >       DataStructure::numSpectralPoints()  { return vv_numSpectralPoint_;   }
+  vector<vector<uint32_t> >       DataStructure::numSpectralPoints()  { return vv_numSpectralPoint_;   }
 
-  vector<vector<unsigned int> >       DataStructure::numBins()            { return vv_numBin_;             }
+  vector<vector<uint32_t> >       DataStructure::numBins()            { return vv_numBin_;             }
 
   vector<vector<Enum<NetSideband> > > DataStructure::sidebands()          { return vv_e_sideband_;         }
 
-  unsigned int                        DataStructure::numApc()             { return numApc_;                }
+  uint32_t                        DataStructure::numApc()             { return numApc_;                }
 
-  vector<unsigned int>                DataStructure::numSpectralWindows() { return v_numSpectralWindow_;   }
+  vector<uint32_t>                DataStructure::numSpectralWindows() { return v_numSpectralWindow_;   }
 
-  unsigned int                        DataStructure::numBaseband()        { return numBaseband_;           }
+  uint32_t                        DataStructure::numBaseband()        { return numBaseband_;           }
 
-  unsigned int                        DataStructure::numAnt()             { return  numAnt_;               }
+  uint32_t                        DataStructure::numAnt()             { return  numAnt_;               }
 
   CorrelationMode                     DataStructure::correlationMode()    { return correlationMode_;       }
 
 
-  vector<unsigned int> DataStructure::leafAxisSizes(){
+  vector<uint32_t> DataStructure::leafAxisSizes(){
     if(!isIndexible()){
-      vector<unsigned int> las;
+      vector<uint32_t> las;
       return las;
     }
     return leafAxisSizes(0,0);
   }
 
-  vector<unsigned int> DataStructure::leafAxisSizes(unsigned int basebandIndex, unsigned int spectralWindowIndex){
-    vector<unsigned int> las;
+  vector<uint32_t> DataStructure::leafAxisSizes(uint32_t basebandIndex, uint32_t spectralWindowIndex){
+    vector<uint32_t> las;
     if(vv_numBin_[basebandIndex][spectralWindowIndex]!=1)
       las.push_back(vv_numBin_[basebandIndex][spectralWindowIndex]);
     if(numApc_!=1)
@@ -292,14 +292,14 @@ namespace sdmbin{
     return las;
   }
 
-  vector<unsigned int> DataStructure::leafAxisSizes(unsigned int ndd){
-    vector<unsigned int> las;
+  vector<uint32_t> DataStructure::leafAxisSizes(uint32_t ndd){
+    vector<uint32_t> las;
     if(ndd==0){
       return leafAxisSizes(0,0);
     }else{
-      unsigned int k=0;
-      unsigned int nb;
-      unsigned int nspw=0;
+      uint32_t k=0;
+      uint32_t nb;
+      uint32_t nspw=0;
       for(nb=0; nb<numBaseband_; nb++){
 	for(nspw=0; nspw<v_numSpectralWindow_[nb]; nspw++){
 	  if(k==ndd)break;
@@ -311,19 +311,19 @@ namespace sdmbin{
   }
 
 
-  unsigned int DataStructure::isIndexible() const
+  uint32_t DataStructure::isIndexible() const
   {
-    unsigned int multidim=0;
-    for(unsigned int n=0; n<v_minSize_.size(); n++)
+    uint32_t multidim=0;
+    for(uint32_t n=0; n<v_minSize_.size(); n++)
       if(v_minSize_[n]==v_maxSize_[n])multidim++;
     if(multidim==v_minSize_.size())return multidim;
     return 0;
   }
 
   // todo
-  vector<unsigned int> DataStructure::eAxisSizes() const
+  vector<uint32_t> DataStructure::eAxisSizes() const
   {
-    vector<unsigned int> v_size;
+    vector<uint32_t> v_size;
     if(!isIndexible())return v_size;         // 
     // 12345678 
     //v_size.push_back(vv_numCrossPolProduct_[0][0]);
@@ -339,34 +339,34 @@ namespace sdmbin{
   }
 
   // todo
-  vector<unsigned int> DataStructure::axisSizes() const
+  vector<uint32_t> DataStructure::axisSizes() const
   {
-    vector<unsigned int> v_size;
-    for(unsigned int n=0; n<v_minSize_.size(); n++)
+    vector<uint32_t> v_size;
+    for(uint32_t n=0; n<v_minSize_.size(); n++)
       if(v_minSize_[n]==v_maxSize_[n])v_size.push_back(v_minSize_[n]);     
     return v_size;
   }
 
-  unsigned int DataStructure::dimension() const
+  uint32_t DataStructure::dimension() const
   {
-    return (unsigned int)axisSequence_.length();
+    return (uint32_t)axisSequence_.length();
   }
 
-  vector<unsigned int> DataStructure::minAxSize() const
+  vector<uint32_t> DataStructure::minAxSize() const
   {
     return v_minSize_;
   }
 
-  vector<unsigned int> DataStructure::maxAxSize() const
+  vector<uint32_t> DataStructure::maxAxSize() const
   {
     return v_maxSize_;
   }
 
-  unsigned int DataStructure::numCrossData() const
+  uint32_t DataStructure::numCrossData() const
   {
-    unsigned int numCrossData = 1;
-    for(unsigned int nbb=0; nbb<numBaseband_; nbb++){
-      for(unsigned int nspw=0; nspw<v_numSpectralWindow_[nbb]; nspw++){
+    uint32_t numCrossData = 1;
+    for(uint32_t nbb=0; nbb<numBaseband_; nbb++){
+      for(uint32_t nspw=0; nspw<v_numSpectralWindow_[nbb]; nspw++){
 	numCrossData *= 
 	  vv_numBin_[nbb][nspw] *
 	  vv_numSpectralPoint_[nbb][nspw] *
@@ -376,11 +376,11 @@ namespace sdmbin{
     return numCrossData;
   }
 
-  unsigned int DataStructure::numAutoData() const
+  uint32_t DataStructure::numAutoData() const
   {
-    unsigned int numAutoData = 1;
-    for(unsigned int nbb=0; nbb<numBaseband_; nbb++){
-      for(unsigned int nspw=0; nspw<v_numSpectralWindow_[nbb]; nspw++){
+    uint32_t numAutoData = 1;
+    for(uint32_t nbb=0; nbb<numBaseband_; nbb++){
+      for(uint32_t nspw=0; nspw<v_numSpectralWindow_[nbb]; nspw++){
 	numAutoData *= 
 	  vv_numBin_[nbb][nspw] *
 	  vv_numSpectralPoint_[nbb][nspw] *
@@ -406,11 +406,11 @@ namespace sdmbin{
   void DataStructure::summary() const
   {
     cout<<"Data for "<<numAnt_<<" antenna."<<endl;
-    for(unsigned int nbb=0; nbb<numBaseband_; nbb++){
+    for(uint32_t nbb=0; nbb<numBaseband_; nbb++){
       cout<<"  Baseband "<<nbb+1
 	  <<" has "<<v_numSpectralWindow_[nbb]
 	  <<" spectral windows."<<endl;
-      for(unsigned int nspw=0; nspw<v_numSpectralWindow_[nbb]; nspw++){
+      for(uint32_t nspw=0; nspw<v_numSpectralWindow_[nbb]; nspw++){
 	cout<<"    Spectral window "<<nspw+1
 	    <<"  num spectral points: "<<vv_numSpectralPoint_[nbb][nspw]
 	    <<"  num bins: "<<vv_numBin_[nbb][nspw];
@@ -423,14 +423,14 @@ namespace sdmbin{
 	cout<<endl;
       }
     }
-    unsigned int multidim = isIndexible();
+    uint32_t multidim = isIndexible();
     if( multidim ){
       cout<<"The data structure is  multi-dimensional with the dimensionality "
 	  <<multidim<<endl;
       cout<<"  axis order: "<<axisSequence_<<endl;
-      vector<unsigned int>v_size=axisSizes();
+      vector<uint32_t>v_size=axisSizes();
       ostringstream os; 
-      for(unsigned int n=0; n<v_size.size()-1; n++)os<<v_size[n]<<",";
+      for(uint32_t n=0; n<v_size.size()-1; n++)os<<v_size[n]<<",";
       os<<v_size[v_size.size()-1];
       cout<<"  axis sizes: "<<os.str()<<endl;;
     }
@@ -445,16 +445,16 @@ namespace sdmbin{
     //cout<<"Default constructor DataDump"<<endl;
   }
 
-  DataDump::DataDump( unsigned int      numPolProduct,
-		      unsigned int      numBin,
+  DataDump::DataDump( uint32_t      numPolProduct,
+		      uint32_t      numBin,
 		      Enum<NetSideband> e_sideband,
-		      unsigned int      numBaseband,
-		      unsigned int      numAnt,
+		      uint32_t      numBaseband,
+		      uint32_t      numAnt,
 		      CorrelationMode   correlationMode,
-		      long long         time,
-		      long long         timeCentroid,
-		      long long         interval, 
-		      long long         exposure, 
+		      uint64_t         time,
+		      uint64_t         timeCentroid,
+		      uint64_t         interval, 
+		      uint64_t         exposure, 
 		      const float*      floatData):
     DataStructure( numPolProduct,
 		   numBin,
@@ -492,19 +492,19 @@ namespace sdmbin{
   }
 
 
-  DataDump::DataDump( unsigned int      numPolProduct,
-		      unsigned int      numSpectralPoint,
-		      unsigned int      numBin,
+  DataDump::DataDump( uint32_t      numPolProduct,
+		      uint32_t      numSpectralPoint,
+		      uint32_t      numBin,
 		      Enum<NetSideband> e_sideband,
-		      unsigned int      numBaseband,
-		      unsigned int      numAnt,
+		      uint32_t      numBaseband,
+		      uint32_t      numAnt,
 		      CorrelationMode   correlationMode,
-		      long long         time,
-		      long long         timeCentroid, 
-		      long long         interval,
-		      long long         exposure,
+		      uint64_t         time,
+		      uint64_t         timeCentroid, 
+		      uint64_t         interval,
+		      uint64_t         exposure,
 		      const float*             floatData, 
-		      const unsigned    int* dataFlags):
+		      const uint32_t* dataFlags):
     DataStructure( numPolProduct,
 		   numSpectralPoint,
 		   numBin,
@@ -540,21 +540,21 @@ namespace sdmbin{
     floatCrossDataPtr_        = NULL;
   }
 
-  DataDump::DataDump( vector<vector<unsigned int> >       vv_numAutoPolProduct, // /bb/spw
-		      vector<vector<unsigned int> >       vv_numSpectralPoint,  // /bb/spw
-		      vector<vector<unsigned int> >       vv_numBin,            // /bb/spw
+  DataDump::DataDump( vector<vector<uint32_t> >       vv_numAutoPolProduct, // /bb/spw
+		      vector<vector<uint32_t> >       vv_numSpectralPoint,  // /bb/spw
+		      vector<vector<uint32_t> >       vv_numBin,            // /bb/spw
 		      vector<vector<Enum<NetSideband> > > vv_e_sideband,        // /bb/spw
-		      unsigned int                        numApc,
-		      vector<unsigned int>                v_numSpectralWindow,  // /bb
-		      unsigned int                        numBaseband,
-		      unsigned int                        numAnt,
+		      uint32_t                        numApc,
+		      vector<uint32_t>                v_numSpectralWindow,  // /bb
+		      uint32_t                        numBaseband,
+		      uint32_t                        numAnt,
 		      CorrelationMode                     correlationMode,
-		      long long                           time,
-		      long long                           timeCentroid,  
-		      long long                           interval,
-		      long long                           exposure,  
+		      uint64_t                           time,
+		      uint64_t                           timeCentroid,  
+		      uint64_t                           interval,
+		      uint64_t                           exposure,  
 		      const float*                        floatData, 
-		      const unsigned int*                 dataFlags):
+		      const uint32_t*                 dataFlags):
     DataStructure( vv_numAutoPolProduct,
 		   vv_numSpectralPoint,
 		   vv_numBin,
@@ -591,19 +591,19 @@ namespace sdmbin{
     floatCrossDataPtr_        = NULL;
   }
 
-  DataDump::DataDump( vector<vector<unsigned int> >       vv_numAutoPolProduct, // /bb/spw
-		      vector<vector<unsigned int> >       vv_numSpectralPoint,  // /bb/spw
-		      vector<vector<unsigned int> >       vv_numBin,            // /bb/spw
+  DataDump::DataDump( vector<vector<uint32_t> >       vv_numAutoPolProduct, // /bb/spw
+		      vector<vector<uint32_t> >       vv_numSpectralPoint,  // /bb/spw
+		      vector<vector<uint32_t> >       vv_numBin,            // /bb/spw
 		      vector<vector<Enum<NetSideband> > > vv_e_sideband,        // /bb/spw
-		      unsigned int                        numApc,
-		      vector<unsigned int>                v_numSpectralWindow,  // /bb
-		      unsigned int                        numBaseband,
-		      unsigned int                        numAnt,
+		      uint32_t                        numApc,
+		      vector<uint32_t>                v_numSpectralWindow,  // /bb
+		      uint32_t                        numBaseband,
+		      uint32_t                        numAnt,
 		      CorrelationMode                     correlationMode,
-		      long long                           time,
-		      long long                           timeCentroid,  
-		      long long                           interval,
-		      long long                           exposure,  
+		      uint64_t                           time,
+		      uint64_t                           timeCentroid,  
+		      uint64_t                           interval,
+		      uint64_t                           exposure,  
 		      const float*                        floatData):
     DataStructure( vv_numAutoPolProduct,    
 		   vv_numSpectralPoint,
@@ -641,20 +641,20 @@ namespace sdmbin{
     floatCrossDataPtr_        = NULL;
   }
 
-  DataDump::DataDump( vector<vector<unsigned int> >       vv_numCrossPolProduct,// /bb/spw
-		      vector<vector<unsigned int> >       vv_numAutoPolProduct, // /bb/spw
-		      vector<vector<unsigned int> >       vv_numSpectralPoint,  // /bb/spw
-		      vector<vector<unsigned int> >       vv_numBin,            // /bb/spw
+  DataDump::DataDump( vector<vector<uint32_t> >       vv_numCrossPolProduct,// /bb/spw
+		      vector<vector<uint32_t> >       vv_numAutoPolProduct, // /bb/spw
+		      vector<vector<uint32_t> >       vv_numSpectralPoint,  // /bb/spw
+		      vector<vector<uint32_t> >       vv_numBin,            // /bb/spw
 		      vector<vector<Enum<NetSideband> > > vv_e_sideband,        // /bb/spw
-		      unsigned int                        numApc,
-		      vector<unsigned int>                v_numSpectralWindow,  // /bb
-		      unsigned int                        numBaseband,
-		      unsigned int                        numAnt,
+		      uint32_t                        numApc,
+		      vector<uint32_t>                v_numSpectralWindow,  // /bb
+		      uint32_t                        numBaseband,
+		      uint32_t                        numAnt,
 		      CorrelationMode                     correlationMode,
-		      long long                           time,
-		      long long                           timeCentroid,  
-		      long long                           interval, 
-		      long long                           exposure):
+		      uint64_t                           time,
+		      uint64_t                           timeCentroid,  
+		      uint64_t                           interval, 
+		      uint64_t                           exposure):
     DataStructure( vv_numCrossPolProduct,
 		   vv_numAutoPolProduct,
 		   vv_numSpectralPoint,
@@ -699,9 +699,9 @@ namespace sdmbin{
     // By default the scale factor is set to 1 for all spw. It must be updated subsequently if required
     // using the method setScaleFactor().
     if(vv_numCrossPolProduct.size()){
-      for(unsigned int nbb=0; nbb<numBaseband; nbb++){
+      for(uint32_t nbb=0; nbb<numBaseband; nbb++){
 	vector<float> v_f;
-	for(unsigned int nspw=0; nspw<vv_numCrossPolProduct[nbb].size(); nspw++)v_f.push_back(1.0);
+	for(uint32_t nspw=0; nspw<vv_numCrossPolProduct[nbb].size(); nspw++)v_f.push_back(1.0);
 	vv_scaleFactor_.push_back(v_f);
       }
     }
@@ -719,26 +719,26 @@ namespace sdmbin{
   }
 
 
-  DataDump::DataDump( vector<vector<unsigned int> >       vv_numCrossPolProduct,// /bb/spw
-		      vector<vector<unsigned int> >       vv_numAutoPolProduct, // /bb/spw
-		      vector<vector<unsigned int> >       vv_numSpectralPoint,  // /bb/spw
-		      vector<vector<unsigned int> >       vv_numBin,            // /bb/spw
+  DataDump::DataDump( vector<vector<uint32_t> >       vv_numCrossPolProduct,// /bb/spw
+		      vector<vector<uint32_t> >       vv_numAutoPolProduct, // /bb/spw
+		      vector<vector<uint32_t> >       vv_numSpectralPoint,  // /bb/spw
+		      vector<vector<uint32_t> >       vv_numBin,            // /bb/spw
 		      vector<vector<Enum<NetSideband> > > vv_e_sideband,        // /bb/spw
-		      unsigned int                        numApc,
-		      vector<unsigned int>                v_numSpectralWindow,  // /bb
-		      unsigned int                        numBaseband,
-		      unsigned int                        numAnt,
+		      uint32_t                        numApc,
+		      vector<uint32_t>                v_numSpectralWindow,  // /bb
+		      uint32_t                        numBaseband,
+		      uint32_t                        numAnt,
 		      CorrelationMode                     correlationMode,
-		      long long                           time,
-		      long long                           timeCentroid,  
-		      long long                           interval,
-		      long long                           exposure,
-		      unsigned int                        numVal,
+		      uint64_t                           time,
+		      uint64_t                           timeCentroid,  
+		      uint64_t                           interval,
+		      uint64_t                           exposure,
+		      uint32_t                        numVal,
 		      const int*                          crossData,
-		      unsigned int                        numAutoData,
+		      uint32_t                        numAutoData,
 		      const float*                        autoData,
-		      unsigned int                        numFlags,
-		      const unsigned int*                 flags):
+		      uint32_t                        numFlags,
+		      const uint32_t*                 flags):
     DataStructure( vv_numCrossPolProduct,
 		   vv_numAutoPolProduct,
 		   vv_numSpectralPoint,
@@ -765,14 +765,14 @@ namespace sdmbin{
     cintCrossDataPtr_(NULL),
     cfloatCrossDataPtr_(NULL)
   {
-    uintFlagsPtr_     = new unsigned int[numFlags]; for(unsigned int n=0; n<numFlags; n++)uintFlagsPtr_[n] = flags[n];
+    uintFlagsPtr_     = new uint32_t[numFlags]; for(uint32_t n=0; n<numFlags; n++)uintFlagsPtr_[n] = flags[n];
     lonlonActualTimesPtr_     = NULL;
     lonlonActualDurationsPtr_ = NULL;
     floatWeightsPtr_          = NULL;
 
     floatZeroLagsPtr_         = NULL;
 
-    floatAutoDataPtr_ = new float[numAutoData]; for(unsigned int n=0; n<numAutoData; n++)floatAutoDataPtr_[n] = autoData[n];
+    floatAutoDataPtr_ = new float[numAutoData]; for(uint32_t n=0; n<numAutoData; n++)floatAutoDataPtr_[n] = autoData[n];
     
     shortCrossDataPtr_        = NULL;
     intCrossDataPtr_          = NULL;
@@ -872,34 +872,34 @@ namespace sdmbin{
     cout<<"a.uintFlagsPtr_"<<a.uintFlagsPtr_<<endl;
     if(a.uintFlagsPtr_){
       cout<<"a.numFlags_="<<a.numFlags_<<endl;
-      uintFlagsPtr_ = new unsigned int[a.numFlags_]; 
-      for(unsigned int n=0; n<a.numFlags_; n++) uintFlagsPtr_[n] = a.uintFlagsPtr_[n]; }
+      uintFlagsPtr_ = new uint32_t[a.numFlags_]; 
+      for(uint32_t n=0; n<a.numFlags_; n++) uintFlagsPtr_[n] = a.uintFlagsPtr_[n]; }
     cout<<"D"<<endl;
     if(a.lonlonActualTimesPtr_){
       cout<<"a.numActualTimes_="<<a.numActualTimes_<<endl;
-      lonlonActualTimesPtr_ = new long long[numActualTimes_]; 
-      for(unsigned int n=0; n<numActualTimes_; n++)lonlonActualTimesPtr_[n] = a.lonlonActualTimesPtr_[n]; }
+      lonlonActualTimesPtr_ = new int64_t[numActualTimes_]; 
+      for(uint32_t n=0; n<numActualTimes_; n++)lonlonActualTimesPtr_[n] = a.lonlonActualTimesPtr_[n]; }
     if(a.lonlonActualDurationsPtr_){
-      lonlonActualDurationsPtr_ = new long long[numActualDurations_]; 
-      for(unsigned int n=0; n<numActualDurations_; n++)lonlonActualDurationsPtr_[n] = a.lonlonActualDurationsPtr_[n]; }
+      lonlonActualDurationsPtr_ = new int64_t[numActualDurations_]; 
+      for(uint32_t n=0; n<numActualDurations_; n++)lonlonActualDurationsPtr_[n] = a.lonlonActualDurationsPtr_[n]; }
     if(a.floatWeightsPtr_){
       floatWeightsPtr_ = new float[numWeights_]; 
-      for(unsigned int n=0; n<numWeights_; n++)floatWeightsPtr_[n] = a.floatWeightsPtr_[n]; }
+      for(uint32_t n=0; n<numWeights_; n++)floatWeightsPtr_[n] = a.floatWeightsPtr_[n]; }
 
     if(a.floatZeroLagsPtr_){
       floatZeroLagsPtr_ = new float[numZeroLags_]; 
-      for(unsigned int n=0; n<numZeroLags_; n++)floatZeroLagsPtr_[n] = a.floatZeroLagsPtr_[n]; }
+      for(uint32_t n=0; n<numZeroLags_; n++)floatZeroLagsPtr_[n] = a.floatZeroLagsPtr_[n]; }
     if(a.shortCrossDataPtr_){
       cout<<"a.numCrossData_="<<a.numCrossData_<<endl;
       cout<<"numCrossData_="<<numCrossData_<<endl;
       shortCrossDataPtr_ = new short int[numCrossData_]; 
-      for(unsigned int n=0; n<numCrossData_; n++)shortCrossDataPtr_[n] = a.shortCrossDataPtr_[n]; }
+      for(uint32_t n=0; n<numCrossData_; n++)shortCrossDataPtr_[n] = a.shortCrossDataPtr_[n]; }
     if(a.intCrossDataPtr_){
       intCrossDataPtr_ = new int[numCrossData_]; 
-      for(unsigned int n=0; n<numCrossData_; n++)intCrossDataPtr_[n] = a.intCrossDataPtr_[n]; }
+      for(uint32_t n=0; n<numCrossData_; n++)intCrossDataPtr_[n] = a.intCrossDataPtr_[n]; }
     if(a.floatCrossDataPtr_){
       floatCrossDataPtr_ = new float[numCrossData_]; 
-      for(unsigned int n=0; n<numCrossData_; n++)floatCrossDataPtr_[n] = a.floatCrossDataPtr_[n]; }
+      for(uint32_t n=0; n<numCrossData_; n++)floatCrossDataPtr_[n] = a.floatCrossDataPtr_[n]; }
     cout<<"E"<<endl;
     cout<<"floatAutoDataPtr_ ="<<floatAutoDataPtr_<<endl;
     cout<<"a.floatAutoDataPtr_ ="<<a.floatAutoDataPtr_<<endl;
@@ -907,7 +907,7 @@ namespace sdmbin{
       cout<<"a.numAutoData_="<<a.numAutoData_<<endl;
       cout<<"numAutoData_="<<numAutoData_<<endl;
       floatAutoDataPtr_ = new float[numAutoData_]; 
-      for(unsigned int n=0; n<numAutoData_; n++)floatAutoDataPtr_[n] = a.floatAutoDataPtr_[n]; }
+      for(uint32_t n=0; n<numAutoData_; n++)floatAutoDataPtr_[n] = a.floatAutoDataPtr_[n]; }
 
      cout<<"F"<<endl;
     
@@ -943,7 +943,7 @@ namespace sdmbin{
   // shape unchanged
   DataDump DataDump::operator - (const DataDump &rhs)
   {
-    unsigned int numD=numAutoData();
+    uint32_t numD=numAutoData();
     if(rhs.numAutoData()!=numD){
       ostringstream os;
       os << "Cannot subtract a data dump which has " << rhs.numAutoData()
@@ -951,13 +951,13 @@ namespace sdmbin{
 	 <<" data";
       Error( FATAL, os.str());
     }
-    long long st1 = (time_-interval_)/(long long)2;
-    long long et1 = (time_+interval_)/(long long)2; 
-    long long st2 = (rhs.time()-rhs.interval())/(long long)2;
-    long long et2 = (rhs.time()+rhs.interval())/(long long)2; 
+    uint64_t st1 = (time_-interval_)/(uint64_t)2;
+    uint64_t et1 = (time_+interval_)/(uint64_t)2; 
+    uint64_t st2 = (rhs.time()-rhs.interval())/(uint64_t)2;
+    uint64_t et2 = (rhs.time()+rhs.interval())/(uint64_t)2; 
     if( st1>et2 || et1<st2)
       Error( WARNING, "data difference of dumps overlaping in time");
-    long long st,et;
+    uint64_t st,et;
     if(st1<st2)
       st = st1;
     else
@@ -967,32 +967,32 @@ namespace sdmbin{
     else
       et = et1;
 
-    long long timeCentroid;
+    uint64_t timeCentroid;
     if(interval_==rhs.interval())
-      timeCentroid = (time_+rhs.time())/(long long)2;
+      timeCentroid = (time_+rhs.time())/(uint64_t)2;
     else{
       double w=interval_/rhs.interval();
-      timeCentroid = (long long) ( (w*time_ + rhs.time())/(w+1.) );
+      timeCentroid = (uint64_t) ( (w*time_ + rhs.time())/(w+1.) );
     }
 
-    unsigned int       numF = numD;                                  // TODO (more complex than that!)
+    uint32_t       numF = numD;                                  // TODO (more complex than that!)
     float*             diffFloatData = new float[numD];
-    unsigned int*      sumUintFlags  = new unsigned int[numF];
+    uint32_t*      sumUintFlags  = new uint32_t[numF];
 
     if(floatAutoDataPtr_){
       if(rhs.floatAutoDataPtr_){
-	for(unsigned int nd=0; nd<numD; nd++)
+	for(uint32_t nd=0; nd<numD; nd++)
 	  diffFloatData[nd] = floatAutoDataPtr_[nd]-rhs.floatAutoDataPtr_[nd];
-	for(unsigned int nf=0; nf<numF; nf++){
+	for(uint32_t nf=0; nf<numF; nf++){
 	  if(uintFlagsPtr_[nf]!=rhs.uintFlagsPtr_[nf])
 	    sumUintFlags[nf]=uintFlagsPtr_[nf]+rhs.uintFlagsPtr_[nf];  // TODO (more complex than that!)
 	  else
 	    sumUintFlags[nf]=uintFlagsPtr_[nf];
 	}
       }else{
-	for(unsigned int nd=0; nd<numD; nd++)
+	for(uint32_t nd=0; nd<numD; nd++)
 	  diffFloatData[nd] = floatAutoDataPtr_[nd]-rhs.cfloatAutoDataPtr_[nd];
-	for(unsigned int nf=0; nf<numF; nf++){
+	for(uint32_t nf=0; nf<numF; nf++){
 	  if(uintFlagsPtr_[nf]!=rhs.cuintFlagsPtr_[nf])
 	    sumUintFlags[nf]=uintFlagsPtr_[nf]+rhs.cuintFlagsPtr_[nf];  // TODO (more complex than that!)
 	  else
@@ -1001,18 +1001,18 @@ namespace sdmbin{
       }
     }else{
       if(rhs.floatAutoDataPtr_){
-	for(unsigned int nd=0; nd<numD; nd++)
+	for(uint32_t nd=0; nd<numD; nd++)
 	  diffFloatData[nd] = cfloatAutoDataPtr_[nd]-rhs.floatAutoDataPtr_[nd];
-	for(unsigned int nf=0; nf<numF; nf++){
+	for(uint32_t nf=0; nf<numF; nf++){
 	  if(cuintFlagsPtr_[nf]!=rhs.uintFlagsPtr_[nf])
 	    sumUintFlags[nf]=cuintFlagsPtr_[nf]+rhs.uintFlagsPtr_[nf];  // TODO (more complex than that!)
 	  else
 	    sumUintFlags[nf]=cuintFlagsPtr_[nf];
 	}
       }else{
-	for(unsigned int nd=0; nd<numD; nd++)
+	for(uint32_t nd=0; nd<numD; nd++)
 	  diffFloatData[nd] = cfloatAutoDataPtr_[nd]-rhs.cfloatAutoDataPtr_[nd];
-	for(unsigned int nf=0; nf<numF; nf++){
+	for(uint32_t nf=0; nf<numF; nf++){
 	  if(cuintFlagsPtr_[nf]!=rhs.cuintFlagsPtr_[nf])
 	    sumUintFlags[nf]=cuintFlagsPtr_[nf]+rhs.cuintFlagsPtr_[nf];  // TODO (more complex than that!)
 	  else
@@ -1020,7 +1020,7 @@ namespace sdmbin{
 	}
       }
     }    
-    unsigned int numV=0;  // TODO
+    uint32_t numV=0;  // TODO
     int*         diffCorrData=NULL;
     return DataDump( vv_numCrossPolProduct_,
 		     vv_numAutoPolProduct_,
@@ -1032,7 +1032,7 @@ namespace sdmbin{
 		     numBaseband_,
 		     numAnt_,
 		     correlationMode_,
-		     (time_+rhs.time())/(long long) 2,
+		     (time_+rhs.time())/(uint64_t) 2,
 		     timeCentroid,
 		     et-st,
 		     exposure_+rhs.exposure(),
@@ -1044,7 +1044,7 @@ namespace sdmbin{
 
   DataDump DataDump::operator + (const DataDump &rhs)
   {
-    unsigned int numD=numAutoData();
+    uint32_t numD=numAutoData();
     if(rhs.numAutoData()!=numD){
       ostringstream os;
       os << "Cannot add a data dump which has " << numD
@@ -1052,13 +1052,13 @@ namespace sdmbin{
 	 <<" data";
       Error( FATAL, os.str());
     }
-    long long st1 = (time_-interval_)/(long long)2;
-    long long et1 = (time_+interval_)/(long long)2; 
-    long long st2 = (rhs.time()-rhs.interval())/(long long)2;
-    long long et2 = (rhs.time()+rhs.interval())/(long long)2; 
+    uint64_t st1 = (time_-interval_)/(uint64_t)2;
+    uint64_t et1 = (time_+interval_)/(uint64_t)2; 
+    uint64_t st2 = (rhs.time()-rhs.interval())/(uint64_t)2;
+    uint64_t et2 = (rhs.time()+rhs.interval())/(uint64_t)2; 
     if( st1>et2 || et1<st2)
       Error( WARNING, "sum of data dumps which overlap in time");
-    long long st,et;
+    uint64_t st,et;
     if(st1<st2)
       st = st1;
     else
@@ -1068,31 +1068,31 @@ namespace sdmbin{
     else
       et = et1;
 
-    long long timeCentroid;
+    uint64_t timeCentroid;
     if(interval_==rhs.interval())
-      timeCentroid = (time_+rhs.time())/(long long)2;
+      timeCentroid = (time_+rhs.time())/(uint64_t)2;
     else{
       double w=interval_/rhs.interval();
-      timeCentroid = (long long) ( (w*time_ + rhs.time())/(w+1.) );
+      timeCentroid = (uint64_t) ( (w*time_ + rhs.time())/(w+1.) );
     }
-    unsigned int numF = numD;                                           // TODO (more complex than that!)
+    uint32_t numF = numD;                                           // TODO (more complex than that!)
     float*             sumFloatData = new float[numD];
-    unsigned int*      sumUintFlags = new unsigned int[numF];
+    uint32_t*      sumUintFlags = new uint32_t[numF];
 
     if(floatAutoDataPtr_){
       if(rhs.floatAutoDataPtr_){
-	for(unsigned int nd=0; nd<numD; nd++)
+	for(uint32_t nd=0; nd<numD; nd++)
 	  sumFloatData[nd] = 0.5*(floatAutoDataPtr_[nd]+rhs.floatAutoDataPtr_[nd]);
-	for(unsigned int nf=0; nf<numF; nf++){
+	for(uint32_t nf=0; nf<numF; nf++){
 	  if(uintFlagsPtr_[nf]!=rhs.uintFlagsPtr_[nf])
 	    sumUintFlags[nf]=uintFlagsPtr_[nf]+rhs.uintFlagsPtr_[nf];  // TODO (more complex than that!)
 	  else
 	    sumUintFlags[nf]=uintFlagsPtr_[nf];
 	}
       }else{
-	for(unsigned int nd=0; nd<numD; nd++)
+	for(uint32_t nd=0; nd<numD; nd++)
 	  sumFloatData[nd] = 0.5*(floatAutoDataPtr_[nd]+rhs.cfloatAutoDataPtr_[nd]);
-	for(unsigned int nf=0; nf<numF; nf++){
+	for(uint32_t nf=0; nf<numF; nf++){
 	  if(uintFlagsPtr_[nf]!=rhs.cuintFlagsPtr_[nf])
 	    sumUintFlags[nf]=uintFlagsPtr_[nf]+rhs.cuintFlagsPtr_[nf];  // TODO (more complex than that!)
 	  else
@@ -1101,18 +1101,18 @@ namespace sdmbin{
       }
     }else{
       if(rhs.floatAutoDataPtr_){
-	for(unsigned int nd=0; nd<numD; nd++)
+	for(uint32_t nd=0; nd<numD; nd++)
 	  sumFloatData[nd] = 0.5*(cfloatAutoDataPtr_[nd]+rhs.floatAutoDataPtr_[nd]);
-	for(unsigned int nf=0; nf<numF; nf++){
+	for(uint32_t nf=0; nf<numF; nf++){
 	  if(cuintFlagsPtr_[nf]!=rhs.uintFlagsPtr_[nf])
 	    sumUintFlags[nf]=cuintFlagsPtr_[nf]+rhs.uintFlagsPtr_[nf];  // TODO (more complex than that!)
 	  else
 	    sumUintFlags[nf]=cuintFlagsPtr_[nf];
 	}
       }else{
-	for(unsigned int nd=0; nd<numD; nd++)
+	for(uint32_t nd=0; nd<numD; nd++)
 	  sumFloatData[nd] = 0.5*(cfloatAutoDataPtr_[nd]+rhs.cfloatAutoDataPtr_[nd]);
-	for(unsigned int nf=0; nf<numF; nf++){
+	for(uint32_t nf=0; nf<numF; nf++){
 	  if(cuintFlagsPtr_[nf]!=rhs.cuintFlagsPtr_[nf])
 	    sumUintFlags[nf]=cuintFlagsPtr_[nf]+rhs.cuintFlagsPtr_[nf];  // TODO (more complex than that!)
 	  else
@@ -1120,7 +1120,7 @@ namespace sdmbin{
 	}
       }
     }
-    unsigned int numVal=0;  // TODO
+    uint32_t numVal=0;  // TODO
     int*         sumVisData=NULL;
     return DataDump (vv_numCrossPolProduct_,
 		     vv_numAutoPolProduct_,
@@ -1132,7 +1132,7 @@ namespace sdmbin{
 		     numBaseband_,
 		     numAnt_,
 		     correlationMode_,
-		     (time_+rhs.time())/(long long) 2,
+		     (time_+rhs.time())/(uint64_t) 2,
 		     timeCentroid,
 		     et-st,
 		     exposure_+rhs.exposure(),
@@ -1151,81 +1151,81 @@ namespace sdmbin{
 
   // Attachers and importers
 
-  void DataDump::attachFlags( unsigned int declaredSize, EnumSet<AxisName> es_an, 
-			      unsigned int numData, const unsigned int* flagsPtr){
+  void DataDump::attachFlags( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+			      uint32_t numData, const uint32_t* flagsPtr){
     cuintFlagsPtr_ = flagsPtr; 
     es_flagsAxes_  = es_an; 
     numFlags_      = numData; 
   }
-  void DataDump::importFlags( unsigned int declaredSize, EnumSet<AxisName> es_an, 
-			      unsigned int numData, const unsigned int* flagsPtr){
+  void DataDump::importFlags( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+			      uint32_t numData, const uint32_t* flagsPtr){
     cuintFlagsPtr_ = NULL;
     if(uintFlagsPtr_){
       if(numFlags_!=numData){
 	delete uintFlagsPtr_;
-	uintFlagsPtr_ = new unsigned int[numData];
+	uintFlagsPtr_ = new uint32_t[numData];
       }
     }else{
-      uintFlagsPtr_ = new unsigned int[numData];
+      uintFlagsPtr_ = new uint32_t[numData];
     }
-    for(unsigned int n=0; n<numData; n++)uintFlagsPtr_[n] = flagsPtr[n]; 
+    for(uint32_t n=0; n<numData; n++)uintFlagsPtr_[n] = flagsPtr[n]; 
     es_flagsAxes_ = es_an;
     numFlags_     = numData; 
   }
 
-  void DataDump::attachActualTimes( unsigned int declaredSize, EnumSet<AxisName> es_an, 
-				    unsigned int numData, const long long* actualTimesPtr){
+  void DataDump::attachActualTimes( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+				    uint32_t numData, const int64_t * actualTimesPtr){
     clonlonActualTimesPtr_ = actualTimesPtr; 
     es_actualTimesAxes_    = es_an;
     numActualTimes_        = numData;
   }
-  void DataDump::importActualTimes( unsigned int declaredSize, EnumSet<AxisName> es_an, 
-				    unsigned int numData, const long long* actualTimesPtr){
+  void DataDump::importActualTimes( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+				    uint32_t numData, const int64_t * actualTimesPtr){
     clonlonActualTimesPtr_ = NULL;
     if(lonlonActualTimesPtr_){
       if(numActualTimes_!=numData){
 	delete lonlonActualTimesPtr_;
-	lonlonActualTimesPtr_ = new long long[numData];
+	lonlonActualTimesPtr_ = new int64_t[numData];
       }
     }else{
-      lonlonActualTimesPtr_ = new long long[numData];
+      lonlonActualTimesPtr_ = new int64_t[numData];
     }
-    for(unsigned int n=0; n<numData; n++)lonlonActualTimesPtr_[n] = actualTimesPtr[n]; 
+    for(uint32_t n=0; n<numData; n++)lonlonActualTimesPtr_[n] = actualTimesPtr[n]; 
     es_actualTimesAxes_ = es_an;
     numActualTimes_     = numData; 
   }
 
 
-  void DataDump::attachActualDurations( unsigned int declaredSize, EnumSet<AxisName> es_an, 
-					unsigned int numData, const long long* actualDurationsPtr){
+  void DataDump::attachActualDurations( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+					uint32_t numData, const int64_t * actualDurationsPtr){
     clonlonActualDurationsPtr_ = actualDurationsPtr; 
     es_actualDurationsAxes_     = es_an;
     numActualDurations_         = numData;
   }
-  void DataDump::importActualDurations( unsigned int declaredSize, EnumSet<AxisName> es_an, 
-					unsigned int numData, const long long* actualDurationsPtr){
+  void DataDump::importActualDurations( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+					uint32_t numData, const int64_t * actualDurationsPtr){
     clonlonActualDurationsPtr_ = NULL;
     if(lonlonActualDurationsPtr_){
       if(numActualDurations_!=numData){
 	delete lonlonActualDurationsPtr_;
-	lonlonActualDurationsPtr_ = new long long[numData];
+	lonlonActualDurationsPtr_ = new int64_t[numData];
       }
     }else{
-      lonlonActualDurationsPtr_ = new long long[numData];
+      lonlonActualDurationsPtr_ = new int64_t[numData];
     }
-    for(unsigned int n=0; n<numData; n++)lonlonActualDurationsPtr_[n] = actualDurationsPtr[n]; 
+    for(uint32_t n=0; n<numData; n++)lonlonActualDurationsPtr_[n] = actualDurationsPtr[n]; 
     es_actualDurationsAxes_ = es_an;
     numActualDurations_     = numData; 
   }
 
-  void DataDump::attachZeroLags( unsigned int declaredSize, EnumSet<AxisName> es_an, 
-				 unsigned int numData, const float* zeroLagsPtr){
+  void DataDump::attachZeroLags( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+				 uint32_t numData, const float* zeroLagsPtr){
     cfloatZeroLagsPtr_ = zeroLagsPtr; 
     es_zeroLagsAxes_   = es_an;
     numZeroLags_       = numData;
   }
-  void DataDump::importZeroLags( unsigned int declaredSize, EnumSet<AxisName> es_an, 
-				 unsigned int numData, const float* zeroLagsPtr){
+  void DataDump::importZeroLags( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+				 uint32_t numData, const float* zeroLagsPtr){
     cfloatZeroLagsPtr_ = NULL;
     if(floatZeroLagsPtr_){
       if(numZeroLags_!=numData){
@@ -1235,13 +1235,13 @@ namespace sdmbin{
     }else{
       floatZeroLagsPtr_ = new float[numData];
     }
-    for(unsigned int n=0; n<numData; n++)floatZeroLagsPtr_[n] = zeroLagsPtr[n]; 
+    for(uint32_t n=0; n<numData; n++)floatZeroLagsPtr_[n] = zeroLagsPtr[n]; 
     es_zeroLagsAxes_ = es_an;
     numZeroLags_     = numData;
   }
 
-  void DataDump::attachAutoData( unsigned int declaredSize, EnumSet<AxisName> es_an, 
-				 unsigned int numData, const float* autoDataPtr){
+  void DataDump::attachAutoData( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+				 uint32_t numData, const float* autoDataPtr){
     cfloatAutoDataPtr_ = autoDataPtr; 
     es_autoDataAxes_   = es_an;
     numAutoData_       = numData;
@@ -1250,8 +1250,8 @@ namespace sdmbin{
     //cout<<"uintFlagsPtr_="<<    uintFlagsPtr_<<endl;
 
   }
-  void DataDump::importAutoData( unsigned int declaredSize, EnumSet<AxisName> es_an, 
-				 unsigned int numData, const float* autoDataPtr){
+  void DataDump::importAutoData( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+				 uint32_t numData, const float* autoDataPtr){
     cfloatAutoDataPtr_ = NULL;
     if(floatAutoDataPtr_){
       if(numAutoData_!=numData){
@@ -1261,21 +1261,21 @@ namespace sdmbin{
     }else{
       floatAutoDataPtr_ = new float[numData];
     }
-    for(unsigned int n=0; n<numData; n++)floatAutoDataPtr_[n] = autoDataPtr[n]; 
+    for(uint32_t n=0; n<numData; n++)floatAutoDataPtr_[n] = autoDataPtr[n]; 
     es_autoDataAxes_ = es_an;
     numAutoData_     = numData;
   }
 
-  void DataDump::attachCrossData( unsigned int declaredSize, EnumSet<AxisName> es_an, 
-				  unsigned int numData, const short int* crossDataPtr){
+  void DataDump::attachCrossData( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+				  uint32_t numData, const short int* crossDataPtr){
     cintCrossDataPtr_   = NULL; 
     cfloatCrossDataPtr_ = NULL;
     cshortCrossDataPtr_ = crossDataPtr; 
     es_crossDataAxes_   = es_an;
     numCrossData_       = numData;
   }
-  void DataDump::importCrossData( unsigned int declaredSize, EnumSet<AxisName> es_an, 
-				  unsigned int numData, const short int* crossDataPtr){
+  void DataDump::importCrossData( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+				  uint32_t numData, const short int* crossDataPtr){
     cintCrossDataPtr_   = NULL; 
     cfloatCrossDataPtr_ = NULL;
     cshortCrossDataPtr_ = NULL;
@@ -1287,21 +1287,21 @@ namespace sdmbin{
     }else{
       shortCrossDataPtr_ = new short int[numData];
     }
-    for(unsigned int n=0; n<numData; n++)shortCrossDataPtr_[n] = crossDataPtr[n]; 
+    for(uint32_t n=0; n<numData; n++)shortCrossDataPtr_[n] = crossDataPtr[n]; 
     es_crossDataAxes_ = es_an;
     numCrossData_     = numData;
   }
 
-  void DataDump::attachCrossData( unsigned int declaredSize, EnumSet<AxisName> es_an, 
-				  unsigned int numData, const  int* crossDataPtr){
+  void DataDump::attachCrossData( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+				  uint32_t numData, const  int* crossDataPtr){
     cshortCrossDataPtr_ = NULL; 
     cintCrossDataPtr_   = crossDataPtr; 
     cfloatCrossDataPtr_ = NULL;
     es_crossDataAxes_   = es_an;
     numCrossData_       = numData;
   }
-  void DataDump::importCrossData( unsigned int declaredSize, EnumSet<AxisName> es_an, 
-				  unsigned int numData, const int* crossDataPtr){
+  void DataDump::importCrossData( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+				  uint32_t numData, const int* crossDataPtr){
     cshortCrossDataPtr_ = NULL; 
     cintCrossDataPtr_   = NULL;
     cfloatCrossDataPtr_ = NULL;
@@ -1313,22 +1313,22 @@ namespace sdmbin{
     }else{
       intCrossDataPtr_ = new int[numData];
     }
-    for(unsigned int n=0; n<numData; n++)intCrossDataPtr_[n] = crossDataPtr[n]; 
+    for(uint32_t n=0; n<numData; n++)intCrossDataPtr_[n] = crossDataPtr[n]; 
     es_crossDataAxes_ = es_an;
     numCrossData_     = numData;
   }
 
 
-  void DataDump::attachCrossData( unsigned int declaredSize, EnumSet<AxisName> es_an, 
-				  unsigned int numData, const float* crossDataPtr){
+  void DataDump::attachCrossData( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+				  uint32_t numData, const float* crossDataPtr){
     cshortCrossDataPtr_ = NULL; 
     cintCrossDataPtr_   = NULL;
     cfloatCrossDataPtr_ = crossDataPtr; 
     es_crossDataAxes_   = es_an;
     numCrossData_       = numData;
   }
-  void DataDump::importCrossData( unsigned int declaredSize, EnumSet<AxisName> es_an, 
-				  unsigned int numData, const float* crossDataPtr){
+  void DataDump::importCrossData( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+				  uint32_t numData, const float* crossDataPtr){
     cshortCrossDataPtr_ = NULL; 
     cintCrossDataPtr_   = NULL;
     cfloatCrossDataPtr_ = NULL;
@@ -1340,7 +1340,7 @@ namespace sdmbin{
     }else{
       floatCrossDataPtr_ = new float[numData];
     }
-    for(unsigned int n=0; n<numData; n++)floatCrossDataPtr_[n] = crossDataPtr[n]; 
+    for(uint32_t n=0; n<numData; n++)floatCrossDataPtr_[n] = crossDataPtr[n]; 
     es_crossDataAxes_ = es_an;
     numCrossData_     = numData;
   }
@@ -1350,15 +1350,15 @@ namespace sdmbin{
       Error(FATAL,
 	    "vv_scaleFactor, of size %d, does not have  a size equal to %d (i.e. numBaseband)",
 	    vv_numCrossPolProduct_.size(),numBaseband_);
-    for(unsigned int nbb=0; nbb<vv_numCrossPolProduct_.size(); nbb++)
+    for(uint32_t nbb=0; nbb<vv_numCrossPolProduct_.size(); nbb++)
       if(vv_scaleFactor[nbb].size()!=vv_numCrossPolProduct_[nbb].size())
 	Error(FATAL,
 	    "vv_scaleFactor[%d], of size %d, does not have  a size equal to the nb on spw for that baseband",
 	    nbb,vv_numCrossPolProduct_[nbb].size());
     vv_scaleFactor_ = vv_scaleFactor;
     // linearization for fast access:
-    for(unsigned int nbb=0; nbb<vv_scaleFactor.size(); nbb++){
-      for(unsigned int nspw=0; nspw<vv_scaleFactor[nbb].size(); nspw++){
+    for(uint32_t nbb=0; nbb<vv_scaleFactor.size(); nbb++){
+      for(uint32_t nspw=0; nspw<vv_scaleFactor[nbb].size(); nspw++){
 	v_scaleFactor_.push_back(vv_scaleFactor[nbb][nspw]);
       }
     }
@@ -1366,7 +1366,7 @@ namespace sdmbin{
   }
 
   // Setters to identify the project structure context:
-  unsigned int DataDump::setIntegration(unsigned int integNum){
+  uint32_t DataDump::setIntegration(uint32_t integNum){
     if(integrationNum_){
       if(integNum==integrationNum_)return integrationNum_;
       Error(WARNING,
@@ -1378,7 +1378,7 @@ namespace sdmbin{
     return integrationNum_;
   }
 
-  unsigned int DataDump::setSubintegration(unsigned int integNum, unsigned int subintegNum){
+  uint32_t DataDump::setSubintegration(uint32_t integNum, uint32_t subintegNum){
     if(setIntegration(integNum)){
       if(subintegNum==subintegrationNum_)return integrationNum_;
       if(subintegrationNum_)
@@ -1391,17 +1391,17 @@ namespace sdmbin{
     return 0;
   }
 
-  unsigned int DataDump::setContextUsingProjectPath(string projectPathUri){
+  uint32_t DataDump::setContextUsingProjectPath(string projectPathUri){
     string::size_type i=0, p=0 ;
-    //    unsigned int i=0, p=0;
-    vector<unsigned int> v_node;
+    //    uint32_t i=0, p=0;
+    vector<uint32_t> v_node;
     while(p!=string::npos){
       p = projectPathUri.find("/",i);
       if(p!=string::npos){
-	v_node.push_back((unsigned int)atoi(projectPathUri.substr(i,p-i).c_str()));
+	v_node.push_back((uint32_t)atoi(projectPathUri.substr(i,p-i).c_str()));
 	i = p+1;
       }else{
-	v_node.push_back((unsigned int)atoi(projectPathUri.substr(i,projectPathUri.length()).c_str()));
+	v_node.push_back((uint32_t)atoi(projectPathUri.substr(i,projectPathUri.length()).c_str()));
       }
     }
     if(v_node.size()==5)
@@ -1413,38 +1413,38 @@ namespace sdmbin{
 
 
   // Accessors
-  long long    DataDump::time() const
+  uint64_t    DataDump::time() const
   {
     return time_;
   }
 
-  long long    DataDump::timeCentroid() const
+  uint64_t    DataDump::timeCentroid() const
   {
     return timeCentroid_;
   }
 
-  long long    DataDump::interval() const
+  uint64_t    DataDump::interval() const
   {
     return interval_;
   }
 
-  long long    DataDump::exposure() const
+  uint64_t    DataDump::exposure() const
   {
     return exposure_;
   }
 
 
-  unsigned int DataDump::integrationNum()
+  uint32_t DataDump::integrationNum()
   {
     return integrationNum_;
   }
 
-  unsigned int DataDump::subintegrationNum()
+  uint32_t DataDump::subintegrationNum()
   {
     return subintegrationNum_;
   }
 
-  float DataDump::scaleFactor(unsigned int nbb, unsigned int nspw){
+  float DataDump::scaleFactor(uint32_t nbb, uint32_t nspw){
     if(nbb<vv_scaleFactor_.size()){
       if(nspw<vv_scaleFactor_[nbb].size()){
 	return vv_scaleFactor_[nbb][nspw];
@@ -1459,7 +1459,7 @@ namespace sdmbin{
     return 0;
   }
 
-  float DataDump::scaleFactor(unsigned int ndd){
+  float DataDump::scaleFactor(uint32_t ndd){
     bool coutest=false;
     if (coutest) cout << "size of v_scaleFactor_ = " << v_scaleFactor_.size() << ", ndd = " << ndd << endl;
     return v_scaleFactor_.at(ndd);
@@ -1495,7 +1495,7 @@ namespace sdmbin{
   }
 
 
-  const unsigned int* DataDump::flags() const
+  const uint32_t* DataDump::flags() const
   {
     bool coutest=false;
     if(coutest){
@@ -1512,7 +1512,7 @@ namespace sdmbin{
   }
 
 
-  const long long int*     DataDump::actualTimes() const
+  const int64_t*     DataDump::actualTimes() const
   {
     if(lonlonActualTimesPtr_)
       return lonlonActualTimesPtr_;
@@ -1521,7 +1521,7 @@ namespace sdmbin{
     return NULL;
   }
 
-  const long long*         DataDump::actualDurations() const
+  const int64_t*         DataDump::actualDurations() const
   {
     bool coutest=false;
     if(coutest){
@@ -1546,10 +1546,10 @@ namespace sdmbin{
     return NULL;
   }
 
-  unsigned int DataDump::floatData(vector<vector<vector<float> > >&)
+  uint32_t DataDump::floatData(vector<vector<vector<float> > >&)
   {
   
-//     for(unsigned int nbb=0; nbb<numBaseband_; nbb++){
+//     for(uint32_t nbb=0; nbb<numBaseband_; nbb++){
 //       v_sizes[nbb].push_back(numSpectralWindow[nbb]);
 //     }
 //     if(numPolProduct>1)     v_sizes.push_back(numPolProduct);
@@ -1559,46 +1559,46 @@ namespace sdmbin{
 //     if(numSpectralWindow>1) v_sizes.push_back(numSpectralWindow);
 //     if(numBaseband>1)       v_sizes.push_back(numBaseband);
 //     if(numAnt>1)            v_sizes.push_back(numAnt);  
-    unsigned int dim=0;
+    uint32_t dim=0;
     return dim;
   }
-  unsigned int DataDump::floatData(vector<vector<vector<float*> > >& vvv)
+  uint32_t DataDump::floatData(vector<vector<vector<float*> > >& vvv)
   {
-    unsigned int dim=0;
-    return dim;
-  }
-
-  unsigned int DataDump::floatData(vector<vector<vector<vector<float> > > >& vvvv)
-  {
-    unsigned int dim=0;
+    uint32_t dim=0;
     return dim;
   }
 
-
-  unsigned int DataDump::floatData(vector<vector<vector<vector<vector<float> > > > >& vvvvv)
+  uint32_t DataDump::floatData(vector<vector<vector<vector<float> > > >& vvvv)
   {
-//     unsigned ind nd;
+    uint32_t dim=0;
+    return dim;
+  }
+
+
+  uint32_t DataDump::floatData(vector<vector<vector<vector<vector<float> > > > >& vvvvv)
+  {
+//     uint32_t nd;
 //     vvvvvvv.resize(numAnt_);
-//     for(unsigned int na=0; na<numAnt_; na++){
+//     for(uint32_t na=0; na<numAnt_; na++){
 //       vvvvvvv[na].resize(numBaseband_);
 
-//       for(unsigned int nbb=0; nbb<numBaseband_; nbb){
+//       for(uint32_t nbb=0; nbb<numBaseband_; nbb){
 // 	vvvvvvv[na][nbb].resize(v_numSpectralWindow_[nbb]);
 
-// 	for(unsigned int nspw=0; nspw<v_numSpectralWindow_[nbb]; nspw++){
+// 	for(uint32_t nspw=0; nspw<v_numSpectralWindow_[nbb]; nspw++){
 // 	  vvvvvvv[na][nbb][nspw].resize(vv_numBin_[nbb][nspw]);
 
-// 	  for(unsigned int nb=0; nb<vv_numBin_[nbb][nspw]; nb++){
+// 	  for(uint32_t nb=0; nb<vv_numBin_[nbb][nspw]; nb++){
 // 	    vvvvvvv[na][nbb][nspw][nb].resize(vv_numBin_[nbb][nspw]);
 
-// 	    for(unsigned int napc=0; napc<numApc_; napc++){
+// 	    for(uint32_t napc=0; napc<numApc_; napc++){
 // 	      vvvvvvv[na][nbb][nb][nspw][nb].resize(numApc_);
 
 
-// 	      for(unsigned int nsp=0; nsp<vv_numSpectralPoint_[nbb][nspw] nsp++){
+// 	      for(uint32_t nsp=0; nsp<vv_numSpectralPoint_[nbb][nspw] nsp++){
 // 		vvvvvvv[na][nbb][nb][nspw][nb][nsp].resize(vv_numPolProduct_[nbb][nspw]);
 
-// 		for(unsigned int np=0; np<vv_numPolProduct_[nbb][nspw]; np++)
+// 		for(uint32_t np=0; np<vv_numPolProduct_[nbb][nspw]; np++)
 // 		  vvvvvvv[na][nbb][nb][nspw][nb][nsp].push-back(*floatDataPtr_[nd++]);
 
 // 	      }
@@ -1608,7 +1608,7 @@ namespace sdmbin{
 //       }
 //     }
     
-    unsigned int dim=0;
+    uint32_t dim=0;
     return dim;
 
   }
@@ -1622,21 +1622,21 @@ namespace sdmbin{
 //   {
 //   }
 
-  Integration::Integration( vector<vector<unsigned int> >       vv_numPolProduct,     // /bb/spw
-			    vector<vector<unsigned int> >       vv_numSpectralPoint,  // /bb/spw
-			    vector<vector<unsigned int> >       vv_numBin,            // /bb/spw
+  Integration::Integration( vector<vector<uint32_t> >       vv_numPolProduct,     // /bb/spw
+			    vector<vector<uint32_t> >       vv_numSpectralPoint,  // /bb/spw
+			    vector<vector<uint32_t> >       vv_numBin,            // /bb/spw
 			    vector<vector<Enum<NetSideband> > > vv_e_sideband,        // /bb/spw
-			    unsigned int                        numApc,
-			    vector<unsigned int>                v_numSpectralWindow,  // /bb
-			    unsigned int                        numBaseband,
-			    unsigned int                        numAnt,
+			    uint32_t                        numApc,
+			    vector<uint32_t>                v_numSpectralWindow,  // /bb
+			    uint32_t                        numBaseband,
+			    uint32_t                        numAnt,
 			    CorrelationMode                     correlationMode,
-			    long long                           time, 
-			    long long                           timeCentroid, 
-			    long long                           interval, 
-			    long long                           exposure, 
+			    uint64_t                           time, 
+			    uint64_t                           timeCentroid, 
+			    uint64_t                           interval, 
+			    uint64_t                           exposure, 
 			    float*                              floatData,
-			    unsigned int                        integrationNum):
+			    uint32_t                        integrationNum):
     DataDump( vv_numPolProduct,    
 	      vv_numSpectralPoint,
 	      vv_numBin,
@@ -1656,22 +1656,22 @@ namespace sdmbin{
     subintegrationNum_ = 0;
   }
 
-  Integration::Integration( vector<vector<unsigned int> >       vv_numPolProduct,     // /bb/spw
-			    vector<vector<unsigned int> >       vv_numSpectralPoint,  // /bb/spw
-			    vector<vector<unsigned int> >       vv_numBin,            // /bb/spw
-			    vector<vector<Enum<NetSideband> > > vv_e_sideband,        // /bb/spw
-			    unsigned int                        numApc,
-			    vector<unsigned int>                v_numSpectralWindow,  // /bb
-			    unsigned int                        numBaseband,
-			    unsigned int                        numAnt,
-			    CorrelationMode                     correlationMode,
-			    long long                           time,
-			    long long                           timeCentroid,  
-			    long long                           interval,
-			    long long                           exposure,  
-			    float*                              floatData, 
-			    unsigned int*                       dataFlags,
-			    unsigned int                        integrationNum):
+  Integration::Integration( vector<vector<uint32_t> >       vv_numPolProduct,	// /bb/spw
+			    vector<vector<uint32_t> >       vv_numSpectralPoint,	// /bb/spw
+			    vector<vector<uint32_t> >       vv_numBin,	// /bb/spw
+			    vector<vector<Enum<NetSideband> > > vv_e_sideband,	// /bb/spw
+			    uint32_t            numApc,
+			    vector<uint32_t>    v_numSpectralWindow,	// /bb
+			    uint32_t            numBaseband,
+			    uint32_t            numAnt,
+			    CorrelationMode     correlationMode,
+			    uint64_t            time,
+			    uint64_t            timeCentroid,  
+			    uint64_t            interval,
+			    uint64_t            exposure,  
+			    float*              floatData, 
+			    uint32_t*           dataFlags,
+			    uint32_t                        integrationNum):
     DataDump( vv_numPolProduct,
 	      vv_numSpectralPoint,
 	      vv_numBin,
@@ -1728,7 +1728,7 @@ namespace sdmbin{
 //       floatDataPtr_=a.floatDataPtr_;
 //     }
 //     if(a.dataFlagsPtr_){
-//       dataFlagsPtr_ = new unsigned long int[nd]; for(int n=0; n<nd; n++)dataFlagsPtr_[n] = a.dataFlagsPtr_[n];
+//       dataFlagsPtr_ = new uint32_t[nd]; for(int n=0; n<nd; n++)dataFlagsPtr_[n] = a.dataFlagsPtr_[n];
 //     }else{
 //       dataFlagsPtr_=a.dataFlagsPtr_;
 //     }
