@@ -451,7 +451,7 @@
 
     <param type="bool" name="state_sig">
       <description>a new line will be added to STATE if the following don't match</description>
-      <value type="bool">false</value>
+      <value type="bool">true</value>
     </param>
     
     <param type="bool" name="state_ref">
