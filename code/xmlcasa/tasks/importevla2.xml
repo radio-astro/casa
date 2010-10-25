@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<task type="function" name="importevla2" category="import/export" visibility="experimental">
+
+  <shortdescription>Convert an ALMA Science Data Model observation into a CASA visibility file</shortdescription>
+
+  <input>
+
+    <param type="string" name="asdm" kind="asdm" mustexist="true">
+          <description>Name of input asdm directory (on disk)</description>
+          <value></value>
+    </param>
+
+    <param type="string" name="vis" kind="ms">
+          <description>Root name of the ms to be created. Note the .ms is NOT added </description>
+          <value></value>
+    </param>
+
+    <param type="string" name="ocorr_mode" >
+	    <description>Fill correlation mode AUTO_ONLY (ao), CROSS_ONLY (co) or CROSS_AND_AUTO (ca)</description>
+	    <value>co</value>
+	    <allowed kind="enum">
+	       <value>co</value>
+	       <value>ao</value>
+	       <value>ca</value>
+	    </allowed>
+    </param>
+    <param type="bool" name="compression">
+	    <description>Flag for turning on data compression</description>
+	    <value>False</value>
+    </param>
+
+    <param type="string" name="asis">
+	    <description>Create verbatim copies of these SDM tables in the MS.</description>
+	    <value></value>
+    </param>
+
+    <param type="bool" name="verbose">
+	    <description>Output lots of information while the filler is working</description>
+	    <value>False</value>
+    </param>
+
+    <param type="bool" name="overwrite">
+	    <description>Over write an existing MS</description>
+	    <value>False</value>
+    </param>
+
+    <param type="bool" name="flagzero">
+	    <description>Create flag for low amplitude/zero points</description>
+	    <value>False</value>
+    </param>
+
+    <param type="double" name="cliplevel" subparam="true">
+            <description>zero clipping level</description>
+            <value>1.0E-8</value>
+    </param> 
+
+    <param type="bool" name="flagpol" subparam="true">
+            <description>flag cross-hand corrs also?</description>
+            <value>False</value>
+    </param> 
+
+    <param type="bool" name="shadow">
+	    <description>Create flag for shadowed data</description>
+	    <value>False</value>
+    </param>
+
+    <param type="double" name="diameter" subparam="true">
+            <description>diameter to use for shadowing (-1=antenna dia.)</description>
+            <value>-1.0</value>
+    </param> 
+
+    <param type="bool" name="applyflags">
+	    <description>Apply flags to MS</description>
+	    <value>False</value>
+    </param>
+
+    <param type="double" name="tbuff" subparam="true">
+            <description>time padding buffer (seconds)</description>
+            <value>1.0</value>
+    </param> 
+
+    <param type="bool" name="flagbackup">
+	    <description>Back up flag column at start</description>
+	    <value>True</value>
+    </param>
+
+    <constraints>
+            <when param="flagzero">
+                <equals type="bool" value="False"/>
+                <equals type="bool" value="True">
+                    <default param="cliplevel"><value type="double">1.0E-8</value></default>
+                    <default param="flagpol"><value type="bool">False</value></default>
+                </equals>
+            </when>
+
+            <when param="shadow">
+                <equals type="bool" value="False"/>
+                <equals type="bool" value="True">
+                    <default param="diameter"><value type="double">-1.0</value></default>
+                </equals>
+            </when>
+
+            <when param="applyflags">
+                <equals type="bool" value="False"/>
+                <equals type="bool" value="True">
+                    <default param="tbuff"><value type="double">1.0</value></default>
+                </equals>
+            </when>
+    </constraints>
+
+    </input>
+
+  <returns type="void"/>
+
+  <example>
+Convert a Science Data Model (SDM) dataset into a CASA Measurement Set (MS).  
+Will place online flags and specified clip/shadow flags into FLAG_CMD table and
+optionally apply to MS.
+
+Warning: This version is under development and is geared to handling EVLA specific flag and
+system files, and is otherwise identical to importasdm.
+				          
+Keyword arguments:
+asdm -- Name of input SDM file (directory)
+        default: none; example: asdm='ExecBlock3'
+
+vis       -- Root ms or scantable name, note a prefix (.ms or .asap) is NOT appended to this name
+             default: none
+
+ocorr_mode    -- output data for correlation mode AUTO_ONLY 
+                 (ao) or CROSS_ONLY (co) or CROSS_AND_AUTO (ca)
+		 default: co (for EVLA)
+		 
+
+compression  -- produces comrpressed columns in the resulting measurement set.
+                default: False
+
+
+asis         --  creates verbatim copies of the ASDM tables in 
+                 the output measurement set. The value given to
+		 this option must be a list of table names separated
+		 by space characters; the wildcard character '*' is 
+                 allowed in table names.
+
+verbose     -- produce log output as asdm2MS is being run
+
+EVLA-specific parameters:
+-------------------------
+
+flagzero -- create flags to clip out visibilities with low amplitude ("zeroes")
+             (default: False)
+ 
+            &gt;&gt;&gt; flagzero expandable parameter(s)
+                 cliplevel -- (float) level below which to clip (default=1.0E-8)
+ 
+                 flagpol -- (boolean) also zero-clip on cross-hands (default=False)
+ 
+shadow -- creat flags for antennas that are shadowed
+             (default: False)
+ 
+            &gt;&gt;&gt; shadow expandable parameter
+                 diameter -- (float) effective diameter (m) to use (default=-1 use antenna diameter)
+ 
+applyflags -- apply the online and specified flags to the MS
+              (default: False)
+
+            &gt;&gt;&gt; applyflags expandable parameters
+                 tbuff -- (float) time padding buffer (seconds, default=1.0)
+ 
+flagbackup -- Backup original flags in &gt;ms&lt;.flagversions (default: True)
+
+       Examples:
+
+            importevla(asdm='CLowTest_000',ocorr_mode='ca')
+
+                Produces MS CLowTest_000.ms with autocorrelations.
+                You will find the online flags in the FLAG_CMD table
+                for later application.  Does not apply any flags.
+
+            importevla(asdm='CLowTest_000')
+
+                Produces MS CLowTest_000.ms without
+                autocorrelations.  
+
+            importevla(asdm='CLowTest_000',applyflags=True,tbuff=2.0)
+
+                Will apply online flags and uses a more conservative 2sec buffer
+                before the start and after the end timeranges.
+
+            importevla(asdm='CLowTest_000',flagzero=True,shadow=True)
+
+                This will create the FLAG_CMD flag using online flags, clipping zeros,
+                and for shadowed data.  But will not be applied to the MS.
+
+            importevla(asdm='CLowTest_000',flagzero=True,shadow=True,applyflags=True)
+
+                This will create the FLAG_CMD flag using online flags, clipping zeros,
+                and for shadowed data.  These will be applied to the MS.
+
+  </example>
+
+</task>
+
+</casaxml>
