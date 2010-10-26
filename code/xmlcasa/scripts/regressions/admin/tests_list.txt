@@ -10,6 +10,7 @@
 
 3C129                           gmoellen aoc.nrao.edu
 3C219D_test                     scastro eso.org
+3C391polim                      ttsutsum nrao.edu
 accum_test                      scastro eso.org
 asdm-imexport+analysis		dpetry eso.org
 async-segfault                  dpetry eso.org
