@@ -823,14 +823,11 @@ void RFASelector::startData(bool verbose)
 {
     RFAFlagCubeBase::startData(verbose);
   
-    if (verbose) {
-        String flagstring = unflag?String("unflag"):String("flag");
-        os << "Data flagged/unflagged : " << desc_str << " " << flagstring;
-        
-        if (flag_everything) os << " all" ;
-        
-        os << LogIO::POST;
-    }
+    String flagstring = unflag?String("unflag"):String("flag");
+
+    os << LogIO::DEBUGGING << "Data flagged/unflagged : " << desc_str << " " << flagstring;
+    if (flag_everything) os << " all" ;
+    os << LogIO::POST;
     
     Bool have_subset = ( desc_str.length() );
     

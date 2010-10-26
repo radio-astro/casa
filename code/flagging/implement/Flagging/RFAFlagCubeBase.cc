@@ -45,7 +45,7 @@ RFABase::RFABase ( RFChunkStats &ch,const RecordInterface &parm )
 
 void RFABase::init ()
 {
-  os<<myname<<": "<<getDesc()<<endl<<LogIO::POST;
+    os << LogIO::DEBUGGING << myname << ": " << getDesc() << endl << LogIO::POST;
 }
         
 // -----------------------------------------------------------------------
