@@ -620,7 +620,7 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
           hostnames='', 
           numcpuperhost=1, majorcycles=1, niter=1000, threshold='0.0mJy', alg='clark', scales=[0],
           mode='channel', start=0, nchan=1, step=1, weight='natural', 
-          imagetilevol=250000,
+          imagetilevol=100000,
           contclean=False, chanchunk=1, visinmem=False, 
           painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
           epjtablename=''): 
@@ -682,8 +682,8 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
         c.start_engine(hostname,numcpu,owd)
     numcpu=numcpu*len(hostnames)
     ##Start an slave for my async use for cleaning up etc here
-    c.start_engine(myhostname, 1, owd)
-    buddy_id=numcpu
+    c.start_engine(myhostname, 3, owd)
+    buddy_id=[numcpu, numcpu+1, numcpu+2]
     c.push(numcpu=numcpu, targets=buddy_id) 
     #####################
     model=imagename+'.model' 
@@ -744,61 +744,88 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
     donegetchan=np.array(range(nchanchunk),dtype=bool)
     doneputchan=np.array(range(nchanchunk),dtype=bool)
     readyputchan=np.array(range(nchanchunk), dtype=bool)
+    cpudoing=np.array(range(nchanchunk), dtype=int)
     donegetchan.setfield(False,bool)
     doneputchan.setfield(False,bool)
     readyputchan.setfield(False, bool)
     chanind=np.array(range(numcpu), dtype=int)
     c.push(readyputchan=readyputchan, targets=buddy_id)
-    c.push(doneputchan=doneputchan, targets=buddy_id)
-    buddy_is_ready=True
-    buddy_ref=False
-    cleanupcomm='a.cleanupcubeimages(readyputchan=readyputchan, doneputchan=doneputchan, imagename='+imnam+', nchanchunk='+str(nchanchunk)+', chanchunk='+str(chanchunk)+')'
-    while(chancounter < nchanchunk):
-        chanind.setfield(-1, int)
-        for k in range(numcpu):
-            if(chancounter < nchanchunk):
-                chanind[k]=chancounter
+    #c.push(doneputchan=doneputchan, targets=buddy_id)
+    buddy_is_ready=[True, True, True]
+    buddy_ref=[False, False, False]
+    cleanupcomm=['', '', '']
+    cleanupcomm[0]='a.cleanupmodelimages(readyputchan=readyputchan,  imagename='+imnam+', nchanchunk='+str(nchanchunk)+', chanchunk='+str(chanchunk)+')'
+    cleanupcomm[1]='a.cleanupresidualimages(readyputchan=readyputchan,  imagename='+imnam+', nchanchunk='+str(nchanchunk)+', chanchunk='+str(chanchunk)+')'
+    cleanupcomm[2]='a.cleanuprestoredimages(readyputchan=readyputchan,  imagename='+imnam+', nchanchunk='+str(nchanchunk)+', chanchunk='+str(chanchunk)+')'
+    def gen_command(ccounter):
+        return 'a.imagechan_new(msname='+'"'+msname+'", start='+str(startsel[ccounter])+', numchan='+str(nchansel[ccounter])+', field="'+str(field)+'", spw='+str(spwsel[chancounter])+', cubeim='+imnam+', imroot='+imnam+',imchan='+str(chancounter)+',chanchunk='+str(chanchunk)+',niter='+str(niter)+',alg="'+alg+'", scales='+str(scales)+', majcycle='+str(majorcycles)+', thr="'+str(threshold)+'")'
+    
+    #while(chancounter < nchanchunk):
+    chanind.setfield(-1, int)
+    for k in range(numcpu):
+        if(chancounter < nchanchunk):
+            chanind[k]=chancounter
                 #if(not donegetchan[chancounter]):
                 #    imagecont.getchanimage(model, imagename+str(chancounter)+'.model', 
                 #                 chancounter*chanchunk, chanchunk)
                 #    donegetchan[chancounter]=True
-                runcomm='a.imagechan_new(msname='+'"'+msname+'", start='+str(startsel[chancounter])+', numchan='+str(nchansel[chancounter])+', field="'+str(field)+'", spw='+str(spwsel[chancounter])+', cubeim='+imnam+', imroot='+imnam+',imchan='+str(chancounter)+',chanchunk='+str(chanchunk)+',niter='+str(niter)+',alg="'+alg+'", scales='+str(scales)+', majcycle='+str(majorcycles)+', thr="'+str(threshold)+'")'
+            
+                #runcomm='a.imagechan_new(msname='+'"'+msname+'", start='+str(startsel[chancounter])+', numchan='+str(nchansel[chancounter])+', field="'+str(field)+'", spw='+str(spwsel[chancounter])+', cubeim='+imnam+', imroot='+imnam+',imchan='+str(chancounter)+',chanchunk='+str(chanchunk)+',niter='+str(niter)+',alg="'+alg+'", scales='+str(scales)+', majcycle='+str(majorcycles)+', thr="'+str(threshold)+'")'
+            runcomm=gen_command(chancounter)
                 #runcomm='a.imagechan(msname='+'"'+msname+'", start='+str(startsel[chancounter])+', numchan='+str(nchansel[chancounter])+', field="'+str(field)+'", spw='+str(spwsel[chancounter])+', imroot='+imnam+',imchan='+str(chancounter)+',niter='+str(niter)+',alg="'+alg+'", scales='+str(scales)+', majcycle='+str(majorcycles)+', thr="'+str(threshold)+'")'
-                print 'command is ', runcomm
-                out[k]=c.odo(runcomm,k)
-                chancounter=chancounter+1
-        over=False
-        while(not over):
-            time.sleep(1)
-            if(buddy_is_ready):
-                c.push(readyputchan=readyputchan, targets=buddy_id)
-                c.push(doneputchan=doneputchan, targets=buddy_id)
-                buddy_ref=c.odo(cleanupcomm, buddy_id)
-            buddy_is_ready=c.check_job(buddy_ref, False)
-            if(buddy_is_ready):
-                doneputchan=c.pull('doneputchan', buddy_id)[buddy_id]
-            overone=True
-            for k in range(numcpu):
-                overone=(overone and c.check_job(out[k],False))
-                if((chanind[k] > -1) and c.check_job(out[k],False) and 
-                   (not readyputchan[chanind[k]])):
-                    readyputchan[chanind[k]]=True
-            over=overone
+            print 'command is ', runcomm
+            out[k]=c.odo(runcomm,k)
+            chancounter=chancounter+1
+    while(chancounter < nchanchunk):
+            over=False
+            while(not over):
+            #############loop waiting for a chunk of work
+                time.sleep(1)
+                for bud in range(3):
+                    if(buddy_is_ready[bud]):
+                    #print 'SENDING ', cleanupcomm[bud]
+                        c.push(readyputchan=readyputchan, targets=buddy_id[bud])
+                    #c.push(doneputchan=doneputchan, targets=buddy_id)
+                        buddy_ref[bud]=c.odo(cleanupcomm[bud], buddy_id[bud])
+                        buddy_is_ready[bud]=c.check_job(buddy_ref[bud], False)
+                #print 'buddy_ready', bud, buddy_is_ready[bud]
+            #if(buddy_is_ready):
+            #    doneputchan=c.pull('doneputchan', buddy_id)[buddy_id]
+                overone=True
+                for k in range(numcpu):
+                    overone=(overone and c.check_job(out[k],False))
+                    if((chanind[k] > -1) and c.check_job(out[k],False) and 
+                       (not readyputchan[chanind[k]])):
+                        readyputchan[chanind[k]]=True
+                        chanind[k]=chancounter
+                        if(chancounter < nchanchunk):
+                            runcomm=gen_command(chancounter)
+                            print 'command is ', runcomm
+                            print 'processor ', k
+                            out[k]=c.odo(runcomm,k)
+                        chancounter+=1
+                        overone=(overone and c.check_job(out[k],False))
+                over=overone
+           ############
     time2=time.time()
     print 'Time to image is ', (time2-time1)/60.0, 'mins'
     ##sweep the remainder channels in case they are missed
-    while(not buddy_is_ready):
-       time.sleep(1)
-       buddy_is_ready=c.check_job(buddy_ref, False)
-    doneputchan=c.pull('doneputchan', buddy_id)[buddy_id]    
-    
-    c.stop_engine(buddy_id)
-    for k in range(nchanchunk):
-        if(not doneputchan[k]):
-            imagecont.putchanimage(model, imagename+str(k)+'.model', k*chanchunk, False)
-            imagecont.putchanimage(imagename+'.residual', imagename+str(k)+'.residual', k*chanchunk, False)
-            imagecont.putchanimage(imagename+'.image', imagename+str(k)+'.image', k*chanchunk, False)
-            doneputchan[k]=True
+    for bud in range(3):
+        while(not buddy_is_ready[bud]):
+            buddy_is_ready[bud]=c.check_job(buddy_ref[bud], False)
+        #doneputchan=c.pull('doneputchan', buddy_id)[buddy_id] 
+        c.push(readyputchan=readyputchan, targets=buddy_id[bud])
+        buddy_ref[bud]=c.odo(cleanupcomm[bud], buddy_id[bud])
+    for bud in range(3):
+        while(not buddy_is_ready[bud]):
+            buddy_is_ready[bud]=c.check_job(buddy_ref[bud], False)
+    #c.stop_engine(buddy_id)
+    #for k in range(nchanchunk):
+    #   if(not doneputchan[k]):
+    #        imagecont.putchanimage(model, imagename+str(k)+'.model', k*chanchunk, False)
+    #        imagecont.putchanimage(imagename+'.residual', imagename+str(k)+'.residual', k*chanchunk, False)
+    #        imagecont.putchanimage(imagename+'.image', imagename+str(k)+'.image', k*chanchunk, False)
+    #        doneputchan[k]=True
     time2=time.time()
     print 'Time to image after cleaning is ', (time2-time1)/60.0, 'mins'
     c.stop_cluster()

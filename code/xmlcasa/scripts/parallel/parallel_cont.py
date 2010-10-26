@@ -239,7 +239,8 @@ class imagecont():
         #self.putchanimage(cubeim+'.residual', imname+'.residual', imchan*chanchunk)
         #self.putchanimage(cubeim+'.image', imname+'.image', imchan*chanchunk)
 
-    def getchanimage(self, inimage, outimage, chan, nchan=1):
+    @staticmethod
+    def getchanimage(inimage, outimage, chan, nchan=1):
         """
         create a slice of channels image from cubeimage
         """
@@ -258,7 +259,7 @@ class imagecont():
         sbim.close()
         ia.close()
         return True
-
+    #getchanimage = staticmethod(getchanimage)
     def cleanupcubeimages(self, readyputchan, doneputchan, imagename, nchanchunk, chanchunk):
         """
         This function will put the True values of readyputchan into the final cubes and set the doneputchan to True
@@ -266,19 +267,47 @@ class imagecont():
         """
         for k in range(nchanchunk):
             if(readyputchan[k] and (not doneputchan[k])):
-                self.putchanimage(imagename+'.model', imagename+str(k)+'.model', k*chanchunk)
-                self.putchanimage(imagename+'.residual', imagename+str(k)+'.residual', k*chanchunk)
-                self.putchanimage(imagename+'.image', imagename+str(k)+'.image', k*chanchunk)
+                self.putchanimage(imagename+'.model', imagename+str(k)+'.model', k*chanchunk, False)
+                self.putchanimage(imagename+'.residual', imagename+str(k)+'.residual', k*chanchunk, False)
+                self.putchanimage(imagename+'.image', imagename+str(k)+'.image', k*chanchunk, False)
                 doneputchan[k]=True
-
-    def putchanimage(self, cubimage,inim,chan):
+    def cleanupmodelimages(self, readyputchan,  imagename, nchanchunk, chanchunk):
+        """
+        This function will put model images only 
+        """
+        for k in range(nchanchunk):
+            if(readyputchan[k]):
+                self.putchanimage(imagename+'.model', imagename+str(k)+'.model', k*chanchunk, True)
+    
+    def cleanupresidualimages(self, readyputchan,  imagename, nchanchunk, chanchunk):
+        """
+        This function will put residual images only 
+        """
+        for k in range(nchanchunk):
+            if(readyputchan[k]):
+                self.putchanimage(imagename+'.residual', imagename+str(k)+'.residual', k*chanchunk, True)
+    
+    def cleanuprestoredimages(self, readyputchan,  imagename, nchanchunk, chanchunk):
+        """
+        This function will put residual images only 
+        """
+        for k in range(nchanchunk):
+            if(readyputchan[k]):
+                self.putchanimage(imagename+'.image', imagename+str(k)+'.image', k*chanchunk, True) 
+                
+    @staticmethod
+    def putchanimage(cubimage,inim,chan, removeinfile=True):
         """
         put channel image back to a pre-exisiting cubeimage
         """
+        if( not os.path.exists(inim)):
+            return False
         ia.open(inim)
         inimshape=ia.shape()
-    ####imdata=ia.getchunk()
-    ####immask=ia.getchunk(getmask=True)
+        ############
+        #imdata=ia.getchunk()
+        #immask=ia.getchunk(getmask=True)
+        ##############
         ia.close()
         ia.open(cubimage)
         cubeshape=ia.shape()
@@ -287,11 +316,17 @@ class imagecont():
         if( not (cubeshape[3] > (chan+inimshape[3]-1))):
             return False
 
-    ####rg0=ia.setboxregion(blc=blc,trc=trc)
+        ############
+        #rg0=ia.setboxregion(blc=blc,trc=trc)
+        ###########
         if inimshape[0:3]!=cubeshape[0:3]: 
             return False
-    ####ia.putregion(pixels=imdata,pixelmask=immask, region=rg0)
+        ########
+        #ia.putregion(pixels=imdata,pixelmask=immask, region=rg0)
+        ###########
         ia.insert(infile=inim, locate=blc)
         ia.close()
-        ia.removefile(inim)
+        if(removeinfile):
+            ia.removefile(inim)
         return True
+    #putchanimage=staticmethod(putchanimage)
