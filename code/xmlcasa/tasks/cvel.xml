@@ -9,8 +9,28 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
      <shortdescription>regrid an MS to a new spectral window / channel structure or frame</shortdescription>
 
 <description>
-Regrid an MS to a new spectral window / channel structure or frame
-(more detailed description to be written).
+The intent of cvel is to transform channel labels and the 
+visibilities to a spectral reference frame which is appropriate
+for the science analysis, e.g. from TOPO to LSRK to correct for 
+Doppler shifts throughout the time of the observation. Naturally, 
+this will change the shape of the spectral feature to some extent. 
+According to the Nyquist theorem you should oversample a spectrum 
+with twice the numbers of channels to retain the shape. Based on 
+some tests, however, we recommend to observe with at least 
+3-4 times the number of channels for each significant spectral 
+feature (like 3-4 times the linewidth). This will minimize 
+regridding artifacts in cvel.
+
+If cvel has already established the grid that is desired for the
+imaging, clean should be run with the default channel mode 
+(width=1) or with exactly the same frequency/velocity parameters 
+as used in cvel in order to avoid additional regridding in clean.
+
+Hanning smoothing is optionally offered in cvel, but tests have 
+shown that already the regridding process itself, if it involved 
+a transformation from TOPO to a non-terrestrial reference frame, 
+implies some smoothing (due to channel interpolation) such that 
+Hanning smoothing may not be necessary.
 </description>
 
 <input>
@@ -359,7 +379,30 @@ Regrid an MS to a new spectral window / channel structure or frame
 
       hanning -- if true, Hanning smooth frequency channel data to remove Gibbs ringing
 
+==================================================================
 
+The intent of cvel is to transform channel labels and the 
+visibilities to a spectral reference frame which is appropriate
+for the science analysis, e.g. from TOPO to LSRK to correct for 
+Doppler shifts throughout the time of the observation. Naturally, 
+this will change the shape of the spectral feature to some extent. 
+According to the Nyquist theorem you should oversample a spectrum 
+with twice the numbers of channels to retain the shape. Based on 
+some tests, however, we recommend to observe with at least 
+3-4 times the number of channels for each significant spectral 
+feature (like 3-4 times the linewidth). This will minimize 
+regridding artifacts in cvel.
+
+If cvel has already established the grid that is desired for the
+imaging, clean should be run with the default channel mode 
+(width=1) or with exactly the same frequency/velocity parameters 
+as used in cvel in order to avoid additional regridding in clean.
+
+Hanning smoothing is optionally offered in cvel, but tests have 
+shown that already the regridding process itself, if it involved 
+a transformation from TOPO to a non-terrestrial reference frame, 
+implies some smoothing (due to channel interpolation) such that 
+Hanning smoothing may not be necessary.
 </example> 
 </task>
 </casaxml>

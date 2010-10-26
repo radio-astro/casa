@@ -558,20 +558,30 @@ def simdata(
                             sttime=-totalsec/2.0+scansec*k
                             endtime=sttime+scansec
                             if observemany:
-                                srces.append(src)
-                                starttimes.append(str(sttime)+"s")
-                                stoptimes.append(str(endtime)+"s")
-                                dirs.append(caldirection)
-                            else:
-                                sm.observe(sourcename="phase calibrator", spwname=fband,
-                                           starttime=qa.quantity(sttime, "s"),
-                                           stoptime=qa.quantity(endtime, "s"),project=project);
+                                # need to observe cal singly to get new row in obs table, so 
+                                # first observemany the on-source pointing(s)
+                                sm.observemany(sourcenames=srces,spwname=fband,starttimes=starttimes,stoptimes=stoptimes,project=project)
+                                # and clear the list
+                                srces=[]
+                                starttimes=[]
+                                stoptimes=[]
+                                dirs=[]
+ #                               srces.append(src)
+ #                               starttimes.append(str(sttime)+"s")
+ #                               stoptimes.append(str(endtime)+"s")
+ #                               dirs.append(caldirection)
+ #                           else:
+                            sm.observe(sourcename="phase calibrator", spwname=fband,
+                                       starttime=qa.quantity(sttime, "s"),
+                                       stoptime=qa.quantity(endtime, "s"),
+                                       state_obs_mode="CALIBRATE_PHASE.ON_SOURCE",state_sig=True,
+                                       project=project);
                         kfld=kfld+1                
                     if kfld > nfld: kfld=0
                 # if directions is unset, NewMSSimulator::observemany 
 
                 # looks up the direction in the field table.
-                if observemany:
+                if observemany and (not docalibrator):
                     sm.observemany(sourcenames=srces,spwname=fband,starttimes=starttimes,stoptimes=stoptimes,project=project)
 
                 sm.setdata(fieldid=range(0,nfld))
@@ -1065,11 +1075,18 @@ def simdata(
             # Do single dish imaging first if tpms exists.
             if tpms and os.path.exists(tpms):
                 msg('creating image from generated ms: '+tpms)
-                if tp_only: msfile=tpms
                 if len(mstoimage):
                     tpimage = project+'.sd.image'
                 else:
                     tpimage = project+'.image'
+                if tp_only: 
+                    msfile=tpms
+                else:
+                    if len(modelimage) and modelimage!=tpimage:
+                        msg("modelimage parameter set to "+modelimage+" but also creating a new total power image "+tpimage,priority="warn")
+                        msg("assuming you know what you want, and using modelimage="+modelimage+" in deconvolution",priority="warn")
+                    else:
+                        modelimage=tpimage
                 #im.open(msfile)
                 im.open(tpms)
                 im.selectvis(nchan=model_nchan,start=0,step=1,spw=0)

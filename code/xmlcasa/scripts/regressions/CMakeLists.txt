@@ -52,6 +52,7 @@ casa_add_python( xmlcasa xmlcasa_regressions_python python/${PYTHONV}/regression
   listcal_regression.py
   listvis_regression.py
   m51_tpsim_regression.py
+  m51_bothsim_regression.py
   maclog_regression.py
   nf_regression.py
   ngc1333_regression.py
@@ -78,7 +79,7 @@ casa_add_python( xmlcasa xmlcasa_regressions_python python/${PYTHONV}/regression
   testcube2_regression.py
   testcube_regression.py
   unit_tests.py
-  wideband_regression.py
   wf_regression.py
+  wideband_regression.py
   wproj3ddat_regression.py
 )

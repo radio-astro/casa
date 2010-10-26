@@ -163,15 +163,15 @@ refstats = { 'sum': 1046.5,
              'sigma': 0.04262 }
 
 diffstats = {'sum': 3176.1,
-             'max': 0.1660,
-             'min': -0.005074,
+             'max': 0.165,
+             'min': -0.0051,
              'rms': 0.03591,
              'sigma': 0.02070 }
 
 
 ### tight 
 reftol   = {'sum':  1e-2,
-            'max':  1e-2,
+            'max':  2e-2,
             'min':  5e-2,
             'rms':  1e-2,
             'sigma': 1e-2}

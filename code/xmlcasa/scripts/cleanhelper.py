@@ -433,11 +433,17 @@ class cleanhelper:
 
             # handle boxes in lists
             if(len(masklist) > 0):
-                self.im.regiontoimagemask(mask=self.maskimages[self.imagelist[maskid]], boxes=masklist)
+		try:
+                   self.im.regiontoimagemask(mask=self.maskimages[self.imagelist[maskid]], boxes=masklist)
+		except:
+		   raise Exception, 'Box-file format not recognised. Please use <index> <xmin> <ymin> <xmax> <ymax>'
             if(len(tablerecord) > 0 ):
                 reg={}
-                for tabl in tablerecord:
+                try:
+                  for tabl in tablerecord:
                     reg.update({tabl:rg.fromfiletorecord(filename=tabl, verbose=False)})
+	        except:
+		  raise Exception,'Region-file format not recognized. Please check. If box-file, please start the file with \'#boxfile\' on the first line';
                 if(len(reg)==1):
                     reg=reg[reg.keys()[0]]
                 else:
@@ -854,10 +860,11 @@ class cleanhelper:
                                 circles[self.imageids[int(splitline2[0])]].append(circlelist)
                             else:
                                 #boxes
-                                boxlist=[int(splitline2[1]),int(splitline2[2]),
+                                if(len(splitline2)==5):
+                                   boxlist=[int(splitline2[1]),int(splitline2[2]),
                                          int(splitline2[3]),int(splitline2[4])]
-                                #boxes[splitline2[0]].append(boxlist)
-                                boxes[self.imageids[int(splitline2[0])]].append(boxlist)
+                                   #boxes[splitline2[0]].append(boxlist)
+                                   boxes[self.imageids[int(splitline2[0])]].append(boxlist)
                         else:
                            ## Don't know what that is
                            ## might be a facet definition 
