@@ -71,14 +71,14 @@
 % 
 \include{casa_cook_display}
 
-% Appendices
-\appendix
-
-% Single Dish - put in appendix for beta
+% Single Dish 
 \include{casa_cook_sd}
 
-% Simulation - put in appendix for beta
+% Simulation 
 \include{casa_cook_sim}
+
+% Appendices
+\appendix
 
 % 
 \include{casa_cook_install}
@@ -89,10 +89,10 @@
 % 
 %\include{casa_cook_tasks}
 
-% Now part of casa_cook_io.tex
-%\include{casa_cook_ms}
-
 % 
+%\include{casa_cook_conv}
+
+%
 \include{casa_cook_me}
 
 % 

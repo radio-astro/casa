@@ -263,20 +263,48 @@ The current inputs to the {\tt plotms} task are:
 vis                 =         ''        #  input visibility dataset (blank for none)
 xaxis               =         ''        #  plot x-axis (blank for default/current)
 yaxis               =         ''        #  plot y-axis (blank for default/current)
-selectdata          =      False        #  data selection parameters
-averagedata         =      False        #  data averaging parameters
+selectdata          =       True        #  data selection parameters
+     field          =         ''        #  field names or field index numbers (blank for all)
+     spw            =         ''        #  spectral windows:channels (blank for all)
+     timerange      =         ''        #  time range (blank for all)
+     uvrange        =         ''        #  uv range (blank for all)
+     antenna        =         ''        #  antenna/baselines (blank for all)
+     scan           =         ''        #  scan numbers (blank for all)
+     correlation    =         ''        #  correlations (blank for all)
+     array          =         ''        #  (sub)array numbers (blank for all)
+     msselect       =         ''        #  MS selection (blank for all)
+
+averagedata         =       True        #  data averaging parameters
+     avgchannel     =         ''        #  average over channel?  (blank = False, otherwise value in channels)
+     avgtime        =         ''        #  average over time? (blank = False, other value in seconds)
+     avgscan        =      False        #  only valid if time averaging is turned on.  average over scans?
+     avgfield       =      False        #  only valid if time averaging is turned on.  average over fields?
+     avgbaseline    =      False        #  average over all baselines?  (mutually exclusive with avgantenna)
+     avgantenna     =      False        #  average by per-antenna?  (mutually exclusive with avgbaseline)
+     avgspw         =      False        #  average over all spectral windows?
+     scalar         =      False        #  Do scalar averaging?
+
 transform           =      False        #  transform data in various ways?
 extendflag          =      False        #  have flagging extend to other data points?
-async               =      False        #  If true the taskname must be started using
-                                        #   plotms(...)
+plotfile            =         ''        #  Name of plot file to save automatically.
+async               =      False        #  If true the taskname must be started using plotms(...)
+
 \end{verbatim}
-\normalsize
-All of these parameters can also be set or modified from inside the {\tt plotms} window. Note that, if the {\tt vis} parameter is set to the name of a measurement set here, when you start up {\tt plotms}, the {\it entire} measurement set will be plotted, which can be time consuming. It is probably best to leave all parameters blank for now, setting them as needed inside the {\tt plotms} GUI.
+\normalsize All of these parameters can also be set or modified from
+inside the {\tt plotms} window. Note that, if the {\tt vis} parameter
+is set to the name of a measurement set here, when you start up {\tt
+  plotms}, the {\it entire} measurement set will be plotted, which can
+be time consuming. It is probably best to leave all parameters blank
+for now, setting them as needed inside the {\tt plotms} GUI.
 
 \begin{figure}[h!]
 \begin{center}
 \pngname{plotms_empty}{6}
-\caption{\label{fig:plotms_empty} A freshly-started {\tt plotms} GUI window. Note that the {\bf Plots $>$ Data} tab is selected, which is discussed in \S~\ref{section:edit.plot.plotms.select}, \ref{section:edit.plot.plotms.average}, and \ref{section:edit.plot.plotms.summary}.} 
+\caption{\label{fig:plotms_empty} A freshly-started {\tt plotms} GUI
+  window. Note that the {\bf Plots $>$ Data} tab is selected, which is
+  discussed in \S~\ref{section:edit.plot.plotms.select},
+  \ref{section:edit.plot.plotms.average}, and
+  \ref{section:edit.plot.plotms.summary}.}
 \hrulefill
 \end{center}
 \end{figure}
@@ -285,7 +313,21 @@ All of these parameters can also be set or modified from inside the {\tt plotms}
 \subsubsection{Loading and Selecting Data}
 \label{section:edit.plot.plotms.select}
 
-When {\tt plotms} is first started, a window will appear as in Figure \ref{fig:plotms_empty}. It will, by default, display the {\bf Plots} tab (as chosen from the tabs at the top of the {\tt plotms} window---e.g., {\bf Plots, Flagging, Tools}...) and the {\bf Plots $>$ Data} tab (as chosen from the tabs on the far left side of the {\tt plotms} window---e.g., {\bf Data, Axes, Trans}...). First, a measurement set should be loaded by clicking on {\bf Browse} near the top of the {\bf Plots $>$ Data} tab, and selecting a {\tt .ms} directory (just select the directory itself; do not descend into the {\tt .ms} directory). A plot can now be made of the measurement set by clicking on {\bf Plot}---but beware, this would plot the entire measurement set, and could take quite some time! It is probably better to select a subset of the measurement set using the {\bf Selection} windows in the {\bf Plots $>$ Data} tab before clicking {\bf Plot}.
+When {\tt plotms} is first started, a window will appear as in Figure
+\ref{fig:plotms_empty}. It will, by default, display the {\bf Plots}
+tab (as chosen from the tabs at the top of the {\tt plotms}
+window---e.g., {\bf Plots, Flagging, Tools}...) and the {\bf Plots $>$
+  Data} tab (as chosen from the tabs on the far left side of the {\tt
+  plotms} window---e.g., {\bf Data, Axes, Trans}...). First, a
+measurement set should be loaded by clicking on {\bf Browse} near the
+top of the {\bf Plots $>$ Data} tab, and selecting a {\tt .ms}
+directory (just select the directory itself; do not descend into the
+{\tt .ms} directory). A plot can now be made of the measurement set by
+clicking on {\bf Plot}---but beware, this would plot the entire
+measurement set, and could take quite some time! It is probably better
+to select a subset of the measurement set using the {\bf Selection}
+windows in the {\bf Plots $>$ Data} tab before clicking {\bf
+  Plot}. 
 
 The options for data selection are:
 \begin{itemize}
@@ -299,11 +341,26 @@ The options for data selection are:
    \item {\bf array}
    \item {\bf msselect}
 \end{itemize}
-These are described in \S~\ref{section:io.selection}. Note that, unlike when setting data selection parameters from the CASA command line, no quotation marks are needed around strings. 
+These are described in \S~\ref{section:io.selection}. Note that,
+unlike when setting data selection parameters from the CASA command
+line, no quotation marks are needed around strings.
 
-When a plotting parameter has been changed, it will turn red (for example, when a new measurement set is loaded, {\bf File Location} turns red). This alerts the user that, if the {\bf Plot} button is clicked, a change will be made to the displayed plot.
+When a plotting parameter has been changed, it will turn red (for
+example, when a new measurement set is loaded, {\bf File Location}
+turns red). This alerts the user that, if the {\bf Plot} button is
+clicked, a change will be made to the displayed plot.
 
-Once you have selected the desired subset of data, if you click {\bf Plot}, {\tt plotms} will by default plot amplitude versus time. See the next section for information about other possible axes. 
+Once you have selected the desired subset of data, if you click {\bf
+  Plot}, {\tt plotms} will by default plot amplitude versus time. See
+the next section for information about other possible axes.
+
+Fopr a given data selection, {\tt plotms} will only load the data
+once. This speeds up plotting considerably when changing plot
+paramateres such as different axes, colors etc. Sometimes, however,
+the data changes on disk, e.g., when other data processing tasks were
+applied. To force {\tt plotms} to reload the data, checkmark the
+little {\bf force reload} box left to the {\bf Plot'} button or press
+the {\tt SHIFT} key while clicking the {\bf Plot} button.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -363,23 +420,53 @@ The X and Y axes of a plot are selected by clicking on the {\bf Plots $>$ Axes} 
 
 \item {\bf Azimuth} and {\bf Ant-Azimuth} --- Azimuth in units of degrees. {\bf Azimuth} plots a fiducial value for the entire array, while {\bf Ant-Azimuth} plots the azimuth for each individual antenna (their azimuths will differ by small amounts, because each antenna is located at a slightly different longitude, latitude, and elevation).
 
-\item {\bf Elevation} and {\bf Ant-Elevation} --- Elevation in units of degrees. {\bf Elevation} is a representative value for the entire array, while {\bf Ant-Elevation} is the elevation for each individual antenna (their elevations will differ by small amounts, because each antenna is located at a slightly different longitude, latitude, and elevation).
+\item {\bf Elevation} and {\bf Ant-Elevation} --- Elevation in units
+  of degrees. {\bf Elevation} is a representative value for the entire
+  array, while {\bf Ant-Elevation} is the elevation for each
+  individual antenna (their elevations will differ by small amounts,
+  because each antenna is located at a slightly different longitude,
+  latitude, and elevation).
 
 \item {\bf HourAngle} --- Hour angle in units of hours. This is a fiducial value for the entire array.
 %Beta Alert: Some day soon, Ant-HourAngle will be added.
 
-\item {\bf ParAngle} and {\bf Ant-ParAng} --- Parallactic angle in units of degrees. {\bf ParAngle} is the fiducial parallactic angle for all antennae in the array, while {\bf Ant-ParAng} plots the parallactic ange for each individual antenna (their parallactic angles will differ by small amounts, because each antenna is located at a slightly different longitude, latitude, and elevation).
+\item {\bf ParAngle} and {\bf Ant-ParAng} --- Parallactic angle in
+  units of degrees. {\bf ParAngle} is the fiducial parallactic angle
+  for all antennae in the array, while {\bf Ant-ParAng} plots the
+  parallactic ange for each individual antenna (their parallactic
+  angles will differ by small amounts, because each antenna is located
+  at a slightly different longitude, latitude, and elevation).
 
-\item {\bf Row} --- Data row number. A row number corresponds to a unique time, baseline, and spectral window in the measurement set.
+\item {\bf Row} --- Data row number. A row number corresponds to a
+  unique time, baseline, and spectral window in the measurement set.
 
-\item {\bf FlagRow} --- In some tasks, if a whole data row is flagged, then FlagRow will be set to 1 for that row. Unflagged rows have FlagRow = 0. However, note that some tasks (like {\tt plotms}) may flag a row, but {\it not} set FlagRow = 1. It is probably better to plot Flag than FlagRow for most applications.
+\item {\bf FlagRow} --- In some tasks, if a whole data row is flagged,
+  then FlagRow will be set to 1 for that row. Unflagged rows have
+  FlagRow = 0. However, note that some tasks (like {\tt plotms}) may
+  flag a row, but {\it not} set FlagRow = 1. It is probably better to
+  plot Flag than FlagRow for most applications.
 \end{itemize}
 
-If the data axis selected from the drop-down menu is already stored in the cache (therefore implying that plotting will proceed relatively quickly), an ``X'' will appear in the checkbox next to {\bf In Cache?}.
+If the data axis selected from the drop-down menu is already stored in
+the cache (therefore implying that plotting will proceed relatively
+quickly), an ``X'' will appear in the checkbox next to {\bf In
+  Cache?}.
 
-For relevant data axes like {\bf Amp} and {\bf Phase}, the user will be presented with the option to plot raw data or calibrated data. This can be selected via a drop-down menu called {\bf Data Column}, located directly under the drop-down menu for X or Y Axis selection (see the Y axis in Figure \ref{fig:plotms_axes}). To plot raw data, select ``data''; to plot calibrated data, select ``corrected''. Note that this choice will only have an impact on a plot if a calibration table has been applied to the measurement set (see {\tt applycal}; \S~[WHICH SECTION?]). 
+For relevant data axes like {\bf Amp} and {\bf Phase}, the user will
+be presented with the option to plot raw data or calibrated data. This
+can be selected via a drop-down menu called {\bf Data Column}, located
+directly under the drop-down menu for X or Y Axis selection (see the Y
+axis in Figure \ref{fig:plotms_axes}). To plot raw data, select
+``data''; to plot calibrated data, select ``corrected''. Note that
+this choice will only have an impact on a plot if a calibration table
+has been applied to the measurement set (see {\tt applycal},
+Sect.\,\ref{section:cal.correct.apply}).
 
-If a data model has been applied to the measurement set (e.g., with {\tt setjy}, \S~[WHICH SECTION?]), it can be plotted by selecting ``model'' from the {\bf Data Column} menu. Finally, to plot the differences between the calibrated data and the model, select ``residual'' from {\bf Data Column}.
+If a data model has been applied to the measurement set (e.g., with
+{\tt setjy}, Sect.\,\ref{section:cal.prior.models}) it can be plotted
+by selecting ``model'' from the {\bf Data Column} menu. Finally, to
+plot the differences between the calibrated data and the model, select
+``residual'' from {\bf Data Column}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -416,7 +503,19 @@ There are two relevant options under the {\bf Options} tab near the top of the {
 
 It is possible to hide these icons by going to the {\bf View $>$ Toolbars} menu at the top of the {\tt plotms} window and un-depressing the {\bf Tools} option (except for {\bf Hide Drawing}, which is hidden by clicking on {\bf View $>$ Toolbars $>$ Display}). In addition, the above tools can also be accessed by clicking on the {\bf Tools} tab near the top of the {\tt plotms} window (just below the {\bf View} menu). 
 
-The {\bf Tools} tab also enables one additional tool, the {\bf Tracker}. To use {\bf Tracker}, click on the {\bf Hover} and/or {\bf Display} checkbox, and place your mouse over the plot. {\bf Tracker} will output the X and Y position of your mouse, either as text superimposed on the plot near your mouse (if {\bf Hover} is selected) or in the blank window in the {\bf Tools} tab (if {\bf Display} is selected).
+The {\bf Tools} tab also enables one additional tool, the {\bf
+  Tracker}. To use {\bf Tracker}, click on the {\bf Hover} and/or {\bf
+  Display} checkbox, and place your mouse over the plot. {\bf Tracker}
+will output the X and Y position of your mouse, either as text
+superimposed on the plot near your mouse (if {\bf Hover} is selected)
+or in the blank window in the {\bf Tools} tab (if {\bf Display} is
+selected). Pressing the {\tt SPACE} bar will copy the lines into the
+larger white box below to the right. This can be repeated many times
+and a log of positions and values will be created. The content in the
+box can then be easily copied and pasted into any other application
+that is used for data analysis. The {\bf Clear} button wipes out the
+content of the box for a fresh start into new scientific adventures.
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

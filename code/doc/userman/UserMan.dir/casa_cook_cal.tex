@@ -32,6 +32,7 @@
 % GM  2009-12-22  Release 3.0.0 gencal (and other edits)
 % JO 2010-03-05 Release 3.0.1 edits
 % JO 2010-04-16 Release 3.0.2 editing starts
+% JO 2010-10-11 Release 3.1.0 edits
 
 \chapter{Synthesis Calibration}
 \label{chapter:cal}
@@ -94,8 +95,9 @@ tables:
       (\S~\ref{section:cal.tables.listcal}),
    \item {\tt plotcal} --- Plot calibration solutions 
       (\S~\ref{section:cal.tables.plotcal}),
-   \item {\tt setjy} --- Compute the model visibility for a specified
-      source flux density (\S~\ref{section:cal.prior.models}),
+    \item {\tt setjy} --- Compute model visibilities with the correct
+      flux density for a specified source
+      (\S~\ref{section:cal.prior.models}),
    \item {\tt smoothcal} --- Smooth calibration solutions derived from
       one or more sources (\S~\ref{section:cal.tables.smooth}),
    \item {\tt split} --- Write out new MS containing calibrated data
@@ -358,6 +360,20 @@ exporting with {\tt FITTP}, then this calibration will be in the
 data itself.  In this case, you do not want to re-apply these
 calibrations when processing in CASA.
 
+\subsection{Loading EVLA data in CASA}
+\label{section:cal.flow.evla}
+
+EVLA data can be loaded into CASA either via {\tt importevla} or by
+using the task {\tt importasdm}. Both tasks will convert ASDM raw data
+files into measurement sets. {\tt importasdm} will convert the data
+itself and the majority of the metadata. {\tt importevla} will run
+{\tt importasdm} followed by EVLA-specific corrections, like the
+application of the on-line flags (e.g. times when the subreflector was
+not in place or the an antenna was not on source), an option to clip
+values that are exactly zero (as of 2010, such values still may appear
+in the EVLA raw data), and flagging for shadowing.
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Preparing for Calibration}
@@ -415,7 +431,7 @@ calibrator observations or self-calibration will remain in the data.
 \label{section:cal.prior.curves}
 
 Large antennas (such as the 25-meter antennas used
-in the VLA and VLBA) have a forward gain and efficiency that changes with
+in the EVLA and VLBA) have a forward gain and efficiency that changes with
 elevation. Gain curve calibration involves compensating for the effects of
 elevation on the amplitude of the received signals at each antenna.
 Antennas are not absolutely rigid, and so their effective collecting
@@ -427,11 +443,11 @@ observing wavelength.  By design, this effect is usually minimized
 the gain decreasing at higher and lower elevations.  Gain curves are
 most often described as 2nd- or 3rd-order polynomials in zenith angle.
 
-Gain curve calibration has been implemented in CASA
-for the VLA (only), with gain curve polynomial coefficients available
-directly from the CASA data repository.  To make gain curve
-corrections for VLA data, set {\tt gaincurve=True}
-for any of the calibration tasks.
+Gain curve calibration has been implemented in CASA for the EVLA and
+VLA (only), with gain curve polynomial coefficients available directly
+from the CASA data repository.  To make gain curve corrections for
+EVLA and VLA data, set {\tt gaincurve=True} for any of the calibration
+tasks.
 
 {\bf ALERT:} The {\tt gaincurve} parameter must be supplied
 to any calibration task that allows pre-application of the prior
@@ -446,7 +462,7 @@ For example, to pre-apply the gaincurve during gain calibration:
   gaincal('data.ms','cal.G0',gaincuve=True, solint=0.,refant=11)
 \end{verbatim}
 \normalsize
-{\bf NOTE:} Set {\tt gaincurve=False} if you are not using VLA data.
+{\bf NOTE:} Set {\tt gaincurve=False} if you are not using E/VLA data.
 
 The gain curve will be calculated per timestamp.  Upon execution of a
 calibration task (e.g., {\tt gaincal}, {\tt bandpass}, {\tt applycal}, 
@@ -454,24 +470,21 @@ etc.), the gain
 curve data appropriate to the observing frequencies will be
 automatically retrieved from the data repository and applied.
 
-{\bf ALERT:} Currently, gain-curves for VLA are built into
+{\bf ALERT:} Currently, gain-curves for E/VLA are built into
 the CASA system and this is what is applied when {\tt gaincurve=True}.
 Therefore, the application of the gain-curves, if {\tt gaincurve=True},
-is allowed only if the VLA is set as the telescope of observation
+is allowed only if the E/VLA is set as the telescope of observation
 in the MS, otherwise an error will be generated.
 Set {\tt gaincurve=False} if you are not using VLA data.  
 A general mechanism for incorporating gaincurve information for
 other arrays will be made available in future releases.
-The gain-curve information available for the VLA is
+The gain-curve information available for the E/VLA is
 time-dependent (on timescales of months to years, at least for the 
 higher frequencies), and CASA will automatically select 
 the date-appropriate gain curve information.  Note, however, that 
 the time-dependence was poorly sampled prior to 2001, and so gain 
 curve corrections prior to this time should be considered with caution.  
-Similarly, gain curves have not yet been measured for antennas that 
-have been physically modified to meet EVLA specifications.
-We will include gain curves for EVLA antennas when those are measured
-and become available.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Atmospheric Optical Depth Correction}
@@ -512,7 +525,7 @@ Generalizations to antenna- and time-dependent opacities, including
 derivation (from weather information) and solving (directly from the
 visibility data) capabilities, will be made available in the future.
 
-For example, if the zenith optical depth is 0.1 nepers, then
+For example, if the zenith optical depth is $\tau=0.1$\,nepers, then
 use the following parameters:
 \small
 \begin{verbatim}
@@ -575,28 +588,36 @@ including plots of the seasonal variations.
 \subsection{Setting the Flux Density Scale using ({\tt setjy})}
 \label{section:cal.prior.models}
 
-When solving for visibility-plane calibration, CASA calibration applications
-compare the observed {\tt DATA} column with the {\tt MODEL\_DATA} column.
-The first time that an imaging or calibration task is executed for a
-given MS, the {\tt MODEL\_DATA} column is created and initialized with unit
-point source flux density visibilities (unpolarized) for all sources
-(e.g. AMP=1, phase=0$^{\circ}$).  The {\tt setjy} task is
-then used to set the proper flux density for flux calibrators.  For
-sources that are recognized flux calibrators (listed in Table
-\ref{table:fluxcal-table}), {\tt setjy} will calculate the flux
-densities, Fourier transform them and write the results to the
-{\tt MODEL\_DATA} column.  For the VLA, the default source models are
-customarily point sources defined by the Baars or Perley-Taylor flux
-density scales, or point sources of unit flux density if the flux
-density is unknown.  The {\tt MODEL\_DATA} column can also be filled with a
-model generated from an image of the source (e.g. the Fourier
-transform of an image generated after initial calibration of the
-data).
+When solving for visibility-plane calibration, CASA calibration
+applications compare the observed {\tt DATA} column with the {\tt
+  MODEL\_DATA} column.  The first time that an imaging or calibration
+task is executed for a given MS, the {\tt MODEL\_DATA} column is
+created and initialized with unit point source flux density
+visibilities (unpolarized) for all sources (e.g. AMP=1,
+phase=0$^{\circ}$).  
+
+The {\tt setjy} task is then used to set the proper flux density in
+the MODEL DATA column for flux calibrators. For sources that are
+recognized flux calibrators (listed in Tables
+\ref{table:fluxcal-table} and \ref{table:fluxcal-table-solarsystem}),
+{\tt setjy} can calculate the flux densities as a function of
+frequency (and time, for Solar System objects).  Otherwise, the flux
+densities should be manually specified.  The Fourier transform of the
+calibration source is then filled into the {\tt MODEL} column.
+
+For the EVLA, the default source models are customarily point sources
+defined by the Baars, Perley-Taylor, or Perley-Butler flux density
+scales ('Perley-Butler 2010' is preliminary as of CASA 3.1.0),
+or point sources of unit flux density if the flux density is
+unknown. The {\tt MODEL\_DATA} column can also be filled with a model
+generated from an image of the source (e.g. the Fourier transform of
+an image generated after initial calibration of the data).
 
 \vspace{5mm}
 \begin{table}[h!]
-\caption[Recognized Flux Density Calibrators.]
-        {\label{table:fluxcal-table}}
+\caption{Recognized Flux Density Calibrators. Note that the EVLA uses
+J2000 calibrator names.
+        {\label{table:fluxcal-table}}}
 \begin{center}
 \begin{tabular}{|ccc|} \hline
 {\bf 3C Name}  & {\bf B1950 Name}& {\bf J2000 Name} \\
@@ -611,30 +632,106 @@ data).
 \end{center}
 \end{table}
 
+\vspace{5mm}
+\begin{table}[h!]
+\caption{Recognized Solar System Objects for Flux Calibration
+        {\label{table:fluxcal-table-solarsystem}}}
+\begin{center}
+\begin{tabular}{|l|} \hline
+\hline
+\multicolumn{1}{|c|}{Planets} \\
+
+Mars, Jupiter, Uranus, Neptune, Pluto\footnotemark[1]\\
+\hline
+\multicolumn{1}{|c|}{Moons}\\
+{\it Jupiter:} Io, Europa, Ganymede, Callisto\\
+{\it Saturn:}  Titan \\
+{\it Neptune:} Triton \\
+%{\it Mars moons:} Phobos, Deimos\\
+%{\it Jupiter moons:} Io, Europa, Ganymede, Callisto\\
+%{\it Saturn moons:} Mimas, Enceladus, Tethys, Dione, Rhea, Titan, Hyperion\\
+%Iapetus, Phoebe, Janus, Epimetheus, Helene, Telesto, Calypso, Atlas\\
+%Prometheus, Pandora, Pan\\
+%{\it Uranus moons:} Ariel, Umbriel, Titania, Oberon, Miranda, Cordelia\\
+%Ophelia, Bianca, Cressida, Desdemona, Juliet, Portia, Rosalind\\
+%Belinda, Puck\\
+%{\it Neptune moons:} Triton, Nereid, Naiad, Thalassa, Despina, Galatea\\
+%Larissa, Proteus\\
+%{\it Pluto moon:} Charon\\
+\hline
+\multicolumn{1}{|c|}{Asteroids}\\
+Ceres, Pallas\footnotemark[2], Vesta\footnotemark[2], Juno\footnotemark[2], Victoria\footnotemark[2], Davida\footnotemark[2]\\
+%Ceres, Pallas, Juno, Vesta, Astraea, Hygiea, Parthenope, Victoria\\
+%Davida, Interamnia\\
+\hline
+\end{tabular}
+\end{center}
+\footnotesize
+$^1$ Pluto alone.  No allowance is made for the possibility of Charon
+  being in the field.\\
+$^2$ not recommended for this release (The temperature is not yet adjusted
+   for varying distance from the Sun.  The model data can be scaled after
+   running setjy, but it is an involved process.)
+\normalsize
+
+\end{table}
+
+
 The inputs for {\tt setjy} are:
 \small
 \begin{verbatim}
-#  setjy :: Place flux density of sources in the measurement set:
-
-vis                 =         ''        #   Name of input visibility file
-field               =         ''        #   Field name list or field ids list
-spw                 =         ''        #   Spectral window identifier (list)
-modimage            =         ''        #   Model image name
-fluxdensity         =         -1        #   Specified flux density [I,Q,U,V]
-standard            = 'Perley-Taylor 99'        #   Flux density standard
+#  setjy :: Fills the model column with the visibilities of a calibrator
+vis                 =         ''        #  Name of input visibility file
+field               =         ''        #  Field name(s)
+spw                 =         ''        #  Spectral window identifier (list)
+modimage            =         ''        #  File location for field model
+scalebychan         =      False        #  scale the flux density on a per channel basis or else on a per spw basis
+fluxdensity         =         -1        #  Specified flux density [I,Q,U,V]; -1 will lookup values
+standard            = 'Perley-Taylor 99' #  Flux density standard
+async               =      False        #  If true the taskname must be started using setjy(...)
 \end{verbatim}
-\normalsize
-By default the {\tt setjy} task will cycle through all fields and
-spectral windows, setting the flux density either to 1 Jy
-(unpolarized), or if the source is recognized as one of the
-calibrators in the above table, to the flux density (assumed
-unpolarized) appropriate to the observing frequency.  For example,
-to run {\tt setjy} on a measurement set called {\tt data.ms}:
-\small
+\normalsize By default the {\tt setjy} task will cycle through all
+fields and spectral windows (or even cheannels, if {\tt scalebychan =
+  True}, setting the flux density either to 1 Jy (unpolarized), or if
+the source is recognized as one of the calibrators in the above table,
+to the flux density (assumed unpolarized) appropriate to the observing
+frequency.  For example, to run {\tt setjy} on a measurement set
+called {\tt data.ms}: \small
 \begin{verbatim}
   setjy(vis='data.ms')                # This will set all fields and spectral windows
 \end{verbatim}
 \normalsize
+
+
+Most calibrator sources are based on radio emission from quasars and
+jets. The spectral indices of these sources are such that at (sub)mm
+wavelengths the majority of these sources become too weak and variable
+to be reliable flux estimators. Alternatives are thermal objects such
+as planets, moons, and asteroids. Those sources, however, are all
+Solar System objects, which implies that they move and may be
+(strongly) resolved. The {\tt standard='Butler-JPL-Horizons 2010'}
+option of {\tt setjy} includes flux density calibration using Solar
+System objects. CASA currently supports the objects listed in
+Table~\ref{table:fluxcal-table-solarsystem}. These names are
+recognized when they are used in the 'field'
+parameter in {\tt setjy}.  In that case, {\tt setjy} will obtain the
+geocentric distance and angular diameter at the time of the
+observation from a (JPL--Horizons) ephemeris and calculate model
+visibilities.  Currently the objects are modeled as uniform
+temperature disks, but effects like primary beam attenuation and limb
+darkening will be accounted for soon. Note that this model may
+oversimplify the real structure, in particular asteroids.
+
+An example, using data from the M99 tutorial in 
+\href{http://casaguides.nrao.edu/index.php?title=CARMA_spectral_line_mosaic_M99}:
+
+{\tt setjy(vis='c0104I', field='MARS', spw='0~2', standard='Butler-JPL-Horizons 2010')}
+
+Tip: Running casalog.filter('INFO1') before running setjy with a Solar
+System object may send the logger a reference to the temperature
+measurement.  Use casalog.filter('INFO') to restore the normal logging
+level.
+
 
 {\bf ALERT:} At this time, all that {\tt setjy} does is to fill
 the {\tt MODEL\_DATA} column of the MS with the Fourier transform of
@@ -673,7 +770,11 @@ the antenna gain-elevation and atmospheric opacity Prior Calibrations
 (\S~\ref{section:cal.prior.curves}--\ref{section:cal.prior.opacity})
 in that it is applied to (and carried with) the MS itself, rather than
 via other tables or parameters to the subsequent tasks.  It is more
-like the Tsys correction (\S~\ref{section:cal.prior.tsys}) in this regard.
+like the Tsys correction (\S~\ref{section:cal.prior.tsys}) in this
+regard.
+
+
+
 
 \subsubsection{Using Calibration Models for Resolved Sources}
 \label{section:cal.prior.models.resolved}
@@ -710,7 +811,7 @@ see the {\em VLA Calibration Manual} at:
 \begin{quote}
    \url{http://www.vla.nrao.edu/astro/calib/manual/}
 \end{quote}
-for details on the use of standard calibrators for the VLA.
+for details on the use of standard calibrators for the E/VLA.
 
 Model images for some flux density calibrators are provided with CASA:
 \begin{itemize}
@@ -982,7 +1083,31 @@ gencal(vis='test.ms',caltable='test.sbd',caltype='sbd', \
 In the following example, antenna position corrections in meters (in
 ITRF) for antenna EA09 (dBx=0.01, dBy=0.02, dBz=0.03) and for antenna
 EA10 (dBx=-0.03, dBy=-0.01, dBz=-0.02) are introduced.  Note that 
-three parameters are required for each antenna. 
+three parameters are required for each antenna. The antenna offsets
+can be obtained for the 'EVLA/VLA Baseline Corrections' web page:
+{\url http://www.vla.nrao.edu/astro/archive/baselines}. The table
+given on this webpage has a format like:\\ 
+
+\begin{verbatim}
+;                2010 BASELINE CORRECTIONS IN METERS
+;ANT
+;MOVED OBSDATE   Put_In_ MC(IAT)  ANT  PAD    Bx      By      Bz
+;
+JAN27   FEB12     FEB21  01:57    11   E04  0.0000  0.0000  0.0000
+JAN27   FEB12     FEB21  01:57    26   W03 -0.0170  0.0204  0.0041
+MAR24   MAR25     MAR26  18:28    17   W07 -0.0061 -0.0069 -0.0055
+APR21   MAY02     MAY04  23:25    12   E08 -0.0072  0.0045 -0.0017
+\end{verbatim}
+
+
+If your observations fall in between the 'Antenna Moved' and
+'Put\_In\_' dates of a given antenna, you may choose to apply the
+offsets in that table; the 'Put\_In\_' time stamp marks the date where
+the more accurate solution was introduced in the data stream directly
+and no correction is required anymore. In {\tt gencal} the offsets
+will be inserted as:
+
+
 
 \small
 \begin{verbatim}
@@ -3169,6 +3294,13 @@ solved and applied.  You can also do any required smoothing of tables
 using {\tt smoothcal} (\S~\ref{section:cal.tables.smooth}), as this
 is not yet available in {\tt accum} or {\tt applycal}.
 
+Note: {\tt applycal} will flag all data that have no calibration
+solution. Flags will distribute into all of your scratch columns,
+ie. it will affect your uncalibrated visibilities, too. It may thus be
+wise to make a backup of your flags with {\tt flagmanager} before
+running {\tt applycal}.
+
+
 If you are not doing polarization calibration or imaging, then you can set 
 {\tt parang=False} to make the calculations faster.  If you are
 applying polarization calibration, or wish to make polarization
@@ -3374,7 +3506,7 @@ split(vis='ngc5921.usecase.ms',
 Time and channel averaging are now available using the {\tt timebin}
 and {\tt width} parameters.
 
-The {\tt timebin} parameter give the averaging time.  It takes a
+The {\tt timebin} parameter gives the averaging interval.  It takes a
 quantity, e.g.
 \small
 \begin{verbatim}
@@ -3382,64 +3514,74 @@ quantity, e.g.
 \end{verbatim}
 \normalsize
 
+When time averaging, the {\tt ignorables} subparameter can be used to
+specify that the bins should \emph{not} be split by changes in
+{\tt SCAN\_NUMBER}, (sub){\tt ARRAY\_ID}, and/or {\tt STATE\_ID}.
+
+{\bf ALERT:} The {\tt ignorables} subparameter will change name to
+{\tt combine} in the next release.
+
+
 The {\tt width} parameter defines the number of channels to average to
 form a given output channel.  This can be specified globally for all
 {\tt spw}, e.g.
+
 \small
 \begin{verbatim}
    width = 5
 \end{verbatim}
 \normalsize
+
 or specified per {\tt spw}, e.g.
+
 \small
 \begin{verbatim}
    width = [2,3]
 \end{verbatim}
 \normalsize
+
 to average 2 channels of 1st spectral window selected and 3 in the 
 second one.
 
-{\bf ALERT}: The ability to average channels in both time and
-channel simultaneously is not yet available.  Also, if you average
-time and channel through sequential runs of {\tt split}, you must
-average in time first.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Hanning smoothing of uv data ({\tt hanningsmooth})}
 \label{section:cal.other.hanningsmooth}
 
-The {\tt hanningsmooth} task will apply Hanning smoothing to a
-spectral line uv data set.  It will be applied to the data in the {\tt
-DATA} column of the input MS and it writes the Hanning smoothed data
-into the {\tt CORRECTED\_DATA} column of that same MS.
+For strong spectral line sources (like RFI sources), the Gibbs
+phenomenon may cause ringing across the frequency channels of an
+observation. This is called the Gibbs pheomenon and a proven remedy is
+the Hanning smoothing algorithm. Hanning smoothing is a running mean
+across the spectral axis with a triangle as a smoothing kernel. The
+central channel is weighted by 0.5 and the two adjacent channels by
+0.25 to preserve the flux. Hanning smoothing significantly reduces
+Gibbs ringing but there's no gain without a penalty and here it is the
+loss of a factor of two in spectral resolution.
 
-Hanning smoothing replaces the contents of channel {\it i} with a
-weighted sum of the contents of a number of channels surrounding
-channel {\it i}.  In its current form, only channels {\it i-1}, {\it
-i}, and {\it i+1} participate, with weights 0.25, 0.50, and 0.25
-respectively, but we intend to extend the kernel size in future
-releases.  A typical use for Hanning smoothing is to remove Gibbs
-ringing.
-
-The inputs are:
+In CASA, the {\tt hanningsmooth} task will apply Hanning smoothing to a
+spectral line uv data measurement set.  The inputs are:
 
 \small
 \begin{verbatim}
-#  hanningsmooth :: Hanning smooth frequency channel data
-vis                 = 'ngc5921.split.ms'     #  Name of input visibility file (MS)
-async               =      False        
+#  hanningsmooth :: Hanning smooth frequency channel data to remove Gibbs ringing
+vis                 =         ''        #  Name of input visibility file (MS)
+datacolumn          =      'all'        #  the name of the MS column into which to write the smoothed data
+outputvis           =         ''        #  name of the output visibility file (MS)
+async               =      False        #  If true the taskname must be started using hanningsmooth(...)
 \end{verbatim}
 \normalsize
 
-In many cases the data to be smoothed are in the {\tt CORRECTED\_DATA}
-column of the MS; in that case, run {\tt split} first to copy the
-contents of the {\tt CORRECTED\_DATA} column of the input MS to the
-{\tt DATA} column of the output MS.  Then run {\tt hanningsmooth} on
-the newly created MS.
-
-After hanning smoothing, the contents of the first and last channel of
-each visibility are undefined; {\tt hanningsmooth} will therefore flag
-the first and last channel.
+{\tt hanningsmooth} will operate on the input measurement set if no
+{\tt outputvis} file name is provided. This option will keep the disk
+usage of large datasets under control. But one should be aware that
+the data is overwritten. If {\tt outputvis} is provided, the task will
+copy the input MS to a new file with that name and operate there. The
+{\tt datacolumn} parameter determines which of the data columns is to
+be Hanning smoothed: {\tt 'all', 'corrected'} or {\tt 'data'}. {\tt
+  'all'} refers to both, the {\tt CORRECTED\_DATA} and the {\tt DATA}
+column. If {\tt 'corrected'} is specified but does not exist in the
+MS, {\tt hanningsmooth} will create this column for your convenience.
 
 {\bf ALERT}: We intend to make the kernel size a user supplied
 parameter.  In the longer term we intend to offer other varieties of
@@ -3576,7 +3718,10 @@ range of the MS will be written out (not just the channels specified
 in {\tt spw} that have had the subtraction), so follow up with
 a {\tt split} if you want to further restrict the output channel range.
 If {\tt splitdata=True}, then {\tt uvcontsub} will make two output
-MS with names {\tt <input msname>.contsub} and {\tt <input msname>.cont}.
+MS with names {\tt <input msname>.contsub} and {\tt <input
+  msname>.cont}.
+
+
 {\bf ALERT:} be sure to
 run with {\tt fitmode='subtract'} if setting {\tt splitdata=True}.
 
@@ -3639,24 +3784,30 @@ The inputs are:
 \small
 \begin{verbatim}
 #  cvel :: regrid an MS to a new spectral window / channel structure or frame
-vis                 =         ''   #  Name of input measurement set
-outputvis           =         ''   #  Name of output measurement set
-passall             =      False   #  Pass through (to output MS) non-selected data with no change
-field               =         ''   #  Select field using field id(s) or field name(s)
-spw                 =         ''   #  Select spectral window/channels
-selectdata          =      False   #  Other data selection parameters
-mode                =  'channel'   #   Regridding mode
-     nchan          =         -1   #  Number of channels in output spw (-1=all)
-     start          =          0   #  first input channel to use
-     width          =          1   #  Number of input channels to average
-     interpolation  =   'linear'   #  Spectral interpolation method
+vis                 =         ''        #  Name of input measurement set
+outputvis           =         ''        #  Name of output measurement set
+passall             =      False        #  Pass through (write to output MS) non-selected data with no change
+field               =         ''        #  Select field using field id(s) or field name(s)
+spw                 =         ''        #  Select spectral window/channels
+selectdata          =       True        #  Other data selection parameters
+     timerange      =         ''        #  Range of time to select from data
+     array          =         ''        #  (sub)array indices
+     antenna        =         ''        #  Select data based on antenna/baseline
+     scan           =         ''        #  scan number range
 
-phasecenter         =         ''   #  Image phase center: position or field index
-restfreq            =         ''   #  rest frequency (see help)
-outframe            =         ''   #  Output frame (''=keep input frame)
-veltype             =    'radio'   #  velocity definition
-hanning             =      False   #  Turn on Hanning smoothing of spectral channels
-async               =      False   #  If true the taskname must be started using cvel(...)
+mode                =  'channel'        #   Regridding mode
+     nchan          =         -1        #  Number of channels in output spw (-1=all)
+     start          =          0        #  first input channel to use
+     width          =          1        #  Number of input channels to average
+     interpolation  =   'linear'        #  Spectral interpolation method
+
+phasecenter         =         ''        #  Image phase center: position or field index
+restfreq            =         ''        #  rest frequency (see help)
+outframe            =         ''        #  Output frame (''=keep input frame)
+veltype             =    'radio'        #  velocity definition
+hanning             =      False        #   If true, Hanning smooth data before regridding to remove Gibbs ringing.
+async               =      False        #  If true the taskname must be started using cvel(...)
+
 \end{verbatim}
 \normalsize
 
@@ -3702,7 +3853,7 @@ into an output frame without regridding.  This is done with
 cvel(vis='test_w3oh_nohann.ms',
      outputvis ='test_w3oh_nohann_chanbary.ms',
      mode='channel',nchan=-1,start=0,width=1,
-     interpolation='nearest',
+     interpolation='linear',
      phasecenter='',
      spw='',
      restfreq='1665.4018MHz',
@@ -3717,10 +3868,11 @@ spectral windows), but is nominally faster.  This is not equivalent to
 a {\tt clean} output gridding mode, although {\tt clean} will
 work on this spectral lattice.
 
-We recommend using the {\tt mode='velocity''} and {\tt  mode='frequency'}
+Mode {\tt channel} is intended to not interpolate between channels. It
+will perform binning if needed.  For most scientific applications we
+recommend using the {\tt mode='velocity''} and {\tt mode='frequency'}
 options, as it is easiest to determine what the resulting
-channelization will be.  For example:
-\small
+channelization will be. For example: \small
 \begin{verbatim}
 cvel(vis='test_w3oh_nohann.ms',
      outputvis ='test_w3oh_nohann_cvellsrk.ms',
@@ -3741,8 +3893,39 @@ cvel(vis='test_w3oh_nohann.ms',
      outframe='BARY')
 
 \end{verbatim}
-\normalsize
-will transform a MS into the LSRK and BARYcenter frames respectively.
+\normalsize will transform a MS into the LSRK and BARYcenter frames
+respectively.  
+
+The sign of the {\tt width} parameter determines whether the channels
+run along increasing or decreasing values of frequency or velocity (ie
+if the cube is reversed or not). 
+
+
+
+The intent of {\tt cvel} regridding is to transform channel labels and
+the visibilities to a spectral reference frame which is appropriate
+for the science analysis, e.g. from TOPO to LSRK, e.g. to correct for
+Doppler shifts throughout the time of the observation. Naturally,
+this will change the shape of the spectral features to some
+extent. According to the Nyquist theorem you should oversample a
+spectrum with twice the numbers of channels to retain the
+shape. Based on some tests, however, we recommend to observe with at
+least 3-4 times the number of channels for each significant spectral
+feature (like 3-4 channels per linewidth). This will minimize
+regridding artifacts in {\tt cvel}.  
+
+If {\tt cvel} has already established the grid that is desired for the
+imaging, {\tt clean} should be run with the default channel mode ({\tt
+  > width=1}) or with exactly the same frequency/velocity parameters
+as > used in {\tt cvel}. This will avoid additional regridding in {\tt
+  clean}. Hanning smoothing is optionally offered in {\tt cvel}, but
+tests have shown that already the regridding process itself, if it
+involved a transformation from TOPO to a non-terrestrial reference
+frame, implies some smoothing (due to channel interpolation) such that
+Hanning smoothing may not be necessary.
+
+
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

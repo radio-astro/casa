@@ -24,6 +24,8 @@
 % STM 2009-12-15  Release 3.0.0 final
 % JO 2010-01-17     Release 3.0.1 edits
 % JO 2010-05-25     Release 3.0.2 edits
+% JO 2010-06-22     remove makemask references
+% JO 2010-10-13   Release 3.1.0 edits
 
 \chapter{Synthesis Imaging}
 \label{chapter:im}
@@ -115,7 +117,7 @@ Information on other useful tasks and parameter setting can be found in:
 
 We now describe some parameters are are common to the imaging
 tasks.  These should behave the same way in any imaging task
-that they are found in.  These are in alphabetical order.
+that they are found in.  These are in alphabetical order.\\[1cm]
 
 {\bf ALERT:} There are still a subset of
 data selection parameters used in the imaging tasks:
@@ -242,15 +244,107 @@ the highest and lowest frequency channels in the input {\tt spw}(s).
 Currently, there is no way to choose the center frequency of the 
 output image plane independently.
 
-Higher order MFS (using {\tt nterms>1}) is now available in CASA
-imaging.  This does a Taylor expansion in frequency suitable for
-wide-band narrow-field imaging.  The default {\tt nterms=1} is
-equivalent to assuming no frequency dependence, while {\tt nterms=2} 
-is equivalent to the Sault-Wieringa algorithm 
-\footnote{R.J.~Sault \& M.H.~Wieringa, Astron.\ Astrophys.\ Suppl., 108,
-585--594 (1994).}
-The {\tt reffreq} parameter sets the reference frequency about which the
-Taylor expansion is done.
+WideBand imaging ({\tt mfs} with {\tt nterms}$>1$) is now available in
+CASA. This algorithm models the wide-band sky brightness as a linear
+combination of Gaussian-like functions whose amplitudes follow a
+Taylor-polynomial in frequency.  The output images are a set of
+Taylor-coefficient images, from which spectral index and curvature
+maps are derived. The {\tt reffreq} parameter sets the reference
+frequency about which the Taylor expansion is done.
+
+{\bf Alert:} The MS-MFS (multiscale-multifrequency) algorithm in the
+current release is new and is still being
+developed/tested/debugged. Its basic operation has been tested on
+wide-band EVLA data for Stokes I imaging.
+
+{\bf Explanation of the Parameters:} \\
+{\tt nterms}: The number of terms in the Taylor polynomial used to
+model the frequency structure.  {\tt nterms}$>1$ triggers MS-MFS. {\tt
+  nterms}$=1$ triggers standard point-source clean or
+multi-scale-clean.  Note: The choice of {\tt nterms} follows the same
+rules used while fitting a polynomial to a 1D set of noisy data
+points. To prevent overfitting, the order of the polynomial needs to
+depend on the available signal-to-noise in the data.  A very rough
+rule-of-thumb is as follows: For high SNR data (single channel
+SNR$>$100), and fields dominated by point-sources with spectral
+indices around $-1.0$ across a 2:1 bandwidth, choose {\tt nterms}$=3$
+or $4$. For lower SNR data ($5<$SNR$<100$), flatter spectra, or when
+there is significant extended emission, {\tt nterms}$=2$ is a much
+safer option. For very low SNR data (SNR$<5$), choose {\tt nterms}$=1$).
+
+
+
+{\tt reffreq}: The reference frequency used to compute Taylor
+functions $[ ({\rm freq} - {\rm reffreq})/({\rm reffreq}) ]^{i}$.  If
+left blank ({\tt reffreq}=''), it defaults to the middle frequency of
+the selected data.  Note : For the current release, the use of {\tt
+  reffreq}='' is recommended.
+
+
+
+{\tt multiscale}: The MS-MFS algorithm always uses scale sizes set via
+the {\tt multiscale} parameter.  For point-source deconvolution, set
+{\tt multiscale}=[0] (also the default).  Note: Unlike standard
+msclean ({\tt multiscale} = [0,6,10,....] with {\tt nterms}=1), with
+higher {\tt nterms} the largest specified scale size must lie within
+the sampled range of the interferometer. If not, there can be an
+ambiguity in the spectral reconstuction at very large spatial scales.
+
+{\tt gridmode}: Wideband W-Projection is supported, and can be
+triggered via {\tt gridmode}='widefield'.
+
+
+{\tt modelimage}: Supply a list of Taylor-coefficient images, to start the deconvolution from.  
+               If only one image is specified, it will be used as the model for the 'tt0' image. 
+     
+
+{\bf Output images}: [xxx.image.tt0,
+               xxx.image.tt1,... ] : Images of Taylor coefficients
+               that describe the frequency-structure.  The "tt0" image
+               is the total-intensity image at the reference
+               frequency, and is equivalent to "xxx.image" obtained
+               via standard imaging.
+
+
+               [xxx.image.alpha, xxx.image.beta] : Spectral index and
+               spectral curvature at the reference-frequency. These
+               are computed from tt0, tt1, tt2 only for regions of the
+               image where there is sufficient signal-to-noise to
+               compute them. These regions are chosen via a threshold
+               on the intensity image (tt0) computed as MAX(
+               userthreshold*2 , peakresidual/10 ) ). This threshold
+               is reported in the logger.  Elsewhere, the values are
+               currently set to zero.
+
+
+The following is a list of differences between MS-MFS ({\tt
+                 nterms}$>1$) and standard imaging, in the current
+               CASA release.
+
+\begin{enumerate}
+
+\item Minor cycle operates only on the inner quarter of the image: The
+  algorithm involves convolutions via FFTs and restricts cleaning to
+  the inner quarter to prevent aliasing.  The user-defined image size
+  needs to account for this.  Note, this has not been tested for
+  non-square-shaped images.
+
+\item Iterations always proceed as cs-clean major/minor cycles, and
+  uses the full psf during minor cycle iterations. There are currently
+  no user-controls on the number of iterations per major cycle
+  (cyclefactor, cyclespeedup), and the flux-limit per major cycle is
+  chosen as 10\% of the peak residual. In future releases, this will
+  be made more adaptive/controllable.
+
+\item Currently, the following options are not supported for {\tt
+    nterms}$>1$: {\tt psfmode,} {\tt pbcorr}, {\tt minpb}, {\tt
+    imagermode}='mosaic', {\tt outlierfile}, {\tt
+    gridmode}='aprojection', {\tt cyclespeedup},{\tt cyclefactor},
+  anything but {\tt stokes}="I". These options are currently under
+  development and testing.
+
+\end{enumerate}
+
 
 %%%%%%
 \subsubsection{Mode {\tt channel} }
@@ -281,23 +375,20 @@ the MS.  {\bf ALERT:} This often results in extra blank channels at the
 beginning and end of the image cube, so it is usually more precise to
 specify {\tt nchan} and {\tt start} to get what you want.  
 
-The channelization of the resulting image is determined by the 
-channelization in the MS of {\tt vis} of the first {\tt spw} 
-specified (the ``reference {\tt spw}''). The actual channels to
-be gridded and used in the clean are selected via the {\tt spw} 
-parameter as usual. 
-The resulting image cube will have {\tt nchan} channels spaced
-evenly in frequency.  The
-first output channel will be located at the frequency of channel 
-{\tt start} in the (first) reference {\tt spw} (independent of what
-channels are selected using {\tt spw}).  If {\tt width}$ > 1$,
-then input MS channels with centers within a frequency range given by 
-$({\tt width}+1)/2$ times the reference {\tt spw} spacing
-will be gridded together (as in {\tt mode = 'mfs'} above)
-into the channels of the output image cube.  
-The output channel 
-spacing is thus given by {\tt width} channels in the reference {\tt spw}
-of the MS.  
+The channelization of the resulting image is determined by the
+channelization in the MS of {\tt vis} of the first {\tt spw} specified
+(the ``reference {\tt spw}''). The actual channels to be gridded and
+used in the clean are selected via the {\tt spw} parameter as usual.
+The resulting image cube will have {\tt nchan} channels spaced evenly
+in frequency.  The first output channel will be located at the
+frequency of channel {\tt start} in the (first) reference {\tt spw}
+(independent of what channels are selected using {\tt spw}).  If {\tt
+  width}$ > 1$, then input MS channels with centers within a frequency
+range given by $({\tt width}+1)/2$ times the reference {\tt spw}
+spacing will be gridded together (as in {\tt mode = 'mfs'} above) into
+the channels of the output image cube.  The output channel spacing is
+thus given by {\tt width} channels in the reference {\tt spw} of the
+MS.
   
 The {\tt interpolation} sub-parameter
 (\S~\ref{section:im.pars.mode.interpolation}) sets how channels are
@@ -613,7 +704,9 @@ to reveal the following sub-parameters:
 \begin{verbatim}
 uvtaper       =       True   #  Apply additional uv tapering of  visibilities.
    outertaper =         []   #  uv-taper on outer baselines in uv-plane
-   innertaper =         []   #  uv-taper in center of uv-plane (not implemented)\end{verbatim}
+   innertaper =         []   #  uv-taper in center of uv-plane (not
+implemented)
+\end{verbatim}
 \normalsize
 The sub-parameters specify the size and optionally shape and
 orientation of this Gaussian in the uv-plane or optionally the
@@ -923,10 +1016,12 @@ narrow and wide-field imaging modes.
 {\bf Toolkit Note:} MEM is not included in {\tt clean}, but is
 available in the toolkit.
 
-The {\tt clean} task uses many
-of the common imaging parameters.  These are described above in
-\S~\ref{section:im.pars}.  There are also a number of parameters
-specific to {\tt clean}.  These are listed and described below.
+{\tt clean} will use the {\tt CORRECTED\_DATA} column from your
+measurement set if it exists. If that column is not available, it will
+use {\tt DATA}. The {\tt clean} task utilizes many of the common imaging
+parameters.  These are described above in \S~\ref{section:im.pars}.
+There are also a number of parameters specific to {\tt clean}.  These
+are listed and described below.
 
 The default inputs to {\tt clean} are:
 \small
@@ -1554,8 +1649,10 @@ list.  For example,
 \begin{verbatim}
   mask = [ [110,110,150,145], [180,70,190,80] ]
 \end{verbatim}
-\normalsize
-defines two boxes.
+\normalsize 
+defines two boxes. They will be applied to all
+channels. To define different regions for different channel ranges, you
+may define a box, a region, or use interactive mode.
 
 %%%%%%
 \subsubsection{Using clean box files}

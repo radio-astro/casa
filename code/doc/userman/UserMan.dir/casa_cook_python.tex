@@ -7,6 +7,7 @@
 % STM 2008-03-26  beta patch 1.0
 % STM 2008-06-10  patch 2.0, add conditionals and loops
 % STM 2008-08-15  beta patch 2.2 updates
+% JO  2010-10-25  updates for Release 3.1.0
 
 \chapter[Appendix: Python and CASA]{Python and CASA}
 \label{chapter:python}
@@ -28,18 +29,19 @@ fieldIndex, antennaID, etc) will start with 0.  Another example is
 that indenting of lines means something to Python, of which users will
 have to be aware.
 
-Some key links are:
+Currently, CASA uses python 2.6 (2.5 for the Mac OS 10.5 version).  Some
+key links to python are:
 
 \begin{itemize}
    \item \url{http://python.org}  --  Main Python page
-   \item \url{http://python.org/doc/2.4.2/ref/ref.html}  --  Python Reference
-   \item \url{http://python.org/doc/2.4.2/tut/tut.html}  --  Python Tutorial
+   \item \url{http://docs.python.org/release/2.6.5/tutorial/index.html}  --  Python Reference
+   \item \url{http://docs.python.org/release/2.6.5/reference/index.html}  --  Python Tutorial
    \item \url{http://ipython.scipy.org}  --  IPython page
    \item \url{http://matplotlib.sourceforge.net}  --  matplotlib page
 \end{itemize}
 
 Each of the features of these components behave in the standard way
-within CASA . In the following sections, we outline the key elements
+within CASA. In the following sections, we outline the key elements
 for analysis interactions; see the Python references and the
 IPython page for the full suite of functionality.
 
@@ -500,66 +502,70 @@ Note that the {\tt os} package has many useful methods.  You can
 see these by using tab-completion:
 \small
 \begin{verbatim}
-  CASA <2>: os.<tab>      
-Display all 223 possibilities? (y or n)
-os.EX_CANTCREAT            os.X_OK                    os.fdatasync               os.readlink
-os.EX_CONFIG               os._Environ                os.fdopen                  os.remove
-os.EX_DATAERR              os.__all__                 os.fork                    os.removedirs
-os.EX_IOERR                os.__class__               os.forkpty                 os.rename
-os.EX_NOHOST               os.__delattr__             os.fpathconf               os.renames
-os.EX_NOINPUT              os.__dict__                os.fstat                   os.rmdir
-os.EX_NOPERM               os.__doc__                 os.fstatvfs                os.sep
-os.EX_NOUSER               os.__file__                os.fsync                   os.setegid
-os.EX_OK                   os.__getattribute__        os.ftruncate               os.seteuid
-os.EX_OSERR                os.__hash__                os.getcwd                  os.setgid
-os.EX_OSFILE               os.__init__                os.getcwdu                 os.setgroups
-os.EX_PROTOCOL             os.__name__                os.getegid                 os.setpgid
-os.EX_SOFTWARE             os.__new__                 os.getenv                  os.setpgrp
-os.EX_TEMPFAIL             os.__reduce__              os.geteuid                 os.setregid
-os.EX_UNAVAILABLE          os.__reduce_ex__           os.getgid                  os.setreuid
-os.EX_USAGE                os.__repr__                os.getgroups               os.setsid
-os.F_OK                    os.__setattr__             os.getloadavg              os.setuid
-os.NGROUPS_MAX             os.__str__                 os.getlogin                os.spawnl
-os.O_APPEND                os._copy_reg               os.getpgid                 os.spawnle
-os.O_CREAT                 os._execvpe                os.getpgrp                 os.spawnlp
-os.O_DIRECT                os._exists                 os.getpid                  os.spawnlpe
-os.O_DIRECTORY             os._exit                   os.getppid                 os.spawnv
-os.O_DSYNC                 os._get_exports_list       os.getsid                  os.spawnve
-os.O_EXCL                  os._make_stat_result       os.getuid                  os.spawnvp
-os.O_LARGEFILE             os._make_statvfs_result    os.isatty                  os.spawnvpe
-os.O_NDELAY                os._pickle_stat_result     os.kill                    os.stat
-os.O_NOCTTY                os._pickle_statvfs_result  os.killpg                  os.stat_float_times
-os.O_NOFOLLOW              os._spawnvef               os.lchown                  os.stat_result
-os.O_NONBLOCK              os.abort                   os.linesep                 os.statvfs
-os.O_RDONLY                os.access                  os.link                    os.statvfs_result
-os.O_RDWR                  os.altsep                  os.listdir                 os.strerror
-os.O_RSYNC                 os.chdir                   os.lseek                   os.symlink
-os.O_SYNC                  os.chmod                   os.lstat                   os.sys
-os.O_TRUNC                 os.chown                   os.major                   os.sysconf
-os.O_WRONLY                os.chroot                  os.makedev                 os.sysconf_names
-os.P_NOWAIT                os.close                   os.makedirs                os.system
-os.P_NOWAITO               os.confstr                 os.minor                   os.tcgetpgrp
-os.P_WAIT                  os.confstr_names           os.mkdir                   os.tcsetpgrp
-os.R_OK                    os.ctermid                 os.mkfifo                  os.tempnam
-os.SEEK_CUR                os.curdir                  os.mknod                   os.times
-os.SEEK_END                os.defpath                 os.name                    os.tmpfile
-os.SEEK_SET                os.devnull                 os.nice                    os.tmpnam
-os.TMP_MAX                 os.dup                     os.open                    os.ttyname
-os.UserDict                os.dup2                    os.openpty                 os.umask
-os.WCONTINUED              os.environ                 os.pardir                  os.uname
-os.WCOREDUMP               os.error                   os.path                    os.unlink
-os.WEXITSTATUS             os.execl                   os.pathconf                os.unsetenv
-os.WIFCONTINUED            os.execle                  os.pathconf_names          os.urandom
-os.WIFEXITED               os.execlp                  os.pathsep                 os.utime
-os.WIFSIGNALED             os.execlpe                 os.pipe                    os.wait
-os.WIFSTOPPED              os.execv                   os.popen                   os.wait3
-os.WNOHANG                 os.execve                  os.popen2                  os.wait4
-os.WSTOPSIG                os.execvp                  os.popen3                  os.waitpid
-os.WTERMSIG                os.execvpe                 os.popen4                  os.walk
-os.WUNTRACED               os.extsep                  os.putenv                  os.write
-os.W_OK                    os.fchdir                  os.read                    
+  CASA <2>: os.<tab>
+os.EX_CANTCREAT            os._Environ                os.fdatasync               os.remove
+os.EX_CONFIG               os.__all__                 os.fdopen                  os.removedirs
+os.EX_DATAERR              os.__builtins__            os.fork                    os.rename
+os.EX_IOERR                os.__class__               os.forkpty                 os.renames
+os.EX_NOHOST               os.__delattr__             os.fpathconf               os.rmdir
+os.EX_NOINPUT              os.__dict__                os.fstat                   os.sep
+os.EX_NOPERM               os.__doc__                 os.fstatvfs                os.setegid
+os.EX_NOUSER               os.__file__                os.fsync                   os.seteuid
+os.EX_OK                   os.__getattribute__        os.ftruncate               os.setgid
+os.EX_OSERR                os.__hash__                os.getcwd                  os.setgroups
+os.EX_OSFILE               os.__init__                os.getcwdu                 os.setpgid
+os.EX_PROTOCOL             os.__name__                os.getegid                 os.setpgrp
+os.EX_SOFTWARE             os.__new__                 os.getenv                  os.setregid
+os.EX_TEMPFAIL             os.__reduce__              os.geteuid                 os.setreuid
+os.EX_UNAVAILABLE          os.__reduce_ex__           os.getgid                  os.setsid
+os.EX_USAGE                os.__repr__                os.getgroups               os.setuid
+os.F_OK                    os.__setattr__             os.getloadavg              os.spawnl
+os.NGROUPS_MAX             os.__str__                 os.getlogin                os.spawnle
+os.O_APPEND                os._copy_reg               os.getpgid                 os.spawnlp
+os.O_CREAT                 os._execvpe                os.getpgrp                 os.spawnlpe
+os.O_DIRECT                os._exists                 os.getpid                  os.spawnv
+os.O_DIRECTORY             os._exit                   os.getppid                 os.spawnve
+os.O_DSYNC                 os._get_exports_list       os.getsid                  os.spawnvp
+os.O_EXCL                  os._make_stat_result       os.getuid                  os.spawnvpe
+os.O_LARGEFILE             os._make_statvfs_result    os.isatty                  os.stat
+os.O_NDELAY                os._pickle_stat_result     os.kill                    os.stat_float_times
+os.O_NOCTTY                os._pickle_statvfs_result  os.killpg                  os.stat_result
+os.O_NOFOLLOW              os._spawnvef               os.lchown                  os.statvfs
+os.O_NONBLOCK              os.abort                   os.linesep                 os.statvfs_result
+os.O_RDONLY                os.access                  os.link                    os.strerror
+os.O_RDWR                  os.altsep                  os.listdir                 os.symlink
+os.O_RSYNC                 os.chdir                   os.lseek                   os.sys
+os.O_SYNC                  os.chmod                   os.lstat                   os.sysconf
+os.O_TRUNC                 os.chown                   os.major                   os.sysconf_names
+os.O_WRONLY                os.chroot                  os.makedev                 os.system
+os.P_NOWAIT                os.close                   os.makedirs                os.tcgetpgrp
+os.P_NOWAITO               os.confstr                 os.minor                   os.tcsetpgrp
+os.P_WAIT                  os.confstr_names           os.mkdir                   os.tempnam
+os.R_OK                    os.ctermid                 os.mkfifo                  os.times
+os.SEEK_CUR                os.curdir                  os.mknod                   os.tmpfile
+os.SEEK_END                os.defpath                 os.name                    os.tmpnam
+os.SEEK_SET                os.devnull                 os.nice                    os.ttyname
+os.TMP_MAX                 os.dup                     os.open                    os.umask
+os.UserDict                os.dup2                    os.openpty                 os.uname
+os.WCONTINUED              os.environ                 os.pardir                  os.unlink
+os.WCOREDUMP               os.errno                   os.path                    os.unsetenv
+os.WEXITSTATUS             os.error                   os.pathconf                os.urandom
+os.WIFCONTINUED            os.execl                   os.pathconf_names          os.utime
+os.WIFEXITED               os.execle                  os.pathsep                 os.wait
+os.WIFSIGNALED             os.execlp                  os.pipe                    os.wait3
+os.WIFSTOPPED              os.execlpe                 os.popen                   os.wait4
+os.WNOHANG                 os.execv                   os.popen2                  os.waitpid
+os.WSTOPSIG                os.execve                  os.popen3                  os.walk
+os.WTERMSIG                os.execvp                  os.popen4                  os.write
+os.WUNTRACED               os.execvpe                 os.putenv                  
+os.W_OK                    os.extsep                  os.read                    
+os.X_OK                    os.fchdir                  os.readlink                
+
 \end{verbatim}
 \normalsize
+
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Directory Navigation}
@@ -580,6 +586,21 @@ bookmarks to simplify access to frequently-used directories:
   (bookmark:data) -> /home/ballista/jmcmulli/other_data
 \end{verbatim}
 \normalsize
+
+For python scripts, there is a special command to change a directory. 
+\small
+\begin{verbatim}
+os.system('cd ~/directory')
+\end{verbatim}
+\normalsize
+will NOT work but the following will:
+\small
+\begin{verbatim}
+os.chdir('~/directory')
+\end{verbatim}
+\normalsize
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Shell Command and Capture}
@@ -667,35 +688,35 @@ command line inputs is done via IPython.
 
 Upon startup, CASA will log all commands to a file called
 {\tt ipython.log}. This file can be changed via the use of the 
-{\tt ipythonrc} file. 
+{\tt ~/.casa/ipython/ipythonrc} file. 
 This log file can be edited and
 re-executed as appropriate using the 
 {\tt execfile} feature (\S~\ref{section:python.scripts}).
 
-The following line sets up the logging for CASA . There are four
-options following the specification of the logging file: 1) append, 2)
-rotate (each session of CASA will create a new log file with a counter
-incrementing ipython.log.1, ipython.log.2 etc, 3) over (overwrite
-existing file), and 4) backup (renames existing log file to log\_name).
-
-\small
-\begin{verbatim}
-  logfile ./ipython.log append
-\end{verbatim}
-\normalsize
-
-The command {\tt logstate} will provide details on the current logging setup:
-
-\small
-\begin{verbatim}
-  CASA [12]: logstate
-
-  File:   ipython.log
-  Mode:   append
-  State:  active
-\end{verbatim}
-\normalsize
-
+%The following line sets up the logging for CASA. There are four
+%options following the specification of the logging file: 1) append, 2)
+%rotate (each session of CASA will create a new log file with a counter
+%incrementing ipython.log.1, ipython.log.2 etc, 3) over (overwrite
+%existing file), and 4) backup (renames existing log file to log\_name).
+%
+%\small
+%\begin{verbatim}
+%  logfile ./ipython.log append
+%\end{verbatim}
+%\normalsize
+%
+%The command {\tt logstate} will provide details on the current logging setup:
+%
+%\small
+%\begin{verbatim}
+%  CASA [12]: logstate
+%
+%  File:   ipython.log
+%  Mode:   append
+%  State:  active
+%\end{verbatim}
+%\normalsize
+%
 Logging can be turned on and off using the {\tt logon}, {\tt logoff} commands.
 
 The second component is the output from applications which is directed
@@ -913,6 +934,15 @@ lines at the CASA prompt.
 \begin{verbatim}
   CASA [5]: execfile 'script.py'
   --------> execfile('script.py')
+\end{verbatim}
+\normalsize
+
+If you don't want to launch CASA and execute your script from the
+{\it command line}, you can use the '-c' option:
+
+\small
+\begin{verbatim}
+unix$   casapy -c 'script.py'
 \end{verbatim}
 \normalsize
 

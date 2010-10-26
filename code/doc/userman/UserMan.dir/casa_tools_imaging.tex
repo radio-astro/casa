@@ -5,6 +5,7 @@
 % STM 2007-04-13  split from previous version
 % STM 2007-04-15  put tool info here
 % JO 2010-03-12 edited for R3.0.1
+% JO 2010-10-12 edited for Release 3.1.0
 
 \chapter{Imaging Data}
 \label{chapter:imtool}
@@ -289,16 +290,15 @@ Examples for mosaics are given in Section
 The above steps show how to set up the {\tt Imager} tool as desired.  In
 addition, before imaging one may wish to set some values in the
 MeasurementSet itself.  This is necessary for visibility weighting.  The
-visibility imaging weights are computed prior to the actual imaging and
-stored in a column of the MeasurementSet called ``IMAGING\_WEIGHT''.
+visibility imaging weights are computed prior to the actual imaging.
 
 The first time an {\tt Imager} tool is attached to a MeasurementSet it
 initializes the imaging weights to the natural weighting scheme.
 Thereafter, whatever weighting scheme you last used is the one you
 will get if you don't explicitly run one of the weighting functions.
 
-The values in the IMAGING\_WEIGHT column are set, changed, and
-examined by the following functions.
+The weights for the imaging process are computed, changed, and examined by
+the following functions.
 
 \begin{itemize}
    \item {\tt im.weight} -- sets the column using one of natural,
