@@ -59,6 +59,7 @@ namespace casa{
   class VisBuffer;
   class SkyJones;
   class CoordinateSystem;
+  class DirectionCoordinate;
 
   class SimplePBConvFunc : public PixelatedConvFunc<Complex>
     {
@@ -70,12 +71,12 @@ namespace casa{
       // findconv return a cached convvolution function appropriate for this 
       // visbuffer and skyjones ...this one should be superseded 
       // by the one below and call setSkyJones when necessary
-      virtual void findConvFunction(const ImageInterface<Complex>& iimage, 
-			    const VisBuffer& vb,const Int& convSampling,
-			    SkyJones& sj,
-			    Matrix<Complex>& convFunc, 
-			    Matrix<Complex>& weightConvFunc, Int& convsize,
-				    Int& convSupport){};
+      virtual void findConvFunction(const ImageInterface<Complex>& , 
+			    const VisBuffer& ,const Int& ,
+			    SkyJones& ,
+			    Matrix<Complex>& , 
+			    Matrix<Complex>& , Int& ,
+				    Int& ){};
       
       ////Returns the convfunctions in the Cubes...the Matrix rowChanMap maps 
       // the vb.row and channel 
@@ -104,9 +105,20 @@ namespace casa{
       Int nchan_p;
       Int npol_p;
       CoordinateSystem csys_p;
+      DirectionCoordinate dc_p;
+      MDirection::Convert pointToPix_p;
+      MeasFrame pointFrame_p;
+      MEpoch::Types timeMType_p;
+      Unit timeUnit_p;
+      Int directionIndex_p;
+      MDirection direction1_p;
+      MDirection direction2_p;
+      Vector<Double> thePix_p;
       Bool filledFluxScale_p;
       Bool doneMainConv_p;
-      virtual void storeImageParams(const ImageInterface<Complex>& iimage);
+      virtual void storeImageParams(const ImageInterface<Complex>& iimage, const VisBuffer& vb);
+      //return the direction pixel corresponding to a direction
+      virtual void toPix(const VisBuffer& vb);
       CountedPtr<TempImage<Float> > convWeightImage_p;
     private:
       Bool checkPBOfField(const VisBuffer& vb);
