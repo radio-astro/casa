@@ -1,3 +1,30 @@
+// -*- C++ -*-
+//# Utils.cc: Implementation of global functions from Utils.h 
+//# Copyright (C) 1997,1998,1999,2000,2001,2002,2003
+//# Associated Universities, Inc. Washington DC, USA.
+//#
+//# This library is free software; you can redistribute it and/or modify it
+//# under the terms of the GNU Library General Public License as published by
+//# the Free Software Foundation; either version 2 of the License, or (at your
+//# option) any later version.
+//#
+//# This library is distributed in the hope that it will be useful, but WITHOUT
+//# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+//# License for more details.
+//#
+//# You should have received a copy of the GNU Library General Public License
+//# along with this library; if not, write to the Free Software Foundation,
+//# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+//#
+//# Correspondence concerning AIPS++ should be addressed as follows:
+//#        Internet email: aips2-request@nrao.edu.
+//#        Postal address: AIPS++ Project Office
+//#                        National Radio Astronomy Observatory
+//#                        520 Edgemont Road
+//#                        Charlottesville, VA 22903-2475 USA
+//#
+//# $Id$
 #include <msvis/MSVis/VisBuffer.h>
 #include <casa/Logging/LogIO.h>
 #include <ms/MeasurementSets/MSColumns.h>
@@ -19,31 +46,40 @@ namespace casa{
   //
   //--------------------------------------------------------------------------------------------
   //  
-  void storeImg(String& fileName,ImageInterface<Complex>& theImg)
+  void storeImg(String fileName,ImageInterface<Complex>& theImg, Bool writeReIm)
   {
-    ostringstream reName,imName;
-    reName << "re" << fileName;
-    imName << "im" << fileName;
     PagedImage<Complex> ctmp(theImg.shape(), theImg.coordinates(), fileName);
-    LatticeExpr<Complex> le(theImg);
-    ctmp.copyData(le);
-    {
-      PagedImage<Float> tmp(theImg.shape(), theImg.coordinates(), reName);
-      LatticeExpr<Float> le(abs(theImg));
-      tmp.copyData(le);
-    }
-    {
-      PagedImage<Float> tmp(theImg.shape(), theImg.coordinates(), imName);
-      LatticeExpr<Float> le(arg(theImg));
-      tmp.copyData(le);
-    }
+    if (writeReIm)
+      {
+	ostringstream reName,imName;
+	reName << "re" << fileName;
+	imName << "im" << fileName;
+	LatticeExpr<Complex> le(theImg);
+	ctmp.copyData(le);
+	{
+	  PagedImage<Float> tmp(theImg.shape(), theImg.coordinates(), reName);
+	  LatticeExpr<Float> le(abs(theImg));
+	  tmp.copyData(le);
+	}
+	{
+	  PagedImage<Float> tmp(theImg.shape(), theImg.coordinates(), imName);
+	  LatticeExpr<Float> le(arg(theImg));
+	  tmp.copyData(le);
+	}
+      }
   }
   
-  void storeImg(String& fileName,ImageInterface<Float>& theImg)
+  void storeImg(String fileName,ImageInterface<Float>& theImg)
   {
     PagedImage<Float> tmp(theImg.shape(), theImg.coordinates(), fileName);
     LatticeExpr<Float> le(theImg);
     tmp.copyData(le);
+  }
+
+  void storeArrayAsImage(String fileName, const CoordinateSystem& coord,
+			 const Array<Complex>& theImg)
+  {
+    PagedImage<Complex> ctmp(theImg.shape(), coord, fileName);
   }
   //
   //---------------------------------------------------------------------
