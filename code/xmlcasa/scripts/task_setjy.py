@@ -67,10 +67,10 @@ def setjy(vis=None,field=None,spw=None,modimage=None,scalebychan=None,fluxdensit
        try:
          casalog.origin('setjy')
 
-         # temporary, until scaleperchan is made compatible with Solar System objects.
+         # temporary, until scalebychan is made compatible with Solar System objects.
          if scalebychan and standard == 'Butler-JPL-Horizons 2010':
-                casalog.post('scaleperchan is not yet compatible with standard = "Butler-JPL-Horizons 2010"', 'WARN')
-                casalog.post('continuing with scaleperchan = False.', 'WARN')
+                casalog.post('scalebychan is not yet compatible with standard = "Butler-JPL-Horizons 2010"', 'WARN')
+                casalog.post('continuing with scalebychan = False.', 'WARN')
                 scalebychan = False
 
          myim = imtool.create()
