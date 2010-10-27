@@ -758,7 +758,7 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
     cleanupcomm[1]='a.cleanupresidualimages(readyputchan=readyputchan,  imagename='+imnam+', nchanchunk='+str(nchanchunk)+', chanchunk='+str(chanchunk)+')'
     cleanupcomm[2]='a.cleanuprestoredimages(readyputchan=readyputchan,  imagename='+imnam+', nchanchunk='+str(nchanchunk)+', chanchunk='+str(chanchunk)+')'
     def gen_command(ccounter):
-        return 'a.imagechan_new(msname='+'"'+msname+'", start='+str(startsel[ccounter])+', numchan='+str(nchansel[ccounter])+', field="'+str(field)+'", spw='+str(spwsel[chancounter])+', cubeim='+imnam+', imroot='+imnam+',imchan='+str(chancounter)+',chanchunk='+str(chanchunk)+',niter='+str(niter)+',alg="'+alg+'", scales='+str(scales)+', majcycle='+str(majorcycles)+', thr="'+str(threshold)+'")'
+        return 'a.imagechan_new(msname='+'"'+msname+'", start='+str(startsel[ccounter])+', numchan='+str(nchansel[ccounter])+', field="'+str(field)+'", spw='+str(spwsel[ccounter])+', cubeim='+imnam+', imroot='+imnam+',imchan='+str(ccounter)+',chanchunk='+str(chanchunk)+',niter='+str(niter)+',alg="'+alg+'", scales='+str(scales)+', majcycle='+str(majorcycles)+', thr="'+str(threshold)+'")'
     
     #while(chancounter < nchanchunk):
     chanind.setfield(-1, int)
@@ -783,12 +783,12 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
                 time.sleep(1)
                 for bud in range(3):
                     if(buddy_is_ready[bud]):
-                    #print 'SENDING ', cleanupcomm[bud]
+                        #print 'SENDING ', cleanupcomm[bud]
                         c.push(readyputchan=readyputchan, targets=buddy_id[bud])
                     #c.push(doneputchan=doneputchan, targets=buddy_id)
                         buddy_ref[bud]=c.odo(cleanupcomm[bud], buddy_id[bud])
-                        buddy_is_ready[bud]=c.check_job(buddy_ref[bud], False)
-                #print 'buddy_ready', bud, buddy_is_ready[bud]
+                    buddy_is_ready[bud]=c.check_job(buddy_ref[bud], False)
+                    #print 'buddy_ready', bud, buddy_is_ready[bud]
             #if(buddy_is_ready):
             #    doneputchan=c.pull('doneputchan', buddy_id)[buddy_id]
                 overone=True
@@ -796,14 +796,14 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
                     overone=(overone and c.check_job(out[k],False))
                     if((chanind[k] > -1) and c.check_job(out[k],False) and 
                        (not readyputchan[chanind[k]])):
-                        readyputchan[chanind[k]]=True
-                        chanind[k]=chancounter
+                        readyputchan[chanind[k]]=True      
                         if(chancounter < nchanchunk):
+                            chanind[k]=chancounter
                             runcomm=gen_command(chancounter)
                             print 'command is ', runcomm
                             print 'processor ', k
                             out[k]=c.odo(runcomm,k)
-                        chancounter+=1
+                            chancounter+=1
                         overone=(overone and c.check_job(out[k],False))
                 over=overone
            ############
