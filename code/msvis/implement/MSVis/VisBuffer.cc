@@ -39,7 +39,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 VisBuffer::VisBuffer():visIter_p(static_cast<ROVisibilityIterator*>(0)),
-twoWayConnection_p(False),corrSorted_p(False),This(this),nChannel_p(0),nRow_p(0)
+		       twoWayConnection_p(False),corrSorted_p(False),This(this),nChannel_p(0),nRow_p(0),lastPointTableRow_p(0)
 {validate(); oldMSId_p=-1;}
 
 VisBuffer::VisBuffer(ROVisibilityIterator& iter):visIter_p(&iter),This(this)
@@ -325,6 +325,7 @@ void VisBuffer::invalidate()
   flagCubeOK_p=visCubeOK_p=imagingWeightOK_p=msOK_p=False;
   modelVisOK_p=correctedVisOK_p=modelVisCubeOK_p=correctedVisCubeOK_p=False;
   feed1_paOK_p=feed2_paOK_p=direction1OK_p=direction2OK_p=rowIdsOK_p=False;
+  lastPointTableRow_p=0;
 }
 
 void VisBuffer::validate()
@@ -1483,24 +1484,29 @@ Vector<MDirection>& VisBuffer::fillDirection1()
   direction1OK_p=True;
   direction1_p.resize(antenna1_p.nelements()); // could also use nRow()
   const ROMSPointingColumns& mspc=msColumns().pointing();
-  
-  if (visIter_p->allBeamOffsetsZero() && mspc.pointingIndex(antenna1()(0),
-      time()(0))<0) {
+  lastPointTableRow_p=mspc.pointingIndex(antenna1()(0),
+					 time()(0), lastPointTableRow_p);
+  if (visIter_p->allBeamOffsetsZero() && lastPointTableRow_p<0) {
         // if no true pointing information is found
         // just return the phase center from the field table
         direction1_p.set(phaseCenter());
+	lastPointTableRow_p=0;
         return direction1_p;
   }
   for (uInt row=0; row<antenna1_p.nelements(); ++row) {
        DebugAssert(antenna1_p(row)>=0,AipsError);	   
        DebugAssert(feed1_p(row)>=0,AipsError);
-       Int pointIndex1 = mspc.pointingIndex(antenna1()(row),time()(row));
-       // if no true pointing information is found
+       Int pointIndex1 = mspc.pointingIndex(antenna1()(row),time()(row), lastPointTableRow_p);
+       
+       //cout << "POINTINDEX " << pointIndex1 << endl;
+      // if no true pointing information is found
        // use the phase center from the field table       
-       if (pointIndex1>=0)
-           direction1_p(row)=mspc.directionMeas(pointIndex1,time()(row));
+       if (pointIndex1>=0){
+	 lastPointTableRow_p=pointIndex1;
+	 direction1_p(row)=mspc.directionMeas(pointIndex1,timeInterval()(row));
+       }
        else
-           direction1_p(row)=phaseCenter();
+	 direction1_p(row)=phaseCenter();
        if (!visIter_p->allBeamOffsetsZero()) { 
            RigidVector<Double, 2> beamOffset = 
 	        visIter_p->getBeamOffsets()(0,antenna1_p(row),feed1_p(row));
@@ -1531,24 +1537,27 @@ Vector<MDirection>& VisBuffer::fillDirection2()
   direction2OK_p=True;
   direction2_p.resize(antenna2_p.nelements()); // could also use nRow()
   const ROMSPointingColumns& mspc=msColumns().pointing();
-  
-  if (visIter_p->allBeamOffsetsZero() && mspc.pointingIndex(antenna2()(0),
-      time()(0))<0) {
+  lastPointTableRow_p=mspc.pointingIndex(antenna2()(0),time()(0), lastPointTableRow_p);
+  if (visIter_p->allBeamOffsetsZero() && lastPointTableRow_p < 0) {
         // if no true pointing information is found
         // just return the phase center from the field table
       direction2_p.set(phaseCenter());
+      lastPointTableRow_p=0;
       return direction2_p;
+
   }
   for (uInt row=0; row<antenna2_p.nelements(); ++row) {
        DebugAssert(antenna2_p(row)>=0,AipsError);	   
        DebugAssert(feed2_p(row)>=0,AipsError);	   
-       Int pointIndex2 = mspc.pointingIndex(antenna2()(row),time()(row));
+       Int pointIndex2 = mspc.pointingIndex(antenna2()(row),time()(row), lastPointTableRow_p);
        // if no true pointing information is found
        // use the phase center from the field table       
-       if (pointIndex2>=0)
-           direction2_p(row)=mspc.directionMeas(pointIndex2,time()(row));
+       if (pointIndex2>=0){
+	 lastPointTableRow_p=pointIndex2;
+	 direction2_p(row)=mspc.directionMeas(pointIndex2,timeInterval()(row));
+       }
        else
-           direction2_p(row)=phaseCenter();
+	 direction2_p(row)=phaseCenter();
        if (!visIter_p->allBeamOffsetsZero()) { 
            RigidVector<Double, 2> beamOffset = 
 	        visIter_p->getBeamOffsets()(0,antenna2_p(row),feed2_p(row));

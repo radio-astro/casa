@@ -537,6 +537,7 @@ private:
   Vector<uInt> rowIds_p;
   Matrix<Float> imagingWeight_p;
   Int oldMSId_p;
+  Int lastPointTableRow_p;
 
   Cube<Float> weightCube_p;
 

@@ -520,6 +520,8 @@ void ROVisibilityIterator::setTileCache(){
   {
 
     const MeasurementSet& thems=msIter_p.ms();
+    if(thems.tableType() == Table::Memory)
+      return;
     const ColumnDescSet& cds=thems.tableDesc().columnDescSet();
     /*
     ROArrayColumn<Complex> colVis;
