@@ -364,6 +364,7 @@ class SubMS
   Bool copySource();
   Bool copyState();
   Bool copyWeather();
+  Bool copyGenericSubtables();
 
   //  Bool writeDiffSpwShape(const Vector<MS::PredefinedColumns>& colNames);
   Bool fillAccessoryMainCols();

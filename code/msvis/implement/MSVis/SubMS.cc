@@ -774,22 +774,23 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
   // selectSource() because mssel_p was not setup yet.
   relabelSources();
 
-  fillFieldTable();
+  success &= fillFieldTable();
   copySource();
 
-  copyAntenna();
+  success &= copyAntenna();
   if(!copyFeed())         // Feed table writing has to be after antenna 
     return false;
     
-  copyObservation();
-  copyPointing();
-  copyState();
-  copyWeather();
-    
+  success &= copyObservation();
+  success &= copyPointing();
+  success &= copyState();
+  success &= copyWeather();
+  success &= copyGenericSubtables();
+
   sameShape_p = areDataShapesConstant();
     
   if(timeBin_p <= 0.0)
-    success = fillMainTable(datacols);
+    success &= fillMainTable(datacols);
   else
     fillAverMainTable(datacols);
   return success;
@@ -5570,12 +5571,14 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
     MSAntenna& newAnt = msOut_p.antenna();
     const ROMSAntennaColumns incols(oldAnt);
     MSAntennaColumns         outcols(newAnt);
+    Bool 		     retval = False;
     
     outcols.setOffsetRef(MPosition::castType(incols.offsetMeas().getMeasRef().getType()));
     outcols.setPositionRef(MPosition::castType(incols.positionMeas().getMeasRef().getType()));
 
     if(!antennaSel_p){
       TableCopy::copyRows(newAnt, oldAnt);
+      retval = True;
     }
     else{
       //Now we try to re-index the antenna list;
@@ -5597,9 +5600,9 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
 	TableCopy::copyRows(newAnt, oldAnt, k, ant1[k], 1);
       }
       
-      return True;
+      retval = True;
     }
-    return False;    
+    return retval;    
   }
 
 
@@ -5721,6 +5724,67 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
     return False;
   }
   
+Bool SubMS::copyGenericSubtables(){
+  LogIO os(LogOrigin("SubMS", "copyGenericSubtables()"));
+
+  // Already handled subtables will be removed from this, so a modifiable copy
+  // is needed.
+  TableRecord inkws(mssel_p.keywordSet());
+
+  // Some of the standard subtables need special handling, 
+  // so remove them from the set of keywords to copy.
+  // inkws.removeField("DATA_DESCRIPTION");
+  // inkws.removeField("SPECTRAL_WINDOW");
+  // inkws.removeField("POLARIZATION");
+  // inkws.removeField("FIELD");
+  // inkws.removeField("ANTENNA");
+  // inkws.removeField("FEED", false);
+  // inkws.removeField("SOURCE", false);
+  // inkws.removeField("STATE", false);
+  // inkws.removeField("POINTING", false);
+  // inkws.removeField("WEATHER", false);
+  // inkws.removeField("OBSERVATION", false);
+
+  // And these were created by MS::createDefaultSubtables(), so don't try to
+  // write over them.
+  //inkws.removeField("FLAG_CMD");
+  TableRecord outkws(msOut_p.rwKeywordSet());
+  for(uInt i = 0; i < outkws.nfields(); ++i){
+    if(outkws.type(i) == TpTable)
+      inkws.removeField(outkws.name(i), false);
+  }
+
+  // Includes a flush. 
+  //msOut_p.unlock();
+
+  // msOut_p.rwKeywordSet() will put a lock on msOut_p.
+  TableCopy::copySubTables(outkws, inkws, msOut_p.tableName(),
+			   msOut_p.tableType(), mssel_p);
+  // TableCopy::copySubTables(Table, Table, Bool) includes this other code,
+  // which seems to be copying subtables at one level deeper, but not
+  // recursively? 
+  const TableDesc& inDesc = mssel_p.tableDesc();
+  const TableDesc& outDesc = msOut_p.tableDesc();
+  for(uInt i = 0; i < outDesc.ncolumn(); ++i){
+    // Only writable cols can have keywords (and thus subtables) defined.
+    if(msOut_p.isColumnWritable(i)){
+      const String& name = outDesc[i].name();
+
+      if(inDesc.isColumn(name)){
+	TableColumn outCol(msOut_p, name);
+	ROTableColumn inCol(mssel_p, name);
+	
+	TableCopy::copySubTables(outCol.rwKeywordSet(), inCol.keywordSet(),
+				 msOut_p.tableName(), msOut_p.tableType(),
+				 mssel_p);
+      }
+    }
+  }
+  msOut_p.flush();
+
+  return true;
+}
+
   Bool SubMS::copyObservation()
   {  
     const MSObservation& oldObs = mssel_p.observation();
