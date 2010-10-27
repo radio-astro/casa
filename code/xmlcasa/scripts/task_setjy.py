@@ -67,6 +67,12 @@ def setjy(vis=None,field=None,spw=None,modimage=None,scalebychan=None,fluxdensit
        try:
          casalog.origin('setjy')
 
+         # temporary, until scaleperchan is made compatible with Solar System objects.
+         if scaleperchan and standard == 'Butler-JPL-Horizons 2010':
+                casalog.post('scaleperchan is not yet compatible with standard = "Butler-JPL-Horizons 2010"', 'WARN')
+                casalog.post('continuing with scaleperchan = False.', 'WARN')
+                scaleperchan = False
+
          myim = imtool.create()
          myms = mstool.create()
 
@@ -74,6 +80,7 @@ def setjy(vis=None,field=None,spw=None,modimage=None,scalebychan=None,fluxdensit
                 myim.open(vis, usescratch=True)
          else:
                 raise Exception, 'Visibility data set not found - please verify the name'
+
 
          myim.setjy(field=field, spw=spw, modimage=modimage, fluxdensity=fluxdensity,
                     standard=standard, scalebychan=scalebychan)

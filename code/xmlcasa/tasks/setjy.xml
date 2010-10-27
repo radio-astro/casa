@@ -150,10 +150,13 @@
               At the AOC or CV, the models are located in
               /usr/lib/casapy/data/nrao/VLA/CalModels/3C286_L.im (egs)
                    lib64
-       scaleperchan=False
+       scalebychan=False
                This determines whether the fluxdensity set in the model is
                calculated on a per channel basis. If False then it only one
                fluxdensity value is given per spw
+
+               NOTE: It does not yet work with Solar System flux density
+                     calibrators (standard = 'Butler-JPL-Horizons 2010').
 
        fluxdensity -- Specified flux density [I,Q,U,V] in Jy
                default: -1, uses [1,0,0,0] flux density for all sources,
