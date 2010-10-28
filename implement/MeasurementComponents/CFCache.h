@@ -59,12 +59,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // <reviewed reviewer="" date="" tests="" demos="">
   
   // <prerequisite>
-  //  No pre-requisites.  
+  //  CFStore class
   // </prerequisite>
   //
   // <etymology> 
   //
-  // CFDiskCache is an object, to write convolution
+  // CFCache is an object, to write convolution
   // functions from the memory cache to the disk cache, and
   // search/load the disk cache for convolution functions for a give
   // Parallactic Angle.  
@@ -80,7 +80,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // efficient to cache these functions as a function of Parallactic
   // Angle and the value of the w-term (if significant). 
   //
-  // CFDiskCache class provides interface to the disk cache and
+  // CFCache class provides interface to the disk cache and
   // is used in <linkto class=PBWProjectFT>PBWProjectFT</linkto> to
   // search and load convolution functions from the disk.  If a new
   // convolution function is computed in <linkto
@@ -109,60 +109,92 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   // </todo>
 
-  class CFDiskCache
+  class CFCache
   {
   public:
-    typedef Array<Complex> CFType ;
-    typedef PtrBlock< CFType *> CFCacheType;
-    typedef PtrBlock< CFStore *> CFStoreCacheType;
-    CFDiskCache():
+    typedef Vector< CFStore > CFStoreCacheType;
+    CFCache():
       logIO_p(), memCache_p(), XSup(), YSup(), paList(), key2IndexMap(),
       cfPrefix("CF"), aux("aux.dat") 
     {};
-    CFDiskCache& operator=(const CFDiskCache& other);
-    ~CFDiskCache();
+    CFCache& operator=(const CFCache& other);
+    ~CFCache();
+    //
+    // Method to set the disk cache directory name
+    //
     void setCacheDir(const char *dir) {Dir = dir;}
+    //
+    // Method to initialize the internal memory cache.
+    //
     void initCache();
+    //
+    // Method to set the class to caluclate the differential
+    // Parallactic Angle.  The ParAngleChangeDetector also holds the
+    // delta PA value (user defined).
+    //
     void setPAChangeDetector(const ParAngleChangeDetector& paCD) {paCD_p=paCD;};
-    void cacheConvFunction(Int which, Float pa, Array<Complex>& cf, CoordinateSystem& coords,
-			   CoordinateSystem& ftcoords, Int& convSize, Cube<Int>& convSupport, 
-			   Float convSampling, String nameQualifier="",Bool savePA=True);
+    //
+    // Methods to cachae the convolution function.
+    //
+    void cacheConvFunction(const Quantity pa, CFStore& cfs)
+    {cacheConvFunction(pa.getValue("rad"), cfs);}
+    void cacheConvFunction(const Float pa, CFStore& cfs)
+    {
+      CoordinateSystem ftcoords;
+      Int which=-1;
+      Int convSize=(Int)cfs.data->shape()(0);
+      cacheConvFunction(which, pa, *(cfs.data), cfs.coordSys, ftcoords, convSize,
+    			cfs.xSupport, cfs.ySupport, cfs.sampling[0]);
+    }
+    void cacheConvFunction(Int which, const Float& pa, CFType& cf, 
+			    CoordinateSystem& coords, CoordinateSystem& ftcoords, 
+			   Int& convSize, Vector<Int>& xConvSupport, Vector<Int>& yConvSupport, 
+			   Float convSampling, 
+			   String nameQualifier="",Bool savePA=True);
+    //
+    // Methods to cache functions to compute the sensitivity pattern on the sky.
+    //
     void cacheWeightsFunction(Int which, Float pa, Array<Complex>& cfWt, CoordinateSystem& coords,
-			      Int& convSize, Cube<Int>& convSupport, Float convSampling);
+			      Int& convSize, Vector<Int>& convSupport, Float convSampling);
+    //
+    // Methods to sarch for a convolution function in the caches (disk
+    // or memory) for the give Parallactic Angle value.
+    //
     Bool searchConvFunction(const VisBuffer& vb, VPSkyJones& vpSJ, Int& which, Float &pa);
-    Bool searchConvFunction(const VisBuffer& vb, const ParAngleChangeDetector& vpSJ, 
-			    Int& which, Float &pa);
-    Bool loadConvFunction(Int where, Int Nx, CFStoreCacheType & convFuncCache,
-			  CFStore& cfs,
-			  // Cube<Int> &convSupport, Vector<Float>& convSampling,
-			  // Double& cfRefFreq,CoordinateSystem& coordys, 
-			  String prefix="/CF");
+    Bool searchConvFunction(Int& which, const Quantity pa, const Quantity dPA )
+    {return searchConvFunction(which, pa.getValue("rad"), dPA.getValue("rad"));};
+    Bool searchConvFunction(Int& which, const Float pa, const Float dPA );
+    //
+    // Lower level method to load a convolution function from the disk.
+    //
+    Int loadFromDisk(Int where, Float pa, Float dPA,
+		     Int Nx, CFStoreCacheType & convFuncCache,
+		     CFStore& cfs, String prefix="/CF");
       
-    Int locateConvFunction(const Int Nw, const VisBuffer& vb,
-			   const ParAngleChangeDetector& paCD,
-			   CFStore& cfs
-			   // CFType& convFunc,
-			   // Cube<Int> &convSupport,
-			   // Vector<Float>& convSampling,
-			   // Double& cfRefFreq, 
-			   // CoordinateSystem& coordSys
-			   );
-    Int locateConvFunction(const Int Nw, 
-			   const VisBuffer& vb,
-			   CFStore& cfs
-			   // CFType& convFunc,
-			   // Cube<Int> &convSupport,
-			   // Vector<Float>& convSampling,
-			   // Double& cfRefFreq, 
-			   // CoordinateSystem& coordSys
-			   )
-    {return locateConvFunction(Nw, vb, paCD_p, cfs// convFunc, convSupport, convSampling,
-			       // cfRefFreq, coordSys
-			       );}
-    void finalize();
-    void finalize(ImageInterface<Float>& avgPB);
+    //
+    // Method to locate a convolution function for the given w-term
+    // index and PA value.  This is the top level function that must
+    // be used by the clients.  This uses searchConvFunction() and
+    // loadFromDisk() methods and the private methods to return a
+    // convolution function.
+    //
+    // Returns CFDefs::NOTCACHED if the convolution function was not
+    // found in the cache, CFDefs::MEMCACHE or CFDefs::DISKCACHE if
+    // the function was found in memory or disk cache respectively.
+    //
+    Int locateConvFunction(const Int Nw, const Quantity pa, const Quantity dPA, CFStore& cfs)
+    {return locateConvFunction(Nw,pa.getValue("rad"), dPA.getValue("rad"),cfs);};
+    Int locateConvFunction(const Int Nw, const Float pa, const Float dPA, CFStore& cfs);
+    //
+    // Methods to write the auxillary information from the memory
+    // cache to the disk cache.  Without this call, the disk cache
+    // might not be complete.  It is safe to call this method at
+    // anytime during the life of this object.
+    //
+    void flush();
+    void flushold();
+    void flush(ImageInterface<Float>& avgPB);
     void loadAvgPB(ImageInterface<Float>& avgPB);
-    enum CACHETYPE {DISKCACHE=1, MEMCACHE};
   protected:
     LogIO logIO_p;
     LogIO& logIO() {return logIO_p;};
@@ -174,10 +206,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Matrix<Float> key2IndexMap; // Nx2 [PAVal, Freq]
     String Dir, cfPrefix, aux;
     ParAngleChangeDetector paCD_p;
-    void ftCoordSys(const CoordinateSystem& coords,
-		    const Int& convSize,
-		    const Vector<Double>& ftRef,
-		    CoordinateSystem& ftCoords);
+    void makeFTCoordSys(const CoordinateSystem& coords,
+			const Int& convSize,
+			const Vector<Double>& ftRef,
+			CoordinateSystem& ftCoords);
+    Int addToMemCache(Float pa, CFType& cf, CoordinateSystem& coords,
+		      Vector<Int>& xConvSupport,
+		      Vector<Int>& yConvSupport,
+		      Float convSampling);
 
   };
 }
