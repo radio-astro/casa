@@ -34,7 +34,7 @@ namespace casa
 {
   namespace CFDefs { //# NAMESPACE CASA - BEGIN
     typedef Array<Complex> CFType ;
-    typedef PtrBlock< CFType *> CFCacheType;
+    enum CACHETYPE {NOTCACHED=0,DISKCACHE, MEMCACHE};
   } //# NAMESPACE CASA - END
 }
 #endif
