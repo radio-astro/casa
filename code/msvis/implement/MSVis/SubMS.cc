@@ -5758,7 +5758,7 @@ Bool SubMS::copyGenericSubtables(){
   //msOut_p.unlock();
 
   // msOut_p.rwKeywordSet() will put a lock on msOut_p.
-  TableCopy::copySubTables(outkws, inkws, msOut_p.tableName(),
+  TableCopy::copySubTables(msOut_p.rwKeywordSet(), inkws, msOut_p.tableName(),
 			   msOut_p.tableType(), mssel_p);
   // TableCopy::copySubTables(Table, Table, Bool) includes this other code,
   // which seems to be copying subtables at one level deeper, but not
