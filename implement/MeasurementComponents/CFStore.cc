@@ -1,5 +1,5 @@
 // -*- C++ -*-
-//# ConvFuncDiskCache.cc: Definition of the ConvFuncDiskCache class
+//# CFStore.cc: Implementation of the CFStore class
 //# Copyright (C) 1997,1998,1999,2000,2001,2002,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -25,26 +25,33 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id$
-#ifndef SYNTHESIS_CFSTORE_H
-#define SYNTHESIS_CFSTORE_H
-#include <synthesis/MeasurementComponents/CFDefs.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
-#include <casa/Utilities/CountedPtr.h>
-namespace casa { //# NAMESPACE CASA - BEGIN
-  using namespace CFDefs;
-  class CFStore
+#include <synthesis/MeasurementComponents/CFStore.h>
+namespace casa{
+
+  CFStore& CFStore::operator=(const CFStore& other)
   {
-  public:
-    CFStore():data(), coordSys(), sampling(), xSupport(), ySupport(), pa(){};
-    CFStore& operator=(const CFStore& other);
-    void show(const char *Mesg=NULL,ostream &os=cerr);
-    Bool null() {return data.null();};
-    
-    CountedPtr<CFType> data;
-    CoordinateSystem coordSys;
-    Vector<Float> sampling;
-    Vector<Int> xSupport,ySupport;
-    Quantity pa;
+    if (&other != this)
+      {
+	data=other.data; 
+	coordSys=other.coordSys; 
+	sampling=other.sampling;
+	xSupport=other.xSupport;
+	ySupport=other.ySupport;
+      }
+    return *this;
   };
-} //# NAMESPACE CASA - END
-#endif
+
+  void CFStore::show(const char *Mesg, ostream& os)
+  {
+    if (!null())
+      {
+	if (Mesg != NULL)
+	  os << Mesg << endl;
+	os << "Data: " << data->shape() << endl
+	     << "Sampling: " << sampling << endl
+	     << "xSupport: " << xSupport << endl
+	     << "ySupport: " << ySupport << endl;
+      }
+  };
+  
+} // end casa namespace
