@@ -785,6 +785,9 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
   success &= copyPointing();
   success &= copyState();
   success &= copyWeather();
+  
+  // Run this after running the other copy*()s.  Maybe there should be an
+  // option to *not* run it.
   success &= copyGenericSubtables();
 
   sameShape_p = areDataShapesConstant();
@@ -5731,24 +5734,12 @@ Bool SubMS::copyGenericSubtables(){
   // is needed.
   TableRecord inkws(mssel_p.keywordSet());
 
-  // Some of the standard subtables need special handling, 
-  // so remove them from the set of keywords to copy.
-  // inkws.removeField("DATA_DESCRIPTION");
-  // inkws.removeField("SPECTRAL_WINDOW");
-  // inkws.removeField("POLARIZATION");
-  // inkws.removeField("FIELD");
-  // inkws.removeField("ANTENNA");
-  // inkws.removeField("FEED", false);
-  // inkws.removeField("SOURCE", false);
-  // inkws.removeField("STATE", false);
-  // inkws.removeField("POINTING", false);
-  // inkws.removeField("WEATHER", false);
-  // inkws.removeField("OBSERVATION", false);
-
-  // And these were created by MS::createDefaultSubtables(), so don't try to
-  // write over them.
-  //inkws.removeField("FLAG_CMD");
-  TableRecord outkws(msOut_p.rwKeywordSet());
+  // Some of the standard subtables need special handling,
+  // e.g. DATA_DESCRIPTION, SPECTRAL_WINDOW, and ANTENNA, so they are already
+  // defined in msOut_p.  Several more (e.g. FLAG_CMD) were also already
+  // created by MS::createDefaultSubtables().  Don't try to write over them - a
+  // locking error will result.
+  const TableRecord& outkws = msOut_p.keywordSet();
   for(uInt i = 0; i < outkws.nfields(); ++i){
     if(outkws.type(i) == TpTable)
       inkws.removeField(outkws.name(i), false);
@@ -5757,7 +5748,8 @@ Bool SubMS::copyGenericSubtables(){
   // Includes a flush. 
   //msOut_p.unlock();
 
-  // msOut_p.rwKeywordSet() will put a lock on msOut_p.
+  // msOut_p.rwKeywordSet() (pass a reference, not a copy) will put a lock on
+  // msOut_p.
   TableCopy::copySubTables(msOut_p.rwKeywordSet(), inkws, msOut_p.tableName(),
 			   msOut_p.tableType(), mssel_p);
   // TableCopy::copySubTables(Table, Table, Bool) includes this other code,

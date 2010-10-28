@@ -488,7 +488,45 @@ class split_test_state(unittest.TestCase):
         Was the STATE subtable copied?
         """
         compare_tables(self.outms + '/STATE', self.inpms + '/STATE')
-        
+
+class split_test_genericsubtables(unittest.TestCase):
+    """
+    Check copying generic subtables
+    """
+    inpms = datapath + 'unittest/split/2554.ms'
+    outms = 'musthavegenericsubtables.ms'
+
+    def setUp(self):
+        try:
+            shutil.rmtree(self.outms, ignore_errors=True)
+
+            #print "\n\tSplitting", self.inpms
+            splitran = split(self.inpms, self.outms, datacolumn='data',
+                             field='', spw='0', width=1,
+                             antenna='',
+                             timebin='0s', timerange='',
+                             scan='', array='', uvrange='',
+                             correlation='', async=False)
+        except Exception, e:
+            print "Error splitting", self.inpms, "to", self.outms
+            raise e
+
+    def tearDown(self):
+        shutil.rmtree(self.outms, ignore_errors=True)
+
+    def test_genericsubtables(self):
+        """
+        Can we copy generic subtables?
+        """
+        tb.open(self.outms)
+        kws = tb.keywordnames()
+        tb.close()
+        # Just check a few, and order does not matter.  Include both "generic"
+        # and "standard" (mandatory and optional) subtables.
+        for subtab in ('ASDM_CALWVR', 'ASDM_CALDELAY', 'DATA_DESCRIPTION',
+                       'POINTING', 'SYSCAL'):
+            assert subtab in kws
+ 
 class split_test_singchan(unittest.TestCase):
     """
     Check selecting a single channel with the spw:chan syntax
@@ -698,5 +736,5 @@ class split_test_tav_then_cvel(SplitChecker):
 def suite():
     return [split_test_tav, split_test_cav, split_test_cst, split_test_state,
             split_test_singchan, split_test_unorderedpolspw,
-            split_test_tav_then_cvel]
+            split_test_tav_then_cvel, split_test_genericsubtables]
     
