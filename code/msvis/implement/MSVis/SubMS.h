@@ -266,12 +266,12 @@ class SubMS
 
   // the following inline convenience methods for regridSpw bypass the whole CASA measure system
   // because when they are used, they can assume that the frame stays the same and the units are OK
-  lDouble vrad(const lDouble freq, const lDouble rest){ return (C::c * (1. - freq/rest)); };
-  lDouble vopt(const lDouble freq, const lDouble rest){ return (C::c *(rest/freq - 1.)); };
-  lDouble lambda(const lDouble freq){ return (C::c/freq); };
-  lDouble freq_from_vrad(const lDouble vrad, const lDouble rest){ return (rest * (1. - vrad/C::c)); };
-  lDouble freq_from_vopt(const lDouble vopt, const lDouble rest){ return (rest / (1. + vopt/C::c)); };
-  lDouble freq_from_lambda(const lDouble lambda){ return (C::c/lambda); };
+  static lDouble vrad(const lDouble freq, const lDouble rest){ return (C::c * (1. - freq/rest)); };
+  static lDouble vopt(const lDouble freq, const lDouble rest){ return (C::c *(rest/freq - 1.)); };
+  static lDouble lambda(const lDouble freq){ return (C::c/freq); };
+  static lDouble freq_from_vrad(const lDouble vrad, const lDouble rest){ return (rest * (1. - vrad/C::c)); };
+  static lDouble freq_from_vopt(const lDouble vopt, const lDouble rest){ return (rest / (1. + vopt/C::c)); };
+  static lDouble freq_from_lambda(const lDouble lambda){ return (C::c/lambda); };
   
   // Support method for regridSpw():
   // results in the column oldName being renamed to newName, and a new column which is an empty copy of 
@@ -285,22 +285,22 @@ class SubMS
   // calculate the final new channel boundaries from the regridding parameters
   // and the old channel boundaries (already transformed to the desired reference frame);
   // returns False if input paramters were invalid and no useful boundaries could be created
-  Bool regridChanBounds(Vector<Double>& newChanLoBound, 
-			Vector<Double>& newChanHiBound,
-			const Double regridCenter, 
-			const Double regridBandwidth,
-			const Double regridChanWidth,
-			const Double regridVeloRestfrq, 
-			const String regridQuant,
-			const Vector<Double>& transNewXin, 
-			const Vector<Double>& transCHAN_WIDTH,
-			String& message, // message to the user, epsecially in case of error 
-			const Bool centerIsStart=False, // if true, the parameter regridCenter specifies the start
-			const Bool startIsEnd=False, // if true, and centerIsStart is true, regridCenter specifies the upper end in frequency
-			const Int nchan=0, // if != 0 : used instead of regridBandwidth, -1 means use all channels
-			const Int width=0, // if >0 and regridQuant=="freq": used instead of regridChanWidth
-			const Int start=-1 // if >=0 and regridQuant=="freq": used instead of regridCenter
-			);
+  static Bool regridChanBounds(Vector<Double>& newChanLoBound, 
+			       Vector<Double>& newChanHiBound,
+			       const Double regridCenter, 
+			       const Double regridBandwidth,
+			       const Double regridChanWidth,
+			       const Double regridVeloRestfrq, 
+			       const String regridQuant,
+			       const Vector<Double>& transNewXin, 
+			       const Vector<Double>& transCHAN_WIDTH,
+			       String& message, // message to the user, epsecially in case of error 
+			       const Bool centerIsStart=False, // if true, the parameter regridCenter specifies the start
+			       const Bool startIsEnd=False, // if true, and centerIsStart is true, regridCenter specifies the upper end in frequency
+			       const Int nchan=0, // if != 0 : used instead of regridBandwidth, -1 means use all channels
+			       const Int width=0, // if >0 and regridQuant=="freq": used instead of regridChanWidth
+			       const Int start=-1 // if >=0 and regridQuant=="freq": used instead of regridCenter
+			       );
 
   // Support method for regridSpw():
   // if writeTables is False, the (const) input parameters are only verified, nothing is written;

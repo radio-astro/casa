@@ -120,6 +120,7 @@ casa_add_library( xmlcasa
   implement/images/imagepol_cmpt.cc
   implement/images/regionmanager_cmpt.cc
   implement/measures/measures_cmpt.cc
+  implement/ms/GridCalc.cc
   implement/ms/ms_cmpt.cc
   implement/ms/msplot_cmpt.cc
   implement/nrao/vlafillertask_cmpt.cc

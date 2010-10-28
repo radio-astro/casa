@@ -33,6 +33,7 @@
 #include <casa/Exceptions/Error.h>
 #include <ms_cmpt.h>
 #include <xmlcasa/ms/Statistics.h>
+#include <xmlcasa/ms/GridCalc.h>
 #include <msfits/MSFits/MSFitsInput.h>
 #include <msfits/MSFits/MSFitsOutput.h>
 #include <msfits/MSFits/MSFitsIDI.h>
@@ -43,6 +44,9 @@
 #include <ms/MeasurementSets/MSFlagger.h>
 #include <ms/MeasurementSets/MSSelectionTools.h>
 #include <ms/MeasurementSets/MSMainColumns.h>
+
+#include <measures/Measures/MeasTable.h>
+
 #include <msvis/MSVis/MSAnalysis.h>
 #include <msvis/MSVis/MSContinuumSubtractor.h>
 #include <msvis/MSVis/SubMS.h>
@@ -1212,120 +1216,28 @@ ms::cvel(const std::string& mode,
   try {
 
     *itsLog << LogOrigin("ms", "cvel");
-    
-    String t_interp = toCasaString(interp);
-    String t_phasec = toCasaString(phasec);
-    String t_mode = toCasaString(mode);
-    Double t_restfreq = 0.; // rest frequency, convert to Hz
-    if(!restfreq.toString().empty()){
-      t_restfreq = casaQuantity(restfreq).getValue("Hz");
-    }
 
     Bool t_doHanning = hanning;
+    
+    String t_phasec = toCasaString(phasec);
 
-    // Determine grid
-    Double t_cstart = -9e99; // default value indicating that the original start of the SPW should be used
-    Double t_bandwidth = -1.; // default value indicating that the original width of the SPW should be used
-    Double t_cwidth = -1.; // default value indicating that the original channel width of the SPW should be used
-    Int t_nchan = -1; 
-    Int t_width = 0;
-    Int t_start = -1;
-    Bool t_startIsEnd = False; // False means that start specifies the lower end in frequency (default)
-                               // True means that start specifies the upper end in frequency
-
-    if(!start.toString().empty()){ // start was set
-      if(t_mode == "channel"){
-	t_start = atoi(start.toString().c_str());
-      }
-      if(t_mode == "channel_b"){
-	t_cstart = Double(atoi(start.toString().c_str()));
-      }
-      else if(t_mode == "frequency"){
-	t_cstart = casaQuantity(start).getValue("Hz");
-      }
-      else if(t_mode == "velocity"){
-	t_cstart = casaQuantity(start).getValue("m/s");
-      }
-    }
-    if(!width.toString().empty()){ // channel width was set
-      if(t_mode == "channel"){
-	Int w = atoi(width.toString().c_str());
-	t_width = abs(w);
-	if(w<0){
-	  t_startIsEnd = True;
-	}
-      }
-      else if(t_mode == "channel_b"){
-	Double w = atoi(width.toString().c_str());
-	t_cwidth = abs(w);
-	if(w<0){
-	  t_startIsEnd = True;
-	}	
-      }
-      else if(t_mode == "frequency"){
-	Double w = casaQuantity(width).getValue("Hz");
-	t_cwidth = abs(w);
-	if(w<0){
-	  t_startIsEnd = True;
-	}	
-      }
-      else if(t_mode == "velocity"){
-	Double w = casaQuantity(width).getValue("m/s");
-	t_cwidth = abs(w);
-	if(w>=0){
-	  t_startIsEnd = True; 
-	}		
-      }
-    }
-    if(nchan > 0){ // number of output channels was set
-      if(t_mode == "channel_b"){
-	if(t_cwidth>0){
-	  t_bandwidth = Double(nchan*t_cwidth);
-	}
-	else{
-	  t_bandwidth = Double(nchan);	  
-	}
-      }
-      else{
-	t_nchan = nchan;
-      }
-    }
-
-    String t_veltype = toCasaString(veltype); 
+    String t_mode;
+    String t_outframe;
     String t_regridQuantity;
-    if(t_mode == "channel"){
-      t_regridQuantity = "freq";
-    }
-    else if(t_mode == "channel_b"){
-      t_regridQuantity = "chan";
-    }
-    else if(t_mode == "frequency"){
-      t_regridQuantity = "freq";
-    }
-    else if(t_mode == "velocity"){
-      if(t_restfreq == 0.){
-	*itsLog << LogIO::SEVERE << "Need to set restfreq in velocity mode." << LogIO::POST; 
-	return False;
-      }	
-      t_regridQuantity = "vrad";
-      if(t_veltype == "optical"){
-	t_regridQuantity = "vopt";
-      }
-      else if(t_veltype != "radio"){
-	*itsLog << LogIO::WARN << "Invalid velocity type "<< veltype 
-		<< ", setting type to \"radio\"" << LogIO::POST; 
-      }
-    }   
-    else{
-      *itsLog << LogIO::WARN << "Invalid mode " << t_mode << LogIO::POST;
-      return false;
-    }
-    
-    String t_outframe=toCasaString(outframe);
-    String t_regridInterpMeth=toCasaString(interp);
-    
+    Double t_restfreq;
+    String t_regridInterpMeth;
+    Double t_cstart;
+    Double t_bandwidth;
+    Double t_cwidth;
+    Bool t_centerIsStart;
+    Bool t_startIsEnd;
+    Int t_nchan;
+    Int t_width;
+    Int t_start;
+
     casa::MDirection  t_phaseCenter;
-    Int t_phasec_fieldid=-1;
+    Int t_phasec_fieldid = -1;
+
     //If phasecenter is a simple numeric value then it's taken as a fieldid 
     //otherwise its converted to a MDirection
     if(phasec.type()==::casac::variant::DOUBLEVEC 
@@ -1351,6 +1263,37 @@ ms::cvel(const std::string& mode,
 	}
 	*itsLog << LogIO::NORMAL << "Using user-provided phase center." << LogIO::POST;
       }
+    }
+
+    // go over the remaining grid parameters and consolidate them
+
+    if(!GridCalc::convertGridPars(*itsLog,
+				  mode, 
+				  nchan, 
+				  start, 
+				  width,
+				  interp, 
+				  restfreq, 
+				  outframe,
+				  veltype,
+				  ////// output ////
+				  t_mode,
+				  t_outframe,
+				  t_regridQuantity,
+				  t_restfreq,
+				  t_regridInterpMeth,
+				  t_cstart, 
+				  t_bandwidth,
+				  t_cwidth,
+				  t_centerIsStart, 
+				  t_startIsEnd,			      
+				  t_nchan,
+				  t_width,
+				  t_start
+				  )
+       ){
+      // an error occured
+      return False;
     }
 
     // end prepare regridding parameters
@@ -1575,6 +1518,153 @@ ms::cvel(const std::string& mode,
   }
   Table::relinquishAutoLocks(True);
   return rstat;
+}
+
+std::vector<double>
+ms::cvelfreqs(const int spwid,
+	      const std::string& obstime,
+	      const std::string& mode, 
+	      const int nchan, 
+	      const ::casac::variant& start, 
+	      const ::casac::variant& width,
+	      const ::casac::variant& phasec, 
+	      const ::casac::variant& restfreq, 
+	      const std::string& outframe,
+	      const std::string& veltype
+	      )
+{
+  std::vector<double> rval(0); // the new channel centers
+  
+  try {
+    
+    *itsLog << LogOrigin("ms", "cvelfreqs");
+    
+    Vector<Double> newCHAN_FREQ; 
+    Vector<Double> newCHAN_WIDTH;
+    
+
+    ROMSMainColumns mainCols(*itsMS);
+    ROMSSpWindowColumns SPWCols(itsMS->spectralWindow());
+    ROMSFieldColumns FIELDCols(itsMS->field());
+    ROMSAntennaColumns ANTCols(itsMS->antenna());
+
+    // extract grid from SPW given by spwid
+    Vector<Double> oldCHAN_FREQ = SPWCols.chanFreq()(spwid); 
+    Vector<Double> oldCHAN_WIDTH = SPWCols.chanWidth()(spwid);
+
+    // determine phase center
+    casa::MDirection phaseCenter;
+    Int phasec_fieldid = -1;
+    String t_phasec = toCasaString(phasec);
+
+    //If phasecenter is a simple numeric value then it's taken as a fieldid 
+    //otherwise its converted to a MDirection
+    if(phasec.type()==::casac::variant::DOUBLEVEC 
+       || phasec.type()==::casac::variant::DOUBLE
+       || phasec.type()==::casac::variant::INTVEC
+       || phasec.type()==::casac::variant::INT){
+      phasec_fieldid = phasec.toInt();	
+      if(phasec_fieldid >= (Int)itsMS->field().nrow() || phasec_fieldid < 0){
+	*itsLog << LogIO::SEVERE << "Field id " << phasec_fieldid
+		<< " selected to be used as phasecenter does not exist." << LogIO::POST;
+	return rval;
+      }
+      else{
+	phaseCenter = FIELDCols.phaseDirMeasCol()(phasec_fieldid)(IPosition(1,0));
+      }
+    }
+    else{
+      if(t_phasec.empty()){
+	phasec_fieldid = 0;
+	phaseCenter = FIELDCols.phaseDirMeasCol()(phasec_fieldid)(IPosition(1,0));
+      }
+      else{
+	if(!casaMDirection(phasec, phaseCenter)){
+	  *itsLog << LogIO::SEVERE << "Could not interprete phasecenter parameter "
+	     << t_phasec << LogIO::POST;
+	  return rval;
+	}
+	else{
+	  *itsLog << LogIO::NORMAL << "Using user-provided phase center." << LogIO::POST;
+	}
+      }
+    }
+
+    // determine old reference frame
+    MFrequency::Types theOldRefFrame = MFrequency::castType(SPWCols.measFreqRef()(spwid));
+
+    // determine observation epoch
+    MEpoch theObsTime;
+    String t_obstime = toCasaString(obstime);
+    if (obstime.length()>0) {
+      Quantum<Double> qt;
+      if (MVTime::read(qt,obstime)) {
+	MVEpoch mv(qt);
+	theObsTime = MEpoch(mv, MEpoch::UTC);
+      } else {
+	*itsLog << LogIO::SEVERE << "Invalid time format: " 
+	      << obstime << LogIO::POST;
+	return rval;
+      }
+    } else {
+      theObsTime = mainCols.timeMeas()(0);
+      *itsLog << LogIO::NORMAL << "Using observation time from first row of MS." << LogIO::POST;
+    }
+
+    // determine observatory position
+    // use a tabulated version if available
+    MPosition mObsPos;
+    {
+      MPosition Xpos;
+      String Xobservatory;
+      ROMSObservationColumns XObsCols(itsMS->observation());
+      if (itsMS->observation().nrow() > 0) {
+	Xobservatory = XObsCols.telescopeName()(mainCols.observationId()(0));
+      }
+      if (Xobservatory.length() == 0 || 
+	  !MeasTable::Observatory(Xpos,Xobservatory)) {
+	// unknown observatory
+	*itsLog << LogIO::WARN << "Unknown observatory: \"" << Xobservatory 
+		<< "\". Determining observatory position from antenna 0." << LogIO::POST;
+	Xpos=MPosition::Convert(ANTCols.positionMeas()(0), MPosition::ITRF)();
+      }
+      else{
+	*itsLog << LogIO::NORMAL << "Using tabulated observatory position for " << Xobservatory << ":"
+		<< LogIO::POST;
+	Xpos=MPosition::Convert(Xpos, MPosition::ITRF)();
+      }
+      mObsPos = Xpos;
+      ostringstream oss;
+      oss <<  "   " << mObsPos << " (ITRF)";
+      *itsLog << LogIO::NORMAL << oss.str() << LogIO::POST;
+    }
+
+    // calculate new grid
+    GridCalc::calcChanFreqs(*itsLog,
+			    newCHAN_FREQ, 
+			    newCHAN_WIDTH,
+			    oldCHAN_FREQ, 
+			    oldCHAN_WIDTH,
+			    phaseCenter,
+			    theOldRefFrame,
+			    theObsTime,
+			    mObsPos,
+			    mode, 
+			    nchan, 
+			    start, 
+			    width,
+			    restfreq, 
+			    outframe,
+			    veltype
+			    );
+
+    newCHAN_FREQ.tovector(rval);
+
+  } catch (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+  }
+  return rval;
 }
 
 

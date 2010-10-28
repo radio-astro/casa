@@ -2126,6 +2126,96 @@ Date/Time:                         RR:                      RL:                 
   </example>
 </method>
 
+<method type="function" name="cvelfreqs">
+   <shortdescription>calculate the transformed grid of a given spectral window (MS is not modified)
+   </shortdescription>
+   
+  <keyword>cvelfreqs</keyword>
+  <input>
+
+
+     <param type="int" direction="in" name="spwid">
+     <description>The id of the spectral window from which the input grid is to be taken.
+     </description>
+     <value>0</value>     
+     </param>
+
+    
+     <param type="string" direction="in" name="obstime">
+     <description>the observation time to assume, default: time of the first row of the MS = 
+     </description>
+     <value></value>     
+     </param>
+
+     <param type="string" direction="in" name="mode">
+     <description> "channel", "velocity", "frequency", or "channel_b", default = 
+     </description>
+     <value>channel</value>
+     </param>
+
+     <param type="int" direction="in" name="nchan">
+     <description> number of channels, default = all = 
+     </description>
+     <value>-1</value>
+     </param>
+
+     <param type="any" direction="in" name="start">
+     <description> start channel, default =  
+     </description>
+     <any type="variant"/>
+     <value>0</value>
+     </param>
+
+     <param type="any" direction="in" name="width">
+     <description> new channel width, default =  
+     </description>
+     <any type="variant"/>
+     <value>1</value>
+     </param>
+
+     <param type="any" direction="in" name="phasec">
+     <description> phase center, default = first field =
+     </description>
+     <any type="variant"/>
+     <value>0</value>
+     </param>
+
+     <param type="any" direction="in" name="restfreq">
+     <description> rest frequency, default = 
+     </description>
+     <any type="variant"/>
+     <value>1.4GHz</value>
+     </param>
+
+     <param type="string" direction="in" name="outframe">
+     <description>LSRK, LSRD, BARY, GALACTO, LGROUP, CMB, GEO, or TOPO, default = keep reference frame = </description>
+     <value></value>
+     </param>
+
+     <param type="string" direction="in" name="veltype">
+     <description>radio or optical, default = </description>
+     <value>radio</value>
+     </param>
+
+  </input>
+  <returns type="doubleArray"/>
+
+  <description>
+    Take the spectral grid of a given spectral window, tranform and regrid it as prescribed by the given
+    grid parameters (same as in cvel and clean) and return the transformed values as a list.
+    The MS is not modified. Useful for tests of gridding parameters before using them in cvel or clean.
+  </description>
+  <example>
+    ms.open('my.ms')
+    ms.cvelfreqs(spwid=1, mode='channel', nchan=20, start=2, width=3, outframe='LSRK')
+
+    will take the grid of SPW 1 (i.e. the second in the SPW table), regrid it as in cvel
+    with the given grid parameters and return the resulting channel centers as an array.
+    The MS is not modified. See help cvel for more details on the grid parameters.
+
+  </example>
+</method>
+
 
  
    <method type="function" name="getdata">
