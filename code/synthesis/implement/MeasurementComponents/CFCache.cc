@@ -1,5 +1,5 @@
 // -*- C++ -*-
-//# CFDiskCache.cc: Implementation of the CFDiskCache class
+//# CFCache.cc: Implementation of the CFCache class
 //# Copyright (C) 1997,1998,1999,2000,2001,2002,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -34,19 +34,19 @@
 #include <fstream>
 
 namespace casa{
-  //
-  //-------------------------------------------------------------------------
-  // Just load the axillary info. if found.  The convolution functions
-  // are loaded on-demand.
-  //
-  CFDiskCache::~CFDiskCache()
+  CFCache::~CFCache()
   {
-    Int n=memCache_p.nelements();
-    for (Int i=0;i<n;i++)
-      delete memCache_p[i];
+    // Int n=memCache_p.nelements();
+    // for (Int i=0;i<n;i++)
+    //   delete memCache_p[i].data;
     memCache_p.resize(0);
   }
-  void CFDiskCache::initCache()
+  //
+  //-------------------------------------------------------------------------
+  // Load just the axillary info. if found.  The convolution functions
+  // are loaded on-demand.
+  //
+  void CFCache::initCache()
   {
     ostringstream name;
     String line;
@@ -54,7 +54,7 @@ namespace casa{
 
     if (Dir.length() == 0) 
       throw(SynthesisFTMachineError("Got null string for disk cache dir. "
-				    "in CFDiskCache::initCache()"));
+				    "in CFCache::initCache()"));
     //
     // If the directory does not exist, create it
     //
@@ -87,7 +87,7 @@ namespace casa{
 	  {
 	    paList.resize(Npa,True);
 
-	    IPosition s(3,Nw,1,Npa);
+	    IPosition s(2,Nw,Npa);
 	    XSup.resize(s,True);
 	    YSup.resize(s,True);
 	    Sampling.resize(Npa,True);
@@ -117,7 +117,7 @@ namespace casa{
 				      +x.getMesg()));
       }
   }
-  CFDiskCache& CFDiskCache::operator=(const CFDiskCache& other)
+  CFCache& CFCache::operator=(const CFCache& other)
   {
     paList = other.paList;
     Sampling = other.Sampling;
@@ -128,7 +128,7 @@ namespace casa{
     aux = other.aux;
     return *this;
   };
-  void CFDiskCache::ftCoordSys(const CoordinateSystem& coords,
+  void CFCache::makeFTCoordSys(const CoordinateSystem& coords,
 			       const Int& convSize,
 			       const Vector<Double>& ftRef,
 			       CoordinateSystem& ftCoords)
@@ -137,7 +137,12 @@ namespace casa{
 
     ftCoords = coords;
     directionIndex=ftCoords.findCoordinate(Coordinate::DIRECTION);
-    DirectionCoordinate dc=coords.directionCoordinate(directionIndex);
+    //  The following line follows the (lame) logic that if a
+    //  DIRECTION axis was not found, the coordinate system must be of
+    //  the FT domain already
+    if (directionIndex == -1) return;
+
+    DirectionCoordinate dc;//=coords.directionCoordinate(directionIndex);
     //	AlwaysAssert(directionIndex>=0, AipsError);
     dc=coords.directionCoordinate(directionIndex);
     Vector<Bool> axes(2); axes(0)=axes(1)=True;//axes(2)=True;
@@ -160,21 +165,80 @@ namespace casa{
   }
   //
   //-------------------------------------------------------------------------
+  //
+  Int CFCache::addToMemCache(Float pa, CFType& cf, 
+			     CoordinateSystem& coords,
+			     Vector<Int>& xConvSupport,
+			     Vector<Int>& yConvSupport,
+			     Float convSampling)
+  {
+    Float dPA=paCD_p.getParAngleTolerance().getValue("rad");
+    Int where=-1, N=memCache_p.nelements(), wConvSize = cf.shape()(2);
+    Bool found=searchConvFunction(where, pa, dPA);
+    //
+    // If the PA value was not found, the return value in "where" is
+    // the negative of the location in which the PA value should be
+    // found.  Convert it to positive value to be used for resizing
+    // etc.
+    //
+    where=abs(where);
+    //
+    // Resize the arrays if the CF for the relevant PA was not in the
+    // MEM cache.  Note that if the arrays are already of size
+    // where+1, Array<>::resize() is a no-op.
+    //
+    if (N <= where)
+      {
+	IPosition s(2,wConvSize,where+1);
+	memCache_p.resize(where+1, True);
+	paList.resize(where+1,True);
+	XSup.resize(s,True);	YSup.resize(s,True);
+	Sampling.resize(where+1,True);
+      }
+    //
+    // If the PA was not found, enter the aux. values in the internal
+    // arrays.
+    //
+    if (!found)
+      {
+	paList[where] = pa;
+	for(Int iw=0;iw<wConvSize;iw++)
+	  {
+	    YSup(iw,N) = xConvSupport(iw);
+	    XSup(iw,N) = yConvSupport(iw);
+	  }
+	Sampling[N]=convSampling;
+      }
+    //
+    // If the CF was in the mem. cache, add it.
+    //
+    if (memCache_p[where].null())
+      {
+	memCache_p[where].data = new CFType(cf);
+	memCache_p[where].sampling.resize(1);
+	memCache_p[where].sampling = convSampling;
+	memCache_p[where].xSupport = xConvSupport;
+	memCache_p[where].ySupport = yConvSupport;
+	memCache_p[where].coordSys = coords;
+      }
+    
+    return where;
+  }
+  //-------------------------------------------------------------------------
   // Write the conv. functions from the mem. cache to the disk cache.
   //
-  void CFDiskCache::cacheConvFunction(Int which, Float pa, 
-				      Array<Complex>& cf, 
-				      CoordinateSystem& coords,
-				      CoordinateSystem& ftCoords,
-				      Int &convSize,
-				      Cube<Int> &convSupport, 
-				      Float convSampling,
-				      String nameQualifier,
-				      Bool savePA)
+  void CFCache::cacheConvFunction(Int which,  const Float& pa, CFType& cf, 
+				  CoordinateSystem& coords,
+				  CoordinateSystem& ftCoords,
+				  Int &convSize,
+				  Vector<Int> &xConvSupport, 
+				  Vector<Int> &yConvSupport, 
+				  Float convSampling, String nameQualifier,
+				  Bool savePA)
   {
-    Int N=paList.nelements();
     if (Dir.length() == 0) return;
-
+    Int N=paList.nelements();
+    if (which < 0) which = N-1;
     try
       {
 	IPosition newConvShape = cf.shape();
@@ -187,33 +251,36 @@ namespace casa{
 	    Vector<Double> ftRef(2);
 	    ftRef(0)=newConvShape(0)/2-1;
 	    ftRef(1)=newConvShape(1)/2-1;
-	    ftCoordSys(coords, convSize, ftRef, ftCoords);
+	    makeFTCoordSys(coords, convSize, ftRef, ftCoords);
 	    ostringstream name;
 	    name << Dir << "/" << cfPrefix << nameQualifier << iw << "_" << which;
-	    storeArrayAsImage(name, ftCoords,((cf(Slicer(sliceStart,sliceLength)).nonDegenerate())));
+	    const CFType tmpArr=cf(Slicer(sliceStart,sliceLength));
+	    storeArrayAsImage(name, ftCoords,tmpArr);
 	  }
-	if (savePA)
-	  {
-	    IPosition s(3,wConvSize,1,N+1);
-	    paList.resize(N+1,True);
-	    // 	XSup.resize(N+1,True); 
-	    // 	YSup.resize(N+1,True); 
-	    XSup.resize(s,True);
-	    YSup.resize(s,True);
-	    Sampling.resize(N+1,True);
-	    paList[N] = pa;
-	    for(Int iw=0;iw<wConvSize;iw++)
-	      {
-		YSup(iw,N) = convSupport(iw,0,which);
-		XSup(iw,N) = convSupport(iw,0,which);
-	      }
-	    Sampling[N]=convSampling;
-	  }
+	addToMemCache(pa,cf, ftCoords, xConvSupport, yConvSupport, convSampling);
+	
+	// if (savePA)
+	//   {
+	//     IPosition s(2,wConvSize,N+1);
+	//     paList.resize(N+1,True);
+	//     // 	XSup.resize(N+1,True); 
+	//     // 	YSup.resize(N+1,True); 
+	//     XSup.resize(s,True);
+	//     YSup.resize(s,True);
+	//     Sampling.resize(N+1,True);
+	//     paList[N] = pa;
+	//     for(Int iw=0;iw<wConvSize;iw++)
+	//       {
+	// 	YSup(iw,N) = convSupport(iw);
+	// 	XSup(iw,N) = convSupport(iw);
+	//       }
+	//     Sampling[N]=convSampling;
+	//   }
       }
     catch (AipsError& x)
       {
 	throw(SynthesisFTMachineError("Error while caching CF to disk in "
-				      "CFDiskCache::cacheCFtion(): "
+				      "CFCache::cacheConvFunction(): "
 				      +x.getMesg()));
       }
   }
@@ -221,11 +288,11 @@ namespace casa{
   //-------------------------------------------------------------------------
   // Write the weight functions from the mem. cache to the disk cache.
   //
-  void CFDiskCache::cacheWeightsFunction(Int which, Float pa, 
+  void CFCache::cacheWeightsFunction(Int which, Float pa, 
 					 Array<Complex>& cfWt, 
 					 CoordinateSystem& coords,
 					 Int &convSize,
-					 Cube<Int> &convSupport, 
+					 Vector<Int> &convSupport, 
 					 Float convSampling)
   {
 //     Int N=paList.nelements();
@@ -243,7 +310,7 @@ namespace casa{
 // 	    Vector<Double> ftRef(2);
 // 	    ftRef(0)=newConvShape(0)/2-1;
 // 	    ftRef(1)=newConvShape(1)/2-1;
-// 	    ftCoordSys(coords, convSize, ftRef, ftCoords);
+// 	    makeFTCoordSys(coords, convSize, ftRef, ftCoords);
 // 	    ostringstream name;
 // 	    name << Dir << "/" << cfPrefix << "WT" << iw << "_" << which;
 // 	    storeArrayAsImage(name, ftCoords,((cfWt(Slicer(sliceStart,sliceLength)).nonDegenerate())));
@@ -266,14 +333,14 @@ namespace casa{
 //     catch (AipsError& x)
 //       {
 // 	throw(SynthesisFTMachineError("Error while caching CFWT to disk in "
-// 				      "CFDiskCache::cacheCFtion(): "
+// 				      "CFCache::cacheCFtion(): "
 // 				      +x.getMesg()));
 //       }
   }
   //
   //-------------------------------------------------------------------------
   //  
-  Bool CFDiskCache::searchConvFunction(const VisBuffer& vb, 
+  Bool CFCache::searchConvFunction(const VisBuffer& vb, 
 					    VPSkyJones& vpSJ, 
 					    Int& which,
 					    Float &pa)
@@ -306,16 +373,12 @@ namespace casa{
   //
   //-------------------------------------------------------------------------
   //  
-  Bool CFDiskCache::searchConvFunction(const VisBuffer& vb, 
-				       const ParAngleChangeDetector& paCD, 
-				       Int& which,
-				       Float &pa)
+  Bool CFCache::searchConvFunction(Int& which,
+				   const Float pa, const Float dPA)
   {
     if (paList.nelements()==0) initCache();
     Int i,NPA=paList.nelements(); Bool paFound=False;
-    Float iPA, dPA;
-    dPA = paCD.getParAngleTolerance().getValue("rad");
-    pa = getPA(vb);
+    Float iPA;
     
     Float paDiff=2*dPA;
     Int saveNdx=-1;
@@ -348,10 +411,38 @@ namespace casa{
   //Write the aux. info. also in the disk cache (wonder if this should
   //be automatically be called from cacheCFtion() method).
   //
-  void CFDiskCache::finalize()
+  void CFCache::flush()
   {
     if (Dir.length() == 0) return;
     ostringstream name;
+    
+    name << Dir << "/aux.dat";
+    Int n=memCache_p.nelements(),nw;
+    if (n>0)
+      try
+	{
+	  nw=memCache_p[0].xSupport.nelements();
+	  ofstream aux(name.str().c_str());
+	  aux << n << " " << nw << endl;
+	  for(Int ipa=0;ipa<n;ipa++)
+	    {
+	      aux << paList[ipa]*180.0/M_PI << " ";
+	      for(int iw=0;iw<nw;iw++)
+		aux << memCache_p[ipa].xSupport(iw) << " " << memCache_p[ipa].ySupport(iw) << " ";
+	      aux << " " << Sampling[ipa] <<endl;
+	    }
+	}
+      catch(AipsError &x)
+	{
+	  throw(SynthesisFTMachineError(String("Error while writing ")
+					+ name + x.getMesg()));
+	}
+  }
+  void CFCache::flushold()
+  {
+    if (Dir.length() == 0) return;
+    ostringstream name;
+    
     name << Dir << "/aux.dat";
     try
       {
@@ -377,10 +468,10 @@ namespace casa{
   //-------------------------------------------------------------------------
   //Along with the aux. info., also save the average PB in the disk cache.
   //
-  void CFDiskCache::finalize(ImageInterface<Float>& avgPB)
+  void CFCache::flush(ImageInterface<Float>& avgPB)
   {
     if (Dir.length() == 0) return;
-    finalize();
+    flush();
     ostringstream Name;
     Name << Dir <<"/avgPB";
     try
@@ -397,7 +488,7 @@ namespace casa{
   //-------------------------------------------------------------------------
   //Load the average PB from the disk cache.
   //
-  void CFDiskCache::loadAvgPB(ImageInterface<Float>& avgPB)
+  void CFCache::loadAvgPB(ImageInterface<Float>& avgPB)
   {
     if (Dir.length() == 0) return;
     ostringstream name;
@@ -429,15 +520,22 @@ namespace casa{
   //It's not much of a memory waste, but still non-optimal!  Leaving
   //it like this for now.
   //
-  Bool CFDiskCache::loadConvFunction(Int where, Int Nw, CFStoreCacheType &convFuncCache,
-				     CFStore& cfs, String prefix)
+  // Return TRUE if loaded from disk and FLASE if found in the mem. cache.
+  //
+  Int CFCache::loadFromDisk(Int where, Float pa, Float dPA,
+			     Int Nw, CFStoreCacheType &convFuncCache,
+			     CFStore& cfs, String prefix)
   {
-    Cube<Int> convSupport;
+    Vector<Int> xconvSupport,yconvSupport;;
     Vector<Float> convSampling;
     Double cfRefFreq; CoordinateSystem coordSys;
+    Array<Complex> cfBuf;
     
-    if (Dir.length() == 0) return False;
-    if (where < (Int)convFuncCache.nelements() && (convFuncCache[where] != NULL)) return False;
+    if (Dir.length() == 0) 
+      throw(SynthesisFTMachineError("CFCache::loadFromDisk(): Cache dir. name not set"));
+      
+    if (where < (Int)convFuncCache.nelements() && (!convFuncCache[where].data.null())) 
+      return MEMCACHE;
 
     Int wConvSize, polInUse=2;
     Int N=convFuncCache.nelements();
@@ -449,7 +547,7 @@ namespace casa{
     // not.
     //
     convFuncCache.resize(max(where+1,N), True);
-    for(Int i=N;i<=where;i++) convFuncCache[i]=NULL;
+    //    for(Int i=N;i<=where;i++) convFuncCache[i].data=NULL;
     //
     // Each w-plan is in a separate disk file.  Each file contains all
     // polarization planes. Memory cache holds all w-planes and
@@ -461,15 +559,10 @@ namespace casa{
     for(Int iw=0;iw<Nw;iw++)
       {
 	ostringstream name;
-	//	name << Dir << "/CF" << iw << "_" << where;
 	name << Dir << prefix << iw << "_" << where;
-	//	cout << "CF File name = " << name.str() << endl;
 	try
 	  {
 	    PagedImage<Complex> tmp(name.str().c_str());
-	    // if (convFuncCache[where] == NULL)
-	    //   convFuncCache[where] = new PagedImage<Complex>(tmp);
-	    
 	    Int index= tmp.coordinates().findCoordinate(Coordinate::SPECTRAL);
 	    coordSys = tmp.coordinates();
 	    SpectralCoordinate spCS = coordSys.spectralCoordinate(index);
@@ -478,10 +571,9 @@ namespace casa{
 	
 	    polInUse = tmp.shape()(2);
 	    IPosition ts=tmp.shape(),ndx(4,0,0,0,0),ts2(4,0,0,0,0);
-	    Array<Complex> buf=tmp.get();
-	    if (convFuncCache[where] == NULL)
-	      convFuncCache[where]->data = new Array<Complex>(IPosition(4,ts(0),ts(1),
-									wConvSize,polInUse));
+	    Array<Complex> imBuf=tmp.get();
+	    if (convFuncCache[where].data.null())
+	      cfBuf.resize(IPosition(4,ts(0),ts(1), wConvSize,polInUse));
 	
 	    ndx(2)=iw;                              // The w-axis
 	    for(ndx(3)=0;ndx(3)<polInUse;ndx(3)++)  // The Poln. axis.
@@ -491,7 +583,7 @@ namespace casa{
 	    	    ts2(0)=ndx(0);ts2(1)=ndx(1);
 	    	    ts2(2)=ndx(3); // The Poln. axis of the disk-cache
 	    	    ts2(3)=0;      // The freq. axis of the disk-cache
-	    	    (*(convFuncCache[where]->data))(ndx)=buf(ts2);
+	    	    cfBuf(ndx)=imBuf(ts2);
 	    	  }
 	  }
 	catch(AipsError &x)
@@ -499,52 +591,61 @@ namespace casa{
 	    throw(SynthesisFTMachineError(String("Error while loading \"")+
 					  name + String("\": ") + x.getMesg()));
 	  }
-	
       }
-    convSupport.resize(wConvSize,polInUse,where+1,True);
+    xconvSupport.resize(wConvSize,True);
+    yconvSupport.resize(wConvSize,True);
     for(Int i=0;i<wConvSize;i++)
-      for(Int j=0;j<polInUse;j++)
-	convSupport(i,j,where) = XSup(i,where);
-    //    cout << "##### " << convFuncCache.nelements() << endl;
-    convSampling = Sampling;
-    cfs=*convFuncCache[where];
-    return True;
+      {
+	xconvSupport(i) = XSup(i,where);
+	yconvSupport(i) = YSup(i,where);
+      }
+
+    convSampling = Sampling[where];
+    
+    where=addToMemCache(pa, cfBuf, coordSys, xconvSupport, yconvSupport, Sampling[where]);
+    cfs=convFuncCache[where];
+    
+    return DISKCACHE;
   };
   // Locate a convlution function in either mem. or disk cache.  
-  // Return CFDiskCache::DISKCACHE (=1) if found in the disk cache.
-  //        CFDiskCache::MEMCACHE (=2)  if found in the mem. cache.
+  // Return CFCache::DISKCACHE (=1) if found in the disk cache.
+  //        CFCache::MEMCACHE (=2)  if found in the mem. cache.
   //       <0 if not found in either cache.  In this case, absolute of
   //          the return value corresponds to the index in the list of
   //          conv. funcs. where this conv. func. should be filled
   //
-  Int CFDiskCache::locateConvFunction(const Int Nw, const VisBuffer& vb,
-				      const ParAngleChangeDetector& paCD,
-				      CFStore& cfs)
+  Int CFCache::locateConvFunction(const Int Nw, const Float pa, const Float dPA,
+				  CFStore& cfs)
   {
-    Int paKey; 
+    Int paKey,retVal=NOTCACHED; 
     Bool found;
-    Float pa;
     // Search for the PA corresponding to the supplied VB to find a
     // paKey in memCache_p which has a Conv. Func. within dPA (dPA is
     // given by paCD).  If found, return the key in paKey.
-    found = searchConvFunction(vb,paCD,paKey,pa);
+    found = searchConvFunction(paKey,pa, dPA);
     if (found)
       {
-	Vector<Float> sampling;
-	if (loadConvFunction(paKey,Nw,memCache_p,cfs))
+	retVal=loadFromDisk(paKey,pa,dPA,Nw,memCache_p,cfs);
+	switch (retVal)
 	  {
-	    cfs=*(memCache_p[paKey]);
-	    //*****************	    convWeights.reference(*convWeightsCache[PAIndex]);
-	    if (paKey < (Int)memCache_p.nelements())
-	      logIO() << "Loaded from disk cache: Conv. func. # "
-		      << paKey << LogIO::POST;
-	    return DISKCACHE;
-	  }
-	cfs=*(memCache_p[paKey]);
+	  case DISKCACHE:
+	    {
+	      //*****************	    convWeights.reference(*convWeightsCache[PAIndex]);
+	      if (paKey < (Int)memCache_p.nelements())
+		logIO() << "Loaded from disk cache: Conv. func. # "
+			<< paKey << LogIO::POST;
+	      else
+		throw(SynthesisFTMachineError("CFCache::locateConvFunction(): "
+					      "Internal error: paKey out of range"));
+	      break;
+	    }
+	  case MEMCACHE:{break;}
+	  case NOTCACHED: {return retVal;}
+	  };
+	cfs=(memCache_p[paKey]);
 	//**************	convWeights.reference(*convWeightsCache[paKey]);
-	return MEMCACHE;
       }
-    return paKey;
+    return retVal;
   }
 
 } // end casa namespace
