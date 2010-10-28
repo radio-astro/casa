@@ -220,6 +220,7 @@ namespace casa{
 	memCache_p[where].xSupport = xConvSupport;
 	memCache_p[where].ySupport = yConvSupport;
 	memCache_p[where].coordSys = coords;
+	memCache_p[where].pa = Quantity(pa,"rad");
       }
     
     return where;
