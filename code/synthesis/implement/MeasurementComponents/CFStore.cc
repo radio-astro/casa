@@ -37,6 +37,7 @@ namespace casa{
 	sampling=other.sampling;
 	xSupport=other.xSupport;
 	ySupport=other.ySupport;
+	pa=other.pa;
       }
     return *this;
   };
@@ -47,10 +48,11 @@ namespace casa{
       {
 	if (Mesg != NULL)
 	  os << Mesg << endl;
-	os << "Data: " << data->shape() << endl
-	     << "Sampling: " << sampling << endl
-	     << "xSupport: " << xSupport << endl
-	     << "ySupport: " << ySupport << endl;
+	os << "Data Shape: " << data->shape() << endl
+	   << "Sampling: " << sampling << endl
+	   << "xSupport: " << xSupport << endl
+	   << "ySupport: " << ySupport << endl
+	   << "PA = " << pa.get("deg") << endl;
       }
   };
   
