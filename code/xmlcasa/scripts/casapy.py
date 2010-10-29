@@ -287,6 +287,13 @@ os.environ['__CASARCDIR__']=casa['dirs']['rc']
 #import string
 
 #
+# Special case if the backend is set to MacOSX reset it to TkAgg as our TablePlot
+# stuff is specific for TkAgg
+#
+if matplotlib.get_backend() == "MacOSX" :
+   matplotlib.use('TkAgg')
+
+#
 # Check if the display environment is set if not
 # switch the backend to Agg only if it's TkAgg
 #
