@@ -173,7 +173,7 @@ namespace casa{
 			     Float convSampling)
   {
     Float dPA=paCD_p.getParAngleTolerance().getValue("rad");
-    Int where=-1, N=memCache_p.nelements(), wConvSize = cf.shape()(2);
+    Int where=-1, wConvSize = cf.shape()(2);
     Bool found=searchConvFunction(where, pa, dPA);
     //
     // If the PA value was not found, the return value in "where" is
@@ -187,10 +187,11 @@ namespace casa{
     // MEM cache.  Note that if the arrays are already of size
     // where+1, Array<>::resize() is a no-op.
     //
-    if (N <= where)
+    Int N=memCache_p.nelements();
+    memCache_p.resize(max(N,where+1), True);
+    if ((Int)paList.nelements() <= where)
       {
 	IPosition s(2,wConvSize,where+1);
-	memCache_p.resize(where+1, True);
 	paList.resize(where+1,True);
 	XSup.resize(s,True);	YSup.resize(s,True);
 	Sampling.resize(where+1,True);
@@ -204,10 +205,10 @@ namespace casa{
 	paList[where] = pa;
 	for(Int iw=0;iw<wConvSize;iw++)
 	  {
-	    YSup(iw,N) = xConvSupport(iw);
-	    XSup(iw,N) = yConvSupport(iw);
+	    YSup(iw,where) = xConvSupport(iw);
+	    XSup(iw,where) = yConvSupport(iw);
 	  }
-	Sampling[N]=convSampling;
+	Sampling[where]=convSampling;
       }
     //
     // If the CF was in the mem. cache, add it.

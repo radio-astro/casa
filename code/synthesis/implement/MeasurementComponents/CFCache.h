@@ -113,9 +113,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
   public:
     typedef Vector< CFStore > CFStoreCacheType;
-    CFCache():
+    CFCache(const char *cfDir="CF"):
       logIO_p(), memCache_p(), XSup(), YSup(), paList(), key2IndexMap(),
-      cfPrefix("CF"), aux("aux.dat") 
+      cfPrefix(cfDir), aux("aux.dat") 
     {};
     CFCache& operator=(const CFCache& other);
     ~CFCache();
@@ -136,6 +136,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // Methods to cachae the convolution function.
     //
+    void cacheConvFunction(CFStore& cfs)                   {cacheConvFunction(cfs.pa, cfs);}
     void cacheConvFunction(const Quantity pa, CFStore& cfs)
     {cacheConvFunction(pa.getValue("rad"), cfs);}
     void cacheConvFunction(const Float pa, CFStore& cfs)
@@ -147,15 +148,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     			cfs.xSupport, cfs.ySupport, cfs.sampling[0]);
     }
     void cacheConvFunction(Int which, const Float& pa, CFType& cf, 
-			    CoordinateSystem& coords, CoordinateSystem& ftcoords, 
-			   Int& convSize, Vector<Int>& xConvSupport, Vector<Int>& yConvSupport, 
-			   Float convSampling, 
-			   String nameQualifier="",Bool savePA=True);
+			   CoordinateSystem& coords, CoordinateSystem& ftcoords, 
+			   Int& convSize, 
+			   Vector<Int>& xConvSupport, Vector<Int>& yConvSupport, 
+			   Float convSampling, String nameQualifier="",Bool savePA=True);
     //
     // Methods to cache functions to compute the sensitivity pattern on the sky.
     //
-    void cacheWeightsFunction(Int which, Float pa, Array<Complex>& cfWt, CoordinateSystem& coords,
-			      Int& convSize, Vector<Int>& convSupport, Float convSampling);
+    void cacheWeightsFunction(Int which, Float pa, Array<Complex>& cfWt, 
+			      CoordinateSystem& coords, Int& convSize, 
+			      Vector<Int>& convSupport, Float convSampling);
     //
     // Methods to sarch for a convolution function in the caches (disk
     // or memory) for the give Parallactic Angle value.
