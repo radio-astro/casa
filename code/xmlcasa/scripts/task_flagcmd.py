@@ -4,7 +4,7 @@ import os
 import sys
 
 debug = False
-def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuff=None,antenna=None,reason=None,useapplied=None,optype=None,flagsort=None,outfile=None,flagbackup=None,clearall=None,rowlist=None,setcol=None,setval=None):
+def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuff=None,antenna=None,reason=None,useapplied=None,optype=None,flagsort=None,outfile=None,flagbackup=None,reset=None,clearall=None,rowlist=None,setcol=None,setval=None):
 	#
 	# Task flagcmd
 	#    Reads flag commands from file or string and applies to MS
@@ -13,6 +13,7 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 	# Updated v2.1 STM 2010-09-24 add FLAG_CMD use, optype
 	# Updated v2.2 STM 2010-10-14 compatible with new importevla
 	# Updated v2.3 STM 2010-10-22 improvements
+	# Updated v2.4 STM 2010-10-26 optype unapply
 	#
 	try:
 		from xml.dom import minidom
@@ -22,7 +23,7 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
         casalog.origin('flagcmd')
 
         fg.done()
-        fg.clearflagselection(0)
+        fg.clearflagselection(-1)
         
         try: 
                 if not os.path.exists(vis):
@@ -169,7 +170,7 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 				myflagd = myflagcmd
 
 			# Apply flags to data using flagger
-			nappl = applyflagcmd(vis, flagbackup, myflagd)
+			nappl = applyflagcmd(vis, flagbackup, myflagd, reset)
 			# Save flags to file
 			if nappl>0:
 			    if outfile=='':
@@ -199,6 +200,33 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 			else:
 			    print 'WARNING: No flags were applied from list'
 			    casalog.post('WARNING: No flags were applied from list','WARN')
+		elif optype == 'unapply':
+			# Possibly resort flags before application
+			# NEEDED TO AVOID FLAG AGENT ERROR
+			if flagsort!='' and flagsort!='id':
+				myflagd = sortflags(myflagcmd,myantenna='',myreason='Any',myflagsort=flagsort)
+			else:
+				myflagd = myflagcmd
+
+			# (Un)Apply flags to data using flagger
+			nappl = applyflagcmd(vis, flagbackup, myflagd, flagtype='UNFLAG')
+			# Save flags to file
+			if nappl>0:
+			    if flagmode=='table' and flagfile=='':
+			        # These flags came from internal FLAG_CMD, update status
+				# to APPLIED=True and TYPE='UNFLAG'
+				print 'Updating APPLIED status in FLAG_CMD'
+				myrowlist = myflagcmd.keys()
+				if myrowlist.__len__()>0:
+				    updateflagcmd(vis,mycol='APPLIED',myval=False,myrowlist=myrowlist)
+			    else:
+			        # These flags came from outside the MS, so add to FLAG_CMD
+				# Tag APPLIED=False
+				# NOTE: original flags, not using resorted version
+				writeflagcmd(vis,myflagcmd,tag='unapplied')
+			else:
+			    print 'WARNING: No flags were unapplied from list'
+			    casalog.post('WARNING: No flags were unapplied from list','WARN')
 		elif optype=='list':
 			# List flags
 			listflags(myflagcmd,myoutfile=outfile,listmode=listmode)
@@ -301,19 +329,31 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 # Apply flag commands using flagger tool
 #===============================================================================
 
-def applyflagcmd(msfile, flagbackup, myflags):
+def applyflagcmd(msfile, flagbackup, myflags, reset=False, flagtype='Unset'):
         #
 	# Takes input flag dictionary myflags (e.g. from readflagxml) 
 	# and applies using flagger tool to MS msfile.
 	#
 	# If flagbackup=True will save copy of flags before flagging.
 	#
+	# If reset=True will reset flags before flagging.
+	#
+	# If flagtype='FLAG' or 'UNFLAG' will override the unflag choice in the 
+	# individual flags
+	#
 	# Returns number of flags applied
 	#
 	ncmd = 0
 
         fg.done()
-        fg.clearflagselection(0)
+        fg.clearflagselection(-1)
+
+	if flagtype=='FLAG' or flagtype=='flag':
+	    mytype='FLAG'
+	elif flagtype=='UNFLAG' or flagtype=='unflag':
+	    mytype='UNFLAG'
+	else:
+	    mytype='Unset'
 
 	try:
 	    if ((type(msfile)==str) & (os.path.exists(msfile))):
@@ -349,7 +389,20 @@ def applyflagcmd(msfile, flagbackup, myflags):
 		cmdlist = []
 		param_set = {}
 		for key in keylist:
+	            # Get command from dictionary (must be there)
 	            cmd = myflags[key]['cmd']
+		    # Get optional type from dictionary
+		    if myflags[key].has_key('type'):
+		        intype=myflags[key]['type']
+			if intype=='FLAG' or intype=='flag':
+			    intype='FLAG'
+		        elif intype=='UNFLAG' or intype=='unflag':
+			    intype='UNFLAG'
+		        else:
+			    intype='Unset'
+		    else:
+		        intype='Unset'
+			    
 		    if debug: print 'Processing command '+cmd
 		    # Parse each command - currently just split by whitespace into key=value strings
 		    params = {}
@@ -393,8 +446,37 @@ def applyflagcmd(msfile, flagbackup, myflags):
 				mode = 'clip'
 			    elif params.has_key('quackinterval'):
 				mode = 'quack'
+			    elif myflags[key].has_key('mode'):
+			        mode = myflags[key]['mode']
+				if mode=='': mode = 'manualflag'
 			    else:
-				mode = 'manualflag'
+			        mode = 'manualflag'
+			    if mode!='shadow':
+			        # Logic tree for unflag
+			        if mytype=='FLAG':
+			            # user has chosen to override flag
+				    dounflag=False
+			        elif mytype=='UNFLAG':
+			            # user has chosen to override unflag
+				    dounflag=True
+				elif params.has_key('unflag'):
+				    # explict unflag in command string
+				    if params['unflag']:
+				        dounflag=True
+				    else:
+				        dounflag=False
+				elif intype=='FLAG':
+			            # user has chosen to override flag
+				    dounflag=False
+			        elif intype=='UNFLAG':
+			            # user has chosen to override unflag
+				    dounflag=True
+			        else:
+				    # default to flagging
+				    dounflag=False
+				# Now implement choice (possibly adding)
+				params['unflag'] = dounflag
+						
 			    if kmodes.has_key(mode):
 				# valid mode, check for known params
 				param_i = {}
@@ -421,24 +503,30 @@ def applyflagcmd(msfile, flagbackup, myflags):
 				if param_set.has_key(mode):
 				    n = param_set[mode].__len__()
 				    name = mode+'_'+str(n)
-				    param_set[mode][name] = param_i
+				    param_set[mode][name] = param_i.copy()
 				else:
 				    name = mode+'_0'
 				    param_set[mode]={}
-				    param_set[mode][name] = param_i
+				    param_set[mode][name] = param_i.copy()
 				cmdlist.append(param_list)
 				# Done with this flag command
 			    else:
 				print ' Warning: ignoring unknown mode '+mode
 	        # Were any valid flagging commands set up?
+		if cmdlist.__len__()>0:
+		    if reset:
+		        print 'WARNING: Will reset flags before application'
+			casalog.post('Will reset flags before application','WARN')
 		# Process these for each mode
 		modelist = param_set.keys()
 		modelist.sort()
 		for mode in modelist:
 		    nf = param_set[mode].__len__()
 		    if nf > 0:
+			print 'Processing '+str(nf)+' flagging commands for mode '+mode
+			casalog.post('Processing '+str(nf)+' flagging commands for mode '+mode)
 			fg.setdata()
-			fg.clearflagselection(0)
+			fg.clearflagselection(-1)
 			for s in param_set[mode].keys():
 			    param_i = param_set[mode][s]
 			    if mode=='shadow':
@@ -454,7 +542,10 @@ def applyflagcmd(msfile, flagbackup, myflags):
 				    fg.setmanualflags()
 			if flagbackup:
 			    backup_cmdflags('importevla_'+mode)
-			fg.run()
+			if reset:
+			    fg.run(reset=True)
+		        else:
+			    fg.run()
 			print 'Applied '+str(nf)+' flagging commands for mode '+mode
 			casalog.post('Applied '+str(nf)+' flagging commands for mode '+mode)
 		

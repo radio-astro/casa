@@ -32,7 +32,7 @@
         probably too complicated.  Comments welcome.
 
         HISTORY: Task created      S.T. Myers 2010-08-31
-                 Last updated      S.T. Myers 2010-10-22
+                 Last updated      S.T. Myers 2010-10-29
 
         </description>
         <input>
@@ -90,10 +90,11 @@
                 </param>
 
                 <param type="string" name="optype">
-                        <description>Flagging operation mode (apply/save/list/plot/clear)</description>
+                        <description>Flagging mode (apply/unapply/save/list/plot/clear/set)</description>
                         <value>apply</value>
                         <allowed kind="enum">
                         <value>apply</value>
+                        <value>unapply</value>
                         <value>list</value>
                         <value>save</value>
                         <value>plot</value>
@@ -119,8 +120,13 @@
                 </param>
 
                 <param type="bool" name="flagbackup" subparam="true">
-                        <description>Automatically backup the FLAG column before apply?</description>
+                        <description>Automatically backup the FLAG column before execution?</description>
                         <value>True</value>
+                </param>
+
+                <param type="bool" name="reset" subparam="true">
+                        <description>Reset all flags before application?</description>
+                        <value>False</value>
                 </param>
 
                 <param type="bool" name="clearall" subparam="true">
@@ -178,6 +184,11 @@
                         <when param="optype">
                                 <equals value="apply">
                                         <default param="outfile"><value type="string"></value></default>
+                                        <default param="flagsort"><value type="string">antenna</value></default>
+                                        <default param="flagbackup"><value>True</value></default>
+                                        <default param="reset"><value>False</value></default>
+                                </equals>
+                                <equals value="unapply">
                                         <default param="flagsort"><value type="string">antenna</value></default>
                                         <default param="flagbackup"><value>True</value></default>
                                 </equals>
@@ -289,10 +300,17 @@
                    matches this compound reason string only
 
         optype -- operation to perform using flags
-                options: 'apply','clear','list','plot','save','set'
+                options: 'apply','clear','list','plot','save','set','unapply'
                 default: 'apply'
 
            optype "apply" --  apply flags to MS
+	   
+              This operation will take the flags chosen by flagmode and apply,
+              treating as if type='FLAG' or unflag=False regardless of
+              actual flag (e.g. even if marked as APPLIED=True in FLAG_CMD).
+	   
+              If using mode='table' from the MS FLAG_CMD, will set
+              these flags to APPLIED=True.
 	   
               outfile -- save flags to output file after application
                    default: '' (save flags/state to FLAG_CMD in vis,
@@ -311,14 +329,57 @@
                    number of individual flags that need to be processed
 
                    If you have too many flags, you will get an error
+                   "*** Error *** Too many flagging agents
+                   instantiated"
+
+              reset -- reset all flags before application (USE WITH CARE)
+                   options: True,False
+                   default: False
+
+                   This should be used with care as you may lose any 
+                   original flags (e.g. from the correlator) not
+                   reflected in the FLAG_CMD table, etc.  
+	   
+           optype "unapply" --  unapply flags in MS
+
+              This operation will take the flags chosen by flagmode and
+              treat as if type='UNFLAG' or unflag=True regardless of
+              actual flag (e.g. even if marked as APPLIED=False in
+              FLAG_CMD).
+
+              If using mode='table' from the MS FLAG_CMD, will set
+              these flags to APPLIED=False.
+
+              WARNING: currently shadowing commands cannot be unapplied.
+	   
+              flagbackup -- Automatically backup MS FLAG column before unapplying?
+                   options: True,False
+                   default: True
+
+              flagsort -- combine/flags (to reduce number of flag ops) 
+                        e.g. flagsort='antenna' or flagsort='reason'
+                             flagsort='id' (keep individual XML flags)
+                   default: 'antenna'
+
+                   NOTE: use flagsort='antenna' or 'reason' to reduce
+                   number of individual flags that need to be processed
+
+                   If you have too many flags, you will get an error
                    "*** Error *** Too many flagging agents instantiated"
 	   
            optype "list" --  list flags
+
+              This operation will list the flags chosen by flagmode and
+              print to a file, screen and/or logger.
 
               outfile -- output listing file
                    default: '' (to screen/logger)
 	   
            optype "save" --  save flags to file/table
+
+              This operation will save the flags read in by flagmode and
+              save to an ascii file or the FLAG_CMD table, without
+              applying (to apply use optype='apply' instead).
 
               outfile -- output flag command file
                    default: '' (save flags to FLAG_CMD in vis, unless flagmode='table' 
@@ -335,6 +396,11 @@
 
            optype "plot" --  plot flags (ant vs time)
 
+              This operation will plot the flags chosen by flagmode to a 
+              matplotlib gui or to a file.  These will be sorted by
+              antenna vs. time.  Most useful for showing the online
+              flags.
+
               outfile -- output plot file
                    default: '' (plot to matplotlib window)
 
@@ -342,6 +408,9 @@
                    per antenna and timerange (e.g. direct from xml)
 	   
            optype "clear" --  clear flags from FLAG_CMD in vis
+
+              This operation will delete the selected flag rows from
+              the internal FLAG_CMD table of the MS.
 
               NOTE: choosing this option will disregard anything you
               set in flagmode, will always work on the FLAG_CMD table
@@ -367,6 +436,9 @@
               redo it).
 
            optype "set" --  set values for keys in FLAG_CMD table
+
+              This operation will set values for selected columns in
+              rows in the internal FLAG_CMD table of the MS.
 
               NOTE: choosing this option will disregard anything you
               set in flagmode, will always work on the FLAG_CMD table

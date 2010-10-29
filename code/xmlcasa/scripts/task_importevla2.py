@@ -24,6 +24,7 @@ def importevla2(asdm=None, vis=None, ocorr_mode=None, compression=None, asis=Non
 	#Vers7.0 (3.1.0) STM 2010-08-18 remove corr_mode,wvr_corrected_data,singledish,antenna
 	#Vers7.1 (3.1.0) STM 2010-10-07 remove time_sampling, srt
 	#Vers7.1 (3.1.0) STM 2010-10-07 use helper functions, flagger tool, fill FLAG_CMD 
+	#Vers7.2 (3.1.0) STM 2010-10-29 minor modifications to defaults and messages
 	try:
                 casalog.origin('importevla')
 		viso = ''
@@ -63,6 +64,8 @@ def importevla2(asdm=None, vis=None, ocorr_mode=None, compression=None, asis=Non
 		    ok=fg.done();
 		    print "Backed up original flag column to "+viso+".flagversions"
 		    casalog.post("Backed up original flag column to "+viso+".flagversions")
+	        else:
+		    casalog.post("Warning: will not back up original flag column",'WARN')
 		#
 		# =============================
 		# Begin EVLA specific code here
@@ -90,8 +93,8 @@ def importevla2(asdm=None, vis=None, ocorr_mode=None, compression=None, asis=Non
 		    nkeys = keylist.__len__()
 		    nflags += nkeys
 		else:
-		    print 'WARNING: No Flag.xml in SDM'
-		    casalog.post('WARNING: No Flag.xml in SDM')
+		    #print 'WARNING: No Flag.xml in SDM'
+		    casalog.post('WARNING: No Flag.xml in SDM','WARN')
 
 		if flagzero or shadow:
 		    # Get overall MS time range for later use (if needed)
@@ -133,30 +136,31 @@ def importevla2(asdm=None, vis=None, ocorr_mode=None, compression=None, asis=Non
 		    flagz['reason'] = 'CLIP_ZERO_RR'
 		    flagz['cmd'] = "mode='clip' cliprange='0~"+str(cliplevel)+"' clipexpr='ABS_RR'"
 		    flagz['id'] = 'ZERO_RR'
+		    myflagd[nflags] = flagz.copy()
 		    nflags += 1
-		    myflagd[nflags] = flagz
 		    # 
 		    flagz['reason'] = 'CLIP_ZERO_LL'
 		    flagz['cmd']= "mode='clip' cliprange='0~"+str(cliplevel)+"' clipexpr='ABS_LL'"
 		    flagz['id'] = 'ZERO_LL'
+		    myflagd[nflags] = flagz.copy()
 		    nflags += 1
-		    myflagd[nflags] = flagz
 		    nflagz = 2
 		    if (flagpol):
 		        flagz['reason'] = 'CLIP_ZERO_RL'
 			flagz['cmd']= "mode='clip' cliprange='0~"+str(cliplevel)+"' clipexpr='ABS_RL'"
 			flagz['id'] = 'ZERO_RL'
+			myflagd[nflags] = flagz.copy()
 			nflags += 1
-			myflagd[nflags] = flagz
 		        flagz['reason'] = 'CLIP_ZERO_LR'
 			flagz['cmd']= "mode='clip' cliprange='0~"+str(cliplevel)+"' clipexpr='ABS_LR'"
 			flagz['id'] = 'ZERO_RL'
+			myflagd[nflags] = flagz.copy()
 			nflags += 1
-			myflagd[nflags] = flagz
 			nflagz += 2
 			       
 		    print 'Flagging low-amplitude points, using clip level ',cliplevel
 		    casalog.post('Flagging low-amplitude points, using clip level '+str(cliplevel))
+		    print 'Added '+str(nflagz)+' clipping flags to list'
 		    casalog.post('Added '+str(nflagz)+' clipping flags to list')
 		    
 		if shadow:
@@ -180,8 +184,9 @@ def importevla2(asdm=None, vis=None, ocorr_mode=None, compression=None, asis=Non
 		    flagh['reason'] = 'SHADOW'
 		    flagh['cmd'] = "mode='shadow' diameter="+str(diameter)
 		    flagh['id'] = 'SHADOW'
+		    myflagd[nflags] = flagh.copy()
 		    nflags += 1
-		    myflagd[nflags] = flagh
+		    print 'Added 1 shadow flag to list'
 		    casalog.post('Added 1 shadow flag to list')
 
 		#
@@ -203,8 +208,8 @@ def importevla2(asdm=None, vis=None, ocorr_mode=None, compression=None, asis=Non
 		        print 'No flagging found in Flag.xml'
 			casalog.post('No flagging found in Flag.xml')
 		else:
-		    print 'Warning: will not be applying flags (applyflags=False)'
-		    casalog.post('Will not be applying flags (applyflags=False)')
+		    #print 'Warning: will not be applying flags (applyflags=False), use flagcmd to apply'
+		    casalog.post('Will not be applying flags (applyflags=False), use flagcmd to apply','WARN')
 
 	except Exception, instance:
 		print '*** Error ***',instance
@@ -606,7 +611,7 @@ def applyflagcmd(msfile, flagbackup, myflags):
 	#
 
         fg.done()
-        fg.clearflagselection(0)
+        fg.clearflagselection(-1)
 
 	try:
 	    if ((type(msfile)==str) & (os.path.exists(msfile))):
@@ -729,7 +734,7 @@ def applyflagcmd(msfile, flagbackup, myflags):
 		    nf = param_set[mode].__len__()
 		    if nf > 0:
 			fg.setdata()
-			fg.clearflagselection(0)
+			fg.clearflagselection(-1)
 			for s in param_set[mode].keys():
 			    param_i = param_set[mode][s]
 			    if mode=='shadow':

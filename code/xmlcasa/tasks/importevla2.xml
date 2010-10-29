@@ -53,7 +53,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="bool" name="flagzero">
 	    <description>Create flag for low amplitude/zero points</description>
-	    <value>False</value>
+	    <value>True</value>
     </param>
 
     <param type="double" name="cliplevel" subparam="true">
@@ -63,12 +63,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="bool" name="flagpol" subparam="true">
             <description>flag cross-hand corrs also?</description>
-            <value>False</value>
+            <value>True</value>
     </param> 
 
     <param type="bool" name="shadow">
 	    <description>Create flag for shadowed data</description>
-	    <value>False</value>
+	    <value>True</value>
     </param>
 
     <param type="double" name="diameter" subparam="true">
@@ -93,18 +93,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <constraints>
             <when param="flagzero">
-                <equals type="bool" value="False"/>
                 <equals type="bool" value="True">
                     <default param="cliplevel"><value type="double">1.0E-8</value></default>
-                    <default param="flagpol"><value type="bool">False</value></default>
+                    <default param="flagpol"><value type="bool">True</value></default>
                 </equals>
+                <equals type="bool" value="False"/>
             </when>
 
             <when param="shadow">
-                <equals type="bool" value="False"/>
                 <equals type="bool" value="True">
                     <default param="diameter"><value type="double">-1.0</value></default>
                 </equals>
+                <equals type="bool" value="False"/>
             </when>
 
             <when param="applyflags">
