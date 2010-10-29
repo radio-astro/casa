@@ -67,6 +67,12 @@ def setjy(vis=None,field=None,spw=None,modimage=None,scalebychan=None,fluxdensit
        try:
 
          casalog.origin('setjy')
+         # temporary, until scaleperchan is made compatible with Solar System objects.
+         if scalebychan and standard == 'Butler-JPL-Horizons 2010':
+                casalog.post('scalebychan is not yet compatible with standard = "Butler-JPL-Horizons 2010"', 'WARN')
+                casalog.post('continuing with scalebychan = False.', 'WARN')
+                scalebychan = False
+	
 
          if ((type(vis)==str) & (os.path.exists(vis))):
                      im.open(vis, usescratch=True)

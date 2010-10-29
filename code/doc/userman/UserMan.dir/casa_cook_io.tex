@@ -17,6 +17,7 @@
 % STM 2009-11-17  Release 3.0.0, importasdm
 % STM 2009-12-11  Release 3.0.0 final
 % JO 2010-03-10     edits for Release 3.0.1
+% JO 2010-10-12 edits Release 3.1.0 
 
 \chapter{Visibility Data Import, Export, and Selection}
 \label{chapter:io} 
@@ -34,6 +35,8 @@ to concatenate multiple datasets.  These are:
          (\S~\ref{section:io.import.asdm})
    \item {\tt importuvfits} --- import visibility data in UVFITS
          format (\S~\ref{section:io.import.uvfits.import})
+   \item {\tt importfitsidi} --- import visibility data in the
+     FITS-IDI format (\S~\ref{section:io.import.uvfitsidi.import})
    \item {\tt importvla} --- import data from VLA that is in 
          {\it export} format (\S~\ref{section:io.import.vla})
    \item {\tt exportuvfits} --- export a CASA MS in UVFITS format 
@@ -236,9 +239,7 @@ for further processing.  The most common scratch columns are:
 \item {\tt CORRECTED\_DATA} --- used to hold calibrated data for
   imaging or display;
 \item {\tt MODEL\_DATA} --- holds the Fourier inversion of a
-  particular model image for calibration or imaging;
-\item {\tt IMAGING\_WEIGHT} ---holds the gridding weights to be used in
-  imaging.  
+  particular model image for calibration or imaging.
 \end{itemize}
 The creation and use of the scratch columns is generally done behind the scenes, but you
 should be aware that they are there (and when they are used).
@@ -271,8 +272,7 @@ should be aware that they are there (and when they are used).
      &  Scratch: created by calibrater or imager tools  \\
   CORRECTED\_DATA   &  Complex(N$_c$, N$_f$)    
      &  Scratch: created by calibrater or imager tools \\ 
-  IMAGING\_WEIGHT   &  Float(N$_c$)
-     &  Scratch: created by calibrater or imager tools  \\
+
 \hline
 \end{tabular}
 \end{center}
@@ -299,7 +299,7 @@ into CASA as a Measurement Set:
       ({\tt importvla})
 
 \item UVFITS format can be imported into and exported from CASA
-      ({\tt importuvfits} and {\tt exportuvfits})
+      ({\tt importuvfits}, {\tt importfitsidi}, and {\tt exportuvfits})
 
 \end{itemize}
 
@@ -611,8 +611,43 @@ For example:
 \end{verbatim}
 \normalsize
 
-{\bf ALERT:} We cannot currently fill CARMA data exported
-via Miriad UVFITS.
+{\bf ALERT:} CARMA data can be loaded into CASA. However,
+ 
+\begin{verbatim}
+tb.open("c0104I/ANTENNA",nomodify=False)
+namelist=tb.getcol("NAME").tolist()
+for i in range(len(namelist)):
+	name = 'CA'+namelist[i]
+	print ' Changing '+namelist[i]+' to '+name
+	namelist[i]=name
+ 
+tb.putcol("NAME",namelist)
+tb.close()
+\end{verbatim}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Import using {\tt importfitsidi} }
+\label{section:io.import.uvfitsidi.import}
+
+Some uvfits data is written in the FITS-IDI standard. Those files can
+be imported into CASA with the {\tt importfitsidi} task: 
+\small
+\begin{verbatim}
+#  importfitsidi :: Convert a FITS-IDI file to a CASA visibility data set
+fitsidifile         =       ['']        #  Name(s) of input FITS-IDI file(s)
+vis                 =         ''        #  Name of output visibility file (MS)
+async               =      False        #  If true the taskname must be started using importfitsidi(...)
+\end{verbatim}
+\normalsize
+
+Example:
+\small
+\begin{verbatim}
+   importuvfits(fitsidifile='NGC1300.fits',vis='NGC1300.ms')
+\end{verbatim}
+\normalsize
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Export using {\tt exportuvfits} }

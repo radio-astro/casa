@@ -155,6 +155,9 @@
                calculated on a per channel basis. If False then it only one
                fluxdensity value is given per spw
 
+               NOTE: It does not yet work with Solar System flux density
+                     calibrators (standard = 'Butler-JPL-Horizons 2010').
+
        fluxdensity -- Specified flux density [I,Q,U,V] in Jy
                default: -1, uses [1,0,0,0] flux density for all sources,
                   except for 3C286, 3C48 and 3C147, which use standard flux
@@ -205,15 +208,14 @@
                   after running setjy, but it is an involved process.)
 
 	       The 'field' parameter must match the case of the field name(s)
-	       in vis, but matching the field name to one of the above objects
-	       is done in a case insensitive way.
+	       in vis (as shown by listobs).
 
                Flux density calculation with Solar System objects depends on
                ephemerides, typically in
                os.getenv('CASAPATH').split()[0] + '/data/ephemerides/JPL-Horizons'.
                If no ephemeris for the right object at the right time is present,
-               the calculation will fail.  Ask the helpdesk and/or look in
-               recipes/ephemerides/ to make an ephemeris.
+               the calculation will fail.  Ask the helpdesk <!-- and/or look in
+               recipes/ephemerides/ --> to make an ephemeris.
 
                CASA comes with ephemerides for several more objects, but they
                are intended for use with me.framecomet(), and are not (yet)
@@ -224,7 +226,7 @@
                may prove to require more sophisticated flux density models than
                are currently implemented in CASA.  Running
                casalog.filter('INFO1') before running setjy will for many
-               object send more possibly relevant information to the logger.
+               objects send more possibly relevant information to the logger.
  </example>
  </task>
  </casaxml>

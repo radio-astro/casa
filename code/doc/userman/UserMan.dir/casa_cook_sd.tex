@@ -17,6 +17,8 @@
 %Updated TT 2009-12-15 added a few more notes
 %Updated TT 2010-03-...      added comments from Takeshi, Wataru, and Kana for R3.0.1 updates
 %Updated JO 2010-03-10 start editing for R3.0.1
+%Updated TT 2010-05-27 start editing for R3.0.2, added inputs from Kana and Takeshi
+%Updated TN 2010-10-12 start editing for R3.1, added inputs from Kana and myself
 
 %\chapter{Single Dish Data Processing}
 \chapter[Appendix: Single Dish Data Processing]{Single Dish Data Processing}
@@ -30,12 +32,12 @@
 % frequencies table) and the last value(s) is used as rest frequencies.
 
 % TT: took out "BETA"  
-{\bf ALERT:} The single-dish analysis package within CASA
-is still experimental.
-It is included in the release for the use
-of the ALMA computing and commissioning groups.  It is not intended
-for general users.  Therefore, this description is included in this Cookbook
-as an appendix.  
+{\bf ALERT:} The single-dish analysis package within CASA 
+is included in the release for the use
+of the ALMA computing and commissioning groups.  
+%Therefore, this description is included in this Cookbook
+%as an appendix. 
+However, it is fully accessible for general users.
 
 For single-dish spectral calibration and analysis, 
 CASA uses the ATNF Spectral Analysis Package (ASAP).
@@ -51,13 +53,36 @@ within the standard CASA task framework.  ASAP was developed to
 support the Australian telescopes such as Mopra, Parkes, and
 Tidbinbilla, and we have adapted it for use within CASA for
 GBT (see the note below for limitation of GBT SDFITS handling) 
-and eventually ALMA [Note: Some support for the ALMA is now available)].  
-{\bf For R3.0.1, the ASAP version included in CASA was updated to Version 2.3.1 (which is 
-the latest official release of ASAP as of Mar. 2010).} 
+and eventually ALMA [Note: Some support for the ALMA is now available].  
+{\bf For R3.1, the ASAP version included in CASA was updated to 3.0 
+(which is the latest official release of ASAP as of Oct. 2010).
+In ASAP 3.0, data format was also updated from 2.0 to 3.0. 
+This update is backward incompatible so that you have to use data conversion 
+command ({\tt asap2to3}) to read old format data.}
+Usage of {\tt asap2to3} is as follows:
+
+\begin{verbatim}
+   $ asap2to3 in=(infile name)
+\end{verbatim}
+
+It creates a file (infile name).asap3 that contains equivalent data with original 
+one but is written as updated data format.
+For example, if you run 
+
+\begin{verbatim}
+   $ asap2to3 in=testdata.asap
+\end{verbatim}
+
+you will get testdata.asap.asap3, and original data testdata.asap will be kept.
+Note that this is specific issue for scantable, which is proper data format 
+for ASAP. 
+For other data format such as Measurement Set (MS) or SDFITS, you can import the data as usual.
+
 For details on ASAP -- including the User Guide, Reference Manual, and tutorial -- see
 the ASAP home page at ATNF: 
 \begin{itemize}
-   \item \url{http://www.atnf.csiro.au/computing/software/asap/} \, .
+   %\item \url{http://www.atnf.csiro.au/computing/software/asap/} \, .
+   \item \url{http://svn.atnf.csiro.au/trac/asap/} \, .
 \end{itemize}
 The ASAP tools are prefaced with {\tt sd.} within CASA, e.g., the ASAP tool {\tt scantable} becomes
 {\tt sd.scantable}.  See \S~\ref{section:sd.asap} for more
@@ -73,12 +98,14 @@ If you run into trouble, be sure to check the list of known issues
 and features of ASAP and the SDtasks presented in 
 \S~\ref{section:sd.issues} first.
 
-{\bf An important note for GBT raw SDFITS data:} The GBT raw SDFITS data format
-(in which the data are stored in multiple data tables within SDFITS file) are not
-supported in the current SDtasks or sd toolkit. Thus the data reduction for the GBT
-data starting from the raw SDFITS cannot be done. It is generally possible to 
-process the GBT data once it is converted with tools outside CASA 
-to a single data table SDFITS or other data format supported by ASAP.  
+%%% 2010/10/12 TN
+%%% This note is no longer necessary since filler for GBT data is implemented
+%{\bf An important note for GBT raw SDFITS data:} The GBT raw SDFITS data format
+%(in which the data are stored in multiple data tables within SDFITS file) are not
+%supported in the current SDtasks or sd toolkit. Thus the data reduction for the GBT
+%data starting from the raw SDFITS cannot be done. It is generally possible to 
+%process the GBT data once it is converted with tools outside CASA 
+%to a single data table SDFITS or other data format supported by ASAP.  
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -233,7 +260,7 @@ more forgiving.  Also, beware Python's sensitivity to indentation.
 \label{section:sd.intro.log}
 
 Before R3.0, all messages from ASAP were written to the standard output
-({\tt sys.stdout}) and they disappeared after exiting CASA. For R3.0, the
+({\tt sys.stdout}) and they disappeared after exiting CASA. After R3.0, the
 logging system of ASAP is integrated into CASA logging system.  Therefore, all outputs from ASAP commands, except for GUI related notifications, are sent to the file {\tt casapy.log} and they
 are displayed to the CASA Logger (see \S~\ref{section:intro.common.logger}).
 
@@ -258,11 +285,13 @@ reduction activities.  The list currently includes:
 
 \item {\bf sdflag} --- channel/row flagging of SD spectra
 
+\item {\bf sdflagmanager} --- enable list, save, restore, delete and rename flag version files
+
 \item {\bf sdfit} --- line fitting to SD spectra
 
 \item {\bf sdimaging} --- create an image from the total power or spectral data
 
-\item{\bf sdimprocess} --- remove the 'scanning noise' from raster scanned data  
+\item{\bf sdimprocess} --- remove the 'scanning noise' from raster scanned image  
 
 \item {\bf sdlist} --- print a summary of a SD dataset
 
@@ -279,13 +308,14 @@ catalog data
 
 \item {\bf sdtpimaging} --- do a simple calibration and create an image from the total power raster scans
  
-\item {\bf sdsim} --- simulate single dish data (experimental)
+\item{\bf msmoments} --- compute moments from spectral data
 
 \end{itemize}
 
-All of the SDtasks, except  those related to imaging  ({\tt sdtpimaging}, {\tt sdimaging}, and {\tt sdimprocess}), work from a file on disk rather than from
+All of the SDtasks, except  those related to imaging  ({\tt sdtpimaging}, {\tt sdimaging}, and {\tt sdimprocess}), 
+work from a file on disk rather than from
 a scantable in memory as the ASAP toolkit does (see 
-\S~\ref{section:sd.asap}.  Inside the tasks we invoke a call
+\S~\ref{section:sd.asap}).  Inside the tasks we invoke a call
 to {\tt sd.scantable} to read the data.  The scantable objects
 do not persist within CASA after completion of the tasks and
 are destroyed to free up memory. 
@@ -319,8 +349,8 @@ parameters that control them. }
 
 The SDtasks support the import and export file formats supported
 by ASAP itself.  For import, this includes:  ASAP (scantables), 
-MS (CASA measurement set), RPFITS and SDFITS.  For export, this
-includes: ASAP (scantables), MS (CASA measurement set),
+MS (CASA measurement set), RPFITS, SDFITS and NRO data format.  
+For export, this includes: ASAP (scantables), MS (CASA measurement set),
 ASCII (text file), SDFITS (a flavor of SD FITS).
 The {\tt sdsave} task is available exclusively for exporting with these
 data selection options.  The {\tt sdcoadd} task is available to merge data in separate data files
@@ -330,17 +360,20 @@ task help.
 Plotting of spectra is handled in the {\tt sdplot} task.  It also offers
 some selection, averaging, and smoothing options in case you are
 working from a dataset that has not been split or averaged.  Note that
-there is some rudimentary plotting capability in many of SD 
-tasks, controlled through the {\tt plotlevel} parameter, 
+there is some rudimentary plotting capability in many of SDtasks, 
+controlled through the {\tt plotlevel} parameter, 
 to aid in the assessment of the performance of these tasks.
 
 Scaling of the spectra and Tsys is available in the {\tt sdscale}.
-For arithmetic operations of spectra in separate scantables, a new task, {\tt sdmath}
+For arithmetic operations of spectra in separate scantables, {\tt sdmath}
 has been added. 
 
 Calculation of statistics on spectral regions is available in the {\tt sdstat} task.
 %%Results are passed in a Python dictionary return variable {\tt xstat}.
 Results are passed by a Python dictionary return variable.
+The statistics of spectra can also be calculated via {\tt msmoments} task.
+The input of {\tt msmoments} task must be in CASA measurement set format.
+The task newly creates measurement set to store statistics values.
 
 Basic Gaussian line-fitting is handled by the {\tt sdfit} task.  It can deal
 with the simpler cases, and offers some automation as well as interactive 
@@ -368,6 +401,12 @@ must be explicitly specified if the input dataset for SDtasks is
 Measurement Set. This can be done by {\tt antenna} parameter. By default
 ({\tt antenna}=0), data associate with antenna id 0 is imported.
 The {\tt antenna} parameter takes no effect for other input data formats.
+
+{\bf R3.1 New Features}\\
+The single dish simulation task, {\tt sdsim}, is merged with synthesis
+simulation task and removed. Please use the unified task, {\tt simdata} 
+(see Appendix \ref{chapter:sim}). 
+
 %\newpage 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{SDtask Summaries}
@@ -549,12 +588,17 @@ plotlevel -- control for plotting of results
   to be telescope diameter (m) and aperture efficiency
   respectively.
 
-  {\tt sdaverage} assumes that {\tt fluxunit} is set correctly in
+  Note that {\tt sdaverage} assumes that {\tt fluxunit} is set correctly in
   the data already.  If not, then set {\tt telescopeparm='FIX'} and it
   will set the default units to {\tt fluxunit} without conversion.
-  NOTE: If the data table in {\tt sdfile} is an ms from GBT and the default flux
+  {\bf NOTE:} If the data table in {\tt sdfile} is an ms from GBT and the default flux
   unit is missing, this task automatically fixes the default {\tt fluxunit}
   to 'K' before performing the conversion.
+
+  WARNING for the GBT raw SDFITS format data as input:\\
+  SDtasks are able to handle GBT raw SDFITS format data since the 
+  data filler is available. However, the functionality is not well 
+  tested yet, so that there may be unknown bugs. 
 
 % this 'new features' for R3.0.0
 %{\bf R3.0 New Features:}
@@ -646,8 +690,11 @@ plotlevel -- control for plotting of results
     DESCRIPTION:
 
     Task {\tt sdsmooth} performs smoothing of the single-dish spectra.
-    Set {\tt plotlevel <= 1} to plot the spectrum before and after smoothing.
+    Set {\tt plotlevel >= 1} to plot the spectrum before and after smoothing.
     
+    See the {\tt sdaverage} description for note on GBT raw SDFITS format data.
+
+
 % {\bf R3.0 New Feature:}
 %    
 %A new parameter {\tt verify} has been added. The task plots both raw
@@ -734,7 +781,7 @@ blmode -- mode for baseline fitting
                  default: 5
                  example: a single channel S/N ratio above which the channel is
                           considered to be a detection
-                 avg_limit -- channel averaging for broad lines
+         avg_limit -- channel averaging for broad lines
                  default: 4
                  example: a number of consecutive channels not greater than
                           this parameter can be averaged to search for broad lines
@@ -742,6 +789,11 @@ blmode -- mode for baseline fitting
                  default: 0
                  example: [1000] drops 1000 channels at beginning AND end
                           [1000,500] drops 1000 from beginning and 500 from end
+         batch -- run faster but no detailed output in logger
+                 default: False
+                 example: If True, this task runs faster, but the detailed 
+                          info such as the coefficients of the best-fit function 
+                          is not shown in the CASA logger
                 
          Note: For bad baselines threshold should be increased,
          and avg_limit decreased (or even switched off completely by
@@ -790,13 +842,12 @@ plotlevel -- control for plotting of results
     DESCRIPTION:
 
     Task {\tt sdbaseline} performs baseline fitting/removal for single-dish spectra.
-    The fit parameters, terms and rms of base-line are saved to an ASCII
+    The fit parameters, terms and rms of baseline are saved to an ASCII
     file, {\tt <outfile>\_blparam.txt}.
 
-    Also, see the notes on {\tt fluxunit} and {\tt telescopeparm} in the section for
-    {\tt sdaverage}.
     See the {\tt sdaverage} description for information on {\tt fluxunit} 
     conversion and the {\tt telescopeparm} parameter.
+    Also, see the {\tt sdaverage} description for note on GBT raw SDFITS format data.
 
     By setting {\tt blmode='interact'}, you can set/unset mask regions interactively using
     mouse buttons. Current mask regions will be shown with yellow shading.
@@ -1009,15 +1060,18 @@ DESCRIPTION:
     three steps in one task execution.
     By setting {\tt calmode='none'}
     one can run {\tt sdcal} on already calibrated data for further selection, averaging and atmospheric optical depth correction.
+
     See the {\tt sdaverage} description for information on the {\tt fluxunit} 
     conversion and the {\tt telescopeparm} parameter.
+    Also, see the {\tt sdaverage} description for note on GBT raw SDFITS format data.
+
     To save the output spectra within a certain range of 
     channels, you set the range in {\tt channelrange}. 
     Averaging of multi-resolution
     spectra can be achieved by setting the sub-parameter of {\tt average}, {\tt averageall}, 
     to True. It generally handles multi-IFs by selecting overlaps in IFs and assigning
     new IFs in the output spectra. 
-       
+
    %% {\bf R3.0 New Features:}
     
     The {\tt verifycal}, {\tt verifysm}, and {\tt verifybl}  parameters correspond to parameter
@@ -1073,9 +1127,24 @@ timeaverage -- average times for multiple scan cycles
         options: (bool) True,False
         default: False
         example: if True, this happens after calibration
+        >>>timeaverage expandable parameter
+                  tweight -- weighting for time average
+                          options: 'none'
+                                   'var'   (1/var(spec) weighted)
+                                   'tsys'  (1/Tsys**2 weighted)
+                                   'tint'  (integration time weighted)
+                                   'tintsys'  (Tint/Tsys**2)
+                                   'median'  ( median averaging)
+                          default: 'none'
 polaverage -- average polarizations
         options: (bool) True,False
         default: False
+        >>>polaverage expandable parameter
+                  pweight -- weighting for polarization average
+                          options: 'none'
+                                   'var'  (1/var(spec) weighted)
+                                   'tsys' (1/Tsys**2 weighted)
+                          default: 'none'
 outfile -- Name of output file
         default: '' (scantable)
         example:
@@ -1104,6 +1173,7 @@ overwrite -- overwrite the output file if it already exists
           and polarization averaging over scans on the merged scantable to 
           obtained co-added spectra before saving to a file on disk.
 
+          See the {\tt sdaverage} description for note on GBT raw SDFITS format data.
 
 \subsubsection{{\tt sdflag}}
 \label{section:sd.sdtasks.tasks.sdflag}
@@ -1141,11 +1211,11 @@ flagrow -- list of row numbers to apply flag/unflag (row-based)
         default: [] (no row selection)
         example: [0, 2, 3]
         WARNING: this parameter is effective only when 
-                  one or more row numbers are given explicitly and also clip=False
+                 one or more row numbers are given explicitly and also clip=False
 clip -- flag data that are outside a specified range
-                options: (bool) True, False
-                default: False
-          >>> clip expandable parameters
+        options: (bool) True, False
+        default: False
+        >>> clip expandable parameters
                 clipminmax -- range of data that will NOT be flagged
                           default: [] means do not use clip option
                           example: [0.0,1.5]
@@ -1207,6 +1277,41 @@ Returns: Current values of maskflag for each spectrum as a list,
     can be listed by setting {\tt flagmode='restore'}. It will print out a summary on
     the screen and returns maskflag values for each spectrum as a list.
     Please note that this task is still experimental.
+
+    See the {\tt sdaverage} description for note on GBT raw SDFITS format data.
+
+\subsubsection{{\tt sdflagmanager}}
+\label{section:sd.sdtasks.tasks.sdflagmanager}
+
+\begin{verbatim}
+Keyword arguments:
+sdfile -- Name of input SD dataset
+        default: ''. example: sdfile='ngc5921.asap'
+mode -- Flag version operation
+        default: 'list'; to list existing flagtables
+        'save' will save flag column from sdfile to a specified flag file
+        'restore' will place the specified flag file into sdfile
+        'delete' will delete specified flag file
+        'rename' will rename a specified flag file
+versionname -- Flag version name
+        default: none; example: versionname='original_data'
+        No imbedded blanks in the versionname
+comment -- Short description of a versionname, when mode is 'save' or 'rename'
+        default: ''; example: comment='Clip above 1.85'
+        comment = versionname
+oldname -- When mode='rename', the flag file to rename
+merge -- Merge operation
+        Options: 'or','and', but not recommended for now.
+
+\end{verbatim}
+
+        DESCRIPTION:
+
+        These flag version files are copies of the flag column for a
+        measurement set.  They can be restored to the data set to obtain
+        a previous flag version.  It is wise to
+        save a flagversion at the beginning or after serious editing.    
+
 
 \subsubsection{{\tt sdfit}}
 \label{section:sd.sdtasks.tasks.sdfit}
@@ -1343,7 +1448,7 @@ Returns a Python dictionary of line statistics
         example: each value is a list of lists with one list of
                  2 entries [fitvalue,error] per component.
                  e.g. xstat['peak']=[[234.9, 4.8],[234.2, 5.3]]
-                for 2 components.
+                 for 2 components.
 \end{verbatim}
 
     DESCRIPTION:
@@ -1375,6 +1480,7 @@ Returns a Python dictionary of line statistics
 
     See the {\tt sdaverage} description for information on {\tt fluxunit} 
     conversion and the {\tt telescopeparm} parameter.
+    Also, see the {\tt sdaverage} description for note on GBT raw SDFITS format data.
 
 %   {\bf R3.0 New Features:}
 %    Interactive mask selection for spectral line fitting is enabled with
@@ -1472,7 +1578,7 @@ pointingcolumn -- pointing data column to use
         Units of spectral axis can be specified via a parameter {\tt specunit}.
         Allowed values for specunit are 'channel', 'GHz', 'MHz', 'kHz', 'Hz', 
         and 'km/s'. This parameter is also used as the units of the parameter 
-        start and step that specify reference value of start channel and width 
+        {\tt start} and {\tt step} that specify reference value of start channel and width 
         of each spectral channel for channel map, respectively.
 
         Selection of the antennas can be made by setting antennaid(s) or 
@@ -1520,6 +1626,8 @@ overwrite -- overwrite the output file if already exists
     before running {\tt sdlist}.  Set it back afterward if you want lots
     of information.
 
+    See the {\tt sdaverage} description for note on GBT raw SDFITS format data.
+
 \subsubsection{{\tt sdmath}}
 \label{section:sd.sdtasks.tasks.sdmath}
 
@@ -1527,8 +1635,8 @@ overwrite -- overwrite the output file if already exists
 Keyword arguments:
 expr -- Mathematical expression using scantables 
 varlist -- Dictionary o variables in expr and their values.
-          Keys must be coincide with variables used in expr.
-          Values are substituted in each value in expr.
+           Keys must be coincide with variables used in expr.
+           Values are substituted in each value in expr.
 antenna -- antenna name or id (only effective for MS input).
 fluxunit -- units for line flux
         options: 'K','Jy',''
@@ -1620,6 +1728,8 @@ overwrite -- overwrite the output file if already exists
      the spectral data in the expression, so if any of the data are
      not selected, the task will produce no output. 
      
+     See the {\tt sdaverage} description for note on GBT raw SDFITS format data.
+
      Example:
 \begin{verbatim}
      # do on-off/off calculation
@@ -1651,7 +1761,7 @@ overwrite -- overwrite the output file if already exists
 \begin{verbatim}
 Keyword arguments:
 sdfile -- name of input SD dataset
-antenna -- antenna name or id (only effective for MS input).
+antenna -- antenna name or id (only effective for MS input). 
 fluxunit -- units for line flux
         options: 'K','Jy',''
         default: '' (keep current fluxunit)
@@ -1666,7 +1776,7 @@ fluxunit -- units for line flux
                          to ASAP are
                          'ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43',
                          'CEDUNA','HOBART'. For GBT, it fixes default fluxunit
-                         to 'K' first then converts to a new fluxunit.
+                         to 'K' first then convert to a new fluxunit.
                          telescopeparm=[104.9,0.43] diameter(m), ap.eff.
                          telescopeparm=[0.743] gain in Jy/K
                          telescopeparm='FIX' to change default fluxunit
@@ -1675,19 +1785,19 @@ fluxunit -- units for line flux
 specunit -- units for spectral axis
         options: (str) 'channel','km/s','GHz','MHz','kHz','Hz'
         default: '' (=current)
-        example: these will be the units for masklist
+        example: this will be the units for masklist
 restfreq -- rest frequency used for specunit='km/s'
         default: '' (use current setting)
         example: 4.6e10 (float value), '46GHz' (string with unit)
-                Allowed units are 'THz', 'GHz', 'MHz', 'kHz', and 'Hz'
+                 Allowed units are 'THz', 'GHz', 'MHz', 'kHz', and 'Hz'
 frame -- frequency frame for spectral axis
         options: (str) 'LSRK','REST','TOPO','LSRD','BARY',
                  'GEO','GALACTO','LGROUP','CMB'
-        default: set current frame in scantable
+        default: currently set frame in scantable
         WARNING: frame='REST' not yet implemented
 doppler -- doppler mode
         options: (str) 'RADIO','OPTICAL','Z','BETA','GAMMA'
-        default: set current doppler in scantable
+        default: currently set doppler in scantable
 scanlist -- list of scan numbers to process
         default: [] (use all scans)
         example: [21,22,23,24]
@@ -1715,98 +1825,116 @@ timeaverage -- average times for multiple scan cycles
         options: (bool) True,False
         default: False
         example: if True, this happens after calibration
-        
-    >>>timeaverage expandable parameter
-        tweight -- weighting for time average
-                options: 'none'
-                         'var'   (1/var(spec) weighted)
-                         'tsys'  (1/Tsys**2 weighted)
-                         'tint'  (integration time weighted)
-                         'tintsys'  (Tint/Tsys**2)
-                         'median'  ( median averaging)
-                default: 'none'
-
+    >>> timeaverage expandable parameter
+         tweight -- weighting for time average
+                 options: 'var'   (1/var(spec) weighted)
+                          'tsys'  (1/Tsys**2 weighted)
+                          'tint'  (integration time weighted)
+                          'tintsys'  (Tint/Tsys**2)
+                          'median'  ( median averaging)
+                 default: 'tintsys'
 polaverage -- average polarizations
         options: (bool) True,False
         default: False
-
-    >>>polaverage expandable parameter
-        pweight -- weighting for polarization average
-                options: 'none'
-                         'var'  (1/var(spec) weighted)
-                         'tsys' (1/Tsys**2 weighted)
-                          
+    >>> polaverage expandable parameter
+         pweight -- weighting for polarization average
+                 options: 'var'  (1/var(spec) weighted)
+                          'tsys' (1/Tsys**2 weighted)
+                 default: 'tsys'
 kernel -- type of spectral smoothing
         options: 'hanning','gaussian','boxcar', 'none'
         default: 'none'
-
-    >>>kernel expandable parameter
-        kwidth -- width of spectral smoothing kernel
-                options: (int) in channels
-                default: 5
-                example: 5 or 10 seem to be popular for boxcar
-                         ignored for hanning (fixed at 5 chans)
-                         (0 will turn off gaussian or boxcar)
-
+    >>> kernel expandable parameter
+         kwidth -- width of spectral smoothing kernel
+                 options: (int) in channels
+                 default: 5
+                 example: 5 or 10 seem to be popular for boxcar
+                          ignored for hanning (fixed at 5 chans)
+                          (0 will turn off gaussian or boxcar)
 plottype -- type of plot
-        options: 'spectra','totalpower','pointing','azel'
-        default: 'spectra'
-stack -- code for stacking on single plot for spectral plotting
-        options: 'p','b','i','t','s' or
-                  'pol', 'beam', 'if', 'time', 'scan'
-        default: 'p'
-        example: maximum of 25 stacked spectra
-                 stack by pol, beam, if, time, scan
-panel -- code for splitting into multiple panels for spectral plotting
-        options: 'p','b','i','t','s' or
-                 'pol', 'beam', 'if', 'time', 'scan'
-        default: 'i'
-        example: maximum of 25 panels
-                 panel by pol, beam, if, time, scan
-flrange -- range for flux axis of plot for spectral plotting
-        options: (list) [min,max]
-        default: [] (full range)
-        example: flrange=[-0.1,2.0] if 'K'
-                 assumes current fluxunit
-sprange -- range for spectral axis of plot
-        options: (list) [min,max]
-        default: [] (full range)
-        example: sprange=[42.1,42.5] if 'GHz'
-                 assumes current specunit
-linecat -- control for line catalog plotting for spectral plotting
-        options: (str) 'all','none' or by molecule
-        default: 'none' (no lines plotted)
-        example: linecat='SiO' for SiO lines
-                 linecat='*OH' for alcohols
-                 uses sprange to limit catalog
-        WARNING: specunit must be in frequency (*Hz)
-                 to plot from the line catalog!
-                 and must be 'GHz' or 'MHz' to use
-                 sprange to limit catalog
-linedop -- doppler offset for line catalog plotting (spectral plotting)
-        options: (float) doppler velocity (km/s)
-        default: 0.0
-        example: linedop=-30.0
-colormap -- the colours to be used for plot lines.
-        default: None
-        example: colormap="green red black cyan magenta" (html standard)
-                 colormap="g r k c m" (abbreviation)
-                 colormap="#008000 #00FFFF #FF0090" (RGB tuple)
-                 The plotter will cycle through these colours
-                 when lines are overlaid (stacking mode).
-linestyles -- the linestyles to be used for plot lines.
-        default: None
-        example: linestyles="line dashed dotted dashdot dashdotdot dashdashdot".
-                 The plotter will cycle through these linestyles
-                 when lines are overlaid (stacking mode).
-                 WARNING: Linestyles can be specified only one color has been set.
-linewidth -- width of plotted lines.
-        default: None
-        example: linewidth=1 (integer)
-                 linewidth=0.75 (double)
-histogram -- plot histogram
+         options: 'spectra','totalpower','pointing','azel'
+         default: 'spectra'
+     >>> plottype expandable parameter
+         stack -- code for stacking on single plot for spectral plotting
+                 options: 'p','b','i','t','s' or
+                          'pol', 'beam', 'if', 'time', 'scan'
+                 default: 'p'
+                 example: maximum of 25 stacked spectra
+                          stack by pol, beam, if, time, scan
+         panel -- code for splitting into multiple panels for spectral plotting
+                 options: 'p','b','i','t','s' or
+                          'pol', 'beam', 'if', 'time', 'scan'
+                 default: 'i'
+                 example: maximum of 25 panels
+                          panel by pol, beam, if, time, scan
+        flrange -- range for flux axis of plot for spectral plotting
+                options: (list) [min,max]
+                default: [] (full range)
+                example: flrange=[-0.1,2.0] if 'K'
+                         assumes current fluxunit
+        sprange -- range for spectral axis of plot
+                options: (list) [min,max]
+                default: [] (full range)
+                example: sprange=[42.1,42.5] if 'GHz'
+                         assumes current specunit
+        linecat -- control for line catalog plotting for spectral plotting
+                options: (str) 'all','none' or by molecule
+                default: 'none' (no lines plotted)
+                example: linecat='SiO' for SiO lines
+                         linecat='*OH' for alcohols
+                         uses sprange to limit catalog
+                WARNING: specunit must be in frequency (*Hz)
+                         to plot from the line catalog!
+                         and must be 'GHz' or 'MHz' to use
+                         sprange to limit catalog
+        linedop -- doppler offset for line catalog plotting (spectral plotting)
+                options: (float) doppler velocity (km/s)
+                default: 0.0
+                example: linedop=-30.0
+        colormap -- the colours to be used for plot lines. 
+                default: None
+                example: colormap="green red black cyan magenta" (html standard)
+                         colormap="g r k c m" (abbreviation)
+                         colormap="#008000 #00FFFF #FF0090" (RGB tuple)
+                         The plotter will cycle through these colours 
+                         when lines are overlaid (stacking mode).
+        linestyles -- the linestyles to be used for plot lines. 
+                default: None
+                example: linestyles="line dashed dotted dashdot dashdotdot dashdashdot". 
+                         The plotter will cycle through these linestyles 
+                         when lines are overlaid (stacking mode). 
+                WARNING: Linestyles can be specified only one color has been set. 
+        linewidth -- width of plotted lines. 
+                default: 1
+                example: linewidth=1 (integer)
+                         linewidth=0.75 (double)
+        histogram -- plot histogram
+                options: (bool) True, False
+                default: False
+header -- print header information on the plot
         options: (bool) True, False
-        default: False
+        default: True
+        The header information is printed only on the logger when 
+        plottype = 'azel' and 'pointing'. 
+    >>> header expandable parameter
+        headsize -- header font size
+                options: (int)
+                default: 9
+plotstyle -- customise plot settings
+        options: (bool) True, False
+        default: True
+    >>> plotstyle expandable parameter
+        layout -- a list of subplots layout in figure coordinate (0-1), 
+                  i.e., fraction of the figure width or height.
+                  The order of elements should be:
+                  [left, bottom, right, top, horizontal space btw panels,
+                  vertical space btw panels]
+        legendloc -- legend location on the axes (0-10)
+                   options: (integer) 0 -10 
+                            see help of "sd.plotter.set_legend" for 
+                            the detail of location. Note that 0 ('best')
+                            is very slow. 
+                   default: 1 ('upper right')
 plotfile -- file name for hardcopy output
         options: (str) filename.eps,.ps,.png
         default: '' (no hardcopy)
@@ -1820,70 +1948,84 @@ overwrite -- overwrite the output file if already exists
 
     DESCRIPTION:
     
-    Task {\tt sdplot} displays single-dish spectra.  
-    It assumes that the spectra have been calibrated in {\tt sdcal}.
-    It does allow selection of scans, IFs, polarizations, and
-    some time and channel averaging/smoothing options also,
-    but does not write data.
-    
-    *** Only apply to 'spectra' {\tt plottype} ***
+        Task {\tt sdplot} displays single-dish spectra or total power data.
+        It assumes that the spectra have been calibrated.
+        It does allow selection of scans, IFs, polarizations, and
+        some time and channel averaging/smoothing options also,
+        but does not write out this data.
 
-    Some header information of the data are plotted at top.
-    Note that {\tt colormap} and {\tt linestyles} cannot be controlled at this time.
-    {\tt 'linestyles'} is ignored if both of them are specified.
-    Some plot options, like annotation and changing titles,
-    legends, fonts, and the like are not supported in this task.
-    You should use {\tt sd.plotter} from the ASAP toolkit directly for this.
+        *** Only apply to 'spectra' plottype ***\\
+        Note that colormap and linestyles cannot be controlled at a time.
+        The '{\tt linestyles}' is ignored if both of them are specified.
+        Some plot options, like changing titles, legends, fonts,
+        and the like are not supported in this task.  You should use
+        {\tt sd.plotter} from the ASAP toolkit directly for this.
 
-    This task uses the JPL line catalog as supplied by ASAP.
-    If you wish to use a different catalog, or have it plot
-    the line IDs from top or bottom (rather than alternating),
-    then you will need to explore the {\tt sd} toolkit also.
-    See \S~\ref{subsection:sd.asap.plotting} for more information.
-    
-    Note that multiple scans and IFs can in principle be handled
-    through stacking and paneling, but this is fairly rudimentary
-    at present and you have little control of what happens in
-    individual panels.  We recommend that you use {\tt scanlist}, 
-    {\tt field}, and {\tt iflist} to give a single selection for each run.
+        This task uses the JPL line catalog as supplied by ASAP.
+        If you wish to use a different catalog, or have it plot
+        the line IDs from top or bottom (rather than alternating),
+        then you will need to explore the {\tt sd} toolkit also.
 
-    After plotting, you can display a spectral value on a pop-up
-    window along with mouse movement. Click the LEFT-mouse button
-    over a spectrum to select it, and drag mouse in the panel to
-    output its value at the x-position of mouse cursor. The selection
-    is released when you release the mouse button.
+        Note that multiple scans and IFs can in principle be handled
+        through stacking and paneling, but this is fairly rudimentary
+        at present and you have little control of what happens in
+        individual panels.  We recommend that you use {\tt scanlist}, {\tt field},
+        and {\tt iflist} to give a single selection for each run.
 
-    The task {\tt sdplot} adds an additional toolbar to ASAP plotter which
-    has three buttons, 'spec value', 'statistics', and 'Quit'. 
-    When the 'spec value' button is pressed and activated, you can 
-    display a spectral value on the toolbar along with mouse
-    movement. Click the LEFT-mouse button over a spectrum to select
-    it, and drag mouse in the panel to output its value at the 
-    x-position of mouse cursor. The selection is released when you
-    release the mouse button. 
-    When 'statistic' button is pressed and activated, you can get
-    statistic values of a channel region selected by mouse. Select a
-    rectangle region with LEFT/RIGHT-mouse buttons to SELECT/EXCLUDE the
-    channel region to calculate statistics for the all spectra
-    plotted. The results are printed on the casapy console. 
-    Press 'Quit' button to close the plotter.
-    
-    *** other {\tt plottype} options ***
+        This task adds an additional toolbar to Matplotlib plotter which
+        has five buttons, 'spec value', 'statistics', 'notaion', '+ page'
+        and 'Quit'.
+        When the 'spec value' button is pressed and activated, you can
+        display a spectral value on the toolbar along with mouse
+        movement. Click the LEFT-mouse button over a spectrum to select
+        it, and drag mouse in the panel to output the spectral value of
+        x-position of mouse cursor. The selection is released when you
+        release the mouse button.
+        When 'statistic' button is pressed and activated, you can get
+        statistic values of a channel region selected by mouse. Select a
+        rectangle region with LEFT/RIGHT-mouse to SELECT/EXCLUDE the
+        channel region to calculate statistics for the all spectra
+        plotted. The results are printed on the casa logger.
+        When 'notation' button is pressed and activated, you can
+        graphically add a text on a position of plot. Click the
+        LEFT-mouse on a position of plot to load notaion window, and
+        input a text to the textbox, select an anchor, and press 'print'
+        button to print it on the plot. Click RIGHT-mouse on a text and
+        cascade menu will let you select either delete or modify it.
+        When you select a panel parameter with more than 16 panels,
+        '+ page' button is activated and let you go through pages.
+        Press 'Quit' button to close the plotter.
 
-    {\tt plottype='totalpower'} is used to plot the total power data.
-    and only plot option is amplitude versus data row number.
-    {\tt plottype='azel'} plots azimuth and elevation tracks of the source.
-    {\tt plottype='pointing'} plots antenna pointing.
-    Currently most of the plotting parameters are ignored for these modes.
+        *** other plottype options ***\\
+        Currently most of the parameters are ignored in these modes.
 
-    See the {\tt sdaverage} description for information on {\tt fluxunit} 
-    conversion and the {\tt telescopeparm} parameter.
+        * {\tt plottype='totalpower'} is used to plot the total power data.
+          and only plot option is amplitude versus data row number.
 
-    WARNING: be careful plotting OTF (on-the-fly) mosaic data with 
-    lots of fields!
+        * {\tt plottype='azel'} plots azimuth and elevation tracks of the source.
 
-%%%{\bf R3.0 New Features:}
- 
+        * {\tt plottype='pointing'} plots antenna poinitings.
+
+        See the {\tt sdaverage} description for information on the {\tt fluxunit} conversion
+        and the {\tt telescopeparm} parameter.
+        Also, see the {\tt sdaverage} description for note on GBT raw SDFITS format data.
+
+        WARNING: be careful plotting otf data with lots of fields!
+  
+{\bf R3.1 New Features:}\\
+New parameters added to control the appearance of plots. 
+A boolean parameter, {\tt header}, controls whether or not header is
+printed on a plot and the subparameter, {\tt headsize}, specifies
+font size. When a boolean parameter, {\tt plotsyle}, is True, users can
+specify margins between subplots and legend location by the
+subparameters, {\tt layout} and {\tt legendloc}. 
+
+Default values changed for subparameters {\tt tweight = 'tintsys'} and
+{\tt pweight = 'tsys'}.
+
+Two new buttons, 'notaion' and '+ page', added to the toolbar on
+plot.
+
 \subsubsection{{\tt sdsave}}
 \label{section:sd.sdtasks.tasks.sdsave}
 
@@ -1966,6 +2108,8 @@ overwrite -- overwrite the output file if already exists
           further analysis using sd tool. For further imaging using imager,
           save the data to the Measurement Set (MS2).
           
+          See the {\tt sdaverage} description for note on GBT raw SDFITS format data.
+
           WARNING:  The parameter {\tt rowlist} enables you to make data selection based
           on row number in the Measurement Set or scantable for data saving. 
           Note that data should be treated carefully when applying row
@@ -2015,11 +2159,14 @@ overwrite -- overwrite the output file if already exists
     of scaling factor consisting of adequate number of rows and columns.
     For example, if the content of input ASCII file is shown as,
 
+    \begin{verbatim}
       0.5 0.3 0.2
       1.0 0.2 0.9
+    \end{verbatim}
 
-     it is interpreted as a list [[0.5,0.3,0.2],[1.0,0.2,0.9]].
+    it is interpreted as a list [[0.5,0.3,0.2],[1.0,0.2,0.9]].
 
+    See the {\tt sdaverage} description for note on GBT raw SDFITS format data.
 
 \subsubsection{{\tt sdstat}}
 \label{section:sd.sdtasks.tasks.sdstat}
@@ -2137,14 +2284,15 @@ overwrite -- overwrites the statistics file if already exists
      {\tt statfile}.
      Interactive mask specification is possible with {\tt interactive=True}.
      Integrated intensity will be shown on the screen and will be included
-     in the saved statfile (but not yet available in the returned dictionary).
+     in the saved {\tt statfile} (but not yet available in the returned dictionary).
 
      Note that multiple scans and IFs can in principle be handled, but
      we recommend that you use {\tt scanlist}, {\tt field}, {\tt
      iflist}, and {\tt pollist} to give a single selection for each run.
 
-     See the {\tt sdcal} description for information on the {\tt fluxunit} 
+     See the {\tt sdaverage} description for information on the {\tt fluxunit} 
      conversion and the {\tt telescopeparm} parameter.
+     Also, see the {\tt sdaverage} description for note on GBT raw SDFITS format data.
 
      WARNING: If you do have multiple scantable rows, then {\tt xstat}
      values will be lists.
@@ -2321,7 +2469,7 @@ method (Sofue \& Reich 1979) can be used to remove the scanning
         For 'Basket-Weaving', scanning directions must have at least two 
         different values. Normally, the scanning direction should be 
         specified for each input image. Otherwise, specified scanning 
-        directions will be used iteratively. The masklist is a width of 
+        directions will be used iteratively. The {\tt masklist} is a width of 
         masking region in the Fourier plane. It is specified as a fraction 
         (percentage) of the image size. 
 
@@ -2349,131 +2497,73 @@ method (Sofue \& Reich 1979) can be used to remove the scanning
         The {\tt imagename} specifies an output CASA image name. If the {\tt imagename} 
         is empty, the default name ('sdimprocess.out.im') will be used. 
 
-\subsubsection{{\tt sdsim}}
-\label{section:sd.sdtasks.tasks.sdsim}
 
-%%DESCRIPTION:
-   Task {\tt sdsim} simulates single dish observations. Note this is a 
-   preliminary prototype task and functionalities are limited. 
-   New functionality is actively  being added, so if you have changed 
-   versions of CASA, check the inputs carefully.
-
+\subsubsection{{\tt msmoments}}
+\label{section:sd.sdtasks.tasks.sdmoments}
 
 \begin{verbatim}
-single dish simulation task (prototype):        
+Keyword arguments:
+msname -- Name of input MS data
+        default: none; example: msname="OrionS_rawACSmod"
+moments -- List of moments you would like to compute
+        default: 0 (integrated spectrum);example: moments=[0,1]
+        see list above
+antenna -- antenna name or id that the user wants to compute moments
+        default: '' (all antennae)
+field -- field name or id that the user wants to compute moments
+        default: '' (all fields)
+spw -- spectral window id that the user wants to compute moments
+        default: '' (all spectral windows)
 
-   This task simulates single dish observations. Note this is a 
-   preliminary prototype task and functionalities are limited. 
-   New functionality is actively  being added, so if you have changed 
-   versions of CASA, check the inputs carefully.
-   -------------------------------
-   Keyword arguments:
-   -------------------------------
-   -- Input Model:
-   modelimage -- Name of an image to simulate.
-   inbright -- Peak surface brightness to scale input image 
-               in Jy/square arcsec.
-               options: 'default' or surface brightness in Jy/sq. 
-               default: 'default'
-   ignorecoord -- ignore whatever is in the image header for coordinates
-               options: (bool) True,False
-               default: False 
-   antennalist -- Name of ascii file containing antenna positions.
-               each row has x y z coordinates and antenna diameter; 
-               header lines are required to specify the observatory name
-               and coordinate system e.g. 
-               # observatory=ALMA
-               # coordsys=UTM
-               # datum=WGS84
-               # zone=19
-   antenna -- Antenna id with which observed. 
-               default: ''
-   -------------------------------
-   -- Output Control:
-   project -- Name of project simulated; created ms and images will
-               start with this string. 
-               default: 'simsd'.
-   startfreq -- Frequency of first channel
-               default: '89GHz'
-   chanwidth -- Channel width
-               default: '10MHz'
-   refdate -- Central time of simulated observation. 
-               default: '2012/05/21/22:05:00'
-               [alpha] ** observations are centered at the nearest transit **
-   totaltime --- total time of observation e.g '7200s'
-   integration --- Time interval for each integration
-               default: '10s'
-   scanlength --- number of integrations per pointing
-               default: 5
-   direction -- image center direction
-               * can optionally be a list of pointings or 
-               a filename which stores a list of pointings, which will 
-               override pointingspacing.
-               Otherwise sdsim will automatically calculates pointings
-               in regular lattice grid.  When direction is a
-               list, the centroid of direction will be used as the center.
-               default: ['J2000 19h00m00 -40d00m00']
-   pointingspacing-- spacing in between beams
-               default: '1arcmin'        
-   mosaicsize --- angular size of desired area to map
-               default: ['1.0arcmin', '1.0arcmin']
-   cell -- output cell/pixel size
-               default: '0.1arcsec'
-   imsize -- output image size in pixels (x,y)
-               options: (list)
-               default: [128,128]
-   stokes -- Stokes parameters to image
-               default: 'I'
-   -------------------------------
-   -- Corrupting data:
-   noise_thermal -- add thermal noise 
-               options: (bool) True, False
-               default: False
-               * [alpha] currently only knows about ALMA receivers 
-                  noise_thermal expandable parameters
-               t_sky -- atmospheric temperature in K 
-                      default: 260.0
-               tau0 -- zenith opacity at observing frequency
-                      default: 0.1
-
-
-
-   -------------------------------
-   How to specify a model image:
-   -------------------------------
-   * sdsim requires a CASA or fits image. If you merely have a grid of 
-     numbers, you will need to write them out as fits or write a CASA script to
-     read them in and use the ia tool to create an image and insert the data.
-
-   * sdsim does NOT require a coordinate system in the header. If the
-     coordinate information is incomplete, missing, or you would like to
-     override it, set "ignorecoord=True".  sdsim will then assume that the
-     axes of your input correspond to RA, Dec, and (optionally) frequency and
-     (optionally) Stokes parameter.  It will assume that the spatial pixel
-     size equals the output parameter "cell", the center of the image is in
-     the (average of the) output parameter "direction", the spectral reference
-     frequency and starting frequency equal the output parameter "startfreq",
-     and the channel width equals the output parameter "chanwidth".  
-
-
-   -------------------------------
-   Output produced:
-   -------------------------------
-   $project.$modelimage.coord = input image recast into 4d image
-   $project.$modelimage.flat  = input image regridded to size, moment zero
-       image if the input was a cube.
-   $project.ms = synthesized visibilities
-   $project.noisy.ms = visibilities with noise added 
-     ** if noise is requested, then the noisy visibilities will be 
-        used to create the synthsized image.
-   $project.im = output image created from $project.noisy.ms (if exists) or
-                 $project.ms. 
+includemask -- List of masks to include
+excludemask -- List of masks to exclude
+        default: [-1] (don"t exclude channels); example=[100,200]
+outfile -- Output MS file name (or root for multiple moments)
+        default: "" (input+auto-determined suffix);example: outfile="source_moment"
+overwrite -- Overwrite existing output files
+        default: false
 \end{verbatim}
 
-{\bf R3.0.2 New Features:}
-Single dish simulation can now be done in the same task as
-interferometric, and the simulated datasets can be jointly imaged, and
-the combined image analyzed.  See the {\tt simdata2} chapter, Sec.\,\ref{chapter:sim}.
+Task {\tt msmoments} computes moments from spectral data stored
+in MS. The task is defined in analogy with {\tt immoments} task,
+so that you can calculate any moments that is available
+for{\tt  immoments} task. Currently, the task only accepts MS
+with FLOAT\_DATA column.
+
+The spectral moment distributions at each row in input MS are
+determined. Input MS must have FLOAT\_DATA column, i.e. 
+autocorrelation data.  
+See the cookbook and User Reference Manual for
+mathematical details.
+
+The main control of the calculation is given by parameter {\tt moments}:
+        
+\begin{itemize}
+   \item {\tt moments=-1} - mean value of the spectrum
+   \item {\tt moments=0}  - integrated value of the spectrum
+   \item {\tt moments=1}  - intensity weighted coordinate;traditionally used to get 'velocity fields'
+   \item {\tt moments=2}  - intensity weighted dispersion of the coordinate; traditionally used to get "velocity dispersion"
+   \item {\tt moments=3}  - median of I
+   \item {\tt moments=4}  - median coordinate
+   \item {\tt moments=5}  - standard deviation about the mean of the spectrum
+   \item {\tt moments=6}  - root mean square of the spectrum
+   \item {\tt moments=7}  - absolute mean deviation of the spectrum
+   \item {\tt moments=8}  - maximum value of the spectrum
+   \item {\tt moments=9}  - coordinate of the maximum value of the spectrum
+   \item {\tt moments=10} - minimum value of the spectrum
+   \item {\tt moments=11} - coordinate of the minimum value of the spectrum
+\end{itemize}
+
+Note that includemask and excludemask cannot set simultaneously. 
+
+Example for finding the 1-momment, intensity-weighted
+coordinate, often used for finding velocity fields.
+
+\begin{verbatim}
+   msmoments( msname="mydata", moment=1, outfile="velocityfields" )
+\end{verbatim}
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Single Dish Analysis Use Cases With SDTasks}
@@ -3119,7 +3209,7 @@ a set of prototype tasks for single dish analysis:
 Once this is done, all of the ASAP functionality is now under the
 Python 'sd' tool.  {\bf Note:} This means that if you are following
 the ASAP cookbook or documentation, all of the commands should be 
-invoked with a 'sd.' before the native ASAP command.
+invoked with a '{\tt sd.}' before the native ASAP command.
 
 The ASAP interface is essentially the same as that
 of the CASA toolkit, that is, there are groups of functionality (aka
@@ -3248,7 +3338,7 @@ rc(group, **kwargs)
 
 Data can be loaded into ASAP by using the {\tt scantable} function
 which will read a variety of recognized formats (RPFITS, varieties of
-SDFITS, the CASA Measurement Set, and NRO OTF data format). For example:
+SDFITS, the CASA Measurement Set, and NRO data format). For example:
 
 
 \small
@@ -3283,8 +3373,11 @@ the individual times and phases.
 ASAP. In particular, the program which converts GBT raw data into CASA
 Measurement Sets tends to proliferate the number of spectral windows
 due to shifts in the tracking frequency; this is being worked on by
-GBT staff. In addition, GBT SDFITS is currently not readable by ASAP
-(in progress).
+GBT staff. 
+%%% 2010/10/12 TN
+%%% no longer necessary since the filler is ready
+%In addition, GBT SDFITS is currently not readable by ASAP
+%(in progress).
 
 %\item The Measurement Set to scantable conversion is able to deduce
 %the reference and source data and assigns an '\_r' to the reference
@@ -3312,7 +3405,7 @@ GBT staff. In addition, GBT SDFITS is currently not readable by ASAP
 
 \begin{itemize}
 \item Currently ASDM data cannot be read to ASAP directly. It must be converted
-to a MS first via importasdm task. Then you can load this MS to ASAP. The
+to a MS first via {\tt importasdm} task. Then you can load this MS to ASAP. The
  {\tt importasdm} task allows to handle these two steps at once. To do
  that, you should set {\tt singledish=True} and specify id or name of the
  antenna by the {\tt antenna} parameter (see 2.2.1). %% <= add correct TeX reference 
@@ -3479,7 +3572,7 @@ selection functions, e.g.,
 \label{subsubsection:sd.asap.scantable.state}
 
 Some properties of a scantable apply to all of the data, such as
-example, spectral units, frequency frame, or Doppler type. This
+spectral units, frequency frame, or Doppler type. This
 information can be set using the {\tt scantable} \_set\_xxxx\_
 methods.  These are currently:
 \small
@@ -3499,7 +3592,7 @@ that describe the flux axis:
 \end{verbatim}
 \normalsize
 Choices are {\tt 'K'} or {\tt 'Jy'}.
-Note: the scantable.set\_fluxunit function only changes the {\bf name}
+Note: the {\tt scantable.set\_fluxunit} function only changes the {\bf name}
 of the current fluxunit. To change fluxunits, use 
 {\tt scantable.convert\_flux} as described in 
 \S~\ref{subsubsection:sd.asap.calib.fluxunit}
@@ -3634,7 +3727,7 @@ their cousins $+=, -=, *=, /=$.
 
 Operands can be
 a numerical value and one- or two-dimensional Python list. For list
-operand, it should be conform with the shape of the scantable.?
+operand, its shape should be conform with the shape of spectral data stored in the scantable.
 Mathematics between two scantables is also available. In that case,
 scantables must be conform with each other.
 
@@ -3775,9 +3868,9 @@ source, calibration on, on source, calibration off, on reference,
 calibration on; on reference, calibration off). Currently, there are a
 number of routines emulating the standard GBT calibration (in GBTIDL):
 \begin{itemize}
-   \item calps - calibrate position switched data
-   \item calfs - calibrate frequency switched data
-   \item calnod - calibration nod (beam switch) data
+   \item {\tt calps} - calibrate position switched data
+   \item {\tt calfs} - calibrate frequency switched data
+   \item {\tt calnod} - calibration nod (beam switch) data
 \end{itemize}
 
 All these routines calibrate the spectral data to antenna temperature
@@ -3788,24 +3881,24 @@ GBTIDL calibration document available at:
 \end{itemize}
 There are two basic steps:
 
-First: determine system temperature using a noise tube calibrator
-(sd.dototalpower()) 
+First, determine system temperature using a noise tube calibrator
+({\tt sd.dototalpower()}) 
 
 For each integration, the system temperature is calculated from
 CAL noise on/off data as:
 
-$ T_{sys} = T_{cal}$ x 
+$ T_{sys} = T_{cal}$ $\times$ 
 $\frac{<ref_{caloff}>}{<ref_{calon} - ref_{caloff}>} + \frac{T_{cal}}{2} $
 
 {\tt ref} which refers to reference data and the spectral data are averaged
 across the bandpass.  Note that the central 80\% of the spectra are
 used for the calculation.
 
-Second, determine antenna temperature (sd.dosigref())
+Second, determine antenna temperature ({\tt sd.dosigref()})
 
 The antenna temperature for each channel is calculated as:
 
-$ T_a(\nu) = T_{sys}$ x 
+$ T_a(\nu) = T_{sys}$ $\times$ 
 $\frac{sig(\nu) - ref(\nu)}{ref(\nu)}$
 
 where $sig = \frac{1}{2}(sig_{calon} + sig_{caloff})$, 
@@ -3829,14 +3922,14 @@ correct order as these routines only do minimal checking.
 
 %addition from Takeshi
 \subsubsection{Comprehensive calibration function}
-A new function calibrate is introduced for more comprehensive
+A new function {\tt calibrate} is introduced for more comprehensive
 calibration. This function calls appropriate calibration scheme by
 referring the antenna name in the metadata. The user just specify input
 scantable and calmode parameter that indicates calibration mode ('ps',
 'nod', 'fs', or 'otf'). For GBT data, calibrate function calls one of
 the functions listed in the above section depending upon the value of
-{\tt calmode}. For APEX data, apexcal function is called, while for ALMA
-data, that contains string 'ALMA' or 'OSF' in its antenna name, almacal
+{\tt calmode}. For APEX data, {\tt apexcal} function is called, while for ALMA
+data, that contains string 'ALMA' or 'OSF' in its antenna name, {\tt almacal}
 function is called. Calibration scheme for these two telescopes are
 essentially same, and can be expressed as,
 
@@ -3915,7 +4008,7 @@ CASA <64>: av = sd.average_times(sc)
 The time averaging can also be applied to multiple scantables.  For example, such data
 might have been taken on different days.  The
 {\tt sd.average\_time} function takes multiple scantables as input.
-However, if th4y taken at significantly different times (different days for
+However, if they are taken at significantly different times (different days for
 example), then {\tt sd.scantable.freq\_align} must be used to align
 the velocity scales to the same time, e.g.
 \small
@@ -4172,7 +4265,7 @@ Here is an example of setting multiple rest frequencies for spectra of a particu
   scans.set_restfreqs([45490258000.0,45590258000.0,45690258000.0])
 \end{verbatim}
 
-NOTE: there is no functionality yet to select a specific rest frequency 
+{\bf NOTE:} there is no functionality yet to select a specific rest frequency 
 to apply to a specific line, etc. Currently, the first one in the list
 of the rest frequencies is used for such calculation.
 
@@ -4483,44 +4576,24 @@ implemented.  These currently include:
 
 \item {\tt sd.plotter}
 
-  Currently one can get hardcopy only after making a viewed plot.
-  Ideally, ASAP should allow choosing the plotting device
-  when you set up the plotter.
+  The method, {\tt sd.plotter.set\_range()} sets the same range for
+  multiple panels, while we would like it to be able to set the
+  range for each independently, including the default ranges.
 
-  Multi-panel plotting is poor.  Currently one can only add things
-  (like lines, text, etc.) to the first panel.  Also,
-  {\tt sd.plotter.set\_range()} sets the same range for multiple panels,
-  while we would like it to be able to set the range for each independently,
-  including the default ranges.
+  The {\tt sd.plotter} object remembers things throughout the session and
+  thus can easily get confused. For example, one must reset the
+  range {\tt sd.plotter.set\_range()} if set manually. This behaviour is
+  not always expected, but is a consequence of having {\tt sd.plotter} be
+  its own object that is fed data and commands.
 
-  The appearance of the plots need to be improved.  In
-  principle, matplotlib can make "publication quality" figures, but in
-  practice a lot of work is required and the plots 
-  are not good.
+  There are known bugs when plotting with the tool-based plotting. 
+  The spectral values won't be displayed on the plotter
+  displayed with {\tt sd.plotter.plot()} even if 'spec value' button is
+  pressed. 
 
-  The sd.plotter object remembers things throughout the session
-  and thus can easily get confused.  For example, one must
-  reset the range {\tt sd.plotter.set\_range()} if set
-  manually.  This behavior is not always expected, but is a consequence
-  of having {\tt sd.plotter} be its own object that is fed data and
-  commands.
-  
-  There are known bugs when switching between the task-based plotting
-  with {\tt sdplot} and the tool-based plotting.
-  {\tt sdplot} adds extra control buttons that are not implemented
-  in the sd toolkit, so there are no 'spec value', 'statistics', or 'Quit' buttons for 
-  {\tt sd.plotter.plot()}. Once the
-  'statistics' button on {\tt sdplot} is used and deleted, {\tt sdplot}, 
-  you can still use mouse buttons to select region to get statistics with
-  the plotter displayed with {\tt sd.plotter.plot()}. But, spectral values won't
-  be displayed in such case. Also, when going back to {\tt sdplot} 
-  after using {\tt sd.plotter.plot()}, an error may occur and the plotter
-  window won't be displayed. In that case, the window state can be reset by deleting the plotter window
-  opened by {\tt sd.plotter.plot()} with the command, {\tt sd.plotter.\_plotter.unmap()}. 
- 
-  Eventually we would like the capability to interactively set things
-  using the plots, like select frequency ranges, identify lines,
-  start fitting.
+  Eventually we would like the capability to interactively
+  set things using the plots, like select frequency ranges,
+  identify lines, start fitting. 
 
 \item {\tt sd.selector}
 
@@ -4532,10 +4605,10 @@ implemented.  These currently include:
 \item {\tt sd.scantable}
 
   There is no useful inline help on the scantable constructor
- in {\tt help sd.scantable} {help sd}.
+  in {\tt help sd.scantable} and {\tt help sd}.
 
-  The inline help for scantable.summary claims that there is
-  a verbose parameter, but there is not.  The scantable.verbosesummary
+  The inline help for {\tt scantable.summary} claims that there is
+  a verbose parameter, but there is not.  The {\tt scantable.verbosesummary}
   asaprc parameter (e.g. in {\tt sd.rcParams}) does nothing.
 
   GBT data has an undefined parameter fluxunit ({\tt ''} that should be {\tt 'K'}), an 
@@ -4570,7 +4643,7 @@ implemented.  These currently include:
 
 \item {\tt sdaverage} (and {\tt sdcal})
 
-  averageall=True is still experimental since the test was insufficient 
+  {\tt averageall=True} is still experimental since the test was insufficient 
   because of a lack of test data.
 
 % \item {\tt sdcal}
@@ -4586,13 +4659,19 @@ implemented.  These currently include:
 %  Handles multiple IFs poorly (a general problem currently in the package).
 %
 %  No way to input guesses.
-Only way to handle multi-IFs is to set fitmode='auto'
+Only way to handle multi-IFs is to set {\tt fitmode='auto'}
 (linefinder is applied for each spectra and derives initial guesses).
-For fitmode='list', there are no way to give initial guesses for each IFs by hand.
+For {\tt fitmode='list'}, there are no way to give initial guesses for each IFs by hand.
 
 \item {\tt sdplot}
 
   Only handles the included JPL line catalog.  Also, see {\tt sd.plotter} issues above.
+
+\item GBT raw SDFITS data
+
+  The SDtasks and {\tt sd.scantable} are able to handle GBT raw SDFITS data format data 
+  since the data filler is available. However, the functionality is not well 
+  tested yet, so that there may be unknown bugs.  
 
 % FIXED for Patch 4
 %\item {\tt sdstat}
