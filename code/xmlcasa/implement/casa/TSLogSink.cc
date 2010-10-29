@@ -62,6 +62,8 @@ TSLogSink::TSLogSink()
     BasicConfigurator config;
     config.configure();
 #else
+   logsink = 0 ;
+   logfile = 0 ;
    send2cerr = False;
    setLogSink();
 #endif
@@ -71,6 +73,8 @@ TSLogSink::TSLogSink (LogMessage::Priority filter)
 : LogSinkInterface(LogFilter(filter))
 {
 #ifndef AIPS_LOG4CPLUS
+   logsink = 0 ;
+   logfile = 0 ;
    setLogSink();
    send2cerr = False;
 #endif
@@ -80,6 +84,8 @@ TSLogSink::TSLogSink (const LogFilterInterface& filter)
 : LogSinkInterface(filter)
 {
 #ifndef AIPS_LOG4CPLUS
+   logsink = 0 ;
+   logfile = 0 ;
    setLogSink();
    send2cerr = False;
 #endif
@@ -100,9 +106,15 @@ void TSLogSink::setLogSink(String logname){
          logname = logname2;
       }
    }
-   std::ofstream *logfile = new std::ofstream(logname.c_str(), ios::app);
-   if(logfile)
-      logsink = new StreamLogSink(LogMessage::NORMAL, logfile);
+   if (logfile) {
+     logfile->close() ;
+     delete logfile ;
+   }
+   logfile = new std::ofstream(logname.c_str(), ios::app);
+   if(logfile) {
+     delete logsink ;
+     logsink = new StreamLogSink(LogMessage::NORMAL, logfile);
+   }
    if(!logsink)
 	   cerr << "Unable to log to " << logname << endl;
    return;
@@ -130,6 +142,8 @@ void TSLogSink::copy_other (const TSLogSink& other)
 TSLogSink::~TSLogSink()
 {
 #ifndef AIPS_LOG4CPLUS
+   logfile->close();
+   delete logfile;
    delete logsink;
 #endif
 }
