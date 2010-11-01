@@ -82,7 +82,7 @@ class WedgeDD : public ActiveCaching2dDD {
 
 public:
 
-  WedgeDD();
+  WedgeDD( DisplayData *image );
 
   // Destructor.
   virtual ~WedgeDD();
@@ -95,6 +95,8 @@ public:
   
   // Axis labeller, 5th step in the WCHolder refresh cycle
   virtual Bool labelAxes(const WCRefreshEvent &ev);
+
+  bool isDisplayable( ) const;
 
   // Return the data unit.
   virtual const Unit dataUnit();
@@ -165,6 +167,8 @@ private:
   Matrix<Float> itsColorbar;
   // the local coordinate system - gets exported to the parent DD
   CoordinateSystem itsCoordinateSystem;
+
+  DlHandle<DisplayData> ihandle_;
 };
 
 

@@ -306,6 +306,7 @@ Bool WorldCanvasHolder::executeSizeControl(WorldCanvas *wCanvas) {
   ListIter<DisplayData*> dds(itsDisplayList);
   for(dds.toStart(); !dds.atEnd(); dds++) {
     DisplayData* dd = dds.getRight();
+    if ( ! dd->isDisplayable( ) ) continue; // not displayable
     if(dd==itsCSmaster) continue;	// (already given the chance).
     if(!masterFound) itsCSmaster = dd;	// (This assignment does not
 		// yet confirm the CS master; it only indicates an offer
@@ -352,6 +353,7 @@ Bool WorldCanvasHolder::syncCSmaster(const WorldCanvasHolder* wch) {
   ConstListIter<DisplayData *> dds(itsDisplayList);
   for(dds.toStart(); !dds.atEnd(); dds++) {
     DisplayData* dd = dds.getRight();
+    if ( ! dd->isDisplayable( ) ) continue; // not displayable
     if(dd==wch->csMaster()) {
       itsCSmaster=dd;
       executeSizeControl(worldCanvas());
@@ -413,27 +415,46 @@ void WorldCanvasHolder::operator()(const WCRefreshEvent &ev) {
   Vector<Bool> conforms(dds.len());
   
   for(dds.toStart(),dd=0; !dds.atEnd(); dds++,dd++) {
-    dData = dds.getRight();
-    conforms[dd] = dData->conformsTo(*this);  }
+	dData = dds.getRight();
+	if ( ! dData->isDisplayable( ) ){
+	  conforms[dd] = False;
+	  continue; // not displayable
+	} else {
+	  conforms[dd] = dData->conformsTo(*this);
+	}
+  }
   
 
   // iteration one - do rasters:
-  for(dds.toStart(),dd=0; !dds.atEnd(); dds++,dd++) if(conforms[dd]) {
-    dData = dds.getRight();
-    if(dData->classType() == Display::Raster) dData->refreshEH(ev);  }
+  int count = 0;
+  for(dds.toStart(),dd=0; !dds.atEnd(); dds++,dd++) {
+	if(conforms[dd]) {
+	    dData = dds.getRight();
+	    if ( ! dData->isDisplayable( ) ) continue; // not displayable
+	    if ( dData->classType() == Display::Raster ) {
+		dData->refreshEH(ev);
+	    }
+	}
+  }
   wc->flushComponentImages();
 
   
   // iteration two - do vector graphics:
   for(dds.toStart(),dd=0; !dds.atEnd(); dds++,dd++) if(conforms[dd]) {
-    dData = dds.getRight();
-    if(dData->classType() == Display::Vector) dData->refreshEH(ev);  }
+	dData = dds.getRight();
+	if ( dData->classType() == Display::Vector &&
+	     dData->isDisplayable( ) )
+	    dData->refreshEH(ev);
+  }
 
   
   // iteration three - do annotation graphics in the draw area:
   for(dds.toStart(),dd=0; !dds.atEnd(); dds++,dd++) if(conforms[dd]) {
-    dData = dds.getRight();
-    if(dData->classType() == Display::Annotation) dData->refreshEH(ev);  }
+	dData = dds.getRight();
+	if ( dData->classType( ) == Display::Annotation &&
+	     dData->isDisplayable( ) )
+	    dData->refreshEH(ev);
+  }
 
     
   // set the clip window to entire WorldCanvas
@@ -445,9 +466,12 @@ void WorldCanvasHolder::operator()(const WCRefreshEvent &ev) {
   
   // iteration four - do full canvas annotation graphics:
   for(dds.toStart(),dd=0; !dds.atEnd(); dds++,dd++) if(conforms[dd]) {
-    dData = dds.getRight();
-    if (dData->classType() == Display::CanvasAnnotation) {
-      dData->refreshEH(ev);  }  }
+	dData = dds.getRight();
+	if ( dData->classType() == Display::CanvasAnnotation &&
+	     dData->isDisplayable( ) ) {
+	    dData->refreshEH(ev);
+	}
+  }
 
   
   // "iteration" five - do axis labelling:
@@ -472,8 +496,11 @@ void WorldCanvasHolder::operator()(const WCRefreshEvent &ev) {
   // eliminate the 'wrong title' bug...).
   
   for(dds.toStart(),dd=0; !dds.atEnd(); dds++,dd++) {
-    dData = dds.getRight();
-    if( conforms[dd]  &&  dData->labelAxes(ev) ) break;  }
+	dData = dds.getRight();
+	if( conforms[dd]  &&  
+	    dData->isDisplayable( ) &&
+	    dData->labelAxes(ev) ) break;
+  }
 
     
   wc->releasePGPLOTdevice();
@@ -552,6 +579,9 @@ const uInt WorldCanvasHolder::nelements() {
   ConstListIter<DisplayData*> dds(itsDisplayList);
   for(dds.toStart(); !dds.atEnd(); dds++) {
     DisplayData* dd = dds.getRight();
+
+    if ( ! dd->isDisplayable( ) ) continue; // not displayable
+
     if(itsCSmaster==0 || isCSmaster(dd) || dd->conformsToCS(*this)) {
       maxNelements = max(maxNelements, dd->nelements());  }  }
       

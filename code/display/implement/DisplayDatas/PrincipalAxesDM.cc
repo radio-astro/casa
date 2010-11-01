@@ -69,8 +69,11 @@ void PrincipalAxesDM::draw(Display::RefreshReason reason,
   // retrieve a pointer to the WorldCanvas
   WorldCanvas *wCanvas = wcHolder.worldCanvas();
 
-  if(dataRedrawSelf(wCanvas, reason)) return;
-	// Return if successful quick redraw (colormap fiddling).
+  if(dataRedrawSelf(wCanvas, reason)) {
+      // Return if successful quick redraw (colormap fiddling).
+      parentDisplayData()->setDisplayState( DisplayData::DISPLAYED );
+      return;
+  }
   
   // get the linear coordinates from WorldCanvas. We assume that the
   // sizecontrol has been done by the ImageDisplayData owning this
@@ -132,6 +135,8 @@ void PrincipalAxesDM::draw(Display::RefreshReason reason,
     // list...
     wCanvas->drawList(drawListNumber);
     return;
+  } else {
+    parentDisplayData()->setDisplayState( DisplayData::UNDISPLAYED );
   }
 
   // No reusable drawlist--rebuild it.
@@ -227,6 +232,7 @@ void PrincipalAxesDM::draw(Display::RefreshReason reason,
       - start(itsYAxisNum);
 
   if (sliceShape(itsXAxisNum) < 1 || sliceShape(itsYAxisNum) < 1) {
+    parentDisplayData()->setDisplayState( DisplayData::UNDISPLAYED );
     return;
   }
 
@@ -249,6 +255,7 @@ void PrincipalAxesDM::draw(Display::RefreshReason reason,
     return;
   }
 
+  parentDisplayData()->setDisplayState( DisplayData::DISPLAYED );
   drawListNumber = dataDrawSelf(wCanvas, blc, trc, start, sliceShape,
 				stride, True);
 
@@ -309,6 +316,7 @@ void PrincipalAxesDM::setup2d() {
 
 // clear drawlist state.
 void PrincipalAxesDM::cleanup() {
+  parentDisplayData()->setDisplayState( DisplayData::UNDISPLAYED );
   drawState.clear();
   if (!notUsed) {
     notUsed = True;

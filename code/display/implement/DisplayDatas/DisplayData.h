@@ -34,6 +34,7 @@
 #include <casa/Containers/List.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <display/Utilities/DisplayOptions.h>
+#include <display/Utilities/DlTarget.h>
 #include <display/Display/WorldCanvasHolder.h>
 #include <display/Display/AttValBase.h>
 #include <display/DisplayEvents/DisplayEH.h>
@@ -307,9 +308,11 @@ class Record;
 // </todo>
 //
  
-class DisplayData : public DisplayOptions, public DisplayEH {
+class DisplayData : public DisplayOptions, public DisplayEH, public DlTarget {
 
 public:   
+
+  enum DisplayState { DISPLAYED, UNDISPLAYED, LIMBO };
 
   // (Required) default constructor.
   DisplayData();
@@ -334,6 +337,10 @@ public:
   virtual String showValue(const Vector<Double> &world) = 0;
 
 
+  virtual void setDisplayState( DisplayState s ) { displaystate = s; }
+  virtual DisplayState getDisplayState( ) const { return displaystate; }
+
+  virtual bool isDisplayable( ) const { return true; }
 
   // Some routines that give info on the axes names, units etc. I am not sure
   // this is the right way of doing it. Specifically I am not sure
@@ -582,6 +589,7 @@ public:
   // debugging purposes, and perhaps future use in the glish widget
   // interface.
   virtual String className() { return String("DisplayData"); }
+  virtual String description( ) const { return "not available"; }
 
   // Return the DisplayData type; used by the WorldCanvasHolder to
   // determine the order of drawing.
@@ -728,7 +736,11 @@ protected:
   void operator=(const DisplayData &other);
 
  private:
-  
+
+
+  // is this data currently being displayed?
+  DisplayState displaystate;
+
   // Colormap for this DisplayData, and its weight.
   Colormap *itsColormap;
   Float itsColormapWeight;

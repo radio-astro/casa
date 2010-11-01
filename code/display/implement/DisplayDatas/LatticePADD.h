@@ -116,6 +116,8 @@ template <class T> class LatticePADisplayData : public PrincipalAxesDD {
   // debugging purposes, and perhaps future use in the glish widget
   // interface.
   virtual String className() { return String("LatticePADisplayData"); }  
+  String description( ) const
+	{ return itsBaseImagePtr ? itsBaseImagePtr->name( ) : "none available"; }
 
   virtual WCResampleHandler *resampleHandler() { return itsResampleHandler; }
 

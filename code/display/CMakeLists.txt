@@ -305,6 +305,8 @@ casa_add_library( display
   implement/RegionShapes/RSUtils.cc
   implement/RegionShapes/XMLFileReaderWriter.cc
   implement/Utilities/DisplayOptions.cc
+  implement/Utilities/DlHandle.cc
+  implement/Utilities/DlTarget.cc
   )
 
 casa_add_executable( display casaplotter apps/casaplotter/casaplotter.cc )
@@ -319,3 +321,4 @@ casa_add_assay( display implement/Display/test/tAttVal.cc )
 casa_add_assay( display implement/Display/test/tAttValPoi.cc )
 casa_add_assay( display implement/QtViewer/test/dQtDataManager.cc )
 casa_add_assay( display implement/Utilities/test/tDisplayOptions.cc )
+casa_add_assay( display implement/Utilities/test/tDlHandle.cc )

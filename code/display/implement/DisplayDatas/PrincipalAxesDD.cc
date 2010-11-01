@@ -1002,7 +1002,8 @@ void PrincipalAxesDD::refreshEH(const WCRefreshEvent &ev)
   // Derived classes implement if applicable (at present, LatticePADDs
   // will draw a beam ellipse if they have an image with beam data and
   // the WorldCanvas CoordinateSystem is set for sky coordinates).
-  drawBeamEllipse_(wCanvas);
+  if ( getDisplayState( ) == DisplayData::DISPLAYED )
+	drawBeamEllipse_(wCanvas);
   
 }
 
