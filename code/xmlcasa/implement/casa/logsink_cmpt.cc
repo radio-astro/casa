@@ -22,6 +22,8 @@
 #include <unistd.h>
 #include <sys/param.h>
 #include <xmlcasa/utils/CasapyWatcher.h>
+#include <casa/OS/File.h>
+#include <casa/System/Aipsrc.h>
 
 using namespace std;
 using namespace casa;
@@ -49,6 +51,7 @@ logsink::logsink()
   itsorigin = new LogOrigin("casa");
   thelogsink->postLocally(LogMessage("", *itsorigin, LogMessage::NORMAL));
   globalsink = false;
+  logname = theLogName ;
   //version();
 }
 
@@ -246,14 +249,27 @@ bool logsink::setglobal(const bool isglobal)
 bool logsink::setlogfile(const std::string& filename)
 {
    bool rstat(true);
-   if(filename != "null")
-      static_cast<TSLogSink*>(thelogsink)->setLogSink(filename);
+   string tmpname = filename ;
+   if(!filename.size()){
+      String logfileKey="user.logfile";
+      String logname2;
+      if(!Aipsrc::find(logname2, logfileKey)){
+         tmpname = "casapy.log";
+      } else {
+         tmpname = logname2;
+      }
+   }
+   if(tmpname != "null") {
+      casa::File filein( tmpname ) ;
+      logname = filein.path().absoluteName() ;
+      static_cast<TSLogSink*>(thelogsink)->setLogSink(logname);
+   }
    else
       thelogsink = new NullLogSink();
       
    //
    // Also set for any watchers.
-   CasapyWatcher::logChanged_(filename);
+   CasapyWatcher::logChanged_(logname);
       
    return rstat;
 }
@@ -269,7 +285,8 @@ logsink::showconsole(const bool onconsole)
 std::string
 logsink::logfile()
 {
-  return theLogName;
+  //return theLogName;
+  return logname ;
 }
 
 
