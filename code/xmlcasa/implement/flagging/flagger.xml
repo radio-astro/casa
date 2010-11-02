@@ -294,7 +294,7 @@ Clears all current manual and auto flag selections.
 </description>
 <input>
      <param type="int" name="index">
-     <description>Flag selection index to clear. Zero to clear all. </description>
+     <description>Flag selection index to clear. Set index to -1 in order to clear all selections. </description>
      <value>0</value>
      </param>
 </input>
