@@ -94,87 +94,29 @@ ia.open(project + '.image')
 hii_stats=ia.statistics(verbose=False,list=False)
 ia.close()
 
-# on ghii.clean.image
-refstats = { 'sum': 240.7, #'flux': 0.21939,
-             'max': 0.4655,
-             'min': -0.0495,
-             'rms': 0.0395,
-             'sigma': 0.0391 }
-
-# padding changes, and mfs BW fix for sum 20100325
-refstats = { 'sum': 520.5, 
-             'max': 0.4292,
-             'min': -0.04473,
-             'rms': 0.0349,
-             'sigma': 0.0344 }
-
-# 20100428
-refstats = { 'sum': 520.5, 
-             'max': 0.4292,
-             'min': -0.04473,
-             'rms': 0.0349,
-             'sigma': 0.0344 }
-
-# simdata1 20100505 robust=0.5
-refstats = { 'sum': 673.4, 
-             'max': 0.5978,
-             'min': -0.06423,
-             'rms': 0.0504,
-             'sigma': 0.0498 }
-
-
-# simdata2 with component
-refstats = { 'sum': 662.3, 
-             'max': 0.59377,
-             'min': -0.0630,
-             'rms': 0.0503,
-             'sigma': 0.0497 }
-
-# 20100927
-refstats = { 'sum': 654.3, 
-             'max': 0.59149,
-             'min': -0.061,
-             'rms': 0.0497,
-             'sigma': 0.0492 }
 
 ia.open(project + '.diff')
 hiidiff_stats=ia.statistics(verbose=False,list=False)
 ia.close()
 
-# 20100505 robust=0.5
-diffstats = {'sum': 68.9,
-             'max': 0.004645,
-             'min': -0.00117,
-             'rms': 0.000946,
-             'sigma': 0.000556 }
+refstats = { 'sum': 1052., 
+             'max': 0.676,
+             'min': -0.0513,
+             'rms': 0.0434,
+             'sigma': 0.0429 }
 
-# simdata2
-diffstats = {'sum': 3267.5,
-             'max': 0.1846,
-             'min': -0.07999,
-             'rms': 0.045,
-             'sigma': 0.0265 }
-
-# 20101013 masked image
-refstats = { 'sum': 1046.5, 
-             'max': 0.6652,
-             'min': -0.04416,
-             'rms': 0.04313,
-             'sigma': 0.04262 }
-
-diffstats = {'sum': 3176.1,
-             'max': 0.164,
-             'min': -0.00354,
-             'rms': 0.03591,
-             'sigma': 0.02070 }
+diffstats = {'sum': 3322.,
+             'max': 0.169,
+             'min': -0.00459,
+             'rms': 0.0379,
+             'sigma': 0.0222 }
 
 
-### tight 
-reftol   = {'sum':  1e-2,
-            'max':  2e-2,
-            'min':  5e-2,
-            'rms':  1e-2,
-            'sigma': 1e-2}
+reftol   = {'sum':  0.1,
+            'max':  0.04,
+            'min':  0.04,
+            'rms':  0.1,
+            'sigma': 0.1}
 
 import datetime
 datestring = datetime.datetime.isoformat(datetime.datetime.today())
