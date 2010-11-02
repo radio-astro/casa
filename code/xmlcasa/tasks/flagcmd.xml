@@ -12,15 +12,11 @@
         quacking, clipping, autocorrelation flagging, or flagging
         of shadowed antennas. Unflagging is also available.
 
-        In a dual polarization data set, each polarization can be flagged
-        separately.  However, at present the calibration and imaging will
-        only use data with both parallel hands unflagged.
-
         This task is equivalent to the corresponding parts of
         flagdata, but works from a series of flagging commands
         specified by the "flagfile" parameters, which can refer to
-        flagging file, a Flag.xml table in the MS, or directly input 
-        the flagging commands as a list of strings.
+        flagging file, a FLAG_CMD table or Flag.xml table in the MS, 
+        or directly input the flagging commands as a list of strings.
 
         The flagging command syntax is currently defined in CAS-2405.
 
@@ -31,8 +27,8 @@
         NOTE: This is an experimental task and the interface is
         probably too complicated.  Comments welcome.
 
-        HISTORY: Task created      S.T. Myers 2010-08-31
-                 Last updated      S.T. Myers 2010-10-29
+        HISTORY: Task created v1.0 S.T. Myers 2010-08-31
+                 Last updated v2.5 S.T. Myers 2010-11-01
 
         </description>
         <input>
@@ -217,7 +213,10 @@
 <returns type="void"/>
 
 <example>
+        HISTORY: Last updated v2.5 S.T. Myers 2010-11-01
+
         The task will flag data based on commands input from source based on flagmode :
+            table = input from FLAG_CMD table in MS
             file  = input from flagging command file "flagfile"
             cmd   = input from "command" list of strings
             xml   = input from Flag.xml in the MS given by vis
@@ -473,35 +472,77 @@
 	   
               WARNING: this can be dangerous, use with care.
 
-        -- Internal FLAG_CMD input flagmode useage --
+     ===========================================================================
+
+     -- Internal FLAG_CMD input flagmode useage --
 
         (For mode='table')
+
+        It is a good idea to use optype='list' first to see whats there
+        before doing anything else, e.g.
+        
+          flagmode = 'table'
+          optype = 'list'
 
         To apply the flags stored in the FLAG_CMD table in the MS,
         simply set flagmode='table' and optype='apply', e.g.
 
-        flagmode = 'table'
-        optype = 'apply'
+          flagmode = 'table'
+          optype = 'apply'
 
         This is the default setup of flagcmd
 
-        -- Online flag input flagmode useage --
+        To merely save to FLAG_CMD but not apply, then
+        
+          flagmode = 'table'
+          optype = 'save'
+
+        If you need to select only certain rows from the FLAG_CMD table,
+        use the flagrows parameter to control this.  Currently this must
+        be a list of individual row numbers (0-based), e.g.
+
+          flagrows = [0,1,2,3,10,11]
+
+        or
+
+          flagrows = range(29)
+
+        NOTE: the useapplied=True/False tag is important if you are
+        going to (re)apply flags marked as APPLIED True in FLAG_CMD. 
+        It is common to have a "failed" flagging operation mark the flags
+        as already applied and then they don't show up when you re-run
+        (e.g. in 'list').  Set useapplied=True so that it will use these
+        anyway.
+
+     -- Online flag input flagmode useage --
 
         (For flagmode='xml')
 
-        To apply the online flags stored in the Flag.xml file in the
-        MS, simply set flagmode='xml' and desired buffer, e.g.
+        To list the online flags stored in the Flag.xml file in the
+        MS, simply set:
 
-        flagmode = 'xml'
-        tbuff = 1.0    # pad flag times by 1sec
+          flagmode = 'xml'
+          optype = 'list'
+
+        It is then straightforward to save these to FLAG_CMD
+
+          flagmode = 'xml'
+          optype = 'save'
+
+        To directly apply the online flags stored in the Flag.xml file in the
+        MS, set flagmode='xml' and desired buffer, e.g.
+
+          flagmode = 'xml'
+          tbuff = 1.0    # pad flag times by 1sec
+          optype = 'apply'
 
         You can also specify a set of reasons (a comma separated list)
         for flags to apply, e.g.
         
-        reason = 'FOCUS_ERROR,SUBREFLECTOR_ERROR'   # select these flags
-        reason = 'ANTENNA_NOT_ON_SOURCE'
+          reason = 'FOCUS_ERROR,SUBREFLECTOR_ERROR'   # select these flags
+          reason = 'ANTENNA_NOT_ON_SOURCE'
 
-        -- Flag command useage --
+     -- Flag command useage --
 
         (For flagmode='file' and flagmode='cmd')
 
@@ -538,7 +579,92 @@
                            "antenna='ea01' timerange='00:00:00~01:00:00'",
                            "antenna='ea11' timerange='00:00:00~03:00:00' spw='0~4'"])
 
-        -- Flag command syntax --
+     -- Optypes --
+
+        The optype parameter controls what flagcmd will actually do with the
+        flags:
+
+        * optype = 'apply'
+
+          This will apply the selected flags to the data (regardless of what the
+          APPLIED column says if using flagmode='table').
+
+          If you want to reset the FLAG column in the main table to be all
+          unflagged before application, then set reset=True.  THIS IS VERY 
+          DANGEROUS if there are existing important correlator generated flags
+          in the filled data.  Otherwise this is a simple way of starting
+          over after editing flags.
+
+          You will need to keep flagsort='antenna' if you have more than about
+          29 indiviual flags to execute.
+
+          If flagmode='table' and flagfile='' then APPLIED column in FLAG_CMD
+          will be set to true.
+
+          NOTE: this can happen even if there was a failure in application, so 
+          to (re)apply you may need to rerun with useapplied=True to pick these
+          up.  I will try to better engineer this in a later version.
+
+        * optype = 'unapply'
+
+          This will apply the selected flags with unflag=True to the data
+          (regardless of what the APPLIED column says if using
+          flagmode='table').  This will effectively unapply any flags on the
+          data with selection matching that of the flag commands.
+
+          Cannot currently unapply mode='shadow' flags :(
+
+          Othewise works as optype='apply'.
+
+        * optype = 'save'
+
+          This will save the flags to the location specified by outfile, with
+          the default being the internal FLAG_CMD table for outfile=''.
+
+          Don't set flagsort='antenna' here (do that on apply) if you want to
+          keep track of orignal flag commands.
+
+        * optype = 'list'
+
+          List whats selected.  You should do this first before running!
+          Will send to logger or to file if outfile is non-blank.
+
+        * optype = 'plot'
+
+          Will pop up a little matplotlib gui (if outfile='') or plot to a
+          file.  Currently only gives an antenna vs time plot, mostly useful
+          for looking at the online flags.
+
+        * optype = 'set'
+
+          DANGER! This can be used to reset values of flags in the FLAG_CMD
+          table.  It ignores what flagmode is pointing to and always works
+          on FLAG_CMD.  Its pretty basic, e.g.
+
+            vis = msfile
+            optype = 'set'
+            rowlist = []          # all rows
+            setcol = 'REASON'
+            setval = 'myFlags1'
+
+          will give all these flags a new REASON name.
+
+        * optype = 'clear'
+          
+          DANGER! This can be used to totally delete rows from the FLAG_CMD
+          table. It ignores what flagmode is pointing to and always works
+          on FLAG_CMD.  Use at your own peril but sometimes you need to just
+          blow that table away, e.g.
+
+            vis = msfile
+            optype = 'clear'
+            rowlist = []          # all rows
+            clearall = True       # disarm the safety
+          
+          Note you have to explicitly set clearall=True to arm the deletion
+          (a minimal precaution).
+
+     -- Flag command syntax --
 
         The command syntax is based on the flagdata parameters.
 

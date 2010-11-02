@@ -8,12 +8,13 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 	#
 	# Task flagcmd
 	#    Reads flag commands from file or string and applies to MS
-	# Created v1.0 STM 2010-08-31 from flagdata
-	# Updated v2.0 STM 2010-09-16 add Flag.xml reading
-	# Updated v2.1 STM 2010-09-24 add FLAG_CMD use, optype
-	# Updated v2.2 STM 2010-10-14 compatible with new importevla
-	# Updated v2.3 STM 2010-10-22 improvements
-	# Updated v2.4 STM 2010-10-26 optype unapply
+	# v1.0 Created STM 2010-08-31 from flagdata
+	# v2.0 Updated STM 2010-09-16 add Flag.xml reading
+	# v2.1 Updated STM 2010-09-24 add FLAG_CMD use, optype
+	# v2.2 Updated STM 2010-10-14 compatible with new importevla
+	# v2.3 Updated STM 2010-10-22 improvements
+	# v2.4 Updated STM 2010-10-26 optype unapply
+	# v2.5 Updated STM 2010-11-01 bug fix
 	#
 	try:
 		from xml.dom import minidom
@@ -21,6 +22,7 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 		raise Exception, 'Failed to load xml.dom.minidom into python'
 
         casalog.origin('flagcmd')
+	casalog.post('You are using flagcmd v2.5 Updated STM 2010-11-01')
 
         fg.done()
         fg.clearflagselection(-1)
@@ -50,11 +52,11 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 			# Get overall MS time range for later use (if needed)
 			try:
 				# this might take too long for large MS
-				ms.open(viso)
+				ms.open(vis)
 				timd = ms.range(["time"])
 				ms.close()
 			except:
-				raise Exception, "Error opening MS "+viso 
+				raise Exception, "Error opening MS "+vis 
 		        ms_startmjds = timd['time'][0]
 			ms_endmjds = timd['time'][1]
 			t = qa.quantity(ms_startmjds,'s')
@@ -121,11 +123,11 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 			# Get overall MS time range for later use (if needed)
 			try:
 				# this might take too long for large MS
-				ms.open(viso)
+				ms.open(vis)
 				timd = ms.range(["time"])
 				ms.close()
 			except:
-				raise Exception, "Error opening MS "+viso 
+				raise Exception, "Error opening MS "+vis 
 		        ms_startmjds = timd['time'][0]
 			ms_endmjds = timd['time'][1]
 			t = qa.quantity(ms_startmjds,'s')
