@@ -1352,11 +1352,14 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
       if(spwinds_of_uniq_spws[min_k].nelements() > 1 ||
          nchan_p[k] != numChan(spw_p[k])){
-        Vector<Double> chanFreqOut(totnchan_p[min_k]);
+	Int nOutChan = totnchan_p[min_k];
+        Vector<Double> chanFreqOut(nOutChan);
         Vector<Double> chanFreqIn = chanFreq(spw_uniq_p[min_k]);
-        Vector<Double> spwResolOut(totnchan_p[min_k]);
+        Vector<Double> chanWidthOut(nOutChan);
+        Vector<Double> chanWidthIn = chanWidth(spw_uniq_p[min_k]);
+        Vector<Double> spwResolOut(nOutChan);
         Vector<Double> spwResolIn = spwResol(spw_uniq_p[min_k]);
-        Vector<Double> effBWOut(totnchan_p[min_k]);
+        Vector<Double> effBWOut(nOutChan);
         Vector<Double> effBWIn = effBW(spw_uniq_p[min_k]);
         Int outChan = 0;
 
@@ -1375,6 +1378,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
                                       chanFreqIn[inpChan + chanStep_p[k]
                                                  - 1])/2;
               spwResolOut[outChan] = spwResolIn[inpChan] * chanStep_p[k];
+              chanWidthOut[outChan] = chanWidthIn[inpChan] * chanStep_p[k];
 
               for(Int avgChan = inpChan; avgChan < inpChan + chanStep_p[k];
                   ++avgChan)
@@ -1383,6 +1387,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
             else{
               chanFreqOut[outChan] = chanFreqIn[inpChan];
               spwResolOut[outChan] = spwResolIn[inpChan];
+              chanWidthOut[outChan] = chanWidthIn[inpChan];
               effBWOut[outChan]    = effBWIn[inpChan];
             }
             ++outChan;
@@ -1395,8 +1400,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
         msSpW.chanFreq().put(min_k, chanFreqOut);
         msSpW.resolution().put(min_k, spwResolOut);
-        msSpW.numChan().put(min_k, totnchan_p[min_k]);
-        msSpW.chanWidth().put(min_k, spwResolOut);
+        msSpW.numChan().put(min_k, nOutChan);
+        msSpW.chanWidth().put(min_k, chanWidthOut);
         msSpW.effectiveBW().put(min_k, spwResolOut);
         msSpW.refFrequency().put(min_k, chanFreqOut[0]);
         msSpW.totalBandwidth().put(min_k, totalBW);
