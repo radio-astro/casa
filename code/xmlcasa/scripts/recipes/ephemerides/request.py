@@ -1,21 +1,14 @@
-import os
-import re
-import smtplib
-import socket
-import time
-from email.mime.text import MIMEText
-
 """
-Utilities for having JPL-Horizons ephemerides mailed to you (or your enemies).
+Utilities for having JPL-Horizons ephemerides mailed to you.
 See JPL_ephem_reader.py for doing something with them.
 
 Examples:
 
 import recipes.ephemerides.request as jplreq
 
-# I recommend you not ask for more than ~18 months of anything with date_incr
-# ~ 1h, because the result would be split into multiple emails which you would
-# have to stitch together.
+# I recommend you not ask for more than ~18 months of anything with
+# date_incr ~ 1h, because the result would be split into multiple
+# emails which you would have to stitch together.
 
 for thing in jplreq.asteroids.keys() + jplreq.planets_and_moons.keys():
     jplreq.request_from_JPL(thing, '2012-12-31')
@@ -25,6 +18,13 @@ for thing in jplreq.asteroids.keys() + jplreq.planets_and_moons.keys():
     if thing not in jplreq.default_date_incrs:
         jplreq.request_from_JPL(thing, '2012-12-31')
 """
+
+import os
+import re
+import smtplib
+import socket
+import time
+from email.mime.text import MIMEText
 
 # Maps from object names to numbers that JPL-Horizons will recognize without
 # fussing around with choosing between barycenters, substrings, etc..

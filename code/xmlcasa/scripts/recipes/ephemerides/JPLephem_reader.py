@@ -1,3 +1,14 @@
+"""
+casapy functions for converting ASCII ephemerides from JPL-Horizons into
+CASA tables and installing them where casapy can find them.
+                    
+jplfiles_to_repository() puts it all together, so it is most likely the
+function you want.
+
+There are various utilities like convert_radec, datestr*, get_num_from_str,
+mean_radius*, and construct_tablepath defined in here as well.
+"""
+
 from glob import glob
 import os
 import re
