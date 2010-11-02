@@ -111,7 +111,7 @@ average over frequency (channels) and time (integrations).
 		<value type="string"></value>
 	</param>
 	<param type="bool" name="keepflags">
-	  <description>If practical, keep flagged data instead of dropping it.</description>
+	  <description>If practical, keep *completely flagged rows* instead of dropping them.</description>
 	  <value>True</value>
 	</param>
         <constraints>
@@ -238,14 +238,25 @@ average over frequency (channels) and time (integrations).
                       ignorables = 'state,subarr': Same as above.  ignorables
                                                    matches on 'arr', 'scan', and
                                                    'state'.
-        keepflags -- If practical, keep flagged data instead of dropping it.
-                     All of the channels and correlations of a row must be
-                     flagged for it to be droppable, and a row must be well
-                     defined to be keepable.  The latter condition means that
-                     this option has no effect on time averaging - in that case
-                     fully flagged rows are automatically omitted.  Regardless
-                     of this parameter, flagged data is never included in
-                     averaging calculations.
+        keepflags -- If practical, keep completely flagged rows instead of
+                     dropping them.  This has absolutely no effect on averaging
+                     calculations, or partially flagged rows.  All of the
+                     channels and correlations of a row must be flagged for it
+                     to be droppable, and a row must be well defined to be
+                     keepable.  The latter condition means that this option has
+                     no effect on time averaging - in that case fully flagged
+                     rows are automatically omitted.  Regardless of this
+                     parameter, flagged data is never included in averaging
+                     calculations.
+
+                     The only time keepflags matters is if 
+                     1. the input MS has some completely flagged rows
+                     and
+                     2. time averaging is not being done.
+
+                     Then, if keepflags is False, the completely flagged rows
+                     will be omitted from the output MS.  Otherwise, they will
+                     be included (subject to the selection parameters).
 </example> 
 </task>
 </casaxml>

@@ -25,7 +25,6 @@
        setjy need only be run on the calibrator sources with a known flux
        density and/or model.
 
-
        Solar System Objects are supported via the 'Butler-JPL-Horizons
        2010' standard.  Currently they are modeled as uniform
        temperature disks based on their ephemerides at the time of
@@ -213,9 +212,13 @@
                Flux density calculation with Solar System objects depends on
                ephemerides, typically in
                os.getenv('CASAPATH').split()[0] + '/data/ephemerides/JPL-Horizons'.
-               If no ephemeris for the right object at the right time is present,
-               the calculation will fail.  Ask the helpdesk <!-- and/or look in
-               recipes/ephemerides/ --> to make an ephemeris.
+
+               If no ephemeris for the right object at the right time is
+               present, the calculation will fail.  Ask the helpdesk to make an
+               ephemeris.  The very adventurous and well versed in python can
+               try it using CASA's recipes.ephemerides package:
+	         import recipes.ephemerides as eph
+		 help eph
 
                CASA comes with ephemerides for several more objects, but they
                are intended for use with me.framecomet(), and are not (yet)
@@ -224,9 +227,11 @@
                featureless, on a circular orbit, in the right part of the sky,
                and not too resolved).  Even some of the objects listed above
                may prove to require more sophisticated flux density models than
-               are currently implemented in CASA.  Running
-               casalog.filter('INFO1') before running setjy will for many
-               objects send more possibly relevant information to the logger.
+               are currently implemented in CASA.  For many objects running
+	       casalog.filter('INFO1') before running setjy will send more
+	       information to the logger.  The cookbook also has an appendix
+	       with descriptions of the models used by setjy (both
+	       extragalactic and Solar System).
  </example>
  </task>
  </casaxml>
