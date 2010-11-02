@@ -15,6 +15,7 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 	# v2.3 Updated STM 2010-10-22 improvements
 	# v2.4 Updated STM 2010-10-26 optype unapply
 	# v2.5 Updated STM 2010-11-01 bug fix
+	# v2.6 Updated STM 2010-11-02 bug fix
 	#
 	try:
 		from xml.dom import minidom
@@ -22,7 +23,7 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 		raise Exception, 'Failed to load xml.dom.minidom into python'
 
         casalog.origin('flagcmd')
-	casalog.post('You are using flagcmd v2.5 Updated STM 2010-11-01')
+	casalog.post('You are using flagcmd v2.6 Updated STM 2010-11-02')
 
         fg.done()
         fg.clearflagselection(-1)
@@ -1139,7 +1140,7 @@ def getflagcmds(cmdlist, ms_startmjds, ms_endmjds):
 			    elif xkey=='time':
 				    tim = xval
 			    elif xkey=='interval':
-				    intv = xval
+				    intvl = xval
 			    else:
 				    # Extract (but keep in string)
 				    if xkey=='timerange':
@@ -1184,7 +1185,7 @@ def getflagcmds(cmdlist, ms_startmjds, ms_endmjds):
 			    flagd['reason']=reas
 			    flagd['cmd']=cmd
 			    flagd['time']=tim
-			    flagd['interval']=interval
+			    flagd['interval']=intvl
 			    flagd['type']=typ
 			    flagd['level']=levl
 			    flagd['severity']=sevr
