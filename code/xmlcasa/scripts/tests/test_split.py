@@ -1,14 +1,3 @@
-import os
-import numpy
-import re
-import sys
-import shutil
-from __main__ import default
-from recipes.listshapes import listshapes
-from tasks import *
-from taskinit import *
-import unittest
-
 '''
 Unit tests for task split.
 
@@ -19,9 +8,26 @@ Features tested:
      selection?
   3. Are the WEIGHT and SIGMA shapes and values correct with and without
      correlation selection?
+  4. Is a SOURCE table with bogus entries properly handled?
+  5. Is the STATE table properly handled?
+  6. Are generic subtables copied over?
+  7. Are CHAN_WIDTH and RESOLUTION properly handled in SPECTRAL_WINDOW when
+     channels are being selected and/or averaged?
+  8. The finer points of spw:chan selection.
 
-Note: The time_then_chan_avg regression is a more general test of split.
+Note: The time_then_chan_avg regression is a more "end-to-end" test of split.
 '''
+
+import os
+import numpy
+import re
+import sys
+import shutil
+from __main__ import default
+from recipes.listshapes import listshapes
+from tasks import *
+from taskinit import *
+import unittest
 
 datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/'
 
@@ -613,6 +619,57 @@ class split_test_unorderedpolspw(SplitChecker):
         """DATA_DESCRIPTION, SPECTRAL_WINDOW, and POLARIZATION shapes"""
         self.check_subtables('', [(2, 128)])
 
+class split_test_chanwidth(SplitChecker):
+    """
+    Check CHAN_WIDTH and RESOLUTION in SPECTRAL_WINDOW with chan selection and averaging.
+    """
+    need_to_initialize = True
+    inpms = 'unittest/split/2562.ms'
+    records = {}
+
+    # records uses these as keys, so they MUST be tuples, not lists.
+    # Each tuple is really (spw, width), but it's called corrsels for
+    # compatibility with SplitChecker.
+    corrsels = (('1:12~115', '1'), ('1', '3'))
+
+    def do_split(self, spwwidth):
+        outms = 'cw' + spwwidth[1] + '.ms'
+        record = {'ms': outms}
+
+        shutil.rmtree(outms, ignore_errors=True)
+        try:
+            print "\nProcessing SPECTRAL_WINDOW with width " + spwwidth[1] + '.'
+            splitran = split(self.inpms, outms, datacolumn='data',
+                             field='', spw=spwwidth[0], width=spwwidth[1], antenna='',
+                             timebin='0s', timerange='',
+                             scan='', array='', uvrange='',
+                             correlation='', async=False)
+            tb.open(outms + '/SPECTRAL_WINDOW')
+            record['res'] = tb.getcell('RESOLUTION', 0)[0]
+            record['cw']  = tb.getcell('CHAN_WIDTH', 0)[0]
+            tb.close()
+        except Exception, e:
+            print "Error selecting spws 1, 3, and 5 from", self.inpms
+            raise e
+        self.__class__.records[spwwidth] = record
+        return splitran
+
+    def test_res_noavg(self):
+        """RESOLUTION after selection, but no averaging."""
+        check_eq(self.records[('1:12~115', '1')]['res'], 14771.10564634, 1e-4)
+
+    def test_cw_noavg(self):
+        """CHAN_WIDTH after selection, but no averaging."""
+        check_eq(self.records[('1:12~115', '1')]['cw'], 12207.525327551524, 1e-4)
+
+    def test_res_wavg(self):
+        """RESOLUTION after averaging, but no selection."""
+        check_eq(self.records[('1', '3')]['res'], 44313.316939, 1e-4)
+
+    def test_cw_wavg(self):
+        """CHAN_WIDTH after averaging, but no selection."""
+        check_eq(self.records[('1', '3')]['cw'], 36622.57598, 1e-4)
+
 class split_test_tav_then_cvel(SplitChecker):
     need_to_initialize = True
     # doppler01fine-01.ms was altered by
@@ -736,5 +793,5 @@ class split_test_tav_then_cvel(SplitChecker):
 def suite():
     return [split_test_tav, split_test_cav, split_test_cst, split_test_state,
             split_test_singchan, split_test_unorderedpolspw,
-            split_test_tav_then_cvel, split_test_genericsubtables]
+            split_test_tav_then_cvel, split_test_genericsubtables, split_test_chanwidth]
     
