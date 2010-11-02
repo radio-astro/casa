@@ -4318,6 +4318,11 @@ This is a file which specifies that two gaussians are to be simultaneously fit,
 and for the second gaussian the specified peak intensity, x position, and position angle
 are to be held fixed during the fit.
 
+ERROR ESTIMATES
+
+The reported estimated errors are calculated according to the description given in AIPS++ Note 224:
+AIPS++ Least Squares Background available at http://www.astron.nl/casacore/trunk/casacore/doc/notes/224.html .
+
 EXAMPLE: 
 
 Here is how one might fit two gaussians to multiple channels of a cube using the fit
