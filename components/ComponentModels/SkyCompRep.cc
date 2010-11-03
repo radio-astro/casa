@@ -583,7 +583,6 @@ void SkyCompRep::fromPixel (
                                            majorAxis, minorAxis, restoringBeam);
          
 // Set flux
-
       itsFlux.setUnit(integralFlux.getFullUnit());   
       itsFlux.setValue (integralFlux, stokes);
    }
@@ -774,8 +773,9 @@ Quantum<Double> SkyCompRep::peakToIntegralFlux (const DirectionCoordinate& dirCo
       
 // Define /beam and /pixel units.
 
-   Bool integralIsJy = True;
    Unit unitIn = peakFlux.getFullUnit();
+	Bool integralIsJy = unitIn.getName() != "Jy/beam.km/s";
+
    Unit brightnessUnit = SkyCompRep::defineBrightnessUnits(os, unitIn, dirCoord,
                                                            restoringBeam, integralIsJy);
       
@@ -798,14 +798,16 @@ Quantum<Double> SkyCompRep::peakToIntegralFlux (const DirectionCoordinate& dirCo
    fluxIntegral = tmp * majorAxis2 * minorAxis2;
    if (fluxIntegral.isConform(Unit("Jy"))) {
       fluxIntegral.convert("Jy");
-   } else {
+   }
+   else if (fluxIntegral.isConform(Unit("Jy.m/s"))) {
+	      fluxIntegral.convert("Jy.km/s");
+   }
+   else {
       os << LogIO::SEVERE << "Cannot convert units of Flux integral to Jy - will assume Jy"
          << LogIO::POST;
       fluxIntegral.setUnit(Unit("Jy"));
    }   
-//
    SkyCompRep::undefineBrightnessUnits();
-//
    return fluxIntegral;
 }
 
@@ -823,20 +825,23 @@ Quantity SkyCompRep::integralToPeakFlux (
 	if (tmp.isConform(Unit("Jy"))) {
 		tmp.convert("Jy");
 	}
+	else if (tmp.isConform(Unit("Jy.m/s"))) {
+		tmp.convert("Jy.km/s");
+	}
 	else {
 		os << "Cannot convert units of Flux integral (" + integralFlux.getUnit() + ") to Jy"
 				<< LogIO::EXCEPTION;
-	//	tmp.setUnit(Unit("Jy"));
 	}
 
 	// Define /beam and /pixel units.
 
-	Bool integralIsJy = True;
-	Unit unitIn = SkyCompRep::defineBrightnessUnits(os, brightnessUnit, dirCoord,
-			restoringBeam, integralIsJy);
+	Bool integralIsJy = brightnessUnit.getName() != "Jy/beam.km/s";
+	Unit unitIn = SkyCompRep::defineBrightnessUnits(
+		os, brightnessUnit, dirCoord,
+		restoringBeam, integralIsJy
+	);
 
 	// Convert integral to Jy
-
 
 	// Now scale
 
@@ -857,13 +862,9 @@ Quantity SkyCompRep::integralToPeakFlux (
 	minorAxis2.convert(Unit("rad"));
 	peakFlux = tmp / majorAxis2 / minorAxis2;
 	peakFlux.convert(unitIn);
-	//
 	SkyCompRep::undefineBrightnessUnits();
-	//
 	return peakFlux;
 }
-
-
 
 Double SkyCompRep::convertToJy (const Unit& brightnessUnit)
 {
@@ -885,8 +886,14 @@ Double SkyCompRep::convertToJy (const Unit& brightnessUnit)
    if (tmp.isConform(Unit("Jy"))) {
       Quantum<Double> tmp2(tmp);
       tmp2.convert("Jy");   
-      facToJy= tmp2.getValue() / tmp.getValue();
-   } else {
+      facToJy = tmp2.getValue() / tmp.getValue();
+   }
+   else if (tmp.isConform(Unit("Jy.m/s"))) {
+	   Quantum<Double> tmp2(tmp);
+	   tmp2.convert("Jy.km/s");
+	   facToJy = tmp2.getValue() / tmp.getValue();
+   }
+   else {
       os << LogIO::SEVERE << "Cannot convert units of brightness to Jy - will assume Jy"
          << LogIO::POST;
       facToJy = 1.0;
@@ -898,11 +905,6 @@ Double SkyCompRep::convertToJy (const Unit& brightnessUnit)
 //
    return facToJy;
 }
-
-
-// Local Variables: 
-// compile-command: "gmake SkyCompRep"
-// End: 
 
 } //# NAMESPACE CASA - END
 
