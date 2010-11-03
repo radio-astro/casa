@@ -81,6 +81,7 @@ stokes_image = "imfit_stokes.fits"
 two_gaussians_estimates = "estimates_2gauss.txt"
 expected_new_estimates = "expected_new_estimates.txt"
 gauss_no_pol = "gauss_no_pol.fits"
+jyperbeamkms = "jyperbeamkmpersec.fits";
 msgs = ''
 
 # are the two specified numeric values relatively close to each other? 
@@ -127,17 +128,21 @@ class imfit_test(unittest.TestCase):
         os.system('cp -r ' +datapath + expected_new_estimates + ' ' + expected_new_estimates)
         os.system('cp -r ' +datapath + stokes_image + ' ' + stokes_image)
         os.system('cp -r ' +datapath + gauss_no_pol + ' ' + gauss_no_pol)
+        os.system('cp -r ' +datapath + jyperbeamkms + ' ' + jyperbeamkms)
+
 
     def tearDown(self):
-        os.system('rm -rf ' +noisy_image)
-        os.system('rm -rf ' +expected_model)
-        os.system('rm -rf ' +expected_residual)
-        os.system('rm -rf ' +convolved_model)
-        os.system('rm -rf ' +estimates_convolved)
-        os.system('rm -rf ' +two_gaussians_image)
-        os.system('rm -rf ' +two_gaussians_estimates)
-        os.system('rm -rf ' +expected_new_estimates)
-        os.system('rm -rf ' +stokes_image)
+        os.system('rm -rf ' + noisy_image)
+        os.system('rm -rf ' + expected_model)
+        os.system('rm -rf ' + expected_residual)
+        os.system('rm -rf ' + convolved_model)
+        os.system('rm -rf ' + estimates_convolved)
+        os.system('rm -rf ' + two_gaussians_image)
+        os.system('rm -rf ' + two_gaussians_estimates)
+        os.system('rm -rf ' + expected_new_estimates)
+        os.system('rm -rf ' + stokes_image)
+        os.system('rm -rf ' + jyperbeamkms)
+
             
 
     def test_fit_using_full_image(self):
@@ -756,6 +761,79 @@ class imfit_test(unittest.TestCase):
             got = clist['component0']['flux']['value'][0]
             expected = 394312.65593496
             self.assertTrue(near(got, expected, 1e-5))
+
+    def test_CAS_1233(self):
+        method = "test_CAS_1233"
+        test = "test_CAS_1233"
+
+        global msgs
+        success = True
+        def run_fitcomponents():
+            myia = iatool.create()
+            myia.open(jyperbeamkms)
+            res = myia.fitcomponents()
+            myia.done()
+            return res
+        def run_imfit():
+            default('imfit')
+            return imfit(imagename=jyperbeamkms)
+    
+        for i in [0 ,1]:
+            if (i == 0):
+                code = run_fitcomponents
+                method = test + "ia.fitcomponents: "
+            else:
+                code = run_imfit
+                method += test + "imfit: "
+            res = code()
+            clist = res['results']
+            if (not res['converged']):
+                success = False
+                msgs += method + "fit did not converge unexpectedly"
+            epsilon = 1e-5
+            # I flux test
+            self.assertTrue(clist['component0']['flux']['unit'] == 'Jy.km/s')
+
+            got = clist['component0']['flux']['value'][0]
+            expected = 60318.6
+            if (not near(got, expected, epsilon)):
+                success = False
+                msgs += method + "I flux density test failure, got " + str(got) + " expected " + str(expected) + "\n"
+
+            # RA test
+            got = clist['component0']['shape']['direction']['m0']['value']
+            expected = 0.000213318
+            if (not near_abs(got, expected, epsilon)):
+                success = False
+                msgs += method + "RA test failure, got " + str(got) + " expected " + str(expected) + "\n"
+            # Dec test
+            got = clist['component0']['shape']['direction']['m1']['value']
+            expected = 1.939254e-5
+            if (not near_abs(got, expected, epsilon)):
+                success = False
+                msgs += method + "Dec test failure, got " + str(got) + " expected " + str(expected) + "\n"
+            # Major axis test
+            got = clist['component0']['shape']['majoraxis']['value']
+            expected =  26.50461508
+            epsilon = 1e-6
+            if (not near(got, expected, epsilon)):
+                success = False
+                msgs += method + "Major axis test failure, got " + str(got) + " expected " + str(expected) + "\n"
+            # Minor axis test
+            got = clist['component0']['shape']['minoraxis']['value']
+            expected = 23.99821851
+            if (not near(got, expected, epsilon)):
+                success = False
+                msgs += method + "Minor axis test failure, got " + str(got) + " expected " + str(expected) + "\n"
+            # Position angle test
+            got = clist['component0']['shape']['positionangle']['value']
+            expected = 126.3211060
+            epsilon = 1e-5
+            if (not near_abs(got, expected, epsilon)):
+                success = False
+                msgs += method + "Position angle test failure, got " + str(got) + " expected " + str(expected) + "\n"
+
+        self.assertTrue(success,msgs)
 
 
 def suite():
