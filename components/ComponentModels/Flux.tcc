@@ -45,6 +45,8 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+template<class T> Vector<String> FluxRep<T>::_allowedUnits(0);
+
 template<class T> FluxRep<T>::
 FluxRep()
   :itsVal(4, typename NumericTraits<T>::ConjugateType(0,0)),
@@ -428,28 +430,40 @@ setValue(const
   DebugAssert(ok(), AipsError);
 }
 
-template<class T> void FluxRep<T>::
-setValue(const Quantum<T>& value, Stokes::StokesTypes stokes)
-{
-   LogIO os(LogOrigin("FluxRep", "setValue(const Quantum<Double>&, Stokes::StokesTypes)"));
-   Vector<T> tmp(4, 0.0);
-//
-   if (stokes==Stokes::I || stokes==Stokes::Q || stokes==Stokes::U || stokes==Stokes::V) {
-      if (stokes==Stokes::I) {
-         tmp(0) = value.getValue(Unit("Jy"));
-      } else if (stokes==Stokes::Q) {
-         tmp(1) = value.getValue(Unit("Jy"));
-      } else if (stokes==Stokes::U) {
-         tmp(2) = value.getValue(Unit("Jy"));
-      } else if (stokes==Stokes::V) {
-         tmp(3) = value.getValue(Unit("Jy"));
-      }
-   } else {
-      os << LogIO::WARN << "Can only properly handle I,Q,U,V presently." << endl;
-      os << "The brightness is assumed to be Stokes I"  << LogIO::POST;
-      tmp(0) = value.getValue(Unit("Jy"));
-   }
-   setValue(tmp);
+template<class T> void FluxRep<T>::setValue(
+		const Quantum<T>& value, Stokes::StokesTypes stokes
+) {
+	LogIO os(LogOrigin("FluxRep", "setValue(const Quantum<Double>&, Stokes::StokesTypes)"));
+	Vector<T> tmp(4, 0.0);
+	String conversionUnit = "Jy";
+	if (! value.isConform("Jy")) {
+		for (
+			Vector<String>::const_iterator iter=_allowedUnits.begin();
+			iter != _allowedUnits.end(); iter++
+		) {
+			if (value.isConform(*iter)) {
+				conversionUnit = *iter;
+				break;
+			}
+		}
+	}
+	if (stokes==Stokes::I || stokes==Stokes::Q || stokes==Stokes::U || stokes==Stokes::V) {
+		if (stokes==Stokes::I) {
+			tmp(0) = value.getValue(Unit(conversionUnit));
+		} else if (stokes==Stokes::Q) {
+			tmp(1) = value.getValue(Unit(conversionUnit));
+		} else if (stokes==Stokes::U) {
+			tmp(2) = value.getValue(Unit(conversionUnit));
+		} else if (stokes==Stokes::V) {
+			tmp(3) = value.getValue(Unit(conversionUnit));
+		}
+	}
+	else {
+		os << LogIO::WARN << "Can only properly handle I,Q,U,V presently." << endl;
+		os << "The brightness is assumed to be Stokes I"  << LogIO::POST;
+		tmp(0) = value.getValue(Unit("Jy"));
+	}
+	setValue(tmp);
 }
 
 template<class T> void FluxRep<T>::
@@ -670,26 +684,43 @@ toRecord(String& errorMessage, RecordInterface& record) const {
 }
 
 
-template<class T> Bool FluxRep<T>::
-ok() const {
-  // The LogIO class is only constructed if an Error is detected for
-  // performance reasons. Both function static and file static variables
-  // where considered and rejected for this purpose.
-  if (itsVal.nelements() != 4) {
-    LogIO logErr(LogOrigin("FluxRep", "ok()"));
-    logErr << LogIO::SEVERE << "The flux does not have 4 elements"
- 	   << " (corresponding to four polarisations)"
-	   << LogIO::POST;
-    return False;
-  }
-  if (itsUnit != Unit("Jy")) {
-    LogIO logErr(LogOrigin("FluxRep", "ok()"));
-    logErr << LogIO::SEVERE << "The flux units have dimensions that are "
-	   << "different from 'Jy'"
-	   << LogIO::POST;
-    return False;
-  }
-  return True;
+template<class T> Bool FluxRep<T>::ok() const {
+	// The LogIO class is only constructed if an Error is detected for
+	// performance reasons. Both function static and file static variables
+	// where considered and rejected for this purpose.
+	if (itsVal.nelements() != 4) {
+		LogIO logErr(LogOrigin("FluxRep", "ok()"));
+		logErr << LogIO::SEVERE << "The flux does not have 4 elements"
+				<< " (corresponding to four polarisations)"
+				<< LogIO::POST;
+		return False;
+	}
+	if (itsUnit == Unit("Jy")) {
+		return True;
+	}
+	Bool found = False;
+	for (Vector<String>::const_iterator iter=_allowedUnits.begin(); iter!=_allowedUnits.end(); iter++) {
+		if (itsUnit == Unit(*iter)) {
+			found = True;
+			break;
+		}
+	}
+	if (! found) {
+		LogIO logErr(LogOrigin("FluxRep", "ok()"));
+		logErr << LogIO::SEVERE << "The flux units have dimensions that are "
+				<< "different from 'Jy'"
+				<< LogIO::POST;
+		return False;
+	}
+	return True;
+}
+
+template<class T> void FluxRep<T>::setAllowedUnits(const Vector<String>& allowedUnits) {
+	_allowedUnits = allowedUnits;
+}
+
+template<class T> void FluxRep<T>::clearAllowedUnits() {
+	_allowedUnits.resize(0);
 }
 
 template<class T> Flux<T>::
