@@ -775,7 +775,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
   relabelSources();
 
   success &= fillFieldTable();
-  copySource();
+  success &= copySource();
 
   success &= copyAntenna();
   if(!copyFeed())         // Feed table writing has to be after antenna 
@@ -5605,9 +5605,10 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
 			     //tables, fix it
       for (Int k=0; k < nAnt1; ++k){
 	antNewIndex_p[ant1[k]]=k;
-	TableCopy::copyRows(newAnt, oldAnt, k, ant1[k], 1);
+	TableCopy::copyRows(newAnt, oldAnt, k, ant1[k], 1, false);
       }
-      
+      newAnt.flush();
+
       retval = True;
     }
     return retval;    
@@ -5648,10 +5649,11 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
 	if(antNewIndex_p[antIds[k]] > -1 &&
            (spwIds[k] < 0 || spwRelabel_p[spwIds[k]] > -1)){
           //                  outtab   intab    outrow       inrow nrows
-	  TableCopy::copyRows(newFeed, oldFeed, totalSelFeeds, k, 1);
+	  TableCopy::copyRows(newFeed, oldFeed, totalSelFeeds, k, 1, false);
           ++totalSelFeeds;
 	}
       }
+      newFeed.flush();
 
       // Remap antenna and spw #s.
       ScalarColumn<Int>& antCol = outcols.antennaId();
@@ -5834,7 +5836,6 @@ Bool SubMS::copyState()
   Bool SubMS::copyPointing(){
     //Pointing is allowed to not exist
     if(Table::isReadable(mssel_p.pointingTableName())){
-
       // An attempt to select from POINTING by timerange.  Fails because the
       // TEN refers to the main table, not POINTING.
       // TableExprNode condition;
