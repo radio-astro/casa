@@ -250,6 +250,7 @@ SkyComponent ImageUtilities::encodeSkyComponent(
     	beam = makeFakeBeam(logIO, cSys);
     }
     sky.fromPixel(facToJy, pars, brightnessUnit, beam, cSys, type, stokes);
+
     return sky;
 } 
 
@@ -286,7 +287,8 @@ SkyComponent ImageUtilities::encodeSkyComponent(
     LogIO& os, Double& facToJy,
     const ImageInterface<Float>& subIm, ComponentType::Shape model,
     const Vector<Double>& parameters, Stokes::StokesTypes stokes,
-    Bool xIsLong, Bool deconvolveIt) {
+    Bool xIsLong, Bool deconvolveIt
+) {
     //
     // This function takes a vector of doubles and converts them to
     // a SkyComponent.   These doubles are in the 'x' and 'y' frames
@@ -314,7 +316,6 @@ SkyComponent ImageUtilities::encodeSkyComponent(
 		os, facToJy, ii, cSys, bU, model,
 		parameters, stokes, xIsLong
 	);
-
 	if (!deconvolveIt) {
 		return sky;
     }
@@ -325,20 +326,19 @@ SkyComponent ImageUtilities::encodeSkyComponent(
 				<< "This image does not have a restoring beam so no deconvolution possible"
 				<< LogIO::POST;
 		return sky;
-	} else {
-		Int dirCoordinate = cSys.findCoordinate(Coordinate::DIRECTION);
-		if (dirCoordinate == -1) {
-			os << LogIO::WARN
-					<< "This image does not have a DirectionCoordinate so no deconvolution possible"
-					<< LogIO::POST;
-			return sky;
-		}
-
-		const DirectionCoordinate& dirCoord = cSys.directionCoordinate(
-            dirCoordinate
-        );
-        return ImageUtilities::deconvolveSkyComponent(os, sky, beam, dirCoord);
 	}
+	Int dirCoordinate = cSys.findCoordinate(Coordinate::DIRECTION);
+	if (dirCoordinate == -1) {
+		os << LogIO::WARN
+			<< "This image does not have a DirectionCoordinate so no deconvolution possible"
+			<< LogIO::POST;
+		return sky;
+	}
+
+	const DirectionCoordinate& dirCoord = cSys.directionCoordinate(
+			dirCoordinate
+	);
+	return ImageUtilities::deconvolveSkyComponent(os, sky, beam, dirCoord);
 }
 
 // moved from ImageAnalysis. See comments in ImageUtilities.h
@@ -347,14 +347,13 @@ SkyComponent ImageUtilities::deconvolveSkyComponent(LogIO& os,
         const DirectionCoordinate& dirCoord) {
     SkyComponent skyOut;
     skyOut = skyIn.copy();
-    //
     const ComponentShape& shapeIn = skyIn.shape();
     ComponentType::Shape type = shapeIn.type();
 
     // Put beam p.a. into XY frame
     Vector<Quantum<Double> > beam2 = putBeamInXYFrame(beam, dirCoord);
     if (type == ComponentType::POINT) {
-        //
+        // do nothing apparently
     } else if (type == ComponentType::GAUSSIAN) {
         // Recover shape
         const TwoSidedShape& ts = dynamic_cast<const TwoSidedShape&> (shapeIn);
@@ -374,7 +373,6 @@ SkyComponent ImageUtilities::deconvolveSkyComponent(LogIO& os,
         // Account for frame change of position angle
         Quantum<Double> diff = paXYFrame2 - paXYFrame;
         pa -= diff;
-        //
         const MDirection dirRefIn = shapeIn.refDirection();
         GaussianShape shapeOut(dirRefIn, major, minor, pa);
         skyOut.setShape(shapeOut);
@@ -382,7 +380,6 @@ SkyComponent ImageUtilities::deconvolveSkyComponent(LogIO& os,
         os << "Cannot deconvolve components of type " << shapeIn.ident()
                 << LogIO::EXCEPTION;
     }
-    //
     return skyOut;
 }
 
