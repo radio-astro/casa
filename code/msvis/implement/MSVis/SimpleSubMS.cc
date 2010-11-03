@@ -40,7 +40,7 @@ namespace casa {
 
   }
 
-  MeasurementSet* SimpleSubMS::makeMemSubMS(const MS::PredefinedColumns& whichcol){
+  MeasurementSet* SimpleSubMS::makeMemSubMS(const MS::PredefinedColumns& whichcol, const String& name){
     LogIO os(LogOrigin("SimpleSubMS", "makeMemSubMS()"));
     
     if(max(fieldid_p) >= Int(ms_p.field().nrow())){
@@ -69,15 +69,25 @@ namespace casa {
       return 0;
     }
     mscIn_p=new ROMSColumns(mssel_p);
-    String msname=AppInfo::workFileName(100, "TempSubMS");
+    String msname=name;
+    if(msname==""){
+      msname=AppInfo::workFileName(100, "TempSubMS");
+    }
     MeasurementSet* ah=setupMS(msname, nchan_p[0], ncorr_p[0],  
 			       mscIn_p->observation().telescopeName()(0),
 			       Vector<MS::PredefinedColumns>(1,whichcol));
     if(!ah)
       return 0;
-    ah->markForDelete();
-    MeasurementSet * outpointer= new MeasurementSet(ah->copyToMemoryTable("TmpMemoryMS"));
-    delete ah;
+    
+    MeasurementSet * outpointer;
+    if(name==""){
+      ah->markForDelete();
+      outpointer= new MeasurementSet(ah->copyToMemoryTable("TmpMemoryMS"));
+      delete ah;
+    }
+    else{
+      outpointer=ah;
+    }
     if(!outpointer)
       return 0;
     outpointer->initRefs();
