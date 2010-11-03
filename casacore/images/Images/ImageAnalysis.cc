@@ -2406,9 +2406,11 @@ ComponentList ImageAnalysis::fitsky(
 		// Encode as SkyComponent and return
 		Vector<SkyComponent> result(1);
 		Double facToJy;
-		result(0) = ImageUtilities::encodeSkyComponent(*itsLog, facToJy, subImage,
-				convertModelType(Fit2D::GAUSSIAN), parameters, stokes, xIsLong,
-				deconvolveIt);
+		result(0) = ImageUtilities::encodeSkyComponent(
+			*itsLog, facToJy, subImage,
+			convertModelType(Fit2D::GAUSSIAN), parameters, stokes, xIsLong,
+			deconvolveIt
+		);
 		cl.add(result(0));
 		return cl;
 	}
@@ -2530,7 +2532,6 @@ ComponentList ImageAnalysis::fitsky(
 	delete pMaskRegion;
 
 	residStats = _fitskyWriteResidualAndGetStats(subImage2, residPixels, residImageName);
-
 
 	// PagedImage<Float> residImage(residImageName);
 	ImageMetaData subImageMD(subImage2);
@@ -6692,7 +6693,7 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 		const String& xytype, const String& specaxis, const Int& whichStokes,
 				   const Int& whichTabular, const Int& whichLinear, 
 				   const String& xunits, const String& specFrame) {
-    
+
 	String whatXY = xytype;
 	Vector<Double> xypix(2);
 	xypix = 0.0;
@@ -6704,7 +6705,8 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 		const DirectionCoordinate& dirCoor = cSys.directionCoordinate(which);
 		if (!dirCoor.toPixel(xypix, xy))
 			return False;
-	} else {
+	}
+	else {
 		if (xy.nelements() != 2)
 			return False;
 		xypix = xy;
@@ -6712,9 +6714,10 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 	Vector<Int> dirPixelAxis = cSys.pixelAxes(which);
 	IPosition blc(pImage_p->ndim(), 0);
 	IPosition trc(pImage_p->ndim(), 0);
-	if ((xypix(0) < 0) || (xypix(0) > pImage_p->shape()(0)) || (xypix(1) < 0)
-			|| (xypix(1) > pImage_p->shape()(1))) {
-
+	if (
+		(xypix(0) < 0) || (xypix(0) > pImage_p->shape()(0)) || (xypix(1) < 0)
+		|| (xypix(1) > pImage_p->shape()(1))
+	) {
 		return False;
 	}
 
@@ -6725,8 +6728,7 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 
 	Int specAx = cSys.findCoordinate(Coordinate::SPECTRAL);
 	Vector<Bool> zyaxismask;
-	trc[cSys.pixelAxes(specAx)[0]] = pImage_p->shape()(
-			cSys.pixelAxes(specAx)[0]) - 1;
+	trc[cSys.pixelAxes(specAx)[0]] = pImage_p->shape()(cSys.pixelAxes(specAx)[0]) - 1;
 	zyaxisval.resize();
 	zyaxisval = pImage_p->getSlice(blc, trc - blc + 1, True);
 	zyaxismask = pImage_p->getMaskSlice(blc, trc - blc + 1, True);
@@ -6748,11 +6750,13 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 	return getSpectralAxisVal(specaxis, zxaxisval, cSys, xunits, specFrame);
 }
 
-Bool ImageAnalysis::getFreqProfile(const Vector<Double>& x,
-		const Vector<Double>& y, Vector<Float>& zxaxisval,
-		Vector<Float>& zyaxisval, const String& xytype, const String& specaxis,
-		const Int& whichStokes, const Int& whichTabular,
-				   const Int& whichLinear, const String& xunits, const String& specFrame) {
+Bool ImageAnalysis::getFreqProfile(
+	const Vector<Double>& x,
+	const Vector<Double>& y, Vector<Float>& zxaxisval,
+	Vector<Float>& zyaxisval, const String& xytype, const String& specaxis,
+	const Int& whichStokes, const Int& whichTabular,
+	const Int& whichLinear, const String& xunits, const String& specFrame
+) {
 
 	Vector<Double> xy(2);
 	xy[0] = 0;
@@ -6765,26 +6769,29 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& x,
 	Array<Bool> mask;
 	if (n < 1) {
 		return False;
-    }
+	}
 	if (n == 1) {
 		xy[0] = x[0];
 		xy[1] = y[0];
-		return getFreqProfile(xy, zxaxisval, zyaxisval, xytype, specaxis,
-				      whichStokes, whichTabular, whichLinear, xunits, specFrame);
+		return getFreqProfile(
+			xy, zxaxisval, zyaxisval, xytype, specaxis,
+			whichStokes, whichTabular, whichLinear, xunits,
+			specFrame
+		);
 	}
 	// n > 1, i.e. region to average over is a rectangle or polygon
 	Int specAx = cSys.findCoordinate(Coordinate::SPECTRAL);
 	Int pixSpecAx = cSys.pixelAxes(specAx)[0];
 	Int nchan = pImage_p->shape()(pixSpecAx);
-    Vector<Int> dirPixelAxis = cSys.pixelAxes(
-        cSys.findCoordinate(Coordinate::DIRECTION)
-    );
+	Vector<Int> dirPixelAxis = cSys.pixelAxes(
+		cSys.findCoordinate(Coordinate::DIRECTION)
+	);
 	if (n == 2) { // rectangle
-	    Vector<Quantity> blc(2);
+		Vector<Quantity> blc(2);
 		Vector<Quantity> trc(2);
 		if (xytype.contains("wor")) {
-			
-            blc(0) = Quantity(x[0], "rad");
+
+			blc(0) = Quantity(x[0], "rad");
 			blc(1) = Quantity(y[0], "rad");
 			trc(0) = Quantity(x[1], "rad");
 			trc(1) = Quantity(y[1], "rad");
@@ -6811,19 +6818,19 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& x,
 		mask = (imagreg->toLatticeRegion(cSys, pImage_p->shape())).get();
 		toAver = subim.get();
 	}
-    else {
+	else {
 		return False;
 	}
 
 	Int polAx = cSys.findCoordinate(Coordinate::STOKES);
-   	IPosition blc(cSys.nPixelAxes());
+	IPosition blc(cSys.nPixelAxes());
 	IPosition trc(cSys.nPixelAxes());
-    if (polAx >= 0) {
-	    Int pixPolAx = cSys.pixelAxes(polAx)[0];
-	    //FIXME only the I image for now
-	    blc(pixPolAx) = 0;
-	    trc(pixPolAx) = 0;
-    }
+	if (polAx >= 0) {
+		Int pixPolAx = cSys.pixelAxes(polAx)[0];
+		//FIXME only the I image for now
+		blc(pixPolAx) = 0;
+		trc(pixPolAx) = 0;
+	}
 	//x-y plane
 	blc(dirPixelAxis[0]) = 0;
 	blc(dirPixelAxis[1]) = 0;
