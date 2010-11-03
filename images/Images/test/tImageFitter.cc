@@ -530,6 +530,36 @@ int main() {
     		compList.getFlux(flux,0);
     		AlwaysAssert(near(flux(0).getValue(), 394312.65593496, 1e-5), AipsError);
         }
+
+        convolvedModel = "jyperbeamkmpersec.fits";
+        {
+        	writeTestString("test fitting image with units of Jy km/s (CAS-1233");
+        	ImageFitter fitter(convolvedModel, "", "");
+        	ComponentList compList = fitter.fit();
+            AlwaysAssert(fitter.converged(), AipsError);
+            Vector<Quantity> flux;
+
+        	compList.getFlux(flux,0);
+        	// I stokes flux test
+        	AlwaysAssert(near(flux(0).getValue(), 60318.6e3, 1e-5), AipsError);
+        	// Q stokes flux test
+        	AlwaysAssert(flux(1).getValue() == 0, AipsError);
+        	MDirection direction = compList.getRefDirection(0);
+        	AlwaysAssert(near(direction.getValue().getLong("rad").getValue(), 0.000213318, 1e-5), AipsError);
+        	AlwaysAssert(near(direction.getValue().getLat("rad").getValue(), 1.939254e-5, 1e-5), AipsError);
+
+        	Vector<Double> parameters = compList.getShape(0)->parameters();
+
+        	Double majorAxis = arcsecsPerRadian*parameters(0);
+        	AlwaysAssert(near(majorAxis, 26.50461508, 1e-7), AipsError);
+
+        	Double minorAxis = arcsecsPerRadian*parameters(1);
+        	AlwaysAssert(near(minorAxis, 23.99821851, 1e-7), AipsError);
+
+        	Double positionAngle = DEGREES_PER_RADIAN*parameters(2);
+        	AlwaysAssert(near(positionAngle, 126.3211060, 1e-7), AipsError);
+        }
+
         cout << "ok" << endl;
     }
     catch (AipsError x) {
