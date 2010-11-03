@@ -61,6 +61,9 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
     try:
         casalog.origin('split')
 
+        if not outputvis or outputvis.isspace():
+            raise ValueError, 'Please specify outputvis'
+
         myms = mstool.create()
         if ((type(vis)==str) & (os.path.exists(vis))):
             myms.open(vis, nomodify=True)
