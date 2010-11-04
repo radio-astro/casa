@@ -18,6 +18,7 @@ Features tested:
 Note: The time_then_chan_avg regression is a more "end-to-end" test of split.
 '''
 
+import inspect
 import os
 import numpy
 import re
@@ -581,6 +582,57 @@ class split_test_singchan(unittest.TestCase):
         # For all correlations, compare output channel 0 to input channel 25.
         check_eq(data_sp[:,0], data_orig[:,25], 0.0001)
 
+class split_test_blankov(unittest.TestCase):
+    """
+    Check that outputvis == '' causes a prompt exit.
+    """
+    # rename and make readonly when plotxy goes away.
+    inpms = 'viewertest/ctb80-vsm.ms'
+
+    outms = ''
+
+    def setUp(self):
+        try:
+            shutil.rmtree(self.outms, ignore_errors=True)
+
+            if not os.path.exists(self.inpms):
+                # Copying is technically unnecessary for split,
+                # but self.inpms is shared by other tests, so making
+                # it readonly might break them.
+                shutil.copytree(datapath + self.inpms, self.inpms)
+        except Exception, e:
+            print "Error in rm -rf %s or cp -r %s" % (self.outms, self.inpms)
+            raise e
+
+    def tearDown(self):
+        shutil.rmtree(self.inpms, ignore_errors=True)
+        shutil.rmtree(self.outms, ignore_errors=True)
+
+    def test_blankov(self):
+        """
+        Does outputvis == '' cause a prompt exit?
+        """
+        #splitran = False
+        try:
+            #print "\n\tSplitting", self.inpms
+            myf = sys._getframe(len(inspect.stack()) - 1).f_globals
+            # This allows distinguishing ValueError from other exceptions, and
+            # quiets an expected error message.
+            myf['__rethrow_casa_exceptions'] = True
+            splitran = split(self.inpms, self.outms, datacolumn='data',
+                             field='', spw='0:25', width=1,
+                             antenna='',
+                             timebin='0s', timerange='',
+                             scan='', array='', uvrange='',
+                             correlation='', async=False)
+            myf['__rethrow_casa_exceptions'] = False
+        except ValueError:
+            splitran = False
+        except Exception, e:
+            print "Unexpected but probably benign exception:", e
+        #__rethrow_casa_exceptions = False
+        assert not splitran
+
 class split_test_unorderedpolspw(SplitChecker):
     """
     Check spw selection from a tricky MS.
@@ -792,6 +844,6 @@ class split_test_tav_then_cvel(SplitChecker):
 
 def suite():
     return [split_test_tav, split_test_cav, split_test_cst, split_test_state,
-            split_test_singchan, split_test_unorderedpolspw,
+            split_test_singchan, split_test_unorderedpolspw, split_test_blankov,
             split_test_tav_then_cvel, split_test_genericsubtables, split_test_chanwidth]
     
