@@ -72,6 +72,28 @@ atmosphere::~atmosphere()
   }
 }
 
+std::string
+atmosphere::getAtmVersion()
+{
+  std::string rtn("");
+  try {
+    if (ATM_VERSION == getVersion()) {
+    rtn = getTag();
+    } else {
+      *itsLog << LogIO::SEVERE
+	      << "Version mismatch between ATM library and header files:  "
+	      << "library = v" << getVersion() << ", header = v" << ATM_VERSION
+	      << LogIO::POST;
+    }
+  } catch (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+	    << LogIO::POST;
+    RETHROW(x);
+  }
+  return rtn;
+}
+
+
 std::vector<std::string>
 atmosphere::listAtmosphereTypes()
 {
