@@ -39,7 +39,7 @@ namespace casa{
     // Int n=memCache_p.nelements();
     // for (Int i=0;i<n;i++)
     //   delete memCache_p[i].data;
-    memCache_p.resize(0);
+    //    memCache_p.resize(0);
   }
   //
   //-------------------------------------------------------------------------
@@ -48,13 +48,13 @@ namespace casa{
   //
   void CFCache::initCache()
   {
+    logIO() << LogOrigin("CFCache","initCache") << LogIO::NORMAL;
     ostringstream name;
     String line;
     Directory dirObj(Dir);
 
     if (Dir.length() == 0) 
-      throw(SynthesisFTMachineError("Got null string for disk cache dir. "
-				    "in CFCache::initCache()"));
+      throw(SynthesisFTMachineError("Got null string for disk cache dir. "));
     //
     // If the directory does not exist, create it
     //
@@ -117,6 +117,9 @@ namespace casa{
 				      +x.getMesg()));
       }
   }
+  //
+  //-----------------------------------------------------------------------
+  //
   CFCache& CFCache::operator=(const CFCache& other)
   {
     paList = other.paList;
@@ -126,8 +129,24 @@ namespace casa{
     Dir = other.Dir;
     cfPrefix = other.cfPrefix;
     aux = other.aux;
+    paCD_p = other.paCD_p;
+    memCache_p = other.memCache_p;
     return *this;
   };
+  //
+  //-----------------------------------------------------------------------
+  //
+  Long CFCache::size()
+  {
+    Long s=0;
+    for(Int i=0;i<memCache_p.nelements();i++)
+      s+=memCache_p[0].data->size();
+
+    return s*sizeof(Complex);
+  }
+  //
+  //-----------------------------------------------------------------------
+  //
   void CFCache::makeFTCoordSys(const CoordinateSystem& coords,
 			       const Int& convSize,
 			       const Vector<Double>& ftRef,
@@ -166,14 +185,15 @@ namespace casa{
   //
   //-------------------------------------------------------------------------
   //
-  Int CFCache::addToMemCache(Float pa, CFType& cf, 
+  Int CFCache::addToMemCache(Float pa, CFType* cf, 
 			     CoordinateSystem& coords,
 			     Vector<Int>& xConvSupport,
 			     Vector<Int>& yConvSupport,
 			     Float convSampling)
   {
     Float dPA=paCD_p.getParAngleTolerance().getValue("rad");
-    Int where=-1, wConvSize = cf.shape()(2);
+
+    Int where=-1, wConvSize = cf->shape()(2);
     Bool found=searchConvFunction(where, pa, dPA);
     //
     // If the PA value was not found, the return value in "where" is
@@ -188,6 +208,7 @@ namespace casa{
     // where+1, Array<>::resize() is a no-op.
     //
     Int N=memCache_p.nelements();
+
     memCache_p.resize(max(N,where+1), True);
     if ((Int)paList.nelements() <= where)
       {
@@ -215,13 +236,21 @@ namespace casa{
     //
     if (memCache_p[where].null())
       {
-	memCache_p[where].data = new CFType(cf);
-	memCache_p[where].sampling.resize(1);
-	memCache_p[where].sampling = convSampling;
-	memCache_p[where].xSupport = xConvSupport;
-	memCache_p[where].ySupport = yConvSupport;
-	memCache_p[where].coordSys = coords;
-	memCache_p[where].pa = Quantity(pa,"rad");
+
+	Vector<Float> sampling(1);sampling[0]=convSampling;
+
+	memCache_p[where] = CFStore(cf,coords,sampling,
+				    xConvSupport,yConvSupport,
+				    max(xConvSupport),max(yConvSupport),
+				    Quantity(pa,"rad"));
+	//	memCache_p[where].show("!$@#!$!@%: ");
+	// memCache_p[where].data = new CFType(cf);
+	// memCache_p[where].sampling.resize(1);
+	// memCache_p[where].sampling = convSampling;
+	// memCache_p[where].xSupport = xConvSupport;
+	// memCache_p[where].ySupport = yConvSupport;
+	// memCache_p[where].coordSys = coords;
+	// memCache_p[where].pa = Quantity(pa,"rad");
       }
     
     return where;
@@ -238,9 +267,17 @@ namespace casa{
 				  Float convSampling, String nameQualifier,
 				  Bool savePA)
   {
+    logIO() << LogOrigin("CFCache","cacheConvFunction") << LogIO::NORMAL;
     if (Dir.length() == 0) return;
-    Int N=paList.nelements();
-    if (which < 0) which = N-1;
+    
+    if (which < 0) 
+      {
+	Int i;
+	searchConvFunction(i,pa,paCD_p.getParAngleTolerance().get("rad"));
+	//	which = paList.nelements();
+	which = abs(i);
+      }
+    
     try
       {
 	IPosition newConvShape = cf.shape();
@@ -257,120 +294,23 @@ namespace casa{
 	    ostringstream name;
 	    name << Dir << "/" << cfPrefix << nameQualifier << iw << "_" << which;
 	    const CFType tmpArr=cf(Slicer(sliceStart,sliceLength));
-	    storeArrayAsImage(name, ftCoords,tmpArr);
+
+	    //	    storeArrayAsImage(name, ftCoords,tmpArr);
+
+	    IPosition screenShape(4,newConvShape(0),newConvShape(1),newConvShape(3),1);
+	    PagedImage<Complex> thisScreen(screenShape, ftCoords, name);
+	    Array<Complex> buf;
+	    buf=((cf(Slicer(sliceStart,sliceLength)).nonDegenerate()));
+	    thisScreen.put(buf);
 	  }
-	addToMemCache(pa,cf, ftCoords, xConvSupport, yConvSupport, convSampling);
+	if (savePA)
+	  addToMemCache(pa,&cf, ftCoords, xConvSupport, yConvSupport, convSampling);
 	
-	// if (savePA)
-	//   {
-	//     IPosition s(2,wConvSize,N+1);
-	//     paList.resize(N+1,True);
-	//     // 	XSup.resize(N+1,True); 
-	//     // 	YSup.resize(N+1,True); 
-	//     XSup.resize(s,True);
-	//     YSup.resize(s,True);
-	//     Sampling.resize(N+1,True);
-	//     paList[N] = pa;
-	//     for(Int iw=0;iw<wConvSize;iw++)
-	//       {
-	// 	YSup(iw,N) = convSupport(iw);
-	// 	XSup(iw,N) = convSupport(iw);
-	//       }
-	//     Sampling[N]=convSampling;
-	//   }
       }
     catch (AipsError& x)
       {
-	throw(SynthesisFTMachineError("Error while caching CF to disk in "
-				      "CFCache::cacheConvFunction(): "
-				      +x.getMesg()));
+	throw(SynthesisFTMachineError("Error while caching CF to disk in "+x.getMesg()));
       }
-  }
-  //
-  //-------------------------------------------------------------------------
-  // Write the weight functions from the mem. cache to the disk cache.
-  //
-  void CFCache::cacheWeightsFunction(Int which, Float pa, 
-					 Array<Complex>& cfWt, 
-					 CoordinateSystem& coords,
-					 Int &convSize,
-					 Vector<Int> &convSupport, 
-					 Float convSampling)
-  {
-//     Int N=paList.nelements();
-//     if (Dir.length() == 0) return;
-
-//     try
-//       {
-// 	IPosition newConvShape = cfWt.shape();
-// 	Int wConvSize = newConvShape(2);
-// 	for(Int iw=0;iw<wConvSize;iw++)
-// 	  {
-// 	    IPosition sliceStart(4,0,0,iw,0), 
-// 	      sliceLength(4,newConvShape(0),newConvShape(1),1,newConvShape(3));
-
-// 	    Vector<Double> ftRef(2);
-// 	    ftRef(0)=newConvShape(0)/2-1;
-// 	    ftRef(1)=newConvShape(1)/2-1;
-// 	    makeFTCoordSys(coords, convSize, ftRef, ftCoords);
-// 	    ostringstream name;
-// 	    name << Dir << "/" << cfPrefix << "WT" << iw << "_" << which;
-// 	    storeArrayAsImage(name, ftCoords,((cfWt(Slicer(sliceStart,sliceLength)).nonDegenerate())));
-// 	  }
-// 	IPosition s(3,wConvSize,1,N+1);
-// 	paList.resize(N+1,True);
-// // 	XSup.resize(N+1,True); 
-// // 	YSup.resize(N+1,True); 
-// 	XSup.resize(s,True);
-// 	YSup.resize(s,True);
-// 	Sampling.resize(N+1,True);
-// 	paList[N] = pa;
-// 	for(Int iw=0;iw<wConvSize;iw++)
-// 	  {
-// 	    YSup(iw,N) = convSupport(iw,0,which);
-// 	    XSup(iw,N) = convSupport(iw,0,which);
-// 	  }
-// 	Sampling[N]=convSampling;
-//       }
-//     catch (AipsError& x)
-//       {
-// 	throw(SynthesisFTMachineError("Error while caching CFWT to disk in "
-// 				      "CFCache::cacheCFtion(): "
-// 				      +x.getMesg()));
-//       }
-  }
-  //
-  //-------------------------------------------------------------------------
-  //  
-  Bool CFCache::searchConvFunction(const VisBuffer& vb, 
-					    VPSkyJones& vpSJ, 
-					    Int& which,
-					    Float &pa)
-  {
-    Int i,NPA=paList.nelements(); Bool paFound=False;
-    Float iPA, dPA;
-    dPA = vpSJ.getPAIncrement().getValue("rad");
-    /*
-    Vector<Float> antPA = vb.feed_pa(getCurrentTimeStamp(vb));
-    pa = sum(antPA)/(antPA.nelements()-1);
-    */
-    pa = getPA(vb);
-    //    cout << dPA*57.295 << " " << pa*57.295 << endl;
-    //    pa = 0;
-    //    cout << "######CFDC::search: " << pa << " " << getPA(vb) << endl;
-    //    if (NPA == 0) return -1;
-    
-    for(i=0;i<NPA;i++)
-      {
-	iPA = paList[i];
-	if (fabs(iPA - pa) <= dPA)
-	  {
-	    paFound = True;
-	    break;
-	  }
-      }
-    if (paFound) which = i; else which = -i;
-    return paFound;
   }
   //
   //-------------------------------------------------------------------------
@@ -415,6 +355,7 @@ namespace casa{
   //
   void CFCache::flush()
   {
+    logIO() << LogOrigin("CFCache","flush") << LogIO::NORMAL;
     if (Dir.length() == 0) return;
     ostringstream name;
     
@@ -440,38 +381,13 @@ namespace casa{
 					+ name + x.getMesg()));
 	}
   }
-  void CFCache::flushold()
-  {
-    if (Dir.length() == 0) return;
-    ostringstream name;
-    
-    name << Dir << "/aux.dat";
-    try
-      {
-	//    cout << "Writing to " << name.str() << endl;
-	IPosition supportShape=XSup.shape();
-	ofstream aux(name.str().c_str());
-	aux << paList.nelements() << " " << supportShape[0] << endl;
-	for(uInt ipa=0;ipa<paList.nelements();ipa++)
-	  {
-	    aux << paList[ipa]*180.0/M_PI << " ";
-	    for(int iw=0;iw<supportShape[0];iw++)
-	      aux << XSup(iw,ipa) << " " << YSup(iw,ipa) << " ";
-	    aux << " " << Sampling[ipa] <<endl;
-	  }
-      }
-    catch(AipsError &x)
-      {
-	throw(SynthesisFTMachineError(String("Error while writing ")
-				      + name + x.getMesg()));
-      }
-  }
   //
   //-------------------------------------------------------------------------
   //Along with the aux. info., also save the average PB in the disk cache.
   //
   void CFCache::flush(ImageInterface<Float>& avgPB)
   {
+    logIO() << LogOrigin("CFCache","flush") << LogIO::NORMAL;
     if (Dir.length() == 0) return;
     flush();
     ostringstream Name;
@@ -492,6 +408,7 @@ namespace casa{
   //
   void CFCache::loadAvgPB(ImageInterface<Float>& avgPB)
   {
+    logIO() << LogOrigin("CFCache","loadAvgPB") << LogIO::NORMAL;
     if (Dir.length() == 0) return;
     ostringstream name;
     name << Dir << "/avgPB";
@@ -528,13 +445,14 @@ namespace casa{
 			     Int Nw, CFStoreCacheType &convFuncCache,
 			     CFStore& cfs, String prefix)
   {
+    logIO() << LogOrigin("CFCache","loadFromDisk") << LogIO::NORMAL;
     Vector<Int> xconvSupport,yconvSupport;;
     Vector<Float> convSampling;
     Double cfRefFreq; CoordinateSystem coordSys;
     Array<Complex> cfBuf;
     
     if (Dir.length() == 0) 
-      throw(SynthesisFTMachineError("CFCache::loadFromDisk(): Cache dir. name not set"));
+      throw(SynthesisFTMachineError("Cache dir. name not set"));
       
     if (where < (Int)convFuncCache.nelements() && (!convFuncCache[where].data.null())) 
       return MEMCACHE;
@@ -576,6 +494,7 @@ namespace casa{
 	    Array<Complex> imBuf=tmp.get();
 	    if (convFuncCache[where].data.null())
 	      cfBuf.resize(IPosition(4,ts(0),ts(1), wConvSize,polInUse));
+	    //	      cfBuf = new CFType(IPosition(4,ts(0),ts(1), wConvSize,polInUse));
 	
 	    ndx(2)=iw;                              // The w-axis
 	    for(ndx(3)=0;ndx(3)<polInUse;ndx(3)++)  // The Poln. axis.
@@ -585,7 +504,7 @@ namespace casa{
 	    	    ts2(0)=ndx(0);ts2(1)=ndx(1);
 	    	    ts2(2)=ndx(3); // The Poln. axis of the disk-cache
 	    	    ts2(3)=0;      // The freq. axis of the disk-cache
-	    	    cfBuf(ndx)=imBuf(ts2);
+	    	    (cfBuf)(ndx)=imBuf(ts2);
 	    	  }
 	  }
 	catch(AipsError &x)
@@ -604,9 +523,10 @@ namespace casa{
 
     convSampling = Sampling[where];
     
-    where=addToMemCache(pa, cfBuf, coordSys, xconvSupport, yconvSupport, Sampling[where]);
+    where=addToMemCache(pa, &cfBuf, coordSys, xconvSupport, yconvSupport, Sampling[where]);
     cfs=convFuncCache[where];
-    
+    //    convFuncCache[where].show("loadFromDisk: ");
+
     return DISKCACHE;
   };
   // Locate a convlution function in either mem. or disk cache.  
@@ -619,6 +539,8 @@ namespace casa{
   Int CFCache::locateConvFunction(const Int Nw, const Float pa, const Float dPA,
 				  CFStore& cfs)
   {
+    logIO() << LogOrigin("CFCache","locateConvFunction")
+	    << LogIO::NORMAL;
     Int paKey,retVal=NOTCACHED; 
     Bool found;
     // Search for the PA corresponding to the supplied VB to find a
@@ -628,23 +550,32 @@ namespace casa{
     if (found)
       {
 	retVal=loadFromDisk(paKey,pa,dPA,Nw,memCache_p,cfs);
+	//	cfs.show("From CFC::locate0");
+	
 	switch (retVal)
 	  {
 	  case DISKCACHE:
 	    {
-	      //*****************	    convWeights.reference(*convWeightsCache[PAIndex]);
+	      //	      *****************	    convWeights.reference(*convWeightsCache[PAIndex]);
 	      if (paKey < (Int)memCache_p.nelements())
-		logIO() << "Loaded from disk cache: Conv. func. # "
-			<< paKey << LogIO::POST;
+	      	logIO() << "Loaded from disk cache: Conv. func. # "
+	      		<< paKey << LogIO::POST;
 	      else
-		throw(SynthesisFTMachineError("CFCache::locateConvFunction(): "
-					      "Internal error: paKey out of range"));
+	      	throw(SynthesisFTMachineError("Internal error: paKey out of range"));
+	      //	      break;
+	    }
+	  case MEMCACHE:  
+	    {
+	      //	      cerr << cfs.data.null() << endl;
+	      //	      cfs.show("From CFC::locate1");
+	      //	      cerr << "mem cache size = " << memCache_p.nelements() << endl;
+	      //	      memCache_p[paKey].show("From CFC::locate2");
+	      cfs=(memCache_p[paKey]);
+	      //	      cfs.show("From CFC::locate3");
 	      break;
 	    }
-	  case MEMCACHE:{break;}
-	  case NOTCACHED: {return retVal;}
+	  case NOTCACHED: {break;}
 	  };
-	cfs=(memCache_p[paKey]);
 	//**************	convWeights.reference(*convWeightsCache[paKey]);
       }
     return retVal;

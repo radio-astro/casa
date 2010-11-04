@@ -115,7 +115,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     typedef Vector< CFStore > CFStoreCacheType;
     CFCache(const char *cfDir="CF"):
       logIO_p(), memCache_p(), XSup(), YSup(), paList(), key2IndexMap(),
-      cfPrefix(cfDir), aux("aux.dat") 
+      cfPrefix(cfDir), aux("aux.dat"), paCD_p()
     {};
     CFCache& operator=(const CFCache& other);
     ~CFCache();
@@ -128,25 +128,44 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     void initCache();
     //
+    // Compute the size of the memory cache in bytes
+    //
+    Long size();
+    //
     // Method to set the class to caluclate the differential
     // Parallactic Angle.  The ParAngleChangeDetector also holds the
     // delta PA value (user defined).
     //
-    void setPAChangeDetector(const ParAngleChangeDetector& paCD) {paCD_p=paCD;};
-    //
-    // Methods to cachae the convolution function.
-    //
-    void cacheConvFunction(CFStore& cfs)                   {cacheConvFunction(cfs.pa, cfs);}
-    void cacheConvFunction(const Quantity pa, CFStore& cfs)
-    {cacheConvFunction(pa.getValue("rad"), cfs);}
-    void cacheConvFunction(const Float pa, CFStore& cfs)
+    void setPAChangeDetector(const ParAngleChangeDetector& paCD) 
     {
+      //      paCD_p.setTolerance(paCD.getParAngleTolerance());
+      paCD_p = paCD;
+      // cerr << "CFC : " << paCD_p.getParAngleTolerance().get("deg") << endl
+      // 	   << paCD.getParAngleTolerance().get("deg") << endl;
+    };
+    //
+    // Methods to cache the convolution function.
+    //
+    void cacheConvFunction(CFStore& cfs, 
+			   String nameQualifier="",Bool savePA=True)
+    {cacheConvFunction(cfs.pa, cfs,nameQualifier,savePA);}
+
+    void cacheConvFunction(const Quantity pa, CFStore& cfs,
+			   String nameQualifier="",Bool savePA=True)
+    {cacheConvFunction(pa.getValue("rad"), cfs, nameQualifier,savePA);}
+
+    void cacheConvFunction(const Float pa, CFStore& cfs, 
+			   String nameQualifier="",Bool savePA=True)
+    {
+      if (cfs.data.null())
+	throw(SynthesisError("Won't cache a NULL CFStore"));
       CoordinateSystem ftcoords;
       Int which=-1;
       Int convSize=(Int)cfs.data->shape()(0);
       cacheConvFunction(which, pa, *(cfs.data), cfs.coordSys, ftcoords, convSize,
-    			cfs.xSupport, cfs.ySupport, cfs.sampling[0]);
+    			cfs.xSupport, cfs.ySupport, cfs.sampling[0],nameQualifier,savePA);
     }
+
     void cacheConvFunction(Int which, const Float& pa, CFType& cf, 
 			   CoordinateSystem& coords, CoordinateSystem& ftcoords, 
 			   Int& convSize, 
@@ -155,16 +174,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // Methods to cache functions to compute the sensitivity pattern on the sky.
     //
-    void cacheWeightsFunction(Int which, Float pa, Array<Complex>& cfWt, 
-			      CoordinateSystem& coords, Int& convSize, 
-			      Vector<Int>& convSupport, Float convSampling);
-    //
+    // // void cacheWeightsFunction(Int which, Float pa, Array<Complex>& cfWt, 
+    // // 			      CoordinateSystem& coords, Int& convSize, 
+    // // 			      Vector<Int>& convSupport, Float convSampling);
+    // //
     // Methods to sarch for a convolution function in the caches (disk
     // or memory) for the give Parallactic Angle value.
     //
-    Bool searchConvFunction(const VisBuffer& vb, VPSkyJones& vpSJ, Int& which, Float &pa);
     Bool searchConvFunction(Int& which, const Quantity pa, const Quantity dPA )
     {return searchConvFunction(which, pa.getValue("rad"), dPA.getValue("rad"));};
+
     Bool searchConvFunction(Int& which, const Float pa, const Float dPA );
     //
     // Lower level method to load a convolution function from the disk.
@@ -186,6 +205,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     Int locateConvFunction(const Int Nw, const Quantity pa, const Quantity dPA, CFStore& cfs)
     {return locateConvFunction(Nw,pa.getValue("rad"), dPA.getValue("rad"),cfs);};
+
     Int locateConvFunction(const Int Nw, const Float pa, const Float dPA, CFStore& cfs);
     //
     // Methods to write the auxillary information from the memory
@@ -194,7 +214,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // anytime during the life of this object.
     //
     void flush();
-    void flushold();
     void flush(ImageInterface<Float>& avgPB);
     void loadAvgPB(ImageInterface<Float>& avgPB);
   protected:
@@ -208,15 +227,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Matrix<Float> key2IndexMap; // Nx2 [PAVal, Freq]
     String Dir, cfPrefix, aux;
     ParAngleChangeDetector paCD_p;
+    //
+    // Internal method to convert the direction co-ordinates of the
+    // given CoordinateSystem to its Fourier conjuguate co-ordinates.
+    //
     void makeFTCoordSys(const CoordinateSystem& coords,
 			const Int& convSize,
 			const Vector<Double>& ftRef,
 			CoordinateSystem& ftCoords);
-    Int addToMemCache(Float pa, CFType& cf, CoordinateSystem& coords,
+    //
+    // Internal method to add the given convolution function to the
+    // memory cache.
+    //
+    Int addToMemCache(Float pa, CFType* cf, CoordinateSystem& coords,
 		      Vector<Int>& xConvSupport,
 		      Vector<Int>& yConvSupport,
 		      Float convSampling);
-
   };
 }
 
