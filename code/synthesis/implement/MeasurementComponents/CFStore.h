@@ -28,22 +28,50 @@
 #ifndef SYNTHESIS_CFSTORE_H
 #define SYNTHESIS_CFSTORE_H
 #include <synthesis/MeasurementComponents/CFDefs.h>
+#include <synthesis/MeasurementComponents/SynthesisError.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
+#include <casa/Logging/LogIO.h>
+#include <casa/Logging/LogSink.h>
+#include <casa/Logging/LogOrigin.h>
 #include <casa/Utilities/CountedPtr.h>
+#include <images/Images/ImageInterface.h>
+#include <msvis/MSVis/VisBuffer.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
   using namespace CFDefs;
   class CFStore
   {
   public:
-    CFStore():data(), coordSys(), sampling(), xSupport(), ySupport(), pa(){};
+    CFStore():data(), coordSys(), sampling(), 
+	      xSupport(), ySupport(), 
+	      maxXSupport(-1), maxYSupport(-1),
+	      pa() {};
+    CFStore(CFType *dataPtr, CoordinateSystem& cs, Vector<Float>& samp,
+	    Vector<Int>& xsup, Vector<Int>& ysup, Int maxXSup, Int maxYSup,
+	    Quantity PA):
+      data(), coordSys(cs), sampling(samp),
+      xSupport(xsup), ySupport(ysup), maxXSupport(maxXSup),
+      maxYSupport(maxYSup), pa(PA) 
+    {data = new CFType(*dataPtr);};
+    ~CFStore() {};
     CFStore& operator=(const CFStore& other);
     void show(const char *Mesg=NULL,ostream &os=cerr);
     Bool null() {return data.null();};
-    
+    void set(CFType *dataPtr, CoordinateSystem& cs, Vector<Float>& samp,
+	    Vector<Int>& xsup, Vector<Int>& ysup, Int maxXSup, Int maxYSup,
+	    Quantity PA)
+    {
+      data=dataPtr; coordSys=cs; sampling=samp; xSupport=xsup; ySupport=ysup;
+      maxXSupport=maxXSup;maxYSupport=maxYSup;pa=PA;
+    }
+
+    void resize(Int nw, IPosition imShape=IPosition(0), Bool retainValues=False);
+
+
     CountedPtr<CFType> data;
     CoordinateSystem coordSys;
     Vector<Float> sampling;
     Vector<Int> xSupport,ySupport;
+    Int maxXSupport, maxYSupport;
     Quantity pa;
   };
 } //# NAMESPACE CASA - END
