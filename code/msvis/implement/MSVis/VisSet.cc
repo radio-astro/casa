@@ -104,7 +104,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (init) {
       
       removeCalSet(ms);
-      addCalSet(ms, compress);
+      addCalSet2(ms, compress);
       
       ArrayColumn<Complex> mcd(ms,"MODEL_DATA");
       mcd.rwKeywordSet().define("CHANNEL_SELECTION",selection_p);
@@ -121,6 +121,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for (uInt spw=0; spw<selection_p.ncolumn(); spw++) {
       iter_p->selectChannel(1,selection_p(0,spw),selection_p(1,spw),0,spw);
     }
+
+    // Now initialize the scratch columns
+    if (init)
+      initCalSet(0);
+
   }
 
   VisSet::VisSet(MeasurementSet& ms,const Block<Int>& columns, 
@@ -174,7 +179,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (addScratch && init) {
 
       removeCalSet(ms);
-      addCalSet(ms, compress);
+      addCalSet2(ms, compress);
       
       ArrayColumn<Complex> mcd(ms,"MODEL_DATA");
       mcd.rwKeywordSet().define("CHANNEL_SELECTION",selection_p);
@@ -186,11 +191,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	ms.rwKeywordSet().removeField("SORTED_TABLE");
     }
     
-    
+    // Generate the VisIter
     iter_p=new VisIter(ms_p,columns,timeInterval);
     for (uInt spw=0; spw<selection_p.ncolumn(); spw++) {
       iter_p->selectChannel(1,selection_p(0,spw),selection_p(1,spw),0,spw);
     }
+
+    // Now initialize the scratch columns
+    if (addScratch && init)
+      initCalSet(0);
+
   }
   
   VisSet::VisSet(Block<MeasurementSet>& mss,const Block<Int>& columns, 
@@ -203,9 +213,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     blockOfMS_p = &mss;
     Int numMS=mss.nelements();
     ms_p=mss[numMS-1];
-    
-  
-
     
     Block<Vector<Int> > blockNGroup(numMS);
     Block<Vector<Int> > blockStart(numMS);
@@ -259,9 +266,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
             addScratchCols(mss[k], compress);
         }
     }
-    
-    
-    
+        
   }
 
 
@@ -400,6 +405,7 @@ void VisSet::initCalSet(Int calSet)
   Vector<Int> lastCorrType;
   Vector<Bool> zero;
   Int nRows(0);
+  iter_p->setRowBlocking(10000);
   for (iter_p->originChunks(); iter_p->moreChunks(); iter_p->nextChunk()) {
 
       // figure out which correlations to set to 1. and 0. for the model.
@@ -407,11 +413,11 @@ void VisSet::initCalSet(Int calSet)
       uInt nCorr = corrType.nelements();
       if (nCorr != lastCorrType.nelements() ||
           !allEQ(corrType, lastCorrType)) {
-
+	
         lastCorrType.resize(nCorr); 
         lastCorrType=corrType;
         zero.resize(nCorr);
-
+	
         for (uInt i=0; i<nCorr; i++) 
           {
             zero[i]=(corrType[i]==Stokes::RL || corrType[i]==Stokes::LR ||
@@ -419,23 +425,30 @@ void VisSet::initCalSet(Int calSet)
           }
       }
       for (iter_p->origin(); iter_p->more(); (*iter_p)++) {
-          Cube<Complex> data;
           nRows+=iter_p->nRow();
-          iter_p->setVis(iter_p->visibility(data, VisibilityIterator::Observed),
-                         VisibilityIterator::Corrected);
 
-          data = Complex(1.0,0.0);
+	  // Read DATA
+          Cube<Complex> data;
+	  iter_p->visibility(data, VisibilityIterator::Observed);
 
-          for (uInt i=0; i < nCorr; i++) {
+	  // Set CORRECTED_DATA
+          iter_p->setVis(data,VisibilityIterator::Corrected);
+
+
+	  // Set MODEL_DATA
+          data.set(1.0);
+	  if (ntrue(zero)>0) {
+	    for (uInt i=0; i < nCorr; i++) {
               if (zero[i]) data(Slice(i), Slice(), Slice()) = Complex(0.0,0.0);
-          }
-          iter_p->setVis(data,
-                         VisibilityIterator::Model);
+	    }
+	  }
+          iter_p->setVis(data,VisibilityIterator::Model);
       }
   }
   flush();
 
   iter_p->originChunks();
+  iter_p->setRowBlocking(0);
 
   ostringstream os;
   os << "Initialized " << nRows << " rows."; 
@@ -812,6 +825,157 @@ void VisSet::addCalSet(MeasurementSet& ms, Bool compress) {
 
   return;
 }
+
+void VisSet::addCalSet2(MeasurementSet& ms, Bool compress) {
+
+    // Add but DO NOT INITIALIZE calibration set (comprising a set of CORRECTED_DATA 
+    // and MODEL_DATA columns) to the MeasurementSet.
+    
+    LogSink logSink;
+    LogMessage message(LogOrigin("VisSet","addCalSet"));
+    
+    message.message("Adding MODEL_DATA and CORRECTED_DATA columns");
+    logSink.post(message);
+    
+    {
+      // Define a column accessor to the observed data
+      ROTableColumn* data;
+      const bool data_is_float = ms.tableDesc().isColumn(MS::columnName(MS::FLOAT_DATA));
+      if (data_is_float) {
+	data = new ROArrayColumn<Float> (ms, MS::columnName(MS::FLOAT_DATA));
+      } else {
+	data = new ROArrayColumn<Complex> (ms, MS::columnName(MS::DATA));
+      };
+      
+      // Check if the data column is tiled and, if so, the
+      // smallest tile shape used.
+      TableDesc td = ms.actualTableDesc();
+      const ColumnDesc& cdesc = td[data->columnDesc().name()];
+      String dataManType = cdesc.dataManagerType();
+      String dataManGroup = cdesc.dataManagerGroup();
+      
+      IPosition dataTileShape;
+      Bool tiled = (dataManType.contains("Tiled"));
+      Bool simpleTiling = False;
+      
+      
+      if (tiled) {
+	ROTiledStManAccessor tsm(ms, dataManGroup);
+	uInt nHyper = tsm.nhypercubes();
+	// Find smallest tile shape
+	Int lowestProduct=INT_MAX,highestProduct=-INT_MAX;
+	Int lowestId=0, highestId=0;
+	for (uInt id=0; id < nHyper; id++) {
+	  Int product = tsm.getTileShape(id).product();
+	  if (product > 0 && (product < lowestProduct)) {
+	    lowestProduct = product;
+	    lowestId = id;
+	  };
+	  if (product > 0 && (product > highestProduct)) {
+	    highestProduct = product;
+	    highestId = id;
+	  };
+	};
+	
+	// 2010Oct07 (gmoellen) We will try using
+	//  maximum volumne intput tile shape, as this 
+	//  improves things drastically for ALMA data with
+	//  an enormous range of nchan (e.g., 3840+:1), and
+	//  will have no impact on data with a single shape
+	//	    dataTileShape = tsm.getTileShape(lowestId);
+	dataTileShape = tsm.getTileShape(highestId);
+	simpleTiling = (dataTileShape.nelements() == 3);
+	
+      };
+      
+      if (!tiled || !simpleTiling) {
+	// Untiled, or tiled at a higher than expected dimensionality
+	// Use a canonical tile shape of 1 MB size
+	
+	Int maxNchan = max (numberChan());
+	Int tileSize = maxNchan/10 + 1;
+	Int nCorr = data->shape(0)(0);
+	dataTileShape = IPosition(3, nCorr, tileSize, 131072/nCorr/tileSize + 1);
+      };
+      
+      delete data;
+
+      
+      // Add the MODEL_DATA column
+      TableDesc tdModel, tdModelComp, tdModelScale;
+      CompressComplex* ccModel=NULL;
+      String colModel=MS::columnName(MS::MODEL_DATA);
+      
+      tdModel.addColumn(ArrayColumnDesc<Complex>(colModel,"model data", 2));
+      td.addColumn(ArrayColumnDesc<Complex>(colModel,"model data", 2));
+      IPosition modelTileShape = dataTileShape;
+      if (compress) {
+	tdModelComp.addColumn(ArrayColumnDesc<Int>(colModel+"_COMPRESSED",
+						   "model data compressed",2));
+	tdModelScale.addColumn(ScalarColumnDesc<Float>(colModel+"_SCALE"));
+	tdModelScale.addColumn(ScalarColumnDesc<Float>(colModel+"_OFFSET"));
+	ccModel = new CompressComplex(colModel, colModel+"_COMPRESSED",
+				      colModel+"_SCALE", colModel+"_OFFSET", True);
+	
+	StandardStMan modelScaleStMan("ModelScaleOffset");
+	ms.addColumn(tdModelScale, modelScaleStMan);
+	
+	
+	TiledShapeStMan modelCompStMan("", modelTileShape);
+	ms.addColumn(tdModelComp, modelCompStMan);
+	ms.addColumn(tdModel, *ccModel);
+	
+      } else {
+	MeasurementSet::addColumnToDesc(tdModel, MeasurementSet::MODEL_DATA, 2);
+	//MeasurementSet::addColumnToDesc(td, MeasurementSet::MODEL_DATA, 2);
+	TiledShapeStMan modelStMan("ModelTiled", modelTileShape);
+	//String hcolName=String("Tiled")+String("MODEL_DATA");
+	//tdModel.defineHypercolumn(hcolName,3,
+	//			     stringToVector(colModel));
+	//td.defineHypercolumn(hcolName,3,
+	//		     stringToVector(colModel));
+	ms.addColumn(tdModel, modelStMan);
+      };
+      
+      // Add the CORRECTED_DATA column
+      TableDesc tdCorr, tdCorrComp, tdCorrScale;
+      CompressComplex* ccCorr=NULL;
+      String colCorr=MS::columnName(MS::CORRECTED_DATA);
+      
+      tdCorr.addColumn(ArrayColumnDesc<Complex>(colCorr,"corrected data", 2));
+      IPosition corrTileShape = dataTileShape;
+      if (compress) {
+	tdCorrComp.addColumn(ArrayColumnDesc<Int>(colCorr+"_COMPRESSED",
+						  "corrected data compressed",2));
+	tdCorrScale.addColumn(ScalarColumnDesc<Float>(colCorr+"_SCALE"));
+	tdCorrScale.addColumn(ScalarColumnDesc<Float>(colCorr+"_OFFSET"));
+	ccCorr = new CompressComplex(colCorr, colCorr+"_COMPRESSED",
+				     colCorr+"_SCALE", colCorr+"_OFFSET", True);
+	
+	StandardStMan corrScaleStMan("CorrScaleOffset");
+	ms.addColumn(tdCorrScale, corrScaleStMan);
+	
+	TiledShapeStMan corrCompStMan("", corrTileShape);
+	ms.addColumn(tdCorrComp, corrCompStMan);
+	ms.addColumn(tdCorr, *ccCorr);
+	
+      } else {
+	TiledShapeStMan corrStMan("", corrTileShape);
+	ms.addColumn(tdCorr, corrStMan);
+      };
+      MeasurementSet::addColumnToDesc(td, MeasurementSet::CORRECTED_DATA, 2);
+      
+      if (ccModel) delete ccModel;
+      if (ccCorr) delete ccCorr;
+      
+      ms.flush();
+
+    }
+
+  return;
+}
+
+
 
 void VisSet::removeCalSet(MeasurementSet& ms) {
   // Remove an existing calibration set (comprising a set of CORRECTED_DATA 
