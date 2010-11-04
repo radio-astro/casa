@@ -48,12 +48,20 @@ namespace casa{
       {
 	if (Mesg != NULL)
 	  os << Mesg << endl;
-	os << "Data Shape: " << data->shape() << endl
-	   << "Sampling: " << sampling << endl
-	   << "xSupport: " << xSupport << endl
-	   << "ySupport: " << ySupport << endl
-	   << "PA = " << pa.get("deg") << endl;
+	os << "Data Shape: " << data->shape() << endl;
+	os << "Sampling: " << sampling << endl;
+	os << "xSupport: " << xSupport << endl;
+	os << "ySupport: " << ySupport << endl;
+	os << "PA = " << pa.get("deg") << endl
+	  ;
       }
   };
   
+  void CFStore::resize(Int nw, IPosition imShape, Bool retainValues)
+  {
+    xSupport.resize(nw,retainValues); ySupport.resize(nw,retainValues);
+    sampling.resize(1);
+    if ((imShape.nelements() > 0) && (!data.null()))
+      data->resize(imShape,retainValues);
+  }
 } // end casa namespace
