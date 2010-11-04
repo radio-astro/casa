@@ -49,13 +49,13 @@ namespace casa{
   void storeImg(String fileName,ImageInterface<Complex>& theImg, Bool writeReIm)
   {
     PagedImage<Complex> ctmp(theImg.shape(), theImg.coordinates(), fileName);
+    LatticeExpr<Complex> le(theImg);
+    ctmp.copyData(le);
     if (writeReIm)
       {
 	ostringstream reName,imName;
 	reName << "re" << fileName;
 	imName << "im" << fileName;
-	LatticeExpr<Complex> le(theImg);
-	ctmp.copyData(le);
 	{
 	  PagedImage<Float> tmp(theImg.shape(), theImg.coordinates(), reName);
 	  LatticeExpr<Float> le(abs(theImg));
