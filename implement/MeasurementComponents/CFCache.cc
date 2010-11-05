@@ -406,10 +406,13 @@ namespace casa{
   //-------------------------------------------------------------------------
   //Load the average PB from the disk cache.
   //
-  void CFCache::loadAvgPB(ImageInterface<Float>& avgPB)
+  Int CFCache::loadAvgPB(ImageInterface<Float>& avgPB)
   {
     logIO() << LogOrigin("CFCache","loadAvgPB") << LogIO::NORMAL;
-    if (Dir.length() == 0) return;
+    if (Dir.length() == 0) 
+      throw(SynthesisFTMachineError("Cache dir. name null"));
+
+
     ostringstream name;
     name << Dir << "/avgPB";
     //    cout << name.str() << endl;
@@ -423,9 +426,9 @@ namespace casa{
                         // Ultimately, this should be used to make
 			// the state of this object consistant.
       {
-	throw(SynthesisFTMachineError(String("Error while loading \"")+
-				      name + String("\": ") + x.getMesg()));
+	return NOTCACHED;
       }
+    return DISKCACHE;
   }
   //
   //-------------------------------------------------------------------------

@@ -215,7 +215,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     void flush();
     void flush(ImageInterface<Float>& avgPB);
-    void loadAvgPB(ImageInterface<Float>& avgPB);
+    Int loadAvgPB(ImageInterface<Float>& avgPB);
   protected:
     LogIO logIO_p;
     LogIO& logIO() {return logIO_p;};
