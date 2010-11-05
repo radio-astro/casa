@@ -354,8 +354,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int nint(Double val) {return Int(floor(val+0.5));};
     
     // Locate convolution functions on the disk
-    Int locateConvFunction(const Int Nw, const Float pa);
-    void cacheConvFunction(Int which, Array<Complex>& cf, CoordinateSystem& coord);
+    //    Int locateConvFunction(const Int Nw, const Float pa);
+    //    void cacheConvFunction(Int which, Array<Complex>& cf, CoordinateSystem& coord);
     // Find the convolution function
     void findConvFunction(const ImageInterface<Complex>& image,
 			  const VisBuffer& vb);
@@ -411,7 +411,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Antenna columns
     MSAntennaColumns* msac;
     
-    DirectionCoordinate directionCoord;
+    //    DirectionCoordinate directionCoord;
     
     MDirection::Convert* pointingToImage;
     

@@ -921,26 +921,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   //
   //---------------------------------------------------------------
-  //
-  //
-  //---------------------------------------------------------------
-  //
-  // Locate a convlution function in either mem. or disk cache.  
-  // Return 1 if found in the disk cache.
-  //        2 if found in the mem. cache.
-  //       <0 if not found in either cache.  In this case, absolute of
-  //          the return value corresponds to the index in the list of
-  //          conv. funcs. where this conv. func. should be filled
-  //
-  Int AWProjectFT::locateConvFunction(const Int Nw, const Float pa)
-  {
-    Int i;
-    Quantity dPA = paChangeDetector.getParAngleTolerance(),
-      PA=Quantity(pa,"rad");
-    if ((i=cfCache.locateConvFunction(Nw, PA, dPA, cfs_p))!=NOTCACHED)
-      convFunc.reference(*cfs_p.data);
-    return i;
-  }
   void AWProjectFT::makeCFPolMap(const VisBuffer& vb, const Vector<Int>& locCfStokes,
 				 Vector<Int>& polM)
   {
@@ -1022,149 +1002,87 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
   }
   //
-  //---------------------------------------------------------------
+  // Locate a convlution function.  It will be either in the cache
+  // (mem. or disk cache) or will be computed and cached for possible
+  // later use.
   //
   void AWProjectFT::findConvFunction(const ImageInterface<Complex>& image,
-				       const VisBuffer& vb)
+				     const VisBuffer& vb)
   {
-    Int PAIndex_l=0;
     if (!paChangeDetector.changed(vb,0)) return;
-
+    Int PAIndex_l=0, cfSource=NOTCACHED;
+    CoordinateSystem ftcoords;
+    Float pa=getVBPA(vb);
+    Bool pbMade=False;
     logIO() << LogOrigin("AWProjectFT", "findConvFunction")  << LogIO::NORMAL;
-    
     ok();
-    
-    
-    CoordinateSystem coords(image.coordinates());
+
+    // Writing obfuscated code can be fun!
+    cfRefFreq_p = image.coordinates()
+      .spectralCoordinate(image.coordinates().findCoordinate(Coordinate::SPECTRAL))
+      .referenceValue()(0);
+
+    //
+    // Need to figure out where to compute the following arrays/ints in the re-factored code.
+    //----------------------------------------------------------------
     {
-      Int spIndex=image.coordinates().findCoordinate(Coordinate::SPECTRAL); ;
-      cfRefFreq_p = image.coordinates().spectralCoordinate(spIndex).referenceValue()(0);
+      polInUse = 0;
+      lastPAUsedForWtImg = currentCFPA = pa;
+      Int M=polMap.nelements(), N=0;
+      for(Int i=0;i<polMap.nelements();i++) if (polMap(i) > -1) polInUse++;
+      cfStokes.resize(polInUse);
+      for(Int i=0;i<polMap.nelements();i++) 
+	if (polMap(i) > -1) {cfStokes(N) = vb.corrType()(i);N++;}
     }
+    //----------------------------------------------------------------
     //
-    // Make a two dimensional image to calculate auto-correlation of
-    // the ideal illumination pattern. We want this on a fine grid in
-    // the UV plane
+    // Loacate the required conv. function.
     //
-    Int directionIndex=coords.findCoordinate(Coordinate::DIRECTION);
-    AlwaysAssert(directionIndex>=0, AipsError);
-    DirectionCoordinate dc=coords.directionCoordinate(directionIndex);
-    directionCoord=coords.directionCoordinate(directionIndex);
-    Vector<Double> sampling;
-    sampling = dc.increment();
-    sampling*=Double(convSampling);
-    sampling*=Double(nx)/Double(convSize);
-    dc.setIncrement(sampling);
-    
-    
-    Vector<Double> unitVec(2);
-    unitVec=convSize/2;
-    dc.setReferencePixel(unitVec);
-    
-    // Set the reference value to that of the image
-    coords.replaceCoordinate(dc, directionIndex);
-    
-    //
-    // Make an image with circular polarization axis.  Return the
-    // no. of vis. poln. planes that will be used in making the user
-    // defined Stokes image.
-    //
-   polInUse = evlacf_p.makePBPolnCoords(coords,cfStokes,vb,polMap);
-   //    polInUse=evlacf_p.makePBPolnCoords(coords,vb);
-    
-   Float pa=getVBPA(vb);
-   Int cfSource=locateConvFunction(wConvSize, pa);
-   lastPAUsedForWtImg = currentCFPA = pa;
-    
-   Bool pbMade=False;
-   if (cfSource==DISKCACHE) // CF found and loaded from the disk cache
-     {
-	//	cout << "### New CFPA = " << currentCFPA << endl;
-	polInUse  = cfs_p.data->shape()(3);
-	wConvSize = cfs_p.data->shape()(2);
-	try
-	  {
-	    cfCache.loadAvgPB(avgPB);
-	    avgPBReady=True;
-	  }
-	catch (AipsError& err)
-	  {
-	    logIO() << "Average PB does not exist in the cache.  A fresh one will be made."
-		    << LogIO::NORMAL << LogIO::POST;
-	    pbMade=makeAveragePB0(vb, image, avgPB);
-	    pbNormalized=False; normalizeAvgPB(); pbNormalized=True;
-	  }
-      }
-    else if (cfSource==MEMCACHE)  // CF found in the mem. cache
+    cfSource=cfCache.locateConvFunction(wConvSize, Quantity(pa,"rad"),
+					paChangeDetector.getParAngleTolerance(),
+					cfs_p);
+    // If conv. func. not found in the cache, make one and cache it.
+    if (cfSource==NOTCACHED)
       {
-      }
-    else                     // CF not found in either cache
-      {
-	//
-	// Make the CF, update the average PB and update the CF and
-	// the avgPB disk cache
-	//
 	PAIndex_l = abs(cfSource);
-        //
-        // Load the average PB from the disk since it's going to be
-        // updated in memory and on the disk.  Without loading it from
-        // the disk (from a potentially more complete existing cache),
-        // the average PB can get inconsistant with the rest of the
-        // cache.
-        //
-// 	logIO() << LogOrigin("AWProjectFT::findConvFunction()","") 
-// 		<< "Making the convolution function for PA=" << pa << "deg."
-// 		<< LogIO::NORMAL 
-// 		<< LogIO::POST;
-	evlacf_p.makeConvFunction(image,wConvSize,vb, pa, polMap,cfStokes,
-				  cfs_p, cfwts_p);
-	convFunc.reference(*cfs_p.data);
-	//	makeConvFunction(image,vb,pa);
-	try
-	  {
-	    cfCache.loadAvgPB(avgPB);
-	    resetPBs = False;
-	    avgPBReady=True;
-	  }
-	catch(SynthesisFTMachineError &err)
-	  {
-	    logIO() << LogOrigin("AWProjectFT::findConvFunction()","") 
-		    << "Average PB does not exist in the cache.  A fresh one will be made." 
-		    << LogIO::NORMAL 
-		    << LogIO::POST;
-	    pbMade=makeAveragePB0(vb, image, avgPB);
-	  }
-
-	//	makeAveragePB(vb, image, polInUse,avgPB);
-	pbNormalized=False; 
-	normalizeAvgPB();
-	pbNormalized=True;
-	Int index=coords.findCoordinate(Coordinate::SPECTRAL);
-	SpectralCoordinate spCS = coords.spectralCoordinate(index);
-	Vector<Double> refValue; refValue.resize(1);refValue(0)=cfRefFreq_p;
-	spCS.setReferenceValue(refValue);
-	coords.replaceCoordinate(spCS,index);
-
-	cfs_p.coordSys=coords; cfs_p.pa=Quantity(pa,"rad");
-	cfwts_p.coordSys=coords; cfwts_p.pa=Quantity(pa,"rad");
+	evlacf_p.makeConvFunction(image,wConvSize,vb, pa, polMap,cfStokes,cfs_p, cfwts_p);
 
 	cfCache.cacheConvFunction(cfs_p);
 	cfCache.cacheConvFunction(cfwts_p,"WT",False);
-
 	cfCache.flush(); // Write the aux info file
-
+      }
+    else
+      {
+	cfwts_p = cfs_p;
+      }
+    polInUse  = cfs_p.data->shape()(3);
+    wConvSize = cfs_p.data->shape()(2);
+    // Reference the pixel array for legacy reasons.  This should not
+    // be required after full-cleanup.
+    convFunc.reference(*cfs_p.data);
+    //
+    // Load the average PB (sensitivity pattern) from the cache.  If
+    // not found, make one and cache it.
+    //
+    if (cfCache.loadAvgPB(avgPB) == NOTCACHED)
+      {
+	logIO() << "Average PB does not exist in the cache.  A fresh one will be made." 
+		<< LogIO::NORMAL  << LogIO::POST;
+	pbMade=makeAveragePB0(vb, image, avgPB);
+	pbNormalized=False;    normalizeAvgPB();	pbNormalized=True;
 	if (pbMade) cfCache.flush(avgPB); // Save the AVG PB and write the aux info.
       }
+    else
+      {resetPBs = False; avgPBReady=True;}
 
     verifyShapes(avgPB.shape(), image.shape());
 
     Int lastPASlot = PAIndex_l;
-
     if (paChangeDetector.changed(vb,0)) paChangeDetector.update(vb,0);
     //
-    // If mem. cache not yet ready and the latest CF was loaded from
-    // the disk cache, compute and give some user useful info.
+    // Write some useful info. to the logger.
     //
-    if ((!convFuncCacheReady) && (cfSource != 2))
+    if ((!convFuncCacheReady) && (cfSource != MEMCACHE))
       {
 	//
 	// Compute the aggregate memory used by the cached convolution
@@ -1181,11 +1099,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	logIO() << "Memory used in gridding functions = "
 		<< (Int)(memoryKB+0.5) << unit << " out of a maximum of "
 		<< maxMemoryMB << " MB" << LogIO::POST;
-	
 	//
 	// Show the list of support sizes along the w-axis for the current PA.
 	//
-	//	logIO() << "Convolution support [CF#= " << lastPASlot 
 	logIO() << "Convolution support = " << cfs_p.xSupport 
 		<< " pixels in Fourier plane" << LogIO::POST;
       }
@@ -1200,6 +1116,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       for(ndx(1)=0;ndx(1)<shp(1);ndx(1)++)
 	Area(lastPASlot)+=convFunc(ndx);
   }
+
   //
   //------------------------------------------------------------------------------
   //
