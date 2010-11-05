@@ -90,19 +90,20 @@ namespace casa{
   int EVLAConvFunc::getVisParams(const VisBuffer& vb)
   {
     Double Freq;
+
     Vector<String> telescopeNames=vb.msColumns().observation().telescopeName().getColumn();
     for(uInt nt=0;nt<telescopeNames.nelements();nt++)
       {
 	if ((telescopeNames(nt) != "VLA") && (telescopeNames(nt) != "EVLA"))
 	  {
-	    String mesg="pbwproject algorithm can handle only (E)VLA antennas for now.\n";
+	    String mesg="We can handle only (E)VLA antennas for now.\n";
 	    mesg += "Erroneous telescope name = " + telescopeNames(nt) + ".";
 	    SynthesisError err(mesg);
 	    throw(err);
 	  }
 	if (telescopeNames(nt) != telescopeNames(0))
 	  {
-	    String mesg="pbwproject algorithm does not (yet) handle inhomogeneous arrays!\n";
+	    String mesg="We do not (yet) handle inhomogeneous arrays for A-Projection!\n";
 	    mesg += "Not yet a \"priority\"!!";
 	    SynthesisError err(mesg);
 	    throw(err);
@@ -136,11 +137,38 @@ namespace casa{
     return bandID;
   }
   
-  Int EVLAConvFunc::makePBPolnCoords(CoordinateSystem& squintCoord,
-				     Vector<Int>& cfStokes,
-				     const VisBuffer&vb,
-				     const Vector<Int>& polMap)
+  Int EVLAConvFunc::makePBPolnCoords(const VisBuffer&vb,
+				     const Vector<Int>& polMap,
+				     const Int& convSize,
+				     const Int& convSampling,
+				     const CoordinateSystem& skyCoord,
+				     const Int& skyNx, const Int& skyNy,
+				     CoordinateSystem& feedCoord,
+				     Vector<Int>& cfStokes)
   {
+    feedCoord = skyCoord;
+    //
+    // Make a two dimensional image to calculate auto-correlation of
+    // the ideal illumination pattern. We want this on a fine grid in
+    // the UV plane
+    //
+    Int directionIndex=skyCoord.findCoordinate(Coordinate::DIRECTION);
+    AlwaysAssert(directionIndex>=0, AipsError);
+    DirectionCoordinate dc=skyCoord.directionCoordinate(directionIndex);
+    Vector<Double> sampling;
+    sampling = dc.increment();
+    sampling*=Double(convSampling);
+    sampling*=Double(skyNx)/Double(convSize);
+    dc.setIncrement(sampling);
+    
+    
+    Vector<Double> unitVec(2);
+    unitVec=convSize/2;
+    dc.setReferencePixel(unitVec);
+    
+    // Set the reference value to that of the image
+    feedCoord.replaceCoordinate(dc, directionIndex);
+
     //
     // Make an image with circular polarization axis.
     //
@@ -151,15 +179,15 @@ namespace casa{
     
     Int index;
     Vector<Int> inStokes;
-    index = squintCoord.findCoordinate(Coordinate::STOKES);
-    inStokes = squintCoord.stokesCoordinate(index).stokes();
+    index = feedCoord.findCoordinate(Coordinate::STOKES);
+    inStokes = feedCoord.stokesCoordinate(index).stokes();
     N = 0;
     try
       {
 	for(Int i=0;i<M;i++) if (polMap(i) > -1) {poln(N) = vb.corrType()(i);N++;}
 	StokesCoordinate polnCoord(poln);
-	Int StokesIndex = squintCoord.findCoordinate(Coordinate::STOKES);
-	squintCoord.replaceCoordinate(polnCoord,StokesIndex);
+	Int StokesIndex = feedCoord.findCoordinate(Coordinate::STOKES);
+	feedCoord.replaceCoordinate(polnCoord,StokesIndex);
 	cfStokes = poln;
       }
     catch(AipsError& x)
@@ -299,7 +327,9 @@ namespace casa{
     // no. of vis. poln. planes that will be used in making the user
     // defined Stokes image.
     //
-    polInUse=makePBPolnCoords(coords,cfStokes, vb, polMap);
+    polInUse=makePBPolnCoords(vb, polMap, convSize, convSampling, 
+			      image.coordinates(),nx,nx,
+			      coords,cfStokes);
     //------------------------------------------------------------------
     //
     // Make the sky Stokes PB.  This will be used in the gridding
@@ -479,10 +509,10 @@ namespace casa{
 	// }
 	LatticeFFT::cfft2d(twoDPB);
 	LatticeFFT::cfft2d(twoDPBSq);
-	{
-	  String name("twoDPBFT.im");
-	  storeImg(name,twoDPB);
-	}
+	// {
+	//   String name("twoDPBFT.im");
+	//   storeImg(name,twoDPB);
+	// }
 	//
 	// Fill the convolution function planes with the result.
 	//
@@ -595,6 +625,7 @@ namespace casa{
 	tmp = convFunc_l(blc,trc);
 	cfs.data->resize(tmp.shape());
 	*cfs.data = tmp; 
+	convFunc_l.reference(*cfs.data);
       }
       
       supportBuffer = (Int)(OVERSAMPLING*CONVWTSIZEFACTOR);
@@ -609,6 +640,7 @@ namespace casa{
       	tmp = convWeights_l(blc,trc);
 	cfwts.data->resize(tmp.shape());
 	*cfwts.data = tmp;
+	convWeights_l.reference(*cfwts.data);
       }
     }    
     
@@ -682,6 +714,14 @@ namespace casa{
 	  SynthesisUtils::findLatticeMax(convWeights_l,maxVal,posMax); 
 	}
     
+    Int index=coords.findCoordinate(Coordinate::SPECTRAL);
+    SpectralCoordinate spCS = coords.spectralCoordinate(index);
+    Vector<Double> refValue; refValue.resize(1);refValue(0)=spCS.referenceValue()(0);
+    spCS.setReferenceValue(refValue);
+    coords.replaceCoordinate(spCS,index);
+
+    cfs.coordSys=coords;         cfwts.coordSys=coords; 
+    cfs.pa=Quantity(pa,"rad");   cfwts.pa=Quantity(pa,"rad");
   }
   //
   //---------------------------------------------------------------------
