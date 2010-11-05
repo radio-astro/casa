@@ -41,6 +41,8 @@ qt4_wrap_cpp( outfiles_qoh
   implement/QtViewer/QtDisplayData.qo.h
   implement/QtViewer/QtDisplayPanelGui.qo.h
   implement/QtViewer/QtDisplayPanel.qo.h
+  implement/QtViewer/QtESOPanelGui.qo.h
+  implement/QtViewer/QtHeaderInfo.qo.h
   implement/QtViewer/QtLELEdit.qo.h
   implement/QtViewer/QtMouseToolBar.qo.h
   implement/QtViewer/QtMouseTools.qo.h
@@ -285,6 +287,8 @@ casa_add_library( display
   implement/QtViewer/QtDisplayData.cc
   implement/QtViewer/QtDisplayPanel.cc
   implement/QtViewer/QtDisplayPanelGui.cc
+  implement/QtViewer/QtESOPanelGui.cc
+  implement/QtViewer/QtHeaderInfo.cc
   implement/QtViewer/QtMouseToolBar.cc
   implement/QtViewer/QtMouseTools.cc
   implement/QtViewer/QtMouseToolState.cc
