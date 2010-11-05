@@ -297,13 +297,21 @@ def simdata(
         util.direction=dir0
 
         if setpointings:
+            import re
             if verbose:
                 util.msg("calculating map pointings centered at "+str(dir0))
+
             if len(pointingspacing)<1:
+                pointingspacing="0.5PB"
+            q=re.compile('(\d+.?\d+)\s*PB')
+            qq=q.match(pointingspacing.upper())
+            if qq:
+                z=qq.groups()
                 if pb<=0:
                     util.msg("Can't calculate pointingspacing in terms of primary beam because neither antennalist nor sdantlist exist",priority="error")
                     return False
-                pointingspacing="%farcsec" % (0.5*pb)
+                pointingspacing="%farcsec" % (float(z[0])*pb)
+                # todo make more robust to nonconforming z[0] strings
             pointings = util.calc_pointings2(pointingspacing,mapsize,maptype=maptype, direction=dir)
             nfld=len(pointings)
             etime = qa.convert(qa.quantity(integration),"s")['value']

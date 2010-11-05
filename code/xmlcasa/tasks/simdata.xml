@@ -124,7 +124,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="pointingspacing" subparam="true">
-      <description>spacing in between pointings or "" for 0.5 PB</description>
+      <description>spacing in between pointings or "0.25PB" or "" for 0.5 PB</description>
       <value></value>
     </param>
 
@@ -620,7 +620,9 @@ mosaic simulation task:
     mapsize -- angular size of map 
        * set to "" to span the model image
     maptype -- hexagonal or linear 
-    pointingspacing -- spacing in between beams e.g '1arcsec'    
+    pointingspacing -- spacing in between beams e.g '1arcsec'
+         or "0.25PB" to use 1/4 of the primary beam FWHM, or 
+         "" will use the primary beam HWHM.
     -------------------------------
     predict -- calculate visibilities from skymodel (which may have been 
          modified above, (optionally) complist, and $ptgfile (which 
