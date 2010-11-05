@@ -61,10 +61,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			  CFStore& cfs,
 			  CFStore& cfwts);
     int getVisParams(const VisBuffer& vb);
-    Int makePBPolnCoords(CoordinateSystem& squintCoord,
-			 Vector<Int>& cfStokes,
-			 const VisBuffer&vb,
-			 const Vector<Int>& polMap);
+    Int makePBPolnCoords(const VisBuffer&vb,
+			 const Vector<Int>& polMap,
+			 const Int& convSize,
+			 const Int& convSampling,
+			 const CoordinateSystem& skyCoord,
+			 const Int& skyNx, const Int& skyNy,
+			 CoordinateSystem& feedCoord,
+			 Vector<Int>& cfStokes);
     Int bandID_p;
     Float Diameter_p, Nant_p, HPBW, sigma;
     
