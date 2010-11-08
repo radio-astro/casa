@@ -613,8 +613,9 @@ class cleanhelper:
                 ia.done(verbose=False)
                 ia.removefile('__temp_mask')
                 ia.removefile('__temp_mask2')
-            outputmask = self.make_mask_from_threshhold(outputmask, 0.01,
-                                                        outputmask)
+	    if(not os.path.exists(outputmask)):
+                outputmask = self.make_mask_from_threshhold(outputmask, 0.01,
+                                                                  outputmask)
         #pdb.set_trace()
         #### This goes when those tablerecord goes
         if(len(tablerecord) > 0):
