@@ -69,7 +69,7 @@ class cluster(object):
       '''Initialize a Cluster.
 
       A Cluster enables parallel and distributed execution of CASA tasks and tools on a set of networked computers. A culster consists of one controller and one or more engines. Each engine is an independent Python instance that takes Python commands over a network connection. The controller provides an interface for working with a set of engines. A user uses casapy console to command the controller. A password-less ssh access to the computers that hosts engines is required for the communication between controller and engines.
-      
+
       '''
       # print 'start cluster---------'
       self.__client=None
@@ -94,15 +94,13 @@ class cluster(object):
 
    def start_engine(self, node_name, num_engine, work_dir=None):
       '''Start engines on the given node.
-
       @param node_name The name of the computer to host the engines.
       @param num_engine The number of the engines to initialize for this run. 
       @param work_dir The working directory where outputs and logs from the engines will be stored. If work_dir is not supplied or does not exist, the user's home directory will be used. 
       Running this command multiple times on the same node is ok. The total number of the engines on the node increases for each run.
       Every engine has a unique integer id. The id is the key to send the instructions to the engine. The available engine ids can be obtained by calling get_ids() or get_engines().
- 
       '''
-
+      
       # start controller
       if not self.__start_controller():
          print 'controller is not started'
@@ -115,18 +113,29 @@ class cluster(object):
       err=open('/dev/null', 'w')
       dist=node_name+':'+self.__prefix+self.__cluster_rc_file
       #print 'dist=', dist
-      p=Popen(['scp', self.__ipythondir+'/'+self.__cluster_rc_file, dist], stdout=out, stderr=err)
+      cmd = ['scp', self.__ipythondir+'/'+self.__cluster_rc_file, dist]
+      p=Popen(cmd, stdout=out, stderr=err)
+      sts = os.waitpid(p.pid, 0)
+      if sts[1] != 0:
+         print >> sys.stderr, "WARNING: Command failed:", " ".join(cmd)
+      
       dist=node_name+':'+self.__prefix+self.__start_engine_file
       #print 'dist=', dist
-      p=Popen(['scp', self.__ipythondir+'/'+self.__start_engine_file, dist], stdout=out, stderr=err)
+      cmd = ['scp', self.__ipythondir+'/'+self.__start_engine_file, dist]
+      p=Popen(cmd, stdout=out, stderr=err)
       out.close()
       err.close()
       sts = os.waitpid(p.pid, 0)
+      if sts[1] != 0:
+         print >> sys.stderr, "WARNING: Command failed:", " ".join(cmd)
       for i in range(1, num_engine+1):
          args='bash '+self.__prefix+self.__start_engine_file
          #print 'args=', args
-         q=Popen(['ssh', '-f', '-q', '-x', node_name, args])
+         cmd = ['ssh', '-f', '-q', '-x', node_name, args]
+         q=Popen(cmd)
          sts = os.waitpid(q.pid, 0)
+         if sts[1] != 0:
+            print >> sys.stderr, "WARNING: Command failed:", " ".join(cmd)
          print "start engine %s on %s" % (i, node_name)
       self.__engines=self.__update_cluster_info(num_engine, work_dir)
       
