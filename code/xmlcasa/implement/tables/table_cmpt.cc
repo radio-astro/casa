@@ -511,9 +511,9 @@ table::browse()
 	   *itsLog << LogIO::NORMAL << "Spawning table browser one moment..." << LogIO::POST;
            if(itsTable){
 	       String myName = itsTable->table().tableName();
-               execlp("casabrowser", "casabrowser", myName.c_str(), (char *)0);
+               execlp("casabrowser", "casabrowser", myName.c_str(), "--casapy", (char *)0);
 	   } else {
-               execlp("casabrowser", "casabrowser", (char *)0);
+               execlp("casabrowser", "casabrowser", "--casapy", (char *)0);
 	   }
 	   // If we get here something bad has happened and the exec has faild
            *itsLog << LogIO::SEVERE << "Bad news, unable to start the table browser." << LogIO::POST;
