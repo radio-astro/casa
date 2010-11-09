@@ -46,7 +46,7 @@ class PictureViewer : public QMainWindow
     Q_OBJECT
 
 public:
-    PictureViewer(const QString = 0);
+    PictureViewer(const QString = "");
 
 private slots:
     void open();
