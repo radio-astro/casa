@@ -49,7 +49,7 @@ namespace casa {
     Quantum<Vector<double> > qx(Vector<double>(1), UNIT),                     \
                              qy(Vector<double>(1), UNIT);                     \
     Quantum<double> t(0.0, UNIT), tx(0.0, units(0)), ty(0.0, units(1));       \
-    Vector<double> p(2), w(2), px(1), py(1);                                  \
+    Vector<double> p(2), w(cs.referenceValue()), px(1), py(1);                \
     MDirection m;
 
 #define RSCOORDSTART(n)                                                       \
@@ -2853,7 +2853,7 @@ String RSComposite::type() const {
     Quantum<Vector<double> > qx(Vector<double>(1), UNIT),                     \
                              qy(Vector<double>(1), UNIT);                     \
     Quantum<double> t(0.0, UNIT), tx(0.0, units(0)), ty(0.0, units(1));       \
-    Vector<double> p(2), w(2), px(1), py(1);                                  \
+    Vector<double> p(2), w(cs.referenceValue()), px(1), py(1);                \
     MDirection m;
 
 #define RSCOMPANGCONV                                                         \

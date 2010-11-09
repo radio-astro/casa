@@ -353,6 +353,7 @@ bool QtEditRegionShape::enteredCoordinatesAreValid(String& reason) const {
 }
 
 void QtEditRegionShape::apply() {
+    QApplication::setOverrideCursor(Qt::WaitCursor);
     bool changed = false;    
     RegionShape* shape = m_creation ? m_cShape : m_shape->shape();
     
@@ -508,6 +509,7 @@ void QtEditRegionShape::apply() {
         m_shape->refresh();
         setupGui();
     }
+    QApplication::restoreOverrideCursor();
 }
 
 void QtEditRegionShape::init(QWidget* coordWidget, bool sPos, bool sUnit,
