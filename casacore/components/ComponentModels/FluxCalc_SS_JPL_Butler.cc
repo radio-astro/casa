@@ -42,6 +42,7 @@
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MCEpoch.h>
 #include <measures/Measures/MFrequency.h>
+#include <scimath/Mathematics/InterpolateArray1D.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/TableRecord.h>
 #include <tables/Tables/ScalarColumn.h>
@@ -494,6 +495,9 @@ ComponentType::Shape FluxCalc_SS_JPL_Butler::compute(Vector<Flux<Double> >& valu
   }
 
   switch(objnum_p){
+  case FluxCalc_SS_JPL_Butler::Venus:
+    compute_venus(values, errors, angdiam, mfreqs);
+    break;
   case FluxCalc_SS_JPL_Butler::Jupiter:
     compute_jupiter(values, errors, angdiam, mfreqs);
     break;
@@ -584,7 +588,17 @@ void FluxCalc_SS_JPL_Butler::compute_GB(Vector<Flux<Double> >& values,
 
   for(uInt f = 0; f < nfreqs; ++f){
     Quantum<Double> freq(mfreqs[f].get(hertz_p));
-    Quantum<Double> temperature(temps[f], "K");
+
+    // Guard against wayward extrapolations (possible with compute_venus()),
+    // but do not emit a warning here; there may be many frequencies with bad
+    // temperatures, and the warning should come from the calling function
+    // anyway since it knows the limits of the model.
+    //
+    // I am not really claiming that the CMB temperature is the most reasonable
+    // minimum temperature, but it is *a* reasonable mininum temperature, and I
+    // want to avoid division by zero.
+    //
+    Quantum<Double> temperature(max(temps[f], 2.7), "K");
 
     // The real peak frequency is about 2.82 x this.
     Quantum<Double> freq_peak(QC::k * temperature / QC::h);
@@ -608,6 +622,95 @@ void FluxCalc_SS_JPL_Butler::compute_GB(Vector<Flux<Double> >& values,
      << "hertz_p = " << hertz_p.getName()
      << "\nvalues[0].unit() = " << values[0].unit().getName()
      << LogIO::POST;
+}
+
+void FluxCalc_SS_JPL_Butler::compute_venus(Vector<Flux<Double> >& values,
+					   Vector<Flux<Double> >& errors,
+					   const Double angdiam,
+					   const Vector<MFrequency>& mfreqs)
+{
+  LogIO os(LogOrigin("FluxCalc_SS_JPL_Butler", "compute_venus"));
+  const uInt nfreqs = mfreqs.nelements();
+  Vector<Double> temps(nfreqs);
+  Vector<Float> ghzfreqs(nfreqs);
+
+  Float minfreq = 0.303;
+  Float maxfreq = 350.0;
+  for(uInt f = 0; f < nfreqs; ++f){
+    Float ghzfreq = 1.0e-9 * mfreqs[f].get(hertz_p).getValue();
+
+    if(ghzfreq < minfreq)
+      minfreq = ghzfreq;
+    else if(ghzfreq > maxfreq)
+      maxfreq = ghzfreq;
+    ghzfreqs[f] = ghzfreq;
+  }
+  
+  const uInt nmeas = 75;
+
+  // GHz.  Nominally const, but there is no constructor for making a Block from
+  // a const C array.
+  Float measfreqarr[nmeas] = {350.000, 318.182, 289.256, 262.960, 239.055,
+			      217.322, 197.566, 179.605, 163.278, 148.434,
+			      134.940, 122.673, 111.521, 101.383,  92.166,
+			       83.787,  76.170,  69.246,  62.951,  57.228,
+			       52.025,  47.296,  42.996,  39.087,  35.534,
+			       32.304,  29.367,  26.697,  24.270,  22.064,
+			       20.058,  18.235,  16.577,  15.070,  13.700,
+			       12.454,  11.322,  10.293,   9.357,   8.507,
+			        7.733,   7.030,   6.391,   5.810,   5.282,
+			        4.802,   4.365,   3.968,   3.608,   3.280,
+			        2.981,   2.710,   2.464,   2.240,   2.036,
+			        1.851,   1.683,   1.530,   1.391,   1.264,
+			        1.149,   1.045,   0.950,   0.864,   0.785,
+			        0.714,   0.649,   0.590,   0.536,   0.487,
+			        0.443,   0.403,   0.366,   0.333,   0.303};
+  Float *measfreqptr = measfreqarr;		// Need a referenceable pointer.
+  const Block<Float> measfreqblk(nmeas, measfreqptr, false);
+
+  // Double to match the type of temps.  Nominally const, but there is no
+  // constructor for making a Block from a const C array.
+  Double meastbarr[nmeas] = {270.2, 273.8, 277.7, 282.0, 286.8,
+			     292.1, 297.6, 303.5, 309.7, 316.1,
+			     322.8, 329.6, 336.6, 343.7, 351.1,
+			     358.7, 366.7, 374.9, 383.6, 392.7,
+			     402.3, 412.3, 422.8, 433.8, 445.3,
+			     457.3, 469.8, 482.8, 496.1, 509.9,
+			     524.1, 538.8, 553.7, 568.7, 583.8,
+			     598.7, 613.0, 626.5, 638.9, 648.0,
+			     657.0, 665.0, 671.0, 676.0, 679.0,
+			     680.0, 680.0, 679.0, 676.0, 671.0,
+			     664.0, 655.0, 646.0, 638.0, 631.0,
+			     624.0, 617.0, 610.0, 604.0, 598.0,
+			     592.0, 586.0, 580.0, 575.0, 570.0,
+			     565.0, 560.0, 555.0, 550.0, 545.0,
+			     540.0, 535.0, 530.0, 525.0, 520.0};
+  Double *meastbptr = meastbarr;
+  const Block<Double> meastbblk(nmeas, meastbptr, false);
+
+  // Just let it extrapolate if necessary; the temperature_p given in the
+  // ephemeris (735K) is so high that I think it's for the surface.
+  InterpolateArray1D<Float, Double>::interpolate(temps, ghzfreqs,
+						 Vector<Float>(measfreqblk),
+						 Vector<Double>(meastbblk),
+						 InterpolateArray1D<Float, Double>::cubic);
+
+  if(minfreq < 0.303)
+    os << LogIO::WARN
+       << "At least one of the frequencies, " << minfreq
+       << "GHz, is below the lower limit for the model (0.303GHz).\n"
+       << LogIO::POST;
+  if(maxfreq > 350.0)
+    os << LogIO::WARN
+       << "At least one of the frequencies, " << maxfreq
+       << "GHz, is above the upper limit for the model (350.0GHz).\n"
+       << LogIO::POST;
+  if(minfreq < 0.303 || maxfreq > 350.0)
+    os << LogIO::WARN
+       << "The extrapolation may be very bad."
+       << LogIO::POST;
+
+  compute_GB(values, errors, angdiam, mfreqs, temps);
 }
 
 void FluxCalc_SS_JPL_Butler::compute_jupiter(Vector<Flux<Double> >& values,
@@ -840,7 +943,7 @@ Bool FluxCalc_SS_JPL_Butler::compute_constant_temperature(Vector<Flux<Double> >&
        << "Juno has a large crater and temperature changes."
        << LogIO::POST;
     os << LogIO::NORMAL1
-       << "Reference for Juno's mean temperature (167K):\n"
+       << "Reference for Juno's mean temperature (163K):\n"
        << "Lim, Lucy F., McConnochie, Timothy H., Bell, James F., Hayward, Thomas L. (2005).\n"
        << "\"Thermal infrared (8-13 um) spectra of 29 asteroids: the Cornell Mid-Infrared\n"
        << "Asteroid Spectroscopy (MIDAS) Survey\" Icarus 173:385-408.\n"
