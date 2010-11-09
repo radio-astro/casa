@@ -4720,7 +4720,7 @@ Bool Imager::clean(const String& algorithm,
 #endif
   Bool converged=True; 
 
- 
+
   if(!valid())
     {
 
@@ -4803,7 +4803,15 @@ Bool Imager::clean(const String& algorithm,
       maskNames=mask;
     }
     else {
-      maskNames="";
+      /* For msmfs, the one input mask must be replicated for all Taylor-planes */
+      if(algorithm=="msmfs" && Int(mask.nelements())>0){
+       for(Int tay=0;tay<nmodels;tay++)
+          maskNames[tay] = mask[0];
+      }
+      else {
+	 /* No mask */
+	 maskNames="";
+      }
     }
 
     if(sm_p){
@@ -4985,11 +4993,6 @@ Bool Imager::clean(const String& algorithm,
 		  images is nested and follows a field-major ordering.
 		  All taylor-coeffs for a single field should have the same mask (for now).
 	   For now, since only single-field is allowed for msmfs, we have the following.*/
-        if(Int(mask.nelements()) != nmodels && Int(mask.nelements())>0) 
-	{
-            for(Int tay=0;tay<nmodels;tay++)
-		   maskNames[tay] = mask[0];
-	}
       }
       else {
 	this->unlock();
