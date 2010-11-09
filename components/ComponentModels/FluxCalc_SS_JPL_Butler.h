@@ -188,6 +188,9 @@ class FluxCalc_SS_JPL_Butler
                   const Vector<MFrequency>& mfreqs,
                   const Vector<Double>& temps);
 
+  void compute_venus(Vector<Flux<Double> >& values,
+		     Vector<Flux<Double> >& errors, const Double angdiam,
+		     const Vector<MFrequency>& mfreqs);
   void compute_jupiter(Vector<Flux<Double> >& values,
                        Vector<Flux<Double> >& errors, const Double angdiam,
                        const Vector<MFrequency>& mfreqs);

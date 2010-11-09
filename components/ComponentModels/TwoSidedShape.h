@@ -320,6 +320,10 @@ public:
     	Quantity minorErr = 0, Quantity posanErr = 0
   );
 
+  // Shush a compiler warning about ComponentShape::sizeToString() being
+  // hidden.
+  virtual String sizeToString() const = 0;
+
 protected:
   // The constructors and assignment operator are protected as only derived
   // classes should use them.
