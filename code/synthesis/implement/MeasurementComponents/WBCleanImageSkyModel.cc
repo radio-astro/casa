@@ -194,14 +194,6 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	os << "Calculating initial residual images" << LogIO::POST;
 	solveResiduals(se);
 
-	/* Check if this is an interactive-clean run */
-	if(adbg) cout << "NumberIterations : " << numberIterations() << endl;
-	if(numberIterations() < 1)
-	{
-		return True;
-	}
-
-
 	/* Initialize the MultiTermLatticeCleaners */
 	if(adbg) cout << "Shape of lc_p : " << lc_p.nelements() << endl;
 	if(lc_p.nelements()==0)
@@ -256,6 +248,14 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	  resizeWorkArrays(nmodels_p);
 	   
 	  donePSF_p=True;
+	}
+	
+	/* Return if niter=0 */
+	/* Check if this is an interactive-clean run, or if niter=0 */
+	if(adbg) cout << "NumberIterations : " << numberIterations() << endl;
+	if(numberIterations() < 1)
+	{
+		return True;
 	}
 
 	/* Set up the Mask image */
