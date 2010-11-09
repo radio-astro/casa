@@ -430,16 +430,20 @@ template <class T>
 Int MultiTermLatticeCleaner<T>::manageMemory(Bool direction)
 {
   LogIO os(LogOrigin("MultiTermLatticeCleaner", "manageMemory()", WHERE));
+	// Define max memory usage for all TempLattices. (half of available);
+	memoryMB_p = Double(HostInfo::memoryTotal()/1024)/(2.0); // ? /(16.0) ?
+	Int ntemp = numberOfTempLattices(nscales_p,ntaylor_p);
+	Int numMB = nx_p*ny_p*4*ntemp/(1024*1024);
+	memoryMB_p = MIN(memoryMB_p, numMB);
 	if(direction)
 	{
-		// Define max memory usage for all TempLattices. (half of available);
-		memoryMB_p = Double(HostInfo::memoryTotal()/1024)/(2.0); // ? /(16.0) ?
-		Int ntemp = numberOfTempLattices(nscales_p,ntaylor_p);
-		Int numMB = nx_p*ny_p*4*ntemp/(1024*1024);
 		os << "This algorithm is allocating " << numMB << " MBytes for " << ntemp << " TempLattices " << LogIO::POST;
-		memoryMB_p = MIN(memoryMB_p, numMB);
 		if(adbg)os << "Allocating " << memoryMB_p << " MBytes." << LogIO::POST;
 		
+	}
+	else
+	{
+		os << "Releasing " << numMB << " MBytes " << LogIO::POST;
 	}
 	if(adbg && direction)os << "Allocating memory ... " ;
 	if(adbg && !direction)os << "Freeing memory ... " ;
