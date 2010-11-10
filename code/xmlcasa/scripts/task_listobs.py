@@ -26,7 +26,7 @@ def listobs(vis=None,verbose=None):
        """
 
        if pCASA.is_mms(vis):
-              pCASA.execute("listobs", vis, locals())
+              pCASA.execute("listobs", locals())
               return
 
        casalog.origin('listobs')

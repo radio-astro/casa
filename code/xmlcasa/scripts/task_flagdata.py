@@ -39,7 +39,7 @@ def flagdata(vis = None,
              maxabs = None):
 
         if pCASA.is_mms(vis):
-                pCASA.execute("flagdata", vis, locals())
+                pCASA.execute("flagdata", locals())
                 return
 
         casalog.origin('flagdata')

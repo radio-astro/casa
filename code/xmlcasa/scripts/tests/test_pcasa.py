@@ -31,12 +31,27 @@ class pcasa_test(unittest.TestCase):
     def test1(self):
         vis = "multi.ms"
 
-        submss = []
+        pCASA.create(vis)
         for i in range(6):
-            submss.append(pCASA.subMS(self.vis[i], "localhost"))
-        pCASA.create(vis, submss)
+            pCASA.add(vis, self.vis[i], "localhost")
         
-        pCASA.show(vis)
+        pCASA.list(vis)
+
+        print "Remove a few subMSs"
+        pCASA.remove(vis, self.vis[0])
+        pCASA.remove(vis, self.vis[3])
+        pCASA.remove(vis, self.vis[4])
+
+        pCASA.list(vis)
+
+        listobs(vis)
+
+        print "Re-add what was removed, on default=localhost"
+        pCASA.add(vis, self.vis[0])
+        pCASA.add(vis, self.vis[3])
+        pCASA.add(vis, self.vis[4])
+
+        pCASA.list(vis)
 
         listobs(vis)
 
@@ -54,8 +69,6 @@ class pcasa_test(unittest.TestCase):
         
         for log in pCASA.pc.cluster.get_casalogs():
             assert os.system("cat " + log) == 0
-
-        
 
 def suite():
     return [pcasa_test]
