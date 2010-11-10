@@ -40,6 +40,8 @@ Images/ImageExprGram.cc
 Images/MaskSpecifier.cc
 Images/ImageMomentsProgress.cc
 Images/ImageAnalysis.cc
+Images/ImageCollapser.cc
+Images/ImageInputProcessor.cc
 Images/FITSImage.cc
 Images/PagedImage2.cc
 Images/ImagePolProxy.cc
@@ -89,6 +91,7 @@ Images/HDF5Image.tcc
 Images/Image2DConvolver.h
 Images/Image2DConvolver.tcc
 Images/ImageAnalysis.h
+Images/ImageCollapser.h
 Images/ImageConcat.h
 Images/ImageConcat.tcc
 Images/ImageConvolver.h
@@ -107,6 +110,7 @@ Images/ImageFit1D.tcc
 Images/ImageHistograms.h
 Images/ImageHistograms.tcc
 Images/ImageInfo.h
+Images/ImageInputProcessor.h
 Images/ImageInterface.h
 Images/ImageInterface.tcc
 Images/ImageMetaData.h
