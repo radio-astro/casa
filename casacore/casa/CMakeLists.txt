@@ -186,6 +186,7 @@ Utilities/BitVector.cc
 Utilities/Fallible2.cc
 Utilities/CompositeNumber.cc
 Utilities/Copy2.cc
+Utilities/Precision.cc
 aips.cc
 version.cc
 )
@@ -542,6 +543,7 @@ Utilities/LinearSearch.h
 Utilities/LinearSearch.tcc
 Utilities/MUString.h
 Utilities/Notice.h
+Utilities/Precision.h
 Utilities/PtrHolder.h
 Utilities/PtrHolder.tcc
 Utilities/RecordTransformable.h
