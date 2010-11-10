@@ -67,7 +67,7 @@ def load(mms_name):
     """Returns either the multiMS object, or None
     if the file is not a multiMS
     """
-
+    
     try:
         f = open(mms_name, "r")
         mms = pickle.load(f)
@@ -111,7 +111,7 @@ class subMS:
         self.host = host
 
 def create(mms_name, sub_mss):
-"""Create a multiMS"
+    """Create a multiMS"""
 
     mms = multiMS()
 
@@ -142,13 +142,17 @@ class multiMS:
     def add(self, sub_ms):
         self.sub_mss.append(sub_ms)
 
-
+        
 def _ip(host):
     """Returns the IP address of the given hostname,
-    but not 127.0.0.1 for localhost but localhost's global IP"""
+    but not 127.0.0.1 for localhost but localhost's global IP
+    """
+    
     ip = socket.gethostbyname(host)
+    
     if ip == "127.0.0.1":
         ip = socket.gethostbyname(socket.gethostname())
+
     return ip
 
 def execute(taskname, mms_name, parameters):
