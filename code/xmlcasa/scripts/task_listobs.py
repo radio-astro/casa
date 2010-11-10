@@ -24,6 +24,11 @@ def listobs(vis=None,verbose=None):
       file in the working directory.
 
        """
+
+       if pCASA.is_mms(vis):
+              pCASA.execute("listobs", vis, locals())
+              return
+
        casalog.origin('listobs')
 
        #Python script

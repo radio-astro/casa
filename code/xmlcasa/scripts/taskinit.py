@@ -1,3 +1,4 @@
+import pCASA
 import casac
 import viewertool
 import inspect

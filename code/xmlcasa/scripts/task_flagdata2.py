@@ -64,6 +64,10 @@ def flagdata2(vis = None,
              minabs = None,
              maxabs = None):
 
+    if pCASA.is_mms(vis):
+        pCASA.execute("flagdata2", vis, locals())
+        return
+
     casalog.origin('flagdata2')
     fglocal = casac.homefinder.find_home_by_name('flaggerHome').create()
     mslocal = casac.homefinder.find_home_by_name('msHome').create()

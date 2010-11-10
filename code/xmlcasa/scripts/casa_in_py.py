@@ -133,6 +133,7 @@ cu = __utilstool__.create()
 from imstat_pg import imstat_pg as imstat
 from fringecal_pg import fringecal_pg as fringecal
 from flagdata_pg import flagdata_pg as flagdata
+from flagdata2_pg import flagdata2_pg as flagdata2
 from split_pg import split_pg as split
 from importvla_pg import importvla_pg as importvla
 from hanningsmooth_pg import hanningsmooth_pg as hanningsmooth
@@ -185,7 +186,6 @@ from blcal_pg import blcal_pg as blcal
 from uvsub_pg import uvsub_pg as uvsub
 from imcontsub_pg import imcontsub_pg as imcontsub
 from imstat_pg import imstat_pg as imstat
-from newflagdata_pg import newflagdata_pg as newflagdata
 from clearstat_pg import clearstat_pg as clearstat
 from flagautocorr_pg import flagautocorr_pg as flagautocorr
 from browsetable_pg import browsetable_pg as browsetable

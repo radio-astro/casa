@@ -188,6 +188,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/imregion.py
   scripts/listing.py
   scripts/mindpipes.py
+  scripts/pCASA.py
   scripts/ngc5921_usecase.py
   scripts/odict.py
   scripts/parallel_go.py
