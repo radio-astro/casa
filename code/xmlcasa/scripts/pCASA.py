@@ -45,7 +45,11 @@ class pCASA:
         # Python 2.6:  self.num_of_engines = multiprocessing.cpu_count()
 
         # POSIX
-        self.num_of_engines = int(os.sysconf('SC_NPROCESSORS_ONLN'))
+        try:
+            self.num_of_engines = int(os.sysconf('SC_NPROCESSORS_ONLN'))
+        except (AttributeError,ValueError):
+            # As fallback
+            self.num_of_engines = 1
         
         self._is_running = False
 
