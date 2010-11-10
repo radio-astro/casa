@@ -10,8 +10,9 @@ Example usage:
       pCASA.add("my.ms", "spw0.ms", "some_hostname")
       pCASA.add("my.ms", "spw1.ms", "some_other_hostname")
       pCASA.add("my.ms", "spw2.ms")
+      pCASA.add("my.ms", "spw3.ms")
 
-   where spw2.ms is a MS on a locally mounted disk. Show the contents
+   where spw3.ms is a MS on a locally mounted disk. Show the contents
    with
 
       pCASA.list("my.ms")
@@ -25,6 +26,7 @@ Example usage:
       flagdata("spw0.ms", <parameters>)
       flagdata("spw1.ms", <parameters>)
       flagdata("spw2.ms", <parameters>)
+      flagdata("spw3.ms", <parameters>)
 
    on the given hosts using parallel_go. parallel_go requires
    password-less ssh in order to function.
