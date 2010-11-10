@@ -1909,7 +1909,14 @@ int main(int argc, char *argv[]) {
     infostream.str("");
     infostream << "The dataset has " << feedT.size() << " feed(s)...";
     vector<FeedRow *> v = rowsInAScanbyTimeInterval(feedT.get(), selectedScanRow_v);
-    infostream << v.size() << " of them in the exec blocks / selected scans ... ";
+    if(v.size()==0){
+      infostream << endl << "***  possible error in input data: none of the feeds are valid in the selected scans"
+      << endl << "***  will try to continue by accepting all feeds.";
+      v = feedT.get();
+    }
+    else{
+      infostream << v.size() << " of them in the selected scans ... ";
+    }      
     info(infostream.str());
     int nFeed = v.size();
 
@@ -2420,7 +2427,14 @@ int main(int argc, char *argv[]) {
     infostream.str("");
     infostream << "The dataset has " << sourceT.size() << " sources(s)...";
     vector<SourceRow *> v = rowsInAScanbyTimeInterval(sourceT.get(), selectedScanRow_v);
-    infostream << v.size() << " of them in the selected scans ... ";
+    if(v.size()==0){
+      infostream << endl << "***  possible error in input data: none of the sources are valid in the selected scans"
+      << endl << "***  will try to continue by accepting all sources.";
+      v = sourceT.get();
+    }
+    else{
+      infostream << v.size() << " of them in the selected scans ... ";
+    } 
     info(infostream.str());
     int nSource = v.size();
 
