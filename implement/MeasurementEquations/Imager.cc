@@ -3523,128 +3523,155 @@ Bool Imager::linearmosaic(const String& mosaic,
 {
   if(!valid()) return False;
   LogIO os(LogOrigin("imager", "linearmosaic()", WHERE));
-  if(mosaic=="") {
-    os << LogIO::SEVERE << "Need name for mosaic image" << LogIO::POST;
-    return False;
-  }
-  if(!Table::isWritable( mosaic )) {
-    make( mosaic );
-  }
-  if (images.nelements() == 0) {
-    os << LogIO::SEVERE << "Need names of images to mosaic" << LogIO::POST;
-    return False;
-  }
-  if (images.nelements() != fieldids.nelements()) {
-    os << LogIO::SEVERE << "number of fieldids doesn\'t match the" 
-       << " number of images" << LogIO::POST;
-    return False;
-  }
-
-  Double meminMB=Double(HostInfo::memoryTotal(true))/1024.0;
-  PagedImage<Float> mosaicImage( mosaic );
-  mosaicImage.set(0.0);
-  TempImage<Float>  numerator( TiledShape(mosaicImage.shape(), mosaicImage.niceCursorShape()), mosaicImage.coordinates(), meminMB/2.0);
-  numerator.set(0.0);
-  TempImage<Float>  denominator( TiledShape(mosaicImage.shape(), mosaicImage.niceCursorShape()), mosaicImage.coordinates(), meminMB/2.0);
-  numerator.set(0.0);
-  IPosition iblcmos(mosaicImage.shape().nelements(),0);
-  IPosition itrcmos(mosaicImage.shape());
-  itrcmos=itrcmos-Int(1);
-  LCBox lboxmos(iblcmos, itrcmos, mosaicImage.shape());
-  ImageRegion imagregMos(WCBox(lboxmos, mosaicImage.coordinates()));
-  ImageRegrid<Float> regridder;
-  
-  ROMSColumns msc(*ms_p);
-  for (uInt i=0; i < images.nelements(); ++i) {
-    if(!Table::isReadable(images(i))) {   
-      os << LogIO::SEVERE << "Image " << images(i) << 
-	" is not readable" << LogIO::POST;
+  try{
+    if(mosaic=="") {
+      os << LogIO::SEVERE << "Need name for mosaic image" << LogIO::POST;
       return False;
     }
-   
-    PagedImage<Float> smallImagedisk( images(i) );
-    TempImage<Float> smallImage(smallImagedisk.shape(), smallImagedisk.coordinates(), meminMB/8.0);
-    smallImage.copyData(smallImagedisk);
-    CoordinateSystem fullimcoord=smallImage.coordinates();
-     IPosition iblc(smallImage.shape().nelements(),0);
-    IPosition itrc(smallImage.shape());
-    itrc=itrc-Int(1);
-      
-    LCBox lbox(iblc, itrc, smallImage.shape());
-    ImageRegion imagreg(WCBox(lbox, fullimcoord) );
-    try{
-      // accumulate the images
-      SubImage<Float> subNum(numerator, imagreg, True);
-     
-      SubImage<Float> subDen(denominator, imagreg, True);
-
-
-
-
-      TempImage<Float> fullImage(subNum.shape(), subNum.coordinates(), meminMB/8.0);
-    
-      os  << "Processing Image " << images(i)  << LogIO::POST;
-
-      regridder.regrid( fullImage, Interpolate2D::LINEAR,
-			IPosition(2,0,1), smallImage );
-
-      TempImage<Float>  PB( subNum.shape(), subNum.coordinates(), meminMB/8.0);
-      PB.set(1.0);
-
-      MDirection pointingDirection = msc.field().phaseDirMeas( fieldids(i) );
-
-      Quantity pa(0.0, "deg");
-      pbguts ( PB, PB, pointingDirection, pa);
-
-      fullImage.copyData( (LatticeExpr<Float>) (fullImage *  PB ) );
-      subNum.copyData( (LatticeExpr<Float>) (subNum + fullImage) );
-      subDen.copyData( (LatticeExpr<Float>) (subDen + (PB*PB)) );
-      
+    if(!Table::isWritable( mosaic )) {
+      make( mosaic );
     }
-    catch(...){
-	//most probably no overlap
+    if (images.nelements() == 0) {
+      os << LogIO::SEVERE << "Need names of images to mosaic" << LogIO::POST;
+      return False;
+    }
+    if (images.nelements() != fieldids.nelements()) {
+      os << LogIO::SEVERE << "number of fieldids doesn\'t match the" 
+	 << " number of images" << LogIO::POST;
+      return False;
+    }
+    
+    Double meminMB=Double(HostInfo::memoryTotal(true))/1024.0;
+    PagedImage<Float> mosaicImage( mosaic );
+    CoordinateSystem cs=mosaicImage.coordinates();
+    String err;
+    //for some reason subimages below  fail if they are in some frames like BARY
+    if(CoordinateUtil::setSpectralConversion(err, cs, "LSRK")){
+      mosaicImage.setCoordinateInfo(cs);
+    }
+    mosaicImage.set(0.0);
+    TempImage<Float>  numerator( TiledShape(mosaicImage.shape(), mosaicImage.niceCursorShape()), mosaicImage.coordinates(), meminMB/2.0);
+    numerator.set(0.0);
+    TempImage<Float>  denominator( TiledShape(mosaicImage.shape(), mosaicImage.niceCursorShape()), mosaicImage.coordinates(), meminMB/2.0);
+    numerator.set(0.0);
+    ImageRegrid<Float> regridder;
+    
+    ROMSColumns msc(*ms_p);
+    for (uInt i=0; i < images.nelements(); ++i) {
+      if(!Table::isReadable(images(i))) {   
+	os << LogIO::SEVERE << "Image " << images(i) << 
+	  " is not readable" << LogIO::POST;
+	return False;
+      }
+      
+      PagedImage<Float> smallImagedisk( images(i) );
+      cs=smallImagedisk.coordinates();
+      //for some reason subimages below  fail if they are in some frames like BARY
+      if(!CoordinateUtil::setSpectralConversion(err, cs, "LSRK")){
+	cs=smallImagedisk.coordinates();
+      }
+      
+      TempImage<Float> smallImage(smallImagedisk.shape(), cs, meminMB/8.0);
+      smallImage.copyData(smallImagedisk);
+      IPosition iblc(smallImage.shape().nelements(),0);
+      IPosition itrc(smallImage.shape());
+      itrc=itrc-Int(1);
+      
+      LCBox lbox(iblc, itrc, smallImage.shape());
+      ImageRegion imagreg(WCBox(lbox, cs) );
+      try{
+	// accumulate the images
+	SubImage<Float> subNum;
+	SubImage<Float> subDen;
+	try{
+	  subNum=SubImage<Float>(numerator, imagreg, True);
+	  subDen=SubImage<Float>(denominator, imagreg, True);
+	}
+	catch(...){
+	  //Failed to make a subimage let us use the full image
+	  subNum=SubImage<Float>(numerator, True);
+	  subDen=SubImage<Float>(denominator, True);
+	  
+	}
+	
+	
+	
+	TempImage<Float> fullImage(subNum.shape(), subNum.coordinates(), meminMB/8.0);
+	
+	os  << "Processing Image " << images(i)  << LogIO::POST;
+	
+	regridder.regrid( fullImage, Interpolate2D::LINEAR,
+			  IPosition(2,0,1), smallImage );
+	
+	TempImage<Float>  PB( subNum.shape(), subNum.coordinates(), meminMB/8.0);
+	PB.set(1.0);
+	
+	MDirection pointingDirection = msc.field().phaseDirMeas( fieldids(i) );
+	
+	Quantity pa(0.0, "deg");
+	pbguts ( PB, PB, pointingDirection, pa);
+	
+	fullImage.copyData( (LatticeExpr<Float>) (fullImage *  PB ) );
+	subNum.copyData( (LatticeExpr<Float>) (subNum + fullImage) );
+	subDen.copyData( (LatticeExpr<Float>) (subDen + (PB*PB)) );
+	
+      }
+      catch (AipsError x) {
+	os << LogIO::WARN<< "Caught exception while processing  " << images(i) 
+	   << "\n"<< x.getMesg()
+	   << LogIO::POST;
 	continue;
+      } 
+      catch(...){
+	os << LogIO::WARN << "Unknown error processing " << images(i) << LogIO::POST; 
+	continue;
+      }
     }
-  }
     
-  LatticeExprNode LEN = max( denominator );
-  Float dMax =  LEN.getFloat();
-
-
-  if (scaleType_p == "SAULT") {
-
-    // truncate denominator at ggSMin1
-    denominator.copyData( (LatticeExpr<Float>) 
-			  (iif(denominator < (dMax * constPB_p), dMax, 
-			       denominator) ) );
-
-    if (fluxscale != "") {
-      clone( mosaic, fluxscale );
+    LatticeExprNode LEN = max( denominator );
+    Float dMax =  LEN.getFloat();
+    
+    
+    if (scaleType_p == "SAULT") {
       
-      PagedImage<Float> fluxscaleImage( fluxscale );
-      fluxscaleImage.copyData( (LatticeExpr<Float>) 
-			       (iif(denominator < (dMax*minPB_p), 0.0,
-				    (dMax*minPB_p)/(denominator) )) );
-      fluxscaleImage.copyData( (LatticeExpr<Float>) 
-			       (iif(denominator > (dMax*constPB_p), 1.0,
-				    (fluxscaleImage) )) );
+      // truncate denominator at ggSMin1
+      denominator.copyData( (LatticeExpr<Float>) 
+			    (iif(denominator < (dMax * constPB_p), dMax, 
+				 denominator) ) );
+      
+      if (fluxscale != "") {
+	clone( mosaic, fluxscale );
+	
+	PagedImage<Float> fluxscaleImage( fluxscale );
+	fluxscaleImage.copyData( (LatticeExpr<Float>) 
+				 (iif(denominator < (dMax*minPB_p), 0.0,
+				      (dMax*minPB_p)/(denominator) )) );
+	fluxscaleImage.copyData( (LatticeExpr<Float>) 
+				 (iif(denominator > (dMax*constPB_p), 1.0,
+				      (fluxscaleImage) )) );
+	mosaicImage.copyData( (LatticeExpr<Float>)(iif(denominator > (dMax*minPB_p),
+						       (numerator/denominator), 0)) );
+      }
+    } else {
       mosaicImage.copyData( (LatticeExpr<Float>)(iif(denominator > (dMax*minPB_p),
-						   (numerator/denominator), 0)) );
+						     (numerator/denominator), 0)) );
+      if (fluxscale != "") {
+	clone(mosaic, fluxscale );
+	PagedImage<Float> fluxscaleImage( fluxscale );
+	fluxscaleImage.copyData( (LatticeExpr<Float>)( 1.0 ) );
+      }
     }
-  } else {
-    mosaicImage.copyData( (LatticeExpr<Float>)(iif(denominator > (dMax*minPB_p),
-						   (numerator/denominator), 0)) );
-    if (fluxscale != "") {
-      clone(mosaic, fluxscale );
-      PagedImage<Float> fluxscaleImage( fluxscale );
-      fluxscaleImage.copyData( (LatticeExpr<Float>)( 1.0 ) );
+    if (sensitivity != "") {
+      clone(mosaic, sensitivity);
+      PagedImage<Float> sensitivityImage( sensitivity );
+      sensitivityImage.copyData( (LatticeExpr<Float>)( denominator/dMax ));
     }
   }
-  if (sensitivity != "") {
-    clone(mosaic, sensitivity);
-    PagedImage<Float> sensitivityImage( sensitivity );
-    sensitivityImage.copyData( (LatticeExpr<Float>)( denominator/dMax ));
-  }
+  catch (AipsError x) {
+    os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
+       << LogIO::POST;
+    return False;
+  } 
   return True;
 }
 
@@ -9697,6 +9724,9 @@ Bool Imager::makeEmptyImage(CoordinateSystem& coords, String& name, Int fieldID)
   modelImage.table().tableInfo().setSubType("GENERIC");
   modelImage.setUnits(Unit("Jy/beam"));
   modelImage.table().unmarkForDelete();
+  modelImage.table().relinquishAutoLocks(True);
+  modelImage.table().unlock();
+
   return True;
   
 }
