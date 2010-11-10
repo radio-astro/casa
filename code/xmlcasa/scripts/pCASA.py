@@ -28,6 +28,7 @@
 
 import parallel_go
 import pickle
+import sets
 import socket
 import os
 
@@ -51,21 +52,24 @@ class pCASA:
             # As fallback
             self.num_of_engines = 1
         
-        self._is_running = False
+        self.hosts = sets.Set()
+        self.cluster = parallel_go.cluster()
+            
 
-    def _start(self):
-        if not self._is_running:
-            if debug:
-                print "Starting ipengines"
-            self.cluster = parallel_go.cluster()
-            self.cluster.start_engine("localhost",
-                                      self.num_of_engines,
-                                      os.getcwd())
+    def register_host(self, hostname):
+        self.hosts.add(hostname)
 
-            self._is_running = True
-            if debug:
-                print "ipengines started"
+    def start(self):
+        for host in self.hosts:
+            if not host in self.cluster.get_nodes():
+                if debug:
+                    print "Start engines on host", host
+                self.cluster.start_engine(host,
+                                          self.num_of_engines,
+                                          os.getcwd())
 
+                if debug:
+                    print "ipengines started on host", host
 
 def load(mms_name):
     """Returns either the multiMS object, or None
@@ -169,9 +173,12 @@ def execute(taskname, mms_name, parameters):
     m = len(mms.sub_mss)
     n = pc.num_of_engines
 
-    print "Process", mms_name, "using", n, "engines"
+    print "Process %s using %s engines" % (mms_name, n)
 
-    pc._start()
+    for s in mms.sub_mss:
+        pc.register_host(s.host)
+        
+    pc.start()
 
     non_processed_submss = mms.sub_mss[:]
 
