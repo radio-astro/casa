@@ -803,7 +803,20 @@ Constraints
         extcorr -- extend flags based on correlation?  
                    default: False.
         extchannel -- extend flags based on channel?
-                      default: False.
+
+
+    plotfile -- name of plot file to save automatically
+                default: ''  (i.e., draw an interactive plot in the gui)
+      &gt;&gt;&gt; plotfile expandable parameters 
+        format -- format type ('jpg', 'png', 'ps', 'pdf'), 
+                  default:  ''   (plotfile extension will be used)
+        highres -- use high resolution? Always true for jpg and png.
+                  default: false
+        interactive  -- interactive mode? (pop up confirmation window)
+                  default: false (e.g., for automated scripts to prevent blocking).
+        overwrite -- Overwrite plot file if it already exists?
+                  default: false
+
 <!--
         extspw - extend flags based on spw?
                   default: False.
