@@ -201,8 +201,8 @@ def _ip(host):
 def _launch(engine, taskname, ms, parameters):
     """Launches a job"""
 
-    print "Run %s on host %s: %s(\"%s\", ...)" % \
-          (engine['id'], engine['host'], taskname, ms)
+    print "%s engine %s: %s(\"%s\", ...)" % \
+          (engine['host'], engine['id'], taskname, ms)
 
     args = []
     for (p, val) in parameters.items():
@@ -248,8 +248,8 @@ def _poor_mans_wait(engines, taskname):
                         state = "success"
                     else:
                         state = "fail"
-                    print "Run %s on host %s: %s(\"%s\", ...) %s" % \
-                      (engine['id'], engine['host'], taskname, engine['ms'],
+                    print "%s engine %s: %s(\"%s\", ...) %s" % \
+                      (engine['host'], engine['id'], taskname, engine['ms'],
                        state)
                     engine['idle'] = True
                     return (engine['id'], ex)
