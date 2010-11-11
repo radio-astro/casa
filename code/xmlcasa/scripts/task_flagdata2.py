@@ -366,6 +366,7 @@ def flagdata2(vis = None,
     except Exception, instance:
 #        fglocal.done()
         print '*** Error ***', instance
+        raise
 
 #    fglocal.done()
     

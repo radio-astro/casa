@@ -238,6 +238,7 @@ def flagdata(vis = None,
 
         except Exception, instance:
                 print '*** Error ***', instance
+                raise
         
         #write history
         mslocal.open(vis,nomodify=False)

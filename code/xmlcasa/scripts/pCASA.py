@@ -8,16 +8,17 @@ Example usage:
 
       pCASA.create("my.ms")
       pCASA.add("my.ms", "spw0.ms", "some_hostname")
-      pCASA.add("my.ms", "spw1.ms", "some_other_hostname")
-      pCASA.add("my.ms", "spw2.ms")
+      pCASA.add("my.ms", "spw1.ms", "some_hostname")
+      pCASA.add("my.ms", "spw2.ms", "some_other_hostname")
       pCASA.add("my.ms", "spw3.ms")
 
-   where spw3.ms is a MS on a locally mounted disk. Show the contents
+   When no hostname is given (spw3.ms), the MS is assumed to be available
+   from a locally mounted disk. When finised, show the contents of the multiMS
    with
 
       pCASA.list("my.ms")
 
-   2) Then the following
+   2) Now the following
 
       flagdata("my.ms", <parameters>)
 
@@ -28,13 +29,25 @@ Example usage:
       flagdata("spw2.ms", <parameters>)
       flagdata("spw3.ms", <parameters>)
 
-   on the given hosts using parallel_go. parallel_go requires
+   on the given hosts, through parallel_go. parallel_go requires
    password-less ssh in order to function.
+
+   The user does not have to explicitly define the available hosts
+   or the number of engines per host. The number of engines per host is
+   determined (automatically) from the number of CPU cores on the
+   local host. The available hosts are determined from the contents of
+   the multiMS.
+
+   It is possible (and a way to avoid bottlenecks) to wrap more subMSs
+   into the multiMS than the number of parallel engines.
+   The parallel engines are assigned and reassigned to individual subMSs
+   on the fly, as they become idle.
 """
 import parallel_go
 import pickle
 import sets
 import socket
+import time
 import os
 
 debug = False
@@ -48,14 +61,14 @@ class pCASA:
         # default to setting up N engines on each host,
         # where N is the number of cores on the local host
 
-        # Python 2.6:  self.num_of_engines = multiprocessing.cpu_count()
+        # Python 2.6:  self.engines_per_host = multiprocessing.cpu_count()
 
         # POSIX
         try:
-            self.num_of_engines = int(os.sysconf('SC_NPROCESSORS_ONLN'))
+            self.engines_per_host = int(os.sysconf('SC_NPROCESSORS_ONLN'))
         except (AttributeError,ValueError):
             # As fallback
-            self.num_of_engines = 1
+            self.engines_per_host = 1
         
         self.hosts = sets.Set()
         self.cluster = parallel_go.cluster()
@@ -73,13 +86,14 @@ class pCASA:
             
         for host in self.hosts:
 
-            print "new host: ", host, _ip(host)
-            print "existing hosts:", already_running_nodes_ip
+            if debug:
+                print "new host: ", host, _ip(host)
+                print "existing hosts:", already_running_nodes_ip
             if not _ip(host) in already_running_nodes_ip:
                 if debug:
                     print "Start engines on host", host
                 self.cluster.start_engine(host,
-                                          self.num_of_engines,
+                                          self.engines_per_host,
                                           os.getcwd())
 
                 if debug:
@@ -183,59 +197,163 @@ def _ip(host):
 
     return ip
 
+
+def _launch(engine, taskname, ms, parameters):
+    """Launches a job"""
+
+    print "Run %s on host %s: %s(\"%s\", ...)" % \
+          (engine['id'], engine['host'], taskname, ms)
+
+    args = []
+    for (p, val) in parameters.items():
+        if p == "vis":
+            args.append(p + " = '" + ms + "'")
+        else:
+            if isinstance(val, str):
+                args.append(p + " = '" + val + "'")
+            else:
+                args.append(p + " = " + str(val))
+                
+    cmd = taskname + "(" + ", ".join(args) + ")"
+    if debug:
+        print cmd
+    engine['job'] = pc.cluster.odo(cmd, engine['id'])
+    engine['ms'] = ms
+    engine['idle'] = False
+
+def _poor_mans_wait(engines, taskname):
+    """Returns engine id and any exception thrown by the job.
+    The return value of the job is not made available.
+    
+    Each pending job is polled once per second; this is inefficient
+    and should be replaced with a 'wait' call that blocks
+    until any job terminates and returns the ID of the job that
+    terminated. But that 'wait' function does not seem to exist."""
+
+    while True:
+        for engine in engines.values():
+            if not engine['idle']:
+                ex = None
+                try:
+                    # get_result() will
+                    #   return None: if the job is not done
+                    #   return ResultList: if the job is done
+                    #   rethrow the job's exception if the job threw
+                    r = engine['job'].get_result(block = False)
+                except Exception, e:
+                    ex = e
+
+                if ex != None or r != None:
+                    if ex == None:
+                        state = "success"
+                    else:
+                        state = "fail"
+                    print "Run %s on host %s: %s(\"%s\", ...) %s" % \
+                      (engine['id'], engine['host'], taskname, engine['ms'],
+                       state)
+                    engine['idle'] = True
+                    return (engine['id'], ex)
+
+        time.sleep(1)
+
 def execute(taskname, parameters):
-    """Runs the given task on the given multiMS"""
+    """Runs the given task on the given multiMS.
+    If any of the jobs throw an exception, execution stops, and the
+    first exception that happened is rethrown by this function"""
 
     global pc
 
     mms_name = parameters['vis']
     mms = _load(mms_name)
 
-    m = len(mms.sub_mss)
-    n = pc.num_of_engines
-
-    print "Process %s using %s engines" % (mms_name, n)
-
     for s in mms.sub_mss:
         pc.register_host(s.host)
         
     pc.start()
 
+    # Convert engines to a more handy format (from lists to dictionaries),
+    # and add idleness as an engine property
+    engines = {}
+    for e in pc.cluster.get_engines():
+        engines[e[0]] = {}
+        engines[e[0]]['id'] = e[0]
+        engines[e[0]]['host'] = e[1]
+        engines[e[0]]['pid'] = e[2]
+        engines[e[0]]['idle'] = True
+        engines[e[0]]['job'] = None
+        
+    m = len(mms.sub_mss)
+
+    n = len(engines)
+
+    print "Process %s using %s engines" % (mms_name, n)
+
     non_processed_submss = mms.sub_mss[:]
 
-    while len(non_processed_submss) > 0:
+    status = None   # None: success
+
+    #  The availble engines will be assigned to the subMSs
+    #  on the fly, as engines become idle
+    #  
+    #  Pseudo code:
+    #
+    #  while still_data_to_process:
+    #      search for an idle engine with access to the data
+    #      if found:
+    #          launch job
+    #      else:
+    #          if there are running engines:
+    #              wait next idle engines
+    #          else:
+    #              give up
+    #  while there are running engines:
+    #      wait
+    #
+    while len(non_processed_submss) > 0 and status == None:
         if debug:
             print "Still to process =", non_processed_submss
+            print "Engines =", engines
 
-        # Dictionary of MSs assigned to each engine
-        vis = {}
-
-        for engine in pc.cluster.get_engines():
-            engine_id = engine[0]
-            if debug:
-                print "engine", engine_id, "is", engine[1], _ip(engine[1])
-
-            for subms in non_processed_submss:
+        found = False
+        
+        for engine in engines.values():
+            if engine['idle']:
                 if debug:
-                    print "subMS", subms.ms, "is", subms.host, _ip(subms.host)
-                if _ip(engine[1]) == _ip(subms.host):
-                
-                    if not vis.has_key(engine_id):
-                        
-                        vis[engine_id] = subms.ms
+                    print "idle engine", engine['id'], "is", engine['host'], _ip(engine['host'])
+            
+                for subms in non_processed_submss:
+                    if debug:
+                        print "subMS", subms.ms, "is", subms.host, _ip(subms.host)
+
+                    if _ip(engine['host']) == _ip(subms.host):
+                    
+                        _launch(engine, taskname, subms.ms, parameters)
+
                         non_processed_submss.remove(subms)
+                        
+                        found = True
                         break
 
-        for engine in pc.cluster.get_engines():
-            engine_id = engine[0]
-            if not vis.has_key(engine_id):
-                vis[engine_id] = "non-existing-dummy"
+                if found:
+                    break
 
-        for engine_id, ms in vis.items():
-            for engine in pc.cluster.get_engines():
-                if engine[0] == engine_id:
-                    print "Run on host %s: %s(\"%s\", ...)" % \
-                          (engine[1], taskname, ms)
+        if not found:
+            pending_job = False
+            for engine in engines.values():
+                if not engine['idle']:
+                    pending_job = True
+                    break
+            if pending_job:
+                (engine_id, s) = _poor_mans_wait(engines, taskname)
+
+                # If an exception was thrown, bail out ASAP
+                if s != None and status == None:
+                    status = (engine_id, s)
+                    
+            else:
+                raise Exception("All engines are idle but none have access to the data")       
+
+
         if debug:
             print "Still to process =", non_processed_submss
             print "casalogs =", pc.cluster.get_casalogs()
@@ -243,23 +361,27 @@ def execute(taskname, parameters):
             print "properties =", pc.cluster.get_properties()
             print "engines =", pc.cluster.get_engines()
             print "nodes = ", pc.cluster.get_nodes()
-    
-        args = []
-        pc.cluster.pgk(vis=vis)
-        for (p, val) in parameters.items():
-            if p == "vis":
-                args.append(p + " = vis")
-            else:
-                if isinstance(val, str):
-                    args.append(p + " = '" + val + "'")
-                else:
-                    args.append(p + " = " + str(val))
+
+    pending_job = True
+    while pending_job:
+        pending_job = False
+        
+        for engine in engines.values():
+            if not engine['idle']:
+                pending_job = True
+                break
             
-        cmd = taskname + "(" + ", ".join(args) + ")"
-        if debug:
-            print cmd
-        pc.cluster.pgc('inp("' + taskname + '")')
-        pc.cluster.pgc(cmd)
+        if pending_job:
+            (engine_id, s) = _poor_mans_wait(engines, taskname)
+            
+            if s != None and status == None:
+                status = (engine_id, s)
+
+    if status != None:
+        print >> sys.stderr, "Engine %s error while processing %s" % \
+              (status[0], engines[status[0]]['ms'])
+        
+        raise status[1]
 
 
 # A subset of a multi MS
