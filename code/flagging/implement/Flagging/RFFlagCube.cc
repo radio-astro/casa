@@ -97,6 +97,9 @@ RFFlagCube::~RFFlagCube ()
     in_flags_time = -1;
     in_flags_flushed = false;
     num_inst--;
+    if (num_inst == 0) {
+        cleanup();
+    }
 }
 
 uInt RFFlagCube::estimateMemoryUse ( const RFChunkStats &ch )
@@ -164,7 +167,7 @@ void RFFlagCube::init( RFlagWord corrmsk, uInt nAgent, bool only_selector, const
 	report_plotted = NULL;
     }
     //cout << "uint_max=" << UINT_MAX << endl;
-    flagmask = base_flagmask<<agent_count;
+    flagmask = base_flagmask << agent_count;
     if (dbg) cout << "agent_count=" << agent_count 
 		  << " base_flagmask=" << base_flagmask 
 		  << " flagmask=" << (flagmask > UINT_MAX) << endl;
