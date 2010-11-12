@@ -29,6 +29,8 @@
 #ifndef SYNTHESIS_CONVOLUTIONFUNCTION_H
 #define SYNTHESIS_CONVOLUTIONFUNCTION_H
 
+#include <synthesis/MeasurementComponents/Utils.h>
+#include <synthesis/MeasurementComponents/CFStore.h>
 #include <casa/Arrays/Vector.h>
 #define CF_TYPE Double
 
@@ -39,10 +41,21 @@ namespace casa{
   public:
     ConvolutionFunction() {};
     ConvolutionFunction(Int dim) {nDim=dim;};
-    virtual ~ConvolutionFunction() {};
+    ~ConvolutionFunction();
     
     virtual void setDimension(Int n){nDim = n;};
-    virtual CF_TYPE getValue(Vector<CF_TYPE>& coord, Vector<CF_TYPE>& offset) {return 0;};
+    virtual CF_TYPE getValue(Vector<CF_TYPE>& coord, Vector<CF_TYPE>& offset) {return 0.0;};
+    virtual int getVisParams(const VisBuffer& vb);
+    virtual void makeConvFunction(const ImageInterface<Complex>& image,
+				  const VisBuffer& vb,
+				  const Int wConvSize,
+				  const Float pa,
+				  CFStore& cfs,
+				  CFStore& cfwts);// {};
+    virtual void setPolMap(const Vector<Int>& polMap);// {};
+    virtual void setFeedStokes(const Vector<Int>& feedStokes);// {};
+    virtual void setParams(const Vector<Int>& polMap, const Vector<Int>& feedStokes);
+    //    {setPolMap(polMap); setFeedStokes(feedStokes);};
   private:
     Int nDim;
   };
