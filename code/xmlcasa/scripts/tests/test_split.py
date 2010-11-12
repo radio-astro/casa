@@ -613,11 +613,13 @@ class split_test_blankov(unittest.TestCase):
         Does outputvis == '' cause a prompt exit?
         """
         #splitran = False
+        original_throw_pref = False
         try:
             #print "\n\tSplitting", self.inpms
             myf = sys._getframe(len(inspect.stack()) - 1).f_globals
             # This allows distinguishing ValueError from other exceptions, and
             # quiets an expected error message.
+            original_throw_pref = myf.get('__rethrow_casa_exceptions', False)
             myf['__rethrow_casa_exceptions'] = True
             splitran = split(self.inpms, self.outms, datacolumn='data',
                              field='', spw='0:25', width=1,
@@ -630,7 +632,7 @@ class split_test_blankov(unittest.TestCase):
             splitran = False
         except Exception, e:
             print "Unexpected but probably benign exception:", e
-        #__rethrow_casa_exceptions = False
+        myf['__rethrow_casa_exceptions'] = original_throw_pref
         assert not splitran
 
 class split_test_unorderedpolspw(SplitChecker):
