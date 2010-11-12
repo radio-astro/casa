@@ -56,6 +56,12 @@ Images/MIRIADImage.cc
 Images/HDF5Image2.cc
 Images/ImageProxy.cc
 Images/ComponentImager.cc
+Images/ImageCollapser.cc
+Images/ImageInputProcessor.cc
+Images/ImageReorderer.cc
+Images/ImageFitter.cc
+Images/ImageProfileFitter.cc
+IO/FitterEstimatesFileParser.cc
 Wnbt/ComponentUpdate.cc
 ${BISON_ImageExprGram_OUTPUTS}
 ${FLEX_ImageExprGram_OUTPUTS}
@@ -96,6 +102,7 @@ Images/ImageConcat.h
 Images/ImageConcat.tcc
 Images/ImageConvolver.h
 Images/ImageConvolver.tcc
+Images/ImageCollapser.h
 Images/ImageDecomposer.h
 Images/ImageDecomposer.tcc
 Images/ImageExpr.h
@@ -105,6 +112,7 @@ Images/ImageExprParse.h
 Images/ImageFFT.h
 Images/ImageFITSConverter.h
 Images/ImageFITSConverter.tcc
+Images/ImageFitter.h
 Images/ImageFit1D.h
 Images/ImageFit1D.tcc
 Images/ImageHistograms.h
@@ -121,10 +129,11 @@ Images/ImageOpener.h
 Images/ImagePolProxy.h
 Images/ImagePolarimetry.h
 Images/ImageProfileFit.h
+Images/ImageProfileFitter.h
 Images/ImageProxy.h
-Images/ImageRegion.h
 Images/ImageRegrid.h
 Images/ImageRegrid.tcc
+Images/ImageReorderer.h
 Images/ImageSourceFinder.h
 Images/ImageSourceFinder.tcc
 Images/ImageStatistics.h
@@ -140,6 +149,8 @@ Images/MIRIADImage.h
 Images/MaskSpecifier.h
 Images/MomentCalculator.h
 Images/MomentCalculator.tcc
+Images/MomentsBase.h
+Images/MomentsBase.tcc
 Images/PagedImage.h
 Images/PagedImage.tcc
 Images/RebinImage.h
@@ -175,6 +186,11 @@ Regions/WCPolygon.h
 Regions/WCRegion.h
 Regions/WCUnion.h
 DESTINATION include/casacore/images/Regions
+)
+
+install (FILES
+IO/FitterEstimatesFileParser.h
+DESTINATION include/casacore/images/IO
 )
 
 install (FILES
