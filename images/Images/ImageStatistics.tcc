@@ -65,16 +65,12 @@ ImageStatistics<T>::ImageStatistics (const ImageInterface<T>& image,
 // Constructor
 //
 : LatticeStatistics<T>(image, os, showProgress, forceDisk),
-  pInImage_p(0), precision_(-1)
+  pInImage_p(0), blc_(IPosition(image.coordinates().nPixelAxes(), 0)), precision_(-1)
 {
    if (!setNewImage(image)) {
       os_p << error_p << LogIO::EXCEPTION;
    }
-   IPosition blc(image.coordinates().nPixelAxes(), 0);
-   setBlc(blc);
-
 }
-
 
 template <class T>
 ImageStatistics<T>::ImageStatistics (const ImageInterface<T>& image,
@@ -84,13 +80,11 @@ ImageStatistics<T>::ImageStatistics (const ImageInterface<T>& image,
 // Constructor
 //
 : LatticeStatistics<T>(image, showProgress, forceDisk),
-  pInImage_p(0), precision_(-1)
+  pInImage_p(0), blc_(IPosition(image.coordinates().nPixelAxes(), 0)), precision_(-1)
 {
    if (!setNewImage(image)) {
       os_p << error_p << LogIO::EXCEPTION;
    }
-   IPosition blc(image.coordinates().nPixelAxes(), 0);
-   setBlc(blc);
 }
 
 
@@ -100,34 +94,26 @@ ImageStatistics<T>::ImageStatistics(const ImageStatistics<T> &other)
 // Copy constructor.  Storage image is not copied.
 //
 : LatticeStatistics<T>(other),
-  pInImage_p(0)
+  pInImage_p(0), blc_(other.getBlc()), precision_(other.getPrecision())
 {
-   if (pInImage_p!=0) delete pInImage_p;
    pInImage_p = other.pInImage_p->cloneII();
-   other.setBlc(blc_);
-   other.setPrecision(precision_);
 }
 
+// Assignment operator.  Storage image is not copied
 
 template <class T>
-ImageStatistics<T> &ImageStatistics<T>::operator=(const ImageStatistics<T> &other)
-//
-// Assignment operator.  Storage image is not copied
-//
-{
+ImageStatistics<T> &ImageStatistics<T>::operator=(const ImageStatistics<T> &other) {
    if (this != &other) {
       LatticeStatistics<T>::operator=(other);
-//
-      if (pInImage_p!=0) delete pInImage_p;
+      if (pInImage_p!=0) {
+    	  delete pInImage_p;
+      }
       pInImage_p = other.pInImage_p->cloneII();
       precision_ = other.getPrecision();
       blc_ = other.getBlc();
    }
    return *this;
 }
-
-
- 
 
 template <class T>
 ImageStatistics<T>::~ImageStatistics()
@@ -150,7 +136,9 @@ Bool ImageStatistics<T>::setNewImage(const ImageInterface<T>& image)
 
 // Make a clone of the image
 
-   if (pInImage_p!=0) delete pInImage_p;
+   if (pInImage_p!=0) {
+	   delete pInImage_p;
+   }
    pInImage_p = image.cloneII();
 
 
