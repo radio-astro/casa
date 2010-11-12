@@ -43,6 +43,21 @@
 
 namespace casa{
   
+  EVLAConvFunc& EVLAConvFunc::operator=(const EVLAConvFunc& other)
+  {
+    if(this!=&other) 
+      {
+	ConvolutionFunction::operator=(other);
+	logIO_p = other.logIO_p;
+	setParams(other.polMap_p, other.feedStokes_p);
+	bandID_p=other.bandID_p;
+	Diameter_p=other.Diameter_p;
+	Nant_p=other.Nant_p;
+	HPBW=other.HPBW;
+	sigma=other.sigma;
+      }
+    return *this;
+  }
   Int EVLAConvFunc::getVLABandID(Double& freq,String&telescopeName)
   {
     if (telescopeName=="VLA")
@@ -86,6 +101,11 @@ namespace casa{
     mesg << telescopeName << "/" << freq << "(Hz) combination not recognized.";
     throw(SynthesisError(mesg.str()));
   }
+  
+  void EVLAConvFunc::setPolMap(const Vector<Int>& polMap) 
+  {polMap_p.resize(0);polMap_p=polMap;};
+  void EVLAConvFunc::setFeedStokes(const Vector<Int>& feedStokes) 
+  {feedStokes_p.resize(0);feedStokes_p=feedStokes;};
   
   int EVLAConvFunc::getVisParams(const VisBuffer& vb)
   {
@@ -229,10 +249,11 @@ namespace casa{
   }
   
   void EVLAConvFunc::makeConvFunction(const ImageInterface<Complex>& image,
+				      const VisBuffer& vb,
 				      const Int wConvSize,
-				      const VisBuffer& vb,Float pa,
-				      const Vector<Int>& polMap,
-				      Vector<Int>& cfStokes,
+				      //				      const Vector<Int>& polMap,
+				      Float pa,
+				      //				      Vector<Int>& cfStokes,
 				      CFStore& cfs,
 				      CFStore& cfwts)
   {
@@ -327,9 +348,9 @@ namespace casa{
     // no. of vis. poln. planes that will be used in making the user
     // defined Stokes image.
     //
-    polInUse=makePBPolnCoords(vb, polMap, convSize, convSampling, 
+    polInUse=makePBPolnCoords(vb, polMap_p, convSize, convSampling, 
 			      image.coordinates(),nx,nx,
-			      coords,cfStokes);
+			      coords,feedStokes_p);
     //------------------------------------------------------------------
     //
     // Make the sky Stokes PB.  This will be used in the gridding
@@ -364,26 +385,26 @@ namespace casa{
     Int inner=convSize/convSampling;
     //    inner = convSize/2;
     
-    Vector<Double> cfUVScale(3,0),cfUVOffset(3,0);
+    // Vector<Double> cfUVScale(3,0),cfUVOffset(3,0);
     
-    cfUVScale(0)=Float(twoDPB.shape()(0))*sampling(0);
-    cfUVScale(1)=Float(twoDPB.shape()(1))*sampling(1);
-    cfUVOffset(0)=Float(twoDPB.shape()(0))/2;
-    cfUVOffset(1)=Float(twoDPB.shape()(1))/2;
-    // cerr << wScale << " " << cfUVScale << endl;
-    // cerr << uvOffset << " " << cfUVOffset << endl;
-    // ConvolveGridder<Double, Complex>
-    //   //      ggridder(IPosition(2, inner, inner), cfUVScale, cfUVOffset, "SF");
-    //   ggridder(IPosition(2, inner, inner), uvScale, uvOffset, "SF");
+    // cfUVScale(0)=Float(twoDPB.shape()(0))*sampling(0);
+    // cfUVScale(1)=Float(twoDPB.shape()(1))*sampling(1);
+    // cfUVOffset(0)=Float(twoDPB.shape()(0))/2;
+    // cfUVOffset(1)=Float(twoDPB.shape()(1))/2;
+    // // cerr << wScale << " " << cfUVScale << endl;
+    // // cerr << uvOffset << " " << cfUVOffset << endl;
+    // // ConvolveGridder<Double, Complex>
+    // //   //      ggridder(IPosition(2, inner, inner), cfUVScale, cfUVOffset, "SF");
+    // //   ggridder(IPosition(2, inner, inner), uvScale, uvOffset, "SF");
     
-    // convFuncCache[PAIndex] = new Array<Complex>(IPosition(4,convSize/2,convSize/2,
-    // 							  wConvSize,polInUse));
-    // convWeightsCache[PAIndex] = new Array<Complex>(IPosition(4,convSize/2,convSize/2,
-    // 							     wConvSize,polInUse));
-    // convFuncCache[PAIndex] = new Array<Complex>(IPosition(4,convSize,convSize,
-    // 							  wConvSize,polInUse));
-    // convWeightsCache[PAIndex] = new Array<Complex>(IPosition(4,convSize,convSize,
-    //    							     wConvSize,polInUse));
+    // // convFuncCache[PAIndex] = new Array<Complex>(IPosition(4,convSize/2,convSize/2,
+    // // 							  wConvSize,polInUse));
+    // // convWeightsCache[PAIndex] = new Array<Complex>(IPosition(4,convSize/2,convSize/2,
+    // // 							     wConvSize,polInUse));
+    // // convFuncCache[PAIndex] = new Array<Complex>(IPosition(4,convSize,convSize,
+    // // 							  wConvSize,polInUse));
+    // // convWeightsCache[PAIndex] = new Array<Complex>(IPosition(4,convSize,convSize,
+    // //    							     wConvSize,polInUse));
     cfs.data = new Array<Complex>(IPosition(4,convSize,convSize,
 					    wConvSize,polInUse));
     cfwts.data = new Array<Complex>(IPosition(4,convSize,convSize,

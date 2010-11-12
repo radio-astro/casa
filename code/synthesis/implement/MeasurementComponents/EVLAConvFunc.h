@@ -35,6 +35,8 @@
 #include <synthesis/MeasurementComponents/BeamCalc.h>
 #include <synthesis/MeasurementComponents/CFStore.h>
 #include <synthesis/MeasurementComponents/VLACalcIlluminationConvFunc.h>
+//#include <synthesis/MeasurementComponents/PixelatedConvFunc.h>
+#include <synthesis/MeasurementComponents/ConvolutionFunction.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/StokesCoordinate.h>
@@ -47,17 +49,24 @@
 // Temp. function for staged re-factoring
 //    
 namespace casa { //# NAMESPACE CASA - BEGIN
-  class EVLAConvFunc
+  template<class T> class ImageInterface;
+  template<class T> class Matrix;
+  class VisBuffer;
+  class EVLAConvFunc : public ConvolutionFunction
+  //: public PixelatedConvFunc<Complex>
   {
   public:
-    EVLAConvFunc():bandID_p(-1){};
+    EVLAConvFunc():ConvolutionFunction(),bandID_p(-1), polMap_p(), feedStokes_p(){};
+    ~EVLAConvFunc() {};
+    EVLAConvFunc& operator=(const EVLAConvFunc& other);
     Int getVLABandID(Double& freq,String&telescopeName);
     Bool findSupport(Array<Complex>& func, Float& threshold,Int& origin, Int& R);
     void makeConvFunction(const ImageInterface<Complex>& image,
+			  const VisBuffer& vb,
 			  const Int wConvSize,
-			  const VisBuffer& vb,Float pa,
-			  const Vector<Int>& polMap,
-			  Vector<Int>& cfStokes,
+			  //			  const Vector<Int>& polMap,
+			  const Float pa,
+			  //			  Vector<Int>& cfStokes,
 			  CFStore& cfs,
 			  CFStore& cfwts);
     int getVisParams(const VisBuffer& vb);
@@ -69,12 +78,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			 const Int& skyNx, const Int& skyNy,
 			 CoordinateSystem& feedCoord,
 			 Vector<Int>& cfStokes);
+    //
+    // Overloading these functions from ConvolutionFunction class
+    //
+    void setPolMap(const Vector<Int>& polMap);
+    void setFeedStokes(const Vector<Int>& feedStokes);
+  private:
     Int bandID_p;
     Float Diameter_p, Nant_p, HPBW, sigma;
     
     LogIO& logIO() {return logIO_p;}
     LogIO logIO_p;
-
+    Vector<Int> polMap_p;
+    Vector<Int> feedStokes_p;
   };
 };
 #endif
