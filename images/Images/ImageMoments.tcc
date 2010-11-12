@@ -106,14 +106,14 @@ ImageMoments<T>::ImageMoments (ImageInterface<T>& image,
 
 template <class T>
 ImageMoments<T>::ImageMoments(const ImageMoments<T> &other)
-: pInImage_p(0)
+: MomentsBase<T>(other), pInImage_p(0)
 {
    operator=(other);
 }
 
 template <class T>
 ImageMoments<T>::ImageMoments(ImageMoments<T> &other)
-: pInImage_p(0)
+: MomentsBase<T>(other), pInImage_p(0)
 {
    operator=(other);
 }
