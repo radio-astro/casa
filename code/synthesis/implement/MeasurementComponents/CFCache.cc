@@ -232,7 +232,7 @@ namespace casa{
 	Sampling[where]=convSampling;
       }
     //
-    // If the CF was in the mem. cache, add it.
+    // If the CF was not in the mem. cache, add it.
     //
     if (memCache_p[where].null())
       {
