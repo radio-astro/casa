@@ -49,6 +49,7 @@
 #include <synthesis/MeasurementComponents/VPSkyJones.h>
 #include <synthesis/MeasurementComponents/VLACalcIlluminationConvFunc.h>
 #include <synthesis/MeasurementComponents/VLAIlluminationConvFunc.h>
+#include <synthesis/MeasurementComponents/ConvolutionFunction.h>
 #include <synthesis/MeasurementComponents/EVLAConvFunc.h>
 #include <synthesis/MeasurementComponents/Utils.h>
 
@@ -144,11 +145,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // 12, 16 works in most cases). 
     // <group>
     AWProjectFT(Int nFacets, Long cachesize, String& cfCacheDirName,
-		  Bool applyPointingOffset=True,
-		  Bool doPBCorr=True,
-		  Int tilesize=16, 
-		  Float pbLimit=5e-2,
-		  Bool usezero=False);
+		EVLAConvFunc& cf,
+		Bool applyPointingOffset=True,
+		Bool doPBCorr=True,
+		Int tilesize=16, 
+		Float pbLimit=5e-2,
+		Bool usezero=False);
     // </group>
     
     // Construct from a Record containing the AWProjectFT state
@@ -424,7 +426,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Grid/degrid zero spacing points?
     Bool usezero_p;
     
-    EVLAConvFunc evlacf_p;
+    EVLAConvFunc telescopeConvFunc_p;
+    //    ConvolutionFunction telescopeConvFunc_p;
     CFStore cfs_p, cfwts_p;
     Array<Complex> convFunc;
     Array<Complex> convWeights;

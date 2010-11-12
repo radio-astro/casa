@@ -142,6 +142,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 #define FUNC(a)  (((a)))
   AWProjectFT::AWProjectFT(Int nWPlanes, Long icachesize, 
 			   String& cfCacheDirName,
+			   EVLAConvFunc& cf,
 			   Bool applyPointingOffset,
 			   Bool doPBCorr,
 			   Int itilesize, 
@@ -155,9 +156,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       doPBCorrection(doPBCorr),
       Second("s"),Radian("rad"),Day("d"), noOfPASteps(0),
       pbNormalized(False),resetPBs(True), rotateAperture_p(True),
-      evlacf_p(), cfs_p(), cfwts_p(), cfCache(), paChangeDetector(), cfStokes(),Area(), 
-      avgPBSaved(False),avgPBReady(False)
+      cfs_p(), cfwts_p(), cfCache(), paChangeDetector(), cfStokes(),Area(), 
+      avgPBSaved(False),avgPBReady(False),telescopeConvFunc_p(cf)
   {
+    //    telescopeConvFunc_p = new EVLAConvFunc();
     epJ=NULL;
     convSize=0;
     tangentSpecified_p=False;
@@ -296,6 +298,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Area=other.Area;
 	avgPB = other.avgPB;
 	avgPBReady = other.avgPBReady;
+	telescopeConvFunc_p = other.telescopeConvFunc_p;
       };
     return *this;
   };
@@ -855,7 +858,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     {
       VLACalcIlluminationConvFunc vlaPB;
       Nant_p     = vb.msColumns().antenna().nrow();
-      if (bandID_p == -1) bandID_p=evlacf_p.getVisParams(vb);
+      if (bandID_p == -1) bandID_p=telescopeConvFunc_p.getVisParams(vb);
       vlaPB.applyPB(localPB, vb, bandID_p);
     }
     
@@ -1045,7 +1048,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (cfSource==NOTCACHED)
       {
 	PAIndex_l = abs(cfSource);
-	evlacf_p.makeConvFunction(image,wConvSize,vb, pa, polMap,cfStokes,cfs_p, cfwts_p);
+	telescopeConvFunc_p.setParams(polMap, cfStokes);
+	telescopeConvFunc_p.makeConvFunction(image,vb,wConvSize,
+					      //					      polMap,
+					      pa,
+					      //					      cfStokes,
+					      cfs_p, cfwts_p);
 
 	cfCache.cacheConvFunction(cfs_p);
 	cfCache.cacheConvFunction(cfwts_p,"WT",False);
@@ -1060,6 +1068,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Reference the pixel array for legacy reasons.  This should not
     // be required after full-cleanup.
     convFunc.reference(*cfs_p.data);
+    convSampling = cfs_p.sampling(0);
     //
     // Load the average PB (sensitivity pattern) from the cache.  If
     // not found, make one and cache it.
@@ -2163,7 +2172,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Int ScanNo=0,doGrad=0;
 		Double area=1.0;
 		
-		Int tmpPAI=0;
+		Int tmpPAI=1;
 		if (dopsf) doPSF=1; else doPSF=0;
 		runFortranPut(uvw,dphase,*datStorage,s,Conj,flags,rowFlags,
 			      *imagingweight,rownr,actualOffset,
@@ -2181,7 +2190,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
 	if (dopsf) doPSF=1;
 	
-	Int tmpPAI=0;
+	Int tmpPAI=1;
 	runFortranPut(uvw,dphase,*datStorage,s,Conj,flags,rowFlags,
 		      *imagingweight,
 		      row,uvOffset,
@@ -2233,7 +2242,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     findConvFunction(*image, vb);
     Int NAnt=0;
     Nant_p     = vb.msColumns().antenna().nrow();
-    if (bandID_p == -1) bandID_p=evlacf_p.getVisParams(vb);
+    if (bandID_p == -1) bandID_p=telescopeConvFunc_p.getVisParams(vb);
     if (doPointing)   
       NAnt = findPointingOffsets(vb,l_offsets,m_offsets,False);
 
@@ -2401,7 +2410,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     findConvFunction(*image, vb);
 
     Nant_p     = vb.msColumns().antenna().nrow();
-    if (bandID_p == -1) bandID_p=evlacf_p.getVisParams(vb);
+    if (bandID_p == -1) bandID_p=telescopeConvFunc_p.getVisParams(vb);
     Int NAnt=0;
     if (doPointing)   
       NAnt = findPointingOffsets(vb,pointingOffsets,l_offsets,m_offsets,False);
@@ -2576,7 +2585,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     findConvFunction(*image, vb);
     
     Nant_p     = vb.msColumns().antenna().nrow();
-    if (bandID_p == -1) bandID_p=evlacf_p.getVisParams(vb);
+    if (bandID_p == -1) bandID_p=telescopeConvFunc_p.getVisParams(vb);
     Int NAnt=0;
     if (doPointing)   NAnt = findPointingOffsets(vb,l_offsets,m_offsets,True);
     
