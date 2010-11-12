@@ -158,7 +158,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			   String nameQualifier="",Bool savePA=True)
     {
       if (cfs.data.null())
-	throw(SynthesisError("Won't cache a NULL CFStore"));
+	throw(SynthesisError(LogMessage("Won't cache a NULL CFStore",
+					LogOrigin("CFCache::cacheConvFunction")).message()));
       CoordinateSystem ftcoords;
       Int which=-1;
       Int convSize=(Int)cfs.data->shape()(0);
