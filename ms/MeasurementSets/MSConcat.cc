@@ -192,6 +192,38 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
 	<< " from the antenna subtable" << endl;
   }
 
+  // merge STATE
+  Block<uInt> newStateIndices;
+  Bool doState = False;
+  {
+    Bool hasState = Table::isReadable(itsMS.stateTableName()) && itsMS.state().nrow()>0;
+    Bool otherHasState = Table::isReadable(otherMS.stateTableName()) && otherMS.state().nrow()>0;
+    if(hasState &&  !otherHasState){
+      log << itsMS.tableName() 
+	  <<" has filled STATE table but not " << otherMS.tableName()
+	  << LogIO::EXCEPTION;
+    }
+    else if(!hasState &&  otherHasState){
+      log << otherMS.tableName() 
+	  <<" has filled STATE table but not " << itsMS.tableName()
+	  << LogIO::EXCEPTION;
+    }
+    else if(hasState && otherHasState){
+      const uInt oldStateRows = itsMS.state().nrow();
+      newStateIndices = copyState(otherMS.state());
+      const uInt addedRows = itsMS.state().nrow() - oldStateRows;
+      const uInt matchedRows = otherMS.state().nrow() - addedRows;
+      log << "Added " << addedRows 
+	  << " rows and matched " << matchedRows 
+	  << " from the state subtable" << LogIO::POST;
+      doState = True; // state id entries in the main table will have to be modified for otherMS
+    }
+    else{
+      log << "Input MS don't have filled STATE table, result won't have one either." 
+	  << LogIO::POST;
+    }
+  } 
+
   //See if there is a SOURCE table and concatenate and reindex it
   copySource(otherMS);
 
@@ -205,7 +237,7 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
     const uInt matchedRows = otherMS.dataDescription().nrow() - addedRows;
     log << "Added " << addedRows 
 	<< " rows and matched " << matchedRows 
-	<< " from the data description subtable" << endl;
+	<< " from the data description subtable" << LogIO::POST;
   }
 
   // correct the spw entries in the SOURCE table and remove redundant rows
@@ -215,7 +247,7 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
     uInt removedRows =  oldRows - itsMS.source().nrow();
     if(removedRows>0){
       log << "Removed " << removedRows 
-	  << " redundant rows from the source subtable" << endl;
+	  << " redundant rows from the source subtable" << LogIO::POST;
     }
   }
 
@@ -227,7 +259,7 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
     const uInt matchedRows = otherMS.field().nrow() - addedRows;
     log << "Added " << addedRows 
 	<< " rows and matched " << matchedRows 
-	<< " from the field subtable" << endl;
+	<< " from the field subtable" << LogIO::POST;
   }
 
 
@@ -401,6 +433,7 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
     thisAnt2.put(curRow, newAntIndices[otherAnt2(r)]);
     thisFeed1.put(curRow, otherFeed1, r);
     thisFeed2.put(curRow, otherFeed2, r);
+    
     thisDDId.put(curRow, newDDIndices[otherDDId(r)]);
     thisFieldId.put(curRow, newFldIndices[otherFieldId(r)]);
     thisInterval.put(curRow, otherInterval, r);
@@ -434,8 +467,13 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
       thisScan.put(curRow, otherScan(r));
     }
 
+    if(doState){
+      thisStateId.put(curRow, newStateIndices[otherStateId(r)]);
+    }
+    else{
+      thisStateId.put(curRow, otherStateId, r);
+    }
 
-    thisStateId.put(curRow, otherStateId, r);
     thisUvw.put(curRow, otherUvw, r);
     
     if(itsChanReversed[otherDDId(r)]){
@@ -720,7 +758,7 @@ Int MSConcat::copyObservation(const MSObservation& otherObs,
       obs.removeRow(rowsTBR);
     }    
     os << "Added " << obs.nrow()- originalNrow << " rows and matched "
-       << rowsToBeRemoved.size() << " rows in the observation subtable." << endl;
+       << rowsToBeRemoved.size() << " rows in the observation subtable." << LogIO::POST;
 
   }
   else {
@@ -730,7 +768,7 @@ Int MSConcat::copyObservation(const MSObservation& otherObs,
 	  newObsIndexB_p.define(i,tempObsIndex(i));
       }
     }
-    os << "Added " << obs.nrow()- originalNrow << " rows in the observation subtable." << endl;
+    os << "Added " << obs.nrow()- originalNrow << " rows in the observation subtable." << LogIO::POST;
   } // end if(remRedunObsId)
 
   return obs.nrow();
@@ -786,6 +824,36 @@ Block<uInt> MSConcat::copyAntennaAndFeed(const MSAntenna& otherAnt,
     }
   }
   return antMap;
+}
+
+Block<uInt> MSConcat::copyState(const MSState& otherState) {
+  const uInt nStateIds = otherState.nrow();
+  Block<uInt> stateMap(nStateIds);
+
+  const ROMSStateColumns otherStateCols(otherState);
+  MSStateColumns& stateCols = state();
+  MSState& stateT = itsMS.state();
+  const ROTableRow otherStateRow(otherState);
+  TableRow stateRow(stateT);
+  const Quantum<Double> tol(1, "K");
+  
+  for (uInt s = 0; s < nStateIds; s++) {
+    const Int newStateId = stateCols.matchState(otherStateCols.calQuant()(s),
+						otherStateCols.loadQuant()(s),
+						otherStateCols.obsMode()(s),
+						otherStateCols.ref()(s),
+						otherStateCols.sig()(s),
+						otherStateCols.subScan()(s),
+						tol);
+    if (newStateId >= 0) {
+      stateMap[s] = newStateId;
+    } else { // need to add a new entry in the STATE subtable
+      stateMap[s] = stateT.nrow();
+      stateT.addRow();
+      stateRow.putMatchingFields(stateMap[s], otherStateRow.get(s));
+    }
+  }
+  return stateMap;
 }
 
 Block<uInt>  MSConcat::copyField(const MSField& otherFld) {
