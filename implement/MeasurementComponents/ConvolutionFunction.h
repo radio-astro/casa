@@ -41,21 +41,23 @@ namespace casa{
   public:
     ConvolutionFunction() {};
     ConvolutionFunction(Int dim) {nDim=dim;};
-    ~ConvolutionFunction();
+    virtual ~ConvolutionFunction();
     
     virtual void setDimension(Int n){nDim = n;};
     virtual CF_TYPE getValue(Vector<CF_TYPE>& coord, Vector<CF_TYPE>& offset) {return 0.0;};
-    virtual int getVisParams(const VisBuffer& vb);
+
+    //    virtual ConvolutionFunction& operator=(const ConvolutionFunction& other) = 0;
+    virtual int getVisParams(const VisBuffer& vb)=0;
     virtual void makeConvFunction(const ImageInterface<Complex>& image,
 				  const VisBuffer& vb,
 				  const Int wConvSize,
 				  const Float pa,
 				  CFStore& cfs,
-				  CFStore& cfwts);// {};
-    virtual void setPolMap(const Vector<Int>& polMap);// {};
-    virtual void setFeedStokes(const Vector<Int>& feedStokes);// {};
-    virtual void setParams(const Vector<Int>& polMap, const Vector<Int>& feedStokes);
-    //    {setPolMap(polMap); setFeedStokes(feedStokes);};
+				  CFStore& cfwts) = 0;// {};
+    virtual void setPolMap(const Vector<Int>& polMap) = 0;// {};
+    virtual void setFeedStokes(const Vector<Int>& feedStokes) = 0;// {};
+    virtual void setParams(const Vector<Int>& polMap, const Vector<Int>& feedStokes)
+    {setPolMap(polMap); setFeedStokes(feedStokes);};
   private:
     Int nDim;
   };

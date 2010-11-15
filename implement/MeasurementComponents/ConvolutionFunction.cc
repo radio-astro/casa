@@ -28,15 +28,16 @@
 #include <synthesis/MeasurementComponents/ConvolutionFunction.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
   ConvolutionFunction::~ConvolutionFunction() {};
-  int ConvolutionFunction::getVisParams(const VisBuffer& vb) {return 0;};
-  void ConvolutionFunction::makeConvFunction(const ImageInterface<Complex>& image,
-					     const VisBuffer& vb,
-					     const Int wConvSize,
-					     const Float pa,
-					     CFStore& cfs,
-					     CFStore& cfwts) {};
-  void ConvolutionFunction::setPolMap(const Vector<Int>& polMap) {};
-  void ConvolutionFunction::setFeedStokes(const Vector<Int>& feedStokes) {};
-  void ConvolutionFunction::setParams(const Vector<Int>& polMap, const Vector<Int>& feedStokes) 
-  {setPolMap(polMap); setFeedStokes(feedStokes);};
+  //  ConvolutionFunction& operator=(const ConvolutionFunction& other) {return *this;}
+  // int ConvolutionFunction::getVisParams(const VisBuffer& vb) {return 0;};
+  // void ConvolutionFunction::makeConvFunction(const ImageInterface<Complex>& image,
+  // 					     const VisBuffer& vb,
+  // 					     const Int wConvSize,
+  // 					     const Float pa,
+  // 					     CFStore& cfs,
+  // 					     CFStore& cfwts) {};
+  // void ConvolutionFunction::setPolMap(const Vector<Int>& polMap) {};
+  // void ConvolutionFunction::setFeedStokes(const Vector<Int>& feedStokes) {};
+  // void ConvolutionFunction::setParams(const Vector<Int>& polMap, const Vector<Int>& feedStokes) 
+  // {setPolMap(polMap); setFeedStokes(feedStokes);};
 };
