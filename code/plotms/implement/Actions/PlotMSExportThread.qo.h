@@ -113,7 +113,8 @@ private slots:
 
 // Helper class for PlotMSExportThread that actually does the work in a new
 // QThread.
-class PlotMSExportThreadHelper : public QThread {
+//class PlotMSExportThreadHelper : public QThread {
+class PlotMSExportThreadHelper : public QObject {
     Q_OBJECT
     
     //# Friend class declarations.
@@ -121,7 +122,7 @@ class PlotMSExportThreadHelper : public QThread {
     
 public:
     // Constructor that takes parent.
-    PlotMSExportThreadHelper(PlotMSExportThread& parent);
+    PlotMSExportThreadHelper(PlotMSExportThread* parent);
     
     // Destructor.
     ~PlotMSExportThreadHelper();
@@ -132,10 +133,14 @@ protected:
     
 private:
     // Parent.
-    PlotMSExportThread& itsParent_;
+    PlotMSExportThread* itsParent_;
     
     // Stores the result of the export.
     bool itsExportResult_;
+
+signals :
+    void finished();
+    void terminated();
 };
 
 }
