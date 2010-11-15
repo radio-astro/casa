@@ -479,6 +479,90 @@ class test_concat(unittest.TestCase):
     
                 
         self.assertTrue(retValue['success'])
+        
+    def test5(self):
+        '''Concat 5: two MSs with different state table (CAS-2601)'''
+        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
+        
+        self.res = concat(vis = ['A2256LC2_4.5s-1.ms','A2256LC2_4.5s-2.ms'],
+                          concatvis = msname)
+        self.assertEqual(self.res,None)
+
+        print myname, ": Success! Now checking output ..."
+        mscomponents = set(["table.dat",
+                            "table.f0",
+                            "table.f1",
+                            "table.f2",
+                            "table.f3",
+                            "table.f4",
+                            "table.f5",
+                            "table.f6",
+                            "table.f7",
+                            "table.f8",
+                            "ANTENNA/table.dat",
+                            "DATA_DESCRIPTION/table.dat",
+                            "FEED/table.dat",
+                            "FIELD/table.dat",
+                            "FLAG_CMD/table.dat",
+                            "HISTORY/table.dat",
+                            "OBSERVATION/table.dat",
+                            "POINTING/table.dat",
+                            "POLARIZATION/table.dat",
+                            "PROCESSOR/table.dat",
+                            "SOURCE/table.dat",
+                            "SPECTRAL_WINDOW/table.dat",
+                            "STATE/table.dat",
+                            "ANTENNA/table.f0",
+                            "DATA_DESCRIPTION/table.f0",
+                            "FEED/table.f0",
+                            "FIELD/table.f0",
+                            "FLAG_CMD/table.f0",
+                            "HISTORY/table.f0",
+                            "OBSERVATION/table.f0",
+                            "POINTING/table.f0",
+                            "POLARIZATION/table.f0",
+                            "PROCESSOR/table.f0",
+                            "SOURCE/table.f0",
+                            "SPECTRAL_WINDOW/table.f0",
+                            "STATE/table.f0"
+                            ])
+        for name in mscomponents:
+            if not os.access(msname+"/"+name, os.F_OK):
+                print myname, ": Error  ", msname+"/"+name, "doesn't exist ..."
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+msname+'/'+name+' does not exist'
+            else:
+                print myname, ": ", name, "present."
+        print myname, ": MS exists. All tables present. Try opening as MS ..."
+        try:
+            ms.open(msname)
+        except:
+            print myname, ": Error  Cannot open MS table", tablename
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+tablename
+        else:
+            ms.close()
+            if 'test5.ms' in glob.glob("*.ms"):
+                shutil.rmtree('test5.ms',ignore_errors=True)
+            shutil.copytree(msname,'test5.ms')
+            print myname, ": OK. Checking tables in detail ..."
+            retValue['success']=True        
+    
+            # check state table
+            name = "STATE"
+            #             col name, row number, expected value, tolerance
+            expected = [
+                ['CAL',  0, 0, 0],
+                ['SIG',  0, 1, 0],
+                ['SUB_SCAN',  2, 1, 0]
+                ]
+            results = checktable(name, expected)
+            if not results:
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+'Check of table '+name+' failed'
+                retValue['error_msgs']=retValue['error_msgs']+'Check of table '+name+' failed'
+                
+        self.assertTrue(retValue['success'])
 
 class concat_cleanup(unittest.TestCase):           
     def setUp(self):
