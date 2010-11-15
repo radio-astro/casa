@@ -329,6 +329,8 @@ public:
 		 const typename NumericTraits<T>::ConjugateType& error2,
 		 const typename NumericTraits<T>::ConjugateType& error3);
 
+  void setErrors(const Vector<typename NumericTraits<T>::ConjugateType>& errors);
+
   const Vector<typename NumericTraits<T>::ConjugateType>& errors() const;
   // </group>
 
@@ -626,6 +628,8 @@ public:
 		 const typename NumericTraits<T>::ConjugateType& error1,
 		 const typename NumericTraits<T>::ConjugateType& error2,
 		 const typename NumericTraits<T>::ConjugateType& error3);
+
+  void setErrors(const Vector<typename NumericTraits<T>::ConjugateType>& errors);
 
   const Vector<typename NumericTraits<T>::ConjugateType>& errors() const;
   // </group>

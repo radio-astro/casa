@@ -437,14 +437,21 @@ template<class T> void FluxRep<T>::setValue(
 	Vector<T> tmp(4, 0.0);
 	String conversionUnit = "Jy";
 	if (! value.isConform("Jy")) {
+		Bool found = False;
 		for (
 			Vector<String>::const_iterator iter=_allowedUnits.begin();
 			iter != _allowedUnits.end(); iter++
 		) {
 			if (value.isConform(*iter)) {
 				conversionUnit = *iter;
+				found = True;
 				break;
 			}
+		}
+		if (! found) {
+			os << LogIO::EXCEPTION << "The flux units "
+				<< value.getFullUnit().getName() << " have dimensions that are "
+				<< "different from 'Jy' and are not allowed";
 		}
 	}
 	if (stokes==Stokes::I || stokes==Stokes::Q || stokes==Stokes::U || stokes==Stokes::V) {
@@ -510,6 +517,13 @@ setErrors(const typename NumericTraits<T>::ConjugateType& error0,
   itsErr(2) = error2;
   itsErr(3) = error3;
 }
+
+template<class T> void FluxRep<T>::setErrors(
+	const Vector<typename NumericTraits<T>::ConjugateType>& errors
+) {
+	itsErr = errors;
+}
+
 
 template<class T> const
 Vector<typename NumericTraits<T>::ConjugateType>& FluxRep<T>::errors() const {
@@ -975,6 +989,14 @@ setErrors(const typename NumericTraits<T>::ConjugateType& error0,
   itsFluxPtr->setErrors(error0, error1, error2, error3);
   DebugAssert(ok(), AipsError);
 }
+
+template<class T> void Flux<T>::setErrors(
+	const Vector<typename NumericTraits<T>::ConjugateType>& errors
+) {
+	itsFluxPtr->setErrors(errors);
+	DebugAssert(ok(), AipsError);
+}
+
 
 template<class T> const
 Vector<typename NumericTraits<T>::ConjugateType>& Flux<T>::errors() const {
