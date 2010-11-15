@@ -455,7 +455,7 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
       if(!scanOffsetForOid.isDefined(oid)){ // offset not set, use default
 	scanOffsetForOid.define(oid, defaultScanOffset);
       }
-      if(!encountered.isDefined(oid)){
+      if(!encountered.isDefined(oid) && scanOffsetForOid(oid)!=0){
 	log << LogIO::NORMAL << "Will offset scan numbers by " <<  scanOffsetForOid(oid)
 	    << " for observations with Obs ID " << oid
 	    << " in order to make scan numbers unique." << LogIO::POST;
