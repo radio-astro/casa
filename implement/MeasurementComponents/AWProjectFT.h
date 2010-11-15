@@ -29,15 +29,24 @@
 #ifndef SYNTHESIS_AWPROJECTFT_H
 #define SYNTHESIS_AWPROJECTFT_H
 
+#include <synthesis/MeasurementComponents/VLACalcIlluminationConvFunc.h>
+#include <synthesis/MeasurementComponents/VLAIlluminationConvFunc.h>
+#include <synthesis/MeasurementComponents/ConvolutionFunction.h>
+#include <synthesis/MeasurementComponents/EVLAConvFunc.h>
+#include <synthesis/MeasurementComponents/SolvableVisCal.h>
+#include <synthesis/MeasurementComponents/VPSkyJones.h>
 #include <synthesis/MeasurementComponents/FTMachine.h>
-#include <casa/Arrays/Matrix.h>
+#include <synthesis/MeasurementComponents/CFCache.h>
+#include <synthesis/MeasurementComponents/Utils.h>
+
 #include <scimath/Mathematics/FFTServer.h>
 #include <msvis/MSVis/VisBuffer.h>
-#include <images/Images/ImageInterface.h>
+
 #include <casa/Containers/Block.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
+
 #include <scimath/Mathematics/ConvolveGridder.h>
 #include <lattices/Lattices/LatticeCache.h>
 #include <lattices/Lattices/ArrayLattice.h>
@@ -45,17 +54,8 @@
 #include <measures/Measures/Measure.h>
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MPosition.h>
+#include <images/Images/ImageInterface.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
-#include <synthesis/MeasurementComponents/VPSkyJones.h>
-#include <synthesis/MeasurementComponents/VLACalcIlluminationConvFunc.h>
-#include <synthesis/MeasurementComponents/VLAIlluminationConvFunc.h>
-#include <synthesis/MeasurementComponents/ConvolutionFunction.h>
-#include <synthesis/MeasurementComponents/EVLAConvFunc.h>
-#include <synthesis/MeasurementComponents/Utils.h>
-
-//#include <synthesis/MeasurementComponents/EPJones.h>
-#include <synthesis/MeasurementComponents/SolvableVisCal.h>
-#include <synthesis/MeasurementComponents/CFCache.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   
@@ -144,8 +144,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // size of the tile used in gridding (cannot be less than
     // 12, 16 works in most cases). 
     // <group>
-    AWProjectFT(Int nFacets, Long cachesize, String& cfCacheDirName,
-		EVLAConvFunc& cf,
+    AWProjectFT(Int nFacets, Long cachesize, 
+		//		String& cfCacheDirName,
+		CountedPtr<CFCache>& cfcache,
+		CountedPtr<ConvolutionFunction>& cf,
 		Bool applyPointingOffset=True,
 		Bool doPBCorr=True,
 		Int tilesize=16, 
@@ -268,7 +270,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool isFourier() {return True;}
     
     //  Bool changed(const VisBuffer& vb) {return vpSJ->changed(vb,1);};
-    Bool changed(const VisBuffer& vb) {return False;}
+    //    Bool changed(const VisBuffer& vb) {return False;}
     
     virtual Int findPointingOffsets(const VisBuffer&, Array<Float>&, Array<Float>&,
 				    Bool Evaluate=True);
@@ -285,17 +287,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					      const MDirection::Types&,
 					      const MDirection::Types&,
 					      MEpoch& last);
-    /*
-      void makePB(const VisBuffer& vb,
-      TempImage<Float>& PB,
-      IPosition& shape,CoordinateSystem& coord);
-      
-      void makeAveragePB(const VisBuffer& vb, 
-      const ImageInterface<Complex>& image,
-      Int& polInUse,
-      TempImage<Float>& PB,
-      TempImage<Float>& avgPB);
-    */
     //
     // Make a sensitivity image (sensitivityImage), given the gridded
     // weights (wtImage).  These are related to each other by a
@@ -350,19 +341,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void correctAntiAliasing(Lattice<Complex>& cf);
   protected:
     
-    // Padding in FFT
-    Float padding_p;
-    
     Int nint(Double val) {return Int(floor(val+0.5));};
-    
     // Locate convolution functions on the disk
     //    Int locateConvFunction(const Int Nw, const Float pa);
     //    void cacheConvFunction(Int which, Array<Complex>& cf, CoordinateSystem& coord);
     // Find the convolution function
     void findConvFunction(const ImageInterface<Complex>& image,
 			  const VisBuffer& vb);
-    
-    Int nWPlanes_p;
     
     // Get the appropriate data pointer
     Array<Complex>* getDataPointer(const IPosition&, Bool);
@@ -374,6 +359,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // ends bracket the middle
     Bool recordOnGrid(const VisBuffer& vb, Int rownr) const;
     
+    // Padding in FFT
+    Float padding_p;
+    
+    Int nWPlanes_p;
     // Image cache
     LatticeCache<Complex> * imageCache;
     
@@ -388,12 +377,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool isTiled;
     
     // Array lattice
-    //Lattice<Complex> * arrayLattice;
     CountedPtr<Lattice<Complex> > arrayLattice;
     
     // Lattice. For non-tiled gridding, this will point to arrayLattice,
     //  whereas for tiled gridding, this points to the image
-    //Lattice<Complex>* lattice;
     CountedPtr<Lattice<Complex> > lattice;
     
     Float maxAbsData;
@@ -407,46 +394,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Array for non-tiled gridding
     Array<Complex> griddedData;
     
-    // Pointing columns
-    MSPointingColumns* mspc;
-    
-    // Antenna columns
-    MSAntennaColumns* msac;
-    
     //    DirectionCoordinate directionCoord;
-    
     MDirection::Convert* pointingToImage;
-    
-    Vector<Double> xyPos;
-    
-    MDirection worldPosMeas;
-    
-    Int priorCacheSize;
     
     // Grid/degrid zero spacing points?
     Bool usezero_p;
     
-    EVLAConvFunc telescopeConvFunc_p;
-    //    ConvolutionFunction telescopeConvFunc_p;
+    CountedPtr<ConvolutionFunction> telescopeConvFunc_p;
     CFStore cfs_p, cfwts_p;
-    Array<Complex> convFunc;
-    Array<Complex> convWeights;
+    Array<Complex> convFunc, convWeights;
     CoordinateSystem convFuncCS_p;
-    Int convSize;
     //
     // Vector to hold the support size info. for the convolution
     // functions pointed to by the elements of convFunctions_p.  The
     // co-ordinates of this array are (W-term, Poln, PA).
     //
-    Int convSampling;
+    Int convSize, convSampling;
     //
     // If true, all convolution functions are in the cache.
     //
     Bool convFuncCacheReady;
 
-    Int wConvSize;
-    
-    Int lastIndex_p;
+    Int wConvSize, lastIndex_p;
     
     //
     // The PA averaged (and potentially antenna averaged) PB for
@@ -457,8 +426,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // No. of vis. polarization planes used in making the user defined
     // Stokes images
     //
-    Int polInUse, bandID_p;
-    Int maxConvSupport;
+    Int polInUse, bandID_p, maxConvSupport;
     //
     // Percentage of the peak of the PB after which the image is set
     // to zero.
@@ -468,55 +436,49 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //    EPJones *epJ;
     SolvableVisJones *epJ;
     Double sigma;
-    Int Nant_p;
-    Int doPointing;
-    Bool doPBCorrection;
-    Bool makingPSF;
+    Int Nant_p, doPointing;
+    Bool doPBCorrection, makingPSF;
     
-    Unit Second, Radian, Day;
-    Array<Float> l_offsets,m_offsets;
-    Int noOfPASteps;
-    Vector<Float> pbPeaks;
-    Bool pbNormalized,resetPBs,rotateAperture_p;
-    Vector<Float> paList;
-    CFCache cfCache;
-    Double currentCFPA;
+    CountedPtr<CFCache> cfCache_p;
     ParAngleChangeDetector paChangeDetector;
     Vector<Int> cfStokes;
     Vector<Complex> Area;
-    Double cfRefFreq_p;
-    Bool avgPBSaved;
-    Bool avgPBReady;
+    Bool avgPBReady, avgPBSaved, pbNormalized,resetPBs,rotateAperture_p;
+
+    Unit Second, Radian, Day;
+    Array<Float> l_offsets,m_offsets;
+    Vector<Float> pbPeaks, paList;
+
+    Double currentCFPA, cfRefFreq_p;
     Vector<Complex> antiAliasingOp,antiAliasingCorrection;
     Float lastPAUsedForWtImg;
-    //    VLACalcIlluminationConvFunc vlaPB;
     //
     //----------------------------------------------------------------------
     //
     virtual void normalizeAvgPB();
     virtual void runFortranGet(Matrix<Double>& uvw,Vector<Double>& dphase,
-		       Cube<Complex>& visdata,
-		       IPosition& s,
-		       //Cube<Complex>& gradVisAzData,
-		       //Cube<Complex>& gradVisElData,
-		       //IPosition& gradS,
-		       Int& Conj,
-		       Cube<Int>& flags,Vector<Int>& rowFlags,
-		       Int& rownr,Vector<Double>& actualOffset,
-		       Array<Complex>* dataPtr,
-		       Int& aNx, Int& aNy, Int& npol, Int& nchan,
-		       VisBuffer& vb,Int& Nant_p, Int& scanNo,
-		       Double& sigma,
-		       Array<Float>& raoffsets,
-		       Array<Float>& decoffsets,
-		       Double area,
-		       Int& doGrad,Int paIndex);
+			       Cube<Complex>& visdata,
+			       IPosition& s,
+			       //Cube<Complex>& gradVisAzData,
+			       //Cube<Complex>& gradVisElData,
+			       //IPosition& gradS,
+			       Int& Conj,
+			       Cube<Int>& flags,Vector<Int>& rowFlags,
+			       Int& rownr,Vector<Double>& actualOffset,
+			       Array<Complex>* dataPtr,
+			       Int& aNx, Int& aNy, Int& npol, Int& nchan,
+			       VisBuffer& vb,Int& Nant_p, Int& scanNo,
+			       Double& sigma,
+			       Array<Float>& raoffsets,
+			       Array<Float>& decoffsets,
+			       Double area,
+			       Int& doGrad,Int paIndex);
     virtual void runFortranPut(Matrix<Double>& uvw,Vector<Double>& dphase,
-		       const Complex& visdata_p,
-		       IPosition& s,
-		       //Cube<Complex>& gradVisAzData,
-		       //Cube<Complex>& gradVisElData,
-		       //IPosition& gradS,
+			       const Complex& visdata_p,
+			       IPosition& s,
+			       //Cube<Complex>& gradVisAzData,
+			       //Cube<Complex>& gradVisElData,
+			       //IPosition& gradS,
 		       Int& Conj,
 		       Cube<Int>& flags,Vector<Int>& rowFlags,
 		       const Matrix<Float>& weight,
@@ -550,8 +512,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			 Int& doGrad,
 			 Int paIndex);
   };
-  
-  //void saveImmage(TempImage<Complex>& convFunc, Int wConvSize);
 } //# NAMESPACE CASA - END
 
 #endif

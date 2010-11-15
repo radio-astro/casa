@@ -29,6 +29,7 @@
 #include <synthesis/MeasurementComponents/EVLAConvFunc.h>
 #include <synthesis/MeasurementComponents/SynthesisError.h>
 #include <synthesis/MeasurementComponents/BeamCalc.h>
+#include <synthesis/MeasurementComponents/WTerm.h>
 //
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
@@ -422,6 +423,7 @@ namespace casa{
     Matrix<Complex> screen(convSize, convSize);
     //    if (paChangeDetector.changed(vb,0)) paChangeDetector.update(vb,0);
     VLACalcIlluminationConvFunc vlaPB;
+    WTerm wterm;
     Long cachesize=(HostInfo::memoryTotal(true)/8)*1024;
     vlaPB.setMaximumCacheSize(cachesize);
     
@@ -449,30 +451,7 @@ namespace casa{
 	//
 	// Now the w term
 	//
-	if(wConvSize>1) 
-	  {
-	    logIO() << LogOrigin("EVLAConvFunc", "")
-		    << "Computing WPlane " << iw  << LogIO::POST;
-	    
-	    Double twoPiW=2.0*C::pi*Double(iw*iw)/wScale;
-	    
-	    for (Int iy=-inner/2;iy<inner/2;iy++) 
-	      {
-		Double m=sampling(1)*Double(iy);
-		Double msq=m*m;
-		for (Int ix=-inner/2;ix<inner/2;ix++) 
-		  {
-		    Double l=sampling(0)*Double(ix);
-		    Double rsq=l*l+msq;
-		    if(rsq<1.0) 
-		      {
-			Double phase=twoPiW*(sqrt(1.0-rsq)-1.0);
-			screen(ix+convSize/2,iy+convSize/2)*=Complex(cos(phase),sin(phase));
-		      }
-		  }
-	      }
-	  }
-	
+	wterm.apply(screen, iw, sampling, wConvSize, wScale, inner);
 	//
 	// Fill the complex image with the w-term...
 	//

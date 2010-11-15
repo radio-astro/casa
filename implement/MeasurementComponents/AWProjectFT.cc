@@ -26,67 +26,27 @@
 //#
 //# $Id$
 
-#include <msvis/MSVis/VisibilityIterator.h>
 #include <casa/Quanta/UnitMap.h>
 #include <casa/Quanta/MVTime.h>
 #include <casa/Quanta/UnitVal.h>
-#include <measures/Measures/Stokes.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
-#include <coordinates/Coordinates/DirectionCoordinate.h>
-#include <coordinates/Coordinates/SpectralCoordinate.h>
-#include <coordinates/Coordinates/StokesCoordinate.h>
-#include <coordinates/Coordinates/Projection.h>
-#include <ms/MeasurementSets/MSColumns.h>
-#include <ms/MeasurementSets/MSRange.h>
-#include <casa/BasicSL/Constants.h>
-#include <scimath/Mathematics/FFTServer.h>
-#include <synthesis/MeasurementComponents/AWProjectFT.h>
-#include <scimath/Mathematics/RigidVector.h>
-#include <msvis/MSVis/StokesVector.h>
-#include <synthesis/MeasurementEquations/StokesImageUtil.h>
-#include <msvis/MSVis/VisBuffer.h>
-#include <msvis/MSVis/VisSet.h>
-#include <images/Images/ImageInterface.h>
-#include <images/Images/ImageRegrid.h>
-#include <images/Images/PagedImage.h>
 #include <casa/Containers/Block.h>
 #include <casa/Containers/Record.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/Array.h>
-#include <casa/Arrays/MaskedArray.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/Slice.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/Arrays/Cube.h>
-#include <casa/Arrays/MatrixIter.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
-#include <lattices/Lattices/ArrayLattice.h>
-#include <lattices/Lattices/SubLattice.h>
-#include <lattices/Lattices/LCBox.h>
-#include <lattices/Lattices/LatticeExpr.h>
-#include <lattices/Lattices/LatticeCache.h>
-#include <lattices/Lattices/LatticeFFT.h>
-#include <lattices/Lattices/LatticeIterator.h>
-#include <lattices/Lattices/LatticeStepper.h>
-#include <casa/Utilities/CompositeNumber.h>
-#include <casa/OS/Timer.h>
 #include <casa/OS/HostInfo.h>
 #include <casa/sstream.h>
 
-#include <synthesis/MeasurementComponents/VLACalcIlluminationConvFunc.h>
-#include <synthesis/MeasurementComponents/IlluminationConvFunc.h>
+#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <images/Images/ImageInterface.h>
+
+#include <synthesis/MeasurementEquations/StokesImageUtil.h>
+#include <synthesis/MeasurementComponents/SynthesisError.h>
+#include <synthesis/MeasurementComponents/AWProjectFT.h>
 #include <synthesis/MeasurementComponents/ExpCache.h>
 #include <synthesis/MeasurementComponents/CExp.h>
-#include <synthesis/MeasurementComponents/Utils.h>
-#include <synthesis/MeasurementComponents/SynthesisError.h>
-#include <measures/Measures/MEpoch.h>
-#include <measures/Measures/MeasTable.h>
-#include <scimath/Mathematics/MathFunc.h>
 
-#include <casa/System/ProgressMeter.h>
+#include <scimath/Mathematics/FFTServer.h>
+#include <scimath/Mathematics/MathFunc.h>
+#include <measures/Measures/MeasTable.h>
 
 #define CONVSIZE (1024*2)
 #define CONVWTSIZEFACTOR 1.0
@@ -141,8 +101,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
 #define FUNC(a)  (((a)))
   AWProjectFT::AWProjectFT(Int nWPlanes, Long icachesize, 
-			   String& cfCacheDirName,
-			   EVLAConvFunc& cf,
+			   //			   String& cfCacheDirName,
+			   CountedPtr<CFCache>& cfcache,
+			   CountedPtr<ConvolutionFunction>& cf,
 			   Bool applyPointingOffset,
 			   Bool doPBCorr,
 			   Int itilesize, 
@@ -152,14 +113,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       imageCache(0), cachesize(icachesize), tilesize(itilesize),
       gridder(0), isTiled(False), arrayLattice(0), lattice(0), 
       maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
-      mspc(0), msac(0), pointingToImage(0), usezero_p(usezero),
-      doPBCorrection(doPBCorr),
-      Second("s"),Radian("rad"),Day("d"), noOfPASteps(0),
-      pbNormalized(False),resetPBs(True), rotateAperture_p(True),
-      cfs_p(), cfwts_p(), cfCache(), paChangeDetector(), cfStokes(),Area(), 
-      avgPBSaved(False),avgPBReady(False),telescopeConvFunc_p(cf)
+      pointingToImage(0), usezero_p(usezero),
+      telescopeConvFunc_p(cf),cfs_p(), cfwts_p(), 
+      doPBCorrection(doPBCorr), cfCache_p(cfcache), paChangeDetector(), cfStokes(),Area(), 
+      avgPBReady(False),avgPBSaved(False),pbNormalized(False),resetPBs(True),rotateAperture_p(True),
+      Second("s"),Radian("rad"),Day("d")
   {
-    //    telescopeConvFunc_p = new EVLAConvFunc();
     epJ=NULL;
     convSize=0;
     tangentSpecified_p=False;
@@ -177,8 +136,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // Set up the Conv. Func. disk cache manager object.
     //
-    cfCache.setCacheDir(cfCacheDirName.data());
-    cfCache.initCache();
+    // if (!cfCache_p.null()) delete &cfCache_p;
+    // cfCache_p=cfcache;
     convSampling=OVERSAMPLING;
     convSize=CONVSIZE;
     Long hostRAM = (HostInfo::memoryTotal(true)*1024); // In bytes
@@ -262,8 +221,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	maxAbsData=other.maxAbsData;
 	centerLoc=other.centerLoc;
 	offsetLoc=other.offsetLoc;
-	mspc=other.mspc;
-	msac=other.msac;
 	pointingToImage=other.pointingToImage;
 	usezero_p=other.usezero_p;
 	doPBCorrection = other.doPBCorrection;
@@ -285,7 +242,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//
 	// Set up the Conv. Func. disk cache manager object.
 	//
-	cfCache=other.cfCache;
+	cfCache_p=other.cfCache_p;
 	convSampling=other.convSampling;
 	convSize=other.convSize;
 	cachesize=other.cachesize;
@@ -763,8 +720,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (!pbNormalized)
       {
 	pbPeaks.resize(avgPB.shape()(2),True);
-	if (makingPSF) pbPeaks = 1.0;
-	else pbPeaks /= (Float)noOfPASteps;
+	// if (makingPSF) pbPeaks = 1.0;
+	// else pbPeaks /= (Float)noOfPASteps;
 	pbPeaks = 1.0;
 	logIO() << LogOrigin("AWProjectFT", "normalizeAvgPB")  
 		<< "Normalizing the average PBs to " << 1.0
@@ -845,7 +802,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	theavgPB.resize(localPB.shape()); 
 	theavgPB.setCoordinateInfo(localPB.coordinates());
 	theavgPB.set(0.0);
-	noOfPASteps = 0;
+	//	noOfPASteps = 0;
 	pbPeaks.resize(theavgPB.shape()(2));
 	pbPeaks.set(0.0);
 	resetPBs=False;
@@ -858,7 +815,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     {
       VLACalcIlluminationConvFunc vlaPB;
       Nant_p     = vb.msColumns().antenna().nrow();
-      if (bandID_p == -1) bandID_p=telescopeConvFunc_p.getVisParams(vb);
+      if (bandID_p == -1) bandID_p=telescopeConvFunc_p->getVisParams(vb);
       vlaPB.applyPB(localPB, vb, bandID_p);
     }
     
@@ -867,7 +824,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     localTwoDPB.setMaximumCacheSize(cachesize);
     Float peak=0;
     Int NAnt;
-    noOfPASteps++;
+    //    noOfPASteps++;
     NAnt=1;
    
 //     logIO() << " Shape of localPB Cube : " << twoDPBShape << LogIO::POST;
@@ -1031,33 +988,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     {
       polInUse = 0;
       lastPAUsedForWtImg = currentCFPA = pa;
-      Int M=polMap.nelements(), N=0;
-      for(Int i=0;i<polMap.nelements();i++) if (polMap(i) > -1) polInUse++;
+      uInt N=0;
+      for(uInt i=0;i<polMap.nelements();i++) if (polMap(i) > -1) polInUse++;
       cfStokes.resize(polInUse);
-      for(Int i=0;i<polMap.nelements();i++) 
+      for(uInt i=0;i<polMap.nelements();i++) 
 	if (polMap(i) > -1) {cfStokes(N) = vb.corrType()(i);N++;}
     }
     //----------------------------------------------------------------
     //
     // Loacate the required conv. function.
     //
-    cfSource=cfCache.locateConvFunction(wConvSize, Quantity(pa,"rad"),
+    cfSource=cfCache_p->locateConvFunction(wConvSize, Quantity(pa,"rad"),
 					paChangeDetector.getParAngleTolerance(),
 					cfs_p);
     // If conv. func. not found in the cache, make one and cache it.
     if (cfSource==NOTCACHED)
       {
 	PAIndex_l = abs(cfSource);
-	telescopeConvFunc_p.setParams(polMap, cfStokes);
-	telescopeConvFunc_p.makeConvFunction(image,vb,wConvSize,
-					      //					      polMap,
-					      pa,
-					      //					      cfStokes,
-					      cfs_p, cfwts_p);
+	telescopeConvFunc_p->setParams(polMap, cfStokes);
+	telescopeConvFunc_p->makeConvFunction(image,vb,wConvSize,
+					      pa, cfs_p, cfwts_p);
 
-	cfCache.cacheConvFunction(cfs_p);
-	cfCache.cacheConvFunction(cfwts_p,"WT",False);
-	cfCache.flush(); // Write the aux info file
+	cfCache_p->cacheConvFunction(cfs_p);
+	cfCache_p->cacheConvFunction(cfwts_p,"WT",False);
+	cfCache_p->flush(); // Write the aux info file
       }
     else
       {
@@ -1068,18 +1022,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Reference the pixel array for legacy reasons.  This should not
     // be required after full-cleanup.
     convFunc.reference(*cfs_p.data);
-    convSampling = cfs_p.sampling(0);
+    convSampling = (Int)cfs_p.sampling(0);
     //
     // Load the average PB (sensitivity pattern) from the cache.  If
     // not found, make one and cache it.
     //
-    if (cfCache.loadAvgPB(avgPB) == NOTCACHED)
+    if (cfCache_p->loadAvgPB(avgPB) == NOTCACHED)
       {
 	logIO() << "Average PB does not exist in the cache.  A fresh one will be made." 
 		<< LogIO::NORMAL  << LogIO::POST;
 	pbMade=makeAveragePB0(vb, image, avgPB);
 	pbNormalized=False;    normalizeAvgPB();	pbNormalized=True;
-	if (pbMade) cfCache.flush(avgPB); // Save the AVG PB and write the aux info.
+	if (pbMade) cfCache_p->flush(avgPB); // Save the AVG PB and write the aux info.
       }
     else
       {resetPBs = False; avgPBReady=True;}
@@ -1100,7 +1054,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Int maxMemoryMB=HostInfo::memoryTotal(true)/1024;
 	String unit(" KB");
 	Float memoryKB=0;
-	memoryKB=(Float)cfCache.size();
+	memoryKB=(Float)cfCache_p->size();
 	
 	memoryKB = Int(memoryKB/1024.0+0.5);
 	if (memoryKB > 1024) {memoryKB /=1024; unit=" MB";}
@@ -1395,7 +1349,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(pointingToImage) delete pointingToImage; pointingToImage=0;
 
     paChangeDetector.reset();
-    cfCache.flush();
+    cfCache_p->flush();
     convFuncCacheReady=True;
   }
   //
@@ -1571,6 +1525,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				   Int& doGrad,
 				   Int paIndex)
   {
+    (void)Conj; //To supress the warning
     enum whichGetStorage {RAOFF,DECOFF,UVW,DPHASE,VISDATA,GRADVISAZ,GRADVISEL,
 			  FLAGS,ROWFLAGS,UVSCALE,ACTUALOFFSET,DATAPTR,VBFREQ,
 			  CONVSUPPORT,CONVFUNC,CHANMAP,POLMAP,VBANT1,VBANT2,CONJCFMAP,CFMAP};
@@ -1886,6 +1841,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				   Int& doPSF,
 				   Int paIndex)
   {
+    (void)Conj; //To supress the warning
     enum whichGetStorage {RAOFF,DECOFF,UVW,DPHASE,VISDATA,GRADVISAZ,GRADVISEL,
 			  FLAGS,ROWFLAGS,UVSCALE,ACTUALOFFSET,DATAPTR,VBFREQ,
 			  CONVSUPPORT,CONVFUNC,CHANMAP,POLMAP,VBANT1,VBANT2,WEIGHT,
@@ -2242,7 +2198,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     findConvFunction(*image, vb);
     Int NAnt=0;
     Nant_p     = vb.msColumns().antenna().nrow();
-    if (bandID_p == -1) bandID_p=telescopeConvFunc_p.getVisParams(vb);
+    if (bandID_p == -1) bandID_p=telescopeConvFunc_p->getVisParams(vb);
     if (doPointing)   
       NAnt = findPointingOffsets(vb,l_offsets,m_offsets,False);
 
@@ -2410,7 +2366,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     findConvFunction(*image, vb);
 
     Nant_p     = vb.msColumns().antenna().nrow();
-    if (bandID_p == -1) bandID_p=telescopeConvFunc_p.getVisParams(vb);
+    if (bandID_p == -1) bandID_p=telescopeConvFunc_p->getVisParams(vb);
     Int NAnt=0;
     if (doPointing)   
       NAnt = findPointingOffsets(vb,pointingOffsets,l_offsets,m_offsets,False);
@@ -2585,7 +2541,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     findConvFunction(*image, vb);
     
     Nant_p     = vb.msColumns().antenna().nrow();
-    if (bandID_p == -1) bandID_p=telescopeConvFunc_p.getVisParams(vb);
+    if (bandID_p == -1) bandID_p=telescopeConvFunc_p->getVisParams(vb);
     Int NAnt=0;
     if (doPointing)   NAnt = findPointingOffsets(vb,l_offsets,m_offsets,True);
     
@@ -2722,6 +2678,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			 Array<Complex>& griddedVis, Vector<Double>& scale,
 			 Int row)
   {
+
+    (void)scale; //Suppress the warning
+
     Int nX=griddedVis.shape()(0);
     Int nY=griddedVis.shape()(1);
     Vector<Double> offset(2);
@@ -3198,7 +3157,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (paIncrement.getValue("rad") < 0)
       rotateAperture_p = False;
     logIO() << LogIO::NORMAL <<"Setting PA increment to " << paIncrement.getValue("deg") << " deg" << endl;
-    cfCache.setPAChangeDetector(paChangeDetector);
+    cfCache_p->setPAChangeDetector(paChangeDetector);
   }
 
   Bool AWProjectFT::verifyShapes(IPosition pbShape, IPosition skyShape)
