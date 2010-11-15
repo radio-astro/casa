@@ -380,6 +380,11 @@ class SubMS
                      const MS::PredefinedColumns datacol,
                      const Bool writeToDataCol=False);
 
+
+  // This method uses VisIter for efficient copy mode data transfer
+  Bool copyData(const MS::PredefinedColumns colName,
+		const Bool writeToDataCol);
+
   // Helper function for parseColumnNames().  Converts col to a list of
   // MS::PredefinedColumnss, and returns the # of recognized data columns.
   // static because parseColumnNames() is static.

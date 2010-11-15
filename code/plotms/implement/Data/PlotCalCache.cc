@@ -39,8 +39,10 @@
 namespace casa {
 
 PlotCalCache::PlotCalCache(PlotMS* parent) :
-  PlotMSCache(parent)
-
+  PlotMSCache(parent),
+  tab_p(NULL),
+  seltab_p(NULL),
+  iter_p(NULL)
 { }
 
 PlotCalCache::~PlotCalCache() {

@@ -2405,8 +2405,8 @@ class par(str):
 	def standard():
 		""" Flux density standard:
 
-		Options: 'Baars', 'Perley 90', 'Perley-Taylor 95'
-		'Perley-Taylor 99'
+		Options: 'Baars', 'Perley 90', 'Perley-Taylor 95',
+		'Perley-Taylor 99', 'Perley-Butler 2010', 'Butler-JPL-Horizons 2010'
 
 		"""
 

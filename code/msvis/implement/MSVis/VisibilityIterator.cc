@@ -60,19 +60,12 @@ curChanGroup_p(0),nChan_p(0),nRowBlocking_p(0),initialized_p(False),
 msIterAtOrigin_p(False),stateOk_p(False),freqCacheOK_p(False),
 floatDataFound_p(False),lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False)
 {
-
- 
-    
   initsinglems();
-  
-
-
 }
 
 
 void ROVisibilityIterator::initsinglems(){
 
-  //  cout << "addDefaultSortColumns = False!" << endl;
   This = (ROVisibilityIterator*)this;
   isMultiMS_p=False;
   msCounter_p=0;
@@ -92,6 +85,7 @@ void ROVisibilityIterator::initsinglems(){
   blockIncr[0].set(1);
   blockSpw[0].resize(nspw); 
   indgen(blockSpw[0]);
+
   selectChannel(blockNGroup, blockStart, blockWidth, blockIncr,
 		blockSpw);
     
@@ -279,6 +273,7 @@ void ROVisibilityIterator::useImagingWeight(const VisImagingWeight& imWgt){
 }
 void ROVisibilityIterator::origin()
 {
+
   if (!initialized_p) {
     originChunks();
   } else {
@@ -300,6 +295,7 @@ void ROVisibilityIterator::origin()
 
 void ROVisibilityIterator::originChunks()
 {
+
   initialized_p=True;
   if (!msIterAtOrigin_p) {
     msIter_p.origin();
@@ -433,6 +429,7 @@ void ROVisibilityIterator::getTopoFreqs()
 
 void ROVisibilityIterator::setState()
 {
+
   if (stateOk_p) return;
 
   curTableNumRow_p = msIter_p.table().nrow();
@@ -461,15 +458,11 @@ void ROVisibilityIterator::setState()
   if (msIter_p.newField() || msIterAtOrigin_p) { 
     msd_p.setFieldCenter(msIter_p.phaseCenter());
   }
-  if ( msIter_p.newSpectralWindow() || msIterAtOrigin_p) {
+  if ( msIter_p.newDataDescriptionId() || msIterAtOrigin_p) {
     Int spw=msIter_p.spectralWindowId();
-    if (floatDataFound_p) {
-      nChan_p = colFloatVis.shape(0)(1);
-      nPol_p = colFloatVis.shape(0)(0);
-    } else {
-      nChan_p = colVis.shape(0)(1);
-      nPol_p = colVis.shape(0)(0);
-    }
+    nChan_p=msColumns().spectralWindow().numChan()(spw);
+    nPol_p=msColumns().polarization().numCorr()(msIter_p.polarizationId());
+
     if (Int(numChanGroup_p.nelements())<= spw || 
 	numChanGroup_p[spw] == 0) {
       // no selection set yet, set default = all
@@ -491,7 +484,6 @@ void ROVisibilityIterator::updateSlicer()
     numChanGroup_p.resize(0, True, False);
     doChannelSelection();
   }
-  
   // set the Slicer to get the selected part of spectrum out of the table
   Int spw=msIter_p.spectralWindowId();
   //Fixed what i think was a confusion between chanWidth and chanInc
@@ -520,6 +512,8 @@ void ROVisibilityIterator::setTileCache(){
   {
 
     const MeasurementSet& thems=msIter_p.ms();
+    if(thems.tableType() == Table::Memory)
+      return;
     const ColumnDescSet& cds=thems.tableDesc().columnDescSet();
     /*
     ROArrayColumn<Complex> colVis;
@@ -551,7 +545,24 @@ void ROVisibilityIterator::setTileCache(){
 	if(columns[k]==MS::columnName(MS::WEIGHT_SPECTRUM))
 	  if(!existsWeightSpectrum())
 	    dataManType="";
-     
+
+	// Sometimes *DATA columns may not contain anything yet
+	if(columns[k]==MS::columnName(MS::DATA)) {
+	  if(!colVis.isNull() &&
+	     !colVis.isDefined(0))
+	    dataManType="";
+	}
+	if(columns[k]==MS::columnName(MS::MODEL_DATA)) {
+	  if(!colModelVis.isNull() &&
+	     !colModelVis.isDefined(0))
+	    dataManType="";
+	}
+	if(columns[k]==MS::columnName(MS::CORRECTED_DATA)) {
+	  if(!colCorrVis.isNull() &&
+	     !colCorrVis.isDefined(0))
+	    dataManType="";
+	}
+
 	if(dataManType.contains("Tiled") ){
 	  try {
 	    
@@ -2094,7 +2105,7 @@ void VisibilityIterator::attachColumns(const Table &t)
   } else {
     floatDataFound_p=False;
   }
-  if (cds.isDefined("MODEL_DATA")) 
+  if (cds.isDefined("MODEL_DATA"))
     RWcolModelVis.attach(t, "MODEL_DATA");
   if (cds.isDefined("CORRECTED_DATA")) 
     RWcolCorrVis.attach(t, "CORRECTED_DATA");
@@ -2194,6 +2205,13 @@ void VisibilityIterator::setVisAndFlag(const Cube<Complex>& vis,
 
 void VisibilityIterator::setVis(const Cube<Complex>& vis, DataColumn whichOne)
 {
+
+  //  cout << "VI::setVis(): " << boolalpha << velSelection_p << " " << useSlicer_p << endl;
+
+  //  cout << boolalpha;
+  //  cout << "((RWcolVis.columnDesc().options() & ColumnDesc::FixedShape)==ColumnDesc::FixedShape) = "
+  //	 << ((RWcolVis.columnDesc().options() & ColumnDesc::FixedShape)==ColumnDesc::FixedShape) << endl;
+
   if (velSelection_p) {
     setInterpolatedVisFlag(vis,flagCube_p);
     if (useSlicer_p) putDataColumn(whichOne,slicer_p,visCube_p);
@@ -2310,7 +2328,6 @@ void VisibilityIterator::putDataColumn(DataColumn whichOne,
   // Set the visibility (observed, model or corrected);
   // deal with DATA and FLOAT_DATA seamlessly for observed data.
 
-
   switch (whichOne) {
   case Observed:
     if (floatDataFound_p) {
@@ -2332,6 +2349,7 @@ void VisibilityIterator::putDataColumn(DataColumn whichOne,
 void VisibilityIterator::putDataColumn(DataColumn whichOne,
 				       const Cube<Complex>& data)
 {
+
   // Set the visibility (observed, model or corrected);
   // deal with DATA and FLOAT_DATA seamlessly for observed data.
   switch (whichOne) {

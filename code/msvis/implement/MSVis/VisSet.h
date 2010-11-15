@@ -222,6 +222,7 @@ private:
   // to the MeasurementSet (MS). Optionally compress these columns using the 
   // CompressComplex column engine.
   void addCalSet(MeasurementSet& ms, Bool compress=True);
+  void addCalSet2(MeasurementSet& ms, Bool compress=False);
 
   // Remove an existing cal set (a CORRECTED_DATA and MODEL_DATA 
   // column set and, optionally, any associated compression columns)

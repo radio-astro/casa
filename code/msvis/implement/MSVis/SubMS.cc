@@ -41,6 +41,7 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/OS/File.h>
 #include <casa/OS/HostInfo.h>
+#include <casa/OS/Timer.h>
 #include <casa/OS/Memory.h>              // Can be commented out along with
 //                                         // Memory:: calls.
 #include <casa/Containers/Record.h>
@@ -620,18 +621,50 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
         outpointer = setupMS(msname, nchan_p[0], ncorr_p[0],  
                              colNamesTok, tileShape);
       }
+/* this calls MSTileLayout...  disabled for now (gmoellen, 2010/11/07)
       else if((tileShape.nelements()==1) && (tileShape[0]==0 || tileShape[0]==1)){
         outpointer = setupMS(msname, nchan_p[0], ncorr_p[0],
                              mscIn_p->observation().telescopeName()(0),
                              colNamesTok, tileShape[0]);
       }
+ */
       else{
-        //Sweep all other cases of bad tileshape to a default one.
-        outpointer = setupMS(msname, nchan_p[0], ncorr_p[0],
-                             mscIn_p->observation().telescopeName()(0),  
-                             colNamesTok, 0);
-      }
+	// Match data column tileshape
+        TableDesc td = mssel_p.actualTableDesc();
+        const ColumnDesc& cdesc = td[mscIn_p->data().columnDesc().name()];
+        String dataManType = cdesc.dataManagerType();
+        String dataManGroup = cdesc.dataManagerGroup();
+	
+        Bool tiled = (dataManType.contains("Tiled"));
+	
+        if (tiled) {
+            ROTiledStManAccessor tsm(mssel_p, dataManGroup);
+            uInt nHyper = tsm.nhypercubes();
+            // Find smallest tile shape
+            Int highestProduct=-INT_MAX;
+            Int highestId=0;
+            for (uInt id=0; id < nHyper; id++) {
+                Int product = tsm.getTileShape(id).product();
+                if (product > 0 && (product > highestProduct)) {
+                    highestProduct = product;
+                    highestId = id;
+                };
+            };
+	    Vector<Int> dataTileShape = tsm.getTileShape(highestId).asVector();
+
+	    outpointer = setupMS(msname, nchan_p[0], ncorr_p[0],  
+				 colNamesTok, dataTileShape);
+
+        }
+
+	else{
+	  //Sweep all other cases of bad tileshape to a default one.
+	  outpointer = setupMS(msname, nchan_p[0], ncorr_p[0],
+			       mscIn_p->observation().telescopeName()(0),  
+			       colNamesTok, 0);
+	}
       
+      }
       ignorables_p = ignorables;
 
       msOut_p= *outpointer;
@@ -5353,13 +5386,6 @@ Bool SubMS::fillAccessoryMainCols(){
       const uInt nDataCols = complexCols.nelements();
       const Bool writeToDataCol = mustConvertToData(nDataCols, complexCols);
 
-      for(uInt ni = 0; ni < nDataCols; ++ni){
-	getDataColumn(data, complexCols[ni]);
-	putDataColumn(*msc_p, data, complexCols[ni], writeToDataCol);
-      }
-      if(doFloat)
-        msc_p->floatData().putColumn(mscIn_p->floatData());
-
       msc_p->flag().putColumn(mscIn_p->flag());
       if(!(mscIn_p->weightSpectrum().isNull()) &&
          mscIn_p->weightSpectrum().isDefined(0))
@@ -5367,6 +5393,25 @@ Bool SubMS::fillAccessoryMainCols(){
 
       msc_p->weight().putColumn(mscIn_p->weight());
       msc_p->sigma().putColumn(mscIn_p->sigma());
+
+      //      Timer timer;
+      //      timer.mark();
+      Bool old(False);
+      for(uInt ni = 0; ni < nDataCols; ++ni){
+	if (old) {
+	  // This does one row at a time
+	  getDataColumn(data, complexCols[ni]);
+	  putDataColumn(*msc_p, data, complexCols[ni], writeToDataCol);
+	}
+	else
+	  // This uses VisIter and is much faster
+	  copyData(complexCols[ni],writeToDataCol);
+      }
+      if(doFloat)
+        msc_p->floatData().putColumn(mscIn_p->floatData());
+
+      //      cout << "Total data read/write time = " << timer.real() << endl;
+
     }
     else{
       // if(sameShape_p){
@@ -5460,6 +5505,95 @@ Bool SubMS::fillAccessoryMainCols(){
     }
     return true;
   }
+
+
+  Bool SubMS::copyData(const MS::PredefinedColumns colName,
+		       const Bool writeToDataCol)
+  {
+
+    /*
+    cout << "Entering SubMS::putDataColumn(): " << colName << endl;
+    cout << "mssel_p.nrow() = " << mssel_p.nrow() << endl;
+    cout << "msOut_p.nrow() = " << msOut_p.nrow() << endl;
+    */
+
+    Block<Int> columns;
+    // include scan iteration, for more optimal iteration
+    columns.resize(5);
+    columns[0]=MS::ARRAY_ID;
+    columns[1]=MS::SCAN_NUMBER;
+    columns[2]=MS::FIELD_ID;
+    columns[3]=MS::DATA_DESC_ID;
+    columns[4]=MS::TIME;
+    
+    //    Timer timer;
+    //    timer.mark();
+    
+    ROVisIter viIn(mssel_p,columns,0.0);
+    VisIter viOut(msOut_p,columns,0.0);
+    viIn.setRowBlocking(1000);
+    viOut.setRowBlocking(1000);
+    Int iChunk(0), iChunklet(0);
+    for (iChunk=0,viIn.originChunks(),viOut.originChunks();
+	 viIn.moreChunks(),viOut.moreChunks();
+	 viIn.nextChunk(),viOut.nextChunk(),++iChunk) {
+      for (iChunklet=0,viIn.origin(),viOut.origin();
+	   viIn.more(),viOut.more();
+	   viIn++,viOut++,++iChunklet) {
+	
+	//	cout << "nRows = " << viIn.nRow() << "/" << viOut.nRow() << endl;
+	//	timer.mark();
+	Cube<Complex> data;
+	if(writeToDataCol || colName == MS::DATA) {
+	  // write DATA, MODEL_DATA, or CORRECTED_DATA to DATA
+	  //	  cout << "Writing " << colName << " to " << (writeToDataCol ? MS::DATA : colName) << " DATA " << endl;
+	  switch (colName) {
+	  case MS::DATA:
+	    viIn.visibility(data,VisibilityIterator::Observed);
+	    break;
+	  case MS::MODEL_DATA:
+	    viIn.visibility(data,VisibilityIterator::Model);
+	    break;
+	  case MS::CORRECTED_DATA:
+	    viIn.visibility(data,VisibilityIterator::Corrected);
+	    break;
+	  default:
+	    throw(AipsError("Unrecognized input column!"));
+	    break;
+	  }
+	  viOut.setVis(data,VisibilityIterator::Observed);
+	}
+	else if (colName ==  MS::MODEL_DATA) {
+	  // write MODEL_DATA to MODEL_DATA
+	  //	  cout << "Writing " << colName << " to " << colName << " (MODEL_DATA)" << endl;
+	  viIn.visibility(data,VisibilityIterator::Model);
+	  viOut.setVis(data,VisibilityIterator::Model);
+	}
+	else if (colName == MS::CORRECTED_DATA) {
+	  // write CORRECTED_DATA to CORRECTED_DATA
+	  //	  cout << "Writing " << colName << " to " << colName << " (CORRECTED_DATA)" << endl;
+	  viIn.visibility(data,VisibilityIterator::Corrected);
+	  viOut.setVis(data,VisibilityIterator::Corrected);
+	}
+	//else if(colName == MS::FLOAT_DATA)              // TBD
+	//	else if(colName == MS::LAG_DATA)      // TBD
+	else
+	  return false;
+
+	/*
+	Double t=timer.real();
+	cout << "Chunk: " << iChunk << " " << iChunklet << " : "
+	     << data.nelements() << " cells = " 
+	     << data.nelements()*8.e-6 << " MB in " 
+	     << t << " sec, for " << data.nelements()*8.e-6/t << " MB/s" 
+	     << endl;
+	*/
+      }
+    }
+    msOut_p.flush();
+    return true;
+  }
+
 
   // Sets outcol to row numbers in the corresponding subtable of its ms that
   // correspond to the values of incol.
