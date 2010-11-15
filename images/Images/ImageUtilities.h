@@ -263,12 +263,17 @@ public:
     // Deconvolve from beam
     // Returns True if the deconvolved source is a point source, False otherwise.
     // The returned value of successFit will be True if the deconvolved size could be determined, False otherwise.
-    static casa::Bool deconvolveFromBeam(
-        casa::Quantum<casa::Double>& majorFit, casa::Quantum<casa::Double>& minorFit,
-        casa::Quantum<casa::Double>& paFit, casa::Bool& successFit, casa::LogIO& os,
-        const casa::Vector<casa::Quantum<casa::Double> >& beam
+    static Bool deconvolveFromBeam(
+        Quantity& majorFit, casa::Quantity& minorFit,
+        Quantity& paFit, Bool& successFit, LogIO& os,
+        const Vector<Quantity>& beam
     );
 
+    static Bool deconvolveFromBeam(
+        Quantity& majorFit, Quantity& minorFit,
+        Quantity& paFit, casa::Bool& successFit, casa::LogIO& os,
+        const Vector<Quantity>& sourceIn, const Vector<Quantity>& beam
+    );
 
 //
 // Convert 2d shape from world (world parameters=x, y, major axis, 

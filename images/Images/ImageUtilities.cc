@@ -467,21 +467,9 @@ Vector<Double> ImageUtilities::decodeSkyComponent (const SkyComponent& sky,
    return pars;
 }
 
-/*
-// the only thing this does is to pass in a Logger to the version of the
-// method that does the real work, so just change the callers to pass in a
-// Logger object and remove this method when that is done
-Bool ImageUtilities::deconvolveFromBeam(Quantity& majorFit, Quantity& minorFit,
-        Quantity& paFit, const Vector<Quantity>& beam) {
-    //moved from ImageAnalysis
-    return deconvolveFromBeam(majorFit, minorFit, paFit, *itsLog, beam);
-
-}
-*/
-
 Bool ImageUtilities::deconvolveFromBeam(
-    Quantum<Double>& majorFit, Quantum<Double>& minorFit,
-    Quantum<Double>& paFit, Bool& successFit, LogIO& os, const Vector<Quantum<Double> >& beam) {
+    Quantity& majorFit, Quantity& minorFit,
+    Quantity& paFit, Bool& successFit, LogIO& os, const Vector<Quantity >& beam) {
     // moved from ImageAnalysis
 
     // The position angle of the component is measured in the frame
@@ -519,6 +507,24 @@ Bool ImageUtilities::deconvolveFromBeam(
     paFit = paOut;
     successFit = True;
     return isPointSource;
+}
+
+Bool ImageUtilities::deconvolveFromBeam(
+    Quantity& majorOut, Quantity& minorOut,
+    Quantity& paOut, Bool& successFit, LogIO& os,
+    const Vector<Quantity>& sourceIn, const Vector<Quantity>& beam
+) {
+	Quantity tmpMaj = sourceIn[0];
+	Quantity tmpMin = sourceIn[1];
+	Quantity tmpPA = sourceIn[2];
+
+	Bool isPointSource = deconvolveFromBeam(
+	    tmpMaj, tmpMin, tmpPA, successFit, os, beam
+	);
+	majorOut = tmpMaj;
+	minorOut = tmpMin;
+	paOut = tmpPA;
+	return isPointSource;
 }
 
 
