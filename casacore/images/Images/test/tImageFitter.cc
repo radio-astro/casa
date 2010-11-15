@@ -28,6 +28,7 @@
 
 #include <casa/BasicMath/Math.h>
 #include <components/ComponentModels/ComponentList.h>
+#include <components/ComponentModels/Flux.h>
 #include <images/Images/ImageFitter.h>
 #include <measures/Measures/MDirection.h>
 #include <components/ComponentModels/ComponentShape.h>
@@ -189,24 +190,11 @@ int main() {
         	Vector<Double> trc(imShape.nelements(), 0);
         	Vector<Double> inc(imShape.nelements(), 1);
 
-        	/*
-        	for (uInt i=0; i<imShape.nelements(); i++) {
-        		blc[i] = 0;
-        		trc[i] = imShape[i] - 1;
-        	}
-*/
         	Vector<Int> dirNums = ImageMetaData(noisy).directionAxesNumbers();
         	blc[dirNums[0]] = 130;
         	blc[dirNums[1]] = 89;
         	trc[dirNums[0]] = 170;
         	trc[dirNums[1]] = 129;
-
-        	/*
-        	LCBox lcBox(blc, trc, imShape);
-        	WCBox wcBox(lcBox, noisy.coordinates());
-        	ImageRegion rg(wcBox);
-        	Record regionRecord(rg.toRecord(""));
-        	*/
 
         	RegionManager rm;
         	Record *box = rm.box(blc, trc, inc, "abs", False);
@@ -357,6 +345,17 @@ int main() {
 
         	Double positionAngle = DEGREES_PER_RADIAN*parameters(2);
         	AlwaysAssert(near(positionAngle, 126.3211060, 1e-7), AipsError);
+
+        	Quantity xPosError = compList.getShape(0)->refDirectionErrorLong();
+        	AlwaysAssert(near(xPosError.getValue(), 8.8704e-08, 1e-4), AipsError);
+
+        	Quantity yPosError = compList.getShape(0)->refDirectionErrorLat();
+        	AlwaysAssert(near(yPosError.getValue(), 1.05117e-07, 1e-4), AipsError);
+
+        	Vector<Double> compErrors = compList.getShape(0)->errors();
+        	AlwaysAssert(near(compErrors[0], 8.57789e-09, 1e-4), AipsError);
+        	AlwaysAssert(near(compErrors[1], 7.11494e-09, 1e-4), AipsError);
+        	AlwaysAssert(near(compErrors[2], 3.40562e-05, 1e-4), AipsError);
         }
         {
         	writeTestString(
@@ -541,9 +540,17 @@ int main() {
 
         	compList.getFlux(flux,0);
         	// I stokes flux test
-        	AlwaysAssert(near(flux(0).getValue(), 60318.6e3, 1e-5), AipsError);
+        	AlwaysAssert(near(flux(0).getValue(), 60318.6, 1e-5), AipsError);
+        	AlwaysAssert(flux(0).getUnit() == "Jy.km/s", AipsError);
         	// Q stokes flux test
         	AlwaysAssert(flux(1).getValue() == 0, AipsError);
+
+        	Vector<complex<double> > fluxErrors = compList.component(0).flux().errors();
+        	AlwaysAssert(near(fluxErrors[0].real(), 0.000863785, 1e-5), AipsError);
+        	AlwaysAssert(fluxErrors[0].imag() == 0, AipsError);
+        	AlwaysAssert(fluxErrors[1].real() == 0, AipsError);
+        	AlwaysAssert(fluxErrors[1].imag() == 0, AipsError);
+
         	MDirection direction = compList.getRefDirection(0);
         	AlwaysAssert(near(direction.getValue().getLong("rad").getValue(), 0.000213318, 1e-5), AipsError);
         	AlwaysAssert(near(direction.getValue().getLat("rad").getValue(), 1.939254e-5, 1e-5), AipsError);

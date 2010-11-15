@@ -129,11 +129,13 @@ namespace casa {
             String _stokesString, _mask, _residual, _model, _logfileName,
 				regionString, estimatesString, _newEstimatesFileName;
             Vector<Float> includePixelRange, excludePixelRange;
-            ComponentList estimates, results;
+            ComponentList estimates, _results;
             Vector<String> fixed;
-            Bool logfileAppend, fitConverged, fitDone, _noBeam;
-            Vector<Quantity> peakIntensities, fluxDensities, majorAxes, minorAxes, positionAngles;
-            Record residStats, inputStats;
+            Bool logfileAppend, _fitConverged, fitDone, _noBeam;
+            Vector<Quantity> _peakIntensities, _peakIntensityErrors, _fluxDensityErrors,
+				_fluxDensities, _majorAxes, _majorAxisErrors, _minorAxes, _minorAxisErrors,
+				_positionAngles, _positionAngleErrors;
+            Record _residStats, inputStats;
             Double chiSquared;
             String _kludgedStokes;
 
@@ -151,6 +153,9 @@ namespace casa {
             String _sizeToString(const uInt compNumber) const;
 
             String _fluxToString(uInt compNumber) const;
+
+           // String _fluxToString2(uInt compNumber) const;
+
 
             String _spectrumToString(uInt compNumber) const;
 
@@ -173,6 +178,8 @@ namespace casa {
 			Double _getStatistic(const String& type, const Record& stats) const;
 
 			String _statisticsToString() const;
+
+			void setErrors(const Record& residStats);
     };
 }
 
