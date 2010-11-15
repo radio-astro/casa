@@ -4320,8 +4320,31 @@ are to be held fixed during the fit.
 
 ERROR ESTIMATES
 
-The reported estimated errors are calculated according to the description given in AIPS++ Note 224:
-AIPS++ Least Squares Background available at http://www.astron.nl/casacore/trunk/casacore/doc/notes/224.html .
+The reported estimated errors are the maxima from two methods. In the first method, errors are calculated
+according to the description given in AIPS++ Note 224: AIPS++ Least Squares Background available at
+http://www.astron.nl/casacore/trunk/casacore/doc/notes/224.html . In the second method (as outlined
+by Ed Fomalont in CAS-1860), the following algorithms are used to compute the various errors.
+
+R = rms of residual image
+P = fitted peak intensity
+S = P/R (signal to noise)
+
+longitude error = (FWHM beam width in longitude direction)/(2*S)
+latitude error = (FWHM beam width in latitude direction)/(2*S)
+FWHM of major axis error = (FWHM beam along major axis)/sqrt(S)
+FWHM of minor axis error = (FWHM beam along minor axis)/sqrt(S)
+position angle error is calculated via standard error propogation of the FWHM major and minor axes sizes and errors
+flux error is computed via standard error propogation of the peak intensity and its error and the FWHM major
+and minor axes sizes and their errors.
+
+In the case where the image has no beam, the pixel width is used as the diameter of the resolution element.
+
+In the vast majority of (and perhaps all) cases, the errors reported come from the second method.
+
+The deconvolved size and position angle errors are computed by taking the maximum of the absolute values of the
+differences of the best fit deconvolved value of the given parameter and the deconvolved size of the eight
+possible combinations of (FWHM major axis +/- major axis error), (FWHM minor axis +/- minor axis error),
+and (position andle +/- position angle error).
 
 EXAMPLE: 
 

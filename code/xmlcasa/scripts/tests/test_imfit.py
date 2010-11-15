@@ -484,6 +484,8 @@ class imfit_test(unittest.TestCase):
             myia = iatool.create()
             myia.open(convolved_model)
             res = myia.fitcomponents(estimates=estimates_convolved)
+            print "** image " + convolved_model
+            print "*** estimates " + estimates_convolved
             myia.done()
             return res
         def run_imfit():
@@ -511,39 +513,88 @@ class imfit_test(unittest.TestCase):
                 success = False
                 msgs += test + "Q flux density test failure, got " + str(got) + " expected " + str(expected) + "\n"
             # RA test
-            got = clist['component0']['shape']['direction']['m0']['value']
+            shape = clist['component0']['shape']
+            got = shape['direction']['m0']['value']
             expected = 0.000213318
             if (not near(got, expected, epsilon)):
                 success = False
                 msgs += test + "RA test failure, got " + str(got) + " expected " + str(expected) + "\n"
             # Dec test
-            got = clist['component0']['shape']['direction']['m1']['value']
+            got = shape['direction']['m1']['value']
             expected = 1.939254e-5 
             if (not near(got, expected, epsilon)):
                 success = False
                 msgs += test + "Dec test failure, got " + str(got) + " expected " + str(expected) + "\n"
             # Major axis test
-            got = clist['component0']['shape']['majoraxis']['value']
+            got = shape['majoraxis']['value']
             expected = 28.21859344 
             epsilon = 1e-7
             if (not near(got, expected, epsilon)):
                 success = False
                 msgs += test+ "Major axis test failure, got " + str(got) + " expected " + str(expected) + "\n"
             # Minor axis test
-            got = clist['component0']['shape']['minoraxis']['value']
+            got = shape['minoraxis']['value']
             expected = 25.55011520
             if (not near(got, expected, epsilon)):
                 success = False
                 msgs += test + "Minor axis test failure, got " + str(got) + " expected " + str(expected) + "\n"
             # Position angle test
-            got = clist['component0']['shape']['positionangle']['value']
+            got = shape['positionangle']['value']
             expected = 126.3211050
             if (not near(got, expected, epsilon)):
                 success = False
                 msgs += test + "Position angle test failure, got " + str(got) + " expected " + str(expected) + "\n"
     
+            # test errors
+
+
         self.assertTrue(success,msgs)
-       
+    
+
+
+    def test_position_errors(self):
+        '''Imfit: Test position errors'''
+        success = True
+        test = 'test_position_errors: '
+        global msgs
+    
+        def run_fitcomponents():
+            myia = iatool.create()
+            myia.open(convolved_model)
+            res = myia.fitcomponents()
+            myia.done()
+            return res
+        def run_imfit():
+            default('imfit')
+            return imfit(imagename=convolved_model)
+    
+        for code in [run_fitcomponents, run_imfit]:
+            res = code()
+    
+            clist = res['results']
+            shape = clist['component0']['shape']
+
+            if (not res['converged']):
+                success = False
+                msgs += test + "fit did not converge unexpectedly"
+            epsilon = 1e-5
+
+            got = shape['direction']['error']['latitude']['value']
+            expected = 1.0511699866407922e-07
+            if (not near(got, expected, epsilon)):
+                success = False
+                msgs += test + "Dec error test failure, got " + str(got) + " expected " + str(expected) + "\n"
+    
+            got = shape['direction']['error']['longitude']['value']
+            expected = 8.8704046316191542e-08
+            if (not near(got, expected, epsilon)):
+                success = False
+                msgs += test + "RA error test failure, got " + str(got) + " expected " + str(expected) + "\n"
+
+        self.assertTrue(success,msgs)
+
+
+
     
     # test writing, appending, and overwriting log files
     def test_logfile(self):

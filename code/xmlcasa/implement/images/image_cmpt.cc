@@ -1391,15 +1391,16 @@ image::fitpolynomial(const std::string& residFile, const std::string& fitFile,
 		else {
 			*itsLog << "Unsupported type for region " << region.type() << LogIO::EXCEPTION;
 		}
-		Vector<String> allowFluxUnits(1);
-		allowFluxUnits[0] = "Jy.km/s";
-		FluxRep<Double>::setAllowedUnits(allowFluxUnits);
-
 		ComponentList compList = fitter->fit();
 		bool converged = fitter->converged();
 		delete fitter;
 		Record returnRecord, compListRecord;
 		String error;
+
+		Vector<String> allowFluxUnits(1);
+		allowFluxUnits[0] = "Jy.km/s";
+		FluxRep<Double>::setAllowedUnits(allowFluxUnits);
+
 	    if (! compList.toRecord(error, compListRecord)) {
 	        *itsLog << "Failed to generate output record from result. " << error
 	                << LogIO::POST;
