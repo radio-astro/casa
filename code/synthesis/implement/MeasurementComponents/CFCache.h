@@ -221,8 +221,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO logIO_p;
     LogIO& logIO() {return logIO_p;};
 
-  private:
     CFStoreCacheType memCache_p;
+  private:
     Matrix<Int> XSup, YSup;
     Vector<Float> paList, Sampling;
     Matrix<Float> key2IndexMap; // Nx2 [PAVal, Freq]
