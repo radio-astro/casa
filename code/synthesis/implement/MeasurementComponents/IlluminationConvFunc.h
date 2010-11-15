@@ -45,6 +45,16 @@ namespace casa{
     {expTableReady=cexpTableReady=sigmaReady=False;pa_p=1000.0;};
     ~IlluminationConvFunc() {};
 
+    IlluminationConvFunc& operator=(const IlluminationConvFunc& other)
+    {
+      cerr << "******* IlluminationConvFunc& operator=(IlluminationConvFunc&) called!" << endl;
+      return *this;
+    }
+    IlluminationConvFunc& operator=(const ConvolutionFunction& other)
+    {
+      cerr << "******* IlluminationConvFunc& operator=(ConvolutionFunction&) called!" << endl;
+      return *this;
+    }
     void initExpTable(Int n, CF_TYPE step)  {ExpTable.build(n,step);expTableReady=True;};
     void initCExpTable(Int n)               {CExpTable.build(n);cexpTableReady=True;};
     void setSigma(Double s)                 {sigma = s;sigmaReady=True;}
@@ -70,6 +80,14 @@ namespace casa{
 			     Double& currentCFPA
 			     //		  ,Double lsigma
 			     );
+    int getVisParams(const casa::VisBuffer&) {return 0;};
+    void makeConvFunction(const casa::ImageInterface<std::complex<float> >&, 
+			  const casa::VisBuffer&, casa::Int, casa::Float, 
+			  casa::CFStore&, casa::CFStore&) {};
+    void setPolMap(const casa::Vector<int>&) {};
+    void setFeedStokes(const casa::Vector<int>&) {};
+    void setParams(const casa::Vector<int>&, const casa::Vector<int>&){};
+
 		  
   private:
     ExpCache<CF_TYPE> ExpTable;

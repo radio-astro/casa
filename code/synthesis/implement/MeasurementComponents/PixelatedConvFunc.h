@@ -52,6 +52,26 @@ namespace casa{
     };
 
     virtual T getValue(Vector<T>& coord, Vector<T>& offset) { return (T)(1.0);};
+    virtual int getVisParams(const VisBuffer& vb) {return 0;};
+    virtual void makeConvFunction(const ImageInterface<Complex>& image,
+				  const VisBuffer& vb,
+				  const Int wConvSize,
+				  const Float pa,
+				  CFStore& cfs,
+				  CFStore& cfwts) {};
+    virtual void setPolMap(const Vector<Int>& polMap) {};
+    virtual void setFeedStokes(const Vector<Int>& feedStokes){};
+    PixelatedConvFunc& operator=(const PixelatedConvFunc& other)
+    {
+      cerr << "******* PixelatedConvFunc& operator=(PixelatedConvFunc&) called!" << endl;
+      return *this;
+    }
+    PixelatedConvFunc& operator=(const ConvolutionFunction& other)
+    {
+      cerr << "******* PixelatedConvFunc& operator=(ConvolutionFunction&) called!" << endl;
+      return *this;
+    }
+
   private:
     Int nDim;
     IPosition shape;

@@ -101,18 +101,6 @@ namespace casa{
     Bool pbRead_p;
     Float freq_p,lastPA;
     struct ApertureCalcParams ap;
-//  =
-//       {
-// 	1,
-// 	{0, 0, 0, 0},
-// 	-13.0, -13.0, 
-// 	0.5, 0.5,
-// 	52, 52,
-// 	15.0*M_PI/180.0,
-// 	1.4,
-// 	BeamCalc_VLA_L
-//       };
-
   };
 
 };
