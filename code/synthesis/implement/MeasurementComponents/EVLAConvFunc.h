@@ -28,13 +28,13 @@
 //
 #ifndef SYNTHESIS_EVLACONVFUNC_H
 #define SYNTHESIS_EVLACONVFUNC_H
-//
-//TEMPS
+
 #include <images/Images/ImageInterface.h>
 #include <synthesis/MeasurementComponents/Utils.h>
 #include <synthesis/MeasurementComponents/BeamCalc.h>
 #include <synthesis/MeasurementComponents/CFStore.h>
 #include <synthesis/MeasurementComponents/VLACalcIlluminationConvFunc.h>
+//#include <synthesis/MeasurementComponents/IlluminationConvFunc.h>
 //#include <synthesis/MeasurementComponents/PixelatedConvFunc.h>
 #include <synthesis/MeasurementComponents/ConvolutionFunction.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
@@ -44,10 +44,7 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogSink.h>
 #include <casa/Logging/LogOrigin.h>
-//TEMPS
-//
-// Temp. function for staged re-factoring
-//    
+
 namespace casa { //# NAMESPACE CASA - BEGIN
   template<class T> class ImageInterface;
   template<class T> class Matrix;
@@ -56,7 +53,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //: public PixelatedConvFunc<Complex>
   {
   public:
-    EVLAConvFunc():ConvolutionFunction(),bandID_p(-1), polMap_p(), feedStokes_p(){};
+    //    EVLAConvFunc(const CountedPtr<IlluminationConvFunc> ATerm):
+    //      ConvolutionFunction(),bandID_p(-1), polMap_p(), feedStokes_p(), ATerm_p(ATerm)
+    EVLAConvFunc():     
+      ConvolutionFunction(),bandID_p(-1), polMap_p(), feedStokes_p()
+    {};
     ~EVLAConvFunc() {};
     EVLAConvFunc& operator=(const EVLAConvFunc& other);
     Int getVLABandID(Double& freq,String&telescopeName);
@@ -64,9 +65,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void makeConvFunction(const ImageInterface<Complex>& image,
 			  const VisBuffer& vb,
 			  const Int wConvSize,
-			  //			  const Vector<Int>& polMap,
 			  const Float pa,
-			  //			  Vector<Int>& cfStokes,
 			  CFStore& cfs,
 			  CFStore& cfwts);
     int getVisParams(const VisBuffer& vb);
@@ -91,6 +90,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO logIO_p;
     Vector<Int> polMap_p;
     Vector<Int> feedStokes_p;
+    CountedPtr<IlluminationConvFunc> ATerm_p;
   };
 };
 #endif
