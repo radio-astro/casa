@@ -48,13 +48,14 @@ namespace casa{
   //
   void CFCache::initCache()
   {
-    logIO() << LogOrigin("CFCache","initCache") << LogIO::NORMAL;
+    LogOrigin logOrigin("CFCache","initCache");
+    logIO() << logOrigin << LogIO::NORMAL;
     ostringstream name;
     String line;
     Directory dirObj(Dir);
 
     if (Dir.length() == 0) 
-      throw(SynthesisFTMachineError("Got null string for disk cache dir. "));
+      throw(SynthesisFTMachineError(LogMessage("Got null string for disk cache dir. ",logOrigin).message()));
     //
     // If the directory does not exist, create it
     //
