@@ -483,7 +483,10 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
         maxWidth = itsAnnotatorTab_->maximumWidth();
     if(itsOptionsTab_->maximumWidth() < maxWidth)
         maxWidth = itsOptionsTab_->maximumWidth();
-    tabWidget->setMaximumWidth(maxWidth);
+    //
+    // Put in to avoid display issues on the mack
+    //
+    tabWidget->setMaximumWidth(325);
     itsPlotTab_->setupForMaxWidth(maxWidth);
     itsFlaggingTab_->setupForMaxWidth(maxWidth);
     itsToolsTab_->setupForMaxWidth(maxWidth);
