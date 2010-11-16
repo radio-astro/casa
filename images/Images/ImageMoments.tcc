@@ -354,7 +354,7 @@ Bool ImageMoments<T>::setSmoothMethod(const Vector<Int>& smoothAxesU,
                                       const Vector<Int>& kernelTypesU,
                                       const Vector<Double> & kernelWidthsPix)
 {
-  MomentsBase<T>::setSmoothMethod(smoothAxesU, kernelTypesU, kernelWidthsPix);
+  return MomentsBase<T>::setSmoothMethod(smoothAxesU, kernelTypesU, kernelWidthsPix);
 }
 
 template <class T>
