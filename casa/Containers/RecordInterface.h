@@ -237,10 +237,8 @@ public:
     virtual Int fieldNumber (const String& fieldName) const = 0;
 
     // Get the field number for the given field id.
-    // If throwIfUnknown is true (historical default), it throws an
-    // exception when id is unrecognized.
-    Int idToNumber (const RecordFieldId& id,
-		    const Bool throwIfUnknown=true) const;
+    // It throws an exception if id is unrecognized.
+    Int idToNumber (const RecordFieldId& id) const;
 
     // Test if a field name exists.
     //# Is here for backward compatibility with KeywordSet.
