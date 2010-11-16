@@ -76,6 +76,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <value>both</value>
 	    </allowed>
     </param>
+    <param type="string" name="scans">
+	    <description>processes only the specified scans. This value is a semicolon separated list of scan specifications. A scan specification consists in an exec bock index followed by the : character;  followed by a comma separated list of scan indexes or scan index ranges. A scan index is relative to the exec block it belongs to. Scan indexes are 1-based while exec blocks are 0-based. "0:1" or "2:2~6" or "0:1,1:2~6,8;2:,3:24~30" "1,2" are valid values for the option. "3:" alone will be interpreted as, all the scans of the exec block#3.  An scan index or a scan index range not preceded by an exec block index will be interpreted as, all the scans with such indexes in all the exec blocks.  By default all the scans are considered. </description>
+	    <value></value>
+    </param>
 
     <param type="bool" name="verbose">
 	    <description>Output lots of information while the filler is working</description>
@@ -164,6 +168,15 @@ wvr_corrected_data -- specifies wich values are considered in the
                       by '-wvr-corrected', containing the corrected 
                       data.
 
+scans --	  processes only the scans specified in the option's value. This value is a semicolon 
+                  separated list of scan specifications. A scan specification consists in an exec bock index 
+                  followed by the character ':' followed by a comma separated list of scan indexes or scan 
+                  index ranges. A scan index is relative to the exec block it belongs to. Scan indexes are 
+                  1-based while exec blocks's are 0-based. "0:1" or "2:2~6" or "0:1,1:2~6,8;2:,3:24~30" "1,2" 
+                  are valid values for the option. "3:" alone will be interpreted as 'all the scans of the 
+                  exec block#3'. An scan index or a scan index range not preceded by an exec block index will
+                  be interpreted as 'all the scans with such indexes in all the exec blocks'.  By default 
+                  all the scans are considered.
 
 verbose     -- produce log output as asdm2MS is being run
 
