@@ -612,7 +612,7 @@ class split_test_blankov(unittest.TestCase):
         """
         Does outputvis == '' cause a prompt exit?
         """
-        #splitran = False
+        splitran = False
         original_throw_pref = False
         try:
             #print "\n\tSplitting", self.inpms
@@ -627,7 +627,6 @@ class split_test_blankov(unittest.TestCase):
                              timebin='0s', timerange='',
                              scan='', array='', uvrange='',
                              correlation='', async=False)
-            myf['__rethrow_casa_exceptions'] = False
         except ValueError:
             splitran = False
         except Exception, e:
