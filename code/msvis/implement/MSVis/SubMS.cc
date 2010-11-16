@@ -5748,8 +5748,8 @@ Bool SubMS::copyGenericSubtables(){
   // locking error will result.
   const TableRecord& outkws = msOut_p.keywordSet();
   for(uInt i = 0; i < outkws.nfields(); ++i){
-    if(outkws.type(i) == TpTable)
-      inkws.removeField(outkws.name(i), false);
+    if(outkws.type(i) == TpTable && inkws.isDefined(outkws.name(i)))
+      inkws.removeField(outkws.name(i));
   }
 
   // Includes a flush. 
