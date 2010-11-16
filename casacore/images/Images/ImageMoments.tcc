@@ -349,6 +349,13 @@ Bool ImageMoments<T>::setSmoothMethod(const Vector<Int>& smoothAxesU,
    return True;
 }
 
+template <class T>
+Bool ImageMoments<T>::setSmoothMethod(const Vector<Int>& smoothAxesU,
+                                      const Vector<Int>& kernelTypesU,
+                                      const Vector<Double> & kernelWidthsPix)
+{
+  MomentsBase<T>::setSmoothMethod(smoothAxesU, kernelTypesU, kernelWidthsPix);
+}
 
 template <class T>
 Bool ImageMoments<T>::createMoments(PtrBlock<MaskedLattice<T>* >& outPt,
