@@ -113,14 +113,13 @@ Int RecordInterface::newIdToNumber (const RecordFieldId& id) const
     }
     return id.fieldNumber();
 }
-Int RecordInterface::idToNumber (const RecordFieldId& id,
-				 const Bool throwIfUnknown) const
+Int RecordInterface::idToNumber (const RecordFieldId& id) const
 {
     if (! id.byName()) {
 	return id.fieldNumber();
     }
     Int whichField = fieldNumber (id.fieldName());
-    if (throwIfUnknown && whichField < 0) {
+    if (whichField < 0) {
 	throw (AipsError ("RecordInterface: field " + id.fieldName() +
 			  " is unknown"));
     }

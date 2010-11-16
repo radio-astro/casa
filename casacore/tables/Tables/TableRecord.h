@@ -300,20 +300,12 @@ public:
     virtual DataType type (Int whichField) const;
 
     // Remove a field from the record.
-    // If throwIfMissing == true  and id is not in the
-    // record, an exception will be thrown.  Usually removing an absent field
-    // is not a problem, and throwIfMissing should be false.
-    // 
+    // If id is not in the record, an exception will be thrown.
     // <note role=caution>
     // Removing a field means that the field number of the fields following
     // it will be decremented. Only the RecordFieldPtr's
     // pointing to the removed field will be invalidated.
     // </note>
-    void removeField(const RecordFieldId& id, const Bool throwIfMissing);
-
-    // removeField(id, true) (historical default)
-    // Defined this way because maintaining compatibility with overloaded pure
-    // virtual functions and defaulted parameters is difficult.
     void removeField(const RecordFieldId& id);
 
     // Rename the given field.
