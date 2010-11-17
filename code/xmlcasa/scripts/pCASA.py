@@ -13,8 +13,8 @@ Example usage:
       pCASA.add("my.ms", "spw3.ms")
 
    When no hostname is given (spw3.ms), the MS is assumed to be available
-   from a locally mounted disk. When finised, show the contents of the multiMS
-   with
+   from a locally mounted disk. When finished, the contents of the multiMS
+   can be shown with
 
       pCASA.list("my.ms")
 
@@ -29,7 +29,7 @@ Example usage:
       flagdata("spw2.ms", <parameters>)
       flagdata("spw3.ms", <parameters>)
 
-   on the given hosts, through parallel_go. parallel_go requires
+   on the given hosts, using parallel_go. Notice that parallel_go requires
    password-less ssh in order to function.
 
    The user does not have to explicitly define the available hosts
@@ -171,11 +171,15 @@ def add(mms_name, subms_name, hostname = "localhost"):
     pickle.dump(mms, f)
     f.close()
 
-def remove(mms_name, subms_name):
-    """Remove a subMS entry from the multiMS"""
+def remove(mms_name, subms_name, hostname = ""):
+    """Remove subMS entries from the multiMS
+
+    If the hostname is not given, all subMSs with the given name will
+    be removed. Otherwise only matching subMSs on the given host are
+    removed. """
 
     mms = _load(mms_name)
-    if not mms.remove(subms_name):
+    if not mms.remove(subms_name, hostname):
         print "%s does not contain a subMS with name %s" % (mms_name, subms_name)
     else:
         f = open(mms_name, "w")
@@ -186,16 +190,21 @@ def remove(mms_name, subms_name):
             print "Removed %s from %s" %(subms_name, mms_name)
        
 def _ip(host):
-    """Returns the IP address of the given hostname,
-    but not 127.0.0.1 for localhost but localhost's global IP
+    """Returns a unique IP address of the given hostname,
+    i.e. not 127.0.0.1 for localhost but localhost's global IP
     """
-    
-    ip = socket.gethostbyname(host)
-    
-    if ip == "127.0.0.1":
-        ip = socket.gethostbyname(socket.gethostname())
 
-    return ip
+    try:
+        ip = socket.gethostbyname(host)
+    
+        if ip == "127.0.0.1":
+            ip = socket.gethostbyname(socket.gethostname())
+
+        return ip
+    except Exception, e:
+        print "Could not get IP address of host '%s': %s" %  (host, str(e))
+        raise
+                        
 
 
 def _launch(engine, taskname, ms, parameters):
@@ -351,7 +360,8 @@ def execute(taskname, parameters):
                     status = (engine_id, s)
                     
             else:
-                raise Exception("All engines are idle but none have access to the data")       
+                raise Exception("All " + str(len(engines)) + \
+                                "engine(s) are idle but no engine has access to any subMS.")       
 
 
         if debug:
@@ -406,15 +416,32 @@ class multiMS:
     def add(self, sub_ms):
         self.sub_mss.append(sub_ms)
 
-    def remove(self, subms_name):
+    def remove(self, subms_name, hostname = ""):
         """Removes all subMSs with the given MS name.
+        The hostname must match if it is provided.
         Returns true if and only if a matching subMS existed"""
 
         found = False
-        for s in self.sub_mss:
-            if s.ms == subms_name:
-                found = True
-                self.sub_mss.remove(s)
+        
+        while True:
+            # Remove the first match, and repeat from the beginning until
+            # there are no more matches
+
+            f = False
+
+            for s in self.sub_mss:
+                if s.ms == subms_name and \
+                       (hostname == "" or s.host == hostname):
+
+                    # Do not compare host IP addresses,
+                    # Looking up the given hostname may not be possible
+                    found = True
+                    f = True
+                    self.sub_mss.remove(s)
+                    break
+                
+            if not f:
+                break
                 
         return found
 
