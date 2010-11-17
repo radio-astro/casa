@@ -44,7 +44,7 @@ class pimager():
         return True
 
     @staticmethod
-    def findchanselcont(msname='', spwids=[], numpartition=1, beginfreq=0.0, endfreq=1e12):
+    def findchanselcont(msname='', spwids=[], numpartition=1, beginfreq=0.0, endfreq=1e12, freqrange=[0, 1e12]):
         numproc=numpartition
         spwsel=[]
         startsel=[]
@@ -78,7 +78,7 @@ class pimager():
         sortind=np.argsort(allfreq)
         allfreq=np.sort(allfreq)
         numchanperms=len(allfreq)
-        print 'number of channels', numchanperms
+        #print 'number of channels', numchanperms
         minfreq=np.min(allfreq)
         if(minfreq > endfreq):
             return -1, -1, -1
@@ -88,8 +88,8 @@ class pimager():
             return -1, -1, -1
         maxfreq=maxfreq if maxfreq < endfreq else endfreq
         ###modify the beginfreq and endfreq
-        beginfreq=minfreq
-        endfreq=maxfreq
+        freqrange[0]=minfreq
+        freqrange[1]=maxfreq
         startallchan=0
         while (minfreq > allfreq[startallchan]):
             startallchan=startallchan+1
@@ -171,7 +171,7 @@ class pimager():
          ##number of channels in the ms
         allfreq=np.sort(allfreq)
         numchanperms=len(allfreq)
-        print 'number of channels', numchanperms
+        #print 'number of channels', numchanperms
         minfreq=np.min(allfreq)
         if(minfreq > endfreq):
             return -1, -1, -1
@@ -427,7 +427,7 @@ class pimager():
             allfreq=np.append(allfreq, tb.getcol('CHAN_FREQ', spwids[k],1))
         ##number of channels in the ms
         numchanperms=len(allfreq)
-        print 'number of channels', numchanperms
+        #print 'number of channels', numchanperms
         minfreq=np.min(allfreq)
         band=np.max(allfreq)-minfreq
         ##minfreq=minfreq-(band/2.0);
@@ -891,13 +891,16 @@ class pimager():
         numms=len(msnames) if (type(msnames)==list) else 1
         if(type(msnames) == str):
             msnames=[msnames]
-        self.findfreqranges(msnames=msnames, spw=spw, freqmin=freqrange[0], freqmax=freqrange[1])
+        freqrange=self.findfreqranges(msnames=msnames, spw=spw, freqmin=freqrange[0], freqmax=freqrange[1])
         ## the above will return the freqmin, freqmax in the data if freqrange is default
         freq=(freqrange[0]+freqrange[1])/2.0
         band=abs(freqrange[1]-freqrange[0])
         self.makeconttempimages(imagename, contclean)
         def gen_comm(msname, startsel, nchansel, field, spw, freq, band, imname):
-            return 'a.imagecont(msname='+'"'+msname+'", start='+str(startsel)+', numchan='+str(nchansel)+', field="'+str(field)+'", spw='+str(spw)+', freq='+freq+', band='+band+', imname='+imname+')'
+            spwsel=str(self.msinfo[msname]['spwids'].tolist())
+            freqsel='"%fHz"'%freq
+            bandsel='"%fHz"'%band
+            return 'a.imagecont(msname='+'"'+msname+'", start='+str(startsel)+', numchan='+str(nchansel)+', field="'+str(field)+'", spw='+spwsel+', freq='+freqsel+', band='+ bandsel+', imname="'+imname+'")'
         ###major cycle
         out=range(self.numcpu)  
         mscpuindex=range(self.numcpu) 
@@ -915,7 +918,7 @@ class pimager():
                 msname=myrec.keys()[k]
                 mscpuindex[k]=msname
                 if(mscounter < len(msnames)):
-                    runcomm=gen_comm(msname=msname, startsel=myrec[msname]['startsel'], nchansel=myrec[msname]['startsel'],
+                    runcomm=gen_comm(msname=msname, startsel=myrec[msname]['startsel'], nchansel=myrec[msname]['nchansel'],
                                     field=self.field, spw=myrec[msname]['spwsel'], freq=freq, band=band, imname=myrec[msname]['imname'])
                     print 'command is ', runcomm
                     out[k]=self.c.odo(runcomm,k)
@@ -925,11 +928,11 @@ class pimager():
                 overone=True
                 time.sleep(1)
                 for k in range(self.numcpu):
-                    if(processing[mscpuindex[k]] and c.check_job(out[k]) and (not processed[mscpuindex[k]])):
+                    if(processing[mscpuindex[k]] and self.c.check_job(out[k],False) and (not processed[mscpuindex[k]])):
                         processed[mscpuindex[k]]=True
                         if(mscounter < len(msnames)):
                             msname=myrec.keys()[mscounter]
-                            runcomm=gen_com(msnames=msname, startsel=myrec[msname]['startsel'], nchansel=myrec[msname]['startsel'],
+                            runcomm=gen_comm(msname=msname, startsel=myrec[msname]['startsel'], nchansel=myrec[msname]['nchansel'],
                                     field=self.field, spw=myrec[msname]['spwsel'], freq=freq, band=band, imname=myrec[msname]['imname'])
                             print 'command is ', runcomm
                             out[k]=self.c.odo(runcomm,k)
@@ -1023,22 +1026,25 @@ class pimager():
         if (len(spw)==1):
             for k in range(1,len(msnames)) :
                 spw.append(spw[0])
-        retfreqmin=1e24
-        retfreqmax=-1e24
+        retfreqmin=1.0e24
+        retfreqmax=-1.0e24
         for k in range(len(msnames)):
             self.msinfo[msnames[k]]=odict()
-            tmpfreqmin=freqmin
-            tmpfreqmax=freqmax
             myrec=self.msinfo[msnames[k]]
+            freqrange=[0,0]
             myrec['spwids']=ms.msseltoindex(vis=msnames[k], spw=spw[k])['spw']
-            myrec['spwsel'],myrec['startsel'],myrec['nchansel']=self.findchanselcont(
+            spws, starts, nchans=self.findchanselcont(
                 msname=msnames[k], spwids=myrec['spwids'], 
-                numpartition=1, beginfreq=tmpfreqmin, 
-                endfreq=tmpfreqmax)
-            retfreqmax=tmpfreqmax if (tmpfreqmax > retfreqmax) else retfreqmax
-            retfreqmin=tmpfreqmin if (tmpfreqmin <  retfreqmin) else retfreqmin
+                numpartition=1, beginfreq=freqmin, 
+                endfreq=freqmax, freqrange=freqrange)
+            myrec['spwsel']=spws[0]
+            myrec['startsel']=starts[0]
+            myrec['nchansel']=nchans[0]
+            retfreqmax=freqrange[1] if (freqrange[1] > retfreqmax) else retfreqmax
+            retfreqmin=freqrange[0] if (freqrange[0] <  retfreqmin) else retfreqmin
         freqmin=retfreqmin
         freqmax=retfreqmax
+        return [freqmin, freqmax]
 
     
 
@@ -1055,10 +1061,12 @@ class pimager():
         self.c=cluster()
         hostname=os.getenv('HOSTNAME')
         wd=os.getcwd()
+        #pdb.set_trace()
         if((workingdir=='') or (workingdir==['']) or (workingdir==[])):
-            self.workingdirs=[wd]
+            workingdir=[wd]
         if(type(workingdir)==str):
-            self.workingdirs=[workingdir]
+            workingdir=[workingdir]
+        self.workingdirs=workingdir
         if((hostnames==[]) or (hostnames=='')): 
             self.hostnames=[hostname]
         else:
@@ -1071,6 +1079,7 @@ class pimager():
 
         for k in range(len(hostnames)):
             hostname=hostnames[k]
+            print 'starting ', numcpuperhost, 'on', hostname, 'with wd', self.workingdirs[k]
             self.c.start_engine(hostname,numcpuperhost,self.workingdirs[k])
         self.numcpu=len(hostnames)*numcpuperhost
         self.numextraprocs=num_ext_procs
@@ -1176,7 +1185,7 @@ class pimager():
             tb.done()
         ##number of channels in the ms
         numchanperms=len(allfreq)
-        print 'number of channels', numchanperms
+        #print 'number of channels', numchanperms
         minfreq=np.min(allfreq)
         band=np.max(allfreq)-minfreq
         ##minfreq=minfreq-(band/2.0);
