@@ -207,15 +207,6 @@ public:
   // returns mask of all correlations
   static RFlagWord fullCorrMask ();
 
-  // returns combination of flag masks corresponding to agents that operate
-  // on correlations in this agent's corrmask (including myself).
-  // (in essence, flag&corrFlagMask() == has anyone flagged my correlations)
-  // Invalidated by init(), and only becomes valid at next reset()!
-  RFlagWord corrFlagMask ();
-
-  // for the given corr-mask, returns the corrFlagMask
-  static RFlagWord corrFlagMask ( RFlagWord cmask );
-  
   // returns the number of instances of the flag cube
   static Int numInstances ();
 
@@ -224,7 +215,7 @@ public:
   // returns the current maximum memory usage
   static int  getMaxMem ();
       
- protected:
+ private:
   // helper methods for generating plots
   void plotIfrMap  ( PGPlotterInterface &pgp,const Matrix<Float> &img,const LogicalVector &ifrvalid);
   void plotAntAxis ( PGPlotterInterface &pgp,const Vector<uInt> &antnums,Bool yaxis );
@@ -262,7 +253,7 @@ public:
     check_corrmask,  // mask checked by preFlagged() & co. Set to 0 for
     // RESET or IGNORE policy, or to corrmask for HONOR
     check_rowmask,   // same for row flags: 0 or RowFlagged
-    my_corrflagmask; // my corrFlagMask(), see above
+    my_corrflagmask; // see above
   static Int agent_count;    // # of agents instantiated
   static RFlagWord base_flagmask, // flagmask of first agent instance
     full_corrmask;          // bitmask for all correlations in MS (low N bits)
@@ -312,12 +303,6 @@ inline RFlagWord RFFlagCube::checkCorrMask ()
 
 inline RFlagWord RFFlagCube::fullCorrMask ()
    { return full_corrmask; }
-
-inline RFlagWord RFFlagCube::corrFlagMask ()
-   { return my_corrflagmask; }
-
-inline RFlagWord RFFlagCube::corrFlagMask ( RFlagWord cmask )
-   { return corr_flagmask((uInt)cmask); }
 
 inline RFlagWord RFFlagCube::getFlag ( uInt ich,uInt ifr,FlagCubeIterator &iter )
    { 
