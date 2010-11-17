@@ -244,7 +244,7 @@ void RFFlagCube::printStats ()
         tot_row_fl_raised,row_fl_raised,row_fl_cleared);
 }
 
-// Sets flag at (ich,iifr) to 1. Returns True if flag has not been raised
+// Sets flag at (ich, ifr) to 1. Returns True if the flag has not been raised
 // previously.
 Bool RFFlagCube::setFlag ( uInt ich,uInt ifr, FlagCubeIterator &iter )
 {
@@ -322,14 +322,14 @@ Bool RFFlagCube::clearFlag ( uInt ich,uInt ifr,FlagCubeIterator &iter )
     return False;
 }
 
-// Sets flag at (ifr,itime). Returns True if flag has not been raised
+// Sets flag at (ifr, itime). Returns True if flag has not been raised
 // previously.
 Bool RFFlagCube::setRowFlag ( uInt ifr, uInt itime )
 {
     RFlagWord oldfl = flagrow(ifr,itime);
 
     // first flag raised for this row - update global stats
-    if( !(oldfl&flagmask) )
+    if ( !(oldfl&flagmask) )
         {
             tot_row_fl_raised++;
             row_fl_raised++;
@@ -339,16 +339,15 @@ Bool RFFlagCube::setRowFlag ( uInt ifr, uInt itime )
     return False;
 }
 
-// Clears row flag for (iifr,it). Returns True if flag was up before.
+// Clears row flag for (ifr, itime). Returns True if flag was up before.
 Bool RFFlagCube::clearRowFlag ( uInt ifr,uInt itime )
 {
     RFlagWord oldfl = flagrow(ifr,itime);
 
-    // all flags cleared for this point - update global stats
-    if( !(oldfl&flagmask) )  {
+    if (oldfl & flagmask)  {
         tot_row_fl_raised--;
         row_fl_cleared++;
-        flagrow(ifr,itime) = oldfl & flagmask;
+        flagrow(ifr,itime) = oldfl & (!flagmask);
         return True;
     }
     return False;
