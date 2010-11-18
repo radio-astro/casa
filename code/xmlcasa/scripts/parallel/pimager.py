@@ -852,6 +852,7 @@ class pimager():
         applyoffsets = If true, apply antenna pointing offsets from the pointing table given by epjtablename 
         epjtablename = Table containing antenna pointing offsets
         """
+        time1=time.time()
         if len(msnames)==0:
             return    
         niterpercycle=niter/majorcycles
@@ -955,7 +956,7 @@ class pimager():
                 if(not contclean or (not os.path.exists(model))):
                     self.copyimage(inimage=residual, outimage=model, 
                                    init=True, initval=0.0)
-            self.incrementaldecon(alg, residual, model, niterpercycle, 'lala.mask', thr, 0)
+            self.incrementaldecon(alg=alg, residual=residual, model=model, niter=niterpercycle, psf=psf, mask='lala.mask', thr=threshold, cpuid=0)
         #######
         restored=imagename+'.image'
         self.averimages(restored, restoreds)
@@ -971,7 +972,7 @@ class pimager():
         print 'Time to image is ', (time2-time1)/60.0, 'mins'
         self.c.stop_cluster()
 
-    def incrementaldecon(alg, residual, model, niter, psf,  mask, thr, cpuid):
+    def incrementaldecon(self, alg, residual, model, niter, psf,  mask, thr, cpuid):
         ##############
             ia.open(residual)
             print 'Residual', ia.statistics() 
@@ -979,13 +980,13 @@ class pimager():
             ########
             #incremental clean...get rid of tempmodel
             shutil.rmtree('tempmodel', True)
-            rundecon='a.cleancont(alg="'+str(alg)+'", niter='+str(niter)+',psf="'+psf+'", dirty="'+residual+'", model="'+'tempmodel'+'", mask='+'"'+mask+'", thr="'+str(threshold)+'")'
+            rundecon='a.cleancont(alg="'+str(alg)+'", niter='+str(niter)+',psf="'+psf+'", dirty="'+residual+'", model="'+'tempmodel'+'", mask='+'"'+mask+'", thr="'+str(thr)+'")'
             print 'Deconvolution command', rundecon
-            out=c.odo(rundecon,cpuid)
+            out=self.c.odo(rundecon,cpuid)
             over=False
             while(not over):
                 time.sleep(1)
-                over=c.check_job(out,False)
+                over=self.c.check_job(out,False)
             ###incremental added to total 
             ia.open(model)
             ia.calc('"'+model+'" +  "tempmodel"')
