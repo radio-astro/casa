@@ -6661,6 +6661,7 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
 	    sm_p = new CleanImageSkyModel();
 	    sm_p->add(*tmodimage,1);
 	    useModelCol_p=True;
+	     ft_p->setFreqInterpolation("linear");
 	    setSkyEquation();
 	    se_p->predict(False);
 	    destroySkyEquation();
@@ -9646,7 +9647,7 @@ Bool Imager::makePBImage(PBMath& pbMath, ImageInterface<Float>& pbImage){
       ++fieldCounter;
       fieldsDone.resize(fieldCounter, True);
       fieldsDone(fieldCounter-1)=vb.fieldId();
-      wcenter=vb.direction1()(0);
+      wcenter=vb.msColumns().field().phaseDirMeas(vb.fieldId());
       TempImage<Float> pbTemp(imShape, imageCoord);
       TempImage<Complex> ctemp(imShape, imageCoord);
       ctemp.set(1.0);
