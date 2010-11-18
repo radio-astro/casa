@@ -57,10 +57,14 @@ namespace casa{
       }
   };
   
-  void CFStore::resize(Int nw, IPosition imShape, Bool retainValues)
+  void CFStore::resize(Int nw,  Bool retainValues)
   {
     xSupport.resize(nw,retainValues); ySupport.resize(nw,retainValues);
     sampling.resize(1);
+  }
+  void CFStore::resize(IPosition imShape, Bool retainValues)
+  {
+    resize(imShape(CFDefs::NWPOS), retainValues);
     if ((imShape.nelements() > 0) && (!data.null()))
       data->resize(imShape,retainValues);
   }

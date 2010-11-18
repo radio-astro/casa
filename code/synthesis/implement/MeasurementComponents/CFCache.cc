@@ -194,7 +194,7 @@ namespace casa{
   {
     Float dPA=paCD_p.getParAngleTolerance().getValue("rad");
 
-    Int where=-1, wConvSize = cf->shape()(2);
+    Int where=-1, wConvSize = cf->shape()(CFDefs::NWPOS);
     Bool found=searchConvFunction(where, pa, dPA);
     //
     // If the PA value was not found, the return value in "where" is
@@ -282,15 +282,18 @@ namespace casa{
     try
       {
 	IPosition newConvShape = cf.shape();
-	Int wConvSize = newConvShape(2);
+	Int wConvSize = newConvShape(CFDefs::NWPOS);
 	for(Int iw=0;iw<wConvSize;iw++)
 	  {
 	    IPosition sliceStart(4,0,0,iw,0), 
-	      sliceLength(4,newConvShape(0),newConvShape(1),1,newConvShape(3));
+	      sliceLength(4,newConvShape(CFDefs::NXPOS),
+			  newConvShape(CFDefs::NYPOS),
+			  1,
+			  newConvShape(CFDefs::NPOLPOS));
 
 	    Vector<Double> ftRef(2);
-	    ftRef(0)=newConvShape(0)/2-1;
-	    ftRef(1)=newConvShape(1)/2-1;
+	    ftRef(0)=newConvShape(CFDefs::NXPOS)/2-1;
+	    ftRef(1)=newConvShape(CFDefs::NYPOS)/2-1;
 	    makeFTCoordSys(coords, convSize, ftRef, ftCoords);
 	    ostringstream name;
 	    name << Dir << "/" << cfPrefix << nameQualifier << iw << "_" << which;
@@ -298,7 +301,10 @@ namespace casa{
 
 	    //	    storeArrayAsImage(name, ftCoords,tmpArr);
 
-	    IPosition screenShape(4,newConvShape(0),newConvShape(1),newConvShape(3),1);
+	    IPosition screenShape(4,newConvShape(CFDefs::NXPOS),
+				  newConvShape(CFDefs::NYPOS),
+				  newConvShape(CFDefs::NPOLPOS),
+				  1);
 	    PagedImage<Complex> thisScreen(screenShape, ftCoords, name);
 	    Array<Complex> buf;
 	    buf=((cf(Slicer(sliceStart,sliceLength)).nonDegenerate()));
@@ -500,13 +506,14 @@ namespace casa{
 	      cfBuf.resize(IPosition(4,ts(0),ts(1), wConvSize,polInUse));
 	    //	      cfBuf = new CFType(IPosition(4,ts(0),ts(1), wConvSize,polInUse));
 	
-	    ndx(2)=iw;                              // The w-axis
-	    for(ndx(3)=0;ndx(3)<polInUse;ndx(3)++)  // The Poln. axis.
-	      for(ndx(0)=0;ndx(0)<ts(0);ndx(0)++)   
-	    	for(ndx(1)=0;ndx(1)<ts(1);ndx(1)++)
+	    ndx(CFDefs::NWPOS)=iw;                  // The w-axis
+	    for(ndx(CFDefs::NPOLPOS)=0;ndx(CFDefs::NPOLPOS)<polInUse;ndx(CFDefs::NPOLPOS)++)  // The Poln. axis.
+	      for(ndx(CFDefs::NXPOS)=0;ndx(CFDefs::NXPOS)<ts(CFDefs::NXPOS);ndx(CFDefs::NXPOS)++)   
+	    	for(ndx(CFDefs::NYPOS)=0;ndx(CFDefs::NYPOS)<ts(CFDefs::NYPOS);ndx(CFDefs::NYPOS)++)
 	    	  {
-	    	    ts2(0)=ndx(0);ts2(1)=ndx(1);
-	    	    ts2(2)=ndx(3); // The Poln. axis of the disk-cache
+	    	    ts2(CFDefs::NXPOS)=ndx(CFDefs::NXPOS);
+		    ts2(CFDefs::NYPOS)=ndx(CFDefs::NYPOS);
+	    	    ts2(2)=ndx(CFDefs::NPOLPOS); // The Poln. axis of the disk-cache. The LHS index is different!
 	    	    ts2(3)=0;      // The freq. axis of the disk-cache
 	    	    (cfBuf)(ndx)=imBuf(ts2);
 	    	  }

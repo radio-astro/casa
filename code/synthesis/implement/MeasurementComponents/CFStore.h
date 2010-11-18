@@ -64,7 +64,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       maxXSupport=maxXSup;maxYSupport=maxYSup;pa=PA;
     }
 
-    void resize(Int nw, IPosition imShape=IPosition(0), Bool retainValues=False);
+    void resize(Int nw, Bool retainValues=False);
+    void resize(IPosition imShape, Bool retainValues=False);
 
 
     CountedPtr<CFType> data;
