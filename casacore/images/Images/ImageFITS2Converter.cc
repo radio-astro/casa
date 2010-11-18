@@ -280,6 +280,12 @@ Bool ImageFITSConverter::ImageToFITS(String &error,
    IPosition newShape = shape;
    const uInt ndim = shape.nelements();
 
+   IPosition cursorOrder(ndim); // to be used later in the actual data copying
+   for (uInt i=0; i<ndim; i++) {
+     cursorOrder(i) = i;
+   }
+   Bool needNonOptimalCursor = False; // the default value for the case no axis reordering is necessary
+
    if(stokesLast || degenerateLast){
        Vector<Int> order(ndim); 
        Vector<String> cNames = cSys.worldAxisNames();
@@ -330,6 +336,14 @@ Bool ImageFITSConverter::ImageToFITS(String &error,
 	   //	   cNames = cSys.worldAxisNames();
 	   //	   cout << "3: " << cNames << endl;
        }
+
+       for (uInt i=0; i<ndim; i++) {
+	   cursorOrder(i) = order(i);
+	   if(order(i)!=i){
+	       needNonOptimalCursor=True;
+	   }
+       }
+
    }
 //
     Bool applyMask = False;
@@ -370,8 +384,11 @@ Bool ImageFITSConverter::ImageToFITS(String &error,
 // Set up iterator
 //
             IPosition cursorShape(image.niceCursorShape());
-	    RO_MaskedLatticeIterator<Float> iter(image, 
-		   LatticeStepper(shape, cursorShape, LatticeStepper::RESIZE));
+	    RO_MaskedLatticeIterator<Float> iter = 
+	      RO_MaskedLatticeIterator<Float>(image, 
+					      LatticeStepper(shape, 
+							     cursorShape,
+							     LatticeStepper::RESIZE));
 	    ProgressMeter meter(0.0, 1.0*shape.product(),
 				"Searching pixels", "",
 				"", "", True, 
@@ -688,27 +705,30 @@ Bool ImageFITSConverter::ImageToFITS(String &error,
 //
     String report;
     IPosition newCursorShape = copyCursorShape(report,
-					    shape,
-					    sizeof(Float),
-					    sizeof(Float),
-					    memoryInMB);
+					       shape,
+					       sizeof(Float),
+					       sizeof(Float),
+					       memoryInMB);
+
+    if(needNonOptimalCursor && newShape.nelements()>0){ 
+	// use cursor the size of one image row in order to enable axis re-ordering
+	newCursorShape.resize(1);
+	newCursorShape=newShape(0);
+    }
 
     if (verbose) {
        os << "Copying '" << image.name() << "' to '" << fitsName << "'   "
           << report << LogIO::POST;
     }
+
 //
 // If this fails, more development is needed
 //
     AlwaysAssert(sizeof(Float) == sizeof(float), AipsError);
     AlwaysAssert(sizeof(Short) == sizeof(short), AipsError);
 
-    IPosition cursorOrder(ndim);
-    for (i=0; i<ndim; i++) {
-	cursorOrder(i) = i;
-    }
-
     try {
+    
         Int nIter = max(1,shape.product()/newCursorShape.product());
         Int iUpdate = max(1,nIter/20);
 //
@@ -880,6 +900,7 @@ Bool ImageFITSConverter::ImageToFITS(String &error,
 //
         if (pMeter) delete pMeter;
         if (pMask!=0) delete pMask;
+
     } catch (AipsError x) {
 	error = "Unknown error copying image to FITS file";
 	if (outfile) {
