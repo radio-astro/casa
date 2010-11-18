@@ -59,8 +59,8 @@ namespace casa{
 				  const Float pa,
 				  CFStore& cfs,
 				  CFStore& cfwts) {};
-    virtual void setPolMap(const Vector<Int>& polMap) {};
-    virtual void setFeedStokes(const Vector<Int>& feedStokes){};
+    virtual void setPolMap(const Vector<Int>& polMap) {(void)polMap;};
+    virtual void setFeedStokes(const Vector<Int>& feedStokes){(void)feedStokes;};
     PixelatedConvFunc& operator=(const PixelatedConvFunc& other)
     {
       cerr << "******* PixelatedConvFunc& operator=(PixelatedConvFunc&) called!" << endl;

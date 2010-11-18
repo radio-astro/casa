@@ -78,6 +78,13 @@ namespace casa{
 			    Vector<Int>& convSupport,
 			    Double& wScale);
 
+    Bool findSupport(Array<Complex>& func, Float& threshold,Int& origin, Int& R) 
+    {throw(AipsError("IlluminationConvFunc::findSupport() not implemented"));};
+    virtual Bool makeAverageResponse(const VisBuffer& vb, 
+				     const ImageInterface<Complex>& image,
+				     TempImage<Float>& theavgPB,
+				     Bool reset=True)
+    {throw(AipsError("WPConvFunc::makeAverageRes() called"));};
 
     private:
       Bool checkCenterPix(const ImageInterface<Complex>& image);

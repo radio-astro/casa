@@ -47,12 +47,10 @@ namespace casa{
 
     IlluminationConvFunc& operator=(const IlluminationConvFunc& other)
     {
-      cerr << "******* IlluminationConvFunc& operator=(IlluminationConvFunc&) called!" << endl;
       return *this;
     }
     IlluminationConvFunc& operator=(const ConvolutionFunction& other)
     {
-      cerr << "******* IlluminationConvFunc& operator=(ConvolutionFunction&) called!" << endl;
       return *this;
     }
     void initExpTable(Int n, CF_TYPE step)  {ExpTable.build(n,step);expTableReady=True;};
@@ -84,9 +82,18 @@ namespace casa{
     void makeConvFunction(const casa::ImageInterface<std::complex<float> >&, 
 			  const casa::VisBuffer&, casa::Int, casa::Float, 
 			  casa::CFStore&, casa::CFStore&) {};
-    void setPolMap(const casa::Vector<int>&) {};
-    void setFeedStokes(const casa::Vector<int>&) {};
-    void setParams(const casa::Vector<int>&, const casa::Vector<int>&){};
+    void setPolMap(const casa::Vector<int>&polMap) {(void)polMap;};
+    void setFeedStokes(const casa::Vector<int>&feedStokes) {(void)feedStokes;};
+    void setParams(const casa::Vector<int>& polMap, const casa::Vector<int>& feedStokes)
+    {(void)polMap;(void)feedStokes;};
+
+    Bool findSupport(Array<Complex>& func, Float& threshold,Int& origin, Int& R) 
+    {throw(AipsError("IlluminationConvFunc::findSupport() not implemented"));};
+    virtual Bool makeAverageResponse(const VisBuffer& vb, 
+				     const ImageInterface<Complex>& image,
+				     TempImage<Float>& theavgPB,
+				     Bool reset=True)
+      {throw(AipsError("IlluminationConvFunc::makeAverageRes() called"));};
 
 		  
   private:

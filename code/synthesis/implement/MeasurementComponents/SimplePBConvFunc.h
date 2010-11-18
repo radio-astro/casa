@@ -97,6 +97,16 @@ namespace casa{
       virtual void setWeightImage(CountedPtr<TempImage<Float> >& wgtimage);
 
       virtual void setSkyJones(SkyJones* sj);
+
+      Bool findSupport(Array<Complex>& func, Float& threshold,Int& origin, Int& R) 
+      {throw(AipsError("SimplePBConvFunc::findSupport() not implemented"));};
+      virtual Bool makeAverageResponse(const VisBuffer& vb, 
+				       const ImageInterface<Complex>& image,
+				       TempImage<Float>& theavgPB,
+				       Bool reset=True)
+      {throw(AipsError("SimplePBConvFunc::makeAverageRes() called"));};
+
+
     protected:
       SkyJones* sj_p;
       TempImage<Float> fluxScale_p;
