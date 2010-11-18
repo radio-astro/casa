@@ -1539,9 +1539,18 @@ emptyMS(const Path& tableName, const Bool overwrite) {
     newMS.bindColumn(MeasurementSet::
 		     columnName(MeasurementSet::TIME_CENTROID), incrMan);
   }
-  // 1 MB tile size
+  // Use a 1 MB tile size
+  // The tile length should not be shorter than (npol, nchan)
+  // in the first 2 dimensions, otherwise performance suffers
+  // due to bookkeeping overhead [yes, that implies that using
+  // tiling is pretty pointless for such small data... But then 
+  // you will suffer from the horrors of BucketCache.]. Therefore 
+  // set the length to the maximum. Unfortunately npol, nchan is
+  // unknown here, so set the lengths to (4,128); the consequence
+  // of hardcoding this is that the real tile size will be less
+  // than 1MB, in fact 1MB/(4*128) = 2KB for npol=nchan columns.
   IPosition tileShape(3, 4, 128, 256);
-  // These columns contain the bulk of the data so save them in a tiled way
+
   {
     //TiledDataStMan dataMan(dataCol);
     TiledShapeStMan dataMan(dataCol, tileShape);
@@ -1565,19 +1574,24 @@ emptyMS(const Path& tableName, const Bool overwrite) {
   }
   {
     //TiledDataStMan dataMan(chanFlagCol);
-    TiledShapeStMan dataMan(chanFlagCol, tileShape);
+    TiledShapeStMan dataMan(chanFlagCol, 
+			    IPosition(3, 
+				      tileShape(0),
+				      tileShape(1),
+				      tileShape(2)*64)
+			    );
     newMS.bindColumn(MeasurementSet::
 		     columnName(MeasurementSet::FLAG), dataMan);
     //  newMS.bindColumn(chanFlagTileId.fieldName(), dataMan);
   }
   {
     //TiledDataStMan dataMan(sigmaCol);
-    TiledShapeStMan dataMan(sigmaCol, IPosition(2,tileShape(0), tileShape(2)));
+    TiledShapeStMan dataMan(sigmaCol, IPosition(2,tileShape(0), tileShape(1) * tileShape(2)));
     newMS.bindColumn(MeasurementSet::
  		     columnName(MeasurementSet::SIGMA), dataMan);
 
     //Hmmm before weight and sigma were bound by the same stman..
-    TiledShapeStMan dataMan2("TiledWgtCol", IPosition(2,tileShape(0), tileShape(2)));
+    TiledShapeStMan dataMan2("TiledWgtCol", IPosition(2,tileShape(0), tileShape(1) * tileShape(2)));
 
     newMS.bindColumn(MeasurementSet::
  		     columnName(MeasurementSet::WEIGHT), dataMan2);
@@ -1593,7 +1607,7 @@ emptyMS(const Path& tableName, const Bool overwrite) {
   }
 
   {
-      TiledColumnStMan tiledStUVW("TiledUVW",IPosition(2, 3, (1024*1024)/ (3*sizeof(double))));
+    TiledColumnStMan tiledStUVW("TiledUVW",IPosition(2, 3, tileShape(0) * tileShape(1) * tileShape(2) * 2 / 3));
     newMS.bindColumn(MS::columnName(MS::UVW),tiledStUVW);
   }
   // The standard storage manager is the default manager but by default it only
