@@ -29,19 +29,11 @@
 #ifndef SYNTHESIS_AWCONVFUNC_H
 #define SYNTHESIS_AWCONVFUNC_H
 
-#include <images/Images/ImageInterface.h>
-// #include <synthesis/MeasurementComponents/Utils.h>
-// #include <synthesis/MeasurementComponents/BeamCalc.h>
-#include <synthesis/MeasurementComponents/CFStore.h>
-//#include <synthesis/MeasurementComponents/VLACalcIlluminationConvFunc.h>
-//#include <synthesis/MeasurementComponents/IlluminationConvFunc.h>
-//#include <synthesis/MeasurementComponents/PixelatedConvFunc.h>
 #include <synthesis/MeasurementComponents/ConvolutionFunction.h>
+#include <synthesis/MeasurementComponents/CFStore.h>
 #include <synthesis/MeasurementComponents/ATerm.h>
-// #include <coordinates/Coordinates/DirectionCoordinate.h>
-// #include <coordinates/Coordinates/SpectralCoordinate.h>
-// #include <coordinates/Coordinates/StokesCoordinate.h>
-// #include <lattices/Lattices/LatticeFFT.h>
+#include <images/Images/ImageInterface.h>
+#include <images/Images/TempImage.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogSink.h>
 #include <casa/Logging/LogOrigin.h>
@@ -54,7 +46,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //-------------------------------------------------------------------------------------------
   //
   class AWConvFunc : public ConvolutionFunction
-  //: public PixelatedConvFunc<Complex>
   {
   public:
     AWConvFunc(const CountedPtr<ATerm> ATerm):
@@ -68,9 +59,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				  const Float pa,
 				  CFStore& cfs,
 				  CFStore& cfwts);
+    virtual Bool makeAverageResponse(const VisBuffer& vb, 
+				     const ImageInterface<Complex>& image,
+				     TempImage<Float>& theavgPB,
+				     Bool reset=True);
     virtual int getVisParams(const VisBuffer& vb) {return ATerm_p->getVisParams(vb);};
     virtual void setPolMap(const Vector<Int>& polMap) {ATerm_p->setPolMap(polMap);};
     virtual void setFeedStokes(const Vector<Int>& feedStokes) {ATerm_p->setFeedStokes(feedStokes);};
+    virtual Bool findSupport(Array<Complex>& func, Float& threshold,Int& origin, Int& R);
 
   private:
     CountedPtr<ATerm> ATerm_p;
