@@ -421,7 +421,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // The PA averaged (and potentially antenna averaged) PB for
     // normalization
     //
-    TempImage<Float> avgPB;
+    CountedPtr<TempImage<Float> > avgPB_p;
     //
     // No. of vis. polarization planes used in making the user defined
     // Stokes images
