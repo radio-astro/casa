@@ -116,7 +116,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       pointingToImage(0), usezero_p(usezero),
       telescopeConvFunc_p(cf),cfs_p(), cfwts_p(), 
       doPBCorrection(doPBCorr), cfCache_p(cfcache), paChangeDetector(), cfStokes(),Area(), 
-      avgPBReady(False),avgPBSaved(False),pbNormalized(False),resetPBs(True),rotateAperture_p(True),
+      avgPBReady(False),avgPBSaved(False),resetPBs(True),rotateAperture_p(True),
       Second("s"),Radian("rad"),Day("d")
   {
     epJ=NULL;
@@ -248,12 +248,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	cachesize=other.cachesize;
     
 	resetPBs=other.resetPBs;
-	pbNormalized=other.pbNormalized;
+
 	currentCFPA=other.currentCFPA;
 	lastPAUsedForWtImg = other.lastPAUsedForWtImg;
 	cfStokes=other.cfStokes;
 	Area=other.Area;
-	avgPB = other.avgPB;
+	avgPB_p = other.avgPB_p;
 	avgPBReady = other.avgPBReady;
 	telescopeConvFunc_p = other.telescopeConvFunc_p;
       };
@@ -709,17 +709,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     polPlane1=polPlane0;
     // senLat.putSlice(polPlane0,IPosition(4,0,0,0,0));
     // senLat.putSlice(polPlane1,IPosition(4,0,0,1,0));
-    // cerr << "Pol0: " << polPlane0.shape() << " " << max(polPlane0) << endl;
-    // cerr << "Pol1: " << polPlane1.shape() << " " << max(polPlane1) << endl;
   }
   //
   //---------------------------------------------------------------
   //
   void AWProjectFT::normalizeAvgPB()
   {
-    if (!pbNormalized)
+    //    if (!pbNormalized)
+    Bool isRefF;
+    Array<Float> avgPBBuf;
+    isRefF=avgPB_p->get(avgPBBuf);
+    Float pbMax = max(avgPBBuf);
+
       {
-	pbPeaks.resize(avgPB.shape()(2),True);
+	pbPeaks.resize(avgPB_p->shape()(2),True);
 	// if (makingPSF) pbPeaks = 1.0;
 	// else pbPeaks /= (Float)noOfPASteps;
 	pbPeaks = 1.0;
@@ -728,15 +731,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		<< LogIO::NORMAL
 		<< LogIO::POST;
 	
-	IPosition avgPBShape(avgPB.shape()),ndx(4,0,0,0,0);
+	IPosition avgPBShape(avgPB_p->shape()),ndx(4,0,0,0,0);
 	Vector<Float> peak(avgPBShape(2));
 	
-	Bool isRefF;
-	Array<Float> avgPBBuf;
-	isRefF=avgPB.get(avgPBBuf);
 	
-	Float pbMax = max(avgPBBuf);
-
 	ndx=0;
 	for(ndx(1)=0;ndx(1)<avgPBShape(1);ndx(1)++)
 	  for(ndx(0)=0;ndx(0)<avgPBShape(0);ndx(0)++)
@@ -754,6 +752,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      plane1(2)=1; // The other poln. plane
 	      avgPBBuf(plane1) = avgPBBuf(ndx);
 	    }
+
+	Float pbMax = max(avgPBBuf);
 	if (fabs(pbMax-1.0) > 1E-3)
 	  {
 	    //	    avgPBBuf = avgPBBuf/noOfPASteps;
@@ -768,12 +768,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      
 		  for(ndx(1)=0;ndx(1)<avgPBShape(1);ndx(1)++)
 		    for(ndx(0)=0;ndx(0)<avgPBShape(0);ndx(0)++)
-		      avgPBBuf(ndx) *= (pbPeaks(ndx(2))/peak(ndx(2)));
+		      //		      avgPBBuf(ndx) *= (pbPeaks(ndx(2))/peak(ndx(2)));
+		      avgPBBuf(ndx) /= peak(ndx(2));
 		}
-	    if (isRefF) avgPB.put(avgPBBuf);
+	    if (isRefF) avgPB_p->put(avgPBBuf);
 	  }
       }
-    pbNormalized = True;
   }
   //
   //---------------------------------------------------------------
@@ -790,7 +790,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     localPB.resize(image.shape()); localPB.setCoordinateInfo(image.coordinates());
     localPB.setMaximumCacheSize(cachesize);
-    // cerr << "Max. cache size = " << localPB.maximumCacheSize() << " " << cachesize << endl;
     //
     // If this is the first time, resize the average PB
     //
@@ -859,17 +858,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    IPosition ndx(4,0,0,0,0),avgNDX(4,0,0,0,0);
 	    for(ndx(3)=0,avgNDX(3)=0;ndx(3)<fs(3);ndx(3)++,avgNDX(3)++)
 	    {
-	    for(ndx(2)=0,avgNDX(2)=0;ndx(2)<twoDPBShape(2);ndx(2)++,avgNDX(2)++)
-	      {
-		for(ndx(0)=0,avgNDX(0)=0;ndx(0)<fs(0);ndx(0)++,avgNDX(0)++)
-		  for(ndx(1)=0,avgNDX(1)=0;ndx(1)<fs(1);ndx(1)++,avgNDX(1)++)
-		    {
-		      Float val;
-		      val = real(cbuf(ndx));
-		      fbuf(avgNDX) += val;
-		      if (fbuf(avgNDX) > peak) peak=fbuf(avgNDX);
-		    }
-	      }
+	      for(ndx(2)=0,avgNDX(2)=0;ndx(2)<twoDPBShape(2);ndx(2)++,avgNDX(2)++)
+		{
+		  for(ndx(0)=0,avgNDX(0)=0;ndx(0)<fs(0);ndx(0)++,avgNDX(0)++)
+		    for(ndx(1)=0,avgNDX(1)=0;ndx(1)<fs(1);ndx(1)++,avgNDX(1)++)
+		      {
+			Float val;
+			val = real(cbuf(ndx));
+			fbuf(avgNDX) += val;
+			if (fbuf(avgNDX) > peak) peak=fbuf(avgNDX);
+		      }
+		}
 	    }
 	  }
 	  if (!isRefF) theavgPB.put(fbuf);
@@ -1027,18 +1026,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Load the average PB (sensitivity pattern) from the cache.  If
     // not found, make one and cache it.
     //
-    if (cfCache_p->loadAvgPB(avgPB) == NOTCACHED)
+    if (avgPB_p.null()) avgPB_p = new TempImage<Float>();
+    if (cfCache_p->loadAvgPB(*avgPB_p) == NOTCACHED)
       {
-	logIO() << "Average PB does not exist in the cache.  A fresh one will be made." 
-		<< LogIO::NORMAL  << LogIO::POST;
-	pbMade=makeAveragePB0(vb, image, avgPB);
-	pbNormalized=False;    normalizeAvgPB();	pbNormalized=True;
-	if (pbMade) cfCache_p->flush(avgPB); // Save the AVG PB and write the aux info.
+	logIO() << "Making average response." << LogIO::NORMAL  << LogIO::POST;
+	//	pbMade     = makeAveragePB0(vb, image, *avgPB_p);
+	pbMade     = telescopeConvFunc_p->makeAverageResponse(vb, image, *avgPB_p);
+	// bandID_p   = telescopeConvFunc_p->getVisParams(vb);
+	// Nant_p     = vb.msColumns().antenna().nrow();	
+
+	normalizeAvgPB();	
+
+	if (pbMade) cfCache_p->flush(*avgPB_p); // Save the AVG PB and write the aux info.
       }
     else
       {resetPBs = False; avgPBReady=True;}
 
-    verifyShapes(avgPB.shape(), image.shape());
+    verifyShapes(avgPB_p->shape(), image.shape());
 
     Int lastPASlot = PAIndex_l;
     if (paChangeDetector.changed(vb,0)) paChangeDetector.update(vb,0);
@@ -1160,14 +1164,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       LatticeStepper lsx(lattice->shape(), cursorShape, axisPath);
       LatticeIterator<Complex> lix(*lattice, lsx);
 	  
-      verifyShapes(avgPB.shape(), image->shape());
-      Array<Float> avgBuf; avgPB.get(avgBuf);
+      verifyShapes(avgPB_p->shape(), image->shape());
+      Array<Float> avgBuf; avgPB_p->get(avgBuf);
       if (max(avgBuf) < 1e-04)
 	throw(AipsError("Normalization by PB requested but either PB not found in the cache "
 			"or is ill-formed."));
 
-      LatticeStepper lpb(avgPB.shape(),cursorShape,axisPath);
-      LatticeIterator<Float> lipb(avgPB, lpb);
+      LatticeStepper lpb(avgPB_p->shape(),cursorShape,axisPath);
+      LatticeIterator<Float> lipb(*avgPB_p, lpb);
 
       Vector<Complex> griddedVis;
       //
@@ -1999,7 +2003,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(dopsf) idopsf=1;
     
     findConvFunction(*image, vb);
-    
+    Nant_p     = vb.msColumns().antenna().nrow();
+
 
     const Matrix<Float> *imagingweight;
     if(imwght.nelements()>0)
@@ -2828,8 +2833,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  LatticeStepper lsx(lattice->shape(), cursorShape, axisPath);
 	  LatticeIterator<Complex> lix(*lattice, lsx);
 	  
-	  LatticeStepper lavgpb(avgPB.shape(),cursorShape,axisPath);
-	  LatticeIterator<Float> liavgpb(avgPB, lavgpb);
+	  LatticeStepper lavgpb(avgPB_p->shape(),cursorShape,axisPath);
+	  LatticeIterator<Float> liavgpb(*avgPB_p, lavgpb);
 	  
 	  for(lix.reset(),liavgpb.reset();
 	      !lix.atEnd();
