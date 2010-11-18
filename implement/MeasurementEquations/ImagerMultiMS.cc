@@ -299,13 +299,82 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       if((numMS_p > 1) || datafieldids_p.nelements() > 1)
 	multiFields_p= True;
        //Now lets see what was selected as spw and match it with datadesc
+      //dataspectralwindowids_p.resize();
+      //dataspectralwindowids_p=thisSelection.getSpwList();
+      Matrix<Int> chansels=thisSelection.getChanList(NULL, 1, True);
+      uInt nms = numMS_p;
+      uInt nrow = chansels.nrow();
       dataspectralwindowids_p.resize();
-      dataspectralwindowids_p=thisSelection.getSpwList();
+      const ROMSSpWindowColumns spwc(thisms.spectralWindow());
+      uInt nspw = spwc.nrow();
+      const ROScalarColumn<Int> spwNchans(spwc.numChan());
+      Vector<Int> nchanvec = spwNchans.getColumn();
+      //cout<<"SetDataOnThisMS::numMS_p="<<numMS_p<<" nchanvec="<<nchanvec<<endl;
+      //cout<<"chansels="<<chansels<<" nrow for chansels="<<nrow<<endl;
+      Int maxnchan = 0;
+
+      for (uInt i=0;i<nchanvec.nelements();i++) {
+          maxnchan=max(nchanvec[i],maxnchan);
+      }
+      //cout<<"spwchansels_p.shape()="<<spwchansels_p.shape()<<endl;
+      uInt maxnspw = 0;
+      if (numMS_p ==1) {
+        maxnspw=nspw;
+      }
+      else {
+        for (uInt i=0;i<numMS_p-1;i++) {
+          maxnspw=max(maxnspw,blockSpw_p[i].nelements());
+        }
+        maxnspw=max(nspw,maxnspw);
+      }
+      spwchansels_p.resize(nms,maxnspw,maxnchan,True);
+      //cout<<"After resize: spwchansels_p.shape()="<<spwchansels_p.shape()<<endl;
+      uInt nselspw=0;
+      if (nrow==0) {
+        //no channel selection, select all channels
+        spwchansels_p.yzPlane(numMS_p-1)=1; 
+        dataspectralwindowids_p=thisSelection.getSpwList();
+      }
+      else {
+        spwchansels_p.yzPlane(numMS_p-1)=0; 
+        Int prvspwid=-1;
+        Vector<Int> selspw;
+	for (uInt i=0;i<nrow;i++) {
+	  Vector<Int> sel = chansels.row(i);
+	  Int spwid = sel[0];
+	  if (spwid != prvspwid){
+	    nselspw++;
+	    selspw.resize(nselspw,True);
+	    selspw[nselspw-1]=spwid;
+	  }
+	  uInt minc= sel[1];
+	  uInt maxc = sel[2];
+	  uInt step = sel[3];
+	  // step as the same context as in im.selectvis
+	  // select channels
+	  for (uInt k=minc;k<(maxc+1);k+=step) {
+	    spwchansels_p(numMS_p-1,spwid,k)=1;
+	  }
+	  prvspwid=spwid;
+	}
+	dataspectralwindowids_p=selspw;
+      }
+
+      //cout<<"spwchansels_p(before shifting)="<<spwchansels_p<<endl;
       if(dataspectralwindowids_p.nelements()==0){
-	Int nspwinms=thisms.spectralWindow().nrow();
+        Int nspwinms=thisms.spectralWindow().nrow();
+        dataspectralwindowids_p.resize(nspwinms);
+        indgen(dataspectralwindowids_p);
+      }
+
+      // old code
+      /***
+      if(dataspectralwindowids_p.nelements()==0){
+      	Int nspwinms=thisms.spectralWindow().nrow();
 	dataspectralwindowids_p.resize(nspwinms);
 	indgen(dataspectralwindowids_p);
       }
+      ***/
 
       // Map the selected spectral window ids to data description ids
       MSDataDescIndex msDatIndex(thisms.dataDescription());
@@ -315,21 +384,56 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
       if(mode=="none"){
 	//check if we can find channel selection in the spw string
-	Matrix<Int> chanselmat=thisSelection.getChanList();
-	if(chanselmat.nrow()==dataspectralwindowids_p.nelements()){
+	//Matrix<Int> chanselmat=thisSelection.getChanList();
+	//if(chanselmat.nrow()==dataspectralwindowids_p.nelements()){
+	if(nselspw==dataspectralwindowids_p.nelements()){
 	  dataMode_p="channel";
 	  dataStep_p.resize(dataspectralwindowids_p.nelements());
 	  dataStart_p.resize(dataspectralwindowids_p.nelements());
 	  dataNchan_p.resize(dataspectralwindowids_p.nelements());
+          Cube<Int> spwchansels_tmp=spwchansels_p;
 	  for (uInt k =0 ; k < dataspectralwindowids_p.nelements(); ++k){
-	    dataStep_p[k]=chanselmat.row(k)(3);
-	    if(dataStep_p[k] < 1)
-	      dataStep_p[k]=1;
-	    dataStart_p[k]=chanselmat.row(k)(1);
-	    dataNchan_p[k]=Int(ceil(Double(chanselmat.row(k)(2)-dataStart_p[k]))/Double(dataStep_p[k]))+1;
-	    if(dataNchan_p[k]<1)
-	      dataNchan_p[k]=1;	  
-	  }
+            uInt curspwid=dataspectralwindowids_p[k];
+	    //dataStep_p[k]=chanselmat.row(k)(3);
+	    dataStep_p[k]=chansels.row(k)(3);
+	    //if(dataStep_p[k] < 1)
+	    //  dataStep_p[k]=1;
+            dataStart_p[k]=0;
+            dataNchan_p[k]=nchanvec(curspwid);
+            //cout<<"SetDataOnThisMS: initial setting dataNchan_p["<<k<<"]="<<dataNchan_p[k]<<endl;
+            //find start
+            Bool first = True;
+            uInt nchn = 0;
+            uInt lastchan = 0;
+            for (uInt j=0 ; j < nchanvec(curspwid); j++) {
+              if (spwchansels_p(numMS_p-1,curspwid,j)==1) {
+                if(first) {
+                  dataStart_p[k]=j;
+                  first = False;
+                }
+                lastchan=j;
+                nchn++;
+              }
+            }
+	    //dataStart_p[k]=chanselmat.row(k)(1);
+	    //dataNchan_p[k]=Int(ceil(Double(chanselmat.row(k)(2)-dataStart_p[k]))/Double(dataStep_p[k]))+1;
+            dataNchan_p[k]=Int(ceil(Double(lastchan-dataStart_p[k])/Double(dataStep_p[k])))+1;
+            //cout<<"SetDataOnThisMS: after recalc. of nchan dataNchan_p["<<k<<"]="<<dataNchan_p[k]<<endl;
+	    //if(dataNchan_p[k]<1)
+	    //  dataNchan_p[k]=1;
+	    // 
+	    //Since msselet will be applied to the data before flags from spwchansels_p
+	    //are applied to the data in FTMachine, shift spwchansels_p by dataStart_p
+	    for (uInt j=0  ; j < nchanvec(curspwid); j++){
+              if (j<nchanvec(curspwid)-dataStart_p[k]) {
+                spwchansels_tmp(numMS_p-1,curspwid,j) = spwchansels_p(numMS_p-1,curspwid,j+dataStart_p[k]);
+              }
+              else {
+                spwchansels_tmp(numMS_p-1,curspwid,j) = 0;
+              }
+            }
+          }
+        spwchansels_p=spwchansels_tmp;
 	}
       }
 
