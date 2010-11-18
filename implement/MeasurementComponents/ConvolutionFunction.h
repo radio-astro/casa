@@ -29,37 +29,104 @@
 #ifndef SYNTHESIS_CONVOLUTIONFUNCTION_H
 #define SYNTHESIS_CONVOLUTIONFUNCTION_H
 
-#include <synthesis/MeasurementComponents/Utils.h>
 #include <synthesis/MeasurementComponents/CFStore.h>
+#include <synthesis/MeasurementComponents/Utils.h>
+#include <images/Images/ImageInterface.h>
+#include <images/Images/TempImage.h>
+#include <casa/Logging/LogOrigin.h>
+#include <casa/Logging/LogSink.h>
+#include <casa/Logging/LogIO.h>
 #include <casa/Arrays/Vector.h>
 #define CF_TYPE Double
 
 namespace casa{
+  // <summary>  
+  //  The base class to compute convolution functions for convolutional gridding. 
+  // </summary>
+  
+  // <use visibility=export>
+  // <prerequisite>
+  // </prerequisite>
+  // <etymology>
+  //   Class to encapsulate the convolution function for convolutional gridding.
+  // </etymology>
+  //
+  // <synopsis> Standard method of re-sampling data to or from a
+  //
+  //  regular grid is done by convolutional gridding.  This requires a
+  //  convolution function which a finte support size and well behaved
+  //  function in the Fourier domain.  For standard gridding, the
+  //  Prolate Spheroidal function are used.  Convolution functions
+  //  used in Projection algorithms (like W-Projection, A-Projection,
+  //  etc. and their combinations) each require potentially different
+  //  mechanisms to compute.  These are implemented in separate
+  //  classes in the Synthesis module.  Since these are used in common
+  //  framework for gridding and de-gridding, these are all derived
+  //  from a common base class.  ConvolutionFunction (this class) is
+  //  that base class.
+  //
+  //  Most of the methods in this base class are pure virtual.  I.e.,
+  //  only surviving offsprings (derived classes) of this class will
+  //  be those that will have the wisdom that they methods represent.
+  //
+  // </synopsis>
 
   class ConvolutionFunction
   {
   public:
-    ConvolutionFunction() {};
+    ConvolutionFunction():logIO_p() {};
     ConvolutionFunction(Int dim) {nDim=dim;};
     virtual ~ConvolutionFunction();
     
+    // Set the dimention of the convolution function.
     virtual void setDimension(Int n){nDim = n;};
+
+    // Given the pixel co-ordinates and an offset values, this returns
+    // the value of the convolution function.  This is however not
+    // used anywhere yet (and is therefore also not a pure virtual
+    // function).
     virtual CF_TYPE getValue(Vector<CF_TYPE>& coord, Vector<CF_TYPE>& offset) {return 0.0;};
 
-    //    virtual ConvolutionFunction& operator=(const ConvolutionFunction& other) = 0;
+    // A support function which, for now, returns and integer ID
+    // corresponding to the on-sky frequency of the supplied VisBuffer.
     virtual int getVisParams(const VisBuffer& vb)=0;
+
+    // This method computes the convolution function and the
+    // convolution function used for gridding the weights (typically
+    // these are the same) and returns them in the cfs and cfwts
+    // parameters.  The required information about the image and
+    // visibility parameters is dervided from the given image and
+    // VisBuffer objects.  wConvSize is the number of w-term planes
+    // and pa is the Parallactic Angle in radians for which the
+    // convolution function(s) are computed.
     virtual void makeConvFunction(const ImageInterface<Complex>& image,
 				  const VisBuffer& vb,
 				  const Int wConvSize,
 				  const Float pa,
 				  CFStore& cfs,
-				  CFStore& cfwts) = 0;// {};
-    virtual void setPolMap(const Vector<Int>& polMap) = 0;// {};
-    virtual void setFeedStokes(const Vector<Int>& feedStokes) = 0;// {};
+				  CFStore& cfwts) = 0;
+    // This method computes the average response function.  This is
+    // typically image-plane equivalent of the convolution functions,
+    // averaged over various axis.  The precise averaging will be
+    // implementation dependent in the derived classes.
+    virtual Bool makeAverageResponse(const VisBuffer& vb, 
+				     const ImageInterface<Complex>& image,
+				     TempImage<Float>& theavgPB,
+				     Bool reset=True) = 0;
+
+    //
+    virtual void setPolMap(const Vector<Int>& polMap) = 0;
+    virtual void setFeedStokes(const Vector<Int>& feedStokes) = 0;
+    virtual Bool findSupport(Array<Complex>& func, Float& threshold,Int& origin, Int& R)=0;
+
+
     virtual void setParams(const Vector<Int>& polMap, const Vector<Int>& feedStokes)
     {setPolMap(polMap); setFeedStokes(feedStokes);};
   private:
     Int nDim;
+  protected:
+    LogIO& logIO() {return logIO_p;}
+    LogIO logIO_p;
   };
 
 };

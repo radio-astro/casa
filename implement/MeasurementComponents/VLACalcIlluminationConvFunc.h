@@ -88,6 +88,13 @@ namespace casa{
     void applyPBSq(ImageInterface<Complex>& pbImage, const VisBuffer& vb, Int bandID=-1, 
 		   Bool doSquint=True);
     void skyMuller(ImageInterface<Complex>& skyJones);
+    Bool findSupport(Array<Complex>& func, Float& threshold,Int& origin, Int& R) 
+    {throw(AipsError("VLACalcIlluminationConvFunc::findSupport() not implemented"));};
+    virtual Bool makeAverageResponse(const VisBuffer& vb, 
+				     const ImageInterface<Complex>& image,
+				     TempImage<Float>& theavgPB,
+				     Bool reset=True)
+    {throw(AipsError("VLACalc::makeAverageRes() called"));};
 
 
   private:
