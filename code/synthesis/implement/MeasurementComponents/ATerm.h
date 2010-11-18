@@ -34,16 +34,19 @@
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/TempImage.h>
+#include <msvis/MSVis/VisBuffer.h>
 
 
 namespace casa{
-  // <summary>  A class to apply the Aperture-Term of the Measurement Equation to the given image. </summary>
+  // <summary>  
+  //  The base class to represent the Aperture-Term of the Measurement Equation. 
+  // </summary>
   
   // <use visibility=export>
   // <prerequisite>
   // </prerequisite>
   // <etymology>
-  // A-Term to account for the effects of the antenna primary beam(s).
+  //   A-Term to account for the effects of the antenna primary beam(s).
   // </etymology>
   //
   // <synopsis> 
@@ -55,25 +58,47 @@ namespace casa{
     ATerm () {};
     virtual ~ATerm () {};
 
-    virtual void apply(Matrix<Complex>& screen, const Int wPixel, 
-	       const Vector<Double>& sampling,
-	       const Int wConvSize, const Double wScale,
-	       const Int inner) 
+    virtual void applySky(Matrix<Complex>& screen, const Int wPixel, 
+			  const Vector<Double>& sampling,
+			  const Int wConvSize, const Double wScale,
+			  const Int inner) 
     {(void)screen; (void)wPixel; (void)sampling; (void)wConvSize; (void)wScale; (void)inner;};
+
+    virtual void applySky(ImageInterface<Float>& twoDPB, 
+			  const VisBuffer& vb, 
+			  const Bool doSquint=True)=0;
+    virtual void applySky(ImageInterface<Complex>& twoDPB, 
+			  const VisBuffer& vb, 
+			  const Bool doSquint=True)=0;
     
-    virtual void makeConvFunction(const ImageInterface<Complex>& image,
-			  const VisBuffer& vb,
-			  const Int wConvSize,
-			  const Float pa,
-			  CFStore& cfs,
-			  CFStore& cfwts) = 0;
+    virtual Int makePBPolnCoords(const VisBuffer&vb,
+				 const Vector<Int>& polMap,
+				 const Int& convSize,
+				 const Int& convSampling,
+				 const CoordinateSystem& skyCoord,
+				 const Int& skyNx, const Int& skyNy,
+				 CoordinateSystem& feedCoord,
+				 Vector<Int>& cfStokes) = 0;
 
     virtual void setPolMap(const Vector<Int>& polMap) = 0;
     virtual void setFeedStokes(const Vector<Int>& feedStokes) = 0;
-    virtual int getVisParams(const VisBuffer& vb) = 0;
-
     virtual void setParams(const Vector<Int>& polMap, const Vector<Int>& feedStokes)
     {setPolMap(polMap); setFeedStokes(feedStokes);};
+
+    virtual Int getConvSize() = 0;
+    virtual Float getConvWeightSizeFactor() = 0;
+    virtual Int getOversampling() = 0;
+    virtual Float getSupportThreshold() = 0;
+
+    virtual void getPolMap(Vector<Int>& polMap) = 0;
+    virtual void getFeedStokes(Vector<Int>& feedStokes) = 0;
+    virtual void getParams(Vector<Int>& polMap, Vector<Int>& feedStokes)
+    {getPolMap(polMap); getFeedStokes(feedStokes);};
+
+    virtual int getVisParams(const VisBuffer& vb) = 0;
+  protected:
+    LogIO& logIO() {return logIO_p;}
+    LogIO logIO_p;
   };
 
 };
