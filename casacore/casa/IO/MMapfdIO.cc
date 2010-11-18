@@ -123,15 +123,13 @@ namespace casa
       Int64 startPage = offset / pageSize;
       Int64 endPage = (offset + length - 1) / pageSize;
       
-      /* Empirically, it was found that for a repeated remapping to not 
-	 have too much overhead, the mapped size should be in the order of
-         MB, i.e. thousands of pages (given the pagesize of 4K used in current
-         OSs). Notice that if this code is used by TSM table columns with
-         tile sizes >= 1MB, the requested length is already large enough,
-         and the following extension of the mapped region is redundant
-         (but not harmful) */
-      startPage -= 1024;
-      endPage += 1024;
+      /* The cost of repeated mmapping of small regions was found to be significant
+	 at around <~ 32 KB on 10.6 and <~ 8 Kb on 10.5 (and insignificant on Linux). 
+         Therefore pad the mapped region a bit in both directions in order to avoid
+         mapping very small regions repeatedly. On current OSs 32 KB = 8 pages.
+      */
+      startPage -= 8;
+      endPage += 8;
 
       itsMapOffset = pageSize * startPage;
       itsMapSize   = pageSize * (endPage - startPage + 1);
