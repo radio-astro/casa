@@ -133,7 +133,7 @@ def verify_asdm(asdmname, withPointing):
             isOK = False
         else:
             # test if well formed
-            rval = os.system('xmllint --noout '+filePath)
+            rval = os.system('DYLD_LIBRARY_PATH="";xmllint --noout '+filePath) #set lib path temporarily to "" to avoid problem on Mac OSX 10.6
             if(rval !=0):
                 print "Table ", filePath, " is not a well formed XML document."
                 isOK = False
