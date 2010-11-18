@@ -30,43 +30,45 @@
 #define SYNTHESIS_EVLAAPERTURE_H
 
 #include <images/Images/ImageInterface.h>
-#include <synthesis/MeasurementComponents/Utils.h>
-#include <synthesis/MeasurementComponents/BeamCalc.h>
-#include <synthesis/MeasurementComponents/CFStore.h>
 #include <synthesis/MeasurementComponents/ATerm.h>
-#include <synthesis/MeasurementComponents/VLACalcIlluminationConvFunc.h>
-//#include <synthesis/MeasurementComponents/PixelatedConvFunc.h>
-#include <synthesis/MeasurementComponents/ConvolutionFunction.h>
-#include <coordinates/Coordinates/DirectionCoordinate.h>
-#include <coordinates/Coordinates/SpectralCoordinate.h>
-#include <coordinates/Coordinates/StokesCoordinate.h>
-#include <lattices/Lattices/LatticeFFT.h>
-#include <casa/Logging/LogIO.h>
-#include <casa/Logging/LogSink.h>
-#include <casa/Logging/LogOrigin.h>
+#include <coordinates/Coordinates/CoordinateSystem.h>
+//
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+// TEMPS The following #defines should REALLLLAY GO!
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+//
+#define CONVSIZE (1024*2)
+#define CONVWTSIZEFACTOR 1.0
+#define OVERSAMPLING 20
+#define THRESHOLD 1E-4
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   template<class T> class ImageInterface;
   template<class T> class Matrix;
   class VisBuffer;
   class EVLAAperture : public ATerm
-  //: public PixelatedConvFunc<Complex>
   {
   public:
     EVLAAperture():     
-      ATerm(),bandID_p(-1), polMap_p(), feedStokes_p()
+      ATerm(), polMap_p(), feedStokes_p()
     {};
     ~EVLAAperture() {};
     EVLAAperture& operator=(const EVLAAperture& other);
     Int getVLABandID(Double& freq,String&telescopeName);
+    //
+    // Overload these functions.  They are pure virtual in the base class (ATerm).
+    //
     Bool findSupport(Array<Complex>& func, Float& threshold,Int& origin, Int& R);
-    void makeConvFunction(const ImageInterface<Complex>& image,
-			  const VisBuffer& vb,
-			  const Int wConvSize,
-			  const Float pa,
-			  CFStore& cfs,
-			  CFStore& cfwts);
+
+    void applySky(ImageInterface<Float>& twoDPB, 
+		  const VisBuffer& vb, const Bool doSquint=True);
+    void applySky(ImageInterface<Complex>& twoDPB, 
+		  const VisBuffer& vb, const Bool doSquint=True);
+
     int getVisParams(const VisBuffer& vb);
+
     Int makePBPolnCoords(const VisBuffer&vb,
 			 const Vector<Int>& polMap,
 			 const Int& convSize,
@@ -75,20 +77,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			 const Int& skyNx, const Int& skyNy,
 			 CoordinateSystem& feedCoord,
 			 Vector<Int>& cfStokes);
-    //
-    // Overloading these functions from ConvolutionFunction class
-    //
-    void setPolMap(const Vector<Int>& polMap);
-    void setFeedStokes(const Vector<Int>& feedStokes);
+    virtual void setPolMap(const Vector<Int>& polMap);
+    virtual void setFeedStokes(const Vector<Int>& feedStokes);
+    virtual void getPolMap(Vector<Int>& polMap) {polMap.resize(0);polMap=polMap_p;};
+    virtual void getFeedStokes(Vector<Int>& feedStokes) 
+    {feedStokes.resize(0);feedStokes = feedStokes_p;};
+    virtual Int getConvSize() {return CONVSIZE;};
+    virtual Float getConvWeightSizeFactor() {return CONVWTSIZEFACTOR;};
+    virtual Int getOversampling() {return OVERSAMPLING;}
+    virtual Float getSupportThreshold() {return THRESHOLD;};
   private:
-    Int bandID_p;
     Float Diameter_p, Nant_p, HPBW, sigma;
-    
-    LogIO& logIO() {return logIO_p;}
-    LogIO logIO_p;
     Vector<Int> polMap_p;
     Vector<Int> feedStokes_p;
-    //    CountedPtr<ATerm> ATerm_p;
   };
 };
 #endif
