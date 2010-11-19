@@ -234,7 +234,9 @@ public:
 
   //assign  the flux scale that the ftmachines have if they have
   virtual void getCoverageImage(Int model, ImageInterface<Float>& im);
-    
+  //Set this to true if the residual image for mosaic is to be in
+  //pb^2 units (optimum mode for clean search for centimetric imaging)
+  virtual void doFlatNoise(Bool doFlat=False){doflat_p=doFlat;};
   
  protected:
 
@@ -353,6 +355,7 @@ public:
   //virtual void predictComponents(Bool& incremental, Bool& initialized);
   virtual void predictComponents(Bool& incremental, Bool& initialized,  MS::PredefinedColumns Type=MS::MODEL_DATA);
 
+  
   // SkyModel
   SkyModel* sm_;
 
@@ -409,6 +412,7 @@ public:
   //We have to ignore this at the very begining and first call to 'changed'
   //and not call finalizePut
   Bool isBeginingOfSkyJonesCache_p;
+  Bool doflat_p;
 };
 
 } //# NAMESPACE CASA - END

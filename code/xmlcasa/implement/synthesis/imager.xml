@@ -3184,6 +3184,7 @@ deconvolution cycles are ended.
   Primary beam the noise floor is kept uniform, when using SAULT as scaletype.
 \item fluxscale: use this to give a filename to store the factor image
   to apply to the image to get the fluxscale right.
+\item flatnoise: (default true) Set to false if you want clean components for mosaic  to be searched in the residual image that is effectively multiplied by the $beam^2$. This means when the noise is determined after the antenna, searching in the optimum domain of $signal/(sigma^2)$. For meter wavelengths where noise is determined by the sky, it is no longer optimal.
 \end{description}
 
 </description>
@@ -3231,6 +3232,10 @@ deconvolution cycles are ended.
      <param type="stringArray" name="fluxscale">
      <description>Names of flux scale images for mosaicing</description>
      <value></value>
+     </param>
+     <param type="bool" name="flatnoise">
+       <description>Set to false if clean component search is to be done in an optimal signal/noise residual image if true will clean in a constant noise image</description>
+     <value>true</value>
      </param>
 </input>
 

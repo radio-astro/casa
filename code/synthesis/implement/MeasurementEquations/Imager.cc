@@ -295,6 +295,7 @@ traceEvent(1,"Entering imager::defaults",25);
   imageTileVol_p=0;
   singlePrec_p=False;
   spwchansels_p.resize();
+  flatnoise_p=True;
 #ifdef PABLO_IO
   traceEvent(1,"Exiting imager::defaults",24);
 #endif
@@ -357,56 +358,59 @@ Imager &Imager::operator=(const Imager & other)
   if (!ms_p.null() && this != &other) {
     *ms_p = *(other.ms_p);
   }
-  //Equating the table and ms parameters
-  antab_p=other.antab_p;
-  datadesctab_p=other.datadesctab_p;
-  feedtab_p=other.feedtab_p;
-  fieldtab_p=other.fieldtab_p;
-  obstab_p=other.obstab_p;
-  pointingtab_p=other.pointingtab_p;
-  poltab_p=other.poltab_p;
-  proctab_p=other.proctab_p;
-  spwtab_p=other.spwtab_p;
-  statetab_p=other.statetab_p;
-  latestObsInfo_p=other.latestObsInfo_p;
-  parAngleInc_p=other.parAngleInc_p;
-  skyPosThreshold_p=other.skyPosThreshold_p;
-  doTrackSource_p=other.doTrackSource_p;
-  trackDir_p=other.trackDir_p;
-  smallScaleBias_p=other.smallScaleBias_p;
-  if (!mssel_p.null() && this != &other) {
-    *mssel_p = *(other.mssel_p);
+  if(this != &other){
+    //Equating the table and ms parameters
+    antab_p=other.antab_p;
+    datadesctab_p=other.datadesctab_p;
+    feedtab_p=other.feedtab_p;
+    fieldtab_p=other.fieldtab_p;
+    obstab_p=other.obstab_p;
+    pointingtab_p=other.pointingtab_p;
+    poltab_p=other.poltab_p;
+    proctab_p=other.proctab_p;
+    spwtab_p=other.spwtab_p;
+    statetab_p=other.statetab_p;
+    latestObsInfo_p=other.latestObsInfo_p;
+    parAngleInc_p=other.parAngleInc_p;
+    skyPosThreshold_p=other.skyPosThreshold_p;
+    doTrackSource_p=other.doTrackSource_p;
+    trackDir_p=other.trackDir_p;
+    smallScaleBias_p=other.smallScaleBias_p;
+    if (!mssel_p.null() && this != &other) {
+      *mssel_p = *(other.mssel_p);
+    }
+    if (vs_p && this != &other) {
+      *vs_p = *(other.vs_p);
+    }
+    if (wvi_p && this != &other) {
+      *wvi_p = *(other.wvi_p);
+      rvi_p=wvi_p;
+    }
+    else if(rvi_p && this != &other){
+      *rvi_p = *(other.rvi_p);
+      wvi_p=NULL;
+    }
+    if (ft_p && this != &other) {
+      *ft_p = *(other.ft_p);
+    }
+    if (cft_p && this != &other) {
+      *cft_p = *(other.cft_p);
+    }
+    if (se_p && this != &other) {
+      *se_p = *(other.se_p);
+    }
+    if (sm_p && this != &other) {
+      *sm_p = *(other.sm_p);
+    }
+    if (vp_p && this != &other) {
+      *vp_p = *(other.vp_p);
+    }
+    if (gvp_p && this != &other) {
+      *gvp_p = *(other.gvp_p);
+    }
+    imageTileVol_p=other.imageTileVol_p;
+    flatnoise_p=other.flatnoise_p;
   }
-  if (vs_p && this != &other) {
-    *vs_p = *(other.vs_p);
-  }
-  if (wvi_p && this != &other) {
-    *wvi_p = *(other.wvi_p);
-    rvi_p=wvi_p;
-  }
-  else if(rvi_p && this != &other){
-    *rvi_p = *(other.rvi_p);
-    wvi_p=NULL;
-  }
-  if (ft_p && this != &other) {
-    *ft_p = *(other.ft_p);
-  }
-  if (cft_p && this != &other) {
-    *cft_p = *(other.cft_p);
-  }
-  if (se_p && this != &other) {
-    *se_p = *(other.se_p);
-  }
-  if (sm_p && this != &other) {
-    *sm_p = *(other.sm_p);
-  }
-  if (vp_p && this != &other) {
-    *vp_p = *(other.vp_p);
-  }
-  if (gvp_p && this != &other) {
-    *gvp_p = *(other.gvp_p);
-  }
-  imageTileVol_p=other.imageTileVol_p;
   return *this;
 }
 
@@ -2458,7 +2462,8 @@ Bool Imager::setmfcontrol(const Float cyclefactor,
 			  const String& scaleType,
 			  const Float minPB,
 			  const Float constPB,
-			  const Vector<String>& fluxscale)
+			  const Vector<String>& fluxscale,
+			  const Bool flatnoise)
 {  
   cyclefactor_p = cyclefactor;
   cyclespeedup_p =  cyclespeedup;
@@ -2468,6 +2473,7 @@ Bool Imager::setmfcontrol(const Float cyclefactor,
   fluxscale_p = fluxscale;
   scaleType_p = scaleType;
   minPB_p = minPB;
+  flatnoise_p=flatnoise;
 
   constPB_p = constPB;
   return True;
@@ -5696,7 +5702,7 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
 	    // Using minPB_p^2 below to make it consistent with the normalization in SkyEquation.
 	    //
 	    Float cutoffval=minPB_p;
-	    if(ft_p->name()=="MosaicFT")
+	    if(ft_p->name()=="MosaicFT")	      
 	      cutoffval=minPB_p*minPB_p;
 	    
 	    if (sm_p->doFluxScale(thismodel)) {
@@ -8760,7 +8766,8 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
     scaleType="NONE";
   
   se_p->setImagePlaneWeighting(scaleType, minPB_p, constPB_p);
-
+  se_p->doFlatNoise(flatnoise_p);
+  
   AlwaysAssert(se_p, AipsError);
 
   // Now add any SkyJones that are needed

@@ -412,6 +412,8 @@ class Imager
 	    const Vector<String>& residual);
 
   // Multi-field control parameters
+  //flat noise is the parameter that control the search of clean components
+  //in a flat noise image or an optimum beam^2 image
   Bool setmfcontrol(const Float cyclefactor,
 		    const Float cyclespeedup,
 		    const Int stoplargenegatives, 
@@ -419,7 +421,8 @@ class Imager
 		    const String& scaleType,
 		    const Float  minPB,
 		    const Float constPB,
-		    const Vector<String>& fluxscale);
+		    const Vector<String>& fluxscale,
+		    const Bool flatnoise=True);
   
   // Feathering algorithm
   Bool feather(const String& image,
@@ -641,6 +644,8 @@ protected:
 
   Bool doWideBand_p;          // Do Multi Frequency Synthesis Imaging
   String freqInterpMethod_p; //frequency interpolation mode
+
+  Bool flatnoise_p;
 
   // Set the defaults
   void defaults();
