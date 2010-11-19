@@ -45,7 +45,6 @@
 #include <images/IO/FitterEstimatesFileParser.h>
 #include <images/Images/ImageAnalysis.h>
 #include <images/Images/ImageFitter.h>
-#include <images/Images/ImageInputProcessor.h>
 #include <images/Images/ImageMetaData.h>
 #include <images/Images/ImageStatistics.h>
 #include <images/Images/FITSImage.h>
@@ -76,7 +75,7 @@ namespace casa {
 		regionString(""), estimatesString(""), _newEstimatesFileName(newEstimatesInp),
 		includePixelRange(includepix), excludePixelRange(excludepix),
 		estimates(), fixed(0), logfileAppend(append), _fitConverged(False),
-		fitDone(False), _noBeam(False), _peakIntensities() {
+		fitDone(False), _noBeam(False), _deleteImageOnDestruct(True), _peakIntensities() {
         _construct(imagename, box, region, 0, estimatesFilename);
     }
 
@@ -93,13 +92,50 @@ namespace casa {
 		regionString(""), estimatesString(""), _newEstimatesFileName(newEstimatesInp),
 		includePixelRange(includepix), excludePixelRange(excludepix),
 		estimates(), fixed(0), logfileAppend(append), _fitConverged(False),
-		fitDone(False), _noBeam(False), _peakIntensities() {
+		fitDone(False), _noBeam(False), _deleteImageOnDestruct(True), _peakIntensities() {
         _construct(imagename, box, "", regionPtr, estimatesFilename);
     }
 
+    ImageFitter::ImageFitter(
+        const ImageInterface<Float>*& image, const String& region, const String& box,
+        const uInt chanInp, const String& stokes,
+        const String& maskInp, const Vector<Float>& includepix,
+        const Vector<Float>& excludepix, const String& residualInp,
+        const String& modelInp, const String& estimatesFilename,
+        const String& logfile, const Bool& append,
+        const String& newEstimatesInp
+    ) : _log(new LogIO()), _image(image->cloneII()), _chan(chanInp), _stokesString(stokes),
+		_mask(maskInp), _residual(residualInp),_model(modelInp), _logfileName(logfile),
+		regionString(""), estimatesString(""), _newEstimatesFileName(newEstimatesInp),
+		includePixelRange(includepix), excludePixelRange(excludepix),
+		estimates(), fixed(0), logfileAppend(append), _fitConverged(False),
+		fitDone(False), _noBeam(False), _deleteImageOnDestruct(False), _peakIntensities() {
+        _construct(_image, box, region, 0, estimatesFilename);
+    }
+
+    ImageFitter::ImageFitter(
+        const ImageInterface<Float>*& image, const Record* regionPtr, const String& box,
+        const uInt chanInp, const String& stokes,
+        const String& maskInp, const Vector<Float>& includepix,
+        const Vector<Float>& excludepix, const String& residualInp,
+        const String& modelInp, const String& estimatesFilename,
+        const String& logfile, const Bool& append,
+        const String& newEstimatesInp
+    ) : _log(new LogIO()), _image(image->cloneII()), _chan(chanInp), _stokesString(stokes),
+		_mask(maskInp), _residual(residualInp),_model(modelInp), _logfileName(logfile),
+		regionString(""), estimatesString(""), _newEstimatesFileName(newEstimatesInp),
+		includePixelRange(includepix), excludePixelRange(excludepix),
+		estimates(), fixed(0), logfileAppend(append), _fitConverged(False),
+		fitDone(False), _noBeam(False), _deleteImageOnDestruct(False), _peakIntensities() {
+        _construct(_image, box, "", regionPtr, estimatesFilename);
+    }
+
+
     ImageFitter::~ImageFitter() {
         delete _log;
-        delete _image;
+        if (_deleteImageOnDestruct) {
+        	delete _image;
+        }
     }
 
     ComponentList ImageFitter::fit() {
@@ -188,15 +224,10 @@ namespace casa {
 		return statVec[0];
 	}
 
-    void ImageFitter::_construct(
-        const String& imagename, const String& box, const String& regionName,
-        const Record* regionPtr, const String& estimatesFilename
-    ) {
+	Vector<ImageInputProcessor::OutputStruct> ImageFitter::_getOutputs() {
     	LogOrigin logOrigin("ImageFitter", __FUNCTION__);
         *_log << logOrigin;
 
-		ImageInputProcessor inputProcessor;
-        String diagnostics;
         ImageInputProcessor::OutputStruct residualIm;
         residualIm.label = "residual image";
         residualIm.outputFile = &_residual;
@@ -224,8 +255,27 @@ namespace casa {
         outputs[2] = newEstFile;
         outputs[3] = logFile;
 
-        Vector<Coordinate::Type> reqCoordTypes(1);
-        reqCoordTypes[0] = Coordinate::DIRECTION;
+        return outputs;
+        // Vector<Coordinate::Type> reqCoordTypes(1, Coordinate::DIRECTION);
+        //reqCoordTypes[0] = Coordinate::DIRECTION;
+        // return inputProcessor;
+	}
+
+    void ImageFitter::_construct(
+        const String& imagename, const String& box, const String& regionName,
+        const Record* regionPtr, const String& estimatesFilename
+    ) {
+    	LogOrigin logOrigin("ImageFitter", __FUNCTION__);
+        *_log << logOrigin;
+        *_log << LogIO::WARN
+        	<< "THIS CONSTRUCTOR IS DEPRECATED. PLEASE USE A CONSTRUCTOR WHICH "
+        	<< "TAKES A VALID IMAGE INTERFACE POINTER" << LogIO::POST;
+        Vector<ImageInputProcessor::OutputStruct> outputs = _getOutputs();
+        //ImageInputProcessor inputProcessor = _beginConstruction();
+
+        String diagnostics;
+        Vector<Coordinate::Type> reqCoordTypes(1, Coordinate::DIRECTION);
+		ImageInputProcessor inputProcessor;
 
         inputProcessor.process(
         	_image, _regionRecord, diagnostics, &outputs,
@@ -234,6 +284,34 @@ namespace casa {
         	ImageInputProcessor::USE_FIRST_STOKES, False,
         	&reqCoordTypes
         );
+        _finishConstruction(estimatesFilename);
+    }
+
+    void ImageFitter::_construct(
+        const ImageInterface<Float> *image, const String& box, const String& regionName,
+        const Record* regionPtr, const String& estimatesFilename
+    ) {
+    	LogOrigin logOrigin("ImageFitter", __FUNCTION__);
+        *_log << logOrigin;
+        Vector<ImageInputProcessor::OutputStruct> outputs = _getOutputs();
+        //ImageInputProcessor inputProcessor = _beginConstruction();
+
+        String diagnostics;
+        Vector<Coordinate::Type> reqCoordTypes(1, Coordinate::DIRECTION);
+		ImageInputProcessor inputProcessor;
+
+        inputProcessor.process(
+        	_regionRecord, diagnostics, &outputs,
+        	_stokesString, image, regionPtr,
+        	regionName, box, String::toString(_chan),
+        	ImageInputProcessor::USE_FIRST_STOKES, False,
+        	&reqCoordTypes
+        );
+        _finishConstruction(estimatesFilename);
+    }
+
+    void ImageFitter::_finishConstruction(const String& estimatesFilename) {
+    	LogOrigin logOrigin("ImageFitter", __FUNCTION__);
         *_log << logOrigin;
         // <todo> kludge because Flux class is really only made for I, Q, U, and V stokes
 
