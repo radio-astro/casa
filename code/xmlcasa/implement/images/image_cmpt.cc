@@ -1372,11 +1372,11 @@ image::fitpolynomial(const std::string& residFile, const std::string& fitFile,
     }
 	try {
 		ImageFitter *fitter = 0;
-		String imName = itsImage->name();
+		const ImageInterface<Float> *image = itsImage->getImage();
 		if (region.type() == ::casac::variant::STRING || region.size() == 0) {
 			String regionString = (region.size() == 0) ? "" : region.toString();
 			fitter = new ImageFitter(
-				imName, regionString, box, chan, stokes, mask, includepix, excludepix,
+				image, regionString, box, chan, stokes, mask, includepix, excludepix,
 				residual, model, estimates, logfile, append, newestimates
 			);
 		}
@@ -1384,7 +1384,7 @@ image::fitpolynomial(const std::string& residFile, const std::string& fitFile,
 			::casac::variant regionCopy = region;
 			Record *regionRecord = toRecord(regionCopy.asRecord());
 			fitter = new ImageFitter(
-				imName, regionRecord, box, chan, stokes, mask, includepix, excludepix,
+				image, regionRecord, box, chan, stokes, mask, includepix, excludepix,
 				residual, model, estimates, logfile, append, newestimates
 			);
 		}
