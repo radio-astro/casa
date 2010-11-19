@@ -17,11 +17,48 @@ def averimages(outimage='outimage', inimages=[]):
     if(os.path.exists(outimage)):
         shutil.rmtree(outimage)
     if(type(inimages)==list):
+
+        #        ia.open(inimages[0])
+        #        shp=ia.shape()
+        #        ia.close()
+        #
+        #        ia.fromshape(outimage,shp,overwrite=True)
+        #        sum=ia.getchunk()
+        #        ia.close()
+        #        nele=0
+        #        for k in range(len(inimages)):
+        #            ia.open(inimages[k])
+        #            ia.unlock()
+        #            try:
+        #	        px=ia.getchunk() 
+        #                for i in range(shp[0]):
+        #                    for j in range(shp[1]):
+        #		        sum[i, j, 0, 0]+=px[i, j, 0, 0]
+        #            except:
+        #                pass
+        #            ia.close()
+        #            time.sleep(1)
+        #        if nele>0:
+        #            for i in range(shp[0]):
+        #                for j in range(shp[1]):
+        #	            sum[i, j, 0, 0]/=nele
+        #        
+        #        ia.open(outimage)
+        #        ia.putchunk(sum)
+        #        ia.close()
+        #        ia.done()
+
         shutil.copytree(inimages[0], outimage)
         ia.open(outimage)        
+        s=0
         for k in range(1, len(inimages)) :
-            ia.calc('"'+outimage+'" +  "'+inimages[k]+'"')
-        ia.calc('"'+outimage+'"'+'/'+str(len(inimages)))
+            try:
+                ia.calc('"'+outimage+'" + "'+inimages[k]+'"')
+                s+=1
+            except:
+                pass
+        if s>0:
+            ia.calc('"'+outimage+'"'+'/'+str(s))
         ia.done()
     elif(type(inimages)==str):
         shutil.copytree(inimages, outimage)
