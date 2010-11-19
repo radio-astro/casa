@@ -30,11 +30,9 @@
 #include <images/Images/FITSImage.h>
 #include <casa/namespace.h>
 
-
 void writeTestString(const String& test) {
     cout << "\n" << "*** " << test << " ***" << endl;
 }
-
 
 int main() {
     String test;
