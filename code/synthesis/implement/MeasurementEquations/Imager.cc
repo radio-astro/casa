@@ -9599,7 +9599,7 @@ Bool Imager::makePBImage(PBMath& pbMath, ImageInterface<Float>& pbImage){
       ++fieldCounter;
       fieldsDone.resize(fieldCounter, True);
       fieldsDone(fieldCounter-1)=vb.fieldId();
-      wcenter=vb.direction1()(0);
+      wcenter=vb.msColumns().field().phaseDirMeas(vb.fieldId());
       TempImage<Float> pbTemp(imShape, imageCoord);
       TempImage<Complex> ctemp(imShape, imageCoord);
       ctemp.set(1.0);
