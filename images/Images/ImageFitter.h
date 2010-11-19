@@ -33,6 +33,8 @@
 #include <casa/Logging/LogIO.h>
 #include <components/ComponentModels/ComponentList.h>
 #include <images/Images/ImageInterface.h>
+#include <images/Images/ImageInputProcessor.h>
+
 #include <components/ComponentModels/ComponentType.h>
 #include <casa/namespace.h>
 
@@ -89,6 +91,8 @@ namespace casa {
             // <li> excludepix - Pixel value range to exclude from fit</li>
             // <li> residualInp - Name of residual image to save. Blank means do not save residual image</li>
             // <li> modelInp - Name of the model image to save. Blank means do not save model image</li>
+
+			// DEPRECATED, DO NOT USE FOR NEW CODE AND CHANGE OLD CODE TO USE ONE OF THE CONSTRUCTORS BELOW
             ImageFitter(
                 const String& imagename, const String& region, const String& box="",
                 const uInt chanInp=0, const String& stokes="I",
@@ -100,8 +104,33 @@ namespace casa {
                 const Bool& append=True, const String& newEstimatesInp=""
             ); 
 
+            // DEPRECATED, DO NOT USE FOR NEW CODE AND CHANGE OLD CODE TO USE ONE OF THE CONSTRUCTORS BELOW
             ImageFitter(
                 const String& imagename, const Record* regionPtr, const String& box="",
+                const uInt chanInp=0, const String& stokes="I",
+                const String& maskInp="",
+                const Vector<Float>& includepix = Vector<Float>(0),
+                const Vector<Float>& excludepix = Vector<Float>(0),
+                const String& residualInp="", const String& modelInp="",
+                const String& estiamtesFilename="", const String& logfile="",
+                const Bool& append=True, const String& newEstimatesInp=""
+            );
+
+            // use these constructors when you already have a pointer to a valid ImageInterface object
+
+            ImageFitter(
+                const ImageInterface<Float>*& image, const String& region, const String& box="",
+                const uInt chanInp=0, const String& stokes="I",
+                const String& maskInp="",
+                const Vector<Float>& includepix = Vector<Float>(0),
+                const Vector<Float>& excludepix = Vector<Float>(0),
+                const String& residualInp="", const String& modelInp="",
+                const String& estiamtesFilename="", const String& logfile="",
+                const Bool& append=True, const String& newEstimatesInp=""
+            );
+
+            ImageFitter(
+                const ImageInterface<Float>*& image, const Record* regionPtr, const String& box="",
                 const uInt chanInp=0, const String& stokes="I",
                 const String& maskInp="",
                 const Vector<Float>& includepix = Vector<Float>(0),
@@ -131,7 +160,7 @@ namespace casa {
             Vector<Float> includePixelRange, excludePixelRange;
             ComponentList estimates, _results;
             Vector<String> fixed;
-            Bool logfileAppend, _fitConverged, fitDone, _noBeam;
+            Bool logfileAppend, _fitConverged, fitDone, _noBeam, _deleteImageOnDestruct;
             Vector<Quantity> _peakIntensities, _peakIntensityErrors, _fluxDensityErrors,
 				_fluxDensities, _majorAxes, _majorAxisErrors, _minorAxes, _minorAxisErrors,
 				_positionAngles, _positionAngleErrors;
@@ -145,6 +174,15 @@ namespace casa {
                 const String& imagename, const String& box, const String& regionName,
                 const Record* regionPtr, const String& estimatesFilename
             );
+
+            void _construct(
+                const ImageInterface<Float> *image, const String& box, const String& regionName,
+                const Record* regionPtr, const String& estimatesFilename
+            );
+
+            Vector<ImageInputProcessor::OutputStruct> _getOutputs();
+
+            void _finishConstruction(const String& estimatesFilename);
 
             // summarize the results in a nicely formatted string
             String _resultsToString();
