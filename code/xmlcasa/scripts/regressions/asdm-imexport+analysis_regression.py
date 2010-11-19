@@ -126,19 +126,23 @@ def verify_asdm(asdmname, withPointing):
                   "SwitchCycle.xml"
                   ]
     isOK = True
+    # test if xmllint is available and can be used in the following
+    xmllint_ok = (os.system('xmllint --version') == 0)
     for fileName in allTables:
         filePath = asdmname+'/'+fileName
         if(not os.path.exists(filePath)):
             print "ASDM table file ", filePath, " doesn't exist."
             isOK = False
-        else:
+        elif(xmllint_ok):
             # test if well formed
-            rval = os.system('DYLD_LIBRARY_PATH="";xmllint --noout '+filePath) #set lib path temporarily to "" to avoid problem on Mac OSX 10.6
+            rval = os.system('xmllint --noout '+filePath)
             if(rval !=0):
                 print "Table ", filePath, " is not a well formed XML document."
                 isOK = False
-
-    print "Note: xml validation not possible since ASDM DTDs (schemas) not yet online."
+    if(isOK and not xmllint_ok):
+        print "Note: Test of XML well-formedness not possible since xmllint not available."
+    else:
+        print "Note: xml validation not possible since ASDM DTDs (schemas) not yet online."
         
     if(not os.path.exists(asdmname+"/ASDMBinary")):
         print "ASDM binary directory "+asdmname+"/ASDMBinary doesn't exist."
