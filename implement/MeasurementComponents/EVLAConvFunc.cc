@@ -451,7 +451,7 @@ namespace casa{
 	//
 	// Now the w term
 	//
-	wterm.apply(screen, iw, sampling, wConvSize, wScale, inner);
+	wterm.applySky(screen, iw, sampling, wScale, inner);
 	//
 	// Fill the complex image with the w-term...
 	//
