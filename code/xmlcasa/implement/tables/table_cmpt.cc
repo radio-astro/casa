@@ -294,7 +294,7 @@ table::fromfits(const std::string& tablename, const std::string& fitsfile, const
 
 
 casac::table*
-table::copy(const std::string& newtablename, const bool deep, const bool valuecopy, const ::casac::record& dminfo, const std::string& endian, const bool memorytable, const bool returnobject)
+table::copy(const std::string& newtablename, const bool deep, const bool valuecopy, const ::casac::record& dminfo, const std::string& endian, const bool memorytable, const bool returnobject, const bool norows)
 {
  *itsLog << LogOrigin(__func__, name());
  casac::table *rstat(0);
@@ -302,7 +302,7 @@ table::copy(const std::string& newtablename, const bool deep, const bool valueco
 	 if(itsTable){
 		 Record *tdminfo = toRecord(dminfo);
 		 TableProxy *mycopy = new TableProxy;
-		 *mycopy = itsTable->copy(newtablename, memorytable, deep, valuecopy, endian, *tdminfo, false);
+		 *mycopy = itsTable->copy(newtablename, memorytable, deep, valuecopy, endian, *tdminfo, norows);
 		 delete tdminfo;
 		 rstat = new casac::table(mycopy);
 	 } else {

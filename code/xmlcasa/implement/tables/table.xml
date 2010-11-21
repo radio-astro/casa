@@ -943,6 +943,11 @@ returned if the copy is made to a memory table.
      <description>Return a tool object for the new table</description>
      <value>false</value>
      </param>
+
+     <param type="bool" name="norows">
+     <description>Don't copy any rows (useful for copying only the table structure)</description>
+     <value>false</value>
+     </param>
 </input>
 <returns type="casatable"/>
 </method>
