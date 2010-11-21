@@ -2541,6 +2541,59 @@ for i in range(len(tcoord)):
     deciding if the spw and field in the measurementsets are
     similar or not. 
   </example>
+
+</method>
+   <method type="function" name="testconcatenate">
+   <shortdescription>Concatenate only the subtables of two measurement sets (resulting MAIN table not useful)</shortdescription>
+   
+  <keyword>testconcatenate</keyword>
+  <input>
+    
+     <param type="string" direction="in" name="msfile">
+     <description>The name of the measurement set from which the subtables should be appended</description>
+     <value></value>
+     </param>
+    
+     <param type="any" direction="in" name="freqtol">
+     <description>Frequency difference  within which 2
+ spectral windows are considered similar; e.g '10Hz'</description>
+     <any type="variant"/>
+     <value>1Hz</value>
+     </param>
+    
+     <param type="any" direction="in" name="dirtol">
+     <description>Direction difference within which 2
+ fields are considered the same; e.g '1mas'</description>
+     <any type="variant"/>
+     <value>1mas</value>
+     </param>
+  </input>
+  <returns type="bool"/>
+
+  <description>
+    This function acts like ms.concatenate() except that the MAIN table
+    is not modified. This is useful for generating, e.g.,
+    SPECTRAL_WINDOW and FIELD tables which contain all used SPW and FIELD ids
+    for a set of MSs without having to actually carry out a time-consuming
+    concatenation on disk. The MAIN table in the resulting output MS is
+    that of the original MS, i.e. it is not touched. 
+  </description>
+  <example>
+    
+      tb.open("3C273XC1.MS")
+      tb.copy("TEMP.MS", norows=True)
+      tb.close()
+      ms.open("TEMP.MS", nomodify=False)
+      ms.testconcatenate("3C273XC1.ms", '1GHz', '1arcsec')
+      ms.testconcatenate("BLLAC.ms", '1GHz', '1arcsec')
+      ms.done()
+    
+    This example makes a copy of the structure of an MS and then
+    appends the subtables data from two  measurement sets to the empty structure. 
+    Its going to assume a frequency tolerance of 1GHz and position tolerance 
+    of 1 arcsec in deciding if the spw and field in the measurementsets are
+    similar or not. 
+  </example>
 </method>
 
    <method type="function" name="timesort">

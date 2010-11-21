@@ -1784,6 +1784,64 @@ ms::concatenate(const std::string& msfile, const ::casac::variant& freqtol, cons
 }
 
 bool
+ms::testconcatenate(const std::string& msfile, const ::casac::variant& freqtol, const ::casac::variant& dirtol)
+{
+    Bool rstat(False);
+    try {
+	if(!detached()){
+	    *itsLog << LogOrigin("ms", "testconcatenate");
+	    
+	    *itsLog << LogIO::NORMAL << "*** Note: this method does _not_ merge the Main table!"
+		    << LogIO::POST;
+
+	    if (!Table::isReadable(msfile)) {
+		*itsLog << "Cannot read the measurement set called " << msfile
+			<< LogIO::EXCEPTION;
+	    }                   
+
+	    const MeasurementSet appendedMS(msfile);
+	    
+	    MSConcat mscat(*itsMS);
+	    Quantum<Double> dirtolerance;
+	    Quantum<Double> freqtolerance;
+	    if(freqtol.toString().empty()){
+		freqtolerance=casa::Quantity(1.0,"Hz");
+	    }
+	    else{
+		freqtolerance=casaQuantity(freqtol);
+	    }
+	    if(dirtol.toString().empty()){
+		dirtolerance=casa::Quantity(1.0, "mas");
+	    }
+	    else{
+		dirtolerance=casaQuantity(dirtol);
+	    }
+	    
+	    mscat.setTolerance(freqtolerance, dirtolerance);
+	    mscat.concatenate(appendedMS, True); // "True" meaning "don't modify Main table"
+
+	    String message = "Subtables from "+String(msfile) + " appended to those from " + itsMS->tableName();
+	    ostringstream param;
+	    param << "msfile= " << msfile
+		  << " freqTol='" << casaQuantity(freqtol) << "' dirTol='"
+		  << casaQuantity(dirtol) << "'";
+	    String paramstr=param.str();
+	    writehistory(std::string(message.data()), std::string(paramstr.data()),
+			 std::string("ms::testconcatenate()"), msfile, "ms");
+	    itsMS->flush(True);
+	}
+	rstat = True;
+    } catch (AipsError x) {
+	*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+		<< LogIO::POST;
+	Table::relinquishAutoLocks(True);
+	RETHROW(x);
+    }
+    Table::relinquishAutoLocks(True);
+    return rstat;
+}
+
+bool
 ms::timesort(const std::string& msname)
 {
     Bool rstat(False);

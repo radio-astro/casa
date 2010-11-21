@@ -302,6 +302,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_specfit.py
   scripts/task_splattotable.py
   scripts/task_split.py
+  scripts/task_testconcat.py
   scripts/task_uvcontsub2.py
   scripts/task_uvcontsub.py
   scripts/task_uvmodelfit.py
@@ -414,6 +415,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/specfit.xml
   tasks/splattotable.xml
   tasks/split.xml
+  tasks/testconcat.xml
   tasks/uvcontsub2.xml
   tasks/uvcontsub.xml
   tasks/uvmodelfit.xml
