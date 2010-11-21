@@ -118,49 +118,58 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
   return fixedShape;
 }
 
-  void MSConcat::concatenate(const MeasurementSet& otherMS)
+  void MSConcat::concatenate(const MeasurementSet& otherMS, 
+			     const Bool dontModifyMain)
 {
   LogIO log(LogOrigin("MSConcat", "concatenate", WHERE));
 
   log << "Appending " << otherMS.tableName() 
       << " to " << itsMS.tableName() << endl << LogIO::POST;
 
+  if(dontModifyMain){
+    log << "*** At user\'s request, MAIN table will not be modified!" << LogIO::POST;
+  }
+
   // check if certain columns are present and set flags accordingly
   Bool doCorrectedData=False, doModelData=False;
   Bool doFloatData=False;
-  if (itsMS.tableDesc().isColumn("FLOAT_DATA") && 
-      otherMS.tableDesc().isColumn("FLOAT_DATA"))
-    doFloatData=True;
-  else if (itsMS.tableDesc().isColumn("FLOAT_DATA") && 
-	   !otherMS.tableDesc().isColumn("FLOAT_DATA")){
-    log << itsMS.tableName() 
-	<< " has FLOAT_DATA column but not " << otherMS.tableName()
-  	<< LogIO::EXCEPTION;
-    log << "Cannot concatenate these MSs yet...you may split the corrected column of the SD as a work around." 
-       	<< LogIO::EXCEPTION;
 
+  if(!dontModifyMain){
+
+    if (itsMS.tableDesc().isColumn("FLOAT_DATA") && 
+	otherMS.tableDesc().isColumn("FLOAT_DATA"))
+      doFloatData=True;
+    else if (itsMS.tableDesc().isColumn("FLOAT_DATA") && 
+	     !otherMS.tableDesc().isColumn("FLOAT_DATA")){
+      log << itsMS.tableName() 
+	  << " has FLOAT_DATA column but not " << otherMS.tableName()
+	  << LogIO::EXCEPTION;
+      log << "Cannot concatenate these MSs yet...you may split the corrected column of the SD as a work around." 
+	  << LogIO::EXCEPTION; 
+    }
+    if (itsMS.tableDesc().isColumn("MODEL_DATA") && 
+	otherMS.tableDesc().isColumn("MODEL_DATA"))
+      doModelData=True;
+    else if (itsMS.tableDesc().isColumn("MODEL_DATA") && 
+	     !otherMS.tableDesc().isColumn("MODEL_DATA")){
+      log << itsMS.tableName() 
+	  << " has MODEL_DATA column but not " << otherMS.tableName()
+	  << LogIO::EXCEPTION;
+      log << "You may wish to create this column by loading " 
+	  << otherMS.tableName() 
+	  << " in imager or calibrater "  	
+	  << LogIO::EXCEPTION;
+    }
+    if (itsMS.tableDesc().isColumn("CORRECTED_DATA") && 
+	otherMS.tableDesc().isColumn("CORRECTED_DATA"))
+      doCorrectedData=True;
+    else if (itsMS.tableDesc().isColumn("CORRECTED_DATA") && 
+	     !otherMS.tableDesc().isColumn("CORRECTED_DATA"))
+      log << itsMS.tableName() 
+	  <<" has CORRECTED_DATA column but not " << otherMS.tableName()
+	  << LogIO::EXCEPTION;
   }
-  if (itsMS.tableDesc().isColumn("MODEL_DATA") && 
-      otherMS.tableDesc().isColumn("MODEL_DATA"))
-    doModelData=True;
-  else if (itsMS.tableDesc().isColumn("MODEL_DATA") && 
-	   !otherMS.tableDesc().isColumn("MODEL_DATA")){
-    log << itsMS.tableName() 
-	<< " has MODEL_DATA column but not " << otherMS.tableName()
-  	<< LogIO::EXCEPTION;
-    log << "You may wish to create this column by loading " 
-	<< otherMS.tableName() 
-	<< " in imager or calibrater "  	<< LogIO::EXCEPTION;
-  }
-  if (itsMS.tableDesc().isColumn("CORRECTED_DATA") && 
-      otherMS.tableDesc().isColumn("CORRECTED_DATA"))
-    doCorrectedData=True;
-  else if (itsMS.tableDesc().isColumn("CORRECTED_DATA") && 
-	   !otherMS.tableDesc().isColumn("CORRECTED_DATA"))
-    log << itsMS.tableName() 
-	<<" has CORRECTED_DATA column but not " << otherMS.tableName()
-	<< LogIO::EXCEPTION;
-  
+
   // verify that shape of the two MSs as described in POLARISATION, SPW, and DATA_DESCR
   //   is the same
   const ROMSMainColumns otherMainCols(otherMS);
@@ -195,37 +204,30 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
   // merge STATE
   Block<uInt> newStateIndices;
   Bool doState = False;
-  {
-    Bool hasState = Table::isReadable(itsMS.stateTableName()) && itsMS.state().nrow()>0;
-    Bool otherHasState = Table::isReadable(otherMS.stateTableName()) && otherMS.state().nrow()>0;
-    if(hasState &&  !otherHasState){
-      log << itsMS.tableName() 
-	  <<" has filled STATE table but not " << otherMS.tableName()
-	  << LogIO::EXCEPTION;
-    }
-    else if(!hasState &&  otherHasState){
-      log << otherMS.tableName() 
-	  <<" has filled STATE table but not " << itsMS.tableName()
-	  << LogIO::EXCEPTION;
-    }
-    else if(hasState && otherHasState){
-      const uInt oldStateRows = itsMS.state().nrow();
-      newStateIndices = copyState(otherMS.state());
-      const uInt addedRows = itsMS.state().nrow() - oldStateRows;
-      const uInt matchedRows = otherMS.state().nrow() - addedRows;
-      log << "Added " << addedRows 
-	  << " rows and matched " << matchedRows 
-	  << " from the state subtable" << LogIO::POST;
-      doState = True; // state id entries in the main table will have to be modified for otherMS
-    }
-    else{
-      log << "Input MS don't have filled STATE table, result won't have one either." 
-	  << LogIO::POST;
-    }
-  } 
+  // STATE is a required subtable but can be empty
+  if(otherMS.state().nrow()>0){
+    const uInt oldStateRows = itsMS.state().nrow();
+    newStateIndices = copyState(otherMS.state());
+    const uInt addedRows = itsMS.state().nrow() - oldStateRows;
+    const uInt matchedRows = otherMS.state().nrow() - addedRows;
+    log << "Added " << addedRows 
+	<< " rows and matched " << matchedRows 
+	<< " from the state subtable" << LogIO::POST;
+    doState = True; // state id entries in the main table will have to be modified for otherMS
+  }
 
   //See if there is a SOURCE table and concatenate and reindex it
-  copySource(otherMS);
+  {
+    uInt oldSRows = itsMS.source().nrow();
+    copySource(otherMS); 
+    if(Table::isReadable(itsMS.sourceTableName())){
+      uInt addedRows =  itsMS.source().nrow() - oldSRows;
+      if(addedRows>0){
+	log << "Added " << addedRows 
+	    << " rows to the source subtable" << LogIO::POST;
+      }
+    }
+  }
 
   // DATA_DESCRIPTION
   oldRows = itsMS.dataDescription().nrow();
@@ -243,7 +245,7 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
   // correct the spw entries in the SOURCE table and remove redundant rows
   oldRows = itsMS.source().nrow();
   updateSource();
-  {
+  if(Table::isReadable(itsMS.sourceTableName())){
     uInt removedRows =  oldRows - itsMS.source().nrow();
     if(removedRows>0){
       log << "Removed " << removedRows 
@@ -262,17 +264,34 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
 	<< " from the field subtable" << LogIO::POST;
   }
 
+  // OBSERVATION
+  copyObservation(otherMS.observation());
+
+  // POINTING
+  if(!copyPointing(otherMS.pointing(), newAntIndices)){
+    log << LogIO::WARN << "Could not merge Pointing subtables " << LogIO::POST ;
+  }
+
+  // STOP HERE if Main is not to be modified
+  if(dontModifyMain){
+    return;
+  }
+  //////////////////////////////////////////////////////
 
   // I need to check that the Measures and units are the same.
   const uInt newRows = otherMS.nrow();
   uInt curRow = itsMS.nrow();
-  if (!itsMS.canAddRow()) {
-    log << LogIO::WARN << "Can't add rows to this ms!  Something is serious wrong with " << itsMS.tableName() << endl << LogIO::POST;
-  }
 
-  log << LogIO::DEBUG1 << "trying to add " << newRows << " data rows to the ms, now at: " << itsMS.nrow() << endl << LogIO::POST;
+  if (!itsMS.canAddRow()) {
+    log << LogIO::WARN << "Can't add rows to this ms!  Something is seriously wrong with " 
+	<< itsMS.tableName() << endl << LogIO::POST;
+  }
+    
+  log << LogIO::DEBUG1 << "trying to add " << newRows << " data rows to the ms, now at: " 
+      << itsMS.nrow() << endl << LogIO::POST;
   itsMS.addRow(newRows);
-  log << LogIO::DEBUG1 << "added " << newRows << " data rows to the ms, now at: " << itsMS.nrow() << endl << LogIO::POST;
+  log << LogIO::DEBUG1 << "added " << newRows << " data rows to the ms, now at: " 
+      << itsMS.nrow() << endl << LogIO::POST;
 
   ROArrayColumn<Complex> otherModelData, otherCorrectedData;
   ArrayColumn<Complex> thisModelData, thisCorrectedData;
@@ -285,6 +304,7 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
     thisModelData.reference(modelData());
     otherModelData.reference(otherMainCols.modelData());
   }
+
   const ROScalarColumn<Double>& otherTime = otherMainCols.time();
   ScalarColumn<Double>& thisTime = time();
   const ROScalarColumn<Int>& otherAnt1 = otherMainCols.antenna1();
@@ -343,21 +363,13 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
   const ROScalarColumn<Int>& otherObsId=otherMainCols.observationId();
   Vector<Int> obsIds=otherObsId.getColumn();
 
-  // OBSERVATION
-  copyObservation(otherMS.observation());
-
-  // POINTING
-  if(!copyPointing(otherMS.pointing(), newAntIndices)){
-    log << LogIO::WARN << "Could not merge Pointing subtables " << LogIO::POST ;
-  }
-
   ScalarColumn<Int>& thisObsId = observationId();
   const ROArrayColumn<Float>& otherWeightSp = otherMainCols.weightSpectrum();
   ArrayColumn<Float>& thisWeightSp = weightSpectrum();
   Bool copyWtSp = !(thisWeightSp.isNull() || otherWeightSp.isNull()); 
   copyWtSp = copyWtSp && thisWeightSp.isDefined(0) 
     && otherWeightSp.isDefined(0);
-
+  
   if(doObsA_p){ // the obs ids changed for the first table
     Vector<Int> oldObsIds=thisObsId.getColumn();
     for(uInt r = 0; r < curRow; r++) {
@@ -634,13 +646,6 @@ Bool MSConcat::copyPointing(const MSPointing& otherPoint,const
     os << LogIO::NORMAL << "No valid pointing tables present. Result won't have one either." << LogIO::POST;
     return True;
   }
-  else if((itsMS.pointing().isNull() || (itsMS.pointing().nrow() == 0)) &&
-     !(otherPoint.isNull() && (otherPoint.nrow() == 0))
-     ){ // only the second  of the two MSs does have a valid pointing table
-    os << LogIO::WARN << itsMS.tableName() << "does not have a valid pointing table, "
-       << " the MS to be appended, however, has one. Result won't have one." << LogIO::POST;
-    return False;
-  }
   else if(otherPoint.isNull() || (otherPoint.nrow() == 0)){
     os << LogIO::WARN << "MS to be appended does not have a valid pointing table, "
        << itsMS.tableName() << ", however, has one. Result won't have one." << LogIO::POST;
@@ -680,11 +685,8 @@ Bool MSConcat::copyPointing(const MSPointing& otherPoint,const
       indgen(rowtodel);
       point.removeRow(rowtodel);
       return False;
-      
-      
+  
     } 
-
-
 
     for (Int k=origNRow; k <  (origNRow+rowToBeAdded); ++k){
       pointCol.antennaId().put(k, newAntIndices[antennaIDs[k]]);
@@ -929,48 +931,52 @@ Bool MSConcat::copySource(const MeasurementSet& otherms){
     MSSource& newSource=itsMS.source();
     MSSourceColumns& sourceCol=source();
     Int maxSrcId=0;
-    if(newSource.nrow() > 0){ 
-      if(!Table::isReadable(otherms.sourceTableName())){
-	return False;
-      }
-      const MSSource& otherSource=otherms.source();
-      if(otherSource.nrow()==0){
-	return False;
-      }
-      maxSrcId=max(sourceCol.sourceId().getColumn());
-      TableRecord sourceRecord;
-      newSourceIndex_p.clear();
-      Int numrows=otherSource.nrow();
-      Int destRow=newSource.nrow();
-      ROMSSourceColumns otherSourceCol(otherms.source());
-      Vector<Int> otherId=otherSourceCol.sourceId().getColumn();
-      newSource.addRow(numrows);
-      const ROTableRow otherSourceRow(otherSource);
-      TableRow sourceRow(newSource);
-      RecordFieldId sourceIdId(MSSource::columnName(MSSource::SOURCE_ID));
-      RecordFieldId spwIdId(MSSource::columnName(MSSource::SPECTRAL_WINDOW_ID));
-      // the spw ids
-      Vector<Int> otherSpectralWindowId=otherSourceCol.spectralWindowId().getColumn();
-
-      for (Int k =0 ; k < numrows ; ++k){
-	sourceRecord = otherSourceRow.get(k);
-	//define a new source id
-	newSourceIndex_p.define(otherId(k), maxSrcId+1+otherId(k)); 
-	sourceRecord.define(sourceIdId, maxSrcId+1+otherId(k));
-
-	//define a new temporary spw id by subtracting 10000
-	// later to be replaced in updateSource
-	if(otherSpectralWindowId(k)>=0){
-	  sourceRecord.define(spwIdId, otherSpectralWindowId(k)-10000);
-	}
-
-	sourceRow.putMatchingFields(destRow, sourceRecord);
-
-	++destRow;
-      }
-
-      doSource_p=True;
+    if(!Table::isReadable(otherms.sourceTableName())){
+      return False;
     }
+    const MSSource& otherSource=otherms.source();
+    if(otherSource.nrow()==0){
+      return False;
+    }
+    if(newSource.nrow()==0){
+      maxSrcId = -1;
+      //cout << "Initial source table is empty." << endl;
+    }
+    else{
+      maxSrcId=max(sourceCol.sourceId().getColumn());
+    }
+    TableRecord sourceRecord;
+    newSourceIndex_p.clear();
+    Int numrows=otherSource.nrow();
+    Int destRow=newSource.nrow();
+    ROMSSourceColumns otherSourceCol(otherms.source());
+    Vector<Int> otherId=otherSourceCol.sourceId().getColumn();
+    newSource.addRow(numrows);
+    const ROTableRow otherSourceRow(otherSource);
+    TableRow sourceRow(newSource);
+    RecordFieldId sourceIdId(MSSource::columnName(MSSource::SOURCE_ID));
+    RecordFieldId spwIdId(MSSource::columnName(MSSource::SPECTRAL_WINDOW_ID));
+    // the spw ids
+    Vector<Int> otherSpectralWindowId=otherSourceCol.spectralWindowId().getColumn();
+    
+    for (Int k =0 ; k < numrows ; ++k){
+      sourceRecord = otherSourceRow.get(k);
+      //define a new source id
+      newSourceIndex_p.define(otherId(k), maxSrcId+1+otherId(k)); 
+      sourceRecord.define(sourceIdId, maxSrcId+1+otherId(k));
+      
+      //define a new temporary spw id by subtracting 10000
+      // later to be replaced in updateSource
+      if(otherSpectralWindowId(k)>=0){
+	sourceRecord.define(spwIdId, otherSpectralWindowId(k)-10000);
+      }
+      
+      sourceRow.putMatchingFields(destRow, sourceRecord);
+      
+      ++destRow;
+    }
+
+    doSource_p=True;
   }
 
   return doSource_p;
