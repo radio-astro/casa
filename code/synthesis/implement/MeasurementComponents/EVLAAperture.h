@@ -55,6 +55,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       ATerm(), polMap_p(), feedStokes_p()
     {};
     ~EVLAAperture() {};
+    virtual String name() {return String("EVLA Aperture");};
+
     EVLAAperture& operator=(const EVLAAperture& other);
     Int getVLABandID(Double& freq,String&telescopeName);
     //
