@@ -30,37 +30,34 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   
-  void WTerm::apply(Matrix<Complex>& screen, const Int wPixel, 
-		    const Vector<Double>& sampling,
-		    const Int wConvSize, const Double wScale,
-		    const Int inner)
+  void WTerm::applySky(Matrix<Complex>& screen, 
+		       const Int wPixel, 
+		       const Vector<Double>& sampling,
+		       const Double wScale,
+		       const Int inner)
   {
     Int convSize = screen.shape()(0);
-    //    for (Int iw=0;iw<wConvSize;iw++) 
+    if(wPixel>0) 
       {
 	screen=0.0;
-	if(wConvSize>1) 
+	Double twoPiW=2.0*C::pi*Double(wPixel*wPixel)/wScale;
+	for (Int iy=-inner/2;iy<inner/2;iy++) 
 	  {
-	    Double twoPiW=2.0*C::pi*Double(wPixel*wPixel)/wScale;
-	    for (Int iy=-inner/2;iy<inner/2;iy++) 
+	    Double m=sampling(1)*Double(iy);
+	    Double msq=m*m;
+	    for (Int ix=-inner/2;ix<inner/2;ix++) 
 	      {
-		Double m=sampling(1)*Double(iy);
-		Double msq=m*m;
-		for (Int ix=-inner/2;ix<inner/2;ix++) 
+		Double l=sampling(0)*Double(ix);
+		Double rsq=l*l+msq;
+		if(rsq<1.0) 
 		  {
-		    Double l=sampling(0)*Double(ix);
-		    Double rsq=l*l+msq;
-		    if(rsq<1.0) 
-		      {
-			Double phase=twoPiW*(sqrt(1.0-rsq)-1.0);
-			screen(ix+convSize/2,iy+convSize/2)=Complex(cos(phase),sin(phase));
-		      }
+		    Double phase=twoPiW*(sqrt(1.0-rsq)-1.0);
+		    screen(ix+convSize/2,iy+convSize/2)=Complex(cos(phase),sin(phase));
 		  }
 	      }
 	  }
-	else 
-	  screen=1.0;
       }
+    else 
+      screen=1.0;
   }
-
 };

@@ -55,10 +55,11 @@ namespace casa{
     WTerm () {};
     ~WTerm () {};
 
-    void apply(Matrix<Complex>& screen, const Int wPixel, 
-	       const Vector<Double>& sampling,
-	       const Int wConvSize, const Double wScale,
-	       const Int inner);
+    void applySky(Matrix<Complex>& screen, 
+		  const Int wPixel, 
+		  const Vector<Double>& sampling,
+		  const Double wScale,
+		  const Int inner);
   };
 
 };
