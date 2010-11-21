@@ -167,7 +167,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ~AWProjectFT();
     
     //   void setEPJones(EPJones* ep_j) {epJ = ep_j;}
-    void setEPJones(SolvableVisJones* ep_j) {epJ = ep_j;}
+    void setEPJones(SolvableVisJones* ep_j) {epJ_p = ep_j;}
     
     void setDOPBCorrection(Bool doit=True) {doPBCorrection=doit;};
     // Initialize transform to Visibility plane using the image
@@ -300,15 +300,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				      ImageInterface<Float>& sensitivityImage,
 				      const Matrix<Float>& sumWt=Matrix<Float>(),
 				      const Bool& doFFTNorm=True);
-    virtual Bool makeAveragePB0(const VisBuffer& vb, 
-				const ImageInterface<Complex>& image,
-				TempImage<Float>& avgPB);
-    /*
-    void makeAveragePB(const VisBuffer& vb, 
-		       const ImageInterface<Complex>& image,
-		       Int& polInUse,
-		       TempImage<Float>& avgPB);
-    */
+
     void makeConjPolMap(const VisBuffer& vb, const Vector<Int> cfPolMap, Vector<Int>& conjPolMap);
     //    Vector<Int> makeConjPolMap(const VisBuffer& vb);
     void makeCFPolMap(const VisBuffer& vb, const Vector<Int>& cfstokes, Vector<Int>& polM);
@@ -321,24 +313,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual String name(){ return "AWProjectFT";};
     virtual Bool verifyAvgPB(ImageInterface<Float>& pb, ImageInterface<Float>& sky)
     {return verifyShapes(pb.shape(),sky.shape());}
+
     virtual Bool verifyAvgPB(ImageInterface<Float>& pb, ImageInterface<Complex>& sky)
     {return verifyShapes(pb.shape(),sky.shape());}
+
     virtual Bool verifyShapes(IPosition shape0, IPosition shape1);
-    void makeAntiAliasingOp(Vector<Complex>& val, const Int len, const Double HPBW);
-    void makeAntiAliasingCorrection(Vector<Complex>& correction, 
-				    const Vector<Complex>& op, 
-				    const Int nx);
-    void applyAntiAliasingOp(ImageInterface<Complex>& cf, 
-			     Vector<IPosition>& offset,
-			     Double HPBW,
-			     Int op=0, 
-			     Bool Square=False);
-    void applyAntiAliasingOp(ImageInterface<Float>& cf, 
-			     Vector<IPosition>& offset,
-			     Double HPBW,
-			     Int op=0, 
-			     Bool Square=False);
-    void correctAntiAliasing(Lattice<Complex>& cf);
   protected:
     
     Int nint(Double val) {return Int(floor(val+0.5));};
@@ -426,15 +405,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // No. of vis. polarization planes used in making the user defined
     // Stokes images
     //
-    Int polInUse, bandID_p, maxConvSupport;
+    Int polInUse, maxConvSupport;
     //
     // Percentage of the peak of the PB after which the image is set
     // to zero.
     //
     Float pbLimit_p;
 
-    //    EPJones *epJ;
-    SolvableVisJones *epJ;
+    CountedPtr<SolvableVisJones> epJ_p;
     Double sigma;
     Int Nant_p, doPointing;
     Bool doPBCorrection, makingPSF;
@@ -442,15 +420,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     CountedPtr<CFCache> cfCache_p;
     ParAngleChangeDetector paChangeDetector;
     Vector<Int> cfStokes;
-    Vector<Complex> Area;
-    Bool avgPBReady, avgPBSaved, pbNormalized,resetPBs,rotateAperture_p;
+    Bool pbNormalized,rotateAperture_p;
 
     Unit Second, Radian, Day;
     Array<Float> l_offsets,m_offsets;
     Vector<Float> pbPeaks, paList;
 
     Double currentCFPA, cfRefFreq_p;
-    Vector<Complex> antiAliasingOp,antiAliasingCorrection;
     Float lastPAUsedForWtImg;
     //
     //----------------------------------------------------------------------
@@ -513,5 +489,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			 Int paIndex);
   };
 } //# NAMESPACE CASA - END
+    // void makeAntiAliasingOp(Vector<Complex>& val, const Int len, const Double HPBW);
+    // void makeAntiAliasingCorrection(Vector<Complex>& correction, 
+    // 				    const Vector<Complex>& op, 
+    // 				    const Int nx);
+    // void applyAntiAliasingOp(ImageInterface<Complex>& cf, 
+    // 			     Vector<IPosition>& offset,
+    // 			     Double HPBW,
+    // 			     Int op=0, 
+    // 			     Bool Square=False);
+    // void applyAntiAliasingOp(ImageInterface<Float>& cf, 
+    // 			     Vector<IPosition>& offset,
+    // 			     Double HPBW,
+    // 			     Int op=0, 
+    // 			     Bool Square=False);
+    // void correctAntiAliasing(Lattice<Complex>& cf);
 
 #endif
