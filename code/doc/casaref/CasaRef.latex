@@ -28,6 +28,7 @@ within the system. There are five broad packages:
 	\item \ahlink{MeasurementSet}{ms} - functionality for manipulating MeasurementSets (CASA data structures)
 	\item \ahlink{Measures}{measures} - functionality for handling quantities with a specified reference frame
 	\item \ahlink{Quanta}{quanta} - functionality for handling quantities (values with units)
+	\item \ahlink{SpectralLine}{spectralline} - functionality for handling the splatalogue spectral line catalog
 	\end{itemize}
 \item Synthesis - modules needed for processing synthesis data
 	\begin{itemize}

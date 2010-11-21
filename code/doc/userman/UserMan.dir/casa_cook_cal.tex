@@ -33,6 +33,7 @@
 % JO 2010-03-05 Release 3.0.1 edits
 % JO 2010-04-16 Release 3.0.2 editing starts
 % JO 2010-10-11 Release 3.1.0 edits
+% GM 2010-11-19 Release 3.1.0 edits
 
 \chapter{Synthesis Calibration}
 \label{chapter:cal}
@@ -87,8 +88,8 @@ tables:
       into a cumulative cal table (\S~\ref{section:cal.tables.accum}),
    \item {\tt applycal} --- Apply calculated calibration solutions
       (\S~\ref{section:cal.correct.apply}),
-   \item {\tt clearcal} --- Re-initialize visibility data set
-     calibration data (\S~\ref{section:cal.correct.clearcal}),
+   \item {\tt clearcal} --- Re-initialize Measurement Set model
+     and corrected data columns (\S~\ref{section:cal.correct.clearcal}),
    \item {\tt fluxscale} --- Bootstrap the flux density scale from
       standard calibration sources (\S~\ref{section:cal.solve.fluxscale}), 
    \item {\tt listcal} --- List calibration solutions 
@@ -191,8 +192,8 @@ This can be broken down into a number of discrete phases:
       the system as a function of time, having pre-applied the 
       bandpass (if needed) and prior calibration. Use the 
       {\tt gaincal} task (\S~\ref{section:cal.solve.gain});
-   \item {\bf Polarization Calibration} --- solve for any unknown
-      polarization leakage terms
+   \item {\bf Polarization Calibration} --- solve for 
+      polarization leakage terms and linear polarization position angle
       (\S~\ref{section:cal.solve.pol});
    \item {\bf Establish Flux Density Scale} --- if only some of the
       calibrators have known flux densities, then rescale gain
@@ -2255,14 +2256,15 @@ This will produce a calibration table of type {\tt 'X'}.
 There are channelized solution modes for the above options.  For
 example, substitute {\tt 'Df'} for {\tt 'D'} in the {\tt 'D*'} modes 
 described above to get a channelized D-term solution.  
-{\bf ALERT:} {\tt 'X'} solutions are currently always
-frequency-independent.
 
 {\bf ALERT:} {\tt polcal} will obtain a separate D-term solution for
 each {\tt field} supplied to it.  This limitation will be relaxed in 
-the future, enabling more sensitive solutions, as well as
-flexibilities like solving for {\tt 'D+X'} using a single scan each of two or
-more position angle calibrators.
+the future, enabling more sensitive solutions.
+
+%% gmoellen (2011Nov19) I don't understand the following...
+%% as well as
+%%flexibilities like solving for {\tt 'D+X'} using a single scan each of two or
+%%more position angle calibrators.
 
 %%%%%%
 \subsubsection{Heuristics and Strategies for Polarization Calibration }
@@ -2284,8 +2286,9 @@ solution is solved using the "linear approximation" where cross-terms
 in more than a single product of the instrumental or source
 polarizations are ignored in the Measurement Equation (see 
 \S~\ref{chapter:me}).
-A general non-linearized solution, with sufficient SNR, may enable 
-some relaxation of the requirements indicated here.
+A more general non-linearized solution, with sufficient SNR, may enable 
+some relaxation of the requirements indicated here, and modes supporting
+such an approach are currently under development.
 
 For instrumental polarization calibration, there are 3 types of
 calibrator choice:
@@ -2313,14 +2316,15 @@ a good target.
 Each of these solutions should be followed with a {\tt 'X'} solution
 on a source with known polarization position angle (and correct $Q+iU$
 in {\tt MODEL\_DATA}).  
-{\bf ALERT:} {\tt polmode='D+X'} will soon deliver this automatically.
+{\bf ALERT:} {\tt polmode='D+X'} will soon be enhanced to 
+deliver this automatically.
            
 The {\tt polcal} task will solve for the {\tt 'D'} or {\tt 'X'} terms
 using the model visibilities that are in the {\tt MODEL\_DATA} column
 of the MS.  Calibration of the parallel hands must have already been
 carried out using {\tt gaincal} and/or {\tt bandpass} in order to
-align the phases over time and frequency.  This calibration need not
-have been applied and can be supplied through the {\tt gaintable}
+align the phases over time and frequency.  This calibration must be
+supplied through the {\tt gaintable}
 parameters, but any cal-tables to be used in {\tt polcal} must agree
 (e.g. have been derived from) the data in the {\tt DATA} column and
 the model visibilities in the {\tt MODEL\_DATA} column of the MS.
@@ -2336,6 +2340,53 @@ calibration.  Use of a {\tt uvrange} will help here.  The use of a
 full-Stokes model with the correct polarization is the only way to 
 ensure a correct calibration if these offsets are large.
 
+\subsubsection{A Note on channelized polarization calibration}
+
+When your data has more than one channel per spectral
+window, it is important to note that the calibrator polarization
+estimate currently assumes the source polarization signal is coherent
+across each spectral window.   In this case, it
+is important to be sure there is no large cross-hand delay still
+present in your data.  Unless the online system has accounted for
+cross-hand delays (typically intended, but not always achieved), the
+gain and bandpass calibration will only correct for parallel-hand
+delay residuals since the two polarizations are referenced
+independently.  Good gain and bandpass calibration will typically
+leave a single cross-hand delay (and phase) residual from the
+reference antenna.  Plots of cross-hand phases as a function of
+frequency for a strongly polarized source (i.e., that dominates the
+instrumental polarization) will show the cross-hand delay as a phase
+slope with frequency.  This slope will be the same magnitude on all
+baselines, but with different sign in the two cross-hand correlations.
+This cross-hand delay can be estimated using the {\tt
+gaintype='KCROSS'} mode of gaincal (in this case, using the strongly
+polarized source 3C286):
+
+\small
+\begin{verbatim}
+   default('gaincal')
+   vis                 = 'polcal_20080224.cband.all.ms'
+   caltable            = 'polcal.xdelcal'
+   field               = '3C286'        
+   spw                 =         ''        
+   solint              =      'inf'    
+   combine             =     'scan' 
+   refant              =     'VA15'
+   smodel              = [1.0,0.11,0.0,0.0]        
+   gaintype            =     'KCROSS'        
+   gaintable           = ['polcal.gcal','polcal.bcal']
+   gaincal()
+\end{verbatim}
+\normalsize
+
+Note that {\tt smodel} is used to specify that 3C286 is polarized; it is not
+important to specify this polarization stokes parameters correctly, as only 
+the delay will be solved for (not any absolute position angle or amplitude 
+scaling).  The resulting solution should be carried forward and applied 
+along with the gain (.gcal) and
+bandpass (.bcal) solutions in subsequent polarization calibration steps.
+
+
 %%%%%%
 \subsubsection{A Polarization Calibration Example}
 \label{section:cal.solve.pol.example}
@@ -2347,7 +2398,7 @@ through a range in parallactic angle:
 \begin{verbatim}
    default('polcal')
    vis                 = 'polcal_20080224.cband.all.ms'
-   caltable            = 'polcal_20080224.cband.all.pcal'
+   caltable            = 'polcal.pcal'
    field               = '2202+422'        
    spw                 =         ''        
    solint              =      'inf'    
@@ -2356,7 +2407,7 @@ through a range in parallactic angle:
    refant              =     'VA15'        
    minsnr              =          3        
    poltype             =     'D+QU'        
-   gaintable           = 'polcal_20080224.cband.all.gcal'
+   gaintable           = ['polcal.gcal','polcal.bcal','polcal.xdelcal]
    gainfield           =       ['']
    polcal()
 \end{verbatim}
@@ -2367,21 +2418,26 @@ so that what is in the {\tt MODEL\_DATA} column is in agreement with
 what is in the {\tt gaintable}, rather than using the table resulting
 from {\tt fluxscale}.
 
-A bit later on, we need to set the R-L phase using a scan on
+Now, we need to set the R-L phase using a scan on
 3C48 ({\tt 0137+331}):
 \small
 \begin{verbatim}
    default('polcal')
    vis                 = 'polcal_20080224.cband.all.ms'
-   caltable            = 'polcal_20080224.cband.all.polx'
+   caltable            = 'polcal.polx'
    field               = '0137+331'
    refant              =     'VA15'        
    minsnr              =          3        
    poltype             =        'X'
-   gaintable = ['polcal_20080224.cband.all.gcal', 'polcal_20080224.cband.all.pcal']
+   smodel              = [1.0,-0.0348,-0.0217,0.0]  # the fractional Stokes for 3C48
+   gaintable           = ['polcal.gcal','polcal.bcal','polcal.xdelcal','polcal.pcal']
    polcal()
 \end{verbatim}
 \normalsize
+
+Note that the fractional polarization of 3C48 has been properly specified 
+in {\tt smodel} here.
+
 
 If, on the other hand, we had a scan on an unpolarized bright source,
 for example 3C84 ({\tt 0319+415}), we could use this to calibrate the
@@ -2390,11 +2446,11 @@ leakages:
 \begin{verbatim}
    default('polcal')
    vis                 = 'polcal_20080224.cband.all.ms'
-   caltable            = 'polcal_20080224.cband.all_3c84.pcal'
+   caltable            = 'polcal.pcal'
    field               = '0319+415'
    refant              =     'VA15'        
    poltype             =     'D'        
-   gaintable           = 'polcal_20080224.cband.all.gcal'
+   gaintable           = ['polcal.gcal','polcal.bcal','polcal.xdelcal]
    polcal()
 \end{verbatim}
 \normalsize
@@ -3423,18 +3479,21 @@ the {\tt viewer} to visualize and edit a Measurement Set.
 
 The {\tt applycal} task will set the {\tt CORRECTED\_DATA} column.
 The {\tt clearcal} task will reset it to be the same as
-the {\tt DATA} column.  This may or may not be what you really
+the {\tt DATA} column.   Note that {\tt clearcal} will also reset
+the {\tt MODEL\_DATA} column to unit flux density, too.
+This may or may not be what you really
 want to do --- nominally you will rerun {\tt applycal} to get
 new calibration if you have changed the tables or want to apply them
 differently.
 
-There is only a single input to {\tt clearcal}:
+The inpust for {\tt clearcal} are simple:
 \small
 \begin{verbatim}
 #  clearcal :: Re-initializes calibration for an ms
 
-vis                 =         ''        #   Name of input visibility file
-
+vis                 =         ''        #  Name of input visibility file
+field               =         ''        #  Select field using field id(s) or field name(s)
+spw                 =         ''        #  Select spectral window/channel.
 \end{verbatim}
 \normalsize
 

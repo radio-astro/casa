@@ -25,6 +25,7 @@
 % JO 2010-02-22 release 3.0.1 editing started
 % JO 2010-04-16 release 3.0.2 editing started
 % JO 2010-10-11 release 3.1.0 edits
+% GM 2010-11-19 release 3.1.0 edits
 
 \chapter{Introduction}
 \label{chapter:intro}
@@ -154,7 +155,7 @@ The CASA home page can be found at:
 \begin{quote}
   \url{http://casa.nrao.edu}
 \end{quote}
-From there you can find documentation and assistance for the use
+>From there you can find documentation and assistance for the use
 of the package, including the User Documentation.  You will
 also find information on how to obtain the latest release and
 receive user support.
@@ -273,10 +274,23 @@ Major improvements over the previous version of CASA include:
 \item {\bf  Calibration }
 \begin{itemize}
 
-   \item {\tt polcal} task now recognizes new
-                        poltypes: Dgen, Dfgen, Dgen+QU, Dfgen+QU
-                        Dgen+X, Dfgen+X which will use the general
-                        matrix algebra
+
+  \item Tasks {\tt gaincal} and {\tt polcal} now support specifying point
+source Stokes parameters for calibration source model in a new {\tt 'smodel'}
+parameter.  When specified, this overrides use of the {\tt MODEL\_DATA} column
+and thereby saves time.
+
+   \item The {\tt setjy} task now has a {\tt 'scalebychan'} parameter that
+enables setting the model for flux density calibrators correctly for
+every channel according to their spectral indices.
+
+  \item The {\tt gaincal} task now supports a new gaintype, {\tt 'KCROSS'},
+to solve for cross-hand delay.
+
+   \item Scratch column creation/initialization has been
+revised to improve performance in most cases.  Further improvements
+in data tiling will be introduced in the near future to provide
+further improvements. 
 
    \item Tool method {\tt me.framecomet} can now load tables that don't have DiskLong or DiskLat columns. This is useful for calibrating on solar system objects such as comets and asteroids 
    \item JPL-Horizon tables can be loaded into CASA by {\tt me.frameset}. Then, planet positions can be accessed, e.g. via {\tt me.direction('SATURN')}
@@ -354,6 +368,8 @@ Major improvements over the previous version of CASA include:
 \end{itemize}
 
 \end{itemize}
+
+{\bf For known issues with this release please visit the CASA webpages:\\ \url{http://casa.nrao.edu/release_ki.shtml}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2945,12 +2961,12 @@ is described in Chapter~\ref{chapter:display}.
 \label{section:intro.walkthru.flag.plotxy}
 
 The principal tool for making X-Y plots of visibility data is
-{\tt plotxy} (see \S~\ref{section:edit.plot.plotxy}).  Amplitudes and phases
+{\tt plotms} (see \S~\ref{section:edit.plot.plotms}).  Amplitudes and phases
 (among other things) can be plotted against several x-axis options.
 
 Interactive flagging (i.e., ``see it -- flag it'') is possible on the
-{\tt plotxy} X-Y displays of the data
-(\S~\ref{section:edit.plot.plotxy.flag}).  Since flags are inserted into the
+{\tt plotms} X-Y displays of the data
+(\S~\ref{section:edit.plot.plotms.flag}).  Since flags are inserted into the
 measurement set, it is useful to backup (or make a copy) of the
 current flags before further flagging is done, using {\tt flagmanager}
 (\S~\ref{section:edit.flagmanager}).  Copies of the flag table can
@@ -3017,7 +3033,7 @@ The major calibration tasks are:
          (\S~\ref{section:cal.tables.listcal});
    \item {\tt plotcal} --- Plots (and optionally flags) calibration
          solutions (\S~\ref{section:cal.tables.plotcal});
-   \item {\tt uvcontsub} --- carry out uv-plane continuum subtraction
+   \item {\tt uvcontsub/uvcontsub2} --- carry out uv-plane continuum subtraction
          for spectral-line data (\S~\ref{section:cal.other.uvcontsub});
    \item {\tt split} --- write out a new (calibrated) MS for specified
          sources (\S~\ref{section:cal.other.split});
@@ -3097,12 +3113,13 @@ gain calibration (see next step).
 The {\tt gaincal} task determines solutions for the time-based complex
 antenna gains, for each spectral window, from the specified
 calibration sources.  A solution interval may be specified. The
-default {\tt 'G'} solution mode solved for gains in specified
-time solution invervals.
+default {\tt 'G'} solution mode solves for antenna-based gains 
+in each polarization in specified time solution invervals.  The {\tt 'T'}
+solution mode is the same as {\tt 'G'} except that it solves for
+a single solution shared by both polarizations.
 
 A spline fit for the solution (solution type {\tt 'GSPLINE'}) may be
 carried out instead of the default time-slot based {\tt 'G'} solutions.
-This single solution will span (combine) multiple spectral windows.
 
 See \S~\ref{section:cal.solve.gain} for more on gain calibration.
 
@@ -3112,13 +3129,18 @@ See \S~\ref{section:cal.solve.gain} for more on gain calibration.
 
 The {\tt polcal} task will solve for any unknown polarization leakage
 and cross-hand phase terms ({\tt 'D'} and {\tt 'X'} solutions).  The
-{\tt 'D'} leakage solutions will work on sources with no polarization, sources
-with known (and supplied) polarization, and sources with unknown
-polarization tracked through a range in parallactic angle on the sky.
+{\tt 'D'} leakage solutions will work on sources with no polarization and
+sources with known (and supplied, e.g., using {\tt smodel}) polarization.
+For sources with unknown polarization tracked through a range in parallactic 
+angle on the sky, using poltype {\tt 'D+QU'}, which will first estimate
+the calibrator polarization for you.
 
 The solution for the unknown cross-hand polarization phase difference
 {\tt 'X'} term requires a polarized source with known linear
 polarization (Q,U).
+
+Frequency-dependent (i.e., per channel) versions of all of these modes
+are also supported (poltypes {\tt 'Df'}, {\tt 'Df+QU'}, and {\tt 'Xf'}.
 
 See \S~\ref{section:cal.solve.pol} for more on polarization calibration.
 

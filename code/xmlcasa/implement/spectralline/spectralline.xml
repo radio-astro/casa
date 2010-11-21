@@ -112,11 +112,9 @@ splattotable does this conversion.
     a spectralline tool using the open method (eg sl.open(tablename)). 
     </description>
     <example>
-\begin{verbatim}
 newsl = sl.splattotable("mysplatlist.txt", "mynewsl.tbl")
 # search the new spectral line tool
 newsl.search([0,1000])
-\end{verbatim}
     </example>
 </method>
 
@@ -137,7 +135,6 @@ newsl.search([0,1000])
     if the table was successfully opened.
     </description>
     <example>
-    \begin{verbatim}
     # open user created spectral line table
     isopen = sl.open("mysplat.tbl")
     if (isopen)
@@ -147,7 +144,6 @@ newsl.search([0,1000])
     isopen = sl.open()
     if (isopen)
       sl.search([0,1000])
-    \end{verbatim}
     </example>
 </method>
 
@@ -159,9 +155,7 @@ newsl.search([0,1000])
     </description>
     <returns type="bool"/>
     <example>
-    \begin{verbatim}
     sl.close()
-    \end{verbatim}
     </example>
 </method>
 
@@ -173,9 +167,7 @@ newsl.search([0,1000])
     </description>
     <returns type="bool"/>
     <example>
-    \begin{verbatim}
     sl.done()
-    \end{verbatim}
     </example>
 </method>
 
@@ -263,7 +255,6 @@ newsl.search([0,1000])
     it with the results.
     </description>
     <example>
-    \begin{verbatim}
     sl.open("myspectrallines.tbl")
     # do a search postponing listing the results to the logger.
     slrestool = sl.search(outfile="myresults.tbl", freqrange = [200,300], species=['HOCN', 'HOCO+'])
@@ -272,7 +263,6 @@ newsl.search([0,1000])
     # or one could also do the following after exiting and restarting casapy
     sl.open("myresults.tbl")
     sl.list()
-    \end{verbatim}
     </example>
 </method>
 

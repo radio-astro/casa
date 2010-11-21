@@ -1430,18 +1430,38 @@ a major cycle break and reconciliation occurs:
 \end{verbatim}
 \normalsize
 
-If your uv-coverage results in a poor PSF, then you should reconcile often
-(a {\tt cyclefactor} of 4 or 5); For reasonable PSFs, use {\tt cyclefactor} in the range
-$1.5$ to $2.0$.  For good PSFs, or for faster cleaning at the expense
-of some fidelity, we recommend trying a lower value, e.g. 
-{\tt cyclefactor = 0.25}, which at least in some of our mosaicing
-tests led to a speedup of
-around a factor of two with little change in residuals.
 
-If {\tt 'mosaic'} or {\tt 'csclean'} diverges on your data, try a
-larger {\tt cyclefactor'}. A larger value typically increases the
+If {\tt mosaic} or {\tt csclean} diverges on your data, try a larger
+{\tt cyclefactor}. A larger value typically increases the
 robustness of your deconvolution. The price, however, will be a slower
-algorithm.
+algorithm.  On the other hand, if you find that the cleaning is slow
+due to taking too many major cycle breaks, then reduce
+{\tt cyclefactor}.
+
+Note that currently the {\tt cycle\_threshold} will saturate at a
+maximum value of 0.80 even when you set {\tt cyclefactor} to a very
+high value or you have very high PSF sidelobes.  This means that with
+a {\tt gain = 0.1} you will get 3 minor cycles per major cycle when
+hitting the limit.
+
+\noindent Some rules of thumb:\\
+
+If you have data taken with a small number of antennas, for example
+from ALMA in the commissioning and early-science phase, then you will
+have high sidelobes in the PSF.  In this case, you will have to reduce
+{\tt cyclefactor} considerably, likely into the range 0.25 to 0.5,
+if you want efficient cleaning of simple source structures (e.g. point
+sources).  You can use the {\tt viewer} to look at your PSF image
+and see what the maximum sidelobe level is and judge accordingly.
+
+However, if your uv-coverage results in a poor PSF and you have
+complex source structure, then you should reconcile often (a
+{\tt cyclefactor} of 4 or 5). For reasonable PSFs, use
+{\tt cyclefactor} in the range 1.5 to 2.0. For good PSFs, or for
+faster cleaning at the expense of some fidelity, we recommend trying a
+lower value, e.g. {\tt cyclefactor = 0.25}, which at least in some
+of our mosaicing tests led to a speedup of around a factor of two with
+little change in residuals. 
 
 %%%%%%
 \subsubsection{Sub-parameter {\tt cyclespeedup} }
