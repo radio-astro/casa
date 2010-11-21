@@ -94,7 +94,8 @@ class MSConcat: public MSColumns
 {
 public:
   MSConcat(MeasurementSet& ms);
-  void concatenate(const MeasurementSet& otherMS);
+  void concatenate(const MeasurementSet& otherMS,
+		   const Bool dontModifyMain=False); // if true, MAIN is not touched
   void setTolerance(Quantum<Double>& freqTol, Quantum<Double>& dirTol); 
 private:
   MSConcat();
