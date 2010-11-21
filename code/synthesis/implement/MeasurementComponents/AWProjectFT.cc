@@ -51,7 +51,6 @@
 #define CONVSIZE (1024*2)
 #define CONVWTSIZEFACTOR 1.0
 #define OVERSAMPLING 20
-#define THRESHOLD 1E-4
 #define USETABLES 0           // If equal to 1, use tabulated exp() and
 			      // complex exp() functions.
 #define MAXPOINTINGERROR 250.0 // Max. pointing error in arcsec used to
@@ -114,12 +113,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       gridder(0), isTiled(False), arrayLattice(0), lattice(0), 
       maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
       pointingToImage(0), usezero_p(usezero),
-      telescopeConvFunc_p(cf),cfs_p(), cfwts_p(), 
-      doPBCorrection(doPBCorr), cfCache_p(cfcache), paChangeDetector(), cfStokes(),Area(), 
-      avgPBReady(False),avgPBSaved(False),resetPBs(True),rotateAperture_p(True),
+      telescopeConvFunc_p(cf),cfs_p(), cfwts_p(), epJ_p(),
+      doPBCorrection(doPBCorr), cfCache_p(cfcache), paChangeDetector(), cfStokes(),
+      rotateAperture_p(True),
       Second("s"),Radian("rad"),Day("d")
   {
-    epJ=NULL;
     convSize=0;
     tangentSpecified_p=False;
     lastIndex_p=0;
@@ -128,7 +126,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // Get various parameters from the visibilities.  
     //
-    bandID_p=-1;
     if (applyPointingOffset) doPointing=1; else doPointing=0;
 
     convFuncCacheReady=False;
@@ -159,7 +156,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (!fromRecord(stateRec)) {
       throw (AipsError("Failed to create AWProjectFT: " ));
     };
-    bandID_p = -1;
     maxConvSupport=-1;
     convSampling=OVERSAMPLING;
     convSize=CONVSIZE;
@@ -226,7 +222,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	doPBCorrection = other.doPBCorrection;
 	maxConvSupport= other.maxConvSupport;
 
-	epJ=other.epJ;
+	epJ_p=other.epJ_p;
 	convSize=other.convSize;
 	lastIndex_p=other.lastIndex_p;
 	paChangeDetector=other.paChangeDetector;
@@ -234,7 +230,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//
 	// Get various parameters from the visibilities.  
 	//
-	bandID_p = other.bandID_p;
 	doPointing=other.doPointing;
 
 	convFuncCacheReady=other.convFuncCacheReady;
@@ -247,14 +242,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	convSize=other.convSize;
 	cachesize=other.cachesize;
     
-	resetPBs=other.resetPBs;
-
 	currentCFPA=other.currentCFPA;
 	lastPAUsedForWtImg = other.lastPAUsedForWtImg;
 	cfStokes=other.cfStokes;
-	Area=other.Area;
 	avgPB_p = other.avgPB_p;
-	avgPBReady = other.avgPBReady;
 	telescopeConvFunc_p = other.telescopeConvFunc_p;
       };
     return *this;
@@ -417,8 +408,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     MEpoch LAST;
     Double thisTime = getCurrentTimeStamp(vb);
     //    Array<Float> pointingOffsets = epJ->nearest(thisTime);
-    if (epJ==NULL) return 0;
-    Array<Float> pointingOffsets; epJ->nearest(thisTime,pointingOffsets);
+    if (epJ_p.null()) return 0;
+    Array<Float> pointingOffsets; epJ_p->nearest(thisTime,pointingOffsets);
     NAnt=pointingOffsets.shape()(2);
     l_off.resize(IPosition(3,1,1,NAnt)); // Poln x NChan x NAnt 
     m_off.resize(IPosition(3,1,1,NAnt)); // Poln x NChan x NAnt 
@@ -777,109 +768,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   //
   //---------------------------------------------------------------
-  //
-  Bool AWProjectFT::makeAveragePB0(const VisBuffer& vb, 
-				     const ImageInterface<Complex>& image,
-				     //TempImage<Float>& thesquintPB,
-				     TempImage<Float>& theavgPB)
-  {
-    TempImage<Float> localPB;
-    
-    logIO() << LogOrigin("AWProjecFT","makeAveragePB")
-	    << LogIO::NORMAL;
-    
-    localPB.resize(image.shape()); localPB.setCoordinateInfo(image.coordinates());
-    localPB.setMaximumCacheSize(cachesize);
-    //
-    // If this is the first time, resize the average PB
-    //
-    if (resetPBs)
-      {
-	logIO() << "Initializing the average PBs"
-		<< LogIO::NORMAL
-		<< LogIO::POST;
-	theavgPB.resize(localPB.shape()); 
-	theavgPB.setCoordinateInfo(localPB.coordinates());
-	theavgPB.set(0.0);
-	//	noOfPASteps = 0;
-	pbPeaks.resize(theavgPB.shape()(2));
-	pbPeaks.set(0.0);
-	resetPBs=False;
-      }
-    //
-    // Make the Stokes PB
-    //
-    localPB.set(1.0);
-
-    {
-      VLACalcIlluminationConvFunc vlaPB;
-      Nant_p     = vb.msColumns().antenna().nrow();
-      if (bandID_p == -1) bandID_p=telescopeConvFunc_p->getVisParams(vb);
-      vlaPB.applyPB(localPB, vb, bandID_p);
-    }
-    
-    IPosition twoDPBShape(localPB.shape());
-    TempImage<Complex> localTwoDPB(twoDPBShape,localPB.coordinates());
-    localTwoDPB.setMaximumCacheSize(cachesize);
-    Float peak=0;
-    Int NAnt;
-    //    noOfPASteps++;
-    NAnt=1;
-   
-//     logIO() << " Shape of localPB Cube : " << twoDPBShape << LogIO::POST;
-//     logIO() << " Shape of avgPB Cube : " << theavgPB.shape() << LogIO::POST;
-
-    for(Int ant=0;ant<NAnt;ant++)
-      { //Ant loop
-	{
-	  IPosition ndx(4,0,0,0,0);
-	  for(ndx(0)=0; ndx(0)<twoDPBShape(0); ndx(0)++)
-	    for(ndx(1)=0; ndx(1)<twoDPBShape(1); ndx(1)++)
-	      for(ndx(2)=0; ndx(2)<twoDPBShape(2); ndx(2)++)
-	       for(ndx(3)=0; ndx(3)<twoDPBShape(3); ndx(3)++)
-		  localTwoDPB.putAt(Complex((localPB(ndx)),0.0),ndx);
-	}
-	//
-	// If antenna pointing errors are not applied, no shifting
-	// (which can be expensive) is required.
-	//
-	//
-	// Accumulate the shifted PBs
-	//
-	{
-	  Bool isRefF,isRefC;
-	  Array<Float> fbuf;
-	  Array<Complex> cbuf;
-	  isRefF=theavgPB.get(fbuf);
-	  isRefC=localTwoDPB.get(cbuf);
-	  
-	  IPosition fs(fbuf.shape());
-	  {
-	    IPosition ndx(4,0,0,0,0),avgNDX(4,0,0,0,0);
-	    for(ndx(3)=0,avgNDX(3)=0;ndx(3)<fs(3);ndx(3)++,avgNDX(3)++)
-	    {
-	      for(ndx(2)=0,avgNDX(2)=0;ndx(2)<twoDPBShape(2);ndx(2)++,avgNDX(2)++)
-		{
-		  for(ndx(0)=0,avgNDX(0)=0;ndx(0)<fs(0);ndx(0)++,avgNDX(0)++)
-		    for(ndx(1)=0,avgNDX(1)=0;ndx(1)<fs(1);ndx(1)++,avgNDX(1)++)
-		      {
-			Float val;
-			val = real(cbuf(ndx));
-			fbuf(avgNDX) += val;
-			if (fbuf(avgNDX) > peak) peak=fbuf(avgNDX);
-		      }
-		}
-	    }
-	  }
-	  if (!isRefF) theavgPB.put(fbuf);
-	  pbPeaks += peak;
-	}
-      }
-    theavgPB.setCoordinateInfo(localPB.coordinates());
-    return True; // i.e., an average PB was made and is in the mem. cache
-  }
-  //
-  //---------------------------------------------------------------
   void AWProjectFT::makeCFPolMap(const VisBuffer& vb, const Vector<Int>& locCfStokes,
 				 Vector<Int>& polM)
   {
@@ -998,8 +886,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Loacate the required conv. function.
     //
     cfSource=cfCache_p->locateConvFunction(wConvSize, Quantity(pa,"rad"),
-					paChangeDetector.getParAngleTolerance(),
-					cfs_p);
+					   paChangeDetector.getParAngleTolerance(),
+					   cfs_p);
     // If conv. func. not found in the cache, make one and cache it.
     if (cfSource==NOTCACHED)
       {
@@ -1029,22 +917,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (avgPB_p.null()) avgPB_p = new TempImage<Float>();
     if (cfCache_p->loadAvgPB(*avgPB_p) == NOTCACHED)
       {
-	logIO() << "Making average response." << LogIO::NORMAL  << LogIO::POST;
-	//	pbMade     = makeAveragePB0(vb, image, *avgPB_p);
 	pbMade     = telescopeConvFunc_p->makeAverageResponse(vb, image, *avgPB_p);
-	// bandID_p   = telescopeConvFunc_p->getVisParams(vb);
-	// Nant_p     = vb.msColumns().antenna().nrow();	
-
 	normalizeAvgPB();	
 
 	if (pbMade) cfCache_p->flush(*avgPB_p); // Save the AVG PB and write the aux info.
       }
-    else
-      {resetPBs = False; avgPBReady=True;}
 
     verifyShapes(avgPB_p->shape(), image.shape());
 
-    Int lastPASlot = PAIndex_l;
+    //    Int lastPASlot = PAIndex_l;
     if (paChangeDetector.changed(vb,0)) paChangeDetector.update(vb,0);
     //
     // Write some useful info. to the logger.
@@ -1072,16 +953,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	logIO() << "Convolution support = " << cfs_p.xSupport 
 		<< " pixels in Fourier plane" << LogIO::POST;
       }
-
-    IPosition shp(convFunc.shape());
-    IPosition ndx(shp);
-    ndx =0;
-    Area.resize(Area.nelements()+1,True);
-    Area(lastPASlot)=0;
-    Complex a=0;
-    for(ndx(0)=0;ndx(0)<shp(0);ndx(0)++)
-      for(ndx(1)=0;ndx(1)<shp(1);ndx(1)++)
-	Area(lastPASlot)+=convFunc(ndx);
   }
 
   //
@@ -1223,24 +1094,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    }
 	}
     }
-    // {
-    //   ostringstream name;
-    //   cout << image->shape() << endl;
-    //   name << "theModel.im";
-    //   PagedImage<Float> tmp(image->shape(), image->coordinates(), name);
-    //   Array<Complex> buf;
-    //   Bool isRef = lattice->get(buf);
-    //   cout << "The model max. = " << max(buf) << endl;
-    //   LatticeExpr<Float> le(abs((*lattice)));
-    //   tmp.copyData(le);
-    // }
     //
     // Now do the FFT2D in place
     //
-//     {
-//       Array<Complex> buf;
-//       Bool isRef = lattice->get(buf);
-//     }
     LatticeFFT::cfft2d(*lattice);
 
     logIO() << LogIO::DEBUGGING << "Finished FFT" << LogIO::POST;
@@ -2203,7 +2059,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     findConvFunction(*image, vb);
     Int NAnt=0;
     Nant_p     = vb.msColumns().antenna().nrow();
-    if (bandID_p == -1) bandID_p=telescopeConvFunc_p->getVisParams(vb);
     if (doPointing)   
       NAnt = findPointingOffsets(vb,l_offsets,m_offsets,False);
 
@@ -2371,7 +2226,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     findConvFunction(*image, vb);
 
     Nant_p     = vb.msColumns().antenna().nrow();
-    if (bandID_p == -1) bandID_p=telescopeConvFunc_p->getVisParams(vb);
     Int NAnt=0;
     if (doPointing)   
       NAnt = findPointingOffsets(vb,pointingOffsets,l_offsets,m_offsets,False);
@@ -2546,7 +2400,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     findConvFunction(*image, vb);
     
     Nant_p     = vb.msColumns().antenna().nrow();
-    if (bandID_p == -1) bandID_p=telescopeConvFunc_p->getVisParams(vb);
     Int NAnt=0;
     if (doPointing)   NAnt = findPointingOffsets(vb,l_offsets,m_offsets,True);
     
@@ -3179,196 +3032,196 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
   }
 
-  void AWProjectFT::makeAntiAliasingOp(Vector<Complex>& op, const Int nx_l, const Double HPBW)
-  {
-    MathFunc<Float> sf(SPHEROIDAL);
-    if (op.nelements() != (uInt)nx_l)
-      {
-	op.resize(nx_l);
-	Int inner=nx_l/2, center=nx_l/2;
-	//
-	// The "complicated" equation below is worthy of a comment (as
-	// notes are called in program text).
-        //
-	// uvScale/nx == Size of a pixel size in the image in radians.
-	// Lets call it dx.  HPBW is the HPBW for the antenna at the
-	// centre freq. in use.  HPBW/dx == Pixel where the PB will be
-	// ~0.5x its peak value.  ((2*N*HPBW)/dx) == the pixel where
-	// the N th. PB sidelobe will be (rougly speaking).  When this
-	// value is equal to 3.0, the Spheroidal implemtation goes to
-	// zero!
-	//
-	Float dx=uvScale(0)*convSampling/nx;
-	Float MaxSideLobeNum = 3.0;
-	Float S=1.0*dx/(MaxSideLobeNum*2*HPBW),cfScale;
-	
-	cout << "UVSCALE = " << uvScale(0) << " " << convSampling << endl;
-	cout << "HPBW = " << HPBW 
-	     << " " << uvScale(0)/nx 
-	     << " " << S 
-	     << " " << dx 
-	     << endl;
-	
-
-	cfScale=S=6.0/inner;
-	for(Int ix=-inner;ix<inner;ix++)	    op(ix+center)=sf.value(abs((ix)*cfScale));
-	// for(Int ix=-inner;ix<inner;ix++)
-	//   if (abs(op(ix+center)) > 1e-8) 
-	// 	    cout << "SF: " << ix 
-	// 		 << " " << (ix)*cfScale 
-	// 		 << " " << real(op(ix+center)) 
-	// 		 << " " << imag(op(ix+center))
-	// 		 << endl;
-      }
-  }
-
-  void AWProjectFT::makeAntiAliasingCorrection(Vector<Complex>& correction, 
-						 const Vector<Complex>& op,
-						 const Int nx_l)
-  {
-    if (correction.nelements() != (uInt)nx_l)
-      {
-	correction.resize(nx_l);
-	correction=0.0;
-	Int opLen=op.nelements(), orig=nx_l/2;
-	for(Int i=-opLen;i<opLen;i++)
-	  {
-	    correction(i+orig) += op(abs(i));
-	  }
-	ArrayLattice<Complex> tmp(correction);
-	LatticeFFT::cfft(tmp,False);
-	correction=tmp.get();
-      }
-//     for(uInt i=0;i<correction.nelements();i++)
-//       cout << "FTSF: " << real(correction(i)) << " " << imag(correction(i)) << endl;
-  }
-
-  void AWProjectFT::correctAntiAliasing(Lattice<Complex>& image)
-  {
-    //  applyAntiAliasingOp(cf,2);
-    IPosition shape(image.shape());
-    IPosition ndx(shape);
-    ndx=0;
-    makeAntiAliasingCorrection(antiAliasingCorrection, 
-			       antiAliasingOp,shape(0));
-
-    Complex tmp,val;
-    for(Int i=0;i<polInUse;i++)
-      {
-	ndx(2)=i;
-	for (Int iy=0;iy<shape(1);iy++) 
-	  {
-	    for (Int ix=0;ix<shape(0);ix++) 
-	      {
-		ndx(0)=ix;
-		ndx(1)=iy;
-		tmp = image.getAt(ndx);
-		val=(antiAliasingCorrection(ix)*antiAliasingCorrection(iy));
-		if (abs(val) > 1e-5) tmp = tmp/val; else tmp=0.0;
-		image.putAt(tmp,ndx);
-	      }
-	  }
-      }
-  }
-
-  void AWProjectFT::applyAntiAliasingOp(ImageInterface<Complex>& cf, 
-					Vector<IPosition>& maxPos,
-					Double HPBW, Int op, Bool Square)
-  {
-    //
-    // First the spheroidal function
-    //
-    IPosition shape(cf.shape());
-    IPosition ndx(shape);
-    Vector<Double> refPixel=cf.coordinates().referencePixel();
-    ndx=0;
-    Int nx_l=shape(0),posX,posY;
-    makeAntiAliasingOp(antiAliasingOp, nx_l, HPBW);
-
-    Complex tmp,gain;
-
-    for(Int i=0;i<polInUse;i++)
-      {
-	ndx(2)=i;
-	for (Int iy=-nx_l/2;iy<nx_l/2;iy++) 
-	  {
-	    for (Int ix=-nx_l/2;ix<nx_l/2;ix++) 
-	      {
-		ndx(0)=ix+nx_l/2;
-		ndx(1)=iy+nx_l/2;
-		tmp = cf.getAt(ndx);
-		posX=ndx(0)+(Int)(refPixel(0)-maxPos(i)(0))+1;
-		posY=ndx(1)+(Int)(refPixel(1)-maxPos(i)(1))+1;
-		if ((posX > 0) && (posX < nx_l) &&
-		    (posY > 0) && (posY < nx_l))
-		  gain = antiAliasingOp(posX)*antiAliasingOp(posY);
-		else
-		  if (op==2) gain = 1.0; else gain=0.0;
-		if (Square) gain *= gain;
-		switch (op)
-		  {
-		  case 0: tmp = tmp+gain;break;
-		  case 1: 
-		    {
-		      tmp = tmp*gain;
-		      break;
-		    }
-		  case 2: tmp = tmp/gain;break;
-		  }
-		cf.putAt(tmp,ndx);
-	      }
-	  }
-      }
-  };
-  void AWProjectFT::applyAntiAliasingOp(ImageInterface<Float>& cf, 
-					Vector<IPosition>& maxPos,
-					Double HPBW, Int op, Bool Square)
-
-  {
-    //
-    // First the spheroidal function
-    //
-    IPosition shape(cf.shape());
-    IPosition ndx(shape);
-    Vector<Double> refPixel=cf.coordinates().referencePixel();
-    ndx=0;
-    Int nx_l=shape(0),posX,posY;
-    makeAntiAliasingOp(antiAliasingOp, nx_l, HPBW);
-
-    Float tmp,gain;
-
-    for(Int i=0;i<polInUse;i++)
-      {
-	ndx(2)=i;
-	for (Int iy=-nx_l/2;iy<nx_l/2;iy++) 
-	  {
-	    for (Int ix=-nx_l/2;ix<nx_l/2;ix++) 
-	      {
-		ndx(0)=ix+nx_l/2;
-		ndx(1)=iy+nx_l/2;
-		tmp = cf.getAt(ndx);
-		posX=ndx(0)+(Int)(refPixel(0)-maxPos(i)(0))+1;
-		posY=ndx(1)+(Int)(refPixel(1)-maxPos(i)(1))+1;
-		if ((posX > 0) && (posX < nx_l) &&
-		    (posY > 0) && (posY < nx_l))
-		  gain = real(antiAliasingOp(posX)*antiAliasingOp(posY));
-		else
-		  if (op==2) gain = 1.0; else gain=0.0;
-		if (Square) gain *= gain;
-		switch (op)
-		  {
-		  case 0: tmp = tmp+gain;break;
-		  case 1: 
-		    {
-		      tmp = tmp*gain;
-		      break;
-		    }
-		  case 2: tmp = tmp/gain;break;
-		  }
-		cf.putAt(tmp,ndx);
-	      }
-	  }
-      }
-  };
 } //# NAMESPACE CASA - END
+//   void AWProjectFT::makeAntiAliasingOp(Vector<Complex>& op, const Int nx_l, const Double HPBW)
+//   {
+//     MathFunc<Float> sf(SPHEROIDAL);
+//     if (op.nelements() != (uInt)nx_l)
+//       {
+// 	op.resize(nx_l);
+// 	Int inner=nx_l/2, center=nx_l/2;
+// 	//
+// 	// The "complicated" equation below is worthy of a comment (as
+// 	// notes are called in program text).
+//         //
+// 	// uvScale/nx == Size of a pixel size in the image in radians.
+// 	// Lets call it dx.  HPBW is the HPBW for the antenna at the
+// 	// centre freq. in use.  HPBW/dx == Pixel where the PB will be
+// 	// ~0.5x its peak value.  ((2*N*HPBW)/dx) == the pixel where
+// 	// the N th. PB sidelobe will be (rougly speaking).  When this
+// 	// value is equal to 3.0, the Spheroidal implemtation goes to
+// 	// zero!
+// 	//
+// 	Float dx=uvScale(0)*convSampling/nx;
+// 	Float MaxSideLobeNum = 3.0;
+// 	Float S=1.0*dx/(MaxSideLobeNum*2*HPBW),cfScale;
+	
+// 	cout << "UVSCALE = " << uvScale(0) << " " << convSampling << endl;
+// 	cout << "HPBW = " << HPBW 
+// 	     << " " << uvScale(0)/nx 
+// 	     << " " << S 
+// 	     << " " << dx 
+// 	     << endl;
+	
+
+// 	cfScale=S=6.0/inner;
+// 	for(Int ix=-inner;ix<inner;ix++)	    op(ix+center)=sf.value(abs((ix)*cfScale));
+// 	// for(Int ix=-inner;ix<inner;ix++)
+// 	//   if (abs(op(ix+center)) > 1e-8) 
+// 	// 	    cout << "SF: " << ix 
+// 	// 		 << " " << (ix)*cfScale 
+// 	// 		 << " " << real(op(ix+center)) 
+// 	// 		 << " " << imag(op(ix+center))
+// 	// 		 << endl;
+//       }
+//   }
+
+//   void AWProjectFT::makeAntiAliasingCorrection(Vector<Complex>& correction, 
+// 						 const Vector<Complex>& op,
+// 						 const Int nx_l)
+//   {
+//     if (correction.nelements() != (uInt)nx_l)
+//       {
+// 	correction.resize(nx_l);
+// 	correction=0.0;
+// 	Int opLen=op.nelements(), orig=nx_l/2;
+// 	for(Int i=-opLen;i<opLen;i++)
+// 	  {
+// 	    correction(i+orig) += op(abs(i));
+// 	  }
+// 	ArrayLattice<Complex> tmp(correction);
+// 	LatticeFFT::cfft(tmp,False);
+// 	correction=tmp.get();
+//       }
+// //     for(uInt i=0;i<correction.nelements();i++)
+// //       cout << "FTSF: " << real(correction(i)) << " " << imag(correction(i)) << endl;
+//   }
+
+//   void AWProjectFT::correctAntiAliasing(Lattice<Complex>& image)
+//   {
+//     //  applyAntiAliasingOp(cf,2);
+//     IPosition shape(image.shape());
+//     IPosition ndx(shape);
+//     ndx=0;
+//     makeAntiAliasingCorrection(antiAliasingCorrection, 
+// 			       antiAliasingOp,shape(0));
+
+//     Complex tmp,val;
+//     for(Int i=0;i<polInUse;i++)
+//       {
+// 	ndx(2)=i;
+// 	for (Int iy=0;iy<shape(1);iy++) 
+// 	  {
+// 	    for (Int ix=0;ix<shape(0);ix++) 
+// 	      {
+// 		ndx(0)=ix;
+// 		ndx(1)=iy;
+// 		tmp = image.getAt(ndx);
+// 		val=(antiAliasingCorrection(ix)*antiAliasingCorrection(iy));
+// 		if (abs(val) > 1e-5) tmp = tmp/val; else tmp=0.0;
+// 		image.putAt(tmp,ndx);
+// 	      }
+// 	  }
+//       }
+//   }
+
+//   void AWProjectFT::applyAntiAliasingOp(ImageInterface<Complex>& cf, 
+// 					Vector<IPosition>& maxPos,
+// 					Double HPBW, Int op, Bool Square)
+//   {
+//     //
+//     // First the spheroidal function
+//     //
+//     IPosition shape(cf.shape());
+//     IPosition ndx(shape);
+//     Vector<Double> refPixel=cf.coordinates().referencePixel();
+//     ndx=0;
+//     Int nx_l=shape(0),posX,posY;
+//     makeAntiAliasingOp(antiAliasingOp, nx_l, HPBW);
+
+//     Complex tmp,gain;
+
+//     for(Int i=0;i<polInUse;i++)
+//       {
+// 	ndx(2)=i;
+// 	for (Int iy=-nx_l/2;iy<nx_l/2;iy++) 
+// 	  {
+// 	    for (Int ix=-nx_l/2;ix<nx_l/2;ix++) 
+// 	      {
+// 		ndx(0)=ix+nx_l/2;
+// 		ndx(1)=iy+nx_l/2;
+// 		tmp = cf.getAt(ndx);
+// 		posX=ndx(0)+(Int)(refPixel(0)-maxPos(i)(0))+1;
+// 		posY=ndx(1)+(Int)(refPixel(1)-maxPos(i)(1))+1;
+// 		if ((posX > 0) && (posX < nx_l) &&
+// 		    (posY > 0) && (posY < nx_l))
+// 		  gain = antiAliasingOp(posX)*antiAliasingOp(posY);
+// 		else
+// 		  if (op==2) gain = 1.0; else gain=0.0;
+// 		if (Square) gain *= gain;
+// 		switch (op)
+// 		  {
+// 		  case 0: tmp = tmp+gain;break;
+// 		  case 1: 
+// 		    {
+// 		      tmp = tmp*gain;
+// 		      break;
+// 		    }
+// 		  case 2: tmp = tmp/gain;break;
+// 		  }
+// 		cf.putAt(tmp,ndx);
+// 	      }
+// 	  }
+//       }
+//   };
+//   void AWProjectFT::applyAntiAliasingOp(ImageInterface<Float>& cf, 
+// 					Vector<IPosition>& maxPos,
+// 					Double HPBW, Int op, Bool Square)
+
+//   {
+//     //
+//     // First the spheroidal function
+//     //
+//     IPosition shape(cf.shape());
+//     IPosition ndx(shape);
+//     Vector<Double> refPixel=cf.coordinates().referencePixel();
+//     ndx=0;
+//     Int nx_l=shape(0),posX,posY;
+//     makeAntiAliasingOp(antiAliasingOp, nx_l, HPBW);
+
+//     Float tmp,gain;
+
+//     for(Int i=0;i<polInUse;i++)
+//       {
+// 	ndx(2)=i;
+// 	for (Int iy=-nx_l/2;iy<nx_l/2;iy++) 
+// 	  {
+// 	    for (Int ix=-nx_l/2;ix<nx_l/2;ix++) 
+// 	      {
+// 		ndx(0)=ix+nx_l/2;
+// 		ndx(1)=iy+nx_l/2;
+// 		tmp = cf.getAt(ndx);
+// 		posX=ndx(0)+(Int)(refPixel(0)-maxPos(i)(0))+1;
+// 		posY=ndx(1)+(Int)(refPixel(1)-maxPos(i)(1))+1;
+// 		if ((posX > 0) && (posX < nx_l) &&
+// 		    (posY > 0) && (posY < nx_l))
+// 		  gain = real(antiAliasingOp(posX)*antiAliasingOp(posY));
+// 		else
+// 		  if (op==2) gain = 1.0; else gain=0.0;
+// 		if (Square) gain *= gain;
+// 		switch (op)
+// 		  {
+// 		  case 0: tmp = tmp+gain;break;
+// 		  case 1: 
+// 		    {
+// 		      tmp = tmp*gain;
+// 		      break;
+// 		    }
+// 		  case 2: tmp = tmp/gain;break;
+// 		  }
+// 		cf.putAt(tmp,ndx);
+// 	      }
+// 	  }
+//       }
+//   };
 
