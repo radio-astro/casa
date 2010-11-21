@@ -40,7 +40,7 @@
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/StokesCoordinate.h>
 #include <lattices/Lattices/LatticeFFT.h>
-
+#include <ostream.h>
 namespace casa{
 
   AWConvFunc& AWConvFunc::operator=(const AWConvFunc& other)
@@ -98,24 +98,6 @@ namespace casa{
     //
     // Set up the convolution function. 
     //
-    if(wConvSize>0) 
-      {
-	if(wConvSize>256) 
-	  {
-	    convSampling=4;
-	    convSize=min(nx,512);
-	  }
-	else 
-	  {
-	    convSampling=4;
-	    convSize=min(nx,2048);
-	  }
-      }
-    else 
-      {
-	convSampling=4;
-	convSize=nx;
-      }
     convSampling=ATerm_p->getOversampling();
     convSize=ATerm_p->getConvSize();
     //
@@ -187,15 +169,12 @@ namespace casa{
     IPosition pbSlice(4, convSize, convSize, 1, 1);
     
     Matrix<Complex> screen(convSize, convSize);
-    //    VLACalcIlluminationConvFunc vlaPB;
     WTerm wterm;
-    //    Long cachesize=(HostInfo::memoryTotal(true)/8)*1024;
-    //    vlaPB.setMaximumCacheSize(cachesize);
     
     for (Int iw=0;iw<wConvSize;iw++) 
       {
-	screen = 1.0;
-	wterm.apply(screen, iw, sampling, wConvSize, wScale, inner);
+	//	wterm.applySky(screen, iw, sampling, wConvSize, wScale, inner);
+	wterm.applySky(screen, iw, sampling,  wScale, convSize);
 	//
 	// Fill the complex image with the w-term...
 	//
@@ -214,12 +193,12 @@ namespace casa{
 	Bool doSquint=True;
 	ATerm_p->applySky(twoDPB, vb, doSquint);
 	doSquint = False;
-	//	ATerm_p->applyPBSq(twoDPBSq, vb, bandID_l, doSquint);
 	ATerm_p->applySky(twoDPBSq, vb, doSquint);
 	// 	twoDPB.put(abs(twoDPB.get()));
 	// 	twoDPBSq.put(abs(twoDPBSq.get()));
 	// {
-	//   String name("twoDPB.before.im");
+	//   ostringstream name;
+	//   name << "twoDPB.before." << iw << ".im";
 	//   storeImg(name,twoDPB);
 	// }
 	
@@ -305,7 +284,6 @@ namespace casa{
 	
 	ndx(0)=ndx(1)=ConvFuncOrigin;
 	ndx(2) = iw;
-	//	Complex maxVal = max(convFunc);
 	threshold = abs(convFunc_l(ndx))*ATerm_p->getSupportThreshold();
 	//
 	// Find the support size of the conv. function in pixels
@@ -313,8 +291,6 @@ namespace casa{
 	Int wtR;
 	found = findSupport(convWeights_l,threshold,ConvFuncOrigin,wtR);
 	found = findSupport(convFunc_l,threshold,ConvFuncOrigin,R);
-	
-	//	R *=2.5;
 	//
 	// Set the support size for each W-plane and for all
 	// Pol-planes.  Assuming that support size for all Pol-planes
@@ -506,6 +482,8 @@ namespace casa{
     
     logIO() << LogOrigin("AWConvFunc","makeAverageResponse")
 	    << LogIO::NORMAL;
+    logIO() << "Making the average response for " << ATerm_p->name() 
+	    << LogIO::NORMAL  << LogIO::POST;
     
     localPB.resize(image.shape()); localPB.setCoordinateInfo(image.coordinates());
     if (reset)
