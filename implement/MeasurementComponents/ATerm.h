@@ -64,6 +64,8 @@ namespace casa{
 			  const Int inner) 
     {(void)screen; (void)wPixel; (void)sampling; (void)wConvSize; (void)wScale; (void)inner;};
 
+    virtual String name() = 0;
+
     virtual void applySky(ImageInterface<Float>& twoDPB, 
 			  const VisBuffer& vb, 
 			  const Bool doSquint=True)=0;
