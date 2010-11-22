@@ -44,24 +44,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     CFStore():data(), coordSys(), sampling(), 
 	      xSupport(), ySupport(), 
 	      maxXSupport(-1), maxYSupport(-1),
-	      pa() {};
+	      pa(), mosPointingPos(0) {};
+
     CFStore(CFType *dataPtr, CoordinateSystem& cs, Vector<Float>& samp,
 	    Vector<Int>& xsup, Vector<Int>& ysup, Int maxXSup, Int maxYSup,
-	    Quantity PA):
+	    Quantity PA, Int mosPointing):
       data(), coordSys(cs), sampling(samp),
       xSupport(xsup), ySupport(ysup), maxXSupport(maxXSup),
-      maxYSupport(maxYSup), pa(PA) 
+      maxYSupport(maxYSup), pa(PA), mosPointingPos(mosPointing)
     {data = new CFType(*dataPtr);};
+
     ~CFStore() {};
+
     CFStore& operator=(const CFStore& other);
     void show(const char *Mesg=NULL,ostream &os=cerr);
     Bool null() {return data.null();};
     void set(CFType *dataPtr, CoordinateSystem& cs, Vector<Float>& samp,
-	    Vector<Int>& xsup, Vector<Int>& ysup, Int maxXSup, Int maxYSup,
-	    Quantity PA)
+	     Vector<Int>& xsup, Vector<Int>& ysup, Int maxXSup, Int maxYSup,
+	     Quantity PA, const Int mosPointing=0)
     {
-      data=dataPtr; coordSys=cs; sampling=samp; xSupport=xsup; ySupport=ysup;
-      maxXSupport=maxXSup;maxYSupport=maxYSup;pa=PA;
+      data=dataPtr; coordSys=cs; sampling=samp; 
+      xSupport=xsup; ySupport=ysup;
+      maxXSupport=maxXSup;maxYSupport=maxYSup;
+      pa=PA;
+      mosPointingPos = mosPointing;
     }
 
     void resize(Int nw, Bool retainValues=False);
@@ -74,6 +80,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<Int> xSupport,ySupport;
     Int maxXSupport, maxYSupport;
     Quantity pa;
+    Int mosPointingPos;
   };
 } //# NAMESPACE CASA - END
 #endif
