@@ -18,7 +18,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMEnumerations.h,v 1.4.2.1 2010/02/19 15:00:11 dbroguie Exp $"
+ * "@(#) $Id: ATMEnumerations.h,v 1.5 2010/05/06 21:32:12 dbroguie Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------

@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMRefractiveIndex.cpp,v 1.9 2010/02/19 10:57:03 dbroguie Exp $"
+ * "@(#) $Id: ATMRefractiveIndex.cpp,v 1.9.14.1 2010/10/15 16:16:42 dbroguie Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------
@@ -1202,7 +1202,7 @@ ATM_NAMESPACE_BEGIN
 	vp=vp-1;
       }
 
-      if(pp<100){
+      if(pp<25){
 	ini=ini3[vp];
 	ifin=ifin3[vp];
       }else{
@@ -1586,7 +1586,7 @@ ATM_NAMESPACE_BEGIN
 	vp=vp-1;
       }
 
-      if(pp<100){
+      if(pp<25){
 	ini=ini3[vp];
 	ifin=ifin3[vp];
       }else{
@@ -2611,7 +2611,7 @@ ATM_NAMESPACE_BEGIN
 	vp=vp-1;
       }
 
-      if(pp<100){
+      if(pp<25){
 	ini=ini3[vp];
 	ifin=ifin3[vp];
       }else{
@@ -3796,7 +3796,7 @@ ATM_NAMESPACE_BEGIN
 	vp=vp-1;
       }
 
-      if(pp<100){
+      if(pp<25){
 	ini=ini3[vp];
 	ifin=ifin3[vp];
 	if(ini>2){ini=ini-2;}
@@ -4223,7 +4223,7 @@ ATM_NAMESPACE_BEGIN
 	vp=vp-1;
       }
 
-      if(pp<100){
+      if(pp<25){
 	ini=ini3[vp];
 	ifin=ifin3[vp];
       }else{
@@ -4960,7 +4960,7 @@ ATM_NAMESPACE_BEGIN
 	vp=vp-1;
       }
 
-      if(pp<100){
+      if(pp<25){
 	ini1=ini31[vp];
 	ifin1=ifin31[vp];
 	ini2=ini32[vp];
@@ -5408,7 +5408,7 @@ ATM_NAMESPACE_BEGIN
 	vp=vp-1;
       }
 
-      if(pp<100){
+      if(pp<25){
 	ini=ini3[vp];
 	ifin=ifin3[vp];
       }else{
@@ -6202,9 +6202,9 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 	vp=vp-1;
       }
 
-      if(pp<100){
-	ini=ini3[vp];
-	ifin=ifin3[vp];
+      if(pp<25){
+	ini=ini2[vp];
+	ifin=ifin2[vp];
       }else{
       	if(pp<300){
       	  ini=ini2[vp];
@@ -6215,17 +6215,25 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
       	}
       }
 
+      //      if(ini==ifin){ini=ini-1;}
+
+      //      cout << "MUCHO ANTES pp ini ifin nu " << pp << " " << ini << " " << ifin << " " << nu << " GHz" << endl;
+
       if(ini<38&&fabs(fre[ini-1]-nu)>50){ini=38;}
 
       if(ini>0){ini=ini-1;}else{ifin=0;}
       if(ifin>0){ifin=ifin-1;}else{ifin=0;}
 
+      //      cout << "ANTES pp ini ifin nu " << pp << " " << ini << " " << ifin << " " << nu << " GHz" << endl;
 
       if(ifin==0||ifin<ini||(ini>0&&ifin==36)){
 
 	return complex<double> (0.0,0.0);
 
       }else{
+
+
+	//	cout << "ini ifin nu " << ini << " " << ifin << " " << nu << " GHz" << endl;
 
 	for(unsigned int i=ini; i<ifin+1; i++){
 
@@ -6241,6 +6249,8 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 
 	lshapeacum=lshapeacum*(nu/pi)*(fac2fixed*pow(mu,2.0)/q); // imaginary part: absorption coefficient in cm^2
 	                                                                    // real part: delay in rad*cm^2
+
+
 
 	return lshapeacum*1e-4;    // to give it in SI units (m^2)    // (  rad m^2 , m^2 )
 
@@ -8628,7 +8638,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 	vp=vp-1;
       }
 
-      if(pp<100){
+      if(pp<25){
 	ini=ini3[vp];
 	ifin=ifin3[vp];
       }else{
@@ -8643,6 +8653,10 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 
       if(ini>0){ini=ini-1;}else{ifin=0;}
       if(ifin>0){ifin=ifin-1;}else{ifin=0;}
+
+
+      //      cout << "16O16O16O: pp fre(ini) fre(ifin) nu " << pp << " " << fre[ini] << " " << fre[ifin] << " " << nu << " GHz" << endl;
+
 
       if(ifin==0||ifin<ini){
 
@@ -9711,7 +9725,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 	vp=vp-1;
       }
 
-      if(pp<100){
+      if(pp<25){
 	ini=ini3[vp];
 	ifin=ifin3[vp];
       }else{
@@ -10786,7 +10800,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 	vp=vp-1;
       }
 
-      if(pp<100){
+      if(pp<25){
 	ini=ini3[vp];
 	ifin=ifin3[vp];
       }else{
@@ -11555,7 +11569,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 	vp=vp-1;
       }
 
-      if(pp<100){
+      if(pp<25){
 	ini=ini3[vp];
 	ifin=ifin3[vp];
       }else{
@@ -12205,7 +12219,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 	vp=vp-1;
       }
 
-      if(pp<100){
+      if(pp<25){
 	ini=ini3[vp];
 	ifin=ifin3[vp];
       }else{
@@ -12248,4 +12262,5 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
     }
 
   }
+
 ATM_NAMESPACE_END

@@ -18,7 +18,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMSkyStatus.h,v 1.8 2010/02/19 01:47:19 dbroguie Exp $"
+ * "@(#) $Id: ATMSkyStatus.h,v 1.9 2010/09/02 22:44:27 dbroguie Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------
@@ -296,6 +296,13 @@ public:
                                 double skycoupling,
                                 Temperature Tspill);
 
+  Temperature getAverageTebbSky(unsigned int spwid,
+                                Length wh2o,
+                                double airmass,
+                                double skycoupling,
+                                double signalgain,
+                                Temperature Tspill);
+
   /** Accesor to the Equivalent Blackbody Temperature in spectral window 0 and channel 0, for the currnet
    (user) Water Vapor Column, the current Air Mass, and perfect Sky Coupling to the sky */
   Temperature getTebbSky()
@@ -498,17 +505,17 @@ public:
    case the returned value corresponds to the zenith water vapor column of the AtmProfile object.*/
   Opacity getAverageWetOpacity(unsigned int spwid)
   {
-    return RefractiveIndexProfile::getAverageWetOpacity(spwid)
+    return RefractiveIndexProfile::getAverageWetOpacity(getGroundWH2O(),spwid)
         * ((getUserWH2O().get()) / (getGroundWH2O().get()));
   }
   Opacity getAverageH2OLinesOpacity(unsigned int spwid)
   {
-    return RefractiveIndexProfile::getAverageH2OLinesOpacity(spwid)
+    return RefractiveIndexProfile::getAverageH2OLinesOpacity(getGroundWH2O(),spwid)
         * ((getUserWH2O().get()) / (getGroundWH2O().get()));
   }
   Opacity getAverageH2OContOpacity(unsigned int spwid)
   {
-    return RefractiveIndexProfile::getAverageH2OContOpacity(spwid)
+    return RefractiveIndexProfile::getAverageH2OContOpacity(getGroundWH2O(),spwid)
         * ((getUserWH2O().get()) / (getGroundWH2O().get()));
   }
 

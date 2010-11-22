@@ -1,4 +1,4 @@
-/** \mainpage C++ interface of the ATM model for ALMA (June 16th, 2008 status)  
+/** \mainpage C++ interface of the ATM model for ALMA (Sep 02, 2010 status)  
  *
  * \section HISTORY ATM history
  *
