@@ -243,15 +243,7 @@ namespace casa{
 	memCache_p[where] = CFStore(cf,coords,sampling,
 				    xConvSupport,yConvSupport,
 				    max(xConvSupport),max(yConvSupport),
-				    Quantity(pa,"rad"));
-	//	memCache_p[where].show("!$@#!$!@%: ");
-	// memCache_p[where].data = new CFType(cf);
-	// memCache_p[where].sampling.resize(1);
-	// memCache_p[where].sampling = convSampling;
-	// memCache_p[where].xSupport = xConvSupport;
-	// memCache_p[where].ySupport = yConvSupport;
-	// memCache_p[where].coordSys = coords;
-	// memCache_p[where].pa = Quantity(pa,"rad");
+				    Quantity(pa,"rad"),0);
       }
     
     return where;
@@ -547,8 +539,9 @@ namespace casa{
   //          the return value corresponds to the index in the list of
   //          conv. funcs. where this conv. func. should be filled
   //
-  Int CFCache::locateConvFunction(const Int Nw, const Float pa, const Float dPA,
-				  CFStore& cfs)
+  Int CFCache::locateConvFunction(CFStore& cfs, 
+				  const Int Nw, const Float pa, const Float dPA,
+				  const Int mosXPos, const Int mosYPos)
   {
     logIO() << LogOrigin("CFCache","locateConvFunction")
 	    << LogIO::NORMAL;
