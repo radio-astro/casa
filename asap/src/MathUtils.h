@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: MathUtils.h 1603 2009-07-17 20:35:47Z TakTsutsumi $
+//# $Id: MathUtils.h 1819 2010-08-02 07:28:20Z KanaSugimoto $
 //#---------------------------------------------------------------------------
 #ifndef MATHUTILS_H
 #define MATHUTILS_H
@@ -50,16 +50,16 @@ namespace mathutil {
  * @param relaxed a weighting scheme
  * @param ignoreOther drop every second channel (NYI)
  */
-void hanning(casa::Vector<casa::Float>& out, 
+void hanning(casa::Vector<casa::Float>& out,
 	     casa::Vector<casa::Bool>& outmask,
-             const casa::Vector<casa::Float>& in, 
+             const casa::Vector<casa::Float>& in,
 	     const casa::Vector<casa::Bool>& mask,
              casa::Bool relaxed=casa::False,
              casa::Bool ignoreOther=casa::False);
 
 /**
  * Apply a running median to  a masked vector.
- * Edge solution:  The first and last hwidth channels will be replicated 
+ * Edge solution:  The first and last hwidth channels will be replicated
  * from the first/last value from a full window.
  * @param out the smoothed vector
  * @param outmask  the smoothed mask
@@ -67,11 +67,17 @@ void hanning(casa::Vector<casa::Float>& out,
  * @param mask the input mask
  * @param hwidth half-width of the smoothing window
  */
- void runningMedian(casa::Vector<casa::Float>& out, 
-                   casa::Vector<casa::Bool>& outmask,
-                   const casa::Vector<casa::Float>& in, 
-                   const casa::Vector<casa::Bool>& mask,
+ void runningMedian(casa::Vector<casa::Float>& out,
+                   casa::Vector<casa::Bool>& outflag,
+                   const casa::Vector<casa::Float>& in,
+                   const casa::Vector<casa::Bool>& flag,
                    float hwidth);
+
+ void polyfit(casa::Vector<casa::Float>& out,
+                   casa::Vector<casa::Bool>& outmask,
+                   const casa::Vector<casa::Float>& in,
+                   const casa::Vector<casa::Bool>& mask,
+                   float hwidth, int order);
 
 // Generate specified statistic
 float statistics(const casa::String& which,

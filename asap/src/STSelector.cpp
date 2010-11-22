@@ -269,6 +269,11 @@ std::vector< int > asap::STSelector::getTypes( ) const
   return getint("SRCTYPE") ;
 }
 
+std::vector< int > asap::STSelector::getRows( ) const
+{
+  return rowselection_ ;
+}
+
 std::string asap::STSelector::print( )
 {
   ostringstream oss;

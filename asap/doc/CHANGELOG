@@ -1,10 +1,74 @@
 Changelog
 =========
 
-Release 2.2.1 [2007-??-??]
+Release 3.0.0 [2010-05-06]
 
-* source direction for Hobart data - Ticket #109
-* added running median to scantable.(smooth(kernel='rmedian') 
+* BEWARE: added asap2to3 which converts '.asap' files from version 2 to 
+          version 3
+* Ticket #183 Added scantable.get_weather
+* Ticket #181 Added work-around for casacore bug in saving tables with
+              selection
+* Ticket #178 Added opacity_model based on  miriad's atmospheric model
+* Ticket #177 Added function skydip to determine opacities.
+* Ticket #172 Fixed non-working scantable.resample
+* Ticket #155 Better output filenames. Ignore non-existsing 
+              beams/pols/ifs/scans
+* Ticket #157 numpy >= 1.1 support
+* Ticket #158 fixed plotter.set_font
+* Ticket #160 Aspect ratio of plotter is customisable now
+* Ticket #163 fixed for scantable.set_sourcetype
+* Ticket #164 Upgrade note in wiki FAQ
+* Ticket #165 Handle non-parallactified polarimtery data (if supported in 
+              rpfits)
+* Ticket #167 Added running polynomial filter to scantable.smooth
+* Ticket #168 Data exported via scantable.save now contains correct frequency
+              or velocity information
+* Ticket #169 Simplified selection of data
+* Ticket #46  Interactive lag flagging
+* Ticket #170 Provided access to frequency coordinate information via
+              scantable.get_coordinate
+* Added OS X 10.5 Disk image installer
+* Added support for OS X 10.6
+* Interactive plotting annotations via optional argument interactive=True
+* Interactive creation of masks on the plotter - plotter.create_mask
+* Tidy up date range in asapplotter.plotazel/plotpointings
+* support for gcc-4.4
+
+Release 2.3.1 [2009-03-25]
+
+* Ticket #154 Flagged data wasn't hnoured in fitting
+* Ticket #153 plotter.plot_lines fixed for matplotlib >= 0.98
+* Ticket #90  Support integer values for frequencies/errors/intensities
+
+Release 2.3.0 [2009-03-13]
+
+* Ticket #150 fix in casacore for frequency frame conversions
+* Ticket #151 added rc parameter and function set_sourcetype to identify
+              on/off scans
+* Ticket #78/#112 Resolved the issue with random errors occuring under linux
+                  for large
+   data files, which corrupted the identifaction of off scans
+* Ticket #149 Fixed the bug causing spectral line search to go into an
+              infinite loop in some rare circumstances
+* Ticket #110 Added export to CLASS readable FITS files
+   scantable.save("myfile.fits", "CLASS")
+* Ticket #142 Fix of the frequency alignment for long observations
+* Ticket #133 allow supression of history in the scantable via rc parameters
+* Ticket #109 source direction for Hobart data
+* Ticket #115 added running median to scantable.(smooth(kernel='rmedian')
+* Ticket #148 opacity correction wasn't applied to TSYS
+* Ticket #135 quotient detection failure for specific source names
+* Ticket #140 NaN values not handled - added scantable.flag_nans to ensure
+              that the NaN are flagged
+* added python iterator access to scantable rows
+* made functions available to directly manipulate spectra 
+  scantable.get/set_spectrum
+* upgrade to support ipython >= 0.8.1
+* support gcc-4.3
+* use scons >= 1.1.0
+* update to latest livedata I/O functions
+* add WCS info to the exported text files
+
 
 Release 2.2.0 [2007-05-02]
 
@@ -27,7 +91,7 @@ Minor Release 2.1.1 [2006-11-09]
 
 * fix for Ticket #88 - numpy masks
 * better TAB completion for ipython (handles quotes, don't list private members)
-* Fix for Ticket #81 = scanatble.stats output as list 
+* Fix for Ticket #81 = scanatble.stats output as list
 * ticket #64 - speed up of auto_poly_baseline
 * fix for ticket #89 - export of IF sub-selections
 * fix for Ticket #83 - export to ms2 crashed asap

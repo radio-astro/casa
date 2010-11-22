@@ -81,7 +81,7 @@ STFiller::~STFiller()
 {
   close();
 }
-  
+
 void STFiller::open( const std::string& filename, const std::string& antenna, int whichIF, int whichBeam, casa::Bool getPt )
 {
   if (table_.null())  {
@@ -229,10 +229,10 @@ void STFiller::open( const std::string& filename, const std::string& antenna, in
   table_->setHeader(*header_);
   //For MS, add the location of POINTING of the input MS so one get
   //pointing data from there, if necessary.
-  //Also find nrow in MS 
+  //Also find nrow in MS
   nInDataRow = 0;
   if (format == "MS2") {
-    Path datapath(inName); 
+    Path datapath(inName);
     String ptTabPath = datapath.absoluteName();
     Table inMS(ptTabPath);
     nInDataRow = inMS.nrow();
@@ -245,8 +245,8 @@ void STFiller::open( const std::string& filename, const std::string& antenna, in
     }
   }
   String freqFrame = header_->freqref;
-  //translate frequency reference frame back to 
-  //MS style (as PKSMS2reader converts the original frame 
+  //translate frequency reference frame back to
+  //MS style (as PKSMS2reader converts the original frame
   //in FITS standard style)
   if (freqFrame == "TOPOCENT") {
     freqFrame = "TOPO";
@@ -263,8 +263,10 @@ void STFiller::open( const std::string& filename, const std::string& antenna, in
   } else if (freqFrame == "SOURCE") {
     freqFrame = "REST";
   }
-  table_->frequencies().setFrame(freqFrame);
-     
+  // set both "FRAME" and "BASEFRAME"
+  table_->frequencies().setFrame(freqFrame, false);
+  table_->frequencies().setFrame(freqFrame,true);
+  //table_->focus().setParallactify(true);
 }
 
 void STFiller::close( )
@@ -279,7 +281,7 @@ int asap::STFiller::read( )
 {
   int status = 0;
 
-  // 
+  //
   // for NRO data
   //
   // 2008/11/12 Takeshi Nakazato
@@ -323,12 +325,11 @@ int asap::STFiller::read( )
       isGBTFITS = true ;
     }
     fclose( fp ) ;
-  } 
+  }
   while ( status == 0 ) {
     status = reader_->read(pksrec);
     if ( status != 0 ) break;
     n += 1;
-
     Regex filterrx(".*[SL|PA]$");
     Regex obsrx("^AT.+");
     if ( header_->antennaname.matches(obsrx) &&
@@ -387,18 +388,8 @@ int asap::STFiller::read( )
     *rbCol = rb;
     RecordFieldPtr<uInt> ifCol(rec, "IFNO");
     *ifCol = pksrec.IFno-ifOffset_- 1;
-    uInt id;
-    /// @todo this has to change when nchan isn't global anymore
-    //id = table_->frequencies().addEntry(Double(header_->nchan/2),
-    //                                        pksrec.refFreq, pksrec.freqInc);
-    if ( pksrec.nchan == 1 ) {
-      id = table_->frequencies().addEntry(Double(0),
-					  pksrec.refFreq, pksrec.freqInc);
-    }
-    else {
-      id = table_->frequencies().addEntry(Double(pksrec.nchan/2),
-					  pksrec.refFreq, pksrec.freqInc);
-    }
+    uInt id = table_->frequencies().addEntry(Double(pksrec.spectra.nrow()/2),
+                 			     pksrec.refFreq, pksrec.freqInc);
     RecordFieldPtr<uInt> mfreqidCol(rec, "FREQ_ID");
     *mfreqidCol = id;
     //*ifCol = id;
@@ -415,9 +406,10 @@ int asap::STFiller::read( )
                                     pksrec.windAz);
     RecordFieldPtr<uInt> mweatheridCol(rec, "WEATHER_ID");
     *mweatheridCol = id;
+
     RecordFieldPtr<uInt> mfocusidCol(rec, "FOCUS_ID");
-    id = table_->focus().addEntry(pksrec.focusAxi, pksrec.focusTan,
-                                  pksrec.focusRot);
+    id = table_->focus().addEntry(pksrec.parAngle, pksrec.focusAxi,
+                                  pksrec.focusTan, pksrec.focusRot);
     *mfocusidCol = id;
     RecordFieldPtr<Array<Double> > dirCol(rec, "DIRECTION");
     *dirCol = pksrec.direction;
@@ -425,9 +417,6 @@ int asap::STFiller::read( )
     *azCol = pksrec.azimuth;
     RecordFieldPtr<Float> elCol(rec, "ELEVATION");
     *elCol = pksrec.elevation;
-
-    RecordFieldPtr<Float> parCol(rec, "PARANGLE");
-    *parCol = pksrec.parAngle;
 
     RecordFieldPtr< Array<Float> > specCol(rec, "SPECTRA");
     RecordFieldPtr< Array<uChar> > flagCol(rec, "FLAGTRA");
@@ -503,17 +492,17 @@ void STFiller::openNRO( int whichIF, int whichBeam )
   time( &t0 ) ;
   tm *ttm = localtime( &t0 ) ;
   LogIO os( LogOrigin( "STFiller", "openNRO()", WHERE ) ) ;
-//   cout << "STFiller::openNRO()  Start time = " << t0 
-//        << " (" 
-//        << ttm->tm_year + 1900 << "/" << ttm->tm_mon + 1 << "/" << ttm->tm_mday 
-//        << " " 
-//        << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec 
+//   cout << "STFiller::openNRO()  Start time = " << t0
+//        << " ("
+//        << ttm->tm_year + 1900 << "/" << ttm->tm_mon + 1 << "/" << ttm->tm_mday
+//        << " "
+//        << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec
 //        << ")" << endl ;
-  os << "Start time = " << t0 
-     << " (" 
-     << ttm->tm_year + 1900 << "/" << ttm->tm_mon + 1 << "/" << ttm->tm_mday 
-     << " " 
-     << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec 
+  os << "Start time = " << t0
+     << " ("
+     << ttm->tm_year + 1900 << "/" << ttm->tm_mon + 1 << "/" << ttm->tm_mday
+     << " "
+     << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec
      << ")" << LogIO::POST ;
 
   // fill STHeader
@@ -541,16 +530,17 @@ void STFiller::openNRO( int whichIF, int whichBeam )
     throw( AipsError("Failed to get header information.") ) ;
   }
 
-  // set frame keyword of FREQUENCIES table
+  // set FRAME and BASEFRAME keyword of FREQUENCIES table
   if ( header_->freqref != "TOPO" ) {
     table_->frequencies().setFrame( header_->freqref, false ) ;
+    table_->frequencies().setFrame( header_->freqref, true ) ;
   }
 
   ifOffset_ = 0;
   vector<Bool> ifs = nreader_->getIFs() ;
   if ( whichIF >= 0 ) {
     if ( whichIF >= 0 && whichIF < nIF_ ) {
-      for ( int i = 0 ; i < nIF_ ; i++ ) 
+      for ( int i = 0 ; i < nIF_ ; i++ )
         ifs[i] = False ;
       ifs[whichIF] = True ;
       header_->nif = 1;
@@ -569,7 +559,7 @@ void STFiller::openNRO( int whichIF, int whichBeam )
   vector<Bool> beams = nreader_->getBeams() ;
   if (whichBeam>=0) {
     if (whichBeam>=0 && whichBeam<nBeam_) {
-      for ( int i = 0 ; i < nBeam_ ; i++ ) 
+      for ( int i = 0 ; i < nBeam_ ; i++ )
         beams[i] = False ;
       beams[whichBeam] = True;
       header_->nbeam = 1;
@@ -594,18 +584,18 @@ void STFiller::openNRO( int whichIF, int whichBeam )
   time_t t1 ;
   time( &t1 ) ;
   ttm = localtime( &t1 ) ;
-//   cout << "STFiller::openNRO()  End time = " << t1 
-//        << " (" 
-//        << ttm->tm_year + 1900 << "/" << ttm->tm_mon + 1 << "/" << ttm->tm_mday 
-//        << " " 
-//        << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec 
+//   cout << "STFiller::openNRO()  End time = " << t1
+//        << " ("
+//        << ttm->tm_year + 1900 << "/" << ttm->tm_mon + 1 << "/" << ttm->tm_mday
+//        << " "
+//        << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec
 //        << ")" << endl ;
 //   cout << "STFiller::openNRO()  Elapsed time = " << t1 - t0 << " sec" << endl ;
-  os << "End time = " << t1 
-     << " (" 
-     << ttm->tm_year + 1900 << "/" << ttm->tm_mon + 1 << "/" << ttm->tm_mday 
-     << " " 
-     << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec 
+  os << "End time = " << t1
+     << " ("
+     << ttm->tm_year + 1900 << "/" << ttm->tm_mon + 1 << "/" << ttm->tm_mday
+     << " "
+     << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec
      << ")" << endl ;
   os << "Elapsed time = " << t1 - t0 << " sec" << endl ;
   os.post() ;
@@ -621,17 +611,17 @@ int STFiller::readNRO()
   time( &t0 ) ;
   tm *ttm = localtime( &t0 ) ;
   LogIO os( LogOrigin( "STFiller", "readNRO()", WHERE ) ) ;
-//   cout << "STFiller::readNRO()  Start time = " << t0 
-//        << " (" 
-//        << ttm->tm_year + 1900 << "/" << ttm->tm_mon + 1 << "/" << ttm->tm_mday 
-//        << " " 
-//        << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec 
+//   cout << "STFiller::readNRO()  Start time = " << t0
+//        << " ("
+//        << ttm->tm_year + 1900 << "/" << ttm->tm_mon + 1 << "/" << ttm->tm_mday
+//        << " "
+//        << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec
 //        << ")" << endl ;
-  os << "Start time = " << t0 
-     << " (" 
-     << ttm->tm_year + 1900 << "/" << ttm->tm_mon + 1 << "/" << ttm->tm_mday 
-     << " " 
-     << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec 
+  os << "Start time = " << t0
+     << " ("
+     << ttm->tm_year + 1900 << "/" << ttm->tm_mon + 1 << "/" << ttm->tm_mday
+     << " "
+     << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec
      << ")" << LogIO::POST ;
   //
 
@@ -691,9 +681,9 @@ int STFiller::readNRO()
       //os << "Undefined srcType: " << i << LogIO::POST ;
       srcType = 3 ;
     }
- 
+
     // if srcType is 2 (ZERO scan), ignore scan
-    if ( srcType != 2 && srcType != -1 && srcType != 3 ) { 
+    if ( srcType != 2 && srcType != -1 && srcType != 3 ) {
       TableRow row( table_->table() ) ;
       TableRecord& rec = row.record();
 
@@ -788,8 +778,8 @@ int STFiller::readNRO()
       RecordFieldPtr<String> srcnCol(rec, "SRCNAME") ;
       *srcnCol = srcname ;
       RecordFieldPtr<Int> srctCol(rec, "SRCTYPE") ;
-      *srctCol = srcType ;     
-      RecordFieldPtr<String> fieldnCol(rec, "FIELDNAME"); 
+      *srctCol = srcType ;
+      RecordFieldPtr<String> fieldnCol(rec, "FIELDNAME");
       *fieldnCol = fieldname ;
       RecordFieldPtr< Array<Float> > specCol(rec, "SPECTRA") ;
       *specCol = spectra ;
@@ -803,23 +793,29 @@ int STFiller::readNRO()
       *azCol = azimuth ;
       RecordFieldPtr<Float> elCol(rec, "ELEVATION") ;
       *elCol = elevation ;
-      RecordFieldPtr<Float> parCol(rec, "PARANGLE") ;
-      *parCol = parangle ;
+      //RecordFieldPtr<Float> parCol(rec, "PARANGLE") ;
+      //*parCol = parangle ;
       RecordFieldPtr<Float> tauCol(rec, "OPACITY") ;
       *tauCol = opacity ;
-      RecordFieldPtr<uInt> mcalidCol(rec, "TCAL_ID") ;
-      *mcalidCol = tcalid ;
+      id = table_->tcal().addEntry("",Vector<Float>(1,0.0));
+      RecordFieldPtr<uInt> mcalidCol(rec, "TCAL_ID");
+      *mcalidCol = id;
+      //RecordFieldPtr<uInt> mcalidCol(rec, "TCAL_ID") ;
+      //*mcalidCol = tcalid ;
       RecordFieldPtr<Int> fitCol(rec, "FIT_ID") ;
       *fitCol = fitid ;
-      RecordFieldPtr<uInt> mfocusidCol(rec, "FOCUS_ID") ;
-      *mfocusidCol = focusid ;
+      //RecordFieldPtr<uInt> mfocusidCol(rec, "FOCUS_ID") ;
+      //*mfocusidCol = focusid ;
+      RecordFieldPtr<uInt> mfocusidCol(rec, "FOCUS_ID");
+      id = table_->focus().addEntry(parangle, 0.0, 0.0, 0.0 ) ;
+      *mfocusidCol = id;
       RecordFieldPtr<uInt> mweatheridCol(rec, "WEATHER_ID") ;
       id = table_->weather().addEntry( temperature,
                                        pressure,
                                        humidity,
                                        windvel,
                                        winddir ) ;
-      *mweatheridCol = id ;          
+      *mweatheridCol = id ;
       RecordFieldPtr<Double> svelCol(rec, "SRCVELOCITY") ;
       *svelCol = srcvel ;
       RecordFieldPtr<Array<Double> > spmCol(rec, "SRCPROPERMOTION") ;
@@ -846,31 +842,31 @@ int STFiller::readNRO()
   time( &t1 ) ;
   ttm = localtime( &t1 ) ;
 //   cout << "STFiller::readNRO()  Processed " << i << " rows" << endl ;
-//   cout << "STFiller::readNRO()  Added " << i - count << " rows (ignored " 
+//   cout << "STFiller::readNRO()  Added " << i - count << " rows (ignored "
 //        << count << " \"ZERO\" scans)" << endl ;
-//   cout << "STFiller::readNRO()  End time = " << t1 
-//        << " (" 
-//        << ttm->tm_year + 1900 << "/" << ttm->tm_mon + 1 << "/" << ttm->tm_mday 
-//        << " " 
-//        << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec 
+//   cout << "STFiller::readNRO()  End time = " << t1
+//        << " ("
+//        << ttm->tm_year + 1900 << "/" << ttm->tm_mon + 1 << "/" << ttm->tm_mday
+//        << " "
+//        << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec
 //        << ")" << endl ;
 //   cout << "STFiller::readNRO()  Elapsed time = " << t1 - t0 << " sec" << endl ;
   os << "Processed " << i << " rows" << endl ;
-  os << "Added " << i - count << " rows (ignored " 
+  os << "Added " << i - count << " rows (ignored "
      << count << " \"ZERO\" scans)" << endl ;
   os.post() ;
-  os << "End time = " << t1 
-     << " (" 
-     << ttm->tm_year + 1900 << "/" << ttm->tm_mon + 1 << "/" << ttm->tm_mday 
-     << " " 
-     << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec 
+  os << "End time = " << t1
+     << " ("
+     << ttm->tm_year + 1900 << "/" << ttm->tm_mon + 1 << "/" << ttm->tm_mday
+     << " "
+     << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec
      << ")" << endl ;
   os << "Elapsed time = " << t1 - t0 << " sec" << endl ;
   os.post() ;
   //
 
   return 0 ;
-} 
+}
 
 Bool STFiller::fileCheck()
 {
@@ -880,9 +876,9 @@ Bool STFiller::fileCheck()
   File inFile( filename_ ) ;
   if ( inFile.isDirectory() )
     return bval ;
-  
+
   // if beginning of header data is "RW", return true
-  // otherwise, return false ; 
+  // otherwise, return false ;
   FILE *fp = fopen( filename_.c_str(), "r" ) ;
   char buf[9] ;
   char buf2[80] ;

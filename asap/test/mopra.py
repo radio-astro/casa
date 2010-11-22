@@ -13,20 +13,23 @@ q.set_freqframe("LSRK")          # set frequency frame
 q.auto_poly_baseline() # determine and subtract a poly baseline automatically
 q.convert_flux() # K -> Jy
 msk = q.create_mask([-70,20], [20,70]) # line free region - two windows
-rms = q.stats("rms",msk)
-med = q.stats("median",msk)
-
-print "Fitter test..."
-# select IF1
-selection = selector()
-selection.set_ifs(1)
-q.set_selection(selection)
+rms = q.stats("rms", msk)
+med = q.stats("median", msk)
 
 rcParams['plotter.gui'] = 0
-f = fitter()
-f.set_scan(q)
-f.set_function(gauss=2) # fit two gaussians
-f.fit()
-f.plot(filename='output/moprafit.png')
-fp = f.get_parameters()
+
+def plotfit(scan, ifno):
+    print "Fitter test for IF%d..." % ifno
+    # select IF
+    scan.set_selection(ifs=ifno)
+    f = fitter()
+    f.set_scan(scan)
+    f.set_function(gauss=ifno+1) # fit gaussian(s)
+    f.fit()
+    f.plot(filename='output/moprafit_if%d.png' % ifno)
+    fp = f.get_parameters()
+
+for ifno in q.getifnos():
+    plotfit(q, ifno)
+
 print "Mopra Test successful"

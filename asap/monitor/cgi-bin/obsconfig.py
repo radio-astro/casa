@@ -4,9 +4,7 @@ from asapconfig import *
 observatory['name'] = 'Mopra'
 
 # Append observing directories
-observatory['rpfpath'].append("/u/mar637/brage/singledish/data")
-observatory['rpfpath'].append("/u/mar637/brage/singledish/data/mopra200505")
-observatory['rpfpath'].append("/u/mar637/brage/singledish/data/mopra/phoenix")
+observatory['rpfpath'].append("/DATA/MPCCC1_1/corr/dat/")
 
 # Restfrequencies in GHz
 observatory['lines'] = {

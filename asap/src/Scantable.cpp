@@ -100,6 +100,7 @@ Scantable::Scantable(Table::TableType ttype) :
   table_.rwKeywordSet().defineTable("HISTORY", historyTable_.table());
   fitTable_ = STFit(*this);
   table_.rwKeywordSet().defineTable("FIT", fitTable_.table());
+  table_.tableInfo().setType( "Scantable" ) ;
   originalTable_ = table_;
   attach();
 }
@@ -119,6 +120,7 @@ Scantable::Scantable(const std::string& name, Table::TableType ttype) :
   } else {
     table_ = tab;
   }
+  table_.tableInfo().setType( "Scantable" ) ;
 
   attachSubtables();
   originalTable_ = table_;
@@ -164,6 +166,7 @@ Scantable::Scantable( const Scantable& other, bool clear )
       table_ = Table(newname, Table::Update);
       table_.markForDelete();
   }
+  table_.tableInfo().setType( "Scantable" ) ;
   /// @todo reindex SCANNO, recompute nbeam, nif, npol
   if ( clear ) copySubtables(other);
   attachSubtables();
@@ -223,9 +226,14 @@ void Scantable::setupMainTable()
 
   td.addColumn(ScalarColumnDesc<uInt>("FREQ_ID"));
   td.addColumn(ScalarColumnDesc<uInt>("MOLECULE_ID"));
-  td.addColumn(ScalarColumnDesc<Int>("REFBEAMNO"));
 
-  td.addColumn(ScalarColumnDesc<uInt>("FLAGROW"));
+  ScalarColumnDesc<Int> refbeamnoColumn("REFBEAMNO");
+  refbeamnoColumn.setDefault(Int(-1));
+  td.addColumn(refbeamnoColumn);
+
+  ScalarColumnDesc<uInt> flagrowColumn("FLAGROW");
+  flagrowColumn.setDefault(uInt(0));
+  td.addColumn(flagrowColumn);
 
   td.addColumn(ScalarColumnDesc<Double>("TIME"));
   TableMeasRefDesc measRef(MEpoch::UTC); // UTC as default
@@ -260,7 +268,6 @@ void Scantable::setupMainTable()
   mdirCol.write(td);
   td.addColumn(ScalarColumnDesc<Float>("AZIMUTH"));
   td.addColumn(ScalarColumnDesc<Float>("ELEVATION"));
-  td.addColumn(ScalarColumnDesc<Float>("PARANGLE"));
   td.addColumn(ScalarColumnDesc<Float>("OPACITY"));
 
   td.addColumn(ScalarColumnDesc<uInt>("TCAL_ID"));
@@ -302,10 +309,10 @@ void Scantable::attach()
   azCol_.attach(table_, "AZIMUTH");
   elCol_.attach(table_, "ELEVATION");
   dirCol_.attach(table_, "DIRECTION");
-  paraCol_.attach(table_, "PARANGLE");
   fldnCol_.attach(table_, "FIELDNAME");
   rbeamCol_.attach(table_, "REFBEAMNO");
 
+  mweatheridCol_.attach(table_,"WEATHER_ID");
   mfitidCol_.attach(table_,"FIT_ID");
   mfreqidCol_.attach(table_, "FREQ_ID");
   mtcalidCol_.attach(table_, "TCAL_ID");
@@ -361,7 +368,7 @@ void Scantable::attachAuxColumnDef(ArrayColumn<T>& col,
       Array<T>& arr(ip);
       for (int i = 0; i < size; ++i)
 	arr[i] = static_cast<T>(defValue[i]);
-      
+
       col.fillColumn(arr);
     } else {
       throw;
@@ -500,7 +507,7 @@ void Scantable::setFeedType(const std::string& feedtype)
   table_.rwKeywordSet().define(String("POLTYPE"), feedtype);
 }
 
-MPosition Scantable::getAntennaPosition () const
+MPosition Scantable::getAntennaPosition() const
 {
   Vector<Double> antpos;
   table_.keywordSet().get("AntennaPosition", antpos);
@@ -514,7 +521,16 @@ void Scantable::makePersistent(const std::string& filename)
   Path path(inname);
   /// @todo reindex SCANNO, recompute nbeam, nif, npol
   inname = path.expandedName();
-  table_.deepCopy(inname, Table::New);
+  // WORKAROUND !!! for Table bug
+  // Remove when fixed in casacore
+  if ( table_.tableType() == Table::Memory  && !selector_.empty() ) {
+    Table tab = table_.copyToMemoryTable(generateName());
+    tab.deepCopy(inname, Table::New);
+    tab.markForDelete();
+
+  } else {
+    table_.deepCopy(inname, Table::New);
+  }
 }
 
 int Scantable::nbeam( int scanno ) const
@@ -645,7 +661,7 @@ int Scantable::getBeam(int whichrow) const
   return beamCol_(whichrow);
 }
 
-std::vector<uint> Scantable::getNumbers(ScalarColumn<uInt>& col)
+std::vector<uint> Scantable::getNumbers(const ScalarColumn<uInt>& col) const
 {
   Vector<uInt> nos(col.getColumn());
   uInt n = genSort( nos, Sort::Ascending, Sort::QuickSort|Sort::NoDuplicates );
@@ -839,16 +855,14 @@ std::vector<float> Scantable::getSpectrum( int whichrow,
   if ( ptype == basetype ) {
     specCol_.get(whichrow, arr);
   } else {
-    CountedPtr<STPol> stpol(STPol::getPolClass(Scantable::factories_, basetype));
+    CountedPtr<STPol> stpol(STPol::getPolClass(Scantable::factories_,
+                                               basetype));
     uInt row = uInt(whichrow);
     stpol->setSpectra(getPolMatrix(row));
     Float fang,fhand,parang;
-    fang = focusTable_.getTotalFeedAngle(mfocusidCol_(row));
+    fang = focusTable_.getTotalAngle(mfocusidCol_(row));
     fhand = focusTable_.getFeedHand(mfocusidCol_(row));
-    parang = paraCol_(row);
-    /// @todo re-enable this
-    // disable total feed angle to support paralactifying Caswell style
-    stpol->setPhaseCorrections(parang, -parang, fhand);
+    stpol->setPhaseCorrections(fang, fhand);
     arr = stpol->getSpectrum(requestedpol, ptype);
   }
   if ( arr.nelements() == 0 )
@@ -920,8 +934,7 @@ std::string Scantable::summary( bool verbose )
       << setw(15) << "IFs:" << setw(4) << nif() << endl
       << setw(15) << "Polarisations:" << setw(4) << npol()
       << "(" << getPolType() << ")" << endl
-      << setw(15) << "Channels:"  << setw(4) << nchan() << endl;
-  oss << endl;
+      << setw(15) << "Channels:" << nchan() << endl;
   String tmp;
   oss << setw(15) << "Observer:"
       << table_.keywordSet().asString("Observer") << endl;
@@ -943,13 +956,13 @@ std::string Scantable::summary( bool verbose )
       if (t.nrow() >  0) {
           Vector<Double> vec(moleculeTable_.getRestFrequency(i));
           if (vec.nelements() > 0) {
-               if (firstline) { 
+               if (firstline) {
                    oss << setprecision(10) << vec << " [Hz]" << endl;
                    firstline=False;
                }
-               else{ 
+               else{
                    oss << setw(15)<<" " << setprecision(10) << vec << " [Hz]" << endl;
-               } 
+               }
           } else {
               oss << "none" << endl;
           }
@@ -966,9 +979,11 @@ std::string Scantable::summary( bool verbose )
   oss << setw(5) << "Scan" << setw(15) << "Source"
       << setw(10) << "Time" << setw(18) << "Integration" << endl;
   oss << setw(5) << "" << setw(5) << "Beam" << setw(3) << "" << dirtype << endl;
-  oss << setw(10) << "" << setw(3) << "IF" << setw(6) << ""
+  oss << setw(10) << "" << setw(3) << "IF" << setw(3) << ""
       << setw(8) << "Frame" << setw(16)
-      << "RefVal" << setw(10) << "RefPix" << setw(12) << "Increment" <<endl;
+      << "RefVal" << setw(10) << "RefPix" << setw(12) << "Increment"
+      << setw(7) << "Channels"
+      << endl;
   oss << asap::SEPERATOR << endl;
   TableIterator iter(table_, "SCANNO");
   while (!iter.pastEnd()) {
@@ -1003,9 +1018,10 @@ std::string Scantable::summary( bool verbose )
         Table isubt = iiter.table();
         ROTableRow irow(isubt);
         const TableRecord& irec = irow.get(0);
-        oss << setw(10) << "";
+        oss << setw(9) << "";
         oss << setw(3) << std::right << irec.asuInt("IFNO") << std::left
-            << setw(2) << "" << frequencies().print(irec.asuInt("FREQ_ID"))
+            << setw(1) << "" << frequencies().print(irec.asuInt("FREQ_ID"))
+            << setw(3) << "" << nchan(irec.asuInt("IFNO"))
             << endl;
 
         ++iiter;
@@ -1039,13 +1055,24 @@ MEpoch Scantable::getEpoch(int whichrow) const
   } else {
     Double tm;
     table_.keywordSet().get("UTC",tm);
-    return MEpoch(MVEpoch(tm));  
+    return MEpoch(MVEpoch(tm));
   }
 }
 
 std::string Scantable::getDirectionString(int whichrow) const
 {
   return formatDirection(getDirection(uInt(whichrow)));
+}
+
+
+SpectralCoordinate Scantable::getSpectralCoordinate(int whichrow) const {
+  const MPosition& mp = getAntennaPosition();
+  const MDirection& md = getDirection(whichrow);
+  const MEpoch& me = timeCol_(whichrow);
+  //Double rf = moleculeTable_.getRestFrequency(mmolidCol_(whichrow));
+  Vector<Double> rf = moleculeTable_.getRestFrequency(mmolidCol_(whichrow));
+  return freqTable_.getSpectralCoordinate(md, mp, me, rf,
+                                          mfreqidCol_(whichrow));
 }
 
 std::vector< double > Scantable::getAbcissa( int whichrow ) const
@@ -1060,14 +1087,7 @@ std::vector< double > Scantable::getAbcissa( int whichrow ) const
     }
     return stlout;
   }
-
-  const MPosition& mp = getAntennaPosition();
-  const MDirection& md = getDirection(whichrow);
-  const MEpoch& me = timeCol_(whichrow);
-  //Double rf = moleculeTable_.getRestFrequency(mmolidCol_(whichrow));
-  Vector<Double> rf = moleculeTable_.getRestFrequency(mmolidCol_(whichrow));
-  SpectralCoordinate spc =
-    freqTable_.getSpectralCoordinate(md, mp, me, rf, mfreqidCol_(whichrow));
+  SpectralCoordinate spc = getSpectralCoordinate(whichrow);
   Vector<Double> pixel(nchan);
   Vector<Double> world;
   indgen(pixel);
@@ -1154,9 +1174,9 @@ void Scantable::setRestFrequencies( vector<double> rf, const vector<std::string>
   Unit u(unit);
   //Quantum<Double> urf(rf, u);
   Quantum<Vector<Double> >urf(rf, u);
-  Vector<String> formattedname(0); 
+  Vector<String> formattedname(0);
   //cerr<<"Scantable::setRestFrequnecies="<<urf<<endl;
-  
+
   //uInt id = moleculeTable_.addEntry(urf.getValue("Hz"), name, "");
   uInt id = moleculeTable_.addEntry(urf.getValue("Hz"), mathutil::toVectorString(name), formattedname);
   TableVector<uInt> tabvec(table_, "MOLECULE_ID");
@@ -1224,18 +1244,18 @@ void Scantable::shift(int npix)
   genSort( fids, Sort::Ascending,
 	   Sort::QuickSort|Sort::NoDuplicates );
   for (uInt i=0; i<fids.nelements(); ++i) {
-    frequencies().shiftRefPix(npix, i);
+    frequencies().shiftRefPix(npix, fids[i]);
   }
 }
 
-std::string asap::Scantable::getAntennaName() const
+String Scantable::getAntennaName() const
 {
   String out;
   table_.keywordSet().get("AntennaName", out);
   return out;
 }
 
-int asap::Scantable::checkScanInfo(const std::vector<int>& scanlist) const
+int Scantable::checkScanInfo(const std::vector<int>& scanlist) const
 {
   String tbpath;
   int ret = 0;
@@ -1320,7 +1340,7 @@ int asap::Scantable::checkScanInfo(const std::vector<int>& scanlist) const
   return ret;
 }
 
-std::vector<double>  asap::Scantable::getDirectionVector(int whichrow) const
+std::vector<double> Scantable::getDirectionVector(int whichrow) const
 {
   Vector<Double> Dir = dirCol_(whichrow).getAngle("rad").getValue();
   std::vector<double> dir;
@@ -1334,7 +1354,7 @@ void asap::Scantable::reshapeSpectrum( int nmin, int nmax )
   // assumed that all rows have same nChan
   Vector<Float> arr = specCol_( 0 ) ;
   int nChan = arr.nelements() ;
-  
+
   // if nmin < 0 or nmax < 0, nothing to do
   if (  nmin < 0 ) {
     throw( casa::indexError<int>( nmin, "asap::Scantable::reshapeSpectrum: Invalid range. Negative index is specified." ) ) ;
@@ -1342,22 +1362,22 @@ void asap::Scantable::reshapeSpectrum( int nmin, int nmax )
   if (  nmax < 0  ) {
     throw( casa::indexError<int>( nmax, "asap::Scantable::reshapeSpectrum: Invalid range. Negative index is specified." ) ) ;
   }
-  
+
   // if nmin > nmax, exchange values
   if ( nmin > nmax ) {
     int tmp = nmax ;
     nmax = nmin ;
     nmin = tmp ;
     LogIO os( LogOrigin( "Scantable", "reshapeSpectrum()", WHERE ) ) ;
-    os << "Swap values. Applied range is [" 
+    os << "Swap values. Applied range is ["
        << nmin << ", " << nmax << "]" << LogIO::POST ;
   }
-  
+
   // if nmin exceeds nChan, nothing to do
   if ( nmin >= nChan ) {
     throw( casa::indexError<int>( nmin, "asap::Scantable::reshapeSpectrum: Invalid range. Specified minimum exceeds nChan." ) ) ;
   }
-  
+
   // if nmax exceeds nChan, reset nmax to nChan
   if ( nmax >= nChan ) {
     if ( nmin == 0 ) {
@@ -1373,7 +1393,7 @@ void asap::Scantable::reshapeSpectrum( int nmin, int nmax )
       nmax = nChan - 1 ;
     }
   }
-  
+
   // reshape specCol_ and flagCol_
   for ( int irow = 0 ; irow < nrow() ; irow++ ) {
     reshapeSpectrum( nmin, nmax, irow ) ;
@@ -1393,22 +1413,22 @@ void asap::Scantable::reshapeSpectrum( int nmin, int nmax )
      * note that channel nmin in old index will be channel 0 in new one
      ***/
     refval = refval - ( refpix - nmin ) * increment ;
-    refpix = 0 ;  
+    refpix = 0 ;
     freqTable_.setEntry( refpix, refval, increment, irow ) ;
   }
-  
+
   // update nchan
   int newsize = nmax - nmin + 1 ;
   table_.rwKeywordSet().define( "nChan", newsize ) ;
-  
+
   // update bandwidth
   // assumed all spectra in the scantable have same bandwidth
   table_.rwKeywordSet().define( "Bandwidth", increment * newsize ) ;
-  
+
   return ;
 }
 
-void asap::Scantable::reshapeSpectrum( int nmin, int nmax, int irow ) 
+void asap::Scantable::reshapeSpectrum( int nmin, int nmax, int irow )
 {
   // reshape specCol_ and flagCol_
   Vector<Float> oldspec = specCol_( irow ) ;
@@ -1449,18 +1469,18 @@ void asap::Scantable::regridChannel( int nChan, double dnu )
   setCoordInfo( coordinfo ) ;
   for ( int irow = 0 ; irow < nrow() ; irow++ ) {
     regridChannel( nChan, dnu, irow ) ;
-  } 
+  }
   coordinfo[0] = oldinfo ;
   setCoordInfo( coordinfo ) ;
 
 
-  // NOTE: this method does not update metadata such as 
+  // NOTE: this method does not update metadata such as
   //       FREQUENCIES subtable, nChan, Bandwidth, etc.
 
-  return ; 
+  return ;
 }
 
-void asap::Scantable::regridChannel( int nChan, double dnu, int irow ) 
+void asap::Scantable::regridChannel( int nChan, double dnu, int irow )
 {
   // logging
   //ofstream ofs( "average.log", std::ios::out | std::ios::app ) ;
@@ -1470,7 +1490,7 @@ void asap::Scantable::regridChannel( int nChan, double dnu, int irow )
   Vector<uChar> oldflag = flagsCol_( irow ) ;
   Vector<Float> newspec( nChan, 0 ) ;
   Vector<uChar> newflag( nChan, false ) ;
-  
+
   // regrid
   vector<double> abcissa = getAbcissa( irow ) ;
   int oldsize = abcissa.size() ;
@@ -1489,14 +1509,14 @@ void asap::Scantable::regridChannel( int nChan, double dnu, int irow )
   Vector<Float> yi( oldsize + 1 ) ;
   zi[0] = z[0] - 0.5 * dnu ;
   zi[1] = z[0] + 0.5 * dnu ;
-  for ( int ii = 2 ; ii < nChan ; ii++ ) 
+  for ( int ii = 2 ; ii < nChan ; ii++ )
     zi[ii] = zi[ii-1] + dnu ;
   zi[nChan] = z[nChan-1] + 0.5 * dnu ;
   yi[0] = abcissa[0] - 0.5 * olddnu ;
   yi[1] = abcissa[1] + 0.5 * olddnu ;
   for ( int ii = 2 ; ii < oldsize ; ii++ )
     yi[ii] = abcissa[ii-1] + olddnu ;
-  yi[oldsize] = abcissa[oldsize-1] + 0.5 * olddnu ; 
+  yi[oldsize] = abcissa[oldsize-1] + 0.5 * olddnu ;
   if ( dnu > 0.0 ) {
     for ( int ii = 0 ; ii < nChan ; ii++ ) {
       double zl = zi[ii] ;
@@ -1651,7 +1671,7 @@ void asap::Scantable::regridChannel( int nChan, double dnu, int irow )
 //    * ichan = nChan-1
 //    ***/
 //   // NOTE: Assumed that all spectra have the same bandwidth
-//   pile += dnu ; 
+//   pile += dnu ;
 //   newspec[nChan-1] += frac * olddnu * oldspec[refChan] ;
 //   newflag[nChan-1] = newflag[nChan-1] || oldflag[refChan] ;
 //   //ofs << "channel " << refChan << " is partly included in new channel " << nChan-1 << " with fraction of " << frac << endl ;
@@ -1670,7 +1690,7 @@ void asap::Scantable::regridChannel( int nChan, double dnu, int irow )
 //   //ofs << "newspec[" << nChan - 1 << "] = " << newspec[nChan-1] << " wsum = " << wsum << endl ;
 //   newspec[nChan-1] /= wsum ;
 //   //ofs << "newspec[" << nChan - 1 << "] = " << newspec[nChan-1] << endl ;
-  
+
 //   specCol_.put( irow, newspec ) ;
 //   flagsCol_.put( irow, newflag ) ;
 
@@ -1678,6 +1698,72 @@ void asap::Scantable::regridChannel( int nChan, double dnu, int irow )
 
 
   return ;
+}
+
+std::vector<float> Scantable::getWeather(int whichrow) const
+{
+  std::vector<float> out(5);
+  //Float temperature, pressure, humidity, windspeed, windaz;
+  weatherTable_.getEntry(out[0], out[1], out[2], out[3], out[4],
+                         mweatheridCol_(uInt(whichrow)));
+
+
+  return out;
+}
+
+bool Scantable::getFlagtraFast(int whichrow)
+{
+  uChar flag;
+  Vector<uChar> flags;
+  flagsCol_.get(uInt(whichrow), flags);
+  for (int i = 0; i < flags.size(); i++) {
+    if (i==0) {
+      flag = flags[i];
+    }
+    else {
+      flag &= flags[i];
+    }
+    return ((flag >> 7) == 1);
+   }
+}
+
+void Scantable::doPolyBaseline(const std::vector<bool>& mask, int order, int rowno, Fitter& fitter)
+{
+  fitter.setExpression("poly", order);
+
+  std::vector<double> abcsd = getAbcissa(rowno);
+  std::vector<float> abcs;
+  for (int i = 0; i < abcsd.size(); i++) {
+    abcs.push_back((float)abcsd[i]);
+  }
+  std::vector<float> spec = getSpectrum(rowno);
+  std::vector<bool> fmask = getMask(rowno);
+  if (fmask.size() != mask.size()) {
+    throw(AipsError("different mask sizes"));
+  }
+  for (int i = 0; i < fmask.size(); i++) {
+    fmask[i] = fmask[i] && mask[i];
+  }
+  fitter.setData(abcs, spec, fmask);
+
+  fitter.lfit();
+}
+
+void Scantable::polyBaselineBatch(const std::vector<bool>& mask, int order)
+{
+  Fitter fitter = Fitter();
+  for (uInt rowno=0; rowno < nrow(); ++rowno) {
+    doPolyBaseline(mask, order, rowno, fitter);
+    setSpectrum(fitter.getResidual(), rowno);
+  }
+}
+
+STFitEntry Scantable::polyBaseline(const std::vector<bool>& mask, int order, int rowno)
+{
+  Fitter fitter = Fitter();
+  doPolyBaseline(mask, order, rowno, fitter);
+  setSpectrum(fitter.getResidual(), rowno);
+  return fitter.getFitEntry();
 }
 
 }

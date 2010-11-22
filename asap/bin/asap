@@ -27,7 +27,7 @@
 #                        Epping, NSW, 2121,
 #                        AUSTRALIA
 #
-# $Id: asap 1210 2006-08-29 06:16:15Z mar637 $
+# $Id: asap 1434 2008-08-28 03:55:49Z MalteMarquarding $
 #---------------------------------------------------------------------------
 [ -x /usr/bin/clear ] && /usr/bin/clear
 
@@ -50,5 +50,5 @@ else
         $p -c "import asap"
     fi
     # now execute ipython using the profile
-    $ip -ipythondir "${HOME}/.asap" -p 'asap' $*
+    $ip -ipythondir "${HOME}/.asap" $*
 fi

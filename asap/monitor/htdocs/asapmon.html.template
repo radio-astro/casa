@@ -3,7 +3,7 @@
 <html>
     <head>
         <title tal:content="title">ASAP Online Monitor</title>
-        <link rel="stylesheet" href="/asaptest/fields.css" type="text/css">
+        <link rel="stylesheet" href="/asapmon/asapmon.css" type="text/css">
         <script type="text/javascript" src="/asapmon/prototype.js"></script>
         <script type="text/javascript" src="/asapmon/asapmon.js"></script>
     </head>

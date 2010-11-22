@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: python_asap.cpp 1693 2010-02-10 08:39:06Z TakeshiNakazato $
+//# $Id: python_asap.cpp 1901 2010-08-26 01:24:33Z TakeshiNakazato $
 //#---------------------------------------------------------------------------
 #include <string>
 #include <vector>
@@ -43,6 +43,8 @@
 #else
   #include <pyrap/Converters/PycExcp.h>
   #include <pyrap/Converters/PycBasicData.h>
+  #include <pyrap/Converters/PycValueHolder.h>
+  #include <pyrap/Converters/PycRecord.h>
 #endif
 
 #include "python_asap.h"
@@ -66,6 +68,7 @@ using namespace boost::python;
 BOOST_PYTHON_MODULE(_asap) {
   asap::python::python_Scantable();
   asap::python::python_STFiller();
+  asap::python::python_Filler();
   asap::python::python_STSelector();
   asap::python::python_STMath();
   asap::python::python_Fitter();
@@ -74,6 +77,9 @@ BOOST_PYTHON_MODULE(_asap) {
   asap::python::python_STWriter();
   asap::python::python_LineCatalog();
   asap::python::python_Logger();
+  asap::python::python_LogSink();
+  asap::python::python_STCoordinate();
+  asap::python::python_STAtmosphere();
   asap::python::python_SrcType();
 
 #ifndef HAVE_LIBPYRAP
@@ -103,5 +109,13 @@ BOOST_PYTHON_MODULE(_asap) {
   casa::pyrap::register_convert_excp();
   casa::pyrap::register_convert_basicdata();
   casa::pyrap::register_convert_std_vector<asap::ScantableWrapper>();
+  casa::pyrap::register_convert_std_vector<int>();
+  casa::pyrap::register_convert_std_vector<uint>();
+  casa::pyrap::register_convert_std_vector<float>();
+  casa::pyrap::register_convert_std_vector<double>();
+  casa::pyrap::register_convert_std_vector<std::string>();
+  casa::pyrap::register_convert_std_vector<bool>();
+  casa::pyrap::register_convert_casa_valueholder();
+  casa::pyrap::register_convert_casa_record();
 #endif
 }

@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: STFitter.h 1388 2007-07-26 16:02:13Z TakTsutsumi $
+//# $Id: STFitter.h 1932 2010-09-17 08:35:58Z WataruKawasaki $
 //#---------------------------------------------------------------------------
 #ifndef STFITTER_H
 #define STFITTER_H
@@ -38,6 +38,8 @@
 #include <casa/Containers/Block.h>
 #include <scimath/Functionals/Function.h>
 #include <scimath/Functionals/CompoundFunction.h>
+
+#include "STFitEntry.h"
 
 namespace asap {
 
@@ -68,12 +70,18 @@ public:
   bool computeEstimate();
 
   std::vector<float> evaluate(int whichComp) const;
+
+  STFitEntry getFitEntry() const;
+
 private:
   void clear();
   casa::Vector<casa::Float> x_;
   casa::Vector<casa::Float> y_;
   casa::Vector<casa::Bool> m_;
   casa::PtrBlock<casa::Function<casa::Float>* > funcs_;
+  std::vector<std::string> funcnames_;
+  std::vector<int> funccomponents_;
+  
   //Bool estimateSet_;
   casa::Float chisquared_;
   casa::Vector<casa::Float> parameters_;

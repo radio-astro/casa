@@ -330,10 +330,11 @@ void STAttr::initData()
    TidGainElPoly_(1) = 2.87243e-2;
    TidGainElPoly_(2) = -3.219093e-4;
    
+   // 2009-09-15 - 13mm (22.2GHz) receiver
    ParkesGainElPoly_.resize(3);
-   ParkesGainElPoly_(0) = 0.296759e-1;
-   ParkesGainElPoly_(1) = -0.293124e-3;
-   ParkesGainElPoly_(2) = 0.264295e-6;
+   ParkesGainElPoly_(0) = -0.194031;
+   ParkesGainElPoly_(1) = 0.457724e-1;
+   ParkesGainElPoly_(2) = -0.438659e-3;
 }
 
 

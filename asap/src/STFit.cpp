@@ -69,6 +69,7 @@ void asap::STFit::setup( )
   table_.addColumn(ArrayColumnDesc<String>("FUNCTIONS"));
   table_.addColumn(ArrayColumnDesc<Int>("COMPONENTS"));
   table_.addColumn(ArrayColumnDesc<Double>("PARAMETERS"));
+  //  table_.addColumn(ArrayColumnDesc<Double>("ERRORS"));
   table_.addColumn(ArrayColumnDesc<Bool>("PARMASKS"));
   table_.addColumn(ArrayColumnDesc<String>("FRAMEINFO"));
 
@@ -76,6 +77,7 @@ void asap::STFit::setup( )
   funcCol_.attach(table_,"FUNCTIONS");
   compCol_.attach(table_,"COMPONENTS");
   parCol_.attach(table_,"PARAMETERS");
+  //  errCol_.attach(table_,"ERRORS");
   maskCol_.attach(table_,"PARMASKS");
   frameCol_.attach(table_,"FRAMEINFO");
 }
@@ -101,12 +103,26 @@ uInt STFit::addEntry( const STFitEntry& fit, Int id )
   }
   // add new row if new id
   if ( !foundentry ) table_.addRow();
+
   funcCol_.put(rno, mathutil::toVectorString(fit.getFunctions()));
   compCol_.put(rno, Vector<Int>(fit.getComponents()));
-  parCol_.put(rno, Vector<Double>(fit.getParameters()));
+  const std::vector<float>& pvec = fit.getParameters();
+  Vector<Double> dvec(pvec.size());
+  for (size_t i=0; i < dvec.nelements(); ++i) {
+    dvec[i] = Double(pvec[i]);
+  }
+  parCol_.put(rno, dvec);
+  /*
+  const std::vector<double>& evec = fit.getErrors();
+  for (size_t i=0; i < dvec.nelements(); ++i) {
+    dvec[i] = Double(evec[i]);
+  }
+  errCol_.put(rno, dvec);
+  */
   maskCol_.put(rno, Vector<Bool>(fit.getParmasks()));
   frameCol_.put(rno, mathutil::toVectorString(fit.getFrameinfo()));
   idCol_.put(rno, resultid);
+
   return resultid;
 }
 
@@ -129,10 +145,17 @@ void STFit::getEntry( STFitEntry& fit, uInt id ) const
   ivec.tovector(istl);
   fit.setComponents(istl);
   Vector<Double> dvec;
-  std::vector<double> dstl;
   rec.get("PARAMETERS", dvec);
+  std::vector<float> dstl(dvec.begin(), dvec.end());
+  fit.setParameters(dstl);
+  /*
   dvec.tovector(dstl);
   fit.setParameters(dstl);
+  dvec.resize();
+  rec.get("ERRORS", dvec);
+  dvec.tovector(dstl);
+  fit.setErrors(dstl);
+  */
   Vector<Bool> bvec;
   std::vector<bool> bstl;
   rec.get("PARMASKS", bvec);

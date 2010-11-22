@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: STLineFinder.h 1353 2007-04-26 04:55:17Z mar637 $
+//# $Id: STLineFinder.h 1644 2009-10-03 14:53:18Z MaximVoronkov $
 //#---------------------------------------------------------------------------
 #ifndef STLINEFINDER_H
 #define STLINEFINDER_H
@@ -149,10 +149,17 @@ struct STLineFinder : protected LFLineListOperations {
    //              valid detections.
    // in_box_size  the box size for running mean calculation. Default is
    //              1./5. of the whole spectrum size
+   // in_noise_box the box size for off-line noise estimation (if working with
+   //              local noise. Negative value means use global noise estimate
+   //              Default is -1 (i.e. estimate using the whole spectrum)
+   // in_median    true if median statistics is used as opposed to average of
+   //              the lowest 80% of deviations (default)
    void setOptions(const casa::Float &in_threshold=sqrt(3.),
                    const casa::Int &in_min_nchan=3,
 		   const casa::Int &in_avg_limit=8,
-                   const casa::Float &in_box_size=0.2) throw();
+                   const casa::Float &in_box_size=0.2,
+                   const casa::Float &in_noise_box=-1.,
+                   const casa::Bool &in_median = casa::False) throw();
 
    // set the scan to work with (in_scan parameter)
    void setScan(const ScantableWrapper &in_scan) throw(casa::AipsError);
@@ -240,6 +247,15 @@ private:
                                            // channels of the spectral lines
    // a buffer for the spectrum
    mutable casa::Vector<casa::Float>  spectrum;
+
+   // the box size for off-line noise estimation (if working with
+   // local noise. Negative value means use global noise estimate
+   // Default is -1 (i.e. estimate using the whole spectrum)
+   casa::Float itsNoiseBox;
+
+   // true if median statistics is used as opposed to average of
+   // the lowest 80% of deviations (default)
+   casa::Bool itsUseMedian;
 };
 
 //

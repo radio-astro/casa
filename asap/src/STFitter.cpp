@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: STFitter.cpp 1700 2010-02-16 05:21:26Z WataruKawasaki $
+//# $Id: STFitter.cpp 1932 2010-09-17 08:35:58Z WataruKawasaki $
 //#---------------------------------------------------------------------------
 #include <casa/aips.h>
 #include <casa/Arrays/ArrayMath.h>
@@ -141,17 +141,29 @@ bool Fitter::setExpression(const std::string& expr, int ncomp)
   if (expr == "gauss") {
     if (ncomp < 1) throw (AipsError("Need at least one gaussian to fit."));
     funcs_.resize(ncomp);
+    funcnames_.clear();
+    funccomponents_.clear();
     for (Int k=0; k<ncomp; ++k) {
       funcs_[k] = new Gaussian1D<Float>();
+      funcnames_.push_back(expr);
+      funccomponents_.push_back(3);
     }
   } else if (expr == "poly") {
     funcs_.resize(1);
+    funcnames_.clear();
+    funccomponents_.clear();
     funcs_[0] = new Polynomial<Float>(ncomp);
+      funcnames_.push_back(expr);
+      funccomponents_.push_back(ncomp);
   } else if (expr == "lorentz") {
     if (ncomp < 1) throw (AipsError("Need at least one lorentzian to fit."));
     funcs_.resize(ncomp);
+    funcnames_.clear();
+    funccomponents_.clear();
     for (Int k=0; k<ncomp; ++k) {
       funcs_[k] = new Lorentzian1D<Float>();
+      funcnames_.push_back(expr);
+      funccomponents_.push_back(3);
     }
   } else {
     //cerr << " compiled functions not yet implemented" << endl;
@@ -408,3 +420,13 @@ std::vector<float> Fitter::evaluate(int whichComp) const
   return stlout;
 }
 
+STFitEntry Fitter::getFitEntry() const
+{
+  STFitEntry fit;
+  fit.setParameters(getParameters());
+  fit.setErrors(getErrors());
+  fit.setComponents(funccomponents_);
+  fit.setFunctions(funcnames_);
+  fit.setParmasks(getFixedParameters());
+  return fit;
+}

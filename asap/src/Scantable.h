@@ -17,13 +17,10 @@
 #include <vector>
 // AIPS++
 #include <casa/aips.h>
+#include <casa/Containers/Record.h>
 #include <casa/Arrays/MaskedArray.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/CountedPtr.h>
-
-#include <casa/Exceptions/Error.h>
-
-#include <coordinates/Coordinates/SpectralCoordinate.h>
 
 #include <tables/Tables/Table.h>
 #include <tables/Tables/ArrayColumn.h>
@@ -31,8 +28,12 @@
 
 #include <measures/TableMeasures/ScalarMeasColumn.h>
 
+#include <coordinates/Coordinates/SpectralCoordinate.h>
+
 #include <casa/Arrays/Vector.h>
 #include <casa/Quanta/Quantum.h>
+
+#include <casa/Exceptions/Error.h>
 
 #include "Logger.h"
 #include "STHeader.h"
@@ -46,6 +47,7 @@
 #include "STPol.h"
 #include "STFit.h"
 #include "STFitEntry.h"
+#include "STFitter.h"
 
 namespace asap {
 
@@ -172,7 +174,7 @@ public:
    * return casa::MDirection
    */
   casa::MDirection getDirection( int whichrow ) const;
-  
+
   /**
    * get the direction type as a string, e.g. "J2000"
    * @param[in] whichrow the row number
@@ -190,7 +192,7 @@ public:
    * get the direction reference string
    * @return a string describing the direction reference
    */
-  std::string getDirectionRefString() const;	
+  std::string getDirectionRefString() const;
 
   /**
    *  Return the Flux unit of the data, e.g. "Jy" or "K"
@@ -236,7 +238,7 @@ public:
   void flagRow( const std::vector<casa::uInt>& rows = std::vector<casa::uInt>(), bool unflag=false);
 
   /**
-   * Get flagRow info at the specified row. If true, the whole data 
+   * Get flagRow info at the specified row. If true, the whole data
    * at the row should be flagged.
    */
   bool getFlagRow(int whichrow) const
@@ -249,11 +251,11 @@ public:
   void clip(const casa::Float uthres, const casa::Float dthres, bool clipoutside, bool unflag);
 
   /**
-   * Return a list of booleans with the size of nchan for a specified row, to get info 
+   * Return a list of booleans with the size of nchan for a specified row, to get info
    * about which channel is clipped.
    */
   std::vector<bool> getClipMask(int whichrow, const casa::Float uthres, const casa::Float dthres, bool clipoutside, bool unflag);
-  void srchChannelsToClip(casa::uInt whichrow, const casa::Float uthres, const casa::Float dthres, bool clipoutside, bool unflag, 
+  void srchChannelsToClip(casa::uInt whichrow, const casa::Float uthres, const casa::Float dthres, bool clipoutside, bool unflag,
 			  casa::Vector<casa::uChar> flgs);
 
   /**
@@ -297,15 +299,15 @@ public:
   int nrow(int scanno=-1) const;
 
   int getBeam(int whichrow) const;
-  std::vector<uint> getBeamNos() { return getNumbers(beamCol_); }
+  std::vector<uint> getBeamNos() const { return getNumbers(beamCol_); }
 
   int getIF(int whichrow) const;
-  std::vector<uint> getIFNos() { return getNumbers(ifCol_); }
+  std::vector<uint> getIFNos() const { return getNumbers(ifCol_); }
 
   int getPol(int whichrow) const;
-  std::vector<uint> getPolNos() { return getNumbers(polCol_); }
+  std::vector<uint> getPolNos() const { return getNumbers(polCol_); }
 
-  std::vector<uint> getScanNos() { return getNumbers(scanCol_); }
+  std::vector<uint> getScanNos() const { return getNumbers(scanCol_); }
   int getScan(int whichrow) const { return scanCol_(whichrow); }
 
   //TT addition
@@ -334,7 +336,7 @@ public:
   float getAzimuth(int whichrow) const
     { return azCol_(whichrow); }
   float getParAngle(int whichrow) const
-    { return paraCol_(whichrow); }
+    { return focus().getParAngle(mfocusidCol_(whichrow)); }
   int getTcalId(int whichrow) const
     { return mtcalidCol_(whichrow); }
 
@@ -384,6 +386,8 @@ public:
 
   std::vector<double> getAbcissa(int whichrow) const;
 
+  std::vector<float> getWeather(int whichrow) const;
+
   std::string getAbcissaLabel(int whichrow) const;
   std::vector<double> getRestFrequencies() const
     { return moleculeTable_.getRestFrequencies(); }
@@ -407,6 +411,8 @@ public:
   void setRestFrequencies(const vector<std::string>& name);
 
   void shift(int npix);
+
+  casa::SpectralCoordinate getSpectralCoordinate(int whichrow) const;
 
   void convertDirection(const std::string& newframe);
 
@@ -436,30 +442,37 @@ public:
    * Get the antenna name
    * @return antenna name string
    */
-  std::string getAntennaName() const;
+  casa::String getAntennaName() const;
 
   /**
    * For GBT MS data only. check a scan list
    * against the information found in GBT_GO table for
    * scan number orders to get correct pairs.
-   * @param[in] scan list 
-   * @return status 
+   * @param[in] scan list
+   * @return status
    */
   int checkScanInfo(const std::vector<int>& scanlist) const;
 
   /**
-   * Get the direction as a vector, for a specific row  
+   * Get the direction as a vector, for a specific row
    * @param[in] whichrow the row numbyyer
-   * @return the direction in a vector 
+   * @return the direction in a vector
    */
   std::vector<double> getDirectionVector(int whichrow) const;
+
+  /**
+   * Set a flag indicating whether the data was parallactified
+   * @param[in] flag true or false
+   */
+  void parallactify(bool flag)
+    { focus().setParallactify(flag); }
 
   /**
    * Reshape spectrum
    * @param[in] nmin, nmax minimum and maximum channel
    * @param[in] irow       row number
-   * 
-   * 30/07/2008 Takeshi Nakazato  
+   *
+   * 30/07/2008 Takeshi Nakazato
    **/
   void reshapeSpectrum( int nmin, int nmax ) throw( casa::AipsError );
   void reshapeSpectrum( int nmin, int nmax, int irow ) ;
@@ -474,7 +487,11 @@ public:
   void regridChannel( int nchan, double dnu ) ;
   void regridChannel( int nchan, double dnu, int irow ) ;
 
- 
+  bool getFlagtraFast(int whichrow);
+
+  void polyBaselineBatch(const std::vector<bool>& mask, int order);
+  STFitEntry polyBaseline(const std::vector<bool>& mask, int order, int rowno);
+
 private:
 
   casa::Matrix<casa::Float> getPolMatrix( casa::uInt whichrow ) const;
@@ -494,7 +511,6 @@ private:
    * @return
    */
   std::string formatDirection(const casa::MDirection& md) const;
-
 
   /**
    * Create a unique file name for the paged (temporary) table
@@ -522,9 +538,9 @@ private:
    */
   int rowToScanIndex(int therow);
 
-  std::vector<uint> getNumbers(casa::ScalarColumn<casa::uInt>& col);
+  std::vector<uint> getNumbers(const casa::ScalarColumn<casa::uInt>& col) const;
 
-  static const casa::uInt version_ = 2;
+  static const casa::uInt version_ = 3;
 
   STSelector selector_;
 
@@ -548,7 +564,6 @@ private:
   casa::MEpoch::ScalarColumn timeCol_;
   casa::ScalarColumn<casa::Float> azCol_;
   casa::ScalarColumn<casa::Float> elCol_;
-  casa::ScalarColumn<casa::Float> paraCol_;
   casa::ScalarColumn<casa::String> srcnCol_, fldnCol_;
   casa::ScalarColumn<casa::uInt> scanCol_, beamCol_, ifCol_, polCol_, cycleCol_, flagrowCol_;
   casa::ScalarColumn<casa::Int> rbeamCol_, srctCol_;
@@ -572,9 +587,9 @@ private:
   void initFactories();
 
   /**
-   * Add an auxiliary column to the main table and attach it to a 
+   * Add an auxiliary column to the main table and attach it to a
    * cached column. Use for adding new columns that the original asap2
-   * tables do not have. 
+   * tables do not have.
    * @param[in] col      reference to the cached column to be attached
    * @param[in] colName  column name in asap table
    * @param[in] defValue default value to fill in the column
@@ -587,6 +602,8 @@ private:
   template<class T, class T2> void attachAuxColumnDef(casa::ArrayColumn<T>&,
 						      const casa::String&,
 						      const casa::Array<T2>&);
+
+  void doPolyBaseline(const std::vector<bool>& mask, int order, int rowno, Fitter& fitter);
 };
 
 

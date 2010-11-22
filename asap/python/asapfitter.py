@@ -1,15 +1,13 @@
 import _asap
-from asap import rcParams
-from asap import print_log
-from asap import _n_bools
-from asap import mask_and
-from asap import asaplog
+from asap.parameters import rcParams
+from asap.logging import asaplog, asaplog_post_dec
+from asap.utils import _n_bools, mask_and
+
 
 class fitter:
     """
     The fitting class for ASAP.
     """
-
     def __init__(self):
         """
         Create a fitter object. No state is set.
@@ -49,6 +47,7 @@ class fitter:
             self.mask = mask
         return
 
+    @asaplog_post_dec
     def set_scan(self, thescan=None, mask=None):
         """
         Set the 'data' (a scantable) of the fitter.
@@ -58,13 +57,7 @@ class fitter:
         """
         if not thescan:
             msg = "Please give a correct scan"
-            if rcParams['verbose']:
-                #print msg
-                asaplog.push(msg)
-                print_log('ERROR')
-                return
-            else:
-                raise TypeError(msg)
+            raise TypeError(msg)
         self.fitted = False
         self.data = thescan
         self.mask = None
@@ -74,11 +67,12 @@ class fitter:
             self.mask = mask
         return
 
+    @asaplog_post_dec
     def set_function(self, **kwargs):
         """
         Set the function to be fit.
         Parameters:
-            poly:    use a polynomial of the order given with nonlinear least squares fit 
+            poly:    use a polynomial of the order given with nonlinear least squares fit
             lpoly:   use polynomial of the order given with linear least squares fit
             gauss:   fit the number of gaussian specified
             lorentz: fit the number of lorentzian specified
@@ -92,40 +86,37 @@ class fitter:
         n=0
         if kwargs.has_key('poly'):
             self.fitfunc = 'poly'
+            self.fitfuncs = ['poly']
             n = kwargs.get('poly')
-            self.components = [n]
-            self.uselinear = False 
+            self.components = [n+1]
+            self.uselinear = False
         elif kwargs.has_key('lpoly'):
             self.fitfunc = 'poly'
+            self.fitfuncs = ['lpoly']
             n = kwargs.get('lpoly')
-            self.components = [n]
+            self.components = [n+1]
             self.uselinear = True
         elif kwargs.has_key('gauss'):
             n = kwargs.get('gauss')
             self.fitfunc = 'gauss'
             self.fitfuncs = [ 'gauss' for i in range(n) ]
             self.components = [ 3 for i in range(n) ]
-            self.uselinear = False 
+            self.uselinear = False
         elif kwargs.has_key('lorentz'):
             n = kwargs.get('lorentz')
             self.fitfunc = 'lorentz'
             self.fitfuncs = [ 'lorentz' for i in range(n) ]
             self.components = [ 3 for i in range(n) ]
-            self.uselinear = False 
+            self.uselinear = False
         else:
             msg = "Invalid function type."
-            if rcParams['verbose']:
-                #print msg
-                asaplog.push(msg)
-                print_log('ERROR')
-                return
-            else:
-                raise TypeError(msg)
+            raise TypeError(msg)
 
         self.fitter.setexpression(self.fitfunc,n)
         self.fitted = False
         return
 
+    @asaplog_post_dec
     def fit(self, row=0, estimate=False):
         """
         Execute the actual fitting process. All the state has to be set.
@@ -145,13 +136,7 @@ class fitter:
         if ((self.x is None or self.y is None) and self.data is None) \
                or self.fitfunc is None:
             msg = "Fitter not yet initialised. Please set data & fit function"
-            if rcParams['verbose']:
-                #print msg
-                asaplog.push(msg)
-                print_log('ERROR')
-                return
-            else:
-                raise RuntimeError(msg)
+            raise RuntimeError(msg)
 
         else:
             if self.data is not None:
@@ -163,7 +148,7 @@ class fitter:
                 out = "Scan[%d] Beam[%d] IF[%d] Pol[%d] Cycle[%d]" % (self.data.getscan(i),
                                                                       self.data.getbeam(i),
                                                                       self.data.getif(i),
-                                                                      self.data.getpol(i), 
+                                                                      self.data.getpol(i),
                                                                       self.data.getcycle(i))
                 asaplog.push(out,False)
         self.fitter.setdata(self.x, self.y, self.mask)
@@ -171,27 +156,17 @@ class fitter:
             ps = self.fitter.getparameters()
             if len(ps) == 0 or estimate:
                 self.fitter.estimate()
-        try:
-            fxdpar = list(self.fitter.getfixedparameters())
-            if len(fxdpar) and fxdpar.count(0) == 0:
-                 raise RuntimeError,"No point fitting, if all parameters are fixed."
-            if self.uselinear:
-                converged = self.fitter.lfit()
-            else:
-                converged = self.fitter.fit()
-            if not converged:
-                raise RuntimeError,"Fit didn't converge."
-        except RuntimeError, msg:
-            if rcParams['verbose']:
-                #print msg
-                print_log()
-                asaplog.push(str(msg))
-                print_log('ERROR')
-            else:
-                raise
+        fxdpar = list(self.fitter.getfixedparameters())
+        if len(fxdpar) and fxdpar.count(0) == 0:
+             raise RuntimeError,"No point fitting, if all parameters are fixed."
+        if self.uselinear:
+            converged = self.fitter.lfit()
+        else:
+            converged = self.fitter.fit()
+        if not converged:
+            raise RuntimeError,"Fit didn't converge."
         self._fittedrow = row
         self.fitted = True
-        print_log()
         return
 
     def store_fit(self, filename=None):
@@ -220,7 +195,7 @@ class fitter:
             else:
                 self.data._addfit(fit,self._fittedrow)
 
-    #def set_parameters(self, params, fixed=None, component=None):
+    @asaplog_post_dec
     def set_parameters(self,*args,**kwargs):
         """
         Set the parameters to be fitted.
@@ -228,8 +203,8 @@ class fitter:
               params:    a vector of parameters
               fixed:     a vector of which parameters are to be held fixed
                          (default is none)
-              component: in case of multiple gaussians, the index of the
-                         component
+              component: in case of multiple gaussians/lorentzians,
+                         the index of the component
         """
         component = None
         fixed = None
@@ -243,13 +218,7 @@ class fitter:
             component = args[1]
         if self.fitfunc is None:
             msg = "Please specify a fitting function first."
-            if rcParams['verbose']:
-                #print msg
-                asaplog.push(msg)
-                print_log('ERROR')
-                return
-            else:
-                raise RuntimeError(msg)
+            raise RuntimeError(msg)
         if (self.fitfunc == "gauss" or self.fitfunc == 'lorentz') and component is not None:
             if not self.fitted and sum(self.fitter.getparameters()) == 0:
                 pars = _n_bools(len(self.components)*3, False)
@@ -265,9 +234,9 @@ class fitter:
         self.fitter.setparameters(params)
         if fixed is not None:
             self.fitter.setfixedparameters(fixed)
-        print_log()
         return
 
+    @asaplog_post_dec
     def set_gauss_parameters(self, peak, centre, fwhm,
                              peakfixed=0, centrefixed=0,
                              fwhmfixed=0,
@@ -287,27 +256,16 @@ class fitter:
         """
         if self.fitfunc != "gauss":
             msg = "Function only operates on Gaussian components."
-            if rcParams['verbose']:
-                #print msg
-                asaplog.push(msg)
-                print_log('ERROR')
-                return
-            else:
-                raise ValueError(msg)
+            raise ValueError(msg)
         if 0 <= component < len(self.components):
             d = {'params':[peak, centre, fwhm],
                  'fixed':[peakfixed, centrefixed, fwhmfixed]}
             self.set_parameters(d, component)
         else:
             msg = "Please select a valid  component."
-            if rcParams['verbose']:
-                #print msg
-                asaplog.push(msg)
-                print_log('ERROR')
-                return
-            else:
-                raise ValueError(msg)
+            raise ValueError(msg)
 
+    @asaplog_post_dec
     def set_lorentz_parameters(self, peak, centre, fwhm,
                              peakfixed=0, centrefixed=0,
                              fwhmfixed=0,
@@ -315,7 +273,7 @@ class fitter:
         """
         Set the Parameters of a 'Lorentzian' component, set with set_function.
         Parameters:
-            peak, centre, fwhm:  The gaussian parameters
+            peak, centre, fwhm:  The lorentzian parameters
             peakfixed,
             centrefixed,
             fwhmfixed:           Optional parameters to indicate if
@@ -327,26 +285,14 @@ class fitter:
         """
         if self.fitfunc != "lorentz":
             msg = "Function only operates on Lorentzian components."
-            if rcParams['verbose']:
-                #print msg
-                asaplog.push(msg)
-                print_log('ERROR')
-                return
-            else:
-                raise ValueError(msg)
+            raise ValueError(msg)
         if 0 <= component < len(self.components):
             d = {'params':[peak, centre, fwhm],
                  'fixed':[peakfixed, centrefixed, fwhmfixed]}
             self.set_parameters(d, component)
         else:
             msg = "Please select a valid  component."
-            if rcParams['verbose']:
-                #print msg
-                asaplog.push(msg)
-                print_log('ERROR')
-                return
-            else:
-                raise ValueError(msg)
+            raise ValueError(msg)
 
     def get_area(self, component=None):
         """
@@ -377,6 +323,7 @@ class fitter:
         else:
             return sum(areas)
 
+    @asaplog_post_dec
     def get_errors(self, component=None):
         """
         Return the errors in the parameters.
@@ -386,13 +333,7 @@ class fitter:
         """
         if not self.fitted:
             msg = "Not yet fitted."
-            if rcParams['verbose']:
-                #print msg
-                asaplog.push(msg)
-                print_log('ERROR')
-                return
-            else:
-                raise RuntimeError(msg)
+            raise RuntimeError(msg)
         errs = list(self.fitter.geterrors())
         cerrs = errs
         if component is not None:
@@ -402,6 +343,8 @@ class fitter:
                     cerrs = errs[i:i+3]
         return cerrs
 
+
+    @asaplog_post_dec
     def get_parameters(self, component=None, errors=False):
         """
         Return the fit paramters.
@@ -411,13 +354,7 @@ class fitter:
         """
         if not self.fitted:
             msg = "Not yet fitted."
-            if rcParams['verbose']:
-                #print msg
-                asaplog.push(msg)
-                print_log('ERROR')
-                return
-            else:
-                raise RuntimeError(msg)
+            raise RuntimeError(msg)
         pars = list(self.fitter.getparameters())
         fixed = list(self.fitter.getfixedparameters())
         errs = list(self.fitter.geterrors())
@@ -443,10 +380,7 @@ class fitter:
                   a = self.get_area(c)
                   area += [a for i in range(3)]
         fpars = self._format_pars(cpars, cfixed, errors and cerrs, area)
-        if rcParams['verbose']:
-            #print fpars
-            asaplog.push(fpars)
-            print_log()
+        asaplog.push(fpars)
         return {'params':cpars, 'fixed':cfixed, 'formatted': fpars,
                 'errors':cerrs}
 
@@ -480,97 +414,68 @@ class fitter:
                 i+=3
         return out
 
+
+    @asaplog_post_dec
     def get_estimate(self):
         """
         Return the parameter estimates (for non-linear functions).
         """
         pars = self.fitter.getestimate()
         fixed = self.fitter.getfixedparameters()
-        if rcParams['verbose']:
-            #print self._format_pars(pars,fixed,None)
-            asaplog.push(self._format_pars(pars,fixed,None))
-            print_log()
+        asaplog.push(self._format_pars(pars,fixed,None,None))
         return pars
 
+    @asaplog_post_dec
     def get_residual(self):
         """
         Return the residual of the fit.
         """
         if not self.fitted:
             msg = "Not yet fitted."
-            if rcParams['verbose']:
-                #print msg
-                asaplog.push(msg)
-                print_log('ERROR')
-                return
-            else:
-                raise RuntimeError(msg)
+            raise RuntimeError(msg)
         return self.fitter.getresidual()
 
+    @asaplog_post_dec
     def get_chi2(self):
         """
         Return chi^2.
         """
         if not self.fitted:
             msg = "Not yet fitted."
-            if rcParams['verbose']:
-                #print msg
-                asaplog.push(msg)
-                print_log('ERROR')
-                return
-            else:
-                raise RuntimeError(msg)
+            raise RuntimeError(msg)
         ch2 = self.fitter.getchi2()
-        if rcParams['verbose']:
-            #print 'Chi^2 = %3.3f' % (ch2)
-            asaplog.push( 'Chi^2 = %3.3f' % (ch2) )
-            print_log()
+        asaplog.push( 'Chi^2 = %3.3f' % (ch2) )
         return ch2
 
+    @asaplog_post_dec
     def get_fit(self):
         """
         Return the fitted ordinate values.
         """
         if not self.fitted:
             msg = "Not yet fitted."
-            if rcParams['verbose']:
-                #print msg
-                asaplog.push(msg)
-                print_log('ERROR')
-                return
-            else:
-                raise RuntimeError(msg)
+            raise RuntimeError(msg)
         return self.fitter.getfit()
 
+    @asaplog_post_dec
     def commit(self):
         """
         Return a new scan where the fits have been commited (subtracted)
         """
         if not self.fitted:
             msg = "Not yet fitted."
-            if rcParams['verbose']:
-                #print msg
-                asaplog.push(msg)
-                print_log('ERROR')
-                return
-            else:
-                raise RuntimeError(msg)
+            raise RuntimeError(msg)
         from asap import scantable
         if not isinstance(self.data, scantable):
             msg = "Not a scantable"
-            if rcParams['verbose']:
-                #print msg
-                asaplog.push(msg)
-                print_log('ERROR')
-                return
-            else:
-                raise TypeError(msg)
+            raise TypeError(msg)
         scan = self.data.copy()
         scan._setspectrum(self.fitter.getresidual())
-        print_log()
         return scan
 
-    def plot(self, residual=False, components=None, plotparms=False, filename=None):
+    @asaplog_post_dec
+    def plot(self, residual=False, components=None, plotparms=False,
+             filename=None):
         """
         Plot the last fit.
         Parameters:
@@ -597,7 +502,7 @@ class fitter:
         tlab = 'Spectrum'
         xlab = 'Abcissa'
         ylab = 'Ordinate'
-        from matplotlib.numerix import ma,logical_not,logical_and,array
+        from numpy import ma,logical_not,logical_and,array
         m = self.mask
         if self.data:
             tlab = self.data._getsourcename(self._fittedrow)
@@ -605,7 +510,7 @@ class fitter:
             m =  logical_and(self.mask,
                              array(self.data._getmask(self._fittedrow),
                                    copy=False))
-                             
+
             ylab = self.data._get_ordinate_label()
 
         colours = ["#777777","#dddddd","red","orange","purple","green","magenta", "cyan"]
@@ -667,8 +572,8 @@ class fitter:
         self._p.release()
         if (not rcParams['plotter.gui']):
             self._p.save(filename)
-        print_log()
 
+    @asaplog_post_dec
     def auto_fit(self, insitu=None, plot=False):
         """
         Return a scan where the function is applied to all rows for
@@ -678,20 +583,14 @@ class fitter:
         from asap import scantable
         if not isinstance(self.data, scantable) :
             msg = "Data is not a scantable"
-            if rcParams['verbose']:
-                #print msg
-                asaplog.push(msg)
-                print_log('ERROR')
-                return
-            else:
-                raise TypeError(msg)
+            raise TypeError(msg)
         if insitu is None: insitu = rcParams['insitu']
         if not insitu:
             scan = self.data.copy()
         else:
             scan = self.data
         rows = xrange(scan.nrow())
-        # Save parameters of baseline fits as a class attribute. 
+        # Save parameters of baseline fits as a class attribute.
         # NOTICE: This does not reflect changes in scantable!
         if len(rows) > 0: self.blpars=[]
         asaplog.push("Fitting:")
@@ -699,7 +598,7 @@ class fitter:
             out = " Scan[%d] Beam[%d] IF[%d] Pol[%d] Cycle[%d]" % (scan.getscan(r),
                                                                    scan.getbeam(r),
                                                                    scan.getif(r),
-                                                                   scan.getpol(r), 
+                                                                   scan.getpol(r),
                                                                    scan.getcycle(r))
             asaplog.push(out, False)
             self.x = scan._getabcissa(r)
@@ -720,6 +619,4 @@ class fitter:
         if plot:
             self._p.unmap()
             self._p = None
-        print_log()
         return scan
-

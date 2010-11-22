@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: STHeader.h 1603 2009-07-17 20:35:47Z TakTsutsumi $
+//# $Id: STHeader.h 1439 2008-08-28 04:00:03Z MalteMarquarding $
 //#---------------------------------------------------------------------------
 #ifndef STHEADER_H
 #define STHEADER_H

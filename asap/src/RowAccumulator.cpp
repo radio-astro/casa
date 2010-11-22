@@ -66,7 +66,7 @@ void RowAccumulator::addSpectrum( const Vector< Float >& v,
 {
   Float totalweight = weight;
   MaskedArray<Float> data(v,m);
-  if ( weightType_ == asap::VAR ) {
+  if ( weightType_ == asap::W_VAR ) {
     if (m.nelements() == userMask_.nelements()) {
       Float fac = 1.0/variance(data(userMask_));
       totalweight *= fac;
@@ -89,7 +89,7 @@ Float RowAccumulator::addTsys( const casa::Vector< casa::Float > & v )
 
   Float w = 1.0;
   tsysSum_ += v[0];
-  if ( weightType_ == asap::TSYS  || weightType_ == asap::TINTSYS ) {
+  if ( weightType_ == asap::W_TSYS  || weightType_ == asap::W_TINTSYS ) {
     w /= (v[0]*v[0]);
   }
   return w;
@@ -104,7 +104,7 @@ Float asap::RowAccumulator::addInterval( casa::Double inter )
 {
   Float w = 1.0;
   intervalSum_ += inter;
-  if ( weightType_ == asap::TINT || weightType_ == asap::TINTSYS ) {
+  if ( weightType_ == asap::W_TINT || weightType_ == asap::W_TINTSYS ) {
     w /= Float(inter);
   }
   return w;

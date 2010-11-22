@@ -1,5 +1,5 @@
 from _asap import fitentry
-from asap import rcParams
+from asap.parameters import rcParams
 
 class asapfit(fitentry):
 
