@@ -56,9 +56,9 @@ SubLattice<T>::SubLattice (const Lattice<T>& lattice,
 }
 
 template<class T>
-SubLattice<T>::SubLattice (Lattice<T>& lattice,
-			   Bool writableIfPossible,
-			   AxesSpecifier axesSpec)
+SubLattice<T>::SubLattice (const Lattice<T>& lattice,
+			   const Bool writableIfPossible,
+			   const AxesSpecifier axesSpec)
 {
   setPtr (lattice.clone(), 0, writableIfPossible);
   setRegion();
@@ -75,9 +75,9 @@ SubLattice<T>::SubLattice (const MaskedLattice<T>& lattice,
 }
 
 template<class T>
-SubLattice<T>::SubLattice (MaskedLattice<T>& lattice,
-			   Bool writableIfPossible,
-			   AxesSpecifier axesSpec)
+SubLattice<T>::SubLattice (const MaskedLattice<T>& lattice,
+			   const Bool writableIfPossible,
+			   const AxesSpecifier axesSpec)
 {
   setPtr (0, lattice.cloneML(), writableIfPossible);
   setRegion();
@@ -116,7 +116,7 @@ SubLattice<T>::SubLattice (const MaskedLattice<T>& lattice,
 }
 
 template<class T>
-SubLattice<T>::SubLattice (MaskedLattice<T>& lattice,
+SubLattice<T>::SubLattice (const MaskedLattice<T>& lattice,
 			   const LatticeRegion& region,
 			   Bool writableIfPossible,
 			   AxesSpecifier axesSpec)

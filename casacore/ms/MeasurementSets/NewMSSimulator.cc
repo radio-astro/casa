@@ -92,14 +92,12 @@ const uInt nCat = 6; // Number of Flag categories
 const String sigmaCol = "sigmaHyperColumn";
 const String dataCol = "dataHyperColumn";
 const String scratchDataCol = "scratchDataHyperColumn";
-const String imweightCol = "imWeightHyperColumn";
 const String flagCol = "flagHyperColumn";
 
 const String sigmaTileId = "SIGMA_HYPERCUBE_ID";
 const String dataTileId = "DATA_HYPERCUBE_ID";
 const String scratchDataTileId = "SCRATCH_DATA_HYPERCUBE_ID";
 const String flagTileId = "FLAG_CATEGORY_HYPERCUBE_ID";
-const String imweightTileId = "IMAGING_WEIGHT_HYPERCUBE_ID";
 
 // a but ugly solution to use the feed table parser of MSIter
 // to extract antennaMounts and BeamOffsets.
@@ -141,7 +139,7 @@ void NewMSSimulator::defaults() {
 }
   
 NewMSSimulator::NewMSSimulator(const String& MSName) :
-  ms_p(0), dataAcc_p(), scratchDataAcc_p(), sigmaAcc_p(), flagAcc_p(), imweightAcc_p(),
+  ms_p(0), dataAcc_p(), scratchDataAcc_p(), sigmaAcc_p(), flagAcc_p(),
   maxData_p(2e9)
 {
   LogIO os(LogOrigin("NewMSSimulator", "NewMSSimulator<const String& MSName)", WHERE));
@@ -155,7 +153,6 @@ NewMSSimulator::NewMSSimulator(const String& MSName) :
   MS::addColumnToDesc(msDesc,MS::DATA,2);
   MS::addColumnToDesc(msDesc,MS::MODEL_DATA,2);
   MS::addColumnToDesc(msDesc,MS::CORRECTED_DATA,2);
-  MS::addColumnToDesc(msDesc,MS::IMAGING_WEIGHT,1);
   
   // Add index columns for tiling. We use three tiles: data, sigma, and flag.
   // Some of these contain more than one column
@@ -166,8 +163,6 @@ NewMSSimulator::NewMSSimulator(const String& MSName) :
 					 "Index for Scratch Data tiling"));
   msDesc.addColumn(ScalarColumnDesc<Int>(sigmaTileId,
 					 "Index for Sigma tiling"));
-  msDesc.addColumn(ScalarColumnDesc<Int>(imweightTileId,
-  					 "Index for Imaging Weight tiling"));
   msDesc.addColumn(ScalarColumnDesc<Int>(flagTileId,
 					 "Index for Flag Category tiling"));
   */
@@ -222,14 +217,6 @@ NewMSSimulator::NewMSSimulator(const String& MSName) :
     msDesc.defineHypercolumn("WeightColumn", 2, dataCols);
   }
 
-  {
-    Vector<String> dataCols(1);
-    dataCols(0) = MeasurementSet::columnName(MeasurementSet::IMAGING_WEIGHT);
-    const Vector<String> coordCols(0);
-    const Vector<String> idCols(1, imweightTileId);
-    //msDesc.defineHypercolumn(imweightCol, 2, dataCols, coordCols, idCols);
-    msDesc.defineHypercolumn(imweightCol, 2, dataCols);
-  }
   {
     Vector<String> dataCols(1);
     dataCols(0) = MeasurementSet::columnName(MeasurementSet::FLAG_CATEGORY);
@@ -291,14 +278,6 @@ NewMSSimulator::NewMSSimulator(const String& MSName) :
   }
 
   {
-    TiledShapeStMan dataMan(imweightCol, IPosition(2,tileShape(1), 
-						   tileShape(2)));
-    newMS.bindColumn(MeasurementSet::
- 		     columnName(MeasurementSet::IMAGING_WEIGHT), dataMan);
-    // newMS.bindColumn(imweightTileId, dataMan);
-  }
-
-  {
     TiledShapeStMan dataMan(flagCol, 
 			    IPosition(4,tileShape(0),tileShape(1), 1,
 				      tileShape(2)));
@@ -320,6 +299,18 @@ NewMSSimulator::NewMSSimulator(const String& MSName) :
   SetupNewTable sourceSetup(ms_p->sourceTableName(),tdesc,Table::New);
   ms_p->rwKeywordSet().defineTable(MS::keywordName(MS::SOURCE),
 				   Table(sourceSetup));
+
+
+//  // add the STATE table  [copied from SimpleSimulator]
+//  TableDesc tdesc2;
+//  for (uInt i = 1 ; i<=MSState::NUMBER_PREDEFINED_COLUMNS; i++) {
+//    MSState::addColumnToDesc(tdesc2, MSState::PredefinedColumns(i));
+//  }
+//  SetupNewTable stateSetup(ms_p->stateTableName(),tdesc2,Table::New);
+//  ms_p->rwKeywordSet().defineTable(MS::keywordName(MS::STATE),
+//				   Table(stateSetup));
+//
+
   // intialize the references to the subtables just added
   ms_p->initRefs();
   //
@@ -340,7 +331,6 @@ NewMSSimulator::NewMSSimulator(const String& MSName) :
   scratchDataAcc_p = TiledDataStManAccessor(*ms_p, scratchDataCol);
   sigmaAcc_p = TiledDataStManAccessor(*ms_p, sigmaCol);
   flagAcc_p = TiledDataStManAccessor(*ms_p, flagCol);
-  imweightAcc_p = TiledDataStManAccessor(*ms_p, imweightCol);
   */
   // We're done - wasn't that easy?
 
@@ -352,7 +342,7 @@ NewMSSimulator::NewMSSimulator(const String& MSName) :
 }
 
 NewMSSimulator::NewMSSimulator(MeasurementSet& theMS) :
-  ms_p(0), dataAcc_p(), scratchDataAcc_p(), sigmaAcc_p(), flagAcc_p(), imweightAcc_p(),
+  ms_p(0), dataAcc_p(), scratchDataAcc_p(), sigmaAcc_p(), flagAcc_p(),
   maxData_p(2e9)
 {
   LogIO os(LogOrigin("NewMSSimulator", "NewMSSimulator(MeasurementSet& theMS)", WHERE));
@@ -372,7 +362,6 @@ NewMSSimulator::NewMSSimulator(MeasurementSet& theMS) :
     scratchDataAcc_p = TiledDataStManAccessor(*ms_p, scratchDataCol);
     sigmaAcc_p = TiledDataStManAccessor(*ms_p, sigmaCol);
     flagAcc_p = TiledDataStManAccessor(*ms_p, flagCol);
-    imweightAcc_p = TiledDataStManAccessor(*ms_p, imweightCol);
     
     ScalarColumn<Int> hyperCubeIDColumn(*ms_p, dataTileId);
     hyperCubeID_p=max(hyperCubeIDColumn.getColumn());
@@ -417,11 +406,6 @@ void NewMSSimulator::addHyperCubes(const Int id, const Int nBase, const Int nCha
   flagAcc_p.addHypercube(IPosition(4, nCorr, nChan, nCat, 0), 
 			 IPosition(4, nCorr, chanTiles, nCat, nBase),
 			 tileId);
-  
-  tileId.define(imweightTileId, static_cast<Int>(10*id + 4));
-  imweightAcc_p.addHypercube(IPosition(2, nChan, 0), 
-			     IPosition(2, chanTiles, nBase),
-			     tileId);
 }
 
 NewMSSimulator::NewMSSimulator(const NewMSSimulator & mss)
@@ -608,8 +592,8 @@ void NewMSSimulator::initFields(const String& sourceName,
 
   const double forever=1.e30;
 
-  os << "Creating new field table row for " << sourceName << ", ID "
-     << baseFieldID << LogIO::POST;
+  //  os << "Creating new field table row for " << sourceName << ", ID "
+  //     << baseFieldID << LogIO::POST;
 
 //  if(!ms_p->source().isNull()){
 //    os << "Creating new source table row for " << sourceName << ", ID "
@@ -1092,14 +1076,26 @@ void NewMSSimulator::settimes(const Quantity& qIntegrationTime,
 void NewMSSimulator::observe(const String& sourceName,
 			     const String& spWindowName,
 			     const Quantity& qStartTime, 
-			     const Quantity& qStopTime)
+			     const Quantity& qStopTime,
+			     const Bool add_observation=True,
+// from int ASDM2MSFiller::addUniqueState(
+// defaults for ALMA as known on 20100831
+			     const Bool state_sig=True,
+			     const Bool state_ref=True,
+			     const double& state_cal=0.,
+			     const double& state_load=0.,
+			     const unsigned int state_sub_scan=0,
+			     const String& state_obs_mode="OBSERVE_TARGET.ON_SOURCE",
+			     const String& observername="CASA simulator",
+			     const String& projectname="CASA simulation")
 {
   Vector<String> sourceNames(1,sourceName);  
   Vector<Quantity> qStartTimes(1,qStartTime);
   Vector<Quantity> qStopTimes(1,qStopTime);
   Vector<MDirection> directions;  // constructs Array<T>(IPosition(1,0))
 
-  NewMSSimulator::observe(sourceNames,spWindowName,qStartTimes,qStopTimes,directions);
+  NewMSSimulator::observe(sourceNames,spWindowName,qStartTimes,qStopTimes,directions,
+			  add_observation,state_sig,state_ref,state_cal,state_load,state_sub_scan,state_obs_mode,observername,projectname);
 }
 
 
@@ -1109,7 +1105,18 @@ void NewMSSimulator::observe(const Vector<String>& sourceNames,
 			     const String& spWindowName,
 			     const Vector<Quantity>& qStartTimes, 
 			     const Vector<Quantity>& qStopTimes,
-			     const Vector<MDirection>& directions)
+			     const Vector<MDirection>& directions,
+			     const Bool add_observation=True,
+// from int ASDM2MSFiller::addUniqueState(
+// defaults for ALMA as known on 20100831
+			     const Bool state_sig=True,
+			     const Bool state_ref=True,
+			     const double& state_cal=0.,
+			     const double& state_load=0.,
+			     const unsigned int state_sub_scan=0,
+			     const String& state_obs_mode="OBSERVE_TARGET.ON_SOURCE",
+			     const String& observername="CASA simulator",
+			     const String& projectname="CASA simulation")
 {  
 
   // It is assumed that if there are multiple pointings, that they 
@@ -1251,57 +1258,109 @@ void NewMSSimulator::observe(const Vector<String>& sourceNames,
   AlwaysAssert(nPts==sourceNames.shape()(0),AipsError);
 
   
-    Tint = qIntegrationTime_p.getValue("s");
-
-    MEpoch::Ref tref(MEpoch::TAI);
-    MEpoch::Convert tconvert(mRefTime_p, tref);
-    MEpoch taiRefTime = tconvert();      
-    
-    // until the qStartTime represents the starting Hour Angle
-    if (useHourAngle_p&&!hourAngleDefined_p) {
-      msd.setEpoch( mRefTime_p );
-      msd.setFieldCenter(fieldCenter);  // set to first sourceName above
-      t_offset_p = - msd.hourAngle() * 3600.0 * 180.0/C::pi / 15.0; // in seconds
-      hourAngleDefined_p=True;
-//      os << "Times specified are interpreted as hour angles for first source observed" << endl
-//	 << "     offset in time = " << t_offset_p / 3600.0 << " hours from "
-//	 << formatTime(taiRefTime.get("s").getValue("s")) << LogIO::DEBUG1;
-    }
-    
-    Tstart = qStartTimes(0).getValue("s") + 
-      taiRefTime.get("s").getValue("s") + t_offset_p;
-    Tend = qStopTimes(nPts-1).getValue("s") + 
-      taiRefTime.get("s").getValue("s") + t_offset_p;
-    os << "Full time range: " 
-       << formatTime(Tstart) << " -- "
-       << formatTime(Tend) << " with int = " << Tint << endl;
+  Tint = qIntegrationTime_p.getValue("s");
+  
+  MEpoch::Ref tref(MEpoch::TAI);
+  MEpoch::Convert tconvert(mRefTime_p, tref);
+  MEpoch taiRefTime = tconvert();      
+  
+  // until the qStartTime represents the starting Hour Angle
+  if (useHourAngle_p&&!hourAngleDefined_p) {
+    msd.setEpoch( mRefTime_p );
+    msd.setFieldCenter(fieldCenter);  // set to first sourceName above
+    t_offset_p = - msd.hourAngle() * 3600.0 * 180.0/C::pi / 15.0; // in seconds
+    hourAngleDefined_p=True;
+    //      os << "Times specified are interpreted as hour angles for first source observed" << endl
+    //	 << "     offset in time = " << t_offset_p / 3600.0 << " hours from "
+    //	 << formatTime(taiRefTime.get("s").getValue("s")) << LogIO::DEBUG1;
+  }
+  
+  Tstart = qStartTimes(0).getValue("s") + 
+    taiRefTime.get("s").getValue("s") + t_offset_p;
+  Tend = qStopTimes(nPts-1).getValue("s") + 
+    taiRefTime.get("s").getValue("s") + t_offset_p;
+  os << "Full time range: " 
+     << formatTime(Tstart) << " -- "
+     << formatTime(Tend) << " with int = " << Tint << endl;
   
 
 
-  // fill Observation Table for every call. Eventually we should fill
+  // fill Observation Table if desired. Eventually we should fill
   // in the schedule information
   MSObservation& obs=ms_p->observation();
   MSObservationColumns& obsc=msc.observation();
   Int nobsrow= obsc.nrow();
-  obs.addRow();
-  obsc.telescopeName().put(nobsrow,telescope_p);
-  Vector<Double> timeRange(2);
-  timeRange(0)=Tstart;
-  timeRange(1)=Tend;
-  obsc.timeRange().put(nobsrow,timeRange);
-  obsc.observer().put(nobsrow,"CASA simulator");
-  
   Int row=ms_p->nrow()-1;
   Int maxObsId=-1;
   Int maxArrayId=0;
-  {
+
+  //cout << "OBSERVATION table has "<< nobsrow << " rows"<<endl;
+
+  if (add_observation or nobsrow<=0) {
+    obs.addRow();
+    obsc.telescopeName().put(nobsrow,telescope_p);
+    Vector<Double> timeRange(2);
+    timeRange(0)=Tstart;
+    timeRange(1)=Tend;
+    obsc.timeRange().put(nobsrow,timeRange);
+    obsc.observer().put(nobsrow,observername);
+    obsc.project().put(nobsrow,projectname);
+    
+    nobsrow= obsc.nrow();
     Vector<Int> tmpids(row+1);
     tmpids=msc.observationId().getColumn();
     if (tmpids.nelements()>0) maxObsId=max(tmpids);
     tmpids=msc.arrayId().getColumn();
     if (tmpids.nelements()>0) maxArrayId=max(tmpids);
+
+    //cout << "OBSERVATION table added to; nobsrow now ="<< nobsrow <<endl;
   }
+
+
+
   
+
+  // fill STATE column, only adding a new row if uniquely new params have been 
+  // given; from int ASDM2MSFiller::addUniqueState(
+
+  MSState& msstate = ms_p -> state();
+  MSStateColumns& msstateCol = msc.state();
+  Int staterow = -1; // the state row to use in the main table
+
+  //cout << "STATE table has " <<msstate.nrow() <<"rows.. searching for match"<<endl;
+  
+  for (uInt i = 0; i < msstate.nrow(); i++) {
+    if ((msstateCol.sig()(i) == state_sig) &&
+	(msstateCol.ref()(i) == state_ref) &&
+	(msstateCol.cal()(i) == state_cal) &&
+	(msstateCol.load()(i) == state_load) && 
+	(msstateCol.subScan()(i) == (int)state_sub_scan) &&
+	(msstateCol.obsMode()(i).compare(state_obs_mode) == 0)) {
+      staterow=i;
+    }
+  }
+
+  //cout << " (matching) staterow = "<<staterow<< endl;
+  
+  if (staterow<0) {
+    msstate.addRow();
+    staterow=msstate.nrow()-1;
+    msstateCol.sig().put(staterow, state_sig);
+    msstateCol.ref().put(staterow, state_ref);
+    msstateCol.cal().put(staterow, state_cal);
+    msstateCol.load().put(staterow, state_load);
+    msstateCol.subScan().put(staterow, state_sub_scan);
+    msstateCol.obsMode().put(staterow, String(state_obs_mode));
+    msstateCol.flagRow().put(staterow, false);
+  }
+
+  //cout << " after adding a row, staterow = "<<staterow<< endl;
+  
+
+
+  // RI TODO make sure to actually set correct state row in ms cols
+
+
   Double Time=Tstart;
   Bool firstTime = True;
   
@@ -1379,8 +1438,6 @@ void NewMSSimulator::observe(const Vector<String>& sourceNames,
     scratchDataAcc_p.extendHypercube(nNewRows, tileId);
     tileId.define(flagTileId, static_cast<Int>(10*hyperCubeID_p + 3));
     flagAcc_p.extendHypercube(nNewRows, tileId);
-    tileId.define(imweightTileId, static_cast<Int>(10*hyperCubeID_p + 4));
-    imweightAcc_p.extendHypercube(nNewRows, tileId);
     // Size of scratch columns
     Double thisChunk=16.0*Double(nChan)*Double(nCorr)*Double(nNewRows);
     dataWritten_p+=thisChunk;
@@ -1392,10 +1449,6 @@ void NewMSSimulator::observe(const Vector<String>& sourceNames,
 
   Matrix<Bool> flag(nCorr,nChan); 
   flag=False;
-    
-  Vector<Float> imagingWeight(nChan);
-  imagingWeight.set(1.0);
-
 
   os << "Calculating a total of " << nIntegrations << " integrations" << endl 
      << LogIO::POST;
@@ -1520,7 +1573,7 @@ void NewMSSimulator::observe(const Vector<String>& sourceNames,
       msc.exposure().put(row+1,Tint);
       msc.interval().put(row+1,Tint);
       msc.observationId().put(row+1,maxObsId+1);
-      msc.stateId().put(row+1,-1);
+      msc.stateId().put(row+1,staterow);
 
       // assume also that all mounts are the same and posit. angle is the same
       if (antenna_mounts[0]=="ALT-AZ" || antenna_mounts[0]=="alt-az") {
@@ -1592,8 +1645,6 @@ void NewMSSimulator::observe(const Vector<String>& sourceNames,
 	  msc.correctedData().put(row,data);
 	  msc.modelData().setShape(row,data.shape());
 	  msc.modelData().put(row, data);
-	  msc.imagingWeight().setShape(row, data.shape().getLast(1));
-	  msc.imagingWeight().put(row, imagingWeight);
 	  
 	  if (ant1 != ant2) {
 	    blockage(fractionBlocked1, fractionBlocked2,

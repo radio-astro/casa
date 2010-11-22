@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5DataType.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: HDF5DataType.h 20901 2010-06-09 07:23:37Z gervandiepen $
 
 #ifndef CASA_HDF5DATATYPE_H
 #define CASA_HDF5DATATYPE_H
@@ -76,6 +76,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     HDF5DataType (const uShort*);
     HDF5DataType (const Int*);
     HDF5DataType (const uInt*);
+    HDF5DataType (const Int64*);
     HDF5DataType (const Float*);
     HDF5DataType (const Double*);
     HDF5DataType (const Complex*);

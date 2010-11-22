@@ -603,6 +603,9 @@ Bool DirectionCoordinate::setReferencePixel(const Vector<Double> &refPix)
        return False;
     }
 //
+    //cout << "refPix[0]=" << refPix[0]
+    //     << " refPix[1]=" << refPix[1]
+    //     << endl;
     wcs_p.crpix[0] = refPix[0];
     wcs_p.crpix[1] = refPix[1];
     set_wcs(wcs_p);
@@ -823,7 +826,7 @@ String DirectionCoordinate::format(String& units,
                                    uInt worldAxis,
                                    Bool isAbsolute,
                                    Bool showAsAbsolute,
-                                   Int precision)
+                                   Int precision) const
 {
    DebugAssert(worldAxis< nWorldAxes(), AipsError);
    DebugAssert(nWorldAxes()==2, AipsError);

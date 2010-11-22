@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tTable.cc 20632 2009-06-14 12:16:13Z gervandiepen $
+//# $Id: tTable.cc 20909 2010-06-16 07:29:13Z gervandiepen $
 
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/SetupNewTab.h>
@@ -410,13 +410,24 @@ void b (Bool doExcp)
     sortab2 = sortab2(TableExprNode(), 5);
     AlwaysAssertExit (sortab2.nrow() == 5);
 
+    // Test using a const Bool expression.
+    Table csortab = sortab(TableExprNode(2) + 3 == 5);
+    AlwaysAssertExit (csortab.nrow() == sortab.nrow());
+    csortab = sortab(TableExprNode(False));
+    AlwaysAssertExit (csortab.nrow() == 0);
+    csortab = sortab(TableExprNode(True), 5);
+    AlwaysAssertExit (csortab.nrow() == 5);
+
+    // Select using an empty set.
     // Select using the IN function.
     TableExprNodeSet set;
+    Table seltabset = sortab (sortab.col("af").in (set));
+    AlwaysAssertExit (seltabset.nrow() == 0);
     set.add (TableExprNodeSetElem ("V3"));
     set.add (TableExprNodeSetElem ("V1"));
     set.add (TableExprNodeSetElem ("V9"));
     set.add (TableExprNodeSetElem ("V6"));
-    Table seltabset = sortab (sortab.col("af").in (set));
+    seltabset = sortab (sortab.col("af").in (set));
     if (seltabset.nrow() != 4) {
 	cout << "seltabset does not contain 4 rows" << endl;
     }

@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ValueHolderRep.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ValueHolderRep.h 20901 2010-06-09 07:23:37Z gervandiepen $
 
 
 #ifndef CASA_VALUEHOLDERREP_H
@@ -73,6 +73,7 @@ public:
   explicit ValueHolderRep (uShort value);
   explicit ValueHolderRep (Int value);
   explicit ValueHolderRep (uInt value);
+  explicit ValueHolderRep (Int64 value);
   explicit ValueHolderRep (Float value);
   explicit ValueHolderRep (Double value);
   explicit ValueHolderRep (const Complex& value);
@@ -85,6 +86,7 @@ public:
   explicit ValueHolderRep (const Array<uShort>& value);
   explicit ValueHolderRep (const Array<Int>& value);
   explicit ValueHolderRep (const Array<uInt>& value);
+  explicit ValueHolderRep (const Array<Int64>& value);
   explicit ValueHolderRep (const Array<Float>& value);
   explicit ValueHolderRep (const Array<Double>& value);
   explicit ValueHolderRep (const Array<Complex>& value);
@@ -117,6 +119,7 @@ public:
   uShort                asuShort  () const;
   Int                   asInt     () const;
   uInt                  asuInt    () const;
+  Int64                 asInt64   () const;
   Float                 asFloat   () const;
   Double                asDouble  () const;
   Complex               asComplex () const;
@@ -128,6 +131,7 @@ public:
   const Array<uShort>   asArrayuShort  () const;
   const Array<Int>      asArrayInt     () const;
   const Array<uInt>     asArrayuInt    () const;
+  const Array<Int64>    asArrayInt64   () const;
   const Array<Float>    asArrayFloat   () const;
   const Array<Double>   asArrayDouble  () const;
   const Array<Complex>  asArrayComplex () const; 
@@ -164,6 +168,7 @@ private:
     uChar  itsUChar;
     Short  itsShort;
     Int    itsInt;
+    Int64  itsInt64;
     Float  itsFloat;
     Double itsDouble;
     void*  itsPtr;

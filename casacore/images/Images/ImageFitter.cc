@@ -25,6 +25,9 @@
 //#
 //# $Id: $
 
+#include <casa/Containers/HashMap.h>
+#include <casa/Containers/HashMapIter.h>
+
 #include <casa/IO/FilebufIO.h>
 #include <casa/IO/FiledesIO.h>
 
@@ -34,6 +37,7 @@
 #include <casa/Quanta/MVAngle.h>
 #include <casa/Quanta/MVTime.h>
 #include <casa/OS/Time.h>
+#include <casa/Utilities/Precision.h>
 
 #include <components/ComponentModels/Flux.h>
 #include <components/ComponentModels/SpectralModel.h>
@@ -41,6 +45,7 @@
 #include <images/IO/FitterEstimatesFileParser.h>
 #include <images/Images/ImageAnalysis.h>
 #include <images/Images/ImageFitter.h>
+#include <images/Images/ImageInputProcessor.h>
 #include <images/Images/ImageMetaData.h>
 #include <images/Images/ImageStatistics.h>
 #include <images/Images/FITSImage.h>
@@ -66,12 +71,12 @@ namespace casa {
         const String& modelInp, const String& estimatesFilename,
         const String& logfile, const Bool& append,
         const String& newEstimatesInp
-    ) : chan(chanInp), stokesString(stokes), mask(maskInp),
-		residual(residualInp),model(modelInp), logfileName(logfile),
-		regionString(""), estimatesString(""), newEstimatesFileName(newEstimatesInp),
+    ) : _log(new LogIO()), _image(0), _chan(chanInp), _stokesString(stokes),
+		_mask(maskInp), _residual(residualInp),_model(modelInp), _logfileName(logfile),
+		regionString(""), estimatesString(""), _newEstimatesFileName(newEstimatesInp),
 		includePixelRange(includepix), excludePixelRange(excludepix),
 		estimates(), fixed(0), logfileAppend(append), fitConverged(False),
-		fitDone(False), _noBeam(False), peakIntensities(), pixelPositions() {
+		fitDone(False), _noBeam(False), peakIntensities() {
         _construct(imagename, box, region, 0, estimatesFilename);
     }
 
@@ -83,51 +88,48 @@ namespace casa {
         const String& modelInp, const String& estimatesFilename,
         const String& logfile, const Bool& append,
         const String& newEstimatesInp
-    ) : chan(chanInp), stokesString(stokes), mask(maskInp),
-		residual(residualInp),model(modelInp), logfileName(logfile),
-		regionString(""), estimatesString(""), newEstimatesFileName(newEstimatesInp),
+    ) : _log(new LogIO()), _image(0), _chan(chanInp), _stokesString(stokes),
+		_mask(maskInp), _residual(residualInp),_model(modelInp), _logfileName(logfile),
+		regionString(""), estimatesString(""), _newEstimatesFileName(newEstimatesInp),
 		includePixelRange(includepix), excludePixelRange(excludepix),
 		estimates(), fixed(0), logfileAppend(append), fitConverged(False),
-		fitDone(False), _noBeam(False), peakIntensities(), pixelPositions() {
+		fitDone(False), _noBeam(False), peakIntensities() {
         _construct(imagename, box, "", regionPtr, estimatesFilename);
     }
 
     ImageFitter::~ImageFitter() {
-        delete itsLog;
-        delete image;
+        delete _log;
+        delete _image;
     }
 
     ComponentList ImageFitter::fit() {
-        *itsLog << LogOrigin("ImageFitter", "fit");
+        *_log << LogOrigin("ImageFitter", "fit");
         Array<Float> residPixels;
         Array<Bool> residMask;
         Bool converged;
-
         uInt ngauss = estimates.nelements() > 0 ? estimates.nelements() : 1;
         Vector<String> models(ngauss);
         models.set("gaussian");
-        ImageAnalysis myImage(image);
-
         Bool fit = True;
         Bool deconvolve = False;
         Bool list = True;
-
         String errmsg;
         Record estimatesRecord;
 
         estimates.toRecord(errmsg, estimatesRecord);
+		ImageAnalysis myImage(_image);
 		try {
         	results = myImage.fitsky(
             	residPixels, residMask, converged,
             	inputStats, residStats, chiSquared,
-            	regionRecord, chan, stokesString, mask,
-            	models, estimatesRecord, fixed,
+            	_regionRecord, _chan, _stokesString,
+            	_mask, models, estimatesRecord, fixed,
             	includePixelRange, excludePixelRange,
-            	fit, deconvolve, list, residual, model
+            	fit, deconvolve, list, _residual, _model
         	);
 		}
 		catch (AipsError err) {
-    		*itsLog << LogIO::WARN << "Fit failed to converge because of exception: "
+    		*_log << LogIO::WARN << "Fit failed to converge because of exception: "
 			<< err.getMesg() << LogIO::POST;
 			converged = false;
 		}
@@ -136,18 +138,13 @@ namespace casa {
         if(converged) {
         	_setSizes();
         	_setFluxes();
-        	pixelPositions.resize(results.nelements());
-        	for(uInt i=0; i<results.nelements(); i++) {
-        		Vector<Double> x(2);
-        		pixelPositions[i] = x;
-        	}
         }
         String resultsString = _resultsToString();
-        if (converged && ! newEstimatesFileName.empty()) {
+        if (converged && ! _newEstimatesFileName.empty()) {
         	_writeNewEstimatesFile();
         }
-        *itsLog << LogIO::NORMAL << resultsString << LogIO::POST;
-        if (! logfileName.empty()) {
+        *_log << LogIO::NORMAL << resultsString << LogIO::POST;
+        if (! _logfileName.empty()) {
         	_writeLogfile(resultsString);
         }
         return results;
@@ -189,198 +186,96 @@ namespace casa {
         const String& imagename, const String& box, const String& regionName,
         const Record* regionPtr, const String& estimatesFilename
     ) {
-        itsLog = new LogIO();
-        *itsLog << LogOrigin("ImageFitter", "_construct");
-        if (imagename.empty()) {
-            *itsLog << "imagename cannot be blank" << LogIO::EXCEPTION;
-        }
+    	LogOrigin logOrigin("ImageFitter", __FUNCTION__);
+        *_log << logOrigin;
 
-        // Register the functions to create a FITSImage or MIRIADImage object.
-        FITSImage::registerOpenFunction();
-        MIRIADImage::registerOpenFunction();
-        ImageUtilities::openImage(image, imagename, *itsLog);
-        if (image == 0) {
-            throw(AipsError("Unable to open image " + imagename));
-        }
-        _checkImageParameterValidity();
-        _doRegion(box, regionName, regionPtr);
+		ImageInputProcessor inputProcessor;
+        String diagnostics;
+        ImageInputProcessor::OutputStruct residualIm;
+        residualIm.label = "residual image";
+        residualIm.outputFile = &_residual;
+        residualIm.required = False;
+        residualIm.replaceable = True;
+        ImageInputProcessor::OutputStruct modelIm;
+        modelIm.label = "model image";
+        modelIm.outputFile = &_model;
+        modelIm.required = False;
+        modelIm.replaceable = True;
+        ImageInputProcessor::OutputStruct newEstFile;
+        newEstFile.label = "new estiamtes file";
+        newEstFile.outputFile = &_newEstimatesFileName;
+        newEstFile.required = False;
+        newEstFile.replaceable = True;
+        ImageInputProcessor::OutputStruct logFile;
+        logFile.label = "log file";
+        logFile.outputFile = &_logfileName;
+        logFile.required = False;
+        logFile.replaceable = True;
+
+        Vector<ImageInputProcessor::OutputStruct> outputs(4);
+        outputs[0] = residualIm;
+        outputs[1] = modelIm;
+        outputs[2] = newEstFile;
+        outputs[3] = logFile;
+
+        Vector<Coordinate::Type> reqCoordTypes(1);
+        reqCoordTypes[0] = Coordinate::DIRECTION;
+
+        inputProcessor.process(
+        	_image, _regionRecord, diagnostics, &outputs,
+        	_stokesString, imagename, regionPtr,
+        	regionName, box, String::toString(_chan),
+        	ImageInputProcessor::USE_FIRST_STOKES, False,
+        	&reqCoordTypes
+        );
+        *_log << logOrigin;
+        // <todo> kludge because Flux class is really only made for I, Q, U, and V stokes
+
+        String iquv = "IQUV";
+        _kludgedStokes = (iquv.index(_stokesString) == String::npos) || _stokesString.empty()
+        	? "I" : _stokesString;
+        // </todo>
+        //_doRegion(box, regionName, regionPtr);
         if(estimatesFilename.empty()) {
-        	*itsLog << LogIO::NORMAL << "No estimates file specified, so will attempt to find and fit one gaussian."
+        	*_log << LogIO::NORMAL << "No estimates file specified, so will attempt to find and fit one gaussian."
         		<< LogIO::POST;
         }
         else {
-        	FitterEstimatesFileParser parser(estimatesFilename, *image);
+        	FitterEstimatesFileParser parser(estimatesFilename, *_image);
         	estimates = parser.getEstimates();
         	estimatesString = parser.getContents();
         	fixed = parser.getFixed();
         	Record rec;
         	String errmsg;
         	estimates.toRecord(errmsg, rec);
-        	*itsLog << LogIO::NORMAL << "File " << estimatesFilename << " has " << estimates.nelements()
+        	*_log << LogIO::NORMAL << "File " << estimatesFilename << " has " << estimates.nelements()
         		<< " specified, so will attempt to fit that many gaussians " << LogIO::POST;
         }
-    }
-
-    void ImageFitter::_checkImageParameterValidity() {
-        *itsLog << LogOrigin("ImageFitter", "_checkImageParameterValidity");
-        String error;
-        ImageMetaData md(*image);
-        if (md.hasPolarizationAxis()) {
-        	if(stokesString.empty()) {
-        		if (md.nStokes() == 1) {
-        			// stokes not specified, but only one stokes axis so use that polarization
-        			stokesString = md.stokesAtPixel(0);
-        		}
-        		else {
-        			*itsLog << "No stokes specified but image has multiple polarizations. Please specify"
-        					<< "which stokes plane on which you want the fit performed"
-        					<< LogIO::EXCEPTION;
-        		}
-        	}
-        	if (! md.isStokesValid(stokesString)) {
-        		*itsLog << "This image has no stokes " << stokesString << LogIO::EXCEPTION;
-        	}
-        }
-        // <todo> kludge because Flux class is really only made for I, Q, U, and V stokes
-        String iquv = "IQUV";
-        _kludgedStokes = (iquv.index(stokesString) == String::npos) ? "I" : stokesString;
-        // </todo>
-        if (md.hasSpectralAxis()) {
-        	if (! md.isChannelNumberValid(chan)) {
-        		*itsLog << "Spectral channel number " << chan << " is not valid for this image." << LogIO::EXCEPTION;
-        	}
-        }
-    } 
-
-    void ImageFitter::_doRegion(const String& box, const String& region, const Record* regionPtr) {
-    	// note that only one of region and regionPtr should ever be provided
-    	ImageRegion imRegion;
-        if (box.empty()) {
-            // box not specified, check for saved region
-            if (region.empty() && regionPtr == 0) {
-                // neither region nor box specified, use entire 2-D plane
-                IPosition imShape = image->shape();
-                Vector<Int> dirNums = ImageMetaData(*image).directionAxesNumbers();
-                Vector<Int> dirShape(imShape[dirNums[0]], imShape[dirNums[1]]);
-                *itsLog << LogIO::NORMAL << "Neither box nor region specified, "
-                    << "so entire plane of " << dirShape[0] << " x "
-                    << dirShape[1] << "  will be used" << LogIO::POST;
-                ostringstream boxStream;
-                boxStream << "0, 0, " << dirShape[0] << ", " << dirShape[1];
-                imRegion = _processBox(String(boxStream));
-            }
-            else if (regionPtr != 0) {
-            	// region record pointer provided
-            	regionRecord = *regionPtr;
-            	regionString = "used provided region record";
-            	return;
-            }
-            else {
-            	// region name provided
-            	Regex otherImage("(.*)+:(.*)+");
-            	if (region.matches(otherImage)) {
-            		String res[2];
-            		casa::split(region, res, 2, ":");
-            		PagedImage<Float> other(res[0]);
-            		imRegion = other.getRegion(res[1]);
-            	}
-            	else {
-            		imRegion = image->getRegion(region);
-            	}
-                regionString = "Used image region " + region;
-            }
-
-        }
-        else if (box.freq(",") % 4 != 3) {
-            *itsLog << "box not specified correctly" << LogIO::EXCEPTION;
-        }
-        else {
-            if (region != "") {
-                *itsLog << "both box and region specified, box will be used" << LogIO::WARN;
-            }
-            // we have been given a box by the user and it is specified correctly
-            imRegion = _processBox(box);
-            regionString = "Used box " + box;
-        }
-        regionRecord = Record(imRegion.toRecord(""));
-    } 
-
-    ImageRegion ImageFitter::_processBox(const String& box) {
-        Vector<String> boxParts = stringToVector(box);
-        AlwaysAssert(boxParts.size() % 4 == 0, AipsError);
-        RegionManager rm;
-        ImageRegion imRegion;
-        for(uInt i=0; i<boxParts.size()/4; i++) {
-        	uInt index = 4*i;
-        	ImageRegion boxRegion = _boxRegion(
-        		boxParts[index], boxParts[index+1], boxParts[index+2], boxParts[index+3]
-        	);
-        	imRegion = (i == 0) ? boxRegion : imRegion = *rm.doUnion(imRegion, boxRegion);
-        }
-        return imRegion;
-    }
-
-    ImageRegion ImageFitter::_boxRegion(String blc1, String blc2, String trc1, String trc2) {
-
-        IPosition imShape = image->shape(); 
-        Vector<Double> blc(imShape.nelements());
-        Vector<Double> trc(imShape.nelements());
-
-        for (uInt i=0; i<imShape.nelements(); i++) {
-            blc[i] = 0;
-            trc[i] = imShape[i] - 1;
-        }
-        ImageMetaData md(*image);
-
-        Vector<Int> dirNums = md.directionAxesNumbers();
-
-
-        blc[dirNums[0]] = String::toDouble(blc1);
-        blc[dirNums[1]] = String::toDouble(blc2);
-        trc[dirNums[0]] = String::toDouble(trc1);
-        trc[dirNums[1]] = String::toDouble(trc2);
-
-        if(md.hasSpectralAxis()) {
-        	Int spectralAxisNumber = md.spectralAxisNumber();
-        	blc[spectralAxisNumber] = chan;
-        	trc[spectralAxisNumber] = chan;
-        }
-
-        if(md.hasPolarizationAxis()) {
-        	Int polarizationAxisNumber = md.polarizationAxisNumber();
-        	Int stokesPixelNumber = md.stokesPixelNumber(stokesString);
-        	blc[polarizationAxisNumber] = stokesPixelNumber;
-        	trc[polarizationAxisNumber] = stokesPixelNumber;
-        }
-
-        LCBox lcBox(blc, trc, imShape);
-        WCBox wcBox(lcBox, image->coordinates());
-        return ImageRegion(wcBox);
     }
 
     String ImageFitter::_resultsToString() {
     	ostringstream summary;
     	summary << "****** Fit performed at " << Time().toString() << "******" << endl << endl;
     	summary << "Input parameters ---" << endl;
-    	summary << "       --- imagename:           " << image->name() << endl;
+    	summary << "       --- imagename:           " << _image->name() << endl;
     	summary << "       --- region:              " << regionString << endl;
-    	summary << "       --- channel:             " << chan << endl;
-    	summary << "       --- stokes:              " << stokesString << endl;
-    	summary << "       --- mask:                " << mask << endl;
+    	summary << "       --- channel:             " << _chan << endl;
+    	summary << "       --- stokes:              " << _stokesString << endl;
+    	summary << "       --- mask:                " << _mask << endl;
     	summary << "       --- include pixel ragne: " << includePixelRange << endl;
     	summary << "       --- exclude pixel ragne: " << excludePixelRange << endl;
     	summary << "       --- initial estimates:   " << estimatesString << endl;
 
     	if (converged()) {
         	if (_noBeam) {
-        		*itsLog << LogIO::WARN << "Flux density not reported because "
+        		*_log << LogIO::WARN << "Flux density not reported because "
         				<< "there is no clean beam in image header so these quantities cannot "
         				<< "be calculated" << LogIO::POST;
         	}
     		summary << _statisticsToString() << endl;
     		for (uInt i = 0; i < results.nelements(); i++) {
-    			summary << "Fit on " << image->name(True) << " component " << i << endl;
-    			summary << _positionToString(i) << endl;
+    			summary << "Fit on " << _image->name(True) << " component " << i << endl;
+    			summary << results.component(i).positionToString(&(_image->coordinates())) << endl;
     			summary << _sizeToString(i) << endl;
     			summary << _fluxToString(i) << endl;
     			summary << _spectrumToString(i) << endl;
@@ -411,97 +306,12 @@ namespace casa {
     	return stats.str();
     }
 
-    String ImageFitter::_positionToString(const uInt compNumber)  {
-    	ostringstream position;
-    	MDirection mdir = results.getRefDirection(compNumber);
-
-    	Quantity lat = mdir.getValue().getLat("rad");
-    	String dec = MVAngle(lat).string(MVAngle::ANGLE_CLEAN, 8);
-
-    	Quantity longitude = mdir.getValue().getLong("rad");
-    	String ra = MVTime(longitude).string(MVTime::TIME, 9);
-    	const ComponentShape* compShape = results.getShape(compNumber);
-
-    	Quantity ddec = compShape->refDirectionErrorLat();
-    	ddec.convert("rad");
-
-    	Quantity dra = compShape->refDirectionErrorLong();
-
-    	dra.convert("rad");
-
-    	// choose a unified error for both axes
-    	Double delta = 0;
-    	if ( dra.getValue() == 0 && ddec.getValue() == 0 ) {
-    		delta = 0;
-    	}
-    	else if ( dra.getValue() == 0 ) {
-    		delta = fabs(ddec.getValue());
-    	}
-    	else if ( ddec.getValue() == 0 ) {
-    		delta = fabs(dra.getValue());
-    	}
-    	else {
-    		delta = sqrt( dra.getValue()*dra.getValue() + ddec.getValue()*ddec.getValue() );
-    	}
-
-		// Add error estimates to ra/dec strings if an error is given (either >0)
-
-    	uInt precision = 1;
-    	if ( delta != 0 ) {
-    		dra.convert("s");
-
-    		ddec.convert("arcsec");
-    		Double drasec  = _round(dra.getValue());
-    		Double ddecarcsec = _round(ddec.getValue());
-    		Vector<Double> dravec(2), ddecvec(2);
-    		dravec.set(drasec);
-    		ddecvec.set(ddecarcsec);
-    		precision = _precision(dravec,ddecvec);
-    		ra = MVTime(longitude).string(MVTime::TIME, 6+precision);
-    		dec =  MVAngle(lat).string(MVAngle::ANGLE, 6+precision);
-    	}
-    	position << "Position ---" << endl;
-    	position << "       --- ra:    " << ra << " +/- " << std::fixed
-    		<< setprecision(precision) << dra << " (" << dra.getValue("arcsec")
-    		<< " arcsec)" << endl;
-    	position << "       --- dec: " << dec << " +/- " << ddec << endl;
-       	Vector<Double> world(4,0), pixel(4,0);
-    	image->coordinates().toWorld(world, pixel);
-
-        world[0] = longitude.getValue();
-        world[1] = lat.getValue();
-        // TODO do the pixel computations in another method
-        if (image->coordinates().toPixel(pixel, world)) {
-        	pixelPositions[compNumber][0] = pixel[0];
-        	pixelPositions[compNumber][1] = pixel[1];
-
-        	DirectionCoordinate dCoord = image->coordinates().directionCoordinate(
-        		ImageMetaData(*image).directionCoordinateNumber()
-        	);
-        	Vector<Double> increment = dCoord.increment();
-        	Double raPixErr = dra.getValue("rad")/increment[0];
-        	Double decPixErr = ddec.getValue("rad")/increment[1];
-        	Vector<Double> raPix(2), decPix(2);
-         	raPix.set(_round(raPixErr));
-        	decPix.set(_round(decPixErr));
-        	precision = _precision(raPix, decPix);
-
-        	position << setprecision(precision);
-        	position << "       --- ra:   " << pixel[0] << " +/- " << raPixErr << " pixels" << endl;
-        	position << "       --- dec:  " << pixel[1] << " +/- " << decPixErr << " pixels" << endl;
-        }
-        else {
-        	position << "unable to determine max in pixels" << endl;
-        }
-    	return position.str();
-    }
-
     void ImageFitter::_setFluxes() {
     	fluxDensities.resize(results.nelements());
     	peakIntensities.resize(results.nelements());
     	Vector<Quantity> fluxQuant;
 		ImageAnalysis ia;
-		ia.open(image->name());
+		ia.open(_image->name());
 
     	for(uInt i=0; i<results.nelements(); i++) {
     		results.getFlux(fluxQuant, i);
@@ -538,31 +348,33 @@ namespace casa {
     String ImageFitter::_sizeToString(const uInt compNumber) const  {
     	ostringstream size;
     	const ComponentShape* compShape = results.getShape(compNumber);
-
     	AlwaysAssert(compShape->type() == ComponentType::GAUSSIAN, AipsError);
-    	Quantity maj = majorAxes[compNumber];
-    	Quantity min = minorAxes[compNumber];
-    	Quantity pa = positionAngles[compNumber];
-    	Quantity emaj = (static_cast<const GaussianShape *>(compShape))->majorAxisError();
-    	Quantity emin = (static_cast<const GaussianShape *>(compShape))->minorAxisError();
-    	Quantity epa  = (static_cast<const GaussianShape *>(compShape))->positionAngleError();
-    	Vector<Quantum<Double> > beam = image->imageInfo().restoringBeam();
+
+    	Vector<Quantum<Double> > beam = _image->imageInfo().restoringBeam();
     	Bool hasBeam = beam.nelements() == 3;
     	size << "Image component size";
     	if (hasBeam) {
     		size << " (convolved with beam)";
     	}
     	size << " ---" << endl;
-    	size << _gaussianToString(maj, min, pa, emaj, emin, epa) << endl;
+    	size << compShape->sizeToString() << endl;
     	if (hasBeam) {
+    		Quantity maj = majorAxes[compNumber];
+    		Quantity min = minorAxes[compNumber];
+    		Quantity pa = positionAngles[compNumber];
+    		const GaussianShape *gaussShape = static_cast<const GaussianShape *>(compShape);
+    		Quantity emaj = gaussShape->majorAxisError();
+    		Quantity emin = gaussShape->minorAxisError();
+    		Quantity epa  = gaussShape->positionAngleError();
+
     		size << "Clean beam size ---" << endl;
-    		size << _gaussianToString(beam[0], beam[1], beam[2], 0, 0, 0, False) << endl;
+    		size << TwoSidedShape::sizeToString(beam[0], beam[1], beam[2], False) << endl;
     		size << "Image component size (deconvolved from beam) ---" << endl;
     		// NOTE fit components change here to their deconvolved counterparts
     		Quantity femaj = emaj/maj;
     		Quantity femin = emin/min;
     		Bool fitSuccess = False;
-    		Bool isPointSource = ImageUtilities::deconvolveFromBeam(maj, min, pa, fitSuccess, *itsLog, beam);
+    		Bool isPointSource = ImageUtilities::deconvolveFromBeam(maj, min, pa, fitSuccess, *_log, beam);
     		if(fitSuccess) {
     			if (isPointSource) {
     				size << "    Component is a point source" << endl;
@@ -571,9 +383,9 @@ namespace casa {
     				if (pa.getValue("deg") < 0) {
     					pa += Quantity(180, "deg");
     				}
-    				emaj *= femaj;
-    				emin *= femin;
-    				size << _gaussianToString(maj, min, pa, emaj, emin, epa);
+    				emaj = femaj * maj;
+    				emin = femin * min;
+    				size << TwoSidedShape::sizeToString(maj, min, pa, True, emaj, emin, epa);
     			}
     		}
     		else {
@@ -582,165 +394,6 @@ namespace casa {
     		}
     	}
     	return size.str();
-    }
-
-    Double ImageFitter::_round(Double number) const {
-    	Double sign = 1;
-        if (number < 0) {
-            sign = -1;
-            number = -number;
-        }
-        Double lgr = log10(number);
-        // shift number into range 32-320
-        Int i = (lgr >= 0) ? int(lgr + 0.5) : int(lgr - 0.5);
-        Double temp = number * pow(10.0, (2-i));
-        return sign*(temp + 0.5)*pow(10.0, (i-2));
-    }
-
-    uInt ImageFitter::_precision(
-    	const Vector<Double>& pair1, const Vector<Double>& pair2
-    ) const {
-    	Double val1 = pair1[0];
-    	Double err1 = pair1[1];
-    	Double value = val1;
-    	Double error = fabs(err1);
-    	uInt sign = 0;
-    	if (pair2.size() == 0) {
-				if (val1 < 0) {
-                sign = 1;
-                val1 = fabs(val1);
-            }
-    	}
-    	else {
-    		Double val2 = pair2[0];
-    		Double err2 = pair2[1];
-            if (val1 < 0 or val2 < 0) {
-                sign = 1;
-                val1 = fabs(val1);
-                val2 = fabs(val2);
-            }
-            value = max(val1, val2);
-            error = (err1 == 0 || err2 == 0)
-            	? max(fabs(err1), fabs(err1))
-            	: min(fabs(err1), fabs(err2));
-    	}
-
-    	// Here are a few general safeguards
-    	// If we are dealing with a value smaller than the estimated error
-    	// (e.g., 0.6 +/- 12) , the roles in formatting need to be
-    	// reversed.
-    	if ( value < error ) {
-    		value = max(value,0.1*error);
-    		// TODO be cool and figure out a way to swap without using a temporary variable
-    		Double tmp = value;
-    		value = error;
-    		error = tmp;
-    	}
-
-		// A value of precisely 0 formats as if it were 1.  If the error is
-    	// precisely 0, we print to 3 significant digits
-
-    	if ( value == 0 ) {
-    		value = 1;
-    	}
-    	if ( error == 0 ) {
-    		error = 0.1*value;
-    	}
-
-		// Arithmetically we have to draw the limit somewhere.  It is
-		// unlikely that numbers (and errors) < 1e-10 are reasonably
-		// printed using this limited technique.
-    	value = max(value,1e-10);
-    	error = max(error,1e-8);
-
-    	// Print only to two significant digits in the error
-    	error = 0.1*error;
-
-    	// Generate format
-
-    	uInt before = max(int(log10(value))+1,1);     // In case value << 1 ==> log10 < 0
-    	uInt after = 0;
-    	//String format="%"+str(sign+before)+".0f"
-    	uInt width = sign + before;
-    	if ( log10(error) < 0 ) {
-    		after = int(fabs(log10(error)))+1;
-    		//format="%"+str(sign+before+1+after)+"."+str(after)+"f"
-    		width = sign + before + after + 1;
-    	}
-    	return after;
-    }
-
-    String ImageFitter::_gaussianToString(
-    	Quantity major, Quantity minor, Quantity posangle,
-    	Quantity majorErr, Quantity minorErr, Quantity posanErr,
-    	Bool includeUncertainties
-    ) const {
-    	// Inputs all as angle quanta
-    	Vector<String> angUnits(5);
-    	angUnits[0] = "deg";
-    	angUnits[1] = "arcmin";
-    	angUnits[2] = "arcsec";
-    	angUnits[3] = "marcsec";
-    	angUnits[4] = "uarcsec";
-    	// First force position angle to be between 0 and 180 deg
-    	if(posangle.getValue() < 0) {
-    		posangle + Quantity(180, "deg");
-    	}
-
-    	String prefUnits;
-    	Quantity vmax(max(fabs(major.getValue("arcsec")), fabs(minor.getValue("arcsec"))), "arcsec");
-
-       	for (uInt i=0; i<angUnits.size(); i++) {
-        	prefUnits = angUnits[i];
-        	if(vmax.getValue(prefUnits) > 1) {
-        		break;
-        	}
-        }
-       	major.convert(prefUnits);
-       	minor.convert(prefUnits);
-       	majorErr.convert(prefUnits);
-       	minorErr.convert(prefUnits);
-
-    	Double vmaj = major.getValue();
-    	Double vmin = minor.getValue();
-
-    	// Formatting as "value +/- err" for symmetric errors
-
-    	Double dmaj = majorErr.getValue();
-    	Double dmin = minorErr.getValue();
-    	// position angle is always in degrees cuz users like that
-    	Double pa  = posangle.getValue("deg");
-    	Double dpa = posanErr.getValue("deg");
-
-    	Vector<Double> majVec(2), minVec(2), paVec(2);
-    	majVec[0] = vmaj;
-    	majVec[1] = dmaj;
-    	minVec[0] = vmin;
-    	minVec[1] = dmin;
-    	paVec[0] = pa;
-    	paVec[1] = dpa;
-    	uInt precision1 = _precision(majVec, minVec);
-    	uInt precision2 = _precision(paVec, Vector<Double>(0));
-
-    	ostringstream summary;
-    	summary << std::fixed << setprecision(precision1);
-    	summary << "       --- major axis:     " << major.getValue();
-    	if (includeUncertainties) {
-    		summary << " +/- " << majorErr.getValue();
-    	}
-    	summary << " " << prefUnits << endl;
-    	summary << "       --- minor axis:     " << minor.getValue();
-    	if (includeUncertainties) {
-    	    summary << " +/- " << minorErr.getValue();
-    	}
-    	summary << " "<< prefUnits << endl;
-    	summary << setprecision(precision2);
-    	summary << "       --- position angle: " << pa;
-    	if (includeUncertainties) {
-    		summary << " +/- " << dpa;
-    	}
-    	summary << " deg" << endl;
-    	return summary.str();
     }
 
     String ImageFitter::_fluxToString(uInt compNumber) const {
@@ -793,7 +446,7 @@ namespace casa {
         fluxes << "Flux ---" << endl;
 
         if (! _noBeam) {
-        	precision = _precision(fd, Vector<Double>());
+        	precision = precisionForValueErrorPairs(fd, Vector<Double>());
         	fluxes << std::fixed << setprecision(precision);
         	fluxes << "       --- Integrated:   " << fluxDensity.getValue()
 					<< " +/- " << fluxDensityError.getValue() << " "
@@ -816,12 +469,12 @@ namespace casa {
         Vector<Double> pi(2);
         pi[0] = peakIntensity.getValue();
         pi[1] = peakIntensityError.getValue();
-        precision = _precision(pi, Vector<Double>());
+        precision = precisionForValueErrorPairs(pi, Vector<Double>());
         fluxes << std::fixed << setprecision(precision);
         fluxes << "       --- Peak:         " << peakIntensity.getValue()
  			<< " +/- " << peakIntensityError.getValue() << " "
  			<< peakIntensity.getUnit() << endl;
-        fluxes << "       --- Polarization: " << stokesString << endl;
+        fluxes << "       --- Polarization: " << _stokesString << endl;
         return fluxes.str();
     }
 
@@ -863,90 +516,73 @@ namespace casa {
     }
 
     void ImageFitter::_writeLogfile(const String& output) const {
-    	File log(logfileName);
-    	if(log.exists()) {
-    		if (log.isWritable()) {
-    			if (logfileAppend) {
-    				Int fd = open(logfileName.c_str(), O_RDWR | O_APPEND);
-    				FiledesIO fio(fd);
-    				fio.write(output.length(), output.c_str());
-    				FiledesIO::close(fd);
-
-    				*itsLog << LogIO::NORMAL << "Appended results to file "
-    						<< logfileName << LogIO::POST;
-    			}
-    			else {
-    				if (log.canCreate()) {
-    					Int fd = FiledesIO::create(logfileName.c_str());
-    					FiledesIO fio (fd);
-    					fio.write(output.length(), output.c_str());
-    					FiledesIO::close(fd);
-    					*itsLog << LogIO::NORMAL << "Overwrote file "
-    							<< logfileName << " with new log file"
-    							<< LogIO::POST;
-    				}
-    			}
-    		}
-    		else {
-    			*itsLog << LogIO::WARN << "Unable to write to file "
-    					<< logfileName << LogIO::POST;
-    		}
-    	}
-    	else {
-    		if (log.canCreate()) {
-    			Int fd = FiledesIO::create(logfileName.c_str());
-    			FiledesIO fio (fd);
+    	File log(_logfileName);
+    	switch (File::FileWriteStatus status = log.getWriteStatus()) {
+    	case File::OVERWRITABLE:
+    		if (logfileAppend) {
+    			Int fd = open(_logfileName.c_str(), O_RDWR | O_APPEND);
+    			FiledesIO fio(fd, _logfileName.c_str());
     			fio.write(output.length(), output.c_str());
     			FiledesIO::close(fd);
-    			*itsLog << LogIO::NORMAL << "Created log file "
-    					<< logfileName << LogIO::POST;
+    			*_log << LogIO::NORMAL << "Appended results to file "
+    					<< _logfileName << LogIO::POST;
     		}
-    		else {
-    			*itsLog << LogIO::WARN << "Cannot create log file "
-    					<< logfileName << LogIO::POST;
+    		// no break here to fall through to the File::CREATABLE block if logFileAppend is false
+    	case File::CREATABLE:
+    		if (status == File::CREATABLE || ! logfileAppend) {
+    			// can fall throw from previous case block so status can be File::OVERWRITABLE
+    			String action = (status == File::OVERWRITABLE) ? "Overwrote" : "Created";
+    			Int fd = FiledesIO::create(_logfileName.c_str());
+    			FiledesIO fio (fd, _logfileName.c_str());
+    			fio.write(output.length(), output.c_str());
+    			FiledesIO::close(fd);
+    			*_log << LogIO::NORMAL << action << " file "
+    					<< _logfileName << " with new log file"
+    					<< LogIO::POST;
     		}
+    		break;
+    	default:
+    		// checks to see if the log file is not creatable or not writeable should have already been
+    		// done and if so _logFileName set to the empty string so this method wouldn't be called in
+    		// those cases.
+    		*_log << "Programming logic error. This block should never be reached" << LogIO::EXCEPTION;
     	}
     }
 
     void ImageFitter::_writeNewEstimatesFile() const {
     	ostringstream out;
     	for (uInt i=0; i<results.nelements(); i++) {
-    		out << peakIntensities[i].getValue() << ", "
-    				<< pixelPositions[i][0] << ", " << pixelPositions[i][1] << ", "
+
+        	MDirection mdir = results.getRefDirection(i);
+           	Quantity lat = mdir.getValue().getLat("rad");
+            Quantity longitude = mdir.getValue().getLong("rad");
+    		Vector<Double> world(4,0), pixel(4,0);
+    		_image->coordinates().toWorld(world, pixel);
+    		world[0] = longitude.getValue();
+    		world[1] = lat.getValue();
+    		if (_image->coordinates().toPixel(pixel, world)) {
+    			out << peakIntensities[i].getValue() << ", "
+    				<< pixel[0] << ", " << pixel[1] << ", "
     				<< majorAxes[i] << ", " << minorAxes[i] << ", "
     				<< positionAngles[i] << endl;
+    		}
+    		else {
+    			*_log << LogIO::WARN << "Unable to calculate pixel location of "
+    				<< "component number " << i << " so cannot write new estimates"
+    				<< "file" << LogIO::POST;
+    			return;
+    		}
     	}
     	String output = out.str();
-    	File estimates(newEstimatesFileName);
-    	if(estimates.exists()) {
-    		if (estimates.isWritable()) {
-    			Int fd = FiledesIO::create(newEstimatesFileName.c_str());
-    			FiledesIO fio(fd);
-    			fio.write(output.length(), output.c_str());
-    			FiledesIO::close(fd);
-    			*itsLog << LogIO::NORMAL << "Overwrote file "
-    					<< newEstimatesFileName << " with new estimates file"
-    					<< LogIO::POST;
-    		}
-    		else {
-    			*itsLog << LogIO::WARN << "Unable to write to file "
-    					<< newEstimatesFileName << LogIO::POST;
-    		}
-    	}
-    	else {
-    		if (estimates.canCreate()) {
-    			Int fd = FiledesIO::create(newEstimatesFileName.c_str());
-    			FiledesIO fio (fd);
-    			fio.write(output.length(), output.c_str());
-    			FiledesIO::close(fd);
-    			*itsLog << LogIO::NORMAL << "Created estimates file "
-    					<< newEstimatesFileName << LogIO::POST;
-    		}
-    		else {
-    			*itsLog << LogIO::WARN << "Cannot create estimates file "
-    					<< newEstimatesFileName << LogIO::POST;
-    		}
-    	}
+    	File estimates(_newEstimatesFileName);
+    	String action = (estimates.getWriteStatus() == File::OVERWRITABLE) ? "Overwrote" : "Created";
+    	Int fd = FiledesIO::create(_newEstimatesFileName.c_str());
+    	FiledesIO fio(fd, _logfileName.c_str());
+    	fio.write(output.length(), output.c_str());
+    	FiledesIO::close(fd);
+    	*_log << LogIO::NORMAL << action << " file "
+    		<< _newEstimatesFileName << " with new estimates file"
+    		<< LogIO::POST;
     }
 }
 

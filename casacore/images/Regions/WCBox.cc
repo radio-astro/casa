@@ -500,56 +500,51 @@ String WCBox::toBoxString() const
       wSp= (itsCSys.worldAxes(spInd))[0];
       spCoord=itsCSys.spectralCoordinate(spInd);
    }
+   Int dirInd = itsCSys.findCoordinate(Coordinate::DIRECTION);
+   DirectionCoordinate dirCoord;
+   Int wDr=-1;
+   if (dirInd>=0){
+      wDr= (itsCSys.worldAxes(dirInd))[0];
+      dirCoord=itsCSys.directionCoordinate(dirInd);
+   }
 
    const uInt nAxes = itsPixelAxes.nelements();
 
    String ret = "worldbox J2000 ";
-   for (uInt j=0; j<nAxes; j++) {
-      uInt ax = -1;
-      for (uInt k=0; k<nAxes; k++) {
-         if (itsPixelAxes(k) == j) {
-            ax = k;
-            break;
-         }
-      }
-      if (wSt == ax) {
-         Stokes::StokesTypes tpblc;
-         Stokes::StokesTypes tptrc;
-         stCoord.toWorld(tpblc, Int(itsBlc(ax).getValue())); 
-         stCoord.toWorld(tptrc, Int(itsTrc(ax).getValue()));
-         ret += "['" + String::toString(Stokes::name(tpblc)) + 
-             "', '" + String::toString(Stokes::name(tptrc)) +
-             "'] ";
-      }
-      else if (wSp == ax) {
-         ret += "['TOPO " + String::toString(itsBlc(ax).getValue()) + 
-             itsBlc(ax).getUnit() + "', 'TOPO " + 
-             String::toString(itsTrc(ax).getValue()) +
-             itsTrc(ax).getUnit() + "'] ";
-      }
-      else {
-            
-         ostringstream tr;
-         tr.precision(15);
-         //tr.width(18);
-         tr << itsTrc(ax).getValue(); 
-         String a = tr.str();
-         ostringstream bl;
-         bl.precision(15);
-         //bl.width(18);
-         bl << itsBlc(ax).getValue(); 
-         String b = bl.str();
-         ret += "['" + b + 
-             itsBlc(ax).getUnit() + "', '" + 
-             a +
-             itsTrc(ax).getUnit() + "'] ";
+   for (Int j = 0; j < 2; j++) {
+      ostringstream tr;
+      tr.precision(15);
+      //tr.width(18);
+      tr << itsTrc(wDr + j).getValue(); 
+      String a = tr.str();
+      ostringstream bl;
+      bl.precision(15);
+      //bl.width(18);
+      bl << itsBlc(wDr + j).getValue(); 
+      String b = bl.str();
+      ret += "['" + b + 
+           itsBlc(wDr + j).getUnit() + "', '" + 
+           a +
+           itsTrc(wDr + j).getUnit() + "'] ";
 
-         //ret += "['" + String::toString(itsBlc(ax).getValue()) + 
-         //    itsBlc(ax).getUnit() + "', '" + 
-         //    String::toString(itsTrc(ax).getValue()) +
-         //    itsTrc(ax).getUnit() + "'] ";
-      }
+      //ret += "['" + String::toString(itsBlc(wDr).getValue()) + 
+      //    itsBlc(wDr).getUnit() + "', '" + 
+      //    String::toString(itsTrc(wDr).getValue()) +
+      //    itsTrc(wDr).getUnit() + "'] ";
    }
+
+   ret += "['TOPO " + String::toString(itsBlc(wSp).getValue()) + 
+          itsBlc(wSp).getUnit() + "', 'TOPO " + 
+          String::toString(itsTrc(wSp).getValue()) +
+          itsTrc(wSp).getUnit() + "'] ";
+
+   Stokes::StokesTypes tpblc;
+   Stokes::StokesTypes tptrc;
+   stCoord.toWorld(tpblc, Int(itsBlc(wSt).getValue())); 
+   stCoord.toWorld(tptrc, Int(itsTrc(wSt).getValue()));
+   ret += "['" + String::toString(Stokes::name(tpblc)) + 
+          "', '" + String::toString(Stokes::name(tptrc)) +
+          "'] ";
    return ret + "1\n";
 }
 
@@ -737,7 +732,7 @@ void WCBox::setChanExt (const Double chanStart, const Double chanEnd) {
    const uInt nAxes = itsPixelAxes.nelements();
 
    //simplest
-   //if (wSp >= 0 && wSp <= nAxes) {
+   //if (wSp >= 0 && wSp < nAxes) {
    //   itsBlc(wSp) = Quantity(chanStart, "pix"); 
    //   itsTrc(wSp) = Quantity(chanEnd, "pix");
    //}
@@ -754,7 +749,6 @@ void WCBox::setChanExt (const Double chanStart, const Double chanEnd) {
    Double a;
    Double b;
    if (wSp >= 0 & wSp < nAxes) {
-      
       if (spCoord.toWorld(a, chanStart) && 
           spCoord.toWorld(b, chanEnd)) {
          itsBlc(wSp).setUnit("s-1");
@@ -762,7 +756,6 @@ void WCBox::setChanExt (const Double chanStart, const Double chanEnd) {
          itsTrc(wSp).setUnit("s-1");
          itsTrc(wSp).setValue(b);
       }
-      
    }
 
 }

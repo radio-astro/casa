@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: fits2image.cc 20491 2009-01-16 08:33:56Z gervandiepen $
+//# $Id: fits2image.cc 20932 2010-07-08 09:06:37Z gervandiepen $
 
 #include <casa/aips.h>
 #include <casa/System/Aipsrc.h>
@@ -49,6 +49,10 @@ int main(int argc, char **argv)
 
     String root = Aipsrc::aipsRoot();
     String name = root + "/data/demo/Images/test_image.fits";
+    if (!File(name).exists()) {
+      cout << "fits2image: " + name + " does not exist" << endl;
+      return 3;    // untested
+    }
     inp.create("in", name, "Input FITS file name", "string");
     inp.create("out", "fits2image_tmp.out", "Output AIPS++ Image name",
 	       "string");

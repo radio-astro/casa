@@ -29,6 +29,7 @@
 #include <casa/Arrays/Vector.h>
 #include <ms/MeasurementSets/MSSelection.h>
 #include <string.h>
+#include <iostream>
 namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //----------------------------------------------------------------------------
@@ -167,8 +168,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     j0=0;j1=str.length()-1;
     if (onlyends)
       {
-	while(str[j0] == ' ') j0++;
-	while(str[j1] == ' ') j1--;
+	while((j0 <= j1) && (str[j0] == ' ')) j0++;
+	while((j1 >= j0) && (str[j1] == ' ')) j1--;
       }
     return str.substr(j0,j1-j0+1);
   }

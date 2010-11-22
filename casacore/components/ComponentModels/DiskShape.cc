@@ -321,6 +321,15 @@ Double DiskShape::calcSample(const MDirection::MVType& compDirValue,
   return 0.0;
 }
 
+String DiskShape::sizeToString() const {
+	return TwoSidedShape::sizeToString(
+		Quantity(itsMajValue, "rad"),
+		Quantity(itsMinValue, "rad"),
+		Quantity(itsPaValue, "rad"),
+		False
+	);
+}
+
 // Local Variables: 
 // compile-command: "gmake DiskShape"
 // End: 

@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: tHostInfo.cc 20749 2009-09-30 14:24:05Z gervandiepen $
+//# $Id: tHostInfo.cc 20891 2010-05-17 07:10:15Z gervandiepen $
 
 // For sleep() and ssize_t.
 #include <stdio.h>

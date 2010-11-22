@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Table.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: Table.cc 20952 2010-09-06 11:50:09Z gervandiepen $
 
 #include <tables/Tables/Table.h>
 #include <tables/Tables/SetupNewTab.h>
@@ -74,41 +74,44 @@ Table::Table()
     baseTabPtr_p->link();
 }
 
-Table::Table (const String& name, TableOption option)
+  Table::Table (const String& name, TableOption option, const TSMOption& tsmOpt)
 : baseTabPtr_p     (0),
   isCounted_p      (True),
   lastModCounter_p (0)
 {
-    open (name, "", option, TableLock());
+  open (name, "", option, TableLock(), tsmOpt);
 }
 
 Table::Table (const String& name, const TableLock& lockOptions,
-	      TableOption option)
+	      TableOption option, const TSMOption& tsmOpt)
 : baseTabPtr_p     (0),
   isCounted_p      (True),
   lastModCounter_p (0)
 {
-    open (name, "", option, lockOptions);
+  open (name, "", option, lockOptions, tsmOpt);
 }
     
-Table::Table (const String& name, const String& type, TableOption option)
+  Table::Table (const String& name, const String& type, TableOption option,
+                const TSMOption& tsmOpt)
 : baseTabPtr_p     (0),
   isCounted_p      (True),
   lastModCounter_p (0)
 {
-    open (name, type, option, TableLock());
+  open (name, type, option, TableLock(), tsmOpt);
 }
     
 Table::Table (const String& name, const String& type,
-	      const TableLock& lockOptions, TableOption option)
+	      const TableLock& lockOptions, TableOption option,
+              const TSMOption& tsmOpt)
 : baseTabPtr_p     (0),
   isCounted_p      (True),
   lastModCounter_p (0)
 {
-    open (name, type, option, lockOptions);
+  open (name, type, option, lockOptions, tsmOpt);
 }
 
-Table::Table (Table::TableType type, Table::EndianFormat endianFormat)
+  Table::Table (Table::TableType type, Table::EndianFormat endianFormat,
+                const TSMOption& tsmOpt)
 : baseTabPtr_p     (0),
   isCounted_p      (True),
   lastModCounter_p (0)
@@ -118,24 +121,24 @@ Table::Table (Table::TableType type, Table::EndianFormat endianFormat)
         baseTabPtr_p = new MemoryTable (newtab, 0, False);
     } else {
         baseTabPtr_p = new PlainTable (newtab, 0, False,
-				       TableLock(), endianFormat);
+				       TableLock(), endianFormat, tsmOpt);
     }
     baseTabPtr_p->link();
 }
 
 Table::Table (SetupNewTable& newtab, uInt nrrow, Bool initialize,
-	      Table::EndianFormat endianFormat)
+	      Table::EndianFormat endianFormat, const TSMOption& tsmOpt)
 : baseTabPtr_p     (0),
   isCounted_p      (True),
   lastModCounter_p (0)
 {
     baseTabPtr_p = new PlainTable (newtab, nrrow, initialize,
-				   TableLock(), endianFormat);
+				   TableLock(), endianFormat, tsmOpt);
     baseTabPtr_p->link();
 }
 Table::Table (SetupNewTable& newtab, Table::TableType type,
 	      uInt nrrow, Bool initialize,
-	      Table::EndianFormat endianFormat)
+	      Table::EndianFormat endianFormat, const TSMOption& tsmOpt)
 : baseTabPtr_p     (0),
   isCounted_p      (True),
   lastModCounter_p (0)
@@ -144,14 +147,14 @@ Table::Table (SetupNewTable& newtab, Table::TableType type,
         baseTabPtr_p = new MemoryTable (newtab, nrrow, initialize);
     } else {
         baseTabPtr_p = new PlainTable (newtab, nrrow, initialize,
-				       TableLock(), endianFormat);
+				       TableLock(), endianFormat, tsmOpt);
     }
     baseTabPtr_p->link();
 }
 Table::Table (SetupNewTable& newtab, Table::TableType type,
 	      const TableLock& lockOptions,
 	      uInt nrrow, Bool initialize,
-	      Table::EndianFormat endianFormat)
+	      Table::EndianFormat endianFormat, const TSMOption& tsmOpt)
 : baseTabPtr_p     (0),
   isCounted_p      (True),
   lastModCounter_p (0)
@@ -160,29 +163,31 @@ Table::Table (SetupNewTable& newtab, Table::TableType type,
         baseTabPtr_p = new MemoryTable (newtab, nrrow, initialize);
     } else {
         baseTabPtr_p = new PlainTable (newtab, nrrow, initialize,
-				       lockOptions, endianFormat);
+				       lockOptions, endianFormat, tsmOpt);
     }
     baseTabPtr_p->link();
 }
 Table::Table (SetupNewTable& newtab, TableLock::LockOption lockOption,
-	      uInt nrrow, Bool initialize, Table::EndianFormat endianFormat)
+	      uInt nrrow, Bool initialize, Table::EndianFormat endianFormat,
+              const TSMOption& tsmOpt)
 : baseTabPtr_p     (0),
   isCounted_p      (True),
   lastModCounter_p (0)
 {
     baseTabPtr_p = new PlainTable (newtab, nrrow, initialize,
 				   TableLock(lockOption),
-				   endianFormat);
+				   endianFormat, tsmOpt);
     baseTabPtr_p->link();
 }
 Table::Table (SetupNewTable& newtab, const TableLock& lockOptions,
-	      uInt nrrow, Bool initialize, Table::EndianFormat endianFormat)
+	      uInt nrrow, Bool initialize, Table::EndianFormat endianFormat,
+              const TSMOption& tsmOpt)
 : baseTabPtr_p     (0),
   isCounted_p      (True),
   lastModCounter_p (0)
 {
     baseTabPtr_p = new PlainTable (newtab, nrrow, initialize, lockOptions,
-				   endianFormat);
+				   endianFormat, tsmOpt);
     baseTabPtr_p->link();
 }
 
@@ -202,26 +207,26 @@ Table::Table (const Block<Table>& tables,
 
 Table::Table (const Block<String>& tableNames,
 	      const Block<String>& subTables,
-	      TableOption option)
+	      TableOption option, const TSMOption& tsmOpt)
 : baseTabPtr_p     (0),
   isCounted_p      (True),
   lastModCounter_p (0)
 {
     baseTabPtr_p = new ConcatTable (tableNames, subTables,
-				    option, TableLock());
+				    option, TableLock(), tsmOpt);
     baseTabPtr_p->link();
 }
 
 Table::Table (const Block<String>& tableNames,
 	      const Block<String>& subTables,
 	      const TableLock& lockOptions,
-	      TableOption option)
+	      TableOption option, const TSMOption& tsmOpt)
 : baseTabPtr_p     (0),
   isCounted_p      (True),
   lastModCounter_p (0)
 {
     baseTabPtr_p = new ConcatTable (tableNames, subTables,
-				    option, lockOptions);
+				    option, lockOptions, tsmOpt);
     baseTabPtr_p->link();
 }
 
@@ -418,7 +423,7 @@ Table Table::copyToMemoryTable (const String& newName, Bool noRows) const
 
 //# Open the table file and read it in if necessary.
 void Table::open (const String& name, const String& type, int tableOption,
-		  const TableLock& lockOptions)
+		  const TableLock& lockOptions, const TSMOption& tsmOpt)
 {
     //# Option Delete is effectively the same as Old followed by a
     //# markForDelete.
@@ -435,13 +440,30 @@ void Table::open (const String& name, const String& type, int tableOption,
     if (btp != 0) {
 	baseTabPtr_p = btp;
     }else{
-	//# Check if the table exists.
-	if (! Table::isReadable (absName)) {
-	    throw (TableNoFile (absName));
-	}
+        //# Check if the table directory exists.
+        File dir(absName);
+        if (!dir.exists()) {
+            throw TableNoFile(absName);
+        }
+        if (!dir.isDirectory()) {
+            throw TableNoDir(absName);
+        }
+        //# Check if the table description exists.
+        String desc = Table::fileName(absName);
+        File file (desc);
+        if (!file.exists()) {
+            throw TableNoDescFile(desc);
+        }
+        //# Read the file type and verify that it is a table
+        AipsIO ios (desc);
+        String t = ios.getNextType();
+        if (t != "Table") {
+            throw TableInvType(absName, "Table", t);
+        }
+
 	// Create the BaseTable object and add a PlainTable to the cache.
 	baseTabPtr_p = makeBaseTable (absName, type, tableOption,
-				      lockOptions, True, 0);
+				      lockOptions, tsmOpt, True, 0);
 	if (baseTabPtr_p == 0) {
 	    throw (AllocError("Table::open",1));
 	}
@@ -454,7 +476,8 @@ void Table::open (const String& name, const String& type, int tableOption,
 
 BaseTable* Table::makeBaseTable (const String& name, const String& type,
 				 int tableOption, const TableLock& lockOptions,
-				 Bool addToCache, uInt locknr)
+				 const TSMOption& tsmOpt,
+                                 Bool addToCache, uInt locknr)
 {
     BaseTable* baseTabPtr = 0;
     //# Determine the file option for the table.
@@ -472,14 +495,14 @@ BaseTable* Table::makeBaseTable (const String& name, const String& type,
     ios >> tp;
     if (tp == "PlainTable") {
 	baseTabPtr = new PlainTable (ios, version, name, type, nrrow,
-				     tableOption, lockOptions, addToCache,
-				     locknr);
+				     tableOption, lockOptions, tsmOpt,
+                                     addToCache, locknr);
     } else if (tp == "RefTable") {
 	baseTabPtr = new RefTable (ios, name, nrrow, tableOption,
-				     lockOptions);
+                                   lockOptions, tsmOpt);
     } else if (tp == "ConcatTable") {
 	baseTabPtr = new ConcatTable (ios, name, nrrow, tableOption,
-				      lockOptions);
+				      lockOptions, tsmOpt);
     } else {
 	throw (TableInternalError
 	       ("Table::open: unknown table kind " + tp));
@@ -630,16 +653,28 @@ void Table::removeColumn (const String& columnName)
 Vector<uInt> Table::rowNumbers () const
     { return baseTabPtr_p->rowNumbers(); }
 
-Vector<uInt> Table::rowNumbers (const Table& that) const
+Vector<uInt> Table::rowNumbers (const Table& that, Bool tryFast) const
 {
+    Vector<uInt> thisRows(rowNumbers());
     const uInt highValue = 4294967295u;
     // If that is the root table of this, we can simply use rowNumbers().
-    if (that.baseTabPtr_p == baseTabPtr_p->root()) {
-        return rowNumbers();
+    // The same is true if empty.
+    if (that.baseTabPtr_p == baseTabPtr_p->root()  ||  nrow() == 0) {
+      return thisRows;
     }
-    // Get the rowNumbers of that and transform it to a vector
+    // Get the rowNumbers of that.
+    Vector<uInt> thatRows(that.rowNumbers());
+    // Try if a fast conversion can be done.
+    // That is the case if this is not a superset of that and if orders match.
+    if (tryFast) {
+      Vector<uInt> outRows;
+      if (fastRowNumbers (thisRows, thatRows, outRows)) {
+        return outRows;
+      }
+    }
+    // Alas, we have to do it the hard way.
+    // Transform the rowNumbers of that to a vector
     // mapping rownr in root to rownr in that.
-    Vector<uInt> thatRows = that.rowNumbers();
     uInt nrthat = thatRows.nelements();
     uInt maxv = nrthat;
     Vector<uInt> rownrs(thatRows);
@@ -653,7 +688,7 @@ Vector<uInt> Table::rowNumbers (const Table& that) const
     Bool deleteIt;
     uInt* rownrsData = rownrs.getStorage (deleteIt);
     // Now make the mapping.
-    // thatRows is not needed anymore, sp resize at the end to reclaim memory.
+    // thatRows is not needed anymore, so resize at the end to reclaim memory.
     if (! that.isRootTable()) {
         Bool deleteThat;
         const uInt* thatRowData = thatRows.getStorage (deleteThat);
@@ -666,7 +701,7 @@ Vector<uInt> Table::rowNumbers (const Table& that) const
     // Use the first mapping to map the rownrs in this to rownrs in that.
     // First get the rownrs of this in root to achieve it.
     // Use a very high value if the rownr is too high.
-    Vector<uInt> thisRows = rowNumbers().copy();
+    thisRows.unique();
     Bool deleteThis;
     uInt* thisRowData = thisRows.getStorage (deleteThis);
     uInt nrthis = thisRows.nelements();
@@ -682,6 +717,42 @@ Vector<uInt> Table::rowNumbers (const Table& that) const
                                         // by the SGI compiler.
     rownrs.freeStorage (dummy, deleteIt);
     return thisRows;
+}
+
+Bool Table::fastRowNumbers (const Vector<uInt>& v1, const Vector<uInt>& v2,
+                            Vector<uInt>& rows) const
+{
+  // v1 cannot be a superset of v2.
+  if (v1.size() > v2.size()) {
+    return False;
+  }
+  rows.resize (v1.size());
+  if (v1.empty()) {
+    return True;
+  }
+  Bool d1,d2,d3;
+  const uInt* r1 = v1.getStorage (d1);
+  const uInt* r2 = v2.getStorage (d2);
+  uInt* routc = rows.getStorage (d3);
+  uInt* rout = routc;
+  uInt i1=0;
+  uInt i2=0;
+  Bool ok = True;
+  while (ok) {
+    if (r1[i1] == r2[i2]) {
+      *rout++ = i2;
+      if (++i1 >= v1.size()) {
+        break;
+      }
+    }
+    if (++i2 >= v2.size()) {
+      ok = False;
+    }
+  }
+  v1.freeStorage (r1, d1);
+  v2.freeStorage (r2, d2);
+  rows.putStorage (routc, d3);
+  return ok;
 }
 
 //# Sort on a single column.

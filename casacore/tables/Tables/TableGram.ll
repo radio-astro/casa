@@ -24,7 +24,7 @@
                            520 Edgemont Road
                            Charlottesville, VA 22903-2475 USA
 
-    $Id: TableGram.ll 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+    $Id: TableGram.ll 20923 2010-07-05 11:37:13Z gervandiepen $
 */
 
 /* yy_unput is not used, so let flex not generate it, otherwise picky
@@ -379,8 +379,7 @@ PATTREX   {OPERREX}{WHITE}({PATTEX}|{DISTEX})
 {OR}      { tableGramPosition() += yyleng; return OR; }
 "!"       { tableGramPosition() += yyleng; return NOT; }
 {NOT}     { tableGramPosition() += yyleng; return NOT; }
- /*"^"       { tableGramPosition() += yyleng; return BITXOR; } was POWER */
-"^"       { throw TableInvExpr ("^ is deprecated; will mean XOR in next release"); }
+"^"       { tableGramPosition() += yyleng; return BITXOR; }
 {XOR}     { tableGramPosition() += yyleng; return BITXOR; }
 "**"      { tableGramPosition() += yyleng; return POWER; }
 "*"       { tableGramPosition() += yyleng; return TIMES; }

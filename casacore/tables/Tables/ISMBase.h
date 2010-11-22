@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ISMBase.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ISMBase.h 20883 2010-04-27 06:02:21Z gervandiepen $
 
 #ifndef TABLES_ISMBASE_H
 #define TABLES_ISMBASE_H
@@ -126,7 +126,12 @@ public:
     uInt version() const;
 
     // Set the cache size (in buckets).
-    void setCacheSize (uInt cacheSize);
+    // If <src>canExceedNrBuckets=True</src>, the given cache size can be
+    // larger than the nr of buckets in the file. In this way the cache can
+    // be made large enough for a future file extnsion.
+    // Otherwise, it is limited to the actual number of buckets. This is useful
+    // if one wants the entire file to be cached.
+   void setCacheSize (uInt cacheSize, Bool canExceedNrBuckets);
 
     // Get the current cache size (in buckets).
     uInt cacheSize() const;

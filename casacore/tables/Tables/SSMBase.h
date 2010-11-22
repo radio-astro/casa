@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SSMBase.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: SSMBase.h 20883 2010-04-27 06:02:21Z gervandiepen $
 
 #ifndef TABLES_SSMBASE_H
 #define TABLES_SSMBASE_H
@@ -192,7 +192,12 @@ public:
   uInt getVersion() const;
   
   // Set the cache size (in buckets).
-  void setCacheSize (uInt aCacheSize);
+  // If <src>canExceedNrBuckets=True</src>, the given cache size can be
+  // larger than the nr of buckets in the file. In this way the cache can
+  // be made large enough for a future file extnsion.
+  // Otherwise, it is limited to the actual number of buckets. This is useful
+  // if one wants the entire file to be cached.
+  void setCacheSize (uInt aCacheSize, Bool canExceedNrBuckets=True);
 
   // Get the current cache size (in buckets).
   uInt getCacheSize() const;

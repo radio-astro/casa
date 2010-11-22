@@ -695,7 +695,7 @@ namespace casa { //# name space casa begins
     
       *itsLog << LogIO::WARN  << tabName << " is not valid or writeable table" 
 	    << LogIO::POST;
-      return False;
+      return String("");
 
     }
     TableRecord lerec(rec);

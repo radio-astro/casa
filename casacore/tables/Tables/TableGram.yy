@@ -24,7 +24,7 @@
                            520 Edgemont Road
                            Charlottesville, VA 22903-2475 USA
 
-    $Id: TableGram.yy 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+    $Id: TableGram.yy 20944 2010-08-30 07:48:24Z gervandiepen $
 */
 
 /*
@@ -99,12 +99,13 @@ using namespace casa;
 %type <node> tfnamen
 %type <node> tfname
 %type <nodeselect> selcomm
+%type <nodeselect> countcomm
 %type <node> updcomm
 %type <node> inscomm
 %type <node> delcomm
-%type <node> countcomm
 %type <node> calccomm
 %type <node> cretabcomm
+%type <nodeselect> subselcnt
 %type <nodeselect> subquery
 %type <nodeselect> selrow
 %type <node> selcol
@@ -183,7 +184,7 @@ TaQLRegexNode* valre;
 TaQLNode* node;
 TaQLConstNode* nodename;
 TaQLMultiNode* nodelist;
-TaQLSelectNode* nodeselect;
+TaQLQueryNode* nodeselect;
 TaQLColNodeRep* nodecolrep;
 }
 
@@ -228,6 +229,19 @@ command:   selcomm
              { TaQLNode::theirNode = *$1; }
          ;
 
+subselcnt: subquery {
+               $$ = $1;
+	   }
+         | LPAREN countcomm RPAREN {
+               $$ = $2;
+	       $$->setBrackets();
+	   }
+         | LBRACKET countcomm RBRACKET {
+               $$ = $2;
+	       $$->setBrackets();
+	   }
+         ;
+
 subquery:  LPAREN selcomm RPAREN {
                $$ = $2;
 	       $$->setBrackets();
@@ -244,13 +258,13 @@ selcomm:   SELECT selrow {
          ;
 
 selrow:    selcol FROM tables whexpr groupby having order limitoff given {
-               $$ = new TaQLSelectNode(
+               $$ = new TaQLQueryNode(
                     new TaQLSelectNodeRep (*$1, *$3, 0, *$4, *$5, *$6,
 					   *$7, *$8, *$9));
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
          | selcol into FROM tables whexpr groupby having order limitoff {
-               $$ = new TaQLSelectNode(
+               $$ = new TaQLQueryNode(
 		    new TaQLSelectNodeRep (*$1, *$4, 0, *$5, *$6, *$7,
 					   *$8, *$9, *$2));
 	       TaQLNode::theirNodesCreated.push_back ($$);
@@ -277,6 +291,13 @@ normcol:   columns {
                     new TaQLColumnsNodeRep (False, *$1));
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
+
+countcomm: COUNT normcol FROM tables whexpr {
+	       $$ = new TaQLQueryNode(
+                    new TaQLCountNodeRep (*$2, *$4, *$5));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+           }
+         ;
 
 updcomm:   UPDATE updrow {
                $$ = $2;
@@ -369,13 +390,6 @@ insvlist:  insvlist COMMA orexpr {
 delcomm:   DELETE FROM tables whexpr order limitoff {
 	       $$ = new TaQLNode(
                     new TaQLDeleteNodeRep (*$3, *$4, *$5, *$6));
-	       TaQLNode::theirNodesCreated.push_back ($$);
-           }
-         ;
-
-countcomm: COUNT normcol FROM tables whexpr {
-	       $$ = new TaQLNode(
-                    new TaQLCountNodeRep (*$2, *$4, *$5));
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
          ;
@@ -748,7 +762,7 @@ tfnamen:   tfname {
            }
          ;
 
-tfname:    subquery {
+tfname:    subselcnt {
 	       theFromQueryDone = True;
 	       $1->setFromExecute();
                $$ = $1;
@@ -1031,6 +1045,11 @@ simexpr:   simbexpr
 simbexpr:  LPAREN orexpr RPAREN
                { $$ = $2; }
          | NAME LPAREN elemlist RPAREN {
+	       $$ = new TaQLNode(
+                    new TaQLFuncNodeRep ($1->getString(), *$3));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+	   }
+         | FLDNAME LPAREN elemlist RPAREN {
 	       $$ = new TaQLNode(
                     new TaQLFuncNodeRep ($1->getString(), *$3));
 	       TaQLNode::theirNodesCreated.push_back ($$);

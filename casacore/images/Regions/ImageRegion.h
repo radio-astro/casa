@@ -120,6 +120,21 @@ public:
     // Comparison
     virtual Bool operator==(const LattRegionHolder& other) const;
 
+    // Create an ImageRegion from a lattice expression. Returned pointer
+    // is created via new(); it is the caller's responsibility to delete it.
+    // This method was moved from ImageAnalysis.
+    static ImageRegion* fromLatticeExpression(const String& latticeExpression);
+
+    // Create an ImageRegion from a record. The returned pointer is created via
+    // new() and so callers are responsible for deleting it. If a null pointer is
+    // passed in for <src>logger</src> no logging is done, otherwise informational
+    // messages regarding bounding boxes are emitted to the <src>logger</src> object.
+    // Moved from ImageAnalysis.
+    static ImageRegion* fromRecord(
+    	LogIO *logger, const CoordinateSystem& coords,
+    	const IPosition& imShape, const Record& regionRecord
+    );
+
     // Test if the underlying region is an WCRegion.
     virtual Bool isWCRegion() const;
 

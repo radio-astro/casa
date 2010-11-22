@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableCopy.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: TableCopy.cc 20889 2010-05-17 06:53:39Z gervandiepen $
 
 
 //# Includes
@@ -69,7 +69,7 @@ Table TableCopy::makeEmptyTable (const String& newName,
   }
   // Replace non-writable storage managers by StandardStMan.
   // This is for instance needed for LofarStMan.
-  dminfo = DataManInfo::adjustStMan (dminfo, "StandardStMan");
+  dminfo = DataManInfo::adjustStMan (dminfo, "StandardStMan", True);
   SetupNewTable newtab (newName, tabDesc, option);
   newtab.bindCreate (dminfo);
   return Table(newtab, (noRows ? 0 : tab.nrow()), False, endianFormat);

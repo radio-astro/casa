@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5DataSet.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: HDF5DataSet.h 20901 2010-06-09 07:23:37Z gervandiepen $
 
 #ifndef CASA_HDF5DATASET_H
 #define CASA_HDF5DATASET_H
@@ -92,6 +92,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     HDF5DataSet (const HDF5Object&, const String&, const IPosition& shape,
 		 const IPosition& tileShape, const Int*);
     HDF5DataSet (const HDF5Object&, const String&, const IPosition& shape,
+		 const IPosition& tileShape, const Int64*);
+    HDF5DataSet (const HDF5Object&, const String&, const IPosition& shape,
 		 const IPosition& tileShape, const Float*);
     HDF5DataSet (const HDF5Object&, const String&, const IPosition& shape,
 		 const IPosition& tileShape, const Double*);
@@ -106,6 +108,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // <group>
     HDF5DataSet (const HDF5Object&, const String&, const Bool*);
     HDF5DataSet (const HDF5Object&, const String&, const Int*);
+    HDF5DataSet (const HDF5Object&, const String&, const Int64*);
     HDF5DataSet (const HDF5Object&, const String&, const Float*);
     HDF5DataSet (const HDF5Object&, const String&, const Double*);
     HDF5DataSet (const HDF5Object&, const String&, const Complex*);

@@ -23,7 +23,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-//# $Id: FFTPack.h 20299 2008-04-03 05:56:44Z gervandiepen $
+//# $Id: FFTW.h 20932 2010-07-08 09:06:37Z gervandiepen $
 
 #ifndef SCIMATH_FFTW_H
 #define SCIMATH_FFTW_H
@@ -33,16 +33,23 @@
 #include <casa/Arrays/VectorIter.h>
 #include <casa/Arrays/Matrix.h>
 
-#include <casa/aips.h>
-#include <fftw3.h>
-
 namespace casa {
 
-// <summary>C++ interface to the FFTW library</summary>
+//# Forward Declarations.
+class FFTWPlan;
+class FFTWPlanf;
+
+// <summary> C++ interface to the FFTWw library </summary>
 // <reviewed reviewer="NONE" date="" tests="" demos="">
 // </reviewed>
 // <synopsis>
-//    This is a wrapper of FFTW
+// This is a wrapper of FFTW3.
+// It is only active if FFTW3 was found during the build.
+// If not found, all functions won't do anything at all.
+// 
+// The interface is such that the presence of FFTW3 is only visible
+// in the implementation. The header file does not need to know.
+// In this way external code using this class does not need to set HAVE_FFTW.
 // </synopsis>
 
 class FFTW
@@ -70,18 +77,18 @@ public:
   void c2c(const IPosition &size, Complex *in, Bool forward);
   void c2c(const IPosition &size, DComplex *in, Bool forward);
 
- private:
-  fftwf_plan itsPlanR2Cf;
-  fftw_plan itsPlanR2C;
+private:
+  FFTWPlanf* itsPlanR2Cf;
+  FFTWPlan*  itsPlanR2C;
   
-  fftwf_plan itsPlanC2Rf;
-  fftw_plan itsPlanC2R;
+  FFTWPlanf* itsPlanC2Rf;
+  FFTWPlan*  itsPlanC2R;
   
-  fftwf_plan itsPlanC2CFf;   // forward
-  fftw_plan itsPlanC2CF;
+  FFTWPlanf* itsPlanC2CFf;   // forward
+  FFTWPlan*  itsPlanC2CF;
   
-  fftwf_plan itsPlanC2CBf;   // backward
-  fftw_plan itsPlanC2CB;
+  FFTWPlanf* itsPlanC2CBf;   // backward
+  FFTWPlan*  itsPlanC2CB;
   
   unsigned flags;
 

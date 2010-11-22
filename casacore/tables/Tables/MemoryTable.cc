@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MemoryTable.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: MemoryTable.cc 20889 2010-05-17 06:53:39Z gervandiepen $
 
 
 #include <tables/Tables/MemoryTable.h>
@@ -62,7 +62,7 @@ MemoryTable::MemoryTable (SetupNewTable& newtab, uInt nrrow, Bool initialize)
     }
   }
   //# Check if there are no data managers with equal names.
-  newtab.columnSetPtr()->checkDataManagerNames();
+  newtab.columnSetPtr()->checkDataManagerNames ("MemoryTable");
   //# Get the data from the SetupNewTable object.
   //# Set SetupNewTable object to in use.
   tdescPtr_p  = tdescPtr;
@@ -76,7 +76,8 @@ MemoryTable::MemoryTable (SetupNewTable& newtab, uInt nrrow, Bool initialize)
   //# Initialize the data managers.
   Table tab(this, False);
   nrrowToAdd_p = nrrow;
-  colSetPtr_p->initDataManagers (nrrow, False, tab);
+  colSetPtr_p->initDataManagers (nrrow, False,
+                                 TSMOption(TSMOption::Cache,0,0), tab);
   //# Initialize the columns if needed.
   if (initialize  &&  nrrow > 0) {
     colSetPtr_p->initialize (0, nrrow-1);
@@ -148,9 +149,7 @@ Bool MemoryTable::isWritable() const
 
 void MemoryTable::copy (const String& newName, int tableOption) const
 {
-  // Only use the current data manager info for possible
-  // virtual column engines.
-  Record dmInfo = colSetPtr_p->dataManagerInfo(True);
+  Record dmInfo = colSetPtr_p->dataManagerInfo();
   deepCopy (newName, dmInfo, tableOption, True, Table::AipsrcEndian, False);
 }
 
@@ -159,21 +158,7 @@ void MemoryTable::deepCopy (const String& newName,
 			    int tableOption, Bool, int endianFormat,
 			    Bool noRows) const
 {
-  // Make sure that all columns get by default the StandardStMan.
-  // The given dmInfo is used to overwrite those defaults.
-  // So make StandardStMan the first field to be sure that the possible
-  // following fields overwrite the defaults.
-  Record dmInfo;
-  Record ssm;
-  ssm.define ("TYPE", "StandardStMan");
-  ssm.define ("NAME", "SSM");
-  ssm.defineRecord ("SPEC", Record());
-  ssm.define ("COLUMNS", tdescPtr_p->columnNames());
-  dmInfo.defineRecord (0, ssm);
-  for (uInt i=0; i<dataManagerInfo.nfields(); i++) {
-    dmInfo.defineRecord (i+1, dataManagerInfo.subRecord(i));
-  }
-  trueDeepCopy (newName, dmInfo, tableOption, endianFormat, noRows);
+  trueDeepCopy (newName, dataManagerInfo, tableOption, endianFormat, noRows);
 }
 
 void MemoryTable::rename (const String& newName, int)
@@ -251,50 +236,55 @@ void MemoryTable::removeRow (uInt rownr)
   nrrow_p--;
 }
 
-void MemoryTable::addColumn (const ColumnDesc& columnDesc)
+void MemoryTable::addColumn (const ColumnDesc& columnDesc, Bool)
 {
   Table tab(this, False);
   ColumnDesc cold(columnDesc);
   // Make sure the MemoryStMan is used.
   cold.dataManagerType() = "MemoryStMan";
   cold.dataManagerGroup() = "MSMTAB";
-  colSetPtr_p->addColumn (cold, False, tab);
+  colSetPtr_p->addColumn (cold, False,
+                          TSMOption(TSMOption::Cache,0,0), tab);
 }
 void MemoryTable::addColumn (const ColumnDesc& columnDesc,
-			     const String& dataManager, Bool byName)
+			     const String& dataManager, Bool byName, Bool)
 {
   Table tab(this, False);
   if (byName) {
-    colSetPtr_p->addColumn (columnDesc, dataManager, byName, False, tab);
+    colSetPtr_p->addColumn (columnDesc, dataManager, byName, False,
+                            TSMOption(TSMOption::Cache,0,0), tab);
   } else {
     // Make sure the MemoryStMan is used if no virtual engine is used.
     DataManager* dmptr = DataManager::getCtor(dataManager)
                                                 (dataManager, Record());
-    addColumn (columnDesc, *dmptr);
+    addColumn (columnDesc, *dmptr, False);
     delete dmptr;
   }
 }
 void MemoryTable::addColumn (const ColumnDesc& columnDesc,
-			     const DataManager& dataManager)
+			     const DataManager& dataManager, Bool)
 {
   Table tab(this, False);
   // Make sure the MemoryStMan is used if no virtual engine is used.
   if (dataManager.isStorageManager()) {
-    addColumn (columnDesc);
+    addColumn (columnDesc, False);
   } else {
-    colSetPtr_p->addColumn (columnDesc, dataManager, False, tab);
+    colSetPtr_p->addColumn (columnDesc, dataManager, False,
+                            TSMOption(TSMOption::Cache,0,0), tab);
   }
 }
 void MemoryTable::addColumn (const TableDesc& tableDesc,
-			     const DataManager& dataManager)
+			     const DataManager& dataManager, Bool)
 {
   Table tab(this, False);
   // Make sure the MemoryStMan is used if no virtual engine is used.
   if (dataManager.isStorageManager()) {
     MemoryStMan stman(dataManager.dataManagerName());
-    colSetPtr_p->addColumn (tableDesc, stman, False, tab);
+    colSetPtr_p->addColumn (tableDesc, stman, False,
+                            TSMOption(TSMOption::Cache,0,0), tab);
   } else {
-    colSetPtr_p->addColumn (tableDesc, dataManager, False, tab);
+    colSetPtr_p->addColumn (tableDesc, dataManager, False,
+                            TSMOption(TSMOption::Cache,0,0), tab);
   }
 }
 

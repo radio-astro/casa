@@ -318,18 +318,19 @@ Int LatticeCleaner<T>::clean(Lattice<T>& model,
   LogIO os(LogOrigin("LatticeCleaner", "clean()", WHERE));
 
   T tmpMaximumResidual;  
+  tmpMaximumResidual=T();
 
   Int nScalesToClean=itsNscales;
   if (itsCleanType==CleanEnums::HOGBOM) {
-    os << LogIO::NORMAL1 << "Using the Hogbom clean algorithm" << LogIO::POST;
+    os << LogIO::NORMAL1 << "Hogbom clean algorithm" << LogIO::POST;
     nScalesToClean=1;
   }
   else if (itsCleanType==CleanEnums::MULTISCALE) {
     if (nScalesToClean==1) {
-      os << LogIO::NORMAL1 << "Using multi-scale clean with only one scale" << LogIO::POST;
+      os << LogIO::NORMAL1 << "Multi-scale clean with only one scale" << LogIO::POST;
     }
     else {
-      os << LogIO::NORMAL1 << "Using the multi-scale clean algorithm" << LogIO::POST;
+      os << LogIO::NORMAL1 << "Multi-scale clean algorithm" << LogIO::POST;
     }
   }
 
@@ -352,8 +353,6 @@ Int LatticeCleaner<T>::clean(Lattice<T>& model,
 
   // Find the peaks of the convolved Psfs
   Vector<T> maxPsfConvScales(nScalesToClean);
-  if(nScalesToClean > 1)
-    os << LogIO::NORMAL << "Scale   Peak location    Peak value" << LogIO::POST;
   for (scale=0;scale<nScalesToClean;scale++) {
     IPosition positionPeakPsfConvScales(model.shape().nelements(), 0);
 
@@ -553,15 +552,19 @@ Int LatticeCleaner<T>::clean(Lattice<T>& model,
       }
     }
     //4. Diverging large scale
-    //If actual value is 10% above the fiducial maximum residual. ..good chance it will not recover at this stage
-    if(((abs(itsStrengthOptimum)-abs(tmpMaximumResidual)) > (abs(tmpMaximumResidual)/10.0)) 
+    //If actual value is 50% above the maximum residual. ..good chance it will not recover at this stage
+    if(((abs(itsStrengthOptimum)-abs(tmpMaximumResidual)) > (abs(tmpMaximumResidual)/2.0)) 
        && !(itsStopAtLargeScaleNegative)){
+      os << "Diverging due to large scale?"
+	 << LogIO::POST;
        //clean is diverging most probably due to the large scale 
       converged=-2;
       break;
     }
     //5. Diverging for some other reason; may just need another CS-style reconciling
-    if((abs(itsStrengthOptimum)-abs(tmpMaximumResidual)) > (abs(tmpMaximumResidual)/10.0)){
+    if((abs(itsStrengthOptimum)-abs(tmpMaximumResidual)) > (abs(tmpMaximumResidual)/2.0)){
+      os << "Diverging due to unknown reason"
+       << LogIO::POST;
       converged=-3;
       break;
     }
@@ -581,7 +584,7 @@ Int LatticeCleaner<T>::clean(Lattice<T>& model,
       }
       if ((itsIteration % (itsMaxNiter/10 > 0 ? itsMaxNiter/10 : 1)) == 0) {
 	//Good place to re-up the fiducial maximum residual
-	tmpMaximumResidual=abs(itsStrengthOptimum);
+	//tmpMaximumResidual=abs(itsStrengthOptimum);
 	os << itsIteration <<"      "<<itsStrengthOptimum<<"      "
 	   << totalFlux <<LogIO::POST;
       }
@@ -631,7 +634,6 @@ Int LatticeCleaner<T>::clean(Lattice<T>& model,
   }
   // End of iteration
 
-  os << LogIO::NORMAL << "Scale  Total flux density" << LogIO::POST;
   for (scale=0;scale<nScalesToClean;scale++) {
     os << LogIO::NORMAL
        << "  " << scale+1 << "    " << totalFluxScale(scale)

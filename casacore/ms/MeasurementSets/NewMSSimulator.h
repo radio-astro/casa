@@ -178,13 +178,33 @@ public:
   void observe(const String& sourceName,
 	       const String& spWindowName,
 	       const Quantity& qStartTime, 
-	       const Quantity& qStopTime);
+	       const Quantity& qStopTime,
+	       const Bool add_observation,
+	       const Bool state_sig,
+	       const Bool state_ref,
+	       const double& state_cal,
+	       const double& state_load,
+	       const unsigned int state_sub_scan,
+	       const String& state_obs_mode,
+	       const String& observername,
+	       const String& projectname);
+
 
   void observe(const Vector<String>& sourceNames,
 	       const String& spWindowName,
 	       const Vector<Quantity>& qStartTimes, 
 	       const Vector<Quantity>& qStopTimes,
-	       const Vector<MDirection>& directions);
+	       const Vector<MDirection>& directions,
+	       const Bool add_observation,
+	       const Bool state_sig,
+	       const Bool state_ref,
+	       const double& state_cal,
+	       const double& state_load,
+	       const unsigned int state_sub_scan,
+	       const String& state_obs_mode,
+	       const String& observername,
+	       const String& projectname);
+
 
 private:
 
@@ -209,7 +229,7 @@ private:
 
   MeasurementSet* ms_p;
 
-  TiledDataStManAccessor dataAcc_p, scratchDataAcc_p, sigmaAcc_p, flagAcc_p, imweightAcc_p;
+  TiledDataStManAccessor dataAcc_p, scratchDataAcc_p, sigmaAcc_p, flagAcc_p;
 
   Double maxData_p;
 

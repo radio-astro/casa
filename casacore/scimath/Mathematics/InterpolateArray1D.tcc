@@ -465,19 +465,35 @@ void InterpolateArray1D<Domain,Range>::interpolatePtr(PtrBlock<Range*>& yout,
 	Domain frac=(x_req-x1)/(x2-x1);
 
 //    y1 + ((x_req-x1)/(x2-x1)) * (y2-y1);
-        if (goodIsTrue) {
-   	   for (Int j=0; j<ny; j++) {
-	     yout[i][j] = yin[ind1][j] + frac * (yin[ind2][j] - yin[ind1][j]);
-	     youtFlags[i][j] = (discard ? flag : 
-				yinFlags[ind1][j] && yinFlags[ind2][j]);
-           }
-        } else {
-   	   for (Int j=0; j<ny; j++) {
-	     yout[i][j] = yin[ind1][j] + frac * (yin[ind2][j] - yin[ind1][j]);
-	     youtFlags[i][j] = ( discard ? flag : 
+
+        if (frac!=0. && frac!=1.) {
+	  if (goodIsTrue) {
+	    for (Int j=0; j<ny; j++) {
+	      yout[i][j] = yin[ind1][j] + frac * (yin[ind2][j] - yin[ind1][j]);
+	      youtFlags[i][j] = (discard ? flag : 
+				 yinFlags[ind1][j] && yinFlags[ind2][j]);
+	    }
+	  } else {
+	    for (Int j=0; j<ny; j++) {
+	      yout[i][j] = yin[ind1][j] + frac * (yin[ind2][j] - yin[ind1][j]);
+	      youtFlags[i][j] = (discard ? flag : 
 				 yinFlags[ind1][j] || yinFlags[ind2][j]);
-           }
+	    }
+	  }
         }
+	else{ // only one of the channels is involved
+	  if (frac==0.) {
+	    for (Int j=0; j<ny; j++) {
+	      yout[i][j] = yin[ind1][j];
+	      youtFlags[i][j] = (discard ? flag : yinFlags[ind1][j]);
+	    }
+	  } else { // frac == 1.
+	    for (Int j=0; j<ny; j++) {
+	      yout[i][j] = yin[ind2][j];
+	      youtFlags[i][j] = (discard ? flag :  yinFlags[ind2][j]);
+	    }
+	  }
+	}	  
       }
       return ;
     }

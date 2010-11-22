@@ -301,6 +301,11 @@ inline Bool isNaN(Double val)
 }
 // </group>
 
+//Round a number to 2 or 3 significant digits, usually used for formatting for printing.
+// For x = a*10^b, where b is an integer, a is rounded to 2 digits if a > sqrt(10) or three
+// digits if a <= sqrt(10).
+Double roundLog(Double val);
+
 // Functions that return IEEE NaN's. The specific NaN returned has all bits
 // set. This is 'quiet' NaN, and because the sign bit is set it may be
 // considered a negative number (but NaN's are not numbers!).

@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ImageFITS2Converter.cc 20699 2009-09-02 12:21:07Z gervandiepen $
+//# $Id: ImageFITS2Converter.cc 20881 2010-04-26 12:42:44Z gervandiepen $
 
 //#include <casa/version.h>
 
@@ -1155,11 +1155,14 @@ Unit ImageFITSConverter::getBrightnessUnit (RecordInterface& header, LogIO& os)
 		 }
 	     }
 	     if(!uFixed){ // recovery  attempt failed as well 
-		 UnitMap::putUser("\""+unitString+"\"", UnitVal::UnitVal(1.0, UnitDim::Dnon), "\""+unitString+"\"");
-		 os << LogIO::WARN << "FITS unit \"" << unitString << "\" unknown to CASA - will treat it as non-dimensional."
+		 UnitMap::putUser("\""+unitString+"\"",
+                                  UnitVal(1.0, UnitDim::Dnon),
+                                  "\""+unitString+"\"");
+		 os << LogIO::WARN << "FITS unit \"" << unitString
+                    << "\" unknown to CASA - will treat it as non-dimensional."
 		    << LogIO::POST;
 		 u.setName("\""+unitString+"\"");
-		 u.setValue(UnitVal::UnitVal(1.0, UnitDim::Dnon));
+		 u.setValue(UnitVal(1.0, UnitDim::Dnon));
 	     }
 	 }
       }

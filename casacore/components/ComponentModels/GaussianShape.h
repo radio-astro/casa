@@ -250,6 +250,7 @@ public:
   // Units of the returned Quantity are steradians.
   virtual Quantity getArea() const;
 
+  virtual String sizeToString() const;
 
 private:
   //# Updates the parameters of the itsFT object

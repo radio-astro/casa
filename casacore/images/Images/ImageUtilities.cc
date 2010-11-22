@@ -1094,5 +1094,25 @@ void ImageUtilities::writeImage(
 	delete newImage;
 }
 
+void ImageUtilities::getUnitAndDoppler(
+	String& xUnit, String& doppler,
+	const uInt axis, const CoordinateSystem& csys
+) {
+    xUnit = csys.worldAxisUnits()[axis];
+    doppler = "";
+	Int specCoordIndex = csys.findCoordinate(Coordinate::SPECTRAL);
+    if (
+    	specCoordIndex >= 0
+    	&& axis == (uInt)csys.pixelAxes(specCoordIndex)[0]
+    	&& ! csys.spectralCoordinate(specCoordIndex).velocityUnit().empty()
+    ) {
+    	SpectralCoordinate specCoord = csys.spectralCoordinate(specCoordIndex);
+    	xUnit = specCoord.velocityUnit();
+    	doppler = MDoppler::showType(
+    		specCoord.velocityDoppler()
+    	);
+    }
+}
+
 
 } //# NAMESPACE CASA - END

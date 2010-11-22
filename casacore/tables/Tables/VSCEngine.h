@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: VSCEngine.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: VSCEngine.h 20926 2010-07-05 11:42:12Z gervandiepen $
 
 #ifndef TABLES_VSCENGINE_H
 #define TABLES_VSCENGINE_H
@@ -316,12 +316,6 @@ public:
     // (meaning Virtual Scalar Column Engine).
     String dataManagerType() const;
 
-    // Adding rows is possible for this engine.
-    Bool canAddRow() const;
-
-    // Deleting rows is possible for this engine.
-    Bool canRemoveRow() const;
-
     // Get the name of the source column.
     const String& sourceColumnName() const
 	{ return sourceName_p; }
@@ -336,14 +330,6 @@ private:
     // Assignment is not needed and therefore forbidden
     // (so it is made private).
     VSCEngine<T>& operator= (const VSCEngine<T>&);
-
-    // Add a row.
-    // By default this is not doing anything.
-    void addRow (uInt nrrow);
-
-    // Delete a row.
-    // By default this is not doing anything.
-    void removeRow (uInt rownr);
 
     // The column is in principle writable.
     // This does not mean it is actually writable, because that

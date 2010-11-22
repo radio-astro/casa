@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: DataManInfo.h 20861 2010-02-11 12:27:48Z gervandiepen $
+//# $Id: DataManInfo.h 20889 2010-05-17 06:53:39Z gervandiepen $
 
 #ifndef TABLES_DATAMANINFO_H
 #define TABLES_DATAMANINFO_H
@@ -88,7 +88,9 @@ public:
   // (usually StandardStMan or IncrementalStMan).
   // It is possible to specify the new data manager type to use.
   // This is needed for special storage managers like LofarStMan.
-  static Record adjustStMan (const Record& dminfo, const String& dmType);
+  // If replaceMSM is set, MemoryStMan is also replaced.
+  static Record adjustStMan (const Record& dminfo, const String& dmType,
+                             Bool replaceMSM = True);
 
   // Set the data managers of the given column(s) to the given tiled storage
   // manager (normally TiledShapeStMan or TiledColumnStMan).

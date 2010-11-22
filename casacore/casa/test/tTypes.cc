@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tTypes.cc 18118 2004-12-06 16:39:11Z wyoung $
+//# $Id: tTypes.cc 20932 2010-07-08 09:06:37Z gervandiepen $
 
 //# Includes
 
@@ -46,11 +46,11 @@ int main()
     }
     {
 	// Make sure the sizes are OK.
-	AlwaysAssertExit(sizeof(Int) >= 4 &&
-			 sizeof(uInt) == sizeof(Int) &&
-			 sizeof(Short) == 2 && sizeof(uShort) == 2 &&
-			 sizeof(Float) >= 4 && sizeof(Double) >= 8 &&
-			 sizeof(lDouble) >= sizeof(Double));
+      AlwaysAssertExit(sizeof(Int) == 4 && sizeof(uInt) == 4 &&
+                       sizeof(Short) == 2 && sizeof(uShort) == 2 &&
+                       sizeof(Int64) == 8 && sizeof(uInt64) == 8 &&
+                       sizeof(Float) == 4 && sizeof(Double) == 8 &&
+                       sizeof(lDouble) >= sizeof(Double));
     }
 
     return 0;

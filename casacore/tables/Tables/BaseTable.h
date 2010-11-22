@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BaseTable.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: BaseTable.h 20908 2010-06-16 06:17:33Z gervandiepen $
 
 #ifndef TABLES_BASETABLE_H
 #define TABLES_BASETABLE_H
@@ -323,6 +323,9 @@ public:
     // Select rows using the given expression.
     BaseTable* select (const TableExprNode&, uInt maxRow);
 
+    // Select maxRow rows. maxRow=0 means all.
+    BaseTable* select (uInt maxRow);
+
     // Select rows using a vector of row numbers.
     BaseTable* select (const Vector<uInt>& rownrs);
 
@@ -365,18 +368,20 @@ public:
     // Add one or more columns to the table.
     // The default implementation throws an "invalid operation" exception.
     // <group>
-    virtual void addColumn (const ColumnDesc& columnDesc);
+    virtual void addColumn (const ColumnDesc& columnDesc, Bool addToParent);
     virtual void addColumn (const ColumnDesc& columnDesc,
-			    const String& dataManager, Bool byName);
+			    const String& dataManager, Bool byName,
+                            Bool addToParent);
     virtual void addColumn (const ColumnDesc& columnDesc,
-			    const DataManager& dataManager);
+			    const DataManager& dataManager, Bool addToParent);
     virtual void addColumn (const TableDesc& tableDesc,
-			    const DataManager& dataManager);
+			    const DataManager& dataManager, Bool addToParent);
     // </group>
 
     // Add one or more columns to the table.
     // The data manager to use is described in the record.
-    void addColumns (const TableDesc& tableDesc, const Record& dmInfo);
+    void addColumns (const TableDesc& tableDesc, const Record& dmInfo,
+                     Bool addToParent);
 
     // Test if columns can be removed.
     virtual Bool canRemoveColumn (const Vector<String>& columnNames) const = 0;

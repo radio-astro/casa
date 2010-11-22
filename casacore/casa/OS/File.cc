@@ -337,6 +337,25 @@ String File::modifyTimeString () const
     return String (asctime (localtime (&buf.st_mtime)));
 }
 
+File::FileWriteStatus File::getWriteStatus() const {
+ 	if(exists()) {
+ 		if (isWritable()) {
+ 			return OVERWRITABLE;
+ 		}
+ 		else {
+ 			return NOT_OVERWRITABLE;
+ 		}
+ 	}
+ 	if (canCreate()) {
+ 		return CREATABLE;
+ 	}
+ 	else {
+ 		return NOT_CREATABLE;
+ 	}
+ 	throw AipsError("Unknown writeability status for " + itsPath.expandedName());
+ }
+
+
 uInt File::statusChangeTime () const
 {
     // The struct is filled in by mylstat, and the statusChangetime 

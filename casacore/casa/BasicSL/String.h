@@ -473,6 +473,10 @@ class String : public string {
   // </group>
   // </group>
 
+
+  // Does the string start with the specified string?
+  Bool startsWith(const String& beginString) const;
+
   // Compare. Returns 0 if strings equal and of equal size; else positive if
   // str larger or longer; else negative.
   // <note role=warning> The gcc compiler does not have the proper standard

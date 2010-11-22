@@ -319,6 +319,11 @@ void String::capitalize() {
   }
 }
 
+Bool String::startsWith(const String& beginString) const {
+	return find(beginString) == 0;
+}
+
+
 // RegexBase related functions
 String::size_type String::find(const RegexBase &r, size_type pos) const {
   Int unused;

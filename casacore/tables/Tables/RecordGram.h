@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RecordGram.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: RecordGram.h 20922 2010-07-05 11:36:04Z gervandiepen $
 
 #ifndef TABLES_RECORDGRAM_H
 #define TABLES_RECORDGRAM_H
@@ -154,6 +154,8 @@ public:
 // WHERE clause in TaQL (see AIPS++ note 199).
 // It is possible to set the TaQL style to use by setting
 // <src>theirTaQLStyle</src> before calling the parse functions.
+// A better way is to define the style with the 'USING STYLE' part of
+// the command (similar to TaQL).
 // </synopsis> 
 
 // <motivation>

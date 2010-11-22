@@ -337,7 +337,7 @@ String Coordinate::format(String& units,
                           uInt worldAxis, 
                           Bool isAbsolute, 
                           Bool showAsAbsolute,
-                          Int precision)
+                          Int precision) const
 //
 // isAbsolute
 //    T means the worldValue is given as absolute

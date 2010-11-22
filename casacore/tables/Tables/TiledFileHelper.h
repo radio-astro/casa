@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TiledFileHelper.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: TiledFileHelper.h 20859 2010-02-03 13:14:15Z gervandiepen $
 
 #ifndef TABLES_TILEDFILEHELPER_H
 #define TABLES_TILEDFILEHELPER_H
@@ -75,7 +75,7 @@ public:
   // Create a TiledFileHelper object.
   // Tell if the data is stored in big or little endian canonical format.
   TiledFileHelper (const String& fileName, const IPosition& shape,
-		   DataType dtype, uInt maximumCacheSize,
+		   DataType dtype, const TSMOption&,
 		   Bool writable, Bool bigEndian);
 
   ~TiledFileHelper();

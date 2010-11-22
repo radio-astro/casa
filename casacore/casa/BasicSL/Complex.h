@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Complex.h 20615 2009-06-09 02:16:01Z Malte.Marquarding $
+//# $Id: Complex.h 20939 2010-08-25 09:06:51Z gervandiepen $
 
 
 #ifndef CASA_COMPLEX_H
@@ -233,16 +233,20 @@ DComplex log10(const DComplex &val);
 // ArrayMath::pow needs this pow function (on SGI).
 inline Complex pow(const Complex& val, Double p) { return std::pow(val,Float(p)); }
 
-// QMath needs these operators * and / (on SGI).
+// QMath and scimath need these operators * and / 
 // <group>
 inline Complex operator*(const Complex& val, Double f) { return val*Float(f); }
+inline Complex operator*(Double f, const Complex& val) { return val*Float(f); }
 inline Complex operator/(const Complex& val, Double f) { return val/Float(f); }
+inline Complex operator/(Double f, const Complex& val) { return Float(f)/val; }
 // </group>
 // These operators are useful, otherwise both Float and Double are applicable
 // for Ints.
 // <group>
 inline Complex operator*(const Complex& val, Int f) { return val*Float(f); }
+inline Complex operator*(Int f, const Complex& val) { return val*Float(f); }
 inline Complex operator/(const Complex& val, Int f) { return val/Float(f); }
+inline Complex operator/(Int f, const Complex& val) { return Float(f)/val; }
 // </group>
 // </group>
 

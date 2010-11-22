@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TSMFile.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: TSMFile.h 20859 2010-02-03 13:14:15Z gervandiepen $
 
 #ifndef TABLES_TSMFILE_H
 #define TABLES_TSMFILE_H
@@ -35,9 +35,9 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
+class TSMOption;
 class TiledStMan;
 class AipsIO;
-
 
 // <summary>
 // File object for Tiled Storage Manager.
@@ -82,16 +82,18 @@ class TSMFile
 public:
     // Create a TSMFile object (with corresponding file).
     // The sequence number gets part of the file name.
-    TSMFile (const TiledStMan* stMan, uInt fileSequenceNr);
+    TSMFile (const TiledStMan* stMan, uInt fileSequenceNr,
+             const TSMOption&);
 
     // Create a TSMFile object for the given existing file.
-    TSMFile (const String& fileName, Bool writable=False);
+    TSMFile (const String& fileName, Bool writable, const TSMOption&);
 
     // Read the object back.
     // The file is not opened until the first access,
     // thus until the file descriptor is asked for the first time.
     // It checks if the sequence number matches the expected one.
-    TSMFile (const TiledStMan* stMan, AipsIO& ios, uInt seqnr);
+    TSMFile (const TiledStMan* stMan, AipsIO& ios, uInt seqnr,
+             const TSMOption&);
 
     // The destructor closes the file.
     ~TSMFile();
@@ -149,7 +151,6 @@ inline BucketFile* TSMFile::bucketFile()
 
 inline void TSMFile::open()
     { file_p->open(); }
-
 
 
 

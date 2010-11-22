@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5DataSet.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: HDF5DataSet.cc 20901 2010-06-09 07:23:37Z gervandiepen $
 
 #include <casa/HDF5/HDF5DataSet.h>
 #include <casa/HDF5/HDF5Error.h>
@@ -45,6 +45,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   HDF5DataSet::HDF5DataSet (const HDF5Object& parentHid, const String& name,
 			    const IPosition& shape, const IPosition& tileShape,
 			    const Int* type)
+    : itsDataType (type)
+  {
+    create (parentHid, name, shape, tileShape);
+  }
+
+  HDF5DataSet::HDF5DataSet (const HDF5Object& parentHid, const String& name,
+			    const IPosition& shape, const IPosition& tileShape,
+			    const Int64* type)
     : itsDataType (type)
   {
     create (parentHid, name, shape, tileShape);
@@ -91,6 +99,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   HDF5DataSet::HDF5DataSet (const HDF5Object& parentHid, const String& name,
 			    const Int* type)
+    : itsDataType (type)
+  {
+    open (parentHid, name);
+  }
+
+  HDF5DataSet::HDF5DataSet (const HDF5Object& parentHid, const String& name,
+			    const Int64* type)
     : itsDataType (type)
   {
     open (parentHid, name);

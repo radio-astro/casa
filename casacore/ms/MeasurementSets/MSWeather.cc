@@ -186,6 +186,12 @@ void MSWeather::init()
 	// WIND_SPEED_FLAG
 	colMapDef(WIND_SPEED_FLAG, "WIND_SPEED_FLAG", TpBool,
 		  "Flag for wind speed","","");
+	// NS_WX_STATION_ID
+	colMapDef(NS_WX_STATION_ID, "NS_WX_STATION_ID", TpInt,
+		  "Weather Station ID","","");
+	// NS_WX_STATION_POSITION
+	colMapDef(NS_WX_STATION_POSITION, "NS_WX_STATION_POSITION", TpArrayDouble,
+		  "Weather Station Position","","");
 	// PredefinedKeywords
 
 	// init requiredTableDesc

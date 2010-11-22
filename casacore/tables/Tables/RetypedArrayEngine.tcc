@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RetypedArrayEngine.tcc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: RetypedArrayEngine.tcc 20932 2010-07-08 09:06:37Z gervandiepen $
 
 //# Includes
 #include <tables/Tables/RetypedArrayEngine.h>
@@ -236,21 +236,22 @@ IPosition RetypedArrayEngine<S,T>::shape (uInt rownr)
 
 
 template<class S, class T>
-IPosition RetypedArrayEngine<S,T>::storedShape (uInt rownr,
-						const IPosition& virtualShape)
+IPosition RetypedArrayEngine<S,T>::getStoredShape
+(uInt rownr, const IPosition& virtualShape)
 {
     //# Determine the element shape.
     //# If the stored is defined, take it from there.
     IPosition elemShape(shape_p);
     if (rownr < table().nrow()  &&  roColumn().isDefined (rownr)) {
-	elemShape = (roColumn().shape(rownr)).getFirst (elemShape.nelements());
+        elemShape = (roColumn().shape(rownr)).getFirst (elemShape.nelements());
     }
     //# The stored shape is element shape plus virtual shape.
     return elemShape.concatenate (virtualShape);
 }
 
 template<class S, class T>
-Slicer RetypedArrayEngine<S,T>::storedSlicer (const Slicer& virtualSlicer) const
+Slicer RetypedArrayEngine<S,T>::getStoredSlicer
+(const Slicer& virtualSlicer) const
 {
     //# Determine the element dimensionality.
     //# Make the Slicer such that all values of the element are used.

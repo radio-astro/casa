@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TiledStManAccessor.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: TiledStManAccessor.h 20859 2010-02-03 13:14:15Z gervandiepen $
 
 #ifndef TABLES_TILEDSTMANACCESSOR_H
 #define TABLES_TILEDSTMANACCESSOR_H
@@ -177,7 +177,7 @@ public:
     // Set the maximum cache size (in bytes) to be used by a hypercube
     // in the storage manager. Note that each hypercube has its own cache.
     // 0 means unlimited.
-    // The initial maximum cache size is 1 Mb.
+    // The initial maximum cache size is unlimited.
     // The maximum cache size given in this way is not persistent.
     // Only the maximum cache size given to the constructors of the tiled
     // storage managers, is persistent.

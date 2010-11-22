@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RecordDesc.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: RecordDesc.cc 20901 2010-06-09 07:23:37Z gervandiepen $
 
 #include <casa/Containers/RecordDesc.h>
 #include <casa/iostream.h>
@@ -118,6 +118,7 @@ AipsIO& RecordDesc::get (AipsIO& os)
 	case TpArrayUShort:
 	case TpArrayInt:
 	case TpArrayUInt:
+	case TpArrayInt64:
 	case TpArrayFloat:
 	case TpArrayDouble:
 	case TpArrayComplex:

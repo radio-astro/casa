@@ -34,7 +34,7 @@
 #include <images/Images/ImageAnalysis.h>
 #include <images/Images/FITSImage.h>
 #include <images/Images/ImageMetaData.h>
-#include <images/Regions/WCBox.h>
+#include <images/Regions/RegionManager.h>
 #include <casa/BasicSL/Constants.h>
 #include <casa/OS/Directory.h>
 #include <casa/namespace.h>
@@ -185,25 +185,32 @@ int main() {
         	);
         	FITSImage noisy(noisyImage);
         	IPosition imShape = noisy.shape();
-        	Vector<Double> blc(imShape.nelements());
-        	Vector<Double> trc(imShape.nelements());
+        	Vector<Double> blc(imShape.nelements(), 0);
+        	Vector<Double> trc(imShape.nelements(), 0);
+        	Vector<Double> inc(imShape.nelements(), 1);
 
+        	/*
         	for (uInt i=0; i<imShape.nelements(); i++) {
         		blc[i] = 0;
         		trc[i] = imShape[i] - 1;
         	}
-
+*/
         	Vector<Int> dirNums = ImageMetaData(noisy).directionAxesNumbers();
         	blc[dirNums[0]] = 130;
         	blc[dirNums[1]] = 89;
         	trc[dirNums[0]] = 170;
         	trc[dirNums[1]] = 129;
 
+        	/*
         	LCBox lcBox(blc, trc, imShape);
         	WCBox wcBox(lcBox, noisy.coordinates());
         	ImageRegion rg(wcBox);
         	Record regionRecord(rg.toRecord(""));
-        	ImageFitter fitter(noisyImage, &regionRecord);
+        	*/
+
+        	RegionManager rm;
+        	Record *box = rm.box(blc, trc, inc, "abs", False);
+        	ImageFitter fitter(noisyImage, box);
         	ComponentList compList = fitter.fit();
             AlwaysAssert(fitter.converged(), AipsError);
 
@@ -508,6 +515,20 @@ int main() {
              	Double positionAngle = DEGREES_PER_RADIAN*parameters(2);
              	AlwaysAssert(nearAbs(positionAngle, expectedPositionAngle[i], 5e-6), AipsError);
         	}
+        }
+        {
+        	writeTestString("Test of CAS-2318 fix");
+
+            ImageFitter fitter(
+            	"gauss_no_pol.fits", "", "", 0, "", "",
+             	Vector<Float>(0), Vector<Float>(0), "",
+             	"", ""
+            );
+            ComponentList compList = fitter.fit();
+            // Just the fact that an exception isn't thrown verifies the fix
+    		Vector<Quantity> flux;
+    		compList.getFlux(flux,0);
+    		AlwaysAssert(near(flux(0).getValue(), 394312.65593496, 1e-5), AipsError);
         }
         cout << "ok" << endl;
     }

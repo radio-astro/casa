@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tSort.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: tSort.cc 20901 2010-06-09 07:23:37Z gervandiepen $
 
 //# Includes
 
@@ -41,7 +41,8 @@
 
 void sortit (int opt)
 {
-    Int arr[10], ar2[10];
+    Int arr[10];
+    Int64 ar2[10];
     uInt i;
     double ard[10];
     struct Ts {
@@ -79,8 +80,8 @@ void sortit (int opt)
     cout << endl;
 
     // Also test copy constructor.
-    Sort sort3(ar2,sizeof(Int));
-    sort3.sortKey (0,TpInt,Sort::Ascending);
+    Sort sort3(ar2,sizeof(Int64));
+    sort3.sortKey (0,TpInt64,Sort::Ascending);
     Sort sort3a(sort3);
     nr = sort3a.sort (inxvec,10,opt);         // same, but now with original
     for (i=0; i<nr; i++) {                    // array in descending order
@@ -89,7 +90,7 @@ void sortit (int opt)
     cout << endl;
 
     Sort sort4;
-    sort4.sortKey (ar2,TpInt,0,Sort::Descending);
+    sort4.sortKey (ar2,TpInt64,0,Sort::Descending);
     nr = sort4.sort (inxvec,10,opt);
     for (i=0; i<nr; i++) {
 	cout << " " << ar2[inxvec(i)];

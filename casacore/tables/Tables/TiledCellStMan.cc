@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TiledCellStMan.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: TiledCellStMan.cc 20859 2010-02-03 13:14:15Z gervandiepen $
 
 #include <tables/Tables/TiledCellStMan.h>
 #include <tables/Tables/TSMColumn.h>
@@ -83,6 +83,11 @@ DataManager* TiledCellStMan::makeObject (const String& group,
 {
     TiledCellStMan* smp = new TiledCellStMan (group, spec);
     return smp;
+}
+
+TSMOption TiledCellStMan::tsmMode(uInt) const
+{
+  return TSMOption(TSMOption::Cache);
 }
 
 String TiledCellStMan::dataManagerType() const
@@ -193,7 +198,8 @@ void TiledCellStMan::addRow (uInt nrow)
 	}
     }
     for (uInt i=nrrow_p; i<nrrow_p+nrow; i++) {
-	TSMCube* hypercube = new TSMCube (this, fileSet_p[0]);
+        TSMCube* hypercube = makeTSMCube (fileSet_p[0], IPosition(),
+                                          IPosition(), Record());
 	cubeSet_p[i] = hypercube;
 	if (fixedCellShape_p.nelements() > 0) {
 	    hypercube->setShape (fixedCellShape_p, defaultTileShape_p);

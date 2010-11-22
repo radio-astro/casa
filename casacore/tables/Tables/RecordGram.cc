@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RecordGram.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: RecordGram.cc 20922 2010-07-05 11:36:04Z gervandiepen $
 
 // RecordGram; grammar for record command lines
 
@@ -220,11 +220,11 @@ TableExprNode RecordGram::handleFunc (const String& name,
     Vector<Int> ignoreFuncs (1, TableExprFuncNode::rownrFUNC);
     return TableParseSelect::makeFuncNode (name, arguments,
 					   ignoreFuncs, Table(),
-					   TaQLStyle());
+					   theirTaQLStyle);
   }
   return TableParseSelect::makeFuncNode (name, arguments,
 					 Vector<Int>(), *theirTabPtr,
-					 TaQLStyle());
+					 theirTaQLStyle);
 }
 
 TableExprNode RecordGram::handleRegex (const TableExprNode& left,

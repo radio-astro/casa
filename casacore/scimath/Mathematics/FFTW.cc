@@ -22,7 +22,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FFTServer.tcc 20253 2008-02-23 15:15:00Z gervandiepen $
+//# $Id: FFTW.cc 20932 2010-07-08 09:06:37Z gervandiepen $
 
 
 #include <scimath/Mathematics/FFTW.h>
@@ -32,47 +32,82 @@
 #include <casa/Arrays/Matrix.h>
 #include <casa/BasicMath/Math.h>
 #include <casa/Utilities/Assert.h>
-
-
-#include <casa/aips.h>
 #include <casa/OS/HostInfo.h>
-#include <fftw3.h>
+
+#ifdef HAVE_FFTW3
+# include <fftw3.h>
+#endif
 
 #include <iostream>
+
 
 namespace casa {
 
   Bool FFTW::is_initialized_fftw = False;
 
-  FFTW::FFTW()
-  {
-    itsPlanR2Cf = NULL;
-    itsPlanR2C = NULL;
-    itsPlanC2Rf = NULL;
-    itsPlanC2R = NULL;
-    itsPlanC2CFf = NULL;
-    itsPlanC2CF = NULL;
-    itsPlanC2CBf = NULL;
-    itsPlanC2CB = NULL;
 
+#ifdef HAVE_FFTW3
+
+  class FFTWPlan
+  {
+  public:
+    explicit FFTWPlan (fftw_plan plan)
+      : itsPlan(plan)
+    {}
+    ~FFTWPlan()
+      { fftw_destroy_plan(itsPlan); }
+    fftw_plan getPlan()
+      { return itsPlan; }
+  private:
+    FFTWPlan (const FFTWPlan&);
+    FFTWPlan& operator= (const FFTWPlan&);
+    fftw_plan itsPlan;
+  };
+
+  class FFTWPlanf
+  {
+  public:
+    explicit FFTWPlanf (fftwf_plan plan)
+      : itsPlan(plan)
+    {}
+    ~FFTWPlanf()
+      { fftwf_destroy_plan(itsPlan); }
+    fftwf_plan getPlan()
+      { return itsPlan; }
+  private:
+    FFTWPlanf (const FFTWPlanf&);
+    FFTWPlanf& operator= (const FFTWPlanf&);
+    fftwf_plan itsPlan;
+  };
+
+    
+
+  FFTW::FFTW()
+    : itsPlanR2Cf  (0),
+      itsPlanR2C   (0),
+      itsPlanC2Rf  (0),
+      itsPlanC2R   (0),
+      itsPlanC2CFf (0),
+      itsPlanC2CF  (0),
+      itsPlanC2CBf (0),
+      itsPlanC2CB  (0)
+  {
     if (!is_initialized_fftw) {
       int numCPUs = HostInfo::numCPUs();
-      int nthreads;
+      int nthreads = 1;
       // cerr << "Number of threads is " << numCPUs << endl;
-      if (numCPUs <= 1) {
-	nthreads = 1;
-      }
-      else {
+      if (numCPUs > 1) {
 	nthreads = numCPUs;
       }
       
       //    std::cout << "init threads " << fftwf_init_threads() << std::endl;
       //    std::cout << "init threads " << fftw_init_threads() << std::endl;
+#ifdef HAVE_FFTW3_THREADS
       fftwf_init_threads();
       fftw_init_threads();
       fftwf_plan_with_nthreads(nthreads);
       fftw_plan_with_nthreads(nthreads);
-
+#endif
       is_initialized_fftw = True;
     }
     //    std::cerr << "will use " << nthreads << " threads " << std::endl;
@@ -84,22 +119,19 @@ namespace casa {
     //flags = FFTW_EXHAUSTIVE;   std::cerr << "Will FFTW_EXHAUSTIVE..." << std::endl;
   }
 
-  FFTW::~FFTW() {
-    
-    fftwf_destroy_plan(itsPlanR2Cf);
-    fftw_destroy_plan(itsPlanR2C);
-    
-    fftwf_destroy_plan(itsPlanC2Rf);
-    fftw_destroy_plan(itsPlanC2R);
-    
-    fftwf_destroy_plan(itsPlanC2CFf); 
-    fftw_destroy_plan(itsPlanC2CF);
-    
-    fftwf_destroy_plan(itsPlanC2CBf); 
-    fftw_destroy_plan(itsPlanC2CB);
-    
+  FFTW::~FFTW()
+  {
+    delete itsPlanR2Cf;
+    delete itsPlanR2C;
+    delete itsPlanC2Rf;
+    delete itsPlanC2R;
+    delete itsPlanC2CFf;
+    delete itsPlanC2CF;
+    delete itsPlanC2CBf;
+    delete itsPlanC2CB;
     // We cannot deinitialize FFTW as in the following because
     // there may be other instances of this class around
+    // Could do it when keeping a static counter, but must be made thread-safe.
 #if 0
     fftw_cleanup();
     fftwf_cleanup();
@@ -108,122 +140,166 @@ namespace casa {
 #endif
   }
   
-  
+
   void FFTW::plan_r2c(const IPosition &size, Float *in, Complex *out) 
   {
-    itsPlanR2Cf = fftwf_plan_dft_r2c(size.nelements(),
-				     size.asVector().data(),
-				     in,
-				     reinterpret_cast<fftwf_complex *>(out), 
-				     flags);
+    delete itsPlanR2Cf;
+    itsPlanR2Cf = new FFTWPlanf
+      (fftwf_plan_dft_r2c(size.nelements(),
+                          size.asVector().data(),
+                          in,
+                          reinterpret_cast<fftwf_complex *>(out), 
+                          flags));
   }
 
   void FFTW::plan_r2c(const IPosition &size, Double *in, DComplex *out) 
   {
-    itsPlanR2C = fftw_plan_dft_r2c(size.nelements(),
-				   size.asVector().data(),
-				   in,
-				   reinterpret_cast<fftw_complex *>(out), 
-				   flags);
+    delete itsPlanR2C;
+    itsPlanR2C = new FFTWPlan
+      (fftw_plan_dft_r2c(size.nelements(),
+                         size.asVector().data(),
+                         in,
+                         reinterpret_cast<fftw_complex *>(out), 
+                         flags));
   }
 
   void FFTW::plan_c2r(const IPosition &size, Complex *in, Float *out) {
-    itsPlanC2Rf = fftwf_plan_dft_c2r(size.nelements(),
-				     size.asVector().data(),
-				     reinterpret_cast<fftwf_complex *>(in),
-				     out, 
-				     flags);
+    delete itsPlanC2Rf;
+    itsPlanC2Rf = new FFTWPlanf
+      (fftwf_plan_dft_c2r(size.nelements(),
+                          size.asVector().data(),
+                          reinterpret_cast<fftwf_complex *>(in),
+                          out, 
+                          flags));
 
   }
 
   void FFTW::plan_c2r(const IPosition &size, DComplex *in, Double *out) {
-    itsPlanC2R = fftw_plan_dft_c2r(size.nelements(),
-				   size.asVector().data(),
-				   reinterpret_cast<fftw_complex *>(in), 
-				   out,
-				   flags);
+    delete itsPlanC2R;
+    itsPlanC2R = new FFTWPlan
+      (fftw_plan_dft_c2r(size.nelements(),
+                         size.asVector().data(),
+                         reinterpret_cast<fftw_complex *>(in), 
+                         out,
+                         flags));
   }
 
   void FFTW::plan_c2c_forward(const IPosition &size, DComplex *in) {
-    itsPlanC2CF = fftw_plan_dft(size.nelements(),
-				size.asVector().data(),
-				reinterpret_cast<fftw_complex *>(in), 
-				reinterpret_cast<fftw_complex *>(in), 
-				FFTW_FORWARD, flags);
+    delete itsPlanC2CF;
+    itsPlanC2CF = new FFTWPlan
+      (fftw_plan_dft(size.nelements(),
+                     size.asVector().data(),
+                     reinterpret_cast<fftw_complex *>(in), 
+                     reinterpret_cast<fftw_complex *>(in), 
+                     FFTW_FORWARD, flags));
 
   }
     
   void FFTW::plan_c2c_forward(const IPosition &size, Complex *in) {
-    itsPlanC2CFf = fftwf_plan_dft(size.nelements(),
-				  size.asVector().data(),
-				  reinterpret_cast<fftwf_complex *>(in), 
-				  reinterpret_cast<fftwf_complex *>(in), 
-				  FFTW_FORWARD, flags);
+    delete itsPlanC2CFf;
+    itsPlanC2CFf = new FFTWPlanf
+      (fftwf_plan_dft(size.nelements(),
+                      size.asVector().data(),
+                      reinterpret_cast<fftwf_complex *>(in), 
+                      reinterpret_cast<fftwf_complex *>(in), 
+                      FFTW_FORWARD, flags));
   }
 
   void FFTW::plan_c2c_backward(const IPosition &size, DComplex *in) {
-    itsPlanC2CB = fftw_plan_dft(size.nelements(),
-				size.asVector().data(),
-				reinterpret_cast<fftw_complex *>(in), 
-				reinterpret_cast<fftw_complex *>(in), 
-				FFTW_BACKWARD, flags);
+    delete itsPlanC2CB;
+    itsPlanC2CB = new FFTWPlan
+      (fftw_plan_dft(size.nelements(),
+                     size.asVector().data(),
+                     reinterpret_cast<fftw_complex *>(in), 
+                     reinterpret_cast<fftw_complex *>(in), 
+                     FFTW_BACKWARD, flags));
       
   }
     
   void FFTW::plan_c2c_backward(const IPosition &size, Complex *in) {
-    itsPlanC2CBf = fftwf_plan_dft(size.nelements(),
-				  size.asVector().data(),
-				  reinterpret_cast<fftwf_complex *>(in), 
-				  reinterpret_cast<fftwf_complex *>(in), 
-				  FFTW_BACKWARD, flags);
+    delete itsPlanC2CBf;
+    itsPlanC2CBf = new FFTWPlanf
+      (fftwf_plan_dft(size.nelements(),
+                      size.asVector().data(),
+                      reinterpret_cast<fftwf_complex *>(in), 
+                      reinterpret_cast<fftwf_complex *>(in), 
+                      FFTW_BACKWARD, flags));
   }
 
-  void FFTW::r2c(const IPosition &size, Float *in, Complex *out) 
+  // the parameters are used only in order to overload this function
+  void FFTW::r2c(const IPosition&, Float*, Complex*) 
   {
-    // the parameters are used only in order to overload this function
-    // suppress warnings about unused parameters
-    if (size(0)) ; if (in) ; if (out) ;
-    fftwf_execute(itsPlanR2Cf);
+    fftwf_execute(itsPlanR2Cf->getPlan());
   }
     
-  void FFTW::r2c(const IPosition &size, Double *in, DComplex *out) 
+  void FFTW::r2c(const IPosition&, Double*, DComplex*) 
   {
-    if (size(0)) ; if (in) ; if (out) ;
-    fftw_execute(itsPlanR2C);
+    fftw_execute(itsPlanR2C->getPlan());
   }
 
-  void FFTW::c2r(const IPosition &size, Complex *in, Float *out)
+  void FFTW::c2r(const IPosition&, Complex*, Float*)
   {
-    if (size(0)) ; if (in) ; if (out) ;
-    fftwf_execute(itsPlanC2Rf);
+    fftwf_execute(itsPlanC2Rf->getPlan());
   }
     
-  void FFTW::c2r(const IPosition &size, DComplex *in, Double *out)
+  void FFTW::c2r(const IPosition&, DComplex*, Double*)
   {
-    if (size(0)) ; if (in) ; if (out) ;
-    fftw_execute(itsPlanC2R);
+    fftw_execute(itsPlanC2R->getPlan());
   }
     
-  void FFTW::c2c(const IPosition &size, Complex *in, Bool forward)
+  void FFTW::c2c(const IPosition&, Complex*, Bool forward)
   {
-    if (size(0)) ; if (in) ;
     if (forward) {
-      fftwf_execute(itsPlanC2CFf);
-    }
-    else {
-      fftwf_execute(itsPlanC2CBf);
+      fftwf_execute(itsPlanC2CFf->getPlan());
+    } else {
+      fftwf_execute(itsPlanC2CBf->getPlan());
     }
   }
     
-  void FFTW::c2c(const IPosition &size, DComplex *in, Bool forward)
+  void FFTW::c2c(const IPosition&, DComplex*, Bool forward)
   {
-    if (size(0)) ; if (in) ;
     if (forward) {
-      fftw_execute(itsPlanC2CF);
-    }
-    else {
-      fftw_execute(itsPlanC2CB);
+      fftw_execute(itsPlanC2CF->getPlan());
+    } else {
+      fftw_execute(itsPlanC2CB->getPlan());
     }
   }
+
+#else
+
+  FFTW::FFTW()
+  {}
+  FFTW::~FFTW()
+  {}
+  void FFTW::plan_r2c(const IPosition&, Float*, Complex*) 
+  {}
+  void FFTW::plan_r2c(const IPosition&, Double*, DComplex*) 
+  {}
+  void FFTW::plan_c2r(const IPosition&, Complex*, Float*)
+  {}
+  void FFTW::plan_c2r(const IPosition&, DComplex*, Double*)
+  {}
+  void FFTW::plan_c2c_forward(const IPosition&, DComplex*)
+  {}
+  void FFTW::plan_c2c_forward(const IPosition&, Complex*)
+  {}
+  void FFTW::plan_c2c_backward(const IPosition&, DComplex*)
+  {}
+  void FFTW::plan_c2c_backward(const IPosition&, Complex*)
+  {}
+  void FFTW::r2c(const IPosition&, Float*, Complex*) 
+  {}
+  void FFTW::r2c(const IPosition&, Double*, DComplex*) 
+  {}
+  void FFTW::c2r(const IPosition&, Complex*, Float*)
+  {}
+  void FFTW::c2r(const IPosition&, DComplex*, Double*)
+  {}
+  void FFTW::c2c(const IPosition&, Complex*, Bool)
+  {}
+  void FFTW::c2c(const IPosition&, DComplex*, Bool)
+  {}
+
+#endif
 
 } //# NAMESPACE CASA - END

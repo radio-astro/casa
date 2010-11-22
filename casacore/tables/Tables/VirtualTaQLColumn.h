@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: VirtualTaQLColumn.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: VirtualTaQLColumn.h 20926 2010-07-05 11:42:12Z gervandiepen $
 
 #ifndef TABLES_VIRTUALTAQLCOLUMN_H
 #define TABLES_VIRTUALTAQLCOLUMN_H
@@ -44,24 +44,46 @@ class TableExprNode;
 //
 // <prerequisite>
 //# Classes you should understand before using this one.
-//   <li> VirtualColumnColumn
 //   <li> VirtualScalarColumn
-//   <li> VirtualArrayColumn
 // </prerequisite>
 //
 // <synopsis> 
-// DummyVirtualScalar is an example of how to implement a virtual
-// column class handling a scalar.
-// This class scales the data in table column "DATA1" from Int to
-// double and back using a scale factor given at construction time.
-// This class is used by DummyVirtualColumn which is the engine for
-// handling this scalar column and another column.
+// VirtualTaQLColumn is a virtual column engine to define the contents of a
+// column as a TaQL expression in which possibly other columns are used.
+// It is (of course) only possible to get data from the column; puts cannot
+// be done.
+// <br>
+// The expression result can be a scalar or array of the basic TaQL data types.
+// The column data type has to be conformant with that TaQL type, thus a
+// column of any integer type has to be used for an integer TaQL result.
+// <note role=caution> One has to be careful with deleting columns. If in an
+// existing table a TaQL expression uses a deleted column, the expression
+// cannot be parsed anymore and the table cannot be opened anymore.
+// In the future the Table System will be made more forgiving.
+// </note>
 // </synopsis> 
 //
-// <motivation>
-// This class is an example for writers of real virtual column classes.
-// It is tested by tVirtColEng.cc.
-// </motivation>
+// <example>
+// The following example creates a table with a few columns.
+// One column is virtual and has a random value if Col3 is true.
+// Otherwise it has value 0.
+// <srcblock>
+//    // Create the table description.
+//    TableDesc td;
+//    td.addColumn (ScalarColumnDesc<DComplex>("Col1"));
+//    td.addColumn (ScalarColumnDesc<Int>("Col2"));
+//    td.addColumn (ScalarColumnDesc<Bool>("Col3"));
+//    td.addColumn (ScalarColumnDesc<Double>("ColVirt"));
+//  
+//    // Now create a new table from the description.
+//    SetupNewTable newTab("tmtest", td, Table::New);
+//    // Define the expression of the virtual column and bind the column to it.
+//    // The other columns are by default bound to StandardStMan.
+//    VirtualTaQLColumn engine("iif(Col3,rand(),0)");
+//    newTab.bindColumn("ColVirt", engine);
+//    Table tab(newTab);
+// </srcblock>
+// </example>
 
 class VirtualTaQLColumn : public VirtualColumnEngine, public DataManagerColumn
 {

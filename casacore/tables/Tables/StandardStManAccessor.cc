@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: StandardStManAccessor.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: StandardStManAccessor.cc 20883 2010-04-27 06:02:21Z gervandiepen $
 
 //# Includes
 #include <tables/Tables/StandardStManAccessor.h>
@@ -68,9 +68,10 @@ ROStandardStManAccessor& ROStandardStManAccessor::operator=
 }
 
 
-void ROStandardStManAccessor::setCacheSize (uInt aSize)
+void ROStandardStManAccessor::setCacheSize (uInt aSize,
+                                            Bool canExceedNrBuckets)
 {
-    itsSSMPtr->setCacheSize (aSize);
+    itsSSMPtr->setCacheSize (aSize, canExceedNrBuckets);
 }
 
 uInt ROStandardStManAccessor::getCacheSize() const

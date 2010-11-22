@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TaQLNode.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: TaQLNode.h 20944 2010-08-30 07:48:24Z gervandiepen $
 
 #ifndef TABLES_TAQLNODE_H
 #define TABLES_TAQLNODE_H
@@ -43,7 +43,7 @@ class TaQLMultiNode;
 class TaQLConstNodeRep;
 class TaQLRegexNodeRep;
 class TaQLMultiNodeRep;
-class TaQLSelectNodeRep;
+class TaQLQueryNodeRep;
 
 // <summary>
 // Envelope class for a node in the raw TaQL parse tree.
@@ -234,7 +234,7 @@ private:
 
 
 // <summary>
-// Envelope class for a node containing a list of nodes.
+// Envelope class for a node containing a selection command.
 // </summary>
 // <use visibility=local>
 // <reviewed reviewer="" date="" tests="tTaQLNode">
@@ -242,17 +242,17 @@ private:
 // <synopsis>
 // This is a specialization of the envelope class
 // <linkto class=TaQLNode>TaQLNode</linkto> for a node containing
-// a select command.
+// a selection command.
 // </synopsis> 
-class TaQLSelectNode: public TaQLNode
+class TaQLQueryNode: public TaQLNode
 {
 public:
-  TaQLSelectNode (TaQLSelectNodeRep* rep);
+  TaQLQueryNode (TaQLQueryNodeRep* rep);
   void setBrackets();
   void setNoExecute();
   void setFromExecute();
 private:
-  TaQLSelectNodeRep* itsNRep;
+  TaQLQueryNodeRep* itsNRep;
 };
 
 

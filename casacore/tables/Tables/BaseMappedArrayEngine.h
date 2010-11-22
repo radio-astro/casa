@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BaseMappedArrayEngine.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: BaseMappedArrayEngine.h 20932 2010-07-08 09:06:37Z gervandiepen $
 
 #ifndef TABLES_BASEMAPPEDARRAYENGINE_H
 #define TABLES_BASEMAPPEDARRAYENGINE_H
@@ -265,12 +265,6 @@ class TableColumn;
 template<class VirtualType, class StoredType> class BaseMappedArrayEngine : public VirtualColumnEngine, public VirtualArrayColumn<VirtualType>
 {
 public:
-    // Adding rows is possible for this engine.
-    virtual Bool canAddRow() const;
-
-    // Deleting rows is possible for this engine.
-    virtual Bool canRemoveRow() const;
-
     // Get the virtual column name.
     const String& virtualName() const;
 
@@ -361,9 +355,6 @@ protected:
     virtual void addRow (uInt nrrow);
     virtual void addRowInit (uInt startRow, uInt nrrow);
     // </group>
-
-    // Deleting rows is possible and is a no-op for this engine.
-    virtual void removeRow (uInt rownr);
 
     // Set the shape of the FixedShape arrays in the column.
     // This function only gets called if the column has FixedShape arrays.
@@ -457,6 +448,15 @@ protected:
     virtual void putColumnSliceCells (const RefRows& rownrs,
 				      const Slicer& slicer,
 				      const Array<VirtualType>& data);
+
+    // Map the virtual shape to the stored shape.
+    // By default is returns the virtual shape.
+    virtual IPosition getStoredShape (uInt rownr,
+                                      const IPosition& virtualShape);
+
+    // Map the slicerfor a virtual shape to a stored shape.
+    // By default it returns the virtualinput slicer.
+    virtual Slicer getStoredSlicer (const Slicer& virtualSlicer) const;
 
     // Map StoredType array to VirtualType array.
     // This is meant when reading an array from the stored column.

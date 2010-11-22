@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprNode.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: ExprNode.h 20940 2010-08-25 09:08:06Z gervandiepen $
 
 #ifndef TABLES_EXPRNODE_H
 #define TABLES_EXPRNODE_H
@@ -957,6 +957,12 @@ public:
 					  const TableExprNode& node,
 					  const TableExprNodeSet& axes);
     // </group>
+
+    // Create a user defined function node.
+    static TableExprNode newUDFNode (const String& name,
+                                     const TableExprNodeSet& set,
+                                     const Table& table,
+                                     const TaQLStyle& = TaQLStyle(0));
 
     // Create cone function node of the given type with the given arguments.
     // <group>

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TSMShape.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: TSMShape.h 20859 2010-02-03 13:14:15Z gervandiepen $
 
 #ifndef TABLES_TSMSHAPE_H
 #define TABLES_TSMSHAPE_H
@@ -110,14 +110,14 @@ public:
 
     // Calculate the offset for a given position.
     // <group>
-    uInt offset (const IPosition& position) const;
-    uInt offset (const IPosition& position, const IPosition& origin) const;
+    size_t offset (const IPosition& position) const;
+    size_t offset (const IPosition& position, const IPosition& origin) const;
     // </group>
 
     // Calculate the position for a given offset.
     // <group>
-    IPosition position (uInt offset) const;
-    IPosition position (uInt offset, const IPosition& origin) const;
+    IPosition position (size_t offset) const;
+    IPosition position (size_t offset, const IPosition& origin) const;
     // </group>
 
     // Calculate the increments when stepping through an array in
