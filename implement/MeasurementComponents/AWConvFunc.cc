@@ -191,11 +191,15 @@ namespace casa{
 	// Apply the PB...
 	//
 	Bool doSquint=True;
-	ATerm_p->applySky(twoDPB, vb, doSquint);
+	Block<CountedPtr<ImageInterface<Complex> > > tmpBlock(1);
+	Block<CountedPtr<ImageInterface<Complex> > > tmpPBSqBlock(1);
+	tmpBlock[0]=CountedPtr<ImageInterface<Complex> >(&twoDPB, False);
+	//	ATerm_p->applySky(twoDPB, vb, doSquint);
+	ATerm_p->applySky(tmpBlock, vb, doSquint);
 	doSquint = False;
-	ATerm_p->applySky(twoDPBSq, vb, doSquint);
-	// 	twoDPB.put(abs(twoDPB.get()));
-	// 	twoDPBSq.put(abs(twoDPBSq.get()));
+	tmpPBSqBlock[0]=CountedPtr<ImageInterface<Complex> >(&twoDPBSq, False);
+	//	ATerm_p->applySky(twoDPBSq, vb, doSquint);
+	ATerm_p->applySky(tmpPBSqBlock, vb, doSquint);
 	// {
 	//   ostringstream name;
 	//   name << "twoDPB.before." << iw << ".im";
@@ -500,7 +504,10 @@ namespace casa{
     //
     localPB.set(1.0);
 
-    ATerm_p->applySky(localPB, vb, False);
+    Block<CountedPtr<ImageInterface<Float > > > tmpBlock(1);
+    tmpBlock[0]=CountedPtr<ImageInterface<Float> >(&localPB, False);
+    //    ATerm_p->applySky(localPB, vb, False);
+    ATerm_p->applySky(tmpBlock, vb, False);
 
     IPosition twoDPBShape(localPB.shape());
     TempImage<Complex> localTwoDPB(twoDPBShape,localPB.coordinates());
