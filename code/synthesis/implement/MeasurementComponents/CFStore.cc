@@ -64,7 +64,8 @@ namespace casa{
   }
   void CFStore::resize(IPosition imShape, Bool retainValues)
   {
-    resize(imShape(CFDefs::NWPOS), retainValues);
+    if (imShape.nelements() > CFDefs::NWPOS)
+      resize(imShape(CFDefs::NWPOS), retainValues);
     if ((imShape.nelements() > 0) && (!data.null()))
       data->resize(imShape,retainValues);
   }
