@@ -1,8 +1,8 @@
 //#---------------------------------------------------------------------------
-//# SDFITSwriter.h: ATNF CFITSIO interface class for SDFITS output.
+//# PKSmsg.h: Message handling for the PKSIO classes.
 //#---------------------------------------------------------------------------
 //# livedata - processing pipeline for single-dish, multibeam spectral data.
-//# Copyright (C) 2000-2009, Australia Telescope National Facility, CSIRO
+//# Copyright (C) 2008-2009, Australia Telescope National Facility, CSIRO
 //#
 //# This file is part of livedata.
 //#
@@ -28,73 +28,63 @@
 //#                        AUSTRALIA
 //#
 //# http://www.atnf.csiro.au/computing/software/livedata.html
-//# $Id: SDFITSwriter.h,v 19.10 2009-09-29 07:33:39 cal103 Exp $
+//# $Id: PKSmsg.h,v 1.3 2009-09-29 07:33:38 cal103 Exp $
 //#---------------------------------------------------------------------------
-//# Original: 2000/07/24, Mark Calabretta, ATNF
+//# Original: 2008/09/18, Mark Calabretta, ATNF
 //#---------------------------------------------------------------------------
 
-#ifndef ATNF_SDFITSWRITER_H
-#define ATNF_SDFITSWRITER_H
+#ifndef ATNF_PKSMSG_H
+#define ATNF_PKSMSG_H
 
-#include <atnf/PKSIO/MBrecord.h>
-#include <atnf/PKSIO/PKSmsg.h>
-
-#include <fitsio.h>
+#include <casa/stdio.h>
 
 using namespace std;
 
 // <summary>
-// ATNF CFITSIO interface class for SDFITS output.
+// Message handling for the PKSIO classes.
 // </summary>
 
-class SDFITSwriter : public PKSmsg
+class PKSmsg
 {
   public:
-    // Default constructor.
-    SDFITSwriter();
+    // Constructor.
+    PKSmsg();
 
     // Destructor.
-    virtual ~SDFITSwriter();
+    virtual ~PKSmsg();
 
-    // Create a new SDFITSwriter and store static data.
-    int create(
-        char*  sdname,
-        char*  observer,
-        char*  project,
-        char*  telescope,
-        double antPos[3],
-        char*  obsMode,
-        char*  bunit,
-        float  equinox,
-        char*  dopplerFrame,
-        int    nIF,
-        int*   nChan,
-        int*   nPol,
-        int*   haveXPol,
-        int    haveBase,
-        int    extraSysCal);
+    // Set message disposition.  If fd is non-zero messages will be written
+    // to that file descriptor, else stored for retrieval by getMsg().
+    virtual int setMsg(
+        FILE *fd = 0x0);
 
-    // Store time-variable data.
-    int write(MBrecord &record);
+    // Log a message.
+    virtual void logMsg(const char *msg = 0x0);
 
-    // Write a history record.
-    int history(char* text);
+    // Get a message string, or 0x0 if there is none.  The null-terminated
+    // message string may contain embedded newline characters and will have
+    // a trailing newline.
+    const char *getMsg();
 
-    // Close the SDFITS file.
-    void close();
+    // Get the next group of messages by type: ERROR, WARNING, or otherwise.
+    // The null-terminated message string may contain embedded newline
+    // characters but will NOT have a trailing newline.  Call this repeatedly
+    // to unwind the message stack (otherwise messages may be lost).
+    enum msgType {NORMAL, WARNING, ERROR};
+    const char *getMsg(msgType &type);
 
-    // Close and delete the SDFITS file.
-    void deleteFile();
+    // Clear the message buffer.
+    void clearMsg(void);
+
+  protected:
+    // Initialize messaging.
+    void initMsg();
 
   private:
-    fitsfile *cSDptr;
-    int  cDoTDIM, cDoXPol, cExtraSysCal, cHaveBase, *cHaveXPol, cIsMX,
-         *cNChan, cNIF, *cNPol, cStatus;
-    long cRow;
-
-    // Message handling.
-    char cMsg[256];
-    virtual void logMsg(const char *msg = 0x0);
+    // For messaging.
+    char *cMsgBuff, *cMsgIdx;
+    int   cMsgLen, cNMsg;
+    FILE *cMsgFD;
 };
 
 #endif

@@ -1,4 +1,4 @@
-# $Id: makefile,v 19.0 2003/07/16 03:34:05 aips2adm Exp $
+# $Id: makefile,v 19.0 2003-07-16 03:34:05 aips2adm Exp $
 
 XLIBLIST := CFITSIO RPFITS
 

@@ -1,51 +1,56 @@
 //#---------------------------------------------------------------------------
 //# PKSMS2writer.h: Class to write Parkes Multibeam data to a measurementset.
 //#---------------------------------------------------------------------------
-//# Copyright (C) 2000-2006
-//# Associated Universities, Inc. Washington DC, USA.
+//# livedata - processing pipeline for single-dish, multibeam spectral data.
+//# Copyright (C) 2000-2009, Australia Telescope National Facility, CSIRO
 //#
-//# This library is free software; you can redistribute it and/or modify it
-//# under the terms of the GNU Library General Public License as published by
-//# the Free Software Foundation; either version 2 of the License, or (at your
-//# option) any later version.
+//# This file is part of livedata.
 //#
-//# This library is distributed in the hope that it will be useful, but WITHOUT
+//# livedata is free software: you can redistribute it and/or modify it under
+//# the terms of the GNU General Public License as published by the Free
+//# Software Foundation, either version 3 of the License, or (at your option)
+//# any later version.
+//#
+//# livedata is distributed in the hope that it will be useful, but WITHOUT
 //# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
-//# License for more details.
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+//# more details.
 //#
-//# You should have received a copy of the GNU Library General Public License
-//# along with this library; if not, write to the Free Software Foundation,
-//# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+//# You should have received a copy of the GNU General Public License along
+//# with livedata.  If not, see <http://www.gnu.org/licenses/>.
 //#
-//# Correspondence concerning AIPS++ should be addressed as follows:
-//#        Internet email: aips2-request@nrao.edu.
-//#        Postal address: AIPS++ Project Office
-//#                        National Radio Astronomy Observatory
-//#                        520 Edgemont Road
-//#                        Charlottesville, VA 22903-2475 USA
+//# Correspondence concerning livedata may be directed to:
+//#        Internet email: mcalabre@atnf.csiro.au
+//#        Postal address: Dr. Mark Calabretta
+//#                        Australia Telescope National Facility, CSIRO
+//#                        PO Box 76
+//#                        Epping NSW 1710
+//#                        AUSTRALIA
 //#
-//# $Id$
+//# http://www.atnf.csiro.au/computing/software/livedata.html
+//# $Id: PKSMS2writer.h,v 19.14 2009-09-29 07:33:38 cal103 Exp $
 //#---------------------------------------------------------------------------
 
 #ifndef ATNF_PKSMS2WRITER_H
 #define ATNF_PKSMS2WRITER_H
 
+#include <atnf/PKSIO/PKSrecord.h>
 #include <atnf/PKSIO/PKSwriter.h>
 
 #include <casa/aips.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/BasicSL/Complex.h>
+#include <casa/BasicSL/String.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSColumns.h>
-#include <casa/BasicSL/String.h>
+
+#include <casa/namespace.h>
 
 // <summary>
 // Class to write Parkes Multibeam data to a measurementset.
 // </summary>
 
-#include <casa/namespace.h>
 class PKSMS2writer : public PKSwriter
 {
   public:
@@ -63,58 +68,17 @@ class PKSMS2writer : public PKSwriter
         const String antName,
         const Vector<Double> antPosition,
         const String obsMode,
+        const String bunit,
         const Float  equinox,
         const String dopplerFrame,
         const Vector<uInt> nChan,
         const Vector<uInt> nPol,
         const Vector<Bool> haveXPol,
-        const Bool   haveBase, 
-        const String fluxUnit);
+        const Bool   haveBase);
 
     // Write the next data record.
     virtual Int write(
-        const Int             scanNo,
-        const Int             cycleNo,
-        const Double          mjd,
-        const Double          interval,
-        const String          fieldName,
-        const String          srcName,
-        const Vector<Double>  srcDir,
-        const Vector<Double>  srcPM,
-        const Double          srcVel,
-        const String          obsMode,
-        const Int             IFno,
-        const Double          refFreq,
-        const Double          bandwidth,
-        const Double          freqInc,
-        //const Double          restFreq,
-        const Vector<Double>  restFreq,
-        const Vector<Float>   tcal,
-        const String          tcalTime,
-        const Float           azimuth,
-        const Float           elevation,
-        const Float           parAngle,
-        const Float           focusAxi,
-        const Float           focusTan,
-        const Float           focusRot,
-        const Float           temperature,
-        const Float           pressure,
-        const Float           humidity,
-        const Float           windSpeed,
-        const Float           windAz,
-        const Int             refBeam,
-        const Int             beamNo,
-        const Vector<Double>  direction,
-        const Vector<Double>  scanRate,
-        const Vector<Float>   tsys,
-        const Vector<Float>   sigma,
-        const Vector<Float>   calFctr,
-        const Matrix<Float>   baseLin,
-        const Matrix<Float>   baseSub,
-        const Matrix<Float>   &spectra,
-        const Matrix<uChar>   &flagged,
-        const Complex         xCalFctr,
-        const Vector<Complex> &xPol);
+        const PKSrecord &pksrec);
 
     // Close the MS, flushing all associated Tables.
     virtual void close();
@@ -166,11 +130,6 @@ class PKSMS2writer : public PKSwriter
     ArrayColumn<Float> *cBaseSubCol;
     ScalarColumn<Complex> *cXCalFctrCol;
 
-    // for handling parameters specific to GBT and other telescopes
-    Bool cGBT;
-    Bool cSMT;
-    Bool cAPEX;
-    Bool cALMA;
 
     // Add an entry to the ANTENNA subtable.
     Int addAntennaEntry(
@@ -204,8 +163,7 @@ class PKSMS2writer : public PKSwriter
     // Add an entry to the OBSERVATION subtable.
     Int addObservationEntry(
         const String observer,
-        const String project,
-        const String antName);
+        const String project);
 
     // Add an entry to the POINTING subtable.
     Int addPointingEntry(
@@ -228,8 +186,7 @@ class PKSMS2writer : public PKSwriter
         const String name,
         const Vector<Double> direction,
         const Vector<Double> properMotion,
-        //const Double restFreq,
-        const Vector<Double> restFreq,
+        const Double restFreq,
         const Double radialVelocity);
 
     // Add an entry to the SPECTRAL_WINDOW subtable.
@@ -251,8 +208,7 @@ class PKSMS2writer : public PKSwriter
         const Double mjd,
         const Double interval,
         const Vector<Float> Tcal,
-        const Vector<Float> Tsys,
-        const Int nPol);
+        const Vector<Float> Tsys);
 
     // Add an entry to the WEATHER subtable.
     Int addWeatherEntry(

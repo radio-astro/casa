@@ -1,5 +1,5 @@
 //#---------------------------------------------------------------------------
-//# PKSwriter.h: Class to write out Parkes multibeam data.
+//# PKSrecord.h: Class to store an MBFITS single-dish data record.
 //#---------------------------------------------------------------------------
 //# livedata - processing pipeline for single-dish, multibeam spectral data.
 //# Copyright (C) 2000-2009, Australia Telescope National Facility, CSIRO
@@ -28,14 +28,13 @@
 //#                        AUSTRALIA
 //#
 //# http://www.atnf.csiro.au/computing/software/livedata.html
-//# $Id: PKSwriter.h,v 19.17 2009-09-29 07:33:39 cal103 Exp $
+//# $Id: PKSrecord.h,v 1.2 2009-09-29 07:33:39 cal103 Exp $
+//#---------------------------------------------------------------------------
+//# Original: 2008/11/14, Mark Calabretta, ATNF
 //#---------------------------------------------------------------------------
 
-#ifndef ATNF_PKSWRITER_H
-#define ATNF_PKSWRITER_H
-
-#include <atnf/PKSIO/PKSmsg.h>
-#include <atnf/PKSIO/PKSrecord.h>
+#ifndef ATNF_PKSRECORD_H
+#define ATNF_PKSRECORD_H
 
 #include <casa/aips.h>
 #include <casa/Arrays/Matrix.h>
@@ -46,47 +45,57 @@
 #include <casa/namespace.h>
 
 // <summary>
-// Class to write out Parkes multibeam data.
+// Class to store an MBFITS single-dish data record.
 // </summary>
 
-class PKSwriter : public PKSmsg
+// Essentially just a struct used as a function argument.
+class PKSrecord
 {
   public:
-    // Destructor.
-    virtual ~PKSwriter() {};
-
-    // Create the output file and and write static data.
-    virtual Int create(
-        const String outName,
-        const String observer,
-        const String project,
-        const String antName,
-        const Vector<Double> antPosition,
-        const String obsMode,
-        const String bunit,
-        const Float  equinox,
-        const String dopplerFrame,
-        const Vector<uInt> nChan,
-        const Vector<uInt> nPol,
-        const Vector<Bool> haveXPol,
-        const Bool havebase) = 0;
-
-    // Write the next data record.
-    virtual Int write (
-        const PKSrecord &pksrec) = 0;
-
-    // Write a history record.
-    virtual Int history(const String text) {return 0;};
-    virtual Int history(const char *text)  {return 0;};
-
-    // Close the output file.
-    virtual void close() = 0;
-
-  protected:
-    Bool cHaveBase;
-    uInt cNIF;
-    Vector<Bool> cHaveXPol;
-    Vector<uInt> cNChan, cNPol;
+    Int             scanNo;
+    Int             cycleNo;
+    Double          mjd;
+    Double          interval;
+    String          fieldName;
+    String          srcName;
+    Vector<Double>  srcDir;
+    Vector<Double>  srcPM;
+    Double          srcVel;
+    String          obsType;
+    Int             IFno;
+    Double          refFreq;
+    Double          bandwidth;
+    Double          freqInc;
+    Double          restFreq;
+    Vector<Float>   tcal;
+    String          tcalTime;
+    Float           azimuth;
+    Float           elevation;
+    Float           parAngle;
+    Float           focusAxi;
+    Float           focusTan;
+    Float           focusRot;
+    Float           temperature;
+    Float           pressure;
+    Float           humidity;
+    Float           windSpeed;
+    Float           windAz;
+    Int             refBeam;
+    Int             beamNo;
+    Vector<Double>  direction;
+    Int             pCode;
+    Float           rateAge;
+    Vector<Float>   scanRate;
+    Float           paRate;
+    Vector<Float>   tsys;
+    Vector<Float>   sigma;
+    Vector<Float>   calFctr;
+    Matrix<Float>   baseLin;
+    Matrix<Float>   baseSub;
+    Matrix<Float>   spectra;
+    Matrix<uChar>   flagged;
+    Complex         xCalFctr;
+    Vector<Complex> xPol;
 };
 
 #endif
