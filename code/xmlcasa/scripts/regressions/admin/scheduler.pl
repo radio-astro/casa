@@ -38,6 +38,8 @@ if (! $res_dir) {
     $res_dir = $reg_dir;
 }
 
+(-d $res_dir) or mkdir($res_dir) or die;
+
 $cmd="date -u +%Y%m%d%H%M";
 $date=`$cmd`;
 if ($?) {

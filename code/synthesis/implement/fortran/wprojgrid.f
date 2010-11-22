@@ -87,7 +87,7 @@ C
          do ichan=1, nvischan
             achan=chanmap(ichan)+1
             if((achan.ge.1).and.(achan.le.nchan).and.
-     $           (weight(ichan,irow).gt.0.0)) then
+     $           (weight(ichan,irow).ne.0.0)) then
                call swp(uvw(1,irow), dphase(irow), freq(ichan), c, 
      $              scale, offset, sampling, pos, loc, off, phasor)
                iloc(3)=max(1, min(wconvsize, loc(3)))

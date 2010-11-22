@@ -47,7 +47,7 @@ string CBasebandName::revision () {
 }
 
 unsigned int CBasebandName::size() {
-	return 10;
+	return 16;
 	}
 	
 	
@@ -71,6 +71,18 @@ const std::string& CBasebandName::sBB_8 = "BB_8";
 	
 const std::string& CBasebandName::sBB_ALL = "BB_ALL";
 	
+const std::string& CBasebandName::sA1C1_3BIT = "A1C1_3BIT";
+	
+const std::string& CBasebandName::sA2C2_3BIT = "A2C2_3BIT";
+	
+const std::string& CBasebandName::sAC_8BIT = "AC_8BIT";
+	
+const std::string& CBasebandName::sB1D1_3BIT = "B1D1_3BIT";
+	
+const std::string& CBasebandName::sB2D2_3BIT = "B2D2_3BIT";
+	
+const std::string& CBasebandName::sBD_8BIT = "BD_8BIT";
+	
 const std::vector<std::string> CBasebandName::names() {
     std::vector<std::string> enumSet;
     
@@ -93,6 +105,18 @@ const std::vector<std::string> CBasebandName::names() {
     enumSet.insert(enumSet.end(), CBasebandName::sBB_8);
     
     enumSet.insert(enumSet.end(), CBasebandName::sBB_ALL);
+    
+    enumSet.insert(enumSet.end(), CBasebandName::sA1C1_3BIT);
+    
+    enumSet.insert(enumSet.end(), CBasebandName::sA2C2_3BIT);
+    
+    enumSet.insert(enumSet.end(), CBasebandName::sAC_8BIT);
+    
+    enumSet.insert(enumSet.end(), CBasebandName::sB1D1_3BIT);
+    
+    enumSet.insert(enumSet.end(), CBasebandName::sB2D2_3BIT);
+    
+    enumSet.insert(enumSet.end(), CBasebandName::sBD_8BIT);
         
     return enumSet;
 }
@@ -129,6 +153,24 @@ std::string CBasebandName::name(const BasebandNameMod::BasebandName& f) {
     
     case BasebandNameMod::BB_ALL:
       return CBasebandName::sBB_ALL;
+    
+    case BasebandNameMod::A1C1_3BIT:
+      return CBasebandName::sA1C1_3BIT;
+    
+    case BasebandNameMod::A2C2_3BIT:
+      return CBasebandName::sA2C2_3BIT;
+    
+    case BasebandNameMod::AC_8BIT:
+      return CBasebandName::sAC_8BIT;
+    
+    case BasebandNameMod::B1D1_3BIT:
+      return CBasebandName::sB1D1_3BIT;
+    
+    case BasebandNameMod::B2D2_3BIT:
+      return CBasebandName::sB2D2_3BIT;
+    
+    case BasebandNameMod::BD_8BIT:
+      return CBasebandName::sBD_8BIT;
     	
     }
     // Impossible siutation but....who knows with C++ enums
@@ -176,6 +218,30 @@ BasebandNameMod::BasebandName CBasebandName::newBasebandName(const std::string& 
     if (name == CBasebandName::sBB_ALL) {
         return BasebandNameMod::BB_ALL;
     }
+    	
+    if (name == CBasebandName::sA1C1_3BIT) {
+        return BasebandNameMod::A1C1_3BIT;
+    }
+    	
+    if (name == CBasebandName::sA2C2_3BIT) {
+        return BasebandNameMod::A2C2_3BIT;
+    }
+    	
+    if (name == CBasebandName::sAC_8BIT) {
+        return BasebandNameMod::AC_8BIT;
+    }
+    	
+    if (name == CBasebandName::sB1D1_3BIT) {
+        return BasebandNameMod::B1D1_3BIT;
+    }
+    	
+    if (name == CBasebandName::sB2D2_3BIT) {
+        return BasebandNameMod::B2D2_3BIT;
+    }
+    	
+    if (name == CBasebandName::sBD_8BIT) {
+        return BasebandNameMod::BD_8BIT;
+    }
     
     throw badString(name);
 }
@@ -220,6 +286,30 @@ BasebandNameMod::BasebandName CBasebandName::literal(const std::string& name) {
     	
     if (name == CBasebandName::sBB_ALL) {
         return BasebandNameMod::BB_ALL;
+    }
+    	
+    if (name == CBasebandName::sA1C1_3BIT) {
+        return BasebandNameMod::A1C1_3BIT;
+    }
+    	
+    if (name == CBasebandName::sA2C2_3BIT) {
+        return BasebandNameMod::A2C2_3BIT;
+    }
+    	
+    if (name == CBasebandName::sAC_8BIT) {
+        return BasebandNameMod::AC_8BIT;
+    }
+    	
+    if (name == CBasebandName::sB1D1_3BIT) {
+        return BasebandNameMod::B1D1_3BIT;
+    }
+    	
+    if (name == CBasebandName::sB2D2_3BIT) {
+        return BasebandNameMod::B2D2_3BIT;
+    }
+    	
+    if (name == CBasebandName::sBD_8BIT) {
+        return BasebandNameMod::BD_8BIT;
     }
     
     throw badString(name);

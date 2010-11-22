@@ -108,6 +108,7 @@ extern "C" {
     tabSpws_p(),
     startFreq_p(),
     stepFreq_p(),
+    nchan_p(),
     resetCallBack_p(NULL),
     noMS_p(True),
     MSstartChan_p()
@@ -465,7 +466,8 @@ Bool PlotCal::plot(String xaxis, String yaxis) {
 
   else if(calType_p=="K")
     //    return timePlotK();
-    throw(AipsError("K plots are disabled for now."));
+    //    throw(AipsError("K plots are disabled for now."));
+    return doPlot();
 
   else if(calType_p=="Xold")
     throw(AipsError("X (old-style) plots are disabled for now."));
@@ -712,6 +714,7 @@ Bool PlotCal::doPlot(){
 
   Int nchan;
   if (calType_p=="BPOLY") {
+
     // form a virtual "B" table
     virtualBPoly(plotTab, nchan);
 
@@ -720,7 +723,6 @@ Bool PlotCal::doPlot(){
       xAxis_p="FREQ";
     if (xAxis_p=="TIME")
       throw(AipsError("BPOLY plotting does not support xaxis=time"));
-
 
     // Disable flagging on BPOLY
     tp_p->changeGuiButtonState("flag","disabled");
@@ -1529,6 +1531,10 @@ Int PlotCal::multiTables(const Table& tablein,
     MeasurementSet ms(msName_p);
     ROArrayColumn<Double> chanfreqcol(ROMSSpWindowColumns(ms.spectralWindow()).chanFreq());
 
+    startFreq_p.resize(nCalDesc_p);
+    stepFreq_p.resize(nCalDesc_p);
+    nchan_p.resize(nCalDesc_p);
+
     for (Int icd=0;icd<nCalDesc_p;++icd) {
 
       Int ispw=tabSpws_p(0,icd);
@@ -1537,6 +1543,8 @@ Int PlotCal::multiTables(const Table& tablein,
 
       Vector<Double> chanfreq = chanfreqcol(ispw);
       Int nchan=chanfreq.nelements();
+
+      nchan_p(icd)=nchan;  // used in virtualBPoly()
 
       startFreq_p(icd) = chanfreq(MSstartChan_p(icd));
       stepFreq_p(icd)= nchan>1 ? (chanfreq(nchan-1)-chanfreq(0))/Double(nchan-1): 0.0;
@@ -1574,15 +1582,16 @@ Int PlotCal::multiTables(const Table& tablein,
 
     startFreq_p.resize(ndesc);
     stepFreq_p.resize(ndesc);
+    nchan_p.resize(ndesc);
+
+    getFreqInfo();
 
     // Fill the bandpass correction cache
     Int nrow = calTable.nRowMain();
 
     Int npolin=2;
-    //    nchan=100;
-    nchan=500;
 
-    IPosition ipin(3,npolin,nchan,nrow);
+    IPosition ipin(3,npolin,max(nchan_p),nrow);
     
     Cube<Bool> flag(ipin);
     flag=True;
@@ -1601,6 +1610,8 @@ Int PlotCal::multiTables(const Table& tablein,
       
       // CalDescId
       Int idesc=col.calDescId().asInt(row);
+
+      Int nchan=nchan_p(idesc);
 
       // Antenna id.
       Int antennaId = col.antenna1().asInt(row);
@@ -1646,10 +1657,8 @@ Int PlotCal::multiTables(const Table& tablein,
       Vector<Double> freq(nchan);
       Double dfreq( (x2-x1)/Double(nchan-1) );
       for (Int ichan=0;ichan<nchan;++ichan)
-	freq(ichan)=freqDomain(0)+Double(ichan)*dfreq;
+	freq(ichan)=(startFreq_p(idesc)+Double(ichan)*stepFreq_p(idesc))*1.0e6;
 
-      startFreq_p(idesc)=freqDomain(0)/1.0e6;
-      stepFreq_p(idesc)=dfreq/1.0e6;
 
       for (Int ipol=0;ipol<2;ipol++) {
 	

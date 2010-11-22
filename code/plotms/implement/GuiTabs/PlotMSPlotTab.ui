@@ -24,6 +24,9 @@
   <property name="windowTitle" >
    <string>PlotMS Plot Tab</string>
   </property>
+  <property name="toolTip" >
+   <string/>
+  </property>
   <layout class="QVBoxLayout" >
    <property name="spacing" >
     <number>3</number>
@@ -85,6 +88,16 @@
       <number>3</number>
      </property>
      <item>
+      <widget class="QCheckBox" name="forceReplotChk" >
+       <property name="toolTip" >
+        <string>If checked, force a reload of the data when the Plot button is pressed.</string>
+       </property>
+       <property name="text" >
+        <string>force reload</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer>
        <property name="orientation" >
         <enum>Qt::Horizontal</enum>
@@ -99,6 +112,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="plotButton" >
+       <property name="toolTip" >
+        <string>Reload data, replot. Hold down shift to force reload</string>
+       </property>
        <property name="text" >
         <string>Plot</string>
        </property>

@@ -148,16 +148,16 @@ void PlotMSCanvasTab::update(const PlotMSPlot& plot) {
     const PMS_PP_Canvas* c = params.typedGroup<PMS_PP_Canvas>(),
                        *c2 = newParams.typedGroup<PMS_PP_Canvas>();
     
-    changedText(titleLabel, c->titleFormat() != c2->titleFormat());
-    changedText(legendLabel, c->legendShown() != c2->legendShown() ||
+    highlightWidgetText(titleLabel, c->titleFormat() != c2->titleFormat());
+    highlightWidgetText(legendLabel, c->legendShown() != c2->legendShown() ||
                 (c->legendShown()&&c->legendPosition()!=c2->legendPosition()));
     
-    changedText(xAxisLabel, c->xAxisShown() != c2->xAxisShown());
-    changedText(xLabelLabel, c->xLabelFormat() != c2->xLabelFormat());
-    changedText(yAxisLabel, c->yAxisShown() != c2->yAxisShown());
-    changedText(yLabelLabel, c->yLabelFormat() != c2->yLabelFormat());
+    highlightWidgetText(xAxisLabel, c->xAxisShown() != c2->xAxisShown());
+    highlightWidgetText(xLabelLabel, c->xLabelFormat() != c2->xLabelFormat());
+    highlightWidgetText(yAxisLabel, c->yAxisShown() != c2->yAxisShown());
+    highlightWidgetText(yLabelLabel, c->yLabelFormat() != c2->yLabelFormat());
     
-    changedText(gridLabel, c->gridMajorShown() != c2->gridMajorShown() ||
+    highlightWidgetText(gridLabel, c->gridMajorShown() != c2->gridMajorShown() ||
                 c->gridMinorShown() != c2->gridMinorShown() ||
                 (c->gridMajorShown() &&
                  *c->gridMajorLine() != *c2->gridMajorLine()) ||

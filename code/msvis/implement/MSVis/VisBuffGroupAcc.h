@@ -92,6 +92,12 @@ public:
   // Make data amp- or phase-only
   void enforceAPonData(const String& apmode);
 
+  // Optionally set cross-hands weights to zero, so they are 
+  //   not used (e.g., for solving) subsequently, but remain
+  //   present in case a general calibration (like P for linears)
+  //   is applied that will mix them with the parallel hands
+  void enforceSolveCorrWeights(const Bool phandonly=False);
+
   // How many separate VisBuffers contained herein?
   inline Int nBuf() { return nBuf_p; };
 

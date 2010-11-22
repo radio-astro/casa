@@ -45,12 +45,9 @@ casaglobals=True
 # setup available tools
 imager = casac.homefinder.find_home_by_name('imagerHome')
 imtool=imager
-im = imager.create()
 calibrater = casac.homefinder.find_home_by_name('calibraterHome')
 cbtool=calibrater
-cb = calibrater.create()
 mstool = casac.homefinder.find_home_by_name('msHome')
-ms = mstool.create()
 tptool = casac.homefinder.find_home_by_name('tableplotHome')
 tp = tptool.create()
 mptool = casac.homefinder.find_home_by_name('msplotHome')
@@ -59,34 +56,23 @@ pmtool = casac.homefinder.find_home_by_name('plotmsHome')
 pm = pmtool.create()
 cptool = casac.homefinder.find_home_by_name('calplotHome')
 cp = cptool.create()
-tbtool = casac.homefinder.find_home_by_name('tableHome')
-tb = tbtool.create()
-fgtool = casac.homefinder.find_home_by_name('flaggerHome')
-fg = fgtool.create()
-aftool = casac.homefinder.find_home_by_name('autoflagHome')
-af = aftool.create()
-metool = casac.homefinder.find_home_by_name('measuresHome')
-me = metool.create()
 qatool = casac.homefinder.find_home_by_name('quantaHome')
 qa = casac.qa = qatool.create()
+tbtool = casac.homefinder.find_home_by_name('tableHome')
+fgtool = casac.homefinder.find_home_by_name('flaggerHome')
+aftool = casac.homefinder.find_home_by_name('autoflagHome')
+metool = casac.homefinder.find_home_by_name('measuresHome')
 iatool = casac.homefinder.find_home_by_name('imageHome')
-ia = iatool.create()
 potool = casac.homefinder.find_home_by_name('imagepolHome')
-po = potool.create()
 smtool = casac.homefinder.find_home_by_name('simulatorHome')
-sm = smtool.create()
 cltool = casac.homefinder.find_home_by_name('componentlistHome')
-cl = cltool.create()
 coordsystool = casac.homefinder.find_home_by_name('coordsysHome')
-cs = coordsystool.create()
 rgtool = casac.homefinder.find_home_by_name('regionmanagerHome')
-rg=rgtool.create()
+sltool = casac.homefinder.find_home_by_name('spectrallineHome')
+dctool = casac.homefinder.find_home_by_name('deconvolverHome')
+vptool = casac.homefinder.find_home_by_name('vpmanagerHome')
 utilstool = casac.homefinder.find_home_by_name('utilsHome')
 cu = casac.cu = utilstool.create()
-dctool = casac.homefinder.find_home_by_name('deconvolverHome')
-dc=dctool.create()
-vptool = casac.homefinder.find_home_by_name('vpmanagerHome')
-vp=vptool.create()
 vftaskhome = casac.homefinder.find_home_by_name('vlafillertaskHome')
 vftask = vftaskhome.create()
 vlafiller=vftask.fill
@@ -96,6 +82,34 @@ __taskinit_setlogfile(casalog)
 casalog.setglobal(True)
 attool = casac.homefinder.find_home_by_name('atmosphereHome')
 at = attool.create()
+
+def gentools():
+	"""
+	Generate a fresh set of tools the ones who's
+	state can be funny
+	im,cb,ms,tb,fg,af,me,ia,po,sm,cl,cs,rg,sl,dc.vp=gentools()  
+	"""
+	im=imager.create()
+	cb = calibrater.create()
+	ms = mstool.create()
+	tb = tbtool.create()
+	fg = fgtool.create()
+	af = aftool.create()
+	me = metool.create()
+	ia = iatool.create()
+	po = potool.create()
+	sm = smtool.create()
+	cl = cltool.create()
+	cs = coordsystool.create()
+	rg=rgtool.create()
+	sl=sltool.create()
+	dc=dctool.create()
+	vp=vptool.create()
+	return im,cb,ms,tb,fg,af,me,ia,po,sm,cl,cs,rg,sl,dc,vp
+
+im,cb,ms,tb,fg,af,me,ia,po,sm,cl,cs,rg,sl,dc,vp=gentools()
+
+###done with common tools
 
 # setup viewer tool
 try : 

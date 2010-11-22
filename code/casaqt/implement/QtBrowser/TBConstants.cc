@@ -344,6 +344,8 @@ vector<String>* TBConstants::nonArrayTypes() {
 }
 
 const String TBConstants::COMMENT_DATE = "Modified Julian Day";
+const String TBConstants::COMMENT_TIMP = "Time interval midpoint";  // e.g. in POINTING
+const String TBConstants::COMMENT_TIMP2 = "Midpoint of time for which this set of parameters is accurate.";  // e.g. in SOURCE
 
 String TBConstants::typeName(DataType dt) {
     if(dt == TpBool) return TYPE_BOOL;

@@ -26,7 +26,7 @@ def sdimaging(sdfile, specunit, restfreq, scanlist, field, spw, antenna, stokes,
 
             # spectral unit
             mode=''
-            if specunit=='channel':
+            if specunit=='channel' or specunit=='':
                 mode='channel'
             elif specunit=='km/s':
                 mode='velocity'
@@ -83,7 +83,10 @@ def sdimaging(sdfile, specunit, restfreq, scanlist, field, spw, antenna, stokes,
 
             # antenna
             if type(antenna)==int:
-                antenna=str(antenna)
+                antenna=str(antenna)+'&&&'
+            else:
+                if (len(antenna)!=0) and (antenna.find('&')==-1) and (antenna.find(';')==-1):
+                    antenna = antenna + '&&&'
 
             # stokes
             if stokes=='':

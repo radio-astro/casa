@@ -74,6 +74,7 @@
 #include <lattices/Lattices/LCBox.h>
 #include <lattices/Lattices/LCSlicer.h>
 
+
 #include <images/Images/TempImage.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageSummary.h>
@@ -98,8 +99,8 @@
 #include <synthesis/MeasurementEquations/IPLatConvEquation.h>
 #include <synthesis/MeasurementEquations/Deconvolver.h>
 #include <synthesis/MeasurementEquations/Imager.h>
+#include <synthesis/MeasurementEquations/ImageMSCleaner.h>
 
-#include <casa/System/PGPlotter.h>
 
 
 #include <casa/sstream.h>
@@ -115,8 +116,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 Deconvolver::Deconvolver() 
-  : dirty_p(0), psf_p(0), convolver_p(0), cleaner_p(0),
-    pgplotter_p(0)
+  : dirty_p(0), psf_p(0), convolver_p(0), cleaner_p(0)
 {
 
   defaults();
@@ -140,8 +140,7 @@ void Deconvolver::defaults()
 }
 
 Deconvolver::Deconvolver(const String& dirty, const String& psf)
-  : dirty_p(0), psf_p(0), convolver_p(0), cleaner_p(0),
-    pgplotter_p(0)
+  : dirty_p(0), psf_p(0), convolver_p(0), cleaner_p(0)
 {
   LogIO os(LogOrigin("Deconvolver", "Deconvolver(String& dirty, Strong& psf)", WHERE));
   defaults();
@@ -149,8 +148,7 @@ Deconvolver::Deconvolver(const String& dirty, const String& psf)
 }
 
 Deconvolver::Deconvolver(const Deconvolver &other)
-  : dirty_p(0), psf_p(0), convolver_p(0), cleaner_p(0),
-    pgplotter_p(0)
+  : dirty_p(0), psf_p(0), convolver_p(0), cleaner_p(0)
 {
   defaults();
   open(other.dirty_p->table().tableName(), other.psf_p->table().tableName());
@@ -169,9 +167,6 @@ Deconvolver &Deconvolver::operator=(const Deconvolver &other)
   }
   if ((!cleaner_p.null()) && this != &other) {
     *cleaner_p = *(other.cleaner_p);
-  }
-  if (pgplotter_p && this != &other) {
-    *pgplotter_p = *(other.pgplotter_p);
   }
   return *this;
 }
@@ -195,11 +190,6 @@ Deconvolver::~Deconvolver()
     delete dirty_p;
   }
   dirty_p = 0;
-  // The PGPLotter has to be managed from the code that call setPGPlotter it
-  //  if (pgplotter_p) {
-  //   delete pgplotter_p;
-  //  }
-  // pgplotter_p = 0;
 }
 
 Bool Deconvolver::open(const String& dirty, const String& psf, Bool warn)
@@ -213,6 +203,9 @@ Bool Deconvolver::open(const String& dirty, const String& psf, Bool warn)
     AlwaysAssert(dirty_p, AipsError);
     nx_p=dirty_p->shape()(0);
     ny_p=dirty_p->shape()(1);
+    dirty_p->setMaximumCacheSize(2*nx_p*ny_p);
+    dirty_p->setCacheSizeInTiles(10000);
+
     if(dirty_p->shape().nelements()==3){
       findAxes();
       if (chanAxis_p > 0)
@@ -241,7 +234,8 @@ Bool Deconvolver::open(const String& dirty, const String& psf, Bool warn)
       psf_p = new PagedImage<Float>(psf);
       AlwaysAssert(psf_p, AipsError);
       psfName_p   =  psf_p->table().tableName();    
-      
+      psf_p->setMaximumCacheSize(2*nx_p*ny_p);
+      psf_p->setCacheSizeInTiles(10000);
       
       try{
 	os << "Fitting PSF" << LogIO::POST;
@@ -290,10 +284,10 @@ Bool Deconvolver::open(const String& dirty, const String& psf, Bool warn)
 	}
 	latConvEqn_p = 0;
 	
-	os << "Making Lattice cleaner" << LogIO::POST;
+	os << "Making Image cleaner" << LogIO::POST;
 	//if (cleaner_p) delete cleaner_p;
+	cleaner_p= new ImageMSCleaner(*psf_p, *dirty_p);
 	if(nchan_p<=1){
-	  cleaner_p = new LatticeCleaner<Float>(*psf_p, *dirty_p);
 	  convolver_p = new LatticeConvolver<Float>(*psf_p);
 	}
 	else{
@@ -302,24 +296,18 @@ Bool Deconvolver::open(const String& dirty, const String& psf, Bool warn)
 	    IPosition trc(4, nx_p-1, ny_p-1, 0, 0);
 	    trc(polAxis_p)=npol_p-1;
 	    Slicer sl(blc, trc, Slicer::endIsLast);
-	    SubImage<Float> dirtySub(*dirty_p, sl, True);
-	    SubImage<Float> psfSub(*psf_p, sl, True);
-	    
+	    SubImage<Float> psfSub(*psf_p, sl, True);  
 	    convolver_p = new LatticeConvolver<Float>(psfSub);
 	    AlwaysAssert(convolver_p, AipsError);
-	    cleaner_p = new LatticeCleaner<Float>(psfSub, dirtySub);
 	  }
 	  else{
 	    IPosition blc(3, 0, 0, 0);
 	    IPosition trc(3, nx_p-1, ny_p-1, 0);
 	    Slicer sl(blc, trc, Slicer::endIsLast);
-	    SubImage<Float> dirtySub(*dirty_p, sl, True);
+	    //SubImage<Float> dirtySub(*dirty_p, sl, True);
 	    SubImage<Float> psfSub(*psf_p, sl, True);
-	    
 	    convolver_p = new LatticeConvolver<Float>(psfSub);
 	    AlwaysAssert(convolver_p, AipsError);
-	    cleaner_p = new LatticeCleaner<Float>(psfSub, dirtySub);
-	    
 	  }
 	  
 	}
@@ -399,11 +387,9 @@ Bool Deconvolver::close()
   os << "Closing images and detaching from Deconvolver" << LogIO::POST;
   if(psf_p) delete psf_p; psf_p = 0;
   if(dirty_p) delete dirty_p; dirty_p = 0;
-  if(pgplotter_p) delete pgplotter_p; pgplotter_p = 0;
   if (convolver_p) delete convolver_p; convolver_p = 0;
   if (residEqn_p) delete  residEqn_p;  residEqn_p = 0;
   if (latConvEqn_p) delete latConvEqn_p; latConvEqn_p = 0;
-  //if (cleaner_p) delete cleaner_p; cleaner_p = 0;
 
   return True;
 }
@@ -1040,8 +1026,7 @@ Bool Deconvolver::clarkclean(const Int niter,
 	
 	//Now actually do the clean
 	if (displayProgress) {
-	  getPGPlotter(False);
-	  ccpp = new ClarkCleanProgress (pgplotter_p);
+	  ccpp = new ClarkCleanProgress ();
 	  myClarkCleaner.setProgress(*ccpp);
 	}
 	if(latConvEqn_p !=0) delete latConvEqn_p;
@@ -1096,8 +1081,7 @@ Bool Deconvolver::clarkclean(const Int niter,
 
       //Now actually do the clean
       if (displayProgress) {
-	getPGPlotter(False);
-	ccpp = new ClarkCleanProgress (pgplotter_p);
+	ccpp = new ClarkCleanProgress ();
 	myClarkCleaner.setProgress(*ccpp);
       }
       latConvEqn_p = new LatConvEquation (psfSub, dirtySub);
@@ -1129,7 +1113,8 @@ Bool Deconvolver::setupLatCleaner(const String& algorithm, const Int niter,
 			const Bool displayProgress){
 
   LogIO os(LogOrigin("Deconvolver", "clean()", WHERE));
-
+  
+  /*
   if((algorithm=="msclean")||(algorithm=="fullmsclean" || algorithm=="multiscale" || algorithm=="fullmultiscale")) {
     os << "Cleaning image using multi-scale algorithm" << LogIO::POST;
     if(!scalesValid_p) {
@@ -1158,7 +1143,7 @@ Bool Deconvolver::setupLatCleaner(const String& algorithm, const Int niter,
     os << "Cleaning full image using multi-scale algorithm" << LogIO::POST;
     cleaner_p->ignoreCenterBox(True);
   }
-
+  */
   return True;
 
 }
@@ -1189,8 +1174,6 @@ Bool Deconvolver::clean(const String& algorithm, const Int niter,
     if(imagename=="") imagename=dirty_p->table().tableName()+"."+algorithm;
     if(!Table::isWritable(imagename)) {
       make(imagename);
-      dirty_p->table().lock();
-      psf_p->table().lock();
     }
     
     {
@@ -1203,83 +1186,26 @@ Bool Deconvolver::clean(const String& algorithm, const Int niter,
     PagedImage<Float> modelImage(imagename);
 
     AlwaysAssert(!cleaner_p.null(), AipsError);
-
-    if(!setupLatCleaner(algorithm, niter, gain, threshold, displayProgress))
-      return False;
-    
     PagedImage<Float> *maskim = 0;
     // Deal with mask
     if (mask != "") {
       if( Table::isReadable(mask)) {
 	maskim = new PagedImage<Float>(mask);
 	AlwaysAssert(maskim, AipsError);
-	masknchan=maskim->shape()(chanAxis_p);
-	if(masknchan==1)
-	  cleaner_p->setMask(*maskim);
-      } else {
+	cleaner_p->setMask(*maskim);
+	 } else {
+
 	os << LogIO::SEVERE << "Mask "<< mask<<" is not readable" << LogIO::POST;
       }
     }
+
+    
     Bool result=False;
 
-    
-
-    if(nchan_p >= 1){
-    
-      for( Int k=0; k< nchan_p; ++k){
-	os << "Cleaning channel " << k+1 << LogIO::POST;
-	SubImage<Float> subModel;
-	IPosition blc;
-	IPosition trc;
-	if(npol_p > 0 ){
-	  blc=IPosition (4,0,0,0,0);
-	  blc(chanAxis_p)=k;
-	  blc(polAxis_p)=0;
-	  trc=IPosition(4, nx_p-1, ny_p-1, 0, 0);
-	  trc(chanAxis_p)=k;
-	  trc(polAxis_p)=npol_p-1;
-	}
-	else{
-	  blc=IPosition(3, 0, 0, k);
-	  trc=IPosition(3, nx_p-1, ny_p-1, k);
-	}
-	Slicer sl(blc, trc, Slicer::endIsLast);
-	SubImage<Float> dirtySub(*dirty_p, sl, True);
-	subModel= SubImage<Float> (modelImage, sl, True);
-	if((psfnchan>1) && (psfnchan==nchan_p)){
-	  SubImage<Float> psfSub(*psf_p, sl, False);
-	  cleaner_p=new LatticeCleaner<Float>(psfSub, dirtySub);
-	  setupLatCleaner(algorithm, niter, gain, threshold, displayProgress);
-	}
-	if(maskim !=0 && (masknchan >1) && (masknchan==nchan_p)){
-	  SubImage<Float> maskSub(*maskim, sl, False);
-	  cleaner_p->setMask(maskSub);
-	  
-	}
-	cleaner_p->update(dirtySub);
-	
-      
-       LatticeCleanProgress * cpp = 0;
-       if (displayProgress) {
-	 getPGPlotter(False);
-	 cpp = new LatticeCleanProgress(pgplotter_p);
-       }
-       result=cleaner_p->clean(subModel, cpp);    
-       if(cpp != 0 ) delete cpp;
-      }
-
-    }
-    else{
-      // Now actually do the clean
-      LatticeCleanProgress * cpp = 0;
-      if (displayProgress) {
-	getPGPlotter(False);
-	cpp = new LatticeCleanProgress(pgplotter_p);
-      }
-      result=cleaner_p->clean(modelImage, cpp);    
-      if(cpp != 0 ) delete cpp;
-    }
+    result=cleaner_p->clean(modelImage, algorithm, niter, gain, threshold, displayProgress);
+    dirty_p->table().relinquishAutoLocks(True);
     dirty_p->table().unlock();
+    psf_p->table().relinquishAutoLocks(True);
     psf_p->table().unlock();
     if (maskim) delete maskim;    
 
@@ -1289,8 +1215,6 @@ Bool Deconvolver::clean(const String& algorithm, const Int niter,
     psf_p->table().unlock();
     os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
   } 
-  dirty_p->table().unlock();
-  psf_p->table().unlock();
   
   return True;
 }
@@ -1510,8 +1434,7 @@ Bool Deconvolver::mem(const String& entropy, const Int niter,
     
 	// Now actually do the MEM deconvolution
 	if (displayProgress) {
-	  getPGPlotter(False);
-	  memProgress_p = new  CEMemProgress (pgplotter_p);
+	  memProgress_p = new  CEMemProgress ();
 	  myMemer.setProgress(*memProgress_p);
 	}
 
@@ -1590,8 +1513,7 @@ Bool Deconvolver::mem(const String& entropy, const Int niter,
 	 myMemer.setMask(*maskQ);
       }
       if (displayProgress) {
-	getPGPlotter(False);
-	memProgress_p = new  CEMemProgress (pgplotter_p);
+	memProgress_p = new  CEMemProgress ();
 	myMemer.setProgress(*memProgress_p);
       }
 
@@ -2207,27 +2129,5 @@ void Deconvolver::checkMask(ImageInterface<Float>& maskImage, Int& xbeg, Int& xe
 
 
 }
-
-PGPlotter& Deconvolver::getPGPlotter(Bool newPlotter) {
-
-  // Destroy the old plotter?
-  // if(newPlotter) {
-  //   if(pgplotter_p) delete pgplotter_p;
-  //   pgplotter_p=0;
-  // }
-
-  // If a plotter does not exist create a new one
-  // if(!pgplotter_p) {
-  //   PlotDevice device=ApplicationEnvironment::defaultPlotter(id());
-  //  pgplotter_p = new PGPlotter(ApplicationEnvironment::getPlotter(device));
-  // }
-  // AlwaysAssert(pgplotter_p, AipsError);
-  return *pgplotter_p;
-};
-
-void Deconvolver::setPGPlotter(PGPlotter& thePlotter) {
-  pgplotter_p=&thePlotter;
-}
-
 
 } //# NAMESPACE CASA - END

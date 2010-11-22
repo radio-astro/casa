@@ -54,7 +54,8 @@ namespace casa {
 // Constructors/Destructors //
 
 PlotMSPlotter::PlotMSPlotter(PlotMS* parent, Plotter::Implementation impl) :
-        itsParent_(parent), itsAnnotator_(parent) {
+        itsParent_(parent), itsAnnotator_(parent)
+        {
     initialize(impl);
 }
 
@@ -123,6 +124,8 @@ bool PlotMSPlotter::canvasDrawBeginning(
 	PlotOperationPtr drawOperation,
     bool drawingIsThreaded, int drawnLayersFlag
 ) {
+
+	(void)drawOperation,(void)drawnLayersFlag;
     if(!drawingIsThreaded) {
         cout << "PlotMSPlotter does not currently support threading for "
              << "plotter implementations that do not do threaded drawing "
@@ -276,32 +279,98 @@ void PlotMSPlotter::setActionIsChecked(
 void PlotMSPlotter::showError(
 	const String& message, const String& title, bool isWarning
 )  {
-    if(isWarning) {
-    	QMessageBox::warning( this, title.c_str(), message.c_str());
-    }
-    else {
-    	QMessageBox::critical(this, title.c_str(), message.c_str());
-    }
+	if (itsParent_->its_want_avoid_popups)   {
+		// We are likely running from an automated python script, or otherwise
+		// don't want to create any blocking popups.
+		// Call upon showMessage to do the right thing.
+		showMessage( String( (isWarning)? "WARNING: " : "ERROR: ")  +  message , title);
+
+	 } else {
+	
+	    if(isWarning) {
+	    	QMessageBox::warning( this, title.c_str(), message.c_str());
+	    }
+	    else {
+	    	QMessageBox::critical(this, title.c_str(), message.c_str());
+	    }
+	 }
 }
 
+
+
 void PlotMSPlotter::showMessage(const String& message, const String& title) {
-    QMessageBox::information(this, title.c_str(), message.c_str());
+	if (itsParent_->its_want_avoid_popups)  {
+
+		// Update status bar 
+		// (Ignore the title)
+		statusbar->showMessage( QString::fromStdString( message ));
+		
+		// Also write msg to logger
+		// (not entirely sure how this is supposed to be done)
+		getParent()->getLogger()->postMessage(PMS::LOG_ORIGIN, String("showError()"), 
+			message);
+		
+		#if (0)   // (DSW) stolen from some .h for reference - do not use this code (i think, maybe)
+		void postMessage(const PlotLogMessage& message);
+		void postMessage(const String& origin1, const String& origin2,
+                     const String& message,
+                     int eventType = PlotLogMessage::DEFAULT_EVENT_TYPE);
+		#endif
+ 
+	
+	} else {
+		
+		QMessageBox::information(this, title.c_str(), message.c_str());
+ 
+	}
 }
+
+
 
 void PlotMSPlotter::showAbout() {
     QMessageBox::about(this, "About PlotMS", itsAboutString_);
 }
 
 
+
+
+
+void PlotMSPlotter::prepareForPlotting()   {
+	
+	PlotMSToolsTab *ttab =  getToolsTab();
+	
+	// This is a fix for the zoom stack bug, JIRA CAS-1770.
+	// The fix is to force all tool buttons unpressed
+	// before doing a reload/redraw of the plot.
+	// toolsUnchecked() has a slightly misleading name.  It causes
+	// all the tool buttons - Zoom, Pan etc to become unchecked by
+	// checking the "None" radio button in the tools tab.
+	// These radio buttons are wired to the tool bar, causing them
+	// to also become unchecked.
+	ttab->toolsUnchecked();
+}
+
+
+
+
 // Protected Methods //
 
 void PlotMSPlotter::closeEvent(QCloseEvent* event) {
+	
     if(itsCurrentThread_ != NULL) {
-        if(!showQuestion("One or more threaded operations are not yet "
-                "complete!  Do you still want to quit?", "PlotMS Quit")) {
-            event->ignore();
-            return;
-        }
+
+		// Normally in interactive mode, verify quitting with user.
+		// If avoiding gui popups, typically due to casaplotms being run
+		// by automated python scripts,  assume answer of "yes, i want to quit"
+        if ( ! itsParent_->its_want_avoid_popups)   {
+		    bool reply = showQuestion("One or more threaded operations are not yet "
+                "complete!  Do you still want to quit?", "PlotMS Quit");
+                
+			if (reply==false)   {
+				event->ignore();
+				return;
+			}
+		}
         
         for(unsigned int i = 0; i < itsWaitingThreads_.size(); i++)
             delete itsWaitingThreads_[i];
@@ -312,6 +381,7 @@ void PlotMSPlotter::closeEvent(QCloseEvent* event) {
     // Close plotter separately if not Qt-based.
     if(!isQt_) itsPlotter_->close();
 }
+
 
 
 // Private Methods //
@@ -369,8 +439,8 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
     itsActionMap_.insert(PlotMSAction::TOOL_ANNOTATE_RECTANGLE,
                          actionAnnotateRectangle);
     
-    itsActionMap_.insert(PlotMSAction::TRACKER_HOVER, actionTrackerHover);
-    itsActionMap_.insert(PlotMSAction::TRACKER_DISPLAY, actionTrackerDisplay);
+    itsActionMap_.insert(PlotMSAction::TRACKER_ENABLE_HOVER, actionTrackerHover);
+    itsActionMap_.insert(PlotMSAction::TRACKER_ENABLE_DISPLAY, actionTrackerDisplay);
     
     itsActionMap_.insert(PlotMSAction::STACK_BACK, actionStackBack);
     itsActionMap_.insert(PlotMSAction::STACK_BASE, actionStackBase);
@@ -413,7 +483,7 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
         maxWidth = itsAnnotatorTab_->maximumWidth();
     if(itsOptionsTab_->maximumWidth() < maxWidth)
         maxWidth = itsOptionsTab_->maximumWidth();
-    tabWidget->setMaximumWidth(maxWidth);
+    tabWidget->setMaximumWidth(325);
     itsPlotTab_->setupForMaxWidth(maxWidth);
     itsFlaggingTab_->setupForMaxWidth(maxWidth);
     itsToolsTab_->setupForMaxWidth(maxWidth);
@@ -501,6 +571,8 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
 
 void PlotMSPlotter::action(QAction* act) {
     if(act == NULL) return;
+setStatusText(" " );//    
+clearStatusText();
     
     // If it's the annotate button, turn on/off the action corresponding to the
     // current mode.
@@ -562,6 +634,7 @@ bool PlotMSPlotter::_triggerAction(PlotMSAction& action) {
 bool PlotMSPlotter::exportPlot(
 		const PlotExportFormat& format, const bool interactive, const bool async
 ) {
+	(void)async;
 	PlotMSAction action(PlotMSAction::PLOT_EXPORT);
 	action.setParameter(PlotMSAction::P_PLOT, itsPlotTab_->currentPlot());
 	action.setParameter(PlotMSAction::P_FILE, format.location);
@@ -577,6 +650,7 @@ bool PlotMSPlotter::exportPlot(
 	action.setParameter(PlotMSAction::P_INTERACTIVE, interactive);
 
 	_triggerAction(action);
+	return true;
 }
 
 void PlotMSPlotter::currentThreadFinished() {
@@ -685,5 +759,7 @@ String PlotMSPlotter::aboutText(Plotter::Implementation impl, bool useHTML) {
 
     return ss.str();
 }
+
+
 
 }

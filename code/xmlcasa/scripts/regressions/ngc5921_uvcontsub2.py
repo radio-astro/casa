@@ -48,7 +48,7 @@
 #                      exportuvfits  ------>  ngc5921.split.uvfits           #
 #                            |                                               #
 #                            v                                               #
-#                        uvcontsub2   ------>  ngc5921.ms.cont +              #
+#                        uvcontsub2   ------>  ngc5921.ms.cont +             #
 #                            |                ngc5921.ms.contsub             #
 #                            v                                               #
 #                         listvis    ------>  ngc5921.listvis.out            #
@@ -91,6 +91,8 @@
 # Updated      RRusk 2007-11-08 Added some test template info                #
 # Updated      RRusk 2007-11-08 More teplate info                            #
 # Updated  JCrossley 2008-09-17 Added listvis and listcal tests              #
+# Converted by RReid 2010-01-31 from ngc5921_regression.py                   #
+# Updated      RReid 2010-05-25 Made listvis use uvcontsub2 output           #
 ##############################################################################
 
 import os
@@ -485,26 +487,31 @@ os.system('rm -f ' + listcalOut + '.tmp')
 # Test the listcal output
 print "Comparing listcal output with standard..."
 standardOut = pathname+'/data/regression/ngc5921/listcal.default.out'
-passlistcal = True
+passlistcal = False
 
 # Test metadata
 print "  1. Checking that metadata agree."
-if (listing.diffMetadata(listcalOut,standardOut,prefix=prefix+".listcal")):
-    print "  Metadata agree"
-else:
-    print "  Metadata do not agree!"
-    passlistcal = False
+try:
+    if listing.diffMetadata(listcalOut,standardOut,prefix=prefix+".listcal"):
+        print "  Metadata agree"
+        passlistcal = True
+    else:
+        print "  Metadata do not agree!"
 
-# Test data (floats)
-print "  2. Checking that data agree to within allowed imprecision..."
-precision = '0.003'
-print "     Allowed visibility imprecision is " + precision
-if ( listing.diffAmpPhsFloat(listcalOut,standardOut,prefix=prefix+".listcal",
-                             precision=precision) ):
-    print "  Data agree"
-else:
-    print "  Data do not agree!"
-    passlistcal = False
+    # Test data (floats)
+    print "  2. Checking that data agree to within allowed imprecision..."
+    precision = '0.003'
+    print "     Allowed visibility imprecision is " + precision
+    if listing.diffAmpPhsFloat(listcalOut,standardOut,
+                               prefix=prefix+".listcal",
+                               precision=precision):
+        passlistcal &= True
+        print "  Data agree"
+    else:
+        print "  Data do not agree!"
+except Exception, e:
+    print "Error", e, "checking listcal."
+    raise e
 
 if (passlistcal): print "Passed listcal output test"
 else:             print "FAILED listcal output test"
@@ -675,8 +682,8 @@ multisource = True
 #async = True
 async = export_asynchronously
 
-async_split_id = exportuvfits()
-print "async_split_id =", async_split_id
+async_exportuvfits_id = exportuvfits()
+print "async_exportuvfits_id =", async_exportuvfits_id
 
 # Record exportuvfits completion time
 # NOTE: If async=true this can't be used to time exportuvfits
@@ -716,18 +723,10 @@ want_cont = True
 uvcontsub2()
 
 # You will see it made two new MS:
-# ngc5921.ms.cont
-# ngc5921.ms.contsub
+# ngc5921.ms.cont         (Continuum estimate)
+# ngc5921.ms.contsub      (Continuum subtracted)
 
 srcsplitms = msfile + '.contsub'
-
-# Note that ngc5921.ms.contsub contains the uv-subtracted
-# visibilities (in its DATA column), and ngc5921.ms.cont
-# the pseudo-continuum visibilities (as fit).
-
-# The original ngc5921.ms now contains the uv-continuum
-# subtracted vis in its CORRECTED_DATA column and the continuum
-# in its MODEL_DATA column as per the fitmode='subtract'
 
 # Record continuum subtraction time
 if benchmarking:
@@ -741,8 +740,8 @@ print '--Listvis--'
 listvisOut = prefix + '.listvis.out'
 
 default('listvis')
-vis = msfile
-datacolumn = 'corrected'
+vis = srcsplitms
+datacolumn = 'corrected'  # change to 'data' when uvcontsub2 changes.
 selectdata=True
 antenna='VA03&VA04'
 listfile = listvisOut
@@ -755,8 +754,8 @@ if benchmarking:
     listvistime = time.time()
 
 # Test the listvis output
-print "Comparing listvis corrected data output with repository standard..."
-standardOut = pathname+'/data/regression/ngc5921/listvis.ant34.out'
+print "Comparing continuum subtracted listvis output with repository standard..."
+standardOut = pathname+'/data/regression/ngc5921/listvis.ant34.contsub.out'
 passlistvis = True
 
 # Test metadata
@@ -1028,10 +1027,10 @@ print ' Difference (fractional) = ',diff_imrms
 print ''
 # Pull the max from the momzerostats dictionary
 thistest_momzeromax=momzerostats['max'][0]
-oldtest_momzeromax = 1.985035
+oldtest_momzeromax = 1.4868
 print ' Moment 0 image max should be ',oldtest_momzeromax
 print ' Found : Moment 0 Max = ',thistest_momzeromax
-diff_momzeromax = abs((oldtest_momzeromax-thistest_momzeromax)/oldtest_momzeromax)
+diff_momzeromax = abs(1.0 - thistest_momzeromax / oldtest_momzeromax)
 print ' Difference (fractional) = ',diff_momzeromax
 
 print ''
@@ -1064,10 +1063,16 @@ tstutl.note("Opening UVFITS file " + srcuvfits +
 
 if export_asynchronously:
     while True:
-        if tm.retrieve(async_split_id):
-            break
-        else:
-            time.sleep(1)
+        try:
+            if tm.retrieve(async_exportuvfits_id):
+                break
+            else:
+                time.sleep(1)
+        except Exception, e:
+            tstutl.note("Error checking whether exportuvfits finished.",
+                        "SEVERE")
+            tstutl.note("async_exportuvfits_id was " + str(async_exportuvfits_id), "SEVERE")
+            raise e
 
 uvfitsexists=False
 if os.path.isfile(srcuvfits):

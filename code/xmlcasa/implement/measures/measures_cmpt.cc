@@ -31,7 +31,7 @@
 #include <measures/Measures/MeasComet.h>
 #include <measures/Measures/MeasTable.h>
 #include <measures/Measures/MeasureHolder.h>
-#include <xmlcasa/measures/measures_cmpt.h>
+#include <measures_cmpt.h>
 
 using namespace std;
 using namespace casa;
@@ -480,53 +480,69 @@ measures::position(const std::string& rf, const ::casac::variant& v0, const ::ca
   ::casac::record *retval(0);
  
   try{
-    MVPosition *mvp = 0;
+    
     String error;
-    casa::Quantity q0(casaQuantityFromVar(v0));
-    casa::Quantity q1(casaQuantityFromVar(v1));
-    casa::Quantity q2(casaQuantityFromVar(v2));
-    //kludge since cannot pass meaningful default paramters
-    if (q0.getValue() == 0 && q0.getUnit() == "" &&
-	q1.getValue() == 0 && q1.getUnit() == "" &&
-	q2.getValue() == 0 && q2.getUnit() == "") {
-      q0 = casa::Quantity(0.0,"deg");
-      q1 = casa::Quantity(90.0,"deg");
-      q2 = casa::Quantity(0.0,"m");
+    Quantum<Vector<Double> > q0v=casaQuantumVector(v0);
+    Record mpos_rec;
+    mpos_rec.define("type", "position");
+    mpos_rec.define("refer", String(rf));
+     String err;
+    //If its  quanta vectors
+    if(q0v.getValue().nelements() != 0){
+      Quantum<Vector<Double> > q1v=casaQuantumVector(v1);
+      Quantum<Vector<Double> > q2v=casaQuantumVector(v2);
+      if((q1v.getValue().nelements() != q0v.getValue().nelements()) ||  (q2v.getValue().nelements() != q0v.getValue().nelements()))
+	throw(AipsError("The length of the 3 quantities are not conformant \n"));
+      Record QuantRec;
+     
+      QuantumHolder(q0v).toRecord(err, QuantRec);
+      mpos_rec.defineRecord("m0", QuantRec);
+      QuantumHolder(q1v).toRecord(err, QuantRec);
+      mpos_rec.defineRecord("m1", QuantRec);
+      QuantumHolder(q2v).toRecord(err, QuantRec);
+      mpos_rec.defineRecord("m2", QuantRec);
     }
-    casa::Quantity q(1.0,"rad");
-    if (q.isConform(q1)) {
-      // Note reordering of input quantities
-      mvp = new MVPosition(q2, q0, q1);
-    } else {
-      mvp = new MVPosition(q0.getBaseValue(),
-			   q1.getBaseValue(),
-			   q2.getBaseValue());
-    }
-    MPosition mp(mvp);
-    delete mvp;
-
-    if (!mp.setRefString(rf)) {
-      *itsLog << LogIO::WARN << "Illegal reference frame string.  Reference string set to DEFAULT" << LogIO::POST;
-    }
-
-    Record *pOff = toRecord(off);
-    if (pOff->nfields() > 0) {
-      MeasureHolder mpoff;
-      if ((mpoff.fromRecord(error,*pOff)) && mpoff.isMeasure()) {
-	if (!mp.setOffset(mpoff.asMeasure())) {
-	  error += String ("Illegal offset type specified, not used\n");
-	  *itsLog << LogIO::WARN << error << LogIO::POST;
-	  error = "";
-	}
+    else{
+      casa::Quantity q0(casaQuantityFromVar(v0));
+      casa::Quantity q1(casaQuantityFromVar(v1));
+      casa::Quantity q2(casaQuantityFromVar(v2));
+      //kludge since cannot pass meaningful default paramters
+      if (q0.getValue() == 0 && q0.getUnit() == "" &&
+	  q1.getValue() == 0 && q1.getUnit() == "" &&
+	  q2.getValue() == 0 && q2.getUnit() == "") {
+	q0 = casa::Quantity(0.0,"deg");
+	q1 = casa::Quantity(90.0,"deg");
+	q2 = casa::Quantity(0.0,"m");
+      }
+      casa::Quantity q(1.0,"rad");
+      Record QuantRec;
+      if (q.isConform(q1)) {
+	// Note reordering of input quantities
+	QuantumHolder(q2).toRecord(err, QuantRec);
+	mpos_rec.defineRecord("m0", QuantRec);
+	QuantumHolder(q0).toRecord(err, QuantRec);
+	mpos_rec.defineRecord("m1", QuantRec);
+	QuantumHolder(q1).toRecord(err, QuantRec);
+	mpos_rec.defineRecord("m2", QuantRec);
+	
       } else {
-	error += String ("Non-measure type offset in measure conversion\n");
-	*itsLog << LogIO::WARN << error << LogIO::POST;
-	error = "";
+	QuantumHolder(q0).toRecord(err, QuantRec);
+	mpos_rec.defineRecord("m0", QuantRec);
+	QuantumHolder(q1).toRecord(err, QuantRec);
+	mpos_rec.defineRecord("m1", QuantRec);
+	QuantumHolder(q2).toRecord(err, QuantRec);
+	mpos_rec.defineRecord("m2", QuantRec);
+	//mvp = new MVPosition(q0.getBaseValue(),
+	//		     q1.getBaseValue(),
+	//		     q2.getBaseValue());
       }
     }
-
     MeasureHolder out;
-    MeasureHolder in(mp);
+    MeasureHolder in;
+    in.fromRecord(err, mpos_rec);
+    if(!in.isMPosition())
+      throw(AipsError("Could not convert input into a Position Measure \n" + err));
+    Record *pOff = toRecord(off);
     if (! measures::measure(error, out, in, rf, *pOff)) {
       error += String("Call to measures::measure() failed\n");
       *itsLog << LogIO::WARN << error << LogIO::POST;
@@ -608,6 +624,9 @@ std::string
 measures::linelist()
 {
   std::string emptyStr("");
+  *itsLog << LogIO::WARN << "DEPRECATED. The " << __FUNCTION__ << " method has been deprecated and will be removed "
+	<< "in the near future. Please use the spectral line (sl) tool and/or related tasks instead"
+	<< LogIO::POST;
   try {
 
     const Vector<String> &lst = MeasTable::Lines();
@@ -632,6 +651,9 @@ measures::linelist()
 ::casac::record *
 measures::spectralline(const std::string& name)
 {
+	*itsLog << LogIO::WARN << "DEPRECATED. The " << __FUNCTION__ << " method has been deprecated and will be removed "
+		<< "in the near future. Please use the spectral line (sl) tool and/or related tasks instead"
+		<< LogIO::POST;
   ::casac::record *retval = 0;
   String error;
 
@@ -887,41 +909,83 @@ measures::uvw(const std::string& rf, const ::casac::variant& v0, const ::casac::
   ::casac::record *retval(0);
   try{
     String error;
-    casa::Quantity q0(casaQuantityFromVar(v0));
-    casa::Quantity q1(casaQuantityFromVar(v1));
-    casa::Quantity q2(casaQuantityFromVar(v2));
-    //kludge since cannot pass meaningful default paramters
-    if (q0.getValue() == 0 && q0.getUnit() == "" &&
-	q1.getValue() == 0 && q1.getUnit() == "" &&
-	q2.getValue() == 0 && q2.getUnit() == "") {
-      q0 = casa::Quantity(0.0,"deg");
-      q1 = casa::Quantity(90.0,"deg");
-      q2 = casa::Quantity(0.0,"m");
+    
+
+    Quantum<Vector<Double> > q0v=casaQuantumVector(v0);
+    Record muvw_rec;
+    muvw_rec.define("type", "uvw");
+    muvw_rec.define("refer", String(rf));
+    String err;
+    //If its  quanta vectors
+    if(q0v.getValue().nelements() != 0){
+      Quantum<Vector<Double> > q1v=casaQuantumVector(v1);
+      Quantum<Vector<Double> > q2v=casaQuantumVector(v2);
+      if((q1v.getValue().nelements() != q0v.getValue().nelements()) ||  (q2v.getValue().nelements() != q0v.getValue().nelements()))
+	throw(AipsError("The length of the 3 quantities are not conformant \n"));
+      Record QuantRec;
+     
+      QuantumHolder(q0v).toRecord(err, QuantRec);
+      muvw_rec.defineRecord("m0", QuantRec);
+      QuantumHolder(q1v).toRecord(err, QuantRec);
+      muvw_rec.defineRecord("m1", QuantRec);
+      QuantumHolder(q2v).toRecord(err, QuantRec);
+      muvw_rec.defineRecord("m2", QuantRec);
     }
-    MVuvw mvq(q2, q0, q1);
-    Muvw mq(mvq);
-    if (!mq.setRefString(rf)) {
-      *itsLog << LogIO::WARN << "Illegal reference frame string." << LogIO::POST;
+    else{
+      casa::Quantity q0(casaQuantity(v0));
+      casa::Quantity q1(casaQuantity(v1));
+      casa::Quantity q2(casaQuantity(v2));
+      //kludge since cannot pass meaningful default paramters
+      if (q0.getValue() == 0 && q0.getUnit() == "" &&
+	  q1.getValue() == 0 && q1.getUnit() == "" &&
+	  q2.getValue() == 0 && q2.getUnit() == "") {
+	q0 = casa::Quantity(0.0,"deg");
+	q1 = casa::Quantity(0.0,"deg");
+	q2 = casa::Quantity(0.0,"m");
+      }
+      casa::Quantity q(1.0,"rad");
+      Record QuantRec;
+      if (q.isConform(q1)) {
+	// Note reordering of input quantities
+	QuantumHolder(q2).toRecord(err, QuantRec);
+	muvw_rec.defineRecord("m0", QuantRec);
+	QuantumHolder(q0).toRecord(err, QuantRec);
+	muvw_rec.defineRecord("m1", QuantRec);
+	QuantumHolder(q1).toRecord(err, QuantRec);
+	muvw_rec.defineRecord("m2", QuantRec);
+	
+      } else {
+	QuantumHolder(q0).toRecord(err, QuantRec);
+	muvw_rec.defineRecord("m0", QuantRec);
+	QuantumHolder(q1).toRecord(err, QuantRec);
+	muvw_rec.defineRecord("m1", QuantRec);
+	QuantumHolder(q2).toRecord(err, QuantRec);
+	muvw_rec.defineRecord("m2", QuantRec);
+      }
     }
+
+
+
+
+
 
     Record *pOff = toRecord(off);
     if (pOff->nfields() > 0) {
       MeasureHolder mqoff;
-      if ((mqoff.fromRecord(error,*pOff)) && mqoff.isMeasure()) {
-	if (!mq.setOffset(mqoff.asMeasure())) {
+      if ((mqoff.fromRecord(error,*pOff)) && mqoff.isMuvw()) {
 	  error += String ("Illegal offset type specified, not used\n");
 	  *itsLog << LogIO::WARN << error << LogIO::POST;
-	  error = "";
-	}
-      } else {
-	error += String ("Non-measure type offset in measure conversion\n");
-	*itsLog << LogIO::WARN << error << LogIO::POST;
-	error = "";
+	  delete pOff;
+	  pOff=new Record();
       }
-    }
+    } 
+    
 
     MeasureHolder out;
-    MeasureHolder in(mq);
+    MeasureHolder in;
+    in.fromRecord(err, muvw_rec);
+    if(!in.isMuvw())
+      throw(AipsError("Could not convert input into a uvw Measure \n" + err));
     if (! measures::measure(error, out, in, rf, *pOff)) {
       error += String("Call to measures::measure() failed\n");
       *itsLog << LogIO::WARN << error << LogIO::POST;
@@ -1101,8 +1165,12 @@ measures::expand(::casac::record& xyzres, const ::casac::record& v)
 
   try {
     Record *pRec = toRecord(v);
+    String origType="uvw";
+    String origRefer="J2000";
     if (pRec->isDefined("type") && pRec->isDefined("refer")) {
-      Int fldnum = pRec->fieldNumber("type");
+      pRec->get("type", origType);
+      pRec->get("refer", origRefer);
+      /*Int fldnum = pRec->fieldNumber("type");
       Int fldnum2 = pRec->fieldNumber("refer");
       if ( (pRec->dataType(fldnum)) == TpString &&
 	   (pRec->dataType(fldnum2)) == TpString) {
@@ -1113,8 +1181,13 @@ measures::expand(::casac::record& xyzres, const ::casac::record& v)
 	  pRec->define("type","uvw");
 	}
 	pRec->removeField(pRec->fieldNumber("refer"));
-	pRec->define("refer","J2000");
-      }
+      
+      
+      pRec->define("refer","J2000");
+    }
+      */
+      pRec->define("refer","J2000");
+      pRec->define("type","uvw");
     }
 
     MeasureHolder in;
@@ -1134,6 +1207,8 @@ measures::expand(::casac::record& xyzres, const ::casac::record& v)
 
       Record outRec;
       if (out.toRecord(error, outRec)) {
+	outRec.define("type", origType);
+	outRec.define("refer", origRefer);
 	retval = fromRecord(outRec);
       } else {
 	error += "Failed to generate valid return value.\n";
@@ -1223,58 +1298,91 @@ measures::baseline(const std::string& rf, const ::casac::variant& v0, const ::ca
 {
   ::casac::record *retval(0);
   try{
-    MVBaseline *mvq = 0;
-    String error;
-    casa::Quantity q0(casaQuantityFromVar(v0));
-    casa::Quantity q1(casaQuantityFromVar(v1));
-    casa::Quantity q2(casaQuantityFromVar(v2));
-    //kludge since cannot pass meaningful default paramters
-    if (q0.getValue() == 0 && q0.getUnit() == "" &&
-	q1.getValue() == 0 && q1.getUnit() == "" &&
-	q2.getValue() == 0 && q2.getUnit() == "") {
-      q0 = casa::Quantity(0.0,"deg");
-      q1 = casa::Quantity(0.0,"deg");
-      q2 = casa::Quantity(0.0,"m");
-    }
-    casa::Quantity q(1.0,"rad");
-    if (q.isConform(casaQuantityFromVar(v1))) {
-      mvq = new MVBaseline(casaQuantityFromVar(v2),casaQuantityFromVar(v0),casaQuantityFromVar(v1));
-    } else {
-      mvq = new MVBaseline(casaQuantityFromVar(v0).getBaseValue(),
-			   casaQuantityFromVar(v1).getBaseValue(),
-			   casaQuantityFromVar(v2).getBaseValue());
-    }
-    MBaseline mq(mvq);
-    delete mvq;
 
-    if (!mq.setRefString(rf)) {
-      *itsLog << LogIO::WARN << "Illegal reference frame string." << LogIO::POST;
+
+
+    String error;
+    Quantum<Vector<Double> > q0v=casaQuantumVector(v0);
+    Record mbas_rec;
+    mbas_rec.define("type", "baseline");
+    mbas_rec.define("refer", String(rf));
+     String err;
+    //If its  quanta vectors
+    if(q0v.getValue().nelements() != 0){
+      Quantum<Vector<Double> > q1v=casaQuantumVector(v1);
+      Quantum<Vector<Double> > q2v=casaQuantumVector(v2);
+      if((q1v.getValue().nelements() != q0v.getValue().nelements()) ||  (q2v.getValue().nelements() != q0v.getValue().nelements()))
+	throw(AipsError("The length of the 3 quantities are not conformant \n"));
+      Record QuantRec;
+     
+      QuantumHolder(q0v).toRecord(err, QuantRec);
+      mbas_rec.defineRecord("m0", QuantRec);
+      QuantumHolder(q1v).toRecord(err, QuantRec);
+      mbas_rec.defineRecord("m1", QuantRec);
+      QuantumHolder(q2v).toRecord(err, QuantRec);
+      mbas_rec.defineRecord("m2", QuantRec);
     }
+    else{
+      casa::Quantity q0(casaQuantity(v0));
+      casa::Quantity q1(casaQuantity(v1));
+      casa::Quantity q2(casaQuantity(v2));
+      //kludge since cannot pass meaningful default paramters
+      if (q0.getValue() == 0 && q0.getUnit() == "" &&
+	  q1.getValue() == 0 && q1.getUnit() == "" &&
+	  q2.getValue() == 0 && q2.getUnit() == "") {
+	q0 = casa::Quantity(0.0,"deg");
+	q1 = casa::Quantity(0.0,"deg");
+	q2 = casa::Quantity(0.0,"m");
+      }
+      casa::Quantity q(1.0,"rad");
+      Record QuantRec;
+      if (q.isConform(q1)) {
+	// Note reordering of input quantities
+	QuantumHolder(q2).toRecord(err, QuantRec);
+	mbas_rec.defineRecord("m0", QuantRec);
+	QuantumHolder(q0).toRecord(err, QuantRec);
+	mbas_rec.defineRecord("m1", QuantRec);
+	QuantumHolder(q1).toRecord(err, QuantRec);
+	mbas_rec.defineRecord("m2", QuantRec);
+	
+      } else {
+	QuantumHolder(q0).toRecord(err, QuantRec);
+	mbas_rec.defineRecord("m0", QuantRec);
+	QuantumHolder(q1).toRecord(err, QuantRec);
+	mbas_rec.defineRecord("m1", QuantRec);
+	QuantumHolder(q2).toRecord(err, QuantRec);
+	mbas_rec.defineRecord("m2", QuantRec);
+      }
+    }
+
+
 
     Record *pOff = toRecord(off);
     if (pOff->nfields() > 0) {
       MeasureHolder mqoff;
-      if ((mqoff.fromRecord(error,*pOff)) && mqoff.isMeasure()) {
-	if (!mq.setOffset(mqoff.asMeasure())) {
+      if (!((mqoff.fromRecord(error,*pOff)) && mqoff.isMBaseline())) {
 	  error += String ("Illegal offset type specified, not used\n");
 	  *itsLog << LogIO::WARN << error << LogIO::POST;
-	  error = "";
-	}
-      } else {
-	error += String ("Non-measure type offset in measure conversion\n");
-	*itsLog << LogIO::WARN << error << LogIO::POST;
-	error = "";
+	  error = "";	
+	  delete pOff;
+	  pOff=new Record();
       }
     }
 
-    MeasureHolder mh;
-    if (!measures::measure(error,mh,mq,rf,*pOff)) {
+    MeasureHolder mhin;
+    mhin.fromRecord(err, mbas_rec); 
+    if(!mhin.isMBaseline()){
+      throw(AipsError("values or reference are invalid to make a Baseline measure \n" + err));
+    }
+
+    MeasureHolder mhout;
+    if (!measures::measure(error,mhout,mhin,rf,*pOff)) {
       error += String("Failed to convert to Baseline measure.\n");
       *itsLog << LogIO::SEVERE << error << LogIO::POST;
       error = "";
     } else {
       Record outRec;
-      if (mh.toRecord(error, outRec)) {
+      if (mhout.toRecord(error, outRec)) {
 	retval = fromRecord(outRec);
       } else {
 	error += String("Failed to generate Baseline measure return value.\n");
@@ -1317,9 +1425,10 @@ measures::asbaseline(const ::casac::record& pos)
     String error("");
     Record *pPos = toRecord(pos);
     String tp;
+    Record outRec;
     pPos->get(RecordFieldId("type"), tp);
     tp.downcase();
-    if (tp != downcase(MPosition::showMe())) {
+    if ((tp != downcase(MPosition::showMe())) && (tp != downcase(MBaseline::showMe()))) {
       *itsLog << LogIO::WARN << "Non-position type for asbaseline input"
 	      << LogIO::POST;
       delete pPos;
@@ -1328,55 +1437,37 @@ measures::asbaseline(const ::casac::record& pos)
 
     MeasureHolder mh_pos;
     if (mh_pos.fromRecord(error,*pPos) && mh_pos.isMeasure()) {
-      if (! mh_pos.isMPosition() ) {
+      if (! mh_pos.isMPosition()  &&  !mh_pos.isMBaseline()) {
 	*itsLog << LogIO::SEVERE << "Input must be a position measure"
 		<< LogIO::POST;
 	delete pPos;
 	return retval;
       }
-
-      mh_pos.asMeasure().getRefPtr()->set(*frame_p);
-      MPosition::Ref outRefMP;
-      outRefMP.setType(MPosition::ITRF);
-      outRefMP.set(*frame_p);
-      MPosition::Convert mcvt1(MPosition::Convert(mh_pos.asMeasure(),
-						 outRefMP));
-      MeasureHolder mh_pos_itrf = MeasureHolder(mcvt1());
-      mh_pos_itrf.makeMV(mh_pos.nelements());
-      for (uInt i=0; i<mh_pos.nelements(); i++) {
-        if (!mh_pos_itrf.setMV(i, mcvt1(dynamic_cast<const MVPosition &>
-                               (*mh_pos.getMV(i))).getValue())) {
-          error += "Cannot get extra measure value in measures::asbaseline\n";
-          *itsLog << LogIO::SEVERE << error << LogIO::POST;
-        };
-      };
-
-      mh_pos_itrf.asMeasure().getRefPtr()->set(*frame_p);   // attach frame
-      MBaseline::Ref outRefMB;
-      outRefMB.setType(MBaseline::J2000);
-      outRefMB.set(*frame_p);
-      MBaseline::Convert mcvt2(MBaseline::Convert(mh_pos_itrf.asMeasure(),
-						  outRefMB));
-      MeasureHolder mh_bl = MeasureHolder(mcvt2());
-      mh_bl.makeMV(mh_pos_itrf.nelements());
-      for (uInt i=0; i<mh_pos_itrf.nelements(); i++) {
-        if (!mh_bl.setMV(i, mcvt2(dynamic_cast<const MVBaseline &>
-                               (*mh_pos_itrf.getMV(i))).getValue())) {
-          error += "Cannot convert position to baseline\n";
-          *itsLog << LogIO::SEVERE << error << LogIO::POST;
-        };
-      };
-      mh_bl.asMeasure().getRefPtr()->set(*frame_p);
-
-      delete pPos;
-
-      Record outRec;
-      if (!mh_bl.toRecord(error, outRec)) {
-	error += "Failed to generate asbaseline return value.\n";
-	*itsLog << LogIO::WARN << error << LogIO::POST;
-      } else {
-	retval=fromRecord(outRec);
+      String err;
+      if(mh_pos.isMPosition()){
+	Record tempRec, off;
+	MeasureHolder tmpmh;
+	if(!measures::measure(err, tmpmh, mh_pos, "ITRF", off))
+	  *itsLog << LogIO::SEVERE << "Error in position conversion: " << err
+		  << LogIO::POST;
+	tmpmh.toRecord(err, tempRec);
+	tempRec.define("type", String("baseline"));
+	mh_pos.fromRecord(err, tempRec);
+	MeasureHolder mh_out; 
+	if(!measures::measure(err, mh_out, mh_pos, "j2000", off))
+	   *itsLog << LogIO::SEVERE << "Error in baseline conversion: " << err
+		  << LogIO::POST;
+	///Weird if using = operator for MeasureHolder it won't allow all elements
+	///saved to Record
+	mh_out.toRecord(err, outRec);
+ 
       }
+      else{
+	//Most probably an MBaseline already
+	mh_pos.toRecord(err, outRec);
+      }
+      
+       retval=fromRecord(outRec);
       return retval;
     } else {
       error += String ("Non-measure type for asbaseline input\n");
@@ -1439,7 +1530,7 @@ Bool measures::measure(String &error, MeasureHolder &out,
 		       const Record &off) {
   MeasureHolder mo;
   try {
-    //    if (off.isDefined("offset")) {
+    if (off.nfields()> 0) {
       if (!mo.fromRecord(error, off)) {
 	//	error += String("Non-measure type offset in measure conversion\n");
 	//	*itsLog << LogIO::WARN << error << LogIO::POST;
@@ -1449,7 +1540,7 @@ Bool measures::measure(String &error, MeasureHolder &out,
 	  mo.asMeasure().getRefPtr()->set(*frame_p);
 	}
       }
-    //    }
+    }
     in.asMeasure().getRefPtr()->set(*frame_p);
 
     if (in.isMEpoch()) {
@@ -2277,30 +2368,30 @@ measures::rise(const ::casac::variant& crd, const ::casac::variant& ev)
 	frame_p->getLat(lati);
       
       
-      Double ct= (sin(elev.get("rad").getValue())-
+	Double ct= (sin(elev.get("rad").getValue())-
 		    sin(hd.getAngle("rad").getValue()(1))*sin(lati))/
-	(cos(hd.getAngle("rad").getValue()(1))*cos(lati));
-      if(ct >= 1.0){
-	outrec.define("rise", "below");
-	outrec.define("set", "below");
-      }
-      else if(ct <= -1.0){
-	outrec.define("rise", "above");
-	outrec.define("set", "above");
-      }
-      else{
-	Double a= acos(ct);
-	//	Double appRa=MVAngle(c.getAngle("rad").getValue()(0)).binorm(0.0).get("rad").getValue();
-	Double appRa=c.getAngle("rad").getValue()(0);
-	String err;
-	Record riserec;
-	QuantumHolder(casa::Quantity(appRa-a, "rad")).toRecord(err, riserec);
-	outrec.defineRecord("rise", riserec);
-	QuantumHolder(casa::Quantity(appRa+a, "rad")).toRecord(err, riserec);
-	outrec.defineRecord("set", riserec);			
-	///
-      }
-      
+	  (cos(hd.getAngle("rad").getValue()(1))*cos(lati));
+	if(ct >= 1.0){
+	  outrec.define("rise", "below");
+	  outrec.define("set", "below");
+	}
+	else if(ct <= -1.0){
+	  outrec.define("rise", "above");
+	  outrec.define("set", "above");
+	}
+	else{
+	  Double a= acos(ct);
+	  //	Double appRa=MVAngle(c.getAngle("rad").getValue()(0)).binorm(0.0).get("rad").getValue();
+	  Double appRa=c.getAngle("rad").getValue()(0);
+	  String err;
+	  Record riserec;
+       	  QuantumHolder(casa::Quantity(appRa-a, "rad")).toRecord(err, riserec);
+	  outrec.defineRecord("rise", riserec);
+	  QuantumHolder(casa::Quantity(appRa+a, "rad")).toRecord(err, riserec);
+	  outrec.defineRecord("set", riserec);			
+	  ///
+	}
+	
     }
     else{
       *itsLog << LogIO::SEVERE << "No rise/set coordinates specified"
@@ -2365,12 +2456,14 @@ measures::riseset(const ::casac::variant& crd, const ::casac::variant& ev)
       QuantumHolder qh;
       qh.fromRecord(err, tmprec);
       riseLAST=MVAngle(qh.asQuantity())().radian();
+      //if(riseLAST <0.0)
+      //	riseLAST+=C::circle;
       Double setLAST;
       tmprec=recRise->asRecord("set");
       qh.fromRecord(err, tmprec);
       setLAST=MVAngle(qh.asQuantity())().radian();
       if(setLAST < riseLAST)
-	setLAST+=C::circle;
+      	setLAST+=C::circle;
       MEpoch newEp(frame_p->epoch());
       newEp.setRefString("R_UTC");
       newEp.getRefPtr()->set(*frame_p);

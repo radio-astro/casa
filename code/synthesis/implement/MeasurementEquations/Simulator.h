@@ -258,7 +258,8 @@ public:
 		const Float correfficiency,
 		const Float trx, 
 		const Float tground,		
-		const Float tcmb);
+		const Float tcmb, 
+		const Bool OTF);
 
   // apply errors to the data in our MS
   Bool corrupt();
@@ -275,12 +276,32 @@ public:
   // or just created measurement set
   Bool observe(const String& sourcename, const String& spwname,
 	       const Quantity& startTime, 
-	       const Quantity& stopTime);
+	       const Quantity& stopTime,
+	       const Bool add_observation,
+	       const Bool state_sig,
+	       const Bool state_ref,
+	       const double& state_cal,
+	       const double& state_load,
+	       const unsigned int state_sub_scan,
+	       const String& state_obs_mode,
+	       const String& observername,
+	       const String& projectname);
+
 
   Bool observemany(const Vector<String>& sourcenames, const String& spwname,
 		   const Vector<Quantity>& startTimes, 
 		   const Vector<Quantity>& stopTimes,
-		   const Vector<MDirection>& directions);
+		   const Vector<MDirection>& directions,
+		   const Bool add_observation,
+		   const Bool state_sig,
+		   const Bool state_ref,
+		   const double& state_cal,
+		   const double& state_load,
+		   const unsigned int state_sub_scan,
+		   const String& state_obs_mode,
+		   const String& observername,
+		   const String& projectname);
+    
 
   // Given a model image, predict the visibilities onto the (u,v) coordinates
   // of our MS
@@ -303,6 +324,10 @@ public:
 		  const Double maxData,const Int wprojPlanes);
 
  
+  // Set the print level
+  inline void setPrtlev(const Int& prtlev) { prtlev_=prtlev; };
+  // Return print (cout) level
+  inline Int& prtlev() { return prtlev_; };
 
   
 private:
@@ -359,12 +384,6 @@ private:
 
   Int seed_p;
 
-  // VisEquation handles corruption by visibility calibration effects
-  VisEquation ve_p;
-
-  // Generic container for any number of calibration effects to corrupt with
-  PtrBlock<VisCal*> vc_p;
-
   ACoh     *ac_p;
 
   SkyEquation* se_p;
@@ -412,7 +431,10 @@ private:
   Vector<Quantity>      distance_p;
 
   // </group>
-
+  // VisEquation handles corruption by visibility calibration effects
+  VisEquation ve_p;
+  // Generic container for any number of calibration effects to corrupt with
+  PtrBlock<VisCal*> vc_p;
 
   // info for spectral window parameters
   // <group>
@@ -481,6 +503,9 @@ private:
   Bool applyPointingOffsets_p;
   Bool doPBCorrection_p;
   // </group>
+  
+  Int prtlev_;
+
 };
 
 } //# NAMESPACE CASA - END

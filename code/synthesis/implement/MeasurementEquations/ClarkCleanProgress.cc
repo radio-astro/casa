@@ -212,6 +212,8 @@ void  ClarkCleanProgress::basicSetUp(Bool doPlot)
   Float xMax = Float(currentTotalIterations)*1.15;
   Float xMin = -0.05*Float(currentTotalIterations);
 
+  if(itsPgplotter){
+
   itsPgplotter->sch(0.6);
   itsPgplotter->sci(1);
   itsPgplotter->page();
@@ -260,6 +262,7 @@ void  ClarkCleanProgress::basicSetUp(Bool doPlot)
     itsPgplotter->pt(iterationNumber, totalFluxes, 2);
   }
 
+  }
 
 };
 
@@ -273,6 +276,7 @@ void ClarkCleanProgress::plotVectors()
   Float xMax = Float(currentTotalIterations)*1.15;
   Float xMin = -0.05*Float(currentTotalIterations);
 
+  if(itsPgplotter){
   itsPgplotter->sch(0.6);
 
     // top graph
@@ -293,6 +297,7 @@ void ClarkCleanProgress::plotVectors()
   itsPgplotter->svp(0.06, 0.94, 0.09, 0.36);
   itsPgplotter->swin(xMin, xMax, 0.0, currentFluxScale);
   itsPgplotter->pt(iterationNumber, totalFluxes, 2);
+  }
 };
 
 
@@ -312,6 +317,7 @@ void  ClarkCleanProgress::plotOne(const Int iteration,
   Vector<Float> x(1);
   Vector<Float> y(1);
   x(0) = iteration;
+  if(itsPgplotter){
   itsPgplotter->sch(0.6);
   if (resid > 0) {
     // top graph
@@ -335,6 +341,7 @@ void  ClarkCleanProgress::plotOne(const Int iteration,
   itsPgplotter->swin(xMin, xMax, 0.0, currentFluxScale);
   y(0) = flux;
   itsPgplotter->pt(x,y,2);
+  }
 };
 
 

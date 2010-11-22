@@ -33,6 +33,7 @@
 
 #include <casa/Arrays/ArrayUtil.h>
 #include <casa/Arrays/ArrayLogical.h>
+//#include <casa/Arrays/ArrayMath.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <ms/MeasurementSets/MSFieldIndex.h>
 #include <ms/MeasurementSets/MSSelection.h>
@@ -166,13 +167,6 @@ Bool Calibrater::initialize(MeasurementSet& inputMS,
 
     // Size-up the chanmask PB
     initChanMask();
-
-    // Initialize the weights if the scratch columns
-    // were just created
-    if(addScratch && !hadScratch) {
-      Double sumwt=0.0;
-      VisSetUtil::WeightNatural(*vs_p, sumwt);
-    }
 
     // Create the associated VisEquation
     //  TBD: move to ctor and make it non-pointer
@@ -543,6 +537,20 @@ Bool Calibrater::setmodel(const String& modelImage)
     throw(AipsError("Calibrater::setmodel() called before Calibrater::setsolve()"));
   svc_p->setModel(modelImage);
   return True;
+}
+
+Bool Calibrater::setModel(const Vector<Double>& stokes) {
+
+  if (ve_p) {
+    Vector<Float> fstokes(stokes.shape());
+    convertArray(fstokes,stokes);
+    ve_p->setModel(fstokes);
+  }
+  else
+    throw(AipsError("Error in Calibrater::setModel: no VisEquation."));
+
+  return True;
+
 }
 
 
@@ -1203,6 +1211,10 @@ Bool Calibrater::solve() {
     applystate();
     solvestate();
 
+
+    // Report correct/corrupt apply order
+    //    ve_p->state();
+
     // Set the channel mask
     svc_p->setChanMask(chanmask_);
 
@@ -1279,21 +1291,6 @@ Bool Calibrater::standardSolve3() {
 	// Apply the channel mask (~no-op, if unnecessary)
 	svc_p->applyChanMask(vb);
 
-   /*  TBD.... (introduce various non-trivial model generation)
-	// Set I model to unity if MODEL_DATA not present
-	if (False && !scrOk_p) {
-	  vb.setModelVisCube(Complex(1.0));
-	  if (vb.nCorr()>2) {
-	    if (vb.corrType()(1)==Stokes::RL ||
-		vb.corrType()(1)==Stokes::XY)
-	      // zero 2nd,3rd [1,2] correlations (i.e., we have [RR,RL,LR,LL]
-	      vb.modelVisCube()(Slice(1,2,1),Slice(),Slice())=0.0;
-	    else
-	      // zero 3rd,4th [2,3] correlations (i.e., we gave [RR,LL,RL,LR]
-	      vb.modelVisCube()(Slice(2,2,1),Slice(),Slice())=0.0;
-	  }
-	}
-   */
 
 	// This forces the data/model/wt I/O, and applies
 	//   any prior calibrations
@@ -1321,6 +1318,10 @@ Bool Calibrater::standardSolve3() {
 
     // Make data amp- or phase-only, if needed
     vbga.enforceAPonData(svc_p->apmode());
+
+    // Select on correlation via weights, according to the svc
+    vbga.enforceSolveCorrWeights(svc_p->phandonly());
+
 
     // Establish meta-data for this interval
     //  (some of this may be used _during_ solve)
@@ -1351,6 +1352,7 @@ Bool Calibrater::standardSolve3() {
       //	for (Int ich=0;ich<((const SolvableVisCal*)svc_p)->nChanPar();++ich) {
       Bool totalGoodSol(False);
       for (Int ich=((const SolvableVisCal*)svc_p)->nChanPar()-1;ich>-1;--ich) {
+	// for (Int ich=0;ich<((const SolvableVisCal*)svc_p)->nChanPar();++ich) {
 
 	// If pars chan-dep, SVC mechanisms for only one channel at a time
 	svc_p->markTimer();

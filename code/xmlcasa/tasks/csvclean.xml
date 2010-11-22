@@ -5,19 +5,19 @@
       xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-      <task type="function" name="csvclean" category="utilities">
+      <task type="function" name="csvclean" category="utilities, imaging" visibility="experimental">
 	<shortdescription>This task does an invert of the visibilities and deconvolve in the image plane.</shortdescription>
 	<description>This task does an invert of the visibilities and deconvolve in the
 			image plane. It does not do a uvdata subtraction (aka Cotton-Schwab
 			major cycle) of model visibility as in clean. - For ALMA Commissioning
 	</description>
 	<input>
-		<param type="string" vis="true" name="vis" mustexist="true">
+		<param type="string" name="vis" kind="ms" mustexist="true">
 			<description>Name of input visibility file</description>
 			<value></value>
 		</param>
 
-		<param type="string" name="imagename">
+		<param type="string" name="imagename" subparam="true">
 			<description>Name of image</description>
 			<value></value>
 		</param>
@@ -32,54 +32,109 @@
 	     	<any type="variant" limittypes="string stringArray int intArray"/>
 	     	<value type="string"></value>
 		</param>
+	<param type="bool" name="advise">
+	  <description>Boolean to determine if advice on image cell is requested</description>
+	  <value>False</value>
+	</param>
+	<param type="string" name="mode">
+	  <description> define the mode to operate csvclean: option continuum, cube </description>
+	  <value>continuum</value>
+	  <allowed kind="enum">
+	    <value>continuum</value>
+	    <value>cube</value>
+	  </allowed>
+	</param>
+	<!--========================================================= -->
+	<param type="int" name="nchan" subparam="true">
+	    <description>Number of channels (planes) in output image; -1 = all</description>
+	    <value>-1</value>
+	</param>
+	<!--========================================================= -->
+	<param type="variant" name="width" subparam="true">
+	  <description>width of output spectral channels</description>
+	  <any type="variant"/>
+	  <value type="int">1</value>
+	</param>
+	<!--========================================================= -->
 
-	    <param type="intArray" name="imsize">
-		    <description>Image size in pixels (nx,ny), symmetric for single value</description>
-		    <value type="vector">
+
+	<param type="intArray" name="imsize" subparam="true">
+	  <description>Image size in pixels (nx,ny), symmetric for single value</description>
+	  <value type="vector">
 	    <value>256</value><value>256</value>
-		    </value>
-	    </param>
+	  </value>
+	</param>
+	
+	<param type="doubleArray" name="cell" units="arcsec" subparam="true">
+	  <description>The image cell size in arcseconds [x,y]. </description>
+	  <value type="vector"><value>1.0</value><value>1.0</value></value>
+	</param>
+	
+	<param type="any" name="phasecenter" subparam="true">
+	  <description>Image center: direction or field index</description>
+	  <any type="variant"/>
+	  <value type="string"></value>
+	</param>
 
-	    <param type="doubleArray" name="cell" units="arcsec">
-	    <description>The image cell size in arcseconds [x,y]. </description>
-	    <value type="vector"><value>1.0</value><value>1.0</value></value>
-	    </param>
+	<param type="int" name="niter" subparam="true">
+	  <description>Maximum number of iterations</description>
+	  <value>500</value>
+	</param>
 
-        <param type="any" name="phasecenter">
-            <description>Image center: direction or field index</description>
-            <any type="variant"/>
-            <value type="string"></value>
-        </param>
+	<param type="string" name="weighting" subparam="true">
+	  <description>Type of weighting</description>
+	  <value>natural</value>
+	  <allowed kind="enum">
+	    <value>natural</value>
+	    <value>uniform</value>
+	    <value>briggs</value>
+	    <value>briggsabs</value>
+	    <value>radial</value>
+	    <value>superuniform</value>
+	  </allowed>
+	</param>
 
-		<param type="int" name="niter">
-			<description>Maximum number of iterations</description>
-			<value>500</value>
-		</param>
-
-		<param type="string" name="weighting">
-			<description>Type of weighting</description>
-			<value>natural</value>
-		    <allowed kind="enum">
-		      <value>natural</value>
-		      <value>uniform</value>
-		      <value>briggs</value>
-		      <value>briggsabs</value>
-		      <value>radial</value>
-		      <value>superuniform</value>
-		    </allowed>
-		</param>
-
-		<param type="stringArray" name="restoringbeam">
-			<description>Output Gaussian restoring beam for CLEAN image</description>
-	    <value></value>
-		</param>
-
-		<param type="bool" name="interactive">
-			<description>Create a mask interactively or not.</description>
-			<value>False</value>
-		</param>
-
-
+	<param type="stringArray" name="restoringbeam" subparam="true">
+	  <description>Output Gaussian restoring beam for CLEAN image</description>
+	  <value></value>
+	</param>
+	
+	<param type="bool" name="interactive" subparam="true">
+	  <description>Create a mask interactively or not.</description>
+	  <value>False</value>
+	</param>
+	<constraints>
+	  <when param="advise">
+	    <equals type="bool" value="False">
+	      <default param="imagename"><value type="string"></value>
+	      </default>
+	      <default param="imsize"><value type="vector"><value>256</value><value>256</value></value>
+	      </default>
+	      <default param="cell"><value type="vector"><value>1.0</value><value>1.0</value></value>
+	      </default>
+	      <default param="phasecenter"><value type="string"></value>
+	      </default>
+	      <default param="niter"><value type="int">500</value>
+	      </default>
+	      <default param="weighting"><value type="string">natural</value>
+	      </default>
+	      <default param="restoringbeam"><value type="vector"><value type="string"></value></value>
+	      </default>
+	      <default param="interactive"><value type="bool">False</value>
+	      </default>
+	    </equals>
+	    <equals type="bool" value="True"/>
+	  </when>
+	  <when param="mode">
+	     <equals type="string" value="continuum"/>
+	     <equals type="string" value="cube">
+	       <default param="nchan"><value type="int">-1</value>
+	       </default>
+	       <default param="width"><value type="int">1</value>
+	       </default>
+	     </equals>
+	  </when>
+	</constraints>
 	</input>
 
 <example>
@@ -125,6 +180,10 @@
 				    0-10,15-60
                 spw='0:0~10,1:20~30,2:1;2;3'; spw 0, channels 0-10,
                       spw 1, channels 20-30, and spw 2, channels, 1,2 and 3
+        advise -- This determines whether advice for imsize and cell is 
+                  requested. If set to True. It won't run clean but return
+                  values for imszise and cell estimated for the longest 
+                  baseline in the data
                       
 	imsize -- Image pixel size (x,y).  DOES NOT HAVE TO BE A POWER OF 2
                default = [256,256]; example: imsize=[350,350]
@@ -141,6 +200,22 @@
        phasecenter -- direction measure  or fieldid for the mosaic center
                 default: '' => first field selected ; example: phasecenter=6
                 or phasecenter='J2000 19h30m00 -40d00m00'
+
+	mode -- this determines what kind of image to make 
+                continuum or cube. In continuum all the selected data 
+                channels are combined in a 1 channel image using 
+                multifrequency synthesis.
+                options are 'cube' and 'continuum'
+                default: 'continuum'
+  &gt;&gt;&gt; mode='cube' expandable parameters
+               nchan -- sets the number of channel in the output
+               image. e.g nchan=10
+                
+               width -- image channel width in terms of the number of
+                        channel of the first spw of the data selected
+                        e.g width=2  
+              
+                
 
 	niter -- Maximum number of iterations,
                if niter=0, then no CLEANing is done ("invert" only)

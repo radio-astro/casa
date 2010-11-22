@@ -14,6 +14,9 @@ casa::ImageAnalysis *itsImage;
 // Private ImageInterface constructor to make components on the fly
 image(const casa::ImageInterface<casa::Float>* inImage);
 
+image(casa::ImageInterface<casa::Float>* inImage, const bool cloneInputPointer);
+
+
 // Having private version of IS and IH means that they will
 // only recreate storage images if they have to
 

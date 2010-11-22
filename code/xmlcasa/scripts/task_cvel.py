@@ -156,12 +156,18 @@ def cvel(vis, outputvis,
           veltype -- definition of velocity (in mode)
                  default = 'radio'
     
-          hanning -- if true, Hanning smooth frequency channel data to remove Gibbs ringing
+          hanning -- if true, Hanning smooth frequency channel data before regridding
+                 to remove Gibbs ringing
+                 default = False
     
     """
     
 
     #Python script
+
+    # make ms and tb tool local 
+    ms = casac.homefinder.find_home_by_name('msHome').create()
+    tb = casac.homefinder.find_home_by_name('tableHome').create()
 
     try:
 	casalog.origin('cvel')
@@ -244,7 +250,7 @@ def cvel(vis, outputvis,
             tb.open(vis+"/FIELD")
             try:
                 # get the name for later display
-                phasecentername = tb.getcell('NAME', phasecenter) + " (original field " + str(phasecenter)
+                phasecentername = tb.getcell('NAME', phasecenter) + " (original field " + str(phasecenter) + ")"
                 tb.close()
                 # phase center id will change if we select on fields,
                 # the name column is only optionally filled and not necessarily unique.
@@ -287,7 +293,7 @@ def cvel(vis, outputvis,
                 raise TypeError, "start and width have to be integers with mode = %s" %mode            
 
         
-        # determine parameters data columns
+        # determine parameter "datacolumn"
         tb.open(vis)
         allcols = tb.colnames()
         tb.close()
@@ -336,7 +342,7 @@ def cvel(vis, outputvis,
 	if not ms.cvel(mode=mode, nchan=nchan, start=start, width=width,
                        interp=interpolation,
                        phasec=newphasecenter, restfreq=restfreq,
-                       outframe=outframe, veltype=veltype):
+                       outframe=outframe, veltype=veltype, hanning=hanning):
             ms.close()
             raise Exception, "Error in regridding step ..."
         ms.close()
@@ -418,13 +424,6 @@ def cvel(vis, outputvis,
                     if not rval:
                         raise Exception, "Error in attaching passed-through data ..."
 
-
-	if (hanning): # smooth it
-            casalog.post("Hanning smoothing ...", 'INFO')
-            ms.open(outputvis, nomodify=False)
-	    ms.hanningsmooth()
-            ms.close()
-
 	# Write history to output MS
         ms.open(outputvis, nomodify=False)
 	ms.writehistory(message='taskname=cvel', origin='cvel')
@@ -458,10 +457,10 @@ def cvel(vis, outputvis,
 
     except Exception, instance:
         casalog.post("Error ...", 'SEVERE')
-        try:
-            ms.close()
-        except:
-            casalog.post("MS closed.", 'INFO')
+        # delete temp output (comment out for debugging)
+        if os.path.exists(outputvis+".spwCombined"):
+            casalog.post("Deleting temporary output files ...", 'INFO')
+            shutil.rmtree(outputvis+".spwCombined")
 	raise Exception, instance
     
 

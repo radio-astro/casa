@@ -37,10 +37,10 @@ Create a {\tt calplot} tool.
 </description>
 <returns type="calplotobject">calplot tool</returns>
 <example>
-\begin{verbatim}
+
 # create a calplot tool
   cp := calplot();
-\end{verbatim}
+
 </example>
 </method>
 
@@ -125,11 +125,11 @@ Supported solution type (AMP, PHASE, RLPHASE, XYPHASE, DELAY, DELAYRATE)
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 # plot some phase calibration solution 
   cp.open('caldata.gcal')
   cp.plot("PHASE")
-\end{verbatim}
+
 </example>
 </method>
 
@@ -256,11 +256,11 @@ and if it is a multiplot.
 </input>
 <returns type="bool">true, is successful</returns>
 <example>
-\begin{verbatim}
+
 # create a calplot tool and set the options for subsequent plotting.
   cp := calplot();
   cp.setoptions(nxpanels=3,nypanels=3,iteraxis='antenna',multiplot=T);
-\end{verbatim}
+
 </example>
 </method>
 
@@ -284,13 +284,13 @@ This function is to be called every time a box is to be drawn to flag data
 </input>
 <returns type="bool">true, is successful</returns>
 <example>
-\begin{verbatim}
+
 # plot some calibration solution and do some flagging
   cp.open('caldata.gcal')
   cp.plot()
   cp.markflags()
   cp.flagdata()
-\end{verbatim}
+
 </example>
 </method>
 
@@ -354,10 +354,10 @@ This method enables plotting of a subset of the caltable.
 
 <returns type="bool">true, is successful</returns>
 <example>
-\begin{verbatim}
+
   cp.open('caltable.gcal');
   cp.setselect(field="1331+305")
-\end{verbatim}
+
 </example>
 </method>
 

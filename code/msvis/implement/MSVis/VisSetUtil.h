@@ -68,41 +68,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 class VisSetUtil {
   
 public:
-
-  // Natural weighting
-  static void WeightNatural(VisSet& vs, Double& sumwt);
-  static void WeightNatural(VisibilityIterator& vi, Double& sumwt);
-  // Uniform weighting (robust possible) with specified image size
-  static void WeightUniform(VisSet& vs, const String& rmode,
-			    const Quantity& noise,
-			    const Double robust, const Int nx, const Int ny,
-			    const Quantity& cellx, const Quantity& celly,
-			    Double& sumwt,
-			    const Int uBox=0, const Int vBox=0);
-  static void WeightUniform(VisibilityIterator& vi, const String& rmode,
-			    const Quantity& noise,
-			    const Double robust, const Int nx, const Int ny,
-			    const Quantity& cellx, const Quantity& celly,
-			    Double& sumwt,
-			    const Int uBox=0, const Int vBox=0);
-  // Radial weighting (as uv distance)
-  static void WeightRadial(VisSet& vs, Double& sumwt);
-  static void WeightRadial(VisibilityIterator& vs, Double& sumwt);
-  // Filtering
-  static void Filter(VisSet& vs, const String& type, const Quantity& bmaj,
-		     const Quantity& bmin, const Quantity& bpa,
-		     Double& sumwt, Double& minfilter, Double& maxfilter);
-  static void Filter(VisibilityIterator& vs, const String& type, 
-		     const Quantity& bmaj,
-		     const Quantity& bmin, const Quantity& bpa,
-		     Double& sumwt, Double& minfilter, Double& maxfilter);
-  // Implement a uv range
-  static void UVRange(VisSet &vs, const Double& uvmin, const Double& uvmax,
-		      Double& sumwt);
-
-  static void UVRange(VisibilityIterator& vs, const Double& uvmin, 
-		      const Double& uvmax,
-		      Double& sumwt);
   // Calculate sensitivity
   static void Sensitivity(VisSet &vs, Quantity& pointsourcesens, Double& relativesens,
 			  Double& sumwt);
@@ -110,8 +75,8 @@ public:
 			  Double& relativesens,
 			  Double& sumwt);
   // Hanning smoothing of spectral channels
-  static void HanningSmooth(VisSet &vs);
-  static void HanningSmooth(VisibilityIterator &vi);
+  static void HanningSmooth(VisSet &vs, const String& dataCol="corrected");
+  static void HanningSmooth(VisibilityIterator &vi, const String& dataCol="corrected");
   // Subtract/add model from/to corrected visibility data
   static void UVSub(VisSet &vs, Bool reverse=False);
   static void UVSub(VisibilityIterator &vs, Bool reverse=False);

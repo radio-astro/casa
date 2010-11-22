@@ -319,6 +319,13 @@ namespace casa {
 	if ( ! in_interact_mode ) {
 	    in_interact_mode = true;
 	    interact_id = id;
+	    if(maskdd_ && (maskdd_->imageInterface())!=0){
+	      LatticeExprNode maxFl=max(*(maskdd_->imageInterface()));
+	      if(maxFl.getFloat() < 0.001){
+		maskDonePB_->setEnabled(false);
+		maskNoMorePB_->setEnabled(false);
+	      }
+	    }
 	    for ( std::list<QWidget*>::iterator iter = disabled_widgets.begin();
 		  iter != disabled_widgets.end(); ++iter ) {
 		(*iter)->setPalette( input_palette );
@@ -384,6 +391,10 @@ namespace casa {
 	    //Lets see if we can change the mask
 	    ImageRegion* imagereg=0;
 	    try{
+	      if(value > 0.0){
+		maskDonePB_->setEnabled(true);
+		maskNoMorePB_->setEnabled(true);
+	      }
 		imagereg=imagedd_->mouseToImageRegion( mouseRegion, wch, allChanRB_->isChecked() );
 
 		ImageInterface<Float> *maskim=maskdd_->imageInterface();

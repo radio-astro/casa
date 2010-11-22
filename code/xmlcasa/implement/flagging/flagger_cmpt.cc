@@ -10,7 +10,7 @@
  ***/
 
 #include <iostream>
-#include <xmlcasa/flagging/flagger_cmpt.h>
+#include <flagger_cmpt.h>
 
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogOrigin.h>

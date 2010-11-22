@@ -55,7 +55,7 @@ namespace PositionMethodMod
   //! PositionMethod.
   //!  [CalDM.CalPositions] Method used for measuring antenna positions
   
-  const char *const revision = "1.7";
+  const char *const revision = "1.8";
   const int version = 1;
   
   enum PositionMethod

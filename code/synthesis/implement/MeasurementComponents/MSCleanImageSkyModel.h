@@ -89,12 +89,14 @@ class MSCleanImageSkyModel : public CleanImageSkyModel {
 public:
 
   // Create a MSCleanImageSkyModel with nScales, we figure out what they are
-  MSCleanImageSkyModel(const Int nscales, const Float& smallScaleBias);
+  MSCleanImageSkyModel(const Int nscales, const Int stoplargenegatives=2,
+			 const Int stoppointmode=-1, const Float smallScaleBias=0.6);
 
   // Create a MSCleanImageSkyModel, you provide the scale sizes, IN PIXELS
   // for example:  Vector<Float> scales(4); scales(0) = 0.0;  scales(1) = 3.0;  
   // scales(2) = 10.0;  scales(3) = 30.0; 
-  MSCleanImageSkyModel(const Vector<Float>& useScaleSize, const Float& smallScaleBias);
+  MSCleanImageSkyModel(const Vector<Float>& useScaleSize, const Int stoplargenegatives=2,
+			 const Int stoppointmode=-1, const Float smallScaleBias=0.6);
  
   // destructor
   ~MSCleanImageSkyModel();
@@ -108,9 +110,17 @@ private:
 
   Int nscales_p;
   Vector<Float> userScaleSizes_p;
+  // parameter to stop the cycle (for the first N cycles) if you get a 
+  // negative on the largest scale;
+  // To disable, use < 0
+  Int stopLargeNegatives_p;
+
+  // parameter which stops the cycle if you hit the smallest scale this many
+  // consecutive times; if < 0, don't stop for this
+  Int stopPointMode_p;
   Float smallScaleBias_p; 
 
-  LatticeCleanProgress  *progress_p;
+  //LatticeCleanProgress  *progress_p;
 
 };
 

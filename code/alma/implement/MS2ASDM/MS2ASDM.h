@@ -149,7 +149,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   Double timestampStartSecs(const uInt mainTabRow){
     return timeQuant()(mainTabRow).getValue("s") - intervalQuant()(mainTabRow).getValue("s")/2.; }
 
-  // return start of MS main table timestamp (seconds)
+  // return end of MS main table timestamp (seconds)
   Double timestampEndSecs(const uInt mainTabRow){
     return timeQuant()(mainTabRow).getValue("s") + intervalQuant()(mainTabRow).getValue("s")/2.; }
 
@@ -162,11 +162,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // convert a MS net sideband no. to an ASDM enum
   NetSidebandMod::NetSideband ASDMNetSideBand( const Int netSideband );
 
-  // set the receiver band and receiver sideband based on a representative frequency
-  //   and the previously set observatory name telName_p
-  Bool setRecBands( const asdm::Frequency refFreq, 
-		    ReceiverBandMod::ReceiverBand& frequencyBand,
-		    ReceiverSidebandMod::ReceiverSideband& receiverSideband);
+  // set a representative frequency, the receiver band and receiver sideband based on a frequency refFreq
+  //   and the previously set observatory name telName_p, return the band id as an Int (1 to 10),
+  //   -1 if refFreq is outside ALMA bands but observatory is ALMA, 0 if observatory not ALMA
+  Int setRecBands( const asdm::Frequency refFreq,
+		   Double& frequency,
+		   ReceiverBandMod::ReceiverBand& frequencyBand,
+		   ReceiverSidebandMod::ReceiverSideband& receiverSideband);
 
   FrequencyReferenceCodeMod::FrequencyReferenceCode ASDMFreqRefCode( const MFrequency::Types refFrame ); 
 

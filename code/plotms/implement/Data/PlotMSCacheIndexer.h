@@ -119,13 +119,13 @@ private:
 
   // Directly implemented index calculators
   //  (generic index methods point to one of these depending upon axis choice)
-  Int getIndex0000(Int ch,Int irel) { return 0; };
-  Int getIndex1000(Int ch,Int irel) { return irel%icorrmax_(ch); };
-  Int getIndex0100(Int ch,Int irel) { return (irel/nperchan_(ch))%ichanmax_(ch); };
-  Int getIndex0010(Int ch,Int irel) { return (irel/nperbsln_(ch))%ibslnmax_(ch); };
-  Int getIndex0110(Int ch,Int irel) { return (irel/nperchan_(ch))%ichanbslnmax_(ch); };
-  Int getIndex1110(Int ch,Int irel) { return irel%idatamax_(ch); };
-  Int getIndex0001(Int ch,Int irel) { return (irel/nperant_(ch))%iantmax_(ch); };
+  Int getIndex0000(Int ch,Int irel) { return 0;  (void)irel; (void)ch; };
+  Int getIndex1000(Int ch,Int irel) { return irel%icorrmax_(ch);  (void)irel; };
+  Int getIndex0100(Int ch,Int irel) { return (irel/nperchan_(ch))%ichanmax_(ch);  (void)irel; };
+  Int getIndex0010(Int ch,Int irel) { return (irel/nperbsln_(ch))%ibslnmax_(ch);  (void)irel; };
+  Int getIndex0110(Int ch,Int irel) { return (irel/nperchan_(ch))%ichanbslnmax_(ch);  (void)irel; };
+  Int getIndex1110(Int ch,Int irel) { return irel%idatamax_(ch);  (void)irel; };
+  Int getIndex0001(Int ch,Int irel) { return (irel/nperant_(ch))%iantmax_(ch);  (void)irel; };
   //  TBD:  corr/bsln-dep (e.g., WEIGHT)
   //  inline Int getIndex1010(Int ch,Int irel) { return 
   

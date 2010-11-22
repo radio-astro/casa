@@ -6,15 +6,41 @@
       <arg direction="in" type="i" name="panel" />
       <arg direction="out" type="v" />
     </method>
-    <method name="setoptions" >
-      <arg direction="in" type="v" name="options" />
+    <method name="datarange" >
+      <arg direction="in" type="ad" name="range" />
+      <arg direction="in" type="i" name="data" />
+      <arg direction="out" type="v" />
+    </method>
+    <method name="contourlevels" >
+      <arg direction="in" type="ad" name="levels" />
+      <arg direction="in" type="d" name="baselevel" />
+      <arg direction="in" type="d" name="unitlevel" />
+      <arg direction="in" type="i" name="panel_or_data" />
+      <arg direction="out" type="v" />
+    </method>
+    <method name="axes" >
+      <arg direction="in" type="s" name="x" />
+      <arg direction="in" type="s" name="y" />
+      <arg direction="in" type="s" name="z" />
       <arg direction="in" type="i" name="panel" />
       <arg direction="out" type="v" />
     </method>
+    <method name="colormap" >
+      <arg direction="in" type="s" name="map" />
+      <arg direction="in" type="i" name="panel_or_data" />
+      <arg direction="out" type="v" />
+    </method>
+    <method name="colorwedge" >
+      <arg direction="in" type="b" name="show" />
+      <arg direction="in" type="i" name="panel_or_data" />
+      <arg direction="out" type="v" />
+    </method>
+
     <method name="load" >
       <arg direction="in" type="s" name="path" />
       <arg direction="in" type="s" name="displaytype" />
       <arg direction="in" type="i" name="panel" />
+      <arg direction="in" type="d" name="scaling" />
       <arg direction="out" type="v" />
     </method>
     <method name="reload" >
@@ -25,17 +51,16 @@
       <arg direction="in" type="i" name="data" />
       <arg direction="out" type="v" />
     </method>
+
     <method name="restore">
       <arg direction="in" type="s" name="path" />
       <arg direction="in" type="i" name="panel" />
       <arg direction="out" type="v" />
     </method>
-    <method name="cwd">
-      <arg direction="in" type="s" name="new_path" />
-      <arg direction="out" type="v" />
-    </method>
+
     <method name="panel">
       <arg direction="in" type="s" name="type" />
+      <arg direction="in" type="b" name="hidden" />
       <arg direction="out" type="v" />
     </method>
     <method name="hide">
@@ -55,6 +80,48 @@
       <arg direction="in" type="i" name="panel" />
       <arg direction="out" type="v" />
     </method>
+
+    <method name="cwd">
+      <arg direction="in" type="s" name="new_path" />
+      <arg direction="out" type="v" />
+    </method>
+
+    <method name="freeze">
+      <arg direction="in" type="i" name="panel" />
+      <arg direction="out" type="v" />
+    </method>
+    <method name="unfreeze">
+      <arg direction="in" type="i" name="panel" />
+      <arg direction="out" type="v" />
+    </method>
+
+    <method name="channel">
+      <arg direction="in" type="i" name="num" />
+      <arg direction="in" type="i" name="panel" />
+      <arg direction="out" type="v" />
+    </method>
+    <method name="zoom">
+      <arg direction="in" type="i" name="level" />
+      <arg direction="in" type="i" name="panel" />
+      <arg direction="out" type="v" />
+    </method>
+    <method name="zoom">
+      <arg direction="in" type="ad" name="blc" />
+      <arg direction="in" type="ad" name="trc" />
+      <arg direction="in" type="s" name="coordinates" />
+      <arg direction="in" type="i" name="panel" />
+      <arg direction="out" type="v" />
+    </method>
+
+    <method name="release">
+      <arg direction="in" type="i" name="panel" />
+      <arg direction="out" type="v" />
+    </method>
+    <method name="setoptions" >
+      <arg direction="in" type="v" name="options" />
+      <arg direction="in" type="i" name="panel" />
+      <arg direction="out" type="v" />
+    </method>
     <method name="output">
       <arg direction="in" type="s" name="device" />
       <arg direction="in" type="s" name="devicetype" />
@@ -66,20 +133,16 @@
       <arg direction="in" type="s" name="media" />
       <arg direction="out" type="b" />
     </method>
+
+    <method name="fileinfo">
+      <arg direction="in" type="s" name="path" />
+      <arg direction="out" type="v" />
+    </method>
     <method name="keyinfo">
       <arg direction="in" type="i" name="key" />
       <arg direction="out" type="as" />
     </method>
-    <method name="channel">
-      <arg direction="in" type="i" name="num" />
-      <arg direction="in" type="i" name="panel" />
-      <arg direction="out" type="v" />
-    </method>
-    <method name="zoom">
-      <arg direction="in" type="i" name="level" />
-      <arg direction="in" type="i" name="panel" />
-      <arg direction="out" type="v" />
-    </method>
+
     <method name="done">
       <arg direction="out" type="b" />
     </method>

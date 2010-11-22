@@ -16,7 +16,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!-- imgr.weight('natural'); -->
 <!-- imgr.clean(algorithm='csclean',niter=500,model='field1') -->
 
-<task type="function" name="mosaic" category="imaging">
+<task type="function" name="mosaic" category="imaging" visibility="deprecated">
 
   <shortdescription>Create a multi-field deconvolved image with selected algorithm</shortdescription>
 

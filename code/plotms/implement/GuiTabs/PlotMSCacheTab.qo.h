@@ -50,10 +50,10 @@ public:
     QString tabName() const { return "Cache"; }
     
     // Implements PlotMSPlotSubtab::getValue().  Does nothing.
-    void getValue(PlotMSPlotParameters& params) const { }
+    void getValue(PlotMSPlotParameters& params) const { (void)params; }
     
     // Implements PlotMSPlotSubtab::setValue().  Does nothing.
-    void setValue(const PlotMSPlotParameters& params) { }
+    void setValue(const PlotMSPlotParameters& params) { (void)params; }
     
     // Implements PlotMSPlotSubtab::update().
     void update(const PlotMSPlot& plot);

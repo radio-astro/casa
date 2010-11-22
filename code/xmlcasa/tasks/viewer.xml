@@ -5,8 +5,8 @@
       xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="viewer" category="utility" async="never">
-	<shortdescription>View an image or visibility data set:</shortdescription>
+<task type="function" name="viewer" category="visualization" async="never">
+	<shortdescription>View an image or visibility data set</shortdescription>
 	<description>
         The viewer will display images in raster, contour, vector or
 	marker form.  Images can be blinked, and movies are available
@@ -115,10 +115,11 @@
 		default: 'raster'
 		example: displaytype='contour'
 
-	Note: there is no longer a filetype parameter; typing of
-	data files is now done automatically.
-	        example:  viewer infile='my.ms'
-		obsolete: viewer infile='my.ms', filetype='ms'
+	Note: the filetype parameter is optional; typing of
+	data files is now inferred:
+	        example:  viewer infile='my.im'
+		obsolete: viewer infile='my.im', filetype='raster'
+        the filetype is still used to load contours, etc.
 
 	</example>
 </task>

@@ -12,7 +12,7 @@
 #include <iostream>
 #include <math.h>
 
-#include <xmlcasa/images/regionmanager_cmpt.h>
+#include <regionmanager_cmpt.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Containers/Record.h>

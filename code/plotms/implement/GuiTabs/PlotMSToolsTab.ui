@@ -316,14 +316,14 @@
          <number>3</number>
         </property>
         <item>
-         <widget class="QCheckBox" name="trackerHover" >
+         <widget class="QCheckBox" name="trackerHoverChk" >
           <property name="text" >
            <string>Hover</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QCheckBox" name="trackerDisplay" >
+         <widget class="QCheckBox" name="trackerDisplayChk" >
           <property name="text" >
            <string>Display</string>
           </property>
@@ -342,14 +342,24 @@
           </property>
          </spacer>
         </item>
+        <item>
+         <widget class="QPushButton" name="clearRecordedValuesBut" >
+          <property name="text" >
+           <string>clear</string>
+          </property>
+         </widget>
+        </item>
        </layout>
       </item>
       <item>
-       <widget class="QLineEdit" name="trackerEdit" >
+       <widget class="QLineEdit" name="trackerValueDisplay" >
         <property name="readOnly" >
          <bool>true</bool>
         </property>
        </widget>
+      </item>
+      <item>
+       <widget class="QTextEdit" name="trackerRecordedValues" />
       </item>
      </layout>
     </widget>

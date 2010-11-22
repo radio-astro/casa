@@ -11,7 +11,7 @@
  ***/
 
 #include <iostream>
-#include <xmlcasa/singledish/sdtable_cmpt.h>
+#include <sdtable_cmpt.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Utilities/Assert.h>
 

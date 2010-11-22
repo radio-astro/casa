@@ -256,7 +256,11 @@ def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
 
 	    # Reload plotter if necessary
 	    if not sd.plotter._plotter or sd.plotter._plotter.is_dead:
+		    if hasattr(sd.plotter,'_plotter') and \
+			   hasattr(sd.plotter._plotter.figmgr,'casabar'):
+			    del sd.plotter._plotter.figmgr.casabar
 		    sd.plotter._plotter = sd.plotter._newplotter()
+		    sd.plotter._plotter.figmgr.casabar=sd.plotter._newcasabar()
 
 	    # The new toolbar
 	    #if not hasattr(sd.plotter._plotter.figmgr,'sdplotbar') or sd.plotter._plotter.figmgr.sdplotbar.custombar is None:
@@ -466,7 +470,7 @@ def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
                                     sd.plotter.plot_lines(linc,doppler=linedop)
 
 	    # List observation header
-	    if not plotstyle or layout==[]:
+	    if header and (not plotstyle or layout==[]):
 		    # automatic layout
 		    sd.plotter._plotter.figure.subplots_adjust(top=0.8)
 	    datname='Data File:     '+sdfile
@@ -487,17 +491,17 @@ def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
 		    #	    print "Restoring colormap..."
 		    #	    sd.plotter._plotter.colormap=colormapold
 
-	    # Restore the previous line properties
-	    sd.plotter._plotter.colormap=colormapold
-	    sd.plotter._plotter.linestyles=linestylesold
-	    pl.rc('lines', linewidth=linewidthold)
-	    # Restore the previous plotter settings
-	    sd.plotter._minmaxx = oldxlim
-	    sd.plotter._minmaxy = oldylim
-	    sd.plotter._panelling = oldpanel
-	    sd.plotter._stacking = oldstack
-	    sd.plotter._hist = oldhist
-	    sd.plotter._panellayout = oldlayout
+	    ## Restore the previous line properties
+	    #sd.plotter._plotter.colormap=colormapold
+	    #sd.plotter._plotter.linestyles=linestylesold
+	    #pl.rc('lines', linewidth=linewidthold)
+	    ## Restore the previous plotter settings
+	    #sd.plotter._minmaxx = oldxlim
+	    #sd.plotter._minmaxy = oldylim
+	    #sd.plotter._panelling = oldpanel
+	    #sd.plotter._stacking = oldstack
+	    #sd.plotter._hist = oldhist
+	    #sd.plotter._panellayout = oldlayout
 
 	    # Define Pick event
 	    #if sd.plotter._visible:

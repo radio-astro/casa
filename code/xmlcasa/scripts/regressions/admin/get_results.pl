@@ -14,8 +14,7 @@
 	"ballista" => "http://www.aoc.nrao.edu/~jmlarsen/casa/",
 	"onager" => "http://www.aoc.nrao.edu/~jmlarsen/casa_onager/",
 	"casa-dev-15" => "http://www.aoc.nrao.edu/~jmlarsen/casa_casa-dev-15/",
-#	"nb014496.ads.eso.org" => "/home/jmlarsen/Regression",
-	"ma014655.hq.eso.org" => "/opt/casa_test/result/"
+	"ma014655.ads.eso.org" => "/opt/casa_test/result/"
 );
 
 # Orphan test failures go to this email

@@ -91,7 +91,269 @@ namespace casa {
 	return QDBusVariant(iter->second->panel()->setoptions(map,panel));
     }
 
-    QDBusVariant QtDBusViewerAdaptor::load( const QString &path, const QString &displaytype, int panel ) {
+    QDBusVariant QtDBusViewerAdaptor::axes( const QString &x, const QString &y, const QString &z, int panel ) {
+        
+	Record rec;
+	bool update_axes = false;
+
+	// -- should not be necessary, but when "setOptions( )" is called  --
+	// -- from a script the axes values being changed are not updated  --
+	// -- in the data options panel...                                 --
+	Record optionsChangedRec;  
+
+	if ( x.size( ) > 0 ) {
+	    rec.define( "xaxis", x.toAscii( ).constData( ) );
+	    update_axes = true;
+	    Record xaxis;
+	    xaxis.define("value",x.toAscii( ).constData( ) );
+	    optionsChangedRec.defineRecord("xaxis",xaxis);
+	}
+
+	if ( y.size( ) > 0 ) {
+	    rec.define( "yaxis", y.toAscii( ).constData( ) );
+	    update_axes = true;
+	    Record yaxis;
+	    yaxis.define("value",y.toAscii( ).constData( ) );
+	    optionsChangedRec.defineRecord("yaxis",yaxis);
+	}
+
+	if ( z.size( ) > 0 ) {
+	    rec.define( "zaxis", z.toAscii( ).constData( ) );
+	    update_axes = true;
+	    Record zaxis;
+	    zaxis.define("value",z.toAscii( ).constData( ) );
+	    optionsChangedRec.defineRecord("zaxis",zaxis);
+	}
+
+	if ( update_axes == false )
+	    return QDBusVariant(QVariant(false));
+	  
+	panelmap::iterator dpiter = managed_panels.find( panel == 0 ? INT_MAX : panel );
+
+	if ( dpiter == managed_panels.end( ) ) {
+	    char buf[50];
+	    sprintf( buf, "%d", panel );
+	    return error(QString("could not find a panel or data with id '") + buf + "'");
+	}
+
+	bool set_option = false;
+	std::list<int> &data = dpiter->second->data( );
+	for ( std::list<int>::iterator diter = data.begin(); diter != data.end(); ++diter ) {
+	    datamap::iterator dditer = managed_datas.find(*diter);
+	    if ( dditer != managed_datas.end( ) ) {
+		QtDisplayData *dd = dditer->second->data( );
+		dd->setOptions(rec,true);
+		set_option = true;
+		// -- it seems like a better idea to signal change here (when they    --
+		// -- fail to update due to scripting ops ) instead of littering the  --
+		// -- code with unnecessary updates for the GUI case                  --
+		dd->emitOptionsChanged( optionsChangedRec );
+	    }
+	}
+
+	return QDBusVariant(QVariant(set_option));
+    }
+
+
+    QDBusVariant QtDBusViewerAdaptor::datarange( const QList<double> &range, int data ) {
+
+	Vector<Float> value;
+	value.resize(2);
+	value(0) = (Float) range[0];
+	value(1) = (Float) range[1];
+
+	Record rec;
+	Record minmax;
+	minmax.define( "value", value );
+	rec.defineRecord( "minmaxhist", minmax );
+
+	QtDisplayData *dd = finddata(data);
+
+	if ( range.size( ) != 2 ) {
+
+	    return error( QString("range must be a list of two numbers") );
+
+	} else if ( dd == 0 ) {
+
+	    // if we have a "id-less" panel (INT_MAX), see if we can
+	    // set the range on rasters there...
+	    if ( data == 0 ) {
+		panelmap::iterator dpiter = managed_panels.find( INT_MAX );
+
+		if ( dpiter != managed_panels.end( ) ) {
+		    std::list<int> &data = dpiter->second->data( );
+		    bool found = false;
+		    for ( std::list<int>::iterator diter = data.begin(); diter != data.end(); ++diter ) {
+			datamap::iterator dditer = managed_datas.find(*diter);
+			if ( dditer != managed_datas.end( ) ) {
+			    QtDisplayData *dd = dditer->second->data( );
+			    if ( dd->displayType( ) == "raster" ) {
+				dd->setOptions(rec,true);
+				found = true;
+			    }
+			}
+		    }
+
+		    if ( found ) 
+			return QDBusVariant(QVariant(true));
+		}
+	    }
+
+	    char buf[50];
+	    sprintf( buf, "%d", data );
+	    return error(QString("data id '") + buf + "' not found");
+
+	}
+
+	dd->setOptions(rec,true);
+
+	return QDBusVariant(QVariant(true));
+    }
+
+    QDBusVariant QtDBusViewerAdaptor::contourlevels( const QList<double> &levels, double baselevel,
+						     double unitlevel, int panel_or_data ) {
+
+	Record rec;
+	bool update_contours = false;
+
+	if ( levels.size( ) > 0 ) {
+	    Vector<Float> value;
+	    value.resize( levels.size( ) );
+	    for ( int i=0; i < levels.size( ); ++i ) {
+		value(i) = (Float) levels[i];
+	    }
+	    rec.define( "rellevels", value );
+	    update_contours = true;
+	}
+
+	if ( baselevel != 2147483648.0 ) {
+	    rec.define( "basecontour", baselevel );
+	    update_contours = true;
+	}
+
+	if ( unitlevel != 2147483648.0 ) {
+	    rec.define( "unitcontour", unitlevel );
+	    update_contours = true;
+	}
+
+	if ( update_contours == false ) {
+	    return QDBusVariant(QVariant(false));
+	}
+
+	QtDisplayData *dd = finddata(panel_or_data);
+
+	if ( dd == 0 ) {
+
+	    panelmap::iterator dpiter = managed_panels.find( panel_or_data == 0 ? INT_MAX : panel_or_data );
+
+	    if ( dpiter == managed_panels.end( ) ) {
+		char buf[50];
+		sprintf( buf, "%d", panel_or_data );
+		return error(QString("could not find a panel or data with id '") + buf + "'");
+	    }
+
+	    bool set_contour = false;
+	    std::list<int> &data = dpiter->second->data( );
+	    for ( std::list<int>::iterator diter = data.begin(); diter != data.end(); ++diter ) {
+		datamap::iterator dditer = managed_datas.find(*diter);
+		if ( dditer != managed_datas.end( ) ) {
+		    QtDisplayData *dd = dditer->second->data( );
+		    if ( dd->displayType( ) == "contour" ) {
+			dd->setOptions(rec,true);
+			set_contour = true;
+		    }
+		}
+	    }
+	    return QDBusVariant(QVariant(set_contour));
+	}
+
+	dd->setOptions(rec,true);
+	return QDBusVariant(QVariant(true));
+    }
+
+    QDBusVariant QtDBusViewerAdaptor::colormap( const QString &map, int panel_or_data ) {
+	QtDisplayData *dd = finddata(panel_or_data);
+	if ( dd == 0 ) {
+
+	    panelmap::iterator dpiter = managed_panels.find( panel_or_data == 0 ? INT_MAX : panel_or_data );
+
+	    if ( dpiter == managed_panels.end( ) ) {
+		char buf[50];
+		sprintf( buf, "%d", panel_or_data );
+		return error(QString("could not find a panel or data with id '") + buf + "'");
+	    }
+
+	    std::list<int> &data = dpiter->second->data( );
+	    // first verify that the colormap name is valid for all qt display datas
+	    for ( std::list<int>::iterator diter = data.begin(); diter != data.end(); ++diter ) {
+		datamap::iterator dditer = managed_datas.find(*diter);
+		if ( dditer != managed_datas.end( ) ) {
+		    QtDisplayData *dd = dditer->second->data( );
+		    if ( dd->hasColormap( ) && dd->isValidColormap( map ) == false ) {
+			return error(QString("'") + map + "' is not a valid colormap for one (or more) display data(s)");
+		    }
+		}
+	    }
+	    // next replace the colormap
+	    String colormap_name(map.toAscii().constData());
+	    for ( std::list<int>::iterator diter = data.begin(); diter != data.end(); ++diter ) {
+		datamap::iterator dditer = managed_datas.find(*diter);
+		if ( dditer != managed_datas.end( ) ) {
+		    QtDisplayData *dd = dditer->second->data( );
+		    if ( dd->hasColormap( ) ) {
+			dd->setColormap( colormap_name ); 
+		    }
+		}
+	    }
+	    return QDBusVariant(QVariant(true));
+	}
+
+	if ( dd->hasColormap( ) ) {
+	    if ( dd->isValidColormap( map ) == false ) {
+		return error(QString("'") + map + "' is not a valid colormap");
+	    }
+	    String colormap_name(map.toAscii().constData());
+	    dd->setColormap( colormap_name );
+	}
+	return QDBusVariant(QVariant(true));
+    }
+
+    QDBusVariant QtDBusViewerAdaptor::colorwedge( bool show, int panel_or_data ) {
+	QtDisplayData *dd = finddata(panel_or_data);
+
+	Record cw;
+	cw.define( "wedge", show ? "Yes" : "No" );
+
+	if ( dd == 0 ) {
+
+	    panelmap::iterator dpiter = managed_panels.find( panel_or_data == 0 ? INT_MAX : panel_or_data );
+
+	    if ( dpiter == managed_panels.end( ) ) {
+		char buf[50];
+		sprintf( buf, "%d", panel_or_data );
+		return error(QString("could not find a panel or data with id '") + buf + "'");
+	    }
+
+	    std::list<int> &data = dpiter->second->data( );
+	    for ( std::list<int>::iterator diter = data.begin(); diter != data.end(); ++diter ) {
+		datamap::iterator dditer = managed_datas.find(*diter);
+		if ( dditer != managed_datas.end( ) ) {
+		    QtDisplayData *dd = dditer->second->data( );
+		    if ( dd->hasColorBar( ) ) {
+			dd->setOptions( cw, true);
+		    }
+		}
+	    }
+	    return QDBusVariant(QVariant(true));
+	}
+
+	if ( dd->hasColorBar( ) ) {
+	    dd->setOptions( cw, true);
+	}
+	return QDBusVariant(QVariant(true));
+    }
+
+    QDBusVariant QtDBusViewerAdaptor::load( const QString &path, const QString &displaytype, int panel, double scaling ) {
 
 	struct stat buf;
 	if ( stat(path.toAscii().constData(),&buf) < 0 ) {
@@ -115,6 +377,11 @@ namespace casa {
 		dpg->autoDDOptionsShow = False;
 		result = dpg->createDD(to_string(path), datatype, to_string(displaytype), false);
 		dpg->displayPanel()->registerDD(result);
+		if ( scaling != 0.0 ) {
+		    Record rec;
+		    rec.define( "powercycles", scaling );
+		    result->setOptions(rec,true);
+		}
 		dpg->autoDDOptionsShow = True;
 
 		dpg->addedData( displaytype, result );
@@ -231,7 +498,7 @@ namespace casa {
 	datamap::iterator dmiter = managed_datas.find( data );
 	if ( dmiter == managed_datas.end( ) ) {
 	    char buf[50];
-	    sprintf( buf, "%", data );
+	    sprintf( buf, "%d", data );
 	    return error(QString("data id (") + buf + ") not found");
 	}
 	if ( dmiter->second->id() != data ) {
@@ -244,8 +511,9 @@ namespace casa {
     QDBusVariant QtDBusViewerAdaptor::restore( const QString &qpath, int panel ) {
 
 	struct stat buf;
-	QByteArray qpatha(qpath.toAscii());
-	const char *path = qpatha.constData();
+	char path[MAXPATHLEN+1];
+
+	sprintf( path, "%s", qpath.toAscii().constData( ) );
 	if ( stat(path,&buf) < 0 || ! S_ISREG(buf.st_mode) ) {
 	    // file (or dir) does not exist
 	    return error("file or dir(" + qpath + ") does not exist");
@@ -368,6 +636,23 @@ namespace casa {
 	return QDBusVariant(QVariant(true));
     }
 
+
+    QDBusVariant QtDBusViewerAdaptor::freeze( int panel ) {
+	QtDisplayPanelGui *dpg = findpanel( panel, false );
+	if ( ! dpg )
+	    error( "could not find requested panel id" );
+	dpg->displayPanel()->hold();
+	return QDBusVariant(QVariant(true));
+    }
+
+    QDBusVariant QtDBusViewerAdaptor::unfreeze( int panel ) {
+	QtDisplayPanelGui *dpg = findpanel( panel, false );
+	if ( ! dpg )
+	    error( "could not find requested panel id" );
+	dpg->displayPanel()->release();
+	return QDBusVariant(QVariant(true));
+    }
+
     QDBusVariant QtDBusViewerAdaptor::channel( int num, int panel ) {
 	QtDisplayPanelGui *dpg = findpanel( panel, false );
 	if ( ! dpg ) {
@@ -393,6 +678,39 @@ namespace casa {
 	else
 	    dpg->displayPanel()->zoomIn( level );
 
+	return QDBusVariant(QVariant(true));
+    }
+
+    QDBusVariant QtDBusViewerAdaptor::zoom( const QList<double> &blc, const QList<double> &trc, const QString &coordinates, int panel ) {
+	QtDisplayPanelGui *dpg = findpanel( panel, false );
+	if ( ! dpg ) {
+	    return error("could not find requested panel");
+	}
+
+	if ( blc.size() != 2 || trc.size() != 2 )
+	    return error("the zoom rectangle corners (blc and trc) must have two elements");
+
+	Vector<Double> v_blc((uInt)2);
+	Vector<Double> v_trc((uInt)2);
+	for ( int i = 0; i < 2; ++i ) {
+	    v_blc[i] = blc[i];
+	    v_trc[i] = trc[i];
+	}
+
+	if ( coordinates == "pixel" ) {
+	    dpg->displayPanel()->zoom( v_blc, v_trc );
+	} else if ( coordinates == "world" ) {
+	    Vector<Double> vp_blc((uInt)2);
+	    Vector<Double> vp_trc((uInt)2);
+	    bool OK = ( dpg->displayPanel( )->worldToLin( vp_blc, v_blc ) &&
+			dpg->displayPanel( )->worldToLin( vp_trc, v_trc ) );
+	    if ( OK == false )
+		return error("zoom() conversion from world to pixel coordinates failed");
+
+	    dpg->displayPanel()->zoom( vp_blc, vp_trc );
+	} else {
+	    return error("coordinates must be either 'world' or 'pixel'");
+	}
 	return QDBusVariant(QVariant(true));
     }
 
@@ -462,7 +780,9 @@ namespace casa {
 	if ( devicetype == "ghostview" ) {
 	    launch_ghostview( printer_file );
 	} else if ( devicetype == "printer" ) {
-	    launch_lpr( printer_file, device.toAscii( ).constData( ) );
+	    char *dev = strdup( device.toAscii().constData( ) );
+	    launch_lpr( printer_file, dev );
+	    free( dev );
 	}
 
 	return true;
@@ -545,7 +865,9 @@ namespace casa {
 	QApplication::restoreOverrideCursor();
 
 	if ( type == "eps" ) {
-	    adjusteps( eps_file_name, file.toAscii( ).constData( ), pmp.size(), viewport );
+	    char path[MAXPATHLEN+1];
+	    sprintf( path, "%s", file.toAscii( ).constData( ) );
+	    adjusteps( eps_file_name, path, pmp.size(), viewport );
 	    remove( eps_file_name );
 	}
 
@@ -628,31 +950,48 @@ namespace casa {
 
 	QApplication::restoreOverrideCursor();
 
-	if ( ! mp->save(file, type.toAscii().constData( ) ) ) {
+	char *ctype = strdup(type.toAscii().constData( ));
+	if ( ! mp->save(file, ctype ) ) {
+	    free( ctype );
 	    delete mp;
 	    return false;
 	}
 
+	free( ctype );
 	delete mp;
 	return true;
     }
 
     QDBusVariant QtDBusViewerAdaptor::cwd( const QString &new_path ) {
+	char p[MAXPATHLEN+1];
 	if ( new_path != "" ) {
 	    struct stat buf;
-	    const char *p = new_path.toAscii().constData();
+	    sprintf( p, "%s", new_path.toAscii().constData() );
 	    if ( stat(p,&buf) == 0 && S_ISDIR(buf.st_mode) )
 		chdir(p);
 	    else if ( stat(p,&buf) != 0 )
 		return error( new_path + " does not exist" );
 	    else if ( ! S_ISDIR(buf.st_mode) )
-		return error( new_path + " is not a directory" );
+    		return error( new_path + " is not a directory" );
 	    else
-		return error( "cannot change to " + new_path );
+    		return error( "cannot change to " + new_path );
 	}
-	char buf[MAXPATHLEN+1];
-	getcwd(buf,MAXPATHLEN+1);
-	return QDBusVariant(QVariant(QString((const char*)buf)));
+	getcwd(p,MAXPATHLEN+1);
+	return QDBusVariant(QVariant(QString((const char*)p)));
+    }
+
+    QDBusVariant QtDBusViewerAdaptor::fileinfo( const QString &path ) {
+	QMap<QString,QVariant> map;
+	map.insert("path",QVariant(path));
+	struct stat buf;
+	if ( stat(path.toAscii().constData(),&buf) < 0 ) {
+	    // file (or dir) does not exist
+	    map.insert("type",QVariant("nonexistent"));
+	} else {
+	    String datatype = viewer_->filetype(path.toStdString()).chars();
+	    map.insert("type",QVariant((const char*) datatype.c_str( )));
+	}
+	return QDBusVariant(QVariant(map));
     }
 
     QStringList QtDBusViewerAdaptor::keyinfo( int key ) {
@@ -692,6 +1031,15 @@ namespace casa {
     QtDBusViewerAdaptor::~QtDBusViewerAdaptor() {
 
 
+    }
+
+    QtDisplayData *QtDBusViewerAdaptor::finddata( int key ) {
+
+	datamap::iterator iter = managed_datas.find( key );
+	if ( iter != managed_datas.end( ) )
+	    return iter->second->data( );
+
+	return 0;
     }
 
     QtDisplayPanelGui *QtDBusViewerAdaptor::findpanel( int key, bool create ) {

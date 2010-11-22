@@ -356,15 +356,6 @@ class XYPlot:
 	  parttaql = 'MODEL_DATA' + index ;
 	if(col == 'residual'):
 	  parttaql = 'DATA' + index + '-MODEL_DATA' + index ;
-	## make separate corr_index and chan_index strings...
-	if(col == 'weighteddata'):
-	  parttaql = 'IMAGING_WEIGHT[' + indexchan + ']*DATA' + index ;
-	if(col == 'weightedcorrected'):
-	  parttaql = 'IMAGING_WEIGHT[' + indexchan + ']*CORRECTED_DATA' + index ;
-	if(col == 'weightedmodel'):
-	  parttaql = 'IMAGING_WEIGHT[' + indexchan + ']*MODEL' + index ;
-	if(col == 'weightedresidual'):
-	  parttaql = 'IMAGING_WEIGHT[' + indexchan + ']*(DATA' + index + '-MODEL_DATA' + index + ')';
 
 	if(quant == 'amp' or quant == 'amplitude'):
 	  expr = 'AMPLITUDE';
@@ -377,7 +368,7 @@ class XYPlot:
 	
 	if(len(parttaql)==0 or len(expr)==0):
 	  print 'Invalid col or quant !';
-	  print 'col = data,corrected,model,residual,weighteddata, weightedcorrected, weightedmodel, weightedresidual';
+	  print 'col = data,corrected,model,residual';
 	  print 'quant = amp,phase,real,imag';
 	  return False,[],[];
         

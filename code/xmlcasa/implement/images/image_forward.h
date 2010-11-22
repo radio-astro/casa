@@ -1,4 +1,4 @@
-#include <xmlcasa/images/coordsys_cmpt.h>
+#include <coordsys_cmpt.h>
 #include <xmlcasa/StdCasa/CasacSupport.h>
 #include <measures/Measures/Stokes.h>
 #include <components/ComponentModels/ComponentType.h>

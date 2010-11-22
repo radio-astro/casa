@@ -89,7 +89,7 @@ public:
   void  markSigma ( uInt ifr );
 
   // recompute updated estimates and optionally do row flagging
-  Float updateSigma (uInt &ifrmax,uInt &itmax,Bool flagrows = True );
+  Float updateSigma (uInt &ifrmax,uInt &itmax,Bool flagrows = True, bool clear_flags = true );
   
   // enables a debugging plot
   void setDebug ( const RFDebugPlot &debug );

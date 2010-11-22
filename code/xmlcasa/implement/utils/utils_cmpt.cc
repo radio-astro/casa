@@ -13,7 +13,7 @@
 #include <iostream>
 #include <fstream>
 #include <xmlcasa/record.h>
-#include <xmlcasa/utils/utils_cmpt.h>
+#include <utils_cmpt.h>
 #include <xmlcasa/utils/stdBaseInterface.h>
 #include <xmlcasa/xerces/stdcasaXMLUtil.h>
 #include <casa/Logging/LogIO.h>

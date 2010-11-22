@@ -1,6 +1,27 @@
 import report
 import unittest
 
+class host_name(unittest.TestCase):
+    
+    def test_ballista(self):
+
+        assert not report.is_stable_branch("ballista")
+
+    def test_onager(self):
+
+        assert not report.is_stable_branch("onager")
+
+    def test_sneffels(self):
+
+        assert report.is_stable_branch("sneffels.aoc.nrao.edu")
+
+
+    def test_ma01(self):
+
+        assert report.is_stable_branch("ma01")
+
+                 
+
 class version_test(unittest.TestCase):
 
     def shortDescription(self):
@@ -59,4 +80,4 @@ class version_test(unittest.TestCase):
         assert report.cmp_version(b, b) == 0
 
 def suite():
-    return [version_test]
+    return [version_test, host_name]

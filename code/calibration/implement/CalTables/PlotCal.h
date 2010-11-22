@@ -231,6 +231,7 @@ class PlotCal
     Matrix<Int> tabSpws_p,chanId_p;
     Vector<Double> startFreq_p;
     Vector<Double> stepFreq_p;
+    Vector<Int> nchan_p;
 
     // The ResetCallBack
     casa::TPResetCallBack *resetCallBack_p;

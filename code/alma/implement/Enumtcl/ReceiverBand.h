@@ -25,7 +25,7 @@
 using namespace ReceiverBandMod;
 
 template<>
- struct enum_set_traits<ReceiverBand> : public enum_set_traiter<ReceiverBand,17,ReceiverBandMod::UNSPECIFIED> {};
+ struct enum_set_traits<ReceiverBand> : public enum_set_traiter<ReceiverBand,27,ReceiverBandMod::UNSPECIFIED> {};
 
 template<>
 class enum_map_traits<ReceiverBand,void> : public enum_map_traiter<ReceiverBand,void> {
@@ -69,6 +69,26 @@ public:
      (ReceiverBandMod::BURE_03,ep((int)ReceiverBandMod::BURE_03,"BURE_03","un-documented")));
     m_.insert(pair<ReceiverBand,EnumPar<void> >
      (ReceiverBandMod::BURE_04,ep((int)ReceiverBandMod::BURE_04,"BURE_04","un-documented")));
+    m_.insert(pair<ReceiverBand,EnumPar<void> >
+     (ReceiverBandMod::EVLA_4,ep((int)ReceiverBandMod::EVLA_4,"EVLA_4","un-documented")));
+    m_.insert(pair<ReceiverBand,EnumPar<void> >
+     (ReceiverBandMod::EVLA_P,ep((int)ReceiverBandMod::EVLA_P,"EVLA_P","un-documented")));
+    m_.insert(pair<ReceiverBand,EnumPar<void> >
+     (ReceiverBandMod::EVLA_L,ep((int)ReceiverBandMod::EVLA_L,"EVLA_L","un-documented")));
+    m_.insert(pair<ReceiverBand,EnumPar<void> >
+     (ReceiverBandMod::EVLA_C,ep((int)ReceiverBandMod::EVLA_C,"EVLA_C","un-documented")));
+    m_.insert(pair<ReceiverBand,EnumPar<void> >
+     (ReceiverBandMod::EVLA_S,ep((int)ReceiverBandMod::EVLA_S,"EVLA_S","un-documented")));
+    m_.insert(pair<ReceiverBand,EnumPar<void> >
+     (ReceiverBandMod::EVLA_X,ep((int)ReceiverBandMod::EVLA_X,"EVLA_X","un-documented")));
+    m_.insert(pair<ReceiverBand,EnumPar<void> >
+     (ReceiverBandMod::EVLA_Ku,ep((int)ReceiverBandMod::EVLA_Ku,"EVLA_Ku","un-documented")));
+    m_.insert(pair<ReceiverBand,EnumPar<void> >
+     (ReceiverBandMod::EVLA_K,ep((int)ReceiverBandMod::EVLA_K,"EVLA_K","un-documented")));
+    m_.insert(pair<ReceiverBand,EnumPar<void> >
+     (ReceiverBandMod::EVLA_Ka,ep((int)ReceiverBandMod::EVLA_Ka,"EVLA_Ka","un-documented")));
+    m_.insert(pair<ReceiverBand,EnumPar<void> >
+     (ReceiverBandMod::EVLA_Q,ep((int)ReceiverBandMod::EVLA_Q,"EVLA_Q","un-documented")));
     m_.insert(pair<ReceiverBand,EnumPar<void> >
      (ReceiverBandMod::UNSPECIFIED,ep((int)ReceiverBandMod::UNSPECIFIED,"UNSPECIFIED","un-documented")));
     return true;

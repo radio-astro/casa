@@ -186,7 +186,7 @@ methods, which are described in the {\em functional} tool.
 </description>
 
 <example>
-\begin{verbatim}
+
 - a:=dfs.functional('poly', 2, [1,2,3]) # create a polynomial
 - a.f([0,1,2])                          # get some values
 [1 6 17]  
@@ -204,7 +204,7 @@ T
 T 
 - b.f([0,1,2])                          # as expected from the combination
 [2 12 34]  
-\end{verbatim}
+
 
 </example>
 </method>
@@ -238,7 +238,7 @@ Calculate the value of the functional.
 </description>
 
 <example>
-\begin{verbatim}
+
 - a:=dfs.gaussian1d()
 - a.setparameters([2,1,3])
 T
@@ -246,7 +246,7 @@ T
 2
 - a.f([1,2])
 [2 1.46973]
-\end{verbatim}                                                                 
+
 </example>
 </method>
 
@@ -271,7 +271,7 @@ Calculate the complex value of the functional.
 </description>
 
 <example>
-\begin{verbatim}
+
 - a:=dfs.gaussian1d()
 - a.setparameters([2,1,3])
 T 
@@ -281,7 +281,7 @@ T
 2.72158+0i 
 - a.cf(1i)
 1.63224+1.15576i 
-\end{verbatim}
+
 </example>
 </method>
 
@@ -309,7 +309,7 @@ specified mask into account).
 </description>
 
 <example>
-\begin{verbatim}
+
 - a:=dfs.gaussian1d()
 - a.setparameters([2,1,3])
 T
@@ -320,7 +320,7 @@ T
 [[1:2,]
     2       1        0        0
     1.46973 0.734867 0.905549 0.30185]
-\end{verbatim}
+
 </example>
 </method>
 
@@ -346,7 +346,7 @@ specified mask into account).
 </description>
 
 <example>
-\begin{verbatim}
+
 - a:=dfs.gaussian1d()
 - a.setparameters([2,1,3])
 T
@@ -361,7 +361,7 @@ T
 [[1:1,]
     1.63224+1.15576i 0.81612+0.577882i -1.71778+0.293572i
     0.474734-0.670449i] 
-\end{verbatim}
+
 </example>
 </method>
 
@@ -392,7 +392,7 @@ Add another functional to a combi or compound functional.
 </description>
 
 <example>
-\begin{verbatim}
+
 - a:=dfs.poly(2,[1,2,3])        # a polynomial
 - a.f(1)                        # its value at x=1
 6 
@@ -410,7 +410,7 @@ to 2.5
 [2.5 1]  
 - c.f(1)                        # now value is 2.5*poly + 1*gauss
 20 
-\end{verbatim}
+
 </example>
 </method>
 <!-- ================================================================== -->
@@ -434,11 +434,11 @@ Return the known functional type.
 </description>
 
 <example>
-\begin{verbatim}
+
 - a:=dfs.gaussian1d()
 - a.type()
 gaussian1d 
-\end{verbatim}
+
 </example>
 </method>
 
@@ -454,11 +454,11 @@ Returns an integer giving the number of parameters.
 </description>
 
 <example>
-\begin{verbatim}
+
 - a:=dfs.gaussian1d()
 - a.npar()
 3
-\end{verbatim}
+
 </example>
 </method>
 
@@ -475,11 +475,11 @@ Return the number of dimensions.
 </description>
 
 <example>
-\begin{verbatim}
+
 - a:=dfs.gaussian1d()
 - a.ndim()
 1
-\end{verbatim}
+
 </example>
 </method>
 
@@ -498,14 +498,14 @@ Return the order of the functional when relevant (e.g. of polynomial).
 </description>
 
 <example>
-\begin{verbatim}
+
 - a:=dfs.gaussian1d()
 - b:=dfs.poly(2)      
 - a.order()
 -1 
 - b.order()
 2 
-\end{verbatim}
+
 </example>
 </method>
 
@@ -527,13 +527,13 @@ Show the complete state of the functional
 </description>   
 
 <example>
-\begin{verbatim}
+
 - a:=dfs.gaussian1d()
 - a.setparameters([2,1,3])
 T
 - a.state()
 [type=0, order=-1, ndim=1, npar=3, params=[2 1 3] , masks=[T T F] ]
-\end{verbatim}
+
 </example>
 </method>
 
@@ -576,11 +576,11 @@ Return the parameter values.
 </description>
 
 <example>
-\begin{verbatim}
+
 - a:=dfs.gaussian1d()
 - a.parameters()
 [1 0 1]  
-\end{verbatim}
+
 </example>
 </method>
 
@@ -602,13 +602,13 @@ Set all the parameter values
 </description>
 
 <example>
-\begin{verbatim}
+
 - a:=dfs.gaussian1d()
 - a.setparameters([2,1,3])
 T 
 - a.parameters()           
 [2 1 3]  
-\end{verbatim}
+
 </example>
 </method>
 
@@ -630,7 +630,7 @@ Show a parameter value at position 'n'.
 </description>
 
 <example>
-\begin{verbatim}
+
 - a:=dfs.gaussian1d()
 - a.setparameters([2,1,3])
 T 
@@ -638,7 +638,7 @@ T
 [2 1 3]  
 - a.par(2)
 1 
-\end{verbatim}
+
 </example>
 </method>
 
@@ -666,7 +666,7 @@ Set a parameter value, and return the new suite of values
 </description>
 
 <example>
-\begin{verbatim}
+
 - a:=dfs.gaussian1d()
 - a.setparameters([2,1,3])
 T 
@@ -674,7 +674,7 @@ T
 [2 1 3]  
 - a.setpar(2,5)
 [2 5 3]  
-\end{verbatim}
+
 </example>
 </method>
 
@@ -695,7 +695,7 @@ calculated for that parameter by {\em fdf}.
 </description>
 
 <example>
-\begin{verbatim}
+
 - a:=dfs.gaussian1d()
 - a.masks()
 [T T T]  
@@ -710,7 +710,7 @@ x0:
 [[1:2,]
     1      1      0 0
     0.0625 0.0625 0 0.346574] 
-\end{verbatim}
+
 </example>
 </method>
 
@@ -732,7 +732,7 @@ Set all the parameter masks
 </description>
 
 <example>
-\begin{verbatim}
+
 - a:=dfs.gaussian1d()
 - a.setmasks([T,F,F])
 T 
@@ -742,7 +742,7 @@ T
 [[1:2,]
     1      1      0 0
     0.0625 0.0625 0 0] 
-\end{verbatim}
+
 </example>
 </method>
 
@@ -765,7 +765,7 @@ Show a parameter mask
 </description>
 
 <example>
-\begin{verbatim}
+
 - a:=dfs.gaussian1d()
 - a.setmasks([T,F,F])
 T 
@@ -773,7 +773,7 @@ T
 [T F F]  
 - a.mask(2)
 F 
-\end{verbatim}
+
 </example>
 </method>
 
@@ -801,7 +801,7 @@ Set a parameter mask, and return the new suite of masks
 </description>
 
 <example>
-\begin{verbatim}
+
 - a:=dfs.gaussian1d()
 - a.setmasks([T,F,F])
 T 
@@ -809,7 +809,7 @@ T
 [T F F]  
 - a.setmask(2,T)
 [T T F]  
-\end{verbatim}
+
 </example>
 </method>
 
@@ -832,7 +832,7 @@ Free the functional's resources.
 </description>
 
 <example>
-\begin{verbatim}
+
 - a:=dfs.gaussian1d()
 - a.setparameters([2,1,3])
 T 
@@ -844,7 +844,7 @@ T
 F 
 - a
 F 
-\end{verbatim}
+
 </example>
 </method>
 
@@ -883,7 +883,7 @@ value and the derivatives with respect to the parameters.
 </description>
 
 <example>
-\begin{verbatim}
+
 # get the value and derivatives of a Gaussian with
 # height=2; center at x=1; a width of 1 at x=[0,1,2]
 - dfs.gaussian1d([2,1,1]).fdf([0,1,2])
@@ -892,7 +892,7 @@ value and the derivatives with respect to the parameters.
     2     1      0         0
     0.125 0.0625 0.693147  0.693147] 
 
-\end{verbatim}
+
 
 </example>
 </method>
@@ -922,7 +922,7 @@ value and the derivatives with respect to the parameters.
 </description>
 
 <example>
-\begin{verbatim}
+
 # get the value and derivatives of a Gaussian with
 # height=2; centers at x,y=1; widths of 1 at x,y=[0,0,1,1,2,2]
 - dfs.gaussian2d([2,1,1,1,1,0]).fdf([0,0,1,1,2,2])
@@ -931,7 +931,7 @@ value and the derivatives with respect to the parameters.
     2         1          0          0          0         0         -0
     0.0078125 0.00390625 0.0433217  0.0433217  0.0866434 0.0433217 -0] 
 
-\end{verbatim}
+
 
 </example>
 </method>
@@ -962,7 +962,7 @@ parameters are all set to zero).
 </description>
 
 <example>
-\begin{verbatim}
+
 - dfs.poly(2).f([1,2])
 [3 7]  
 - dfs.poly(2).state() 
@@ -970,7 +970,7 @@ parameters are all set to zero).
 - dfs.poly(2).type() 
 polynomial 
 -
-\end{verbatim}
+
 
 </example>
 </method>
@@ -1001,13 +1001,13 @@ parameters are all set to zero).
 </description>
 
 <example>
-\begin{verbatim}
+
 - dfs.oddpoly(2).f([1,2])
 [2 10]  
 - dfs.oddpoly(2).npar()  
 2 
 
-\end{verbatim}
+
 
 </example>
 </method>
@@ -1039,7 +1039,7 @@ parameters are all set to zero).
 </description>
 
 <example>
-\begin{verbatim}
+
 - dfs.evenpoly(2).fdf([1,2])
 [[1:2,]
     2 1 1
@@ -1047,7 +1047,7 @@ parameters are all set to zero).
 - dfs.evenpoly(2).state()   
 [type=6, order=3, ndim=1, npar=2, params=[1 1] ] 
 
-\end{verbatim}
+
 
 </example>
 </method>
@@ -1213,7 +1213,7 @@ The default out-of-interval mode is \texttt{constant}.
 </description>
 
 <example>
-\begin{verbatim}
+
 - cheb := dfs.chebyshev(2, [2, 3, 4])
 - cheb.state()
 [type=9, order=2, ndim=1, npar=3, params=[2 3 4] , masks=[T T T] , 
@@ -1226,7 +1226,7 @@ mode=[interval=[0 2] , default=0, intervalMode=extrapolate]]
 - cheb.state()
 - cheb.f([0, 0.5, 1, 2, 5])
 [3 -1.5 -2 9 138]  
-\end{verbatim}
+
 </example>
 
 </method>
@@ -1316,7 +1316,7 @@ the attenuation curve--$n$ in the above formula--can be set using
 </description>
 
 <example>
-\begin{verbatim}
+
 - butt := dfs.butterworth(minorder=4, maxorder=4, mincut=10,
                           maxcut=50, center=30, peak=1)
 - butt.state()
@@ -1324,16 +1324,16 @@ the attenuation curve--$n$ in the above formula--can be set using
 mode=[minOrder=4, maxOrder=4]]
 - butt.f([0, 7, 10, 13, 30, 47, 50, 53, 60])
 [0.193786 0.496351 0.707107 0.886488 1 0.886488 0.707107 0.496351 0.193786]  
-\end{verbatim}
+
 
 To plot this function...
-\begin{verbatim}
+
 - include 'pgplotter.g'
 - pg := pgplotter()
 - x := [-30:90]
 - y := butt.f(x)
 - pg.plotxy1(x, y, ylab='Bandpass')
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1357,7 +1357,7 @@ combined. See also {\em compound}.
 </description>
 
 <example>
-\begin{verbatim}
+
 - a:=dfs.poly(2,[1,2,3])        # a polynomial
 - a.f(1)                        # its value at x=1
 6 
@@ -1375,7 +1375,7 @@ T
 20 
 -
 
-\end{verbatim}
+
 
 </example>
 </method>
@@ -1398,7 +1398,7 @@ changed, the parameter of the constituting function is changed as well.
 </description>
 
 <example>
-\begin{verbatim}
+
 - a:=dfs.poly(2,[1,2,3])        # a polynomial
 - a.f(1)                        # its value at x=1
 6 
@@ -1423,7 +1423,7 @@ T
 12.5
 -
 
-\end{verbatim}
+
 
 </example>
 </method>
@@ -1468,7 +1468,7 @@ behaves as all other functionals, and hence can be used in combinations.
 </description>
 
 <example>
-\begin{verbatim}
+
 - a:=dfs.compiled('sin(pi(0.5) ) +pi'); # an example
 - a.state()                             # and its result
 [type=12, order=-1, progtext=sin(pi(0.5) ) +pi, ndim=0, npar=0, params=] 
@@ -1508,7 +1508,7 @@ No closing function paranethesis at:
 - dfs.compiled('x==0 ? 1 : sin(x)/x').f([-1,0,1])
 [0.841471 1 0.841471]  
 
-\end{verbatim}
+
 
 </example>
 </method>
@@ -1526,10 +1526,10 @@ No closing function paranethesis at:
              is meant for the toolmanager.
 </description>
 <example>
-\begin{verbatim}
+
 - dfs.id()
 [sequence=1, pid=6053, time=1020745837, host=cetus, agentid=4] 
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1548,10 +1548,10 @@ No closing function paranethesis at:
 type will return the tool name.
 </description>
 <example>
-\begin{verbatim}
+
 - dfs.type()
 functionals 
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1565,10 +1565,10 @@ functionals
 <description>The tool name is returned.
 </description>
 <example>
-\begin{verbatim}
+
 - dfs.type()
 functionals 
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1593,7 +1593,7 @@ argument is true.
 </description>
 
 <example>
-\begin{verbatim}
+
 - a:=functionals()
 - a.done()
 T 
@@ -1602,7 +1602,7 @@ F
 - dfs.done(kill=T)
 NORMAL: Successfully closed empty server: functionals
 T 
-\end{verbatim}
+
 </example>
 </method>
 

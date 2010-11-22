@@ -154,6 +154,7 @@ void  CEMemProgress::basicSetUp(Bool doPlot)
   Float xMax = Float(itsCurrentTotalIterations)*1.15;
   Float xMin = -0.05*Float(itsCurrentTotalIterations);
 
+if(itsPgplotter){
   itsPgplotter->sch(0.6);
   itsPgplotter->sci(1);
   itsPgplotter->page();
@@ -205,6 +206,7 @@ void  CEMemProgress::basicSetUp(Bool doPlot)
   if (doPlot) {
     itsPgplotter->pt(itsIterationNumbers, itsTotalFluxes, 2);
   }
+}
 
 
 };
@@ -221,7 +223,7 @@ void  CEMemProgress::plotOne(const Int iteration,
   Vector<Float> x(1);
   Vector<Float> y(1);
   x(0) = iteration;
-
+if(itsPgplotter){
   // top graph
   itsPgplotter->sch(0.6);
   itsPgplotter->sci(1);
@@ -243,6 +245,7 @@ void  CEMemProgress::plotOne(const Int iteration,
   itsPgplotter->swin(xMin, xMax, 0.0, itsCurrentFluxScale);
   y(0) = flux;
   itsPgplotter->pt(x,y,2);
+}
 };
 
 

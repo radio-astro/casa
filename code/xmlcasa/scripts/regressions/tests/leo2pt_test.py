@@ -39,3 +39,6 @@ def data():
     ### return the data files that are needed by the regression script
     return ['leo2pt.55183.452640752315','3C286_L.im']
 
+def doCopy():
+    return [0,0]
+

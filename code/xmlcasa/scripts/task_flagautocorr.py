@@ -14,27 +14,25 @@ def flagautocorr(vis=None):
 	"""
 	casalog.origin('flagautocorr')
 
+        fglocal = casac.homefinder.find_home_by_name('flaggerHome').create()
+        mslocal = casac.homefinder.find_home_by_name('msHome').create()
+
 	#Python script
 	try:
-		##Let us start by clearing the state of flagger especially
-		##if its a global
-		fg.clearflagselection(0)
                 if ((type(vis)==str) & (os.path.exists(vis))):
-                        fg.open(vis)
+                        fglocal.open(vis)
                 else:
 			raise Exception, 'Visibility data set not found - please verify the name'
-		fg.setdata()
-		fg.setmanualflags(autocorrelation=True)
-		fg.run()
-		fg.done()
+		fglocal.setdata()
+		fglocal.setmanualflags(autocorrelation=True)
+		fglocal.run()
         
 	        #write history
-        	ms.open(vis,nomodify=False)
-        	ms.writehistory(message='taskname = flagautocorr',origin='flagautocorr')
-        	ms.writehistory(message='vis         = "'+str(vis)+'"',origin='flagautocorr')
-        	ms.close()
+        	mslocal.open(vis,nomodify=False)
+        	mslocal.writehistory(message='taskname = flagautocorr',origin='flagautocorr')
+        	mslocal.writehistory(message='vis         = "'+str(vis)+'"',origin='flagautocorr')
+        	mslocal.close()
         
 	except Exception, instance:
-		fg.done()
 	        print '*** Error ***',instance
 

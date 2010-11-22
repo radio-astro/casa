@@ -11,23 +11,20 @@ import traceback
 import casac
 import unittest
 
+PYVER = str(sys.version_info[0]) + "." + str(sys.version_info[1])
+
 AIPS_DIR = os.environ["CASAPATH"].split()[0]
 DATA_DIR = AIPS_DIR+'/data'
 
-SCRIPT_REPOS=AIPS_DIR+'/code/xmlcasa/scripts/tests/'
-UTILS_DIR = AIPS_DIR+'/code/xmlcasa/scripts/regressions/admin/'
+SCRIPT_REPOS=AIPS_DIR + "/" + os.environ["CASAPATH"].split()[1] + '/python/' + PYVER + '/tests/'
+
 if not os.access(SCRIPT_REPOS, os.F_OK):
     if os.access(AIPS_DIR+'/lib64', os.F_OK):
-        SCRIPT_REPOS = AIPS_DIR+'/lib64/python2.5/tests/'
-        UTILS_DIR = SCRIPT_REPOS+'admin'
+        SCRIPT_REPOS = AIPS_DIR+'/lib64/python' + PYVER + '/tests/'
     elif os.access(AIPS_DIR+'/lib', os.F_OK):
-        SCRIPT_REPOS = AIPS_DIR+'/lib/python2.5/tests/'
-        UTILS_DIR = SCRIPT_REPOS+'admin'
+        SCRIPT_REPOS = AIPS_DIR+'/lib/python' + PYVER + '/tests/'
     else:            #Mac release
         SCRIPT_REPOS = AIPS_DIR+'/Resources/python/tests/'
-        UTILS_DIR = AIPS_DIR+'/Resources/python/regressions/admin'        
-
-sys.path.append(UTILS_DIR)
 
 class Helper():
     # This class is called when a test is not found. It will
@@ -137,21 +134,52 @@ class UnitTest:
         # get the classes
         classes = mytest.suite()
         testlist = []
-
-        for c in classes:
-            for attr, value in c.__dict__.iteritems():
-                if list:
-#                    print 'There is a list'
-                    for test in list:
-                        if test == attr:
-                            testlist.append(c(attr))
-                else:
+        
+        # Check if specific tests/classes were requested
+        if not list:
+#            print "no list"
+            for c in classes:
+                for attr, value in c.__dict__.iteritems():                
 #                    print attr, " = ", value
-                   if len(attr) >= len("test") and \
+                    if len(attr) >= len("test") and \
                         attr[:len("test")] == "test" : \
-#                        attr.rfind('test') != -1 :
                         testlist.append(c(attr))
-            
+                        
+        else:
+            # verify if list contains classes and/or methods
+            for input in list:
+                for c in classes:
+#                    print c
+                    if self.isaclass(c,input):
+#                        print "it is a class"
+                        # It is a class. Get all its methods
+                        for attr, value in c.__dict__.iteritems():
+                            if len(attr) >= len("test") and \
+                                attr[:len("test")] == "test" : \
+                                # append each test method to the list    
+                                testlist.append(c(attr))
+                    else:
+                        # maybe it is a method. Get only this one
+#                        print "maybe it is a method"
+                        for attr, value in c.__dict__.iteritems():
+                            if input == attr:
+                                testlist.append(c(attr))
+                                                                                        
+#            for attr, value in c.__dict__.iteritems():
+#                print attr, value
+#                if list:
+#                    print 'There is a list'
+#                    for test in list:
+#                        print test
+#                        if test == attr:
+#                            testlist.append(c(attr))
+#                else:
+#                    print attr, " = ", value
+#                   if len(attr) >= len("test") and \
+#                        attr[:len("test")] == "test" : \
+##                        attr.rfind('test') != -1 :
+#                        testlist.append(c(attr))
+#        print testlist
         return testlist
             
 
@@ -261,6 +289,14 @@ class UnitTest:
             shutil.copy(scriptdir+'/'+testnamek, \
                     workdir+'/')
 
+    def isaclass(self,myclass,input):
+        '''Check if input equals the class name'''
+#        print "input=%s myclass=%s"%(input,myclass.__name__)
+        if input == myclass.__name__:
+            return True
+            
+        return False
+
 
 class ExecTest(unittest.TestCase,UnitTest):
     """Wraps scripts to run with execfile"""
@@ -300,9 +336,3 @@ class ExecTest(unittest.TestCase,UnitTest):
         execfile(self.testscript, gl)   
         
 
-
-
-
-
-
-        

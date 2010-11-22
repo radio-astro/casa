@@ -1,3 +1,4 @@
+#include <stdio.h>
 //# QPCanvas.cc: Qwt implementation of generic PlotCanvas class.
 //# Copyright (C) 2008
 //# Associated Universities, Inc. Washington DC, USA.
@@ -229,12 +230,29 @@ bool QPCanvas::exportHelper(vector<PlotCanvasPtr>& canvases,
         }
         
         // Set output quality.
-        int f = (format.resolution == PlotExportFormat::HIGH) ? 100 : -1;
+		bool hires = (format.resolution == PlotExportFormat::HIGH);
+		int quality;    // see QImage.save official documentation for its meaning
+		switch (format.type)
+		{
+			case PlotExportFormat::JPG:
+					// JPEG quality ranges from 0 (crude 8x8 blocks) to 100 (best)
+					quality= (hires)? 100: 95;   // experimental; need user feedback 
+					break; 
+			case PlotExportFormat::PNG:
+					// compression is lossless.  "quality" is number of deflations.
+					// first one does great compression.  more will buy only a small %. 	 
+					// Set to -1 for no compression 
+					quality=1; 
+					break;   // how many deflates
+			default: 
+					quality=-1;  // no compression of undefined/unknown formats
+		}
         
         // Save to file.
-        ret = !wasCanceled && !image.isNull() &&
+		ret = !wasCanceled && !image.isNull() &&
               image.save(format.location.c_str(),
-              PlotExportFormat::exportFormat(format.type).c_str(), f);
+              PlotExportFormat::exportFormat(format.type).c_str(), 
+			  quality);
         
     // PS/PDF
     } else if(format.type == PlotExportFormat::PS ||
@@ -1337,7 +1355,11 @@ void QPCanvas::keyReleaseEvent(QKeyEvent* event) {
         }
         accept = true;
         
-    } /* else if(text == "!" || text == "@" || text == "#" || text == "$" ||
+    } else if (key == Qt::Key_Space)  {
+		c = ' ';
+		accept=true; 
+		
+    }/* else if(text == "!" || text == "@" || text == "#" || text == "$" ||
               text == "%" || text == "^" || text == "&" || text == "*" ||
               text == "(" || text == ")") {
         if(mods.testFlag(Qt::ControlModifier))
@@ -1356,7 +1378,7 @@ void QPCanvas::keyReleaseEvent(QKeyEvent* event) {
         else if(text == "(") c = '9';
         else if(text == ")") c = '0';
     } */
-    
+printf(" DSW CHECKPOINT: KEY! char = %04X accept=%d\n", key, (int)accept);  /* DSW HACK - remove, if i forget */   
     if(accept) accept = notifyKeyHandlers(c, modifiers);
     
     if(accept) event->accept();

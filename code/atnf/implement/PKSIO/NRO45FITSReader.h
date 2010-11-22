@@ -49,6 +49,27 @@ using namespace std ;
 // <summary>
 // Class to read NRO 45m FITS data.
 // </summary>
+//
+// <prerequisite>
+//   <li> <linkto class=NROReader>NROReader</linkto>
+//   <li> <linkto class=NRODataRecord>NRODataset</linkto>
+//   <li> <linkto class=NROFITSDataset>NROFITSDataset</linkto>
+// </prerequisite>
+//
+// <reviewed reviewer="" date="" tests="" demos="">
+// </reviewed>
+//
+// <etymology>
+// This class is a reader class for NRO 45m telescope. This is specialized class 
+// for data obtained by pointing observation (non-OTF observations) that outputs 
+// data in NRO FITS format. The class uses 
+// <linkto class=NROFITSDataset>NROFITSDataset</linkto> object to access data. 
+// </etymology>
+//
+// <synopsis>
+// Reader class for NRO 45m FITS data.
+// </synopsis>
+//
 
 class NRO45FITSReader : public NRO45Reader
 {

@@ -114,7 +114,7 @@ public:
 //   Int add(ImageInterface<Float>& iimage, const Int maxNumXfr=100);
 //   Bool addResidual(Int thismodel, ImageInterface<Float>& iresidual);
 //   void initializeGradients();
-   Bool solveResiduals(SkyEquation& se);
+   Bool solveResiduals(SkyEquation& se, Bool modelToMS=False);
    Bool makeNewtonRaphsonStep(SkyEquation& se, Bool incremental=False, Bool modelToMS=False);
 
    Int numberOfTaylorTerms(){return ntaylor_p;};

@@ -13,36 +13,28 @@ import pdb
 import traceback
 import re
 import cProfile
+
+PYVER = str(sys.version_info[0]) + "." + str(sys.version_info[1])
+
 imager = casac.homefinder.find_home_by_name('imagerHome')
 image = casac.homefinder.find_home_by_name('imageHome')
 quantity=casac.Quantity
-# DATA_REPOS=[ '/home/onager4/Regression/Data/', '/aips++/data/', '/home/rohir2/jmcmulli/']
-# SCRIPT_REPOS='/home/ballista3/Regression/Scripts/'
-# WORKING_DIR='/home/onager4/Regression/WorkingDir/'
-# RESULT_DIR='/home/ballista3/Regression/Result/'
-# TEMPLATE_RESULT_DIR='/home/onager4/Regression/TemplateResults/'
-# RESULT_TEMPLATE_FOLDER='/home/ballista3/Regression/COMPARISON_VALUES_latest.txt'
-#DATA_REPOS=[ '/scratch/ALMA/casa/data/']
-#DATA_REPOS=['/tmp/hest']
-#INFRASTRUC_DIR='/scratch/ALMA/casa/test/admin/'
-#WORKING_DIR='/scratch/tmp/Regression/WorkingDir/'
-#RESULT_DIR='/scratch/tmp/Regression/Result/'
-#TEMPLATE_RESULT_DIR='/scratch/ALMA/casa/test/tests/third/reference/'
 
 AIPS_DIR = os.environ["CASAPATH"].split()[0]
 
-SCRIPT_REPOS=AIPS_DIR+'/code/xmlcasa/scripts/regressions/'
-UTILS_DIR = AIPS_DIR+'/code/xmlcasa/scripts/regressions/admin/'
-if not os.access(SCRIPT_REPOS, os.F_OK):
-    if os.access(AIPS_DIR+'/lib64', os.F_OK):
-        SCRIPT_REPOS = AIPS_DIR+'/lib64/python2.5/regressions/'
-        UTILS_DIR = AIPS_DIR+'/lib64/casapy/bin/'
-    elif os.access(AIPS_DIR+'/lib', os.F_OK):
-        SCRIPT_REPOS = AIPS_DIR+'/lib/python2.5/regressions/'
-        UTILS_DIR = AIPS_DIR+'/lib/casapy/bin/'        
-    else:            #Mac release
-        SCRIPT_REPOS = AIPS_DIR+'/Resources/python/regressions/'
-        UTILS_DIR = AIPS_DIR+'/MacOS/'        
+if os.access(AIPS_DIR+'/lib64', os.F_OK):
+    SCRIPT_REPOS = AIPS_DIR+'/lib64/python'+PYVER+'/regressions/'
+    UTILS_DIR = AIPS_DIR+'/lib64/casapy/bin/'
+elif os.access(AIPS_DIR+'/lib', os.F_OK):
+    SCRIPT_REPOS = AIPS_DIR+'/lib/python'+PYVER+'/regressions/'
+    UTILS_DIR = AIPS_DIR+'/lib/casapy/bin/'        
+elif os.access(AIPS_DIR + '/' + os.environ["CASAPATH"].split()[1] + '/python/' + PYVER + '/regressions/', os.F_OK):
+    # devel
+    SCRIPT_REPOS = AIPS_DIR + '/' + os.environ["CASAPATH"].split()[1] + '/python/' + PYVER + '/regressions/'
+    UTILS_DIR = ''
+else:            #Mac release
+    SCRIPT_REPOS = AIPS_DIR+'/Resources/python/regressions/'
+    UTILS_DIR = AIPS_DIR+'/MacOS/'        
 # because casapy releases have a different directory structure
 
 
@@ -136,18 +128,22 @@ class runTest:
                 os.system("echo -n > " + process_data)
                 pp = SCRIPT_REPOS + '/profileplot.py'  # for release
                 if not os.path.isfile(pp):
-                    pp = SCRIPT_REPOS + '/admin/profileplot.py' # for devel
+                    pp = SCRIPT_REPOS + '/../profileplot.py' # for devel
                 pyt = UTILS_DIR + '/python'  # for release
                 if not os.path.isfile(pyt):
                     pyt = '/usr/lib64/casapy/bin/python'    # for devel
                 if not os.path.isfile(pyt):
                     pyt = '/usr/lib/casapy/bin/python'    # for devel
-                profileplot_pid=os.spawnlp( \
-                    os.P_NOWAIT,
-                    pyt,
-                    pyt,
-                    pp,
-                    testName, RESULT_DIR, profilepage, process_data)
+                if not os.path.isfile(pyt):
+                    pyt = commands.getoutput('which python') # Mac devel
+                profileplot_pid=os.spawnlp(os.P_NOWAIT,
+                                           pyt,
+                                           pyt,
+                                           pp,
+                                           testName, RESULT_DIR,
+                                           profilepage,
+                                           process_data,
+                                           str(os.getpid()))
                 presentDir=os.getcwd()
                 os.chdir(self.tester.workingDirectory)
 
@@ -163,7 +159,7 @@ class runTest:
                 try:
                     self.op_init(profile)
                     time1=time.time()
-
+                    mem1 = commands.getoutput('ps -p ' + str(os.getpid()) + ' -o rss | tail -1')
                     #prof.runctx("(leResult, leImages)=self.tester.runtests(testName, k, dry)", globals(), locals())
                     #prof.runctx("(leResult, leImages)=self.tester.runtests(testName, k, dry)", gl, lo)
                     #prof.run("(leResult, leImages) = self.tester.runtests(testName, k, dry)")
@@ -177,11 +173,13 @@ class runTest:
                     print >> sys.stderr, "%s failed, dumping traceback:" % testName
                     traceback.print_exc() # print and swallow exception
 
+                mem2 = commands.getoutput('ps -p ' + str(os.getpid()) + ' -o rss | tail -1')
                 time2=time.time()
                 time2=(time2-time1)/60.0
+
+                print "Net memory allocated:", (int(mem2) - int(mem1))/1024, "MB"
                 
                 try:
-                    print "now in ", os.getcwd()
                     prof.dump_stats(self.resultsubdir+'/cProfile.profile')
                 except:
                     print >> sys.stderr, "Failed to write profiling data!"
@@ -251,7 +249,7 @@ class runTest:
                     self.result_common['description'] = "'" + short_description + "'", "test short description"
 
                 # Figure out data repository version
-                if os.system("which svnversion") == 0:
+                if os.system("which svnversion >/dev/null") == 0:
                     (errorcode, datasvnr) = commands.getstatusoutput('cd '+DATA_REPOS[0]+' && svnversion 2>&1 | grep -vi warning')
                 else:
                     errorcode = 1
@@ -413,8 +411,7 @@ class runTest:
             casapy = os.environ["CASAPATH"].split()[0] + '/' + \
                      os.environ["CASAPATH"].split()[1] + '/bin/casapy'
 
-            gprof2dot = os.environ["CASAPATH"].split()[0] + \
-                        '/code/xmlcasa/scripts/regressions/admin/gprof2dot.py'
+            gprof2dot = SCRIPT_REPOS + "/../gprof2dot.py"
             
             os.system("sudo opcontrol --stop && sudo opcontrol --dump")
             os.system("opreport -clf image-exclude:/no-vmlinux " + casapy + " > cpp_profile.txt")

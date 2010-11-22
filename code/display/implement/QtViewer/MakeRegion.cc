@@ -139,7 +139,7 @@ MakeRegion::MakeRegion(QtDisplayPanel* qdp) {
   load = new QPushButton("Delete");
 
   tLayout->addWidget(load, 3, 5, 1, 1);
-  load->setToolTip("Load box(es) from a previously saved region file.");
+  load->setToolTip("Delete region from the image.");
   connect(load, SIGNAL(clicked()), SLOT(deleteRegionFromImage()));
 
 
@@ -499,6 +499,7 @@ void MakeRegion::loadRegionFromImage() {
      return;
 
    Vector<String> regionNames=qdp_->listRegionsInImage();
+   //cout << "regionNames=" << regionNames << endl;
    if(regionNames.nelements() != 0){
      List<QtDisplayData*> DDs = qdp_->registeredDDs();
      ListIter<QtDisplayData*> qdds(DDs);
@@ -682,7 +683,6 @@ void MakeRegion::saveRegionToImage() {
 
    showHideMenu->clear();
    name->setText("");
-
    uInt nreg=unionRegions_p.nelements();
    for (uInt k=0; k< nreg; ++k){
      if (unionRegions_p[k] !=0){
@@ -707,6 +707,8 @@ void MakeRegion::deleteBox(RegionShape*) {
 }
 
 void MakeRegion::deleteAll() {
+
+
    //qDebug() << "What should cleanUp do?";
    uInt nreg=unionRegions_p.nelements();
    for (uInt k=0; k< nreg; ++k){
@@ -722,7 +724,9 @@ void MakeRegion::deleteAll() {
      //qDebug() << list.at(i)->isChecked();
      list.at(i)->setChecked(false);
    }
+   showHideMenu->clear();
    name->setText("");
+   loadRegionFromImage();
    reDraw();
 }
 

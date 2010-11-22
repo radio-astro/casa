@@ -21,7 +21,7 @@ using namespace std;
 
 #include <casa/Logging/LogIO.h>
 #include <casa/Exceptions/Error.h>
-#include <xmlcasa/atmosphere/atmosphere_cmpt.h>
+#include <atmosphere_cmpt.h>
 #include <xmlcasa/StdCasa/CasacSupport.h>
 
 using namespace atm;
@@ -48,6 +48,18 @@ atmosphere::atmosphere()
 atmosphere::~atmosphere()
 {
   try {
+    if (pSkyStatus != 0) {
+      delete pSkyStatus;
+      pSkyStatus = 0;
+    }
+    if (pRefractiveIndexProfile != 0) {
+      delete pRefractiveIndexProfile;
+      pRefractiveIndexProfile = 0;
+    }
+    if (pSpectralGrid != 0) {
+      delete pSpectralGrid;
+      pSpectralGrid = 0;
+    }
     if (pAtmProfile != 0) {
       delete pAtmProfile;
       pAtmProfile = 0;
@@ -115,6 +127,19 @@ atmosphere::initAtmProfile(const Quantity& altitude,
     oss<<"Pressure step factor:         " << PstepFact          << " "    <<endl;
     oss<<"Tropospheric lapse rate:      " << TLR                << " K/km" <<endl;
 
+    // Reset all atmospheric and spectral settings for this function.
+    if (pSpectralGrid != 0) {
+      delete pSpectralGrid;
+      pSpectralGrid = 0;
+    }
+    if (pRefractiveIndexProfile != 0) {
+      delete pRefractiveIndexProfile;
+      pRefractiveIndexProfile = 0;
+    }
+    if (pSkyStatus != 0) {
+      delete pSkyStatus;
+      pSkyStatus = 0;
+    }
     if (pAtmProfile != 0) delete pAtmProfile;
     pAtmProfile = new AtmProfile( Alt, P, T, TLR, H, WVL, Pstep, PstepFact,
 				  topAtm, atmType );
@@ -150,6 +175,22 @@ atmosphere::updateAtmProfile(const Quantity& altitude,
       if (! pAtmProfile->setBasicAtmosphericParameters(Alt,P,T,TLR,H,WVL) ) {
 	*itsLog << LogIO::WARN
 		<< "Atmospheric profile update failed!" << LogIO::POST;
+      }
+      if (pRefractiveIndexProfile) {
+	if (! pRefractiveIndexProfile->setBasicAtmosphericParameters(Alt,P,T,TLR,H,WVL) ) {
+	  *itsLog << LogIO::WARN
+		  << "Refractive index profile update failed!" 
+		  << LogIO::POST;
+	}
+      }
+      if (pSkyStatus) {
+	if (! pSkyStatus->setBasicAtmosphericParameters(Alt,P,T,TLR,H,WVL) ) {
+	  *itsLog << LogIO::WARN
+		  << "Skystatus update failed!" 
+		  << LogIO::POST;
+	}
+	// WORK AROUND to set the 1st guess water column as a coefficient
+	pSkyStatus->setUserWH2O(pSkyStatus->getGroundWH2O());
       }
     } else {
       *itsLog << LogIO::WARN
@@ -422,6 +463,8 @@ atmosphere::initSpectralWindow(const int nbands, const Quantity& fCenter,
 							   *pAtmProfile);
       if (pSkyStatus != 0) delete pSkyStatus;
       pSkyStatus = new SkyStatus(*pRefractiveIndexProfile);
+      // WORK AROUND to set the 1st guess water column as a coefficient
+      pSkyStatus->setUserWH2O(pSkyStatus->getGroundWH2O());
       rstat = numChan[0];
     } else {
       *itsLog << LogIO::WARN
@@ -879,7 +922,8 @@ atmosphere::getWetOpacity(const int nc, const int spwId)
 {
   ::casac::Quantity wetOpacity;
   try {
-    if (pRefractiveIndexProfile) {
+    //if (pRefractiveIndexProfile) {
+    if (pSkyStatus) {
       int chan;
       if (nc < 0)
 	chan = pSpectralGrid->getRefChan(spwId);
@@ -887,7 +931,8 @@ atmosphere::getWetOpacity(const int nc, const int spwId)
 	chan = nc;
       wetOpacity.value.resize(1);
       wetOpacity.units = "neper";
-      wetOpacity.value[0] = pRefractiveIndexProfile->getWetOpacity(spwId,chan).get(wetOpacity.units);
+      //wetOpacity.value[0] = pRefractiveIndexProfile->getWetOpacity(spwId,chan).get(wetOpacity.units);
+      wetOpacity.value[0] = pSkyStatus->getWetOpacity(spwId,chan).get(wetOpacity.units);
       cout << "rip: " << wetOpacity.value[0] << " " << wetOpacity.units << " " << chan << endl;
     } else {
       *itsLog << LogIO::WARN
@@ -914,7 +959,8 @@ atmosphere::getH2OLinesOpacity(const int nc, const int spwId)
 	chan = pSpectralGrid->getRefChan(spwId);
       else
 	chan = nc;
-      h2oLinesOpacity = pRefractiveIndexProfile->getH2OLinesOpacity(spwId,chan).get("neper");
+      //h2oLinesOpacity = pRefractiveIndexProfile->getH2OLinesOpacity(spwId,chan).get("neper");
+      h2oLinesOpacity = pSkyStatus->getH2OLinesOpacity(spwId,chan).get("neper");
     } else {
       *itsLog << LogIO::WARN
 	      << "Please set spectral window(s) with initSpectralWindow first."
@@ -940,7 +986,8 @@ atmosphere::getH2OContOpacity(const int nc, const int spwId)
 	chan = pSpectralGrid->getRefChan(spwId);
       else
 	chan = nc;
-      h2oContOpacity = pRefractiveIndexProfile->getH2OContOpacity(spwId,chan).get("neper");
+      //h2oContOpacity = pRefractiveIndexProfile->getH2OContOpacity(spwId,chan).get("neper");
+      h2oContOpacity = pSkyStatus->getH2OContOpacity(spwId,chan).get("neper");
     } else {
       *itsLog << LogIO::WARN
 	      << "Please set spectral window(s) with initSpectralWindow first."
@@ -985,13 +1032,15 @@ atmosphere::getWetOpacitySpec(Quantity& wetOpacity, const int spwId)
 {
   int nchan(-1);
   try {
-    if (pRefractiveIndexProfile) {
+    //if (pRefractiveIndexProfile) {
+    if (pSkyStatus) {
       nchan = pSpectralGrid->getNumChan(spwId);
       (wetOpacity.value).resize(nchan);
       wetOpacity.units="mm-1";
       for (int i = 0; i < nchan; i++) {
 	(wetOpacity.value)[i] =
-	  pRefractiveIndexProfile->getWetOpacity(spwId,i).get(wetOpacity.units);
+	  //pRefractiveIndexProfile->getWetOpacity(spwId,i).get(wetOpacity.units);
+          pSkyStatus->getWetOpacity(spwId,i).get(wetOpacity.units);
       }
     } else {
       *itsLog << LogIO::WARN
@@ -1047,7 +1096,8 @@ atmosphere::getDispersiveWetPhaseDelay(const int nc, const int spwId)
 	chan = nc;
       dwpd.value.resize(1);
       std::string units("deg");
-      dwpd.value[0] = pRefractiveIndexProfile->getDispersiveH2OPhaseDelay(spwId,chan).get(units);
+      //dwpd.value[0] = pRefractiveIndexProfile->getDispersiveH2OPhaseDelay(spwId,chan).get(units);
+      dwpd.value[0] = pRefractiveIndexProfile->getDispersiveH2OPhaseDelay(pRefractiveIndexProfile->getGroundWH2O(),spwId,chan).get(units);
       dwpd.units = units;
     } else {
       *itsLog << LogIO::WARN
@@ -1075,7 +1125,8 @@ atmosphere::getNonDispersiveWetPhaseDelay(const int nc, const int spwId)
 	chan = nc;
       ndwpd.value.resize(1);
       std::string units("deg");
-      ndwpd.value[0] = pRefractiveIndexProfile->getNonDispersiveH2OPhaseDelay(spwId,chan).get(units);
+      //ndwpd.value[0] = pRefractiveIndexProfile->getNonDispersiveH2OPhaseDelay(spwId,chan).get(units);
+      ndwpd.value[0] = pRefractiveIndexProfile->getNonDispersiveH2OPhaseDelay(pRefractiveIndexProfile->getGroundWH2O(),spwId,chan).get(units);
       ndwpd.units = units;
     } else {
       *itsLog << LogIO::WARN
@@ -1194,7 +1245,8 @@ atmosphere::getDispersiveWetPathLength(const int nc, const int spwId)
 	chan = nc;
       dwpl.value.resize(1);
       std::string units("m");
-      dwpl.value[0] = pRefractiveIndexProfile->getDispersiveH2OPathLength(spwId,chan).get(units);
+      //dwpl.value[0] = pRefractiveIndexProfile->getDispersiveH2OPathLength(spwId,chan).get(units);
+      dwpl.value[0] = pRefractiveIndexProfile->getDispersiveH2OPathLength(pRefractiveIndexProfile->getGroundWH2O(),spwId,chan).get(units);
       dwpl.units = units;
     } else {
       *itsLog << LogIO::WARN
@@ -1222,7 +1274,8 @@ atmosphere::getNonDispersiveWetPathLength(const int nc, const int spwId)
 	chan = nc;
       ndwpl.value.resize(1);
       std::string units("m");
-      ndwpl.value[0] = pRefractiveIndexProfile->getNonDispersiveH2OPathLength(spwId,chan).get(units);
+      //ndwpl.value[0] = pRefractiveIndexProfile->getNonDispersiveH2OPathLength(spwId,chan).get(units);
+      ndwpl.value[0] = pRefractiveIndexProfile->getNonDispersiveH2OPathLength(pRefractiveIndexProfile->getGroundWH2O(),spwId,chan).get(units);
       ndwpl.units = units;
     } else {
       *itsLog << LogIO::WARN

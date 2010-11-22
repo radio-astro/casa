@@ -98,21 +98,9 @@ def mosaic(vis,imagename,mode,alg,imsize,cell,phasecenter,stokes,niter,gain,thre
 ###try to minimize the number of data selection
 		### when natural mosweight is irrelevant		
 		if(weighting=='natural'):
-			mosweight=False
-			
-###Set weighting if mosweight
-		if(mosweight) :
-			for k in fieldindex :
-				imMos.selectvis(field=k, spw=spwindex,time=timerange, usescratch=True)
-				imMos.weight(type=weighting,rmode=rmode,robust=robust, npixels=npixels, noise=noise)
-
-### Now do the data selection after its been weighted per field 
+			mosweight=False 
 		imMos.selectvis(field=field,spw=spw,time=timerange, usescratch=True)
-
-####if it was not weighted per field then we can go and do it now on the
-####selected data ...mosaic parameter in imMos.weight is deprecated...need to go
-		if(not mosweight):
-			imMos.weight(type=weighting,rmode=rmode,robust=robust,npixels=npixels, noise=noise)
+		imMos.weight(type=weighting,rmode=rmode,robust=robust,npixels=npixels, noise=noise, mosaic=mosweight)
 
 
 #####

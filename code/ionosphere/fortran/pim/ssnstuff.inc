@@ -1,6 +1,0 @@
-C
-C
-C
-      INTEGER USESSN
-      REAL SSN
-      COMMON /USSN/SSN,USESSN

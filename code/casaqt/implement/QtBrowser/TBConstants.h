@@ -284,9 +284,11 @@ public:
     // Return a vector containing all the valid non-array data types.
     static vector<String>* nonArrayTypes();
 
-    // The comment for Double fields that indicates that they should be
+    // The comments for Double fields that indicate that they should be
     // interpreted as a date.
     static const String COMMENT_DATE;
+    static const String COMMENT_TIMP;
+    static const String COMMENT_TIMP2;
 
     // Convert a CASA DataType enum to its String equivalent.
     static String typeName(DataType dt);

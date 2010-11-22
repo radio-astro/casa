@@ -5,7 +5,7 @@
       xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-      <task type="function" name="plotxy" category="display/plot, data editing" async="never">
+      <task type="function" name="plotxy" category="visualization, editing, information, manipulation" async="never">
         <shortdescription>An X-Y plotter/interactive flagger for visibility data.</shortdescription>
 	
 	<description>

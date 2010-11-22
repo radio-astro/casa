@@ -85,8 +85,6 @@
 # or
 #
 # # This example shows who to run it manually from with casapy.
-# sys.path.append( os.environ["CASAPATH"].split()[0]+'/code/xmlcasa/scripts/regressions/admin' )
-# import runUnitTest
 # runUnitTest.main(['imcontsub_test'])
 #
 # </example>
@@ -149,6 +147,10 @@ class imcontsub_test(unittest.TestCase):
     def tearDown(self):
         for file in list:
             os.system('rm -rf ' +file)
+            os.system('rm -rf cont_*')
+            os.system('rm -rf input_test*')
+            os.system('rm -rf fit_test*')
+            os.system('rm -rf line_*')
         
     ####################################################################
     # Incorrect inputs to parameters.  The parameters are:

@@ -41,14 +41,16 @@ DParameterRange<T>::DParameterRange(const String name,
 				    const T defaultvalue, const T value, 
 				    const String context, 
 				    const Bool editable,
-				    const Bool provideentry) :
+				    const Bool provideentry,
+				    const Bool onrelease) :
   DisplayParameter(name, description, help, context, False, editable),
   itsMinimum(minimum),
   itsMaximum(maximum),
   itsResolution(resolution),
   itsDefault(defaultvalue),
   itsValue(value),
-  itsProvideEntry(provideentry) {
+  itsProvideEntry(provideentry),
+  itsOnRelease(onrelease) {
 
 }
 
@@ -61,7 +63,8 @@ DParameterRange<T>::DParameterRange() :
   itsResolution(1),
   itsDefault(0),
   itsValue(0),
-  itsProvideEntry(False) {
+  itsProvideEntry(False),
+  itsOnRelease(False) {
 }
 
 // Copy constructor.
@@ -73,7 +76,8 @@ DParameterRange<T>::DParameterRange(const DParameterRange<T> &other) :
   itsResolution(other.itsResolution),
   itsDefault(other.itsDefault),
   itsValue(other.itsValue),
-  itsProvideEntry(other.itsProvideEntry) {
+  itsProvideEntry(other.itsProvideEntry),
+  itsOnRelease(other.itsOnRelease) {
 }
 
 // Destructor.
@@ -91,6 +95,7 @@ DParameterRange<T> &DParameterRange<T>::operator=(const DParameterRange<T> &othe
     itsDefault = other.itsDefault;
     itsValue = other.itsValue;
     itsProvideEntry = other.itsProvideEntry;
+    itsOnRelease = other.itsOnRelease;
   }
   return *this;
 }
@@ -134,6 +139,7 @@ void DParameterRange<T>::toRecord(RecordInterface &record,
   rec.define("default", itsDefault);
   rec.define("value", itsValue);
   rec.define("provideentry", itsProvideEntry);
+  rec.define("onrelease", itsOnRelease);
 
   record.defineRecord(name(), rec);
 }

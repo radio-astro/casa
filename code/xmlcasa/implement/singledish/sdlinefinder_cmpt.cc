@@ -12,7 +12,7 @@
  ***/
 
 #include <iostream>
-#include <xmlcasa/singledish/sdlinefinder_cmpt.h>
+#include <sdlinefinder_cmpt.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Utilities/Assert.h>
 

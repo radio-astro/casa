@@ -10,15 +10,15 @@ vis_d = 'ngc4826.tutorial.ngc4826.ll.5.ms'
 vis_e = 'g19_d2usb_targets_line-shortened.ms'
 
 if(not os.path.exists(vis_a)):
-    importuvfits(fitsfile=os.environ['CASADATA']+'/regression/ngc4826/fitsfiles/ngc4826.ll.fits5', vis=vis_a)
+    importuvfits(fitsfile=os.environ['CASAPATH'].split()[0]+'/data/regression/ngc4826/fitsfiles/ngc4826.ll.fits5', vis=vis_a)
 if(not os.path.exists(vis_b)):
-    os.system('cp -R '+os.environ['CASADATA']+'/regression/fits-import-export/input/test.ms .')
+    os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/fits-import-export/input/test.ms .')
 if(not os.path.exists(vis_c)):
-    importuvfits(fitsfile=os.environ['CASADATA']+'/regression/jupiter6cm/jupiter6cm.fits', vis=vis_c)
+    importuvfits(fitsfile=os.environ['CASAPATH'].split()[0]+'/data/regression/jupiter6cm/jupiter6cm.fits', vis=vis_c)
 if(not os.path.exists(vis_d)):
-    importuvfits(fitsfile=os.environ['CASADATA']+'/regression/ngc4826/fitsfiles/ngc4826.ll.fits5', vis=vis_d)
+    importuvfits(fitsfile=os.environ['CASAPATH'].split()[0]+'/data/regression/ngc4826/fitsfiles/ngc4826.ll.fits5', vis=vis_d)
 if(not os.path.exists(vis_e)):
-    os.system('cp -R '+os.environ['CASADATA']+'/regression/cvel/input/g19_d2usb_targets_line-shortened.ms .')
+    os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/cvel/input/g19_d2usb_targets_line-shortened.ms .')
 
 def verify_ms(msname, expnumspws, expnumchan, inspw):
     tb.open(msname+'/SPECTRAL_WINDOW')
@@ -927,6 +927,60 @@ if (testnumber in testlist):
         omsname = "test"+str(testnumber)+'cvel-output.ms'
         os.system('rm -rf '+omsname+'; mv cvel-output.ms '+omsname)
         verify_ms(omsname, 1, 2440, 0)
+    except:
+        print myname, ': *** Unexpected error ***'   
+        failures += 1
+
+testnumber = 32
+if (testnumber in testlist):
+    myvis = vis_e
+    os.system('rm -rf cvel-output.ms cvel-output.ms.deselected myinput.ms')
+    os.system('cp -R ' + myvis + ' myinput.ms')
+    default('cvel')
+    total += 1
+    try:
+        print "\n>>>> Test ", testnumber, ", input MS: ", myvis
+        print "SMA input MS, 24 spws to combine, scratch columns, mode channel, frame trafo, Hanning smoothing"
+        rval = cvel(
+            vis = 'myinput.ms',
+            outputvis = 'cvel-output.ms',
+            mode="channel",
+            outframe = "BARY",
+            phasecenter = "J2000 18h25m56.09 -12d04m28.20",
+            hanning = True
+            )
+        if not rval:
+            raise Exception
+        omsname = "test"+str(testnumber)+'cvel-output.ms'
+        os.system('rm -rf '+omsname+'; mv cvel-output.ms '+omsname)
+        verify_ms(omsname, 1, 2440, 0)
+    except:
+        print myname, ': *** Unexpected error ***'   
+        failures += 1
+
+testnumber = 33
+if (testnumber in testlist):
+    myvis = vis_e
+    os.system('rm -rf cvel-output.ms cvel-output.ms.deselected myinput.ms')
+    os.system('cp -R ' + myvis + ' myinput.ms')
+    default('cvel')
+    total += 1
+    try:
+        print "\n>>>> Test ", testnumber, ", input MS: ", myvis
+        print "SMA input MS, 1 spw, scratch columns, mode channel, no trafo, Hanning smoothing"
+        rval = cvel(
+            vis = 'myinput.ms',
+            spw='1',
+            outputvis = 'cvel-output.ms',
+            mode="channel",
+            outframe = "",
+            hanning = True
+            )
+        if not rval:
+            raise Exception
+        omsname = "test"+str(testnumber)+'cvel-output.ms'
+        os.system('rm -rf '+omsname+'; mv cvel-output.ms '+omsname)
+        verify_ms(omsname, 1, 128, 0)
     except:
         print myname, ': *** Unexpected error ***'   
         failures += 1

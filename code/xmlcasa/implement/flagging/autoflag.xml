@@ -43,9 +43,9 @@ set.
 </input>
 <returns type="unknown">autoflag tool</returns>
 <example>
-\begin{verbatim}
+
 af:=autoflag('3C273XC1.MS')      
-\end{verbatim}
+
 </example>
 </method>
 
@@ -157,11 +157,11 @@ raised, running this method a second time may sometimes be of use.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 - af:=autoflag('3C273XC1.MS')
 - af.setdata()
 - af.settimemed(thr=5,hw=5,expr="- ABS RR LL")
-\end{verbatim}
+
 </example>
 </method>
 
@@ -208,12 +208,12 @@ away from the median are flagged.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 - af:=autoflag('H031121.MS')
 - af.setdata()
 - af.setnewtimemed(thr=5, expr="ABS RR")
 - af.run()
-\end{verbatim}
+
 </example>
 </method>
 
@@ -255,28 +255,30 @@ The channels are centered on velocities: start, start+step,
 start+2*step, etc.  
 
 Examples for choosing the parameters for setdata.
+
 \begin{verbatim}
 af.setdata(mode='fieldids',fieldid=1);
-\end{verbatim}
-\begin{verbatim}
+
+
 af.setdata(mode='spwids',spwid=1);
-\end{verbatim}
-\begin{verbatim}
+
+
 af.setdata(mode='spwids &amp; fieldids',spwid=1, fieldid=1);
-\end{verbatim}
-\begin{verbatim}
+
+
 af.setdata(mode='channel', nchan=64, start=1, step=1, spwid=1)
 \end{verbatim}
+
 For velocity modes, the mstart and mstep are the start and step velocities 
 as strings.
-\begin{verbatim}
+
 af.setdata(mode='velocity', nchan=64, mstart='20km/s', mstep='-80m/s', spwid=1)
-\end{verbatim}
+
 For multi-spectral window selection, the data can be selected as follows
-\begin{verbatim}
+
 af.setdata(mode='channel', nchan=[20,30], start=[1,1], step=[1,1],
              spwid=[1,2])
-\end{verbatim}
+
 The above means that you would make a data selection of 20 channels
 (starting from 1 steping 1) from the first spectral window and 30
 channels (starting from 1 steping 1) from the second spectral window.
@@ -284,14 +286,16 @@ channels (starting from 1 steping 1) from the second spectral window.
 
 \begin{description}
 \item[Note:] Current autoflag setdata implementation does not support cumulative set data. For example, instead of doing 
-\begin{verbatim}
+
 af.setdata(mode='spwids', spwid=1) 
 af.setdata(mode='fieldids', fieldid=1) 
-\end{verbatim}
+
 The input should be 
+
 \begin{verbatim}
 af.setdata(mode='spwids &amp; fieldids', spwid=1, fieldid=1)
 \end{verbatim}
+
 \end{description}
 
 <input>
@@ -352,7 +356,7 @@ af.setdata(mode='spwids &amp; fieldids', spwid=1, fieldid=1)
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 af:=autoflag('testdata.ms');
 af.setdata(mode='channel',nchan=64,start=1,step=1,spwid=1,msselect=
 'SCAN_NUMBER &lt; 5')
@@ -362,7 +366,7 @@ af.resetall();
 af.summary();
 af.setuvbin(thr=.01);
 af.run();
-\end{verbatim}
+
 </example>
 </method>
 
@@ -425,11 +429,11 @@ all details.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 - af:=autoflag('3C273XC1.MS')
 - af.setdata()
 - af.setfreqmed(thr=5,hw=5,expr="- ABS RR LL")
-\end{verbatim}
+
 </example>
 </method>
 
@@ -522,7 +526,7 @@ example)</description>
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 - af:=autoflag('3C273XC1.MS')
 - af.setdata()
 # use segments 807-807.5 and 809-809.5 MHz for fitting
@@ -537,7 +541,7 @@ example)</description>
 - region[2] := [ spwid=2,chan=[10,20] ]
 - region[3] := [ spwid=4,chan=[50,60] ]
 - af.setsprej(region=region)
-\end{verbatim}
+
 </example>
 </method>
 
@@ -631,11 +635,11 @@ plot</description>
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 - af:=autoflag('3C273XC1.MS')
 - af.setdata()
 - af.setuvbin(nbins=[50,100],expr="- ABS RR LL",plotchan=40,econoplot=T)
-\end{verbatim}
+
 </example>
 </method>
  
@@ -658,9 +662,9 @@ attach it to a another one. All flagging methods specified via
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 af.open('3C273XC1.MS)
-\end{verbatim}
+
 </example>
 </method>
 
@@ -738,7 +742,7 @@ report, or default for no report</description>
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 af:=autoflag('3C273XC1.MS)
 af.setdata();
 ...
@@ -747,7 +751,7 @@ af.setselect(autocorr=T,quack=[240,120])
 af.setuvbin(thr=.01)
 ...
 af.run()
-\end{verbatim}
+
 </example>
 </method>
 
@@ -766,7 +770,7 @@ Non-default values are marked with an ``*'' symbol.
 
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 - af.summary()
 Measurement set: test.MS2
 Methods set up:
@@ -779,7 +783,7 @@ Methods set up:
     expr        = + ABS XX YY
     fignore     = F
 ...
-\end{verbatim}
+
 </example>
 </method>
 
@@ -802,10 +806,10 @@ of all methods, or {\tt help("method  names")} for specific ones.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 af.help()
 af.help("timemed freqmed")
-\end{verbatim}
+
 </example>
 </method>
 
@@ -834,7 +838,7 @@ produces a fail; you should use {\tt resetall()} if you want to reset all method
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 - af.reset("timemed freqmed")
 Reset 3 method(s), 3 remaining
 T
@@ -842,7 +846,7 @@ T
 Reset 2 method(s), 3 remaining
 T
 -
-\end{verbatim}
+
 </example>
 </method>
 
@@ -858,12 +862,12 @@ This function disables all methods previously set up by calls to
 </description>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 - af.resetall()
 All methods reset
 T
 -
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1135,11 +1139,11 @@ This function destroys the autoflag tool.
 </description>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 - af.close()
 T
 -
-\end{verbatim}
+
 </example>
 </method>
    <method type="function" name="done">
@@ -1152,11 +1156,11 @@ This function destroys the autoflag tool.
 </description>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 - af.done()
 T
 -
-\end{verbatim}
+
 </example>
 </method>
 

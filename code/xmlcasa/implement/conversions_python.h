@@ -1,16 +1,16 @@
 #ifndef _casac_conversions_python_h__
 #define _casac_conversions_python_h__
-#include <xmlcasa/complex.h>
 #include <Python.h>
 #include <complexobject.h>
 #include <xmlcasa/record.h>
-#include <xmlcasa/BoolAry.h>
-#include <xmlcasa/IntAry.h>
-#include <xmlcasa/DoubleAry.h>
-#include <xmlcasa/ComplexAry.h>
-#include <xmlcasa/StringAry.h>
+#include <casac/BoolAry.h>
+#include <casac/IntAry.h>
+#include <casac/DoubleAry.h>
+#include <casac/ComplexAry.h>
+#include <casac/StringAry.h>
 #include <WX/Utils/value.h>
 #include <string>
+#include <casac/complex.h>
 
 namespace casac {
 
@@ -50,6 +50,9 @@ WX::Utils::Value *initialize_python_record( );
 WX::Utils::Value *initialize_python_record( const std::string & );
 WX::Utils::Value *initialize_python_variant( );
 WX::Utils::Value *initialize_python_variant( const std::string &a);
+
+int is_intvec_compatible_numpy_array( PyObject *obj );
+int convert_intvec_from_compatible_numpy_array( PyObject *obj, void *s );
 
 }
 

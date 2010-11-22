@@ -77,6 +77,9 @@ a \fits\ file:
 
 \begin{itemize}
 
+\item <link anchor="images:image.collapse.function">subimage</link> (function) - collapse image along specified axis,
+computing aggregate function of pixels along that axis
+
 \item <link anchor="images:image.decompose.function">decompose</link> - separate a complex image into individual components
 
 \item <link anchor="images:image.deconvolvecomponentlist.function">deconvolvecomponentlist</link> - deconvolve a Componentlist from the restoring beam
@@ -86,9 +89,6 @@ a \fits\ file:
 \item <link anchor="images:image.findsources.function">findsources</link> - Find strong point sources in sky
 
 \item <link anchor="images:image.fitcomponents.function">fitcomponents</link> - Fit model components to an image.
-
-\item <link anchor="images:image.fitsky.function">fitsky</link> - fit 2-dimensional models to the sky
-(see also the <link anchor="images:imagefitter">imagefitter</link> \tool.
 
 \item <link anchor="images:image.fitpolynomial.function">fitpolynomial</link> - fit 1-d polynomials 
 to profiles and subtract (see also the <link anchor="images:imageprofilefitter">imageprofilefitter</link> \tool.
@@ -115,6 +115,8 @@ and write out the fitted and residual images (see also the
 
 \item <link anchor="images:image.regrid.function">regrid</link> - regrid the image to the
 specified Coordinate System 
+
+\item <link anchor="images:image.reorder.function">reorder</link> - reorder the image axes
 
 \item <link anchor="images:image.rotate.function">rotate</link> - rotate the coordinate system
 and regrid the image to the rotated Coordinate System 
@@ -397,6 +399,7 @@ ia.close()      # DO NOT DONE DEFAULT IMAGE TOOL ia!!!
 #
 """
 \end{verbatim}
+
 <!--#ia.view()                           # Display image-->
 </example>
 
@@ -411,6 +414,7 @@ in order to access the image.   For example:
 
 <example> 
 \begin{verbatim}
+
 """
 #
 print "\t----\t Intro Ex 2 \t----"
@@ -435,8 +439,9 @@ subim.done()                    # done on-the-fly image tool
 ia.close()                      # close (not done) default image analysis tool
 #
 """
-\end{verbatim}
+
 Each of these Image tools has access to all the same \toolfunctions.
+\end{verbatim}
 </example>
 
 Where ever you see an argument in an Image \tool\ function which is
@@ -532,6 +537,7 @@ Here are some examples.
 
 <example> 
 \begin{verbatim}
+
 """
 #
 print "\t----\t Intro Ex 3 \t----"
@@ -541,6 +547,7 @@ ia.close()
 #
 """
 \end{verbatim}
+
 <!--
 #myim = ia.maketestimage()         # Make virtual test image
 #ia.calc('$im + min($im)')         # Make the minimum value zero
@@ -562,11 +569,12 @@ expression.
 
 \bigskip
 <example> 
+\begin{verbatim}
 Note that for image file names with special characters in them (like a
 dash for example), you should (double) escape those characters or put
 the file name in double quotes. E.g.
 
-\begin{verbatim}
+
 """
 #
 print "\t----\t Intro Ex 4 \t----"
@@ -578,6 +586,7 @@ im2.done()
 ia.close()
 #
 """
+
 \end{verbatim}
 </example>
           
@@ -666,6 +675,7 @@ ia.close()
 #
 """
 \end{verbatim}
+
 <!--#ia.calcmask (mask='(2*$im) > 0') # Create a new mask which is T (good)-->
 
 The {\stfaf mask} expression must in general conform (shape and
@@ -694,6 +704,7 @@ might then make the \pixelmask\ persistent with the
 <link anchor="images:image.calcmask.function">calcmask</link> function. 
 
 <example> 
+
 \begin{verbatim}
 """
 #
@@ -703,8 +714,9 @@ print "\t----\t Intro Ex 6 \t----"
 #myim.calcmask (mask='rmerr&lt;20')     # Make persistent mask
 #
 """
-\end{verbatim}
+
 <!-- #myim.view(mask='rmerr&lt;20')-->
+\end{verbatim}
 </example>
 
 \medskip
@@ -712,6 +724,7 @@ Finally, a subtlety that is worth explaining.
 
 <example> 
 \begin{verbatim}
+
 """
 #
 print "\t----\t Intro Ex 7 \t----"
@@ -721,7 +734,7 @@ ia.statistics(mask='mask(zz) &amp;&amp; zz>0')     # Mask of zz used
 ia.close()
 #
 """
-\end{verbatim}
+
 
 In the first example, any default mask associated with the image {\sff
 zz} is ignored.  Only the pixel values are looked at.  In the second
@@ -729,6 +742,7 @@ example, the mask of {\sff zz} is also taken into account via the LEL
 {\cf mask} function. That is, the transient output mask is T (good) only when
 the mask of {\sff zz} is T and the expression {\cf zz&gt;0} is T.
 
+\end{verbatim}
 </example>
 
 
@@ -741,6 +755,7 @@ upon selected pixel coordinates or indices (specified 0-rel) rather
 than image values.  For example
 
 \goodbreak
+
 \begin{verbatim}
 """
 #
@@ -754,11 +769,13 @@ ia.close()
 """
 \end{verbatim}
 
+
 You can see the mask is good (T) for the specified indices along the
 specified axis.  You can also pass in a premade variable for the
 specification if you like, viz.
 
 \goodbreak
+
 \begin{verbatim}
 """
 #
@@ -773,6 +790,7 @@ ia.close()
 #
 """
 \end{verbatim}
+
 
 This capability is useful for fitting functions.
 See the example in the <link anchor="images:image.fitpolynomial.function">fitpolynomial</link> function. 
@@ -816,6 +834,7 @@ For example
 
 <example> 
 \begin{verbatim}
+
 """
 #
 print "\t----\t Intro Ex 10 \t----"
@@ -830,7 +849,8 @@ print "\t----\t Intro Ex 10 \t----"
                                               # 'rmerr' and 'rm'
 #
 """
-\end{verbatim}
+\begin{verbatim}
+
 </example>
 
 <!--
@@ -854,7 +874,7 @@ each constructor and function always tells you what the return variable
 type could potentially be. 
 
 <example> 
-\begin{verbatim}
+
 """
 #
 #print "\t\t Intro Ex 11 \t"
@@ -865,7 +885,7 @@ type could potentially be.
 # }
 #
 """
-\end{verbatim}
+
 The scoping operator :: enables to extract out a diagnostic
 message from the variable {\cf im} when it is a fail.
 </example>
@@ -958,10 +978,10 @@ that lives in your home directory.
 Note that if the \toolfunction\ is run asynchronously, you have to recover the
 result in a more indirect fashion as follows in the following example.
 
-\begin{verbatim}
+
 - jobnum = ia.statistics(async=T) 
 - statsout = defaultservers.result(jobnum) 
-\end{verbatim}
+
 
 -->
 
@@ -991,7 +1011,7 @@ information on foreign images.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 #ia.image('myimage')         # Access native aips++ image
@@ -1001,7 +1021,7 @@ information on foreign images.
 #im2.view()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 -->
@@ -1030,7 +1050,7 @@ information on foreign images.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t newimage Ex 1 \t----"
@@ -1052,7 +1072,7 @@ im2.done()
 ia.close()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1081,7 +1101,7 @@ information on foreign images.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t newimagefromfile Ex 1 \t----"
@@ -1103,7 +1123,7 @@ im2.done()
 ia.close()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1159,7 +1179,7 @@ to access the pixel values (they must be recomputed).
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t imagecalc Ex 1 \t----"
@@ -1171,7 +1191,7 @@ myim.done()
 ia.close()
 #
 """
-\end{verbatim}
+
 
 Suppose {\sff aF} and {\sff bF} are \imagefiles\ with single precision
 data.  They do not need to have conforming shapes and coordinates,
@@ -1190,7 +1210,7 @@ If the expression is masked, that mask will be copied to the new image.
 </example>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t imagecalc Ex 2 \t----"
@@ -1200,7 +1220,7 @@ myim.done()
 ia.close()
 #
 """
-\end{verbatim}
+
 
 This example shows that there are 2 {\cf min} functions.  One with a
 single argument returning the minimum value of that image.  The other
@@ -1210,7 +1230,7 @@ the value of the 2nd argument.
 </example>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t imagecalc Ex 3 \t----"
@@ -1223,7 +1243,7 @@ myim.done()
 ia.close()
 #
 """
-\end{verbatim}
+
 This shows a mixed type expression.  The real part of the Complex image
 {\sff aC}  is used in an expression that otherwise uses Float
 type.  The result of the expression is written out to the
@@ -1231,7 +1251,7 @@ disk file called {\sff eF}.
 </example>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t imagecalc Ex 4 \t----"
@@ -1244,12 +1264,92 @@ myim.done()
 ia.close()
 #
 """
-\end{verbatim}
+
 This shows a mixed type expression.  The real part of the Complex image
 {\sff aC}  is used in an expression that otherwise uses Float
 type.  The result of the expression is not written out to disk
 in this case.  It is evaluated each time it is needed.
 </example>
+</method>
+
+<method type="function" name="collapse">
+    <shortdescription>Collapse image along specified axis, computing aggregate function of pixels along that axis.</shortdescription>
+    <input>
+        <param type="string" direction="in" name="function">
+            <description>Aggregate function to apply: avdev, max, mean, median, min, rms, stdev, sum, variance.</description>
+            <value></value>
+        </param>
+        <param type="int" direction="in" name="axis">
+            <description>Zero-based axis number along which to collapse image.</description>
+            <value>0</value>
+        </param>
+        <param type="string" direction="in" name="outfile">
+            <description>Output image file name. If blank, no image is written but a new image tool referencing the collapsed image is returned.</description>
+            <value></value>
+        </param>
+        <param type="string" direction="in" name="region">
+            <description>Region name, default is to not use a region.</description>
+            <value></value>
+        </param>
+        <param type="string" direction="in" name="box">
+            <description>Box to use in position plane specified by four numbers "blcx, blcy, trcx, trcy"</description>
+            <value></value>
+        </param>
+        <param type="string" direction="in" name="chans">
+            <description>Channels to use. Channels must be contigous. Default is to use all channels.</description>
+            <value></value>
+        </param>
+        <param type="string" direction="in" name="stokes">
+            <description>Stokes planes to use. Planes must be contiguous. Default is to use all stokes.</description>
+            <value></value>
+        </param>
+        <param type="string" direction="in" name="mask">
+            <description>Mask to use. Default is none.</description>
+            <value></value>
+        </param>
+        <param type="bool" direction="in" name="overwrite">
+            <description>Overwrite (unprompted) pre-existing output file? Ignored if outfile is blank.</description>
+            <value>false</value>
+        </param>
+    </input>
+    <returns type="casaimage"/>
+    <description>
+        This method collapses an image along a specified axis of N pixels to 1 pixel. It computes
+        the specified aggregate function of pixels along that axis and places those values in the
+        single remaining plane of this axis in the output image. The method returns an image analysis
+        tool containing the newly created collapsed image. Choices of aggregate functions are:
+        avdev, max, mean, median, min, rms, stdev, sum, variance. Minimum match is supported for
+        the function parameter (eg, function="r" will compute the rms of the pixel values).
+        
+        If outfile is not specified (or contains only white spaces), no image is written but the
+        collapsed image is still able to be accessed via the image analysis tool this method always
+        returns which references the collpased image. If the returned object is not wanted it should
+        still be caught and deleted via its done() method. If this is not done, there is no gaurantee
+        for when the python garbage collector will delete it. If the returned object is wanted, it
+        should be deleted as soon as possible for the same reasons, eg
+        
+        collapsed_image = ia.collapse(...)
+        # do things (or not) with collapsed_image and when done with object, do
+        collapsed_image.done()
+
+        The reference pixel of the collapsed axis is set to 0 and its reference value is set to the mean
+        of axis values of the pixels along that axis that were used in computing the aggregate value.
+    </description>
+        <example>
+
+"""
+# myimage.im is a 512x512x128x4 (ra,dec,freq,stokes) image
+ia.open("myimage.im")
+# collapse a subimage of it along its spectral axis avoiding the 8 edge
+# channels at each end of the band, computing the mean value of the pixels
+# resulting image is 256x256x1x4 in size.
+collapsed = ia.collapse(outfile="collapse_spec_mean.im", function="mean", axis=2, box="127,127,383,383", chans="8-119")
+# manipulate collapsed
+collapsed.done()
+
+"""
+
+        </example>
 </method>
 
    <method type="function" name="imageconcat">
@@ -1366,7 +1466,7 @@ file limit, will be better.
 
 </description>
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t imageconcat Ex 1 \t----"
@@ -1379,7 +1479,7 @@ bigim.done()
 ia.close()
 #
 """
-\end{verbatim}
+
 The \imagefiles\ {\sff im1}, {\sff im2}, and {\sff im3} are concatenated along
 the third axis to form the output \imagefile\ {\sff bigimage}.
 Only warnings are issued if axis descriptors mismatch.
@@ -1387,7 +1487,7 @@ Access to the output image is provided via the \tool\ called {\stf bigim}.
 </example>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t imageconcat Ex 2 \t----"
@@ -1396,7 +1496,7 @@ bigim.done()
 ia.close()
 #
 """
-\end{verbatim}
+
 All images whose file names begin with {\sff im} and terminate with
 any valid filename extension that reside in the current directory <!--
 given by the translation of the environment variable {\tt \$ADATA} -->
@@ -1483,7 +1583,7 @@ Coordinate System.
 
 </description>
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t fromarray Ex 1 \t----"
@@ -1496,7 +1596,7 @@ mycs.done()
 ia.close()
 #
 """
-\end{verbatim}
+
 
 The first example creates a zero-filled \imagefile\ named {\sff
 test.data} which is of shape [64,64,4,128].  If you examine the header with
@@ -1570,7 +1670,7 @@ For example, let us say the shape of your image is
 {\cf [nx,ny,nz] = [3,4,2]}, then
 the image should be stored as 
 
-\begin{verbatim}
+
 1 1 1                   # row 1; y = 1, z = 1
 2 2 2                   # row 2; y = 2, z = 1
 3 3 3                   # row 3; y = 3, z = 1
@@ -1579,7 +1679,7 @@ the image should be stored as
 2.5 2.5 2.5             # row 6; y = 2, z = 2
 3.5 3.5 3.5             # row 7; y = 3, z = 2
 4.5 4.5 4.5             # row 8; y = 4, z = 2
-\end{verbatim}
+
 
 The Coordinate System, provided as a <link
 anchor="images:coordsys">Coordsys</link> {\tool} converted to a record
@@ -1601,7 +1701,7 @@ Coordinate System.
 <example>
 The ascii image file shown above can be read as
 an image this way:
-\begin{verbatim}
+
 """
 #
 print "\t----\t fromascii Ex 1 \t----"
@@ -1626,7 +1726,7 @@ ia.close()
 #!diff myimage.ascii myimage2.ascii
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1692,7 +1792,7 @@ need to replace masked pixel values after you have created the image.
 
 </description>
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t fromfits Ex 1 \t----"
@@ -1704,7 +1804,7 @@ print s.keys()  #  prints any unrecognized field names
 ia.close()
 #
 """
-\end{verbatim}
+
 
 The FITS image is converted to a \casa\ \imagefile\ and access is
 provided via the default \imagetool\ called {\stf ia}.  Any FITS
@@ -1789,7 +1889,7 @@ See also the <link anchor="images:image.subimage.function">subimage</link> funct
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t fromimage Ex 1 \t----"
@@ -1802,7 +1902,7 @@ ia.fromimage(outfile='image.small', infile='test.data', region=innerquarter, ove
 ia.close()
 #
 """
-\end{verbatim}
+
 The specified \region\ takes a quarter by area of the first two axes
 of the image, and all pixels of other axes.
 </example>
@@ -1873,7 +1973,7 @@ If {\stfaf linear=T} then you get a linear Coordinate System.
 
 </description>
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t fromshape Ex 1 \t----"
@@ -1885,7 +1985,7 @@ mycs.done()
 ia.close()
 #
 """
-\end{verbatim}
+
 
 The first example creates a zero-filled \imagefile\ named {\sff
 test.data} of shape [64,64,128].  If you examine the header with {\stff
@@ -1928,7 +2028,7 @@ function) this temporary image is deleted.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t maketestimage Ex 1 \t----"
@@ -1938,7 +2038,7 @@ ia.maketestimage('tmp', overwrite=true)
 ia.close()             # close to unlock disk image
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2009,7 +2109,7 @@ temporary image is deleted.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t adddegaxes Ex 1 \t----"
@@ -2039,7 +2139,7 @@ im3.done()
 ia.close()
 #
 """
-\end{verbatim}
+
 In this example, all the images are virtual (temporary images).
 </example>
 
@@ -2136,7 +2236,7 @@ It is required that the alpha parameter is not zero.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t addnoise Ex 1 \t----"
@@ -2146,7 +2246,7 @@ ia.statistics()
 ia.close()
 #
 """
-\end{verbatim}
+
 
 A test image is created, zeroed, and noise of mean 0.5 and variance 1
 from a normal distribution added.
@@ -2242,7 +2342,7 @@ See also the other convolution functions
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t convole Ex 1 \t----"
@@ -2257,7 +2357,7 @@ ia.close()
 im3.done()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2293,7 +2393,7 @@ below).
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t boundingbox Ex 1 \t----"
@@ -2313,11 +2413,11 @@ print bb
 ia.close()
 #
 """
-\end{verbatim}
+
 </example>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t boundingbox Ex 2 \t----"
@@ -2333,7 +2433,7 @@ print ia.boundingbox(b)
 ia.close()
 #
 """
-\end{verbatim}
+
 In this example we see the difference between bbShape and regionShape because
 of the increment (stride).  See also that the trc is modified by
 the increment.
@@ -2352,7 +2452,7 @@ This function <!-- (short-hand name {\stff bu}) --> gets the image brightness un
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t brightnessunit Ex 1 \t----"
@@ -2362,7 +2462,7 @@ print ia.brightnessunit()
 ia.close()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2400,7 +2500,7 @@ See the related functions <link anchor="images:image.set.function">set</link> an
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t calc Ex 1 \t----"
@@ -2410,7 +2510,7 @@ ia.calc('1.0')
 ia.close()
 #
 """
-\end{verbatim}
+
 
 The first example shows that there are 2 {\cf min} functions.  One with a
 single argument returning the minimum value of that image.  The other
@@ -2418,7 +2518,7 @@ with 2 arguments returning an image containing ``aF'' data clipped at
 the value of the 2nd argument.   The second example sets all good
 pixels to unity.
 
-\begin{verbatim}
+
 """
 #
 print "\t----\t calc Ex 2 \t----"
@@ -2435,7 +2535,7 @@ ia.calc('sin(aD)+(aF*2)+min(bF)+real(aC)')   # the example
 ia.close()
 #
 """
-\end{verbatim}
+
 This shows a mixed type expression.  The real part of the complex image
 ``aC''  is used in an expression that otherwise uses Float type.
 </example>
@@ -2489,7 +2589,7 @@ By default, it is made the default \pixelmask\ !
 </description>
 
 <example>
-\begin{verbatim} 
+ 
 """
 #
 print "\t----\t calcmask Ex 1 \t----"
@@ -2504,7 +2604,7 @@ subim.done()
 ia.close()
 #
 """
-\end{verbatim}
+
 
 The first calcmask example is the equivalent of {\cf
 ia.set(pixelmask=1)}.  It sets the entire mask to True.
@@ -2555,7 +2655,7 @@ will result in an error.
 
 </description>
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t close Ex 1 \t----"
@@ -2569,7 +2669,7 @@ ia.summary()            # No error
 ia.close()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2654,7 +2754,7 @@ mechanism for doing this. -->
 </description>
 
 <example>
-\begin{verbatim} 
+ 
 """
 #
 print "\t----\t continuumsub Ex 1 \t----"
@@ -2669,7 +2769,7 @@ im1csub.done()      # done the on-the-fly image tool
 ia.close()
 #
 """
-\end{verbatim}
+
 In this first example, the continuum emission in each pixel of the
 inner quarter of the input image is estimated by averaging
 (fitorder=0) channels 3-8 and 54-60, inclusive.  (Python's range
@@ -2677,7 +2777,7 @@ function includes the lower limit and excludes the upper limit.)
 im1csub is an image tool containing the result (only the inner quarter
 of the original image).
 
-\begin{verbatim} 
+ 
 """
 #
 print "\t----\t continuumsub Ex 2 \t----"
@@ -2688,7 +2788,7 @@ im2csub.done()
 ia.close()
 #
 """
-\end{verbatim}
+
 In this second example, the Stokes I continuum emission in each pixel 
 of the whole input image is estimated with a 2nd-order polynomial
 fit to channels 3-8 and 54-60.  The output image tool (im2csub) contains
@@ -2741,7 +2841,7 @@ Gaussian or Disk component.  The image must hold a restoring beam.
 </description>
 
 <example>
-\begin{verbatim} 
+ 
 """
 #
 print "\t----\t convertflux Ex 1 \t----"
@@ -2757,7 +2857,7 @@ print 'peak, integral, peak = ', p1, i1, p2
 ia.close()
 #
 """
-\end{verbatim}
+
 
 </example>
 </method>
@@ -2928,7 +3028,7 @@ See also the other convolution functions
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t convolve2d Ex 1 \t----"
@@ -2949,7 +3049,7 @@ im2.done()
 ia.close()
 #
 """
-\end{verbatim}
+
 In the second example we must use pixel units because axes 0 and 3 (0-rel)
 are unlike.
 </example>
@@ -2983,7 +3083,7 @@ functions <link anchor="images:image.fromarray.constructor">fromarray</link> or
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t coordsys Ex 1 \t----"
@@ -2997,7 +3097,7 @@ mycs.done()
 ia.close()
 #
 """
-\end{verbatim}
+
 
 In this example, we create a Coordinate System pertaining to the first
 two axes of the image and then we create a new (empty) 2D image with
@@ -3033,7 +3133,7 @@ constructors  <link anchor="images:image.fromarray.constructor">fromarray</link>
 </description>
 
 <example>
-\begin{verbatim}
+
 #
 print "\t\t csys Ex 1 \t"
 ia.maketestimage('hcn',overwrite=true)
@@ -3045,7 +3145,7 @@ ia.summary()
 mycs.done()
 ia.close()
 #
-\end{verbatim}
+
 
 In this example, we create a Coordinate System pertaining to the first two axes
 of the image and create a new (empty) 2D image with it with the {\cf fromshape}
@@ -3120,7 +3220,7 @@ if the specified pixel coordinate is off the image.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t coordmeasures Ex 1 \t----"
@@ -3158,7 +3258,7 @@ print 'az,el=', qa.angle(azel['m0']), qa.angle(azel['m1'])
 #az,el= +105.16.05 -024.23.00
 #
 """
-\end{verbatim}
+
 
 In this example we first find the world coordinates of the centre of the
 image.  Then we use the Measures \tool\ {\stf me} to convert the
@@ -3273,7 +3373,7 @@ The {\tt 'trc'} element is a matrix of the top right corners (trc) of the region
 
 </description>
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t decompose Ex 1 \t----"
@@ -3305,7 +3405,7 @@ print out['trc']
 ia.close()
 #
 """
-\end{verbatim}
+
 </example>
 </method> 
 
@@ -3337,13 +3437,15 @@ See also functions <link anchor="images:image.setrestoringbeam.function">setrest
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t deconvolvecomponentlist Ex 1 \t----"
 ia.maketestimage()
-r = ia.fitsky(deconvolve=F)
-cl1 = r['return']                      # cl1 and cl2 are record representations
+r = ia.fitcomponents()
+cl1 = r['results']                     # cl1 and cl2 are record representations
+r = ia.fitcomponents()
+cl1 = r['results']                      # cl1 and cl2 are record representations
 cl2 = ia.deconvolvecomponentlist(cl1)  #   of componentlists
 print cl1, cl2
 cl.fromrecord(cl2)                     # set componentlist tool with record
@@ -3351,7 +3453,7 @@ ia.close()
 cl.close()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -3391,7 +3493,7 @@ The return value is a record that contains the fit param and the return value is
 
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t deconvolvefrombeam Ex 1 \t----"
@@ -3407,7 +3509,7 @@ print 'pa=',recout['fit']['pa']
 
 
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -3438,7 +3540,7 @@ to open a new \imagefile.  Otherwise the \imagetool\ is destroyed.  If {\stfaf v
 
 </description>
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t remove Ex 1 \t----"
@@ -3455,7 +3557,7 @@ ia.open('myimage')          # 'myimage' was deleted above
 ia.close()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -3477,7 +3579,7 @@ This function deletes the specified image file.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t removefile Ex 1 \t----"
@@ -3489,7 +3591,7 @@ ia.close()
 ia.removefile('myimage')
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -3528,7 +3630,7 @@ same \tool.
 
 </description>
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t done Ex 1 \t----"
@@ -3540,7 +3642,7 @@ subim.open('myfile')      # Error: tool `subim' has been destroyed
 ia.close()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -3611,7 +3713,7 @@ masks too.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t fft Ex 1 \t----"
@@ -3622,13 +3724,13 @@ ia.removefile('r.im')     # clean up example ouptut files
 ia.removefile('a.im')
 #
 """
-\end{verbatim}
+
 This transforms only the sky plane(s).  The real and amplitude 
 images only are written out.
 </example>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t fft Ex 2 \t----"
@@ -3639,7 +3741,7 @@ ia.removefile('amp.im')   # clean up example output files
 ia.removefile('p.im')
 #
 """
-\end{verbatim}
+
 This transforms only the third axis of the image. The amplitude and phase
 images only are written out.
 </example>
@@ -3720,14 +3822,14 @@ The \region\ must be 2-dimensional and it must hold a region of the sky.
 Any degenerate trailing dimensions in the region are discarded.
 
 See also the function <link
-anchor="images:image.fitsky.function">fitsky</link> (for which {\stff
+anchor="images:image.fitcomponents.function">fitcomponents</link> (for which {\stff
 findsources} can provide an initial estimate). <!-- and the <link
 anchor="images:imagefitter">Imagefitter</link> \tool.-->
 
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t findsources Ex 1 \t----"
@@ -3736,7 +3838,7 @@ clrec = ia.findsources(nmax=5, cutoff=0.5)
 print clrec
 #
 """
-\end{verbatim}
+
 
 All sources stronger than 0.5 of the strongest will be found.
 We use the Componentlist GUI to look at the strongest component.
@@ -3746,53 +3848,54 @@ We use the Componentlist GUI to look at the strongest component.
 
  
    <method type="function" name="fitallprofiles">
-   <shortdescription>Fit all 1-dimensional profiles in a region</shortdescription>
+   <shortdescription>DEPRECATED USE fitprofile() with multi=true INSTEAD. Fit gaussians and/or polynomial to all pixels in the specified region.</shortdescription>
    
 <input>
+        <param type="string" direction="in" name="box">
+            <description>Rectangular box in direction coordinate blc, trc. Default: entire image ("").</description>
+            <value></value>
+        </param>
+        <param type="string" direction="in" name="region">
+            <description>Region name, Default: no region ("").</description>
+            <value></value>
+        </param>
+        <param type="string" direction="in" name="chans">
+            <description>Channels to use. Channels must be contigous. Default: all channels ("").</description>
+            <value></value>
+        </param>
+        <param type="string" direction="in" name="stokes">
+            <description>Stokes planes to use. Planes must be contiguous. Default: all stokes ("").</description>
+            <value></value>
+        </param>
+        <param type="int" direction="in" name="axis">
+            <description>The profile axis. Default: use the spectral axis if one exists, axis 0 otherwise (&lt;0).</description>
+            <value>-1</value>
+        </param>
+        <param type="any" direction="in" name="mask">
+            <any type="variant"/>
+            <description>OTF mask, Boolean LEL expression or mask region.  Default: no mask ("").</description>
+            <value></value>
+        </param>
+        <param type="int" direction="in" name="ngauss">
+            <description>Number of Gaussian elements.  Default: 1.</description>
+            <value>1</value>
+        </param>
+        <param type="int" direction="in" name="poly">
+            <description>Order of polynomial element.  Default: do not fit a polynomial (&lt;0).</description>
+            <value>-1</value>
+        </param>
+        <param type="string" direction="in" name="model">
+            <description>Name of model image. Default: do not write the model image ("").</description>
+            <value></value>
+        </param>
+        <param type="string" direction="in" name="residual">
+            <description>Name of residual image. Default: do not write the residual image ("").</description>
+            <value></value>
+        </param>
   
-     <param type="any" direction="in" name="region">
-	     <any type="record"/>
-     <description>The region of interest.  Default is whole image.</description>
-     <value></value>
-     </param>
-  
-     <param type="int" direction="in" name="axis">
-	     <description>The profile axis. Default is spectral axis.</description>
-     <value>-1</value>
-     </param>
-  
-     <param type="any" direction="in" name="mask">
-	     <any type="variant"/>
-     <description>OTF mask, Boolean LEL expression or mask region.  Default is none.</description>
-     <value></value>
-     </param>
-  
-     <param type="int" direction="in" name="ngauss">
-     <description>Number of Gaussian elements</description>
-     <value>1</value>
-     </param>
-  
-     <param type="int" direction="in" name="poly">
-     <description>Order of polynomial element.  Default is none.</description>
-     <value>-1</value>
-     </param>
-  
-     <param type="string" direction="in" name="sigma">
-     <description>Weights image.  Default is unset.</description>
-     <value></value>
-     </param>
-  
-     <param type="string" direction="in" name="fit">
-     <description>Output fitted image file name.  Default is none.</description>
-     <value></value>
-     </param>
-  
-     <param type="string" direction="in" name="resid">
-     <description>Output fitted residuals image file name. Default is none.</description>
-     <value></value>
-     </param>
+
 </input>
-<returns type="bool"/>
+<returns type="any"><any type="record"/>Dectionary</returns>
 
 <description>
 This function fits all of the 1-dimensional profiles in the
@@ -3811,7 +3914,7 @@ mask to the output.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t fitallprofiles Ex 1 \t----"
@@ -3822,121 +3925,136 @@ ia.removefile('gc.fit')
 ia.removefile('gc.small')
 #
 """
-\end{verbatim}
+
 </example>
 
 </method>
 
- 
-   <method type="function" name="fitprofile">
-   <shortdescription>Fit 1-dimensional profile with functional forms</shortdescription>
-   
-<output>  
-     <param type="doubleArray" direction="out" name="values">
-     <description>Output fitted or estimated profile</description>
-     </param>
-  
-     <param type="doubleArray" direction="out" name="resid">
-     <description>Output residual profile</description>
-     </param>
-</output>  
+<method type="function" name="fitprofile">
+    <shortdescription>Fit gaussians and/or polynomials to a 1-dimensional profile.</shortdescription>
+    <input>
+        <param type="string" direction="in" name="box">
+            <description>Rectangular box in direction coordinate blc, trc. Default: entire image ("").</description>
+            <value></value>
+        </param>
+        <param type="string" direction="in" name="region">
+            <description>Region name, Default: no region ("").</description>
+            <value></value>
+        </param>
+        <param type="string" direction="in" name="chans">
+            <description>Channels to use. Channels must be contigous. Default: all channels ("").</description>
+            <value></value>
+        </param>
+        <param type="string" direction="in" name="stokes">
+            <description>Stokes planes to use. Planes must be contiguous. Default: all stokes ("").</description>
+            <value></value>
+        </param>
+        <param type="int" direction="in" name="axis">
+            <description>The profile axis. Default: use the spectral axis if one exists, axis 0 otherwise (&lt;0).</description>
+            <value>-1</value>
+        </param>
+        <param type="any" direction="in" name="mask">
+            <any type="variant"/>
+            <description>OTF mask, Boolean LEL expression or mask region.  Default: no mask ("").</description>
+            <value></value>
+        </param>
+        <param type="int" direction="in" name="ngauss">
+            <description>Number of Gaussian elements.  Default: 1.</description>
+            <value>1</value>
+        </param>
+        <param type="int" direction="in" name="poly">
+            <description>Order of polynomial element.  Default: do not fit a polynomial (&lt;0).</description>
+            <value>-1</value>
+        </param>
+        <param type="bool" direction="in" name="multifit">
+            <description>If true, fit a profile along the desired axis at each pixel in the specified region. If false, average the non-fit axis pixels and do a single fit to that average profile. Default False.</description>
+            <value>false</value>
+         </param>
+        <param type="string" direction="in" name="model">
+            <description>Name of model image. Default: do not write the model image ("").</description>
+            <value></value>
+        </param>
+        <param type="string" direction="in" name="residual">
+            <description>Name of residual image. Default: do not write the residual image ("").</description>
+            <value></value>
+        </param>
+        <param type="string" direction="in" name="amp">
+            <description>Prefix of name of amplitude solution image. Name of image will have gaussian component number appended.  Default: do not write the image ("").</description>
+            <value></value>
+        </param>
+        <param type="string" direction="in" name="amperr">
+            <description>Prefix of name of amplitude error solution image. Name of image will have gaussian component number appended.  Default: do not write the image ("").</description>
+            <value></value>
+        </param>
+        <param type="string" direction="in" name="center">
+            <description>Prefix of name of center solution image. Name of image will have gaussian component number appended.  Default: do not write the image ("").</description>
+            <value></value>
+        </param>
+        <param type="string" direction="in" name="centererr">
+            <description>Prefix of name of center error solution image. Name of image will have gaussian component number appended.  Default: do not write the image ("").</description>
+            <value></value>
+        </param>
+        <param type="string" direction="in" name="fwhm">
+            <description>Prefix of name of FWHM solution image. Name of image will have gaussian component number appended.  Default: do not write the image ("").</description>
+            <value></value>
+        </param>
+        <param type="string" direction="in" name="fwhmerr">
+            <description>Prefix of name of FWHM error solution image. Name of image will have gaussian component number appended.  Default: do not write the image ("").</description>
+            <value></value>
+        </param>
 
-<input>
-  
-     <param type="any" direction="in" name="region">
-	     <any type="record"/>
-     <description>The region of interest.  Default is whole image.</description>
-     <value></value>
-     </param>
-  
-     <param type="int" direction="in" name="axis">
-     <description>The profile axis. Default is spectral axis.</description>
-     <value>-1</value>
-     </param>
-  
-     <param type="any" direction="in" name="mask">
-	     <any type="variant"/>
-     <description>OTF mask, Boolean LEL expression or mask region.  Default is none.</description>
-     <value></value>
-     </param>
-  
-     <param type="any" direction="in" name="estimate">
-	     <any type="record"/>
-     <description>Initial estimate.  Default is unset.</description>
-     <value></value>
-     </param>
-  
-     <param type="int" direction="in" name="ngauss">
-     <description>Number of Gaussian elements.  Default is one.</description>
-     <value>-1</value>
-     </param>
-  
-     <param type="int" direction="in" name="poly">
-     <description>Order of polynomial element.  Default is unset.</description>
-     <value>-1</value>
-     </param>
-  
-     <param type="bool" direction="in" name="fit">
-     <description>Do fit or get estimate</description>
-     <value>true</value>
-     </param>
-  
-     <param type="string" direction="in" name="sigma">
-     <description>Weights image.  Default is unset.</description>
-     <value></value>
-     </param>
-</input>
+    </input>
 <returns type="any"><any type="record"/></returns>
 
 <description>
-This function fits 1-dimensional models to profiles.  All data in the specified
-region (except along the fitting axis) are averaged.
+This method simultaneously fits one or more gaussians and/or a polynomial to one dimensional profiles.
 
-The behaviour is primarily controlled by argument {\stfaf fit}.
+The axis parameter indicates on which axis profiles should be fit; a value &lt;0 indicates the spectral axis should be used, or if one does not exist,
+that the zeroth axis should be used.
 
-If {\stfaf fit==T} then you need an estimate.  If {\stfaf estimate}
-is unset, then that estimate is automatically provided by
-fitting {\stfaf ngauss} gaussians.  If {\stfaf estimate}
-is set then it is used to provide the initial estimate.
+The ngauss parameter indicates the maximum number of gaussians that should be fit. The poly parameter indicates the order of the polynomial to
+fit; a value &lt;0 indicates that no polynomial should be fit. An error will occur if ngauss=0 and poly&lt;0, as this indicates there
+is nothing to fit. 
 
-The functional form that is actually fit for will be any polynomial
-specified by the {\stfaf poly} argument, plus the number of gaussians 
-present in the estimate.
+The multifit parameter indicates if profiles should be fit at each pixel in the selected region (true), or if the profiles in that region should be
+averaged and the fit done to that average profile (false).
 
-If {\stfaf fit==F} then an estimate is created and returned.
-If {\stfaf estimate} is empty, than an estimate for {\stfaf ngauss}
-gaussians is made.  If {\stfaf estimate} is not empty, then
-it is just evaluated.
+The model and residual parameters indicate the names of the model and residual images to be written; blank values inidcate that these images
+should not be written.
 
-After calling this function, argument {\stfaf values} holds the fitted or estimated 
-profile values, and argument  {\stfaf resid} holds the fitted or estimated residual 
-profile values.  Look at the example for information on accessing returned values.
+The return value is a dictionary containing the following keys and values:
+converged: an array indicating if the fits converged (true) or not (false).
+niter: an array indicating the number of iterations for each profile, &lt;0 if the fit did not converge
+ncomps: the number of components (gaussians + polynomial) fit for the profile, 0 if the fit did not converge
+xUnit: the abscissa unit
+yUnit: the ordinate unit
 
-The output mask is a copy of the default input \pixelmask\ (if any); the
-OTF mask does not contribute. Any other input \pixelmasks\ will not be
-copied.  Use function <link anchor="images:image.maskhandler.function">maskhandler</link> if
-you need to copy other masks too.  Use function
-<link anchor="images:image.calcmask.function">calcmask</link> if you need to  apply the OTF
-mask to the output.
+In addition, the following keys are appended by the component number to indicate which component they correspond to, eg, fwhm0, fwhm1, etc
+type[0,1,...] The type of component (GAUSSIAN or POLYNOMIAL)
+center[0,1,...] The fitted center value for the nth component which is a gaussian.
+fwhm[0,1,...] The fitted FWHM value for the nth component which is a gaussian.
+amp[0,1,...] The fitted amplitude value for the nth component which is a gaussian.
+centerErr[0,1,...], fwhmErr[0,1,...], ampErr[0,1,...] The associated errors for the nth component which is a gaussian.
+
+One can also write none, any or all of the solution and error images for gaussian fits via the parameters amp, amperr, center, centererr,
+fwhm, and fwhmerr when doing multi-pixel fits. The specified parameter value will by appended by "_n" where n is the gaussian
+component number. Writing analogous images for polynomial coefficients is not yet supported.
+
+It is not yet possible to specify initial model parameter estimates; this feature is planned for a future release. Currently, the solver
+will determine initial estimates.
+
+Note that ngauss is the *maximum* number of gaussians that the solver will attempt to fit. However, where appropriate, it will fit fewer than
+ngauss gaussians.
 
 </description>
 
 <example>
-\begin{verbatim}
 """
-#
-print "\t----\t fitprofile Ex 1 \t----"
-ia.maketestimage('gc.small', overwrite=true)
-fit = ia.fitprofile(axis=1, fit=T)     # Auto-est and fit
-print fit.keys()
-#print fit['return']
-#print fit['values']
-#print fit['resid']
-
-ia.close()
-#
+ia.open("myspectrum.im")
+res = ia.fitprofile(ngauss=2, box="3,3,4,5", poly=2, multifit=true)
+# reshape fit parameters to correspond to input pixels
+mycenter0 = res["center0"].reshape([2,3], order="F")
 """
-\end{verbatim}
 </example>
 
 </method>
@@ -4004,8 +4122,9 @@ OTF mask does not contribute to the output mask. Any other input
 masks too.  Use function <link anchor="images:image.calcmask.function">calcmask</link> if you
 need to  apply the OTF mask to the output.
 
+</description>
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t fitpolynomial Ex 1 \t----"
@@ -4016,9 +4135,9 @@ myim.done()
 ia.close()
 #
 """
-\end{verbatim}
 
-\begin{verbatim}
+
+
 """
 #
 print "\t----\t fitpolynomial Ex 2 \t----"
@@ -4031,7 +4150,7 @@ myim.done()
 ia.close()
 #
 """
-\end{verbatim}
+
 
 This example can be thought of as an image-based continuum
 substraction.  You specify the axis and the pixels where the spectrum
@@ -4039,231 +4158,10 @@ is line free (continuum), do the fit and create an on-the-fly image
 tool attached to the residual (continuum subtracted) image.
 
 </example>
-</description>
 
 </method>
 
  
-   <method type="function" name="fitsky">
-   <shortdescription>DEPRECATED USE FTICOMPONENTS() INSTEAD. Fit 2-dimensional models to the sky.</shortdescription>
-   
-
-<input>
-  
-     <param type="any" direction="in" name="region">
-	     <any type="record"/>
-     <description>The 2-D region of interest to fit. Default is whole image.</description>
-     <value></value>
-     </param>
-
-     <param type="int" direction="in" name="chan">
-     <description>Spectral plane to use to fit gaussian(s)</description>
-     <value>0</value>
-     </param>
-
-     <param type="string" direction="in" name="stokes">
-     <description>Stokes (polarization) plane to use to fit gaussian(s).</description>
-     <value>I</value>
-     </param>
-   
-     <param type="any" direction="in" name="mask">
-	     <any type="variant"/>
-     <description>OTF mask, Boolean LEL expression or mask region.  Default is none.</description>
-     <value></value>
-     </param>
-  
-     <param type="stringArray" direction="in" name="models">
-     <description>The model types to fit simultaneously.  Default is ['gaussian']</description>
-     <value>gaussian</value>
-     </param>
-  
-     <param type="any" direction="in" name="estimate">
-	     <any type="record"/>
-     <description>Initial estimate for the model (from componentlist.torecord()). Default is to use an internal estimate.</description>
-     <value></value>
-     </param>
-  
-     <param type="stringArray" direction="in" name="fixedparams">
-     <description>Parameters to hold fixed per model, String or vector of strings, one per model. Choose from ``fxyabp''.  Default is all parameters vary.</description>
-     <value></value>
-     </param>
-  
-     <param type="doubleArray" direction="in" name="includepix">
-     <description>Range of pixel values to include.  For default behaviour see discussion.</description>
-     <value>-1</value>
-     </param>
-  
-     <param type="doubleArray" direction="in" name="excludepix">
-     <description>Range of pixel values to exclude.  For default behaviour see discussion.</description>
-     <value>-1</value>
-     </param>
-  
-     <param type="bool" direction="in" name="fit">
-     <description>Do fit or get estimate</description>
-     <value>true</value>
-     </param>
-  
-     <param type="bool" direction="in" name="deconvolve">
-     <description>Deconvolve from restoring beam</description>
-     <value>false</value>
-     </param>
-  
-     <param type="bool" direction="in" name="list">
-     <description>List informative messages to the logger</description>
-     <value>true</value>
-     </param>
-</input>
-<returns type="any"><any type="record"/>
-Componentlist tool or fail</returns>
-
-<description>
-
-THIS METHOD HAS BEEN DEPRECATED AND WILL BE REMOVED IN A FUTURE VERSION
-OF CASA. USE FITCOMPONENTS() INSTEAD.
-
-This function fits 2-dimensional models to regions of the sky.  You
-can fit multiple models simulataneously, although only Gaussian models
-are currently implemented.  The fit is returned as a record that can
-be loaded into a <link
-anchor="componentmodels:componentlist">Componentlist</link> \tool\
-with the fromrecord() function.  <!-- See also the <link
-anchor="images:imagefitter">imagefitter</link> \tool\ which is an
-interactive high-level \tool\ based around this function.-->
-
-\begin{itemize}
-
-\item If {\stfaf fit=T} the fit is done and returned.
-If {\stfaf fit=F} the fit is not done.  Instead, the initial
-auto-determined estimate is returned (this is used as the
-starting guess of the actual fit); in this case, arguments
-{\stfaf pixels, pixelmask, converged, estimate} and {\stfaf fixed} are
-ignored.   The auto-fit can only be determined for a single
-model.
-
-\item The {\stfaf pixels} array is returned to you (in the return
-record) with the residual of the fit.  The {\stfaf pixelmask} array is
-returned to you (also in the return record) with the \pixelmask\ of
-the specified region (this reflects both the underlying \pixelmask\
-that you applied [if any] as well as the shape of the region).
-
-\item If the fit converged, {\stfaf converged=T} in the return record.
-
-\item The \region\ must be 2-dimensional and it must hold a region of the
-sky.   Any degenerate trailing dimensions in the region are discarded.
-
-\item The {\stfaf models} argument specifies the simultaneous model
-types you would like to fit to the specified region.  Currently you
-can only choose from `gaussian' (minimum match).  Specify the {\stfaf
-models} argument as a vector of strings. <!--, or a string with comma
-or space delimiters. --> Thus, to fit 3 simultaneous gaussians, you
-would give <!-- {\stfaf models='gaussian gaussian gaussian'}.-->
-{\stfaf models=['gaussian','gaussian','gaussian']}.
-
-\item An initial automatically determined estimate of the parameters
-of the model can be made for you (only for single model fits).
-However, if this turns out to be poor, or if you want to hold some
-parameters fixed, then you can enter your estimate with the {\stfaf
-estimate} argument to which you supply a record associated with a
-<link anchor="componentmodels:componentlist">Componentlist</link>
-\tool\ (the same type of record that is returned by this function).
-Note that an integrated flux is specified in the estimate of a
-Gaussian component.  The estimate doesn't have to be the same type as
-the model you are fitting.  For example you can give a Point model
-estimate for a Gaussian fit.  The other parameter estimates will be
-filled in for you.  The function <link
-anchor="images:image.findsources.function">findsources</link> can be
-used to get rough point source estimates.  You must supply one
-estimate component for every model component that you wish to fit when
-fitting multiple simultaneous models.
-
-\item When you fit a model, you can choose which parameters you hold
-fixed in the fit and which you solve for.  The {\stfaf fixed} argument
-enables you to specify which parameters of the fit you hold fixed.  It
-is entered as a vector of strings, one string for each model specifying
-which parameters of the fit are fixed.
-
-For gaussian models, that string should contain letters chosen from
-
-\begin{itemize}
-\item `f' - hold the peak flux (intensity) of the model fixed
-\item `x' - hold the X location of the model fixed
-\item `y' - hold the Y location of the model fixed
-\item `a' - hold the major axis width fixed
-\item `b' - hold the minor axis width fixed
-\item `p' - hold the position angle fixed
-\end{itemize}
-
-If you hold any parameters fixed, you may need to specify an input
-estimate.  As currently implemented, the effect of holding constant
-the flux of a Gaussian model is confusing.  The input estimate is
-specified as an integral flux.  This is used to determine the peak
-flux of the Gaussian model.  It is this peak flux which is kept
-constant.  The returned model's integral flux may be different than
-the specified integral flux because other parameters (such as the
-shape) of the Gaussian model may have changed.
-
-\item Often when fitting, it is advisable to exclude noise pixels.  The
-{\stfaf includepix} (pixel value range to include) or {\stfaf
-excludepix} (pixel value range to exclude) arguments (you can't specify
-them both) allow you to select a subset of the pixels for the fit.  If
-you only give one value for either of these vectors, say {\stfaf
-includepix=[b]}, then this is interpreted as {\stfaf
-includepix=[-abs(b),abs(b)]}.  
-
-For total intensity (Stokes I) images, if neither of these are specified
-and  the peak in the region is positive, then all
-pixels below zero are discarded.  If the peak is negative (a negative
-source), all pixels above zero are discarded.  For other Stokes
-parameters all pixels are included by default. 
-
-\end{itemize}
-
-Return value is a record with 4 elements. The keys are 'return',
-'pixelmask', 'pixels' and 'converged'.
-
-\begin{itemize}
-\item {\tt 'return'} is a componentlist record which can be used with the componentlist tool.  (The returned flux values are integral, not peak values.)
-\item {\tt 'pixelmask'} is a boolean array that defines on the image where the residual values  are invalid
-\item {\tt 'pixels'} is a float array containing the residuals after subtracting the fitted components
-\item {\tt 'converged'} is a boolean value representing the convergence of the fit.
-
-\end{itemize} 
-
-</description>
-
-<example>
-\begin{verbatim}
-"""
-#
-print "\t----\t fitsky Ex 1 \t----"
-ia.maketestimage('image.large', overwrite=true)
-innerquarter=ia.setboxregion([0.25,0.25],[0.75,0.75],frac=true)
-ia.fromimage(outfile='image.small', infile='image.large',
-             region=innerquarter, overwrite=true)
-ia.close()
-ia.open('image.small')
-cl1 = ia.fitsky(models=["gaussian"])
-print cl1.keys()
-# 'pixels','pixelmask','converged','return'
-print cl1['return'] # 'return' field holds a componentlist record
-if cl1['converged']:
-  ia.close()
-  ia.open('image.large')
-  cl2 = ia.fitsky(models=["gaussian"], estimate=cl1['return'])
-  print cl2['return']
-ia.close()
-#
-"""
-\end{verbatim}
-
-In this example we assume the image is 2-dimensional.  We fit the first
-image using the internal starting estimate for the model parameters.  We
-fit the second image using the result of the first fit as the starting
-estimate. 
-
-</example>
-</method>
-
 <method type="function" name="fitcomponents">
     <shortdescription>Fit 2-dimensional models to an image.</shortdescription>
     <input>
@@ -4284,8 +4182,8 @@ estimate.
         </param>
         
         <param type="string" direction="in" name="stokes">
-            <description>The polarization to use in the fit. Default is I.</description>
-            <value>I</value>
+            <description>The polarization to use in the fit. Default is to use the first stokes plane.</description>
+            <value/>
         </param>
         
         <param type="any" direction="in" name="mask">
@@ -4402,11 +4300,13 @@ In addition, lines in the file starting with a \# are considered comments.
 
 An example of such a file is:
 
+
 \begin{verbatim}
 # peak intensity must be in map units
 120, 150, 110, 23.5arcsec, 18.9arcsec, 120deg  
 90, 60, 200, 46arcsec, 23arcsec, 140deg, fxp
 \end{verbatim}
+
 
 This is a file which specifies that two gaussians are to be simultaneously fit,
 and for the second gaussian the specified peak intensity, x position, and position angle
@@ -4418,6 +4318,7 @@ Here is how one might fit two gaussians to multiple channels of a cube using the
 from the previous channel as the initial estimate for the next. It also illustrates
 how one can specify a region in the associated continuum image as the region to use
 as the fit for the channel.
+
 
 \begin{verbatim}
 imagename = "co_cube.im"
@@ -4443,6 +4344,7 @@ for x in range(3,20):
     imfit
 \end{verbatim}
 
+
     
 </description>
 <example>
@@ -4451,7 +4353,7 @@ from the previous channel as the initial estimate for the next. It also illustra
 how one can specify a region in the associated continuum image as the region to use
 as the fit for the channel.
 
-\begin{verbatim}
+
 
 imagename = "co_cube.im"
 # open the image analysis tool
@@ -4470,7 +4372,7 @@ for x in range(3,20):
     estimates = "estimates" + str(x) + ".txt"
     newestimates = "estimates" + str(x + 1) + ".txt"
     ia.fitcomponents(region="continuum.im:source.rgn", chan=x, excludepix=[-1e10,0], estimates="initial_estimates.txt", logfile="co_fit.log", append=True, newestimates=newestimates)
-\end{verbatim}
+
 </example>
 </method>
 
@@ -4505,7 +4407,7 @@ You can convert an associated image to a record
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t fromrecord Ex 1 \t----"
@@ -4516,7 +4418,7 @@ ia.fromrecord(rec, "testimage")
 
 
 """
-\end{verbatim}
+
 </example>
 
 </method>
@@ -4607,7 +4509,7 @@ the 'pixel' image.
 
 <example>
 Suppose that we have a 3-dimensional image called {\sff im}. Then:
-\begin{verbatim}
+
 """
 #
 print "\t----\t getchunk Ex 1 \t----"
@@ -4621,7 +4523,7 @@ mask = ia.getchunk(getmask=T)            # Get pixelmask
 ia.close()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -4703,7 +4605,7 @@ image.
 <example>
 Suppose that we have a 3-dimensional image called {\sff cube} and wish
 to recover the pixel from a simple regular region.
-\begin{verbatim}
+
 """
 #
 print "\t----\t getregion Ex 1 \t----"
@@ -4714,11 +4616,11 @@ pixels=ia.getregion(r1)
 ia.close()
 #
 """
-\end{verbatim}
+
 </example>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t getregion Ex 2 \t----"
@@ -4727,7 +4629,7 @@ pixels = ia.getregion()
 pixelmask = ia.getregion(getmask=T)  
 #
 """
-\end{verbatim}
+
 In this example we recover first the pixels and then the pixel mask.
 </example>
 </method>
@@ -4793,7 +4695,7 @@ which defaults to False. -->
 
 <example>
 Suppose that we have a 2-dimensional image. Then:
-\begin{verbatim}
+
 """
 #
 print "\t----\t getslice Ex 1 \t----"
@@ -4805,7 +4707,7 @@ rec = ia.getslice (x=[1,20,25,11], y=[2,30,32,40]) # Polyline slice
 ia.close()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -4885,7 +4787,7 @@ See also the other convolution functions
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 print "\t----\t hanning Ex 1 \t----"
 ia.fromshape('x', shape=[64,64,128], overwrite=true)
@@ -4896,7 +4798,7 @@ im2.done(remove=T)
 ia.close()
 #
 """
-\end{verbatim}
+
 
 This would Hanning smooth the spectral axis of the image associated with
 the default \imagetool\ {\stf ia}, if there is one.  Every other pixel on the
@@ -4927,7 +4829,7 @@ file is being shared between more than one process.  See also functions
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t haslock Ex 1 \t----"
@@ -4944,7 +4846,7 @@ print ia.haslock()
 ia.close()
 #
 """
-\end{verbatim}
+
 This example acquires a read/write lock on the file and then unlocks it
 and acquires just a read lock.
 </example>
@@ -5119,7 +5021,7 @@ disk if you set {\stfaf disk=T}, otherwise it decides for itself.
 </description>
 
 <example> 
-\begin{verbatim}
+
 """
 #
 print "\t----\t histograms Ex 1 \t----"
@@ -5128,14 +5030,14 @@ ia.histograms()
 ia.close()
 #
 """
-\end{verbatim} 
+ 
 <!-- In this example we plot the histogram of the entire image
 on a PGPLOT X-windows device.-->
 In this example we obtain the histogram of the entire image.
 </example>
 
 <example> 
-\begin{verbatim} 
+ 
 """
 #
 print "\t----\t histograms Ex 2 \t----"
@@ -5146,7 +5048,7 @@ print r.keys()
 ia.close()
 #
 """
-\end{verbatim} 
+ 
 
 <!--  cumu=T,gauss=T,plotter='',nx=4,ny=3) -->
 
@@ -5203,7 +5105,7 @@ from \fits\ file conversions is also stored and listable here.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t history Ex 1 \t----"
@@ -5213,7 +5115,7 @@ h = ia.history(list=F)             # Recover history in variable h
 ia.history(list=T, browse=F)       # List history to logger
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -5260,7 +5162,7 @@ the input image is symmetrically placed in the output image.
 
 </description>
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t insert Ex 1 \t----"
@@ -5281,7 +5183,7 @@ im3.done()
 im4.done()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -5298,7 +5200,7 @@ is associated with an image or not.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t isopen Ex 1 \t----"
@@ -5314,7 +5216,7 @@ print ia.isopen()
 ia.close()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -5333,7 +5235,7 @@ which is on disk is termed persistent.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t ispersistent Ex 1 \t----"
@@ -5357,7 +5259,7 @@ im4.done()
 ia.close(remove=true)
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -5393,7 +5295,7 @@ file is being shared between more than one process.  See also functions
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t lock Ex 1 \t----"
@@ -5404,7 +5306,7 @@ ia.lock(writelock=F)
 ia.close(remove=true)
 #
 """
-\end{verbatim}
+
 This acquires a read/write lock on the file. Then we unlock it
 and acquire a readonly lock.
 </example>
@@ -5452,7 +5354,7 @@ write it to disk.  The Viewer can view it.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t makecomplex Ex 1 \t----"
@@ -5465,7 +5367,7 @@ ia.removefile('ia.complex')
 ia.close(remove=true)
 #
 """
-\end{verbatim}
+
 </example>
 
 </method>
@@ -5552,7 +5454,7 @@ brackets.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t maskhandler Ex 1 \t----"
@@ -5583,7 +5485,7 @@ ia.removefile('g1.app')                  # Cleanup
 ia.close()
 #
 """
-\end{verbatim}
+
 </example>
 
 </method>
@@ -5613,7 +5515,7 @@ as keywords with the corresponding record field name.
 
 </description>
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t miscinfo Ex 1 \t----"
@@ -5626,7 +5528,7 @@ print header
 ia.close()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -5685,17 +5587,17 @@ masked bad.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t modify Ex 1 \t----"
 ia.maketestimage()
-clrec = ia.fitsky()
-ia.modify(clrec['return'])
+clrec = ia.fitcomponents()
+ia.modify(clrec['results'])
 ia.close()
 #
 """
-\end{verbatim}
+
 
 <!-- 
 # ia.image('gc.small')
@@ -5704,7 +5606,7 @@ ia.close()
 In this example we subtract the model contained in the Table
 called {\sff list}. -->
 
-In this example we subtract the model returned by the fitsky function.
+In this example we subtract the model returned by the fitcomponents function.
 
 </example>
 </method>
@@ -5758,12 +5660,12 @@ and fit.
 See function <link anchor="images:image.findsources.function">findsources</link> for
 a description of arguments {\stfaf point} and {\stfaf width}.
 
-See also the function <link anchor="images:image.fitsky.function">fitsky</link>.
+See also the function <link anchor="images:image.fitcomponents.function">fitcomponents</link>.
 
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t maxfit Ex 1 \t----"
@@ -5773,7 +5675,7 @@ print clrec          # There is only one component
 ia.close()
 #
 """
-\end{verbatim}
+
 
 </example>
 </method>
@@ -6185,9 +6087,10 @@ Note that this function has no ``virtual'' output file capability. All
 output files are written to disk.   The output mask for these images is
 good (T) unless the moment method fails to generate a value (e.g.  the
 total input pixel mask was all bad for the profile) in which case it will be bad (F).
+</description>
 
 <example> 
-\begin{verbatim} 
+ 
 """
 #
 print "\t----\t moments Ex 1 \t----"
@@ -6200,7 +6103,7 @@ im2.done()
 ia.close()
 #
 """
-\end{verbatim} 
+ 
 
 In this example, standard moments (average intensity, weighted velocity
 and weighted velocity dispersion) are computed via the convolve (spatially
@@ -6213,7 +6116,7 @@ moment image.
 </example>
 
 <example> 
-\begin{verbatim} 
+ 
 """
 #
 print "\t----\t moments Ex 2 \t----"
@@ -6223,7 +6126,7 @@ im2.done()
 ia.close()
 #
 """
-\end{verbatim} 
+ 
 
 In this example, the median of each spectrum is computed, after pixel
 selection by the automatic window method.  <!-- Each spectrum and the window
@@ -6234,7 +6137,6 @@ interactively do the Gaussian fit to the histogram. --> The output
 image is temporary and accessed via the returned Image tool.
 
 </example>
-</description>
 </method> 
 
  
@@ -6261,7 +6163,7 @@ just recover the \imagefile\ name itself.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t name Ex 1 \t----"
@@ -6273,7 +6175,7 @@ print ia.name(strippath=T)
 ia.close()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -6308,7 +6210,7 @@ with the new \imagefile, but this saves you the \tool\ creation.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t open Ex 1 \t----"
@@ -6319,7 +6221,7 @@ ia.open('anotherimage')               # attach tool to 'anotherimage'
 ia.close()
 #
 """
-\end{verbatim}
+
 The {\stff open} function first closes the old \imagefile.
 </example>
 </method>
@@ -6353,7 +6255,7 @@ This is reflected in the output record 'pixel' field.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t pixelvalue Ex 1 \t----"
@@ -6375,7 +6277,7 @@ print ia.pixelvalue([9,9,9])
 ia.close()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -6467,7 +6369,7 @@ See also the functions <link anchor="images:image.set.function">set</link> and
 <example>
 
 We can clip all pixels to be {\tt &lt;= } 5 as follows.
-\begin{verbatim}
+
 """
 #
 print "\t----\t putchunk Ex 1 \t----"
@@ -6492,7 +6394,7 @@ print ia.getchunk()
 ia.close()
 #
 """
-\end{verbatim}
+
 
 The above example shows how you could clip an image to a value.  If
 all the pixels didn't easily fit in memory, you would iterate through
@@ -6503,7 +6405,7 @@ anchor="images:image.calc.function">calc</link>.
 Suppose we wanted to set the fifth XY plane to 1.
 
 We could do so as follows:
-\begin{verbatim}
+
 """
 #
 print "\t----\t putchunk Ex 2 \t----"
@@ -6515,11 +6417,11 @@ print ia.getchunk()[0:3]
 ia.close()
 #
 """
-\end{verbatim}
+
 
 Suppose we wanted to set the first YZ plane to 2.
 
-\begin{verbatim}
+
 """
 #
 print "\t----\t putchunk Ex 3 \t----"
@@ -6531,7 +6433,7 @@ print ia.getchunk()[0:3]
 ia.close()
 #
 """
-\end{verbatim}
+
 
 </example>
 </method>
@@ -6629,7 +6531,7 @@ Suppose that we have a 2-dimensional image.  First we recover the pixel
 and \pixelmask\ values from a polygonal region.  Then we change the values in
 the array that are within the region to zero and replace the data. 
 
-\begin{verbatim}
+
 """
 #
 print "\t----\t putregion Ex 1 \t----"
@@ -6652,7 +6554,7 @@ ia.putregion(pixels=pixels, pixelmask=pixelmask,
 ia.close()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -6724,7 +6626,7 @@ image after the degenerate axes are dropped.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t rebin Ex 1 \t----"
@@ -6734,7 +6636,7 @@ im2.done()
 ia.close()
 #
 """
-\end{verbatim}
+
 </example>
 
 </method>
@@ -6967,7 +6869,7 @@ system (it won't be filled in for you).
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t regrid Ex 1 \t----"
@@ -6983,7 +6885,7 @@ imrr.done()
 ia.close()
 #
 """
-\end{verbatim}
+
 
 In this example, we regrid a radio image onto the grid of an optical
 image - this probably (if the optical FITS image was correctly labelled
@@ -6992,7 +6894,7 @@ projection, radio usually SIN).
 </example>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t regrid Ex 2 \t----"
@@ -7008,7 +6910,7 @@ im3.done()
 ia.close()
 #
 """
-\end{verbatim}
+
 
 In this example, we regrid a radio image from J2000 to B1950. This is
 accomplished by first recovering the Coordinate System into a
@@ -7018,7 +6920,7 @@ regrid function.
 </example>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t regrid Ex 3 \t----"
@@ -7048,12 +6950,74 @@ imr.done()
 ia.close()
 #
 """
-\end{verbatim}
+
 </example>
 
 </method>
 
- 
+
+   <method type="function" name="reorder">
+   <shortdescription>Reorder the image axes.</shortdescription>
+   
+<input>
+  
+     <param type="string" direction="in" name="outfile">
+     <description>Output image file name.  Default is unset.</description>
+     <value></value>
+     </param>
+  
+     <param type="any" direction="in" name="order">
+     <any type="variant"/>
+     <description>Zero-based order of axes in output image (eg "120" => input->output 0->2, 1->0, 2->1))</description>
+     <value></value>
+     </param>
+  
+</input>
+<returns type="casaimage"/>
+
+<description>
+
+This method reorders (transposes) the axes in the input image to the specified
+order. The associated pixel values and coordinate system are transposed.
+
+If the outfile parameter is empty, only a temporary image is created; no output image
+is written to disk.
+
+The order parameter describes the mapping of the input axes to the output axes.
+It can be one of three types: a non-negative integer, a string, or a list of
+strings. If a string or non-negative integer, it should contain
+zero-based digits describing the new order of the input axes. It must
+contain the same number of (unique) digits as the number of input axes. For example,
+specifying reorder="1032" or reorder=1032 for a four axes image maps input axes
+0, 1, 2, 3 to output axes 1, 0, 3, 2. In the case of order being a nonnegative integer
+and the zeroth axis in the input being mapped to zeroth axis in the output, the zeroth
+digit is implicitly understood to be 0 so that to transpose an image where one would
+use a string order="0321", one could equivalently specify an int order=321.
+Because of ambiguity for axes numbers greater than nine, using string or integer order
+specifications cannot handle images containing more than 10 axes.
+The order parameter can also be specified as a list of strings which uniquely match,
+ignoring case, the first characters of the image axis names (ia.coordsys().names()).
+So to reorder an image with right ascension, declination, and frequency axes, one could
+specify order=["d", "f", "r"] or equivalently ["decl", "frequ", "right a"]. Note that
+specifying "ra" for the right ascension axis will result in an error because "ra" does
+not match the first two characters of right ascension.
+
+</description>
+
+<example>
+
+"""
+# swap stokes (axis 2) and spectral (axis 3) axes in a 4 dimensional image
+ia.open("myimage.fits")
+reordim = ia.reorder(outfile="my_reordered_image.im", order="0132")
+ia.done()
+"""
+
+
+</example>
+
+</method>
+
    <method type="function" name="rotate">
    <shortdescription>rotate the direction coordinate axes attached to the image and regrid the image to the rotated Coordinate System</shortdescription>
    
@@ -7189,7 +7153,7 @@ then the output pixel would be masked bad (F).
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t rotate Ex 1 \t----"
@@ -7199,7 +7163,7 @@ imr.done()
 ia.close()
 #
 """
-\end{verbatim}
+
 
 In this example, we rotate the direction coordinate axes (RA/Dec) of a
 test image by 45 degress and regrid the image onto the axes.  <!-- The viewer
@@ -7234,7 +7198,7 @@ result.
 
 </description>
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t rename Ex 1 \t----"
@@ -7246,7 +7210,7 @@ print ia.name(strippath=T)
 #newimage
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -7338,7 +7302,7 @@ it as well (see examples).
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t replacemaskedpixels Ex 1 \t----"
@@ -7349,7 +7313,7 @@ ia.replacemaskedpixels('min(zz1)')
 ia.close()
 #
 """
-\end{verbatim}
+
 
 These examples replace all masked pixels by the specified scalar.  In
 the second case, the scalar comes from a LEL expression operating on
@@ -7359,7 +7323,7 @@ other image).
 </example>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t replacemaskedpixels Ex 2 \t----"
@@ -7371,7 +7335,7 @@ ia.replacemaskedpixels(0.0, mask='zz2&gt;0')
 ia.close()
 #
 """
-\end{verbatim}
+
 
 Let us say that {\sff zz1} has no mask.  By using the {\stfaf mask}
 argument, we generate a transient mask which is T (good) when the pixel
@@ -7383,7 +7347,7 @@ would be logically ORed).
 </example>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t replacemaskedpixels Ex 3 \t----"
@@ -7398,7 +7362,7 @@ im2.done()
 ia.close()
 #
 """
-\end{verbatim}
+
 
 The specified region takes one quarter of the image by area centered on
 the image center.  The region is applied to the {\stfaf mask} expression
@@ -7412,7 +7376,7 @@ to its disk file name {\sff zz2}).
 </example>
 
 <example>
-\begin{verbatim}
+
 
 #
 print "\----\t replacemaskedpixels Ex 4 \t----"
@@ -7424,7 +7388,7 @@ ia.replacemaskedpixels('zz2+zz3')
 ia.close()
 #
 
-\end{verbatim}
+
 
 In this example, the replacement values are taken
 from a LEL expression adding two other images
@@ -7434,7 +7398,7 @@ image {\sff zz1}.
 
 <!-- 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t\t replacemaskedpixels Ex 5 \t"
@@ -7449,7 +7413,7 @@ ia.replacemaskedpixels('zz2+zz3')
 ia.close()
 #
 """
-\end{verbatim}
+
 
 In this example, the replacement values are taken
 from a LEL expression adding two other images
@@ -7480,7 +7444,7 @@ You can set the restoring beam with function
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t restoringbeam Ex 1 \t----"
@@ -7492,7 +7456,7 @@ print ia.restoringbeam()
 ia.close()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -7632,7 +7596,7 @@ See also the other convolution functions
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t sepconvolve Ex 1 \t----"
@@ -7642,7 +7606,7 @@ im2.done()
 ia.close()
 #
 """
-\end{verbatim}
+
 
 </example>
 </method>
@@ -7716,7 +7680,7 @@ mask is created for you and made the default mask.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t set Ex 1 \t----"
@@ -7734,7 +7698,7 @@ ia.set(pixels=0, pixelmask=F, region=r1)  #Set pixels and mask in region
 ia.close()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -7758,7 +7722,7 @@ You can get the brightness unit with function
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t setbrightnessunit Ex 1 \t----"
@@ -7768,7 +7732,7 @@ print ia.brightnessunit()
 #km
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -7798,7 +7762,7 @@ image, until it is replaced with this function.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t setcoordsys Ex 1 \t----"
@@ -7815,7 +7779,7 @@ mycs.done()
 ia.close()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -7853,7 +7817,7 @@ You can recover the history information with function
 
  
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t sethistory Ex 1 \t----"
@@ -7864,7 +7828,7 @@ ia.sethistory(origin="sethistory", history=["I","like","fish"])
 ia.close()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -7906,7 +7870,7 @@ will be omitted, and multi-dimensional arrays will be flattened into
 
  
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t setmiscinfo Ex 1 \t----"
@@ -7917,7 +7881,7 @@ ia.setmiscinfo(info)            # put it back into the image
 ia.close()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -7935,7 +7899,7 @@ so useful that it can be obtained directly.
 
 </description>
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t shape Ex 1 \t----"
@@ -7950,7 +7914,7 @@ for i in range(len(imshape)):
 ia.close()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -8026,7 +7990,7 @@ You may also delete the restoring beam by setting {\stfaf delete=T}
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t setrestoringbeam Ex 1 \t----"
@@ -8058,7 +8022,7 @@ print ia.restoringbeam()
 ia.close()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -8125,7 +8089,7 @@ ia.close()
      </param>
   
      <param type="bool" direction="in" name="list">
-     <description>If T then list the statistics as well</description>
+     <description>If True print bounding box and statistics to logger.</description>
      <value>true</value>
      </param>
   
@@ -8311,7 +8275,7 @@ disk=T}, otherwise it decides for itself.
 </description>
 
 <example> 
-\begin{verbatim} 
+ 
 """
 #
 print "\t----\t statistics Ex 1 \t----"
@@ -8320,13 +8284,13 @@ ia.statistics()
 ia.close()
 #
 """
-\end{verbatim} 
+ 
 In this example, we ask to see statistics evaluated over the
 entire image. <!-- No plotting is available under these conditions.-->
 </example>
 
 <example> 
-\begin{verbatim}
+
 """
 #
 print "\t----\t statistics Ex 2 \t----"
@@ -8335,7 +8299,7 @@ stats = ia.statistics(axes=[1],plotstats=["sigma","rms"],
                       includepix=[0,100],list=F)
 #
 """
-\end{verbatim} 
+ 
 
 In this example, let us assume the image has 2 dimensions.  We want
 the standard deviation about the mean and the rms of Y (axes 1) for
@@ -8429,7 +8393,7 @@ lags don't have a lot of contributing values of course.
 </description>
 
 <example> 
-\begin{verbatim} 
+ 
 """
 #
 print "\t----\t twopointcorrelation Ex 1 \t----"
@@ -8437,7 +8401,7 @@ ia.maketestimage();        # Output image is virtual
 ia.twopointcorrelation()   # Output image is virtual
 #
 """
-\end{verbatim} 
+ 
 </example>
 
 </method> 
@@ -8510,7 +8474,7 @@ need to copy other masks too.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t subimage Ex 1 \t----"
@@ -8524,7 +8488,7 @@ im3.done()
 ia.close()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -8613,7 +8577,7 @@ always T or a fail.-->
 
 </description>
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t summary Ex 1 \t----"
@@ -8625,7 +8589,7 @@ if s['header']['ndim'] == 2: # program using header values
 ia.close()
 #
 """
-\end{verbatim}
+
 
 <!--
 Note that the Spectral Coordinate is listed twice; once with frequency
@@ -8779,7 +8743,7 @@ use the {\stfaf stokeslast} argument.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t tofits Ex 1 \t----"
@@ -8791,7 +8755,7 @@ ok = ia.tofits('MYFILE2.FITS', bitpix=16, overwrite=true)
 ia.close()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -8858,7 +8822,7 @@ could set, say, {\stfaf maskvalue=-10000} as a magic value.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t toASCII Ex 1 \t----"
@@ -8870,7 +8834,7 @@ ia.toASCII('myfile2.ascii',overwrite=true)
 #!diff myfile.ascii myfile2.ascii
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -8893,7 +8857,7 @@ You can convert an associated image to a record for manipulation or passing it t
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t torecord Ex 1 \t----"
@@ -8904,7 +8868,7 @@ ia.close()
 
 
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -8954,7 +8918,7 @@ for a description and more examples.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t topixel Ex 1 \t----"
@@ -8970,7 +8934,7 @@ ia.topixel(w)
 ia.close()
 #
 """
-\end{verbatim}
+
 Convert a pixel coordinate to world as floats and then
 back to pixel.  Do the same with the world coordinate
 formatted as measures instead.
@@ -9012,7 +8976,7 @@ for a description of the arguments and more examples.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t toworld Ex 1 \t----"
@@ -9034,7 +8998,7 @@ print w
 ia.close()
 #
 """
-\end{verbatim}
+
 Convert to a vector of floats and then to a record
 holding a vector of floats, a vector of quantities
 and a subrecord of measures.
@@ -9057,7 +9021,7 @@ one process.  See also functions <link anchor="images:image.lock.function">lock<
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t unlock Ex 1 \t----"
@@ -9066,7 +9030,7 @@ ia.unlock()
 ia.close()
 #
 """
-\end{verbatim}
+
 
 This releases the write lock on the \imagefile.  Now some
 other process can gain immediate access to the \imagefile.
@@ -9147,7 +9111,7 @@ Coordinate System.
 
 </description>
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t newimagefromarray Ex 1 \t----"
@@ -9162,7 +9126,7 @@ cs1.done()
 im2.done()
 #
 """
-\end{verbatim}
+
 
 The first example creates a zero-filled \imagefile\ named {\sff
 test.data} which is of shape [64,64,4,128].  If you examine the header
@@ -9237,7 +9201,7 @@ need to replace masked pixel values after you have created the image.
 
 </description>
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t newimagefromfits Ex 1 \t----"
@@ -9253,7 +9217,7 @@ print 'fields=', im1.miscinfo().keys()
 im1.done()
 #
 """
-\end{verbatim}
+
 
 The FITS image is converted to a \casa\ \imagefile\ and access is
 provided via the \imagetool\ called {\stf im1}.  Any FITS header
@@ -9338,7 +9302,7 @@ See also the <link anchor="images:image.subimage.function">subimage</link> funct
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t newimagefromimage Ex 1 \t----"
@@ -9360,7 +9324,7 @@ im1.done()
 im2.done()
 #
 """
-\end{verbatim}
+
 <!--The specified \region\ takes a quarter by area of the first two axes
 of the image, and all pixels of other axes.-->
 </example>
@@ -9434,7 +9398,7 @@ If {\stfaf linear=T} then you get a linear Coordinate System.
 
 </description>
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t newimagefromshape Ex 1 \t----"
@@ -9446,7 +9410,7 @@ cs1.done()
 im2.done()
 #
 """
-\end{verbatim}
+
 
 The first example creates a zero-filled \imagefile\ named {\sff
 test.data} of shape [64,64,128].  If you examine the header with
@@ -9484,14 +9448,14 @@ the dimensions of the array.
 <example>
 A three dimensional array that is initialized to all zeros. Each of
 the three dimensions of the cube has a length of four.
-\begin{verbatim}
+
 """
 #
 print "\t----\t makearray Ex 1 \t----"
 cube = ia.makearray(0,[4,4,4])
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -9532,7 +9496,7 @@ available when this method was created.
 
 <example>
 Make region box of inner quarter of the image.
-\begin{verbatim}
+
 """
 #
 print "\t----\t setboxregion Ex 1 \t----"
@@ -9541,7 +9505,7 @@ box = ia.setboxregion([0.25,0.25],[0.75,0.75],frac=true)
 ia.close()
 #
 """
-\end{verbatim}
+
 </example>
 
 </method>
@@ -9569,14 +9533,14 @@ ia.close()
 echo returns input.  This method is for diagnostic purposes only.
 </description>
 <example>
-\begin{verbatim}
+
 """
 #
 x=5
 ia.echo(x)
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -9599,14 +9563,14 @@ returns internally generated v as a variant output parameter.
 Exists for test purposes only.
 </description>
 <example>
-\begin{verbatim}
+
 """
 #
 #ia.outputvariant()
 exit() # This is last example so lets exit().
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 

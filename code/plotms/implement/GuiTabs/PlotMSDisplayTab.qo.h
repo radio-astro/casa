@@ -46,7 +46,10 @@ class QtLabelWidget;
 class PlotMSDisplayTab : public PlotMSPlotSubtab, Ui::DisplayTab {
     Q_OBJECT
     
+    
 public:
+
+	
     // Constructor which takes the parent tab and plotter.
     PlotMSDisplayTab(PlotMSPlotTab* plotTab, PlotMSPlotter* parent);
     

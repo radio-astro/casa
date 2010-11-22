@@ -16,7 +16,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!--       Verify that region selection with region manager works           -->
 <!--       Expand region selection                                          -->
 
-<task type="function" name="imcontsub" category="image analysis">
+<task type="function" name="imcontsub" category="analysis, imaging">
 <shortdescription>Subtracts specified continuum channels from a spectral line data set</shortdescription>
 
 <input>

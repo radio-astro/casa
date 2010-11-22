@@ -55,7 +55,7 @@ namespace WindowFunctionMod
   //! WindowFunction.
   //! [APDM; ASDM.ALmaCorrelatorMode] Windowing functions for spectral data apodization 
   
-  const char *const revision = "1.7";
+  const char *const revision = "1.8";
   const int version = 1;
   
   enum WindowFunction

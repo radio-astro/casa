@@ -45,6 +45,25 @@ using namespace std ;
 // <summary>
 // Class to read ASTE data.
 // </summary>
+//
+// <prerequisite>
+//   <li> <linkto class=NROReader>NROReader</linkto>
+//   <li> <linkto class=NRODataRecord>NRODataset</linkto>
+//   <li> <linkto class=ASTEDataset>ASTEDataset</linkto>
+// </prerequisite>
+//
+// <reviewed reviewer="" date="" tests="" demos="">
+// </reviewed>
+//
+// <etymology>
+// This class is a reader class for ASTE OTF data. The class uses 
+// <linkto class=ASTEDataset>ASTEDataset</linkto> object to access data. 
+// </etymology>
+//
+// <synopsis>
+// Reader class for ASTE OTF data.
+// </synopsis>
+//
 
 #include <casa/namespace.h>
 #include <atnf/PKSIO/NROReader.h>

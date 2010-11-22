@@ -40,12 +40,12 @@ def flagdata(vis = None,
 
         casalog.origin('flagdata')
 
-        fg.done()
-        fg.clearflagselection(0)
+        fglocal = casac.homefinder.find_home_by_name('flaggerHome').create()
+        mslocal = casac.homefinder.find_home_by_name('msHome').create()
         
         try: 
                 if ((type(vis)==str) & (os.path.exists(vis))):
-                        fg.open(vis)
+                        fglocal.open(vis)
                 else:
                         raise Exception, 'Visibility data set not found - please verify the name'
 
@@ -53,7 +53,7 @@ def flagdata(vis = None,
                         # In manualflag and quack modes,
                         # filter out the parameters which are not used
 
-                        manualflag_quack(mode, selectdata, flagbackup,
+                        manualflag_quack(fglocal, mode, selectdata, flagbackup,
                                          autocorr=autocorr,
                                          unflag=unflag,
                                          clipexpr=clipexpr,       # manualflag only
@@ -71,7 +71,7 @@ def flagdata(vis = None,
                                          array=array,
                                          uvrange=uvrange)
                 elif mode == 'quack':
-                        manualflag_quack(mode, selectdata, flagbackup,
+                        manualflag_quack(fglocal, mode, selectdata, flagbackup,
                                          autocorr=autocorr,
                                          unflag=unflag,
                                          clipminmax=[], clipoutside=False,
@@ -89,8 +89,8 @@ def flagdata(vis = None,
                                          array=array,
                                          uvrange=uvrange)
                 elif ( mode == 'shadow' ):
-                        fg.setdata()
-                        fg.setshadowflags( \
+                        fglocal.setdata()
+                        fglocal.setshadowflags( \
                                 field = field, \
                                 spw = spw, \
                                 array = array, \
@@ -103,10 +103,10 @@ def flagdata(vis = None,
                                 diameter = diameter)
 
                         if flagbackup:
-                                backup_flags(mode)
-                        fg.run()
+                                backup_flags(fglocal, mode)
+                        fglocal.run()
                 elif ( mode == 'autoflag' ):
-                        fg.setdata(field = field, \
+                        fglocal.setdata(field = field, \
                                    spw = spw, \
                                    array = array, \
                                    feed = feed, \
@@ -115,7 +115,7 @@ def flagdata(vis = None,
                                    uvrange = uvrange, \
                                    time = timerange, \
                                    correlation = correlation)
-                        rec = fg.getautoflagparams(algorithm=algorithm)
+                        rec = fglocal.getautoflagparams(algorithm=algorithm)
                         rec['expr'] = expr
                         rec['thr'] = thr
                         #rec['rowthr'] = rowthr;
@@ -125,15 +125,15 @@ def flagdata(vis = None,
                         #     rec['nbins'] = nbins;
                         #     rec['minpop'] = minpop;
                         rec['column'] = column
-                        fg.setautoflag(algorithm = algorithm,
+                        fglocal.setautoflag(algorithm = algorithm,
                                        parameters = rec)
                         
                         if flagbackup:
-                                backup_flags(mode)
-                        fg.run()
+                                backup_flags(fglocal, mode)
+                        fglocal.run()
 
                 elif mode == 'rfi':
-                        fg.setdata(field = field, \
+                        fglocal.setdata(field = field, \
                                    spw = spw, \
                                    array = array, \
                                    feed = feed, \
@@ -146,7 +146,7 @@ def flagdata(vis = None,
                         # Get the detault parameters for a particular algorithm,
                         # then modify them
                         
-                        par = fg.getautoflagparams(algorithm='tfcrop')
+                        par = fglocal.getautoflagparams(algorithm='tfcrop')
                         #print "par =", par
                         
                         ## True : Show plots of each time-freq chunk.
@@ -192,16 +192,16 @@ def flagdata(vis = None,
                         # Tell the 'fg' tool which algorithm to use, and set the parameters.
                         # Note : Can set multiple instances of this (will be done one after the other)
                         #
-                        fg.setautoflag(algorithm='tfcrop', parameters=par)
+                        fglocal.setautoflag(algorithm='tfcrop', parameters=par)
 
                         if flagbackup:
-                                backup_flags(mode)
+                                backup_flags(fglocal, mode)
 
-                        fg.run()
+                        fglocal.run()
 
                 elif ( mode == 'summary' ):
-                        fg.setdata()
-                        fg.setflagsummary(field=field, \
+                        fglocal.setdata()
+                        fglocal.setflagsummary(field=field, \
                                           spw=spw, \
                                           array=array, \
                                           feed=feed, \
@@ -212,8 +212,7 @@ def flagdata(vis = None,
                                           correlation=correlation)
                         
                         # do not backup existing flags
-                        stats = fg.run()
-                        fg.done()
+                        stats = fglocal.run()
 
                         # filter out baselines/antennas/fields/spws/...
                         # which do not fall within limits
@@ -232,35 +231,23 @@ def flagdata(vis = None,
                                                 del stats[x][xx]
                         
                         return stats
-                elif ( mode == 'query' ):
-                        print "Sorry - not yet implemented !"
-                        fg.done()
-                        return False
-                elif ( mode == 'extend' ):
-                        print "Sorry - not yet implemented !"
-                        fg.done()
-                        return False
 
         except Exception, instance:
-                fg.done()
                 print '*** Error ***', instance
-                #raise
-        fg.done()
-
         
         #write history
-        ms.open(vis,nomodify=False)
-        ms.writehistory(message='taskname = flagdata', origin='flagdata')
-        ms.writehistory(message='vis      = "' + str(vis) + '"', origin='flagdata')
-        ms.writehistory(message='mode     = "' + str(mode) + '"', origin='flagdata')
-        ms.close()
+        mslocal.open(vis,nomodify=False)
+        mslocal.writehistory(message='taskname = flagdata', origin='flagdata')
+        mslocal.writehistory(message='vis      = "' + str(vis) + '"', origin='flagdata')
+        mslocal.writehistory(message='mode     = "' + str(mode) + '"', origin='flagdata')
+        mslocal.close()
 
         return
 
 #
 # Handle mode = 'manualflag' and mode = 'quack'
 #
-def manualflag_quack(mode, selectdata, flagbackup, **params):
+def manualflag_quack(fglocal, mode, selectdata, flagbackup, **params):
         if debug: print params
 
         if not selectdata:
@@ -293,9 +280,9 @@ def manualflag_quack(mode, selectdata, flagbackup, **params):
                         if debug: print x, "is not a vector"
 
         if not vector_mode:
-                fg.setdata()
+                fglocal.setdata()
                 rename_params(params)
-                fg.setmanualflags(**params)
+                fglocal.setmanualflags(**params)
         else:
                 # Vector mode
                 plural_s = ''
@@ -323,7 +310,7 @@ def manualflag_quack(mode, selectdata, flagbackup, **params):
                 # Input validation done.
                 # Now call setmanualflags for every specification
 
-                fg.setdata()
+                fglocal.setdata()
                 for i in range(vector_length):
                         param_i = {}
                         param_list = ''
@@ -337,14 +324,14 @@ def manualflag_quack(mode, selectdata, flagbackup, **params):
                         casalog.post(param_list)
                         rename_params(param_i)
                         if debug: print param_i
-                        fg.setmanualflags(**param_i)
+                        fglocal.setmanualflags(**param_i)
 
         if flagbackup:
-                backup_flags(mode)
-        fg.run()
+                backup_flags(fglocal, mode)
+        fglocal.run()
 
 # rename some parameters,
-# in order to match the interface of fg.tool
+# in order to match the interface of fglocal.tool
 #
 # validate parameter quackmode
 
@@ -359,7 +346,7 @@ def rename_params(params):
         params['cliprange']       = params['clipminmax']  ; del params['clipminmax']
         params['outside']         = params['clipoutside'] ; del params['clipoutside']
 
-def backup_flags(mode):
+def backup_flags(fglocal, mode):
 
         # Create names like this:
         # before_manualflag_1,
@@ -370,7 +357,7 @@ def backup_flags(mode):
         # Generally  before_<mode>_<i>, where i is the smallest
         # integer giving a name, which does not already exist
        
-        existing = fg.getflagversionlist(printflags=False)
+        existing = fglocal.getflagversionlist(printflags=False)
 
 	# remove comments from strings
 	existing = [x[0:x.find(' : ')] for x in existing]
@@ -387,7 +374,7 @@ def backup_flags(mode):
 
         casalog.post("Saving current flags to " + versionname + " before applying new flags")
 
-        fg.saveflagversion(versionname=versionname,
+        fglocal.saveflagversion(versionname=versionname,
                            comment='flagdata autosave before ' + mode + ' on ' + time_string,
                            merge='replace')
 

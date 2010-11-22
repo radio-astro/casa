@@ -977,7 +977,7 @@ ImageInterface<Complex>& WProjectFT::getImage(Matrix<Float>& weights,
       for(lix.reset();!lix.atEnd();lix++) {
 	Int pol=lix.position()(2);
 	Int chan=lix.position()(3);
-	if(weights(pol, chan)>0.0) {
+	if(weights(pol, chan)!=0.0) {
 	  Int iy=lix.position()(1);
 	  gridder->correctX1D(correction,iy);
 	  for (Int ix=0;ix<nx;ix++) {

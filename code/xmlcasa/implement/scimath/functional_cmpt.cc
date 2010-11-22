@@ -11,7 +11,7 @@
  ***/
 
 #include <iostream>
-#include <xmlcasa/scimath/functional_cmpt.h>
+#include <functional_cmpt.h>
 
 using namespace std;
 

@@ -55,7 +55,7 @@ namespace FilterModeMod
   //! FilterMode.
   //!  [APDM.Correlator] Modes of correlator input filtering
   
-  const char *const revision = "1.7";
+  const char *const revision = "1.8";
   const int version = 1;
   
   enum FilterMode

@@ -10,7 +10,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!-- This is the task interface to ia.fitcomponents           -->
 <!--                                                          -->
 
-<task type="function" name="imfit" category="image analysis">
+<task type="function" name="imfit" category="analysis">
 
 <shortdescription>Fit one or more elliptical Gaussian components on an image region(s)</shortdescription>
 
@@ -41,7 +41,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
     
     <param type="string" name="stokes">
-        <description>Stokes parameter to fit.</description>
+        <description>Stokes parameter to fit. If blank, first stokes plane is used.</description>
         <value></value>
         <example>stokes='Q'</example>
     </param>
@@ -124,7 +124,7 @@ region           Region name or region specified using rg tool.
                  A region from another image can be specified using the
                  imagename:regionname syntax, eg "mycontinuumimage:mysourceregion"
 chan             Spectral channel on which to perform fit (only one may be specified).
-stokes           Stokes parameter to fit.
+stokes           Stokes parameter to fit. If blank, first polarization plane is used.
 mask             Mask to be applied to the image. Can be a mask associated with the
                  image or an LEL expression. 
 includepix       Range of pixel values to include for fitting. Array of two numeric

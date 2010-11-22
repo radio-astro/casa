@@ -1,31 +1,34 @@
 //#---------------------------------------------------------------------------
 //# PKSMS2writer.cc: Class to write Parkes multibeam data to a measurementset.
 //#---------------------------------------------------------------------------
-//# Copyright (C) 2000-2008
-//# Associated Universities, Inc. Washington DC, USA.
+//# livedata - processing pipeline for single-dish, multibeam spectral data.
+//# Copyright (C) 2000-2009, Australia Telescope National Facility, CSIRO
 //#
-//# This library is free software; you can redistribute it and/or modify it
-//# under the terms of the GNU Library General Public License as published by
-//# the Free Software Foundation; either version 2 of the License, or (at your
-//# option) any later version.
+//# This file is part of livedata.
 //#
-//# This library is distributed in the hope that it will be useful, but
-//# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-//# or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
-//# License for more details.
+//# livedata is free software: you can redistribute it and/or modify it under
+//# the terms of the GNU General Public License as published by the Free
+//# Software Foundation, either version 3 of the License, or (at your option)
+//# any later version.
 //#
-//# You should have received a copy of the GNU Library General Public License
-//# along with this library; if not, write to the Free Software Foundation,
-//# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+//# livedata is distributed in the hope that it will be useful, but WITHOUT
+//# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+//# more details.
 //#
-//# Correspondence concerning AIPS++ should be addressed as follows:
-//#        Internet email: aips2-request@nrao.edu.
-//#        Postal address: AIPS++ Project Office
-//#                        National Radio Astronomy Observatory
-//#                        520 Edgemont Road
-//#                        Charlottesville, VA 22903-2475 USA
+//# You should have received a copy of the GNU General Public License along
+//# with livedata.  If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: PKSMS2writer.cc,v 19.14 2008-11-17 06:56:13 cal103 Exp $
+//# Correspondence concerning livedata may be directed to:
+//#        Internet email: mcalabre@atnf.csiro.au
+//#        Postal address: Dr. Mark Calabretta
+//#                        Australia Telescope National Facility, CSIRO
+//#                        PO Box 76
+//#                        Epping NSW 1710
+//#                        AUSTRALIA
+//#
+//# http://www.atnf.csiro.au/computing/software/livedata.html
+//# $Id: PKSMS2writer.cc,v 19.16 2009-09-29 07:33:38 cal103 Exp $
 //#---------------------------------------------------------------------------
 
 #include <atnf/PKSIO/PKSrecord.h>
@@ -144,7 +147,7 @@ Int PKSMS2writer::create(
     pksDesc.addColumn(ArrayColumnDesc<Float>("BASELIN", "Linear baseline fit",
                 IPosition(2,2,maxNPol), ColumnDesc::Direct));
     pksDesc.addColumn(ArrayColumnDesc<Float>("BASESUB", "Baseline subtracted",
-                IPosition(2,9,maxNPol), ColumnDesc::Direct));
+                IPosition(2,24,maxNPol), ColumnDesc::Direct));
   }
 
   // Add the optional DATA column if cross-polarizations are to be recorded.
@@ -172,8 +175,8 @@ Int PKSMS2writer::create(
   IncrementalStMan incrStMan("ISMData");
   newtab.bindAll(incrStMan, True);
 
-  // Use TiledShapeStMan for the FLOAT_DATA hypercube with tile size 16 kiB.
-  TiledShapeStMan tiledStMan("TiledData", IPosition(3,1,128,32));
+  // Use TiledShapeStMan for the FLOAT_DATA hypercube with tile size 1 MB.
+  TiledShapeStMan tiledStMan("TiledData", IPosition(3,1,128,2048));
   newtab.bindColumn(MS::columnName(MS::FLOAT_DATA), tiledStMan);
 
   // Use Standard Storage Manager to handle columns that change for each row.
@@ -541,11 +544,11 @@ Int PKSMS2writer::write(
   if (cHaveBase) {
     cBaseLinCol->put(irow, pksrec.baseLin);
 
-    if (pksrec.baseSub.nrow() == 9) {
+    if (pksrec.baseSub.nrow() == 24) {
       cBaseSubCol->put(irow, pksrec.baseSub);
 
     } else {
-      Matrix<Float> tmp(9, 2, 0.0f);
+      Matrix<Float> tmp(24, 2, 0.0f);
       for (Int ipol = 0; ipol < nPol; ipol++) {
         for (uInt j = 0; j < pksrec.baseSub.nrow(); j++) {
           tmp(j,ipol) = pksrec.baseSub(j,ipol);
@@ -580,9 +583,6 @@ Int PKSMS2writer::write(
   //Vector<Float> weight(1, 1.0f);
   Vector<Float> weight(nPol, 1.0f);
   cMSCols->weight().put(irow, weight);
-  //imaging weight
-  //Vector<Float> imagingWeight(nChan); 
-  //cMSCols->imagingWeight().put(irow, imagingWeight);
 
   // Flag information.
   Cube<Bool> flags(nPol, nChan, 1, False);

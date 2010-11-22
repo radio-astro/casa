@@ -58,7 +58,7 @@ public:
     // Implemented PlotData methods.
     // <group>
     bool willDeleteData() const { return true; }
-    void setDeleteData(bool del = true) { }
+    void setDeleteData(bool del = true)   { (void)del; }
     bool isValid() const;
     // </group>
     

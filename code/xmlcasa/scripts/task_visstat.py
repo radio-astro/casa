@@ -15,6 +15,9 @@ def visstat(vis=None,
             array=None):
 
     casalog.origin('visstat')  
+
+    ms = casac.homefinder.find_home_by_name('msHome').create()
+
     ms.open(vis)
 
     if axis in ['amp', 'amplitude', 'phase', 'imag', 'imaginary', 'real']:
@@ -43,8 +46,6 @@ def visstat(vis=None,
                       correlation=correlation,
                       scan=scan,
                       array=array)
-        
-    ms.close()
 
     for stats in s.keys():
         casalog.post(stats + " values --- ", "NORMAL")

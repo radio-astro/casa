@@ -114,7 +114,10 @@ protected:
   ClarkCleanProgress *progress_p;
   //Allow only one model to be valid in overlapping regions
   void blankOverlappingModels();
-
+  //restore clean components in overlapping regions
+  void restoreOverlappingModels();
+  //merge (OR)  the mask in overlapping regions
+  void mergeOverlappingMasks();
 };
 
 

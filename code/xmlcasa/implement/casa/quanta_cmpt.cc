@@ -13,7 +13,7 @@
 
 #include <iostream>
 #include <iomanip>
-#include <xmlcasa/casa/quanta_cmpt.h>
+#include <quanta_cmpt.h>
 
 #include <casa/BasicSL/String.h>
 #include <casa/Quanta/QC.h>

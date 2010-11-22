@@ -8,7 +8,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!-- Documentation here.                                                -->
 
-<task type="function" name="vishead" category="information">
+<task type="function" name="vishead" category="information, manipulation">
 
 <shortdescription>List, summary, get, and put metadata in a measurement set</shortdescription>
 <description>List, summary, get, and put "header" information in a measurement set.</description>

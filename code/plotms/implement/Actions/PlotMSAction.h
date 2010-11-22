@@ -132,12 +132,12 @@ public:
         // Turns on/off the tracker tool hover function.  Operates on all
         // canvases of all plots AT THE TIME of the call to doAction().
         // Required parameters: P_ON_OFF.
-        TRACKER_HOVER,
+        TRACKER_ENABLE_HOVER,
 
         // Turns on/off the tracker tool display function.  Operates on all
         // canvases of all plots AT THE TIME of the call to doAction().
         // Required parameters: P_ON_OFF.
-        TRACKER_DISPLAY,
+        TRACKER_ENABLE_DISPLAY,
 
 
         // Stack actions //

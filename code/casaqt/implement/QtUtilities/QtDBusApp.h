@@ -36,7 +36,7 @@ namespace casa {
 
     class QtDBusApp {
 	public:
-	    static QDBusConnection &connection( );
+	    static QDBusConnection connection( );
 	    QString dbusServiceName( const QString &name, const pid_t pid );
 	    QString dbusObjectName( const QString &name, const pid_t pid );
 	    static QString serviceOwner( const QString &service );

@@ -34,6 +34,13 @@
 #include <casa/OS/Time.h>
 #include <scimath/Mathematics/InterpolateArray1D.h>
 
+#include <measures/Measures/MeasConvert.h>
+#include <measures/Measures/MCFrequency.h>
+#include <measures/Measures/MFrequency.h>
+#include <measures/Measures/MPosition.h>
+#include <measures/Measures/MEpoch.h>
+#include <measures/Measures/MDirection.h>
+
 #include <math.h>
 #include <fstream>
 
@@ -795,6 +802,16 @@ vector<double> NRODataset::getFrequencies( int i )
     v[2] = cw ;
   }
 
+  // conversion from TOPO to LSRK
+  v[1] = toLSR( v[1], getStartIntTime( i ), record_->SCX, record_->SCY ) ;
+
+  if ( refFreq_[ib] != 0.0 ) {
+    v[1] = refFreq_[ib] ;
+  }
+  else {
+    refFreq_[ib] = v[1] ;
+  }
+
   return v ;
 }
 
@@ -818,4 +835,65 @@ void NRODataset::show()
   os << LogIO::NORMAL << "------------------------------------------------------------" << endl ;
   os.post() ;
 
+}
+
+double NRODataset::toLSR( double v, double t, double x, double y ) 
+{
+  double vlsr ;
+
+  // get epoch
+  double tcent = t + 0.5*getIPTIM()/86400.0 ;
+  MEpoch me( Quantity( tcent, "d" ), MEpoch::UTC ) ;
+
+  // get antenna position
+  MPosition mp ;
+  if ( SITE.find( "45" ) != string::npos ) {
+    // 45m telescope
+    Double posx = -3.8710235e6 ;
+    Double posy = 3.4281068e6 ;
+    Double posz = 3.7240395e6 ;
+    mp = MPosition( MVPosition( posx, posy, posz ),
+                    MPosition::ITRF ) ;
+  }
+  else {
+    // ASTE
+    Vector<Double> pos( 2 ) ;
+    pos[0] = -67.7031 ;
+    pos[1] = -22.9717 ;
+    Double sitealt = 4800.0 ;
+    mp = MPosition( MVPosition( Quantity( sitealt, "m" ),
+                                Quantum< Vector<Double> >( pos, "deg" ) ),
+                    MPosition::WGS84 ) ;
+  }
+
+  // get direction 
+  MDirection md ;
+  if ( SCNCD == 0 ) {
+    // RADEC
+    if ( EPOCH == "B1950" ) {
+      md = MDirection( Quantity( Double(x), "rad" ), Quantity( Double(y), "rad" ),
+                       MDirection::B1950 ) ;
+    }
+    else {
+      md = MDirection( Quantity( Double(x), "rad" ), Quantity( Double(y), "rad" ),
+                       MDirection::J2000 ) ;
+    }
+  }
+  else if ( SCNCD == 1 ) {
+    // LB
+    md = MDirection( Quantity( Double(x), "rad" ), Quantity( Double(y), "rad" ),
+                     MDirection::GALACTIC ) ;
+  }
+  else {
+    // AZEL
+    md = MDirection( Quantity( Double(x), "rad" ), Quantity( Double(y), "rad" ),
+                     MDirection::AZEL ) ;
+  }
+    
+  // to LSR
+  MeasFrame mf( me, mp, md ) ;
+  MFrequency::Convert tolsr( MFrequency::TOPO, MFrequency::Ref( MFrequency::LSRK, mf ) ) ;
+  vlsr = (double)(tolsr( Double(v) ).get( "Hz" ).getValue()) ;
+
+  return vlsr ;
 }

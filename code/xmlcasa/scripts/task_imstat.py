@@ -4,9 +4,7 @@ from imregion import *
 
 from odict import odict
 
-def imstat(imagename=None,region=None,box=None,chans=None,stokes=None):
-	#Python script
-	#
+def imstat(imagename=None, region=None, box=None, chans=None, stokes=None, listit=None, verbose=None):
 	retValue = {}
 	try:
 	    casalog.origin('imstat')
@@ -17,7 +15,7 @@ def imstat(imagename=None,region=None,box=None,chans=None,stokes=None):
 	    # generate statistical information for the entire image.
 	    if ( len(box)<1 and len(chans)<1 and len(stokes)<1 and len(region)<1):
 		# Get stats for whole image
-		retValue = ia.statistics( robust=True )
+		retValue = ia.statistics( robust=True, list=listit, verbose=verbose )
 		ia.close()
 		#imstat_print( retValue, imagename )
 		#myf['xstat']=retValue
@@ -73,7 +71,7 @@ def imstat(imagename=None,region=None,box=None,chans=None,stokes=None):
 
 	    #retValue=ia.statistics( axes=statAxes, region=reg, robust=True  )
 	    ia.open(imagename)
-	    retValue=ia.statistics( region=reg, robust=True  )
+	    retValue=ia.statistics( region=reg, robust=True, list=listit, verbose=verbose  )
 	    #imstat_print( retValue, imagename )
 	    #myf['xstat']=retValue
 
@@ -90,6 +88,8 @@ def imstat(imagename=None,region=None,box=None,chans=None,stokes=None):
 	
 	return retValue
 
+#TODO so I'm not sure why this method is still here since all calls to it are commented
+#out in the above code
 def imstat_print( values, name ) :
     print 'Statistics on ', name
     print ''

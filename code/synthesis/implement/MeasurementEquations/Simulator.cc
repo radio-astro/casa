@@ -101,37 +101,33 @@
 Simulator::Simulator(): 
   msname_p(String("")), ms_p(0), mssel_p(0), vs_p(0), 
   seed_p(11111),
-  ve_p(),
-  vc_p(),
-  ac_p(0), vp_p(0), gvp_p(0), 
+  ac_p(0), distance_p(0), ve_p(), vc_p(),vp_p(0), gvp_p(0), 
+  nSpw(0),
   sim_p(0),
   // epJ_p(0),
   epJTableName_p(),
-  nSpw(0)
+  prtlev_(0)
 {
 }
 
 
 Simulator::Simulator(String& msname) 
-  : msname_p(msname), ms_p(0), mssel_p(0), vs_p(0), seed_p(11111),
-    ve_p(),
-    vc_p(),
-    ac_p(0), vp_p(0), gvp_p(0), 
+  : msname_p(msname), ms_p(0), mssel_p(0), vs_p(0), seed_p(11111), 
+    ac_p(0), distance_p(0),ve_p(), vc_p(), vp_p(0), gvp_p(0), 
+    nSpw(0),
     sim_p(0),
     // epJ_p(0),
-    epJTableName_p()
+    epJTableName_p(),
+    prtlev_(0)
 {
-#ifdef RI_DEBUG
-  LogIO os(LogOrigin("simulator", "simulator(String& msname)", WHERE));
-#else
-  LogIO os(LogOrigin("simulator", "simulator(String& msname)"));
-#endif
-
   defaults();
 
   if(!sim_p) {
     sim_p= new NewMSSimulator(msname);
+    //sim_p->setPrtlev(prtlev());
   }
+
+  ve_p.setPrtlev(prtlev());
   
   // Make a MeasurementSet object for the disk-base MeasurementSet that we just
   // created
@@ -143,15 +139,14 @@ Simulator::Simulator(String& msname)
 
 
 Simulator::Simulator(MeasurementSet &theMs)
-  : msname_p(""), ms_p(0), mssel_p(0), vs_p(0), seed_p(11111),
-    ve_p(),
-    vc_p(),
-    ac_p(0), vp_p(0), gvp_p(0), 
+  : msname_p(""), ms_p(0), mssel_p(0), vs_p(0), seed_p(11111), 
+    ac_p(0), distance_p(0), ve_p(), vc_p(), vp_p(0), gvp_p(0), 
     sim_p(0),
     // epJ_p(0),
-    epJTableName_p()
+    epJTableName_p(),
+    prtlev_(0)    
 {
-  LogIO os(LogOrigin("simulator", "simulator(MeasurementSet& theMs)", WHERE));
+  LogIO os(LogOrigin("simulator", "simulator(MeasurementSet& theMs)"));
 
   defaults();
 
@@ -159,8 +154,11 @@ Simulator::Simulator(MeasurementSet &theMs)
 
   if(!sim_p) {
     sim_p= new NewMSSimulator(theMs);
+    //sim_p->setPrtlev(prtlev());
   }
 
+  ve_p.setPrtlev(prtlev());
+  
   ms_p = new MeasurementSet(theMs);
   AlwaysAssert(ms_p, AipsError);
 
@@ -169,6 +167,9 @@ Simulator::Simulator(MeasurementSet &theMs)
     os << "Can't find antenna information for loaded MS" << LogIO::WARN;
   if (!sim_p->getSpWindows(nSpw,spWindowName_p,nChan_p,startFreq_p,freqInc_p,stokesString_p))
     os << "Can't find spectral window information for loaded MS" << LogIO::WARN;
+  freqRes_p.resize(nSpw);
+  for (uInt i=0;i<nSpw;++i)
+    freqRes_p[i]=freqInc_p[i];
   if (!sim_p->getFields(nField,sourceName_p,sourceDirection_p,calCode_p))
     os << "Can't find Field/Source information for loaded MS" << LogIO::WARN;
 
@@ -183,12 +184,11 @@ Simulator::Simulator(MeasurementSet &theMs)
 
 Simulator::Simulator(const Simulator &other)
   : msname_p(""), ms_p(0), vs_p(0), seed_p(11111),
-    ve_p(),
-    vc_p(),
-    ac_p(0), vp_p(0), gvp_p(0),
+    ac_p(0), distance_p(0),ve_p(), vc_p(), vp_p(0), gvp_p(0),
     sim_p(0),
     // epJ_p(0),
-    epJTableName_p()
+    epJTableName_p(),
+    prtlev_(0)
 {
   defaults();
   ms_p = new MeasurementSet(*other.ms_p);
@@ -229,6 +229,7 @@ Simulator &Simulator::operator=(const Simulator &other)
 
 Simulator::~Simulator()
 {
+//RI  cout<<"Sim::~Sim: nlock="<<Table::nAutoLocks()<< " .. deleting components .. ";
   if (ms_p) {
     ms_p->relinquishAutoLocks();
     ms_p->unlock();
@@ -257,7 +258,8 @@ Simulator::~Simulator()
   if(sm_p) delete sm_p; sm_p = 0;
   if(ft_p) delete ft_p; ft_p = 0;
   if(cft_p) delete cft_p; cft_p = 0;
-
+  
+//RI  cout<<"nlock="<<Table::nAutoLocks()<<endl;
 }
 
 
@@ -658,7 +660,7 @@ Bool Simulator::settimes(const Quantity& integrationTime,
 			 const MEpoch&   refTime)
 {
   
-  LogIO os(LogOrigin("simulator", "settimes()", WHERE));
+  LogIO os(LogOrigin("simulator", "settimes()"));
   try {
     
     integrationTime_p=integrationTime;
@@ -809,12 +811,8 @@ Bool Simulator::setfield(const String& sourceName,
 			 const String& calCode,
 			 const Quantity& distance)
 {
-  LogIO os(LogOrigin("Simulator", "setfield()", WHERE));
-  //#ifndef RI_DEBUG
+  LogIO os(LogOrigin("Simulator", "setfield()"));
   try {
-//#else 
-//    os << LogIO::WARN << "debug mode - not catching errors." << LogIO::POST;  
-//#endif
     
     if (sourceName == "") {
       os << LogIO::SEVERE << "must provide a source name" << LogIO::POST;  
@@ -822,9 +820,9 @@ Bool Simulator::setfield(const String& sourceName,
     }
 
     nField++;    
-#ifdef RI_DEBUG
-    os << "nField = " << nField << LogIO::POST;  
-#endif
+
+    if (prtlev()>2) os << "nField = " << nField << LogIO::POST;  
+
     distance_p.resize(nField,True);
     distance_p[nField-1]=distance;
     sourceName_p.resize(nField,True);
@@ -836,12 +834,10 @@ Bool Simulator::setfield(const String& sourceName,
 
     sim_p->initFields(sourceName, sourceDirection, calCode);
 
-    //#ifndef RI_DEBUG
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
     return False;
   } 
-  //#endif
   return True;
 };
 
@@ -916,7 +912,7 @@ Bool Simulator::setspwindow(const String& spwName,
 			    const String& stokes) 
 
 {
-  LogIO os(LogOrigin("Simulator", "setspwindow()", WHERE));
+  LogIO os(LogOrigin("Simulator", "setspwindow()"));
   try {
     if (nChan == 0) {
       os << LogIO::SEVERE << "must provide nchannels" << LogIO::POST;  
@@ -961,7 +957,7 @@ Bool Simulator::setfeed(const String& mode,
 			   const Vector<Double>& y,
 			   const Vector<String>& pol)
 {
-  LogIO os(LogOrigin("Simulator", "setfeed()", WHERE));
+  LogIO os(LogOrigin("Simulator", "setfeed()"));
   
   if (mode != "perfect R L" && mode != "perfect X Y" && mode != "list") {
     os << LogIO::SEVERE << 
@@ -989,7 +985,7 @@ Bool Simulator::setvp(const Bool dovp,
 			 const Quantity &skyPosThreshold,
 			 const Float &pbLimit)
 {
-  LogIO os(LogOrigin("Simulatore", "setvp()", WHERE));
+  LogIO os(LogOrigin("Simulatore", "setvp()"));
   
   os << "Setting voltage pattern parameters" << LogIO::POST;
   
@@ -1055,16 +1051,16 @@ Bool Simulator::setnoise(const String& mode,
 			 const Float correfficiency=0.85,
 			 const Float trx=150.0, 
 			 const Float tground=270.0, 
-			 const Float tcmb=2.7
+			 const Float tcmb=2.73, 
+			 const Bool OTF=True
 			 ) {
   
   LogIO os(LogOrigin("Simulator", "setnoise2()", WHERE));
-#ifndef RI_DEBUG
-  try {
-#else
-    cout<<pground<<" "<<relhum<<" "<<altitude<<" "<<waterheight<<" "<<pwv<<endl;
-#endif
 
+  try {
+
+    //cout<<" Sim::setnoise "<<pground<<" "<<relhum<<" "<<altitude<<" "<<waterheight<<" "<<pwv<<endl;
+    
     noisemode_p = mode;
 
     RecordDesc simparDesc;
@@ -1126,7 +1122,7 @@ Bool Simulator::setnoise(const String& mode,
     simpar.define ("mode", mode);
     simpar.define ("combine", ""); // SPW,FIELD, etc
 
-    if (mode=="simple") {
+    if (mode=="simplenoise") {
       os << "Using simple noise model with noise level of " << simplenoise.getValue("Jy")
 	 << " Jy" << LogIO::POST;
       simpar.define ("amplitude", Float(simplenoise.getValue("Jy")) );
@@ -1142,6 +1138,12 @@ Bool Simulator::setnoise(const String& mode,
       throw(AipsError("unsupported mode "+mode+" in setnoise()"));
     }
 
+    Bool saveOnthefly=False;
+    if (simpar.isDefined("onthefly")) {
+      saveOnthefly=simpar.asBool("onthefly");
+    }
+    simpar.define("onthefly",OTF);
+
     // create the ANoise
     if (!create_corrupt(simpar)) 
       throw(AipsError("could not create ANoise in Simulator::setnoise"));
@@ -1155,9 +1157,12 @@ Bool Simulator::setnoise(const String& mode,
       simpar.define ("tground"	      ,tground	      );
       simpar.define ("tcmb"           ,tcmb           );
 
-      if (pwv.getValue("mm")>0.)
+      if (pwv.getValue("mm")>0.) {
+	if (pwv.getValue("mm")>100.) 
+	  throw(AipsError(" you input PWV="+String(pwv.getValue("mm"))+"mm. The most common reason for this error is forgetting to set units, which default to meters"));
+ 
 	simpar.define ("mean_pwv", pwv.getValue("mm"));
-      else {
+      } else {
 	simpar.define ("mean_pwv", Double(1.));
 	// we want to set it, but it doesn't get used unless ATM is being used
 	if (mode=="tsys-atm") os<<"User has not set PWV, using 1mm"<<LogIO::POST;
@@ -1176,7 +1181,10 @@ Bool Simulator::setnoise(const String& mode,
 	// the relative opacity across the band, but it won't properly
 	// integrate the atmosphere to get T_ebb.  
 	// so for now we'll just make tsys-manual mean freqDepPar=False
-	simpar.define ("type", "M");
+
+	simpar.define ("type", "T");
+	//simpar.define ("type", "M");
+
       } else {
 	// otherwise ATM will be used to calculate tau from pwv
 	// catch uninitialized variant @#$^@! XML interface
@@ -1201,27 +1209,31 @@ Bool Simulator::setnoise(const String& mode,
 	if (waterheight.getValue("m")>100.)
 	  simpar.define ("waterheight", waterheight.getValue("km"));
 	else {
-	  simpar.define ("waterheight", Double(2.));
-	  os<<"User has not set water scale height, using 2km"<<LogIO::POST;
+	  simpar.define ("waterheight", Double(0.2));
+	  os<<"User has not set water scale height, using 200m"<<LogIO::POST;
 	}
 	// as a function of frequency  (freqDepPar=True)
-	simpar.define ("type", "MF");
+	//simpar.define ("type", "TF");
+	simpar.define ("type", "TF NOISE");
+	// simpar.define ("type", "MF");
       }
 
       if (strlen>1) 
-	simpar.define ("caltable", caltbl+".M.cal");
+	simpar.define ("caltable", caltbl+".T.cal");
+      //simpar.define ("caltable", caltbl+".M.cal");
       
+      simpar.define("onthefly",saveOnthefly);
+
       // create the M
       if (!create_corrupt(simpar)) 
-	throw(AipsError("could not create M in Simulator::setnoise"));        
+	throw(AipsError("could not create T in Simulator::setnoise"));        
+      //throw(AipsError("could not create M in Simulator::setnoise"));        
     } 
 
-#ifndef RI_DEBUG
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
     return False;
   } 
-#endif
   return True;
 }
 
@@ -1235,9 +1247,7 @@ Bool Simulator::setgain(const String& mode,
 { 
   LogIO os(LogOrigin("Simulator", "setgain()", WHERE));
 
-#ifndef RI_DEBUG
   try {
-#endif
         
     if(mode=="table") {      
       os << LogIO::SEVERE << "Cannot yet read from table" << LogIO::POST;
@@ -1284,12 +1294,10 @@ Bool Simulator::setgain(const String& mode,
 	throw(AipsError("unsupported mode "+mode+" in setgain()"));
       }
     }
-#ifndef RI_DEBUG
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
     return False;
   } 
-#endif
   return True;
 }
 
@@ -1348,7 +1356,7 @@ Bool Simulator::settrop(const String& mode,
       simpar.define ("mode", mode);
       simpar.define ("delta_pwv", deltapwv);
       simpar.define ("beta", beta);
-      simpar.define ("windspeed", deltapwv);
+      simpar.define ("windspeed", windspeed);
       simpar.define ("combine", "");
 
 //      if (tground>100.)
@@ -1378,9 +1386,10 @@ Bool Simulator::settrop(const String& mode,
 //      if (waterheight.getValue("m")>100.)
 //	simpar.define ("waterheight", waterheight.getValue("km"));
 //      else {
-	simpar.define ("waterheight", Double(2.));
+	simpar.define ("waterheight", Double(0.2));  // km
 //	os<<"User has not set water scale height, using 2km"<<LogIO::POST;
 //      }
+	simpar.define ("spillefficiency", Float(.85));
 
       // create the T
       if (!create_corrupt(simpar)) 
@@ -1500,7 +1509,7 @@ Bool Simulator::oldsetnoise(const String& mode,
 			    const Float tau=0.0,
 			    const Float trx=50.0, 
 			    const Float tatmos=250.0, 
-			    const Float tcmb=2.7) {
+			    const Float tcmb=2.73) {
   
   LogIO os(LogOrigin("Simulator", "oldsetnoise()", WHERE));
   try {
@@ -1656,9 +1665,7 @@ Bool Simulator::create_corrupt(Record& simpar)
   
   // RI todo sim::create_corrupt assert that ms has certain structure
   
-#ifndef RI_DEBUG
-    try {
-#endif
+  try {
     makeVisSet();
     
     String upType=simpar.asString("type");
@@ -1667,11 +1674,7 @@ Bool Simulator::create_corrupt(Record& simpar)
     
     svc = createSolvableVisCal(upType,*vs_p);
 
-#ifdef RI_DEBUG
-    svc->setPrtlev(4);
-#else 
-    svc->setPrtlev(0);
-#endif
+    svc->setPrtlev(prtlev());
 
     Vector<Double> solTimes;
     svc->setSimulate(*vs_p,simpar,solTimes);
@@ -1683,14 +1686,12 @@ Bool Simulator::create_corrupt(Record& simpar)
     // svc=NULL;
     ve_p.setapply(vc_p);
             
-#ifndef RI_DEBUG
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
     if (svc) delete svc;
     throw(AipsError("Error in Simulator::create_corrupt"));
     return False;
   }
-#endif
   return True;
 }
 
@@ -1816,13 +1817,17 @@ Bool Simulator::corrupt() {
 
   try {
     
+//RI    cout<<"Sim::corrupt: nlock="<<Table::nAutoLocks()<< " .. locking .. ";
     ms_p->lock();
     if(mssel_p) mssel_p->lock();
+//RI    cout<<"nlock="<<Table::nAutoLocks()<<endl;
 
 //    makeVisSet();
 //    AlwaysAssert(vs_p, AipsError);
 
-    // Arrange the sort for efficient cal apply
+    // Arrange the sort for efficient cal apply (different from sort order 
+    // created by makeVisSet) and if there's a vs_p delete it and replace with 
+    // this one.  also delete it at the end of this routine
     Block<Int> columns;
     // include scan iteration
     columns.resize(5);
@@ -1832,6 +1837,9 @@ Bool Simulator::corrupt() {
     columns[3]=MS::DATA_DESC_ID;
     columns[4]=MS::TIME;
 
+    if(vs_p) {
+      delete vs_p; vs_p=0;
+    }
     Matrix<Int> noselection;
     if(mssel_p) {
       vs_p = new VisSet(*mssel_p,columns,noselection);
@@ -1915,9 +1923,18 @@ Bool Simulator::corrupt() {
     // Flush to disk
     vs_p->flush();
 
+    // since we made a specially sorted vs_p for corrupt, should we delete it 
+    // and make one with the regular order?
+//    if(vs_p) {
+//      delete vs_p; vs_p=0;
+//      makeVisSet()
+//    }
+
+//RI    cout<<"Sim::corrupt: nlock="<<Table::nAutoLocks()<< " .. unlocking .. ";
     ms_p->relinquishAutoLocks();
     ms_p->unlock();
     if(mssel_p) mssel_p->unlock();
+//RI    cout<<"nlock="<<Table::nAutoLocks()<<endl;
 
   } catch (std::exception& x) {
     ms_p->relinquishAutoLocks();
@@ -1949,9 +1966,18 @@ Bool Simulator::corrupt() {
 
 
 Bool Simulator::observe(const String&   sourcename,
-			   const String&   spwname,
-			   const Quantity& startTime, 
-			   const Quantity& stopTime)
+			const String&   spwname,
+			const Quantity& startTime, 
+			const Quantity& stopTime,
+			const Bool add_observation=True,
+			const Bool state_sig=True,
+			const Bool state_ref=True,
+			const double& state_cal=0.,
+			const double& state_load=0.,
+			const unsigned int state_sub_scan=0,
+			const String& state_obs_mode="OBSERVE_TARGET.ON_SOURCE",
+			const String& observername="CASA simulator",
+			const String& projectname="CASA simulation")
 {
   LogIO os(LogOrigin("Simulator", "observe()", WHERE));
   
@@ -1969,7 +1995,9 @@ Bool Simulator::observe(const String&   sourcename,
 	 << LogIO::WARN;
     }
 
-    sim_p->observe(sourcename, spwname, startTime, stopTime);
+    sim_p->observe(sourcename, spwname, startTime, stopTime, 
+		   add_observation, state_sig, state_ref, state_cal,state_load,state_sub_scan,state_obs_mode,observername,projectname);
+
 
     if(ms_p) delete ms_p; ms_p=0;
     if(mssel_p) delete mssel_p; mssel_p=0;
@@ -1991,10 +2019,19 @@ Bool Simulator::observe(const String&   sourcename,
 
 
 Bool Simulator::observemany(const Vector<String>&   sourcenames,
-			   const String&   spwname,
-			   const Vector<Quantity>& startTimes, 
+			    const String&   spwname,
+			    const Vector<Quantity>& startTimes, 
 			    const Vector<Quantity>& stopTimes,
-			    const Vector<MDirection>& directions)
+			    const Vector<MDirection>& directions,
+			    const Bool add_observation=True,
+			    const Bool state_sig=True,
+			    const Bool state_ref=True,
+			    const double& state_cal=0.,
+			    const double& state_load=0.,
+			    const unsigned int state_sub_scan=0,
+			    const String& state_obs_mode="OBSERVE_TARGET.ON_SOURCE",
+			    const String& observername="CASA simulator",
+			    const String& projectname="CASA simulation")
 {
   LogIO os(LogOrigin("Simulator", "observemany()", WHERE));
   
@@ -2012,7 +2049,8 @@ Bool Simulator::observemany(const Vector<String>&   sourcenames,
 	 << LogIO::WARN;
     }
 
-    sim_p->observe(sourcenames, spwname, startTimes, stopTimes, directions);
+    sim_p->observe(sourcenames, spwname, startTimes, stopTimes, directions,
+		   add_observation, state_sig, state_ref, state_cal,state_load,state_sub_scan,state_obs_mode,observername,projectname);
 
     if(ms_p) delete ms_p; ms_p=0;
     if(mssel_p) delete mssel_p; mssel_p=0;
@@ -2172,13 +2210,13 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
 	    AlwaysAssert(images_p[model], AipsError);
 	    // RI TODO is this a logic problem with more than one source??
 	    // Add distance
-	    if(abs(distance_p[nField-1].get().getValue())>0.0) {
+	    if((distance_p.nelements() > 0 && distance_p.nelements() <= nField) && abs(distance_p[nField-1].get().getValue())>0.0) {
 	      os << "  Refocusing to distance " << distance_p[nField-1].get("km").getValue()
 		 << " km" << LogIO::POST;
+	      Record info(images_p[model]->miscInfo());
+	      info.define("distance", distance_p[nField-1].get("m").getValue());
+	      images_p[model]->setMiscInfo(info);
 	    }
-	    Record info(images_p[model]->miscInfo());
-	    info.define("distance", distance_p[nField-1].get("m").getValue());
-	    images_p[model]->setMiscInfo(info);
 	    if(sm_p->add(*images_p[model])!=model) {
 	      os << LogIO::SEVERE << "Error adding model " << model+1 << LogIO::POST;
 	      return False;

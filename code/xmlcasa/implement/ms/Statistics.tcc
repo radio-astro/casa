@@ -171,6 +171,11 @@ Statistics<T>::get_stats(const Vector<T> v,
         }
         
         apply_flags(data_float, flags);
+        if (data_float.shape() == 0) {
+          stringstream ss;
+          ss << "All selected rows are flagged.";
+          throw AipsError(ss.str());
+        }
         get_statistics_1d(result, column, data_float);
     }
 
@@ -249,6 +254,11 @@ Statistics<T>::get_stats_complex(const Vector<Complex> v,
       }
       
       apply_flags(data_float, flags);
+      if (data_float.shape() == 0) {
+        stringstream ss;
+        ss << "All selected rows are flagged.";
+        throw AipsError(ss.str());
+      }
       get_statistics_1d(result, column, data_float);
     }
     return result;
@@ -296,7 +306,7 @@ Record
 Statistics<T>::get_stats_array(const Matrix<T> v,
                                const Vector<Bool> flags,
                                const std::string &column,
-                               bool &supported)
+                               bool &)
 {
     Record result;
 

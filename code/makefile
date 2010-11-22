@@ -135,6 +135,7 @@ docdoxy : $(AIPSDOCS)/doxygen
         echo "IMAGE_PATH       = ." >> $</doxygen.cfg; \
         echo "INPUT_FILTER     = $(AIPSARCH)/bin/doxygen_pp" >> $</doxygen.cfg; \
         echo "GENERATE_TAGFILE = $</casa.tag" >> $</doxygen.cfg; \
+	echo "INCLUDE_PATH = $(AIPSARCH)/include/casacore"  >> $</doxygen.cfg; \
         $(RM) $</doxygen.log;
 	$(DOXYGEN) $</doxygen.cfg 2>&1 > $</doxygen.log
 

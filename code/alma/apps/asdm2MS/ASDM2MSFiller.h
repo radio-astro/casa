@@ -178,7 +178,6 @@ class ASDM2MSFiller
   Bool     itsWithRadioMeters;     /* Are we building an ALMA MS ?*/
   Bool     itsFirstScan;
   uInt     itsMSMainRow;
-  /*TiledDataStManAccessor itsImWgtAcc;*/
   Block<IPosition> itsDataShapes;
 
   int itsScanNumber;

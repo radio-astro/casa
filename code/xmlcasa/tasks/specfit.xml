@@ -7,15 +7,11 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 
-<!-- This is the task interface to ia.fitpolynomial           -->
-<!--                               ia.fitallprofiles          -->
-<!--                               ia.fitprofile              -->
-<!-- TODO                                                     -->
-<!--  - decide if we want to add the following params:        -->
-<!--         axis                                             -->
-<task type="function" name="specfit" category="image analysis" visibility="experimental">
+<!-- This is the task interface to ia.fitprofile           -->
 
-<shortdescription>Fit 1-dimentional profile(s) or polynomial(s) to an image or image region</shortdescription>
+<task type="function" name="specfit" category="analysis" visibility="experimental">
+
+<shortdescription>Fit 1-dimensional gaussians and/or polynomial models to an image or image region</shortdescription>
 
 <description>
 </description>
@@ -27,99 +23,203 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <example>imagenam='ngc5921_task.image'</example>
     </param>
 
-    <param type="string" name="mode">
-	<description>Mode the task is operating in, which are:\
-             single: fits a 1-D model to a single profile\
-             all:    fits a 1-D models to all profiles\
-             poly:   fits 1-D polynomials to profiles</description>
-	<value>single</value>
-	<allowed kind="enum">
-		<value>poly</value>
-		<value>all</value>
-		<value>single</value>
-        </allowed>
-    </param>
+        <param type="string" direction="in" name="box">
+            <description>Rectangular box in direction coordinate blc, trc. Default: entire image ("").</description>
+            <value></value>
+            <example>box="4,4,10,10"</example>
+        </param>
+        <param type="string" direction="in" name="region">
+            <description>Region name, Default: no region ("").</description>
+            <value></value>
+            <example>region="myregion.rgn"</example>
+        </param>
+        <param type="string" direction="in" name="chans">
+            <description>Channels to use. Channels must be contiguous. Default: all channels ("").</description>
+            <value></value>
+            <example>chans="4-11"</example>
+        </param>
+        <param type="string" direction="in" name="stokes">
+            <description>Stokes planes to use. Planes must be contiguous. Default: all stokes ("").</description>
+            <value></value>
+            <example>stokes="I"</example>
+        </param>
+        <param type="int" direction="in" name="axis">
+            <description>The profile axis. Default: use the spectral axis if one exists, axis 0 otherwise (&lt;0).</description>
+            <value>-1</value>
+            <example>axis=3</example>
+        </param>
+        <param type="string" direction="in" name="mask">
+            <description>OTF mask, Boolean LEL expression or mask region.  Default: no mask ("").</description>
+            <value></value>
+        </param>
+        <param type="int" direction="in" name="ngauss">
+            <description>Number of Gaussian elements.  Default: 1.</description>
+            <value>1</value>
+            <example>ngauss=2</example>
+        </param>
+        <param type="int" direction="in" name="poly">
+            <description>Order of polynomial element.  Default: do not fit a polynomial (&lt;0).</description>
+            <value>-1</value>
+            <example>poly=4</example>
+        </param>
+        <param type="bool" direction="in" name="multifit">
+            <description>If true, fit a profile along the desired axis at each pixel in the specified region. If false, average the non-fit axis pixels and do a single fit to that average profile. Default False.</description>
+            <value>False</value>
+            <example>multifit=True</example>
+         </param>
+        <param type="string" direction="in" name="model">
+            <description>Name of model image. Default: do not write the model image ("").</description>
+            <value></value>
+            <example>model="mymodel.im"</example>
+        </param>
+        <param type="string" direction="in" name="residual">
+            <description>Name of residual image. Default: do not write the residual image ("").</description>
+            <value></value>
+            <example>residual="myresid.im"</example>
+        </param>
+        <param type="string" direction="in" name="amp" subparam="true">
+            <description>Name of amplitude solution image. Default: do not write the image ("").</description>
+            <value/>
+            <example>amp="amp"</example>
+        </param>
+        <param type="string" direction="in" name="amperr" subparam="true">
+            <description>Name of amplitude solution error image. Default: do not write the image ("").</description>
+            <value/>
+            <example>amperr="ampErr"</example>
+        </param>
+        <param type="string" direction="in" name="center" subparam="true">
+            <description>Name of center solution image. Default: do not write the image ("").</description>
+            <value/>
+            <example>center="center"</example>
+        </param>
+        <param type="string" direction="in" name="centererr" subparam="true">
+            <description>Name of center solution error image. Default: do not write the image ("").</description>
+            <value/>
+            <example>centererr="centerErr"</example>
+        </param>
+        <param type="string" direction="in" name="fwhm" subparam="true">
+            <description>Name of fwhm solution image. Default: do not write the image ("").</description>
+            <value/>
+            <example>fwhm="fwhm"</example>
+        </param>
+        <param type="string" direction="in" name="fwhmerr" subparam="true">
+            <description>Name of fwhm solution error image. Default: do not write the image ("").</description>
+            <value/>
+            <example>fwhmerr="fwhmErr"</example>
+        </param>
+        <param type="bool" name="wantreturn">
+            <description>Should a record summarizing the results be returned?</description>
+            <value>True</value>
+            <example>wantreturn=True</example>
+        </param>
+        <constraints>
+            <when param="multifit">
+                <equals type="bool" value="True">
+                    <default param="amp">
+                        <value>""</value>
+                    </default>
+                    <default param="amperr">
+                        <value>""</value>
+                    </default>
+                    <default param="center">
+                        <value>""</value>
+                    </default>
+                    <default param="centererr">
+                        <value>""</value>
+                    </default>
+                    <default param="fwhm">
+                        <value>""</value>
+                    </default>
+                    <default param="fwhmerr">
+                        <value>""</value>
+                    </default>
 
-    <param type="int" name="fitorder" >
-    	<description>Order of the polynomial used in the fitting</description>
-    	<value>0</value>
-        <example>fitorder=2</example>
-    </param>
-
-    <param type="int" name="ngauss" >
-    	<description>Number of Gaussian elements used.</description>
-    	<value>1</value>
-        <example>ngauss=3</example>
-    </param>
-
-    <param type="string" name="box">
-        <description>Select one or more box regions in the input images</description>
-        <value></value>
-    </param>
-
-    <param type="string" name="stokes">
-	<description>Stokes params to image (I,IV,IQU,IQUV)</description>
-        <value></value>
-	<example>stokes='IQ'</example>
-	<example>stokes='RR,LL'</example>
-    </param>
-
-    <param type="string" name="mask">
-        <description>Mask to be applied to the images</description>
-        <value></value>
-    </param>
-
-    <param type="boolean" name="estimate">
-        <description>In single profile fitting, create an estimate instead\
-         of doing the fit.</description>
-        <value>False</value>
-    </param>
-
-    <param type="string" name="estfile">
-        <description>A file containing an intial estimate of the fit.\
-        Estimates are allowed on single profile fits only.</description>
-        <value></value>
-    </param>
-
-
-    <param type="string" name="sigmafile">
-	<description>Input image weight file.</description>
-	<value></value>
-    </param>
-
-
-    <param type="string" name="fitfile">
-	<description>Output fitted image</description>
-	<value></value>
-    </param>
-
-
-    <param type="string" name="residualfile">
-	<description>Output fitted image or estimated profile when the\
-        an estimate is requested in single profile mode.</description>
-	<value></value>
-    </param>
-
-    <constraints>
-	<when param="mode">
-	    <equals value="single">
-		<default param="ngauss"><value>1</value></default>
-		<default param="estfile"><value>""</value></default>
-		<default param="estimate"><value>False</value></default>
             </equals>
-	    <equals value="all">
-		<default param="ngauss"><value>1</value></default>
-            </equals>
-	    <equals value="poly"/>
         </when>
     </constraints>
 </input>
 
-<returns type="void"/>
+<returns type="record"/>
 
 <example>
-</example>
+    
+This task simultaneously fits one or more gaussians and/or a polynomial to one dimensional profiles.
 
+ARAMETER SUMMARY
+imagename        Name of the input (CASA, FITS, MIRIAD) image
+box              Direction plane box specification, "blcx, blcy, trcx, trcy". Only one box
+                 may be specified. If not specified, region is used if specified. If region
+                 is also not specified, entire directional plane unioned with any chans and
+                 stokes specification determines the region.
+region           Optional region file to use.
+chans            Optional contiguous frequency channel number specification. Not used if
+                 region is specified. Default is all channels.
+stokes           Contiguous stokes planes specification. Not used if region is specified.
+                 Default is all stokes.     
+axis             Axis along which to do the fit(s). &lt;0 means use the spectral axis or the
+                 zeroth axis if a spectral axis is not present.
+mask             Optional mask specification.
+ngauss           Maximum number of gaussians to fit.
+poly             Order of polynomial to fit. &lt;0 means do not fit a polynomial.
+multifit         Fit models at each pixel in region (true) or average profiles and fit a single model (false).
+model            Name of model image to write.
+residual         Name of residual image to write.
+amp              Name of amplitude solution image. Default: do not write the image ("")
+amperr           Name of amplitude solution error image. Default: do not write the image ("")
+center           Name of center solution image. Default: do not write the image ("")
+centererr        Name of center solution error image. Default: do not write the image ("")
+fwhm             Name of fwhm solution image. Default: do not write the image ("")
+fwhmerr           Name of fwhm solution error image. Default: do not write the image ("")
+
+wantreturn       If true, return a record summarizing the fit results, if false, return false.
+
+The axis parameter indicates on which axis profiles should be fit; a value &lt;0 indicates the spectral axis should be used, or if one does not exist,
+that the zeroth axis should be used.
+
+The ngauss parameter indicates the maximum number of gaussians that should be fit. The poly parameter indicates the order of the polynomial to
+fit; a value &lt;0 indicates that no polynomial should be fit. An error will occur if ngauss=0 and poly&lt;0, as this indicates there
+is nothing to fit. 
+
+The multifit parameter indicates if profiles should be fit at each pixel in the selected region (true), or if the profiles in that region should be
+averaged and the fit done to that average profile (false).
+
+The model and residual parameters indicate the names of the model and residual images to be written; blank values inidcate that these images
+should not be written.
+
+If wantreturn=true, the return value is a dictionary containing the following keys and values:
+converged: an array indicating if the fits converged (true) or not (false).
+niter: an array indicating the number of iterations for each profile, &lt;0 if the fit did not converge
+ncomps: the number of components (gaussians + polynomial) fit for the profile, 0 if the fit did not converge
+xUnit: the abscissa unit
+yUnit: the ordinate unit
+
+In addition, the following keys are appended by the component number to indicate which component they correspond to, eg, fwhm0, fwhm1, etc
+type[0,1,...] The type of component (GAUSSIAN or POLYNOMIAL)
+center[0,1,...] The fitted center value for the nth component which is a gaussian.
+fwhm[0,1,...] The fitted FWHM value for the nth component which is a gaussian.
+amp[0,1,...] The fitted amplitude value for the nth component which is a gaussian.
+centerErr[0,1,...], fwhmErr[0,1,...], ampErr[0,1,...] The associated errors for the nth component which is a gaussian.
+
+Currently, the polynomial coefficients and their errors are not returned, although they are logged.
+
+One can also write none, any or all of the solution and error images for gaussian fits via the parameters amp, amperr, center, centererr,
+fwhm, and fwhmerr when doing multi-pixel fits. The specified parameter value will by appended by "_n" where n is the gaussian
+component number. Writing analogous images for polynomial coefficients is not yet supported.
+
+
+It is not yet possible to specify initial model parameter estimates; this feature is planned for a future release. Currently, the solver
+will determine initial estimates.
+
+Note that ngauss is the *maximum* number of gaussians that the solver will attempt to fit. However, where appropriate, it will fit fewer than
+ngauss gaussians.
+
+
+res = specfit(imagename="myspectrum.im", ngauss=2, box="3,3,4,5", poly=2, multifit=true, wantreturn=true)
+# reshape fit parameters to correspond to input pixels
+mycenter0 = res["center0"].reshape([2,3], order="F")
+
+</example>
+    
 </task>
 
 </casaxml>

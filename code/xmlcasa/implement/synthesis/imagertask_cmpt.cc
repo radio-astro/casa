@@ -11,8 +11,8 @@
  ***/
 
 #include <iostream>
-#include <xmlcasa/synthesis/imagertask_cmpt.h>
-#include <xmlcasa/synthesis/imager_cmpt.h>
+#include <imagertask_cmpt.h>
+#include <imager_cmpt.h>
 
 #include <casa/Logging/LogIO.h>
 #include <casa/Exceptions/Error.h>

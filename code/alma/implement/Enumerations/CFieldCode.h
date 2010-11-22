@@ -55,7 +55,7 @@ namespace FieldCodeMod
   //! FieldCode.
   //!  [ASDM.Field] code for Field
   
-  const char *const revision = "1.7";
+  const char *const revision = "1.8";
   const int version = 1;
   
   enum FieldCode

@@ -100,7 +100,7 @@ public:
     void detachFromCanvases();
     
     // Implements PlotMSPlot::plotTabHasChanged().
-    void plotTabHasChanged(PlotMSPlotTab& tab) { }
+    void plotTabHasChanged(PlotMSPlotTab& tab) { (void)tab; }
     
 protected:
     // Implements PlotMSPlot::assignCanvases().
@@ -147,8 +147,19 @@ private:
     bool updateDisplay();
     // </group>
     
-    // Use macro for define post-thread methods for loading the cache.
-    PMS_POST_THREAD_METHOD(PlotMSSinglePlot, cacheLoaded)
+    // Post-thread methods for loading the cache.
+    public:
+	static void cacheLoaded (void *obj, bool wasCanceled)
+	{
+	     PlotMSSinglePlot *cobj = static_cast < PlotMSSinglePlot * >(obj);
+	     if (cobj != NULL)
+	          cobj->cacheLoaded_ (wasCanceled);
+	}
+	
+	private:
+	void cacheLoaded_ (bool wasCanceled);
+	
+
 };
 
 }

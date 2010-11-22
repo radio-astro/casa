@@ -83,7 +83,8 @@ VisCal::VisCal(VisSet& vs) :
   PValid_(vs.numberSpw(),False),
   calWt_(False),
   currWtScale_(vs.numberSpw(),NULL),
-  prtlev_(PRTLEV)
+  prtlev_(PRTLEV),
+  extratag_("")
 {
   if (prtlev()>2) cout << "VC::VC(vs)" << endl;
 
@@ -116,7 +117,8 @@ VisCal::VisCal(const Int& nAnt) :
   PValid_(1,False),
   calWt_(False),
   currWtScale_(1,NULL),
-  prtlev_(PRTLEV)
+  prtlev_(PRTLEV),
+  extratag_("")
 {
   if (prtlev()>2) cout << "VC::VC(i,j,k)" << endl;
 
@@ -208,7 +210,7 @@ void VisCal::corrupt(VisBuffer& vb) {
 
 void VisCal::correct(VisBuffer& vb, Cube<Complex>& Vout) {
 
-  if (prtlev()>3) cout << " VC::correct()" << endl;
+  if (prtlev()>3) cout << " VC::correct(vb,Vout)" << endl;
   
   // Prepare output Cube<Complex> for its own in-place apply:
   //  (this is a no-op if referencing same storage)
@@ -404,6 +406,7 @@ void VisCal::syncMeta(const Int& spw,
   //  (in solve context, this is handled differently, outside this method)
   if (isApplied()) setCalChannelization(nchan);
 
+  if (prtlev()>5) cout << "      meta: t,fld,freq=" << time << field << freq << endl;
 }
 
 void VisCal::setCalChannelization(const Int& nChanDat) {
@@ -464,6 +467,8 @@ void VisCal::checkCurrCal() {
     //   (i.e., PValid=F may not yield _new_ parameters in
     //    calcPar, but this forces matrix re-sync anyway)
     if (timeDepMat()) invalidateCalMat();
+
+    //if (prtlev()>5 and timeDepMat()) cout << "      invalidateCalMat() " << endl;
 
   }
 
@@ -671,7 +676,13 @@ void VisMueller::applyCal(VisBuffer& vb, Cube<Complex>& Vout) {
       // Solution channel registration
       Int solCh0(0);
       dataChan=&vb.channel()(0);
-      if (freqDepMat()) {
+
+      // If cal _parameters_ are not freqDep (e.g., a delay)
+      //  the startChan() should be the same as the first data channel
+      if (freqDepMat() && !freqDepPar())
+	startChan()=(*dataChan);
+
+      if (freqDepMat() && freqDepPar()) {
 	solCh0=(*dataChan)-startChan();
 	if (solCh0 < 0) solCh0=0;
       }
@@ -720,6 +731,9 @@ void VisMueller::syncCalMat(const Bool& doInv) {
 }
 
 void VisMueller::syncMueller(const Bool& doInv) {
+
+  // RI
+  //prtlev()=10;
 
   if (prtlev()>6) cout << "      VM::syncMueller()" << endl;
 
@@ -863,6 +877,10 @@ void VisMueller::createMueller() {
 
   // Nominal synchronization is with currMElem()(0,0,0);
   M().sync(currMElem()(0,0,0),currMElemOK()(0,0,0));
+
+  if (prtlev()>6) cout << "       currMElem()(0,0,0) = " << currMElem()(0,0,0) << endl;
+  if (prtlev()>6) cout << "       currMElem()(0,0,1) = " << currMElem()(0,0,1) << endl;
+
       
 }
 
@@ -1037,8 +1055,8 @@ void VisJones::applyCal(VisBuffer& vb, Cube<Complex>& Vout) {
     ArrayIterator<Float> wt(vb.weightMat(),1);
     Vector<Float> wtvec;
 
-    //    cout << "vb.weightMat() = " << vb.weightMat() << endl;
-
+    //cout << "VC:apply " << Vout(0,0,1216) << " ... ";
+    
     // iterate rows
     Int& nRow(vb.nRow());
     Int& nChanDat(vb.nChannel());
@@ -1052,7 +1070,13 @@ void VisJones::applyCal(VisBuffer& vb, Cube<Complex>& Vout) {
 	// Solution channel registration
 	Int solCh0(0);
 	dataChan=&vb.channel()(0);
-	if (freqDepMat()) {
+
+	// If cal _parameters_ are not freqDep (e.g., a delay)
+	//  the startChan() should be the same as the first data channel
+	if (freqDepMat() && !freqDepPar())
+	  startChan()=(*dataChan);
+
+	if (freqDepMat() && freqDepPar()) {
 	  solCh0=(*dataChan)-startChan();
 	  if (solCh0 < 0) solCh0=0;
 	}
@@ -1070,6 +1094,7 @@ void VisJones::applyCal(VisBuffer& vb, Cube<Complex>& Vout) {
 	  if (!*flag) {
 	    J1().applyRight(V(),*flag);
 	    J2().applyLeft(V(),*flag);
+
 	  }
 	  
 	  // inc soln ch axis if freq-dependent (and next dataChan within soln)
@@ -1082,6 +1107,7 @@ void VisJones::applyCal(VisBuffer& vb, Cube<Complex>& Vout) {
 	  
 	} // chn
 	
+
 	// If requested, update the weights
 	if (calWt()) updateWt(wtvec,*a1,*a2);
 	
@@ -1091,7 +1117,7 @@ void VisJones::applyCal(VisBuffer& vb, Cube<Complex>& Vout) {
       }
     }
 
-    //    cout << "vb.weightMat() = " << vb.weightMat() << endl;
+    //    cout << Vout(0,0,1216) << endl;
 
   }
 

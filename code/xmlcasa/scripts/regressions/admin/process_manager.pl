@@ -86,8 +86,8 @@ sub terminate
     $n = kill 0, -$child;
     if ($n > 0) {
 	print "$0: kill $n leftover child" . (($n != 1) ? "ren": "") . " in PGID=$child";
-	kill SIGHUP , -$child;
-	sleep(2);
+	#kill SIGHUP , -$child;
+	#sleep(2);
 	if (kill SIGTERM, -$child) {
 	    sleep(2);
 	    kill SIGKILL, -$child;

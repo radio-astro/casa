@@ -35,9 +35,9 @@ Requires:
 <xsl:for-each select="aps:needs">
 	<xsl:value-of select="."/>
 </xsl:for-each>
-Synopsis
+\textbf{Synopsis}
 <xsl:apply-templates select="aps:description"/>
-Methods
+\flushleft\vspace{.20in}\textbf{Methods}
 \begin{longtable}{ll}
 <xsl:for-each select="aps:method">
 	\ahlink{<xsl:value-of select="@name"/>}{<xsl:value-of select="$modulename"/>:<xsl:value-of select="$toolname"/>.<xsl:value-of select="@name"/>} <xsl:text disable-output-escaping="yes">&amp;</xsl:text><xsl:apply-templates select="aps:shortdescription"/> \\
@@ -67,15 +67,17 @@ Methods
 
 <xsl:template match="aps:description">
 <xsl:text disable-output-escaping="yes">
+\hfill \\
+\hfill \\
 \flushleft\vspace{.20in}\textbf {Description}\\
-   \hfill \\</xsl:text>
+\hfill \\</xsl:text>
 <xsl:value-of select="." disable-output-escaping="yes"/>
 </xsl:template>
 
 
 
 <xsl:template match="aps:shortdescription">
-	<xsl:value-of select="." disable-output-escaping="yes"/>
+<xsl:value-of select="." disable-output-escaping="yes"/>
 </xsl:template>
 
 <xsl:template match="aps:task">
@@ -86,10 +88,13 @@ Requires:
 <xsl:for-each select="aps:needs">
 	<xsl:value-of select="."/>
 </xsl:for-each>
-Synopsis
+\flushleft\vspace{.20in}\textbf{Synopsis}
+<xsl:text disable-output-escaping="yes">\hfill \\</xsl:text>
 <xsl:apply-templates select="aps:shortdescription"/>
 <xsl:apply-templates select="aps:description"/>
-\flushleft\vspace{.20in}\textbf {Arguments}\\
+<xsl:text disable-output-escaping="yes">\hfill \\</xsl:text>
+<xsl:text disable-output-escaping="yes">\hfill \\</xsl:text>
+\flushleft\vspace{.20in}\textbf{Arguments}\\
 \hfill \\
 \begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
 \hline
@@ -108,7 +113,7 @@ Synopsis
 \newpage
 \ahfunction{<xsl:value-of select="$toolname"/><xsl:value-of select="@name"/>}{<xsl:apply-templates select="aps:shortdescription"/>}
 <xsl:apply-templates select="aps:description"/>
-\flushleft\vspace{.20in}\textbf {Arguments}\\
+\flushleft\vspace{.20in}\textbf{Arguments}\\
 \hfill \\
 \begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
 \hline

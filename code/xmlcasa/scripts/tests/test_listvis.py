@@ -25,11 +25,11 @@ reffile = refpath+'reflistvis'
 # Input and output names
 msfile1 = 'ngc5921_ut.ms'
 msfile2 = 'OrionS_rawACSmod'
+msfile3 = 'as1039q4_ut.ms'
 res = None
 out = 'listvis'
 
 class listvis_test1(unittest.TestCase):
-
 
     def setUp(self):
         self.res = None
@@ -39,6 +39,9 @@ class listvis_test1(unittest.TestCase):
         
         if (not os.path.exists(msfile2)):            
             shutil.copytree(datapath+msfile2, msfile2)
+
+        if (not os.path.exists(msfile3)):            
+            shutil.copytree(datapath+msfile3, msfile3)
 
         default(listvis)
         
@@ -56,7 +59,7 @@ class listvis_test1(unittest.TestCase):
 #        listvis(vis=msfile1,datacolumn='data',listfile=output,
 #                field='2',spw='0:4~5',selectdata=True,antenna='1&2')
         self.assertTrue(lt.runTests(output,reference,'1.000',comp),
-                        'New and reference files are different.\n %s != %s. '
+                        'New and reference files are different. %s != %s. '
                         'See the diff file'%(output,reference))
     def test2(self):
         '''Listvis 1: Data column with different selections'''
@@ -66,18 +69,18 @@ class listvis_test1(unittest.TestCase):
         listvis(vis=msfile1,field='0',spw='0:1~2',selectdata=True, antenna='2&11',
                 listfile=output)
         self.assertTrue(lt.runTests(output,reference,'1.000',comp),
-                        'New and reference files are different.\n %s != %s. '
+                        'New and reference files are different. %s != %s. '
                         'See the diff file'%(output,reference))
         
     def test3(self):
-        '''Listvis 3: Float data column'''
+        '''Listvis 3: Float data column (CAS-2138)'''
         output = out+'3'
         comp = 'compare.3'
         reference = reffile+'3'
         listvis(vis=msfile2,datacolumn='float_data',listfile=output,
                 spw='0:2001~2003')
         self.assertTrue(lt.runTests(output,reference,'1.000',comp),
-                        'New and reference files are different\n. %s != %s. '
+                        'New and reference files are different. %s != %s. '
                         'See the diff file.'%(output,reference))
         
 
@@ -89,8 +92,30 @@ class listvis_test1(unittest.TestCase):
         listvis(vis=msfile1,datacolumn='data',listfile=output,
                 spw='0:1',field='1',selectdata=True,antenna='2&&2')
         self.assertTrue(lt.runTests(output,reference,'1.000',comp),
-                        'New and reference files are different\n. %s != %s. '
+                        'New and reference files are different. %s != %s. '
                         'See the diff file.'%(output,reference))
+
+    def test5(self):
+        '''Listvis 5: MS with blanked scan (CAS-2112)'''
+        output = out+'5'
+        comp = 'compare.5'
+        reference = reffile+'5'
+        listvis(vis=msfile3,datacolumn='data',listfile=output,spw='0:1~2',
+                selectdata=True,antenna='1',scan='1')
+        self.assertTrue(lt.runTests(output,reference,'1.000',comp),
+                        'New and reference files are different. %s != %s. '
+                        'See the diff file.'%(output,reference))
+
+    def test6(self):
+        '''Listvis 6: MS with good scan (CAS-2112)'''
+        output = out+'6'
+        comp = 'compare.6'
+        reference = reffile+'6'
+        listvis(vis=msfile3,spw='4:1~2',selectdata=True,antenna='8',scan='3',listfile=output)
+        self.assertTrue(lt.runTests(output,reference,'1.000',comp),
+                        'New and reference files are different. %s != %s. '
+                        'See the diff file.'%(output,reference))
+        
         
 class listvis_test2(unittest.TestCase):
 
@@ -101,7 +126,8 @@ class listvis_test2(unittest.TestCase):
         # It will ignore errors in case the files don't exist
         shutil.rmtree(msfile1,ignore_errors=True)
         shutil.rmtree(msfile2,ignore_errors=True)
-#        os.system('rm -rf ' + out+'*')
+        shutil.rmtree(msfile3,ignore_errors=True)
+        os.system('rm -rf ' + out+'*')
         
     def test1a(self):
         '''Listvis: Cleanup'''

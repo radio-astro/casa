@@ -48,10 +48,10 @@ of tables. Returns true if tables are valid, false otherwise.
 
 This is just a test line.
 <example>
-\begin{verbatim}
+
  # set the list of tables to plot from.
  tp.open(tabnames=['3c273.ms','3c48.ms'])
-\end{verbatim}
+
 </example>
 
 </method>
@@ -165,11 +165,11 @@ Specify a TaQL select string. A subtable will be generated, and passed to the pl
 <returns type="bool"/>
 
 <example>
-\begin{verbatim}
+
 # set the list of tables to plot from.
   tp.open(tabnames=['3c273.ms','3c48.ms'])
   tp.selectdata(taqlstring='ANTENNA1==5') 
-\end{verbatim}
+
 </example>
 
 </method>
@@ -233,7 +233,7 @@ read out the data from the table, and the x-values are the column indices
 \end{enumerate}
 
 Plotting options ('poption' entries) are listed below.
-\begin{verbatim}
+
     Default values are indicated within [ ] when present.
     nrows [ 1 ] :            Number of rows of panels
     ncols [ 1 ] :            Number of columns of panels
@@ -293,7 +293,7 @@ Plotting options ('poption' entries) are listed below.
     fontsize [ 12.0 ] :      Font size of title text.
                              Font size of x,y labels are 80% of this.
     
-\end{verbatim}
+
 
 Returns true if plotting is successful, false otherwise.
 
@@ -329,25 +329,25 @@ Plot data amplitude vs uv-distance for two Measurement set tables as a
 single panel plot.  Operate on channel 1 for Stokes 1 and 2 using the
 DATA column.
    
-\begin{verbatim}
+
  tp.open(tabnames=['3c273.ms','3c48.ms'])
  pop = { 'nrows':1, 'ncols':1,'panel':1}
  labels = ['Amplitude vs UVdist','uvdist','amplitude']
  xystr = ['SQRT(SUMSQUARE(UVW[1:2]))','AMPLITUDE(DATA[1,1:2])']
  tp.plotdata(poption=pop,labels=labels,datastr=xystr)
-\end{verbatim}
+
 
 TaQL strings for the above example can also be written as follows.
-\begin{verbatim}
+
   xystr = ['SQRT(UVW[1]*UVW[1]+UVW[2]*UVW[2])','AMPLITUDE(DATA[1,1:2])']
-\end{verbatim}
+
 
 </example>
 
 <example>       
 Multi-panel plotting
    
-\begin{verbatim}
+
  # uvdist for pol 1 and chan 1,2 on panel 211
  pop = { 'nrows':2, 'ncols':1,'panel':1}
  labels = ['Amplitude vs UVdist','uvdist','amplitude']
@@ -372,18 +372,18 @@ Multi-panel plotting
  xystr = ['28*ANTENNA1+ANTENNA2-(ANTENNA1-1)*(ANTENNA1+2)/2',
            'AMPLITUDE(DATA[1:2,1:10])']
  tp.plotdata(poption=pop,labels=labels,datastr=xystr)
-\end{verbatim}
+
 </example>
 
 <example>
 Plotting with time formatting
-\begin{verbatim}
+
  # vistime for 10 chans (timeplot=1)   
  pop = { 'nrows':1, 'ncols':1,'panel':1,'timeplot':True}
  labels = ['Timeplot','time','amplitude']
  xystr = ['TIME','AMPLITUDE(DATA[1:2,1:10])']
  tp.plotdata(poption=pop,labels=labels,datastr=xystr)
-\end{verbatim}
+
 </example>
       
 <example>
@@ -394,7 +394,7 @@ NCHAN columns and NPOL rows. Plotting with 'CROSS' as the X-TaQL, uses
 channel numbers as the x-axis. The option 'crossdirection=True' can be used 
 to plot with polarization on the x-axis.
 
-\begin{verbatim}
+
    
  pop = { 'nrows':2, 'ncols':1,'panel':1, 'plotcolour':2}
  labels = ['Amplitude vs Channel number','chan','amplitude']
@@ -404,13 +404,13 @@ to plot with polarization on the x-axis.
  labels = ['Amplitude vs Polarization number','pol','amplitude']
  xystr = ['CROSS','AMPLITUDE(DATA[1:2,1:10])']
  tp.plotdata(poption=pop,labels=labels,datastr=xystr)
-\end{verbatim}
+
 </example>
       
 <example>
 Individual points can be annotated by specifying the 'pointlabels' parameter. 
 If N labels are specified, the first N data points to be plotted, are annotated.
-\begin{verbatim}
+
    
  pop = {'nrows':1,'ncols':1, 'panel':1, 'plotcolour':1,'py_plotsymbol':'o',
         'pointlabels':[' A1',' A2',' A3',' A4',' A5',' A6',' A7',' A8',
@@ -420,20 +420,20 @@ If N labels are specified, the first N data points to be plotted, are annotated.
  xystr = ['POSITION[1]','POSITION[2]']
  labels = ['Antenna positions','x','y']
  tp.plotdata(poption=pop,labels=labels,datastr=xystr)
-\end{verbatim}
+
 </example>
       
 <example>
 To plot with multiple colours for each channel and polarization of an MS.
 
-\begin{verbatim}
+
  #(multicolour=1, plotcolour > 5)
  pop = { 'nrows':1, 'ncols':1,'panel':1, 'plotcolour':6,
          'showflags':0, 'multicolour':True}
  labels = ['Amplitude vs UVdist','uvdist','amplitude']
  xystr = ['SQRT(SUMSQUARE(UVW[1:2]))','AMPLITUDE(DATA[1:2,1:2])']
  tp.plotdata(poption=pop,labels=labels,datastr=xystr)
-\end{verbatim}
+
 </example>   
 
 </method>
@@ -482,7 +482,7 @@ Only forward step through is allowed.
 <returns type="bool"/>
 
 <example>
-\begin{verbatim}
+
  # Open a list of MS tables to plot from, 
  # and initialize a plot of Amplitude vs UV distance for 
  # channel 1 and stokes 1, iterating over Antenna1
@@ -495,12 +495,12 @@ Only forward step through is allowed.
  tp.iterplotstart(poption=pop, labels=labels, datastr=xystr,
                   iteraxes=iteraxes)
  tp.iterplotnext()
-\end{verbatim}
+
 </example>
 
 <example>
 To iterate over baseline and plot Amplitude vs time, for stokes 1, channel 1.
-\begin{verbatim}
+
  pop = { 'nrows':4, 'ncols':1 }
  labels = ['Amplitude vs UVdist (iterating over Baseline)',
             'uvdist','amplitude']
@@ -508,7 +508,7 @@ To iterate over baseline and plot Amplitude vs time, for stokes 1, channel 1.
  iteraxes = ['ANTENNA1','ANTENNA2']
  tp.iterplotstart(poption=plotopts,labels=labels,
                   datastr=xystr,iteraxes=iteraxes)
-\end{verbatim}
+
 
 </example>
 </method>
@@ -546,7 +546,7 @@ Returns 1 if additional iteration steps remain ,
 <returns type="int"/>
 
 <example>
-\begin{verbatim}
+
  # iterate through the data
   
  tp.open(tabnames=['3c273.ms','3c48.ms'])
@@ -561,7 +561,7 @@ Returns 1 if additional iteration steps remain ,
  ret = tp.iterplotnext()
  ret = tp.iterplotnext()
 ...
-\end{verbatim}
+
 </example>
 </method>
 
@@ -585,7 +585,7 @@ Okay if ignored.
 
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
  # iterate through and stop after 5 iterations of 2 plots per page
   
  tp.open(tabnames=['3c273.ms','3c48.ms'])
@@ -602,7 +602,7 @@ Okay if ignored.
  ret = tp.iterplotnext()
  ret = tp.iterplotnext()
  tp.iterplotstop()
-\end{verbatim}
+
 </example>
 </method>
 
@@ -654,20 +654,20 @@ row-major ordering of panels. -->
 <returns type="bool"/>
 
 <example>
-\begin{verbatim}
+
   tp.markregions(nrows=2,ncols=1,panel=1,region=[300.0,400.0,0.090,0.095])
-\end{verbatim}
+
 </example>
 
 <!--
 
 <example>
-\begin{verbatim}
+
 # mark 2 flag regions on a multi-panel plot, one in panel 1 and one
 # in panel 2.
   tp.markregions(panel=1)
   tp.markregions(panel=2)
-\end{verbatim}
+
 </example>
 
 -->
@@ -707,13 +707,13 @@ flagged for the marked flag regions by setting the corresponding row flag.
 
 <!--
 <example>
-\begin{verbatim}
+
 # mark 2 flag regions on a multi-panel plot, one in panel 1 and one
 # in panel 2. Then apply the flags and write to disk.
   tp.markregions(panel=1)
   tp.markregions(panel=2)
   tp.flagdata()
-\end{verbatim}
+
 </example>
 -->
 
@@ -739,13 +739,13 @@ flagged for the marked flag regions by setting the corresponding row flag.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 # mark 2 flag regions on a multi-panel plot, one in panel 1 and one
 # in panel 2. Then apply the flags and write to disk.
   tp.markregions(panel=1)
   tp.markregions(panel=2)
   tp.unflagdata()
-\end{verbatim}
+
 </example>
 </method>
 
@@ -793,13 +793,13 @@ indexing into a stored history of marked flag-regions).
 
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 # clear all flags from two measurement set tables
   
   tp.open(tabnames=['3c273.ms','3c48.ms'])
   tp.clearflags()
   tp.done()
-\end{verbatim}
+
 </example>
 </method>
 
@@ -834,14 +834,14 @@ indexing into a stored history of marked flag-regions).
    <description>  Restore flags from a saved flag_version. 
  This applies to the last opened Tables
 
-\begin{verbatim}
+
  versionname : name of flag version to restore to main table
  merge : Type of operation to perform during restoration.
         merge = replace  : replaces the main table flags.
         merge = and   : logical AND with main table flags
         merge = or    : logical OR with main table flags
         Default : replace.
-\end{verbatim}
+
 </description>
 <input>
      <param type="stringArray" name="versionname">
@@ -916,13 +916,13 @@ clearplot(nrows,ncols,panel) clears a plot on a specified panel.
 </input>
 <returns type="bool"/>
 <example>
-\begin{verbatim}
+
 # clear all flags from two measurement set tables
   
   tp.open(tabnames=['3c273.ms','3c48.ms'])
   tp.clearflags()
   tp.done()
-\end{verbatim}
+
 </example>
 </method>
 

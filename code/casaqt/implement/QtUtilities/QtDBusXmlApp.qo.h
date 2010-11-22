@@ -156,7 +156,7 @@ protected:
     // intended recipient.  Note that most applications won't need to do this
     // (and probably shouldn't) since dbusRunXmlMethod() will be called with the
     // appropriate parameters if this object is the intended recipient.
-    virtual void dbusXmlReceived(const QtDBusXML& xml) { }
+    virtual void dbusXmlReceived(const QtDBusXML& xml) { (void)xml; }
     
     
     // IMPLEMENTED METHODS //

@@ -70,7 +70,8 @@ public:
   Bool anyTransform() const { return ((frameStr()!="") ||
 				(veldefStr()!="RADIO") ||
 				(xpcOffset()!=0.0) ||
-				(ypcOffset()!=0.0)); };
+				(ypcOffset()!=0.0) ||
+				(formStokes()) ); };
   
   // Convenience methods for returning the standard field values.
   // <group>
@@ -83,6 +84,8 @@ public:
   Double restFreqHz() const   { return restFreq_*1.0e6; };
   Double xpcOffset() const  { return XpcOffset_; };
   Double ypcOffset() const  { return YpcOffset_; };
+  Bool formStokes() const   { return formStokes_; };
+
   // </group>
   
   
@@ -98,6 +101,7 @@ public:
   void setRestFreq(Quantity restfreq)   { restFreq_ = restfreq.getValue("MHz"); };
   void setXpcOffset(Double dx)          { XpcOffset_ = dx; };
   void setYpcOffset(Double dy)          { YpcOffset_ = dy; };
+  void setFormStokes(Bool formstokes)   { formStokes_ = formstokes; };
   // </group>
   
   
@@ -124,6 +128,9 @@ private:
 
   // Phase center offsets
   Double XpcOffset_, YpcOffset_;
+
+  // Form Stokes from correlations
+  Bool formStokes_;
 
   // Sets the default values.
   void setDefaults();

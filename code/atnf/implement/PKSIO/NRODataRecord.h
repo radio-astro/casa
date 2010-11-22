@@ -50,26 +50,18 @@ using namespace std ;
 // <reviewed reviewer="" date="" tests="" demos="">
 // </reviewed>
 
-// <prerequisite>
-//   <li> 
-// </prerequisite>
-//
 // <etymology>
 // NRO and ASTE raw data format consists of two major components; data 
-// header and scan record. <linkto class=NROData>NROData</linkto> is a 
-// representation of the scan record 
+// header and scan record. <linkto class=NRODataRecord>NRODataRecord</linkto> 
+// is a representation of the scan record 
 // that contains a scan header and a spectral data.
 // </etymology>
 //
 // <synopsis>
 // <linkto class=NRODataRecord>NRODataRecord</linkto> is a struct that is an 
 // implementation of a single scan record.
-// All attributes are public, i.e. able to access directly.
+// All attributes are public.
 // </synopsis>
-//
-// <example>
-// 
-// </example>
 //
 // <motivation>
 // <linkto class=NRODataRecord>NRODataRecord</linkto> are defined to import 
@@ -78,9 +70,6 @@ using namespace std ;
 // attributes individually.
 // </motivation>
 //
-// <to do asof="">
-//   <li>
-// </to do>  
 struct NRODataRecord
 {
   // Type of file record

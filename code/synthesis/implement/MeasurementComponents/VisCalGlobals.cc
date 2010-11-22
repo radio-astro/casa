@@ -88,20 +88,30 @@ SolvableVisCal* createSolvableVisCal(const String& type, VisSet& vs) {
   else if (uptype=="GSPLINE") 
     return new GJonesSpline(vs);
   
-  else if (uptype=="TF" || uptype=="TF JONES") 
+  else if (uptype=="TF" || uptype=="TF JONES" || uptype=="TF NOISE") 
     return new TfJones(vs);
 
-  else if (uptype=="T" || uptype=="T JONES") 
+  else if (uptype=="T" || uptype=="T JONES" || uptype=="T NOISE") 
     return new TJones(vs);
 
   else if (uptype.before('+')=="DLIN" ||
 	   uptype.before('+')=="D" || 
 	   uptype=="D JONES") 
-    return new DJones(vs);
+    return new DlinJones(vs);
 
   else if (uptype.before('+')=="DFLIN" || 
 	   uptype.before('+')=="DF" || 
 	   uptype=="DF JONES") 
+    return new DflinJones(vs);
+
+  else if (uptype.before('+')=="DGEN" ||
+	   uptype.before('+')=="DGENERAL" || 
+	   uptype=="DGEN JONES") 
+    return new DJones(vs);
+
+  else if (uptype.before('+')=="DFGEN" || 
+	   uptype.before('+')=="DFGENERAL" || 
+	   uptype=="DFGEN JONES") 
     return new DfJones(vs);
 
   else if (uptype=="J" || uptype=="J JONES") 
@@ -136,6 +146,13 @@ SolvableVisCal* createSolvableVisCal(const String& type, VisSet& vs) {
 
   else if (uptype=="K" || uptype=="K JONES")
     return new KJones(vs);
+
+  else if (uptype=="KCROSS" || uptype=="KCROSS JONES")
+    return new KcrossJones(vs);
+
+  else if (uptype=="GLINXPH" || uptype=="GLINXPH JONES" ||
+	   uptype=="XY+QU")
+    return new GlinXphJones(vs);
 
   else if (uptype=="KMBD" || uptype=="KMBD JONES")
     return new KMBDJones(vs);

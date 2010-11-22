@@ -11,7 +11,7 @@
  ***/
 
 #include <iostream>
-#include <xmlcasa/tables/tablerow_cmpt.h>
+#include <tablerow_cmpt.h>
 #include <casa/aips.h>
 
 using namespace std;

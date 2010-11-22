@@ -130,25 +130,25 @@ void PlotMSAxesTab::update(const PlotMSPlot& plot) {
     itsYWidget_->setInCache(found);
     
     // Update labels.
-    changedText(xLabel, d->isSet() && (c->xAxis() != c2->xAxis() ||
+    highlightWidgetText(xLabel, d->isSet() && (c->xAxis() != c2->xAxis() ||
                 (PMS::axisIsData(c->xAxis()) &&
                  c->xDataColumn() != c2->xDataColumn())));
-    changedText(itsXWidget_->dataLabel(), d->isSet() &&
+    highlightWidgetText(itsXWidget_->dataLabel(), d->isSet() &&
                 c->xDataColumn() != c2->xDataColumn());
-    changedText(itsXWidget_->attachLabel(), d->isSet() &&
+    highlightWidgetText(itsXWidget_->attachLabel(), d->isSet() &&
                 a->xAxis() != a2->xAxis());
-    changedText(itsXWidget_->rangeLabel(), d->isSet() &&
+    highlightWidgetText(itsXWidget_->rangeLabel(), d->isSet() &&
                 (a->xRangeSet() != a2->xRangeSet() ||
                 (a->xRangeSet() && a->xRange() != a2->xRange())));
     
-    changedText(yLabel, d->isSet() && (c->yAxis() != c2->yAxis() ||
+    highlightWidgetText(yLabel, d->isSet() && (c->yAxis() != c2->yAxis() ||
                 (PMS::axisIsData(c->yAxis()) &&
                  c->yDataColumn() != c2->yDataColumn())));
-    changedText(itsYWidget_->dataLabel(), d->isSet() &&
+    highlightWidgetText(itsYWidget_->dataLabel(), d->isSet() &&
                 c->yDataColumn() != c2->yDataColumn());
-    changedText(itsYWidget_->attachLabel(), d->isSet() &&
+    highlightWidgetText(itsYWidget_->attachLabel(), d->isSet() &&
                 a->yAxis() != a2->yAxis());
-    changedText(itsYWidget_->rangeLabel(), d->isSet() &&
+    highlightWidgetText(itsYWidget_->rangeLabel(), d->isSet() &&
                 (a->yRangeSet() != a2->yRangeSet() ||
                 (a->yRangeSet() && a->yRange() != a2->yRange())));
 }

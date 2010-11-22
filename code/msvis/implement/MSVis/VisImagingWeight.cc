@@ -36,11 +36,11 @@
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
-  VisImagingWeight::VisImagingWeight() : wgtType_p("none"), doFilter_p(False) {
+  VisImagingWeight::VisImagingWeight() : multiFieldMap_p(-1), wgtType_p("none"), doFilter_p(False) {
 
     }
 
-  VisImagingWeight::VisImagingWeight(const String& type) : doFilter_p(False) {
+  VisImagingWeight::VisImagingWeight(const String& type) : multiFieldMap_p(-1),doFilter_p(False) {
 
         wgtType_p=type;
         wgtType_p.downcase();
@@ -55,34 +55,68 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     VisImagingWeight::VisImagingWeight(ROVisibilityIterator& vi, const String& rmode, const Quantity& noise,
                                        const Double robust, const Int nx, const Int ny,
                                        const Quantity& cellx, const Quantity& celly,
-                                       const Int uBox, const Int vBox) : doFilter_p(False) {
+                                       const Int uBox, const Int vBox, const Bool multiField) : multiFieldMap_p(-1), doFilter_p(False) {
   
         LogIO os(LogOrigin("VisSetUtil", "VisImagingWeight()", WHERE));
   
-        Double sumwt=0.0;
+        
 
         const VisBuffer vb(vi);
-  
         wgtType_p="uniform";
         // Float uscale, vscale;
         //Int uorigin, vorigin;
         Vector<Double> deltas;
+	//
+	//Sanjay's fix now backed out so regressions would pass
+	//
+        //uscale_p=(nx*cellx.get("rad").getValue());
+        //vscale_p=(ny*celly.get("rad").getValue());
         uscale_p=(nx*cellx.get("rad").getValue())/2.0;
         vscale_p=(ny*celly.get("rad").getValue())/2.0;
         uorigin_p=nx/2;
         vorigin_p=ny/2;
         nx_p=nx;
         ny_p=ny;
-  
         // Simply declare a big matrix
         //Matrix<Float> gwt(nx,ny);
-        gwt_p.resize(nx, ny);
-        gwt_p=0.0;
-  
+	gwt_p.resize(1);
+	multiFieldMap_p.clear();
+	vi.originChunks();
+	vi.origin();
+	String mapid=String::toString(vi.msId())+String("_")+String::toString(vi.fieldId());
+	multiFieldMap_p.define(mapid, 0);
+        gwt_p[0].resize(nx, ny);
+        gwt_p[0].set(0.0);
+	
+	Int fields=0;
+	for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
+            for (vi.origin();vi.more();vi++) {
+	      if(vi.newFieldId()){
+		 mapid=String::toString(vi.msId())+String("_")+String::toString(vi.fieldId());
+		if(multiField){
+		  if(!multiFieldMap_p.isDefined(mapid)){
+		    fields+=1;
+		    gwt_p.resize(fields+1);
+		    gwt_p[fields].resize(nx,ny);
+		    gwt_p[fields].set(0.0);
+		  }
+		}
+		if(!multiFieldMap_p.isDefined(mapid))
+		  multiFieldMap_p.define(mapid, fields);		  
+	      }
+	    }
+	}
+	
         Float u, v;
-        sumwt=0.0;
+        Vector<Double> sumwt(fields+1,0.0);
+	f2_p.resize(fields+1);
+	d2_p.resize(fields+1);
+	Int fid=0;
         for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
             for (vi.origin();vi.more();vi++) {
+	      if(vi.newFieldId())
+		mapid=String::toString(vi.msId())+String("_")+String::toString(vi.fieldId());
+	      fid=multiFieldMap_p(mapid);
               Int nRow=vb.nRow();
               Int nChan=vb.nChannel();
               for (Int row=0; row<nRow; row++) {
@@ -96,8 +130,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                     if(((ucell-uBox)>0)&&((ucell+uBox)<nx)&&((vcell-vBox)>0)&&((vcell+vBox)<ny)) {
                       for (Int iv=-vBox;iv<=vBox;iv++) {
                         for (Int iu=-uBox;iu<=uBox;iu++) {
-                          gwt_p(ucell+iu,vcell+iv)+=vb.weight()(row);
-                          sumwt+=vb.weight()(row);
+                          gwt_p[fid](ucell+iu,vcell+iv)+=vb.weight()(row);
+                          sumwt[fid]+=vb.weight()(row);
                         }
                       }
                     }
@@ -106,8 +140,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                     if(((ucell-uBox)>0)&&((ucell+uBox)<nx)&&((vcell-vBox)>0)&&((vcell+vBox)<ny)) {
                       for (Int iv=-vBox;iv<=vBox;iv++) {
                         for (Int iu=-uBox;iu<=uBox;iu++) {
-                          gwt_p(ucell+iu,vcell+iv)+=vb.weight()(row);
-                          sumwt+=vb.weight()(row);
+                          gwt_p[fid](ucell+iu,vcell+iv)+=vb.weight()(row);
+                          sumwt[fid]+=vb.weight()(row);
                         }
                       }
                     }
@@ -124,39 +158,42 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         // to be exact, since any given case will require some experimentation.
   
         //Float f2, d2;
-  
-        if (rmode=="norm") {
+	for(fid=0; fid < Int(gwt_p.nelements()); ++fid){
+	  if (rmode=="norm") {
             os << "Normal robustness, robust = " << robust << LogIO::POST;
-            Double sumlocwt = 0.;
-            for(Int vgrid=0;vgrid<ny;vgrid++) {
-                for(Int ugrid=0;ugrid<nx;ugrid++) {
-                    if(gwt_p(ugrid, vgrid)>0.0) sumlocwt+=square(gwt_p(ugrid,vgrid));
-                }
-            }
-            f2_p = square(5.0*pow(10.0,Double(-robust))) / (sumlocwt / sumwt);
-            d2_p = 1.0;
-        }
-        else if (rmode=="abs") {
+	    Double sumlocwt = 0.;
+	    for(Int vgrid=0;vgrid<ny;vgrid++) {
+	      for(Int ugrid=0;ugrid<nx;ugrid++) {
+		if(gwt_p[fid](ugrid, vgrid)>0.0) sumlocwt+=square(gwt_p[fid](ugrid,vgrid));
+	      }
+	    }
+	    f2_p[fid] = square(5.0*pow(10.0,Double(-robust))) / (sumlocwt / sumwt[fid]);
+	    d2_p[fid] = 1.0;
+	    
+	  }
+	  else if (rmode=="abs") {
             os << "Absolute robustness, robust = " << robust << ", noise = "
-                    << noise.get("Jy").getValue() << "Jy" << LogIO::POST;
-            f2_p = square(robust);
-            d2_p = 2.0 * square(noise.get("Jy").getValue());
-        }
-        else {
-            f2_p = 1.0;
-            d2_p = 0.0;
-        }
-  
+	       << noise.get("Jy").getValue() << "Jy" << LogIO::POST;
+	    f2_p[fid] = square(robust);
+	    d2_p[fid] = 2.0 * square(noise.get("Jy").getValue());
+	    
+	  }
+	  else {
+            f2_p[fid] = 1.0;
+            d2_p[fid] = 0.0;
+	  }
+	}
     }
 
     VisImagingWeight::~VisImagingWeight(){
-
-        gwt_p.resize();
+      for (uInt fid=0; fid < gwt_p.nelements(); ++fid){
+	gwt_p[fid].resize();
+      }
     }
 
 
   void VisImagingWeight::setFilter(const String& type, const Quantity& bmaj,
-			const Quantity& bmin, const Quantity& bpa)
+				   const Quantity& bmin, const Quantity& bpa)
   {
 
      LogIO os(LogOrigin("VisImagingWeight", "setFilter()", WHERE));
@@ -238,7 +275,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     void VisImagingWeight::weightUniform(Matrix<Float>& imWeight, const Matrix<Bool>& flag, const Matrix<Double>& uvw,
                                          const Vector<Double>& frequency,
-                                         const Vector<Float>& weight) const{
+                                         const Vector<Float>& weight, const Int msId, const Int fieldId) const{
 
 
 
@@ -246,37 +283,43 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // cout << " WEIG " << nx_p << "  " << ny_p << "   " << gwt_p.shape() << endl;
       // cout << "f2 " << f2_p << " d2 " << d2_p << " uscale " << uscale_p << " vscal " << vscale_p << endl;
       // cout << "min max gwt " << min(gwt_p) << "    " << max(gwt_p) << endl; 
-        Int ndrop=0;
-        Double sumwt=0.0;
-        Int nRow=imWeight.shape()(1);
-        Int nChannel=imWeight.shape()(0);
+      String mapid=String::toString(msId)+String("_")+String::toString(fieldId);
+      
+      if(!multiFieldMap_p.isDefined(mapid))
+	throw(AipsError("Imaging weight calculation is requested for a data that was not selected"));
+      
+      Int fid=multiFieldMap_p(mapid);
+      Int ndrop=0;
+      Double sumwt=0.0;
+      Int nRow=imWeight.shape()(1);
+      Int nChannel=imWeight.shape()(0);
 
-        Float u, v;
-        for (Int row=0; row<nRow; row++) {
-            for (Int chn=0; chn<nChannel; chn++) {
-                if (!flag(chn,row)) {
-                    Float f=frequency(chn)/C::c;
-                    u=uvw(0, row)*f;
-                    v=uvw(1, row)*f;
-                    Int ucell=Int(uscale_p*u+uorigin_p);
-                    Int vcell=Int(vscale_p*v+vorigin_p);
-                    imWeight(chn,row)=weight(row);
-                    if((ucell>0)&&(ucell<nx_p)&&(vcell>0)&&(vcell<ny_p)) {
-                        if(gwt_p(ucell,vcell)>0.0) {
-                            imWeight(chn,row)/=gwt_p(ucell,vcell)*f2_p+d2_p;
-                            sumwt+=imWeight(chn,row);
-                        }
-                    }
-                    else {
-                        imWeight(chn,row)=0.0;
-                        ndrop++;
-                    }
-                }
-		else{
-		  imWeight(chn,row)=0.0;
-		}
-            }
-        }
+      Float u, v;
+      for (Int row=0; row<nRow; row++) {
+	for (Int chn=0; chn<nChannel; chn++) {
+	  if (!flag(chn,row)) {
+	    Float f=frequency(chn)/C::c;
+	    u=uvw(0, row)*f;
+	    v=uvw(1, row)*f;
+	    Int ucell=Int(uscale_p*u+uorigin_p);
+	    Int vcell=Int(vscale_p*v+vorigin_p);
+	    imWeight(chn,row)=weight(row);
+	    if((ucell>0)&&(ucell<nx_p)&&(vcell>0)&&(vcell<ny_p)) {
+	      if(gwt_p[fid](ucell,vcell)>0.0) {
+		imWeight(chn,row)/=gwt_p[fid](ucell,vcell)*f2_p[fid]+d2_p[fid];
+		sumwt+=imWeight(chn,row);
+	      }
+	    }
+	    else {
+	      imWeight(chn,row)=0.0;
+	      ndrop++;
+	    }
+	  }
+	  else{
+	    imWeight(chn,row)=0.0;
+	  }
+	}
+      }
 
 
 
@@ -336,10 +379,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     VisImagingWeight& VisImagingWeight::operator=(const VisImagingWeight& other){
         if(this != &other){
-            gwt_p.reference(other.gwt_p);
+            gwt_p=other.gwt_p;
             wgtType_p=other.wgtType_p;
             uscale_p=other.uscale_p;
             vscale_p=other.vscale_p;
+	    f2_p.resize();
+	    d2_p.resize();
             f2_p=other.f2_p;
             d2_p=other.d2_p;
             uorigin_p=other.uorigin_p;
@@ -351,6 +396,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    sinpa_p=other.sinpa_p;
 	    rbmaj_p=other.rbmaj_p;
 	    rbmin_p=other.rbmin_p;
+	    multiFieldMap_p=other.multiFieldMap_p;
         }
         return *this;
     }

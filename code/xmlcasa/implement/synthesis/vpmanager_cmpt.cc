@@ -11,12 +11,12 @@
  ***/
 
 #include <iostream>
-#include <xmlcasa/synthesis/vpmanager_cmpt.h>
+#include <vpmanager_cmpt.h>
 #include <casa/Logging/LogIO.h>
-#include<casa/BasicSL/String.h>
+#include <casa/BasicSL/String.h>
 #include <casa/Containers/Record.h>
-#include<casa/Utilities/Assert.h>
-#include<measures/Measures/MDirection.h>
+#include <casa/Utilities/Assert.h>
+#include <measures/Measures/MDirection.h>
 #include <synthesis/MeasurementEquations/VPManager.h>
 
 using namespace std;

@@ -56,6 +56,7 @@ VisEquation::VisEquation() :
   svc_(NULL),
   pivot_(VisCal::ALL),  // at the sky
   spwOK_(),
+  useInternalModel_(False),
   prtlev_(VISEQPRTLEV)
 {
   if (prtlev()>0) cout << "VE::VE()" << endl;
@@ -171,6 +172,18 @@ void VisEquation::setPivot(VisCal::Type pivot) {
 }
   
 
+//----------------------------------------------------------------------
+void VisEquation::setModel(const Vector<Float>& stokes) {
+
+  if (prtlev()>0) cout << "VE::setModel()" << endl;
+
+  // Set the internal point source model
+  useInternalModel_=True;
+  stokesModel_.resize(4);
+  stokesModel_.set(0.0);
+  stokesModel_(Slice(0,stokes.nelements(),1))=stokes;
+
+}
 
 
 //----------------------------------------------------------------------
@@ -227,19 +240,12 @@ void VisEquation::collapse(VisBuffer& vb) {
   if (prtlev()>0) cout << "VE::collapse()" << endl;
 
   // Handle origin of model data here:
-
-  /*
-  if (doaltmodel)
-    if (!skytype)
-      vb.setModel(model);;
-    // else skytype will originate model when encountered
+  if (useInternalModel_)
+    vb.setModelVisCube(stokesModel_);
   else
-    // force I/O from MS
-    vb.modelVisCube()
-  */
+    vb.modelVisCube();
 
   // Ensure required columns are present!
-  vb.modelVisCube();
   vb.visCube();
   vb.weightMat();
   
@@ -306,7 +312,7 @@ void VisEquation::collapse(VisBuffer& vb) {
 //----------------------------------------------------------------------
 void VisEquation::collapseForSim(VisBuffer& vb) {
 
-  if (prtlev()>0) cout << "VE::collapse()" << endl;
+  if (prtlev()>0) cout << "VE::collapseforSim()" << endl;
 
   // Handle origin of model data here (?):
 
@@ -319,28 +325,64 @@ void VisEquation::collapseForSim(VisBuffer& vb) {
   Int lidx=0;
   Int ridx=napp_-1;
 
+#ifdef RI_DEBUG
+  cout << "vb.visCube    original: " << vb.visCube()(0,0,500) <<  vb.visCube()(0,0,1216) <<  vb.visCube()(0,0,1224) << endl;
+  cout << "vb.model      original: " << vb.modelVisCube()(0,0,500) <<  vb.modelVisCube()(0,0,1216) <<  vb.modelVisCube()(0,0,1224) << endl;
+#endif
+
   // copy data to model, to be corrupted in place there.
   // 20091030 RI changed skyequation to use Observed.  the below 
   // should not require scratch columns 
   vb.setModelVisCube(vb.visCube());
 
-  // Corrupt Model down to (and including) the pivot
-  while (ridx>-1    && vc()[ridx]->type() >= pivot_) {
-    vc()[ridx]->corrupt(vb);
-    ridx--;
-  }
-  
   // zero the data. correct will operate in place on data, so 
   // if we don't have an AMueller we don't get anything from this.  
   vb.setVisCube(0.0);
-  // RI KLUDGE FOR BROKEN ANOISE
-  // vb.setVisCube(Complex(0.0001,0.0));
-  
+   
+#ifdef RI_DEBUG
+  cout << "vb.visCube before crct: " << vb.visCube()(0,0,500) <<  vb.visCube()(0,0,1216) <<  vb.visCube()(0,0,1224) << endl;
+#endif
+
   // Correct DATA up to pivot 
   while (lidx<napp_ && vc()[lidx]->type() < pivot_) {
-    vc()[lidx]->correct(vb);
+    if (prtlev()>2) cout << vc()[lidx]->typeName();
+    if (vc()[ridx]->extraTag()!="NoiseScale" or vc()[lidx]->type()!=VisCal::T) {
+      vc()[lidx]->correct(vb);
+      if (prtlev()>2) cout << " -> correct";
+    }
+    if (prtlev()>2) cout << endl;
     lidx++;
   }
+
+#ifdef RI_DEBUG
+  cout << "vb.visCube  after crct: " << vb.visCube()(0,0,500) <<  vb.visCube()(0,0,1216) <<  vb.visCube()(0,0,1224) << endl;
+  cout << "vb.model   before crpt: " << vb.modelVisCube()(0,0,500) <<  vb.modelVisCube()(0,0,1216) <<  vb.modelVisCube()(0,0,1224) << endl;
+#endif
+
+  // Corrupt Model down to (and including) the pivot
+  while (ridx>-1    && vc()[ridx]->type() >= pivot_) {
+    if (prtlev()>2) cout << vc()[lidx]->typeName();
+    // manually pick off a T intended to be noise scaling T:
+    if (pivot_ <= VisCal::T and vc()[ridx]->type()==VisCal::T) {
+      if (vc()[ridx]->extraTag()=="NoiseScale") {
+	vc()[ridx]->correct(vb);  // correct DATA
+	if (prtlev()>2) cout << " -> correct";
+      } else {
+	vc()[ridx]->corrupt(vb);
+	if (prtlev()>2) cout << " -> corrupt";
+      }
+    } else { 
+      vc()[ridx]->corrupt(vb);
+      if (prtlev()>2) cout << " -> corrupt";
+    }
+    if (prtlev()>2) cout << endl;
+    ridx--;
+  }
+  
+#ifdef RI_DEBUG
+  cout << "vb.model    after crpt: " << vb.modelVisCube()(0,0,500) <<  vb.modelVisCube()(0,0,1216) <<  vb.modelVisCube()(0,0,1224) << endl;
+  cout << "vb.visCube  after crpt: " << vb.visCube()(0,0,500) <<  vb.visCube()(0,0,1216) <<  vb.visCube()(0,0,1224) << endl << endl;
+#endif
 
   // add corrected/scaled data (e.g. noise) to corrupted model
   // vb.modelVisCube()+=vb.visCube();
@@ -358,8 +400,7 @@ void VisEquation::state() {
 
   if (prtlev()>0) cout << "VE::state()" << endl;
 
-  cout << "freqAveOK_ = " << freqAveOK_ << endl;
-
+  cout << boolalpha;
 
   // Order in which DATA is corrected
   cout << "Correct order:" << endl;
@@ -385,13 +426,23 @@ void VisEquation::state() {
     cout << " <none>" << endl;
   
   cout << endl;
+
+  cout << "Source model:" << endl;
+  cout << "  useInternalModel_ = " << useInternalModel_ << endl;
+  if (useInternalModel_)
+    cout << "  Stokes = " << stokesModel_ << endl;
+  else
+    cout << "  <using MODEL_DATA column>" << endl;
+  cout << endl;
+
   cout << "Collapse order:" << endl;
+  cout << "  freqAveOK_ = " << freqAveOK_ << endl;
   
   if (svc_) {
     Int lidx=0;
     Int ridx=napp_-1;
 
-    if ( !svc().freqDepMat() ) {
+    if ( freqAveOK_ && !svc().freqDepMat() ) {
       // Correct DATA up to last freqDep term on LHS
       cout << " LHS (pre-freqAve):" << endl;
       if (lidx <= lfd_) 

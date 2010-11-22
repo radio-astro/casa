@@ -52,9 +52,15 @@ class plotants_test(unittest.TestCase):
         
     def test2(self):
         '''Test 2: Good input file and output exists'''
-        self.res = plotants(vis=self.msfile, figfile=self.fig)
-        self.assertEqual(self.res,None)
-        self.assertTrue(os.path.exists(self.fig))
+        if os.uname()[0] == "Darwin" and \
+           os.system("sw_vers -productVersion | grep 10.6") == 0 and \
+           not os.getenv("DISPLAY"):
+            print >> sys.stderr, "Warning: The DISPLAY environment variable is unset, " + \
+            "required on OS X 10.6, skipping test"
+        else:
+            self.res = plotants(vis=self.msfile, figfile=self.fig)
+            self.assertEqual(self.res,None)
+            self.assertTrue(os.path.exists(self.fig))
         
 def suite():
     return [plotants_test]

@@ -10,7 +10,7 @@
  ***/
 
 #include <iostream>
-#include <xmlcasa/synthesis/calibrater_cmpt.h>
+#include <calibrater_cmpt.h>
 #include <synthesis/MeasurementComponents/Calibrater.h>
 #include <ms/MeasurementSets.h>
 #include <casa/Logging/LogIO.h>
@@ -185,6 +185,23 @@ calibrater::setmodel(const std::string& modelImage)
     }
   return true;
 }
+
+bool 
+calibrater::setptmodel(const std::vector<double>& stokes) {
+  try
+    {
+      itsCalibrater->setModel(stokes);
+    }
+  catch (AipsError x)
+    {
+      *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+      RETHROW(x);
+    }
+  return true;
+}
+
+
+
 
 bool 
 calibrater::setapply(const std::string& type,
@@ -734,6 +751,30 @@ calibrater::listcal(const std::string& tablein,
 				 toCasaString(spw),
 				 toCasaString(listfile),
 				 pagerows);
+
+  } catch (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+  }
+  return rstat;
+
+}
+
+bool 
+calibrater::fromaipscal(const std::string& tableout, 
+			const std::string& fitsfile, 
+			const std::string& extension, 
+			const std::string& whichhdu)
+{
+
+  Bool rstat(False);
+  try {
+
+    *itsLog << LogIO::NORMAL << "Transforming AIPS calibration table in extension " << extension
+	    << " of file " << fitsfile << " into calibration table " << tableout << LogIO::POST;
+    // call CalTables code here
+
+    rstat = True;
 
   } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;

@@ -1,32 +1,34 @@
 //#---------------------------------------------------------------------------
 //# SDFITSwriter.cc: ATNF CFITSIO interface class for SDFITS output.
 //#---------------------------------------------------------------------------
-//# Copyright (C) 2000-2008
-//# Mark Calabretta, ATNF
+//# livedata - processing pipeline for single-dish, multibeam spectral data.
+//# Copyright (C) 2000-2009, Australia Telescope National Facility, CSIRO
 //#
-//# This library is free software; you can redistribute it and/or modify it
-//# under the terms of the GNU Library General Public License as published by
-//# the Free Software Foundation; either version 2 of the License, or (at your
-//# option) any later version.
+//# This file is part of livedata.
 //#
-//# This library is distributed in the hope that it will be useful, but WITHOUT
+//# livedata is free software: you can redistribute it and/or modify it under
+//# the terms of the GNU General Public License as published by the Free
+//# Software Foundation, either version 3 of the License, or (at your option)
+//# any later version.
+//#
+//# livedata is distributed in the hope that it will be useful, but WITHOUT
 //# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
-//# License for more details.
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+//# more details.
 //#
-//# You should have received a copy of the GNU Library General Public License
-//# along with this library; if not, write to the Free Software Foundation,
-//# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+//# You should have received a copy of the GNU General Public License along
+//# with livedata.  If not, see <http://www.gnu.org/licenses/>.
 //#
-//# Correspondence concerning this software should be addressed as follows:
-//#        Internet email: mcalabre@atnf.csiro.au.
-//#        Postal address: Dr. Mark Calabretta,
-//#                        Australia Telescope National Facility,
-//#                        P.O. Box 76,
-//#                        Epping, NSW, 2121,
+//# Correspondence concerning livedata may be directed to:
+//#        Internet email: mcalabre@atnf.csiro.au
+//#        Postal address: Dr. Mark Calabretta
+//#                        Australia Telescope National Facility, CSIRO
+//#                        PO Box 76
+//#                        Epping NSW 1710
 //#                        AUSTRALIA
 //#
-//# $Id: SDFITSwriter.cc,v 19.15 2008-11-17 06:58:58 cal103 Exp $
+//# http://www.atnf.csiro.au/computing/software/livedata.html
+//# $Id: SDFITSwriter.cc,v 19.18 2009-09-29 07:33:39 cal103 Exp $
 //#---------------------------------------------------------------------------
 //# Original: 2000/07/24, Mark Calabretta, ATNF
 //#---------------------------------------------------------------------------
@@ -37,10 +39,10 @@
 #include <casa/Logging/LogIO.h>
 
 #include <casa/iostream.h>
-#include <cstring>
 
 #include <algorithm>
 #include <math.h>
+#include <cstring>
 
 using namespace std;
 
@@ -173,8 +175,8 @@ int SDFITSwriter::create(
   char text[72];
   char version[7];
   char date[11];
-  sscanf("$Revision: 19.15 $", "%*s%s", version);
-  sscanf("$Date: 2008-11-17 06:58:58 $", "%*s%s", date);
+  sscanf("$Revision: 19.18 $", "%*s%s", version);
+  sscanf("$Date: 2009-09-29 07:33:39 $", "%*s%s", date);
   sprintf(text, "SDFITSwriter (v%s, %s)", version, date);
   fits_write_key_str(cSDptr, "ORIGIN", text, "output class", &cStatus);
 
@@ -230,7 +232,7 @@ int SDFITSwriter::create(
   fits_insert_col(cSDptr, ++ncol, "SCAN", "1I", &cStatus);
 
   // CYCLE (additional, real).
-  fits_insert_col(cSDptr, ++ncol, "CYCLE", "1I", &cStatus);
+  fits_insert_col(cSDptr, ++ncol, "CYCLE", "1J", &cStatus);
 
   // DATE-OBS (core, real).
   fits_insert_col(cSDptr, ++ncol, "DATE-OBS", "10A", &cStatus);
@@ -390,9 +392,9 @@ int SDFITSwriter::create(
     fits_write_tdim(cSDptr, ncol, 2, tdim, &cStatus);
 
     // BASESUB (additional, real).
-    sprintf(tform, "%dE", 9*maxNPol);
+    sprintf(tform, "%dE", 24*maxNPol);
     fits_insert_col(cSDptr, ++ncol, "BASESUB", tform, &cStatus);
-    tdim[0] = 9;
+    tdim[0] = 24;
     fits_write_tdim(cSDptr, ncol, 2, tdim, &cStatus);
   }
 
@@ -688,7 +690,7 @@ int SDFITSwriter::write(MBrecord &mbrec)
                        &cStatus);
 
     // BASESUB.
-    fits_write_col_flt(cSDptr, ++icol, cRow, 1, 9*nPol, mbrec.baseSub[0][0],
+    fits_write_col_flt(cSDptr, ++icol, cRow, 1, 24*nPol, mbrec.baseSub[0][0],
                        &cStatus);
   }
 

@@ -371,12 +371,11 @@ coordinate system
 There are no events emitted or acted upon by this \tool.
 -->
 
-\goodbreak\bigskip
-\noindent {\bf Example}
+</description>
 
 <example> 
 <!--include 'coordsys.g'-->
-\begin{verbatim}
+
 """
 #
 print "\t----\t Intro Ex 1 \t----"
@@ -384,9 +383,8 @@ csys = cs.newcoordsys(direction=T, linear=2)
 csys.summary()
 #
 """
-\end{verbatim}
+
 </example>
-</description>
  
    <method type="function" name="newcoordsys">
    <shortdescription>Create a non-default coordsys tool</shortdescription>
@@ -476,7 +474,7 @@ a list of pixel and world values to function
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t newcoordsys Ex 1 \t----"
@@ -493,7 +491,7 @@ print cs2.coordinatetype()
 cs2.summary()
 #
 """
-\end{verbatim}
+
 The second Coordinate System contains a direction coordinate
 and a Stokes coordinate.   This means that there are three `axes'
 associated with the 2 coordinates.
@@ -552,7 +550,7 @@ Use only for assay tests.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t addcoordinate Ex 1 \t----"
@@ -561,7 +559,7 @@ mycs.addcoordinate(direction=T)
 mycs.done()
 #
 """
-\end{verbatim}
+
 
 </example>
 </method>
@@ -589,7 +587,7 @@ ordering.  Generally they will be in the same order.
 
 </description>
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t axesmap Ex 1 \t----"
@@ -600,7 +598,7 @@ csys.axesmap(F);
 #[1L, 2L, 3L]
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -629,7 +627,7 @@ ordering.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t axiscoordinatetypes Ex 1 \t----"
@@ -638,7 +636,7 @@ csys.axiscoordinatetypes()
 #['Direction', 'Direction', 'Spectral']
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -671,8 +669,9 @@ which is used when converting between world and pixel coordinate.
 This function allows you to recover those conversion types.  If no extra
 conversion layer has been set, you get back the native reference types.
 
+</description>
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t conversiontype Ex 1 \t----"
@@ -684,9 +683,8 @@ print csys.conversiontype (type='direction'), ' ', csys.conversiontype (type='sp
 #GALACTIC   BARY
 #
 """
-\end{verbatim}
+
 </example>
-</description>
 </method>
 
  
@@ -763,7 +761,7 @@ The example clarifies the use of this function.
 <example>
 In this example we convert from a vector of absolute pixels
 to a mixture of pixel/world and abs/rel.
-\begin{verbatim}
+
 """
 #
 print "\t----\t convert Ex 1 \t----"
@@ -776,7 +774,7 @@ print cout
 #[10.0, 1140.0058038878046, 1139.1354056919731]
 #
 """
-\end{verbatim}
+
 </example>
 
 </method>
@@ -842,7 +840,7 @@ and a matrix of many converted coordinates is returned.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t convertmany Ex 1 \t----"
@@ -869,7 +867,7 @@ print cout
 #  1143.3888287218554)]
 #
 """
-\end{verbatim}
+
 </example>
 
 </method>
@@ -898,7 +896,7 @@ Possible output values are 'Direction', 'Spectral', 'Stokes', 'Linear', and
 
 </description>
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t coordinatetype Ex 1 \t----"
@@ -909,7 +907,7 @@ cs.coordinatetype()
 #['Direction', 'Spectral']
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -930,7 +928,7 @@ on the new \tool.
 
 </description>
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t copy Ex 1 \t----"
@@ -951,7 +949,7 @@ cs2.done()
 cs2.summary()     # Now it's done (done just invokes default constructor)
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -969,7 +967,7 @@ longer call any functions on the \tool\ after it has been {\stff done}. -->
 
 </description>
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t done Ex 1 \t----"
@@ -978,7 +976,7 @@ csys.done()
 print csys.torecord()            # default tool
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -996,7 +994,7 @@ This function <!--(short-hand name {\stff e})--> returns the epoch of the observ
 
 </description>
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t epoch Ex 1 \t----"
@@ -1011,7 +1009,7 @@ qa.time(time)                    # Format with quanta
 #'23:09:20'
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1052,7 +1050,7 @@ fail).-->
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t findaxis Ex 1 \t----"
@@ -1065,7 +1063,7 @@ rtn
 #{'axisincoordinate': 0L, 'coordinate': 1L, 'return': True}
 #
 """
-\end{verbatim}
+
 
 In these examples, the Coordinate System has 2 coordinates and 4 axes
 (0-rel, both world and pixel the same).  The first example finds the
@@ -1120,7 +1118,7 @@ which returns the mapping between pixel and world axes.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t findcoordinate Ex 1 \t----"
@@ -1132,7 +1130,7 @@ print 'pixel, world axes =', rtn['pixel'], rtn['world']
 #pixel, world axes = [0 1] [0 1]
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1194,7 +1192,7 @@ values of the velocity.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t frequencytofrequency Ex 1 \t----"
@@ -1212,7 +1210,7 @@ print cs.frequencytofrequency(freq, velocity='100km/s')
 # 1980339319.698648, 2121792128.2485518]
 #
 """
-\end{verbatim}
+
 
 </example>
 </method>
@@ -1272,7 +1270,7 @@ in the Coordinate System. See also function
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t frequencytovelocity Ex 1 \t----"
@@ -1298,7 +1296,7 @@ print "vel=", vel
 # 1144.6648790772279, 1144.4522032665104]
 #
 """
-\end{verbatim}
+
 
 In this example, we find the optical velocity in km/s of every pixel
 along the spectral axis of our image.  First we  obtain the Coordinate
@@ -1338,7 +1336,7 @@ contents.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t fromrecord Ex 1 \t----"
@@ -1354,7 +1352,7 @@ print cs2.ncoordinates()
 #2
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1399,7 +1397,7 @@ You can set the increment with function
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t increment Ex 1 \t----"
@@ -1414,7 +1412,7 @@ print csys.increment(format='n', type='spectral')
 #{'numeric': [1000.0]}
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1439,7 +1437,7 @@ You can set the linear transform with function
 
 </description>
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t lineartransform Ex 1 \t----"
@@ -1450,7 +1448,7 @@ csys.lineartransform('lin')                             # 3 x 3
 # [(1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0)]
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1485,7 +1483,7 @@ You can set the names with function
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t names Ex 1 \t----"
@@ -1501,7 +1499,7 @@ print cs.names('spec')
 #Frequency
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1531,7 +1529,7 @@ ordering.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t naxes Ex 1 \t----"
@@ -1544,7 +1542,7 @@ print n
 #3
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1562,7 +1560,7 @@ coordinates in the Coordinate System.
 
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t ncoordinates Ex 1 \t----"
@@ -1574,7 +1572,7 @@ print cs2.ncoordinates()
 #1
 #
 """
-\end{verbatim}
+
 </example>
 
 </method>
@@ -1591,7 +1589,7 @@ You can set it with the function <link anchor="images:coordsys.setobserver.funct
 
 </description>
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t observer Ex 1 \t----"
@@ -1600,7 +1598,7 @@ print csys.observer()
 #Karl Jansky
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1658,7 +1656,7 @@ an exception is generated.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t projection Ex 1 \t----"
@@ -1673,7 +1671,7 @@ print csys.projection('ZPN')
 #{'nparameters': 100}
 #
 """
-\end{verbatim}
+
 We first recover the projection type and parameters from
 the direction coordinate.  Then we find the list of all
 possible projection types.  FInally, we recover the number of 
@@ -1734,7 +1732,7 @@ You can set the reference code with
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t referencecode Ex 1 \t----"
@@ -1751,7 +1749,7 @@ print csys.referencecode('dir')
 #J2000
 #
 """
-\end{verbatim}
+
 
 In this example we first get the list of all possible reference codes
 for a direction coordinate.<!-- (and print some of the normal ones).--> Then we
@@ -1791,7 +1789,7 @@ You can set the reference pixel with function
 
 </description>
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t referencepixel Ex 1 \t----"
@@ -1803,7 +1801,7 @@ print csys.referencepixel('lin')
 #{'ar_type': 'absolute', 'pw_type': 'pixel', 'numeric': array([ 2.,  3.])}
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1846,7 +1844,7 @@ You can set the reference value with function
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t referencevalue Ex 1 \t----"
@@ -1867,7 +1865,7 @@ print csys.referencevalue(format='n', type='spec')
 # 'pw_type': 'world'}
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1892,7 +1890,7 @@ order.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t reorder Ex 1 \t----"
@@ -1904,7 +1902,7 @@ print csys.coordinatetype()
 #['Spectral', 'Linear', 'Direction']
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1939,7 +1937,7 @@ coordinates must have the same number of axes.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t replace Ex 1 \t----"
@@ -1952,7 +1950,7 @@ print cs1.coordinatetype()
 #['Direction', 'Spectral']
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -1982,7 +1980,7 @@ an exception is generated.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t restfrequency Ex 1 \t----"
@@ -1994,7 +1992,7 @@ print csys.restfrequency()
 #{'value': [1300000000.0, 1200000000.0], 'unit': 'Hz'}
 #
 """
-\end{verbatim}
+
 In the example, the initial spectral coordinate has 1 rest frequency.
 Then we set it with two, nominating the second as the active rest frequency,
 and recover them.
@@ -2106,6 +2104,7 @@ print 'pixel, frequency, velocity = ', p[pa], w['numeric'][wa], v
 """
 \end{verbatim}
 
+
 You must also be aware of when this extra layer is active and when it is
 not.  It's a bit nasty. 
 
@@ -2152,6 +2151,10 @@ the right in parentheses).
      <param type="string" direction="in" name="type">
      <description>Conversion type</description>
      <value></value>
+     </param>
+     <param type="bool" direction="in" name="showconversion">
+     <description>Show the conversion layer</description>
+     <value>true</value>
      </param>
 </input>
 
@@ -2239,7 +2242,7 @@ the reference pixel is special and you should not change it.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t setdirection Ex 1 \t----"
@@ -2255,7 +2258,7 @@ print csys.referencevalue(format='s')
 # 'string': array(['10.00000000 deg', '-20.00000000 deg'], dtype='|S17')}
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2283,7 +2286,7 @@ can get the current epoch with function
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t setepoch Ex 1 \t----"
@@ -2297,7 +2300,7 @@ print csys.epoch()
 #{'type': 'epoch', 'm0': {'value': 54161.766782997685, 'unit': 'd'}, 'refer': 'UTC'}
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2346,7 +2349,7 @@ You can recover the current increments with function
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t setincrement Ex 1 \t----"
@@ -2379,7 +2382,7 @@ print csys.increment(format='q')
 #              '*3': {'value': 20000.0, 'unit': 'Hz'}}}
 #
 """
-\end{verbatim}
+
 
 In the example we first recover the increments as a vector of
 quantities. We then create a quantity for a new value for the spectral
@@ -2421,7 +2424,7 @@ You can recover the current linear transform with function
 
 </description>
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t setlineartransform Ex 1 \t----"
@@ -2436,7 +2439,7 @@ csys.setlineartransform('lin',xf)
 print csys.lineartransform('lin')
 #[(1.0, 0.01, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0)]
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2474,7 +2477,7 @@ You can recover the current axis names with function
 
 </description>
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t setnames Ex 1 \t----"
@@ -2487,7 +2490,7 @@ print csys.names()
 #['a', 'flying', 'fish']
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2515,7 +2518,7 @@ observer's name is not fundamental to the Coordinate System !
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t setobserver Ex 1 \t----"
@@ -2527,7 +2530,7 @@ print csys.observer()
 #Ronald Biggs 
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2591,7 +2594,7 @@ an exception is generated.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t Ex setprojection 1 \t----"
@@ -2605,7 +2608,7 @@ csys.setprojection('ZEA')
 im2 = ia.regrid('cena.zea', csys=csys.torecord(), overwrite=true)
 #
 """
-\end{verbatim}
+
 We change the projection of an image from SIN to 
 ZEA (which requires no parameters).
 </example>
@@ -2657,7 +2660,7 @@ then the reference code is simply overwritten; do this very carefully.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t Ex setreferencecode 1 \t----"
@@ -2674,7 +2677,7 @@ print cs.referencecode('dir')
 cs.setreferencecode('B1950', 'dir', T)
 #
 """
-\end{verbatim}
+
 
 In this example we first get the list of all possible reference codes
 for a direction coordinate. <!-- (and print some of the normal
@@ -2684,7 +2687,7 @@ coordinate in our Coordinate System.
 </example>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t Ex setreferencecode 2 \t----"
@@ -2697,7 +2700,7 @@ im2 = ia.regrid(outfile='myimage.b1950', csys=csys.torecord(),
                 overwrite=true)  # Regrid and make new image
 #
 """
-\end{verbatim}
+
 
 In this example we show how to regrid an image from J2000
 to B1950.  First we recover the Coordinate System  into the Coordsys
@@ -2751,7 +2754,7 @@ regridded image.
 
 </description>
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t setreferencelocation Ex 1 \t----"
@@ -2770,7 +2773,7 @@ print csys.referencevalue()
 #{'numeric': array([ 19.,  19.])}
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2814,7 +2817,7 @@ You can recover the current reference pixel with function
 
 </description>
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t setreferencepixel Ex 1 \t----"
@@ -2827,7 +2830,7 @@ print csys.referencepixel()
 #[1.0, -1.0, -1.0]
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -2872,7 +2875,7 @@ record.
 
 </description>
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t setreferencevalue Ex 1 \t----"
@@ -2904,7 +2907,7 @@ print csys.referencevalue(format='q')
 #              '*3': {'value': 1415000000.0, 'unit': 'Hz'}}}
 #
 """
-\end{verbatim}
+
 </example>
 In the example we first recover the reference value as a vector of quantities.
 We then select out the value for the spectral coordinate, change it,
@@ -2964,7 +2967,7 @@ an exception is generated.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t setrestfrequency Ex 1 \t----"
@@ -2989,7 +2992,7 @@ print csys.restfrequency()
 #{'value': array([  1.40000000e+09,   1.66700000e+09]), 'unit': 'Hz'}
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -3054,7 +3057,7 @@ of Spectral Coordinate used).
 </description>
 
 <example>
-\begin{verbatim}
+
 print "\t----\t setspectral Ex 1 \t----"
 csys = cs.newcoordsys(spectral=T);
 f1 = [1,1.01,1.03,1.4]
@@ -3070,7 +3073,7 @@ print 'f1 = ', f1
 #f1 =  [1, 1.01, 1.03, 1.3999999999999999]
 print 'f2 = ', f2
 #f2 =  [1.0, 1.01, 1.03, 1.3999999999999999]
-\end{verbatim}
+
 We make a linear Spectral Coordinate.  Then overwrite it with
 a list of frequenices.  Convert those values to velocity,
 then overwrite the coordinate starting with a list of
@@ -3106,7 +3109,7 @@ You can set the Stokes types with function
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t setstokes Ex 1 \t----"
@@ -3118,7 +3121,7 @@ print csys.stokes()
 #['XX', 'RL']
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -3171,7 +3174,7 @@ If you have more than one Tabular Coordinate, use argument
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t settabular Ex 1 \t----"
@@ -3180,7 +3183,7 @@ print csys.settabular (pixel=[1,10,15,20,100], world=[10,20,50,100,500])
 #True
 #
 """
-\end{verbatim}
+
 We make a linear Tabular Coordinate.  Then overwrite it with
 a non-linear list of pixel and world values.
 </example>
@@ -3215,7 +3218,7 @@ You can  get the current telescope with function
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t settelescope Ex 1 \t----"
@@ -3234,7 +3237,7 @@ print me.obslist()
 # JCMT MOPRA MOST NRAO12M NRAO_GBT PKS SAO SMA VLA VLBA WSRT
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -3290,7 +3293,7 @@ You can recover the current axis units with function
 
 </description>
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t setunits Ex 1 \t----"
@@ -3300,7 +3303,7 @@ csys.setunits(value="deg rad mHz");
 csys.summary()
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -3323,7 +3326,7 @@ You can set the Stokes types with function
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t stokes Ex 1 \t----"
@@ -3335,7 +3338,7 @@ print csys.stokes()
 #['Q', 'U']
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -3394,7 +3397,7 @@ means.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t summary Ex 1 \t----"
@@ -3421,7 +3424,7 @@ print csys.summary(list=F)
 #
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -3448,7 +3451,7 @@ The example shows how.  <!--what is really going on.-->
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t telescope Ex 1 \t----"
@@ -3462,7 +3465,7 @@ print me.observatory(csys.telescope())
 # 'm2': {'value': 6372960.2577234386, 'unit': 'm'}}
 #
 """
-\end{verbatim}
+
 
 We get the telescope as a string. <!-- and as a position measure.-->
 <!-- We also show how--> The Measures system is used to convert from
@@ -3509,7 +3512,7 @@ world or pixel coordinate via the {\stfaf isworld} argument.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t toabs Ex 1 \t----"
@@ -3531,13 +3534,13 @@ print aw2
 #                  '1.41502400e+09 Hz'], dtype='|S19')}
 #
 """
-\end{verbatim}
+
 
 This example uses world coordinates.
 </example>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t toabs Ex 2 \t----"
@@ -3554,7 +3557,7 @@ print ap2
 #{'ar_type': 'absolute', 'pw_type': 'world', 'numeric': array([ 0.,  0.,  0.])}
 #
 """
-\end{verbatim}
+
 This example uses pixel coordinates.
 </example>
 </method>
@@ -3593,7 +3596,7 @@ values must be the native units, given by function
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t toabsmany Ex 1 \t----"
@@ -3617,7 +3620,7 @@ print wabs[0][99],wabs[1][99],wabs[2][99]   # 100th absolute coordinate
 #0.0 0.0 1415099000.0
 #
 """
-\end{verbatim}
+
 This example uses world coordinates.
 </example>
 </method>
@@ -3653,7 +3656,7 @@ the \htmlref{formatting}{COORDSYS:FORMATTING} discussion.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t topixel Ex 1 \t----"
@@ -3680,12 +3683,12 @@ print cs.topixel(w)
 # 'numeric': array([ -2.,   2.,   1.,   2.,  23.,  24.])}
 #
 """
-\end{verbatim}
+
 </example>
 
 \goodbreak
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t topixel Ex 2 \t----"
@@ -3704,12 +3707,12 @@ print csys.toworld([0,1,2], 'q')
 # '*2': {'value': 1.0, 'unit': 'km'}, '*3': {'value': 2.0, 'unit': 'km'}}}
 #
 """
-\end{verbatim}
+
 </example>
 
 \goodbreak
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t topixel Ex 3 \t----"
@@ -3720,7 +3723,7 @@ print csys.toworld([0,1,2], 'q')
 # '*2': {'value': 1.0, 'unit': 'km'}}}
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -3754,7 +3757,7 @@ function <link anchor="images:coordsys.units.function">units</link>.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t topixelmany Ex 1 \t----"
@@ -3777,7 +3780,7 @@ print pabs[0][99], pabs[1][99], pabs[2][99] # 100th absolute pixel coordinate
 #0.0 0.0 99.0
 #
 """
-\end{verbatim}
+
 </example>
 </method>
  
@@ -3799,7 +3802,7 @@ Coordsys \tools\ to be used as parameters in the methods of other tools.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t torecord Ex 1 \t----"
@@ -3813,7 +3816,7 @@ print csys.ncoordinates(), cs2.ncoordinates()
 #2 2
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -3859,7 +3862,7 @@ world or pixel coordinate via the {\stfaf isworld} argument.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t torel Ex 1 \t----"
@@ -3881,11 +3884,11 @@ print aw2
 # '1.41502300e+09 Hz'], dtype='|S19')}
 #
 """
-\end{verbatim}
+
 
 This example uses world coordinates.
 
-\begin{verbatim}
+
 """
 #
 print "\t----\t torel Ex 2 \t----"
@@ -3901,7 +3904,7 @@ print ap2
 #{'ar_type': 'absolute', 'pw_type': 'pixel', 'numeric': array([ 0.,  0.,  0.])}
 #
 """
-\end{verbatim}
+
 This example uses pixel coordinates.
 </example>
 </method>
@@ -3940,7 +3943,7 @@ values must be the native units, given by function
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t torelmany Ex 1 \t----"
@@ -3963,7 +3966,7 @@ print wrel[0][99], wrel[1][99], wrel[2][99] # 100th relative coordinate
 #0.0 0.0 99000.0
 #
 """
-\end{verbatim}
+
 This example uses world coordinates.
 </example>
 
@@ -4003,7 +4006,7 @@ formatting possibilities available via argument {\stfaf format}.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t toworld Ex 1 \t----"
@@ -4029,12 +4032,12 @@ print csys.toworld([-3,1,1], 's')
 # 'string': array(['00:00:12.00000203', '+00.01.00.00000085', '1.41500100e+09 Hz'], dtype='|S19')}
 #
 """
-\end{verbatim}
+
 </example>
 
 \goodbreak
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t toworld Ex 2 \t----"
@@ -4054,12 +4057,12 @@ print csys.toworld([0,1,2], 'q')
 #              '*3': {'value': 2.0, 'unit': 'km'}}}
 #
 """
-\end{verbatim}
+
 </example>
 
 \goodbreak
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t toworld Ex 3 \t----"
@@ -4070,7 +4073,7 @@ print cs.toworld([0,1,2], 'q')
 #              '*2': {'value': 1.0, 'unit': 'km'}}}
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -4102,7 +4105,7 @@ function <link anchor="images:coordsys.units.function">units</link>.
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t toworldmany Ex 1 \t----"
@@ -4121,7 +4124,7 @@ print wabs[0][99], wabs[1][99], wabs[2][99] # 100th absolute pixel coordinate
 #0.0 0.0 1415099000.0
 #
 """
-\end{verbatim}
+
 </example>
 </method>
  
@@ -4168,7 +4171,7 @@ You can set the units with function
 </description>
 
 <example>  
-\begin{verbatim}
+
 """
 #
 print "\t----\t units Ex 1 \t----"
@@ -4179,7 +4182,7 @@ print csys.units('spec')
 #Hz
 #
 """
-\end{verbatim}
+
 </example>
 </method>
 
@@ -4231,7 +4234,7 @@ in the Coordinate System. See also the function
 </description>
 
 <example>
-\begin{verbatim}
+
 """
 #
 print "\t----\t velocitytofrequency Ex 1 \t----"
@@ -4257,7 +4260,7 @@ csys.done()
 exit() # This is last example so exit casapy if you wish.
 #
 """
-\end{verbatim}
+
 
 In this example, we find the optical velocity in km/s of every pixel
 along the spectral axis of our image.  First we  obtain the Coordinate

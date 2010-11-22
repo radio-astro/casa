@@ -36,7 +36,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 //forward
 class SkyEquation;
-template <class T> class LatticeCleaner;
 
 // <summary> Image Sky Model implementing the MultiScale, MultiField Clean algorithm </summary>
 
@@ -115,7 +114,7 @@ private:
   void getScales();
 
   // set the scales
-  void setScales(LatticeCleaner<Float>& cleaner);
+  //  void setScales(LatticeCleaner<Float>& cleaner);
 
   enum Scale_Method{NSCALES, USERVECTOR};
   Scale_Method method_p;

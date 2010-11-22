@@ -55,7 +55,7 @@ namespace BasebandNameMod
   //! BasebandName.
   //!  Baseband names
   
-  const char *const revision = "1.7";
+  const char *const revision = "1.8";
   const int version = 1;
   
   enum BasebandName
@@ -79,6 +79,18 @@ namespace BasebandNameMod
     BB_8 /*!< Baseband eight (not ALMA) */
      ,
     BB_ALL /*!< All ALMA basebands (i.e. all available basebands) */
+     ,
+    A1C1_3BIT /*!<  */
+     ,
+    A2C2_3BIT /*!<  */
+     ,
+    AC_8BIT /*!<  */
+     ,
+    B1D1_3BIT /*!<  */
+     ,
+    B2D2_3BIT /*!<  */
+     ,
+    BD_8BIT /*!<  */
      
   };
   typedef BasebandName &BasebandName_out;
@@ -117,6 +129,18 @@ class CBasebandName {
 	static const std::string& sBB_8; /*!< A const string equal to "BB_8".*/
 	
 	static const std::string& sBB_ALL; /*!< A const string equal to "BB_ALL".*/
+	
+	static const std::string& sA1C1_3BIT; /*!< A const string equal to "A1C1_3BIT".*/
+	
+	static const std::string& sA2C2_3BIT; /*!< A const string equal to "A2C2_3BIT".*/
+	
+	static const std::string& sAC_8BIT; /*!< A const string equal to "AC_8BIT".*/
+	
+	static const std::string& sB1D1_3BIT; /*!< A const string equal to "B1D1_3BIT".*/
+	
+	static const std::string& sB2D2_3BIT; /*!< A const string equal to "B2D2_3BIT".*/
+	
+	static const std::string& sBD_8BIT; /*!< A const string equal to "BD_8BIT".*/
 	
 
 	/**

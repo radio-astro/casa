@@ -137,7 +137,7 @@ public:
   // <group>
   MosaicFT(SkyJones* sj, MPosition mloc, String stokes,
 	    Long cachesize, Int tilesize=16, 
-	   Bool usezero=True);
+	   Bool usezero=True, Bool useDoublePrec=False);
   // </group>
 
   // Construct from a Record containing the MosaicFT state
@@ -277,7 +277,8 @@ protected:
   // Array for non-tiled gridding
   Array<Complex> griddedData;
   Array<Complex> griddedWeight;
-
+  Array<DComplex> griddedData2;
+  Array<DComplex> griddedWeight2;
   // Pointing columns
   MSPointingColumns* mspc;
 

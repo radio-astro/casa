@@ -228,7 +228,8 @@ void RFChunkStats::newTime ()
 {
 // setup IFR numbers for every row in time slot
   ifr_nums.resize( visbuf.antenna1().nelements() );
-  ifr_nums = flagger.ifrNumbers( visbuf.antenna1(),visbuf.antenna2() );
+  ifr_nums = flagger.ifrNumbers( visbuf.antenna1(),
+                                 visbuf.antenna2() );
 
   // setup FEED CORRELATION numbers for every row in time slot
   feed_nums.resize( visbuf.feed1().nelements() );
@@ -237,12 +238,12 @@ void RFChunkStats::newTime ()
   // reset stats
   for( uInt i=0; i<ifr_nums.nelements(); i++ ) {
 
-      Int antenna_num = ifr_nums(i);
+      Int baseline_num = ifr_nums(i);
       
-      if (antenna_num >= (Int) rows_per_ifr.nelements()) {
+      if (baseline_num >= (Int) rows_per_ifr.nelements()) {
           std::stringstream ss;
-          ss << "Internal error: Antenna number is " << antenna_num
-             << ", but there are only " << rows_per_ifr.nelements() << " antennas" << endl;
+          ss << "Internal error: Baseline number is " << baseline_num
+             << ", but there are only " << rows_per_ifr.nelements() << " baselines" << endl;
           throw AipsError(ss.str());
       }
       

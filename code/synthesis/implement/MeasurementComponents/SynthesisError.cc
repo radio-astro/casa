@@ -54,5 +54,11 @@ SynthesisFTMachineError::SynthesisFTMachineError (const String& str,Category c)
 SynthesisFTMachineError::~SynthesisFTMachineError () throw()
 {}
 
+  PSFZero::PSFZero(const String& str, Category c)
+    :SynthesisFTMachineError(str,c) 
+  {}
+  PSFZero::~PSFZero() throw()
+  {};
+
 } //# NAMESPACE CASA - END
 

@@ -26,10 +26,10 @@
 #include <casa/Quanta/QuantumHolder.h>
 #include <ms/MeasurementSets.h>
 #include <casa/Logging/LogIO.h>
-#include <xmlcasa/synthesis/imager_cmpt.h>
-#include <xmlcasa/images/image_cmpt.h>
-#include <casa/System/PGPlotterNull.h>
-#include <graphics/Graphics/PGPlotterLocal.h>
+#include <imager_cmpt.h>
+#include <image_cmpt.h>
+//#include <casa/System/PGPlotterNull.h>
+//#include <graphics/Graphics/PGPlotterLocal.h>
 
 using namespace std;
 using namespace casa;
@@ -44,14 +44,14 @@ imager::imager()
  itsImager = new ImagerMultiMS() ;
  itsLog = new LogIO();
  // OK this is probably not the way to set the plotter but it's OK for now I think.
- PGPlotterInterface *worker(0);
- try {
-    worker = new PGPlotterLocal("/NULL");
- } catch (AipsError x) {
-   worker = new PGPlotterNull("/NULL");
- }
- itsPlotter = new PGPlotter(worker);
- itsImager->setPGPlotter(*itsPlotter);
+ //PGPlotterInterface *worker(0);
+ //try {
+    //worker = new PGPlotterLocal("/NULL");
+ //} catch (AipsError x) {
+   //worker = new PGPlotterNull("/NULL");
+ //}
+ //itsPlotter = new PGPlotter(worker);
+ //itsImager->setPGPlotter(*itsPlotter);
 }
 
 imager::~imager()
@@ -62,9 +62,6 @@ imager::~imager()
  if(itsImager)
    delete itsImager;
  itsImager = 0;
- if(itsPlotter)
-   delete itsPlotter;
- itsPlotter = 0;
 }
 
 bool
@@ -208,7 +205,7 @@ bool imager::clean(const std::string& algorithm, const int niter, const double g
 				     amodel, fixed, String(complist),
 				     amask, aimage, aresidual, apsf,
 				     Bool(interactive), npercycle,
-				     String(masktemplate), Bool(async));
+				     String(masktemplate));
 	 } 
        catch  (AipsError x) 
 	 {
@@ -280,7 +277,7 @@ imager::close()
    delete itsImager;
    hasValidMS_p=false;
    itsImager = new ImagerMultiMS();
-   itsImager->setPGPlotter(*itsPlotter);
+   //itsImager->setPGPlotter(*itsPlotter);
     
    rstat = True;
  } catch  (AipsError x) {
@@ -298,9 +295,9 @@ imager::done()
    return close();
 }
 
-bool imager::drawmask(const std::string& image, const std::string& mask ){
+int imager::drawmask(const std::string& image, const std::string& mask ){
 
-
+  int rstat=-1;
   try{
     String elmask(mask);
     if(elmask==String("")){
@@ -309,13 +306,13 @@ bool imager::drawmask(const std::string& image, const std::string& mask ){
     Int dummy=0;
     Int dummier=0;
     String dummiest="0.0Jy";
-    itsImager->interactivemask(image, elmask,dummy, dummier, dummiest);
+    rstat=itsImager->interactivemask(image, elmask,dummy, dummier, dummiest);
   } catch  (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
 
-  return True;
+  return rstat;
 }
 
 
@@ -718,18 +715,18 @@ imager::plotvis(const std::string& type, const int increment)
  imager::plotweights(const bool gridded, const int increment)
  {
     Bool rstat(False);
-//    if(hasValidMS_p){
-//       try {
-//         // Has a tendency to dump core.  Add to plotms, replace with
-//         // something else, or fix.
-//         rstat = itsImager->plotweights(gridded, increment);
-//       } catch  (AipsError x) {
-//          *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-// 	 RETHROW(x);
-//       }
-//    } else {
-//       *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
-//    }
+   if(hasValidMS_p){
+       try {
+         // Has a tendency to dump core.  Add to plotms, replace with
+         // something else, or fix.
+         rstat = itsImager->plotweights(gridded, increment);
+      } catch  (AipsError x) {
+          *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+ 	 RETHROW(x);
+       }
+    } else {
+       *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
+    }
     return rstat;
  }
 
@@ -1276,7 +1273,7 @@ imager::defineimage(const int nx, const int ny, const ::casac::variant& cellx,
 bool
 imager::setjy(const ::casac::variant& field, const ::casac::variant& spw, 
 	      const std::string& modimage,
-	      const std::vector<double>& fluxdensity, const std::string& standard)
+	      const std::vector<double>& fluxdensity, const std::string& standard, const bool scalebychan)
 {
    Bool rstat(False);
    if(hasValidMS_p){
@@ -1297,7 +1294,45 @@ imager::setjy(const ::casac::variant& field, const ::casac::variant& spw,
 	}
 
 	rstat = itsImager->setjy(fieldIndex, spwid, fieldnames, spwstring, 
-				 modimage,fluxdensity, standard);
+				 modimage,fluxdensity, standard, scalebychan);
+       } catch  (AipsError x) {
+          *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+	  RETHROW(x);
+       }
+    } else {
+      *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
+    }
+    return rstat;
+}
+
+// temporary copy of setjy while flux calibration with Solar System objects is
+// being tested.
+bool
+imager::ssoflux(const ::casac::variant& field, const ::casac::variant& spw, 
+                const std::string& modimage,
+                const std::vector<double>& fluxdensity,
+                const std::string& standard)
+{
+   Bool rstat(False);
+   if(hasValidMS_p){
+      try {
+	casa::String fieldnames="";
+	casa::Vector<Int> fieldIndex;
+	fieldnames=toCasaString(field);
+	if(fieldnames.contains(String("-"), -1)){
+	  fieldnames="";
+	  fieldIndex=Vector<Int>(1,-1);
+	}
+	casa::String spwstring="";
+	casa::Vector<Int> spwid;
+	spwstring=toCasaString(spw);
+	if(spwstring.contains(String("-"), -1)){
+	  spwstring="";
+	  spwid=Vector<Int>(1,-1);
+	}
+
+	rstat = itsImager->ssoflux(fieldIndex, spwid, fieldnames, spwstring, 
+                                   modimage,fluxdensity, standard);
        } catch  (AipsError x) {
           *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	  RETHROW(x);
@@ -1545,7 +1580,7 @@ imager::weight(const std::string& type, const std::string& rmode,
   if(hasValidMS_p){
     try{
       rstat = itsImager->weight(String(type), String(rmode), casaQuantity(noise),
-                                robust, casaQuantity(fieldofview), npixels);
+                                robust, casaQuantity(fieldofview), npixels, mosaic);
     }
     catch(AipsError x){
       *itsLog << LogIO::SEVERE << "Exception Reported: "

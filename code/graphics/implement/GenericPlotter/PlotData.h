@@ -772,10 +772,10 @@ public:
     
     // Implements PlotErrorData getter methods.
     // <group>
-    double xLeftErrorAt(unsigned int i) const { return m_xLeftError; }    
-    double xRightErrorAt(unsigned int i) const { return m_xRightError; }
-    double yBottomErrorAt(unsigned int i) const { return m_yBottomError; }
-    double yTopErrorAt(unsigned int i) const { return m_yTopError; }
+    double xLeftErrorAt(unsigned int ) const { return m_xLeftError; }    
+    double xRightErrorAt(unsigned int ) const { return m_xRightError; }
+    double yBottomErrorAt(unsigned int ) const { return m_yBottomError; }
+    double yTopErrorAt(unsigned int ) const { return m_yTopError; }
     // </group>
     
     // Implements PlotErrorData::errorMaxes().

@@ -130,19 +130,19 @@ RFCubeLatticeIterator<T>::set( uInt chan, uInt ifr, const T &val )
       unsigned indx = 0 + n_bit*(chan + n_chan*ifr);
       l[indx] = val & 1;
       
-    for (unsigned b = 1; b < n_bit; b++) {
-      indx++;
-      l[indx] = val & (1<<(b+1));
+      for (unsigned b = 1; b < n_bit; b++) {
+	indx++;
+	l[indx] = val & (1<<(b+1));
+      }
     }
-  }
-  else {
-    unsigned indx = n_bit*(chan + n_chan*ifr);
-    for (unsigned b = 0; b < n_bit; b++) {
-      l[indx++] = val & (1<<b);
+    else {
+      unsigned indx = n_bit*(chan + n_chan*ifr);
+      for (unsigned b = 0; b < n_bit; b++) {
+	l[indx++] = val & (1<<b);
+      }
     }
-  }
-
-  return;
+    
+    return;
 }
 
 
@@ -298,7 +298,7 @@ template<class T> void RFCubeLattice<T>::cleanup ()
   lat_shape.resize(0);
 }
 
-template<class T> void RFCubeLattice<T>::reset ( Bool r,Bool w )
+template<class T> void RFCubeLattice<T>::reset ()
 {
   iter.reset();
 }

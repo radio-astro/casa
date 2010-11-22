@@ -314,12 +314,18 @@ Result TBTableDriverDirect::loadRows(int start, int num, bool full,
                                                                 colNames(i));
         else valid = false;
                 
-        if(updateFields && t == TpDouble) { // Check if it's a date
-            String comment = cdesc.comment();
-            if(TBConstants::equalsIgnoreCase(comment,
-               TBConstants::COMMENT_DATE)) {
-                type = TBConstants::TYPE_DATE;
-            }
+        if(updateFields && t == TpDouble) { // Check if it's a date.
+          String comment = cdesc.comment(); // Wouldn't it be better to look
+                                            // for an epoch ref?
+
+          if(TBConstants::equalsIgnoreCase(comment,
+                                           TBConstants::COMMENT_DATE) ||
+             TBConstants::equalsIgnoreCase(comment,
+                                           TBConstants::COMMENT_TIMP) ||
+             TBConstants::equalsIgnoreCase(comment,
+                                           TBConstants::COMMENT_TIMP2)){
+            type = TBConstants::TYPE_DATE;
+          }
         }
 
         if(pp != NULL) pp->step();
@@ -411,7 +417,11 @@ Result TBTableDriverDirect::loadRows(int start, int num, bool full,
                     String comment = tdesc.columnDesc(j).comment();
                     double v = **((RORecordFieldPtr<Double>*)fieldPtrs[j]);
                     if(TBConstants::equalsIgnoreCase(comment,
-                       TBConstants::COMMENT_DATE)) {
+                                                     TBConstants::COMMENT_DATE) ||
+                       TBConstants::equalsIgnoreCase(comment,
+                                                     TBConstants::COMMENT_TIMP) ||
+                       TBConstants::equalsIgnoreCase(comment,
+                                                     TBConstants::COMMENT_TIMP2)) {
                         val = new TBDataDate(v);
                     } else {
                         val = new TBDataDouble(v);

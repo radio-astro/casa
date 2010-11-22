@@ -42,8 +42,27 @@
 using namespace std ;
 
 // <summary>
-// Class specific for ASTE-FX data header.
+// Accessor class for ASTE FX data.
 // </summary>
+//
+// <prerequisite>
+//   <li> <linkto class=ASTEFXReader>ASTEFXReader</linkto>
+//   <li> <linkto class=NRODataset>NRODataset</linkto>
+// </prerequisite>
+//
+// <reviewed reviewer="" date="" tests="" demos="">
+// </reviewed>
+//
+// <etymology>
+// This class actually accesses data from NRO telescopes. This is specialized class 
+// for ASTE telescope with FX spectrometer. Only fillHeader method is implemented here. 
+// The fillRecord method is implemented in <linkto class=NRODataset>NRODataset</linkto>.
+// </etymology>
+//
+// <synopsis>
+// Accessor class for ASTE FX data.
+// </synopsis>
+//
 
 class ASTEFXDataset : public NRODataset
 {

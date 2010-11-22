@@ -63,13 +63,14 @@ def concat(vislist,concatvis,freqtol,dirtol,timesort):
 		if(os.path.exists(concatvis)):
 			casalog.post('Will be concatenating into the existing ms '+concatvis , 'WARN')
 		else:
-			if(len(vis) >1):
+			if(len(vis) >0): # (note: in case len is 1, we only copy, essentially)
 				casalog.post('copying '+vis[0]+' to '+concatvis , 'INFO')
 				tb.open(vis[0])
 				tb.copy(concatvis, deep=True, valuecopy=True)
 				tb.close()
 				# note that the resulting copy is writable even if the original was read-only
 				vis.remove(vis[0])
+				
 
 		# Determine if scratch columns should be considered at all
 		# by checking if any of the MSs has them.
@@ -81,13 +82,11 @@ def concat(vislist,concatvis,freqtol,dirtol,timesort):
 			# check if all scratch columns are present
 			tb.open(concatvis)
 			if(tb.colnames().count('CORRECTED_DATA')==1 
-			   or  tb.colnames().count('MODEL_DATA')==1 
-			   or  tb.colnames().count('IMAGING_WEIGHT')==1):
+			   or  tb.colnames().count('MODEL_DATA')==1):
 				considerscrcols = True  # there are scratch columns
 				
 			needscrcols.append(tb.colnames().count('CORRECTED_DATA')==0 
-					   or  tb.colnames().count('MODEL_DATA')==0 
-					   or  tb.colnames().count('IMAGING_WEIGHT')==0)			
+					   or  tb.colnames().count('MODEL_DATA')==0)
 			tb.close()
                 else:
                         raise Exception, 'Visibility data set '+concatvis+' not found - please verify the name'
@@ -99,13 +98,11 @@ def concat(vislist,concatvis,freqtol,dirtol,timesort):
 			# check if all scratch columns are present
 			tb.open(elvis)
 			if(tb.colnames().count('CORRECTED_DATA')==1 
-			   or  tb.colnames().count('MODEL_DATA')==1 
-			   or  tb.colnames().count('IMAGING_WEIGHT')==1):
+                           or  tb.colnames().count('MODEL_DATA')==1):
 				considerscrcols = True  # there are scratch columns
 
 			needscrcols.append(tb.colnames().count('CORRECTED_DATA')==0 
-					  or  tb.colnames().count('MODEL_DATA')==0 
-					  or  tb.colnames().count('IMAGING_WEIGHT')==0)			
+					  or  tb.colnames().count('MODEL_DATA')==0)
 			tb.close()
 
 		# start actual work, file existence has already been checked

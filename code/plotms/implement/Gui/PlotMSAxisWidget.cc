@@ -115,6 +115,7 @@ void PlotMSAxisWidget::setValue(PMS::Axis axis, PMS::DataColumn data,
     case Y_RIGHT:  attachRight->setChecked(true);  break;
     default: break;
     }
+
     
     itsRangeWidget_->setRange(PMS::axisType(axis) == PMS::TTIME, rangeCustom,
             range);
@@ -127,7 +128,15 @@ void PlotMSAxisWidget::setInCache(bool isInCache) {
 // Private Slots //
 
 void PlotMSAxisWidget::axisChanged(const QString& value) {
-    dataFrame->setVisible(PMS::axisIsData(PMS::axis(value.toStdString())));
+  PMS::Axis currAxis=PMS::axis(value.toStdString());
+
+  // Reveal Data Column chooser, if necessary
+  dataFrame->setVisible(PMS::axisIsData(currAxis));
+
+  // Revise the range widget to zero
+  itsRangeWidget_->setRange(PMS::axisType(currAxis) == PMS::TTIME, 
+			    false,0,0);
+
 }
 
 }

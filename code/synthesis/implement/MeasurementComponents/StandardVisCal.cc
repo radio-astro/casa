@@ -32,8 +32,15 @@
 #include <ms/MeasurementSets/MSColumns.h>
 #include <synthesis/MeasurementEquations/VisEquation.h>
 #include <scimath/Fitting/LSQFit.h>
+#include <scimath/Fitting/LinearFit.h>
+#include <scimath/Functionals/CompiledFunction.h>
+//#include <scimath/Functionals/Function.h>
+#include <scimath/Functionals/Polynomial.h>
+#include <scimath/Mathematics/AutoDiff.h>
+#include <casa/BasicMath/Math.h>
 #include <lattices/Lattices/ArrayLattice.h>
 #include <lattices/Lattices/LatticeFFT.h>
+#include <scimath/Mathematics/FFTServer.h>
 #include <tables/Tables/ExprNode.h>
 
 #include <casa/Arrays/ArrayMath.h>
@@ -130,18 +137,18 @@ void PJones::calcOneJones(Vector<Complex>& mat, Vector<Bool>& mOk,
 
   if (prtlev()>10) cout << "       P::calcOneJones()" << endl;
 
-  //  TBD: handle linears too
 
-  // Circular version:
   if (pOk(0)) {
 
     switch (jonesType()) {
+      // Circular version:
     case Jones::Diagonal: {
       mat(0)=conj(par(0));  // exp(-ia)
       mat(1)=par(0);        // exp(ia)
       mOk=True;
       break;
     }
+      // Linear version:
     case Jones::General: {
       Float a=arg(par(0));
       mat(0)=mat(3)=cos(a);
@@ -155,8 +162,6 @@ void PJones::calcOneJones(Vector<Complex>& mat, Vector<Bool>& mOk,
       break;
 
     }
-
-
 
   }
 }
@@ -239,7 +244,7 @@ void TJones::guessPar(VisBuffer& vb) {
   //   base first guess on first good ant
   if (guessant<0 || !antok(guessant)) {
     guessant=0;
-    while (!antok(guessant++));
+    while (antok(guessant)<1) guessant++;
   }
 
   AlwaysAssert(guessant>-1,AipsError);
@@ -352,28 +357,36 @@ void TJones::createCorruptor(const VisIter& vi, const Record& simpar, const Int 
   if (tcorruptor_p->mean_pwv()<=0)
     throw(AipsError("AtmCorruptor attempted initialization with undefined PWV"));
   
-  Float Scale(.15); // scale of fluctuations rel to mean
-  if (simpar.isDefined("delta_pwv") and simpar.isDefined("mean_pwv")) {    
-    Scale=simpar.asFloat("delta_pwv")/simpar.asFloat("mean_pwv");
-    if (Scale>.5) {
-      Scale=.5;  
-      os << LogIO::WARN << " decreasing PWV fluctuation magnitude to half of the mean PWV, " << simpar.asFloat("mean_pwv") << LogIO::POST;  
-    }
-  }
-
   if (simpar.isDefined("mode")) {    
     if (prtlev()>2) 
       cout << "initializing T:Corruptor with mode " << simpar.asString("mode") << endl;
+       String simMode=simpar.asString("mode");
     
-    if (simpar.asString("mode") == "test")
+    if (simMode == "test")
       tcorruptor_p->initialize();
-    else {
+    else if (simMode == "individual" or simMode == "screen") {
 
+      Float Scale(1.); // RELATIVE scale of fluctuations (to mean_pwv)
+      if (simpar.isDefined("delta_pwv")) {
+	if (simpar.asFloat("delta_pwv")>1.) {
+	  Scale=1.;
+	  os << LogIO::WARN << " decreasing PWV fluctuation magnitude to 100% of the mean PWV " << LogIO::POST;  
+	} else {
+	  Scale=simpar.asFloat("delta_pwv");
+	}
+      } else {
+	os << LogIO::WARN << " setting PWV fluctuation magnitude to 15% of the mean PWV " << LogIO::POST;  
+	Scale=0.15;
+      }
+      
+      os << " PWV fluctuations = " << Scale << " of mean PWV which is " << simpar.asFloat("mean_pwv") << "mm " << LogIO::POST;  
+      
+      
       // slot_times for a fBM-based corruption need to be even even if solTimes are not
       // so will define startTime and stopTime and reset nsim() here.
       
       if (simpar.isDefined("startTime")) {    
-	corruptor_p->startTime() = simpar.asDouble("startTime");
+	corruptor_p->startTime() = simpar.asDouble("startTime");	
       } else {
 	throw(AipsError("start/stop time not defined"));
       }
@@ -382,9 +395,11 @@ void TJones::createCorruptor(const VisIter& vi, const Record& simpar, const Int 
       } else {
 	throw(AipsError("start/stop time not defined"));
       }
-      
+
       // RI todo T::createCorr make min screen granularity a user parameter
       Float fBM_interval=max(interval(),10.); // generate screens on >10s intervals
+      if (prtlev()>2) cout<<"set fBM_interval"<<" to "<<fBM_interval<<" startTime="<<corruptor_p->startTime()<<" stopTime="<<corruptor_p->stopTime()<<endl;
+
       corruptor_p->setEvenSlots(fBM_interval);
 
       if (simpar.asString("mode") == "individual") 
@@ -396,9 +411,17 @@ void TJones::createCorruptor(const VisIter& vi, const Record& simpar, const Int 
 	  tcorruptor_p->initialize(Seed,Beta,Scale,antcols);
 	} else
 	  throw(AipsError("Unknown wind speed for T:Corruptor"));        
-      } else 
+      }
+
+    } else if (simMode == "tsys-atm" or simMode == "tsys-manual") {
+      // NEW 20100818 change from Mf to Tf
+      // M corruptor initialization didn't matter M or Mf here - it checks mode in 
+      // the Atmoscorruptor init.
+      tcorruptor_p->initialize(vi,simpar,VisCal::T); 
+      extraTag()="NoiseScale"; // collapseForSim catches this
+    
+    } else 
 	throw(AipsError("Unknown mode for T:Corruptor"));        
-    }
   } else {
     throw(AipsError("No Mode specified for T:Corruptor."));
   }  
@@ -1311,6 +1334,60 @@ DfJones::~DfJones() {
 
 
 
+// **********************************************************
+//  DlinJones Implementations
+//
+
+// Constructor
+DlinJones::DlinJones(VisSet& vs)  :
+  VisCal(vs),             // virtual base
+  VisMueller(vs),         // virtual base
+  DJones(vs)              // immediate parent
+{
+  if (prtlev()>2) cout << "Dlin::Dlin(vs)" << endl;
+}
+
+DlinJones::DlinJones(const Int& nAnt) :
+  VisCal(nAnt), 
+  VisMueller(nAnt),
+  DJones(nAnt)
+{
+  if (prtlev()>2) cout << "Dlin::Dlin(nAnt)" << endl;
+}
+
+DlinJones::~DlinJones() {
+  if (prtlev()>2) cout << "Dlin::~Dlin()" << endl;
+}
+
+
+// **********************************************************
+//  DflinJones Implementations
+//
+
+// Constructor
+DflinJones::DflinJones(VisSet& vs)  :
+  VisCal(vs),             // virtual base
+  VisMueller(vs),         // virtual base
+  DlinJones(vs)             // immediate parent
+{
+  if (prtlev()>2) cout << "Dflin::Dflin(vs)" << endl;
+}
+
+DflinJones::DflinJones(const Int& nAnt) :
+  VisCal(nAnt), 
+  VisMueller(nAnt),
+  DlinJones(nAnt)
+{
+  if (prtlev()>2) cout << "Dflin::Dflin(nAnt)" << endl;
+}
+
+DflinJones::~DflinJones() {
+  if (prtlev()>2) cout << "Dflin::~Dflin()" << endl;
+}
+
+
+
+
 
 
 
@@ -1848,8 +1925,8 @@ void MMueller::createCorruptor(const VisIter& vi, const Record& simpar, const In
 {
   LogIO os(LogOrigin("MM", "createCorruptor()", WHERE));
 
-  if (prtlev()>2) cout << "   MM::setSimulate()" << endl;
-  os << LogIO::DEBUG1 << "   MM::setSimulate()" 
+  if (prtlev()>2) cout << "   MM::createCorruptor()" << endl;
+  os << LogIO::DEBUG1 << "   MM::createCorruptor()" 
      << LogIO::POST;
 
   atmcorruptor_p = new AtmosCorruptor();
@@ -1860,7 +1937,7 @@ void MMueller::createCorruptor(const VisIter& vi, const Record& simpar, const In
 
   // this is the M type corruptor - maybe we should make the corruptor 
   // take the VC as an argument
-  atmcorruptor_p->initialize(vi,simpar); 
+  atmcorruptor_p->initialize(vi,simpar,VisCal::M); 
 }
 
 
@@ -3125,6 +3202,705 @@ void KJones::calcAllJones() {
     }
   }
 }
+
+// Simple FFT search solver
+void KJones::selfSolve(VisSet& vs, VisEquation& ve) {
+
+  if (prtlev()>4) cout << "   K::selfSolve(ve)" << endl;
+
+  // Trap unspecified refant:
+  if (refant()<0)
+    throw(AipsError("Please specify a good reference antenna (refant) explicitly."));
+  // Inform logger/history
+  logSink() << "Solving for " << typeName()
+            << LogIO::POST;
+
+  // Initialize the svc according to current VisSet
+  //  (this counts intervals, sizes CalSet)
+  Vector<Int> nChunkPerSol;
+  Int nSol = sizeUpSolve(vs,nChunkPerSol);
+
+  // The iterator, VisBuffer
+  VisIter& vi(vs.iter());
+  VisBuffer vb(vi);
+
+  //  cout << "nSol = " << nSol << endl;
+  //  cout << "nChunkPerSol = " << nChunkPerSol << endl;
+
+  Vector<Int> slotidx(vs.numberSpw(),-1);
+
+  Int nGood(0);
+  vi.originChunks();
+  for (Int isol=0;isol<nSol && vi.moreChunks();++isol) {
+
+    // Arrange to accumulate
+    VisBuffAccumulator vba(nAnt(),preavg(),False);
+    
+    for (Int ichunk=0;ichunk<nChunkPerSol(isol);++ichunk) {
+
+      // Current _chunk_'s spw
+      Int spw(vi.spectralWindow());
+
+      // Abort if we encounter a spw for which a priori cal not available
+      if (!ve.spwOK(spw))
+        throw(AipsError("Pre-applied calibration not available for at least 1 spw. Check spw selection carefully."));
+
+
+      // Collapse each timestamp in this chunk according to VisEq
+      //  with calibration and averaging
+      for (vi.origin(); vi.more(); vi++) {
+
+        // Force read of the field Id
+        vb.fieldId();
+
+        // This forces the data/model/wt I/O, and applies
+        //   any prior calibrations
+        ve.collapse(vb);
+
+        // If permitted/required by solvable component, normalize
+        if (normalizable())
+	  vb.normalize();
+
+	// If this solve not freqdep, and channels not averaged yet, do so
+	if (!freqDepMat() && vb.nChannel()>1)
+	  vb.freqAveCubes();
+
+        // Accumulate collapsed vb in a time average
+        vba.accumulate(vb);
+      }
+      // Advance the VisIter, if possible
+      if (vi.moreChunks()) vi.nextChunk();
+
+    }
+
+    // Finalize the averged VisBuffer
+    vba.finalizeAverage();
+
+    // The VisBuffer to solve with
+    VisBuffer& svb(vba.aveVisBuff());
+
+    // Establish meta-data for this interval
+    //  (some of this may be used _during_ solve)
+    //  (this sets currSpw() in the SVC)
+    Bool vbOk=syncSolveMeta(svb,-1);
+
+    Int thisSpw=spwMap()(svb.spectralWindow());
+    slotidx(thisSpw)++;
+
+    // Fill solveCPar() with 1, nominally, and flagged
+    solveCPar()=Complex(1.0);
+    solveParOK()=False;
+    
+    if (vbOk && svb.nRow()>0) {
+
+      // solve for the R-L phase term in the current VB
+      solveOneVB(svb);
+
+      nGood++;
+    }
+
+    keep(slotidx(thisSpw));
+    
+  }
+  
+  logSink() << "  Found good "
+            << typeName() << " solutions in "
+            << nGood << " intervals."
+            << LogIO::POST;
+
+  // Store whole of result in a caltable
+  if (nGood==0)
+    logSink() << "No output calibration table written."
+              << LogIO::POST;
+  else {
+
+    // Do global post-solve tinkering (e.g., phase-only, normalization, etc.)
+    //  TBD
+    // globalPostSolveTinker();
+
+    // write the table
+    store();
+  }
+
+}
+
+
+// Do the FFTs
+void KJones::solveOneVB(const VisBuffer& vb) {
+
+  Int nChan=vb.nChannel();
+
+  solveCPar()=Complex(0.0);
+  solveParOK()=False;
+
+  //  cout << "solveCPar().shape() = " << solveCPar().shape() << endl;
+  //  cout << "vb.nCorr() = " << vb.nCorr() << endl;
+  //  cout << "vb.corrType() = " << vb.corrType() << endl;
+
+
+  // FFT parallel-hands only
+  Int nC= (vb.nCorr()>1 ? 2 : 1);  // number of parallel hands
+  Int sC= (vb.nCorr()>2 ? 3 : 1);  // step by 3 for full pol data
+
+  // I/O shapes
+  Int fact(8);
+  Int nPadChan=nChan*fact;
+
+  IPosition ip0=vb.visCube().shape();
+  IPosition ip1=ip0;
+  ip1(0)=nC;    // the number of correlations to FFT 
+  ip1(1)=nPadChan; // padded channel axis
+
+  // I/O slicing
+  Slicer sl0(Slice(0,nC,sC),Slice(),Slice());  
+  Slicer sl1(Slice(),Slice(nChan*(fact-1)/2,nChan,1),Slice());
+
+  // Fill the (padded) transform array
+  //  TBD: only do ref baselines
+  Cube<Complex> vpad(ip1);
+  Cube<Complex> slvis=vb.visCube();
+  vpad.set(Complex(0.0));
+  vpad(sl1)=slvis(sl0);
+
+  //  cout << "vpad.shape() = " << vpad.shape() << endl;
+  //  cout << "vpad(sl1).shape() = " << vpad(sl1).shape() << endl;
+
+
+  cout << "Starting ffts..." << flush;
+
+  if (False) {
+    Vector<Complex> testf(64,Complex(1.0));
+    FFTServer<Float,Complex> ffts;
+    cout << "FFTServer..." << flush;
+    ffts.fft(testf,True);
+    cout << "done." << endl;
+    
+    ArrayLattice<Complex> tf(testf);
+    cout << "tf.isWritable() = " << boolalpha << tf.isWritable() << endl;
+    
+    LatticeFFT::cfft(tf,False);
+    cout << "testf = " << testf << endl;
+  }  
+
+  // We will only transform frequency axis of 3D array
+  Vector<Bool> ax(3,False);
+  ax(1)=True;
+  
+  // Do the FFT
+  ArrayLattice<Complex> c(vpad);
+  //  cout << "c.shape() = " << c.shape() << endl;
+  LatticeFFT::cfft(c,ax);        
+  //LatticeFFT::cfft2d(c,False);   
+      
+  cout << "done." << endl;
+
+  // Find peak in each FFT
+  Int ipk=0;
+  Float amax(0.0);
+  Vector<Float> amp;
+  for (Int irow=0;irow<vb.nRow();++irow) {
+    if (!vb.flagRow()(irow) &&
+	vb.antenna1()(irow)!=vb.antenna2()(irow) &&
+	(vb.antenna1()(irow)==refant() || 
+	 vb.antenna2()(irow)==refant()) ) {
+
+      for (Int icor=0;icor<ip1(0);++icor) {
+	amp=amplitude(vpad(Slice(icor,1,1),Slice(),Slice(irow,1,1)));
+	ipk=1;
+	amax=0;
+	for (Int ich=1;ich<nPadChan-1;++ich) {
+	  if (amp(ich)>amax) {
+	    ipk=ich;
+	    amax=amp(ich);
+	  }
+	} // ich
+
+       	// Derive refined peak (fractional) channel
+	// via parabolic interpolation of peak and neighbor channels
+
+	Vector<Float> amp3(amp(IPosition(1,ipk-1),IPosition(1,ipk+1)));
+	Float denom(amp3(0)-2.0*amp3(1)+amp3(2));
+
+	if (amax>0.0 && abs(denom)>0) {
+
+	  Float fipk=Float(ipk)+0.5-(amp3(2)-amp3(1))/denom;
+	    
+	    // Handle FFT offset and scale
+	    Float delay=(fipk-Float(nPadChan/2))/Float(nPadChan); // cycles/sample
+	  
+	  // Convert to cycles/Hz and then to nsec
+	  Double df=vb.frequency()(1)-vb.frequency()(0);
+	  delay/=df;
+	  delay/=1.0e-9;
+	  
+	  cout << "Antenna ID=";
+	  if (vb.antenna1()(irow)==refant()) {
+	    cout << vb.antenna2()(irow) << ", pol=" << icor << " delay(nsec)="<< -delay; 
+	    solveCPar()(icor,0,vb.antenna2()(irow))=-Complex(delay);
+	    solveParOK()(icor,0,vb.antenna2()(irow))=True;
+	  }
+	  else if (vb.antenna2()(irow)==refant()) {
+	    cout << vb.antenna1()(irow) << ", pol=" << icor << " delay(nsec)="<< delay;
+	    solveCPar()(icor,0,vb.antenna1()(irow))=Complex(delay);
+	    solveParOK()(icor,0,vb.antenna1()(irow))=True;
+	  }
+	  cout << " (refant ID=" << refant() << ")" << endl;
+
+	  /*	  
+	  cout << irow << " " 
+	       << vb.antenna1()(irow) << " " 
+	       << vb.antenna2()(irow) << " " 
+	       << icor << " "
+	       << ipk << " "
+	       << fipk << " "
+	       << delay << " "
+	       << endl;
+	  */
+	} // amax > 0
+	else {
+	  cout << "No solution found for antenna ID= ";
+	  if (vb.antenna1()(irow)==refant())
+	    cout << vb.antenna2()(irow);
+	  else if (vb.antenna2()(irow)==refant()) 
+	    cout << vb.antenna1()(irow);
+	  cout << " in polarization " << icor << endl;
+	}
+	
+      } // icor
+    } // !flagrRow, etc.
+
+  } // irow
+
+  // Ensure refant has zero delay and is NOT flagged
+  solveCPar()(Slice(),Slice(),Slice(refant(),1,1)) = 0.0;
+  solveParOK()(Slice(),Slice(),Slice(refant(),1,1)) = True;
+  
+  if (nfalse(solveParOK())>0) {
+    cout << "NB: No delay solutions found for antenna IDs: ";
+    Int nant=solveParOK().shape()(2);
+    for (Int iant=0;iant<nant;++iant)
+      if (!(solveParOK()(0,0,iant)))
+	cout << iant << " ";
+    cout << endl;
+  }
+
+}
+
+// **********************************************************
+//  KcrossJones Implementations
+//
+
+KcrossJones::KcrossJones(VisSet& vs) :
+  VisCal(vs),             // virtual base
+  VisMueller(vs),         // virtual base
+  KJones(vs)             // immediate parent
+{
+  if (prtlev()>2) cout << "Kx::Kx(vs)" << endl;
+
+  // Extract per-spw ref Freq for phase(delay) calculation
+  //  TBD: these should be in the caltable!!
+  MSSpectralWindow msSpw(vs.msName()+"/SPECTRAL_WINDOW");
+  MSSpWindowColumns msCol(msSpw);
+  msCol.refFrequency().getColumn(KrefFreqs_,True);
+  KrefFreqs_/=1.0e9;  // in GHz
+
+  cout << boolalpha 
+       << " freqDepMat() = " << freqDepMat()
+       << " freqDepPar() = " << freqDepPar() << endl;
+
+}
+
+KcrossJones::KcrossJones(const Int& nAnt) :
+  VisCal(nAnt), 
+  VisMueller(nAnt),
+  KJones(nAnt)
+{
+  if (prtlev()>2) cout << "Kx::Kx(nAnt)" << endl;
+}
+
+KcrossJones::~KcrossJones() {
+  if (prtlev()>2) cout << "Kx::~Kx()" << endl;
+}
+
+// Do the FFTs
+void KcrossJones::solveOneVB(const VisBuffer& vb) {
+
+  solveCPar()=Complex(0.0);
+  solveParOK()=False;
+
+
+  Int fact(8);
+  Int nChan=vb.nChannel();
+  Int nPadChan=nChan*fact;
+
+  // Collapse cross-hands over baseline
+  Vector<Complex> sumvis(nPadChan);
+  sumvis.set(Complex(0.0));
+  Vector<Complex> slsumvis(sumvis(Slice(nChan*(fact-1)/2,nChan,1)));
+  Vector<Float> sumwt(nChan);
+  sumwt.set(0.0);
+  for (Int irow=0;irow<vb.nRow();++irow) {
+    if (!vb.flagRow()(irow) &&
+	vb.antenna1()(irow)!=vb.antenna2()(irow)) {
+
+      for (Int ich=0;ich<nChan;++ich) {
+
+	if (!vb.flag()(ich,irow)) {
+	  // 1st cross-hand
+	  slsumvis(ich)+=(vb.visCube()(1,ich,irow)*vb.weightMat()(1,irow));
+	  sumwt(ich)+=vb.weightMat()(1,irow);
+	  // 2nd cross-hand
+	  slsumvis(ich)+=conj(vb.visCube()(2,ich,irow)*vb.weightMat()(2,irow));
+	  sumwt(ich)+=vb.weightMat()(2,irow);
+	}
+      }
+    }
+  }
+  // Normalize the channelized sum
+  for (int ich=0;ich<nChan;++ich)
+    if (sumwt(ich)>0)
+      slsumvis(ich)/=sumwt(ich);
+    else
+      slsumvis(ich)=Complex(0.0);
+  
+  cout << "Starting ffts..." << flush;
+
+  // Do the FFT
+  ArrayLattice<Complex> c(sumvis);
+  cout << "c.shape() = " << c.shape() << endl;
+  LatticeFFT::cfft(c,True);        
+      
+  cout << "done." << endl;
+
+  // Find peak in each FFT
+  Vector<Float> amp=amplitude(sumvis);
+  cout << "amp = " << amp << endl;
+
+
+  Int ipk=0;
+  Float amax(0.0);
+  for (Int ich=0;ich<nPadChan;++ich) {
+    if (amp(ich)>amax) {
+      ipk=ich;
+      amax=amp(ich);
+    }
+  } // ich
+	
+  // Derive refined peak (fractional) channel
+  // via parabolic interpolation of peak and neighbor channels
+  Float fipk=ipk;
+  // Interpolate the peak (except at edges!)
+  if (ipk>0 && ipk<(nPadChan-1)) {
+    Vector<Float> amp3(amp(IPosition(1,ipk-1),IPosition(1,ipk+1)));
+    fipk=Float(ipk)+0.5-(amp3(2)-amp3(1))/(amp3(0)-2.0*amp3(1)+amp3(2));
+
+    Vector<Float> pha3=phase(sumvis(IPosition(1,ipk-1),IPosition(1,ipk+1)));
+    cout << "amp3 = " << amp3 << endl;
+    cout << "pha3 = " << pha3 << endl;
+
+  }
+
+  // Handle FFT offset and scale
+  Float delay=(fipk-Float(nPadChan/2))/Float(nPadChan); // cycles/sample
+
+  // Convert to cycles/Hz and then to nsec
+  Double df=vb.frequency()(1)-vb.frequency()(0);
+  delay/=df;
+  delay/=1.0e-9;
+
+  solveCPar()(Slice(0,1,1),Slice(),Slice())=Complex(delay);
+  solveParOK()=True;
+
+  cout 	     << ipk << " "
+	     << fipk << " "
+	     << delay << " "
+	     << endl;
+  
+}
+// **********************************************************
+//  GlinXphJones Implementations
+//
+
+GlinXphJones::GlinXphJones(VisSet& vs) :
+  VisCal(vs),             // virtual base
+  VisMueller(vs),         // virtual base
+  GJones(vs)             // immediate parent
+{
+  if (prtlev()>2) cout << "GlinXph::GlinXph(vs)" << endl;
+
+}
+
+GlinXphJones::GlinXphJones(const Int& nAnt) :
+  VisCal(nAnt), 
+  VisMueller(nAnt),
+  GJones(nAnt)
+{
+  if (prtlev()>2) cout << "GlinXph::GlinXph(nAnt)" << endl;
+}
+
+GlinXphJones::~GlinXphJones() {
+  if (prtlev()>2) cout << "GlinXph::~GlinXph()" << endl;
+}
+
+
+void GlinXphJones::selfSolve(VisSet& vs, VisEquation& ve) {
+
+  if (prtlev()>4) cout << "   GlnXph::selfSolve(ve)" << endl;
+
+  // Inform logger/history
+  logSink() << "Solving for " << typeName()
+            << LogIO::POST;
+
+  // Initialize the svc according to current VisSet
+  //  (this counts intervals, sizes CalSet)
+  Vector<Int> nChunkPerSol;
+  Int nSol = sizeUpSolve(vs,nChunkPerSol);
+
+  // The iterator, VisBuffer
+  VisIter& vi(vs.iter());
+  VisBuffer vb(vi);
+
+  //  cout << "nSol = " << nSol << endl;
+  //  cout << "nChunkPerSol = " << nChunkPerSol << endl;
+
+  Vector<Int> slotidx(vs.numberSpw(),-1);
+
+  Int nGood(0);
+  vi.originChunks();
+  for (Int isol=0;isol<nSol && vi.moreChunks();++isol) {
+
+    // Arrange to accumulate
+    VisBuffAccumulator vba(nAnt(),preavg(),False);
+    
+    for (Int ichunk=0;ichunk<nChunkPerSol(isol);++ichunk) {
+
+      // Current _chunk_'s spw
+      Int spw(vi.spectralWindow());
+
+      // Abort if we encounter a spw for which a priori cal not available
+      if (!ve.spwOK(spw))
+        throw(AipsError("Pre-applied calibration not available for at least 1 spw. Check spw selection carefully."));
+
+
+      // Collapse each timestamp in this chunk according to VisEq
+      //  with calibration and averaging
+      for (vi.origin(); vi.more(); vi++) {
+
+        // Force read of the field Id
+        vb.fieldId();
+
+        // This forces the data/model/wt I/O, and applies
+        //   any prior calibrations
+        ve.collapse(vb);
+
+        // If permitted/required by solvable component, normalize
+        if (normalizable())
+	  vb.normalize();
+
+	// If this solve not freqdep, and channels not averaged yet, do so
+	if (!freqDepMat() && vb.nChannel()>1)
+	  vb.freqAveCubes();
+
+        // Accumulate collapsed vb in a time average
+        vba.accumulate(vb);
+      }
+      // Advance the VisIter, if possible
+      if (vi.moreChunks()) vi.nextChunk();
+
+    }
+
+    // Finalize the averged VisBuffer
+    vba.finalizeAverage();
+
+    // The VisBuffer to solve with
+    VisBuffer& svb(vba.aveVisBuff());
+
+    // Establish meta-data for this interval
+    //  (some of this may be used _during_ solve)
+    //  (this sets currSpw() in the SVC)
+    Bool vbOk=syncSolveMeta(svb,-1);
+
+    Int thisSpw=spwMap()(svb.spectralWindow());
+    slotidx(thisSpw)++;
+
+    // Fill solveCPar() with 1, nominally, and flagged
+    solveCPar()=Complex(1.0);
+    solveParOK()=False;
+    
+    if (vbOk && svb.nRow()>0) {
+
+      // solve for the X-Y phase term in the current VB
+      solveOneVB(svb);
+
+      nGood++;
+    }
+
+    keep(slotidx(thisSpw));
+    
+  }
+  
+  logSink() << "  Found good "
+            << typeName() << " solutions in "
+            << nGood << " intervals."
+            << LogIO::POST;
+
+  // Store whole of result in a caltable
+  if (nGood==0)
+    logSink() << "No output calibration table written."
+              << LogIO::POST;
+  else {
+
+    // Do global post-solve tinkering (e.g., phase-only, normalization, etc.)
+    //  TBD
+    // globalPostSolveTinker();
+
+    // write the table
+    store();
+  }
+
+}
+
+// Solve for the X-Y phase from the cross-hand's slope in R/I
+void GlinXphJones::solveOneVB(const VisBuffer& vb) {
+
+  solveCPar()=Complex(1.0);
+  solveParOK()=False;
+
+  Int nChan=vb.nChannel();
+  if (nChan>1)
+    throw(AipsError("X-Y phase solution NYI for channelized data"));
+
+  // Find number of timestamps in the VB
+  Vector<uInt> ord;
+  Int nTime=genSort(ord,vb.time(),Sort::NoDuplicates);
+
+  Vector<Double> x(nTime,0.0),y(nTime,0.0),wt(nTime,0.0),sig(nTime,0.0);
+  Vector<Bool> mask(nTime,False);
+  mask.set(False);
+  Complex v(0.0);
+  Float wt0(0.0);
+  Int iTime(-1);
+  Double currtime(-1.0);
+  for (Int irow=0;irow<vb.nRow();++irow) {
+    if (!vb.flagRow()(irow) &&
+	vb.antenna1()(irow)!=vb.antenna2()(irow)) {
+
+      // Advance time index when we see a new time
+      if (vb.time()(irow)!=currtime) {
+	++iTime;
+	currtime=vb.time()(irow); // remember the new current time
+      }
+      
+      if (!vb.flag()(0,irow)) {
+	wt0=(vb.weightMat()(1,irow)+vb.weightMat()(2,irow));
+	if (wt0>0.0) {
+	  v=vb.visCube()(1,0,irow)+conj(vb.visCube()(2,0,irow));
+	  x(iTime)+=Double(wt0*real(v));
+	  y(iTime)+=Double(wt0*imag(v));
+	  wt(iTime)+=Double(wt0);
+
+	}
+      }
+    }
+  }
+
+  // Normalize data by accumulated weights
+  for (Int itime=0;itime<nTime;++itime) {
+
+    if (wt(itime)>0.0) {
+      x(itime)/=wt(itime);
+      y(itime)/=wt(itime);
+      sig(itime)=sqrt(1.0/wt(itime));
+      mask(itime)=True;
+    }
+    else
+      sig(itime)=DBL_MAX;    // ~zero weight
+  }
+
+  LinearFit<Double> phfitter;
+  Polynomial<AutoDiff<Double> > line(1);
+  phfitter.setFunction(line);
+  Vector<Double> soln=phfitter.fit(x,y,sig,&mask);
+
+  // The X-Y phase is the arctan of the fitted slope
+  Float Xph=atan(soln(1));   // +C::pi;
+  Complex Cph=Complex(cos(Xph),sin(Xph));
+
+  cout << "X-Y phase = " << Xph*180.0/C::pi << " deg." << endl << endl;
+
+  // Set all antennas with this X-Y phase (as a complex number)
+  solveCPar()(Slice(0,1,1),Slice(),Slice())=Cph;
+  solveParOK()=True;
+
+  // Now fit for the source polarization
+  {
+
+    Vector<Double> wtf(nTime,0.0),sigf(nTime,0.0),xf(nTime,0.0),yf(nTime,0.0);
+    Vector<Bool> maskf(nTime,False);
+    Float wt0;
+    Complex v;
+    Double currtime(-1.0);
+    Int iTime(-1);
+    for (Int irow=0;irow<vb.nRow();++irow) {
+      if (!vb.flagRow()(irow) &&
+	  vb.antenna1()(irow)!=vb.antenna2()(irow)) {
+	
+	if (vb.time()(irow)!=currtime) {
+	  // Advance time index when we see a new time
+	  ++iTime;
+	  currtime=vb.time()(irow); // remember the new current time
+	}
+	if (!vb.flag()(0,irow)) {
+	  wt0=(vb.weightMat()(1,irow)+vb.weightMat()(2,irow));
+	  if (wt0>0.0) {
+	    // Correct x-hands for xy-phase and add together
+	    v=vb.visCube()(1,0,irow)/Cph+vb.visCube()(2,0,irow)/conj(Cph);
+	    
+	    xf(iTime)+=Double(wt0*2.0*(vb.feed_pa(vb.time()(irow))(0)));
+	    yf(iTime)+=Double(wt0*real(v)/2.0);
+	    wtf(iTime)+=Double(wt0);
+	  }
+	}
+      }
+    }
+    
+    // Normalize data by accumulated weights
+    for (Int itime=0;itime<nTime;++itime) {
+      if (wtf(itime)>0.0) {
+	xf(itime)/=wtf(itime);
+	yf(itime)/=wtf(itime);
+	sigf(itime)=sqrt(1.0/wtf(itime));
+	maskf(itime)=True;
+      }
+      else
+	sigf(itime)=DBL_MAX;    // ~zero weight
+    }
+    
+    // p0=Q, p1=U, p2 = real part of net instr pol offset
+    //  x is TWICE the parallactic angle
+    CompiledFunction<AutoDiff<Double> > fn;
+    fn.setFunction("-p0*sin(x) + p1*cos(x) + p2");
+
+    LinearFit<Double> fitter;
+    fitter.setFunction(fn);
+    
+    Vector<Double> soln=fitter.fit(xf,yf,sigf,&maskf);
+    
+    cout << "Fractional Poln: "
+	 << "Q = " << soln(0) << ", "
+	 << "U = " << soln(1) << "; "
+	 << "P = " << sqrt(soln(0)*soln(0)+soln(1)*soln(1)) << ", "
+	 << "X = " << atan2(soln(1),soln(0))*90.0/C::pi << "deg."
+	 << endl;
+    cout << "Net (over baselines) instrumental polarization: " 
+	 << soln(2) << endl;
+
+  }	
+
+}
+
+
+
 
 // **********************************************************
 //  KMBDJones Implementations

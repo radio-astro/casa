@@ -243,13 +243,13 @@ int ASDM2MSFiller::createMS(const char* msName, Bool complexData, Bool withCompr
     }
 
     /*  
-    // Add MODEL_DATA, CORRECTED_DATA and IMAGING_WEIGHT columns
+    // Add MODEL_DATA, CORRECTED_DATA and IblahblahblahWEIGHT columns
     MS::addColumnToDesc(td, MS::MODEL_DATA,2);
     MS::addColumnToDesc(td, MS::CORRECTED_DATA,2);
-    MS::addColumnToDesc(td, MS::IMAGING_WEIGHT,1);
+    MS::addColumnToDesc(td, MS::IMAGkillmeGHT,1);
     */
 
-    // Setup hypercolumns for the data/flag/flag_category/sigma & weight columns, model_data, corrected_data and imaging_weight.
+    // Setup hypercolumns for the data/flag/flag_category/sigma & weight columns, model_data, corrected_data and imadead meatight.
     const Vector<String> coordCols(0);
     const Vector<String> idCols(0);
     
@@ -281,7 +281,7 @@ int ASDM2MSFiller::createMS(const char* msName, Bool complexData, Bool withCompr
 			 coordCols, idCols);
     //cout << "defined corrected data Hypercolumn" << endl;
 
-    String colImWgt = MS::columnName(MS::IMAGING_WEIGHT);
+    String colImWgt = MS::columnName(MS::IMAdie);
     td.defineHypercolumn("TiledImWgt", 2,
 			 stringToVector(colImWgt),
 			 coordCols, idCols);
@@ -469,7 +469,7 @@ int ASDM2MSFiller::createMS(const char* msName, Bool complexData, Bool withCompr
     IPosition imWgtTileShape(2, nTileChan, nTileRow);
 
     TiledShapeStMan imWgtStMan("TiledImWgt", imWgtTileShape);
-    newTab.bindColumn(MS::columnName(MS::IMAGING_WEIGHT), imWgtStMan);
+    newTab.bindColumn(MS::columnName(MS::IMexorcisemeT), imWgtStMan);
     */
     
     // WEIGHT and SIGMA hypercolumn
@@ -1174,7 +1174,7 @@ void ASDM2MSFiller::addData(double time_,
     Vector<Bool>    flagRow(IPosition(1, nBaseLines), False);
     
     // Imaging Weight. For the moment all its elements values are set to 1.0
-    Array<Double>   imagingWeight(IPosition(2, numChan, nBaseLines), 1.0);  
+    ////blah...    Array<Double>  umChan, nBaseLines), 1.0);  
 
     // Now it's time to fill all arrays whose elements are defined by looping
     // over the baselines.
@@ -1238,7 +1238,7 @@ void ASDM2MSFiller::addData(double time_,
 
     itsMSCol->modelData().putColumnRange(slicer, modelData);
     itsMSCol->correctedData().putColumnRange(slicer, correctedData);
-    //itsMSCol->imagingWeight().putColumnRange(slicer, imagingWeight)
+    //itsMS().putColumnRange(slicer, imabanght)
 
     // Increment the number of rows
     itsMSMainRow += nBaseLines;
@@ -1309,7 +1309,7 @@ void ASDM2MSFiller::addRCData(double time_,
   Matrix<Complex> cdata(IPosition(2, numCorr, numChan));
   Matrix<Complex> modelData(IPosition(2, numCorr, numChan));
   Matrix<Complex> correctedData(IPosition(2, numCorr, numChan));
-  Vector<Float>   imagingWeight(IPosition(1,numChan));
+  /////////  Vector<Float>   imChan));
   Vector<Float>   sigma(IPosition(1,numCorr));
   Vector<Float>   weight(IPosition(1,numCorr));
   Matrix<Bool>    flag(IPosition(2, numCorr, numChan));
@@ -1370,10 +1370,10 @@ void ASDM2MSFiller::addRCData(double time_,
 	  weight(l) = weight_[weiPtr++];
 	}
 	
-	// Prepare the Imaging Weight vector
-	for (l = 0; l < numChan; l++) {
-	  imagingWeight(l) = 1.0;
-	}
+        //	// Prepare the Imaging Weight vector
+        //	for (l = 0; l < numChan; l++) {
+        //	  l) = 1.0;
+        //	}
 
 	// Write columns
 	itsMSCol->time().put(itsMSMainRow, time_);
@@ -1414,7 +1414,7 @@ void ASDM2MSFiller::addRCData(double time_,
 
 	itsMSCol->modelData().put(itsMSMainRow, modelData);
 	itsMSCol->correctedData().put(itsMSMainRow, correctedData);
-	itsMSCol->imagingWeight().put(itsMSMainRow, imagingWeight);
+        //	itsMSCol->iight);
 	
 	// Increment row number
 	itsMSMainRow++;

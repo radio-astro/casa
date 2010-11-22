@@ -78,8 +78,6 @@
 # <example>
 # # This test was designed to run in the automated CASA test system.
 # # This exmple shows who to run it manually from with casapy.
-# sys.path.append( os.environ["CASAPATH"].split()[0]+'/code/xmlcasa/scripts/regressions/admin' )
-# import runUnitTest
 # runUnitTest.main(['test_imhead'])
 #
 # or outside casapy like this:
@@ -224,6 +222,8 @@ class immoment_test1(unittest.TestCase):
     def tearDown(self):
         for file in list1:
             os.system('rm -rf ' +file)
+            os.system('rm -rf input_test*')
+            os.system('rm -rf moment_test*')
         
         
     def test_input(self):
@@ -876,6 +876,8 @@ class immoment_test2(unittest.TestCase):
     def tearDown(self):
         for file in list2:
             os.system('rm -rf ' +file)
+            os.system('rm -rf mask_test*')
+            os.system('rm -rf moment_test*')
     
     ####################################################################
     # Testing calculation of each type of moment
@@ -981,13 +983,17 @@ class immoment_test2(unittest.TestCase):
                           +"\nError: Moment file, " + got + ", was not created."
         
         immath( outfile=difference, expr='"' + got + '"-"' + expected + '"' )
-        ia.open(difference)
-        stats = ia.statistics()
+        myia = iatool.create()
+        myia.open(difference)
+        stats = myia.statistics()
+        myia.close()
         casalog.post("moment 1 difference image stats " + str(stats))
         if (stats['sumsq'][0] != 0):
             retValue['error_msgs'] += "\nError: first moment test did not produce expected image"
             retValue['success']=False
 
+        # Cleanup
+        os.system('rm -rf first_moment_diff')
         self.assertTrue(retValue['success'],retValue['error_msgs'])
     
     ####################################################################

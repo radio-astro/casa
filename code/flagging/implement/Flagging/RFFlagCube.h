@@ -103,7 +103,7 @@ public:
 
   // creates flag cube for current chunk. name is name of agent.
   // nAgent is total number of agents
-  void init ( RFlagWord polmsk, uInt nAgent, const String &name = "" );
+  void init ( RFlagWord polmsk, uInt nAgent, bool is_selector, const String &name = "" );
 
   // cleans up at end of chunk
   void cleanup ();
@@ -129,7 +129,7 @@ public:
   void advance   ( uInt it,Bool getFlags=False );
 
   // fills global flag lattice with apriori flags from a VisBuffer (if required)
-  void getMSFlags  ();
+  void getMSFlags  (uInt it);
 
   // transfers all flags from lattice into VisBuffer
   void setMSFlags  (uInt itime);
@@ -235,6 +235,12 @@ public:
     
   RFChunkStats &chunk;                  // chunk
 
+  bool kiss;  // do things simpler (faster) if there is exactly one selector agent
+
+  static Cube<Bool> in_flags;
+  static int in_flags_time;  //time stamp that in_flags has reached
+  static bool in_flags_flushed; // do we need to write the flags back for this time stamp?
+
   // shortcut to RFChunkStats::num
   uInt num ( StatEnums which ) { return chunk.num(which); }
       
@@ -314,7 +320,25 @@ inline RFlagWord RFFlagCube::corrFlagMask ( RFlagWord cmask )
    { return corr_flagmask((uInt)cmask); }
 
 inline RFlagWord RFFlagCube::getFlag ( uInt ich,uInt ifr,FlagCubeIterator &iter )
-   { return (iter)(ich,ifr); }
+   { 
+     if (kiss) {
+       /* Create the bitmap (integer) from the correlation flags
+          relevant for this agent */
+       RFlagWord f = 0;
+       uInt c = 1;
+
+       for (uInt icorr = 0; icorr < num(CORR); icorr++, c<<=1) {
+         if ((c & corrmask) && 
+             in_flags(icorr, ich, ifr)) {
+           f |= c;
+         }
+       }
+       return f;
+     }
+     else {
+       return (iter)(ich,ifr); 
+     }
+   }
 
 inline Bool RFFlagCube::setFlag ( uInt ich,uInt ifr ) 
    { return setFlag(ich,ifr,flag.iterator()); } 

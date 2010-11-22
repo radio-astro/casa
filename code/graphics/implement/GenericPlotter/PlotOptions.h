@@ -857,7 +857,7 @@ public:
     class cptrname : public pptrname {                                        \
     public:                                                                   \
         cptrname () : pptrname () { }                                         \
-        cptrname ( cname * val, bool del = true ) {                           \
+        cptrname ( cname * val, bool del = true ) : pptrname() {                           \
             gname * v = dynamic_cast< gname *>(val);                          \
             if(v != NULL) gptrname ::operator=( gptrname (v, del));           \
         }                                                                     \
@@ -865,9 +865,6 @@ public:
             const cname * v = dynamic_cast<const cname *>(                    \
                               val.operator->());                              \
             if(v != NULL) gptrname ::operator=(val);                          \
-        }                                                                     \
-        cptrname ( const cptrname & val ) {                                   \
-            gptrname ::operator=((const gptrname &)val);                      \
         }                                                                     \
         cname & operator*() {                                                 \
             return dynamic_cast< cname &>(**(( gptrname *)this));             \
@@ -903,7 +900,7 @@ public:
     template <class T> class cptrname : public pptrname {                     \
     public:                                                                   \
         cptrname () : pptrname () { }                                         \
-        cptrname ( cname <T>* val, bool del = true ) {                        \
+        cptrname ( cname <T>* val, bool del = true ) : pptrname(){            \
             gname * v = dynamic_cast< gname *>(val);                          \
             if(v != NULL) gptrname ::operator=( gptrname (v, del));           \
         }                                                                     \
@@ -912,7 +909,7 @@ public:
                               val.operator->());                              \
             if(v != NULL) gptrname ::operator=(val);                          \
         }                                                                     \
-        cptrname ( const cptrname <T> & val ) {                               \
+        cptrname ( const cptrname <T> & val ) : pptrname() {                               \
             gptrname ::operator=((const gptrname &)val);                      \
         }                                                                     \
         cname <T>& operator*() {                                              \

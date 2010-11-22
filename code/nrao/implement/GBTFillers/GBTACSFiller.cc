@@ -384,9 +384,8 @@ Bool GBTACSFiller::fill(const Vector<String> &backendFiles,
 	dmCols(1) = MS::columnName(MS::FLAG);
 	mainTD.defineHypercolumn("HYPERDATA", 3, dmCols,
 				 stringToVector(",,"));
-	// not sure what the best default tile shape might be
-	IPosition defaultTileShape(3,4,128,8);
-	TiledShapeStMan stman("HYPERDATA", IPosition(3, 4, 128, 8));
+	IPosition defaultTileShape(3, 4, 1034, 32);
+	TiledShapeStMan stman("HYPERDATA", defaultTileShape);
 
 	// second hypercolumn for the lags, if necessary
 	if (!fillOptions.fillLags()) {
@@ -400,7 +399,7 @@ Bool GBTACSFiller::fill(const Vector<String> &backendFiles,
 	    dm2Cols(0) = MS::columnName(MS::LAG_DATA);
 	    mainTD.defineHypercolumn("LAGSHYPERDATA", 3, dm2Cols,
 				     stringToVector(",,"));
- 	    TiledShapeStMan lagssm("LAGSHYPERDATA", IPosition(3,4,128,8));
+ 	    TiledShapeStMan lagssm("LAGSHYPERDATA", defaultTileShape);
    	    AlwaysAssert(GBTBackendFiller::createMS(msName_p, mainTD,
    						    stman, dmCols, defaultTileShape, 
 						    fillOptions, lagssm, dm2Cols, 
@@ -997,7 +996,6 @@ Bool GBTACSFiller::fill(const Vector<String> &backendFiles,
 		}
 		modelData().setShape(thisrow, thisShape);
 		correctedData().setShape(thisrow, thisShape);
-		imagingWeight().setShape(thisrow, thisShape.getLast(1));
 		thisrow += ncorr;
 	    }
 	    feedDDFiller().next();
@@ -1097,7 +1095,6 @@ Bool GBTACSFiller::fill(const Vector<String> &backendFiles,
 	    
 	    Array<Complex> modData(outdata.shape().getFirst(2),1.0);
 	    Array<Complex> cdata(modData.shape());
-	    Array<Float> imagingWt(modData.shape().getLast(1), 1.0);
 	    Array<Float> sigma(outdata.shape().getFirst(1), 1.0);
 	    Array<Float> weight(sigma.shape(), 1.0);
 	    ArrayIterator<Float> dataIter(outdata,2);
@@ -1114,7 +1111,6 @@ Bool GBTACSFiller::fill(const Vector<String> &backendFiles,
 		convertArray(cdata,dataIter.array());
 		correctedData().put(thisRow, cdata);
 		dataIter.next();
-		imagingWeight().put(thisRow, imagingWt);
 	    }
 	    
 	    // FLAG - all False

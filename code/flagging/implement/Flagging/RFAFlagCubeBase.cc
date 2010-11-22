@@ -38,7 +38,8 @@ uInt RFABase::indexing_base = 0;
 RFABase::RFABase ( RFChunkStats &ch,const RecordInterface &parm )
   : chunk(ch),params(parm),
     myname(parm.isDefined(RF_NAME)?parm.asString(RF_NAME):String("RFABase")),
-    os(LogOrigin("Flagger",myname))
+    os(LogOrigin("Flagger",myname)),
+    only_selector(false)
 {
 }
 
@@ -122,7 +123,7 @@ uInt RFAFlagCubeBase::estimateMemoryUse ()
 // -----------------------------------------------------------------------
 Bool RFAFlagCubeBase::newChunk (Int &)
 {
-  flag.init(corrmask, nAgent, name());
+  flag.init(corrmask, nAgent, only_selector, name());
   return active=True;
 }
 

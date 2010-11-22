@@ -31,6 +31,7 @@
 #include <casa/aips.h>
 #include <casa/Arrays/Vector.h>
 #include <display/Display/DisplayParameter.h>
+#include <display/Display/ColormapDefinition.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -113,6 +114,10 @@ class DParameterChoice : public DisplayParameter {
   // is thrown.
   DParameterChoice(const String name, const String description,
 		   const String help, const Vector<String> &options,
+		   const String defaultvalue, const String value, 
+		   const String context = "", const Bool editable = False);
+  DParameterChoice(const String name, const String description,
+		   const String help, const ColormapDefinition::colormapnamemap &options,
 		   const String defaultvalue, const String value, 
 		   const String context = "", const Bool editable = False);
 

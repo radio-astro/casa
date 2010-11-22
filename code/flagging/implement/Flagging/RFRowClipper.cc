@@ -68,7 +68,7 @@ void RFRowClipper::reset ()
   sigupdated = False;
 }
 
-Float RFRowClipper::updateSigma (uInt &ifrmax,uInt &itmax,Bool flag_rows )
+Float RFRowClipper::updateSigma (uInt &ifrmax,uInt &itmax,Bool flag_rows, bool clear_flags )
 {
   Vector<Float> medsigma(ntime);
   Vector<Float> diffsigma(ntime);
@@ -151,7 +151,7 @@ Float RFRowClipper::updateSigma (uInt &ifrmax,uInt &itmax,Bool flag_rows )
             if( !flag_rows || goodsigma(it) ) 
             {
               Bool res = False;
-              if( flag_rows ) // clear row flag
+              if( flag_rows && clear_flags ) // clear row flag
               {
                 recalc |= ( res = flag.clearRowFlag(ifr,it) );
                 for( uInt ich=0; ich<chunk.num(CHAN); ich++ )

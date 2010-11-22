@@ -105,6 +105,9 @@ private:
   // Initialization
   void init( const casa::MeasurementSet *inMS ) ;
 
+  // Add comments on HISTORY table
+  void addHistory( String tableName, String suffix ) ;
+
   // MeasurementSet data (should have FLOAT_DATA column)
   MeasurementSet *ms_p ;
 

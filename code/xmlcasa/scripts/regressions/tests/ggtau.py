@@ -25,7 +25,7 @@ def run():
         raise Exception, 'regstate = False'
 #    import lepath+'/g192_regression.py'
 ###resturn the images that will be templated and compared in future runs
-    return ['ggtau.hco.image', 'ggtau.co.image',  'ggtau.1mm.image', 'ggtau.3mm.image']
+    return ['ggtau.co.image',  'ggtau.1mm.image', 'ggtau.3mm.image']
 
 def data():
     ### return the data files that is needed by the regression script

@@ -165,6 +165,32 @@ Vector<Int>& ROVisIterator::chanIds(Vector<Int>& chanids, Int spw) const
   return chanids;
 }
 
+void ROVisIterator::setSelTable()
+{
+    ROVisibilityIterator::setSelTable();
+
+    // The following code (which uses Table::operator() to create
+    // a new RefTable) is computationally expensive. This could
+    // be optimized by using the same method as in the
+    // VisibilityIterator base class (which is to not create
+    // RefTables but instead access the table column directly in
+    // msIter_p.table() using VisibilityIterator::selRows_p).
+
+    // Doing so would mean replacing calls like
+    //     colSigma.getColumn(newWtSlicer_p,sigmat,True);
+    // with
+    //     colSigma.getColumnCells(selRows_p,newWtSlicer_p,sigmat,True);
+    //
+    // However the ArrayColumn class does allow passing both a 
+    // Vector<Vector<Slice> > and a RefRows parameter to get-/putColumn.
+    // Such put/get functions must be first implemented.
+
+    Vector<uInt> rows(curNumRow_p);
+    indgen(rows,uInt(curStartRow_p));
+    selTable_p=msIter_p.table()(rows);
+    attachColumns(attachTable());
+}
+
 
 // Return native correlation _indices_
 Vector<Int>& ROVisIterator::corrIds(Vector<Int>& corrids) const
@@ -473,6 +499,75 @@ Int ROVisIterator::numberCorr(Int pol) const {
 
 }
 
+void ROVisIterator::getCol(const ROScalarColumn<Bool> &column, Vector<Bool> &array, Bool resize) const
+{
+    column.getColumn(array, resize);
+}
+
+void ROVisIterator::getCol(const ROScalarColumn<Int> &column, Vector<Int> &array, Bool resize) const
+{
+    column.getColumn(array, resize);
+}
+
+void ROVisIterator::getCol(const ROScalarColumn<Double> &column, Vector<Double> &array, Bool resize) const
+{
+    column.getColumn(array, resize);
+}
+
+void ROVisIterator::getCol(const ROArrayColumn<Bool> &column, Array<Bool> &array, Bool resize) const
+{
+    column.getColumn(array, resize);
+}
+
+void ROVisIterator::getCol(const ROArrayColumn<Float> &column, Array<Float> &array, Bool resize) const
+{
+    column.getColumn(array, resize);
+}
+
+void ROVisIterator::getCol(const ROArrayColumn<Double> &column, Array<Double> &array, Bool resize) const
+{
+    column.getColumn(array, resize);
+}
+
+void ROVisIterator::getCol(const ROArrayColumn<Complex> &column, Array<Complex> &array, Bool resize) const
+{
+    column.getColumn(array, resize);
+}
+
+void ROVisIterator::getCol(const ROArrayColumn<Bool> &column, const Slicer &slicer, Array<Bool> &array, Bool resize) const
+{
+    column.getColumn(slicer, array, resize);
+}
+
+void ROVisIterator::getCol(const ROArrayColumn<Float> &column, const Slicer &slicer, Array<Float> &array, Bool resize) const
+{
+    column.getColumn(slicer, array, resize);
+}
+
+void ROVisIterator::getCol(const ROArrayColumn<Complex> &column, const Slicer &slicer, Array<Complex> &array, Bool resize) const
+{
+    column.getColumn(slicer, array, resize);
+}
+
+
+Vector<RigidVector<Double,3> >& 
+ROVisIterator::uvw(Vector<RigidVector<Double,3> >& uvwvec) const
+{
+    uvwvec.resize(curNumRow_p);
+    getCol(colUVW, uvwMat_p,True);
+    // get a pointer to the raw storage for quick access
+    Bool deleteIt;
+    Double* pmat = uvwMat_p.getStorage(deleteIt);
+    for (uInt row=0; row<curNumRow_p; row++, pmat+=3) uvwvec(row)=pmat;
+    return uvwvec;
+}
+
+
+const Table
+ROVisIterator::attachTable() const
+{
+    return selTable_p;
+}
 
 VisIterator::VisIterator() {}
 
@@ -494,6 +589,7 @@ VisIterator::operator=(const VisIterator& other)
 {
     if (this!=&other) {
 	ROVisIterator::operator=(other);
+        selTable_p=other.selTable_p;
 	RWcolFlag.reference(other.RWcolFlag);
         RWcolFlagRow.reference(other.RWcolFlagRow);
 	RWcolVis.reference(other.RWcolVis);
@@ -503,7 +599,6 @@ VisIterator::operator=(const VisIterator& other)
 	RWcolWeight.reference(other.RWcolWeight);
         RWcolWeightSpectrum.reference(other.RWcolWeightSpectrum);
 	RWcolSigma.reference(other.RWcolSigma);
-	RWcolImagingWeight.reference(other.RWcolImagingWeight);
     }
     return *this;
 }
@@ -522,32 +617,30 @@ VisIterator & VisIterator::operator++()
   return *this;
 }
 
-void VisIterator::attachColumns()
+void VisIterator::attachColumns(const Table &t)
 {
-  ROVisibilityIterator::attachColumns();
+  ROVisibilityIterator::attachColumns(t);
   //todo: should cache this (update once per ms)
-  const ColumnDescSet& cds=selTable_p.tableDesc().columnDescSet();
+  const ColumnDescSet& cds=t.tableDesc().columnDescSet();
   if (cds.isDefined(MS::columnName(MS::DATA))) {
-    RWcolVis.attach(selTable_p,MS::columnName(MS::DATA));
+      RWcolVis.attach(t,MS::columnName(MS::DATA));
   };
   if (cds.isDefined(MS::columnName(MS::FLOAT_DATA))) {
     floatDataFound_p=True;
-    RWcolFloatVis.attach(selTable_p,MS::columnName(MS::FLOAT_DATA));
+    RWcolFloatVis.attach(t,MS::columnName(MS::FLOAT_DATA));
   } else {
     floatDataFound_p=False;
   };
   if (cds.isDefined("MODEL_DATA")) 
-    RWcolModelVis.attach(selTable_p,"MODEL_DATA");
+    RWcolModelVis.attach(t,"MODEL_DATA");
   if (cds.isDefined("CORRECTED_DATA")) 
-    RWcolCorrVis.attach(selTable_p,"CORRECTED_DATA");
-  RWcolWeight.attach(selTable_p,MS::columnName(MS::WEIGHT));
+    RWcolCorrVis.attach(t,"CORRECTED_DATA");
+  RWcolWeight.attach(t,MS::columnName(MS::WEIGHT));
   if (cds.isDefined("WEIGHT_SPECTRUM"))
-    RWcolWeightSpectrum.attach(selTable_p,"WEIGHT_SPECTRUM");
-  RWcolSigma.attach(selTable_p,MS::columnName(MS::SIGMA));
-  RWcolFlag.attach(selTable_p,MS::columnName(MS::FLAG));
-  RWcolFlagRow.attach(selTable_p,MS::columnName(MS::FLAG_ROW));
-  if (cds.isDefined("IMAGING_WEIGHT"))
-    RWcolImagingWeight.attach(selTable_p,"IMAGING_WEIGHT");
+    RWcolWeightSpectrum.attach(t,"WEIGHT_SPECTRUM");
+  RWcolSigma.attach(t,MS::columnName(MS::SIGMA));
+  RWcolFlag.attach(t,MS::columnName(MS::FLAG));
+  RWcolFlagRow.attach(t,MS::columnName(MS::FLAG_ROW));
 }
 
 void VisIterator::setFlagRow(const Vector<Bool>& rowflags)
@@ -643,9 +736,47 @@ void VisIterator::putDataColumn(DataColumn whichOne,
   };
 };  
 
+Vector<uInt>& ROVisIterator::rowIds(Vector<uInt>& rowids) const
+{
+  rowids.resize(curNumRow_p);
+  rowids=selTable_p.rowNumbers();
+  return rowids;
+}
 
+void VisIterator::putCol(ScalarColumn<Bool> &column, const Vector<Bool> &array)
+{
+    column.putColumn(array);
+}
 
+void VisIterator::putCol(ArrayColumn<Bool> &column, const Array<Bool> &array)
+{
+    column.putColumn(array);
+}
 
+void VisIterator::putCol(ArrayColumn<Float> &column, const Array<Float> &array)
+{
+    column.putColumn(array);
+}
+
+void VisIterator::putCol(ArrayColumn<Complex> &column, const Array<Complex> &array)
+{
+    column.putColumn(array);
+}
+
+void VisIterator::putCol(ArrayColumn<Bool> &column, const Slicer &slicer, const Array<Bool> &array)
+{
+    column.putColumn(slicer, array);
+}
+
+void VisIterator::putCol(ArrayColumn<Float> &column, const Slicer &slicer, const Array<Float> &array)
+{
+    column.putColumn(slicer, array);
+}
+
+void VisIterator::putCol(ArrayColumn<Complex> &column, const Slicer &slicer, const Array<Complex> &array)
+{
+    column.putColumn(slicer, array);
+}
 
 
 } //# NAMESPACE CASA - END

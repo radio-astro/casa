@@ -6,6 +6,7 @@
 
 import time
 import os
+import shutil
 
 os.system('rm -rf orion_t* gbt_gau.im')
 
@@ -44,14 +45,15 @@ print '--Feather - create synth image--'
 #    NOTE: field 10 is outside of the 9 point primary mosaic (sitting
 #     on M43 -- but the flux is resolved out so there is no use to
 #     add it to the mosaic.  The script below leaves it out.
+shutil.rmtree('orion.task.model', True)
 default('mosaic')
 mosaic('orion.ms',
        'orion.task',
        'mfs',
        'entropy',
-       niter=34,
+       niter=35,
        sigma='4mJy',
-       targetflux='180Jy',
+       targetflux='240Jy',
        mask=datapath+'orion.mask6',
        field=[2, 3, 4, 5, 6, 7, 8, 9,10],
        spw=[0, 1],
@@ -79,6 +81,7 @@ print '--Single Dish as Model (multi-scale)--'
 ## Starting from:
 ##    VLA calibrated visibilities: orion.ms
 ##    GBT OTF cube: orion.gbt.im
+shutil.rmtree('orion_tsdms.model', True)
 default('clean')
 clean('orion.ms',
       'orion_tsdms',
@@ -91,9 +94,9 @@ clean('orion.ms',
       imagermode='mosaic',
       mosweight=True,
       ftmachine='ft',
-      cyclefactor=2,
+      cyclefactor=4,
       cyclespeedup=-1,
-      multiscale=[0,3,10,30],
+      multiscale=[0,2,8,16,32,64],
       negcomponent=-1,
       mask=datapath+'orion.mask6',
       modelimage=datapath+'orion.gbt.im',
@@ -114,6 +117,7 @@ print '--Single Dish as Model (MEM)--'
 ### Starting from:
 ###    VLA calibrated visibilities: orion.ms
 ###    GBT OTF cube: orion.gbt.im
+shutil.rmtree('orion_tsdmem.model', True)
 default('mosaic')
 mosaic('orion.ms', 'orion_tsdmem', 'mfs', 'entropy', niter=3, sigma='4mJy',
        targetflux='240Jy', mask=datapath+'orion.mask6',
@@ -155,6 +159,7 @@ def joint_deconvolve(datapath):
 	dc.makegaussian('gbt_gau.im',bmaj='55arcsec',bmin='55arcsec',
 			bpa='0deg',normalize=False)
 	dc.close()
+	os.system("rm -rf orion_tjoint3")
 	dc.open('orion_tgbt_regrid.im',psf='gbt_gau.im')
 	dc.setscales(scalemethod='uservector',uservector=[30.,100.,200.])
 	dc.clean(algorithm='fullmsclean',model='orion_tjoint3',niter=50,
@@ -175,10 +180,10 @@ def joint_deconvolve(datapath):
 	##that scale
 	im.setoptions(ftmachine='ft')
 	im.setmfcontrol(stoplargenegatives=-1, cyclefactor=2.0, cyclespeedup=-1)
-	im.weight(type='briggs',rmode='norm',robust=-1,mosaic=True)
+	im.weight(type='briggs',rmode='norm',robust=-1,mosaic=False)
 	im.clean(algorithm='mfmultiscale', model='orion_tjoint3',
 		 image='orion_tjoint3.image', gain=0.3, niter=10000,
-		 mask=datapath+'orion.mask6')
+		 mask=datapath+'orion.mask6', threshold='4mJy')
 	im.close()
 	return time.time()
 
@@ -260,14 +265,14 @@ print >>logfile,'*                               *'
 #              Test name          Stat type Expected  Label irregularities 
 test_descs = (('Feather 1',           'max',  0.780,  ' '),
 	      ('Feather 2',           'max',  0.868,  ' '),
-	      ('SD Model (MS)',       'max',  1.04),
+	      ('SD Model (MS)',       'max',  1.05),
 	      ('SD Model (MEM)',      'max',  0.87),
-	      ('Joint Deconvolution', 'max',  0.96, '', 'Joint Decon1'), # 1.014
+	      ('Joint Deconvolution', 'max',  0.81, '', 'Joint Decon1'), # 1.014
 	      ('Feather 1',           'flux', 242.506,  ' '),
 	      ('Feather 2',           'flux', 242.506,  ' '),
-	      ('SD Model (MS)',       'flux', 364, ' ', 'SD Model (MS)', 'Feather 3'),
+	      ('SD Model (MS)',       'flux', 351, ' ', 'SD Model (MS)', 'Feather 3'),
 	      ('SD Model (MEM)',      'flux', 289, '', 'SD Model (MEM)', 'Joint Deconvolution'),
-	      ('Joint Deconvolution', 'flux', 326, '', 'Joint Decon2')) # 360.468
+	      ('Joint Deconvolution', 'flux', 169, '', 'Joint Decon2')) # 360.468
 
 def log_test_result(test_results, testdesc, logfile):
 	"""Append testdesc to logfile and return whether or not the test was

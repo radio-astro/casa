@@ -32,8 +32,8 @@
 // #include <casaqt/QtPlotServer/QtPlotHistogram.h>
 #include "QtPlotHistogram.h"
 
-QtPlotHistogram::QtPlotHistogram( const QString &label ) : reference_(0.0), QwtPlotItem(QwtText(label)) { }
-QtPlotHistogram::QtPlotHistogram( const QwtText &label ) : reference_(0.0), QwtPlotItem(label) { }
+QtPlotHistogram::QtPlotHistogram( const QString &label ) :  QwtPlotItem(QwtText(label)), reference_(0.0) { }
+QtPlotHistogram::QtPlotHistogram( const QwtText &label ) :  QwtPlotItem(label), reference_(0.0) { }
 
 void QtPlotHistogram::setData(const QwtIntervalData &data) {
     data_ = data;

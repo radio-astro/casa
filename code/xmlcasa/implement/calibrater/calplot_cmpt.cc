@@ -12,7 +12,7 @@
 
 #include <iostream>
 #include <casa/Exceptions/Error.h>
-#include <xmlcasa/calibrater/calplot_cmpt.h>
+#include <calplot_cmpt.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Arrays/IPosition.h>
 #include <casa/Arrays/Array.h>

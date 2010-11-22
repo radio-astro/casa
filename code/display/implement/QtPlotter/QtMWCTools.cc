@@ -49,12 +49,12 @@ void QtPolyTool::updateRegion() {
   if (!itsCurrentWC) return;
 
   //qDebug() << "ploy ready" << coordType.chars();
-  Vector<Double> x;
-  Vector<Double> y;
-  if (coordType == "world")
-     getWorldCoords(x, y);
-  else
-     getLinearCoords(x, y);
+  Vector<Double> wx;
+  Vector<Double> wy;
+  Vector<Double> px;
+  Vector<Double> py;
+  getWorldCoords(wx, wy);
+  getLinearCoords(px, py);
   //Int nt;
   //x.shape(nt);
   //cout << "nt=" << nt << endl;
@@ -62,7 +62,12 @@ void QtPolyTool::updateRegion() {
   //  cout << "x=" << x(i) << " y=" << y(i) << endl;
   //} 
 
-  emit wcNotify(coordType, x, y);
+  emit wcNotify( coordType, px, py, wx, wy );
+}
+
+void QtPolyTool::setCoordType(const String& t) {
+    QtMWCTool::setCoordType(t);
+    updateRegion( );
 }
 
 //////////////rect tool//////////////////
@@ -75,19 +80,28 @@ void QtRectTool::updateRegion() {
   if (!itsCurrentWC) return;
 
   //qDebug() << "rect ready" << coordType.chars();
-  Vector<Double> x;
-  Vector<Double> y;
-  if (coordType == "world")
-     getWorldCoords(x, y);
-  else
-     getLinearCoords(x, y);
-  Vector<Double> xx(2);
-  Vector<Double> yy(2);
-  xx(0) = x(0); xx(1) = y(0);
-  yy(0) = x(1); yy(1) = y(1);
+  Vector<Double> wx;
+  Vector<Double> wy;
+  Vector<Double> px;
+  Vector<Double> py;
+  getWorldCoords(wx, wy);
+  getLinearCoords(px, py);
+  Vector<Double> wxx(2);
+  Vector<Double> wyy(2);
+  wxx(0) = wx(0); wxx(1) = wy(0);
+  wyy(0) = wx(1); wyy(1) = wy(1);
+  Vector<Double> pxx(2);
+  Vector<Double> pyy(2);
+  pxx(0) = px(0); pxx(1) = py(0);
+  pyy(0) = px(1); pyy(1) = py(1);
   //cout << "(" << xx(0) << "," << yy(0) << ")"
   //     << " (" << xx(1) << "," << yy(1) << ")" << endl;
-  emit wcNotify(coordType, xx, yy);
+  emit wcNotify( coordType, pxx, pyy, wxx, wyy );
+}
+
+void QtRectTool::setCoordType(const String& t) {
+  QtMWCTool::setCoordType(t);
+  updateRegion( );
 }
 
 //////////////cross tool//////////////////
@@ -101,16 +115,19 @@ void QtCrossTool::crosshairReady(const String &evtype) {
   if (!itsCurrentWC) return;
 
   //qDebug() << "cross ready" << coordType.chars();
-  Double x, y;
-  if (coordType == "world")
-    getWorld(x, y);
-  else
-     getLin(x, y);
-  Vector<Double> xx(1);
-  Vector<Double> yy(1);
-  xx[0]=x; 
-  yy[0]=y;
-  emit wcNotify(coordType, xx, yy);
+  Double wx, wy;
+  Double px, py;
+  getWorld(wx, wy);
+  getLin(px, py);
+  Vector<Double> wxx(1);
+  Vector<Double> wyy(1);
+  wxx[0]=wx; 
+  wyy[0]=wy;
+  Vector<Double> pxx(1);
+  Vector<Double> pyy(1);
+  pxx[0]=px; 
+  pyy[0]=py;
+  emit wcNotify( coordType, pxx, pyy, wxx, wyy );
 }
 
 void QtCrossTool::setCoordType(const String& t) {

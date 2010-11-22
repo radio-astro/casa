@@ -20,9 +20,9 @@ def exportfits(imagename,fitsimage,velocity,optical,bitpix,minpix,maxpix,overwri
 		default: -32 (floating point)
 		<Options: -32 (floating point), 16 (integer)>
 	minpix -- Minimum pixel value
-		default: 0 = autoscale
+		default: 0 (if minpix > maxpix, value is automatically determined)
 	maxpix -- Maximum pixel value
-		default: 0 = autoscale
+		default: -1 (if minpix > maxpix, value is automatically determined)
 	overwrite -- Overwrite pre-existing imagename
 		default=False; example: overwrite=True
 	dropstokes -- Drop the Stokes axis?

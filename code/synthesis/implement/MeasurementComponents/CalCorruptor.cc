@@ -36,13 +36,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 CalCorruptor::CalCorruptor(const Int nSim) : 
   nSim_(nSim),
+  curr_slot_(-1),
   times_initialized_(False),
-  prtlev_(PRTLEV),
-  curr_slot_(-1),curr_time_(0),starttime_(0),stoptime_(0),curr_freq_(1),
-  curr_spw_(-1), nSpw_(0),
-  curr_ant_(-1), nAnt_(0),
   freqdep_(False),
-  nPar_(0),amp_(0),mode_(""),curr_ant2_(0)
+  nPar_(0),
+  curr_time_(0),starttime_(0),stoptime_(0),curr_freq_(1),
+  amp_(0),mode_(""),
+  prtlev_(PRTLEV),
+  nAnt_(0), curr_ant_(-1), nSpw_(0), curr_spw_(-1), curr_ant2_(0)
 {}
 
 CalCorruptor::~CalCorruptor() {}
@@ -65,11 +66,13 @@ Complex CalCorruptor::simPar(const VisIter& vi,VisCal::Type type, Int ipar){
 void CalCorruptor::setEvenSlots(const Double& dt) {
   // set slots to constant intervals dt
   Int nslots = Int( (stopTime()-startTime())/dt + 1 );
-  if (nslots<=0) throw(AipsError("logic problem Corruptor::setEvenSlots called before start/stopTime set"));
+
+  if ((stopTime()-startTime())/dt<1) throw(AipsError("logic problem Corruptor::setEvenSlots called before start/stopTime set"));
+  if (dt<=0) throw(AipsError("logic problem Corruptor::setEvenSlots called with bad time interval"));
 
   nSim()=nslots;
   slot_times().resize(nSim(),False);
-  for (Int i=0;i<nSim();i++) 
+  for (uInt i=0;i<nSim();i++) 
     slot_time(i) = startTime() + (Double(i)+0.5) * dt;   
   times_initialized()=True;
   
@@ -79,13 +82,40 @@ void CalCorruptor::setEvenSlots(const Double& dt) {
 
 
 
+void CalCorruptor::setCurrTime(const Double& time) {
+  if (prtlev()>4) cout<<"   CalCorruptor::setCurrTime()"<<endl;
+
+  // if we need to invalidate aux parms e.g. airmass in atmcorr, override 
+  // this and do it here.
+  curr_time()=time;
+  // find new slot if required
+  Double dt(1e10),dt0(-1);
+  dt0 = abs(slot_time() - time);
+  
+  for (uInt newslot=0;newslot<nSim();newslot++) {
+    dt=abs(slot_time(newslot) - time);
+    // is this newslot closer to the current time?
+    if (dt<dt0) {
+      curr_slot()=newslot;
+      dt0 = dt;
+    }
+  }
+}
+
+
 
 
 Complex ANoiseCorruptor::simPar(const VisIter& vi, VisCal::Type type,Int ipar) {
-  if (prtlev()>5) cout << "AN::simPar ";
+  if (prtlev()>5) cout << "AN::simPar(vi,type,ipar) ";
   if (type==VisCal::ANoise) {
     return Complex((*nDist_p)()*amp(),(*nDist_p)()*amp());
-  } else throw(AipsError("unknown VC type "+VisCal::nameOfType(type)+" in AnoiseCorruptor::simPar"));
+  } else throw(AipsError("unknown VC type "+VisCal::nameOfType(type)+" in AnoiseCorruptor::simPar(vi,type,ipar)"));
+}
+
+
+Complex ANoiseCorruptor::simPar() {
+  if (prtlev()>5) cout << "AN::simPar() ";
+  return Complex((*nDist_p)()*amp(),(*nDist_p)()*amp());
 }
 
 
@@ -120,16 +150,36 @@ DJonesCorruptor::~DJonesCorruptor() {};
 
 AtmosCorruptor::AtmosCorruptor() : 
   CalCorruptor(1),  // parent
-  mean_pwv_(-1.)
+  mean_pwv_(-1.),
+  airMassValid_(False),airMassTime_(-1000),
+  screen_p(0),itsatm(0),itsRIP(0),itsSkyStatus(0)
 {}
 
 AtmosCorruptor::AtmosCorruptor(const Int nSim) : 
   CalCorruptor(nSim),  // parent
-  mean_pwv_(-1.)
+  mean_pwv_(-1.),
+  airMassValid_(False),airMassTime_(-1000),
+  screen_p(0),itsatm(0),itsRIP(0),itsSkyStatus(0)
 {}
 
 AtmosCorruptor::~AtmosCorruptor() {
-  if (prtlev()>2) cout << "AtmosCorruptor::~AtmosCorruptor()" << endl;
+  if (itsSkyStatus) {
+    delete itsSkyStatus;
+    itsSkyStatus=0;
+  }
+  if (itsRIP) {
+    delete itsRIP;
+    itsRIP=0;
+  }
+  if (itsatm) {
+    delete itsatm;
+    itsatm=0;
+  }
+  if (screen_p) {
+    delete screen_p;
+    screen_p=0;
+  }
+  if (prtlev()>2) cout << "AtmCorruptor::~AtmCorruptor()" << endl;
 }
 
 
@@ -145,81 +195,139 @@ Float& AtmosCorruptor::pwv(const Int islot) {
   if (currAnt()<=pwv_p.nelements())
     return (*pwv_p[currAnt()])(islot);
   else
-    throw(AipsError("AtmosCorruptor internal error accessing delay()"));;
+    throw(AipsError("AtmCorruptor internal error accessing delay()"));;
 };
 
 
 
 
 
+void AtmosCorruptor::setCurrTime(const Double& time) {
+  if (prtlev()>4) cout<<"   AtmosCorruptor::setCurrTime()"<<endl;
+
+  // if we need to invalidate aux parms e.g. airmass in atmcorr, override 
+  // this and do it here:
+
+  Double dt(1e10),dt0(-1);
+  
+  //dt=abs(curr_time() - time);
+  dt=abs(airMassTime_ - time);
+  //cout <<" setCurrTime t="<<time<<" prev curr_t="<<curr_time()<<" dt="<<dt<<endl;
+  // for airmass, we want to recalculate if it changes by more than 1%
+  // if elevation>5 deg, airmass<10, d(airmass)/d(theta)<100, 
+  // recalc if dtheta > .1/100 -> 0.06deg.  1deg=4 min so make tolerance 100s
+  if (dt>100.) airMassValid_=False;
+
+  curr_time()=time;
+  // find new slot if required
+  dt0 = abs(slot_time() - time);
+  
+  for (uInt newslot=0;newslot<nSim();newslot++) {
+    dt=abs(slot_time(newslot) - time);
+    // is this newslot closer to the current time?
+    if (dt<dt0) {
+      curr_slot()=newslot;
+      dt0 = dt;
+    }
+  }
+
+  if (prtlev()>4) cout<<"   ~AtmosCorruptor::setCurrTime()"<<endl;
+}
+
+
+
+
 Complex AtmosCorruptor::simPar(const VisIter& vi, VisCal::Type type,Int ipar){
 
-  LogIO os(LogOrigin("AtmCorr", "simPar("+VisCal::nameOfType(type)+")", WHERE));
-  if (prtlev()>4) cout << "  Atm::simPar("<<VisCal::nameOfType(type)<<") ipar=" <<ipar<< endl;
+  //  LogIO os(LogOrigin("AtmCorr", "simPar("+VisCal::nameOfType(type)+")", WHERE));
+  //  if (prtlev()>5) cout << "  Atm::simPar("<<VisCal::nameOfType(type)<<") ipar=" <<ipar<< endl;
+
+  // WARNING: removed error trapping and exception reporting from this
+  // subroutine for speed 20100831 RI
   
-#ifndef RI_DEBUG
-  try {
-#endif
-    if (type==VisCal::T) {
-
-      if(mode()=="test" or mode()=="1d")
-	return cphase(focusChan()); 
+    if (mode() == "tsys-manual" or mode()=="tsys-atm") {
       
-      else if (mode()=="2d") {
-	// RI TODO Atmcorr:simPar  modify x,y by tan(zenith angle)*(layer altitude)
-	Int ix(Int( antx()(currAnt()) ));
-	Int iy(Int( anty()(currAnt()) ));
-	if (prtlev()>5) 
-	  cout << " getting gain for antenna ix,iy = " << ix << "," << iy << endl;  
-	return cphase(ix,iy,focusChan()); // init all elts of gain vector with scalar 
-      } else 
-	throw(AipsError("AtmosCorruptor: unknown corruptor mode "+mode()));
-    } else if (type==VisCal::M) {
-      Float tau(0.),airmass(1.);
-      Double factor(1.0);
-      Float el1(1.5708), el2(1.5708);
+      double factor(1.0),airmass(1.0);      
+      double tint = vi.msColumns().exposure()(0);  
+      int iSpW = vi.spectralWindow();
+      double deltaNu = 
+	vi.msColumns().spectralWindow().totalBandwidth()(iSpW) / 
+	Float(vi.msColumns().spectralWindow().numChan()(iSpW));	    
 
-      if (mode() == "tsys-manual" or mode()=="tsys-atm") {
-	Double tint = vi.msColumns().exposure()(0);  
-	Int iSpW = vi.spectralWindow();
-	Double deltaNu = 
-	  vi.msColumns().spectralWindow().totalBandwidth()(iSpW) / 
-	  Float(vi.msColumns().spectralWindow().numChan()(iSpW));	    
-	// Thompson Moran Swenson say factor of 2 here:?
-	// factor = amp() / sqrt( 2 * deltaNu * tint ) ;
-	factor = amp() / sqrt( deltaNu * tint ) ;
+
+      // 20100824 getAngle() is very slow: cache airmass
+      if (!airMassValid_) {
+	if (prtlev()>3) cout <<"     simPar recalc airMass_ .. ";
 	
-	// RI verify accuracy of how refTime set in SVC
 	Vector<MDirection> antazel(vi.azel(curr_time()));
-	
-	el1 = antazel(currAnt()).getAngle("rad").getValue()(1);
-	el2 = antazel(currAnt2()).getAngle("rad").getValue()(1);
-	
-	if (el1 > 0.0 && el2 > 0.0) {
-	  airmass = 1.0/ sin(el1);
-	  airmass += 1.0/ sin(el2);
-	} else {
-	  airmass = 1.0;
-	  airmass += 1.0;
+	float el(0.);
+
+	if (airMass_.nelements() != nAnt()) airMass_.resize(nAnt());
+	for (uInt iAnt=0;iAnt<nAnt();iAnt++) {
+	  el = antazel(iAnt).getAngle("rad").getValue()(1);	  
+	  if (el>0)
+	    airMass_(iAnt)= 1./sin(el);
+	  else
+	    airMass_(iAnt)= 1000.;
 	}
-	airmass/=2; // average
+	airMassValid_=True;
+	airMassTime_=curr_time();
+
+	//cout<<"t="<<curr_time()<<" A[0]="<<airMass_(0)<<" A(1)="<<airMass_(1)<<" A(15)="<<airMass_(15)<<" "<<airMass_.nelements()<<endl;
+	if (prtlev()>3) cout <<"done"<<endl;
+      }
+	
+
+      if (type==VisCal::M) {
+	factor = amp() / sqrt( deltaNu * tint ) ;	
+	airmass= 0.5*(airMass_(currAnt()) + airMass_(currAnt2()));
 	
 	// this is tsys above atmosphere
 	// tsys = tsys(airmass) * exp( tau*airmass )	
 	return Complex( antDiams(currAnt())*antDiams(currAnt2()) /factor 
 			/tsys(airmass) );
 
-      } else return Complex( 1./amp() ); // for constant amp MfM
-      
+      } else if (type==VisCal::T) {
+
+	factor = sqrt( amp() / sqrt( deltaNu * tint ) ) ;
+	airmass = airMass_(currAnt());
+
+//	cout << "gain per baseline [mJy]=" << 
+//	  tsys(airmass) * (factor/antDiams(currAnt())) * (factor/antDiams(currAnt()))*1000 << 
+//	  " " << amp() << endl;
+	
+	// this is tsys above atmosphere
+	// tsys = tsys(airmass) * exp( tau*airmass )	
+	return Complex( antDiams(currAnt()) /factor 
+			/sqrt(tsys(airmass)) );
+
+	//RI TODO  sqrt(Tsys)
+
+      } else {
+	throw(AipsError("AtmCorruptor: unknown VisCal type "+VisCal::nameOfType(type)));
+      }
     } else {
-      throw(AipsError("AtmosCorruptor: unknown VisCal type "+VisCal::nameOfType(type)));
-    }
-    
-#ifndef RI_DEBUG    
-  } catch (AipsError x) {
-    os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
-  } 
-#endif
+      // not tsys - so either flat noise or phase noise T
+
+      if (type==VisCal::T) {
+
+	if (mode()=="test" or mode()=="1d")
+	  return cphase(focusChan()); 
+	
+	else if (mode()=="2d") {
+	  // RI TODO Atmcorr:simPar  modify x,y by tan(zenith angle)*(layer altitude)
+	  Int ix(Int( antx()(currAnt()) ));
+	  Int iy(Int( anty()(currAnt()) ));
+	  if (prtlev()>5) 
+	    cout << " getting gain for antenna ix,iy = " << ix << "," << iy << endl;  
+	  return cphase(ix,iy,focusChan()); // init all elts of gain vector with scalar 
+	} else 
+	  throw(AipsError("AtmCorruptor: unknown corruptor mode "+mode()));
+      } else if (type==VisCal::M) 
+	return Complex( 1./amp() ); // for constant amp MfM
+      else 
+	throw(AipsError("AtmCorruptor: unknown VisCal type "+VisCal::nameOfType(type)));
+    }    
 }
 
 
@@ -262,7 +370,7 @@ void AtmosCorruptor::initAtm() {
 			       topAtm, atmType);
 
   if (nSpw()<=0)
-    throw(AipsError("AtmosCorruptor::initAtm called before spw setup."));
+    throw(AipsError("AtmCorruptor::initAtm called before spw setup."));
 
   // first SpW:
   double fRes(fWidth()[0]/fnChan()[0]);
@@ -272,7 +380,7 @@ void AtmosCorruptor::initAtm() {
 				      atm::Frequency(fRefFreq()[0],"Hz"),
 				      atm::Frequency(fRes,"Hz"));
   // any more?
-  for (Int ispw=1;ispw<nSpw();ispw++) {
+  for (uInt ispw=1;ispw<nSpw();ispw++) {
     fRes = fWidth()[ispw]/fnChan()[ispw];
     // CHANINDEX
     itsSpecGrid->add(fnChan()[ispw],1,
@@ -285,11 +393,40 @@ void AtmosCorruptor::initAtm() {
   // used for Tebb(spw,chan)
   itsSkyStatus = new atm::SkyStatus(*itsRIP);
 
+
+  // DispersiveH20PhaseDelay is different frmo RIP as from Status
+  
+  //  /** Accesor to get the integrated zenith H2O Atmospheric Phase Delay (Dispersive part)
+  //   for the current conditions, for a single frequency RefractiveIndexProfile object or
+  //   for the point 0 of spectral window 0 of a multi-window RefractiveIndexProfile object.
+  //   There is overloading. The same accessor exists in RefractiveIndexProfile but in that
+  //   case the returned value corresponds to the zenith water vapor column of the AtmProfile object.*/
+  //  Angle getDispersiveH2OPhaseDelay()
+ 
   os << "DispersiveWetPathLength = " 
      << itsRIP->getDispersiveH2OPathLength().get("micron") 
      << " microns at " 
      << fRefFreq()[0]/1e9 << " GHz; dryOpacity = " 
-     << itsRIP->getDryOpacity(currSpw(),focusChan()).get() << LogIO::POST;
+     << itsRIP->getDryOpacity(currSpw(),focusChan()).get() 
+//     << ", DispersiveH2ODelay (RefIPfl) = " 
+//     << itsRIP->getDispersiveH2OPhaseDelay(currSpw(),focusChan()).get("deg") << " deg" 
+//     << "DispersiveH2ODelay (SkyStat) = " 
+//     << itsSkyStatus->getDispersiveH2OPhaseDelay(currSpw(),focusChan()).get("deg") << " deg" 
+     << LogIO::POST;
+
+  itsSkyStatus->setUserWH2O(atm::Length(mean_pwv(),"mm"));  // set WH2O
+
+  os << "after setting WH20 to " << itsSkyStatus->getUserWH2O().get("mm")
+     << ", DispersiveH2ODelay (RefIPfl) = " 
+    //<< itsRIP->getDispersiveH2OPhaseDelay(currSpw(),focusChan()).get("deg") << " deg, " 
+     << itsRIP->getDispersiveH2OPhaseDelay(itsRIP->getGroundWH2O(),currSpw(),focusChan()).get("deg") << " deg, " 
+     << "DispersiveH2ODelay (SkyStat) = " 
+     << itsSkyStatus->getDispersiveH2OPhaseDelay(currSpw(),focusChan()).get("deg") << "deg = " 
+     << itsSkyStatus->getDispersiveH2OPhaseDelay(currSpw(),focusChan()).get("rad") << "rad" 
+     << LogIO::POST;
+
+  
+
   // CHANINDEX
   atm::Temperature t0 = 
     itsSkyStatus->getTebbSky(0,0,atm::Length(mean_pwv(),"mm"),1.0,spilleff(),tground());
@@ -315,7 +452,7 @@ void AtmosCorruptor::initialize() {
 
   mode()="test";
   if (!times_initialized())
-    throw(AipsError("logic error in AtmCorr::init(Seed,Beta,scale) - slot times not initialized."));
+    throw(AipsError("logic error in AtmCorr::init() - slot times not initialized."));
 
   mean_pwv() = simpar().asFloat("mean_pwv");
   spilleff() = simpar().asFloat("spillefficiency");
@@ -326,25 +463,26 @@ void AtmosCorruptor::initialize() {
   // RI todo AtmCor:init() test is mean_pwv() ever set?
   if (freqDepPar()) initAtm();
   pwv_p.resize(nAnt(),False,True);
-  for (Int ia=0;ia<nAnt();++ia) {
+  for (uInt ia=0;ia<nAnt();++ia) {
     pwv_p[ia] = new Vector<Float>(nSim());
     // not really pwv, but this is a test mode
-    for (Int i=0;i<nSim();++i) 
+    for (uInt i=0;i<nSim();++i) 
       (*(pwv_p[ia]))(i) = (Float(i)/Float(nSim()) + Float(ia)/Float(nAnt()))*mean_pwv()*10;  
   }
 
-  if (prtlev()>2) cout << "AtmosCorruptor::init [test]" << endl;
+  if (prtlev()>2) cout << "AtmCorruptor::init [test]" << endl;
 }
-
 
 
 // this one is for the M - maybe we should just make one Corruptor and 
 // pass the VisCal::Type to it - the concept of the corruptor taking a VC
 // instead of being a member of it.
 
-void AtmosCorruptor::initialize(const VisIter& vi, const Record& simpar) {
+void AtmosCorruptor::initialize(const VisIter& vi, const Record& simpar, VisCal::Type type) {
 
-  LogIO os(LogOrigin("AtmosCorr", "init()", WHERE));
+  LogIO os(LogOrigin("AtmCorr", "init(vi,par,type)", WHERE));
+
+  if (prtlev()>3) cout<<" AtmCorr::init(vi,par,type)"<<endl;
   
   // start with amp defined as something
   amp()=1.0;
@@ -356,7 +494,7 @@ void AtmosCorruptor::initialize(const VisIter& vi, const Record& simpar) {
 
   if (mode()=="simple") {
     freqDepPar()=False; 
-    if (prtlev()>2) cout << "AtmosCorruptor::init [simple scale by " << amp() << "]" << endl;
+    if (prtlev()>2) cout << "AtmCorruptor::init [simple scale by " << amp() << "]" << endl;
 
   } else {
     antDiams = vi.msColumns().antenna().dishDiameter().getColumn();
@@ -394,7 +532,7 @@ void AtmosCorruptor::initialize(const VisIter& vi, const Record& simpar) {
 
     // even if not freqdeppar, we need to set this so that tsys and focusFreq work
     currSpw()=0;
-    setFocusChan(floor(nChan()/2));
+    setFocusChan(Int(floor(nChan()/2)));
     
     os << LogIO::NORMAL 
        << "Tsys at center of first Spectral Window = " << tsys(1.0)
@@ -411,13 +549,17 @@ void AtmosCorruptor::initialize(const VisIter& vi, const Record& simpar) {
     else
       os << " tauscale=" << tauscale() << LogIO::POST;
    
-    // conversion to Jy, when divided by D1D2
+    // conversion to Jy when divided by D1D2 for an M, 
+    // extra sqrt(2) or application to real & imag
     amp() = 4 * C::sqrt2 * 1.38062e-16 * 1e23 * 1e-4 / 		
       ( simpar.asFloat("antefficiency") * 
 	simpar.asFloat("correfficiency") * C::pi );
-
+    // or divided by D for a T
     os << LogIO::DEBUG1 << " noise ~ " << amp()*1000 << "*Tsys/D^2/sqrt(dnu dt)/Nant" << LogIO::POST;
   }
+
+  if (prtlev()>3) cout<<" ~AtmCorr::init(vi,par,type)"<<endl;
+
 }
 
 
@@ -438,34 +580,38 @@ Float AtmosCorruptor::tsys(const Float& airmass) {
 				 atm::Length(mean_pwv(),"mm"),airmass,
 				 spilleff(),tground());
       // 1/e(hn/kt)-1 recalculated for us by every setFocusChan
-      R = Rtcmb() +
-	exp(tau) *
-	( 1./(exp(hn_k/tatmosatm.get("K"))-1.) + 
-	  Rtrx() );
-      
+
+      // cmb is already in ATM Tebb (but not in manual one below)
+      // and Trx don't need the plank correction
+      // does Tebb need the plank?  doesn't matter..
+      R = exp(tau) * ( 1./(exp(hn_k/tatmosatm.get("K"))-1.) + trx()/hn_k );
+      //R = exp(tau) * ( tatmosatm.get("K")/hn_k + trx()/hn_k );
+
     } else {
       tau = tau*tauscale();
       // manual: tauscale = tau0/opac(band center)
       R = Rtcmb() +
 	exp(tau) *
 	( spilleff() * (1.-exp(-tau)) * Rtatmos() + 
-	  (1.-spilleff()) * Rtground() +
-	  Rtrx() );
+	  (1.-spilleff()) * Rtground() + trx()/hn_k );
+	  //	  Rtrx() );
     }
   } else {
     // not freqDep
     if (mode()=="tsys-atm") 
-      throw(AipsError("non-freqDep AtmosCorr::tsys called in unsopported ATM mode"));
+      throw(AipsError("non-freqDep AtmCorr::tsys called in unsopported ATM mode"));
     else {
       tau=tauscale()*airmass; // no reference to ATM here - it's not initialized!
       R = Rtcmb() +
 	exp(tau) *
 	( spilleff() * (1.-exp(-tau)) / Rtatmos() + 
-	  (1.-spilleff()) / Rtground() +
-	  Rtrx() );
+	  (1.-spilleff()) / Rtground() + trx()/hn_k);
+	  // Rtrx() );
     }
   }
-  return hn_k/log(1.+1./R);
+  //  return hn_k/log(1.+1./R);
+  // we want to return a noise temp, i.e. with the plank correction
+  return hn_k*R;
 }
 
 
@@ -476,7 +622,8 @@ Float AtmosCorruptor::tsys(const Float& airmass) {
 Float AtmosCorruptor::opac(const Int ichan) {
   // CHANINDEX
   Float opac = itsRIP->getDryOpacity(currSpw(),ichan).get() + 
-    mean_pwv()*(itsRIP->getWetOpacity(currSpw(),ichan).get())  ;
+    //mean_pwv()*(itsRIP->getWetOpacity(currSpw(),ichan).get())  ;
+    itsRIP->getWetOpacity(atm::Length(mean_pwv(),"mm"),currSpw(),ichan).get();
   return opac;
 }
 
@@ -504,9 +651,9 @@ void AtmosCorruptor::initialize(const Int Seed, const Float Beta, const Float sc
 
   fBM* myfbm = new fBM(nSim());
   pwv_p.resize(nAnt(),False,True);
-  for (Int iant=0;iant<nAnt();++iant){
+  for (uInt iant=0;iant<nAnt();++iant){
     pwv_p[iant] = new Vector<Float>(nSim());
-    Float pmean(0.),rms(0.);
+    float pmean(0.),rms(0.);
     do {
       myfbm->initialize(Seed+iant,Beta); // (re)initialize
       *(pwv_p[iant]) = myfbm->data(); // iAnt()=iant; delay() = myfbm->data();
@@ -517,13 +664,12 @@ void AtmosCorruptor::initialize(const Int Seed, const Float Beta, const Float sc
       cout << "RMS fBM fluctuation for antenna " << iant 
 	   << " = " << rms << " ( " << pmean << " ; beta = " << Beta << " ) " << endl;      
     }
-    // scale is set above to delta/meanpwv, so pwv_p are _relative_ variations
-    // Float lscale = log(scale)/rms;
-    for (Int islot=0;islot<nSim();++islot)
+    // scale is RELATIVE ie. pwv_p has rms=scale
+    for (uInt islot=0;islot<nSim();++islot)
       (*(pwv_p[iant]))[islot] = (*(pwv_p[iant]))[islot]*scale/rms;  
     if (prtlev()>2 and currAnt()<5) {
-      Float pmean = mean(*(pwv_p[iant]));
-      Float rms = sqrt(mean( (*(pwv_p[iant])-pmean)*(*(pwv_p[iant])-pmean) ));
+      float pmean = mean(*(pwv_p[iant]));
+      float rms = sqrt(mean( (*(pwv_p[iant])-pmean)*(*(pwv_p[iant])-pmean) ));
       cout << "RMS fractional fluctuation for antenna " << iant 
 	   << " = " << rms << " ( " << pmean << " ) " 
 	// << " lscale = " << lscale 
@@ -532,7 +678,7 @@ void AtmosCorruptor::initialize(const Int Seed, const Float Beta, const Float sc
     currAnt()=iant;
   }
 
-  if (prtlev()>2) cout << "AtmosCorruptor::init [1d]" << endl;
+  if (prtlev()>2) cout << "AtmCorruptor::init [1d]" << endl;
 
 }
 
@@ -563,7 +709,7 @@ void AtmosCorruptor::initialize(const Int Seed, const Float Beta, const Float sc
   antx().resize(nAnt());
   anty().resize(nAnt());
   MVPosition ant;
-  for (Int i=0;i<nAnt();i++) {	
+  for (uInt i=0;i<nAnt();i++) {	
     ant = antcols.positionMeas()(i).getValue();
     // have to convert to ENU or WGS84
     // ant = MPosition::Convert(ant,MPosition::WGS84)().getValue();
@@ -616,25 +762,32 @@ void AtmosCorruptor::initialize(const Int Seed, const Float Beta, const Float sc
   fBM* myfbm = new fBM(xsize,ysize);
   screen_p = new Matrix<Float>(xsize,ysize);
   Float pmean(0.),rms(0.);
+  Int ct(0);
   do {
     myfbm->initialize(Seed,Beta); 
     *screen_p=myfbm->data();
     if (prtlev()>3) cout << " fBM created" << endl;   
     pmean = mean(*screen_p);
     rms = sqrt(mean( ((*screen_p)-pmean)*((*screen_p)-pmean) ));
-  } while (!isnormal(rms));
+    ct++;
+  } while (!(isnormal(rms) and pmean<1 and pmean>0) and ct<5);
+  if (ct>=5) os << "possible issue with fBM init:" << LogIO::DEBUG1;
   // if (prtlev()>4) cout << (*screen_p)[10] << endl;
   if (currAnt()<2) {
     if (prtlev()>3)
       cout << "RMS screen fluctuation " 
-	   << " = " << rms << " ( " << pmean << " ; beta = " << Beta << " ) " << endl;
+	   << " = " << rms << " ( mean = " << pmean << " ; beta = " << Beta << " ) " << endl;
     os << "RMS screen fluctuation " 
-       << " = " << rms << " ( " << pmean << " ; beta = " << Beta << " ) " << LogIO::POST;
+       << " = " << rms << " ( mean = " << pmean << " ; beta = " << Beta << " ; scale = " << scale << "  ) " << LogIO::DEBUG1;
   }
-  // scale is set above to delta/meanpwv so screen is a fractional/relative variation
+  // scale is RELATIVE i,e, screen has rms=scale
   *screen_p = myfbm->data() * scale/rms;
 
-  if (prtlev()>2) cout << "AtmosCorruptor::init [2d]" << endl;
+  if (prtlev()>2) cout << "AtmCorruptor::init [2d] scale= " << scale << endl;
+
+  // carefully delete this - screen_p should have a copy, not just a ref.
+  delete myfbm;
+  myfbm=0;
 
 }
 
@@ -647,7 +800,7 @@ Complex AtmosCorruptor::cphase(const Int ix, const Int iy, const Int ichan) {
   // of the screen, and modified for off-zenith pointing
 
   AlwaysAssert(mode()=="2d",AipsError);
-  Float delay;
+  float delay;
   ostringstream o; 
  
   if (curr_slot()>=0 and curr_slot()<nSim()) {
@@ -666,10 +819,14 @@ Complex AtmosCorruptor::cphase(const Int ix, const Int iy, const Int ichan) {
     // the screen, and this deltapwv, is a _fractional_ variation delta/mean
     // so a fractional pwv fluctuation turns into a fractional wet phase 
     // fluctuation
-    Float deltapwv = (*screen_p)(ix+blown,iy);
-    delay = itsRIP->getDispersiveH2OPhaseDelay(currSpw(),ichan).get("rad") 
-      * deltapwv / 57.2958; // convert from deg to rad
-        return Complex(cos(delay),sin(delay));
+    float deltapwv = (*screen_p)(ix+blown,iy);
+    //    delay = itsRIP->getDispersiveH2OPhaseDelay(currSpw(),ichan).get("rad") 
+    //      * deltapwv / 57.2958; // convert from deg to rad
+    // Skystatus delay scales with userWH0 which was set in initialize to mean_pwv
+    delay = itsSkyStatus->getDispersiveH2OPhaseDelay(currSpw(),ichan).get("rad") * deltapwv;
+    //cout << "delay=" << delay << " " << Complex(cos(delay),sin(delay))<<endl;
+
+    return Complex(cos(delay),sin(delay));
   } else {    
     o << "atmosCorruptor::cphase: slot " << curr_slot() << "out of range!" <<endl;
     throw(AipsError(o));
@@ -680,7 +837,7 @@ Complex AtmosCorruptor::cphase(const Int ix, const Int iy, const Int ichan) {
 
 Complex AtmosCorruptor::cphase(const Int ichan) {
   AlwaysAssert(mode()=="1d" or mode()=="test",AipsError);
-  Float delay;
+  float delay;
   
   if (curr_slot()>=0 and curr_slot()<nSim()) {
     // if this gets used in the future, 
@@ -692,20 +849,17 @@ Complex AtmosCorruptor::cphase(const Int ichan) {
     // pwv_p is a _fractional_ variation delta/mean
     // so a fractional pwv fluctuation turns into a fractional wet phase 
     // fluctuation
-      Float deltapwv = (*pwv_p[currAnt()])(curr_slot());
+      float deltapwv = (*pwv_p[currAnt()])(curr_slot());
       // CHANINDEX
-      delay = itsRIP->getDispersiveH2OPhaseDelay(currSpw(),ichan).get("rad")
-	* deltapwv / 57.2958; // convert from deg to rad
-      if (prtlev()>5) 
-	cout << itsRIP->getDispersiveH2OPhaseDelay(0,ichan).get("rad") << " "
-	     << itsRIP->getDispersiveH2OPhaseDelay(1,ichan).get("rad") << " "
-	     << itsRIP->getDispersiveH2OPhaseDelay(2,ichan).get("rad") << " "
-	     << itsRIP->getDispersiveH2OPhaseDelay(3,ichan).get("rad") << endl;
+      //      delay = itsRIP->getDispersiveH2OPhaseDelay(currSpw(),ichan).get("rad")
+      //	* deltapwv / 57.2958; // convert from deg to rad
+      // the acessor from RIP doesn't scale with WH20, but skystatus' accessor does
+      delay = itsSkyStatus->getDispersiveH2OPhaseDelay(currSpw(),ichan).get("rad") * deltapwv;
     } else
-      throw(AipsError("AtmosCorruptor internal error accessing pwv()"));  
+      throw(AipsError("AtmCorruptor internal error accessing pwv()"));  
     return Complex(cos(delay),sin(delay));
   } else {
-    cout << "AtmosCorruptor::cphase: slot " << curr_slot() << "out of range!" <<endl;
+    cout << "AtmCorruptor::cphase: slot " << curr_slot() << "out of range!" <<endl;
     return Complex(1.);
   }
 }
@@ -913,19 +1067,19 @@ void GJonesCorruptor::initialize(const Int Seed, const Float Beta, const Float s
 
   fBM* myfbm = new fBM(nSim());
   drift_p.resize(nAnt(),False,True);
-  for (Int iant=0;iant<nAnt();++iant) {
+  for (uInt iant=0;iant<nAnt();++iant) {
     drift_p[iant] = new Matrix<Complex>(nPar(),nSim());
-    for (Int icorr=0;icorr<nPar();++icorr){
+    for (uInt icorr=0;icorr<nPar();++icorr){
       myfbm->initialize(Seed+iant+icorr,Beta); // (re)initialize
-      Float pmean = mean(myfbm->data());
-      Float rms = sqrt(mean( ((myfbm->data())-pmean)*((myfbm->data())-pmean) ));
+      float pmean = mean(myfbm->data());
+      float rms = sqrt(mean( ((myfbm->data())-pmean)*((myfbm->data())-pmean) ));
       if (prtlev()>3 and currAnt()<2) {
 	cout << "RMS fBM fluctuation for antenna " << iant 
 	     << " = " << rms << " ( " << pmean << " ; beta = " << Beta << " ) " << endl;      
       }
       // amp
       Vector<Float> amp = (myfbm->data()) * scale/rms;
-      for (Int i=0;i<nSim();++i)  {
+      for (uInt i=0;i<nSim();++i)  {
 	(*(drift_p[iant]))(icorr,i) = Complex(1.+amp[i],0);
       }
       
@@ -934,7 +1088,7 @@ void GJonesCorruptor::initialize(const Int Seed, const Float Beta, const Float s
       pmean = mean(myfbm->data());
       rms = sqrt(mean( ((myfbm->data())-pmean)*((myfbm->data())-pmean) ));
       Vector<Float> angle = (myfbm->data()) * scale/rms * 3.141592; // *2 ?
-      for (Int i=0;i<nSim();++i)  {
+      for (uInt i=0;i<nSim();++i)  {
 	(*(drift_p[iant]))(icorr,i) *= exp(Complex(0,angle[i]));
       }
 

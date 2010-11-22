@@ -1,4 +1,6 @@
 import os
+if os.environ.has_key('LD_PRELOAD'):
+    del os.environ['LD_PRELOAD']
 import sys
 import time
 import signal
@@ -6,32 +8,32 @@ import signal
 ##
 ## tweak path... where necessary...
 ##
-path_addition = [ ]
-for p in sys.path :
-    if p.startswith(sys.prefix):
-        # According to
-        # http://www.debian.org/doc/packaging-manuals/python-policy/ch-python.html
-        # "Python modules not handled by python-central or python-support must
-        # be installed in the system Python modules directory,
-        # /usr/lib/pythonX.Y/dist-packages for python2.6 and later, and
-        # /usr/lib/pythonX.Y/site-packages for python2.5 and earlier."
-        #
-        # I am not sure if this is general Python policy, or just Debian policy.
-        # In any case, dist-packages is a more honestly named site-packages, since
-        # nominally site stuff goes in /usr/local or /opt.
-        #
-        for wanted in ['lib-tk', 'dist-packages']:
-            newpath = p + os.sep + wanted
-            if os.path.isdir(newpath):
-                path_addition.append(newpath)
+## path_addition = [ ]
+## for p in sys.path :
+##     if p.startswith(sys.prefix):
+##         # According to
+##         # http://www.debian.org/doc/packaging-manuals/python-policy/ch-python.html
+##         # "Python modules not handled by python-central or python-support must
+##         # be installed in the system Python modules directory,
+##         # /usr/lib/pythonX.Y/dist-packages for python2.6 and later, and
+##         # /usr/lib/pythonX.Y/site-packages for python2.5 and earlier."
+##         #
+##         # I am not sure if this is general Python policy, or just Debian policy.
+##         # In any case, dist-packages is a more honestly named site-packages, since
+##         # nominally site stuff goes in /usr/local or /opt.
+##         #
+##         for wanted in ['lib-tk', 'dist-packages']:
+##             newpath = p + os.sep + wanted
+##             if os.path.isdir(newpath):
+##                 path_addition.append(newpath)
 
-sys.path = sys.path + path_addition
+#sys.path = sys.path + path_addition
 
 # i.e. /usr/lib/pymodules/python2.6, needed for matplotlib in Debian and its derivatives.
-pymodules_dir = sys.prefix + '/lib/pymodules/python' + '.'.join(map(str, sys.version_info[:2]))
+#pymodules_dir = sys.prefix + '/lib/pymodules/python' + '.'.join(map(str, sys.version_info[:2]))
 
-if os.path.isdir(pymodules_dir) and pymodules_dir not in sys.path:
-    sys.path.append(pymodules_dir)
+#if os.path.isdir(pymodules_dir) and pymodules_dir not in sys.path:
+#    sys.path.append(pymodules_dir)
 
 ##
 ## watchdog... which is *not* in the casapy process group
@@ -57,7 +59,7 @@ if os.fork( ) == 0 :
     os.killpg(ppid, signal.SIGTERM)
     time.sleep(6)
     os.killpg(ppid, signal.SIGKILL)
-    exit(0)
+    sys.exit(1)
 
 ##
 ## ensure that we're the process group leader
@@ -74,7 +76,7 @@ try:
     import casac
 except ImportError, e:
     print "failed to load casa:\n", e
-    exit(1)
+    sys.exit(1)
 
 try:
     import matplotlib
@@ -88,16 +90,18 @@ from asap_init import *
 homedir = os.getenv('HOME')
 if homedir == None :
    print "Environment variable HOME is not set, please set it"
-   exit(1)
+   sys.exit(1)
+
+import casadef
 
 casa = { 'build': {
-             'time': '/CASASUBST/build_time',
-             'version': '/CASASUBST/casa_version',
-             'number': '/CASASUBST/casa_build'
+             'time': casadef.build_time,
+             'version': casadef.casa_version,
+             'number': casadef.subversion_revision
          },
          'source': {
-             'url': '/CASASUBST/subversion_url',
-             'revision': '/CASASUBST/subversion_revision'
+             'url': casadef.subversion_url,
+             'revision': casadef.subversion_revision
          },
          'helpers': {
              'logger': 'casalogger',
@@ -158,7 +162,7 @@ while len(a) > 0:
     if c == '--logfile' or c == '-c' or c == '--rcdir':
         if len(a) == 0 :
             print "A file must be specified with " + c + "..."
-            exit(1)
+            sys.exit(1)
         else :
             casa['flags'][c] = a.pop( )
             if c == '--rcdir':
@@ -170,6 +174,21 @@ while len(a) > 0:
     else :
         casa['flags'][c] = ''
 
+
+
+if casa['flags'].has_key('--help') :
+	print "Options are: "
+	print "   --rcdir directory"
+	print "   --logfile logfilename"
+	print "   --maclogger"
+	print "   --log2term"
+	print "   --nologger"
+	print "   --nogui"
+	print "   --noipython"
+	print "   -c filename "
+	print "   --help, print this text and exit"
+	print
+	sys.exit(0) 
 
 if os.uname()[0]=='Darwin' :
     casa_path = os.environ['CASAPATH'].split()
@@ -191,13 +210,18 @@ if os.uname()[0]=='Darwin' :
 
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 ## ensure default initialization occurs before this point...
+##
+##      prelude.py  =>  setup/modification of casa settings
+##      init.py     =>  user setup (with task access)
+##
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
-if os.path.exists( casa['dirs']['rc'] + '/init.py' ) :
+if os.path.exists( casa['dirs']['rc'] + '/prelude.py' ) :
     try:
-        execfile ( casa['dirs']['rc'] + '/init.py' )
+        execfile ( casa['dirs']['rc'] + '/prelude.py' )
     except:
-        print 'Could not execute initialization file: ' + casa['dirs']['rc'] + '/init.py'
-        exit(1)
+        print str(sys.exc_info()[0]) + ": " + str(sys.exc_info()[1])
+        print 'Could not execute initialization file: ' + casa['dirs']['rc'] + '/prelude.py'
+        sys.exit(1)
 
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 ## on linux set up a dbus-daemon for casa because each
@@ -235,7 +259,7 @@ if os.uname()[0] == 'Linux' :
             else:
                 args = args + ['--session']
             os.execvp(casa['helpers']['dbus'],args)
-            sys.exit(1)
+            sys.exit
         
         os.close(w)
         dbus_address = os.read(r,200)
@@ -252,10 +276,21 @@ try :
    os.makedirs(ipythonpath, 0755)
 except :
    pass
-os.environ['IPYTHONDIR']=ipythonpath
+###check IPYTHONDIR is defined by user and make it if not there
+if(not os.environ.has_key('IPYTHONDIR')):
+    os.environ['IPYTHONDIR']=ipythonpath
+if(not os.path.exists(os.environ['IPYTHONDIR'])):
+    os.makedirs(os.environ['IPYTHONDIR'], 0755)
+
 os.environ['__CASARCDIR__']=casa['dirs']['rc']
 
 #import string
+#
+# Special case if the backend is set to MacOSX reset it to TkAgg as our TablePlot
+# stuff is specific for TkAgg
+#
+if matplotlib.get_backend() == "MacOSX" :
+   matplotlib.use('TkAgg')
 
 #
 # Check if the display environment is set if not
@@ -345,7 +380,9 @@ def go(taskname=None):
     """ Execute taskname: """
     myf = sys._getframe(len(inspect.stack())-1).f_globals
     if taskname==None: taskname=myf['taskname']
-    oldtaskname=myf['taskname']
+    oldtaskname=taskname
+    if(myf.has_key('taskname')):
+        oldtaskname=myf['taskname']
     #myf['taskname']=taskname
     if type(taskname)!=str:
         taskname=taskname.__name__
@@ -959,8 +996,29 @@ from math import *
 from tasks import *
 from parameter_dictionary import *
 from task_help import *
+
+#
+# import testing environment
+#
+import publish_summary
+import runUnitTest
 #
 home=os.environ['HOME']
+
+## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+##
+##      prelude.py  =>  setup/modification of casa settings (above)
+##      init.py     =>  user setup (with task access)
+##
+## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+if os.path.exists( casa['dirs']['rc'] + '/init.py' ) :
+    try:
+        execfile ( casa['dirs']['rc'] + '/init.py' )
+    except:
+        print str(sys.exc_info()[0]) + ": " + str(sys.exc_info()[1])
+        print 'Could not execute initialization file: ' + casa['dirs']['rc'] + '/init.py'
+        sys.exit(1)
+
 if ipython:
     startup()
 
@@ -969,7 +1027,7 @@ if ipython:
 #pathname=os.environ.get('CASAPATH').split()[0]
 #uname=os.uname()
 #unameminusa=str.lower(uname[0])
-fullpath='/CASASUBST/python_library_directory//assignmentFilter.py'
+fullpath = casadef.python_library_directory + 'assignmentFilter.py'
 casalog.origin('casa')
 
 #
@@ -987,10 +1045,7 @@ class casaDocHelper(pydoc.Helper):
 
 pydoc.help = casaDocHelper(sys.stdin, sys.stdout)
 
-##
-## /CASASUBST/python_library_directory/  is substituted at build time
-##
-fullpath='/CASASUBST/python_library_directory/' + '/assignmentFilter.py'
+fullpath=casadef.python_library_directory + '/assignmentFilter.py'
 
 if os.environ.has_key('__CASAPY_PYTHONDIR'):
     fullpath=os.environ['__CASAPY_PYTHONDIR'] + '/assignmentFilter.py'
@@ -1031,7 +1086,8 @@ try:
     casalog.post('---')
 except:
     print "Error: the logfile is not writable"
-    exit(1)
+    sys.exit(1)
+
 
 casalog.showconsole(showconsole)
 casalog.version()

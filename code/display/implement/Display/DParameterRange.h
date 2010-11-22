@@ -75,7 +75,7 @@ template <class T> class DParameterRange : public DisplayParameter {
 		  const String help, const T minimum, const T maximum, 
 		  const T resolution, const T defaultvalue, const T value, 
 		  const String context = "", const Bool editable = True,
-		  const Bool provideentry = False);
+		  const Bool provideentry = False, const Bool onrelease=False );
 
   // (Required) default constructor.
   DParameterRange();
@@ -130,6 +130,12 @@ template <class T> class DParameterRange : public DisplayParameter {
   Bool provideEntry()
     { return itsProvideEntry; }
 
+  // Return whether the slider event should occur when the user releases the
+  // slider, i.e. at the end of setting the value, rather than in real time
+  // as the user moves the slider (good for operations which take a long time)
+  Bool onRelease( )
+    { return itsOnRelease; }
+
 
   // Set or change the minimum for this parameter.
   void setMinimum(const T minimum)
@@ -159,6 +165,10 @@ template <class T> class DParameterRange : public DisplayParameter {
   void setProvideEntry(const Bool provideentry)
     { itsProvideEntry = provideentry; }
 
+  // Set or change the onrelease state for this parameter.
+  void setOnRelease(const Bool onrelease)
+    { itsOnRelease = onrelease; }
+
  private:
 
   // Store for the minimum of this parameter.
@@ -178,6 +188,9 @@ template <class T> class DParameterRange : public DisplayParameter {
 
   // Store for the 'provideentry' state of this parameter.
   Bool itsProvideEntry;
+
+  // Store for the 'onrelease' state of this parameter
+  Bool itsOnRelease;
   
 };
 

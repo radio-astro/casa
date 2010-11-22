@@ -1,7 +1,7 @@
 import os
 from taskinit import *
 
-def setjy(vis=None,field=None,spw=None,modimage=None,fluxdensity=None,standard=None):
+def setjy(vis=None,field=None,spw=None,modimage=None,scalebychan=None,fluxdensity=None,standard=None):
        """ Fills the model column for flux density calibrators:
 
        The task places the model visibility amp and phase associated
@@ -67,13 +67,19 @@ def setjy(vis=None,field=None,spw=None,modimage=None,fluxdensity=None,standard=N
        try:
 
          casalog.origin('setjy')
+         # temporary, until scaleperchan is made compatible with Solar System objects.
+         if scalebychan and standard == 'Butler-JPL-Horizons 2010':
+                casalog.post('scalebychan is not yet compatible with standard = "Butler-JPL-Horizons 2010"', 'WARN')
+                casalog.post('continuing with scalebychan = False.', 'WARN')
+                scalebychan = False
+	
 
          if ((type(vis)==str) & (os.path.exists(vis))):
                      im.open(vis, usescratch=True)
          else:
                      raise Exception, 'Visibility data set not found - please verify the name'
 
-         im.setjy(field=field,spw=spw,modimage=modimage,fluxdensity=fluxdensity,standard=standard)
+         im.setjy(field=field,spw=spw,modimage=modimage,fluxdensity=fluxdensity,standard=standard, scalebychan=scalebychan)
          im.close()
 
 

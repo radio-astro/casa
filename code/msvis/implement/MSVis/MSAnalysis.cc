@@ -347,6 +347,7 @@ MeasurementSet* MSAnalysis::moments( const Vector<Int> &whichmoments,
           }
         }          
         msMoments[i]->deepCopy( outTable, Table::New, True ) ;
+        addHistory( outTable, suffix.substr(1,suffix.size()-1) ) ;
         if ( i == 0 )
           moments[i] = new MeasurementSet( outTable ) ;
         *itsLog << "Created " << outTable << LogIO::POST ;
@@ -380,6 +381,7 @@ MeasurementSet* MSAnalysis::moments( const Vector<Int> &whichmoments,
           }
         }          
         msMoments[i]->deepCopy( outTable, Table::New, True ) ;
+        addHistory( outTable, suffix.substr(1,suffix.size()-1) ) ;
         if ( i == 0 ) 
           moments[i] = new MeasurementSet( outTable ) ;
         *itsLog << "Created " << outTable << LogIO::POST ;
@@ -461,6 +463,18 @@ void MSAnalysis::selectMS( const String antenna, const String field, const Strin
     cleanup() ;
     RETHROW( e ) ;
   }
+}
+
+void MSAnalysis::addHistory( String tableName, String suffix )
+{
+  suffix.upcase() ;
+  Table hisTable( tableName+"/HISTORY", Table::Update ) ;
+  //MSHistory history = ms.history() ;
+  hisTable.addRow( 1, True ) ;
+  ScalarColumn<String> commentCol( hisTable, "MESSAGE" ) ;
+  String message = "FLOAT_DATA contains moment of type " + suffix ;
+  commentCol.put( commentCol.nrow()-1, message ) ;
+  hisTable.unlock() ;
 }
 
 }

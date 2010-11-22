@@ -852,6 +852,7 @@ clean(vis='ngc4826.tutorial.16apr98.src.split.ms',
       cell=[1.,1.],imsize=[clnsize,clnsize],
       stokes='I',
       mode='channel',nchan=36,start=34,width=4,
+      interpolation='nearest',
       psfmode='clark',imagermode='mosaic',ftmachine='mosaic',
       scaletype='SAULT',
 ### As we moved to clean by default in flat sigma rather than

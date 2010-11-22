@@ -5,6 +5,8 @@ import sys
 import string
 import commands
 
+from get_user import get_user
+
 try:
     import casac
 except ImportError, e:
@@ -87,6 +89,7 @@ __simulatorhome__ = casac.homefinder.find_home_by_name('simulatorHome')
 __componentlisthome__ = casac.homefinder.find_home_by_name('componentlistHome')
 __coordsyshome__ = casac.homefinder.find_home_by_name('coordsysHome')
 __regionmanagerhome__ = casac.homefinder.find_home_by_name('regionmanagerHome')
+__spectrallinehome__ = casac.homefinder.find_home_by_name('spectrallineHome')
 __utilshome__ = casac.homefinder.find_home_by_name('utilsHome')
 __deconvolverhome__ = casac.homefinder.find_home_by_name('deconvolverHome')
 __vpmanagerhome__ = casac.homefinder.find_home_by_name('vpmanagerHome')
@@ -117,6 +120,7 @@ simulator = __simulatorhome__.create( )
 componentlist = __componentlisthome__.create( )
 coordsys = __coordsyshome__.create( )
 regionmanager = __regionmanagerhome__.create( )
+spectralline = __spectrallinehome__.create( )
 utils = __utilshome__.create( )
 deconvolver = __deconvolverhome__.create( )
 vpmanager = __vpmanagerhome__.create( )
@@ -143,7 +147,7 @@ from imfit_pg import imfit_pg as imfit
 from deconvolve_pg import deconvolve_pg as deconvolve
 
 from simdata_pg import simdata_pg as simdata
-from simdata2_pg import simdata2_pg as simdata2
+from oldsimdata_pg import oldsimdata_pg as oldsimdata
 
 from importasdm_pg import importasdm_pg as importasdm
 from uvmodelfit_pg import uvmodelfit_pg as uvmodelfit
@@ -163,7 +167,7 @@ from listcal_pg import listcal_pg as listcal
 from ft_pg import ft_pg as ft
 from importuvfits_pg import importuvfits_pg as importuvfits
 from setjy_pg import setjy_pg  as setjy
-#from clean_pg import clean_pg as clean
+from clean_pg import clean_pg as clean
 from immath_pg import immath_pg as immath
 from imhead_pg import imhead_pg as imhead
 from find_pg import find_pg as find
@@ -185,7 +189,6 @@ from newflagdata_pg import newflagdata_pg as newflagdata
 from clearstat_pg import clearstat_pg as clearstat
 from flagautocorr_pg import flagautocorr_pg as flagautocorr
 from browsetable_pg import browsetable_pg as browsetable
-from makemask_pg import makemask_pg as makemask
 from smoothcal_pg import smoothcal_pg as smoothcal
 from imval_pg import imval_pg as imval
 from vishead_pg import vishead_pg as vishead
@@ -1008,9 +1011,6 @@ def setcwd(dir='.'):
 def get_host():
     import commands
     return commands.getoutput("uname -n")
-
-def get_user():
-    return os.environ['USER']
 
 import shutil
 

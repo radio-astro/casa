@@ -79,6 +79,7 @@ public:
             const QString& caption = QString(),
             const QString& directory = lastDirectory(),
             const QString& filter = QString(), int histLimit = historyLimit()){
+        (void)filter;
         return qgetHelper(AcceptOpen, ExistingFile, parent, caption, directory,
                           QString(), histLimit); }
     static String getExistingFile(QWidget* parent = NULL,

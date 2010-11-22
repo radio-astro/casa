@@ -60,7 +60,7 @@ public:
     // Implements PlotMSParametersWatcher::parametersHaveChanged().  Does
     // nothing.
     void parametersHaveChanged(const PlotMSWatchedParameters& params,
-            int updateFlag) { }
+            int updateFlag) { (void)params,(void)updateFlag; }
     
 private:
     // Reference to annotator.

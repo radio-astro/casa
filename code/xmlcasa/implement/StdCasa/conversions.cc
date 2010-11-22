@@ -1,7 +1,7 @@
 #include <xmlcasa/conversions.h>
 #include <xmlcasa/type_record.h>
 #include <xmlcasa/type_variant.h>
-#include <xmlcasa/casac.h>
+#include <casac/casac.h>
 
 namespace casac {
 

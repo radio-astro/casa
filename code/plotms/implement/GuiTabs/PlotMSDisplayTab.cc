@@ -93,6 +93,7 @@ PlotMSDisplayTab::PlotMSDisplayTab(PlotMSPlotTab* tab, PlotMSPlotter* parent) :
     connect(colorize, SIGNAL(toggled(bool)), SIGNAL(changed()));
     connect(colorizeChooser, SIGNAL(currentIndexChanged(int)),
             SIGNAL(changed()));
+    
 }
 
 PlotMSDisplayTab::~PlotMSDisplayTab() { }
@@ -141,12 +142,12 @@ void PlotMSDisplayTab::update(const PlotMSPlot& plot) {
     unsigned int index = 0;
     if(itsIndexChooser_->isVisible()) index = itsIndexChooser_->index();
     
-    changedText(titleLabel, d->titleFormat(index) != d2->titleFormat(index));
-    changedText(unflaggedLabel,
+    highlightWidgetText(titleLabel, d->titleFormat(index) != d2->titleFormat(index));
+    highlightWidgetText(unflaggedLabel,
                 *d->unflaggedSymbol(index) != *d2->unflaggedSymbol(index));
-    changedText(flaggedLabel,
+    highlightWidgetText(flaggedLabel,
                 *d->flaggedSymbol(index) != *d2->flaggedSymbol(index));
-    changedText(colorizeLabel,
+    highlightWidgetText(colorizeLabel,
                 d->colorizeFlag(index) != d2->colorizeFlag(index) ||
                 (d->colorizeFlag(index) &&
                  d->colorizeAxis(index)!= d2->colorizeAxis(index)));

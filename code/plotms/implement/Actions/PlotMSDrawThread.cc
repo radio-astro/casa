@@ -51,7 +51,6 @@ PlotMSDrawThread::~PlotMSDrawThread() {
 
 void PlotMSDrawThread::updatePlotterCanvases() {
     if(itsPlotter_ == NULL) return;
-    
     itsOperationsMutex_.lock();
     vector<PlotCanvasPtr> canvases = itsPlotter_->currentCanvases();
     vector<PlotOperationPtr> ops;
@@ -104,11 +103,11 @@ void PlotMSDrawThread::updatePlotterCanvases() {
     itsOperationsMutex_.unlock();
 }
 
+
 void PlotMSDrawThread::startOperation() {
     itsOperationsMutex_.lock();
     
     itsOperationFlag_ = false;
-    
     // Make sure we have work to do..
     bool done = itsOperations_.size() == 0;
     if(!done) {
@@ -129,6 +128,7 @@ void PlotMSDrawThread::startOperation() {
     isRunning_ = true;
     itsOperationsMutex_.unlock();
 }
+
 
 void PlotMSDrawThread::operationChanged(const PlotOperation& operation) {
     if(!itsOperationsMutex_.tryLock()) {

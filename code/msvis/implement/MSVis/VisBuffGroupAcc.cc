@@ -148,6 +148,20 @@ void VisBuffGroupAcc::enforceAPonData(const String& apmode)
 
 }
 
+void VisBuffGroupAcc::enforceSolveCorrWeights(const Bool phandonly)
+{
+
+  // If requested set cross-hand weights to zero (if they exist):
+  if (phandonly)
+    for (Int ibuf=0;ibuf<nBuf_p;++ibuf)
+      if (VBA_p[ibuf]) {
+	CalVisBuffer& cvb(this->operator()(ibuf));
+	if (cvb.nCorr()>2)
+	  cvb.weightMat()(Slice(1,2,1),Slice()).set(0.0);
+      }       
+
+}
+
 
 CalVisBuffer& VisBuffGroupAcc::operator()(const Int& buf) 
 {

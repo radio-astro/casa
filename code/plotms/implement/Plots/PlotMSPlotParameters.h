@@ -129,9 +129,20 @@ public:
         
         // Post-thread method for notifying watchers that this group has
         // changed.
-        PMS_POST_THREAD_METHOD(Group, notifyWatchers)
-    };
-    
+    public:
+		static void
+		notifyWatchers (void *obj, bool wasCanceled)
+		{
+			Group *cobj = static_cast < Group * >(obj);
+			if (cobj != NULL)
+				cobj->notifyWatchers_ (wasCanceled);
+		}
+	private:
+		void notifyWatchers_ (bool wasCanceled);
+		
+	
+	    };
+	    
     //# Friend class declarations.
     friend class PlotMSPlotParameters::Group;
     

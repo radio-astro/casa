@@ -65,8 +65,11 @@ void QtSliderBase::constructBase(QDomElement& ele,  QSlider* slider,
   
   floatrng_ = ele.attribute("ptype") == "floatrange";
 	// Whether widget should emit float or integer values.
-  
+
+  onrelease_ = ele.attribute("onrelease") == "1" ? true : false;
+
   connect(slider_, SIGNAL(valueChanged(int)),     SLOT(slChg(int)) );
+  connect(slider_, SIGNAL(sliderReleased( )),     SLOT(release( )) );
 
   // Store main state.
  
@@ -174,14 +177,14 @@ void QtSliderBase::emitVal() {
   emit itemValueChanged(itemName, textVal(),    QtAutoGui::Set, True);  }
 
  
-void QtSliderBase::updateAndEmit(Double dval) {
+void QtSliderBase::update(Double dval) {
   // Sets the new value (which should already be validated), 
   // updates user interface accordingly, (without retriggering any
   // internal slots), and emits the new value.
     dVal_ = dval;		// Accept new value.
     updateText();		// 'Normalize' text version on ui.
     updateSlider();		// update slider.
-    emitVal();  }		// Send out new value.
+}
 
 
 void QtSliderBase::setOriginal() {
@@ -190,7 +193,11 @@ void QtSliderBase::setOriginal() {
   // In this version, slider limits cannot be changed via 'Original'.
   Double dval = min(dMax_, max(dMin_, origVal_));
   
-  if(dval!=dVal_) updateAndEmit(dval);  }
+  if(dval!=dVal_) {
+      update(dval);
+      emitVal( );
+  }
+}
   
   
   
@@ -242,7 +249,9 @@ void QtSliderEditor::textChg(QString strval)  {
   // Accept new value.  Update interface accordingly,
   // and emit the new value.
   
-  updateAndEmit(dval);  }
+  update(dval);
+  emitVal( );
+}
 
 
 

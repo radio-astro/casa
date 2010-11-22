@@ -48,13 +48,36 @@
 
 using namespace std ;
 
-//enum OS_ENDIAN { BIG_ENDIAN,
-//                 LITTLE_ENDIAN,
-//                 UNKNOWN_ENDIAN } ;
-
 // <summary>
-// Base class for NRO dataset.
+// Base class for NRO accessor classes.
 // </summary>
+//
+// <prerequisite>
+//   <li> <linkto class=NROReader>NROReader</linkto>
+//   <li> <linkto class=NRODataRecord>NRODataRecord</linkto>
+// </prerequisite>
+//
+// <reviewed reviewer="" date="" tests="" demos="">
+// </reviewed>
+//
+// <etymology>
+// This class is a base class for classes that actually access data from NRO telescopes.
+// Concrete classes are defiened for each data type (OTF format or NRO FITS) and/or 
+// telescopes (45m or ASTE).
+// The class have two filler method: fillHeader and fillRecord. The former reads header 
+// information from the data. Since header data depends on the telescope and its configuration, 
+// it is an abstract in this class and is defined in each concrete class. 
+// On the other hand, the later reads each scan record (set of meta data 
+// and spectral data). The method uses <linkto class=NRODataRecord>NRODataRecord</linkto> 
+// to access scan record. It is implemented here since contents of scan record is 
+// quite similar for several types of data.
+// </etymology>
+//
+// <synopsis>
+// Abstract class that is designed as a base class for all accessor classes.
+// </synopsis>
+//
+
 class NRODataset
 {
  public:
@@ -208,6 +231,9 @@ class NRODataset
 
   // show primary information
   void show() ;
+
+  // convert frequency frame
+  virtual double toLSR( double v, double t, double x, double y ) ;
 
   // Type of file record
   string LOFIL ;
@@ -482,6 +508,9 @@ class NRODataset
 
   // Logger
   //LogIO os ;
+
+  // reference frequency for each array
+  vector<double> refFreq_ ;
 } ;
 
 
