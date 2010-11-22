@@ -2086,11 +2086,11 @@ namespace casa {
       }
 
     }
-    catch(AipsError x)
+    catch(AipsError &x)
       {
 	throw;
       }
-    catch(std::exception e) 	 
+    catch(std::exception &e)
         { 	 
             throw AipsError(e.what()); 	 
         }
