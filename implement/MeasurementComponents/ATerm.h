@@ -35,7 +35,7 @@
 #include <images/Images/PagedImage.h>
 #include <images/Images/TempImage.h>
 #include <msvis/MSVis/VisBuffer.h>
-
+#include <casa/Containers/Block.h>
 
 namespace casa{
   // <summary>  
@@ -66,14 +66,29 @@ namespace casa{
 
     virtual String name() = 0;
 
-    virtual void applySky(ImageInterface<Float>& twoDPB, 
+    virtual void applySky(Block<CountedPtr<ImageInterface<Float> > >& outputImages,
 			  const VisBuffer& vb, 
 			  const Bool doSquint=True)=0;
-    virtual void applySky(ImageInterface<Complex>& twoDPB, 
+    virtual void applySky(Block<CountedPtr<ImageInterface<Complex> > >& outputImages,
 			  const VisBuffer& vb, 
 			  const Bool doSquint=True)=0;
-    
-    virtual Int makePBPolnCoords(const VisBuffer&vb,
+    // virtual void applySky(ImageInterface<Float>& twoDPB, 
+    // 			  const VisBuffer& vb, 
+    // 			  const Bool doSquint=True)=0;
+    // virtual void applySky(ImageInterface<Complex>& twoDPB, 
+    // 			  const VisBuffer& vb, 
+    // 			  const Bool doSquint=True)=0;
+    //
+    // Returns a vector of integers that map each row in the given
+    // VisBuffer to an index that is used to pick the appropriate
+    // convolution function plane.
+    //
+    // This is required for Heterogeneous antenna arrays (like ALMA)
+    // and for all arrays where not all antenna aperture illuminations
+    // can be treated as identical.
+    //
+    virtual Vector<Int> vbRow2CFKeyMap(const VisBuffer& vb) = 0;
+    virtual Int makePBPolnCoords(const VisBuffer& vb,
 				 const Vector<Int>& polMap,
 				 const Int& convSize,
 				 const Int& convSampling,
