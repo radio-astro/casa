@@ -136,13 +136,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Parallactic Angle.  The ParAngleChangeDetector also holds the
     // delta PA value (user defined).
     //
-    void setPAChangeDetector(const ParAngleChangeDetector& paCD) 
-    {
-      //      paCD_p.setTolerance(paCD.getParAngleTolerance());
-      paCD_p = paCD;
-      // cerr << "CFC : " << paCD_p.getParAngleTolerance().get("deg") << endl
-      // 	   << paCD.getParAngleTolerance().get("deg") << endl;
-    };
+    void setPAChangeDetector(const ParAngleChangeDetector& paCD) {paCD_p = paCD;};
     //
     // Methods to cache the convolution function.
     //
@@ -173,12 +167,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			   Vector<Int>& xConvSupport, Vector<Int>& yConvSupport, 
 			   Float convSampling, String nameQualifier="",Bool savePA=True);
     //
-    // Methods to cache functions to compute the sensitivity pattern on the sky.
-    //
-    // // void cacheWeightsFunction(Int which, Float pa, Array<Complex>& cfWt, 
-    // // 			      CoordinateSystem& coords, Int& convSize, 
-    // // 			      Vector<Int>& convSupport, Float convSampling);
-    // //
     // Methods to sarch for a convolution function in the caches (disk
     // or memory) for the give Parallactic Angle value.
     //
@@ -204,10 +192,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // found in the cache, CFDefs::MEMCACHE or CFDefs::DISKCACHE if
     // the function was found in memory or disk cache respectively.
     //
-    Int locateConvFunction(const Int Nw, const Quantity pa, const Quantity dPA, CFStore& cfs)
-    {return locateConvFunction(Nw,pa.getValue("rad"), dPA.getValue("rad"),cfs);};
+    Int locateConvFunction(CFStore& cfs, const Int Nw, const Quantity pa, const Quantity dPA, 
+			   const Int mosXPos=0, const Int mosYPos=0)
+    {return locateConvFunction(cfs, Nw,pa.getValue("rad"), dPA.getValue("rad"),mosXPos,mosYPos);};
 
-    Int locateConvFunction(const Int Nw, const Float pa, const Float dPA, CFStore& cfs);
+    Int locateConvFunction(CFStore& cfs, const Int Nw, const Float pa, const Float dPA, 
+			   const Int mosXPos=0, const Int mosYPos=0);
     //
     // Methods to write the auxillary information from the memory
     // cache to the disk cache.  Without this call, the disk cache
