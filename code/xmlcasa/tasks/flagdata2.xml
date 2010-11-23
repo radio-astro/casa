@@ -770,7 +770,7 @@
 
            vis = 'my.ms'
            manualflag = True
-           mf_antenna = ['2', '3, '5', '8']
+           mf_antenna = ['2', '3', '5', '8']
            mf_scan = ['4']
            clip = True
            clipminmax = [0.0, 0.2]
@@ -778,7 +778,7 @@
            flagdata2()
            
            Or the command line call is:
-           flagdata2(vis='my.ms', manualflag=True, mf_antenna=['2', '3, '5', '8'], mf_scan=['4'],
+           flagdata2(vis='my.ms', manualflag=True, mf_antenna=['2', '3', '5', '8'], mf_scan=['4'],
                      clip=True, clipminmax=[0.0,0.2])
                      
            At run time, flagdata2 will first flag manually in parallel mode, then it will clip.
@@ -802,7 +802,16 @@
               flagdata2()
               
 
+           Another possibility of improving the performance [in vector mode, when the vector is
+           already so long that the I/O overhead gets negligible and the runtime is proportional 
+           to the vector length] is to combine several vector entries into fewer equivalent entries.
+           For example, the specification
+           
+              mf_antenna = ['2', '3', &lt;many more parameters&gt; ]
 
+           could be combined into the equivalent and marginally faster,
+
+              mf_antenna = ['2,3', &lt;many more parameters&gt; ]
  </example>
  </task>
  </casaxml>
