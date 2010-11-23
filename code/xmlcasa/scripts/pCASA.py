@@ -29,8 +29,10 @@ Example usage:
       flagdata("spw2.ms", <parameters>)
       flagdata("spw3.ms", <parameters>)
 
-   on the given hosts, using parallel_go. Notice that parallel_go requires
-   password-less ssh in order to function.
+   on the given hosts, using parallel_go. This will also work in a single-
+   machine (multi-core) environment. In a multi-host environment, notice
+   that parallel_go requires password-less ssh in order to connect to the
+   remote hosts.
 
    The user does not have to explicitly define the available hosts
    or the number of engines per host. The number of engines per host is
@@ -38,10 +40,11 @@ Example usage:
    local host. The available hosts are determined from the contents of
    the multiMS.
 
-   It is possible (and a way to avoid bottlenecks) to wrap more subMSs
-   into the multiMS than the number of parallel engines.
-   The parallel engines are assigned and reassigned to individual subMSs
-   on the fly, as they become idle.
+   It is possible (and a recommended way to avoid scheduling bottlenecks)
+   to wrap more subMSs into one multiMS than the number of parallel engines
+   (for example 20 subMSs on a single 8-core machine). The parallel engines
+   are assigned and reassigned to individual subMSs on the fly, as they
+   become idle.
 """
 import parallel_go
 import pickle
