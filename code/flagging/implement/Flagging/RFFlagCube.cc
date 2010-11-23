@@ -34,9 +34,13 @@
 #include <casa/Utilities/Regex.h>
 #include <casa/OS/Time.h>
 #include <casa/Quanta/MVTime.h>
+#include <memory>
 #include <stdio.h>
 
 #include <casa/System/PGPlotterInterface.h>
+
+using namespace boost;
+using namespace std;
         
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -49,14 +53,14 @@ Cube<Bool> RFFlagCube::in_flags;  //global flag array (kiss mode)
 int RFFlagCube::in_flags_time;
 bool RFFlagCube::in_flags_flushed;
 
-FlagMatrix RFFlagCube::flagrow;   
+FlagMatrix RFFlagCube::flagrow;     // this data type supports only up to 32 agents (bad design)
+Matrix<dynamic_bitset<> > RFFlagCube::flagrow_kiss;  // in kiss mode, support more agents
 Int RFFlagCube::pos_get_flag=-1,RFFlagCube::pos_set_flag=-1;
 Int RFFlagCube::maxmemuse=0;
 
 RFlagWord RFFlagCube::base_flagmask=1,
           RFFlagCube::full_corrmask;
-Int RFFlagCube::agent_count=0,RFFlagCube::num_inst=0;
-RFlagWord RFFlagCube::agent_corrmasks[sizeof(RFlagWord)*8];
+Int RFFlagCube::agent_count=0, RFFlagCube::num_inst=0;
 Vector<RFlagWord> RFFlagCube::corr_flagmask;  
 //This is a map from a set of correlations to a set of agents, i.e.
 // which agents deal with any of the given correlations
@@ -113,16 +117,25 @@ uInt RFFlagCube::estimateMemoryUse ( const RFChunkStats &ch )
 // creates flag cube for a given visibility chunk
 void RFFlagCube::init( RFlagWord corrmsk, uInt nAgent, bool only_selector, const String &name) 
 {
+    if (dbg) cout << "name=" << name << endl;
+
     kiss = only_selector; /* Use a Cube<Bool> instead of the
                              expensive flag lattice in this case */
 
-    if (dbg) cout << "name=" << name << endl;
- 
+    /* Using the 'flagrow_kiss' buffer instead of 'flagrow'
+       allows to have more than 32 agents+correlations, but at a
+       (small, maybe insignificant 1m38s vs 1m32s) runtime cost. 
+       Therefore use it only when necessary.
+     */
+    kiss_flagrow = (kiss && nAgent + num(CORR) + 1 > sizeof(RFlagWord)*8);
+
+    // In order to use flagrow_kiss whenever possible (for testing), define here kiss_flagrow = kiss;
+
     // setup some masks
     corrmask = corrmsk;
     check_corrmask = (pfpolicy == FL_HONOR) ? corrmsk : 0;
     check_rowmask  = (pfpolicy == FL_HONOR) ? RowFlagged : 0;
- 
+
     // clear stats  
     tot_fl_raised=tot_row_fl_raised=fl_raised=fl_cleared=
 	row_fl_raised=row_fl_cleared=0;
@@ -144,6 +157,7 @@ void RFFlagCube::init( RFlagWord corrmsk, uInt nAgent, bool only_selector, const
             // init empty flag lattice
             // initial state is all pre-flags set; we'll clear them as we go along
             flag.init(num(CHAN),num(IFR),num(TIME),num(CORR), nAgent, full_corrmask, maxmemuse, 2);
+
         }
         else {
             /* Set shape to a dummy value, 
@@ -152,38 +166,58 @@ void RFFlagCube::init( RFlagWord corrmsk, uInt nAgent, bool only_selector, const
             */
             flag.shape().resize(1);
             in_flags_time = -1;
+
         }
+
+        if (!kiss_flagrow) {
+            // allocate cube of row flags
+            flagrow.resize(num(IFR),num(TIME));
+            flagrow = RowFlagged|RowAbsent; // 0000 0011
+
+            corr_flagmask.resize(1<<num(CORR));
+            corr_flagmask = 0;
+        }
+        else {
+            flagrow_kiss.resize(num(IFR),num(TIME));
+            flagrow_kiss = dynamic_bitset<>(num(CORR) >= 2 ?
+                                            (num(CORR) + 1 + nAgent) 
+                                            : (3 + nAgent),
+                                            (unsigned) (RowFlagged|RowAbsent));
+        }
+
 	pos_get_flag = pos_set_flag = -1;
 
-	// allocate cube of row flags
-	flagrow.resize(num(IFR),num(TIME));
-	flagrow = RowFlagged|RowAbsent; // 0000 0011
-
 	// reset instance counters 
-	agent_count = 0; // reset instantiation counts
-	corr_flagmask.resize(1<<num(CORR));
-	corr_flagmask = 0;
+	agent_count = 0;
+
 	agent_names = "";
 	report_plotted = NULL;
     }
-    //cout << "uint_max=" << UINT_MAX << endl;
-    flagmask = base_flagmask << agent_count;
-    if (dbg) cout << "agent_count=" << agent_count 
-		  << " base_flagmask=" << base_flagmask 
-		  << " flagmask=" << (flagmask > UINT_MAX) << endl;
-    //exit(0);
-    if( !flagmask  )
-	throw(AipsError("Too many flagging agents instantiated"));
-    agent_corrmasks[agent_count] = corrmask;
+    if (kiss) {
+        // basebit plus agent_count
+        flagmask_kiss = (num(CORR) >= 2 ? 1<<num(CORR) : 4) + agent_count;
+
+    }
+    else {
+        flagmask = base_flagmask << agent_count;
+        if (dbg) cout << "agent_count=" << agent_count 
+                      << " base_flagmask=" << base_flagmask 
+                      << " flagmask=" << (flagmask > UINT_MAX) << endl;
+        if( !flagmask  )
+            throw(AipsError("Too many flagging agents instantiated"));
+    }
     agent_count++;
+
     // raise flag if any one instance has a RESET pre-flag policy
     if ( pfpolicy==FL_RESET )
 	reset_preflags=True;
 
-    // set bits in corr_flagmask
-    for ( uInt cm=0; cm < corr_flagmask.nelements(); cm++ )
-	if ( cm & corrmask )
-	    corr_flagmask(cm)|=flagmask;
+    // set bits in corr_flagmask, not used in kiss mode
+    if (!kiss_flagrow) {
+        for ( uInt cm=0; cm < corr_flagmask.nelements(); cm++ )
+            if ( cm & corrmask )
+                corr_flagmask(cm) |= flagmask;
+    }
   
     // accumulates names of all agents using our cube. (This is just eye 
     // candy, for plots)
@@ -192,14 +226,16 @@ void RFFlagCube::init( RFlagWord corrmsk, uInt nAgent, bool only_selector, const
 	    // strip off instance count from name, if it's there
 	    String nm(name);
 	    int pos = nm.index(Regex("#[0-9]+$"));
-	    if ( pos>0 )
+	    if ( pos>0 ) {
 		nm = nm.before(pos);
+            }
 	    // add to list of names
 	    if ( !agent_names.contains(nm) )
 		{
-		    if ( agent_names.length() )
+                    if ( agent_names.length() ) {
 			agent_names += "/";
-		    agent_names += nm;
+                    }
+                    agent_names += nm;
 		}
 	}
     if(dbg) cout << "End of init. reset_preflags : " << reset_preflags << endl;
@@ -210,8 +246,13 @@ void RFFlagCube::cleanup ()
 {
     if (flag.shape().nelements()) {
         flag.cleanup();
-        flagrow.resize(0,0);
-        corr_flagmask.resize(0);
+        if (!kiss_flagrow) {
+            flagrow.resize(0,0);
+            corr_flagmask.resize(0);
+        }
+        else {
+            flagrow_kiss.resize(0, 0);
+        }
         agent_count=0;
     }
 }
@@ -219,8 +260,12 @@ void RFFlagCube::cleanup ()
 void RFFlagCube::reset ()
 {
     fl_raised=fl_cleared=row_fl_raised=row_fl_cleared=0;
-    my_corrflagmask = corr_flagmask(corrmask);
-    if (!kiss) flag.reset();
+    if (!kiss_flagrow) {
+        my_corrflagmask = corr_flagmask(corrmask);
+    }
+    if (!kiss) {
+        flag.reset();
+    }
 
     return;
 }
@@ -248,8 +293,6 @@ void RFFlagCube::printStats ()
 // previously.
 Bool RFFlagCube::setFlag ( uInt ich,uInt ifr, FlagCubeIterator &iter )
 {
-    if (dbg) cerr << "flag for " << ich << "," << ifr << "corrmask = " << corrmask;
-
     if (kiss) {
         uInt c = 1;
         bool raised = false;
@@ -267,6 +310,8 @@ Bool RFFlagCube::setFlag ( uInt ich,uInt ifr, FlagCubeIterator &iter )
         }
         return raised;
     }
+
+    if (dbg) cerr << "flag for " << ich << "," << ifr << "corrmask = " << corrmask;
 
     RFlagWord oldfl = iter(ich,ifr);
     if (dbg) cerr << " : " << oldfl << "," << flagmask;
@@ -326,31 +371,63 @@ Bool RFFlagCube::clearFlag ( uInt ich,uInt ifr,FlagCubeIterator &iter )
 // previously.
 Bool RFFlagCube::setRowFlag ( uInt ifr, uInt itime )
 {
-    RFlagWord oldfl = flagrow(ifr,itime);
+    if (kiss_flagrow){
 
-    // first flag raised for this row - update global stats
-    if ( !(oldfl&flagmask) )
-        {
+        const dynamic_bitset<> &oldfl(flagrow_kiss(ifr, itime));
+
+        if ( ! oldfl[flagmask_kiss] ) {
             tot_row_fl_raised++;
             row_fl_raised++;
-            flagrow(ifr,itime) = oldfl | flagmask;
+
+            flagrow_kiss(ifr, itime)[flagmask_kiss] = true;
+
             return True;
         }
-    return False;
+        return False;
+    }
+    else {
+        RFlagWord oldfl = flagrow(ifr,itime);
+        
+        // first flag raised for this row - update global stats
+        if ( !(oldfl&flagmask) )
+            {
+                tot_row_fl_raised++;
+                row_fl_raised++;
+                flagrow(ifr, itime) = oldfl | flagmask;
+                return True;
+            }
+        return False;
+    }
 }
 
 // Clears row flag for (ifr, itime). Returns True if flag was up before.
 Bool RFFlagCube::clearRowFlag ( uInt ifr,uInt itime )
 {
-    RFlagWord oldfl = flagrow(ifr,itime);
+    if (kiss_flagrow){
 
-    if (oldfl & flagmask)  {
-        tot_row_fl_raised--;
-        row_fl_cleared++;
-        flagrow(ifr,itime) = oldfl & (!flagmask);
-        return True;
+        const dynamic_bitset<> &oldfl(flagrow_kiss(ifr, itime));
+
+        if ( oldfl[flagmask_kiss] ) {
+            tot_row_fl_raised--;
+            row_fl_raised++;
+
+            flagrow_kiss(ifr, itime)[flagmask_kiss] = false;
+
+            return True;
+        }
+        return False;
+    }   
+    else {
+        RFlagWord oldfl = flagrow(ifr, itime);
+        
+        if (oldfl & flagmask)  {
+            tot_row_fl_raised--;
+            row_fl_cleared++;
+            flagrow(ifr,itime) = oldfl & (~flagmask);
+            return True;
+        }
+        return False;
     }
-    return False;
 }
 
 // Advances the global flag lattice iterator to the specified time.
@@ -383,7 +460,14 @@ void RFFlagCube::getMSFlags(uInt it)
       in_flags_flushed = false;
   }
   
-  FlagVector fl_row (flagrow.column(pos_get_flag));
+  auto_ptr<FlagVector> fl_row(NULL);
+  FlagVector *flr = NULL;
+
+  //  FlagVector fl_row;//(flagrow.column(pos_get_flag));
+  if (!kiss) {
+      fl_row = auto_ptr<FlagVector>(new FlagVector(flagrow.column(pos_get_flag)));
+      flr = fl_row.get();
+  }
 
   const Vector<Bool> & fr( chunk.visBuf().flagRow() );
 
@@ -397,7 +481,7 @@ void RFFlagCube::getMSFlags(uInt it)
 
       if (!kiss) {
           // clear row flag
-          fl_row(ifr) &= ~(RowAbsent|RowFlagged); // 0000 0011 & 1111 1100 = 0000 0000
+          (*flr)(ifr) &= ~(RowAbsent|RowFlagged); // 0000 0011 & 1111 1100 = 0000 0000
           // clear pixel flags
           flag.set_column(ifr, 0); // 0000 0000
       }
@@ -445,14 +529,14 @@ void RFFlagCube::getMSFlags(uInt it)
       }
 
       if (!kiss) {
-          fl_row(ifr) &= ~RowAbsent; // 0000 0011 & 11111101 = 0000 0001
+          (*flr)(ifr) &= ~RowAbsent; // 0000 0011 & 11111101 = 0000 0001
           // initial state of lattice is all correlations flagged, so we just
           // ignore flagged rows
           //if( !fr(i) )  // row not flagged, or we ignore/reset flags
           //{
           // clear row flag in internal matrix, if needed
           if( !fr(i) ) 
-              fl_row(ifr) &= ~RowFlagged; // 0000 0001 & 1111 1110 -> 0000 0000
+              (*flr)(ifr) &= ~RowFlagged; // 0000 0001 & 1111 1110 -> 0000 0000
           /* clear all row flags...so that only new flags are True at the end */
           
           ///... read in chan flags for all rows......
@@ -464,7 +548,7 @@ void RFFlagCube::getMSFlags(uInt it)
           */
           if (num(CORR) == 1) {
               for (uInt ich=0; ich<num(CHAN); ich++ ) {
-                  if( !fl_row(ifr) && !fc(0, ich, i) ) {
+                  if( !(*flr)(ifr) && !fc(0, ich, i) ) {
                       flag.set(ich, ifr, 0, 0);
                   }
               }
@@ -473,7 +557,7 @@ void RFFlagCube::getMSFlags(uInt it)
               for (uInt ich=0; ich<num(CHAN); ich++ ) {
                   for (uInt icorr=0; icorr<num(CORR); icorr++ ) {
                       
-                      if( !fl_row(ifr) && !fc(icorr, ich, i) ) {
+                      if( !(*flr)(ifr) && !fc(icorr, ich, i) ) {
                           //(*flag.cursor())(ich,ifr) &= ~(1<<icorr); 
                           
                           flag.set(ich, ifr, icorr, 0);
@@ -817,6 +901,7 @@ void RFFlagCube::plotIfrMap ( PGPlotterInterface &pgp,const Matrix<Float> &img,c
 Int RFFlagCube::numStatPlots (const RFChunkStats &chunk)
 {
   Int count = 0;
+  // because 'flagrow' below is invalid
   if( anyGT(flagrow,full_corrmask) ) // any row flags?
     count+=3; // 3 row flag plots
   if( anyGT(chunk.nfIfrTime(),0u) )   // any pixel flags?
@@ -1121,10 +1206,6 @@ void RFFlagCube::plotStats (PGPlotterInterface &pgp)
     }
   } // endif( nval )
 }
-
-//template Array<RFlagWord> operator & ( const Array<RFlagWord> &arr,const RFlagWord &val);
-//template LogicalArray maskBits  ( const Array<RFlagWord> &arr,const RFlagWord &val);
-
 
 
 } //# NAMESPACE CASA - END

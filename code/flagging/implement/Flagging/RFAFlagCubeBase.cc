@@ -219,6 +219,5 @@ void RFAFlagCubeBase::plotFlaggingReport ( PGPlotterInterface &pgp )
 }
 
 
-
 } //# NAMESPACE CASA - END
 

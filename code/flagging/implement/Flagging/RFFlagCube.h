@@ -35,6 +35,8 @@
 #include <casa/Arrays/LogiMatrix.h>
 #include <casa/Arrays/LogiVector.h>
 #include <casa/Logging/LogIO.h>
+#include <boost/dynamic_bitset.hpp>
+#include <stdexcept>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -71,6 +73,10 @@ template<class T> LogicalArray  maskBits  ( const Array<T> &,const T &);
 // (i.e. global) cube is used to hold the actual flags. Individual
 // instances (instantiated by flagging agents) have individual unique
 // bitmasks and, possibly, individual iterators.
+//
+// It was/is a design mistake to use a global/static buffer to hold the
+// shared flags. Instead, every agent should point to the unique dynamically
+// allocated buffer. 
 // </synopsis>
 //
 // <example>
@@ -167,12 +173,9 @@ public:
   // agent's correlations are pre-flagged. Uses internal cursor.
   Bool preFlagged   ( uInt ich,uInt ifr );
 
-  // The agentFlagged() uses the corr-flagmask to tell if any of my
-  // correlations are flagged by any agent (including myself). 
-  // (i.e. has anyone flagged my correlations?). Uses internal cursor.
-  Bool agentFlagged ( uInt ich,uInt ifr );
-
-  // This corresponds to preFlagged OR agentFlagged. Uses internal cursor.
+  // The anyFlagged() uses the corr-flagmask to tell if any of my
+  // correlations are flagged either by any agent or pre-flagged
+  // Uses internal cursor.
   Bool anyFlagged   ( uInt ich,uInt ifr );
   
   // Sets or clears a row flag
@@ -216,6 +219,7 @@ public:
   static int  getMaxMem ();
       
  private:
+
   // helper methods for generating plots
   void plotIfrMap  ( PGPlotterInterface &pgp,const Matrix<Float> &img,const LogicalVector &ifrvalid);
   void plotAntAxis ( PGPlotterInterface &pgp,const Vector<uInt> &antnums,Bool yaxis );
@@ -226,7 +230,9 @@ public:
     
   RFChunkStats &chunk;                  // chunk
 
-  bool kiss;  // do things simpler (faster) if there is exactly one selector agent
+  bool kiss;  // do things simpler (faster) if there is nothing but RFAselector agents
+  bool kiss_flagrow;  // Use boost::dynamic_bitset for 'flagrow' if only RFA agents and
+                      // more than 32 (or so) agents
 
   static Cube<Bool> in_flags;
   static int in_flags_time;  //time stamp that in_flags has reached
@@ -237,6 +243,7 @@ public:
       
   static RFCubeLattice<RFlagWord> flag; // global flag lattice
   static FlagMatrix flagrow;             // (nIfr,nTime) matrix of row flags
+  static Matrix<boost::dynamic_bitset<> > flagrow_kiss;
   static Int pos_get_flag,pos_set_flag; 
 
   static Bool reset_preflags; // flag: RESET policy specified for at least one instance
@@ -254,12 +261,11 @@ public:
     // RESET or IGNORE policy, or to corrmask for HONOR
     check_rowmask,   // same for row flags: 0 or RowFlagged
     my_corrflagmask; // see above
+  unsigned flagmask_kiss; // represents a bitmask with only bit number <n> set where 
+                          // <n> is the value of this variable
   static Int agent_count;    // # of agents instantiated
   static RFlagWord base_flagmask, // flagmask of first agent instance
     full_corrmask;          // bitmask for all correlations in MS (low N bits)
-
-  // agent_corrmasks is an array of correlation masks for every object instance
-  static RFlagWord agent_corrmasks[sizeof(RFlagWord)*8];
 
   // corr_flagmask is a mapping from corrmasks into masks of agents that flag the
   // given corrmask
@@ -293,10 +299,17 @@ public:
 };
 
 inline RFlagWord RFFlagCube::flagMask ()
-  { return flagmask; }
+  { 
+     if (kiss) {
+       throw std::logic_error("Cannot do this in kiss mode (programmer bug, please report)");
+     }
+     return flagmask; 
+  }
  
 inline RFlagWord RFFlagCube::corrMask ()
-   { return corrmask; }
+   { 
+     return corrmask; 
+   }
 
 inline RFlagWord RFFlagCube::checkCorrMask ()
    { return check_corrmask; }
@@ -341,16 +354,23 @@ inline const FlagMatrix & RFFlagCube::flagMatrix ()
    { return *flag_curs; }
 
 inline const FlagMatrix & RFFlagCube::rowFlagMatrix ()
-   { return flagrow; }
+   { 
+     if (kiss) {
+       throw std::logic_error("Cannot do this in kiss mode (programmer bug, please report)");
+     }
+     return flagrow; 
+   }
 
 inline Bool RFFlagCube::preFlagged ( uInt ich,uInt ifr )
    { return getFlag(ich,ifr)&check_corrmask != 0; }    
 
-inline Bool RFFlagCube::agentFlagged ( uInt ich,uInt ifr )
-   { return getFlag(ich,ifr)&my_corrflagmask != 0; }    
-
 inline Bool RFFlagCube::anyFlagged ( uInt ich,uInt ifr )
-   { return getFlag(ich,ifr)&(check_corrmask|my_corrflagmask) != 0; }
+   { 
+     if (kiss) {
+       throw std::logic_error("Cannot do this in kiss mode (programmer bug, please report)");
+     }
+     return getFlag(ich,ifr)&(check_corrmask|my_corrflagmask) != 0; 
+   }
 
 // Gets full row flag word
 inline RFlagWord RFFlagCube::getRowFlag ( uInt ifr,uInt itime )

@@ -195,6 +195,20 @@ class test_vector(test_base):
         for a in ["VLA1", "VLA2", "VLA5", "VLA8", "VLA9", "VLA10", "VLA11", "VLA24"]:
             self.assertEqual(s['antenna'][a]['flagged'], 808)
 
+    def test_many_agents(self):
+        """More than 32 agents"""
+        # 1 agent
+        flagdata(vis = self.vis,
+                 antenna="3")
+        test_eq(flagdata(vis = self.vis, mode = "summary"), 70902, 5252)
+
+        flagdata(vis=self.vis, unflag=True)
+
+        # 500 agents
+        flagdata(vis = self.vis,
+                 antenna=["3"] * 500)
+        test_eq(flagdata(vis = self.vis, mode = "summary"), 70902, 5252)
+
 class test_vector_ngc5921(test_base):
     def setUp(self):
         self.setUp_ngc5921()
@@ -375,7 +389,7 @@ class test_autoflag(test_base):
         assert s4 <= s5
         assert s5 <= s6
 
-    def test1(self):
+    def test_auto1(self):
         print "Test of autoflag, algorithm=timemed"
         flagdata(vis=self.vis, mode='autoflag', algorithm='timemed', window=3)
         test_eq(flagdata(vis=self.vis, mode='summary'), 2854278, 4725)
