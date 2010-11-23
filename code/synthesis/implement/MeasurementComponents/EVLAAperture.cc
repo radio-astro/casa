@@ -253,7 +253,7 @@ namespace casa{
     return found;
   }
   
-  void EVLAAperture::applySky(ImageInterface<Complex>& twoDPB, 
+  void EVLAAperture::applySky(Block<CountedPtr<ImageInterface<Complex> > >& outImages,
 			      const VisBuffer& vb, 
 			      const Bool doSquint)
   {
@@ -261,10 +261,10 @@ namespace casa{
     Long cachesize=(HostInfo::memoryTotal(true)/8)*1024;
     vlaPB.setMaximumCacheSize(cachesize);
     Int bandID=getVisParams(vb);
-    vlaPB.applyPB(twoDPB, vb, bandID, doSquint);
+    vlaPB.applyPB(*(outImages[0]), vb, bandID, doSquint);
   }
 
-  void EVLAAperture::applySky(ImageInterface<Float>& twoDPB, 
+  void EVLAAperture::applySky(Block<CountedPtr<ImageInterface<Float> > >& outImages,
 			      const VisBuffer& vb, 
 			      const Bool doSquint)
   {
@@ -272,7 +272,7 @@ namespace casa{
     Long cachesize=(HostInfo::memoryTotal(true)/8)*1024;
     vlaPB.setMaximumCacheSize(cachesize);
     Int bandID=getVisParams(vb);
-    vlaPB.applyPB(twoDPB, vb, bandID, doSquint);
+    vlaPB.applyPB(*(outImages[0]), vb, bandID, doSquint);
   }
   
 };

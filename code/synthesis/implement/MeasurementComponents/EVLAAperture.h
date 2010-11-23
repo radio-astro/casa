@@ -64,12 +64,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     Bool findSupport(Array<Complex>& func, Float& threshold,Int& origin, Int& R);
 
-    void applySky(ImageInterface<Float>& twoDPB, 
-		  const VisBuffer& vb, const Bool doSquint=True);
-    void applySky(ImageInterface<Complex>& twoDPB, 
-		  const VisBuffer& vb, const Bool doSquint=True);
+    virtual void applySky(Block<CountedPtr<ImageInterface<Float> > >& outputImages,
+			  const VisBuffer& vb, 
+			  const Bool doSquint=True);
+    virtual void applySky(Block<CountedPtr<ImageInterface<Complex> > >& outputImages,
+			  const VisBuffer& vb, 
+			  const Bool doSquint=True);
+    // void applySky(ImageInterface<Float>& twoDPB, 
+    // 		  const VisBuffer& vb, const Bool doSquint=True);
+    // void applySky(ImageInterface<Complex>& twoDPB, 
+    // 		  const VisBuffer& vb, const Bool doSquint=True);
 
     int getVisParams(const VisBuffer& vb);
+
+    virtual Vector<Int> vbRow2CFKeyMap(const VisBuffer& vb)
+    {Vector<Int> tmp; tmp.resize(vb.nRow()); tmp=0;return tmp;}
 
     Int makePBPolnCoords(const VisBuffer&vb,
 			 const Vector<Int>& polMap,
