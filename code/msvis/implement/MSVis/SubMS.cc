@@ -3463,6 +3463,9 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	//      (taken from the time of the first integration for this (theFieldId, theSPWId) pair)
 	//      -> store in obsTime[numNewDataDesc] (further below)
        	MEpoch theObsTime = mainTimeMeasCol(mainTabRow);
+	  ////      (taken uniformly for the whole MS from the first row of the MS
+	  ////      which is also the earliest row because it is time-sorted)
+       	  //MEpoch theObsTime = mainTimeMeasCol(0);
 	//   4) direction of the field, i.e. the phase center
 	MDirection theFieldDir;
 	if(regridPhaseCenterFieldId<-1){ // take it from the PHASE_DIR cell
@@ -3916,7 +3919,10 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     return rval;
   }
 
-  Bool SubMS::combineSpws(const Vector<Int>& spwids){
+  Bool SubMS::combineSpws(const Vector<Int>& spwids,
+			  const Bool noModify,
+			  Vector<Double>& newCHAN_FREQ,
+			  Vector<Double>& newCHAN_WIDTH){
     
     LogIO os(LogOrigin("SubMS", "combineSpws()"));
       
@@ -4012,8 +4018,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       TableRecord spwRecord = SPWRow.get(id0);
 
       Int newNUM_CHAN = numChanCol(id0);
-      Vector<Double> newCHAN_FREQ(chanFreqCol(id0));
-      Vector<Double> newCHAN_WIDTH(chanWidthCol(id0));
+      newCHAN_FREQ.assign(chanFreqCol(id0));
+      newCHAN_WIDTH.assign(chanWidthCol(id0));
       Vector<Double> newEFFECTIVE_BW(effectiveBWCol(id0));
       Double newREF_FREQUENCY(refFrequencyCol(id0));
       //MFrequency newREF_FREQUENCY = refFrequencyMeasCol(id0);
@@ -4040,7 +4046,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	tvd.push_back(1.);
 	averageChanFrac.push_back(tvd);
       }
-
 
       os << LogIO::NORMAL << "Original SPWs sorted by first channel frequency:" << LogIO::POST;
       {
@@ -4346,6 +4351,10 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
       } // end loop over SPWs
       
+      if(noModify){ // newCHAN_FREQ and newCHAN_WIDTH have been determined now
+	return True;
+      }
+
       os << LogIO::NORMAL << "Combined SPW will have " << newNUM_CHAN << " channels. May change in later regridding." << LogIO::POST;
 
 //       // print channel fractions for debugging
@@ -4356,6 +4365,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 // 	  cout << " averageChanFrac[i][j] " << averageChanFrac[i][j] << endl;
 // 	}
 //       }	
+
 
       // write new spw to spw table (ID =  newSpwId)
       spwtable.addRow();

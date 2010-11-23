@@ -2127,19 +2127,22 @@ Date/Time:                         RR:                      RL:                 
 </method>
 
 <method type="function" name="cvelfreqs">
-   <shortdescription>calculate the transformed grid of a given spectral window (MS is not modified)
+   <shortdescription>calculate the transformed grid of the SPW obtained by combining a given set of SPWs (MS is not modified)
    </shortdescription>
    
   <keyword>cvelfreqs</keyword>
   <input>
 
 
-     <param type="int" direction="in" name="spwid">
-     <description>The id of the spectral window from which the input grid is to be taken.
+     <param type="intArray" direction="in" name="spwids">
+     <description>The list of ids of the spectral windows from which the input grid is to be taken.
      </description>
-     <value>0</value>     
      </param>
 
+     <param type="intArray" direction="in" name="fieldids">
+     <description>The list of ids of the fields which are selected (for observation time determination), default: all
+     </description>
+     </param>
     
      <param type="string" direction="in" name="obstime">
      <description>the observation time to assume, default: time of the first row of the MS = 
@@ -2207,7 +2210,7 @@ Date/Time:                         RR:                      RL:                 
   </description>
   <example>
     ms.open('my.ms')
-    ms.cvelfreqs(spwid=1, mode='channel', nchan=20, start=2, width=3, outframe='LSRK')
+    ms.cvelfreqs(spwid=[1], mode='channel', nchan=20, start=2, width=3, outframe='LSRK')
 
     will take the grid of SPW 1 (i.e. the second in the SPW table), regrid it as in cvel
     with the given grid parameters and return the resulting channel centers as an array.

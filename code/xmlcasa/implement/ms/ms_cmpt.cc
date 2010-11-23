@@ -1521,7 +1521,8 @@ ms::cvel(const std::string& mode,
 }
 
 std::vector<double>
-ms::cvelfreqs(const int spwid,
+ms::cvelfreqs(const std::vector<int>& spwids,
+	      const std::vector<int>& fieldids,
 	      const std::string& obstime,
 	      const std::string& mode, 
 	      const int nchan, 
@@ -1544,13 +1545,40 @@ ms::cvelfreqs(const int spwid,
     
 
     ROMSMainColumns mainCols(*itsMS);
+    ROScalarColumn<Double> timeCol(mainCols.time());
+    ROScalarColumn<Int> ddCol(mainCols.dataDescId());
+    ROScalarColumn<Int> fieldCol(mainCols.fieldId());
+
+    ROMSDataDescColumns DDCols(itsMS->dataDescription());
+    ROScalarColumn<Int> spwidCol(DDCols.spectralWindowId());
+
     ROMSSpWindowColumns SPWCols(itsMS->spectralWindow());
     ROMSFieldColumns FIELDCols(itsMS->field());
     ROMSAntennaColumns ANTCols(itsMS->antenna());
 
-    // extract grid from SPW given by spwid
-    Vector<Double> oldCHAN_FREQ = SPWCols.chanFreq()(spwid); 
-    Vector<Double> oldCHAN_WIDTH = SPWCols.chanWidth()(spwid);
+    // extract grid from SPW given by spwids
+    Vector<Double> oldCHAN_FREQ; 
+    Vector<Double> oldCHAN_WIDTH;
+
+    if(spwids.size() == 1){ // only one spw selected
+      oldCHAN_FREQ.assign(SPWCols.chanFreq()(spwids[0])); 
+      oldCHAN_WIDTH.assign(SPWCols.chanWidth()(spwids[0]));
+    }
+    else if(spwids.size() > 1){ // several ids selected
+      SubMS theMS(*itsMS);
+      Vector<Int> spwidv(spwids);
+      if(!theMS.combineSpws(spwidv,
+			    True, // dont't modify the MS
+			    oldCHAN_FREQ,
+			    oldCHAN_WIDTH)){
+      	*itsLog << LogIO::SEVERE << "Error combining SPWs." << LogIO::POST;
+	return rval;
+      }	
+    }
+    else{
+      	*itsLog << LogIO::NORMAL << "Zero SPWs selected." << LogIO::POST;
+	return rval;
+    }
 
     // determine phase center
     casa::MDirection phaseCenter;
@@ -1591,7 +1619,7 @@ ms::cvelfreqs(const int spwid,
     }
 
     // determine old reference frame
-    MFrequency::Types theOldRefFrame = MFrequency::castType(SPWCols.measFreqRef()(spwid));
+    MFrequency::Types theOldRefFrame = MFrequency::castType(SPWCols.measFreqRef()(spwids[0]));
 
     // determine observation epoch
     MEpoch theObsTime;
@@ -1607,8 +1635,51 @@ ms::cvelfreqs(const int spwid,
 	return rval;
       }
     } else {
-      theObsTime = mainCols.timeMeas()(0);
-      *itsLog << LogIO::NORMAL << "Using observation time from first row of MS." << LogIO::POST;
+      // take the smallest obstime in the MS given the spw and field selection
+      
+      // determine the relevant DD Ids
+      vector<Int> ddids;
+      for(uInt irow=0; irow<DDCols.nrow(); irow++){ // loop over DD table
+	for(uInt i=0; i<spwids.size(); i++){
+	  Int theSPWId = spwidCol(irow);
+	  if(theSPWId==spwids[i]){ // SPWId match found
+	    ddids.push_back(irow);
+	  }
+	} // end for
+      } // end for
+      cout << "DD IDs selected " << Vector<Int>(ddids) << endl; 
+      uInt minTimeRow = 0;
+      Double minTime = 1E42;
+      Bool doField = (fieldids.size()!=0);
+
+      for(uInt irow=1;irow<itsMS->nrow(); irow++){ // loop over main table
+	if(minTime<timeCol(irow)){
+
+	  Int theDDId = ddCol(irow);
+	  for(uInt i=0; i<ddids.size(); i++){
+	    if(theDDId==ddids[i]){ // DD match found
+	      if(doField){
+		Int theFieldId = fieldCol(irow);
+		for(uInt i=0; i<fieldids.size(); i++){
+		  if(theFieldId==fieldids[i]){ // field match found
+		    minTime=timeCol(irow);
+		    minTimeRow = irow;
+		    break;
+		  }
+		}
+	      }
+	      else{ // all fields selected
+		minTime=timeCol(irow);
+		minTimeRow = irow;
+	      }
+	      break;
+	    } // end if DD matches
+	  } // end for
+
+	}
+      } // end for
+      theObsTime = mainCols.timeMeas()(minTimeRow);
+      *itsLog << LogIO::NORMAL << "Using observation time from earliest row of the MS given the SPW and FIELD selection." << LogIO::POST;
     }
 
     // determine observatory position

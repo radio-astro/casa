@@ -342,9 +342,18 @@ class SubMS
 			   );
 
   // combineSpws():
-  // make one spectral window from all spws given by the spwids vector, 
-  // Vector<Int>(1,-1) means: use all SPWs
-  Bool combineSpws(const Vector<Int>& spwids = Vector<Int>(1,-1));
+  // make one spectral window from all spws given by the spwids vector
+  Bool combineSpws(const Vector<Int>& spwids,  // Vector<Int>(1,-1) means: use all SPWs
+		   const Bool noModify,   // if True, the MS will not be modified
+		   Vector<Double>& newCHAN_FREQ, // will return the grid of the resulting SPW
+		   Vector<Double>& newCHAN_WIDTH
+		   );
+
+  Bool combineSpws(const Vector<Int>& spwids = Vector<Int>(1,-1)){  // Vector<Int>(1,-1) means: use all SPWs
+    Vector<Double> temp1; 
+    Vector<Double> temp2;
+    return combineSpws(spwids, False, temp1, temp2);
+  }
 
  protected:
 
