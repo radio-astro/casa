@@ -77,8 +77,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     int getVisParams(const VisBuffer& vb);
 
-    virtual Vector<Int> vbRow2CFKeyMap(const VisBuffer& vb)
-    {Vector<Int> tmp; tmp.resize(vb.nRow()); tmp=0;return tmp;}
+    virtual Vector<Int> vbRow2CFKeyMap(const VisBuffer& vb, Int& nUnique)
+    {Vector<Int> tmp; tmp.resize(vb.nRow()); tmp=0; nUnique=1; return tmp;}
 
     Int makePBPolnCoords(const VisBuffer&vb,
 			 const Vector<Int>& polMap,
