@@ -50,7 +50,8 @@ namespace casa{
       {
 	ConvolutionFunction::operator=(other);
 	logIO_p = other.logIO_p;
-	setParams(other.polMap_p, other.feedStokes_p);
+	//	setParams(other.polMap_p, other.feedStokes_p);
+	setPolMap(other.polMap_p);
 	bandID_p=other.bandID_p;
 	Diameter_p=other.Diameter_p;
 	Nant_p=other.Nant_p;

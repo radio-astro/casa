@@ -116,12 +116,12 @@ namespace casa{
 
     //
     virtual void setPolMap(const Vector<Int>& polMap) = 0;
-    virtual void setFeedStokes(const Vector<Int>& feedStokes) = 0;
+    //    virtual void setFeedStokes(const Vector<Int>& feedStokes) = 0;
     virtual Bool findSupport(Array<Complex>& func, Float& threshold,Int& origin, Int& R)=0;
 
 
-    virtual void setParams(const Vector<Int>& polMap, const Vector<Int>& feedStokes)
-    {setPolMap(polMap); setFeedStokes(feedStokes);};
+    // virtual void setParams(const Vector<Int>& polMap, const Vector<Int>& feedStokes)
+    // {setPolMap(polMap); setFeedStokes(feedStokes);};
   private:
     Int nDim;
   protected:

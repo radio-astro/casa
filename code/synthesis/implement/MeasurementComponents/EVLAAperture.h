@@ -81,14 +81,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     {Vector<Int> tmp; tmp.resize(vb.nRow()); tmp=0; nUnique=1; return tmp;}
 
     Int makePBPolnCoords(const VisBuffer&vb,
-			 const Vector<Int>& polMap,
 			 const Int& convSize,
 			 const Int& convSampling,
 			 const CoordinateSystem& skyCoord,
 			 const Int& skyNx, const Int& skyNy,
-			 CoordinateSystem& feedCoord,
-			 Vector<Int>& cfStokes);
-    virtual void setPolMap(const Vector<Int>& polMap);
+			 CoordinateSystem& feedCoord);
+    //			 Vector<Int>& cfStokes);
+    //    virtual void setPolMap(const Vector<Int>& polMap);
     virtual void setFeedStokes(const Vector<Int>& feedStokes);
     virtual void getPolMap(Vector<Int>& polMap) {polMap.resize(0);polMap=polMap_p;};
     virtual void getFeedStokes(Vector<Int>& feedStokes) 
