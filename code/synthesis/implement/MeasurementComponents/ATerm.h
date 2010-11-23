@@ -58,26 +58,26 @@ namespace casa{
     ATerm () {};
     virtual ~ATerm () {};
 
+    virtual String name() = 0;
+
+    virtual void applySky(ImageInterface<Float>& outputImages,
+			  const VisBuffer& vb, 
+			  const Bool doSquint=True,
+			  const Int& cfKey=0) = 0;
+    virtual void applySky(ImageInterface<Complex>& outputImages,
+			  const VisBuffer& vb, 
+			  const Bool doSquint=True,
+			  const Int& cfKey=0) = 0;
+    //
+    // Not sure if the following method is requried.  Leaving it in
+    // the code for now with an implementation that does nothing.
+    //
     virtual void applySky(Matrix<Complex>& screen, const Int wPixel, 
 			  const Vector<Double>& sampling,
 			  const Int wConvSize, const Double wScale,
 			  const Int inner) 
     {(void)screen; (void)wPixel; (void)sampling; (void)wConvSize; (void)wScale; (void)inner;};
 
-    virtual String name() = 0;
-
-    virtual void applySky(Block<CountedPtr<ImageInterface<Float> > >& outputImages,
-			  const VisBuffer& vb, 
-			  const Bool doSquint=True)=0;
-    virtual void applySky(Block<CountedPtr<ImageInterface<Complex> > >& outputImages,
-			  const VisBuffer& vb, 
-			  const Bool doSquint=True)=0;
-    // virtual void applySky(ImageInterface<Float>& twoDPB, 
-    // 			  const VisBuffer& vb, 
-    // 			  const Bool doSquint=True)=0;
-    // virtual void applySky(ImageInterface<Complex>& twoDPB, 
-    // 			  const VisBuffer& vb, 
-    // 			  const Bool doSquint=True)=0;
     //
     // Returns a vector of integers that map each row in the given
     // VisBuffer to an index that is used to pick the appropriate
@@ -97,33 +97,24 @@ namespace casa{
 				 const CoordinateSystem& skyCoord,
 				 const Int& skyNx, const Int& skyNy,
 				 CoordinateSystem& feedCoord) = 0;
-    //				 Vector<Int>& cfStokes) = 0;
 
+    virtual Int getConvSize() = 0;
+    virtual Int getOversampling() = 0;
+    virtual Float getConvWeightSizeFactor() = 0;
+    virtual Float getSupportThreshold() = 0;
+
+    virtual int getVisParams(const VisBuffer& vb) = 0;
     //
-    // The the map of how the VisBuffer polarizations map to the Image
-    // plane polarization.  The latter is determined by the user input
-    // to the imaging module.
+    // The mapping from VisBuffer polarizations map to the Image plane
+    // polarization.  The latter is determined by the user input,
+    // which is passed to the FTMachine in Imager.cc
     //
     // The map is available in the FTMachine which uses this method to
     // set the map for the ATerm object.
     //
     virtual void setPolMap(const Vector<Int>& polMap) {polMap_p_base.resize(0);polMap_p_base=polMap;}
-
-    // virtual void setFeedStokes(const Vector<Int>& feedStokes) = 0;
-    // virtual void setParams(const Vector<Int>& polMap, const Vector<Int>& feedStokes)
-    // {setPolMap(polMap); setFeedStokes(feedStokes);};
-
-    virtual Int getConvSize() = 0;
-    virtual Float getConvWeightSizeFactor() = 0;
-    virtual Int getOversampling() = 0;
-    virtual Float getSupportThreshold() = 0;
-
     virtual void getPolMap(Vector<Int>& polMap) {polMap.resize(0); polMap = polMap_p_base;};
-    // virtual void getFeedStokes(Vector<Int>& feedStokes) = 0;
-    // virtual void getParams(Vector<Int>& polMap, Vector<Int>& feedStokes)
-    // {getPolMap(polMap); getFeedStokes(feedStokes);};
 
-    virtual int getVisParams(const VisBuffer& vb) = 0;
   protected:
     LogIO& logIO() {return logIO_p;}
     LogIO logIO_p;

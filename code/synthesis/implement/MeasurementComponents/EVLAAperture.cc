@@ -108,11 +108,6 @@ namespace casa{
     throw(SynthesisError(mesg.str()));
   }
   
-  // void EVLAAperture::setPolMap(const Vector<Int>& polMap) 
-  // {polMap_p.resize(0);polMap_p=polMap;};
-  void EVLAAperture::setFeedStokes(const Vector<Int>& feedStokes) 
-  {feedStokes_p.resize(0);feedStokes_p=feedStokes;};
-  
   int EVLAAperture::getVisParams(const VisBuffer& vb)
   {
     Double Freq;
@@ -253,26 +248,28 @@ namespace casa{
     return found;
   }
   
-  void EVLAAperture::applySky(Block<CountedPtr<ImageInterface<Complex> > >& outImages,
+  void EVLAAperture::applySky(ImageInterface<Complex>& outImages,
 			      const VisBuffer& vb, 
-			      const Bool doSquint)
+			      const Bool doSquint,
+			      const Int& cfKey)
   {
     VLACalcIlluminationConvFunc vlaPB;
     Long cachesize=(HostInfo::memoryTotal(true)/8)*1024;
     vlaPB.setMaximumCacheSize(cachesize);
     Int bandID=getVisParams(vb);
-    vlaPB.applyPB(*(outImages[0]), vb, bandID, doSquint);
+    vlaPB.applyPB(outImages, vb, bandID, doSquint);
   }
 
-  void EVLAAperture::applySky(Block<CountedPtr<ImageInterface<Float> > >& outImages,
+  void EVLAAperture::applySky(ImageInterface<Float>& outImages,
 			      const VisBuffer& vb, 
-			      const Bool doSquint)
+			      const Bool doSquint,
+			      const Int& cfKey)
   {
     VLACalcIlluminationConvFunc vlaPB;
     Long cachesize=(HostInfo::memoryTotal(true)/8)*1024;
     vlaPB.setMaximumCacheSize(cachesize);
     Int bandID=getVisParams(vb);
-    vlaPB.applyPB(*(outImages[0]), vb, bandID, doSquint);
+    vlaPB.applyPB(outImages, vb, bandID, doSquint);
   }
   
 };

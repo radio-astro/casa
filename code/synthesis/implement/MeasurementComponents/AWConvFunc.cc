@@ -189,15 +189,16 @@ namespace casa{
 	// Apply the PB...
 	//
 	Bool doSquint=True;
-	Block<CountedPtr<ImageInterface<Complex> > > tmpBlock(1);
-	Block<CountedPtr<ImageInterface<Complex> > > tmpPBSqBlock(1);
-	tmpBlock[0]=CountedPtr<ImageInterface<Complex> >(&twoDPB, False);
-	//	ATerm_p->applySky(twoDPB, vb, doSquint);
-	ATerm_p->applySky(tmpBlock, vb, doSquint);
+	// Block<CountedPtr<ImageInterface<Complex> > > tmpBlock(1);
+	// Block<CountedPtr<ImageInterface<Complex> > > tmpPBSqBlock(1);
+	// tmpBlock[0]=CountedPtr<ImageInterface<Complex> >(&twoDPB, False);
+	//	ATerm_p->applySky(tmpBlock, vb, 0, doSquint);
+	//      doSquint=False;
+	//	tmpPBSqBlock[0]=CountedPtr<ImageInterface<Complex> >(&twoDPBSq, False);
+	//	ATerm_p->applySky(tmpPBSqBlock, vb, 0, doSquint);
+	ATerm_p->applySky(twoDPB, vb, doSquint, 0);
 	doSquint = False;
-	tmpPBSqBlock[0]=CountedPtr<ImageInterface<Complex> >(&twoDPBSq, False);
-	//	ATerm_p->applySky(twoDPBSq, vb, doSquint);
-	ATerm_p->applySky(tmpPBSqBlock, vb, doSquint);
+	ATerm_p->applySky(twoDPBSq, vb, doSquint, 0);
 	// {
 	//   ostringstream name;
 	//   name << "twoDPB.before." << iw << ".im";
@@ -502,10 +503,10 @@ namespace casa{
     //
     localPB.set(1.0);
 
-    Block<CountedPtr<ImageInterface<Float > > > tmpBlock(1);
-    tmpBlock[0]=CountedPtr<ImageInterface<Float> >(&localPB, False);
-    //    ATerm_p->applySky(localPB, vb, False);
-    ATerm_p->applySky(tmpBlock, vb, False);
+    // Block<CountedPtr<ImageInterface<Float > > > tmpBlock(1);
+    // tmpBlock[0]=CountedPtr<ImageInterface<Float> >(&localPB, False);
+    // ATerm_p->applySky(tmpBlock, vb, 0, False);
+    ATerm_p->applySky(localPB, vb, False, 0);
 
     IPosition twoDPBShape(localPB.shape());
     TempImage<Complex> localTwoDPB(twoDPBShape,localPB.coordinates());
