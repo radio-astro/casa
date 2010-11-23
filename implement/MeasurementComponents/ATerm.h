@@ -81,13 +81,16 @@ namespace casa{
     //
     // Returns a vector of integers that map each row in the given
     // VisBuffer to an index that is used to pick the appropriate
-    // convolution function plane.
+    // convolution function plane.  It also returns the number of
+    // unique baselines in the nUnique parameter (unique baselines are
+    // defined as the number of baselines each requiring a unique
+    // convolution function).
     //
     // This is required for Heterogeneous antenna arrays (like ALMA)
     // and for all arrays where not all antenna aperture illuminations
     // can be treated as identical.
     //
-    virtual Vector<Int> vbRow2CFKeyMap(const VisBuffer& vb) = 0;
+    virtual Vector<Int> vbRow2CFKeyMap(const VisBuffer& vb, Int& nUnique) = 0;
     virtual Int makePBPolnCoords(const VisBuffer& vb,
 				 const Vector<Int>& polMap,
 				 const Int& convSize,
