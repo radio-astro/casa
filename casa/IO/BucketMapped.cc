@@ -44,7 +44,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   BucketMapped::~BucketMapped()
-  {}
+  {
+      delete [] zeros;
+  }
 
   void BucketMapped::doResync()
   {
@@ -68,7 +70,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                                 Int64(itsCurNrOfBuckets)*itsBucketSize);
     
     while (itsCurNrOfBuckets < itsNewNrOfBuckets) {
-      itsFile->mappedFile()->write(itsBucketSize, zeros.get());
+      itsFile->mappedFile()->write(itsBucketSize, zeros);
       itsCurNrOfBuckets++;
     }
   }
