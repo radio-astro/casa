@@ -127,11 +127,9 @@ namespace casa{
     // no. of vis. poln. planes that will be used in making the user
     // defined Stokes image.
     //
-    Vector<Int> polMap_l, feedStokes_l;
-    ATerm_p->getParams(polMap_l, feedStokes_l);
-    polInUse=ATerm_p->makePBPolnCoords(vb, polMap_l, convSize, convSampling, 
+    polInUse=ATerm_p->makePBPolnCoords(vb, convSize, convSampling, 
 				       image.coordinates(),nx,nx,
-				       coords,feedStokes_l);
+				       coords);//,feedStokes_l);
     //------------------------------------------------------------------
     // Make the sky Stokes PB.  This will be used in the gridding
     // correction

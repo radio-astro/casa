@@ -92,33 +92,42 @@ namespace casa{
     //
     virtual Vector<Int> vbRow2CFKeyMap(const VisBuffer& vb, Int& nUnique) = 0;
     virtual Int makePBPolnCoords(const VisBuffer& vb,
-				 const Vector<Int>& polMap,
 				 const Int& convSize,
 				 const Int& convSampling,
 				 const CoordinateSystem& skyCoord,
 				 const Int& skyNx, const Int& skyNy,
-				 CoordinateSystem& feedCoord,
-				 Vector<Int>& cfStokes) = 0;
+				 CoordinateSystem& feedCoord) = 0;
+    //				 Vector<Int>& cfStokes) = 0;
 
-    virtual void setPolMap(const Vector<Int>& polMap) = 0;
-    virtual void setFeedStokes(const Vector<Int>& feedStokes) = 0;
-    virtual void setParams(const Vector<Int>& polMap, const Vector<Int>& feedStokes)
-    {setPolMap(polMap); setFeedStokes(feedStokes);};
+    //
+    // The the map of how the VisBuffer polarizations map to the Image
+    // plane polarization.  The latter is determined by the user input
+    // to the imaging module.
+    //
+    // The map is available in the FTMachine which uses this method to
+    // set the map for the ATerm object.
+    //
+    virtual void setPolMap(const Vector<Int>& polMap) {polMap_p_base.resize(0);polMap_p_base=polMap;}
+
+    // virtual void setFeedStokes(const Vector<Int>& feedStokes) = 0;
+    // virtual void setParams(const Vector<Int>& polMap, const Vector<Int>& feedStokes)
+    // {setPolMap(polMap); setFeedStokes(feedStokes);};
 
     virtual Int getConvSize() = 0;
     virtual Float getConvWeightSizeFactor() = 0;
     virtual Int getOversampling() = 0;
     virtual Float getSupportThreshold() = 0;
 
-    virtual void getPolMap(Vector<Int>& polMap) = 0;
-    virtual void getFeedStokes(Vector<Int>& feedStokes) = 0;
-    virtual void getParams(Vector<Int>& polMap, Vector<Int>& feedStokes)
-    {getPolMap(polMap); getFeedStokes(feedStokes);};
+    virtual void getPolMap(Vector<Int>& polMap) {polMap.resize(0); polMap = polMap_p_base;};
+    // virtual void getFeedStokes(Vector<Int>& feedStokes) = 0;
+    // virtual void getParams(Vector<Int>& polMap, Vector<Int>& feedStokes)
+    // {getPolMap(polMap); getFeedStokes(feedStokes);};
 
     virtual int getVisParams(const VisBuffer& vb) = 0;
   protected:
     LogIO& logIO() {return logIO_p;}
     LogIO logIO_p;
+    Vector<Int> polMap_p_base;
   };
 
 };

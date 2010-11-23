@@ -898,7 +898,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (cfSource==CFDefs::NOTCACHED)
       {
 	PAIndex_l = abs(cfSource);
-	telescopeConvFunc_p->setParams(polMap, cfStokes);
+	//	telescopeConvFunc_p->setParams(polMap, cfStokes);
+	telescopeConvFunc_p->setPolMap(polMap);
 	telescopeConvFunc_p->makeConvFunction(image,vb,wConvSize,
 					      pa, cfs_p, cfwts_p);
 

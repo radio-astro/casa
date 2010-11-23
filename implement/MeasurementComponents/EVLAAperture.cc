@@ -55,7 +55,8 @@ namespace casa{
       {
 	//	ConvolutionFunction::operator=(other);
 	logIO_p = other.logIO_p;
-	setParams(other.polMap_p, other.feedStokes_p);
+	//	setParams(other.polMap_p_base, other.feedStokes_p);
+	setPolMap(other.polMap_p_base);
 	Diameter_p=other.Diameter_p;
 	Nant_p=other.Nant_p;
 	HPBW=other.HPBW;
@@ -107,8 +108,8 @@ namespace casa{
     throw(SynthesisError(mesg.str()));
   }
   
-  void EVLAAperture::setPolMap(const Vector<Int>& polMap) 
-  {polMap_p.resize(0);polMap_p=polMap;};
+  // void EVLAAperture::setPolMap(const Vector<Int>& polMap) 
+  // {polMap_p.resize(0);polMap_p=polMap;};
   void EVLAAperture::setFeedStokes(const Vector<Int>& feedStokes) 
   {feedStokes_p.resize(0);feedStokes_p=feedStokes;};
   
@@ -163,13 +164,12 @@ namespace casa{
   }
   
   Int EVLAAperture::makePBPolnCoords(const VisBuffer&vb,
-				     const Vector<Int>& polMap,
 				     const Int& convSize,
 				     const Int& convSampling,
 				     const CoordinateSystem& skyCoord,
 				     const Int& skyNx, const Int& skyNy,
-				     CoordinateSystem& feedCoord,
-				     Vector<Int>& cfStokes)
+				     CoordinateSystem& feedCoord)
+  //				     Vector<Int>& cfStokes)
   {
     feedCoord = skyCoord;
     //
@@ -198,8 +198,8 @@ namespace casa{
     // Make an image with circular polarization axis.
     //
     Int NPol=0,M,N=0;
-    M=polMap.nelements();
-    for(Int i=0;i<M;i++) if (polMap(i) > -1) NPol++;
+    M=polMap_p_base.nelements();
+    for(Int i=0;i<M;i++) if (polMap_p_base(i) > -1) NPol++;
     Vector<Int> poln(NPol);
     
     Int index;
@@ -209,11 +209,11 @@ namespace casa{
     N = 0;
     try
       {
-	for(Int i=0;i<M;i++) if (polMap(i) > -1) {poln(N) = vb.corrType()(i);N++;}
+	for(Int i=0;i<M;i++) if (polMap_p_base(i) > -1) {poln(N) = vb.corrType()(i);N++;}
 	StokesCoordinate polnCoord(poln);
 	Int StokesIndex = feedCoord.findCoordinate(Coordinate::STOKES);
 	feedCoord.replaceCoordinate(polnCoord,StokesIndex);
-	cfStokes = poln;
+	//	cfStokes = poln;
       }
     catch(AipsError& x)
       {
