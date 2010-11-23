@@ -64,16 +64,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     Bool findSupport(Array<Complex>& func, Float& threshold,Int& origin, Int& R);
 
-    virtual void applySky(Block<CountedPtr<ImageInterface<Float> > >& outputImages,
+    virtual void applySky(ImageInterface<Float>& outputImages,
 			  const VisBuffer& vb, 
-			  const Bool doSquint=True);
-    virtual void applySky(Block<CountedPtr<ImageInterface<Complex> > >& outputImages,
+			  const Bool doSquint=True,
+			  const Int& cfKey=0);
+    virtual void applySky(ImageInterface<Complex>& outputImages,
 			  const VisBuffer& vb, 
-			  const Bool doSquint=True);
-    // void applySky(ImageInterface<Float>& twoDPB, 
-    // 		  const VisBuffer& vb, const Bool doSquint=True);
-    // void applySky(ImageInterface<Complex>& twoDPB, 
-    // 		  const VisBuffer& vb, const Bool doSquint=True);
+			  const Bool doSquint=True,
+			  const Int& cfKey=0);
 
     int getVisParams(const VisBuffer& vb);
 
@@ -86,15 +84,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			 const CoordinateSystem& skyCoord,
 			 const Int& skyNx, const Int& skyNy,
 			 CoordinateSystem& feedCoord);
-    //			 Vector<Int>& cfStokes);
-    //    virtual void setPolMap(const Vector<Int>& polMap);
-    virtual void setFeedStokes(const Vector<Int>& feedStokes);
+
     virtual void getPolMap(Vector<Int>& polMap) {polMap.resize(0);polMap=polMap_p;};
-    virtual void getFeedStokes(Vector<Int>& feedStokes) 
-    {feedStokes.resize(0);feedStokes = feedStokes_p;};
     virtual Int getConvSize() {return CONVSIZE;};
-    virtual Float getConvWeightSizeFactor() {return CONVWTSIZEFACTOR;};
     virtual Int getOversampling() {return OVERSAMPLING;}
+    virtual Float getConvWeightSizeFactor() {return CONVWTSIZEFACTOR;};
     virtual Float getSupportThreshold() {return THRESHOLD;};
   private:
     Float Diameter_p, Nant_p, HPBW, sigma;
