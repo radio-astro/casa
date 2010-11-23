@@ -49,6 +49,7 @@ import sets
 import socket
 import time
 import os
+import sys
 
 debug = False
 
@@ -180,7 +181,10 @@ def remove(mms_name, subms_name, hostname = ""):
 
     mms = _load(mms_name)
     if not mms.remove(subms_name, hostname):
-        print "%s does not contain a subMS with name %s" % (mms_name, subms_name)
+        hoststr = ""
+        if hostname != "":
+            hoststr = " on host " + str(hostname)
+        print ("%s does not contain a subMS with name %s" % (mms_name, subms_name)) + hoststr
     else:
         f = open(mms_name, "w")
         pickle.dump(mms, f)

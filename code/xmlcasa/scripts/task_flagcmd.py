@@ -16,14 +16,19 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 	# v2.4 Updated STM 2010-10-26 optype unapply
 	# v2.5 Updated STM 2010-11-01 bug fix
 	# v2.6 Updated STM 2010-11-02 bug fix
+	# v2.7 Updated JL  2010-11-23 support for multiMS
 	#
+        if pCASA.is_mms(vis):
+                pCASA.execute("flagcmd", locals())
+                return
+
 	try:
 		from xml.dom import minidom
 	except:
 		raise Exception, 'Failed to load xml.dom.minidom into python'
 
         casalog.origin('flagcmd')
-	casalog.post('You are using flagcmd v2.6 Updated STM 2010-11-02')
+	casalog.post('You are using flagcmd v2.7 Updated JL  2010-11-23')
 
         fg.done()
         fg.clearflagselection(-1)

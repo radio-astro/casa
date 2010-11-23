@@ -6,6 +6,7 @@ import commands
 import string
 import atexit
 import time
+import socket
 import types
 import inspect
 import casadef
@@ -92,6 +93,38 @@ class cluster(object):
       #atexit.register(self.stop_cluster)
       atexit.register(cluster.stop_cluster,self)
 
+   def _ip(self, host):
+      """Returns a unique IP address of the given hostname,
+      i.e. not 127.0.0.1 for localhost but localhost's global IP"""
+      
+      ip = socket.gethostbyname(host)
+      
+      if ip == "127.0.0.1":
+         ip = socket.gethostbyname(socket.gethostname())
+         
+      return ip
+
+   def _cp(self, source, host, destination):
+      """Creates the command to copy the source file to the destination file and destination host,
+      using either scp or cp for the localhost. This is to avoid the requirement of password-less ssh
+      in a single host environment."""
+
+      if self._ip(host) == self._ip("localhost"):
+         cmd = ['cp', source, destination]
+      else:
+         cmd = ['scp', source, host + ":" + destination]
+
+      return cmd
+
+   def _do(self, host, cmd):
+      """Creates the command line to execute the give command on the given host.
+      If and only if the host is not localhost, ssh is used."""
+
+      if self._ip(host) == self._ip("localhost"):
+         return cmd.split(" ")
+      else:
+         return ['ssh', '-f', '-q', '-x', host, cmd]
+
    def start_engine(self, node_name, num_engine, work_dir=None):
       '''Start engines on the given node.
       @param node_name The name of the computer to host the engines.
@@ -111,17 +144,18 @@ class cluster(object):
       #print 'engines', self.engines
       out=open('/dev/null', 'w')
       err=open('/dev/null', 'w')
-      dist=node_name+':'+self.__prefix+self.__cluster_rc_file
-      #print 'dist=', dist
-      cmd = ['scp', self.__ipythondir+'/'+self.__cluster_rc_file, dist]
+      cmd = self._cp(self.__ipythondir+'/'+self.__cluster_rc_file,
+                node_name,
+                self.__prefix+self.__cluster_rc_file)
       p=Popen(cmd, stdout=out, stderr=err)
       sts = os.waitpid(p.pid, 0)
       if sts[1] != 0:
          print >> sys.stderr, "WARNING: Command failed:", " ".join(cmd)
       
-      dist=node_name+':'+self.__prefix+self.__start_engine_file
-      #print 'dist=', dist
-      cmd = ['scp', self.__ipythondir+'/'+self.__start_engine_file, dist]
+      cmd = self._cp(self.__ipythondir+'/'+self.__start_engine_file,
+                node_name,
+                self.__prefix+self.__start_engine_file)
+
       p=Popen(cmd, stdout=out, stderr=err)
       out.close()
       err.close()
@@ -131,7 +165,7 @@ class cluster(object):
       for i in range(1, num_engine+1):
          args='bash '+self.__prefix+self.__start_engine_file
          #print 'args=', args
-         cmd = ['ssh', '-f', '-q', '-x', node_name, args]
+         cmd = self._do(node_name, args)
          q=Popen(cmd)
          sts = os.waitpid(q.pid, 0)
          if sts[1] != 0:
@@ -346,15 +380,17 @@ class cluster(object):
 
       out=open('/dev/null', 'w')
       err=open('/dev/null', 'w')
-      dist=node_name+':'+self.__prefix+self.__stop_engine_file
-      #print 'dist=', dist
-      p=Popen(['scp', self.__ipythondir+'/'+self.__stop_engine_file, dist], stdout=out, stderr=err)
+      cmd = self._cp(self.__ipythondir+'/'+self.__stop_engine_file,
+                node_name,
+                self.__prefix+self.__stop_engine_file)
+
+      p=Popen(cmd, stdout=out, stderr=err)
       out.close()
       err.close()
       sts = os.waitpid(p.pid, 0)
       args='bash '+self.__prefix+self.__stop_engine_file
       #print 'args=', args
-      Popen(['ssh', '-f', '-q', '-x', node_name, args])
+      Popen(self._do(node_name, args))
       print 'stop engine %d on %s\n' % (engine_id, node_name)
       self.__engines=self.__update_cluster_info(-1)
 
@@ -380,15 +416,16 @@ class cluster(object):
 
       out=open('/dev/null', 'w')
       err=open('/dev/null', 'w')
-      dist=node_name+':'+self.__prefix+self.__stop_node_file
-      #print 'dist=', dist
-      p=Popen(['scp', self.__ipythondir+'/'+self.__stop_node_file, dist], stdout=out, stderr=err)
+      cmd = self._cp(self.__ipythondir+'/'+self.__stop_node_file,
+                node_name,
+                self.__prefix+self.__stop_node_file)
+      p=Popen(cmd, stdout=out, stderr=err)
       out.close()
       err.close()
       sts = os.waitpid(p.pid, 0)
       args='bash '+self.__prefix+self.__stop_node_file
       #print 'args=', args
-      Popen(['ssh', '-f', '-q', '-x', node_name, args])
+      Popen(self._do(node_name, args))
       print 'stop engines on %s\n' % node_name
       # what to do with client.kill() ?
 
@@ -415,15 +452,16 @@ class cluster(object):
       #node_name=os.environ['HOSTNAME']
       out=open('/dev/null', 'w')
       err=open('/dev/null', 'w')
-      dist=node_name+':'+self.__prefix+self.__stop_controller_file
-      #print 'dist=', dist
-      p=Popen(['scp', self.__ipythondir+'/'+self.__stop_controller_file, dist], stdout=out, stderr=err)
+      cmd = self._cp(self.__ipythondir+'/'+self.__stop_controller_file,
+                node_name,
+                self.__prefix+self.__stop_controller_file)
+      p=Popen(cmd, stdout=out, stderr=err)
       out.close()
       err.close()
       sts = os.waitpid(p.pid, 0)
       args='bash '+self.__prefix+self.__stop_controller_file
       #print 'args=', args
-      Popen(['ssh', '-f', '-q', '-x', node_name, args])
+      Popen(self._do(node_name, args))
 
       #cmd="ps -ef | grep `whoami` | grep ipcontroller | grep -v grep | awk '{print $2}' | xargs kill -9"
       #print 'cmd=', cmd

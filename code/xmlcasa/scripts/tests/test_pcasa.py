@@ -66,6 +66,10 @@ class pcasa_test(unittest.TestCase):
                  antenna = "8",
                  unflag=True,
                  flagbackup = False)
+
+
+        flagcmd(vis, optype="list")
+
         
         for log in pCASA.pc.cluster.get_casalogs():
             assert os.system("cat " + log) == 0
