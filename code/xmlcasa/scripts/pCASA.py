@@ -13,10 +13,12 @@ Example usage:
       pCASA.add("my.ms", "spw3.ms")
 
    When no hostname is given (spw3.ms), the MS is assumed to be available
-   from a locally mounted disk. When finished, the contents of the multiMS
-   can be shown with
+   from localhost. When finished, the contents of the multiMS can be shown
+   with
 
       pCASA.list("my.ms")
+
+   Named subMS entries can be removed with pCASA.remove()
 
    2) Now the following
 

@@ -35,6 +35,7 @@ test_imtrans                    dmehring@nrao.edu
 test_imval                      dmehring@nrao.edu
 test_listhistory                scastro@eso.org
 #test_listvis                    scastro@eso.org
+test_pcasa                      jmlarsen@eso.org
 test_plotants                   scastro@eso.org
 #test_plotms                     dmehring@nrao.edu
 test_report                     jmlarsen@eso.org
