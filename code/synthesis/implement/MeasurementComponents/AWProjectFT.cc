@@ -857,8 +857,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				     const VisBuffer& vb)
   {
     if (!paChangeDetector.changed(vb,0)) return;
-    Int PAIndex_l=0, cfSource=NOTCACHED;
+    Int PAIndex_l=0, cfSource=CFDefs::NOTCACHED;
     CoordinateSystem ftcoords;
+    // Think of a generic call to get the key-values.  And a
+    // overloadable method (or an externally supplied one?) to convert
+    // the values to key-ids.  That will ensure that AWProjectFT
+    // remains the A-Projection algorithm implementation configurable
+    // by the behaviour of the supplied objects.
     Float pa=getVBPA(vb);
     Bool pbMade=False;
     logIO() << LogOrigin("AWProjectFT", "findConvFunction")  << LogIO::NORMAL;
@@ -885,11 +890,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // Loacate the required conv. function.
     //
-    cfSource=cfCache_p->locateConvFunction(wConvSize, Quantity(pa,"rad"),
+    Int mosXPos=0, mosYPos=0;
+    cfSource=cfCache_p->locateConvFunction(cfs_p, wConvSize, Quantity(pa,"rad"),
 					   paChangeDetector.getParAngleTolerance(),
-					   cfs_p);
+					   mosXPos, mosYPos);
     // If conv. func. not found in the cache, make one and cache it.
-    if (cfSource==NOTCACHED)
+    if (cfSource==CFDefs::NOTCACHED)
       {
 	PAIndex_l = abs(cfSource);
 	telescopeConvFunc_p->setParams(polMap, cfStokes);
@@ -915,7 +921,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // not found, make one and cache it.
     //
     if (avgPB_p.null()) avgPB_p = new TempImage<Float>();
-    if (cfCache_p->loadAvgPB(*avgPB_p) == NOTCACHED)
+    if (cfCache_p->loadAvgPB(*avgPB_p) == CFDefs::NOTCACHED)
       {
 	pbMade     = telescopeConvFunc_p->makeAverageResponse(vb, image, *avgPB_p);
 	normalizeAvgPB();	
@@ -930,7 +936,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // Write some useful info. to the logger.
     //
-    if ((!convFuncCacheReady) && (cfSource != MEMCACHE))
+    if ((!convFuncCacheReady) && (cfSource != CFDefs::MEMCACHE))
       {
 	//
 	// Compute the aggregate memory used by the cached convolution
