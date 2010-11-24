@@ -50,6 +50,7 @@
 #include <casa/Utilities/GenSort.h>
 #include <casa/System/AppInfo.h>
 #include <casa/System/ProgressMeter.h>
+#include <casa/Quanta/QuantumHolder.h>
 #include <msvis/MSVis/VisSet.h>
 //#include <msvis/MSVis/VisBuffer.h>
 //#include <msvis/MSVis/VisibilityIterator.h>
@@ -3240,6 +3241,352 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
   }
 
+  Bool SubMS::convertGridPars(LogIO& os,
+			      const String& mode, 
+			      const int nchan, 
+			      const String& start, 
+			      const String& width,
+			      const String& interp, 
+			      const String& restfreq, 
+			      const String& outframe,
+			      const String& veltype,
+			      String& t_mode,
+			      String& t_outframe,
+			      String& t_regridQuantity,
+			      Double& t_restfreq,
+			      String& t_regridInterpMeth,
+			      Double& t_cstart, 
+			      Double& t_bandwidth,
+			      Double& t_cwidth,
+			      Bool& t_centerIsStart, 
+			      Bool& t_startIsEnd,			      
+			      Int& t_nchan,
+			      Int& t_width,
+			      Int& t_start
+			      ){
+    Bool rstat(False);
+    
+    try {
+      
+      os << LogOrigin("SubMS", "convertGridPars");
+      
+      casa::QuantumHolder qh;
+      String error;
+
+      t_mode = mode;
+      t_restfreq = 0.; 
+      if(!restfreq.empty() && !(restfreq=="[]")){
+	if(qh.fromString(error, restfreq)){
+	  t_restfreq = qh.asQuantity().getValue("Hz");
+	}
+	else{
+	  os << LogIO::SEVERE  << "restfreq: " << error << LogIO::POST; 	  
+	  return False;
+	}
+      }
+      
+      // Determine grid
+      t_cstart = -9e99; // default value indicating that the original start of the SPW should be used
+      t_bandwidth = -1.; // default value indicating that the original width of the SPW should be used
+      t_cwidth = -1.; // default value indicating that the original channel width of the SPW should be used
+      t_nchan = -1; 
+      t_width = 0;
+      t_start = -1;
+      t_startIsEnd = False; // False means that start specifies the lower end in frequency (default)
+      // True means that start specifies the upper end in frequency
+
+      if(!start.empty() && !(start=="[]")){ // start was set
+	if(t_mode == "channel"){
+	  t_start = atoi(start.c_str());
+	}
+	if(t_mode == "channel_b"){
+	  t_cstart = Double(atoi(start.c_str()));
+	}
+	else if(t_mode == "frequency"){
+	  if(qh.fromString(error, start)){
+	    t_cstart = qh.asQuantity().getValue("Hz");
+	  }
+	  else{
+	    os << LogIO::SEVERE  << "start: " << error << LogIO::POST; 	  
+	    return False;
+	  }	
+	}
+	else if(t_mode == "velocity"){
+	  if(qh.fromString(error, start)){
+	    t_cstart = qh.asQuantity().getValue("m/s");
+	  }
+	  else{
+	    os << LogIO::SEVERE << "start: " << error << LogIO::POST; 	  
+	    return False;
+	  }	
+	}
+      }
+      if(!width.empty() && !(width=="[]")){ // channel width was set
+	if(t_mode == "channel"){
+	  Int w = atoi(width.c_str());
+	  t_width = abs(w);
+	  if(w<0){
+	    t_startIsEnd = True;
+	  }
+	}
+	else if(t_mode == "channel_b"){
+	  Double w = atoi(width.c_str());
+	  t_cwidth = abs(w);
+	  if(w<0){
+	    t_startIsEnd = True;
+	  }	
+	}
+	else if(t_mode == "frequency"){
+	  if(qh.fromString(error, width)){
+	    Double w = qh.asQuantity().getValue("Hz");
+	    t_cwidth = abs(w);
+	    if(w<0){
+	      t_startIsEnd = True;
+	    }	
+	  }
+	  else{
+	    os << LogIO::SEVERE << "width: " << error << LogIO::POST; 	  
+	    return False;
+	  }	
+	}
+	else if(t_mode == "velocity"){
+	  if(qh.fromString(error, width)){
+	    Double w = qh.asQuantity().getValue("m/s");
+	    t_cwidth = abs(w);
+	    if(w>=0){
+	      t_startIsEnd = True; 
+	    }		
+	  }
+	  else{
+	    os << LogIO::SEVERE << "width: " << error << LogIO::POST; 	  
+	    return False;	    
+	  }
+	}
+      }
+      if(nchan > 0){ // number of output channels was set
+	if(t_mode == "channel_b"){
+	  if(t_cwidth>0){
+	    t_bandwidth = Double(nchan*t_cwidth);
+	  }
+	  else{
+	    t_bandwidth = Double(nchan);	  
+	  }
+	}
+	else{
+	  t_nchan = nchan;
+	}
+      }
+      
+      if(t_mode == "channel"){
+	t_regridQuantity = "freq";
+      }
+      else if(t_mode == "channel_b"){
+	t_regridQuantity = "chan";
+      }
+      else if(t_mode == "frequency"){
+	t_regridQuantity = "freq";
+      }
+      else if(t_mode == "velocity"){
+	if(t_restfreq == 0.){
+	  os << LogIO::SEVERE << "Need to set restfreq in velocity mode." << LogIO::POST; 
+	  return False;
+	}	
+	t_regridQuantity = "vrad";
+	if(veltype == "optical"){
+	  t_regridQuantity = "vopt";
+	}
+	else if(veltype != "radio"){
+	  os << LogIO::WARN << "Invalid velocity type "<< veltype 
+	     << ", setting type to \"radio\"" << LogIO::POST; 
+	}
+      }   
+      else{
+	os << LogIO::WARN << "Invalid mode " << t_mode << LogIO::POST;
+	return False;
+      }
+      
+      t_outframe=outframe;
+      t_regridInterpMeth=interp;
+      t_centerIsStart = True;
+            
+      // end prepare regridding parameters
+      
+      rstat = True;
+
+    } catch (AipsError x) {
+      os << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+      rstat = False;
+    }
+    return rstat;
+  }
+
+
+  Bool SubMS::calcChanFreqs(LogIO& os,
+			    Vector<Double>& newCHAN_FREQ, 
+			    Vector<Double>& newCHAN_WIDTH,
+			    const Vector<Double>& oldCHAN_FREQ, 
+			    const Vector<Double>& oldCHAN_WIDTH,
+			    const MDirection  phaseCenter,
+			    const MFrequency::Types theOldRefFrame,
+			    const MEpoch theObsTime,
+			    const MPosition mObsPos,
+			    const String& mode, 
+			    const int nchan, 
+			    const String& start, 
+			    const String& width,
+			    const String& restfreq, 
+			    const String& outframe,
+			    const String& veltype
+			    ){
+
+    Vector<Double> newChanLoBound; 
+    Vector<Double> newChanHiBound;
+    String t_phasec;
+
+    String t_mode;
+    String t_outframe;
+    String t_regridQuantity;
+    Double t_restfreq;
+    String t_regridInterpMeth;
+    Double t_cstart;
+    Double t_bandwidth;
+    Double t_cwidth;
+    Bool t_centerIsStart;
+    Bool t_startIsEnd;
+    Int t_nchan;
+    Int t_width;
+    Int t_start;
+
+    if(!convertGridPars(os,
+			mode, 
+			nchan, 
+			start, 
+			width,
+			"linear", // a dummy value in this context
+			restfreq, 
+			outframe,
+			veltype,
+			////// output ////
+			t_mode,
+			t_outframe,
+			t_regridQuantity,
+			t_restfreq,
+			t_regridInterpMeth,
+			t_cstart, 
+			t_bandwidth,
+			t_cwidth,
+			t_centerIsStart, 
+			t_startIsEnd,			      
+			t_nchan,
+			t_width,
+			t_start
+			)
+       ){
+      // an error occured
+      return False;
+    }
+
+    // reference frame transformation
+    Bool needTransform = True;
+    MFrequency::Types theFrame;
+    if(outframe==""){ // no ref frame given 
+      // keep the reference frame as is
+      theFrame = theOldRefFrame;
+      needTransform = False;
+    }
+    else if(!MFrequency::getType(theFrame, outframe)){
+      os << LogIO::SEVERE
+	 << "Parameter \"outframe\" value " << outframe << " is invalid." 
+	 << LogIO::POST;
+      return False;
+    }
+    else if (theFrame == theOldRefFrame){
+      needTransform = False;
+    }
+
+    uInt oldNUM_CHAN = oldCHAN_FREQ.size();
+    if(oldNUM_CHAN == 0){
+      newCHAN_FREQ.resize(0);
+      newCHAN_WIDTH.resize(0);
+      return True;
+    }
+
+    if(oldNUM_CHAN != oldCHAN_WIDTH.size()){
+      os << LogIO::SEVERE
+	 << "Internal error: inconsistent dimensions of input channel freq and width arrays." 
+	 << LogIO::POST;
+      return False;
+    }      
+
+    Vector<Double> transNewXin;
+    Vector<Double> transCHAN_WIDTH(oldNUM_CHAN);
+
+    if(needTransform){
+      transNewXin.resize(oldNUM_CHAN);
+      // set up conversion
+      Unit unit(String("Hz"));
+      MFrequency::Ref fromFrame = MFrequency::Ref(theOldRefFrame, MeasFrame(phaseCenter, mObsPos, theObsTime));
+      MFrequency::Ref toFrame = MFrequency::Ref(theFrame, MeasFrame(phaseCenter, mObsPos, theObsTime));
+      MFrequency::Convert freqTrans(unit, fromFrame, toFrame);
+      
+      for(uInt i=0; i<oldNUM_CHAN; i++){
+	transNewXin[i] = freqTrans(oldCHAN_FREQ[i]).get(unit).getValue();
+	transCHAN_WIDTH[i] = freqTrans(oldCHAN_FREQ[i] +
+				       oldCHAN_WIDTH[i]/2.).get(unit).getValue()
+	  - freqTrans(oldCHAN_FREQ[i] -
+		      oldCHAN_WIDTH[i]/2.).get(unit).getValue(); // eliminate possible offsets
+      }
+    }
+    else {
+      // just copy
+      transNewXin.assign(oldCHAN_FREQ);
+      transCHAN_WIDTH.assign(oldCHAN_WIDTH);
+    }
+
+    // calculate new grid
+
+    String message;
+
+    if(!regridChanBounds(newChanLoBound, 
+			 newChanHiBound,
+			 t_cstart,  
+			 t_bandwidth, 
+			 t_cwidth, 
+			 t_restfreq,
+			 t_regridQuantity,
+			 transNewXin, 
+			 transCHAN_WIDTH,
+			 message,
+			 t_centerIsStart,
+			 t_startIsEnd,
+			 t_nchan,
+			 t_width,
+			 t_start
+			 )
+       ){ // there was an error
+      os << LogIO::WARN << message << LogIO::POST;
+      return False;
+    }
+    
+    os << LogIO::NORMAL << message << LogIO::POST;
+
+    // we have a useful set of channel boundaries
+    uInt newNUM_CHAN = newChanLoBound.size();
+    
+    // complete the calculation of the new channel centers and widths
+    // from newNUM_CHAN, newChanLoBound, and newChanHiBound 
+    newCHAN_FREQ.resize(newNUM_CHAN);
+    newCHAN_WIDTH.resize(newNUM_CHAN);
+    for(uInt i=0; i<newNUM_CHAN; i++){
+      newCHAN_FREQ[i] = (newChanLoBound[i]+newChanHiBound[i])/2.;
+      newCHAN_WIDTH[i] = newChanHiBound[i]-newChanLoBound[i];
+    }
+    
+    return True;
+
+  }
+  
+
   Bool SubMS::setRegridParameters(vector<Int>& oldSpwId,
 				  vector<Int>& oldFieldId,
 				  vector<Int>& newDataDescId,
@@ -3975,24 +4322,24 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       uInt nSpwsToCombine = spwsToCombine.size();
 
       // prepare access to the SPW table
-      MSSpWindowColumns SPWCols(spwtable);
-      ScalarColumn<Int> numChanCol = SPWCols.numChan(); 
-      ArrayColumn<Double> chanFreqCol = SPWCols.chanFreq(); 
-      ArrayColumn<Double> chanWidthCol = SPWCols.chanWidth(); 
-      //    ArrayMeasColumn<MFrequency> chanFreqMeasCol = SPWCols.chanFreqMeas();
-      ScalarColumn<Int> measFreqRefCol = SPWCols.measFreqRef();
-      ArrayColumn<Double> effectiveBWCol = SPWCols.effectiveBW();   
-      ScalarColumn<Double> refFrequencyCol = SPWCols.refFrequency(); 
-      //    ScalarMeasColumn<MFrequency> refFrequencyMeasCol = SPWCols.refFrequencyMeas(); 
-      ArrayColumn<Double> resolutionCol = SPWCols.resolution(); 
-      ScalarColumn<Double> totalBandwidthCol = SPWCols.totalBandwidth();
+      ROMSSpWindowColumns SPWColrs(spwtable);
+      ROScalarColumn<Int> numChanColr = SPWColrs.numChan(); 
+      ROArrayColumn<Double> chanFreqColr = SPWColrs.chanFreq(); 
+      ROArrayColumn<Double> chanWidthColr = SPWColrs.chanWidth(); 
+      //    ArrayMeasColumn<MFrequency> chanFreqMeasColr = SPWColrs.chanFreqMeas();
+      ROScalarColumn<Int> measFreqRefColr = SPWColrs.measFreqRef();
+      ROArrayColumn<Double> effectiveBWColr = SPWColrs.effectiveBW();   
+      ROScalarColumn<Double> refFrequencyColr = SPWColrs.refFrequency(); 
+      //    ScalarMeasColumn<MFrequency> refFrequencyMeasColr = SPWColrs.refFrequencyMeas(); 
+      ROArrayColumn<Double> resolutionColr = SPWColrs.resolution(); 
+      ROScalarColumn<Double> totalBandwidthColr = SPWColrs.totalBandwidth();
 
       // create a list of the spw ids sorted by first channel frequency
       vector<Int> spwsSorted(origNumSPWs);
       {
 	Double* firstFreq = new Double[origNumSPWs];
 	for(uInt i=0; (Int)i<origNumSPWs; i++){
-	  Vector<Double> CHAN_FREQ(chanFreqCol(i));
+	  Vector<Double> CHAN_FREQ(chanFreqColr(i));
 	  firstFreq[i] = CHAN_FREQ(0);
 	}
 	Sort sort;
@@ -4005,27 +4352,17 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	delete[] firstFreq;
       }
 
-      // Create new row in the SPW table (with ID nextSPWId) by copying
-      // all information from row theSPWId
-      if(!spwtable.canAddRow()){
-	os << LogIO::WARN
-	   << "Unable to add new row to SPECTRAL_WINDOW table. Cannot proceed with spwCombine ..." 
-	   << LogIO::POST;
-	return False; 
-      }
-      TableRow SPWRow(spwtable);
       Int id0 = spwsSorted[0];
-      TableRecord spwRecord = SPWRow.get(id0);
 
-      Int newNUM_CHAN = numChanCol(id0);
-      newCHAN_FREQ.assign(chanFreqCol(id0));
-      newCHAN_WIDTH.assign(chanWidthCol(id0));
-      Vector<Double> newEFFECTIVE_BW(effectiveBWCol(id0));
-      Double newREF_FREQUENCY(refFrequencyCol(id0));
-      //MFrequency newREF_FREQUENCY = refFrequencyMeasCol(id0);
-      Int newMEAS_FREQ_REF = measFreqRefCol(id0);
-      Vector<Double> newRESOLUTION(resolutionCol(id0));
-      Double newTOTAL_BANDWIDTH = totalBandwidthCol(id0);
+      Int newNUM_CHAN = numChanColr(id0);
+      newCHAN_FREQ.assign(chanFreqColr(id0));
+      newCHAN_WIDTH.assign(chanWidthColr(id0));
+      Vector<Double> newEFFECTIVE_BW(effectiveBWColr(id0));
+      Double newREF_FREQUENCY(refFrequencyColr(id0));
+      //MFrequency newREF_FREQUENCY = refFrequencyMeasColr(id0);
+      Int newMEAS_FREQ_REF = measFreqRefColr(id0);
+      Vector<Double> newRESOLUTION(resolutionColr(id0));
+      Double newTOTAL_BANDWIDTH = totalBandwidthColr(id0);
 
       vector<Int> averageN; // for each new channel store the number of old channels to average over
       vector<vector<Int> > averageWhichSPW; // for each new channel store the
@@ -4062,15 +4399,15 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       for(uInt i=1; i<nSpwsToCombine; i++){
 	Int idi = spwsSorted[i];
       
-	Int newNUM_CHANi = numChanCol(idi);
-	Vector<Double> newCHAN_FREQi(chanFreqCol(idi));
-	Vector<Double> newCHAN_WIDTHi(chanWidthCol(idi));
-	Vector<Double> newEFFECTIVE_BWi(effectiveBWCol(idi));
-	//Double newREF_FREQUENCYi(refFrequencyCol(idi));
-	//MFrequency newREF_FREQUENCYi = refFrequencyMeasCol(idi);
-	Int newMEAS_FREQ_REFi = measFreqRefCol(idi);
-	Vector<Double> newRESOLUTIONi(resolutionCol(idi));
-	//Double newTOTAL_BANDWIDTHi = totalBandwidthCol(idi);
+	Int newNUM_CHANi = numChanColr(idi);
+	Vector<Double> newCHAN_FREQi(chanFreqColr(idi));
+	Vector<Double> newCHAN_WIDTHi(chanWidthColr(idi));
+	Vector<Double> newEFFECTIVE_BWi(effectiveBWColr(idi));
+	//Double newREF_FREQUENCYi(refFrequencyColr(idi));
+	//MFrequency newREF_FREQUENCYi = refFrequencyMeasColr(idi);
+	Int newMEAS_FREQ_REFi = measFreqRefColr(idi);
+	Vector<Double> newRESOLUTIONi(resolutionColr(idi));
+	//Double newTOTAL_BANDWIDTHi = totalBandwidthColr(idi);
 
 	ostringstream oss; // needed for iomanip functions
 	oss << "   SPW " << std::setw(3) << idi << ": " << std::setw(5) << newNUM_CHANi 
@@ -4355,6 +4692,20 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	return True;
       }
 
+      // now need write access
+      MSSpWindowColumns SPWCols(spwtable);
+      ScalarColumn<Int> numChanCol = SPWCols.numChan(); 
+      ArrayColumn<Double> chanFreqCol = SPWCols.chanFreq(); 
+      ArrayColumn<Double> chanWidthCol = SPWCols.chanWidth(); 
+      //    ArrayMeasColumn<MFrequency> chanFreqMeasCol = SPWCols.chanFreqMeas();
+      ScalarColumn<Int> measFreqRefCol = SPWCols.measFreqRef();
+      ArrayColumn<Double> effectiveBWCol = SPWCols.effectiveBW();   
+      ScalarColumn<Double> refFrequencyCol = SPWCols.refFrequency(); 
+      //    ScalarMeasColumn<MFrequency> refFrequencyMeasCol = SPWCols.refFrequencyMeas(); 
+      ArrayColumn<Double> resolutionCol = SPWCols.resolution(); 
+      ScalarColumn<Double> totalBandwidthCol = SPWCols.totalBandwidth();
+
+
       os << LogIO::NORMAL << "Combined SPW will have " << newNUM_CHAN << " channels. May change in later regridding." << LogIO::POST;
 
 //       // print channel fractions for debugging
@@ -4366,6 +4717,17 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 // 	}
 //       }	
 
+      // Create new row in the SPW table (with ID nextSPWId) by copying
+      // all information from row theSPWId
+      if(!spwtable.canAddRow()){
+	os << LogIO::WARN
+	   << "Unable to add new row to SPECTRAL_WINDOW table. Cannot proceed with spwCombine ..." 
+	   << LogIO::POST;
+	return False; 
+      }
+
+      TableRow SPWRow(spwtable);
+      TableRecord spwRecord = SPWRow.get(id0);
 
       // write new spw to spw table (ID =  newSpwId)
       spwtable.addRow();

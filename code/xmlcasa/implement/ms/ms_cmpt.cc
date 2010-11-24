@@ -33,7 +33,6 @@
 #include <casa/Exceptions/Error.h>
 #include <ms_cmpt.h>
 #include <xmlcasa/ms/Statistics.h>
-#include <xmlcasa/ms/GridCalc.h>
 #include <msfits/MSFits/MSFitsInput.h>
 #include <msfits/MSFits/MSFitsOutput.h>
 #include <msfits/MSFits/MSFitsIDI.h>
@@ -1267,30 +1266,30 @@ ms::cvel(const std::string& mode,
 
     // go over the remaining grid parameters and consolidate them
 
-    if(!GridCalc::convertGridPars(*itsLog,
-				  mode, 
-				  nchan, 
-				  start, 
-				  width,
-				  interp, 
-				  restfreq, 
-				  outframe,
-				  veltype,
-				  ////// output ////
-				  t_mode,
-				  t_outframe,
-				  t_regridQuantity,
-				  t_restfreq,
-				  t_regridInterpMeth,
-				  t_cstart, 
-				  t_bandwidth,
-				  t_cwidth,
-				  t_centerIsStart, 
-				  t_startIsEnd,			      
-				  t_nchan,
-				  t_width,
-				  t_start
-				  )
+    if(!SubMS::convertGridPars(*itsLog,
+			       mode, 
+			       nchan, 
+			       start.toString(), 
+			       width.toString(),
+			       interp, 
+			       restfreq.toString(), 
+			       outframe,
+			       veltype,
+			       ////// output ////
+			       t_mode,
+			       t_outframe,
+			       t_regridQuantity,
+			       t_restfreq,
+			       t_regridInterpMeth,
+			       t_cstart, 
+			       t_bandwidth,
+			       t_cwidth,
+			       t_centerIsStart, 
+			       t_startIsEnd,			      
+			       t_nchan,
+			       t_width,
+			       t_start
+			       )
        ){
       // an error occured
       return False;
@@ -1535,201 +1534,205 @@ ms::cvelfreqs(const std::vector<int>& spwids,
 	      )
 {
   std::vector<double> rval(0); // the new channel centers
-  
+
   try {
+
+    if(!detached()){
     
-    *itsLog << LogOrigin("ms", "cvelfreqs");
-    
-    Vector<Double> newCHAN_FREQ; 
-    Vector<Double> newCHAN_WIDTH;
-    
-
-    ROMSMainColumns mainCols(*itsMS);
-    ROScalarColumn<Double> timeCol(mainCols.time());
-    ROScalarColumn<Int> ddCol(mainCols.dataDescId());
-    ROScalarColumn<Int> fieldCol(mainCols.fieldId());
-
-    ROMSDataDescColumns DDCols(itsMS->dataDescription());
-    ROScalarColumn<Int> spwidCol(DDCols.spectralWindowId());
-
-    ROMSSpWindowColumns SPWCols(itsMS->spectralWindow());
-    ROMSFieldColumns FIELDCols(itsMS->field());
-    ROMSAntennaColumns ANTCols(itsMS->antenna());
-
-    // extract grid from SPW given by spwids
-    Vector<Double> oldCHAN_FREQ; 
-    Vector<Double> oldCHAN_WIDTH;
-
-    if(spwids.size() == 1){ // only one spw selected
-      oldCHAN_FREQ.assign(SPWCols.chanFreq()(spwids[0])); 
-      oldCHAN_WIDTH.assign(SPWCols.chanWidth()(spwids[0]));
-    }
-    else if(spwids.size() > 1){ // several ids selected
-      SubMS theMS(*itsMS);
-      Vector<Int> spwidv(spwids);
-      if(!theMS.combineSpws(spwidv,
-			    True, // dont't modify the MS
-			    oldCHAN_FREQ,
-			    oldCHAN_WIDTH)){
-      	*itsLog << LogIO::SEVERE << "Error combining SPWs." << LogIO::POST;
-	return rval;
-      }	
-    }
-    else{
+      *itsLog << LogOrigin("ms", "cvelfreqs");
+      
+      Vector<Double> newCHAN_FREQ; 
+      Vector<Double> newCHAN_WIDTH;
+      
+      
+      ROMSMainColumns mainCols(*itsMS);
+      ROScalarColumn<Double> timeCol(mainCols.time());
+      ROScalarColumn<Int> ddCol(mainCols.dataDescId());
+      ROScalarColumn<Int> fieldCol(mainCols.fieldId());
+      
+      ROMSDataDescColumns DDCols(itsMS->dataDescription());
+      ROScalarColumn<Int> spwidCol(DDCols.spectralWindowId());
+      
+      ROMSSpWindowColumns SPWCols(itsMS->spectralWindow());
+      ROMSFieldColumns FIELDCols(itsMS->field());
+      ROMSAntennaColumns ANTCols(itsMS->antenna());
+      
+      // extract grid from SPW given by spwids
+      Vector<Double> oldCHAN_FREQ; 
+      Vector<Double> oldCHAN_WIDTH;
+      
+      if(spwids.size() == 1){ // only one spw selected
+	oldCHAN_FREQ.assign(SPWCols.chanFreq()(spwids[0])); 
+	oldCHAN_WIDTH.assign(SPWCols.chanWidth()(spwids[0]));
+      }
+      else if(spwids.size() > 1){ // several ids selected
+	SubMS theMS(*itsMS);
+	Vector<Int> spwidv(spwids);
+	if(!theMS.combineSpws(spwidv,
+			      True, // dont't modify the MS
+			      oldCHAN_FREQ,
+			      oldCHAN_WIDTH)){
+	  *itsLog << LogIO::SEVERE << "Error combining SPWs." << LogIO::POST;
+	  return rval;
+	}	
+      }
+      else{
       	*itsLog << LogIO::NORMAL << "Zero SPWs selected." << LogIO::POST;
 	return rval;
-    }
-
-    // determine phase center
-    casa::MDirection phaseCenter;
-    Int phasec_fieldid = -1;
-    String t_phasec = toCasaString(phasec);
-
-    //If phasecenter is a simple numeric value then it's taken as a fieldid 
-    //otherwise its converted to a MDirection
-    if(phasec.type()==::casac::variant::DOUBLEVEC 
-       || phasec.type()==::casac::variant::DOUBLE
-       || phasec.type()==::casac::variant::INTVEC
-       || phasec.type()==::casac::variant::INT){
-      phasec_fieldid = phasec.toInt();	
-      if(phasec_fieldid >= (Int)itsMS->field().nrow() || phasec_fieldid < 0){
-	*itsLog << LogIO::SEVERE << "Field id " << phasec_fieldid
-		<< " selected to be used as phasecenter does not exist." << LogIO::POST;
-	return rval;
       }
-      else{
-	phaseCenter = FIELDCols.phaseDirMeasCol()(phasec_fieldid)(IPosition(1,0));
-      }
-    }
-    else{
-      if(t_phasec.empty()){
-	phasec_fieldid = 0;
-	phaseCenter = FIELDCols.phaseDirMeasCol()(phasec_fieldid)(IPosition(1,0));
-      }
-      else{
-	if(!casaMDirection(phasec, phaseCenter)){
-	  *itsLog << LogIO::SEVERE << "Could not interprete phasecenter parameter "
-	     << t_phasec << LogIO::POST;
+      
+      // determine phase center
+      casa::MDirection phaseCenter;
+      Int phasec_fieldid = -1;
+      String t_phasec = toCasaString(phasec);
+      
+      //If phasecenter is a simple numeric value then it's taken as a fieldid 
+      //otherwise its converted to a MDirection
+      if(phasec.type()==::casac::variant::DOUBLEVEC 
+	 || phasec.type()==::casac::variant::DOUBLE
+	 || phasec.type()==::casac::variant::INTVEC
+	 || phasec.type()==::casac::variant::INT){
+	phasec_fieldid = phasec.toInt();	
+	if(phasec_fieldid >= (Int)itsMS->field().nrow() || phasec_fieldid < 0){
+	  *itsLog << LogIO::SEVERE << "Field id " << phasec_fieldid
+		  << " selected to be used as phasecenter does not exist." << LogIO::POST;
 	  return rval;
 	}
 	else{
-	  *itsLog << LogIO::NORMAL << "Using user-provided phase center." << LogIO::POST;
+	  phaseCenter = FIELDCols.phaseDirMeasCol()(phasec_fieldid)(IPosition(1,0));
 	}
-      }
-    }
-
-    // determine old reference frame
-    MFrequency::Types theOldRefFrame = MFrequency::castType(SPWCols.measFreqRef()(spwids[0]));
-
-    // determine observation epoch
-    MEpoch theObsTime;
-    String t_obstime = toCasaString(obstime);
-    if (obstime.length()>0) {
-      Quantum<Double> qt;
-      if (MVTime::read(qt,obstime)) {
-	MVEpoch mv(qt);
-	theObsTime = MEpoch(mv, MEpoch::UTC);
-      } else {
-	*itsLog << LogIO::SEVERE << "Invalid time format: " 
-	      << obstime << LogIO::POST;
-	return rval;
-      }
-    } else {
-      // take the smallest obstime in the MS given the spw and field selection
-      
-      // determine the relevant DD Ids
-      vector<Int> ddids;
-      for(uInt irow=0; irow<DDCols.nrow(); irow++){ // loop over DD table
-	for(uInt i=0; i<spwids.size(); i++){
-	  Int theSPWId = spwidCol(irow);
-	  if(theSPWId==spwids[i]){ // SPWId match found
-	    ddids.push_back(irow);
-	  }
-	} // end for
-      } // end for
-      cout << "DD IDs selected " << Vector<Int>(ddids) << endl; 
-      uInt minTimeRow = 0;
-      Double minTime = 1E42;
-      Bool doField = (fieldids.size()!=0);
-
-      for(uInt irow=1;irow<itsMS->nrow(); irow++){ // loop over main table
-	if(minTime<timeCol(irow)){
-
-	  Int theDDId = ddCol(irow);
-	  for(uInt i=0; i<ddids.size(); i++){
-	    if(theDDId==ddids[i]){ // DD match found
-	      if(doField){
-		Int theFieldId = fieldCol(irow);
-		for(uInt i=0; i<fieldids.size(); i++){
-		  if(theFieldId==fieldids[i]){ // field match found
-		    minTime=timeCol(irow);
-		    minTimeRow = irow;
-		    break;
-		  }
-		}
-	      }
-	      else{ // all fields selected
-		minTime=timeCol(irow);
-		minTimeRow = irow;
-	      }
-	      break;
-	    } // end if DD matches
-	  } // end for
-
-	}
-      } // end for
-      theObsTime = mainCols.timeMeas()(minTimeRow);
-      *itsLog << LogIO::NORMAL << "Using observation time from earliest row of the MS given the SPW and FIELD selection." << LogIO::POST;
-    }
-
-    // determine observatory position
-    // use a tabulated version if available
-    MPosition mObsPos;
-    {
-      MPosition Xpos;
-      String Xobservatory;
-      ROMSObservationColumns XObsCols(itsMS->observation());
-      if (itsMS->observation().nrow() > 0) {
-	Xobservatory = XObsCols.telescopeName()(mainCols.observationId()(0));
-      }
-      if (Xobservatory.length() == 0 || 
-	  !MeasTable::Observatory(Xpos,Xobservatory)) {
-	// unknown observatory
-	*itsLog << LogIO::WARN << "Unknown observatory: \"" << Xobservatory 
-		<< "\". Determining observatory position from antenna 0." << LogIO::POST;
-	Xpos=MPosition::Convert(ANTCols.positionMeas()(0), MPosition::ITRF)();
       }
       else{
-	*itsLog << LogIO::NORMAL << "Using tabulated observatory position for " << Xobservatory << ":"
-		<< LogIO::POST;
-	Xpos=MPosition::Convert(Xpos, MPosition::ITRF)();
+	if(t_phasec.empty()){
+	  phasec_fieldid = 0;
+	  phaseCenter = FIELDCols.phaseDirMeasCol()(phasec_fieldid)(IPosition(1,0));
+	}
+	else{
+	  if(!casaMDirection(phasec, phaseCenter)){
+	    *itsLog << LogIO::SEVERE << "Could not interprete phasecenter parameter "
+		    << t_phasec << LogIO::POST;
+	    return rval;
+	  }
+	  else{
+	    *itsLog << LogIO::NORMAL << "Using user-provided phase center." << LogIO::POST;
+	  }
+	}
       }
-      mObsPos = Xpos;
-      ostringstream oss;
-      oss <<  "   " << mObsPos << " (ITRF)";
-      *itsLog << LogIO::NORMAL << oss.str() << LogIO::POST;
-    }
-
-    // calculate new grid
-    GridCalc::calcChanFreqs(*itsLog,
-			    newCHAN_FREQ, 
-			    newCHAN_WIDTH,
-			    oldCHAN_FREQ, 
-			    oldCHAN_WIDTH,
-			    phaseCenter,
-			    theOldRefFrame,
-			    theObsTime,
-			    mObsPos,
-			    mode, 
-			    nchan, 
-			    start, 
-			    width,
-			    restfreq, 
-			    outframe,
-			    veltype
-			    );
-
-    newCHAN_FREQ.tovector(rval);
+      
+      // determine old reference frame
+      MFrequency::Types theOldRefFrame = MFrequency::castType(SPWCols.measFreqRef()(spwids[0]));
+      
+      // determine observation epoch
+      MEpoch theObsTime;
+      String t_obstime = toCasaString(obstime);
+      if (obstime.length()>0) {
+	Quantum<Double> qt;
+	if (MVTime::read(qt,obstime)) {
+	  MVEpoch mv(qt);
+	  theObsTime = MEpoch(mv, MEpoch::UTC);
+	} else {
+	  *itsLog << LogIO::SEVERE << "Invalid time format: " 
+		  << obstime << LogIO::POST;
+	  return rval;
+	}
+      } else {
+	// take the smallest obstime in the MS given the spw and field selection
+	
+	// determine the relevant DD Ids
+	vector<Int> ddids;
+	for(uInt irow=0; irow<DDCols.nrow(); irow++){ // loop over DD table
+	  for(uInt i=0; i<spwids.size(); i++){
+	    Int theSPWId = spwidCol(irow);
+	    if(theSPWId==spwids[i]){ // SPWId match found
+	      ddids.push_back(irow);
+	    }
+	  } // end for
+	} // end for
+	//cout << "DD IDs selected " << Vector<Int>(ddids) << endl; 
+	uInt minTimeRow = 0;
+	Double minTime = 1E42;
+	Bool doField = (fieldids.size()!=0);
+	
+	for(uInt irow=1;irow<itsMS->nrow(); irow++){ // loop over main table
+	  if(minTime<timeCol(irow)){
+	    
+	    Int theDDId = ddCol(irow);
+	    for(uInt i=0; i<ddids.size(); i++){
+	      if(theDDId==ddids[i]){ // DD match found
+		if(doField){
+		  Int theFieldId = fieldCol(irow);
+		  for(uInt i=0; i<fieldids.size(); i++){
+		    if(theFieldId==fieldids[i]){ // field match found
+		      minTime=timeCol(irow);
+		      minTimeRow = irow;
+		      break;
+		    }
+		  }
+		}
+		else{ // all fields selected
+		  minTime=timeCol(irow);
+		  minTimeRow = irow;
+		}
+		break;
+	      } // end if DD matches
+	    } // end for
+	    
+	  }
+	} // end for
+	theObsTime = mainCols.timeMeas()(minTimeRow);
+	*itsLog << LogIO::NORMAL << "Using observation time from earliest row of the MS given the SPW and FIELD selection." << LogIO::POST;
+      }
+      
+      // determine observatory position
+      // use a tabulated version if available
+      MPosition mObsPos;
+      {
+	MPosition Xpos;
+	String Xobservatory;
+	ROMSObservationColumns XObsCols(itsMS->observation());
+	if (itsMS->observation().nrow() > 0) {
+	  Xobservatory = XObsCols.telescopeName()(mainCols.observationId()(0));
+	}
+	if (Xobservatory.length() == 0 || 
+	    !MeasTable::Observatory(Xpos,Xobservatory)) {
+	  // unknown observatory
+	  *itsLog << LogIO::WARN << "Unknown observatory: \"" << Xobservatory 
+		  << "\". Determining observatory position from antenna 0." << LogIO::POST;
+	  Xpos=MPosition::Convert(ANTCols.positionMeas()(0), MPosition::ITRF)();
+	}
+	else{
+	  *itsLog << LogIO::NORMAL << "Using tabulated observatory position for " << Xobservatory << ":"
+		  << LogIO::POST;
+	  Xpos=MPosition::Convert(Xpos, MPosition::ITRF)();
+	}
+	mObsPos = Xpos;
+	ostringstream oss;
+	oss <<  "   " << mObsPos << " (ITRF)";
+	*itsLog << LogIO::NORMAL << oss.str() << LogIO::POST;
+      }
+      
+      // calculate new grid
+      SubMS::calcChanFreqs(*itsLog,
+			   newCHAN_FREQ, 
+			   newCHAN_WIDTH,
+			   oldCHAN_FREQ, 
+			   oldCHAN_WIDTH,
+			   phaseCenter,
+			   theOldRefFrame,
+			   theObsTime,
+			   mObsPos,
+			   mode, 
+			   nchan, 
+			   start.toString(), 
+			   width.toString(),
+			   restfreq.toString(), 
+			   outframe,
+			   veltype
+			   );
+      
+      newCHAN_FREQ.tovector(rval);
+      
+    } // end if !detached
 
   } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;

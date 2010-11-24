@@ -302,6 +302,52 @@ class SubMS
 			       const Int start=-1 // if >=0 and regridQuant=="freq": used instead of regridCenter
 			       );
 
+  // a helper function for handling the gridding parameter user input
+  static Bool convertGridPars(LogIO& os,
+			      const String& mode, 
+			      const int nchan, 
+			      const String& start, 
+			      const String& width,
+			      const String& interp, 
+			      const String& restfreq, 
+			      const String& outframe,
+			      const String& veltype,
+			      String& t_mode,
+			      String& t_outframe,
+			      String& t_regridQuantity,
+			      Double& t_restfreq,
+			      String& t_regridInterpMeth,
+			      Double& t_cstart, 
+			      Double& t_bandwidth,
+			      Double& t_cwidth,
+			      Bool& t_centerIsStart, 
+			      Bool& t_startIsEnd,			      
+			      Int& t_nchan,
+			      Int& t_width,
+			      Int& t_start);
+
+  // A wrapper for SubMS::regridChanBounds() which takes the user interface type gridding parameters
+  // The ready-made grid is returned in newCHAN_FREQ and newCHAN_WIDTH
+  static Bool calcChanFreqs(LogIO& os,
+			    // output
+			    Vector<Double>& newCHAN_FREQ,
+			    Vector<Double>& newCHAN_WIDTH,
+			    // input
+			    const Vector<Double>& oldCHAN_FREQ, // the original grid
+			    const Vector<Double>& oldCHAN_WIDTH, 
+			    // the gridding parameters
+			    const MDirection  phaseCenter,
+			    const MFrequency::Types theOldRefFrame,
+			    const MEpoch theObsTime,
+			    const MPosition mObsPos,
+			    const String& mode, 
+			    const int nchan, 
+			    const String& start, 
+			    const String& width,
+			    const String& restfreq, 
+			    const String& outframe,
+			    const String& veltype);
+
   // Support method for regridSpw():
   // if writeTables is False, the (const) input parameters are only verified, nothing is written;
   // return value is True if the parameters are OK.
