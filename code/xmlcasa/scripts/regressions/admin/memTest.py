@@ -112,6 +112,10 @@ class MemTest(nose.plugins.xunit.Xunit):
         else:
             self._resident_memory = 0           
 
+    def stopContext(self, context):
+        print "Directory contents after", context
+        os.system("ls -l")
+
     def _update_after_test(self):
         # The predefined hooks stopTest() and afterTest() cannot be used
         # because they get called after addError/addFailure/addSuccess
