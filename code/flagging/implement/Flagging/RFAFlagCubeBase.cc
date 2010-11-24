@@ -38,8 +38,8 @@ uInt RFABase::indexing_base = 0;
 RFABase::RFABase ( RFChunkStats &ch,const RecordInterface &parm )
   : chunk(ch),params(parm),
     myname(parm.isDefined(RF_NAME)?parm.asString(RF_NAME):String("RFABase")),
-    os(LogOrigin("Flagger",myname)),
-    only_selector(false)
+    only_selector(false),
+    os(LogOrigin("Flagger",myname))
 {
 }
 
@@ -141,7 +141,7 @@ void RFAFlagCubeBase::endChunk ()
 // RFAFlagCubeBase::startData
 // Prepares for an data pass over a VisIter chunk
 // -----------------------------------------------------------------------
-void RFAFlagCubeBase::startData (bool verbose)
+void RFAFlagCubeBase::startData (bool)
 {
   flag.reset();
 }
@@ -150,7 +150,7 @@ void RFAFlagCubeBase::startData (bool verbose)
 // RFAFlagCubeBase::startDry
 // Prepares for an dry pass 
 // -----------------------------------------------------------------------
-void RFAFlagCubeBase::startDry (bool verbose)
+    void RFAFlagCubeBase::startDry (bool)
 {
   flag.reset();
 }
@@ -159,7 +159,7 @@ void RFAFlagCubeBase::startDry (bool verbose)
 // RFAFlagCubeBase::startFlag
 // Prepares for a flag-copy pass
 // -----------------------------------------------------------------------
-void RFAFlagCubeBase::startFlag (bool verbose)
+void RFAFlagCubeBase::startFlag (bool)
 {
   flag.reset();
 }
@@ -207,17 +207,6 @@ RFA::IterMode RFAFlagCubeBase::endDry ()
   flag.printStats();
   return RFA::STOP;
 }
-
-// -----------------------------------------------------------------------
-// RFAFlagCubeBase::plotFlaggingReport
-// Defers to FlagCube to produce a flagging report
-// -----------------------------------------------------------------------
-void RFAFlagCubeBase::plotFlaggingReport ( PGPlotterInterface &pgp ) 
-{
-// ask the flag cube to plot the report
-  flag.plotStats(pgp);
-}
-
 
 } //# NAMESPACE CASA - END
 

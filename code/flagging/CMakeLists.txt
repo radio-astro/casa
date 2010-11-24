@@ -29,9 +29,6 @@ casa_add_library( flagging
   implement/Flagging/DDMapper.cc
   implement/Flagging/ExtendFlagger.cc
   implement/Flagging/Flagger.cc
-  implement/Flagging/FlagIndex.cc
-  implement/Flagging/RedFlagger.cc
-  implement/Flagging/RFAApplyFlags.cc
   implement/Flagging/RFADiffBase.cc
   implement/Flagging/RFAFlagCubeBase.cc
   implement/Flagging/RFAMedianClip.cc
@@ -41,7 +38,6 @@ casa_add_library( flagging
   implement/Flagging/RFAUVBinner.cc
   implement/Flagging/RFChunkStats.cc
   implement/Flagging/RFDataMapper.cc
-  implement/Flagging/RFDebugPlot.cc
   implement/Flagging/RFFlagCube.cc
   implement/Flagging/RFRowClipper.cc
   implement/Flagging/RFFloatLattice.cc

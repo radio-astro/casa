@@ -40,10 +40,8 @@
 #include <flagging/Flagging/RFASelector.h>
 #include <flagging/Flagging/RFAUVBinner.h>
 #include <flagging/Flagging/RFATimeFreqCrop.h>
-#include <flagging/Flagging/RFAApplyFlags.h>
 #include <msvis/MSVis/VisibilityIterator.h>
 #include <msvis/MSVis/VisBuffer.h>
-#include <casa/System/PGPlotter.h>
 #include <casa/System/ProgressMeter.h>
 #include <casa/stdio.h>
 #include <casa/math.h>
@@ -107,7 +105,6 @@ namespace casa {
     setdata_p = False;
     selectdata_p = False;
     // setupAgentDefaults();
-    pgprep_nx = pgprep_ny = 1;
 
     quack_agent_exists = false;
   }
@@ -131,7 +128,6 @@ namespace casa {
     setdata_p = False;
     selectdata_p = False;
     attach(mset);
-    pgprep_nx = pgprep_ny = 1;
 
     quack_agent_exists = false;
   }
@@ -184,17 +180,10 @@ namespace casa {
     // create record description on first entry
     if ( !rec.nfields() )
       {
-	Vector<Int> plotscr(2, 3); 
-	rec.define(RF_PLOTSCR, plotscr);
-	rec.define(RF_PLOTDEV, plotscr);
-	rec.define(RF_DEVFILE, "flagreport.ps/ps");
 	rec.defineRecord(RF_GLOBAL, Record());
 	rec.define(RF_TRIAL, False);
 	rec.define(RF_RESET, False);
 	
-	rec.setComment(RF_PLOTSCR, "Format of screen plots: [NX, NY] or False to disable");
-	rec.setComment(RF_PLOTDEV, "Format of hardcopy plots: [NX, NY], or False to disable");
-	rec.setComment(RF_DEVFILE, "Filename for hardcopy (a PGPlot 'filename/device')");
 	rec.setComment(RF_GLOBAL, "Record of global parameters applied to all methods");
 	rec.setComment(RF_TRIAL, "T for trial run (no flags written out)");
 	rec.setComment(RF_RESET, "T to reset existing flags before running");
@@ -312,7 +301,6 @@ namespace casa {
 	  nant = 0;
 	  setdata_p = False;
 	  selectdata_p = False;
-	  pgprep_nx = pgprep_ny = 1;
 	  ms.flush();
 	  ms.relinquishAutoLocks(True);
 	  ms.unlock();
@@ -1019,19 +1007,6 @@ namespace casa {
     return True;
   }
   
-  Bool Flagger::applyFlags(const std::vector<FlagIndex> &fi) {
-  
-    Record agent(defaultAgents().asRecord("applyflags"));
-       
-    RFAApplyFlags::setIndices(&fi); // static memory!
-
-    agent.define("id", String("applyflags"));
-    addAgent(agent);
-
-    return True;
-  }
-  
-  
   Bool Flagger::setautoflagparams(String algorithm,Record &parameters)
   {
     LogIO os(LogOrigin("Flagger", "setautoflagparams()", WHERE));
@@ -1139,124 +1114,6 @@ namespace casa {
       }
     return defrecord;
     
-    /*
-      
-    RecordDesc flagDesc;
-    
-    if (algorithm.matches("timemed") || algorithm.matches("timemedian"))
-    {
-    flagDesc.addField("id", TpString);
-    flagDesc.addField("thr", TpFloat);
-    flagDesc.addField("hw", TpInt);
-    flagDesc.addField("rowthr", TpFloat);
-    flagDesc.addField("rowhw", TpInt);
-    flagDesc.addField("norow", TpBool);
-    flagDesc.addField("column", TpString);
-    flagDesc.addField("expr", TpString);
-    flagDesc.addField("fignore", TpBool);
-    }
-    if (algorithm.matches("freqmed") || algorithm.matches("freqmedian"))
-    {
-    flagDesc.addField("id", TpString);
-    flagDesc.addField("thr", TpFloat);
-    flagDesc.addField("hw", TpInt);
-    flagDesc.addField("rowthr", TpFloat);
-    flagDesc.addField("rowhw", TpInt);
-    flagDesc.addField("norow", TpBool);
-    flagDesc.addField("column", TpString);
-    flagDesc.addField("expr", TpString);
-    flagDesc.addField("fignore", TpBool);
-    }
-    if (algorithm.matches("uvbin"))
-    {
-    flagDesc.addField("id", TpString);
-    flagDesc.addField("thr", TpFloat);
-    flagDesc.addField("minpop", TpInt);
-    flagDesc.addField("nbins", TpArrayInt);
-    //flagDesc.addField("plotchan", TpBool);
-    //flagDesc.addField("econoplot", TpBool);
-    flagDesc.addField("column", TpString);
-    flagDesc.addField("expr", TpString);
-    //flagDesc.addField("debug", TpBool);
-    flagDesc.addField("fignore", TpBool);
-    }
-    if (algorithm.matches("sprej"))
-    {
-    flagDesc.addField("id", TpString);
-    flagDesc.addField(RF_NDEG, TpInt);
-    flagDesc.addField("rowthr", TpFloat);
-    flagDesc.addField("rowhw", TpInt);
-    flagDesc.addField("column", TpString);
-    flagDesc.addField("expr", TpString);
-    flagDesc.addField("norow", TpBool);
-    //flagDesc.addField("debug", TpBool);
-    flagDesc.addField("fignore", TpBool);
-    flagDesc.addField("fitspwchan",TpString);
-    flagDesc.addField(RF_REGION, TpRecord);
-    }
-    
-    
-    Record flagRec(flagDesc);
-    
-    if (algorithm.matches("timemed") || algorithm.matches("timemedian"))
-    {
-    flagRec.define("id", String("timemed"));
-    flagRec.define("thr", Float(5.0));
-    flagRec.define("hw", 10);
-    flagRec.define("rowthr", Float(10.0));
-    flagRec.define("rowhw", 10);
-    flagRec.define("norow", False);
-    flagRec.define("column", String("DATA"));
-    flagRec.define("expr", String("ABS I"));
-    flagRec.define("fignore", False);
-    }
-    if (algorithm.matches("freqmed") || algorithm.matches("freqmedian"))
-    {
-    flagRec.define("id", String("freqmed"));
-    flagRec.define("thr", Float(5.0));
-    flagRec.define("hw", 10);
-    flagRec.define("rowthr", Float(10.0));
-    flagRec.define("rowhw", 10);
-    flagRec.define("column", String("DATA"));
-    flagRec.define("expr", String("ABS I"));
-    flagRec.define("fignore", False);
-    }
-    if (algorithm.matches("uvbin"))
-    {
-    flagRec.define("id", String("uvbin"));
-    flagRec.define("thr", Float(0.0));
-    flagRec.define("minpop", 0);
-    Vector<Int> dnbins(2);
-    dnbins(0) = 50;
-    dnbins(1) = 50;
-    flagRec.define("nbins", dnbins);
-    //flagRec.define("plotchan", plotchan);
-    //flagRec.define("econoplot", econoplot);
-    flagRec.define("column", "DATA");
-    flagRec.define("expr", "ABS I");
-    //flagRec.define("debug", debug);
-    flagRec.define("fignore", False);
-    }
-    if (algorithm.matches("sprej"))
-    {
-    flagRec.define("id",String("sprej"));
-    flagRec.define("ndeg", 2);
-    flagRec.define("rowthr", Float(5.0));
-    flagRec.define("rowhw", 6);
-    flagRec.define("column", "DATA");
-    flagRec.define("expr", "ABS I");
-    flagRec.define("norow", False);
-    //flagRec.define("debug", debug);
-    flagRec.define("fignore", False);
-    flagRec.define("fitspwchan", "");
-    //flagRec.defineRecord(RF_REGION, *allRegions); // will get set later.
-    }
-    
-    //
-    
-    return flagRec;
-    
-    */
   }
   
   /* Clean up all selections */
@@ -1377,7 +1234,6 @@ namespace casa {
     agent_defaults.defineRecord("flagexaminer", RFAFlagExaminer::getDefaults());
     agent_defaults.defineRecord("uvbin", RFAUVBinner::getDefaults());
     agent_defaults.defineRecord("tfcrop", RFATimeFreqCrop::getDefaults());
-    agent_defaults.defineRecord("applyflags", RFAApplyFlags::getDefaults());
     return agent_defaults;
   }
   
@@ -1410,31 +1266,12 @@ namespace casa {
       return boost::shared_ptr<RFABase>(new RFAUVBinner(chunk, parms));
     else if ( id == "tfcrop" )
       return boost::shared_ptr<RFABase>(new RFATimeFreqCrop(chunk, parms));
-    else if ( id == "applyflags" )
-      return boost::shared_ptr<RFABase>(new RFAApplyFlags(chunk, parms));
     else
         return boost::shared_ptr<RFABase>();
   }
   
   
-  // -----------------------------------------------------------------------
-  // setReportPanels
-  // Calls SUBP on the pgp_report plotter
-  // -----------------------------------------------------------------------
-  void Flagger::setReportPanels ( Int nx,Int ny )
-  {
-    if ( !nx && !ny ) // reset
-	{
-	    pgprep_nx = 0;
-      pgprep_ny = 0;
-	}
-    if ( pgp_report.isAttached() && (pgprep_nx!=nx || pgprep_ny!=ny) )
-      {  
-	//    dprintf(os,"pgp_report.subp(%d,%d)\n",nx,ny);
-	pgp_report.subp(pgprep_nx=nx,pgprep_ny=ny);
-      }
-  }
-  void Flagger::summary( const RecordInterface &agents,const RecordInterface &opt ) 
+  void Flagger::summary( const RecordInterface &agents ) 
   {
     //os << "Autoflag summary will report results here" << LogIO::POST;
     for(uInt i=0;i<agents.nfields(); i++){
@@ -1611,8 +1448,7 @@ namespace casa {
       VisBuffer vb(vi);
       
       RFChunkStats chunk(vi, vb,
-			 *this,
-			 &pgp_screen, &pgp_report);
+			 *this);
       
       // setup global options for flagging agents
       Record globopt(Record::Variable);
@@ -1722,27 +1558,7 @@ namespace casa {
 	    opt.asInt("maxmem") : HostInfo::memoryTotal()/1024;
 	  if ( debug_level>0 )
 	    dprintf(os,"%d MB memory available\n",availmem);
-	  // see if a flag cube is being used, and tell it to use/not use memory
-	  if ( RFFlagCube::numInstances() )
-	    {
-	      Int flagmem = RFFlagCube::estimateMemoryUse(chunk);
 
-	      // memory tight? use a disk-based flag cube
-	      if ( flagmem>.75*availmem )
-		{
-		  if ( debug_level>0 )
-		    dprintf(os,"%d MB flag cube: using disk\n",flagmem);
-		  RFFlagCube::setMaxMem(0);
-		  availmem -= 2; // reserve 2 MB for the iterator
-		}
-	      else // else use an in-memory cube
-		{
-		  if ( debug_level>0 )
-		    dprintf(os,"%d MB flag cube: using memory\n",flagmem);
-		  RFFlagCube::setMaxMem(availmem);
-		  availmem -= flagmem;
-		}
-	    }
 	  // call newChunk() for all accumulators; determine which ones are active
 	  Vector<Int> iter_mode(acc.size(),RFA::DATA);
 	  Vector<Bool> active(acc.size());
@@ -2094,7 +1910,7 @@ namespace casa {
         { 	 
             throw AipsError(e.what()); 	 
         }
-    //cleanupPlotters();
+
     ms.flush();
     //os<<"Flagging complete\n"<<LogIO::POST;
     
@@ -2105,80 +1921,10 @@ namespace casa {
   }
   
   // -----------------------------------------------------------------------
-  // Flagger::setupPlotters
-  // Sets up screen and hardcopy plotters according to options
-  // -----------------------------------------------------------------------
-  void Flagger::setupPlotters ( const RecordInterface &opt )
-  {
-    if ( !isFieldSet(opt,RF_PLOTSCR) )
-      { 
-	// skip the on-screen plot report
-      }
-    else  // else generate report
-      {
-	pgp_screen = PGPlotter("/xw",80);
-	// setup colormap for PS
-	uInt c1=16,nc=64;
-	Float scale=1.0/(nc-1);
-	pgp_screen.scir(c1,c1+nc-1);
-	for( uInt c=0; c<nc; c++ )
-	  pgp_screen.scr(c1+c,c*scale,c*scale,c*scale);
-	if ( fieldType(opt,RF_PLOTSCR,TpArrayInt) )
-	  {
-	    Vector<Int> subp( opt.asArrayInt(RF_PLOTSCR) );
-	    pgp_screen.subp(subp(0),subp(1)); 
-	  }
-	else
-	  pgp_screen.subp(3,3);
-      }
-    // Device for hardcopy report 
-    //   plotdev=F for no plot
-    //   plotdev=T for plot (*default*)
-    //   plotdev=[nx,ny] for NX x NY sub-panels
-    if ( !isFieldSet(opt,RF_PLOTDEV) )
-      {
-	// skip the hardcopy report
-      }
-    else 
-      {
-	String filename( defaultOptions().asString(RF_DEVFILE) );
-	if ( fieldType(opt,RF_DEVFILE,TpString) )
-	  filename = opt.asString(RF_DEVFILE);
-	if ( filename.length() )
-	  {
-	    // make sure default device is "/ps"
-	    if ( !filename.contains(Regex("/[a-zA-Z0-9]+$")) ) 
-	      filename += "/ps";
-	    pgp_report = PGPlotter(filename,80);
-	    // setup colormap for PS
-	    uInt c1=16,nc=64;
-	    Float scale=1.0/(nc-1);
-	    pgp_report.scir(c1,c1+nc-1);
-	    for( uInt c=0; c<nc; c++ )
-	      pgp_report.scr(c1+c,c*scale,c*scale,c*scale);
-	  }
-      }
-  }
-  
-  
-  // -----------------------------------------------------------------------
-  // cleanupPlotters
-  // detaches any active PGPlotters
-  // -----------------------------------------------------------------------
-  void Flagger::cleanupPlotters ()
-  {
-    if ( pgp_screen.isAttached() )
-      pgp_screen.detach();
-    if ( pgp_report.isAttached() )
-      pgp_report.detach();
-    setReportPanels(0,0);
-  }
-  
-  // -----------------------------------------------------------------------
   // printSummaryReport
   // Generates a summary flagging report for current chunk
   // -----------------------------------------------------------------------
-  void Flagger::printSummaryReport (RFChunkStats &chunk,const RecordInterface &opt )
+  void Flagger::printSummaryReport (RFChunkStats &chunk)
   {
     if (dbg) cout << "Flagger:: printSummaryReport" << endl;
     // generate a short text report in the first pane
@@ -2229,83 +1975,6 @@ namespace casa {
     if (dbg) cout << "end of.... Flagger:: printSummaryReport" << endl;
   }
   
-  // -----------------------------------------------------------------------
-  // plotSummaryReport
-  // Generates a summary flagging report for current chunk
-  // -----------------------------------------------------------------------
-  void Flagger::plotSummaryReport ( PGPlotterInterface &pgp,RFChunkStats &chunk,const RecordInterface &opt )
-  {
-    // generate a short text report in the first pane
-    pgp.env(0,1,0,1,0,-2);
-    char s[1024];
-    sprintf(s,"Flagging MS '%s' chunk %d (field %s, spw %d)",ms.tableName().chars(),
-	    chunk.nchunk(),chunk.visIter().fieldName().chars(),chunk.visIter().spectralWindow());
-    pgp.lab("","",s);
-    
-    Float y0=1,dy=(pgp.qcs(4))(1)*1.5; // dy is text baseline height
-    Vector<Float> vec01(2);
-    vec01(0)=0; vec01(1)=1;
-    
-    // print chunk field, etc.
-    
-    // print overall flagging stats
-    uInt n=0,n0;
-    for( uInt i=0; i<chunk.num(IFR); i++ )
-      if ( chunk.nrowPerIfr(i) )
-	n++;
-    sprintf(s,"%s, %d channels, %d time slots, %d baselines, %d rows\n",
-	    chunk.getCorrString().chars(),chunk.num(CHAN),chunk.num(TIME),
-	    chunk.num(IFR),chunk.num(ROW));
-    pgp.text(0,y0-=dy,s);
-    if ( isFieldSet(opt,RF_TRIAL) )
-      {
-	if ( isFieldSet(opt,RF_RESET) )
-	  pgp.text(0,y0-=dy,"trial: no flags written out; reset: existing flags ignored");
-	else 
-	  pgp.text(0,y0-=dy,"trial: no flags written out");
-      }
-    else if ( isFieldSet(opt,RF_RESET) )
-      pgp.text(0,y0-=dy,"reset: existing flags were reset");
-    
-    n  = sum(chunk.nrfIfr());
-    n0 = chunk.num(ROW);
-    sprintf(s,"%d (%0.2f%%) rows have been flagged.",n,n*100.0/n0);
-    pgp.text(0,y0-=dy,s);
-    os<<s<<LogIO::POST;
-    n  = sum(chunk.nfIfrTime());
-    n0 = chunk.num(ROW)*chunk.num(CHAN)*chunk.num(CORR);
-    sprintf(s,"%d of %d (%0.2f%%) data points have been flagged.",n,n0,n*100.0/n0);
-    os<<s<<LogIO::POST;
-    pgp.text(0,y0-=dy,s);
-    pgp.line(vec01,Vector<Float>(2,y0-dy/4));
-    
-    // print per-agent flagging summary
-    for( uInt i=0; i<acc.size(); i++ )
-      {
-	String name(acc[i]->name() + ": ");
-	pgp.text(0,y0-=dy,name+acc[i]->getDesc());
-	String stats( acc[i]->isActive() ? acc[i]->getStats() : String("can't process this chunk") );
-	pgp.text(0,y0-=dy,String("     ")+stats);
-	os<<name+stats<<LogIO::POST;
-      }
-    pgp.line(vec01,Vector<Float>(2,y0-dy/4));
-    pgp.iden();
-  }
-  
-  // -----------------------------------------------------------------------
-  // plotAgentReport
-  // Generates per-agent reports for current chunk of data
-  // Meant to be called before doing endChunk() on all the flagging 
-  // agents.
-  // -----------------------------------------------------------------------
-  void Flagger::plotAgentReports( PGPlotterInterface &pgp )
-  {
-      if ( !pgp.isAttached() )
-	  return;
-      // call each agent to produce summary plots
-      for( uInt i=0; i<acc.size(); i++ )
-	  acc[i]->plotFlaggingReport(pgp);
-  }
   // -----------------------------------------------------------------------
   // printAgentReport
   // Generates per-agent reports for current chunk of data
@@ -2390,23 +2059,37 @@ namespace casa {
 
 
 
-  void Flagger::reform_baselinelist(Matrix<Int> &baselinelist, unsigned nant)
-  {
-      for (unsigned i = 0; (int)i < baselinelist.shape()(1); i++) {
-          int a1 = baselinelist(0, i);
-          if (a1 < 0) {
-              for (unsigned a = 0; a < nant; a++) {
-                  if (a != (unsigned) (-a1)) {
-                      IPosition longer = baselinelist.shape();
-                      longer(1) += 1;
-                      baselinelist.resize(longer);
-                      baselinelist(0, longer(1)-1) = a;
-                      baselinelist(1, longer(1)-1) = baselinelist(1, i);
-                  }
-              }
-          }
-      }
-  }
-  
+void Flagger::reform_baselinelist(Matrix<Int> &baselinelist, unsigned nant)
+{
+    for (unsigned i = 0; (int)i < baselinelist.shape()(1); i++) {
+        int a1 = baselinelist(0, i);
+        if (a1 < 0) {
+            for (unsigned a = 0; a < nant; a++) {
+                if (a != (unsigned) (-a1)) {
+                    IPosition longer = baselinelist.shape();
+                    longer(1) += 1;
+                    baselinelist.resize(longer);
+                    baselinelist(0, longer(1)-1) = a;
+                    baselinelist(1, longer(1)-1) = baselinelist(1, i);
+                }
+            }
+        }
+    }
+}
+
+// -----------------------------------------------------------------------
+// dprintf
+// Function for printfing stuff to a debug stream
+// -----------------------------------------------------------------------
+int dprintf( LogIO &os,const char *format, ...) 
+{
+  char str[1024];
+  va_list ap;
+  va_start(ap, format);
+  int ret = vsnprintf(str, 1024, format, ap);
+  va_end(ap);
+  os << LogIO::DEBUGGING << str << LogIO::POST;
+  return ret;
+}
     
 } //#end casa namespace

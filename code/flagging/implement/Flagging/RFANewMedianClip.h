@@ -32,8 +32,6 @@
 #include <flagging/Flagging/RFFlagCube.h> 
 #include <flagging/Flagging/RFFloatLattice.h> 
 #include <flagging/Flagging/RFRowClipper.h> 
-#include <flagging/Flagging/RFDebugPlot.h> 
-#include <casa/System/PGPlotter.h>
 #include <scimath/Mathematics/MedianSlider.h> 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -64,7 +62,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //   <li> start discussion of this possible extension
 // </todo>
 
-class RFANewMedianClip : public RFAFlagCubeBase, public RFDataMapper, public PGPlotEnums
+class RFANewMedianClip : public RFAFlagCubeBase, public RFDataMapper
 {
 public:
   RFANewMedianClip  ( RFChunkStats &ch, const RecordInterface &parm );
@@ -87,7 +85,6 @@ public:
 protected:
   MedianSlider & slider (uInt ich,uInt ifr);
   MedianSlider globalmed;
-  void makePlot ( PGPlotterInterface &pgp,uInt ich );
 
   FlagCubeIterator * pflagiter; 
   FlagCubeIterator flag_iter;

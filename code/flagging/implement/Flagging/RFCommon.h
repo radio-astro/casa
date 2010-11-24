@@ -49,13 +49,8 @@ const char
     RF_DEBUG[]   = "debug",
     RF_PLOT[]    = "plot",
     RF_PLOTSCR[] = "plotscr",
-    RF_PLOTDEV[] = "plotdev",
-    RF_DEVFILE[] = "devfile",
     RF_GLOBAL[]  = "global",
     RF_TRIAL[]   = "trial",
-
-    RF_PLOTCHAN[]= "plotchan",
-    RF_ECONOPLOT[]= "econoplot",
 
     RF_RESET[]   = "reset",
     RF_FIGNORE[] = "fignore",
@@ -144,88 +139,7 @@ public:
     FL_RESET  = 2
   } PreFlagPolicy;
 };
-
-    
-// <summary>
-// PGPlotEnums: enums for various PGPlot indices
-// </summary>
-//
-// <synopsis>
-// This really belongs somewhere else...
-// </synopsis>
-//
-class PGPlotEnums {
-  public:
-    typedef enum {
-      BOX      = 0,
-      DOT      = 1,
-      PLUS     = 2,
-      ASTERIX  = 3,
-      CIRCLE   = 4,
-      CROSS    = 5,
-      BOX2     = 6,
-      TRIANGLE   = 7,
-      CIRCLEPLUS = 8,
-      CIRCLEDOT  = 9,
-      PILLOW     = 10,
-      DIAMOND    = 11,
-      STAR5      = 12,
-      FTRIANGLE  = 13,
-      FATPLUS    = 14,
-      DAVIDSTAR  = 15,
-      FBOX       = 16,
-      FCIRCLE    = 17,
-      FSTAR5     = 18,
-      BIGBOX     = 19,
-      CIRCLE1    = 20,
-      CIRCLE2    = 21,
-      CIRCLE3    = 22,
-      CIRCLE4    = 23,
-      CIRCLE5    = 24,
-      CIRCLE6    = 25,
-      CIRCLE7    = 26,
-      CIRCLE8    = 27,
-      LEFTARROW  = 28,
-      RIGHTARROW = 29,
-      UPARROW    = 30,
-      DOWNARROW  = 31,
-      DOT1       = -1,
-      DOT2       = -2,
-      FTRIANGLE1 = -3,
-      FDIAMOND   = -4,
-      FPENTAGON  = -5,
-      FHEXAGON   = -6,
-      FHEPTAGON  = -7,
-      FOCTAGON   = -8
-    } SymbolEnums;
-    
-    typedef enum {
-      WHITE      = 0,
-      BLACK      = 1,
-      RED        = 2,
-      GREEN      = 3,
-      BLUE       = 4,
-      CYAN       = 5,
-      MAGENTA    = 6,
-      YELLOW     = 7,
-      ORANGE     = 8,
-      GREEN1     = 9,
-      GREEN2     = 10,
-      BLUE1      = 11,
-      PURPLE     = 12,
-      MAGENTA1   = 13,
-      DARKGREY   = 14,
-      LIGHTGREY  = 15
-    } ColorEnums;
-    
-    typedef enum {
-      LINE_FULL    = 1,
-      LINE_DASH    = 2,
-      LINE_DOTDASH = 3,
-      LINE_DOT     = 4,
-      LINE_DASHDDD = 5
-    } LineStyleEnums;
-};
+   
 
 // short inline function for checking the type of a record field
 inline Bool fieldType ( const RecordInterface &parm,const String &id,DataType type,DataType type2 = TpNumberOfTypes )

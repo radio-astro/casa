@@ -61,7 +61,6 @@ qatool = casac.homefinder.find_home_by_name('quantaHome')
 qa = casac.qa = qatool.create()
 tbtool = casac.homefinder.find_home_by_name('tableHome')
 fgtool = casac.homefinder.find_home_by_name('flaggerHome')
-aftool = casac.homefinder.find_home_by_name('autoflagHome')
 metool = casac.homefinder.find_home_by_name('measuresHome')
 iatool = casac.homefinder.find_home_by_name('imageHome')
 potool = casac.homefinder.find_home_by_name('imagepolHome')
@@ -88,14 +87,13 @@ def gentools():
 	"""
 	Generate a fresh set of tools the ones who's
 	state can be funny
-	im,cb,ms,tb,fg,af,me,ia,po,sm,cl,cs,rg,sl,dc.vp=gentools()  
+	im,cb,ms,tb,fg,me,ia,po,sm,cl,cs,rg,sl,dc.vp=gentools()  
 	"""
 	im=imager.create()
 	cb = calibrater.create()
 	ms = mstool.create()
 	tb = tbtool.create()
 	fg = fgtool.create()
-	af = aftool.create()
 	me = metool.create()
 	ia = iatool.create()
 	po = potool.create()
@@ -106,9 +104,9 @@ def gentools():
 	sl=sltool.create()
 	dc=dctool.create()
 	vp=vptool.create()
-	return im,cb,ms,tb,fg,af,me,ia,po,sm,cl,cs,rg,sl,dc,vp
+	return im,cb,ms,tb,fg,me,ia,po,sm,cl,cs,rg,sl,dc,vp
 
-im,cb,ms,tb,fg,af,me,ia,po,sm,cl,cs,rg,sl,dc,vp=gentools()
+im,cb,ms,tb,fg,me,ia,po,sm,cl,cs,rg,sl,dc,vp=gentools()
 
 ###done with common tools
 

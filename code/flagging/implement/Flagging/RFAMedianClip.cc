@@ -53,7 +53,6 @@ RFATimeMedian::RFATimeMedian( RFChunkStats &ch,const RecordInterface &parm ) :
       ifr = chunk.antToIfr(dbg(1),dbg(2));
     else
       os<<"\""<<RF_DEBUG<<"\" parameter must be [NCH,NIFR] or [NCH,ANT1,ANT2]"<<LogIO::EXCEPTION;
-    setDebug( RFDebugPlot(chunk.pgpscr(),dbg(0),ifr,-1) );
   }
 }
 
@@ -87,9 +86,7 @@ Bool RFATimeMedian::newChunk (Int &maxmem)
       ": too few (" << num(TIME) << ") time slots (" << halfwin*4 << " needed), ignoring this chunk\n"<<LogIO::POST;
     return active=False;
   }
-// if disk-based flag cube, reserve 2MB for local iterator
-  if( !flag.getMaxMem() )
-    maxmem -= 2; 
+  maxmem -= 2; 
 // reserve memory for our bunch of median sliders
   maxmem -= (num(CHAN)*num(IFR)*MedianSlider::objsize(halfwin))/(1024*1024)+1;
 // call parent's newChunk  
@@ -167,7 +164,6 @@ RFA::IterMode RFATimeMedian::iterRow ( uInt irow )
     // loop over channels for this spw, ifr
     for( uInt ich=0; ich<num(CHAN); ich++ )
     {
-      Bool debug_plot = ( (dbg_i = debug.index(ich,iifr,it)) >=0 );
       // get derived flags and values
       Float val = 0;
 // during first pass, look at pre-flags only. During subsequent passes,
@@ -175,27 +171,15 @@ RFA::IterMode RFATimeMedian::iterRow ( uInt irow )
       Bool fl = chunk.npass() ? flag.anyFlagged(ich,iifr) : flag.preFlagged(ich,iifr);
       if( fl )
       {
-        if( debug_plot ) // plot pre-flagged point here
-        {
-          dbg_val(dbg_i) = mapValue(ich,irow);
-          dbg_sym(dbg_i) = PGPlotEnums::CROSS;
-        }
       }
       else
       {
         val = mapValue(ich,irow);
-        if( debug_plot ) 
-        {
-          dbg_val(dbg_i) = val;
-          dbg_sym(dbg_i) = PGPlotEnums::DOT;
-        }
       }
       slider(ich,iifr).add( val,fl ); 
       // are we filling in the diff-median lattice already?
       if( fill )
       {
-        if( debug_plot )
-          dbg_med(dbg_i-halfwin) = slider(ich,iifr).median();
         Float d = slider(ich,iifr).diff(fl);
         if( !fl )  // ignore if flagged
           setDiff( ich,iifr,d );
@@ -220,16 +204,12 @@ RFA::IterMode RFATimeMedian::endData ()
       startDataRow(i);
       for( uInt j = 0; j<num(CHAN); j++ )
       {
-        dbg_i = debug.index(j,i,it);
-        
         slider(j,i).next();
         Bool fl;
         Float diff = slider(j,i).diff(fl);
         if( !fl )
           setDiff(j,i,diff);
         
-        if( dbg_i>=0 )
-          dbg_med(dbg_i) = slider(j,i).median();
       }
       endDataRow(i);
     }
@@ -281,7 +261,6 @@ RFAFreqMedian::RFAFreqMedian( RFChunkStats &ch,const RecordInterface &parm ) :
     }
     else
       os<<"\""<<RF_DEBUG<<"\" parameter must be [NIFR,NTIME] or [ANT1,ANT2,NTIME]"<<LogIO::EXCEPTION;
-    setDebug( RFDebugPlot(chunk.pgpscr(),-1,dbg(0),dbg(1)) );
   }
 }
 
@@ -314,10 +293,6 @@ RFA::IterMode RFAFreqMedian::iterRow ( uInt irow )
                             : flag.rowPreFlagged(iifr,it);
   if( rowfl )
   {
-    if( debug.type()==CHAN && debug.index(0,iifr,it) >= 0 ) 
-    { 
-      dprintf(os,"FreqMedian: IFR %d, time slot %d is flagged, no plot.\n",iifr,it); 
-    }
   }  
   else // row not flagged
   {
@@ -326,33 +301,20 @@ RFA::IterMode RFAFreqMedian::iterRow ( uInt irow )
 // loop through all channels in this window
     for( uInt i = 0; i<num(CHAN); i++ ) 
     {
-      dbg_i = debug.index(i,iifr,it);
       Float val = 0; 
 // during first pass, look at pre-flags only. During subsequent passes,
 // look at all flags
       Bool fl = chunk.npass() ? flag.anyFlagged(i,iifr) : flag.preFlagged(i,iifr);
       if( fl )
       {
-        if( dbg_i>=0 ) // plot pre-flagged point here
-        {
-          dbg_val(dbg_i) = mapValue(i,irow);
-          dbg_sym(dbg_i) = PGPlotEnums::CROSS;
-        }
       }
       else
       {
         val = mapValue(i,irow);
-        if( dbg_i>=0 ) 
-        {
-          dbg_val(dbg_i) = val;
-          dbg_sym(dbg_i) = PGPlotEnums::DOT;
-        }
       }
       msl.add( val,fl ); 
       if( i>=halfwin )
       {
-        if( dbg_i>=0 )
-          dbg_med(dbg_i-halfwin) = msl.median();
         Float d = msl.diff(fl);
         if( !fl )
           setDiff(i-halfwin,iifr,d);
@@ -361,10 +323,7 @@ RFA::IterMode RFAFreqMedian::iterRow ( uInt irow )
     // finish sliding the medians for remaining channels
     for( uInt i=num(CHAN)-halfwin; i<num(CHAN); i++ )
     {
-      dbg_i = debug.index(i,iifr,it);
       msl.next(); 
-      if( dbg_i>=0 )
-        dbg_med(dbg_i) = msl.median();
       Bool fl;
       Float d = msl.diff(fl);
       if( !fl ) 

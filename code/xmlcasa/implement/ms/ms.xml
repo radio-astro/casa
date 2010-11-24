@@ -119,7 +119,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     The listhistory function lists the contents of the measurement set
     history table.  The history table contains a record of changes
-    made to the measurement set by autoflag, calibrater, imager and
+    made to the measurement set by flagger, calibrater, imager and
     other tools.
 
   \medskip\noindent\textbf{Selecting data}
@@ -192,7 +192,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
    The writehistory function allows messages to be appended to the measurement
    set history table should you wish to do so.  The listhistory function lists
-   your messages and those created by autoflag, calibrater, imager and other
+   your messages and those created by flagger, calibrater, imager and other
    tools.
 
   \medskip\noindent\textbf{Conversions to \fits}

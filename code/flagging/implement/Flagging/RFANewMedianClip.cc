@@ -90,8 +90,7 @@ Bool RFANewMedianClip::newChunk (Int &maxmem)
     return active=False;
   }
 
-  if( !flag.getMaxMem() )
-    maxmem -= 2; 
+  maxmem -= 2; 
   uInt halfwin = num(TIME)/2;
   // reserve memory for our bunch of median sliders
   maxmem -= (num(CHAN)*num(IFR)*MedianSlider::objsize(halfwin))/(1024*1024)+1;

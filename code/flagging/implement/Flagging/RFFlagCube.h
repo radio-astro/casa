@@ -42,8 +42,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 typedef RFCubeLatticeIterator<RFlagWord> FlagCubeIterator;
 
-class PGPlotterInterface;
-
 // special row flag masks. RowFlagged for flagged rows, 
 // RowAbsent for absent rows
 const RFlagWord RowFlagged=1,RowAbsent=2;
@@ -120,12 +118,6 @@ public:
   // prints flagging stats to stderr
   void printStats ();
 
-  // produces a plot of the flagging stats
-  void plotStats (PGPlotterInterface &pgp);
-
-  // returns number of stat plots which will be done 
-  static Int numStatPlots (const RFChunkStats &chunk);
-
   // resets at start of pass
   void reset ();
 
@@ -146,17 +138,6 @@ public:
   // Returns full flag matrix (i.e. cursor of global iterator)
   const FlagMatrix & flagMatrix ();
   
-  // Returns matrix of row flags
-  const FlagMatrix & rowFlagMatrix ();
-  
-  // Returns boolean NIFRxNT map of row flags
-  const LogicalMatrix rowFlagMap () 
-        { return maskBits(rowFlagMatrix(),RowFlagged); }
-
-  // Returns boolean NIFRxNT map of rows actually present in the data
-  const LogicalMatrix rowAvailabilityMap () 
-        { return !maskBits(rowFlagMatrix(),RowAbsent); }
-
   // sets or clears a flag at the given flag cursor
   Bool setFlag      ( uInt ich,uInt ifr,FlagCubeIterator &iter );
   Bool clearFlag    ( uInt ich,uInt ifr,FlagCubeIterator &iter );
@@ -219,15 +200,6 @@ public:
   static int  getMaxMem ();
       
  private:
-
-  // helper methods for generating plots
-  void plotIfrMap  ( PGPlotterInterface &pgp,const Matrix<Float> &img,const LogicalVector &ifrvalid);
-  void plotAntAxis ( PGPlotterInterface &pgp,const Vector<uInt> &antnums,Bool yaxis );
-  void plotImage   ( PGPlotterInterface &pgp,const Matrix<Float> &img,
-                     const char *labelx,const char *labely,const char *labeltop,
-                     Bool wedge = True,Float xbox=0,Float ybox=0,Bool xfreq=False);
-    
-    
   RFChunkStats &chunk;                  // chunk
 
   bool kiss;  // do things simpler (faster) if there is nothing but RFAselector agents
@@ -287,21 +259,14 @@ public:
   FlagMatrix * flag_curs;
   uInt flag_itime;
   
-  // members for managing flagging report plots
-  static PGPlotterInterface * report_plotted;
-  static String agent_names;
-  
   // number of instances in use
   static Int num_inst;
-
-  // maximum memory size to use for the flag cube
-  static Int maxmemuse; 
 };
 
 inline RFlagWord RFFlagCube::flagMask ()
   { 
      if (kiss) {
-       throw std::logic_error("Cannot do this in kiss mode (programmer bug, please report)");
+       throw std::logic_error("Cannot do this in kiss mode (program bug, please report)");
      }
      return flagmask; 
   }
@@ -353,28 +318,25 @@ inline FlagCubeIterator RFFlagCube::newCustomIter ()
 inline const FlagMatrix & RFFlagCube::flagMatrix ()
    { return *flag_curs; }
 
-inline const FlagMatrix & RFFlagCube::rowFlagMatrix ()
-   { 
-     if (kiss) {
-       throw std::logic_error("Cannot do this in kiss mode (programmer bug, please report)");
-     }
-     return flagrow; 
-   }
-
 inline Bool RFFlagCube::preFlagged ( uInt ich,uInt ifr )
    { return getFlag(ich,ifr)&check_corrmask != 0; }    
 
 inline Bool RFFlagCube::anyFlagged ( uInt ich,uInt ifr )
    { 
      if (kiss) {
-       throw std::logic_error("Cannot do this in kiss mode (programmer bug, please report)");
+       throw std::logic_error("Cannot do this in kiss mode (program bug, please report)");
      }
      return getFlag(ich,ifr)&(check_corrmask|my_corrflagmask) != 0; 
    }
 
 // Gets full row flag word
 inline RFlagWord RFFlagCube::getRowFlag ( uInt ifr,uInt itime )
-   { return flagrow(ifr,itime); }
+  {
+    if (kiss) {
+      throw std::logic_error("Cannot do this in kiss mode (program bug, please report)");
+    }
+    return flagrow(ifr,itime); 
+  }
 
 // tells if a row is pre-flagged in the MS (or does not exist)
 inline Bool RFFlagCube::rowPreFlagged   ( uInt ifr,uInt itime )
@@ -393,12 +355,6 @@ inline FlagCubeIterator & RFFlagCube::iterator ()
 
 inline int RFFlagCube::numInstances ()
    { return num_inst; }
-
-inline void RFFlagCube::setMaxMem ( Int maxmem )
-   { maxmemuse=maxmem; }
-
-inline Int RFFlagCube::getMaxMem ()
-   { return maxmemuse; }
 
 inline LogIO & RFFlagCube::logSink ()
    { return os; }

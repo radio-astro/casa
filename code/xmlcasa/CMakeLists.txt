@@ -113,7 +113,6 @@ casa_add_library( xmlcasa
   implement/casa/quanta_cmpt.cc
   implement/casa/TSLogSink.cc
   implement/components/componentlist_cmpt.cc
-  implement/flagging/autoflag_cmpt.cc
   implement/flagging/flagger_cmpt.cc
   implement/images/coordsys_cmpt.cc
   implement/images/image_cmpt.cc
@@ -167,8 +166,6 @@ casa_add_executable( xmlcasa casapy apps/casapy/casapy.cc )
 casa_add_executable( xmlcasa harvestrn apps/harvestrn/harvestrn.cc )
 casa_add_executable( xmlcasa harvestrr apps/harvestrr/harvestrr.cc )
 casa_add_assay( xmlcasa implement/xerces/test/tXMLToRecord.cc )
-casa_add_test ( xmlcasa implement/flagging/test/tAutoflagger.cc )
-
 
 casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/asap_init.py
@@ -268,7 +265,6 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_listvis.py
   scripts/taskmanager.py
   scripts/task_mosaic.py
-  scripts/task_newflagdata.py
   scripts/task_peel.py
   scripts/task_plotants.py
   scripts/task_plotcal.py
@@ -381,7 +377,6 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/listobs.xml
   tasks/listvis.xml
   tasks/mosaic.xml
-  tasks/newflagdata.xml
   tasks/peel.xml
   tasks/plotants.xml
   tasks/plotcal.xml
@@ -434,7 +429,6 @@ casa_add_tools( tools_idl tools_sources
   implement/casa/logsink.xml
   implement/casa/quanta.xml
   implement/components/componentlist.xml
-  implement/flagging/autoflag.xml
   implement/flagging/flagger.xml
   implement/images/coordsys.xml
   implement/images/imagepol.xml

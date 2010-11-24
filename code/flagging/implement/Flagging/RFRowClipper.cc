@@ -33,7 +33,6 @@
 #include <casa/Arrays/MaskArrMath.h>
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/Arrays/Slice.h>
-#include <casa/System/PGPlotterInterface.h>
 #include <scimath/Mathematics/MedianSlider.h>
 #include <casa/stdio.h>
     
@@ -43,11 +42,6 @@ RFRowClipper::RFRowClipper( RFChunkStats &ch,RFFlagCube &fl,Float clip,uInt hw,u
   chunk(ch),flag(fl),clip_level(clip),halfwin(hw),maxpass(maxp),
   os(fl.logSink())
 {}
-
-void RFRowClipper::setDebug ( const RFDebugPlot &dbg )
-{
-  debug = dbg;
-}
     
 void RFRowClipper::init( uInt ni,uInt nt ) 
 {
@@ -74,8 +68,6 @@ Float RFRowClipper::updateSigma (uInt &ifrmax,uInt &itmax,Bool flag_rows, bool c
   Vector<Float> diffsigma(ntime);
   Vector<Float> diffs(ntime);
   
-  Vector<Int>   plotsym(ntime); // for debug plots
-  
   Float dmax=0;
   ifrmax=itmax=0;
   RFlagWord fm = flag.flagMask()|flag.fullCorrMask();
@@ -84,7 +76,7 @@ Float RFRowClipper::updateSigma (uInt &ifrmax,uInt &itmax,Bool flag_rows, bool c
   {
     if( sigupdated(ifr) )
     {
-      Bool fl, debug_plot = ( debug.type()==TIME && debug.ifr() == (Int)ifr );
+      Bool fl;
       Float d;
       Vector<Float> sigma( sig.column(ifr) );
       Bool recalc=True;
@@ -157,8 +149,6 @@ Float RFRowClipper::updateSigma (uInt &ifrmax,uInt &itmax,Bool flag_rows, bool c
                 for( uInt ich=0; ich<chunk.num(CHAN); ich++ )
                         flag.clearFlag(ich,ifr);
               }
-              if( debug_plot )
-                plotsym(it) = res?CIRCLE:PLUS;
               Float s0 = sig0(it,ifr),
                     m = max(s,s0),
                     d= m!=0 ? abs(s-s0)/m : 0;
@@ -174,50 +164,15 @@ Float RFRowClipper::updateSigma (uInt &ifrmax,uInt &itmax,Bool flag_rows, bool c
               recalc |= res;
               for( uInt ich=0; ich<chunk.num(CHAN); ich++ )
                         flag.setFlag(ich,ifr);
-              if( debug_plot )
-                plotsym(it) = res?FSTAR5:STAR5;
               nbad++;
             }
           }
           else // ignore rows that are apriori bad/nonexistent
           {
-            if( debug_plot )
-              plotsym(it) = DOT;
           }
         }
         String ifrid( chunk.ifrString(ifr) );
 //        dprintf(os,"IFR %d (%s): %d rows flagged, recalc=%d\n",ifr,ifrid.chars(),nbad,(Int)recalc);
-  // produce debug plot, if needed
-        if( debug_plot )
-        {
-          PGPlotterInterface &pgp( debug.pgp() );
-          Float vmin=0,vmax=max(sigma(goodsigma)); 
-          dprintf(os,"Max sigma is %f\n",vmax);
-          while( debug_plot )
-          {
-            pgp.ask(False);
-            pgp.eras();
-            pgp.env(0,sigma.nelements(),0,vmax,0,0);
-            char s[256];
-            sprintf(s,"Pass %d: IFR %d (%s)",chunk.npass(),ifr,ifrid.chars());
-            pgp.lab("Time slot","Noise level",s);
-            Vector<Float> x(sigma.nelements());
-            indgen(x);
-            pgp.sci(YELLOW);
-            pgp.line(x,sigma);
-            pgp.sci(LIGHTGREY);
-            pgp.line(x,sig0.column(ifr));
-            pgp.sci(BLACK);
-            pgp.line(x,medsigma);
-            pgp.line(x,medsigma+thr);
-            pgp.line(x,medsigma-thr);
-            pgp.sci(YELLOW);
-            pgp.pnts(x,sigma,plotsym);
-
-            debug_plot = debug.queryPlotLimits(vmin,vmax);
-          }
-          pgp.ask(True);
-        } // endif( debug_plot )
       } // endwhile(recalc)
     } // endif( sigupated(ifr) )
   } // endfor( ifr )
