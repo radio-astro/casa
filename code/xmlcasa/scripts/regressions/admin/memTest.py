@@ -113,7 +113,7 @@ class MemTest(nose.plugins.xunit.Xunit):
             self._resident_memory = 0           
 
     def stopContext(self, context):
-        out = commands.getoutput("ls -l")
+        out = commands.getoutput("du -h")
         print "Directory contents after", context
         print out
 
