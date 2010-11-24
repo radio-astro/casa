@@ -518,7 +518,7 @@ class PlotFlag:
         self.toolbar._xypress=[]
         for i, a in enumerate(self.canvas.figure.get_axes()):
             #if x is not None and y is not None and a.in_axes(x, y) and a.get_navigate():
-            if x is not None and y is not None and event.inaxes and a.get_navigate():
+            if x is not None and y is not None and event.inaxes==a and a.get_navigate():
                 xmin, xmax = a.get_xlim()
                 ymin, ymax = a.get_ylim()
                 lim = xmin, xmax, ymin, ymax
@@ -651,7 +651,7 @@ class PlotFlag:
         self.toolbar._xypress=[]
         for i, a in enumerate(self.canvas.figure.get_axes()):
             #if x is not None and y is not None and a.in_axes(x, y) and a.get_navigate():
-            if x is not None and y is not None and event.inaxes and a.get_navigate():
+            if x is not None and y is not None and event.inaxes==a and a.get_navigate():
                 xmin, xmax = a.get_xlim()
                 ymin, ymax = a.get_ylim()
                 lim = xmin, xmax, ymin, ymax
@@ -806,7 +806,7 @@ class PlotFlag:
         self.toolbar._xypress=[]
         for i, a in enumerate(self.canvas.figure.get_axes()):
             #if x is not None and y is not None and a.in_axes(x, y) and a.get_navigate():
-            if x is not None and y is not None and event.inaxes and a.get_navigate():
+            if x is not None and y is not None and event.inaxes==a and a.get_navigate():
                 xmin, xmax = a.get_xlim()
                 ymin, ymax = a.get_ylim()
                 lim = xmin, xmax, ymin, ymax
