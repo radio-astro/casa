@@ -193,6 +193,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	<value>PBCOR</value>
       </allowed>
     </param>
+
     
 <!--======================================================== -->
     <param type="intArray" name="multiscale">
@@ -416,6 +417,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>False</value> 
     </param>
 <!--========================================================= -->
+    <param type="bool" name="flatnoise" subparam="true">
+      <description>Controls whether search clean components in a constant noise residual image (True) or in an optimal signal-to-noise residual image (False). </description>
+      <value>True</value>
+    </param>
+<!--========================================================= -->
     <constraints>
             <when param="selectdata">
 		  <equals type="bool" value="False"/>
@@ -560,6 +566,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 			<default param="scaletype"><value type="string">SAULT</value></default>
 			<default param="cyclefactor"><value>1.5</value></default>
 			<default param="cyclespeedup"><value>-1</value></default>
+			<default param="flatnoise"><value>True</value></default>
 	        </equals>
 <!--
                 <equals value="multiscale">

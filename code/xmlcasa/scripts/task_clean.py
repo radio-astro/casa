@@ -13,7 +13,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
           veltype, imsize, cell, phasecenter, restfreq, stokes, weighting,
           robust, uvtaper, outertaper, innertaper, modelimage, restoringbeam,
           pbcor, minpb, calready, noise, npixels, npercycle, cyclefactor,
-          cyclespeedup, nterms, reffreq, chaniter):
+          cyclespeedup, nterms, reffreq, chaniter, flatnoise):
 
     #Python script
     
@@ -400,7 +400,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                                        cyclefactor=cyclefactor,
                                        cyclespeedup=cyclespeedup,
                     #                   fluxscale=[imagename+'.flux'])
-                                       fluxscale=fluximage)
+                                       fluxscale=fluximage, flatnoise=flatnoise)
             else:
                 imCln.setmfcontrol(stoplargenegatives=negcomponent,
                                    cyclefactor=cyclefactor,
