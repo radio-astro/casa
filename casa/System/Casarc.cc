@@ -381,10 +381,15 @@ namespace casa {
 	if ( ! S_ISREG(buf.st_mode)) {
 	    throw( "Casarc::current_modification_time: " + filename + " is not a regular file" );
 	}
+#if defined(__APPLE__)
 	// micro seconds: 1000000
 	// nano seconds:  1000000000
 	//   ...unfortunately, the resolution for modification time seems to be seconds...
 	return (double) buf.st_mtimespec.tv_sec + (double) buf.st_mtimespec.tv_nsec / (double) 1000000000;
+#else
+	//   ...non-apple platforms seem upfront about the 1 sec resolution...
+	return (double) buf.st_mtime;
+#endif
     }
 
     #define is_added_tag(PTR,OFF)															\
