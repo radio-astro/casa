@@ -144,6 +144,9 @@ C++  := $(shell type g++-mp-4.4 2> /dev/null | perl -pe 's@^\S+\s+is\s+@@')
 endif
 endif
 ifeq "$(FC)" ""
+FC  := $(shell type gfortran-mp-4.2 2> /dev/null | perl -pe 's@^\S+\s+is\s+@@')
+endif
+ifeq "$(FC)" ""
 FC  := $(shell type g77 2> /dev/null | perl -pe 's@^\S+\s+is\s+@@')
 endif
 ifeq "$(shell echo $(FC) | perl -pe 's|.*?gfortran.*|gfortran|')" "gfortran"
@@ -154,7 +157,7 @@ archcompile :=
 archlink :=
 ifeq "$(os)" "darwin"
 _darwin_major_version:=$(shell uname -r | perl -pe "s|^(\d+)\..*|\$$1|")
-_gfortran_path := $(shell $(FC) -print-search-dirs | perl -e "while(<>) { if( m|^libraries:\s*=(.*?\$$)| ) { foreach \$$d (split(':',\$$1) ) { if ( -e \"\$$d/libgfortran.dylib\" ) { print \"\$$d\n\"; break;}}}}")
+_gfortran_path := $(shell $(FC) -print-search-dirs | perl -e "while(<>) { if( m|^libraries:\s*=(.*?\$$)| ) { foreach \$$d (split(':',\$$1) ) { if ( -e \"\$$d/libgfortran.dylib\" || -e \"\$$d/libgfortran.a\" ) { print \"\$$d\n\"; break;}}}}")
 archlink := -L/opt/local/lib -L$(_gfortran_path)
 archcompile := -I/opt/local/include
 ifeq "$(_darwin_major_version)" "10"
