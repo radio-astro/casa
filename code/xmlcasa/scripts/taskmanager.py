@@ -40,6 +40,7 @@ class taskmanager(object):
     __hub = { 'init atend': False, 'proc': None, 'engines': [], 'engine hosts': { },
               'mec': None, 'tasks initialized': [], 'task path': [], 'initialized': False,
               'log root': None, 'execute count': 0, 'result map': { }, 'pipe minder': None }
+    __helpers = { 'ipcontroller': 'ipcontroller', 'ipengine': 'ipengine' }
 
     def retrieve(self, receipt):
         try:
@@ -187,12 +188,12 @@ class taskmanager(object):
 	    # uses IPYTHONDIR instead for IPython 0.10.x
 	    #
 	    if(int(version.split('.')[1]) < 10) :
-                engine['proc'] = subprocess.Popen( [ 'ipengine', '--furl-file=' + self.__furl['engine'],
+                engine['proc'] = subprocess.Popen( [ self.__helpers['ipengine'], '--furl-file=' + self.__furl['engine'],
                                                  '--ipythondir=' + self.__dir['rc'],
                                                  '--logfile=' + self.__dir['session log root'] + "/engine." ],
                                                stdout=engine['stdout'][1], stderr=engine['stderr'][1])
 	    else :
-                engine['proc'] = subprocess.Popen( [ 'ipengine', '--furl-file=' + self.__furl['engine'],
+                engine['proc'] = subprocess.Popen( [ self.__helpers['ipengine'], '--furl-file=' + self.__furl['engine'],
                                                  '--logfile=' + self.__dir['session log root'] + "/engine." ],
                                                stdout=engine['stdout'][1], stderr=engine['stderr'][1])
 
@@ -221,6 +222,29 @@ class taskmanager(object):
 
         return len(self.__hub['engines']) - 1
 
+    def __initialize_helpers(self):
+        ####
+        #### where are our helpers?
+        ####
+        a=inspect.stack()
+        stacklevel=0
+        for k in range(len(a)):
+            if a[k][1] == "<string>" or (string.find(a[k][1], 'ipython console') > 0 or string.find(a[k][1],"casapy.py") > 0):
+                      stacklevel=k
+
+        myf=sys._getframe(stacklevel).f_globals
+
+        ipcontroller_path = None
+        ipengine_path = None
+        if type(myf) == dict and myf.has_key('casa') and type(myf['casa']) == dict and \
+                myf['casa'].has_key('helpers') and type(myf['casa']['helpers']) == dict:
+
+            if myf['casa']['helpers'].has_key('ipcontroller'):
+                self.__helpers['ipcontroller'] = myf['casa']['helpers']['ipcontroller']   #### set in casapy.py
+            if myf['casa']['helpers'].has_key('ipengine'):
+                self.__helpers['ipengine'] = myf['casa']['helpers']['ipengine']           #### set in casapy.py
+
+
     def __initialize(self):
         for host in self.__hub['engine hosts'].keys( ):
             if self.__hub['engine hosts'][host] > 0 :
@@ -234,7 +258,7 @@ class taskmanager(object):
 	# uses IPYTHONDIR instead for IPython 0.10.x
 	#
 	if(int(version.split('.')[1]) < 10) :
-           self.__hub['proc'] = subprocess.Popen( [ 'ipcontroller',
+           self.__hub['proc'] = subprocess.Popen( [ self.__helpers['ipcontroller'],
                                                  '--client-cert-file=' + self.__cert['client'],
                                                  '--engine-cert-file=' + self.__cert['engine'],
                                                  '--engine-furl-file=' + self.__furl['engine'],
@@ -244,7 +268,7 @@ class taskmanager(object):
                                                  '--logfile=' + self.__dir['session log root'] + "/controller." ],
                                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
 	else :
-           self.__hub['proc'] = subprocess.Popen( [ 'ipcontroller',
+           self.__hub['proc'] = subprocess.Popen( [ self.__helpers['ipcontroller'],
                                                  '--client-cert-file=' + self.__cert['client'],
                                                  '--engine-cert-file=' + self.__cert['engine'],
                                                  '--engine-furl-file=' + self.__furl['engine'],
@@ -294,6 +318,8 @@ class taskmanager(object):
             engine['setup'] = True
 
     def __init__(self,task_path=[''],engines={'localhost': 1}):
+
+        self.__initialize_helpers( )
 
         if os.environ.has_key('__CASARCDIR__'):
             self.__dir['home'] = os.environ['__CASARCDIR__'] + "/tm"

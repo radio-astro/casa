@@ -106,7 +106,9 @@ casa = { 'build': {
          'helpers': {
              'logger': 'casalogger',
              'viewer': 'casaviewer',
-             'dbus': None
+             'dbus': None,
+             'ipcontroller': None,
+             'ipengine': None
          },
          'dirs': {
              'rc': homedir + '/.casa'
@@ -118,37 +120,39 @@ casa = { 'build': {
 
 
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
-## setup dbus-daemon launch path...
+## setup helper paths...
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
-##     first try to find dbus launch script in likely system areas
+##     first try to find executables in likely system areas
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 ##
-##   for exe in ['dbus-daemon', 'dbus-daemon-1']:
+##   note:  hosts which have dbus-daemon-1 but not dbus-daemon seem to have a broken dbus-daemon-1...
 ##
-##  hosts which have dbus-daemon-1 but not dbus-daemon seem to have
-##  a broken dbus-daemon-1...
-##
-for exe in ['dbus-daemon']:
-    for dir in ['/bin', '/usr/bin', '/opt/local/bin', '/usr/lib/qt-4.3.4/dbus/bin', '/usr/lib64/qt-4.3.4/dbus/bin'] :
-        dd = dir + os.sep + exe
-        if os.path.exists(dd) and os.access(dd,os.X_OK) :
-            casa['helpers']['dbus'] = dd
-            break
-    if casa['helpers']['dbus'] is not None:
-        break
-
-## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
-##     next search through $PATH for dbus launch script
-## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
-if casa['helpers']['dbus'] is None:
-    for exe in ['dbus-daemon']:
-        for dir in os.getenv('PATH').split(':') :
+for info in [ (['dbus-daemon'],'dbus'),
+              (['ipcontroller','ipcontroller-2.6'], 'ipcontroller'),
+              (['ipengine','ipengine-2.6'], 'ipengine') ]:
+    exelist = info[0]
+    entry = info[1]
+    for exe in exelist:
+        for dir in ['/bin', '/usr/bin', '/opt/local/bin', '/usr/lib/qt-4.3.4/dbus/bin', '/usr/lib64/qt-4.3.4/dbus/bin'] :
             dd = dir + os.sep + exe
             if os.path.exists(dd) and os.access(dd,os.X_OK) :
-                casa['helpers']['dbus'] = dd
+                casa['helpers'][entry] = dd
                 break
-        if casa['helpers']['dbus'] is not None:
+        if casa['helpers'][entry] is not None:
             break
+
+    ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+    ##     next search through $PATH for executables
+    ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+    if casa['helpers'][entry] is None:
+        for exe in exelist:
+            for dir in os.getenv('PATH').split(':') :
+                dd = dir + os.sep + exe
+                if os.path.exists(dd) and os.access(dd,os.X_OK) :
+                    casa['helpers'][entry] = dd
+                    break
+            if casa['helpers'][entry] is not None:
+                break
 
 print "CASA Version " + casa['build']['version'] + " (r" + casa['source']['revision'] + ")\n  Compiled on: " + casa['build']['time']
 
