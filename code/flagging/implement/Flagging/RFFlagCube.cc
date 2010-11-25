@@ -142,7 +142,7 @@ void RFFlagCube::init( RFlagWord corrmsk, uInt nAgent, bool only_selector, const
 	// setup correlation masks. The first NCORR bits of the flag word
 	// are used to store the apriori flags. Basemask is the first bitmask
 	// actually used for flagging
-	base_flagmask = num(CORR)>=2 ? 1<<num(CORR) : 4;  // is this a bug, should base_flagmask be 2 if num(CORR) is 1?
+	base_flagmask = num(CORR) >= 2 ? 1 << num(CORR) : 4;  // is this a bug, should base_flagmask be 2 if num(CORR) is 1?
 
 	// full_corrmask is the mask of all correlations flagged
 	full_corrmask = (1<<num(CORR))-1;
@@ -173,10 +173,10 @@ void RFFlagCube::init( RFlagWord corrmsk, uInt nAgent, bool only_selector, const
         }
         else {
             flagrow_kiss.resize(num(IFR),num(TIME));
-            flagrow_kiss = dynamic_bitset<>(num(CORR) >= 2 ?
-                                            (num(CORR) + 1 + nAgent) 
-                                            : (3 + nAgent),
-                                            (unsigned) (RowFlagged|RowAbsent));
+            unsigned long val = (RowFlagged|RowAbsent);
+            flagrow_kiss = dynamic_bitset<>((num(CORR) >= 2 ?
+                                             num(CORR) : 2) + nAgent,
+                                            val);
         }
 
 	pos_get_flag = pos_set_flag = -1;
@@ -184,9 +184,9 @@ void RFFlagCube::init( RFlagWord corrmsk, uInt nAgent, bool only_selector, const
 	// reset instance counters 
 	agent_count = 0;
     }
-    if (kiss) {
+    if (kiss_flagrow) {
         // basebit plus agent_count
-        flagmask_kiss = (num(CORR) >= 2 ? 1<<num(CORR) : 4) + agent_count;
+        flagmask_kiss = (num(CORR) >= 2 ? num(CORR) : 2) + agent_count;
 
     }
     else {

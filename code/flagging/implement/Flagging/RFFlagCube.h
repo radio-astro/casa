@@ -233,7 +233,7 @@ public:
     // RESET or IGNORE policy, or to corrmask for HONOR
     check_rowmask,   // same for row flags: 0 or RowFlagged
     my_corrflagmask; // see above
-  unsigned flagmask_kiss; // represents a bitmask with only bit number <n> set where 
+  unsigned long flagmask_kiss; // represents a bitmask with only bit number <n> set where 
                           // <n> is the value of this variable
   static Int agent_count;    // # of agents instantiated
   static RFlagWord base_flagmask, // flagmask of first agent instance
