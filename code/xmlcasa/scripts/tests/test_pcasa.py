@@ -4,6 +4,9 @@ from tasks import *
 
 class pcasa_test(unittest.TestCase):
 
+    def shortDescription(self):
+        return "Test of pCASA parallel task wrapper"
+
     def setUp(self):
         print "Importing data..."
         self.vis = ["ngc5921-1.ms",
@@ -25,8 +28,10 @@ class pcasa_test(unittest.TestCase):
         for i in range(1, 6):
             assert os.system("cp -r " + self.vis[0] + " " + self.vis[i]) == 0
 
-    def shortDescription(self):
-        return "Test of pCASA parallel task wrapper"
+    def tearDown(self):
+        for v in self.vis:
+            os.system("rm -rf " + v)
+            os.system("rm -rf " + v + ".flagversions")
 
     def test1(self):
         vis = "multi.ms"
