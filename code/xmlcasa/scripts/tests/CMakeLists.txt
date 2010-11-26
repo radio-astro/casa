@@ -25,6 +25,7 @@ casa_add_python( xmlcasa xmlcasa_tests_python python/${PYTHONV}/tests
   test_clearstat.py
   test_componentlist.py
   test_concat.py
+  test_conjugatevis.py
   test_csvclean.py
   test_cvel.py
   test_exportasdm.py
