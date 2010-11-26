@@ -32,20 +32,9 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
             if any(key=='MS_VERSION' for key in tbkeys):
                 if any(col=='FLOAT_DATA' for col in colnames):
                     fdataexist = True
-                    #print "FLOAT_DATA exist"
                     casalog.post( "FLOAT_DATA exist" )
                 else:
-                    #print "No FLOAT_DATA, DATA is used"
                     casalog.post( "No FLOAT_DATA, DATA is used" )
-                if any(col=='CORRECTED_DATA' for col in colnames):
-                    calibrated = True
-                    #print "Calibrated data seems to exist"
-                    casalog.post( "Calibrated data seems to exist" )
-                elif calmode != 'none':
-                    # Workaround: create CORRECTED_DATA using im tool
-                    casalog.post( "CORRECTED_DATA doesn't exist, create it..." )
-                    im.open(sdfile,usescratch=True)
-                    im.close()
             else:
                 msg='sdfile must be in MS format'
                 raise Exception, msg
@@ -311,9 +300,10 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
             nr = subtb.nrows()
             #nr = len(data)*len(data[0])
             #ndatcol = numpy.zeros((npol,nr),dtype=numpy.float)
-            ndatcol = subtb.getcol('CORRECTED_DATA')
+            ndatcol = subtb.getcol(datalab)
             (l,m,n) = ndatcol.shape
-            ndatcol.reshape(l,n)
+            # m (= nchan) should be 1 since the task is specifically designed for total power data
+            ndatcol.reshape(l,n) 
             for np in range(len(selcorrtypeind)):
                 pl.figure(np+1)
                 pl.clf()
@@ -433,16 +423,17 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
             else:
                 startrow=0
                 rowincr=1
-            casalog.post( "Storing the corrected data to CORRECTED_DATA column in the MS..." )
+            casalog.post( "Storing the corrected data to %s column in the MS..."%datalab )
+            casalog.post( "Note that %s will be overwritten"%datalab )
             cdatm=ndatcol.reshape(npol,1,len(cdat))
-            tb.putcol('CORRECTED_DATA', cdatm, startrow=startrow, rowincr=rowincr)
+            tb.putcol(datalab, cdatm, startrow=startrow, rowincr=rowincr)
             tb.close() 
             # calibration end
             #
             # plot corrected data
             tb.open(sdfile)
             subt=tb.query('any(ANTENNA1==%s && ANTENNA2==%s)' % (antid, antid))
-            cdatcol=subt.getcol('CORRECTED_DATA')
+            cdatcol=subt.getcol(datalab)
             (l,m,n)=cdatcol.shape
             subt.close()
             tb.close()
@@ -461,13 +452,12 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
                 if abs(plotlevel) > 0:
                     if plotlevel > 0:
                         pl.ion()
-##                     pl.ion()
                     pl.plot(xrange(len(cdatcol2)),cdatcol2, 'g.')
                     pl.xlim(0,ndat)
                     t1=pl.getp(pl.gca(),'xticklabels')
                     t2=pl.getp(pl.gca(),'yticklabels')
                     pl.setp((t1,t2),fontsize='smaller')
-                    pl.ylabel('CORRECTED_DATA',fontsize='smaller')
+                    pl.ylabel('CORRECTED DATA',fontsize='smaller')
                     #pl.text(len(cdatcol2)*1.01,cdatcol2.min(),'[row #]',fontsize='smaller')
                     pl.xlabel('[row #]',fontsize='smaller')
                     pl.draw()
@@ -481,15 +471,11 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
                 subt=tb.query('any(ANTENNA1==%s && ANTENNA2==%s)' % (antid, antid))
                 nrow=subt.nrows()
                 for np in range(selnpol):
-                    if calibrated:
-                        datalab = 'CORRECTED_DATA'
-                        datcol=subt.getcol(datalab)
+                    if fdataexist:
+                        datalab='FLOAT_DATA'
                     else:
-                        if fdataexist:
-                            datalab='FLOAT_DATA'
-                        else:
-                            datalab='DATA'
-                        datcol=subt.getcol(datalab)
+                        datalab='DATA'
+                    datcol=subt.getcol(datalab)
                     tb.close()
                     pl.ioff()
                     pl.figure(np+1)
