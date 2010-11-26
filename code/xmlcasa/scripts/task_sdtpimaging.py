@@ -10,7 +10,7 @@ interactive=False
 # This is a task version of the script originally made for reducing ATF raster scan data 
 # in total power mode. Still experimental...
 # 
-def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, createimage, imagename, imsize, cell, phasecenter, ephemsrcname, pointingcolumn, gridfunction, plotlevel):
+def sdtpimaging(sdfile, calmode, masklist, blpoly, backup, flaglist, antenna, stokes, createimage, imagename, imsize, cell, phasecenter, ephemsrcname, pointingcolumn, gridfunction, plotlevel):
     # NEED to include spw, src? name for movingsource param. in function argument
     # put implementation here....
     casalog.origin('sdtpimaging')
@@ -268,6 +268,19 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
                     phasecenter = me.measure(me.direction(ephemsrcname),'AZELGEO')
         # get number of scans and subscans
         tb.open(sdfile)
+        if calmode != 'none':
+            # back up original file if backup == True
+            if fdataexist:
+                colname = 'FLOAT_DATA'
+            else:
+                colname = 'DATA'
+            casalog.post('%s column in %s will be overwritten.'%(colname,sdfile))
+            if backup:
+                import time
+                backupname = sdfile.rstrip('/')+'.sdtpimaging.bak.'+time.asctime(time.gmtime()).replace(' ','_')
+                casalog.post('The task will create a back up named %s'%backupname)
+                backuptb = tb.copy( backupname, deep=True, valuecopy=True )
+                backuptb.close()
         scans = numpy.unique(tb.getcol('SCAN_NUMBER'))
         nscan = len(scans)
         subscans = numpy.unique(tb.getcol('STATE_ID'))
