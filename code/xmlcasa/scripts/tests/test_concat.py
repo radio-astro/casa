@@ -569,8 +569,7 @@ class concat_cleanup(unittest.TestCase):
         pass
     
     def tearDown(self):
-        os.system('rm -rf *part*.ms')   
-        os.system('rm -rf test*.ms')
+        os.system('rm -rf *.ms')
 
     def testrun(self):
         '''Concat: Cleanup'''
