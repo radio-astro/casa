@@ -103,6 +103,21 @@ class test_vector(test_base):
         for a in ["VLA1", "VLA2", "VLA5", "VLA8", "VLA9", "VLA10", "VLA11", "VLA24"]:
             self.assertEqual(s['antenna'][a]['flagged'], 808)
 
+    def test_many_agents(self):
+        """More than 32 agents"""
+        # 1 agent
+        flagdata2(vis = self.vis, manualflag=True, selectdata=True,
+                  mf_antenna="3")
+        test_eq(flagdata2(vis = self.vis, summary=True), 70902, 5252)
+
+        flagdata2(vis=self.vis, unflag=True)
+
+        # 500 agents
+        flagdata2(vis = self.vis, manualflag=True, selectdata=True,
+                  mf_antenna=["3"] * 500)
+        test_eq(flagdata2(vis = self.vis, summary=True), 70902, 5252)
+
+
 class test_vector_ngc5921(test_base):
     def setUp(self):
         self.setUp_ngc5921()
@@ -674,6 +689,7 @@ class cleanup(test_base):
         os.system('rm -rf ngc5921.ms.flagversions')
         os.system('rm -rf flagdatatest.ms')
         os.system('rm -rf flagdatatest.ms.flagversions')
+        os.system('rm -rf missing-baseline.ms')
 
     def test1(self):
         '''flagdata2: Cleanup'''

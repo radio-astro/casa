@@ -556,6 +556,7 @@ class cleanup(test_base):
         os.system('rm -rf ngc5921.ms.flagversions')
         os.system('rm -rf flagdatatest.ms')
         os.system('rm -rf flagdatatest.ms.flagversions')
+        os.system('rm -rf missing-baseline.ms')
 
     def test1(self):
         '''flagdata: Cleanup'''
