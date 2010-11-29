@@ -397,10 +397,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int wConvSize, lastIndex_p;
     
     //
-    // The PA averaged (and potentially antenna averaged) PB for
-    // normalization
+    // The average PB for sky image normalization
     //
-    CountedPtr<TempImage<Float> > avgPB_p;
+    CountedPtr<ImageInterface<Float> > avgPB_p;
     //
     // No. of vis. polarization planes used in making the user defined
     // Stokes images

@@ -875,8 +875,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       .referenceValue()(0);
 
     //
-    // Need to figure out where to compute the following arrays/ints in the re-factored code.
-    //----------------------------------------------------------------
+    // Need to figure out where to compute the following arrays/ints
+    // in the re-factored code.
+    // ----------------------------------------------------------------
     {
       polInUse = 0;
       lastPAUsedForWtImg = currentCFPA = pa;
@@ -898,36 +899,42 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (cfSource==CFDefs::NOTCACHED)
       {
 	PAIndex_l = abs(cfSource);
-	//	telescopeConvFunc_p->setParams(polMap, cfStokes);
 	telescopeConvFunc_p->setPolMap(polMap);
 	telescopeConvFunc_p->makeConvFunction(image,vb,wConvSize,
 					      pa, cfs_p, cfwts_p);
 
 	cfCache_p->cacheConvFunction(cfs_p);
 	cfCache_p->cacheConvFunction(cfwts_p,"WT",False);
-	cfCache_p->flush(); // Write the aux info file
+	cfCache_p->flush(); // Write the aux info file to the disk
+			    // cache
       }
-    else
-      {
-	cfwts_p = cfs_p;
-      }
+
+    // For now, functions for weight gridding is the same at the
+    // function for visibility gridding.
+    cfwts_p = cfs_p;
+
     polInUse  = cfs_p.data->shape()(3);
     wConvSize = cfs_p.data->shape()(2);
-    // Reference the pixel array for legacy reasons.  This should not
-    // be required after full-cleanup.
+    // Reference the pixel array from the CFStore object to the
+    // convFunc variable for conveinance (legacy reasons).  This may
+    // not be required after full-cleanup.
     convFunc.reference(*cfs_p.data);
+
     convSampling = (Int)cfs_p.sampling(0);
     //
     // Load the average PB (sensitivity pattern) from the cache.  If
     // not found, make one and cache it.
     //
-    if (avgPB_p.null()) avgPB_p = new TempImage<Float>();
-    if (cfCache_p->loadAvgPB(*avgPB_p) == CFDefs::NOTCACHED)
+    if (cfCache_p->loadAvgPB(avgPB_p) == CFDefs::NOTCACHED)
       {
-	pbMade     = telescopeConvFunc_p->makeAverageResponse(vb, image, *avgPB_p);
+	pbMade = telescopeConvFunc_p->makeAverageResponse(vb, image, *avgPB_p);
+
 	normalizeAvgPB();	
 
-	if (pbMade) cfCache_p->flush(*avgPB_p); // Save the AVG PB and write the aux info.
+	if (pbMade) cfCache_p->flush(*avgPB_p); // Save the AVG PB and
+						// write the aux
+						// info. to the disk
+						// cache
       }
 
     verifyShapes(avgPB_p->shape(), image.shape());

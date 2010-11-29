@@ -111,7 +111,8 @@ namespace casa{
     // implementation dependent in the derived classes.
     virtual Bool makeAverageResponse(const VisBuffer& vb, 
 				     const ImageInterface<Complex>& image,
-				     TempImage<Float>& theavgPB,
+				     //				     TempImage<Float>& theavgPB,
+				     ImageInterface<Float>& theavgPB,
 				     Bool reset=True) = 0;
 
     //
