@@ -42,6 +42,8 @@
 #include <display/QtViewer/QtESOPanelGui.qo.h>
 #include <display/QtViewer/QtViewer.qo.h>
 
+#include <display/Utilities/Lowlevel.h>
+
 #include <unistd.h>
 #include <sys/stat.h>
 
@@ -65,7 +67,6 @@ static void launch_server( const char *origname, int numargs, char **args,
 			   bool persistent, bool casapy_start );
 static char *find_xvfb( const char *paths );
 static pid_t launch_xvfb( const char *name, pid_t pid, char *&display, char *&authority );
-static int make_it_a_dir( const char *path );
 
 static void exiting_server( int sig ) { exit(0); }
 static void signal_manager_root( int sig ) {
@@ -568,7 +569,7 @@ pid_t launch_xvfb( const char *name, pid_t pid, char *&display, char *&authority
 
     authority = (char*) malloc( sizeof(char)*(strlen(home)+160) );
     sprintf( authority, "%s/.casa", home );
-    make_it_a_dir( authority );
+    viewer::make_it_a_dir( authority );
     sprintf( authority, "%s/.casa/xauthority", home );
 
     const int display_start=6;
@@ -662,33 +663,3 @@ pid_t launch_xvfb( const char *name, pid_t pid, char *&display, char *&authority
     return child_xvfb;
 }
 
-//
-//  helper function to create ~/.casa/ipython/security
-//
-int make_it_a_dir( const char *path ) {
-    struct stat buf;
-    if ( stat( path, &buf ) == 0 ) {
-	if ( ! S_ISDIR(buf.st_mode) ) {
-	    char *savepath = (char*) malloc(sizeof(char) * (strlen(path) + 12));
-	    int count = 0;
-
-	    do {
-		count += 1;
-		sprintf( savepath, "%s_SAV%03d", path, count );
-	    } while ( stat( savepath, &buf ) == 0 );
-
-	    if ( rename( path, savepath ) != 0 ) {
-		return 1;
-	    }
-	    if ( mkdir( path, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH ) != 0 ) {
-		return 1;
-	    }
-	    free(savepath);
-	}
-    } else {
-	if ( mkdir( path, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH ) != 0 ) {
-	    return 1;
-	}
-    }
-    return 0;
-}

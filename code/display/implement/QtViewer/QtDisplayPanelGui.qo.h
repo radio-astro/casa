@@ -43,7 +43,7 @@
 #include <graphics/X11/X_exit.h>
 #include <casaqt/QtUtilities/QtPanelBase.qo.h>
 #include <display/QtViewer/QtDisplayPanel.qo.h>
-
+#include <display/Utilities/Lowlevel.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -80,7 +80,7 @@ class QtDisplayPanelGui : public QtPanelBase,
  public:
   enum SCRIPTING_OPTION { INTERACT, SETOPTIONS };
 
-  QtDisplayPanelGui(QtViewer* v, QWidget* parent=0);
+  QtDisplayPanelGui(QtViewer* v, QWidget* parent=0, std::string rcstr="dpg" );
   ~QtDisplayPanelGui();
 
   // access to our viewer
@@ -162,6 +162,9 @@ class QtDisplayPanelGui : public QtPanelBase,
  
   QtDataManager* dataMgr() { return qdm_;  }
 
+  // return the id for viewer state for this type of panel
+  virtual std::string rcid( ) const { return rcid_; }
+
  public slots:
  
   // At least for now, colorbars can only be placed horizontally or vertically,
@@ -214,7 +217,11 @@ class QtDisplayPanelGui : public QtPanelBase,
   // (Attempts to) restore panel state from named file.
   virtual Bool restorePanelState(String filename);
  
- 
+  virtual void trackingMoved(Qt::DockWidgetArea);
+  virtual void animatorMoved(Qt::DockWidgetArea);
+  virtual void mousetoolbarMoved(Qt::Orientation orient);
+
+
  signals:
  
     void colorBarOrientationChange();     
@@ -363,8 +370,10 @@ class QtDisplayPanelGui : public QtPanelBase,
   virtual void updateDDMenus_(Bool doCloseMenu = True);
   
   
-  
-  
+  // scripted (via dbus) panels should override the closeEvent( ) and hide the gui
+  // instead of deleting it when it was created via a dbus script...
+  void closeEvent(QCloseEvent *event);
+
   //# ----------------------------DATA----------------------------------
   
   // At least for now, colorbars can only be placed horizontally or vertically,
@@ -412,7 +421,13 @@ class QtDisplayPanelGui : public QtPanelBase,
      
  private:
   unsigned int showdataoptionspanel_enter_count;
-  QtDisplayPanelGui() {  }		// (not intended for use)  
+  QtDisplayPanelGui() : rc(viewer::getrc()) {  }		// (not intended for use)  
+
+  // connection to rc file
+  Casarc &rc;
+  // rc id for this panel type
+  std::string rcid_;
+
     
  public:
  
@@ -470,7 +485,7 @@ class TrackBox : public QGroupBox {
   QTextEdit*    trkgEdit_;	// (the box's tracking info display area).
     
  private:
-  
+
   TrackBox() {  }		// (not intended for use)  
 
 };

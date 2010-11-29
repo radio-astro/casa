@@ -311,6 +311,7 @@ casa_add_library( display
   implement/Utilities/DisplayOptions.cc
   implement/Utilities/DlHandle.cc
   implement/Utilities/DlTarget.cc
+  implement/Utilities/Lowlevel.cc
   )
 
 casa_add_executable( display casaplotter apps/casaplotter/casaplotter.cc )

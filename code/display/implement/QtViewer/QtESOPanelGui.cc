@@ -52,7 +52,7 @@
 //#include <casa/sstream.h>
 namespace casa {
 
-    QtESOPanelGui::QtESOPanelGui( QtViewer *v, QWidget *parent ) : QtDisplayPanelGui( v, parent)
+    QtESOPanelGui::QtESOPanelGui( QtViewer *v, QWidget *parent ) : QtDisplayPanelGui( v, parent, "eso" )
     {
 
     // set a new display title
