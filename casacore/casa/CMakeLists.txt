@@ -164,6 +164,7 @@ System/AipsrcBool.cc
 System/AppInfo.cc
 System/Aipsrc.cc
 System/AipsrcVBool.cc
+System/Casarc.cc
 System/PGPlotterNull.cc
 System/ObjectID.cc
 System/Choice.cc
@@ -505,6 +506,7 @@ System/AipsrcValue.h
 System/AipsrcValue.tcc
 System/AipsrcVector.h
 System/AipsrcVector.tcc
+System/Casarc.h
 System/AppInfo.h
 System/Choice.h
 System/ObjectID.h
