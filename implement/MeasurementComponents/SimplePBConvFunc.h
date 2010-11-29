@@ -102,7 +102,8 @@ namespace casa{
       {throw(AipsError("SimplePBConvFunc::findSupport() not implemented"));};
       virtual Bool makeAverageResponse(const VisBuffer& vb, 
 				       const ImageInterface<Complex>& image,
-				       TempImage<Float>& theavgPB,
+				       //				       TempImage<Float>& theavgPB,
+				       ImageInterface<Float>& theavgPB,
 				       Bool reset=True)
       {throw(AipsError("SimplePBConvFunc::makeAverageRes() called"));};
 

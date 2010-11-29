@@ -478,7 +478,8 @@ namespace casa{
 
   Bool AWConvFunc::makeAverageResponse(const VisBuffer& vb, 
 				       const ImageInterface<Complex>& image,
-				       TempImage<Float>& theavgPB,
+				       //				       TempImage<Float>& theavgPB,
+				       ImageInterface<Float>& theavgPB,
 				       Bool reset)
   {
     TempImage<Float> localPB;

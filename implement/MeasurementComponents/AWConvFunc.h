@@ -61,7 +61,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				  CFStore& cfwts);
     virtual Bool makeAverageResponse(const VisBuffer& vb, 
 				     const ImageInterface<Complex>& image,
-				     TempImage<Float>& theavgPB,
+				     //				     TempImage<Float>& theavgPB,
+				     ImageInterface<Float>& theavgPB,
 				     Bool reset=True);
     virtual int getVisParams(const VisBuffer& vb) {return ATerm_p->getVisParams(vb);};
     virtual void setPolMap(const Vector<Int>& polMap) {ATerm_p->setPolMap(polMap);};
