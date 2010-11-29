@@ -31,6 +31,7 @@
 #include <casa/Arrays/Matrix.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <images/Images/ImageInterface.h>
+#include <images/Images/TempImage.h>
 #include <images/Images/PagedImage.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Vector.h>
@@ -207,6 +208,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void flush();
     void flush(ImageInterface<Float>& avgPB);
     Int loadAvgPB(ImageInterface<Float>& avgPB);
+    Int loadAvgPB(CountedPtr<ImageInterface<Float> > & avgPB)
+    {if (avgPB.null()) avgPB = new TempImage<Float>(); return loadAvgPB(*avgPB);};
+
   protected:
     LogIO logIO_p;
     LogIO& logIO() {return logIO_p;};
