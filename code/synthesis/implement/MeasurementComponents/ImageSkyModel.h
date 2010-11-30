@@ -215,6 +215,22 @@ public:
   // Set the variable that switches on the progress display
   void setDisplayProgress (const Bool display ) {displayProgress_p = display; };
 
+  // Tries to return a pointer to a TempImage (allocated with new, so remember
+  // to use delete) with the given shape and CoordinateSystem.
+  //
+  // @param imgShp
+  // @param imgCoords
+  // @param nMouthsToFeed: If > 1 it is taken as a hint that it should leave
+  //                       room for nMouthsToFeed - 1 more TempImages. 
+  //
+  // <throws>
+  // AipsError on memory allocation error.
+  // </throws>
+  template<class M>
+  static TempImage<M>* getTempImage(const TiledShape& imgShp,
+                                    const CoordinateSystem& imgCoords,
+                                    const uInt nMouthsToFeed=1);
+
 protected:
 
   // Make Newton Raphson step internally. This is really an implementation
@@ -288,6 +304,11 @@ protected:
 
 
 } //# NAMESPACE CASA - END
+
+
+#ifndef AIPS_NO_TEMPLATE_SRC
+#include <synthesis/MeasurementComponents/ImageSkyModel.tcc>
+#endif //# AIPS_NO_TEMPLATE_SRC
 
 #endif
 

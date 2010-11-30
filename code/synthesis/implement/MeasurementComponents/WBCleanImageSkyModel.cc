@@ -67,8 +67,6 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 #define TMR(a) "[User: " << a.user() << "] [System: " << a.system() << "] [Real: " << a.real() << "]"
-
-#define MEMFACTOR (4.0)
 	
 #define MIN(a,b) ((a)<=(b) ? (a) : (b))
 #define MAX(a,b) ((a)>=(b) ? (a) : (b))

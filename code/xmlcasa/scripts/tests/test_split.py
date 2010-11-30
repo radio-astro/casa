@@ -133,8 +133,7 @@ class SplitChecker(unittest.TestCase):
 
     def tearDown(self):
         """
-        Will only clean things up if all the tests have run and passed,
-        so keep self.n_tests and self.tests_passed up to date.
+        Will only clean things up if all the splits have run.
         """
         #print "self.n_tests_passed:", self.n_tests_passed
 
@@ -842,6 +841,8 @@ class split_test_tav_then_cvel(SplitChecker):
                 record['tav'][c] = {}
                 for r in [0, 4, 5, 6, 7, 90, 91]:
                     record['tav'][c][r] = tb.getcell(c, r)
+            for c in ['SCAN_NUMBER', 'STATE_ID']:
+                record['tav'][c][123] = tb.getcell(c, 123)
             tb.close()
         except Exception, e:
             print "Error time averaging and reading", tavms
@@ -879,22 +880,22 @@ class split_test_tav_then_cvel(SplitChecker):
                                    5405.+2.10000014j, 5405.+3.10000014j],
                                   [5405.+0.10000001j, 5405.+1.10000002j,
                                    5405.+2.10000014j, 5405.+3.10000014j]]),
-                  6: numpy.array([[5906.+0.1j, 5906.+1.10000002j,
-                                   5906.+2.0999999j, 5906.+3.0999999j],
-                                  [5906.+0.1j, 5906.+1.10000002j,
-                                   5906.+2.0999999j, 5906.+3.0999999j]]),
-                  7: numpy.array([[6456.+0.10000001j, 6456.+1.10000014j,
-                                   6456.+2.10000014j, 6456.+3.10000014j],
-                                  [6456.+0.10000001j, 6456.+1.10000014j,
-                                   6456.+2.10000014j, 6456.+3.10000014j]]),
-                 90: numpy.array([[89256.+0.1j, 89256.+1.10000002j,
-                                   89256.+2.10000014j, 89256.+3.10000014j],
-                                  [89256.+0.1j, 89256.+1.10000002j,
-                                   89256.+2.10000014j, 89256.+3.10000014j]]),
-                 91: numpy.array([[162467.015625+0.j, 162467.015625+1.j,
-                                   162467.015625+2.j, 162467.015625+3.j],
-                                  [162467.015625+0.j, 162467.015625+1.j,
-                                   162467.015625+2.j, 162467.015625+3.j]])},
+                  6: numpy.array([[6356.+0.10000002j, 6356.+1.10000014j,
+                                   6356.+2.10000014j, 6356.+3.10000014j],
+                                  [6356.+0.10000002j, 6356.+1.10000014j,
+                                   6356.+2.10000014j, 6356.+3.10000014j]]),
+                  7: numpy.array([[7356.+0.10000002j, 7356.+1.10000014j,
+                                   7356.+2.10000014j, 7356.+3.10000014j],
+                                  [7356.+0.10000002j, 7356.+1.10000014j,
+                                   7356.+2.10000014j, 7356.+3.10000014j]]),
+                 90: numpy.array([[670450.+0.1j,    670450.+1.10000002j,
+                                   670450.+2.1j,    670450.+3.1j],
+                                  [670450.+0.1j,    670450.+1.10000002j,
+                                   670450.+2.1j,    670450.+3.1j]]),
+                 91: numpy.array([[671150.+0.100j,  671150.+1.10000014j,
+                                   671150.+2.100j,  671150.+3.10000014j],
+                                  [671150.+0.100j,  671150.+1.10000014j,
+                                   671150.+2.100j,  671150.+3.10000014j]])},
                  0.0001)
         #self.__class__.n_tests_passed += 1
 
@@ -904,30 +905,28 @@ class split_test_tav_then_cvel(SplitChecker):
                  {0: numpy.array([ 10.,  10.]),
                   4: numpy.array([ 10.,  10.]),
                   5: numpy.array([ 9.,  9.]),
-                  6: numpy.array([ 1.,  1.]),
+                  6: numpy.array([ 10.,  10.]),
                   7: numpy.array([ 10.,  10.]),
-                  90: numpy.array([ 6.,  6.]),
+                  90: numpy.array([ 4.,  4.]),
                   91: numpy.array([ 10.,  10.])}, 0.01)
         #self.__class__.n_tests_passed += 1
 
     def test_tav_int(self):
         """Time averaged INTERVAL"""
         check_eq(self.records['tav']['INTERVAL'],
-                 {0: 10.0, 4: 10.0, 5: 9.0, 6: 1.0, 7: 10.0, 90: 6.0, 91: 10.0},
+                 {0: 10.0, 4: 10.0, 5: 9.0, 6: 10.0, 7: 10.0, 90: 4.0, 91: 10.0},
                  0.01)
         #self.__class__.n_tests_passed += 1
 
     def test_tav_state_id(self):
         """Time averaged STATE_ID"""
         check_eq(self.records['tav']['STATE_ID'],
-                 {0: 1, 4: 1, 5: 1, 6: 1, 7: 1, 90: 1, 91: 0})
-        #self.__class__.n_tests_passed += 1
+                 {0: 1, 4: 1, 5: 1, 6: 1, 7: 1, 90: 1, 91: 1, 123: 0})
 
     def test_tav_scan(self):
         """Time averaged SCAN_NUMBER"""
         check_eq(self.records['tav']['SCAN_NUMBER'],
-                 {0: 5, 4: 5, 5: 5, 6: 6, 7: 6, 90: 6, 91: 17})
-        #self.__class__.n_tests_passed += 1
+                 {0: 5, 4: 5, 5: 5, 6: 6, 7: 6, 90: 100, 91: 100, 123: 38})
 
     def test_cv(self):
         """cvel completed"""

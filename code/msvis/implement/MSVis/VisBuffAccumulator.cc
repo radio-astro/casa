@@ -1,4 +1,4 @@
-//# VisTimeAverager.cc: Implementation of VisTimeAverager.h
+//# VisBuffAccumulator.cc: Implementation of VisBuffAccumulator.h
 //# Copyright (C) 1996,1997,1998,1999,2000,2002,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#

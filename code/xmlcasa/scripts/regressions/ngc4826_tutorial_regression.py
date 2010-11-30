@@ -540,7 +540,7 @@ print "Completed pre-calibration flagging"
 ##########################################################################
 #
 # Bandpasses are very flat because of observing mode used (online bandpass
-# correction) so bandpass calibration is unecessary for these data.
+# correction) so bandpass calibration is unnecessary for these data.
 #
 ##########################################################################
 #

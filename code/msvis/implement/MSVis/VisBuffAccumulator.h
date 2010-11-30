@@ -101,6 +101,13 @@ public:
   Double& timeStamp() { return globalTime_p; };
   Double& timeStampWt() { return globalTimeWt_p; };
 
+protected:
+  // Averaging buffer
+  CalVisBuffer avBuf_p;
+
+  // Number of correlations and channels
+  Int nCorr_p, nChan_p;
+
 private:
   // Prohibit null constructor, copy constructor and assignment for now
   VisBuffAccumulator();
@@ -119,8 +126,8 @@ private:
   // Hash function to return the row offset for an interferometer (ant1, ant2)
   Int hashFunction (const Int& ant1, const Int& ant2);
 
-  // Number of antennas, correlations, and channels
-  Int nAnt_p, nCorr_p, nChan_p;
+  // Number of antennas
+  Int nAnt_p;
 
   // Averaging interval
   Double interval_p;
@@ -142,9 +149,6 @@ private:
 
   // Flag to mark the first accumulation interval
   Bool firstInterval_p;
-
-  // Averaging buffer
-  CalVisBuffer avBuf_p;
   
   // Diagnostic print level
   Int prtlev_;

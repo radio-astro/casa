@@ -4,7 +4,7 @@ from taskinit import *
 
 def split(vis, outputvis, datacolumn, field, spw, width, antenna,
           timebin, timerange, scan, array, uvrange, correlation,
-          ignorables, keepflags):
+          combine, keepflags):
     """Create a visibility subset from an existing visibility set:
 
     Keyword arguments:
@@ -49,8 +49,8 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
                default '' (all).
     correlation -- Select correlations, e.g. 'rr, ll' or ['XY', 'YX'].
                    default '' (all).
-    ignorables -- Data descriptors that time averaging can ignore:
-                  array, scan, and/or state
+    combine -- Data descriptors that time averaging can ignore:
+                  scan, and/or state
                   Default '' (none)
     keepflags -- Keep flagged data, if possible
                  Default True
@@ -101,14 +101,14 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
             else:
                 width = [1]
         except:
-            raise TypeError, 'parameter width is invalid..using 1'
+            raise TypeError, 'parameter width is invalid...using 1'
 
     if type(correlation) == list:
         correlation = ', '.join(correlation)
     correlation = correlation.upper()
 
-    if hasattr(ignorables, '__iter__'):
-        ignorables = ', '.join(ignorables)
+    if hasattr(combine, '__iter__'):
+        combine = ', '.join(combine)
 
     if type(spw) == list:
         spw = ','.join([str(s) for s in spw])
@@ -146,7 +146,7 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
                  timebin='',         time=timerange,
                  whichcol=datacolumn,
                  scan=scan,          uvrange=uvrange,
-                 ignorables=ignorables,
+                 combine=combine,
                  correlation=correlation)
         
         # The selection was already made, so blank them before time averaging.
@@ -175,7 +175,7 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
              timebin=timebin,     time=timerange,
              whichcol=datacolumn,
              scan=scan,           uvrange=uvrange,
-             ignorables=ignorables,
+             combine=combine,
              correlation=correlation,
              taql=taqlstr)
     myms.close()
@@ -203,7 +203,7 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
                       origin='split')
     myms.writehistory(message='datacolumn  = "'+str(datacolumn)+'"',
                       origin='split')
-    myms.writehistory(message='ignorables  = "'+str(ignorables)+'"',
+    myms.writehistory(message='combine  = "'+str(combine)+'"',
                       origin='split')
     myms.close()
 

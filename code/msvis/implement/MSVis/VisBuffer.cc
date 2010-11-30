@@ -100,6 +100,9 @@ VisBuffer& VisBuffer::assign(const VisBuffer& other, Bool copy)
       flagCubeOK_p=other.flagCubeOK_p;
       flagRowOK_p=other.flagRowOK_p;
       scanOK_p=other.scanOK_p;
+      observationIdOK_p=other.observationIdOK_p;
+      processorIdOK_p=other.processorIdOK_p;
+      stateIdOK_p=other.stateIdOK_p;
       freqOK_p=other.freqOK_p;
       lsrFreqOK_p=other.lsrFreqOK_p;
       phaseCenterOK_p=other.phaseCenterOK_p;
@@ -191,6 +194,18 @@ VisBuffer& VisBuffer::assign(const VisBuffer& other, Bool copy)
       if (scanOK_p) {
 	scan_p.resize(other.scan_p.nelements());
 	scan_p=other.scan_p;
+      }
+      if (observationIdOK_p) {
+	observationId_p.resize(other.observationId_p.nelements());
+	observationId_p=other.observationId_p;
+      }
+      if (processorIdOK_p) {
+	processorId_p.resize(other.processorId_p.nelements());
+	processorId_p=other.processorId_p;
+      }
+      if (stateIdOK_p) {
+	stateId_p.resize(other.stateId_p.nelements());
+	stateId_p=other.stateId_p;
       }
       if (freqOK_p) {
 	frequency_p.resize(other.frequency_p.nelements()); 
@@ -319,6 +334,8 @@ void VisBuffer::invalidate()
 {
   nChannelOK_p=channelOK_p=nRowOK_p=ant1OK_p=ant2OK_p=feed1OK_p=feed2OK_p=
     arrayIdOK_p=cjonesOK_p=fieldIdOK_p=flagOK_p=flagRowOK_p=scanOK_p=freqOK_p=
+    observationIdOK_p = processorIdOK_p = stateIdOK_p = timeCentroidOK_p =
+    exposureOK_p =
     lsrFreqOK_p=phaseCenterOK_p=polFrameOK_p=sigmaOK_p=sigmaMatOK_p=spwOK_p=
     timeOK_p=timeIntervalOK_p=uvwOK_p=uvwMatOK_p=visOK_p=weightOK_p=
     weightMatOK_p=weightSpectrumOK_p=corrTypeOK_p=nCorrOK_p=    False;
@@ -332,6 +349,8 @@ void VisBuffer::validate()
 {
   nChannelOK_p=channelOK_p=nRowOK_p=ant1OK_p=ant2OK_p=feed1OK_p=feed2OK_p=
     arrayIdOK_p=cjonesOK_p=fieldIdOK_p=flagOK_p=flagRowOK_p=scanOK_p=freqOK_p=
+    observationIdOK_p = processorIdOK_p = stateIdOK_p = timeCentroidOK_p =
+    exposureOK_p =
     lsrFreqOK_p=phaseCenterOK_p=polFrameOK_p=sigmaOK_p=sigmaMatOK_p=spwOK_p=
     timeOK_p=timeIntervalOK_p=uvwOK_p=uvwMatOK_p=visOK_p=weightOK_p=
     weightMatOK_p=weightSpectrumOK_p=corrTypeOK_p=nCorrOK_p=    True;
@@ -1601,8 +1620,16 @@ Cube<Bool>& VisBuffer::fillFlagCube()
 { flagCubeOK_p=True; return visIter_p->flag(flagCube_p); }
 Vector<Bool>& VisBuffer::fillFlagRow()
 { flagRowOK_p=True; return visIter_p->flagRow(flagRow_p);}
+Array<Bool>& VisBuffer::fillFlagCategory()
+{ flagCategoryOK_p=True; return visIter_p->flagCategory(flagCategory_p); }
 Vector<Int>& VisBuffer::fillScan()
 { scanOK_p=True; return visIter_p->scan(scan_p);}
+Vector<Int>& VisBuffer::fillObservationId()
+{ observationIdOK_p=True; return visIter_p->observationId(observationId_p);}
+Vector<Int>& VisBuffer::fillProcessorId()
+{ processorIdOK_p=True; return visIter_p->processorId(processorId_p);}
+Vector<Int>& VisBuffer::fillStateId()
+{ stateIdOK_p=True; return visIter_p->stateId(stateId_p);}
 Vector<Double>& VisBuffer::fillFreq()
 { freqOK_p=True; return visIter_p->frequency(frequency_p); }
 Vector<Double>& VisBuffer::fillLSRFreq()
@@ -1632,8 +1659,14 @@ Int& VisBuffer::fillSpW()
 Vector<Double>& VisBuffer::fillTime()
 { timeOK_p=True; return visIter_p->time(time_p);}
 
+Vector<Double>& VisBuffer::fillTimeCentroid()
+{ timeCentroidOK_p = True; return visIter_p->timeCentroid(timeCentroid_p);}
+
 Vector<Double>& VisBuffer::fillTimeInterval()
-{ timeIntervalOK_p=True; return visIter_p->timeInterval(timeInterval_p);}
+{ timeIntervalOK_p = True; return visIter_p->timeInterval(timeInterval_p);}
+
+Vector<Double>& VisBuffer::fillExposure()
+{ exposureOK_p = True; return visIter_p->exposure(exposure_p);}
 
 Vector<RigidVector<Double,3> >& VisBuffer::filluvw()
 { uvwOK_p=True; return visIter_p->uvw(uvw_p);}
@@ -1655,7 +1688,7 @@ VisBuffer::fillVis(VisibilityIterator::DataColumn whichOne)
     break;    
   case VisibilityIterator::Observed:
   default:
-    visOK_p=True; 
+    visOK_p=True;
     return visIter_p->visibility(visibility_p,whichOne);
     break;
   }

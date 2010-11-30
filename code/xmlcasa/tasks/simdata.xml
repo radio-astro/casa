@@ -306,7 +306,8 @@ it'll do them for the same amount of time -->
     <param type="any" name="mask" subparam="true">
       <description>clean mask -- see help clean</description>
       <any type="variant"/>
-      <value type="stringArray"></value>
+      <!-- <value type="stringArray"></value> -->
+      <value type="bool">True</value>
     </param>
 
     <param type="stringArray" name="outertaper" subparam="true">
@@ -538,7 +539,7 @@ modifying the description doesn't work yet but its an improvement ticket.
 	  <default param="niter"><value>500</value></default>
 	  <default param="threshold"><value type="string">0.1mJy</value></default>
 	  <default param="weighting"><value type="string">natural</value></default>
-	  <default param="mask">      <value type="stringArray"></value></default>
+	  <default param="mask">      <value type="bool">True</value></default>
 	  <default param="outertaper"><value type="vector"><value></value></value></default>
 	  <default param="stokes"><value type="string">I</value></default>
 	</equals>

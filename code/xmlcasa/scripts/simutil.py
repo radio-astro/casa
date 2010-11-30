@@ -4,12 +4,16 @@ import casac
 import os
 import shutil
 import commands
-import pdb
+#import pdb
 # all I really need is casalog, but how to get it:?
 from taskinit import *
 import pylab as pl
-qatool = casac.homefinder.find_home_by_name('quantaHome')
-qa = qatool.create()
+
+# qa doesn't hold state.
+#qatool = casac.homefinder.find_home_by_name('quantaHome')
+#qa = qatool.create()
+
+im, cb, ms, tb, fg, me, ia, po, sm, cl, cs, rg, sl, dc, vp = gentools()
 
 class compositenumber:
     def __init__(self, maxval=100):
@@ -2780,14 +2784,6 @@ class simutil:
 
 
 
-
-
-
-
-
-
-
-
     ##################################################################
     # image/clean subtask
 
@@ -2922,8 +2918,8 @@ class simutil:
         else:
             cleanlast.write('modelimage              = ""\n');
         cleanlast.write("restoringbeam           = ['']\n");
-        cleanlast.write("pbcor                   = False\n");
-        cleanlast.write("minpb                   = 0.1\n");
+        cleanlast.write("pbcor                   = True\n");
+        cleanlast.write("minpb                   = 0.2\n");
         cleanlast.write("calready                = True\n");
         cleanlast.write('noise                   = ""\n');
         cleanlast.write('npixels                 = 0\n');
@@ -2942,11 +2938,11 @@ class simutil:
         cleanlast.close()
         
         clean(vis=', '.join(mstoimage), imagename=image, mode=chanmode, nchan=nchan,
-                  niter=niter, threshold=threshold, selectdata=False, mask=mask,
-                  psfmode=psfmode, imagermode=imagermode, ftmachine=ftmachine, 
-                  imsize=imsize, cell=map(qa.tos,cell), phasecenter=imcenter,
-                  stokes=stokes, weighting=weighting, robust=robust,
-                  uvtaper=uvtaper,outertaper=outertaper)
+              niter=niter, threshold=threshold, selectdata=False, mask=mask,
+              psfmode=psfmode, imagermode=imagermode, ftmachine=ftmachine, 
+              imsize=imsize, cell=map(qa.tos,cell), phasecenter=imcenter,
+              stokes=stokes, weighting=weighting, robust=robust,
+              uvtaper=uvtaper,outertaper=outertaper, mask=mask, pbcor=True)
 
         del freq,nchan # something is holding onto the ms in table cache
 

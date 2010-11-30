@@ -95,6 +95,9 @@ class VisBuffer;
 // For imaging and calibration you need to access an MS in some consistent
 // order (by field, spectralwindow, time interval etc.). This class provides
 // that access.
+//
+// Unlike ROVisibilityIterator, this supports non-strided in-row selection
+// (e.g., of channels and correlations).
 // </motivation>
 //
 // <thrown>
@@ -105,6 +108,7 @@ class VisBuffer;
 // <todo asof="1997/05/30">
 //   <li> cleanup the currently dual interface for visibilities and flags
 //   <li> sort out what to do with weights when interpolating
+//   <li> Handle the multi-MS case like ROVisibilityIterator does.
 // </todo>
 
 class ROVisIterator : public ROVisibilityIterator
@@ -114,15 +118,14 @@ public:
   // Default constructor - useful only to assign another iterator later
   ROVisIterator();
 
-  // Construct from MS and a Block of MS column enums specifying the 
-  // iteration order, if none are specified, time iteration is implicit.
-  // An optional timeInterval can be given to iterate through chunks of time.
-  // The default interval of 0 groups all times together.
-  // Every 'chunk' of data contains all data within a certain time interval
-  // and with identical values of the other iteration columns (e.g.
-  // SPECTRAL_WINDOW_ID and FIELD_ID).
+  // Construct from MS and a Block of MS column enums specifying the iteration
+  // order, if none are specified, time iteration is implicit.  An optional
+  // timeInterval can be given to iterate through chunks of time.  The default
+  // interval of 0 groups all times together.  Every 'chunk' of data contains
+  // all data within a certain time interval (in seconds) and with identical
+  // values of the other iteration columns (e.g.  DATA_DESC_ID and FIELD_ID).
   // Using selectChannel(), a number of groups of channels can be requested.
-  // At present the channel group iteration will always occur before the 
+  // At present the channel group iteration will always occur before the
   // interval iteration.
   ROVisIterator(const MeasurementSet& ms, 
 		const Block<Int>& sortColumns, 
@@ -267,6 +270,9 @@ protected:
 // For imaging and calibration you need to access an MS in some consistent
 // order (by field, spectralwindow, time interval etc.). This class provides
 // that access.
+//
+// Unlike ROVisibilityIterator, this supports non-strided in-row selection
+// (e.g., of channels).
 // </motivation>
 //
 // #<thrown>
@@ -276,6 +282,7 @@ protected:
 // <todo asof="1997/05/30">
 //   <li> cleanup the currently dual interface for visibilities and flags
 //   <li> sort out what to do with weights when interpolating
+//   <li> Handle the multi-MS case like VisibilityIterator does.
 // </todo>
 
 class VisIterator : public ROVisIterator

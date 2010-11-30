@@ -167,11 +167,11 @@ class SubMS
   //vector size 3 e.g [4, 15, 351] => a tile shape of 4 stokes, 15 channels 351
   //rows.
   //
-  // ignorables sets ignorables_p.  (Columns to ignore while time averaging.)
+  // combine sets combine_p.  (Columns to ignore while time averaging.)
   //
   Bool makeSubMS(String& submsname, String& whichDataCol,
                  const Vector<Int>& tileShape=Vector<Int>(1, 0),
-                 const String& ignorables="");
+                 const String& combine="");
 
   //Method to make a scratch subMS and even in memory if posssible
   //Useful if temporary subselection/averaging is necessary
@@ -242,6 +242,11 @@ class SubMS
 			  Vector<Vector<Int> >& outToIn,
 			  const Bool areSelecting=false);
   
+  // Replaces col[i] with mapper[col[i]] for each element of col.
+  // Does NOT check whether mapper[col[i]] is defined.
+  static void remap(Vector<Int>& col, const Vector<Int>& mapper);
+  static void remap(Vector<Int>& col, const std::map<Int, Int>& mapper);
+
   // Transform spectral data to different reference frame,
   // optionally regrid the frequency channels 
   // return values: -1 = MS not modified, 1 = MS modified and OK, 
@@ -458,18 +463,6 @@ class SubMS
   //Int numOfBaselines(Vector<Int>& ant1, Vector<Int>& ant2,
   //                   Bool includeAutoCorr=False);
 
-  // Figure out which timebins each input row will go in, and return the
-  // number of output rows (slots) (-1 on failure).
-  //
-  // Normally the bins are automatically separated by changes in any data
-  // descriptor, i.e. antenna #, state ID, etc., but sometimes bins should be
-  // allowed to span (ignore) changes in certain descriptors.  An example is
-  // scan # in WSRT MSes; it goes up with each integration, defeating time
-  // averaging!  (sub)array(_ID), scan #, and state ID can be ignored by
-  // setting ignorables_p.
-  //
-  Int binTimes(const Double timeBin);
-
   // Used in a couple of places to estimate how much memory to grab.
   Double n_bytes() {return mssel_p.nrow() * nchan_p[0] * ncorr_p[0] *
                            sizeof(Complex);}
@@ -487,9 +480,6 @@ class SubMS
   // Figures out the number, maximum, and index of the selected antennas.
   uInt fillAntIndexer(const ROMSColumns *msc, Vector<Int>& antIndexer);
 
-  //Bool fillAverAntTime();
-  Bool fillTimeAverData(const Vector<MS::PredefinedColumns>& colNames);
-
   // Bits of fillTimeAverData() which were internal to it until they needed to
   // be templated to support both FLOAT_DATA and the other data columns (all
   // Complex).
@@ -501,6 +491,9 @@ class SubMS
   void accumUnflgData(Array<M>& data_toikit, const Vector<Float>& unflaggedwt,
                       const Array<M>& inData, const Array<Bool>& flag,
                       Matrix<M>& outData);
+
+  // Read the input, time average it to timeBin_p, and write the output.
+  Bool doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames);
 
   // Fills mapper[ntok] with a map from dataColumn indices to ArrayColumns in
   // the output.  mapper must have ntok slots!
@@ -524,15 +517,6 @@ class SubMS
 		       std::map<Int, Int>& mapper);
   uInt remapped(const Int ov, const Vector<Int>& mapper, uInt i);
 
-  // A "Slot" is a subBin, i.e. rows within the same time bin that have
-  // different Data Descriptors, Field_IDs, Array_IDs, or States, and so should
-  // not be averaged together.  In other words a slot becomes an output row
-  // when time averaging.  This function returns the Slot number corresponding
-  // to the Data Descriptor (dd), Field_ID, Array_ID, and State.
-  uInt rowProps2slotKey(const Int ant1,  const Int ant2, const Int dd, 
-			const Int field, const Int scan, const Int state,
-                        const uInt array);
-
   // *** Member variables ***
 
   // Initialized* by ctors.  (Maintain order both here and in ctors.)
@@ -542,16 +526,15 @@ class SubMS
   ROMSColumns * mscIn_p;
   Bool keepShape_p,      	// Iff true, each output array has the
 				// same shape as the corresponding input one.
-       sameShape_p,             // Iff true, the shapes of the arrays do not
-				// vary with row number.
+       // sameShape_p,             // Iff true, the shapes of the arrays do not
+       //  			// vary with row number.
        antennaSel_p;		// Selecting by antenna?
   Double timeBin_p;
   String scanString_p, uvrangeString_p, taqlString_p;
   String timeRange_p, arrayExpr_p, corrString_p;
-  uInt nant_p;
-  String ignorables_p;          // Should time averaging not split bins by
-                                // (sub)array(_ID), scan #, and/or state ID?
-                                // Must be lowercase at all times.
+  String combine_p;          // Should time averaging not split bins by
+                             // scan #, observation, and/or state ID?
+                             // Must be lowercase at all times.
 
   // Uninitialized by ctors.
   MeasurementSet msOut_p;
@@ -576,20 +559,16 @@ class SubMS
 
   Vector<Int> arrayId_p;
   Vector<Int> polID_p;	       // Map from input DDID to input polID, filled in fillDDTables(). 
-  Vector<uInt> tOI_p; //timeOrderIndex
   Vector<uInt> spw2ddid_p;
 
   // inCorrInd = outPolCorrToInCorrMap_p[polID_p[ddID]][outCorrInd]
   Vector<Vector<Int> > inPolOutCorrToInCorrMap_p;
 
-  std::map<Int, Int> arrayRemapper_p, scanRemapper_p, stateRemapper_p; 
+  std::map<Int, Int> arrayRemapper_p, stateRemapper_p; 
 
-  // Each bin gets a map which maps its set of slot keys from
-  // rowProps2slotKey() to lists of the row numbers in mscIn_p that belong to
-  // the slot.
-  Vector<ui2vmap> bin_slots_p;
-
+  Vector<Vector<Slice> > chanSlices_p;  // Used by VisIterator::selectChannel()
   Vector<Slice> corrSlice_p;
+  Vector<Vector<Slice> > corrSlices_p;  // Used by VisIterator::selectCorrelation()
   Matrix<Double> selTimeRanges_p;
 };
 

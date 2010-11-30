@@ -1985,7 +1985,7 @@ ms::split(const std::string&      outputms,   const ::casac::variant& field,
           const ::casac::variant& uvrange,    const std::string&      taql,
           const std::string&      whichcol,   const ::casac::variant& tileShape,
           const ::casac::variant& subarray,   const bool averchan,
-          const std::string&      ignorables, const std::string& correlation)
+          const std::string&      combine, const std::string& correlation)
 {
   Bool rstat(False);
   try {
@@ -2033,9 +2033,9 @@ ms::split(const std::string&      outputms,   const ::casac::variant& field,
        t_tileshape.resize();
        t_tileshape=tileShape.toIntVec();
      }
-     const String t_ignorables = downcase(ignorables);
+     const String t_combine = downcase(combine);
 
-     if(!splitter->makeSubMS(t_outputms, t_whichcol, t_tileshape, t_ignorables)){
+     if(!splitter->makeSubMS(t_outputms, t_whichcol, t_tileshape, t_combine)){
        *itsLog << LogIO::SEVERE
                << "Error splitting " << itsMS->tableName() << " to "
                << t_outputms

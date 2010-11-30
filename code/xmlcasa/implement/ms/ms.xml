@@ -2712,8 +2712,8 @@ for i in range(len(tcoord)):
      <value>true</value>
      </param>
 
-     <param type="string" direction="in" name="ignorables">
-     <description>Columns (array, scan, and/or state) to ignore when time averaging.</description>
+     <param type="string" direction="in" name="combine">
+     <description>Ignore changes in these columns (scan, and/or state) when time averaging.</description>
      <value></value>
      </param>
 
@@ -2782,7 +2782,7 @@ from spwid 1 of the input data, starting at channel 4, and every
 
      
   ms.open("WSRT.ms")
-  ms.split('subms.ms', timebin='20s', whichcol='all', ignorables='scan')
+  ms.split('subms.ms', timebin='20s', whichcol='all', combine='scan')
   ms.close()
 
 

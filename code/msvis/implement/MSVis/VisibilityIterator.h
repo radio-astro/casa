@@ -136,14 +136,13 @@ public:
   // and TIME, but check MSIter.h to be sure.
   // These columns will be added first if they are not specified.
   //
-  // An optional timeInterval can be given to iterate through chunks of time.
-  // The default interval of 0 groups all times together.
-  // Every 'chunk' of data contains all data within a certain time interval
-  // and with identical values of the other iteration columns (e.g.
-  // SPECTRAL_WINDOW_ID and FIELD_ID).
-  // Using selectChannel(), a number of groups of channels can be requested.
-  // At present the channel group iteration will always occur before the 
-  // interval iteration.
+  // An optional timeInterval (in seconds) can be given to iterate through
+  // chunks of time.  The default interval of 0 groups all times together.
+  // Every 'chunk' of data contains all data within a certain time interval and
+  // with identical values of the other iteration columns (e.g.  DATA_DESC_ID
+  // and FIELD_ID).  Using selectChannel(), a number of groups of channels can
+  // be requested.  At present the channel group iteration will always occur
+  // before the interval iteration.
   ROVisibilityIterator(const MeasurementSet& ms, 
 		       const Block<Int>& sortColumns,
 		       Double timeInterval=0);
@@ -179,7 +178,7 @@ public:
   // Reset iterator to true start of data (first chunk)
   void originChunks();
  
-  // Set or reset the time interval to use for iteration.
+  // Set or reset the time interval (in seconds) to use for iteration.
   // You should call originChunks() to reset the iteration after 
   // calling this.
   void setInterval(Double timeInterval)
@@ -298,11 +297,23 @@ public:
   // Return flag for each channel & row
   Matrix<Bool>& flag(Matrix<Bool>& flags) const;
 
+  // Return flags for each polarization, channel, category, and row.
+  Array<Bool>& flagCategory(Array<Bool>& flagCategories) const;
+
   // Return row flag
   Vector<Bool>& flagRow(Vector<Bool>& rowflags) const;
 
   // Return scan number
   Vector<Int>& scan(Vector<Int>& scans) const;
+
+  // Return the OBSERVATION_IDs
+  Vector<Int>& observationId(Vector<Int>& obsids) const;
+
+  // Return the PROCESSOR_IDs
+  Vector<Int>& processorId(Vector<Int>& procids) const;
+
+  // Return the STATE_IDs
+  Vector<Int>& stateId(Vector<Int>& stateids) const;
 
   // Return current frequencies
   virtual Vector<Double>& frequency(Vector<Double>& freq) const;
@@ -340,11 +351,17 @@ public:
   Int dataDescriptionId() const
   { return msIter_p.dataDescriptionId(); }
 
-  // Return MJD 
+  // Return MJD midpoint of interval.
   Vector<Double>& time(Vector<Double>& t) const;
 
-  // Return MJD time interval
-  Vector<Double>& timeInterval(Vector<Double>& t) const;
+  // Return MJD centroid of interval.
+  Vector<Double>& timeCentroid(Vector<Double>& t) const;
+
+  // Return nominal time interval
+  Vector<Double>& timeInterval(Vector<Double>& ti) const;
+
+  // Return actual time interval
+  Vector<Double>& exposure(Vector<Double>& expo) const;
 
   // Return the visibilities as found in the MS, Cube(npol,nchan,nrow).
   virtual Cube<Complex>& visibility(Cube<Complex>& vis,
@@ -366,7 +383,7 @@ public:
   // Return weight
   Vector<Float>& weight(Vector<Float>& wt) const;
 
-  // Return weight matrix
+  // Returns the nPol_p x curNumRow_p weight matrix
   virtual Matrix<Float>& weightMat(Matrix<Float>& wtmat) const;
 
   // Determine whether WEIGHT_SPECTRUM exists
@@ -653,7 +670,9 @@ protected:
   ROScalarColumn<Int> colAntenna1, colAntenna2;
   ROScalarColumn<Int> colFeed1, colFeed2;
   ROScalarColumn<Double> colTime;
+  ROScalarColumn<Double> colTimeCentroid;
   ROScalarColumn<Double> colTimeInterval;
+  ROScalarColumn<Double> colExposure;
   ROArrayColumn<Float> colWeight;
   ROArrayColumn<Float> colWeightSpectrum;
   ROArrayColumn<Complex> colVis;
@@ -662,8 +681,12 @@ protected:
   ROArrayColumn<Complex> colCorrVis;
   ROArrayColumn<Float> colSigma;
   ROArrayColumn<Bool> colFlag;
+  ROArrayColumn<Bool> colFlagCategory;
   ROScalarColumn<Bool> colFlagRow;
+  ROScalarColumn<Int> colObservation;
+  ROScalarColumn<Int> colProcessor;
   ROScalarColumn<Int> colScan;
+  ROScalarColumn<Int> colState;
   ROArrayColumn<Double> colUVW;
 
   //object to calculate imaging weight

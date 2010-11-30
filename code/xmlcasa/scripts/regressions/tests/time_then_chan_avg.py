@@ -20,9 +20,9 @@ expected = {
         # The rest of the keys at this level are chanselstrs.
         '': {
             # Test type
-            'nrows_aft_tavg': 1259,
-            'nrows_aft_cavg': 1259,
-            'datshp':         (1, 4, 1259),
+            'nrows_aft_tavg': 1079,
+            'nrows_aft_cavg': 1079,
+            'datshp':         (1, 4, 1079),
             'cells': {
                 #T or C  (col, row)  val, or (val, tolerance)
                 'tav': {('FLAG', 0): [False for i in xrange(8)],
@@ -78,9 +78,9 @@ expected = {
                         ('ANTENNA2', 5): 7  # Baseline 0-6 is dropped
                         }}},
         '0': {
-            'nrows_aft_tavg': 314,
-            'nrows_aft_cavg': 314,
-            'datshp':         (1, 4, 314),
+            'nrows_aft_tavg': 269,
+            'nrows_aft_cavg': 269,
+            'datshp':         (1, 4, 269),
             'cells': {
                 #T or C  (col, row)  val, or (val, tolerance)
                 'tav': {('FLAG', 0): [False for i in xrange(8)],
@@ -137,9 +137,9 @@ expected = {
                         ('ANTENNA2', 5): 7,  # Baseline 0-6 is dropped
                         }}},
         '2': {  # spw 2 didn't get the manual flagging that spw 0 did.
-            'nrows_aft_tavg': 315,
-            'nrows_aft_cavg': 315,
-            'datshp':         (1, 4, 315),
+            'nrows_aft_tavg': 270,
+            'nrows_aft_cavg': 270,
+            'datshp':         (1, 4, 270),
             'cells': {
                 #T or C  (col, row)  val, or (val, tolerance)
                 'tav': {('FLAG', 0): [False for i in xrange(8)],
@@ -175,9 +175,9 @@ expected = {
                         ('WEIGHT', 2): (2560.0, 0.05)
                         }}},
         '0~2:0~3': {
-            'nrows_aft_tavg': 944,
-            'nrows_aft_cavg': 944,
-            'datshp':         (1, 2, 944),
+            'nrows_aft_tavg': 808,
+            'nrows_aft_cavg': 808,
+            'datshp':         (1, 2, 808),
             'cells': {
                 #T or C  (col, row)  val, or (val, tolerance)
                 'tav': {('FLAG', 0): [False for i in xrange(4)],
@@ -217,8 +217,8 @@ expected = {
                         ('ANTENNA2', 5): 7,  # Baseline 0-6 is dropped
                         }}},
         '0,2:0~3': {
-            'nrows_aft_tavg': 629,
-            'nrows_aft_cavg': 629,
+            'nrows_aft_tavg': 539,
+            'nrows_aft_cavg': 539,
             'datshp': set([(1, 4, 1), (1, 2, 1)]),
             'cells': {
                 #T or C  (col, row)  val, or (val, tolerance)
@@ -245,7 +245,8 @@ expected = {
                                                                32., 32.,
                                                                32., 32.]]), 0.005),
                         ('ANTENNA2', 5): 7,  # Baseline 0-6 is dropped
-                        ('DATA_DESC_ID', 44): 1
+                        ('DATA_DESC_ID', 44): 0,
+                        ('DATA_DESC_ID', 134): 1
                         },
                 'cav': {('FLAG', 0): [False for i in xrange(4)],
                         ('WEIGHT', 0): (2304.0, 0.1),
@@ -254,6 +255,11 @@ expected = {
                         ('FEED2', 9): 0,
                         ('DATA', 1): (numpy.array([[4.5+1.0j, 4.5+2.6j,
                                                     4.5+4.5555553j, 0.0+0.j]]), 0.005),
+                        ('DATA', 81): (numpy.array([[14.4541+0.5j, 14.4541+2.5j,
+                                                     14.4541+4.5j, 14.4541+6.5j]]),
+                                       0.005),
+                        ('DATA', 192): (numpy.array([[14.462124+0.5j, 14.462124+2.5j]]),
+                                        0.005),
                         ('WEIGHT_SPECTRUM', 1): (numpy.array([[10., 50., 90., 0.]]),
                                                  0.005),
                         ('TIME', 1): (4715114710.4857559, 0.01),
@@ -269,7 +275,7 @@ expected = {
                                                  0.005),
                         ('ANTENNA2', 5): 7,  # Baseline 0-6 is dropped
                         ('DATA_DESC_ID', 134): 1,
-                        ('DATA', 134): (numpy.array([[14.462+0.5j, 14.462+2.5j]]), 0.005)
+                        ('DATA', 134): (numpy.array([[5.0+0.5j, 5.0+2.5j]]), 0.005)
                         }
                 }
             }
@@ -382,7 +388,7 @@ def run():
                     raise Exception, "Error (%s) checking %s's cell %s." % (e, avms,
                                                                             (col, row))
                 finally:
-                    tb.close(avms)
+                    tb.close()
 
                 if not badcells.has_key(avms):
                     shutil.rmtree(avms)
@@ -437,7 +443,6 @@ def time_then_chan_avg(inms, tbin, chanbin, outms="", zaptemp=True,
     
     try:
         # Do time averaging.
-        datacolstr = 'corrected'
         if (chanselstr.find(':') > -1) and ((chanselstr.find(',') > -1) or
                                             (chanselstr.find(';') > -1)):
             funnyshapes = True
