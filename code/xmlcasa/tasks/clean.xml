@@ -418,7 +418,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 <!--========================================================= -->
     <param type="bool" name="flatnoise" subparam="true">
-      <description>Controls whether search clean components in a constant noise residual image (True) or in an optimal signal-to-noise residual image (False). </description>
+      <description>Controls whether searching for clean components is done in a constant noise residual image (True) or in an optimal signal-to-noise residual image (False) </description>
       <value>True</value>
     </param>
 <!--========================================================= -->
