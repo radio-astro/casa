@@ -33,6 +33,7 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <sys/time.h>
+#include <QApplication>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
     namespace viewer { //# NAMESPACE VIEWER - BEGIN
@@ -99,6 +100,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		fprintf( stderr, "HOME is not defined... using current directory to store state...\n" );
 		return Casarc::instance("casaviewerrc");
 	    }
+	}
+
+	guiwait::guiwait( ) {
+	    QApplication::setOverrideCursor(Qt::WaitCursor);
+	}
+
+	guiwait::~guiwait( ) {
+	    QApplication::restoreOverrideCursor();
 	}
 
     } //# NAMESPACE VIEWER - BEGIN

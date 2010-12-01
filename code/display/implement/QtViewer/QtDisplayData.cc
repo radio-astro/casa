@@ -91,6 +91,8 @@ QtDisplayData::QtDisplayData(QtDisplayPanelGui *panel, String path,
 	       colorBarOrientationOpt_(0),
 	       colorBarCharSizeOpt_(0)  {
 
+  viewer::guiwait wait_cursor;
+
   if(dataType=="lel") { 
     name_ = path_;
     if(name_.length()>25) name_ =  path_.before(15) + "..." +

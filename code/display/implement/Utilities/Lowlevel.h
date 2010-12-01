@@ -40,6 +40,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	std::string date( );
 	// get viewer's rc file
 	Casarc &getrc( );
+
+	class guiwait {
+	    public:
+		guiwait( );
+		~guiwait( );
+	    private:
+		int noop;
+
+		// Prevent heap allocation
+		void * operator new   (size_t);
+		void * operator new[] (size_t);
+	};
     }
 }
 
