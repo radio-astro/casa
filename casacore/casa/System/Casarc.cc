@@ -348,7 +348,7 @@ namespace casa {
 
 	if ( stat( path.c_str( ), &buf ) < 0 ) {
 	    int fd = open( path.c_str( ), O_CREAT | O_WRONLY,
-			   S_IRUSR|S_IWUSR );
+			   S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH );
 	    if ( fd < 0 ) {
 		throw( "Casarc, could not create: " + path );
 	    } else {
