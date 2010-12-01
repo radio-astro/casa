@@ -4,103 +4,611 @@
 
 % JO  2010-10-12 doc created for CASA 3.1.0
 
-\chapter[Appendix: Conventions and Parameters]
-         {Conventions and Parameters}
+\chapter[Appendix: Models, Conventions and Reference Frames]
+         {Appendix: Models, Conventions, and Reference Frames}
 \label{chapter:conventions}
 
-This chapter lists the available parameters, conventions, and
-reference frames in CASA.
+This appendix lists the available parameters, conventions,
+reference frames, and information on flux standards used in CASA.
+
+
+%\section{Coordinate and Time Formatting Conventions}
+
+
+
+\section{Flux Density Models for setjy}
+%\label{sec-1}
+\label{section:conventions.fluxdensity}
+
+{\tt setjy} sets the {\tt MODEL\_DATA} column to what it calculates given the source,
+frequency, a standard (really, a set of models), and possibly a time.  At cm
+wavelengths the flux density (FD) calibrators are typically one of several
+bright extragalactic sources.  These objects are comparatively faint and less
+well characterized at shorter wavelengths, so for (sub)mm astronomy it is
+common to use Solar System objects.
+
+Reliably setting the FD scale with astronomical calibrators requires
+that they be bright, not too resolved, and have simple dependencies on
+frequency and time.  These criteria are somewhat mutually exclusive, so the
+number of calibrator sources supported by {\tt setjy} is fairly small, although it
+could certainly be added to.  This appendix is for describing the models that
+{\tt setjy} uses.  Choosing a FD calibrator of course has to be done before the
+observation and the observatory may provide additional information.
+
+\subsection{Long wavelength calibration}
+%\label{sec-1.1}
+\label{section:conventions.longwavelength}
+
+Synchrotron sources can vary over a light crossing time, so ones used as FD
+calibrators must have most of their emission coming from an extended region.
+The additional requirement that they be nearly unresolved therefore forces them
+to be distant, meaning that candidates which also have high apparent fluxes are
+quite rare.  The following standards mostly share the same set of objects, and
+monitor their FDs every few years to account for variations.  No interpolation
+is done between epochs, though - you are encouraged to choose the standard
+which observed your FD calibrator closest to the time you observed it at.
+The measurements \underline{are} interpolated in frequency, however, using second to
+fourth degree polynomials of the frequency's logarithm.
+
+\begin{table}[htb]
+\caption{Extragalactic objects recognized by {\tt setjy}\label{table:conventions.fluxdensity.sources}}
+\begin{center}
+\begin{tabular}{ll}
+ FD calibrator  &  Aliases                         \\
+\hline
+ 3C286          &  1328+307, 1331+305, J1331+3030  \\
+ 3C48           &  0134+329, 0137+331, J0137+3309  \\
+ 3C147          &  0538+498, 0542+498, J0542+4951  \\
+ 3C138          &  0518+165, 0521+166, J0521+1638  \\
+ 1934-638       &                                  \\
+ 3C295          &  1409+524, 1411+522, J1411+5212  \\
+ 3C196          &  0809+483, 0813+482, J0813+4813  \\
+\end{tabular}
+\end{center}
+\end{table}
+
+
+\subsubsection{Baars}
+\label{sec-1.1.1}
+\label{section:conventions.longwavelength.baars}
+
+The only standard to not have the year in the name.  It is \textbf{1977}.
+
+The models are second order polynomials in log$\nu$, valid between 408 MHz and
+15 GHz.
+
+The paper is Baars et al. (1977)  (bibliography in
+Sect.\,\ref{section:conventions.fluxreferences}) with a commentary by
+Kellerman (2009).
+
+
+\subsubsection{Perley 90}
+\label{sec-1.1.2}
+\label{section:conventions.longwavelength.perley90}
+
+This standard also includes 1934-638 from Reynolds (7/94) and 3C138
+from Baars et al. (1977).
+
+Reference: {\it Website 1} in \ref{section:conventions.fluxreferences} 
+
+\subsubsection{Perley-Taylor 95}
+\label{sec-1.1.3}
+\label{section:conventions.longwavelength.perleytaylor95}
+
+Perley and Taylor (1995.2); plus Reynolds (1934-638; 7/94)
+
+Reference: {\it Website 1}
+
+\subsubsection{Perley-Taylor 99}
+%\label{sec-1.1.4}
+\label{section:conventions.longwavelength.perleytaylor99}
+
+Perley and Taylor (1999.2); plus Reynolds (1934-638; 7/94)
+
+Reference: {\it Website 1}
+ 
+\subsubsection{Perley-Butler 2010}
+%\label{sec-1.1.5}
+\label{section:conventions.longwavelength.perleybutler10}
+
+Made using VLA (not EVLA!) data.
+
+Reference: {\it Website 1}
+
+\subsection{Short wavelength calibration}
+%\label{sec-1.2}
+\label{section:conventions.shortwavelength}
+
+The usual approach in this regime is to use (nearly) thermal sources in the
+Solar System.  Their apparent brightness of course varies in time with their
+distance from the Earth (and Sun), and orientation if they are not perfect
+spheres with zero obliquity.  However, most of them have almost constant
+surface properties, so once those properties are measured their apparent
+brightness distributions can in principle be predicted for any time, given an
+ephemeris.
+
+In CASA all of the Solar System objects supported by {\tt setjy} are lumped
+under one standard, `Butler-JPL-Horizons 2010', since none of them are covered
+by more than one model yet.  The model uses a uniform temperature disk whose
+semiaxes are set using ephemerides from the JPL-Horizons project.  All of the
+objects are warm enough to put them in the Rayleigh-Jeans regime for ALMA, but
+the FD as a function of frequency is calculated using the full Planck
+equation.  Synchrotron emission (the gas giants) is accounted for by using
+models that smoothly vary the brightness temperature with frequency.
+
+\begin{table}[htb]
+\caption{Notable Solar System objects\label{table:conventions.fluxdensity.solarsystem}}
+\begin{center}
+\begin{tabular}{lp{9cm}}
+ Object         &  Notes                                                                                                                                            \\
+\hline
+ Mercury        &  Not yet included (phase angle)                                                                                                                   \\
+ Venus          &  Not yet included (phase angle)                                                                                                                   \\
+ Earth          &  Not yet included (very resolved)                                                                                                                 \\
+ Mars           &  Taken to be 210K (JPL ephemeris)                                                                                                                 \\
+ Jupiter        &  Model from B. Butler, $\lambda \in [0.1, 6.2]$ cm                                                                                                \\
+ Ceres          &  167K (Saint-Pe et al 1993)                                                                                                 \\
+ Pallas         &  164K (Not yet scaled for its varying distance from the Sun.  e = 0.231)                                                                          \\
+ Juno           &  163K, but it has a large crater and temperature changes. (Lim et al. 2005)                                                   \\
+ Io             &  110K (Rathbun et al. 2004)                                                                                               \\
+ Europa         &  109K ({\it Website 2})                                                      \\
+ Callisto       &  134K ($\pm 11$ K, Moore et al. 2004,)                                                  \\
+ Ganymede       &  110K ({Delitsky et al, 1998, J.Geophys.Res. 103 (E13)})              \\
+ Saturn         &  Not yet included (the rings, the rings)                                                                                                          \\
+ Titan          &  76.6K (B. Butler)                                                                                                                                \\
+ Uranus         &  Model from B. Butler, $\lambda \in [0.07, 6.2]$ cm                                                                                               \\
+ Uranian moons  &  Not yet included (obliquity issues, esp. since the Voyager era was apx. 1 Uranian season ago.)                                                   \\
+ Neptune        &  Model from B. Butler, $\nu \in [4.0, 1000.0]$ GHz (more refs in code comments)                                                                   \\
+ Triton         &  38K ({\it Website 3})                                                                 \\
+ Pluto          &  35K (Altenhoff et al. 1988 + more refs in code
+ comments.)  {\tt setjy} does not check whether Charon was in the field.  \\
+\end{tabular}
+\end{center}
+\end{table}
+
+
+For most Solar System FD calibrators, the temperature reference will also be
+sent to the logger if {\tt casalog.filter('INFO1')} (or lower) is run before
+running {\tt setjy}.  If there is a discrepancy between the logger note and this
+appendix, the logger note is more likely to be up to date.
+
+\subsection{References to this Section}
+\label{section:conventions.fluxreferences}
+
+\noindent Altenhoff et al. 1988, A\&ALetter, 190, L15\\
+\noindent Baars, J. W. M., Genzel, R., Pauliny-Toth, I. I. K., \&  Witzel,
+A. 1977, A\&A, 61, 99\\
+\noindent Delitsky et al. 1998, J.Geophys.Res. 103 (E13)\footnote{http://trs-new.jpl.nasa.gov/dspace/bitstream/2014/20675/1/98-1725.pdf}\\
+\noindent Kellermann, K. I. 1999, A\&A 500, 143\\
+\noindent Lim et al. 2005, Icarus 173, 385\\
+\noindent Moore et al. 2004, in ``Jupiter: The Planet, Satellites, and Magnetosphere''\\
+\noindent Rathbun et al. 2004, Icarus 169, 127\\
+\noindent Saint-Pe et al. 1993, Icarus 105, 271\\
+
+\noindent {\it Website 1:} \url{http://www.vla.nrao.edu/astro/calib/manual/baars.html}\\
+\noindent {\it Website 2:} \url{http://science.nasa.gov/science-news/science-at-nasa/1998/ast03dec98_1/}\\
+\noindent {\it Website 3:} \url{http://solarsystem.nasa.gov/planets/profile.cfm?Object=Triton}\\
+%\end{document}
+
+
+
 
 \section{Velocity Reference Frames}
 \label{section:conv.vel}
 
-The velocity frames supportedin CASA are:
-me.listcodes(me.frequency())
+CASA supported velocity frames are listed in Table\,\ref{table:conv.velocityframes}.
 
-\begin{itemize}
-\item {\bf REST} --- Laboratory
-\item {\bf LSRK} --- local standard of rest (kinematic)
-\item {\bf LSRD} --- local standard of rest (dynamic)
-\item {\bf BARY} --- barycentric
-\item {\bf GEO} --- geocentric
-\item {\bf TOPO} --- topocentric
-\item {\bf GALACTO} --- galactocentric
-\item {\bf LGROUP} --- Local Group
-\item {\bf CMB} --- cosmic microwave background dipole
-\end{itemize}
+%The velocity frames supported in CASA are:
+%me.listcodes(me.frequency())
 
-The same list can be accessed from teh toolkit as {\tt me.listcodes(me.frequency())}.
+\begin{table}[htb]
+\caption{Velocity frames in CASA \label{table:conv.velocityframes}}
+\begin{center}
+\begin{tabular}{lll}
+Name & Description\\
+\hline
+REST &  Laboratory\\
+LSRK &  local standard of rest (kinematic)\\
+LSRD &  local standard of rest (dynamic)\\
+BARY &  barycentric\\
+GEO &  geocentric\\
+TOPO &  topocentric\\
+GALACTO &  galactocentric\\
+LGROUP &  Local Group\\
+CMB &  cosmic microwave background dipole\\
+\end{tabular}
+\end{center}
+\end{table}
+
+%The same list can be accessed from the toolkit as {\tt me.listcodes(me.frequency())}.
+
+
+\subsection{Doppler Types}
+\label{section:conv.doppler}
+
+CASA supported Doppler types are listed in Table\,\ref{table:conv.doppler}.
+
+%The velocity frames supported in CASA are:
+%me.listcodes(me.frequency())
+
+\begin{table}[htb]
+\caption{Doppler types in CASA \label{table:conv.doppler}}
+\begin{center}
+\begin{tabular}{lll}
+Name & Description\\
+\hline
+RADIO 	& \\
+Z 	& \\
+RATIO 	& \\
+BETA 	& \\
+GAMMA 	& \\
+OPTICAL & \\	
+TRUE 	& \\
+RELATIVISTIC & \\ 
+\end{tabular}
+\end{center}
+\end{table}
+
 
 \section{Time Reference Frames}
 \label{section:conv.time}
 
-\begin{itemize}
-\item {\bf LAST} ---  
+CASA supported time reference frames are listed in Table\,\ref{table:conv.timeframes}.
 
-\item {\bf LMST} ---  
+\begin{table}[htb]
+\caption{Time reference frames in CASA \label{table:conv.timeframes}}
+\begin{center}
+\begin{tabular}{lll}
+Name & Description\\
+\hline
 
-\item {\bf GMST1} ---  
-
-\item {\bf GAST} ---  
-
-\item {\bf UT1} ---  
-
-\item {\bf UT2} ---  
-
-\item {\bf UTC} ---  
-
-\item {\bf TAI} ---  
-
-\item {\bf TDT} ---  
-
-\item {\bf TCG} ---  
-
-\item {\bf TDB} ---  
-
-\item {\bf TCB} ---  
-
-\item {\bf IAT} ---  
-
-\item {\bf GMST} ---  
-
-\item {\bf TT} ---  
-
-\item {\bf ET} ---  
-
-\item {\bf UT} ---  
-\end{itemize}
+LAST &   \\
+LMST &   \\
+GMST1 &   \\
+GAST &   \\
+UT1 &   \\
+UT2 &   \\
+UTC &   \\
+TAI &   \\
+TDT &   \\
+TCG &   \\
+TDB &   \\
+TCB &   \\
+IAT &   \\
+GMST &   \\
+TT &   \\
+ET &   \\
+UT &   \\
+\end{tabular}
+\end{center}
+\end{table}
 
 
 
 
 \section{Coordinate Framess}
-me.listcodes(me.frequency())
+\label{section:conv.coordinateframes}
+%me.listcodes(me.frequency())
 
-\begin{itemize}
-\item {\bf J2000} --- 
+CASA supported time coordinate frames are listed in Table\,\ref{table:conv.coordinateframes}.
 
-\item {\bf B1950} --- 
+\begin{table}[htb]
+\caption{Coordinate frames in CASA \label{table:conv.coordinateframes}}
+\begin{center}
+\begin{tabular}{lll}
+Name & Description\\
+\hline
+    J2000     &  mean equator and equinox at J2000.0 (FK5)\\
+    JNAT      &  geocentric natural frame\\
+    JMEAN     &  mean equator and equinox at frame epoch\\
+    JTRUE     &  true equator and equinox at frame epoch\\
+    APP       &  apparent geocentric position\\
+    B1950     &  mean epoch and ecliptic at B1950.0.\\ 
+    B1950\_VLA &  mean epoch(1979.9)) and ecliptic at B1950.0\\
+    BMEAN     &  mean equator and equinox at frame epoch\\
+    BTRUE     &  true equator and equinox at frame epoch\\
+    GALACTIC  &  Galactic coordinates\\
+    HADEC     &  topocentric HA and declination\\
+    AZEL      &  topocentric Azimuth and Elevation (N through E)\\
+    AZELSW    &  topocentric Azimuth and Elevation (S through W)\\
+    AZELNE    &  topocentric Azimuth and Elevation (N through E)\\
+    AZELGEO   &  geodetic Azimuth and Elevation (N through E)\\
+    AZELSWGEO &  geodetic Azimuth and Elevation (S through W)\\
+    AZELNEGEO &  geodetic Azimuth and Elevation (N through E)\\
+    ECLIPTC   &  ecliptic for J2000 equator and equinox\\
+    MECLIPTIC &  ecliptic for mean equator of date\\
+    TECLIPTIC &  ecliptic for true equator of date\\
+    SUPERGAL  &  supergalactic coordinates\\
+    ITRF      &  coordinates wrt ITRF Earth frame\\
+    TOPO      &  apparent topocentric position\\
+    ICRS      &  International Celestial reference system\\ 
+\end{tabular}
+\end{center}
+\end{table}
 
-\item {\bf B1950\_VLA} --- 
+\section{Physical Units}
 
-\item {\bf GALACTIC} --- 
+\label{section:conv.units}
 
-\item {\bf HADEC} --- 
+CASA also recognizes physical units. They are listed in
+Tables\,\ref{table:conv.prefixes}, \ref{table:conv.SI},
+and \ref{table:conv.custom}.
 
-\item {\bf AZEL} --- 
- 
-\item {\bf AZELSW} --- 
- 
-\item {\bf AZELNE} --- 
+\begin{table}[htb]
+\caption{Prefixes \label{table:conv.prefixes}}
+\begin{center}
+\begin{tabular}{lll}
+Prefix & Name & Value\\
+\hline
+    Y  &         (yotta)  &                    $10^{24}$\\
+    Z  &         (zetta)  &                    $10^{21}$\\
+    E  &         (exa)    &                    $10^{18}$ \\
+    P  &         (peta)   &                    $10^{15}$\\
+    T  &         (tera)   &                    $10^{12}$\\
+    G  &         (giga)   &                    $10^{9}$\\
+    M  &         (mega)   &                    $10^{6}$\\
+    k  &         (kilo)   &                    $10^{3}$\\
+    h  &         (hecto)  &                    $10^{2}$\\
+    da &         (deka)   &                    10\\
+    d  &         (deci)   &                    $10^{-1}$\\
+    c  &         (centi)  &                    $10^{-2}$\\
+    m  &         (milli)  &                    $10^{-3}$\\
+    u  &         (micro)  &                    $10^{-6}$\\
+    n  &         (nano)   &                    $10^{-9}$\\
+    p  &         (pico)   &                    $10^{-12}$\\
+    f  &         (femto)  &                    $10^{-15}$\\
+    a  &         (atto)   &                    $10^{-18}$\\
+    z  &         (zepto)  &                    $10^{-21}$\\
+    y  &         (yocto)  &                    $10^{-24}$\\
 
-\item {\bf ECLIPTIC} --- 
-
-\item {\bf MECLIPTIC} --- 
-
-\item {\bf TECLIPTIC} --- 
-
-\item {\bf SUPERGAL} --- 
-\end{itemize}
+\end{tabular}
+\end{center}
+\end{table}
 
 
-%\section{Coordinate and Time Formatting Conventions}
+
+
+\begin{table}
+\caption{SI Units \label{table:conv.SI}}
+
+\begin{center}
+\begin{tabular}{lll}
+Unit & Name & Value\\
+\hline
+     \$        &   (currency)              &     1 \_ \\       
+     \%        &   (percent)               &     0.01 \\
+     \%\%      &   (permille)              &     0.001 \\
+     A         &   (ampere)                &     1\,A\\
+     AE        &   (astronomical unit)     &     149597870659\,m\\
+      AU       &   (astronomical unit)     &     149597870659\,m\\
+      Bq       &   (becquerel)             &     1 s$^{-1}$\\
+      C        &   (coulomb)               &     1 s\,A\\
+      F        &   (farad)                 &     1 m$^{-2}$\,kg$^{-1}$\,s$^{4}$\,A$^{2}$\\
+      Gy       &   (gray)                  &     1 m$^{2}$\,s$^{-2}$\\
+      H        &   (henry)                 &     1 m$^{2}$\,kg\,s$^{-2}$\,A$^{-2}$\\
+      Hz       &   (hertz)                 &     1 s$^{-1}$\\
+      J        &   (joule)                 &     1 m$^{2}$\,kg\,s$^{-2}$\\
+      Jy       &   (jansky)                &     $10^{-26}$\,kg\,s$^{-2}$\\
+      K        &   (kelvin)                &     1 K\\
+      L        &   (litre)                 &     0.001 m$^{3}$\\
+      M0       &   (solar mass)            &     1.98891944407$\times 10^{30}$\,kg\\
+      N        &   (newton)                &     1 m\,kg\,s$^{-2}$\\
+      Ohm      &   (ohm)                   &     1 m$^{2}$\,kg\,s$^{-3}$\,A$^{-2}$\\
+      Pa       &   (pascal)                &     1 m$^{-1}$\,kg\,s$^{-2}$\\
+      S        &   (siemens)               &     1 m$^{-2}$\,kg$^{-1}$\,s$^{3}$\,A$^{2}$\\
+      S0       &   (solar mass)            &     1.98891944407$\times 10^{30}$\,kg\\
+      Sv       &   (sievert)               &     1 m$^{2}$\,s$^{-2}$\\
+      T        &   (tesla)                 &     1 kg\,s$^{-2}$\,A$^{-1}$\\
+      UA       &   (astronomical unit)     &     149597870659\,m\\
+      V        &   (volt)                  &     1 m$^{2}$\,kg\,s$^{-3}$\,A$^{-1}$\\
+      W        &   (watt)                  &     1 m$^{2}$\,kg\,s$^{-3}$\\
+      Wb       &   (weber)                 &     1 m$^{2}$\,kg\,s$^{-2}$\,A$^{-1}$\\
+      \_        &   (undimensioned)         &     1 \_\\
+
+\end{tabular}
+\end{center}
+\end{table}
+
+\normalsize
+
+
+\begin{table}
+\addtocounter{table}{-1}
+\caption{SI Units -- continued}
+
+\begin{center}
+\begin{tabular}{lll}
+Unit & Name & Value\\
+\hline
+      a        &   (year)                  &     31557600\,s\\
+      arcmin   &   (arcmin)                &     0.000290888208666\,rad\\
+      arcsec   &   (arcsec)                &     4.8481368111$\times10^{-6}$\,rad\\
+      as       &   (arcsec)                &     4.8481368111e$\times10^{-6}$\,rad\\
+      cd       &   (candela)               &     1 cd\\
+      cy       &   (century)               &     3155760000 s\\
+      d        &   (day)                   &     86400 s\\
+      deg      &   (degree)                &     0.0174532925199 rad\\
+      g        &   (gram)                  &     0.001 kg\\
+      h        &   (hour)                  &     3600 s\\
+      l        &   (litre)                 &     0.001 m$^{3}$\\
+      lm       &   (lumen)                 &     1 cd\,sr\\
+      lx       &   (lux)                   &     1 m$^{-2}$\,cd\,sr\\
+      m        &   (metre)                 &     1 m\\
+      min      &   (minute)                &     60 s\\
+      mol      &   (mole)                  &     1 mol\\
+      pc       &   (parsec)                &     3.08567758065$\times10^{16}$ m\\
+      rad      &   (radian)                &     1 rad\\
+      s        &   (second)                &     1 s\\
+      sr       &   (steradian)             &     1 sr\\
+      t        &   (tonne)                 &     1000 kg\\
+
+\end{tabular}
+\end{center}
+\end{table}
+
+
+
+\begin{table}
+\caption{Custom Units \label{table:conv.custom}}
+
+\begin{center}
+\begin{tabular}{lll}
+Unit & Name & Value \\
+\hline
+      "          & (arcsec)                      & 4.8481368111$\times10^{-6}$\,rad\\
+      "\_2        & (square arcsec)               & 2.35044305391$\times 10^{-11}$\,sr\\
+      '          & (arcmin)                      & 0.000290888208666 rad\\
+      ''         & (arcsec)                      & 4.8481368111$\times10^{-6}$\,rad\\
+      ''\_2       & (square arcsec)               & 2.35044305391$\times10^{-11}$\,sr\\
+      '\_2        & (square arcmin)               & 8.46159499408$\times10^{-8}$\,sr\\
+      :          & (hour)                        & 3600 s\\
+      ::         & (minute)                      & 60 s\\
+      :::        & (second)                      & 1 s\\
+      Ah         & (ampere hour)                 & 3600 s\,A\\
+      Angstrom   & (angstrom)                    & 1e-10 m\\
+      Btu        & (British thermal unit (Int))  & 1055.056 m$^{2}$\,kg\,s$^{-2}$\\
+      CM         & (metric carat)                & 0.0002 kg\\
+      Cal        & (large calorie (Int))         & 4186.8 m$^{2}$\,kg\,s$^{-2}$\\
+      FU         & (flux unit)                   & $10^{-26}$\,kg\,s$^{-2}$\\
+      G          & (gauss)                       & 0.0001 kg\,s$^{-2}$\,A$^{-1}$\\
+      Gal        & (gal)                         & 0.01 m\,s$^{-2}$\\
+      Gb         & (gilbert)                     & 0.795774715459 A\\
+      Mx         & (maxwell)                     & $10^{-8}$\,m$^{2}$\,kg\,s$^{-2}$\,A$^{-1}$\\
+      Oe         & (oersted)                     & 79.5774715459 m$^{-1}$\,A\\
+      R          & (mile)                        & 0.000258 kg$^{-1}$\,s\,A\\
+      St         & (stokes)                      & 0.0001 m$^{2}$\,s${-1}$\\
+      Torr       & (torr)                        & 133.322368421 m$^{-1}$\,kg\,s$^{-2}$\\
+      USfl\_oz    & (fluid ounce (US))            & 2.95735295625$\times10^{-5}$\,m$^{3}$\\
+      USgal      & (gallon (US))                 & 0.003785411784
+      m$^{3}$\\
+
+\end{tabular}
+\end{center}
+\end{table}
+
+
+
+
+\begin{table}
+\addtocounter{table}{-1}
+\caption{Custom Units -- continued}
+
+\begin{center}
+\begin{tabular}{lll}
+Unit & Name & Value \\
+\hline
+      WU         & (WSRT flux unit)              & $5\times 10^{-29}$\,kg\,s$^{-2}$\\
+      abA        & (abampere)                    & 10 A\\
+      abC        & (abcoulomb)                   & 10 s\,A\\
+      abF        & (abfarad)                     & $10^{9}$\,m$^{-2}$\,kg$^{-1}$\,s$^{4}$\,A$^{2}$\\
+      abH        & (abhenry)                     & $10^{-9}$\,m$^{2}$\,kg\,s$^{-2}$\,A$^{-2}$\\
+      abOhm      & (abohm)                       & $10^{-9}$\,m$^{2}$\,kg\,s$^{-3}$\,A$^{-2}$\\
+      abV        & (abvolt)                      & $10^{-8}$\,m$^{2}$\,kg\,s$^{-3}$\,A$^{-1}$\\
+      ac         & (acre)                        & 4046.8564224 m$^{2}$\\
+      arcmin\_2   & (square arcmin)               & 8.46-2159499408$\times10^{-8}$\,sr\\
+      arcsec\_2   & (square arcsec)               & 2.35044305391$\times10^{-11}$\,sr\\
+      ata        & (technical atmosphere)        & 98066.5 m$^{-1}$.kg.s$^{-2}$\\
+      atm        & (standard atmosphere)         & 101325 m$^{-1}$.kg.s$^{-2}$\\
+      bar        & (bar)                         & 100000 m$^{-1}$.kg.s$^{-2}$\\
+      beam       & (undefined beam area)         & 1 \_\\
+      cal        & (calorie (Int))               & 4.1868 m$^{2}$\,kg\,s$^{-2}$\\
+      count      & (count)                       & 1 \_\\
+      cwt        & (hundredweight)               & 50.80234544 kg\\
+      deg\_2      & (square degree)               & 0.000304617419787 sr\\
+      dyn        & (dyne)                        & $10^{-5}$\,m\,kg\,s$^{-2}$\\
+      eV         & (electron volt)               & 1.60217733$\times10^{-19}$\,m$^{2}$\,kg\,s$^{-2}$\\
+      erg        & (erg)                         & $10^{-7}$\,m$^{2}$\,kg\,s$^{-2}$\\
+      fl\_oz      & (fluid ounce (Imp))           & 2.84130488996$\times10^{-5}$\,m$^{3}$\\
+      ft         & (foot)                        & 0.3048 m\\
+      fu         & (flux unit)                   & $10^{-26}$\,kg\,s$^{-2}$\\
+      fur        & (furlong)                     & 201.168 m\\
+      gal        & (gallon (Imp))                & 0.00454608782394
+      m$^{3}$\\
+\end{tabular}
+\end{center}
+\end{table}
+
+
+
+
+\begin{table}
+\addtocounter{table}{-1}
+\caption{Custom Units -- continued}
+
+\begin{center}
+\begin{tabular}{lll}
+Unit & Name & Value \\
+\hline
+      ha         & (hectare)                     & 10000 m$^{2}$\\
+      hp         & (horsepower)                  & 745.7 m$^{2}$\,kg\,s$^{-3}$\\
+      in         & (inch)                        & 0.0254 m\\
+      kn         & (knot (Imp))                  & 0.514773333333 m\,s$^{-1}$\\
+      lambda     & (lambda)                      & 1 \_\\
+      lb         & (pound (avoirdupois))         & 0.45359237 kg\\
+      ly         & (light year)                  & 9.46073047$\times10^{15}$\,m\\
+      mHg        & (metre of mercury)            & 133322.387415 m$^{-1}$\,kg\,s$^{-2}$\\
+      mile       & (mile)                        & 1609.344 m\\
+      n\_mile     & (nautical mile (Imp))         & 1853.184 m\\
+      oz         & (ounce (avoirdupois))         & 0.028349523125 kg\\
+      pixel      & (pixel)                       & 1 \_\\
+      sb         & (stilb)                       & 10000 m$^{-2}$\,cd\\
+      sq\_arcmin  & (square arcmin)               & 8.46159499408$\times10^{-8}$ sr\\
+      sq\_arcsec  & (square arcsec)               & 2.35044305391$\times10^{-11}$ sr\\
+      sq\_deg     & (square degree)               & 0.000304617419787 sr\\
+      statA      & (statampere)                  & 3.33564095198$\times10^{-10}$\,A\\
+      statC      & (statcoulomb)                 & 3.33564095198$\times10^{-10}$\,s\,A\\
+      statF      & (statfarad)                   & 1.11188031733$\times10^{-12}$\,m$^{-2}$\,kg$^{-1}$\,s$^{4}$\,A$^{2}$\\
+      statH      & (stathenry)                   & 899377374000\,m$^{2}$\,kg\,s$^{-2}$\,A$^{-2}$\\
+      statOhm    & (statohm)                     & 899377374000\,m$^{2}$\,kg\,s$^{-3}$\,A$^{-2}$\\
+      statV      & (statvolt)                    & 299.792458 m$^{2}$\,kg\,s$^{-3}$\,A$^{-1}$\\
+      u          & (atomic mass unit)            & 1.661$\times10^{-27}$\, kg\\
+      yd         & (yard)                        & 0.9144 m\\
+      yr         & (year)                        & 31557600 s\\
+
+\end{tabular}
+\end{center}
+\end{table}
+
+\normalsize
+
+
+\section{Physical Constants}
+\label{section:conv.constants}
+
+The physical constants included in CASA can be found in Table\,\ref{table:conv.constants}.
+
+
+
+\begin{table}
+\caption{Physical Constants \label{table:conv.constants}}
+\begin{center}
+\begin{tabular}{lll}\\
+Constant & Name & Value \\
+\hline
+         pi     & 3.14..                  &  3.14159  \\
+         ee     & 2.71..                  &  2.71828  \\
+         c      & light vel.              &  2.99792$\times10^{8}$\,m\,s$^{-1}$\\  
+         G      & grav. const             &  6.67259$\times10^{11}$\,N\,m$^{2}$\,kg$^{-2}$\\  
+         h      & Planck const            &  6.62608$\times10^{-34}$\,J\,s  \\
+         HI     & HI line                 &  1420.41 MHz  \\
+         R      & gas const               &  8.31451 J\,K$^{-1}$\,mol$^{-1}$\\  
+         NA     & Avogadro \#              &  6.02214$\times10^{23}$\,mol$^{-1}$\\  
+         e      & electron charge         &  1.60218$\times10^{-19}$\,C  \\
+         mp     & proton mass             &  1.67262$\times10^{-27}$\, kg  \\
+         mp\_me  & mp/me                   &  1836.15  \\
+         mu0    & permeability vac.       &  1.25664$\times10^{-6}$\,H\,m$^{-1}$\\  
+         eps0   & permittivity vac.       &  1.60218$\times10^{-19}$\,C  \\
+         k      & Boltzmann const         &  1.38066$\times10^{-23}$\,J\,K$^{-1}$  \\
+         F      & Faraday const           &  96485.3 C\,mol$^{-1}$  \\
+         me     & electron mass           &  9.10939$\times10^{-31}$\, kg  \\
+         re     & electron radius         &  2.8179e$\times10^{-15}$\, m  \\
+         a0     & Bohr¡¯s radius            &  5.2918$\times10^{-11}$\, m  \\
+         R0     & solar radius            &  6.9599$\times10^{8}$\, m  \\
+         k2     & IAU grav. const$^{2}$    &  0.000295912
+         AU$^{3}$\,d$^{-2}$\,S0$^{-1}$ \\
+
+\end{tabular}
+\end{center}
+\end{table}
+
+

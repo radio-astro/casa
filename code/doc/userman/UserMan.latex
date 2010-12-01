@@ -90,7 +90,7 @@
 %\include{casa_cook_tasks}
 
 % 
-%\include{casa_cook_conv}
+\include{casa_cook_conv}
 
 %
 \include{casa_cook_me}
