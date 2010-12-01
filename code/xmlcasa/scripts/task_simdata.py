@@ -663,6 +663,8 @@ def simdata(
                     util.nextfig()
                     im.open(msfile)  
                     # TODO spectral parms
+                    if not image:
+                        msg("using default model cell "+qa.tos(model_cell[0])+" for PSF calculation",priority="warn")
                     im.defineimage(cellx=qa.tos(model_cell[0]))  
                     #im.makeimage(type='psf',image=project+".quick.psf")
                     if os.path.exists(project+".quick.psf"):
@@ -1197,7 +1199,7 @@ def simdata(
                 file=""
 
         # create fake model from components for analysis
-        if components_only:
+        if components_only and (image or analyze):
             newmodel=project+".compskymodel"
             if not os.path.exists(project+".image"):
                 msg("must image before analyzing",priority="error")

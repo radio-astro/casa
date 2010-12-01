@@ -2937,8 +2937,8 @@ class simutil:
         cleanlast.write("#"+cleanstr+"\n")
         cleanlast.close()
         
-        clean(vis=', '.join(mstoimage), imagename=image, mode=chanmode, nchan=nchan,
-              niter=niter, threshold=threshold, selectdata=False, mask=mask,
+        clean(vis=', '.join(mstoimage), imagename=image, mode=chanmode, 
+              niter=niter, threshold=threshold, selectdata=False, nchan=nchan,
               psfmode=psfmode, imagermode=imagermode, ftmachine=ftmachine, 
               imsize=imsize, cell=map(qa.tos,cell), phasecenter=imcenter,
               stokes=stokes, weighting=weighting, robust=robust,
