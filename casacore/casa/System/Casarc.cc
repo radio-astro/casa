@@ -33,6 +33,7 @@
 #include <sys/time.h>
 #include <fcntl.h>
 #include <sys/mman.h>
+#include <cstdio>
 
 #define USE_FLOCK 0
 #define CASARC_DEBUG 0
@@ -346,7 +347,8 @@ namespace casa {
 	if ( initialized == false ) { startup( ); }
 
 	if ( stat( path.c_str( ), &buf ) < 0 ) {
-	    int fd = open( path.c_str( ), O_CREAT | O_WRONLY );
+	    int fd = open( path.c_str( ), O_CREAT | O_WRONLY,
+			   S_IRUSR|S_IWUSR );
 	    if ( fd < 0 ) {
 		throw( "Casarc, could not create: " + path );
 	    } else {
