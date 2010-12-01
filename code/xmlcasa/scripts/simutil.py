@@ -2942,7 +2942,7 @@ class simutil:
               psfmode=psfmode, imagermode=imagermode, ftmachine=ftmachine, 
               imsize=imsize, cell=map(qa.tos,cell), phasecenter=imcenter,
               stokes=stokes, weighting=weighting, robust=robust,
-              uvtaper=uvtaper,outertaper=outertaper, mask=mask, pbcor=True)
+              uvtaper=uvtaper,outertaper=outertaper, pbcor=True)
 
         del freq,nchan # something is holding onto the ms in table cache
 
