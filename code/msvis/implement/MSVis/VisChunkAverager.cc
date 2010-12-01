@@ -26,31 +26,18 @@
 //----------------------------------------------------------------------------
 
 #include <msvis/MSVis/VisChunkAverager.h>
-//#include <casa/Exceptions/Error.h>
-//#include <casa/Arrays/ArrayLogical.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------------
   
-VisChunkAverager::VisChunkAverager(//const Double timeBin,
-                                 const Vector<MS::PredefinedColumns>& dataCols,
-                                 const Bool doSpWeight) 
-  : //VisBuffAccumulator(2, // I don't want to use VisBuffAccumulator's notion of
-    //                      // a constant number of antennas.
-    //                   timeBin,
-    //                   false),           // ?
-    //timeBin_p(timeBin),
-    colEnums_p(dataCols),
+VisChunkAverager::VisChunkAverager(const Vector<MS::PredefinedColumns>& dataCols,
+                                   const Bool doSpWeight) 
+  : colEnums_p(dataCols),
     doSpWeight_p(doSpWeight),
     readyToHash_p(false),
     haveHashMap_p(false)
 {
-  //// TimeBin MUST be strictly greater than zero
-  //if (timeBin_p < DBL_EPSILON)
-  //  timeBin_p = 0.01;   // TBD: is this reasonable? 
-
-  // Reset the averager
   reset();
 }
 
@@ -65,19 +52,9 @@ VisChunkAverager::~VisChunkAverager()
 
 void VisChunkAverager::reset()
 {
-// Reset the averager
-// Output to private data:
-//    tStart_p         Double        Start time of current accumulation
-////    firstTimeBin_p  Bool          Is this the first timeBin ?
-//    nChan_p          Int           No. of channels in the averaging buffer
-//    avrow_p          Int           Starting row of current accumulation
-//    avBuf_p          VisBuffer     Averaging buffer
-//
-
   haveHashMap_p = false;
   sphash_to_inprows_p.clear();
   readyToHash_p = false;
-  //VisBuffAccumulator::reset();
 }
 
 // read all the columns into vb.
