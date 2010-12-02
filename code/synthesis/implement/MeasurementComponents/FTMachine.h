@@ -278,7 +278,7 @@ protected:
   Bool useDoubleGrid_p;
 
   void initMaps(const VisBuffer& vb);
-
+  virtual void initPolInfo(const VisBuffer& vb);
 
 
   // Sum of weights per polarization and per chan
@@ -348,6 +348,8 @@ protected:
   InterpolateArray1D<Float,Complex>::InterpolationMethod freqInterpMethod_p;
   String pointingDirCol_p;
   Cube<Int> spwChanSelFlag_p;
+  Vector<Int> cfStokes_p;
+  Int polInUse_p;
 
  private:
   //Some temporary wasteful function for swapping axes because we don't 

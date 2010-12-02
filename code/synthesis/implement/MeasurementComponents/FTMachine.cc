@@ -78,13 +78,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			   tangentSpecified_p(False), fixMovingSource_p(False),
 			   distance_p(0.0), lastFieldId_p(-1),lastMSId_p(-1), 
 			   useDoubleGrid_p(False), 
-			   freqFrameValid_p(False), freqInterpMethod_p(InterpolateArray1D<Float,Complex>::nearestNeighbour), pointingDirCol_p("DIRECTION")
+			   freqFrameValid_p(False), 
+			   freqInterpMethod_p(InterpolateArray1D<Float,Complex>::nearestNeighbour), 
+			   pointingDirCol_p("DIRECTION"),
+			   cfStokes_p()
 {
-
-
   spectralCoord_p=SpectralCoordinate();
   isIOnly=False;
   spwChanSelFlag_p=0;
+  polInUse_p=0;
 }
 
 
@@ -151,7 +153,8 @@ FTMachine& FTMachine::operator=(const FTMachine& other)
     
     //Double precision gridding for those FTMachines that can do
     useDoubleGrid_p=other.useDoubleGrid_p;
-
+    cfStokes_p = other.cfStokes_p;
+    polInUse_p = other.polInUse_p;
   };
   return *this;
 };
@@ -171,6 +174,22 @@ Bool FTMachine::doublePrecGrid(){
   return useDoubleGrid_p;
 }
 
+//----------------------------------------------------------------------
+void FTMachine::initPolInfo(const VisBuffer& vb)
+{
+  //
+  // Need to figure out where to compute the following arrays/ints
+  // in the re-factored code.
+  // ----------------------------------------------------------------
+  {
+    polInUse_p = 0;
+    uInt N=0;
+    for(uInt i=0;i<polMap.nelements();i++) if (polMap(i) > -1) polInUse_p++;
+    cfStokes_p.resize(polInUse_p);
+    for(uInt i=0;i<polMap.nelements();i++) 
+      if (polMap(i) > -1) {cfStokes_p(N) = vb.corrType()(i);N++;}
+  }
+}
 //----------------------------------------------------------------------
 void FTMachine::initMaps(const VisBuffer& vb) {
 
@@ -382,6 +401,8 @@ void FTMachine::initMaps(const VisBuffer& vb) {
   }
   logIO() << LogIO::DEBUGGING << "Polarization map = "<< polMap
   	  << LogIO::POST;
+
+  initPolInfo(vb);
   //cerr<<"spwchanselflag_p shape="<<spwChanSelFlag_p.shape()<<endl;
 }
 
