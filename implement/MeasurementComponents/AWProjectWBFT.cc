@@ -93,11 +93,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   AWProjectWBFT::AWProjectWBFT(const RecordInterface& stateRec)
     : AWProjectFT(stateRec)
   {
+    LogIO log_l(LogOrigin("AWProjectWBFT", "AWProjectWBFT"));
     // Construct from the input state record
     
     //    if (!fromRecord(error, stateRec)) 
     if (!fromRecord(stateRec)) 
-      throw (AipsError("Failed to create AWProjectWBFT: "));
+      log_l << "Failed to create " << name() << " object." << LogIO::EXCEPTION;
 
     maxConvSupport=-1;
     convSampling=OVERSAMPLING;
@@ -138,7 +139,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					 Array<Float> &m_off,
 					 Bool Evaluate)
   {
-    logIO() << LogOrigin("AWProjectWBFT","findPointingOffsets") << LogIO::NORMAL;
+    LogIO log_l(LogOrigin("AWProjectWBFT","findPointingOffsets"));
     Int NAnt=0;
     //
     // This will return 0 if EPJ Table is not given.  Otherwise will
@@ -243,7 +244,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   void AWProjectWBFT::normalizeAvgPB()
   {
-    logIO() << LogOrigin("AWProjectWBFT","normalizeAvgPB") << LogIO::NORMAL;
+    LogIO log_l(LogOrigin("AWProjectWBFT","normalizeAvgPB"));
     // We accumulated normalized PBs.  So don't normalize the average
     // PB.
     pbNormalized_p = False;
@@ -253,9 +254,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					   const ImageInterface<Complex>& imageTemplate,
 					   ImageInterface<Float>& sensitivityImage)
   {
-    logIO() << LogOrigin("AWProjectWBFT", "makeSensitivityImage")
-	    << "Setting up weights accumulation to compute sensitivity pattern"
-	    << LogIO::NORMAL << LogIO::POST;
+    LogIO log_l(LogOrigin("AWProjectWBFT", "makeSensitivityImage"));
+    log_l << "Setting up weights accumulation to compute sensitivity pattern"
+	  << LogIO::NORMAL << LogIO::POST;
   }
   //
   //---------------------------------------------------------------
@@ -265,7 +266,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					   const Matrix<Float>& sumWt,
 					   const Bool& doFFTNorm)
   {
-    logIO() << LogOrigin("AWProjectWBFT", "makeSensitivityImage") << LogIO::NORMAL;
+    LogIO log_l(LogOrigin("AWProjectWBFT", "makeSensitivityImage"));
 
     Bool doSumWtNorm=True;
     if (sumWt.shape().nelements()==0) doSumWtNorm=False;
@@ -273,7 +274,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if ((sumWt.shape().nelements() < 2) || 
 	(sumWt.shape()(0) != wtImage.shape()(2)) || 
 	(sumWt.shape()(1) != wtImage.shape()(3)))
-      logIO() << "Sum of weights per poln and chan required" << LogIO::EXCEPTION;
+      log_l << "Sum of weights per poln and chan required" << LogIO::EXCEPTION;
     Float sumWtVal=1.0;
 
     LatticeFFT::cfft2d(wtImage,False);
@@ -371,7 +372,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 						   Bool fftNormalization) 
   {
     AlwaysAssert(image, AipsError);
-    logIO() << LogOrigin("AWProjectWBFT", "getImage") << LogIO::NORMAL;
+    LogIO log_l(LogOrigin("AWProjectWBFT", "getImage"));
 
     weights.resize(sumWeight.shape());
     convertArray(weights, sumWeight);//I suppose this converts a
@@ -567,7 +568,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				 Int& doGrad,
 				 Int paIndex)
   {
-    logIO() << LogOrigin("AWProjectWBFT","runFortranGet") << LogIO::NORMAL;
+    LogIO log_l(LogOrigin("AWProjectWBFT","runFortranGet"));
     enum whichGetStorage {RAOFF,DECOFF,UVW,DPHASE,VISDATA,GRADVISAZ,GRADVISEL,
 			  FLAGS,ROWFLAGS,UVSCALE,ACTUALOFFSET,DATAPTR,VBFREQ,
 			  CONVSUPPORT,CONVFUNC,CHANMAP,POLMAP,VBANT1,VBANT2,CONJCFMAP,CFMAP};
@@ -589,9 +590,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for(Int i=0;i<N;i++) CFMap[i] = polMap[N-i-1];
     
     Array<Complex> rotatedConvFunc;
-//     SynthesisUtils::rotateComplexArray(logIO(), convFunc_p, convFuncCS_p, 
+//     SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
 // 				       rotatedConvFunc,(currentCFPA-actualPA),"LINEAR");
-    SynthesisUtils::rotateComplexArray(logIO(), convFunc_p, convFuncCS_p, 
+    SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
 				       rotatedConvFunc,0.0);
 
     ConjCFMap = polMap;
@@ -717,7 +718,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				     Int& doGrad,
 				     Int paIndex)
   {
-    logIO() << LogOrigin("AWProjectWBFT","runFortranGetGrad") << LogIO::NORMAL;
+    LogIO log_l(LogOrigin("AWProjectWBFT","runFortranGetGrad"));
     enum whichGetStorage {RAOFF,DECOFF,UVW,DPHASE,VISDATA,GRADVISAZ,GRADVISEL,
 			  FLAGS,ROWFLAGS,UVSCALE,ACTUALOFFSET,DATAPTR,VBFREQ,
 			  CONVSUPPORT,CONVFUNC,CHANMAP,POLMAP,VBANT1,VBANT2,CONJCFMAP,CFMAP};
@@ -738,9 +739,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     makeConjPolMap(vb,CFMap,ConjCFMap);
 
     Array<Complex> rotatedConvFunc;
-//     SynthesisUtils::rotateComplexArray(logIO(), convFunc_p, convFuncCS_p, 
+//     SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
 // 				       rotatedConvFunc,(currentCFPA-actualPA));
-    SynthesisUtils::rotateComplexArray(logIO(), convFunc_p, convFuncCS_p, 
+    SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
 				       rotatedConvFunc,0.0);
 
     ConjCFMap_p     = ConjCFMap.getStorage(deleteThem(CONJCFMAP));
@@ -864,7 +865,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				 Int& doPSF,
 				 Int paIndex)
   {
-    logIO() << LogOrigin("AWProjectWBFT","runFortranPut") << LogIO::NORMAL;
+    LogIO log_l(LogOrigin("AWProjectWBFT","runFortranPut"));
     enum whichGetStorage {RAOFF,DECOFF,UVW,DPHASE,VISDATA,GRADVISAZ,GRADVISEL,
 			  FLAGS,ROWFLAGS,UVSCALE,ACTUALOFFSET,DATAPTR,VBFREQ,
 			  CONVSUPPORT,CONVWTSUPPORT,CONVFUNC,CHANMAP,POLMAP,VBANT1,VBANT2,WEIGHT,
@@ -891,9 +892,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     makeConjPolMap(vb,CFMap,ConjCFMap);
 
     Array<Complex> rotatedConvFunc;
-//     SynthesisUtils::rotateComplexArray(logIO(), convFunc_p, convFuncCS_p, 
+//     SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
 // 				       rotatedConvFunc,(currentCFPA-actualPA));
-    SynthesisUtils::rotateComplexArray(logIO(), convFunc_p, convFuncCS_p, 
+    SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
 				       rotatedConvFunc,0.0);
 
 
@@ -1045,7 +1046,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				   Matrix<Float>& weight,
 				   const VisBuffer& vb)
   {
-    logIO() << LogOrigin("AWProjectWBFT","initializeToSky") << LogIO::NORMAL;
+    LogIO log_l(LogOrigin("AWProjectWBFT","initializeToSky"));
+
     image=&iimage;
     
     init();
@@ -1095,7 +1097,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   void AWProjectWBFT::finalizeToSky()
   {
-    logIO() << LogOrigin("AWProjectWBFT", "finalizeToSky")  << LogIO::NORMAL;
+    LogIO log_l(LogOrigin("AWProjectWBFT", "finalizeToSky"));
 	
     if(isTiled) 
       {
@@ -1104,7 +1106,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	imageCache->flush();
 	ostringstream o;
 	imageCache->showCacheStatistics(o);
-	logIO() << o.str() << LogIO::POST;
+	log_l << o.str() << LogIO::POST;
       }
 
     if(pointingToImage) delete pointingToImage; pointingToImage=0;

@@ -60,6 +60,7 @@ namespace casa{
   				    CFStore& cfs,
   				    CFStore& cfwts)
   {
+    LogIO log_l(LogOrigin("AWConvFunc", "makeConvFunction"));
     Int convSize, convSampling, polInUse;
     Double wScale=1; Int bandID_l=-1;
     Array<Complex> convFunc_l, convWeights_l;
@@ -67,28 +68,26 @@ namespace casa{
     Int nx=image.shape()(0);
     if (bandID_l == -1) bandID_l=getVisParams(vb);
     
-    logIO() << LogOrigin("AWConvFunc", "makeConvFunction") 
-	    << "Making a new convolution function for PA="
-	    << pa*(180/C::pi) << "deg"
-	    << LogIO::NORMAL 
-	    << LogIO::POST;
+    log_l << "Making a new convolution function for PA="
+	  << pa*(180/C::pi) << "deg"
+	  << LogIO::NORMAL << LogIO::POST;
     
     if(wConvSize>0) {
-      logIO() << "Using " << wConvSize << " planes for W-projection" << LogIO::POST;
+      log_l << "Using " << wConvSize << " planes for W-projection" << LogIO::POST;
       Double maxUVW;
       maxUVW=0.25/abs(image.coordinates().increment()(0));
-      logIO() << "Estimating maximum possible W = " << maxUVW
-	      << " (wavelengths)" << LogIO::POST;
+      log_l << "Estimating maximum possible W = " << maxUVW
+	    << " (wavelengths)" << LogIO::POST;
       
       Double invLambdaC=vb.frequency()(0)/C::c;
       Double invMinL = vb.frequency()((vb.frequency().nelements())-1)/C::c;
-      logIO() << "wavelength range = " << 1.0/invLambdaC << " (m) to " 
-	      << 1.0/invMinL << " (m)" << LogIO::POST;
+      log_l << "wavelength range = " << 1.0/invLambdaC << " (m) to " 
+	    << 1.0/invMinL << " (m)" << LogIO::POST;
       if (wConvSize > 1)
 	{
 	  wScale=Float((wConvSize-1)*(wConvSize-1))/maxUVW;
-	  logIO() << "Scaling in W (at maximum W) = " << 1.0/wScale
-		  << " wavelengths per pixel" << LogIO::POST;
+	  log_l << "Scaling in W (at maximum W) = " << 1.0/wScale
+		<< " wavelengths per pixel" << LogIO::POST;
 	}
     }
     //  
@@ -323,12 +322,11 @@ namespace casa{
       }
     
     if(cfs.xSupport(0)<1) 
-      logIO() << "Convolution function is misbehaved - support seems to be zero"
-	      << LogIO::EXCEPTION;
+      log_l << "Convolution function is misbehaved - support seems to be zero"
+	    << LogIO::EXCEPTION;
     
-    logIO() << LogOrigin("AWConvFunc", "makeConvFunction")
-	    << "Re-sizing the convolution functions"
-	    << LogIO::POST;
+    log_l << "Re-sizing the convolution functions"
+	  << LogIO::POST;
     
     {
       supportBuffer = ATerm_p->getOversampling();;
@@ -449,6 +447,7 @@ namespace casa{
 
   Bool AWConvFunc::findSupport(Array<Complex>& func, Float& threshold,Int& origin, Int& R)
   {
+    LogIO log_l(LogOrigin("AWConvFunc", "findSupport"));
     Double NSteps;
     Int PixInc=1;
     Vector<Complex> vals;
@@ -493,16 +492,15 @@ namespace casa{
 				       ImageInterface<Complex>& theavgPB,
 				       Bool reset)
   {
-    logIO() << LogOrigin("AWConvFunc","makeAverageResponse(Complex)")
-	    << LogIO::NORMAL;
-    logIO() << "Making the average response for " << ATerm_p->name() 
-	    << LogIO::NORMAL  << LogIO::POST;
+    LogIO log_l(LogOrigin("AWConvFunc","makeAverageResponse(Complex)"));
+
+    log_l << "Making the average response for " << ATerm_p->name() 
+	  << LogIO::NORMAL  << LogIO::POST;
     
     if (reset)
       {
-	logIO() << "Initializing the average PBs"
-		<< LogIO::NORMAL
-		<< LogIO::POST;
+	log_l << "Initializing the average PBs"
+	      << LogIO::NORMAL << LogIO::POST;
 	theavgPB.resize(image.shape()); 
 	theavgPB.setCoordinateInfo(image.coordinates());
 	theavgPB.set(1.0);
@@ -518,7 +516,7 @@ namespace casa{
   void AWConvFunc::normalizeAvgPB(ImageInterface<Complex>& inImage,
 				  ImageInterface<Float>& outImage)
   {
-    LogOrigin logOrigin("AWConvFunc", "normalizeAvgPB");
+    LogIO log_l(LogOrigin("AWConvFunc", "normalizeAvgPB"));
 
     IPosition inShape(inImage.shape()),ndx(4,0,0,0,0);
     Vector<Complex> peak(inShape(2));
@@ -532,8 +530,8 @@ namespace casa{
 
     isRefIn  = inImage.get(inBuf);
     isRefOut = outImage.get(outBuf);
-    logIO() << logOrigin << "Normalizing the average PBs to unity"
-	    << LogIO::NORMAL << LogIO::POST;
+    log_l << "Normalizing the average PBs to unity"
+	  << LogIO::NORMAL << LogIO::POST;
     //
     // Normalize each plane of the inImage separately to unity.
     //
@@ -589,15 +587,15 @@ namespace casa{
 					   ImageInterface<Float>& theavgPB,
 					   Bool reset)
   {
+    LogIO log_l(LogOrigin("AWConvFunc", "makeAverageResponse_org"));
     TempImage<Float> localPB;
     
-    logIO() << LogOrigin("AWConvFunc","makeAverageResponse") << LogIO::NORMAL;
-    logIO() << "Making the average response for " << ATerm_p->name() << LogIO::NORMAL << LogIO::POST;
+    log_l << "Making the average response for " << ATerm_p->name() << LogIO::NORMAL << LogIO::POST;
     
     localPB.resize(image.shape()); localPB.setCoordinateInfo(image.coordinates());
     if (reset)
       {
-	logIO() << "Initializing the average PBs" << LogIO::NORMAL << LogIO::POST;
+	log_l << "Initializing the average PBs" << LogIO::NORMAL << LogIO::POST;
 	theavgPB.resize(localPB.shape()); 
 	theavgPB.setCoordinateInfo(localPB.coordinates());
 	theavgPB.set(0.0);

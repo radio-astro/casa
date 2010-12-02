@@ -146,13 +146,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   AWProjectFT::AWProjectFT(const RecordInterface& stateRec)
     : FTMachine(),Second("s"),Radian("rad"),Day("d")
   {
+    LogIO log_l(LogOrigin("AWProjectFT", "AWProjectFT"));
     //
     // Construct from the input state record
     //
     String error;
     
     if (!fromRecord(stateRec)) {
-      throw (AipsError("Failed to create AWProjectFT: " ));
+      log_l << "Failed to create " << name() << " object." << LogIO::EXCEPTION;
     };
     maxConvSupport=-1;
     convSampling=OVERSAMPLING;
@@ -261,7 +262,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   void AWProjectFT::init() 
   {
-    LogOrigin logOrigin("AWProjectFT", "init");
+    LogIO log_l(LogOrigin("AWProjectFT", "init"));
+
     nx    = image->shape()(0);
     ny    = image->shape()(1);
     npol  = image->shape()(2);
@@ -329,23 +331,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		    MAXPOINTINGERROR*1.745329E-02*(sigma)/3600.0))/N;
     if (!awEij.isReady())
       {
-	logIO() << LogOrigin("AWProjectFT","init")
-		<< "Making lookup table for exp function with a resolution of " 
-		<< StepSize << " radians.  "
-		<< "Memory used: " << sizeof(Float)*N/(1024.0*1024.0)<< " MB." 
-		<< LogIO::NORMAL 
-		<<LogIO::POST;
+	log_l << "Making lookup table for exp function with a resolution of " 
+	      << StepSize << " radians.  "
+	      << "Memory used: " << sizeof(Float)*N/(1024.0*1024.0)<< " MB." 
+	      << LogIO::NORMAL 
+	      <<LogIO::POST;
 	
 	awEij.setSigma(sigma);
 	awEij.initExpTable(N,StepSize);
 	//    ExpTab.build(N,StepSize);
 	
-	logIO() << LogOrigin("AWProjectFT","init")
-		<< "Making lookup table for complex exp function with a resolution of " 
-		<< 2*M_PI/N << " radians.  "
-		<< "Memory used: " << 2*sizeof(Float)*N/(1024.0*1024.0) << " MB." 
-		<< LogIO::NORMAL
-		<< LogIO::POST;
+	log_l << "Making lookup table for complex exp function with a resolution of " 
+	      << 2*M_PI/N << " radians.  "
+	      << "Memory used: " << 2*sizeof(Float)*N/(1024.0*1024.0) << " MB." 
+	      << LogIO::NORMAL
+	      << LogIO::POST;
 	awEij.initCExpTable(N);
 	//    CExpTab.build(N);
       }
@@ -380,7 +380,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							 const MDirection::Types& To,
 							 MEpoch& last)
   {
-    LogOrigin logOrigin("AWProjectFT","makeCoordinateMachine");
+    LogIO log_l(LogOrigin("AWProjectFT","makeCoordinateMachine"));
     Double time = getCurrentTimeStamp(vb);
     
     MEpoch epoch(Quantity(time,Second),MEpoch::TAI);
@@ -392,9 +392,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     String ObsName=vb.msColumns().observation().telescopeName()(vb.arrayId());
     
     if (!MeasTable::Observatory(pos,ObsName))
-      logIO() << logOrigin 
-	      << "Observatory position for "+ ObsName + " not found"
-	      << LogIO::EXCEPTION;
+      log_l << "Observatory position for "+ ObsName + " not found"
+	    << LogIO::EXCEPTION;
     //
     // ...now make a Frame object out of the observatory position and
     // time objects...
@@ -420,7 +419,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					Array<Float> &m_off,
 					Bool Evaluate)
   {
-    LogOrigin logOrigin("AWProjectFT", "findPointingOffsets");
+    LogIO log_l(LogOrigin("AWProjectFT", "findPointingOffsets"));
     Int NAnt = 0;
     MEpoch LAST;
     Double thisTime = getCurrentTimeStamp(vb);
@@ -539,7 +538,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					Array<Float> &m_off,
 					Bool Evaluate)
   {
-    LogOrigin logOrigin("AWProjectFT", "findPointingOffsets");
+    LogIO log_l(LogOrigin("AWProjectFT", "findPointingOffsets"));
     Int NAnt = 0;
     Float tmp;
     // TBD: adapt the following to VisCal mechanism:
@@ -672,7 +671,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void AWProjectFT::normalizeAvgPB(ImageInterface<Complex>& inImage,
 				   ImageInterface<Float>& outImage)
   {
-    logIO() << LogOrigin("AWProjectFT", "normalizeAvgPB") << LogIO::NORMAL;
+    LogIO log_l(LogOrigin("AWProjectFT", "normalizeAvgPB"));
     if (pbNormalized_p) return;
     IPosition inShape(inImage.shape()),ndx(4,0,0,0,0);
     Vector<Complex> peak(inShape(2));
@@ -686,8 +685,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     isRefIn  = inImage.get(inBuf);
     isRefOut = outImage.get(outBuf);
-    logIO() << "Normalizing the average PBs to unity"
-	    << LogIO::NORMAL << LogIO::POST;
+    log_l << "Normalizing the average PBs to unity"
+	  << LogIO::NORMAL << LogIO::POST;
     //
     // Normalize each plane of the inImage separately to unity.
     //
@@ -740,7 +739,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   void AWProjectFT::normalizeAvgPB()
   {
-    LogOrigin logOrigin("AWProjectFT", "normalizeAvgPB");
+    LogIO log_l(LogOrigin("AWProjectFT", "normalizeAvgPB"));
     if (pbNormalized_p) return;
     Bool isRefF;
     Array<Float> avgPBBuf;
@@ -751,10 +750,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// if (makingPSF) pbPeaks = 1.0;
 	// else pbPeaks /= (Float)noOfPASteps;
 	pbPeaks = 1.0;
-	logIO() << LogOrigin("AWProjectFT", "normalizeAvgPB")  
-		<< "Normalizing the average PBs to " << 1.0
-		<< LogIO::NORMAL
-		<< LogIO::POST;
+	log_l << "Normalizing the average PBs to " << 1.0
+	      << LogIO::NORMAL << LogIO::POST;
 	
 	IPosition avgPBShape(avgPB_p->shape()),ndx(4,0,0,0,0);
 	Vector<Float> peak(avgPBShape(2));
@@ -807,7 +804,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void AWProjectFT::makeCFPolMap(const VisBuffer& vb, const Vector<Int>& locCfStokes,
 				 Vector<Int>& polM)
   {
-    LogOrigin logOrigin("AWProjectFT", "findPointingOffsets");
+    LogIO log_l(LogOrigin("AWProjectFT", "findPointingOffsets"));
     Vector<Int> msStokes = vb.corrType();
     Int nPol = msStokes.nelements();
     polM.resize(polMap.shape());
@@ -832,7 +829,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				     const Vector<Int> cfPolMap, 
 				     Vector<Int>& conjPolMap)
   {
-    LogOrigin logOrigin("AWProjectFT", "makConjPolMap");
+    LogIO log_l(LogOrigin("AWProjectFT", "makConjPolMap"));
     //
     // All the Natak (Drama) below with slicers etc. is to extract the
     // Poln. info. for the first IF only (not much "information
@@ -894,7 +891,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void AWProjectFT::findConvFunction(const ImageInterface<Complex>& image,
 				     const VisBuffer& vb)
   {
-    logIO() <<  LogOrigin("AWProjectFT", "findConvFunction") << LogIO::NORMAL;
+    LogIO log_l(LogOrigin("AWProjectFT", "findConvFunction"));
     if (!paChangeDetector.changed(vb,0)) return;
     Int cfSource=CFDefs::NOTCACHED;
     CoordinateSystem ftcoords;
@@ -975,14 +972,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	memoryKB = Int(memoryKB/1024.0+0.5);
 	if (memoryKB > 1024) {memoryKB /=1024; unit=" MB";}
 	
-	logIO() << "Memory used in gridding functions = "
-		<< (Int)(memoryKB+0.5) << unit << " out of a maximum of "
-		<< maxMemoryMB << " MB" << LogIO::POST;
+	log_l << "Memory used in gridding functions = "
+	      << (Int)(memoryKB+0.5) << unit << " out of a maximum of "
+	      << maxMemoryMB << " MB" << LogIO::POST;
 	//
 	// Show the list of support sizes along the w-axis for the current PA.
 	//
-	logIO() << "Convolution support = " << cfs_p.xSupport 
-		<< " pixels in Fourier plane" << LogIO::POST;
+	log_l << "Convolution support = " << cfs_p.xSupport 
+	      << " pixels in Fourier plane" << LogIO::POST;
       }
   }
   //
@@ -991,7 +988,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void AWProjectFT::initializeToVis(ImageInterface<Complex>& iimage,
 				    const VisBuffer& vb)
   {
-    LogOrigin logOrigin("AWProjectFT", "initializeToVis");
+    LogIO log_l(LogOrigin("AWProjectFT", "initializeToVis"));
     image=&iimage;
     
     ok();
@@ -1043,7 +1040,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     //AlwaysAssert(lattice, AipsError);
     
-    logIO() << LogIO::DEBUGGING << "Starting FFT of image" << LogIO::POST;
+    log_l << LogIO::DEBUGGING << "Starting FFT of image" << LogIO::POST;
     
     Vector<Float> sincConv(nx);
     Float centerX=nx/2;
@@ -1069,10 +1066,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       verifyShapes(avgPB_p->shape(), image->shape());
       Array<Float> avgBuf; avgPB_p->get(avgBuf);
       if (max(avgBuf) < 1e-04)
-	logIO() << logOrigin 
-		<< "Normalization by PB requested but either PB not "
-		<<"found in the cache or is ill-formed."
-		<< LogIO::EXCEPTION;
+	log_l << "Normalization by PB requested but either PB not "
+	      <<"found in the cache or is ill-formed."
+	      << LogIO::EXCEPTION;
 	  
 
       LatticeStepper lpb(avgPB_p->shape(),cursorShape,axisPath);
@@ -1133,7 +1129,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     LatticeFFT::cfft2d(*lattice);
 
-    logIO() << LogIO::DEBUGGING << "Finished FFT" << LogIO::POST;
+    log_l << LogIO::DEBUGGING << "Finished FFT" << LogIO::POST;
   }
   //
   //---------------------------------------------------------------
@@ -1152,10 +1148,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   void AWProjectFT::finalizeToVis()
   {
-    LogOrigin logOrigin("AWProjectFT", "finalizeToVis");
+    LogIO log_l(LogOrigin("AWProjectFT", "finalizeToVis"));
 
-    logIO() << logOrigin << LogIO::NORMAL;
-    logIO() <<  logOrigin << LogIO::DEBUGGING << LogIO::POST;
     if(isTiled) 
       {
 	AlwaysAssert(imageCache, AipsError);
@@ -1163,7 +1157,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	ostringstream o;
 	imageCache->flush();
 	imageCache->showCacheStatistics(o);
-	logIO() << o.str() << LogIO::POST;
+	log_l << o.str() << LogIO::POST;
       }
     if(pointingToImage) delete pointingToImage; pointingToImage=0;
   }
@@ -1177,10 +1171,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				     Matrix<Float>& weight,
 				     const VisBuffer& vb)
   {
-    LogOrigin logOrigin("AWProjectFT", "initializeToSky");
-    logIO() <<  logOrigin << LogIO::NORMAL;
-    logIO() <<  logOrigin << LogIO::DEBUGGING << LogIO::POST;
-
+    LogIO log_l(LogOrigin("AWProjectFT", "initializeToSky"));
     
     // image always points to the image
     image=&iimage;
@@ -1232,19 +1223,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Now we flush the cache and report statistics For memory based,
     // we don't write anything out yet.
     //
-    LogOrigin logOrigin("AWProjectFT", "findPointingOffsets");
-    logIO() << logOrigin << LogIO::NORMAL;
-    logIO() << logOrigin << LogIO::DEBUGGING << LogIO::POST;
+    LogIO log_l(LogOrigin("AWProjectFT", "findPointingOffsets"));
+
     if(isTiled) 
       {
-	logIO() << LogOrigin("AWProjectFT", "finalizeToSky")  << LogIO::NORMAL;
-	
 	AlwaysAssert(image, AipsError);
 	AlwaysAssert(imageCache, AipsError);
 	imageCache->flush();
 	ostringstream o;
 	imageCache->showCacheStatistics(o);
-	logIO() << o.str() << LogIO::POST;
+	log_l << o.str() << LogIO::POST;
       }
     if(pointingToImage) delete pointingToImage; pointingToImage=0;
 
@@ -1424,6 +1412,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				   Int& doGrad,
 				   Int paIndex)
   {
+    LogIO log_l(LogOrigin("AWProjectFT", "runFortranGet"));
     (void)Conj; //To supress the warning
     enum whichGetStorage {RAOFF,DECOFF,UVW,DPHASE,VISDATA,GRADVISAZ,GRADVISEL,
 			  FLAGS,ROWFLAGS,UVSCALE,ACTUALOFFSET,DATAPTR,VBFREQ,
@@ -1450,11 +1439,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for(Int i=0;i<N;i++) CFMap[i] = polMap[N-i-1];
     
     Array<Complex> rotatedConvFunc;
-//     SynthesisUtils::rotateComplexArray(logIO(), convFunc_p, convFuncCS_p, 
+//     SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
 // 				       rotatedConvFunc,(currentCFPA-actualPA),"CUBIC");
-    SynthesisUtils::rotateComplexArray(logIO(), convFunc_p, convFuncCS_p, 
+    SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
     				       rotatedConvFunc,0.0,"LINEAR");
-    // SynthesisUtils::rotateComplexArray(logIO(), convFunc_p, convFuncCS_p, 
+    // SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
     // 				       rotatedConvFunc,(currentCFPA-actualPA),"LINEAR");
 
     ConjCFMap = polMap;
@@ -1585,6 +1574,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				       Int& doGrad,
 				       Int paIndex)
   {
+    LogIO log_l(LogOrigin("AWProjectFT", "runFortranGetGrad"));
     enum whichGetStorage {RAOFF,DECOFF,UVW,DPHASE,VISDATA,GRADVISAZ,GRADVISEL,
 			  FLAGS,ROWFLAGS,UVSCALE,ACTUALOFFSET,DATAPTR,VBFREQ,
 			  CONVSUPPORT,CONVFUNC,CHANMAP,POLMAP,VBANT1,VBANT2,CONJCFMAP,CFMAP};
@@ -1605,11 +1595,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     makeConjPolMap(vb,CFMap,ConjCFMap);
 
     Array<Complex> rotatedConvFunc;
-//     SynthesisUtils::rotateComplexArray(logIO(), convFunc_p, convFuncCS_p, 
+//     SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
 //  				       rotatedConvFunc,(currentCFPA-actualPA),"LINEAR");
-    SynthesisUtils::rotateComplexArray(logIO(), convFunc_p, convFuncCS_p, 
+    SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
     				       rotatedConvFunc,0.0);
-    // SynthesisUtils::rotateComplexArray(logIO(), convFunc_p, convFuncCS_p, 
+    // SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
     // 				       rotatedConvFunc,(currentCFPA-actualPA),"LINEAR");
 
     ConjCFMap_p     = ConjCFMap.getStorage(deleteThem(CONJCFMAP));
@@ -1740,6 +1730,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				   Int& doPSF,
 				   Int paIndex)
   {
+    LogIO log_l(LogOrigin("AWProjectFT", "runFortranPut"));
+
     (void)Conj; //To supress the warning
     enum whichGetStorage {RAOFF,DECOFF,UVW,DPHASE,VISDATA,GRADVISAZ,GRADVISEL,
 			  FLAGS,ROWFLAGS,UVSCALE,ACTUALOFFSET,DATAPTR,VBFREQ,
@@ -1762,9 +1754,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ConjCFMap = polMap;
 
     Array<Complex> rotatedConvFunc;
-//    SynthesisUtils::rotateComplexArray(logIO(), convFunc_p, convFuncCS_p, 
+//    SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
 //				       rotatedConvFunc,(currentCFPA-actualPA),"LINEAR");
-    SynthesisUtils::rotateComplexArray(logIO(), convFunc_p, convFuncCS_p, 
+    SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
  				       rotatedConvFunc,0.0,"LINEAR");
 
     /*
@@ -2088,6 +2080,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			  Cube<Complex>& dMout2,
 			  Int Conj, Int doGrad)
   {
+    LogIO log_l(LogOrigin("AWProjectFT", "nget"));
     Int startRow, endRow, nRow;
     nRow=vb.nRow();
     startRow=0;
@@ -2165,7 +2158,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     if(isTiled) 
       {
-	logIO() << "AWProjectFT::nget(): The sky model is tiled" << LogIO::NORMAL << LogIO::POST;
+	log_l << "The sky model is tiled" << LogIO::NORMAL << LogIO::POST;
 	Double invLambdaC=vb.frequency()(0)/C::c;
 	Vector<Double> uvLambda(2);
 	Vector<Int> centerLoc2D(2);
@@ -2757,6 +2750,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   ImageInterface<Complex>& AWProjectFT::getImage(Matrix<Float>& weights,
 						  Bool fftNormalization) 
   {
+    LogIO log_l(LogOrigin("AWProjectFT", "getImage"));
     //
     // There are three objects held by the FTMachine objects: (1)
     // *image, (2) *lattice, and (3) griddedData.
@@ -2773,8 +2767,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // --SB (Dec. 2010).
     AlwaysAssert(image, AipsError);
     
-    logIO() << LogOrigin("AWProjectFT", "getImage") << LogIO::NORMAL;
-    
     weights.resize(sumWeight.shape());
     convertArray(weights, sumWeight);
     //  
@@ -2782,13 +2774,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // we don't care.
     //
     if(max(weights)==0.0) 
-      logIO() << LogIO::SEVERE
-	      << "No useful data in " << name() << ".  Weights all zero"
-	      << LogIO::POST;
+      log_l << LogIO::SEVERE
+	    << "No useful data in " << name() << ".  Weights all zero"
+	    << LogIO::POST;
     else
       {
 	const IPosition latticeShape = lattice->shape();
-	logIO() << LogIO::DEBUGGING
+	log_l << LogIO::DEBUGGING
 		<< "Starting FFT and scaling of image" << LogIO::POST;
 	//    
 	// x and y transforms (lattice has the gridded vis.  Make the
@@ -2831,8 +2823,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void AWProjectFT::getWeightImage(ImageInterface<Float>& weightImage,
 				    Matrix<Float>& weights) 
   {
-    
-    logIO() << LogOrigin("AWProjectFT", "getWeightImage") << LogIO::NORMAL;
+    LogIO log_l(LogOrigin("AWProjectFT", "getWeightImage"));
     
     weights.resize(sumWeight.shape());
     convertArray(weights,sumWeight);
@@ -2859,6 +2850,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   Bool AWProjectFT::toRecord(RecordInterface& outRec, Bool withImage) 
   {
+    LogIO log_l(LogOrigin("AWProjectFT", "toRecord"));
     
     // Save the current AWProjectFT object to an output state record
     Bool retval = True;
@@ -2907,6 +2899,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   Bool AWProjectFT::fromRecord(const RecordInterface& inRec)
   {
+    LogIO log_l(LogOrigin("AWProjectFT", "fromRecord"));
+
     Bool retval = True;
     imageCache=0; lattice=0; arrayLattice=0;
     Double cacheVal;
@@ -3002,11 +2996,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			      ImageInterface<Complex>& theImage,
 			      Matrix<Float>& weight) 
   {
-    logIO() << LogOrigin("AWProjectFT", "makeImage") << LogIO::NORMAL;
+    LogIO log_l(LogOrigin("AWProjectFT", "makeImage"));
     
     if(type==FTMachine::COVERAGE) 
-      logIO() << "Type COVERAGE not defined for Fourier transforms"
-	      << LogIO::EXCEPTION;
+      log_l << "Type COVERAGE not defined for Fourier transforms"
+	    << LogIO::EXCEPTION;
     
     
     // Initialize the gradients
@@ -3071,23 +3065,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   void AWProjectFT::setPAIncrement(const Quantity& paIncrement)
   {
+    LogIO log_l(LogOrigin("AWProjectFT", "setPAIncrement"));
     paChangeDetector.setTolerance(paIncrement);
     rotateAperture_p = True;
     if (paIncrement.getValue("rad") < 0)
       rotateAperture_p = False;
-    logIO() << LogIO::NORMAL <<"Setting PA increment to " << paIncrement.getValue("deg") << " deg" << endl;
+    log_l << LogIO::NORMAL <<"Setting PA increment to " << paIncrement.getValue("deg") << " deg" << endl;
     cfCache_p->setPAChangeDetector(paChangeDetector);
   }
 
   Bool AWProjectFT::verifyShapes(IPosition pbShape, IPosition skyShape)
   {
-    LogOrigin logOrigin("AWProjectFT", "verifyShapes");
+    LogIO log_l(LogOrigin("AWProjectFT", "verifyShapes"));
+
     if ((pbShape(0) != skyShape(0)) && // X-axis
 	(pbShape(1) != skyShape(1)) && // Y-axis
 	(pbShape(2) != skyShape(2)))   // Poln-axis
       {
-	logIO() << logOrigin <<	"Sky and/or polarization shape of the avgPB and the sky model do not match."
-		<< LogIO::EXCEPTION;
+	log_l << "Sky and/or polarization shape of the avgPB and the sky model do not match."
+	      << LogIO::EXCEPTION;
 	return False;
       }
     return True;
