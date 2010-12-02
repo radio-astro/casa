@@ -61,13 +61,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				  CFStore& cfwts);
     virtual Bool makeAverageResponse(const VisBuffer& vb, 
 				     const ImageInterface<Complex>& image,
-				     //				     TempImage<Float>& theavgPB,
 				     ImageInterface<Float>& theavgPB,
+				     Bool reset=True);
+    virtual Bool makeAverageResponse(const VisBuffer& vb, 
+				     const ImageInterface<Complex>& image,
+				     ImageInterface<Complex>& theavgPB,
 				     Bool reset=True);
     virtual int getVisParams(const VisBuffer& vb) {return ATerm_p->getVisParams(vb);};
     virtual void setPolMap(const Vector<Int>& polMap) {ATerm_p->setPolMap(polMap);};
     //    virtual void setFeedStokes(const Vector<Int>& feedStokes) {ATerm_p->setFeedStokes(feedStokes);};
     virtual Bool findSupport(Array<Complex>& func, Float& threshold,Int& origin, Int& R);
+
+  protected:
+    void normalizeAvgPB(ImageInterface<Complex>& inImage,
+			ImageInterface<Float>& outImage);
+    Bool makeAverageResponse_org(const VisBuffer& vb, 
+				 const ImageInterface<Complex>& image,
+				 ImageInterface<Float>& theavgPB,
+				 Bool reset=True);
 
   private:
     CountedPtr<ATerm> ATerm_p;
