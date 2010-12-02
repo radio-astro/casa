@@ -91,8 +91,13 @@ namespace casa{
     {throw(AipsError("IlluminationConvFunc::findSupport() not implemented"));};
     virtual Bool makeAverageResponse(const VisBuffer& vb, 
 				     const ImageInterface<Complex>& image,
-				     //				     TempImage<Float>& theavgPB,
 				     ImageInterface<Float>& theavgPB,
+				     Bool reset=True)
+      {throw(AipsError("IlluminationConvFunc::makeAverageRes() called"));};
+
+    virtual Bool makeAverageResponse(const VisBuffer& vb, 
+				     const ImageInterface<Complex>& image,
+				     ImageInterface<Complex>& theavgPB,
 				     Bool reset=True)
       {throw(AipsError("IlluminationConvFunc::makeAverageRes() called"));};
 
