@@ -325,9 +325,6 @@ namespace casa{
       log_l << "Convolution function is misbehaved - support seems to be zero"
 	    << LogIO::EXCEPTION;
     
-    log_l << "Re-sizing the convolution functions"
-	  << LogIO::POST;
-    
     {
       supportBuffer = ATerm_p->getOversampling();;
       Int bot=(Int)(ConvFuncOrigin-cfs.sampling[0]*maxConvSupport-supportBuffer),//-convSampling/2, 
@@ -370,7 +367,6 @@ namespace casa{
     // (fpbwproj.f).
     //
     ndx(2)=ndx(3)=0;
-    
     
     Complex pbSum=0.0;
     IPosition peakPix(ndx);

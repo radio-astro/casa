@@ -107,13 +107,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			   Int itilesize, 
 			   Float pbLimit,
 			   Bool usezero)
-    : FTMachine(), padding_p(1.0), nWPlanes_p(nWPlanes),
+    : FTMachine(cfcache,cf), padding_p(1.0), nWPlanes_p(nWPlanes),
       imageCache(0), cachesize(icachesize), tilesize(itilesize),
       gridder(0), isTiled(False), arrayLattice(0), lattice(0), 
       maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
       pointingToImage(0), usezero_p(usezero),
-      telescopeConvFunc_p(cf),cfs_p(), cfwts_p(), epJ_p(),
-      doPBCorrection(doPBCorr), cfCache_p(cfcache), paChangeDetector(),
+      /*telescopeConvFunc_p(cf),cfs_p(), cfwts_p(),*/ epJ_p(),
+      doPBCorrection(doPBCorr), /*cfCache_p(cfcache),*/ paChangeDetector(),
       rotateAperture_p(True),
       Second("s"),Radian("rad"),Day("d"), pbNormalized_p(False)
   {
@@ -252,7 +252,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	currentCFPA=other.currentCFPA;
 	lastPAUsedForWtImg = other.lastPAUsedForWtImg;
 	avgPB_p = other.avgPB_p;
-	telescopeConvFunc_p = other.telescopeConvFunc_p;
+	convFuncCtor_p = other.convFuncCtor_p;
 	pbNormalized_p = other.pbNormalized_p;
       };
     return *this;
@@ -662,7 +662,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					 const ImageInterface<Complex>& imageTemplate,
 					 ImageInterface<Float>& sensitivityImage)
   {
-    if (telescopeConvFunc_p->makeAverageResponse(vb, imageTemplate, sensitivityImage))
+    if (convFuncCtor_p->makeAverageResponse(vb, imageTemplate, sensitivityImage))
       cfCache_p->flush(sensitivityImage); 
   }
   //
@@ -920,9 +920,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // If conv. func. not found in the cache, make one and cache it.
     if (cfSource==CFDefs::NOTCACHED)
       {
-	telescopeConvFunc_p->setPolMap(polMap);
-	telescopeConvFunc_p->makeConvFunction(image,vb,wConvSize,
-					      pa, cfs_p, cfwts_p);
+	convFuncCtor_p->setPolMap(polMap);
+	convFuncCtor_p->makeConvFunction(image,vb,wConvSize,
+					 pa, cfs_p, cfwts_p);
 
 	cfCache_p->cacheConvFunction(cfs_p);
 	cfCache_p->cacheConvFunction(cfwts_p,"WT",False);

@@ -42,6 +42,8 @@
 #include <images/Images/TempImage.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <scimath/Mathematics/InterpolateArray1D.h>
+#include <synthesis/MeasurementComponents/CFCache.h>
+#include <synthesis/MeasurementComponents/ConvolutionFunction.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -115,6 +117,8 @@ public:
 
   FTMachine();
 
+  FTMachine(CountedPtr<CFCache>& cfcache,CountedPtr<ConvolutionFunction>& cfctor);
+
   FTMachine(const FTMachine& other);
 
   FTMachine& operator=(const FTMachine& other);
@@ -169,6 +173,10 @@ public:
 
   // Get the final image
   virtual ImageInterface<Complex>& getImage(Matrix<Float>&, Bool normalize=True) = 0;
+  virtual void normalizeImage(Lattice<Complex>& skyImage,
+			      const Matrix<Double>& sumOfWts,
+			      Lattice<Float>& sensitivityImage,
+			      Bool fftNorm) = 0;
 
   // Get the final weights image
   virtual void getWeightImage(ImageInterface<Float>&, Matrix<Float>&) = 0;
@@ -350,7 +358,9 @@ protected:
   Cube<Int> spwChanSelFlag_p;
   Vector<Int> cfStokes_p;
   Int polInUse_p;
-
+  CountedPtr<CFCache> cfCache_p;
+  CFStore cfs_p, cfwts_p;
+  CountedPtr<ConvolutionFunction> convFuncCtor_p;
  private:
   //Some temporary wasteful function for swapping axes because we don't 
   //Interpolation along the second axis...will need to implement 

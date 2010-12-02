@@ -31,12 +31,12 @@
 
 #include <synthesis/MeasurementComponents/VLACalcIlluminationConvFunc.h>
 #include <synthesis/MeasurementComponents/VLAIlluminationConvFunc.h>
-#include <synthesis/MeasurementComponents/ConvolutionFunction.h>
+//#include <synthesis/MeasurementComponents/ConvolutionFunction.h>
 #include <synthesis/MeasurementComponents/EVLAConvFunc.h>
 #include <synthesis/MeasurementComponents/SolvableVisCal.h>
 #include <synthesis/MeasurementComponents/VPSkyJones.h>
 #include <synthesis/MeasurementComponents/FTMachine.h>
-#include <synthesis/MeasurementComponents/CFCache.h>
+//#include <synthesis/MeasurementComponents/CFCache.h>
 #include <synthesis/MeasurementComponents/Utils.h>
 
 #include <scimath/Mathematics/FFTServer.h>
@@ -391,8 +391,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Grid/degrid zero spacing points?
     Bool usezero_p;
     
-    CountedPtr<ConvolutionFunction> telescopeConvFunc_p;
-    CFStore cfs_p, cfwts_p;
+    //    CountedPtr<ConvolutionFunction> telescopeConvFunc_p;
+    //    CFStore cfs_p, cfwts_p;
     Array<Complex> convFunc_p, convWeights_p;
     CoordinateSystem convFuncCS_p;
     //
@@ -422,7 +422,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int Nant_p, doPointing;
     Bool doPBCorrection, makingPSF;
     
-    CountedPtr<CFCache> cfCache_p;
+    //    CountedPtr<CFCache> cfCache_p;
     ParAngleChangeDetector paChangeDetector;
     Bool rotateAperture_p;
 
