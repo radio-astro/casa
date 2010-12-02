@@ -177,6 +177,11 @@ public:
   // Get the final image: do the Fourier transform and
   // grid-correct, then optionally normalize by the summed weights
   ImageInterface<Complex>& getImage(Matrix<Float>&, Bool normalize=True);
+  virtual void normalizeImage(Lattice<Complex>& skyImage,
+			      const Matrix<Double>& sumOfWts,
+			      Lattice<Float>& sensitivityImage,
+			      Bool fftNorm)
+    {throw(AipsError("SDGrid::normalizeImage() called"));}
 
   // Get the final weights image
   void getWeightImage(ImageInterface<Float>&, Matrix<Float>&);

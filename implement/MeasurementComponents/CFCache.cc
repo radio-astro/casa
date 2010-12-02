@@ -238,7 +238,6 @@ namespace casa{
     //
     if (memCache_p[where].null())
       {
-
 	Vector<Float> sampling(1);sampling[0]=convSampling;
 
 	memCache_p[where] = CFStore(cf,coords,sampling,
