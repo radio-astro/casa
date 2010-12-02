@@ -106,6 +106,7 @@ typedef AipsrcVector<String> AipsrcVString;
 // given order):
 // <srcblock>
 //   ~/.casarc
+//   ~/.casa/rc
 //   ~/.aipsrc
 //   $AIPSROOT/.aipsrc
 //   $AIPSHOST/aipsrc
