@@ -61,6 +61,7 @@
 #include <casa/Arrays/MatrixIter.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/Assert.h>
+#include <casa/Utilities/BinarySearch.h>
 #include <casa/Exceptions/Error.h>
 #include <scimath/Mathematics/NNGridder.h>
 #include <scimath/Mathematics/ConvolveGridder.h>
@@ -79,7 +80,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			   distance_p(0.0), lastFieldId_p(-1),lastMSId_p(-1), 
 			   useDoubleGrid_p(False), 
 			   freqFrameValid_p(False), 
-			   freqInterpMethod_p(InterpolateArray1D<Float,Complex>::nearestNeighbour), 
+			   freqInterpMethod_p(InterpolateArray1D<Double,Complex>::nearestNeighbour), 
 			   pointingDirCol_p("DIRECTION"),
 			   cfStokes_p(), cfCache_p(), cfs_p(), cfwts_p()
   {
@@ -95,7 +96,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     distance_p(0.0), lastFieldId_p(-1),lastMSId_p(-1), 
     useDoubleGrid_p(False), 
     freqFrameValid_p(False), 
-    freqInterpMethod_p(InterpolateArray1D<Float,Complex>::nearestNeighbour), 
+    freqInterpMethod_p(InterpolateArray1D<Double,Complex>::nearestNeighbour), 
     pointingDirCol_p("DIRECTION"),
     cfStokes_p(), cfCache_p(cfcache), cfs_p(), cfwts_p(),
     convFuncCtor_p(cf)
@@ -436,12 +437,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     Cube<Complex> origdata;
     Cube<Bool> modflagCube;
-    Vector<Float> visFreq(vb.frequency().nelements());
+    Vector<Double> visFreq(vb.frequency().nelements());
     if(doConversion_p[vb.spectralWindow()]){
       convertArray(visFreq, lsrFreq_p);
     }
-    else{
-      
+    else{      
       convertArray(visFreq, vb.frequency());
       lsrFreq_p.resize();
       lsrFreq_p=vb.frequency();
@@ -464,7 +464,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     else{
       throw(AipsError("Don't know which column is being regridded"));
     }
-    if((imageFreq_p.nelements()==1) || (freqInterpMethod_p== InterpolateArray1D<Float, Complex>::nearestNeighbour) || (vb.nChannel()==1)){
+    if((imageFreq_p.nelements()==1) || (freqInterpMethod_p== InterpolateArray1D<Double, Complex>::nearestNeighbour) || (vb.nChannel()==1)){
       data.reference(origdata);
       // do something here for apply flag based on spw chan sels
       // e.g. 
@@ -478,6 +478,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       weight.reference(wt);
       interpVisFreq_p.resize();
       interpVisFreq_p=lsrFreq_p;
+
       return False;
     }
     
@@ -486,6 +487,77 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     Cube<Bool>flag;
     
+    //okay at this stage we have at least 2 channels
+    Double width=fabs(imageFreq_p[1]-imageFreq_p[0])/fabs(visFreq[1]-visFreq[0]);
+    //if width is smaller than number of points needed for interpolation ...do it directly
+    if(((width >2.0) && (freqInterpMethod_p==InterpolateArray1D<Double, Complex>::linear)) || 
+	   (width >4.0) && (freqInterpMethod_p !=InterpolateArray1D<Double, Complex>::linear)){
+      Double minVF=min(visFreq);
+      Double maxVF=max(visFreq);
+      Double minIF=min(imageFreq_p);
+      Double maxIF=max(imageFreq_p);
+      if( (minIF > maxVF) ||   (maxIF < minVF)){
+	//This function should not have been called with image 
+	//being out of bound of data...but still
+	interpVisFreq_p.resize(imageFreq_p.nelements());
+	interpVisFreq_p=imageFreq_p;
+	chanMap.resize(interpVisFreq_p.nelements());
+	chanMap.set(-1);
+      }
+      else{ 
+	Bool found;
+	uInt where=0;
+	Int firstchan=0;
+	Double interpwidth=visFreq[1]-visFreq[0];
+	if(minIF < minVF){
+	  where=binarySearchBrackets(found, imageFreq_p, minVF, imageFreq_p.nelements());
+	  if(where != imageFreq_p.nelements()){
+	    minIF=imageFreq_p[where];
+	    if(interpwidth >0.0)
+	      firstchan=where;
+	  }
+	}
+
+	if(maxIF > maxVF){
+	   where=binarySearchBrackets(found, imageFreq_p, maxVF, imageFreq_p.nelements());
+	   if(where!= imageFreq_p.nelements()){
+	    maxIF=imageFreq_p[where];
+	    if(interpwidth < 0.0)
+	      firstchan=where;
+	   }
+	  
+	}
+	
+	
+	Int ninterpchan=(Int)floor((maxIF-minIF+(imageFreq_p[1]-imageFreq_p[0]))/fabs(interpwidth));
+	chanMap.resize(ninterpchan);
+	chanMap.set(-1);
+	interpVisFreq_p.resize(ninterpchan);
+	interpVisFreq_p[0]=(interpwidth > 0) ? minIF : maxIF;
+	interpVisFreq_p[0] -= (imageFreq_p[1]-imageFreq_p[0])/2.0;
+	chanMap[0]=firstchan;
+	for (Int k=1; k < ninterpchan; ++k){
+	  interpVisFreq_p[k] = interpVisFreq_p[k-1]+ interpwidth;
+	  ///chanmap with width
+	  Double nearestchanval = interpVisFreq_p[k]- (imageFreq_p[1]-imageFreq_p[0])/2.0;
+	  where=binarySearchBrackets(found, imageFreq_p, nearestchanval, imageFreq_p.nelements());
+	  if(where != imageFreq_p.nelements())
+	    chanMap[k]=where;
+	}
+      }
+
+      
+
+      
+      
+    }
+    else{
+      interpVisFreq_p.resize(imageFreq_p.nelements());
+      convertArray(interpVisFreq_p, imageFreq_p);
+      chanMap.resize(interpVisFreq_p.nelements());
+      indgen(chanMap);
+    }
+
     if(type != FTMachine::PSF){
       //if(freqInterpMethod_p != InterpolateArray1D<Float, Complex>::linear){
       if(1){
@@ -494,12 +566,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//2 swap of axes needed
 	Cube<Complex> flipdata;
 	Cube<Bool> flipflag;
+
+
 	setSpectralFlag(vb,modflagCube);
 	//swapyz(flipflag,vb.flagCube());
 	swapyz(flipflag,modflagCube);
 	swapyz(flipdata,origdata);
-	InterpolateArray1D<Float,Complex>::
-	  interpolate(data,flag,imageFreq_p,visFreq,flipdata,flipflag,freqInterpMethod_p);
+	InterpolateArray1D<Double,Complex>::
+	  interpolate(data,flag,interpVisFreq_p,visFreq,flipdata,flipflag,freqInterpMethod_p);
 	flipdata.resize();
 	swapyz(flipdata,data);
 	data.resize();
@@ -513,24 +587,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//InterpolateArray1D<Float,Complex>::
 	//  interpolatey(data,flag,imageFreq_p,visFreq,origdata,vb.flagCube(),freqInterpMethod_p);
 	setSpectralFlag(vb,modflagCube);
-	InterpolateArray1D<Float,Complex>::
-	  interpolatey(data,flag,imageFreq_p,visFreq,origdata,modflagCube,freqInterpMethod_p);
+	InterpolateArray1D<Double,Complex>::
+	  interpolatey(data,flag,interpVisFreq_p,visFreq,origdata,modflagCube,freqInterpMethod_p);
       }
     }
     else{
       //For now don't read data to just interpolate flags...need a interpolate 
       //flag only function
-      flag.resize(vb.nCorr(), imageFreq_p.nelements(), vb.nRow());
+      flag.resize(vb.nCorr(), interpVisFreq_p.nelements(), vb.nRow());
       flag.set(True);
       ArrayIterator<Bool> iter(flag, IPosition(2,0,2));
       //ReadOnlyArrayIterator<Bool> origiter(vb.flagCube(), IPosition(2,0,2));
       setSpectralFlag(vb,modflagCube);
       ReadOnlyArrayIterator<Bool> origiter(modflagCube, IPosition(2,0,2));
       Int channum=0;
-      Float step=imageFreq_p[1]-imageFreq_p[0];
+      Float step=interpVisFreq_p[1]-interpVisFreq_p[0];
       Float origstep=lsrFreq_p[1]-lsrFreq_p[0];
       while (!iter.pastEnd()){
-	Int closest=Int((imageFreq_p[channum]+step-lsrFreq_p[0])/origstep);
+	Int closest=Int((interpVisFreq_p[channum]+step-lsrFreq_p[0])/origstep);
 	//if(closest <0) closest=0;	
 	//if(closest >=vb.nChannel()) closest=vb.nChannel()-1;
         origiter.origin();
@@ -548,7 +622,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     Matrix<Float> flipweight;
     flipweight=transpose(wt);
-    InterpolateArray1D<Float,Float>::interpolate(weight,imageFreq_p,visFreq,flipweight,freqInterpMethod_p);
+    InterpolateArray1D<Double,Float>::interpolate(weight,interpVisFreq_p, visFreq,flipweight,freqInterpMethod_p);
     
     flipweight.resize();
     flipweight=transpose(weight);    
@@ -558,11 +632,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     flags.resize(flag.shape());
     flags=0;
     flags(flag)=True;
-    interpVisFreq_p.resize(imageFreq_p.nelements());
-    convertArray(interpVisFreq_p, imageFreq_p);
+    //interpVisFreq_p.resize(imageFreq_p.nelements());
+    //convertArray(interpVisFreq_p, imageFreq_p);
     
-    chanMap.resize(imageFreq_p.nelements());
-    indgen(chanMap);
+    //chanMap.resize(imageFreq_p.nelements());
+    //indgen(chanMap);
     return True;
   }
   
@@ -570,7 +644,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				       Cube<Complex>& data, Cube<Int>& flags){
     
     
-    if((imageFreq_p.nelements()==1) || (freqInterpMethod_p== InterpolateArray1D<Float, Complex>::nearestNeighbour)||  (vb.nChannel()==1)){
+    if((imageFreq_p.nelements()==1) || (freqInterpMethod_p== InterpolateArray1D<Double, Complex>::nearestNeighbour)||  (vb.nChannel()==1)){
       Cube<Bool> modflagCube;
       setSpectralFlag(vb,modflagCube);
       data.reference(vb.modelVisCube());
@@ -616,7 +690,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					       FTMachine::Type type){
     
     Cube<Complex> *origdata;
-    Vector<Float> visFreq(vb.frequency().nelements());
+    Vector<Double> visFreq(vb.frequency().nelements());
     
     if(doConversion_p[vb.spectralWindow()]){
       convertArray(visFreq, lsrFreq_p);
@@ -634,7 +708,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     else{
       origdata=&(vb.visCube());
     }
-    if((imageFreq_p.nelements()==1) || (freqInterpMethod_p== InterpolateArray1D<Float, Complex>::nearestNeighbour)){
+    if((imageFreq_p.nelements()==1) || (freqInterpMethod_p== InterpolateArray1D<Double, Complex>::nearestNeighbour)){
       origdata->reference(data);
       return False;
     }
@@ -648,7 +722,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Cube<Complex> flipdata((origdata->shape())(0),(origdata->shape())(2),
 			   (origdata->shape())(1)) ;
     flipdata.set(Complex(0.0));
-    InterpolateArray1D<Float,Complex>::
+    InterpolateArray1D<Double,Complex>::
       interpolate(flipdata,visFreq, imageFreq_p, flipgrid,freqInterpMethod_p);
     swapyz(vb.modelVisCube(),flipdata);
     
@@ -1159,6 +1233,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     movingDir_p.setRefString(sourcename);
     
   }
+
   void FTMachine::setMovingSource(const MDirection& mdir){
     
     fixMovingSource_p=True;
@@ -1171,18 +1246,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     String meth=method;
     meth.downcase();
     if(meth.contains("linear")){
-      freqInterpMethod_p=InterpolateArray1D<Float,Complex>::linear;
+      freqInterpMethod_p=InterpolateArray1D<Double,Complex>::linear;
     }
     else if(meth.contains("splin")){
-      freqInterpMethod_p=InterpolateArray1D<Float,Complex>::spline;  
+      freqInterpMethod_p=InterpolateArray1D<Double,Complex>::spline;  
     }	    
     else if(meth.contains("cub")){
-      freqInterpMethod_p=InterpolateArray1D<Float,Complex>::cubic;
+      freqInterpMethod_p=InterpolateArray1D<Double,Complex>::cubic;
     }
     else{
-      freqInterpMethod_p=InterpolateArray1D<Float,Complex>::nearestNeighbour;
+      freqInterpMethod_p=InterpolateArray1D<Double,Complex>::nearestNeighbour;
     }
-    
+  
   }
   
   
