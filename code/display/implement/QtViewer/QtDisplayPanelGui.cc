@@ -232,6 +232,13 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	// versa.  Also note: technically, the _layout_ is not the child
 	// widget's 'parent'.
 
+    if ( track_on_right && animator_on_right && rc.get("viewer." + rcid() + ".rightdock") == "tabbed" ) {
+	tabifyDockWidget( animDockWidget_, trkgDockWidget_ );
+    }
+
+    if ( track_on_right == false && animator_on_right == false && rc.get("viewer." + rcid() + ".bottomdock") == "tabbed" ) {
+	tabifyDockWidget( animDockWidget_, trkgDockWidget_ );
+    }
    
     // (This was going to be used for tracking....  May still be useful for
     // additions, or perhaps they should be in central widget, above QtPC).
@@ -1906,6 +1913,31 @@ void QtDisplayPanelGui::closeEvent(QCloseEvent *event) {
     char buf[256];
     sprintf( buf, "%d %d", ending_size.width(), ending_size.height() );
     rc.put( "viewer." + rcid() + ".dimensions", buf );
+
+    QList<QDockWidget*> tabbeddocks = tabifiedDockWidgets( trkgDockWidget_ );
+
+    for ( QList<QDockWidget*>::const_iterator i = tabbeddocks.begin(); i !=  tabbeddocks.end(); ++i ) {
+	if ( dockWidgetArea(*i) == Qt::RightDockWidgetArea )
+	    rc.put( "viewer." + rcid() + ".rightdock", "tabbed" );
+	if ( dockWidgetArea(*i) == Qt::BottomDockWidgetArea )
+	    rc.put( "viewer." + rcid() + ".bottomdock", "tabbed" );
+	if ( dockWidgetArea(*i) == Qt::LeftDockWidgetArea )
+	    rc.put( "viewer." + rcid() + ".leftdock", "tabbed" );
+    }
+
+    if ( trkgDockWidget_->isVisible( ) && animDockWidget_->isVisible( ) &&
+	 tabbeddocks.indexOf(trkgDockWidget_) < 0 && tabbeddocks.indexOf(animDockWidget_) < 0 ) {
+	// ... both right/bottom dock widgets are available & untabbed
+	// ... if they are both on the same dock location it means that location is untabbed
+	if ( dockWidgetArea(trkgDockWidget_) == Qt::RightDockWidgetArea &&
+	     dockWidgetArea(animDockWidget_) == Qt::RightDockWidgetArea ) {
+	    rc.put( "viewer." + rcid() + ".rightdock", "untabbed" );
+	}
+	if ( dockWidgetArea(trkgDockWidget_) == Qt::BottomDockWidgetArea &&
+	     dockWidgetArea(animDockWidget_) == Qt::BottomDockWidgetArea ) {
+	    rc.put( "viewer." + rcid() + ".bottomdock", "untabbed" );
+	}
+    }
 
     QtPanelBase::closeEvent(event);
 }
