@@ -83,7 +83,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 SkyEquation::SkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft,
 			 FTMachine& ift)
   : sm_(&sm), vs_(&vs), ft_(&ft), ift_(&ift), cft_(0), ej_(0), dj_(0), 
-    tj_(0), fj_(0), iDebug_p(0), isPSFWork_p(False), noModelCol_p(False), isBeginingOfSkyJonesCache_p(True)
+    tj_(0), fj_(0), iDebug_p(0), isPSFWork_p(False), noModelCol_p(False), isBeginingOfSkyJonesCache_p(True), doflat_p(False)
 {
   rvi_p=&(vs_->iter());
   wvi_p=&(vs_->iter());
@@ -92,7 +92,7 @@ SkyEquation::SkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft,
 //----------------------------------------------------------------------
 SkyEquation::SkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft)
   : sm_(&sm), vs_(&vs), ft_(&ft), ift_(&ft), cft_(0), ej_(0), dj_(0), 
-    tj_(0), fj_(0), iDebug_p(0), isPSFWork_p(False),noModelCol_p(False), isBeginingOfSkyJonesCache_p(True)
+    tj_(0), fj_(0), iDebug_p(0), isPSFWork_p(False),noModelCol_p(False), isBeginingOfSkyJonesCache_p(True), doflat_p(False)
 {
   rvi_p=&(vs_->iter());
   wvi_p=&(vs_->iter());
@@ -103,7 +103,7 @@ SkyEquation::SkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft)
 SkyEquation::SkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft,
 			 FTMachine& ift, ComponentFTMachine& cft)
   : sm_(&sm), vs_(&vs), ft_(&ft), ift_(&ift), cft_(&cft), ej_(0),
-    dj_(0), tj_(0), fj_(0), iDebug_p(0), isPSFWork_p(False),noModelCol_p(False),isBeginingOfSkyJonesCache_p(True)
+    dj_(0), tj_(0), fj_(0), iDebug_p(0), isPSFWork_p(False),noModelCol_p(False),isBeginingOfSkyJonesCache_p(True), doflat_p(False)
 {
   rvi_p=&(vs_->iter());
   wvi_p=&(vs_->iter());
@@ -115,7 +115,7 @@ SkyEquation::SkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft,
 			 ComponentFTMachine& cft, Bool noModelCol)
   : sm_(&sm), vs_(&vs), ft_(&ft), ift_(&ft), cft_(&cft), ej_(0),
     dj_(0), tj_(0), fj_(0), iDebug_p(0), isPSFWork_p(False), 
-    noModelCol_p(noModelCol),isBeginingOfSkyJonesCache_p(True)
+    noModelCol_p(noModelCol),isBeginingOfSkyJonesCache_p(True),doflat_p(False)
 {
 
   rvi_p=&(vs_->iter());
@@ -128,7 +128,7 @@ SkyEquation::SkyEquation(SkyModel& sm, ROVisibilityIterator& vi, FTMachine& ft,
 			 ComponentFTMachine& cft, Bool noModelCol)
   : sm_(&sm), ft_(&ft), ift_(&ft), cft_(&cft), ej_(0),
     dj_(0), tj_(0), fj_(0), iDebug_p(0), isPSFWork_p(False), 
-    noModelCol_p(noModelCol),isBeginingOfSkyJonesCache_p(True){
+    noModelCol_p(noModelCol),isBeginingOfSkyJonesCache_p(True), doflat_p(False){
 
 
   //visiter is read only
@@ -159,6 +159,7 @@ SkyEquation& SkyEquation::operator=(const SkyEquation& other)
     fj_=other.fj_;
     rvi_p=other.rvi_p;
     wvi_p=other.wvi_p;
+    doflat_p=other.doflat_p;
   };
   return *this;
 };

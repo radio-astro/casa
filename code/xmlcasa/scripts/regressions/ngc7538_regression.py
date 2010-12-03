@@ -91,7 +91,7 @@ print '--Clean cal--'
 default('clean')
 clean(vis='2229.cont2.ms',imagename='2229.cont2',mode='channel',
       psfmode='hogbom',niter=6000,gain=0.1,threshold=8.,mask='',
-      nchan=1,start=0,width=1,field='0',spw=0,
+      nchan=1,start=0,width=1,field='0',spw='0',
       imsize=[256,256],cell=[0.5,0.5],
       weighting='briggs',robust=0.5)
 cleantime1 = time.time()
@@ -99,7 +99,7 @@ print '--Clean src cont--'
 default('clean')
 clean(vis='ngc7538d.cont.ms',imagename='ngc7538d.cont',mode='channel',
       psfmode='hogbom',niter=5000,gain=0.1,threshold=3.,mask='',
-      nchan=1,start=0,width=1,field='0',spw=0,
+      nchan=1,start=0,width=1,field='0',spw='0',
       imsize=[1024,1024],cell=[0.5,0.5],
       weighting='briggs',robust=0.5)
 cleantime2 = time.time()
@@ -107,7 +107,7 @@ print '--Clean src line--'
 default('clean')
 clean(vis='ngc7538d.line.ms',imagename='ngc7538d.cube',mode='channel',
       psfmode='hogbom',niter=5000,gain=0.1,threshold=30.,mask='',
-      nchan=48,start=2,width=1,field='0',spw=0,
+      nchan=48,start=2,width=1,field='0',spw='0',
       imsize=[128,128],cell=[4.,4.],
       weighting='briggs',robust=2.,
       uvtaper=True, outertaper=['12.0arcsec','12.0arcsec', '0deg'])
@@ -189,13 +189,15 @@ print >>logfile,'*********************************'
 print >>logfile,''
 print >>logfile,'********** Regression ***********'
 print >>logfile,'*                               *'
-if (diff_cal < 0.05): print >>logfile,'* Passed cal max amplitude test *'
+passfail = {True: '* Passed',
+            False: '* FAILED'}
+print >> logfile, passfail[diff_cal < 0.05], 'cal max amplitude test *'
 print >>logfile,'* Cal max amp '+str(thistest_cal)
-if (diff_src < 0.05): print >>logfile,'* Passed src max amplitude test *'
+print >> logfile, passfail[diff_src < 0.05], 'src max amplitude test *'
 print >>logfile,'* Src max amp '+str(thistest_src)
-if (diff_immax < 0.05): print >>logfile,'* Passed image max test         *'
+print >> logfile, passfail[diff_immax < 0.05], 'image max test         *'
 print >>logfile,'* Image max '+str(thistest_immax)
-if (diff_imrms < 0.05): print >>logfile,'* Passed image rms test         *'
+print >> logfile, passfail[diff_imrms < 0.05], 'image rms test         *'
 print >>logfile,'* Image rms '+str(thistest_imrms)
 if ((diff_src<0.05) & (diff_cal<0.05) & (diff_immax<0.05) & (diff_imrms<0.05)): 
 	regstate=True

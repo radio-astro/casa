@@ -99,7 +99,7 @@ using namespace PolarizationTypeMod;
 
 
 /*\file Feed.h
-    \brief Generated from model's revision "1.54", branch "HEAD"
+    \brief Generated from model's revision "1.55", branch "HEAD"
 */
 
 namespace asdm {
@@ -126,7 +126,7 @@ typedef void (FeedRow::*FeedAttributeFromBin) (EndianISStream& eiss);
 /**
  * The FeedRow class is a row of a FeedTable.
  * 
- * Generated from model's revision "1.54", branch "HEAD"
+ * Generated from model's revision "1.55", branch "HEAD"
  *
  */
 class FeedRow {
@@ -769,13 +769,13 @@ public:
   * @return a pointer on a BeamRow whose key (a Tag) is equal to the Tag stored at position
   * i in the beamId. 
   */
- BeamRow* getBeam(int i); 
+ BeamRow* getBeamUsingBeamId(int i); 
  
  /**
   * Returns the vector of BeamRow* linked to this row via the Tags stored in beamId
   * @return an array of pointers on BeamRow.
   */
- vector<BeamRow *> getBeams(); 
+ vector<BeamRow *> getBeamsUsingBeamId(); 
   
 
 	

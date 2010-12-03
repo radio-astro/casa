@@ -35,6 +35,8 @@
 #include <casa/Containers/Block.h>
 #include <casa/BasicSL/String.h>
 
+#include <fstream>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
@@ -112,6 +114,7 @@ private:
 #ifndef AIPS_LOG4CPLUS
   LogSinkInterface *logsink;
   Bool send2cerr;
+  std::ofstream *logfile;
 #endif
 
 };

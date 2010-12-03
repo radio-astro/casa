@@ -132,8 +132,11 @@ macro( casa_add_tasks module _target )
     COMMAND echo "from odict import odict" > ${_tasksinfo}
     COMMAND echo "mytasks = odict\\(\\)" >> ${_tasksinfo}
     COMMAND echo "tasksum = odict\\(\\)" >> ${_tasksinfo}
+    COMMAND echo "taskcat = odict\\(\\)" >> ${_tasksinfo}
+    COMMAND echo "taskvis = odict\\(\\)" >> ${_tasksinfo}
 
     COMMAND for x in ${_out_taskinfo} \; do grep -Ev "\"(^#?from|^\$\$)\"" $$x >> ${_tasksinfo} \; done
+    COMMAND cat ${CMAKE_SOURCE_DIR}/xmlcasa/install/tasksinfo.pytxt >> ${_tasksinfo}
     DEPENDS ${_out_taskinfo}
     )
 

@@ -25,6 +25,7 @@ set( _latex ${prefix}/TaskRef/${_base}.tex )
 set( _latex ${_base}.latex )
 
 set( _inputs .:${prefix}/helpfiles/:${CMAKE_SOURCE_DIR}/doc/texinputs.dir/:${CMAKE_SOURCE_DIR}/doc/taskref/:${CMAKE_SOURCE_DIR}/doc/taskref/TaskRef.dir/:/usr/share/texmf/tex/{latex,generic,}//:/usr/share/texmf/web2c//:/usr/share/texmf/tex4ht//:/usr/share/texmf/tex/:$ENV{TEXINPUTS} )
+set( CASAGOOGLESEARCH 006707099318971825654:0jfwitmloig )
 
 
     # Create HTML
@@ -37,6 +38,7 @@ set( _inputs .:${prefix}/helpfiles/:${CMAKE_SOURCE_DIR}/doc/texinputs.dir/:${CMA
 
       add_custom_command(
         OUTPUT ${_html}
+	COMMAND sed -e "s/CASADOCUMENT/CASA Task Reference Manual/" -e "s/CASAGOOGLESEARCH/${CASAGOOGLESEARCH}/" ${casaroot}/code/doc/texinputs.dir/nraoheader.4ht > ${prefix}/nraoheader.4ht
         COMMAND mkdir -p ${prefix}/TaskRef
         COMMAND cd ${prefix}/TaskRef && TEXINPUTS=${_inputs} ${LATEX2HTML_CONVERTER} ${_latex} ${LATEX2HTML_OPTIONS}
         COMMAND cd ${prefix}/TaskRef && TEXINPUTS=${_inputs} ${LATEX2HTML_CONVERTER} ${_latex} ${LATEX2HTML_OPTIONS}
@@ -46,7 +48,7 @@ set( _inputs .:${prefix}/helpfiles/:${CMAKE_SOURCE_DIR}/doc/texinputs.dir/:${CMA
 
       add_custom_target( taskref_html DEPENDS ${_html} )
 
-      add_dependencies( taskref_html xmlcasa_tasksref doc_latex )
+      add_dependencies( taskref_html doc_latex xmlcasa_tasksref )
 
     else()
       add_custom_target( taskref_html COMMAND echo "LaTeX to HTML converter was not found." )
@@ -65,7 +67,7 @@ set( _inputs .:${prefix}/helpfiles/:${CMAKE_SOURCE_DIR}/doc/texinputs.dir/:${CMA
         VERBATIM )
 
 	add_custom_target( taskref_pdf DEPENDS ${_pdf} ) 
-        add_dependencies( taskref_pdf xmlcasa_tasksref doc_latex )
+        add_dependencies( taskref_pdf doc_latex xmlcasa_tasksref )
    else()
       add_custom_target( taskref_pdf COMMAND echo "LaTeX to PDF converter was not found." )
 

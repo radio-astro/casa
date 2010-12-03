@@ -5,7 +5,7 @@
       xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="flagmanager" category="data editing">
+<task type="function" name="flagmanager" category="editing">
         <shortdescription>Enable list, save, restore, delete and rename flag version files.</shortdescription>
         <description>
         These flag version files are copies of the flag column for a

@@ -45,6 +45,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
   
   class EPJones;
+  //  class nPBWProjectFT;
   class PBMosaicFT : public nPBWProjectFT {
 
   public:

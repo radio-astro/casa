@@ -85,7 +85,7 @@ using namespace WVRMethodMod;
 
 
 /*\file WVMCal.h
-    \brief Generated from model's revision "1.54", branch "HEAD"
+    \brief Generated from model's revision "1.55", branch "HEAD"
 */
 
 namespace asdm {
@@ -106,7 +106,7 @@ typedef void (WVMCalRow::*WVMCalAttributeFromBin) (EndianISStream& eiss);
 /**
  * The WVMCalRow class is a row of a WVMCalTable.
  * 
- * Generated from model's revision "1.54", branch "HEAD"
+ * Generated from model's revision "1.55", branch "HEAD"
  *
  */
 class WVMCalRow {

@@ -132,6 +132,10 @@ const TagType* TagType:: Field = new TagType("Field") ;
 	
 
 	
+const TagType* TagType:: Flag = new TagType("Flag") ;
+	
+
+	
 
 	
 
@@ -323,6 +327,10 @@ const TagType* TagType::getTagType(string name) {
 
 	
 	TagType::name2TagType["Field"] = TagType::Field ;
+	
+
+	
+	TagType::name2TagType["Flag"] = TagType::Flag ;
 	
 
 	

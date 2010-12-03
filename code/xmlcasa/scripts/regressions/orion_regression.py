@@ -86,7 +86,7 @@ default('clean')
 clean('orion.ms',
       'orion_tsdms',
       field='2~10',
-      spw=[0,1],
+      spw='0,1',
       mode='mfs',
       niter=10000,
       gain=0.2,

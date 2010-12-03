@@ -94,7 +94,7 @@ class FreqOffsetRow;
  * Frequency offset information. Contains an additional antenna-based frequency  offset relative to the frequencies in the Spectral Windows. Useful for such  thing as Doppler tracking.
  * <BR>
  
- * Generated from model's revision "1.54", branch "HEAD"
+ * Generated from model's revision "1.55", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of FreqOffset </CAPTION>
@@ -140,7 +140,7 @@ class FreqOffsetRow;
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandatory) </TH></TR>
 	
  * <TR>
  * <TD> offset </TD> 

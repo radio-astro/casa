@@ -6,7 +6,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="visstat" category="visibility statistics">
+<task type="function" name="visstat" category="information">
 <shortdescription>Displays statistical information from a measurement set, or from a measurement set selection</shortdescription>
 
 <input>

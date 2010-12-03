@@ -91,8 +91,8 @@ public:
 		const Double intensityLow, const Double intensityHigh,
 		const Double smu2Low, const Double smu2High,
 		const Double logaLow, const Double logaHigh,
-		const Double euLow, const Double euHigh,
 		const Double elLow, const Double elHigh,
+		const Double euLow, const Double euHigh,
 		const Bool includeRRLs, const Bool onlyRRLs
 	) const;
 

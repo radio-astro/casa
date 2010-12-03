@@ -1279,7 +1279,7 @@ in this case.  It is evaluated each time it is needed.
             <description>Aggregate function to apply: avdev, max, mean, median, min, rms, stdev, sum, variance.</description>
             <value></value>
         </param>
-        <param type="int" direction="in" name="axis">
+        <param type="variant" direction="in" name="axes">
             <description>Zero-based axis number along which to collapse image.</description>
             <value>0</value>
         </param>
@@ -1314,7 +1314,7 @@ in this case.  It is evaluated each time it is needed.
     </input>
     <returns type="casaimage"/>
     <description>
-        This method collapses an image along a specified axis of N pixels to 1 pixel. It computes
+        This method collapses an image along a specified axis or set of axes of N pixels to 1 pixel. It computes
         the specified aggregate function of pixels along that axis and places those values in the
         single remaining plane of this axis in the output image. The method returns an image analysis
         tool containing the newly created collapsed image. Choices of aggregate functions are:
@@ -1331,7 +1331,6 @@ in this case.  It is evaluated each time it is needed.
         collapsed_image = ia.collapse(...)
         # do things (or not) with collapsed_image and when done with object, do
         collapsed_image.done()
-        
 
         The reference pixel of the collapsed axis is set to 0 and its reference value is set to the mean
         of axis values of the pixels along that axis that were used in computing the aggregate value.
@@ -2377,7 +2376,7 @@ im3.done()
 <returns type="any"><any type="record"/>Record or fail</returns>
 <description>
 
-This function <!-- (short-hand name {\stff bb}) --> finds the bounding box of a
+This function finds the bounding box of a
 region of interest when it is applied to a particular image.  It is
 returned in a record which has fields {\cf `blc', `trc', `inc',
 `bbShape', `regionShape', `imageShape', `blcf'} and {\cf `trcf'}
@@ -2385,11 +2384,17 @@ containing the bottom-left corner, the top-right corner (in absolute
 image pixel coordinates), the increment (stride) of the region, the
 shape of the boundingbox, the shape of the region, the shape of the
 image,  the blc in formatted absolute world coordinates and the trc in
-formatted absolute world  coordinates, respectively. 
+formatted absolute world  coordinates, respectively.
 
 Note that the shape of the bounding box will be different from the shape
 of the region if a non-unit stride (increment) is involved (see the example
 below).
+
+Note that the integer size of the elements in blc, trc, inc, regionShape,
+bbShape, and imageShape are 32 bits, even on a 64 bit machine. This means that,
+on 64 bit machines, you may have to convert them to 64 bit ints using eg
+numpy.int64, before being able to use them as direct input to other
+methods such as ia.getchunk().
 
 </description>
 
@@ -4183,8 +4188,8 @@ tool attached to the residual (continuum subtracted) image.
         </param>
         
         <param type="string" direction="in" name="stokes">
-            <description>The polarization to use in the fit. Default is I.</description>
-            <value>I</value>
+            <description>The polarization to use in the fit. Default is to use the first stokes plane.</description>
+            <value/>
         </param>
         
         <param type="any" direction="in" name="mask">
@@ -4312,6 +4317,34 @@ An example of such a file is:
 This is a file which specifies that two gaussians are to be simultaneously fit,
 and for the second gaussian the specified peak intensity, x position, and position angle
 are to be held fixed during the fit.
+
+ERROR ESTIMATES
+
+The reported estimated errors are the maxima from two methods. In the first method, errors are calculated
+according to the description given in AIPS++ Note 224: AIPS++ Least Squares Background available at
+http://www.astron.nl/casacore/trunk/casacore/doc/notes/224.html . In the second method (as outlined
+by Ed Fomalont in CAS-1860), the following algorithms are used to compute the various errors.
+
+R = rms of residual image
+P = fitted peak intensity
+S = P/R (signal to noise)
+
+longitude error = (FWHM beam width in longitude direction)/(2*S)
+latitude error = (FWHM beam width in latitude direction)/(2*S)
+FWHM of major axis error = (FWHM beam along major axis)/sqrt(S)
+FWHM of minor axis error = (FWHM beam along minor axis)/sqrt(S)
+position angle error is calculated via standard error propogation of the FWHM major and minor axes sizes and errors
+flux error is computed via standard error propogation of the peak intensity and its error and the FWHM major
+and minor axes sizes and their errors.
+
+In the case where the image has no beam, the pixel width is used as the diameter of the resolution element.
+
+In the vast majority of (and perhaps all) cases, the errors reported come from the second method.
+
+The deconvolved size and position angle errors are computed by taking the maximum of the absolute values of the
+differences of the best fit deconvolved value of the given parameter and the deconvolved size of the eight
+possible combinations of (FWHM major axis +/- major axis error), (FWHM minor axis +/- minor axis error),
+and (position andle +/- position angle error).
 
 EXAMPLE: 
 
@@ -8090,7 +8123,7 @@ ia.close()
      </param>
   
      <param type="bool" direction="in" name="list">
-     <description>If T then list the statistics as well</description>
+     <description>If True print bounding box and statistics to logger.</description>
      <value>true</value>
      </param>
   

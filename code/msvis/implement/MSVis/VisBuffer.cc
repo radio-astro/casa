@@ -39,7 +39,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 VisBuffer::VisBuffer():visIter_p(static_cast<ROVisibilityIterator*>(0)),
-twoWayConnection_p(False),corrSorted_p(False),This(this),nChannel_p(0),nRow_p(0)
+		       twoWayConnection_p(False),corrSorted_p(False),This(this),nChannel_p(0),nRow_p(0),lastPointTableRow_p(0)
 {validate(); oldMSId_p=-1;}
 
 VisBuffer::VisBuffer(ROVisibilityIterator& iter):visIter_p(&iter),This(this)
@@ -100,6 +100,9 @@ VisBuffer& VisBuffer::assign(const VisBuffer& other, Bool copy)
       flagCubeOK_p=other.flagCubeOK_p;
       flagRowOK_p=other.flagRowOK_p;
       scanOK_p=other.scanOK_p;
+      observationIdOK_p=other.observationIdOK_p;
+      processorIdOK_p=other.processorIdOK_p;
+      stateIdOK_p=other.stateIdOK_p;
       freqOK_p=other.freqOK_p;
       lsrFreqOK_p=other.lsrFreqOK_p;
       phaseCenterOK_p=other.phaseCenterOK_p;
@@ -191,6 +194,18 @@ VisBuffer& VisBuffer::assign(const VisBuffer& other, Bool copy)
       if (scanOK_p) {
 	scan_p.resize(other.scan_p.nelements());
 	scan_p=other.scan_p;
+      }
+      if (observationIdOK_p) {
+	observationId_p.resize(other.observationId_p.nelements());
+	observationId_p=other.observationId_p;
+      }
+      if (processorIdOK_p) {
+	processorId_p.resize(other.processorId_p.nelements());
+	processorId_p=other.processorId_p;
+      }
+      if (stateIdOK_p) {
+	stateId_p.resize(other.stateId_p.nelements());
+	stateId_p=other.stateId_p;
       }
       if (freqOK_p) {
 	frequency_p.resize(other.frequency_p.nelements()); 
@@ -319,18 +334,23 @@ void VisBuffer::invalidate()
 {
   nChannelOK_p=channelOK_p=nRowOK_p=ant1OK_p=ant2OK_p=feed1OK_p=feed2OK_p=
     arrayIdOK_p=cjonesOK_p=fieldIdOK_p=flagOK_p=flagRowOK_p=scanOK_p=freqOK_p=
+    observationIdOK_p = processorIdOK_p = stateIdOK_p = timeCentroidOK_p =
+    exposureOK_p =
     lsrFreqOK_p=phaseCenterOK_p=polFrameOK_p=sigmaOK_p=sigmaMatOK_p=spwOK_p=
     timeOK_p=timeIntervalOK_p=uvwOK_p=uvwMatOK_p=visOK_p=weightOK_p=
     weightMatOK_p=weightSpectrumOK_p=corrTypeOK_p=nCorrOK_p=    False;
   flagCubeOK_p=visCubeOK_p=imagingWeightOK_p=msOK_p=False;
   modelVisOK_p=correctedVisOK_p=modelVisCubeOK_p=correctedVisCubeOK_p=False;
   feed1_paOK_p=feed2_paOK_p=direction1OK_p=direction2OK_p=rowIdsOK_p=False;
+  lastPointTableRow_p=0;
 }
 
 void VisBuffer::validate()
 {
   nChannelOK_p=channelOK_p=nRowOK_p=ant1OK_p=ant2OK_p=feed1OK_p=feed2OK_p=
     arrayIdOK_p=cjonesOK_p=fieldIdOK_p=flagOK_p=flagRowOK_p=scanOK_p=freqOK_p=
+    observationIdOK_p = processorIdOK_p = stateIdOK_p = timeCentroidOK_p =
+    exposureOK_p =
     lsrFreqOK_p=phaseCenterOK_p=polFrameOK_p=sigmaOK_p=sigmaMatOK_p=spwOK_p=
     timeOK_p=timeIntervalOK_p=uvwOK_p=uvwMatOK_p=visOK_p=weightOK_p=
     weightMatOK_p=weightSpectrumOK_p=corrTypeOK_p=nCorrOK_p=    True;
@@ -1483,24 +1503,29 @@ Vector<MDirection>& VisBuffer::fillDirection1()
   direction1OK_p=True;
   direction1_p.resize(antenna1_p.nelements()); // could also use nRow()
   const ROMSPointingColumns& mspc=msColumns().pointing();
-  
-  if (visIter_p->allBeamOffsetsZero() && mspc.pointingIndex(antenna1()(0),
-      time()(0))<0) {
+  lastPointTableRow_p=mspc.pointingIndex(antenna1()(0),
+					 time()(0), lastPointTableRow_p);
+  if (visIter_p->allBeamOffsetsZero() && lastPointTableRow_p<0) {
         // if no true pointing information is found
         // just return the phase center from the field table
         direction1_p.set(phaseCenter());
+	lastPointTableRow_p=0;
         return direction1_p;
   }
   for (uInt row=0; row<antenna1_p.nelements(); ++row) {
        DebugAssert(antenna1_p(row)>=0,AipsError);	   
        DebugAssert(feed1_p(row)>=0,AipsError);
-       Int pointIndex1 = mspc.pointingIndex(antenna1()(row),time()(row));
-       // if no true pointing information is found
+       Int pointIndex1 = mspc.pointingIndex(antenna1()(row),time()(row), lastPointTableRow_p);
+       
+       //cout << "POINTINDEX " << pointIndex1 << endl;
+      // if no true pointing information is found
        // use the phase center from the field table       
-       if (pointIndex1>=0)
-           direction1_p(row)=mspc.directionMeas(pointIndex1,time()(row));
+       if (pointIndex1>=0){
+	 lastPointTableRow_p=pointIndex1;
+	 direction1_p(row)=mspc.directionMeas(pointIndex1,timeInterval()(row));
+       }
        else
-           direction1_p(row)=phaseCenter();
+	 direction1_p(row)=phaseCenter();
        if (!visIter_p->allBeamOffsetsZero()) { 
            RigidVector<Double, 2> beamOffset = 
 	        visIter_p->getBeamOffsets()(0,antenna1_p(row),feed1_p(row));
@@ -1531,24 +1556,27 @@ Vector<MDirection>& VisBuffer::fillDirection2()
   direction2OK_p=True;
   direction2_p.resize(antenna2_p.nelements()); // could also use nRow()
   const ROMSPointingColumns& mspc=msColumns().pointing();
-  
-  if (visIter_p->allBeamOffsetsZero() && mspc.pointingIndex(antenna2()(0),
-      time()(0))<0) {
+  lastPointTableRow_p=mspc.pointingIndex(antenna2()(0),time()(0), lastPointTableRow_p);
+  if (visIter_p->allBeamOffsetsZero() && lastPointTableRow_p < 0) {
         // if no true pointing information is found
         // just return the phase center from the field table
       direction2_p.set(phaseCenter());
+      lastPointTableRow_p=0;
       return direction2_p;
+
   }
   for (uInt row=0; row<antenna2_p.nelements(); ++row) {
        DebugAssert(antenna2_p(row)>=0,AipsError);	   
        DebugAssert(feed2_p(row)>=0,AipsError);	   
-       Int pointIndex2 = mspc.pointingIndex(antenna2()(row),time()(row));
+       Int pointIndex2 = mspc.pointingIndex(antenna2()(row),time()(row), lastPointTableRow_p);
        // if no true pointing information is found
        // use the phase center from the field table       
-       if (pointIndex2>=0)
-           direction2_p(row)=mspc.directionMeas(pointIndex2,time()(row));
+       if (pointIndex2>=0){
+	 lastPointTableRow_p=pointIndex2;
+	 direction2_p(row)=mspc.directionMeas(pointIndex2,timeInterval()(row));
+       }
        else
-           direction2_p(row)=phaseCenter();
+	 direction2_p(row)=phaseCenter();
        if (!visIter_p->allBeamOffsetsZero()) { 
            RigidVector<Double, 2> beamOffset = 
 	        visIter_p->getBeamOffsets()(0,antenna2_p(row),feed2_p(row));
@@ -1592,8 +1620,16 @@ Cube<Bool>& VisBuffer::fillFlagCube()
 { flagCubeOK_p=True; return visIter_p->flag(flagCube_p); }
 Vector<Bool>& VisBuffer::fillFlagRow()
 { flagRowOK_p=True; return visIter_p->flagRow(flagRow_p);}
+Array<Bool>& VisBuffer::fillFlagCategory()
+{ flagCategoryOK_p=True; return visIter_p->flagCategory(flagCategory_p); }
 Vector<Int>& VisBuffer::fillScan()
 { scanOK_p=True; return visIter_p->scan(scan_p);}
+Vector<Int>& VisBuffer::fillObservationId()
+{ observationIdOK_p=True; return visIter_p->observationId(observationId_p);}
+Vector<Int>& VisBuffer::fillProcessorId()
+{ processorIdOK_p=True; return visIter_p->processorId(processorId_p);}
+Vector<Int>& VisBuffer::fillStateId()
+{ stateIdOK_p=True; return visIter_p->stateId(stateId_p);}
 Vector<Double>& VisBuffer::fillFreq()
 { freqOK_p=True; return visIter_p->frequency(frequency_p); }
 Vector<Double>& VisBuffer::fillLSRFreq()
@@ -1623,8 +1659,14 @@ Int& VisBuffer::fillSpW()
 Vector<Double>& VisBuffer::fillTime()
 { timeOK_p=True; return visIter_p->time(time_p);}
 
+Vector<Double>& VisBuffer::fillTimeCentroid()
+{ timeCentroidOK_p = True; return visIter_p->timeCentroid(timeCentroid_p);}
+
 Vector<Double>& VisBuffer::fillTimeInterval()
-{ timeIntervalOK_p=True; return visIter_p->timeInterval(timeInterval_p);}
+{ timeIntervalOK_p = True; return visIter_p->timeInterval(timeInterval_p);}
+
+Vector<Double>& VisBuffer::fillExposure()
+{ exposureOK_p = True; return visIter_p->exposure(exposure_p);}
 
 Vector<RigidVector<Double,3> >& VisBuffer::filluvw()
 { uvwOK_p=True; return visIter_p->uvw(uvw_p);}
@@ -1646,7 +1688,7 @@ VisBuffer::fillVis(VisibilityIterator::DataColumn whichOne)
     break;    
   case VisibilityIterator::Observed:
   default:
-    visOK_p=True; 
+    visOK_p=True;
     return visIter_p->visibility(visibility_p,whichOne);
     break;
   }

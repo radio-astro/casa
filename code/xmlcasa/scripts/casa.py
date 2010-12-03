@@ -63,7 +63,6 @@ __plotmshome__ = casac.homefinder.find_home_by_name('plotmsHome')
 __calplothome__ = casac.homefinder.find_home_by_name('calplotHome')
 __tablehome__ = casac.homefinder.find_home_by_name('tableHome')
 __flaggerhome__ = casac.homefinder.find_home_by_name('flaggerHome')
-__autoflaghome__ = casac.homefinder.find_home_by_name('autoflagHome')
 __imagehome__ = casac.homefinder.find_home_by_name('imageHome')
 __imagepolhome__ = casac.homefinder.find_home_by_name('imagepolHome')
 __simulatorhome__ = casac.homefinder.find_home_by_name('simulatorHome')
@@ -88,14 +87,13 @@ pmtool = __plotmshome__.create( )
 calplot = __calplothome__.create( )
 table = __tablehome__.create( )
 flagger = __flaggerhome__.create( )
-autoflag = __autoflaghome__.create( )
 image = __imagehome__.create( )
 imagepol = __imagepolhome__.create( )
 simulator = __simulatorhome__.create( )
 componentlist = __componentlisthome__.create( )
 coordsys = __coordsyshome__.create( )
 regionmanager = __regionmanagerhome__.create( )
-spectralline = __spectralline__.create( )
+spectralline = __spectrallinehome__.create( )
 utils = __utilshome__.create( )
 deconvolver = __deconvolverhome__.create( )
 vpmanager = __vpmanagerhome__.create( )
@@ -163,7 +161,7 @@ from polcal import  polcal
 from rmtables import  rmtables
 from setjy import  setjy
 from simdata import  simdata
-from simdata2 import  simdata2
+from oldsimdata import  oldsimdata
 from smoothcal import  smoothcal
 from specfit import  specfit
 from split import  split

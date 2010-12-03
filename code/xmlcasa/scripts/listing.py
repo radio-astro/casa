@@ -21,11 +21,11 @@ def compare(test, standard):
     standardFile = open(standard,'r')
     standardList = standardFile.readlines()
     if (testList == standardList):
-        testList.close()
+        testFile.close()
         standardFile.close()
         return True
     else:
-        testList.close()
+        testFile.close()
         standardFile.close()
         return False
 #=============================================================================

@@ -1,6 +1,7 @@
 from taskinit import *
 from parallel_go import *
 from cleanhelper import *
+from parallel.parallel_cont import imagecont
 from odict import *
 import numpy as np
 import random
@@ -16,11 +17,48 @@ def averimages(outimage='outimage', inimages=[]):
     if(os.path.exists(outimage)):
         shutil.rmtree(outimage)
     if(type(inimages)==list):
+
+        #        ia.open(inimages[0])
+        #        shp=ia.shape()
+        #        ia.close()
+        #
+        #        ia.fromshape(outimage,shp,overwrite=True)
+        #        sum=ia.getchunk()
+        #        ia.close()
+        #        nele=0
+        #        for k in range(len(inimages)):
+        #            ia.open(inimages[k])
+        #            ia.unlock()
+        #            try:
+        #	        px=ia.getchunk() 
+        #                for i in range(shp[0]):
+        #                    for j in range(shp[1]):
+        #		        sum[i, j, 0, 0]+=px[i, j, 0, 0]
+        #            except:
+        #                pass
+        #            ia.close()
+        #            time.sleep(1)
+        #        if nele>0:
+        #            for i in range(shp[0]):
+        #                for j in range(shp[1]):
+        #	            sum[i, j, 0, 0]/=nele
+        #        
+        #        ia.open(outimage)
+        #        ia.putchunk(sum)
+        #        ia.close()
+        #        ia.done()
+
         shutil.copytree(inimages[0], outimage)
         ia.open(outimage)        
+        s=0
         for k in range(1, len(inimages)) :
-            ia.calc('"'+outimage+'" +  "'+inimages[k]+'"')
-        ia.calc('"'+outimage+'"'+'/'+str(len(inimages)))
+            try:
+                ia.calc('"'+outimage+'" + "'+inimages[k]+'"')
+                s+=1
+            except:
+                pass
+        if s>0:
+            ia.calc('"'+outimage+'"'+'/'+str(s))
         ia.done()
     elif(type(inimages)==str):
         shutil.copytree(inimages, outimage)
@@ -52,10 +90,14 @@ def putchanimage(cubimage,inim,chan):
     """
     put channel image back to a pre-exisiting cubeimage
     """
+    time000=time.time()
     ia.open(inim)
     inimshape=ia.shape()
-    ####imdata=ia.getchunk()
-    ####immask=ia.getchunk(getmask=True)
+    ####
+    #imdata=ia.getchunk()
+    ####
+    #immask=ia.getchunk(getmask=True)
+####========
     ia.close()
     ia.open(cubimage)
     cubeshape=ia.shape()
@@ -64,13 +106,19 @@ def putchanimage(cubimage,inim,chan):
     if( not (cubeshape[3] > (chan+inimshape[3]-1))):
         return False
 
-    ####rg0=ia.setboxregion(blc=blc,trc=trc)
+    ####
+    #rg0=ia.setboxregion(blc=blc,trc=trc)
+    ####
     if inimshape[0:3]!=cubeshape[0:3]: 
         return False
-    ####ia.putregion(pixels=imdata,pixelmask=immask, region=rg0)
+    print 'after blc', time.time()-time000
+    ####
+    #ia.putregion(pixels=imdata,pixelmask=immask, region=rg0)
+    ####
     ia.insert(infile=inim, locate=blc)
     ia.close()
     ia.removefile(inim)
+    print 'after insert', time.time()-time000
     return True
 
 def findchanselcont(msname='', spwids=[], numpartition=1, beginfreq=0.0, endfreq=1e12):
@@ -443,10 +491,10 @@ def pcont(msname=None, imagename=None, imsize=[1000, 1000],
 
 
     tb.open(msname+"/SPECTRAL_WINDOW")
-    freqs=tb.getcol('CHAN_FREQ')
-    allfreq=freqs[:, spwids[0]]
+    #freqs=tb.getcol('CHAN_FREQ')
+    allfreq=tb.getcol('CHAN_FREQ', spwids[0],1)
     for k in range(1, len(spwids)) :
-        allfreq=np.append(allfreq, freqs[:,spwids[k]])
+        allfreq=np.append(allfreq, tb.getcol('CHAN_FREQ', spwids[k],1))
     ##number of channels in the ms
     numchanperms=len(allfreq)
     print 'number of channels', numchanperms
@@ -607,7 +655,7 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
           hostnames='', 
           numcpuperhost=1, majorcycles=1, niter=1000, alg='clark', scales=[0],
           mode='channel', start=0, nchan=1, step=1, weight='natural', 
-          imagetilevol=1000000,
+          imagetilevol=100000,
           contclean=False, chanchunk=1, visinmem=False, 
           painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
           epjtablename=''): 
@@ -653,20 +701,24 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
         len(c.get_engines())):
         c.stop_cluster()
         time.sleep(1)
-    hostname=os.getenv('HOSTNAME')
+    myhostname=os.getenv('HOSTNAME')
     wd=os.getcwd()
     owd=wd
    ########################3
     ###num of cpu per node
     numcpu=numcpuperhost
     if((hostnames==[]) or (hostnames=='')): 
-        hostnames=[hostname]
+        hostnames=[myhostname]
     print 'Hosts ', hostnames
     time1=time.time()
     print 'output will be in directory', owd
     for hostname in hostnames:
         c.start_engine(hostname,numcpu,owd)
     numcpu=numcpu*len(hostnames)
+    ##Start an slave for my async use for cleaning up etc here
+    c.start_engine(myhostname, 3, owd)
+    buddy_id=[numcpu, numcpu+1, numcpu+2]
+    c.push(numcpu=numcpu, targets=buddy_id) 
     #####################
     model=imagename+'.model' 
     if(not contclean or (not os.path.exists(model))):
@@ -726,53 +778,90 @@ def pcube(msname=None, imagename='elimage', imsize=[1000, 1000],
     donegetchan=np.array(range(nchanchunk),dtype=bool)
     doneputchan=np.array(range(nchanchunk),dtype=bool)
     readyputchan=np.array(range(nchanchunk), dtype=bool)
+    cpudoing=np.array(range(nchanchunk), dtype=int)
     donegetchan.setfield(False,bool)
     doneputchan.setfield(False,bool)
     readyputchan.setfield(False, bool)
     chanind=np.array(range(numcpu), dtype=int)
+    c.push(readyputchan=readyputchan, targets=buddy_id)
+    #c.push(doneputchan=doneputchan, targets=buddy_id)
+    buddy_is_ready=[True, True, True]
+    buddy_ref=[False, False, False]
+    cleanupcomm=['', '', '']
+    cleanupcomm[0]='a.cleanupmodelimages(readyputchan=readyputchan,  imagename='+imnam+', nchanchunk='+str(nchanchunk)+', chanchunk='+str(chanchunk)+')'
+    cleanupcomm[1]='a.cleanupresidualimages(readyputchan=readyputchan,  imagename='+imnam+', nchanchunk='+str(nchanchunk)+', chanchunk='+str(chanchunk)+')'
+    cleanupcomm[2]='a.cleanuprestoredimages(readyputchan=readyputchan,  imagename='+imnam+', nchanchunk='+str(nchanchunk)+', chanchunk='+str(chanchunk)+')'
+    def gen_command(ccounter):
+        return 'a.imagechan_new(msname='+'"'+msname+'", start='+str(startsel[ccounter])+', numchan='+str(nchansel[ccounter])+', field="'+str(field)+'", spw='+str(spwsel[ccounter])+', cubeim='+imnam+', imroot='+imnam+',imchan='+str(ccounter)+',chanchunk='+str(chanchunk)+',niter='+str(niter)+',alg="'+alg+'", scales='+str(scales)+', majcycle='+str(majorcycles)+', thr="'+str(threshold)+'")'
     
+    #while(chancounter < nchanchunk):
+    chanind.setfield(-1, int)
+    for k in range(numcpu):
+        if(chancounter < nchanchunk):
+            chanind[k]=chancounter
+                #if(not donegetchan[chancounter]):
+                #    imagecont.getchanimage(model, imagename+str(chancounter)+'.model', 
+                #                 chancounter*chanchunk, chanchunk)
+                #    donegetchan[chancounter]=True
+            
+                #runcomm='a.imagechan_new(msname='+'"'+msname+'", start='+str(startsel[chancounter])+', numchan='+str(nchansel[chancounter])+', field="'+str(field)+'", spw='+str(spwsel[chancounter])+', cubeim='+imnam+', imroot='+imnam+',imchan='+str(chancounter)+',chanchunk='+str(chanchunk)+',niter='+str(niter)+',alg="'+alg+'", scales='+str(scales)+', majcycle='+str(majorcycles)+', thr="'+str(threshold)+'")'
+            runcomm=gen_command(chancounter)
+                #runcomm='a.imagechan(msname='+'"'+msname+'", start='+str(startsel[chancounter])+', numchan='+str(nchansel[chancounter])+', field="'+str(field)+'", spw='+str(spwsel[chancounter])+', imroot='+imnam+',imchan='+str(chancounter)+',niter='+str(niter)+',alg="'+alg+'", scales='+str(scales)+', majcycle='+str(majorcycles)+', thr="'+str(threshold)+'")'
+            print 'command is ', runcomm
+            out[k]=c.odo(runcomm,k)
+            chancounter=chancounter+1
     while(chancounter < nchanchunk):
-        chanind.setfield(-1, int)
-        for k in range(numcpu):
-            if(chancounter < nchanchunk):
-                chanind[k]=chancounter
-                if(not donegetchan[chancounter]):
-                    getchanimage(model, imagename+str(chancounter)+'.model', 
-                                 chancounter*chanchunk, chanchunk)
-                    donegetchan[chancounter]=True
-                runcomm='a.imagechan(msname='+'"'+msname+'", start='+str(startsel[chancounter])+', numchan='+str(nchansel[chancounter])+', field="'+str(field)+'", spw='+str(spwsel[chancounter])+', imroot='+imnam+',imchan='+str(chancounter)+',niter='+str(niter)+',alg="'+alg+'", scales='+str(scales)+', majcycle='+str(majorcycles)+')'
-                print 'command is ', runcomm
-                out[k]=c.odo(runcomm,k)
-                chancounter=chancounter+1
-        over=False
-        while(not over):
-            time.sleep(5)
-            for k in range(nchanchunk):
-                ###split the remaining channel image while the master is waiting
-                if(not donegetchan[k]):
-                    getchanimage(model, imagename+str(k)+'.model', k*chanchunk, chanchunk)
-                    donegetchan[k]=True
-                if(readyputchan[k] and (not doneputchan[k])):
-                    putchanimage(model, imagename+str(k)+'.model', k*chanchunk)
-                    putchanimage(imagename+'.residual', imagename+str(k)+'.residual', k*chanchunk)
-                    putchanimage(imagename+'.image', imagename+str(k)+'.image', k*chanchunk)
-                    doneputchan[k]=True
-            overone=True
-            for k in range(numcpu):
-                overone=(overone and c.check_job(out[k],False))
-                if((chanind[k] > -1) and c.check_job(out[k],False) and 
-                   (not readyputchan[chanind[k]])):
-                    readyputchan[chanind[k]]=True
-            over=overone
-    ##sweep the remainder channels in case they are missed
-    for k in range(nchanchunk):
-         if(not doneputchan[k]):
-             putchanimage(model, imagename+str(k)+'.model', k*chanchunk)
-             putchanimage(imagename+'.residual', imagename+str(k)+'.residual', k*chanchunk)
-             putchanimage(imagename+'.image', imagename+str(k)+'.image', k*chanchunk)
-             doneputchan[k]=True
+            over=False
+            while(not over):
+            #############loop waiting for a chunk of work
+                time.sleep(1)
+                for bud in range(3):
+                    if(buddy_is_ready[bud]):
+                        #print 'SENDING ', cleanupcomm[bud]
+                        c.push(readyputchan=readyputchan, targets=buddy_id[bud])
+                    #c.push(doneputchan=doneputchan, targets=buddy_id)
+                        buddy_ref[bud]=c.odo(cleanupcomm[bud], buddy_id[bud])
+                    buddy_is_ready[bud]=c.check_job(buddy_ref[bud], False)
+                    #print 'buddy_ready', bud, buddy_is_ready[bud]
+            #if(buddy_is_ready):
+            #    doneputchan=c.pull('doneputchan', buddy_id)[buddy_id]
+                overone=True
+                for k in range(numcpu):
+                    overone=(overone and c.check_job(out[k],False))
+                    if((chanind[k] > -1) and c.check_job(out[k],False) and 
+                       (not readyputchan[chanind[k]])):
+                        readyputchan[chanind[k]]=True      
+                        if(chancounter < nchanchunk):
+                            chanind[k]=chancounter
+                            runcomm=gen_command(chancounter)
+                            print 'command is ', runcomm
+                            print 'processor ', k
+                            out[k]=c.odo(runcomm,k)
+                            chancounter+=1
+                        overone=(overone and c.check_job(out[k],False))
+                over=overone
+           ############
     time2=time.time()
     print 'Time to image is ', (time2-time1)/60.0, 'mins'
+    ##sweep the remainder channels in case they are missed
+    for bud in range(3):
+        while(not buddy_is_ready[bud]):
+            buddy_is_ready[bud]=c.check_job(buddy_ref[bud], False)
+        #doneputchan=c.pull('doneputchan', buddy_id)[buddy_id] 
+        c.push(readyputchan=readyputchan, targets=buddy_id[bud])
+        buddy_ref[bud]=c.odo(cleanupcomm[bud], buddy_id[bud])
+    for bud in range(3):
+        while(not buddy_is_ready[bud]):
+            buddy_is_ready[bud]=c.check_job(buddy_ref[bud], False)
+    #c.stop_engine(buddy_id)
+    #for k in range(nchanchunk):
+    #   if(not doneputchan[k]):
+    #        imagecont.putchanimage(model, imagename+str(k)+'.model', k*chanchunk, False)
+    #        imagecont.putchanimage(imagename+'.residual', imagename+str(k)+'.residual', k*chanchunk, False)
+    #        imagecont.putchanimage(imagename+'.image', imagename+str(k)+'.image', k*chanchunk, False)
+    #        doneputchan[k]=True
+    time2=time.time()
+    print 'Time to image after cleaning is ', (time2-time1)/60.0, 'mins'
     c.stop_cluster()
 
 
@@ -866,9 +955,9 @@ def pcontmultims(msnames=[], workdirs=[], imagename=None, imsize=[1000, 1000],
         msname=msnames[msid]
         myrec=hostdata.values()[msid]
         tb.open(msname+"/SPECTRAL_WINDOW")
-        freqs=tb.getcol('CHAN_FREQ')
+        #freqs=tb.getcol('CHAN_FREQ')
         for k in range(len(myrec['spwids'])) :
-            allfreq=np.append(allfreq, freqs[:,myrec['spwids'][k]])
+            allfreq=np.append(allfreq, tb.getcol('CHAN_FREQ',myrec['spwids'][k],1))
         tb.done()
     ##number of channels in the ms
     numchanperms=len(allfreq)

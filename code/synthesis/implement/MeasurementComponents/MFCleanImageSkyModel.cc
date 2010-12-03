@@ -732,7 +732,8 @@ void MFCleanImageSkyModel::blankOverlappingModels(){
   if(numberOfModels() == 1) 
     return;
   /////////////////////
-  /*  for (Int model=0;model<(numberOfModels()); ++model) {
+  /*
+   for (Int model=0;model<(numberOfModels()); ++model) {
 
     
       LatticeExprNode maxIm=max(deltaImage(model));
@@ -741,8 +742,7 @@ void MFCleanImageSkyModel::blankOverlappingModels(){
   */
   //////////////
   for (Int model=0;model<(numberOfModels()-1); ++model) {
-    image(model).set(0);
-    /*    CoordinateSystem cs0=image(model).coordinates();
+    CoordinateSystem cs0=image(model).coordinates();
     IPosition iblc0(image(model).shape().nelements(),0);
       
       IPosition itrc0(image(model).shape());
@@ -770,12 +770,12 @@ void MFCleanImageSkyModel::blankOverlappingModels(){
       }
       catch(...){
 	//no overlap you think ?
-	cout << "Did i fail " << endl;
+	//cout << "Did i fail " << endl;
 	continue;
       }
     
     
-      }*/
+      }
     
     
     

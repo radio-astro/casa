@@ -13,13 +13,14 @@ def simdata(
     ptgfile=None, integration=None, direction=None, mapsize=None, 
     maptype=None, pointingspacing=None, caldirection=None, calflux=None, 
     predict=None, 
-    refdate=None, complist=None, totaltime=None, antennalist=None, 
+    refdate=None, complist=None, compwidth=None,
+    totaltime=None, antennalist=None, 
     sdantlist=None, sdant=None,
     thermalnoise=None,
     user_pwv=None, t_ground=None, t_sky=None, tau0=None, leakage=None,
     image=None,
     vis=None, modelimage=None, cell=None, imsize=None, niter=None, threshold=None,
-    weighting=None, outertaper=None, stokes=None,     
+    weighting=None, mask=None, outertaper=None, stokes=None,     
     analyze=None, 
     showarray=None, showuv=None, showpsf=None, showmodel=None, 
     showconvolved=None, showclean=None, showresidual=None, showdifference=None, 
@@ -35,9 +36,15 @@ def simdata(
     casalog.origin('simdata')
     if verbose: casalog.filter(level="DEBUG2")
 
-    #from casa_in_py import saveinputs
-    #saveinputs(taskname="simdata",outfile=project+".simdata.last")
-
+    a=inspect.stack()
+    stacklevel=0
+    for k in range(len(a)):
+        if (string.find(a[k][1], 'ipython console') > 0):
+            stacklevel=k
+    myf=sys._getframe(stacklevel).f_globals
+     
+    saveinputs=myf['saveinputs']
+    saveinputs('simdata',project+".simdata.last")
 
 
 
@@ -61,9 +68,9 @@ def simdata(
         return False
 
     if((not os.path.exists(skymodel)) and (os.path.exists(complist))):
-        msg("No skymodel found. Some functionality is not supported when predicting from only components.",priority="warn")
-        if analyze:
-            msg("In particular, fidelity image may be misleading due to division by small values",priority="warn")
+        msg("No skymodel found. Simulating from components only is new and still considered an 'expert' feature.",priority="warn")
+#        if analyze:
+#            msg("In particular, fidelity image may be misleading due to division by small values",priority="warn")
 
     grscreen=False
     grfile=False
@@ -150,7 +157,12 @@ def simdata(
             model_refdir, coffs = util.average_direction(compdirs)
             model_center = cl.getspectrum(0)['frequency']['m0']
             # components don't yet support spectrum
-            model_width = "10GHz"
+            if util.isquantity(compwidth,halt=False):
+                model_width=compwidth                
+            else:
+                model_width = "2GHz"
+                msg("component-only simulation, compwidth unset: setting bandwidth to 2GHz",priority="warn")
+
             model_nchan = 1
 
             cmax=0.0014 # ~5 arcsec
@@ -252,17 +264,19 @@ def simdata(
                 msg("Only single-dish observation is predicted",priority="info")
                 tp_only=True
             # check for image size (need to be > 2*pb)
-            pb2 = 2.*1.2*0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/tp_aveant*3600.*180/pl.pi
-            minsize=min(qa.convert(model_size[0],'arcsec')['value'],qa.convert(model_size[1],'arcsec')['value'])
-            if pb==0:
-                pb=0.5*pb2 #arcsec
-            if minsize < pb2:
-                msg("skymodel should be larger than 2*primary beam. Your skymodel: %.3f arcsec < %.3f arcsec: 2*primary beam" % (minsize, pb2),priority="error")
+            if not components_only:
+                pb2 = 2.*1.2*0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/tp_aveant*3600.*180/pl.pi
+                minsize = min(qa.convert(model_size[0],'arcsec')['value'],\
+                              qa.convert(model_size[1],'arcsec')['value'])
+                if pb == 0:
+                    pb = 0.5*pb2 #arcsec
+                if minsize < pb2:
+                    msg("skymodel should be larger than 2*primary beam. Your skymodel: %.3f arcsec < %.3f arcsec: 2*primary beam" % (minsize, pb2),priority="error")
+                    del minsize,pb2
+                    return False            
                 del minsize,pb2
-                return False            
-            del minsize,pb2
-            
-        
+
+
 
 
 
@@ -283,13 +297,21 @@ def simdata(
         util.direction=dir0
 
         if setpointings:
+            import re
             if verbose:
                 util.msg("calculating map pointings centered at "+str(dir0))
+
             if len(pointingspacing)<1:
+                pointingspacing="0.5PB"
+            q=re.compile('(\d+.?\d+)\s*PB')
+            qq=q.match(pointingspacing.upper())
+            if qq:
+                z=qq.groups()
                 if pb<=0:
                     util.msg("Can't calculate pointingspacing in terms of primary beam because neither antennalist nor sdantlist exist",priority="error")
                     return False
-                pointingspacing="%farcsec" % (0.5*pb)
+                pointingspacing="%farcsec" % (float(z[0])*pb)
+                # todo make more robust to nonconforming z[0] strings
             pointings = util.calc_pointings2(pointingspacing,mapsize,maptype=maptype, direction=dir)
             nfld=len(pointings)
             etime = qa.convert(qa.quantity(integration),"s")['value']
@@ -336,8 +358,11 @@ def simdata(
 
         msg("phase center = " + imcenter)
         if nfld>1 and verbose:
-            for dir in pointings:
-                msg("   "+dir)
+            for idir in range(min(len(pointings),20)):
+                msg("   "+pointings[idir])
+            if nfld>=20:
+                msg("   (printing only first 20 - see pointing file for full list)")
+            
  
         if not overlap:
             msg("No overlap between model and pointings",priority="error")
@@ -390,8 +415,6 @@ def simdata(
                 else:
                     discard = util.statim(modelflat,plot=True,incell=model_cell)
                 lims=pl.xlim(),pl.ylim()
-                # done above
-                # pb=1.2*0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/aveant*3600.*180/pl.pi                
                 if pb<=0 and verbose:
                     msg("unknown primary beam size for plot",priority="warn")
                 if max(max(lims)) > pb:
@@ -399,12 +422,14 @@ def simdata(
                 else:
                     plotcolor='k'
 
-                if offsets.shape[1]>16 or pb<=0 or pb>pl.absolute(max(max(lims))):
+                #if offsets.shape[1]>16 or pb<=0 or pb>pl.absolute(max(max(lims))):
+                if offsets.shape[1]>16 or pb<=0:
+                    lims=pl.xlim(),pl.ylim()
                     pl.plot((offsets[0]+shift[0])*3600.,(offsets[1]+shift[1])*3600.,
                             plotcolor+'+',markeredgewidth=1)
-                    lims=pl.xlim(),pl.ylim()
-                    if pb>0 and pl.absolute(lims[0][0])>pb:
-                        plotpb(pb,pl.gca(),lims=lims)
+                    #if pb>0 and pl.absolute(lims[0][0])>pb:
+                    if pb>0:
+                        plotpb(pb,pl.gca(),lims=lims,color=plotcolor)
                 else:
                     from matplotlib.patches import Circle
                     for i in xrange(offsets.shape[1]):
@@ -461,7 +486,9 @@ def simdata(
                 posobs=me.observatory(telescopename)
                 diam=stnd;
                 # WARNING: sm.setspwindow is not consistent with clean::center
-                model_start=qa.sub(model_center,qa.mul(model_width,0.5*model_nchan))
+                #model_start=qa.sub(model_center,qa.mul(model_width,0.5*model_nchan))
+                # but the "start" is the center of the first channel:
+                model_start=qa.sub(model_center,qa.mul(model_width,0.5*(model_nchan-1)))
 
                 sm.setconfig(telescopename=telescopename, x=stnx, y=stny, z=stnz, 
                              dishdiameter=diam.tolist(), 
@@ -532,28 +559,38 @@ def simdata(
                     # this only creates blank uv entries
                         sm.observe(sourcename=src, spwname=fband,
                                    starttime=qa.quantity(sttime, "s"),
-                                   stoptime=qa.quantity(endtime, "s"));
+                                   stoptime=qa.quantity(endtime, "s"),project=project);
                     kfld=kfld+1
                     if kfld==nfld: 
                         if docalibrator:
                             sttime=-totalsec/2.0+scansec*k
                             endtime=sttime+scansec
                             if observemany:
-                                srces.append(src)
-                                starttimes.append(str(sttime)+"s")
-                                stoptimes.append(str(endtime)+"s")
-                                dirs.append(caldirection)
-                            else:
-                                sm.observe(sourcename="phase calibrator", spwname=fband,
-                                           starttime=qa.quantity(sttime, "s"),
-                                           stoptime=qa.quantity(endtime, "s"));
+                                # need to observe cal singly to get new row in obs table, so 
+                                # first observemany the on-source pointing(s)
+                                sm.observemany(sourcenames=srces,spwname=fband,starttimes=starttimes,stoptimes=stoptimes,project=project)
+                                # and clear the list
+                                srces=[]
+                                starttimes=[]
+                                stoptimes=[]
+                                dirs=[]
+ #                               srces.append(src)
+ #                               starttimes.append(str(sttime)+"s")
+ #                               stoptimes.append(str(endtime)+"s")
+ #                               dirs.append(caldirection)
+ #                           else:
+                            sm.observe(sourcename="phase calibrator", spwname=fband,
+                                       starttime=qa.quantity(sttime, "s"),
+                                       stoptime=qa.quantity(endtime, "s"),
+                                       state_obs_mode="CALIBRATE_PHASE.ON_SOURCE",state_sig=True,
+                                       project=project);
                         kfld=kfld+1                
                     if kfld > nfld: kfld=0
                 # if directions is unset, NewMSSimulator::observemany 
 
                 # looks up the direction in the field table.
-                if observemany:
-                    sm.observemany(sourcenames=srces,spwname=fband,starttimes=starttimes,stoptimes=stoptimes)
+                if observemany and (not docalibrator):
+                    sm.observemany(sourcenames=srces,spwname=fband,starttimes=starttimes,stoptimes=stoptimes,project=project)
 
                 sm.setdata(fieldid=range(0,nfld))
                 sm.setvp()
@@ -626,6 +663,8 @@ def simdata(
                     util.nextfig()
                     im.open(msfile)  
                     # TODO spectral parms
+                    if not image:
+                        msg("using default model cell "+qa.tos(model_cell[0])+" for PSF calculation",priority="warn")
                     im.defineimage(cellx=qa.tos(model_cell[0]))  
                     #im.makeimage(type='psf',image=project+".quick.psf")
                     if os.path.exists(project+".quick.psf"):
@@ -668,7 +707,7 @@ def simdata(
                 posobs=me.observatory(tp_telescopename)
                 diam=tpd
                 # WARNING: sm.setspwindow is not consistent with clean::center
-                model_start=qa.sub(model_center,qa.mul(model_width,0.5*model_nchan))
+                model_start=qa.sub(model_center,qa.mul(model_width,0.5*(model_nchan-1)))
 
                 sm.setconfig(telescopename=tp_telescopename, x=tpx, y=tpy, z=tpz, 
                              dishdiameter=diam.tolist(),
@@ -823,7 +862,7 @@ def simdata(
                 
             noise_any=True
 
-            eta_p, eta_s, eta_b, eta_t, eta_q, t_rx = util.noisetemp()
+            eta_p, eta_s, eta_b, eta_t, eta_q, t_rx = util.noisetemp(freq=model_center)
 
             # antenna efficiency
             eta_a = eta_p * eta_s * eta_b * eta_t
@@ -833,7 +872,7 @@ def simdata(
                 msg('correlator efficiency = ' + str(eta_q),origin="noise")
  
             # Cosmic background radiation temperature in K. 
-            t_cmb = 2.275
+            t_cmb = 2.725
 
             noisymsroot = msroot+".noisy"
 
@@ -879,12 +918,12 @@ def simdata(
                             ",correfficiency="+str(eta_q)+",antefficiency="+str(eta_a)+
                             ",trx="+str(t_rx)+",tground="+str(t_ground)+
                             ",tcmb="+str(t_cmb)+",mode='tsys-atm'"+
-                            ",pground='650mbar',altitude='5000m',waterheight='2km',relhum=20,pwv="+str(user_pwv)+"mm)");
+                            ",pground='560mbar',altitude='5000m',waterheight='200m',relhum=20,pwv="+str(user_pwv)+"mm)");
                         msg("** this may be slow if your MS is finely sampled in time ** ",priority="warn")
                     sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
                                 antefficiency=eta_a,trx=t_rx,
                                 tground=t_ground,tcmb=t_cmb,pwv=str(user_pwv)+"mm",
-                                mode="tsys-atm")
+                                mode="tsys-atm",table=noisymsroot)
                     # don't set table, that way it won't save to disk
                     #                        mode="calculate",table=noisymsroot)
                 sm.corrupt();
@@ -1046,11 +1085,18 @@ def simdata(
             # Do single dish imaging first if tpms exists.
             if tpms and os.path.exists(tpms):
                 msg('creating image from generated ms: '+tpms)
-                if tp_only: msfile=tpms
                 if len(mstoimage):
                     tpimage = project+'.sd.image'
                 else:
                     tpimage = project+'.image'
+                if tp_only: 
+                    msfile=tpms
+                else:
+                    if len(modelimage) and modelimage!=tpimage:
+                        msg("modelimage parameter set to "+modelimage+" but also creating a new total power image "+tpimage,priority="warn")
+                        msg("assuming you know what you want, and using modelimage="+modelimage+" in deconvolution",priority="warn")
+                    else:
+                        modelimage=tpimage
                 #im.open(msfile)
                 im.open(tpms)
                 im.selectvis(nchan=model_nchan,start=0,step=1,spw=0)
@@ -1117,7 +1163,7 @@ def simdata(
                        cleanmode,cell,imsize,imcenter,
                        niter,threshold,weighting,
                        outertaper,stokes,sourcefieldlist=sourcefieldlist,
-                       modelimage=modelimage)
+                       modelimage=modelimage,mask=mask)
 
             # create imagename.flat and imagename.residual.flat:
             util.flatimage(imagename+".image",verbose=verbose)
@@ -1153,7 +1199,7 @@ def simdata(
                 file=""
 
         # create fake model from components for analysis
-        if components_only:
+        if components_only and (image or analyze):
             newmodel=project+".compskymodel"
             if not os.path.exists(project+".image"):
                 msg("must image before analyzing",priority="error")
@@ -1249,7 +1295,7 @@ def simdata(
                 if not os.path.exists(complist):
                     return False
                 else:
-                    msg("If you are simulating from componentlist only, analysis is not fully implemented.  If you have a sky model image, please set the skymodel parameter.",priority="warn")
+                    msg("If you have a sky model image, please set the skymodel parameter.",priority="warn")
 
             modelim=newmodel
 
@@ -1326,10 +1372,25 @@ def simdata(
                                                           maxdiff/pl.sqrt(2.0)), overwrite = True)
             fidelityim = imagename + '.fidelity'
             ia.imagecalc(fidelityim, "abs('%s') / '%s'" % (convolved, absdiff), overwrite = True)
-            ia.done()
-
             msg("fidelity image calculated",origin="analysis")
 
+            # scalar fidelity
+            absconv = imagename + '.absconv'
+            ia.imagecalc(absconv, "abs('%s')" % convolved, overwrite=True)
+            ia.done()
+            
+            ia.open(absconv)
+            modelstats = ia.statistics(robust=True, verbose=False,list=False)
+            maxmodel=modelstats['max']            
+            if maxmodel!=maxmodel: maxmodel=0.
+            if type(maxmodel)!=type(0.):
+                if maxmodel.__len__()>0: 
+                    maxmodel=maxmodel[0]
+                else:
+                    maxmodel=0.
+            ia.done()
+            scalarfidel=maxmodel/maxdiff
+            msg("fidelity range (max model / rms difference) = "+str(scalarfidel),origin="analysis")
 
 
             # now, what does the user want to actually display?
@@ -1489,7 +1550,7 @@ def simdata(
 
 
 ##### Helper functions to plot primary beam
-def plotpb(pb,axes,lims=None):
+def plotpb(pb,axes,lims=None,color='k'):
     # This beam is automatically scaled when you zoom in/out but
     # not anchored in plot area. We'll wait for Matplotlib 0.99
     # for that function. 
@@ -1498,28 +1559,41 @@ def plotpb(pb,axes,lims=None):
     #rangle=rangle
     #bwidth=max(major*pl.cos(rangle),minor*pl.sin(rangle))*1.1
     #bheight=max(major*pl.sin(rangle),minor*pl.cos(rangle))*1.1
-    boxsize=pb*1.1
-    if not lims: lims=axes.get_xlim(),axes.get_ylim()
-    incx=1
-    incy=1
-    if axes.xaxis_inverted(): incx=-1
-    if axes.yaxis_inverted(): incy=-1
-    #ecx=lims[0][0]+bwidth/2.*incx
-    #ecy=lims[1][0]+bheight/2.*incy
-    ccx=lims[0][0]+boxsize/2.*incx
-    ccy=lims[1][0]+boxsize/2.*incy
     from matplotlib.patches import Rectangle, Circle #,Ellipse
-    #box=Rectangle((lims[0][0],lims[1][0]),incx*bwidth,incy*bheight,
-    box=Rectangle((lims[0][0],lims[1][0]),incx*boxsize,incy*boxsize,
-                  alpha=0.3,facecolor='w',
-                  transform=axes.transData) #Axes
-    #beam=Ellipse((ecx,ecy),major,minor,angle=rangle,
-    beam=Circle((ccx,ccy), radius=pb/2.,
-                 edgecolor='k',fill=False,
-                 label='beam',transform=axes.transData)
-    #props={'pad': 3, 'edgecolor': 'k', 'linewidth':2, 'facecolor': 'w', 'alpha': 0.5}
-    #pl.matplotlib.patches.bbox_artist(beam,axes.figure.canvas.get_renderer(),props=props)
-    axes.add_artist(box)
-    axes.add_artist(beam)
-
- 
+    try:
+        from matplotlib.offsetbox import AnchoredOffsetbox, AuxTransformBox
+        box=AuxTransformBox(axes.transData)
+        box.set_alpha(0.7)
+        circ=Circle((pb,pb),radius=pb/2.,color=color,fill=False,\
+                    label='primary beam',linewidth=2.0)
+        box.add_artist(circ)
+        pblegend=AnchoredOffsetbox(loc=3,pad=0.2,borderpad=0.,\
+                                   child=box,prop=None,frameon=False)#,frameon=True)
+        pblegend.set_alpha(0.7)
+        axes.add_artist(pblegend)
+    except:
+        print "Using old matplotlib substituting with circle"
+        # work around for old matplotlib
+        boxsize=pb*1.1
+        if not lims: lims=axes.get_xlim(),axes.get_ylim()
+        incx=1
+        incy=1
+        if axes.xaxis_inverted(): incx=-1
+        if axes.yaxis_inverted(): incy=-1
+        #ecx=lims[0][0]+bwidth/2.*incx
+        #ecy=lims[1][0]+bheight/2.*incy
+        ccx=lims[0][0]+boxsize/2.*incx
+        ccy=lims[1][0]+boxsize/2.*incy
+    
+        #box=Rectangle((lims[0][0],lims[1][0]),incx*bwidth,incy*bheight,
+        box=Rectangle((lims[0][0],lims[1][0]),incx*boxsize,incy*boxsize,
+                      alpha=0.7,facecolor='w',
+                      transform=axes.transData) #Axes
+        #beam=Ellipse((ecx,ecy),major,minor,angle=rangle,
+        beam=Circle((ccx,ccy), radius=pb/2.,
+                    edgecolor='k',fill=False,
+                    label='beam',transform=axes.transData)
+        #props={'pad': 3, 'edgecolor': 'k', 'linewidth':2, 'facecolor': 'w', 'alpha': 0.5}
+        #pl.matplotlib.patches.bbox_artist(beam,axes.figure.canvas.get_renderer(),props=props)
+        axes.add_artist(box)
+        axes.add_artist(beam)

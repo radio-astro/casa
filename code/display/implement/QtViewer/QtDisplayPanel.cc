@@ -1192,7 +1192,11 @@ Float QtDisplayPanel::cbPanelSpace_(QtDisplayData* dd) {
   // for dd's colorbar panel.  (This is allocated along the direction of
   // the colorbar's thickness; the panel uses the entire PC size along the
   // direction of the colorbar's length).  
-  
+
+  if ( ! dd->colorBar()->isDisplayable( ) ) {
+	return 0;
+  }
+
   Float cblen = pclnsz_ - (lnmrgna_+lnmrgnb_)*marginUnit_;
 	// (Approx.) length in screen pixels that the colorbar will have.
 	// (All colorbars are given the same margins in their 'length'

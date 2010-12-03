@@ -987,14 +987,18 @@ Bool FTMachine::matchAllSpwChans(const VisBuffer& vb){
   multiChanMap_p.resize(max(selectedSpw_p)+1, True);
   
   Bool anymatchChan=False;
+  Bool anyTopo=False;
   for (uInt k=0; k < selectedSpw_p.nelements(); ++k){ 
     Bool matchthis=matchChannel(selectedSpw_p[k], vb);
     anymatchChan= (anymatchChan || matchthis);
-    
+    anyTopo=anyTopo || ((MFrequency::castType(vb.msColumns().spectralWindow().measFreqRef()(selectedSpw_p[k]))==MFrequency::TOPO) && freqFrameValid_p);
   }
-  if (!anymatchChan){
+  // if TOPO and valid frame things may match later but not now  thus we'll go 
+  // through the data 
+  // hoping the user made the right choice
+  if (!anymatchChan && !anyTopo){
     logIO() << "No overlap in frequency between image channels and selected data found "
-            << " Check your data selection and image parameters" 
+	    << " Check your data selection and image parameters" 
 	    << LogIO::EXCEPTION;
     return False;
     

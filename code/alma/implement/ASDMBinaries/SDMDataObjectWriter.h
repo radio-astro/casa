@@ -747,9 +747,9 @@ namespace asdmbinaries {
     
     void output   (const string& s);    
     void outputln (const string& s);
-    void output   (const float* data, unsigned int numData);
-    void outputln (const float* data, unsigned int numData);
-    void outputln (const int64_t* data, unsigned int numData);
+    void output   (const float* data, uint32_t numData);
+    void outputln (const float* data, uint32_t numData);
+    void outputln (const long long* data, uint32_t numData);
 
     template <class T> void output(const vector<T>& data) {
       numBytes_ += data.size()*sizeof(T);

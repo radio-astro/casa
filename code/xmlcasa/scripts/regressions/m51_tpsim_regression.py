@@ -5,11 +5,10 @@
 
 import os, time
 
-#os.system('rm -rf m51.image')
-
 #modelname="M51HA.MODEL"
 modelname="m51ha.model"
-os.system('rm -rf '+modelname)
+if os.path.exists(modelname):
+    shutil.rmtree(modelname)
 
 startTime = time.time()
 startProc = time.clock()
@@ -114,6 +113,20 @@ diffstats = {'sum': 3.5216e4,
              'min': -0.49571,
              'rms': 0.30398,
              'sigma': 0.27268 }
+
+# v13235
+
+refstats = {'sum':14712,
+            'max':1.6276,
+            'min':-0.74572,
+            'rms':0.20357,
+            'sigma':0.19568}
+
+diffstats = {'sum':36338,
+             'max':2.7257,
+             'min':-0.70069,
+             'rms':0.31747,
+             'sigma':0.28561}
 
 
 # relative tolerances to reference values

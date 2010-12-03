@@ -80,7 +80,6 @@ public:
   virtual String getStats ();
   static const RecordInterface & getDefaults ();
 
-  virtual void plotFlaggingReport ( PGPlotterInterface &pgp );
   virtual String getID() {return String("");};
   
 protected:

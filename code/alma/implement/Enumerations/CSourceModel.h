@@ -55,7 +55,7 @@ namespace SourceModelMod
   //! SourceModel.
   //!  [CalDM.CalFlux] Source Model
   
-  const char *const revision = "1.8";
+  const char *const revision = "1.9";
   const int version = 1;
   
   enum SourceModel

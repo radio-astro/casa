@@ -283,7 +283,9 @@ public:
 	       const double& state_cal,
 	       const double& state_load,
 	       const unsigned int state_sub_scan,
-	       const String& state_obs_mode);
+	       const String& state_obs_mode,
+	       const String& observername,
+	       const String& projectname);
 
 
   Bool observemany(const Vector<String>& sourcenames, const String& spwname,
@@ -296,7 +298,10 @@ public:
 		   const double& state_cal,
 		   const double& state_load,
 		   const unsigned int state_sub_scan,
-		   const String& state_obs_mode);
+		   const String& state_obs_mode,
+		   const String& observername,
+		   const String& projectname);
+    
 
   // Given a model image, predict the visibilities onto the (u,v) coordinates
   // of our MS

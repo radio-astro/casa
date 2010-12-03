@@ -90,6 +90,7 @@ CubeSkyEquation::CubeSkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft, Compon
 void CubeSkyEquation::init(FTMachine& ft){
   Int nmod=sm_->numberOfModels();
 
+  doflat_p=False;
   //if(sm_->getAlgorithm()=="MSMFS") 
   if(sm_->numberOfTaylorTerms()>1) 
     {
@@ -1212,17 +1213,19 @@ void CubeSkyEquation::fixImageScale()
 	  // if ggS < ggSMin2, set to Zero;
 	  // if ggS > ggSMin2 && < ggSMin1, set to ggSMin1/ggS
 	  // if ggS > ggSMin1, set to 1.0
-	  sm_->fluxScale(model).copyData( (LatticeExpr<Float>) 
-					  (iif(sm_->ggS(model) < (ggSMin2), 0.0,
-					       sqrt((sm_->ggS(model))/ggSMin1) )) );
-	  sm_->fluxScale(model).copyData( (LatticeExpr<Float>) 
-					  (iif(sm_->ggS(model) > (ggSMin1), 1.0,
-					       (sm_->fluxScale(model)) )) );
-	  // truncate ggS at ggSMin1
-	  sm_->ggS(model).copyData( (LatticeExpr<Float>) 
-				    (iif(sm_->ggS(model) < (ggSMin1), ggSMin1*(sm_->fluxScale(model)), 
-					 sm_->ggS(model)) )
-				    );
+	
+	sm_->fluxScale(model).copyData( (LatticeExpr<Float>) 
+					(iif(sm_->ggS(model) < (ggSMin2), 0.0,
+					     sqrt((sm_->ggS(model))/ggSMin1) )) );
+	sm_->fluxScale(model).copyData( (LatticeExpr<Float>) 
+					(iif(sm_->ggS(model) > (ggSMin1), 1.0,
+					     (sm_->fluxScale(model)) )) );
+	// truncate ggS at ggSMin1
+	sm_->ggS(model).copyData( (LatticeExpr<Float>) 
+				  (iif(sm_->ggS(model) < (ggSMin1), ggSMin1*(sm_->fluxScale(model)), 
+				       sm_->ggS(model)) )
+				  );
+	
 	}
 
 	else{
@@ -1237,19 +1240,6 @@ void CubeSkyEquation::fixImageScale()
 	}
 
       } else {
-	/*
-	if(ft_->name() != "MosaicFT"){
-	  sm_->fluxScale(model).copyData( (LatticeExpr<Float>) 1.0 );
-	  sm_->ggS(model).copyData( (LatticeExpr<Float>) 
-	  			    (iif(sm_->ggS(model) < (ggSMin2), 0.0, 
-	  				 sm_->ggS(model)) ));
-	 
-
-	}
-	else{
-
-	*/
-	 
 	
 	  Int nXX=sm_->ggS(model).shape()(0);
 	  Int nYY=sm_->ggS(model).shape()(1);
@@ -1283,12 +1273,23 @@ void CubeSkyEquation::fixImageScale()
 	      ///As we chop the image later...the weight can vary per channel
 	      ///lets be conservative and go to 1% of ggsMin2
 	      if(planeMax !=0){
-		fscalesub.copyData( (LatticeExpr<Float>) 
-				    (iif(ggSSub < (ggSMin2/100.0), 
-					 0.0, sqrt(ggSSub/planeMax))));
-		ggSSub.copyData( (LatticeExpr<Float>) 
-				 (iif(ggSSub < (ggSMin2/100.0), 0.0, 
-				      sqrt(planeMax*ggSSub))));
+		if(doflat_p){
+		  fscalesub.copyData( (LatticeExpr<Float>) 
+				      (iif(ggSSub < (ggSMin2/100.0), 
+					   0.0, sqrt(ggSSub/planeMax))));
+		  ggSSub.copyData( (LatticeExpr<Float>) 
+				   (iif(ggSSub < (ggSMin2/100.0), 0.0, 
+					sqrt(planeMax*ggSSub))));
+		}
+		else{
+		  fscalesub.copyData( (LatticeExpr<Float>) 
+				      (iif(ggSSub < (ggSMin2/100.0), 
+					   0.0, (ggSSub/planeMax))));
+		  ggSSub.copyData( (LatticeExpr<Float>) 
+				   (iif(ggSSub < (ggSMin2/100.0), 0.0, 
+					(planeMax))));
+		}
+
 		//ggSSub.copyData( (LatticeExpr<Float>) 
 		//		 (iif(ggSSub < (ggSMin2/100.0), 0.0, 
 		//		      planeMax)));

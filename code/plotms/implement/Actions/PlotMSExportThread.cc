@@ -43,8 +43,8 @@ PlotMSExportThread::PlotMSExportThread(
 	: PlotMSThread(
 			plot->parent()->getPlotter()->getProgressWidget(),
 			postThreadMethod, postThreadObject
-		), itsPlot_(plot), itsFormat_(format), _interactive(interactive),
-		itsHelper_(new PlotMSExportThreadHelper(*this))
+		), itsPlot_(plot), itsFormat_(format),
+		itsHelper_(new PlotMSExportThreadHelper(this)), _interactive(interactive)
 {
     if(plot != NULL) {
         vector<PlotCanvasPtr> canvases = plot->canvases();
@@ -91,7 +91,8 @@ void PlotMSExportThread::startOperation() {
     initializeProgressWidget(PlotCanvas::OPERATION_EXPORT);
     setAllowedOperations(false, false, true);
     
-    itsHelper_->start();
+    itsHelper_->run();
+    threadFinished();
 }
 
 void PlotMSExportThread::operationChanged(const PlotOperation& operation) {
@@ -164,14 +165,16 @@ void PlotMSExportThread::threadFinished() {
 // PLOTMSEXPORTTHREADHELPER DEFINITIONS //
 //////////////////////////////////////////
 
-PlotMSExportThreadHelper::PlotMSExportThreadHelper(PlotMSExportThread& parent):
+PlotMSExportThreadHelper::PlotMSExportThreadHelper(PlotMSExportThread* parent):
         itsParent_(parent) { }
 
 PlotMSExportThreadHelper::~PlotMSExportThreadHelper() { }
 
 void PlotMSExportThreadHelper::run() {
-    itsExportResult_ = itsParent_.itsPlot_->exportToFormat(
-                       itsParent_.itsFormat_);
+
+    itsExportResult_ = itsParent_->itsPlot_->exportToFormat(
+                       itsParent_->itsFormat_);
+
 }
 
 }

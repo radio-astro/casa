@@ -122,7 +122,7 @@ bool RSUtils::worldToPixel(const Quantum<Vector<double> >& worldX,
     Quantum<Vector<Double> > qc(Vector<Double>(2), RegionShape::UNIT);
     Quantum<double> t(0.0, RegionShape::UNIT);
     
-    Vector<double> world(2), pixel(2);
+    Vector<double> world(cs.referenceValue()), pixel(2);
     bool convert = fromSys != wcSys;
     bool wasError = false;
     

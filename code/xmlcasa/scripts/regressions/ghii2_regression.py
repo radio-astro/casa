@@ -20,11 +20,16 @@ print 'I think the data repository is at '+repodir
 datadir=repodir+"/data/regression/simdata/"
 cfgdir=repodir+"/data/alma/simmos/"
 importfits(fitsimage=datadir+"30dor.fits",imagename="30dor.image")
-default("simdata")
 
 project="ghii2"
 # Clear out results from previous runs.
 os.system('rm -rf '+project+'*')
+
+#importfits(fitsimage=datadir+"ghii2_regression.mask.fits",imagename="ghii2_regression.mask")
+shutil.copytree(datadir+"ghii2_regression.mask","ghii2_regression.mask")
+default("simdata")
+project="ghii2"
+
 
 cl.done()
 cl.addcomponent(dir="J2000 05h18m48.586s -68d42m00.05s",flux=0.5,freq="650GHz")
@@ -55,11 +60,15 @@ thermalnoise="tsys-atm" # simdata2 default=off
 
 image=True
 vis="$project.noisy.ms"
-imsize=[300,300]
 cell="0.05arcsec"
 niter=5000
-threshold="0.1mJy"
+threshold="1mJy"
 weighting="briggs"
+#imsize=[300,300]
+imsize=[400,400]
+#mask=[50,350,50,350]
+#mask="ghii2_regression.mask.text"
+mask="ghii2_regression.mask"
 
 analyze=True
 overwrite=True
@@ -85,66 +94,29 @@ ia.open(project + '.image')
 hii_stats=ia.statistics(verbose=False,list=False)
 ia.close()
 
-# on ghii.clean.image
-refstats = { 'sum': 240.7, #'flux': 0.21939,
-             'max': 0.4655,
-             'min': -0.0495,
-             'rms': 0.0395,
-             'sigma': 0.0391 }
-
-# padding changes, and mfs BW fix for sum 20100325
-refstats = { 'sum': 520.5, 
-             'max': 0.4292,
-             'min': -0.04473,
-             'rms': 0.0349,
-             'sigma': 0.0344 }
-
-# 20100428
-refstats = { 'sum': 520.5, 
-             'max': 0.4292,
-             'min': -0.04473,
-             'rms': 0.0349,
-             'sigma': 0.0344 }
-
-# simdata1 20100505 robust=0.5
-refstats = { 'sum': 673.4, 
-             'max': 0.5978,
-             'min': -0.06423,
-             'rms': 0.0504,
-             'sigma': 0.0498 }
-
-
-# simdata2 with component
-refstats = { 'sum': 662.3, 
-             'max': 0.59377,
-             'min': -0.0630,
-             'rms': 0.0503,
-             'sigma': 0.0497 }
 
 ia.open(project + '.diff')
 hiidiff_stats=ia.statistics(verbose=False,list=False)
 ia.close()
 
-# 20100505 robust=0.5
-diffstats = {'sum': 68.9,
-             'max': 0.004645,
-             'min': -0.00117,
-             'rms': 0.000946,
-             'sigma': 0.000556 }
+refstats = { 'sum': 1052., 
+             'max': 0.676,
+             'min': -0.0513,
+             'rms': 0.0434,
+             'sigma': 0.0429 }
 
-# simdata2
-diffstats = {'sum': 3267.5,
-             'max': 0.1846,
-             'min': -0.07999,
-             'rms': 0.045,
-             'sigma': 0.0265 }
+diffstats = {'sum': 3322.,
+             'max': 0.169,
+             'min': -0.00459,
+             'rms': 0.0379,
+             'sigma': 0.0222 }
 
-### tight 
-reftol   = {'sum':  1e-2,
-            'max':  1e-2,
-            'min':  5e-2,
-            'rms':  1e-2,
-            'sigma': 1e-2}
+
+reftol   = {'sum':  0.1,
+            'max':  0.04,
+            'min':  0.04,
+            'rms':  0.1,
+            'sigma': 0.1}
 
 import datetime
 datestring = datetime.datetime.isoformat(datetime.datetime.today())

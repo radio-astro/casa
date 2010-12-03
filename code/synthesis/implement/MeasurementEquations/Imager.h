@@ -203,7 +203,9 @@ class Imager
                              const String& scan="",
                              const Bool useModelCol=False);
 
-
+  // Select some data.
+  // Sets nullSelect_p and returns !nullSelect_p.
+  // be_calm: lowers the logging level of some messages if True.
   Bool setdata(const String& mode, const Vector<Int>& nchan, 
 	       const Vector<Int>& start,
 	       const Vector<Int>& step, const MRadialVelocity& mStart,
@@ -218,7 +220,8 @@ class Imager
 	       const String& spwstring="",
 	       const String& uvdist="",
                const String& scan="",
-               const Bool usemodelCol=False);
+               const Bool usemodelCol=False,
+               const Bool be_calm=false);
   
   // Set the processing options
   Bool setoptions(const String& ftmachine, const Long cache, const Int tile,
@@ -330,8 +333,8 @@ class Imager
   Bool clipimage(const String& image, const Quantity& threshold);
 
   // Make a mask image
-  Bool mask(const String& mask, const String& imageName,
-	    const Quantity& threshold);
+  static Bool mask(const String& mask, const String& imageName,
+                   const Quantity& threshold);
   
   // Restore
   Bool restore(const Vector<String>& model, const String& complist,
@@ -409,6 +412,8 @@ class Imager
 	    const Vector<String>& residual);
 
   // Multi-field control parameters
+  //flat noise is the parameter that control the search of clean components
+  //in a flat noise image or an optimum beam^2 image
   Bool setmfcontrol(const Float cyclefactor,
 		    const Float cyclespeedup,
 		    const Int stoplargenegatives, 
@@ -416,7 +421,8 @@ class Imager
 		    const String& scaleType,
 		    const Float  minPB,
 		    const Float constPB,
-		    const Vector<String>& fluxscale);
+		    const Vector<String>& fluxscale,
+		    const Bool flatnoise=True);
   
   // Feathering algorithm
   Bool feather(const String& image,
@@ -481,7 +487,7 @@ class Imager
 		       String& maskImage);
 
   // Clone an image
-  Bool clone(const String& imageName, const String& newImageName);
+  static Bool clone(const String& imageName, const String& newImageName);
   
   // Fit the psf
   Bool fitpsf(const String& psf, Quantity& mbmaj, Quantity& mbmin,
@@ -638,6 +644,8 @@ protected:
 
   Bool doWideBand_p;          // Do Multi Frequency Synthesis Imaging
   String freqInterpMethod_p; //frequency interpolation mode
+
+  Bool flatnoise_p;
 
   // Set the defaults
   void defaults();

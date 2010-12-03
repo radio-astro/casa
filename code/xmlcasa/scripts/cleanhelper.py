@@ -3,7 +3,7 @@ import casac
 import os
 import commands
 import math
-import pdb
+#import pdb
 import numpy
 import shutil
 
@@ -20,7 +20,6 @@ rgtool=casac.homefinder.find_home_by_name('regionmanagerHome')
 rg = rgtool.create()
 iatool=casac.homefinder.find_home_by_name('imageHome')
 ia = iatool.create()
-
 
 class cleanhelper:
     def __init__(self, imtool='', vis='', usescratch=False, casalog=None):
@@ -270,7 +269,8 @@ class cleanhelper:
         else:
             self.maskimages={}
         masktext=[]
-        if( (len(maskobject)==0) or (maskobject==[''])):
+        if (not hasattr(maskobject, '__len__')) \
+           or (len(maskobject) == 0) or (maskobject == ['']):
             return
         if(type(maskobject)==str):
             maskobject=[maskobject]
@@ -333,7 +333,8 @@ class cleanhelper:
             self.maskimages={}
 
         #print "makemultifieldmask2: intial self.imagelist=",self.imagelist
-        if((len(maskobject)==0) or (maskobject==[''])):
+        if (not hasattr(maskobject, '__len__')) \
+           or (len(maskobject) == 0) or (maskobject == ['']):
             return
         # determine number of input elements
         if (type(maskobject)==str):
@@ -433,11 +434,17 @@ class cleanhelper:
 
             # handle boxes in lists
             if(len(masklist) > 0):
-                self.im.regiontoimagemask(mask=self.maskimages[self.imagelist[maskid]], boxes=masklist)
+		try:
+                   self.im.regiontoimagemask(mask=self.maskimages[self.imagelist[maskid]], boxes=masklist)
+		except:
+		   raise Exception, 'Box-file format not recognised. Please use <index> <xmin> <ymin> <xmax> <ymax>'
             if(len(tablerecord) > 0 ):
                 reg={}
-                for tabl in tablerecord:
+                try:
+                  for tabl in tablerecord:
                     reg.update({tabl:rg.fromfiletorecord(filename=tabl, verbose=False)})
+                except:
+		  raise Exception,'Region-file format not recognized. Please check. If box-file, please start the file with \'#boxfile\' on the first line';
                 if(len(reg)==1):
                     reg=reg[reg.keys()[0]]
                 else:
@@ -447,6 +454,10 @@ class cleanhelper:
         if(len(masktext) > 0):
             # fill for all fields in boxfiles
             circles, boxes=self.readmultifieldboxfile(masktext)
+            #print 'circles : ', circles, '    boxes : ', boxes;
+            #print 'imageids : ', self.imageids
+            #print 'imagelist :', self.imagelist
+            #print 'maskimages : ', self.maskimages;
             # doit for all fields
             for k in range(len(self.imageids)):
                 if(circles.has_key(self.imageids[k]) and boxes.has_key(self.imageids[k])):
@@ -459,6 +470,7 @@ class cleanhelper:
                 elif(boxes.has_key(self.imageids[k])):
                     self.im.regiontoimagemask(mask=self.maskimages[self.imagelist[k]],
                                                    boxes=boxes[self.imageids[k]])
+                    #print 'put ', boxes[self.imageids[k]] , ' into ', self.maskimages[self.imagelist[k]];
         # set unused mask images to 1 for a whole field
         for key in self.maskimages:
             if(os.path.exists(self.maskimages[key])):
@@ -467,7 +479,43 @@ class cleanhelper:
                 if(fsum[0]==0.0):
                     ia.set(pixels=1.0)
                 ia.done(verbose=False)
-                
+
+    def make_mask_from_threshhold(self, imagename, thresh, outputmask=None):
+        """
+        Makes a mask image with the same coords as imagename where each
+        pixel is True if and only if the corresponding pixel in imagename
+        is >= thresh.
+
+        The mask will be named outputmask (if provided) or imagename +
+        '.thresh_mask'.  The name is returned on success, or False on failure.
+        """
+        if not outputmask:
+            outputmask = imagename + '.thresh_mask'
+
+        # im.mask would be a lot shorter, but it (unnecessarily) needs im to be
+        # open with an MS.
+        # I am not convinced that im.mask should really be using Quantity.
+        # qa.quantity(quantity) = quantity.
+        self.im.mask(imagename, outputmask, qa.quantity(thresh))
+        
+        ## # Copy imagename to a safe name to avoid problems with /, +, -, and ia.
+        ## ia.open(imagename)
+        ## shp = ia.shape()
+        ## ia.close()
+        ## self.copymaskimage(imagename, shp, '__temp_mask')
+        
+        ## self.copymaskimage(imagename, shp, outputmask)
+        ## ia.open(outputmask)
+        ## ###getchunk is a mem hog
+        ## #arr=ia.getchunk()
+        ## #arr[arr>0.01]=1
+        ## #ia.putchunk(arr)
+        ## #inpix="iif("+"'"+outputmask.replace('/','\/')+"'"+">0.01, 1, 0)"
+        ## #ia.calc(pixels=inpix)
+        ## ia.calc(pixels="iif(__temp_mask>" + str(thresh) + ", 1, 0)")
+        ## ia.close()
+        ## ia.removefile('__temp_mask')
+        return outputmask
         
     def makemaskimage(self, outputmask='', imagename='', maskobject=[], slice=-1):
         """
@@ -479,7 +527,8 @@ class cleanhelper:
         b)lists of blc trc's
         c)record output from rg tool for e.g
         """
-        if( (len(maskobject)==0) or (maskobject==[''])):
+        if (not hasattr(maskobject, '__len__')) \
+           or (len(maskobject) == 0) or (maskobject == ['']):
             return
         maskimage=[]
         masklist=[]
@@ -564,21 +613,9 @@ class cleanhelper:
                 ia.done(verbose=False)
                 ia.removefile('__temp_mask')
                 ia.removefile('__temp_mask2')
-            #make image a mask image i.e 1 and 0 only
-            #   make a copy of mask image again since 
-            #   the image name may contain / , +, - which may causes
-            #   problem in evaluating iif.
-            self.copymaskimage(outputmask, shp, '__temp_mask')
-            ia.open(outputmask)
-            ###getchunk is a mem hog
-            #arr=ia.getchunk()
-            #arr[arr>0.01]=1
-            #ia.putchunk(arr)
-            #inpix="iif("+"'"+outputmask.replace('/','\/')+"'"+">0.01, 1, 0)"
-            #ia.calc(pixels=inpix)
-            ia.calc(pixels="iif(__temp_mask>0.01, 1, 0)")
-            ia.close()
-            ia.removefile('__temp_mask')
+	    if(not os.path.exists(outputmask)):
+                outputmask = self.make_mask_from_threshhold(outputmask, 0.01,
+                                                                  outputmask)
         #pdb.set_trace()
         #### This goes when those tablerecord goes
         if(len(tablerecord) > 0):
@@ -844,7 +881,6 @@ class cleanhelper:
                         ### its an AIPS boxfile
                         splitline=line.split('\n')
                         splitline2=splitline[0].split()
-                        #print "splitline2=",splitline2
                         if (len(splitline2)<6):
                             ##circles
                             if(int(splitline2[1]) <0):
@@ -854,10 +890,11 @@ class cleanhelper:
                                 circles[self.imageids[int(splitline2[0])]].append(circlelist)
                             else:
                                 #boxes
-                                boxlist=[int(splitline2[1]),int(splitline2[2]),
-                                         int(splitline2[3]),int(splitline2[4])]
-                                #boxes[splitline2[0]].append(boxlist)
-                                boxes[self.imageids[int(splitline2[0])]].append(boxlist)
+			        if(len(splitline2)==5):
+                                   boxlist=[int(splitline2[1]),int(splitline2[2]),
+                                            int(splitline2[3]),int(splitline2[4])]
+                                   #boxes[splitline2[0]].append(boxlist)
+                                   boxes[self.imageids[int(splitline2[0])]].append(boxlist)
                         else:
                            ## Don't know what that is
                            ## might be a facet definition 
@@ -918,6 +955,8 @@ class cleanhelper:
         return imsizes,phasecenters,imageids
 
     def copymaskimage(self, maskimage, shp, outfile):
+        if outfile == maskimage:     # Make it a no-op,
+            return                   # this is more than just peace of mind.
         #pdb.set_trace() 
         ia.open(maskimage)
         oldshp=ia.shape()
@@ -2139,55 +2178,3 @@ def getAlgorithm(psfmode, imagermode, gridmode, mode,
     if (addMultiField and (alg[0:2] != 'mf') and (alg != 'msmfs')):  alg = 'mf' + alg;
     return alg;
 
-# Function to compute Calculate alpha
-def msmfsCalcAlphaBeta(imtemplate="",taylorlist=[],namealpha="",namebeta="",threshold=0.001):
-    nterms = len(taylorlist);
-    if(nterms>1):
-     if(not os.path.exists(namealpha)):
-       cpcmd = 'cp -r ' + imtemplate + ' ' + namealpha;
-       os.system(cpcmd);
-    if(nterms>2):
-     if(not os.path.exists(namebeta)):
-       cpcmd = 'cp -r ' + imtemplate + ' ' + namebeta;
-       os.system(cpcmd);
-    if(nterms>0):
-     ia.open(taylorlist[0]);
-     ptay0 = ia.getchunk();
-     ia.close();
-    if(nterms>1):
-     ia.open(taylorlist[1]);
-     ptay1 = ia.getchunk();
-     ia.close();
-     ia.open(namealpha);
-     alpha = ia.getchunk();
-     alpha.fill(0.0);
-     ia.close();
-    if(nterms>2):
-     ia.open(taylorlist[2]);
-     ptay2 = ia.getchunk();
-     ia.close();
-     ia.open(namebeta);
-     beta = ia.getchunk();
-     beta.fill(0.0);
-     ia.close();
-   # Calc alpha,beta from ptay0,ptay1,ptay2
-    N = ptay0.shape[0];
-    if(nterms>1):
-     for ii in range(0,N):
-       for jj in range(0,N):
-         if(ptay0[ii,jj,0,0]>threshold):
-	    mtay0 = ptay0[ii,jj,0,0];
-	    mtay1 = ptay1[ii,jj,0,0];
-	    alphaval = mtay1/mtay0;
-	    alpha[ii,jj,0,0] = alphaval;
-	    if(nterms>2):
-	       mtay2 = ptay2[ii,jj,0,0];
-	       beta[ii,jj,0,0] = (mtay2/mtay0) - 0.5*alphaval*(alphaval-1);
-    if(nterms>1):
-     ia.open(namealpha);
-     ia.putchunk(alpha);
-     ia.close();
-    if(nterms>2):
-     ia.open(namebeta);
-     ia.putchunk(beta);
-     ia.close();

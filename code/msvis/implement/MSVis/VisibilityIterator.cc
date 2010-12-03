@@ -253,7 +253,9 @@ ROVisibilityIterator::operator=(const ROVisibilityIterator& other)
   colFeed1.reference(other.colFeed1);
   colFeed2.reference(other.colFeed2);
   colTime.reference(other.colTime);
+  colTimeCentroid.reference(other.colTimeCentroid);
   colTimeInterval.reference(other.colTimeInterval);
+  colExposure.reference(other.colExposure);
   colWeight.reference(other.colWeight);
   colWeightSpectrum.reference(other.colWeightSpectrum);
   colVis.reference(other.colVis);
@@ -262,8 +264,12 @@ ROVisibilityIterator::operator=(const ROVisibilityIterator& other)
   colCorrVis.reference(other.colCorrVis);
   colSigma.reference(other.colSigma);
   colFlag.reference(other.colFlag);
+  colFlagCategory.reference(other.colFlagCategory);
   colFlagRow.reference(other.colFlagRow);
+  colObservation.reference(other.colObservation);
+  colProcessor.reference(other.colProcessor);
   colScan.reference(other.colScan);
+  colState.reference(other.colState);
   colUVW.reference(other.colUVW);
   imwgt_p=other.imwgt_p;
   return *this;
@@ -520,6 +526,8 @@ void ROVisibilityIterator::setTileCache(){
   {
 
     const MeasurementSet& thems=msIter_p.ms();
+    if(thems.tableType() == Table::Memory)
+      return;
     const ColumnDescSet& cds=thems.tableDesc().columnDescSet();
     /*
     ROArrayColumn<Complex> colVis;
@@ -680,7 +688,9 @@ void ROVisibilityIterator::attachColumns(const Table &t)
   colFeed1.attach(t, MS::columnName(MS::FEED1));
   colFeed2.attach(t, MS::columnName(MS::FEED2));
   colTime.attach(t, MS::columnName(MS::TIME));
+  colTimeCentroid.attach(t, MS::columnName(MS::TIME_CENTROID));
   colTimeInterval.attach(t, MS::columnName(MS::INTERVAL));
+  colExposure.attach(t, MS::columnName(MS::EXPOSURE));
   if (cds.isDefined(MS::columnName(MS::DATA))) {
     colVis.attach(t, MS::columnName(MS::DATA));
   }
@@ -696,8 +706,12 @@ void ROVisibilityIterator::attachColumns(const Table &t)
     colCorrVis.attach(t, "CORRECTED_DATA");
   colUVW.attach(t, MS::columnName(MS::UVW));
   colFlag.attach(t, MS::columnName(MS::FLAG));
+  colFlagCategory.attach(t, MS::columnName(MS::FLAG_CATEGORY));
   colFlagRow.attach(t, MS::columnName(MS::FLAG_ROW));
+  colObservation.attach(t, MS::columnName(MS::OBSERVATION_ID));
+  colProcessor.attach(t, MS::columnName(MS::PROCESSOR_ID));
   colScan.attach(t, MS::columnName(MS::SCAN_NUMBER));
+  colState.attach(t, MS::columnName(MS::STATE_ID));
   colSigma.attach(t, MS::columnName(MS::SIGMA));
   colWeight.attach(t, MS::columnName(MS::WEIGHT));
   if (cds.isDefined("WEIGHT_SPECTRUM")) 
@@ -837,6 +851,25 @@ Matrix<Bool>& ROVisibilityIterator::flag(Matrix<Bool>& flags) const
   return flags;
 }
 
+Array<Bool>& ROVisibilityIterator::flagCategory(Array<Bool>& flagCategories) const
+{
+  if(colFlagCategory.isNull() || !colFlagCategory.isDefined(0)){ // It often is.
+    flagCategories.resize();    // Zap it.
+  }
+  else{
+    if(velSelection_p){
+      throw(AipsError("velocity selection not allowed in flagCategory()."));
+    }
+    else{
+      if(useSlicer_p)
+        getCol(colFlagCategory, slicer_p, flagCategories, True);
+      else
+        getCol(colFlagCategory, flagCategories, True);
+    }
+  }
+  return flagCategories;
+}
+
 Vector<Bool>& ROVisibilityIterator::flagRow(Vector<Bool>& rowflags) const
 {
   rowflags.resize(curNumRow_p);
@@ -844,11 +877,32 @@ Vector<Bool>& ROVisibilityIterator::flagRow(Vector<Bool>& rowflags) const
   return rowflags;
 }
 
+Vector<Int>& ROVisibilityIterator::observationId(Vector<Int>& obsIDs) const
+{
+    obsIDs.resize(curNumRow_p);
+    getCol(colObservation, obsIDs);
+    return obsIDs;
+}
+
+Vector<Int>& ROVisibilityIterator::processorId(Vector<Int>& procIDs) const
+{
+    procIDs.resize(curNumRow_p);
+    getCol(colProcessor, procIDs);
+    return procIDs;
+}
+
 Vector<Int>& ROVisibilityIterator::scan(Vector<Int>& scans) const
 {
     scans.resize(curNumRow_p);
     getCol(colScan, scans);
     return scans;
+}
+
+Vector<Int>& ROVisibilityIterator::stateId(Vector<Int>& stateIds) const
+{
+    stateIds.resize(curNumRow_p);
+    getCol(colState, stateIds);
+    return stateIds;
 }
 
 Vector<Double>& ROVisibilityIterator::frequency(Vector<Double>& freq) const
@@ -895,11 +949,25 @@ Vector<Double>& ROVisibilityIterator::time(Vector<Double>& t) const
   return t;
 }
 
+Vector<Double>& ROVisibilityIterator::timeCentroid(Vector<Double>& t) const
+{
+  t.resize(curNumRow_p);
+  getCol(colTimeCentroid, t);
+  return t;
+}
+
 Vector<Double>& ROVisibilityIterator::timeInterval(Vector<Double>& t) const
 {
   t.resize(curNumRow_p);
   getCol(colTimeInterval, t);
   return t;
+}
+
+Vector<Double>& ROVisibilityIterator::exposure(Vector<Double>& expo) const
+{
+  expo.resize(curNumRow_p);
+  getCol(colExposure, expo);
+  return expo;
 }
 
 Cube<Complex>& 

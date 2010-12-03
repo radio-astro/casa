@@ -31,7 +31,6 @@
 #include <flagging/Flagging/RFDataMapper.h> 
 #include <flagging/Flagging/RFFlagCube.h> 
 #include <flagging/Flagging/RFRowClipper.h> 
-#include <flagging/Flagging/RFDebugPlot.h> 
 #include <scimath/Functionals/Polynomial.h>
 #include <scimath/Fitting/LinearFit.h>
 #include <casa/Containers/Queue.h>
@@ -66,7 +65,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //   <li> start discussion of this possible extension
 // </todo>
 
-class RFASpectralRej : public RFAFlagCubeBase, public RFDataMapper, public PGPlotEnums
+class RFASpectralRej : public RFAFlagCubeBase, public RFDataMapper
 {
 public:
   RFASpectralRej  ( RFChunkStats &ch,const RecordInterface &parm ); 
@@ -101,8 +100,6 @@ protected:
 
   Polynomial<AutoDiff<Float> > poly; // fitted polynomial
   LinearFit<Float> fitter;     // fitter object
-  
-  RFDebugPlot   debug;
   
   Double     xnorm;
 };

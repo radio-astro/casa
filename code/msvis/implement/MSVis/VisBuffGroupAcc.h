@@ -60,6 +60,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <motivation>
 // To encapsulate in a single object multiple (averaged) VisBuffers
 // for the solver.
+//
+// Used by calibration to generate multiple accumulations, e.g., per spw, when
+// using combine='spw' and the data cannot be averaged over spw.
 // </motivation>
 //
 // <thrown>

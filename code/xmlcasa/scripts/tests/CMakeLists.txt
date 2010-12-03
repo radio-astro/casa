@@ -25,12 +25,14 @@ casa_add_python( xmlcasa xmlcasa_tests_python python/${PYTHONV}/tests
   test_clearstat.py
   test_componentlist.py
   test_concat.py
+  test_conjugatevis.py
   test_csvclean.py
   test_cvel.py
   test_exportasdm.py
   test_fixvis.py
   test_flagdata.py
   test_flagdata2.py
+  test_getchunk.py
   test_hanningsmooth.py
   test_imcollapse.py
   test_imcontsub.py
@@ -49,6 +51,7 @@ casa_add_python( xmlcasa xmlcasa_tests_python python/${PYTHONV}/tests
   test_imval.py
   test_listhistory.py
   test_listvis.py
+  test_pcasa.py
   test_plotants.py
   test_plotms.py
   test_report.py
@@ -60,6 +63,7 @@ casa_add_python( xmlcasa xmlcasa_tests_python python/${PYTHONV}/tests
   test_specfit.py
   test_splattotable.py
   test_split.py
+  test_testconcat.py
   test_viewer.py
   test_vishead.py
   test_visstat.py

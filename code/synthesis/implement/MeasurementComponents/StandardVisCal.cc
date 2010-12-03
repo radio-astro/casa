@@ -244,7 +244,7 @@ void TJones::guessPar(VisBuffer& vb) {
   //   base first guess on first good ant
   if (guessant<0 || !antok(guessant)) {
     guessant=0;
-    while (!antok(guessant++));
+    while (antok(guessant)<1) guessant++;
   }
 
   AlwaysAssert(guessant>-1,AipsError);
@@ -3208,6 +3208,9 @@ void KJones::selfSolve(VisSet& vs, VisEquation& ve) {
 
   if (prtlev()>4) cout << "   K::selfSolve(ve)" << endl;
 
+  // Trap unspecified refant:
+  if (refant()<0)
+    throw(AipsError("Please specify a good reference antenna (refant) explicitly."));
   // Inform logger/history
   logSink() << "Solving for " << typeName()
             << LogIO::POST;
@@ -3325,9 +3328,6 @@ void KJones::selfSolve(VisSet& vs, VisEquation& ve) {
 // Do the FFTs
 void KJones::solveOneVB(const VisBuffer& vb) {
 
-  // This just a simple average of the cross-hand
-  //  visbilities...
-
   Int nChan=vb.nChannel();
 
   solveCPar()=Complex(0.0);
@@ -3400,49 +3400,72 @@ void KJones::solveOneVB(const VisBuffer& vb) {
   Vector<Float> amp;
   for (Int irow=0;irow<vb.nRow();++irow) {
     if (!vb.flagRow()(irow) &&
-	vb.antenna1()(irow)!=vb.antenna2()(irow)) {
+	vb.antenna1()(irow)!=vb.antenna2()(irow) &&
+	(vb.antenna1()(irow)==refant() || 
+	 vb.antenna2()(irow)==refant()) ) {
 
       for (Int icor=0;icor<ip1(0);++icor) {
 	amp=amplitude(vpad(Slice(icor,1,1),Slice(),Slice(irow,1,1)));
-	ipk=0;
+	ipk=1;
 	amax=0;
-	for (Int ich=0;ich<nPadChan;++ich) {
+	for (Int ich=1;ich<nPadChan-1;++ich) {
 	  if (amp(ich)>amax) {
 	    ipk=ich;
 	    amax=amp(ich);
 	  }
 	} // ich
-	
-	// Derive refined peak (fractional) channel
+
+       	// Derive refined peak (fractional) channel
 	// via parabolic interpolation of peak and neighbor channels
+
 	Vector<Float> amp3(amp(IPosition(1,ipk-1),IPosition(1,ipk+1)));
-	Float fipk=Float(ipk)+0.5-(amp3(2)-amp3(1))/(amp3(0)-2.0*amp3(1)+amp3(2));
+	Float denom(amp3(0)-2.0*amp3(1)+amp3(2));
 
-	// Handle FFT offset and scale
-	Float delay=(fipk-Float(nPadChan/2))/Float(nPadChan); // cycles/sample
+	if (amax>0.0 && abs(denom)>0) {
 
-	// Convert to cycles/Hz and then to nsec
-	Double df=vb.frequency()(1)-vb.frequency()(0);
-	delay/=df;
-	delay/=1.0e-9;
+	  Float fipk=Float(ipk)+0.5-(amp3(2)-amp3(1))/denom;
+	    
+	    // Handle FFT offset and scale
+	    Float delay=(fipk-Float(nPadChan/2))/Float(nPadChan); // cycles/sample
+	  
+	  // Convert to cycles/Hz and then to nsec
+	  Double df=vb.frequency()(1)-vb.frequency()(0);
+	  delay/=df;
+	  delay/=1.0e-9;
+	  
+	  cout << "Antenna ID=";
+	  if (vb.antenna1()(irow)==refant()) {
+	    cout << vb.antenna2()(irow) << ", pol=" << icor << " delay(nsec)="<< -delay; 
+	    solveCPar()(icor,0,vb.antenna2()(irow))=-Complex(delay);
+	    solveParOK()(icor,0,vb.antenna2()(irow))=True;
+	  }
+	  else if (vb.antenna2()(irow)==refant()) {
+	    cout << vb.antenna1()(irow) << ", pol=" << icor << " delay(nsec)="<< delay;
+	    solveCPar()(icor,0,vb.antenna1()(irow))=Complex(delay);
+	    solveParOK()(icor,0,vb.antenna1()(irow))=True;
+	  }
+	  cout << " (refant ID=" << refant() << ")" << endl;
 
-	if (vb.antenna1()(irow)==refant()) {
-	  solveCPar()(icor,0,vb.antenna2()(irow))=-Complex(delay);
-	  solveParOK()(icor,0,vb.antenna2()(irow))=True;
-	}
+	  /*	  
+	  cout << irow << " " 
+	       << vb.antenna1()(irow) << " " 
+	       << vb.antenna2()(irow) << " " 
+	       << icor << " "
+	       << ipk << " "
+	       << fipk << " "
+	       << delay << " "
+	       << endl;
+	  */
+	} // amax > 0
 	else {
-	  solveCPar()(icor,0,vb.antenna1()(irow))=Complex(delay);
-	  solveParOK()(icor,0,vb.antenna1()(irow))=True;
+	  cout << "No solution found for antenna ID= ";
+	  if (vb.antenna1()(irow)==refant())
+	    cout << vb.antenna2()(irow);
+	  else if (vb.antenna2()(irow)==refant()) 
+	    cout << vb.antenna1()(irow);
+	  cout << " in polarization " << icor << endl;
 	}
-
-	cout << irow << " " 
-	     << vb.antenna1()(irow) << " " 
-	     << vb.antenna2()(irow) << " " 
-	     << icor << " "
-	     << ipk << " "
-	     << fipk << " "
-	     << delay << " "
-	     << endl;
+	
       } // icor
     } // !flagrRow, etc.
 
@@ -3451,8 +3474,16 @@ void KJones::solveOneVB(const VisBuffer& vb) {
   // Ensure refant has zero delay and is NOT flagged
   solveCPar()(Slice(),Slice(),Slice(refant(),1,1)) = 0.0;
   solveParOK()(Slice(),Slice(),Slice(refant(),1,1)) = True;
-
   
+  if (nfalse(solveParOK())>0) {
+    cout << "NB: No delay solutions found for antenna IDs: ";
+    Int nant=solveParOK().shape()(2);
+    for (Int iant=0;iant<nant;++iant)
+      if (!(solveParOK()(0,0,iant)))
+	cout << iant << " ";
+    cout << endl;
+  }
+
 }
 
 // **********************************************************

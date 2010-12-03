@@ -51,7 +51,8 @@
 #include <synthesis/MeasurementComponents/VLAIlluminationConvFunc.h>
 #include <synthesis/MeasurementComponents/Utils.h>
 
-#include <synthesis/MeasurementComponents/EPJones.h>
+//#include <synthesis/MeasurementComponents/EPJones.h>
+#include <synthesis/MeasurementComponents/SolvableVisCal.h>
 #include <synthesis/MeasurementComponents/ConvFuncDiskCache.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -131,7 +132,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   // </todo>
   
-  class EPJones;
+  //  class EPJones;
+  class SolvableVisJones;
   class nPBWProjectFT : public FTMachine {
   public:
     
@@ -159,7 +161,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     ~nPBWProjectFT();
     
-    void setEPJones(EPJones* ep_j) {epJ = ep_j;}
+    //   void setEPJones(EPJones* ep_j) {epJ = ep_j;}
+    void setEPJones(SolvableVisJones* ep_j) {epJ = ep_j;}
     
     void setDOPBCorrection(Bool doit=True) {doPBCorrection=doit;};
     // Initialize transform to Visibility plane using the image
@@ -269,6 +272,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual Int findPointingOffsets(const VisBuffer&, Cube<Float>&,
 			    Array<Float>&, Array<Float>&,
 			    Bool Evaluate=True);
+    virtual Double getVBPA(const VisBuffer& vb) 
+    {
+      // if (!rotateAperture_p) return currentCFPA;
+      // else return getPA(vb);
+      return getPA(vb);
+    };
     MDirection::Convert makeCoordinateMachine(const VisBuffer&,
 					      const MDirection::Types&,
 					      const MDirection::Types&,
@@ -284,6 +293,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       TempImage<Float>& PB,
       TempImage<Float>& avgPB);
     */
+    //
+    // Make a sensitivity image (sensitivityImage), given the gridded
+    // weights (wtImage).  These are related to each other by a
+    // Fourier transform and normalization by the sum-of-weights
+    // (sumWt) and normalization by the product of the 2D FFT size
+    // along each axis.  If doFFTNorm=False, normalization by the FFT
+    // size is not done.  If sumWt is not provided, normalization by
+    // the sum of weights is also not done.
+    //
+    virtual void makeSensitivityImage(Lattice<Complex>& wtImage,
+				      ImageInterface<Float>& sensitivityImage,
+				      const Matrix<Float>& sumWt=Matrix<Float>(),
+				      const Bool& doFFTNorm=True);
     virtual Bool makeAveragePB0(const VisBuffer& vb, 
 		       const ImageInterface<Complex>& image,
 		       Int& polInUse,
@@ -462,7 +484,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     Float pbLimit_p;
 
-    EPJones *epJ;
+    //    EPJones *epJ;
+    SolvableVisJones *epJ;
     Double HPBW, Diameter_p, sigma;
     Int Nant_p;
     Int doPointing;
@@ -473,7 +496,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Array<Float> l_offsets,m_offsets;
     Int noOfPASteps;
     Vector<Float> pbPeaks;
-    Bool pbNormalized,resetPBs;
+    Bool pbNormalized,resetPBs,rotateAperture_p;
     Vector<Float> paList;
     ConvFuncDiskCache cfCache;
     Double currentCFPA;
@@ -484,6 +507,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool avgPBSaved;
     Bool avgPBReady;
     Vector<Complex> antiAliasingOp,antiAliasingCorrection;
+    Float lastPAUsedForWtImg;
     //    VLACalcIlluminationConvFunc vlaPB;
     //
     //----------------------------------------------------------------------

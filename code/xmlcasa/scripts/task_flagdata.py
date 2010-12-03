@@ -38,6 +38,10 @@ def flagdata(vis = None,
              minabs = None,
              maxabs = None):
 
+        if pCASA.is_mms(vis):
+                pCASA.execute("flagdata", locals())
+                return
+
         casalog.origin('flagdata')
 
         fglocal = casac.homefinder.find_home_by_name('flaggerHome').create()
@@ -234,6 +238,7 @@ def flagdata(vis = None,
 
         except Exception, instance:
                 print '*** Error ***', instance
+                raise
         
         #write history
         mslocal.open(vis,nomodify=False)

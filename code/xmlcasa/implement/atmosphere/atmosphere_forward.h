@@ -2,6 +2,7 @@
 #include <ATMRefractiveIndexProfile.h>
 #include <ATMSpectralGrid.h>
 #include <ATMSkyStatus.h>
+#include <ATMVersion.h>
 
 
 namespace atm

@@ -10,7 +10,7 @@ interactive=False
 # This is a task version of the script originally made for reducing ATF raster scan data 
 # in total power mode. Still experimental...
 # 
-def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, createimage, imagename, imsize, cell, phasecenter, ephemsrcname, pointingcolumn, gridfunction, plotlevel):
+def sdtpimaging(sdfile, calmode, masklist, blpoly, backup, flaglist, antenna, stokes, createimage, imagename, imsize, cell, phasecenter, ephemsrcname, pointingcolumn, gridfunction, plotlevel):
     # NEED to include spw, src? name for movingsource param. in function argument
     # put implementation here....
     casalog.origin('sdtpimaging')
@@ -32,20 +32,9 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
             if any(key=='MS_VERSION' for key in tbkeys):
                 if any(col=='FLOAT_DATA' for col in colnames):
                     fdataexist = True
-                    #print "FLOAT_DATA exist"
                     casalog.post( "FLOAT_DATA exist" )
                 else:
-                    #print "No FLOAT_DATA, DATA is used"
                     casalog.post( "No FLOAT_DATA, DATA is used" )
-                if any(col=='CORRECTED_DATA' for col in colnames):
-                    calibrated = True
-                    #print "Calibrated data seems to exist"
-                    casalog.post( "Calibrated data seems to exist" )
-                elif calmode != 'none':
-                    # Workaround: create CORRECTED_DATA using im tool
-                    casalog.post( "CORRECTED_DATA doesn't exist, create it..." )
-                    im.open(sdfile,usescratch=True)
-                    im.close()
             else:
                 msg='sdfile must be in MS format'
                 raise Exception, msg
@@ -80,10 +69,19 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
         antnames=tb.getcol('NAME')
         nant=tb.nrows()
         tb.close()
+        antsel=''
         if antenna == "": # assume all antennas
             antenna = str(range(nant))
             antenna = antenna.lstrip('[')
             antenna = antenna.rstrip(']') 
+            if antenna.find(',')==-1:
+                antsel = antenna + '&&&'
+            else:
+                antsel = antenna.replace(',','&&& ; ')
+        elif antenna.find('&')==-1 and antenna.find(';')==-1:
+            antsel = antenna + '&&&'
+        else:
+            antsel = antenna
         antlist={}
         for i in range(nant):
             antlist[i]=antnames[i]
@@ -270,6 +268,19 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
                     phasecenter = me.measure(me.direction(ephemsrcname),'AZELGEO')
         # get number of scans and subscans
         tb.open(sdfile)
+        if calmode != 'none':
+            # back up original file if backup == True
+            if fdataexist:
+                colname = 'FLOAT_DATA'
+            else:
+                colname = 'DATA'
+            casalog.post('%s column in %s will be overwritten.'%(colname,sdfile))
+            if backup:
+                import time
+                backupname = sdfile.rstrip('/')+'.sdtpimaging.bak.'+time.asctime(time.gmtime()).replace(' ','_')
+                casalog.post('The task will create a back up named %s'%backupname)
+                backuptb = tb.copy( backupname, deep=True, valuecopy=True )
+                backuptb.close()
         scans = numpy.unique(tb.getcol('SCAN_NUMBER'))
         nscan = len(scans)
         subscans = numpy.unique(tb.getcol('STATE_ID'))
@@ -302,9 +313,10 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
             nr = subtb.nrows()
             #nr = len(data)*len(data[0])
             #ndatcol = numpy.zeros((npol,nr),dtype=numpy.float)
-            ndatcol = subtb.getcol('CORRECTED_DATA')
+            ndatcol = subtb.getcol(datalab)
             (l,m,n) = ndatcol.shape
-            ndatcol.reshape(l,n)
+            # m (= nchan) should be 1 since the task is specifically designed for total power data
+            ndatcol.reshape(l,n) 
             for np in range(len(selcorrtypeind)):
                 pl.figure(np+1)
                 pl.clf()
@@ -377,8 +389,12 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
                     casalog.post( "Processing Scan#=%s" % i )
                     for j in xrange(nsubscan):
                         masks=numpy.zeros(len(data[i][j]),dtype=numpy.int)
-                        msg = "Subtracting baselines, set masks for fitting at row ranges: [0,%s] and [%s,%s] " % (lmask-1, len(masks)-rmask, len(masks)-1)
-                        casalog.post(msg, "INFO")
+                        if lmask >= len(data[i][j]) or rmask >= len(data[i][j]):
+                            msg = "Too large mask. All data will be used for baseline subtraction.\n The fitting may not be correct since it might confuse signal component as a background..."
+                            casalog.post(msg, "WARN")
+                        else:
+                            msg = "Subtracting baselines, set masks for fitting at row ranges: [0,%s] and [%s,%s] " % (lmask-1, len(masks)-rmask, len(masks)-1)
+                            casalog.post(msg, "INFO")
                         masks[:lmask]=True
                         masks[-rmask:]=True
                         x=xrange(len(data[i][j]))
@@ -420,16 +436,17 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
             else:
                 startrow=0
                 rowincr=1
-            casalog.post( "Storing the corrected data to CORRECTED_DATA column in the MS..." )
+            casalog.post( "Storing the corrected data to %s column in the MS..."%datalab )
+            casalog.post( "Note that %s will be overwritten"%datalab )
             cdatm=ndatcol.reshape(npol,1,len(cdat))
-            tb.putcol('CORRECTED_DATA', cdatm, startrow=startrow, rowincr=rowincr)
+            tb.putcol(datalab, cdatm, startrow=startrow, rowincr=rowincr)
             tb.close() 
             # calibration end
             #
             # plot corrected data
             tb.open(sdfile)
             subt=tb.query('any(ANTENNA1==%s && ANTENNA2==%s)' % (antid, antid))
-            cdatcol=subt.getcol('CORRECTED_DATA')
+            cdatcol=subt.getcol(datalab)
             (l,m,n)=cdatcol.shape
             subt.close()
             tb.close()
@@ -448,13 +465,12 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
                 if abs(plotlevel) > 0:
                     if plotlevel > 0:
                         pl.ion()
-##                     pl.ion()
                     pl.plot(xrange(len(cdatcol2)),cdatcol2, 'g.')
                     pl.xlim(0,ndat)
                     t1=pl.getp(pl.gca(),'xticklabels')
                     t2=pl.getp(pl.gca(),'yticklabels')
                     pl.setp((t1,t2),fontsize='smaller')
-                    pl.ylabel('CORRECTED_DATA',fontsize='smaller')
+                    pl.ylabel('CORRECTED DATA',fontsize='smaller')
                     #pl.text(len(cdatcol2)*1.01,cdatcol2.min(),'[row #]',fontsize='smaller')
                     pl.xlabel('[row #]',fontsize='smaller')
                     pl.draw()
@@ -468,15 +484,11 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
                 subt=tb.query('any(ANTENNA1==%s && ANTENNA2==%s)' % (antid, antid))
                 nrow=subt.nrows()
                 for np in range(selnpol):
-                    if calibrated:
-                        datalab = 'CORRECTED_DATA'
-                        datcol=subt.getcol(datalab)
+                    if fdataexist:
+                        datalab='FLOAT_DATA'
                     else:
-                        if fdataexist:
-                            datalab='FLOAT_DATA'
-                        else:
-                            datalab='DATA'
-                        datcol=subt.getcol(datalab)
+                        datalab='DATA'
+                    datcol=subt.getcol(datalab)
                     tb.close()
                     pl.ioff()
                     pl.figure(np+1)
@@ -567,7 +579,7 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
             casalog.post( "pointingcolumn used: %s" % pointingcolumn )
             casalog.post( "Imaging...." )
             im.open(sdfile)
-            im.selectvis(field=0, spw='', baseline=antenna)
+            im.selectvis(field=0, spw='', baseline=antsel)
             im.defineimage(nx=nx, ny=ny, cellx=cellx, celly=celly,  phasecenter=phasecenter, spw=0, stokes=stokes, movingsource=ephemsrcname)
             #im.defineimage(nx=nx, ny=ny, cellx=cellx, celly=celly,  phasecenter=phasecenter, spw=0, stokes=stokes, movingsource=ephemsrcname,restfreq=1.14e11)
             im.setoptions(ftmachine='sd', gridfunction=gridfunction)

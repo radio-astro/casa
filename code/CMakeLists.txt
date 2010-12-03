@@ -40,6 +40,8 @@ if( APPLE )
 	set( CMAKE_CXX_COMPILER     /opt/casa/core2-apple-darwin8/3rd-party/bin/g++ )
     elseif( EXISTS        /opt/local/bin/gfortran )
         set( CMAKE_Fortran_COMPILER /opt/local/bin/gfortran )
+    elseif( EXISTS        /opt/local/bin/gfortran-mp-4.2 )
+        set( CMAKE_Fortran_COMPILER /opt/local/bin/gfortran-mp-4.2 )
     elseif( EXISTS        /opt/local/bin/gfortran-mp-4.4 )
         set( CMAKE_Fortran_COMPILER /opt/local/bin/gfortran-mp-4.4 )
 	if( EXISTS /opt/local/bin/g++-mp-4.4 )
@@ -150,7 +152,7 @@ set( CASA_assay ${CMAKE_SOURCE_DIR}/install/assay )
 if( APPLE )
     set( CMAKE_Fortran_FLAGS -fno-second-underscore )
     execute_process( COMMAND ${CMAKE_Fortran_COMPILER} -print-search-dirs
-                     COMMAND perl -e "while(<>) { if( m|^libraries:\\s*=(.*?$)| ) { foreach $d (split(':',$1) ) { if ( -e \"$d/libgfortran.${SO}\" ) { print \"$d/libgfortran.${SO}\"; break;}}}}"
+                     COMMAND perl -e "while(<>) { if( m|^libraries:\\s*=(.*?$)| ) { foreach $d (split(':',$1) ) { if ( -e \"$d/libgfortran.${SO}\" ) { print \"$d/libgfortran.${SO}\"; break;} if ( -e \"$d/libgfortran.a\" ) { print \"$d/libgfortran.a\"; break;}}}}"
                      OUTPUT_VARIABLE _gfortran_lib_path
                      OUTPUT_STRIP_TRAILING_WHITESPACE )
     if( NOT arch )
@@ -187,33 +189,38 @@ if( APPLE )
 	endif()
 	execute_process( COMMAND ${CMAKE_Fortran_COMPILER} --version
 			 COMMAND head -1
-			 COMMAND perl -pe "s|.*?(\\S+)$|$1|"
+			 COMMAND perl -pe "s|.*?(\\d+\\.\\d+)\\.\\d+$|$1|"
 			 OUTPUT_VARIABLE _gfortran_version
 			 OUTPUT_STRIP_TRAILING_WHITESPACE )
 	execute_process( COMMAND ${CMAKE_CXX_COMPILER} -dumpmachine
 			 COMMAND head -1
-			 COMMAND perl -pe "s|.*?(\\S+)$|$1|"
+			 COMMAND perl -pe "s|.*?(\\d+\\.\\d+)\\.\\d+$|$1|"
 			 OUTPUT_VARIABLE _gcc_machine
 			 OUTPUT_STRIP_TRAILING_WHITESPACE )
 	execute_process( COMMAND ${CMAKE_CXX_COMPILER} --version
 			 COMMAND head -1
-			 COMMAND perl -pe "s|.*?(\\S+)$|$1|"
+			 COMMAND perl -pe "s|.*?(\\d+\\.\\d+)\\.\\d+$|$1|"
 			 OUTPUT_VARIABLE _cxx_version
 			 OUTPUT_STRIP_TRAILING_WHITESPACE )
-	if( NOT _gfortran_version STREQUAL "4.4.4" )
+	
+	message( STATUS "$_gfortran_version = ${_gfortran_version}" )
+	if( NOT _gfortran_version STREQUAL "4.4" AND
+	    NOT _gfortran_version STREQUAL "4.2" )
 	    set( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -arch ${archflag}" )
+	    set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -framework AppKit" )
+	else()
+	    set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -arch ${archflag} -framework AppKit" )
         endif()
-        set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -arch ${archflag} -framework AppKit" )
         # Which part of CASA needs -framework AppKit to run? This should probably *not* be added
         # as a generic linker flag.
-	if( NOT _cxx_version STREQUAL "4.4.4" )
+	if( NOT _cxx_version STREQUAL "4.4" )
 	    set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -arch ${archflag}" )
 	endif()
     else()
         message( WARNING "Unsupported Mac: ${CMAKE_SYSTEM}" )
     endif()
 
-    if( _cxx_version STREQUAL "4.4.4" )
+    if( _cxx_version STREQUAL "4.4" )
 	set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -dynamic -mtune=nocona -ftree-vectorize -ffast-math -mfpmath=sse" )
     else()
 	set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -dynamic -mtune=nocona -ftree-vectorize -ffast-math -mfpmath=sse -fasm-blocks" )
@@ -475,7 +482,7 @@ if( NOT SKIP_PGPLOT )
   casa_find( PGPLOT
     VERSION 5.3.1
     INCLUDES cpgplot.h
-    LIBS pgplot cpgplot
+    LIBS pgplot${pgplot_ext} cpgplot${pgplot_ext}
     DEPENDS ${_deps} )
 endif()
 
@@ -569,7 +576,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.28
+           VERSION 1.0.34
            INCLUDES casa/aips.h
                     casa/version.h
                     scimath/Mathematics/MatrixMathLA.h  # declares symbols defined in LAPACK
@@ -939,6 +946,19 @@ casa_config_end()
 #
 set( PYTHON_LIBD ${CMAKE_INSTALL_PREFIX}/python/${PYTHONV} )
 set( PYTHON_TASKD ${PYTHON_LIBD} )
+#
+# allow user to override contents of casadef.py (needed for linux rpms)
+#
+if( NOT PYTHONLIBD )
+    set( PYTHON_LIBD_CASADEF ${PYTHON_LIBD} )
+else()
+    set( PYTHON_LIBD_CASADEF ${PYTHONLIBD} )
+endif()
+if( NOT PYTHONTASKD )
+    set( PYTHON_TASKD_CASADEF ${PYTHON_TASKD} )
+else()
+    set( PYTHON_TASKD_CASADEF ${PYTHONTASKD} )
+endif()
 
 # The modules must be defined in dependency order!
 # This will set up include paths, and which libraries to link to
@@ -1031,6 +1051,8 @@ file( WRITE ${CMAKE_INSTALL_PREFIX}/makedefs
 
 add_subdirectory( doc/taskref )
 add_subdirectory( doc/casaref )
+add_subdirectory( doc/userman )
 
 # All documentation
-add_custom_target( doc DEPENDS taskref_html taskref_pdf casaref_html casaref_pdf )
+add_custom_target( doc DEPENDS taskref_html taskref_pdf casaref_html casaref_pdf userman_html userman_pdf)
+#add_custom_target( doc )

@@ -319,9 +319,12 @@ void PlotMSCache::load(const vector<PMS::Axis>& axes,
   // Now Load data.
     
   // Setup the selected Visiter (getting sort right to support averaging)
+  /*
   thread->setStatus("Applying MS selection. Please wait...");
   thread->setAllowedOperations(false,false,false);
   thread->setProgress(1);
+  */
+
   setUpVisIter(msname,selection,True,True,True);
   ROVisIterator& viter(*rvi_p);
 
@@ -746,11 +749,12 @@ void PlotMSCache::setUpVisIter(const String& msname,
       
 void PlotMSCache::countChunks(ROVisibilityIterator& vi,
 			      PlotMSCacheThread* thread) {
-
+  /*
   if (thread!=NULL) {
     thread->setStatus("Establishing cache size.  Please wait...");
     thread->setAllowedOperations(false,false,false);
   }
+  */
 
   // This is the old way, with no averaging over chunks.
 
@@ -760,18 +764,20 @@ void PlotMSCache::countChunks(ROVisibilityIterator& vi,
   vi.origin();
   refTime_p=86400.0*floor(vb.time()(0)/86400.0);
 
+  /*
+  if (thread!=NULL) {
+    if (thread->wasCanceled()) {
+      dataLoaded_=false;
+      return;
+    }
+    else
+      thread->setProgress(2);
+  }
+  */
+
   // Count number of chunks.
   int chunk = 0;
   for(vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
-
-    if (thread!=NULL) {
-      if (thread->wasCanceled()) {
-	dataLoaded_=false;
-	return;
-      }
-      else
-	thread->setProgress(2);
-    }
     for (vi.origin(); vi.more(); vi++) chunk++;
   }
   if(chunk != nChunk_) increaseChunks(chunk);
@@ -785,10 +791,13 @@ void PlotMSCache::countChunks(ROVisibilityIterator& vi, Vector<Int>& nIterPerAve
 			      const PlotMSAveraging& averaging,
 			      PlotMSCacheThread* thread) {
 
+  /*
   if (thread!=NULL) {
     thread->setStatus("Establishing cache size.  Please wait...");
     thread->setAllowedOperations(false,false,false);
   }
+  */
+
   Bool verby(False);
 
   Bool combscan(averaging_.scan());
@@ -820,16 +829,19 @@ void PlotMSCache::countChunks(ROVisibilityIterator& vi, Vector<Int>& nIterPerAve
   vi.originChunks();
   vi.origin();
   stringstream ss;
-  
-  for (vi.originChunks(); vi.moreChunks(); vi.nextChunk(),chunk++) {
-    if (thread!=NULL) {
-      if (thread->wasCanceled()) {
-	dataLoaded_=false;
-	return;
-      }
-      else
-	thread->setProgress(2);
+
+  /*
+  if (thread!=NULL) {
+    if (thread->wasCanceled()) {
+      dataLoaded_=false;
+      return;
     }
+    else
+      thread->setProgress(2);
+  }
+  */
+
+  for (vi.originChunks(); vi.moreChunks(); vi.nextChunk(),chunk++) {
     Int iter(0);
     for (vi.origin(); vi.more();vi++,iter++) {
 

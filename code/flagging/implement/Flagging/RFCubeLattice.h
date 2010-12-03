@@ -172,18 +172,18 @@ public:
 // default constructor creates empty cube
   RFCubeLattice();
 // creates NX x NY x NZ cube
-  RFCubeLattice( uInt nx,uInt ny,uInt nz, uInt ncorr, uInt nAgent, Int maxmem=-1 );
+  RFCubeLattice( uInt nx,uInt ny,uInt nz, uInt ncorr, uInt nAgent );
 // creates NX x NY x NZ cube and fills with initial value
-  RFCubeLattice( uInt nx,uInt ny,uInt nz, uInt ncorr, uInt nAgent, const T &init_val,Int maxmem=-1 );
+  RFCubeLattice( uInt nx,uInt ny,uInt nz, uInt ncorr, uInt nAgent, const T &init_val );
 // destructor
   ~RFCubeLattice();
 
 // creates NX x NY x NZ cube
 // tile_mb is the tile size, in MB (when using paging)
-  void init ( uInt nx,uInt ny,uInt nz, uInt ncorr, uInt nAgent, Int maxmem=-1,Int tile_mb=2 );
+  void init ( uInt nx,uInt ny,uInt nz, uInt ncorr, uInt nAgent );
 // creates NX x NY x NZ cube and fills with initial value
 // tile_mb is the tile size, in MB (when using paging)
-  void init ( uInt nx,uInt ny,uInt nz, uInt ncorr, uInt nAgent, const T &init_val,Int maxmem=-1,Int tile_mb=2 );
+  void init ( uInt nx,uInt ny,uInt nz, uInt ncorr, uInt nAgent, const T &init_val );
 // destroys cube
   void cleanup ();
 // returns size of cube

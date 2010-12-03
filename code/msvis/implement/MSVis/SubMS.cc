@@ -26,7 +26,8 @@
 //# $Id: $
 #include <msvis/MSVis/SubMS.h>
 #include <ms/MeasurementSets/MSSelection.h>
-#include <tables/Tables/ExprNode.h>
+//#include <ms/MeasurementSets/MSTimeGram.h>
+//#include <tables/Tables/ExprNode.h>
 #include <tables/Tables/RefRows.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
@@ -49,9 +50,11 @@
 #include <casa/Utilities/GenSort.h>
 #include <casa/System/AppInfo.h>
 #include <casa/System/ProgressMeter.h>
+#include <casa/Quanta/QuantumHolder.h>
 #include <msvis/MSVis/VisSet.h>
-//#include <msvis/MSVis/VisBuffer.h>
-//#include <msvis/MSVis/VisibilityIterator.h>
+#include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisChunkAverager.h>
+#include <msvis/MSVis/VisIterator.h>
 #include <tables/Tables/IncrementalStMan.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/ScaColDesc.h>
@@ -87,7 +90,7 @@ namespace casa {
     msc_p(NULL),
     mscIn_p(NULL),
     keepShape_p(true),
-    sameShape_p(True),
+    //    sameShape_p(True),
     antennaSel_p(False),
     timeBin_p(-1.0),
     scanString_p(""),
@@ -95,8 +98,7 @@ namespace casa {
     taqlString_p(""),
     timeRange_p(""),
     arrayExpr_p(""),
-    nant_p(0),
-    ignorables_p("")
+    combine_p("")
   {
   }
   
@@ -106,7 +108,7 @@ namespace casa {
     msc_p(NULL),
     mscIn_p(NULL),
     keepShape_p(true),
-    sameShape_p(True),
+    //sameShape_p(True),
     antennaSel_p(False),
     timeBin_p(-1.0),
     scanString_p(""),
@@ -114,8 +116,7 @@ namespace casa {
     taqlString_p(""),
     timeRange_p(""),
     arrayExpr_p(""),
-    nant_p(0),
-    ignorables_p("")
+    combine_p("")
   {
   }
   
@@ -250,7 +251,7 @@ namespace casa {
       for(std::set<Int>::iterator bbit = badSelSpwSlots.begin();
           bbit != badSelSpwSlots.end(); ++bbit)
         os << spw_p[*bbit] << " ";
-      os << "\nnot found in DATA_DESCRIPTION and being excluded."
+      os << "\nwere not found in DATA_DESCRIPTION and are being excluded."
          << LogIO::POST;
 
       uInt ngoodSelSpwSlots = nSelSpw - nbadSelSpwSlots;
@@ -281,6 +282,8 @@ namespace casa {
     }
     
     averageChannel_p = averchan;
+    mssel.getChanSlices(chanSlices_p, &ms_p,
+                        widths.nelements() == 1 ? widths[0] : 1);
     return true;
   }
   
@@ -362,6 +365,7 @@ namespace casa {
     if(areSelecting)
       mssel.setPolnExpr(corrstr);
     corrString_p = corrstr;
+    mssel.getCorrSlices(corrSlices_p, &ms_p);
     return getCorrMaps(mssel, ms_p, inPolOutCorrToInCorrMap_p, areSelecting);
   }
 
@@ -586,7 +590,7 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
   
   
   Bool SubMS::makeSubMS(String& msname, String& colname,
-                        const Vector<Int>& tileShape, const String& ignorables)
+                        const Vector<Int>& tileShape, const String& combine)
   {
     LogIO os(LogOrigin("SubMS", "makeSubMS()"));
     try{
@@ -605,7 +609,7 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
 
       if(!makeSelection()){
         os << LogIO::SEVERE 
-           << "Failed on selection: combination of spw and/or field and/or time chosen"
+           << "Failed on selection: combination of spw, field, antenna, correlation and/or timerange"
            << " may be invalid." 
            << LogIO::POST;
         ms_p=MeasurementSet();
@@ -632,7 +636,7 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
                              colNamesTok, 0);
       }
       
-      ignorables_p = ignorables;
+      combine_p = combine;
 
       msOut_p= *outpointer;
       msc_p=new MSColumns(msOut_p);
@@ -773,22 +777,26 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
   // selectSource() because mssel_p was not setup yet.
   relabelSources();
 
-  fillFieldTable();
-  copySource();
+  success &= fillFieldTable();
+  success &= copySource();
 
-  copyAntenna();
+  success &= copyAntenna();
   if(!copyFeed())         // Feed table writing has to be after antenna 
     return false;
     
-  copyObservation();
-  copyPointing();
-  copyState();
-  copyWeather();
-    
-  sameShape_p = areDataShapesConstant();
+  success &= copyObservation();
+  success &= copyPointing();
+  success &= copyState();
+  success &= copyWeather();
+  
+  // Run this after running the other copy*()s.  Maybe there should be an
+  // option to *not* run it.
+  success &= copyGenericSubtables();
+
+  //sameShape_p = areDataShapesConstant();
     
   if(timeBin_p <= 0.0)
-    success = fillMainTable(datacols);
+    success &= fillMainTable(datacols);
   else
     fillAverMainTable(datacols);
   return success;
@@ -841,7 +849,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     thisSelection.setTaQLExpr(taqlString_p);
     
     TableExprNode exprNode=thisSelection.toTableExprNode(elms);
-    
+    selTimeRanges_p = thisSelection.getTimeList();
+
     {      
       const MSDataDescription ddtable = elms->dataDescription();
       ROScalarColumn<Int> polId(ddtable, 
@@ -1346,11 +1355,14 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
       if(spwinds_of_uniq_spws[min_k].nelements() > 1 ||
          nchan_p[k] != numChan(spw_p[k])){
-        Vector<Double> chanFreqOut(totnchan_p[min_k]);
+	Int nOutChan = totnchan_p[min_k];
+        Vector<Double> chanFreqOut(nOutChan);
         Vector<Double> chanFreqIn = chanFreq(spw_uniq_p[min_k]);
-        Vector<Double> spwResolOut(totnchan_p[min_k]);
+        Vector<Double> chanWidthOut(nOutChan);
+        Vector<Double> chanWidthIn = chanWidth(spw_uniq_p[min_k]);
+        Vector<Double> spwResolOut(nOutChan);
         Vector<Double> spwResolIn = spwResol(spw_uniq_p[min_k]);
-        Vector<Double> effBWOut(totnchan_p[min_k]);
+        Vector<Double> effBWOut(nOutChan);
         Vector<Double> effBWIn = effBW(spw_uniq_p[min_k]);
         Int outChan = 0;
 
@@ -1369,6 +1381,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
                                       chanFreqIn[inpChan + chanStep_p[k]
                                                  - 1])/2;
               spwResolOut[outChan] = spwResolIn[inpChan] * chanStep_p[k];
+              chanWidthOut[outChan] = chanWidthIn[inpChan] * chanStep_p[k];
 
               for(Int avgChan = inpChan; avgChan < inpChan + chanStep_p[k];
                   ++avgChan)
@@ -1377,6 +1390,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
             else{
               chanFreqOut[outChan] = chanFreqIn[inpChan];
               spwResolOut[outChan] = spwResolIn[inpChan];
+              chanWidthOut[outChan] = chanWidthIn[inpChan];
               effBWOut[outChan]    = effBWIn[inpChan];
             }
             ++outChan;
@@ -1389,8 +1403,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
         msSpW.chanFreq().put(min_k, chanFreqOut);
         msSpW.resolution().put(min_k, spwResolOut);
-        msSpW.numChan().put(min_k, totnchan_p[min_k]);
-        msSpW.chanWidth().put(min_k, spwResolOut);
+        msSpW.numChan().put(min_k, nOutChan);
+        msSpW.chanWidth().put(min_k, chanWidthOut);
         msSpW.effectiveBW().put(min_k, spwResolOut);
         msSpW.refFrequency().put(min_k, chanFreqOut[0]);
         msSpW.totalBandwidth().put(min_k, totalBW);
@@ -1875,7 +1889,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       // channel-number-dependent arrays need to be regridded.
       if(regrid[iDone]){
 
-	Bool doExtrapolate = True;
+	Bool doExtrapolate = False;
 
 	// regrid the complex columns
 	Array<Complex> yout;
@@ -2462,14 +2476,12 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  lDouble bwUpperEndF = freq_from_vrad(regridCenterVel - regridBandwidth/2.,
                                               regridVeloRestfrq);
 	  regridBandwidthF = 2.* (bwUpperEndF - regridCenterF); 
-	
-	  if(regridChanWidth > 0.){
-	    lDouble chanUpperEdgeF = freq_from_vrad(regridCenterVel - regridChanWidth/2.,
-						   regridVeloRestfrq);
-	    regridChanWidthF = 2.* (chanUpperEdgeF - regridCenterF); 
-	  }
 	}
-
+	if(regridChanWidth > 0. && regridChanWidthF<0.){
+	  lDouble chanUpperEdgeF = freq_from_vrad(regridCenterVel - regridChanWidth/2.,
+						  regridVeloRestfrq);
+	  regridChanWidthF = 2.* (chanUpperEdgeF - freq_from_vrad(regridCenterVel, regridVeloRestfrq));
+	}
       }
       else if(regridQuant=="vopt"){ ///////////
 	// optical velocity ...
@@ -2557,10 +2569,10 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
                                                regridVeloRestfrq);
 	  regridBandwidthF = 2.* (bwUpperEndF- regridCenterF); 
 	}
-	if(regridChanWidth > 0.){
+	if(regridChanWidth > 0. && regridChanWidthF<0.){
 	  lDouble chanUpperEdgeF = freq_from_vopt(regridCenterVel - regridChanWidth/2.,
                                                  regridVeloRestfrq);
-	  regridChanWidthF = 2.* (chanUpperEdgeF - regridCenterF); 
+	  regridChanWidthF = 2.* (chanUpperEdgeF - freq_from_vopt(regridCenterVel,regridVeloRestfrq)); 
 	}
       } 
       else if(regridQuant=="freq"){ ////////////////////////
@@ -2722,14 +2734,24 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	if(nchan!=0){ // use nchan parameter if available
 	  if(nchan<0){
 	    // define via width of first channel to avoid numerical problems
-	    theRegridBWF = transCHAN_WIDTH[0]*floor((theRegridBWF+transCHAN_WIDTH[0]*0.01)/transCHAN_WIDTH[0]);
+	    if(regridChanWidthF <= 0.){ // channel width not set
+	      theRegridBWF = transCHAN_WIDTH[0]*floor((theRegridBWF+transCHAN_WIDTH[0]*0.01)/transCHAN_WIDTH[0]);
+	    }
+	    else{
+	      theRegridBWF = regridChanWidthF*floor((theRegridBWF+regridChanWidthF*0.01)/regridChanWidthF);
+	    }
 	  }
 	  else if(regridChanWidthF <= 0.){ // channel width not set
 	    theRegridBWF = transCHAN_WIDTH[0]*nchan;
 	  }
 	  else{ 
 	    theRegridBWF = regridChanWidthF*nchan;
-	  }	    
+	  }
+	  if(regridCenterF <= 0.|| regridCenter <-C::c ){ // center was not set by user but calculated
+	    // need to update
+	    theRegridCenterF = transNewXin[0] - transCHAN_WIDTH[0]/2. + theRegridBWF/2.;
+	    centerIsStart = False;
+	  }
 	}
 	// now can convert start to center
 	if(centerIsStart){
@@ -2796,7 +2818,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  oss << " *** Requested new channel width exceeds defined SPW width." << endl
 	      << "     Crating a single channel with the defined SPW width." << endl;
 	}
-	else{ // check if too small
+	else if(theCentralChanWidthF<transCHAN_WIDTH[0]){ // check if too small
 	  // determine smallest channel width
 	  lDouble smallestChanWidth = 1E30;
 	  Int ii = 0;
@@ -2825,12 +2847,36 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  }
 	}   	    
       }
+
       oss << " Channels equidistant in " << regridQuant << endl
 	  << " Central frequency (in output frame) = " << theRegridCenterF
-          << " Hz" << endl 
-	  << " Width of central channel (in output frame) = "
-          << theCentralChanWidthF << " Hz" << endl;
-      
+          << " Hz";
+      if(regridQuant == "vrad"){
+	oss << " == " << vrad(theRegridCenterF, regridVeloRestfrq) << " m/s radio velocity";
+      }
+      else if(regridQuant == "vopt"){
+	oss << " == " << vopt(theRegridCenterF, regridVeloRestfrq) << " m/s optical velocity";
+      }      
+      else if(regridQuant == "wave"){
+	oss << " == " << lambda(theRegridCenterF) << " m wavelength";
+      }
+      oss << endl;
+
+      oss << " Width of central channel (in output frame) = "
+          << theCentralChanWidthF << " Hz";
+      if(regridQuant == "vrad"){
+	oss << " == " << vrad(theRegridCenterF - theCentralChanWidthF, regridVeloRestfrq) 
+	  -  vrad(theRegridCenterF, regridVeloRestfrq) << " m/s radio velocity";
+      }
+      else if(regridQuant == "vopt"){
+	oss << " == " << vopt(theRegridCenterF - theCentralChanWidthF, regridVeloRestfrq) 
+	  - vopt(theRegridCenterF, regridVeloRestfrq) << " m/s optical velocity";
+      }      
+      else if(regridQuant == "wave"){
+	oss << " == " << lambda(theRegridCenterF - theCentralChanWidthF) - lambda(theRegridCenterF) << " m wavelength";
+      }
+      oss << endl;
+       
       // now calculate newChanLoBound, and newChanHiBound from
       // theRegridCenterF, theRegridBWF, theCentralChanWidthF
       vector<lDouble> loFBup; // the lower bounds for the new channels 
@@ -3197,6 +3243,352 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
   }
 
+  Bool SubMS::convertGridPars(LogIO& os,
+			      const String& mode, 
+			      const int nchan, 
+			      const String& start, 
+			      const String& width,
+			      const String& interp, 
+			      const String& restfreq, 
+			      const String& outframe,
+			      const String& veltype,
+			      String& t_mode,
+			      String& t_outframe,
+			      String& t_regridQuantity,
+			      Double& t_restfreq,
+			      String& t_regridInterpMeth,
+			      Double& t_cstart, 
+			      Double& t_bandwidth,
+			      Double& t_cwidth,
+			      Bool& t_centerIsStart, 
+			      Bool& t_startIsEnd,			      
+			      Int& t_nchan,
+			      Int& t_width,
+			      Int& t_start
+			      ){
+    Bool rstat(False);
+    
+    try {
+      
+      os << LogOrigin("SubMS", "convertGridPars");
+      
+      casa::QuantumHolder qh;
+      String error;
+
+      t_mode = mode;
+      t_restfreq = 0.; 
+      if(!restfreq.empty() && !(restfreq=="[]")){
+	if(qh.fromString(error, restfreq)){
+	  t_restfreq = qh.asQuantity().getValue("Hz");
+	}
+	else{
+	  os << LogIO::SEVERE  << "restfreq: " << error << LogIO::POST; 	  
+	  return False;
+	}
+      }
+      
+      // Determine grid
+      t_cstart = -9e99; // default value indicating that the original start of the SPW should be used
+      t_bandwidth = -1.; // default value indicating that the original width of the SPW should be used
+      t_cwidth = -1.; // default value indicating that the original channel width of the SPW should be used
+      t_nchan = -1; 
+      t_width = 0;
+      t_start = -1;
+      t_startIsEnd = False; // False means that start specifies the lower end in frequency (default)
+      // True means that start specifies the upper end in frequency
+
+      if(!start.empty() && !(start=="[]")){ // start was set
+	if(t_mode == "channel"){
+	  t_start = atoi(start.c_str());
+	}
+	if(t_mode == "channel_b"){
+	  t_cstart = Double(atoi(start.c_str()));
+	}
+	else if(t_mode == "frequency"){
+	  if(qh.fromString(error, start)){
+	    t_cstart = qh.asQuantity().getValue("Hz");
+	  }
+	  else{
+	    os << LogIO::SEVERE  << "start: " << error << LogIO::POST; 	  
+	    return False;
+	  }	
+	}
+	else if(t_mode == "velocity"){
+	  if(qh.fromString(error, start)){
+	    t_cstart = qh.asQuantity().getValue("m/s");
+	  }
+	  else{
+	    os << LogIO::SEVERE << "start: " << error << LogIO::POST; 	  
+	    return False;
+	  }	
+	}
+      }
+      if(!width.empty() && !(width=="[]")){ // channel width was set
+	if(t_mode == "channel"){
+	  Int w = atoi(width.c_str());
+	  t_width = abs(w);
+	  if(w<0){
+	    t_startIsEnd = True;
+	  }
+	}
+	else if(t_mode == "channel_b"){
+	  Double w = atoi(width.c_str());
+	  t_cwidth = abs(w);
+	  if(w<0){
+	    t_startIsEnd = True;
+	  }	
+	}
+	else if(t_mode == "frequency"){
+	  if(qh.fromString(error, width)){
+	    Double w = qh.asQuantity().getValue("Hz");
+	    t_cwidth = abs(w);
+	    if(w<0){
+	      t_startIsEnd = True;
+	    }	
+	  }
+	  else{
+	    os << LogIO::SEVERE << "width: " << error << LogIO::POST; 	  
+	    return False;
+	  }	
+	}
+	else if(t_mode == "velocity"){
+	  if(qh.fromString(error, width)){
+	    Double w = qh.asQuantity().getValue("m/s");
+	    t_cwidth = abs(w);
+	    if(w>=0){
+	      t_startIsEnd = True; 
+	    }		
+	  }
+	  else{
+	    os << LogIO::SEVERE << "width: " << error << LogIO::POST; 	  
+	    return False;	    
+	  }
+	}
+      }
+      if(nchan > 0){ // number of output channels was set
+	if(t_mode == "channel_b"){
+	  if(t_cwidth>0){
+	    t_bandwidth = Double(nchan*t_cwidth);
+	  }
+	  else{
+	    t_bandwidth = Double(nchan);	  
+	  }
+	}
+	else{
+	  t_nchan = nchan;
+	}
+      }
+      
+      if(t_mode == "channel"){
+	t_regridQuantity = "freq";
+      }
+      else if(t_mode == "channel_b"){
+	t_regridQuantity = "chan";
+      }
+      else if(t_mode == "frequency"){
+	t_regridQuantity = "freq";
+      }
+      else if(t_mode == "velocity"){
+	if(t_restfreq == 0.){
+	  os << LogIO::SEVERE << "Need to set restfreq in velocity mode." << LogIO::POST; 
+	  return False;
+	}	
+	t_regridQuantity = "vrad";
+	if(veltype == "optical"){
+	  t_regridQuantity = "vopt";
+	}
+	else if(veltype != "radio"){
+	  os << LogIO::WARN << "Invalid velocity type "<< veltype 
+	     << ", setting type to \"radio\"" << LogIO::POST; 
+	}
+      }   
+      else{
+	os << LogIO::WARN << "Invalid mode " << t_mode << LogIO::POST;
+	return False;
+      }
+      
+      t_outframe=outframe;
+      t_regridInterpMeth=interp;
+      t_centerIsStart = True;
+            
+      // end prepare regridding parameters
+      
+      rstat = True;
+
+    } catch (AipsError x) {
+      os << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+      rstat = False;
+    }
+    return rstat;
+  }
+
+
+  Bool SubMS::calcChanFreqs(LogIO& os,
+			    Vector<Double>& newCHAN_FREQ, 
+			    Vector<Double>& newCHAN_WIDTH,
+			    const Vector<Double>& oldCHAN_FREQ, 
+			    const Vector<Double>& oldCHAN_WIDTH,
+			    const MDirection  phaseCenter,
+			    const MFrequency::Types theOldRefFrame,
+			    const MEpoch theObsTime,
+			    const MPosition mObsPos,
+			    const String& mode, 
+			    const int nchan, 
+			    const String& start, 
+			    const String& width,
+			    const String& restfreq, 
+			    const String& outframe,
+			    const String& veltype
+			    ){
+
+    Vector<Double> newChanLoBound; 
+    Vector<Double> newChanHiBound;
+    String t_phasec;
+
+    String t_mode;
+    String t_outframe;
+    String t_regridQuantity;
+    Double t_restfreq;
+    String t_regridInterpMeth;
+    Double t_cstart;
+    Double t_bandwidth;
+    Double t_cwidth;
+    Bool t_centerIsStart;
+    Bool t_startIsEnd;
+    Int t_nchan;
+    Int t_width;
+    Int t_start;
+
+    if(!convertGridPars(os,
+			mode, 
+			nchan, 
+			start, 
+			width,
+			"linear", // a dummy value in this context
+			restfreq, 
+			outframe,
+			veltype,
+			////// output ////
+			t_mode,
+			t_outframe,
+			t_regridQuantity,
+			t_restfreq,
+			t_regridInterpMeth,
+			t_cstart, 
+			t_bandwidth,
+			t_cwidth,
+			t_centerIsStart, 
+			t_startIsEnd,			      
+			t_nchan,
+			t_width,
+			t_start
+			)
+       ){
+      // an error occured
+      return False;
+    }
+
+    // reference frame transformation
+    Bool needTransform = True;
+    MFrequency::Types theFrame;
+    if(outframe==""){ // no ref frame given 
+      // keep the reference frame as is
+      theFrame = theOldRefFrame;
+      needTransform = False;
+    }
+    else if(!MFrequency::getType(theFrame, outframe)){
+      os << LogIO::SEVERE
+	 << "Parameter \"outframe\" value " << outframe << " is invalid." 
+	 << LogIO::POST;
+      return False;
+    }
+    else if (theFrame == theOldRefFrame){
+      needTransform = False;
+    }
+
+    uInt oldNUM_CHAN = oldCHAN_FREQ.size();
+    if(oldNUM_CHAN == 0){
+      newCHAN_FREQ.resize(0);
+      newCHAN_WIDTH.resize(0);
+      return True;
+    }
+
+    if(oldNUM_CHAN != oldCHAN_WIDTH.size()){
+      os << LogIO::SEVERE
+	 << "Internal error: inconsistent dimensions of input channel freq and width arrays." 
+	 << LogIO::POST;
+      return False;
+    }      
+
+    Vector<Double> transNewXin;
+    Vector<Double> transCHAN_WIDTH(oldNUM_CHAN);
+
+    if(needTransform){
+      transNewXin.resize(oldNUM_CHAN);
+      // set up conversion
+      Unit unit(String("Hz"));
+      MFrequency::Ref fromFrame = MFrequency::Ref(theOldRefFrame, MeasFrame(phaseCenter, mObsPos, theObsTime));
+      MFrequency::Ref toFrame = MFrequency::Ref(theFrame, MeasFrame(phaseCenter, mObsPos, theObsTime));
+      MFrequency::Convert freqTrans(unit, fromFrame, toFrame);
+      
+      for(uInt i=0; i<oldNUM_CHAN; i++){
+	transNewXin[i] = freqTrans(oldCHAN_FREQ[i]).get(unit).getValue();
+	transCHAN_WIDTH[i] = freqTrans(oldCHAN_FREQ[i] +
+				       oldCHAN_WIDTH[i]/2.).get(unit).getValue()
+	  - freqTrans(oldCHAN_FREQ[i] -
+		      oldCHAN_WIDTH[i]/2.).get(unit).getValue(); // eliminate possible offsets
+      }
+    }
+    else {
+      // just copy
+      transNewXin.assign(oldCHAN_FREQ);
+      transCHAN_WIDTH.assign(oldCHAN_WIDTH);
+    }
+
+    // calculate new grid
+
+    String message;
+
+    if(!regridChanBounds(newChanLoBound, 
+			 newChanHiBound,
+			 t_cstart,  
+			 t_bandwidth, 
+			 t_cwidth, 
+			 t_restfreq,
+			 t_regridQuantity,
+			 transNewXin, 
+			 transCHAN_WIDTH,
+			 message,
+			 t_centerIsStart,
+			 t_startIsEnd,
+			 t_nchan,
+			 t_width,
+			 t_start
+			 )
+       ){ // there was an error
+      os << LogIO::WARN << message << LogIO::POST;
+      return False;
+    }
+    
+    os << LogIO::NORMAL << message << LogIO::POST;
+
+    // we have a useful set of channel boundaries
+    uInt newNUM_CHAN = newChanLoBound.size();
+    
+    // complete the calculation of the new channel centers and widths
+    // from newNUM_CHAN, newChanLoBound, and newChanHiBound 
+    newCHAN_FREQ.resize(newNUM_CHAN);
+    newCHAN_WIDTH.resize(newNUM_CHAN);
+    for(uInt i=0; i<newNUM_CHAN; i++){
+      newCHAN_FREQ[i] = (newChanLoBound[i]+newChanHiBound[i])/2.;
+      newCHAN_WIDTH[i] = newChanHiBound[i]-newChanLoBound[i];
+    }
+    
+    return True;
+
+  }
+  
+
   Bool SubMS::setRegridParameters(vector<Int>& oldSpwId,
 				  vector<Int>& oldFieldId,
 				  vector<Int>& newDataDescId,
@@ -3420,6 +3812,9 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	//      (taken from the time of the first integration for this (theFieldId, theSPWId) pair)
 	//      -> store in obsTime[numNewDataDesc] (further below)
        	MEpoch theObsTime = mainTimeMeasCol(mainTabRow);
+	  ////      (taken uniformly for the whole MS from the first row of the MS
+	  ////      which is also the earliest row because it is time-sorted)
+       	  //MEpoch theObsTime = mainTimeMeasCol(0);
 	//   4) direction of the field, i.e. the phase center
 	MDirection theFieldDir;
 	if(regridPhaseCenterFieldId<-1){ // take it from the PHASE_DIR cell
@@ -3873,7 +4268,10 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     return rval;
   }
 
-  Bool SubMS::combineSpws(const Vector<Int>& spwids){
+  Bool SubMS::combineSpws(const Vector<Int>& spwids,
+			  const Bool noModify,
+			  Vector<Double>& newCHAN_FREQ,
+			  Vector<Double>& newCHAN_WIDTH){
     
     LogIO os(LogOrigin("SubMS", "combineSpws()"));
       
@@ -3926,24 +4324,24 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       uInt nSpwsToCombine = spwsToCombine.size();
 
       // prepare access to the SPW table
-      MSSpWindowColumns SPWCols(spwtable);
-      ScalarColumn<Int> numChanCol = SPWCols.numChan(); 
-      ArrayColumn<Double> chanFreqCol = SPWCols.chanFreq(); 
-      ArrayColumn<Double> chanWidthCol = SPWCols.chanWidth(); 
-      //    ArrayMeasColumn<MFrequency> chanFreqMeasCol = SPWCols.chanFreqMeas();
-      ScalarColumn<Int> measFreqRefCol = SPWCols.measFreqRef();
-      ArrayColumn<Double> effectiveBWCol = SPWCols.effectiveBW();   
-      ScalarColumn<Double> refFrequencyCol = SPWCols.refFrequency(); 
-      //    ScalarMeasColumn<MFrequency> refFrequencyMeasCol = SPWCols.refFrequencyMeas(); 
-      ArrayColumn<Double> resolutionCol = SPWCols.resolution(); 
-      ScalarColumn<Double> totalBandwidthCol = SPWCols.totalBandwidth();
+      ROMSSpWindowColumns SPWColrs(spwtable);
+      ROScalarColumn<Int> numChanColr = SPWColrs.numChan(); 
+      ROArrayColumn<Double> chanFreqColr = SPWColrs.chanFreq(); 
+      ROArrayColumn<Double> chanWidthColr = SPWColrs.chanWidth(); 
+      //    ArrayMeasColumn<MFrequency> chanFreqMeasColr = SPWColrs.chanFreqMeas();
+      ROScalarColumn<Int> measFreqRefColr = SPWColrs.measFreqRef();
+      ROArrayColumn<Double> effectiveBWColr = SPWColrs.effectiveBW();   
+      ROScalarColumn<Double> refFrequencyColr = SPWColrs.refFrequency(); 
+      //    ScalarMeasColumn<MFrequency> refFrequencyMeasColr = SPWColrs.refFrequencyMeas(); 
+      ROArrayColumn<Double> resolutionColr = SPWColrs.resolution(); 
+      ROScalarColumn<Double> totalBandwidthColr = SPWColrs.totalBandwidth();
 
       // create a list of the spw ids sorted by first channel frequency
       vector<Int> spwsSorted(origNumSPWs);
       {
 	Double* firstFreq = new Double[origNumSPWs];
 	for(uInt i=0; (Int)i<origNumSPWs; i++){
-	  Vector<Double> CHAN_FREQ(chanFreqCol(i));
+	  Vector<Double> CHAN_FREQ(chanFreqColr(i));
 	  firstFreq[i] = CHAN_FREQ(0);
 	}
 	Sort sort;
@@ -3956,27 +4354,17 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	delete[] firstFreq;
       }
 
-      // Create new row in the SPW table (with ID nextSPWId) by copying
-      // all information from row theSPWId
-      if(!spwtable.canAddRow()){
-	os << LogIO::WARN
-	   << "Unable to add new row to SPECTRAL_WINDOW table. Cannot proceed with spwCombine ..." 
-	   << LogIO::POST;
-	return False; 
-      }
-      TableRow SPWRow(spwtable);
       Int id0 = spwsSorted[0];
-      TableRecord spwRecord = SPWRow.get(id0);
 
-      Int newNUM_CHAN = numChanCol(id0);
-      Vector<Double> newCHAN_FREQ(chanFreqCol(id0));
-      Vector<Double> newCHAN_WIDTH(chanWidthCol(id0));
-      Vector<Double> newEFFECTIVE_BW(effectiveBWCol(id0));
-      Double newREF_FREQUENCY(refFrequencyCol(id0));
-      //MFrequency newREF_FREQUENCY = refFrequencyMeasCol(id0);
-      Int newMEAS_FREQ_REF = measFreqRefCol(id0);
-      Vector<Double> newRESOLUTION(resolutionCol(id0));
-      Double newTOTAL_BANDWIDTH = totalBandwidthCol(id0);
+      Int newNUM_CHAN = numChanColr(id0);
+      newCHAN_FREQ.assign(chanFreqColr(id0));
+      newCHAN_WIDTH.assign(chanWidthColr(id0));
+      Vector<Double> newEFFECTIVE_BW(effectiveBWColr(id0));
+      Double newREF_FREQUENCY(refFrequencyColr(id0));
+      //MFrequency newREF_FREQUENCY = refFrequencyMeasColr(id0);
+      Int newMEAS_FREQ_REF = measFreqRefColr(id0);
+      Vector<Double> newRESOLUTION(resolutionColr(id0));
+      Double newTOTAL_BANDWIDTH = totalBandwidthColr(id0);
 
       vector<Int> averageN; // for each new channel store the number of old channels to average over
       vector<vector<Int> > averageWhichSPW; // for each new channel store the
@@ -3998,7 +4386,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	averageChanFrac.push_back(tvd);
       }
 
-
       os << LogIO::NORMAL << "Original SPWs sorted by first channel frequency:" << LogIO::POST;
       {
 	ostringstream oss; // needed for iomanip functions
@@ -4014,15 +4401,15 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       for(uInt i=1; i<nSpwsToCombine; i++){
 	Int idi = spwsSorted[i];
       
-	Int newNUM_CHANi = numChanCol(idi);
-	Vector<Double> newCHAN_FREQi(chanFreqCol(idi));
-	Vector<Double> newCHAN_WIDTHi(chanWidthCol(idi));
-	Vector<Double> newEFFECTIVE_BWi(effectiveBWCol(idi));
-	//Double newREF_FREQUENCYi(refFrequencyCol(idi));
-	//MFrequency newREF_FREQUENCYi = refFrequencyMeasCol(idi);
-	Int newMEAS_FREQ_REFi = measFreqRefCol(idi);
-	Vector<Double> newRESOLUTIONi(resolutionCol(idi));
-	//Double newTOTAL_BANDWIDTHi = totalBandwidthCol(idi);
+	Int newNUM_CHANi = numChanColr(idi);
+	Vector<Double> newCHAN_FREQi(chanFreqColr(idi));
+	Vector<Double> newCHAN_WIDTHi(chanWidthColr(idi));
+	Vector<Double> newEFFECTIVE_BWi(effectiveBWColr(idi));
+	//Double newREF_FREQUENCYi(refFrequencyColr(idi));
+	//MFrequency newREF_FREQUENCYi = refFrequencyMeasColr(idi);
+	Int newMEAS_FREQ_REFi = measFreqRefColr(idi);
+	Vector<Double> newRESOLUTIONi(resolutionColr(idi));
+	//Double newTOTAL_BANDWIDTHi = totalBandwidthColr(idi);
 
 	ostringstream oss; // needed for iomanip functions
 	oss << "   SPW " << std::setw(3) << idi << ": " << std::setw(5) << newNUM_CHANi 
@@ -4303,6 +4690,24 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
       } // end loop over SPWs
       
+      if(noModify){ // newCHAN_FREQ and newCHAN_WIDTH have been determined now
+	return True;
+      }
+
+      // now need write access
+      MSSpWindowColumns SPWCols(spwtable);
+      ScalarColumn<Int> numChanCol = SPWCols.numChan(); 
+      ArrayColumn<Double> chanFreqCol = SPWCols.chanFreq(); 
+      ArrayColumn<Double> chanWidthCol = SPWCols.chanWidth(); 
+      //    ArrayMeasColumn<MFrequency> chanFreqMeasCol = SPWCols.chanFreqMeas();
+      ScalarColumn<Int> measFreqRefCol = SPWCols.measFreqRef();
+      ArrayColumn<Double> effectiveBWCol = SPWCols.effectiveBW();   
+      ScalarColumn<Double> refFrequencyCol = SPWCols.refFrequency(); 
+      //    ScalarMeasColumn<MFrequency> refFrequencyMeasCol = SPWCols.refFrequencyMeas(); 
+      ArrayColumn<Double> resolutionCol = SPWCols.resolution(); 
+      ScalarColumn<Double> totalBandwidthCol = SPWCols.totalBandwidth();
+
+
       os << LogIO::NORMAL << "Combined SPW will have " << newNUM_CHAN << " channels. May change in later regridding." << LogIO::POST;
 
 //       // print channel fractions for debugging
@@ -4313,6 +4718,18 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 // 	  cout << " averageChanFrac[i][j] " << averageChanFrac[i][j] << endl;
 // 	}
 //       }	
+
+      // Create new row in the SPW table (with ID nextSPWId) by copying
+      // all information from row theSPWId
+      if(!spwtable.canAddRow()){
+	os << LogIO::WARN
+	   << "Unable to add new row to SPECTRAL_WINDOW table. Cannot proceed with spwCombine ..." 
+	   << LogIO::POST;
+	return False; 
+      }
+
+      TableRow SPWRow(spwtable);
+      TableRecord spwRecord = SPWRow.get(id0);
 
       // write new spw to spw table (ID =  newSpwId)
       spwtable.addRow();
@@ -5482,51 +5899,21 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
 {    
   LogIO os(LogOrigin("SubMS", "fillAverMainTable()"));
     
-  Double timeBin=timeBin_p;
+  os << LogIO::DEBUG1 // helpdesk ticket in from Oleg Smirnov (ODU-232630)
+     << "Before fillAntIndexer(): "
+     << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
+     << LogIO::POST;
 
-  // os << LogIO::DEBUG1 // helpdesk ticket in from Oleg Smirnov (ODU-232630)
-  //    << "Before fillAntIndexer(): "
-  //    << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
-  //    << LogIO::POST;
-
-  //// fill time and timecentroid and antennas
-  nant_p = fillAntIndexer(mscIn_p, antIndexer_p);
-  if(nant_p < 1)
+  // fill time and timecentroid and antennas
+  if(fillAntIndexer(mscIn_p, antIndexer_p) < 1)
     return False;
 
-  // os << LogIO::DEBUG1 // helpdesk ticket in from Oleg Smirnov (ODU-232630)
-  //    << "Before binTimes(): "
-  //    << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
-  //    << LogIO::POST;
-
-  //Int numBaselines=numOfBaselines(ant1, ant2, False);
-  Int numOutputRows = binTimes(timeBin);  // Sets up remappers as a side-effect.
-    
-  if(numOutputRows < 1)
-    os << LogIO::SEVERE
-       << "Number of time bins is < 1: time averaging bin size is not > 0"
-       << LogIO::POST;
-
-  os << LogIO::DEBUG1 // helpdesk ticket from Oleg Smirnov (ODU-232630)
-     << "Before msOut_p.addRow(): "
-     << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
-     << LogIO::POST;
-
-  msOut_p.addRow(numOutputRows, True);
-        
-  //    relabelIDs();
-
-  os << LogIO::DEBUG1 // helpdesk ticket from Oleg Smirnov (ODU-232630)
-     << "After binTimes(): "
-     << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
-     << LogIO::POST;
-
-  //things to be taken care in fillTimeAverData...
+  //things to be taken care in doTimeAver()...
   // flagRow		ScanNumber	uvw		weight		
   // sigma		ant1		ant2		time
   // timeCentroid	feed1 		feed2		exposure
   // stateId		processorId	observationId	arrayId
-  return fillTimeAverData(colNames); 
+  return doTimeAver(colNames);
 }
   
   Bool SubMS::copyAntenna(){
@@ -5534,12 +5921,14 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
     MSAntenna& newAnt = msOut_p.antenna();
     const ROMSAntennaColumns incols(oldAnt);
     MSAntennaColumns         outcols(newAnt);
+    Bool 		     retval = False;
     
     outcols.setOffsetRef(MPosition::castType(incols.offsetMeas().getMeasRef().getType()));
     outcols.setPositionRef(MPosition::castType(incols.positionMeas().getMeasRef().getType()));
 
     if(!antennaSel_p){
       TableCopy::copyRows(newAnt, oldAnt);
+      retval = True;
     }
     else{
       //Now we try to re-index the antenna list;
@@ -5558,12 +5947,13 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
 			     //tables, fix it
       for (Int k=0; k < nAnt1; ++k){
 	antNewIndex_p[ant1[k]]=k;
-	TableCopy::copyRows(newAnt, oldAnt, k, ant1[k], 1);
+	TableCopy::copyRows(newAnt, oldAnt, k, ant1[k], 1, false);
       }
-      
-      return True;
+      newAnt.flush();
+
+      retval = True;
     }
-    return False;    
+    return retval;    
   }
 
 
@@ -5601,10 +5991,11 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
 	if(antNewIndex_p[antIds[k]] > -1 &&
            (spwIds[k] < 0 || spwRelabel_p[spwIds[k]] > -1)){
           //                  outtab   intab    outrow       inrow nrows
-	  TableCopy::copyRows(newFeed, oldFeed, totalSelFeeds, k, 1);
+	  TableCopy::copyRows(newFeed, oldFeed, totalSelFeeds, k, 1, false);
           ++totalSelFeeds;
 	}
       }
+      newFeed.flush();
 
       // Remap antenna and spw #s.
       ScalarColumn<Int>& antCol = outcols.antennaId();
@@ -5685,6 +6076,56 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
     return False;
   }
   
+Bool SubMS::copyGenericSubtables(){
+  LogIO os(LogOrigin("SubMS", "copyGenericSubtables()"));
+
+  // Already handled subtables will be removed from this, so a modifiable copy
+  // is needed.
+  TableRecord inkws(mssel_p.keywordSet());
+
+  // Some of the standard subtables need special handling,
+  // e.g. DATA_DESCRIPTION, SPECTRAL_WINDOW, and ANTENNA, so they are already
+  // defined in msOut_p.  Several more (e.g. FLAG_CMD) were also already
+  // created by MS::createDefaultSubtables().  Don't try to write over them - a
+  // locking error will result.
+  const TableRecord& outkws = msOut_p.keywordSet();
+  for(uInt i = 0; i < outkws.nfields(); ++i){
+    if(outkws.type(i) == TpTable && inkws.isDefined(outkws.name(i)))
+      inkws.removeField(outkws.name(i));
+  }
+
+  // Includes a flush. 
+  //msOut_p.unlock();
+
+  // msOut_p.rwKeywordSet() (pass a reference, not a copy) will put a lock on
+  // msOut_p.
+  TableCopy::copySubTables(msOut_p.rwKeywordSet(), inkws, msOut_p.tableName(),
+			   msOut_p.tableType(), mssel_p);
+  // TableCopy::copySubTables(Table, Table, Bool) includes this other code,
+  // which seems to be copying subtables at one level deeper, but not
+  // recursively? 
+  const TableDesc& inDesc = mssel_p.tableDesc();
+  const TableDesc& outDesc = msOut_p.tableDesc();
+  for(uInt i = 0; i < outDesc.ncolumn(); ++i){
+    // Only writable cols can have keywords (and thus subtables) defined.
+    if(msOut_p.isColumnWritable(i)){
+      const String& name = outDesc[i].name();
+
+      if(inDesc.isColumn(name)){
+	TableColumn outCol(msOut_p, name);
+	ROTableColumn inCol(mssel_p, name);
+	
+	TableCopy::copySubTables(outCol.rwKeywordSet(), inCol.keywordSet(),
+				 msOut_p.tableName(), msOut_p.tableType(),
+				 mssel_p);
+      }
+    }
+  }
+  msOut_p.flush();
+
+  return true;
+}
+
   Bool SubMS::copyObservation()
   {  
     const MSObservation& oldObs = mssel_p.observation();
@@ -5737,12 +6178,25 @@ Bool SubMS::copyState()
   Bool SubMS::copyPointing(){
     //Pointing is allowed to not exist
     if(Table::isReadable(mssel_p.pointingTableName())){
+      // An attempt to select from POINTING by timerange.  Fails because the
+      // TEN refers to the main table, not POINTING.
+      // TableExprNode condition;
+
+      // if(timeRange_p != "" &&
+      // 	 msTimeGramParseCommand(&ms_p, timeRange_p, condition) == 0){
+      // 	const TableExprNode *timeNode = 0x0;
+	  
+      // 	timeNode = msTimeGramParseNode();
+      // 	if(timeNode && !timeNode->isNull())
+      // 	  condition = *timeNode;
+      // }
+
       //Wconst Table oldPoint(mssel_p.pointingTableName(), Table::Old);
       const MSPointing& oldPoint = mssel_p.pointing();
 
       if(oldPoint.nrow() > 0){
-        MSPointing& newPoint = msOut_p.pointing();  // Could be declared as
-                                                    // Table&
+	// Could be declared as Table&
+        MSPointing& newPoint = msOut_p.pointing();
 
         LogIO os(LogOrigin("SubMS", "copyPointing()"));
 
@@ -5766,23 +6220,38 @@ Bool SubMS::copyState()
         newPCs.setEncoderDirectionRef(MDirection::castType(oldPCs.encoderMeas().getMeasRef().getType()));
 
 	
-        if(!antennaSel_p){
+        if(!antennaSel_p && timeRange_p == ""){
           TableCopy::copyRows(newPoint, oldPoint);
         }
         else{
           const ROScalarColumn<Int>& antIds  = oldPCs.antennaId();
+          const ROScalarColumn<Double>& time = oldPCs.time();
           ScalarColumn<Int>& 	     outants = newPCs.antennaId();
 
-          uInt selRow = 0;
-          for (uInt k = 0; k < antIds.nrow(); ++k){
-            Int newAntInd = antNewIndex_p[antIds(k)];
+	  uInt nTRanges = selTimeRanges_p.ncolumn();
+
+	  uInt outRow = 0;
+          for (uInt inRow = 0; inRow < antIds.nrow(); ++inRow){
+            Int newAntInd = antNewIndex_p[antIds(inRow)];
+	    Double t = time(inRow);
 	    
             if(newAntInd > -1){
-              TableCopy::copyRows(newPoint, oldPoint, selRow, k, 1);
-              outants.put(selRow, newAntInd);
-              ++selRow;
+	      Bool matchT = false;
+	      for(uInt tr = 0; tr < nTRanges; ++tr){
+		if(t >= selTimeRanges_p(0, tr) && t <= selTimeRanges_p(1, tr)){
+		  matchT = true;
+		  break;
+		}
+	      }
+
+	      if(matchT){
+		TableCopy::copyRows(newPoint, oldPoint, outRow, inRow, 1, false);
+		outants.put(outRow, newAntInd);
+		++outRow;
+	      }
             }
           }
+	  newPoint.flush();
         }
         //DW 	//	TableCopy::copySubTables(newPoint, oldPoint);
         //DW	oldPoint.deepCopy(msOut_p.pointingTableName(), Table::NewNoReplace);
@@ -5849,6 +6318,21 @@ Bool SubMS::copyState()
     }
     return True;
   }
+
+// writeDiffSpwShape() was the VisIter-using channel averager, which sounds
+// great, but:
+// 0. If VisIter's sort order is different from the one in the MS, then if you
+//    write _any_ columns using VisIter-fetched data, then you must write _all_ of
+//    them.  This is crucially important for channel averaging in split: normally
+//    only *DATA, FLAG*, WEIGHT, and SIGMA would have to be updated, but if using
+//    VisIter, the ANTENNA*, FEED*, STATE_ID, etc. have to be updated too because
+//    they could be rearranged.
+//
+//    There does not appear to be an easy way of getting the MS's starting sort
+//    order, i.e. AFAIK it is not written into a header.
+//
+// 1. If FLOAT_DATA is present, VisIter will ignore DATA.  (G. Moellenbrock,
+//    =casa-staff, 1/15/2010)
   
   // Bool SubMS::writeDiffSpwShape(const Vector<MS::PredefinedColumns>& datacols)
   // {
@@ -6183,6 +6667,18 @@ void SubMS::make_map(const ROScalarColumn<Int>& mscol,
   }
 }
 
+void SubMS::remap(Vector<Int>& col, const Vector<Int>& mapper)
+{
+  for(Int row = col.nelements(); row--;)
+    col[row] = mapper[col[row]];
+}
+
+void SubMS::remap(Vector<Int>& col, const std::map<Int, Int>& mapper)
+{
+  for(Int row = col.nelements(); row--;)
+    col[row] = mapper.find(col[row])->second;
+}
+
 // Returns rv s.t. mapper[rv] == ov, assuming that mapper[i + 1] >= mapper[i]
 // for 0 <= i < mapper.nelements() - 1.
 // i can be supplied as the first guess.
@@ -6241,169 +6737,6 @@ uInt SubMS::remapped(const Int ov, const Vector<Int>& mapper, uInt i=0)
   }
   return i;  
 }
-
-// Maps the properties of a MS row to a unique key for a slot (= rows within a
-// bin that should be averaged together).  The vector of the properties is
-// mapped to a uInt, at some risk of overflow, so that later the key can be mapped to
-// an output row number in the bin.
-//
-// The order of the properties is a convention, but it is arranged so that in
-// the output ant2 will be the fastest varying index, ant1 the next fastest,
-// and so on.
-//
-// Some properties are deliberately not included here because they are
-// redundant for this purpose, and it is important to minimize the number of
-// factors going into the key.  
-// If this ignored # changes, => >= 1 of these watched ones changes.
-// -------------------------     -----------------------------------
-//           feed                  field, polarization, or spw
-//	obs, array			antenna, spw, field
-//       processor                       Should I care?
-//
-// The mapping also remaps (if necessary) each property to a range from 0 to max - 1,
-// assuming that the corresponding remapper vectors have already been set up!
-uInt SubMS::rowProps2slotKey(const Int ant1, const Int ant2,
-			     const Int dd,   const Int field,
-			     const Int scan, const Int state,
-                             const uInt array)
-{
-  // Fastest slotnum (farthest apart), but slowest index.
-  uInt slotKey = arrayRemapper_p[array];
-  
-  slotKey *= stateRemapper_p.size();
-  slotKey += stateRemapper_p[state];
-
-  slotKey *= scanRemapper_p.size();        // Must be set before calling
-  slotKey += scanRemapper_p[scan]; 	   // rowProps2slotKey().
-
-  slotKey *= fieldid_p.nelements();
-  slotKey += fieldRelabel_p[field];
-
-  slotKey *= spw_p.nelements();  // ndds;
-  slotKey += spwRelabel_p[oldDDSpwMatch_p[dd]];
-
-  slotKey *= nant_p;            // Must be set before calling rowProps2slotKey().
-  slotKey += antIndexer_p[ant1];
-
-  slotKey *= nant_p;   // Must be set before calling rowProps2slotKey().
-
-  // Slowest slotnum (closest together), but fastest index.
-  slotKey += antIndexer_p[ant2];
-
-  return slotKey;
-}
-
-  Int SubMS::binTimes(const Double timeBin)
-  {
-    // Figure out which bins each row (slot) will go in, and return the
-    // number of bins (-1 on failure).
-    //
-    // Normally the bins are automatically separated by changes in any data
-    // descriptor, i.e. antenna #, state ID, etc., but sometimes bins should be
-    // allowed to span (ignore) changes in certain descriptors.  An example is 
-    // scan # in WSRT MSes; it goes up with each integration, defeating time
-    // averaging!
-    //
-    if(timeBin > 0.0){
-      Int numrows = mssel_p.nrow();
-      const Vector<Int>&    ant1         = mscIn_p->antenna1().getColumn();
-      const Vector<Int>&    ant2         = mscIn_p->antenna2().getColumn();
-      const Vector<Double>& timeRows     = mscIn_p->timeCentroid().getColumn();
-      const Vector<Double>& intervalRows = mscIn_p->interval().getColumn();
-      const Vector<Int>&    datDesc      = mscIn_p->dataDescId().getColumn();
-      const Vector<Int>&    fieldId      = mscIn_p->fieldId().getColumn();
-
-      Bool ignore_array = false;    
-      Bool ignore_scan  = false;    // The most likely thing to ignore,
-                                    // esp. for WSRT MSes.
-      Bool ignore_state = false;
-      Vector<Int> zeroes;                  // The dummy values for ignored quantities.
-      if(ignorables_p != ""){              // Ignore something
-        zeroes.resize(ant1.nelements());   // Dummy vector of nrows zeroes.
-        ignore_array = ignorables_p.contains("arr"); // Pirate talk for "array".
-        ignore_scan  = ignorables_p.contains("scan");
-        ignore_state = ignorables_p.contains("state");
-      }
-
-      const Vector<Bool>& rowFlag = mscIn_p->flagRow().getColumn();
-
-      //std::set<Int> slotSet;
-      
-      GenSortIndirect<Double>::sort(tOI_p, timeRows);
-
-      bin_slots_p.resize(numrows);
-
-      if(ignore_array){
-	arrayRemapper_p.clear();
-	arrayRemapper_p[0] = 0;		// This will do.
-      }
-      else if(arrayRemapper_p.size() < 1)
-	make_map(mscIn_p->arrayId(), arrayRemapper_p);
-
-      if(ignore_scan){
-	scanRemapper_p.clear();
-	scanRemapper_p[0] = 0;
-      }
-      else if(scanRemapper_p.size() < 1)
-        make_map(mscIn_p->scanNumber(), 
-		 scanRemapper_p);        // This map is only implicitly used.
-
-      if(stateRemapper_p.size() < 1)
-	make_map(mscIn_p->stateId(), stateRemapper_p);
-
-      Int numBin = 0;
-
-      // A (potentially large) batch of flagged rows at the start is an
-      // annoyingly common case that must be dealt with.
-      uInt start_k = 0;
-      while(start_k < uInt(numrows) && rowFlag[tOI_p[start_k]])
-	++start_k;
-
-      uInt   oldtoik   = tOI_p[start_k];      
-      Double startoftb = timeRows[oldtoik] - 0.5 * intervalRows[oldtoik];
-      Double endoftb   = startoftb + timeBin;
-
-      Int numOutRows = 0;
-
-      for(uInt k = start_k; k < uInt(numrows); ++k){
-	uInt toik = tOI_p[k];
-
-	if(!rowFlag[toik]){
-	  Double time_toik = timeRows[toik];	  
-
-	  if(time_toik >= endoftb){	// Start a new bin.
-	    // Finish the old one
-	    startoftb = time_toik - 0.5 * intervalRows[toik];
-	    endoftb   = startoftb + timeBin;
-	  
-	    if(bin_slots_p[numBin].size() > 0){
-	      numOutRows += bin_slots_p[numBin].size();
-	      ++numBin;
-	    }
-	  }
-	  bin_slots_p[numBin][rowProps2slotKey(ant1[toik], ant2[toik],
-					       datDesc[toik], fieldId[toik],
-					       ignore_scan ? 0 : // Don't remap!
-					       mscIn_p->scanNumber()(toik),	
-					       ignore_state ? 0 : 
-					       mscIn_p->stateId()(toik),
-                                               ignore_array ? 0:
-					       mscIn_p->arrayId()(toik))].push_back(toik);
-	  oldtoik = toik;
-	}
-      }
-      
-      // Finish the last bin.
-      if(bin_slots_p[numBin].size() > 0){
-	numOutRows += bin_slots_p[numBin].size();
-	++numBin;
-      }
-
-      bin_slots_p.resize(numBin, true);
-      return numOutRows;
-    }
-    return -1;
-  }
 
 uInt SubMS::fillAntIndexer(const ROMSColumns *msc, Vector<Int>& antIndexer)
 {
@@ -6486,482 +6819,239 @@ Bool SubMS::sepFloat(const Vector<MS::PredefinedColumns>& anyDataCols,
   return doFloat;
 }
 
-Bool SubMS::fillTimeAverData(const Vector<MS::PredefinedColumns>& dataColNames)
+Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
 {
-  LogIO os(LogOrigin("SubMS", "fillTimeAverData()"));
+  LogIO os(LogOrigin("SubMS", "doTimeAver()"));
 
-  //No channel averaging with time averaging ... it's better this way.
+  //No channel averaging with time averaging ... it's better this way, but
+  //maybe that should be revisited with VisIter.
   if(chanStep_p[0] > 1){
     throw(AipsError("Simultaneous time and channel averaging is not handled."));
     return False;
   }
 
+  if(stateRemapper_p.size() < 1)
+    make_map(mscIn_p->stateId(), stateRemapper_p);
+
+  os << LogIO::DEBUG1 // helpdesk ticket from Oleg Smirnov (ODU-232630)
+     << "Before msOut_p.addRow(): "
+     << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
+     << LogIO::POST;
+
   Vector<MS::PredefinedColumns> columnNames;
   const Bool doFloat = sepFloat(dataColNames, columnNames);
+  if(doFloat)           // 2010-09-30
+    os << LogIO::WARN
+       << "Using VisIter to average FLOAT_DATA is extremely experimental."
+       << LogIO::POST;
+
   uInt ntok = columnNames.nelements();
+  ArrayColumn<Complex> outDataCols[ntok];
+  getDataColMap(outDataCols, ntok, columnNames);
 
-  //Vector<ROArrayColumn<Complex> > data(ntok);
-  ROArrayColumn<Complex> data[ntok];
-  ROArrayColumn<Float> floatData;
-
-  // Must initialize these before doSpWeight.
-  for(uInt datacol = 0; datacol < ntok; ++datacol)
-    data[datacol].reference(right_column(mscIn_p, columnNames[datacol]));
-  if(doFloat)
-    floatData.reference(mscIn_p->floatData());
-
-  const ROScalarColumn<Double> inTC(mscIn_p->timeCentroid());
-  const ROScalarColumn<Double> inExposure(mscIn_p->exposure());
-
-  ROArrayColumn<Float> wgtSpec;
   const Bool doSpWeight = !mscIn_p->weightSpectrum().isNull() &&
                            mscIn_p->weightSpectrum().isDefined(0) &&
                            mscIn_p->weightSpectrum().shape(0) ==
-                           data[0].shape(0);
-  if(doSpWeight)
-    wgtSpec.reference(mscIn_p->weightSpectrum());
-    
-  const ROScalarColumn<Int> ant1(mscIn_p->antenna1());
-  const ROScalarColumn<Int> ant2(mscIn_p->antenna2());
-  const ROScalarColumn<Int> inFeed1(mscIn_p->feed1());
-  const ROScalarColumn<Int> inFeed2(mscIn_p->feed2());
-  const ROScalarColumn<Int> fieldID(mscIn_p->fieldId());
-  const ROScalarColumn<Int> state(mscIn_p->stateId());
+                           right_column(mscIn_p, columnNames[0]).shape(0);
 
-  const ROScalarColumn<Int> inProc(mscIn_p->processorId());
-  std::map<Int, Int> procMapper;
-  make_map(inProc, procMapper);
+  // We may need to watch for chunks (timebins) that should be split because of
+  // changes in scan, etc. (CAS-2401).  The old split way would have
+  // temporarily shortened timeBin, but vi.setInterval() does not work without
+  // calling vi.originChunks(), so that approach does not work with VisIter.
+  // Instead, get VisIter's sort (which also controls how the chunks are split)
+  // to do the work.
 
-  const ROScalarColumn<Int> inObs(mscIn_p->observationId());
-  std::map<Int, Int> obsMapper;
-  make_map(inObs, obsMapper);
+  // Already separated by the chunking.
+  //const Bool watch_array(!combine_p.contains("arr")); // Pirate talk for "array".
 
-  const ROScalarColumn<Int> inArr(mscIn_p->arrayId());
+  const Bool watch_scan(!combine_p.contains("scan"));
+  const Bool watch_state(!combine_p.contains("state"));
+  const Bool watch_obs(!combine_p.contains("obs"));
+  uInt n_extra_cols_to_watch = 0;
 
-  const ROArrayColumn<Bool> flag(mscIn_p->flag());
+  if(watch_scan)
+    ++n_extra_cols_to_watch;
+  if(watch_state)
+    ++n_extra_cols_to_watch;
+  if(watch_obs)
+    ++n_extra_cols_to_watch;
 
-  // Flagged rows have already been excluded from the bins, so there is no
-  // need to worry about them here.
-  //const ROScalarColumn<Bool> rowFlag(mscIn_p->flagRow());
+  Block<Int> sort(n_extra_cols_to_watch);
+  uInt extra_col = 0;
 
-  // ...but new row flags can be made for completely flagged or unweighted rows.
-  Bool outRowFlag;
+  if(watch_scan){
+    sort[extra_col] = MS::SCAN_NUMBER;
+    ++extra_col;
+  }
+  if(watch_state){
+    sort[extra_col] = MS::STATE_ID;
+    ++extra_col;
+  }
+  if(watch_obs){
+    sort[extra_col] = MS::OBSERVATION_ID;
+    ++extra_col;
+  }
 
-  const ROScalarColumn<Int> scanNum(mscIn_p->scanNumber());
-  const ROScalarColumn<Int> dataDescIn(mscIn_p->dataDescId());
-  const ROArrayColumn<Double> inUVW(mscIn_p->uvw());
- 
-  uInt n_tbns = bin_slots_p.nelements();
-  os << LogIO::NORMAL << "Writing time averaged data of "
-     << n_tbns << " time slots" << LogIO::POST;
+  // MSIter tends to produce output INTERVALs that are longer than the
+  // requested interval length, by ~0.5 input integrations for a random
+  // timeBin_p.  Giving it timeBin_p - 0.5 * interval[0] removes the bias and
+  // brings it almost in line with binTimes() (which uses -0.5 *
+  // interval[bin_start]).
+  Double timeBin = timeBin_p - 0.5 * mscIn_p->interval()(0);
 
-  //Vector<Cube<Complex> > outData(ntok);
-  Matrix<Complex> outData[ntok];
-  ArrayColumn<Complex> outDataCols[ntok];
-  getDataColMap(outDataCols, ntok, columnNames);
-  Matrix<Float> outFloatData;
+  ROVisIterator vi(mssel_p, sort, timeBin);
   
-  Vector<Float> outRowWeight;
+  // Apply selection
+  // for(uInt spwind = 0; spwind < spw_p.nelements(); ++spwind)
+  //   vi.selectChannel(1, chanStart_p[spwind], nchan_p[spwind],
+  //                    chanStep_p[spwind], spw_p[spwind]);
+  vi.selectChannel(chanSlices_p);
+  vi.selectCorrelation(corrSlices_p);
+  VisBuffer vb(vi);
 
-  // This gets resized + initialized later.
-  Matrix<Bool> outFlag;
-
-  Matrix<Float> outSpWeight;
-
-  Double totrowwt;
-
-  Vector<Double> outUVW(3);
-  Vector<Float> outSigma;
-
-  const ROArrayColumn<Float> inRowWeight(mscIn_p->weight());
-  //os << LogIO::NORMAL2 << "outNrow = " << msOut_p.nrow() << LogIO::POST;
-  os << LogIO::DEBUG1 << "inUVW.nrow() = " << inUVW.nrow() << LogIO::POST;
-  //os << LogIO::NORMAL << "ncorr_p = " << ncorr_p << LogIO::POST;
-  //os << LogIO::NORMAL << "nchan_p = " << nchan_p << LogIO::POST;
-
-  //IPosition blc(2, 0, chanStart_p[0]);
-  //IPosition trc(2, ncorr_p[0] - 1, nchan_p[0] + chanStart_p[0] - 1);
-  //IPosition sliceShape(trc - blc + 1);
-  IPosition sliceShape;
-  IPosition oldsliceShape = IPosition(2, 0, 0); // Ensure mismatch on 1st iteration.
-  Slice chanSlice;
-  Slicer corrChanSlicer;
-
-  // The real initialization is inside the loop - this just prevents a compiler warning.
-  uInt chanStop = nchan_p[0] * chanStep_p[0] + chanStart_p[0];
-  Array<Float> unflgWtSpec;
-  Array<Complex> data_toikit;
-  Array<Float> floatData_toikit;
-  Vector<Float> unflaggedwt;
+  Vector<Int> spwindex(max(spw_p) + 1);
+  spwindex.set(-1);
+  for(uInt k = 0; k < spw_p.nelements(); ++k)
+    spwindex[spw_p[k]] = k;
     
-  // Iterate through timebins.
-  uInt orn = 0; 		      // row number in output.
-  // Guarantee oldDDID != ddID on 1st iteration.
-  Int oldDDID = spwRelabel_p[oldDDSpwMatch_p[dataDescIn(bin_slots_p[0].begin()->second[0])]] - 1;
-  //Float oldMemUse = -1.0;
+  std::map<Int, Int> procMapper;
+  make_map(mscIn_p->processorId(), procMapper); // Chunkize?
+
+  // Vector<Int> inObs;            // mscIn_p->observationId()
+  std::map<Int, Int> obsMapper;
+  make_map(mscIn_p->observationId(), obsMapper); // Chunkize?
+
+  //os << LogIO::NORMAL2 << "outNrow = " << msOut_p.nrow() << LogIO::POST;
 
   Double rowwtfac; // Adjusts row weight for channel selection.
 
-  ProgressMeter meter(0.0, n_tbns * 1.0, "split", "bins averaged", "", "",
-		      True, n_tbns / 100);
+  // All of this ddid/spw confusion really needs cleaning up.
+  // a map from input to output
+  // DATA_DESC_ID.  (ddidmap[input_ddid] = output_ddid.  Setting ddidmap to -1
+  // for unselected ddids will help make it obvious if unexpected ddids sneak
+  // through.)  Vector<Int> ddidmap(oldDDSpwMatch_p.nelements());
+  // ddidmap.set(-1);
+  // for(uInt i = 0; i < ddidmap.nelements(); ++i){
+  //   Int oldspwid = oldDDSpwMatch_p[i];
 
-  for(uInt tbn = 0; tbn < n_tbns; ++tbn){
-    // Float memUse = Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0);
-    // if(memUse != oldMemUse){
-    //   oldMemUse = memUse;
-    //   os << LogIO::DEBUG1 // helpdesk ticket in from Oleg Smirnov (ODU-232630)
-    //      << "tbn " << tbn << ": " << memUse << " MB"
-    //      << LogIO::POST;
-    // }
-    
-    // Iterate through slots.
-    for(ui2vmap::iterator slotit = bin_slots_p[tbn].begin();
-        slotit != bin_slots_p[tbn].end(); ++slotit){
-      uivector& slotv = slotit->second;
-      uInt slotv0 = slotv[0];
-      Double totslotwt = 0.0;
-      Double outTC = 0.0;
-      Double outExposure = 0.0;
+  //   if(oldspwid > -1 && oldspwid < spwRelabel_p.nelements())
+  //     ddidmap[i] = spwRelabel_p[oldspwid];
+  // }
 
-      outRowFlag = false;
-      outUVW.set(0.0);
+  uInt rowsdone = 0;    // Output rows, used for the RefRows.
 
-      Int ddID = spwRelabel_p[oldDDSpwMatch_p[dataDescIn(slotv0)]];
-      Bool newDDID = (ddID != oldDDID);
-      if(newDDID){
-        oldDDID = ddID;
+  uInt ninrows = mssel_p.nrow();
+  ProgressMeter meter(0.0, ninrows * 1.0, "split", "rows averaged", "", "",
+		      True, 1);
+  uInt inrowsdone = 0;  // only for the meter.
 
-        if(ddID < 0){                      // Paranoia
-          if(newDDID)
-            os << LogIO::WARN
-               << "Treating DATA_DESCRIPTION_ID " << ddID << " as 0."
-               << LogIO::POST;
-          ddID = 0;
-        }
-      
-        //// Note the lack of polStart_p[ddID] - this is not set up to select by
-        //// polarization, or even correlation.
-        //blc = IPosition(2, 0, chanStart_p[ddID]);
-        //trc = IPosition(2, ncorr_p[ddID] - 1, nchan_p[ddID] + chanStart_p[ddID] - 1);
-	chanSlice = Slice(chanStart_p[ddID], nchan_p[ddID],
-			  averageChannel_p ? 1 : chanStep_p[ddID]);
-	corrChanSlicer = Slicer(corrSlice_p[polID_p[ddID]], chanSlice);
-        chanStop = nchan_p[ddID] * chanStep_p[ddID] + chanStart_p[ddID];
+  //VisChunkAverager vca(timeBin_p, columnNames, doSpWeight);
+  VisChunkAverager vca(columnNames, doSpWeight);
 
-        //sliceShape = trc - blc + 1;
-	sliceShape = IPosition(2, ncorr_p[ddID], nchan_p[ddID]);
-        if(sliceShape != oldsliceShape){
-          os << LogIO::DEBUG1
-             << "sliceShape = " << sliceShape << " (was: " << oldsliceShape << ")"
-             << LogIO::POST;
-          oldsliceShape = sliceShape;
+  // Iterate through the chunks.  A timebin will have multiple chunks if it has
+  // > 1 arrays, fields, or ddids.
+  for(vi.originChunks(); vi.moreChunks(); vi.nextChunk()){
+    vca.reset();        // Should be done at the start of each chunk.
 
-          // Refit the temp & output holders for this shape.
-          unflaggedwt.resize(ncorr_p[ddID]);
-	  outRowWeight.resize(ncorr_p[ddID]);
-	  outSigma.resize(ncorr_p[ddID]);
-          outFlag.resize(sliceShape);
-          data_toikit.resize(sliceShape);
-          for(uInt datacol = 0; datacol < ntok; ++datacol)
-            outData[datacol].resize(sliceShape);
-          if(doFloat){
-            floatData_toikit.resize(sliceShape);
-            outFloatData.resize(sliceShape);
-          }
-          if(doSpWeight){
-            unflgWtSpec.resize(sliceShape);
-            outSpWeight.resize(sliceShape);
-          }
+    inrowsdone += vi.nRowChunk();
 
-	  rowwtfac = static_cast<Double>(nchan_p[ddID]) / inNumChan_p[ddID];
-        }
-      }
+    // Fill and time average vi's current chunk.
+    VisBuffer& avb(vca.average(vi));
+    uInt rowsnow = avb.nRow();
 
-      // Make any necessary initializations of the output holders for this orn.
-      outFlag.set(True);
-      outRowWeight.set(0.0);	  
-      for(uInt datacol = 0; datacol < ntok; ++datacol)
-        outData[datacol].set(0.0);
-      if(doFloat)
-        outFloatData.set(0.0);      
-      if(doSpWeight)
-        outSpWeight.set(0.0);
+    if(rowsnow > 0){
+      RefRows rowstoadd(rowsdone, rowsdone + rowsnow - 1);
 
-      // Iterate through mscIn_p's rows that belong to the slot.
-      Double swv = 0.0; // Sum of the weighted visibilities.
-      outUVW.set(0.0);
-      Double minTime = mscIn_p->time()(slotv0);
-      Double maxTime = minTime;
-      Double startInterval = mscIn_p->interval()(slotv0);
-      Double endInterval = startInterval;
-      
-      for(uivector::iterator toikit = slotv.begin();
-          toikit != slotv.end(); ++toikit){
-        Double time = mscIn_p->time()(*toikit);
+      // msOut_p.addRow(rowsnow, True);
+      msOut_p.addRow(rowsnow);            // Try it without initialization.
         
-        if(time > maxTime){
-          maxTime = time;
-          endInterval = mscIn_p->interval()(*toikit);
-        }
-        
-        // keepShape_p == false means the input channels cannot simply
-        // be copied through to the output channels.
-        // It's a bit faster if no slicing is done...so avoid it if possible.
+      //    relabelIDs();
 
-        if(doSpWeight){
-          if(!keepShape_p){
-            unflgWtSpec = wgtSpec(*toikit)(corrChanSlicer);
-            unflgWtSpec(flag(*toikit)(corrChanSlicer)) = 0.0;
-          }
-          else{
-            unflgWtSpec = wgtSpec(*toikit);
-            unflgWtSpec(flag(*toikit)) = 0.0;
-          }
-        }
-        // Set flagged weights to 0 in the unflagged weights...
-        for(Int outCorrInd = 0; outCorrInd < ncorr_p[ddID]; ++outCorrInd){
-	  Int inCorrInd = inPolOutCorrToInCorrMap_p[polID_p[ddID]][outCorrInd];
-	  IPosition startpos(2, inCorrInd, chanStart_p[ddID]);
-	  IPosition endpos(2, inCorrInd,
-			   nchan_p[ddID] + chanStart_p[ddID] - 1);
-	  
-	  if(doSpWeight){
-	    unflaggedwt[outCorrInd] = sum(unflgWtSpec(startpos, endpos));
-	  }
-	  else{
-	    if(allTrue(flag(*toikit)(startpos, endpos))){
-	      unflaggedwt[outCorrInd] = 0.0;
-	    }
-	    else{
-	      unflaggedwt[outCorrInd] = inRowWeight(*toikit)(IPosition(1,
-								   inCorrInd));
-	      if(!keepShape_p)
-		unflaggedwt[outCorrInd] *= rowwtfac;
-	    }
-	  }
-        }
-        
-        // The input row may be completely flagged even if the row flag is
-        // false.
-        totrowwt = sum(doSpWeight ? unflgWtSpec : unflaggedwt);
-        if(totrowwt > 0.0){
-          // Accumulate the averaging values from *toikit.
-          //  	    os << LogIO::DEBUG1 << "inRowWeight(*toikit).shape() = "
-          //  	       << inRowWeight(*toikit).shape() << LogIO::POST;
-          //  	    os << LogIO::DEBUG1 << "unflaggedwt.shape() = "
-          //  	       << unflaggedwt.shape() << LogIO::POST;
-          //  	    os << LogIO::DEBUG1 << "flag(*toikit).shape() = "
-          //  	       << flag(*toikit).shape() << LogIO::POST;
-            	    // os << LogIO::DEBUG1 << "data(*toikit).shape() = "
-            	    //    << data(*toikit).shape() << LogIO::POST;
+      // avb.freqAveCubes();  // Watch out, weight must currently be handled separately.
 
-          outRowWeight += unflaggedwt;
-          
-          totslotwt += totrowwt;
-        
-	  outFlag *= keepShape_p ? flag(*toikit) : flag(*toikit)(corrChanSlicer);
-
-          if(doSpWeight){
-            //    os << LogIO::DEBUG1
-            // //    << "wgtSpec(*toikit).shape() = " << wgtSpec(*toikit).shape()
-            // //    << "\nflag(*toikit).shape() = " << flag(*toikit).shape()
-            // //    << "outSpWeight.xyPlane(orn).shape() = "
-            // //    << outSpWeight.xyPlane(orn).shape()
-            //       << "\noutSpWeight.xyPlane(orn)(blc) (before) =\t"
-            //       << outSpWeight.xyPlane(orn)(blc)
-            //       << LogIO::POST;
-            
-            outSpWeight += unflgWtSpec;
-            
-            // os << LogIO::DEBUG1
-            //    << "outSpWeight.xyPlane(orn)(blc) (after) = "
-            //    << outSpWeight.xyPlane(orn)(blc)
-            //    << "\nunflgWtSpec(blc) = " << unflgWtSpec(blc)
-            //    << "\nwgtSpec(*toikit)(blc) = " << wgtSpec(*toikit)(blc)
-            //    << "\nflag(*toikit)(blc) = " << flag(*toikit)(blc)
-            //    << LogIO::POST;
-            if(!keepShape_p){
-              for(uInt datacol = 0; datacol < ntok; ++datacol)
-                accumUnflgDataWS(data_toikit, unflgWtSpec,
-                                 data[datacol](*toikit)(corrChanSlicer),
-                                 flag(*toikit)(corrChanSlicer), outData[datacol]);
-              if(doFloat)
-                accumUnflgDataWS(floatData_toikit, unflgWtSpec,
-                                 floatData(*toikit)(corrChanSlicer),
-                                 flag(*toikit)(corrChanSlicer), outFloatData);
-            }
-            else{
-              for(uInt datacol = 0; datacol < ntok; ++datacol)
-                accumUnflgDataWS(data_toikit, unflgWtSpec,
-                                 data[datacol](*toikit),
-                                 flag(*toikit), outData[datacol]);
-              if(doFloat)
-                accumUnflgDataWS(floatData_toikit, unflgWtSpec,
-                                 floatData(*toikit), flag(*toikit),
-                                 outFloatData);
-            }
-          }
-          else{
-            if(!keepShape_p){
-              for(uInt datacol = 0; datacol < ntok; ++datacol)
-                accumUnflgData(data_toikit, unflaggedwt,
-                               data[datacol](*toikit)(corrChanSlicer),
-                               flag(*toikit)(corrChanSlicer), outData[datacol]);
-              if(doFloat)
-                accumUnflgData(floatData_toikit, unflaggedwt,
-                               floatData(*toikit)(corrChanSlicer),
-                               flag(*toikit)(corrChanSlicer), outFloatData);
-            }
-            else{
-              for(uInt datacol = 0; datacol < ntok; ++datacol)
-                accumUnflgData(data_toikit, unflaggedwt,
-                               data[datacol](*toikit),
-                               flag(*toikit), outData[datacol]);
-              if(doFloat)
-                accumUnflgData(floatData_toikit, unflaggedwt,
-                               floatData(*toikit), flag(*toikit), outFloatData);
-            }
-          }
-          
-          Double wv = 0.0;
-          Array<Complex>::const_iterator dataEnd = data_toikit.end();
-          for(Array<Complex>::const_iterator dit = data_toikit.begin();
-              dit != dataEnd; ++dit)
-            wv += fabs(*dit);
-          if(wv > 0.0){
-            swv += wv;
-            outUVW += (wv / swv) * (inUVW(*toikit) - outUVW);
-          }
-
-          // totrowwt > 0.0 implies totslotwt > 0.0
-          outTC += (totrowwt / totslotwt) * (inTC(*toikit) - outTC);
-          outExposure += totrowwt * inExposure(*toikit);
-	}
-      } // End of loop through the slot's rows.
-
-      // If there were no weights > 0, plop in reasonable values just for
-      // appearance's sake.
-      if(swv <= 0.0)
-        outUVW = inUVW(slotv0);
-
-      // Average the accumulated values.
-      //totslotwt = sum(outRowWeight);  // Uncomment for debugging
-      if(totslotwt > 0.0){
-        outExposure *= slotv.size() / totslotwt;
-      }
-      else{
-        // outExposure = 0.0;      // Already is.
-        outTC = inTC(slotv0);      // Looks better than 1858.
-        outRowFlag = true;
-      }
-
-      slotv.clear();  // Free some memory.  Does it save time?  Test!
-      if(doSpWeight){
-        Matrix<Float>::const_iterator oSpWtIter;
-        const Matrix<Float>::const_iterator oSpWtEnd(outSpWeight.end());
-          
-        for(uInt datacol = 0; datacol < ntok; ++datacol){
-          oSpWtIter = outSpWeight.begin();            
-          for(Matrix<Complex>::iterator oDIter = outData[datacol].begin();
-              oSpWtIter != oSpWtEnd; ++oSpWtIter){
-            if(*oSpWtIter != 0.0)
-              *oDIter /= *oSpWtIter;
-            ++oDIter;
-          }
-        }
-      }
-      else{
-        uInt ncorr  = ncorr_p[ddID];
-        uInt nchan = chanStop - chanStart_p[ddID];
-        
-        for(uInt corrind = 0; corrind < ncorr; ++corrind){
-          Float rowwtcorr = outRowWeight[corrind];
-          for(uInt datacol = 0; datacol < ntok; ++datacol){
-
-            if(rowwtcorr != 0.0){
-              for(uInt c = 0; c < nchan; ++c)
-                outData[datacol](corrind, c) /= rowwtcorr;
-            }
-            else{
-              for(uInt c = 0; c < nchan; ++c)
-                outData[datacol](corrind, c) = 0.0;
-            }
-          }
-        }
-      }
-
-      // ncorr_p is Int, therefore corrInd is too.
-      for(Int corrInd = 0; corrInd < ncorr_p[ddID]; ++corrInd){
-        Float orw = outRowWeight[corrInd];
-        
-        if(orw > 0.0)
-          outSigma[corrInd] = sqrt(1.0 / orw);
-        else
-          outSigma[corrInd] = -1.0; // Seems safer than 0.0.
-      }
-
-      // Fill in the nonaveraging values from slotv0.
-      // In general, _IDs which are row numbers in a subtable must be
-      // remapped, and those which are not probably shouldn't be.
-      msc_p->time().put(orn, 0.5 * (minTime + maxTime));
-      msc_p->interval().put(orn,
-                            maxTime - minTime + 0.5 * (startInterval
-                                                       + endInterval));
-      msc_p->scanNumber().put(orn, scanNum(slotv0));	// Don't remap!
+      // // Fill in the nonaveraging values from slotv0.
+      // // In general, _IDs which are row numbers in a subtable must be
+      // // remapped, and those which are not probably shouldn't be.
       if(antennaSel_p){
-	msc_p->antenna1().put(orn, antIndexer_p[ant1(slotv0)]);
-	msc_p->antenna2().put(orn, antIndexer_p[ant2(slotv0)]);
+        remap(avb.antenna1(), antIndexer_p);
+        remap(avb.antenna2(), antIndexer_p);
       }
-      else{
-	msc_p->antenna1().put(orn, ant1(slotv0));
-	msc_p->antenna2().put(orn, ant2(slotv0));
-      }	
-      msc_p->feed1().put(orn, inFeed1(slotv0));
-      msc_p->feed2().put(orn, inFeed2(slotv0));
-      msc_p->fieldId().put(orn, fieldRelabel_p[fieldID(slotv0)]);
-      msc_p->stateId().put(orn, stateRemapper_p[state(slotv0)]);
-      msc_p->processorId().put(orn, procMapper[inProc(slotv0)]);
-      msc_p->observationId().put(orn, obsMapper[inObs(slotv0)]);
-      msc_p->arrayId().put(orn, inArr(slotv0));	        // Don't remap!
-      msc_p->dataDescId().put(orn,
-			      spwRelabel_p[oldDDSpwMatch_p[dataDescIn(slotv0)]]);
-      msc_p->flagRow().put(orn, outRowFlag);
-      msc_p->exposure().put(orn, outExposure);
-      msc_p->timeCentroid().put(orn, outTC);
+      msc_p->antenna1().putColumnCells(rowstoadd, avb.antenna1());
+      msc_p->antenna2().putColumnCells(rowstoadd, avb.antenna2());
 
-      // Columns whose shape might vary with ddID must be filled on a
-      // row-by-row basis.
-      msc_p->flag().put(orn, outFlag);
-      msc_p->weight().put(orn, outRowWeight);
-      msc_p->sigma().put(orn, outSigma);
-      for(uInt datacol = 0; datacol < ntok; ++datacol)
-        outDataCols[datacol].put(orn, outData[datacol]);
-      if(doFloat)
-        msc_p->floatData().put(orn, outFloatData);
+      Vector<Int> arrID(rowsnow);
+      arrID.set(avb.arrayId());                              // Don't remap!
+      msc_p->arrayId().putColumnCells(rowstoadd, arrID);
+
+      // outDataCols determines whether the input column is output to DATA or not.
+      for(uInt datacol = 0; datacol < ntok; ++datacol){
+        if(dataColNames[datacol] == MS::DATA)
+          outDataCols[datacol].putColumnCells(rowstoadd, avb.visCube());
+        else if(dataColNames[datacol] == MS::MODEL_DATA)
+          outDataCols[datacol].putColumnCells(rowstoadd, avb.modelVisCube());
+        else if(dataColNames[datacol] == MS::CORRECTED_DATA)
+          outDataCols[datacol].putColumnCells(rowstoadd, avb.correctedVisCube());
+      }
+      // if(doFloat)
+      //   msc_p->floatData().putColumnCells(rowstoadd, avb.floatData());
+
+      // remap() with a constant value.
+      Vector<Int> ddID(rowsnow);
+      ddID.set(spwRelabel_p[oldDDSpwMatch_p[avb.dataDescriptionId()]]);
+      msc_p->dataDescId().putColumnCells(rowstoadd, ddID);
+
+      msc_p->exposure().putColumnCells(rowstoadd, avb.exposure());
+      msc_p->feed1().putColumnCells(rowstoadd, avb.feed1());
+      msc_p->feed2().putColumnCells(rowstoadd, avb.feed2());
+
+      Vector<Int> fieldID(rowsnow);
+      fieldID.set(fieldRelabel_p[avb.fieldId()]);
+      msc_p->fieldId().putColumnCells(rowstoadd, fieldID);
+
+      msc_p->flagRow().putColumnCells(rowstoadd, avb.flagRow()); 
+      msc_p->flag().putColumnCells(rowstoadd, avb.flagCube());
+      msc_p->interval().putColumnCells(rowstoadd, avb.timeInterval());
+
+      remap(avb.observationId(), obsMapper);
+      msc_p->observationId().putColumnCells(rowstoadd, avb.observationId());
+
+      remap(avb.processorId(), procMapper);
+      msc_p->processorId().putColumnCells(rowstoadd, avb.processorId());
+
+      msc_p->scanNumber().putColumnCells(rowstoadd, avb.scan());	// Don't remap!
+      msc_p->sigma().putColumnCells(rowstoadd, avb.sigmaMat());
+
+      remap(avb.stateId(), stateRemapper_p);
+      msc_p->stateId().putColumnCells(rowstoadd, avb.stateId());
+
+      msc_p->time().putColumnCells(rowstoadd, avb.time());
+      msc_p->timeCentroid().putColumnCells(rowstoadd, avb.timeCentroid());
+      msc_p->uvw().putColumnCells(rowstoadd, avb.uvwMat());
+      msc_p->weight().putColumnCells(rowstoadd, avb.weightMat());
       if(doSpWeight)
-        msc_p->weightSpectrum().put(orn, outSpWeight);
+        msc_p->weightSpectrum().putColumnCells(rowstoadd, avb.weightSpectrum());
       
-      // And it's a good idea in general (always?), since it avoids arrays that
-      // hold all of the output rows.
-      msc_p->uvw().put(orn, outUVW);
-
-      ++orn;  // Advance the output row #.
-    } // End of iterating through the bin's slots.
-
-    meter.update(tbn);
-  }
-  os << LogIO::NORMAL << "Data binned." << LogIO::POST; 
-  bin_slots_p.resize(0);           // Free some memory
+      rowsdone += rowsnow;
+    }
+    meter.update(inrowsdone);
+  }   // End of for(vi.originChunks(); vi.moreChunks(); vi.nextChunk())
+  os << LogIO::NORMAL << "Data binned." << LogIO::POST;
 
   os << LogIO::DEBUG1 // helpdesk ticket in from Oleg Smirnov (ODU-232630)
      << "Post binning memory: " << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
      << LogIO::POST;
 
+  if(rowsdone < 1){
+    os << LogIO::WARN
+       << "No rows were written.  Is all the selected input flagged?"
+       << LogIO::POST;
+    return false;
+  }
   return True;
 }
 
 void SubMS::getDataColMap(ArrayColumn<Complex>* mapper, uInt ntok,
-                          const Vector<MS::PredefinedColumns> colEnums)
+                          const Vector<MS::PredefinedColumns>& colEnums)
 {
   // Set up a map from dataColumn indices to ArrayColumns in the output.
   // mapper has to be a pointer (gasp!), not a Vector, because
@@ -6984,7 +7074,6 @@ void SubMS::getDataColMap(ArrayColumn<Complex>* mapper, uInt ntok,
     }
   }
 }
-
 
 inline Bool SubMS::areDataShapesConstant()
 {

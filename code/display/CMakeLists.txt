@@ -41,6 +41,8 @@ qt4_wrap_cpp( outfiles_qoh
   implement/QtViewer/QtDisplayData.qo.h
   implement/QtViewer/QtDisplayPanelGui.qo.h
   implement/QtViewer/QtDisplayPanel.qo.h
+  implement/QtViewer/QtESOPanelGui.qo.h
+  implement/QtViewer/QtHeaderInfo.qo.h
   implement/QtViewer/QtLELEdit.qo.h
   implement/QtViewer/QtMouseToolBar.qo.h
   implement/QtViewer/QtMouseTools.qo.h
@@ -285,6 +287,8 @@ casa_add_library( display
   implement/QtViewer/QtDisplayData.cc
   implement/QtViewer/QtDisplayPanel.cc
   implement/QtViewer/QtDisplayPanelGui.cc
+  implement/QtViewer/QtESOPanelGui.cc
+  implement/QtViewer/QtHeaderInfo.cc
   implement/QtViewer/QtMouseToolBar.cc
   implement/QtViewer/QtMouseTools.cc
   implement/QtViewer/QtMouseToolState.cc
@@ -305,6 +309,9 @@ casa_add_library( display
   implement/RegionShapes/RSUtils.cc
   implement/RegionShapes/XMLFileReaderWriter.cc
   implement/Utilities/DisplayOptions.cc
+  implement/Utilities/DlHandle.cc
+  implement/Utilities/DlTarget.cc
+  implement/Utilities/Lowlevel.cc
   )
 
 casa_add_executable( display casaplotter apps/casaplotter/casaplotter.cc )
@@ -319,3 +326,4 @@ casa_add_assay( display implement/Display/test/tAttVal.cc )
 casa_add_assay( display implement/Display/test/tAttValPoi.cc )
 casa_add_assay( display implement/QtViewer/test/dQtDataManager.cc )
 casa_add_assay( display implement/Utilities/test/tDisplayOptions.cc )
+casa_add_assay( display implement/Utilities/test/tDlHandle.cc )

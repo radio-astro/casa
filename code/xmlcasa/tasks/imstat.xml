@@ -9,7 +9,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!-- This is the image statitics task                         -->
 
-<task type="function" name="imstat" category="image analysis, information">
+<task type="function" name="imstat" category="analysis, information">
 <shortdescription>Displays statistical information from an image or image region</shortdescription>
 
 <input>
@@ -44,8 +44,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <example>stokes=&quot;RR,LL&quot;</example>
     </param>
 
-    <param type="bool" name="list">
-        <description>Print stats to logger?</description>
+    <param type="bool" name="listit">
+        <description>Print stats and bounding box to logger?</description>
         <value>True</value>
     </param>
 
@@ -101,6 +101,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 Default: none (all); Example: stokes='IQUV';  
                                      Example:stokes='I,Q'
                 Options: 'I','Q','U','V','RR','RL','LR','LL','XX','YX','XY','YY', ...
+    listit   -- Print stats and bounding box to logger? 
+    verbose  -- Print additional messages to logger?
+
 
       General procedure:
 

@@ -55,7 +55,7 @@ namespace FluxCalibrationMethodMod
   //! FluxCalibrationMethod.
   //!  [CalDM.CalFlux] Methods for flux calibration
   
-  const char *const revision = "1.8";
+  const char *const revision = "1.9";
   const int version = 1;
   
   enum FluxCalibrationMethod

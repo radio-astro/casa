@@ -5,7 +5,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="uvmodelfit" category="modelling">
+<task type="function" name="uvmodelfit" category="modeling, calibration">
 <shortdescription>Fit a single component source model to the uv data</shortdescription>
 <description>
 	Fit a single component source model to the uv data

@@ -107,7 +107,7 @@ class CalDeviceRow;
  * Calibration device characteristics. This table is not part of the   Calibration Data Model but describes the actual observations; it refers to   the amplitude calibration device which includes the hot loads.     Calibration device properties are assumed independent of frequency   throughout a spectral window.
  * <BR>
  
- * Generated from model's revision "1.54", branch "HEAD"
+ * Generated from model's revision "1.55", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalDevice </CAPTION>
@@ -153,7 +153,7 @@ class CalDeviceRow;
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandatory) </TH></TR>
 	
  * <TR>
  * <TD> numCalload </TD> 

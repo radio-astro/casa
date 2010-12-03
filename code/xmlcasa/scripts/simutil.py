@@ -4,12 +4,16 @@ import casac
 import os
 import shutil
 import commands
-import pdb
+#import pdb
 # all I really need is casalog, but how to get it:?
 from taskinit import *
 import pylab as pl
-qatool = casac.homefinder.find_home_by_name('quantaHome')
-qa = qatool.create()
+
+# qa doesn't hold state.
+#qatool = casac.homefinder.find_home_by_name('quantaHome')
+#qa = qatool.create()
+
+im, cb, ms, tb, fg, me, ia, po, sm, cl, cs, rg, sl, dc, vp = gentools()
 
 class compositenumber:
     def __init__(self, maxval=100):
@@ -46,13 +50,13 @@ class compositenumber:
 
 class simutil:
     def __init__(self, direction="",
-                 startfreq=qa.quantity("245GHz"),
+                 centerfreq=qa.quantity("245GHz"),
                  bandwidth=qa.quantity("1GHz"),
                  totaltime=qa.quantity("0h"),
                  verbose=False):
         self.direction=direction
         self.verbose=verbose
-        self.startfreq=startfreq
+        self.centerfreq=centerfreq
         self.bandwidth=bandwidth
         self.totaltime=totaltime
         self.pmulti=0  # rows, cols, currsubplot
@@ -834,14 +838,13 @@ class simutil:
 
         # Ruze phase efficiency.    
         if epsilon==None: epsilon = eps[iobs] # microns RMS
-        if freq==None:            
-            startfreq_ghz=qa.convert(qa.quantity(self.startfreq),'GHz')
+        if freq==None:
+            freq_ghz=qa.convert(qa.quantity(self.centerfreq),'GHz')
             bw_ghz=qa.convert(qa.quantity(self.bandwidth),'GHz')
-            freq_ghz=qa.add(startfreq_ghz,qa.mul(qa.quantity(0.5),bw_ghz))
         else:            
             freq_ghz=qa.convert(qa.quantity(freq),'GHz')
         eta_p = pl.exp(-(4.0*3.1415926535*epsilon*freq_ghz.get("value")/2.99792458e5)**2)
-        if self.verbose: self.msg("ruze phase efficiency for surface accuracy of "+str(epsilon)+"um = " + str(eta_p),origin="noisetemp")
+        if self.verbose: self.msg("ruze phase efficiency for surface accuracy of "+str(epsilon)+"um = " + str(eta_p) + " at "+str(freq),origin="noisetemp")
 
         # antenna efficiency
         # eta_a = eta_p*eta_s*eta_b*eta_t
@@ -861,11 +864,6 @@ class simutil:
             if self.verbose: self.msg("using ALMA/ACA Rx specs",origin="noisetemp")
         else:
             if telescope=='EVLA':
-                # these are T_Rx/epsilon so may be incorrect
-                # http://www.vla.nrao.edu/astro/guides/vlas/current/node11.html
-                # http://www.vla.nrao.edu/astro/guides/evlareturn/stress_tests/L-Band/
-#                f0=[0.33,1.47,4.89,8.44,22.5,33.5,43.3]
-#                t0=[500, 70,  60,  55,  100, 130, 350]
                 # 201009114 from rick perley:
                 f0=[1.5,3,6,10,15,23,33,45]
                 t0=[10.,15,12,15,10,12,15,28]
@@ -920,9 +918,24 @@ class simutil:
     def sensitivity(self, freq, bandwidth, etime, elevation, pwv=None,
                    telescope=None, diam=None, nant=None,
                    antennalist=None,
-                   doimnoise=None):
+                   doimnoise=None,
+                   integration=None,debug=None):
         
-        msfile="tmp.ms"
+        import glob
+        tmpname="tmp"+str(os.getpid())
+        i=0
+        while i<10 and len(glob.glob(tmpname+"*"))>0:
+            tmpname="tmp"+str(os.getpid())+str(i)
+            i=i+1
+        if i>=9:
+            xx=glob.glob(tmpname+"*")
+            for k in range(len(xx)):
+                if os.path.isdir(xx[k]):
+                    cu.removetable(xx[k])
+                else:
+                    os.remove(xx[k])
+ 
+        msfile=tmpname+".ms"
         sm.open(msfile)
 
         if antennalist==None:
@@ -945,6 +958,19 @@ class simutil:
             antnames="A00"
 
         else:
+            if str.upper(antennalist[0:4])=="ALMA":
+                tail=antennalist[5:]
+                if self.isquantity(tail,halt=False):
+                    resl=qa.convert(tail,"arcsec")['value']
+                    repodir=os.getenv("CASAPATH").split(' ')[0]+"/data/alma/simmos/"
+                    if os.path.exists(repodir):
+                        confnum=(2.867-pl.log10(resl*1000*qa.convert(freq,"GHz")['value']/672.))/0.0721
+                        confnum=max(1,min(28,confnum))
+                        conf=str(int(round(confnum)))
+                        if len(conf)<2: conf='0'+conf
+                        antennalist=repodir+"alma.out"+conf+".cfg"
+                        self.msg("converted resolution to antennalist "+antennalist)
+
             if os.path.exists(antennalist):
                 stnx, stny, stnz, stnd, padnames, nant, telescope = self.readantenna(antennalist)
             else:
@@ -977,14 +1003,9 @@ class simutil:
         # RI TODO isquantity checks
         model_width=qa.quantity(bandwidth) # note: ATM uses band center
 
-        # but we want band center at center of first channel, and 
-        #model_start=qa.add(qa.quantity(freq),qa.mul(model_width,-0.5))
+        # start is center of first channel.  for nch=1, that equals center
         model_start=qa.quantity(freq)
        
-#        model_nchan=2
-#        model_width=qa.mul(qa.quantity(bandwidth),0.5)
-#        model_start=qa.add(qa.quantity(freq),qa.mul(model_width,-0.25))
-
         if str.upper(telescope).find('VLA')>0:
             sm.setspwindow(spwname="band1", freq=qa.tos(model_start), 
                            deltafreq=qa.tos(model_width), 
@@ -1010,7 +1031,10 @@ class simutil:
                     sourcedirection="J2000 00:00:00.00 "+qa.angle(dec),
                     calcode="OBJ", distance='0m')
         reftime = me.epoch('TAI', "2012/01/01/00:00:00")
-        sm.settimes(integrationtime=etime, usehourangle=True, 
+        if integration==None:
+            integration=qa.mul(etime,0.01)        
+        self.msg("observing for "+qa.tos(etime)+" with integration="+qa.tos(integration))
+        sm.settimes(integrationtime=integration, usehourangle=True, 
                     referencetime=reftime)
 
         sm.observe(sourcename="src1", spwname="band1",
@@ -1022,6 +1046,10 @@ class simutil:
         
         eta_p, eta_s, eta_b, eta_t, eta_q, t_rx = self.noisetemp(telescope=telescope,freq=freq)
         eta_a = eta_p * eta_s * eta_b * eta_t
+        if self.verbose: 
+            self.msg('antenna efficiency    = ' + str(eta_a),origin="noise")
+            self.msg('spillover efficiency  = ' + str(eta_s),origin="noise")
+            self.msg('correlator efficiency = ' + str(eta_q),origin="noise")
         
         if pwv==None:
             # RI TODO choose based on freq octile
@@ -1029,14 +1057,14 @@ class simutil:
 
         # things hardcoded in ALMA etimecalculator, & defaults in simulator.xml
         t_ground=270.
-        t_cmb=2.73
+        t_cmb=2.725
         # eta_q = 0.88
         # eta_a = 0.95*0.8*eta_s
 
         sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
                     antefficiency=eta_a,trx=t_rx,
                     tground=t_ground,tcmb=t_cmb,pwv=str(pwv)+"mm",
-                    mode="tsys-atm",table="tmp")
+                    mode="tsys-atm",table=tmpname)
         
         if doimnoise:
             sm.corrupt()
@@ -1045,51 +1073,49 @@ class simutil:
 
         
         if doimnoise:
-            cellsize=qa.quantity(3.e3/250./qa.convert(model_start,"GHz")["value"],"arcsec")  # need better cell determination - 250m?!
+            cellsize=qa.quantity(6.e3/250./qa.convert(model_start,"GHz")["value"],"arcsec")  # need better cell determination - 250m?!
             cellsize=[cellsize,cellsize]
             # very light clean - its an empty image!
-            self.image("tmp.ms","tmp",
+            self.image(tmpname+".ms",tmpname,
                        "csclean",cellsize,[128,128],
                        "J2000 00:00:00.00 "+qa.angle(dec),
-                       500,"0.01mJy","natural",[],"I")
-            ia.open("tmp.image")
+                       100,"0.01mJy","natural",[],"I")
+
+            ia.open(tmpname+".image")
             stats= ia.statistics(robust=True, verbose=False,list=False)
             ia.done()
-            imnoise=stats["rms"][0]
+            imnoise=(stats["rms"][0])*pl.sqrt(2)  # 2 polarizations
         else:
             imnoise=0.
+
+        nint = qa.convert(etime,'s')['value'] / qa.convert(integration,'s')['value'] 
+        nbase= 0.5*nant*(nant-1)
                 
-        if os.path.exists("tmp.T.cal"):
-            tb.open("tmp.T.cal")
+        if os.path.exists(tmpname+".T.cal"):
+            tb.open(tmpname+".T.cal")
             gain=tb.getcol("GAIN")
-        #RI TODO average instead of first?
+            # RI TODO average instead of first?
             tb.done()
-            gain=1./(gain[0][0][0].real)**2
+            # gain is per ANT so square for per baseline;  
+            # pick a gain from about the middle of the track
+            noiseperbase=1./(gain[0][0][0.5*nint*nant].real)**2
         else:
-            gain=0.
- 
-        if os.path.exists("tmp.ms"):
-            #shutil.rmtree("tmp.ms")
-            cu.removetable("tmp.ms")
-        if os.path.exists("tmp.T.cal"):
-            cu.removetable("tmp.T.cal")
-        if os.path.exists("tmp.model"):
-            cu.removetable("tmp.model")
-        if os.path.exists("tmp.flux"):
-            shutil.rmtree("tmp.flux")
-#        if os.path.exists("tmp.psf"):
-#            shutil.rmtree("tmp.psf")
-#        if os.path.exists("tmp.image"):
-#            shutil.rmtree("tmp.image")
-#        if os.path.exists("tmp.residual"):
-#            shutil.rmtree("tmp.residual")
+            noiseperbase=0.
 
+        theoreticalnoise=noiseperbase/pl.sqrt(nint*nbase)
+        
+        if debug==None:
+            xx=glob.glob(tmpname+"*")
+            for k in range(len(xx)):
+                if os.path.isdir(xx[k]):
+                    cu.removetable(xx[k])
+                else:
+                    os.remove(xx[k])
 
-        #return 1./(gain[0][0][0].real)**2 /pl.sqrt(.5*nant*(nant-1))
         if doimnoise:
-            return gain /pl.sqrt(.5*nant*(nant-1)), imnoise
+            return theoreticalnoise , imnoise
         else:
-            return gain /pl.sqrt(.5*nant*(nant-1))
+            return theoreticalnoise 
 
 
 
@@ -2473,7 +2499,6 @@ class simutil:
             self.msg("model image has more than 4 dimensions.  Not sure how to proceed",priority="error")
             return False
 
-
         # now parse coordsys:
         model_refdir=""
         #model_refpix=[]
@@ -2507,9 +2532,8 @@ class simutil:
 
             # move model_refdir to center of image
             model_refpix=[0.5*in_shape[axmap[0]],0.5*in_shape[axmap[1]]]
-            ra,dec = in_ia.toworld(model_refpix)['numeric'][0:2]
-            ra=qa.quantity(str(ra)+"rad")
-            dec=qa.quantity(str(dec)+"rad")
+            ra = in_ia.toworld(model_refpix,'q')['quantity']['*'+str(axmap[0]+1)]
+            dec = in_ia.toworld(model_refpix,'q')['quantity']['*'+str(axmap[1]+1)]
             model_refdir= in_csys.referencecode(type="direction")+" "+qa.formxxx(ra,format='hms',prec=5)+" "+qa.formxxx(dec,format='dms',prec=5)
 
         else:
@@ -2556,7 +2580,8 @@ class simutil:
             model_start=in_csys.referencevalue(type="spectral")['numeric'][0]-in_startpix*model_width
             # this maybe can be done more accurately - for nonregular
             # grids it may trip things up
-            model_center=model_start+0.5*model_nchan*model_width
+            # start is center of first channel.  for nch=1, that equals center
+            model_center=model_start+0.5*(model_nchan-1)*model_width
             model_width=str(model_width)+in_csys.units(type="spectral")
             model_start=str(model_start)+in_csys.units(type="spectral")
             model_center=str(model_center)+in_csys.units(type="spectral")
@@ -2687,7 +2712,8 @@ class simutil:
 
         modelcsys.setspectral(refcode="LSRK",restfreq=model_restfreq)
         modelcsys.setreferencevalue(qa.convert(model_center,modelcsys.units()[3])['value'],type="spectral")
-        modelcsys.setreferencepixel(0.5*model_nchan,type="spectral") # default is middle chan
+#        modelcsys.setreferencepixel(0.5*model_nchan,type="spectral") # default is middle chan
+        modelcsys.setreferencepixel(0.5*(model_nchan-1),type="spectral") # but not half-pixel
         modelcsys.setincrement(qa.convert(model_width,modelcsys.units()[3])['value'],type="spectral")
         #modelcsys.summary()
 
@@ -2758,20 +2784,12 @@ class simutil:
 
 
 
-
-
-
-
-
-
-
-
     ##################################################################
     # image/clean subtask
 
     def image(self,mstoimage,image,
               cleanmode,cell,imsize,imcenter,niter,threshold,weighting,
-              outertaper,stokes,sourcefieldlist="",modelimage=""):
+              outertaper,stokes,sourcefieldlist="",modelimage="",mask=[]):
         from clean import clean
 
         # determine channelization from (first) ms:
@@ -2855,7 +2873,12 @@ class simutil:
         cleanlast.write('negcomponent            = -1\n')
         cleanlast.write('smallscalebias          = 0.6\n')
         cleanlast.write('interactive             = False\n')
-        cleanlast.write('mask                    = []\n')
+        if type(mask)==type(" "):
+            cleanlast.write('mask                    = "'+mask+'"\n')
+            cleanstr=cleanstr+",mask='"+mask+"'"
+        else:
+            cleanlast.write('mask                    = '+str(mask)+'\n')
+            cleanstr=cleanstr+",mask="+str(mask)
         cleanlast.write('start                   = 0\n')
         cleanlast.write('width                   = 1\n')
         cleanlast.write('outframe                = ""\n')
@@ -2895,8 +2918,8 @@ class simutil:
         else:
             cleanlast.write('modelimage              = ""\n');
         cleanlast.write("restoringbeam           = ['']\n");
-        cleanlast.write("pbcor                   = False\n");
-        cleanlast.write("minpb                   = 0.1\n");
+        cleanlast.write("pbcor                   = True\n");
+        cleanlast.write("minpb                   = 0.2\n");
         cleanlast.write("calready                = True\n");
         cleanlast.write('noise                   = ""\n');
         cleanlast.write('npixels                 = 0\n');
@@ -2914,12 +2937,12 @@ class simutil:
         cleanlast.write("#"+cleanstr+"\n")
         cleanlast.close()
         
-        clean(vis=', '.join(mstoimage), imagename=image, mode=chanmode, nchan=nchan,
-                  niter=niter, threshold=threshold, selectdata=False,
-                  psfmode=psfmode, imagermode=imagermode, ftmachine=ftmachine, 
-                  imsize=imsize, cell=map(qa.tos,cell), phasecenter=imcenter,
-                  stokes=stokes, weighting=weighting, robust=robust,
-                  uvtaper=uvtaper,outertaper=outertaper)
+        clean(vis=', '.join(mstoimage), imagename=image, mode=chanmode, 
+              niter=niter, threshold=threshold, selectdata=False, nchan=nchan,
+              psfmode=psfmode, imagermode=imagermode, ftmachine=ftmachine, 
+              imsize=imsize, cell=map(qa.tos,cell), phasecenter=imcenter,
+              stokes=stokes, weighting=weighting, robust=robust,
+              uvtaper=uvtaper,outertaper=outertaper, pbcor=True, mask=mask)
 
         del freq,nchan # something is holding onto the ms in table cache
 

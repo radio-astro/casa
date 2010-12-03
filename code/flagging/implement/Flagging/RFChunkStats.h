@@ -41,7 +41,6 @@ class Flagger;
 class MeasurementSet;
 class VisibilityIterator;
 class VisBuffer;
-class PGPlotterInterface;
 
 class RFABase;
 typedef RFABase RFA;
@@ -106,8 +105,6 @@ protected:
 
 //  Matrix<uInt> nf_corr_ifr, nf_chan_corr, nf_chan_time, nf_corr_time;
   
-  PGPlotterInterface *pgp_screen,*pgp_report;
-
   std::vector<double> scan_start;      /* first time stamp in scan */
   std::vector<double> scan_start_flag; /* first time stamp with any 
                                           unflagged data in scan*/
@@ -117,8 +114,7 @@ protected:
 
 public:
 // constructor
-  RFChunkStats( VisibilityIterator &vi,VisBuffer &vb,Flagger &rf,
-         PGPlotterInterface *pgp_scr=NULL,PGPlotterInterface *pgp_rep=NULL );
+  RFChunkStats( VisibilityIterator &vi,VisBuffer &vb,Flagger &rf );
 
 // accessors to VisIter
   const VisibilityIterator & visIter () const { return visiter; }
@@ -150,12 +146,6 @@ public:
   double get_scan_end_unflagged(unsigned scan) const
     { return scan_end_flag[scan]; }
 
-// accessors to plotters
-  PGPlotterInterface & pgpscr() const;
-  PGPlotterInterface & pgprep() const;
-// divides the pgp_report view into subpanels
-  void setReportPanels (Int nx,Int ny) const;
-  
 // loads data for new chunk, resets all flag stat counters
   void newChunk (bool init_quack);
 // loads data for new pass

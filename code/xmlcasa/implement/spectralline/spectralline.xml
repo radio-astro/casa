@@ -101,7 +101,7 @@ splattotable does this conversion.
     "Freq in GHz", "Resolved QNs", "CDMS/JPL Intensity", "S<sub>ij</sub>&#956;<sup>2</sup>; (D<sup>2</sup>)",
     "Log<sub>10</sub> (A<sub>ij</sub>)", "E<sub>L</sub> (K)", "E<sub>U</sub> (K)", "Linelist". In order to get these columns in this order, one should
     select exactly the following items on the Splatalogue search interface. Under "Specify Ranges" one should select "GHz" for the frequency unit.
-    Under "Line List Display" select exactly "CDMS/JPL Intensity",
+    Under "Line Strength Display" select exactly "CDMS/JPL Intensity",
     "Sij μ2", and "Aij". Under "Energy Levels", one should select exactly "Elower (K)" and "Eupper (K)". Under "Miscellaneous", one should
     select exactly "Display Ordered Frequency ONLY" and "Display NRAO Recommended Frequencies". One should then initiate the search and on
     the resulting page, one should select the Tab Field Separator and then export the list. The resulting list should be in the proper
@@ -209,26 +209,26 @@ newsl.search([0,1000])
             <value/>
         </param>
         <param type="doubleArray" name="intensity">
-            <description>CDMS/JPL intensity range.</description>
+            <description>CDMS/JPL intensity range. -1 -> do not use an intensity range.</description>
             <value>-1</value>
         </param>
         <param type="doubleArray" name="smu2">
-            <description>S*mu*mu range.</description>
+            <description>S*mu*mu range in Debye**2. -1 -> do not use an S*mu*mu range.</description>
             <value>-1</value>
         </param>
         <param type="doubleArray" name="loga">
-            <description>log(A) (Einstein coefficient) range.</description>
-            <value>-1</value>
-        </param>
-        <param type="doubleArray" name="eu">
-            <description>Upper energy state range.</description>
+            <description>log(A) (Einstein coefficient) range. -1 -> do not use a loga range.</description>
             <value>-1</value>
         </param>
         <param type="doubleArray" name="el">
-            <description>Lower energy state range.</description>
+            <description>Lower energy state range in Kelvin. -1 -> do not use an el range.</description>
             <value>-1</value>
         </param>
-        <param type="bool" name="rrlinclude">
+        <param type="doubleArray" name="eu">
+            <description>Upper energy state range in Kelvin. -1 -> do not use an eu range.</description>
+            <value>-1</value>
+        </param>
+         <param type="bool" name="rrlinclude">
             <description>Include RRLs in the result set?</description>
             <value>true</value>
         </param>
@@ -236,16 +236,16 @@ newsl.search([0,1000])
             <description>Include only RRLs in the result set?</description>
             <value>false</value>
         </param>
-        <param type="bool" name="list">
+        <param type="bool" name="verbose">
             <description>List result set to logger (and optionally logfile)?</description>
             <value>true</value>
         </param>
         <param type="string" name="logfile">
-            <description>List result set to this logfile (only used if list=true).</description>
+            <description>List result set to this logfile (only used if verbose=true).</description>
             <value/>
         </param>
         <param type="bool" name="append">
-            <description>If true, append to logfile if it already exists, if false overwrite logfile it it exists. Only used if list=true and logfile not blank.</description>
+            <description>If true, append to logfile if it already exists, if false overwrite logfile it it exists. Only used if verbose=true and logfile not blank.</description>
             <value>false</value>
         </param>
     </input>
@@ -254,11 +254,11 @@ newsl.search([0,1000])
     Search the table associated with this tool. The return value is a spectralline tool with a new table containing the search
     results. This new table can be written to disk by specifying its name in the outfile parameter. If outfile is not specified
     (ie outfile=""), the resulting table is held in memory and deleted upon a call to close() or done() for the newly created tool
-    or upon exiting casapy. Because Splatalogue does not have values for intensity, smu2, loga, eu, and el
+    or upon exiting casapy. Because Splatalogue does not have values for intensity, smu2, loga, el, and eu
     for radio recombination lines (rrls), one must specify to include rrls in the specified frequency range in the output. In this case,
-    RRLs will be included ignoring any filters on intensity, smu2, loga, eu, and el. One can also specify to list only RRLs. One can specify
-    to list the search results to the logger via the list parameter. If list is false, no logger output is listed, although the results
-    can be listed later by running the list() method on the newly created spectral line tool. If list=true, one can also specify that
+    RRLs will be included ignoring any filters on intensity, smu2, loga, el, and eu. One can also specify to list only RRLs. One can specify
+    to list the search results to the logger via the verbose parameter. If verbose is false, no logger output is listed, although the results
+    can be listed later by running the list() method on the newly created spectral line tool. If verbose=true, one can also specify that
     the results be listed to a logfile and if this file already exists, one can specify that the results be appended to it or to overwrite
     it with the results.
     </description>
@@ -290,12 +290,12 @@ newsl.search([0,1000])
     Return the unique species in the associated table as a list.
     </description>
     <input>
-        <param type="bool" name="list">
+        <param type="bool" name="verbose">
             <description>List result set to logger (and optionally logfile)?</description>
             <value>false</value>
         </param>
         <param type="string" name="logfile">
-            <description>List result set to this logfile (only used if list=true).</description>
+            <description>List result set to this logfile (only used if verbose=true).</description>
             <value/>
         </param>
         <param type="bool" name="append">
@@ -314,12 +314,12 @@ newsl.search([0,1000])
     Return the unique chemical names in the associated table as a list.
     </description>
     <input>
-        <param type="bool" name="list">
+        <param type="bool" name="verbose">
             <description>List result set to logger (and optionally logfile)?</description>
             <value>false</value>
         </param>
         <param type="string" name="logfile">
-            <description>List result set to this logfile (only used if list=true).</description>
+            <description>List result set to this logfile (only used if verbose=true).</description>
             <value/>
         </param>
         <param type="bool" name="append">

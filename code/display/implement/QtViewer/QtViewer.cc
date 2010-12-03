@@ -62,9 +62,12 @@ QtViewer::QtViewer( bool is_server, const char *dbus_name ) :
 	// It doesn't work here because it makes the linker looks for
 	//   casa::qInitResources_QtViewer()     :-)   dk
 
-  
-    dbus_ = new QtDBusViewerAdaptor(this);
-    dbus_->connectToDBus(dbus_name_);
+    if ( is_server ) {
+	dbus_ = new QtDBusViewerAdaptor(this);
+	dbus_->connectToDBus(dbus_name_);
+    } else {
+	dbus_ = 0;
+    }
 }
 
 

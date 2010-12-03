@@ -9,7 +9,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!-- This is the task interface to ia.fitprofile           -->
 
-<task type="function" name="specfit" category="image analysis" visibility="experimental">
+<task type="function" name="specfit" category="analysis" visibility="experimental">
 
 <shortdescription>Fit 1-dimensional gaussians and/or polynomial models to an image or image region</shortdescription>
 

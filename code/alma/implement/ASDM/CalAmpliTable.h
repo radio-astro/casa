@@ -121,7 +121,7 @@ class CalAmpliRow;
  * Amplitude Calibration Result from Telescope Calibration. This calibration checks that observing amplitude calibrators provide reasonable results: From the antenna-based fringe amplitudes rough aperture efficiencies are determined.
  * <BR>
  
- * Generated from model's revision "1.54", branch "HEAD"
+ * Generated from model's revision "1.55", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalAmpli </CAPTION>
@@ -176,7 +176,7 @@ class CalAmpliRow;
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandatory) </TH></TR>
 	
  * <TR>
  * <TD> numReceptor </TD> 

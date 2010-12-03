@@ -43,6 +43,9 @@
 #include <ms/MeasurementSets/MSFlagger.h>
 #include <ms/MeasurementSets/MSSelectionTools.h>
 #include <ms/MeasurementSets/MSMainColumns.h>
+
+#include <measures/Measures/MeasTable.h>
+
 #include <msvis/MSVis/MSAnalysis.h>
 #include <msvis/MSVis/MSContinuumSubtractor.h>
 #include <msvis/MSVis/SubMS.h>
@@ -1212,120 +1215,28 @@ ms::cvel(const std::string& mode,
   try {
 
     *itsLog << LogOrigin("ms", "cvel");
-    
-    String t_interp = toCasaString(interp);
-    String t_phasec = toCasaString(phasec);
-    String t_mode = toCasaString(mode);
-    Double t_restfreq = 0.; // rest frequency, convert to Hz
-    if(!restfreq.toString().empty()){
-      t_restfreq = casaQuantity(restfreq).getValue("Hz");
-    }
 
     Bool t_doHanning = hanning;
+    
+    String t_phasec = toCasaString(phasec);
 
-    // Determine grid
-    Double t_cstart = -9e99; // default value indicating that the original start of the SPW should be used
-    Double t_bandwidth = -1.; // default value indicating that the original width of the SPW should be used
-    Double t_cwidth = -1.; // default value indicating that the original channel width of the SPW should be used
-    Int t_nchan = -1; 
-    Int t_width = 0;
-    Int t_start = -1;
-    Bool t_startIsEnd = False; // False means that start specifies the lower end in frequency (default)
-                               // True means that start specifies the upper end in frequency
-
-    if(!start.toString().empty()){ // start was set
-      if(t_mode == "channel"){
-	t_start = atoi(start.toString().c_str());
-      }
-      if(t_mode == "channel_b"){
-	t_cstart = Double(atoi(start.toString().c_str()));
-      }
-      else if(t_mode == "frequency"){
-	t_cstart = casaQuantity(start).getValue("Hz");
-      }
-      else if(t_mode == "velocity"){
-	t_cstart = casaQuantity(start).getValue("m/s");
-      }
-    }
-    if(!width.toString().empty()){ // channel width was set
-      if(t_mode == "channel"){
-	Int w = atoi(width.toString().c_str());
-	t_width = abs(w);
-	if(w<0){
-	  t_startIsEnd = True;
-	}
-      }
-      else if(t_mode == "channel_b"){
-	Double w = atoi(width.toString().c_str());
-	t_cwidth = abs(w);
-	if(w<0){
-	  t_startIsEnd = True;
-	}	
-      }
-      else if(t_mode == "frequency"){
-	Double w = casaQuantity(width).getValue("Hz");
-	t_cwidth = abs(w);
-	if(w<0){
-	  t_startIsEnd = True;
-	}	
-      }
-      else if(t_mode == "velocity"){
-	Double w = casaQuantity(width).getValue("m/s");
-	t_cwidth = abs(w);
-	if(w>=0){
-	  t_startIsEnd = True; 
-	}		
-      }
-    }
-    if(nchan > 0){ // number of output channels was set
-      if(t_mode == "channel_b"){
-	if(t_cwidth>0){
-	  t_bandwidth = Double(nchan*t_cwidth);
-	}
-	else{
-	  t_bandwidth = Double(nchan);	  
-	}
-      }
-      else{
-	t_nchan = nchan;
-      }
-    }
-
-    String t_veltype = toCasaString(veltype); 
+    String t_mode;
+    String t_outframe;
     String t_regridQuantity;
-    if(t_mode == "channel"){
-      t_regridQuantity = "freq";
-    }
-    else if(t_mode == "channel_b"){
-      t_regridQuantity = "chan";
-    }
-    else if(t_mode == "frequency"){
-      t_regridQuantity = "freq";
-    }
-    else if(t_mode == "velocity"){
-      if(t_restfreq == 0.){
-	*itsLog << LogIO::SEVERE << "Need to set restfreq in velocity mode." << LogIO::POST; 
-	return False;
-      }	
-      t_regridQuantity = "vrad";
-      if(t_veltype == "optical"){
-	t_regridQuantity = "vopt";
-      }
-      else if(t_veltype != "radio"){
-	*itsLog << LogIO::WARN << "Invalid velocity type "<< veltype 
-		<< ", setting type to \"radio\"" << LogIO::POST; 
-      }
-    }   
-    else{
-      *itsLog << LogIO::WARN << "Invalid mode " << t_mode << LogIO::POST;
-      return false;
-    }
-    
-    String t_outframe=toCasaString(outframe);
-    String t_regridInterpMeth=toCasaString(interp);
-    
+    Double t_restfreq;
+    String t_regridInterpMeth;
+    Double t_cstart;
+    Double t_bandwidth;
+    Double t_cwidth;
+    Bool t_centerIsStart;
+    Bool t_startIsEnd;
+    Int t_nchan;
+    Int t_width;
+    Int t_start;
+
     casa::MDirection  t_phaseCenter;
-    Int t_phasec_fieldid=-1;
+    Int t_phasec_fieldid = -1;
+
     //If phasecenter is a simple numeric value then it's taken as a fieldid 
     //otherwise its converted to a MDirection
     if(phasec.type()==::casac::variant::DOUBLEVEC 
@@ -1353,7 +1264,101 @@ ms::cvel(const std::string& mode,
       }
     }
 
+    // go over the remaining grid parameters and consolidate them
+
+    if(!SubMS::convertGridPars(*itsLog,
+			       mode, 
+			       nchan, 
+			       start.toString(), 
+			       width.toString(),
+			       interp, 
+			       restfreq.toString(), 
+			       outframe,
+			       veltype,
+			       ////// output ////
+			       t_mode,
+			       t_outframe,
+			       t_regridQuantity,
+			       t_restfreq,
+			       t_regridInterpMeth,
+			       t_cstart, 
+			       t_bandwidth,
+			       t_cwidth,
+			       t_centerIsStart, 
+			       t_startIsEnd,			      
+			       t_nchan,
+			       t_width,
+			       t_start
+			       )
+       ){
+      // an error occured
+      return False;
+    }
+
     // end prepare regridding parameters
+
+    String originalName = itsMS->tableName();
+
+    // test parameters of input SPWs
+    Bool foundInconsistentSPW = False;
+    {
+      Table spwtable(originalName+"/SPECTRAL_WINDOW");
+      ROArrayColumn<Double> chanwidths(spwtable, "CHAN_WIDTH");
+      ROArrayColumn<Double> chanfreqs(spwtable, "CHAN_FREQ");
+
+      for(uInt ii=0; ii<spwtable.nrow(); ii++){
+	Vector<Double> cw(chanwidths(ii));
+	Vector<Double> cf(chanfreqs(ii));
+	Int totNumChan = cw.size();
+      
+	Bool isEquidistant = True;
+	for(Int i=0; i<totNumChan; i++){
+	  if(abs(cw(i)-cw(0))>0.1){
+	    isEquidistant = False;
+	  }
+	}
+	Double minWidth = min(cw);
+	Double maxWidth = max(cw);
+
+	ostringstream oss;
+      
+	if(isEquidistant){
+	  oss <<  "Input spectral window " << ii << " has " << totNumChan 
+	      << " channels of width " << scientific << setprecision(6) << setw(6) << cw(0) << " Hz";
+	}
+	else{
+	  oss << "Input spectral window " << ii << " has " << totNumChan 
+	      << " channels of varying width: minimum width = " << scientific << setprecision(6) << setw(6) << minWidth 
+	      << " Hz, maximum width = " << scientific << setprecision(6) << setw(6) << maxWidth << " Hz";
+	}
+	oss << endl;
+	if(totNumChan > 1){
+	  oss << "   First channel center = " << setprecision(9) << setw(9) << cf(0) 
+	      << " Hz, last channel center = " << setprecision(9) << setw(9) << cf(totNumChan-1) << " Hz";
+	}
+	else{
+	  oss << "   Channel center = " << setprecision(9) << setw(9) << cf(0) << " Hz";
+	}
+	
+	for(Int i=0; i<totNumChan-2; i++){
+	  if( abs((cf(i)+cw(i)/2.) - (cf(i+1)-cw(i+1)/2.))>1.0 ){
+	    oss << "\n   Internal ERROR: Center of channel " << i <<  " is off nominal center by " 
+		<< ((cf(i)+cw(i)/2.) - (cf(i+1)-cw(i+1)/2.)) << " Hz\n" 
+		<< "   Distance between channels " << i << " and " << i+1 << " (" 
+		<< scientific << setprecision(6) << setw(6) << cf(i+1)-cf(i) << " Hz) is not equal to what is"
+		<< " expected\n   from their channel widths which would be " 
+		<< scientific << setprecision(6) << setw(6) << +cw(i)/2.+cw(i+1)/2. << " Hz.\n"
+		<< "   Will skip other channels in this SPW.";
+	    foundInconsistentSPW = True;
+	    break;
+	  }
+	}
+	*itsLog << LogIO::NORMAL  << oss.str() << LogIO::POST;
+      }
+    }
+    if(foundInconsistentSPW){
+      throw(AipsError("Inconsistent SPECTRAL_WINDOW table in input MS."));
+    }
 
     // check disk space: need at least twice the size of the original for safety
     if (2 * DOos::totalSize(itsMS->tableName(), True) >
@@ -1365,7 +1370,6 @@ ms::cvel(const std::string& mode,
     }
 
     // need exclusive rights to this MS, will re-open it after combineSpws
-    String originalName = itsMS->tableName();
     itsMS->flush();
     close();
 
@@ -1385,8 +1389,8 @@ ms::cvel(const std::string& mode,
 
     *itsLog << LogIO::NORMAL << " " << LogIO::POST; 
 
-    // cout << "trq " << t_regridQuantity << " ts " << t_start << " tcs " << t_cstart << " tb " 
-    //	 << t_bandwidth << " tcw " << t_cwidth << " tw " << t_width << " tn " << t_nchan << endl; 
+    //    cout << "trq " << t_regridQuantity << " ts " << t_start << " tcs " << t_cstart << " tb " 
+    //    	 << t_bandwidth << " tcw " << t_cwidth << " tw " << t_width << " tn " << t_nchan << endl; 
 
     // Regrid
 
@@ -1486,7 +1490,7 @@ ms::cvel(const std::string& mode,
       }
       *itsLog << LogIO::NORMAL  << oss.str() << LogIO::POST;
 
-      for(Int i=0; i<totNumChan-1; i++){
+      for(Int i=0; i<totNumChan-2; i++){
 	if( abs((cf(i)+cw(i)/2.) - (cf(i+1)-cw(i+1)/2.))>0.1 ){
 	  *itsLog << LogIO::WARN << "Internal error: Center of channel " << i <<  " is off nominal center by " 
 		  << ((cf(i)+cw(i)/2.) - (cf(i+1)-cw(i+1)/2.)) << " Hz" << LogIO::POST;
@@ -1513,6 +1517,228 @@ ms::cvel(const std::string& mode,
   }
   Table::relinquishAutoLocks(True);
   return rstat;
+}
+
+std::vector<double>
+ms::cvelfreqs(const std::vector<int>& spwids,
+	      const std::vector<int>& fieldids,
+	      const std::string& obstime,
+	      const std::string& mode, 
+	      const int nchan, 
+	      const ::casac::variant& start, 
+	      const ::casac::variant& width,
+	      const ::casac::variant& phasec, 
+	      const ::casac::variant& restfreq, 
+	      const std::string& outframe,
+	      const std::string& veltype
+	      )
+{
+  std::vector<double> rval(0); // the new channel centers
+
+  try {
+
+    if(!detached()){
+    
+      *itsLog << LogOrigin("ms", "cvelfreqs");
+      
+      Vector<Double> newCHAN_FREQ; 
+      Vector<Double> newCHAN_WIDTH;
+      
+      
+      ROMSMainColumns mainCols(*itsMS);
+      ROScalarColumn<Double> timeCol(mainCols.time());
+      ROScalarColumn<Int> ddCol(mainCols.dataDescId());
+      ROScalarColumn<Int> fieldCol(mainCols.fieldId());
+      
+      ROMSDataDescColumns DDCols(itsMS->dataDescription());
+      ROScalarColumn<Int> spwidCol(DDCols.spectralWindowId());
+      
+      ROMSSpWindowColumns SPWCols(itsMS->spectralWindow());
+      ROMSFieldColumns FIELDCols(itsMS->field());
+      ROMSAntennaColumns ANTCols(itsMS->antenna());
+      
+      // extract grid from SPW given by spwids
+      Vector<Double> oldCHAN_FREQ; 
+      Vector<Double> oldCHAN_WIDTH;
+      
+      if(spwids.size() == 1){ // only one spw selected
+	oldCHAN_FREQ.assign(SPWCols.chanFreq()(spwids[0])); 
+	oldCHAN_WIDTH.assign(SPWCols.chanWidth()(spwids[0]));
+      }
+      else if(spwids.size() > 1){ // several ids selected
+	SubMS theMS(*itsMS);
+	Vector<Int> spwidv(spwids);
+	if(!theMS.combineSpws(spwidv,
+			      True, // dont't modify the MS
+			      oldCHAN_FREQ,
+			      oldCHAN_WIDTH)){
+	  *itsLog << LogIO::SEVERE << "Error combining SPWs." << LogIO::POST;
+	  return rval;
+	}	
+      }
+      else{
+      	*itsLog << LogIO::NORMAL << "Zero SPWs selected." << LogIO::POST;
+	return rval;
+      }
+      
+      // determine phase center
+      casa::MDirection phaseCenter;
+      Int phasec_fieldid = -1;
+      String t_phasec = toCasaString(phasec);
+      
+      //If phasecenter is a simple numeric value then it's taken as a fieldid 
+      //otherwise its converted to a MDirection
+      if(phasec.type()==::casac::variant::DOUBLEVEC 
+	 || phasec.type()==::casac::variant::DOUBLE
+	 || phasec.type()==::casac::variant::INTVEC
+	 || phasec.type()==::casac::variant::INT){
+	phasec_fieldid = phasec.toInt();	
+	if(phasec_fieldid >= (Int)itsMS->field().nrow() || phasec_fieldid < 0){
+	  *itsLog << LogIO::SEVERE << "Field id " << phasec_fieldid
+		  << " selected to be used as phasecenter does not exist." << LogIO::POST;
+	  return rval;
+	}
+	else{
+	  phaseCenter = FIELDCols.phaseDirMeasCol()(phasec_fieldid)(IPosition(1,0));
+	}
+      }
+      else{
+	if(t_phasec.empty()){
+	  phasec_fieldid = 0;
+	  phaseCenter = FIELDCols.phaseDirMeasCol()(phasec_fieldid)(IPosition(1,0));
+	}
+	else{
+	  if(!casaMDirection(phasec, phaseCenter)){
+	    *itsLog << LogIO::SEVERE << "Could not interprete phasecenter parameter "
+		    << t_phasec << LogIO::POST;
+	    return rval;
+	  }
+	  else{
+	    *itsLog << LogIO::NORMAL << "Using user-provided phase center." << LogIO::POST;
+	  }
+	}
+      }
+      
+      // determine old reference frame
+      MFrequency::Types theOldRefFrame = MFrequency::castType(SPWCols.measFreqRef()(spwids[0]));
+      
+      // determine observation epoch
+      MEpoch theObsTime;
+      String t_obstime = toCasaString(obstime);
+      if (obstime.length()>0) {
+	Quantum<Double> qt;
+	if (MVTime::read(qt,obstime)) {
+	  MVEpoch mv(qt);
+	  theObsTime = MEpoch(mv, MEpoch::UTC);
+	} else {
+	  *itsLog << LogIO::SEVERE << "Invalid time format: " 
+		  << obstime << LogIO::POST;
+	  return rval;
+	}
+      } else {
+	// take the smallest obstime in the MS given the spw and field selection
+	
+	// determine the relevant DD Ids
+	vector<Int> ddids;
+	for(uInt irow=0; irow<DDCols.nrow(); irow++){ // loop over DD table
+	  for(uInt i=0; i<spwids.size(); i++){
+	    Int theSPWId = spwidCol(irow);
+	    if(theSPWId==spwids[i]){ // SPWId match found
+	      ddids.push_back(irow);
+	    }
+	  } // end for
+	} // end for
+	//cout << "DD IDs selected " << Vector<Int>(ddids) << endl; 
+	uInt minTimeRow = 0;
+	Double minTime = 1E42;
+	Bool doField = (fieldids.size()!=0);
+	
+	for(uInt irow=1;irow<itsMS->nrow(); irow++){ // loop over main table
+	  if(minTime<timeCol(irow)){
+	    
+	    Int theDDId = ddCol(irow);
+	    for(uInt i=0; i<ddids.size(); i++){
+	      if(theDDId==ddids[i]){ // DD match found
+		if(doField){
+		  Int theFieldId = fieldCol(irow);
+		  for(uInt i=0; i<fieldids.size(); i++){
+		    if(theFieldId==fieldids[i]){ // field match found
+		      minTime=timeCol(irow);
+		      minTimeRow = irow;
+		      break;
+		    }
+		  }
+		}
+		else{ // all fields selected
+		  minTime=timeCol(irow);
+		  minTimeRow = irow;
+		}
+		break;
+	      } // end if DD matches
+	    } // end for
+	    
+	  }
+	} // end for
+	theObsTime = mainCols.timeMeas()(minTimeRow);
+	*itsLog << LogIO::NORMAL << "Using observation time from earliest row of the MS given the SPW and FIELD selection." << LogIO::POST;
+      }
+      
+      // determine observatory position
+      // use a tabulated version if available
+      MPosition mObsPos;
+      {
+	MPosition Xpos;
+	String Xobservatory;
+	ROMSObservationColumns XObsCols(itsMS->observation());
+	if (itsMS->observation().nrow() > 0) {
+	  Xobservatory = XObsCols.telescopeName()(mainCols.observationId()(0));
+	}
+	if (Xobservatory.length() == 0 || 
+	    !MeasTable::Observatory(Xpos,Xobservatory)) {
+	  // unknown observatory
+	  *itsLog << LogIO::WARN << "Unknown observatory: \"" << Xobservatory 
+		  << "\". Determining observatory position from antenna 0." << LogIO::POST;
+	  Xpos=MPosition::Convert(ANTCols.positionMeas()(0), MPosition::ITRF)();
+	}
+	else{
+	  *itsLog << LogIO::NORMAL << "Using tabulated observatory position for " << Xobservatory << ":"
+		  << LogIO::POST;
+	  Xpos=MPosition::Convert(Xpos, MPosition::ITRF)();
+	}
+	mObsPos = Xpos;
+	ostringstream oss;
+	oss <<  "   " << mObsPos << " (ITRF)";
+	*itsLog << LogIO::NORMAL << oss.str() << LogIO::POST;
+      }
+      
+      // calculate new grid
+      SubMS::calcChanFreqs(*itsLog,
+			   newCHAN_FREQ, 
+			   newCHAN_WIDTH,
+			   oldCHAN_FREQ, 
+			   oldCHAN_WIDTH,
+			   phaseCenter,
+			   theOldRefFrame,
+			   theObsTime,
+			   mObsPos,
+			   mode, 
+			   nchan, 
+			   start.toString(), 
+			   width.toString(),
+			   restfreq.toString(), 
+			   outframe,
+			   veltype
+			   );
+      
+      newCHAN_FREQ.tovector(rval);
+      
+    } // end if !detached
+
+  } catch (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+  }
+  return rval;
 }
 
 
@@ -1632,6 +1858,64 @@ ms::concatenate(const std::string& msfile, const ::casac::variant& freqtol, cons
 }
 
 bool
+ms::testconcatenate(const std::string& msfile, const ::casac::variant& freqtol, const ::casac::variant& dirtol)
+{
+    Bool rstat(False);
+    try {
+	if(!detached()){
+	    *itsLog << LogOrigin("ms", "testconcatenate");
+	    
+	    *itsLog << LogIO::NORMAL << "*** Note: this method does _not_ merge the Main table!"
+		    << LogIO::POST;
+
+	    if (!Table::isReadable(msfile)) {
+		*itsLog << "Cannot read the measurement set called " << msfile
+			<< LogIO::EXCEPTION;
+	    }                   
+
+	    const MeasurementSet appendedMS(msfile);
+	    
+	    MSConcat mscat(*itsMS);
+	    Quantum<Double> dirtolerance;
+	    Quantum<Double> freqtolerance;
+	    if(freqtol.toString().empty()){
+		freqtolerance=casa::Quantity(1.0,"Hz");
+	    }
+	    else{
+		freqtolerance=casaQuantity(freqtol);
+	    }
+	    if(dirtol.toString().empty()){
+		dirtolerance=casa::Quantity(1.0, "mas");
+	    }
+	    else{
+		dirtolerance=casaQuantity(dirtol);
+	    }
+	    
+	    mscat.setTolerance(freqtolerance, dirtolerance);
+	    mscat.concatenate(appendedMS, True); // "True" meaning "don't modify Main table"
+
+	    String message = "Subtables from "+String(msfile) + " appended to those from " + itsMS->tableName();
+	    ostringstream param;
+	    param << "msfile= " << msfile
+		  << " freqTol='" << casaQuantity(freqtol) << "' dirTol='"
+		  << casaQuantity(dirtol) << "'";
+	    String paramstr=param.str();
+	    writehistory(std::string(message.data()), std::string(paramstr.data()),
+			 std::string("ms::testconcatenate()"), msfile, "ms");
+	    itsMS->flush(True);
+	}
+	rstat = True;
+    } catch (AipsError x) {
+	*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+		<< LogIO::POST;
+	Table::relinquishAutoLocks(True);
+	RETHROW(x);
+    }
+    Table::relinquishAutoLocks(True);
+    return rstat;
+}
+
+bool
 ms::timesort(const std::string& msname)
 {
     Bool rstat(False);
@@ -1701,7 +1985,7 @@ ms::split(const std::string&      outputms,   const ::casac::variant& field,
           const ::casac::variant& uvrange,    const std::string&      taql,
           const std::string&      whichcol,   const ::casac::variant& tileShape,
           const ::casac::variant& subarray,   const bool averchan,
-          const std::string&      ignorables, const std::string& correlation)
+          const std::string&      combine, const std::string& correlation)
 {
   Bool rstat(False);
   try {
@@ -1749,9 +2033,9 @@ ms::split(const std::string&      outputms,   const ::casac::variant& field,
        t_tileshape.resize();
        t_tileshape=tileShape.toIntVec();
      }
-     const String t_ignorables = downcase(ignorables);
+     const String t_combine = downcase(combine);
 
-     if(!splitter->makeSubMS(t_outputms, t_whichcol, t_tileshape, t_ignorables)){
+     if(!splitter->makeSubMS(t_outputms, t_whichcol, t_tileshape, t_combine)){
        *itsLog << LogIO::SEVERE
                << "Error splitting " << itsMS->tableName() << " to "
                << t_outputms

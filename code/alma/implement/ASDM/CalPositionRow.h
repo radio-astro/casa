@@ -118,7 +118,7 @@ using namespace ReceiverBandMod;
 
 
 /*\file CalPosition.h
-    \brief Generated from model's revision "1.54", branch "HEAD"
+    \brief Generated from model's revision "1.55", branch "HEAD"
 */
 
 namespace asdm {
@@ -139,7 +139,7 @@ typedef void (CalPositionRow::*CalPositionAttributeFromBin) (EndianISStream& eis
 /**
  * The CalPositionRow class is a row of a CalPositionTable.
  * 
- * Generated from model's revision "1.54", branch "HEAD"
+ * Generated from model's revision "1.55", branch "HEAD"
  *
  */
 class CalPositionRow {

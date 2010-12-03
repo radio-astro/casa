@@ -6,7 +6,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 
-<task type="function" name="importoldasdm" category="import/export" visibility="experimental">
+<task type="function" name="importoldasdm" category="import/export" visibility="deprecated">
 
   <shortdescription>Convert an ALMA Science Data Model observation into a CASA visibility file</shortdescription>
 

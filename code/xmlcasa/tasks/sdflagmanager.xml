@@ -5,10 +5,10 @@
       xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="sdflagmanager" category="single dish">
+<task type="function" name="sdflagmanager" startup="false" category="single dish">
         <shortdescription>ASAP SD task: enable list, save, restore, delete and rename flag version files</shortdescription>
         <description>
-        ASAP SD task to enable list, save, restore, delete and rename flag version files. 
+        ASAP SD task to list, save, restore, delete and rename flag version files. 
         </description>
         <input>
                 <param type="string" name="sdfile" mustexist="true">

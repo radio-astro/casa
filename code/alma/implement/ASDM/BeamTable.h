@@ -86,7 +86,7 @@ class BeamRow;
  * At the present time, this table is not defined.  This table would  be needed for the observing system to write suitable primary beam maps in  all data sets. It is not clear that this table is really needed.  Data  reduction software may well access available archived beam measurements  (e.g. CalBeam tables) for accurate deconvolution.
  * <BR>
  
- * Generated from model's revision "1.54", branch "HEAD"
+ * Generated from model's revision "1.55", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of Beam </CAPTION>

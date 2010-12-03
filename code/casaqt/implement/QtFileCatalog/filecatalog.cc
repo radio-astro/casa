@@ -379,7 +379,7 @@ void FileCatalog::fileOpen()
    }
    else if (tp == "Graphics") {
     //qDebug() << "show graphics";
-    PictureViewer *imageViewer = new PictureViewer();
+    PictureViewer *imageViewer = new PictureViewer("");
     imageViewer->open(s); 
     imageViewer->show();
     return;

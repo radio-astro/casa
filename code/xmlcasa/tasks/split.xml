@@ -5,7 +5,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="split" category="utility">
+<task type="function" name="split" category="manipulation">
      <shortdescription>Create a visibility subset from an existing visibility set</shortdescription>
 
 <description>
@@ -54,7 +54,7 @@ average over frequency (channels) and time (integrations).
 	</param>
 
         <param type="any" name="field">
-                <description>Select field using field id(s) or field name(s)</description>
+                <description>Select field using ID(s) or name(s)</description>
 		<any type="variant" limittypes="string stringArray int intArray"/>
                 <value type="string"></value>
         </param>
@@ -78,7 +78,7 @@ average over frequency (channels) and time (integrations).
 	</param>
 
 	<param type="string" name="timebin">
-		<description>Value for timeaveraging</description>		
+		<description>Bin width for time averaging</description>		
 		<value type="string">0s</value>
 	</param>
 
@@ -87,7 +87,7 @@ average over frequency (channels) and time (integrations).
 		<value></value>
 	</param>
 	<param type="string" name="scan" >
-		<description>select data by scan numbers</description>
+		<description>Select data by scan numbers</description>
 		<value></value>
 	</param>
         <param type="string" name="array">
@@ -95,7 +95,7 @@ average over frequency (channels) and time (integrations).
                 <value></value>
         </param>
 	<param type="string" name="uvrange" >
-		<description>select data by baseline length</description>
+		<description>Select data by baseline length</description>
 		<value></value>
 	</param>
 
@@ -105,19 +105,19 @@ average over frequency (channels) and time (integrations).
 		<value type="string"></value>
 	</param>
 
-	<param type="any" name="ignorables" subparam="true">
-		<description>Let time bins ignore changes in array, scan, and/or state</description>
+	<param type="any" name="combine" subparam="true">
+		<description>Let time bins span changes in scan and/or state</description>
 		<any type="variant" limittypes="string stringArray"/>
 		<value type="string"></value>
 	</param>
 	<param type="bool" name="keepflags">
-	  <description>If practical, keep flagged data instead of dropping it.</description>
+	  <description>If practical, keep *completely flagged rows* instead of dropping them.</description>
 	  <value>True</value>
 	</param>
         <constraints>
 	  <when param="timebin">
             <notequals type="string" value="0s">
-              <default param="ignorables"><value type="string"></value></default>
+              <default param="combine"><value type="string"></value></default>
             </notequals>
           </when>
         </constraints>
@@ -192,7 +192,7 @@ average over frequency (channels) and time (integrations).
                 Examples:
                 antenna='5&amp;6': baseline between antenna index 5 and index 6.
                 antenna='VA05&amp;VA06': baseline between VLA antenna 5 and 6.
-                antenna='5&amp;6:7&amp;8': baselines 5-6 and 7-8
+                antenna='5&amp;6;7&amp;8': baselines 5-6 and 7-8
                 antenna='5': all baselines with antenna 5
                 antenna='5,6,10': all baselines including antennas 5, 6, or 10
                 antenna='5,6,10&amp;': all baselines with *only* antennas 5, 6, or
@@ -227,25 +227,33 @@ average over frequency (channels) and time (integrations).
             default: ''=all
         correlation -- Select correlations, e.g. 'rr, ll' or ['XY', 'YX'].
                        default '' (all).
-        ignorables -- Let time bins ignore boundaries in array, scan, and/or
-                      state.
-                      default = '' (separate time bins by all of the above)
-                      ignorables = 'scan': Can be useful when the scan number
-                                           goes up with each integration,
-                                           as in many WSRT MSes.
-                      ignorables = ['array', 'state']: disregard array and state
-                                                       IDs when time averaging.
-                      ignorables = 'state,subarr': Same as above.  ignorables
-                                                   matches on 'arr', 'scan', and
-                                                   'state'.
-        keepflags -- If practical, keep flagged data instead of dropping it.
-                     All of the channels and correlations of a row must be
-                     flagged for it to be droppable, and a row must be well
-                     defined to be keepable.  The latter condition means that
-                     this option has no effect on time averaging - in that case
-                     fully flagged rows are automatically omitted.  Regardless
-                     of this parameter, flagged data is never included in
-                     averaging calculations.
+        combine -- Let time bins span changes in scan and/or state.
+                   default = '' (separate time bins by both of the above)
+                   combine = 'scan': Can be useful when the scan number
+                                     goes up with each integration,
+                                     as in many WSRT MSes.
+                   combine = ['scan', 'state']: disregard scan and state
+                                                numbers when time averaging.
+                   combine = 'state,scan': Same as above.
+        keepflags -- If practical, keep completely flagged rows instead of
+                     dropping them.  This has absolutely no effect on averaging
+                     calculations, or partially flagged rows.  All of the
+                     channels and correlations of a row must be flagged for it
+                     to be droppable, and a row must be well defined to be
+                     keepable.  The latter condition means that this option has
+                     no effect on time averaging - in that case fully flagged
+                     rows are automatically omitted.  Regardless of this
+                     parameter, flagged data is never included in averaging
+                     calculations.
+
+                     The only time keepflags matters is if 
+                     1. the input MS has some completely flagged rows
+                     and
+                     2. time averaging is not being done.
+
+                     Then, if keepflags is False, the completely flagged rows
+                     will be omitted from the output MS.  Otherwise, they will
+                     be included (subject to the selection parameters).
 </example> 
 </task>
 </casaxml>

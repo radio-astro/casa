@@ -2020,13 +2020,12 @@ class par(str):
 	@staticmethod
 	def pweight():
 		"""
-		pweight -- weighting for polarization average
-		options: 'none'
-	                 'var'  = 1/var(spec) weighted
-			 'tsys' = 1/Tsys**2 weighted
-	        default: 'none'
+        pweight -- weighting for polarization average
+            options: 'var'  = 1/var(spec) weighted
+                     'tsys' = 1/Tsys**2 weighted
+            default: 'tsys'
 		"""
-		
+
 	@staticmethod
 	def quackinterval():
 		"""
@@ -2406,8 +2405,8 @@ class par(str):
 	def standard():
 		""" Flux density standard:
 
-		Options: 'Baars', 'Perley 90', 'Perley-Taylor 95'
-		'Perley-Taylor 99'
+		Options: 'Baars', 'Perley 90', 'Perley-Taylor 95',
+		'Perley-Taylor 99', 'Perley-Butler 2010', 'Butler-JPL-Horizons 2010'
 
 		"""
 
@@ -2649,14 +2648,14 @@ class par(str):
 	@staticmethod
 	def tweight():
 		"""
-		tweight -- weighting for time average
-	        options: 'none' 
-	                 'var'      = 1/var(spec) weighted
-			 'tsys'     = 1/Tsys**2 weighted
-			 'tint'     = integration time weighted
-			 'tintsys'  = Tint/Tsys**2
-			 'median'   = median averaging
-	        default: 'none'
+        tweight -- weighting for time average
+            options:
+                'var'      = 1/var(spec) weighted
+                'tsys'     = 1/Tsys**2 weighted
+                'tint'     = integration time weighted
+                'tintsys'  = Tint/Tsys**2
+                'median'   = median averaging
+                default: 'tintsys'
 		"""
 		
 	@staticmethod

@@ -294,7 +294,7 @@ table::fromfits(const std::string& tablename, const std::string& fitsfile, const
 
 
 casac::table*
-table::copy(const std::string& newtablename, const bool deep, const bool valuecopy, const ::casac::record& dminfo, const std::string& endian, const bool memorytable, const bool returnobject)
+table::copy(const std::string& newtablename, const bool deep, const bool valuecopy, const ::casac::record& dminfo, const std::string& endian, const bool memorytable, const bool returnobject, const bool norows)
 {
  *itsLog << LogOrigin(__func__, name());
  casac::table *rstat(0);
@@ -302,7 +302,7 @@ table::copy(const std::string& newtablename, const bool deep, const bool valueco
 	 if(itsTable){
 		 Record *tdminfo = toRecord(dminfo);
 		 TableProxy *mycopy = new TableProxy;
-		 *mycopy = itsTable->copy(newtablename, memorytable, deep, valuecopy, endian, *tdminfo, false);
+		 *mycopy = itsTable->copy(newtablename, memorytable, deep, valuecopy, endian, *tdminfo, norows);
 		 delete tdminfo;
 		 rstat = new casac::table(mycopy);
 	 } else {
@@ -511,9 +511,9 @@ table::browse()
 	   *itsLog << LogIO::NORMAL << "Spawning table browser one moment..." << LogIO::POST;
            if(itsTable){
 	       String myName = itsTable->table().tableName();
-               execlp("casabrowser", "casabrowser", myName.c_str(), (char *)0);
+               execlp("casabrowser", "casabrowser", myName.c_str(), "--casapy", (char *)0);
 	   } else {
-               execlp("casabrowser", "casabrowser", (char *)0);
+               execlp("casabrowser", "casabrowser", "--casapy", (char *)0);
 	   }
 	   // If we get here something bad has happened and the exec has faild
            *itsLog << LogIO::SEVERE << "Bad news, unable to start the table browser." << LogIO::POST;

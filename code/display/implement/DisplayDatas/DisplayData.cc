@@ -56,7 +56,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 DisplayData::DisplayData() : 
   activeZIndex_(0),
   rstrsConformed_(False), csConformed_(False), zIndexConformed_(False),
-  itsColormap(0), itsColormapWeight(-1.0),
+  itsColormap(0), itsColormapWeight(-1.0), displaystate(LIMBO),
   uiBase_(1) {
 };
 
@@ -761,6 +761,7 @@ void DisplayData::handleEvent(DisplayEvent &ev) {
 
 DisplayData::DisplayData(const DisplayData &other) :
   DisplayOptions(other) {
+    displaystate = LIMBO;
 }
 
 void DisplayData::operator=(const DisplayData &) {

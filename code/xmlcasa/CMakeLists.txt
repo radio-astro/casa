@@ -40,8 +40,15 @@ add_custom_command( OUTPUT definitions
 
 add_custom_target(
   xmlcasa_python_casadef
-  COMMAND echo "task_directory = \\\"${PYTHON_TASKD}\\\"" > casadef.py
-  COMMAND echo "python_library_directory = \\\"${PYTHON_LIBD}\\\"" >> casadef.py
+  COMMAND echo "import os" > casadef.py
+  COMMAND echo "if os.environ.has_key\\\(\\'__CASAPY_TASKDIR\\'\\\):" >> casadef.py
+  COMMAND echo "    task_directory = os.environ[\\'__CASAPY_TASKDIR\\']" >> casadef.py
+  COMMAND echo "else:" >> casadef.py
+  COMMAND echo "    task_directory = \\\"${PYTHON_TASKD_CASADEF}\\\"" >> casadef.py
+  COMMAND echo "if os.environ.has_key\\\(\\'__CASAPY_PYTHONDIR\\'\\\):" >> casadef.py
+  COMMAND echo "    python_library_directory = os.environ[\\'__CASAPY_PYTHONDIR\\']" >> casadef.py
+  COMMAND echo "else:" >> casadef.py
+  COMMAND echo "    python_library_directory = \\\"${PYTHON_LIBD_CASADEF}\\\"" >> casadef.py
   COMMAND echo "casa_version = \\\"${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_VERSION}\\\"" >> casadef.py
   COMMAND cat definitions >> casadef.py
   DEPENDS definitions
@@ -106,7 +113,6 @@ casa_add_library( xmlcasa
   implement/casa/quanta_cmpt.cc
   implement/casa/TSLogSink.cc
   implement/components/componentlist_cmpt.cc
-  implement/flagging/autoflag_cmpt.cc
   implement/flagging/flagger_cmpt.cc
   implement/images/coordsys_cmpt.cc
   implement/images/image_cmpt.cc
@@ -157,8 +163,6 @@ add_dependencies( libxmlcasa      xmlcasa_definitions )
 casa_add_executable( xmlcasa casaparamgui apps/casaparamgui/casaparamgui.cc )
 casa_add_executable( xmlcasa casapy apps/casapy/casapy.cc )
 casa_add_assay( xmlcasa implement/xerces/test/tXMLToRecord.cc )
-casa_add_test ( xmlcasa implement/flagging/test/tAutoflagger.cc )
-
 
 casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/asap_init.py
@@ -178,6 +182,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/imregion.py
   scripts/listing.py
   scripts/mindpipes.py
+  scripts/pCASA.py
   scripts/ngc5921_usecase.py
   scripts/odict.py
   scripts/parallel_go.py
@@ -207,6 +212,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_clearplot.py
   scripts/task_clearstat.py
   scripts/task_concat.py
+  scripts/task_conjugatevis.py
   scripts/task_csvclean.py
   scripts/task_pclean.py
   scripts/task_cvel.py
@@ -238,6 +244,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_importaipscaltable.py
   scripts/task_importasdm.py
   scripts/task_importevla.py
+  scripts/task_importevla2.py
   scripts/task_importfits.py
   scripts/task_importfitsidi.py
   scripts/task_importgmrt.py
@@ -256,7 +263,6 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_listvis.py
   scripts/taskmanager.py
   scripts/task_mosaic.py
-  scripts/task_newflagdata.py
   scripts/task_peel.py
   scripts/task_plotants.py
   scripts/task_plotcal.py
@@ -270,6 +276,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_sdcoadd.py
   scripts/task_sdfit.py
   scripts/task_sdflag.py
+  scripts/task_sdflagmanager.py
   scripts/task_sdimaging.py
   scripts/task_sdimprocess.py
   scripts/task_sdlist.py
@@ -289,6 +296,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_specfit.py
   scripts/task_splattotable.py
   scripts/task_split.py
+  scripts/task_testconcat.py
   scripts/task_uvcontsub2.py
   scripts/task_uvcontsub.py
   scripts/task_uvmodelfit.py
@@ -320,6 +328,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/clearplot.xml
   tasks/clearstat.xml
   tasks/concat.xml
+  tasks/conjugatevis.xml
   tasks/csvclean.xml
   tasks/pclean.xml
   tasks/cvel.xml
@@ -350,6 +359,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/importaipscaltable.xml
   tasks/importasdm.xml
   tasks/importevla.xml
+  tasks/importevla2.xml
   tasks/importfits.xml
   tasks/importfitsidi.xml
   tasks/importgmrt.xml
@@ -366,7 +376,6 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/listobs.xml
   tasks/listvis.xml
   tasks/mosaic.xml
-  tasks/newflagdata.xml
   tasks/peel.xml
   tasks/plotants.xml
   tasks/plotcal.xml
@@ -380,6 +389,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/sdcoadd.xml
   tasks/sdfit.xml
   tasks/sdflag.xml
+  tasks/sdflagmanager.xml
   tasks/sdimaging.xml
   tasks/sdimprocess.xml
   tasks/sdlist.xml
@@ -399,6 +409,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/specfit.xml
   tasks/splattotable.xml
   tasks/split.xml
+  tasks/testconcat.xml
   tasks/uvcontsub2.xml
   tasks/uvcontsub.xml
   tasks/uvmodelfit.xml
@@ -417,7 +428,6 @@ casa_add_tools( tools_idl tools_sources
   implement/casa/logsink.xml
   implement/casa/quanta.xml
   implement/components/componentlist.xml
-  implement/flagging/autoflag.xml
   implement/flagging/flagger.xml
   implement/images/coordsys.xml
   implement/images/imagepol.xml

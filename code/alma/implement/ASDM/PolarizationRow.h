@@ -78,7 +78,7 @@ using namespace PolarizationTypeMod;
 
 
 /*\file Polarization.h
-    \brief Generated from model's revision "1.54", branch "HEAD"
+    \brief Generated from model's revision "1.55", branch "HEAD"
 */
 
 namespace asdm {
@@ -93,7 +93,7 @@ typedef void (PolarizationRow::*PolarizationAttributeFromBin) (EndianISStream& e
 /**
  * The PolarizationRow class is a row of a PolarizationTable.
  * 
- * Generated from model's revision "1.54", branch "HEAD"
+ * Generated from model's revision "1.55", branch "HEAD"
  *
  */
 class PolarizationRow {

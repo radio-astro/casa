@@ -904,8 +904,8 @@ ImageInterface<Complex>& GridFT::getImage(Matrix<Float>& weights, Bool normalize
     //
     if(useDoubleGrid_p)
       {
-	ArrayLattice<DComplex> *darrayLattice = new ArrayLattice<DComplex>(griddedData2);
-	LatticeFFT::cfft2d(*darrayLattice,False);
+	ArrayLattice<DComplex> darrayLattice(griddedData2);
+	LatticeFFT::cfft2d(darrayLattice,False);
 	convertArray(griddedData, griddedData2);
 	//Don't need the double-prec grid anymore...
 	griddedData2.resize();

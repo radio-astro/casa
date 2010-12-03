@@ -165,8 +165,6 @@ RFASpectralRej::RFASpectralRej  ( RFChunkStats &ch,const RecordInterface &parm )
     }
     else
       os<<"\""<<RF_DEBUG<<"\" parameter must be [NIFR,NTIME] or [ANT1,ANT2,NTIME]"<<LogIO::EXCEPTION;
-    debug = RFDebugPlot(chunk.pgpscr(),-1,ifr,it);
-    rowclipper.setDebug(debug);
   }
 }
 
@@ -260,8 +258,6 @@ RFA::IterMode RFASpectralRej::iterRow ( uInt irow )
   uInt it = chunk.iTime();
   Bool rowfl = chunk.npass() ? flag.rowFlagged(iifr,it) 
                             : flag.rowPreFlagged(iifr,it);
-  Bool dbg = ( debug.index(0,iifr,it) >= 0 );
-  
   if( !rowfl )   
   {
     Vector<Float> x(num_fitchan),y(num_fitchan);
@@ -278,8 +274,6 @@ RFA::IterMode RFASpectralRej::iterRow ( uInt irow )
         chan(np++) = ich;
       }
     }
-    if( dbg )
-      dprintf(os,"Row %d: %d points can be fitted\n",irow,np);
 // check that we have enough points to constrain the fit
     if( np > ndeg+2 )
     {
@@ -289,54 +283,8 @@ RFA::IterMode RFASpectralRej::iterRow ( uInt irow )
       Vector<Float> c = fitter.fit(x1,y1,sigma);
       Float chisq = fitter.chiSquare();
       rowclipper.setSigma(iifr,it,chisq);
-  // produce debugging plot if needed
-      if( dbg )
-      {
-	Polynomial<Float> poly(ndeg);
-        poly.setCoefficients(c);
-        Vector<Float> yfit(np);
-        for( uInt i=0; i<y1.nelements(); i++ )
-          yfit(i) = poly(x1(i));
-        
-        cerr<<"Sigma: "<<sigma<<LogIO::POST;
-        dprintf(os,"Row %d: chisq=%f\n",irow,chisq);
- 
-        Vector<Float> data(num(CHAN));
-        for( uInt ich=0; ich<num(CHAN); ich++ )
-          data(ich) = mapValue(ich,irow);
-        
-        PGPlotterInterface &pgp( debug.pgp() );
-        Float vmax = ::casa::max( ::casa::max(static_cast<Array<Float> >(y1),static_cast<Array<Float> >(yfit)) );
-        Float vmin = ::casa::min( ::casa::min(static_cast<Array<Float> >(y1),static_cast<Array<Float> >(yfit)) ); 
-        for( Bool redraw=True; redraw;  )
-        {
-          pgp.ask(False);
-          pgp.subp(1,1);
-          pgp.eras();
-          pgp.sci(BLACK);
-          pgp.env(0,num(CHAN),vmin,vmax,0,0);
-          char s[256];
-          sprintf(s,"IFR %d (%s), time slot %d",debug.ifr(),chunk.ifrString(debug.ifr()).chars(),debug.time());
-          pgp.lab("Channel","",s);
-          
-          Vector<Float> xdata(data.nelements());
-          indgen(xdata);
-
-          pgp.sci(BLACK);
-          pgp.line(xdata,data);
-          pgp.sci(YELLOW);
-          pgp.line(x1*xnorm,yfit);
-          
-          redraw = debug.queryPlotLimits(vmin,vmax);
-        }
-        pgp.ask(True);
-      } // endif( dbg )
     } // endif( np>ndeg+2)
   } // endif( !rowfl )
-  else if( dbg )// a row flag
-  {
-    dprintf(os,"Row %d is flagged, so ignoring\n",irow);
-  }
   
   return RFA::CONT;
 }

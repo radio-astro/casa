@@ -167,11 +167,11 @@ class SubMS
   //vector size 3 e.g [4, 15, 351] => a tile shape of 4 stokes, 15 channels 351
   //rows.
   //
-  // ignorables sets ignorables_p.  (Columns to ignore while time averaging.)
+  // combine sets combine_p.  (Columns to ignore while time averaging.)
   //
   Bool makeSubMS(String& submsname, String& whichDataCol,
                  const Vector<Int>& tileShape=Vector<Int>(1, 0),
-                 const String& ignorables="");
+                 const String& combine="");
 
   //Method to make a scratch subMS and even in memory if posssible
   //Useful if temporary subselection/averaging is necessary
@@ -242,6 +242,11 @@ class SubMS
 			  Vector<Vector<Int> >& outToIn,
 			  const Bool areSelecting=false);
   
+  // Replaces col[i] with mapper[col[i]] for each element of col.
+  // Does NOT check whether mapper[col[i]] is defined.
+  static void remap(Vector<Int>& col, const Vector<Int>& mapper);
+  static void remap(Vector<Int>& col, const std::map<Int, Int>& mapper);
+
   // Transform spectral data to different reference frame,
   // optionally regrid the frequency channels 
   // return values: -1 = MS not modified, 1 = MS modified and OK, 
@@ -266,12 +271,12 @@ class SubMS
 
   // the following inline convenience methods for regridSpw bypass the whole CASA measure system
   // because when they are used, they can assume that the frame stays the same and the units are OK
-  lDouble vrad(const lDouble freq, const lDouble rest){ return (C::c * (1. - freq/rest)); };
-  lDouble vopt(const lDouble freq, const lDouble rest){ return (C::c *(rest/freq - 1.)); };
-  lDouble lambda(const lDouble freq){ return (C::c/freq); };
-  lDouble freq_from_vrad(const lDouble vrad, const lDouble rest){ return (rest * (1. - vrad/C::c)); };
-  lDouble freq_from_vopt(const lDouble vopt, const lDouble rest){ return (rest / (1. + vopt/C::c)); };
-  lDouble freq_from_lambda(const lDouble lambda){ return (C::c/lambda); };
+  static lDouble vrad(const lDouble freq, const lDouble rest){ return (C::c * (1. - freq/rest)); };
+  static lDouble vopt(const lDouble freq, const lDouble rest){ return (C::c *(rest/freq - 1.)); };
+  static lDouble lambda(const lDouble freq){ return (C::c/freq); };
+  static lDouble freq_from_vrad(const lDouble vrad, const lDouble rest){ return (rest * (1. - vrad/C::c)); };
+  static lDouble freq_from_vopt(const lDouble vopt, const lDouble rest){ return (rest / (1. + vopt/C::c)); };
+  static lDouble freq_from_lambda(const lDouble lambda){ return (C::c/lambda); };
   
   // Support method for regridSpw():
   // results in the column oldName being renamed to newName, and a new column which is an empty copy of 
@@ -285,22 +290,68 @@ class SubMS
   // calculate the final new channel boundaries from the regridding parameters
   // and the old channel boundaries (already transformed to the desired reference frame);
   // returns False if input paramters were invalid and no useful boundaries could be created
-  Bool regridChanBounds(Vector<Double>& newChanLoBound, 
-			Vector<Double>& newChanHiBound,
-			const Double regridCenter, 
-			const Double regridBandwidth,
-			const Double regridChanWidth,
-			const Double regridVeloRestfrq, 
-			const String regridQuant,
-			const Vector<Double>& transNewXin, 
-			const Vector<Double>& transCHAN_WIDTH,
-			String& message, // message to the user, epsecially in case of error 
-			const Bool centerIsStart=False, // if true, the parameter regridCenter specifies the start
-			const Bool startIsEnd=False, // if true, and centerIsStart is true, regridCenter specifies the upper end in frequency
-			const Int nchan=0, // if != 0 : used instead of regridBandwidth, -1 means use all channels
-			const Int width=0, // if >0 and regridQuant=="freq": used instead of regridChanWidth
-			const Int start=-1 // if >=0 and regridQuant=="freq": used instead of regridCenter
-			);
+  static Bool regridChanBounds(Vector<Double>& newChanLoBound, 
+			       Vector<Double>& newChanHiBound,
+			       const Double regridCenter, 
+			       const Double regridBandwidth,
+			       const Double regridChanWidth,
+			       const Double regridVeloRestfrq, 
+			       const String regridQuant,
+			       const Vector<Double>& transNewXin, 
+			       const Vector<Double>& transCHAN_WIDTH,
+			       String& message, // message to the user, epsecially in case of error 
+			       const Bool centerIsStart=False, // if true, the parameter regridCenter specifies the start
+			       const Bool startIsEnd=False, // if true, and centerIsStart is true, regridCenter specifies the upper end in frequency
+			       const Int nchan=0, // if != 0 : used instead of regridBandwidth, -1 means use all channels
+			       const Int width=0, // if >0 and regridQuant=="freq": used instead of regridChanWidth
+			       const Int start=-1 // if >=0 and regridQuant=="freq": used instead of regridCenter
+			       );
+
+  // a helper function for handling the gridding parameter user input
+  static Bool convertGridPars(LogIO& os,
+			      const String& mode, 
+			      const int nchan, 
+			      const String& start, 
+			      const String& width,
+			      const String& interp, 
+			      const String& restfreq, 
+			      const String& outframe,
+			      const String& veltype,
+			      String& t_mode,
+			      String& t_outframe,
+			      String& t_regridQuantity,
+			      Double& t_restfreq,
+			      String& t_regridInterpMeth,
+			      Double& t_cstart, 
+			      Double& t_bandwidth,
+			      Double& t_cwidth,
+			      Bool& t_centerIsStart, 
+			      Bool& t_startIsEnd,			      
+			      Int& t_nchan,
+			      Int& t_width,
+			      Int& t_start);
+
+  // A wrapper for SubMS::regridChanBounds() which takes the user interface type gridding parameters
+  // The ready-made grid is returned in newCHAN_FREQ and newCHAN_WIDTH
+  static Bool calcChanFreqs(LogIO& os,
+			    // output
+			    Vector<Double>& newCHAN_FREQ,
+			    Vector<Double>& newCHAN_WIDTH,
+			    // input
+			    const Vector<Double>& oldCHAN_FREQ, // the original grid
+			    const Vector<Double>& oldCHAN_WIDTH, 
+			    // the gridding parameters
+			    const MDirection  phaseCenter,
+			    const MFrequency::Types theOldRefFrame,
+			    const MEpoch theObsTime,
+			    const MPosition mObsPos,
+			    const String& mode, 
+			    const int nchan, 
+			    const String& start, 
+			    const String& width,
+			    const String& restfreq, 
+			    const String& outframe,
+			    const String& veltype);
 
   // Support method for regridSpw():
   // if writeTables is False, the (const) input parameters are only verified, nothing is written;
@@ -342,9 +393,18 @@ class SubMS
 			   );
 
   // combineSpws():
-  // make one spectral window from all spws given by the spwids vector, 
-  // Vector<Int>(1,-1) means: use all SPWs
-  Bool combineSpws(const Vector<Int>& spwids = Vector<Int>(1,-1));
+  // make one spectral window from all spws given by the spwids vector
+  Bool combineSpws(const Vector<Int>& spwids,  // Vector<Int>(1,-1) means: use all SPWs
+		   const Bool noModify,   // if True, the MS will not be modified
+		   Vector<Double>& newCHAN_FREQ, // will return the grid of the resulting SPW
+		   Vector<Double>& newCHAN_WIDTH
+		   );
+
+  Bool combineSpws(const Vector<Int>& spwids = Vector<Int>(1,-1)){  // Vector<Int>(1,-1) means: use all SPWs
+    Vector<Double> temp1; 
+    Vector<Double> temp2;
+    return combineSpws(spwids, False, temp1, temp2);
+  }
 
  protected:
 
@@ -364,6 +424,7 @@ class SubMS
   Bool copySource();
   Bool copyState();
   Bool copyWeather();
+  Bool copyGenericSubtables();
 
   //  Bool writeDiffSpwShape(const Vector<MS::PredefinedColumns>& colNames);
   Bool fillAccessoryMainCols();
@@ -402,18 +463,6 @@ class SubMS
   //Int numOfBaselines(Vector<Int>& ant1, Vector<Int>& ant2,
   //                   Bool includeAutoCorr=False);
 
-  // Figure out which timebins each input row will go in, and return the
-  // number of output rows (slots) (-1 on failure).
-  //
-  // Normally the bins are automatically separated by changes in any data
-  // descriptor, i.e. antenna #, state ID, etc., but sometimes bins should be
-  // allowed to span (ignore) changes in certain descriptors.  An example is
-  // scan # in WSRT MSes; it goes up with each integration, defeating time
-  // averaging!  (sub)array(_ID), scan #, and state ID can be ignored by
-  // setting ignorables_p.
-  //
-  Int binTimes(const Double timeBin);
-
   // Used in a couple of places to estimate how much memory to grab.
   Double n_bytes() {return mssel_p.nrow() * nchan_p[0] * ncorr_p[0] *
                            sizeof(Complex);}
@@ -431,9 +480,6 @@ class SubMS
   // Figures out the number, maximum, and index of the selected antennas.
   uInt fillAntIndexer(const ROMSColumns *msc, Vector<Int>& antIndexer);
 
-  //Bool fillAverAntTime();
-  Bool fillTimeAverData(const Vector<MS::PredefinedColumns>& colNames);
-
   // Bits of fillTimeAverData() which were internal to it until they needed to
   // be templated to support both FLOAT_DATA and the other data columns (all
   // Complex).
@@ -446,10 +492,13 @@ class SubMS
                       const Array<M>& inData, const Array<Bool>& flag,
                       Matrix<M>& outData);
 
+  // Read the input, time average it to timeBin_p, and write the output.
+  Bool doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames);
+
   // Fills mapper[ntok] with a map from dataColumn indices to ArrayColumns in
   // the output.  mapper must have ntok slots!
   void getDataColMap(ArrayColumn<Complex>* mapper, uInt ntok,
-                     const Vector<MS::PredefinedColumns> colEnums); 
+                     const Vector<MS::PredefinedColumns>& colEnums); 
 
   // Returns whether or not the numbers of correlations and channels
   // are independent of DATA_DESCRIPTION_ID, for both the input and output
@@ -468,15 +517,6 @@ class SubMS
 		       std::map<Int, Int>& mapper);
   uInt remapped(const Int ov, const Vector<Int>& mapper, uInt i);
 
-  // A "Slot" is a subBin, i.e. rows within the same time bin that have
-  // different Data Descriptors, Field_IDs, Array_IDs, or States, and so should
-  // not be averaged together.  In other words a slot becomes an output row
-  // when time averaging.  This function returns the Slot number corresponding
-  // to the Data Descriptor (dd), Field_ID, Array_ID, and State.
-  uInt rowProps2slotKey(const Int ant1,  const Int ant2, const Int dd, 
-			const Int field, const Int scan, const Int state,
-                        const uInt array);
-
   // *** Member variables ***
 
   // Initialized* by ctors.  (Maintain order both here and in ctors.)
@@ -486,16 +526,15 @@ class SubMS
   ROMSColumns * mscIn_p;
   Bool keepShape_p,      	// Iff true, each output array has the
 				// same shape as the corresponding input one.
-       sameShape_p,             // Iff true, the shapes of the arrays do not
-				// vary with row number.
+       // sameShape_p,             // Iff true, the shapes of the arrays do not
+       //  			// vary with row number.
        antennaSel_p;		// Selecting by antenna?
   Double timeBin_p;
   String scanString_p, uvrangeString_p, taqlString_p;
   String timeRange_p, arrayExpr_p, corrString_p;
-  uInt nant_p;
-  String ignorables_p;          // Should time averaging not split bins by
-                                // (sub)array(_ID), scan #, and/or state ID?
-                                // Must be lowercase at all times.
+  String combine_p;          // Should time averaging not split bins by
+                             // scan #, observation, and/or state ID?
+                             // Must be lowercase at all times.
 
   // Uninitialized by ctors.
   MeasurementSet msOut_p;
@@ -520,20 +559,17 @@ class SubMS
 
   Vector<Int> arrayId_p;
   Vector<Int> polID_p;	       // Map from input DDID to input polID, filled in fillDDTables(). 
-  Vector<uInt> tOI_p; //timeOrderIndex
   Vector<uInt> spw2ddid_p;
 
   // inCorrInd = outPolCorrToInCorrMap_p[polID_p[ddID]][outCorrInd]
   Vector<Vector<Int> > inPolOutCorrToInCorrMap_p;
 
-  std::map<Int, Int> arrayRemapper_p, scanRemapper_p, stateRemapper_p; 
+  std::map<Int, Int> arrayRemapper_p, stateRemapper_p; 
 
-  // Each bin gets a map which maps its set of slot keys from
-  // rowProps2slotKey() to lists of the row numbers in mscIn_p that belong to
-  // the slot.
-  Vector<ui2vmap> bin_slots_p;
-
+  Vector<Vector<Slice> > chanSlices_p;  // Used by VisIterator::selectChannel()
   Vector<Slice> corrSlice_p;
+  Vector<Vector<Slice> > corrSlices_p;  // Used by VisIterator::selectCorrelation()
+  Matrix<Double> selTimeRanges_p;
 };
 
 

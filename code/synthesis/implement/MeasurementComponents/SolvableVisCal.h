@@ -684,6 +684,8 @@ public:
                   const uInt numAnts,
                   const uInt iElem);
 
+  virtual void nearest(const Double time, Array<Float>& vals) {};
+  virtual void nearest(const Double time, Array<Complex>& vals) {};
 protected:
  
   // Number of Cal Matrices to form on baseline axis

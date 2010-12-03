@@ -9,7 +9,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!-- This is the image statitics task                         -->
 
-<task type="function" name="immoments" category="image analysis">
+<task type="function" name="immoments" category="analysis">
 <shortdescription>Compute moments from an image</shortdescription>
 
 <description>

@@ -206,7 +206,7 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
           saveinputs(</xsl:text>&apos;<xsl:value-of select="$taskname"/>&apos;, &apos;<xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">.last&apos;, myparams, self.__globals__)
 	except Exception, instance:
           if(self.__globals__.has_key('__rethrow_casa_exceptions') and self.__globals__['__rethrow_casa_exceptions']) :
-             raise Exception, instance
+             raise
           else :
              print '**** Error **** ',instance
 </xsl:text>
@@ -283,7 +283,7 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
         elif(param == 'paramkeys'):
                 return a.keys()
         else:
-            if(paramvalue==None):
+            if(paramvalue==None and subparam==None):
                if(a.has_key(param)):
                   return a[param]
                else:
@@ -303,6 +303,8 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
                               retval=retval[subparam]
                            else:
                               retval=self.itsdefault(subparam)
+		     else:
+                        retval=self.itsdefault(subparam)
                return retval
 
 

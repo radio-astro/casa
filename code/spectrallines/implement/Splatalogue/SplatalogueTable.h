@@ -74,15 +74,15 @@ public:
 	const static String INTENSITY;
 	const static String SMU2;
 	const static String LOGA;
-	const static String EU;
 	const static String EL;
+	const static String EU;
 	const static String LINELIST;
 	const static String ISSPLAT;
 
 	SplatalogueTable(
 		SetupNewTable& snt, uInt nrow,
 		const String& freqUnit, const String& smu2Unit,
-		const String & euUnit, const String& elUnit
+		const String& elUnit, const String& euUnit  
 	);
 
 	// open an existing splatalogue table. Checks are done to ensure the table
@@ -99,7 +99,7 @@ public:
 	String list() const;
 
 private:
-	String _freqUnit, _smu2Unit, _euUnit, _elUnit;
+	String _freqUnit, _smu2Unit, _elUnit, _euUnit;
 
 	SplatalogueTable();
 	//void _defineTable(const String& tablename, const uInt nrow);

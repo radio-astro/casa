@@ -101,6 +101,8 @@
 
 #include <FieldTable.h>
 
+#include <FlagTable.h>
+
 #include <FlagCmdTable.h>
 
 #include <FocusTable.h>
@@ -225,6 +227,8 @@ using asdm::ExecBlockTable;
 using asdm::FeedTable;
 
 using asdm::FieldTable;
+
+using asdm::FlagTable;
 
 using asdm::FlagCmdTable;
 
@@ -444,6 +448,10 @@ namespace asdm {
 		field = new FieldTable (*this);
 		table.push_back(field);
 		tableEntity["Field"] = emptyEntity;
+
+		flag = new FlagTable (*this);
+		table.push_back(flag);
+		tableEntity["Flag"] = emptyEntity;
 
 		flagCmd = new FlagCmdTable (*this);
 		table.push_back(flagCmd);
@@ -862,6 +870,14 @@ namespace asdm {
 	}
 
 	/**
+	 * Get the table Flag.
+	 * @return The table Flag as a FlagTable.
+	 */
+	FlagTable & ASDM::getFlag () const {
+		return *flag;
+	}
+
+	/**
 	 * Get the table FlagCmd.
 	 * @return The table FlagCmd as a FlagCmdTable.
 	 */
@@ -1082,7 +1098,7 @@ namespace asdm {
 	string ASDM::toXML()   {
 		string out;
 		out.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		out.append("<ASDM xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cntnr=\"http://Alma/XASDM/ASDM\" xsi:schemaLocation=\"http://Alma/XASDM/ASDM http://almaobservatory.org/XML/XASDM/2/ASDM.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\"> ");
+		out.append("<ASDM xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cntnr=\"http://Alma/XASDM/ASDM\" xsi:schemaLocation=\"http://Alma/XASDM/ASDM http://almaobservatory.org/XML/XASDM/2/ASDM.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\"> ");
 
 		if (entity.isNull())
 			throw ConversionException("Container entity cannot be null.","Container");
@@ -1253,6 +1269,8 @@ namespace asdm {
 		
 		result->field = *(this->field->toIDL());
 		
+		result->flag = *(this->flag->toIDL());
+		
 		result->flagCmd = *(this->flagCmd->toIDL());
 		
 		result->focus = *(this->focus->toIDL());
@@ -1379,6 +1397,8 @@ namespace asdm {
 		this->feed->fromIDL(x->feed);
 		
 		this->field->fromIDL(x->field);
+		
+		this->flag->fromIDL(x->flag);
 		
 		this->flagCmd->fromIDL(x->flagCmd);
 		
@@ -2773,6 +2793,43 @@ namespace asdm {
 			dataset->getField().fromXML(tableDoc);						
 		}
 
+		entity = dataset->tableEntity["Flag"];
+		if (entity.getEntityId().getId().length()  != 0) {
+			// Which file must we read ?
+			string tablename = xmlDirectory + "/Flag.xml";
+
+			// Determine the file size
+			ifstream::pos_type size;	
+			ifstream tablein (tablename.c_str() , ios::in|ios::binary|ios::ate);
+  			if (tablein.is_open()) { 
+  				size = tablein.tellg(); 
+  			}
+			else {
+				throw ConversionException("Could not open file " + tablename, "Flag");
+			}
+			
+			// Read the file in a string
+			string tableDoc;
+
+			tableDoc.reserve(size);
+			tablein.seekg (0);	
+			int nread = BLOCKSIZE;	
+			while (nread == BLOCKSIZE) {
+				tablein.read(c, BLOCKSIZE);
+				if (tablein.rdstate() == istream::failbit || tablein.rdstate() == istream::badbit) {
+					throw ConversionException("Error reading file " + tablename,"ASDM");
+				}
+				nread = tablein.gcount();
+				tableDoc.append(c, nread);
+			}
+			tablein.close();
+			if (tablein.rdstate() == istream::failbit)
+				throw ConversionException("Could not close file " + tablename,"ASDM");
+			
+			// And finally parse the XML document to populate the table.	
+			dataset->getFlag().fromXML(tableDoc);						
+		}
+
 		entity = dataset->tableEntity["FlagCmd"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			// Which file must we read ?
@@ -3955,6 +4012,10 @@ namespace asdm {
 			getField().toFile(directory);
 		}
 	
+		if (getFlag().size() > 0) {
+			getFlag().toFile(directory);
+		}
+	
 		if (getFlagCmd().size() > 0) {
 			getFlagCmd().toFile(directory);
 		}
@@ -4279,6 +4340,11 @@ namespace asdm {
 		entity = tableEntity["Field"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getField().setFromFile(directory);
+		}
+	
+		entity = tableEntity["Flag"];
+		if (entity.getEntityId().getId().length()  != 0) {
+			getFlag().setFromFile(directory);
 		}
 	
 		entity = tableEntity["FlagCmd"];
@@ -4696,6 +4762,13 @@ namespace asdm {
 			container->getField().setEntity(entity);
 			xml = getXMLEntity(entity.getEntityId());
 			container->getField().fromXML(xml);
+		}
+			
+		entity = container->tableEntity["Flag"];
+		if (entity.getEntityId().getId().size() != 0) {
+			container->getFlag().setEntity(entity);
+			xml = getXMLEntity(entity.getEntityId());
+			container->getFlag().fromXML(xml);
 		}
 			
 		entity = container->tableEntity["FlagCmd"];

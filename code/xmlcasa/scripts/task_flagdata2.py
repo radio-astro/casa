@@ -2,7 +2,7 @@ import time
 import os
 import sys
 from taskinit import *
-im,cb,ms,tb,fg,af,me,ia,po,sm,cl,cs,rg,sl,dc,vp=gentools()
+im,cb,ms,tb,fg,me,ia,po,sm,cl,cs,rg,sl,dc,vp=gentools()
 
 debug = False
 def flagdata2(vis = None,
@@ -63,6 +63,10 @@ def flagdata2(vis = None,
              maxrel = None,
              minabs = None,
              maxabs = None):
+
+    if pCASA.is_mms(vis):
+        pCASA.execute("flagdata2", locals())
+        return
 
     casalog.origin('flagdata2')
     fglocal = casac.homefinder.find_home_by_name('flaggerHome').create()
@@ -362,6 +366,7 @@ def flagdata2(vis = None,
     except Exception, instance:
 #        fglocal.done()
         print '*** Error ***', instance
+        raise
 
 #    fglocal.done()
     

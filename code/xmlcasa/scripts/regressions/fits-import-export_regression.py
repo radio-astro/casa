@@ -232,6 +232,31 @@ else:
     failed_tests.append('bitpix')
 print myname, ' ***********************************************************'
 
+print myname, ' ***********************************************************'
+print myname, ' Test of the stokeslast parameter:'
+exportfits(imagename='stokeslast-test.image', fitsimage='stokeslast-test.fits', stokeslast=True)
+importfits(imagename='stokeslast-test2.image', fitsimage='stokeslast-test.fits')
+myrgn1 = rg.box([0,0,1,0],[64,64,1,0])
+myrgn2 = rg.box([0,0,0,1],[64,64,0,1])
+ia.open('stokeslast-test.image')
+ia.subimage(outfile='sub1.im', region = myrgn1)
+ia.close()
+ia.open('stokeslast-test2.image')
+ia.subimage(outfile='sub2.im', region = myrgn2)
+ia.close()
+myresult1 = imstat('sub1.im')
+myresult2 = imstat('sub2.im')
+# imagecalc is on strike here because the formal coordinates of the slices disagree because the order is different
+# so use min, max, and sum
+passed = (myresult1['min']==myresult2['min']) and (myresult1['max']==myresult2['max']) and (myresult1['sum']==myresult2['sum'])
+if passed:
+    print myname, ' stokeslast test passed.'
+    passed_tests.append('stokeslast')
+else:
+    print myname, ' stokeslast test failed.'
+    failed_tests.append('stokeslast')
+print myname, ' ***********************************************************'
+
 
 
 if len(failed_tests)>0:

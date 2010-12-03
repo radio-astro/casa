@@ -59,7 +59,7 @@ using namespace asdmIDL;   /// <-------------------
 #endif
 
 /*\file ASDM.h
-    \brief Generated from model's revision "1.54", branch "HEAD"
+    \brief Generated from model's revision "1.55", branch "HEAD"
 */
 
 namespace asdm {
@@ -167,6 +167,9 @@ class FeedTable;
 //class asdm::FieldTable;
 class FieldTable;
 
+//class asdm::FlagTable;
+class FlagTable;
+
 //class asdm::FlagCmdTable;
 class FlagCmdTable;
 
@@ -254,7 +257,7 @@ class WeatherTable;
  * creates a complete set of tables.
  *
  * 
- * Generated from model's revision "1.54", branch "HEAD"
+ * Generated from model's revision "1.55", branch "HEAD"
  */
 //class ASDM : public Representable {
 class ASDM {
@@ -471,6 +474,12 @@ public:
 	 * @return The table Field as a FieldTable.
 	 */
 	FieldTable & getField () const;
+
+	/**
+	 * Get the table Flag.
+	 * @return The table Flag as a FlagTable.
+	 */
+	FlagTable & getFlag () const;
 
 	/**
 	 * Get the table FlagCmd.
@@ -1044,6 +1053,11 @@ private:
 	 * The table Field
 	 */
 	FieldTable * field;
+
+	/**
+	 * The table Flag
+	 */
+	FlagTable * flag;
 
 	/**
 	 * The table FlagCmd

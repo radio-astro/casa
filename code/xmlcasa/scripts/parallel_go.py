@@ -6,9 +6,11 @@ import commands
 import string
 import atexit
 import time
+import socket
 import types
 import inspect
 import casadef
+import numpy as np
 from math import *
 from get_user import get_user
 
@@ -68,7 +70,7 @@ class cluster(object):
       '''Initialize a Cluster.
 
       A Cluster enables parallel and distributed execution of CASA tasks and tools on a set of networked computers. A culster consists of one controller and one or more engines. Each engine is an independent Python instance that takes Python commands over a network connection. The controller provides an interface for working with a set of engines. A user uses casapy console to command the controller. A password-less ssh access to the computers that hosts engines is required for the communication between controller and engines.
-      
+
       '''
       # print 'start cluster---------'
       self.__client=None
@@ -91,17 +93,47 @@ class cluster(object):
       #atexit.register(self.stop_cluster)
       atexit.register(cluster.stop_cluster,self)
 
+   def _ip(self, host):
+      """Returns a unique IP address of the given hostname,
+      i.e. not 127.0.0.1 for localhost but localhost's global IP"""
+      
+      ip = socket.gethostbyname(host)
+      
+      if ip == "127.0.0.1":
+         ip = socket.gethostbyname(socket.gethostname())
+         
+      return ip
+
+   def _cp(self, source, host, destination):
+      """Creates the command to copy the source file to the destination file and destination host,
+      using either scp or cp for the localhost. This is to avoid the requirement of password-less ssh
+      in a single host environment."""
+
+      if self._ip(host) == self._ip("localhost"):
+         cmd = ['cp', source, destination]
+      else:
+         cmd = ['scp', source, host + ":" + destination]
+
+      return cmd
+
+   def _do(self, host, cmd):
+      """Creates the command line to execute the give command on the given host.
+      If and only if the host is not localhost, ssh is used."""
+
+      if self._ip(host) == self._ip("localhost"):
+         return cmd.split(" ")
+      else:
+         return ['ssh', '-f', '-q', '-x', host, cmd]
+
    def start_engine(self, node_name, num_engine, work_dir=None):
       '''Start engines on the given node.
-
       @param node_name The name of the computer to host the engines.
       @param num_engine The number of the engines to initialize for this run. 
       @param work_dir The working directory where outputs and logs from the engines will be stored. If work_dir is not supplied or does not exist, the user's home directory will be used. 
       Running this command multiple times on the same node is ok. The total number of the engines on the node increases for each run.
       Every engine has a unique integer id. The id is the key to send the instructions to the engine. The available engine ids can be obtained by calling get_ids() or get_engines().
- 
       '''
-
+      
       # start controller
       if not self.__start_controller():
          print 'controller is not started'
@@ -112,20 +144,32 @@ class cluster(object):
       #print 'engines', self.engines
       out=open('/dev/null', 'w')
       err=open('/dev/null', 'w')
-      dist=node_name+':'+self.__prefix+self.__cluster_rc_file
-      #print 'dist=', dist
-      p=Popen(['scp', self.__ipythondir+'/'+self.__cluster_rc_file, dist], stdout=out, stderr=err)
-      dist=node_name+':'+self.__prefix+self.__start_engine_file
-      #print 'dist=', dist
-      p=Popen(['scp', self.__ipythondir+'/'+self.__start_engine_file, dist], stdout=out, stderr=err)
+      cmd = self._cp(self.__ipythondir+'/'+self.__cluster_rc_file,
+                node_name,
+                self.__prefix+self.__cluster_rc_file)
+      p=Popen(cmd, stdout=out, stderr=err)
+      sts = os.waitpid(p.pid, 0)
+      if sts[1] != 0:
+         print >> sys.stderr, "WARNING: Command failed:", " ".join(cmd)
+      
+      cmd = self._cp(self.__ipythondir+'/'+self.__start_engine_file,
+                node_name,
+                self.__prefix+self.__start_engine_file)
+
+      p=Popen(cmd, stdout=out, stderr=err)
       out.close()
       err.close()
       sts = os.waitpid(p.pid, 0)
+      if sts[1] != 0:
+         print >> sys.stderr, "WARNING: Command failed:", " ".join(cmd)
       for i in range(1, num_engine+1):
          args='bash '+self.__prefix+self.__start_engine_file
          #print 'args=', args
-         q=Popen(['ssh', '-f', '-q', '-x', node_name, args])
+         cmd = self._do(node_name, args)
+         q=Popen(cmd)
          sts = os.waitpid(q.pid, 0)
+         if sts[1] != 0:
+            print >> sys.stderr, "WARNING: Command failed:", " ".join(cmd)
          print "start engine %s on %s" % (i, node_name)
       self.__engines=self.__update_cluster_info(num_engine, work_dir)
       
@@ -336,15 +380,17 @@ class cluster(object):
 
       out=open('/dev/null', 'w')
       err=open('/dev/null', 'w')
-      dist=node_name+':'+self.__prefix+self.__stop_engine_file
-      #print 'dist=', dist
-      p=Popen(['scp', self.__ipythondir+'/'+self.__stop_engine_file, dist], stdout=out, stderr=err)
+      cmd = self._cp(self.__ipythondir+'/'+self.__stop_engine_file,
+                node_name,
+                self.__prefix+self.__stop_engine_file)
+
+      p=Popen(cmd, stdout=out, stderr=err)
       out.close()
       err.close()
       sts = os.waitpid(p.pid, 0)
       args='bash '+self.__prefix+self.__stop_engine_file
       #print 'args=', args
-      Popen(['ssh', '-f', '-q', '-x', node_name, args])
+      Popen(self._do(node_name, args))
       print 'stop engine %d on %s\n' % (engine_id, node_name)
       self.__engines=self.__update_cluster_info(-1)
 
@@ -370,15 +416,16 @@ class cluster(object):
 
       out=open('/dev/null', 'w')
       err=open('/dev/null', 'w')
-      dist=node_name+':'+self.__prefix+self.__stop_node_file
-      #print 'dist=', dist
-      p=Popen(['scp', self.__ipythondir+'/'+self.__stop_node_file, dist], stdout=out, stderr=err)
+      cmd = self._cp(self.__ipythondir+'/'+self.__stop_node_file,
+                node_name,
+                self.__prefix+self.__stop_node_file)
+      p=Popen(cmd, stdout=out, stderr=err)
       out.close()
       err.close()
       sts = os.waitpid(p.pid, 0)
       args='bash '+self.__prefix+self.__stop_node_file
       #print 'args=', args
-      Popen(['ssh', '-f', '-q', '-x', node_name, args])
+      Popen(self._do(node_name, args))
       print 'stop engines on %s\n' % node_name
       # what to do with client.kill() ?
 
@@ -405,15 +452,16 @@ class cluster(object):
       #node_name=os.environ['HOSTNAME']
       out=open('/dev/null', 'w')
       err=open('/dev/null', 'w')
-      dist=node_name+':'+self.__prefix+self.__stop_controller_file
-      #print 'dist=', dist
-      p=Popen(['scp', self.__ipythondir+'/'+self.__stop_controller_file, dist], stdout=out, stderr=err)
+      cmd = self._cp(self.__ipythondir+'/'+self.__stop_controller_file,
+                node_name,
+                self.__prefix+self.__stop_controller_file)
+      p=Popen(cmd, stdout=out, stderr=err)
       out.close()
       err.close()
       sts = os.waitpid(p.pid, 0)
       args='bash '+self.__prefix+self.__stop_controller_file
       #print 'args=', args
-      Popen(['ssh', '-f', '-q', '-x', node_name, args])
+      Popen(self._do(node_name, args))
 
       #cmd="ps -ef | grep `whoami` | grep ipcontroller | grep -v grep | awk '{print $2}' | xargs kill -9"
       #print 'cmd=', cmd
@@ -998,126 +1046,112 @@ class cluster(object):
    def pgk(self, **kwargs):
       '''Parallel execution to set keywords
 
-      @param **kwargs available 
-          special keyword options are
-             job=<str> or jobname=<str>
-             block=<True/False>
+      @param **kwargs keyword args 
 
       Example:
-      c.pgk(xx={0:5,2:'c'},action='write')
-      action : write
-      xx : {0: 5, 2: 'c'}
-      0 xx=5
-      1
-      2 xx='c'
-      3
-
-      c.pgk(xx={0:5,2:'c'},action='run')
-      c.pull('xx')
-      {0: 5, 2: 'c'}
-
+      x=np.zeros((3,3))
+      c.pgk(c={1:x},d=6,t='b',s={0:'y'})
+      c.pull('c')
+      {1: array([[ 0.,  0.,  0.],
+                 [ 0.,  0.,  0.],
+                 [ 0.,  0.,  0.]])}
+      c.pull('d')
+      {0: 6, 1: 6}
+      c.pull('s')
+      {0: 'y'}
+      c.pull('t')
+      {0: 'b', 1: 'b'}
       '''
-
-      # set default action
-      pgTask=None
-      pgAction='run'
-      pgBlock=False
-      pgJob="NoName"
 
       tasks={}
       for j in self.__client.get_ids():
-         tasks[j]=[]
+         tasks[j]=dict()
       
       #print '-' * 10, 'kargs:'
       keys = kwargs.keys()
       #keys.sort()
 
-      for kw in keys:
-         #print kw
-         if kw.lower()=='action':
-            pgAction=kwargs[kw]
-         if kw.lower()=='task' and \
-            type(kwargs[kw])==types.StringType:
-             pgTask=kwargs[kw]
-         if kw.lower()=='block' and kwargs[kw]==True:
-             pgBlock=True
-         if (kw.lower()=='job' or kw.lower()=='jobname') and \
-            type(kwargs[kw])==types.StringType :
-             pgJob=kwargs[kw]
-
-      if type(pgAction)!=types.StringType or \
-        (pgAction.lower()!='run' and \
-        pgAction.lower()!='check'):
-         pgAction='write'
-      #print 'pgAction', pgAction
-
       for kw in keys: 
          vals=kwargs[kw]
-         print kw, ":", vals
+         #print kw, ":", vals
          if type(vals)==types.DictType:
             for j in vals.keys():
                if type(j)!=types.IntType or j<0:
                   print ('task id', j, 
                          'must be a positive integer')
-                  return None
+                  pass
                else:
-                  st=kw+'='
-                  if type(vals[j])==types.StringType:
-                     st=st+"'"+vals[j]+"'"
-                  else:
-                     st=st+str(vals[j])
-                  tasks[j].append(st)
+                  tasks[j][kw]=vals[j]
          else:
-            if kw=='task':
-               pgTask=vals
-            elif kw=='action':
-               pass
-            else:
-               for i in xrange(0, len(self.__engines)): 
-                  st=kw+'='
-                  if type(vals)==types.StringType:
-                     st=st+"'"+vals+"'"
-                  else:
-                     st=st+str(vals)
-                  tasks[i].append(st)
+            for j in tasks.keys():
+               tasks[j][kw]=vals
 
-      if pgAction=='write':
-         if (pgTask==None or pgTask==''):
-            for i in tasks.keys():      
-               print i, string.join(tasks[i], ',') 
-         else:
-            for i in tasks.keys():      
-               print i, pgTask+"("+ \
-                     string.join(tasks[i], ',')+")" 
-         return None
+      #print 'tasks', tasks
+
+      for i in tasks.keys():      
+         #print 'dict'
+         self.__client.push(tasks[i], i, True)
+      return tasks
+
+   def make_command(self, func, **kwargs):
+      '''Make command strings to be distributed to engines
+
+      @func function name 
+      @kwargs **kwargs available 
+
+      Example:
+      x=np.ones((3,3))
+      c.make_command(func=None,c={1:x},d=6,t='b',s={0:'y'})
+      {0: 's="y"; t="b"; d=6',
+       1: 'c=array([[ 1., 1., 1.],\n[ 1., 1., 1.],\n[ 1., 1., 1.]]); t="b"; d=6'}
+      c.make_command(func='g',c={1:x},d=6,t='b',s={0:'y'})
+      {0: 'g(s="y", t="b", d=6)',
+       1: 'g(c=array([[1., 1., 1.],\n[1., 1., 1.],\n[1., 1., 1.]]), t="b", d=6)'}
+      '''
+
+      tasks=self.pgk(**kwargs)
+
+      if func!=None and type(func)!=str:
+        print 'func must be a str'
+        return None
+
+      if len(tasks)==0:
+        print 'no parameters specified'
+        return None
+
+      if func==None or len(str.strip(func))==0:
+         func=''
+
+      func=str.strip(func)
+
+      cmds=dict()
+      for i in tasks.keys(): 
+        cmd=''
+        for (k, v) in tasks[i].iteritems():
+          cmd+=k+'='
+          if type(v)==str:
+              cmd+='"'+v+'"'
+          elif type(v)==np.ndarray:
+              cmd+=repr(v)
+          else:
+              cmd+=str(v)
+          if func=='':
+            cmd+='; '
+          else:
+            cmd+=', '
+        cmd=cmd[0:-2]
+        if func!='':
+           cmd=func+'('+cmd+')'
+        cmds[i]=cmd
+      return cmds
+
+    #for i in tasks.keys():      
+    #   print i, string.join(tasks[i], ',') 
+    #else:
+    #   for i in tasks.keys():      
+    #      print i, pgTask+"("+ \
+    #                 string.join(tasks[i], ',')+")" 
       
-      if pgAction=='run':
-         #print 'run keyword'
-         if (pgTask==None or pgTask==''):
-            for i in tasks.keys():      
-               cmd=string.join(tasks[i], '\n')
-               #print 'cmd', cmd
-               #self.__client.execute(cmd, i)
-               self.__client.push(dict(job=cmd), i)
-
-            #print 'cmd', cmd
-            return self.__client.execute('exec(job)',
-                         block=pgBlock,targets=tasks.keys())
-            #self.__result[job]=self.__client.execute(
-            #  'exec(job)',block=pgBlock,targets=tasks.keys())
-           
-         else:
-            for i in tasks.keys():      
-               cmd=pgTask+"("+string.join(tasks[i], ',')+")" 
-               #self.__client.execute(cmd, i)
-               self.__client.push(dict(job=cmd), i)
-
-            #print 'cmd', cmd
-            #self.__result[job]=self.__client.execute(
-            #  'exec(job)',block=pgBlock,targets=tasks.keys())
-            return self.__client.execute(
-               'exec(job)',block=pgBlock,targets=tasks.keys())
-         return
                
    def parallel_go_keywords(self, **kwargs):
       '''Parallel execution to set keywords
@@ -1299,6 +1333,61 @@ class cluster(object):
 
       '''
       return self.__client.keys()
+
+   def push(self, **kwargs):
+      '''set values to the engines
+      @param kekword value to distribute
+      @param targets, the engines of interest
+      By default, this function set the keyword values to all engines.
+      To set values on a subset of engines, use kekword parameter targets,
+      whick takes integer or array of integer of engine ids.
+      You can also use function pgk to set values onto the engines. 
+      Example:
+      c.push(a=[1,3,7.1])
+      c.pull('a')
+      {0: [1, 3, 7.0999999999999996], 1: [1, 3, 7.0999999999999996]}
+      c.push(b=[1.2,3.7], targets=1)
+      c.pull('b',[1])
+      {1: [1.2, 3.7000000000000002]}
+      c.pull('b')
+      {1: [1.2, 3.7000000000000002]}
+
+      '''
+
+      keys = kwargs.keys()
+      #keys.sort()
+      if len(keys)==0:
+          return False
+
+      tgt=[]
+      targets=None
+      for kw in keys:
+         if kw.lower()=='targets':
+            targets=kwargs[kw]
+            break
+
+      if targets=='all' or targets==None or \
+         type(targets)==list and len(targets)==0:
+          tgt=list(xrange(0, len(self.__engines))) 
+      elif type(targets)==list:
+          for j in targets:
+              if type(j)==types.IntType and j>=0:
+                  tgt.append(j)
+      elif type(targets)==int and targets>=0:
+          tgt.append(targets)
+           
+      if len(tgt)==0:
+           print 'no target engines'
+           return False
+
+      ok=True
+      for i in tgt: 
+          try:
+              self.__client.push(dict(kwargs),i)
+          except:
+              ok=Fale 
+
+      return ok
 
    def pull(self, key, targets='all'):
       '''get the value of a key

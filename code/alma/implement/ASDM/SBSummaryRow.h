@@ -119,7 +119,7 @@ using namespace DirectionReferenceCodeMod;
 
 
 /*\file SBSummary.h
-    \brief Generated from model's revision "1.54", branch "HEAD"
+    \brief Generated from model's revision "1.55", branch "HEAD"
 */
 
 namespace asdm {
@@ -134,7 +134,7 @@ typedef void (SBSummaryRow::*SBSummaryAttributeFromBin) (EndianISStream& eiss);
 /**
  * The SBSummaryRow class is a row of a SBSummaryTable.
  * 
- * Generated from model's revision "1.54", branch "HEAD"
+ * Generated from model's revision "1.55", branch "HEAD"
  *
  */
 class SBSummaryRow {

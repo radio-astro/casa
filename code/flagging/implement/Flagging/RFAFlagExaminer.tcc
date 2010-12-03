@@ -148,7 +148,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // processRow
   // Raises/clears flags for a single row, depending on current selection
   // -----------------------------------------------------------------------
-  void RFAFlagExaminer::processRow(uInt ifr, uInt it)
+  void RFAFlagExaminer::processRow(uInt, uInt)
   {
       // called often... if(dbg3)  cout << __FILE__ << ":" << __func__ << "():" << __LINE__ << endl;      
       return;
@@ -176,7 +176,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return;
   }
   
-  void RFAFlagExaminer::initializeIter (uInt it) 
+  void RFAFlagExaminer::initializeIter (uInt) 
   {
       if(dbg3)  cout << __FILE__ << ":" << __func__ << "():" << __LINE__ << endl;
 
@@ -199,7 +199,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   // Is not called if this is the only agent
-  void RFAFlagExaminer::finalizeIter (uInt it) 
+  void RFAFlagExaminer::finalizeIter (uInt) 
   {
     //cout << __FILE__ << ":" << __func__ << "():" << __LINE__ << endl;
 

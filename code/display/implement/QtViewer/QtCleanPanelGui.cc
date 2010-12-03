@@ -51,7 +51,7 @@
 #include <casa/sstream.h>	
 namespace casa {
 
-    QtCleanPanelGui::QtCleanPanelGui( QtViewer *v, QWidget *parent ) : QtDisplayPanelGui( v, parent ),
+    QtCleanPanelGui::QtCleanPanelGui( QtViewer *v, QWidget *parent ) : QtDisplayPanelGui( v, parent, "iclean" ),
 								       in_interact_mode(false), interact_id(0),
 								       maskdd_(0), imagedd_(0) {
 

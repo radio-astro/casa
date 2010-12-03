@@ -167,6 +167,9 @@ Simulator::Simulator(MeasurementSet &theMs)
     os << "Can't find antenna information for loaded MS" << LogIO::WARN;
   if (!sim_p->getSpWindows(nSpw,spWindowName_p,nChan_p,startFreq_p,freqInc_p,stokesString_p))
     os << "Can't find spectral window information for loaded MS" << LogIO::WARN;
+  freqRes_p.resize(nSpw);
+  for (uInt i=0;i<nSpw;++i)
+    freqRes_p[i]=freqInc_p[i];
   if (!sim_p->getFields(nField,sourceName_p,sourceDirection_p,calCode_p))
     os << "Can't find Field/Source information for loaded MS" << LogIO::WARN;
 
@@ -1972,7 +1975,9 @@ Bool Simulator::observe(const String&   sourcename,
 			const double& state_cal=0.,
 			const double& state_load=0.,
 			const unsigned int state_sub_scan=0,
-			const String& state_obs_mode="OBSERVE_TARGET.ON_SOURCE")
+			const String& state_obs_mode="OBSERVE_TARGET.ON_SOURCE",
+			const String& observername="CASA simulator",
+			const String& projectname="CASA simulation")
 {
   LogIO os(LogOrigin("Simulator", "observe()", WHERE));
   
@@ -1991,7 +1996,7 @@ Bool Simulator::observe(const String&   sourcename,
     }
 
     sim_p->observe(sourcename, spwname, startTime, stopTime, 
-		   add_observation, state_sig, state_ref, state_cal,state_load,state_sub_scan,state_obs_mode);
+		   add_observation, state_sig, state_ref, state_cal,state_load,state_sub_scan,state_obs_mode,observername,projectname);
 
 
     if(ms_p) delete ms_p; ms_p=0;
@@ -2024,7 +2029,9 @@ Bool Simulator::observemany(const Vector<String>&   sourcenames,
 			    const double& state_cal=0.,
 			    const double& state_load=0.,
 			    const unsigned int state_sub_scan=0,
-			    const String& state_obs_mode="OBSERVE_TARGET.ON_SOURCE")
+			    const String& state_obs_mode="OBSERVE_TARGET.ON_SOURCE",
+			    const String& observername="CASA simulator",
+			    const String& projectname="CASA simulation")
 {
   LogIO os(LogOrigin("Simulator", "observemany()", WHERE));
   
@@ -2043,7 +2050,7 @@ Bool Simulator::observemany(const Vector<String>&   sourcenames,
     }
 
     sim_p->observe(sourcenames, spwname, startTimes, stopTimes, directions,
-		   add_observation, state_sig, state_ref, state_cal,state_load,state_sub_scan,state_obs_mode);
+		   add_observation, state_sig, state_ref, state_cal,state_load,state_sub_scan,state_obs_mode,observername,projectname);
 
     if(ms_p) delete ms_p; ms_p=0;
     if(mssel_p) delete mssel_p; mssel_p=0;

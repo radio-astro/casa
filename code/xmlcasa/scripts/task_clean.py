@@ -2,7 +2,7 @@ import os
 import shutil
 from taskinit import *
 from cleanhelper import *
-im,cb,ms,tb,fg,af,me,ia,po,sm,cl,cs,rg,sl,dc,vp=gentools()
+im,cb,ms,tb,fg,me,ia,po,sm,cl,cs,rg,sl,dc,vp=gentools()
 #import pdb
 
 def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
@@ -13,7 +13,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
           veltype, imsize, cell, phasecenter, restfreq, stokes, weighting,
           robust, uvtaper, outertaper, innertaper, modelimage, restoringbeam,
           pbcor, minpb, calready, noise, npixels, npercycle, cyclefactor,
-          cyclespeedup, nterms, reffreq, chaniter):
+          cyclespeedup, nterms, reffreq, chaniter, flatnoise):
 
     #Python script
     
@@ -21,7 +21,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
 
     applyoffsets=False;
     pbgridcorrect=True;
-    reffreqVal=1.4e9;
+    reffreqVal=0.0;
     padding=1.2;
     #
     # While the following condition is irrelavent due to the change in
@@ -53,8 +53,6 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                 print '*** Error *** In conversion of reffreq=\'',reffreq,'\' to a numerical value';
                 raise Exception, instance
             reffreqVal=rff['value'];  # This is the frequency in Hz
-            if(reffreqVal == 0.0):
-                raise Exception,'Reference Frequency is 0.0. Please set a value within your data range.';
             #qat.close()
             
         # if (gridmode =='widefield'):
@@ -242,8 +240,9 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
             else:
                 imset.makemultifieldmask2(mask,chanslice)
                 maskimage=[]
-                for k in range(len(imset.maskimages)):
-                    maskimage.append(imset.maskimages[imset.imagelist[k]])
+                for img in sorted(imset.maskimages):
+                    maskimage.append(imset.maskimages[img])
+	    casalog.post('Used mask(s) : ' + str(mask) + ' to create mask image(s) : ' + str(maskimage),'INFO');
 
             if dochaniter:
                 imset.checkpsf(chanslice)
@@ -259,10 +258,6 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                              applypointingoffsets=applyoffsets,
                              dopbgriddingcorrections=pbgridcorrect);
 
-            if (mode=='mfs') and (nterms > 1):
-                imCln.settaylorterms(ntaylorterms=nterms,
-                                     reffreq=reffreqVal);
-
             #if(alg=='mfmultiscale' and multifield): 
             #    raise Exception, 'Multiscale clean with flanking fields is not supported yet'
 
@@ -272,7 +267,9 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
             #if not multifield:
             #         imset.convertmodelimage(modelimages=modelimage,
             #                 outputmodel=imagename+'.model')
-            if modelimage != '' and modelimage != []:
+	    if (type(modelimage)!=str and type(modelimage)!=list):
+		    raise Exception,'modelimage must be a string or a list of strings';
+            if modelimage != '' and modelimage != [] and nterms==1:
                 if dochaniter:
                     imset.defineChaniterModelimages(modelimage,j,tmppath)
                 else:
@@ -340,11 +337,15 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                 # imCln.setsmallscalebias(smallscalebias)
                 imCln.settaylorterms(ntaylorterms=nterms,
                                      reffreq=reffreqVal);
+                # forbid pbcorrection with msmfs for now
+                if(pbcor):
+                    raise Exception, 'Primary-beam correction is currently not supported with nterms>1'
 
                 modelimages[0]=modelimages[0]+'.tt'+str(0);
                 restoredimage[0]=restoredimage[0]+'.tt'+str(0);
                 residualimage[0]=residualimage[0]+'.tt'+str(0);
 
+                # Make image names...
                 for tt in range(1, nterms):
                     modelimages.append(imset.imagelist[0] + '.model'
                                        + '.tt' +str(tt))
@@ -352,9 +353,33 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                                          '.tt' + str(tt))
                     residualimage.append(imset.imagelist[0] + '.residual'
                                          + '.tt' + str(tt))
+		# Check if starting models exist 
+		#   - either same name as that derived from 'imagename', stored in 'modelimages'
+		#   - or, if the user has explicitly specified via 'modelimage'.
+		# If neither, make empty ones.
+		# Note : modelimages is an internal variable and modelimage is user-specified
                 for tt in range(0, nterms):
 		    if not os.path.exists(modelimages[tt]):
 			 imCln.make(modelimages[tt])
+		         casalog.post("No model found. Making empty initial model : "+modelimages[tt]);
+	            else:
+		         casalog.post("Found and starting from existing model on disk : "+modelimages[tt]);
+		# Check for a user-specified modelimage list to add to current model
+		if( modelimage != '' and modelimage != [] ):
+		   if( type(modelimage)==str ):
+		       modelimage = [modelimage];
+		   if( type(modelimage)==list ):
+		       nimages = min( len(modelimage), len(modelimages) );
+		       for tt in range(0,nimages):
+			   if( os.path.exists(modelimage[tt]) ):
+			       imset.convertmodelimage(modelimages=[modelimage[tt]],outputmodel=modelimages[tt]);
+			       casalog.post("Found user-specified model image : "+modelimage[tt]+" . Adding to starting model : "+modelimages[tt]);
+			   else:
+			       casalog.post("Cannot find user-specified model image : "+modelimage[tt]+" . Continuing with current model : "+modelimages[tt]);
+		   else:
+		      raise Exception,'Model image(s) must be a string or a list of strings';
+		
+		casalog.post('Running MS-MFS with '+str(nterms)+' Taylor-terms on dataset : ' + vis);
             #####################################################################
             if len(multiscale) > 0:
                 imCln.setscales(scalemethod='uservector',
@@ -375,7 +400,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                                        cyclefactor=cyclefactor,
                                        cyclespeedup=cyclespeedup,
                     #                   fluxscale=[imagename+'.flux'])
-                                       fluxscale=fluximage)
+                                       fluxscale=fluximage, flatnoise=flatnoise)
             else:
                 imCln.setmfcontrol(stoplargenegatives=negcomponent,
                                    cyclefactor=cyclefactor,
@@ -392,13 +417,35 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                     else:
                         maskimage = imset.imagelist[0] + '.mask'
                         imset.maskimages[imset.imagelist[0]] = maskimage
+            maskimg = mask
+            if mask == True:
+                maskimg = minpb
+            if ((len(maskimage) == 0 or maskimage[0] == '') and
+                isinstance(maskimg, float) and maskimg > 0.0 and maskimg < 1.0
+                # and imagermode == 'mosaic'
+                and not interactive):
+                casalog.post('Making a mask at primary beam level ' + str(maskimg),
+                             'INFO')
+                casalog.post('Running clean with niter=0 to get the primary beam coverage',
+                             'INFO')
+                # Run clean with niter = 0 to get the pbcoverage.
+                imCln.clean(algorithm=localAlgorithm, niter=0, gain=gain,
+                            threshold=qa.quantity(threshold,'mJy'),
+                            model=modelimages, residual=residualimage,
+                            image=restoredimage, psfimage=psfimage,
+                            mask=maskimage, interactive=False,
+                            npercycle=npercycle)
+                pbcov_image = imset.imagelist[0] + '.flux'
+                if localFTMachine == 'mosaic':
+                    pbcov_image += '.pbcoverage'
+                maskimage = imset.make_mask_from_threshhold(pbcov_image, maskimg) 
             if not imset.skipclean: 
                 imCln.clean(algorithm=localAlgorithm, niter=niter, gain=gain,
                             threshold=qa.quantity(threshold,'mJy'),
                             model=modelimages, residual=residualimage,
                             image=restoredimage, psfimage=psfimage,
                             mask=maskimage, interactive=interactive,
-                            npercycle=npercycle);
+                            npercycle=npercycle)
 		
                 #In the interactive mode, deconvlution can be skipped and in that case
                 #psf is not generated. So check if all psfs are there if not, generate
@@ -411,31 +458,12 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                 imset.storeCubeImages(finalimagename,imset.imagelist,j,imagermode)
         
         imCln.close()
-        #
-        # If MS-MFS was used, compute alpha (spectral index)
-        # and beta (sp. index variation) images from the
-        # Taylor term images.
-        # Compute alpha and beta only for regions where total 
-        # intensity is larger than 5 times the user-specified threshold.
-        #
-        if (localAlgorithm=='msmfs'):
-            calcspec = True;
-            for ii in range(0,len(restoredimage[0:])):
-	       if( not os.path.exists(restoredimage[ii]) ):
-                   calcspec = False;
-            if(calcspec):
-               casalog.post('Calculating Spectral Index for regions where total intensity > 5 x threshold = '+str(5*(qa.quantity(threshold)['value']))+' '+qa.quantity(threshold)['unit'],'INFO') 
-               msmfsCalcAlphaBeta(imtemplate=restoredimage[0],
-                                  taylorlist=restoredimage[0:],
-                                  namealpha=imset.imagelist[0]+'.restored.alpha',
-                                  namebeta=imset.imagelist[0]+'.restored.beta',
-                                  threshold=5*(qa.convert(threshold,'Jy')['value']))
-
+        ####################################################################
         if dochaniter:
             imset.cleanupTempFiles(tmppath)
             imset.imagelist=finalimagename
         presdir=os.path.realpath('.')
-        for k in range(len(imset.imagelist)):
+        for k in xrange(len(imset.imagelist)):
             newimage=imset.imagelist[k]
             if(imset.imagelist[k].count('/') > 0):
                 newimage=os.path.basename(imset.imagelist[k])

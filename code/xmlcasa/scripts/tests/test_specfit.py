@@ -146,7 +146,7 @@ class specfit_test(unittest.TestCase):
             got = gotImage
         self.assertTrue(got.shape() == expected.shape())
         diffData = got.getchunk() - expected.getchunk()
-        self.assertTrue(abs(diffData).max() == 0)
+        self.assertTrue(abs(diffData).max() < 4e-13)
         gotCsys = got.coordsys()
         expectedCsys = expected.coordsys()
         diffPixels = gotCsys.referencepixel()['numeric'] - expectedCsys.referencepixel()['numeric']

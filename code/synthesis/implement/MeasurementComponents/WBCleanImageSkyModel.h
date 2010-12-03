@@ -150,6 +150,7 @@ private:
   LogIO os;
   
   void initVars();
+  Bool checkParameters();
   
   Int storeAsImg(String fileName, ImageInterface<Float>& theImg);
   Int storeTLAsImg(String fileName, TempLattice<Float> &TL, ImageInterface<Float>& theImg);

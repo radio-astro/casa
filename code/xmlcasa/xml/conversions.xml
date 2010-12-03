@@ -265,10 +265,15 @@
         </target>
         <target name="python">
             <include>CCM_Python/BasicTypes.h</include>
+	    <include>xmlcasa/conversions_python.h</include>
             <to>
                 <check>is_int_compatible_sequence</check>
                 <func>convert_intvec_from_int_compatible_sequence</func>
            </to>
+	   <to>
+		<check>::casac::is_intvec_compatible_numpy_array</check>
+		<func>::casac::convert_intvec_from_compatible_numpy_array</func>
+	   </to>
         </target>
     </polymorph>
     <polymorph type="StringVec">

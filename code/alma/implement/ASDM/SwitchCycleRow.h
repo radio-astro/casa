@@ -93,7 +93,7 @@ using namespace DirectionReferenceCodeMod;
 
 
 /*\file SwitchCycle.h
-    \brief Generated from model's revision "1.54", branch "HEAD"
+    \brief Generated from model's revision "1.55", branch "HEAD"
 */
 
 namespace asdm {
@@ -108,7 +108,7 @@ typedef void (SwitchCycleRow::*SwitchCycleAttributeFromBin) (EndianISStream& eis
 /**
  * The SwitchCycleRow class is a row of a SwitchCycleTable.
  * 
- * Generated from model's revision "1.54", branch "HEAD"
+ * Generated from model's revision "1.55", branch "HEAD"
  *
  */
 class SwitchCycleRow {

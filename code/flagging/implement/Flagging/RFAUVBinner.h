@@ -32,9 +32,7 @@
 #include <flagging/Flagging/RFFloatLattice.h>
 #include <flagging/Flagging/RFFlagCube.h> 
 #include <flagging/Flagging/RFRowClipper.h> 
-#include <flagging/Flagging/RFDebugPlot.h> 
 #include <scimath/Mathematics/RigidVector.h>
-#include <casa/System/PGPlotter.h>
     
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -65,7 +63,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //        and for each point use the count of the bigger bin?
 // </todo>
 
-class RFAUVBinner : public RFAFlagCubeBase, public RFDataMapper, public PGPlotEnums
+class RFAUVBinner : public RFAFlagCubeBase, public RFDataMapper
 {
 public:
   RFAUVBinner  ( RFChunkStats &ch,const RecordInterface &parm ); 
@@ -87,19 +85,11 @@ public:
   
 protected:
   IPosition computeBin( Float uv,Float y,uInt ich );
-  void makePlot ( PGPlotterInterface &pgp,uInt ich );
 
   Double  threshold;
   uInt    min_population;
   uInt    nbin_y,nbin_uv;
   Bool    binned;
-  
-// stuff for a separate flagging report
-  Bool  plot_report,econoplot;
-  Int   plot_chan,report_chan,econo_density;
-  Int   plot_thr_count;
-  uInt  plot_np;
-  Vector<Float> plot_px,plot_py,plot_prob;
   
 // current UVW column
   Vector< RigidVector<Double,3> > *puvw;
@@ -116,8 +106,6 @@ protected:
 // bin counts
   Cube<Int> bincounts;
   Vector<Int> totcounts;
-
-  RFDebugPlot   debug;
 };
 
 

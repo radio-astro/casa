@@ -31,7 +31,6 @@
 #include <flagging/Flagging/RFDataMapper.h> 
 #include <flagging/Flagging/RFFloatLattice.h>
 #include <flagging/Flagging/RFRowClipper.h>
-#include <flagging/Flagging/RFDebugPlot.h>
 #include <scimath/Mathematics/MedianSlider.h> 
 #include <casa/Arrays/LogiVector.h>
 #include <casa/Containers/RecordInterface.h>
@@ -43,8 +42,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 const int   RFA_MIN_NAD = 20;
 // significant change in accumulated average
 const Float RFA_AAD_CHANGE = 0.05;
-
-class PGPlotterInterface;
 
 // <summary>
 // RFADiffBase: abstract class for deviation-based flagging
@@ -79,7 +76,7 @@ class PGPlotterInterface;
 //   <li> start discussion of this possible extension
 // </todo>
 
-class RFADiffBase : public RFAFlagCubeBase, public PGPlotEnums
+class RFADiffBase : public RFAFlagCubeBase
 {
 public:
   RFADiffBase  ( RFChunkStats &ch,const RecordInterface &parm );
@@ -98,9 +95,6 @@ public:
   virtual String getDesc ();
   static const RecordInterface & getDefaults ();
 
-// sets up a debugging plot object
-  void setDebug( const RFDebugPlot &dbg );
-  
 protected:
   static Bool dummy_Bool;
 
@@ -133,22 +127,6 @@ protected:
   Matrix<Float> sig;       // current noise estimate for (it,ifr)
   Matrix<Float> sig0;      // reference estimate (boxcar average from previous pass)
   LogicalVector sigupdated;
-  
-// methods and members for making debugging plots
-// Resets vectors (for start of new plot)
-  void resetPlot ();
-// Makes a plot using the filled-in vectors (below)  
-  void makePlot ();
-
-  RFDebugPlot debug;
-  
-  Vector<Float> dbg_val,  // vector of data values
-               dbg_med,  // vector of corresponding medians (or whatever)
-               dbg_thr;  // vector of currently used thresholds
-  Vector<Int>   dbg_sym;  // vector of data point symbols
-// index into which point in the plot is being filled, for setDiff.
-// set up by child classes before calling setDiff
-  Int dbg_i;    
 };
 
 // <summary>

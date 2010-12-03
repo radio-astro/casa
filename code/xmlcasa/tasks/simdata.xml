@@ -124,7 +124,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="pointingspacing" subparam="true">
-      <description>spacing in between pointings or "" for 0.5 PB</description>
+      <description>spacing in between pointings or "0.25PB" or "" for 0.5 PB</description>
       <value></value>
     </param>
 
@@ -167,6 +167,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <param type="string" name="complist" subparam="true">
       <description>optional componentlist to observe with skymodel</description>
       <value></value>
+    </param>
+
+    <param type="string" name="compwidth" subparam="true">
+      <description>optional bandwidth if simulating from components only</description>
+      <value>"2GHz"</value>
     </param>
 
     <param type="string" name="totaltime" subparam="true">
@@ -296,6 +301,13 @@ it'll do them for the same amount of time -->
 	<value>uniform</value>
 	<value>briggs</value>  <!-- robust=0.5  -->
       </allowed>
+    </param>
+
+    <param type="any" name="mask" subparam="true">
+      <description>clean mask -- see help clean</description>
+      <any type="variant"/>
+      <!-- <value type="stringArray"></value> -->
+      <value type="bool">True</value>
     </param>
 
     <param type="stringArray" name="outertaper" subparam="true">
@@ -484,6 +496,7 @@ modifying the description doesn't work yet but its an improvement ticket.
 	    <description>optional model componentlist file</description>
 	    <value type="string"></value>
 	  </default>
+	  <default param="compwidth"><value type="string">2GHz</value></default>
 	  <default param="antennalist"><value type="string">alma.out10.cfg</value></default>
 	  <default param="refdate"><value type="string">2012/05/21/22:05:00</value></default>
 	  <default param="totaltime"><value>"7200s"</value></default>
@@ -526,6 +539,7 @@ modifying the description doesn't work yet but its an improvement ticket.
 	  <default param="niter"><value>500</value></default>
 	  <default param="threshold"><value type="string">0.1mJy</value></default>
 	  <default param="weighting"><value type="string">natural</value></default>
+	  <default param="mask">      <value type="bool">True</value></default>
 	  <default param="outertaper"><value type="vector"><value></value></value></default>
 	  <default param="stokes"><value type="string">I</value></default>
 	</equals>
@@ -555,7 +569,7 @@ modifying the description doesn't work yet but its an improvement ticket.
 <example>
 mosaic simulation task:
 
-    This task simulates interfermetric observations (currently 
+    This task simulates interferometric observations (currently 
     only ALMA can be done easily).  New functionality is actively 
     being added, so if you have changed versions of CASA, check 
     the inputs carefully.
@@ -607,13 +621,19 @@ mosaic simulation task:
     mapsize -- angular size of map 
        * set to "" to span the model image
     maptype -- hexagonal or linear 
-    pointingspacing -- spacing in between beams e.g '1arcsec'    
+    pointingspacing -- spacing in between beams e.g '1arcsec'
+         or "0.25PB" to use 1/4 of the primary beam FWHM, or 
+         "" will use the primary beam HWHM.
     -------------------------------
     predict -- calculate visibilities from skymodel (which may have been 
          modified above, (optionally) complist, and $ptgfile (which 
          may have been generated above)
        * if graphics selected, display the array (like plotants), the uv 
          coverage, the synthesized (dirty) beam, and ephemeris information
+       * if simulating from component list only, you should specify
+         modifymodel=False, and set compwidth, the desired bandwidth - 
+         there is not currently a way to specify the spectrum of a component, 
+         so simulations from a componentlist only will be continuum (1 chan)
     refdate -- central time of simulated observation eg: '2012/05/21/22:05:00'
        * NOTE: observations are currently centered at the nearest transit *
     totaltime --- total time of observation e.g '7200s'

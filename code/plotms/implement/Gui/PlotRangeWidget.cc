@@ -89,14 +89,29 @@ PlotRangeWidget::PlotRangeWidget(bool customOnTwoLines, QWidget* parent) :
             SLOT(timeToChanged()));
 }
 
+
+
 PlotRangeWidget::~PlotRangeWidget() { }
 
-bool PlotRangeWidget::isDate() const {
-    return stackedWidget->currentIndex() == 1; }
-void PlotRangeWidget::setIsDate(bool isDate) {
-    stackedWidget->setCurrentIndex(isDate ? 1 : 0); }
 
-bool PlotRangeWidget::isCustom() const { return custom->isChecked(); }
+
+bool PlotRangeWidget::isDate() const {
+	
+    return stackedWidget->currentIndex() == 1; 
+}
+    
+
+    
+void PlotRangeWidget::setIsDate(bool isDate) {
+	
+    stackedWidget->setCurrentIndex(isDate ? 1 : 0); 
+}
+
+
+
+bool PlotRangeWidget::isCustom() const { 
+	return custom->isChecked(); 
+}
 
 
 
@@ -109,19 +124,19 @@ bool PlotRangeWidget::isCustom() const { return custom->isChecked(); }
 	We distinguish different kinds of non-good date-time strings,
 	identified by the DateTimeStringQuality enum.
 	 
-	NOTE: this whole mess probably shouldn't be sitting loosely in 
+	NOTE (DSW): this whole mess probably shouldn't be sitting loosely in 
 	this src file, but put somewhere it's available more widely
 	and easier to test.
 */
-#pragma GCC optimize 0
-#pragma GCC option ("-O0")
   
+
 enum DateTimeStringQuality   {
 	DATETIME_BadSyntax,      // wrong characters, gibberish
 	DATETIME_Incomplete,     // good syntax so far
 	DATETIME_ImproperValue,  // silly month  number, >59 minutes, etc.
 	DATETIME_GOOD
 };
+
 
 
 static 
@@ -215,7 +230,7 @@ DateTimeStringQuality EvaluateDateTimeText(const char *txt,  double &mjulian_sec
 
 
 prange_t PlotRangeWidget::getRange() const {
-    if(isDate()) {
+    if (isDate()) {
  		double from,to;
 		DateTimeStringQuality fquality, tquality;
 		
@@ -227,18 +242,6 @@ prange_t PlotRangeWidget::getRange() const {
 			     must return a prange_t in any case... */  
 			}
 
-			
-#if (0) // dead code, keep for ref while building new code.  DELETE THIS SOON
-        QDate date = timeFrom->date(); QTime time = timeFrom->time();
-        double from = PMS::dateDouble(date.year(), date.month(), date.day(),
-                time.hour(), time.minute(),
-                time.second() + (time.msec() / 1000.0));
-        
-        date = timeTo->date(); time = timeTo->time();
-        double to = PMS::dateDouble(date.year(), date.month(), date.day(),
-                time.hour(), time.minute(),
-                time.second() + (time.msec() / 1000.0));
-#endif
         return prange_t(from, to);
         
     } else

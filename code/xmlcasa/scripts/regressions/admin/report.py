@@ -36,7 +36,9 @@ known_releases = ["CASA Version 2.3.0 (build #6654)",
                   "CASA Version 2.4.0 (build #8115)",
                   "CASA Version 3.0.0 (r9861)", # for Mac...
                   "CASA Version 3.0.0 (r9888)", # for Linux...
-                  "CASA Version 3.0.1 (r11099)"]
+                  "CASA Version 3.0.1 (r11099)",
+                  "CASA Version 3.0.2 (r11761)",
+                  "CASA Version 3.1.0 (r13568)"]
 
 
 exclude_host = []

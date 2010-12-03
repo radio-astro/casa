@@ -41,8 +41,21 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
             final_csvis = csvis
             csvis = tempfile.mkdtemp(suffix=csvis)
 
+        # ms does not have a colnames method, so open vis with tb even though
+        # it is already open with ms.  Note that both use nomodify=True, however,
+        # and no problem was revealed in testing.
+        tb.open(vis, nomodify=True)
+        if 'CORRECTED_DATA' in tb.colnames():
+            whichcol = 'CORRECTED_DATA'
+        else:
+            # DON'T remind the user that split before uvcontsub2 wastes time -
+            # scratch columns will eventually go away.
+            whichcol = 'DATA'
+        tb.close()
+        
         # tempspw is chan free, so averchan doesn't matter.
-        ms.split(csvis, field=field, spw=tempspw, whichcol='CORRECTED_DATA')
+        ms.split(csvis, field=field, spw=tempspw, whichcol=whichcol)
+
         ms.close()       
         
         if (type(csvis) == str) and os.path.isdir(csvis):

@@ -124,7 +124,6 @@ void PlotMSPlotTab::parametersHaveChanged(const PlotMSWatchedParameters& p,
 
 
 
-#include<stdio.h>  //!!!!! REMOVE 
 
 void PlotMSPlotTab::plotsChanged(const PlotMSPlotManager& manager) {
     goChooser->clear();

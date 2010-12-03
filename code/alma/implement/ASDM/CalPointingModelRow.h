@@ -116,7 +116,7 @@ using namespace PolarizationTypeMod;
 
 
 /*\file CalPointingModel.h
-    \brief Generated from model's revision "1.54", branch "HEAD"
+    \brief Generated from model's revision "1.55", branch "HEAD"
 */
 
 namespace asdm {
@@ -137,7 +137,7 @@ typedef void (CalPointingModelRow::*CalPointingModelAttributeFromBin) (EndianISS
 /**
  * The CalPointingModelRow class is a row of a CalPointingModelTable.
  * 
- * Generated from model's revision "1.54", branch "HEAD"
+ * Generated from model's revision "1.55", branch "HEAD"
  *
  */
 class CalPointingModelRow {

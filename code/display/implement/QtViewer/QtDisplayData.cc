@@ -346,7 +346,7 @@ QtDisplayData::QtDisplayData(QtDisplayPanelGui *panel, String path,
   
   if(usesColorBar_() && clrMap_!=0) {
     
-    colorBar_ = new WedgeDD;
+    colorBar_ = new WedgeDD(dd_);
     colorBar_->setColormap(clrMap_, 1.);
 
     Vector<String> yesNo(2);     yesNo[0]="Yes";
@@ -736,8 +736,8 @@ void QtDisplayData::setOptions(Record opts, Bool emitAll) {
 	panel_->setColorBarOrientation(orientation);  }
     
       else if(cbChg || (wouldDisplayColorBar() && cbSzChg)) {
-        
-	emit colorBarChange();  }
+	emit colorBarChange();
+      }
     
     
       // Trigger redraw of color bar, if necessary.
@@ -980,6 +980,9 @@ void QtDisplayData::unregisterNotice(QtDisplayPanel* qdp) {
   //obs disconnect( qdp, SIGNAL(rectangleRegionReady(Record)),
   //obs            this,  SLOT(mouseRectRegionToImageRegion_(Record)) );
 
+  // this should perhaps be done elsewhere, but the "unregister"
+  // notice is not propagated out of the Qt layer...
+  dd()->setDisplayState( DisplayData::UNDISPLAYED );
 }
 
 

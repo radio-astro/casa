@@ -88,7 +88,7 @@ private:
 	LogIO *_log;
 	ListConverter();
 	Vector<RegularFile> _listFiles;
-	String _tableName, _freqUnit, _smu2Unit, _euUnit, _elUnit;
+	String _tableName, _freqUnit, _smu2Unit, _elUnit, _euUnit;
 	Vector<String> _species, _chemName, _qns, _lineList;
 	Vector<Bool> _recommended;
 	Vector<Double> _frequency;
