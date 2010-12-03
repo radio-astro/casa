@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TaQLStyle.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: TaQLStyle.cc 20967 2010-09-27 11:06:03Z gervandiepen $
 
 #include <tables/Tables/TaQLStyle.h>
 #include <tables/Tables/TableError.h>
@@ -56,6 +56,12 @@ void TaQLStyle::set (const String& value)
   } else {
     throw TableError(value + " is an invalid TaQL STYLE value");
   }
+}
+
+void TaQLStyle::reset()
+{
+  set ("GLISH"); 
+  itsDoTiming = False;
 }
 
 } //# NAMESPACE CASA - END

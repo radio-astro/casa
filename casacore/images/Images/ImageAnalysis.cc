@@ -2406,9 +2406,11 @@ ComponentList ImageAnalysis::fitsky(
 		// Encode as SkyComponent and return
 		Vector<SkyComponent> result(1);
 		Double facToJy;
-		result(0) = ImageUtilities::encodeSkyComponent(*itsLog, facToJy, subImage,
-				convertModelType(Fit2D::GAUSSIAN), parameters, stokes, xIsLong,
-				deconvolveIt);
+		result(0) = ImageUtilities::encodeSkyComponent(
+			*itsLog, facToJy, subImage,
+			convertModelType(Fit2D::GAUSSIAN), parameters, stokes, xIsLong,
+			deconvolveIt
+		);
 		cl.add(result(0));
 		return cl;
 	}
@@ -2530,7 +2532,6 @@ ComponentList ImageAnalysis::fitsky(
 	delete pMaskRegion;
 
 	residStats = _fitskyWriteResidualAndGetStats(subImage2, residPixels, residImageName);
-
 
 	// PagedImage<Float> residImage(residImageName);
 	ImageMetaData subImageMD(subImage2);
@@ -6704,7 +6705,8 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 		const DirectionCoordinate& dirCoor = cSys.directionCoordinate(which);
 		if (!dirCoor.toPixel(xypix, xy))
 			return False;
-	} else {
+	}
+	else {
 		if (xy.nelements() != 2)
 			return False;
 		xypix = xy;
@@ -6712,9 +6714,10 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 	Vector<Int> dirPixelAxis = cSys.pixelAxes(which);
 	IPosition blc(pImage_p->ndim(), 0);
 	IPosition trc(pImage_p->ndim(), 0);
-	if ((xypix(0) < 0) || (xypix(0) > pImage_p->shape()(0)) || (xypix(1) < 0)
-			|| (xypix(1) > pImage_p->shape()(1))) {
-
+	if (
+		(xypix(0) < 0) || (xypix(0) > pImage_p->shape()(0)) || (xypix(1) < 0)
+		|| (xypix(1) > pImage_p->shape()(1))
+	) {
 		return False;
 	}
 
@@ -6725,8 +6728,7 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 
 	Int specAx = cSys.findCoordinate(Coordinate::SPECTRAL);
 	Vector<Bool> zyaxismask;
-	trc[cSys.pixelAxes(specAx)[0]] = pImage_p->shape()(
-			cSys.pixelAxes(specAx)[0]) - 1;
+	trc[cSys.pixelAxes(specAx)[0]] = pImage_p->shape()(cSys.pixelAxes(specAx)[0]) - 1;
 	zyaxisval.resize();
 	zyaxisval = pImage_p->getSlice(blc, trc - blc + 1, True);
 	zyaxismask = pImage_p->getMaskSlice(blc, trc - blc + 1, True);
@@ -6748,11 +6750,13 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 	return getSpectralAxisVal(specaxis, zxaxisval, cSys, xunits, specFrame);
 }
 
-Bool ImageAnalysis::getFreqProfile(const Vector<Double>& x,
-		const Vector<Double>& y, Vector<Float>& zxaxisval,
-		Vector<Float>& zyaxisval, const String& xytype, const String& specaxis,
-		const Int& whichStokes, const Int& whichTabular,
-				   const Int& whichLinear, const String& xunits, const String& specFrame) {
+Bool ImageAnalysis::getFreqProfile(
+	const Vector<Double>& x,
+	const Vector<Double>& y, Vector<Float>& zxaxisval,
+	Vector<Float>& zyaxisval, const String& xytype, const String& specaxis,
+	const Int& whichStokes, const Int& whichTabular,
+	const Int& whichLinear, const String& xunits, const String& specFrame
+) {
 
 	Vector<Double> xy(2);
 	xy[0] = 0;
@@ -6763,93 +6767,86 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& x,
 	CoordinateSystem cSys = pImage_p->coordinates();
 	Array<Float> toAver;
 	Array<Bool> mask;
-	if (n < 1)
+	if (n < 1) {
 		return False;
-
+	}
 	if (n == 1) {
 		xy[0] = x[0];
 		xy[1] = y[0];
-		return getFreqProfile(xy, zxaxisval, zyaxisval, xytype, specaxis,
-				      whichStokes, whichTabular, whichLinear, xunits, specFrame);
+		return getFreqProfile(
+			xy, zxaxisval, zyaxisval, xytype, specaxis,
+			whichStokes, whichTabular, whichLinear, xunits,
+			specFrame
+		);
 	}
 	// n > 1, i.e. region to average over is a rectangle or polygon
 	Int specAx = cSys.findCoordinate(Coordinate::SPECTRAL);
 	Int pixSpecAx = cSys.pixelAxes(specAx)[0];
 	Int nchan = pImage_p->shape()(pixSpecAx);
-	try {
-		Vector<Int> dirPixelAxis = cSys.pixelAxes(cSys.findCoordinate(
-				Coordinate::DIRECTION));
-		if (n == 2) { // rectangle
-			Vector<Quantity> blc(2);
-			Vector<Quantity> trc(2);
-			if (xytype.contains("wor")) {
-				blc(0) = Quantity(x[0], "rad");
-				blc(1) = Quantity(y[0], "rad");
-				trc(0) = Quantity(x[1], "rad");
-				trc(1) = Quantity(y[1], "rad");
-				Vector<Int> pixax(2);
-				pixax(0) = dirPixelAxis[0];
-				pixax(1) = dirPixelAxis[1];
-				imagreg = regMan.wbox(blc, trc, pixax, cSys);
-			}
-		}
-		if (n > 2) { // polygon
-			Vector<Quantity> xvertex(n);
-			Vector<Quantity> yvertex(n);
-			for (Int k = 0; k < n; ++k) {
-				xvertex[k] = Quantity(x[k], "rad");
-				yvertex[k] = Quantity(y[k], "rad");
-			}
+	Vector<Int> dirPixelAxis = cSys.pixelAxes(
+		cSys.findCoordinate(Coordinate::DIRECTION)
+	);
+	if (n == 2) { // rectangle
+		Vector<Quantity> blc(2);
+		Vector<Quantity> trc(2);
+		if (xytype.contains("wor")) {
+
+			blc(0) = Quantity(x[0], "rad");
+			blc(1) = Quantity(y[0], "rad");
+			trc(0) = Quantity(x[1], "rad");
+			trc(1) = Quantity(y[1], "rad");
 			Vector<Int> pixax(2);
 			pixax(0) = dirPixelAxis[0];
 			pixax(1) = dirPixelAxis[1];
-			imagreg = regMan.wpolygon(xvertex, yvertex, pixax, cSys, "abs");
+			imagreg = regMan.wbox(blc, trc, pixax, cSys);
 		}
-		if (imagreg != 0) {
-			SubImage<Float> subim(*pImage_p, *imagreg, False);
-			mask = (imagreg->toLatticeRegion(cSys, pImage_p->shape())).get();
-			toAver = subim.get();
-		} else {
-			return False;
+	}
+	if (n > 2) { // polygon
+		Vector<Quantity> xvertex(n);
+		Vector<Quantity> yvertex(n);
+		for (Int k = 0; k < n; ++k) {
+			xvertex[k] = Quantity(x[k], "rad");
+			yvertex[k] = Quantity(y[k], "rad");
 		}
+		Vector<Int> pixax(2);
+		pixax(0) = dirPixelAxis[0];
+		pixax(1) = dirPixelAxis[1];
+		imagreg = regMan.wpolygon(xvertex, yvertex, pixax, cSys, "abs");
+	}
+	if (imagreg != 0) {
+		SubImage<Float> subim(*pImage_p, *imagreg, False);
+		mask = (imagreg->toLatticeRegion(cSys, pImage_p->shape())).get();
+		toAver = subim.get();
+	}
+	else {
+		return False;
+	}
 
-		Int polAx = cSys.findCoordinate(Coordinate::STOKES);
+	Int polAx = cSys.findCoordinate(Coordinate::STOKES);
+	IPosition blc(cSys.nPixelAxes());
+	IPosition trc(cSys.nPixelAxes());
+	if (polAx >= 0) {
 		Int pixPolAx = cSys.pixelAxes(polAx)[0];
-		IPosition blc(4);
-		IPosition trc(4);
-		//only the I image for now
+		//FIXME only the I image for now
 		blc(pixPolAx) = 0;
 		trc(pixPolAx) = 0;
-		//x-y plane
-		blc(dirPixelAxis[0]) = 0;
-		blc(dirPixelAxis[1]) = 0;
-		trc(dirPixelAxis[0]) = toAver.shape()(dirPixelAxis[0]) - 1;
-		trc(dirPixelAxis[1]) = toAver.shape()(dirPixelAxis[1]) - 1;
-		zyaxisval.resize(nchan);
-		for (Int k = 0; k < nchan; ++k) {
-			blc(pixSpecAx) = k;
-			trc(pixSpecAx) = k;
-			MaskedArray<Float> planedat(toAver(blc, trc), mask(blc, trc));
-			zyaxisval(k) = mean(planedat);
-
-		}
-
-		//      if(pImage_p->units().getName().contains("Jy")){  // convert to mJy
-		// 	  for (uInt kk=0; kk < zyaxisval.nelements() ; ++kk){
-		// 	    zyaxisval[kk]=Quantity(zyaxisval[kk], pImage_p->units()).getValue("mJy");
-		// 	  }
-		//      }
-
-		zxaxisval.resize(zyaxisval.nelements());
-		return getSpectralAxisVal(specaxis, zxaxisval, cSys, xunits, specFrame);
-
-	} catch (std::exception& x) {
-		zxaxisval.resize(nchan);
-		zyaxisval.resize(nchan);
-		zxaxisval.set(0.0);
-		zyaxisval.set(0.0);
 	}
-	return True;
+	//x-y plane
+	blc(dirPixelAxis[0]) = 0;
+	blc(dirPixelAxis[1]) = 0;
+	trc(dirPixelAxis[0]) = toAver.shape()(dirPixelAxis[0]) - 1;
+	trc(dirPixelAxis[1]) = toAver.shape()(dirPixelAxis[1]) - 1;
+	zyaxisval.resize(nchan);
+	for (Int k = 0; k < nchan; ++k) {
+		blc(pixSpecAx) = k;
+		trc(pixSpecAx) = k;
+		MaskedArray<Float> planedat(toAver(blc, trc), mask(blc, trc));
+		zyaxisval(k) = mean(planedat);
+
+	}
+
+	zxaxisval.resize(zyaxisval.nelements());
+	return getSpectralAxisVal(specaxis, zxaxisval, cSys, xunits, specFrame);
 }
 
 // These should really go in a coordsys inside the casa name space

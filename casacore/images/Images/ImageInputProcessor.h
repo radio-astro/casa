@@ -186,6 +186,11 @@ private:
 
     Bool _isFractionalRegion(const Record& region) const;
 
+    void _fillVector(
+        Vector<Double> myVector, const uInt nRegions
+    ) const;
+
+
 };
 
 }

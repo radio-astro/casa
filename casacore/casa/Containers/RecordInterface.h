@@ -237,8 +237,8 @@ public:
     virtual Int fieldNumber (const String& fieldName) const = 0;
 
     // Get the field number for the given field id.
-    // It throws an exception when an unknown name was given.
-    Int idToNumber (const RecordFieldId&) const;
+    // It throws an exception if id is unrecognized.
+    Int idToNumber (const RecordFieldId& id) const;
 
     // Test if a field name exists.
     //# Is here for backward compatibility with KeywordSet.

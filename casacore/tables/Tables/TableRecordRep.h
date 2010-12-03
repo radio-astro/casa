@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: TableRecordRep.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: TableRecordRep.h 20969 2010-09-27 12:45:04Z gervandiepen $
 
 
 #ifndef TABLES_TABLERECORDREP_H
@@ -186,11 +186,11 @@ public:
 
     // Put the description and data of the Record.
     // It also puts the fixedFlag attribute (of the mother object).
-    void putRecord (AipsIO& os, int recordType, const TableAttr&) const;
+    void putRecord (AipsIO& os, Int recordType, const TableAttr&) const;
 
     // Get the description and data of the Record.
     // It also gets the fixedFlag attribute (of the mother object).
-    void getRecord (AipsIO& os, int& recordType, const TableAttr&);
+    void getRecord (AipsIO& os, Int& recordType, const TableAttr&);
 
     // Put the data of a record.
     // This is used to write a subrecord, whose description has

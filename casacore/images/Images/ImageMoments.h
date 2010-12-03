@@ -54,7 +54,7 @@ template <class T> class PtrHolder;
 class IPosition;
 class String;
 class Unit;
-template <class T> class MomentsBase;
+//template <class T> class MomentsBase;
 
 // <summary>
 // This class generates moments from an image.
@@ -297,6 +297,9 @@ public:
    Bool setSmoothMethod(const Vector<Int>& smoothAxes,
                         const Vector<Int>& kernelTypes,
                         const Vector<Quantum<Double> >& kernelWidths);
+   Bool setSmoothMethod(const Vector<Int>& smoothAxes,
+			const Vector<Int>& kernelTypes,
+			const Vector<Double>& kernelWidths);
 
 // This is the function that does all the computational work.  It should be called
 // after the <src>set</src> functions.  A return value of  <src>False</src>

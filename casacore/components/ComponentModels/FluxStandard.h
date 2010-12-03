@@ -94,6 +94,9 @@ class FluxStandard
     PERLEY_TAYLOR_99,
 
     // Baars scale
+    // Baars J. W. M., Genzel R., Pauliny-Toth I. I. K., et al., 1977,
+    // A&A, 61, 99
+    // http://cdsads.u-strasbg.fr/abs/1977A%26A....61...99B
     BAARS,
 
     // Perley-Butler 2010 Scale (using VLA [not EVLA!] data)
@@ -129,23 +132,28 @@ class FluxStandard
   // suitable for resolved sources.
   // mtime is ignored for nonvariable objects.
   // Solar System objects are typically resolved and variable!
+  // The ComponentList names are formed from prefix, sourceName, the
+  // frequencies, and times.
   Bool computeCL(const String& sourceName, const Vector<MFrequency>& mfreqs,
                  const MEpoch& mtime, const MDirection& position,
                  const ConstantSpectrum& cspectrum,
                  Vector<Flux<Double> >& values, Vector<Flux<Double> >& errors,
-                 Vector<String>& clnames) const;
+                 Vector<String>& clnames,
+		 const String& prefix="") const;
 
   // Take a component cmp and save it to a ComponentList on disk, returning the
   // pathname.  ("" if unsuccessful, sourceName_mfreqGHzDateTime.cl otherwise)
   //
   // This is also used outside of FluxStandard, but it is declared here instead
   // of in ComponentList because it is somewhat specialized, mainly in setting
-  // up the pathname.
+  // up the pathname.  The ComponentList name is formed from prefix, sourceName,
+  // mfreq, and mtime.
   //
   static String makeComponentList(const String& sourceName, const MFrequency& mfreq,
                                   const MEpoch& mtime, const Flux<Double>& fluxval,
                                   const ComponentShape& cmp,
-                                  const ConstantSpectrum& cspectrum);
+                                  const ConstantSpectrum& cspectrum,
+				  const String& prefix="");
 
   // Decode a string representation of the standard or catalog name
   static Bool matchStandard(const String& name, 

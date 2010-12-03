@@ -268,7 +268,7 @@ public:
           const Vector<Quantum<Double> >& restoringBeam,
           const CoordinateSystem& cSys,
           Stokes::StokesTypes stokes
-  );
+  ) const;
 
   // Take a vector Doubles and fill the SkyComponent from the values.
   // The first three elements of the given vector are : flux for given 
@@ -299,10 +299,10 @@ public:
 
 // Find the factor that converts whatever per whatevers (e.g. mJy per beam)
 // to Jy per whatevers (e.g. Jy per beam)
-   Double convertToJy (const Unit& brightnessUnit);
+   static Double convertToJy (const Unit& brightnessUnit);
 
 // Convert a peak flux density to integral flux density
-   Quantity peakToIntegralFlux (const DirectionCoordinate& dirCoord,
+   static Quantity peakToIntegralFlux (const DirectionCoordinate& dirCoord,
                                               ComponentType::Shape componentShape,
                                               const Quantum<Double>& peakFlux,
                                               const Quantum<Double>& majorAxis,
@@ -312,7 +312,7 @@ public:
    // Convert an integral flux density to peak flux density.  The brightness unit
    // of the output quantum (e.g. mJy/beam) is specified by <src>brightnessUnit</src>
    // Throws an exception if the units of <src>integralFlux</src> do not conform to Jy.
-   Quantity integralToPeakFlux (
+   static Quantity integralToPeakFlux (
 		   const DirectionCoordinate& dirCoord,
 		   ComponentType::Shape componentShape,
 		   const Quantity& integralFlux,
@@ -332,7 +332,7 @@ private:
   // Make definitions to handle "/beam" and "/pixel" units.   The restoring beam
   // is provided in a vector of quanta (major, minor, position angle).  Should
   // be length 0 or 3. It can be obtained from class ImageInfo
-     Unit defineBrightnessUnits (
+     static Unit defineBrightnessUnits (
   		   LogIO& os, const Unit& brightnessUnitIn,
              const DirectionCoordinate& dirCoord,
              const Vector<Quantum<Double> >& restoringBeam,

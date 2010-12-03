@@ -210,6 +210,10 @@ public:
   virtual void visibility(Vector<DComplex>& scale, const Matrix<Double>& uvw,
 			  const Double& frequency) const;
 
+  //Same as above except with many frequencies
+  virtual void visibility(Matrix<DComplex>& scale, const Matrix<Double>& uvw,
+			  const Vector<Double>& frequency) const;
+
   // A point shape is symmetric so this function always returns True;
   virtual Bool isSymmetric() const;
 

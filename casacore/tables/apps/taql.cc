@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: taql.cc 20867 2010-03-04 12:29:57Z gervandiepen $
+//# $Id: taql.cc 20982 2010-09-30 10:57:13Z gervandiepen $
 
 #include <tables/Tables/TableParse.h>
 #include <tables/Tables/Table.h>
@@ -184,7 +184,11 @@ void showTable (const Table& tab, const Vector<String>& colnam)
   for (i=0; i<tab.nrow(); i++) {
     for (uInt j=0; j<nrcol; j++) {
       if (tableColumns[j]->columnDesc().isArray()) {
-	cout << " shape=" << tableColumns[j]->shape (i);
+        if (tableColumns[j]->isDefined (i)) {
+          cout << " shape=" << tableColumns[j]->shape (i);
+        }else{
+          cout << " no_array";
+        }
       }else{
 	switch (tableColumns[j]->columnDesc().dataType()) {
 	case TpBool:
@@ -337,7 +341,7 @@ Table doCommand (bool printCommand, bool printSelect, bool printRows,
       s.downcase();
       addCalc = !(s=="select" || s=="update" || s=="insert" || s=="calc" ||
                   s=="delete" || s=="create" || s=="createtable" ||
-                  s=="count"  || s=="using"  || s=="usingstyle");
+                  s=="count"  || s=="using"  || s=="usingstyle" || s=="time");
       showResult = (s=="select");
     }
   }

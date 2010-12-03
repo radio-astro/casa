@@ -191,7 +191,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     	String imageUnits = itsUnits.getName();
     	imageUnits.upcase();
 
-    	if (beam.nelements()==3 && imageUnits==String("JY/BEAM")) {
+    	if (beam.nelements()==3 && imageUnits.contains("/BEAM")) {
             beam[0].convert("rad");
     		beam[1].convert("rad");
     		beamArea = (C::pi/(4*log(2.0))) * beam[0].getValue() * beam[1].getValue();

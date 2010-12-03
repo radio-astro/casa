@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tPath.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tPath.cc 20965 2010-09-27 06:42:34Z gervandiepen $
 
 
 #include <casa/OS/Path.h>
@@ -117,6 +117,13 @@ void doIt (Bool doExcp, Bool& success)
     check ("~" + user + "/test/test2", home + "/test/test2",
 	   home + "/test/test2", success);
     check ("$tPath_Env_User/test", home + "/test", home + "/test", success);
+    check ("${tPath_Env_User}/test", home + "/test", home + "/test", success);
+    check ("/aa$HOME/test", "/aa" + home + "/test",
+           "/aa" + home + "/test", success);
+    check ("/aa${HOME}bb/test", "/aa" + home + "bb/test",
+           "/aa" + home + "bb/test", success);
+    check ("/aa${HOME}bb${HOME}cc/test", "/aa"+ home+"bb"+home+"cc/test",
+           "/aa"+home+"bb"+home+"cc/test", success);
     check ("/testx", "/testx", "/testx", success);
     check ("testx", "testx", curr + "/testx", success);
     check (user, user, curr + "/" + user, success);

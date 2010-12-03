@@ -211,11 +211,11 @@ J2000 aberration for 45837 from derivative at +0.1:
 J2000 aberration for 45837 from derivative at +0.04: 
 [1.40505e+06, -876895, -380118]
 B1950 aberration for 44238: 
-[-1.72786e+06, -243394, -105563]
+[-1.72786e+06, -243394, -105562]
 B1950 aberration for 44238 from derivative at +0.1: 
 [-1.72786e+06, -243394, -105563]
 B1950 aberration for 44238 from derivative at +0.04: 
-[-1.72786e+06, -243394, -105563]
+[-1.72786e+06, -243394, -105562]
 J2000 aberration: 
 45837.5: [1.40505e+06, -876895, -380118]
 45838.5: [1.4208e+06, -854798, -370543]

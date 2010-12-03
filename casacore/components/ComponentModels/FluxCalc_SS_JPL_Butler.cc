@@ -42,6 +42,7 @@
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MCEpoch.h>
 #include <measures/Measures/MFrequency.h>
+#include <scimath/Mathematics/InterpolateArray1D.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/TableRecord.h>
 #include <tables/Tables/ScalarColumn.h>
@@ -102,16 +103,22 @@ Bool FluxCalc_SS_JPL_Butler::setObjNum()
     objnum_p = FluxCalc_SS_JPL_Butler::Mars;
   else if(lname == "jupiter")
     objnum_p = FluxCalc_SS_JPL_Butler::Jupiter;
+  else if(lname == "io")
+    objnum_p = FluxCalc_SS_JPL_Butler::Io;
+  else if(lname == "ganymede")
+    objnum_p = FluxCalc_SS_JPL_Butler::Ganymede;
+  else if(lname == "europa")
+    objnum_p = FluxCalc_SS_JPL_Butler::Europa;
+  else if(lname == "callisto")
+    objnum_p = FluxCalc_SS_JPL_Butler::Callisto;
   else if(lname == "uranus")
     objnum_p = FluxCalc_SS_JPL_Butler::Uranus;
   else if(lname == "neptune")
     objnum_p = FluxCalc_SS_JPL_Butler::Neptune;
+  else if(lname == "triton")
+    objnum_p = FluxCalc_SS_JPL_Butler::Triton;
   else if(lname == "pluto")
     objnum_p = FluxCalc_SS_JPL_Butler::Pluto;
-  else if(lname == "ganymede")
-    objnum_p = FluxCalc_SS_JPL_Butler::Ganymede;
-  else if(lname == "callisto")
-    objnum_p = FluxCalc_SS_JPL_Butler::Callisto;
   else if(lname == "titan")
     objnum_p = FluxCalc_SS_JPL_Butler::Titan;
   else if(lname == "ceres")
@@ -128,7 +135,8 @@ Bool FluxCalc_SS_JPL_Butler::setObjNum()
     objnum_p = FluxCalc_SS_JPL_Butler::Davida;
   else{
     os << LogIO::SEVERE
-       << name_p << " is not a recognized Solar System flux calibration object."
+       << "Sorry, no flux density model for " << name_p
+       << "\n (not even a rudimentary one)."
        << LogIO::POST;
     matched = false;
   }
@@ -208,13 +216,15 @@ Bool FluxCalc_SS_JPL_Butler::readEphem()
   
   Directory hordir(horpath);
   DirectoryIterator dirIter(hordir, tabpat);
-  Bool found = false;
+  Bool foundObj = false;
+  Bool found = false;        // = foundObj && right time.
   uInt firstTimeStart = name_p.length() + 1;  // The + 1 is for the _.
   Regex timeUnitPat("[ydhms]");
   Path path;
 
   while(!dirIter.pastEnd()){
     path = dirIter.name();
+    foundObj = true;
     String basename(path.baseName());
 
     // Look for, respectively, the positions of '--', 'd', and '.' in
@@ -227,7 +237,7 @@ Bool FluxCalc_SS_JPL_Butler::readEphem()
     uInt unitPos  = firstTimeStart + firstTimeLen + 1 + lastTimeLen;
     
     Double firstTime = String::toDouble(basename.substr(firstTimeStart, firstTimeLen));
-    Double lastTime = String::toDouble(basename.substr(firstTimeLen + firstTimeLen + 1,
+    Double lastTime = String::toDouble(basename.substr(firstTimeStart + firstTimeLen + 1,
 						       lastTimeLen));
     Unit unit(basename[unitPos]);
     String ref(basename.substr(unitPos + 1,
@@ -258,11 +268,16 @@ Bool FluxCalc_SS_JPL_Butler::readEphem()
   }
 
   if(!found){
-    // Needing an MEpoch::Convert just to print an MEpoch is a pain.
-    os << LogIO::SEVERE
-       << "Could not find an ephemeris table for " << name_p
-       << LogIO::POST;
-    cout << " at " << MEpoch::Convert(time_p, MEpoch::Ref(MEpoch::UTC))() << endl;
+    os << LogIO::SEVERE;
+    if(foundObj)
+      os << "Found an ephemeris for " << name_p << ", but not";
+    else
+      os << "Could not find an ephemeris table for " << name_p;
+
+    // MEpoch cannot directly << to a LogIO.
+    os << " at ";
+    os.output() << MEpoch::Convert(time_p, MEpoch::Ref(MEpoch::UTC))();
+    os << LogIO::POST;
     return false;
   }
   else{
@@ -285,8 +300,19 @@ Bool FluxCalc_SS_JPL_Butler::readEphem()
   const Table tab(abspath);
   const TableRecord ks(tab.keywordSet());
 
-  temperature_p = get_Quantity_keyword(ks, "T_mean", "K");
-  mean_rad_p = get_Quantity_keyword(ks, "meanrad", "AU");
+  Bool got_q = true;
+  temperature_p = get_Quantity_keyword(ks, "T_mean", "K", got_q);
+  if(!got_q)
+    temperature_p = -1;  // Hopefully a model for the obj will supply a
+			 // temperature later.
+  mean_rad_p = get_Quantity_keyword(ks, "meanrad", "AU", got_q);
+  if(!got_q){
+    mean_rad_p = -1.0;
+    os << LogIO::SEVERE		// Remove/modify this when it starts supporting triaxiality.
+       << "The table is missing the meanrad keyword, needed to calculate the apparent diameter."
+       << LogIO::POST;
+    return false;
+  }
 
   // Find the row numbers with the right MJDs.
   ROScalarColumn<Double> mjd(tab, "MJD");
@@ -345,11 +371,11 @@ Bool FluxCalc_SS_JPL_Butler::get_row_numbers(uInt& rowbef, uInt& rowclosest,
 
   Double mjd0 = mjd(0);
   Double dmjd = mjd0;
-  uInt ndates = mjd.nrow();
-  uInt step = 1;
-  Long rn = 0;
+  Int ndates = mjd.nrow();      // Don't bother trying uInts in this 
+  Int step = 1;                 // function - it just leads to several
+  Long rn = 0;                  // compiler warnings.
 
-  uInt ub = ndates - 1;
+  Int ub = ndates - 1;
   Double the_time = time_p.get("d").getValue();
 
   if(mjd(ub) < the_time){
@@ -359,7 +385,7 @@ Bool FluxCalc_SS_JPL_Butler::get_row_numbers(uInt& rowbef, uInt& rowclosest,
     rn = ub;
     step = 0;	// Prevents going through the while loop below.
   }
-  uInt lb = 0;
+  Int lb = 0;
   if(mjd(0) > the_time){
     return false;
   }
@@ -368,7 +394,7 @@ Bool FluxCalc_SS_JPL_Butler::get_row_numbers(uInt& rowbef, uInt& rowclosest,
     step = 0;	// Prevents going through the while loop below.
   }    
 
-  uInt i;
+  Int i;
   for(i = 1; dmjd == mjd0 && i < ndates; ++i)
     dmjd = mjd(i);
   if(i > 1)
@@ -385,7 +411,7 @@ Bool FluxCalc_SS_JPL_Butler::get_row_numbers(uInt& rowbef, uInt& rowclosest,
 
   Double mjdrn = mjd(rn);
   Bool increasing = mjdrn < the_time;
-  uInt paranoia = 0;
+  Int paranoia = 0;
 
   while(step && paranoia < ndates){
     if(mjdrn < the_time){
@@ -434,12 +460,20 @@ Bool FluxCalc_SS_JPL_Butler::get_row_numbers(uInt& rowbef, uInt& rowclosest,
 
 Double FluxCalc_SS_JPL_Butler::get_Quantity_keyword(const TableRecord& ks,
 						    const String& kw,
-						    const Unit& unit)
+						    const Unit& unit,
+						    Bool& success)
 {
-  const Record rec(ks.asRecord(kw));
-  const Quantity q(rec.asDouble("value"), rec.asString("unit"));
+  try{
+    const Record rec(ks.asRecord(kw));
+    const Quantity q(rec.asDouble("value"), rec.asString("unit"));
   
-  return q.get(unit).getValue();
+    success = true;
+    return q.get(unit).getValue();
+  }
+  catch(...){
+    success = false;
+    return 0.0;
+  }
 }
 
 ComponentType::Shape FluxCalc_SS_JPL_Butler::compute(Vector<Flux<Double> >& values,
@@ -447,7 +481,7 @@ ComponentType::Shape FluxCalc_SS_JPL_Butler::compute(Vector<Flux<Double> >& valu
                                                      Double& angdiam,
                                                      const Vector<MFrequency>& mfreqs)
 {
-  LogIO os(LogOrigin("FluxCalc_SS_JPL_Butler", "compute"));
+  // LogIO os(LogOrigin("FluxCalc_SS_JPL_Butler", "compute"));
 
   // Calls readEphem() if necessary.
   ComponentType::Shape rettype(getShape(angdiam));
@@ -461,6 +495,9 @@ ComponentType::Shape FluxCalc_SS_JPL_Butler::compute(Vector<Flux<Double> >& valu
   }
 
   switch(objnum_p){
+  case FluxCalc_SS_JPL_Butler::Venus:
+    compute_venus(values, errors, angdiam, mfreqs);
+    break;
   case FluxCalc_SS_JPL_Butler::Jupiter:
     compute_jupiter(values, errors, angdiam, mfreqs);
     break;
@@ -470,15 +507,10 @@ ComponentType::Shape FluxCalc_SS_JPL_Butler::compute(Vector<Flux<Double> >& valu
   case FluxCalc_SS_JPL_Butler::Neptune:
     compute_neptune(values, errors, angdiam, mfreqs);
     break;
-  case FluxCalc_SS_JPL_Butler::Pluto:
-    compute_pluto(values, errors, angdiam, mfreqs);
-    break;
-  case FluxCalc_SS_JPL_Butler::Titan:
-    compute_titan(values, errors, angdiam, mfreqs);
-    break;
-  default: 
-    os << LogIO::NORMAL << "Using blackbody model." << LogIO::POST;
-    compute_BB(values, errors, angdiam, mfreqs);
+  default:
+    Bool success = compute_constant_temperature(values, errors, angdiam, mfreqs);
+    if(!success)
+      return ComponentType::UNKNOWN_SHAPE;
   };
 
   return rettype;
@@ -491,7 +523,10 @@ void FluxCalc_SS_JPL_Butler::compute_BB(Vector<Flux<Double> >& values,
 {
   const uInt nfreqs = mfreqs.nelements();
   Quantum<Double> temperature(temperature_p, "K");
+
+  // The real peak frequency is about 2.82 x this.
   Quantum<Double> freq_peak(QC::k * temperature / QC::h);
+
   Quantum<Double> rocd2(0.5 * angdiam);	// Dimensionless for now.
 
   rocd2 /= QC::c;	// Don't put this in the c'tor, it'll give the wrong answer.
@@ -505,7 +540,7 @@ void FluxCalc_SS_JPL_Butler::compute_BB(Vector<Flux<Double> >& values,
      << "angdiam = " << angdiam << " rad"
      << "\nrocd2 = " << rocd2.getValue() << rocd2.getUnit()
      << "\nfreq_ind_fac = " << freq_ind_fac.getValue() << freq_ind_fac.getUnit()
-     << "\nfreq_peak = " << freq_peak.get(hertz_p).getValue() << " Hz"
+     << "\npeak freq = " << 2.82e-12 * freq_peak.get(hertz_p).getValue() << " THz"
      << "\ntemperature_p = " << temperature_p << " K"
      << "\nvalues[0].unit() = " << values[0].unit().getName()
      << "\nhertz_p = " << hertz_p.getName()
@@ -534,22 +569,148 @@ void FluxCalc_SS_JPL_Butler::compute_GB(Vector<Flux<Double> >& values,
                                         const Vector<Double>& temps)
 {
   const uInt nfreqs = mfreqs.nelements();
-  Quantum<Double> rocd2(0.5 * angdiam / QC::c);
+  Quantum<Double> rocd2(0.5 * angdiam);	// Dimensionless for now.
 
+  rocd2 /= QC::c;	// Don't put this in the c'tor, it'll give the wrong answer.
   rocd2 *= rocd2;
 
   // Frequency independent factor.
   Quantum<Double> freq_ind_fac(2.0e26 * QC::h * C::pi * rocd2);
 
+  LogIO os(LogOrigin("FluxCalc_SS_JPL_Butler", "compute_GB"));
+  os << LogIO::DEBUG1
+     << "angdiam = " << angdiam << " rad"
+     << "\nrocd2 = " << rocd2.getValue() << rocd2.getUnit()
+     << "\nfreq_ind_fac = " << freq_ind_fac.getValue() << freq_ind_fac.getUnit()
+     << LogIO::POST;
+
+  const Unit jy("Jy");
+
   for(uInt f = 0; f < nfreqs; ++f){
     Quantum<Double> freq(mfreqs[f].get(hertz_p));
-    Quantum<Double> temperature(temps[f], "K");
-    Quantum<Double> freq_peak(QC::h / (QC::k * temperature));
+
+    // Guard against wayward extrapolations (possible with compute_venus()),
+    // but do not emit a warning here; there may be many frequencies with bad
+    // temperatures, and the warning should come from the calling function
+    // anyway since it knows the limits of the model.
+    //
+    // I am not really claiming that the CMB temperature is the most reasonable
+    // minimum temperature, but it is *a* reasonable mininum temperature, and I
+    // want to avoid division by zero.
+    //
+    Quantum<Double> temperature(max(temps[f], 2.7), "K");
+
+    // The real peak frequency is about 2.82 x this.
+    Quantum<Double> freq_peak(QC::k * temperature / QC::h);
     
-    values[f].setValue((freq_ind_fac * freq * freq * freq).getValue() /
-                       (exp((freq / freq_peak).getValue()) - 1.0));
+    values[f].setUnit(jy);
+    Double fd = (freq_ind_fac * freq * freq * freq).getValue() /
+                (exp((freq / freq_peak).getValue()) - 1.0);
+    values[f].setValue(fd);
     errors[f].setValue(0.0);
+
+    // Take this out when it's served its purpose, since it's in a possibly
+    // long loop.
+    // os << LogIO::DEBUG2   
+    //    << "f = 0 (" << 1e-12 * freq.get(hertz_p).getValue() << " THz):\n"
+    //    << "temperature = " << temps[f] << " K\n"
+    //    << "freq_peak = " << 1e-12 * freq_peak.get(hertz_p).getValue() << " THz\n"
+    //    << "f.d. = " << fd
+    //    << LogIO::POST;
   }
+  os << LogIO::DEBUG1
+     << "hertz_p = " << hertz_p.getName()
+     << "\nvalues[0].unit() = " << values[0].unit().getName()
+     << LogIO::POST;
+}
+
+void FluxCalc_SS_JPL_Butler::compute_venus(Vector<Flux<Double> >& values,
+					   Vector<Flux<Double> >& errors,
+					   const Double angdiam,
+					   const Vector<MFrequency>& mfreqs)
+{
+  LogIO os(LogOrigin("FluxCalc_SS_JPL_Butler", "compute_venus"));
+  const uInt nfreqs = mfreqs.nelements();
+  Vector<Double> temps(nfreqs);
+  Vector<Float> ghzfreqs(nfreqs);
+
+  Float minfreq = 0.303;
+  Float maxfreq = 350.0;
+  for(uInt f = 0; f < nfreqs; ++f){
+    Float ghzfreq = 1.0e-9 * mfreqs[f].get(hertz_p).getValue();
+
+    if(ghzfreq < minfreq)
+      minfreq = ghzfreq;
+    else if(ghzfreq > maxfreq)
+      maxfreq = ghzfreq;
+    ghzfreqs[f] = ghzfreq;
+  }
+  
+  const uInt nmeas = 75;
+
+  // GHz.  Nominally const, but there is no constructor for making a Block from
+  // a const C array.
+  Float measfreqarr[nmeas] = {350.000, 318.182, 289.256, 262.960, 239.055,
+			      217.322, 197.566, 179.605, 163.278, 148.434,
+			      134.940, 122.673, 111.521, 101.383,  92.166,
+			       83.787,  76.170,  69.246,  62.951,  57.228,
+			       52.025,  47.296,  42.996,  39.087,  35.534,
+			       32.304,  29.367,  26.697,  24.270,  22.064,
+			       20.058,  18.235,  16.577,  15.070,  13.700,
+			       12.454,  11.322,  10.293,   9.357,   8.507,
+			        7.733,   7.030,   6.391,   5.810,   5.282,
+			        4.802,   4.365,   3.968,   3.608,   3.280,
+			        2.981,   2.710,   2.464,   2.240,   2.036,
+			        1.851,   1.683,   1.530,   1.391,   1.264,
+			        1.149,   1.045,   0.950,   0.864,   0.785,
+			        0.714,   0.649,   0.590,   0.536,   0.487,
+			        0.443,   0.403,   0.366,   0.333,   0.303};
+  Float *measfreqptr = measfreqarr;		// Need a referenceable pointer.
+  const Block<Float> measfreqblk(nmeas, measfreqptr, false);
+
+  // Double to match the type of temps.  Nominally const, but there is no
+  // constructor for making a Block from a const C array.
+  Double meastbarr[nmeas] = {270.2, 273.8, 277.7, 282.0, 286.8,
+			     292.1, 297.6, 303.5, 309.7, 316.1,
+			     322.8, 329.6, 336.6, 343.7, 351.1,
+			     358.7, 366.7, 374.9, 383.6, 392.7,
+			     402.3, 412.3, 422.8, 433.8, 445.3,
+			     457.3, 469.8, 482.8, 496.1, 509.9,
+			     524.1, 538.8, 553.7, 568.7, 583.8,
+			     598.7, 613.0, 626.5, 638.9, 648.0,
+			     657.0, 665.0, 671.0, 676.0, 679.0,
+			     680.0, 680.0, 679.0, 676.0, 671.0,
+			     664.0, 655.0, 646.0, 638.0, 631.0,
+			     624.0, 617.0, 610.0, 604.0, 598.0,
+			     592.0, 586.0, 580.0, 575.0, 570.0,
+			     565.0, 560.0, 555.0, 550.0, 545.0,
+			     540.0, 535.0, 530.0, 525.0, 520.0};
+  Double *meastbptr = meastbarr;
+  const Block<Double> meastbblk(nmeas, meastbptr, false);
+
+  // Just let it extrapolate if necessary; the temperature_p given in the
+  // ephemeris (735K) is so high that I think it's for the surface.
+  InterpolateArray1D<Float, Double>::interpolate(temps, ghzfreqs,
+						 Vector<Float>(measfreqblk),
+						 Vector<Double>(meastbblk),
+						 InterpolateArray1D<Float, Double>::cubic);
+
+  if(minfreq < 0.303)
+    os << LogIO::WARN
+       << "At least one of the frequencies, " << minfreq
+       << "GHz, is below the lower limit for the model (0.303GHz).\n"
+       << LogIO::POST;
+  if(maxfreq > 350.0)
+    os << LogIO::WARN
+       << "At least one of the frequencies, " << maxfreq
+       << "GHz, is above the upper limit for the model (350.0GHz).\n"
+       << LogIO::POST;
+  if(minfreq < 0.303 || maxfreq > 350.0)
+    os << LogIO::WARN
+       << "The extrapolation may be very bad."
+       << LogIO::POST;
+
+  compute_GB(values, errors, angdiam, mfreqs, temps);
 }
 
 void FluxCalc_SS_JPL_Butler::compute_jupiter(Vector<Flux<Double> >& values,
@@ -648,6 +809,19 @@ void FluxCalc_SS_JPL_Butler::compute_neptune(Vector<Flux<Double> >& values,
   for(uInt f = 0; f < nfreqs; ++f){
     Double freq = 1.0e-9 * mfreqs[f].get(hertz_p).getValue(); // GHz
 
+    // These temperatures agree well with the ones collected in 
+    // http://adsabs.harvard.edu/abs/1995EM&P...67...89S (Spilker)
+    // (0.1-20cm = 1.5-300GHz) and 
+    // http://www.ericweisstein.com/research/papers/applopt/node10.html
+    // (200-300GHz) except around 70 GHz.  It's not so much a knee
+    // at 70 GHz as a flat interval around 70 GHz.  Unfortunately I don't yet
+    // have any data right there, but Planck should publish better models for
+    // the planets.
+    //
+    // (Spilker attributed the flat interval or dip in Jupiter, Saturn, and
+    //  Neptune to NH3.  Uranus has barely any, at least while we're looking at
+    //  its pole.)
+    //
     if(freq < 4.0 || freq > 1000.0){
       outOfFreqRange = true;
       temps[f] = temperature_p;
@@ -658,7 +832,7 @@ void FluxCalc_SS_JPL_Butler::compute_neptune(Vector<Flux<Double> >& values,
     }
     else
       // 34.93815 = 100.0 / ln(70.0 / 4.0)
-      temps[f] = 240.0 - 34.93815 * log(freq);
+      temps[f] = 240.0 - 34.93815 * log(freq / 4.0);
   }
 
   if(outOfFreqRange)
@@ -671,47 +845,131 @@ void FluxCalc_SS_JPL_Butler::compute_neptune(Vector<Flux<Double> >& values,
   compute_GB(values, errors, angdiam, mfreqs, temps);
 }
 
-void FluxCalc_SS_JPL_Butler::compute_pluto(Vector<Flux<Double> >& values,
-                                           Vector<Flux<Double> >& errors,
-                                           const Double angdiam,
-                                           const Vector<MFrequency>& mfreqs)
+Bool FluxCalc_SS_JPL_Butler::compute_constant_temperature(Vector<Flux<Double> >& values,
+							  Vector<Flux<Double> >& errors,
+							  const Double angdiam,
+							  const Vector<MFrequency>& mfreqs)
 {
-  // Using the value from:
-  //   Altenhoff, W. J., R. Chini, H. Hein, E. Kreysa, P. G. Mezger, 
-  //      C. Salter, and J. B. Schraml, First radio astronomical estimate 
-  //      of the temperature of Pluto, A&ALett, 190, L15-L17, 1988
-  // which is: Tb = 35 K at 1.27 mm.  this is a correction from the 
-  // value of 39 K in the paper, due to the incorrect geometric mean size 
-  // used for Pluto and Charon (1244 km vs the correct 1320 km).  this is
-  // similar to the value found in:
-  //   Stern, S. A., D. A. Weintraub, and M. C. Festou, Evidence for a Low 
-  //      Surface Temperature on Pluto from Millimeter-Wave Thermal
-  //      Emission Measurements, Science, 261, 1713-1716, 1993
-  // and is a good match to the physical temperature reported in:
-  //   Tryka, K. A., R. H. Brown, D. P. Cruikshank, T. C. Owen, T. R.
-  //      Geballe, and C. DeBergh, Temperature of Nitrogen Ice on Pluto and
-  //      Its Implications for Flux Measurements, Icarus, 112, 513-527, 
-  //      1994
-  // where they give a surface temperature of 40+-2 K.  this would imply
-  // an emissivity of 0.875, which is certainly reasonable.
-  
+  LogIO os(LogOrigin("FluxCalc_SS_JPL_Butler", "compute_constant_temperature"));
+
+  Bool success = true;
   Double ephem_temp = temperature_p;    // Store it.
 
-  temperature_p = 35.0;
-  compute_BB(values, errors, angdiam, mfreqs);
-  temperature_p = ephem_temp;           // Restore it.
-}
+  switch(objnum_p){
+  case FluxCalc_SS_JPL_Butler::Pluto:
+    // Using the value from:
+    //   Altenhoff, W. J., R. Chini, H. Hein, E. Kreysa, P. G. Mezger, 
+    //      C. Salter, and J. B. Schraml, First radio astronomical estimate 
+    //      of the temperature of Pluto, A&ALett, 190, L15-L17, 1988
+    // which is: Tb = 35 K at 1.27 mm.  this is a correction from the 
+    // value of 39 K in the paper, due to the incorrect geometric mean size 
+    // used for Pluto and Charon (1244 km vs the correct 1320 km).  this is
+    // similar to the value found in:
+    //   Stern, S. A., D. A. Weintraub, and M. C. Festou, Evidence for a Low 
+    //      Surface Temperature on Pluto from Millimeter-Wave Thermal
+    //      Emission Measurements, Science, 261, 1713-1716, 1993
+    // and is a good match to the physical temperature reported in:
+    //   Tryka, K. A., R. H. Brown, D. P. Cruikshank, T. C. Owen, T. R.
+    //      Geballe, and C. DeBergh, Temperature of Nitrogen Ice on Pluto and
+    //      Its Implications for Flux Measurements, Icarus, 112, 513-527, 
+    //      1994
+    // where they give a surface temperature of 40+-2 K.  this would imply
+    // an emissivity of 0.875, which is certainly reasonable.  
+    temperature_p = 35.0;
+    break;
+  case FluxCalc_SS_JPL_Butler::Io:
+    os << LogIO::NORMAL1
+       << "Reference for Io's temperature (110K):\n"
+       << "Rathbun, J.A., Spencer, J.R. Tamppari, L.K., Martin, T.Z., Barnard, L.,\n"
+       << "Travis, L.D. (2004). \"Mapping of Io's thermal radiation by the Galileo\n"
+       << "photopolarimeter-radiometer (PPR) instrument\". Icarus 169:127-139.\n"
+       << "doi:10.1016/j.icarus.2003.12.021\n"
+       << LogIO::POST;
+    temperature_p = 110.0;
+    break;
+  case FluxCalc_SS_JPL_Butler::Ganymede:
+    os << LogIO::NORMAL1
+       << "Reference for Ganymede's temperature (110K):\n"
+       << "Delitsky, Mona L., Lane, Arthur L. (1998). \"Ice chemistry of Galilean satellites\"\n"
+       << "J. of Geophys. Res. 103 (E13): 31,391-31,403. doi:10.1029/1998/JE900020\n"
+       << "http://trs-new.jpl.nasa.gov/dspace/bitstream/2014/20675/1/98-1725.pdf"
+       << LogIO::POST;
+    temperature_p = 110.0;
+    break;
+  case FluxCalc_SS_JPL_Butler::Callisto:
+    os << LogIO::NORMAL1
+       << "Reference for Callisto's temperature (134 +- 11 K):\n"
+       << "Moore, Jeffrey M., Chapman, Clark R., Bierhaus, Edward B. et al\n"
+       << "(2004). \"Callisto\" In Bagenal, F., Dowling, T.E., McKinnon, W.B.,\n"
+       << "\"Jupiter: The Planet, Satellites, and Magnetosphere\". Cambridge Univ. Press"
+       << LogIO::POST;
+    temperature_p = 134.0;   	// +- 11.
+    break;
+  case FluxCalc_SS_JPL_Butler::Europa:
+    os << LogIO::NORMAL1
+       << "Reference for Europa's temperature (109 K):\n"
+       << "http://science.nasa.gov/science-news/science-at-nasa/1998/ast03dec98_1/"
+       << LogIO::POST;
+    temperature_p = 109.0;
+    break;
+  case FluxCalc_SS_JPL_Butler::Titan:
+    temperature_p = 76.6;
+    break;
+  case FluxCalc_SS_JPL_Butler::Triton:
+    os << LogIO::NORMAL1
+       << "Reference for Triton's temperature (38 K):\n"
+       << "http://solarsystem.nasa.gov/planets/profile.cfm?Object=Triton"
+       << LogIO::POST;
+    temperature_p = 38.0;
+    break;
+  case FluxCalc_SS_JPL_Butler::Ceres:
+    os << LogIO::NORMAL1
+       << "Reference for Ceres' mean temperature (167K):\n"
+       << "Saint-Pe, O., Combes, N., Rigaut, F. (1993). \"Ceres surface properties\n"
+       << "by high-resolution imaging from Earth\" Icarus 105:271-281.\n"
+       << "doi:10.1006/icar.1993.1125"
+       << LogIO::POST;
+    temperature_p = 167.0;
+    break;
+  case FluxCalc_SS_JPL_Butler::Pallas:
+    os << LogIO::WARN
+       << "The orbit of Pallas has an eccentricity of 0.231.  This is not yet accounted\n"
+       << "for when calculating its temperature (taken to be 164K)."
+       << LogIO::POST;
+    temperature_p = 164.0;
+    break;
+  case FluxCalc_SS_JPL_Butler::Juno:
+    os << LogIO::WARN
+       << "Juno has a large crater and temperature changes."
+       << LogIO::POST;
+    os << LogIO::NORMAL1
+       << "Reference for Juno's mean temperature (163K):\n"
+       << "Lim, Lucy F., McConnochie, Timothy H., Bell, James F., Hayward, Thomas L. (2005).\n"
+       << "\"Thermal infrared (8-13 um) spectra of 29 asteroids: the Cornell Mid-Infrared\n"
+       << "Asteroid Spectroscopy (MIDAS) Survey\" Icarus 173:385-408.\n"
+       << "doi:10.1016/j.icarus.2004.08.005."
+       << LogIO::POST;
+    temperature_p = 163.0;
+    break;
+  default:
+    break;
+  };
+    
+  if(temperature_p > 0.0){
+    os << LogIO::NORMAL << "Using blackbody model." << LogIO::POST;
+    compute_BB(values, errors, angdiam, mfreqs);
+  }
+  else{
+    os << LogIO::SEVERE
+       << "An ephemeris was found, but not a temperature."
+       << LogIO::POST;
+    success = false;
+  }
 
-void FluxCalc_SS_JPL_Butler::compute_titan(Vector<Flux<Double> >& values,
-                                           Vector<Flux<Double> >& errors,
-                                           const Double angdiam,
-                                           const Vector<MFrequency>& mfreqs)
-{
-  Double ephem_temp = temperature_p;    // Store it.
+  if(ephem_temp > 0.0)
+    temperature_p = ephem_temp;         // Restore it.
 
-  temperature_p = 76.6;
-  compute_BB(values, errors, angdiam, mfreqs);
-  temperature_p = ephem_temp;           // Restore it.
+  return success;
 }
 
 Bool FluxCalc_SS_JPL_Butler::setObj(const String& objname)

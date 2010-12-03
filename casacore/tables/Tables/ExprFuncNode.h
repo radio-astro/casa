@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprFuncNode.h 20940 2010-08-25 09:08:06Z gervandiepen $
+//# $Id: ExprFuncNode.h 20967 2010-09-27 11:06:03Z gervandiepen $
 
 #ifndef TABLES_EXPRFUNCNODE_H
 #define TABLES_EXPRFUNCNODE_H
@@ -216,6 +216,9 @@ public:
 	weekdayFUNC,           //# returning Int
 	cdowFUNC,              //# returning String
 	weekFUNC,              //# returning Int
+        ctodFUNC,              //# returning String
+        cdateFUNC,             //# returning String
+        ctimeFUNC,             //# returning String
 	    // special function returning a random Double number
 	randFUNC,
             // special function returning Int row number
@@ -304,6 +307,14 @@ public:
         { return funcType_p; }
     NodeDataType argDataType() const
         { return argDataType_p; }
+    // </group>
+
+    // Convert the date and/or time to a string.
+    // <group>
+    static String stringDT (const MVTime& dt, Int prec, MVTime::formatTypes);
+    static String stringDateTime (const MVTime& dt, Int prec);
+    static String stringDate (const MVTime& dt);
+    static String stringTime (const MVTime& dt, Int prec);
     // </group>
 
 private:

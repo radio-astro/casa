@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: RecordRep.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: RecordRep.h 20969 2010-09-27 12:45:04Z gervandiepen $
 
 
 #ifndef CASA_RECORDREP_H
@@ -181,7 +181,7 @@ public:
 
     // Get the description and data of the Record.
     // It also gets the fixedFlag attribute (of the mother object).
-    void getRecord (AipsIO& os, int& recordType);
+    void getRecord (AipsIO& os, Int& recordType);
 
     // Put the data of a record.
     // This is used to write a subrecord, whose description has

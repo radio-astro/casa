@@ -252,7 +252,6 @@ Vector<ImageFit1D<T> > ImageUtilities::fitProfiles (
 		const IPosition& curPos = inIter.position();
 		ImageFit1D<T> fitter(inImage, axis);
 
-		//fitter.clearList();
 		fitter.errorMessage();
 		ok = fitter.setData (curPos, abcissaType, True);
 

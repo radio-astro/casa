@@ -28,6 +28,7 @@
 #include <images/Images/ImageCollapser.h>
 
 #include <images/Images/ImageInputProcessor.h>
+#include <images/Images/ImageUtilities.h>
 #include <images/Images/FITSImage.h>
 #include <images/Images/PagedImage.h>
 
@@ -70,7 +71,7 @@ void checkImage(
 	Array<Double> fracDiffRef = (
 			gotCsys.referenceValue() - expectedCsys.referenceValue()
 		)/expectedCsys.referenceValue();
-	AlwaysAssert(max(abs(fracDiffRef)) <= 1e-13, AipsError);
+	AlwaysAssert(max(abs(fracDiffRef)) <= 1.5e-6, AipsError);
 }
 
 void checkImage(
@@ -165,14 +166,14 @@ int main() {
     	{
     		writeTestString("sum subimage collapse along axis 1");
     		ImageCollapser *collapser = new ImageCollapser(
-    			"sum", goodImage, "", "1,1,2,2", "1-2",
+    			"sum", goodImage, "", "1,1,2,2", "1~2",
     			"qu", "", 2, outname(), False
     		);
     		collapser->collapse(False);
     		delete collapser;
     		// and check that we can overwrite the previous output
     		collapser = new ImageCollapser(
-        		"sum", goodImage, "", "1,1,2,2", "1-2",
+        		"sum", goodImage, "", "1,1,2,2", "1~2",
         		"qu", "", 1, outname(), True
         	);
     		collapser->collapse(False);
@@ -212,6 +213,35 @@ int main() {
     		collapser.collapse(False);
     		checkImage(outname(), "collapse_max_0_a.fits");
     	}
+       	{
+        	writeTestString("average full temporary image collapse along axis 0");
+        	ImageInterface<Float> *pIm;
+        	LogIO log;
+        	ImageUtilities::openImage(pIm, goodImage, log);
+        	IPosition shape = pIm->shape();
+        	CoordinateSystem csys = pIm->coordinates();
+        	Array<Float> vals = pIm->get();
+        	delete pIm;
+        	TempImage<Float> tIm(shape, csys);
+        	tIm.put(vals);
+        	ImageCollapser collapser(
+        		"mean", &tIm, "", "", ALL,
+        		ALL, "", 0, outname(), False
+        	);
+        	collapser.collapse(False);
+        	checkImage(outname(), "collapse_avg_0.fits");
+        }
+       	{
+        	writeTestString("full image collapse along axes 0, 1");
+        	Vector<uInt> axes(2, 0);
+        	axes[1] = 1;
+        	ImageCollapser collapser(
+        		"mean", goodImage, "", "", ALL,
+        		ALL, "", axes, outname(), False
+        	);
+        	collapser.collapse(False);
+        	checkImage(outname(), "collapse_avg_0_1.fits");
+        }
         cout << "ok" << endl;
     }
     catch (AipsError x) {

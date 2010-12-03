@@ -85,6 +85,8 @@ public:
   // Ouput : psfs and dirty images
   Bool getresidual(int order, Lattice<T> & residual);
  
+  // Output : Hessian matrix
+  Bool getinvhessian(Matrix<Double> & invhessian);
 
 private:
   LogIO os;

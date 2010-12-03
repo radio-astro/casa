@@ -132,9 +132,11 @@ class FluxCalc_SS_JPL_Butler
                                Vector<Flux<Double> >& errors, Double& angdiam,
                                const Vector<MFrequency>& mfreqs);
 
+  // Returns the value in units unit of ks's keyword kw.  success is set to
+  // whether or not it succeeded.
   static Double get_Quantity_keyword(const TableRecord& ks,
 				     const String& kw,
-				     const Unit& unit);
+				     const Unit& unit, Bool& success);
  private:
   enum KnownObjects {
     Mercury = 0,
@@ -142,13 +144,16 @@ class FluxCalc_SS_JPL_Butler
     // Earth, // Too highly resolved
     Mars,
     Jupiter,
+    Io,
+    Ganymede,
+    Europa,
+    Callisto,
     // Saturn, // Modeling the rings is too complicated.
+    Titan,
     Uranus,
     Neptune,
+    Triton,
     Pluto,
-    Ganymede,
-    Callisto,
-    Titan,
     Ceres,
     Pallas,
     Vesta,
@@ -183,6 +188,9 @@ class FluxCalc_SS_JPL_Butler
                   const Vector<MFrequency>& mfreqs,
                   const Vector<Double>& temps);
 
+  void compute_venus(Vector<Flux<Double> >& values,
+		     Vector<Flux<Double> >& errors, const Double angdiam,
+		     const Vector<MFrequency>& mfreqs);
   void compute_jupiter(Vector<Flux<Double> >& values,
                        Vector<Flux<Double> >& errors, const Double angdiam,
                        const Vector<MFrequency>& mfreqs);
@@ -195,9 +203,12 @@ class FluxCalc_SS_JPL_Butler
   void compute_pluto(Vector<Flux<Double> >& values,
                      Vector<Flux<Double> >& errors, const Double angdiam,
                      const Vector<MFrequency>& mfreqs);
-  void compute_titan(Vector<Flux<Double> >& values,
-                     Vector<Flux<Double> >& errors, const Double angdiam,
-                     const Vector<MFrequency>& mfreqs);  
+
+  // Uses objnum_p to look up a mean temperature, and uses that.
+  // Returns whether or not it was successful.
+  Bool compute_constant_temperature(Vector<Flux<Double> >& values,
+				    Vector<Flux<Double> >& errors, const Double angdiam,
+				    const Vector<MFrequency>& mfreqs);  
 
   // Find the row in mjd closest to time_p, and the rows just before and after
   // it, taking boundaries into account.

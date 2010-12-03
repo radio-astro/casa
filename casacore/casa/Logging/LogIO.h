@@ -113,7 +113,6 @@ class LogOrigin;
 // <srcblock>
 //   os << "Every good boy deserves" << 5 << " pieces of fudge!";
 // </srcblock>
-// </example>
 // This accumulates the message but does not send it. If you want to force it
 // to be sent you can do so with either of the following methods:
 // <srcblock>
@@ -138,6 +137,15 @@ class LogOrigin;
 //    os << LogOrigin("class", "func(args)");
 //    os << WHERE;
 // </srcblock>
+//
+// A class which has an operator<< to std::ostream but not LogIO can be handled
+// like so:
+// <srcblock>
+// os << LogIO::SEVERE << " at ";
+// os.output() << MEpoch::Convert(time_p, MEpoch::Ref(MEpoch::UTC))();
+// os << LogIO::POST;
+// </srcblock>
+// </example>
 //
 // <motivation>
 // The earlier method of creating log messages solely through LogSink and
@@ -229,7 +237,7 @@ public:
     // Change the origin of the accumulated message.
     void origin(const LogOrigin &origin);
 
-    // Acumulate output in this ostream.
+    // Accumulate output in this ostream.
     ostream& output();
 
     // Occasionally it is useful to interrogate the local log sink.

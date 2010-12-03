@@ -185,7 +185,9 @@ public:
 	       const double& state_cal,
 	       const double& state_load,
 	       const unsigned int state_sub_scan,
-	       const String& state_obs_mode);
+	       const String& state_obs_mode,
+	       const String& observername,
+	       const String& projectname);
 
 
   void observe(const Vector<String>& sourceNames,
@@ -199,7 +201,10 @@ public:
 	       const double& state_cal,
 	       const double& state_load,
 	       const unsigned int state_sub_scan,
-	       const String& state_obs_mode);
+	       const String& state_obs_mode,
+	       const String& observername,
+	       const String& projectname);
+
 
 private:
 
