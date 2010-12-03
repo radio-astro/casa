@@ -102,7 +102,7 @@ class asapplotter:
             self._plotter = self._newplotter()
             self._plotter.figmgr.casabar=self._newcasabar()
         self._plotter.hold()
-        self._plotter.clear()
+        #self._plotter.clear()
         if not self._data and not scan:
             msg = "Input is not a scantable"
             raise TypeError(msg)
@@ -831,7 +831,8 @@ class asapplotter:
             sel.set_order(order)
         scan.set_selection(sel)
         d = {'b': scan.getbeam, 's': scan.getscan,
-             'i': scan.getif, 'p': scan.getpol, 't': scan._gettime,
+             #'i': scan.getif, 'p': scan.getpol, 't': scan._gettime,
+             'i': scan.getif, 'p': scan.getpol, 't': scan.get_time,
              'r': int, '_r': int}
 
         polmodes = dict(zip(self._selection.get_pols(),
@@ -904,7 +905,8 @@ class asapplotter:
                 newpanel = True
                 stackcount = 0
                 panelcount += 1
-            if (b > b0 or newpanel) and stackcount < nstack:
+            #if (b > b0 or newpanel) and stackcount < nstack:
+            if stackcount < nstack and (newpanel or (a == a0 and b > b0)):
                 y = []
                 if len(polmodes):
                     y = scan._getspectrum(r, polmodes[scan.getpol(r)])
@@ -994,7 +996,7 @@ class asapplotter:
     def _get_sortstring(self, lorders):
         d0 = {'s': 'SCANNO', 'b': 'BEAMNO', 'i':'IFNO',
               'p': 'POLNO', 'c': 'CYCLENO', 't' : 'TIME', 'r':None, '_r':None }
-        if not (type(lorders) == list) or not (type(lorders) == tuple):
+        if not (type(lorders) == list) and not (type(lorders) == tuple):
             return None
         if len(lorders) > 0:
             lsorts = []

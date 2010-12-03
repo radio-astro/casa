@@ -731,7 +731,7 @@ Int PKSMS2writer::addDataDescriptionEntry(
 {
   // Extend the DATA_DESCRIPTION subtable.
   while (Int(cDataDescription.nrow()) < IFno) {
-    cDataDescription.addRow();
+    cDataDescription.addRow(1,True);
   }
   Int n = IFno - 1;
 
@@ -965,8 +965,9 @@ Int PKSMS2writer::addPolarizationEntry(
         const Int nPol)
 {
   // Extend the POLARIZATION subtable.
+  Int nr = cPolarization.nrow() ;
   while (Int(cPolarization.nrow()) < IFno) {
-    cPolarization.addRow();
+    cPolarization.addRow(1,True);
   }
   Int n = IFno - 1;
 
@@ -984,6 +985,9 @@ Int PKSMS2writer::addPolarizationEntry(
   corrType(0) = Stokes::XX;
   corrType(1) = Stokes::YY;
   }
+  // initialization
+  for ( Int i = nr ; i < n ; i++ )
+    cPolarizationCols->corrType().put( i, corrType ) ;
   cPolarizationCols->corrType().put(n, corrType);
 
   Matrix<Int> corrProduct(2,2,1);
@@ -1091,8 +1095,9 @@ Int PKSMS2writer::addSpectralWindowEntry(
         const Double freqInc)
 {
   // Extend the SPECTRAL_WINDOW subtable.
+  Int nr = cSpectralWindow.nrow() ;
   while (Int(cSpectralWindow.nrow()) < IFno) {
-    cSpectralWindow.addRow();
+    cSpectralWindow.addRow(1,True);
   }
   Int n = IFno - 1;
 
@@ -1110,15 +1115,26 @@ Int PKSMS2writer::addSpectralWindowEntry(
   for (Int i = 0; i < nChan; i++) {
     freqs(i) = refFreq + (i - refChan)*freqInc;
   }
+  // initialization
+  for ( Int i = nr ; i < n ; i++ ) 
+    cSpWindowCols->chanFreq().put( i, freqs ) ;
   cSpWindowCols->chanFreq().put(n, freqs);
 
   Vector<Double> chanWidths(nChan, freqInc);
+  // initialization
+  for ( Int i = nr ; i < n ; i++ ) {
+    cSpWindowCols->chanWidth().put( i, chanWidths ) ;
+    cSpWindowCols->effectiveBW().put( i, chanWidths ) ;
+  }
   cSpWindowCols->chanWidth().put(n, chanWidths);
 
   cSpWindowCols->measFreqRef().put(n, cDopplerFrame);
   cSpWindowCols->effectiveBW().put(n, chanWidths);
 
   Vector<Double> resolution(nChan, fabs(freqInc));
+  // initialization
+  for ( Int i = nr ; i < n ; i++ ) 
+    cSpWindowCols->resolution().put( i, resolution ) ;
   cSpWindowCols->resolution().put(n, resolution);
 
   cSpWindowCols->totalBandwidth().put(n, bandwidth);

@@ -1,6 +1,7 @@
 """This module defines the scantable class."""
 
 import os
+import numpy
 try:
     from functools import wraps as wraps_dec
 except ImportError:
@@ -724,17 +725,17 @@ class scantable(Scantable):
         asaplog.post()
         return outvec
 
-    def _get_column(self, callback, row=-1):
+    def _get_column(self, callback, row=-1, *args):
         """
         """
         if row == -1:
-            return [callback(i) for i in range(self.nrow())]
+            return [callback(i, *args) for i in range(self.nrow())]
         else:
             if  0 <= row < self.nrow():
-                return callback(row)
+                return callback(row, *args)
 
 
-    def get_time(self, row=-1, asdatetime=False):
+    def get_time(self, row=-1, asdatetime=False, prec=-1):
         """\
         Get a list of time stamps for the observations.
         Return a datetime object or a string (default) for each
@@ -746,17 +747,37 @@ class scantable(Scantable):
 
             asdatetime:   return values as datetime objects rather than strings
 
+            prec:         number of digits shown. Default -1 to automatic calculation.
+                          Note this number is equals to the digits of MVTime,
+                          i.e., 0<prec<3: dates with hh:: only,
+                          <5: with hh:mm:, <7 or 0: with hh:mm:ss,
+                          and 6> : with hh:mm:ss.tt... (prec-6 t's added)
+
         """
-        from time import strptime
         from datetime import datetime
-        times = self._get_column(self._gettime, row)
+        if prec < 0:
+            # automagically set necessary precision +1
+            prec = 7 - numpy.floor(numpy.log10(numpy.min(self.get_inttime(row))))
+            prec = max(6, int(prec))
+        else:
+            prec = max(0, prec)
+        if asdatetime:
+            #precision can be 1 millisecond at max
+            prec = min(12, prec)
+
+        times = self._get_column(self._gettime, row, prec)
         if not asdatetime:
             return times
-        format = "%Y/%m/%d/%H:%M:%S"
+        format = "%Y/%m/%d/%H:%M:%S.%f"
+        if prec < 7:
+            nsub = 1 + (((6-prec)/2) % 3)
+            substr = [".%f","%S","%M"]
+            for i in range(nsub):
+                format = format.replace(substr[i],"")
         if isinstance(times, list):
-            return [datetime(*strptime(i, format)[:6]) for i in times]
+            return [datetime.strptime(i, format) for i in times]
         else:
-            return datetime(*strptime(times, format)[:6])
+            return datetime.strptime(times, format)
 
 
     def get_inttime(self, row=-1):
