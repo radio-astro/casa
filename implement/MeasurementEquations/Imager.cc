@@ -9986,10 +9986,28 @@ void Imager::savePSF(const Vector<String>& psf){
 
     for (Int thismodel=0;thismodel<Int(psf.nelements());++thismodel) {
       if(removeTable(psf(thismodel))) {
-	PagedImage<Float> psfimage(images_p[thismodel]->shape(),
+	Int whichmodel=thismodel;
+	if(facets_p >1 && thismodel > 0)
+	  whichmodel=facets_p*facets_p-1+thismodel;
+	IPosition shape=images_p[thismodel]->shape();
+	PagedImage<Float> psfimage(shape,
 				   images_p[thismodel]->coordinates(),
 				   psf(thismodel));
-	psfimage.copyData(sm_p->PSF(thismodel));
+	psfimage.set(0.0);
+	if((shape[0]*shape[1]) > ((sm_p->PSF(whichmodel)).shape()[0]*(sm_p->PSF(whichmodel)).shape()[1])){
+	  IPosition blc(4, 0, 0, 0, 0);
+	  IPosition trc=shape-1;
+	  blc[0]=(shape[0]-(sm_p->PSF(whichmodel)).shape()[0])/2;
+	  trc[0]=(sm_p->PSF(whichmodel)).shape()[0]+blc[0]-1;
+	  blc[1]=(shape[1]-(sm_p->PSF(whichmodel)).shape()[1])/2;
+	  trc[1]=(sm_p->PSF(whichmodel)).shape()[1]+blc[1]-1;
+	  Slicer sl(blc, trc, Slicer::endIsLast);
+	  SubImage<Float> sub(psfimage, sl, True);
+	  sub.copyData(sm_p->PSF(whichmodel));	  
+	}
+	else{
+	  psfimage.copyData(sm_p->PSF(whichmodel));
+	}
       }
     }
 
