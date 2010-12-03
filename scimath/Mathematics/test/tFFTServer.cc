@@ -1377,6 +1377,121 @@ public:
   }
 };
 
+template <class T, class S>
+class TestFFTShift
+{
+public:
+  TestFFTShift()  // test the complex->complex fft shift function
+  {
+
+    FFTServer<T, S> server; 
+    
+    int iterations = 1;
+
+      Array<S> a(IPosition(2,2,10));
+      a(IPosition(2,0,0)) = Complex(0.,0.);
+      a(IPosition(2,0,1)) = Complex(1.,0.);
+      a(IPosition(2,0,2)) = Complex(2.,0.);
+      a(IPosition(2,0,3)) = Complex(3.,0.);
+      a(IPosition(2,0,4)) = Complex(4.,0.);
+      a(IPosition(2,0,5)) = Complex(5.,0.);
+      a(IPosition(2,0,6)) = Complex(6.,0.);
+      a(IPosition(2,0,7)) = Complex(7.,0.);
+      a(IPosition(2,0,8)) = Complex(8.,0.);
+      a(IPosition(2,0,9)) = Complex(9.,0.);
+      a(IPosition(2,1,0)) = Complex(0.,0.);
+      a(IPosition(2,1,1)) = Complex(10.,0.);
+      a(IPosition(2,1,2)) = Complex(20.,0.);
+      a(IPosition(2,1,3)) = Complex(30.,0.);
+      a(IPosition(2,1,4)) = Complex(40.,0.);
+      a(IPosition(2,1,5)) = Complex(50.,0.);
+      a(IPosition(2,1,6)) = Complex(60.,0.);
+      a(IPosition(2,1,7)) = Complex(70.,0.);
+      a(IPosition(2,1,8)) = Complex(80.,0.);
+      a(IPosition(2,1,9)) = Complex(90.,0.);
+
+      Array<S> b(IPosition(2,10,2));
+      b(IPosition(2,0,0)) = Complex(0.,0.);
+      b(IPosition(2,1,0)) = Complex(1.,0.);
+      b(IPosition(2,2,0)) = Complex(2.,0.);
+      b(IPosition(2,3,0)) = Complex(3.,0.);
+      b(IPosition(2,4,0)) = Complex(4.,0.);
+      b(IPosition(2,5,0)) = Complex(5.,0.);
+      b(IPosition(2,6,0)) = Complex(6.,0.);
+      b(IPosition(2,7,0)) = Complex(7.,0.);
+      b(IPosition(2,8,0)) = Complex(8.,0.);
+      b(IPosition(2,9,0)) = Complex(9.,0.);
+      b(IPosition(2,0,1)) = Complex(0.,0.);
+      b(IPosition(2,1,1)) = Complex(10.,0.);
+      b(IPosition(2,2,1)) = Complex(20.,0.);
+      b(IPosition(2,3,1)) = Complex(30.,0.);
+      b(IPosition(2,4,1)) = Complex(40.,0.);
+      b(IPosition(2,5,1)) = Complex(50.,0.);
+      b(IPosition(2,6,1)) = Complex(60.,0.);
+      b(IPosition(2,7,1)) = Complex(70.,0.);
+      b(IPosition(2,8,1)) = Complex(80.,0.);
+      b(IPosition(2,9,1)) = Complex(90.,0.);
+
+      Array<S> expect(IPosition(2,2,10));
+      expect(IPosition(2,0,0)) = Complex(9.,0.);	
+      expect(IPosition(2,0,1)) = Complex(0.,0.); 	
+      expect(IPosition(2,0,2)) = Complex(1.,0.); 	
+      expect(IPosition(2,0,3)) = Complex(2.,0.); 	
+      expect(IPosition(2,0,4)) = Complex(3.,0.); 	
+      expect(IPosition(2,0,5)) = Complex(4.,0.); 	
+      expect(IPosition(2,0,6)) = Complex(5.,0.); 	
+      expect(IPosition(2,0,7)) = Complex(6.,0.); 	
+      expect(IPosition(2,0,8)) = Complex(7.,0.); 	
+      expect(IPosition(2,0,9)) = Complex(8.,0.); 	
+      expect(IPosition(2,1,0)) = Complex(90.,0.); 	
+      expect(IPosition(2,1,1)) = Complex(0.,0.); 	
+      expect(IPosition(2,1,2)) = Complex(10.,0.);	
+      expect(IPosition(2,1,3)) = Complex(20.,0.);	
+      expect(IPosition(2,1,4)) = Complex(30.,0.);	
+      expect(IPosition(2,1,5)) = Complex(40.,0.);	
+      expect(IPosition(2,1,6)) = Complex(50.,0.);	
+      expect(IPosition(2,1,7)) = Complex(60.,0.);	
+      expect(IPosition(2,1,8)) = Complex(70.,0.);	
+      expect(IPosition(2,1,9)) = Complex(80.,0.);  
+
+#if PERFORMANCE_TEST
+    iterations = 10;
+#endif
+    for (int it = 0; it < iterations; it++) {
+      
+      uInt whichAxis = 1;
+      Double relshift = 1./10.;
+
+      server.fftshift(a, whichAxis, relshift, False);
+
+      {
+	for(uInt i=0; i<2; i++){
+	  for(uInt j=0; j<10; j++){
+	    DComplex diff = a(IPosition(2,i,j))-expect(IPosition(2,i,j));
+	    AlwaysAssert((abs(diff.real())<1E-5) && (abs(diff.imag())<1E-5), AipsError);
+	  }
+	}
+      }
+
+      whichAxis = 0;
+      relshift = 1./10.;
+
+      server.fftshift(b, whichAxis, relshift, False);
+
+      {
+	for(uInt i=0; i<2; i++){
+	  for(uInt j=0; j<10; j++){
+	    DComplex diff = b(IPosition(2,j,i))-expect(IPosition(2,i,j));
+	    AlwaysAssert((abs(diff.real())<1E-5) && (abs(diff.imag())<1E-5), AipsError);
+	  }
+	}
+      }
+
+    } // enf for it=0
+
+  }
+};
+
 
 template <class T, class S, template<class,class> class P, class TServer, class SServer>
 class TestR2C   // real->complex and complex->real
@@ -1582,6 +1697,9 @@ void run_tests()
     TestC2C<S, C2C3Doddoddodd2, T, S> c2c19(server, 100*FLT_EPSILON, 2*FLT_EPSILON);
     TestC2C<S, C2C4Doddoddoddeven1, T, S> c2c20(server, FLT_EPSILON, 2*FLT_EPSILON);
     TestC2C<S, C2C4Doddoddoddeven2, T, S> c2c21(server, 500*FLT_EPSILON, 2*FLT_EPSILON);
+
+    TestFFTShift<T, S> ();
+
     return;
 }
 
