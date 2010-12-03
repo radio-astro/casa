@@ -344,6 +344,13 @@ public:
   void flip(Array<S> & cData, const Bool toZero, const Bool isHermitian);
   // </group>
 
+  // N-D in-place complex->complex FFT shift (FFT - phase-mult - inverse FFT)
+  // If toFrequency is true, the first FFT will be from time to frequency. 
+  // relshift is the freq shift normalised to the bandwidth.
+  // Only transform over selected dimension. Iterate over the others. 
+  void fftshift(Array<S> & cValues, const uInt& whichAxis, 
+		const Double& relshift, const Bool toFrequency=True);
+
 private:
   //# finds the shape of the output array when doing complex->real transforms
   IPosition determineShape(const IPosition & rShape, const Array<S> & cData);
