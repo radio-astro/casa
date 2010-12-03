@@ -1914,6 +1914,7 @@ void QtDisplayPanelGui::closeEvent(QCloseEvent *event) {
     sprintf( buf, "%d %d", ending_size.width(), ending_size.height() );
     rc.put( "viewer." + rcid() + ".dimensions", buf );
 
+#if QT_VERSION >= 0x040500
     QList<QDockWidget*> tabbeddocks = tabifiedDockWidgets( trkgDockWidget_ );
 
     for ( QList<QDockWidget*>::const_iterator i = tabbeddocks.begin(); i !=  tabbeddocks.end(); ++i ) {
@@ -1938,6 +1939,7 @@ void QtDisplayPanelGui::closeEvent(QCloseEvent *event) {
 	    rc.put( "viewer." + rcid() + ".bottomdock", "untabbed" );
 	}
     }
+#endif
 
     QtPanelBase::closeEvent(event);
 }
