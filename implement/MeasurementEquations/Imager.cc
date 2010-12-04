@@ -275,6 +275,7 @@ traceEvent(1,"Entering imager::defaults",25);
 
   cyclefactor_p = 1.5;
   cyclespeedup_p =  -1;
+  cyclemaxpsffraction_p = 0.8;
   stoplargenegatives_p = 2;
   stoppointmode_p = -1;
   fluxscale_p.resize(0);
@@ -2457,6 +2458,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
 
 Bool Imager::setmfcontrol(const Float cyclefactor,
 			  const Float cyclespeedup,
+                          const Float cyclemaxpsffraction, 
 			  const Int stoplargenegatives, 
 			  const Int stoppointmode,
 			  const String& scaleType,
@@ -2467,6 +2469,7 @@ Bool Imager::setmfcontrol(const Float cyclefactor,
 {  
   cyclefactor_p = cyclefactor;
   cyclespeedup_p =  cyclespeedup;
+  cyclemaxpsffraction_p = cyclemaxpsffraction;
   stoplargenegatives_p = stoplargenegatives;
   stoppointmode_p = stoppointmode;
   fluxscale_p.resize( fluxscale.nelements() );
@@ -5073,6 +5076,7 @@ Bool Imager::clean(const String& algorithm,
     sm_p->setThreshold(threshold.get("Jy").getValue());
     sm_p->setCycleFactor(cyclefactor_p);
     sm_p->setCycleSpeedup(cyclespeedup_p);
+    sm_p->setCycleMaxPsfFraction(cyclemaxpsffraction_p);
     {
       ostringstream oos;
       oos << "Clean gain = " <<gain<<", Niter = "<<niter<<", Threshold = "
@@ -5392,6 +5396,7 @@ Bool Imager::mem(const String& algorithm,
     sm_p->setNumberIterations(niter);
     sm_p->setCycleFactor(cyclefactor_p);   // used by mf algs
     sm_p->setCycleSpeedup(cyclespeedup_p); // used by mf algs
+    sm_p->setCycleMaxPsfFraction(cyclemaxpsffraction_p); // used by mf algs
 
     {
       ostringstream oos;
