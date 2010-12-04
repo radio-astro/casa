@@ -212,6 +212,11 @@ public:
   // to inch up)
   void setCycleSpeedup(float x) { cycleSpeedup_p = x; }
 
+  // Yet another control for the minor cycle threshold.
+  // This is in response to CAS-2673
+  // This allows control similar to 'cyclefactor' - used in MFClarkCleanSkyModel
+  void setCycleMaxPsfFraction(float x) { cycleMaxPsfFraction_p = x; }
+
   // Set the variable that switches on the progress display
   void setDisplayProgress (const Bool display ) {displayProgress_p = display; };
 
@@ -294,6 +299,8 @@ protected:
   // (ie, use a large number if you don't want cycle threshold
   // to inch up)
   Float cycleSpeedup_p;
+  // Cycle threshold = maxResidual x min(Max-Psf-Fraction , cyclefactor x maxpsfsidelobe)
+  Float cycleMaxPsfFraction_p;
   // If PSF is done..should not redo it.
   Bool donePSF_p;
   // check if model has been modified especially for continuing

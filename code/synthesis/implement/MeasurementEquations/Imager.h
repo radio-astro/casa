@@ -416,6 +416,7 @@ class Imager
   //in a flat noise image or an optimum beam^2 image
   Bool setmfcontrol(const Float cyclefactor,
 		    const Float cyclespeedup,
+		    const Float cyclemaxpsffraction,
 		    const Int stoplargenegatives, 
 		    const Int stoppointmode,
 		    const String& scaleType,
@@ -614,6 +615,7 @@ protected:
   // special mf control parms, etc
   Float cyclefactor_p;
   Float cyclespeedup_p;
+  Float cyclemaxpsffraction_p;
   Int stoplargenegatives_p;
   Int stoppointmode_p;
   Vector<String> fluxscale_p;
