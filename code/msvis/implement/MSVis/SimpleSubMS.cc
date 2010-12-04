@@ -122,6 +122,8 @@ namespace casa {
     // copyWeather();
     /////////////Done with the sub tables...now to the main
     fillAccessoryMainCols();
+    msc_p->weight().putColumn(mscIn_p->weight());
+    msc_p->sigma().putColumn(mscIn_p->sigma());
     Block<Int> sort(0);
     ROVisibilityIterator vi(mssel_p, sort);
     for (Int k=0; k < spw_p.shape()(0) ; ++k){ 

@@ -479,8 +479,26 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
     //use nchan if defined else use caret-column syntax of  msselection 
     if((nchan.nelements()>0) && nchan[0] > 0){
       inchan.resize(); inchan=nchan;
-      istep.resize(); istep=step;
-      istart.resize(); istart=start;
+      if((step.nelements() >0 ) && (step.nelements() != nchan.nelements()) && (nchan.nelements() >1)){
+	istep[0]=step[0];
+      }
+      if(step.nelements() != nchan.nelements()){
+	istep.resize(nchan.nelements(), True);
+	istep.set(istep[0]);
+      }
+      else{
+	istep.resize(); istep=step;
+      }
+      if((start.nelements() >0 ) && (start.nelements() != nchan.nelements()) && (nchan.nelements() >1)){
+	istart[0]=start[0];
+      }
+      if(start.nelements() != nchan.nelements()){
+	istart.resize(nchan.nelements(), True);
+	istart.set(istart[0]);
+      }
+      else{
+	istart.resize(); istart=start;
+      }
     }
     else{
       Matrix<Int> chansel=selrec.asArrayInt("channel");
