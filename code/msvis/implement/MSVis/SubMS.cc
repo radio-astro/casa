@@ -6129,10 +6129,6 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
 	TableCopy::copyRows(newAnt, oldAnt, k, ant1[k], 1, false);
       }
       newAnt.flush();
-
-      cout << "antNewIndex_p = " << antNewIndex_p << endl;
-
-
       retval = True;
     }
     return retval;    
