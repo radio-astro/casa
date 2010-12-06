@@ -134,6 +134,9 @@ namespace casa {
 
     void Casarc::put( const std::string &keyword, const std::string &value ) {
 
+#if CASARC_DEBUG >= 2
+	fprintf( stderr, "<<<<<<<<<<<<<<<<<<<<<enter: put(pid:%d)>>>>>>>>>>>>>>>>>>>>>\n", getpid() );
+#endif
         int the_lock = lock( READ );
 	sync( );
 
@@ -167,6 +170,22 @@ namespace casa {
 	    off_t start = (meta->second.time_length( ) ? meta->second.time_offset( ) : meta->second.key_offset( ));
 	    off_t end = meta->second.value_offset( ) + meta->second.value_length( );
 
+#if CASARC_DEBUG >= 2
+	    { fprintf( stderr, " >>old-offset>>>> start: %d, end: %d\n", start, end );
+	      char *oldv = (char*) calloc( end - start + 10, sizeof(char) );
+	      memcpy( oldv, &mapped_file[start], end-start );
+	      fprintf( stderr, " >>old-value>>>>>%s<< [%d]\n", oldv, strlen(oldv) );
+	      free( oldv );
+	    }
+
+	    { char *outputbuf = (char*) malloc( (start + 1) * sizeof(char) );
+	      memcpy(outputbuf, mapped_file, start);
+	      outputbuf[start] = '\0';
+	      fprintf( stderr, " >>prefix>>>>>>>>%s<< [%d]\n",outputbuf, strlen(outputbuf) );
+	      free( outputbuf );
+	    }
+#endif
+
 	    int buflen = strlen(buf);
 	    char *copy = (char*) malloc(sizeof(char) * ( start +
 							 (buflen + keyword.length() + value.length() + 5) +
@@ -175,17 +194,29 @@ namespace casa {
 	    off_t off = 0;
 	    memcpy( copy, mapped_file, start );
 	    off += start;
-	    char *newdata = copy + start;
-	    sprintf( newdata, "%s%s: %s", buf, keyword.c_str(), value.c_str() );
-	    int newdatalen = strlen(newdata);
-	    off += newdatalen;
+	    sprintf( &copy[off], "%s%s: %s", buf, keyword.c_str(), value.c_str() );
 
+#if CASARC_DEBUG >= 2
+	    fprintf( stderr, " >>update>>>>>>>>%s<< [%d]\n", &copy[off], strlen(&copy[off]) );
+#endif
+
+	    off += strlen(&copy[off]);
+
+#if CASARC_DEBUG >= 2
+	    int sufstart = off;
+#endif
 	    memcpy( &copy[off], &mapped_file[end], mapped_file_size-end );
 	    off += mapped_file_size-end;
 	    if ( copy[off-1] != '\n' ) {
 		copy[off++] = '\n';
 	    }
 	    copy[off] = '\0';
+
+#if CASARC_DEBUG >= 2
+	    fprintf( stderr, " >>suffix>>>>>>>>%s<< [%d]\n", &mapped_file[end], strlen(&mapped_file[end]) );
+	    fprintf( stderr, " >>updated-file>>%s<< [%d]\n", copy, strlen(copy) );
+#endif
+
 
 	    munmap( mapped_file, mapped_file_size );
 	    mapped_file = 0;
@@ -198,6 +229,9 @@ namespace casa {
 	}
 
 	unlock( the_lock );
+#if CASARC_DEBUG >= 2
+	fprintf( stderr, "<<<<<<<<<<<<<<<<<<<<<exit: put(pid:%d)>>>>>>>>>>>>>>>>>>>>>\n", getpid() );
+#endif
     }
 
     bool Casarc::get( const std::string &keyword, std::string &value ) {
@@ -232,7 +266,7 @@ namespace casa {
 	if ( mapped_file == 0 ||
 	     mapped_file_size != buf.st_size ||
 	     current_modification_time(buf) != timestamp ) {
-#if CASARC_DEBUG
+#if CASARC_DEBUG >= 1
 	    fprintf( stderr, "casarc update: %ld => ", size() );
 	    read_file( );
 	    fprintf( stderr, "%ld (pid:%d)\n", size(), getpid() );
@@ -266,7 +300,7 @@ namespace casa {
 	int flags = ( mode == READ ? O_RDWR :
 #endif
 		      mode == READ_WRITE ? O_RDWR :
-		      mode == WRITE ? O_WRONLY :
+		      mode == WRITE ? O_WRONLY | O_TRUNC :
 		      mode == APPEND ? O_APPEND | O_WRONLY : O_RDONLY );
 
 	int fd = open( filename.c_str( ), flags );
@@ -370,7 +404,7 @@ namespace casa {
 	filenames->insert(make_pair(path,this));
 	rclist->push_back(this);
 
-#if CASARC_DEBUG
+#if CASARC_DEBUG >= 1
 	fprintf( stderr, "casarc start:  %ld rc files managed [", rclist->size() );
 	for ( std::list<Casarc*>::iterator iter = rclist->begin( ); iter != rclist->end( ); ++iter ) {
 	    fprintf( stderr, iter == rclist->begin() ? "%ld" : ",%ld", (*iter)->size() );
@@ -552,7 +586,7 @@ namespace casa {
 
     void Casarc::shutdown( ) {
 	if ( initialized ) {
-#if CASARC_DEBUG
+#if CASARC_DEBUG >= 1
 	    fprintf( stderr, "casarc halt:   %ld rc files managed [", rclist->size() );
 	    for ( std::list<Casarc*>::iterator iter = rclist->begin( ); iter != rclist->end( ); ++iter ) {
 	      fprintf( stderr, iter == rclist->begin() ? "%ld" : ",%ld", (*iter)->size() );
