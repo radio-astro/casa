@@ -475,7 +475,7 @@ if( NOT SKIP_PGPLOT )
   casa_find( PGPLOT
     VERSION 5.3.1
     INCLUDES cpgplot.h
-    LIBS pgplot cpgplot
+    LIBS pgplot${pgplot_ext} cpgplot${pgplot_ext}
     DEPENDS ${_deps} )
 endif()
 
