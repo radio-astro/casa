@@ -24,16 +24,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
   <input>
 
-    <param type="string" name="vis" kind="ms" mustexist="true">
+    <!--<param type="string" name="vis" kind="ms" mustexist="true">-->
+    <param type="any" name="vis" kind="ms" mustexist="true">
     <description>Name of input visibility file</description>
-    <value></value>
+      <any type="variant" limittypes="string stringArray"/>
+      <value type="string"></value>
     </param>
 
     <param type="any" name="imagename">
       <description>Pre-name of output images</description>
-      <any type="variant"/>
+      <any type="variant" limittypes="string stringArray"/>
       <value type="string"></value>
-      <value></value>
     </param>
 
     <param type="string" name="outlierfile">
@@ -41,15 +42,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value></value>
     </param>
 
-    <param type="string" name="field">
+    <!--<param type="string" name="field">-->
+    <param type="any" name="field">
       <description>Field Name or id</description>
-     <value></value>
+      <any type="variant" limittypes="string stringArray"/>
+      <value type="string"></value>
     </param>
 
     <param type="any" name="spw">
       <!--<description>Spectral windows:channels e.g. \'0~3:3~100\', \'\' is all</description>-->
       <description>Spectral windows e.g. \'0~3\', \'\' is all</description>
-      <any type="variant"/>
+      <any type="variant" limittypes="string stringArray"/>
       <value type="string"></value>
     </param>
     <param type="bool" name="selectdata">
@@ -57,24 +60,32 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value>False</value>
     </param>
     
-    <param type="string" name="timerange" subparam="true">
+    <!--<param type="string" name="timerange" subparam="true">-->
+    <param type="any" name="timerange" subparam="true">
       <description>Range of time to select from data</description>
-      <value></value>
+      <any type="variant" limittypes="string stringArray"/>
+      <value type="string"></value>
     </param>
 
-    <param type="string" name="uvrange" subparam="true">
+    <!--<param type="string" name="uvrange" subparam="true">-->
+    <param type="any" name="uvrange" subparam="true">
       <description>Select data within uvrange </description>
-      <value></value>
+      <any type="variant" limittypes="string stringArray"/>
+      <value type="string"></value>
     </param>
 
-    <param type="string" name="antenna" subparam="true">
+    <!--<param type="string" name="antenna" subparam="true">-->
+    <param type="any" name="antenna" subparam="true">
       <description>Select data based on antenna/baseline</description>
-      <value></value>
+      <any type="variant" limittypes="string stringArray"/>
+      <value type="string"></value>
     </param>
 
-    <param type="string" name="scan" subparam="true">
+    <!--<param type="string" name="scan" subparam="true">-->
+    <param type="any" name="scan" subparam="true">
       <description>Scan number range</description>
-      <value></value>
+      <any type="variant" limittypes="string stringArray"/>
+      <value type="string"></value>
     </param>
     
 
