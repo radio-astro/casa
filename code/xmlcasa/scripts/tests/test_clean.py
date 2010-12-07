@@ -328,7 +328,7 @@ class clean_test1(unittest.TestCase):
         '''Clean 40: Test chaniter=T clean with flagged channels'''
         # test CAS-2369 bug fix 
         flagdata(vis=self.msfile,mode='manualflag',spw='0:0~0')
-        self.res=clean(vis=self.msfile,imagename=self.img,mode='channel',spw=0)
+        self.res=clean(vis=self.msfile,imagename=self.img,mode='channel',spw='0')
         self.assertEqual(self.res, None)
         self.assertTrue(os.path.exists(self.img+'.image'))
          
@@ -343,6 +343,20 @@ class clean_test1(unittest.TestCase):
         # This tests if a numerical failure-mode is detected and returned without fuss.
         self.res=clean(vis=self.msfile,imagename=self.img,nterms=2,reffreq='23691.4682MHz',spw='0:0');
         self.assertFalse(self.res);
+
+    def test43(self):
+        '''Clean 43: Test multiple MS input(including two cases with wrong numbers of spw or field given)'''
+        datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/'
+        # copy the ms to make another ms
+        shutil.copytree(datapath+self.msfile, self.msfile+'2')
+        resfail1=clean(vis=[self.msfile,self.msfile+'2'],spw=['0~1','0~1','0'],field=['0~2','0~2'],imagename=self.img)
+        resfail2=clean(vis=[self.msfile,self.msfile+'2'],spw=['0~1','0~1'],field=['0~2','0~2','0~2'],imagename=self.img)
+        self.res=clean(vis=[self.msfile,self.msfile+'2'],spw=['0~1','0~1'],field=['0~2','0~2'],imagename=self.img)
+        self.assertFalse(resfail1)
+        self.assertFalse(resfail2)
+        self.assertEqual(self.res,None)
+        # cleanup the copied ms
+        os.system('rm -rf ' + self.msfile+'2')
 
 
 class clean_test2(unittest.TestCase):
