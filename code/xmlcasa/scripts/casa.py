@@ -151,7 +151,6 @@ from listobs import  listobs
 from listvis import  listvis
 from mosaic import  mosaic
 from msview import msview
-from newflagdata import  newflagdata
 from peel import  peel
 from plotants import  plotants
 from plotcal import  plotcal
