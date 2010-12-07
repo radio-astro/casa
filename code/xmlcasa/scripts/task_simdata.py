@@ -658,6 +658,9 @@ def simdata(
                     pl.xlabel('u[klambda]',fontsize='x-small')
                     pl.ylabel('v[klambda]',fontsize='x-small')
                     pl.axis('equal')
+                    # Add single dish (zero-spacing)
+                    if predict_sd:
+                        pl.plot([0.],[0.],'r,')
 
                     # show dirty beam from observed uv coverage
                     util.nextfig()
@@ -1432,7 +1435,7 @@ def simdata(
                     util.nextfig()
 
                 if showuv:
-                    tb.open(msfile)  
+                    tb.open(msfile)
                     rawdata=tb.getcol("UVW")
                     tb.done()
                     pl.box()
@@ -1446,6 +1449,9 @@ def simdata(
                     pl.ylabel('v[klambda]',fontsize='x-small')
                     pl.axis('equal')
                     util.nextfig()
+                    # Add zero-spacing (single dish) if not yet plotted
+                    if predict_sd and not util.ismstp(msfile,halt=False):
+                        pl.plot([0.],[0.],'r,')
 
                 if showpsf:
                     if image: 
