@@ -133,6 +133,9 @@ namespace casa {
        vi.selectChannel(1, chanStart_p[k], nchan_p[k],
 			chanStep_p[k], spw_p[k]);
     }
+    /////slurp test
+    //vi.slurp();
+    ///
     Bool doSpWeight = !(mscIn_p->weightSpectrum().isNull()) &&
                       mscIn_p->weightSpectrum().isDefined(0);
     Int rowsdone=0;
@@ -146,7 +149,7 @@ namespace casa {
       for (vi.origin(); vi.more(); vi++) {
 	Int spw=spwindex[vb.spectralWindow()];
 	if(spw <0){
-	  cerr << "Huh ?: The programmer is useless.." << endl;
+	  cerr << "Huh ?: The programmer calling this code is useless.." << endl;
 	  return 0;
 	}
 	rowsnow=vb.nRow();	
@@ -156,7 +159,7 @@ namespace casa {
 	else if(whichcol==MS::MODEL_DATA)
 	  msc_p->data().putColumnCells(rowstoadd, vb.modelVisCube());
 	else if(whichcol==MS::CORRECTED_DATA)
-	  msc_p->data().putColumnCells(rowstoadd, vb.modelVisCube());
+	  msc_p->data().putColumnCells(rowstoadd, vb.correctedVisCube());
 	else
 	  cerr << "Column not requested not yet supported to be loaded to memory" << endl;
 	msc_p->flag().putColumnCells(rowstoadd, vb.flagCube());
