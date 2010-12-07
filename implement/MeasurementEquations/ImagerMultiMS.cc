@@ -488,16 +488,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //vs_p= new VisSet(blockMSSel_p, sort, noChanSel, useModelCol_p);
       if(!useModelCol_p){
 	rvi_p=new ROVisibilityIterator(blockMSSel_p, sort);
-	if(imwgt_p.getType()=="none")
-	  imwgt_p=VisImagingWeight("natural");
-	rvi_p->useImagingWeight(imwgt_p);
+	
       }
       else{
 	wvi_p=new VisibilityIterator(blockMSSel_p, sort);
 	rvi_p=wvi_p;    
       }
   
-
+      if(imwgt_p.getType()=="none")
+	  imwgt_p=VisImagingWeight("natural");
+      rvi_p->useImagingWeight(imwgt_p);
+      //rvi_p->slurp();
 
       selectDataChannel();
       dataSet_p=True;
