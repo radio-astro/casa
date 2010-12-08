@@ -31,6 +31,7 @@
 #include <casa/Arrays/VectorIter.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/BasicMath/Math.h>
+#include <casa/BasicSL/Constants.h>
 #include <scimath/Mathematics/NumericTraits.h>
 #include <scimath/Mathematics/FFTPack.h>
 #include <casa/Utilities/Assert.h>
@@ -756,5 +757,29 @@ flip(Array<T> & rData, const Bool toZero, const Bool isHermitian)
   }
   rData.putStorage(dataPtr, dataIsAcopy);
 }
+
+template<class T, class S> void FFTServer<T,S>::
+fftshift(Array<S> & cValues, const uInt& whichAxis,
+	 const Double& relshift, const Bool toFrequency)
+{
+  const IPosition arrayShape = cValues.shape();
+  const uInt vsize = arrayShape[whichAxis];
+  DebugAssert(vsize > 0, AipsError);
+      
+  // relshift is the freq shift normalised to the bandwidth
+  const Complex exponent =  2.*C::pi*Complex(0.,1.)*relshift; 
+      
+  ArrayIterator<S> ait(cValues, IPosition(1,whichAxis), True); // axes are the cursor  
+  while(!ait.pastEnd()){
+    Array<S> cv = ait.array(); // reference
+    fft0(cv, toFrequency);
+    for(uInt i=0; i<vsize; i++){
+      cv(IPosition(1,i)) *= exp(Double(i)*exponent);
+    }
+    fft0(cv, !toFrequency);
+    ait.next();
+  }
+}
+
 
 } //# NAMESPACE CASA - END

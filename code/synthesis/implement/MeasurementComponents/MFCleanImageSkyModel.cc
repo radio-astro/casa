@@ -411,11 +411,27 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
       
     
       // Calculate the threshold for this cycle. Add a safety factor
-      // This will be fixed someday by an option for an increasing threshold
-      Float fudge = cycleFactor_p * maxSidelobe;
-      if (fudge > 0.8) fudge = 0.8;   // painfully slow!
 
-      cycleThreshold=max(0.95*threshold(), fudge * absmax);
+      // fractionOfPsf controls how deep the cleaning should go. 
+      // There are two user-controls.
+      //  cycleFactor_p : scale factor for the PSF sidelobe level. 
+      //                         1 : clean down to the psf sidelobe level
+      //                         <1 : go deeper
+      //                         >1 : shallower : stop sooner.
+      //                          Default : 1.5
+      //  cycleMaxPsfFraction_p : scale factor as a fraction of the PSF peak
+      //                                     must be 0.0 < xx < 1.0 (obviously)
+      //                                     Default : 0.8
+      Float fractionOfPsf = min(cycleMaxPsfFraction_p, cycleFactor_p * maxSidelobe);
+      if (fractionOfPsf > 0.8) 
+	{
+          os << LogIO::WARN << "PSF fraction for threshold computation is too high : " << fractionOfPsf << ".  Forcing to 0.8 to ensure that the threshold is smaller than the peak residual !" << LogIO::POST;
+          fractionOfPsf = 0.8;   // painfully slow!
+	}
+
+      os << LogIO::NORMAL << "The minor-cycle threshold is MAX[ 0.95 x " << threshold()  << "  ,   peak residual x " << fractionOfPsf  <<  " ] " << LogIO::POST;
+
+      cycleThreshold=max(0.95*threshold(), fractionOfPsf * absmax);
       os << LogIO::NORMAL << "Maximum residual = " << absmax // Loglevel INFO
          << ", cleaning down to " << cycleThreshold << LogIO::POST;
       

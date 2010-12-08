@@ -810,7 +810,7 @@ macro( casa_config_end )
   list( REMOVE_DUPLICATES casa_find_found )
 
   add_custom_target( config_check ALL
-      ${PERL_EXECUTABLE} -le 'foreach (@ARGV) { if ( ! -e ) { print \"ERROR: The file $$_ has disappeared since it was detected by cmake. Cannot continue. It might help to clear CMakes cache (rm CMakeCache.txt) and rerun cmake\"\; exit 1;} }' -- ${casa_find_found}
+      ${PERL_EXECUTABLE} -le 'foreach (@ARGV) { if ( ! -e ) { print STDERR \"ERROR: The file $$_ has disappeared since it was detected by CMake. Cannot continue. It might help to clear CMake s cache (rm CMakeCache.txt) and rerun CMake\"\; exit 1;} }' -- ${casa_find_found}
       )
 
 endmacro( casa_config_end )

@@ -23,12 +23,11 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 
-#ifndef MSVIS_VISBUFFAVERAGER_H
-#define MSVIS_VISBUFFAVERAGER_H
+#ifndef MSVIS_VISCHUNKAVERAGER_H
+#define MSVIS_VISCHUNKAVERAGER_H
 
 #include <casa/aips.h>
 #include <msvis/MSVis/CalVisBuffer.h>
-//#include <msvis/MSVis/VisBuffAccumulator.h>
 #include <map>
 #include <vector>
 
@@ -48,11 +47,11 @@ class VisBuffer;
 
 // <prerequisite>
 //   <li> VisBuffer
-//   <li> VisBuffAccumulator
 // </prerequisite>
 //
 // <etymology>
-// From "VisBuffer" and "averaging".
+// From "VisBuffer", "Chunk", and "averaging".  "Chunk" comes from
+// VisibilityIterator.
 // </etymology>
 //
 // <synopsis>
@@ -60,6 +59,7 @@ class VisBuffer;
 // </synopsis>
 //
 // <example>
+// See SubMS::doTimeAver().
 // </example>
 //
 // <motivation>
@@ -72,8 +72,12 @@ class VisBuffer;
 //
 // <note>
 // For many of the columns averaging is trivial, i.e. the VisBuffer should only
-// contain one baseline, so ANTENNA1, ANTENNA2, FEED1, and FEED2 should all
-// only have one value each.
+// contain one ARRAY_ID, FIELD_ID, and DATA_DESC_ID, so they will all only have
+// one value each.
+//
+// TIME and INTERVAL will also be univalued in the output, for a different
+// reason.  For most (all?) uses this is a feature.  (See CAS-2422 + 2439 for
+// why.)
 // </note>
 //
 // <todo asof="2010/11/12">
@@ -85,11 +89,10 @@ typedef std::map<uInt, std::vector<Int> > mapuIvIType;
 class VisChunkAverager //: public VisBuffAccumulator
 {
 public:
-  // Construct from the averaging interval, which *DATA column(s) to read,
-  // and whether or not to use WEIGHT_SPECTRUM.
-  VisChunkAverager(//const Double timeBin,
-                  const Vector<MS::PredefinedColumns>& dataCols,
-                  const Bool doSpWeight);
+  // Construct from which *DATA column(s) to read and whether or not to use
+  // WEIGHT_SPECTRUM.
+  VisChunkAverager(const Vector<MS::PredefinedColumns>& dataCols,
+                   const Bool doSpWeight);
 
   // Null destructor
   ~VisChunkAverager();
@@ -183,12 +186,6 @@ private:
   Bool checkForBreak(Vector<Int>& firstVals, const Int i, const uInt slotnum,
                      const uInt chunkletNum,
                      const std::vector<Int>& inrows_for_slot) const;
-
-  //// Number of antennas, correlations, and channels
-  //Int nAnt_p, nCorr_p, nChan_p;
-
-  //// Averaging interval
-  //Double timeBin_p;
 
   // Which of DATA, MODEL_DATA, and/or CORRECTED_DATA to use.
   Vector<MS::PredefinedColumns> colEnums_p;

@@ -39,6 +39,8 @@ casa_add_library( synthesis
   implement/MeasurementComponents/CalCorruptor.cc
   implement/MeasurementComponents/Calibrater.cc
   implement/MeasurementComponents/CEMemImageSkyModel.cc
+  implement/MeasurementComponents/CFCache.cc
+  implement/MeasurementComponents/CFStore.cc
   implement/MeasurementComponents/ClarkCleanAlgorithm.cc
   implement/MeasurementComponents/ClarkCleanImageSkyModel.cc
   implement/MeasurementComponents/CleanImageSkyModel.cc

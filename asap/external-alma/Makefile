@@ -108,6 +108,38 @@ HEADERS := $(ATNFDIR)/pks/pks_maths.h \
 	$(ATNFDIR)/PKSIO/SrcType.h #\
 #	$(ATNFDIR)/PKSIO/PKSmsg.h
 
+ifeq ($(shell uname), Darwin)
+	CASACORELIB =	$(CASALIB)/libcasa_casa.dylib \
+			$(CASALIB)/libcasa_components.dylib \
+			$(CASALIB)/libcasa_coordinates.dylib \
+			$(CASALIB)/libcasa_derivedmscal.dylib \
+			$(CASALIB)/libcasa_fits.dylib \
+			$(CASALIB)/libcasa_images.dylib \
+			$(CASALIB)/libcasa_lattices.dylib \
+			$(CASALIB)/libcasa_measures.dylib \
+			$(CASALIB)/libcasa_mirlib.dylib \
+			$(CASALIB)/libcasa_msfits.dylib \
+			$(CASALIB)/libcasa_ms.dylib \
+			$(CASALIB)/libcasa_scimath_f.dylib \
+			$(CASALIB)/libcasa_scimath.dylib \
+			$(CASALIB)/libcasa_tables.dylib
+else
+	CASACORELIB =	$(CASALIB)/libcasa_casa.so \
+			$(CASALIB)/libcasa_components.so \
+			$(CASALIB)/libcasa_coordinates.so \
+			$(CASALIB)/libcasa_derivedmscal.so \
+			$(CASALIB)/libcasa_fits.so \
+			$(CASALIB)/libcasa_images.so \
+			$(CASALIB)/libcasa_lattices.so \
+			$(CASALIB)/libcasa_measures.so \
+			$(CASALIB)/libcasa_mirlib.so \
+			$(CASALIB)/libcasa_msfits.so \
+			$(CASALIB)/libcasa_ms.so \
+			$(CASALIB)/libcasa_scimath_f.so \
+			$(CASALIB)/libcasa_scimath.so \
+			$(CASALIB)/libcasa_tables.so
+endif
+
 .SUFFIXES: .o .cc
 .cc.o:
 	-@ echo
@@ -123,7 +155,7 @@ $(TARGETLIB) : $(OBJECTS)
 	-@ echo
 	  $(LD) $(CXXFLAGS) $(LDFLAGS) -o $(TARGETLIB) $(OBJECTS) $(LIBS)
 
-$(OBJECTS) : $(HEADERS)
+$(OBJECTS) : $(HEADERS) $(CASACORELIB)
 
 install : 
 	@if ( test -f $(TARGETLIB) ) ; then cp -f $(TARGETLIB) $(CASALIB)/. ; fi

@@ -174,6 +174,12 @@ private:
   // FTMachine declares a LOT of pure virtual functions which FixVis does not
   // need.  They are declared as no-ops here for now.
   ImageInterface<Complex>& getImage(Matrix<float>&, Bool) {return *image;}
+  virtual void normalizeImage(Lattice<Complex>& skyImage,
+			      const Matrix<Double>& sumOfWts,
+			      Lattice<Float>& sensitivityImage,
+			      Bool fftNorm)
+  {throw(AipsError("normalizeImage::normalizeImage() called"));}
+
   void getWeightImage(ImageInterface<float>&, Matrix<float>&) {}
   void get(VisBuffer&, Int) {}
 

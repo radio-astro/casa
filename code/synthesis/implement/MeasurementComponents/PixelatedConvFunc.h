@@ -71,6 +71,11 @@ namespace casa{
       cerr << "******* PixelatedConvFunc& operator=(ConvolutionFunction&) called!" << endl;
       return *this;
     }
+    virtual Bool makeAverageResponse(const VisBuffer& vb, 
+				     const ImageInterface<Complex>& image,
+				     ImageInterface<Complex>& theavgPB,
+				     Bool reset=True)
+    {throw(AipsError("PixelatedConvFunc::makeAverageRes(Complex) called"));};
 
   private:
     Int nDim;

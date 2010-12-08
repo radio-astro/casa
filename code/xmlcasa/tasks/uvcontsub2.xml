@@ -18,19 +18,16 @@ all channels.
 
 The fitted continuum spectrum is subtracted from all channels 
 selected in spw, and the result (presumably only line emission)
-is stored in the CORRECTED_DATA of a <em>new</em> MS (vis + ".contsub").
-The selected CORRECTED_DATA column of vis is copied to the DATA
-column of the new ms.
+is stored in the CORRECTED_DATA column of a <em>new</em> MS (vis + ".contsub").
+uvcontsub2 will read from the CORRECTED_DATA column of vis if it
+is present, and from the DATA column otherwise.
 
 If want_cont is True, the continuum fit is placed in the DATA
 column of a second new MS (vis + ".cont").  N.B. because the
 continuum model is necessarily a smoothed fit, images made with
 it are liable to have their field of view reduced in some
 strange way, and if possible should be compared with images
-made by excluding the line channels.  A copy of the continuum
-estimate is always placed in the MODEL_DATA column of vis + ".cont"
-regardless of want_cont.
-
+made by excluding the line channels.
 </description>
 <input>
 	<param type="string" name="vis" mustexist="true">
@@ -91,21 +88,17 @@ regardless of want_cont.
         The fitted continuum spectrum is subtracted from all channels 
         selected in spw, and the result (presumably only line emission)
         is stored in the CORRECTED_DATA of a <em>new</em> MS (vis + ".contsub").
-        The selected CORRECTED_DATA column of vis is copied to the DATA
-        column of the new ms.
+        The selected part of vis is copied to the DATA column of the new ms.
+	It will read from the CORRECTED_DATA column of vis if it is present,
+	or DATA if it is not.  Whichever column is read is presumed to have
+	already been calibrated.
 
         If want_cont is True, the continuum fit is placed in the DATA
         column of a second new MS (vis + '.cont').  N.B. because the
         continuum model is necessarily a smoothed fit, images made with
         it are liable to have their field of view reduced in some
         strange way, and if possible should be compared with images
-        made by excluding the line channels.  A copy of the continuum
-        estimate is always placed in the MODEL_DATA column of vis + '.cont'
-        regardless of want_cont.
-
-
-        The input MeasurementSet should have calibrated data in
-        its CORRECTED_DATA column.
+        made by excluding the line channels.
 
 	Keyword arguments:
 	vis -- Name of input visibility file

@@ -83,8 +83,10 @@ public:
   float getTsys(int whichrow=0) const
     { return table_->getTsys(whichrow); }
 
-  std::string getTime(int whichrow=0) const
-    { return table_->getTime(whichrow); }
+  //std::string getTime(int whichrow=0) const
+  //  { return table_->getTime(whichrow); }
+  std::string getTime(int whichrow=0, int prec = 0) const
+    { return table_->getTime(whichrow, true, casa::uInt(prec)); }
 
   double getIntTime(int whichrow=0) const
     { return table_->getIntTime(whichrow); }

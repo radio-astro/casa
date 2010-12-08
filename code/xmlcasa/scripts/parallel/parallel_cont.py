@@ -6,8 +6,10 @@ from cleanhelper import *
 class imagecont():
     def __init__(self, ftmachine='ft', wprojplanes=10, facets=1, pixels=[3600, 3600], cell=['3arcsec', '3arcsec'], spw='', field='', phasecenter='', weight='natural'):
         self.im=imtool.create()
+        self.imperms={}
         self.dc=dctool.create()
         self.ft=ftmachine
+        self.origms=''
         self.wprojplanes=wprojplanes
         self.facets=facets
         print 'cell', cell
@@ -32,8 +34,13 @@ class imagecont():
         self.cfcache='cfcache.dir'
         self.epjtablename=''
     def imagecont(self, msname='spw00_4chan351rowTile.ms', start=0, numchan=1, spw=0, field=0, freq='1.20GHz', band='200MHz', imname='newmodel'):
-        im=self.im
-        origname=msname
+        if(not self.imperms.has_key(msname)):
+            self.imageparamset=False
+            im=imtool.create()
+            self.imperms['msname']=im
+        else:
+            im=self.imperms['msname']
+            self.imageparamset=True
         ###either psf 0 or no channel selected
         if(self.novaliddata):
             return
@@ -41,8 +48,8 @@ class imagecont():
         #end=start+numchan-1
         #spwstring=str(spw)+':'+str(start)+'~'+str(end)
         #print 'spwstring', spwstring
-        msname=origname
         if(not self.imageparamset):
+            self.origms=msname
             im.selectvis(vis=msname, field=field, spw=spw, nchan=numchan, start=start, step=1, datainmemory=self.visInMem)
             #im.selectvis(vis=msname, field=field, spw=spwstring, datainmemory=True)
 ####

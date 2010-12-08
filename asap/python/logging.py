@@ -47,6 +47,9 @@ class AsapLogger(object):
             origin = inspect.getframeinfo(inspect.currentframe().f_back)[2]
         logs = self._log.strip()
         if len(logs) > 0:
+            if isinstance(self.logger, LogSink):
+                #can't handle unicode in boost signature
+                logs = str(logs)
             self.logger.post(logs, priority=level, origin=origin)
         if isinstance(self.logger, LogSink):
             logs = self.logger.pop().strip()

@@ -31,12 +31,12 @@
 
 #include <synthesis/MeasurementComponents/VLACalcIlluminationConvFunc.h>
 #include <synthesis/MeasurementComponents/VLAIlluminationConvFunc.h>
-#include <synthesis/MeasurementComponents/ConvolutionFunction.h>
+//#include <synthesis/MeasurementComponents/ConvolutionFunction.h>
 #include <synthesis/MeasurementComponents/EVLAConvFunc.h>
 #include <synthesis/MeasurementComponents/SolvableVisCal.h>
 #include <synthesis/MeasurementComponents/VPSkyJones.h>
 #include <synthesis/MeasurementComponents/FTMachine.h>
-#include <synthesis/MeasurementComponents/CFCache.h>
+//#include <synthesis/MeasurementComponents/CFCache.h>
 #include <synthesis/MeasurementComponents/Utils.h>
 
 #include <scimath/Mathematics/FFTServer.h>
@@ -145,7 +145,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // 12, 16 works in most cases). 
     // <group>
     AWProjectFT(Int nFacets, Long cachesize, 
-		//		String& cfCacheDirName,
 		CountedPtr<CFCache>& cfcache,
 		CountedPtr<ConvolutionFunction>& cf,
 		Bool applyPointingOffset=True,
@@ -258,7 +257,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Get the final image: do the Fourier transform and
     // grid-correct, then optionally normalize by the summed weights
     virtual ImageInterface<Complex>& getImage(Matrix<Float>&, Bool normalize=True);
-    
+
     // Get the final weights image
     void getWeightImage(ImageInterface<Float>&, Matrix<Float>&);
     
@@ -299,7 +298,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual void makeSensitivityImage(Lattice<Complex>& wtImage,
 				      ImageInterface<Float>& sensitivityImage,
 				      const Matrix<Float>& sumWt=Matrix<Float>(),
-				      const Bool& doFFTNorm=True);
+				      const Bool& doFFTNorm=True) {};
+    virtual void makeSensitivityImage(const VisBuffer& vb, const ImageInterface<Complex>& imageTemplate,
+				      ImageInterface<Float>& sensitivityImage);
+
+    virtual void normalizeImage(Lattice<Complex>& skyImage,
+				const Matrix<Double>& sumOfWts,
+				Lattice<Float>& sensitivityImage,
+				Bool fftNorm=True);
+    
+    virtual ImageInterface<Float>& getSensitivityImage() {return *avgPB_p;}
+    virtual Matrix<Double>& getSumOfWeights() {return sumWeight;};
 
     void makeConjPolMap(const VisBuffer& vb, const Vector<Int> cfPolMap, Vector<Int>& conjPolMap);
     //    Vector<Int> makeConjPolMap(const VisBuffer& vb);
@@ -318,6 +327,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     {return verifyShapes(pb.shape(),sky.shape());}
 
     virtual Bool verifyShapes(IPosition shape0, IPosition shape1);
+
+
   protected:
     
     Int nint(Double val) {return Int(floor(val+0.5));};
@@ -334,6 +345,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void ok();
     
     void init();
+    //    virtual void initPolInfo(const VisBuffer& vb);
     // Is this record on Grid? check both ends. This assumes that the
     // ends bracket the middle
     Bool recordOnGrid(const VisBuffer& vb, Int rownr) const;
@@ -379,22 +391,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Grid/degrid zero spacing points?
     Bool usezero_p;
     
-    CountedPtr<ConvolutionFunction> telescopeConvFunc_p;
-    CFStore cfs_p, cfwts_p;
-    Array<Complex> convFunc, convWeights;
+    //    CountedPtr<ConvolutionFunction> telescopeConvFunc_p;
+    //    CFStore cfs_p, cfwts_p;
+    Array<Complex> convFunc_p, convWeights_p;
     CoordinateSystem convFuncCS_p;
     //
     // Vector to hold the support size info. for the convolution
     // functions pointed to by the elements of convFunctions_p.  The
     // co-ordinates of this array are (W-term, Poln, PA).
     //
-    Int convSize, convSampling;
-    //
-    // If true, all convolution functions are in the cache.
-    //
-    Bool convFuncCacheReady;
-
-    Int wConvSize, lastIndex_p;
+    Int convSize, convSampling, wConvSize, lastIndex_p;
     
     //
     // The average PB for sky image normalization
@@ -404,7 +410,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // No. of vis. polarization planes used in making the user defined
     // Stokes images
     //
-    Int polInUse, maxConvSupport;
+    Int maxConvSupport;
     //
     // Percentage of the peak of the PB after which the image is set
     // to zero.
@@ -416,10 +422,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int Nant_p, doPointing;
     Bool doPBCorrection, makingPSF;
     
-    CountedPtr<CFCache> cfCache_p;
+    //    CountedPtr<CFCache> cfCache_p;
     ParAngleChangeDetector paChangeDetector;
-    Vector<Int> cfStokes;
-    Bool pbNormalized,rotateAperture_p;
+    Bool rotateAperture_p;
 
     Unit Second, Radian, Day;
     Array<Float> l_offsets,m_offsets;
@@ -427,10 +432,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     Double currentCFPA, cfRefFreq_p;
     Float lastPAUsedForWtImg;
+    Bool pbNormalized_p;
     //
     //----------------------------------------------------------------------
     //
     virtual void normalizeAvgPB();
+    virtual void normalizeAvgPB(ImageInterface<Complex>& inImage,
+				ImageInterface<Float>& outImage);
     virtual void runFortranGet(Matrix<Double>& uvw,Vector<Double>& dphase,
 			       Cube<Complex>& visdata,
 			       IPosition& s,

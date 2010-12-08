@@ -965,10 +965,12 @@ class pimager():
         #shutil.move(restored,  imagename+'.image')
         time2=time.time()
         ###Clean up
-        #for k in range(len(imlist)):
-        #   shutil.rmtree(imlist[k]+'.model', True)
-        #  shutil.rmtree(imlist[k]+'.residual', True)
-        # shutil.rmtree(imlist[k]+'.image', True)
+        for k in range(len(msnames)):
+            imlist=self.msinfo[msnames[k]]['imname']
+            shutil.rmtree(imlist+'.model', True)
+            shutil.rmtree(imlist+'.residual', True)
+            shutil.rmtree(imlist+'.image', True)
+            shutil.rmtree(imlist+'.psf', True)
         print 'Time to image is ', (time2-time1)/60.0, 'mins'
         self.c.stop_cluster()
 

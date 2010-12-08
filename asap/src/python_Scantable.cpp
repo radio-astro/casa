@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: python_Scantable.cpp 1908 2010-08-26 10:22:18Z WataruKawasaki $
+//# $Id: python_Scantable.cpp 1947 2010-11-10 03:48:15Z KanaSugimoto $
 //#---------------------------------------------------------------------------
 #include <vector>
 
@@ -98,8 +98,11 @@ void python_Scantable() {
          (boost::python::arg("whichrow")=0) )
     .def("_getparangle", &ScantableWrapper::getParAngle,
          (boost::python::arg("whichrow")=0) )
+    //.def("_gettime", &ScantableWrapper::getTime,
+    //     (boost::python::arg("whichrow")=0) )
     .def("_gettime", &ScantableWrapper::getTime,
-         (boost::python::arg("whichrow")=0) )
+         (boost::python::arg("whichrow")=0,
+          boost::python::arg("prec")=0) )
     .def("_getinttime", &ScantableWrapper::getIntTime,
          (boost::python::arg("whichrow")=0) )
     .def("_getdirection", &ScantableWrapper::getDirectionString,

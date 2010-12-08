@@ -191,7 +191,7 @@ class NotationWindowCommon:
                                 'parent': event.canvas.figure, 'textobj': textobj}
                     msg = "Fig loop: a text, '"+textobj.get_text()+"', at "
                     msg += str(textobj.get_position())+" detected"
-                    print msg
+                    #print msg
         for ax in self.canvas.figure.axes:
             for textobj in ax.texts:
                 if textobj.contains(event)[0]:
@@ -204,11 +204,11 @@ class NotationWindowCommon:
                                     'parent': ax, 'textobj': textobj}
                         msg = "Ax loop: a text, '"+textobj.get_text()+"', at "
                         msg += str(textobj.get_position())+" detected"
-                        print msg 
+                        #print msg 
 
         if selected:
-            msg = "Selected (modify/delete): '"+textobj.get_text()
-            msg += "' @"+str(textobj.get_position())
+            msg = "Selected (modify/delete): '"+selected['textobj'].get_text()
+            msg += "' @"+str(selected['textobj'].get_position())
             msg += " ("+selected['anchor']+"-coord)"
             asaplog.push(msg)
 
@@ -313,7 +313,8 @@ class NotationWindowTkAgg(NotationWindowCommon):
         textbox = Tk.Text(master=parent,background='white',
                           height=2,width=20,cursor="xterm",
                           padx=2,pady=2,undo=True,maxundo=10,
-                          relief='sunken',borderwidth=3)
+                          relief='sunken',borderwidth=3,
+                          state=Tk.NORMAL,takefocus=1)
         return textbox
 
     def _AnchorRadio(self,parent=None):

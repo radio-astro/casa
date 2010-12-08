@@ -3162,6 +3162,10 @@ deconvolution cycles are ended.
 \item cyclespeedup: this is used if the PSF is not well behaved and
   you want clean to raise by 2 the threshold if it has not reached the
   threshold in this number of iteration
+\item cyclemaxpsffraction: similar to cyclefactor, but this is an
+explicit fraction of the PSF peak. The final threshold is computed
+using  min( cyclemaxpsffraction, cyclefactor * maxPSFsidelobe).
+Valid values are between 0.0 and 1.0. 
 \item stoplargenegatives: This parameter is exclusively for when using
   multiscale clean. This is used to stop the component
   search when the largest scale has found this number of negative
@@ -3191,13 +3195,18 @@ deconvolution cycles are ended.
 <input>
 
      <param type="double" name="cyclefactor">
-     <description>Cycle threshold = this * max sidelobe * max resid</description>
+     <description>Cycle threshold = max_resid * min(cyclemaxpsffraction,  this * max_sidelobe) </description>
      <value>1.5</value>
      </param>
 
      <param type="double" name="cyclespeedup">
      <description>Cycle threshold doubles in this number of iterations</description>
      <value>-1</value>
+     </param>
+
+     <param type="double" name="cyclemaxpsffraction">
+     <description>Cycle threshold = max_resid * min(this,  cyclefactor * max_sidelobe) </description>
+     <value>0.8</value>
      </param>
 
      <param type="int" name="stoplargenegatives">
@@ -3242,7 +3251,7 @@ deconvolution cycles are ended.
 <returns type="bool"/>
 <example>
 
-im.setmfcontrol(cyclefactor=2.0, cyclespeedup=niter/10, 
+im.setmfcontrol(cyclefactor=2.0, cyclespeedup=niter/10, cyclemaxpsffraction=0.8,
 stoplargenegatives=T, stoppointmode=10, fluxscale='image.fluxscale');
 
 </example>

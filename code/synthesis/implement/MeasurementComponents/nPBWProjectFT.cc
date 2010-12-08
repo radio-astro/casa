@@ -1037,6 +1037,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				       const VisBuffer& vb, Float &pa)
   {
     Int i; Bool found;
+    Float dPA = paChangeDetector.getParAngleTolerance().getValue("rad");
     found = cfCache.searchConvFunction(vb,paChangeDetector,i,pa);
     if (found)
       {
@@ -2660,7 +2661,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     CFMap = polMap; ConjCFMap = polMap;
     CFMap = makeConjPolMap(vb);
     */
-    makeCFPolMap(vb,CFMap);
+     makeCFPolMap(vb,CFMap);
     makeConjPolMap(vb,CFMap,ConjCFMap);
 
     ConjCFMap_p     = ConjCFMap.getStorage(deleteThem(CONJCFMAP));

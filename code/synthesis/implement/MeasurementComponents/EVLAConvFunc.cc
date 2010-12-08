@@ -259,6 +259,7 @@ namespace casa{
 				      CFStore& cfs,
 				      CFStore& cfwts)
   {
+    LogIO log_l(LogOrigin("EVLAConvFunc", "makeConvFunction"));
     Int convSize, convSampling, polInUse;
     Double wScale=1;
     Array<Complex> convFunc_l, convWeights_l;
@@ -266,28 +267,26 @@ namespace casa{
     Int nx=image.shape()(0);
     if (bandID_p == -1) bandID_p=getVisParams(vb);
     
-    logIO() << LogOrigin("EVLAConvFunc", "makeConvFunction") 
-	    << "Making a new convolution function for PA="
-	    << pa*(180/C::pi) << "deg"
-	    << LogIO::NORMAL 
-	    << LogIO::POST;
+    log_l << "Making a new convolution function for PA="
+	  << pa*(180/C::pi) << "deg"
+	  << LogIO::NORMAL << LogIO::POST;
     
     if(wConvSize>0) {
-      logIO() << "Using " << wConvSize << " planes for W-projection" << LogIO::POST;
+      log_l << "Using " << wConvSize << " planes for W-projection" << LogIO::POST;
       Double maxUVW;
       maxUVW=0.25/abs(image.coordinates().increment()(0));
-      logIO() << "Estimating maximum possible W = " << maxUVW
-	      << " (wavelengths)" << LogIO::POST;
+      log_l << "Estimating maximum possible W = " << maxUVW
+	    << " (wavelengths)" << LogIO::POST;
       
       Double invLambdaC=vb.frequency()(0)/C::c;
       Double invMinL = vb.frequency()((vb.frequency().nelements())-1)/C::c;
-      logIO() << "wavelength range = " << 1.0/invLambdaC << " (m) to " 
-	      << 1.0/invMinL << " (m)" << LogIO::POST;
+      log_l << "wavelength range = " << 1.0/invLambdaC << " (m) to " 
+	    << 1.0/invMinL << " (m)" << LogIO::POST;
       if (wConvSize > 1)
 	{
 	  wScale=Float((wConvSize-1)*(wConvSize-1))/maxUVW;
-	  logIO() << "Scaling in W (at maximum W) = " << 1.0/wScale
-		  << " wavelengths per pixel" << LogIO::POST;
+	  log_l << "Scaling in W (at maximum W) = " << 1.0/wScale
+		<< " wavelengths per pixel" << LogIO::POST;
 	}
     }
     //  
@@ -603,12 +602,11 @@ namespace casa{
       }
     
     if(cfs.xSupport(0)<1) 
-      logIO() << "Convolution function is misbehaved - support seems to be zero"
+      log_l << "Convolution function is misbehaved - support seems to be zero"
 	      << LogIO::EXCEPTION;
     
-    logIO() << LogOrigin("EVLAConvFunc", "makeConvFunction")
-	    << "Re-sizing the convolution functions"
-	    << LogIO::POST;
+    log_l << "Re-sizing the convolution functions"
+	  << LogIO::POST;
     
     {
       supportBuffer = OVERSAMPLING;

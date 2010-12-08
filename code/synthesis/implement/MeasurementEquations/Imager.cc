@@ -275,6 +275,7 @@ traceEvent(1,"Entering imager::defaults",25);
 
   cyclefactor_p = 1.5;
   cyclespeedup_p =  -1;
+  cyclemaxpsffraction_p = 0.8;
   stoplargenegatives_p = 2;
   stoppointmode_p = -1;
   fluxscale_p.resize(0);
@@ -2457,6 +2458,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
 
 Bool Imager::setmfcontrol(const Float cyclefactor,
 			  const Float cyclespeedup,
+                          const Float cyclemaxpsffraction, 
 			  const Int stoplargenegatives, 
 			  const Int stoppointmode,
 			  const String& scaleType,
@@ -2467,6 +2469,7 @@ Bool Imager::setmfcontrol(const Float cyclefactor,
 {  
   cyclefactor_p = cyclefactor;
   cyclespeedup_p =  cyclespeedup;
+  cyclemaxpsffraction_p = cyclemaxpsffraction;
   stoplargenegatives_p = stoplargenegatives;
   stoppointmode_p = stoppointmode;
   fluxscale_p.resize( fluxscale.nelements() );
@@ -5073,6 +5076,7 @@ Bool Imager::clean(const String& algorithm,
     sm_p->setThreshold(threshold.get("Jy").getValue());
     sm_p->setCycleFactor(cyclefactor_p);
     sm_p->setCycleSpeedup(cyclespeedup_p);
+    sm_p->setCycleMaxPsfFraction(cyclemaxpsffraction_p);
     {
       ostringstream oos;
       oos << "Clean gain = " <<gain<<", Niter = "<<niter<<", Threshold = "
@@ -5392,6 +5396,7 @@ Bool Imager::mem(const String& algorithm,
     sm_p->setNumberIterations(niter);
     sm_p->setCycleFactor(cyclefactor_p);   // used by mf algs
     sm_p->setCycleSpeedup(cyclespeedup_p); // used by mf algs
+    sm_p->setCycleMaxPsfFraction(cyclemaxpsffraction_p); // used by mf algs
 
     {
       ostringstream oos;
@@ -9986,10 +9991,28 @@ void Imager::savePSF(const Vector<String>& psf){
 
     for (Int thismodel=0;thismodel<Int(psf.nelements());++thismodel) {
       if(removeTable(psf(thismodel))) {
-	PagedImage<Float> psfimage(images_p[thismodel]->shape(),
+	Int whichmodel=thismodel;
+	if(facets_p >1 && thismodel > 0)
+	  whichmodel=facets_p*facets_p-1+thismodel;
+	IPosition shape=images_p[thismodel]->shape();
+	PagedImage<Float> psfimage(shape,
 				   images_p[thismodel]->coordinates(),
 				   psf(thismodel));
-	psfimage.copyData(sm_p->PSF(thismodel));
+	psfimage.set(0.0);
+	if((shape[0]*shape[1]) > ((sm_p->PSF(whichmodel)).shape()[0]*(sm_p->PSF(whichmodel)).shape()[1])){
+	  IPosition blc(4, 0, 0, 0, 0);
+	  IPosition trc=shape-1;
+	  blc[0]=(shape[0]-(sm_p->PSF(whichmodel)).shape()[0])/2;
+	  trc[0]=(sm_p->PSF(whichmodel)).shape()[0]+blc[0]-1;
+	  blc[1]=(shape[1]-(sm_p->PSF(whichmodel)).shape()[1])/2;
+	  trc[1]=(sm_p->PSF(whichmodel)).shape()[1]+blc[1]-1;
+	  Slicer sl(blc, trc, Slicer::endIsLast);
+	  SubImage<Float> sub(psfimage, sl, True);
+	  sub.copyData(sm_p->PSF(whichmodel));	  
+	}
+	else{
+	  psfimage.copyData(sm_p->PSF(whichmodel));
+	}
       }
     }
 

@@ -69,6 +69,7 @@ ImageSkyModel::ImageSkyModel(const Int maxNumModels) :
   displayProgress_p(False),
   cycleFactor_p(4.0),
   cycleSpeedup_p(-1.0),
+  cycleMaxPsfFraction_p(0.8),
   donePSF_p(False),
   modified_p(True)
  {}

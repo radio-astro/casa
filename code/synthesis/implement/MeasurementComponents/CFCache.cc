@@ -48,8 +48,9 @@ namespace casa{
   //
   void CFCache::initCache()
   {
-    LogOrigin logOrigin("CFCache","initCache");
-    logIO() << logOrigin << LogIO::NORMAL;
+    LogOrigin logOrigin("CFCache", "initCache");
+    LogIO log_l(logOrigin);
+
     ostringstream name;
     String line;
     Directory dirObj(Dir);
@@ -237,7 +238,6 @@ namespace casa{
     //
     if (memCache_p[where].null())
       {
-
 	Vector<Float> sampling(1);sampling[0]=convSampling;
 
 	memCache_p[where] = CFStore(cf,coords,sampling,
@@ -260,7 +260,7 @@ namespace casa{
 				  Float convSampling, String nameQualifier,
 				  Bool savePA)
   {
-    logIO() << LogOrigin("CFCache","cacheConvFunction") << LogIO::NORMAL;
+    LogIO log_l(LogOrigin("CFCache","cacheConvFunction"));
     if (Dir.length() == 0) return;
     
     if (which < 0) 
@@ -354,7 +354,8 @@ namespace casa{
   //
   void CFCache::flush()
   {
-    logIO() << LogOrigin("CFCache","flush") << LogIO::NORMAL;
+    LogIO log_l(LogOrigin("CFCache", "flush"));
+
     if (Dir.length() == 0) return;
     ostringstream name;
     
@@ -386,7 +387,8 @@ namespace casa{
   //
   void CFCache::flush(ImageInterface<Float>& avgPB)
   {
-    logIO() << LogOrigin("CFCache","flush") << LogIO::NORMAL;
+    LogIO log_l(LogOrigin("CFCache", "flush"));
+
     if (Dir.length() == 0) return;
     flush();
     ostringstream Name;
@@ -407,7 +409,8 @@ namespace casa{
   //
   Int CFCache::loadAvgPB(ImageInterface<Float>& avgPB)
   {
-    logIO() << LogOrigin("CFCache","loadAvgPB") << LogIO::NORMAL;
+    LogIO log_l(LogOrigin("CFCache", "loadAvgPB"));
+
     if (Dir.length() == 0) 
       throw(SynthesisFTMachineError("Cache dir. name null"));
 
@@ -447,7 +450,8 @@ namespace casa{
 			     Int Nw, CFStoreCacheType &convFuncCache,
 			     CFStore& cfs, String prefix)
   {
-    logIO() << LogOrigin("CFCache","loadFromDisk") << LogIO::NORMAL;
+    LogIO log_l(LogOrigin("CFCache", "loadFromDisk"));
+
     Vector<Int> xconvSupport,yconvSupport;;
     Vector<Float> convSampling;
     Double cfRefFreq; CoordinateSystem coordSys;
@@ -543,8 +547,8 @@ namespace casa{
 				  const Int Nw, const Float pa, const Float dPA,
 				  const Int mosXPos, const Int mosYPos)
   {
-    logIO() << LogOrigin("CFCache","locateConvFunction")
-	    << LogIO::NORMAL;
+    LogIO log_l(LogOrigin("CFCache", "locatedConvFunction"));
+
     Int paKey,retVal=NOTCACHED; 
     Bool found;
     // Search for the PA corresponding to the supplied VB to find a
@@ -562,8 +566,8 @@ namespace casa{
 	    {
 	      //	      *****************	    convWeights.reference(*convWeightsCache[PAIndex]);
 	      if (paKey < (Int)memCache_p.nelements())
-	      	logIO() << "Loaded from disk cache: Conv. func. # "
-	      		<< paKey << LogIO::POST;
+	      	log_l << "Loaded from disk cache: Conv. func. # "
+		      << paKey << LogIO::POST;
 	      else
 	      	throw(SynthesisFTMachineError("Internal error: paKey out of range"));
 	      //	      break;

@@ -40,8 +40,6 @@ if( APPLE )
 	set( CMAKE_CXX_COMPILER     /opt/casa/core2-apple-darwin8/3rd-party/bin/g++ )
     elseif( EXISTS        /opt/local/bin/gfortran )
         set( CMAKE_Fortran_COMPILER /opt/local/bin/gfortran )
-    elseif( EXISTS        /opt/local/bin/gfortran-mp-4.2 )
-        set( CMAKE_Fortran_COMPILER /opt/local/bin/gfortran-mp-4.2 )
     elseif( EXISTS        /opt/local/bin/gfortran-mp-4.4 )
         set( CMAKE_Fortran_COMPILER /opt/local/bin/gfortran-mp-4.4 )
 	if( EXISTS /opt/local/bin/g++-mp-4.4 )
@@ -152,7 +150,7 @@ set( CASA_assay ${CMAKE_SOURCE_DIR}/install/assay )
 if( APPLE )
     set( CMAKE_Fortran_FLAGS -fno-second-underscore )
     execute_process( COMMAND ${CMAKE_Fortran_COMPILER} -print-search-dirs
-                     COMMAND perl -e "while(<>) { if( m|^libraries:\\s*=(.*?$)| ) { foreach $d (split(':',$1) ) { if ( -e \"$d/libgfortran.${SO}\" ) { print \"$d/libgfortran.${SO}\"; break;} if ( -e \"$d/libgfortran.a\" ) { print \"$d/libgfortran.a\"; break;}}}}"
+                     COMMAND perl -e "while(<>) { if( m|^libraries:\\s*=(.*?$)| ) { foreach $d (split(':',$1) ) { if ( -e \"$d/libgfortran.${SO}\" ) { print \"$d/libgfortran.${SO}\"; break;}}}}"
                      OUTPUT_VARIABLE _gfortran_lib_path
                      OUTPUT_STRIP_TRAILING_WHITESPACE )
     if( NOT arch )
@@ -202,15 +200,10 @@ if( APPLE )
 			 COMMAND perl -pe "s|.*?(\\d+\\.\\d+)\\.\\d+$|$1|"
 			 OUTPUT_VARIABLE _cxx_version
 			 OUTPUT_STRIP_TRAILING_WHITESPACE )
-	
-	message( STATUS "$_gfortran_version = ${_gfortran_version}" )
-	if( NOT _gfortran_version STREQUAL "4.4" AND
-	    NOT _gfortran_version STREQUAL "4.2" )
+	if( NOT _gfortran_version STREQUAL "4.4" )
 	    set( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -arch ${archflag}" )
-	    set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -framework AppKit" )
-	else()
-	    set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -arch ${archflag} -framework AppKit" )
         endif()
+        set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -arch ${archflag} -framework AppKit" )
         # Which part of CASA needs -framework AppKit to run? This should probably *not* be added
         # as a generic linker flag.
 	if( NOT _cxx_version STREQUAL "4.4" )

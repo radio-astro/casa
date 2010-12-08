@@ -43,6 +43,7 @@
 #include <casa/OS/File.h>
 #include <casa/OS/HostInfo.h>
 #include <casa/OS/Memory.h>              // Can be commented out along with
+#include <casa/OS/Timer.h>
 //                                         // Memory:: calls.
 #include <casa/Containers/Record.h>
 #include <casa/BasicSL/String.h>
@@ -81,6 +82,11 @@
 #include <measures/Measures/MeasTable.h>
 #include <scimath/Mathematics/Smooth.h>
 #include <casa/Quanta/MVTime.h>
+
+// uncomment the following line to restore old (slow) row-wise in simple copy:
+//#define OLDCOPY
+// uncomment the following line to invoke Timer reports in the simple copy
+//#define COPYTIMER
 
 namespace casa {
   
@@ -473,8 +479,26 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
     //use nchan if defined else use caret-column syntax of  msselection 
     if((nchan.nelements()>0) && nchan[0] > 0){
       inchan.resize(); inchan=nchan;
-      istep.resize(); istep=step;
-      istart.resize(); istart=start;
+      if((step.nelements() >0 ) && (step.nelements() != nchan.nelements()) && (nchan.nelements() >1)){
+	istep[0]=step[0];
+      }
+      if(step.nelements() != nchan.nelements()){
+	istep.resize(nchan.nelements(), True);
+	istep.set(istep[0]);
+      }
+      else{
+	istep.resize(); istep=step;
+      }
+      if((start.nelements() >0 ) && (start.nelements() != nchan.nelements()) && (nchan.nelements() >1)){
+	istart[0]=start[0];
+      }
+      if(start.nelements() != nchan.nelements()){
+	istart.resize(nchan.nelements(), True);
+	istart.set(istart[0]);
+      }
+      else{
+	istart.resize(); istart=start;
+      }
     }
     else{
       Matrix<Int> chansel=selrec.asArrayInt("channel");
@@ -624,16 +648,53 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
         outpointer = setupMS(msname, nchan_p[0], ncorr_p[0],  
                              colNamesTok, tileShape);
       }
+
+      // the following calls MSTileLayout...  disabled for now because it
+      // forces tiles to be the full spw bandwidth in width (gmoellen, 2010/11/07)
+  /*
       else if((tileShape.nelements()==1) && (tileShape[0]==0 || tileShape[0]==1)){
         outpointer = setupMS(msname, nchan_p[0], ncorr_p[0],
                              mscIn_p->observation().telescopeName()(0),
                              colNamesTok, tileShape[0]);
       }
+  */
       else{
-        //Sweep all other cases of bad tileshape to a default one.
-        outpointer = setupMS(msname, nchan_p[0], ncorr_p[0],
-                             mscIn_p->observation().telescopeName()(0),  
-                             colNamesTok, 0);
+	// Derive tile shape based on input dataset's tiles, borrowed
+	//  from VisSet's scr col tile shape derivation
+	//  (this may need some tweaking for averaging cases)
+        TableDesc td = mssel_p.actualTableDesc();
+        const ColumnDesc& cdesc = td[mscIn_p->data().columnDesc().name()];
+        String dataManType = cdesc.dataManagerType();
+        String dataManGroup = cdesc.dataManagerGroup();
+
+        Bool tiled = (dataManType.contains("Tiled"));
+
+        if (tiled) {
+            ROTiledStManAccessor tsm(mssel_p, dataManGroup);
+            uInt nHyper = tsm.nhypercubes();
+            // Find smallest tile shape
+            Int highestProduct=-INT_MAX;
+            Int highestId=0;
+            for (uInt id=0; id < nHyper; id++) {
+                Int product = tsm.getTileShape(id).product();
+                if (product > 0 && (product > highestProduct)) {
+                    highestProduct = product;
+                    highestId = id;
+                };
+            };
+	    Vector<Int> dataTileShape = tsm.getTileShape(highestId).asVector();
+
+	    outpointer = setupMS(msname, nchan_p[0], ncorr_p[0],  
+				 colNamesTok, dataTileShape);
+
+        }
+	else
+	  //Sweep all other cases of bad tileshape to a default one.
+	  //  (this probably never happens)
+	  outpointer = setupMS(msname, nchan_p[0], ncorr_p[0],
+			       mscIn_p->observation().telescopeName()(0),  
+			       colNamesTok, 0);
+	
       }
       
       combine_p = combine;
@@ -755,6 +816,7 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
   
 Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 {
+
   LogIO os(LogOrigin("SubMS", "fillAllTables()"));
   Bool success = true;
     
@@ -783,9 +845,10 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
   success &= copyAntenna();
   if(!copyFeed())         // Feed table writing has to be after antenna 
     return false;
-    
+
   success &= copyObservation();
   success &= copyPointing();
+
   success &= copyState();
   success &= copyWeather();
   
@@ -794,7 +857,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
   success &= copyGenericSubtables();
 
   //sameShape_p = areDataShapesConstant();
-    
+
   if(timeBin_p <= 0.0)
     success &= fillMainTable(datacols);
   else
@@ -5727,7 +5790,7 @@ Bool SubMS::fillAccessoryMainCols(){
   {  
     LogIO os(LogOrigin("SubMS", "fillMainTable()"));
     Bool success = true;
-    
+
     fillAccessoryMainCols();
 
     //Deal with data
@@ -5738,13 +5801,6 @@ Bool SubMS::fillAccessoryMainCols(){
       const uInt nDataCols = complexCols.nelements();
       const Bool writeToDataCol = mustConvertToData(nDataCols, complexCols);
 
-      for(uInt ni = 0; ni < nDataCols; ++ni){
-	getDataColumn(data, complexCols[ni]);
-	putDataColumn(*msc_p, data, complexCols[ni], writeToDataCol);
-      }
-      if(doFloat)
-        msc_p->floatData().putColumn(mscIn_p->floatData());
-
       msc_p->flag().putColumn(mscIn_p->flag());
       if(!(mscIn_p->weightSpectrum().isNull()) &&
          mscIn_p->weightSpectrum().isDefined(0))
@@ -5752,6 +5808,31 @@ Bool SubMS::fillAccessoryMainCols(){
 
       msc_p->weight().putColumn(mscIn_p->weight());
       msc_p->sigma().putColumn(mscIn_p->sigma());
+
+#ifdef COPYTIMER
+      Timer timer;
+      timer.mark();
+#endif
+
+      for(uInt ni = 0; ni < nDataCols; ++ni){
+
+#ifdef OLDCOPY
+	// This does one row at a time
+	getDataColumn(data, complexCols[ni]);
+	putDataColumn(*msc_p, data, complexCols[ni], writeToDataCol);
+#else
+	// This uses VisIter and is much faster
+	copyData(complexCols[ni],writeToDataCol);
+#endif
+      }
+
+      if(doFloat)
+        msc_p->floatData().putColumn(mscIn_p->floatData());
+
+#ifdef COPYTIMER
+	cout << "Total data read/write time = " << timer.real() << endl;
+#endif
+
     }
     else{
       // if(sameShape_p){
@@ -5807,7 +5888,7 @@ Bool SubMS::fillAccessoryMainCols(){
                             const MS::PredefinedColumns colName,
                             const Bool writeToDataCol)
   {
-    if(writeToDataCol || colName == MS::DATA)
+    if(writeToDataCol || colName == MS::DATA) 
       msc.data().putColumn(data);
     else if (colName ==  MS::MODEL_DATA)
       msc.modelData().putColumn(data);
@@ -5819,6 +5900,104 @@ Bool SubMS::fillAccessoryMainCols(){
       msc.lagData().putColumn(data);
     else
       return false;
+    return true;
+  }
+
+  Bool SubMS::copyData(const MS::PredefinedColumns colName,
+		       const Bool writeToDataCol)
+  {
+
+    Block<Int> columns;
+    // include scan iteration, for more optimal iteration
+    columns.resize(5);
+    columns[0]=MS::ARRAY_ID;
+    columns[1]=MS::SCAN_NUMBER;
+    columns[2]=MS::FIELD_ID;
+    columns[3]=MS::DATA_DESC_ID;
+    columns[4]=MS::TIME;
+
+#ifdef COPYTIMER
+    Timer timer;
+    timer.mark();
+#endif
+
+    ROVisIter viIn(mssel_p,columns,0.0);
+    VisIter viOut(msOut_p,columns,0.0);
+    viIn.setRowBlocking(1000);
+    viOut.setRowBlocking(1000);
+    Int iChunk(0), iChunklet(0);
+    for (iChunk=0,viOut.originChunks(),viIn.originChunks();
+	 viOut.moreChunks(),viIn.moreChunks();
+	 viOut.nextChunk(),viIn.nextChunk(),++iChunk) {
+
+      Vector<Int> i,j;
+
+      // The following can help evaluable in/out index alignment
+      /*
+      cout << "****iChunk=" << iChunk 
+	   << " scn: " << viIn.scan(i)(0) << "/" << viOut.scan(j)(0) << "   "
+	   << "fld: " << viIn.fieldId() << "/"  << viOut.fieldId() << "   "
+	   << "ddi: " << viIn.dataDescriptionId() << "/" << viOut.dataDescriptionId() << "   "
+	   << "spw: " << viIn.spectralWindow() << "/"  << viOut.spectralWindow() << "   "
+	   << endl;
+      */
+      for (iChunklet=0,viIn.origin(),viOut.origin();
+	   viIn.more(),viOut.more();
+	   viIn++,viOut++,++iChunklet) { //  
+
+	//	cout << "nRows = " << viIn.nRow() << "/" << viOut.nRow() << endl;
+
+#ifdef COPYTIMER
+	timer.mark();
+#endif
+	Cube<Complex> data;
+	if(writeToDataCol || colName == MS::DATA) {
+	  // write DATA, MODEL_DATA, or CORRECTED_DATA to DATA
+	  switch (colName) {
+	  case MS::DATA:
+	    viIn.visibility(data,VisibilityIterator::Observed);
+	    break;
+	  case MS::MODEL_DATA:
+	    viIn.visibility(data,VisibilityIterator::Model);
+	    break;
+	  case MS::CORRECTED_DATA:
+	    viIn.visibility(data,VisibilityIterator::Corrected);
+	    break;
+	  default:
+	    throw(AipsError("Unrecognized input column!"));
+	    break;
+	  }
+	  viOut.setVis(data,VisibilityIterator::Observed);
+	}
+	else if (colName ==  MS::MODEL_DATA) {
+	  // write MODEL_DATA to MODEL_DATA
+	  viIn.visibility(data,VisibilityIterator::Model);
+	  viOut.setVis(data,VisibilityIterator::Model);
+	}
+	else if (colName == MS::CORRECTED_DATA) {
+	  // write CORRECTED_DATA to CORRECTED_DATA
+	  viIn.visibility(data,VisibilityIterator::Corrected);
+	  viOut.setVis(data,VisibilityIterator::Corrected);
+	}
+	//else if(colName == MS::FLOAT_DATA)              // TBD
+	//	else if(colName == MS::LAG_DATA)      // TBD
+	else
+	  return false;
+
+#ifdef COPYTIMER	
+	Double t=timer.real();
+	cout << "Chunk: " << iChunk << " " << iChunklet 
+	     << " scn: " << viIn.scan(i)(0) << "/" << viOut.scan(j)(0) << "   "
+	     << " spw: " << viIn.spectralWindow() << "/"  << viOut.spectralWindow() << " : "
+	     << data.nelements() << " cells = " 
+	     << data.nelements()*8.e-6 << " MB in " 
+	     << t << " sec, for " << data.nelements()*8.e-6/t << " MB/s" 
+	     << endl;
+#endif
+	
+      }
+    }
+    msOut_p.flush();
     return true;
   }
 
@@ -5950,7 +6129,6 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
 	TableCopy::copyRows(newAnt, oldAnt, k, ant1[k], 1, false);
       }
       newAnt.flush();
-
       retval = True;
     }
     return retval;    

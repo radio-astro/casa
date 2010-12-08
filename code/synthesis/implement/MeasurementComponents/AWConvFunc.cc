@@ -60,6 +60,7 @@ namespace casa{
   				    CFStore& cfs,
   				    CFStore& cfwts)
   {
+    LogIO log_l(LogOrigin("AWConvFunc", "makeConvFunction"));
     Int convSize, convSampling, polInUse;
     Double wScale=1; Int bandID_l=-1;
     Array<Complex> convFunc_l, convWeights_l;
@@ -67,28 +68,26 @@ namespace casa{
     Int nx=image.shape()(0);
     if (bandID_l == -1) bandID_l=getVisParams(vb);
     
-    logIO() << LogOrigin("AWConvFunc", "makeConvFunction") 
-	    << "Making a new convolution function for PA="
-	    << pa*(180/C::pi) << "deg"
-	    << LogIO::NORMAL 
-	    << LogIO::POST;
+    log_l << "Making a new convolution function for PA="
+	  << pa*(180/C::pi) << "deg"
+	  << LogIO::NORMAL << LogIO::POST;
     
     if(wConvSize>0) {
-      logIO() << "Using " << wConvSize << " planes for W-projection" << LogIO::POST;
+      log_l << "Using " << wConvSize << " planes for W-projection" << LogIO::POST;
       Double maxUVW;
       maxUVW=0.25/abs(image.coordinates().increment()(0));
-      logIO() << "Estimating maximum possible W = " << maxUVW
-	      << " (wavelengths)" << LogIO::POST;
+      log_l << "Estimating maximum possible W = " << maxUVW
+	    << " (wavelengths)" << LogIO::POST;
       
       Double invLambdaC=vb.frequency()(0)/C::c;
       Double invMinL = vb.frequency()((vb.frequency().nelements())-1)/C::c;
-      logIO() << "wavelength range = " << 1.0/invLambdaC << " (m) to " 
-	      << 1.0/invMinL << " (m)" << LogIO::POST;
+      log_l << "wavelength range = " << 1.0/invLambdaC << " (m) to " 
+	    << 1.0/invMinL << " (m)" << LogIO::POST;
       if (wConvSize > 1)
 	{
 	  wScale=Float((wConvSize-1)*(wConvSize-1))/maxUVW;
-	  logIO() << "Scaling in W (at maximum W) = " << 1.0/wScale
-		  << " wavelengths per pixel" << LogIO::POST;
+	  log_l << "Scaling in W (at maximum W) = " << 1.0/wScale
+		<< " wavelengths per pixel" << LogIO::POST;
 	}
     }
     //  
@@ -323,12 +322,8 @@ namespace casa{
       }
     
     if(cfs.xSupport(0)<1) 
-      logIO() << "Convolution function is misbehaved - support seems to be zero"
-	      << LogIO::EXCEPTION;
-    
-    logIO() << LogOrigin("AWConvFunc", "makeConvFunction")
-	    << "Re-sizing the convolution functions"
-	    << LogIO::POST;
+      log_l << "Convolution function is misbehaved - support seems to be zero"
+	    << LogIO::EXCEPTION;
     
     {
       supportBuffer = ATerm_p->getOversampling();;
@@ -372,7 +367,6 @@ namespace casa{
     // (fpbwproj.f).
     //
     ndx(2)=ndx(3)=0;
-    
     
     Complex pbSum=0.0;
     IPosition peakPix(ndx);
@@ -449,6 +443,7 @@ namespace casa{
 
   Bool AWConvFunc::findSupport(Array<Complex>& func, Float& threshold,Int& origin, Int& R)
   {
+    LogIO log_l(LogOrigin("AWConvFunc", "findSupport"));
     Double NSteps;
     Int PixInc=1;
     Vector<Complex> vals;
@@ -478,23 +473,125 @@ namespace casa{
 
   Bool AWConvFunc::makeAverageResponse(const VisBuffer& vb, 
 				       const ImageInterface<Complex>& image,
-				       //				       TempImage<Float>& theavgPB,
 				       ImageInterface<Float>& theavgPB,
 				       Bool reset)
   {
+    TempImage<Complex> complexPB;
+    Bool pbMade;
+    pbMade = makeAverageResponse(vb, image, complexPB,reset);
+    normalizeAvgPB(complexPB, theavgPB);	
+    return pbMade;
+  }
+  
+  Bool AWConvFunc::makeAverageResponse(const VisBuffer& vb, 
+				       const ImageInterface<Complex>& image,
+				       ImageInterface<Complex>& theavgPB,
+				       Bool reset)
+  {
+    LogIO log_l(LogOrigin("AWConvFunc","makeAverageResponse(Complex)"));
+
+    log_l << "Making the average response for " << ATerm_p->name() 
+	  << LogIO::NORMAL  << LogIO::POST;
+    
+    if (reset)
+      {
+	log_l << "Initializing the average PBs"
+	      << LogIO::NORMAL << LogIO::POST;
+	theavgPB.resize(image.shape()); 
+	theavgPB.setCoordinateInfo(image.coordinates());
+	theavgPB.set(1.0);
+      }
+
+    ATerm_p->applySky(theavgPB, vb, True, 0);
+    
+    return True; // i.e., an average PB was made 
+  }
+  //
+  //---------------------------------------------------------------
+  //
+  void AWConvFunc::normalizeAvgPB(ImageInterface<Complex>& inImage,
+				  ImageInterface<Float>& outImage)
+  {
+    LogIO log_l(LogOrigin("AWConvFunc", "normalizeAvgPB"));
+
+    IPosition inShape(inImage.shape()),ndx(4,0,0,0,0);
+    Vector<Complex> peak(inShape(2));
+    
+    outImage.resize(inShape);
+    outImage.setCoordinateInfo(inImage.coordinates());
+
+    Bool isRefIn, isRefOut;
+    Array<Complex> inBuf;
+    Array<Float> outBuf;
+
+    isRefIn  = inImage.get(inBuf);
+    isRefOut = outImage.get(outBuf);
+    log_l << "Normalizing the average PBs to unity"
+	  << LogIO::NORMAL << LogIO::POST;
+    //
+    // Normalize each plane of the inImage separately to unity.
+    //
+    Complex inMax = max(inBuf);
+    if (abs(inMax)-1.0 > 1E-3)
+      {
+	for(ndx(3)=0;ndx(3)<inShape(3);ndx(3)++)
+	  for(ndx(2)=0;ndx(2)<inShape(2);ndx(2)++)
+	    {
+	      peak(ndx(2)) = 0;
+	      for(ndx(1)=0;ndx(1)<inShape(1);ndx(1)++)
+		for(ndx(0)=0;ndx(0)<inShape(0);ndx(0)++)
+		  if (abs(inBuf(ndx)) > peak(ndx(2)))
+		    peak(ndx(2)) = inBuf(ndx);
+	      
+	      for(ndx(1)=0;ndx(1)<inShape(1);ndx(1)++)
+		for(ndx(0)=0;ndx(0)<inShape(0);ndx(0)++)
+		  //		      avgPBBuf(ndx) *= (pbPeaks(ndx(2))/peak(ndx(2)));
+		  inBuf(ndx) /= peak(ndx(2));
+	    }
+	if (isRefIn) inImage.put(inBuf);
+      }
+
+    ndx=0;
+    for(ndx(1)=0;ndx(1)<inShape(1);ndx(1)++)
+      for(ndx(0)=0;ndx(0)<inShape(0);ndx(0)++)
+	{
+	  IPosition plane1(ndx);
+	  plane1=ndx;
+	  plane1(2)=1; // The other poln. plane
+	  //	  avgPBBuf(ndx) = (avgPBBuf(ndx) + avgPBBuf(plane1))/2.0;
+	  outBuf(ndx) = sqrt(real(inBuf(ndx) * inBuf(plane1)));
+	}
+    //
+    // Rather convoluted way of copying Pol. plane-0 to Pol. plane-1!!!
+    //
+    for(ndx(1)=0;ndx(1)<inShape(1);ndx(1)++)
+      for(ndx(0)=0;ndx(0)<inShape(0);ndx(0)++)
+	{
+	  IPosition plane1(ndx);
+	  plane1=ndx;
+	  plane1(2)=1; // The other poln. plane
+	  outBuf(plane1) = real(outBuf(ndx));
+	}
+  }
+  //
+  //-------------------------------------------------------------------------
+  // Legacy code.  Should ultimately be deleteted after re-facatoring
+  // is finished.
+  //
+  Bool AWConvFunc::makeAverageResponse_org(const VisBuffer& vb, 
+					   const ImageInterface<Complex>& image,
+					   ImageInterface<Float>& theavgPB,
+					   Bool reset)
+  {
+    LogIO log_l(LogOrigin("AWConvFunc", "makeAverageResponse_org"));
     TempImage<Float> localPB;
     
-    logIO() << LogOrigin("AWConvFunc","makeAverageResponse")
-	    << LogIO::NORMAL;
-    logIO() << "Making the average response for " << ATerm_p->name() 
-	    << LogIO::NORMAL  << LogIO::POST;
+    log_l << "Making the average response for " << ATerm_p->name() << LogIO::NORMAL << LogIO::POST;
     
     localPB.resize(image.shape()); localPB.setCoordinateInfo(image.coordinates());
     if (reset)
       {
-	logIO() << "Initializing the average PBs"
-		<< LogIO::NORMAL
-		<< LogIO::POST;
+	log_l << "Initializing the average PBs" << LogIO::NORMAL << LogIO::POST;
 	theavgPB.resize(localPB.shape()); 
 	theavgPB.setCoordinateInfo(localPB.coordinates());
 	theavgPB.set(0.0);
@@ -526,10 +623,6 @@ namespace casa{
 		  localTwoDPB.putAt(Complex((localPB(ndx)),0.0),ndx);
 	}
 	//
-	// If antenna pointing errors are not applied, no shifting
-	// (which can be expensive) is required.
-	//
-	//
 	// Accumulate the shifted PBs
 	//
 	{
@@ -540,26 +633,21 @@ namespace casa{
 	  isRefC=localTwoDPB.get(cbuf);
 	  
 	  IPosition fs(fbuf.shape());
-	  {
-	    IPosition ndx(4,0,0,0,0),avgNDX(4,0,0,0,0);
-	    for(ndx(3)=0,avgNDX(3)=0;ndx(3)<fs(3);ndx(3)++,avgNDX(3)++)
-	    {
-	      for(ndx(2)=0,avgNDX(2)=0;ndx(2)<twoDPBShape(2);ndx(2)++,avgNDX(2)++)
-		{
-		  for(ndx(0)=0,avgNDX(0)=0;ndx(0)<fs(0);ndx(0)++,avgNDX(0)++)
-		    for(ndx(1)=0,avgNDX(1)=0;ndx(1)<fs(1);ndx(1)++,avgNDX(1)++)
-		      {
-			Float val;
-			val = real(cbuf(ndx));
-			fbuf(avgNDX) += val;
-		      }
-		}
-	    }
-	  }
+	  IPosition ndx(4,0,0,0,0),avgNDX(4,0,0,0,0);
+	  for(ndx(3)=0,avgNDX(3)=0;ndx(3)<fs(3);ndx(3)++,avgNDX(3)++)
+	    for(ndx(2)=0,avgNDX(2)=0;ndx(2)<twoDPBShape(2);ndx(2)++,avgNDX(2)++)
+	      for(ndx(0)=0,avgNDX(0)=0;ndx(0)<fs(0);ndx(0)++,avgNDX(0)++)
+		for(ndx(1)=0,avgNDX(1)=0;ndx(1)<fs(1);ndx(1)++,avgNDX(1)++)
+		  {
+		    Float val;
+		    val = real(cbuf(ndx));
+		    fbuf(avgNDX) += val;
+		  }
 	  if (!isRefF) theavgPB.put(fbuf);
 	}
       }
     theavgPB.setCoordinateInfo(localPB.coordinates());
-    return True; // i.e., an average PB was made and is in the mem. cache
+    return True; // i.e., an average PB was made
   }
+
 };

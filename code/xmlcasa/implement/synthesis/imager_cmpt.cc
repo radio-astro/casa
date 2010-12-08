@@ -1340,13 +1340,13 @@ imager::ssoflux(const ::casac::variant& field, const ::casac::variant& spw,
 }
 
 bool
-imager::setmfcontrol(const double cyclefactor, const double cyclespeedup, const int stoplargenegatives, const int stoppointmode, const double minpb, const std::string& scaletype, const double constpb, const std::vector<std::string>& fluxscale, const bool flatnoise)
+imager::setmfcontrol(const double cyclefactor, const double cyclespeedup, const double cyclemaxpsffraction, const int stoplargenegatives, const int stoppointmode, const double minpb, const std::string& scaletype, const double constpb, const std::vector<std::string>& fluxscale, const bool flatnoise)
 {
    Bool rstat(False);
    if(hasValidMS_p){
       try {
          Vector <String> afluxscale(toVectorString(fluxscale));
-         rstat = itsImager->setmfcontrol(cyclefactor, cyclespeedup, stoplargenegatives,
+         rstat = itsImager->setmfcontrol(cyclefactor, cyclespeedup, cyclemaxpsffraction, stoplargenegatives,
                                          stoppointmode, scaletype, minpb, constpb, afluxscale, flatnoise);
        } catch  (AipsError x) {
           *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
