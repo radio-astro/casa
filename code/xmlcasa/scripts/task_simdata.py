@@ -820,25 +820,6 @@ def simdata(
                     sm.predict(complist=complist)
             
                 sm.done()
-
-                # modify STATE table information for ASAP
-                # Ugly part!! need improvement. 
-                nstate=1
-                tb.open(tablename=sdmsfile+'/STATE',nomodify=False)
-                tb.addrows(nrow=nstate)
-                tb.putcol(columnname='CAL',value=[0.]*nstate,startrow=0,nrow=nstate,rowincr=1)
-                tb.putcol(columnname='FLAG_ROW',value=[False]*nstate,startrow=0,nrow=nstate,rowincr=1)
-                tb.putcol(columnname='LOAD',value=[0.]*nstate,startrow=0,nrow=nstate,rowincr=1)
-                tb.putcol(columnname='REF',value=[False]*nstate,startrow=0,nrow=nstate,rowincr=1)
-                tb.putcol(columnname='SIG',value=[True]*nstate,startrow=0,nrow=nstate,rowincr=1)
-                tb.putcol(columnname='SUB_SCAN',value=[0]*nstate,startrow=0,nrow=nstate,rowincr=1)
-                tb.flush()
-                tb.close()
-            
-                tb.open(tablename=sdmsfile,nomodify=False)
-                tb.putcol(columnname='STATE_ID',value=[0]*nscan,startrow=0,nrow=nscan,rowincr=1)
-                tb.flush()
-                tb.close()
                 
                 msg('generation of measurement set ' + sdmsfile + ' complete')
 
