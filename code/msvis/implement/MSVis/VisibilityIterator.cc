@@ -332,7 +332,11 @@ Bool ROVisibilityIterator::isInSelectedSPW(const Int& spw){
 void ROVisibilityIterator::advance()
 {
   newChanGroup_p=False;
-  flagOK_p = visOK_p[0] = visOK_p[1] = visOK_p[2] = weightSpOK_p = False;
+  flagOK_p = False;
+  visOK_p[0] = False;
+  visOK_p[1] = False;
+  visOK_p[2] = False;
+  weightSpOK_p = False;
   curStartRow_p=curEndRow_p+1;
   if (curStartRow_p>=curTableNumRow_p) {
     if (++curChanGroup_p >= curNumChanGroup_p) {
@@ -818,7 +822,9 @@ Cube<Bool>& ROVisibilityIterator::flag(Cube<Bool>& flags) const
     if (!flagOK_p) {
       // need to do the interpolation
       getInterpolatedVisFlagWeight(Corrected);
-      This->flagOK_p=This->visOK_p[Corrected]=This->weightSpOK_p=True;
+      This->flagOK_p = True;
+      This->visOK_p[Corrected] = True;
+      This->weightSpOK_p = True;
     }
     flags.resize(flagCube_p.shape());  flags=flagCube_p; 
   } else {
@@ -985,7 +991,9 @@ ROVisibilityIterator::visibility(Cube<Complex>& vis, DataColumn whichOne) const
   if (velSelection_p) {
     if (!visOK_p[whichOne]) {
       getInterpolatedVisFlagWeight(whichOne);
-      This->visOK_p[whichOne]=This->flagOK_p=This->weightSpOK_p=True;
+      This->visOK_p[whichOne] = True;
+      This->flagOK_p = True;
+      This->weightSpOK_p = True;
     }
     vis.resize(visCube_p.shape()); vis=visCube_p;
   } else { 

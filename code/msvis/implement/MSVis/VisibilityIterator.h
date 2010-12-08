@@ -209,7 +209,7 @@ public:
   Int msId() const
     { return msIter_p.msId();}
 
-  //reference to actual ms in interator 
+  //reference to actual ms in iterator 
   const MeasurementSet& ms() const {
     return msIter_p.ms();
   }
