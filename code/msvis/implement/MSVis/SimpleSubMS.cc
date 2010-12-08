@@ -25,7 +25,7 @@
 //#
 //# $Id: $
 #include <casa/System/AppInfo.h>
-
+#include <casa/Utilities/GenSort.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisibilityIterator.h>
 #include <msvis/MSVis/SimpleSubMS.h>
@@ -68,7 +68,15 @@ namespace casa {
       ms_p=MeasurementSet();
       return 0;
     }
-    mscIn_p=new ROMSColumns(mssel_p);
+    //Make sure the damn ms is sorted the way we want ...to copy the meta-columns as is.
+    Block<String> sortcol(4);
+    sortcol[0]=MS::columnName(MS::ARRAY_ID);
+    sortcol[1]=MS::columnName(MS::FIELD_ID);
+    sortcol[2]=MS::columnName(MS::DATA_DESC_ID);
+    sortcol[3]=MS::columnName(MS::TIME);
+    MeasurementSet msselsort(mssel_p.sort(sortcol, Sort::Ascending, Sort::QuickSort));
+
+    mscIn_p=new ROMSColumns(msselsort);
     String msname=name;
     if(msname==""){
       msname=AppInfo::workFileName(100, "TempSubMS");
@@ -124,8 +132,12 @@ namespace casa {
     fillAccessoryMainCols();
     msc_p->weight().putColumn(mscIn_p->weight());
     msc_p->sigma().putColumn(mscIn_p->sigma());
-    Block<Int> sort(0);
-    ROVisibilityIterator vi(mssel_p, sort);
+    Block<Int> sort(4);
+    sort[0]=MS::ARRAY_ID;
+    sort[1]=MS::FIELD_ID;
+    sort[2]=MS::DATA_DESC_ID;
+    sort[3]=MS::TIME;
+    ROVisibilityIterator vi(msselsort, sort);
     for (Int k=0; k < spw_p.shape()(0) ; ++k){ 
        os << LogIO::NORMAL
 	  << "Selecting "<< nchan_p[k] << " channels, starting at " <<chanStart_p[k] << " for spw " << spw_p[k] << LogIO::POST; ;
