@@ -841,12 +841,14 @@ def simdata(
         msroot=project  # if leakage, can just copy from this project
     
         if thermalnoise!="":
-            if not (telescopename == 'ALMA' or telescopename == 'ACA' or telescopename == "SMA" or telescopename=="EVLA" or telescopename=="VLA"):
+            #if not (telescopename == 'ALMA' or telescopename == 'ACA' or telescopename == "SMA" or telescopename=="EVLA" or telescopename=="VLA"):
+            knowntelescopes = ["ALMA", "ACA", "SMA", "EVLA", "VLA"]
+            if telescopename not in knowntelescopes:
                 msg("thermal noise only works properly for ALMA/ACA or EVLA",origin="noise",priority="warn")
                 
             noise_any=True
 
-            eta_p, eta_s, eta_b, eta_t, eta_q, t_rx = util.noisetemp(freq=model_center)
+            eta_p, eta_s, eta_b, eta_t, eta_q, t_rx = util.noisetemp(telescope=telescopename,freq=model_center)
 
             # antenna efficiency
             eta_a = eta_p * eta_s * eta_b * eta_t
