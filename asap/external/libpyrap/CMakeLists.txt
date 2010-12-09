@@ -2,9 +2,6 @@
 # CMakeLists.txt for libpyrap.so
 ###
 
-# library name is libpyrap.so
-set( PYRAPLIB pyrap )
-
 # root for libpyrap
 set( PYRAPROOT ${ASAP_SOURCE_DIR}/external/libpyrap/pyrap-0.3.2 )
 set( PYRAPDIR ${PYRAPROOT}/pyrap )
@@ -27,8 +24,15 @@ set( PYRAP_SRCS
      ${PYRAPDIR}/${MODULE}/PycExcp.cc
      ${PYRAPDIR}/${MODULE}/PycRecord.cc
      ${PYRAPDIR}/${MODULE}/PycValueHolder.cc )
+
 add_library( ${PYRAPLIB} SHARED ${PYRAP_SRCS} )
-target_link_libraries( ${PYRAPLIB} ${Boost_LIBRARIES} ${PYTHON_LIBRARIES} ${CASACORE_LIBRARIES} )
+target_link_libraries( ${PYRAPLIB} 
+                       ${Boost_LIBRARIES} 
+                       ${PYTHON_LIBRARIES} 
+                       ${CASACORE_LIBRARIES} 
+                       ${DL_LIBRARIES} 
+                       ${BLAS_LIBRARIES} 
+                       ${LAPACK_LIBRARIES} )
 
 # install directory
 install( TARGETS ${PYRAPLIB}
