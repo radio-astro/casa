@@ -186,37 +186,9 @@ HEADERS   := MathUtils.h \
 ifeq ($(shell uname), Darwin)
 	ATNF := $(ASAPROOT)/$(ATNFD)/libatnf.dylib
 	PYRAP := $(ASAPROOT)/$(PYRAPD)/libpyrap.dylib
-	CASACORELIB =	$(CASALIB)/libcasa_casa.dylib \
-			$(CASALIB)/libcasa_components.dylib \
-			$(CASALIB)/libcasa_coordinates.dylib \
-			$(CASALIB)/libcasa_derivedmscal.dylib \
-			$(CASALIB)/libcasa_fits.dylib \
-			$(CASALIB)/libcasa_images.dylib \
-			$(CASALIB)/libcasa_lattices.dylib \
-			$(CASALIB)/libcasa_measures.dylib \
-			$(CASALIB)/libcasa_mirlib.dylib \
-			$(CASALIB)/libcasa_msfits.dylib \
-			$(CASALIB)/libcasa_ms.dylib \
-			$(CASALIB)/libcasa_scimath_f.dylib \
-			$(CASALIB)/libcasa_scimath.dylib \
-			$(CASALIB)/libcasa_tables.dylib
 else
         ATNF := $(ASAPROOT)/$(ATNFD)/libatnf.so
 	PYRAP := $(ASAPROOT)/$(PYRAPD)/libpyrap.so
-	CASACORELIB =	$(CASALIB)/libcasa_casa.so \
-			$(CASALIB)/libcasa_components.so \
-			$(CASALIB)/libcasa_coordinates.so \
-			$(CASALIB)/libcasa_derivedmscal.so \
-			$(CASALIB)/libcasa_fits.so \
-			$(CASALIB)/libcasa_images.so \
-			$(CASALIB)/libcasa_lattices.so \
-			$(CASALIB)/libcasa_measures.so \
-			$(CASALIB)/libcasa_mirlib.so \
-			$(CASALIB)/libcasa_msfits.so \
-			$(CASALIB)/libcasa_ms.so \
-			$(CASALIB)/libcasa_scimath_f.so \
-			$(CASALIB)/libcasa_scimath.so \
-			$(CASALIB)/libcasa_tables.so
 endif
 
 STATICCCLIB := libasap.a
@@ -253,7 +225,7 @@ $(TARGET) : $(OBJECTS)
 	-@ echo
 	  $(LD) $(LDFLAGS) -o $(TARGET) $(OBJECTS) $(LIBS)
 
-$(OBJECTS) : $(HEADERS) $(CASACORELIB) $(ATNF) $(PYRAP)
+$(OBJECTS) : $(HEADERS) $(CORELIB) $(ATNF) $(PYRAP)
 
 staticlib: $(MEMBERS)
 
