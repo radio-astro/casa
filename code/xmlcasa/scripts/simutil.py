@@ -188,12 +188,22 @@ class simutil:
 
     def ismstp(self,s,halt=False):
         try:
-            istp=False
+            istp = False
             # check if the ms is tp data or not.
             tb.open(s+'/ANTENNA')
-            antname=tb.getcol('NAME')
+            antname = tb.getcol('NAME')
             tb.close()
-            if antname[0].find('TP') > -1: istp=True
+            if antname[0].find('TP') > -1:
+                istp = True
+            elif len(antname) == 1:
+                istp = True
+            else:
+                # need complete testing of UVW
+                tb.open(s)
+                uvw = tb.getcol("UVW")
+                tb.close()
+                if uvw.all() == 0.:
+                    istp = True 
         except:
             if halt:
                 self.msg("can't understand the file '"+str(s)+"'",priority="error")
