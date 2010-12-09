@@ -33,6 +33,7 @@
 #include <synthesis/MeasurementComponents/EPJones.h>
 #include <synthesis/MeasurementComponents/LJJones.h>
 #include <synthesis/MeasurementComponents/AMueller.h>
+#include <synthesis/MeasurementComponents/TsysGainCal.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -159,6 +160,9 @@ SolvableVisCal* createSolvableVisCal(const String& type, VisSet& vs) {
 
   else if (uptype.contains("KANTPOS") || uptype.contains("KANTPOS JONES"))
     return new KAntPosJones(vs);
+
+  else if (uptype.contains("TSYS"))
+    return new StandardTsys(vs);
 
   else {
     cout << "attempted type = " << type << endl;
