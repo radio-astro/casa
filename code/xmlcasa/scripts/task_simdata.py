@@ -1115,6 +1115,12 @@ def simdata(
                 msg('generation of total power image ' + tpimage + ' complete.')
                 # End of single dish imaging part
 
+        outflat_current=False
+        convsky_current=False
+        beam_current=False
+        imagename=project
+
+        if image and len(mstoimage)>0:
             if not predict:
                 # get nfld, sourcefieldlist, from (interfm) ms if it was not just created
                 tb.open(mstoimage[0]+"/SOURCE")
@@ -1125,18 +1131,11 @@ def simdata(
                 msfile=mstoimage[0]
 
             # set cleanmode automatically (for interfm)
-            if len(mstoimage):
-                if nfld==1:
-                    cleanmode="csclean"
-                else:
-                    cleanmode="mosaic"
+            if nfld==1:
+                cleanmode="csclean"
+            else:
+                cleanmode="mosaic"
 
-        outflat_current=False
-        convsky_current=False
-        beam_current=False
-        imagename=project
-
-        if image and len(mstoimage)>0:
             if not docalibrator:
                 sourcefieldlist=""  # sourcefieldlist should be ok, but this is safer
             
