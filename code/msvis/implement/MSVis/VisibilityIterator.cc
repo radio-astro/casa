@@ -556,23 +556,24 @@ void ROVisibilityIterator::setTileCache(){
 	  if(!existsWeightSpectrum())
 	    dataManType="";
 
-	// Sometimes *DATA columns may not contain anything yet
-	if(columns[k]==MS::columnName(MS::DATA)) {
-	  if(!colVis.isNull() &&
-	     !colVis.isDefined(0))
+	// Sometimes  columns may not contain anything yet
+	if((columns[k]==MS::columnName(MS::DATA) && !colVis.isNull() &&
+	     !colVis.isDefined(0)) || 
+	   (columns[k]==MS::columnName(MS::MODEL_DATA) && !colModelVis.isNull() &&
+	     !colModelVis.isDefined(0)) ||
+	   (columns[k]==MS::columnName(MS::CORRECTED_DATA) && !colCorrVis.isNull() &&
+	     !colCorrVis.isDefined(0)) ||
+	   (columns[k]==MS::columnName(MS::FLAG) && !colFlag.isNull() &&
+	     !colFlag.isDefined(0)) ||
+	   (columns[k]==MS::columnName(MS::WEIGHT) && !colWeight.isNull() &&
+	     !colWeight.isDefined(0)) ||
+	   (columns[k]==MS::columnName(MS::SIGMA) && !colSigma.isNull() &&
+	     !colSigma.isDefined(0)) ||
+	   (columns[k]==MS::columnName(MS::UVW) && !colUVW.isNull() &&
+	    !colUVW.isDefined(0)) ){
 	    dataManType="";
-	}
-	if(columns[k]==MS::columnName(MS::MODEL_DATA)) {
-	  if(!colModelVis.isNull() &&
-	     !colModelVis.isDefined(0))
-	    dataManType="";
-	}
-	if(columns[k]==MS::columnName(MS::CORRECTED_DATA)) {
-	  if(!colCorrVis.isNull() &&
-	     !colCorrVis.isDefined(0))
-	    dataManType="";
-	}
-
+      }
+	
 	if(dataManType.contains("Tiled") ){
 	  try {
 	    
