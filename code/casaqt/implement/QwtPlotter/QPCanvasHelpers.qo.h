@@ -357,6 +357,7 @@ protected:
     void draw_(QPainter* p, const QwtScaleMap& xMap,
                 const QwtScaleMap& yMap, const QRect& drawRect,
                 unsigned int drawIndex, unsigned int drawCount) const {
+		(void)drawIndex; (void)drawCount;
         QwtPlotGrid::draw(p, xMap, yMap, drawRect); }
 };
 

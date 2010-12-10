@@ -39,21 +39,38 @@ using namespace std;
 
 namespace casa {
 
+
 // Typedef for range, which is two doubles (min and max).
 typedef pair<double, double> prange_t;
 
 // Typedef for size, which is two doubles (width and height).
 typedef pair<double, double> psize_t;
 
+
+
 ///////////
 // ENUMS //
 ///////////
 
+
 // Enum for the four plot axes.  If this enum is changed, PlotCanvas::allAxes()
 // needs to be updated.
+// Use this in contexts where one and only one side is specified.
+// For combinations of sides, or none, use  PlotAxiBitset
 enum PlotAxis {
     X_BOTTOM = 1, X_TOP = 2, Y_LEFT = 4, Y_RIGHT = 8
 };
+
+
+// Set of bit flags to indicate combinations of sides, 
+// used (as of this writing) for indicating which axes have visible scales.
+// The value of a PlotSideBitset is the bitwise OR of values of PlotSide.
+typedef  unsigned int  PlotAxisBitset;
+
+const PlotAxisBitset all_four_sides  = 0xF;
+const PlotAxisBitset none_sides      = 0x0;
+
+
 
 // Enum for possible axis scales.
 enum PlotAxisScale {

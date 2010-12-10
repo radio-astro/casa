@@ -400,39 +400,47 @@ bool QPGrid::shouldDraw() const {
 /////////////////////////////////
 
 QPCartesianAxis::QPCartesianAxis(QwtPlot::Axis master, QwtPlot::Axis slave) :
-        m_axis(master), m_scaleDraw() {
+        m_axis(master), m_scaleDraw() 
+{
     if(master == QwtPlot::yLeft || master == QwtPlot::yRight)
         setAxis(slave, master);
     else
         setAxis(master, slave);
     
-    QwtScaleDraw::Alignment a;
+    
     switch(master) {
-    case QwtPlot::yLeft: a = QwtScaleDraw::LeftScale; break;
-    case QwtPlot::yRight: a = QwtScaleDraw::RightScale; break;
-    case QwtPlot::xTop: a = QwtScaleDraw::TopScale; break;
-    default: a = QwtScaleDraw::BottomScale;
+      case QwtPlot::yLeft:    m_scaleDraw.setAlignment(QwtScaleDraw::LeftScale);   break;
+      case QwtPlot::yRight:   m_scaleDraw.setAlignment(QwtScaleDraw::RightScale);  break;
+      case QwtPlot::xTop:     m_scaleDraw.setAlignment(QwtScaleDraw::TopScale);    break;
+      case QwtPlot::xBottom:  m_scaleDraw.setAlignment(QwtScaleDraw::BottomScale); break;
     }
-    m_scaleDraw.setAlignment(a);
     
     setZ(BASE_Z_CARTAXIS);
 }
 
+
+
 QPCartesianAxis::~QPCartesianAxis() { }
+
+
 
 void QPCartesianAxis::draw_(QPainter* painter, const QwtScaleMap& xMap,
                   const QwtScaleMap& yMap, const QRect& drawRect,
                   unsigned int drawIndex, unsigned int drawCount) const {
+	
     QwtScaleDraw* s = const_cast<QwtScaleDraw*>(&m_scaleDraw);
-    if(m_axis == QwtPlot::yLeft || m_axis == QwtPlot::yRight) {
+    if(m_axis == QwtPlot::yLeft || m_axis == QwtPlot::yRight) 
+		{
         s->move(QPOptions::round(xMap.xTransform(0.0)),
                 QPOptions::round(yMap.p2()));
         s->setLength(QPOptions::round(yMap.p1() - yMap.p2()));
-    } else if(m_axis == QwtPlot::xBottom || m_axis == QwtPlot::xTop) {
+		} 
+    else if(m_axis == QwtPlot::xBottom || m_axis == QwtPlot::xTop) 
+		{
         s->move(QPOptions::round(xMap.p1()),
                 QPOptions::round(yMap.xTransform(0.0)));
         s->setLength(QPOptions::round(xMap.p2() - xMap.p1()));
-    }
+		}
     
     s->setScaleDiv(*(plot()->axisScaleDiv(m_axis)));
     s->draw(painter, plot()->palette());

@@ -30,6 +30,7 @@
 #ifdef AIPS_HAS_QWT
 
 #include <graphics/GenericPlotter/PlotCanvas.h>
+#include <graphics/GenericPlotter/PlotOptions.h>
 #include <graphics/GenericPlotter/PlotLogger.h>
 #include <graphics/GenericPlotter/Plotter.h>
 #include <casaqt/QwtPlotter/QPImageCache.h>
@@ -153,10 +154,12 @@ public:
 
     
     // Implements PlotCanvas::shownAxes().
-    int shownAxes() const;
+    // Returns a bit set (really an int) of bits defined by PlotAxis enum or'd together
+    PlotAxisBitset shownAxes() const;
 
     // Implements PlotCanvas::showAxes().
-    void showAxes(int axesFlag);
+    // Takes a bit set, as an int, of bits defined by PlotAxis enum or'd together
+    void showAxes(PlotAxisBitset axes);
     
     // Implements PlotCanvas::axisScale().
     PlotAxisScale axisScale(PlotAxis axis) const;
