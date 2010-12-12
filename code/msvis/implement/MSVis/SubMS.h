@@ -279,17 +279,20 @@ class SubMS
   static lDouble freq_from_lambda(const lDouble lambda){ return (C::c/lambda); };
   
   // Support method for regridSpw():
-  // results in the column oldName being renamed to newName, and a new column which is an empty copy of 
-  // oldName being created together with a TileShapeStMan data manager and hypercolumn (name copied from 
-  // the old hypercolumn) with given dimension, the old hypercolumn of name hypercolumnName is renamed 
-  // to  name+"B"
-  Bool createPartnerColumn(TableDesc& modMSTD, const String& oldName, const String& newName,
-			   const Int& hypercolumnDim, const IPosition& tileShape);
+  // results in the column oldName being renamed to newName, and a new column
+  // which is an empty copy of oldName being created together with a
+  // TileShapeStMan data manager and hypercolumn (name copied from the old
+  // hypercolumn) with given dimension, the old hypercolumn of name
+  // hypercolumnName is renamed to name+"B"
+  Bool createPartnerColumn(TableDesc& modMSTD, const String& oldName,
+                           const String& newName, const Int& hypercolumnDim,
+                           const IPosition& tileShape);
 
   // Support method for regridSpw():
   // calculate the final new channel boundaries from the regridding parameters
-  // and the old channel boundaries (already transformed to the desired reference frame);
-  // returns False if input paramters were invalid and no useful boundaries could be created
+  // and the old channel boundaries (already transformed to the desired
+  // reference frame); returns False if input paramters were invalid and no
+  // useful boundaries could be created
   static Bool regridChanBounds(Vector<Double>& newChanLoBound, 
 			       Vector<Double>& newChanHiBound,
 			       const Double regridCenter, 
@@ -442,8 +445,8 @@ class SubMS
                      const Bool writeToDataCol=False);
 
   // This method uses VisIter for efficient copy mode data transfer
-  Bool copyData(const MS::PredefinedColumns colName,
-		const Bool writeToDataCol);
+  Bool copyDataFlagsWtSp(const Vector<MS::PredefinedColumns>& colNames,
+                         const Bool writeToDataCol);
 
   // Helper function for parseColumnNames().  Converts col to a list of
   // MS::PredefinedColumnss, and returns the # of recognized data columns.

@@ -1463,7 +1463,7 @@ Bool ROVisibilityIterator::existsWeightSpectrum() const
   Bool rstat(False);
 
   try {
-    rstat = (!colWeightSpectrum.isNull() &&
+    rstat = (!colWeightSpectrum.isNull() && colWeightSpectrum.isDefined(0) &&
 	     colWeightSpectrum.shape(0).isEqual(IPosition(2,nPol_p,channelGroupSize())));
   } catch (AipsError x) {
     rstat = False;
@@ -2330,6 +2330,11 @@ void VisibilityIterator::setSigma(const Vector<Float>& sigma)
     r = sigma;
   }
   putCol(RWcolSigma, sigmat);
+}
+
+void VisibilityIterator::setSigmaMat(const Matrix<Float>& sigMat)
+{
+  putCol(RWcolSigma, sigMat);
 }
 
 void VisibilityIterator::setInterpolatedVisFlag(const Cube<Complex>& vis, 

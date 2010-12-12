@@ -24,6 +24,11 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id: $
+
+// To make Timer reports in the inner loop of the simple copy,
+// uncomment the following line:
+//#define COPYTIMER
+
 #include <msvis/MSVis/SubMS.h>
 #include <ms/MeasurementSets/MSSelection.h>
 //#include <ms/MeasurementSets/MSTimeGram.h>
@@ -43,8 +48,12 @@
 #include <casa/OS/File.h>
 #include <casa/OS/HostInfo.h>
 #include <casa/OS/Memory.h>              // Can be commented out along with
-#include <casa/OS/Timer.h>
 //                                         // Memory:: calls.
+
+//#ifdef COPYTIMER
+#include <casa/OS/Timer.h>
+//#endif
+
 #include <casa/Containers/Record.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/Assert.h>
@@ -82,11 +91,6 @@
 #include <measures/Measures/MeasTable.h>
 #include <scimath/Mathematics/Smooth.h>
 #include <casa/Quanta/MVTime.h>
-
-// uncomment the following line to restore old (slow) row-wise in simple copy:
-//#define OLDCOPY
-// uncomment the following line to invoke Timer reports in the simple copy
-//#define COPYTIMER
 
 namespace casa {
   
@@ -832,12 +836,21 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
   msc_p->uvwMeas().setDescRefCode(Muvw::castType(mscIn_p->uvwMeas().getMeasRef().getType()));
 
   // fill or update
+  Timer timer;
+  timer.mark();
   if(!fillDDTables())
     return False;
+  os << LogIO::DEBUG1
+     << "fillDDTables took " << timer.real() << "s."
+     << LogIO::POST;
 
   // SourceIDs need to be remapped around here.  It could not be done in
   // selectSource() because mssel_p was not setup yet.
+  timer.mark();
   relabelSources();
+  os << LogIO::DEBUG1
+     << "relabelSources took " << timer.real() << "s."
+     << LogIO::POST;
 
   success &= fillFieldTable();
   success &= copySource();
@@ -847,10 +860,18 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     return false;
 
   success &= copyObservation();
+  timer.mark();
   success &= copyPointing();
+  os << LogIO::DEBUG1
+     << "copyPointing took " << timer.real() << "s."
+     << LogIO::POST;
 
   success &= copyState();
+  timer.mark();
   success &= copyWeather();
+  os << LogIO::DEBUG1
+     << "copyWeather took " << timer.real() << "s."
+     << LogIO::POST;
   
   // Run this after running the other copy*()s.  Maybe there should be an
   // option to *not* run it.
@@ -873,8 +894,10 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     //VisSet/MSIter will check if the SORTED exists
     //and resort if necessary
     {
-      Matrix<Int> noselection;
-      VisSet vs(ms_p, noselection);
+      // Matrix<Int> noselection;
+      // VisSet vs(ms_p, noselection);
+      Block<Int> sort;
+      ROVisibilityIterator(ms_p, sort);
     }
     
    
@@ -1002,9 +1025,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
          << LogIO::POST;
     }
     return True;
-    
   }
-  
 
   MeasurementSet* SubMS::setupMS(const String& MSFileName, const Int nchan,
                                  const Int nCorr, const String& telescop,
@@ -5749,40 +5770,100 @@ uInt SubMS::dataColStrToEnums(const String& col, Vector<MS::PredefinedColumns>& 
 
 
 Bool SubMS::fillAccessoryMainCols(){
-  msOut_p.addRow(mssel_p.nrow(), True);
+  LogIO os(LogOrigin("SubMS", "fillAccessoryMainCols()"));
+  uInt nrows = mssel_p.nrow();
+
+  msOut_p.addRow(nrows, True);
   
+  //#ifdef COPYTIMER
+  Timer timer;
+  timer.mark();
+  //#endif
   if(!antennaSel_p){
-    msc_p->antenna1().putColumn(mscIn_p->antenna1());
-    msc_p->antenna2().putColumn(mscIn_p->antenna2());
+    msc_p->antenna1().putColumn(mscIn_p->antenna1().getColumn());
+    msc_p->antenna2().putColumn(mscIn_p->antenna2().getColumn());
+    os << LogIO::DEBUG1
+       << "Straight copying ANTENNA* took " << timer.real() << "s."
+       << LogIO::POST;
   }
   else{
-    const ROScalarColumn<Int> ant1(mscIn_p->antenna1());
-    const ROScalarColumn<Int> ant2(mscIn_p->antenna2());
+    Vector<Int> ant1(mscIn_p->antenna1().getColumn());
+    Vector<Int> ant2(mscIn_p->antenna2().getColumn());
     
-    for(Int k = ant1.nrow(); k--;){
-      msc_p->antenna1().put(k, antNewIndex_p[ant1(k)]);
-      msc_p->antenna2().put(k, antNewIndex_p[ant2(k)]);
+    for(uInt k = 0; k < nrows; ++k){
+      ant1[k] = antNewIndex_p[ant1[k]];
+      ant2[k] = antNewIndex_p[ant2[k]];
     }
+    msc_p->antenna1().putColumn(ant1);
+    msc_p->antenna2().putColumn(ant2);
+    os << LogIO::DEBUG1
+       << "Selectively copying ANTENNA* took " << timer.real() << "s."
+       << LogIO::POST;
   }
-  msc_p->feed1().putColumn(mscIn_p->feed1());
-  msc_p->feed2().putColumn(mscIn_p->feed2());
   
-  msc_p->exposure().putColumn(mscIn_p->exposure());
-  //  msc_p->flag().putColumn(mscIn_p->flag());
-  // if(!(mscIn_p->flagCategory().isNull()))
-  //  if(mscIn_p->flagCategory().isDefined(0))
-  //    msc_p->flagCategory().putColumn(mscIn_p->flagCategory());
-  msc_p->flagRow().putColumn(mscIn_p->flagRow());
-  msc_p->interval().putColumn(mscIn_p->interval());
-  msc_p->scanNumber().putColumn(mscIn_p->scanNumber());
-  msc_p->time().putColumn(mscIn_p->time());
-  msc_p->timeCentroid().putColumn(mscIn_p->timeCentroid());
+  timer.mark();
+  msc_p->feed1().putColumn(mscIn_p->feed1().getColumn());
+  msc_p->feed2().putColumn(mscIn_p->feed2().getColumn());
+  os << LogIO::DEBUG1
+     << "Copying FEED* took " << timer.real() << "s."
+     << LogIO::POST;
+  
+  timer.mark();
+  msc_p->exposure().putColumn(mscIn_p->exposure().getColumn());
+  os << LogIO::DEBUG1
+     << "Copying EXPOSURE took " << timer.real() << "s."
+     << LogIO::POST;
+
+  timer.mark();
+  msc_p->flagRow().putColumn(mscIn_p->flagRow().getColumn());
+  os << LogIO::DEBUG1
+     << "Copying flagRow took " << timer.real() << "s."
+     << LogIO::POST;
+
+  timer.mark();
+  msc_p->interval().putColumn(mscIn_p->interval().getColumn());
+  os << LogIO::DEBUG1
+     << "Copying INTERVAL took " << timer.real() << "s."
+     << LogIO::POST;
+
+  timer.mark();
+  msc_p->scanNumber().putColumn(mscIn_p->scanNumber().getColumn());
+  os << LogIO::DEBUG1
+     << "Copying scanNumber took " << timer.real() << "s."
+     << LogIO::POST;
+
+  timer.mark();
+  msc_p->time().putColumn(mscIn_p->time().getColumn());
+  os << LogIO::DEBUG1
+     << "Copying TIME took " << timer.real() << "s."
+     << LogIO::POST;
+
+  timer.mark();
+  msc_p->timeCentroid().putColumn(mscIn_p->timeCentroid().getColumn());
+  os << LogIO::DEBUG1
+     << "Copying timeCentroid took " << timer.real() << "s."
+     << LogIO::POST;
   
   // ScalarMeasColumn doesn't have a putColumn() for some reason.
   //msc_p->uvwMeas().putColumn(mscIn_p->uvwMeas());
-  msc_p->uvw().putColumn(mscIn_p->uvw());
+  timer.mark();
+  //msc_p->uvw().putColumn(mscIn_p->uvw());      // 98s for 4.7e6 rows
+
+  // 3.06s for 4.7e6 rows
+  //RefRows refrows(0,  nrows - 1);
+  //msc_p->uvw().putColumnCells(refrows, mscIn_p->uvw().getColumn());
+
+  msc_p->uvw().putColumn(mscIn_p->uvw().getColumn());   // 2.74s for 4.7e6 rows
+  os << LogIO::DEBUG1
+     << "Copying uvw took " << timer.real() << "s."
+     << LogIO::POST;
   
+  timer.mark();
   relabelIDs();
+  os << LogIO::DEBUG1
+     << "relabelIDs took " << timer.real() << "s."
+     << LogIO::POST;
+
   return True;
 }
 
@@ -5790,6 +5871,7 @@ Bool SubMS::fillAccessoryMainCols(){
   {  
     LogIO os(LogOrigin("SubMS", "fillMainTable()"));
     Bool success = true;
+    Timer timer;
 
     fillAccessoryMainCols();
 
@@ -5801,56 +5883,54 @@ Bool SubMS::fillAccessoryMainCols(){
       const uInt nDataCols = complexCols.nelements();
       const Bool writeToDataCol = mustConvertToData(nDataCols, complexCols);
 
-      msc_p->flag().putColumn(mscIn_p->flag());
-      if(!(mscIn_p->weightSpectrum().isNull()) &&
-         mscIn_p->weightSpectrum().isDefined(0))
-        msc_p->weightSpectrum().putColumn(mscIn_p->weightSpectrum());
+      // timer.mark();
+      // msc_p->weight().putColumn(mscIn_p->weight());
+      // os << LogIO::DEBUG1
+      //    << "Copying weight took " << timer.real() << "s."
+      //    << LogIO::POST;
+      // timer.mark();
+      // msc_p->sigma().putColumn(mscIn_p->sigma());
+      // os << LogIO::DEBUG1
+      //    << "Copying SIGMA took " << timer.real() << "s."
+      //    << LogIO::POST;
 
-      msc_p->weight().putColumn(mscIn_p->weight());
-      msc_p->sigma().putColumn(mscIn_p->sigma());
+      // timer.mark();      
+      // msc_p->flag().putColumn(mscIn_p->flag());
+      // os << LogIO::DEBUG1
+      //    << "Copying FLAG took " << timer.real() << "s."
+      //    << LogIO::POST;
 
-#ifdef COPYTIMER
-      Timer timer;
-      timer.mark();
-#endif
+      os << LogIO::DEBUG1;
+      Bool didFC = false;
+      timer.mark();      
+      if(!mscIn_p->flagCategory().isNull() &&
+         mscIn_p->flagCategory().isDefined(0)){
+        IPosition fcshape(mscIn_p->flagCategory().shape(0));
+        IPosition fshape(mscIn_p->flag().shape(0));
 
-      for(uInt ni = 0; ni < nDataCols; ++ni){
-
-#ifdef OLDCOPY
-	// This does one row at a time
-	getDataColumn(data, complexCols[ni]);
-	putDataColumn(*msc_p, data, complexCols[ni], writeToDataCol);
-#else
-	// This uses VisIter and is much faster
-	copyData(complexCols[ni],writeToDataCol);
-#endif
+        // I don't know or care how many flag categories there are.
+        if(fcshape(0) == fshape(0) && fcshape(1) == fshape(1)){
+          msc_p->flagCategory().putColumn(mscIn_p->flagCategory());
+          os << "Copying FLAG_CATEGORY took " << timer.real() << "s.";
+          didFC = true;
+        }
       }
-
+      if(!didFC)
+        os << "Deciding not to copy FLAG_CATEGORY took " << timer.real() << "s.";
+      os << LogIO::POST;
+          
+      timer.mark();
+      copyDataFlagsWtSp(complexCols, writeToDataCol);
       if(doFloat)
         msc_p->floatData().putColumn(mscIn_p->floatData());
-
-#ifdef COPYTIMER
-	cout << "Total data read/write time = " << timer.real() << endl;
-#endif
-
     }
     else{
-      // if(sameShape_p){
-      // 	//
-      // 	//Checking to make sure we have in memory capability else 
-      // 	// use visbuffer
-      // 	//
-      // 	Double memAvail= Double (HostInfo::memoryTotal())*(1024);
-      // 	//Factoring in 30% for flags and other stuff
-      // 	if(4.3 * n_bytes() >  memAvail)
-      // 	  sameShape_p = False;
-      // }
-      // if(sameShape_p)
-      // 	writeSimilarSpwShape(colNames);
-      // else
-      // 	success = writeDiffSpwShape(colNames);
+      timer.mark();
       doChannelMods(colNames);
     }
+    os << LogIO::DEBUG1
+       << "Total data read/write time = " << timer.real()
+       << LogIO::POST;
     
     return success;
   }
@@ -5903,8 +5983,8 @@ Bool SubMS::fillAccessoryMainCols(){
     return true;
   }
 
-  Bool SubMS::copyData(const MS::PredefinedColumns colName,
-		       const Bool writeToDataCol)
+Bool SubMS::copyDataFlagsWtSp(const Vector<MS::PredefinedColumns>& colNames,
+                              const Bool writeToDataCol)
   {
 
     Block<Int> columns;
@@ -5919,6 +5999,8 @@ Bool SubMS::fillAccessoryMainCols(){
 #ifdef COPYTIMER
     Timer timer;
     timer.mark();
+
+    Vector<Int> inscan, outscan;
 #endif
 
     ROVisIter viIn(mssel_p,columns,0.0);
@@ -5926,16 +6008,28 @@ Bool SubMS::fillAccessoryMainCols(){
     viIn.setRowBlocking(1000);
     viOut.setRowBlocking(1000);
     Int iChunk(0), iChunklet(0);
+    Cube<Complex> data;
+    Cube<Bool> flag;
+
+    Matrix<Float> wtmat;
+    viIn.originChunks();                                // Makes me feel better.
+    const Bool doWtSp(viIn.existsWeightSpectrum());
+    Cube<Float> wtsp;
+
+    uInt ninrows = mssel_p.nrow();
+    ProgressMeter meter(0.0, ninrows * 1.0, "split", "rows copied", "", "",
+                        True, 1);
+    uInt inrowsdone = 0;  // only for the meter.
+
     for (iChunk=0,viOut.originChunks(),viIn.originChunks();
 	 viOut.moreChunks(),viIn.moreChunks();
 	 viOut.nextChunk(),viIn.nextChunk(),++iChunk) {
-
-      Vector<Int> i,j;
+      inrowsdone += viIn.nRowChunk();
 
       // The following can help evaluable in/out index alignment
       /*
       cout << "****iChunk=" << iChunk 
-	   << " scn: " << viIn.scan(i)(0) << "/" << viOut.scan(j)(0) << "   "
+	   << " scn: " << viIn.scan(inscan)(0) << "/" << viOut.scan(outscan)(0) << "   "
 	   << "fld: " << viIn.fieldId() << "/"  << viOut.fieldId() << "   "
 	   << "ddi: " << viIn.dataDescriptionId() << "/" << viOut.dataDescriptionId() << "   "
 	   << "spw: " << viIn.spectralWindow() << "/"  << viOut.spectralWindow() << "   "
@@ -5950,45 +6044,59 @@ Bool SubMS::fillAccessoryMainCols(){
 #ifdef COPYTIMER
 	timer.mark();
 #endif
-	Cube<Complex> data;
-	if(writeToDataCol || colName == MS::DATA) {
-	  // write DATA, MODEL_DATA, or CORRECTED_DATA to DATA
-	  switch (colName) {
-	  case MS::DATA:
-	    viIn.visibility(data,VisibilityIterator::Observed);
-	    break;
-	  case MS::MODEL_DATA:
-	    viIn.visibility(data,VisibilityIterator::Model);
-	    break;
-	  case MS::CORRECTED_DATA:
-	    viIn.visibility(data,VisibilityIterator::Corrected);
-	    break;
-	  default:
-	    throw(AipsError("Unrecognized input column!"));
-	    break;
-	  }
-	  viOut.setVis(data,VisibilityIterator::Observed);
-	}
-	else if (colName ==  MS::MODEL_DATA) {
-	  // write MODEL_DATA to MODEL_DATA
-	  viIn.visibility(data,VisibilityIterator::Model);
-	  viOut.setVis(data,VisibilityIterator::Model);
-	}
-	else if (colName == MS::CORRECTED_DATA) {
-	  // write CORRECTED_DATA to CORRECTED_DATA
-	  viIn.visibility(data,VisibilityIterator::Corrected);
-	  viOut.setVis(data,VisibilityIterator::Corrected);
-	}
-	//else if(colName == MS::FLOAT_DATA)              // TBD
-	//	else if(colName == MS::LAG_DATA)      // TBD
-	else
-	  return false;
+        viIn.flag(flag);
+        viOut.setFlag(flag);
+        viIn.weightMat(wtmat);
+        viOut.setWeightMat(wtmat);
+        viIn.sigmaMat(wtmat);           // Yes, I'm reusing wtmat.
+        viOut.setSigmaMat(wtmat);
+        if(doWtSp){
+          viIn.weightSpectrum(wtsp);
+          viOut.setWeightSpectrum(wtsp);
+        }
+
+        for(Int colnum = colNames.nelements(); colnum--;){
+          if(writeToDataCol || colNames[colnum] == MS::DATA) {
+            // write DATA, MODEL_DATA, or CORRECTED_DATA to DATA
+            switch (colNames[colnum]) {
+            case MS::DATA:
+              viIn.visibility(data,VisibilityIterator::Observed);
+              break;
+            case MS::MODEL_DATA:
+              viIn.visibility(data,VisibilityIterator::Model);
+              break;
+            case MS::CORRECTED_DATA:
+              viIn.visibility(data,VisibilityIterator::Corrected);
+              break;
+            default:
+              throw(AipsError("Unrecognized input column!"));
+              break;
+            }
+            viOut.setVis(data,VisibilityIterator::Observed);
+          }
+          else if (colNames[colnum] ==  MS::MODEL_DATA) {
+            // write MODEL_DATA to MODEL_DATA
+            viIn.visibility(data,VisibilityIterator::Model);
+            viOut.setVis(data,VisibilityIterator::Model);
+          }
+          else if (colNames[colnum] == MS::CORRECTED_DATA) {
+            // write CORRECTED_DATA to CORRECTED_DATA
+            viIn.visibility(data,VisibilityIterator::Corrected);
+            viOut.setVis(data,VisibilityIterator::Corrected);
+          }
+          //else if(colNames[colnum] == MS::FLOAT_DATA)              // TBD
+          //	else if(colNames[colnum] == MS::LAG_DATA)      // TBD
+          else
+            return false;
+        }
 
 #ifdef COPYTIMER	
 	Double t=timer.real();
 	cout << "Chunk: " << iChunk << " " << iChunklet 
-	     << " scn: " << viIn.scan(i)(0) << "/" << viOut.scan(j)(0) << "   "
-	     << " spw: " << viIn.spectralWindow() << "/"  << viOut.spectralWindow() << " : "
+	     << " scn: " << viIn.scan(inscan)(0) << "/" << viOut.scan(outscan)(0) 
+             << "   "
+	     << " spw: " << viIn.spectralWindow() << "/"  << viOut.spectralWindow() 
+             << " : "
 	     << data.nelements() << " cells = " 
 	     << data.nelements()*8.e-6 << " MB in " 
 	     << t << " sec, for " << data.nelements()*8.e-6/t << " MB/s" 
@@ -5996,6 +6104,7 @@ Bool SubMS::fillAccessoryMainCols(){
 #endif
 	
       }
+      meter.update(inrowsdone);
     }
     msOut_p.flush();
     return true;
@@ -7075,9 +7184,7 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
   // timeBin_p.  Giving it timeBin_p - 0.5 * interval[0] removes the bias and
   // brings it almost in line with binTimes() (which uses -0.5 *
   // interval[bin_start]).
-  Double timeBin = timeBin_p - 0.5 * mscIn_p->interval()(0);
-
-  ROVisIterator vi(mssel_p, sort, timeBin);
+  ROVisIterator vi(mssel_p, sort, timeBin_p - 0.5 * mscIn_p->interval()(0));
   
   // Apply selection
   // for(uInt spwind = 0; spwind < spw_p.nelements(); ++spwind)
@@ -7101,8 +7208,6 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
 
   //os << LogIO::NORMAL2 << "outNrow = " << msOut_p.nrow() << LogIO::POST;
 
-  Double rowwtfac; // Adjusts row weight for channel selection.
-
   // All of this ddid/spw confusion really needs cleaning up.
   // a map from input to output
   // DATA_DESC_ID.  (ddidmap[input_ddid] = output_ddid.  Setting ddidmap to -1
@@ -7123,7 +7228,6 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
 		      True, 1);
   uInt inrowsdone = 0;  // only for the meter.
 
-  //VisChunkAverager vca(timeBin_p, columnNames, doSpWeight);
   VisChunkAverager vca(columnNames, doSpWeight);
 
   // Iterate through the chunks.  A timebin will have multiple chunks if it has

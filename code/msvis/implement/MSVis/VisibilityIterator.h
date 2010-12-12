@@ -854,6 +854,8 @@ public:
   // Set/modify the Sigma
   void setSigma(const Vector<Float>& sig);
 
+  // Set/modify the ncorr x nrow SigmaMat.
+  void setSigmaMat(const Matrix<Float>& sigmat);
 protected:
   virtual void attachColumns(const Table &t);
   void setInterpolatedVisFlag(const Cube<Complex>& vis, 
