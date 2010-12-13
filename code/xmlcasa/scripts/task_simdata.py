@@ -826,13 +826,31 @@ def simdata(
         else:
             # if not predicting this time, but are imageing or analyzing, 
             # get telescopename from ms
-            if image or analyze:
+            # KS - telescopename seems not used in image and analyze
+            if (image or analyze) and os.path.exists(project+'.ms'):
                 tb.open(project+".ms/OBSERVATION")
                 n=tb.getcol("TELESCOPE_NAME")
                 telescopename=n[0]
                 util.telescopename=telescopename
                 # todo add check that entire column is the same
                 tb.done()
+            # if not predicting this time, but applying thermal noise,
+            # get telescopename from ms
+            if thermalnoise != "":
+                if os.path.exists(project+'.ms'):
+                    msfile = project+'.ms'
+                    tb.open(msfile+"/OBSERVATION")
+                    n=tb.getcol("TELESCOPE_NAME")
+                    telescopename=n[0]
+                    # todo add check that entire column is the same
+                    tb.done()
+                if os.path.exists(project+'.sd.ms'):
+                    sdmsfile = project+'.sd.ms'
+                    tb.open(sdmsfile+"/OBSERVATION")
+                    n=tb.getcol("TELESCOPE_NAME")
+                    tp_telescopename=n[0]
+                    # todo add check that entire column is the same
+                    tb.done()
 
         ######################################################################
         # noisify
@@ -843,24 +861,14 @@ def simdata(
         if thermalnoise!="":
             #if not (telescopename == 'ALMA' or telescopename == 'ACA' or telescopename == "SMA" or telescopename=="EVLA" or telescopename=="VLA"):
             knowntelescopes = ["ALMA", "ACA", "SMA", "EVLA", "VLA"]
-            if telescopename not in knowntelescopes:
-                msg("thermal noise only works properly for ALMA/ACA or EVLA",origin="noise",priority="warn")
                 
             noise_any=True
 
-            eta_p, eta_s, eta_b, eta_t, eta_q, t_rx = util.noisetemp(telescope=telescopename,freq=model_center)
-
-            # antenna efficiency
-            eta_a = eta_p * eta_s * eta_b * eta_t
-            if verbose: 
-                msg('antenna efficiency    = ' + str(eta_a),origin="noise")
-                msg('spillover efficiency  = ' + str(eta_s),origin="noise")
-                msg('correlator efficiency = ' + str(eta_q),origin="noise")
+            noisymsroot = msroot+".noisy"
  
             # Cosmic background radiation temperature in K. 
             t_cmb = 2.725
 
-            noisymsroot = msroot+".noisy"
 
             # check for interferometric ms:
             if os.path.exists(msroot+".ms"):
@@ -884,6 +892,17 @@ def simdata(
                     msg("tp_only set to False since you have "+msroot+".ms",priority="warn")
                     tp_only=False
                 
+                if telescopename not in knowntelescopes:
+                    msg("thermal noise only works properly for ALMA/ACA or EVLA",origin="noise",priority="warn")
+                eta_p, eta_s, eta_b, eta_t, eta_q, t_rx = util.noisetemp(telescope=telescopename,freq=model_center)
+
+                # antenna efficiency
+                eta_a = eta_p * eta_s * eta_b * eta_t
+                if verbose: 
+                    msg('antenna efficiency    = ' + str(eta_a),origin="noise")
+                    msg('spillover efficiency  = ' + str(eta_s),origin="noise")
+                    msg('correlator efficiency = ' + str(eta_q),origin="noise")
+
                 sm.openfromms(noisymsroot+".ms")    # an existing MS
                 sm.setdata(fieldid=[]) # force to get all fields
                 if thermalnoise=="tsys-manual":
@@ -929,6 +948,17 @@ def simdata(
                 if sm.name()!='':
                     msg("table persistence error on %s" % sm.name(),priority="error")
                     return
+
+                if tp_telescopename not in knowntelescopes:
+                    msg("thermal noise only works properly for ALMA/ACA or EVLA",origin="noise",priority="warn")
+                eta_p, eta_s, eta_b, eta_t, eta_q, t_rx = util.noisetemp(telescope=tp_telescopename,freq=model_center)
+
+                # antenna efficiency
+                eta_a = eta_p * eta_s * eta_b * eta_t
+                if verbose: 
+                    msg('antenna efficiency    = ' + str(eta_a),origin="noise")
+                    msg('spillover efficiency  = ' + str(eta_s),origin="noise")
+                    msg('correlator efficiency = ' + str(eta_q),origin="noise")
 
                 sm.openfromms(noisymsroot+".sd.ms")    # an existing MS
                 sm.setdata(fieldid=[]) # force to get all fields
