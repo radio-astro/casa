@@ -101,6 +101,7 @@ casa_add_library( synthesis
   implement/MeasurementComponents/StandardVisCal.cc
   implement/MeasurementComponents/SteepestDescentSolver.cc
   implement/MeasurementComponents/SynthesisError.cc
+  implement/MeasurementComponents/TsysGainCal.cc
   implement/MeasurementComponents/Utils.cc
   implement/MeasurementComponents/UVMod.cc
   implement/MeasurementComponents/VisCal.cc

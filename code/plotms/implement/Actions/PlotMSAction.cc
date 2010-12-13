@@ -177,7 +177,9 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
 	
 	switch(itsType_) {
 	
-	case SEL_FLAG: case SEL_UNFLAG: case SEL_LOCATE: {
+	case SEL_FLAG: 
+	case SEL_UNFLAG: 
+	case SEL_LOCATE: {
 	    // Locate/Flag/Unflag on all visible canvases.
 	    const vector<PlotMSPlot*>& plots = plotms->getPlotManager().plots();
 	    vector<PlotCanvasPtr> visibleCanv = plotms->getPlotter()
@@ -347,8 +349,11 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
 		return true;
 	}
 
-	case TOOL_MARK_REGIONS:	case TOOL_ZOOM:	case TOOL_PAN:
-	case TOOL_ANNOTATE_TEXT: case TOOL_ANNOTATE_RECTANGLE: {
+	case TOOL_MARK_REGIONS:	
+	case TOOL_ZOOM:	
+	case TOOL_PAN:
+	case TOOL_ANNOTATE_TEXT: 
+	case TOOL_ANNOTATE_RECTANGLE: {
 		bool on = valueBool(P_ON_OFF);
 	    PlotStandardMouseToolGroup::Tool tool=PlotStandardMouseToolGroup::NONE;
 	    if(on && itsType_ == TOOL_MARK_REGIONS)
@@ -410,7 +415,9 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
 	    return true;
 	}
 
-	case STACK_BACK: case STACK_BASE: case STACK_FORWARD: {
+	case STACK_BACK: 
+	case STACK_BASE: 
+	case STACK_FORWARD: {
 	    int delta = 0;
 	    if(itsType_ == STACK_BACK)         delta = -1;
 	    else if(itsType_ == STACK_FORWARD) delta = 1;
@@ -619,9 +626,13 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
 	    Bool interactive = ! (
 	    	isDefinedBool(P_INTERACTIVE) && ! valueBool(P_INTERACTIVE)
 	    );
+	    
+	    // Create Export Thread and start executing it
+	    // Note: new object is deleted in PlotMSPlotter::currentThreadFinished() 
 	    plotms->getPlotter()->doThreadedOperation(
 	    	new PlotMSExportThread(valuePlot(P_PLOT), format, interactive)
 	    );
+	    
 	    return true;
 	}
 

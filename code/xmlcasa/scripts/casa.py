@@ -122,6 +122,7 @@ from find import  find
 from fixvis import  fixvis
 from flagautocorr import  flagautocorr
 from flagdata import  flagdata
+from flagdata2 import  flagdata2
 from flagmanager import  flagmanager
 from fluxscale import  fluxscale
 from fringecal import  fringecal
@@ -151,7 +152,6 @@ from listobs import  listobs
 from listvis import  listvis
 from mosaic import  mosaic
 from msview import msview
-from newflagdata import  newflagdata
 from peel import  peel
 from plotants import  plotants
 from plotcal import  plotcal

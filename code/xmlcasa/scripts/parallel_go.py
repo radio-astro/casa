@@ -271,6 +271,13 @@ class cluster(object):
          time.sleep(1)
          #print "wait", i 
 
+      for i in range(1, 15):
+         #print os.path.exists(meng)
+         if os.path.exists(meng):
+            break
+         time.sleep(1)
+         #print "wait furl file", i 
+
       self.__client=client.MultiEngineClient(meng)
       #print "__client=", self.__client
 

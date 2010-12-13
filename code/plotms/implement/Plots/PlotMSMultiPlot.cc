@@ -513,7 +513,7 @@ bool PlotMSMultiPlot::updateCanvas() {
 
                 // Show/hide axes
 		// TBD: control this from the gui info!!
-                canv->showAxes(false);
+                canv->showAllAxes(false);
                 canv->showAxis(cx, set && c->xAxisShown());
                 canv->showAxis(cy, set && c->yAxisShown());
                 

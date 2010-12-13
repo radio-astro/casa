@@ -1492,12 +1492,6 @@ class par(str):
 
 		--------------------------------------------------------------------------
 
-		(for newflagdata)
-		mode -- mode of operation
-		options: 'manualflag', 'autoflag', 'summary', 'query', 'extend', 'run'
-
-		--------------------------------------------------------------------------
-
                 (for sdimprocess)
 		mode -- processing mode
 		options: 'basket', 'press'

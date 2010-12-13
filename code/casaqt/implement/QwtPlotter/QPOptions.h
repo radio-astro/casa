@@ -451,24 +451,8 @@ class QPOptions {
 public:
     // Converts between Qwt's axis enum and CASA's.
     // <group>
-    static QwtPlot::Axis axis(PlotAxis a) {
-        switch(a) {
-        case X_BOTTOM: return QwtPlot::xBottom;
-        case X_TOP: return QwtPlot::xTop;
-        case Y_LEFT: return QwtPlot::yLeft;
-        case Y_RIGHT: return QwtPlot::yRight;
-        default: return QwtPlot::xBottom;
-        }
-    }    
-    static PlotAxis axis(QwtPlot::Axis a) {
-        switch(a) {
-        case QwtPlot::xBottom: return X_BOTTOM;
-        case QwtPlot::xTop: return X_TOP;
-        case QwtPlot::yLeft: return Y_LEFT;
-        case QwtPlot::yRight: return Y_RIGHT;
-        default: return X_BOTTOM;
-        }
-    }
+    static QwtPlot::Axis axis(PlotAxis a);
+    static PlotAxis axis(QwtPlot::Axis a);
     // </group>
     
     // Converts between Qt's cursors and CASA's.

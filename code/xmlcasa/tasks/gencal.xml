@@ -33,6 +33,7 @@
                             <value>mbd</value>
                             <value>antpos</value>
                             <value>antposvla</value>
+                            <value>tsys</value>
                         </allowed>
 		</param>
 

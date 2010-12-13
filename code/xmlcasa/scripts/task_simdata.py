@@ -658,6 +658,9 @@ def simdata(
                     pl.xlabel('u[klambda]',fontsize='x-small')
                     pl.ylabel('v[klambda]',fontsize='x-small')
                     pl.axis('equal')
+                    # Add single dish (zero-spacing)
+                    if predict_sd:
+                        pl.plot([0.],[0.],'r,')
 
                     # show dirty beam from observed uv coverage
                     util.nextfig()
@@ -817,25 +820,6 @@ def simdata(
                     sm.predict(complist=complist)
             
                 sm.done()
-
-                # modify STATE table information for ASAP
-                # Ugly part!! need improvement. 
-                nstate=1
-                tb.open(tablename=sdmsfile+'/STATE',nomodify=False)
-                tb.addrows(nrow=nstate)
-                tb.putcol(columnname='CAL',value=[0.]*nstate,startrow=0,nrow=nstate,rowincr=1)
-                tb.putcol(columnname='FLAG_ROW',value=[False]*nstate,startrow=0,nrow=nstate,rowincr=1)
-                tb.putcol(columnname='LOAD',value=[0.]*nstate,startrow=0,nrow=nstate,rowincr=1)
-                tb.putcol(columnname='REF',value=[False]*nstate,startrow=0,nrow=nstate,rowincr=1)
-                tb.putcol(columnname='SIG',value=[True]*nstate,startrow=0,nrow=nstate,rowincr=1)
-                tb.putcol(columnname='SUB_SCAN',value=[0]*nstate,startrow=0,nrow=nstate,rowincr=1)
-                tb.flush()
-                tb.close()
-            
-                tb.open(tablename=sdmsfile,nomodify=False)
-                tb.putcol(columnname='STATE_ID',value=[0]*nscan,startrow=0,nrow=nscan,rowincr=1)
-                tb.flush()
-                tb.close()
                 
                 msg('generation of measurement set ' + sdmsfile + ' complete')
 
@@ -857,12 +841,14 @@ def simdata(
         msroot=project  # if leakage, can just copy from this project
     
         if thermalnoise!="":
-            if not (telescopename == 'ALMA' or telescopename == 'ACA' or telescopename == "SMA" or telescopename=="EVLA" or telescopename=="VLA"):
+            #if not (telescopename == 'ALMA' or telescopename == 'ACA' or telescopename == "SMA" or telescopename=="EVLA" or telescopename=="VLA"):
+            knowntelescopes = ["ALMA", "ACA", "SMA", "EVLA", "VLA"]
+            if telescopename not in knowntelescopes:
                 msg("thermal noise only works properly for ALMA/ACA or EVLA",origin="noise",priority="warn")
                 
             noise_any=True
 
-            eta_p, eta_s, eta_b, eta_t, eta_q, t_rx = util.noisetemp(freq=model_center)
+            eta_p, eta_s, eta_b, eta_t, eta_q, t_rx = util.noisetemp(telescope=telescopename,freq=model_center)
 
             # antenna efficiency
             eta_a = eta_p * eta_s * eta_b * eta_t
@@ -1129,6 +1115,12 @@ def simdata(
                 msg('generation of total power image ' + tpimage + ' complete.')
                 # End of single dish imaging part
 
+        outflat_current=False
+        convsky_current=False
+        beam_current=False
+        imagename=project
+
+        if image and len(mstoimage)>0:
             if not predict:
                 # get nfld, sourcefieldlist, from (interfm) ms if it was not just created
                 tb.open(mstoimage[0]+"/SOURCE")
@@ -1139,18 +1131,11 @@ def simdata(
                 msfile=mstoimage[0]
 
             # set cleanmode automatically (for interfm)
-            if len(mstoimage):
-                if nfld==1:
-                    cleanmode="csclean"
-                else:
-                    cleanmode="mosaic"
+            if nfld==1:
+                cleanmode="csclean"
+            else:
+                cleanmode="mosaic"
 
-        outflat_current=False
-        convsky_current=False
-        beam_current=False
-        imagename=project
-
-        if image and len(mstoimage)>0:
             if not docalibrator:
                 sourcefieldlist=""  # sourcefieldlist should be ok, but this is safer
             
@@ -1432,7 +1417,7 @@ def simdata(
                     util.nextfig()
 
                 if showuv:
-                    tb.open(msfile)  
+                    tb.open(msfile)
                     rawdata=tb.getcol("UVW")
                     tb.done()
                     pl.box()
@@ -1446,6 +1431,9 @@ def simdata(
                     pl.ylabel('v[klambda]',fontsize='x-small')
                     pl.axis('equal')
                     util.nextfig()
+                    # Add zero-spacing (single dish) if not yet plotted
+                    if predict_sd and not util.ismstp(msfile,halt=False):
+                        pl.plot([0.],[0.],'r,')
 
                 if showpsf:
                     if image: 

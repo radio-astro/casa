@@ -308,7 +308,7 @@ print 'Image HCO--'
 default('clean')
 clean(vis='ggtau.hco.split.ms',imagename='ggtau.hco',
       psfmode='clark',niter=100,gain=0.1,nchan=14,start=75,width=4,
-      spw=0,field='0',stokes='I',
+      spw='0',field='0',stokes='I',
       weighting='briggs',robust=0.5,cell=[0.2,0.2],imsize=[256,256],mode='channel')
    ### Emission in central channels is barely visible (too weak to image
    ###  with only 1 day of data but you get the point).  
@@ -343,7 +343,7 @@ print '--Image CO--'
 default('clean')
 clean(vis='ggtau.co.split.ms',imagename='ggtau.co',
       psfmode='clark',niter=100,gain=0.1,nchan=14,start=92,width=4,
-      spw=0,field='0',stokes='I',
+      spw='0',field='0',stokes='I',
       weighting='briggs',robust=0.5,cell=[0.1,0.1],imsize=[256,256])
    ### Emission is too weak to image with only 1 day of data.
 imagecotime=time.time()

@@ -236,7 +236,7 @@ bool QPCanvas::exportHelper(vector<PlotCanvasPtr>& canvases,
 		{
 			case PlotExportFormat::JPG:
 					// JPEG quality ranges from 0 (crude 8x8 blocks) to 100 (best)
-					quality= (hires)? 100: 95;   // experimental; need user feedback 
+					quality= (hires)? 99: 95;   // experimental; need user feedback 
 					break; 
 			case PlotExportFormat::PNG:
 					// compression is lossless.  "quality" is number of deflations.
@@ -249,10 +249,12 @@ bool QPCanvas::exportHelper(vector<PlotCanvasPtr>& canvases,
 		}
         
         // Save to file.
-		ret = !wasCanceled && !image.isNull() &&
-              image.save(format.location.c_str(),
+        bool save_ok;
+        save_ok= image.save(format.location.c_str(),
               PlotExportFormat::exportFormat(format.type).c_str(), 
 			  quality);
+
+		ret = !wasCanceled && !image.isNull() && save_ok;
         
     // PS/PDF
     } else if(format.type == PlotExportFormat::PS ||
@@ -413,6 +415,8 @@ PlotFontPtr QPCanvas::titleFont() const {
     return new QPFont(t.font(), t.color());
 }
 
+
+
 void QPCanvas::setTitleFont(const PlotFont& font) {
     QPFont f(font);
     QwtText t = m_canvas.title();
@@ -421,10 +425,14 @@ void QPCanvas::setTitleFont(const PlotFont& font) {
     m_canvas.setTitle(t);
 }
 
+
+
 PlotAreaFillPtr QPCanvas::background() const {
     return new QPAreaFill(m_canvas.canvas()->palette().brush(
                           QPalette::Window));
 }
+
+
 
 void QPCanvas::setBackground(const PlotAreaFill& areaFill) {
     QPAreaFill a(areaFill);    
@@ -433,12 +441,20 @@ void QPCanvas::setBackground(const PlotAreaFill& areaFill) {
     m_canvas.canvas()->setPalette(p);
 }
 
+
+
 PlotCursor QPCanvas::cursor() const {
-    return QPOptions::cursor(m_canvas.cursor().shape()); }
+    return QPOptions::cursor(m_canvas.cursor().shape()); 
+}
+
+
 
 void QPCanvas::setCursor(PlotCursor cursor) {
+	
     QWidget::setCursor(QPOptions::cursor(cursor));
-    m_canvas.canvas()->setCursor(QPOptions::cursor(cursor)); }
+    m_canvas.canvas()->setCursor(QPOptions::cursor(cursor)); 
+}
+
 
 void QPCanvas::refresh() {
     logMethod(CLASS_NAME, "refresh", true);
@@ -448,6 +464,7 @@ void QPCanvas::refresh() {
     POST_REPLOT
     logMethod(CLASS_NAME, "refresh", false);
 }
+
 
 void QPCanvas::refresh(int drawLayersFlag) {
     logMethod(CLASS_NAME, "refresh(int)", true);
@@ -463,39 +480,63 @@ void QPCanvas::refresh(int drawLayersFlag) {
 }
 
 
-int QPCanvas::shownAxes() const {
-    int axes = 0;
+
+PlotAxisBitset  QPCanvas::shownAxes() const {
+    PlotAxisBitset axes = 0;
     for(int i = 0; i < QwtPlot::axisCnt; i++) {
         if(m_canvas.axisEnabled(i))
-            axes |= QPOptions::axis(QwtPlot::Axis(i));
+            axes |= (PlotAxisBitset)QPOptions::axis(QwtPlot::Axis(i));
     }
     return axes;
 }
 
-void QPCanvas::showAxes(int axesFlag) {
+
+
+void QPCanvas::showAxes(PlotAxisBitset axes) {
     bool show;
-    for(int i = 0; i < QwtPlot::axisCnt; i++) {
-        show = axesFlag & QPOptions::axis(QwtPlot::Axis(i));
+    for(int i = 0; i < QwtPlot::axisCnt /* 4 */;  i++) {
+        show = axes & QPOptions::axis(QwtPlot::Axis(i));
         m_canvas.enableAxis(QwtPlot::Axis(i), show);
     }
 }
 
-PlotAxisScale QPCanvas::axisScale(PlotAxis axis) const {
-	return m_scaleDraws[QPOptions::axis(axis)]->scale(); }
+
+
+PlotAxisScale QPCanvas::axisScale(PlotAxis axis) const   {
+	return m_scaleDraws[QPOptions::axis(axis)]->scale(); 
+}
+
+
+
 void QPCanvas::setAxisScale(PlotAxis axis, PlotAxisScale scale) {
-	m_scaleDraws[QPOptions::axis(axis)]->setScale(scale); }
+	m_scaleDraws[QPOptions::axis(axis)]->setScale(scale); 
+}
+
+
 
 bool QPCanvas::axisReferenceValueSet(PlotAxis axis) const {
-	return m_scaleDraws[QPOptions::axis(axis)]->referenceValueSet(); }
+	return m_scaleDraws[QPOptions::axis(axis)]->referenceValueSet(); 
+}
+
+
 
 double QPCanvas::axisReferenceValue(PlotAxis axis) const {
-	return m_scaleDraws[QPOptions::axis(axis)]->referenceValue(); }
+	return m_scaleDraws[QPOptions::axis(axis)]->referenceValue(); 
+}
+
+
 
 void QPCanvas::setAxisReferenceValue(PlotAxis axis, bool on, double value) {
-	m_scaleDraws[QPOptions::axis(axis)]->setReferenceValue(on, value); }
+	m_scaleDraws[QPOptions::axis(axis)]->setReferenceValue(on, value); 
+}
+
+
 
 bool QPCanvas::cartesianAxisShown(PlotAxis axis) const {
-    return m_canvas.cartesianAxisShown(axis); }
+    return m_canvas.cartesianAxisShown(axis); 
+}
+
+
 
 void QPCanvas::showCartesianAxis(PlotAxis mirrorAxis, PlotAxis secondaryAxis,
                                  bool show, bool hideNormalAxis) {
@@ -503,20 +544,31 @@ void QPCanvas::showCartesianAxis(PlotAxis mirrorAxis, PlotAxis secondaryAxis,
     showAxis(mirrorAxis, !hideNormalAxis);
 }
 
+
+
 String QPCanvas::axisLabel(PlotAxis axis) const {
-    return m_canvas.axisTitle(QPOptions::axis(axis)).text().toStdString(); }
+    return m_canvas.axisTitle(QPOptions::axis(axis)).text().toStdString(); 
+}
+
+
+
 
 void QPCanvas::setAxisLabel(PlotAxis axis, const String& title) {
+	
     m_canvas.setAxisTitle(QPOptions::axis(axis), title.c_str());
     m_canvas.enableAxis(QPOptions::axis(axis));
 }
 
 PlotFontPtr QPCanvas::axisFont(PlotAxis a) const {
+	
     QwtText t = m_canvas.axisTitle(QPOptions::axis(a));
     return new QPFont(t.font(), t.color());
 }
 
+
+
 void QPCanvas::setAxisFont(PlotAxis axis, const PlotFont& font) {
+	
     if(font != *axisFont(axis)) {
         QPFont f(font);    
         QwtText t = m_canvas.axisTitle(QPOptions::axis(axis));
@@ -527,10 +579,16 @@ void QPCanvas::setAxisFont(PlotAxis axis, const PlotFont& font) {
     }
 }
 
+
+
 bool QPCanvas::colorBarShown(PlotAxis axis) const {
-    return m_canvas.axisWidget(QPOptions::axis(axis))->isColorBarEnabled(); }
+    return m_canvas.axisWidget(QPOptions::axis(axis))->isColorBarEnabled(); 
+}
+
+
 
 void QPCanvas::showColorBar(bool show, PlotAxis axis) {
+    
     QwtScaleWidget* scale = m_canvas.axisWidget(QPOptions::axis(axis));
     
     if(!show) {
@@ -569,6 +627,7 @@ void QPCanvas::showColorBar(bool show, PlotAxis axis) {
 
 
 prange_t QPCanvas::axisRange(PlotAxis axis) const {
+	
     const QwtScaleDiv* div = m_canvas.axisScaleDiv(QPOptions::axis(axis));
 #if QWT_VERSION < 0x050200
     return prange_t(div->lBound(), div->hBound());
@@ -577,9 +636,13 @@ prange_t QPCanvas::axisRange(PlotAxis axis) const {
 #endif
 }
 
+
+
 void QPCanvas::setAxisRange(PlotAxis axis, double from, double to) {
     setAxesRanges(axis, from, to, axis, from, to);
 }
+
+
 
 void QPCanvas::setAxesRanges(PlotAxis xAxis, double xFrom, double xTo,
         PlotAxis yAxis, double yFrom, double yTo) {
@@ -648,6 +711,8 @@ void QPCanvas::setAxesRanges(PlotAxis xAxis, double xFrom, double xTo,
     logMethod(CLASS_NAME, "setAxesRanges", false);
 }
 
+
+
 bool QPCanvas::axesAutoRescale() const {
     return !m_axesRatioLocked &&
            m_canvas.axisAutoScale(QPOptions::axis(X_BOTTOM)) &&
@@ -655,6 +720,8 @@ bool QPCanvas::axesAutoRescale() const {
            m_canvas.axisAutoScale(QPOptions::axis(Y_LEFT)) &&
            m_canvas.axisAutoScale(QPOptions::axis(Y_RIGHT));
 }
+
+
 
 void QPCanvas::setAxesAutoRescale(bool autoRescale) {
     if(autoRescale) {
@@ -686,6 +753,8 @@ void QPCanvas::setAxesAutoRescale(bool autoRescale) {
     }
 }
 
+
+
 void QPCanvas::rescaleAxes() {
     logMethod(CLASS_NAME, "rescaleAxes", true);
     m_axesRatioLocked = false;
@@ -702,7 +771,13 @@ void QPCanvas::rescaleAxes() {
     logMethod(CLASS_NAME, "rescaleAxes", false);
 }
 
-bool QPCanvas::axesRatioLocked() const { return m_axesRatioLocked; }
+
+
+bool QPCanvas::axesRatioLocked() const { 
+	return m_axesRatioLocked; 
+}
+
+
 
 void QPCanvas::setAxesRatioLocked(bool locked) {
     m_axesRatioLocked = locked;
@@ -726,16 +801,26 @@ void QPCanvas::setAxesRatioLocked(bool locked) {
 }
 
 
+
 int QPCanvas::cachedAxesStackSizeLimit() const {
-    return m_stackCache.memoryLimit(); }
+    return m_stackCache.memoryLimit(); 
+}
+
+
+
 void QPCanvas::setCachedAxesStackSizeLimit(int sizeInKilobytes) {
-    m_stackCache.setMemoryLimit(sizeInKilobytes); }
+    m_stackCache.setMemoryLimit(sizeInKilobytes); 
+}
+
+
 
 pair<int, int> QPCanvas::cachedAxesStackImageSize() const {
     QSize size = m_stackCache.fixedImageSize();
     if(!size.isValid()) return pair<int, int>(-1, -1);
     else return pair<int, int>(size.width(), size.height());
 }
+
+
 
 void QPCanvas::setCachedAxesStackImageSize(int width, int height) {
     m_stackCache.setFixedSize(QSize(width, height)); }
@@ -843,13 +928,18 @@ bool QPCanvas::plotItem(PlotItemPtr item, PlotCanvasLayer layer) {
     return true;
 }
 
+
+
 vector<PlotItemPtr> QPCanvas::allPlotItems() const {
+	
     vector<PlotItemPtr> v(m_plotItems.size() + m_layeredItems.size());
     unsigned int i = 0, n = m_plotItems.size();
     for(; i < m_plotItems.size(); i++) v[i] = m_plotItems[i].first;
     for(; i < v.size(); i++) v[i] = m_layeredItems[i - n].first;
     return v;
 }
+
+
 
 vector<PlotItemPtr> QPCanvas::layerPlotItems(PlotCanvasLayer layer) const {
     vector<PlotItemPtr> v((layer == MAIN) ? m_plotItems.size() :
@@ -864,12 +954,21 @@ vector<PlotItemPtr> QPCanvas::layerPlotItems(PlotCanvasLayer layer) const {
     return v;
 }
 
-unsigned int QPCanvas::numPlotItems() const { return m_plotItems.size(); }
+
+
+unsigned int QPCanvas::numPlotItems() const { 
+	return m_plotItems.size(); 
+}
+
+
 
 unsigned int QPCanvas::numLayerPlotItems(PlotCanvasLayer layer) const {
+	
     if(layer == MAIN) return m_plotItems.size();
     else              return m_layeredItems.size();
 }
+
+
 
 void QPCanvas::removePlotItems(const vector<PlotItemPtr>& items) {
     logMethod(CLASS_NAME, "removePlotItems", true);
@@ -903,6 +1002,8 @@ void QPCanvas::removePlotItems(const vector<PlotItemPtr>& items) {
     logMethod(CLASS_NAME, "removePlotItems", false);
 }
 
+
+
 void QPCanvas::clearPlotItems() {
     logMethod(CLASS_NAME, "clearPlotItems", true);
     bool replot = m_canvas.autoReplot();
@@ -926,10 +1027,14 @@ void QPCanvas::clearPlotItems() {
     logMethod(CLASS_NAME, "clearPlotItems", false);
 }
 
+
+
 void QPCanvas::clearPlots() {
     PlotCanvas::clearPlots();
     m_usedColors.resize(0);
 }
+
+
 
 void QPCanvas::clearLayer(PlotCanvasLayer layer) {
     logMethod(CLASS_NAME, "clearLayer", true);
@@ -958,7 +1063,10 @@ void QPCanvas::clearLayer(PlotCanvasLayer layer) {
 }
 
 
-void QPCanvas::holdDrawing() { m_canvas.holdDrawing(); }
+
+void QPCanvas::holdDrawing() { 
+		m_canvas.holdDrawing(); 
+}
 
 void QPCanvas::releaseDrawing() {
     logMethod(CLASS_NAME, "releaseDrawing", true);
@@ -969,7 +1077,12 @@ void QPCanvas::releaseDrawing() {
     logMethod(CLASS_NAME, "releaseDrawing", false);
 }
 
-bool QPCanvas::drawingIsHeld() const { return m_canvas.drawingIsHeld(); }
+
+
+bool QPCanvas::drawingIsHeld() const   { 
+	return m_canvas.drawingIsHeld(); 
+}
+
 
 
 void QPCanvas::setSelectLineShown(bool shown) {
@@ -991,6 +1104,7 @@ void QPCanvas::setSelectLine(const PlotLine& line) {
 
 bool QPCanvas::gridShown(bool* xMajor, bool* xMinor, bool* yMajor,
         bool* yMinor) const {
+			
     bool ret = false;
     
     bool tmp = m_canvas.grid().xEnabled();
@@ -1016,8 +1130,13 @@ void QPCanvas::showGrid(bool xMajor, bool xMinor, bool yMajor,bool yMinor) {
     m_canvas.grid().enableYMin(yMinor);
 }
 
+
+
 PlotLinePtr QPCanvas::gridMajorLine() const {
-    return new QPLine(m_canvas.grid().majPen()); }
+    return new QPLine(m_canvas.grid().majPen()); 
+}
+
+
 
 void QPCanvas::setGridMajorLine(const PlotLine& line) {
     if(line != *gridMajorLine()) {
@@ -1028,6 +1147,8 @@ void QPCanvas::setGridMajorLine(const PlotLine& line) {
         m_canvas.grid().setMajPen(l.asQPen());
     }
 }
+
+
 
 PlotLinePtr QPCanvas::gridMinorLine() const {
     return new QPLine(m_canvas.grid().minPen()); }
@@ -1043,30 +1164,62 @@ void QPCanvas::setGridMinorLine(const PlotLine& line) {
 }
 
 
-bool QPCanvas::legendShown() const { return m_legend->legendShown(); }
+
+bool QPCanvas::legendShown() const { 
+	return m_legend->legendShown(); 
+}
+
+
 
 void QPCanvas::showLegend(bool on, LegendPosition pos) {
     m_legend->showLegend(on);
     m_legend->setPosition(pos);
 }
 
+
+
 PlotCanvas::LegendPosition QPCanvas::legendPosition() const {
-    return m_legend->position(); }
+    return m_legend->position(); 
+}
+
+
 
 void QPCanvas::setLegendPosition(LegendPosition pos) {   
-    m_legend->setPosition(pos); }
+    m_legend->setPosition(pos); 
+}
 
-PlotLinePtr QPCanvas::legendLine() const{ return new QPLine(m_legend->line());}
+
+
+PlotLinePtr QPCanvas::legendLine() const{ 
+	return new QPLine(m_legend->line());
+}
+
+
+
 void QPCanvas::setLegendLine(const PlotLine& line) { m_legend->setLine(line); }
 
-PlotAreaFillPtr QPCanvas::legendFill() const {
-    return new QPAreaFill(m_legend->areaFill()); }
-void QPCanvas::setLegendFill(const PlotAreaFill& area) {
-    m_legend->setAreaFill(area); }
 
-PlotFontPtr QPCanvas::legendFont() const { return new QPFont(m_legendFont); }
+
+PlotAreaFillPtr QPCanvas::legendFill() const {
+    return new QPAreaFill(m_legend->areaFill()); 
+}
+
+
+
+void QPCanvas::setLegendFill(const PlotAreaFill& area) {
+    m_legend->setAreaFill(area); 
+}
+
+
+
+PlotFontPtr QPCanvas::legendFont() const { 
+	return new QPFont(m_legendFont); 
+}
+
+
     
 void QPCanvas::setLegendFont(const PlotFont& font) {
+    
     if(font != m_legendFont) {
         m_legendFont = font;
         for(unsigned int i = 0; i < m_plotItems.size(); i++) {
@@ -1080,40 +1233,70 @@ void QPCanvas::setLegendFont(const PlotFont& font) {
 }
 
 
-bool QPCanvas::autoIncrementColors() const { return m_autoIncColors; }
+bool QPCanvas::autoIncrementColors() const { 
+	return m_autoIncColors; 
+}
+
+
 
 void QPCanvas::setAutoIncrementColors(bool autoInc) {
-    m_autoIncColors = autoInc; }
+    m_autoIncColors = autoInc; 
+}
+
+
 
 bool QPCanvas::exportToFile(const PlotExportFormat& format) {
-    return exportCanvas(this, format); }
+    return exportCanvas(this, format); 
+}
 
-String QPCanvas::fileChooserDialog(const String& title,
-        const String& directory) {
+
+
+String QPCanvas::fileChooserDialog(
+			const String& title,
+			const String& directory)    {
+			
     QString filename = QFileDialog::getSaveFileName(this, title.c_str(),
             directory.c_str());
     return filename.toStdString();
 }
 
-const String& QPCanvas::dateFormat() const { return m_dateFormat; }
-void QPCanvas::setDateFormat(const String& dateFormat) {
+
+
+const String& QPCanvas::dateFormat() const { 
+	return m_dateFormat; 
+}
+
+
+
+void QPCanvas::setDateFormat(const String& dateFormat)   {
+	
     if(m_dateFormat == dateFormat) return;
     m_dateFormat = dateFormat;
     for(int i = 0; i < QwtPlot::axisCnt; i++)
         m_scaleDraws[i]->setDateFormat(m_dateFormat);
 }
 
+
+
 const String& QPCanvas::relativeDateFormat() const {
-    return m_relativeDateFormat; }
-void QPCanvas::setRelativeDateFormat(const String& dateFormat) {
+    return m_relativeDateFormat; 
+}
+
+
+
+void QPCanvas::setRelativeDateFormat(const String& dateFormat)   {
+	
     if(m_relativeDateFormat == dateFormat) return;
     m_relativeDateFormat = dateFormat;
     for(int i = 0; i < QwtPlot::axisCnt; i++)
         m_scaleDraws[i]->setRelativeDateFormat(m_relativeDateFormat);
 }
 
+
+
 PlotCoordinate QPCanvas::convertCoordinate(const PlotCoordinate& coord,
-                                 PlotCoordinate::System newSystem) const {
+                                 PlotCoordinate::System newSystem) const  {
+									 
     if(coord.system() == newSystem) return coord;
     
     if(coord.system() == PlotCoordinate::WORLD) {
@@ -1125,7 +1308,8 @@ PlotCoordinate QPCanvas::convertCoordinate(const PlotCoordinate& coord,
             
             return PlotCoordinate(x, y, newSystem);
             
-        } else if(newSystem == PlotCoordinate::PIXEL) {
+        } 
+        else if(newSystem == PlotCoordinate::PIXEL) {
             QwtScaleMap map = m_canvas.canvasMap(QwtPlot::xBottom);
             double x = map.xTransform(coord.x());
             map = m_canvas.canvasMap(QwtPlot::yLeft);
@@ -1134,7 +1318,8 @@ PlotCoordinate QPCanvas::convertCoordinate(const PlotCoordinate& coord,
             return PlotCoordinate(x, y, newSystem);
         }
         
-    } else if(coord.system() == PlotCoordinate::NORMALIZED_WORLD) {
+    } 
+    else if(coord.system() == PlotCoordinate::NORMALIZED_WORLD) {
         if(newSystem == PlotCoordinate::WORLD ||
            newSystem == PlotCoordinate::PIXEL) {
             prange_t range = axisRange(X_BOTTOM);
@@ -1153,7 +1338,8 @@ PlotCoordinate QPCanvas::convertCoordinate(const PlotCoordinate& coord,
 
         }
         
-    } else if(coord.system() == PlotCoordinate::PIXEL) {
+    } 
+    else if(coord.system() == PlotCoordinate::PIXEL) {
         if(newSystem == PlotCoordinate::WORLD ||
            newSystem == PlotCoordinate::NORMALIZED_WORLD) {
             QwtScaleMap map = m_canvas.canvasMap(QwtPlot::xBottom);
@@ -1177,8 +1363,10 @@ PlotCoordinate QPCanvas::convertCoordinate(const PlotCoordinate& coord,
     return coord;
 }
 
+
+
 vector<double> QPCanvas::textWidthHeightDescent(const String& text,
-                                                PlotFontPtr font) const {
+                                                PlotFontPtr font) const   {
     vector<double> v(3, 0);
 
     QFontMetrics mets(QPFont(*font).asQFont());
@@ -1189,21 +1377,50 @@ vector<double> QPCanvas::textWidthHeightDescent(const String& text,
     return v;
 }
 
-PlotFactory* QPCanvas::implementationFactory() const { return new QPFactory();}
 
 
-QPLayeredCanvas& QPCanvas::asQwtPlot() { return m_canvas; }
-const QPLayeredCanvas& QPCanvas::asQwtPlot() const { return m_canvas; }
+PlotFactory* QPCanvas::implementationFactory() const { 
+	return new QPFactory();
+}
 
-QwtPlotPicker& QPCanvas::getSelecter() { return m_picker; }
+
+
+QPLayeredCanvas& QPCanvas::asQwtPlot() { 
+	return m_canvas; 
+}
+
+
+
+const QPLayeredCanvas& QPCanvas::asQwtPlot() const { 
+	return m_canvas; 
+}
+
+
+
+QwtPlotPicker& QPCanvas::getSelecter() { 
+	return m_picker; 
+}
+
+
 
 void QPCanvas::reinstallTrackerFilter() {
     m_canvas.canvas()->removeEventFilter(&m_mouseFilter);
     m_canvas.canvas()->installEventFilter(&m_mouseFilter);
 }
 
-QSize QPCanvas::sizeHint() const { return QSize(); }
-QSize QPCanvas::minimumSizeHint() const { return QSize(); }
+
+
+QSize QPCanvas::sizeHint() const { 
+	return QSize(); 
+}
+
+
+
+QSize QPCanvas::minimumSizeHint() const { 
+	return QSize(); 
+}
+
+
 
 
 // Protected Methods //
@@ -1219,10 +1436,14 @@ void QPCanvas::setQPPlotter(QPPlotter* parent) {
     }
 }
 
+
+
 PlotLoggerPtr QPCanvas::logger() const {
     if(m_parent == NULL) return PlotLoggerPtr();
     else                 return m_parent->logger();
 }
+
+
 
 void QPCanvas::logObject(const String& className, void* address, bool creation,
         const String& message) {
@@ -1234,16 +1455,30 @@ void QPCanvas::logObject(const String& className, void* address, bool creation,
                               PlotLogger::OBJECTS_MAJOR));
 }
 
+
+
 void QPCanvas::logMethod(const String& className, const String& methodName,
         bool entering, const String& message) {
     if(m_parent != NULL)
         m_parent->logMethod(className, methodName, entering, message);
 }
 
-QPAxesCache& QPCanvas::axesCache() { return m_stackCache; }
-const QPAxesCache& QPCanvas::axesCache() const { return m_stackCache; }
+
+
+QPAxesCache& QPCanvas::axesCache()   { 
+	return m_stackCache; 
+}
+
+
+
+const QPAxesCache& QPCanvas::axesCache() const   {  
+	return m_stackCache; 
+}
+
+
 
 void QPCanvas::mousePressEvent(QMouseEvent* event) {
+
     PlotMouseEvent::Button t = PlotMouseEvent::SINGLE;
     if(event->button() == Qt::RightButton) t = PlotMouseEvent::CONTEXT;
     else if(event->button() == Qt::MidButton) t = PlotMouseEvent::MIDDLE;
@@ -1253,7 +1488,10 @@ void QPCanvas::mousePressEvent(QMouseEvent* event) {
     else                               event->ignore();
 }
 
+
+
 void QPCanvas::mouseReleaseEvent(QMouseEvent* event) {    
+
     PlotMouseEvent::Button t = PlotMouseEvent::SINGLE;
     if(event->button() == Qt::RightButton) t = PlotMouseEvent::CONTEXT;
     else if(event->button() == Qt::MidButton) t = PlotMouseEvent::MIDDLE;
@@ -1281,12 +1519,10 @@ void QPCanvas::mouseReleaseEvent(QMouseEvent* event) {
     else       event->ignore();
 }
 
+
+
 void QPCanvas::mouseDoubleClickEvent(QMouseEvent* event) {
-    /*
-    m_ignoreNextRelease = true;
-    m_timer.stop();
-    */
-    
+
     PlotCoordinate pcoord = globalPosToPixelCoord(event);
     
     // Send a double-click and a release event.
@@ -1296,6 +1532,8 @@ void QPCanvas::mouseDoubleClickEvent(QMouseEvent* event) {
     if(accept) event->accept();
     else       event->ignore();
 }
+
+
 
 void QPCanvas::trackerMouseEvent(QMouseEvent* event) {
     PlotMouseEvent::Button t = PlotMouseEvent::SINGLE;
@@ -1321,6 +1559,8 @@ void QPCanvas::trackerMouseEvent(QMouseEvent* event) {
     else       event->ignore();
 }
 
+
+
 void QPCanvas::keyReleaseEvent(QKeyEvent* event) {
     int key = event->key();
     QString text = event->text();
@@ -1330,13 +1570,14 @@ void QPCanvas::keyReleaseEvent(QKeyEvent* event) {
     vector<PlotKeyEvent::Modifier> modifiers;
     bool accept = false;
     
-    if(key >= Qt::Key_F1 && key <= Qt::Key_F35) {
+    if (key >= Qt::Key_F1 && key <= Qt::Key_F35) {
         modifiers.push_back(PlotKeyEvent::F);
         int i = key - Qt::Key_F1;
         c = '1' + i;
         accept = true;
 
-    } else if((key >= Qt::Key_0 && key <= Qt::Key_9) ||
+    } 
+    else if ((key >= Qt::Key_0 && key <= Qt::Key_9) ||
               (key >= Qt::Key_A && key <= Qt::Key_Z)) {        
         if(mods.testFlag(Qt::ControlModifier))
             modifiers.push_back(PlotKeyEvent::CONTROL);
@@ -1355,35 +1596,20 @@ void QPCanvas::keyReleaseEvent(QKeyEvent* event) {
         }
         accept = true;
         
-    } else if (key == Qt::Key_Space)  {
+    } 
+    else if (key == Qt::Key_Space)  {
 		c = ' ';
 		accept=true; 
-		
-    }/* else if(text == "!" || text == "@" || text == "#" || text == "$" ||
-              text == "%" || text == "^" || text == "&" || text == "*" ||
-              text == "(" || text == ")") {
-        if(mods.testFlag(Qt::ControlModifier))
-            modifiers.push_back(PlotKeyEvent::CONTROL);
-        if(mods.testFlag(Qt::AltModifier))
-            modifiers.push_back(PlotKeyEvent::ALT);
-        modifiers.push_back(PlotKeyEvent::SHIFT);
-        if(text == "!")      c = '1';
-        else if(text == "@") c = '2';
-        else if(text == "#") c = '3';
-        else if(text == "$") c = '4';
-        else if(text == "%") c = '5';
-        else if(text == "^") c = '6';
-        else if(text == "&") c = '7';
-        else if(text == "*") c = '8';
-        else if(text == "(") c = '9';
-        else if(text == ")") c = '0';
-    } */
-printf(" DSW CHECKPOINT: KEY! char = %04X accept=%d\n", key, (int)accept);  /* DSW HACK - remove, if i forget */   
+    }
+    
+    
     if(accept) accept = notifyKeyHandlers(c, modifiers);
     
     if(accept) event->accept();
     else       event->ignore();
 }
+
+
 
 void QPCanvas::wheelEvent(QWheelEvent* event) {
     int delta = (event->delta() / 8) / 15;
@@ -1392,6 +1618,8 @@ void QPCanvas::wheelEvent(QWheelEvent* event) {
     if(notifyWheelHandlers(delta, pcoord)) event->accept();
     else                                   event->ignore();
 }
+
+
 
 void QPCanvas::resizeEvent(QResizeEvent* event) {
     QSize o = event->oldSize(), n = event->size();
@@ -1434,16 +1662,7 @@ void QPCanvas::regionSelected(const QwtDoubleRect& region) {
     }
 }
 
-/*
-void QPCanvas::timeout() {    
-    // single click has occurred    
-    m_timer.stop();
-    
-    PlotCoordinate pcoord = globalPosToPixelCoord(m_clickEvent);
-    if(notifyClickHandlers(PlotMouseEvent::SINGLE, pcoord))
-        m_clickEvent->accept();
-}
-*/
+
 
 }
 
