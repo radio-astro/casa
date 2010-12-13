@@ -151,7 +151,7 @@ private slots:
     
     // Connects with TBBrowser::tableOpened() signal.  Updates dynamic menus
     // as necessary.
-    void tableOpened(String name);
+    void tableOpened(String name, String fullpath);
 
     //void openTableWithOptions();
     

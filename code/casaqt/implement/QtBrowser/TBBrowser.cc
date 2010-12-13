@@ -763,7 +763,7 @@ int TBBrowser::addTable(String f, bool taql, DriverParams* dp, int start,
             tabWidget->setTabToolTip(tables.size() - 1,
                                      t->getTable()->tableToolTip().c_str());
             QCoreApplication::processEvents();
-            emit tableOpened(t->getName());
+            emit tableOpened(t->getName(), t->getFileName());
             return tables.size() - 1;
         } else {
             delete t;
