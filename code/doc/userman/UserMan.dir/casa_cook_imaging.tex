@@ -2277,9 +2277,8 @@ The file {\tt outlierfile="setup.txt"} is an AIPS-style field file
 used to locate outlier fields.  For example:
 \small
 \begin {verbatim}
-C 0   1024 1024   13 27 20.98     43 26 28.0    # Main field with image size and phase center
-C 1    128  128   13 30 52.158    43 23 08.00   # First outlier field specification
-C 2    128  128   13 24 08.163    43 09 48.00   # Second outlier field specification
+C   main 2048 2048   13 27 20.98     43 26 28.0   # Main field with image size and phase center
+C   out1  128  128   13 30 52.158    43 23 08.00  # First outlier field specification
                       etc
 \end{verbatim}
 \normalsize
