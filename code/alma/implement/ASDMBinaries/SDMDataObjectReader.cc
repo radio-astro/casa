@@ -114,50 +114,6 @@ namespace asdmbinaries {
     return position_ >= endPosition_;
   }
 
-  const SDMDataObject & SDMDataObjectReader::read(string filename) {
-
-    char errmsg[512];
-    struct stat64 fattr;
-
-    unsigned long int filesize;
-    char* data = 0;
-    // Open the file.
-    errno = 0;
-#ifdef __APPLE__
-    if ( (filedes_ = open(filename.c_str(), O_RDONLY )) == -1) {
-#else
-    if ( (filedes_ = open(filename.c_str(), O_RDONLY | O_LARGEFILE)) == -1) {
-#endif
-      //string message(strerror_r(errno, errmsg, 512));
-      string message(strerror(errno));
-      throw SDMDataObjectReaderException("Could not open file '" + filename + "'. The message was '" + message + "'");
-    }
-    read_ = FILE_;
-    
-    // Get its size.
-    errno = 0;
-    int status = fstat64(filedes_,&fattr);
-    if (status == -1) {
-      //string message(strerror_r(errno, errmsg, 512));
-      string message(strerror(errno));
-      throw SDMDataObjectReaderException("Could not retrieve size of file '" + filename + "'. The message was '" + message + "'");
-    }
-    filesize = fattr.st_size;
-
-    // Map it to virtual memory address space.
-    errno = 0;
-
-    data = (char *) mmap((caddr_t)0, filesize, PROT_READ, MAP_SHARED, filedes_, (off_t)0);
-    if ( ((unsigned long) data) == 0xffffffff) {      
-      //string message(strerror_r(errno, errmsg, 512));
-      string message(strerror(errno));
-      throw SDMDataObjectReaderException("Could not map file '" + filename + "' to memory. The message was '" + message + "'");
-    }
-    
-    // cout << "Successfully mapped file." << endl;
-    // And delegate to the other read (memory buffer) method.
-    return read(data, filesize, true);
-  }
 
   string SDMDataObjectReader::extractXMLHeader(const string& boundary) {
     // cout << "Entering extractXMLHeader"  << endl;
@@ -911,6 +867,53 @@ namespace asdmbinaries {
   const SDMDataObject& SDMDataObjectReader::sdmDataObject() {
     return sdmDataObject_;
   }
+
+
+  const SDMDataObject & SDMDataObjectReader::read(string filename) {
+
+    char errmsg[512];
+    struct stat64 fattr;
+
+    unsigned long int filesize;
+    char* data = 0;
+    // Open the file.
+    errno = 0;
+#ifdef __APPLE__
+    if ( (filedes_ = open(filename.c_str(), O_RDONLY )) == -1) {
+#else
+    if ( (filedes_ = open(filename.c_str(), O_RDONLY | O_LARGEFILE)) == -1) {
+#endif
+      //string message(strerror_r(errno, errmsg, 512));
+      string message(strerror(errno));
+      throw SDMDataObjectReaderException("Could not open file '" + filename + "'. The message was '" + message + "'");
+    }
+    read_ = FILE_;
+    
+    // Get its size.
+    errno = 0;
+    int status = fstat64(filedes_,&fattr);
+    if (status == -1) {
+      //string message(strerror_r(errno, errmsg, 512));
+      string message(strerror(errno));
+      throw SDMDataObjectReaderException("Could not retrieve size of file '" + filename + "'. The message was '" + message + "'");
+    }
+    filesize = fattr.st_size;
+
+    // Map it to virtual memory address space.
+    errno = 0;
+
+    data = (char *) mmap((caddr_t)0, filesize, PROT_READ, MAP_SHARED, filedes_, (off_t)0);
+    if ( ((unsigned long) data) == 0xffffffff) {      
+      //string message(strerror_r(errno, errmsg, 512));
+      string message(strerror(errno));
+      throw SDMDataObjectReaderException("Could not map file '" + filename + "' to memory. The message was '" + message + "'");
+    }
+    
+    // cout << "Successfully mapped file." << endl;
+    // And delegate to the other read (memory buffer) method.
+    return read(data, filesize, true);
+  }
+
   // SDMDataObjectReader::
 
 } // namespace asdmbinaries

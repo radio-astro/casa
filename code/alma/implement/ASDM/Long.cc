@@ -34,14 +34,14 @@ using namespace std;
 
 namespace asdm {
 
-    const long long Long::MIN_VALUE = 0x8000000000000000LL;
-    const long long Long::MAX_VALUE = 0x7fffffffffffffffLL;
+    const int64_t Long::MIN_VALUE = 0x8000000000000000LL;
+    const int64_t Long::MAX_VALUE = 0x7fffffffffffffffLL;
 
-	long long Long::parseLong(const string &s) throw (NumberFormatException) {
+	int64_t Long::parseLong(const string &s) throw (NumberFormatException) {
 //		istringstream *in = new istringstream(s.c_str());
 	    istringstream in;
 	    in.str(s.c_str());
-		long long x;
+		int64_t x;
 //		(*in) >> x;
 	    in >> x;
 //		if (in->rdstate() == istream::failbit)
@@ -51,7 +51,7 @@ namespace asdm {
 		return x;
 	}
 
-	string Long::toString(long long x) {
+	string Long::toString(int64_t x) {
 		ostringstream out ;
 		out.width(35);
 		out.precision(25);

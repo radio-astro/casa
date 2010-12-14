@@ -27,6 +27,7 @@
 #ifndef Interval_CLASS
 #define Interval_CLASS
 
+#include <stdint.h>
 #include <vector>
 #include <iostream>
 #include <string>
@@ -49,7 +50,7 @@ using asdm::EndianISStream;
 namespace asdm {
 
 class Interval;
-Interval operator * ( long long , const Interval & );
+Interval operator * ( int64_t , const Interval & );
 ostream & operator << ( ostream &, const Interval & );
 istream & operator >> ( istream &, Interval&);
 
@@ -61,13 +62,13 @@ istream & operator >> ( istream &, Interval&);
  * @author Allen Farris
  */
 class Interval {
-	friend Interval operator * ( long long , const Interval & );
+	friend Interval operator * ( int64_t , const Interval & );
     friend ostream & operator << ( ostream &, const Interval & );
 	friend istream & operator >> ( istream &, Interval&);
 
 public:
-	static long long fromString(const string&);
-	static string toString(long long);
+	static int64_t fromString(const string&);
+	static string toString(int64_t);
 	static Interval getInterval(StringTokenizer &t) throw(NumberFormatException);
 
 	Interval();                              		// default constructor
@@ -76,21 +77,21 @@ public:
 #ifndef WITHOUT_ACS
 	Interval(const IDLInterval &);
 #endif
-	Interval(long long value);
+	Interval(int64_t value);
 	virtual ~Interval();							// destructor
 
 	Interval& operator = (const Interval&);			// assignment operator
-	Interval& operator = (const long long);			// assignment operator
+	Interval& operator = (const int64_t);			// assignment operator
 
 	Interval& operator += (const Interval&);		// assignment with arithmetic
 	Interval& operator -= (const Interval&);		//	operators
-	Interval& operator *= (const long long);
-	Interval& operator /= (const long long);
+	Interval& operator *= (const int64_t);
+	Interval& operator /= (const int64_t);
 
 	Interval operator + (const Interval&) const;	// arithmetic operators
 	Interval operator - (const Interval&) const;
-	Interval operator * (const long long) const;
-	Interval operator / (const long long) const;
+	Interval operator * (const int64_t) const;
+	Interval operator / (const int64_t) const;
 
 	bool operator < (const Interval&) const;		// comparison operators
 	bool operator > (const Interval&) const;
@@ -154,14 +155,14 @@ public:
 	static vector<vector<Interval> >from2DBin(EndianISStream& eiss);	
 	
 	operator string () const;
-	long long get() const;
+	int64_t get() const;
 #ifndef WITHOUT_ACS
 	IDLInterval toIDLInterval() const;
 #endif
 	static string unit();
 
 private:
-	long long value;
+	int64_t value;
 
 };
 
@@ -180,7 +181,7 @@ inline Interval::Interval(const IDLInterval &l) : value(l.value) {
 inline Interval::Interval(const string &s) : value(fromString(s)) {
 }
 
-inline Interval::Interval(long long v) : value(v) {
+inline Interval::Interval(int64_t v) : value(v) {
 }
 
 // Interval destructor
@@ -193,7 +194,7 @@ inline Interval& Interval::operator = ( const Interval &t ) {
 }
 
 // assignment operator
-inline Interval& Interval::operator = ( const long long v ) {
+inline Interval& Interval::operator = ( const int64_t v ) {
 	value = v;
 	return *this;
 }
@@ -209,12 +210,12 @@ inline Interval& Interval::operator -= ( const Interval& t) {
 	return *this;
 }
 
-inline Interval& Interval::operator *= ( const long long n) {
+inline Interval& Interval::operator *= ( const int64_t n) {
 	value *= n;
 	return *this;
 }
 
-inline Interval& Interval::operator /= ( const long long n) {
+inline Interval& Interval::operator /= ( const int64_t n) {
 	value /= n;
 	return *this;
 }
@@ -231,13 +232,13 @@ inline Interval Interval::operator - ( const Interval &t2 ) const {
 	tmp.value = value - t2.value;
 	return tmp;
 }
-inline Interval Interval::operator * ( const long long n) const {
+inline Interval Interval::operator * ( const int64_t n) const {
 	Interval tmp;
 	tmp.value = value * n;
 	return tmp;
 }
 
-inline Interval Interval::operator / ( const long long n) const {
+inline Interval Interval::operator / ( const int64_t n) const {
 	Interval tmp;
 	tmp.value = value / n;
 	return tmp;
@@ -297,7 +298,7 @@ inline string Interval::toStringI() const {
 	return toString(value);
 }
 
-inline long long Interval::get() const {
+inline int64_t Interval::get() const {
 	return value;
 }
 
@@ -311,7 +312,7 @@ inline IDLInterval Interval::toIDLInterval() const {
 
 // Friend functions
 
-inline Interval operator * ( long long n, const Interval &x) {
+inline Interval operator * ( int64_t n, const Interval &x) {
 	Interval tmp;
 	tmp.value = x.value * n;
 	return tmp;

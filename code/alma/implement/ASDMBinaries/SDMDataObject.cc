@@ -420,6 +420,7 @@ namespace asdmbinaries {
     startTime_(startTime),
     dataOID_(dataOID),
     dimensionality_(dimensionality),
+    numTime_(0),
     execBlockUID_(execBlockUID),
     execBlockNum_(execBlockNum),
     scanNum_(scanNum),
