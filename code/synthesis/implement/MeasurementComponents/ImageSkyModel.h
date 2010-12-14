@@ -112,7 +112,7 @@ public:
   virtual Int add(ImageInterface<Float>& image, const Int maxNumXfr=100);
   //update model image...you have to have added it before...nmodels_p held has to be bigger that image here
   //its left to the caller to make sure the image is conformant...otherwise you are in trouble.
-  virtual Bool  updatemodel(const Int image, ImageInterface<Float>& image);
+  virtual Bool  updatemodel(const Int thismodel, ImageInterface<Float>& image);
   // Add a residual image
   virtual Bool addResidual(Int image, ImageInterface<Float>& residual);
 
