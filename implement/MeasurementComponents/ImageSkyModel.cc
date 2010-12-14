@@ -86,7 +86,30 @@ Bool ImageSkyModel::add(ComponentList& compList)
   }
   return False;
 }
- 
+
+Bool ImageSkyModel::updatemodel(ComponentList& compList)
+{
+  if(componentList_p!=0) {
+    delete componentList_p;
+    componentList_p=0;
+  }
+  
+  componentList_p=new ComponentList(compList);
+  modified_p=True; 
+  return True;
+}
+  
+
+Bool ImageSkyModel::updatemodel(const Int thismodel, ImageInterface<Float>& image){
+  if(nmodels_p < thismodel)
+    throw(AipsError("Programming error " + String::toString(thismodel) + " is larger than the number of models"));
+  image_p[thismodel]=&image;
+  AlwaysAssert(image_p[thismodel], AipsError);
+  image_p[thismodel]->setUnits(Unit("Jy/pixel"));
+  modified_p=True;
+  return True;
+}
+
 Int ImageSkyModel::add(ImageInterface<Float>& image, const Int maxNumXfr)
 {
   Int thismodel=nmodels_p;
