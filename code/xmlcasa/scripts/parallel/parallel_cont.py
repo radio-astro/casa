@@ -30,20 +30,24 @@ class imagecont():
         self.painc=360.0
         self.pblimit=0.1
         self.dopbcorr=True
-        self.novaliddata=False
+        self.novaliddata={}
         self.applyoffsets=False
         self.cfcache='cfcache.dir'
         self.epjtablename=''
     def imagecont(self, msname='spw00_4chan351rowTile.ms', start=0, numchan=1, spw=0, field=0, freq='1.20GHz', band='200MHz', imname='newmodel'):
+        casalog.post('KEYS '+str(self.imperms.keys()))
         if(not self.imperms.has_key(msname)):
             self.imageparamset=False
             im=imtool.create()
-            self.imperms['msname']=im
+            self.imperms[msname]=im
+            self.novaliddata[msname]=False
+            casalog.post('MSNAME '+msname)
         else:
-            im=self.imperms['msname']
+            casalog.post('reMSNAME '+msname)
+            im=self.imperms[msname]
             self.imageparamset=True
         ###either psf 0 or no channel selected
-        if(self.novaliddata):
+        if(self.novaliddata[msname]):
             return
         #j=start
         #end=start+numchan-1
@@ -57,7 +61,7 @@ class imagecont():
         #imname=imname+'_%02d'%(j)
             im.defineimage(nx=self.pixels[0], ny=self.pixels[1], cellx=self.cell[0], celly=self.cell[1], phasecenter=self.phCen, mode='frequency', nchan=1, start=freq, step=band, facets=self.facets)
             if((len(numchan)==0) or (np.sum(numchan)==0)):
-                self.novaliddata=True
+                self.novaliddata[msname]=True
                 ###make blanks
                 im.make(imname+'.image')
                 im.make(imname+'.residual')
@@ -69,20 +73,23 @@ class imagecont():
             im.setoptions(ftmachine=self.ft, wprojplanes=self.wprojplanes, pastep=self.painc, pblimit=self.pblimit, cfcachedirname=self.cfcache, dopbgriddingcorrections=self.dopbcorr, applypointingoffsets=self.applyoffsets, imagetilevol=self.imagetilevol)
         #im.regionmask(mask='lala.mask', boxes=[[0, 0, 3599, 3599]])
         #im.setmfcontrol(cyclefactor=0.0)
+        #casalog.post('imageparmset'+str(self.imageparamset))
         if(not self.imageparamset):
+        #if(True):
             try:
                 im.clean(algorithm='mfclark', niter=0, threshold='0.05mJy', model=imname+'.model', image=imname+'.image', residual=imname+'.residual', psfimage=imname+'.psf')
             except Exception, instance:
                 if(string.count(instance.message, 'PSFZero') >0):
-                    self.novaliddata=True
+                    self.novaliddata[msname]=True
                     ###make a blank image
                     im.make(imname+'.image')
                 else:
                     raise instance
         else:
-            if(not self.novaliddata):
-                im.restore(model=imname+'.model',  image=imname+'.image', residual=imname+'.residual')
-            
+            if(not self.novaliddata[msname]):
+                casalog.post('Updating '+msname+' imname '+imname)
+                im.updateresidual(model=imname+'.model',  image=imname+'.image', residual=imname+'.residual')
+        #casalog.post('CACHE:  '+ str(tb.showcache()))
         #im.done()
         self.imageparamset=True
 

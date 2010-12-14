@@ -905,6 +905,9 @@ class pimager():
         ###major cycle
         out=range(self.numcpu)  
         mscpuindex=range(self.numcpu) 
+        msassigned=odict()
+        for k in range(len(msnames)):
+            msassigned[msnames[k]]=-1
         for maj in range(majorcycles):
             ###set the processed flags off
             processing=odict()
@@ -917,29 +920,52 @@ class pimager():
             ##initial bunch of launches
             for k in range(self.numcpu):
                 msname=myrec.keys()[k]
-                mscpuindex[k]=msname
-                if(mscounter < len(msnames)):
-                    runcomm=gen_comm(msname=msname, startsel=myrec[msname]['startsel'], nchansel=myrec[msname]['nchansel'],
+                if((msassigned[msname]==k) or (msassigned[msname] <0)):
+                    mscpuindex[k]=msname
+                    if(mscounter < len(msnames)):
+                        runcomm=gen_comm(msname=msname, startsel=myrec[msname]['startsel'], nchansel=myrec[msname]['nchansel'],
                                     field=self.field, spw=myrec[msname]['spwsel'], freq=freq, band=band, imname=myrec[msname]['imname'])
-                    print 'command is ', runcomm
-                    out[k]=self.c.odo(runcomm,k)
-                    mscounter +=1
-                    processing[msname]=True
+                        print 'cpu', k,  'command is ', runcomm
+                        out[k]=self.c.odo(runcomm,k)
+                        mscounter +=1
+                        processing[msname]=True
+                        msassigned[msname]=k
             while (not np.alltrue(processed.values())):
                 overone=True
                 time.sleep(1)
                 for k in range(self.numcpu):
-                    if(processing[mscpuindex[k]] and self.c.check_job(out[k],False) and (not processed[mscpuindex[k]])):
+                    if(processing[mscpuindex[k]] and self.c.check_job(out[k], False)):
                         processed[mscpuindex[k]]=True
-                        if(mscounter < len(msnames)):
+                        processing[mscpuindex[k]]=False
+                        found=False
+                        mscounter=0
+                        while(not found):
                             msname=myrec.keys()[mscounter]
-                            runcomm=gen_comm(msname=msname, startsel=myrec[msname]['startsel'], nchansel=myrec[msname]['nchansel'],
-                                    field=self.field, spw=myrec[msname]['spwsel'], freq=freq, band=band, imname=myrec[msname]['imname'])
-                            print 'command is ', runcomm
-                            out[k]=self.c.odo(runcomm,k)
-                            mscpuindex[k]=msname
-                            mscounter +=1
-                            processing[msname]=True
+                            if(not processed[msname] and ((msassigned[msname]==k) or (msassigned[msname] <0))):
+                                processing[msname]=True
+                                runcomm=gen_comm(msname=msname, startsel=myrec[msname]['startsel'], 
+                                                 nchansel=myrec[msname]['nchansel'],
+                                                 field=self.field, spw=myrec[msname]['spwsel'], freq=freq, band=band, 
+                                                 imname=myrec[msname]['imname'])
+                                print 'cpu', k, 'command is ', runcomm
+                                out[k]=self.c.odo(runcomm,k)
+                                mscpuindex[k]=msname
+                                msassigned[msname]=k
+                                found=True
+                            mscounter+=1
+                            if(mscounter == len(msnames)):
+                                found=True
+#                    if(processing[mscpuindex[k]] and self.c.check_job(out[k],False) and (not processed[mscpuindex[k]])):
+#                        processed[mscpuindex[k]]=True
+#                        if(mscounter < len(msnames)):
+#                            msname=myrec.keys()[mscounter]
+#                            runcomm=gen_comm(msname=msname, startsel=myrec[msname]['startsel'], nchansel=myrec[msname]['nchansel'],
+#                                    field=self.field, spw=myrec[msname]['spwsel'], freq=freq, band=band, imname=myrec[msname]['imname'])
+#                            print 'cpu', k, 'command is ', runcomm
+#                            out[k]=self.c.odo(runcomm,k)
+#                            mscpuindex[k]=msname
+#                            mscounter +=1
+#                            processing[msname]=True
             residual=imagename+'.residual'
             psf=imagename+'.psf'
             psfs=range(len(msnames))
