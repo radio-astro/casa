@@ -670,8 +670,20 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
 	//  from VisSet's scr col tile shape derivation
 	//  (this may need some tweaking for averaging cases)
         TableDesc td = mssel_p.actualTableDesc();
-        
-        const ColumnDesc& cdesc = td[MS::columnName(colNamesTok[0])];
+
+        // If a non-DATA column, i.e. CORRECTED_DATA, is being written to DATA,
+        // datacolname must be set to DATA because the tile management in
+        // setupMS() will look for "TiledDATA", not "TiledCorrectedData".
+        String datacolname = MS::columnName(MS::DATA);
+        // But if DATA is not present in the input MS, using it would cause a
+        // segfault.
+        if(!td.isColumn(datacolname))
+          // This is could be any other kind of *DATA column, including
+          // FLOAT_DATA or LAG_DATA, but it is guaranteed to be something.
+          datacolname = MS::columnName(colNamesTok[0]);
+
+        const ColumnDesc& cdesc = td[datacolname];
+
         String dataManType = cdesc.dataManagerType();
         String dataManGroup = cdesc.dataManagerGroup();
 
@@ -7131,9 +7143,9 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
 
   Vector<MS::PredefinedColumns> columnNames;
   const Bool doFloat = sepFloat(dataColNames, columnNames);
-  if(doFloat)           // 2010-09-30
+  if(doFloat && columnNames.nelements() > 0)           // 2010-12-14
     os << LogIO::WARN
-       << "Using VisIter to average FLOAT_DATA is extremely experimental."
+       << "Using VisIter to average both FLOAT_DATA and another DATA column is extremely experimental."
        << LogIO::POST;
 
   uInt ntok = columnNames.nelements();
@@ -7143,7 +7155,7 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
   const Bool doSpWeight = !mscIn_p->weightSpectrum().isNull() &&
                            mscIn_p->weightSpectrum().isDefined(0) &&
                            mscIn_p->weightSpectrum().shape(0) ==
-                           right_column(mscIn_p, columnNames[0]).shape(0);
+                           right_column(mscIn_p, dataColNames[0]).shape(0);
 
   // We may need to watch for chunks (timebins) that should be split because of
   // changes in scan, etc. (CAS-2401).  The old split way would have
@@ -7232,7 +7244,7 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
 		      True, 1);
   uInt inrowsdone = 0;  // only for the meter.
 
-  VisChunkAverager vca(columnNames, doSpWeight);
+  VisChunkAverager vca(dataColNames, doSpWeight);
 
   // Iterate through the chunks.  A timebin will have multiple chunks if it has
   // > 1 arrays, fields, or ddids.
@@ -7278,8 +7290,8 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
         else if(dataColNames[datacol] == MS::CORRECTED_DATA)
           outDataCols[datacol].putColumnCells(rowstoadd, avb.correctedVisCube());
       }
-      // if(doFloat)
-      //   msc_p->floatData().putColumnCells(rowstoadd, avb.floatData());
+      if(doFloat)
+        msc_p->floatData().putColumnCells(rowstoadd, avb.floatDataCube());
 
       // remap() with a constant value.
       Vector<Int> ddID(rowsnow);

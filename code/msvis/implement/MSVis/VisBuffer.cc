@@ -120,6 +120,7 @@ VisBuffer& VisBuffer::assign(const VisBuffer& other, Bool copy)
       visCubeOK_p=other.visCubeOK_p;
       modelVisCubeOK_p=other.modelVisCubeOK_p;
       correctedVisCubeOK_p=other.correctedVisCubeOK_p;
+      floatDataCubeOK_p = other.floatDataCubeOK_p;
       weightOK_p=other.weightOK_p;
       weightMatOK_p=other.weightMatOK_p;
       weightSpectrumOK_p=other.weightSpectrumOK_p;
@@ -266,6 +267,10 @@ VisBuffer& VisBuffer::assign(const VisBuffer& other, Bool copy)
 	correctedVisCube_p.resize(other.correctedVisCube_p.shape());
 	correctedVisCube_p=other.correctedVisCube_p;
       }
+      if(floatDataCubeOK_p){
+	floatDataCube_p.resize(other.floatDataCube_p.shape());
+	floatDataCube_p=other.floatDataCube_p;        
+      }
       if (weightOK_p) {
 	weight_p.resize(other.weight_p.nelements()); 
 	weight_p=other.weight_p;
@@ -341,6 +346,7 @@ void VisBuffer::invalidate()
     weightMatOK_p=weightSpectrumOK_p=corrTypeOK_p=nCorrOK_p=    False;
   flagCubeOK_p=visCubeOK_p=imagingWeightOK_p=msOK_p=False;
   modelVisOK_p=correctedVisOK_p=modelVisCubeOK_p=correctedVisCubeOK_p=False;
+  floatDataCubeOK_p = False;
   feed1_paOK_p=feed2_paOK_p=direction1OK_p=direction2OK_p=rowIdsOK_p=False;
   lastPointTableRow_p=0;
 }
@@ -356,6 +362,7 @@ void VisBuffer::validate()
     weightMatOK_p=weightSpectrumOK_p=corrTypeOK_p=nCorrOK_p=    True;
   flagCubeOK_p=visCubeOK_p=imagingWeightOK_p=msOK_p=True;  
   modelVisOK_p=correctedVisOK_p=modelVisCubeOK_p=correctedVisCubeOK_p=True;
+  floatDataCubeOK_p = True;
   feed1_paOK_p=feed2_paOK_p=direction1OK_p=direction2OK_p=rowIdsOK_p=True;
 }
 
@@ -507,6 +514,8 @@ void VisBuffer::formStokes() {
   if (correctedVisCubeOK_p)
     formStokes(correctedVisCube_p);
 
+  if(floatDataCubeOK_p)
+    formStokes(floatDataCube_p);
 }
 
 void VisBuffer::formStokesWeightandFlag() {
@@ -580,8 +589,6 @@ void VisBuffer::formStokesWeightandFlag() {
 
 }
 
-
-
 void VisBuffer::formStokes(Cube<Complex>& vis) {
 
   Cube<Complex> newvis(vis.shape());
@@ -635,6 +642,71 @@ void VisBuffer::formStokes(Cube<Complex>& vis) {
   }
 }
 
+void VisBuffer::formStokes(Cube<Float>& fcube)
+{
+  Cube<Float> newfcube(fcube.shape());
+  newfcube.set(0.0);
+  Slice all = Slice();
+
+  switch (nCorr()) {
+  case 4: {
+    throw(AipsError(
+       "Forming all 4 Stokes parameters out of FLOAT_DATA is not supported."));
+
+    Slice pp(0, 1, 1), pq(1, 1, 1), qp(2, 1, 1), qq(3, 1, 1);
+    Slice a(0, 1, 1), b(1, 1, 1), c(2, 1, 1), d(3, 1, 1);
+    
+    if (polFrame()==MSIter::Linear) {
+      d=Slice(1, 1, 1);  // Q
+      b=Slice(2, 1, 1);  // U
+      c=Slice(3, 1, 1);  // V
+    }
+    
+    newfcube(a,all,all)=(fcube(pp,all,all)+fcube(qq,all,all)); //  I / I
+    newfcube(d,all,all)=(fcube(pp,all,all)-fcube(qq,all,all)); //  V / Q
+    
+    newfcube(b,all,all)=(fcube(pq,all,all)+fcube(qp,all,all)); //  Q / U
+
+    ////  U / V
+    // This clearly isn't going to work.  AFAICT it is impossible to
+    // simultaneously measure all 4 polarizations with the same feed, so
+    // FLOAT_DATA shouldn't come with 4 polarizations.
+    //newfcube(c,all,all)=(fcube(pq,all,all)-fcube(qp,all,all))/Complex(0.0,1.0);
+    newfcube(c,all,all)=(fcube(pq,all,all)-fcube(qp,all,all));
+
+    // The cast is necessary to stop the compiler from promoting it to a Complex.
+    newfcube *= static_cast<Float>(0.5);
+
+    fcube.reference(newfcube);
+
+    break;
+  }
+  case 2: {
+    // parallel hands only
+    Slice pp(0,1,1),qq(1,1,1);
+    Slice a(0,1,1),d(1,1,1);
+    
+    newfcube(a,all,all)=(fcube(pp,all,all)+fcube(qq,all,all)); //  I / I
+    newfcube(d,all,all)=(fcube(pp,all,all)-fcube(qq,all,all)); //  V / Q
+
+    // The cast is necessary to stop the compiler from promoting it to a Complex.
+    newfcube *= static_cast<Float>(0.5);
+
+    fcube.reference(newfcube);
+
+    break;
+  }
+  case 1: {
+    // need do nothing for single correlation case
+    break;
+  }
+  default: {
+    cout << "Insufficient correlations to form Stokes" << endl;
+    break;
+  }
+  }
+}
+
 void VisBuffer::channelAve(const Matrix<Int>& chanavebounds) 
 {
   // TBD: Use/update weightSpec, if present, and update weightMat accordingly
@@ -653,6 +725,7 @@ void VisBuffer::channelAve(const Matrix<Int>& chanavebounds)
     if (visCubeOK_p)          chanAveVisCube(visCube(),nChanOut);
     if (modelVisCubeOK_p)     chanAveVisCube(modelVisCube(),nChanOut);
     if (correctedVisCubeOK_p) chanAveVisCube(correctedVisCube(),nChanOut);
+    if (floatDataCubeOK_p)    chanAveVisCube(floatDataCube(), nChanOut);
     if (flagCubeOK_p)         chanAveFlagCube(flagCube(),nChanOut);
     
     // Finally, collapse the frequency values themselves
@@ -727,7 +800,43 @@ void VisBuffer::chanAveVisCube(Cube<Complex>& data,Int nChanOut) {
 
   // Install averaged info
   data.reference(newCube);
+}
 
+void VisBuffer::chanAveVisCube(Cube<Float>& data, Int nChanOut)
+{
+  IPosition csh(data.shape());
+  Int nChan0=csh(1);
+  csh(1)=nChanOut;
+
+  Vector<Int>& chans(channel());
+  Cube<Float> newCube(csh); newCube=Float(0.0);
+  Int nCor = nCorr();
+  Int ichan(0);
+
+  Vector<Int> ngood(nCor, 0);
+  for (Int row=0; row<nRow(); row++) {
+    if (!flagRow()(row)) {
+      ichan=0;
+      for (Int ochan=0;ochan<nChanOut;++ochan) {
+	ngood=0;
+	while (chans(ichan)>=chanAveBounds_p(ochan,0) &&
+	       chans(ichan)<=chanAveBounds_p(ochan,1) &&
+	       ichan<nChan0) {
+	  for (Int icor=0;icor<nCor;++icor) 
+	    if (!flagCube()(icor,ichan,row)) {
+	      newCube(icor,ochan,row)+=data(icor,ichan,row);
+	      ++ngood[icor];
+	    }
+	  ichan++;
+	}
+	for(Int icor = 0; icor < nCor; ++icor){
+	  if(ngood[icor] > 0)
+	    newCube(icor, ochan, row) *= 1.0 / ngood[icor];
+	}
+      }
+    }
+  }
+  data.reference(newCube);        // Install averaged info
 }
 
 void VisBuffer::chanAveFlagCube(Cube<Bool>& flagcube,Int nChanOut) {
@@ -851,6 +960,22 @@ void VisBuffer::sortCorr() {
       p2=p3;
       p3=tmp;
     }
+    // Do floatDataCube if present
+    if (floatDataCubeOK_p && floatDataCube_p.nelements()>0) {
+      Matrix<Float> tmp(nChannel(), nRow());
+      Matrix<Float> p1, p2, p3;
+
+      blc(0)=trc(0)=1;
+      p1.reference(floatDataCube_p(blc,trc).reform(mat));
+      blc(0)=trc(0)=2;
+      p2.reference(floatDataCube_p(blc,trc).reform(mat));
+      blc(0)=trc(0)=3;
+      p3.reference(floatDataCube_p(blc,trc).reform(mat));
+      tmp=p1;
+      p1=p2;
+      p2=p3;
+      p3=tmp;
+    }
 
     // Data is now sorted into canonical order
     corrSorted_p=True;
@@ -932,6 +1057,22 @@ void VisBuffer::unSortCorr() {
       p2.reference(correctedVisCube_p(blc,trc).reform(mat));
       blc(0)=trc(0)=3;
       p3.reference(correctedVisCube_p(blc,trc).reform(mat));
+      tmp=p3;
+      p3=p2;
+      p2=p1;
+      p1=tmp;
+    }
+    // Do floatDataCube if present
+    if (floatDataCubeOK_p && floatDataCube_p.nelements()>0) {
+      Matrix<Float> tmp(nChannel(), nRow());
+      Matrix<Float> p1, p2, p3;
+
+      blc(0)=trc(0)=1;
+      p1.reference(floatDataCube_p(blc,trc).reform(mat));
+      blc(0)=trc(0)=2;
+      p2.reference(floatDataCube_p(blc,trc).reform(mat));
+      blc(0)=trc(0)=3;
+      p3.reference(floatDataCube_p(blc,trc).reform(mat));
       tmp=p3;
       p3=p2;
       p2=p1;
@@ -1024,6 +1165,7 @@ void VisBuffer::phaseCenterShift(Double dx,Double dy) {
 	if (visCubeOK_p)          visCube_p(icor,ichn,irow)*=cph;
 	if (modelVisCubeOK_p)     modelVisCube_p(icor,ichn,irow)*=cph;
 	if (correctedVisCubeOK_p) correctedVisCube_p(icor,ichn,irow)*=cph;
+        // Of course floatDataCube does not have a phase to rotate.
       }
     }
   
@@ -1381,6 +1523,13 @@ void VisBuffer::setCorrectedVisCube(const Cube<Complex>& vis)
   correctedVisCubeOK_p=True;
 }
 
+void VisBuffer::setFloatDataCube(const Cube<Float>& fcube)
+{
+  floatDataCube_p.resize(fcube.shape());
+  floatDataCube_p=fcube;
+  floatDataCubeOK_p=True;
+}
+
 void VisBuffer::refModelVis(const Matrix<CStokesVector>& mvis)
 {
   modelVisibility_p.resize();
@@ -1711,6 +1860,12 @@ Cube<Complex>& VisBuffer::fillVisCube(VisibilityIterator::DataColumn whichOne)
     return visIter_p->visibility(visCube_p,whichOne);
     break;
   }
+}
+
+Cube<Float>& VisBuffer::fillFloatDataCube()
+{
+  floatDataCubeOK_p = True;
+  return visIter_p->floatData(floatDataCube_p);
 }
 
 Vector<Float>& VisBuffer::fillWeight()
