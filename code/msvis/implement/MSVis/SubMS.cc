@@ -93,6 +93,9 @@
 #include <casa/Quanta/MVTime.h>
 
 namespace casa {
+
+//typedef ROVisibilityIterator ROVisIter;
+//typedef VisibilityIterator VisIter;
   
   SubMS::SubMS(String& theMS, Table::TableOption option) :
     ms_p(MeasurementSet(theMS, option)),
@@ -667,7 +670,8 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
 	//  from VisSet's scr col tile shape derivation
 	//  (this may need some tweaking for averaging cases)
         TableDesc td = mssel_p.actualTableDesc();
-        const ColumnDesc& cdesc = td[mscIn_p->data().columnDesc().name()];
+        
+        const ColumnDesc& cdesc = td[MS::columnName(colNamesTok[0])];
         String dataManType = cdesc.dataManagerType();
         String dataManGroup = cdesc.dataManagerGroup();
 
