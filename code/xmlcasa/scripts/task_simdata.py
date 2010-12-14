@@ -208,7 +208,7 @@ def simdata(
         # read antenna file here to get Primary Beam
         predict_uv=False
         predict_sd=False
-        tp_only=False
+        sd_only=False
         tpset=False
         aveant=-1
         stnx=[]  # for later, to know if we read an array in or not
@@ -262,7 +262,7 @@ def simdata(
             if not predict_uv:
                 aveant=tp_aveant
                 msg("Only single-dish observation is predicted",priority="info")
-                tp_only=True
+                sd_only=True
             # check for image size (need to be > 2*pb)
             if not components_only:
                 pb2 = 2.*1.2*0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/tp_aveant*3600.*180/pl.pi
@@ -636,12 +636,14 @@ def simdata(
 
             if (grscreen or grfile):
                 util.newfig(multi=multi,show=grscreen)
-                if tp_only: telescopename=tp_telescopename
+                if sd_only: telescopename=tp_telescopename
                 util.ephemeris(refdate,direction=util.direction,telescope=telescopename)
                 casalog.origin('simdata')
                 if predict_uv:
                     util.nextfig()
                     util.plotants(stnx, stny, stnz, stnd, padnames)
+                    if predict_sd:
+                        msg("The total power antenna will not be shown on the array configuration")
                     
                     # uv coverage
                     util.nextfig()
@@ -826,7 +828,8 @@ def simdata(
         else:
             # if not predicting this time, but are imageing or analyzing, 
             # get telescopename from ms
-            if image or analyze:
+            # KS - telescopename seems not used in image and analyze
+            if (image or analyze) and os.path.exists(project+'.ms'):
                 tb.open(project+".ms/OBSERVATION")
                 n=tb.getcol("TELESCOPE_NAME")
                 telescopename=n[0]
@@ -841,26 +844,15 @@ def simdata(
         msroot=project  # if leakage, can just copy from this project
     
         if thermalnoise!="":
-            #if not (telescopename == 'ALMA' or telescopename == 'ACA' or telescopename == "SMA" or telescopename=="EVLA" or telescopename=="VLA"):
             knowntelescopes = ["ALMA", "ACA", "SMA", "EVLA", "VLA"]
-            if telescopename not in knowntelescopes:
-                msg("thermal noise only works properly for ALMA/ACA or EVLA",origin="noise",priority="warn")
                 
             noise_any=True
 
-            eta_p, eta_s, eta_b, eta_t, eta_q, t_rx = util.noisetemp(telescope=telescopename,freq=model_center)
-
-            # antenna efficiency
-            eta_a = eta_p * eta_s * eta_b * eta_t
-            if verbose: 
-                msg('antenna efficiency    = ' + str(eta_a),origin="noise")
-                msg('spillover efficiency  = ' + str(eta_s),origin="noise")
-                msg('correlator efficiency = ' + str(eta_q),origin="noise")
+            noisymsroot = msroot+".noisy"
  
             # Cosmic background radiation temperature in K. 
             t_cmb = 2.725
 
-            noisymsroot = msroot+".noisy"
 
             # check for interferometric ms:
             if os.path.exists(msroot+".ms"):
@@ -880,10 +872,30 @@ def simdata(
                     msg("table persistence error on %s" % sm.name(),priority="error")
                     return
 
-                if tp_only:
-                    msg("tp_only set to False since you have "+msroot+".ms",priority="warn")
-                    tp_only=False
+                if sd_only:
+                    msg("sd_only set to False since you have "+msroot+".ms",priority="warn")
+                    sd_only=False
                 
+                # if not predicted this time, get telescopename from ms
+                if not predict:
+                    tb.open(noisymsroot+".ms/OBSERVATION")
+                    n=tb.getcol("TELESCOPE_NAME")
+                    telescopename=n[0]
+                    # todo add check that entire column is the same
+                    tb.done()
+                    msg("telescopename read from "+noisymsroot+".ms: "+telescopename)
+
+                if telescopename not in knowntelescopes:
+                    msg("thermal noise only works properly for ALMA/ACA or EVLA",origin="noise",priority="warn")
+                eta_p, eta_s, eta_b, eta_t, eta_q, t_rx = util.noisetemp(telescope=telescopename,freq=model_center)
+
+                # antenna efficiency
+                eta_a = eta_p * eta_s * eta_b * eta_t
+                if verbose: 
+                    msg('antenna efficiency    = ' + str(eta_a),origin="noise")
+                    msg('spillover efficiency  = ' + str(eta_s),origin="noise")
+                    msg('correlator efficiency = ' + str(eta_q),origin="noise")
+
                 sm.openfromms(noisymsroot+".ms")    # an existing MS
                 sm.setdata(fieldid=[]) # force to get all fields
                 if thermalnoise=="tsys-manual":
@@ -929,6 +941,26 @@ def simdata(
                 if sm.name()!='':
                     msg("table persistence error on %s" % sm.name(),priority="error")
                     return
+
+                # if not predicted this time, get telescopename from ms
+                if not predict:
+                    tb.open(noisymsroot+".sd.ms/OBSERVATION")
+                    n=tb.getcol("TELESCOPE_NAME")
+                    tp_telescopename=n[0]
+                    # todo add check that entire column is the same
+                    tb.done()
+                    msg("telescopename read from "+noisymsroot+".sd.ms: "+tp_telescopename)
+
+                if tp_telescopename not in knowntelescopes:
+                    msg("thermal noise only works properly for ALMA/ACA or EVLA",origin="noise",priority="warn")
+                eta_p, eta_s, eta_b, eta_t, eta_q, t_rx = util.noisetemp(telescope=tp_telescopename,freq=model_center)
+
+                # antenna efficiency
+                eta_a = eta_p * eta_s * eta_b * eta_t
+                if verbose: 
+                    msg('antenna efficiency    = ' + str(eta_a),origin="noise")
+                    msg('spillover efficiency  = ' + str(eta_s),origin="noise")
+                    msg('correlator efficiency = ' + str(eta_q),origin="noise")
 
                 sm.openfromms(noisymsroot+".sd.ms")    # an existing MS
                 sm.setdata(fieldid=[]) # force to get all fields
@@ -1066,7 +1098,7 @@ def simdata(
                     msg("no measurement sets found to image",priority="warn")
                     image=False
                 else:
-                    tp_only=True
+                    sd_only=True
 
             # Do single dish imaging first if tpms exists.
             if tpms and os.path.exists(tpms):
@@ -1075,7 +1107,7 @@ def simdata(
                     tpimage = project+'.sd.image'
                 else:
                     tpimage = project+'.image'
-                if tp_only: 
+                if sd_only: 
                     msfile=tpms
                 else:
                     if len(modelimage) and modelimage!=tpimage:
@@ -1329,7 +1361,7 @@ def simdata(
                 outflat_current=True
                 
             # regridded and convolved input:?
-            if not convsky_current:                
+            if not convsky_current:
                 util.convimage(modelim+".flat",imagename+".image.flat")
                 convsky_current=True
             
@@ -1384,7 +1416,7 @@ def simdata(
                 showarray=False
             if not (predict or image):
                 msfile=project+".ms"
-            if showpsf and (tp_only or util.ismstp(msfile,halt=False)):
+            if showpsf and (sd_only or util.ismstp(msfile,halt=False)):
                     msg("single dish simulation -- psf will not be plotted",priority='warn')
                     showpsf=False
 
@@ -1414,6 +1446,8 @@ def simdata(
                 # if order in task parameters changes, change here too
                 if showarray:
                     util.plotants(stnx, stny, stnz, stnd, padnames)
+                    if predict_sd:
+                        msg("The total power antenna will not be shown on the array configuration")
                     util.nextfig()
 
                 if showuv:

@@ -318,6 +318,31 @@ class test_flagmanager(test_base):
 
         assert restore2 == ant2
 
+    def test_CAS2701(self):
+        """Do not allow flagversion=''"""
+
+        
+        fg.open(self.vis)
+        l = len(fg.getflagversionlist())
+        fg.done()
+        
+        flagmanager(vis = self.vis,
+                    mode = "save",
+                    versionname = "non-empty-string")
+
+        fg.open(self.vis)
+        self.assertEqual(len(fg.getflagversionlist()), l+1)
+        fg.done()
+
+        flagmanager(vis = self.vis,
+                    mode = "save",
+                    versionname = "non-empty-string")
+
+        fg.open(self.vis)
+        self.assertEqual(len(fg.getflagversionlist()), l+1)
+        fg.done()
+
+
 class test_msselection(test_base):
 
     def setUp(self):

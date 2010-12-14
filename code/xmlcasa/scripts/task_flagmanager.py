@@ -21,14 +21,26 @@ def flagmanager(vis=None,
 			fglocal.getflagversionlist()
 			print 'See logger for flag versions for this MS'
 		elif (mode=='save'):
+                        if versionname == "":
+                                raise Exception("Illegal versionname: ''")
 			casalog.post('Save current flagversion in ' + versionname)
 			fglocal.saveflagversion(versionname=versionname,comment=comment,merge=merge)
 		elif (mode=='restore'):
+                        if versionname == "":
+                                raise Exception("Illegal versionname: ''")
 			casalog.post('Restore flagversion ' + versionname)
 			fglocal.restoreflagversion(versionname=versionname,merge=merge)
 		elif (mode=='delete'):
+                        if versionname == "":
+                                raise Exception("Illegal versionname: ''")
 			fglocal.deleteflagversion(versionname=versionname)
 		elif (mode=='rename'):
+                        if versionname == "":
+                                raise Exception("Illegal versionname: ''")
+
+                        if oldname == "":
+                                raise Exception("Illegal oldname: ''")
+
                         # The directory structure is unlikely to change
                         olddir = vis + ".flagversions/flags." + oldname
                         newdir = vis + ".flagversions/flags." + versionname

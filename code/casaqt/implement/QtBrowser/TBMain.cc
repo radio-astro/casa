@@ -138,8 +138,8 @@ void TBMain::setup() {
     connect(&browser, SIGNAL(threadIsFinished()),this, SLOT(threadFinished()));
     connect(&browser, SIGNAL(findRuleAvailable()),
             this, SLOT(findRuleAvailable()));
-    connect(&browser, SIGNAL(tableOpened(String)),
-            this, SLOT(tableOpened(String)));
+    connect(&browser, SIGNAL(tableOpened(String, String)),
+            this, SLOT(tableOpened(String, String)));
     connect(&browser, SIGNAL(tableClosed(String)),
             this, SLOT(tableClosed(String)));
     connect(&browser, SIGNAL(filterRuleAvailable(int)),
@@ -356,8 +356,8 @@ void TBMain::openTableWithOptions() {
 }
 */
 
-void TBMain::tableOpened(String name) {
-    statusBar->showMessage(tr(("Browsing table: " + name).c_str()));
+void TBMain::tableOpened(String name, String fullpath) {
+    statusBar->showMessage(tr(("Browsing table: " + fullpath).c_str()));
     
     // add table to menus
     closeMenu->addAction(name.c_str());
@@ -500,6 +500,8 @@ void TBMain::tabChanged(int tableIndex) {
     
     b = browser.currentlySelectedTableTabs()->getTable()->isAnyEditable();
     actionEditTable->setEnabled(b);
+    
+    statusBar->showMessage(tr(("Browsing  table: " + tb->getFileName()).c_str()));
 }
 
 void TBMain::viewColumn(QAction* which) {

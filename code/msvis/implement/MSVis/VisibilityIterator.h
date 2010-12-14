@@ -571,9 +571,19 @@ protected:
 
   //Re-Do the channel selection in multi ms case 
   void doChannelSelection();
-  //Set the tile cache size....when using slice access if tile cache size is 
-  // not set memory usuage can go wild
+
+  // Set the tile cache size....when using slice access if tile cache size is 
+  // not set memory usage can go wild.  Specifically, the caching scheme is
+  // ephemeral and lives for that instance of setting the caching scheme.
+  // 
+  // If you don't set any then the defaults come into play and caches a few
+  // tiles along every axis at the tile you requested...which is a waste when
+  // say you know you want to proceed along the row axis for example...and in
+  // fact now VisIter just reads one tile (thus the commenting in setTileCache)
+  // and lets the OS do the caching rather than than having the table system
+  // cache extra tiles.
   void setTileCache();
+
   //Check if spw is in selected SPW for actual ms
   Bool isInSelectedSPW(const Int& spw);
 
@@ -854,6 +864,8 @@ public:
   // Set/modify the Sigma
   void setSigma(const Vector<Float>& sig);
 
+  // Set/modify the ncorr x nrow SigmaMat.
+  void setSigmaMat(const Matrix<Float>& sigmat);
 protected:
   virtual void attachColumns(const Table &t);
   void setInterpolatedVisFlag(const Cube<Complex>& vis, 

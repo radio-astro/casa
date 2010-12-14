@@ -1753,7 +1753,10 @@ void PlotMSCache::reportMeta(Double x, Double y,stringstream& ss) {
   else 	 
     ss << "Field=" << fldnames_(fld) << "(" << fld << ")" << " "; 	 
   
-  ss << "Time=" << MVTime(getTime()/C::day).string(MVTime::YMD,7) << " ";
+  
+  const int number_of_digits_after_decimal_for_seconds = 2;
+  const int time_prec = 6  + number_of_digits_after_decimal_for_seconds;
+  ss << "Time=" << MVTime(getTime()/C::day).string(MVTime::YMD, time_prec) << " ";
   ss << "BL=";
 
   // Antenna names
