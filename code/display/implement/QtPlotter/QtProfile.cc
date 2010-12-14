@@ -528,7 +528,7 @@ void QtProfile::writeText()
        << region << "(" << position << ")\n";
     ts << "#coordintate: " << QString(coordinate.chars()) << "\n";
     ts << "#xLabel: " << QString(coordinateType.chars()) << "\n";
-    ts << "#yLabel: " << "(" << yUnit << ")\n";
+    ts << "#yLabel: " << "(" << yUnitPrefix << yUnit << ")\n";
     
     ts.setRealNumberNotation(QTextStream::ScientificNotation);
 
