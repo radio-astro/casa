@@ -219,7 +219,7 @@ class QtDisplayPanelGui : public QtPanelBase,
  
   virtual void trackingMoved(Qt::DockWidgetArea);
   virtual void animatorMoved(Qt::DockWidgetArea);
-  virtual void mousetoolbarMoved(Qt::Orientation orient);
+  virtual void mousetoolbarMoved(bool);
 
 
  signals:

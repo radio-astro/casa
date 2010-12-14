@@ -57,11 +57,11 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     setWindowTitle("Viewer Display Panel");
 
     std::string apos = rc.get("viewer." + rcid() + ".position.animator");
-    if ( apos != "bottom" && apos != "right" ) {
+    if ( apos != "bottom" && apos != "right" && apos != "left" && apos != "top" ) {
 	rc.put( "viewer." + rcid() + ".position.animator", "bottom" );
     }
     std::string tpos = rc.get("viewer." + rcid() + ".position.cursor_tracking");
-    if ( tpos != "bottom" && tpos != "right" ) {
+    if ( tpos != "bottom" && tpos != "right" && tpos != "left" && tpos != "top" ) {
 	rc.put( "viewer." + rcid() + ".position.cursor_tracking", "bottom" );
     }
 
@@ -161,9 +161,13 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     std::string mbpos = rc.get("viewer." + rcid() + ".position.mousetools");
     mouseToolBar_ = new QtMouseToolBar(v_->mouseBtns(), qdp_);
 		    mouseToolBar_->setObjectName("Mouse Toolbar");
-		    mouseToolBar_->setAllowedAreas( (Qt::ToolBarArea) (Qt::LeftToolBarArea | Qt::TopToolBarArea) );
+		    mouseToolBar_->setAllowedAreas( (Qt::ToolBarArea) ( Qt::LeftToolBarArea | Qt::TopToolBarArea |
+									Qt::RightToolBarArea | Qt::BottomToolBarArea ) );
 		    addToolBarBreak();
-		    addToolBar( mbpos == "left" ? Qt::LeftToolBarArea : Qt::TopToolBarArea, mouseToolBar_);
+		    addToolBar( mbpos == "left" ? Qt::LeftToolBarArea :
+				mbpos == "right" ? Qt::RightToolBarArea :
+				mbpos == "bottom" ? Qt::BottomToolBarArea :
+				Qt::TopToolBarArea, mouseToolBar_);
 
 #if 0
 //  addToolBarBreak();
@@ -194,11 +198,13 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 		       customToolBar2->hide();
 		       customToolBar2->toggleViewAction()->setVisible(False);
        
-    bool animator_on_right = rc.get("viewer." + rcid() + ".position.animator") == "right" ? true : false;
+    std::string animloc = rc.get("viewer." + rcid() + ".position.animator");
     animDockWidget_  = new QDockWidget();
 		       animDockWidget_->setObjectName("Animator");
-		       addDockWidget( animator_on_right ? Qt::RightDockWidgetArea : Qt::BottomDockWidgetArea,
-				      animDockWidget_, Qt::Vertical );
+		       addDockWidget( animloc == "right" ? Qt::RightDockWidgetArea :
+				      animloc == "left" ? Qt::LeftDockWidgetArea :
+				      animloc == "top" ? Qt::TopDockWidgetArea :
+				      Qt::BottomDockWidgetArea, animDockWidget_, Qt::Vertical );
    
     animWidget_      = new QFrame;	
 		       animDockWidget_->setWidget(animWidget_);
@@ -209,11 +215,13 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	// of Ui::QtAnimatorGui, accessible to this derived class.
 	// They are declared/defined in QtAnimatorGui.ui[.h].
    
-    bool track_on_right = rc.get("viewer." + rcid() + ".position.cursor_tracking") == "right" ? true : false;
+    std::string trackloc = rc.get("viewer." + rcid() + ".position.cursor_tracking");
     trkgDockWidget_  = new QDockWidget();
 		       trkgDockWidget_->setObjectName("Position Tracking");
-		       addDockWidget( track_on_right ? Qt::RightDockWidgetArea : Qt::BottomDockWidgetArea,
-				      trkgDockWidget_, Qt::Vertical );
+		       addDockWidget( trackloc == "right" ? Qt::RightDockWidgetArea :
+				      trackloc == "left" ? Qt::LeftDockWidgetArea :
+				      trackloc == "top" ? Qt::TopDockWidgetArea :
+				      Qt::BottomDockWidgetArea, trkgDockWidget_, Qt::Vertical );
    
     trkgWidget_      = new QWidget;
 		       trkgDockWidget_->setWidget(trkgWidget_);
@@ -232,11 +240,13 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	// versa.  Also note: technically, the _layout_ is not the child
 	// widget's 'parent'.
 
-    if ( track_on_right && animator_on_right && rc.get("viewer." + rcid() + ".rightdock") == "tabbed" ) {
+    if ( trackloc == "right" && animloc == "right" && rc.get("viewer." + rcid() + ".rightdock") == "tabbed" ) {
 	tabifyDockWidget( animDockWidget_, trkgDockWidget_ );
-    }
-
-    if ( track_on_right == false && animator_on_right == false && rc.get("viewer." + rcid() + ".bottomdock") == "tabbed" ) {
+    } else if ( trackloc == "left" && animloc == "left" && rc.get("viewer." + rcid() + ".leftdock") == "tabbed" ) {
+	tabifyDockWidget( animDockWidget_, trkgDockWidget_ );
+    } else if ( trackloc == "top" && animloc == "top" && rc.get("viewer." + rcid() + ".topdock") == "tabbed" ) {
+	tabifyDockWidget( animDockWidget_, trkgDockWidget_ );
+    } else if ( trackloc == "bottom" && animloc == "bottom" && rc.get("viewer." + rcid() + ".bottomdock") == "tabbed" ) {
 	tabifyDockWidget( animDockWidget_, trkgDockWidget_ );
     }
    
@@ -296,7 +306,8 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     //## Cursor Position Tracking
     //######################################
 
-    trkgDockWidget_->setAllowedAreas((Qt::DockWidgetAreas)(Qt::BottomDockWidgetArea | Qt::RightDockWidgetArea));
+    trkgDockWidget_->setAllowedAreas((Qt::DockWidgetAreas)( Qt::BottomDockWidgetArea | Qt::RightDockWidgetArea | 
+							    Qt::TopDockWidgetArea | Qt::LeftDockWidgetArea ));
   
 //  trkgDockWidget_->setFeatures( QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
 	// Prevents closing.  (Now that there's a 'View' menu making
@@ -328,7 +339,8 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 					// (to outline inner frame (in Ui))
    
 
-    animDockWidget_->setAllowedAreas((Qt::DockWidgetAreas)(Qt::BottomDockWidgetArea | Qt::RightDockWidgetArea));
+    animDockWidget_->setAllowedAreas((Qt::DockWidgetAreas)( Qt::BottomDockWidgetArea | Qt::RightDockWidgetArea | 
+							    Qt::TopDockWidgetArea | Qt::LeftDockWidgetArea ));
   
     animDockWidget_->toggleViewAction()->setText("Animator");
   
@@ -501,7 +513,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     //## docking changes
     connect( trkgDockWidget_, SIGNAL(dockLocationChanged(Qt::DockWidgetArea)), SLOT(trackingMoved(Qt::DockWidgetArea)) );
     connect( animDockWidget_, SIGNAL(dockLocationChanged(Qt::DockWidgetArea)), SLOT(animatorMoved(Qt::DockWidgetArea)) );
-    connect( mouseToolBar_, SIGNAL(orientationChanged(Qt::Orientation)), SLOT(mousetoolbarMoved(Qt::Orientation)) );
+    connect( mouseToolBar_, SIGNAL(topLevelChanged(bool)), SLOT(mousetoolbarMoved(bool)) );
 
     //## user interface to animator
   
@@ -579,10 +591,11 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     }
 
     if ( dimension_set == false ) {
-	if ( animator_on_right || track_on_right ) {
-	    if ( track_on_right == false ) {
+	if ( animloc == "right" || trackloc == "right" ||
+	     animloc == "left" || animloc == "left" ) {
+	    if ( trackloc != "right" && trackloc != "left" ) {
 		resize( QSize(1000, 700).expandedTo(minimumSizeHint()) );
-	    } else if ( animator_on_right == false ) {
+	    } else if ( animloc != "right" && animloc != "left" ) {
 		resize( QSize(1000, 760).expandedTo(minimumSizeHint()) );
 	    } else {
 		resize( QSize(1000, 640).expandedTo(minimumSizeHint()) );
@@ -1005,6 +1018,10 @@ void QtDisplayPanelGui::trackingMoved(Qt::DockWidgetArea area) {
 	rc.put( "viewer." + rcid() + ".position.cursor_tracking", "right" );
     } else if ( area == Qt::BottomDockWidgetArea ) {
 	rc.put( "viewer." + rcid() + ".position.cursor_tracking", "bottom" );
+    } else if ( area == Qt::LeftDockWidgetArea ) {
+	rc.put( "viewer." + rcid() + ".position.cursor_tracking", "left" );
+    } else if ( area == Qt::TopDockWidgetArea ) {
+	rc.put( "viewer." + rcid() + ".position.cursor_tracking", "top" );
     }
 }
 
@@ -1013,14 +1030,22 @@ void QtDisplayPanelGui::animatorMoved(Qt::DockWidgetArea area) {
 	rc.put( "viewer." + rcid() + ".position.animator", "right" );
     } else if ( area == Qt::BottomDockWidgetArea ) {
 	rc.put( "viewer." + rcid() + ".position.animator", "bottom" );
+    } else if ( area == Qt::LeftDockWidgetArea ) {
+	rc.put( "viewer." + rcid() + ".position.animator", "left" );
+    } else if ( area == Qt::TopDockWidgetArea ) {
+	rc.put( "viewer." + rcid() + ".position.animator", "top" );
     }
 }
 
-void QtDisplayPanelGui::mousetoolbarMoved(Qt::Orientation orient) {
-    if ( orient == Qt::Horizontal ) {
+void QtDisplayPanelGui::mousetoolbarMoved(bool) {
+    if ( toolBarArea(mouseToolBar_) == Qt::TopToolBarArea ) {
 	rc.put( "viewer." + rcid() + ".position.mousetools", "top" );
-    } else if ( orient == Qt::Vertical ) {
+    } else if ( toolBarArea(mouseToolBar_) == Qt::LeftToolBarArea ) {
 	rc.put( "viewer." + rcid() + ".position.mousetools", "left" );
+    } else if ( toolBarArea(mouseToolBar_) == Qt::RightToolBarArea ) {
+	rc.put( "viewer." + rcid() + ".position.mousetools", "right" );
+    } else if ( toolBarArea(mouseToolBar_) == Qt::BottomToolBarArea ) {
+	rc.put( "viewer." + rcid() + ".position.mousetools", "bottom" );
     }
 }
 
@@ -1917,13 +1942,24 @@ void QtDisplayPanelGui::closeEvent(QCloseEvent *event) {
 #if QT_VERSION >= 0x040500
     QList<QDockWidget*> tabbeddocks = tabifiedDockWidgets( trkgDockWidget_ );
 
+    int rcnt = 0, lcnt = 0, tcnt = 0, bcnt = 0;
     for ( QList<QDockWidget*>::const_iterator i = tabbeddocks.begin(); i !=  tabbeddocks.end(); ++i ) {
-	if ( dockWidgetArea(*i) == Qt::RightDockWidgetArea )
+	if ( dockWidgetArea(*i) == Qt::RightDockWidgetArea ) {
 	    rc.put( "viewer." + rcid() + ".rightdock", "tabbed" );
-	if ( dockWidgetArea(*i) == Qt::BottomDockWidgetArea )
+	    ++rcnt;
+	}
+	if ( dockWidgetArea(*i) == Qt::BottomDockWidgetArea ) {
 	    rc.put( "viewer." + rcid() + ".bottomdock", "tabbed" );
-	if ( dockWidgetArea(*i) == Qt::LeftDockWidgetArea )
+	    ++bcnt;
+	}
+	if ( dockWidgetArea(*i) == Qt::LeftDockWidgetArea ) {
 	    rc.put( "viewer." + rcid() + ".leftdock", "tabbed" );
+	    ++lcnt;
+	}
+	if ( dockWidgetArea(*i) == Qt::TopDockWidgetArea ) {
+	    rc.put( "viewer." + rcid() + ".topdock", "tabbed" );
+	    ++tcnt;
+	}
     }
 
     if ( trkgDockWidget_->isVisible( ) && animDockWidget_->isVisible( ) &&
@@ -1937,6 +1973,14 @@ void QtDisplayPanelGui::closeEvent(QCloseEvent *event) {
 	if ( dockWidgetArea(trkgDockWidget_) == Qt::BottomDockWidgetArea &&
 	     dockWidgetArea(animDockWidget_) == Qt::BottomDockWidgetArea ) {
 	    rc.put( "viewer." + rcid() + ".bottomdock", "untabbed" );
+	}
+	if ( dockWidgetArea(trkgDockWidget_) == Qt::LeftDockWidgetArea &&
+	     dockWidgetArea(animDockWidget_) == Qt::LeftDockWidgetArea ) {
+	    rc.put( "viewer." + rcid() + ".leftdock", "untabbed" );
+	}
+	if ( dockWidgetArea(trkgDockWidget_) == Qt::TopDockWidgetArea &&
+	     dockWidgetArea(animDockWidget_) == Qt::TopDockWidgetArea ) {
+	    rc.put( "viewer." + rcid() + ".topdock", "untabbed" );
 	}
     }
 #endif
