@@ -4491,12 +4491,89 @@ Bool Imager::restore(const Vector<String>& model,
       //      if (!se_p)
       if(!createSkyEquation(model, complist)) return False;
       
-      addResidualsToSkyEquation(residualNames);
+      addResiduals(residualNames);
     }
     sm_p->solveResiduals(*se_p);
-    
+    for (uInt k=0 ; k < residuals_p.nelements(); ++k){
+      residuals_p[k]->copyData(sm_p->residual(k));
+    }
     restoreImages(image);
     
+    this->unlock();
+    return True;
+  } catch (AipsError x) {
+    this->unlock();
+    throw(x);
+    return False;
+  } 
+  this->unlock();
+  return True;
+}
+
+Bool Imager::updateresidual(const Vector<String>& model,
+		     const String& complist,
+		     const Vector<String>& image,
+		     const Vector<String>& residual)
+{
+  
+  if(!valid()) return False;
+  LogIO os(LogOrigin("imager", "updateresidual()", WHERE));
+  
+  this->lock();
+  try {
+    if(!assertDefinedImageParameters()) return False;
+    
+    if(image.nelements()>model.nelements()) {
+      this->unlock();
+      os << LogIO::SEVERE << "Cannot specify more output images than models"
+	 << LogIO::EXCEPTION;
+      return False;
+    }
+    else {
+      os << LogIO::NORMAL // Loglevel PROGRESS
+         << "updating and restoring " << model.nelements() << " models" << LogIO::POST;
+    }
+
+    if(redoSkyModel_p)
+      throw(AipsError("use restore instead of updateresidual"));
+    Bool coordMatch=True; 
+    for (Int thismodel=0;thismodel<Int(model.nelements());++thismodel) {
+      CoordinateSystem cs=(sm_p->image(thismodel)).coordinates();
+      coordMatch= coordMatch || checkCoord(cs, model(thismodel));
+      if(!coordMatch)
+	throw(AipsError("Coordinates of models to be updated are different from what is in the cache of imager "));
+      if(model(thismodel)=="") {
+	os << LogIO::SEVERE << "Need a name for model "
+	   << model << LogIO::POST;
+	return False;
+      }
+      else {
+	if(!Table::isReadable(model(thismodel))) {
+	  os << LogIO::SEVERE << model(thismodel) << "is unreadable"
+	     << model << LogIO::POST;
+	  return False;
+	}
+      }
+      images_p[thismodel]=0;
+      images_p[thismodel]=new PagedImage<Float>(model(thismodel));
+	AlwaysAssert(!images_p[thismodel].null(), AipsError);
+	sm_p->updatemodel(thismodel, *images_p[thismodel]);
+      }
+    if((complist !="") && Table::isReadable(complist)){
+      ComponentList cl(Path(complist), True);
+      sm_p->updatemodel(cl);
+    }
+    
+    
+    
+    addResiduals(residual);
+    sm_p->solveResiduals(*se_p);
+    for (uInt k=0 ; k < residuals_p.nelements(); ++k){
+      residuals_p[k]->copyData(sm_p->residual(k));
+    }
+    restoreImages(image);
+    
+
     this->unlock();
     return True;
   } catch (AipsError x) {
@@ -5056,8 +5133,8 @@ Bool Imager::clean(const String& algorithm,
           return False;
         }
       os << LogIO::NORMAL3 << "Created Sky Equation" << LogIO::POST;
-
-      addResidualsToSkyEquation(residualNames);
+      //No need to add residuals will let sm_p use tmpimage ones and we'll copy them in restore 
+      addResiduals(residualNames);
     }
     else{
       //adding or modifying mask associated with skyModel
@@ -5113,16 +5190,13 @@ Bool Imager::clean(const String& algorithm,
       //write the model visibility to ms for now 
       sm_p->solveResiduals(*se_p, True);
 
+    for (uInt k=0 ; k < residuals_p.nelements(); ++k){
+      residuals_p[k]->copyData(sm_p->residual(k));
+    }
     savePSF(psfnames);
     redoSkyModel_p=False;
     restoreImages(image);
     writeFluxScales(fluxscale_p);
-    for (Int thismodel=0;thismodel<Int(model.nelements());++thismodel) {
-      if(residuals_p[thismodel]->ok()){
-	residuals_p[thismodel]->table().relinquishAutoLocks(True);
-	residuals_p[thismodel]->table().unlock();
-      }
-    }
     this->writeHistory(os);
     try{
      // write data processing history into image logtable
@@ -5752,19 +5826,26 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
 	      copyMask(diskrestore, restored, "mask0");
 		 
 	    }
+	    
 	  }
 	  else {
 	    os << LogIO::SEVERE << "No residual image for model "
 	       << thismodel << ", cannot restore image" << LogIO::POST;
 	  }
 	  
+	  if(residuals_p[thismodel]->ok()){
+	    residuals_p[thismodel]->table().relinquishAutoLocks(True);
+	    residuals_p[thismodel]->table().unlock();
+	    //detaching residual so that other processes can use it
+	    residuals_p[thismodel]=0;
+	  }
 	}
-    
+	
       }
 
     }
   }
-  catch (exception &x) { 
+catch (exception &x) { 
     os << LogIO::SEVERE << "Exception: " << x.what() << LogIO::POST;
     return False;
   }
@@ -8791,10 +8872,9 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
   return True;  
 }
 
-// Tell the sky model to use the specified images as the residuals    
-Bool Imager::addResidualsToSkyEquation(const Vector<String>& imageNames) {
-  
-  residuals_p.resize(imageNames.nelements());
+Bool Imager::addResiduals(const Vector<String>& imageNames) {
+  Bool retval=True;
+  residuals_p.resize(imageNames.nelements(), True, False);
   for (Int thismodel=0;thismodel<Int(imageNames.nelements());++thismodel) {
     if(imageNames(thismodel)!="") {
       removeTable(imageNames(thismodel));
@@ -8805,8 +8885,20 @@ images_p[thismodel]->niceCursorShape()),
 			       imageNames(thismodel));
       AlwaysAssert(!residuals_p[thismodel].null(), AipsError);
       residuals_p[thismodel]->setUnits(Unit("Jy/beam"));
-      sm_p->addResidual(thismodel, *residuals_p[thismodel]);
     }
+    else{
+      retval=False;
+    }
+  }
+  return retval;
+} 
+// Tell the sky model to use the specified images as the residuals    
+Bool Imager::addResidualsToSkyEquation(const Vector<String>& imageNames) {
+  
+  addResiduals(imageNames);
+  for (Int thismodel=0;thismodel<Int(imageNames.nelements());++thismodel) {
+    if(imageNames(thismodel)!="") 
+      sm_p->addResidual(thismodel, *residuals_p[thismodel]);   
   }
   return True;
 } 

@@ -103,11 +103,16 @@ public:
 
   // Add a componentlist
   virtual Bool add(ComponentList& compList);
+  //update componentlist
+  virtual Bool updatemodel(ComponentList& compList);
+
 
   // Add an image. maxNumXfr is the maximum Number of transfer functions
   // that we might want to associate with this image.
   virtual Int add(ImageInterface<Float>& image, const Int maxNumXfr=100);
-  
+  //update model image...you have to have added it before...nmodels_p held has to be bigger that image here
+  //its left to the caller to make sure the image is conformant...otherwise you are in trouble.
+  virtual Bool  updatemodel(const Int image, ImageInterface<Float>& image);
   // Add a residual image
   virtual Bool addResidual(Int image, ImageInterface<Float>& residual);
 

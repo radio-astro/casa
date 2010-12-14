@@ -340,6 +340,12 @@ class Imager
   Bool restore(const Vector<String>& model, const String& complist,
 	       const Vector<String>& image, const Vector<String>& residual);
 
+  // similar to restore except this is to be called if you fiddle with the model and complist
+  // outside of this object (say you clip stuff etc) ...keep the sm_p and se_p state but just calculate new residuals and 
+  // restored images. Will throw an exception is se_p or sm_p is not valid (i.e you should have used clean, mem etc before hand).
+  Bool updateresidual(const Vector<String>& model, const String& complist,
+	       const Vector<String>& image, const Vector<String>& residual);
+
   // Setbeam
   Bool setbeam(const Quantity& bmaj, const Quantity& bmin, const Quantity& bpa);
 
@@ -678,6 +684,8 @@ protected:
 			 const String complist="");
   void destroySkyEquation();
 
+  //add residual to the private vars or create residual images
+  Bool addResiduals(const Vector<String>& residual);
   // Add the residuals to the SkyEquation
   Bool addResidualsToSkyEquation(const Vector<String>& residual);
 
