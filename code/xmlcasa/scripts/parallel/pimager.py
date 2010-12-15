@@ -23,7 +23,11 @@ class pimager():
         self.cell=['1arcsec', '1arcsec']
         self.weight='natural'
         self.visinmem=False
-
+        os.environ['IPYTHONDIR']='./i_serpiante'  
+        shutil.rmtree(os.environ['IPYTHONDIR'], True)
+    def __del__(self):
+        #print 'ipythondir', os.environ['IPYTHONDIR']
+        shutil.rmtree(os.environ['IPYTHONDIR'], True)
     @staticmethod
     def averimages(outimage='outimage', inimages=[]):
         if((type(inimages)==list) and (len (inimages)==0)):
@@ -320,13 +324,20 @@ class pimager():
             ####ib.done()
             ia.insert(inimage, locate=[0,0,0,0])
         ia.done()
-
+    @staticmethod
+    def regridimageimage(outimage='', inimage='', templateimage=''):
+        ia.open(templateimage)
+        csys=ia.coordsys()
+        shp=ia.shape()
+        ia.open(inimage)
+        ia.regrid(outfile=outimage, shape=shp, csys=csys.torecord, axes=[0,1])
+        ia.done()
     def pcont(self, msname=None, imagename=None, imsize=[1000, 1000], 
               pixsize=['1arcsec', '1arcsec'], phasecenter='', 
               field='', spw='*', ftmachine='ft', wprojplanes=128, facets=1, 
               hostnames='', 
               numcpuperhost=1, majorcycles=1, niter=1000, threshold='0.0mJy', alg='clark', scales=[0], weight='natural',
-              contclean=False, visinmem=False, interactive=False,
+              contclean=False, visinmem=False, interactive=False, maskimage='lala.mask',
               painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
               epjtablename=''):
 
@@ -502,8 +513,8 @@ class pimager():
             self.averimages(residual, residuals)
             if (interactive and (intmask==0)):
                 if(maj==0):
-                    ia.removefile('lala.mask')
-                intmask=im.drawmask(residual,'lala.mask');
+                    ia.removefile(maskimage)
+                intmask=im.drawmask(residual,maskimage);
                 print 'intmask', intmask
                 if(intmask==1):
                     im.done()
@@ -511,7 +522,12 @@ class pimager():
                     break;
             else:
                 if (maj==0):
-                    self.copyimage(inimage=residual, outimage='lala.mask', init=True, initval=1.0);
+                    if(os.path.exists(maskimage)):
+                        self.regridimage(outimage='__lala.mask', inimage=maskimage, templateimage=residual);
+                        shutil.rmtree(maskimage, True)
+                        shutil.move('__lala.mask', maskimage)
+                    else:
+                        self.copyimage(inimage=residual, outimage=maskimage, init=True, initval=1.0);
             if(maj==0):
     #            copyimage(inimage=residual, outimage='lala.mask', init=True, initval=1.0)
                 if(not contclean or (not os.path.exists(model))):
@@ -536,7 +552,7 @@ class pimager():
                 self.averimages(psf, psfs)
             #incremental clean...get rid of tempmodel
             shutil.rmtree('tempmodel', True)
-            rundecon='a.cleancont(alg="'+str(alg)+'", thr="'+str(threshold)+'", scales='+ str(scales)+', niter='+str(niterpercycle)+',psf="'+psf+'", dirty="'+residual+'", model="'+'tempmodel'+'", mask='+'"lala.mask")'
+            rundecon='a.cleancont(alg="'+str(alg)+'", thr="'+str(threshold)+'", scales='+ str(scales)+', niter='+str(niterpercycle)+',psf="'+psf+'", dirty="'+residual+'", model="'+'tempmodel'+'", mask="'+str(maskimage)+'")'
             print 'Deconvolution command', rundecon
             out[0]=c.odo(rundecon,0)
             over=False
@@ -586,7 +602,7 @@ class pimager():
               numcpuperhost=1, majorcycles=1, niter=1000, threshold='0.0mJy', alg='clark', scales=[0],
               mode='channel', start=0, nchan=1, step=1, weight='natural', 
               imagetilevol=100000,
-              contclean=False, chanchunk=1, visinmem=False, 
+              contclean=False, chanchunk=1, visinmem=False, maskimage='lala.mask' ,
               painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
               epjtablename=''): 
 
@@ -820,7 +836,7 @@ class pimager():
                      field='', spw='*', freqrange=['', ''],  ftmachine='ft', wprojplanes=128, facets=1, 
                      hostnames='', 
                      numcpuperhost=1, majorcycles=1, niter=1000, threshold='0.0mJy', alg='clark', weight='natural',
-                     contclean=False, visinmem=False,
+                     contclean=False, visinmem=False, maskimage='lala.mask',
                      painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
                      epjtablename=''):
         """
@@ -978,11 +994,16 @@ class pimager():
             self.averimages(residual, residuals)
             if(maj==0):
                 self.averimages(psf, psfs)
-                self.copyimage(inimage=residual, outimage='lala.mask', init=True, initval=1.0)
+                if(os.path.exists(maskimage)):
+                    self.regridimage(outimage='__lala.mask', inimage=maskimage, templateimage=residual);
+                    shutil.rmtree(maskimage, True)
+                    shutil.move('__lala.mask', maskimage)
+                else:
+                    self.copyimage(inimage=residual, outimage=maskimage, init=True, initval=1.0);
                 if(not contclean or (not os.path.exists(model))):
                     self.copyimage(inimage=residual, outimage=model, 
                                    init=True, initval=0.0)
-            self.incrementaldecon(alg=alg, residual=residual, model=model, niter=niterpercycle, psf=psf, mask='lala.mask', thr=threshold, cpuid=0)
+            self.incrementaldecon(alg=alg, residual=residual, model=model, niter=niterpercycle, psf=psf, mask=maskimage, thr=threshold, cpuid=0)
         #######
         restored=imagename+'.image'
         self.averimages(restored, restoreds)
@@ -1137,7 +1158,7 @@ class pimager():
                      field='', spw='*', ftmachine='ft', wprojplanes=128, facets=1, 
                      hostnames='', 
                      numcpuperhost=1, majorcycles=1, niter=1000, threshold='0.0mJy', alg='clark', weight='natural',
-                     contclean=False, visinmem=False,
+                     contclean=False, visinmem=False, maskimage='lala.mask',
                      painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
                      epjtablename=''):
         if len(msnames)==0:
@@ -1281,7 +1302,12 @@ class pimager():
             self.averimages(residual, residuals)
             if(maj==0):
                     self.averimages(psf, psfs)
-                    self.copyimage(inimage=residual, outimage='lala.mask', init=True, initval=1.0)
+                    if(os.path.exists(maskimage)):
+                        self.regridimage(outimage='__lala.mask', inimage=maskimage, templateimage=residual);
+                        shutil.rmtree(maskimage, True)
+                        shutil.move('__lala.mask', maskimage)
+                    else:
+                        self.copyimage(inimage=residual, outimage=maskimage, init=True, initval=1.0);
                     if(not contclean or (not os.path.exists(model))):
                             self.copyimage(inimage=residual, outimage=model, 
                                     init=True, initval=0.0)    
@@ -1301,7 +1327,7 @@ class pimager():
             ########
             #incremental clean...get rid of tempmodel
             shutil.rmtree('tempmodel', True)
-            rundecon='a.cleancont(alg="'+str(alg)+'", niter='+str(niterpercycle)+',psf="'+psf+'", dirty="'+residual+'", model="'+'tempmodel'+'", mask='+'"lala.mask", thr="'+str(threshold)+'")'
+            rundecon='a.cleancont(alg="'+str(alg)+'", niter='+str(niterpercycle)+',psf="'+psf+'", dirty="'+residual+'", model="'+'tempmodel'+'", mask="'+str(maskimage)+'", thr="'+str(threshold)+'")'
             print 'Deconvolution command', rundecon
             out[0]=c.odo(rundecon,numcpu)
             over=False

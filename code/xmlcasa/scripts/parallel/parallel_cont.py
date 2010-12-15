@@ -33,17 +33,17 @@ class imagecont():
         self.novaliddata={}
         self.applyoffsets=False
         self.cfcache='cfcache.dir'
-        self.epjtablename=''
+        self.epjtablename=''        
     def imagecont(self, msname='spw00_4chan351rowTile.ms', start=0, numchan=1, spw=0, field=0, freq='1.20GHz', band='200MHz', imname='newmodel'):
-        casalog.post('KEYS '+str(self.imperms.keys()))
+        #casalog.post('KEYS '+str(self.imperms.keys()))
         if(not self.imperms.has_key(msname)):
             self.imageparamset=False
             im=imtool.create()
             self.imperms[msname]=im
             self.novaliddata[msname]=False
-            casalog.post('MSNAME '+msname)
+            #casalog.post('MSNAME '+msname)
         else:
-            casalog.post('reMSNAME '+msname)
+            #casalog.post('reMSNAME '+msname)
             im=self.imperms[msname]
             self.imageparamset=True
         ###either psf 0 or no channel selected
@@ -87,7 +87,7 @@ class imagecont():
                     raise instance
         else:
             if(not self.novaliddata[msname]):
-                casalog.post('Updating '+msname+' imname '+imname)
+                #casalog.post('Updating '+msname+' imname '+imname)
                 im.updateresidual(model=imname+'.model',  image=imname+'.image', residual=imname+'.residual')
         #casalog.post('CACHE:  '+ str(tb.showcache()))
         #im.done()
@@ -344,3 +344,4 @@ class imagecont():
             ia.removefile(inim)
         return True
     #putchanimage=staticmethod(putchanimage)
+
