@@ -134,7 +134,6 @@ casa_add_library( synthesis
   implement/MeasurementEquations/LatConvEquation.cc
   implement/MeasurementEquations/LatticeModel.cc
   implement/MeasurementEquations/MatrixCleaner.cc	
-  implement/MeasurementEquations/MosaicSkyEquation.cc
   implement/MeasurementEquations/PSkyEquation.cc
   implement/MeasurementEquations/Qimager.cc
   implement/MeasurementEquations/Simulator.cc
