@@ -542,7 +542,6 @@ class split_test_state(unittest.TestCase):
                 shutil.copytree(datapath + self.inpms, self.inpms)
                 
                 print "\n\tSplitting", self.inpms
-                print "\t  ...ignore any warnings about time-varying feeds..."
             splitran = split(self.inpms, self.outms, datacolumn='corrected',
                              field='', spw=[0, 1], width=1,
                              antenna='',
