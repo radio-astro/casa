@@ -258,7 +258,7 @@ class taskmanager(object):
 	# uses IPYTHONDIR instead for IPython 0.10.x
 	#
 	if(int(version.split('.')[1]) < 10) :
-           self.__hub['proc'] = subprocess.Popen( [ self.__helpers['ipcontroller'],
+           self.__hub['proc'] = subprocess.Popen( [ self.__helpers['ipcontroller'], '-xy',
                                                  '--client-cert-file=' + self.__cert['client'],
                                                  '--engine-cert-file=' + self.__cert['engine'],
                                                  '--engine-furl-file=' + self.__furl['engine'],
@@ -268,7 +268,7 @@ class taskmanager(object):
                                                  '--logfile=' + self.__dir['session log root'] + "/controller." ],
                                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
 	else :
-           self.__hub['proc'] = subprocess.Popen( [ self.__helpers['ipcontroller'],
+           self.__hub['proc'] = subprocess.Popen( [ self.__helpers['ipcontroller'], '-xy',
                                                  '--client-cert-file=' + self.__cert['client'],
                                                  '--engine-cert-file=' + self.__cert['engine'],
                                                  '--engine-furl-file=' + self.__furl['engine'],
