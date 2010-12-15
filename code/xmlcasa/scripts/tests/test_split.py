@@ -527,7 +527,7 @@ class split_test_state(unittest.TestCase):
     Checks a simple copy of the STATE subtable.
     """
     # rename and make readonly when plotxy goes away.
-    inpms = 'plotxy/uid___X1eb_Xa30_X1.ms'
+    inpms = 'plotxy/testPhase_sdm.ms'
     
     outms = 'musthavestate.ms'
 
