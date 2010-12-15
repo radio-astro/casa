@@ -400,7 +400,14 @@ namespace casa {
 		ImageInterface<Float> *maskim=maskdd_->imageInterface();
 		//Write the region as text...will need to add a box/toggle
 		//to the viewer for that
-		writeRegionText(*imagereg, maskim->name(), value);
+		//It was requested by some but 
+		//latest conclusion is not useful ...so getting rid of it
+		//recent comment from CSSC:
+		//I note that the imagename.mask.text have not ever worked to my 
+		//knowledge, in the sense that you cannot feed them back into clean 
+		//or use them for any image analysis tasks.
+
+		//writeRegionText(*imagereg, maskim->name(), value);
 
 		SubImage<Float> partToMask(*maskim, *imagereg, True);
 		LatticeRegion latReg=imagereg->toLatticeRegion(csys_p, maskim->shape());
