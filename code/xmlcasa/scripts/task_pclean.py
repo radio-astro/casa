@@ -1,5 +1,6 @@
 from parallel.pimager import pimager
 import pdb
+from taskinit import *
 import shutil
 import os
 
