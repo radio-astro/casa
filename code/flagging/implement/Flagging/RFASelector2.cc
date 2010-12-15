@@ -701,7 +701,11 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm) :
   shadow = fieldType(parm, RF_SHADOW, TpBool) && parm.asBool(RF_SHADOW);
   if (shadow) {
     diameter = parm.asDouble(RF_DIAMETER);
-    //cerr << "diameter = " << diameter << endl;
+  }
+
+  elevation = fieldType(parm, RF_ELEVATION, TpBool) && parm.asBool(RF_ELEVATION);
+  if (elevation) {
+    height = parm.asDouble(RF_HEIGHT);
   }
  
 // now, scan arguments for what to flag within the selection
@@ -795,7 +799,8 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm) :
      !sel_autocorr && 
      !sel_clip.nelements() && 
      !sel_clip_row.nelements() && 
-     !shadow);
+     !shadow && 
+     !elevation);
   /*
   if (flag_everything)
   {
@@ -1077,6 +1082,38 @@ RFA::IterMode RFASelector::iterTime (uInt it)
   bool flagall = flag_everything;
 
   if (!flagall) {
+
+      if (elevation) {
+          const Vector<MDirection> &azimuth_elevation = chunk.visIter().azel(t0);
+
+	  for (uInt i = 0; i < ifrs.nelements(); i++) {
+	      
+	      unsigned a1, a2;
+	      chunk.ifrToAnt(a1, a2, chunk.ifrNum(i));
+
+	      Bool inrange = False;
+	      uvdist = sqrt( uvw(i)(0)*uvw(i)(0) + uvw(i)(1)*uvw(i)(1) );
+	      for (uInt j = 0; j < sel_uvrange.ncolumn(); j++)
+		  if (uvdist >= sel_uvrange(0, j) && uvdist <= sel_uvrange(1, j))
+		      inrange |= True;
+	      
+	      if( (!sel_ifr.nelements() || sel_ifr(ifrs(i))) && 
+		  (!sel_feed.nelements() || sel_feed(feeds(i))) &&
+		  (!sel_uvrange.nelements() || inrange ) ) {
+		  
+                  //                  double antenna_elevation = azimuth_elevation[i].getAngle("deg").getValue()[1];
+                  double antenna1_elevation = azimuth_elevation[a1].getAngle("deg").getValue()[1];
+                  double antenna2_elevation = azimuth_elevation[a2].getAngle("deg").getValue()[1];
+
+                  if ( antenna1_elevation <= height ||
+                       antenna2_elevation <= height ) {
+                      processRow(ifrs(i), it);
+                  }
+	      }
+	  }
+
+      }
+
       if (shadow) {
 	  
 	  /*
@@ -1440,12 +1477,14 @@ const RecordInterface & RFASelector::getDefaults ()
     rec.define(RF_FLAGRANGE,False);
     rec.define(RF_UNFLAG,False);
     rec.define(RF_SHADOW,False);
+    rec.define(RF_ELEVATION, False);
     rec.define(RF_SCAN,False);
     rec.define(RF_ARRAY,False);
     rec.define(RF_FEED,False);
     rec.define(RF_UVRANGE,False);
     rec.define(RF_COLUMN,False);
     rec.define(RF_DIAMETER, False);
+    rec.define(RF_HEIGHT, False);
     
     rec.setComment(RF_SPWID,"Restrict flagging to specific spectral windows (integers)");
     rec.setComment(RF_FIELD,"Restrict flagging to specific field IDs or field names (integers/strings)");
@@ -1464,12 +1503,14 @@ const RecordInterface & RFASelector::getDefaults ()
     rec.setComment(RF_FLAGRANGE,"Flag inside a specific range of values");
     rec.setComment(RF_UNFLAG,"If T, specified flags are CLEARED");
     rec.setComment(RF_SHADOW, "If T, flag shadowed antennas");
+    rec.setComment(RF_ELEVATION, "If T, flag based on elevation");
     rec.setComment(RF_SCAN,"Restrict flagging to specific scans (integers)");
     rec.setComment(RF_ARRAY,"Restrict flagging to specific array ids (integers)");
     rec.setComment(RF_FEED,"Restrict flagging to specific feeds (2,N array of integers)");
     rec.setComment(RF_UVRANGE,"Restrict flagging to specific uv-distance ranges in meters (2,N array of doubles )");
     rec.setComment(RF_COLUMN,"Data column to clip on.");
     rec.setComment(RF_DIAMETER, "Effective diameter to use. If negative, the true antenna diameters are used");
+    rec.setComment(RF_HEIGHT, "Effective diameter to use. If negative, the true antenna diameters are used");
   }
   return rec;
 }

@@ -9,16 +9,18 @@
     <shortdescription> All purpose flagging task based on selections. It allows the combination of several modes.</shortdescription>
     <description>
         The task will select a subset of data explicitly for flagging,
-        quacking, clipping, autocorrelation flagging, rfi or flagging
-        of shadowed antennas. Unflagging is also available.
+        quacking, clipping, autocorrelation flagging, rfi, flagging
+        of shadowed antennas or flagging based on elevation. Unflagging
+        is also available.
         
         The parameter selectdata will pre-select a subset of the data for flagging.
         Any flagging will be applied to the subset data only. Some modes contain
         specific subparameters for further selections.
         
         Any combination of the following modes can be applied: manualflag, clip,
-        shadow, quack, autoflag, rfi and summary. When mode summary is combined with any
-        other mode(s), it will run as last and report what has been flagged by the other modes.
+        shadow, elevation, quack, autoflag, rfi and summary. When mode summary is 
+        combined with any other mode(s), it will run as last and report what has
+        been flagged by the other modes.
 
         In a dual polarization data set, each polarization can be flagged
         separately.  However, at present the calibration and imaging will
@@ -179,6 +181,15 @@
             <param type="double" name="diameter" subparam="true">
                    <description>Effective diameter (m) to use. -1 ==>antenna diameter</description>
                    <value>-1.0</value>
+            </param>
+
+        <param type="bool" name="elevation">
+               <description>Flag data obtained below a given threshold elevation</description>
+               <value>False</value>
+        </param>       
+            <param type="double" name="limit" subparam="true">
+                   <description>Limiting elevation in degrees</description>
+                   <value>10.0</value>
             </param>
 
         <param type="bool" name="quack">
@@ -367,6 +378,12 @@
                 <default param="diameter"><value type="double">-1.0</value></default>
             </equals>
             </when>
+            <when param="elevation">
+            <equals type="bool" value="False"/>
+            <equals type="bool" value="True">
+                <default param="limit"><value type="double">10.0</value></default>
+            </equals>
+            </when>
             <when param="quack">
             <equals type="bool" value="False"/>
             <equals type="bool" value="True">
@@ -426,6 +443,7 @@
             clip       = clip data according to values
             quack      = remove/keep specific time range at scan beginning/end
             shadow     = remove antenna-shadowed data
+            elevation  = remove data below a given elevation
             rfi        = Radio Frequency Interference auto-flagging
             autoflag   = experimental auto-flagging outliers
             summary    = report the amount of flagged data
@@ -590,6 +608,15 @@
                     for all antennas. If this is set to a negative number the actual 
                     antenna diameters are used.
                   default: -1.0
+
+        elevation -- Option to flag based on antenna elevation
+                default: False
+                options: True, False
+                 
+              limit -- Limiting elevation in degrees. Data coming from a baseline
+                  where one or both antennas were pointing at a lower elevation
+                  (as function of time), will be flagged.
+                  default: 10.0
 
         autoflag -- Automatic flagging of outliers (Experimental)
                 default: False

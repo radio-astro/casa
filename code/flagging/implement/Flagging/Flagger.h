@@ -182,7 +182,8 @@ public:
                       String quackmode=String("beg"),
                       Bool quackincrement=Bool(false),
                       String opmode=String("flag"),
-                      Double diameter = -1.0);
+                      Double diameter = -1.0,
+                      Double limit = -1.0);
 
   // Clean up all agents of type "select".
   //Bool clearflagselections(Vector<Int> &recordlist,Vector<String> &agentlist);

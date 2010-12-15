@@ -78,6 +78,40 @@ class test_shadow(test_base):
         flagdata2(vis=self.vis, selectdata=True, correlation='LL', shadow=True )
         test_eq(flagdata2(vis=self.vis, summary=True), 70902, 1456)
 
+class test_elevation(test_base):
+    """Test of mode = 'shadow'"""
+    def setUp(self):
+        self.setUp_ngc5921()
+
+    def test1(self):
+        flagdata2(vis = self.vis,
+                  elevation = True)
+        
+        test_eq(flagdata2(vis=self.vis, summary=True), 2854278, 0)
+
+        flagdata2(vis = self.vis,
+                  elevation = True,
+                  limit = 50)
+
+        test_eq(flagdata2(vis=self.vis, summary=True), 2854278, 0)
+
+        flagdata2(vis = self.vis,
+                  elevation = True,
+                  limit = 55)
+
+        test_eq(flagdata2(vis=self.vis, summary=True), 2854278, 666792)
+
+        flagdata2(vis = self.vis,
+                  elevation = True,
+                  limit = 60)
+
+        test_eq(flagdata2(vis=self.vis, summary=True), 2854278, 1428840)
+
+        flagdata2(vis = self.vis,
+                  elevation = True,
+                  limit = 65)
+
+        test_eq(flagdata2(vis=self.vis, summary=True), 2854278, 2854278)
 
 class test_vector(test_base):
     def setUp(self):
@@ -728,6 +762,7 @@ def suite():
             test_flagmanager,
             test_rfi,
             test_shadow,
+            test_elevation,
             test_msselection,
             test_autoflag,
             test_multimode1,
