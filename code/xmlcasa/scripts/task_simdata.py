@@ -623,83 +623,6 @@ def simdata(
                 sm.done()        
                 msg('generation of measurement set ' + msfile + ' complete')
 
-            ############################################
-            # create figure 
-            if grfile:            
-                file=project+".predict.png"
-            else:
-                file=""
-            if predict_uv:
-                multi=[2,2,1]
-            else:
-                multi=0
-
-            if (grscreen or grfile):
-                util.newfig(multi=multi,show=grscreen)
-                if sd_only: telescopename=tp_telescopename
-                util.ephemeris(refdate,direction=util.direction,telescope=telescopename)
-                casalog.origin('simdata')
-                if predict_uv:
-                    util.nextfig()
-                    util.plotants(stnx, stny, stnz, stnd, padnames)
-                    if predict_sd:
-                        msg("The total power antenna will not be shown on the array configuration")
-                    
-                    # uv coverage
-                    util.nextfig()
-                    tb.open(msfile)  
-                    rawdata=tb.getcol("UVW")
-                    tb.done()
-                    pl.box()
-                    maxbase=max([max(rawdata[0,]),max(rawdata[1,])])  # in m
-                    klam_m=300/qa.convert(model_center,'GHz')['value']
-                    pl.plot(rawdata[0,]/klam_m,rawdata[1,]/klam_m,'b,')
-                    pl.plot(-rawdata[0,]/klam_m,-rawdata[1,]/klam_m,'b,')
-                    ax=pl.gca()
-                    ax.yaxis.LABELPAD=-4
-                    pl.xlabel('u[klambda]',fontsize='x-small')
-                    pl.ylabel('v[klambda]',fontsize='x-small')
-                    pl.axis('equal')
-                    # Add single dish (zero-spacing)
-                    if predict_sd:
-                        pl.plot([0.],[0.],'r,')
-
-                    # show dirty beam from observed uv coverage
-                    util.nextfig()
-                    im.open(msfile)  
-                    # TODO spectral parms
-                    if not image:
-                        msg("using default model cell "+qa.tos(model_cell[0])+" for PSF calculation",priority="warn")
-                    im.defineimage(cellx=qa.tos(model_cell[0]))  
-                    #im.makeimage(type='psf',image=project+".quick.psf")
-                    if os.path.exists(project+".quick.psf"):
-                        shutil.rmtree(project+".quick.psf")
-                    im.approximatepsf(psf=project+".quick.psf")
-                    quickpsf_current=True
-                    beam=im.fitpsf(psf=project+".quick.psf")
-                    im.done()                    
-                    ia.open(project+".quick.psf")            
-                    beamcs=ia.coordsys()
-                    beam_array=ia.getchunk(axes=[beamcs.findcoordinate("spectral")['pixel'],beamcs.findcoordinate("stokes")['pixel']],dropdeg=True)
-                    pixsize=(qa.convert(qa.quantity(model_cell[0]),'arcsec')['value'])
-                    xextent=128*pixsize*0.5
-                    xextent=[xextent,-xextent]
-                    yextent=128*pixsize*0.5
-                    yextent=[-yextent,yextent]
-                    flipped_array=beam_array.transpose()
-                    ttrans_array=flipped_array.tolist()
-                    ttrans_array.reverse()
-                    pl.imshow(ttrans_array,interpolation='bilinear',cmap=pl.cm.jet,extent=xextent+yextent,origin="bottom")
-                    pl.title(project+".quick.psf",fontsize="x-small")
-                    b=qa.convert(beam['bmaj'],'arcsec')['value']
-                    pl.xlim([-3*b,3*b])
-                    pl.ylim([-3*b,3*b])
-                    ax=pl.gca()
-                    pl.text(0.05,0.95,"bmaj=%7.1e\nbmin=%7.1e" % (beam['bmaj']['value'],beam['bmin']['value']),transform = ax.transAxes,bbox=dict(facecolor='white', alpha=0.7),size="x-small",verticalalignment="top")
-                    ia.done()
-                util.endfig(show=grscreen,filename=file)
-
-
 
             ##################################################################
             # predict single dish observation
@@ -825,6 +748,87 @@ def simdata(
                 
                 msg('generation of measurement set ' + sdmsfile + ' complete')
 
+
+            ############################################
+            # create figure 
+            if grfile:            
+                file=project+".predict.png"
+            else:
+                file=""
+            if predict_uv:
+                multi=[2,2,1]
+            else:
+                multi=0
+
+            if (grscreen or grfile):
+                util.newfig(multi=multi,show=grscreen)
+                if predict_uv:
+                    util.ephemeris(refdate,direction=util.direction,telescope=telescopename)
+                if predict_sd:
+                    util.ephemeris(refdate,direction=util.direction,telescope=tp_telescopename)
+                casalog.origin('simdata')
+                if predict_uv:
+                    util.nextfig()
+                    util.plotants(stnx, stny, stnz, stnd, padnames)
+                    if predict_sd:
+                        msg("The total power antenna will not be shown on the array configuration")
+                    
+                    # uv coverage
+                    util.nextfig()
+                    tb.open(msfile)  
+                    rawdata=tb.getcol("UVW")
+                    tb.done()
+                    pl.box()
+                    maxbase=max([max(rawdata[0,]),max(rawdata[1,])])  # in m
+                    klam_m=300/qa.convert(model_center,'GHz')['value']
+                    pl.plot(rawdata[0,]/klam_m,rawdata[1,]/klam_m,'b,')
+                    pl.plot(-rawdata[0,]/klam_m,-rawdata[1,]/klam_m,'b,')
+                    ax=pl.gca()
+                    ax.yaxis.LABELPAD=-4
+                    pl.xlabel('u[klambda]',fontsize='x-small')
+                    pl.ylabel('v[klambda]',fontsize='x-small')
+                    pl.axis('equal')
+                    # Add single dish (zero-spacing)
+                    if predict_sd:
+                        pl.plot([0.],[0.],'r,')
+
+                    # show dirty beam from observed uv coverage
+                    util.nextfig()
+                    im.open(msfile)  
+                    # TODO spectral parms
+                    if not image:
+                        msg("using default model cell "+qa.tos(model_cell[0])+" for PSF calculation",priority="warn")
+                    im.defineimage(cellx=qa.tos(model_cell[0]))  
+                    #im.makeimage(type='psf',image=project+".quick.psf")
+                    if os.path.exists(project+".quick.psf"):
+                        shutil.rmtree(project+".quick.psf")
+                    im.approximatepsf(psf=project+".quick.psf")
+                    quickpsf_current=True
+                    beam=im.fitpsf(psf=project+".quick.psf")
+                    im.done()                    
+                    ia.open(project+".quick.psf")            
+                    beamcs=ia.coordsys()
+                    beam_array=ia.getchunk(axes=[beamcs.findcoordinate("spectral")['pixel'],beamcs.findcoordinate("stokes")['pixel']],dropdeg=True)
+                    pixsize=(qa.convert(qa.quantity(model_cell[0]),'arcsec')['value'])
+                    xextent=128*pixsize*0.5
+                    xextent=[xextent,-xextent]
+                    yextent=128*pixsize*0.5
+                    yextent=[-yextent,yextent]
+                    flipped_array=beam_array.transpose()
+                    ttrans_array=flipped_array.tolist()
+                    ttrans_array.reverse()
+                    pl.imshow(ttrans_array,interpolation='bilinear',cmap=pl.cm.jet,extent=xextent+yextent,origin="bottom")
+                    pl.title(project+".quick.psf",fontsize="x-small")
+                    b=qa.convert(beam['bmaj'],'arcsec')['value']
+                    pl.xlim([-3*b,3*b])
+                    pl.ylim([-3*b,3*b])
+                    ax=pl.gca()
+                    pl.text(0.05,0.95,"bmaj=%7.1e\nbmin=%7.1e" % (beam['bmaj']['value'],beam['bmin']['value']),transform = ax.transAxes,bbox=dict(facecolor='white', alpha=0.7),size="x-small",verticalalignment="top")
+                    ia.done()
+                util.endfig(show=grscreen,filename=file)
+
+
+
         else:
             # if not predicting this time, but are imageing or analyzing, 
             # get telescopename from ms
@@ -872,9 +876,9 @@ def simdata(
                     msg("table persistence error on %s" % sm.name(),priority="error")
                     return
 
-                if sd_only:
-                    msg("sd_only set to False since you have "+msroot+".ms",priority="warn")
-                    sd_only=False
+                #if sd_only:
+                #    msg("sd_only set to False since you have "+msroot+".ms",priority="warn")
+                #    sd_only=False
                 
                 # if not predicted this time, get telescopename from ms
                 if not predict:
