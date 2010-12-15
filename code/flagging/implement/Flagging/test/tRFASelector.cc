@@ -234,11 +234,8 @@ int run()
     cout << "flagger.numFeed = " << flagger.numFeed() << endl;
     cout << "flagger.numFeedCorr = " << flagger.numFeedCorr() << endl;
 
-    PGPlotterInterface *pgp_screen(NULL);
-    PGPlotterInterface *pgp_report(NULL);
 
-
-    RFChunkStats chunk(vi, vb, flagger, pgp_screen, pgp_report);
+    RFChunkStats chunk(vi, vb, flagger);
     
     cout << "Parameters are " << parm  << endl;
 
