@@ -1,4 +1,4 @@
-from parallel.pcont import *
+from parallel.pimager import pimager
 import pdb
 import shutil
 import os
@@ -52,6 +52,7 @@ def pclean(vis,
        os.system('ssh '+host+' killall -9 ipengine')
        shutil.rmtree(os.environ['HOME']+'/.casa/ipython/security', True)
 
+    pim=pimager()
     numcores=numcpuperhost
     if numcores<1:
        numcores=1
@@ -64,7 +65,7 @@ def pclean(vis,
        imagename=vis
 
     if mode=='continuum':
-        pcont(msname=vis, imagename=imagename, 
+        pim.pcont(msname=vis, imagename=imagename, 
               imsize=imsize, pixsize=cell, 
               phasecenter=phasecenter, 
               field=field, spw=spw, 
@@ -76,10 +77,10 @@ def pclean(vis,
               painc=painc, pblimit=pblimit,dopbcorr=dopbcorr,
               applyoffsets=applyoffsets,cfcache=cfcache,
               epjtablename=epjtablename,
-              contclean=contclean, visinmem=visinmem)
+              contclean=contclean, visinmem=visinmem, maskimage=mask, interactive=interactive)
     else:
         
-        pcube(msname=vis, imagename=imagename, 
+        pim.pcube(msname=vis, imagename=imagename, 
               imsize=imsize, pixsize=cell, 
               phasecenter=phasecenter, 
               field=field, spw=spw, 
