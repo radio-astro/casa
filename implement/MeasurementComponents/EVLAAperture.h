@@ -40,7 +40,7 @@
 //---------------------------------------------------------------------
 //
 #define CONVSIZE (1024*2)
-#define CONVWTSIZEFACTOR 1.0
+#define CONVWTSIZEFACTOR 2.0
 #define OVERSAMPLING 20
 #define THRESHOLD 1E-4
 
@@ -51,18 +51,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class EVLAAperture : public ATerm
   {
   public:
-    EVLAAperture():     
-      ATerm(), polMap_p(), feedStokes_p()
-    {};
+    EVLAAperture(): ATerm(), polMap_p(), feedStokes_p() {};
     ~EVLAAperture() {};
-    virtual String name() {return String("EVLA Aperture");};
-
     EVLAAperture& operator=(const EVLAAperture& other);
-    Int getVLABandID(Double& freq,String&telescopeName);
     //
     // Overload these functions.  They are pure virtual in the base class (ATerm).
     //
-    Bool findSupport(Array<Complex>& func, Float& threshold,Int& origin, Int& R);
+    virtual String name() {return String("EVLA Aperture");};
 
     virtual void applySky(ImageInterface<Float>& outputImages,
 			  const VisBuffer& vb, 
@@ -73,11 +68,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			  const Bool doSquint=True,
 			  const Int& cfKey=0);
 
-    int getVisParams(const VisBuffer& vb);
-
     virtual Vector<Int> vbRow2CFKeyMap(const VisBuffer& vb, Int& nUnique)
     {Vector<Int> tmp; tmp.resize(vb.nRow()); tmp=0; nUnique=1; return tmp;}
 
+    virtual void getPolMap(Vector<Int>& polMap) {polMap.resize(0);polMap=polMap_p;};
+    virtual Int getConvSize() {return CONVSIZE;};
+    virtual Int getOversampling() {return OVERSAMPLING;}
+    virtual Float getConvWeightSizeFactor() {return CONVWTSIZEFACTOR;};
+    virtual Float getSupportThreshold() {return THRESHOLD;};
+
+  protected:
+    int getVisParams(const VisBuffer& vb);
+    Bool findSupport(Array<Complex>& func, Float& threshold,Int& origin, Int& R);
+    Int getVLABandID(Double& freq,String&telescopeName);
     Int makePBPolnCoords(const VisBuffer&vb,
 			 const Int& convSize,
 			 const Int& convSampling,
@@ -85,11 +88,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			 const Int& skyNx, const Int& skyNy,
 			 CoordinateSystem& feedCoord);
 
-    virtual void getPolMap(Vector<Int>& polMap) {polMap.resize(0);polMap=polMap_p;};
-    virtual Int getConvSize() {return CONVSIZE;};
-    virtual Int getOversampling() {return OVERSAMPLING;}
-    virtual Float getConvWeightSizeFactor() {return CONVWTSIZEFACTOR;};
-    virtual Float getSupportThreshold() {return THRESHOLD;};
   private:
     Float Diameter_p, Nant_p, HPBW, sigma;
     Vector<Int> polMap_p;
