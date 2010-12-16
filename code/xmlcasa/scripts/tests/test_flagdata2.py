@@ -82,36 +82,56 @@ class test_elevation(test_base):
     """Test of mode = 'shadow'"""
     def setUp(self):
         self.setUp_ngc5921()
+        self.x55 = 666792    # data below 55 degrees, etc.
+        self.x60 = 1428840
+        self.x65 = 2854278
+        self.all = 2854278
 
-    def test1(self):
+    def test_lower(self):
         flagdata2(vis = self.vis,
                   elevation = True)
         
-        test_eq(flagdata2(vis=self.vis, summary=True), 2854278, 0)
+        test_eq(flagdata2(vis=self.vis, summary=True), self.all, 0)
 
         flagdata2(vis = self.vis,
                   elevation = True,
-                  limit = 50)
+                  lowerlimit = 50)
 
-        test_eq(flagdata2(vis=self.vis, summary=True), 2854278, 0)
-
-        flagdata2(vis = self.vis,
-                  elevation = True,
-                  limit = 55)
-
-        test_eq(flagdata2(vis=self.vis, summary=True), 2854278, 666792)
+        test_eq(flagdata2(vis=self.vis, summary=True), self.all, 0)
 
         flagdata2(vis = self.vis,
                   elevation = True,
-                  limit = 60)
+                  lowerlimit = 55)
 
-        test_eq(flagdata2(vis=self.vis, summary=True), 2854278, 1428840)
+        test_eq(flagdata2(vis=self.vis, summary=True), self.all, self.x55)
 
         flagdata2(vis = self.vis,
                   elevation = True,
-                  limit = 65)
+                  lowerlimit = 60)
 
-        test_eq(flagdata2(vis=self.vis, summary=True), 2854278, 2854278)
+        test_eq(flagdata2(vis=self.vis, summary=True), self.all, self.x60)
+
+        flagdata2(vis = self.vis,
+                  elevation = True,
+                  lowerlimit = 65)
+
+        test_eq(flagdata2(vis=self.vis, summary=True), self.all, self.x65)
+
+    def test_upper(self):
+        flagdata2(vis = self.vis,
+                  elevation = True,
+                  upperlimit = 60)
+
+        test_eq(flagdata2(vis=self.vis, summary=True), self.all, self.all - self.x60)
+
+
+    def test_interval(self):
+        flagdata2(vis = self.vis,
+                  elevation = True,
+                  lowerlimit = 55,
+                  upperlimit = 60)
+
+        test_eq(flagdata2(vis=self.vis, summary=True), self.all, self.all - (self.x60 - self.x55))
 
 class test_vector(test_base):
     def setUp(self):
