@@ -165,6 +165,8 @@ namespace asdm {
 
 		Merger::mergeFlagPtr = &Merger::mergeFlag;
 
+		Merger::mergeSysPowerPtr = &Merger::mergeSysPower;
+
 	}
 	
 	Merger::~Merger() {
@@ -300,6 +302,8 @@ namespace asdm {
 
 		hasMergedFlag = false;
 
+		hasMergedSysPower = false;
+
 
 		mergeSBSummary( );
 
@@ -425,6 +429,8 @@ namespace asdm {
 
 		mergeFlag( );
 
+		mergeSysPower( );
+
 
 		postMergeSBSummary( );
 
@@ -549,6 +555,8 @@ namespace asdm {
 		postMergeDelayModel( );
 
 		postMergeFlag( );
+
+		postMergeSysPower( );
 			
 	}
 	
@@ -2754,6 +2762,51 @@ namespace asdm {
 		}
 	
 		cout << "Exiting Merger::postMergeFlag" << endl;
+	}			
+
+	void Merger::mergeSysPower() {
+		cout << "Entering Merger::mergeSysPower" << endl;
+		if (hasMergedSysPower) return;
+	
+		vector <SysPowerRow *> rows2 = ds2->getSysPower().get();
+		for (unsigned int i = 0; i < rows2.size(); i++) {
+			SysPowerRow * row = ds1->getSysPower().newRow(rows2.at(i));
+		
+			
+				
+				
+			Tag antennaIdTag = getTag(row->getAntennaId(), mergeAntennaPtr);
+			row->setAntennaId(antennaIdTag);
+				
+			
+		
+			
+				
+				
+			row->setFeedId(getId("Feed", row->getFeedId(), mergeFeedPtr));
+				
+			
+		
+			
+				
+				
+			Tag spectralWindowIdTag = getTag(row->getSpectralWindowId(), mergeSpectralWindowPtr);
+			row->setSpectralWindowId(spectralWindowIdTag);
+				
+			
+		
+			SysPowerRow * retRow = ds1->getSysPower().add(row);
+		
+		}
+	
+		hasMergedSysPower = true;
+		cout << "Exiting Merger::mergeSysPower" << endl;
+	}
+	
+	void Merger::postMergeSysPower() {
+		cout << "Entering Merger::postMergeSysPower" << endl;
+	
+		cout << "Exiting Merger::postMergeSysPower" << endl;
 	}			
 
 

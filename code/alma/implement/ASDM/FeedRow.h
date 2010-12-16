@@ -102,7 +102,7 @@ using namespace PolarizationTypeMod;
 
 
 /*\file Feed.h
-    \brief Generated from model's revision "1.55", branch "HEAD"
+    \brief Generated from model's revision "1.57", branch "HEAD"
 */
 
 namespace asdm {
@@ -129,7 +129,7 @@ typedef void (FeedRow::*FeedAttributeFromBin) (EndianISStream& eiss);
 /**
  * The FeedRow class is a row of a FeedTable.
  * 
- * Generated from model's revision "1.55", branch "HEAD"
+ * Generated from model's revision "1.57", branch "HEAD"
  *
  */
 class FeedRow {

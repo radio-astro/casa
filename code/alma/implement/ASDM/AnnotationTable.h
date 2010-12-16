@@ -121,7 +121,7 @@ class AnnotationRow;
  * The Annotation Table is intended to offer space for unexpected data to be  added in the software development process at short notice, without  redefining the data model.
  * <BR>
  
- * Generated from model's revision "1.55", branch "HEAD"
+ * Generated from model's revision "1.57", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of Annotation </CAPTION>

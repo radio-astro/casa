@@ -1881,12 +1881,12 @@ namespace sdmbin {
     static vector<vector<vector<vector<CalDeviceRow*> > > > vvvv_calDevice;
     static vector<Tag>                                      v_spwId;
     MSState                                                 msState;
-    if(subscan!=subscanNum){
+    //    if(subscan!=subscanNum){
       StateTable&  sdmStates  = datasetPtr_->getState();
       v_sdmState.resize(v_stateId.size());
       for(unsigned int n=0 ; n<v_stateId.size(); n++)
 	v_sdmState[n] = sdmStates.getRowByKey(v_stateId[n]);
-    }
+      //}
     if(coutest)cout<<"v_sdmState="<<v_sdmState.size()<<endl;
 
     msState.sig  = v_sdmState[na]->getSig();

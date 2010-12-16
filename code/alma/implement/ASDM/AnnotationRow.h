@@ -104,7 +104,7 @@ using namespace BasebandNameMod;
 
 
 /*\file Annotation.h
-    \brief Generated from model's revision "1.55", branch "HEAD"
+    \brief Generated from model's revision "1.57", branch "HEAD"
 */
 
 namespace asdm {
@@ -122,7 +122,7 @@ typedef void (AnnotationRow::*AnnotationAttributeFromBin) (EndianISStream& eiss)
 /**
  * The AnnotationRow class is a row of a AnnotationTable.
  * 
- * Generated from model's revision "1.55", branch "HEAD"
+ * Generated from model's revision "1.57", branch "HEAD"
  *
  */
 class AnnotationRow {

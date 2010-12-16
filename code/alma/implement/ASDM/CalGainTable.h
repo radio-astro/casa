@@ -105,7 +105,7 @@ class CalGainRow;
  * This Table is a placeholder to be used to wrap up casa gain tables produced  in the Science Pipeline and Offline so that they can be archived in the  ALMA Calibration Data Base.
  * <BR>
  
- * Generated from model's revision "1.55", branch "HEAD"
+ * Generated from model's revision "1.57", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalGain </CAPTION>

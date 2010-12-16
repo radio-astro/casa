@@ -165,6 +165,8 @@ namespace asdm {
 
 		attributesNames.push_back("noiseCal");
 
+		attributesNames.push_back("coupledNoiseCal");
+
 		attributesNames.push_back("temperatureLoad");
 
 		return attributesNames;
@@ -488,7 +490,7 @@ CalDeviceRow* CalDeviceTable::newRow(CalDeviceRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalDeviceTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cldvc=\"http://Alma/XASDM/CalDeviceTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalDeviceTable http://almaobservatory.org/XML/XASDM/2/CalDeviceTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n");
+		buf.append("<CalDeviceTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cldvc=\"http://Alma/XASDM/CalDeviceTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalDeviceTable http://almaobservatory.org/XML/XASDM/2/CalDeviceTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.57\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -566,7 +568,7 @@ CalDeviceRow* CalDeviceTable::newRow(CalDeviceRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalDeviceTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cldvc=\"http://Alma/XASDM/CalDeviceTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalDeviceTable http://almaobservatory.org/XML/XASDM/2/CalDeviceTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n";
+		oss << "<CalDeviceTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cldvc=\"http://Alma/XASDM/CalDeviceTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalDeviceTable http://almaobservatory.org/XML/XASDM/2/CalDeviceTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.57\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalDeviceTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -582,6 +584,7 @@ CalDeviceRow* CalDeviceTable::newRow(CalDeviceRow* row) {
 		oss << "<numReceptor/>\n"; 
 		oss << "<calEff/>\n"; 
 		oss << "<noiseCal/>\n"; 
+		oss << "<coupledNoiseCal/>\n"; 
 		oss << "<temperatureLoad/>\n"; 
 		oss << "</Attributes>\n";		
 		oss << "</CalDeviceTable>\n";
@@ -710,6 +713,8 @@ CalDeviceRow* CalDeviceTable::newRow(CalDeviceRow* row) {
     attributesSeq.push_back("calEff") ; 
      
     attributesSeq.push_back("noiseCal") ; 
+     
+    attributesSeq.push_back("coupledNoiseCal") ; 
      
     attributesSeq.push_back("temperatureLoad") ; 
               

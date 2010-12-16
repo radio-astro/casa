@@ -115,7 +115,7 @@ class SwitchCycleRow;
  * Cycle information in switching modes. Describe each step in a switching cycle.
  * <BR>
  
- * Generated from model's revision "1.55", branch "HEAD"
+ * Generated from model's revision "1.57", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of SwitchCycle </CAPTION>

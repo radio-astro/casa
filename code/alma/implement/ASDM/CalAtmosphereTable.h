@@ -177,7 +177,7 @@ class CalAtmosphereRow;
  * Results of atmosphere calibration by TelCal. This calibration determines the system temperatures corrected for atmospheric absorption. Ionospheric effects are not dealt with in the Table.
  * <BR>
  
- * Generated from model's revision "1.55", branch "HEAD"
+ * Generated from model's revision "1.57", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalAtmosphere </CAPTION>

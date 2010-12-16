@@ -435,6 +435,61 @@ class ASDM2MSFiller
 		  int             wx_station_id_,
 		  vector<double>& wx_station_position_);
 
+  /**
+   * Add one row in the MS CALDEVICE table.
+   *
+   * @param antennaId the index in the ANTENNA table of the antenna for which this row is defined.
+   * @param feedId the index in the FEED table of the feeds for which this row is defined.
+   * @param spectralWindowId the index in the SPECTRAL WINDOW table of the spectral window for which this row is defined.
+   * @param time the midpoint time of measurement.
+   * @param interval the interval of measurement.
+   * @param numCalload the number of calibration loads.
+   * @param calLoadNames a vector of strings.
+   */
+  void addCalDevice(int				antennaId,
+		    int				feedId,
+		    int				spectralWindowId,
+		    double			time,
+		    double			interval,
+		    unsigned int		numCalLoad,
+		    vector<string>		calloadNames,
+		    unsigned int		numReceptor,
+		    vector<vector<float> >&	calEff,
+		    vector<vector<float> >&	noiseCal,
+		    vector<double >&		temperatureLoad);
+
+  /**
+   * Adds one row in the MS SYSPOWER table.
+   *
+   *
+   * @param antennaId the index in the ANTENNA table of the antenna for which this row is defined.
+   * @param feedId the index in the FEED table of the feeds for which this row is defined.
+   * @param spectralWindowId the index in the SPECTRAL WINDOW table of the spectral window for which this row is defined.
+   * @param time the midpoint time of measurement.
+   * @param interval the interval of measurement.
+   * @param numReceptor a null value will be interpreted as "all the optional attributes" are absent, otherwise it will be considered as
+   * as the number of useful values to read in the next three vectors. More precisely, for any of the parameters switchedPowerDifference, 
+   * switchedPowerSum and requantizedGain, if its size is null then the parameter is considered as "absent" and ignored otherwise
+   * its first numReceptor values will be copied into the MS CalDevice table corresponding field. If the size of one the parameters is not null
+   * but smaller than numReceptor then the code will crash miserably.
+   *
+   * @param switchedPowerDifference a vector of float numbers containing the switched power differences in its numReceptor first elements on
+   * the basis of one value per receptor. If the size of the vector is null then it'll be ignored.
+   * @param switchedPowerSum a vector of float numbers containing the switched power sums in its numReceptor first elements on
+   * the basis of one value per receptor. If the size of the vector is null then it'll be ignored. 
+   * @param temperatureLoad a vector of float number containing the requantizer gains on the basis of one value per receptor. If the size
+   * of the vector is null then it'll be ignored. 
+   */
+  void addSysPower(int			antennaId,
+		   int			feedId,
+		   int			spectralWindowId,
+		   double		time,
+		   double		interval,
+		   unsigned int         numReceptor,
+		   vector<float>&	switchedPowerDifference,
+		   vector<float>&	switchedPowerSum,
+		   vector<float>&	requantizerGain); 
+
   void end(double time_);
 };
 #endif

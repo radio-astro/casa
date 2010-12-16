@@ -347,7 +347,6 @@ vector<string> PolTypeMapper::toStringVector(const vector<PolarizationTypeMod::P
 }
 
 
-
 // These classes provide methods to convert from vectors of "anything" into vectors of basic types.
 class FConverter {
 public:
@@ -931,6 +930,32 @@ vector<T *> rowsInAScanbyTime(const vector<T* >& rows, const vector<ScanRow *>& 
   return result;
 }
 
+//
+// A boolean template functor which returns the value of the expression x.size() < y.
+template<typename T>
+struct size_lt {
+public: 
+  size_lt(unsigned int y) : y(y) {}
+  bool operator()(vector<T>& x) {return x.size() < y;}
+
+private:
+  unsigned int  y;
+};
+
+//
+// A template function which returns a string from an (expectedly) enumeration and its associated 
+// helper class.
+template<typename Enum, typename CEnum> 
+string stringValue(Enum literal) {
+  return CEnum::name(literal);
+}
+
+//
+// template function meant to return a value of type BasicType out of a value expected to be of one of the Physical Quantities type (Pressure, Speed ....)
+template<typename PhysicalQuantity, typename BasicType> 
+BasicType basicTypeValue (PhysicalQuantity value) {
+  return (BasicType) value.get();
+}
 
 /**
  * The main function.
@@ -977,7 +1002,8 @@ int main(int argc, char *argv[]) {
       ("logfile,l", po::value<string>(), "specifies the log filename. If the option is not used then the logged informations are written to the standard error stream.")
       ("verbose,v", "logs numerous informations as the filler is working.")
       ("revision,r", "logs information about the revision of this application.")
-      ("mute,m", "produces no output.");
+      ("dry-run,m", "does not produce any MS MAIN table.")
+      ("ignore-time,t", "all the rows of the tables Feed, History, Pointing, Source, SysCal, CalDevice, SysPower and Weather are processed independently of the time range of the selected exec block / scan.");
     
 
     // Hidden options, will be allowed both on command line and
@@ -1021,7 +1047,7 @@ int main(int argc, char *argv[]) {
     // Revision ? displays revision's info and don't go further.
     if (vm.count("revision")) {
       errstream.str("");
-      errstream << "$Id: asdm2MS.cpp,v 1.54 2010/10/20 14:41:13 mcaillat Exp $" << "\n" ;
+      errstream << "$Id: asdm2MS.cpp,v 1.61 2010/12/15 13:44:40 mcaillat Exp $" << "\n" ;
       error(errstream.str());
     }
 
@@ -1130,7 +1156,7 @@ int main(int argc, char *argv[]) {
       string dummyMSName = vm["ms-directory-prefix"].as< string >();
       dummyMSName = lrtrim(dummyMSName);
       if (boost::algorithm::ends_with(dummyMSName, "/")) dummyMSName.erase(dummyMSName.size()-1);
-      boost::filesystem::path msPath(lrtrim(dummyMSName),boost::filesystem::no_check);
+      boost::filesystem::path msPath(lrtrim(dummyMSName),&boost::filesystem::no_check);
       string msDirectory = msPath.branch_path().string();
       msDirectory = lrtrim(msDirectory);
       if (msDirectory.size() == 0) msDirectory = ".";
@@ -1305,6 +1331,8 @@ int main(int argc, char *argv[]) {
     scansOptionInfo = "All scans of all exec blocks will be processed \n";
   }
 
+  bool ignoreTime = vm.count("ignore-time") != 0;
+
   //
   // Report the selection's parameters.
   //
@@ -1320,8 +1348,11 @@ int main(int argc, char *argv[]) {
   }
 
   infostream << scansOptionInfo;
+
+  if (ignoreTime)
+    infostream << "All rows of the tables depending on time intervals will be processed independantly of the selected exec block / scan.";
   info(infostream.str());
- 
+
   //
   // Shall we have Complex or Float data ?
   //
@@ -1427,7 +1458,7 @@ int main(int argc, char *argv[]) {
 
 
   //
-  // Write the Antenna table.
+  // Process the Antenna table.
   // 
   // (This part needs the Station table)
   //
@@ -1488,7 +1519,7 @@ int main(int argc, char *argv[]) {
   
   SpectralWindowTable& spwT = ds->getSpectralWindow();  
   //
-  // Read/Write the SpectralWindow table.
+  // Process the SpectralWindow table.
   //
   vector<Tag> reorderedSwIds = reorderSwIds(*ds); // The vector of Spectral Window Tags in the order they will be inserted in the MS.
 
@@ -1510,8 +1541,6 @@ int main(int argc, char *argv[]) {
 	(errstream << "Problem while reading the SpectralWindow table, the row with key = Tag(" << i << ") does not exist.Aborting." << endl);
 	error(errstream.str());
       }
-      
-      
       
       
       /* Processing the chanFreqXXX
@@ -1724,35 +1753,32 @@ int main(int argc, char *argv[]) {
       int freqGroup         = r->isFreqGroupExists()?r->getFreqGroup():0;
       string freqGroupName  = r->isFreqGroupNameExists()?r->getFreqGroupName().c_str():"";
 
-      if (!false) {
-	for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
-	     iter != msFillers.end();
-	     ++iter) {
-	  iter->second->addSpectralWindow(numChan,
-					  name,
-					  refFreq,
-					  chanFreq1D,  
-					  chanWidth1D, 
-					  measFreqRef,
-					  effectiveBw1D, 
-					  resolution1D,
-					  totalBandwidth,
-					  netSideband,
-					  bbcNo,
-					  ifConvChain,
-					  freqGroup,
-					  freqGroupName,
-					  numAssocValues,
-					  assocSpectralWindowId_,
-					  assocNature_);      
-	}      
-
-	if (nSpectralWindow) {
-	  infostream.str("");
-	  infostream << "converted in " << msFillers.begin()->second->ms()->spectralWindow().nrow() << " spectral window(s) in the measurement set(s).";
-	  info(infostream.str());
-	}	
-      }
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	   iter != msFillers.end();
+	   ++iter) {
+	iter->second->addSpectralWindow(numChan,
+					name,
+					refFreq,
+					chanFreq1D,  
+					chanWidth1D, 
+					measFreqRef,
+					effectiveBw1D, 
+					resolution1D,
+					totalBandwidth,
+					netSideband,
+					bbcNo,
+					ifConvChain,
+					freqGroup,
+					freqGroupName,
+					numAssocValues,
+					assocSpectralWindowId_,
+					assocNature_);      
+      }      
+    }
+    if (nSpectralWindow) {
+      infostream.str("");
+      infostream << "converted in " << msFillers.begin()->second->ms()->spectralWindow().nrow() << " spectral window(s) in the measurement set(s).";
+      info(infostream.str());
     }
   }
   catch (IllegalAccessException& e) {
@@ -1762,7 +1788,7 @@ int main(int argc, char *argv[]) {
   }
 
   //
-  // Read/Write the polarization table
+  // Process the Polarization table
   //
   Stokes::StokesTypes linearCorr[] = { Stokes::XX, Stokes::XY, Stokes::YX, Stokes::YY };
   Stokes::StokesTypes circularCorr[] = { Stokes::RR, Stokes::RL, Stokes::LR, Stokes::LL };
@@ -1835,22 +1861,21 @@ int main(int argc, char *argv[]) {
       case 4: corrProduct.resize(8); copy(corrProduct4, corrProduct4+8, corrProduct.begin()); break;
       }
 
-      if (!false) {
-	for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
-	     iter != msFillers.end();
-	     ++iter) {
-	  pIdx = iter->second->addUniquePolarization(numCorr,
-						     corrType,
-						     corrProduct
-						     );
-	}
-	polarizationIdx2Idx.push_back(pIdx);
+
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	   iter != msFillers.end();
+	   ++iter) {
+	pIdx = iter->second->addUniquePolarization(numCorr,
+						   corrType,
+						   corrProduct
+						   );
       }
-      if (nPolarization) {
-	infostream.str("");
-	infostream << "converted in " << msFillers.begin()->second->ms()->polarization().nrow() << " polarization(s)." ;
-	info(infostream.str());
-      }
+      polarizationIdx2Idx.push_back(pIdx);
+    }
+    if (nPolarization) {
+      infostream.str("");
+      infostream << "converted in " << msFillers.begin()->second->ms()->polarization().nrow() << " polarization(s)." ;
+      info(infostream.str());
     }
   }
   catch (ASDM2MSException e) {
@@ -1861,7 +1886,8 @@ int main(int argc, char *argv[]) {
   
     
   //
-  // Load the DataDescription table.
+  // Process the DataDescription table.
+  //
   vector<int> dataDescriptionIdx2Idx;
   int ddIdx;
   DataDescriptionTable& ddT = ds->getDataDescription();
@@ -1878,28 +1904,23 @@ int main(int argc, char *argv[]) {
 	(errstream << "Problem while reading the DataDescription table, the row with key = Tag(" << i << ") does not exist.Aborting." << endl);
 	error(errstream.str());
       }
-     
-      if (!false) {
-	for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
-	     iter != msFillers.end();
-	     ++iter) {
-	  ddIdx = iter->second->addUniqueDataDescription(swIdx2Idx[r->getSpectralWindowId().getTagValue()],
-							 polarizationIdx2Idx.at(r->getPolOrHoloId().getTagValue()));
-	}
-	dataDescriptionIdx2Idx.push_back(ddIdx);
-
-	if (nDataDescription) {
-	  infostream.str("");
-	  infostream << "converted in " << msFillers.begin()->second->ms()->dataDescription().nrow() << " data description(s)  in the measurement set(s)." ;
-	  info(infostream.str());
-	}
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	   iter != msFillers.end();
+	   ++iter) {
+	ddIdx = iter->second->addUniqueDataDescription(swIdx2Idx[r->getSpectralWindowId().getTagValue()],
+						       polarizationIdx2Idx.at(r->getPolOrHoloId().getTagValue()));
       }
+      dataDescriptionIdx2Idx.push_back(ddIdx); 
+    }
+    if (nDataDescription) {
+      infostream.str("");
+      infostream << "converted in " << msFillers.begin()->second->ms()->dataDescription().nrow() << " data description(s)  in the measurement set(s)." ;
+      info(infostream.str());
     }
   }
 
-
   //
-  // Load the Feed table
+  // Process the Feed table
   // Issues :
   //    - time (epoch) : at the moment it takes directly the time as it is stored in the ASDM.
   //    - focusLength (in AIPS++) is no defined.
@@ -1908,15 +1929,14 @@ int main(int argc, char *argv[]) {
     FeedRow* r = 0;
     infostream.str("");
     infostream << "The dataset has " << feedT.size() << " feed(s)...";
-    vector<FeedRow *> v = rowsInAScanbyTimeInterval(feedT.get(), selectedScanRow_v);
-    if(v.size()==0){
-      infostream << endl << "***  possible error in input data: none of the feeds are valid in the selected scans"
-      << endl << "***  will try to continue by accepting all feeds.";
+    vector<FeedRow *> v;
+    if (ignoreTime)
       v = feedT.get();
+    else {
+      v = rowsInAScanbyTimeInterval(feedT.get(), selectedScanRow_v);
+      infostream << v.size() << " of them in the exec blocks / selected scans ... ";
     }
-    else{
-      infostream << v.size() << " of them in the selected scans ... ";
-    }      
+
     info(infostream.str());
     int nFeed = v.size();
 
@@ -1945,33 +1965,32 @@ int main(int argc, char *argv[]) {
 	xyzPosition = DConverter::toVectorD<Length>(position);
       }
       vector<double> receptor_angle_ = DConverter::toVectorD<Angle>(r->getReceptorAngle());
-      if (!false) {
-	for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
-	     iter != msFillers.end();
-	     ++iter) {
-	  iter->second->addFeed((int) r->getAntennaId().getTagValue(),
-				r->getFeedId(),
-				swIdx2Idx[r->getSpectralWindowId().getTagValue()],
-				time,
-				interval,
-				r->getNumReceptor(), 
-				-1,             // We ignore the beamId array
-				beam_offset_,
-				polarization_type_,
-				polarization_response_,
-				xyzPosition,
-				receptor_angle_);
-	}
-      }
-      if (nFeed) {
-	infostream.str("");
-	infostream <<  "converted in " << msFillers.begin()->second->ms()->feed().nrow() << " feed(s) in the measurement set." ;
-	info(infostream.str());
-      }
+      
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	   iter != msFillers.end();
+	   ++iter) {
+	iter->second->addFeed((int) r->getAntennaId().getTagValue(),
+			      r->getFeedId(),
+			      swIdx2Idx[r->getSpectralWindowId().getTagValue()],
+			      time,
+			      interval,
+			      r->getNumReceptor(), 
+			      -1,             // We ignore the beamId array
+			      beam_offset_,
+			      polarization_type_,
+			      polarization_response_,
+			      xyzPosition,
+			      receptor_angle_);
+      } 
+    }
+    if (nFeed) {
+      infostream.str("");
+      infostream <<  "converted in " << msFillers.begin()->second->ms()->feed().nrow() << " feed(s) in the measurement set." ;
+      info(infostream.str());
     }
   }
     
-  // Load the Field table.
+  // Process the Field table.
   // Issues :
   // - only processes the case with numPoly == 0 at the moment.
 
@@ -2000,32 +2019,31 @@ int main(int argc, char *argv[]) {
       int sourceId = -1;
       if (r->isSourceIdExists()) sourceId = r->getSourceId();
 
-      if (!false) {
-	for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
-	     iter != msFillers.end();
-	     ++iter) {
-	  iter->second->addField( fieldName,
-				  code,
-				  r->isTimeExists() ? ((double) r->getTime().get()) / ArrayTime::unitsInASecond : 0.0,
-				  delayDir,
-				  phaseDir,
-				  referenceDir,
-				  r->isSourceIdExists()?r->getSourceId():0);
-	}
-      }  
-      if (nField) {
-	infostream.str("");
-	infostream << "converted in " << msFillers.begin()->second->ms()->field().nrow() << "  field(s) in the measurement set(s)." ;
-	info(infostream.str());
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	   iter != msFillers.end();
+	   ++iter) {
+	iter->second->addField( fieldName,
+				code,
+				r->isTimeExists() ? ((double) r->getTime().get()) / ArrayTime::unitsInASecond : 0.0,
+				delayDir,
+				phaseDir,
+				referenceDir,
+				r->isSourceIdExists()?r->getSourceId():0);
       }
+    }
+    if (nField) {
+      infostream.str("");
+      infostream << "converted in " << msFillers.begin()->second->ms()->field().nrow() << "  field(s) in the measurement set(s)." ;
+      info(infostream.str());
     }
   }
   catch (IllegalAccessException& e) {
     cout << e.getMessage();
   }
 
-
-  // Load the FlagCmd table
+  //
+  // Process the FlagCmd table.
+  //
   FlagCmdTable& flagCmdT  = ds->getFlagCmd();
 
 
@@ -2047,29 +2065,28 @@ int main(int argc, char *argv[]) {
       string type = r->getType();
       string reason = r->getReason();
       string command = r->getCommand();
-      if (!false) {
-	for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
-	     iter != msFillers.end();
-	     ++iter) {
-	  iter->second->addFlagCmd(time,
-				   interval,
-				   type,
-				   reason,
-				   r->getLevel(),
-				   r->getSeverity(),
-				   r->getApplied() ? 1 : 0,
-				   command);
-	}
+   
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	   iter != msFillers.end();
+	   ++iter) {
+	iter->second->addFlagCmd(time,
+				 interval,
+				 type,
+				 reason,
+				 r->getLevel(),
+				 r->getSeverity(),
+				 r->getApplied() ? 1 : 0,
+				 command);
       }
-      if (nFlagCmd) {
-	infostream.str("");
-	infostream << "converted in " << msFillers.begin()->second->ms()->flagCmd().nrow() << " in the measurement set." ;
-	info(infostream.str());
-      }
+    }
+    if (nFlagCmd) {
+      infostream.str("");
+      infostream << "converted in " << msFillers.begin()->second->ms()->flagCmd().nrow() << " in the measurement set." ;
+      info(infostream.str());
     }
   }
 
-  // Load the History table
+  // Process the History table.
   // Issues :
   // - use executeBlockId for observationId ...to be discussed with Francois.
   // - objectId : not taken into account (it's a string while the MS expects an int).
@@ -2079,8 +2096,13 @@ int main(int argc, char *argv[]) {
     int nHistory = historyT.size();
     infostream.str("");
     infostream << "The dataset has " << nHistory << " history(s)...";
-    vector<HistoryRow *> v = rowsInAScanbyTime(historyT.get(), selectedScanRow_v);
-    infostream << v.size() << " of them in the selected exec blocks / scans ... ";
+    vector<HistoryRow *> v;
+    if (ignoreTime) 
+      v = historyT.get();
+    else {
+      v = rowsInAScanbyTime(historyT.get(), selectedScanRow_v);
+      infostream << v.size() << " of them in the selected exec blocks / scans ... ";
+    }
     info(infostream.str()); 
 
     for (int i = 0; i < nHistory; i++) {
@@ -2092,31 +2114,31 @@ int main(int argc, char *argv[]) {
       string application = r->getApplication();
       string cliCommand  = r->getCliCommand();
       string appParams   = r->getAppParms();
-
-      if (!false) {
-	for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
-	     iter != msFillers.end();
-	     ++iter) {
-	  iter->second->addHistory(time,
-				   r->getExecBlockId().getTagValue(),   
-				   message,
-				   priority,
-				   origin,
-				   -1,
-				   application,
-				   cliCommand,
-				   appParams);
-	}
+ 
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	   iter != msFillers.end();
+	   ++iter) {
+	iter->second->addHistory(time,
+				 r->getExecBlockId().getTagValue(),   
+				 message,
+				 priority,
+				 origin,
+				 -1,
+				 application,
+				 cliCommand,
+				 appParams);
       }
-      if (nHistory) {
-	infostream.str("");
-	infostream << "converted in " << msFillers.begin()->second->ms()->history().nrow() << " history(s) in the measurement set(s)." ;
-	info(infostream.str());
-      }
+    }
+    if (nHistory) {
+      infostream.str("");
+      infostream << "converted in " << msFillers.begin()->second->ms()->history().nrow() << " history(s) in the measurement set(s)." ;
+      info(infostream.str());
     }
   }
 
-  // Build the MS Observation table with the content of the ASDM ExecBlock table.
+  // 
+  // Process the ExecBlock table,
+  // in order to build the MS Observation table.
   // 
   ExecBlockTable& execBlockT = ds->getExecBlock(); 
   {
@@ -2136,8 +2158,7 @@ int main(int argc, char *argv[]) {
     infostream << v.size() << " of them in the selected exec blocks / scans ... ";
     info(infostream.str());
 
-
-    for (int i = 0; i < v.size(); i++) {
+    for (unsigned int i = 0; i < v.size(); i++) {
       r = v.at(i);
       
       string telescopeName  = r->getTelescopeName();
@@ -2153,22 +2174,20 @@ int main(int argc, char *argv[]) {
       string project("T.B.D.");
       double releaseDate = r->isReleaseDateExists() ? r->getReleaseDate().getMJD():0.0;
 
-      if (!false) {
-	for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
-	     iter != msFillers.end();
-	     ++iter) {
-	  iter->second->addObservation(telescopeName,
-				       startTime,
-				       endTime,
-				       observerName,
-				       observingLog,
-				       scheduleType,
-				       schedule,
-				       project,
-				       releaseDate
-				       );
-	}
-      } 
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	   iter != msFillers.end();
+	   ++iter) {
+	iter->second->addObservation(telescopeName,
+				     startTime,
+				     endTime,
+				     observerName,
+				     observingLog,
+				     scheduleType,
+				     schedule,
+				     project,
+				     releaseDate
+				     );
+      }
     }
     if (nExecBlock) {
       infostream.str("");
@@ -2177,15 +2196,21 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  // Load the Pointing table
+  //
+  // Process the Pointing table.
   // Issues :
   // - pointingModelId , phaseTracking, sourceOffset and overTheTop not taken into account.
 
   PointingTable& pointingT = ds->getPointing();
   infostream.str("");
   infostream << "The dataset has " << pointingT.size() << " pointing(s)...";
-  vector<PointingRow *> v = rowsInAScanbyTimeInterval(pointingT.get(), selectedScanRow_v);
-  infostream << v.size() << " of them in the selected exec blocks / scans ... ";
+  vector<PointingRow *> v;
+  if (ignoreTime) 
+    v = pointingT.get();
+  else {
+    v = rowsInAScanbyTimeInterval(pointingT.get(), selectedScanRow_v);
+    infostream << v.size() << " of them in the selected exec blocks / scans ... ";
+  }
   info(infostream.str());
   int nPointing = v.size();
 
@@ -2354,33 +2379,32 @@ int main(int argc, char *argv[]) {
       }
     }
     
-    if (!false) {
-      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
-	   iter != msFillers.end();
-	   ++iter) {
-	iter->second->addPointingSlice(numMSPointingRows,
-				       antenna_id_,
-				       time_,
-				       interval_,
-				       direction_,
-				       target_,
-				       pointing_offset_,
-				       encoder_,
-				       tracking_,
-				       overTheTopExists4All,
-				       v_overTheTop_,
-				       v_s_overTheTop_);
-      }			       
-      
-      if (nPointing) {
-	infostream.str("");
-	infostream << "converted in " << msFillers.begin()->second->ms()->pointing().nrow() << " pointing(s) in the measurement set." ;
-	info(infostream.str()); 
-      }
+
+    for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	 iter != msFillers.end();
+	 ++iter) {
+      iter->second->addPointingSlice(numMSPointingRows,
+				     antenna_id_,
+				     time_,
+				     interval_,
+				     direction_,
+				     target_,
+				     pointing_offset_,
+				     encoder_,
+				     tracking_,
+				     overTheTopExists4All,
+				     v_overTheTop_,
+				     v_s_overTheTop_);
+    }
+    
+    if (nPointing) {
+      infostream.str("");
+      infostream << "converted in " << msFillers.begin()->second->ms()->pointing().nrow() << " pointing(s) in the measurement set." ;
+      info(infostream.str()); 
     }
   }
     
-  // Load the processor table
+  // Process the processor table.
   //
   ProcessorTable& processorT = ds->getProcessor();
   {
@@ -2397,44 +2421,40 @@ int main(int argc, char *argv[]) {
 	(errstream << "Problem while reading the Processor table, the row with key = Tag(" << i << ") does not exist.Aborting." << endl);
 	error(errstream.str());
       }
-
+      
       string processorType    = CProcessorType::name(r->getProcessorType());
       string processorSubType = CProcessorSubType::name(r->getProcessorSubType());
-      if (!false) {
-	for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
-	     iter != msFillers.end();
-	     ++iter) {
-	  iter->second->addProcessor(processorType,
-				     processorSubType,
-				     -1,    // Since there is no typeId in the ASDM.
-				     r->getModeId().getTagValue());
-	}
-
-	if (nProcessor) {
-	  infostream.str("");
-	  infostream << "converted in " << msFillers.begin()->second->ms()->processor().nrow() << " processor(s) in the measurement set." ;
-	  info(infostream.str());
-	} 
-      }
+      
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	   iter != msFillers.end();
+	   ++iter) {
+	iter->second->addProcessor(processorType,
+				   processorSubType,
+				   -1,    // Since there is no typeId in the ASDM.
+				   r->getModeId().getTagValue());
+      }  
     }
+    if (nProcessor) {
+      infostream.str("");
+      infostream << "converted in " << msFillers.begin()->second->ms()->processor().nrow() << " processor(s) in the measurement set." ;
+      info(infostream.str());
+    } 
   }
   
-  // Load the source table
+  // Process the Source table.
   //
   SourceTable& sourceT = ds->getSource();
   try {
     SourceRow* r = 0;
     infostream.str("");
     infostream << "The dataset has " << sourceT.size() << " sources(s)...";
-    vector<SourceRow *> v = rowsInAScanbyTimeInterval(sourceT.get(), selectedScanRow_v);
-    if(v.size()==0){
-      infostream << endl << "***  possible error in input data: none of the sources are valid in the selected scans"
-      << endl << "***  will try to continue by accepting all sources.";
+    vector<SourceRow *> v ;
+    if (ignoreTime) 
       v = sourceT.get();
-    }
-    else{
+    else {
+      v = rowsInAScanbyTimeInterval(sourceT.get(), selectedScanRow_v);
       infostream << v.size() << " of them in the selected scans ... ";
-    } 
+    }
     info(infostream.str());
     int nSource = v.size();
 
@@ -2531,32 +2551,31 @@ int main(int argc, char *argv[]) {
 	sysVel = DConverter::toVectorD<Speed>(r->getSysVel());
       }
    
-      if (!false) {
-	for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
-	     iter != msFillers.end();
-	     ++iter) {
-	  iter->second->addSource(sourceId,
-				  time,
-				  interval,
-				  spectralWindowId,
-				  numLines,
-				  sourceName,
-				  calibrationGroup,
-				  code,
-				  direction,
-				  position,
-				  properMotion,
-				  transition,
-				  restFrequency,
-				  sysVel);
-	}
 
-	if (nSource) {
-	  infostream.str("");
-	  infostream << "converted in " << msFillers.begin()->second->ms()->source().nrow() <<" source(s) in the measurement set(s)." ;
-	  info(infostream.str());
-	}
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	   iter != msFillers.end();
+	   ++iter) {
+	iter->second->addSource(sourceId,
+				time,
+				interval,
+				spectralWindowId,
+				numLines,
+				sourceName,
+				calibrationGroup,
+				code,
+				direction,
+				position,
+				properMotion,
+				transition,
+				restFrequency,
+				sysVel);
       }
+    }
+    
+    if (nSource) {
+      infostream.str("");
+      infostream << "converted in " << msFillers.begin()->second->ms()->source().nrow() <<" source(s) in the measurement set(s)." ;
+      info(infostream.str());
     }
   }
   catch (IllegalAccessException& e) {
@@ -2565,15 +2584,20 @@ int main(int argc, char *argv[]) {
   }
 
   //
-  // Load the SysCal table
+  // Process the SysCal table.
   //
   SysCalTable& sysCalT = ds->getSysCal();
   {
     SysCalRow* r = 0;
     infostream.str("");
     infostream << "The dataset has " << sysCalT.size() << " sysCal(s)...";
-    vector<SysCalRow *> v = rowsInAScanbyTimeInterval(sysCalT.get(), selectedScanRow_v);
-    infostream << v.size() << " of them in the selected scans ... ";
+    vector<SysCalRow *> v;
+    if (ignoreTime) 
+      v = sysCalT.get();
+    else {
+      vector<SysCalRow *> v = rowsInAScanbyTimeInterval(sysCalT.get(), selectedScanRow_v);
+      infostream << v.size() << " of them in the selected scans ... ";
+    }
     info(infostream.str());
     int nSysCal = v.size();
 
@@ -2636,38 +2660,372 @@ int main(int argc, char *argv[]) {
       if (tant_tsys_spectrum_pair.first)
 	tant_tsys_spectrum_pair.second = FConverter::toVectorF(r->getTantTsysSpectrum(), true);
 
-      if (!false) {
-	for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
-	     iter != msFillers.end();
-	     ++iter) {
-	  iter->second->addSysCal((int) r->getAntennaId().getTagValue(),
-				  (int) r->getFeedId(),
-				  (int) r->getSpectralWindowId().getTagValue(),
-				  time,
-				  interval,
-				  r->getNumReceptor(),
-				  r->getNumChan(),
-				  tcal_spectrum_pair,
-				  tcal_flag_pair,
-				  trx_spectrum_pair,
-				  trx_flag_pair,
-				  tsky_spectrum_pair,
-				  tsky_flag_pair,
-				  tsys_spectrum_pair,
-				  tsys_flag_pair,
-				  tant_spectrum_pair,
-				  tant_flag_pair,
-				  tant_tsys_spectrum_pair,
-				  tant_tsys_flag_pair);				
-	}
-      }
-      if (nSysCal) {
-	infostream.str("");
-	infostream << "converted in " << msFillers.begin()->second->ms()->sysCal().nrow() <<" sysCal(s) in the measurement set(s)." ;
-	info(infostream.str());
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	   iter != msFillers.end();
+	   ++iter) {
+	iter->second->addSysCal((int) r->getAntennaId().getTagValue(),
+				(int) r->getFeedId(),
+				(int) swIdx2Idx[r->getSpectralWindowId().getTagValue()],
+				time,
+				interval,
+				r->getNumReceptor(),
+				r->getNumChan(),
+				tcal_spectrum_pair,
+				tcal_flag_pair,
+				trx_spectrum_pair,
+				trx_flag_pair,
+				tsky_spectrum_pair,
+				tsky_flag_pair,
+				tsys_spectrum_pair,
+				tsys_flag_pair,
+				tant_spectrum_pair,
+				tant_flag_pair,
+				tant_tsys_spectrum_pair,
+				tant_tsys_flag_pair);				
       }
     }
+    if (nSysCal) {
+      infostream.str("");
+      infostream << "converted in " << msFillers.begin()->second->ms()->sysCal().nrow() <<" sysCal(s) in the measurement set(s)." ;
+      info(infostream.str());
+    }
   }
+  
+  //
+  // Process the CalDevice table.
+  CalDeviceTable& calDeviceT = ds->getCalDevice();
+  {
+    infostream.str("");
+    infostream << "The dataset has " << calDeviceT.size() << " calDevice(s)...";
+    vector<CalDeviceRow*> calDevices;
+    if (ignoreTime) 
+      calDevices = calDeviceT.get();
+    else {
+      calDevices = rowsInAScanbyTimeInterval(calDeviceT.get(), selectedScanRow_v);
+      infostream << calDevices.size() << " of them in the selected exec blocks / scans ... ";
+    }
+    info(infostream.str());
+
+    for (vector<CalDeviceRow*>::iterator iter = calDevices.begin(); iter != calDevices.end(); iter++) {
+      bool ignoreThisRow = false;
+      unsigned int numCalload = 0;
+      unsigned int numReceptor = 0;
+      
+      //
+      // Let's make some checks on the attributes.
+      errstream.str("");
+      infostream.str("");
+
+      //
+      // Is numCalload > 0 ?
+      if ((numCalload = (*iter)->getNumCalload()) <= 0) { 
+	errstream << "In the table CalDevice, the attribute 'numCalload' in row #"
+		  << (unsigned int) (iter - calDevices.begin())
+		  << " has an invalid value '("
+		  << numCalload << "'), a strictly positive value is expected."
+		  << endl; 
+	ignoreThisRow = true;
+      }
+      
+      //
+      // Do we have enough elements in calLoadNames ?
+      vector<CalibrationDevice> temp = (*iter)->getCalLoadNames();
+      vector<string> calLoadNames;
+      if (temp.size() < numCalload) { 
+	errstream  << "In the table CalDevice, the size of the attribute 'calLoadNames' in row #"
+		   << (unsigned int) (iter - calDevices.begin())
+		   << " is too small. It should be greater than or equal to the value of the atttribute 'numCalload' ("
+		   << numCalload
+		   <<")."
+		   << endl;
+	ignoreThisRow = true;
+      }
+      else {
+	calLoadNames.resize(temp.size());
+	transform(temp.begin(), temp.end(), calLoadNames.begin(), stringValue<CalibrationDevice, CCalibrationDevice>);	  
+      }
+
+
+      //
+      // Do we have numReceptor ?
+      if ((*iter)->isNumReceptorExists()) {
+	numReceptor = (*iter)->getNumReceptor();
+	if (numReceptor == 0) {
+	  errstream << "In the table CalDevice, the value of the attribute 'numReceptor' in row #"
+		    << (unsigned int) (iter - calDevices.begin())
+		    << " is invalid (" 
+		    << numReceptor 
+		    << "). It is expected to be strictly positive."
+		    << endl;
+	  ignoreThisRow = true;
+	}
+      }
+
+      //
+      // Do we have calEff ?
+      vector<vector<float> > calEff;
+      if ((*iter)->isCalEffExists()) {
+	//
+	// Do we take it into account ?
+	if (numReceptor == 0) {
+	  infostream << "In the table CalDevice, the attribute 'calEff' is present in row #"
+		     << (unsigned int) (iter - calDevices.begin())
+		     << " but it will be ignored due to the fact that the attribute 'numReceptor' is null."
+		     << endl;
+	}
+	else {
+	  calEff = (*iter)->getCalEff();
+	  
+	  //
+	  // Let's check the sizes of its content.
+	  if (calEff.size() < numReceptor) {
+	    errstream << "In the table CalDevice, the size of the attribute 'calEff' in row #"
+		      << (unsigned int) (iter - calDevices.begin())
+		      << " is too small. It should be greater than or equal to the value of the attribute 'numReceptor' ("
+		      << numReceptor
+		      <<")."
+		      << endl;
+	    ignoreThisRow = true;
+	  }
+	  else {
+	    if (find_if(calEff.begin(), calEff.end(), size_lt<float>(numReceptor)) != calEff.end()) {
+	      errstream << "In the table CalDevice, the attribute 'calEff' in row #"
+			<< (unsigned int) (iter - calDevices.begin())
+			<< " has at least one element whose size is too small. All its elements should have their size"
+			<< " greater then  or equal to the value of the attribute 'numCalload' ("
+			<< numCalload
+			<< ")."
+			<< endl;
+	      ignoreThisRow = true;
+	    }
+	  }
+	}	
+      }
+      
+      //
+      // Do we have coupledNoiseCal ?
+      vector<vector<float> > coupledNoiseCal;
+      if ((*iter)->isCoupledNoiseCalExists()) {
+	//
+	// Do we take it into account ?
+	if (numReceptor == 0) {
+	  infostream << "In the table CalDevice, the attribute 'coupledNoiseCal' is present in row #"
+		     << (unsigned int) (iter - calDevices.begin())
+		     << " but it will be ignored due to the fact that the attribute 'numReceptor' is null."
+		     << endl;
+	}
+	else {
+	  coupledNoiseCal = (*iter)->getCoupledNoiseCal();
+	  
+	  //
+	  // Let's check the sizes of its content.
+	  if (coupledNoiseCal.size() < numReceptor) {
+	    errstream << "In the table CalDevice, the size of the attribute 'coupledNoiseCal' in row #"
+		      << (unsigned int) (iter - calDevices.begin())
+		      << " is too small. It should be greater than or equal to the value of the attribute 'numReceptor' ("
+		      << numReceptor
+		      <<")."
+		      << endl;
+	    ignoreThisRow = true;
+	  }
+	  else {
+	    if (find_if(coupledNoiseCal.begin(), coupledNoiseCal.end(), size_lt<float>(numReceptor)) != coupledNoiseCal.end()) {
+	      errstream << "In the table CalDevice, the attribute 'coupledNoiseCal' in row #"
+			<< (unsigned int) (iter - calDevices.begin())
+			<< " has at least one element whose size is too small. All its elements should have their size"
+			<< " greater then  or equal to the value of the attribute 'numCalload' ("
+			<< numCalload
+			<< ")."
+			<< endl;
+	      ignoreThisRow = true;
+	    }
+	  }
+	}	
+      }
+      
+      //
+      // Do we have temperatureLoad ?
+      vector<double> temperatureLoad;
+      if ((*iter)->isTemperatureLoadExists()) {
+	vector<Temperature> temp = (*iter)->getTemperatureLoad();
+	if (temp.size() < numCalload) {
+	  errstream  << "In the table CalDevice, the size of the attribute 'temperatureLoad' in row #"
+		     << (unsigned int) (iter - calDevices.begin())
+		     << " is too small. It should be greater than or equal to the value of the atttribute 'numCalload' ("
+		     << numCalload
+		     <<")."
+		     << endl;
+	  ignoreThisRow = true;
+	}
+	else {
+	  temperatureLoad.resize(temp.size());
+	  transform(temp.begin(), temp.end(), temperatureLoad.begin(), basicTypeValue<Temperature, float>);	  
+	}
+      }
+      
+      if (errstream.str().size() > 0) 
+	error(errstream.str());
+      
+      if (infostream.str().size() > 0)
+	info(infostream.str());
+
+      if (ignoreThisRow) {
+	infostream.str("");
+	infostream << "This row will be ignored." << endl;
+	info(infostream.str());
+	continue;
+      }
+
+      //
+      // And finally we can add a new row to the MS CALDEVICE table.
+      double interval = ((double) (*iter)->getTimeInterval().getDuration().get()) / ArrayTime::unitsInASecond ;
+      double time =  (*iter)->getTimeInterval().getStartInMJD()*86400 + interval / 2.0 ;
+      
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator msIter = msFillers.begin();
+	   msIter != msFillers.end();
+	   ++msIter) {
+	msIter->second->addCalDevice((*iter)->getAntennaId().getTagValue(),
+				     (*iter)->getFeedId(),
+				     swIdx2Idx[(*iter)->getSpectralWindowId().getTagValue()],
+				     time,
+				     interval,
+				     numCalload,
+				     calLoadNames,
+				     numReceptor,
+				     calEff,
+				     coupledNoiseCal,
+				     temperatureLoad);
+      }      
+    }
+    unsigned int numMSCalDevices = (const_cast<casa::MeasurementSet*>(msFillers.begin()->second->ms()))->rwKeywordSet().asTable("CALDEVICE").nrow();
+    if (numMSCalDevices > 0) {
+      infostream.str("");
+      infostream << "converted in " << numMSCalDevices << " caldevice(s) in the measurement set.";
+      info(infostream.str());
+    }
+  }
+
+  //
+  // Process the SysPower table.
+  SysPowerTable& sysPowerT = ds->getSysPower();
+  {
+    infostream.str("");
+    infostream << "The dataset has " << sysPowerT.size() << " syspower(s)...";
+    vector<SysPowerRow*> sysPowers;
+    if (ignoreTime) 
+      sysPowers = sysPowerT.get();
+    else {
+      sysPowers = rowsInAScanbyTimeInterval(sysPowerT.get(), selectedScanRow_v);
+      infostream << sysPowers.size() << " of them in the selected exec blocks / scans ... ";
+    }
+    info(infostream.str());
+    for (vector<SysPowerRow *>::iterator iter = sysPowers.begin(); iter != sysPowers.end(); iter++) {
+      bool ignoreThisRow = false;
+      vector<float> switchedPowerDifference;
+      vector<float> switchedPowerSum;
+      vector<float> requantizerGain;
+      unsigned int numReceptor = (*iter)->getNumReceptor();
+
+      errstream.str("");
+      infostream.str("");
+      if (numReceptor == 0) {
+	errstream << "In the table Syspower, the value of the attribute 'numReceptor' in row #"
+		  << (unsigned int) (iter - sysPowers.begin())
+		  << " is invalid (" 
+		  << numReceptor 
+		  << "). It is expected to be strictly positive."
+		  << endl;
+	ignoreThisRow = true;
+      }
+
+      else {
+	// 
+	// Do we have switchedPowerDifference ?
+	if ((*iter)->isSwitchedPowerDifferenceExists()) {
+	  switchedPowerDifference = (*iter)->getSwitchedPowerDifference();
+	  // Does it have a correct size ?      
+	  if (switchedPowerDifference.size() < numReceptor) {
+	    errstream  << "In the table SysPower, the size of the attribute 'switchedPowerDifference' in row #"
+		       << (unsigned int) (iter - sysPowers.begin())
+		       << " is too small. It should be greater than or equal to the value of the atttribute 'numReceptor' ("
+		       << numReceptor
+		       <<")."
+		       << endl;
+	    ignoreThisRow = true;
+	  } 
+	}
+
+	//
+	// Do we have switchedPowerSum ?
+	if ((*iter)->isSwitchedPowerSumExists()) {
+	  switchedPowerSum = (*iter)->getSwitchedPowerSum();
+	  // Does it have a correct size ?      
+	  if (switchedPowerSum.size() < numReceptor) {
+	    errstream  << "In the table SysPower, the size of the attribute 'switchedPowerSum' in row #"
+		       << (unsigned int) (iter - sysPowers.begin())
+		       << " is too small. It should be greater than or equal to the value of the atttribute 'numReceptor' ("
+		       << numReceptor
+		       <<")."
+		       << endl;
+	    ignoreThisRow = true;
+	  } 
+	}
+
+	//
+	// Do we have requantizerGain ?
+	if ((*iter)->isRequantizerGainExists()) {
+	  requantizerGain = (*iter)->getRequantizerGain();
+	  // Does it have a correct size ?      
+	  if (requantizerGain.size() < numReceptor) {
+	    errstream  << "In the table SysPower, the size of the attribute 'requantizerGain' in row #"
+		       << (unsigned int) (iter - sysPowers.begin())
+		       << " is too small. It should be greater than or equal to the value of the atttribute 'numReceptor' ("
+		       << numReceptor
+		       <<")."
+		       << endl;
+	    ignoreThisRow = true;
+	  } 
+	}
+	if (errstream.str().size() > 0) 
+	  error(errstream.str());
+	
+	if (infostream.str().size() > 0)
+	  info(infostream.str());
+
+	if (ignoreThisRow) {
+	  infostream.str("");
+	  infostream << "This row will be ignored." << endl;
+	  info(infostream.str());
+	  continue;
+	}
+	
+	// And finally we can add a new row to the MS SYSPOWER table.
+	double interval = ((double) (*iter)->getTimeInterval().getDuration().get()) / ArrayTime::unitsInASecond ;
+	double time =  (*iter)->getTimeInterval().getStartInMJD()*86400 + interval / 2.0 ;	
+	for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator msIter = msFillers.begin();
+	     msIter != msFillers.end();
+	     ++msIter) {
+	  msIter->second->addSysPower((*iter)->getAntennaId().getTagValue(),
+				      (*iter)->getFeedId(),
+				      swIdx2Idx[(*iter)->getSpectralWindowId().getTagValue()],
+				      time,
+				      interval,
+				      numReceptor,
+				      switchedPowerDifference,
+				      switchedPowerSum,
+				      requantizerGain);
+	}          
+      }
+    }
+
+    unsigned int numMSSysPowers =  (const_cast<casa::MeasurementSet*>(msFillers.begin()->second->ms()))->rwKeywordSet().asTable("SYSPOWER").nrow();
+    if (numMSSysPowers > 0) {
+      infostream.str("");
+      infostream << "converted in " << numMSSysPowers << " syspower(s) in the measurement set.";
+      info(infostream.str());
+    }
+  }
+
 
 #if 1
   //
@@ -2678,8 +3036,13 @@ int main(int argc, char *argv[]) {
     WeatherRow* r = 0;
     infostream.str("");
     infostream << "The dataset has " << weatherT.size() << " weather(s)...";
-    vector<WeatherRow *> v = rowsInAScanbyTimeInterval(weatherT.get(), selectedScanRow_v);
-    infostream << v.size() << " of them in the selected scans ... ";
+    vector<WeatherRow *> v; 
+    if (ignoreTime) 
+      v = weatherT.get();
+    else {
+      v = rowsInAScanbyTimeInterval(weatherT.get(), selectedScanRow_v);
+      infostream << v.size() << " of them in the selected scans ... ";
+    }
     info(infostream.str());
     int nWeather = v.size();
 
@@ -2704,35 +3067,35 @@ int main(int argc, char *argv[]) {
       int   wxStationId                = r->getStationId().getTagValue();
       vector<double> wxStationPosition = DConverter::toVectorD(r->getStationUsingStationId()->getPosition());
       
-      if (!false) {
-	for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
-	     iter != msFillers.end();
-	     ++iter) {
-	  iter->second->addWeather(-1,
-				   time,
-				   interval,
-				   pressure,
-				   pressureFlag,
-				   humidity,
-				   humidityFlag,
-				   temperature,
-				   temperatureFlag,
-				   windDirection,
-				   windDirectionFlag,
-				   windSpeed,
-				   windSpeedFlag,
-				   hasDewPoint,
-				   dewPoint,
-				   dewPointFlag,
-				   wxStationId,
-				   wxStationPosition);
-	}
+
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	   iter != msFillers.end();
+	   ++iter) {
+	iter->second->addWeather(-1,
+				 time,
+				 interval,
+				 pressure,
+				 pressureFlag,
+				 humidity,
+				 humidityFlag,
+				 temperature,
+				 temperatureFlag,
+				 windDirection,
+				 windDirectionFlag,
+				 windSpeed,
+				 windSpeedFlag,
+				 hasDewPoint,
+				 dewPoint,
+				 dewPointFlag,
+				 wxStationId,
+				 wxStationPosition);
       }
-      if (nWeather) {
-	infostream.str("");
-	infostream << "converted in " << msFillers.begin()->second->ms()->weather().nrow() <<" weather(s) in the measurement set." ;
-	info(infostream.str());
-      }
+    }
+
+    if (nWeather) {
+      infostream.str("");
+      infostream << "converted in " << msFillers.begin()->second->ms()->weather().nrow() <<" weather(s) in the measurement set." ;
+      info(infostream.str());
     }
   }
 #endif

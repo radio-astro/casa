@@ -144,7 +144,7 @@ class CalDelayRow;
  * Result of delay offset calibration performed on-line by  TelCal. This calibration determines the delay offsets to be added in the  correlator to compensate for residual cable delays.   Delays are entered in seconds but represented as double precision floating point numbers.
  * <BR>
  
- * Generated from model's revision "1.55", branch "HEAD"
+ * Generated from model's revision "1.57", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalDelay </CAPTION>

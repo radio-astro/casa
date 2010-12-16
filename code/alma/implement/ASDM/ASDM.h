@@ -59,7 +59,7 @@ using namespace asdmIDL;   /// <-------------------
 #endif
 
 /*\file ASDM.h
-    \brief Generated from model's revision "1.55", branch "HEAD"
+    \brief Generated from model's revision "1.57", branch "HEAD"
 */
 
 namespace asdm {
@@ -242,6 +242,9 @@ class SwitchCycleTable;
 //class asdm::SysCalTable;
 class SysCalTable;
 
+//class asdm::SysPowerTable;
+class SysPowerTable;
+
 //class asdm::TotalPowerTable;
 class TotalPowerTable;
 
@@ -257,7 +260,7 @@ class WeatherTable;
  * creates a complete set of tables.
  *
  * 
- * Generated from model's revision "1.55", branch "HEAD"
+ * Generated from model's revision "1.57", branch "HEAD"
  */
 //class ASDM : public Representable {
 class ASDM {
@@ -624,6 +627,12 @@ public:
 	 * @return The table SysCal as a SysCalTable.
 	 */
 	SysCalTable & getSysCal () const;
+
+	/**
+	 * Get the table SysPower.
+	 * @return The table SysPower as a SysPowerTable.
+	 */
+	SysPowerTable & getSysPower () const;
 
 	/**
 	 * Get the table TotalPower.
@@ -1178,6 +1187,11 @@ private:
 	 * The table SysCal
 	 */
 	SysCalTable * sysCal;
+
+	/**
+	 * The table SysPower
+	 */
+	SysPowerTable * sysPower;
 
 	/**
 	 * The table TotalPower

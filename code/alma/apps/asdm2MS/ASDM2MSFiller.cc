@@ -358,6 +358,7 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
   const Int nTileCorr = 4;
   const Int nTileChan = 64;
   const Int tileSizeKBytes = 1024;
+
   Int nTileRow;
 
   // Create an incremental storage manager
@@ -699,6 +700,73 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
     SetupNewTable tabSetup(itsMS->weatherTableName(), td, Table::New);
     itsMS->rwKeywordSet().defineTable(MS::keywordName(MS::WEATHER),
 				      Table(tabSetup));   
+  }
+
+  //
+  // New Tables.
+  //
+
+  // SYSPOWER.
+  //
+  {
+    TableDesc tableDesc_;
+    String name_ = "SYSPOWER";
+    
+    //
+    // Key columns.
+    //
+    tableDesc_.comment() = "System calibration from Cal diode demodulation (EVLA).";
+    tableDesc_.addColumn(ScalarColumnDesc<Int>("ANTENNA_ID", "Antenna identifier."));
+    tableDesc_.addColumn(ScalarColumnDesc<Int>("FEED_ID", "Feed's index."));
+    tableDesc_.addColumn(ScalarColumnDesc<Int>("SPECTRAL_WINDOW_ID", "Spectral window identifier."));
+    tableDesc_.addColumn(ScalarColumnDesc<Double>("TIME", "Midpoint of time measurement."));
+    tableDesc_.addColumn(ScalarColumnDesc<Double>("INTERVAL", "Interval of measurement."));
+    
+    //
+    // Data columns.
+    //
+    tableDesc_.addColumn(ArrayColumnDesc<Float>("SWITCHED_DIFF", "Switched power difference (cal on - off)."));
+    tableDesc_.addColumn(ArrayColumnDesc<Float>("SWITCHED_SUM", "Switched power sum (cal on + off)."));
+    tableDesc_.addColumn(ArrayColumnDesc<Float>("REQUANTIZER_GAIN", "Requantizer gain."));
+    
+    SetupNewTable tableSetup(itsMS->tableName() + "/" + name_,
+			     tableDesc_,
+			     Table::New);
+    itsMS->rwKeywordSet().defineTable(name_, Table(tableSetup));
+  }
+  
+  itsMS->rwKeywordSet().asTable("SYSPOWER").flush();
+
+  // CALDEVICE.
+  //
+  {
+    TableDesc tableDesc_;
+    String name_ = "CALDEVICE";
+
+    //
+    // Key columns.
+    //
+    tableDesc_.comment() = "An immediate transcription of the ASDM's CalDevice table.";
+    tableDesc_.addColumn(ScalarColumnDesc<Int>("ANTENNA_ID","Antenna's identifier"));
+    tableDesc_.addColumn(ScalarColumnDesc<Int>("FEED_ID", "Feed's index"));
+    tableDesc_.addColumn(ScalarColumnDesc<Int>("SPECTRAL_WINDOW_ID", "Spectral window identifier."));
+    tableDesc_.addColumn(ScalarColumnDesc<Double>("TIME", "Midpoint of time measurement."));
+    tableDesc_.addColumn(ScalarColumnDesc<Double>("INTERVAL", "Interval of measurement."));
+
+    //
+    // Data columns.
+    //
+    tableDesc_.addColumn(ScalarColumnDesc<Int>("NUM_CAL_LOAD", "Number of calibration loads."));
+    tableDesc_.addColumn(ArrayColumnDesc<String>("CAL_LOAD_NAMES", "Calibration load names."));
+    tableDesc_.addColumn(ScalarColumnDesc<Int>("NUM_RECEPTOR", "Number of receptors."));
+    tableDesc_.addColumn(ArrayColumnDesc<Float>("NOISE_CAL", "Equivalent temperatures of the noise sources (TCAL for EVLA)."));
+    tableDesc_.addColumn(ArrayColumnDesc<Float>("CAL_EFF", "Calibration efficiencies (one per receptor per load)."));
+    tableDesc_.addColumn(ArrayColumnDesc<Double>("TEMPERATURE_LOAD", "Physical."));
+
+    SetupNewTable tableSetup(itsMS->tableName() + "/" + name_,
+			     tableDesc_,
+			     Table::New);
+    itsMS->rwKeywordSet().defineTable(name_, Table(tableSetup));    
   }
 
   itsMS->initRefs(True);
@@ -1909,6 +1977,145 @@ void ASDM2MSFiller::addWeather(int             antenna_id_,
   nsWXStationPosition.put(crow, Vector<double>(IPosition(1, 3), &wx_station_position_[0], SHARE));
 
   msweather.flush();
+}
+
+
+void ASDM2MSFiller::addSysPower(int		antennaId,
+				int		feedId,
+				int		spectralWindowId,
+				double		time,
+				double		interval,
+				unsigned int    numReceptor,
+				vector<float>&	switchedPowerDifference,
+				vector<float>&	switchedPowerSum,
+				vector<float>&  requantizerGain
+				) {
+  Table						mssyspower = itsMS->rwKeywordSet().asTable("SYSPOWER");
+  int						rowIndex   = mssyspower.nrow();
+  mssyspower.addRow(1);
+
+  ScalarColumn<Int>	antennaIdCol(mssyspower, "ANTENNA_ID");
+  antennaIdCol.put(rowIndex, antennaId);
+
+  ScalarColumn<Int>	feedIdCol(mssyspower, "FEED_ID");
+  feedIdCol.put(rowIndex, feedId);
+
+  ScalarColumn<Int>	spectralWindowIdCol(mssyspower, "SPECTRAL_WINDOW_ID");
+  spectralWindowIdCol.put(rowIndex, spectralWindowId);
+
+  ScalarColumn<Double>	timeCol(mssyspower, "TIME");
+  timeCol.put(rowIndex, time);
+
+  ScalarColumn<Double>	intervalCol(mssyspower, "INTERVAL");
+  intervalCol.put(rowIndex, interval);
+
+  // numReceptor != 0 then consider the optional attributes.
+  //
+  if (numReceptor) {
+    // switchedPowerDifference size != 0 then optional attribute is present.
+    // 
+    if (switchedPowerDifference.size()) {
+      ArrayColumn<Float>	switchedPowerDifferenceCol(mssyspower, "SWITCHED_DIFF");
+      Vector<Float> switchedPowerDifference_(IPosition(1, switchedPowerDifference.size()), const_cast<float *>(&switchedPowerDifference[0]));
+      switchedPowerDifferenceCol.put(rowIndex, switchedPowerDifference_);
+    }
+    
+    // switchedPowerSum size != 0 then optional attribute is present.
+    // 
+    if (switchedPowerSum.size()) {
+      ArrayColumn<Float>	switchedPowerSumCol(mssyspower, "SWITCHED_SUM");
+      Vector<Float> switchedPowerSum_(IPosition(1, switchedPowerSum.size()), const_cast<float *>(&switchedPowerSum[0]));
+      switchedPowerSumCol.put(rowIndex, switchedPowerSum_);
+    }
+    
+    // requantizerGain size != 0 then optional attribute is present.
+    // 
+    if (requantizerGain.size()) {
+      ArrayColumn<Float>	requantizerGainCol(mssyspower, "REQUANTIZER_GAIN");
+      Vector<Float> requantizerGain_(IPosition(1, requantizerGain.size()), const_cast<float *>(&requantizerGain[0]));
+      requantizerGainCol.put(rowIndex, requantizerGain_);
+    }
+  }
+  
+  mssyspower.flush();
+}
+
+void ASDM2MSFiller::addCalDevice(int				antennaId,
+				 int				feedId,
+				 int				spectralWindowId,
+				 double				time,
+				 double				interval,
+				 unsigned int			numCalLoad,
+				 vector<string>			calloadNames,
+				 unsigned int			numReceptor,
+				 vector<vector<float> >&	calEff,
+				 vector<vector<float> >&	noiseCal,
+				 vector<double >&                temperatureLoad) {
+  Table								mscaldevice = itsMS->rwKeywordSet().asTable("CALDEVICE");
+  int								rowIndex    = mscaldevice.nrow();
+  mscaldevice.addRow(1);
+
+  ScalarColumn<Int>	antennaIdCol(mscaldevice, "ANTENNA_ID");
+  antennaIdCol.put(rowIndex, antennaId);
+
+  ScalarColumn<Int>	feedIdCol(mscaldevice, "FEED_ID");
+  feedIdCol.put(rowIndex, feedId);
+
+  ScalarColumn<Int>	spectralWindowIdCol(mscaldevice, "SPECTRAL_WINDOW_ID");
+  spectralWindowIdCol.put(rowIndex, spectralWindowId);
+
+  ScalarColumn<Double>	timeCol(mscaldevice, "TIME");
+  timeCol.put(rowIndex, time);
+
+  ScalarColumn<Double>	intervalCol(mscaldevice, "INTERVAL");
+  intervalCol.put(rowIndex, interval);  
+
+  ScalarColumn<Int> numCalLoadCol(mscaldevice, "NUM_CAL_LOAD");
+  numCalLoadCol.put(rowIndex, numCalLoad);
+
+  ArrayColumn<String> calloadNamesCol(mscaldevice, "CAL_LOAD_NAMES");
+  Vector<String> calloadNames_(IPosition(1, calloadNames.size()));
+  for (unsigned int i = 0; i < calloadNames.size(); i++)
+    calloadNames_(i) = calloadNames[i];
+  calloadNamesCol.put(rowIndex, calloadNames_);
+  
+  //
+  // numReceptor == 0 will be interpreted as numReceptor 'absent'.
+  if (numReceptor) {
+    ScalarColumn<Int> numReceptorCol(mscaldevice, "NUM_RECEPTOR");
+    numReceptorCol.put(rowIndex, numReceptor);
+
+    //
+    // calEff size == 0 will be interpreted as calEff absent. 
+    if (calEff.size()) {
+      ArrayColumn<Float> calEffCol(mscaldevice, "CAL_EFF");
+      Matrix<Float> calEff_(IPosition(2, numCalLoad, numReceptor));
+      for (unsigned int iReceptor = 0; iReceptor < numReceptor; iReceptor++)
+	for (unsigned int iCalLoad = 0; iCalLoad < numCalLoad; iCalLoad++)
+	  calEff_(iCalLoad, iReceptor) = calEff.at(iReceptor).at(iCalLoad);
+      calEffCol.put(rowIndex, calEff_);
+    }
+    
+    //
+    // noiseCal size == 0 will be interpreted as noiseCal absent.
+    if (noiseCal.size()) {
+      ArrayColumn<Float> noiseCalCol(mscaldevice, "NOISE_CAL");
+      Matrix<Float> noiseCal_(IPosition(2, numCalLoad, numReceptor));
+      for (unsigned int iReceptor = 0; iReceptor < numReceptor; iReceptor++)
+	for (unsigned int iCalLoad = 0; iCalLoad < numCalLoad; iCalLoad++)
+	  noiseCal_(iCalLoad, iReceptor) = (float) noiseCal.at(iReceptor).at(iCalLoad);
+      noiseCalCol.put(rowIndex, noiseCal_);
+    }
+  }
+   
+  //
+  // temperatureLoad == 0 will be interpreted as temperatureLoad absent. 
+  if (temperatureLoad.size()) {
+    ArrayColumn<Double> temperatureLoadCol(mscaldevice, "TEMPERATURE_LOAD");
+    temperatureLoadCol.put(rowIndex, Vector<Double>(IPosition(1, numCalLoad), &temperatureLoad[0], SHARE));
+  }    
+
+  mscaldevice.flush();
 }
 
 void ASDM2MSFiller::end(double time_) {

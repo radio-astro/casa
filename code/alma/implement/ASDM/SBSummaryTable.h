@@ -141,7 +141,7 @@ class SBSummaryRow;
  * Characteristics of the Scheduling Block that has been executed. Much of the  data here is reproduced from the Scheduling block itself.
  * <BR>
  
- * Generated from model's revision "1.55", branch "HEAD"
+ * Generated from model's revision "1.57", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of SBSummary </CAPTION>

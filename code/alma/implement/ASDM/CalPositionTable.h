@@ -140,7 +140,7 @@ class CalPositionRow;
  * Result of antenna positions calibration performed by TelCal.
  * <BR>
  
- * Generated from model's revision "1.55", branch "HEAD"
+ * Generated from model's revision "1.57", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalPosition </CAPTION>

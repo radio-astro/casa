@@ -203,6 +203,30 @@ namespace asdm {
 	
   		
 		
+		x->coupledNoiseCalExists = coupledNoiseCalExists;
+		
+		
+			
+		x->coupledNoiseCal.length(coupledNoiseCal.size());
+		for (unsigned int i = 0; i < coupledNoiseCal.size(); i++) {
+			x->coupledNoiseCal[i].length(coupledNoiseCal.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < coupledNoiseCal.size() ; i++)
+			for (unsigned int j = 0; j < coupledNoiseCal.at(i).size(); j++)
+					
+						
+				x->coupledNoiseCal[i][j] = coupledNoiseCal.at(i).at(j);
+		 				
+			 						
+		
+			
+		
+	
+
+	
+  		
+		
 		x->temperatureLoadExists = temperatureLoadExists;
 		
 		
@@ -377,6 +401,31 @@ namespace asdm {
 
 	
 		
+		coupledNoiseCalExists = x.coupledNoiseCalExists;
+		if (x.coupledNoiseCalExists) {
+		
+		
+			
+		coupledNoiseCal .clear();
+		vector<float> v_aux_coupledNoiseCal;
+		for (unsigned int i = 0; i < x.coupledNoiseCal.length(); ++i) {
+			v_aux_coupledNoiseCal.clear();
+			for (unsigned int j = 0; j < x.coupledNoiseCal[0].length(); ++j) {
+				
+				v_aux_coupledNoiseCal.push_back(x.coupledNoiseCal[i][j]);
+	  			
+  			}
+  			coupledNoiseCal.push_back(v_aux_coupledNoiseCal);			
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
+		
 		temperatureLoadExists = x.temperatureLoadExists;
 		if (x.temperatureLoadExists) {
 		
@@ -514,6 +563,18 @@ namespace asdm {
 
   	
  		
+		if (coupledNoiseCalExists) {
+		
+		
+		Parser::toXML(coupledNoiseCal, "coupledNoiseCal", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
 		if (temperatureLoadExists) {
 		
 		
@@ -629,6 +690,18 @@ namespace asdm {
 			
 								
 	  		setNoiseCal(Parser::get1DDouble("noiseCal","CalDevice",rowDoc));
+	  			
+	  		
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<coupledNoiseCal>")) {
+			
+								
+	  		setCoupledNoiseCal(Parser::get2DFloat("coupledNoiseCal","CalDevice",rowDoc));
 	  			
 	  		
 		}
@@ -803,6 +876,28 @@ namespace asdm {
 
 	}
 
+	eoss.writeBoolean(coupledNoiseCalExists);
+	if (coupledNoiseCalExists) {
+	
+	
+	
+		
+		
+			
+		eoss.writeInt((int) coupledNoiseCal.size());
+		eoss.writeInt((int) coupledNoiseCal.at(0).size());
+		for (unsigned int i = 0; i < coupledNoiseCal.size(); i++) 
+			for (unsigned int j = 0;  j < coupledNoiseCal.at(0).size(); j++) 
+							 
+				eoss.writeFloat(coupledNoiseCal.at(i).at(j));
+				
+	
+						
+		
+	
+
+	}
+
 	eoss.writeBoolean(temperatureLoadExists);
 	if (temperatureLoadExists) {
 	
@@ -958,6 +1053,38 @@ void CalDeviceRow::noiseCalFromBin(EndianISStream& eiss) {
 			
 			noiseCal.push_back(eiss.readDouble());
 			
+	
+
+		
+	
+
+	}
+	
+}
+void CalDeviceRow::coupledNoiseCalFromBin(EndianISStream& eiss) {
+		
+	coupledNoiseCalExists = eiss.readBoolean();
+	if (coupledNoiseCalExists) {
+		
+	
+	
+		
+			
+	
+		coupledNoiseCal.clear();
+		
+		unsigned int coupledNoiseCalDim1 = eiss.readInt();
+		unsigned int coupledNoiseCalDim2 = eiss.readInt();
+		vector <float> coupledNoiseCalAux1;
+		for (unsigned int i = 0; i < coupledNoiseCalDim1; i++) {
+			coupledNoiseCalAux1.clear();
+			for (unsigned int j = 0; j < coupledNoiseCalDim2 ; j++)			
+			
+			coupledNoiseCalAux1.push_back(eiss.readFloat());
+			
+			coupledNoiseCal.push_back(coupledNoiseCalAux1);
+		}
+	
 	
 
 		
@@ -1248,6 +1375,53 @@ void CalDeviceRow::temperatureLoadFromBin(EndianISStream& eiss) {
 
 	
 	/**
+	 * The attribute coupledNoiseCal is optional. Return true if this attribute exists.
+	 * @return true if and only if the coupledNoiseCal attribute exists. 
+	 */
+	bool CalDeviceRow::isCoupledNoiseCalExists() const {
+		return coupledNoiseCalExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get coupledNoiseCal, which is optional.
+ 	 * @return coupledNoiseCal as vector<vector<float > >
+ 	 * @throw IllegalAccessException If coupledNoiseCal does not exist.
+ 	 */
+ 	vector<vector<float > > CalDeviceRow::getCoupledNoiseCal() const  {
+		if (!coupledNoiseCalExists) {
+			throw IllegalAccessException("coupledNoiseCal", "CalDevice");
+		}
+	
+  		return coupledNoiseCal;
+ 	}
+
+ 	/**
+ 	 * Set coupledNoiseCal with the specified vector<vector<float > >.
+ 	 * @param coupledNoiseCal The vector<vector<float > > value to which coupledNoiseCal is to be set.
+ 	 
+ 	
+ 	 */
+ 	void CalDeviceRow::setCoupledNoiseCal (vector<vector<float > > coupledNoiseCal) {
+	
+ 		this->coupledNoiseCal = coupledNoiseCal;
+	
+		coupledNoiseCalExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark coupledNoiseCal, which is an optional field, as non-existent.
+	 */
+	void CalDeviceRow::clearCoupledNoiseCal () {
+		coupledNoiseCalExists = false;
+	}
+	
+
+	
+	/**
 	 * The attribute temperatureLoad is optional. Return true if this attribute exists.
 	 * @return true if and only if the temperatureLoad attribute exists. 
 	 */
@@ -1499,6 +1673,10 @@ void CalDeviceRow::temperatureLoadFromBin(EndianISStream& eiss) {
 	
 
 	
+		coupledNoiseCalExists = false;
+	
+
+	
 		temperatureLoadExists = false;
 	
 
@@ -1527,6 +1705,8 @@ void CalDeviceRow::temperatureLoadFromBin(EndianISStream& eiss) {
 	
 
 	
+
+	
 	
 	 fromBinMethods["antennaId"] = &CalDeviceRow::antennaIdFromBin; 
 	 fromBinMethods["spectralWindowId"] = &CalDeviceRow::spectralWindowIdFromBin; 
@@ -1539,6 +1719,7 @@ void CalDeviceRow::temperatureLoadFromBin(EndianISStream& eiss) {
 	 fromBinMethods["numReceptor"] = &CalDeviceRow::numReceptorFromBin; 
 	 fromBinMethods["calEff"] = &CalDeviceRow::calEffFromBin; 
 	 fromBinMethods["noiseCal"] = &CalDeviceRow::noiseCalFromBin; 
+	 fromBinMethods["coupledNoiseCal"] = &CalDeviceRow::coupledNoiseCalFromBin; 
 	 fromBinMethods["temperatureLoad"] = &CalDeviceRow::temperatureLoadFromBin; 
 	
 	}
@@ -1565,6 +1746,10 @@ void CalDeviceRow::temperatureLoadFromBin(EndianISStream& eiss) {
 
 	
 		noiseCalExists = false;
+	
+
+	
+		coupledNoiseCalExists = false;
 	
 
 	
@@ -1621,6 +1806,13 @@ void CalDeviceRow::temperatureLoadFromBin(EndianISStream& eiss) {
 		else
 			noiseCalExists = false;
 		
+		if (row.coupledNoiseCalExists) {
+			coupledNoiseCal = row.coupledNoiseCal;		
+			coupledNoiseCalExists = true;
+		}
+		else
+			coupledNoiseCalExists = false;
+		
 		if (row.temperatureLoadExists) {
 			temperatureLoad = row.temperatureLoad;		
 			temperatureLoadExists = true;
@@ -1641,6 +1833,7 @@ void CalDeviceRow::temperatureLoadFromBin(EndianISStream& eiss) {
 		 fromBinMethods["numReceptor"] = &CalDeviceRow::numReceptorFromBin; 
 		 fromBinMethods["calEff"] = &CalDeviceRow::calEffFromBin; 
 		 fromBinMethods["noiseCal"] = &CalDeviceRow::noiseCalFromBin; 
+		 fromBinMethods["coupledNoiseCal"] = &CalDeviceRow::coupledNoiseCalFromBin; 
 		 fromBinMethods["temperatureLoad"] = &CalDeviceRow::temperatureLoadFromBin; 
 			
 	}
@@ -1747,6 +1940,7 @@ void CalDeviceRow::temperatureLoadFromBin(EndianISStream& eiss) {
 		result["numReceptor"] = &CalDeviceRow::numReceptorFromBin;
 		result["calEff"] = &CalDeviceRow::calEffFromBin;
 		result["noiseCal"] = &CalDeviceRow::noiseCalFromBin;
+		result["coupledNoiseCal"] = &CalDeviceRow::coupledNoiseCalFromBin;
 		result["temperatureLoad"] = &CalDeviceRow::temperatureLoadFromBin;
 			
 		

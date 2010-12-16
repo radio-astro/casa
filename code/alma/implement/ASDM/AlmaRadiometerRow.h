@@ -69,7 +69,7 @@ using  asdm::Tag;
 
 
 /*\file AlmaRadiometer.h
-    \brief Generated from model's revision "1.55", branch "HEAD"
+    \brief Generated from model's revision "1.57", branch "HEAD"
 */
 
 namespace asdm {
@@ -87,7 +87,7 @@ typedef void (AlmaRadiometerRow::*AlmaRadiometerAttributeFromBin) (EndianISStrea
 /**
  * The AlmaRadiometerRow class is a row of a AlmaRadiometerTable.
  * 
- * Generated from model's revision "1.55", branch "HEAD"
+ * Generated from model's revision "1.57", branch "HEAD"
  *
  */
 class AlmaRadiometerRow {

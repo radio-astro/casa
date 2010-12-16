@@ -80,6 +80,8 @@ using namespace CalibrationDeviceMod;
 
 	
 
+	
+
 
 
 #include <ConversionException.h>
@@ -88,7 +90,7 @@ using namespace CalibrationDeviceMod;
 
 
 /*\file CalDevice.h
-    \brief Generated from model's revision "1.55", branch "HEAD"
+    \brief Generated from model's revision "1.57", branch "HEAD"
 */
 
 namespace asdm {
@@ -112,7 +114,7 @@ typedef void (CalDeviceRow::*CalDeviceAttributeFromBin) (EndianISStream& eiss);
 /**
  * The CalDeviceRow class is a row of a CalDeviceTable.
  * 
- * Generated from model's revision "1.55", branch "HEAD"
+ * Generated from model's revision "1.57", branch "HEAD"
  *
  */
 class CalDeviceRow {
@@ -349,6 +351,47 @@ public:
 	 * Mark noiseCal, which is an optional field, as non-existent.
 	 */
 	void clearNoiseCal ();
+	
+
+
+	
+	// ===> Attribute coupledNoiseCal, which is optional
+	
+	
+	
+	/**
+	 * The attribute coupledNoiseCal is optional. Return true if this attribute exists.
+	 * @return true if and only if the coupledNoiseCal attribute exists. 
+	 */
+	bool isCoupledNoiseCalExists() const;
+	
+
+	
+ 	/**
+ 	 * Get coupledNoiseCal, which is optional.
+ 	 * @return coupledNoiseCal as vector<vector<float > >
+ 	 * @throws IllegalAccessException If coupledNoiseCal does not exist.
+ 	 */
+ 	vector<vector<float > > getCoupledNoiseCal() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set coupledNoiseCal with the specified vector<vector<float > >.
+ 	 * @param coupledNoiseCal The vector<vector<float > > value to which coupledNoiseCal is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setCoupledNoiseCal (vector<vector<float > > coupledNoiseCal);
+		
+	
+	
+	
+	/**
+	 * Mark coupledNoiseCal, which is an optional field, as non-existent.
+	 */
+	void clearCoupledNoiseCal ();
 	
 
 
@@ -742,6 +785,19 @@ private:
  	
 
 	
+	// ===> Attribute coupledNoiseCal, which is optional
+	
+	
+	bool coupledNoiseCalExists;
+	
+
+	vector<vector<float > > coupledNoiseCal;
+
+	
+	
+ 	
+
+	
 	// ===> Attribute temperatureLoad, which is optional
 	
 	
@@ -830,6 +886,7 @@ void calLoadNamesFromBin( EndianISStream& eiss);
 void numReceptorFromBin( EndianISStream& eiss);
 void calEffFromBin( EndianISStream& eiss);
 void noiseCalFromBin( EndianISStream& eiss);
+void coupledNoiseCalFromBin( EndianISStream& eiss);
 void temperatureLoadFromBin( EndianISStream& eiss);
 	
 	

@@ -108,7 +108,7 @@ class FlagRow;
  * This table is used for flagging visibility data and is used in addition to the Binary Data Format flags produced by the correlator software.
  * <BR>
  
- * Generated from model's revision "1.55", branch "HEAD"
+ * Generated from model's revision "1.57", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of Flag </CAPTION>

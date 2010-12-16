@@ -151,6 +151,8 @@
 
 #include <SysCalTable.h>
 
+#include <SysPowerTable.h>
+
 #include <TotalPowerTable.h>
 
 #include <WVMCalTable.h>
@@ -277,6 +279,8 @@ using asdm::SubscanTable;
 using asdm::SwitchCycleTable;
 
 using asdm::SysCalTable;
+
+using asdm::SysPowerTable;
 
 using asdm::TotalPowerTable;
 
@@ -548,6 +552,10 @@ namespace asdm {
 		sysCal = new SysCalTable (*this);
 		table.push_back(sysCal);
 		tableEntity["SysCal"] = emptyEntity;
+
+		sysPower = new SysPowerTable (*this);
+		table.push_back(sysPower);
+		tableEntity["SysPower"] = emptyEntity;
 
 		totalPower = new TotalPowerTable (*this);
 		table.push_back(totalPower);
@@ -1070,6 +1078,14 @@ namespace asdm {
 	}
 
 	/**
+	 * Get the table SysPower.
+	 * @return The table SysPower as a SysPowerTable.
+	 */
+	SysPowerTable & ASDM::getSysPower () const {
+		return *sysPower;
+	}
+
+	/**
 	 * Get the table TotalPower.
 	 * @return The table TotalPower as a TotalPowerTable.
 	 */
@@ -1098,7 +1114,7 @@ namespace asdm {
 	string ASDM::toXML()   {
 		string out;
 		out.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		out.append("<ASDM xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cntnr=\"http://Alma/XASDM/ASDM\" xsi:schemaLocation=\"http://Alma/XASDM/ASDM http://almaobservatory.org/XML/XASDM/2/ASDM.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\"> ");
+		out.append("<ASDM xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cntnr=\"http://Alma/XASDM/ASDM\" xsi:schemaLocation=\"http://Alma/XASDM/ASDM http://almaobservatory.org/XML/XASDM/2/ASDM.xsd\" schemaVersion=\"2\" schemaRevision=\"1.57\"> ");
 
 		if (entity.isNull())
 			throw ConversionException("Container entity cannot be null.","Container");
@@ -1319,6 +1335,8 @@ namespace asdm {
 		
 		result->sysCal = *(this->sysCal->toIDL());
 		
+		result->sysPower = *(this->sysPower->toIDL());
+		
 		result->totalPower = *(this->totalPower->toIDL());
 		
 		result->wVMCal = *(this->wVMCal->toIDL());
@@ -1447,6 +1465,8 @@ namespace asdm {
 		this->switchCycle->fromIDL(x->switchCycle);
 		
 		this->sysCal->fromIDL(x->sysCal);
+		
+		this->sysPower->fromIDL(x->sysPower);
 		
 		this->totalPower->fromIDL(x->totalPower);
 		
@@ -3718,6 +3738,43 @@ namespace asdm {
 			dataset->getSysCal().fromXML(tableDoc);						
 		}
 
+		entity = dataset->tableEntity["SysPower"];
+		if (entity.getEntityId().getId().length()  != 0) {
+			// Which file must we read ?
+			string tablename = xmlDirectory + "/SysPower.xml";
+
+			// Determine the file size
+			ifstream::pos_type size;	
+			ifstream tablein (tablename.c_str() , ios::in|ios::binary|ios::ate);
+  			if (tablein.is_open()) { 
+  				size = tablein.tellg(); 
+  			}
+			else {
+				throw ConversionException("Could not open file " + tablename, "SysPower");
+			}
+			
+			// Read the file in a string
+			string tableDoc;
+
+			tableDoc.reserve(size);
+			tablein.seekg (0);	
+			int nread = BLOCKSIZE;	
+			while (nread == BLOCKSIZE) {
+				tablein.read(c, BLOCKSIZE);
+				if (tablein.rdstate() == istream::failbit || tablein.rdstate() == istream::badbit) {
+					throw ConversionException("Error reading file " + tablename,"ASDM");
+				}
+				nread = tablein.gcount();
+				tableDoc.append(c, nread);
+			}
+			tablein.close();
+			if (tablein.rdstate() == istream::failbit)
+				throw ConversionException("Could not close file " + tablename,"ASDM");
+			
+			// And finally parse the XML document to populate the table.	
+			dataset->getSysPower().fromXML(tableDoc);						
+		}
+
 		entity = dataset->tableEntity["TotalPower"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			// Which file must we read ?
@@ -4112,6 +4169,10 @@ namespace asdm {
 			getSysCal().toFile(directory);
 		}
 	
+		if (getSysPower().size() > 0) {
+			getSysPower().toFile(directory);
+		}
+	
 		if (getTotalPower().size() > 0) {
 			getTotalPower().toFile(directory);
 		}
@@ -4465,6 +4526,11 @@ namespace asdm {
 		entity = tableEntity["SysCal"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getSysCal().setFromFile(directory);
+		}
+	
+		entity = tableEntity["SysPower"];
+		if (entity.getEntityId().getId().length()  != 0) {
+			getSysPower().setFromFile(directory);
 		}
 	
 		entity = tableEntity["TotalPower"];
@@ -4937,6 +5003,13 @@ namespace asdm {
 			container->getSysCal().setEntity(entity);
 			xml = getXMLEntity(entity.getEntityId());
 			container->getSysCal().fromXML(xml);
+		}
+			
+		entity = container->tableEntity["SysPower"];
+		if (entity.getEntityId().getId().size() != 0) {
+			container->getSysPower().setEntity(entity);
+			xml = getXMLEntity(entity.getEntityId());
+			container->getSysPower().fromXML(xml);
 		}
 			
 		entity = container->tableEntity["TotalPower"];

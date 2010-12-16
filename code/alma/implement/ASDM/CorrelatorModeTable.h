@@ -119,7 +119,7 @@ class CorrelatorModeRow;
  * Contains information on a Correlator processor.
  * <BR>
  
- * Generated from model's revision "1.55", branch "HEAD"
+ * Generated from model's revision "1.57", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CorrelatorMode </CAPTION>
