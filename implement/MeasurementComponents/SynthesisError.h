@@ -93,6 +93,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ~PSFZero () throw();
   };
 
+  class NoSenPattern: public SynthesisFTMachineError {
+  public:
+    NoSenPattern(const String& message, Category c=GENERAL);
+    ~NoSenPattern() throw();
+  };
 } //# NAMESPACE CASA - END
 
 #endif
