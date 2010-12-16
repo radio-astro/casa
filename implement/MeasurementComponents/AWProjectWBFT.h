@@ -80,6 +80,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				      ImageInterface<Float>& sensitivityImage,
 				      const Matrix<Float>& sumWt=Matrix<Float>(),
 				      const Bool& doFFTNorm=True);
+    virtual void makeSensitivitySqImage(Lattice<Complex>& wtImage,
+					ImageInterface<Complex>& sensitivitySqImage,
+					const Matrix<Float>& sumWt=Matrix<Float>(),
+					const Bool& doFFTNorm=True);
 
     virtual ImageInterface<Complex>& getImage(Matrix<Float>&, Bool normalize=True);
 
@@ -95,7 +99,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     {(void)shape0; (void)shape1;return False;};
 
   protected:
-    Bool avgPBReady_p,resetPBs_p;
+    void ftWeightImage(Lattice<Complex>& wtImage, 
+		       const Matrix<Float>& sumWt,
+		       const Bool& doFFTNorm);
+
+    Bool avgPBReady_p,resetPBs_p, wtImageFTDone;
 
   private:
     Vector<Int> fieldIds_p;

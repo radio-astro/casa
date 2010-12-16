@@ -35,6 +35,7 @@
 #include <msvis/MSVis/VisBuffer.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Slice.h>
+#include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/Array.h>
 #include <casa/OS/HostInfo.h>
 #include <casa/sstream.h>
@@ -63,7 +64,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			       Float pbLimit,
 			       Bool usezero)
     : AWProjectFT(nWPlanes,icachesize,cfcache,cf,applyPointingOffset,doPBCorr,itilesize,pbLimit,usezero),
-      avgPBReady_p(False),resetPBs_p(True),fieldIds_p(0)
+      avgPBReady_p(False),resetPBs_p(True),wtImageFTDone(False),fieldIds_p(0)
   {
     //
     // Set the function pointer for FORTRAN call for GCF services.  
@@ -250,23 +251,37 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     pbNormalized_p = False;
     
   }
+  //
+  //---------------------------------------------------------------
+  // For wide-band case, this just tells the user that the sensitivity
+  // image will be computed during the first gridding cycle.
+  //
+  // Weights image (sum of convolution functions) is accumulated
+  // during gridding.  At the end of the gridding cycle, the weight
+  // image is FT'ed (using ftWeightImage()) and properly normalized
+  // and converted to sensitivity image (using
+  // makeSensitivityImage()).  These methods are triggred in the first
+  // call to getImage().  In subsequent calls to getImage() these
+  // calls are NoOps.
+  //
   void AWProjectWBFT::makeSensitivityImage(const VisBuffer& vb, 
 					   const ImageInterface<Complex>& imageTemplate,
 					   ImageInterface<Float>& sensitivityImage)
   {
     LogIO log_l(LogOrigin("AWProjectWBFT", "makeSensitivityImage"));
-    log_l << "Setting up weights accumulation to compute sensitivity pattern"
+    log_l << "Setting up weights accumulation during gridding to compute sensitivity pattern." << endl
+	  << "First gridding cycle will be slower than the subsequent ones." 
 	  << LogIO::NORMAL << LogIO::POST;
   }
   //
   //---------------------------------------------------------------
   // 
-  void AWProjectWBFT::makeSensitivityImage(Lattice<Complex>& wtImage,
-					   ImageInterface<Float>& sensitivityImage,
-					   const Matrix<Float>& sumWt,
-					   const Bool& doFFTNorm)
+  void AWProjectWBFT::ftWeightImage(Lattice<Complex>& wtImage, 
+				    const Matrix<Float>& sumWt,
+				    const Bool& doFFTNorm)
   {
-    LogIO log_l(LogOrigin("AWProjectWBFT", "makeSensitivityImage"));
+    LogIO log_l(LogOrigin("AWProjectWBFT", "ftWeightImage"));
+    if (wtImageFTDone) return;
 
     Bool doSumWtNorm=True;
     if (sumWt.shape().nelements()==0) doSumWtNorm=False;
@@ -278,13 +293,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Float sumWtVal=1.0;
 
     LatticeFFT::cfft2d(wtImage,False);
+    wtImageFTDone=True;
 
     Int sizeX=wtImage.shape()(0), sizeY=wtImage.shape()(1);
-    sensitivityImage.resize(wtImage.shape());
-    Array<Float> senBuf;
-    sensitivityImage.get(senBuf,False);
-    ArrayLattice<Float> senLat(senBuf, True);
 
+    Array<Complex> wtBuf; wtImage.get(wtBuf,False);
+    ArrayLattice<Complex> wtLat(wtBuf,True);
     //
     // Copy one 2D plane at a time, normalizing by the sum of weights
     // and possibly 2D FFT.
@@ -293,26 +307,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     IPosition axisPath(4, 0, 1, 2, 3);
     IPosition cursorShape(4, sizeX, sizeY, 1, 1);
+
     LatticeStepper wtImStepper(wtImage.shape(), cursorShape, axisPath);
     LatticeIterator<Complex> wtImIter(wtImage, wtImStepper);
-    LatticeStepper senImStepper(senLat.shape(), cursorShape, axisPath);
-    LatticeIterator<Float> senImIter(senLat, senImStepper);
     //
     // Iterate over channel and polarization axis
     //
     if (!doFFTNorm) sizeX=sizeY=1;
+    //
     // Normalize each frequency and polarization plane of the complex
     // sensitivity pattern
     //
     // For effeciency reasons, weight functions are accumulated only
     // once per channel and polarization per VB (i.e. for a given VB,
-    // if the weight functions are accumulated for every channel and
-    // polarization, they are not accumulated for the rest of VB).
-    // This makes the sum of weights for wegith functions different
-    // from sum of weights for the visibility data and the
-    // normalzation in makeSensitivityImage() will be incorrect.  For
-    // now, normalize the peak of the average weight function (wavgPB)
-    // to 1.0.
+    // once the weight functions are accumulated for every selected
+    // channel and polarization, they are not accumulated for the rest
+    // of VB).  This makes the sum of weights for weight functions
+    // different from sum of weights for the visibility data and the
+    // normalzation in makeSensitivityImage() will be incorrect.
+    // Therefore, for now, normalize the peak of the average weight
+    // function (wavgPB) to 1.0.
     //
     for(wtImIter.reset(); !wtImIter.atEnd(); wtImIter++)
       {
@@ -320,15 +334,123 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if (doSumWtNorm) sumWtVal=sumWt(pol,chan);
 	// wtImIter.rwCursor() = (wtImIter.rwCursor()
 	// 			*Float(sizeX)*Float(sizeY)/sumWtVal);
+	
+	//
+	// Normalizing the peak to unity instead of normalization by
+	// the sum-of-weights (due to the reason in the long comment
+	// above).
+	//
 	wtImIter.rwCursor() /= max(wtImIter.rwCursor());
       }
-    // for(wtImIter.reset(),senImIter.reset();  !wtImIter.atEnd(); wtImIter++,senImIter++) 
-    //   {
-    // 	Int pol=wtImIter.position()(2), chan=wtImIter.position()(3);
-    // 	if (doSumWtNorm) sumWtVal=sumWt(pol,chan);
-    // 	senImIter.rwCursor() = (real(wtImIter.rwCursor())
-    // 				*Float(sizeX)*Float(sizeY)/sumWtVal);
-    //   }
+  }
+  //
+  //---------------------------------------------------------------
+  // 
+  void AWProjectWBFT::makeSensitivitySqImage(Lattice<Complex>& wtImage,
+					     ImageInterface<Complex>& sensitivitySqImage,
+					     const Matrix<Float>& sumWt,
+					     const Bool& doFFTNorm)
+  {
+    //    if (avgPBReady_p) return;
+    LogIO log_l(LogOrigin("AWProjectWBFT", "makeSensitivitySqImage"));
+
+    //    avgPBReady_p=True;
+
+    ftWeightImage(wtImage, sumWt, doFFTNorm);
+
+    sensitivitySqImage.resize(griddedWeights.shape()); 
+    sensitivitySqImage.setCoordinateInfo(griddedWeights.coordinates());
+
+    Int sizeX=wtImage.shape()(0), sizeY=wtImage.shape()(1);
+    Array<Complex> senSqBuf; sensitivitySqImage.get(senSqBuf,False); 
+    ArrayLattice<Complex> senSqLat(senSqBuf, True);
+
+    Array<Complex> wtBuf; wtImage.get(wtBuf,False);
+    ArrayLattice<Complex> wtLat(wtBuf,True);
+    //
+    // Copy one 2D plane at a time, normalizing by the sum of weights
+    // and possibly 2D FFT.
+    //
+    // Set up Lattice iteratos on wtImage and sensitivityImage
+    //
+    IPosition axisPath(4, 0, 1, 2, 3);
+    IPosition cursorShape(4, sizeX, sizeY, 1, 1);
+
+    LatticeStepper wtImStepper(wtImage.shape(), cursorShape, axisPath);
+    LatticeIterator<Complex> wtImIter(wtImage, wtImStepper);
+
+    LatticeStepper senSqImStepper(senSqLat.shape(), cursorShape, axisPath);
+    LatticeIterator<Complex> senSqImIter(senSqLat, senSqImStepper);
+    //
+    // Iterate over channel and polarization axis
+    //
+    //
+    // The following code is averaging RR and LL planes and writing
+    // the result to back to both planes.  This needs to be
+    // generalized for full-pol case.
+    //
+    IPosition start0(4,0,0,0,0), start1(4,0,0,1,0), length(4,sizeX,sizeY,1,1);
+    Slicer slicePol0(start0,length), slicePol1(start1,length);
+    Array<Complex> polPlane0C, polPlane1C, polPlaneSq0C, polPlaneSq1C;
+
+    senSqLat.getSlice(polPlaneSq0C, slicePol0);
+    senSqLat.getSlice(polPlaneSq1C,slicePol1);
+    wtLat.getSlice(polPlane0C, slicePol0);
+    wtLat.getSlice(polPlane1C, slicePol1);
+
+    polPlaneSq0C = polPlane0C*polPlane1C;
+    polPlaneSq1C = polPlaneSq0C;
+
+    pbNormalized_p=False;
+
+    resetPBs_p=False;
+    String name("avgPBSq.im");
+    storeImg(name,sensitivitySqImage);
+  }
+  //
+  //---------------------------------------------------------------
+  // 
+  void AWProjectWBFT::makeSensitivityImage(Lattice<Complex>& wtImage,
+					   ImageInterface<Float>& sensitivityImage,
+					   const Matrix<Float>& sumWt,
+					   const Bool& doFFTNorm)
+  {
+    if (avgPBReady_p) return;
+    LogIO log_l(LogOrigin("AWProjectWBFT", "makeSensitivityImage"));
+
+    {
+      String name("cwts.im");
+      Array<Complex> tt;wtImage.get(tt,False);
+      storeArrayAsImage(name,griddedWeights.coordinates(),tt);
+    }
+
+
+    ftWeightImage(wtImage, sumWt, doFFTNorm);
+
+
+    {
+      String name("cavgPB.im");
+      Array<Complex> tt;wtImage.get(tt,False);
+      storeArrayAsImage(name,griddedWeights.coordinates(),tt);
+    }
+
+    sensitivityImage.resize(griddedWeights.shape()); 
+    sensitivityImage.setCoordinateInfo(griddedWeights.coordinates());
+
+    Int sizeX=wtImage.shape()(0), sizeY=wtImage.shape()(1);
+    Array<Float> senBuf; sensitivityImage.get(senBuf,False); 
+    ArrayLattice<Float> senLat(senBuf, True);
+
+    Array<Complex> wtBuf; wtImage.get(wtBuf,False);
+    ArrayLattice<Complex> wtLat(wtBuf,True);
+    //
+    // Set up Lattice iteratos on wtImage and sensitivityImage
+    //
+    IPosition axisPath(4, 0, 1, 2, 3);
+    IPosition cursorShape(4, sizeX, sizeY, 1, 1);
+
+    LatticeStepper senImStepper(senLat.shape(), cursorShape, axisPath);
+    LatticeIterator<Float> senImIter(senLat, senImStepper);
     //
     // The following code is averaging RR and LL planes and writing
     // the result to back to both planes.  This needs to be
@@ -338,20 +460,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Slicer slicePol0(start0,length), slicePol1(start1,length);
     Array<Float> polPlane0F, polPlane1F;
     Array<Complex> polPlane0C, polPlane1C;
-    Array<Complex> wtBuf;
-    wtImage.get(wtBuf,False);
-    ArrayLattice<Complex> wtLat(wtBuf,True);
 
     senLat.getSlice(polPlane0F,slicePol0);
     senLat.getSlice(polPlane1F,slicePol1);
     wtLat.getSlice(polPlane0C, slicePol0);
     wtLat.getSlice(polPlane1C, slicePol1);
 
-    // polPlane0=(polPlane0+polPlane1)/2.0;
-    // polPlane1=polPlane0;
+    // abs(Array<Complex>&) also returns Array<Complex> instead of
+    // Array<Float>.  Hence the real(abs(...)).
+    //    polPlane0F = sqrt(real(abs(polPlane0C*polPlane1C)));
+    polPlane0F = (real(abs(polPlane0C)));
+    polPlane1F = polPlane0F;
 
-    polPlane0F = sqrt(real(polPlane0C*polPlane1C));
-    polPlane1F = sqrt(real(polPlane0C*polPlane1C));
+    cfCache_p->flush(sensitivityImage);
+
+    pbNormalized_p=False;
+    resetPBs_p=False;
+
+    avgPBReady_p=True;
   }
   //
   //---------------------------------------------------------------
@@ -380,21 +506,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				     //Matrix<Float> (weights).  Why
 				     //is this conversion required?
 				     //--SB (Dec. 2010)
-    if (!avgPBReady_p)
-      {
-	avgPBReady_p=True;
-	avgPB_p->resize(griddedWeights.shape()); 
-	avgPB_p->setCoordinateInfo(griddedWeights.coordinates());
-	// {
-	//   String name("cpb.im");
-	//   storeImg(name,griddedWeights);
-	// }
-	makeSensitivityImage(griddedWeights, *avgPB_p, weights, True);
-	pbNormalized_p=False;
-	//	    AWProjectFT::normalizeAvgPB();
-	resetPBs_p=False;
-	cfCache_p->flush(*avgPB_p);
-      }
+    //
+    // Compute the sensitivity image as FT of the griddedWegiths.
+    // Return the result in avgPB_p.  Cache it in the cfCache_p
+    // object.  And raise the avgPBReady_p flag so that this becomes a
+    // null call the next time around.
+    makeSensitivityImage(griddedWeights, *avgPB_p, weights, True);
+
+    //        if (avgPBSq_p.null()) avgPBSq_p = new TempImage<Complex>();
+    //    makeSensitivitySqImage(griddedWeights, *avgPBSq_p, weights, True);
+
+    //
+    // This calls the overloadable method normalizeImage() which
+    // normalizes the raw image by the sensitivty pattern (avgPB_p).
+    //
     AWProjectFT::getImage(weights,fftNormalization);
     // if (!makingPSF)
     //   {
@@ -891,11 +1016,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     makeCFPolMap(vb,cfStokes_p,CFMap);
     makeConjPolMap(vb,CFMap,ConjCFMap);
 
-    Array<Complex> rotatedConvFunc;
-//     SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
-// 				       rotatedConvFunc,(currentCFPA-actualPA));
+    Array<Complex> rotatedConvFunc_l, rotatedConvWeights_l;
+    // SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
+    //     			       rotatedConvFunc_l,(currentCFPA-actualPA));
+    // SynthesisUtils::rotateComplexArray(log_l, convWeights_p, convFuncCS_p, 
+    //     			       rotatedConvWeights_l,(currentCFPA-actualPA));
     SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
-				       rotatedConvFunc,0.0);
+        			       rotatedConvFunc_l,0.0);
+    SynthesisUtils::rotateComplexArray(log_l, convWeights_p, convFuncCS_p,
+        			       rotatedConvWeights_l,0.0);
 
 
     ConjCFMap_p     = ConjCFMap.getStorage(deleteThem(CONJCFMAP));
@@ -911,9 +1040,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     vb_freq_p       = (Double *)(vb.frequency().getStorage(deleteThem(VBFREQ)));
     convSupport_p   = cfs_p.xSupport.getStorage(deleteThem(CONVSUPPORT));
     convWtSupport_p = cfwts_p.xSupport.getStorage(deleteThem(CONVWTSUPPORT));
-    //    f_convFunc_p      = convFunc_p.getStorage(deleteThem(CONVFUNC));
-    f_convFunc_p      = rotatedConvFunc.getStorage(deleteThem(CONVFUNC));
-    f_convWts_p     = convWeights_p.getStorage(deleteThem(CONVWTS));
+    f_convFunc_p    = rotatedConvFunc_l.getStorage(deleteThem(CONVFUNC));
+    f_convWts_p     = rotatedConvWeights_l.getStorage(deleteThem(CONVWTS));
     chanMap_p       = chanMap.getStorage(deleteThem(CHANMAP));
     polMap_p        = polMap.getStorage(deleteThem(POLMAP));
     vb_ant1_p       = (Int *)(vb.antenna1().getStorage(deleteThem(VBANT1)));
@@ -950,6 +1078,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //    IPosition shp=convSupport.shape();
     Int alwaysDoPointing=1;
     alwaysDoPointing = doPointing;
+
     gpbmos(uvw_p,
 	   dphase_p,
 	   visdata_p,
@@ -1091,6 +1220,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	pbPeaks.set(0.0);
 	resetPBs_p=False;
       }
+    cfCache_p->loadAvgPB(avgPB_p);
+    avgPBReady_p = cfCache_p->avgPBReady();
   }
   //
   //---------------------------------------------------------------
