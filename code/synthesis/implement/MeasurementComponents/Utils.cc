@@ -80,6 +80,7 @@ namespace casa{
 			 const Array<Complex>& theImg)
   {
     PagedImage<Complex> ctmp(theImg.shape(), coord, fileName);
+    ctmp.put(theImg);
   }
   //
   //---------------------------------------------------------------------
