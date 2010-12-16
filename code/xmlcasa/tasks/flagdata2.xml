@@ -184,13 +184,17 @@
             </param>
 
         <param type="bool" name="elevation">
-               <description>Flag data from antennas below a given threshold elevation</description>
+               <description>Flag data from antennas below and above the given elevation range</description>
                <value>False</value>
         </param>       
-            <param type="double" name="limit" subparam="true">
-                   <description>Limiting elevation in degrees</description>
-                   <value>10.0</value>
-            </param>
+        <param type="double" name="lowerlimit" subparam="true">
+                <description>Lower limiting elevation in degrees</description>
+                <value>0.0</value>
+         </param>
+        <param type="double" name="upperlimit" subparam="true">
+                <description>Upper limiting elevation in degrees</description>
+                <value>90.0</value>
+         </param>
 
         <param type="bool" name="quack">
                <description>Clip beginning or ending of scans</description>
@@ -381,7 +385,8 @@
             <when param="elevation">
             <equals type="bool" value="False"/>
             <equals type="bool" value="True">
-                <default param="limit"><value type="double">10.0</value></default>
+                <default param="lowerlimit"><value type="double">0.0</value></default>
+                <default param="upperlimit"><value type="double">90.0</value></default>
             </equals>
             </when>
             <when param="quack">
@@ -443,7 +448,7 @@
             clip       = clip data according to values
             quack      = remove/keep specific time range at scan beginning/end
             shadow     = remove antenna-shadowed data
-            elevation  = remove data below a given elevation
+            elevation  = remove data below/above given elevations
             rfi        = Radio Frequency Interference auto-flagging
             autoflag   = experimental auto-flagging outliers
             summary    = report the amount of flagged data
@@ -613,10 +618,23 @@
                 default: False
                 options: True, False
                  
-              limit -- Limiting elevation in degrees. Data coming from a baseline
-                  where one or both antennas were pointing at a lower elevation
+              lowerlimit -- Lower limiting elevation in degrees. Data coming from a baseline
+                  where one or both antennas were pointing at a strictly lower elevation
                   (as function of time), will be flagged.
-                  default: 10.0
+                  default: 0.0
+
+              upperlimit -- Upper limiting elevation in degrees. Data coming from a baseline
+                  where one or both antennas were pointing at a strictly higher elevation
+                  (as function of time), will be flagged.
+                  default: 90.0
+
+
+              For example, the following
+
+                   flagdata2(elevation = True, upperlimit = 85.0, ...)
+
+              would flag everything above 85 degrees of elevation (as well as data below 0
+              degrees of elevation, if any).
 
         autoflag -- Automatic flagging of outliers (Experimental)
                 default: False

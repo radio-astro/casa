@@ -94,7 +94,8 @@ const char
     RF_FEED[]    = "feed",
     RF_UVRANGE[] = "uvrange",
     RF_DIAMETER[] = "diameter",
-    RF_HEIGHT[]  = "height",
+    RF_LOWERLIMIT[]  = "lowerlimit",
+    RF_UPPERLIMIT[]  = "upperlimit",
     
     RF_TIMERANGE[] = "timerng",
     RF_CENTERTIME[] = "timeslot",

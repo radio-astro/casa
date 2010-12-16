@@ -116,7 +116,8 @@ protected:
   ROMSAntennaColumns *ac;
 
   // elevation
-  double height;
+  double lowerlimit;
+  double upperlimit;
 
 // description of agent
   String desc_str;

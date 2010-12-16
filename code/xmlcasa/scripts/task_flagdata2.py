@@ -35,7 +35,8 @@ def flagdata2(vis = None,
              shadow = None,
              diameter = None,
              elevation = None,
-             limit = None,
+             lowerlimit = None,
+             upperlimit = None,
              quack = None,
              quackinterval = None, 
              quackmode = None, 
@@ -207,7 +208,8 @@ def flagdata2(vis = None,
             
         if elevation:
             mode = 'elevation'
-            casalog.post('Flagging elevations <= ' + str(limit) + ' degrees')
+            casalog.post('Flagging elevations < ' + str(lowerlimit) + \
+                         ' degrees and > ' + str(upperlimit) + ' degrees')
             fglocal.setelevationflags( \
                         field = field, \
                         spw = spw, \
@@ -218,7 +220,8 @@ def flagdata2(vis = None,
                         uvrange = uvrange, \
                         time = timerange, \
                         correlation = correlation, \
-                        limit = limit)
+                        lowerlimit = lowerlimit,
+                        upperlimit = upperlimit)
             modestr = modestr+"elevation_"
             mslocal.writehistory(message='mode     = "' + str(mode) + '"', origin='flagdata2')
             

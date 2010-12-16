@@ -705,7 +705,8 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm) :
 
   elevation = fieldType(parm, RF_ELEVATION, TpBool) && parm.asBool(RF_ELEVATION);
   if (elevation) {
-    height = parm.asDouble(RF_HEIGHT);
+    lowerlimit = parm.asDouble(RF_LOWERLIMIT);
+    upperlimit = parm.asDouble(RF_UPPERLIMIT);
   }
  
 // now, scan arguments for what to flag within the selection
@@ -1105,8 +1106,10 @@ RFA::IterMode RFASelector::iterTime (uInt it)
                   double antenna1_elevation = azimuth_elevation[a1].getAngle("deg").getValue()[1];
                   double antenna2_elevation = azimuth_elevation[a2].getAngle("deg").getValue()[1];
 
-                  if ( antenna1_elevation <= height ||
-                       antenna2_elevation <= height ) {
+                  if ( antenna1_elevation < lowerlimit ||
+                       antenna2_elevation < lowerlimit ||
+                       antenna1_elevation > upperlimit ||
+                       antenna2_elevation > upperlimit ) {
                       processRow(ifrs(i), it);
                   }
 	      }
@@ -1484,7 +1487,8 @@ const RecordInterface & RFASelector::getDefaults ()
     rec.define(RF_UVRANGE,False);
     rec.define(RF_COLUMN,False);
     rec.define(RF_DIAMETER, False);
-    rec.define(RF_HEIGHT, False);
+    rec.define(RF_LOWERLIMIT, False);
+    rec.define(RF_UPPERLIMIT, False);
     
     rec.setComment(RF_SPWID,"Restrict flagging to specific spectral windows (integers)");
     rec.setComment(RF_FIELD,"Restrict flagging to specific field IDs or field names (integers/strings)");
@@ -1510,7 +1514,8 @@ const RecordInterface & RFASelector::getDefaults ()
     rec.setComment(RF_UVRANGE,"Restrict flagging to specific uv-distance ranges in meters (2,N array of doubles )");
     rec.setComment(RF_COLUMN,"Data column to clip on.");
     rec.setComment(RF_DIAMETER, "Effective diameter to use. If negative, the true antenna diameters are used");
-    rec.setComment(RF_HEIGHT, "Effective diameter to use. If negative, the true antenna diameters are used");
+    rec.setComment(RF_LOWERLIMIT, "Limiting elevation");
+    rec.setComment(RF_UPPERLIMIT, "Limiting elevation");
   }
   return rec;
 }

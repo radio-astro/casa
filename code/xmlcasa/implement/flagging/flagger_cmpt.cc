@@ -312,7 +312,8 @@ flagger::setelevationflags(const std::string& field,
                            const std::string& uvrange,
                            const std::string& time, 
                            const std::string& correlation,
-                           double limit)
+                           double lowerlimit,
+                           double upperlimit)
 {
     try {
 	if(flagger_p) {
@@ -329,7 +330,7 @@ flagger::setelevationflags(const std::string& field,
 		    String(""), Vector<Double>(), String(""),
 		    False, False,
                     0.0, String("beg"), False,
-                    String("ELEVATION"), 0, limit);
+                    String("ELEVATION"), 0, lowerlimit, upperlimit);
 	    }
 	    
 	    return true;

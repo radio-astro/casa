@@ -490,10 +490,16 @@ Defines data selection parameters.
      <value>""</value>
      </param>
 
-     <param type="double" name="limit">
-     <description>The limiting elevation in degrees. Data obtained at lower antenna elevation will get flagged. : example : limit = '15'
+     <param type="double" name="lowerlimit">
+     <description>The limiting elevation in degrees. Data obtained at lower antenna elevations will get flagged. : example : limit = '15'
      </description>
-     <value>10</value>
+     <value>0.0</value>
+     </param>
+
+     <param type="double" name="upperlimit">
+     <description>The limiting elevation in degrees. Data obtained at higher antenna elevations will get flagged. : example : limit = '85'
+     </description>
+     <value>90.0</value>
      </param>
 <!-- Selection parameters : end -->
  

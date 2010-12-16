@@ -729,7 +729,8 @@ namespace casa {
                                  Bool quackincrement,
                                  String opmode,
                                  Double diameter,
-                                 Double limit)
+                                 Double lowerlimit,
+                                 Double upperlimit)
     {
      if (dbg) 
        cout << "setmanualflags: "
@@ -800,7 +801,8 @@ namespace casa {
               selrec.define(RF_DIAMETER, Double(diameter));
             }
             else if (upcase(opmode).matches("ELEVATION")) {
-              selrec.define(RF_HEIGHT, Double(limit));
+              selrec.define(RF_LOWERLIMIT, Double(lowerlimit));
+              selrec.define(RF_UPPERLIMIT, Double(upperlimit));
             }
         }
         else if (upcase(opmode).matches("SUMMARY")) {
