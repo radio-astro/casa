@@ -306,6 +306,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				const Matrix<Double>& sumOfWts,
 				Lattice<Float>& sensitivityImage,
 				Bool fftNorm=True);
+    virtual void normalizeImage(Lattice<Complex>& skyImage,
+				const Matrix<Double>& sumOfWts,
+				Lattice<Float>& sensitivityImage,
+				Lattice<Complex>& sensitivitySqImage,
+				Bool fftNorm=True);
     
     virtual ImageInterface<Float>& getSensitivityImage() {return *avgPB_p;}
     virtual Matrix<Double>& getSumOfWeights() {return sumWeight;};
@@ -328,6 +333,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     virtual Bool verifyShapes(IPosition shape0, IPosition shape1);
 
+    inline virtual Float pbFunc(Float& a) {return (a);};
+    inline virtual Complex pbFunc(Complex& a) {return (a);};
 
   protected:
     
@@ -406,6 +413,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // The average PB for sky image normalization
     //
     CountedPtr<ImageInterface<Float> > avgPB_p;
+    CountedPtr<ImageInterface<Complex> > avgPBSq_p;
     //
     // No. of vis. polarization planes used in making the user defined
     // Stokes images
