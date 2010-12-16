@@ -45,6 +45,7 @@
 #include <casa/OS/File.h>
 #include <fstream>
 #include <casa/sstream.h>
+
 namespace casa{
 
   //
@@ -69,7 +70,8 @@ namespace casa{
 
 
   CoordinateSystem VLACalcIlluminationConvFunc::makeUVCoords(CoordinateSystem& imageCoordSys,
-							 IPosition& shape)
+							     IPosition& shape,
+							     Double refFreq)
   {
     CoordinateSystem FTCoords = imageCoordSys;
 
@@ -78,6 +80,14 @@ namespace casa{
     Vector<Bool> axes(2); axes=True;
     Vector<Int> dirShape(2); dirShape(0)=shape(0);dirShape(1)=shape(1);
     Coordinate* FTdc=dc.makeFourierCoordinate(axes,dirShape);
+    // if (refFreq > 0)
+    //   {
+    // 	Int index1 = FTCoords.findCoordinate(Coordinate::SPECTRAL);
+    // 	SpectralCoordinate SpC = FTCoords.spectralCoordinate(index1);
+    // 	Vector<Double> refVal = SpC.referenceValue();
+    // 	refVal = refFreq;
+    // 	SpC.setReferenceValue(refVal);
+    //   }
 
     FTCoords.replaceCoordinate(*FTdc,dirIndex);
     delete FTdc;
@@ -124,12 +134,7 @@ namespace casa{
     if (maximumCacheSize() > 0) uvGrid.setMaximumCacheSize(maximumCacheSize());
     //    regridAperture(skyCS, skyShape, uvGrid, vb, True, bandID);
     regridAperture(skyCS, skyShape, uvGrid, vb, doSquint, bandID);
-    /*
-    {
-      String name("pb.im");
-      storeImg(name,*(ap.aperture));
-    }
-    */
+    pbImage.setCoordinateInfo(skyCS);
     fillPB(*(ap.aperture),pbImage);
   }
   //--------------------------------------------------------------------------
@@ -210,8 +215,7 @@ namespace casa{
     // 	pa += M_PI;
     //   }
     // pa=0.0;
-    // cerr << "************PA being set to zero!!!!**************" << endl;
-    Float Freq;
+    Float Freq, freqLo, freqHi;
     Vector<Double> chanFreq = vb.frequency();
 
     if (lastPA == pa)
@@ -230,17 +234,27 @@ namespace casa{
 
 	//	Freq = sum(chanFreq)/chanFreq.nelements();
 	Freq = max(chanfreq.getColumn());
-	//	cerr << "RefFreq = " << Freq << endl;
-	ap.freq = Freq/1E9;
+	freqHi = max(chanfreq.getColumn());
+	freqLo = min(chanfreq.getColumn());
+	
+	ap.freq = freqHi/1E9;
 	
 	IPosition imsize(skyShape);
-	CoordinateSystem uvCoords = makeUVCoords(skyCoords,imsize);
-	
+	//	CoordinateSystem uvCoords = makeUVCoords(skyCoords,imsize,Freq);
+	CoordinateSystem uvCoords = makeUVCoords(skyCoords,imsize,freqHi);
+
 	index = uvCoords.findCoordinate(Coordinate::LINEAR);
 	LinearCoordinate lc=uvCoords.linearCoordinate(index);
 	Vector<Double> incr = lc.increment();
-	Double Lambda = C::c/Freq;
+	Double Lambda = C::c/freqHi;
 	
+    index = skyCS.findCoordinate(Coordinate::SPECTRAL);
+    SpectralCoordinate SpC = skyCS.spectralCoordinate(index);
+    Vector<Double> refVal = SpC.referenceValue();
+    refVal(0) = freqHi;
+    SpC.setReferenceValue(refVal);
+    skyCS.replaceCoordinate(SpC,index);
+
 	ap.nx = skyShape(0); ap.ny = skyShape(1);
 	IPosition apertureShape(ap.aperture->shape());
 	apertureShape(0) = ap.nx;  apertureShape(1) = ap.ny;
@@ -371,7 +385,8 @@ namespace casa{
 
     Freq = max(chanfreq.getColumn());
     IPosition imsize(skyShape);
-    CoordinateSystem uvCoords = makeUVCoords(skyCoords,imsize);
+    CoordinateSystem uvCoords = makeUVCoords(skyCoords,imsize,Freq);
+    uvGrid.setCoordinateInfo(uvCoords);
 	
     Int index = uvCoords.findCoordinate(Coordinate::LINEAR);
     LinearCoordinate lc=uvCoords.linearCoordinate(index);
@@ -621,57 +636,6 @@ namespace casa{
     skyMuller(uvgrid);
   }
   
-  void VLACalcIlluminationConvFunc::store(String& fileName){storeImg(fileName,convFunc_p);}
-  
-  void VLACalcIlluminationConvFunc::storeImg(String& fileName,ImageInterface<Complex>& theImg)
-  {
-    ostringstream reName,imName;
-    reName << "re" << fileName;
-    imName << "im" << fileName;
-    PagedImage<Complex> ctmp(theImg.shape(), theImg.coordinates(), fileName);
-    LatticeExpr<Complex> le(theImg);
-    ctmp.copyData(le);
-    {
-      PagedImage<Float> tmp(theImg.shape(), theImg.coordinates(), reName);
-      LatticeExpr<Float> le(abs(theImg));
-      tmp.copyData(le);
-    }
-    {
-      PagedImage<Float> tmp(theImg.shape(), theImg.coordinates(), imName);
-      LatticeExpr<Float> le(arg(theImg));
-      tmp.copyData(le);
-    }
-  }
-  
-  void VLACalcIlluminationConvFunc::storeImg(String& fileName,ImageInterface<Float>& theImg)
-  {
-    PagedImage<Float> tmp(theImg.shape(), theImg.coordinates(), fileName);
-    LatticeExpr<Float> le(theImg);
-    tmp.copyData(le);
-  }
-  
-  void VLACalcIlluminationConvFunc::storePB(String& fileName)
-  {
-    {
-      ostringstream Name;
-      Name << "re" << fileName;
-      IPosition newShape(convFunc_p.shape());
-      newShape(0)=newShape(1)=200;
-      PagedImage<Float> tmp(newShape, convFunc_p.coordinates(), Name);
-      LatticeExpr<Float> le(real(convFunc_p));
-      tmp.copyData(le);
-    }
-    {
-      ostringstream Name;
-      Name << "im" << fileName;
-      
-      IPosition newShape(convFunc_p.shape());
-      newShape(0)=newShape(1)=200;
-      PagedImage<Float> tmp(newShape, convFunc_p.coordinates(), Name);
-      LatticeExpr<Float> le(imag(convFunc_p));
-      tmp.copyData(le);
-    }
-  }
   void VLACalcIlluminationConvFunc::loadFromImage(String& fileName)
   {
     throw(AipsError("VLACalcIlluminationConvFunc::loadFromImage() not yet supported."));
