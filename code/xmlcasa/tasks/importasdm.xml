@@ -81,6 +81,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <value></value>
     </param>
 
+    <param type="bool" name="ignore_time">
+      <description>All the rows of the tables Feed, History, Pointing, Source, SysCal, CalDevice, SysPower, and Weather are processed independently of the time range of the selected exec block / scan.</description>
+      <value>False</value>
+    </param>
+
     <param type="bool" name="verbose">
 	    <description>Output lots of information while the filler is working</description>
 	    <value>False</value>
@@ -177,6 +182,9 @@ scans --	  processes only the scans specified in the option's value. This value 
                   exec block#3'. An scan index or a scan index range not preceded by an exec block index will
                   be interpreted as 'all the scans with such indexes in all the exec blocks'.  By default 
                   all the scans are considered.
+
+ignore_time -- All the rows of the tables Feed, History, Pointing, Source, SysCal, CalDevice, SysPower,
+               and Weather are processed independently of the time range of the selected exec block / scan.
 
 verbose     -- produce log output as asdm2MS is being run
 
