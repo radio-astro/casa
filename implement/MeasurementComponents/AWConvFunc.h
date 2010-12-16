@@ -79,7 +79,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				 const ImageInterface<Complex>& image,
 				 ImageInterface<Float>& theavgPB,
 				 Bool reset=True);
-
+    void makePBSq(ImageInterface<Complex>& inImage);
   private:
     CountedPtr<ATerm> ATerm_p;
   };

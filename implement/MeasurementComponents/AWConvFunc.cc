@@ -52,6 +52,26 @@ namespace casa{
     return *this;
 
   }
+
+  void AWConvFunc::makePBSq(ImageInterface<Complex>& PB)
+  {
+    Int sizeX=PB.shape()(0), sizeY=PB.shape()(1);
+    IPosition cursorShape(4, sizeX, sizeY, 1, 1), axisPath(4,0,1,2,3);
+    Array<Complex> buf; PB.get(buf,False);
+    ArrayLattice<Complex> lat(buf, True);
+    LatticeStepper latStepper(lat.shape(), cursorShape,axisPath);
+    LatticeIterator<Complex> latIter(lat, latStepper);
+    
+    IPosition start0(4,0,0,0,0), start1(4,0,0,1,0), length(4,sizeX, sizeY,1,1);
+    Slicer slicePol0(start0, length), slicePol1(start1, length);
+    Array<Complex> pol0, pol1,tmp;
+
+    lat.getSlice(pol0, slicePol0);
+    lat.getSlice(pol1, slicePol1);
+    tmp = pol0;
+    pol0 = pol0*conj(pol1);
+    pol1 = tmp*conj(pol1);
+  }
   
   void AWConvFunc::makeConvFunction(const ImageInterface<Complex>& image,
   				    const VisBuffer& vb,
@@ -64,6 +84,7 @@ namespace casa{
     Int convSize, convSampling, polInUse;
     Double wScale=1; Int bandID_l=-1;
     Array<Complex> convFunc_l, convWeights_l;
+    Double cfRefFreq;
     
     Int nx=image.shape()(0);
     if (bandID_l == -1) bandID_l=getVisParams(vb);
@@ -196,8 +217,10 @@ namespace casa{
 	//	tmpPBSqBlock[0]=CountedPtr<ImageInterface<Complex> >(&twoDPBSq, False);
 	//	ATerm_p->applySky(tmpPBSqBlock, vb, 0, doSquint);
 	ATerm_p->applySky(twoDPB, vb, doSquint, 0);
-	doSquint = False;
+	//	doSquint = False;
 	ATerm_p->applySky(twoDPBSq, vb, doSquint, 0);
+	//	twoDPBSq = twoDPB;
+	makePBSq(twoDPBSq);
 	// {
 	//   ostringstream name;
 	//   name << "twoDPB.before." << iw << ".im";
@@ -218,7 +241,7 @@ namespace casa{
 	Int index= twoDPB.coordinates().findCoordinate(Coordinate::SPECTRAL);
 	SpectralCoordinate SpCS = twoDPB.coordinates().spectralCoordinate(index);
 	
-	Double cfRefFreq=SpCS.referenceValue()(0);
+	cfRefFreq=SpCS.referenceValue()(0);
 	Vector<Double> refValue; refValue.resize(1); refValue(0)=cfRefFreq;
 	SpCS.setReferenceValue(refValue);
 	cs.replaceCoordinate(SpCS,index);
@@ -280,18 +303,19 @@ namespace casa{
     for (Int iw=0;iw<wConvSize;iw++)
       {
 	Bool found=False;
-	Float threshold;
+	Float threshold, wtThreshold;
 	Int R;
 	ndx(2) = iw;
 	
 	ndx(0)=ndx(1)=ConvFuncOrigin;
 	ndx(2) = iw;
-	threshold = abs(convFunc_l(ndx))*ATerm_p->getSupportThreshold();
+	threshold   = abs(convFunc_l(ndx))*ATerm_p->getSupportThreshold();
+	wtThreshold = abs(convWeights_l(ndx))*ATerm_p->getSupportThreshold();
 	//
 	// Find the support size of the conv. function in pixels
 	//
 	Int wtR;
-	found = findSupport(convWeights_l,threshold,ConvFuncOrigin,wtR);
+	found = findSupport(convWeights_l,wtThreshold,ConvFuncOrigin,wtR);
 	found = findSupport(convFunc_l,threshold,ConvFuncOrigin,R);
 	//
 	// Set the support size for each W-plane and for all
@@ -307,16 +331,18 @@ namespace casa{
 		cfs.xSupport(iw)=cfs.ySupport(iw)=Int(R/cfs.sampling(0));
 		cfs.xSupport(iw)=cfs.ySupport(iw)=Int(0.5+Float(R)/cfs.sampling(0))+1;
 
-		cfwts.xSupport(iw)=cfwts.ySupport(iw)=Int(R*ATerm_p->getConvWeightSizeFactor()/
+		cfwts.xSupport(iw)=cfwts.ySupport(iw)=Int(wtR*ATerm_p->getConvWeightSizeFactor()/
 							  cfwts.sampling(0));
-		cfwts.xSupport(iw)=cfwts.ySupport(iw)=Int(0.5+Float(R)*
+		cfwts.xSupport(iw)=cfwts.ySupport(iw)=Int(0.5+Float(wtR)*
 							  ATerm_p->getConvWeightSizeFactor()/
 							  cfwts.sampling(0))+1;
 
 		if (cfs.maxXSupport == -1)
 		  if (cfs.xSupport(iw) > maxConvSupport)
 		    maxConvSupport = cfs.xSupport(iw);
-		  maxConvWtSupport=cfwts.xSupport(iw);//HOW CAN THIS BE RIGHT!!!!
+		if (cfwts.maxXSupport == -1)
+		  if (cfwts.xSupport(iw) > maxConvWtSupport)
+		    maxConvWtSupport = cfwts.xSupport(iw);
 	      }
 	  }
       }
@@ -431,7 +457,7 @@ namespace casa{
     
     Int index=coords.findCoordinate(Coordinate::SPECTRAL);
     SpectralCoordinate spCS = coords.spectralCoordinate(index);
-    Vector<Double> refValue; refValue.resize(1);refValue(0)=spCS.referenceValue()(0);
+    Vector<Double> refValue; refValue.resize(1);refValue(0)=cfRefFreq;
     spCS.setReferenceValue(refValue);
     coords.replaceCoordinate(spCS,index);
 
