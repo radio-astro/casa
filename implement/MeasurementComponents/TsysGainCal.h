@@ -44,7 +44,7 @@ class VisEquation;
 
 
 // **********************************************************
-//  Standard Tsys from SYSCAL table
+//  Standard Tsys Spectrum from SYSCAL table
 //
 
 class StandardTsys : public BJones {
@@ -95,6 +95,64 @@ private:
 
 
 };
+
+
+// **********************************************************
+//  EVLA switched power Gain and Tsys
+//
+
+
+class EVLAGainTsys : public GJones {
+public:
+
+  // Constructor
+  EVLAGainTsys(VisSet& vs);
+  EVLAGainTsys(const Int& nAnt);
+
+  virtual ~EVLAGainTsys();
+
+  // Return the type enum (for now, pretend we are B)
+  virtual Type type() { return VisCal::G; };
+
+  // Return type name as string (ditto)
+  virtual String typeName()     { return "G EVLA"; };
+  virtual String longTypeName() { return "G EVLA (Switched-power gain)"; };
+
+  // Local setSpecify
+  using GJones::setSpecify;
+  virtual void setSpecify(const Record& specify);
+
+  // Specific specify() that reads the SYSCAL subtable
+  virtual void specify(const Record& specify);
+
+  // In general, we are freq-dep
+  virtual Bool freqDepPar() { return False; };
+
+
+protected:
+
+  // There are 4 parameters (Gain and Tsys for each pol)
+  virtual Int nPar() { return 4; };
+
+  // The parameter array is not (just) the Jones matrix element array
+  virtual Bool trivialJonesElem() { return False; };
+
+  // Invert doInv for Tsys corrections
+  //  virtual void syncJones(const Bool& doInv) { BJones::syncJones(!doInv); };
+  
+  // Calculate Jones matrix elements (slice out the gains)
+  virtual void calcAllJones();
+
+private:
+
+  // The name of the SYSCAL table
+  String sysPowTabName_,calDevTabName_;
+
+
+};
+
+
+
 
 } //# NAMESPACE CASA - END
 
