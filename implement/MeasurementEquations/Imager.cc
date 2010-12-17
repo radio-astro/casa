@@ -4941,18 +4941,17 @@ Bool Imager::clean(const String& algorithm,
 
     // Always fill in the residual images
     Vector<String> residualNames(nmodels);
-    if(redoSkyModel_p){
- 
-      if(Int(residual.nelements())==nmodels) {
+    if(Int(residual.nelements())==nmodels) {
 	residualNames=residual;
-      }
-      else {
-	residualNames="";
-      }
+    }
+    else {
+      residualNames="";
       for (Int thismodel=0;thismodel<Int(model.nelements());++thismodel) {
-	if(residualNames(thismodel)=="") {
 	  residualNames(thismodel)=modelNames(thismodel)+".residual";
-	}
+      }	
+    }
+    if(redoSkyModel_p){
+      for (Int thismodel=0;thismodel<Int(model.nelements());++thismodel) {
 	removeTable(residualNames(thismodel));
 	if(!clone(model(thismodel), residualNames(thismodel)))
 	  {
@@ -5133,14 +5132,13 @@ Bool Imager::clean(const String& algorithm,
           return False;
         }
       os << LogIO::NORMAL3 << "Created Sky Equation" << LogIO::POST;
-      //No need to add residuals will let sm_p use tmpimage ones and we'll copy them in restore 
-      addResiduals(residualNames);
     }
     else{
       //adding or modifying mask associated with skyModel
       addMasksToSkyEquation(maskNames,fixed);
     }
-
+    //No need to add residuals will let sm_p use tmpimage ones and we'll copy them in restore 
+      addResiduals(residualNames);
     // The old plot that showed how much flux was being incorporated in each
     // scale.   No longer available, slated for removal.
     // if (displayProgress) {
@@ -5191,7 +5189,7 @@ Bool Imager::clean(const String& algorithm,
       sm_p->solveResiduals(*se_p, True);
 
     for (uInt k=0 ; k < residuals_p.nelements(); ++k){
-      residuals_p[k]->copyData(sm_p->residual(k));
+      (residuals_p[k])->copyData(sm_p->residual(k));
     }
     savePSF(psfnames);
     redoSkyModel_p=False;
