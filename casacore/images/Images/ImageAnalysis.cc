@@ -2365,8 +2365,6 @@ ComponentList ImageAnalysis::fitsky(
     region.print(oss);
     // Make sure the region is 2D and that it holds the sky.  Exception if not.
 	const CoordinateSystem& cSys = subImage.coordinates();
-
-
 	Bool xIsLong = CoordinateUtil::isSky(*itsLog, cSys);
 
 	Array<Float> pixels = subImage.get(True);
@@ -2396,8 +2394,13 @@ ComponentList ImageAnalysis::fitsky(
 	// pixel and vice versa
     ComponentList cl;
 
+	// CAS-1966, CAS-2633 keep degenerate axes
+	SubImage<Float> allAxesSubImage = SubImage<Float>::createSubImage(
+		pRegionRegion, pMaskRegion,
+		subImageTmp, *(ImageRegion::tweakedRegionRecord(&region)),
+		mask, (list ? itsLog : 0), False
+	);
     if (!fitIt) {
-                //cerr << "cinco" << endl;
 		Vector<Double> parameters;
 		parameters = singleParameterEstimate(fitter, Fit2D::GAUSSIAN,
 				maskedPixels, minVal, maxVal, minPos, maxPos, stokes, subImage,
@@ -2407,7 +2410,7 @@ ComponentList ImageAnalysis::fitsky(
 		Vector<SkyComponent> result(1);
 		Double facToJy;
 		result(0) = ImageUtilities::encodeSkyComponent(
-			*itsLog, facToJy, subImage,
+			*itsLog, facToJy, allAxesSubImage,
 			convertModelType(Fit2D::GAUSSIAN), parameters, stokes, xIsLong,
 			deconvolveIt
 		);
@@ -2508,13 +2511,13 @@ ComponentList ImageAnalysis::fitsky(
 		Vector<Double> solution = fitter.availableSolution(i);
 		Vector<Double> errors = fitter.availableErrors(i);
 
+
 	    result(i) = ImageUtilities::encodeSkyComponent(
-		    *itsLog, facToJy, subImage, modelType,
+		    *itsLog, facToJy, allAxesSubImage, modelType,
 			solution, stokes, xIsLong, deconvolveIt
 		);
-
 		encodeSkyComponentError(
-			*itsLog, result(i), facToJy, subImage,
+			*itsLog, result(i), facToJy, allAxesSubImage,
 			solution, errors, stokes, xIsLong
 		);
 
@@ -2522,23 +2525,17 @@ ComponentList ImageAnalysis::fitsky(
 	}
 	*itsLog << LogOrigin("ImageAnalysis", "fitsky");
 
-	// CAS-1966 keep degenerate axes
-	SubImage<Float> subImage2 = SubImage<Float>::createSubImage(
-		pRegionRegion, pMaskRegion, subImageTmp,
-		*(ImageRegion::tweakedRegionRecord(&region)),
-		mask, (list ? itsLog : 0), False, AxesSpecifier(True)
-	);
 	delete pRegionRegion;
 	delete pMaskRegion;
 
-	residStats = _fitskyWriteResidualAndGetStats(subImage2, residPixels, residImageName);
+	residStats = _fitskyWriteResidualAndGetStats(allAxesSubImage, residPixels, residImageName);
 
 	// PagedImage<Float> residImage(residImageName);
-	ImageMetaData subImageMD(subImage2);
+	ImageMetaData subImageMD(allAxesSubImage);
 	Vector<Int> inputDirectionAxes = subImageMD.directionAxesNumbers();
 	Record reg;
 
-	ImageAnalysis(&subImage2).statistics(
+	ImageAnalysis(&allAxesSubImage).statistics(
 		inputStats, inputDirectionAxes, reg, "", Vector<String>(0),
 		Vector<Float>(0), Vector<Float>(0)
 	);
@@ -2546,7 +2543,7 @@ ComponentList ImageAnalysis::fitsky(
     if (! modelImageName.empty()) {
         // construct the model image, copying pattern from ImageProxy
     	ImageUtilities::writeImage(
-    		subImage2.shape(), subImage2.coordinates(),
+    		allAxesSubImage.shape(), allAxesSubImage.coordinates(),
     		modelImageName, modelPixels, *itsLog
     	);
     }
