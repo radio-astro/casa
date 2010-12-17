@@ -2922,7 +2922,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// method, normalizeImage also needs to work with Lattices
 	// (rather than ImageInterface).
 	//
-	Array<Float> avgPBLat; avgPB_p->get(avgPBLat);
         normalizeImage(*lattice,sumWeight,*avgPB_p,fftNormalization);
 
         //	normalizeImage(*lattice,sumWeight,*avgPB_p, *avgPBSq_p, fftNormalization);
