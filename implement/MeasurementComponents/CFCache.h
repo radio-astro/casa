@@ -213,10 +213,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // anytime during the life of this object.
     //
     void flush();
-    void flush(ImageInterface<Float>& avgPB);
-    Int loadAvgPB(ImageInterface<Float>& avgPB);
-    Int loadAvgPB(CountedPtr<ImageInterface<Float> > & avgPB)
-    {if (avgPB.null()) avgPB = new TempImage<Float>(); return loadAvgPB(*avgPB);};
+    void flush(ImageInterface<Float>& avgPB, String qualifier=String(""));
+    Int loadAvgPB(ImageInterface<Float>& avgPB, String qualifier=String(""));
+    Int loadAvgPB(CountedPtr<ImageInterface<Float> > & avgPB, String qualifier=String(""))
+    {if (avgPB.null()) avgPB = new TempImage<Float>(); return loadAvgPB(*avgPB,qualifier);};
 
     Bool avgPBReady() {return avgPBReady_p;};
 

@@ -56,7 +56,8 @@ namespace casa{
     Directory dirObj(Dir);
 
     if (Dir.length() == 0) 
-      throw(SynthesisFTMachineError(LogMessage("Got null string for disk cache dir. ",logOrigin).message()));
+      throw(SynthesisFTMachineError(LogMessage("Got null string for disk cache dir. ",
+					       logOrigin).message()));
     //
     // If the directory does not exist, create it
     //
@@ -260,7 +261,8 @@ namespace casa{
 				  Int &convSize,
 				  Vector<Int> &xConvSupport, 
 				  Vector<Int> &yConvSupport, 
-				  Float convSampling, String nameQualifier,
+				  Float convSampling, 
+				  String nameQualifier,
 				  Bool savePA)
   {
     LogIO log_l(LogOrigin("CFCache","cacheConvFunction"));
@@ -394,14 +396,14 @@ namespace casa{
   //-------------------------------------------------------------------------
   //Along with the aux. info., also save the average PB in the disk cache.
   //
-  void CFCache::flush(ImageInterface<Float>& avgPB)
+  void CFCache::flush(ImageInterface<Float>& avgPB, String qualifier)
   {
     LogIO log_l(LogOrigin("CFCache", "flush"));
 
     if (Dir.length() == 0) return;
     flush();
     ostringstream Name;
-    Name << Dir <<"/avgPB";
+    Name << Dir <<"/avgPB" << qualifier;
     try
       {
 	storeImg(Name, avgPB);
@@ -417,7 +419,7 @@ namespace casa{
   //-------------------------------------------------------------------------
   //Load the average PB from the disk cache.
   //
-  Int CFCache::loadAvgPB(ImageInterface<Float>& avgPB)
+  Int CFCache::loadAvgPB(ImageInterface<Float>& avgPB, String qualifier)
   {
     LogIO log_l(LogOrigin("CFCache", "loadAvgPB"));
 
@@ -426,7 +428,7 @@ namespace casa{
 
 
     ostringstream name;
-    name << Dir << "/avgPB";
+    name << Dir << "/avgPB" << qualifier;
     //    cout << name.str() << endl;
     try
       {
@@ -551,13 +553,18 @@ namespace casa{
 
     // convSampling = Sampling[where];
 
-    //    where=addToMemCache(convFuncCache, pa, &cfBuf, coordSys, xconvSupport, yconvSupport, Sampling[where]);
-    where=addToMemCache(convFuncCache, paFromMisc, &cfBuf, coordSys, xconvSupport, yconvSupport, samplingFromMisc);
+    // where=addToMemCache(convFuncCache, pa, &cfBuf, coordSys, 
+    // 			xconvSupport, yconvSupport, Sampling[where]);
+    where=addToMemCache(convFuncCache, paFromMisc, &cfBuf, coordSys, 
+			xconvSupport, yconvSupport, samplingFromMisc);
     cfs=convFuncCache[where];
     //    convFuncCache[where].show("loadFromDisk: ");
 
     return DISKCACHE;
   };
+  //
+  //-----------------------------------------------------------------------
+  //
   Int CFCache::locateConvFunction(CFStore& cfs, CFStore& cfwts,
 				  const Int Nw, const Float pa, const Float dPA,
 				  const Int mosXPos, const Int mosYPos)
@@ -572,6 +579,9 @@ namespace casa{
      }
    return retVal;
   }
+  //
+  //-----------------------------------------------------------------------
+  //
   // Locate a convlution function in either mem. or disk cache.  
   // Return CFCache::DISKCACHE (=1) if found in the disk cache.
   //        CFCache::MEMCACHE (=2)  if found in the mem. cache.
