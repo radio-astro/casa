@@ -302,6 +302,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual void makeSensitivityImage(const VisBuffer& vb, const ImageInterface<Complex>& imageTemplate,
 				      ImageInterface<Float>& sensitivityImage);
 
+    //
+    // Given the sky image (Fourier transform of the visibilities),
+    // sum of weights and the sensitivity image, this method replaces
+    // the skyImage with the normalized image of the sky.
+    //
     virtual void normalizeImage(Lattice<Complex>& skyImage,
 				const Matrix<Double>& sumOfWts,
 				Lattice<Float>& sensitivityImage,
