@@ -40,10 +40,8 @@
 #include <casa/OS/HostInfo.h>
 #include <casa/sstream.h>
 
-#define DELTAPA 1.0
-#define MAGICPAVALUE -999.0
 #define CONVSIZE (1024*4)
-#define OVERSAMPLING 20
+#define OVERSAMPLING 10
 #define USETABLES 0           // If equal to 1, use tabulated exp() and
 			      // complex exp() functions.
 #define MAXPOINTINGERROR 250.0 // Max. pointing error in arcsec used to
@@ -418,21 +416,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (avgPBReady_p) return;
     LogIO log_l(LogOrigin("AWProjectWBFT", "makeSensitivityImage"));
 
-    {
-      String name("cwts.im");
-      Array<Complex> tt;wtImage.get(tt,False);
-      storeArrayAsImage(name,griddedWeights.coordinates(),tt);
-    }
-
 
     ftWeightImage(wtImage, sumWt, doFFTNorm);
-
-
-    {
-      String name("cavgPB.im");
-      Array<Complex> tt;wtImage.get(tt,False);
-      storeArrayAsImage(name,griddedWeights.coordinates(),tt);
-    }
 
     sensitivityImage.resize(griddedWeights.shape()); 
     sensitivityImage.setCoordinateInfo(griddedWeights.coordinates());
@@ -1066,10 +1051,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     Int npa=1,actualConvSize, actualConvWtSize;
     Int paIndex_Fortran = paIndex; 
-    Int doAvgPB=((avgPBReady_p==False) && 
-		 ((fabs(lastPAUsedForWtImg-actualPA)*57.2956 >= DELTAPA) || 
-		  (lastPAUsedForWtImg == MAGICPAVALUE)));
-    doAvgPB=(avgPBReady_p==False);
+    // Int doAvgPB=((avgPBReady_p==False) && 
+    //     	 ((fabs(lastPAUsedForWtImg-actualPA)*57.2956 >= DELTAPA) || 
+    //     	  (lastPAUsedForWtImg == MAGICPAVALUE)));
+
+    Int doAvgPB=computeAvgPB(actualPA, lastPAUsedForWtImg);//(avgPBReady_p==False);
     actualConvSize = convFunc_p.shape()(0);
     actualConvWtSize = convWeights_p.shape()(0);
 
