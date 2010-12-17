@@ -88,6 +88,8 @@ target_link_libraries( ${ASAPLIB}
                        #${CASACORE_LIBRARIES} 
                        ${WCSLIB} )
 
+add_dependencies( inst ${ASAPLIB} )
+
 # install directory
 install( TARGETS ${ASAPLIB}
          LIBRARY DESTINATION ${PYTHON_INSTALL_DIR} )

@@ -33,6 +33,7 @@ target_link_libraries( ${PYRAPLIB}
                        ${DL_LIBRARIES} 
                        ${BLAS_LIBRARIES} 
                        ${LAPACK_LIBRARIES} )
+add_dependencies( inst ${PYRAPLIB} )
 
 # install directory
 install( TARGETS ${PYRAPLIB}

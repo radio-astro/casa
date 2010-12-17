@@ -5,10 +5,19 @@
 # minimum requirement for cmake version
 cmake_minimum_required( VERSION 2.8 )
 
+# options
+option( USE_LIBCASACORE 
+        "set ON to use libcasacore.so instead of libcasa_*.so"
+        OFF )
+option( STANDALONE 
+        "set ON to build standalone mode"
+        OFF )
+message( STATUS "USE_LIBCASACORE = " ${USE_LIBCASACORE} )
+message( STATUS "STANDALONE = " ${STANDALONE} )
+
 # Define compiler paths on OSX 10.5. This must be done before invoking project()
 if( APPLE )
     if( EXISTS            /opt/casa/core2-apple-darwin8/3rd-party/bin/gfortran )
-    set( SO dylib )
         set( CMAKE_Fortran_COMPILER /opt/casa/core2-apple-darwin8/3rd-party/bin/gfortran )
 	set( CMAKE_CXX_COMPILER     /opt/casa/core2-apple-darwin8/3rd-party/bin/g++ )
     elseif( EXISTS        /opt/local/bin/gfortran )
@@ -23,21 +32,6 @@ endif()
 
 # project name is ASAP
 project( ASAP )
-
-# install directory
-# set casaroot
-# the regular expression means '../'
-#  [^ ] Matches any character(s) not inside the brackets
-#  +    Matches preceding pattern one or more times
-#  ?    Matches preceding pattern zero or once only
-#  $    Mathces at end of a line
-string( REGEX REPLACE /[^/]+/?$ "" casaroot ${CMAKE_SOURCE_DIR} )
-message( STATUS "casaroot = " ${casaroot} )
-
-# modules
-set( CMAKE_MODULE_PATH ${casaroot}/code/install )
-include( config )
-include( CASA )
 
 # flags
 set( DEFAULT_CXX_FLAGS
@@ -63,13 +57,14 @@ endif()
 
 add_definitions( ${CASACORE_DEFINITIONS} )
 
+# set flags for cpp compiler
+set( CMAKE_CXX_FLAGS ${DEFAULT_CXX_FLAGS} )
+
 # environment dependent settings
 message( STATUS "CMAKE_SYSTEM = " ${CMAKE_SYSTEM} )
+message( STATUS "CMAKE_SYSTEM_PROCESSOR = " ${CMAKE_SYSTEM_PROCESSOR} )
 if( APPLE )
    set( SO dylib )
-   if( NOT arch )
-      set( arch darwin )
-   endif()
    if( CMAKE_SYSTEM MATCHES ^Darwin-10 )
       if( NOT archflag )
          if( EXISTS /opt/casa/darwin10-64b )
@@ -82,9 +77,6 @@ if( APPLE )
       endif()
       if( archflag STREQUAL x86_64 )
          add_definitions( -DAIPS_64B )
-         set( casa_packages /opt/casa/darwin10-64b )
-      else()
-         set( casa_packages /opt/casa/core2-apple-darwin10 )
       endif()
       execute_process( COMMAND ${CMAKE_CXX_COMPILER} --version
                        COMMAND head -1
@@ -94,71 +86,50 @@ if( APPLE )
       if( NOT _cxx_version STREQUAL "4.4" )
          set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -arch ${archflag}" )
       endif()
-   elseif( CMAKE_SYSTEM MATCHES ^Darwin-9 )
-      set( casa_packages /opt/casa/core2-apple-darwin8/3rd-party )
    endif()         
 elseif( CMAKE_SYSTEM_NAME STREQUAL Linux )
    set( SO so )
    add_definitions( -DAIPS_LINUX )
    if( CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 )
-      set( casa_packages /usr/lib64/casapy )
-      if( NOT arch )
-         set( arch linux_64b )
-      endif()
       add_definitions( -DAIPS_64B )
       set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -Wno-deprecated" )
    else()
-      set( casa_packages /usr/lib/casapy )
-      if( NOT arch )
-         set( arch linux_gnu )
-      endif()
       set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -Wno-deprecated -Woverloaded-virtual" )
    endif()
 endif()
-message( STATUS "arch = " ${arch} )
-
-# set root directory for installation
-set( CMAKE_INSTALL_PREFIX ${casaroot}/${arch} )
-message( STATUS "CMAKE_INSTALL_PREFIX = " ${CMAKE_INSTALL_PREFIX} )
-
-# set flags for cpp compiler
-set( CMAKE_CXX_FLAGS ${DEFAULT_CXX_FLAGS} )
 
 
 #
-# DL
+# mode specific settings
 #
-set( DL_LIBRARIES ${CMAKE_DL_LIBS} CACHE STRING "dl libraries" FORCE )
-if( DL_LIBRARIES STREQUAL "dl" )
-  set( DL_LIBRARIES "-ldl" CACHE STRING "dl libraries" FORCE )
+# STANDALONE=ON   standalone build
+# STANDALONE=OFF  build with casa
+#
+set( CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_SOURCE_DIR}/cmake" )
+message( STATUS "CMAKE_MODULE_PATH = " ${CMAKE_MODULE_PATH} )
+if( STANDALONE )
+   include( standalone )
+else()
+   include( withcasa )
 endif()
-message( STATUS "DL_LIBRARIES = " ${DL_LIBRARIES} )
 
-
-#
-# BLAS
-#
-find_library( BLAS_LIBRARIES libblas.${SO} )
-message( STATUS "BLAS_LIBRARIES = " ${BLAS_LIBRARIES} )
-
-
-#
-# LAPACK
-#
-find_library( LAPACK_LIBRARIES liblapack.${SO} )
-message( STATUS "LAPACK_LIBRARIES = " ${LAPACK_LIBRARIES} ) 
+message( STATUS "CMAKE_INSTALL_PREFIX = " ${CMAKE_INSTALL_PREFIX} )
 
 
 #
 # casacore
 #
+unset( CASACORE_INCLUDE_DIR CACHE )
+unset( CASACORE_LIBRARIES CACHE )
 if( NOT USE_LIBCASACORE )
    # use casacore libraries 
    set( _includename casa/aipsdef.h )
    find_path( CASACORE_INCLUDE_DIR ${_includename} 
-              HINTS ${casaroot}/${arch}/include/
-              PATH_SUFFIXES casacore ) 
-   if( CASACORE_INCLUDE_DIR STREQUAL CASACORE_INCLUDE_DIR-NOTFOUND )
+              PATHS ${CASACORE_PATHS}
+              PATH_SUFFIXES include include/casacore 
+              NO_DEFAULT_PATH )
+   find_path( CASACORE_INCLUDE_DIR ${_includename} ) 
+   if( CASACORE_INCLUDE_DIR MATCHES "NOTFOUND$" )
      message( FATAL_ERROR "${_includename} could not be found. Please check!" )
    endif()
    set( CASACORE_LIBS casa
@@ -179,8 +150,11 @@ if( NOT USE_LIBCASACORE )
       set( _libname libcasa_${_a}.${SO} )
       unset( _casacore_lib CACHE )
       find_library( _casacore_lib ${_libname}
-                    PATHS ${CMAKE_INSTALL_PREFIX} PATH_SUFFIXES lib )
-      if( NOT _casacore_lib-NOTFOUND )
+                    PATHS ${CASACORE_PATHS} 
+                    PATH_SUFFIXES lib64 lib )
+      if( _casacore_lib MATCHES "NOTFOUND$" )
+         message( FATAL_ERROR "${_libname} could not be found. Please check!" )
+      else()
          #list( APPEND _casacore_libs casa_${_a} )
          list( APPEND _casacore_libs ${_casacore_lib} )
       endif()
@@ -189,119 +163,178 @@ if( NOT USE_LIBCASACORE )
 else()
    # use libcasacore
    set( _libname libcasacore.${SO} )
-   find_library( CASACORE_LIBRARIES ${_libname} )
-   if( CASACORE_LIBRARIES STREQUAL CASACORE_LIBRARIES-NOTFOUND )
+   find_library( CASACORE_LIBRARIES ${_libname} 
+                 PATHS ${CASACORE_PATHS} 
+                 PATH_SUFFIXES lib64 lib )
+   if( CASACORE_LIBRARIES MATCHES "NOTFOUND$" )
       message( FATAL_ERROR "${_libname} could not be found. Please check!" )
    endif()
    set( _includename casa/aipsdef.h )
    find_path( CASACORE_INCLUDE_DIR ${_includename} 
-              PATH_SUFFIXES casacore ) 
-   if( CASACORE_INCLUDE_DIR STREQUAL CASACORE_INCLUDE_DIR-NOTFOUND )
+              PATHS ${CASACORE_PATHS}
+              PATH_SUFFIXES include include/casacore 
+              NO_DEFAULT_PATH ) 
+   find_path( CASACORE_INCLUDE_DIR ${_includename} ) 
+   if( CASACORE_INCLUDE_DIR MATCHES "NOTFOUND$" )
      message( FATAL_ERROR "${_includename} could not be found. Please check!" )
    endif()
 endif()
 message( STATUS "CASACORE_LIBRARIES = " ${CASACORE_LIBRARIES} )
 message( STATUS "CASACORE_INCLUDE_DIR = " ${CASACORE_INCLUDE_DIR} )
+unset( USE_LIBCASACORE CACHE )
 
 
 #
 # Python
 #
-if( NOT PYTHON_FOUND )
+if( STANDALONE )
+   include( FindPythonLibs )
+   if( NOT PYTHONLIBS_FOUND )
+      message( FATAL_ERROR "Python could not be found. Please check!" )
+   endif()
 
-  if ( NOT PYTHON_LIBNAME )
-    set( _names 2.9 2.8 2.7 2.6 2.5.2 2.5 )
-    # (The library named libpython.2.5.2.dylib seems to exist only in the CASA world.)
-  else()
-    set( _names ${PYTHON_LIBNAME} )
-  endif()
+   # Define pyroot
+   string( REGEX REPLACE "/[^/]+/[^/]+/?$" "" pyroot ${PYTHON_INCLUDE_DIRS} )
 
-  set( _found False )
-  foreach( _v ${_names} )
+   # find numpy
+   string( REGEX MATCH [0-9].[0-9] PYTHONV ${PYTHON_INCLUDE_DIRS} )
+   string( REPLACE "." "" PV ${PYTHONV} )
+   find_path( NUMPY_INCLUDE_DIR numpy/npy_interrupt.h 
+              PATHS 
+                 ${pyroot}/lib/python${PYTHONV}/site-packages/numpy/core 
+                 ${pyroot}/Library/Frameworks/Python.framework/Versions/${PYTHONV} 
+                 ${pyroot}/Library/Frameworks/Python.framework/Versions/${PYTHONV}/lib/python${PYTHONV}/site-packages/numpy/core 
+              PATH_SUFFIXES include )
+   if( NUMPY_INCLUDE_DIR MATCHES "NOTFOUND$" )
+      message( FATAL_ERROR "numpy/npy_interrupt.h could not be found. Please check!" )
+   endif()
+   list( APPEND PYTHON_INCLUDE_DIRS ${NUMPY_INCLUDE_DIR} )
 
-    casa_find( 
-      PYTHON${_v} 
-      LIBS python${_v} 
-      NO_REQUIRE 
-      )
-
-    if( PYTHON${_v}_FOUND )
-      set( PYTHON_LIBNAME ${_v} )
-      set( _found True )
-      break()
-    endif()
-
-  endforeach()
-  
-  if( NOT _found )
-    message( FATAL_ERROR "Could not find any PYTHON library with version one of ${_names}. Please check!" )
-  endif()
-
-endif()
-
-if( NOT PYTHON_LIBNAME )
-  # Found Python, but PYTHON_LIBNAME is undefined, that is impossible.
-  message( FATAL_ERROR "The variable PYTHON_LIBNAME is undefined. Most likely, CMake's cache is out of date and you need to redetect your PYTHON installation (\"cmake -U PYTHON*\")")
-endif()
-
-string( SUBSTRING ${PYTHON_LIBNAME} 0 3 PYTHONV )
-string( REPLACE "." "" PV ${PYTHONV} )
-set( python_library python${PYTHON_LIBNAME} )
-
-# Form the Python install prefix by stripping away "lib/libpython2.5.2.dylib" (example) from 
-# the full python library path
-string( REGEX MATCH "/lib(64)?/lib${python_library}" _match ${PYTHON${PYTHON_LIBNAME}_LIBRARIES} )
-if( _match )
-  string( REGEX REPLACE "/lib(64)?/lib${python_library}.*" "" python_prefix ${PYTHON${PYTHON_LIBNAME}_LIBRARIES} )
+   set( PYTHON_DEFINITIONS ${PYTHON_DEFINITIONS}
+      -DPYTHONROOT=\"${pyroot}\"
+      -DPYTHONVER=\"${PYTHONV}\"
+      -DPYVERSION=${PV} )
 else()
-  # Python library was not in a lib(64) directory!
-  message( WARNING "Python library path \"${PYTHON${PYTHON_LIBNAME}_LIBRARIES}\" does not contain \"/lib(64)/lib${python_library}\"" )
-  set( python_prefix ${casa_packages} )
+   if( NOT PYTHON_FOUND )
+      if ( NOT PYTHON_LIBNAME )
+         set( _names 2.9 2.8 2.7 2.6 2.5.2 2.5 )
+         # (The library named libpython.2.5.2.dylib seems to exist only in the CASA world.)
+      else()
+         set( _names ${PYTHON_LIBNAME} )
+      endif()
+
+      set( _found False )
+      foreach( _v ${_names} )
+
+         casa_find( 
+            PYTHON${_v} 
+            LIBS python${_v} 
+            NO_REQUIRE 
+         )
+
+         if( PYTHON${_v}_FOUND )
+            set( PYTHON_LIBNAME ${_v} )
+            set( _found True )
+            break()
+         endif()
+
+      endforeach()
+  
+      if( NOT _found )
+         message( FATAL_ERROR "Could not find any PYTHON library with version one of ${_names}. Please check!" )
+      endif()
+
+   endif()
+
+   if( NOT PYTHON_LIBNAME )
+      # Found Python, but PYTHON_LIBNAME is undefined, that is impossible.
+      message( FATAL_ERROR "The variable PYTHON_LIBNAME is undefined. Most likely, CMake's cache is out of date and you need to redetect your PYTHON installation (\"cmake -U PYTHON*\")")
+   endif()
+
+   string( SUBSTRING ${PYTHON_LIBNAME} 0 3 PYTHONV )
+   string( REPLACE "." "" PV ${PYTHONV} )
+   set( python_library python${PYTHON_LIBNAME} )
+
+   # Form the Python install prefix by stripping away "lib/libpython2.5.2.dylib" (example) from 
+   # the full python library path
+   string( REGEX MATCH "/lib(64)?/lib${python_library}" _match ${PYTHON${PYTHON_LIBNAME}_LIBRARIES} )
+   if( _match )
+      string( REGEX REPLACE "/lib(64)?/lib${python_library}.*" "" python_prefix ${PYTHON${PYTHON_LIBNAME}_LIBRARIES} )
+   else()
+      # Python library was not in a lib(64) directory!
+      message( WARNING "Python library path \"${PYTHON${PYTHON_LIBNAME}_LIBRARIES}\" does not contain \"/lib(64)/lib${python_library}\"" )
+      set( python_prefix ${casa_packages} )
+   endif()
+
+   # The python version and prefix is known, do the actual search
+   if( NOT PYTHON_FOUND )
+      message( STATUS "Looking for PYTHON version ${PYTHONV}.x in ${python_prefix}" )
+   endif()
+
+   casa_find( PYTHON
+      VERSION 2.5    # minimum required
+      INCLUDES Python.h 
+         numpy/npy_interrupt.h   # for numpy
+      INCLUDES_SUFFIXES python${PYTHONV}
+      PREFIX_HINTS 
+         ${python_prefix}/lib/python${PYTHONV}/site-packages/numpy/core
+         ${python_prefix}/Library/Frameworks/Python.framework/Versions/${PYTHONV}
+         ${python_prefix}/Library/Frameworks/Python.framework/Versions/${PYTHONV}/lib/python${PYTHONV}/site-packages/numpy/core
+      LIBS ${python_library}
+      CPP_VERSION PY_VERSION )
+
+   # Store PYTHON_LIBNAME in the cache
+   set( PYTHON_LIBNAME ${PYTHON_LIBNAME} CACHE STRING "Python major and minor version to use" FORCE )
+
+   # Define pyroot to two directory levels above Python.h.
+   string( REGEX REPLACE "/[^/]+/[^/]+/?$" "" pyroot ${PYTHON_Python.h} )
+
+   set( PYTHON_DEFINITIONS ${PYTHON_DEFINITIONS}
+      -DAIPSROOT=\"${CMAKE_SOURCE_DIR}\"
+      -DAIPSARCH=\"${arch}\"
+      -DAIPSSITE=\"garching\"
+      -DPYTHONROOT=\"${pyroot}\"
+      -DPYTHONVER=\"${PYTHONV}\"
+      -DPYVERSION=${PV} )
 endif()
-
-# The python version and prefix is known, do the actual search
-if( NOT PYTHON_FOUND )
-  message( STATUS "Looking for PYTHON version ${PYTHONV}.x in ${python_prefix}" )
-endif()
-
-casa_find( PYTHON
-  VERSION 2.5    # minimum required
-  INCLUDES Python.h 
-     numpy/npy_interrupt.h   # for numpy
-  INCLUDES_SUFFIXES python${PYTHONV}
-  PREFIX_HINTS 
-     ${python_prefix}/lib/python${PYTHONV}/site-packages/numpy/core
-     ${python_prefix}/Library/Frameworks/Python.framework/Versions/${PYTHONV}
-     ${python_prefix}/Library/Frameworks/Python.framework/Versions/${PYTHONV}/lib/python${PYTHONV}/site-packages/numpy/core
-  LIBS ${python_library}
-  CPP_VERSION PY_VERSION )
-
-# Store PYTHON_LIBNAME in the cache
-set( PYTHON_LIBNAME ${PYTHON_LIBNAME} CACHE STRING "Python major and minor version to use" FORCE )
-
-# Define pyroot to two directory levels above Python.h.
-string( REGEX REPLACE "/[^/]+/[^/]+/?$" "" pyroot ${PYTHON_Python.h} )
-
-message( STATUS "PYTHON_INCLUDE_DIR = " ${PYTHON_INCLUDE_DIR} )
+message( STATUS "PYTHON_INCLUDE_DIRS = " ${PYTHON_INCLUDE_DIRS} )
 message( STATUS "PYTHON_LINRARIES = " ${PYTHON_LIBRARIES} )
 message( STATUS "PYTHONV = " ${PYTHONV} )
 
-set( PYTHON_DEFINITIONS ${PYTHON_DEFINITIONS}
-  -DAIPSROOT=\"${CMAKE_SOURCE_DIR}\"
-  -DAIPSARCH=\"${arch}\"
-  -DAIPSSITE=\"garching\"
-  -DPYTHONROOT=\"${pyroot}\"
-  -DPYTHONVER=\"${PYTHONV}\"
-  -DPYVERSION=${PV} )
+
+#
+# DL
+#
+set( DL_LIBRARIES ${CMAKE_DL_LIBS} CACHE STRING "dl libraries" FORCE )
+if( DL_LIBRARIES STREQUAL "dl" )
+  set( DL_LIBRARIES "-ldl" CACHE STRING "dl libraries" FORCE )
+endif()
+message( STATUS "DL_LIBRARIES = " ${DL_LIBRARIES} )
+
+
+#
+# BLAS
+#
+find_library( BLAS_LIBRARIES libblas.${SO} )
+if ( BLAS_LIBRARIES MATCHES "NOTFOUND$" )
+   message( FATAL_ERROR "blas could not be found. Please check!" )
+endif()
+message( STATUS "BLAS_LIBRARIES = " ${BLAS_LIBRARIES} )
+
+
+#
+# LAPACK
+#
+find_library( LAPACK_LIBRARIES liblapack.${SO} )
+if ( LAPACK_LIBRARIES MATCHES "NOTFOUND$" )
+   message( FATAL_ERROR "lapack could not be found. Please check!" )
+endif()
+message( STATUS "LAPACK_LIBRARIES = " ${LAPACK_LIBRARIES} ) 
 
 
 #
 # Boost
 #
-if( NOT BOOST_ROOT )
-   set( BOOST_ROOT ${casa_packages} )
-endif()
-
 set( boost_components python )
 find_package( Boost REQUIRED ${boost_components} )
 if( NOT Boost_FOUND )
@@ -314,50 +347,45 @@ message( STATUS "BOOST_LIBRARIES = " ${Boost_LIBRARIES} )
 #
 # cfitsio
 #
-casa_find( CFITSIO
-           VERSION 3.006
-           INCLUDES fitsio.h fitsio2.h
-           INCLUDES_SUFFIXES cfitsio
-           LIBS cfitsio
-           CPP_VERSION CFITSIO_VERSION
-           RUN_VERSION "(ffvers(&v), v)" )
-if( NOT CFITSIO_FOUND )
-   message( FATAL_ERROR "CFITSIO could not be found. Please check!" )
+if( STANDALONE )
+   find_path( CFITSIO_INCLUDE_DIRS fitsio.h
+              PATH_SUFFIXES cfitsio )
+   if( CFITSIO_INCLUDE_DIRS MATCHES "NOTFOUND$" )
+      message( FATAL_ERROR "fitsio.h could not be found. Please check!" )
+   endif()
+   string( REGEX REPLACE "/[^/]+/?$" "" CFITSIO_ROOT ${CFITSIO_INCLUDE_DIRS} )
+   message( STATUS "CFITSIO_ROOT=" ${CFITSIO_ROOT} )
+   find_library( CFITSIO_LIBRARIES libcfitsio.${SO}
+                 PATHS ${CFITSIO_ROOT}
+                 PATH_SUFFIXES lib64 lib
+                 NO_DEFAULT_PATH )
+   if( CFITSIO_LIBRARIES MATCHES "NOTFOUND$" )
+      find_library( CFITSIO_LIBRARIES libcfitsio.a 
+                    PATHS ${CFITSIO_ROOT}
+                    PATH_SUFFIXES lib64 lib
+                    NO_DEFAULT_PATH )
+   endif()
+   find_library( CFITSIO_LIBRARIES libcfitsio.${SO} 
+                 PATHS /usr/local /usr
+                 PATH_SUFFIXES lib64 lib )
+   if( CFITSIO_LIBRARIES MATCHES "NOTFOUND$" )
+      message( FATAL_ERROR "libcfitsio.so could not be found. Please check!" )
+   endif()
+else()
+   casa_find( CFITSIO
+              VERSION 3.006
+              INCLUDES fitsio.h fitsio2.h
+              INCLUDES_SUFFIXES cfitsio
+              LIBS cfitsio
+              CPP_VERSION CFITSIO_VERSION
+              RUN_VERSION "(ffvers(&v), v)" )
 endif()
 message( STATUS "CFITSIO_INCLUDE_DIRS = " ${CFITSIO_INCLUDE_DIRS} )
 message( STATUS "CFITSIO_LIBRARIES = " ${CFITSIO_LIBRARIES} )
 
 
 #
-# wcslib
-#
-set( _wcslib libwcs.${SO} )
-set( _wcs_version 4.3 )
-find_library( WCSLIB ${_wcslib} 
-              HINTS /usr/lib64 /usr/lib ${casaroot}/${arch}/lib )
-if( WCSLIB STREQUAL WCSLIB-NOTFOUND )
-   message( STATUS "${_wcslib} could not be found." )
-   unset( _wcslib CACHE )
-   unset( WCSLIB CACHE ) 
-   set( _wcslib libwcs.${_wcs_version}.${SO} )
-   message( STATUS "Try to find ${_wcslib}..." )
-   find_library( WCSLIB ${_wcslib} 
-                 HINTS /usr/lib64 /usr/lib ${casaroot}/${arch}/lib )
-   if( WCSLIB STREQUAL WCSLIB-NOTFOUND )
-      message( FATAL_ERROR "${_wcslib} could not be found. Please check!" )
-   endif()
-endif()
-message( STATUS "WCSLIB = " ${WCSLIB} )
-find_path( WCSLIB_INCLUDE_DIR wcslib/wcs.h
-           HINTS /usr/include ${casaroot}/${arch}/include )
-if( WCSLIB_INCLUDE_DIR STREQUAL WCSLIB_INCLUDE_DIR-NOTFOUND )
-   message( FATAL_ERROR "wcs.h could not be found. Please check!" )
-endif()
-message( STATUS "WCSLIB_INCLUDE_DIR = " ${WCSLIB_INCLUDE_DIR} )
-
-
-#
-# RPFITS (Fortran)
+# Fortran
 #
 if( NOT FORTRAN_LIBRARIES )
 
@@ -402,36 +430,76 @@ if( NOT FORTRAN_LIBRARIES )
   endif()
 endif()
 
-casa_find( RPFITS
-  VERSION 2.11
-  INCLUDES RPFITS.h
-  LIBS rpfits
-  RUN_VERSION names_.rpfitsversion
-  DEPENDS FORTRAN 
-)
-if( NOT RPFITS_FOUND )
-   message( FATAL_ERROR "${_wcslib} could not be found. Please check!" )
+
+#
+# RPFITS
+#
+if ( STANDALONE ) 
+   find_path( RPFITS_INCLUDE_DIRS RPFITS.h
+              PATHS /usr/local /usr
+              PATH_SUFFIXES include )
+   if( RPFITS_INCLUDE_DIRS MATCHES "NOTFOUND$" )
+      message( FATAL_ERROR "RPFITS.h could not be found. Please check!" )
+   endif()
+   find_library( RPFITS_LIBRARIES librpfits.so
+                 PATHS /usr/local /usr
+                 PATH_SUFFIXES lib64 lib )
+   if( RPFITS_LIBRARIES MATCHES "NOTFOUND$" )
+      message( FATAL_ERROR "librpfits.so could not be found. Please check!" )
+   endif()
+   list( APPEND RPFITS_LIBRARIES ${FORTRAN_LIBRARIES} )
+else()
+   casa_find( RPFITS
+              VERSION 2.11
+              INCLUDES RPFITS.h
+              LIBS rpfits
+              RUN_VERSION names_.rpfitsversion
+              DEPENDS FORTRAN )
 endif()
-message( STATUS "RPFITS_INCLUDE_DIR = " ${RPFITS_INCLUDE_DIR} )
+message( STATUS "RPFITS_INCLUDE_DIRS = " ${RPFITS_INCLUDE_DIRS} )
 message( STATUS "RPFITS_LIBRARIES = " ${RPFITS_LIBRARIES} )
+
+
+#
+# wcslib
+#
+set( _wcslib libwcs.${SO} )
+set( _wcs_version 4.3 )
+find_library( WCSLIB ${_wcslib} 
+              PATHS ${WCSLIB_PATHS} 
+              PATH_SUFFIXES lib64 lib )
+if( WCSLIB MATCHES "NOTFOUND$" )
+   message( STATUS "${_wcslib} could not be found." )
+   unset( _wcslib CACHE )
+   unset( WCSLIB CACHE ) 
+   set( _wcslib libwcs.${_wcs_version}.${SO} )
+   message( STATUS "Try to find ${_wcslib}..." )
+   find_library( WCSLIB ${_wcslib} 
+                 PATHS ${WCSLIB_PATHS}
+                 PATH_SUFFIXES lib64 lib )
+   if( WCSLIB MATCHES "NOTFOUND$" )
+      message( FATAL_ERROR "${_wcslib} could not be found. Please check!" )
+   endif()
+endif()
+message( STATUS "WCSLIB = " ${WCSLIB} )
+find_path( WCSLIB_INCLUDE_DIR wcslib/wcs.h
+           PATHS ${WCSLIB_PATHS}
+           PATH_SUFFIXES include )
+if( WCSLIB_INCLUDE_DIR MATCHES "NOTFOUND$" )
+   message( FATAL_ERROR "wcs.h could not be found. Please check!" )
+endif()
+message( STATUS "WCSLIB_INCLUDE_DIR = " ${WCSLIB_INCLUDE_DIR} )
 
 
 #
 # common include path
 #
-message( STATUS "Boost_INCLUDE_DIR = " ${Boost_INCLUDE_DIR} )
 include_directories( ${CASACORE_INCLUDE_DIR} 
                      ${Boost_INCLUDE_DIR} 
-                     ${PYTHON_INCLUDE_DIR} 
+                     ${PYTHON_INCLUDE_DIRS} 
                      ${WCSLIB_INCLUDE_DIR} 
                      ${CFITSIO_INCLUDE_DIRS} 
-                     ${RPFITS_INCLUDE_DIR} )
-
-#
-# link path
-#
-#set( CASACORE_LIBRARY_DIR ${casaroot}/${arch}/lib )
-#link_directories( ${CASACORE_LIBRARY_DIR} )
+                     ${RPFITS_INCLUDE_DIRS} )
 
 
 #
@@ -451,21 +519,12 @@ set( PYRAPLIB pyrap )
 set( ATNFLIB atnf )
 set( ASAP2TO3 asap2to3 )
 
+#
+# always install by default
+#
+add_custom_target( inst ALL ${CMAKE_BUILD_TOOL} install/fast )
 
 #
 # subdirectories
-#  ASAP2TO3 asap2to3       apps
-#  PYRAPLIB libpyrap.so    external/libpyrap
-#  ATNFLIB  libatnf.so     external-alma/atnf
-#  ASAPLIB  _asap.so       src
-#  python modules           python
-#  shared files             share
 #
-add_subdirectory( apps )
-add_subdirectory( external/libpyrap )
-add_subdirectory( external-alma/atnf )
-add_subdirectory( src )
-add_subdirectory( python )
-add_subdirectory( share )
-
-
+asap_add_subdirectory()

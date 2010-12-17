@@ -14,6 +14,7 @@ target_link_libraries( ${ASAP2TO3}
                        ${DL_LIBRARIES} 
                        ${BLAS_LIBRARIES}
                        ${LAPACK_LIBRARIES} )
+add_dependencies( inst ${ASAP2TO3} )
 
 # install
 install( TARGETS ${ASAP2TO3}
