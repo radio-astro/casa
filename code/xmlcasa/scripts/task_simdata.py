@@ -1503,10 +1503,10 @@ def simdata(
                     pl.xlabel('u[klambda]',fontsize='x-small')
                     pl.ylabel('v[klambda]',fontsize='x-small')
                     pl.axis('equal')
-                    util.nextfig()
                     # Add zero-spacing (single dish) if not yet plotted
                     if predict_sd and not util.ismstp(msfile,halt=False):
                         pl.plot([0.],[0.],'r,')
+                    util.nextfig()
 
                 if showpsf:
                     if image: 
