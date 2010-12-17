@@ -8875,14 +8875,24 @@ Bool Imager::addResiduals(const Vector<String>& imageNames) {
   residuals_p.resize(imageNames.nelements(), True, False);
   for (Int thismodel=0;thismodel<Int(imageNames.nelements());++thismodel) {
     if(imageNames(thismodel)!="") {
-      removeTable(imageNames(thismodel));
-      residuals_p[thismodel]=
-	new PagedImage<Float> (TiledShape(images_p[thismodel]->shape(), 
-images_p[thismodel]->niceCursorShape()),
+      if(Table::isWritable(imageNames(thismodel))){
+	residuals_p[thismodel]=new PagedImage<Float>(imageNames(thismodel));
+	if(!(residuals_p[thismodel]->shape()).isEqual(images_p[thismodel]->shape())){
+	  residuals_p[thismodel]=0;
+	  removeTable(imageNames(thismodel));
+	}
+      }
+      if(!Table::isReadable(imageNames(thismodel))){
+	residuals_p[thismodel]=
+	  new PagedImage<Float> (TiledShape(images_p[thismodel]->shape(), 
+					    images_p[thismodel]->niceCursorShape()),
 			       images_p[thismodel]->coordinates(),
-			       imageNames(thismodel));
-      AlwaysAssert(!residuals_p[thismodel].null(), AipsError);
-      residuals_p[thismodel]->setUnits(Unit("Jy/beam"));
+				 imageNames(thismodel));
+	AlwaysAssert(!residuals_p[thismodel].null(), AipsError);
+	residuals_p[thismodel]->setUnits(Unit("Jy/beam"));
+      }
+      if(residuals_p[thismodel].null()) 
+	retval=False;
     }
     else{
       retval=False;
