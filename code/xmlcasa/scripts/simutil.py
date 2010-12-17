@@ -2923,7 +2923,7 @@ class simutil:
             cleanstr=cleanstr+",uvtaper=False"
         cleanlast.write('innertaper              = []\n');
         if os.path.exists(modelimage):
-            cleanstr=cleanstr+",modelimage="+str(modelimage)
+            cleanstr=cleanstr+",modelimage='"+str(modelimage)+"'"
             cleanlast.write('modelimage              = "'+str(modelimage)+'"\n');
         else:
             cleanlast.write('modelimage              = ""\n');
@@ -2952,7 +2952,8 @@ class simutil:
               psfmode=psfmode, imagermode=imagermode, ftmachine=ftmachine, 
               imsize=imsize, cell=map(qa.tos,cell), phasecenter=imcenter,
               stokes=stokes, weighting=weighting, robust=robust,
-              uvtaper=uvtaper,outertaper=outertaper, pbcor=True, mask=mask)
+              uvtaper=uvtaper,outertaper=outertaper, pbcor=True, mask=mask,
+              modelimage=modelimage)
 
         del freq,nchan # something is holding onto the ms in table cache
 
