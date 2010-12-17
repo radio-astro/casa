@@ -325,12 +325,12 @@ class pimager():
             ia.insert(inimage, locate=[0,0,0,0])
         ia.done()
     @staticmethod
-    def regridimageimage(outimage='', inimage='', templateimage=''):
+    def regridimage(outimage='', inimage='', templateimage=''):
         ia.open(templateimage)
         csys=ia.coordsys()
         shp=ia.shape()
         ia.open(inimage)
-        ia.regrid(outfile=outimage, shape=shp, csys=csys.torecord, axes=[0,1])
+        ia.regrid(outfile=outimage, shape=shp, csys=csys.torecord(), axes=[0,1])
         ia.done()
     def pcont(self, msname=None, imagename=None, imsize=[1000, 1000], 
               pixsize=['1arcsec', '1arcsec'], phasecenter='', 
@@ -643,29 +643,30 @@ class pimager():
         if(field==''):
             field='*'
         spwids=ms.msseltoindex(vis=msname, spw=spw)['spw']
-        c=cluster()
-        if (len(c.get_ids()) > 0 or len(c.get_nodes()) > 0 or 
-            len(c.get_engines())):
-            c.stop_cluster()
-            time.sleep(1)
-        myhostname=os.getenv('HOSTNAME')
-        wd=os.getcwd()
-        owd=wd
+        #c=cluster()
+        #if (len(c.get_ids()) > 0 or len(c.get_nodes()) > 0 or 
+        #    len(c.get_engines())):
+        #    c.stop_cluster()
+        #    time.sleep(1)
+        #myhostname=os.getenv('HOSTNAME')
+        #wd=os.getcwd()
+        #owd=wd
        ########################3
         ###num of cpu per node
         numcpu=numcpuperhost
-        if((hostnames==[]) or (hostnames=='')): 
-            hostnames=[myhostname]
-        print 'Hosts ', hostnames
+        #if((hostnames==[]) or (hostnames=='')): 
+        #    hostnames=[myhostname]
+        #print 'Hosts ', hostnames
         time1=time.time()
-        print 'output will be in directory', owd
-        for hostname in hostnames:
-            c.start_engine(hostname,numcpu,owd)
+        self.setupcluster(hostnames,numcpuperhost, 3)
+        #print 'output will be in directory', owd
+        #for hostname in hostnames:
+        #    c.start_engine(hostname,numcpu,owd)
         numcpu=numcpu*len(hostnames)
         ##Start an slave for my async use for cleaning up etc here
-        c.start_engine(myhostname, 3, owd)
+        #c.start_engine(myhostname, 3, owd)
         buddy_id=[numcpu, numcpu+1, numcpu+2]
-        c.push(numcpu=numcpu, targets=buddy_id) 
+        self.c.push(numcpu=numcpu, targets=buddy_id) 
         #####################
         model=imagename+'.model' 
         if(not contclean or (not os.path.exists(model))):
@@ -699,22 +700,22 @@ class pimager():
         shutil.copytree(model, imagename+'.residual')
 
         out=range(numcpu)  
-        c.pgc('from  parallel.parallel_cont import *')
+        self.c.pgc('from  parallel.parallel_cont import *')
         spwlaunch='"'+spw+'"' if (type(spw)==str) else str(spw)
         fieldlaunch='"'+field+'"' if (type(field) == str) else str(field)
         pslaunch='"'+phasecenter+'"' if (type(phasecenter) == str) else str(phasecenter)
         launchcomm='a=imagecont(ftmachine='+'"'+ftmachine+'",'+'wprojplanes='+str(wprojplanes)+',facets='+str(facets)+',pixels='+str(imsize)+',cell='+str(pixsize)+', spw='+spwlaunch +',field='+fieldlaunch+',phasecenter='+pslaunch+',weight="'+weight+'")'
         print 'launch command', launchcomm
-        c.pgc(launchcomm)
+        self.c.pgc(launchcomm)
         ###set some common parameters
-        c.pgc('a.imagetilevol='+str(imagetilevol))
-        c.pgc('a.visInMem='+str(visinmem))
-        c.pgc('a.painc='+str(painc))
-        c.pgc('a.cfcache='+'"'+str(cfcache)+'"')
-        c.pgc('a.pblimit='+str(pblimit));
-        c.pgc('a.dopbcorr='+str(dopbcorr));
-        c.pgc('a.applyoffsets='+str(applyoffsets));
-        c.pgc('a.epjtablename='+'"'+str(epjtablename)+'"');
+        self.c.pgc('a.imagetilevol='+str(imagetilevol))
+        self.c.pgc('a.visInMem='+str(visinmem))
+        self.c.pgc('a.painc='+str(painc))
+        self.c.pgc('a.cfcache='+'"'+str(cfcache)+'"')
+        self.c.pgc('a.pblimit='+str(pblimit));
+        self.c.pgc('a.dopbcorr='+str(dopbcorr));
+        self.c.pgc('a.applyoffsets='+str(applyoffsets));
+        self.c.pgc('a.epjtablename='+'"'+str(epjtablename)+'"');
 
         tb.clearlocks()
         print 'LOCKS3', tb.listlocks()
@@ -734,7 +735,7 @@ class pimager():
         doneputchan.setfield(False,bool)
         readyputchan.setfield(False, bool)
         chanind=np.array(range(numcpu), dtype=int)
-        c.push(readyputchan=readyputchan, targets=buddy_id)
+        self.c.push(readyputchan=readyputchan, targets=buddy_id)
         #c.push(doneputchan=doneputchan, targets=buddy_id)
         buddy_is_ready=[True, True, True]
         buddy_ref=[False, False, False]
@@ -759,7 +760,7 @@ class pimager():
                 runcomm=gen_command(chancounter)
                     #runcomm='a.imagechan(msname='+'"'+msname+'", start='+str(startsel[chancounter])+', numchan='+str(nchansel[chancounter])+', field="'+str(field)+'", spw='+str(spwsel[chancounter])+', imroot='+imnam+',imchan='+str(chancounter)+',niter='+str(niter)+',alg="'+alg+'", scales='+str(scales)+', majcycle='+str(majorcycles)+', thr="'+str(threshold)+'")'
                 print 'command is ', runcomm
-                out[k]=c.odo(runcomm,k)
+                out[k]=self.c.odo(runcomm,k)
                 chancounter=chancounter+1
         while(chancounter < nchanchunk):
                 over=False
@@ -769,17 +770,17 @@ class pimager():
                     for bud in range(3):
                         if(buddy_is_ready[bud]):
                             #print 'SENDING ', cleanupcomm[bud]
-                            c.push(readyputchan=readyputchan, targets=buddy_id[bud])
+                            self.c.push(readyputchan=readyputchan, targets=buddy_id[bud])
                         #c.push(doneputchan=doneputchan, targets=buddy_id)
-                            buddy_ref[bud]=c.odo(cleanupcomm[bud], buddy_id[bud])
-                        buddy_is_ready[bud]=c.check_job(buddy_ref[bud], False)
+                            buddy_ref[bud]=self.c.odo(cleanupcomm[bud], buddy_id[bud])
+                        buddy_is_ready[bud]=self.c.check_job(buddy_ref[bud], False)
                         #print 'buddy_ready', bud, buddy_is_ready[bud]
                 #if(buddy_is_ready):
                 #    doneputchan=c.pull('doneputchan', buddy_id)[buddy_id]
                     overone=True
                     for k in range(numcpu):
-                        overone=(overone and c.check_job(out[k],False))
-                        if((chanind[k] > -1) and c.check_job(out[k],False) and 
+                        overone=(overone and self.c.check_job(out[k],False))
+                        if((chanind[k] > -1) and self.c.check_job(out[k],False) and 
                            (not readyputchan[chanind[k]])):
                             readyputchan[chanind[k]]=True      
                             if(chancounter < nchanchunk):
@@ -787,9 +788,9 @@ class pimager():
                                 runcomm=gen_command(chancounter)
                                 print 'command is ', runcomm
                                 print 'processor ', k
-                                out[k]=c.odo(runcomm,k)
+                                out[k]=self.c.odo(runcomm,k)
                                 chancounter+=1
-                            overone=(overone and c.check_job(out[k],False))
+                            overone=(overone and self.c.check_job(out[k],False))
                     over=overone
                ############
         time2=time.time()
@@ -797,13 +798,13 @@ class pimager():
         ##sweep the remainder channels in case they are missed
         for bud in range(3):
             while(not buddy_is_ready[bud]):
-                buddy_is_ready[bud]=c.check_job(buddy_ref[bud], False)
+                buddy_is_ready[bud]=self.c.check_job(buddy_ref[bud], False)
             #doneputchan=c.pull('doneputchan', buddy_id)[buddy_id] 
-            c.push(readyputchan=readyputchan, targets=buddy_id[bud])
-            buddy_ref[bud]=c.odo(cleanupcomm[bud], buddy_id[bud])
+            self.c.push(readyputchan=readyputchan, targets=buddy_id[bud])
+            buddy_ref[bud]=self.c.odo(cleanupcomm[bud], buddy_id[bud])
         for bud in range(3):
             while(not buddy_is_ready[bud]):
-                buddy_is_ready[bud]=c.check_job(buddy_ref[bud], False)
+                buddy_is_ready[bud]=self.c.check_job(buddy_ref[bud], False)
         #c.stop_engine(buddy_id)
         #for k in range(nchanchunk):
         #   if(not doneputchan[k]):
@@ -813,7 +814,7 @@ class pimager():
         #        doneputchan[k]=True
         time2=time.time()
         print 'Time to image after cleaning is ', (time2-time1)/60.0, 'mins'
-        c.stop_cluster()
+        self.c.stop_cluster()
 
 
     def pcubemultims(msnames=[], imagename='elimage', imsize=[1000, 1000], 
