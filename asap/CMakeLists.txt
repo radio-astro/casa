@@ -170,6 +170,11 @@ else()
       message( FATAL_ERROR "${_libname} could not be found. Please check!" )
    endif()
    set( _includename casa/aipsdef.h )
+   string( REGEX REPLACE /[^/]+/[^/]+/?$ "" _coreroot ${CASACORE_LIBRARIES} )
+   find_path( CASACORE_INCLUDE_DIR ${_includename}
+              PATHS ${_coreroot}
+              PATH_SUFFIXES include include/casacore
+              NO_DEFAULT_PATH )
    find_path( CASACORE_INCLUDE_DIR ${_includename} 
               PATHS ${CASACORE_PATHS}
               PATH_SUFFIXES include include/casacore 
