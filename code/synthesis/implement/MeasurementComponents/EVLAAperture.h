@@ -40,9 +40,9 @@
 //---------------------------------------------------------------------
 //
 #define CONVSIZE (1024*2)
-#define CONVWTSIZEFACTOR 2.0
-#define OVERSAMPLING 20
-#define THRESHOLD 1E-4
+#define CONVWTSIZEFACTOR sqrt(2.0)
+#define OVERSAMPLING 10
+#define THRESHOLD 1E-3
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   template<class T> class ImageInterface;
