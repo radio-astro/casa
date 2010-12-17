@@ -270,7 +270,81 @@ Bool MeasComet::initMeas(const String &which, const Table *tabin) {
     };
     measured_p = True;
   };
+
+  haveTriedExtras_p = false;	// Defer reading them until asked to.
+
   return (measured_p);
+}
+
+Double MeasComet::getTemperature(const Bool squawk)
+{
+  if(!haveTriedExtras_p)
+    getExtras();
+
+  if(temperature_p < 0.0 && squawk){
+    LogIO os(LogOrigin("MeasComet", String("getTemperature(True)"), WHERE));
+
+    os << LogIO::SEVERE
+       << "The comet table is missing the T_mean keyword, which holds the temperature."
+       << LogIO::POST;
+  }
+  return temperature_p;
+}
+
+Double MeasComet::getMeanRad(const Bool squawk)
+{
+  if(!haveTriedExtras_p)
+    getExtras();
+
+  if(mean_rad_p < 0.0 && squawk){
+    LogIO os(LogOrigin("MeasComet", String("getMeanRad(True)"), WHERE));
+
+    os << LogIO::SEVERE		// Remove/modify this when it starts supporting triaxiality.
+       << "The table is missing the meanrad keyword, needed to calculate the apparent diameter."
+       << LogIO::POST;
+  }
+  return mean_rad_p;
+}
+
+Double MeasComet::get_Quantity_keyword(const TableRecord& ks,
+				       const String& kw,
+				       const Unit& unit,
+				       Bool& success)
+{
+  try{
+    const Record rec(ks.asRecord(kw));
+    const Quantity q(rec.asDouble("value"), rec.asString("unit"));
+  
+    success = true;
+    return q.get(unit).getValue();
+  }
+  catch(...){
+    success = false;
+    return 0.0;
+  }
+}
+
+Bool MeasComet::getExtras() {
+  if(haveTriedExtras_p)		// That was easy.
+    return true;
+
+  const TableRecord ks(tab_p.keywordSet());
+  Bool got_q = true;
+
+  // Use impossible values to indicate failure to _successfully_ read any given
+  // quantity.
+  haveTriedExtras_p = true;
+
+  temperature_p = get_Quantity_keyword(ks, "T_mean", "K", got_q);
+  if(!got_q)
+    temperature_p = -1;  // Hopefully a model for the obj will supply a
+			 // temperature later.
+
+  mean_rad_p = get_Quantity_keyword(ks, "meanrad", "AU", got_q);
+  if(!got_q)
+    mean_rad_p = -1.0;
+
+  return true;
 }
 
 void MeasComet::closeMeas() {
