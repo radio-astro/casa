@@ -209,7 +209,6 @@ def simdata(
         predict_uv=False
         predict_sd=False
         sd_only=False
-        tpset=False
         aveant=-1
         stnx=[]  # for later, to know if we read an array in or not
 
@@ -241,7 +240,6 @@ def simdata(
 
             
         if os.path.exists(sdantlist):
-            tpset=True
             tpx, tpy, tpz, tpd, tp_padnames, tp_nant, tp_telescopename = util.readantenna(sdantlist)
             tp_antnames=[]
             #for k in range(0,tp_nant): tp_antnames.append('TP%02d'%k)
@@ -456,10 +454,11 @@ def simdata(
 
         ##################################################################
         # set up observatory, feeds, etc        
-        quickpsf_current=False
+        quickpsf_current = False
 
-        msfile=project+'.ms'
-        sdmsfile=project+'.sd.ms'
+        msfile = project+'.ms'
+        sdmsfile = project+'.sd.ms'
+        sd_any = False
         if predict:
             if not(predict_uv or predict_sd):
                 util.msg("must specify at least one of antennalist, sdantlist",priority="error")
@@ -631,6 +630,8 @@ def simdata(
                     if not overwrite:
                         util.msg("measurement set "+sdmsfile+" already exists and user does not wish to overwrite",priority="error")
                         return False
+                sd_any = True
+
                 sm.open(sdmsfile)
                 posobs=me.observatory(tp_telescopename)
                 diam=tpd
@@ -805,8 +806,8 @@ def simdata(
                     im.approximatepsf(psf=project+".quick.psf")
                     quickpsf_current=True
                     beam=im.fitpsf(psf=project+".quick.psf")
-                    im.done()                    
-                    ia.open(project+".quick.psf")            
+                    im.done()
+                    ia.open(project+".quick.psf")
                     beamcs=ia.coordsys()
                     beam_array=ia.getchunk(axes=[beamcs.findcoordinate("spectral")['pixel'],beamcs.findcoordinate("stokes")['pixel']],dropdeg=True)
                     pixsize=(qa.convert(qa.quantity(model_cell[0]),'arcsec')['value'])
@@ -844,13 +845,13 @@ def simdata(
         ######################################################################
         # noisify
 
-        noise_any=False
-        msroot=project  # if leakage, can just copy from this project
+        noise_any = False
+        msroot = project  # if leakage, can just copy from this project
     
         if thermalnoise!="":
             knowntelescopes = ["ALMA", "ACA", "SMA", "EVLA", "VLA"]
-                
-            noise_any=True
+            
+            noise_any = True
 
             noisymsroot = msroot+".noisy"
  
@@ -932,8 +933,10 @@ def simdata(
                 sm.done();
 
             # now TP ms:
-            if os.path.exists(msroot+".sd.ms"):
-                tpset=True
+            # KS note: You want to noisify it if SD is predicted this time
+            # (predict=predict_sd=T => sd_any=T) or not predicted but 
+            # sdantlist is specified (predict=F, predict_sd=T).
+            if (predict_sd or sd_any) and os.path.exists(sdmsfile):
                 #msg('copying '+msroot+'.sd.ms to ' +
                 msg('copying '+sdmsfile+' to ' + 
                     noisymsroot+'.sd.ms and adding thermal noise',
@@ -984,7 +987,9 @@ def simdata(
                     return False
                 sm.corrupt();
                 sm.done();
+                # update TP ms name for the following steps
                 sdmsfile=noisymsroot+".sd.ms"
+                sd_any = True
 
             msroot=noisymsroot
             if verbose: msg("done corrupting with thermal noise",origin="noise")
@@ -1061,66 +1066,83 @@ def simdata(
 
         #####################################################################
         if image:
-            tpms=None
-            if predict_sd:
-                tpms=sdmsfile
-
-            if not tpset and os.path.exists(modelimage):
-                # should be CASA image so far. 
-                tpimage=modelimage
-                tpset=True
+            # if you neither predict nor noisify this time and already
+            # have modelimage generated, set the name to tpimage
+            #if not tpset and os.path.exists(modelimage):
+            #    # should be CASA image so far. 
+            #    tpimage=modelimage # KS-don't think this is necessary
+            #    tpset=True
 
             # parse ms parameter and check for existance; 
             # if noise_any
             #     mstoimage = noisymsfile
             # else:
-            #     mstoimage = msfile            
-                 
-            mslist=vis.split(',')
-            mstoimage=[]
+            #     mstoimage = msfile                 
+            mslist = vis.split(',')
+            mstoimage = []
+            tpmstoimage = None
             for ms0 in mslist:
                 if not len(ms0): continue
                 # if noisy ms was created, check for defaults:
-                if ms0=="$project.ms" and noise_any:
-                    msg("you are requesting to image $project.ms, but have created a corrupted $project.noisy.ms",priority="error");
-                    msg("If you want to image the corrupted visibilites, you need to set vis=$project.noisy.ms in the image subtask",priority="error");
+                if (ms0=="$project.ms" or ms0=="$project.sd.ms") and noise_any:
+                    msg("you are requesting to image $project[.sd].ms, but have created a corrupted $project.noisy[.sd].ms",priority="error");
+                    msg("If you want to image the corrupted visibilites, you need to set vis=$project.noisy[.sd].ms in the image subtask",priority="error");
 
                 ms1=ms0.replace('$project',project)
                 if os.path.exists(ms1):
                     # check if the ms is tp data or not.
-                    if util.ismstp(ms1,halt=False) and tpset:
-                        tpms=ms1
-                        tpset=True
+                    #if util.ismstp(ms1,halt=False) and tpset:
+                    if util.ismstp(ms1,halt=False):
+                        # if any SD operation in previous steps, check for vis
+                        if sd_any and ms1!=sdmsfile:
+                            msg("inconsistent vis name. you have generated a total power MS "+sdmsfile+", but are requesting vis="+ms1+" for imaging",priority="error")
+                            return False
+                        tpmstoimage = ms1
                     else: mstoimage.append(ms1)
                 else:
                     if verbose:
-                        msg("measurement set "+ms1+" not found -- removing from clean list",priority="warn")
+                        msg("measurement set "+ms1+" not found -- removing from imaging list",priority="warn")
+
                     else:
-                        msg("measurement set "+ms1+" not found -- removing from clean list")
+                        msg("measurement set "+ms1+" not found -- removing from imaging list")
+
+            if not tpmstoimage and sd_any and os.path.exists(sdmsfile):
+                msg("you have generated a total power MS "+sdmsfile+", but not specified it in 'vis' for imaging",priority="warn")
+                msg("assuming you want to image it and creating a total power image",priority="warn")
+                tpmstoimage = sdmsfile
+
             if len(mstoimage)<=0:
-                if not tpset:
+                if tpmstoimage:
+                    sd_only=True
+                else:
                     msg("no measurement sets found to image",priority="warn")
                     image=False
-                else:
-                    sd_only=True
+            else:
+                sd_only = False
 
-            # Do single dish imaging first if tpms exists.
-            if tpms and os.path.exists(tpms):
-                msg('creating image from generated ms: '+tpms)
+            # Do single dish imaging first if tpmstoimage exists.
+            if tpmstoimage and os.path.exists(tpmstoimage):
+                msg('creating image from generated ms: '+tpmstoimage)
                 if len(mstoimage):
                     tpimage = project+'.sd.image'
                 else:
                     tpimage = project+'.image'
-                if sd_only: 
-                    msfile=tpms
-                else:
+                #if sd_only:
+                #    # for analysis step -> do it later
+                #    msfile=tpmstoimage
+                #else:
+                # check for modelimage
+                if len(mstoimage):
                     if len(modelimage) and modelimage!=tpimage:
                         msg("modelimage parameter set to "+modelimage+" but also creating a new total power image "+tpimage,priority="warn")
                         msg("assuming you know what you want, and using modelimage="+modelimage+" in deconvolution",priority="warn")
                     else:
+                        # This forces to use TP image as a model for clean
+                        if len(modelimage) <= 0:
+                            msg("you are generating total power image "+tpimage+". this is used as a model image for clean",priority="warn")
                         modelimage=tpimage
-                #im.open(msfile)
-                im.open(tpms)
+                
+                im.open(tpmstoimage)
                 im.selectvis(nchan=model_nchan,start=0,step=1,spw=0)
                 im.defineimage(mode='channel',nx=imsize[0],ny=imsize[1],cellx=cell[0],celly=cell[1],phasecenter=model_refdir,nchan=model_nchan,start=0,step=1,spw=0)
                 #im.setoptions(ftmachine='sd',gridfunction='pb')
@@ -1135,7 +1157,7 @@ def simdata(
                     msg('setting primary beam information to image.')
                     # !! aveant will only be set if modifymodel or setpointingsm and in 
                     # any case it will the the aveant of the INTERFM array - we want the SD
-                    tb.open(tpms+"/ANTENNA")
+                    tb.open(tpmstoimage+"/ANTENNA")
                     diams=tb.getcol("DISH_DIAMETER")
                     tb.done()
                     aveant=pl.mean(diams)
@@ -1149,6 +1171,10 @@ def simdata(
                 del beam
 
                 msg('generation of total power image ' + tpimage + ' complete.')
+                # update TP ms name the for following steps
+                sdmsfile = tpmstoimage
+                sd_any = True
+                
                 # End of single dish imaging part
 
         outflat_current=False
@@ -1416,13 +1442,22 @@ def simdata(
 
             # now, what does the user want to actually display?
             if len(stnx)<=0:
+                # array configuration is read from antenna list.
+                # no use for SD only
                 if showarray: msg("input data is not an array -- the array will not be plotted",priority="warn")
                 showarray=False
+            # need MS for showuv and showpsf
             if not (predict or image):
-                msfile=project+".ms"
-            if showpsf and (sd_only or util.ismstp(msfile,halt=False)):
-                    msg("single dish simulation -- psf will not be plotted",priority='warn')
-                    showpsf=False
+                msfile = project+".ms"
+            if sd_only and os.path.exists(sdmsfile):
+                # use TP ms for UV plot if only SD sim, i.e.,
+                # image=sd_only=T or (image=F=predict_uv and predict_sd=T)
+                msfile = sdmsfile
+            # psf is not available for SD only sim
+            #if sd_only or util.ismstp(msfile,halt=False):
+            if util.ismstp(msfile,halt=False):
+                if showpsf: msg("single dish simulation -- psf will not be plotted",priority='warn')
+                showpsf=False
 
             # if the order in the task input changes, change it here too
             figs=[showarray,showuv,showpsf,showmodel,showconvolved,showclean,showresidual,showdifference,showfidelity]
