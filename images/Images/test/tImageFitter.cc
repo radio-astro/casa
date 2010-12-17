@@ -31,6 +31,7 @@
 #include <components/ComponentModels/Flux.h>
 #include <images/Images/ImageFitter.h>
 #include <measures/Measures/MDirection.h>
+#include <components/ComponentModels/SpectralModel.h>
 #include <components/ComponentModels/ComponentShape.h>
 #include <images/Images/ImageAnalysis.h>
 #include <images/Images/FITSImage.h>
@@ -587,6 +588,10 @@ int main() {
 
         	Double positionAngle = DEGREES_PER_RADIAN*parameters(2);
         	AlwaysAssert(near(positionAngle, 126.3211060, 1e-7), AipsError);
+
+        	// CAS-2633
+        	Double refFreq = compList.component(0).spectrum().refFrequency().getValue();
+        	AlwaysAssert(near(refFreq, 1.415e9, 1e-7), AipsError);
         }
 
         cout << "ok" << endl;
