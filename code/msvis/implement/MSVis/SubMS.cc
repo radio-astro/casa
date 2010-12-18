@@ -696,12 +696,20 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
             Int highestProduct=-INT_MAX;
             Int highestId=0;
             for (uInt id=0; id < nHyper; id++) {
-                Int product = tsm.getTileShape(id).product();
-                if (product > 0 && (product > highestProduct)) {
-                    highestProduct = product;
-                    highestId = id;
-                };
-            };
+              IPosition tshp(tsm.getTileShape(id));
+              Int product = tshp.product();
+
+              os << LogIO::DEBUG2
+                 << "hypercube " << id << ":\n";
+              for(uInt i = 0; i < tshp.nelements(); ++i)
+                os << "  tshp[" << i << "] = " << tshp[i] << "\n";
+              os << LogIO::POST;
+
+              if (product > 0 && (product > highestProduct)) {
+                highestProduct = product;
+                highestId = id;
+              }
+            }
 	    Vector<Int> dataTileShape = tsm.getTileShape(highestId).asVector();
 
 	    outpointer = setupMS(msname, nchan_p[0], ncorr_p[0],  
