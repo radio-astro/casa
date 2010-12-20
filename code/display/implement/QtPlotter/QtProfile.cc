@@ -229,6 +229,7 @@ QtProfile::QtProfile(ImageInterface<Float>* img,
     ctype->addItem("radio velocity"); 
     ctype->addItem("optical velocity");
     ctype->addItem("frequency ");
+    ctype->addItem("wavelength ");
     ctype->addItem("channel");
     frameButton_p->addItem("LSRK");
     frameButton_p->addItem("BARY");
@@ -279,6 +280,7 @@ QtProfile::QtProfile(ImageInterface<Float>* img,
     QString lbl = coordinateType.chars();
     if (lbl.contains("freq")) lbl.append(" (GHz)");
     if (lbl.contains("velo")) lbl.append(" (km/s)");
+    if (lbl.contains("wave")) lbl.append(" (mm)");
     pc->setXLabel(lbl, 12, 0.5, "Helvetica [Cronyx]");
 
     yUnit = QString(img->units().getName().chars());
@@ -608,6 +610,7 @@ void QtProfile::changeCoordinateType(const QString &text) {
     QString lbl = text;
     if (text.contains("freq")) lbl.append(" (GHz) " + QString(frameType_p.c_str()));
     if (text.contains("velo")) lbl.append(" (km/s) " + QString(frameType_p.c_str()));
+    if (text.contains("wave")) lbl.append(" (mm) " + QString(frameType_p.c_str()));
     pc->setXLabel(lbl, 12, 0.5, "Helvetica [Cronyx]");
 
     pc->setPlotSettings(QtPlotSettings());
@@ -688,6 +691,7 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
     ctype->addItem("radio velocity ("+nativeRefFrameName+")"); 
     ctype->addItem("optical velocity ("+nativeRefFrameName+")");
     ctype->addItem("frequency ("+nativeRefFrameName+")");
+    ctype->addItem("wavelength ("+nativeRefFrameName+")");
     ctype->addItem("channel");    
 
     coordinateType = String(ctype->itemText(0).toStdString());
@@ -695,6 +699,7 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
     QString lbl = coordinateType.chars();
     if (lbl.contains("freq")) lbl.append(" (GHz)");
     if (lbl.contains("velo")) lbl.append(" (km/s)");
+    if (lbl.contains("wave")) lbl.append(" (mm)");
     pc->setXLabel(lbl, 12, 0.5, "Helvetica [Cronyx]");
 
     yUnit = QString(img->units().getName().chars());
@@ -828,6 +833,7 @@ void QtProfile::wcChanged( const String c,
 #endif
     if ( ! ok ) {
 	// change to notify user of error... 
+        cerr << "Error generating frequency profile." << endl; 
 	return;
     }
 
@@ -956,27 +962,27 @@ void QtProfile::wcChanged( const String c,
             //cout << xval(i) << " - " << yval(i) << endl;
             //cout << z_xval(0) << " + " << z_xval(k) << endl;
             if (coordinateType.contains("elocity")) {
-            if (xval(i) < z_xval(0) && xval(i) >= z_xval(k)) {
-              for (uInt j = 0; j < k; j++) {
-                //cout << z_xval(j) << " + " 
-                //     << z_yval(j) << endl;
-                if (xval(i) <= z_xval(j) && 
-                    xval(i) > z_xval(j + 1)) {
-                  float s = z_xval(j + 1) - z_xval(j);
-                  if (s != 0) {
-                    xRel(count) = xval(i);
-                    yRel(count)= yval(i) - 
-                               (z_yval(j) + (xval(i) - z_xval(j)) / s * 
-                                (z_yval(j + 1) - z_yval(j)));
-                    count++;
-                    //yval(i) -= (z_yval(j) + (xval(i) - z_xval(j)) / s * 
-                    //           (z_yval(j + 1) - z_yval(j)));
-
-                  }
-                  break;
-                }
-              }
-            }
+	      if (xval(i) < z_xval(0) && xval(i) >= z_xval(k)) {
+		for (uInt j = 0; j < k; j++) {
+		  //cout << z_xval(j) << " + " 
+		  //     << z_yval(j) << endl;
+		  if (xval(i) <= z_xval(j) && 
+		      xval(i) > z_xval(j + 1)) {
+		    float s = z_xval(j + 1) - z_xval(j);
+		    if (s != 0) {
+		      xRel(count) = xval(i);
+		      yRel(count)= yval(i) - 
+			(z_yval(j) + (xval(i) - z_xval(j)) / s * 
+			 (z_yval(j + 1) - z_yval(j)));
+		      count++;
+		      //yval(i) -= (z_yval(j) + (xval(i) - z_xval(j)) / s * 
+		      //           (z_yval(j + 1) - z_yval(j)));
+		      
+		    }
+		    break;
+		  }
+		}
+	      }
             }
             else {
             if (xval(i) >= z_xval(0) && xval(i) < z_xval(k)) {
