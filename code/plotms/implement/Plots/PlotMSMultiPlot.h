@@ -42,15 +42,15 @@ public:
     
     // See PlotMSPlot::makeParameters().
     // <group>
-    static PlotMSPlotParameters makeParameters(PlotMS* plotms);
-    static void makeParameters(PlotMSPlotParameters& params, PlotMS* plotms);
+    static PlotMSPlotParameters makeParameters(PlotMSApp* plotms);
+    static void makeParameters(PlotMSPlotParameters& params, PlotMSApp* plotms);
     // </group>
     
     
     // Non-Static //
     
     // Constructor which takes PlotMS parent.
-    PlotMSMultiPlot(PlotMS* parent);
+    PlotMSMultiPlot(PlotMSApp* parent);
     
     // Destructor.
     ~PlotMSMultiPlot();

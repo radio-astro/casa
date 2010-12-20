@@ -35,7 +35,7 @@
 namespace casa {
 
 //# Forward Declararations
-class PlotMS;
+class PlotMSApp;
 class PlotMSMultiPlot;
 class PlotMSPlot;
 class PlotMSPlotManagerWatcher;
@@ -63,8 +63,8 @@ public:
     
     // Gets/Sets the parent PlotMS.
     // <group>
-    PlotMS* parent();
-    void setParent(PlotMS* parent);
+    PlotMSApp* parent();
+    void setParent(PlotMSApp* parent);
     // </group>
     
     // Returns the plotter used by the parent.
@@ -109,7 +109,7 @@ public:
     
 private:
     // Parent.
-    PlotMS* itsParent_;
+    PlotMSApp* itsParent_;
     
     // Plotter.
     PlotterPtr itsPlotter_;

@@ -37,7 +37,7 @@
 namespace casa {
 
 //# Forward declarations.
-class PlotMS;
+class PlotMSApp;
 class PlotMSCacheIndexer;  // needed for method pointer typedefs
 
 typedef Double(PlotMSCache::*PlotMSCacheMemPtr)(Int,Int);

@@ -37,7 +37,7 @@ namespace casa {
 ////////////////////////////
 
 
-PlotMSData::PlotMSData(PlotMS* parent) : 
+PlotMSData::PlotMSData(PlotMSApp* parent) : 
   itsCache_(NULL),
   itsMSCache_(new PlotMSCache(parent)),
   itsCalCache_(new PlotCalCache(parent)),

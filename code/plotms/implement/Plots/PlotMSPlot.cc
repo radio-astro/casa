@@ -38,13 +38,13 @@ namespace casa {
 
 // Static //
 
-PlotMSPlotParameters PlotMSPlot::makeParameters(PlotMS* plotms) {
+PlotMSPlotParameters PlotMSPlot::makeParameters(PlotMSApp* plotms) {
     PlotMSPlotParameters p(plotms->getPlotter()->getFactory());
     makeParameters(p, plotms);
     return p;    
 }
 
-void PlotMSPlot::makeParameters(PlotMSPlotParameters& params, PlotMS* plotms) {
+void PlotMSPlot::makeParameters(PlotMSPlotParameters& params, PlotMSApp* plotms) {
     // Add data parameters if needed.
     if(params.typedGroup<PMS_PP_MSData>() == NULL)
         params.setGroup<PMS_PP_MSData>();
@@ -53,7 +53,7 @@ void PlotMSPlot::makeParameters(PlotMSPlotParameters& params, PlotMS* plotms) {
 
 // Constructors/Destructors //
 
-PlotMSPlot::PlotMSPlot(PlotMS* parent) : itsParent_(parent),
+PlotMSPlot::PlotMSPlot(PlotMSApp* parent) : itsParent_(parent),
         itsFactory_(parent->getPlotter()->getFactory()),
         itsParams_(itsFactory_), itsData_(parent) { }
 
@@ -129,7 +129,7 @@ void PlotMSPlot::detachFromCanvases() {
 PlotMSData& PlotMSPlot::data() { return itsData_; }
 const PlotMSData& PlotMSPlot::data() const { return itsData_; }
 
-PlotMS* PlotMSPlot::parent() { return itsParent_; }
+PlotMSApp* PlotMSPlot::parent() { return itsParent_; }
 
 void PlotMSPlot::parametersHaveChanged(const PlotMSWatchedParameters& p,
         int updateFlag) {    

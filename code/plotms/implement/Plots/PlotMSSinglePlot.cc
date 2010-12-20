@@ -39,14 +39,14 @@ namespace casa {
 
 // Static //
 
-PlotMSPlotParameters PlotMSSinglePlot::makeParameters(PlotMS* plotms) {
+PlotMSPlotParameters PlotMSSinglePlot::makeParameters(PlotMSApp* plotms) {
     PlotMSPlotParameters p = PlotMSPlot::makeParameters(plotms);
     makeParameters(p, plotms);
     return p;
 }
 
 void PlotMSSinglePlot::makeParameters(PlotMSPlotParameters& params,
-        PlotMS* plotms) {
+        PlotMSApp* plotms) {
     PlotMSPlot::makeParameters(params, plotms);
     
     // Add cache parameters if needed.
@@ -69,7 +69,7 @@ void PlotMSSinglePlot::makeParameters(PlotMSPlotParameters& params,
 
 // Constructors/Destructors //
 
-PlotMSSinglePlot::PlotMSSinglePlot(PlotMS* parent) : PlotMSPlot(parent) {
+PlotMSSinglePlot::PlotMSSinglePlot(PlotMSApp* parent) : PlotMSPlot(parent) {
     constructorSetup(); }
 
 PlotMSSinglePlot::~PlotMSSinglePlot() { }

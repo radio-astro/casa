@@ -38,11 +38,11 @@
 namespace casa {
 
 //# Forward Declarations.
-class PlotMS;
+class PlotMSApp;
 
 
 // Subclass of PlotMouseTool for drawing/managing annotations on the plot
-// canvases of PlotMS.
+// canvases of PlotMSApp.
 class PlotMSAnnotator : public PlotMouseTool, public PlotMSPlotManagerWatcher {
     
     //# Friend class declarations.
@@ -61,7 +61,7 @@ public:
     // Non-Static //
     
     // Constructor which takes the PlotMS parent and optional starting mode.
-    PlotMSAnnotator(PlotMS* parent, Mode startingMode = TEXT);
+    PlotMSAnnotator(PlotMSApp* parent, Mode startingMode = TEXT);
     
     // Destructor.
     ~PlotMSAnnotator();
@@ -128,7 +128,7 @@ protected:
     
 private:
     // Parent.
-    PlotMS* itsParent_;
+    PlotMSApp* itsParent_;
     
     // Factory for generating plot objects.
     PlotFactoryPtr itsFactory_;

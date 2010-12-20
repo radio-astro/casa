@@ -59,7 +59,7 @@ bool PlotMSCache::axisIsMetaData(PMS::Axis axis) {
 const unsigned int PlotMSCache::THREAD_SEGMENT = 10;
 
                                            
-PlotMSCache::PlotMSCache(PlotMS* parent):
+PlotMSCache::PlotMSCache(PlotMSApp* parent):
   plotms_(parent),
   nAnt_(0),
   nChunk_(0),
@@ -1355,7 +1355,7 @@ PlotLogMessage* PlotMSCache::locateNearest(Double x, Double y) {
 
   stringstream ss;
   reportMeta(minic,minidx,ss);
-  return new PlotLogGeneric(PlotMS::CLASS_NAME, PlotMS::LOG_LOCATE, ss.str());
+  return new PlotLogGeneric(PlotMSApp::CLASS_NAME, PlotMSApp::LOG_LOCATE, ss.str());
 
   */
 

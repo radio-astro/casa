@@ -41,7 +41,7 @@ namespace casa {
 // Public Methods //
 
 // itsFactory_ member cannot be initialized here yet.
-PlotMSAnnotator::PlotMSAnnotator(PlotMS* parent, Mode startMode) :
+PlotMSAnnotator::PlotMSAnnotator(PlotMSApp* parent, Mode startMode) :
         itsParent_(parent), itsMode_(startMode), itsAnnotateAction_(NULL) {
     parent->getPlotManager().addWatcher(this);
 }
