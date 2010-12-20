@@ -196,6 +196,20 @@ public:
                        const Vector<Double>& velocities,  const String& velUnit,
                        Double restFrequency = 0.0);
 
+    // Construct a SpectralCoordinate with the specified wavelengths (in mm).
+    // They will be converted to Hz and the SpectralCoordinate constructed.
+    // This axis can be nonlinear; the increments and related 
+    // functions return the <src>average</src> values
+    // (calculated from the first and last pixel's frequencies).
+    //
+    // A linear interpolation/extrapolation is used for pixels which are
+    // not supplied. The reference pixel is chosen to be 0.
+    // The wavelengths must increase or decrease monotonically (otherwise
+    // the toPixel lookup would not be possible).
+    SpectralCoordinate(MFrequency::Types freqType,     
+		       const Vector<Double>& wavelengths,  const String& waveUnit,
+                       Double restFrequency = 0.0);
+
     // Construct from wcs structure.  Must hold only a spectral wcs structure
     // Specify whether the absolute pixel coordinates in the wcs structure
     // are 0- or 1-relative.  The coordinate is always constructed with 0-relative
@@ -293,9 +307,10 @@ public:
                              Vector<Bool>& failures) const;
     // </group>
 
-    // Set the state that is used for conversions from pixel and frequency to velocity.
-    // The SpectralCoordinate is constructed  with 
-    // <src>MDoppler::RADIO</src> and <src>km/s</src> as the velocity conversion state.
+    // Set the state that is used for conversions from pixel and frequency to velocity
+    // or wavelength. The SpectralCoordinate is constructed  with 
+    // <src>MDoppler::RADIO</src> and <src>km/s</src> as the velocity conversion state
+    // and <src>mm</src> as the wavelength conversion state.
     // The functions in this class which use this state are those that convert
     // to or from velocity.  Also, function <src>format</src> uses the Doppler
     // state set here.  If the function returns False it means the unit was 
@@ -306,33 +321,40 @@ public:
 
     MDoppler::Types velocityDoppler () const {return velType_p;};
     String velocityUnit () const {return velUnit_p;};
+    //
+    Bool setWavelengthUnit (const String& waveUnit=String("mm"));
+    String wavelengthUnit () const {return waveUnit_p;};
     // </group>
     // Functions to convert to velocity (uses the current active
-    // rest frequency).  There is no reference frame
+    // rest frequency) or wavelength.  There is no reference frame
     // change but you can specify the velocity Doppler and the output
-    // units of the velocity with function <src>setVelocity</src>.
-    // When the input is a frequency stored 
-    // as a Double it must be  in the current units of the SpectralCoordinate.  
+    // units of the velocity with function <src>setVelocity</src>
+    // or <src>setWavelength</src> respectively. When the input is a frequency stored 
+    // as a Double it must be in the current units of the SpectralCoordinate.  
     // 
     // Note that the extra conversion layer (see function <src>setReferenceConversion</src>)
     // is active in the <src>pixelToVelocity</src> functions (because internally
-    // the use <src>toWorld</src>) but not in the <src>frequencyToVelocity</src> functions.
+    // the use <src>toWorld</src>) but not in the <src>frequencyToVelocity</src> 
+    // or <src>frequencyToWavelength</src> functions.
     // <group>  
     Bool pixelToVelocity (Quantum<Double>& velocity, Double pixel) const;
     Bool pixelToVelocity (Double& velocity, Double pixel) const;
     Bool pixelToVelocity (Vector<Double>& velocity, const Vector<Double>& pixel) const;
-//
+    //
     Bool frequencyToVelocity (Quantum<Double>& velocity, Double frequency) const;
     Bool frequencyToVelocity (Quantum<Double>& velocity, const MFrequency& frequency) const;
     Bool frequencyToVelocity (Quantum<Double>& velocity, const MVFrequency& frequency) const;
     Bool frequencyToVelocity (Double& velocity, Double frequency) const;
     Bool frequencyToVelocity (Vector<Double>& velocity, const Vector<Double>& frequency) const;
+    //
+    Bool frequencyToWavelength (Vector<Double>& wavelength, const Vector<Double>& frequency) const;
     // </group>
 
     // Functions to convert from velocity (uses the current active
-    // rest frequency).   There is no reference frame
+    // rest frequency) or wavelength.  There is no reference frame
     // change but you can specify the velocity Doppler and the output
-    // units of the velocity with function <src>setVelocity</src>. 
+    // units of the velocity with function <src>setVelocity</src>
+    // and those of the wavelength with <src>setWavelength</src>. 
     // When the input is a frequency stored 
     // as a Double it must be  in the current units of the SpectralCoordinate.  
     //
@@ -342,9 +364,11 @@ public:
     // <group>  
     Bool velocityToPixel (Double& pixel, Double velocity) const;
     Bool velocityToPixel (Vector<Double>& pixel, const Vector<Double>& velocity) const;
-//
+    // 
     Bool velocityToFrequency (Double& frequency, Double velocity) const;
     Bool velocityToFrequency (Vector<Double>& frequency, const Vector<Double>& velocity) const;
+    //
+    Bool wavelengthToFrequency (Vector<Double>& frequency, const Vector<Double>& wavelength) const;
     // </group>
 
     // The SpectralCoordinate can maintain a list of rest frequencies
@@ -464,7 +488,7 @@ public:
     // The world value must always be given in native frequency units.
     // Use argument <src>unit</src> to determine what it will be 
     // converted to for formatting. If <src>unit</src> is given, it 
-    // must be dimensionally consistent with Hz or m/s.   
+    // must be dimensionally consistent with Hz, m, or m/s.   
     // If you give a unit consistent with m/s then the
     // appropriate velocity Doppler type is taken from that set by
     // function <src>setVelocity</src>.  There is no frame conversion.
@@ -527,6 +551,7 @@ private:
     TabularCoordinate* pTabular_p;                     // Tabular coordinate OR
     mutable ::wcsprm wcs_p;                              // wcs structure is used 
     Double to_hz_p;                                    // Convert from current world units to Hz
+    Double to_m_p;                                     // Convert from current wavelength units to m
 //
     MFrequency::Types type_p, conversionType_p;        // Frequency system and conversion system
     Vector<Double> restfreqs_p;                        // List of possible rest frequencies
@@ -539,6 +564,8 @@ private:
     VelocityMachine* pVelocityMachine_p;           // The velocity machine does all conversions between world & velocity.
     MDoppler::Types velType_p;                     // Velocity Doppler
     String velUnit_p;                              // Velocity unit
+//
+    String waveUnit_p;                             // Wavelength unit for conversions between world & wavelength
 //
     Unit unit_p;                                   // World axis unit
     String axisName_p;                             // The axis name
