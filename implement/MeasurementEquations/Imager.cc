@@ -3376,7 +3376,7 @@ Bool Imager::restore(const Vector<String>& model,
       Vector<String> imageNames(image);
       if(image.nelements()<model.nelements()) {
 	imageNames.resize(model.nelements());
-	for(Int i=Int(image.nelements());i<Int(model.nelements()); ++i) {
+	for(Int i=0;i<Int(model.nelements()); ++i) {
 	  imageNames(i)="";
 	}
       }
@@ -3398,7 +3398,7 @@ Bool Imager::restore(const Vector<String>& model,
       Vector<String> residualNames(residual);
       if(residual.nelements()<model.nelements()) {
 	residualNames.resize(model.nelements());
-	for(Int i=Int(residual.nelements());i<Int(model.nelements());++i) {
+	for(Int i=0;i<Int(model.nelements());++i) {
 	  residualNames(i)="";
 	}
       }
@@ -3887,10 +3887,11 @@ Bool Imager::clean(const String& algorithm,
 	residualNames=residual;
     }
     else {
-      residualNames="";
-      for (Int thismodel=0;thismodel<Int(model.nelements());++thismodel) {
-	  residualNames(thismodel)=modelNames(thismodel)+".residual";
-      }	
+      residualNames="";	
+    }
+    for (Int thismodel=0;thismodel<Int(model.nelements());++thismodel) {
+      if(residualNames[thismodel]=="")
+	residualNames(thismodel)=modelNames(thismodel)+".residual";
     }
     if(redoSkyModel_p){
       for (Int thismodel=0;thismodel<Int(model.nelements());++thismodel) {
@@ -4080,7 +4081,8 @@ Bool Imager::clean(const String& algorithm,
       addMasksToSkyEquation(maskNames,fixed);
     }
     //No need to add residuals will let sm_p use tmpimage ones and we'll copy them in restore 
-      addResiduals(residualNames);
+    if(!addResiduals(residualNames))
+       throw(AipsError("Problem in attaching to residual images")); 
     // The old plot that showed how much flux was being incorporated in each
     // scale.   No longer available, slated for removal.
     // if (displayProgress) {

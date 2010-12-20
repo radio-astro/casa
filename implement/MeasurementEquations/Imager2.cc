@@ -2371,6 +2371,7 @@ Bool Imager::addResiduals(const Vector<String>& imageNames) {
   residuals_p.resize(imageNames.nelements(), True, False);
   for (Int thismodel=0;thismodel<Int(imageNames.nelements());++thismodel) {
     if(imageNames(thismodel)!="") {
+      residuals_p[thismodel]=0;
       if(Table::isWritable(imageNames(thismodel))){
 	residuals_p[thismodel]=new PagedImage<Float>(imageNames(thismodel));
 	if(!(residuals_p[thismodel]->shape()).isEqual(images_p[thismodel]->shape())){
@@ -2378,7 +2379,9 @@ Bool Imager::addResiduals(const Vector<String>& imageNames) {
 	  removeTable(imageNames(thismodel));
 	}
       }
-      if(!Table::isReadable(imageNames(thismodel))){
+      if(residuals_p[thismodel].null()){
+	if(Table::isReadable(imageNames(thismodel)))
+	   removeTable(imageNames(thismodel));
 	residuals_p[thismodel]=
 	  new PagedImage<Float> (TiledShape(images_p[thismodel]->shape(), 
 					    images_p[thismodel]->niceCursorShape()),
