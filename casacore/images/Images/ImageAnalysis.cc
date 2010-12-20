@@ -6623,7 +6623,7 @@ ImageAnalysis::echo(Record& v, const bool godeep) {
 }
 
 Bool ImageAnalysis::getSpectralAxisVal(const String& specaxis,
-		Vector<Float>& specVal, const CoordinateSystem& cs,
+				       Vector<Float>& specVal, const CoordinateSystem& cs,
 				       const String& xunits, const String& specFrame) {
 
         CoordinateSystem cSys=cs;
@@ -6644,24 +6644,24 @@ Bool ImageAnalysis::getSpectralAxisVal(const String& specaxis,
 	String axis = specaxis;
 	axis.downcase();
 	Bool ok = False;
-       	if (axis.contains("vel") || axis.contains("freq")) { // need a conversion
+       	if (axis.contains("velo") || axis.contains("freq") || axis.contains("wave")) { // need a conversion
 
 		// first convert from pixels to frequencies
 		Vector<String> tmpstr(1);
 		Vector<Double> fworld(pix.nelements());
 		if (xunits == String("")) {
-			tmpstr[0] = String("GHz");
-		} else {
-			tmpstr[0] = xunits;
+		       tmpstr[0] = String("GHz");
+		} else if(axis.contains("freq")) {
+		       tmpstr[0] = xunits;
 		}
 		specCoor.setWorldAxisUnits(tmpstr);
 		ok = True;
 		for (uInt k = 0; k < pix.nelements(); ++k) {
-			ok = ok && specCoor.toWorld(fworld[k], pix[k]);
+		       ok = ok && specCoor.toWorld(fworld[k], pix[k]);
 		}
 
-		// then, if necessary, from frequencies to velocity
-		if (ok && axis.contains("vel")) {
+		// then, if necessary, from frequencies to velocity or wavelength
+		if (ok && axis.contains("velo")) {
 			ok = False;
 			if (axis.contains("optical")) { // optical velocity
 				specCoor.setVelocity(xunits, MDoppler::OPTICAL);
@@ -6671,6 +6671,10 @@ Bool ImageAnalysis::getSpectralAxisVal(const String& specaxis,
 				specCoor.setVelocity(xunits, MDoppler::RELATIVISTIC);
 			}
 			ok = specCoor.frequencyToVelocity(xworld, fworld);
+		} else if(ok && axis.contains("wave")) {
+		        ok = False;
+			specCoor.setWavelengthUnit(xunits);
+			ok = specCoor.frequencyToWavelength(xworld, fworld);
 		} else {
 			xworld = fworld;
 		}
@@ -6685,9 +6689,10 @@ Bool ImageAnalysis::getSpectralAxisVal(const String& specaxis,
 
 }
 
-Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
-		Vector<Float>& zxaxisval, Vector<Float>& zyaxisval,
-		const String& xytype, const String& specaxis, const Int& whichStokes,
+Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy, 
+				   Vector<Float>& zxaxisval, Vector<Float>& zyaxisval,
+				   const String& xytype, 
+				   const String& specaxis, const Int& whichStokes,
 				   const Int& whichTabular, const Int& whichLinear, 
 				   const String& xunits, const String& specFrame) {
 
@@ -6748,9 +6753,9 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 }
 
 Bool ImageAnalysis::getFreqProfile(
-	const Vector<Double>& x,
-	const Vector<Double>& y, Vector<Float>& zxaxisval,
-	Vector<Float>& zyaxisval, const String& xytype, const String& specaxis,
+	const Vector<Double>& x, const Vector<Double>& y, 
+	Vector<Float>& zxaxisval, Vector<Float>& zyaxisval, 
+	const String& xytype, const String& specaxis,
 	const Int& whichStokes, const Int& whichTabular,
 	const Int& whichLinear, const String& xunits, const String& specFrame
 ) {
