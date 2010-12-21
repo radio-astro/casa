@@ -49,8 +49,8 @@ PlotMSPlotManager::~PlotMSPlotManager() {
 
 // Public Methods //
 
-PlotMS* PlotMSPlotManager::parent() { return itsParent_; }
-void PlotMSPlotManager::setParent(PlotMS* parent) {
+PlotMSApp* PlotMSPlotManager::parent() { return itsParent_; }
+void PlotMSPlotManager::setParent(PlotMSApp* parent) {
     itsParent_ = parent;
     itsPlotter_ = parent->getPlotter()->getPlotter();
     itsFactory_ = parent->getPlotter()->getFactory();

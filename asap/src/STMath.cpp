@@ -4278,8 +4278,10 @@ vector<float> STMath::getSpectrumFromTime( string reftime,
         id = idx[0] ;
       }
       else {
-        double t0 = getMJD( s->getTime( idx[0] ) ) ;
-        double t1 = getMJD( s->getTime( idx[1] ) ) ;
+        //double t0 = getMJD( s->getTime( idx[0] ) ) ;
+        //double t1 = getMJD( s->getTime( idx[1] ) ) ;
+        double t0 = s->getEpoch( idx[0] ).get( Unit( "d" ) ).getValue() ;
+        double t1 = s->getEpoch( idx[1] ).get( Unit( "d" ) ).getValue() ;
         double tref = getMJD( reftime ) ;
         if ( abs( t0 - tref ) > abs( t1 - tref ) ) {
           id = idx[1] ;
@@ -4316,8 +4318,10 @@ vector<float> STMath::getSpectrumFromTime( string reftime,
       else {
         // do interpolation
         //os << "interpolate between " << idx[0] << " and " << idx[1] << " (scanno: " << s->getScan( idx[0] ) << ", " << s->getScan( idx[1] ) << ")" << LogIO::POST ;
-        double t0 = getMJD( s->getTime( idx[0] ) ) ;
-        double t1 = getMJD( s->getTime( idx[1] ) ) ;
+        //double t0 = getMJD( s->getTime( idx[0] ) ) ;
+        //double t1 = getMJD( s->getTime( idx[1] ) ) ;
+        double t0 = s->getEpoch( idx[0] ).get( Unit( "d" ) ).getValue() ;
+        double t1 = s->getEpoch( idx[1] ).get( Unit( "d" ) ).getValue() ;
         double tref = getMJD( reftime ) ;
         vector<float> sp0 = s->getSpectrum( idx[0] ) ;
         vector<float> sp1 = s->getSpectrum( idx[1] ) ;
@@ -4458,8 +4462,10 @@ vector<float> STMath::getTcalFromTime( string reftime,
         id = idx[0] ;
       }
       else {
-        double t0 = getMJD( s->getTime( idx[0] ) ) ;
-        double t1 = getMJD( s->getTime( idx[1] ) ) ;
+        //double t0 = getMJD( s->getTime( idx[0] ) ) ;
+        //double t1 = getMJD( s->getTime( idx[1] ) ) ;
+        double t0 = s->getEpoch( idx[0] ).get( Unit( "d" ) ).getValue() ;
+        double t1 = s->getEpoch( idx[1] ).get( Unit( "d" ) ).getValue() ;
         double tref = getMJD( reftime ) ;
         if ( abs( t0 - tref ) > abs( t1 - tref ) ) {
           id = idx[1] ;
@@ -4504,8 +4510,10 @@ vector<float> STMath::getTcalFromTime( string reftime,
       else {
         // do interpolation
         //os << "interpolate between " << idx[0] << " and " << idx[1] << " (scanno: " << s->getScan( idx[0] ) << ", " << s->getScan( idx[1] ) << ")" << LogIO::POST ;
-        double t0 = getMJD( s->getTime( idx[0] ) ) ;
-        double t1 = getMJD( s->getTime( idx[1] ) ) ;
+        //double t0 = getMJD( s->getTime( idx[0] ) ) ;
+        //double t1 = getMJD( s->getTime( idx[1] ) ) ;
+        double t0 = s->getEpoch( idx[0] ).get( Unit( "d" ) ).getValue() ;
+        double t1 = s->getEpoch( idx[1] ).get( Unit( "d" ) ).getValue() ;
         double tref = getMJD( reftime ) ;
         vector<float> tcal0 ;
         vector<float> tcal1 ;
@@ -4588,8 +4596,10 @@ vector<float> STMath::getTsysFromTime( string reftime,
         id = idx[0] ;
       }
       else {
-        double t0 = getMJD( s->getTime( idx[0] ) ) ;
-        double t1 = getMJD( s->getTime( idx[1] ) ) ;
+        //double t0 = getMJD( s->getTime( idx[0] ) ) ;
+        //double t1 = getMJD( s->getTime( idx[1] ) ) ;
+        double t0 = s->getEpoch( idx[0] ).get( Unit( "d" ) ).getValue() ;
+        double t1 = s->getEpoch( idx[1] ).get( Unit( "d" ) ).getValue() ;
         double tref = getMJD( reftime ) ;
         if ( abs( t0 - tref ) > abs( t1 - tref ) ) {
           id = idx[1] ;
@@ -4630,8 +4640,10 @@ vector<float> STMath::getTsysFromTime( string reftime,
       else {
         // do interpolation
         //os << "interpolate between " << idx[0] << " and " << idx[1] << " (scanno: " << s->getScan( idx[0] ) << ", " << s->getScan( idx[1] ) << ")" << LogIO::POST ;
-        double t0 = getMJD( s->getTime( idx[0] ) ) ;
-        double t1 = getMJD( s->getTime( idx[1] ) ) ;
+        //double t0 = getMJD( s->getTime( idx[0] ) ) ;
+        //double t1 = getMJD( s->getTime( idx[1] ) ) ;
+        double t0 = s->getEpoch( idx[0] ).get( Unit( "d" ) ).getValue() ;
+        double t1 = s->getEpoch( idx[1] ).get( Unit( "d" ) ).getValue() ;
         double tref = getMJD( reftime ) ;
         vector<float> tsys0 ;
         vector<float> tsys1 ;

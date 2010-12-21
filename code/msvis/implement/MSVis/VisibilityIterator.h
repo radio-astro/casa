@@ -367,6 +367,9 @@ public:
   virtual Cube<Complex>& visibility(Cube<Complex>& vis,
 				    DataColumn whichOne) const;
 
+  // Return FLOAT_DATA as a Cube(npol, nchan, nrow) if found in the MS.
+  virtual Cube<Float>& floatData(Cube<Float>& fcube) const;
+
   // Return the visibility 4-vector of polarizations for each channel.
   // If the MS doesn't contain all polarizations, it is assumed it
   // contains one or two parallel hand polarizations.
@@ -557,13 +560,23 @@ protected:
   // returns the table, to which columns are attached, 
   // can be overridden in derived classes
   virtual const Table attachTable() const;
+
   // get the (velocity selected) interpolated visibilities, flags and weights
   void getInterpolatedVisFlagWeight(DataColumn whichOne) const;
+
+  // get the (velocity selected) interpolated FLOAT_DATA (as real Floats),
+  // flags and weights.
+  void getInterpolatedFloatDataFlagWeight() const;
+
   // get the visibility data (observed, corrected or model);
   // deals with Float and Complex observed data (DATA or FLOAT_DATA)
   virtual void getDataColumn(DataColumn whichOne, const Slicer& slicer, 
 			     Cube<Complex>& data) const;
   virtual void getDataColumn(DataColumn whichOne, Cube<Complex>& data) const;
+
+  // get FLOAT_DATA as real Floats.
+  virtual void getFloatDataColumn(const Slicer& slicer, Cube<Float>& data) const;
+  virtual void getFloatDataColumn(Cube<Float>& data) const;
 
   //constructor helpers
   virtual void initsinglems();
@@ -610,10 +623,17 @@ protected:
   virtual void getCol(const ROArrayColumn<Float> &column, const Slicer &slicer, Array<Float> &array, Bool resize = False) const;
   virtual void getCol(const ROArrayColumn<Complex> &column, const Slicer &slicer, Array<Complex> &array, Bool resize = False) const;
 
-  //  virtual void getCol(const String &colName, Array<Double> &array, Array<Double> &all, Bool resize = False) const;
-  //  virtual void getCol(const String &colName, Vector<Bool> &array, Vector<Bool> &all, Bool resize = False) const;
-  //  virtual void getCol(const String &colName, Vector<Int> &array, Vector<Int> &all, Bool resize = False) const;
-  //  virtual void getCol(const String &colName, Vector<Double> &array, Vector<Double> &all, Bool resize = False) const;
+  //  virtual void getCol(const String &colName, Array<Double> &array,
+  //                      Array<Double> &all, Bool resize = False) const;
+  //  virtual void getCol(const String &colName, Vector<Bool> &array,
+  //                      Vector<Bool> &all, Bool resize = False) const;
+  //  virtual void getCol(const String &colName, Vector<Int> &array,
+  //                      Vector<Int> &all, Bool resize = False) const;
+  //  virtual void getCol(const String &colName, Vector<Double> &array,
+  //                      Vector<Double> &all, Bool resize = False) const;
+
+  template<class T>
+  void swapyz(Cube<T>& out, const Cube<T>& in) const;
 
   ROVisibilityIterator* This;
   MSIter msIter_p;
@@ -629,8 +649,8 @@ protected:
     preselectedChanStart_p,preselectednChan_p;
   
   Bool isMultiMS_p;
-  Block< Vector<Int> >blockNumChanGroup_p, blockChanStart_p;
-  Block< Vector<Int> > blockChanWidth_p, blockChanInc_p;
+  Block<Vector<Int> > blockNumChanGroup_p, blockChanStart_p;
+  Block<Vector<Int> > blockChanWidth_p, blockChanInc_p;
   Block<Vector<Int> > blockSpw_p;
   Int msCounter_p;
   // Stack of VisBuffer objects
@@ -645,8 +665,10 @@ protected:
   Vector<Double> frequency_p;
   Bool freqCacheOK_p, flagOK_p, weightSpOK_p;
   Block<Bool> visOK_p;
+  Bool floatDataCubeOK_p;
   Cube<Bool> flagCube_p;
   Cube<Complex> visCube_p;
+  Cube<Float> floatDataCube_p;
   mutable Matrix<Double> uvwMat_p;
   Matrix<Float> imagingWeight_p;
   Vector<Float> feedpa_p;
@@ -901,7 +923,10 @@ protected:
   ScalarColumn<Bool> RWcolFlagRow;
 };
 
-
 } //# NAMESPACE CASA - END
+
+#ifndef AIPS_NO_TEMPLATE_SRC
+#include <msvis/MSVis/VisibilityIterator.tcc>
+#endif //# AIPS_NO_TEMPLATE_SRC
 
 #endif

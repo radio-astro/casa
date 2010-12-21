@@ -99,17 +99,18 @@ ia.open(project + '.diff')
 hiidiff_stats=ia.statistics(verbose=False,list=False)
 ia.close()
 
-refstats = { 'sum': 1052., 
-             'max': 0.676,
-             'min': -0.0513,
-             'rms': 0.0434,
-             'sigma': 0.0429 }
+# KS - updated 2010-12-17 (13767@active)
+refstats = { 'sum': 1060.,
+             'max': 0.6777,
+             'min': -0.05212,
+             'rms': 0.04411,
+             'sigma': 0.04360 }
 
-diffstats = {'sum': 3322.,
-             'max': 0.169,
-             'min': -0.00459,
-             'rms': 0.0379,
-             'sigma': 0.0222 }
+diffstats = {'sum': 3290.,
+             'max': 0.1087,
+             'min': -0.01149,
+             'rms': 0.03742,
+             'sigma': 0.02183 }
 
 
 reftol   = {'sum':  0.1,

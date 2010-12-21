@@ -1201,6 +1201,31 @@ Bool Calibrater::solve() {
     if (!svc_p)
       throw(AipsError("Please run setsolve before attempting to solve."));
 
+    // Handle specified caltable
+    if (False && svc_p) {
+      
+      /*      
+      cout << "name: " << svc_p->calTableName() << endl;
+      cout << boolalpha;
+      cout << "append?   " << svc_p->append() << endl;
+      cout << "opened?   " << Table::isOpened(svc_p->calTableName()) << endl;
+      cout << "readable? " << Table::isReadable(svc_p->calTableName()) << endl;
+      cout << "writable? " << Table::isWritable(svc_p->calTableName()) << endl;
+      cout << "canDelete? " << Table::canDeleteTable(svc_p->calTableName(),True) << endl;
+      */
+
+
+      // If we are not appending, and the cal table exists,
+      //   then it better be deletable
+      if (!svc_p->append() &&
+	  Table::isReadable(svc_p->calTableName()) &&
+	  !Table::canDeleteTable(svc_p->calTableName()) ) {
+	cout << "Table CAN'T be deleted!!!!!" << endl;
+	
+	throw(AipsError("Specified caltable ("+svc_p->calTableName()+") exists and\n cannot be replaced because it appears to be open somewhere."));
+      }
+    }
+
     // Arrange VisEquation for solve
     ve_p->setsolve(*svc_p);
 
@@ -2276,6 +2301,10 @@ void Calibrater::specifycal(const String& type,
       cal_ = createSolvableVisCal("KMBD",*vs_p);
     else if (utype.contains("ANTPOS"))
       cal_ = createSolvableVisCal("KANTPOS",*vs_p);
+    else if (utype.contains("TSYS"))
+      cal_ = createSolvableVisCal("TSYS",*vs_p);
+    else if (utype.contains("EVLAGAIN"))
+      cal_ = createSolvableVisCal("EVLAGAIN",*vs_p);
     else
       throw(AipsError("Unrecognized caltype."));
 

@@ -41,7 +41,7 @@
 namespace casa {
 
 //# Forward declarations
-class PlotMS;
+class PlotMSApp;
 class PlotMSPlotter;
 
 
@@ -87,7 +87,7 @@ public:
     
 protected:
     // Parent.
-    PlotMS* itsParent_;
+    PlotMSApp* itsParent_;
     
     // Plotter.
     PlotMSPlotter* itsPlotter_;

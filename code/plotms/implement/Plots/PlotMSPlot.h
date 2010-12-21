@@ -37,7 +37,7 @@
 namespace casa {
 
 //# Forward declarations
-class PlotMS;
+class PlotMSApp;
 class PlotMSPages;
 class PlotMSPlotTab;
 
@@ -52,18 +52,18 @@ public:
     
     // Returns a new instance of PlotMSPlotParameters suitable for use with
     // this class, using the given PlotMS parent.
-    static PlotMSPlotParameters makeParameters(PlotMS* plotms);
+    static PlotMSPlotParameters makeParameters(PlotMSApp* plotms);
     
     // Updates the given PlotMSPlotParameters to be suitable for use with this
     // class, using the given PlotMS parent.
-    static void makeParameters(PlotMSPlotParameters& params, PlotMS* plotms);
+    static void makeParameters(PlotMSPlotParameters& params, PlotMSApp* plotms);
     
     
     // Non-Static //
     
     // Constructor which takes the parent PlotMS object.  Starts out with
     // default data parameters.
-    PlotMSPlot(PlotMS* parent);
+    PlotMSPlot(PlotMSApp* parent);
     
     // Destructor.
     virtual ~PlotMSPlot();
@@ -129,7 +129,7 @@ public:
     // </group>
     
     // Gets the plot's parent.
-    virtual PlotMS* parent();
+    virtual PlotMSApp* parent();
     
     // Implements PlotMSParametersWatcher::parametersHaveChanged().  Updates
     // the data parameters and then calls parametersHaveChanged_().
@@ -199,7 +199,7 @@ protected:
     // MEMBERS //
     
     // PlotMS parent.
-    PlotMS* itsParent_;
+    PlotMSApp* itsParent_;
     
     // Plot factory for generating plot objects as needed.
     PlotFactoryPtr itsFactory_;

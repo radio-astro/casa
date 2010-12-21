@@ -115,8 +115,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   public:
     typedef Vector< CFStore > CFStoreCacheType;
     CFCache(const char *cfDir="CF"):
-      logIO_p(), memCache_p(), XSup(), YSup(), paList(), key2IndexMap(),
-      cfPrefix(cfDir), aux("aux.dat"), paCD_p()
+      logIO_p(), memCache_p(), memCacheWt_p(), XSup(), YSup(), paList(), key2IndexMap(),
+      cfPrefix(cfDir), aux("aux.dat"), paCD_p(), avgPBReady_p(False)
     {};
     CFCache& operator=(const CFCache& other);
     ~CFCache();
@@ -193,10 +193,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // found in the cache, CFDefs::MEMCACHE or CFDefs::DISKCACHE if
     // the function was found in memory or disk cache respectively.
     //
+    Int locateConvFunction(CFStore& cfs, CFStore& cftws, const Int Nw, const Quantity pa, const Quantity dPA, 
+			   const Int mosXPos=0, const Int mosYPos=0)
+    {return locateConvFunction(cfs, cftws, Nw,pa.getValue("rad"), dPA.getValue("rad"),mosXPos,mosYPos);};
+
     Int locateConvFunction(CFStore& cfs, const Int Nw, const Quantity pa, const Quantity dPA, 
 			   const Int mosXPos=0, const Int mosYPos=0)
     {return locateConvFunction(cfs, Nw,pa.getValue("rad"), dPA.getValue("rad"),mosXPos,mosYPos);};
 
+    Int locateConvFunction(CFStore& cfs, CFStore& cfwts,
+			   const Int Nw, const Float pa, const Float dPA,
+			   const Int mosXPos=0, const Int mosYPos=0);
     Int locateConvFunction(CFStore& cfs, const Int Nw, const Float pa, const Float dPA, 
 			   const Int mosXPos=0, const Int mosYPos=0);
     //
@@ -206,16 +213,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // anytime during the life of this object.
     //
     void flush();
-    void flush(ImageInterface<Float>& avgPB);
-    Int loadAvgPB(ImageInterface<Float>& avgPB);
-    Int loadAvgPB(CountedPtr<ImageInterface<Float> > & avgPB)
-    {if (avgPB.null()) avgPB = new TempImage<Float>(); return loadAvgPB(*avgPB);};
+    void flush(ImageInterface<Float>& avgPB, String qualifier=String(""));
+    Int loadAvgPB(ImageInterface<Float>& avgPB, String qualifier=String(""));
+    Int loadAvgPB(CountedPtr<ImageInterface<Float> > & avgPB, String qualifier=String(""))
+    {if (avgPB.null()) avgPB = new TempImage<Float>(); return loadAvgPB(*avgPB,qualifier);};
+
+    Bool avgPBReady() {return avgPBReady_p;};
 
   protected:
     LogIO logIO_p;
     LogIO& logIO() {return logIO_p;};
 
-    CFStoreCacheType memCache_p;
+    CFStoreCacheType memCache_p, memCacheWt_p;
   private:
     Matrix<Int> XSup, YSup;
     Vector<Float> paList, Sampling;
@@ -234,10 +243,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Internal method to add the given convolution function to the
     // memory cache.
     //
-    Int addToMemCache(Float pa, CFType* cf, CoordinateSystem& coords,
+    Int addToMemCache(CFStoreCacheType& cfCache, 
+		      Float pa, CFType* cf, CoordinateSystem& coords,
 		      Vector<Int>& xConvSupport,
 		      Vector<Int>& yConvSupport,
 		      Float convSampling);
+    Bool avgPBReady_p;
   };
 }
 

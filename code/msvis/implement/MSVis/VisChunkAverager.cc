@@ -91,12 +91,14 @@ void VisChunkAverager::fill_vb(VisBuffer& vb)
     else if(colEnums_p[i] == MS::MODEL_DATA)
       vb.modelVisCube();
     // else if(colEnums_p[i] == MS::LAG_DATA)
-    //  VisBuffer doesn't handle LAG_DATA.  FLOAT_DATA ends up as DATA.
+    //  VisBuffer doesn't handle LAG_DATA.
+    else if(colEnums_p[i] == MS::FLOAT_DATA)
+      vb.floatDataCube();
     else if(colEnums_p[i] == MS::DATA)
       vb.visCube();
   }
   // video_point?
-  vb.sigma();
+  vb.sigmaMat();
   vb.weightMat();
   if(doSpWeight_p)
     vb.weightSpectrum();
@@ -216,7 +218,10 @@ VisBuffer& VisChunkAverager::average(ROVisibilityIterator& vi)
                   avBuf_p.modelVisCube()(cor, chn, outrow) += 
                     (wt * vb.modelVisCube()(cor, chn, inrow));
                 // else if(colEnums_p[i] == MS::LAG_DATA)
-                //  VisBuffer doesn't handle LAG_DATA.  FLOAT_DATA ends up as DATA.
+                //  VisBuffer doesn't handle LAG_DATA
+                else if(colEnums_p[i] == MS::FLOAT_DATA)
+                  avBuf_p.floatDataCube()(cor, chn, outrow) += 
+                    (wt * vb.floatDataCube()(cor, chn, inrow));
                 else if(colEnums_p[i] == MS::DATA)
                   avBuf_p.visCube()(cor, chn, outrow) += 
                     (wt * vb.visCube()(cor, chn, inrow));
@@ -313,7 +318,9 @@ void VisChunkAverager::initialize(VisBuffer& vb)
     else if(colEnums_p[i] == MS::MODEL_DATA)
       avBuf_p.modelVisCube().resize(nCorr_p, nChan_p, nRow);
     // else if(colEnums_p[i] == MS::LAG_DATA)
-    //  VisBuffer doesn't handle LAG_DATA.  FLOAT_DATA ends up as DATA.
+    //  VisBuffer doesn't handle LAG_DATA
+    else if(colEnums_p[i] == MS::FLOAT_DATA)
+      avBuf_p.floatDataCube().resize(nCorr_p, nChan_p, nRow);
     else if(colEnums_p[i] == MS::DATA)
       avBuf_p.visCube().resize(nCorr_p, nChan_p, nRow);
   }
@@ -354,7 +361,9 @@ void VisChunkAverager::initialize(VisBuffer& vb)
     else if(colEnums_p[i] == MS::MODEL_DATA)
       avBuf_p.modelVisCube() = czero;
     // else if(colEnums_p[i] == MS::LAG_DATA)
-    //  VisBuffer doesn't handle LAG_DATA.  FLOAT_DATA ends up as DATA.
+    //  VisBuffer doesn't handle LAG_DATA.
+    else if(colEnums_p[i] == MS::FLOAT_DATA)
+      avBuf_p.floatDataCube() = 0.0;
     else if(colEnums_p[i] == MS::DATA)
       avBuf_p.visCube() = czero;
   }
@@ -441,34 +450,22 @@ void VisChunkAverager::normalize(const Double minTime, const Double maxTime,
           if(!avBuf_p.flagCube()(cor, chn, outrow)){
             Double w = doSpWeight_p ? avBuf_p.weightSpectrum()(cor, chn, outrow)
               : constwtperchan;
-            if(w > 0.0){
-              Double norm = 1.0 / w;
 
-              for(Int i = colEnums_p.nelements(); i--;){
-                if(colEnums_p[i] == MS::CORRECTED_DATA)
-                  avBuf_p.correctedVisCube()(cor, chn, outrow) *= norm;
-                else if(colEnums_p[i] == MS::MODEL_DATA)
-                  avBuf_p.modelVisCube()(cor, chn, outrow) *= norm;
-                // else if(colEnums_p[i] == MS::LAG_DATA)
-                //  VisBuffer doesn't handle LAG_DATA.  FLOAT_DATA ends up as
-                //  DATA.
-                else if(colEnums_p[i] == MS::DATA)
-                  avBuf_p.visCube()(cor, chn, outrow) *= norm;
-              }
+            // The 2nd choice begs the question of why it isn't flagged.
+            Double norm = w > 0.0 ? 1.0 / w : 0.0;      
+
+            for(Int i = colEnums_p.nelements(); i--;){
+              if(colEnums_p[i] == MS::CORRECTED_DATA)
+                avBuf_p.correctedVisCube()(cor, chn, outrow) *= norm;
+              else if(colEnums_p[i] == MS::MODEL_DATA)
+                avBuf_p.modelVisCube()(cor, chn, outrow) *= norm;
+              // else if(colEnums_p[i] == MS::LAG_DATA)
+              //  VisBuffer doesn't handle LAG_DATA.
+              else if(colEnums_p[i] == MS::FLOAT_DATA)
+                avBuf_p.floatDataCube()(cor, chn, outrow) *= norm;
+              else if(colEnums_p[i] == MS::DATA)
+                avBuf_p.visCube()(cor, chn, outrow) *= norm;
             }
-            else{ // This begs the question of why isn't it flagged.
-              for(Int i = colEnums_p.nelements(); i--;){
-                if(colEnums_p[i] == MS::CORRECTED_DATA)
-                  avBuf_p.correctedVisCube()(cor, chn, outrow) = 0.0;
-                else if(colEnums_p[i] == MS::MODEL_DATA)
-                  avBuf_p.modelVisCube()(cor, chn, outrow) *= 0.0;
-                // else if(colEnums_p[i] == MS::LAG_DATA)
-                //  VisBuffer doesn't handle LAG_DATA.  FLOAT_DATA ends up as
-                //  DATA.
-                else if(colEnums_p[i] == MS::DATA)
-                  avBuf_p.visCube()(cor, chn, outrow) *= 0.0;
-              }
-            }   // ends if(w > 0.0)...else
           }     // ends if(!avBuf_p.flagCube()(cor, chn, outrow))
         }       // ends chan loop
       }         // ends cor loop

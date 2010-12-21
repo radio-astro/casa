@@ -325,6 +325,11 @@ public:
   }
   const Cube<Complex>& correctedVisCube() const {return This->correctedVisCube();}
 
+  Cube<Float>& floatDataCube() {
+    return floatDataCubeOK_p ? floatDataCube_p : fillFloatDataCube();
+  }
+  const Cube<Float>& floatDataCube() const {return This->floatDataCube();}
+
   // Returns the weights for each row averaged over the parallel hand correlations.
   Vector<Float>& weight() {return weightOK_p ? weight_p : fillWeight();}
   const Vector<Float>& weight() const {return This->weight();}
@@ -379,6 +384,7 @@ public:
   // Average channel axis by factor
   void channelAve(const Matrix<Int>& chanavebounds);
   void chanAveVisCube(Cube<Complex>& data,Int nChanOut);
+  void chanAveVisCube(Cube<Float>& data,Int nChanOut);
   void chanAveFlagCube(Cube<Bool>& flagcube,Int nChanOut);
 
   // Form Stokes parameters from correlations
@@ -386,6 +392,7 @@ public:
   void formStokes();
   void formStokesWeightandFlag();
   void formStokes(Cube<Complex>& vis);
+  void formStokes(Cube<Float>& fcube);    // Will throw up if asked to do all 4.
 
   // Sort/unsort the correlations, if necessary
   //  (Rudimentary handling of non-canonically sorted correlations--use with care!)
@@ -420,9 +427,11 @@ public:
   void setModelVisCube(const Cube<Complex>& vis);
   void setCorrectedVisCube(const Cube<Complex>& vis);
 
+  // Like the above, but for FLOAT_DATA, keeping it as real floats.
+  void setFloatDataCube(const Cube<Float>& fcube);
+
   // Set model according to a Stokes vector
   void setModelVisCube(const Vector<Float>& stokes);
-
 
   // Reference external model visibilities
   void refModelVis(const Matrix<CStokesVector>& mvis);
@@ -503,6 +512,7 @@ private:
   Matrix<Double>& filluvwMat();
   Matrix<CStokesVector>& fillVis(VisibilityIterator::DataColumn whichOne);
   Cube<Complex>& fillVisCube(VisibilityIterator::DataColumn whichOne);
+  Cube<Float>& fillFloatDataCube();
   Vector<Float>& fillWeight();
   Matrix<Float>& fillWeightMat();
   Cube<Float>& fillWeightSpectrum();
@@ -533,7 +543,8 @@ private:
     timeOK_p, timeCentroidOK_p, timeIntervalOK_p, exposureOK_p, uvwOK_p, uvwMatOK_p,
     visOK_p, weightOK_p, weightMatOK_p, weightSpectrumOK_p;
   Bool corrTypeOK_p, flagCubeOK_p, visCubeOK_p, imagingWeightOK_p,
-    modelVisOK_p, correctedVisOK_p, modelVisCubeOK_p, correctedVisCubeOK_p;
+    modelVisOK_p, correctedVisOK_p, modelVisCubeOK_p, correctedVisCubeOK_p,
+    floatDataCubeOK_p;
   Bool msOK_p, newMS_p;
   Bool feed1_paOK_p,feed2_paOK_p,direction1OK_p,direction2OK_p;
   Bool rowIdsOK_p;
@@ -573,6 +584,7 @@ private:
   Cube<Float> weightSpectrum_p;
   Cube<Bool> flagCube_p;
   Cube<Complex> visCube_p, modelVisCube_p, correctedVisCube_p;
+  Cube<Float> floatDataCube_p;
   Vector<uInt> rowIds_p;
   Matrix<Float> imagingWeight_p;
   Int oldMSId_p;

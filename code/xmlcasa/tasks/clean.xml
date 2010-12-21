@@ -648,8 +648,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         8)  Use starting model (eg from single dish)
  
  
-       vis -- Name of input visibility file
-               default: none; example: vis='ngc5921.ms'
+       vis -- Name(s) of input visibility file(s)
+               default: none; 
+               example: vis='ngc5921.ms'
+                        vis=['ngc5921a.ms','ngc5921b.ms']; multiple MSes
        imagename -- Pre-name of output images:
                default: none; example: imagename='m2'
                output images are:
@@ -676,6 +678,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  field='0,4,5~7'; field ids 0,4,5,6,7
                  field='3C286,3C295'; field named 3C286 and 3C295
                  field = '3,4C*'; field id 3, all names starting with 4C
+                 For multiple MS input, a list of field strings can be used:
+                 field = ['0~2','0~4']; field ids 0-2 for the first MS and 0-4 for the second 
+                 field = '0~2'; field ids 0-2 for all input MSes
        spw -- Select spectral window/channels
                NOTE: channels de-selected here will contain all zeros if
                selected by the parameter mode subparameters.    
@@ -688,6 +693,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  spw='0,10,3:3~45'; spw 0,10 all channels, spw 3, 
 				    channels 3 to 45.
                  spw='0~2:2~6'; spw 0,1,2 with channels 2 through 6 in each.
+                 For multiple MS input, a list of spw strings can be used:
+                 spw=['0','0~3']; spw ids 0 for the first MS and 0-3 for the second
+                 spw='0~3' spw ids 0-3 for all input MS
                  <!-- COMMENTED OUT UNTIL PROPER PARSING OF CHANNEL SELECTION
                  IS IMPLEMENTED -->
 			     <!-- multiple ranges do not work for 3.0.1
@@ -713,10 +721,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                    timerange='09:44:00' pick data within one integration 
 		             of time
                    timerange='&gt;10:24:00' data after this time
+                   For multiple MS input, a list of timerange strings can be used:
+                   timerange=['09:14:0~09:54:0','&gt;10:24:00']
+                   timerange='09:14:0~09:54:0'';apply the same timerange for all input MSes 
                uvrange -- Select data within uvrange (default units meters)
                    default: '' (all); example:
                    uvrange='0~1000klambda'; uvrange from 0-1000 kilo-lambda
                    uvrange='&gt;4klambda';uvranges greater than 4 kilo lambda
+                   For multiple MS input, a list of uvrange strings can be used:
+                   uvrange=['0~1000klambda','100~1000klamda']
+                   uvrange='0~1000klambda'; apply 0-1000 kilo-lambda for all input MSes
                antenna -- Select data based on antenna/baseline
                    default: '' (all)
                    If antenna string is a non-negative integer, it is 
@@ -731,10 +745,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                    antenna='05'; all baselines with antenna number 05 
  				(VLA old name)
                    antenna='5,6,9'; all baselines with antennas 5,6,9 
- 				   index numbers
+ 				   index number
+                   For multiple MS input, a list of antenna strings can be used:
+                   antenna=['5','5&amp;6'];
+                   antenna='5'; antenna index 5 for all input MSes
                scan -- Scan number range.
                    default: '' (all)
                    example: scan='1~5'
+                   For multiple MS input, a list of scan strings can be used:
+                   scan=['0~100','10~200']
+                   scan='0~100; scan ids 0-100 for all input MSes
                    Check 'go listobs' to insure the scan numbers are in order.
        mode -- Frequency Specification:
                NOTE: Channels deselected with spw parameter will contain all

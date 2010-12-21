@@ -28,6 +28,8 @@
 
 #ifndef SYNTHESIS_AWPROJECTWBFT_H
 #define SYNTHESIS_AWPROJECTWBFT_H
+#define DELTAPA 1.0
+#define MAGICPAVALUE -999.0
 
 #include <synthesis/MeasurementComponents/AWProjectFT.h>
 
@@ -73,14 +75,50 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void normalizeAvgPB(ImageInterface<Complex>& inImage, ImageInterface<Float>& outImage) 
     {throw(AipsError("AWPWBFT::normalizeAvgPB(Complex,Float)"));}
 
+    //
+    // This method is called from AWProjectF to make the compute the
+    // sensitivity image by accumulating in the image domain
+    // (i.e. directly accumulate the Primay Beam functions).  This is
+    // called from findConvFunction() so that sensitivity pattern is
+    // also pre-computed along with the convolution functions.  This
+    // in-turn calls the ATerm::makeAverageResponse().
+    //
+    // For AWProjectWBFT class of FTMachines, this just issues a log
+    // message indicating that this is only setting up things for
+    // accumulation of weight images in the first gridding cycle.  The
+    // actual sensitivity patterns are computed by overloaded function
+    // below.
+    //
     virtual void makeSensitivityImage(const VisBuffer& vb, 
 				      const ImageInterface<Complex>& imageTemplate,
 				      ImageInterface<Float>& sensitivityImage);
+    //
+    // In AWProjectWBFT and its derivatives, sensitivity image is
+    // computed by accumulating weight functions (images) during the
+    // first gridding cycle.  AWProjectFT::makeSensitivityImage() is
+    // overloaded in AWProjectWBFT and only issues a log message.
+    //
+    // The following method is used to Fourier transform normalize the
+    // accumulated weight images.  doFFTNorm when True, the FFT
+    // normalization (by pixel volume) is also done.
+    //
     virtual void makeSensitivityImage(Lattice<Complex>& wtImage,
 				      ImageInterface<Float>& sensitivityImage,
 				      const Matrix<Float>& sumWt=Matrix<Float>(),
 				      const Bool& doFFTNorm=True);
+    virtual void makeSensitivitySqImage(Lattice<Complex>& wtImage,
+					ImageInterface<Complex>& sensitivitySqImage,
+					const Matrix<Float>& sumWt=Matrix<Float>(),
+					const Bool& doFFTNorm=True);
 
+    //
+    // Method used to make normalized image from gridded visibilites.
+    // This calls makeSensitivityImage() to make the sensitivity image
+    // and AWProjectFT::getImage() to make the image from gridded
+    // visibilites.  AWProjectFT::getImage() internally calls
+    // normalizeImage() which uses the sensitivty image computed by
+    // makeSensitivtyImage().
+    //
     virtual ImageInterface<Complex>& getImage(Matrix<Float>&, Bool normalize=True);
 
     virtual void finalizeToSky();
@@ -94,8 +132,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual Bool verifyShapes(IPosition shape0, IPosition shape1)
     {(void)shape0; (void)shape1;return False;};
 
+    //
+    // Returns True if accumulation during gridding to compute the
+    // average PB must be done.
+    //
+    virtual Bool computeAvgPB(const Double& actualPA, const Double& lastPAUsedForWtImg) 
+    {return (avgPBReady_p==False);};
+
   protected:
-    Bool avgPBReady_p,resetPBs_p;
+    void ftWeightImage(Lattice<Complex>& wtImage, 
+		       const Matrix<Float>& sumWt,
+		       const Bool& doFFTNorm);
+
+    Bool avgPBReady_p,resetPBs_p, wtImageFTDone;
 
   private:
     Vector<Int> fieldIds_p;

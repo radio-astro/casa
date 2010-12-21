@@ -36,7 +36,7 @@
 namespace casa {
 
 //# Forward declarations.
-class PlotMS;
+class PlotMSApp;
 
 
 // Subclass of QtDBusXmlApp to control plotms using DBus communication.
@@ -185,7 +185,7 @@ public:
     // Non-Static //
     
     // Constructor which takes PlotMS parent object.
-    PlotMSDBusApp(PlotMS& plotms);
+    PlotMSDBusApp(PlotMSApp& plotms);
     
     // Destructor.
     ~PlotMSDBusApp();
@@ -215,7 +215,7 @@ protected:
     
 private:
     // Parent PlotMS.
-    PlotMS& itsPlotms_;
+    PlotMSApp& itsPlotms_;
     
     // Set PlotMS parameters that haven't yet been transferred to the current
     // PlotMS.

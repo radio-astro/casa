@@ -161,12 +161,25 @@ class MeasComet {
   Bool getDisk(MVDirection &returnValue, Double date) const;
   // Get the velocity from a comet table, interpolated for date(in MJD(TDB)).
   Bool getRadVel(MVRadialVelocity &returnValue, Double date) const;
+
+  // Return the temperature in K, or -1 if the table does not have it.
+  // If squawk is true an error message will also be posted.
+  Double getTemperature(const Bool squawk);
+
+  // Return the mean radius in AU, or -1 if the table does not have it.
+  // If squawk is true an error message will also be posted.
+  Double getMeanRad(const Bool squawk);  
+
   // Create a clone
   MeasComet *clone() const;
 
   // Close the Comet tabls only
   void closeMeas();
 
+  // Convenience function that returns ks[kw] in units of unit, setting
+  // success.
+  static Double get_Quantity_keyword(const TableRecord& ks, const String& kw,
+				     const Unit& unit, Bool& success);
  private:
   
   //# General member functions
@@ -179,6 +192,13 @@ class MeasComet {
   // that isn't checked!
   MVPosition getRelPosition(const uInt index) const;
   MVDirection getDiskLongLat(const uInt index) const;  // Must not be called if !haveDiskLongLat_p
+
+  // Try to read mean_rad_p and temperature_p, returning whether or not it was
+  // successful.  (but the real mark of success is whether or not they are
+  // positive.)
+  // It sets haveTriedExtras_p to true and will return right away if it is
+  // already true.
+  Bool getExtras();
 
   //# Data members
 
@@ -226,6 +246,9 @@ class MeasComet {
   // Last read data (measlow - meashigh)
   mutable Vector<Double> ldat_p[2];         // They allow declaring a const
 					    // which isn't.
+  Bool haveTriedExtras_p;
+  Double temperature_p;
+  Double mean_rad_p;
 };
 
 //# Inline Implementations

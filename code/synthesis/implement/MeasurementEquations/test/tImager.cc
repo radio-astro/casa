@@ -46,7 +46,8 @@ int main()
     cout << "--MeasurementSet created." << endl;
 
     Bool compress = False;
-    Imager* imgr = new Imager( ms, compress );
+    Bool useModel = False;
+    Imager* imgr = new Imager( ms, compress, useModel );
     cout <<"--Imager created for MeasurementSet object. " << endl;
 
     LogSink logSink_p=LogSink(LogMessage::NORMAL, False);	  

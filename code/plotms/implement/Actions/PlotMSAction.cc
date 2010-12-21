@@ -146,7 +146,7 @@ void PlotMSAction::setParameter(const String& parameter, int value) {
     PMSA_PRINTPARAMS3                                                         \
     PMSA_PRINTPARAMS4
 
-bool PlotMSAction::doAction(PlotMS* plotms) {
+bool PlotMSAction::doAction(PlotMSApp* plotms) {
 	itsDoActionResult_ = "";
 
 	if(!isValid() || plotms == NULL) {

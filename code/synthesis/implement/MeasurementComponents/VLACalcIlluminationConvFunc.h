@@ -39,6 +39,7 @@
 #include <casa/Exceptions.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <casa/sstream.h>
+#include <synthesis/MeasurementComponents/Utils.h>
 namespace casa{
 
   Int getVLABandID(Double& freq,String&telescopeName);
@@ -51,9 +52,9 @@ namespace casa{
     ~VLACalcIlluminationConvFunc() {delete ap.aperture;};
 
     void setBandID(Int bandID) {ap.band=(BeamCalcBandCode)bandID;}
-    void storeImg(String &fileName,ImageInterface<Complex>& img);
-    void storeImg(String &fileName,ImageInterface<Float>& img);
-    void store(String &fileName);
+    // void storeImg(String &fileName,ImageInterface<Complex>& img);
+    // void storeImg(String &fileName,ImageInterface<Float>& img);
+    // void store(String &fileName);
     void loadFromImage(String &fileName);
     void getIdealConvFunc(Array<Complex>& buf);
     void ftAperture(TempImage<Complex>& uvgrid);
@@ -63,7 +64,7 @@ namespace casa{
     Bool pbReady() {return pbRead_p;}
 
     CoordinateSystem makeUVCoords(CoordinateSystem& imageCoordSys,
-				  IPosition& shape);
+				  IPosition& shape, Double refFreq=-1.0);
     void regridAperture(CoordinateSystem& skyCS, 
 			IPosition& skyShape, 
 			TempImage<Complex>& uvGrid, 

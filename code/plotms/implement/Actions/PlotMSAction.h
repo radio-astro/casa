@@ -37,7 +37,7 @@ using namespace std;
 namespace casa {
 
 //# Forward declarations
-class PlotMS;
+class PlotMSApp;
 class PlotMSPlot;
 
 
@@ -249,9 +249,9 @@ public:
     void setParameter(const String& parameter, const vector<PMS::Axis>& value);
     // </group>
 
-    // Performs the action, using the given PlotMS, and returns true for
+    // Performs the action, using the given PlotMSApp, and returns true for
     // success or false or failure.
-    bool doAction(PlotMS* plotms);
+    bool doAction(PlotMSApp* plotms);
 
     // Returns the result of doAction(), if applicable.  Usually this is used
     // to return the error/reason why the action failed.

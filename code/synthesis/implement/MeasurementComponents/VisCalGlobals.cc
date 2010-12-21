@@ -164,6 +164,9 @@ SolvableVisCal* createSolvableVisCal(const String& type, VisSet& vs) {
   else if (uptype.contains("TSYS"))
     return new StandardTsys(vs);
 
+  else if (uptype.contains("EVLAGAIN"))
+    return new EVLAGainTsys(vs);
+
   else {
     cout << "attempted type = " << type << endl;
     throw(AipsError("Unknown calibration type."));

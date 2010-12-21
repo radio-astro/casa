@@ -42,7 +42,7 @@ namespace casa {
 
 // Static //
 
-PlotMSPlotParameters PlotMSMultiPlot::makeParameters(PlotMS* plotms) {
+PlotMSPlotParameters PlotMSMultiPlot::makeParameters(PlotMSApp* plotms) {
 
   cout << "PMSMP::makeParameters" << endl;
 
@@ -51,7 +51,7 @@ PlotMSPlotParameters PlotMSMultiPlot::makeParameters(PlotMS* plotms) {
     return p;
 }
 
-void PlotMSMultiPlot::makeParameters(PlotMSPlotParameters& params, PlotMS* plotms) {
+void PlotMSMultiPlot::makeParameters(PlotMSPlotParameters& params, PlotMSApp* plotms) {
     // Uses the same parameter groups as PlotMSSinglePlot.
 
   cout << "PMSMP::makeParameters2" << endl;
@@ -67,7 +67,7 @@ void PlotMSMultiPlot::makeParameters(PlotMSPlotParameters& params, PlotMS* plotm
 
 // Constructors/Destructors //
 
-PlotMSMultiPlot::PlotMSMultiPlot(PlotMS* parent) : PlotMSPlot(parent) {
+PlotMSMultiPlot::PlotMSMultiPlot(PlotMSApp* parent) : PlotMSPlot(parent) {
   cout << "PMSMP::PlotMSMultiPlot" << endl;
     constructorSetup(); }
 

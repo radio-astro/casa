@@ -85,7 +85,7 @@ void PlotMSPage::resize(unsigned int nrows, unsigned int ncols) {
     itsCanvases_.resize(nrows);
     itsCanvasOwners_.resize(nrows);
     
-    PlotMS* plotms = itsParent_->itsManager_->parent();
+    PlotMSApp* plotms = itsParent_->itsManager_->parent();
     PlotMSPlotter* plotter = plotms->getPlotter();
     PlotFactoryPtr factory = plotter->getFactory();
     PlotStandardMouseToolGroupPtr tools;

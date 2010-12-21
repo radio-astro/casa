@@ -37,7 +37,7 @@
 namespace casa {
 
 //# Forward Declarations.
-class PlotMS;
+class PlotMSApp;
 
 
 // Parameters for a PlotMSPlot.  Parameters for different plot types are

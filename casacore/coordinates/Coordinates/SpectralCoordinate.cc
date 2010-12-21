@@ -69,6 +69,7 @@ SpectralCoordinate::SpectralCoordinate()
   pVelocityMachine_p(0),
   velType_p(MDoppler::RADIO),
   velUnit_p("km/s"),
+  waveUnit_p("mm"),
   unit_p(Unit("Hz")),
   axisName_p("Frequency"),
   formatUnit_p("")
@@ -80,6 +81,7 @@ SpectralCoordinate::SpectralCoordinate()
 //
    makeWCS(wcs_p, String("FREQ"), 0.0, 0.0, 1.0, 1.0, restfreqs_p(0));
    to_hz_p = 1.0;
+   to_m_p = 0.001;
 //
    setDefaultWorldMixRanges();
 }
@@ -99,6 +101,7 @@ SpectralCoordinate::SpectralCoordinate(MFrequency::Types type,
   pVelocityMachine_p(0),
   velType_p(MDoppler::RADIO),
   velUnit_p("km/s"),
+  waveUnit_p("mm"),
   unit_p(Unit("Hz")),
   axisName_p("Frequency"),
   formatUnit_p("")
@@ -112,6 +115,7 @@ SpectralCoordinate::SpectralCoordinate(MFrequency::Types type,
 //
    makeWCS(wcs_p, String("FREQ"), refPix, refVal, inc, 1.0, restfreqs_p(0));
    to_hz_p = 1.0;
+   to_m_p = 0.001;
 //
    setDefaultWorldMixRanges();
 }
@@ -136,6 +140,7 @@ SpectralCoordinate::SpectralCoordinate(MFrequency::Types type,
   pVelocityMachine_p(0),
   velType_p(MDoppler::RADIO),
   velUnit_p("km/s"),
+  waveUnit_p("mm"),
   unit_p(Unit("Hz")),
   axisName_p("Frequency"),
   formatUnit_p("")
@@ -161,6 +166,7 @@ SpectralCoordinate::SpectralCoordinate(MFrequency::Types type,
    makeWCS(wcs_p, String("FREQ"), refPix, refVal.getValue(hz), inc.getValue(hz), 
            1.0, restfreqs_p(0));
    to_hz_p = 1.0;
+   to_m_p = 0.001;
 //
    setDefaultWorldMixRanges();
 }
@@ -181,6 +187,7 @@ SpectralCoordinate::SpectralCoordinate(MFrequency::Types type,
   pVelocityMachine_p(0),
   velType_p(MDoppler::RADIO),
   velUnit_p("km/s"),
+  waveUnit_p("mm"),
   unit_p(Unit("Hz")),
   axisName_p("Frequency"),
   formatUnit_p("")
@@ -193,6 +200,7 @@ SpectralCoordinate::SpectralCoordinate(MFrequency::Types type,
    indgen(channels);
    pTabular_p = new TabularCoordinate(channels, freqs, "Hz", "Frequency");
    to_hz_p = 1.0;
+   to_m_p = 0.001;
 //
    makeVelocityMachine (velUnit_p, velType_p, unit_p,
                         type_p, restfreqs_p(restfreqIdx_p));
@@ -217,6 +225,7 @@ SpectralCoordinate::SpectralCoordinate(MFrequency::Types type,
   pVelocityMachine_p(0),
   velType_p(MDoppler::RADIO),
   velUnit_p("km/s"),
+  waveUnit_p("mm"),
   unit_p(Unit("Hz")),
   axisName_p("Frequency"),
   formatUnit_p("")
@@ -238,6 +247,7 @@ SpectralCoordinate::SpectralCoordinate(MFrequency::Types type,
    indgen(channels);
    pTabular_p = new TabularCoordinate(channels, freqs2, "Hz", "Frequency");
    to_hz_p = 1.0;
+   to_m_p = 0.001;
 //
    makeVelocityMachine (velUnit_p, velType_p, unit_p,
                         type_p, restfreqs_p(restfreqIdx_p));
@@ -264,6 +274,7 @@ SpectralCoordinate::SpectralCoordinate(MFrequency::Types freqType,
   pVelocityMachine_p(0),
   velType_p(MDoppler::RADIO),
   velUnit_p("km/s"),
+  waveUnit_p("mm"),
   unit_p("Hz"),
   axisName_p("Frequency"),
   formatUnit_p("")
@@ -281,6 +292,56 @@ SpectralCoordinate::SpectralCoordinate(MFrequency::Types freqType,
    Vector<Double> channels(velocities.nelements());
    indgen(channels);
    pTabular_p = new TabularCoordinate(channels, frequencies.getValue(), "Hz", "Frequency");
+   to_hz_p = 1.0;
+   to_m_p = 0.001;
+
+// make velocity machine
+
+   makeVelocityMachine (velUnit_p, velType_p, unit_p,
+                        type_p, restfreqs_p(restfreqIdx_p));
+//
+   wcs_p.flag = -1;                // Uninitialized
+//
+   setDefaultWorldMixRanges();
+}
+
+SpectralCoordinate::SpectralCoordinate(MFrequency::Types freqType,
+                                       const Vector<Double>& wavelengths,
+                                       const String&waveUnit,
+                                       Double restFrequency )
+: Coordinate(),
+  pTabular_p(0),
+  type_p(freqType),
+  conversionType_p(type_p),
+  restfreqs_p(0),
+  restfreqIdx_p(0),
+  pConversionMachineTo_p(0),
+  pConversionMachineFrom_p(0),
+  pVelocityMachine_p(0),
+  velType_p(MDoppler::RADIO),
+  velUnit_p("km/s"),
+  waveUnit_p("mm"),
+  unit_p("Hz"),
+  axisName_p("Frequency"),
+  formatUnit_p("")
+{
+   restfreqs_p.resize(1);
+   restfreqs_p(0) = restFrequency;
+   
+// Convert to frequency
+
+   if(!setWavelengthUnit(waveUnit)){
+      throw(AipsError("Wavelength unit is not consistent with m"));
+   }
+     
+   Vector<Double> frequencies;
+   wavelengthToFrequency(frequencies, wavelengths);
+
+// Make Tabular spectral coordinate
+
+   Vector<Double> channels(frequencies.nelements());
+   indgen(channels);
+   pTabular_p = new TabularCoordinate(channels, frequencies, "Hz", "Frequency");
    to_hz_p = 1.0;
 
 // Now remake Velocity Machine to be consistent with state
@@ -307,6 +368,7 @@ SpectralCoordinate::SpectralCoordinate (MFrequency::Types type, const ::wcsprm& 
   pVelocityMachine_p(0),
   velType_p(MDoppler::RADIO),
   velUnit_p("km/s"),
+  waveUnit_p("mm"),
   unit_p(Unit("Hz")),
   axisName_p("Frequency"),
   formatUnit_p("")
@@ -326,6 +388,7 @@ SpectralCoordinate::SpectralCoordinate (MFrequency::Types type, const ::wcsprm& 
    }
    set_wcs(wcs_p);
    to_hz_p = 1.0;
+   to_m_p = 0.001;
 
 // Make 0-relative
 
@@ -707,6 +770,31 @@ Bool SpectralCoordinate::setVelocity (const String& velUnit,
    }
    velType_p = velType;
    updateVelocityMachine(velUnit_p, velType_p);
+//
+   return True;
+}
+
+Bool SpectralCoordinate::setWavelengthUnit(const String& waveUnit)
+{
+   static const Unit unitsM_b(String("m"));
+   if (!waveUnit.empty()) {
+      Unit unit(waveUnit);
+      if (unit!=unitsM_b) {
+         set_error("Unit must be empty or consistent with m");
+         return False; 
+      }
+
+      String error;
+      Vector<Double> factor;
+      Vector<String> outUnit(1,"m");
+      Vector<String> inUnit(1,waveUnit);
+      if(!find_scale_factor(error, factor, outUnit, inUnit)){
+         set_error(error);
+	 return False;
+      }
+      to_m_p = factor(0);
+      waveUnit_p = waveUnit;
+   }
 //
    return True;
 }
@@ -1129,6 +1217,7 @@ Bool SpectralCoordinate::save(RecordInterface &container,
         subrec.define("restfreqs", restFrequencies());
         subrec.define("velType", Int(velType_p));
         subrec.define("velUnit", velUnit_p);
+        subrec.define("waveUnit", waveUnit_p);
         subrec.define("formatUnit", formatUnit_p);
 
 // We may have TC (for tabular coordinates) or not.
@@ -1437,6 +1526,16 @@ SpectralCoordinate* SpectralCoordinate::restoreVersion2 (const RecordInterface& 
 
     restoreConversion (pSpectral, subrec);
 //
+
+// Wavelength conversion
+    
+    String waveUnit("mm"); 
+    if (subrec.isDefined("waveUnit")) {                      // optional
+       formatUnit = subrec.asString("waveUnit");
+    }
+    pSpectral->setWavelengthUnit(waveUnit);
+
+
     return pSpectral;
 }
 
@@ -1786,8 +1885,9 @@ Bool SpectralCoordinate::setFormatUnit (const String& unit)
 {
    const Unit unitHZ(String("Hz"));      
    const Unit unitKMS(String("km/s"));      
+   const Unit unitM(String("m"));      
    Unit t(unit);
-   if (t != unitHZ && t != unitKMS) {
+   if (t != unitHZ && t != unitKMS && t != unitM) {
       return False;
    }
 //
@@ -1823,8 +1923,10 @@ String SpectralCoordinate::format (String& units,
   
    static const Unit unitsHZ(String("Hz"));      
    static const Unit unitsKMS_c(String("km/s"));      
+   static const Unit unitsM_c(String("m"));      
    static Quantum<Double> qVel;
-   static Quantum<Double> qFreq;
+   //   static Quantum<Double> qFreq;
+   static Vector<Double> vWave;
    static Vector<Double> world;
 
 // Use default format unit (which itself may be empty) if empty
@@ -1841,39 +1943,33 @@ String SpectralCoordinate::format (String& units,
 
       theString = Coordinate::format(units, form, worldValue, worldAxis,
                                      isAbsolute, showAsAbsolute, precision);
-   } else {
+   } 
+   else { // unit not frequency
 
-// Is unit sensible ?
+     if (unit == unitsKMS_c) { // unit consistent with velocty
 
-      if (unit != unitsKMS_c) {
-        throw(AipsError("Requested units must be consistent with km/s or Hz for a SpectralCoordinate"));
-      }
-
-// Requested unit is consistent with km/s
-
-      world.resize(nWorldAxes());
-      String tunits(units);
+       world.resize(nWorldAxes());
 
 // We must convert to absolute first (regardless of how we want
 // to see the value) as we are formatting in velocity units
 
-      if (!isAbsolute) {
+       if (!isAbsolute) {
          world = 0.0;
          world(worldAxis) = worldValue; 
          makeWorldAbsolute(world);
          worldValue = world(worldAxis);
-      }
+       }
 //
-      if (showAsAbsolute) {
-         if (!frequencyToVelocity (qVel, worldValue)) {
-            theString = "Fail";
-            return theString;
+       if (showAsAbsolute) {
+	 if (!frequencyToVelocity (qVel, worldValue)) {
+	   theString = "Fail";
+	   return theString;
          }
 
 // Convert from velUnit_p (used in f2v) to desired unit
 
          worldValue = qVel.getValue(unit);
-      } else {
+       } else {
 
 // Find relative coordinate in km/s consistent units
 
@@ -1881,30 +1977,61 @@ String SpectralCoordinate::format (String& units,
          freq2(0) = referenceValue()(worldAxis);
          freq2(1) = worldValue;
          if (!frequencyToVelocity(vel, freq2)) {
-            theString = "Fail";
-            return theString;
+	   theString = "Fail";
+	   return theString;
          }
-
+	 
 // Convert from velUnit_p (used in f2v) to desired unit
-
+	 
          Quantum<Double> t(vel[1]-vel[0], Unit(velUnit_p)); // rel=abs-ref
          worldValue = t.getValue(unit);
-      }
+       }
+
+     }  
+     else{ // unit should be wavelength
+
+       if (unit != unitsM_c) {
+	 throw(AipsError("Requested units must be consistent with km/s, m, or Hz for a SpectralCoordinate"));
+       }
+       
+// Requested unit is consistent with m
+
+       world.resize(nWorldAxes());
+
+// We must convert to absolute first (regardless of how we want
+// to see the value) as we are formatting in wavelength units
+
+       if (!isAbsolute) {
+	 world = 0.0;
+	 world(worldAxis) = worldValue; 
+	 makeWorldAbsolute(world);
+	 worldValue = world(worldAxis);
+       }
 //
-      ostringstream oss;
-      if (form == Coordinate::MIXED) {
-         oss << worldValue;
-      } else if (form == Coordinate::SCIENTIFIC) {
-         oss.setf(ios::scientific, ios::floatfield);
-         oss.precision(prec);
-         oss << worldValue;
-      } else if (form == Coordinate::FIXED) {
-         oss.setf(ios::fixed, ios::floatfield);
-         oss.precision(prec);
-         oss << worldValue;
-      }
-      theString = String(oss);
-    }
+       MVFrequency mvFreq(worldValue);
+       worldValue = mvFreq.get(unit).getValue();
+       if (!showAsAbsolute) {
+// Find relative coordinate in m consistent units
+	 mvFreq = MVFrequency(referenceValue()(worldAxis));
+	 worldValue = worldValue - mvFreq.get(unit).getValue(); // subtract reference
+       }
+
+     } // end if
+//
+     ostringstream oss;
+     if (form == Coordinate::MIXED) {
+       oss << worldValue;
+     } else if (form == Coordinate::SCIENTIFIC) {
+       oss.setf(ios::scientific, ios::floatfield);
+       oss.precision(prec);
+       oss << worldValue;
+     } else if (form == Coordinate::FIXED) {
+       oss.setf(ios::fixed, ios::floatfield);
+       oss.precision(prec);
+       oss << worldValue;
+     }
+     theString = String(oss);
+   }
 //
    return theString;
 }
@@ -2094,6 +2221,7 @@ void SpectralCoordinate::copy (const SpectralCoordinate &other)
 
    type_p = other.type_p;
    to_hz_p = other.to_hz_p;
+   to_m_p = other.to_m_p;
 //
    restfreqs_p.resize(0);
    restfreqs_p = other.restfreqs_p;
@@ -2132,6 +2260,7 @@ void SpectralCoordinate::copy (const SpectralCoordinate &other)
 //
     velType_p = other.velType_p;
     velUnit_p = other.velUnit_p;
+    waveUnit_p = other.waveUnit_p;
     unit_p = other.unit_p;
     axisName_p = other.axisName_p;
     formatUnit_p = other.formatUnit_p;

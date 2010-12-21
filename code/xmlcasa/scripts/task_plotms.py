@@ -187,9 +187,12 @@ def plotms(vis=None, xaxis=None, xdatacolumn=None, yaxis=None,
         
         # write file if requested
         if(plotfile != ""):
+            time.sleep(0.5)
+            if (pm.isDrawing()):
+                casalog.post("Will wait until drawing of the plot has completed before exporting it",'NORMAL')
             while (pm.isDrawing()):
-                casalog.post("Waiting until drawing of the plot has completed before saving it",'NORMAL')
                 time.sleep(0.5)
+            casalog.post("Exporting the plot.",'NORMAL')
             pm.save(plotfile, format, highres, interactive)
     
     except Exception, instance:

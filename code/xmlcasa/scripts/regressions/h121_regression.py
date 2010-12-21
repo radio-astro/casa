@@ -357,12 +357,12 @@ cont3mmmax=statistics['max'][0]
 cont3mmrms=statistics['rms'][0]
 ia.close()
 
-srca=3.182
-srcb=3.203
-coa=0.4728
+srca=3.235
+srcb=3.260
+coa=0.4755
 cob=0.4043
-coc=0.3145
-contmax=0.00962
+coc=0.3300
+contmax=0.00963
 
 diff_3mma=abs((srca-thistest_3mm)/srca)
 diff_3mmb=abs((srcb-thistest_3mmb)/srcb)

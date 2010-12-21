@@ -102,6 +102,46 @@ int main() {
             AlwaysAssert(fabs(1-z_yval[6]/-0.0924785) < 1e-5, AipsError); 
             AlwaysAssert(fabs(1-z_yval[7]/-0.131597) < 1e-5, AipsError); 
         }
+        {
+            // wavelength output
+            PagedImage<Float> img("CAS-2533.im");
+            ImageAnalysis analysis(&img);
+
+            Vector<casa::Double> wxv(2);
+            Vector<casa::Double> wyv(2);
+            Vector<casa::Float> z_xval;
+            Vector<casa::Float> z_yval;
+
+            wxv[0] = 4.63641;
+            wxv[1] = 4.63639;
+            wyv[0] = -0.506297;
+            wyv[1] = -0.506279;
+
+            bool ok = analysis.getFreqProfile(
+                wxv, wyv, z_xval, z_yval,
+                "world", "wavelength",
+                0, 0, 0, "", "LSRK"
+            );
+
+            AlwaysAssert(ok, AipsError);
+            AlwaysAssert(fabs(1-z_xval[0]/212.115) < 1e-5, AipsError); 
+            AlwaysAssert(fabs(1-z_xval[1]/212.112) < 1e-5, AipsError); 
+            AlwaysAssert(fabs(1-z_xval[2]/212.109) < 1e-5, AipsError); 
+            AlwaysAssert(fabs(1-z_xval[3]/212.106) < 1e-5, AipsError); 
+            AlwaysAssert(fabs(1-z_xval[4]/212.103) < 1e-5, AipsError); 
+            AlwaysAssert(fabs(1-z_xval[5]/212.100) < 1e-5, AipsError); 
+            AlwaysAssert(fabs(1-z_xval[6]/212.097) < 1e-5, AipsError); 
+            AlwaysAssert(fabs(1-z_xval[7]/212.094) < 1e-5, AipsError); 
+
+            AlwaysAssert(fabs(1-z_yval[0]/-0.146577) < 1e-5, AipsError); 
+            AlwaysAssert(fabs(1-z_yval[1]/-0.244666) < 1e-5, AipsError); 
+            AlwaysAssert(fabs(1-z_yval[2]/-0.184397) < 1e-5, AipsError); 
+            AlwaysAssert(fabs(1-z_yval[3]/0.0869152) < 1e-5, AipsError); 
+            AlwaysAssert(fabs(1-z_yval[4]/-0.43336) < 1e-5, AipsError); 
+            AlwaysAssert(fabs(1-z_yval[5]/-0.145391) < 1e-5, AipsError); 
+            AlwaysAssert(fabs(1-z_yval[6]/-0.0924785) < 1e-5, AipsError); 
+            AlwaysAssert(fabs(1-z_yval[7]/-0.131597) < 1e-5, AipsError); 
+        }
         cout << "ok" << endl;
 	}
     catch (AipsError x) {

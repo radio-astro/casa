@@ -54,15 +54,15 @@ void TestAlgorithm::get(){
       cout << "got seven " << seven << endl;
 
       casa::applicator.get(aOne);
-      cout << "got aOne " << aOne << endl;
+      cout << "got aOne " << endl;
       casa::applicator.get(aTwo);
-      cout << "got aTwo " << aTwo << endl;
+      cout << "got aTwo " << endl;
       casa::applicator.get(aThree);
-      cout << "got aThree " << aThree << endl;
+      cout << "got aThree " << endl;
       casa::applicator.get(aFour);
-      cout << "got aFour " << aFour << endl;
+      cout << "got aFour " << endl;
       casa::applicator.get(aFive);
-      cout << "got aFive " << aFive << endl;
+      cout << "got aFive " << endl;
 
       return;
 }

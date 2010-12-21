@@ -979,6 +979,27 @@ imager::residual(const std::vector<std::string>& model, const std::string& compl
    return rstat;
 }
 
+bool imager::updateresidual(const std::vector<std::string>& model, const std::string& complist, const std::vector<std::string>& image, const std::vector<std::string>& residual){
+
+  Bool rstat(False);
+  if(hasValidMS_p){
+    try {
+      Vector <String> amodel(toVectorString(model));
+      Vector <String> aimage(toVectorString(image));
+      Vector <String> aresidual(toVectorString(residual));
+      rstat = itsImager->updateresidual(amodel, complist, aimage, aresidual);
+    } catch  (AipsError x) {
+      *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+      RETHROW(x);
+    }
+  } else {
+    *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
+  }
+  return rstat;
+
+
+}
+
 bool
 imager::restore(const std::vector<std::string>& model, const std::string& complist, const std::vector<std::string>& image, const std::vector<std::string>& residual, const bool async)
 {

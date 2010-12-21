@@ -158,6 +158,28 @@ Bool SpectralCoordinate::frequencyToVelocity (Quantum<Double>& velocity, const M
    return True;
 }
 
+Bool SpectralCoordinate::frequencyToWavelength (Vector<Double>& wavelength, const Vector<Double>& frequency) const
+{
+   wavelength.resize(frequency.nelements());
+
+   // wave = C::c/freq * 1/to_hz_p * 1/to_m_p
+   Double factor = C::c/to_hz_p/to_m_p;
+   for(uInt i=0; i<frequency.nelements(); i++){
+     if(frequency(i)>0.){
+       wavelength(i) = factor/frequency(i);
+     }
+     else{
+       wavelength(i) = HUGE_VAL;
+     }
+   }
+   return True;
+}
+Bool SpectralCoordinate::wavelengthToFrequency (Vector<Double>& frequency, const Vector<Double>& wavelength) const
+{
+   // since the functional form of the conversion is identical, we can reuse the inverse function
+  return frequencyToWavelength(frequency,wavelength);
+}
+
 Bool SpectralCoordinate::velocityToPixel (Double& pixel, Double velocity) const
 {
    Double frequency;

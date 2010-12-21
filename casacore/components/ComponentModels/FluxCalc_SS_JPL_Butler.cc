@@ -42,6 +42,7 @@
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MCEpoch.h>
 #include <measures/Measures/MFrequency.h>
+#include <measures/Measures/MeasComet.h>
 #include <scimath/Mathematics/InterpolateArray1D.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/TableRecord.h>
@@ -301,11 +302,11 @@ Bool FluxCalc_SS_JPL_Butler::readEphem()
   const TableRecord ks(tab.keywordSet());
 
   Bool got_q = true;
-  temperature_p = get_Quantity_keyword(ks, "T_mean", "K", got_q);
+  temperature_p = MeasComet::get_Quantity_keyword(ks, "T_mean", "K", got_q);
   if(!got_q)
     temperature_p = -1;  // Hopefully a model for the obj will supply a
 			 // temperature later.
-  mean_rad_p = get_Quantity_keyword(ks, "meanrad", "AU", got_q);
+  mean_rad_p = MeasComet::get_Quantity_keyword(ks, "meanrad", "AU", got_q);
   if(!got_q){
     mean_rad_p = -1.0;
     os << LogIO::SEVERE		// Remove/modify this when it starts supporting triaxiality.
@@ -456,24 +457,6 @@ Bool FluxCalc_SS_JPL_Butler::get_row_numbers(uInt& rowbef, uInt& rowclosest,
   rowaft = (rn < ndates - 1) ? rn + 1 : rn;
   rowbef = (rn > 0) ? rn - 1 : rn;
   return true;
-}
-
-Double FluxCalc_SS_JPL_Butler::get_Quantity_keyword(const TableRecord& ks,
-						    const String& kw,
-						    const Unit& unit,
-						    Bool& success)
-{
-  try{
-    const Record rec(ks.asRecord(kw));
-    const Quantity q(rec.asDouble("value"), rec.asString("unit"));
-  
-    success = true;
-    return q.get(unit).getValue();
-  }
-  catch(...){
-    success = false;
-    return 0.0;
-  }
 }
 
 ComponentType::Shape FluxCalc_SS_JPL_Butler::compute(Vector<Flux<Double> >& values,

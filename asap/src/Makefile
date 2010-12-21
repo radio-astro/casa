@@ -36,6 +36,7 @@ CFITSIOINCD := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=
 
 CASAINC   := -I$(CASAROOT)/code/include -I$(COREINCD) -I$(CASAROOT)/$(CASAARCH)/include
 CASALIB   := $(CASAROOT)/$(CASAARCH)/lib
+CASACORELIB := $(filter $(CASALIB)/libcasa%, $(CORELIB))
 
 # the compiler
 ifndef CXX
@@ -81,7 +82,6 @@ LDFLAGS   += -shared
 
 
 # DO NOT MODIFY AFTER THIS
-
 INCDIRS   := -I. $(CASAINC)  -I$(CFITSIOINCD) $(BOOSTINC) $(addprefix -I, $(PYTHONINCD)) -I$(ASAPROOT)/$(ATNFD) -I$(PYRAPINCD)
 LIBS      := $(PYTHONLIB)  $(BOOSTLIB) $(CASAPPLIB)
 
@@ -181,7 +181,6 @@ HEADERS   := MathUtils.h \
 	     PKSFiller.h \
 	     AsapLogSink.h
 
-
 # external libraries
 ifeq ($(shell uname), Darwin)
 	ATNF := $(ASAPROOT)/$(ATNFD)/libatnf.dylib
@@ -225,7 +224,7 @@ $(TARGET) : $(OBJECTS)
 	-@ echo
 	  $(LD) $(LDFLAGS) -o $(TARGET) $(OBJECTS) $(LIBS)
 
-$(OBJECTS) : $(HEADERS) $(CORELIB) $(ATNF) $(PYRAP)
+$(OBJECTS) : $(HEADERS) $(CASACORELIB) $(ATNF) $(PYRAP)
 
 staticlib: $(MEMBERS)
 

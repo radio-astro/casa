@@ -21,9 +21,7 @@ RPFITSLIBD := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=R
 
 CASAINC   := -I$(CASAROOT)/code/include -I$(COREINCD) -I$(CASAROOT)/$(CASAARCH)/include
 CASALIB   := $(CASAROOT)/$(CASAARCH)/lib
-
-CASALIB   := $(CASAROOT)/$(CASAARCH)/lib
-#USELIB := lib64
+CASACORELIB := $(filter $(CASALIB)/libcasa%, $(CORELIB))
 
 ifeq ($(shell uname), Darwin)
 	TARGETLIB   := libatnf.dylib
@@ -108,6 +106,7 @@ HEADERS := $(ATNFDIR)/pks/pks_maths.h \
 	$(ATNFDIR)/PKSIO/SrcType.h #\
 #	$(ATNFDIR)/PKSIO/PKSmsg.h
 
+
 .SUFFIXES: .o .cc
 .cc.o:
 	-@ echo
@@ -123,7 +122,7 @@ $(TARGETLIB) : $(OBJECTS)
 	-@ echo
 	  $(LD) $(CXXFLAGS) $(LDFLAGS) -o $(TARGETLIB) $(OBJECTS) $(LIBS)
 
-$(OBJECTS) : $(HEADERS) $(CORELIB)
+$(OBJECTS) : $(HEADERS) $(CASACORELIB)
 
 install : 
 	@if ( test -f $(TARGETLIB) ) ; then cp -f $(TARGETLIB) $(CASALIB)/. ; fi

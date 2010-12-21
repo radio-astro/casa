@@ -111,7 +111,7 @@ const QString &PlotMSDBusApp::name( ) {
 
 // Constructors/Destructors //
 
-PlotMSDBusApp::PlotMSDBusApp(PlotMS& plotms) : itsPlotms_(plotms),
+PlotMSDBusApp::PlotMSDBusApp(PlotMSApp& plotms) : itsPlotms_(plotms),
         itsUpdateFlag_(false) {
     // Register self as watcher.
     plotms.getPlotManager().addWatcher(this);

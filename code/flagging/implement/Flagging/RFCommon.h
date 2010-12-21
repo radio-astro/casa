@@ -56,6 +56,7 @@ const char
     RF_FIGNORE[] = "fignore",
     RF_UNFLAG[]  = "unflag",
     RF_SHADOW[]  = "shadow",
+    RF_ELEVATION[] = "elevation",
     
     RF_THR[]     = "thr",
     RF_ROW_THR[] = "rowthr",
@@ -93,6 +94,8 @@ const char
     RF_FEED[]    = "feed",
     RF_UVRANGE[] = "uvrange",
     RF_DIAMETER[] = "diameter",
+    RF_LOWERLIMIT[]  = "lowerlimit",
+    RF_UPPERLIMIT[]  = "upperlimit",
     
     RF_TIMERANGE[] = "timerng",
     RF_CENTERTIME[] = "timeslot",

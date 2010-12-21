@@ -728,7 +728,9 @@ namespace casa {
                                  String quackmode,
                                  Bool quackincrement,
                                  String opmode,
-                                 Double diameter)
+                                 Double diameter,
+                                 Double lowerlimit,
+                                 Double upperlimit)
     {
      if (dbg) 
        cout << "setmanualflags: "
@@ -791,11 +793,16 @@ namespace casa {
     for ( Int i=0; i < nrec; i++ ) {
 	Record selrec;
 	if (upcase(opmode).matches("FLAG") ||
-	    upcase(opmode).matches("SHADOW")) {
+	    upcase(opmode).matches("SHADOW") ||
+	    upcase(opmode).matches("ELEVATION")) {
 	    selrec.define("id", String("select"));
             
             if (upcase(opmode).matches("SHADOW")) {
               selrec.define(RF_DIAMETER, Double(diameter));
+            }
+            else if (upcase(opmode).matches("ELEVATION")) {
+              selrec.define(RF_LOWERLIMIT, Double(lowerlimit));
+              selrec.define(RF_UPPERLIMIT, Double(upperlimit));
             }
         }
         else if (upcase(opmode).matches("SUMMARY")) {
@@ -879,6 +886,14 @@ namespace casa {
 	    Record flagRec(flagDesc);
 	    flagRec.define(RF_SHADOW, True);
 	    selrec.mergeField(flagRec, RF_SHADOW, RecordInterface::OverwriteDuplicates);
+	}
+	
+	else if (upcase(opmode).matches("ELEVATION") ) {
+	    RecordDesc flagDesc;       
+	    flagDesc.addField(RF_ELEVATION, TpBool);
+	    Record flagRec(flagDesc);
+	    flagRec.define(RF_ELEVATION, True);
+	    selrec.mergeField(flagRec, RF_ELEVATION, RecordInterface::OverwriteDuplicates);
 	}
 	
 	/* Flag Autocorrelations too? */

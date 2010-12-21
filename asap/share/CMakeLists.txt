@@ -2,11 +2,7 @@
 # CMakeLists.txt for shared files
 ###
 
-# root for shared
-set( SHAREDROOT ${ASAP_SOURCE_DIR} )
-set( SHAREDDIR ${PYTHONROOT}/share )
-
-# python modules 
+# shared files
 set( SHARED_FILES
      ipythonrc-asap )
 

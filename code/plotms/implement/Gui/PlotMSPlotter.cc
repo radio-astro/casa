@@ -53,7 +53,7 @@ namespace casa {
 
 // Constructors/Destructors //
 
-PlotMSPlotter::PlotMSPlotter(PlotMS* parent, Plotter::Implementation impl) :
+PlotMSPlotter::PlotMSPlotter(PlotMSApp* parent, Plotter::Implementation impl) :
         itsParent_(parent), itsAnnotator_(parent)
         {
     initialize(impl);

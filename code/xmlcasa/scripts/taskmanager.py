@@ -1,5 +1,6 @@
 from IPython.kernel import client
 from IPython.kernel.multiengineclient import PendingResult
+from IPython.kernel import error as iperror
 from mindpipes import mindpipes
 import subprocess
 import inspect
@@ -49,7 +50,7 @@ class taskmanager(object):
                 if result is not None:
                     target = self.__hub['result map'][receipt]['engine']['index']
                     result_name = "result_%04d" % receipt
-                    self.__hub['result map'][receipt]['result'] = { 'result': self.__hub['mec'].pull( result_name, targets=[target] )[0] }
+                    self.__hub['result map'][receipt]['result'] = { 'result': self.__hub['mec'].pull( result_name, targets=[target] )[0], 'status': 'done' }
                     self.__hub['result map'][receipt]['result output'] = result[0]
                     if self.__hub['result map'][receipt]['result output'].has_key('stdout') :
                         engine = self.__hub['result map'][receipt]['engine']
@@ -58,8 +59,19 @@ class taskmanager(object):
                         log_message({'out': 'stderr', 'engine': engine}, 2, self.__hub['result map'][receipt]['result output']['stderr'].splitlines() )
                     return self.__hub['result map'][receipt]['result']
                 else:
-                    return { 'result': 'pending' }
+                    return { 'result': None, 'state': 'pending' }
+
+        except iperror.InvalidEngineID:
+            if self.__hub['result map'].has_key(receipt):
+                self.__hub['result map'][receipt]['result'] = { 'result': None,
+                                                                'status': 'died' }
+            pass
+
         except:
+            #print ">>>>>>>>>>>>", sys.exc_info()[0]
+            if self.__hub['result map'].has_key(receipt):
+                self.__hub['result map'][receipt]['result'] = { 'result': None,
+                                                                'status': 'failed' }
             pass
 
         if self.__hub['result map'].has_key(receipt):
@@ -258,7 +270,7 @@ class taskmanager(object):
 	# uses IPYTHONDIR instead for IPython 0.10.x
 	#
 	if(int(version.split('.')[1]) < 10) :
-           self.__hub['proc'] = subprocess.Popen( [ self.__helpers['ipcontroller'],
+           self.__hub['proc'] = subprocess.Popen( [ self.__helpers['ipcontroller'], '-xy',
                                                  '--client-cert-file=' + self.__cert['client'],
                                                  '--engine-cert-file=' + self.__cert['engine'],
                                                  '--engine-furl-file=' + self.__furl['engine'],
@@ -268,7 +280,7 @@ class taskmanager(object):
                                                  '--logfile=' + self.__dir['session log root'] + "/controller." ],
                                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
 	else :
-           self.__hub['proc'] = subprocess.Popen( [ self.__helpers['ipcontroller'],
+           self.__hub['proc'] = subprocess.Popen( [ self.__helpers['ipcontroller'], '-xy',
                                                  '--client-cert-file=' + self.__cert['client'],
                                                  '--engine-cert-file=' + self.__cert['engine'],
                                                  '--engine-furl-file=' + self.__furl['engine'],

@@ -47,6 +47,7 @@
 #include <scimath/Mathematics/FFTServer.h>
 #include <scimath/Mathematics/MathFunc.h>
 #include <measures/Measures/MeasTable.h>
+#include <iostream.h>
 
 #define CONVSIZE (1024*2)
 #define CONVWTSIZEFACTOR 1.0
@@ -98,7 +99,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //---------------------------------------------------------------
   //
-#define FUNC(a)  (((a)))
+
   AWProjectFT::AWProjectFT(Int nWPlanes, Long icachesize, 
 			   CountedPtr<CFCache>& cfcache,
 			   CountedPtr<ConvolutionFunction>& cf,
@@ -252,6 +253,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	currentCFPA=other.currentCFPA;
 	lastPAUsedForWtImg = other.lastPAUsedForWtImg;
 	avgPB_p = other.avgPB_p;
+	avgPBSq_p = other.avgPBSq_p;
 	convFuncCtor_p = other.convFuncCtor_p;
 	pbNormalized_p = other.pbNormalized_p;
       };
@@ -903,20 +905,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Float pa=getVBPA(vb);
     ok();
 
-    // Writing obfuscated code can be fun!
-    cfRefFreq_p = image.coordinates()
-      .spectralCoordinate(image.coordinates().findCoordinate(Coordinate::SPECTRAL))
-      .referenceValue()(0);
-
     lastPAUsedForWtImg = currentCFPA = pa;
     //----------------------------------------------------------------
     //
     // Loacate the required conv. function.
     //
     Int mosXPos=0, mosYPos=0;
-    cfSource=cfCache_p->locateConvFunction(cfs_p, wConvSize, Quantity(pa,"rad"),
+    // cfSource=cfCache_p->locateConvFunction(cfs_p, wConvSize, Quantity(pa,"rad"),
+    //     				   paChangeDetector.getParAngleTolerance(),
+    //     				   mosXPos, mosYPos);
+    cfSource=cfCache_p->locateConvFunction(cfs_p, cfwts_p, wConvSize, Quantity(pa,"rad"),
 					   paChangeDetector.getParAngleTolerance(),
 					   mosXPos, mosYPos);
+    //    cfwts_p.xSupport=cfwts_p.ySupport=50;
     // If conv. func. not found in the cache, make one and cache it.
     if (cfSource==CFDefs::NOTCACHED)
       {
@@ -929,11 +930,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	cfCache_p->flush(); // Write the aux info file to the disk
 			    // cache
       }
+    convFuncCS_p = cfs_p.coordSys;
 
     // For now, functions for weight gridding is the same as the
     // function for visibility gridding.
-    cfwts_p = cfs_p;
-
+    //    cfwts_p = cfs_p;
+    
     polInUse_p  = cfs_p.data->shape()(3);
     wConvSize = cfs_p.data->shape()(2);
     //
@@ -981,6 +983,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	log_l << "Convolution support = " << cfs_p.xSupport 
 	      << " pixels in Fourier plane" << LogIO::POST;
       }
+
+    // Writing obfuscated code can be fun (well....it's not that
+    // obfuscated).  Just pulling out the frequency for which the
+    // convolution function was computed.
+    cfRefFreq_p = cfs_p.coordSys.spectralCoordinate(image.coordinates().findCoordinate(Coordinate::SPECTRAL))
+      .referenceValue()(0);
+
   }
   //
   //------------------------------------------------------------------------------
@@ -998,6 +1007,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     initMaps(vb);
     
     findConvFunction(*image, vb);
+    if (!cfCache_p->avgPBReady())
+      log_l << "Sensitivity pattern not found." << LogIO::EXCEPTION;
     //  
     // Initialize the maps for polarization and channel. These maps
     // translate visibility indices into image indices
@@ -1112,7 +1123,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      if (doPBCorrection)
 		{
 		  // PBCorrection(ix) = FUNC(PBCorrection(ix))/(sincConv(ix)*sincConv(iy));
-		  PBCorrection(ix) = FUNC(PBCorrection(ix))*(sincConv(ix)*sincConv(iy));
+		  PBCorrection(ix) = (PBCorrection(ix))*(sincConv(ix)*sincConv(iy));
 //		  PBCorrection(ix) = (PBCorrection(ix))*(sincConv(ix)*sincConv(iy));
  		  if ((abs(PBCorrection(ix))) >= pbLimit_p)
 		    {lix.rwVectorCursor()(ix) /= (PBCorrection(ix));}
@@ -1127,6 +1138,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // Now do the FFT2D in place
     //
+
     LatticeFFT::cfft2d(*lattice);
 
     log_l << LogIO::DEBUGGING << "Finished FFT" << LogIO::POST;
@@ -2659,6 +2671,116 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void AWProjectFT::normalizeImage(Lattice<Complex>& skyImage,
 				   const Matrix<Double>& sumOfWts,
 				   Lattice<Float>& sensitivityImage,
+				   Lattice<Complex>& sensitivitySqImage,
+				   Bool fftNorm)
+  {
+    //
+    // Apply the gridding correction
+    //    
+    Int inx = skyImage.shape()(0);
+    Int iny = skyImage.shape()(1);
+    Vector<Complex> correction(inx);
+	  
+    Vector<Float> sincConv(nx);
+    Float centerX=nx/2;
+    for (Int ix=0;ix<nx;ix++) 
+      {
+	Float x=C::pi*Float(ix-centerX)/(Float(nx)*Float(convSampling));
+	if(ix==centerX) sincConv(ix)=1.0;
+	else 	    sincConv(ix)=sin(x)/x;
+      }
+	  
+    IPosition cursorShape(4, inx, 1, 1, 1);
+    IPosition axisPath(4, 0, 1, 2, 3);
+    LatticeStepper lsx(skyImage.shape(), cursorShape, axisPath);
+    LatticeIterator<Complex> lix(skyImage, lsx);
+    
+    LatticeStepper lavgpb(sensitivityImage.shape(),cursorShape,axisPath);
+    LatticeIterator<Float> liavgpb(sensitivityImage, lavgpb);
+    LatticeStepper lavgpbSq(sensitivitySqImage.shape(),cursorShape,axisPath);
+    LatticeIterator<Complex> liavgpbSq(sensitivitySqImage, lavgpbSq);
+	  
+    for(lix.reset(),liavgpb.reset(),liavgpbSq.reset();
+	!lix.atEnd();
+	lix++,liavgpb++,liavgpbSq++) 
+      {
+	Int pol=lix.position()(2);
+	Int chan=lix.position()(3);
+	
+	if(sumOfWts(pol, chan)>0.0) 
+	  {
+	    Int iy=lix.position()(1);
+	    gridder->correctX1D(correction,iy);
+	    
+	    Vector<Complex> PBCorrection(liavgpb.rwVectorCursor().shape());
+	    Vector<Float> avgPBVec(liavgpb.rwVectorCursor().shape());
+	    Vector<Complex> avgPBSqVec(liavgpbSq.rwVectorCursor().shape());
+	    
+	    avgPBSqVec= liavgpbSq.rwVectorCursor();
+	    avgPBVec = liavgpb.rwVectorCursor();
+
+	    for(int i=0;i<PBCorrection.shape();i++)
+	      {
+		//
+		// This with the PS functions
+		//
+		// PBCorrection(i)=FUNC(avgPBVec(i))*sincConv(i)*sincConv(iy);
+		// if ((abs(PBCorrection(i)*correction(i))) >= pbLimit_p)
+		// 	lix.rwVectorCursor()(i) /= PBCorrection(i)*correction(i);
+		// else if (!makingPSF)
+		// 	lix.rwVectorCursor()(i) /= correction(i)*sincConv(i)*sincConv(iy);
+		//
+		// This without the PS functions
+		//
+
+
+
+		// if (makingPSF)
+		PBCorrection(i)=(avgPBSqVec(i)/avgPBVec(i));///(sincConv(i)*sincConv(iy));
+		//		PBCorrection(i)=(avgPBSqVec(i));///(sincConv(i)*sincConv(iy));
+		//		PBCorrection(i)=avgPBVec(i);///(sincConv(i)*sincConv(iy));
+
+		// else
+		//		PBCorrection(i)=(avgPBVec(i));//*sincConv(i)*sincConv(iy);
+		//		if ((abs(avgPBSqVec(i))) >= pbLimit_p)
+		lix.rwVectorCursor()(i) /= PBCorrection(i);
+
+		// if ((abs(PBCorrection(i))) >= pbLimit_p)
+		//   lix.rwVectorCursor()(i) /= PBCorrection(i);
+		// else if (!makingPSF)
+		//   lix.rwVectorCursor()(i) /= sincConv(i)*sincConv(iy);
+
+
+		// PBCorrection(i)=FUNC(avgPBVec(i)/avgPBSqVec(i))/(sincConv(i)*sincConv(iy));
+		// lix.rwVectorCursor()(i) *= PBCorrection(i);
+
+		// if ((abs(avgPBSqVec(i))) >= pbLimit_p)
+		//   lix.rwVectorCursor()(i) *= PBCorrection(i);
+		// else if (!makingPSF)
+		//   lix.rwVectorCursor()(i) /= sincConv(i)*sincConv(iy);
+	      }
+	    
+	    if(fftNorm)
+	      {
+		Complex rnorm(Float(inx)*Float(iny)/sumOfWts(pol,chan));
+		lix.rwCursor()*=rnorm;
+	      }
+	    else 
+	      {
+		Complex rnorm(Float(inx)*Float(iny));
+		lix.rwCursor()*=rnorm;
+	      }
+	  }
+	else 
+	  lix.woCursor()=0.0;
+      }
+  }
+  //
+  //---------------------------------------------------------------
+  //
+  void AWProjectFT::normalizeImage(Lattice<Complex>& skyImage,
+				   const Matrix<Double>& sumOfWts,
+				   Lattice<Float>& sensitivityImage,
 				   Bool fftNorm)
   {
     //
@@ -2720,11 +2842,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//
 		// This without the PS functions
 		//
-		PBCorrection(i)=FUNC(avgPBVec(i))*sincConv(i)*sincConv(iy);
-		if ((abs(PBCorrection(i))) >= pbLimit_p)
-		  lix.rwVectorCursor()(i) /= PBCorrection(i);
-		else if (!makingPSF)
-		  lix.rwVectorCursor()(i) /= sincConv(i)*sincConv(iy);
+                Float tt=sqrt(avgPBVec(i))/avgPBVec(i);
+                  //		PBCorrection(i)=pbFunc(avgPBVec(i))*sincConv(i)*sincConv(iy);
+                  //                lix.rwVectorCursor()(i) /= PBCorrection(i);
+                lix.rwVectorCursor()(i) *= tt;
+                  
+
+
+		// if ((abs(PBCorrection(i))) >= pbLimit_p)
+		//   lix.rwVectorCursor()(i) /= PBCorrection(i);
+		// else if (!makingPSF)
+		//   lix.rwVectorCursor()(i) /= sincConv(i)*sincConv(iy);
 	      }
 	    
 	    if(fftNorm)
@@ -2794,8 +2922,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// method, normalizeImage also needs to work with Lattices
 	// (rather than ImageInterface).
 	//
-	Array<Float> avgPBLat; avgPB_p->get(avgPBLat);
-	normalizeImage(*lattice,sumWeight,*avgPB_p,fftNormalization);
+        normalizeImage(*lattice,sumWeight,*avgPB_p,fftNormalization);
+
+        //	normalizeImage(*lattice,sumWeight,*avgPB_p, *avgPBSq_p, fftNormalization);
 
 	if(!isTiled) 
 	  {

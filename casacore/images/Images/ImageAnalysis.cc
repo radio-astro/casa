@@ -2365,8 +2365,6 @@ ComponentList ImageAnalysis::fitsky(
     region.print(oss);
     // Make sure the region is 2D and that it holds the sky.  Exception if not.
 	const CoordinateSystem& cSys = subImage.coordinates();
-
-
 	Bool xIsLong = CoordinateUtil::isSky(*itsLog, cSys);
 
 	Array<Float> pixels = subImage.get(True);
@@ -2396,8 +2394,13 @@ ComponentList ImageAnalysis::fitsky(
 	// pixel and vice versa
     ComponentList cl;
 
+	// CAS-1966, CAS-2633 keep degenerate axes
+	SubImage<Float> allAxesSubImage = SubImage<Float>::createSubImage(
+		pRegionRegion, pMaskRegion,
+		subImageTmp, *(ImageRegion::tweakedRegionRecord(&region)),
+		mask, (list ? itsLog : 0), False
+	);
     if (!fitIt) {
-                //cerr << "cinco" << endl;
 		Vector<Double> parameters;
 		parameters = singleParameterEstimate(fitter, Fit2D::GAUSSIAN,
 				maskedPixels, minVal, maxVal, minPos, maxPos, stokes, subImage,
@@ -2407,7 +2410,7 @@ ComponentList ImageAnalysis::fitsky(
 		Vector<SkyComponent> result(1);
 		Double facToJy;
 		result(0) = ImageUtilities::encodeSkyComponent(
-			*itsLog, facToJy, subImage,
+			*itsLog, facToJy, allAxesSubImage,
 			convertModelType(Fit2D::GAUSSIAN), parameters, stokes, xIsLong,
 			deconvolveIt
 		);
@@ -2508,13 +2511,13 @@ ComponentList ImageAnalysis::fitsky(
 		Vector<Double> solution = fitter.availableSolution(i);
 		Vector<Double> errors = fitter.availableErrors(i);
 
+
 	    result(i) = ImageUtilities::encodeSkyComponent(
-		    *itsLog, facToJy, subImage, modelType,
+		    *itsLog, facToJy, allAxesSubImage, modelType,
 			solution, stokes, xIsLong, deconvolveIt
 		);
-
 		encodeSkyComponentError(
-			*itsLog, result(i), facToJy, subImage,
+			*itsLog, result(i), facToJy, allAxesSubImage,
 			solution, errors, stokes, xIsLong
 		);
 
@@ -2522,23 +2525,17 @@ ComponentList ImageAnalysis::fitsky(
 	}
 	*itsLog << LogOrigin("ImageAnalysis", "fitsky");
 
-	// CAS-1966 keep degenerate axes
-	SubImage<Float> subImage2 = SubImage<Float>::createSubImage(
-		pRegionRegion, pMaskRegion, subImageTmp,
-		*(ImageRegion::tweakedRegionRecord(&region)),
-		mask, (list ? itsLog : 0), False, AxesSpecifier(True)
-	);
 	delete pRegionRegion;
 	delete pMaskRegion;
 
-	residStats = _fitskyWriteResidualAndGetStats(subImage2, residPixels, residImageName);
+	residStats = _fitskyWriteResidualAndGetStats(allAxesSubImage, residPixels, residImageName);
 
 	// PagedImage<Float> residImage(residImageName);
-	ImageMetaData subImageMD(subImage2);
+	ImageMetaData subImageMD(allAxesSubImage);
 	Vector<Int> inputDirectionAxes = subImageMD.directionAxesNumbers();
 	Record reg;
 
-	ImageAnalysis(&subImage2).statistics(
+	ImageAnalysis(&allAxesSubImage).statistics(
 		inputStats, inputDirectionAxes, reg, "", Vector<String>(0),
 		Vector<Float>(0), Vector<Float>(0)
 	);
@@ -2546,7 +2543,7 @@ ComponentList ImageAnalysis::fitsky(
     if (! modelImageName.empty()) {
         // construct the model image, copying pattern from ImageProxy
     	ImageUtilities::writeImage(
-    		subImage2.shape(), subImage2.coordinates(),
+    		allAxesSubImage.shape(), allAxesSubImage.coordinates(),
     		modelImageName, modelPixels, *itsLog
     	);
     }
@@ -6626,7 +6623,7 @@ ImageAnalysis::echo(Record& v, const bool godeep) {
 }
 
 Bool ImageAnalysis::getSpectralAxisVal(const String& specaxis,
-		Vector<Float>& specVal, const CoordinateSystem& cs,
+				       Vector<Float>& specVal, const CoordinateSystem& cs,
 				       const String& xunits, const String& specFrame) {
 
         CoordinateSystem cSys=cs;
@@ -6647,24 +6644,24 @@ Bool ImageAnalysis::getSpectralAxisVal(const String& specaxis,
 	String axis = specaxis;
 	axis.downcase();
 	Bool ok = False;
-       	if (axis.contains("vel") || axis.contains("freq")) { // need a conversion
+       	if (axis.contains("velo") || axis.contains("freq") || axis.contains("wave")) { // need a conversion
 
 		// first convert from pixels to frequencies
 		Vector<String> tmpstr(1);
 		Vector<Double> fworld(pix.nelements());
 		if (xunits == String("")) {
-			tmpstr[0] = String("GHz");
-		} else {
-			tmpstr[0] = xunits;
+		       tmpstr[0] = String("GHz");
+		} else if(axis.contains("freq")) {
+		       tmpstr[0] = xunits;
 		}
 		specCoor.setWorldAxisUnits(tmpstr);
 		ok = True;
 		for (uInt k = 0; k < pix.nelements(); ++k) {
-			ok = ok && specCoor.toWorld(fworld[k], pix[k]);
+		       ok = ok && specCoor.toWorld(fworld[k], pix[k]);
 		}
 
-		// then, if necessary, from frequencies to velocity
-		if (ok && axis.contains("vel")) {
+		// then, if necessary, from frequencies to velocity or wavelength
+		if (ok && axis.contains("velo")) {
 			ok = False;
 			if (axis.contains("optical")) { // optical velocity
 				specCoor.setVelocity(xunits, MDoppler::OPTICAL);
@@ -6674,6 +6671,10 @@ Bool ImageAnalysis::getSpectralAxisVal(const String& specaxis,
 				specCoor.setVelocity(xunits, MDoppler::RELATIVISTIC);
 			}
 			ok = specCoor.frequencyToVelocity(xworld, fworld);
+		} else if(ok && axis.contains("wave")) {
+		        ok = False;
+			specCoor.setWavelengthUnit(xunits);
+			ok = specCoor.frequencyToWavelength(xworld, fworld);
 		} else {
 			xworld = fworld;
 		}
@@ -6688,9 +6689,10 @@ Bool ImageAnalysis::getSpectralAxisVal(const String& specaxis,
 
 }
 
-Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
-		Vector<Float>& zxaxisval, Vector<Float>& zyaxisval,
-		const String& xytype, const String& specaxis, const Int& whichStokes,
+Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy, 
+				   Vector<Float>& zxaxisval, Vector<Float>& zyaxisval,
+				   const String& xytype, 
+				   const String& specaxis, const Int& whichStokes,
 				   const Int& whichTabular, const Int& whichLinear, 
 				   const String& xunits, const String& specFrame) {
 
@@ -6751,9 +6753,9 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 }
 
 Bool ImageAnalysis::getFreqProfile(
-	const Vector<Double>& x,
-	const Vector<Double>& y, Vector<Float>& zxaxisval,
-	Vector<Float>& zyaxisval, const String& xytype, const String& specaxis,
+	const Vector<Double>& x, const Vector<Double>& y, 
+	Vector<Float>& zxaxisval, Vector<Float>& zyaxisval, 
+	const String& xytype, const String& specaxis,
 	const Int& whichStokes, const Int& whichTabular,
 	const Int& whichLinear, const String& xunits, const String& specFrame
 ) {

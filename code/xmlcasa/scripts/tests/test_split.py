@@ -527,7 +527,7 @@ class split_test_state(unittest.TestCase):
     Checks a simple copy of the STATE subtable.
     """
     # rename and make readonly when plotxy goes away.
-    inpms = 'plotxy/uid___X1eb_Xa30_X1.ms'
+    inpms = 'plotxy/testPhase_sdm.ms'
     
     outms = 'musthavestate.ms'
 
@@ -542,7 +542,6 @@ class split_test_state(unittest.TestCase):
                 shutil.copytree(datapath + self.inpms, self.inpms)
                 
                 print "\n\tSplitting", self.inpms
-                print "\t  ...ignore any warnings about time-varying feeds..."
             splitran = split(self.inpms, self.outms, datacolumn='corrected',
                              field='', spw=[0, 1], width=1,
                              antenna='',

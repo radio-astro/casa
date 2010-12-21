@@ -433,6 +433,82 @@ Defines data selection parameters.
 
 <!-- ********************************************************************** -->
 <!-- ********************************************************************** -->
+   <method type="function" name="setelevationflags">
+   <shortdescription>Setup data selection parameters for flagging of
+   antennas pointing at a low elevation
+   </shortdescription>
+   
+<description>
+Defines data selection parameters.
+</description>
+<input>
+
+<!-- Selection parameters : start -->
+     <param type="string" name="field">
+     <description>Field indices or source names : example : '2,3C48' </description>
+     <value>""</value>
+     </param>
+     
+     <param type="string" name="spw">
+     <description>Spectral Window Indices or names : example : '1,2' </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="array">
+     <description>Array Indices or names : example : 'VLAA' </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="feed">
+     <description>Feed index or name : example : '1,2' </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="scan">
+     <description>Scan number : example : '1,2,3' </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="baseline">
+     <description>Baseline number : example : '2-3,4-5,132 ????' </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="uvrange">
+     <description> UV-distance range, with a unit : example : '2.0-3000.0 m'
+     </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="time">
+     <description>Time range, as MJDs or date strings : example : 'xx.x.x.x.x~yy.y.y.y.y'</description>
+     <value>""</value>
+     </param>
+
+     <param type="string" name="correlation">
+     <description>Correlations/polarizations : example : 'RR,LL,RL,LR,XX,YY,XY,YX'</description>
+     <value>""</value>
+     </param>
+
+     <param type="double" name="lowerlimit">
+     <description>The limiting elevation in degrees. Data obtained at lower antenna elevations will get flagged. : example : limit = '15'
+     </description>
+     <value>0.0</value>
+     </param>
+
+     <param type="double" name="upperlimit">
+     <description>The limiting elevation in degrees. Data obtained at higher antenna elevations will get flagged. : example : limit = '85'
+     </description>
+     <value>90.0</value>
+     </param>
+<!-- Selection parameters : end -->
+ 
+</input>
+<returns type="bool"/>
+</method>
+
+<!-- ********************************************************************** -->
+<!-- ********************************************************************** -->
 
    <method type="function" name="setflagsummary">
    <shortdescription>This function produces a summary of the flags. Statistics include

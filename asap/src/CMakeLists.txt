@@ -2,19 +2,21 @@
 # CMakeLists.txt for _asap.so
 ###
 
-# library name is _asap.so
-set( ASAPLIB _asap.so )
-
 # root for libatnf
 set( ASAPROOT ${ASAP_SOURCE_DIR} )
 set( SRCDIR ${ASAPROOT}/src )
 
 # include path
-include_directories( ${SRCDIR} )
-include_directories( ${ASAPROOT}/external-alma )
+include_directories( ${SRCDIR} 
+                     ${Boost_INCLUDE_DIR}
+                     ${ASAPROOT}/external-alma 
+                     ${ASAPROOT}/external/libpyrap/pyrap-0.3.2 )
 
 # link path
 link_directories( ${SRCDIR} )
+
+# use libpyrap
+add_definitions( -DHAVE_LIBPYRAP )
 
 # source files for libpyrap
 set( ASAP_SRCS
@@ -72,11 +74,21 @@ set( ASAP_PYSRCS
      ${SRCDIR}/python_asap.cpp )
 
 add_library( ${ASAPLIB} SHARED ${ASAP_SRCS} ${ASAP_PYSRCS} )
+
+# library name must be _asap.so
 set_target_properties( ${ASAPLIB}
                        PROPERTIES
-                       PREFIX ""
-                       SUFFIX "" )
-target_link_libraries( ${ASAPLIB} pyrap atnf ${CASACORE_LIBRARIES} )
+                       PREFIX _
+                       SUFFIX .so )
+
+target_link_libraries( ${ASAPLIB} 
+                       #${Boost_LIBRARIES}
+                       ${PYRAPLIB} 
+                       ${ATNFLIB} 
+                       #${CASACORE_LIBRARIES} 
+                       ${WCSLIB} )
+
+add_dependencies( inst ${ASAPLIB} )
 
 # install directory
 install( TARGETS ${ASAPLIB}

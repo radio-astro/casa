@@ -56,7 +56,8 @@ namespace casa{
     Directory dirObj(Dir);
 
     if (Dir.length() == 0) 
-      throw(SynthesisFTMachineError(LogMessage("Got null string for disk cache dir. ",logOrigin).message()));
+      throw(SynthesisFTMachineError(LogMessage("Got null string for disk cache dir. ",
+					       logOrigin).message()));
     //
     // If the directory does not exist, create it
     //
@@ -133,6 +134,7 @@ namespace casa{
     aux = other.aux;
     paCD_p = other.paCD_p;
     memCache_p = other.memCache_p;
+    memCacheWt_p = other.memCacheWt_p;
     return *this;
   };
   //
@@ -141,7 +143,7 @@ namespace casa{
   Long CFCache::size()
   {
     Long s=0;
-    for(Int i=0;i<memCache_p.nelements();i++)
+    for(uInt i=0;i<memCache_p.nelements();i++)
       s+=memCache_p[0].data->size();
 
     return s*sizeof(Complex);
@@ -187,7 +189,8 @@ namespace casa{
   //
   //-------------------------------------------------------------------------
   //
-  Int CFCache::addToMemCache(Float pa, CFType* cf, 
+  Int CFCache::addToMemCache(CFStoreCacheType& memCache_l, 
+			     Float pa, CFType* cf, 
 			     CoordinateSystem& coords,
 			     Vector<Int>& xConvSupport,
 			     Vector<Int>& yConvSupport,
@@ -209,9 +212,9 @@ namespace casa{
     // MEM cache.  Note that if the arrays are already of size
     // where+1, Array<>::resize() is a no-op.
     //
-    Int N=memCache_p.nelements();
+    Int N=memCache_l.nelements();
 
-    memCache_p.resize(max(N,where+1), True);
+    memCache_l.resize(max(N,where+1), True);
     if ((Int)paList.nelements() <= where)
       {
 	IPosition s(2,wConvSize,where+1);
@@ -236,14 +239,15 @@ namespace casa{
     //
     // If the CF was not in the mem. cache, add it.
     //
-    if (memCache_p[where].null())
+    if (memCache_l[where].null())
       {
 	Vector<Float> sampling(1);sampling[0]=convSampling;
 
-	memCache_p[where] = CFStore(cf,coords,sampling,
+	Int maxXSup=max(xConvSupport), maxYSup=max(yConvSupport);
+	memCache_l[where] = CFStore(cf,coords,sampling,
 				    xConvSupport,yConvSupport,
-				    max(xConvSupport),max(yConvSupport),
-				    Quantity(pa,"rad"),0);
+				    maxXSup,maxYSup,Quantity(pa,"rad"),
+				    0);
       }
     
     return where;
@@ -257,7 +261,8 @@ namespace casa{
 				  Int &convSize,
 				  Vector<Int> &xConvSupport, 
 				  Vector<Int> &yConvSupport, 
-				  Float convSampling, String nameQualifier,
+				  Float convSampling, 
+				  String nameQualifier,
 				  Bool savePA)
   {
     LogIO log_l(LogOrigin("CFCache","cacheConvFunction"));
@@ -297,13 +302,19 @@ namespace casa{
 				  newConvShape(CFDefs::NYPOS),
 				  newConvShape(CFDefs::NPOLPOS),
 				  1);
+	    Record miscinfo;
+	    miscinfo.define("Xsupport",xConvSupport);
+	    miscinfo.define("Ysupport",yConvSupport);
+	    miscinfo.define("sampling", convSampling);
+	    miscinfo.define("ParallacticAngle",pa);
 	    PagedImage<Complex> thisScreen(screenShape, ftCoords, name);
+	    thisScreen.setMiscInfo(miscinfo);
 	    Array<Complex> buf;
 	    buf=((cf(Slicer(sliceStart,sliceLength)).nonDegenerate()));
 	    thisScreen.put(buf);
 	  }
 	if (savePA)
-	  addToMemCache(pa,&cf, ftCoords, xConvSupport, yConvSupport, convSampling);
+	  addToMemCache(memCache_p, pa,&cf, ftCoords, xConvSupport, yConvSupport, convSampling);
 	
       }
     catch (AipsError& x)
@@ -385,17 +396,18 @@ namespace casa{
   //-------------------------------------------------------------------------
   //Along with the aux. info., also save the average PB in the disk cache.
   //
-  void CFCache::flush(ImageInterface<Float>& avgPB)
+  void CFCache::flush(ImageInterface<Float>& avgPB, String qualifier)
   {
     LogIO log_l(LogOrigin("CFCache", "flush"));
 
     if (Dir.length() == 0) return;
     flush();
     ostringstream Name;
-    Name << Dir <<"/avgPB";
+    Name << Dir <<"/avgPB" << qualifier;
     try
       {
 	storeImg(Name, avgPB);
+	avgPBReady_p=True;
       }
     catch(AipsError &x)
       {
@@ -407,7 +419,7 @@ namespace casa{
   //-------------------------------------------------------------------------
   //Load the average PB from the disk cache.
   //
-  Int CFCache::loadAvgPB(ImageInterface<Float>& avgPB)
+  Int CFCache::loadAvgPB(ImageInterface<Float>& avgPB, String qualifier)
   {
     LogIO log_l(LogOrigin("CFCache", "loadAvgPB"));
 
@@ -416,7 +428,7 @@ namespace casa{
 
 
     ostringstream name;
-    name << Dir << "/avgPB";
+    name << Dir << "/avgPB" << qualifier;
     //    cout << name.str() << endl;
     try
       {
@@ -430,6 +442,7 @@ namespace casa{
       {
 	return NOTCACHED;
       }
+    avgPBReady_p=True;
     return DISKCACHE;
   }
   //
@@ -456,7 +469,7 @@ namespace casa{
     Vector<Float> convSampling;
     Double cfRefFreq; CoordinateSystem coordSys;
     Array<Complex> cfBuf;
-    
+    Float samplingFromMisc, paFromMisc;
     if (Dir.length() == 0) 
       throw(SynthesisFTMachineError("Cache dir. name not set"));
       
@@ -489,6 +502,16 @@ namespace casa{
 	try
 	  {
 	    PagedImage<Complex> tmp(name.str().c_str());
+	    Record miscInfo;
+	    miscInfo = tmp.miscInfo();
+
+	    miscInfo.get("Xsupport", xconvSupport);
+	    miscInfo.get("Ysupport", yconvSupport);
+	    miscInfo.get("sampling", samplingFromMisc);
+	    miscInfo.get("ParallacticAngle", paFromMisc);
+	    convSampling = samplingFromMisc;
+
+
 	    Int index= tmp.coordinates().findCoordinate(Coordinate::SPECTRAL);
 	    coordSys = tmp.coordinates();
 	    SpectralCoordinate spCS = coordSys.spectralCoordinate(index);
@@ -520,22 +543,45 @@ namespace casa{
 					  name + String("\": ") + x.getMesg()));
 	  }
       }
-    xconvSupport.resize(wConvSize,True);
-    yconvSupport.resize(wConvSize,True);
-    for(Int i=0;i<wConvSize;i++)
-      {
-	xconvSupport(i) = XSup(i,where);
-	yconvSupport(i) = YSup(i,where);
-      }
+    // xconvSupport.resize(wConvSize,True);
+    // yconvSupport.resize(wConvSize,True);
+    // for(Int i=0;i<wConvSize;i++)
+    //   {
+    // 	xconvSupport(i) = XSup(i,where);
+    // 	yconvSupport(i) = YSup(i,where);
+    //   }
 
-    convSampling = Sampling[where];
-    
-    where=addToMemCache(pa, &cfBuf, coordSys, xconvSupport, yconvSupport, Sampling[where]);
+    // convSampling = Sampling[where];
+
+    // where=addToMemCache(convFuncCache, pa, &cfBuf, coordSys, 
+    // 			xconvSupport, yconvSupport, Sampling[where]);
+    where=addToMemCache(convFuncCache, paFromMisc, &cfBuf, coordSys, 
+			xconvSupport, yconvSupport, samplingFromMisc);
     cfs=convFuncCache[where];
     //    convFuncCache[where].show("loadFromDisk: ");
 
     return DISKCACHE;
   };
+  //
+  //-----------------------------------------------------------------------
+  //
+  Int CFCache::locateConvFunction(CFStore& cfs, CFStore& cfwts,
+				  const Int Nw, const Float pa, const Float dPA,
+				  const Int mosXPos, const Int mosYPos)
+  {
+   Int retVal=locateConvFunction(cfs, Nw, pa, dPA, mosXPos, mosYPos);
+   Int paKey;
+   if (retVal == DISKCACHE)
+     {
+       searchConvFunction(paKey, pa, dPA);
+       loadFromDisk(paKey,pa,dPA,Nw,memCacheWt_p, cfwts,"/CFWT");
+       cfwts=(memCacheWt_p[paKey]);
+     }
+   return retVal;
+  }
+  //
+  //-----------------------------------------------------------------------
+  //
   // Locate a convlution function in either mem. or disk cache.  
   // Return CFCache::DISKCACHE (=1) if found in the disk cache.
   //        CFCache::MEMCACHE (=2)  if found in the mem. cache.

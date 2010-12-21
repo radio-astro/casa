@@ -2609,7 +2609,6 @@ image='3C273XC1.clean.residual')
 </example>
 </method>
 
- 
    <method type="function" name="restore">
    <shortdescription>Calculate the restored image with restored model, component list, and  residuals</shortdescription>
    
@@ -2656,6 +2655,48 @@ parameters.
 
 </example>
 </method>
+ 
+   <method type="function" name="updateresidual">
+   <shortdescription>Calculate the residual and restored images with new modified model, component list,</shortdescription>
+   
+<description>
+This function is for efficiency and speed purpose only. Same as <link anchor="imager:imager.restore.function">restore</link>
+It is to be used after you have used <link anchor="imager:imager.clean.function">clean</link> or <link anchor="imager:imager.mem.function">mem</link> ...but you wish to tweak the model image, say by clipping unwanted components and it will avoid unnecessary recalculating of psf but will do a proper prediction of the new model visibilities and recalculate residual and restored images.
+
+
+</description>
+<input>
+
+     <param type="stringArray" name="model">
+     <description>Names of input model</description>
+     <value></value>
+     </param>
+
+     <param type="string" name="complist">
+     <description>Name of component list</description>
+     <value></value>
+     </param>
+
+     <param type="stringArray" name="image">
+     <description>Names of output restored images</description>
+     <value></value>
+     </param>
+
+     <param type="stringArray" name="residual">
+     <description>Names of residual images</description>
+     <value></value>
+     </param>
+
+</input>
+<returns type="bool"/>
+<example>
+
+- im.setbeam(bmaj='2.0arcsec', bmin='2.0arcsec')
+- im.restore(model='3C273XC1.clean', image='3C273XC1.clean.restored',
+
+</example>
+</method>
+
  
    <method type="function" name="sensitivity">
    <shortdescription>Calculate rms  sensitivity</shortdescription>

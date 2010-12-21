@@ -885,6 +885,45 @@ class imfit_test(unittest.TestCase):
 
         self.assertTrue(success,msgs)
 
+    def test_CAS_2633(self):
+        method = "test_CAS_2633"
+        test = "test_CAS_2633"
+
+        global msgs
+        success = True
+        def run_fitcomponents():
+            myia = iatool.create()
+            myia.open(jyperbeamkms)
+            res = myia.fitcomponents()
+            myia.done()
+            return res
+        def run_imfit():
+            default('imfit')
+            return imfit(imagename=jyperbeamkms)
+    
+        for i in [0 ,1]:
+            if (i == 0):
+                code = run_fitcomponents
+                method = test + "ia.fitcomponents: "
+            else:
+                code = run_imfit
+                method += test + "imfit: "
+            res = code()
+            clist = res['results']
+            if (not res['converged']):
+                success = False
+                msgs += method + "fit did not converge unexpectedly"
+            epsilon = 1e-7
+            # ref freq test
+            got = clist['component0']['spectrum']['frequency']['m0']['value']
+            expected = 1.415
+            if (not near(got, expected, epsilon)):
+                success = False
+                msgs += method + "frequency test failure, got " + str(got) + " expected " + str(expected) + "\n"
+
+
+        self.assertTrue(success,msgs)
+
 
 def suite():
     return [imfit_test]
