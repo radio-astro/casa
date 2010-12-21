@@ -277,6 +277,12 @@ protected:
   Quantum<Double> itsThreshold;
   CountedPtr<Matrix<Float> > itsMask;
   IPosition itsPositionPeakPsf;
+  Float itsSmallScaleBias;
+  Block<Matrix<Float> > itsScaleMasks;
+  Block<Matrix<Complex> > itsScaleXfrs;
+  Bool itsScalesValid;
+  Int itsNscales;
+  Float itsMaskThreshold;
 private:
 
   //# The following functions are used in various places in the code and are
@@ -289,16 +295,12 @@ private:
   CountedPtr<Matrix<Float> > itsDirty;
   CountedPtr<Matrix<Complex> >itsXfr;
 
-  Int itsNscales;
   Vector<Float> itsScaleSizes;
 
   Block<Matrix<Float> > itsScales;
-  Block<Matrix<Complex> > itsScaleXfrs;
   Block<Matrix<Float> > itsPsfConvScales;
   Block<Matrix<Float> > itsDirtyConvScales;
-  Block<Matrix<Float> > itsScaleMasks;
 
-  Bool itsScalesValid;
 
   Int itsIteration;	// what iteration did we get to?
   Int itsStartingIter;	// what iteration did we get to?
@@ -333,7 +335,6 @@ private:
 
   
   Bool itsIgnoreCenterBox;
-  Float itsSmallScaleBias;
   Bool itsStopAtLargeScaleNegative;
   Int itsStopPointMode;
   Bool itsDidStopPointMode;
@@ -341,7 +342,7 @@ private:
 
   // threshold for masks. If negative, mask values are used as weights and no pixels are
   // discarded (although effectively they would be discarded if the mask value is 0.)
-  Float itsMaskThreshold;
+
   IPosition psfShape_p;
 
 };
