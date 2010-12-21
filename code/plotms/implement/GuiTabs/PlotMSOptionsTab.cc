@@ -68,6 +68,7 @@ PlotMSOptionsTab::~PlotMSOptionsTab() { }
 
 void PlotMSOptionsTab::parametersHaveChanged(const PlotMSWatchedParameters& p,
         int updateFlag) {
+    (void)updateFlag;
     if(&p == &itsParameters_) {
         bool oldChange = itsChangeFlag_;
         itsChangeFlag_ = false;
