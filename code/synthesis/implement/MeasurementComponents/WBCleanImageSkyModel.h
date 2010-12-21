@@ -34,6 +34,7 @@
 #include <lattices/Lattices/LatticeExprNode.h>
 #include <lattices/Lattices/LatticeIterator.h>
 #include <lattices/Lattices/MultiTermLatticeCleaner.h>
+#include <synthesis/MeasurementEquations/MultiTermMatrixCleaner.h>
 #include <casa/OS/Timer.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -101,8 +102,8 @@ public:
 
   // Solve for this SkyModel
   Bool solve (SkyEquation& se);
-  Bool copyLatToImInt(TempLattice<Float>& lat, ImageInterface<Float>& im);
-  Bool copyImIntToLat(TempLattice<Float>& lat, ImageInterface<Float>& im);
+  //  Bool copyLatToImInt(TempLattice<Float>& lat, ImageInterface<Float>& im);
+  // Bool copyImIntToLat(TempLattice<Float>& lat, ImageInterface<Float>& im);
   
 //  Int nmodels_p; // Number of image models = nfields * ntaylor
   Int ntaylor_p; // Number of terms in the Taylor expansion to use.
@@ -134,7 +135,8 @@ public:
    
 private:
 
-  PtrBlock<MultiTermLatticeCleaner<Float>* > lc_p;
+  //  PtrBlock<MultiTermLatticeCleaner<Float>* > lc_p;
+  Block<MultiTermMatrixCleaner> lc_p;
    
   Vector<Float> scaleSizes_p; // Vector of scale sizes in pixels.
   Vector<Float> scaleBias_p; // Vector of scale biases !!
@@ -143,6 +145,8 @@ private:
   IPosition gip,imshape;
   Bool donePSF_p;
   Int nx,ny;
+
+  Int numbermajorcycles_p;
   
   // Memory to be allocated per TempLattice
   Double memoryMB_p;
@@ -151,17 +155,17 @@ private:
   
   void initVars();
   Bool checkParameters();
-  
-  Int storeAsImg(String fileName, ImageInterface<Float>& theImg);
-  Int storeTLAsImg(String fileName, TempLattice<Float> &TL, ImageInterface<Float>& theImg);
-  Int storeTLAsImg(String fileName, TempLattice<Complex> &TL, ImageInterface<Float>& theImg);
+
+  //  Int storeAsImg(String fileName, ImageInterface<Float>& theImg);
+  //Int storeTLAsImg(String fileName, TempLattice<Float> &TL, ImageInterface<Float>& theImg);
+  //Int storeTLAsImg(String fileName, TempLattice<Complex> &TL, ImageInterface<Float>& theImg);
 
   Bool resizeWorkArrays(Int length);
   
   Int makeSpectralPSFs(SkyEquation& se);
-  Bool findMaxAbsLattice(const TempLattice<Float>& masklat,const Lattice<Float>& lattice,Float& maxAbs,IPosition& posMaxAbs, Bool flip=False);
-  Int addTo(Lattice<Float>& to, const Lattice<Float>& add, Float multiplier);
+   //Int addTo(Lattice<Float>& to, const Lattice<Float>& add, Float multiplier);
   Int writeResultsToDisk();
+  Float computeFluxLimit(Int model, Float &cyclethreshold);
   
   Timer tmr1,tmr2;
   Int adbg;
