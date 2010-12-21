@@ -2040,6 +2040,72 @@ void ASDM2MSFiller::addSysPower(int		antennaId,
   mssyspower.flush();
 }
 
+void ASDM2MSFiller::addSysPowerSlice(unsigned int	nRow,
+				     vector<int>&       antennaId,
+				     vector<int>&	spectralWindowId,
+				     vector<int>&	feedId,
+				     vector<double>&	time,
+				     vector<double>&	interval,
+				     unsigned int       numReceptor,
+				     vector<float>&	switchedPowerDifference,
+				     vector<float>&	switchedPowerSum,
+				     vector<float>&     requantizerGain) {
+
+  Table			mssyspower = itsMS->rwKeywordSet().asTable("SYSPOWER");
+    
+  Vector<Int>		antennaIdMS(IPosition(1, nRow), &antennaId[0], SHARE);
+  Vector<Int>		spectralWindowIdMS(IPosition(1, nRow), &spectralWindowId[0], SHARE);
+  Vector<Int>		feedIdMS(IPosition(1, nRow), &feedId[0], SHARE);
+  Vector<Double>	timeMS(IPosition(1, nRow), &time[0], SHARE);
+  Vector<Double>	intervalMS(IPosition(1, nRow), &interval[0], SHARE);
+
+  unsigned int crow = mssyspower.nrow();
+
+  // Define a slicer to write blocks of nRow rows in the columns the SYSPOWER table.
+  Slicer slicer(IPosition(1, crow),
+		IPosition(1, crow + nRow - 1),
+		Slicer::endIsLast);
+
+  mssyspower.addRow(nRow);
+
+  // Fill the obvious columns
+  ScalarColumn<Int>	antennaIdCol(mssyspower, "ANTENNA_ID");
+  antennaIdCol.putColumnRange(slicer, antennaIdMS);
+  
+  ScalarColumn<Int>	feedIdCol(mssyspower, "FEED_ID");
+  feedIdCol.putColumnRange(slicer, feedIdMS);
+  
+  ScalarColumn<Int>	spectralWindowIdCol(mssyspower, "SPECTRAL_WINDOW_ID");
+  spectralWindowIdCol.putColumnRange(slicer, spectralWindowIdMS);
+  
+  ScalarColumn<Double>	timeCol(mssyspower, "TIME");
+  timeCol.putColumnRange(slicer, timeMS);
+
+  ScalarColumn<Double>	intervalCol(mssyspower, "INTERVAL");
+  intervalCol.putColumnRange(slicer, intervalMS);
+
+  ArrayColumn<Float> switchedPowerDifferenceCol(mssyspower, "SWITCHED_DIFF");
+  if (switchedPowerDifference.size() != 0) {
+    Matrix<Float> switchedPowerDifferenceMS(IPosition(2, numReceptor, nRow), &switchedPowerDifference[0], SHARE);
+    switchedPowerDifferenceCol.putColumnRange(slicer, switchedPowerDifferenceMS);
+  }
+
+  ArrayColumn<Float> switchedPowerSumCol(mssyspower, "SWITCHED_SUM");
+  if (switchedPowerSum.size() != 0) {
+    Matrix<Float> switchedPowerSumMS(IPosition(2, numReceptor, nRow), &switchedPowerSum[0], SHARE);
+    switchedPowerSumCol.putColumnRange(slicer, switchedPowerSumMS);
+  }
+
+  ArrayColumn<Float> requantizerGainCol(mssyspower, "REQUANTIZER_GAIN");
+  if (requantizerGain.size() != 0) {
+    Matrix<Float> requantizerGainMS(IPosition(2, numReceptor, nRow), &requantizerGain[0], SHARE);
+    requantizerGainCol.putColumnRange(slicer, requantizerGainMS);
+  }
+
+  mssyspower.flush();
+}
+				     
+
 void ASDM2MSFiller::addCalDevice(int				antennaId,
 				 int				feedId,
 				 int				spectralWindowId,

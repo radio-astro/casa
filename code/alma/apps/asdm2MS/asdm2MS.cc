@@ -957,6 +957,124 @@ BasicType basicTypeValue (PhysicalQuantity value) {
   return (BasicType) value.get();
 }
 
+map<int, int> swIdx2Idx ;                       // A map which associates old and new index of Spectral Windows before/after reordering.
+
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Some functions defined for the processing of the SysPower table 
+// with 'functional programming' techniques.
+//
+int sysPowerAntennaId(SysPowerRow* row) {
+  return row->getAntennaId().getTagValue();
+}
+
+int sysPowerSpectralWindowId(const SysPowerRow* row) {
+  return swIdx2Idx[row->getSpectralWindowId().getTagValue()];
+}
+
+int sysPowerFeedId(const SysPowerRow* row) {
+  return row->getFeedId();
+}
+
+double sysPowerMidTimeInSeconds(const SysPowerRow* row) {
+  return row->getTimeInterval().getStartInMJD()*86400 + ((double) row->getTimeInterval().getDuration().get()) / ArrayTime::unitsInASecond / 2.;
+}
+
+double sysPowerIntervalInSeconds(const SysPowerRow* row) {
+  return ((double) row->getTimeInterval().getDuration().get()) / ArrayTime::unitsInASecond ;
+}
+
+int sysPowerNumReceptor(const SysPowerRow* row) {
+  return row->getNumReceptor();
+}
+
+struct sysPowerCheckConstantNumReceptor {
+private:
+  unsigned int numReceptor;
+
+public:
+  sysPowerCheckConstantNumReceptor(unsigned int numReceptor) : numReceptor(numReceptor) {}
+  bool operator()(SysPowerRow* row) {
+    return numReceptor != (unsigned int) row->getNumReceptor();
+  }
+};
+
+struct sysPowerCheckSwitchedPowerDifference {
+private:
+  unsigned int	numReceptor;
+  bool		exists;
+
+public:
+  sysPowerCheckSwitchedPowerDifference(unsigned int numReceptor, bool exists) : numReceptor(numReceptor), exists(exists) {}
+  bool operator()(SysPowerRow* row) {
+    return (exists != row->isSwitchedPowerDifferenceExists()) || (row->getSwitchedPowerDifference().size() != numReceptor);
+  }
+};
+
+struct sysPowerCheckSwitchedPowerSum {
+private:
+  unsigned int	numReceptor;
+  bool		exists;
+
+public:
+  sysPowerCheckSwitchedPowerSum(unsigned int numReceptor, bool exists) : numReceptor(numReceptor), exists(exists) {}
+  bool operator()(SysPowerRow* row) {
+    return (exists != row->isSwitchedPowerSumExists()) || (row->getSwitchedPowerSum().size() != numReceptor);
+  }
+};
+
+struct sysPowerCheckRequantizerGain {
+private:
+  unsigned int	numReceptor;
+  bool		exists;
+
+public:
+  sysPowerCheckRequantizerGain(unsigned int numReceptor, bool exists) : numReceptor(numReceptor), exists(exists) {}
+  bool operator()(SysPowerRow* row) {
+    return (exists != row->isRequantizerGainExists()) || (row->getRequantizerGain().size() != numReceptor);
+  }
+};
+
+struct sysPowerSwitchedPowerDifference {
+private:
+  vector<float>::iterator iter;
+  
+public:
+  sysPowerSwitchedPowerDifference(vector<float>::iterator iter): iter(iter) {}
+  void operator()(SysPowerRow* row) { 
+    vector<float> tmp = row->getSwitchedPowerDifference();
+    copy(tmp.begin(), tmp.end(), iter);
+    iter += tmp.size();
+  }
+};
+
+struct sysPowerSwitchedPowerSum {
+private:
+  vector<float>::iterator iter;
+  
+public:
+  sysPowerSwitchedPowerSum(vector<float>::iterator iter): iter(iter) {}
+  void operator()(SysPowerRow* row) { 
+    vector<float> tmp = row->getSwitchedPowerSum();
+    copy(tmp.begin(), tmp.end(), iter);
+    iter += tmp.size();
+  }
+};
+
+
+struct sysPowerRequantizerGain {
+private:
+  vector<float>::iterator iter;
+
+public:
+  sysPowerRequantizerGain(vector<float>::iterator iter): iter(iter) {}
+  void operator()(SysPowerRow* row) { 
+    vector<float> tmp = row->getRequantizerGain();
+    copy(tmp.begin(), tmp.end(), iter);
+    iter += tmp.size();
+  }
+};
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+
 /**
  * The main function.
  */
@@ -1047,7 +1165,7 @@ int main(int argc, char *argv[]) {
     // Revision ? displays revision's info and don't go further.
     if (vm.count("revision")) {
       errstream.str("");
-      errstream << "$Id: asdm2MS.cpp,v 1.61 2010/12/15 13:44:40 mcaillat Exp $" << "\n" ;
+      errstream << "$Id: asdm2MS.cpp,v 1.62 2010/12/21 13:00:59 mcaillat Exp $" << "\n" ;
       error(errstream.str());
     }
 
@@ -1523,7 +1641,6 @@ int main(int argc, char *argv[]) {
   //
   vector<Tag> reorderedSwIds = reorderSwIds(*ds); // The vector of Spectral Window Tags in the order they will be inserted in the MS.
 
-  map<int, int> swIdx2Idx ;                       // A map which associates old and new index of Spectral Windows before/after reordering.
   for (vector<Tag>::size_type i = 0; i != reorderedSwIds.size() ; i++) swIdx2Idx[reorderedSwIds[i].getTagValue()] = i;
 
   try {
@@ -2907,6 +3024,7 @@ int main(int argc, char *argv[]) {
 
   //
   // Process the SysPower table.
+#if 0
   SysPowerTable& sysPowerT = ds->getSysPower();
   {
     infostream.str("");
@@ -3024,7 +3142,139 @@ int main(int argc, char *argv[]) {
       infostream << "converted in " << numMSSysPowers << " syspower(s) in the measurement set.";
       info(infostream.str());
     }
-  }
+  } // end of filling SysPower by row.
+#else
+  SysPowerTable& sysPowerT = ds->getSysPower();
+  {
+    
+    vector<int>		antennaId;
+    vector<int>		spectralWindowId;
+    vector<int>		feedId;
+    vector<double>	time;
+    vector<double>	interval;
+    vector<int>		numReceptor;
+    vector<float>	switchedPowerDifference;
+    vector<float>	switchedPowerSum;
+    vector<float>	requantizerGain;
+
+    unsigned int        numReceptor0;
+    {
+      infostream.str("");
+      infostream << "The dataset has " << sysPowerT.size() << " syspower(s)...";
+
+      /*
+       * Which rows must be processed ?
+       */
+      vector<SysPowerRow*> sysPowers;
+      if (ignoreTime) 
+	sysPowers = sysPowerT.get();
+      else {
+	sysPowers = rowsInAScanbyTimeInterval(sysPowerT.get(), selectedScanRow_v);
+	infostream << sysPowers.size() << " of them in the selected exec blocks / scans ... ";	
+      }
+
+      info(infostream.str());
+
+      infostream.str("");
+      errstream.str("");
+
+      antennaId.resize(sysPowers.size());
+      spectralWindowId.resize(sysPowers.size());
+      feedId.resize(sysPowers.size());
+      time.resize(sysPowers.size());
+      interval.resize(sysPowers.size());
+
+      /*
+       * Prepare the mandatory attributes.
+       */
+      transform(sysPowers.begin(), sysPowers.end(), antennaId.begin(), sysPowerAntennaId);
+      transform(sysPowers.begin(), sysPowers.end(), spectralWindowId.begin(), sysPowerSpectralWindowId);
+      transform(sysPowers.begin(), sysPowers.end(), feedId.begin(), sysPowerFeedId);
+      transform(sysPowers.begin(), sysPowers.end(), time.begin(), sysPowerMidTimeInSeconds);
+      transform(sysPowers.begin(), sysPowers.end(), interval.begin(), sysPowerIntervalInSeconds);
+      
+      /*
+       * Prepare the optional attributes.
+       */
+      numReceptor0 = (unsigned int) sysPowers[0]->getNumReceptor();
+      //
+      // Do we have a constant numReceptor all over the array numReceptor.
+      if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckConstantNumReceptor(numReceptor0)) != sysPowers.end()) {
+	errstream << "In SysPower table, numReceptor is varying. Can't go further." << endl;
+	error(errstream.str());
+      }
+      else 
+	infostream << "In SysPower table, numReceptor is uniformly equal to '" << numReceptor0 << "'.";
+            
+      bool switchedPowerDifferenceExists0 = sysPowers[0]->isSwitchedPowerDifferenceExists();
+      if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckSwitchedPowerDifference(numReceptor0, switchedPowerDifferenceExists0)) == sysPowers.end())
+	if (switchedPowerDifferenceExists0) {
+	  infostream << "In SysPower table all rows have switchedPowerDifference with " << numReceptor0 << " elements." << endl;
+	  switchedPowerDifference.resize(numReceptor0 * sysPowers.size());
+	  for_each(sysPowers.begin(), sysPowers.end(), sysPowerSwitchedPowerDifference(switchedPowerDifference.begin()));
+	}
+	else
+	  infostream << "In SysPower table no switchedPowerDifference recorded." << endl;
+      else {
+	errstream << "In SysPower table, switchedPowerDifference has a variable shape or is not present everywhere or both. Can't go further." ;
+	error(errstream.str());
+      }
+      
+      bool switchedPowerSumExists0 = sysPowers[0]->isSwitchedPowerSumExists();
+      if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckSwitchedPowerSum(numReceptor0, switchedPowerSumExists0)) == sysPowers.end())
+	if (switchedPowerSumExists0) {
+	  infostream << "In SysPower table all rows have switchedPowerSum with " << numReceptor0 << " elements." << endl;
+	  switchedPowerSum.resize(numReceptor0 * sysPowers.size());
+	  for_each(sysPowers.begin(), sysPowers.end(), sysPowerSwitchedPowerSum(switchedPowerSum.begin()));
+	}
+	else
+	  infostream << "In SysPower table no switchedPowerSum recorded." << endl;
+      else {
+	errstream << "In SysPower table, switchedPowerSum has a variable shape or is not present everywhere or both. Can't go further." ;
+	error(errstream.str());
+      }
+      
+      bool requantizerGainExists0 = sysPowers[0]->isRequantizerGainExists();
+      if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckRequantizerGain(numReceptor0, requantizerGainExists0)) == sysPowers.end())
+	if (requantizerGainExists0) {
+	  infostream << "In SysPower table all rows have switchedPowerSum with " << numReceptor0 << " elements." << endl;
+	  requantizerGain.resize(numReceptor0 * sysPowers.size());
+	  for_each(sysPowers.begin(), sysPowers.end(), sysPowerRequantizerGain(requantizerGain.begin()));  
+	}
+	else
+	  infostream << "In SysPower table no switchedPowerSum recorded." << endl;
+      else {
+	errstream << "In SysPower table, requantizerGain has a variable shape or is not present everywhere or both. Can't go further." ;
+	error(errstream.str());
+      }
+    }
+    info(infostream.str());
+        
+    cout << "About to call addSysPowerSlice with nRow=" << antennaId.size() << endl;
+    for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator msIter = msFillers.begin();
+	 msIter != msFillers.end();
+	 ++msIter) {
+      msIter->second->addSysPowerSlice(antennaId.size(),
+				       antennaId,
+				       spectralWindowId,
+				       feedId,
+				       time,
+				       interval,
+				       (unsigned int) numReceptor0,
+				       switchedPowerDifference,
+				       switchedPowerSum,
+				       requantizerGain);
+    }
+     
+    unsigned int numMSSysPowers =  (const_cast<casa::MeasurementSet*>(msFillers.begin()->second->ms()))->rwKeywordSet().asTable("SYSPOWER").nrow();
+    if (numMSSysPowers > 0) {
+      infostream.str("");
+      infostream << "converted in " << numMSSysPowers << " syspower(s) in the measurement set.";
+      info(infostream.str());
+    }
+  } // end of filling SysPower by slice.
+
+#endif
 
 
 #if 1

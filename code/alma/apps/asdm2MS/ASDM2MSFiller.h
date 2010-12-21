@@ -490,6 +490,17 @@ class ASDM2MSFiller
 		   vector<float>&	switchedPowerSum,
 		   vector<float>&	requantizerGain); 
 
+  void addSysPowerSlice(unsigned int	nRow,
+			vector<int>&    antennaId,
+			vector<int>&	spectralWindowId,
+			vector<int>&	feedId,
+			vector<double>&	time,
+			vector<double>&	interval,
+			unsigned int    numReceptor,
+			vector<float>&	switchedPowerDifference,
+			vector<float>&	switchedPowerSum,
+			vector<float>&	requantizerGain);
+
   void end(double time_);
 };
 #endif
