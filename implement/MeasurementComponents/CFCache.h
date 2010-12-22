@@ -115,7 +115,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   public:
     typedef Vector< CFStore > CFStoreCacheType;
     CFCache(const char *cfDir="CF"):
-      logIO_p(), memCache_p(), memCacheWt_p(), XSup(), YSup(), paList(), key2IndexMap(),
+      memCache_p(), memCacheWt_p(), XSup(), YSup(), paList(), key2IndexMap(),
       cfPrefix(cfDir), aux("aux.dat"), paCD_p(), avgPBReady_p(False)
     {};
     CFCache& operator=(const CFCache& other);
@@ -141,33 +141,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // Methods to cache the convolution function.
     //
+    // Top level method interfacing with the CFStore object
+    //-------------------------------------------------------------------
     void cacheConvFunction(CFStore& cfs, 
 			   String nameQualifier="",Bool savePA=True)
     {cacheConvFunction(cfs.pa, cfs,nameQualifier,savePA);}
-
+    //-------------------------------------------------------------------
+    // One level lower - the Parallactic angle can be separately
+    // provided.
     void cacheConvFunction(const Quantity pa, CFStore& cfs,
 			   String nameQualifier="",Bool savePA=True)
     {cacheConvFunction(pa.getValue("rad"), cfs, nameQualifier,savePA);}
-
+    //-------------------------------------------------------------------
+    // The Parallactic angle as a floating point number in radians.
     void cacheConvFunction(const Float pa, CFStore& cfs, 
-			   String nameQualifier="",Bool savePA=True)
-    {
-      if (cfs.data.null())
-	throw(SynthesisError(LogMessage("Won't cache a NULL CFStore",
-					LogOrigin("CFCache::cacheConvFunction")).message()));
-      CoordinateSystem ftcoords;
-      Int which=-1;
-      Int convSize=(Int)cfs.data->shape()(0);
-      cacheConvFunction(which, pa, *(cfs.data), cfs.coordSys, ftcoords, convSize,
-    			cfs.xSupport, cfs.ySupport, cfs.sampling[0],nameQualifier,savePA);
-    }
-
-    void cacheConvFunction(Int which, const Float& pa, CFType& cf, 
-			   CoordinateSystem& coords, CoordinateSystem& ftcoords, 
-			   Int& convSize, 
-			   Vector<Int>& xConvSupport, Vector<Int>& yConvSupport, 
-			   Float convSampling, String nameQualifier="",Bool savePA=True);
-    //
+			   String nameQualifier="",Bool savePA=True);
+    //-------------------------------------------------------------------
+    // Lowest level - all information about CFStore is explicitly
+    // provided as basic types
+    Int cacheConvFunction(Int which, const Float& pa, CFType& cf, 
+			  CoordinateSystem& coords, CoordinateSystem& ftcoords, 
+			  Int& convSize, 
+			  Vector<Int>& xConvSupport, Vector<Int>& yConvSupport, 
+			  Float convSampling, String nameQualifier="",Bool savePA=True);
+    //-------------------------------------------------------------------
     // Methods to sarch for a convolution function in the caches (disk
     // or memory) for the give Parallactic Angle value.
     //
@@ -180,8 +177,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     Int loadFromDisk(Int where, Float pa, Float dPA,
 		     Int Nx, CFStoreCacheType & convFuncCache,
-		     CFStore& cfs, String prefix="/CF");
-      
+		     CFStore& cfs, String nameQualifier="");
     //
     // Method to locate a convolution function for the given w-term
     // index and PA value.  This is the top level function that must
@@ -193,18 +189,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // found in the cache, CFDefs::MEMCACHE or CFDefs::DISKCACHE if
     // the function was found in memory or disk cache respectively.
     //
-    Int locateConvFunction(CFStore& cfs, CFStore& cftws, const Int Nw, const Quantity pa, const Quantity dPA, 
+    Int locateConvFunction(CFStore& cfs, CFStore& cftws, const Int Nw, 
+			   const Quantity pa, const Quantity dPA, 
 			   const Int mosXPos=0, const Int mosYPos=0)
     {return locateConvFunction(cfs, cftws, Nw,pa.getValue("rad"), dPA.getValue("rad"),mosXPos,mosYPos);};
 
-    Int locateConvFunction(CFStore& cfs, const Int Nw, const Quantity pa, const Quantity dPA, 
+    Int locateConvFunction(CFStore& cfs, const Int Nw, 
+			   const Quantity pa, const Quantity dPA, 
+			   const String& nameQualifier="",
 			   const Int mosXPos=0, const Int mosYPos=0)
-    {return locateConvFunction(cfs, Nw,pa.getValue("rad"), dPA.getValue("rad"),mosXPos,mosYPos);};
+    {return locateConvFunction(cfs, Nw,pa.getValue("rad"), dPA.getValue("rad"),nameQualifier, mosXPos,mosYPos);};
 
     Int locateConvFunction(CFStore& cfs, CFStore& cfwts,
 			   const Int Nw, const Float pa, const Float dPA,
 			   const Int mosXPos=0, const Int mosYPos=0);
+
     Int locateConvFunction(CFStore& cfs, const Int Nw, const Float pa, const Float dPA, 
+			   const String& nameQualifier="",
 			   const Int mosXPos=0, const Int mosYPos=0);
     //
     // Methods to write the auxillary information from the memory
@@ -220,12 +221,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     Bool avgPBReady() {return avgPBReady_p;};
 
-  protected:
-    LogIO logIO_p;
-    LogIO& logIO() {return logIO_p;};
-
-    CFStoreCacheType memCache_p, memCacheWt_p;
   private:
+    CFStoreCacheType memCache_p, memCacheWt_p;
     Matrix<Int> XSup, YSup;
     Vector<Float> paList, Sampling;
     Matrix<Float> key2IndexMap; // Nx2 [PAVal, Freq]
@@ -248,6 +245,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		      Vector<Int>& xConvSupport,
 		      Vector<Int>& yConvSupport,
 		      Float convSampling);
+    CFStoreCacheType& getMEMCacheObj(const String& nameQualifier);
+
     Bool avgPBReady_p;
   };
 }
