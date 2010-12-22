@@ -72,24 +72,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					  Bool oneRelative,
 					  Char prefix, Bool writeWCS,
 					  Bool preferVelocity, 
-					  Bool opticalVelocity) const
+					  Bool opticalVelocity,
+					  Bool preferWavelength) const
     {
 	LogIO os(LogOrigin("FITSCoordinateUtil", "toFITSHeader", WHERE));
 
-// If we have any tabular axes that aren't pure linear report that the
-// table will be lost.
-
-	Int tabCoord = -1;
-	while ((tabCoord = cSys.findCoordinate(Coordinate::TABULAR, tabCoord)) > 0) {
-	    if (cSys.tabularCoordinate(tabCoord).pixelValues().nelements() > 0) {
-		os << LogIO::NORMAL <<
-		    "Note: Your coordinate system has one or more TABULAR axes.\n"
-		    "The lookup table will be lost in the conversion to FITS, and\n"
-		    "will be replaced by averaged (i.e. linearized) axes." <<
-		    LogIO::POST;
-		break;
-	    }
-	}
 
 // Validation
 
@@ -154,11 +141,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	if (longAxis==-1 && latAxis==-1) skyCoord = -1;
 
+// If we have any tabular axes that aren't pure linear and are not optical velo or wavelength,
+// report that the table will be lost.
+
+	Int tabCoord = -1;
+	while ((tabCoord = cSys.findCoordinate(Coordinate::TABULAR, tabCoord)) > 0) {
+	    if (cSys.tabularCoordinate(tabCoord).pixelValues().nelements() > 0 
+		&& !( ((preferVelocity && opticalVelocity) || preferWavelength) && tabCoord==specCoord)
+		) {
+		os << LogIO::NORMAL <<
+		    "Note: Your coordinate system has one or more TABULAR axes for which\n"
+		    "the lookup table will be lost in the conversion to FITS, and\n"
+		    "will be replaced by averaged (i.e. linearized) axes." <<
+		    LogIO::POST;
+		break;
+	    }
+	}
+
+
 // change the units to degrees for the sky axes
 
 	Vector<String> units(coordsys.worldAxisUnits().copy());
 	if (longAxis >= 0) units(longAxis) = "deg";
 	if (latAxis >= 0) units(latAxis) = "deg";
+
+// and to the canonical units for the spectral and stokes axis
 	if (specAxis >= 0) units(specAxis) = "Hz";
 	if (stokesAxis >= 0) units(stokesAxis) = "";
 	coordsys.setWorldAxisUnits(units);
@@ -314,7 +321,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if (specAxis >= 0) {
 	    const SpectralCoordinate &spec = coordsys.spectralCoordinate(specCoord);
 	    spec.toFITS(header, specAxis, os, oneRelative, preferVelocity, 
-			opticalVelocity);
+			opticalVelocity, preferWavelength);
 	}
 
 // Write out the obsinfo
@@ -356,17 +363,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    crpix(stokesAxis) = 1;
 	    cdelt(stokesAxis) = inc;
 	} else {
-
-// The idea here is to write non-standard records, to indicate something
-// funny, and then write the rest of the Stokes axis as non-standard
-// keywords.  Since fromFITSHeader can't decode this anyway, for now
-// return False.
-
-/*
-  crval(stokesAxis) = Stokes::FITSValue(Stokes::StokesTypes(stokes(0))) + 200;
-  crpix(stokesAxis) = 1;
-  cdelt(stokesAxis) = 1;
-*/
 
 	    os << LogIO::SEVERE 
 	       <<  "The Stokes coordinate in this CoordinateSystem is too" << endl;
@@ -487,10 +483,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         // by ObsInfo.
         vector<String> saveCards;
 	int nkeys = header.nelements();
+	Vector<uInt> nChan;
 	String all;
 	for (int i=0; i<nkeys; i++) {
             if (header[i].substr(0,7) == "OBSGEO-") {
                 saveCards.push_back (header[i]);
+            }
+            if (header[i].substr(0,5) == "NAXIS") {
+		if(header[i].substr(0,6) == "NAXIS "){
+		    uInt na = atoi(header[i].substr(10,20).c_str());
+		    nChan.resize(na);
+		}
+		else {
+		    uInt j = atoi(header[i].substr(5,2).c_str())-1;
+		    if(j<nChan.nelements()){
+			nChan(j) = atoi(header[i].substr(10,20).c_str()); // extract number
+			//cout << header[i] << "   nchan " << j << " " << nChan(j) << endl;
+		    }
+		}
             }
 	    int hsize = header[i].size();
 	    if (hsize >= 19 &&       // kludge changes 'RA--SIN ' to 'RA---SIN', etc.
@@ -643,13 +653,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	ctrl = 7;                         // Do all unsafe unit corrections
         // wcsfix needs Int shape, so copy it.
         std::vector<Int> tmpshp(shape.begin(), shape.end());
+
         if (wcsfix(ctrl, &(tmpshp[0]), &wcsPtr[which], stat) > 0) {
 	    for (int i=0; i<NWCSFIX; i++) {
 		int err = stat[i];
 		if (err>0) {
 		    if (i==DATFIX) {
 			os << LogIO::NORMAL << wcsNames(i) << " incurred the error " << wcsfix_errmsg[err] <<  LogIO::POST;
-			os << LogIO::NORMAL << "this probably isn't fatal so continuing" << LogIO::POST;
+			os << LogIO::NORMAL << "This probably isn't fatal. Will try to continue ..." << LogIO::POST;
 		    } else {
 			os << LogIO::NORMAL << "The wcs function '"
 			   << wcsNames(i) << "' failed with error: "
@@ -694,7 +705,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    return False;
 	}
 //
-	ok = addSpectralCoordinate (cSysTmp, specAxis, wcsPtr[which], os);
+	ok = addSpectralCoordinate (cSysTmp, specAxis, wcsPtr[which], os, nChan(specAxis));
 	if (!ok) {
 	    wcsvfree(&nwcs, &wcsPtr);
 	    return False;
@@ -952,7 +963,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool FITSCoordinateUtil::addSpectralCoordinate (CoordinateSystem& cSys, 
 						    Int& specAxis,
 						    const ::wcsprm& wcs,
-						    LogIO& os) const
+						    LogIO& os,
+						    uInt nChan) const
     {
 
         // Extract wcs structure pertaining to Spectral Coordinate
@@ -975,84 +987,173 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	// See if we found the axis
 	if (ok && nsub==1) {
-
+	    
 	    // throws exception if wcsset() fails
 	    setWCS (wcsDest);
 
-	    // Convert the struct to a frequency base...
-	    // ...really convert to FREQ... casa (non-core) above depends
-	    // on receiving FREQ coordinates (not VELO)... if other uses
-	    // of addSpectralCoordinate( ) depend on retrieving VELO, then
-	    // FREQ conversion should be added as an option, taking advantage
-	    // of wcslib's conversion abilities.
-	    int index=0;
-	    char ctype[9];  // Patched by rrusk 25-Oct-2007
-	    String cType = wcs.ctype[axes[0]-1];
+	    String cType = wcsDest.ctype[0];
+	    	    
+	    if (cType.contains("WAVE")){
 
-	    if (cType.contains("VELO") || cType.contains("VRAD")) {
-	      os << "Converting velocity axis to frequency axis" << LogIO::POST;
-	    }
+		// make a tabular frequency coordinate from the wavelengths
+		MFrequency::Types freqSystem;
 
-
-	    if (cType.contains("FREQ")) strcpy(ctype,"FREQ-???");
-	    else if (cType.contains("VELO")) strcpy(ctype, "FREQ-???");
-	    else if (cType.contains("VRAD")) strcpy(ctype, "FREQ-???");
-	    else if (cType.contains("FELO")) strcpy(ctype, "FELO-???"); // FELO should never occur here
-	                                                                // because wcsfix should have replaced it, DP
-	                                                                // Will correct this for the 3.0 release
-	    else if (cType.contains("VOPT")) strcpy(ctype, "FREQ-???");
-	    else {
-		os << LogIO::WARN << "Unrecognized frequency type" << LogIO::POST;
-		ok = False;
-	    }
-
-	    if (ok) {
-	        int status = 0;
-		if ((status=wcssptr(&wcsDest, &index, ctype))) {
-		    os << LogIO::WARN << "Failed to convert Spectral coordinate to Frequency, error status = "
-		       
-		       << status << ": " << endl << "   " << wcs_errmsg[status] << endl;
-		    switch(status){
-		    case 4:
-		    case 5:
-		    case 6:
-		    case 7:
-		      os << "Will try to continue ...";
-		      break;
-		    default:
-		      os << "Will not try to continue ...";
-		      ok = False;
-		    }
-		    os << LogIO::POST;
-		} else {
-		  // throws exception if wcsset() fails
-		  setWCS (wcsDest);
-		}
-	    }
-
-	    // Find frequency system
-	    MFrequency::Types freqSystem;
-	    if (ok) {
-		specAxis = axes[0] - 1;                  // 1 -> 0 rel
 		if (!frequencySystemFromWCS (os, freqSystem, errMsg, wcsDest)) {
 		    os << LogIO::WARN << errMsg << LogIO::POST;
 		    ok = False;
 		}
-	    }
+		Double cRval = wcsDest.crval[0];
+		Double cRpix = wcsDest.crpix[0];
+		Double cDelt = wcsDest.cdelt[0];
+		Double cPc = wcsDest.pc[0];
+		Vector<Double> wavelengths(nChan);
 
-	    // Try to create SpectralCoordinate and fix up zero 
-	    // increments etc and add to CoordinateSystem
-	    if (ok) {
+		//cout << "crval " << cRval << " crpix " << cRpix << " pc " << cPc << " cdelt " << cDelt << endl;
+		
+		String waveUnit = String(wcsDest.cunit[0]);
+		Double restFrequency = wcs.restfrq;
+
+		if(nChan==0){
+		    os << LogIO::WARN << "Addition of tabular spectral coordinate with no channels requested." << LogIO::POST;
+		}
+
+		for(uInt i=0; i<nChan; i++){
+		    wavelengths(i) = cRval + cDelt * cPc * (Double(i) - cRpix);
+		    //cout << "wave i " << i << " " << wavelengths(i) << " " << waveUnit << endl;
+		}
+		    
+		SpectralCoordinate c(freqSystem, wavelengths, waveUnit, restFrequency);
+		
 		try {
-		    Bool oneRel = True;           // wcs structure from FITS has 1-rel pixel coordinate
-		    SpectralCoordinate c(freqSystem, wcsDest, oneRel);
-
-		    fixCoordinate (c, os);
 		    cSys.addCoordinate(c);
 		} catch (AipsError x) {
 		    os << LogIO::WARN << x.getMesg() << LogIO::POST;
 		    ok = False;
 		}     
+	    }
+	    else if(cType.contains("VOPT") || cType.contains("FELO")){
+
+		// make a tabular frequency coordinate from the optical velocities
+		MFrequency::Types freqSystem;
+
+		if (!frequencySystemFromWCS (os, freqSystem, errMsg, wcsDest)) {
+		    os << LogIO::WARN << errMsg << LogIO::POST;
+		    ok = False;
+		}
+		Double cRval = wcsDest.crval[0];
+		Double cRpix = wcsDest.crpix[0];
+		Double cDelt = wcsDest.cdelt[0];
+		Double cPc = wcsDest.pc[0];
+		Double restFrequency = wcs.restfrq;
+		if (restFrequency==0.){
+		    if(wcs.restwav != 0.){
+			restFrequency = C::c/wcs.restwav;
+		    }
+		    else{
+			os << LogIO::WARN << "Zero or no rest frequency provided for velocity axis." << LogIO::POST;
+			ok = False;
+		    }	
+		}
+		Vector<Double> frequencies(nChan);
+
+		//cout << "crval " << cRval << " crpix " << cRpix << " pc " << cPc << " cdelt " << cDelt << endl;
+		//cout << "restfrq " << restFrequency << " cunit " << String(wcsDest.cunit[0]) << endl;
+
+		Unit uCunit(String(wcsDest.cunit[0]));
+		Unit mps("m/s");
+
+		if(nChan==0){
+		    os << LogIO::WARN << "Addition of tabular spectral coordinate with no channels requested." << LogIO::POST;
+		}
+
+		for(uInt i=0; i<nChan; i++){
+		    Quantity velQ(cRval + cDelt * cPc * (Double(i) - cRpix), uCunit);
+		    Double vel = velQ.getValue(mps);
+		    if(vel>-C::c){
+			frequencies(i) = restFrequency/(vel/C::c+1.); // in Hz
+		    }
+		    else{
+			frequencies(i) = HUGE_VAL;
+		    }
+		    //cout << "freq i " << i << " " << frequencies(i) << " Hz"<< endl;
+		}
+		    
+		SpectralCoordinate c(freqSystem, frequencies, restFrequency);
+		
+		try {
+		    cSys.addCoordinate(c);
+		} catch (AipsError x) {
+		    os << LogIO::WARN << x.getMesg() << LogIO::POST;
+		    ok = False;
+		}     
+	    }
+	    else{ // make a coordinate linear in frequency using wcslib
+		
+		// Convert the struct to a frequency base...
+		// ...really convert to FREQ... casa (non-core) above depends
+		// on receiving FREQ coordinates (not VELO)... if other uses
+		// of addSpectralCoordinate( ) depend on retrieving VELO, then
+		// FREQ conversion should be added as an option, taking advantage
+		// of wcslib's conversion abilities.
+		int index=0;
+		char ctype[9];
+		
+		if (cType.contains("FREQ")) strcpy(ctype,"FREQ-???");
+		else if (cType.contains("VELO")) strcpy(ctype, "FREQ-???");
+		else if (cType.contains("VRAD")) strcpy(ctype, "FREQ-???");
+		else {
+		    os << LogIO::WARN << "Unrecognized frequency type" << LogIO::POST;
+		    ok = False;
+		}
+		
+		if (ok) {
+		    int status = 0;
+		    if ((status=wcssptr(&wcsDest, &index, ctype))) {
+			os << LogIO::WARN << "Failed to convert Spectral coordinate to Frequency, error status = "
+			    
+			   << status << ": " << endl << "   " << wcs_errmsg[status] << endl;
+			switch(status){
+			case 4:
+			case 5:
+			case 6:
+			case 7:
+			    os << "Will try to continue ...";
+			    break;
+			default:
+			    os << "Will not try to continue ...";
+			    ok = False;
+			}
+			os << LogIO::POST;
+		    } else {
+			// throws exception if wcsset() fails
+			setWCS (wcsDest);
+		    }
+		}
+	      
+
+		// Find frequency system
+		MFrequency::Types freqSystem;
+		if (ok) {
+		    if (!frequencySystemFromWCS (os, freqSystem, errMsg, wcsDest)) {
+			os << LogIO::WARN << errMsg << LogIO::POST;
+			ok = False;
+		    }
+		}
+
+		// Try to create SpectralCoordinate and fix up zero 
+		// increments etc and add to CoordinateSystem
+		if (ok) {
+		    try {
+			Bool oneRel = True;           // wcs structure from FITS has 1-rel pixel coordinate
+			SpectralCoordinate c(freqSystem, wcsDest, oneRel);
+			
+			fixCoordinate (c, os);
+			cSys.addCoordinate(c);
+		    } catch (AipsError x) {
+			os << LogIO::WARN << x.getMesg() << LogIO::POST;
+			ok = False;
+		    }     
+		}
 	    }
 	} else {
 	  //os << LogIO::DEBUG1 << "passing empty or nonexistant spectral Coordinate axis" << LogIO::POST;
