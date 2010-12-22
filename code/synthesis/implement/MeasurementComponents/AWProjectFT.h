@@ -338,8 +338,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     virtual Bool verifyShapes(IPosition shape0, IPosition shape1);
 
-    inline virtual Float pbFunc(Float& a) {return (a);};
-    inline virtual Complex pbFunc(Complex& a) {return (a);};
+    inline virtual Float pbFunc(const Float& a, const Float& limit) {if (abs(a) >= limit) return (a);else return 1.0;};
+    inline virtual Complex pbFunc(const Complex& a, const Float& limit) 
+    {if (abs(a)>=limit) return (a); else return Complex(1.0,0.0);};
 
   protected:
     
@@ -406,7 +407,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //    CountedPtr<ConvolutionFunction> telescopeConvFunc_p;
     //    CFStore cfs_p, cfwts_p;
     Array<Complex> convFunc_p, convWeights_p;
-    CoordinateSystem convFuncCS_p;
     //
     // Vector to hold the support size info. for the convolution
     // functions pointed to by the elements of convFunctions_p.  The
