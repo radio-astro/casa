@@ -113,7 +113,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       gridder(0), isTiled(False), arrayLattice(0), lattice(0), 
       maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
       pointingToImage(0), usezero_p(usezero),
-      /*telescopeConvFunc_p(cf),cfs_p(), cfwts_p(),*/ epJ_p(),
+      convFunc_p(), convWeights_p(), epJ_p(),
       doPBCorrection(doPBCorr), /*cfCache_p(cfcache),*/ paChangeDetector(),
       rotateAperture_p(True),
       Second("s"),Radian("rad"),Day("d"), pbNormalized_p(False)
@@ -926,11 +926,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					 pa, cfs_p, cfwts_p);
 
 	cfCache_p->cacheConvFunction(cfs_p);
-	cfCache_p->cacheConvFunction(cfwts_p,"WT",False);
+	cfCache_p->cacheConvFunction(cfwts_p,"WT");//,False);
 	cfCache_p->flush(); // Write the aux info file to the disk
 			    // cache
       }
-    convFuncCS_p = cfs_p.coordSys;
 
     // For now, functions for weight gridding is the same as the
     // function for visibility gridding.
@@ -1123,12 +1122,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      if (doPBCorrection)
 		{
 		  // PBCorrection(ix) = FUNC(PBCorrection(ix))/(sincConv(ix)*sincConv(iy));
-		  PBCorrection(ix) = (PBCorrection(ix))*(sincConv(ix)*sincConv(iy));
-//		  PBCorrection(ix) = (PBCorrection(ix))*(sincConv(ix)*sincConv(iy));
- 		  if ((abs(PBCorrection(ix))) >= pbLimit_p)
-		    {lix.rwVectorCursor()(ix) /= (PBCorrection(ix));}
- 		  else
-		    {lix.rwVectorCursor()(ix) *= (sincConv(ix)*sincConv(iy));}
+		  PBCorrection(ix) = pbFunc(PBCorrection(ix),pbLimit_p)*(sincConv(ix)*sincConv(iy));
+		  lix.rwVectorCursor()(ix) /= PBCorrection(ix);
 		}
 	      else 
 		lix.rwVectorCursor()(ix) /= (1.0/(sincConv(ix)*sincConv(iy)));
@@ -1451,11 +1446,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for(Int i=0;i<N;i++) CFMap[i] = polMap[N-i-1];
     
     Array<Complex> rotatedConvFunc;
-//     SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
+//     SynthesisUtils::rotateComplexArray(log_l, convFunc_p, cfs_p.coordSys,
 // 				       rotatedConvFunc,(currentCFPA-actualPA),"CUBIC");
-    SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
+    SynthesisUtils::rotateComplexArray(log_l, convFunc_p, cfs_p.coordSys,
     				       rotatedConvFunc,0.0,"LINEAR");
-    // SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
+    // SynthesisUtils::rotateComplexArray(log_l, convFunc_p, cfs_p.coordSys,
     // 				       rotatedConvFunc,(currentCFPA-actualPA),"LINEAR");
 
     ConjCFMap = polMap;
@@ -1607,11 +1602,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     makeConjPolMap(vb,CFMap,ConjCFMap);
 
     Array<Complex> rotatedConvFunc;
-//     SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
+//     SynthesisUtils::rotateComplexArray(log_l, convFunc_p, cfs_p.coordSys,
 //  				       rotatedConvFunc,(currentCFPA-actualPA),"LINEAR");
-    SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
+    SynthesisUtils::rotateComplexArray(log_l, convFunc_p, cfs_p.coordSys,
     				       rotatedConvFunc,0.0);
-    // SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
+    // SynthesisUtils::rotateComplexArray(log_l, convFunc_p, cfs_p.coordSys,
     // 				       rotatedConvFunc,(currentCFPA-actualPA),"LINEAR");
 
     ConjCFMap_p     = ConjCFMap.getStorage(deleteThem(CONJCFMAP));
@@ -1766,9 +1761,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ConjCFMap = polMap;
 
     Array<Complex> rotatedConvFunc;
-//    SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
+//    SynthesisUtils::rotateComplexArray(log_l, convFunc_p, cfs_p.coordSys,
 //				       rotatedConvFunc,(currentCFPA-actualPA),"LINEAR");
-    SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
+    SynthesisUtils::rotateComplexArray(log_l, convFunc_p, cfs_p.coordSys,
  				       rotatedConvFunc,0.0,"LINEAR");
 
     /*
@@ -2823,13 +2818,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    Int iy=lix.position()(1);
 	    gridder->correctX1D(correction,iy);
 	    
-	    Vector<Float> PBCorrection(liavgpb.rwVectorCursor().shape()),
-	      avgPBVec(liavgpb.rwVectorCursor().shape());
+	    Vector<Float> avgPBVec(liavgpb.rwVectorCursor().shape());
 	    
-	    PBCorrection = liavgpb.rwVectorCursor();
 	    avgPBVec = liavgpb.rwVectorCursor();
 
-	    for(int i=0;i<PBCorrection.shape();i++)
+	    for(int i=0;i<avgPBVec.shape();i++)
 	      {
 		//
 		// This with the PS functions
@@ -2842,15 +2835,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//
 		// This without the PS functions
 		//
-                Float tt=sqrt(avgPBVec(i))/avgPBVec(i);
-                  //		PBCorrection(i)=pbFunc(avgPBVec(i))*sincConv(i)*sincConv(iy);
+		//                Float tt=sqrt(avgPBVec(i))/avgPBVec(i);
+		Float tt = pbFunc(avgPBVec(i),pbLimit_p);
+                  //		PBCorrection(i)=pbFunc(avgPBVec(i),pbLimit_p)*sincConv(i)*sincConv(iy);
                   //                lix.rwVectorCursor()(i) /= PBCorrection(i);
-                lix.rwVectorCursor()(i) *= tt;
+		//                lix.rwVectorCursor()(i) *= tt;
                   
-
-
-		// if ((abs(PBCorrection(i))) >= pbLimit_p)
-		//   lix.rwVectorCursor()(i) /= PBCorrection(i);
+		lix.rwVectorCursor()(i) /= tt;
+		// if ((abs(tt) >= pbLimit_p))
+		//   lix.rwVectorCursor()(i) /= tt;
 		// else if (!makingPSF)
 		//   lix.rwVectorCursor()(i) /= sincConv(i)*sincConv(iy);
 	      }
@@ -2922,6 +2915,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// method, normalizeImage also needs to work with Lattices
 	// (rather than ImageInterface).
 	//
+
         normalizeImage(*lattice,sumWeight,*avgPB_p,fftNormalization);
 
         //	normalizeImage(*lattice,sumWeight,*avgPB_p, *avgPBSq_p, fftNormalization);
