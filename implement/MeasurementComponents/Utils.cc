@@ -528,7 +528,7 @@ namespace casa{
     // Re-grid inImage onto outImage
     //
     Vector<Int> pixelAxes;
-    Int linInd = -1, after=-1;
+    Int linInd = -1;
     // Extract LINRAR coords from inCS.
     // Extract axes2
     Vector<Double> refPix = inCS.referencePixel();
@@ -536,7 +536,8 @@ namespace casa{
     refPix(1) = (inArray.shape()(1)+1)/2;
 
     inCS.setReferencePixel(refPix);
-    linInd = inCS.findCoordinate(Coordinate::LINEAR, after);
+    linInd = inCS.findCoordinate(Coordinate::LINEAR);
+
     pixelAxes=inCS.pixelAxes(linInd);
     IPosition axes2(pixelAxes);
     // Set linear transformation matrix in inCS.
