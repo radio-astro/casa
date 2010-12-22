@@ -267,9 +267,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					   ImageInterface<Float>& sensitivityImage)
   {
     LogIO log_l(LogOrigin("AWProjectWBFT", "makeSensitivityImage"));
-    log_l << "Setting up weights accumulation during gridding to compute sensitivity pattern." << endl
-	  << "First gridding cycle will be slower than the subsequent ones." 
-	  << LogIO::NORMAL << LogIO::POST;
+    log_l << "Setting up for weights accumulation during gridding to compute sensitivity pattern." 
+	  << endl
+	  << "Consequently, the first gridding cycle will be slower than the subsequent ones." 
+	  << LogIO::WARN;
   }
   //
   //---------------------------------------------------------------
@@ -700,10 +701,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for(Int i=0;i<N;i++) CFMap[i] = polMap[N-i-1];
     
     Array<Complex> rotatedConvFunc;
-//     SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
-// 				       rotatedConvFunc,(currentCFPA-actualPA),"LINEAR");
-    SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
-				       rotatedConvFunc,0.0);
+
+    // Rotate the convolution function using Image rotation and
+    // disable rotation in the gridder
+    SynthesisUtils::rotateComplexArray(log_l, convFunc_p, cfs_p.coordSys,
+				       rotatedConvFunc,(currentCFPA-actualPA),"LINEAR");
+    actualPA = currentCFPA; 
+
+    // SynthesisUtils::rotateComplexArray(log_l, convFunc_p, cfs_p.coordSys,
+    // 				       rotatedConvFunc,0.0);
 
     ConjCFMap = polMap;
     makeCFPolMap(vb,cfStokes_p,CFMap);
@@ -849,10 +855,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     makeConjPolMap(vb,CFMap,ConjCFMap);
 
     Array<Complex> rotatedConvFunc;
-//     SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
-// 				       rotatedConvFunc,(currentCFPA-actualPA));
-    SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
-				       rotatedConvFunc,0.0);
+    // Rotate the convolution function using Image rotation and
+    // disable rotation in the gridder
+    SynthesisUtils::rotateComplexArray(log_l, convFunc_p, cfs_p.coordSys,
+				       rotatedConvFunc,(currentCFPA-actualPA));
+    actualPA = currentCFPA; 
+
+    // SynthesisUtils::rotateComplexArray(log_l, convFunc_p, cfs_p.coordSys,
+    // 				       rotatedConvFunc,0.0);
 
     ConjCFMap_p     = ConjCFMap.getStorage(deleteThem(CONJCFMAP));
     CFMap_p         = CFMap.getStorage(deleteThem(CFMAP));
@@ -1001,15 +1011,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     makeCFPolMap(vb,cfStokes_p,CFMap);
     makeConjPolMap(vb,CFMap,ConjCFMap);
 
+    // {
+    //   IPosition tt;
+    //   cfs_p.coordSys.list(log_l,MDoppler::RADIO,tt,tt);
+    //   cfwts_p.coordSys.list(log_l,MDoppler::RADIO,tt,tt);
+    // }
     Array<Complex> rotatedConvFunc_l, rotatedConvWeights_l;
-    // SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
-    //     			       rotatedConvFunc_l,(currentCFPA-actualPA));
-    // SynthesisUtils::rotateComplexArray(log_l, convWeights_p, convFuncCS_p, 
-    //     			       rotatedConvWeights_l,(currentCFPA-actualPA));
-    SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
-        			       rotatedConvFunc_l,0.0);
-    SynthesisUtils::rotateComplexArray(log_l, convWeights_p, convFuncCS_p,
-        			       rotatedConvWeights_l,0.0);
+
+    // Rotate the convolution function using Image rotation and
+    // disable rotation in the gridder
+    SynthesisUtils::rotateComplexArray(log_l, convFunc_p, cfs_p.coordSys,
+        			       rotatedConvFunc_l,(currentCFPA-actualPA));
+    if (!avgPBReady_p)
+      SynthesisUtils::rotateComplexArray(log_l, convWeights_p, cfwts_p.coordSys,
+    					 rotatedConvWeights_l,(currentCFPA-actualPA));
+    // Disable rotation in the gridder
+    actualPA = currentCFPA; 
+
+    // SynthesisUtils::rotateComplexArray(log_l, convFunc_p, cfs_p.coordSys,
+    //     			       rotatedConvFunc_l,0.0);
+    // if (!avgPBReady_p)
+    //   SynthesisUtils::rotateComplexArray(log_l, convWeights_p, cfwts_p.coordSys,
+    // 					 rotatedConvWeights_l,0.0);
 
 
     ConjCFMap_p     = ConjCFMap.getStorage(deleteThem(CONJCFMAP));
