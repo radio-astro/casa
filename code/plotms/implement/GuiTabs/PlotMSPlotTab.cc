@@ -254,8 +254,7 @@ void PlotMSPlotTab::plot() {
                          d->filename() != cd->filename())))    {
                     vector<PlotCanvasPtr> canv = itsCurrentPlot_->canvases();
                     for(unsigned int i = 0; i < canv.size(); i++)
-                        canv[i]->standardMouseTools()->selectTool()
-                               ->clearSelectedRects();
+                        canv[i]->standardMouseTools()->selectTool()->clearSelectedRects();
                     itsPlotter_->getAnnotator().clearAll();
                 }
                 

@@ -415,16 +415,16 @@ public:
     // Returns a standard mouse tool group for this implementation.
     // DEFAULT IMPLEMENTATION.
     virtual PlotStandardMouseToolGroupPtr standardMouseTools(
-            PlotStandardMouseToolGroup::Tool activeTool =
-            PlotStandardMouseToolGroup::NONE, bool smartDelete = true) const;
+            ToolCode activeTool = NONE_TOOL,  
+            bool smartDelete = true)    const;
     
     // Returns a standard mouse tool group for this implementation on the given
     // axes.
     // DEFAULT IMPLEMENTATION.
     virtual PlotStandardMouseToolGroupPtr standardMouseTools(PlotAxis xAxis,
             PlotAxis yAxis, PlotCoordinate::System sys,
-            PlotStandardMouseToolGroup::Tool activeTool =
-            PlotStandardMouseToolGroup::NONE, bool smartDelete = true) const;
+            ToolCode activeTool = NONE_TOOL,  
+            bool smartDelete = true)   const;
     
     // Returns tools for this implementation.  Implementations that provide
     // their own PlotTool subclasses should override these methods.

@@ -106,6 +106,11 @@ public:
         // regions, zoom, pan, and annotate tools can be turned on at one time.
         // Required parameters: P_ON_OFF.
         TOOL_MARK_REGIONS,
+        
+        // Turns on/off the subtract regions tool.  
+        // works like MARK REGIONS, but where user drags, all regions within are deleted.
+        // (note: CAS-1971 DSW)
+        TOOL_SUBTRACT_REGIONS,
 
         // Turns on/off the zoom tool.  Operates on all canvases of all plots
         // AT THE TIME of the call to doAction().  Only one of the mark

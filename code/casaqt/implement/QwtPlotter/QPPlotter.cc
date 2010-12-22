@@ -271,19 +271,22 @@ void QPPlotter::showDefaultPanel(DefaultPanel panel, bool show) {
         else if(!exportBox->isVisible()) toolFrame->setVisible(false);
         
         if(!m_layout.null()) {        
-            PlotStandardMouseToolGroup::Tool tool =
-                PlotStandardMouseToolGroup::NONE;        
+            ToolCode toolcode = NONE_TOOL;        
             if(show) {
                 if(handSelectButton->isChecked())
-                    tool = PlotStandardMouseToolGroup::SELECT;
+                    toolcode = SELECT_TOOL;
+#if (0)
+                else if(handSubtractButton->isChecked())
+                    toolcode = SUBTRACT_TOOL;
+#endif
                 else if(handZoomButton->isChecked())
-                    tool = PlotStandardMouseToolGroup::ZOOM;
+                    toolcode = ZOOM_TOOL;
                 else if(handPanButton->isChecked())
-                    tool = PlotStandardMouseToolGroup::PAN;
+                    toolcode = PAN_TOOL;
             }
 
             for(unsigned int i = 0; i < m_canvasTools.size(); i++)
-                m_canvasTools[i]->setActiveTool(tool);
+                m_canvasTools[i]->setActiveTool(toolcode);
         }
         break;
         
@@ -539,11 +542,15 @@ void QPPlotter::initialize() {
 void QPPlotter::handToolChanged(bool on) {
     if(!on || m_layout.null()) return;
     
-    PlotStandardMouseToolGroup::Tool tool = PlotStandardMouseToolGroup::NONE;
-    if(handZoomButton->isChecked()) tool = PlotStandardMouseToolGroup::ZOOM;
+    ToolCode tool = NONE_TOOL;
+    if(handZoomButton->isChecked()) tool = ZOOM_TOOL;
     else if(handSelectButton->isChecked())
-        tool = PlotStandardMouseToolGroup::SELECT;
-    else if(handPanButton->isChecked()) tool = PlotStandardMouseToolGroup::PAN;
+        tool = SELECT_TOOL;
+#if (0)
+    else if(handSubtractButton->isChecked())   /* ???? work in progress. did i create such a button in .ui? No? then what is handSubtractRegions? duh... */
+        tool = SUBTRACT_TOOL;
+#endif
+    else if(handPanButton->isChecked()) tool = PAN_TOOL;
     
     for(unsigned int i = 0; i < m_canvasTools.size(); i++)
         m_canvasTools[i]->setActiveTool(tool);

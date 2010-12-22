@@ -196,8 +196,11 @@ PlotSymbolPtr PlotFactory::symbol(const PlotSymbolPtr copy,
 }
 
 
-PlotStandardMouseToolGroupPtr PlotFactory::standardMouseTools(
-        PlotStandardMouseToolGroup::Tool activeTool, bool smartDelete) const {
+
+PlotStandardMouseToolGroupPtr   PlotFactory::standardMouseTools(
+        ToolCode activeTool, 
+        bool smartDelete) const    {
+            
     PlotSelectToolPtr sel = selectTool();
     sel->setSelectLine(line("black", PlotLine::SOLID, 1.0));
     sel->setRectLine(line("black", PlotLine::SOLID, 1.0));
@@ -207,11 +210,19 @@ PlotStandardMouseToolGroupPtr PlotFactory::standardMouseTools(
             smartDelete);
 }
 
-PlotStandardMouseToolGroupPtr PlotFactory::standardMouseTools(PlotAxis xAxis,
-        PlotAxis yAxis, PlotCoordinate::System sys,
-        PlotStandardMouseToolGroup::Tool activeTool, bool smartDelete) const {
+
+
+
+PlotStandardMouseToolGroupPtr   PlotFactory::standardMouseTools(
+        PlotAxis xAxis,
+        PlotAxis yAxis, 
+        PlotCoordinate::System sys,
+        ToolCode activeTool, 
+        bool smartDelete) const    {
+
     PlotSelectToolPtr sel = selectTool(xAxis, yAxis, sys);
     sel->setSelectLine(line("black", PlotLine::SOLID, 1.0));
+    sel->setSubtractLine(line("violet", PlotLine::DASHED, 2.0));   //DSW: if compiles ok, change to #9020C8
     sel->setRectLine(line("black", PlotLine::SOLID, 1.0));
     sel->setRectFill(areaFill("black", PlotAreaFill::MESH3));
     return PlotStandardMouseToolGroupPtr(new PlotStandardMouseToolGroup(
@@ -245,6 +256,8 @@ PlotZoomToolPtr PlotFactory::zoomTool(PlotAxis xAxis, PlotAxis yAxis,
 
 PlotPanToolPtr PlotFactory::panTool(PlotAxis xAxis, PlotAxis yAxis,
         PlotCoordinate::System system, bool smartDelete) const {
+    
+    (void)smartDelete;
     return PlotPanToolPtr(new PlotPanTool(xAxis, yAxis, system), false); }
 
 PlotTrackerToolPtr PlotFactory::trackerTool(PlotAxis xAxis, PlotAxis yAxis,
