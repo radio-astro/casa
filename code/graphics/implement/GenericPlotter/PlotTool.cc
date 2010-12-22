@@ -348,43 +348,43 @@ void PlotSelectTool::handleMouseEvent(const PlotEvent& event)    {
         
         if (m_subtraction_mode)  {
             
-            rect->setLine(m_subLine); 
-            ///rect->setAreaFill( /*hard-code lime green or something gaudy for testing );
-            
-   ////xxx         vector<PlotItemPtr> v(1);
             float zapper_x1 = r.upperLeft().x();
             float zapper_x2 = r.lowerRight().x();
             float zapper_y1 = r.lowerRight().y();
             float zapper_y2 = r.upperLeft().y();
             
             int n = m_rects.size();
+            #if (0)    // testing overlap logic
             printf("\n\n  Region Subtractor Starts!            m_rects n=%d  zap (%.3f to %.3f)  X  (%.3f to %.3f) \n\n", 
                                                (int)m_rects.size() ,
                                                zapper_x1, zapper_x2, zapper_y1, zapper_y2);
+            #endif
             for (int j=n-1;  j>=0;  j--)   {
                 
                 // test if [j]th rect in our list m_rects fits inside the newly dragged rect
                 PlotShapeRectanglePtr pr = m_rects[j];
                 vector<PlotCoordinate> coords =  pr->coordinates();
-                float x1 = coords[0].x();
-                float x2 = coords[1].x();
-                float y1 = coords[0].y();
-                float y2 = coords[1].y();
-bool ffx1, ffx2, ffy1, ffy2;
-ffx1 =  (x1 >= zapper_x1),
-                          ffx2= (x2 <= zapper_x2),
-                          ffy1= (y1 >= zapper_y1),
-                          ffy2= (y2 <= zapper_y2);
+                float x1 = min(coords[0].x(), coords[1].x() );
+                float x2 = max(coords[0].x(), coords[1].x() );
+                float y1 = min(coords[0].y(), coords[1].y() );
+                float y2 = max(coords[0].y(), coords[1].y() );
 
                 bool it_fits =  (x1 >= zapper_x1)
                              && (x2 <= zapper_x2)
                              && (y1 >= zapper_y1)
                              && (y2 <= zapper_y2);
-                printf("     test   (%.3f %d to %.3f %d)  X  (%.3f %d to %.3f %d)  %s  ncoord=%d\n",
-                            x1, ffx1, x2, ffx2, y1,ffy1, y2,ffy2,  it_fits? "it fits!":  " no ",   coords.size() );
+#if (0)  // testing overlap logic
+bool ffx1, ffx2, ffy1, ffy2;
+ffx1 =  (x1 >= zapper_x1),
+ffx2= (x2 <= zapper_x2),
+ffy1= (y1 >= zapper_y1),
+ffy2= (y2 <= zapper_y2);
+printf("     test   (%.3f %d to %.3f %d)  X  (%.3f %d to %.3f %d)  %s  ncoord=%d\n",
+                    x1, ffx1, x2, ffx2, y1,ffy1, y2,ffy2,  it_fits? "it fits!":  " no ",   coords.size() );
+#endif
+
                 if (it_fits)   {
                     // Must remove both the PlotItem in the canvas and the rect in our list
-///xxx              v[0] = m_rects[j];
                     m_canvas->removePlotItem(pr);
                     m_rects.erase( m_rects.begin()+ j);
                 }
