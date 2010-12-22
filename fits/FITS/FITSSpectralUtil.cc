@@ -118,7 +118,8 @@ Bool FITSSpectralUtil::fromFITSHeader(Int &spectralAxis,
 
     for (Int i=0; i<ndim; i++) {
 	if (ctype(i).contains("FELO") || ctype(i).contains("FREQ") ||
-	    ctype(i).contains("VELO")) {
+	    ctype(i).contains("VELO") || ctype(i).contains("VOPT") ||
+	    ctype(i).contains("WAVE")) {
 	    spectralAxis = i;
 	    break;
 	}
@@ -238,7 +239,7 @@ Bool FITSSpectralUtil::fromFITSHeader(Int &spectralAxis,
 	  referenceFrequency + (Double(i)-referenceChannel)*delt;
       }
       
-    } else if (ctype(spectralAxis).contains("FELO")) {
+    } else if (ctype(spectralAxis).contains("FELO") || (ctype(spectralAxis).contains("VOPT"))) {
       if (restFrequency < 0) {
 	logger << LogIO::SEVERE << "FELO axis does not have rest frequency "
 	  "information (RESTFREQ)" << LogIO::POST;
@@ -277,8 +278,7 @@ Bool FITSSpectralUtil::fromFITSHeader(Int &spectralAxis,
 	logger << LogIO::SEVERE << "VELO axis does not have rest frequency "
 	  "information (RESTFREQ)" << LogIO::POST;
 	return False;
-      } else {
-	    // Have RESTFREQ
+      } else { // Have RESTFREQ
 	referenceChannel = rpix;
 	switch(velocityPreference) {
 	case MDoppler::RADIO:
@@ -307,6 +307,28 @@ Bool FITSSpectralUtil::fromFITSHeader(Int &spectralAxis,
 	    (Double(i)-referenceChannel) * deltaFrequency;
 	}
       }
+    } else if (ctype(spectralAxis).contains("WAVE")) {
+      referenceChannel = rpix;
+      if(rval>0. && rval+delt!=0.){
+	referenceFrequency = C::c/rval;
+	deltaFrequency =   C::c/(rval+delt) - referenceFrequency;
+      }
+      else{
+	logger << LogIO::SEVERE << "Zero or negative wavelength as CRVAL." << LogIO::POST;
+	return False;
+      }
+      frequencies.resize(nChan);
+      for (Int i=0; i<nChan; i++) {
+	Double wl = rval + (Double(i)-referenceChannel) * delt;
+	if(wl>0.){
+	  frequencies(i) = C::c/wl;
+	}
+	else{
+	  logger << LogIO::SEVERE << "Zero or negative wavelength at pixel "
+		 << i << LogIO::POST;
+	  return False;
+	}	
+      }
     } else {
       AlwaysAssert(0, AipsError); // NOTREACHED
     }
@@ -329,7 +351,8 @@ Bool FITSSpectralUtil::toFITSHeader(String &ctype,
 				    Double freqIncrement,
 				    MFrequency::Types referenceFrame,
 				    Bool preferVelocity,
-				    MDoppler::Types velocityPreference)
+				    MDoppler::Types velocityPreference,
+				    Bool preferWavelength)
 {
     // Dummy defaults
     ctype = "";
@@ -339,6 +362,9 @@ Bool FITSSpectralUtil::toFITSHeader(String &ctype,
     velref = 0;
 
     logger << LogOrigin("FITSUtil", "toFITSHeader", WHERE);
+
+    AlwaysAssert(!(preferVelocity && preferWavelength), AipsError);
+    // Cannot produce FITS header for velocity AND wavelength. You have to choose one.
 
     // Calculate the velocity related things first
     
@@ -356,11 +382,10 @@ Bool FITSSpectralUtil::toFITSHeader(String &ctype,
 	case MDoppler::RADIO: velref += 256; break;
 	default:
 	    {
-		logger << LogIO::SEVERE << "Can only handle OPTICAL and RADIO "
+	       logger << LogIO::SEVERE << "Can only handle OPTICAL and RADIO "
 		    "velocities. Using OPTICAL" << LogIO::POST;
 	    }
-	}
-	
+	}	
     }
 
     // Calculate velocity quantities
@@ -377,7 +402,18 @@ Bool FITSSpectralUtil::toFITSHeader(String &ctype,
 	}
     }
 
-    if (!haveAlt || !preferVelocity) {
+    if(preferWavelength){
+	// axis is supposed to be linear in wavelength
+	if(refFrequency<=0. || refFrequency+freqIncrement==0.){
+	    logger << LogIO::SEVERE << "Zero or negative reference frequency." << LogIO::POST;
+	    return False;
+	}
+	ctype = String("WAVE") + ctypetag;
+	crval = C::c/refFrequency;
+	cdelt = C::c/(refFrequency+freqIncrement) - crval;
+	crpix = refChannel;
+    }
+    else if (!haveAlt || !preferVelocity) {
 	// FREQ is primary
 	//	ctype = String("FREQ") + ctypetag;
 	ctype = String("FREQ"); // no tag here. change requested by C. Brogan

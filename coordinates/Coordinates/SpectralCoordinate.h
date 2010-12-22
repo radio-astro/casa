@@ -516,14 +516,16 @@ public:
     // the fields "ctype, crval, crpix", and "cdelt" must already be created. Other header
     // words are created as needed.  Use <src>oneRelative=True</src> to
     // convert zero-relative SpectralCoordinate pixel coordinates to 
-    // one-relative FITS coordinates, and vice-versa.  If <src>preferVelocity=False</src>
-    // the primary axis type will be Frequency, else velocity.  For a velocity axis,
+    // one-relative FITS coordinates, and vice-versa.  If <src>preferVelocity=True</src>
+    // the primary axis type will be velocity, if <src>preferWavelength=True</src> it will
+    // be wavelength, else frequency.  For a velocity axis,
     // if <src>opticalVelDef=False</src>, the radio velocity definition will be used,
     // else optical definition.
     //<group>
     void toFITS(RecordInterface &header, uInt whichAxis, 
 		LogIO &logger, Bool oneRelative=True,
-		Bool preferVelocity=True, Bool opticalVelDef=True) const;
+		Bool preferVelocity=True, Bool opticalVelDef=True,
+		Bool preferWavelength=False) const;
 
 // Old interface.  Handled by wcs in new interface in FITSCoordinateUtil.cc
 //    static Bool fromFITSOld(SpectralCoordinate &out, String &error,
