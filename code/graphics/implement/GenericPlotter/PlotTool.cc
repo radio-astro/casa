@@ -389,7 +389,9 @@ printf("     test   (%.3f %d to %.3f %d)  X  (%.3f %d to %.3f %d)  %s  ncoord=%d
                     m_rects.erase( m_rects.begin()+ j);
                 }
             }
+#if (0) // testing overlap logic
             printf("\n\n  Post-surgical stats:             m_rects n=%d  \n\n", (int)m_rects.size() );
+#endif 
             m_lastEventHandled = true;
             
         }
