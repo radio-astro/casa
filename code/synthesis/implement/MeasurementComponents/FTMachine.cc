@@ -884,8 +884,88 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Save the FTMachine to a Record; currently undefined for the base
     // FTMachine class.
     //
-    error="Not defined";
-    outRecord = Record();
+    
+    if(withImage){
+      Record imrec;
+      if(image->toRecord(error, imrec))
+	outRecord.defineRecord("image", imrec);
+    }
+    outRecord.define("nantenna", nAntenna_p);
+    outRecord.define("distance", distance_p);
+    outRecord.define("lastfieldid", lastFieldId_p);
+    outRecord.define("lastmsid", lastMSId_p);
+    outRecord.define("tangentspecified", tangentSpecified_p);
+    {
+      Record tmprec;
+      MeasureHolder mh(mTangent_p);
+      if(mh.toRecord(error, tmprec))
+	outRecord.defineRecord("mtangent_rec", tmprec);
+    }
+    {
+      Record tmprec;
+      MeasureHolder mh(mImage_p);
+      if(mh.toRecord(error, tmprec))
+	outRecord.defineRecord("mimage_rec", tmprec);
+    }
+    
+    //mFrame_p not necessary to save as it is generated from mLocation_p
+    outRecord.define("nx", nx);
+    outRecord.define("ny", ny);
+    outRecord.define("npol", npol);
+    outRecord.define("nchan", nchan);
+    outRecord.define("nvischan", nvischan);
+    outRecord.define("nvispol", nvispol);
+    {
+      Record tmprec;
+      MeasureHolder mh(mLocation_p);
+      if(mh.toRecord(error, tmprec))
+	outRecord.defineRecord("mlocation_rec", tmprec);
+    }
+
+
+
+      /*
+      if(uvwMachine_p)
+	delete uvwMachine_p;
+      if(other.uvwMachine_p)
+	uvwMachine_p=new UVWMachine(*other.uvwMachine_p);
+      else
+	uvwMachine_p=0;
+      doUVWRotation_p=other.doUVWRotation_p;
+      //Spectral and pol stuff 
+      freqInterpMethod_p=other.freqInterpMethod_p;
+      spwChanSelFlag_p.resize();
+      spwChanSelFlag_p=other.spwChanSelFlag_p;
+      freqFrameValid_p=other.freqFrameValid_p;
+      selectedSpw_p.resize();
+      selectedSpw_p=other.selectedSpw_p;
+      imageFreq_p.resize();
+      imageFreq_p=other.imageFreq_p;
+      lsrFreq_p.resize();
+      lsrFreq_p=other.lsrFreq_p;
+      interpVisFreq_p.resize();
+      interpVisFreq_p=other.interpVisFreq_p;
+      multiChanMap_p=other.multiChanMap_p;
+      chanMap.resize();
+      chanMap=other.chanMap;
+      polMap.resize();
+      polMap=other.polMap;
+      nVisChan_p.resize();
+      nVisChan_p=other.nVisChan_p;
+      spectralCoord_p=other.spectralCoord_p;
+      doConversion_p.resize();
+      doConversion_p=other.doConversion_p;
+      pointingDirCol_p=other.pointingDirCol_p;
+      //moving source stuff
+      movingDir_p=other.movingDir_p;
+      fixMovingSource_p=other.fixMovingSource_p;
+      firstMovingDir_p=other.firstMovingDir_p;
+      
+      //Double precision gridding for those FTMachines that can do
+      useDoubleGrid_p=other.useDoubleGrid_p;
+      cfStokes_p = other.cfStokes_p;
+      polInUse_p = other.polInUse_p;
+    */
     return False;
   };
   
@@ -893,7 +973,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Restore an FTMachine from a Record; currently undefined for the 
     // base FTMachine class
     //
-    error="Not defined";
+    uvwMachine_p=0; //when null it is reconstructed from mImage_p and mFrame_p
+    //mFrame_p is not necessary as it is generated in initMaps from mLocation_p
     return False;
   };
   
