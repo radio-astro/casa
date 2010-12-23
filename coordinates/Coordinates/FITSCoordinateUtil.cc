@@ -705,7 +705,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    return False;
 	}
 //
-	ok = addSpectralCoordinate (cSysTmp, specAxis, wcsPtr[which], os, nChan(specAxis));
+	ok = addSpectralCoordinate (cSysTmp, specAxis, wcsPtr[which], os, nChan.nelements());
 	if (!ok) {
 	    wcsvfree(&nwcs, &wcsPtr);
 	    return False;
