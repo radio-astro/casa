@@ -72,6 +72,7 @@ def data():
     for i in (pass_on['datasets']).keys():
         myfiles.append(pass_on['datasets'][i][0] + '.fits')
     myfiles.append('stokeslast-test.image')    
+    myfiles.append('xxx-clean.image')    
     return myfiles
 
 def doCopy():
@@ -83,4 +84,6 @@ def doCopy():
     cp = []
     for i in (pass_on['datasets']).keys():
         cp.append(0)
+    cp.append(0)
+    cp.append(0)
     return cp
