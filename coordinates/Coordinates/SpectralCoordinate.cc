@@ -342,9 +342,9 @@ SpectralCoordinate::SpectralCoordinate(MFrequency::Types freqType,
    Vector<Double> frequencies;
    wavelengthToFrequency(frequencies, wavelengths);
 
-   // for(uInt i=0; i<frequencies.nelements(); i++){
+   //for(uInt i=0; i<frequencies.nelements(); i++){
    //    cout << "freq i " << i << " " << frequencies(i) << endl;
-   // }
+   //}
 
 // Make Tabular spectral coordinate
 
@@ -784,25 +784,35 @@ Bool SpectralCoordinate::setVelocity (const String& velUnit,
 
 Bool SpectralCoordinate::setWavelengthUnit(const String& waveUnit)
 {
-   static const Unit unitsM_b(String("m"));
-   if (!waveUnit.empty()) {
-      Unit unit(waveUnit);
-      if (unit!=unitsM_b) {
-         set_error("Unit must be empty or consistent with m");
-         return False; 
-      }
 
-      String error;
-      Vector<Double> factor;
-      Vector<String> outUnit(1,"m");
-      Vector<String> inUnit(1,waveUnit);
-      if(!find_scale_factor(error, factor, outUnit, inUnit)){
-         set_error(error);
-	 return False;
-      }
-      to_m_p = factor(0);
-      waveUnit_p = waveUnit;
+   //cout << "setting waveunit before: unit  is " << waveUnit_p << " to_m_p  is " << to_m_p << endl;  
+   //cout << "setting waveunit before: requested unit  is " << waveUnit << endl;  
+
+   static const Unit unitsM_b(String("m"));
+
+   String wu = waveUnit;
+
+   if (wu.empty()) {
+     wu = "mm"; // the default
    }
+   Unit unit(wu);
+   if (unit!=unitsM_b) {
+     set_error("Unit must be empty or consistent with m");
+     return False; 
+   }
+   
+   String error;
+   Vector<Double> factor;
+   Vector<String> outUnit(1,"m");
+   Vector<String> inUnit(1,wu);
+   if(!find_scale_factor(error, factor, outUnit, inUnit)){
+     set_error(error);
+     return False;
+   }
+   to_m_p = factor(0);
+   waveUnit_p = wu;
+
+   //cout << "setting waveunit after: unit now is " << waveUnit_p << " to_m_p now is " << to_m_p << endl;  
 //
    return True;
 }

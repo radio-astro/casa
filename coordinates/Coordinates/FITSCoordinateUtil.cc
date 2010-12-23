@@ -493,11 +493,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if(header[i].substr(0,6) == "NAXIS "){
 		    uInt na = atoi(header[i].substr(10,20).c_str());
 		    nChan.resize(na);
+		    nChan = 0;
 		}
 		else {
 		    uInt j = atoi(header[i].substr(5,2).c_str())-1;
 		    if(j<nChan.nelements()){
-			nChan(j) = atoi(header[i].substr(10,20).c_str()); // extract number
+		        nChan(j) = atoi(header[i].substr(10,20).c_str()); // extract number
 			//cout << header[i] << "   nchan " << j << " " << nChan(j) << endl;
 		    }
 		}
@@ -705,7 +706,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    return False;
 	}
 //
-	ok = addSpectralCoordinate (cSysTmp, specAxis, wcsPtr[which], os, nChan.nelements());
+	ok = addSpectralCoordinate (cSysTmp, specAxis, wcsPtr[which], os, nChan);
 	if (!ok) {
 	    wcsvfree(&nwcs, &wcsPtr);
 	    return False;
@@ -964,7 +965,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 						    Int& specAxis,
 						    const ::wcsprm& wcs,
 						    LogIO& os,
-						    uInt nChan) const
+						    Vector<uInt> nChan) const
     {
 
         // Extract wcs structure pertaining to Spectral Coordinate
@@ -976,6 +977,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	wcsDest.flag = -1;
 	int alloc = 1;
 	int ierr = wcssub (alloc, &wcs, &nsub, axes.storage(), &wcsDest);
+
+	uInt nc = 0;
+	if(axes[0]-1<nChan.nelements()){
+	  nc = nChan(axes[0]-1); // the number of channels of the spectral axis
+	}
 
 	Bool ok = True;
 	String errMsg;
@@ -995,6 +1001,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    	    
 	    if (cType.contains("WAVE")){
 
+		if(nc==0){
+		    os << LogIO::WARN << "Will omit tabular spectral coordinate with no channels." << LogIO::POST;
+		    wcsfree (&wcsDest);
+		    return True;
+		}
+
 		// make a tabular frequency coordinate from the wavelengths
 		MFrequency::Types freqSystem;
 
@@ -1006,18 +1018,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Double cRpix = wcsDest.crpix[0];
 		Double cDelt = wcsDest.cdelt[0];
 		Double cPc = wcsDest.pc[0];
-		Vector<Double> wavelengths(nChan);
+		Vector<Double> wavelengths(nc);
 
 		//cout << "crval " << cRval << " crpix " << cRpix << " pc " << cPc << " cdelt " << cDelt << endl;
 		
 		String waveUnit = String(wcsDest.cunit[0]);
 		Double restFrequency = wcs.restfrq;
 
-		if(nChan==0){
-		    os << LogIO::WARN << "Addition of tabular spectral coordinate with no channels requested." << LogIO::POST;
-		}
-
-		for(uInt i=0; i<nChan; i++){
+		for(uInt i=0; i<nc; i++){
 		    wavelengths(i) = cRval + cDelt * cPc * (Double(i) - cRpix);
 		    //cout << "wave i " << i << " " << wavelengths(i) << " " << waveUnit << endl;
 		}
@@ -1032,6 +1040,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}     
 	    }
 	    else if(cType.contains("VOPT") || cType.contains("FELO")){
+
+		if(nc==0){
+		    os << LogIO::WARN << "Will omit tabular spectral coordinate with no channels." << LogIO::POST;
+		    wcsfree (&wcsDest);
+		    return True; 
+		}
 
 		// make a tabular frequency coordinate from the optical velocities
 		MFrequency::Types freqSystem;
@@ -1054,7 +1068,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			ok = False;
 		    }	
 		}
-		Vector<Double> frequencies(nChan);
+		Vector<Double> frequencies(nc);
 
 		//cout << "crval " << cRval << " crpix " << cRpix << " pc " << cPc << " cdelt " << cDelt << endl;
 		//cout << "restfrq " << restFrequency << " cunit " << String(wcsDest.cunit[0]) << endl;
@@ -1062,11 +1076,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Unit uCunit(String(wcsDest.cunit[0]));
 		Unit mps("m/s");
 
-		if(nChan==0){
-		    os << LogIO::WARN << "Addition of tabular spectral coordinate with no channels requested." << LogIO::POST;
-		}
-
-		for(uInt i=0; i<nChan; i++){
+		for(uInt i=0; i<nc; i++){
 		    Quantity velQ(cRval + cDelt * cPc * (Double(i) - cRpix), uCunit);
 		    Double vel = velQ.getValue(mps);
 		    if(vel>-C::c){
@@ -1134,6 +1144,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Find frequency system
 		MFrequency::Types freqSystem;
 		if (ok) {
+ 		    specAxis = axes[0]-1;
 		    if (!frequencySystemFromWCS (os, freqSystem, errMsg, wcsDest)) {
 			os << LogIO::WARN << errMsg << LogIO::POST;
 			ok = False;
