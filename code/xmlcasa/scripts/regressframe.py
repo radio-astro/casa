@@ -20,7 +20,7 @@ class regressionframe :
    image = {}
    analysis = {}
 
-   def run(self, workdir='testing') :
+   def run(self, workdir='testing', verbose=True) :
       try :
          startdir = os.getcwd()
          os.mkdir(self.workdir)
@@ -29,13 +29,15 @@ class regressionframe :
          print self.title + ":" + workdir
          for mystep in self.steps :
 	    print "Processing step: " +mystep
+	    beenrun = {}
+	    for task in eval('self.'+mystep+"['tasks']") :
+		    beenrun[task] = 0
 	    for task in eval('self.'+mystep+"['tasks']") :
                #print "   "+ eval('self.'+mystep+"['"+task+"']")
                mycommand = "self."+mystep+"['"+task+"']"
 	       the_args = eval(mycommand)
 	       arg_list = ''
 	       thecommand=task+'('
-	       count = 0
 	       if(the_args.has_key('args')) :
 		       argscount = len(the_args['args'].keys())
 		       argcount = 0
@@ -50,6 +52,7 @@ class regressionframe :
 			       arg_list=arg_list+key+'='+quoteit+str(the_args['args'][key])+quoteit+comma
 		       thecommand=thecommand+arg_list
 	       elif(len(the_args.keys())>1) :
+		       count = beenrun[task]
 		       argscount = len(the_args[count]['args'].keys())
 		       argcount = 0
 		       comma = ', '
@@ -62,10 +65,12 @@ class regressionframe :
 				       quoteit = "'"
 			       arg_list=arg_list+key+'='+quoteit+str(the_args[count]['args'][key])+quoteit+comma
 		       thecommand=thecommand+arg_list
-		       count = count + 1
+		       beenrun[task] = beenrun[task]+1
 		       
 	       thecommand=thecommand+')'
 	       beginTime = time.time()
+	       if verbose :
+	          print thecommand
 	       eval(thecommand)
 	       endTime = time.time()
 	       print "   " + task+': Time to complete was '+str(endTime-beginTime)
