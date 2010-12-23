@@ -408,7 +408,7 @@ Bool FITSSpectralUtil::toFITSHeader(String &ctype,
 	    logger << LogIO::SEVERE << "Zero or negative reference frequency." << LogIO::POST;
 	    return False;
 	}
-	ctype = String("WAVE") + ctypetag;
+	ctype = String("WAVE");
 	crval = C::c/refFrequency;
 	cdelt = C::c/(refFrequency+freqIncrement) - crval;
 	crpix = refChannel;
@@ -428,10 +428,10 @@ Bool FITSSpectralUtil::toFITSHeader(String &ctype,
 	// Velocity of some type is primary
 	if (velref < 256) {
 	    // Optical
-	    ctype = String("FELO") + ctypetag;
+	    ctype = String("FELO")+ctypetag;
 	} else {
 	    // Radio
-	    ctype = String("VELO") + ctypetag;
+	    ctype = String("VELO")+ctypetag;
 	}
 	crval = refVelocity;
 	cdelt = velocityIncrement;

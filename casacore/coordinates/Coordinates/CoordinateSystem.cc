@@ -2652,13 +2652,15 @@ Bool CoordinateSystem::toFITSHeader(RecordInterface &header,
 				    Bool oneRelative,
 				    Char prefix, Bool writeWCS,
 				    Bool preferVelocity, 
-				    Bool opticalVelocity) const
+				    Bool opticalVelocity,
+				    Bool preferWavelength) const
 {
    FITSCoordinateUtil fcu;
    return fcu.toFITSHeader(header, shape, *this, 
                            oneRelative, prefix,
-                           writeWCS, preferVelocity,
-                           opticalVelocity);
+                           writeWCS, 
+			   preferVelocity, opticalVelocity,
+			   preferWavelength);
 }
 
 

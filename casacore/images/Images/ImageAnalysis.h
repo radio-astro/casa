@@ -462,7 +462,8 @@ class ImageAnalysis
                 Record& region, const String& mask, 
                 const Bool overwrite = False, 
                 const Bool dropdeg = False, const Bool deglast = False, 
-                const Bool dropstokes = False, const Bool stokeslast = False);
+                const Bool dropstokes = False, const Bool stokeslast = False,
+		const Bool wavelength = False);
 
     Bool toASCII(const String& outfile, Record& region, const String& mask,
                  const String& sep = " ", const String& format = "%e", 
