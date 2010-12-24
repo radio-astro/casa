@@ -78,6 +78,7 @@ class regressionframe :
 	        verified = eval('self.'+mystep+"['verify']()")
 	        if not verified :
 		   print mystep + " has failed verification."
+                   os.chdir(startdir)
 		   return False
 	        else :
 	           print '   '+mystep+' verified'
@@ -87,4 +88,5 @@ class regressionframe :
          return True
       except Exception, instance:
 	 print "***Oops exception*** ",instance
+         os.chdir(startdir)
 	 return False
