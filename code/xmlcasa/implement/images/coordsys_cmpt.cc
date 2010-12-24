@@ -2957,6 +2957,45 @@ coordsys::torecord()
 }
 
 ::casac::record*
+coordsys::subimage(const ::casac::variant& neworigin, const std::vector<int>& newshape)
+{
+  ::casac::record *rstat = new ::casac::record();
+  *itsLog << LogOrigin("coordsys", "subimage");
+
+  try {
+    Record rec;
+    Int nPixAxes=itsCoordSys->nPixelAxes();
+    Vector<Float>incr(nPixAxes, 1);
+    Vector<Int> shp(newshape);
+    Vector<Float>orig;
+    if((neworigin.type() == ::casac::variant::DOUBLEVEC) || 
+       (neworigin.type() == ::casac::variant::INTVEC)){
+      Vector<Double> tmpVec(neworigin.toDoubleVec());
+      orig.resize(tmpVec.nelements());
+      convertArray(orig, tmpVec);
+    }
+    else{
+      throw(AipsError("Parameter neworigin is not a vector of pixel positions"));
+    }
+    CoordinateSystem subcs=itsCoordSys->subImage(orig, incr, shp);
+
+    if (!subcs.save(rec,"CoordinateSystem")) {
+      *itsLog << "Could not convert to record because "
+	      << subcs.errorMessage() << LogIO::EXCEPTION;
+    }
+
+    //rec.define(RecordFieldId("parentName"), itsParentImageName);
+
+    // Put it in a ::casac::record
+    rstat = fromRecord(rec.asRecord("CoordinateSystem"));
+  } catch (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: "
+    	    << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+  }
+  return rstat;
+}
+::casac::record*
 coordsys::torel(const ::casac::variant& value, const int isworld)
 {
   ::casac::record *rstat = 0;
