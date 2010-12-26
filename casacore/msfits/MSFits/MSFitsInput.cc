@@ -1361,22 +1361,16 @@ void MSFitsInput::fillAntennaTable(BinaryTable& bt)
   TableRecord btKeywords=bt.getKeywords();
   Int nAnt, nAntMax;
   Bool itsEVLA=((array_p=="VLA") || (array_p=="EVLA"));
-  if (itsEVLA)
-    {
-      nAntMax=nAnt_p;
-      if (nAnt_p != bt.nrows())
-	itsLog << array_p 
-	       << " telescope quirk detected.  Filler purports to construct the full"
-	       << " ANTENNA table with possible blank entries." 
-	       << LogIO::NORMAL1 << LogIO::POST;
-    }
-  else 
-    if (nAnt_p>bt.nrows()) 
-      {
-	itsLog << "Not all antennas found in antenna table:"
-	       << " expected " << nAnt_p << ", found " << bt.nrows()
-	       << LogIO::EXCEPTION;
-      }
+  Bool missingAnts = False;
+  nAntMax=nAnt_p;
+  if (nAnt_p != bt.nrows()){
+    itsLog << array_p 
+	   << " telescope quirk detected.  Filler purports to construct the full"
+	   << " ANTENNA table with possible blank entries." 
+	   << LogIO::NORMAL1 << LogIO::POST;
+    missingAnts = True;
+  }
+
   nAnt=bt.nrows();
   if (nAnt-1 > nAntMax) nAntMax=nAnt-1;
 
@@ -1505,21 +1499,22 @@ void MSFitsInput::fillAntennaTable(BinaryTable& bt)
    ant.setPositionRef(MPosition::ITRF);
    Int row=ms_p.antenna().nrow();
 
-   if (itsEVLA && (row < nAntMax))
-     {
-       Int n=nAntMax - row + 1;
-       for(Int i=0; i<n; i++)
-	 {ms_p.antenna().addRow(); row++;}
-     }
+   if (missingAnts && (row < nAntMax)){
+     Int n=nAntMax - row + 1;
+     for(Int i=0; i<n; i++)
+       {ms_p.antenna().addRow(); row++;}
+   }
    row = ms_p.antenna().nrow()-1;
    for(Int i=0;i<ms_p.antenna().nrow();i++)
      ant.flagRow().put(i,True);
 
    for (Int i=0; i<nAnt; i++) {
-     if (!itsEVLA)
-       {ms_p.antenna().addRow(); row++;}
-     else
+     if (!missingAnts){
+       ms_p.antenna().addRow(); row++;
+     }
+     else{
        row=id(i)-1;
+     }
 
      ant.dishDiameter().put(row,antDiams(i)); 
      String mount;

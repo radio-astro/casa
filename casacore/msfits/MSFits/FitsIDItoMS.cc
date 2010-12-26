@@ -1850,21 +1850,29 @@ void FITSIDItoMS1::fillMSMainTable(const String& MSFileName, Int& nField, Int& n
     baseline += tzero(iBsln); 
     //cout << "BASELINE=" << baseline << endl; 
 
-    memcpy(&(_uvw(0)), (static_cast<Float *>(data_addr[iU])), sizeof(Float));
-    uvw(0)=static_cast<Double>(_uvw(0));
+    if(field(iU).fieldtype() == FITS::FLOAT) {
+      uvw(0) = *static_cast<Float *>(data_addr[iU]);
+    } else {
+      uvw(0) = *static_cast<Double *>(data_addr[iU]);
+    }    
     uvw(0) *= tscal(iU);
     uvw(0) += tzero(iU); 
     //cout << "uvw(0)=" << uvw(0) << endl; 
 
-    memcpy(&(_uvw(1)), (static_cast<Float *>(data_addr[iV])), sizeof(Float));
-    uvw(1)=static_cast<Double>(_uvw(1));
+    if(field(iV).fieldtype() == FITS::FLOAT) {
+      uvw(1) = *static_cast<Float *>(data_addr[iV]);
+    } else {
+      uvw(1) = *static_cast<Double *>(data_addr[iV]);
+    }
     uvw(1) *= tscal(iV);
     uvw(1) += tzero(iV); 
     //cout << "uvw(1)=" << uvw(1) << endl; 
 
-    memcpy(&(_uvw(2)), (static_cast<Float *>(data_addr[iW])), sizeof(Float));
-    uvw(2)=static_cast<Double>(_uvw(2));
-    //uvw(2) = *(static_cast<Int *>((*(fld[iW])).data()));
+    if(field(iW).fieldtype() == FITS::FLOAT) {
+      uvw(2) = *static_cast<Float *>(data_addr[iW]);
+    } else {
+      uvw(2) = *static_cast<Double *>(data_addr[iW]);
+    }
     uvw(2) *= tscal(iW);
     uvw(2) += tzero(iW); 
     //cout << "uvw(2)=" << uvw(2) << endl; 
@@ -2001,20 +2009,20 @@ void FITSIDItoMS1::fillMSMainTable(const String& MSFileName, Int& nField, Int& n
       }
 
       // fill in values for all the unused columns
-      msc.feed1().put(row,0);
-      msc.feed2().put(row,0);
-      msc.flagRow().put(row,False);
-      msc.processorId().put(row,-1);
-      msc.observationId().put(row,0);
-      msc.stateId().put(row,-1);
+      msc.feed1().put(putrow,0);
+      msc.feed2().put(putrow,0);
+      msc.flagRow().put(putrow,False);
+      msc.processorId().put(putrow,-1);
+      msc.observationId().put(putrow,0);
+      msc.stateId().put(putrow,-1);
 
       Vector<Float> tmp(nCorr); tmp=1.0;
-      msc.sigma().put(row,tmp);
-      msc.weight().put(row,tmp);
+      msc.sigma().put(putrow,tmp);
+      msc.weight().put(putrow,tmp);
       lastWeight=1.0;
 
-      msc.interval().put(row,interval);
-      msc.exposure().put(row,interval);
+      msc.interval().put(putrow,interval);
+      msc.exposure().put(putrow,interval);
       msc.scanNumber().put(putrow,nScan);
 
       msc.data().put(putrow,vis);
@@ -2311,10 +2319,17 @@ void FITSIDItoMS1::fillAntennaTable()
      if(anNo(i)<10){
        temps = String("0")+temps;
      }
-     ant.name().put(row,String("ANT")+temps);
+     if(name(i)==""){
+       ant.name().put(row,String("ANT")+temps);
+     }
+     else{
+       ant.name().put(row, name(i));
+     }
      //Vector<Double> offsets(3); offsets=0.; offsets(0)=offset(i);
      //ant.offset().put(row,offset);
-     ant.station().put(row,name(i));
+
+     //ant.station().put(row,name(i));
+     ant.station().put(row,arrnam+":"+temps);     
      ant.type().put(row,"GROUND-BASED");
 
      // Do UVFITS-dependent position corrections:
