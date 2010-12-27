@@ -5412,10 +5412,10 @@ Vector<String> ImageAnalysis::summary(Record& header, const String& doppler,
 }
 
 Bool ImageAnalysis::tofits(const String& fitsfile, const Bool velocity,
-		const Bool optical, const Int bitpix, const Double minpix,
-		const Double maxpix, Record& pRegion, const String& mask,
-		const Bool overwrite, const Bool dropDeg, const Bool degLast,
-		const Bool dropStokes, const Bool stokesLast) {
+			   const Bool optical, const Int bitpix, const Double minpix,
+			   const Double maxpix, Record& pRegion, const String& mask,
+			   const Bool overwrite, const Bool dropDeg, const Bool degLast,
+			   const Bool dropStokes, const Bool stokesLast, const Bool wavelength) {
 
 	*itsLog << LogOrigin("ImageAnalysis", "tofits");
 
@@ -5481,10 +5481,13 @@ Bool ImageAnalysis::tofits(const String& fitsfile, const Bool velocity,
 	delete pRegionRegion;
 	delete pMaskRegion;
 	Bool ok = ImageFITSConverter::ImageToFITS(error, subImage, fitsfile,
-			HostInfo::memoryFree() / 1024, velocity, optical, bitpix, minpix,
-			maxpix, overwrite, False, //  deglast default
-			False, //  verbose default
-			stokesLast);
+						  HostInfo::memoryFree() / 1024, 
+						  velocity, optical, 
+						  bitpix, minpix, maxpix, overwrite, 
+						  False, //  deglast default
+						  False, //  verbose default
+						  stokesLast, 
+						  wavelength);
 	if (!ok)
 		*itsLog << error << LogIO::EXCEPTION;
 

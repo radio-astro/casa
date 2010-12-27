@@ -2693,7 +2693,8 @@ image::tofits(const std::string& fitsfile, const bool velocity,
 	      const ::casac::record& region, const ::casac::variant& vmask,
 	      const bool overwrite,
 	      const bool dropdeg, const bool deglast,
-	      const bool dropstokes, const bool stokeslast, const bool async)
+	      const bool dropstokes, const bool stokeslast, 
+	      const bool wavelength, const bool async)
 {
   bool rstat(false);
   try {
@@ -2709,7 +2710,8 @@ image::tofits(const std::string& fitsfile, const bool velocity,
     rstat=itsImage->tofits(fitsfile, velocity, optical, bitpix, minpix,
 			   maxpix, *pRegion, mask, overwrite,
 			   dropdeg, deglast,
-			   dropstokes, stokeslast);
+			   dropstokes, stokeslast,
+			   wavelength);
     delete pRegion;
     //
   } catch (AipsError x) {

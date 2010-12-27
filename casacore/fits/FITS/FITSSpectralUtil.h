@@ -145,6 +145,10 @@ public:
     // axis description parameters will be set to those appropriate for
     // a velocity axis given the referenceFrame, and velocityPreference
     // if possible.
+    // If preferWavelength is True, the
+    // axis description parameters will be set to those appropriate for
+    // a wavelength axis given the referenceFrame if possible.
+    // The two preferences cannot be True at the same time.
 
     // This method always returns True.
     static Bool toFITSHeader(String &ctype, 
@@ -162,8 +166,8 @@ public:
 			     Double freqIncrement,
 			     MFrequency::Types referenceFrame,
 			     Bool preferVelocity = True,
-			     MDoppler::Types velocityPreference = 
-			                               MDoppler::OPTICAL);
+			     MDoppler::Types velocityPreference = MDoppler::OPTICAL,
+			     Bool preferWavelength = False);
 
     // Convert a reference frame tag (typically found as the characters
     // after the first 4 characters in a ctype string for the

@@ -327,6 +327,9 @@ SpectralCoordinate::SpectralCoordinate(MFrequency::Types freqType,
 {
    restfreqs_p.resize(1);
    restfreqs_p(0) = restFrequency;
+
+   to_hz_p = 1.;
+   to_m_p = 0.001;
    
 // Convert to frequency
 
@@ -334,15 +337,20 @@ SpectralCoordinate::SpectralCoordinate(MFrequency::Types freqType,
       throw(AipsError("Wavelength unit is not consistent with m"));
    }
      
+   //cout << "waveUnit " << waveUnit << " waveUnit_p " << waveUnit_p << " to_m_p " << to_m_p << " to_hz_p " << to_hz_p << endl;
+
    Vector<Double> frequencies;
    wavelengthToFrequency(frequencies, wavelengths);
+
+   //for(uInt i=0; i<frequencies.nelements(); i++){
+   //    cout << "freq i " << i << " " << frequencies(i) << endl;
+   //}
 
 // Make Tabular spectral coordinate
 
    Vector<Double> channels(frequencies.nelements());
    indgen(channels);
    pTabular_p = new TabularCoordinate(channels, frequencies, "Hz", "Frequency");
-   to_hz_p = 1.0;
 
 // Now remake Velocity Machine to be consistent with state
 
@@ -776,25 +784,35 @@ Bool SpectralCoordinate::setVelocity (const String& velUnit,
 
 Bool SpectralCoordinate::setWavelengthUnit(const String& waveUnit)
 {
-   static const Unit unitsM_b(String("m"));
-   if (!waveUnit.empty()) {
-      Unit unit(waveUnit);
-      if (unit!=unitsM_b) {
-         set_error("Unit must be empty or consistent with m");
-         return False; 
-      }
 
-      String error;
-      Vector<Double> factor;
-      Vector<String> outUnit(1,"m");
-      Vector<String> inUnit(1,waveUnit);
-      if(!find_scale_factor(error, factor, outUnit, inUnit)){
-         set_error(error);
-	 return False;
-      }
-      to_m_p = factor(0);
-      waveUnit_p = waveUnit;
+   //cout << "setting waveunit before: unit  is " << waveUnit_p << " to_m_p  is " << to_m_p << endl;  
+   //cout << "setting waveunit before: requested unit  is " << waveUnit << endl;  
+
+   static const Unit unitsM_b(String("m"));
+
+   String wu = waveUnit;
+
+   if (wu.empty()) {
+     wu = "mm"; // the default
    }
+   Unit unit(wu);
+   if (unit!=unitsM_b) {
+     set_error("Unit must be empty or consistent with m");
+     return False; 
+   }
+   
+   String error;
+   Vector<Double> factor;
+   Vector<String> outUnit(1,"m");
+   Vector<String> inUnit(1,wu);
+   if(!find_scale_factor(error, factor, outUnit, inUnit)){
+     set_error(error);
+     return False;
+   }
+   to_m_p = factor(0);
+   waveUnit_p = wu;
+
+   //cout << "setting waveunit after: unit now is " << waveUnit_p << " to_m_p now is " << to_m_p << endl;  
 //
    return True;
 }
@@ -1653,12 +1671,15 @@ Coordinate *SpectralCoordinate::clone() const
 
 
 void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis, 
-		LogIO &logger, Bool oneRelative, 
-                Bool preferVelocity,  Bool opticalVelDef) const
+				LogIO &logger, Bool oneRelative, 
+				Bool preferVelocity,  Bool opticalVelDef, 
+				Bool preferWavelength) const
 {
     const Double offset(1.0*Int(oneRelative == True));
 
     logger << LogOrigin("SpectralCoordinate", "toFITS", WHERE);
+
+    AlwaysAssert(!(preferVelocity && preferWavelength), AipsError); // Cannot prefer both velocity and wavelength
 
     // Verify that the required headers exist and are the right type
     AlwaysAssert(header.isDefined("ctype") && 
@@ -1692,44 +1713,6 @@ void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis,
 	header.get("cunit", cunit);
     }
 
-// If we are from a table, report how non-linear we are. At some point
-// we should worry about nonlinear frequency axes more (e.g. they might
-// be regularly gridded in lambda or velocities).
-
-    if (pixelValues().nelements() != 0) {
-	Vector<Double> pixel = pixelValues();
-	Vector<Double> world = worldValues();
-	Double dcrpix, dcdelt, dcrval;
-	dcrpix = referencePixel()(0);
-	dcdelt = increment()(0);
-	dcrval = referenceValue()(0);
-	Double maxDeviation = 0.0;
-	Vector<Double> tmpworld(1), tmppixel(1);
-	for (uInt i=0; i<pixel.nelements(); i++) {
-	    tmppixel(0) = pixel(i);
-	    Bool ok = toWorld(tmpworld, tmppixel);
-	    if (!ok) {
-		logger << LogIO::SEVERE << "Error calculating deviations "
-		    "from linear" << errorMessage() << LogIO::POST;
-		break;
-	    }
-	    Double actual = tmpworld(0);
-	    Double linear = dcrval + dcdelt*(pixel(i) - dcrpix);
-// 	    cout << " dcrval " << dcrval << " dcdelt " << dcdelt << " i " << i 
-// 		 << " pixel(i) " << pixel(i) << " dcrpix " << dcrpix << " actual " << actual << " linear " << linear << endl;
-	    if(maxDeviation<abs(actual-linear)){
-	      maxDeviation = abs(actual-linear);
-	    }
-	}
-	if (maxDeviation > 0.0) {
-	  logger << LogIO::WARN << "Spectral axis is non-linear but CASA can presently only write linear axes to FITS." << endl
-		 << "In this image, the maximum deviation from linearity is " << maxDeviation << " "
-		 << worldAxisUnits()(0) << LogIO::POST;
-	}
-    }
-
-// Wacky capitalization to avoid running into other variables
-
     String Ctype;
     Double Crval, Cdelt, Crpix, Altrval, Altrpix;
     Int Velref;
@@ -1740,13 +1723,94 @@ void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis,
 			      worldAxisUnits()(0)).getBaseValue();
     Double FreqInc = Quantity(increment()(0), 
 			      worldAxisUnits()(0)).getBaseValue();
-    MDoppler::Types VelPreference = opticalVelDef ? MDoppler::OPTICAL :
-	MDoppler::RADIO;
+    Double RefPix = referencePixel()(0) + offset;
+    MDoppler::Types VelPreference = opticalVelDef ? MDoppler::OPTICAL : MDoppler::RADIO;
+
+    Double dcrpix = 0;
+    Double dcdelt = increment()(0); 
+    Double dcrval = referenceValue()(0);
+
+    // Check if we are linear in the preferred quantity.
+    // If not, give a warning.
+    if (pixelValues().nelements() > 1) {
+      Vector<Double> pixel = pixelValues();
+      Vector<Double> world = worldValues();
+      MVFrequency f0, f1;
+      if(!toWorld(f0, 0.) || !toWorld(f1,1.)){
+	logger << LogIO::SEVERE << "Error calculating deviations "
+	  "from linear" << errorMessage() << LogIO::POST;
+      }
+      dcrval = f0.get().getBaseValue(); // value in Hz
+      dcdelt = f1.get().getBaseValue() - dcrval; // dto.
+      
+      Double maxDeviation = 0.0;
+      Double maxAbsVal = 0.;
+      MVFrequency fx;
+      for (uInt i=0; i<pixel.nelements(); i++) {
+	Bool ok = toWorld(fx, pixel(i));
+	if (!ok) {
+	  logger << LogIO::SEVERE << "Error calculating deviations "
+	    "from linear" << errorMessage() << LogIO::POST;
+	  break;
+	}
+	Double actual = fx.get().getBaseValue(); // value in Hz
+	Double linear = dcrval + dcdelt*(pixel(i) - dcrpix); // also in Hz
+	if(preferWavelength){
+	  if(actual>0. && linear>0.){
+	    actual = C::c/actual;
+	    linear = C::c/linear;
+	  }
+	  else{
+	    logger << LogIO::SEVERE << "Zero or negative frequency." << LogIO::POST;
+	    break;
+	  }
+	}
+	else if(preferVelocity && opticalVelDef){ // optical velocity
+	  if(actual>0. && linear>0.){
+	    actual = (Restfreq - actual)/actual; // can omit factor C here since we are only comparing
+	    linear = (Restfreq - linear)/linear; // dto.
+	  }
+	  else{
+	    logger << LogIO::SEVERE << "Zero or negative frequency."  << LogIO::POST;
+	    break;
+	  }
+	}
+	//else {} // radio velocity or frequency, both linear in frequency
+	  
+	// 	    cout << " dcrval " << dcrval << " dcdelt " << dcdelt << " i " << i 
+	// 		 << " pixel(i) " << pixel(i) << " dcrpix " << dcrpix << " actual " << actual << " linear " << linear << endl;
+	if(maxDeviation<abs(actual-linear)){
+	  maxDeviation = abs(actual-linear);
+	}
+	if(maxAbsVal<abs(actual)){
+	  maxAbsVal = abs(actual);
+	}
+      }
+      if (maxDeviation > 0.0 && maxAbsVal>0. && maxDeviation/maxAbsVal>1E-5) {
+	string sUnit = "Hz";
+	if(preferWavelength){
+	  sUnit = "m";
+	}
+	else if(preferVelocity){
+	  sUnit = "m/s";
+	}
+	logger << LogIO::WARN << "Spectral axis is non-linear but CASA can presently only write linear axes to FITS." << endl
+	       << "In this image, the maximum deviation from linearity is " << maxDeviation << " "
+	       << sUnit << " or " << maxDeviation/maxAbsVal*100. << "% of the upper end of the scale." << LogIO::POST;
+      }
+    }
+
+    if(preferWavelength || (preferVelocity && opticalVelDef)){
+      RefFreq = dcrval;
+      FreqInc = dcdelt;
+      RefPix = dcrpix;
+    }
+
     AlwaysAssert(FITSSpectralUtil::toFITSHeader(Ctype, Crval, Cdelt, Crpix, HaveAlt, Altrval,
 						Altrpix, Velref, Restfreq, logger,
-						RefFreq, referencePixel()(0) + offset,
+						RefFreq, RefPix,
   					        FreqInc, type_p, preferVelocity,
-						VelPreference), AipsError);
+						VelPreference, preferWavelength), AipsError);
 
     ctype(whichAxis) = Ctype;
     crval(whichAxis) = Crval;
@@ -1757,6 +1821,8 @@ void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis,
 	    cunit(whichAxis) = "M/S";
 	} else if (Ctype.contains("FREQ")) {
 	    cunit(whichAxis) = "HZ";
+	} else if (Ctype.contains("WAVE")) {
+	    cunit(whichAxis) = "M";
 	} else {
 	    AlwaysAssert(0, AipsError); // NOTREACHED
 	}

@@ -2957,6 +2957,45 @@ coordsys::torecord()
 }
 
 ::casac::record*
+coordsys::subimage(const ::casac::variant& neworigin, const std::vector<int>& newshape)
+{
+  ::casac::record *rstat = new ::casac::record();
+  *itsLog << LogOrigin("coordsys", "subimage");
+
+  try {
+    Record rec;
+    Int nPixAxes=itsCoordSys->nPixelAxes();
+    Vector<Float>incr(nPixAxes, 1);
+    Vector<Int> shp(newshape);
+    Vector<Float>orig;
+    if((neworigin.type() == ::casac::variant::DOUBLEVEC) || 
+       (neworigin.type() == ::casac::variant::INTVEC)){
+      Vector<Double> tmpVec(neworigin.toDoubleVec());
+      orig.resize(tmpVec.nelements());
+      convertArray(orig, tmpVec);
+    }
+    else{
+      throw(AipsError("Parameter neworigin is not a vector of pixel positions"));
+    }
+    CoordinateSystem subcs=itsCoordSys->subImage(orig, incr, shp);
+
+    if (!subcs.save(rec,"CoordinateSystem")) {
+      *itsLog << "Could not convert to record because "
+	      << subcs.errorMessage() << LogIO::EXCEPTION;
+    }
+
+    //rec.define(RecordFieldId("parentName"), itsParentImageName);
+
+    // Put it in a ::casac::record
+    rstat = fromRecord(rec.asRecord("CoordinateSystem"));
+  } catch (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: "
+    	    << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+  }
+  return rstat;
+}
+::casac::record*
 coordsys::torel(const ::casac::variant& value, const int isworld)
 {
   ::casac::record *rstat = 0;
@@ -3108,48 +3147,56 @@ coordsys::toworld(const ::casac::variant& value, const std::string& format)
   return rstat;
 }
 
-::casac::record*
-coordsys::toworldmany(const ::casac::variant& value)
-{
-  ::casac::record * rstat = 0;
-  *itsLog << LogOrigin("coordsys", "toworldmany");
+record* coordsys::toworldmany(const variant& value) {
+	record * rstat = 0;
+	*itsLog << LogOrigin("coordsys", "toworldmany");
+	try {
+		// form Array<Double> pixel
+		Vector<Int> value_shape = value.arrayshape();
+	    if(value.type() != variant::DOUBLEVEC) {
+	        *itsLog << LogIO::SEVERE
+	  	      << "You must provide a vector of doubles."
+	  	      << LogIO::POST;
+	        return 0;
+	    }
 
-  // form Array<Double> pixel
-  Vector<Int> value_shape = value.arrayshape();
-  std::vector<double> value_vec = value.getDoubleVec();
-  Array<Double> pixel;
-  pixel.resize(IPosition(value_shape));
-  int i = 0;
-  for (Array<Double>::iterator iter = pixel.begin();
-       iter != pixel.end(); iter++) {
-    *iter = value_vec[i++];
-  }
+		std::vector<double> value_vec = value.getDoubleVec();
 
-  //
-  AlwaysAssert(pixel.shape().nelements()==2, AipsError);
-  Matrix<Double> worlds;
-  Matrix<Double> pixels(pixel);
-  Vector<Bool> failures;
-  if (!itsCoordSys->toWorldMany(worlds, pixels, failures)) {
-    *itsLog << itsCoordSys->errorMessage() << LogIO::EXCEPTION;
-  }
-  Array<Double> world(worlds.copy());
+		Array<Double> pixel;
+		pixel.resize(IPosition(value_shape));
+		int i = 0;
 
-  // put Array<Double> world into ::casac::variant
-  /*
-  std::vector<int> shape;
-  std::vector<double> rtnVec;
-  world.shape().asVector().tovector(shape);
-  world.tovector(rtnVec);
-  rstat = new ::casac::variant(rtnVec, shape);
-  */
-  Record tmpRec;
-  tmpRec.define("numeric", world);
-  tmpRec.define("pw_type", "world");
-  tmpRec.define("ar_type","absolute");
-  rstat = fromRecord(tmpRec);
+		for (
+			Array<Double>::iterator iter = pixel.begin();
+			iter != pixel.end(); iter++
+		) {
+			*iter = value_vec[i++];
+		}
 
-  return rstat;
+		AlwaysAssert(pixel.shape().nelements()==2, AipsError);
+		Matrix<Double> worlds;
+
+		Matrix<Double> pixels(pixel);
+		Vector<Bool> failures;
+		if (!itsCoordSys->toWorldMany(worlds, pixels, failures)) {
+			*itsLog << itsCoordSys->errorMessage() << LogIO::EXCEPTION;
+		}
+		Array<Double> world(worlds.copy());
+
+		// put Array<Double> world into ::casac::variant
+
+		Record tmpRec;
+		tmpRec.define("numeric", world);
+		tmpRec.define("pw_type", "world");
+		tmpRec.define("ar_type","absolute");
+		rstat = fromRecord(tmpRec);
+	}
+	catch (AipsError x) {
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		RETHROW(x);
+	}
+
+	return rstat;
 }
 
 std::string

@@ -188,13 +188,13 @@ void QtCanvas::setDataRange()
     }
     if (fabs(xmax - xmin) < 0.0001)
     {
-        xmax = xmax + 0.0005;
-        xmin = xmin - 0.0005;
+        xmax = xmax + 0.00001;
+        xmin = xmin - 0.00001;
     }
     if (fabs(ymax - ymin) < 0.0001)
     {
-        ymax = ymax + 0.0005;
-        ymin = ymin - 0.0005;
+        ymax = ymax + 0.00001;
+        ymin = ymin - 0.00001;
     }
     if (autoScaleX) {
        settings.minX = xmin;

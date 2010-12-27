@@ -58,6 +58,8 @@ namespace casa {
        preAxes[2] != postAxes[2] || preAxes[3] != postAxes[3])                \
         resetMouseTools();
 
+
+
 // Static //
 
 double QPCanvas::zOrder = 1;
@@ -66,23 +68,289 @@ const String QPCanvas::CLASS_NAME = "QPCanvas";
 const String QPCanvas::DRAW_NAME = "drawItems";
 const String QPCanvas::EXPORT_NAME = "export";
 
+
+
 bool QPCanvas::exportPlotter(QPPlotter* plotter, const PlotExportFormat& fmt) {
+	
     vector<PlotCanvasPtr> canvases;
     if(plotter != NULL && !plotter->canvasLayout().null())
         canvases = plotter->canvasLayout()->allCanvases();
-    return exportHelper(canvases, fmt, NULL, plotter);
+    return exportCanvases(canvases, fmt, NULL, plotter);
 }
+
+
 
 bool QPCanvas::exportCanvas(QPCanvas* canvas, const PlotExportFormat& format) {
+    
     vector<PlotCanvasPtr> canvases(1, PlotCanvasPtr(canvas, false));
-    return exportHelper(canvases, format, canvas, NULL);
+    return exportCanvases(canvases, format, canvas, NULL);
 }
 
 
-bool QPCanvas::exportHelper(vector<PlotCanvasPtr>& canvases,
-		const PlotExportFormat& format, QPCanvas* grabCanvas,
-		QPPlotter* grabPlotter) {
-    if(format.location.empty() || ((format.type == PlotExportFormat::JPG ||
+
+
+/* static (for now. someday maybe make method of QPCanvas, repl grabCanvas with self - dsw) */
+QImage QPCanvas::grabImageFromCanvas(
+        const PlotExportFormat& format, 
+        QPCanvas* grabCanvas,
+        QPPlotter* grabPlotter
+        )   
+{
+	QImage image;
+    
+    //image = QImage(width, height, QImage::Format_ARGB32);
+	
+    image = QPixmap::grabWidget(grabCanvas != NULL ?
+            &grabCanvas->asQwtPlot() :
+            grabPlotter->canvasWidget()).toImage();
+
+    /* (DSW) this commented-out code appears to have been for
+     *  producing screen capture images, but was buggy due to thread trouble,
+     * so was commented out svn rev 7788 by LG
+     */
+    //if(grabCanvas != NULL) grabCanvas->asQwtPlot().render(&image);
+    //else                   grabPlotter->render(&image);
+    
+    //QPainter::setRedirected(grabCanvas != NULL ?
+    //        (QWidget*)&grabCanvas->asQwtPlot() :
+    //        (QWidget*)grabPlotter->canvasWidget(), &image);
+    //if(grabCanvas != NULL) grabCanvas->asQwtPlot().repaint();
+    //else grabPlotter->canvasWidget()->repaint();
+    //QPainter::restoreRedirected(grabCanvas != NULL ?
+    //        (QWidget*)&grabCanvas->asQwtPlot() :
+    //        (QWidget*)grabPlotter->canvasWidget());
+    
+    
+    // Scale to set width and height, if applicable.
+    if (format.width > 0 && format.height > 0) {
+        // size is specified
+        image = image.scaled(format.width, format.height,
+                Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+    
+    } else if (format.width > 0) {
+        // width is specified            
+        image = image.scaledToWidth(format.width,
+                Qt::SmoothTransformation);
+    
+    } else if (format.height > 0) {
+        //  height is specified            
+        image = image.scaledToHeight(format.height,
+                Qt::SmoothTransformation);
+	}
+    
+    return image;
+}
+
+
+
+/* static */
+QImage QPCanvas::produceHighResImage(
+        const PlotExportFormat& format,
+        vector<QPCanvas*> &qcanvases,
+        int width, 
+        int height,
+        bool &wasCanceled
+        )   
+{
+
+    // make sure both width and height are set
+    int widgetWidth  = width, 
+        widgetHeight = height;
+    if (format.width > 0)  width  = format.width;
+    if (format.height > 0) height = format.height;
+    QImage image = QImage(width, height, QImage::Format_ARGB32);
+    
+    // Fill with background color.
+    QPCanvas* canv = qcanvases[0];
+    image.fill(canv->palette().color(canv->backgroundRole()).rgba());
+    
+    // Print each canvas.
+    QPainter painter(&image);
+    double widthRatio  = ((double)width)  / widgetWidth,
+           heightRatio = ((double)height) / widgetHeight;
+    QRect geom, printGeom, imageRect(0, 0, width, height);
+    QwtText title; 
+    QColor titleColor;
+    PlotOperationPtr op;
+
+    for (unsigned int i = 0; i < qcanvases.size(); i++) {
+        canv = qcanvases[i];
+        
+        geom = canv->geometry();
+        printGeom = QRect((int)((geom.x() * widthRatio) + 0.5),
+                          (int)((geom.y() * heightRatio) + 0.5),
+                          (int)((geom.width() * widthRatio) + 0.5),
+                          (int)((geom.height() * heightRatio) + 0.5));
+        printGeom &= imageRect;
+        titleColor = canv->asQwtPlot().title().color();
+        
+        op = canv->operationExport();
+        if (!op.null()) wasCanceled |= op->cancelRequested();
+        if (wasCanceled) break;
+        canv->asQwtPlot().print(&painter, printGeom);
+        
+        // For bug where title color changes after a print.
+        title = canv->asQwtPlot().title();
+        if (title.color() != titleColor) {
+            title.setColor(titleColor);
+            canv->asQwtPlot().setTitle(title);
+        }
+        
+        if (!op.null()) wasCanceled |= op->cancelRequested();
+        if (wasCanceled) break;
+    }
+    
+    return image;
+}
+
+
+
+
+bool QPCanvas::exportToImageFile(
+        const PlotExportFormat& format, 
+        vector<QPCanvas*> &qcanvases,
+        QPCanvas* grabCanvas,
+        QPPlotter* grabPlotter
+        )   
+{
+    
+    QImage image;
+    
+    int width  = grabCanvas != NULL ? grabCanvas->width()  : grabPlotter->width();
+    int height = grabCanvas != NULL ? grabCanvas->height() : grabPlotter->height();    
+    
+    // Just grab the widget if: 1) screen resolution, or 2) high resolution
+    // but size is <= widget size or not set.
+    bool wasCanceled = false;
+    if(format.resolution == PlotExportFormat::SCREEN)    {
+        image=grabImageFromCanvas(format, grabCanvas, grabPlotter);
+    } 
+    else {
+        // High resolution, or format size larger than widget.
+        image=produceHighResImage(format, qcanvases, width, height,  wasCanceled);
+    }
+
+    // Set DPI.
+    if(!wasCanceled && format.dpi > 0) {
+        // convert dpi to dpm
+        int dpm = QPOptions::round((format.dpi / 2.54) * 100);
+        image.setDotsPerMeterX(dpm);
+        image.setDotsPerMeterY(dpm);
+    }
+    
+    
+    // Set output quality.
+    bool hires = (format.resolution == PlotExportFormat::HIGH);
+    int quality;    // see QImage.save official documentation for its meaning
+    switch (format.type)
+    {
+        case PlotExportFormat::JPG:
+                // JPEG quality ranges from 0 (crude 8x8 blocks) to 100 (best)
+                quality= (hires)? 99: 95;   // experimental; need user feedback 
+                break; 
+        
+        case PlotExportFormat::PNG:
+                // Compression is lossless.  "quality" is number of deflations.
+                // First one does great compression.  More buy only a small %.      
+                // Set to -1 for no compression.
+                quality=1; 
+                break; 
+        
+        default: 
+                quality=-1;  // no compression of undefined/unknown formats
+    }
+    
+    // Save to file.
+    bool save_ok;
+    save_ok= image.save(format.location.c_str(),
+          PlotExportFormat::exportFormat(format.type).c_str(), 
+          quality);
+
+    return !wasCanceled && !image.isNull() && save_ok;
+}
+
+
+
+
+bool QPCanvas::exportPostscript(
+        const PlotExportFormat& format, 
+        vector<QPCanvas*> &qcanvases
+        )
+{
+    // Set resolution.
+    QPrinter::PrinterMode mode = QPrinter::ScreenResolution;
+    if(format.resolution == PlotExportFormat::HIGH)
+        mode = QPrinter::HighResolution;
+    
+    // Set file.
+    QPrinter printer(mode);
+    switch (format.type)   {
+        case PlotExportFormat::PDF:
+                printer.setOutputFormat(QPrinter::PdfFormat);
+                break;
+        case PlotExportFormat::PS:
+                printer.setOutputFormat(QPrinter::PostScriptFormat);
+                break;
+        default: {}
+    }
+
+    printer.setOutputFileName(format.location.c_str());
+
+    
+    // Set output settings.
+    if(format.dpi > 0) printer.setResolution(format.dpi);
+        printer.setColorMode(QPrinter::Color);
+    
+    // Print each canvas.
+    bool flag = false;
+    QwtText title; QColor titleColor;
+    PlotOperationPtr op;
+    bool wasCanceled = false;
+    for(unsigned int i = 0; i < qcanvases.size(); i++) {
+        QPCanvas *canv = qcanvases[i];
+        
+        // don't do new page only for first non-null canvas
+        if(flag) printer.newPage();
+        flag = true;
+        
+        // Set orientation.
+        printer.setOrientation(canv->width() >= canv->height() ?
+                      QPrinter::Landscape : QPrinter::Portrait);
+              
+        titleColor = canv->asQwtPlot().title().color();
+
+
+        op = canv->operationExport();
+        if(!op.null()) wasCanceled |= op->cancelRequested();
+        if(wasCanceled) break;
+        canv->asQwtPlot().print(printer);
+        
+        // For bug where title color changes after a print.
+        title = canv->asQwtPlot().title();
+        if(title.color() != titleColor) {
+            title.setColor(titleColor);
+            canv->asQwtPlot().setTitle(title);
+        }
+        
+        if(!op.null()) wasCanceled |= op->cancelRequested();
+        if(wasCanceled) break;
+    }
+    
+    return !wasCanceled;
+
+}
+
+
+
+/* Formerly named exportHelper()  */
+bool QPCanvas::exportCanvases  (
+		vector<PlotCanvasPtr>& canvases,
+        const PlotExportFormat& format, 
+        QPCanvas* grabCanvas,
+        QPPlotter* grabPlotter)     
+{
+    
+    if (format.location.empty() || ((format.type == PlotExportFormat::JPG ||
        format.type == PlotExportFormat::PNG) && (grabCanvas == NULL &&
        grabPlotter == NULL)))
         return false;
@@ -104,8 +372,6 @@ bool QPCanvas::exportHelper(vector<PlotCanvasPtr>& canvases,
     
     if(qcanvases.size() == 0) return false;
     
-    bool wasCanceled = false;
-    bool ret = false;
     
     // Compile vector of unique, non-null loggers for export event.
     vector<PlotLoggerPtr> loggers;
@@ -120,202 +386,36 @@ bool QPCanvas::exportHelper(vector<PlotCanvasPtr>& canvases,
         if(!found) loggers.push_back(logger);
     }
     
+    
     // Start logging.
     for(unsigned int i = 0; i < loggers.size(); i++)
         loggers[i]->markMeasurement(CLASS_NAME, EXPORT_NAME,
                                     PlotLogger::EXPORT_TOTAL);
-    
-    // Image
-    if(format.type == PlotExportFormat::JPG ||
-       format.type == PlotExportFormat::PNG) {
-        QImage image;
         
-        int width = grabCanvas != NULL ? grabCanvas->width() :
-                    grabPlotter->width(),
-           height = grabCanvas != NULL ? grabCanvas->height() :
-                    grabPlotter->height();
-        
-        // Just grab the widget if: 1) screen resolution, or 2) high resolution
-        // but size is <= widget size or not set.
-        if(format.resolution == PlotExportFormat::SCREEN/* ||
-           (format.width <= width && format.height <= height)*/) {
-            //image = QImage(width, height, QImage::Format_ARGB32);
-   	
-        	// TODO
-            image = QPixmap::grabWidget(grabCanvas != NULL ?
-                    &grabCanvas->asQwtPlot() :
-                    grabPlotter->canvasWidget()).toImage();
-        	//if(grabCanvas != NULL) grabCanvas->asQwtPlot().render(&image);
-        	//else                   grabPlotter->render(&image);
-        	
-            //QPainter::setRedirected(grabCanvas != NULL ?
-            //        (QWidget*)&grabCanvas->asQwtPlot() :
-            //        (QWidget*)grabPlotter->canvasWidget(), &image);
-            //if(grabCanvas != NULL) grabCanvas->asQwtPlot().repaint();
-            //else grabPlotter->canvasWidget()->repaint();
-            //QPainter::restoreRedirected(grabCanvas != NULL ?
-            //        (QWidget*)&grabCanvas->asQwtPlot() :
-            //        (QWidget*)grabPlotter->canvasWidget());
-			
-            // Scale to set width and height, if applicable.
-            if(format.width > 0 && format.height > 0) {
-                // size is specified
-                image = image.scaled(format.width, format.height,
-                        Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
-            
-            } else if(format.width > 0) {
-                // width is specified            
-                image = image.scaledToWidth(format.width,
-                        Qt::SmoothTransformation);
-            
-            } else if(format.height > 0) {
-                //  height is specified            
-                image = image.scaledToHeight(format.height,
-                        Qt::SmoothTransformation);
-            }
-        } else {
-            // High resolution, or format size larger than widget.
+    bool ret = false;
 
-            // make sure both width and height are set
-            int widgetWidth = width, widgetHeight = height;
-            if(format.width > 0)  width  = format.width;
-            if(format.height > 0) height = format.height;
-            image = QImage(width, height, QImage::Format_ARGB32);
-            
-            // Fill with background color.
-            canv = qcanvases[0];
-            image.fill(canv->palette().color(canv->backgroundRole()).rgba());
-            
-            // Print each canvas.
-            QPainter painter(&image);
-            double widthRatio  = ((double)width)  / widgetWidth,
-                   heightRatio = ((double)height) / widgetHeight;
-            QRect geom, printGeom, imageRect(0, 0, width, height);
-            QwtText title; QColor titleColor;
-            PlotOperationPtr op;
-            for(unsigned int i = 0; i < qcanvases.size(); i++) {
-                canv = qcanvases[i];
-                
-                geom = canv->geometry();
-                printGeom = QRect((int)((geom.x() * widthRatio) + 0.5),
-                                  (int)((geom.y() * heightRatio) + 0.5),
-                                  (int)((geom.width() * widthRatio) + 0.5),
-                                  (int)((geom.height() * heightRatio) + 0.5));
-                printGeom &= imageRect;
-                titleColor = canv->asQwtPlot().title().color();
-                
-                op = canv->operationExport();
-                if(!op.null()) wasCanceled |= op->cancelRequested();
-                if(wasCanceled) break;
-                canv->asQwtPlot().print(&painter, printGeom);
-                
-                // For bug where title color changes after a print.
-                title = canv->asQwtPlot().title();
-                if(title.color() != titleColor) {
-                    title.setColor(titleColor);
-                    canv->asQwtPlot().setTitle(title);
-                }
-                
-                if(!op.null()) wasCanceled |= op->cancelRequested();
-                if(wasCanceled) break;
-            }
-        }
-
-        // Set DPI.
-        if(!wasCanceled && format.dpi > 0) {
-            // convert dpi to dpm
-            int dpm = QPOptions::round((format.dpi / 2.54) * 100);
-            image.setDotsPerMeterX(dpm);
-            image.setDotsPerMeterY(dpm);
-        }
+    switch (format.type)
+    {
+        case PlotExportFormat::JPG:
+        case PlotExportFormat::PNG:
+                ret=exportToImageFile(format, qcanvases, grabCanvas, grabPlotter);
+                break;
+        case PlotExportFormat::PS:
+        case PlotExportFormat::PDF:
+                ret=exportPostscript(format, qcanvases);
+                break;
         
-        // Set output quality.
-		bool hires = (format.resolution == PlotExportFormat::HIGH);
-		int quality;    // see QImage.save official documentation for its meaning
-		switch (format.type)
-		{
-			case PlotExportFormat::JPG:
-					// JPEG quality ranges from 0 (crude 8x8 blocks) to 100 (best)
-					quality= (hires)? 99: 95;   // experimental; need user feedback 
-					break; 
-			case PlotExportFormat::PNG:
-					// compression is lossless.  "quality" is number of deflations.
-					// first one does great compression.  more will buy only a small %. 	 
-					// Set to -1 for no compression 
-					quality=1; 
-					break;   // how many deflates
-			default: 
-					quality=-1;  // no compression of undefined/unknown formats
-		}
-        
-        // Save to file.
-        bool save_ok;
-        save_ok= image.save(format.location.c_str(),
-              PlotExportFormat::exportFormat(format.type).c_str(), 
-			  quality);
-
-		ret = !wasCanceled && !image.isNull() && save_ok;
-        
-    // PS/PDF
-    } else if(format.type == PlotExportFormat::PS ||
-              format.type == PlotExportFormat::PDF) {
-        // Set resolution.
-        QPrinter::PrinterMode mode = QPrinter::ScreenResolution;
-        if(format.resolution == PlotExportFormat::HIGH)
-            mode = QPrinter::HighResolution;
-        
-        // Set file.
-        QPrinter printer(mode);
-        if(format.type == PlotExportFormat::PDF)
-            printer.setOutputFormat(QPrinter::PdfFormat);
-        else printer.setOutputFormat(QPrinter::PostScriptFormat);
-        printer.setOutputFileName(format.location.c_str());
-        
-        // Set output settings.
-        if(format.dpi > 0) printer.setResolution(format.dpi);
-        printer.setColorMode(QPrinter::Color);
-        
-        // Print each canvas.
-        bool flag = false;
-        QwtText title; QColor titleColor;
-        PlotOperationPtr op;
-        for(unsigned int i = 0; i < qcanvases.size(); i++) {
-            canv = qcanvases[i];
-            
-            // don't do new page only for first non-null canvas
-            if(flag) printer.newPage();
-            flag = true;
-            
-            // Set orientation.
-            printer.setOrientation(canv->width() >= canv->height() ?
-                                   QPrinter::Landscape : QPrinter::Portrait);
-                  
-            titleColor = canv->asQwtPlot().title().color();
-            op = canv->operationExport();
-            if(!op.null()) wasCanceled |= op->cancelRequested();
-            if(wasCanceled) break;
-            canv->asQwtPlot().print(printer);
-            
-            // For bug where title color changes after a print.
-            title = canv->asQwtPlot().title();
-            if(title.color() != titleColor) {
-                title.setColor(titleColor);
-                canv->asQwtPlot().setTitle(title);
-            }
-            
-            if(!op.null()) wasCanceled |= op->cancelRequested();
-            if(wasCanceled) break;
-        }
-        
-        ret = !wasCanceled;
     }
     
+
     // End logging.
     for(unsigned int i = 0; i < loggers.size(); i++)
         loggers[i]->releaseMeasurement();
     
     return ret;
 }
+
+
 
 unsigned int QPCanvas::axisIndex(PlotAxis a) {
     switch(a) {
@@ -326,6 +426,8 @@ unsigned int QPCanvas::axisIndex(PlotAxis a) {
     default: return 0;
     }
 }   
+
+
 
 PlotAxis QPCanvas::axisIndex(unsigned int i) {
     switch(i) {
@@ -376,9 +478,9 @@ QPCanvas::QPCanvas(QPPlotter* parent) : m_parent(parent), m_canvas(this),
     m_dateFormat = Plotter::DEFAULT_DATE_FORMAT;
     m_relativeDateFormat = Plotter::DEFAULT_RELATIVE_DATE_FORMAT;
     for(int i = 0; i < QwtPlot::axisCnt; i++) {
-    	m_scaleDraws[i] = new QPScaleDraw(&m_canvas, QwtPlot::Axis(i));
-    	m_scaleDraws[i]->setDateFormat(m_dateFormat);
-    	m_scaleDraws[i]->setRelativeDateFormat(m_relativeDateFormat);
+        m_scaleDraws[i] = new QPScaleDraw(&m_canvas, QwtPlot::Axis(i));
+        m_scaleDraws[i]->setDateFormat(m_dateFormat);
+        m_scaleDraws[i]->setRelativeDateFormat(m_relativeDateFormat);
     }
     
     m_canvas.enableAxis(QwtPlot::xBottom, false);
@@ -450,7 +552,7 @@ PlotCursor QPCanvas::cursor() const {
 
 
 void QPCanvas::setCursor(PlotCursor cursor) {
-	
+    
     QWidget::setCursor(QPOptions::cursor(cursor));
     m_canvas.canvas()->setCursor(QPOptions::cursor(cursor)); 
 }
@@ -503,31 +605,31 @@ void QPCanvas::showAxes(PlotAxisBitset axes) {
 
 
 PlotAxisScale QPCanvas::axisScale(PlotAxis axis) const   {
-	return m_scaleDraws[QPOptions::axis(axis)]->scale(); 
+    return m_scaleDraws[QPOptions::axis(axis)]->scale(); 
 }
 
 
 
 void QPCanvas::setAxisScale(PlotAxis axis, PlotAxisScale scale) {
-	m_scaleDraws[QPOptions::axis(axis)]->setScale(scale); 
+    m_scaleDraws[QPOptions::axis(axis)]->setScale(scale); 
 }
 
 
 
 bool QPCanvas::axisReferenceValueSet(PlotAxis axis) const {
-	return m_scaleDraws[QPOptions::axis(axis)]->referenceValueSet(); 
+    return m_scaleDraws[QPOptions::axis(axis)]->referenceValueSet(); 
 }
 
 
 
 double QPCanvas::axisReferenceValue(PlotAxis axis) const {
-	return m_scaleDraws[QPOptions::axis(axis)]->referenceValue(); 
+    return m_scaleDraws[QPOptions::axis(axis)]->referenceValue(); 
 }
 
 
 
 void QPCanvas::setAxisReferenceValue(PlotAxis axis, bool on, double value) {
-	m_scaleDraws[QPOptions::axis(axis)]->setReferenceValue(on, value); 
+    m_scaleDraws[QPOptions::axis(axis)]->setReferenceValue(on, value); 
 }
 
 
@@ -554,13 +656,13 @@ String QPCanvas::axisLabel(PlotAxis axis) const {
 
 
 void QPCanvas::setAxisLabel(PlotAxis axis, const String& title) {
-	
+    
     m_canvas.setAxisTitle(QPOptions::axis(axis), title.c_str());
     m_canvas.enableAxis(QPOptions::axis(axis));
 }
 
 PlotFontPtr QPCanvas::axisFont(PlotAxis a) const {
-	
+    
     QwtText t = m_canvas.axisTitle(QPOptions::axis(a));
     return new QPFont(t.font(), t.color());
 }
@@ -568,7 +670,7 @@ PlotFontPtr QPCanvas::axisFont(PlotAxis a) const {
 
 
 void QPCanvas::setAxisFont(PlotAxis axis, const PlotFont& font) {
-	
+    
     if(font != *axisFont(axis)) {
         QPFont f(font);    
         QwtText t = m_canvas.axisTitle(QPOptions::axis(axis));
@@ -627,7 +729,7 @@ void QPCanvas::showColorBar(bool show, PlotAxis axis) {
 
 
 prange_t QPCanvas::axisRange(PlotAxis axis) const {
-	
+    
     const QwtScaleDiv* div = m_canvas.axisScaleDiv(QPOptions::axis(axis));
 #if QWT_VERSION < 0x050200
     return prange_t(div->lBound(), div->hBound());
@@ -774,7 +876,7 @@ void QPCanvas::rescaleAxes() {
 
 
 bool QPCanvas::axesRatioLocked() const { 
-	return m_axesRatioLocked; 
+    return m_axesRatioLocked; 
 }
 
 
@@ -931,7 +1033,7 @@ bool QPCanvas::plotItem(PlotItemPtr item, PlotCanvasLayer layer) {
 
 
 vector<PlotItemPtr> QPCanvas::allPlotItems() const {
-	
+    
     vector<PlotItemPtr> v(m_plotItems.size() + m_layeredItems.size());
     unsigned int i = 0, n = m_plotItems.size();
     for(; i < m_plotItems.size(); i++) v[i] = m_plotItems[i].first;
@@ -957,13 +1059,13 @@ vector<PlotItemPtr> QPCanvas::layerPlotItems(PlotCanvasLayer layer) const {
 
 
 unsigned int QPCanvas::numPlotItems() const { 
-	return m_plotItems.size(); 
+    return m_plotItems.size(); 
 }
 
 
 
 unsigned int QPCanvas::numLayerPlotItems(PlotCanvasLayer layer) const {
-	
+    
     if(layer == MAIN) return m_plotItems.size();
     else              return m_layeredItems.size();
 }
@@ -1065,7 +1167,7 @@ void QPCanvas::clearLayer(PlotCanvasLayer layer) {
 
 
 void QPCanvas::holdDrawing() { 
-		m_canvas.holdDrawing(); 
+        m_canvas.holdDrawing(); 
 }
 
 void QPCanvas::releaseDrawing() {
@@ -1080,7 +1182,7 @@ void QPCanvas::releaseDrawing() {
 
 
 bool QPCanvas::drawingIsHeld() const   { 
-	return m_canvas.drawingIsHeld(); 
+    return m_canvas.drawingIsHeld(); 
 }
 
 
@@ -1104,7 +1206,7 @@ void QPCanvas::setSelectLine(const PlotLine& line) {
 
 bool QPCanvas::gridShown(bool* xMajor, bool* xMinor, bool* yMajor,
         bool* yMinor) const {
-			
+            
     bool ret = false;
     
     bool tmp = m_canvas.grid().xEnabled();
@@ -1166,7 +1268,7 @@ void QPCanvas::setGridMinorLine(const PlotLine& line) {
 
 
 bool QPCanvas::legendShown() const { 
-	return m_legend->legendShown(); 
+    return m_legend->legendShown(); 
 }
 
 
@@ -1191,7 +1293,7 @@ void QPCanvas::setLegendPosition(LegendPosition pos) {
 
 
 PlotLinePtr QPCanvas::legendLine() const{ 
-	return new QPLine(m_legend->line());
+    return new QPLine(m_legend->line());
 }
 
 
@@ -1213,7 +1315,7 @@ void QPCanvas::setLegendFill(const PlotAreaFill& area) {
 
 
 PlotFontPtr QPCanvas::legendFont() const { 
-	return new QPFont(m_legendFont); 
+    return new QPFont(m_legendFont); 
 }
 
 
@@ -1234,7 +1336,7 @@ void QPCanvas::setLegendFont(const PlotFont& font) {
 
 
 bool QPCanvas::autoIncrementColors() const { 
-	return m_autoIncColors; 
+    return m_autoIncColors; 
 }
 
 
@@ -1252,9 +1354,9 @@ bool QPCanvas::exportToFile(const PlotExportFormat& format) {
 
 
 String QPCanvas::fileChooserDialog(
-			const String& title,
-			const String& directory)    {
-			
+            const String& title,
+            const String& directory)    {
+            
     QString filename = QFileDialog::getSaveFileName(this, title.c_str(),
             directory.c_str());
     return filename.toStdString();
@@ -1263,13 +1365,13 @@ String QPCanvas::fileChooserDialog(
 
 
 const String& QPCanvas::dateFormat() const { 
-	return m_dateFormat; 
+    return m_dateFormat; 
 }
 
 
 
 void QPCanvas::setDateFormat(const String& dateFormat)   {
-	
+    
     if(m_dateFormat == dateFormat) return;
     m_dateFormat = dateFormat;
     for(int i = 0; i < QwtPlot::axisCnt; i++)
@@ -1285,7 +1387,7 @@ const String& QPCanvas::relativeDateFormat() const {
 
 
 void QPCanvas::setRelativeDateFormat(const String& dateFormat)   {
-	
+    
     if(m_relativeDateFormat == dateFormat) return;
     m_relativeDateFormat = dateFormat;
     for(int i = 0; i < QwtPlot::axisCnt; i++)
@@ -1296,7 +1398,7 @@ void QPCanvas::setRelativeDateFormat(const String& dateFormat)   {
 
 PlotCoordinate QPCanvas::convertCoordinate(const PlotCoordinate& coord,
                                  PlotCoordinate::System newSystem) const  {
-									 
+                                     
     if(coord.system() == newSystem) return coord;
     
     if(coord.system() == PlotCoordinate::WORLD) {
@@ -1380,25 +1482,25 @@ vector<double> QPCanvas::textWidthHeightDescent(const String& text,
 
 
 PlotFactory* QPCanvas::implementationFactory() const { 
-	return new QPFactory();
+    return new QPFactory();
 }
 
 
 
 QPLayeredCanvas& QPCanvas::asQwtPlot() { 
-	return m_canvas; 
+    return m_canvas; 
 }
 
 
 
 const QPLayeredCanvas& QPCanvas::asQwtPlot() const { 
-	return m_canvas; 
+    return m_canvas; 
 }
 
 
 
 QwtPlotPicker& QPCanvas::getSelecter() { 
-	return m_picker; 
+    return m_picker; 
 }
 
 
@@ -1411,13 +1513,13 @@ void QPCanvas::reinstallTrackerFilter() {
 
 
 QSize QPCanvas::sizeHint() const { 
-	return QSize(); 
+    return QSize(); 
 }
 
 
 
 QSize QPCanvas::minimumSizeHint() const { 
-	return QSize(); 
+    return QSize(); 
 }
 
 
@@ -1466,13 +1568,13 @@ void QPCanvas::logMethod(const String& className, const String& methodName,
 
 
 QPAxesCache& QPCanvas::axesCache()   { 
-	return m_stackCache; 
+    return m_stackCache; 
 }
 
 
 
 const QPAxesCache& QPCanvas::axesCache() const   {  
-	return m_stackCache; 
+    return m_stackCache; 
 }
 
 
@@ -1598,8 +1700,8 @@ void QPCanvas::keyReleaseEvent(QKeyEvent* event) {
         
     } 
     else if (key == Qt::Key_Space)  {
-		c = ' ';
-		accept=true; 
+        c = ' ';
+        accept=true; 
     }
     
     

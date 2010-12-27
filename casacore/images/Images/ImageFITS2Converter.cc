@@ -218,7 +218,8 @@ Bool ImageFITSConverter::ImageToFITS(String &error,
 				     Bool opticalVelocity,
 				     Int BITPIX, Float minPix, Float maxPix,
 				     Bool allowOverwrite, Bool degenerateLast,
-                                     Bool verbose, Bool stokesLast)
+                                     Bool verbose, Bool stokesLast,
+				     Bool preferWavelength)
 {
 //
 // Make a logger
@@ -507,7 +508,8 @@ Bool ImageFITSConverter::ImageToFITS(String &error,
     IPosition shapeCopy = newShape;
     Record saveHeader(header);
     Bool ok = cSys.toFITSHeader(header, shapeCopy, True, 'c', True, // use WCS 
-                                preferVelocity, opticalVelocity);
+                                preferVelocity, opticalVelocity,
+				preferWavelength);
 
     if (!ok) {
 	os << LogIO::SEVERE << "Could not make a standard FITS header. Setting"

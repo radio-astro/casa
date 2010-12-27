@@ -257,6 +257,39 @@ else:
     failed_tests.append('stokeslast')
 print myname, ' ***********************************************************'
 
+print myname, ' ***********************************************************'
+print myname, ' Test of the wavelength parameter:'
+ia.open('stokeslast-test.image')
+ia.tofits(outfile='wavelength-test.fits', wavelength=True)
+ia.close()
+passed = ia.open('wavelength-test.fits')
+ia.close()
+if passed:
+    print myname, ' wavelength parameter test passed.'
+    passed_tests.append('wavelength')
+else:
+    print myname, ' wavelength parameter test failed.'
+    failed_tests.append('wavelength')
+print myname, ' ***********************************************************'
+
+print myname, ' ***********************************************************'
+print myname, ' Test of export of a standard single-channel image from clean:'
+ia.open('xxx-clean.image')
+ia.tofits(outfile='xxx-test.fits')
+ia.tofits(outfile='xxx-test-w.fits', wavelength=True)
+ia.close()
+passed1 = ia.open('xxx-test.fits')
+ia.close()
+passed2 = ia.open('xxx-test-w.fits')
+ia.close()
+passed = passed1==True and passed2==True
+if passed:
+    print myname, ' trivial export tests passed.'
+    passed_tests.append('trivial')
+else:
+    print myname, ' trivial export test failed.'
+    failed_tests.append('trivial')
+print myname, ' ***********************************************************'
 
 
 if len(failed_tests)>0:
@@ -274,9 +307,3 @@ print 'Done.'
 
 
 #End of Script
-
-
-        
-        
-    
-

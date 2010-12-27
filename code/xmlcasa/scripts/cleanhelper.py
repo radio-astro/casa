@@ -335,11 +335,13 @@ class cleanhelper:
                 else: 
                   # multi-mses case: use first vis that has the specified field
                   # (use unsorted vis list)
-                  for i in range(len(self.vis)):
-                    if type(field)!=list:
-                      field=[field]
-                    try: 
-                      self.im.selectvis(vis=self.vis[i],field=field)
+                  nvis=len(self.vis)
+                  for i in range(nvis):
+                    #if type(field)!=list:
+                    #  field=[field]
+                    try:
+                      selparam=self._selectlistinputs(nvis,i,self.paramlist)
+                      self.im.selectvis(vis=self.vis[i],field=selparam['field'],spw=selparam['spw'])
                     except:
                       pass
 
@@ -867,7 +869,7 @@ class cleanhelper:
     def _selectlistinputs(self,nvis,indx,params):
         """
         A little private function to do selection and checking for a parameter 
-        given in list param should be string or list of strings.
+        given in list of strings.
         It checks nelement in each param either match with nvis or nelement=1
         (or a string) otherwise exception is thrown. 
         """

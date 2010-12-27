@@ -413,10 +413,12 @@ void QPDrawThread::run() {
         
         // Update operation.
         if(!op.null()) {
-//            title = item->title();
-            title = item->canvas()->title();
-            if(title.empty()) title = item->className();
-            op->setCurrentStatus("Drawing item \"" + title + "\".");
+//            title = item->title();  -- gives wrong info when shown in progress bar popup
+            if (item->canvas())   {    // prevents crash when marking/subtracting regions
+                title = item->canvas()->title();
+                if(title.empty()) title = item->className();
+                op->setCurrentStatus("Drawing item \"" + title + "\".");
+            }
         }
         
         // Start logging.

@@ -38,6 +38,11 @@
 #include <casa/namespace.h>
 
 int main(int argc, char* argv[]) {    
+
+#if (0)
+setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediately always */
+#endif
+
     // Parameter defaults.
     String ms    = "",
            xaxis = PMS::axis(PMS::DEFAULT_XAXIS),

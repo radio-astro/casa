@@ -1152,7 +1152,7 @@ public:
     
     // See TBArrayData::containsGreaterThan().  Returns false because Strings
     // are not numberable.
-    bool containsGreaterThan(TBData* data) { return false; }
+    bool containsGreaterThan(TBData* data)  { (void)data;   return false; }
     
     // See TBArrayData::to1DString().
     String to1DString();
