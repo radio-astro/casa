@@ -1,5 +1,5 @@
 // -*- C++ -*-
-//# ConvFuncDiskCache.cc: Definition of the ConvFuncDiskCache class
+//# CFStore.h: Definition of the CFStore class
 //# Copyright (C) 1997,1998,1999,2000,2001,2002,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -41,7 +41,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class CFStore
   {
   public:
-    CFStore():data(), coordSys(), sampling(), 
+    CFStore():data(), rdata(), coordSys(), sampling(), 
 	      xSupport(), ySupport(), 
 	      maxXSupport(-1), maxYSupport(-1),
 	      pa(), mosPointingPos(0) {};
@@ -49,7 +49,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     CFStore(CFType *dataPtr, CoordinateSystem& cs, Vector<Float>& samp,
 	    Vector<Int>& xsup, Vector<Int>& ysup, Int maxXSup, Int maxYSup,
 	    Quantity PA, Int mosPointing):
-      data(), coordSys(cs), sampling(samp),
+      data(),rdata(), coordSys(cs), sampling(samp),
       xSupport(xsup), ySupport(ysup), maxXSupport(maxXSup),
       maxYSupport(maxYSup), pa(PA), mosPointingPos(mosPointing)
     {data = new CFType(*dataPtr);};
@@ -75,6 +75,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
     CountedPtr<CFType> data;
+    CountedPtr<CFTypeReal> rdata;
     CoordinateSystem coordSys;
     Vector<Float> sampling;
     Vector<Int> xSupport,ySupport;
