@@ -593,16 +593,13 @@ namespace casa{
 				  const Int mosXPos, const Int mosYPos)
   {
     Int retVal;
+    // This assumes that the return state of locateConvFunction() for
+    // "CF" and "CFWT" will be the same.  I.e. if "CF" is found in the
+    // cache, "CFWT" will be found.  If "CF" is not found "CFWT" won't
+    // be found either.
     retVal=locateConvFunction(cfs, Nw, pa, dPA,"",mosXPos,mosYPos);
     locateConvFunction(cfwts, Nw, pa, dPA,"WT",mosXPos,mosYPos);
-   // Int retVal=locateConvFunction(cfs, Nw, pa, dPA, mosXPos, mosYPos);
-   // Int paKey;
-   // if (retVal == DISKCACHE)
-   //   {
-   //     searchConvFunction(paKey, pa, dPA);
-   //     loadFromDisk(paKey,pa,dPA,Nw,memCacheWt_p, cfwts,"WT");
-   //     cfwts=(memCacheWt_p[paKey]);
-   //   }
+
    return retVal;
   }
   //
