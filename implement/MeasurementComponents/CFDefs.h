@@ -34,6 +34,7 @@ namespace casa
 {
   namespace CFDefs { //# NAMESPACE CASA - BEGIN
     typedef Array<Complex> CFType ;
+    typedef Array<Double> CFTypeReal ;
     enum CACHETYPE {NOTCACHED=0,DISKCACHE, MEMCACHE};
     enum CFARRAYSHAPE {NXPOS=0,NYPOS,NWPOS,NPOLPOS,NBASEPOS,CFNDIM};
   } //# NAMESPACE CASA - END
