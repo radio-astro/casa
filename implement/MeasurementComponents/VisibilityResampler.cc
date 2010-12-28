@@ -32,28 +32,46 @@
 
 namespace casa{
   //
+  //-----------------------------------------------------------------------------------
+  //
+  VisibilityResampler& VisibilityResampler::operator=(const VisibilityResampler& other)
+  {
+    SETVEC(uvwScale_p, other.uvwScale_p);
+    SETVEC(offset_p, other.offset_p);
+    SETVEC(dphase_p, other.dphase_p);
+    SETVEC(chanMap_p, other.chanMap_p);
+    SETVEC(polMap_p, other.polMap_p);
+
+    convFuncStore_p = other.convFuncStore_p;
+
+    return *this;
+  }
+  //
+  //-----------------------------------------------------------------------------------
   // Re-sample the griddedData on the VisBuffer (a.k.a gridding)
   //
-  // Template instantiations for re-sampling onto DComplex of Complex grid.
+  // Template instantiations for re-sampling onto a double precision
+  // or single precision grid.
   //
   template
-  void VisibilityResampler::DataToGridImpl(VBStore& vbs, Array<DComplex>& grid, 
-		  const Bool& dopsf,  Matrix<Double>& sumwt, 
-		  const CFStore& cfs, const Vector<Double>& dphase,  
-		  const Vector<Int>& chanMap, const Vector<Int>& polMap, 
-		  const Vector<Double>& scale, const Vector<Double>& offset);
+  void VisibilityResampler::DataToGridImpl_p(Array<DComplex>& grid, const VBStore& vbs, 
+					   const Bool& dopsf,  Matrix<Double>& sumwt, 
+					   const CFStore& cfs, const Vector<Double>& dphase,  
+					   const Vector<Int>& chanMap, const Vector<Int>& polMap, 
+					   const Vector<Double>& scale, const Vector<Double>& offset);
   template
-  void VisibilityResampler::DataToGridImpl(VBStore& vbs, Array<Complex>& grid, 
-		  const Bool& dopsf,  Matrix<Double>& sumwt, 
-		  const CFStore& cfs, const Vector<Double>& dphase,  
-		  const Vector<Int>& chanMap, const Vector<Int>& polMap, 
-		  const Vector<Double>& scale, const Vector<Double>& offset);
+  void VisibilityResampler::DataToGridImpl_p(Array<Complex>& grid, const VBStore& vbs, 
+					   const Bool& dopsf,  Matrix<Double>& sumwt, 
+					   const CFStore& cfs, const Vector<Double>& dphase,  
+					   const Vector<Int>& chanMap, const Vector<Int>& polMap, 
+					   const Vector<Double>& scale, const Vector<Double>& offset);
 
   //
   //-----------------------------------------------------------------------------------
+  // Template implementation for DataToGrid
   //
   template <class T>
-  void VisibilityResampler::DataToGridImpl(VBStore& vbs, Array<T>& grid, const Bool& dopsf,
+  void VisibilityResampler::DataToGridImpl_p(Array<T>& grid, const VBStore& vbs, const Bool& dopsf,
 				       Matrix<Double>& sumwt, const CFStore& cfs, 
 				       const Vector<Double>& dphase,  
 				       const Vector<Int>& chanMap, const Vector<Int>& polMap, 
@@ -136,7 +154,6 @@ namespace casa{
 			      norm+=wt;
 			    }
 			}
-		      //		      sumwt(apol,achan)=sumwt(apol,achan)+
 		      sumwt(apol,achan)+=vbs.imagingWeight(ichan,irow)*norm;
 		    }
 		  }
@@ -150,12 +167,10 @@ namespace casa{
     
   }
   //
+  //-----------------------------------------------------------------------------------
   // Re-sample VisBuffer to a regular grid (griddedData) (a.k.a. de-gridding)
   //
-  void VisibilityResampler::GridToData(const Array<Complex>& grid, VBStore& vbs, 
-				       const CFStore& cfs, const Vector<Double>& dphase,
-				       const Vector<Int>& chanMap, const Vector<Int>& polMap,
-				       const Vector<Double>& scale, const Vector<Double>& offset)
+  void VisibilityResampler::GridToData(VBStore& vbs, const Array<Complex>& grid)
   {
     Vector<Double> convFunc;
 
@@ -178,26 +193,26 @@ namespace casa{
     nDataPol  = vbs.flagCube.shape()[0];
     nDataChan = vbs.flagCube.shape()[1];
 
-    convFunc.reference(*(cfs.rdata));
+    convFunc.reference(*(convFuncStore_p.rdata));
 
-    sampling[0] = sampling[1] = cfs.sampling[0];
-    support(0) = cfs.xSupport[0];
-    support(1) = cfs.ySupport[0];
+    sampling[0] = sampling[1] = convFuncStore_p.sampling[0];
+    support(0) = convFuncStore_p.xSupport[0];
+    support(1) = convFuncStore_p.ySupport[0];
     
     for(Int irow=rbeg; irow<rend; irow++) {
       if(!vbs.rowFlag(irow)) {
 
 	for (Int ichan=0; ichan < nDataChan; ichan++) {
-	  achan=chanMap(ichan);
+	  achan=chanMap_p(ichan);
 
 	  if((achan>=0) && (achan<nGridChan)) {
-	    sgrid(pos,loc,off,phasor,irow,vbs.uvw,dphase,vbs.freq(ichan),
-		  scale,offset,sampling);
+	    sgrid(pos,loc,off,phasor,irow,vbs.uvw,dphase_p,vbs.freq(ichan),
+		  uvwScale_p,offset_p,sampling);
 	    if (onGrid(nx, ny, loc, support)) {
 	      for(Int ipol=0; ipol < nDataPol; ipol++) {
 
 		if(!vbs.flagCube(ipol,ichan,irow)) { 
-		  apol=polMap(ipol);
+		  apol=polMap_p(ipol);
 		  
 		  if((apol>=0) && (apol<nGridPol)) {
 		    grdpos[2]=apol; grdpos[3]=achan;
