@@ -33,6 +33,7 @@ namespace casa{
     if (&other != this)
       {
 	data=other.data; 
+	rdata=other.rdata; 
 	coordSys=other.coordSys; 
 	sampling=other.sampling;
 	xSupport=other.xSupport;
