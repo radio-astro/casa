@@ -126,7 +126,7 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-	unsigned int MainTable::size() {
+	unsigned int MainTable::size() const {
 		return privateRows.size();
 	}
 	
@@ -357,33 +357,23 @@ MainRow* MainTable::newRow(MainRow* row) {
 
 
 
+	 vector<MainRow *> MainTable::get() {
+	    return privateRows;
+	 }
+	 
+	 const vector<MainRow *>& MainTable::get() const {
+	    return privateRows;
+	 }	 
+	 	
+
+
+
 
 	
 
 	
 	
 		
-	/**
-	 * Get all rows.
-	 * @return Alls rows as an array of MainRow
-	 */
-	 vector<MainRow *> MainTable::get() {
-	    return privateRows;
-	    
-	 /*
-	 	vector<MainRow *> v;
-	 	map<string, TIME_ROWS>::iterator mapIter;
-	 	vector<MainRow *>::iterator rowIter;
-	 	
-	 	for (mapIter=context.begin(); mapIter!=context.end(); mapIter++) {
-	 		for (rowIter=((*mapIter).second).begin(); rowIter!=((*mapIter).second).end(); rowIter++) 
-	 			v.push_back(*rowIter); 
-	 	}
-	 	
-	 	return v;
-	 */
-	 }
-	 
 	 vector<MainRow *> *MainTable::getByContext(Tag configDescriptionId, Tag fieldId) {
 	  	string k = Key(configDescriptionId, fieldId);
  
@@ -494,7 +484,7 @@ MainRow* MainTable::newRow(MainRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<MainTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:main=\"http://Alma/XASDM/MainTable\" xsi:schemaLocation=\"http://Alma/XASDM/MainTable http://almaobservatory.org/XML/XASDM/2/MainTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.57\">\n");
+		buf.append("<MainTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:main=\"http://Alma/XASDM/MainTable\" xsi:schemaLocation=\"http://Alma/XASDM/MainTable http://almaobservatory.org/XML/XASDM/2/MainTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -572,7 +562,7 @@ MainRow* MainTable::newRow(MainRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<MainTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:main=\"http://Alma/XASDM/MainTable\" xsi:schemaLocation=\"http://Alma/XASDM/MainTable http://almaobservatory.org/XML/XASDM/2/MainTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.57\">\n";
+		oss << "<MainTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:main=\"http://Alma/XASDM/MainTable\" xsi:schemaLocation=\"http://Alma/XASDM/MainTable http://almaobservatory.org/XML/XASDM/2/MainTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='MainTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";

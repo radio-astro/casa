@@ -124,7 +124,7 @@ class SysCalRow;
  * System calibration. Gives information on the conversion  of data to temperature scale. This table is reduced to follow  the contents of the Measurement Set SysCal table. Use only spectral  values (use a single channel spectral window for single numbers).   \texttt{numChan} can be found in the SpectralWindow Table.  The contents of this table are used to scale the data in the filler.
  * <BR>
  
- * Generated from model's revision "1.57", branch "HEAD"
+ * Generated from model's revision "1.58", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of SysCal </CAPTION>
@@ -319,7 +319,7 @@ public:
 	 *
 	 * @return the number of rows in an unsigned int.
 	 */
-	unsigned int size() ;
+	unsigned int size() const;
 	
 	/**
 	 * Return the name of this table.
@@ -453,11 +453,19 @@ public:
 	//
 		
 	/**
-	 * Get all rows.
-	 * @return Alls rows as a vector of pointers of SysCalRow. The elements of this vector are stored in the order 
+	 * Get a collection of pointers on the rows of the table.
+	 * @return Alls rows in a vector of pointers of SysCalRow. The elements of this vector are stored in the order 
 	 * in which they have been added to the SysCalTable.
 	 */
 	vector<SysCalRow *> get() ;
+	
+	/**
+	 * Get a const reference on the collection of rows pointers internally hold by the table.
+	 * @return A const reference of a vector of pointers of SysCalRow. The elements of this vector are stored in the order 
+	 * in which they have been added to the SysCalTable.
+	 *
+	 */
+	 const vector<SysCalRow *>& get() const ;
 	
 
 	/**

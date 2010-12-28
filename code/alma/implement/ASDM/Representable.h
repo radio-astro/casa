@@ -64,7 +64,7 @@ public:
 	virtual void fromXML(string xml) = 0;
 
 	virtual string getName() const = 0;
-	virtual unsigned int size() = 0;
+	virtual unsigned int size() const = 0;
 	
 protected:
 

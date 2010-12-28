@@ -122,7 +122,7 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-	unsigned int SwitchCycleTable::size() {
+	unsigned int SwitchCycleTable::size() const {
 		return privateRows.size();
 	}
 	
@@ -332,20 +332,19 @@ SwitchCycleRow* SwitchCycleTable::newRow(SwitchCycleRow* row) {
 
 
 
+	 vector<SwitchCycleRow *> SwitchCycleTable::get() {
+	    return privateRows;
+	 }
+	 
+	 const vector<SwitchCycleRow *>& SwitchCycleTable::get() const {
+	    return privateRows;
+	 }	 
+	 	
+
+
+
 
 	
-
-	//
-	// ====> Methods returning rows.
-	//	
-	/**
-	 * Get all rows.
-	 * @return Alls rows as an array of SwitchCycleRow
-	 */
-	vector<SwitchCycleRow *> SwitchCycleTable::get() {
-		return privateRows;
-		// return row;
-	}
 
 	
 /*
@@ -435,7 +434,7 @@ SwitchCycleRow* SwitchCycleTable::lookup(int numStep, vector<float > weightArray
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<SwitchCycleTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:swtccl=\"http://Alma/XASDM/SwitchCycleTable\" xsi:schemaLocation=\"http://Alma/XASDM/SwitchCycleTable http://almaobservatory.org/XML/XASDM/2/SwitchCycleTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.57\">\n");
+		buf.append("<SwitchCycleTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:swtccl=\"http://Alma/XASDM/SwitchCycleTable\" xsi:schemaLocation=\"http://Alma/XASDM/SwitchCycleTable http://almaobservatory.org/XML/XASDM/2/SwitchCycleTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -513,7 +512,7 @@ SwitchCycleRow* SwitchCycleTable::lookup(int numStep, vector<float > weightArray
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<SwitchCycleTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:swtccl=\"http://Alma/XASDM/SwitchCycleTable\" xsi:schemaLocation=\"http://Alma/XASDM/SwitchCycleTable http://almaobservatory.org/XML/XASDM/2/SwitchCycleTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.57\">\n";
+		oss << "<SwitchCycleTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:swtccl=\"http://Alma/XASDM/SwitchCycleTable\" xsi:schemaLocation=\"http://Alma/XASDM/SwitchCycleTable http://almaobservatory.org/XML/XASDM/2/SwitchCycleTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='SwitchCycleTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";

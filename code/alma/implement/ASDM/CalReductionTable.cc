@@ -122,7 +122,7 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-	unsigned int CalReductionTable::size() {
+	unsigned int CalReductionTable::size() const {
 		return privateRows.size();
 	}
 	
@@ -378,20 +378,19 @@ CalReductionRow* CalReductionTable::newRow(CalReductionRow* row) {
 
 
 
+	 vector<CalReductionRow *> CalReductionTable::get() {
+	    return privateRows;
+	 }
+	 
+	 const vector<CalReductionRow *>& CalReductionTable::get() const {
+	    return privateRows;
+	 }	 
+	 	
+
+
+
 
 	
-
-	//
-	// ====> Methods returning rows.
-	//	
-	/**
-	 * Get all rows.
-	 * @return Alls rows as an array of CalReductionRow
-	 */
-	vector<CalReductionRow *> CalReductionTable::get() {
-		return privateRows;
-		// return row;
-	}
 
 	
 /*
@@ -491,7 +490,7 @@ CalReductionRow* CalReductionTable::lookup(int numApplied, vector<string > appli
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalReductionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clred=\"http://Alma/XASDM/CalReductionTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalReductionTable http://almaobservatory.org/XML/XASDM/2/CalReductionTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.57\">\n");
+		buf.append("<CalReductionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clred=\"http://Alma/XASDM/CalReductionTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalReductionTable http://almaobservatory.org/XML/XASDM/2/CalReductionTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -569,7 +568,7 @@ CalReductionRow* CalReductionTable::lookup(int numApplied, vector<string > appli
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalReductionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clred=\"http://Alma/XASDM/CalReductionTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalReductionTable http://almaobservatory.org/XML/XASDM/2/CalReductionTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.57\">\n";
+		oss << "<CalReductionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clred=\"http://Alma/XASDM/CalReductionTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalReductionTable http://almaobservatory.org/XML/XASDM/2/CalReductionTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalReductionTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";

@@ -128,7 +128,7 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-	unsigned int SysPowerTable::size() {
+	unsigned int SysPowerTable::size() const {
 		return privateRows.size();
 	}
 	
@@ -331,33 +331,23 @@ SysPowerRow* SysPowerTable::newRow(SysPowerRow* row) {
 
 
 
+	 vector<SysPowerRow *> SysPowerTable::get() {
+	    return privateRows;
+	 }
+	 
+	 const vector<SysPowerRow *>& SysPowerTable::get() const {
+	    return privateRows;
+	 }	 
+	 	
+
+
+
 
 	
 
 	
 	
 		
-	/**
-	 * Get all rows.
-	 * @return Alls rows as an array of SysPowerRow
-	 */
-	 vector<SysPowerRow *> SysPowerTable::get() {
-	    return privateRows;
-	    
-	 /*
-	 	vector<SysPowerRow *> v;
-	 	map<string, TIME_ROWS>::iterator mapIter;
-	 	vector<SysPowerRow *>::iterator rowIter;
-	 	
-	 	for (mapIter=context.begin(); mapIter!=context.end(); mapIter++) {
-	 		for (rowIter=((*mapIter).second).begin(); rowIter!=((*mapIter).second).end(); rowIter++) 
-	 			v.push_back(*rowIter); 
-	 	}
-	 	
-	 	return v;
-	 */
-	 }
-	 
 	 vector<SysPowerRow *> *SysPowerTable::getByContext(Tag antennaId, Tag spectralWindowId, int feedId) {
 	  	string k = Key(antennaId, spectralWindowId, feedId);
  
@@ -480,7 +470,7 @@ SysPowerRow* SysPowerTable::newRow(SysPowerRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<SysPowerTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:syspwr=\"http://Alma/XASDM/SysPowerTable\" xsi:schemaLocation=\"http://Alma/XASDM/SysPowerTable http://almaobservatory.org/XML/XASDM/2/SysPowerTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.57\">\n");
+		buf.append("<SysPowerTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:syspwr=\"http://Alma/XASDM/SysPowerTable\" xsi:schemaLocation=\"http://Alma/XASDM/SysPowerTable http://almaobservatory.org/XML/XASDM/2/SysPowerTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -558,7 +548,7 @@ SysPowerRow* SysPowerTable::newRow(SysPowerRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<SysPowerTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:syspwr=\"http://Alma/XASDM/SysPowerTable\" xsi:schemaLocation=\"http://Alma/XASDM/SysPowerTable http://almaobservatory.org/XML/XASDM/2/SysPowerTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.57\">\n";
+		oss << "<SysPowerTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:syspwr=\"http://Alma/XASDM/SysPowerTable\" xsi:schemaLocation=\"http://Alma/XASDM/SysPowerTable http://almaobservatory.org/XML/XASDM/2/SysPowerTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='SysPowerTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";

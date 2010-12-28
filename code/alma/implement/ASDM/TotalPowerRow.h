@@ -100,7 +100,7 @@ using  asdm::Length;
 
 
 /*\file TotalPower.h
-    \brief Generated from model's revision "1.57", branch "HEAD"
+    \brief Generated from model's revision "1.58", branch "HEAD"
 */
 
 namespace asdm {
@@ -127,7 +127,7 @@ typedef void (TotalPowerRow::*TotalPowerAttributeFromBin) (EndianISStream& eiss)
 /**
  * The TotalPowerRow class is a row of a TotalPowerTable.
  * 
- * Generated from model's revision "1.57", branch "HEAD"
+ * Generated from model's revision "1.58", branch "HEAD"
  *
  */
 class TotalPowerRow {

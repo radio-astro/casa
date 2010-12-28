@@ -128,7 +128,7 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-	unsigned int FeedTable::size() {
+	unsigned int FeedTable::size() const {
 		return privateRows.size();
 	}
 	
@@ -477,30 +477,20 @@ FeedRow* FeedTable::newRow(FeedRow* row) {
 
 
 
+	 vector<FeedRow *> FeedTable::get() {
+	    return privateRows;
+	 }
+	 
+	 const vector<FeedRow *>& FeedTable::get() const {
+	    return privateRows;
+	 }	 
+	 	
+
+
+
 
 	
 
-	
-	
-	/**
-	 * Get all rows.
-	 * @return Alls rows as an array of FeedRow
-	 */
-	vector<FeedRow *> FeedTable::get()  {
-		return privateRows;
-	/*	
-		vector<FeedRow *> v;
-		
-		map<string, ID_TIME_ROWS >::iterator mapIter = context.begin();
-		ID_TIME_ROWS::iterator planeIter;
-		vector<FeedRow*>::iterator rowIter; 
-		for (mapIter=context.begin(); mapIter!=context.end(); mapIter++)
-			for (planeIter=((*mapIter).second).begin(); planeIter != ((*mapIter).second).end(); planeIter++)
-				for (rowIter=(*planeIter).begin(); rowIter != (*planeIter).end(); rowIter++)
-					v.push_back(*rowIter);
-		return v;
-	*/
-	}	
 	
 
 
@@ -642,7 +632,7 @@ FeedRow* FeedTable::lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterva
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<FeedTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:feed=\"http://Alma/XASDM/FeedTable\" xsi:schemaLocation=\"http://Alma/XASDM/FeedTable http://almaobservatory.org/XML/XASDM/2/FeedTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.57\">\n");
+		buf.append("<FeedTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:feed=\"http://Alma/XASDM/FeedTable\" xsi:schemaLocation=\"http://Alma/XASDM/FeedTable http://almaobservatory.org/XML/XASDM/2/FeedTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -720,7 +710,7 @@ FeedRow* FeedTable::lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterva
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<FeedTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:feed=\"http://Alma/XASDM/FeedTable\" xsi:schemaLocation=\"http://Alma/XASDM/FeedTable http://almaobservatory.org/XML/XASDM/2/FeedTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.57\">\n";
+		oss << "<FeedTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:feed=\"http://Alma/XASDM/FeedTable\" xsi:schemaLocation=\"http://Alma/XASDM/FeedTable http://almaobservatory.org/XML/XASDM/2/FeedTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='FeedTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";

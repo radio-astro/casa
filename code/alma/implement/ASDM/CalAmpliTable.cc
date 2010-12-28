@@ -130,7 +130,7 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-	unsigned int CalAmpliTable::size() {
+	unsigned int CalAmpliTable::size() const {
 		return privateRows.size();
 	}
 	
@@ -357,20 +357,19 @@ CalAmpliRow* CalAmpliTable::newRow(CalAmpliRow* row) {
 
 
 
+	 vector<CalAmpliRow *> CalAmpliTable::get() {
+	    return privateRows;
+	 }
+	 
+	 const vector<CalAmpliRow *>& CalAmpliTable::get() const {
+	    return privateRows;
+	 }	 
+	 	
+
+
+
 
 	
-
-	//
-	// ====> Methods returning rows.
-	//	
-	/**
-	 * Get all rows.
-	 * @return Alls rows as an array of CalAmpliRow
-	 */
-	vector<CalAmpliRow *> CalAmpliTable::get() {
-		return privateRows;
-		// return row;
-	}
 
 	
 /*
@@ -490,7 +489,7 @@ CalAmpliRow* CalAmpliTable::lookup(string antennaName, AtmPhaseCorrectionMod::At
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalAmpliTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clmpl=\"http://Alma/XASDM/CalAmpliTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalAmpliTable http://almaobservatory.org/XML/XASDM/2/CalAmpliTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.57\">\n");
+		buf.append("<CalAmpliTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clmpl=\"http://Alma/XASDM/CalAmpliTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalAmpliTable http://almaobservatory.org/XML/XASDM/2/CalAmpliTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -568,7 +567,7 @@ CalAmpliRow* CalAmpliTable::lookup(string antennaName, AtmPhaseCorrectionMod::At
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalAmpliTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clmpl=\"http://Alma/XASDM/CalAmpliTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalAmpliTable http://almaobservatory.org/XML/XASDM/2/CalAmpliTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.57\">\n";
+		oss << "<CalAmpliTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clmpl=\"http://Alma/XASDM/CalAmpliTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalAmpliTable http://almaobservatory.org/XML/XASDM/2/CalAmpliTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalAmpliTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";

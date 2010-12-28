@@ -124,7 +124,7 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-	unsigned int FocusTable::size() {
+	unsigned int FocusTable::size() const {
 		return privateRows.size();
 	}
 	
@@ -311,33 +311,23 @@ FocusRow* FocusTable::newRow(FocusRow* row) {
 
 
 
+	 vector<FocusRow *> FocusTable::get() {
+	    return privateRows;
+	 }
+	 
+	 const vector<FocusRow *>& FocusTable::get() const {
+	    return privateRows;
+	 }	 
+	 	
+
+
+
 
 	
 
 	
 	
 		
-	/**
-	 * Get all rows.
-	 * @return Alls rows as an array of FocusRow
-	 */
-	 vector<FocusRow *> FocusTable::get() {
-	    return privateRows;
-	    
-	 /*
-	 	vector<FocusRow *> v;
-	 	map<string, TIME_ROWS>::iterator mapIter;
-	 	vector<FocusRow *>::iterator rowIter;
-	 	
-	 	for (mapIter=context.begin(); mapIter!=context.end(); mapIter++) {
-	 		for (rowIter=((*mapIter).second).begin(); rowIter!=((*mapIter).second).end(); rowIter++) 
-	 			v.push_back(*rowIter); 
-	 	}
-	 	
-	 	return v;
-	 */
-	 }
-	 
 	 vector<FocusRow *> *FocusTable::getByContext(Tag antennaId) {
 	  	string k = Key(antennaId);
  
@@ -460,7 +450,7 @@ FocusRow* FocusTable::newRow(FocusRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<FocusTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:focus=\"http://Alma/XASDM/FocusTable\" xsi:schemaLocation=\"http://Alma/XASDM/FocusTable http://almaobservatory.org/XML/XASDM/2/FocusTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.57\">\n");
+		buf.append("<FocusTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:focus=\"http://Alma/XASDM/FocusTable\" xsi:schemaLocation=\"http://Alma/XASDM/FocusTable http://almaobservatory.org/XML/XASDM/2/FocusTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -538,7 +528,7 @@ FocusRow* FocusTable::newRow(FocusRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<FocusTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:focus=\"http://Alma/XASDM/FocusTable\" xsi:schemaLocation=\"http://Alma/XASDM/FocusTable http://almaobservatory.org/XML/XASDM/2/FocusTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.57\">\n";
+		oss << "<FocusTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:focus=\"http://Alma/XASDM/FocusTable\" xsi:schemaLocation=\"http://Alma/XASDM/FocusTable http://almaobservatory.org/XML/XASDM/2/FocusTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='FocusTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";

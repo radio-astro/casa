@@ -78,7 +78,7 @@ using  asdm::ArrayTimeInterval;
 
 
 /*\file SysPower.h
-    \brief Generated from model's revision "1.57", branch "HEAD"
+    \brief Generated from model's revision "1.58", branch "HEAD"
 */
 
 namespace asdm {
@@ -102,7 +102,7 @@ typedef void (SysPowerRow::*SysPowerAttributeFromBin) (EndianISStream& eiss);
 /**
  * The SysPowerRow class is a row of a SysPowerTable.
  * 
- * Generated from model's revision "1.57", branch "HEAD"
+ * Generated from model's revision "1.58", branch "HEAD"
  *
  */
 class SysPowerRow {

@@ -126,7 +126,7 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-	unsigned int WVMCalTable::size() {
+	unsigned int WVMCalTable::size() const {
 		return privateRows.size();
 	}
 	
@@ -341,33 +341,23 @@ WVMCalRow* WVMCalTable::newRow(WVMCalRow* row) {
 
 
 
+	 vector<WVMCalRow *> WVMCalTable::get() {
+	    return privateRows;
+	 }
+	 
+	 const vector<WVMCalRow *>& WVMCalTable::get() const {
+	    return privateRows;
+	 }	 
+	 	
+
+
+
 
 	
 
 	
 	
 		
-	/**
-	 * Get all rows.
-	 * @return Alls rows as an array of WVMCalRow
-	 */
-	 vector<WVMCalRow *> WVMCalTable::get() {
-	    return privateRows;
-	    
-	 /*
-	 	vector<WVMCalRow *> v;
-	 	map<string, TIME_ROWS>::iterator mapIter;
-	 	vector<WVMCalRow *>::iterator rowIter;
-	 	
-	 	for (mapIter=context.begin(); mapIter!=context.end(); mapIter++) {
-	 		for (rowIter=((*mapIter).second).begin(); rowIter!=((*mapIter).second).end(); rowIter++) 
-	 			v.push_back(*rowIter); 
-	 	}
-	 	
-	 	return v;
-	 */
-	 }
-	 
 	 vector<WVMCalRow *> *WVMCalTable::getByContext(Tag antennaId, Tag spectralWindowId) {
 	  	string k = Key(antennaId, spectralWindowId);
  
@@ -490,7 +480,7 @@ WVMCalRow* WVMCalTable::newRow(WVMCalRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<WVMCalTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:wvmcl=\"http://Alma/XASDM/WVMCalTable\" xsi:schemaLocation=\"http://Alma/XASDM/WVMCalTable http://almaobservatory.org/XML/XASDM/2/WVMCalTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.57\">\n");
+		buf.append("<WVMCalTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:wvmcl=\"http://Alma/XASDM/WVMCalTable\" xsi:schemaLocation=\"http://Alma/XASDM/WVMCalTable http://almaobservatory.org/XML/XASDM/2/WVMCalTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -568,7 +558,7 @@ WVMCalRow* WVMCalTable::newRow(WVMCalRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<WVMCalTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:wvmcl=\"http://Alma/XASDM/WVMCalTable\" xsi:schemaLocation=\"http://Alma/XASDM/WVMCalTable http://almaobservatory.org/XML/XASDM/2/WVMCalTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.57\">\n";
+		oss << "<WVMCalTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:wvmcl=\"http://Alma/XASDM/WVMCalTable\" xsi:schemaLocation=\"http://Alma/XASDM/WVMCalTable http://almaobservatory.org/XML/XASDM/2/WVMCalTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='WVMCalTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";

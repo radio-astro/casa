@@ -59,7 +59,7 @@ using namespace asdmIDL;   /// <-------------------
 #endif
 
 /*\file ASDM.h
-    \brief Generated from model's revision "1.57", branch "HEAD"
+    \brief Generated from model's revision "1.58", branch "HEAD"
 */
 
 namespace asdm {
@@ -260,14 +260,14 @@ class WeatherTable;
  * creates a complete set of tables.
  *
  * 
- * Generated from model's revision "1.57", branch "HEAD"
+ * Generated from model's revision "1.58", branch "HEAD"
  */
 //class ASDM : public Representable {
 class ASDM {
 
 public:
 	/**
-	 * Create an instance of the tables that belong to this model.
+	 * Constructs an empty ASDM.
 	 */
 	ASDM ();
 	
@@ -728,9 +728,29 @@ public:
 	void toFile(string directory);
 
 	/**
-	 * Reads and parses a collection of files as those produced by the toFile method.
-	 * This dataset is populated with the result of the parsing.
-	 * @param directory The name of the directory containing the files.
+	 * Constructs totally or partially an ASDM dataset from its representation on disk.
+	 *
+	 * Reads and parses a file (ASDM.xml) containing the top level element of an ASDM.
+	 * Depending on the value of the boolean parameter loadTablesOnDemand the files containing the tables of
+	 * of the dataset are parsed to populate the dataset in memory immediately (false) or only when an application tries
+	 * to retrieve values from these tables (true).
+	 *
+	 * @param directory the name of the directory containing the files.
+	 * @param loadTablesOnDemand the tables are read and parsed immediately (false) or only when necessary (true).
+	 * @throws ConversionException If any error occurs while reading the 
+	 * files in the directory or parsing them.
+	 *
+	 */	
+	 void setFromFile(string directory, bool loadTablesOnDemand);
+	 
+	/**
+	 * Constructs an ASDM dataset from its representation on disk.
+	 *
+	 * Reads and parses a file (ASDM.xml) containing the top level element of an ASDM and then the files
+	 * containing the representation on disk of the dataset's tables. On exit the dataset contains 
+	 * all its tables in memory.
+	 *
+	 * @param directory the name of the directory containing the files.
 	 * @throws ConversionException If any error occurs while reading the 
 	 * files in the directory or parsing them.
 	 *
@@ -886,12 +906,33 @@ public:
 
 
 
+	/**
+	 *  \enum Origin
+	 *
+	 *  \brief This enumeration lists the different possible origins for an ASDM present in memory. 
+	 */
+	enum Origin {
+		FILE,  ///< The dataset has been constructed from its representation on disk. 
+		ARCHIVE, ///< The dataset has been constructed from its representation in the Archive. 
+		EX_NIHILO ///< The dataset has been constructed ex nihilo.
+	};
+	
+	/**
+	 * Returns the origin of the dataset in memory.
+	 *
+	 * @return an ASDM::Origin value.
+	 */
+	 Origin getOrigin() const ;
+	 	
 private:
 
 	bool archiveAsBin; // If true archive binary else archive XML
 	bool fileAsBin ; // If true file binary else file XML		
 	bool hasBeenAdded;
-	
+	Origin origin;
+	bool loadTablesOnDemand;
+	string directory;
+		
 
 	/**
 	 * The table Main

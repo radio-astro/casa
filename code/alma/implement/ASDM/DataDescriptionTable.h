@@ -164,7 +164,7 @@ public:
 	 *
 	 * @return the number of rows in an unsigned int.
 	 */
-	unsigned int size() ;
+	unsigned int size() const ;
 	
 	/**
 	 * Return the name of this table.

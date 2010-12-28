@@ -88,7 +88,7 @@ class AlmaRadiometerRow;
  * Properties of the Radiometer receiver/backend (used to monitor water vapour  content and correct phases). Note that standard properties (like  spectral coverage) are in the generic tables (like SpectralWindow).
  * <BR>
  
- * Generated from model's revision "1.57", branch "HEAD"
+ * Generated from model's revision "1.58", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of AlmaRadiometer </CAPTION>
@@ -155,7 +155,7 @@ public:
 	 *
 	 * @return the number of rows in an unsigned int.
 	 */
-	unsigned int size() ;
+	unsigned int size() const;
 	
 	/**
 	 * Return the name of this table.
@@ -262,11 +262,19 @@ public:
 	//
 		
 	/**
-	 * Get all rows.
-	 * @return Alls rows as a vector of pointers of AlmaRadiometerRow. The elements of this vector are stored in the order 
+	 * Get a collection of pointers on the rows of the table.
+	 * @return Alls rows in a vector of pointers of AlmaRadiometerRow. The elements of this vector are stored in the order 
 	 * in which they have been added to the AlmaRadiometerTable.
 	 */
 	vector<AlmaRadiometerRow *> get() ;
+	
+	/**
+	 * Get a const reference on the collection of rows pointers internally hold by the table.
+	 * @return A const reference of a vector of pointers of AlmaRadiometerRow. The elements of this vector are stored in the order 
+	 * in which they have been added to the AlmaRadiometerTable.
+	 *
+	 */
+	 const vector<AlmaRadiometerRow *>& get() const ;
 	
 
 

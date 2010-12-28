@@ -128,7 +128,7 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-	unsigned int SysCalTable::size() {
+	unsigned int SysCalTable::size() const {
 		return privateRows.size();
 	}
 	
@@ -359,33 +359,23 @@ SysCalRow* SysCalTable::newRow(SysCalRow* row) {
 
 
 
+	 vector<SysCalRow *> SysCalTable::get() {
+	    return privateRows;
+	 }
+	 
+	 const vector<SysCalRow *>& SysCalTable::get() const {
+	    return privateRows;
+	 }	 
+	 	
+
+
+
 
 	
 
 	
 	
 		
-	/**
-	 * Get all rows.
-	 * @return Alls rows as an array of SysCalRow
-	 */
-	 vector<SysCalRow *> SysCalTable::get() {
-	    return privateRows;
-	    
-	 /*
-	 	vector<SysCalRow *> v;
-	 	map<string, TIME_ROWS>::iterator mapIter;
-	 	vector<SysCalRow *>::iterator rowIter;
-	 	
-	 	for (mapIter=context.begin(); mapIter!=context.end(); mapIter++) {
-	 		for (rowIter=((*mapIter).second).begin(); rowIter!=((*mapIter).second).end(); rowIter++) 
-	 			v.push_back(*rowIter); 
-	 	}
-	 	
-	 	return v;
-	 */
-	 }
-	 
 	 vector<SysCalRow *> *SysCalTable::getByContext(Tag antennaId, Tag spectralWindowId, int feedId) {
 	  	string k = Key(antennaId, spectralWindowId, feedId);
  
@@ -508,7 +498,7 @@ SysCalRow* SysCalTable::newRow(SysCalRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<SysCalTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:syscal=\"http://Alma/XASDM/SysCalTable\" xsi:schemaLocation=\"http://Alma/XASDM/SysCalTable http://almaobservatory.org/XML/XASDM/2/SysCalTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.57\">\n");
+		buf.append("<SysCalTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:syscal=\"http://Alma/XASDM/SysCalTable\" xsi:schemaLocation=\"http://Alma/XASDM/SysCalTable http://almaobservatory.org/XML/XASDM/2/SysCalTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -586,7 +576,7 @@ SysCalRow* SysCalTable::newRow(SysCalRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<SysCalTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:syscal=\"http://Alma/XASDM/SysCalTable\" xsi:schemaLocation=\"http://Alma/XASDM/SysCalTable http://almaobservatory.org/XML/XASDM/2/SysCalTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.57\">\n";
+		oss << "<SysCalTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:syscal=\"http://Alma/XASDM/SysCalTable\" xsi:schemaLocation=\"http://Alma/XASDM/SysCalTable http://almaobservatory.org/XML/XASDM/2/SysCalTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='SysCalTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";

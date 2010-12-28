@@ -128,7 +128,7 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-	unsigned int GainTrackingTable::size() {
+	unsigned int GainTrackingTable::size() const {
 		return privateRows.size();
 	}
 	
@@ -381,33 +381,23 @@ GainTrackingRow* GainTrackingTable::newRow(GainTrackingRow* row) {
 
 
 
+	 vector<GainTrackingRow *> GainTrackingTable::get() {
+	    return privateRows;
+	 }
+	 
+	 const vector<GainTrackingRow *>& GainTrackingTable::get() const {
+	    return privateRows;
+	 }	 
+	 	
+
+
+
 
 	
 
 	
 	
 		
-	/**
-	 * Get all rows.
-	 * @return Alls rows as an array of GainTrackingRow
-	 */
-	 vector<GainTrackingRow *> GainTrackingTable::get() {
-	    return privateRows;
-	    
-	 /*
-	 	vector<GainTrackingRow *> v;
-	 	map<string, TIME_ROWS>::iterator mapIter;
-	 	vector<GainTrackingRow *>::iterator rowIter;
-	 	
-	 	for (mapIter=context.begin(); mapIter!=context.end(); mapIter++) {
-	 		for (rowIter=((*mapIter).second).begin(); rowIter!=((*mapIter).second).end(); rowIter++) 
-	 			v.push_back(*rowIter); 
-	 	}
-	 	
-	 	return v;
-	 */
-	 }
-	 
 	 vector<GainTrackingRow *> *GainTrackingTable::getByContext(Tag antennaId, Tag spectralWindowId, int feedId) {
 	  	string k = Key(antennaId, spectralWindowId, feedId);
  
@@ -530,7 +520,7 @@ GainTrackingRow* GainTrackingTable::newRow(GainTrackingRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<GainTrackingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:gntrk=\"http://Alma/XASDM/GainTrackingTable\" xsi:schemaLocation=\"http://Alma/XASDM/GainTrackingTable http://almaobservatory.org/XML/XASDM/2/GainTrackingTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.57\">\n");
+		buf.append("<GainTrackingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:gntrk=\"http://Alma/XASDM/GainTrackingTable\" xsi:schemaLocation=\"http://Alma/XASDM/GainTrackingTable http://almaobservatory.org/XML/XASDM/2/GainTrackingTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -608,7 +598,7 @@ GainTrackingRow* GainTrackingTable::newRow(GainTrackingRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<GainTrackingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:gntrk=\"http://Alma/XASDM/GainTrackingTable\" xsi:schemaLocation=\"http://Alma/XASDM/GainTrackingTable http://almaobservatory.org/XML/XASDM/2/GainTrackingTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.57\">\n";
+		oss << "<GainTrackingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:gntrk=\"http://Alma/XASDM/GainTrackingTable\" xsi:schemaLocation=\"http://Alma/XASDM/GainTrackingTable http://almaobservatory.org/XML/XASDM/2/GainTrackingTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='GainTrackingTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";

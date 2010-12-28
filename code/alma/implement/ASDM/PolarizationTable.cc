@@ -122,7 +122,7 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-	unsigned int PolarizationTable::size() {
+	unsigned int PolarizationTable::size() const {
 		return privateRows.size();
 	}
 	
@@ -310,20 +310,19 @@ PolarizationRow* PolarizationTable::newRow(PolarizationRow* row) {
 
 
 
+	 vector<PolarizationRow *> PolarizationTable::get() {
+	    return privateRows;
+	 }
+	 
+	 const vector<PolarizationRow *>& PolarizationTable::get() const {
+	    return privateRows;
+	 }	 
+	 	
+
+
+
 
 	
-
-	//
-	// ====> Methods returning rows.
-	//	
-	/**
-	 * Get all rows.
-	 * @return Alls rows as an array of PolarizationRow
-	 */
-	vector<PolarizationRow *> PolarizationTable::get() {
-		return privateRows;
-		// return row;
-	}
 
 	
 /*
@@ -409,7 +408,7 @@ PolarizationRow* PolarizationTable::lookup(int numCorr, vector<StokesParameterMo
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<PolarizationTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:plrztn=\"http://Alma/XASDM/PolarizationTable\" xsi:schemaLocation=\"http://Alma/XASDM/PolarizationTable http://almaobservatory.org/XML/XASDM/2/PolarizationTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.57\">\n");
+		buf.append("<PolarizationTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:plrztn=\"http://Alma/XASDM/PolarizationTable\" xsi:schemaLocation=\"http://Alma/XASDM/PolarizationTable http://almaobservatory.org/XML/XASDM/2/PolarizationTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -487,7 +486,7 @@ PolarizationRow* PolarizationTable::lookup(int numCorr, vector<StokesParameterMo
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<PolarizationTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:plrztn=\"http://Alma/XASDM/PolarizationTable\" xsi:schemaLocation=\"http://Alma/XASDM/PolarizationTable http://almaobservatory.org/XML/XASDM/2/PolarizationTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.57\">\n";
+		oss << "<PolarizationTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:plrztn=\"http://Alma/XASDM/PolarizationTable\" xsi:schemaLocation=\"http://Alma/XASDM/PolarizationTable http://almaobservatory.org/XML/XASDM/2/PolarizationTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='PolarizationTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";

@@ -126,7 +126,7 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-	unsigned int SourceTable::size() {
+	unsigned int SourceTable::size() const {
 		return privateRows.size();
 	}
 	
@@ -467,30 +467,20 @@ SourceRow* SourceTable::newRow(SourceRow* row) {
 
 
 
+	 vector<SourceRow *> SourceTable::get() {
+	    return privateRows;
+	 }
+	 
+	 const vector<SourceRow *>& SourceTable::get() const {
+	    return privateRows;
+	 }	 
+	 	
+
+
+
 
 	
 
-	
-	
-	/**
-	 * Get all rows.
-	 * @return Alls rows as an array of SourceRow
-	 */
-	vector<SourceRow *> SourceTable::get()  {
-		return privateRows;
-	/*	
-		vector<SourceRow *> v;
-		
-		map<string, ID_TIME_ROWS >::iterator mapIter = context.begin();
-		ID_TIME_ROWS::iterator planeIter;
-		vector<SourceRow*>::iterator rowIter; 
-		for (mapIter=context.begin(); mapIter!=context.end(); mapIter++)
-			for (planeIter=((*mapIter).second).begin(); planeIter != ((*mapIter).second).end(); planeIter++)
-				for (rowIter=(*planeIter).begin(); rowIter != (*planeIter).end(); rowIter++)
-					v.push_back(*rowIter);
-		return v;
-	*/
-	}	
 	
 
 
@@ -624,7 +614,7 @@ SourceRow* SourceTable::lookup(ArrayTimeInterval timeInterval, Tag spectralWindo
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<SourceTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:src=\"http://Alma/XASDM/SourceTable\" xsi:schemaLocation=\"http://Alma/XASDM/SourceTable http://almaobservatory.org/XML/XASDM/2/SourceTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.57\">\n");
+		buf.append("<SourceTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:src=\"http://Alma/XASDM/SourceTable\" xsi:schemaLocation=\"http://Alma/XASDM/SourceTable http://almaobservatory.org/XML/XASDM/2/SourceTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -702,7 +692,7 @@ SourceRow* SourceTable::lookup(ArrayTimeInterval timeInterval, Tag spectralWindo
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<SourceTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:src=\"http://Alma/XASDM/SourceTable\" xsi:schemaLocation=\"http://Alma/XASDM/SourceTable http://almaobservatory.org/XML/XASDM/2/SourceTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.57\">\n";
+		oss << "<SourceTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:src=\"http://Alma/XASDM/SourceTable\" xsi:schemaLocation=\"http://Alma/XASDM/SourceTable http://almaobservatory.org/XML/XASDM/2/SourceTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='SourceTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";

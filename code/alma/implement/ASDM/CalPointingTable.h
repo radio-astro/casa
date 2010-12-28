@@ -176,7 +176,7 @@ class CalPointingRow;
  * Result of the pointing calibration performed on-line by TelCal.
  * <BR>
  
- * Generated from model's revision "1.57", branch "HEAD"
+ * Generated from model's revision "1.58", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalPointing </CAPTION>
@@ -462,7 +462,7 @@ public:
 	 *
 	 * @return the number of rows in an unsigned int.
 	 */
-	unsigned int size() ;
+	unsigned int size() const;
 	
 	/**
 	 * Return the name of this table.
@@ -620,11 +620,19 @@ public:
 	//
 		
 	/**
-	 * Get all rows.
-	 * @return Alls rows as a vector of pointers of CalPointingRow. The elements of this vector are stored in the order 
+	 * Get a collection of pointers on the rows of the table.
+	 * @return Alls rows in a vector of pointers of CalPointingRow. The elements of this vector are stored in the order 
 	 * in which they have been added to the CalPointingTable.
 	 */
 	vector<CalPointingRow *> get() ;
+	
+	/**
+	 * Get a const reference on the collection of rows pointers internally hold by the table.
+	 * @return A const reference of a vector of pointers of CalPointingRow. The elements of this vector are stored in the order 
+	 * in which they have been added to the CalPointingTable.
+	 *
+	 */
+	 const vector<CalPointingRow *>& get() const ;
 	
 
 

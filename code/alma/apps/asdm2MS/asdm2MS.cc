@@ -879,6 +879,25 @@ bool timeIntervalIntersectsAScan (T* row, const vector<ScanRow *>& scans) {
   return result;
 }
 
+template<typename T>
+struct rowsInAScanbyTimeIntervalFunctor {
+private:
+  const vector<ScanRow *>& scans;
+  vector<T *> result;
+
+public:
+  rowsInAScanbyTimeIntervalFunctor(const vector<ScanRow *>& scans): scans(scans) {};
+  const vector<T *> & operator() (const vector<T *>& rows, bool ignoreTime=false) {
+    if (ignoreTime) return rows;
+
+    for (typename vector<T *>::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
+      if (timeIntervalIntersectsAScan (*iter, scans))
+	result.push_back(*iter);
+    }
+    return result;    
+  }
+};
+
 //
 // A template function which calls the template function timeIntervalIntersectsAScan for each
 // element of 'rows' by using the parameter 'scans' to determine if there is at least an intersection.
@@ -911,6 +930,26 @@ bool timeIsInAScan(T* row, const vector<ScanRow *>& scans) {
   }
   return result;
 }
+
+template<typename T>
+struct rowsInAScanbyTimeFunctor {
+private:
+  const vector<ScanRow *>& scans;
+  vector<T *> result;
+
+public:
+  rowsInAScanbyTimeFunctor(const vector<ScanRow *>& scans): scans(scans) {};
+  const vector<T *> & operator() (const vector<T *>& rows, bool ignoreTime=false) {
+    if (ignoreTime) return rows;
+
+    for (typename vector<T *>::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
+      if (timeIsInAScan (*iter, scans))
+	result.push_back(*iter);
+    }
+
+    return result;    
+  }
+};
 
 //
 // A template function which calls the template function timeIsInAScan for each
@@ -1165,7 +1204,7 @@ int main(int argc, char *argv[]) {
     // Revision ? displays revision's info and don't go further.
     if (vm.count("revision")) {
       errstream.str("");
-      errstream << "$Id: asdm2MS.cpp,v 1.62 2010/12/21 13:00:59 mcaillat Exp $" << "\n" ;
+      errstream << "$Id: asdm2MS.cpp,v 1.63 2010/12/27 17:32:16 mcaillat Exp $" << "\n" ;
       error(errstream.str());
     }
 
@@ -1341,7 +1380,7 @@ int main(int argc, char *argv[]) {
     infostream.str("");
     infostream << "Input ASDM dataset : " << dsName << endl;
     info(infostream.str());
-    ds->setFromFile(dsName);
+    ds->setFromFile(dsName, false);
   }
   catch (ConversionException e) {
     errstream.str("");
@@ -2041,19 +2080,17 @@ int main(int argc, char *argv[]) {
   // Issues :
   //    - time (epoch) : at the moment it takes directly the time as it is stored in the ASDM.
   //    - focusLength (in AIPS++) is no defined.
-  FeedTable& feedT = ds->getFeed();
+  const FeedTable& feedT = ds->getFeed();
   {
     FeedRow* r = 0;
     infostream.str("");
     infostream << "The dataset has " << feedT.size() << " feed(s)...";
-    vector<FeedRow *> v;
-    if (ignoreTime)
-      v = feedT.get();
-    else {
-      v = rowsInAScanbyTimeInterval(feedT.get(), selectedScanRow_v);
+    rowsInAScanbyTimeIntervalFunctor<FeedRow> selector(selectedScanRow_v);
+    
+    const vector<FeedRow *>& v = selector(feedT.get(), ignoreTime);
+    if (!ignoreTime)
       infostream << v.size() << " of them in the exec blocks / selected scans ... ";
-    }
-
+    
     info(infostream.str());
     int nFeed = v.size();
 
@@ -2161,15 +2198,17 @@ int main(int argc, char *argv[]) {
   //
   // Process the FlagCmd table.
   //
-  FlagCmdTable& flagCmdT  = ds->getFlagCmd();
-
-
+  const FlagCmdTable& flagCmdT  = ds->getFlagCmd();
   {
     FlagCmdRow* r = 0;
     infostream.str("");
     infostream << "The dataset has " << flagCmdT.size() << " FlagCmd(s)...";
-    vector<FlagCmdRow *> v = rowsInAScanbyTimeInterval(flagCmdT.get(), selectedScanRow_v);
-    infostream << v.size() << " of them in the exec blocks / selected scans ... ";
+    rowsInAScanbyTimeIntervalFunctor<FlagCmdRow> selector(selectedScanRow_v);
+
+    const vector<FlagCmdRow *>& v = selector(flagCmdT.get(), ignoreTime);
+    if (!ignoreTime)
+      infostream << v.size() << " of them in the exec blocks / selected scans ... ";
+
     info(infostream.str());
     int nFlagCmd = v.size();
 
@@ -2207,19 +2246,18 @@ int main(int argc, char *argv[]) {
   // Issues :
   // - use executeBlockId for observationId ...to be discussed with Francois.
   // - objectId : not taken into account (it's a string while the MS expects an int).
-  HistoryTable& historyT = ds->getHistory();
+  const HistoryTable& historyT = ds->getHistory();
   {
     HistoryRow* r = 0;
     int nHistory = historyT.size();
     infostream.str("");
     infostream << "The dataset has " << nHistory << " history(s)...";
-    vector<HistoryRow *> v;
-    if (ignoreTime) 
-      v = historyT.get();
-    else {
-      v = rowsInAScanbyTime(historyT.get(), selectedScanRow_v);
+    rowsInAScanbyTimeFunctor<HistoryRow> selector(selectedScanRow_v);
+
+    const vector<HistoryRow *>& v = selector(historyT.get(), ignoreTime);;
+    if (!ignoreTime) 
       infostream << v.size() << " of them in the selected exec blocks / scans ... ";
-    }
+
     info(infostream.str()); 
 
     for (int i = 0; i < nHistory; i++) {
@@ -2321,13 +2359,12 @@ int main(int argc, char *argv[]) {
   PointingTable& pointingT = ds->getPointing();
   infostream.str("");
   infostream << "The dataset has " << pointingT.size() << " pointing(s)...";
-  vector<PointingRow *> v;
-  if (ignoreTime) 
-    v = pointingT.get();
-  else {
-    v = rowsInAScanbyTimeInterval(pointingT.get(), selectedScanRow_v);
+  rowsInAScanbyTimeIntervalFunctor<PointingRow> selector(selectedScanRow_v);
+
+  const vector<PointingRow *>& v = selector(pointingT.get(), ignoreTime);
+  if (!ignoreTime) 
     infostream << v.size() << " of them in the selected exec blocks / scans ... ";
-  }
+
   info(infostream.str());
   int nPointing = v.size();
 
@@ -2560,18 +2597,17 @@ int main(int argc, char *argv[]) {
   
   // Process the Source table.
   //
-  SourceTable& sourceT = ds->getSource();
+  const SourceTable& sourceT = ds->getSource();
   try {
     SourceRow* r = 0;
     infostream.str("");
     infostream << "The dataset has " << sourceT.size() << " sources(s)...";
-    vector<SourceRow *> v ;
-    if (ignoreTime) 
-      v = sourceT.get();
-    else {
-      v = rowsInAScanbyTimeInterval(sourceT.get(), selectedScanRow_v);
+    rowsInAScanbyTimeIntervalFunctor<SourceRow> selector(selectedScanRow_v);
+
+    const vector<SourceRow *>& v = selector(sourceT.get(), ignoreTime);
+    if (!ignoreTime) 
       infostream << v.size() << " of them in the selected scans ... ";
-    }
+
     info(infostream.str());
     int nSource = v.size();
 
@@ -2703,18 +2739,17 @@ int main(int argc, char *argv[]) {
   //
   // Process the SysCal table.
   //
-  SysCalTable& sysCalT = ds->getSysCal();
+  const SysCalTable& sysCalT = ds->getSysCal();
   {
     SysCalRow* r = 0;
     infostream.str("");
     infostream << "The dataset has " << sysCalT.size() << " sysCal(s)...";
-    vector<SysCalRow *> v;
-    if (ignoreTime) 
-      v = sysCalT.get();
-    else {
-      vector<SysCalRow *> v = rowsInAScanbyTimeInterval(sysCalT.get(), selectedScanRow_v);
+    rowsInAScanbyTimeIntervalFunctor<SysCalRow> selector(selectedScanRow_v);
+
+    const vector<SysCalRow *>& v = selector(sysCalT.get(), ignoreTime);
+    if (!ignoreTime) 
       infostream << v.size() << " of them in the selected scans ... ";
-    }
+
     info(infostream.str());
     int nSysCal = v.size();
 
@@ -2810,20 +2845,19 @@ int main(int argc, char *argv[]) {
   
   //
   // Process the CalDevice table.
-  CalDeviceTable& calDeviceT = ds->getCalDevice();
+  const CalDeviceTable& calDeviceT = ds->getCalDevice();
   {
     infostream.str("");
     infostream << "The dataset has " << calDeviceT.size() << " calDevice(s)...";
-    vector<CalDeviceRow*> calDevices;
-    if (ignoreTime) 
-      calDevices = calDeviceT.get();
-    else {
-      calDevices = rowsInAScanbyTimeInterval(calDeviceT.get(), selectedScanRow_v);
+    rowsInAScanbyTimeIntervalFunctor<CalDeviceRow> selector(selectedScanRow_v);
+
+    const vector<CalDeviceRow *>& calDevices = selector(calDeviceT.get(), ignoreTime);
+    if (!ignoreTime) 
       infostream << calDevices.size() << " of them in the selected exec blocks / scans ... ";
-    }
+
     info(infostream.str());
 
-    for (vector<CalDeviceRow*>::iterator iter = calDevices.begin(); iter != calDevices.end(); iter++) {
+    for (vector<CalDeviceRow*>::const_iterator iter = calDevices.begin(); iter != calDevices.end(); iter++) {
       bool ignoreThisRow = false;
       unsigned int numCalload = 0;
       unsigned int numReceptor = 0;
@@ -2861,7 +2895,6 @@ int main(int argc, char *argv[]) {
 	calLoadNames.resize(temp.size());
 	transform(temp.begin(), temp.end(), calLoadNames.begin(), stringValue<CalibrationDevice, CCalibrationDevice>);	  
       }
-
 
       //
       // Do we have numReceptor ?
@@ -3024,127 +3057,8 @@ int main(int argc, char *argv[]) {
 
   //
   // Process the SysPower table.
-#if 0
-  SysPowerTable& sysPowerT = ds->getSysPower();
-  {
-    infostream.str("");
-    infostream << "The dataset has " << sysPowerT.size() << " syspower(s)...";
-    vector<SysPowerRow*> sysPowers;
-    if (ignoreTime) 
-      sysPowers = sysPowerT.get();
-    else {
-      sysPowers = rowsInAScanbyTimeInterval(sysPowerT.get(), selectedScanRow_v);
-      infostream << sysPowers.size() << " of them in the selected exec blocks / scans ... ";
-    }
-    info(infostream.str());
-    for (vector<SysPowerRow *>::iterator iter = sysPowers.begin(); iter != sysPowers.end(); iter++) {
-      bool ignoreThisRow = false;
-      vector<float> switchedPowerDifference;
-      vector<float> switchedPowerSum;
-      vector<float> requantizerGain;
-      unsigned int numReceptor = (*iter)->getNumReceptor();
 
-      errstream.str("");
-      infostream.str("");
-      if (numReceptor == 0) {
-	errstream << "In the table Syspower, the value of the attribute 'numReceptor' in row #"
-		  << (unsigned int) (iter - sysPowers.begin())
-		  << " is invalid (" 
-		  << numReceptor 
-		  << "). It is expected to be strictly positive."
-		  << endl;
-	ignoreThisRow = true;
-      }
-
-      else {
-	// 
-	// Do we have switchedPowerDifference ?
-	if ((*iter)->isSwitchedPowerDifferenceExists()) {
-	  switchedPowerDifference = (*iter)->getSwitchedPowerDifference();
-	  // Does it have a correct size ?      
-	  if (switchedPowerDifference.size() < numReceptor) {
-	    errstream  << "In the table SysPower, the size of the attribute 'switchedPowerDifference' in row #"
-		       << (unsigned int) (iter - sysPowers.begin())
-		       << " is too small. It should be greater than or equal to the value of the atttribute 'numReceptor' ("
-		       << numReceptor
-		       <<")."
-		       << endl;
-	    ignoreThisRow = true;
-	  } 
-	}
-
-	//
-	// Do we have switchedPowerSum ?
-	if ((*iter)->isSwitchedPowerSumExists()) {
-	  switchedPowerSum = (*iter)->getSwitchedPowerSum();
-	  // Does it have a correct size ?      
-	  if (switchedPowerSum.size() < numReceptor) {
-	    errstream  << "In the table SysPower, the size of the attribute 'switchedPowerSum' in row #"
-		       << (unsigned int) (iter - sysPowers.begin())
-		       << " is too small. It should be greater than or equal to the value of the atttribute 'numReceptor' ("
-		       << numReceptor
-		       <<")."
-		       << endl;
-	    ignoreThisRow = true;
-	  } 
-	}
-
-	//
-	// Do we have requantizerGain ?
-	if ((*iter)->isRequantizerGainExists()) {
-	  requantizerGain = (*iter)->getRequantizerGain();
-	  // Does it have a correct size ?      
-	  if (requantizerGain.size() < numReceptor) {
-	    errstream  << "In the table SysPower, the size of the attribute 'requantizerGain' in row #"
-		       << (unsigned int) (iter - sysPowers.begin())
-		       << " is too small. It should be greater than or equal to the value of the atttribute 'numReceptor' ("
-		       << numReceptor
-		       <<")."
-		       << endl;
-	    ignoreThisRow = true;
-	  } 
-	}
-	if (errstream.str().size() > 0) 
-	  error(errstream.str());
-	
-	if (infostream.str().size() > 0)
-	  info(infostream.str());
-
-	if (ignoreThisRow) {
-	  infostream.str("");
-	  infostream << "This row will be ignored." << endl;
-	  info(infostream.str());
-	  continue;
-	}
-	
-	// And finally we can add a new row to the MS SYSPOWER table.
-	double interval = ((double) (*iter)->getTimeInterval().getDuration().get()) / ArrayTime::unitsInASecond ;
-	double time =  (*iter)->getTimeInterval().getStartInMJD()*86400 + interval / 2.0 ;	
-	for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator msIter = msFillers.begin();
-	     msIter != msFillers.end();
-	     ++msIter) {
-	  msIter->second->addSysPower((*iter)->getAntennaId().getTagValue(),
-				      (*iter)->getFeedId(),
-				      swIdx2Idx[(*iter)->getSpectralWindowId().getTagValue()],
-				      time,
-				      interval,
-				      numReceptor,
-				      switchedPowerDifference,
-				      switchedPowerSum,
-				      requantizerGain);
-	}          
-      }
-    }
-
-    unsigned int numMSSysPowers =  (const_cast<casa::MeasurementSet*>(msFillers.begin()->second->ms()))->rwKeywordSet().asTable("SYSPOWER").nrow();
-    if (numMSSysPowers > 0) {
-      infostream.str("");
-      infostream << "converted in " << numMSSysPowers << " syspower(s) in the measurement set.";
-      info(infostream.str());
-    }
-  } // end of filling SysPower by row.
-#else
-  SysPowerTable& sysPowerT = ds->getSysPower();
+  const SysPowerTable& sysPowerT = ds->getSysPower();
   {
     
     vector<int>		antennaId;
@@ -3161,17 +3075,12 @@ int main(int argc, char *argv[]) {
     {
       infostream.str("");
       infostream << "The dataset has " << sysPowerT.size() << " syspower(s)...";
+      rowsInAScanbyTimeIntervalFunctor<SysPowerRow> selector(selectedScanRow_v);
+   
+      const vector<SysPowerRow *>& sysPowers = selector(sysPowerT.get(), ignoreTime);
 
-      /*
-       * Which rows must be processed ?
-       */
-      vector<SysPowerRow*> sysPowers;
-      if (ignoreTime) 
-	sysPowers = sysPowerT.get();
-      else {
-	sysPowers = rowsInAScanbyTimeInterval(sysPowerT.get(), selectedScanRow_v);
+      if (!ignoreTime) 
 	infostream << sysPowers.size() << " of them in the selected exec blocks / scans ... ";	
-      }
 
       info(infostream.str());
 
@@ -3204,7 +3113,7 @@ int main(int argc, char *argv[]) {
 	error(errstream.str());
       }
       else 
-	infostream << "In SysPower table, numReceptor is uniformly equal to '" << numReceptor0 << "'.";
+	infostream << "In SysPower table, numReceptor is uniformly equal to '" << numReceptor0 << "'." << endl;
             
       bool switchedPowerDifferenceExists0 = sysPowers[0]->isSwitchedPowerDifferenceExists();
       if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckSwitchedPowerDifference(numReceptor0, switchedPowerDifferenceExists0)) == sysPowers.end())
@@ -3250,7 +3159,6 @@ int main(int argc, char *argv[]) {
     }
     info(infostream.str());
         
-    cout << "About to call addSysPowerSlice with nRow=" << antennaId.size() << endl;
     for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator msIter = msFillers.begin();
 	 msIter != msFillers.end();
 	 ++msIter) {
@@ -3274,25 +3182,21 @@ int main(int argc, char *argv[]) {
     }
   } // end of filling SysPower by slice.
 
-#endif
-
-
 #if 1
   //
   // Load the weather table
-  WeatherTable& weatherT = ds->getWeather();
+  const WeatherTable& weatherT = ds->getWeather();
 
   {
     WeatherRow* r = 0;
     infostream.str("");
     infostream << "The dataset has " << weatherT.size() << " weather(s)...";
-    vector<WeatherRow *> v; 
-    if (ignoreTime) 
-      v = weatherT.get();
-    else {
-      v = rowsInAScanbyTimeInterval(weatherT.get(), selectedScanRow_v);
+    rowsInAScanbyTimeIntervalFunctor<WeatherRow> selector(selectedScanRow_v);
+    
+    const vector<WeatherRow *>& v = selector(weatherT.get(), ignoreTime);
+    if (!ignoreTime) 
       infostream << v.size() << " of them in the selected scans ... ";
-    }
+
     info(infostream.str());
     int nWeather = v.size();
 
@@ -3312,11 +3216,11 @@ int main(int argc, char *argv[]) {
       float windSpeed                  = r->getWindSpeed().get();
       bool  windSpeedFlag              = r->getWindSpeedFlag();
       bool  hasDewPoint                = r->isDewPointExists();
+
       float dewPoint                   = r->isDewPointExists()?r->getDewPoint().get():-1.0;
       bool  dewPointFlag               = r->isDewPointFlagExists()?r->getDewPointFlag():true;
       int   wxStationId                = r->getStationId().getTagValue();
       vector<double> wxStationPosition = DConverter::toVectorD(r->getStationUsingStationId()->getPosition());
-      
 
       for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
 	   iter != msFillers.end();
@@ -3363,8 +3267,8 @@ int main(int argc, char *argv[]) {
 
 #if 1 
   {
-    MainTable& mainT = ds->getMain();
-    StateTable& stateT = ds->getState();
+    const MainTable& mainT = ds->getMain();
+    const StateTable& stateT = ds->getState();
 
     MainRow* r = 0;
     vector<MainRow*> v ;
@@ -3372,8 +3276,8 @@ int main(int argc, char *argv[]) {
     //
     // Consider only the Main rows whose execBlockId and scanNumber attributes correspond to the selection.
     //
-    vector<MainRow *> temp = mainT.get();
-    for ( vector<MainRow *>::iterator iter_v = temp.begin(); iter_v != temp.end(); iter_v++) {
+    const vector<MainRow *>& temp = mainT.get();
+    for ( vector<MainRow *>::const_iterator iter_v = temp.begin(); iter_v != temp.end(); iter_v++) {
       map<int, set<int> >::iterator iter_m = selected_eb_scan_m.find((*iter_v)->getExecBlockId().getTagValue());
       if ( iter_m != selected_eb_scan_m.end() && iter_m->second.find((*iter_v)->getScanNumber()) != iter_m->second.end() )	  
 	v.push_back(*iter_v);

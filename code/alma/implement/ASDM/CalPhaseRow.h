@@ -130,7 +130,7 @@ using namespace PolarizationTypeMod;
 
 
 /*\file CalPhase.h
-    \brief Generated from model's revision "1.57", branch "HEAD"
+    \brief Generated from model's revision "1.58", branch "HEAD"
 */
 
 namespace asdm {
@@ -151,7 +151,7 @@ typedef void (CalPhaseRow::*CalPhaseAttributeFromBin) (EndianISStream& eiss);
 /**
  * The CalPhaseRow class is a row of a CalPhaseTable.
  * 
- * Generated from model's revision "1.57", branch "HEAD"
+ * Generated from model's revision "1.58", branch "HEAD"
  *
  */
 class CalPhaseRow {

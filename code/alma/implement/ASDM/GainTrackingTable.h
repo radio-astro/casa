@@ -131,7 +131,7 @@ class GainTrackingRow;
  * Gain tracking information. Contains variable control parameters   affecting the signal coming from a receiver in an antenna. The number of   LOs is in the Receiver table.    See the document \href{https://wikio.nrao.edu/pub/ALMA/CalExamples/DelayCalSteps.pdf}   {Antenna and Electronic Delay Calibration} for details.
  * <BR>
  
- * Generated from model's revision "1.57", branch "HEAD"
+ * Generated from model's revision "1.58", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of GainTracking </CAPTION>
@@ -319,7 +319,7 @@ public:
 	 *
 	 * @return the number of rows in an unsigned int.
 	 */
-	unsigned int size() ;
+	unsigned int size() const;
 	
 	/**
 	 * Return the name of this table.
@@ -465,11 +465,19 @@ public:
 	//
 		
 	/**
-	 * Get all rows.
-	 * @return Alls rows as a vector of pointers of GainTrackingRow. The elements of this vector are stored in the order 
+	 * Get a collection of pointers on the rows of the table.
+	 * @return Alls rows in a vector of pointers of GainTrackingRow. The elements of this vector are stored in the order 
 	 * in which they have been added to the GainTrackingTable.
 	 */
 	vector<GainTrackingRow *> get() ;
+	
+	/**
+	 * Get a const reference on the collection of rows pointers internally hold by the table.
+	 * @return A const reference of a vector of pointers of GainTrackingRow. The elements of this vector are stored in the order 
+	 * in which they have been added to the GainTrackingTable.
+	 *
+	 */
+	 const vector<GainTrackingRow *>& get() const ;
 	
 
 	/**

@@ -90,7 +90,7 @@ class DopplerRow;
  * Doppler tracking information. This table defines how velocity  information is converted into a frequency offset to compensate in real time  for the Doppler effect. This table may be omitted for ALMA when the  Doppler tracking is not corrected.
  * <BR>
  
- * Generated from model's revision "1.57", branch "HEAD"
+ * Generated from model's revision "1.58", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of Doppler </CAPTION>
@@ -166,7 +166,7 @@ public:
 	 *
 	 * @return the number of rows in an unsigned int.
 	 */
-	unsigned int size() ;
+	unsigned int size() const;
 	
 	/**
 	 * Return the name of this table.
@@ -287,11 +287,19 @@ public:
 	//
 		
 	/**
-	 * Get all rows.
-	 * @return Alls rows as a vector of pointers of DopplerRow. The elements of this vector are stored in the order 
+	 * Get a collection of pointers on the rows of the table.
+	 * @return Alls rows in a vector of pointers of DopplerRow. The elements of this vector are stored in the order 
 	 * in which they have been added to the DopplerTable.
 	 */
 	vector<DopplerRow *> get() ;
+	
+	/**
+	 * Get a const reference on the collection of rows pointers internally hold by the table.
+	 * @return A const reference of a vector of pointers of DopplerRow. The elements of this vector are stored in the order 
+	 * in which they have been added to the DopplerTable.
+	 *
+	 */
+	 const vector<DopplerRow *>& get() const ;
 	
 
 

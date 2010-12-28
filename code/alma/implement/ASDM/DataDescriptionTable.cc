@@ -120,7 +120,7 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 
-	unsigned int DataDescriptionTable::size() {
+	unsigned int DataDescriptionTable::size() const {
 		return row.size();
 	}	
 	
