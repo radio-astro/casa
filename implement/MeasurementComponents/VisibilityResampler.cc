@@ -54,45 +54,33 @@ namespace casa{
   // or single precision grid.
   //
   template
-  void VisibilityResampler::DataToGridImpl_p(Array<DComplex>& grid, const VBStore& vbs, 
-					   const Bool& dopsf,  Matrix<Double>& sumwt, 
-					   const CFStore& cfs, const Vector<Double>& dphase,  
-					   const Vector<Int>& chanMap, const Vector<Int>& polMap, 
-					   const Vector<Double>& scale, const Vector<Double>& offset);
+  void VisibilityResampler::DataToGridImpl_p(Array<DComplex>& grid, VBStore& vbs, 
+					     const Bool& dopsf,  Matrix<Double>& sumwt);
   template
-  void VisibilityResampler::DataToGridImpl_p(Array<Complex>& grid, const VBStore& vbs, 
-					   const Bool& dopsf,  Matrix<Double>& sumwt, 
-					   const CFStore& cfs, const Vector<Double>& dphase,  
-					   const Vector<Int>& chanMap, const Vector<Int>& polMap, 
-					   const Vector<Double>& scale, const Vector<Double>& offset);
+  void VisibilityResampler::DataToGridImpl_p(Array<Complex>& grid, VBStore& vbs, 
+  					     const Bool& dopsf,  Matrix<Double>& sumwt);
 
+  template void VisibilityResampler::addTo4DArray(DComplex* store,const Int* iPos, Complex& val, Double& wt);
+  template void VisibilityResampler::addTo4DArray(Complex* store,const Int* iPos, Complex& val, Double& wt);
   //
   //-----------------------------------------------------------------------------------
   // Template implementation for DataToGrid
   //
   template <class T>
-  void VisibilityResampler::DataToGridImpl_p(Array<T>& grid, const VBStore& vbs, const Bool& dopsf,
-				       Matrix<Double>& sumwt, const CFStore& cfs, 
-				       const Vector<Double>& dphase,  
-				       const Vector<Int>& chanMap, const Vector<Int>& polMap, 
-				       const Vector<Double>& scale, const Vector<Double>& offset)
+  void VisibilityResampler::DataToGridImpl_p(Array<T>& grid,  VBStore& vbs, const Bool& dopsf,
+					     Matrix<Double>& sumwt)
   {
-    Matrix<Float> imagingWts;
-    Vector<Bool> rowFlag;
-    Cube<Bool> flagCube;
-    Vector<Double> convFunc;
-
     Int nDataChan, nDataPol, nGridPol, nGridChan, nx, ny;
     Int achan, apol, rbeg, rend;
     Vector<Float> sampling(2);
     Vector<Int> support(2),loc(2), off(2), iloc(2);
     Vector<Double> pos(2);
 
-    IPosition grdpos(4);
+    //    IPosition grdpos(4);
+    Vector<Int> igrdpos(4);
 
     Double norm=0, wt;
     Complex phasor, nvalue;
-
 
     rbeg = 0;
     rend = vbs.nRow;
@@ -103,54 +91,62 @@ namespace casa{
     nDataPol  = vbs.flagCube.shape()[0];
     nDataChan = vbs.flagCube.shape()[1];
 
-    convFunc.reference(*(cfs.rdata));
+    sampling[0] = sampling[1] = convFuncStore_p.sampling[0];
+    support(0) = convFuncStore_p.xSupport[0];
+    support(1) = convFuncStore_p.ySupport[0];
 
-    sampling[0] = sampling[1] = cfs.sampling[0];
-    support(0) = cfs.xSupport[0];
-    support(1) = cfs.ySupport[0];
-    
+    Bool Dummy;
+    T *gridStore = grid.getStorage(Dummy);
+    const Int *iPosPtr = igrdpos.getStorage(Dummy);
+    Double *convFunc=(*(convFuncStore_p.rdata)).getStorage(Dummy);
+    Double *freq=vbs.freq.getStorage(Dummy);
+    Bool *rowFlag=vbs.rowFlag.getStorage(Dummy);
+
+    cacheAxisIncrements(nx,ny,nGridPol, nGridChan);
+
     for(Int irow=rbeg; irow< rend; irow++){          // For all rows
       
-      if(!vbs.rowFlag(irow)){                        // If the row is not flagged
+      if(!rowFlag[irow]){                        // If the row is not flagged
 	
 	for(Int ichan=0; ichan< nDataChan; ichan++){ // For all channels
 	  
 	  if (vbs.imagingWeight(ichan,irow)!=0.0) {  // If weights are not zero
-	    achan=chanMap(ichan);
+	    achan=chanMap_p[ichan];
 	    
 	    if((achan>=0) && (achan<nGridChan)) {   // If selected channels are valid
 	      
 	      sgrid(pos,loc,off, phasor, irow, 
-		    vbs.uvw, dphase,  vbs.freq(ichan), 
-		    scale, offset, sampling);
+		    vbs.uvw, dphase_p[irow], vbs.freq[ichan], 
+		    uvwScale_p, offset_p, sampling);
+
 	      if (onGrid(nx, ny, loc, support)) {   // If the data co-ords. are with-in the grid
 		
 		for(Int ipol=0; ipol< nDataPol; ipol++) { // For all polarizations
 		  if((!vbs.flagCube(ipol,ichan,irow))){   // If the pol. & chan. specific
 							  // flags are not raised
-		    apol=polMap(ipol);
+		    apol=polMap_p(ipol);
 		    if ((apol>=0) && (apol<nGridPol)) {
-		      grdpos[2]=apol; grdpos[3]=achan;
+		      igrdpos[2]=apol; igrdpos[3]=achan;
 		      
+		      norm=0.0;
+
 		      if(dopsf)  nvalue=Complex(vbs.imagingWeight(ichan,irow));
 		      else	 nvalue=vbs.imagingWeight(ichan,irow)*
 				   (vbs.visCube(ipol,ichan,irow)*phasor);
-		      norm=0.0;
-		      //
-		      // Loop over conv. func. support
-		      //
 		      for(Int iy=-support[1]; iy <= support[1]; iy++) 
 			{
 			  iloc(1)=abs((int)(sampling[1]*iy+off[1]));
-			  grdpos[1]=loc[1]+iy;
+			  igrdpos[1]=loc[1]+iy;
 			  for(Int ix=-support[0]; ix <= support[0]; ix++) 
 			    {
 			      iloc[0]=abs((int)(sampling[0]*ix+off[0]));
 			      wt = convFunc[iloc[0]]*convFunc[iloc[1]];
 			      
-			      grdpos[0]=loc[0]+ix;
-			      grid(grdpos) += nvalue*wt;
-			      
+			      igrdpos[0]=loc[0]+ix;
+			      // grid(grdpos) += nvalue*wt;
+
+			      // The following uses raw index on the 4D grid
+			      addTo4DArray(gridStore,iPosPtr,nvalue,wt);
 			      norm+=wt;
 			    }
 			}
@@ -171,9 +167,8 @@ namespace casa{
   // Re-sample VisBuffer to a regular grid (griddedData) (a.k.a. de-gridding)
   //
   void VisibilityResampler::GridToData(VBStore& vbs, const Array<Complex>& grid)
+  //  void VisibilityResampler::GridToData(VBStore& vbs, Array<Complex>& grid)
   {
-    Vector<Double> convFunc;
-
     Int nDataChan, nDataPol, nGridPol, nGridChan, nx, ny;
     Int achan, apol, rbeg, rend;
     Vector<Float> sampling(2);
@@ -193,45 +188,57 @@ namespace casa{
     nDataPol  = vbs.flagCube.shape()[0];
     nDataChan = vbs.flagCube.shape()[1];
 
-    convFunc.reference(*(convFuncStore_p.rdata));
-
     sampling[0] = sampling[1] = convFuncStore_p.sampling[0];
     support(0) = convFuncStore_p.xSupport[0];
     support(1) = convFuncStore_p.ySupport[0];
-    
+
+    Bool Dummy;
+    const Complex *gridStore = grid.getStorage(Dummy);
+    Vector<Int> igrdpos(4);
+    const Int *iPosPtr = igrdpos.getStorage(Dummy);
+    Double *convFunc=(*(convFuncStore_p.rdata)).getStorage(Dummy);
+    Double *freq=vbs.freq.getStorage(Dummy);
+    Bool *rowFlag=vbs.rowFlag.getStorage(Dummy);
+
+    cacheAxisIncrements(nx,ny,nGridPol, nGridChan);
+
     for(Int irow=rbeg; irow<rend; irow++) {
-      if(!vbs.rowFlag(irow)) {
+      if(!rowFlag[irow]) {
 
 	for (Int ichan=0; ichan < nDataChan; ichan++) {
-	  achan=chanMap_p(ichan);
+	  achan=chanMap_p[ichan];
 
 	  if((achan>=0) && (achan<nGridChan)) {
-	    sgrid(pos,loc,off,phasor,irow,vbs.uvw,dphase_p,vbs.freq(ichan),
+	    sgrid(pos,loc,off,phasor,irow,vbs.uvw,
+		  dphase_p[irow],vbs.freq[ichan],
 		  uvwScale_p,offset_p,sampling);
+
 	    if (onGrid(nx, ny, loc, support)) {
 	      for(Int ipol=0; ipol < nDataPol; ipol++) {
 
 		if(!vbs.flagCube(ipol,ichan,irow)) { 
-		  apol=polMap_p(ipol);
+		  apol=polMap_p[ipol];
 		  
 		  if((apol>=0) && (apol<nGridPol)) {
-		    grdpos[2]=apol; grdpos[3]=achan;
+		    igrdpos[2]=apol; igrdpos[3]=achan;
 		    nvalue=0.0;
 		    norm=0.0;
-		    
+
 		    for(Int iy=-support[1]; iy <= support[1]; iy++) 
 		      {
 			iloc(1)=abs((Int)(sampling[1]*iy+off[1]));
-			grdpos[1]=loc[1]+iy;
+			igrdpos[1]=loc[1]+iy;
 			
 			for(Int ix=-support[0]; ix <= support[0]; ix++) 
 			  {
 			    iloc(0)=abs((Int)(sampling[0]*ix+off[0]));
-			    grdpos[0]=loc[0]+ix;
+			    igrdpos[0]=loc[0]+ix;
 			    
 			    wt=convFunc[iloc[1]]*convFunc[iloc[0]];
 			    norm+=wt;
-			    nvalue+=wt*grid(grdpos);
+			    //			    nvalue+=wt*grid(grdpos);
+			    // The following uses raw index on the 4D grid
+			    nvalue+=wt*getFrom4DArray(gridStore,iPosPtr);
 			  }
 		      }
 		    vbs.visCube(ipol,ichan,irow)=(nvalue*conj(phasor))/norm;
@@ -249,7 +256,7 @@ namespace casa{
   //
   void VisibilityResampler::sgrid(Vector<Double>& pos, Vector<Int>& loc, Vector<Int>& off, 
 				  Complex& phasor, const Int& irow,
-				  const Matrix<Double>& uvw, const Vector<Double>& dphase, 
+				  const Matrix<Double>& uvw, const Double& dphase, 
 				  const Double& freq, const Vector<Double>& scale, 
 				  const Vector<Double>& offset,
 				  const Vector<Float>& sampling)
@@ -260,11 +267,16 @@ namespace casa{
     for(Int idim=0;idim<ndim;idim++)
       {
 	pos[idim]=scale[idim]*uvw(idim,irow)*freq/C::c+offset[idim];
-	loc[idim]=(int)(pos[idim]+0.5);
-	off[idim]=(int)((loc[idim]-pos[idim])*sampling[idim]+0.5);
+	loc[idim]=(Int)std::floor(pos[idim]+0.5);
+	off[idim]=(Int)std::floor(((loc[idim]-pos[idim])*sampling[idim])+0.5);
       }
 
-    phase=-2.0*C::pi*dphase[irow]*freq/C::c;
-    phasor=Complex(cos(phase), sin(phase));
+    if (dphase != 0.0)
+      {
+	phase=-2.0*C::pi*dphase*freq/C::c;
+	phasor=Complex(cos(phase), sin(phase));
+      }
+    else
+      phasor=Complex(1.0);
   }
 };// end namespace casa
