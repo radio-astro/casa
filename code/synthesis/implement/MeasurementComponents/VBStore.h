@@ -29,8 +29,19 @@
 #define SYNTHESIS_VBSTORE_H
 
 namespace casa { //# NAMESPACE CASA - BEGIN
-  struct VBStore
+  class VBStore
   {
+  public:
+    VBStore() {};
+    ~VBStore() {};
+    inline Int nRow_() {return nRow;};
+    Matrix<Double>& uvw_() {return uvw;};
+    Vector<Bool>& rowFlag_() {return rowFlag;};
+    Cube<Bool>& flagCube_() {return flagCube;};
+    Matrix<Float>& imagingWeight_() {return imagingWeight;};
+    Cube<Complex>& visCube_() {return visCube;};
+    Vector<Double>& freq_() {return freq;};
+
     Int nRow;
     Matrix<Double> uvw;
     Vector<Bool> rowFlag;
