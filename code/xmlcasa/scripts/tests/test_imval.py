@@ -913,7 +913,19 @@ class imval_test(unittest.TestCase):
                       + str(means[index])\
                       +" but found mean of "+str(dmax)+"."
     
-        self.assertTrue(retValue['success'],retValue['error_msgs'])        
+        self.assertTrue(retValue['success'],retValue['error_msgs'])     
+        
+    def test_coord_return(self):
+        """Test returned coordinates CAS-2651"""
+        myimval = imval(imagename=image_file, box="40,40,50,50", chans="5")
+        myia = iatool.create()
+        myia.open(image_file)
+        mycsys = myia.coordsys()
+        expected = mycsys.toworld([45,45,0,5])['numeric']
+        got = myimval["coords"][5,5]
+        diff = got - expected
+        self.assertTrue(all(diff == 0))
+        
     
 def suite():
     return [imval_test]

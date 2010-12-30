@@ -244,15 +244,11 @@ def _imval_process_pixel( results, point ):
         casalog.post( "ia.pixelvalue() has returned unexpected results, data value absent or ill-formed.", "SEVERE" )
         return retvalue
     
-    if ( results['mask'] ):
-        retValue={'blc':point, 'trc': point, 'unit':results['value']['unit'],
-                  'data': numpy.array([results['value']['value']]),
-                  'mask': numpy.array([True]) }
-    else:
-        retValue={'blc':point, 'trc': point, 'unit':results['value']['unit'],
-                  'data': numpy.array([results['value']['value']]),
-                  'mask': numpy.array([False]) }
-
+    retValue={
+        'blc':point, 'trc': point, 'unit':results['value']['unit'],
+        'data': numpy.array([results['value']['value']]),
+        'mask': numpy.array([results['mask']])
+    }
     return retValue
 
 #
@@ -315,10 +311,10 @@ def _imval_getregion( imagename="", region={} ):
         # Find the array of data and mask values.
         data_results=myia.getregion( region=region, dropdeg=True, getmask=False )
         mask_results=myia.getregion( region=region, dropdeg=True, getmask=True )
-        
+                
         # Find the bounding box of the region so we can report it back to
         # the user.
-        bbox=myia.boundingbox( region=region )
+        bbox = myia.boundingbox( region=region )
         
         if ( not bbox.has_key( 'blc' ) ):
             casalog.post( "ia.boundingbox() has returned unexpected results, blc value absent.", "SEVERE" )
@@ -328,18 +324,67 @@ def _imval_getregion( imagename="", region={} ):
             casalog.post( "ia.boundingbox() has returned unexpected results, blc value absent.", "SEVERE" )
             myia.done()
             return retvalue
+        
+        # get the pixel coords
+        mycsys = myia.coordsys()
+        myarrays = _imval_iterate(bbox['blc'], bbox['trc'])
+        mycoords = mycsys.toworldmany(myarrays)
+        outcoords = _imval_redo(data_results.shape, mycoords['numeric'])
         
         # Find what units the data values are stored in.
-        avalue=myia.pixelvalue( bbox['blc'].tolist() )
+        avalue = myia.pixelvalue( bbox['blc'].tolist() )
         #print "A VALUE IS: ", avalue
         if ( not avalue.has_key('value') or not avalue['value'].has_key('unit') ):
             casalog.post( "ia.pixelvalue() has returned unexpected results, data value absent or ill-formed.", "SEVERE" )
             myia.done()
             return retvalue
 
-        retvalue={'blc':bbox['blc'].tolist(), 'trc':bbox['trc'].tolist(), 'unit':avalue['value']['unit'], 'data':data_results, 'mask': mask_results}
+        retvalue={
+            'blc':bbox['blc'].tolist(),'trc':bbox['trc'].tolist(),
+            'unit':avalue['value']['unit'], 'data':data_results,
+            'mask': mask_results, 'coords': outcoords
+        }
     except Exception, instance:
         myia.done()
         raise instance
     myia.done()
     return retvalue
+
+def _imval_iterate(begins, ends, arrays=None, place=None, depth=0, count=None):
+    if (depth == 0):
+        count = [0]
+        mylist = []
+        diff = numpy.array(ends) - numpy.array(begins) + 1
+        prod = diff.prod()
+        for i in range(len(begins)):
+            mylist.append(numpy.zeros([prod]))
+        arrays = numpy.array(mylist)
+    for i in range(begins[depth], ends[depth] + 1):
+        if (depth == 0):
+            tmpplace = []
+            for j in range(len(begins)):
+                tmpplace.append(0)
+            place = numpy.array(tmpplace)
+        place[depth] = i
+        if (depth == len(begins) - 1):
+            for k in range(depth + 1):
+                arrays[k][count[0]] = place[k]
+            count[0] = count[0] + 1
+        else:
+            mydepth = depth + 1
+            _imval_iterate(begins, ends, arrays, place, mydepth, count)
+    return arrays
+
+def _imval_redo(shape, arrays):
+    list_of_arrays = []
+    for x in range(arrays[0].size):
+        mylist = []
+        for arr in arrays:
+            mylist.append(arr[x])
+        list_of_arrays.append(numpy.array(mylist))
+    array_of_arrays = numpy.array(list_of_arrays)
+    # because shape is an immutable tuple
+    newshape = list(shape)
+    newshape.append(array_of_arrays.shape[1])
+    return array_of_arrays.reshape(newshape)
+
