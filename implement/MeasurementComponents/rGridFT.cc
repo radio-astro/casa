@@ -489,17 +489,6 @@ void rGridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   interpolateFrequencyTogrid(vb, *imagingweight,data, flags, elWeight, type);
 
 
-  // Bool iswgtCopy;
-  // const Float *wgtStorage;
-  // wgtStorage=elWeight.getStorage(iswgtCopy);
-  
-  // Bool isCopy;
-  // const Complex *datStorage;
-  // if(!dopsf)
-  //   datStorage=data.getStorage(isCopy);
-  // else
-  //   datStorage=0;
-  // If row is -1 then we pass through all rows
   Int startRow, endRow, nRow;
   if (row==-1) {
     nRow=vb.nRow();
@@ -516,10 +505,8 @@ void rGridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   // when null, this step takes about 50us per uvw point. This
   // is just barely noticeable for Stokes I continuum and
   // irrelevant for other cases.
-  Matrix<Double> uvw(3, vb.uvw().nelements());
-  uvw=0.0;
-  Vector<Double> dphase(vb.uvw().nelements());
-  dphase=0.0;
+  Matrix<Double> uvw(3, vb.uvw().nelements());  uvw=0.0;
+  Vector<Double> dphase(vb.uvw().nelements());  dphase=0.0;
   //NEGATING to correct for an image inversion problem
   for (Int i=startRow;i<=endRow;i++) {
     for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(i)(idim);
@@ -529,27 +516,7 @@ void rGridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   rotateUVW(uvw, dphase, vb);
   refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
 
-  // Take care of translation of Bools to Integer
-  Int idopsf=0;
-  if(dopsf) idopsf=1;
-
-  
-
-  Vector<Int> rowFlags(vb.nRow());
-  rowFlags=0;
-  rowFlags(vb.flagRow())=True;
-  if(!usezero_p) {
-    for (Int rownr=startRow; rownr<=endRow; rownr++) {
-      if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) rowFlags(rownr)=1;
-    }
-  }
-  
-
-  // const IPosition &fs=flags.shape();
-  // std::vector<Int> s(fs.begin(),fs.end());
-  
   // Set up VBStore object to point to the relavent info. of the VB.
-  Bool dummy;
   VBStore vbs;
 
   vbs.nRow = vb.nRow();
@@ -557,26 +524,23 @@ void rGridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   vbs.imagingWeight.reference(elWeight);
   vbs.visCube.reference(data);
   vbs.freq.reference(interpVisFreq_p);
+  vbs.rowFlag.resize(0); vbs.rowFlag = vb.flagRow();  
+  if(!usezero_p) 
+    for (Int rownr=startRow; rownr<=endRow; rownr++) 
+      if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) vbs.rowFlag(rownr)=True;
 
   // Really nice way of converting a Cube<Int> to Cube<Bool>.
   // However the VBS objects should ultimately be references
   // directly to bool cubes.
-  vbs.flagCube.resize(flags.shape());    vbs.flagCube = False; vbs.flagCube(flags != 0) = True;
-  vbs.rowFlag.resize(rowFlags.shape());  vbs.rowFlag  = False; vbs.rowFlag(rowFlags != 0) = True;
+  //  vbs.rowFlag.resize(rowFlags.shape());  vbs.rowFlag  = False; vbs.rowFlag(rowFlags) = True;
+  vbs.flagCube.resize(flags.shape());    vbs.flagCube = False; vbs.flagCube(flags!=0) = True;
 
   visResampler_p.setParams(uvScale,uvOffset,dphase);
   visResampler_p.setMaps(chanMap, polMap);
     
-  Bool gridcopy;
-  
-  //Double of single precision gridding.
+  //Double or single precision gridding.
   if(useDoubleGrid_p) visResampler_p.DataToGrid(griddedData2, vbs, sumWeight, dopsf);
   else                visResampler_p.DataToGrid(griddedData, vbs, sumWeight, dopsf); 
- 
-  // if(!dopsf)
-  //   data.freeStorage(datStorage, isCopy);
-  //  elWeight.freeStorage(wgtStorage,iswgtCopy);
-
 }
 
 
@@ -590,14 +554,10 @@ void rGridFT::get(VisBuffer& vb, Int row)
     nRow=vb.nRow();
     startRow=0;
     endRow=nRow-1;
-    //unnecessary zeroing
-    //vb.modelVisCube()=Complex(0.0,0.0);
   } else {
     nRow=1;
     startRow=row;
     endRow=row;
-    //unnecessary zeroing
-    //vb.modelVisCube().xyPlane(row)=Complex(0.0,0.0);
   }
 
   // Get the uvws in a form that Fortran can use
@@ -613,136 +573,54 @@ void rGridFT::get(VisBuffer& vb, Int row)
   rotateUVW(uvw, dphase, vb);
   refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
 
-  
-
   //Check if ms has changed then cache new spw and chan selection
-  if(vb.newMS())
-    matchAllSpwChans(vb);
+  if(vb.newMS())  matchAllSpwChans(vb);
 
 
-  //Here we redo the match or use previous match
-  
   //Channel matching for the actual spectral window of buffer
-  if(doConversion_p[vb.spectralWindow()]){
+  if(doConversion_p[vb.spectralWindow()])
     matchChannel(vb.spectralWindow(), vb);
-  }
-  else{
-    chanMap.resize();
-    chanMap=multiChanMap_p[vb.spectralWindow()];
-  }
+  else
+    {
+      chanMap.resize();
+      chanMap=multiChanMap_p[vb.spectralWindow()];
+    }
 
   //No point in reading data if its not matching in frequency
-  if(max(chanMap)==-1)
-    return;
+  if(max(chanMap)==-1)    return;
 
   Cube<Complex> data;
   Cube<Int> flags;
   getInterpolateArrays(vb, data, flags);
 
-  // Complex *datStorage;
-  // Bool isCopy;
-  // datStorage=data.getStorage(isCopy);
-  
+  if(isTiled) 
+    throw(SynthesisFTMachineError("rGridFT::get(): Internal error.  isTiled is True. "));
+  else 
+    {
+      VBStore vbs;
+      vbs.nRow = vb.nRow();
+      vbs.uvw.reference(uvw);
+      //    vbs.imagingWeight.reference(elWeight);
+      vbs.visCube.reference(data);
+      vbs.freq.reference(interpVisFreq_p);
+      vbs.rowFlag.resize(0); vbs.rowFlag = vb.flagRow();  
+      if(!usezero_p) 
+	for (Int rownr=startRow; rownr<=endRow; rownr++) 
+	  if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) vbs.rowFlag(rownr)=True;
 
-  Vector<Int> rowFlags(vb.nRow());
-  rowFlags=0;
-  rowFlags(vb.flagRow())=True;
-  if(!usezero_p) {
-    for (Int rownr=startRow; rownr<=endRow; rownr++) {
-      if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) rowFlags(rownr)=1;
-    }
-  }
-  
-  if(isTiled) {
-    /*
-    Double invLambdaC=vb.frequency()(nvischan/2)/C::c;
-    Vector<Double> uvLambda(2);
-    Vector<Int> centerLoc2D(2);
-    centerLoc2D=0;
-    
-    // Loop over all rows
-    for (Int rownr=startRow; rownr<=endRow; rownr++) {
+      // Really nice way of converting a Cube<Int> to Cube<Bool>.
+      // However these should ultimately be references directly to bool
+      // cubes.
+      vbs.flagCube.resize(flags.shape());    vbs.flagCube = False; vbs.flagCube(flags!=0) = True;
+      //    vbs.rowFlag.resize(rowFlags.shape());  vbs.rowFlag  = False; vbs.rowFlag(rowFlags) = True;
       
-      // Calculate uvw for this row at the center frequency
-      uvLambda(0)=uvw(0, rownr)*invLambdaC;
-      uvLambda(1)=uvw(1, rownr)*invLambdaC;
-      centerLoc2D=gridder->location(centerLoc2D, uvLambda);
-      
-      // Is this point on the grid?
-      if(gridder->onGrid(centerLoc2D)) {
-	
-        // Get the tile
-	Array<Complex>* dataPtr=getDataPointer(centerLoc2D, True);
-	Int aNx=dataPtr->shape()(0);
-	Int aNy=dataPtr->shape()(1);
-	
-	// Now use FORTRAN to do the gridding. Remember to 
-	// ensure that the shape and offsets of the tile are 
-	// accounted for.
-	Bool del;
-        Vector<Double> actualOffset(2);
-        for (Int i=0;i<2;i++) {
-          actualOffset(i)=uvOffset(i)-Double(offsetLoc(i));
-	}
-	IPosition s(vb.modelVisCube().shape());
-	dgridft(uvw.getStorage(del),
-		dphase.getStorage(del),
-		vb.modelVisCube().getStorage(del),
-                &s(0),
-		&s(1),
-		flags.getStorage(del),
-		rowFlags.getStorage(del),
-		&s(2),
-		&rownr,
-		uvScale.getStorage(del),
-		actualOffset.getStorage(del),
-		dataPtr->getStorage(del),
-		&aNx,
-		&aNy,
-		&npol,
-		&nchan,
-		vb.frequency().getStorage(del),
-		&C::c,
-		&(gridder->cSupport()(0)),
-		&(gridder->cSampling()),
-		gridder->cFunction().getStorage(del),
-		chanMap.getStorage(del),
-		polMap.getStorage(del));
-      }
+      visResampler_p.setParams(uvScale,uvOffset,dphase);
+      visResampler_p.setMaps(chanMap, polMap);
+
+      // De-gridding
+      visResampler_p.GridToData(vbs, griddedData);
     }
-      */
-    }
-  else {
-    Bool del;
-    
-    //    IPosition s(data.shape());
-    const IPosition &fs=data.shape();
-    std::vector<Int> s(fs.begin(), fs.end());
-
-    // Set up VBStore object to point to the relavent info. of the VB.
-    VBStore vbs;
-    vbs.nRow = vb.nRow();
-    vbs.uvw.reference(uvw);
-    //    vbs.imagingWeight.reference(elWeight);
-    vbs.visCube.reference(data);
-    vbs.freq.reference(interpVisFreq_p);
-
-    // Really nice way of converting a Cube<Int> to Cube<Bool>.
-    // However these should ultimately be references directly to bool
-    // cubes.
-    vbs.flagCube.resize(flags.shape());    vbs.flagCube = False; vbs.flagCube(flags != 0) = True;
-    vbs.rowFlag.resize(rowFlags.shape());  vbs.rowFlag  = False; vbs.rowFlag(rowFlags != 0) = True;
-
-    visResampler_p.setParams(uvScale,uvOffset,dphase);
-    visResampler_p.setMaps(chanMap, polMap);
-
-    // De-gridding
-    visResampler_p.GridToData(vbs, griddedData);
-
-    //    data.putStorage(datStorage, isCopy);
-  }
   interpolateFrequencyFromgrid(vb, data, FTMachine::MODEL);
-
 }
 
 
