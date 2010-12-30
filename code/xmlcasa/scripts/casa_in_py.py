@@ -82,7 +82,6 @@ __msplothome__ = casac.homefinder.find_home_by_name('msplotHome')
 __calplothome__ = casac.homefinder.find_home_by_name('calplotHome')
 __tablehome__ = casac.homefinder.find_home_by_name('tableHome')
 __flaggerhome__ = casac.homefinder.find_home_by_name('flaggerHome')
-__autoflaghome__ = casac.homefinder.find_home_by_name('autoflagHome')
 __imagehome__ = casac.homefinder.find_home_by_name('imageHome')
 __imagepolhome__ = casac.homefinder.find_home_by_name('imagepolHome')
 __simulatorhome__ = casac.homefinder.find_home_by_name('simulatorHome')
@@ -113,7 +112,6 @@ msplot = __msplothome__.create( )
 calplot = __calplothome__.create( )
 table = __tablehome__.create( )
 flagger = __flaggerhome__.create( )
-autoflag = __autoflaghome__.create( )
 image = __imagehome__.create( )
 imagepol = __imagepolhome__.create( )
 simulator = __simulatorhome__.create( )
@@ -132,7 +130,9 @@ cu = __utilstool__.create()
 
 from imstat_pg import imstat_pg as imstat
 from fringecal_pg import fringecal_pg as fringecal
+from flagcmd_pg import flagcmd_pg as flagcmd
 from flagdata_pg import flagdata_pg as flagdata
+from flagdata2_pg import flagdata2_pg as flagdata2
 from split_pg import split_pg as split
 from importvla_pg import importvla_pg as importvla
 from hanningsmooth_pg import hanningsmooth_pg as hanningsmooth
@@ -185,7 +185,6 @@ from blcal_pg import blcal_pg as blcal
 from uvsub_pg import uvsub_pg as uvsub
 from imcontsub_pg import imcontsub_pg as imcontsub
 from imstat_pg import imstat_pg as imstat
-from newflagdata_pg import newflagdata_pg as newflagdata
 from clearstat_pg import clearstat_pg as clearstat
 from flagautocorr_pg import flagautocorr_pg as flagautocorr
 from browsetable_pg import browsetable_pg as browsetable

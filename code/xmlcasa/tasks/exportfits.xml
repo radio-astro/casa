@@ -97,7 +97,7 @@ can be made with this task.
 	dropstokes -- Drop Stokes axis?
 		default: False; example: dropstokes=True
 	stokeslast -- Put Stokes axis last in header?
-		default: True; example: syokeslast=False
+		default: True; example: stokeslast=False
         async --  Run asynchronously
                 default = False;
 </example> 

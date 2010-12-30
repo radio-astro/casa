@@ -115,6 +115,10 @@ protected:
   Vector< Double > diameters;
   ROMSAntennaColumns *ac;
 
+  // elevation
+  double lowerlimit;
+  double upperlimit;
+
 // description of agent
   String desc_str;
 // selection arguments
@@ -133,7 +137,7 @@ protected:
   Vector<Int>   sel_scannumber,sel_arrayid;
   String        sel_column;
 
-  Bool select_fullrow,flag_everything, shadow;
+  Bool select_fullrow,flag_everything, shadow, elevation;
 
 };
 

@@ -199,7 +199,7 @@ void SDGrid::init() {
   if(imageCache) delete imageCache; imageCache=0;
 
   convType=downcase(convType);
-  logIO() << "Convolution function : " << convType << LogIO::POST;
+  logIO() << "Convolution function : " << convType << LogIO::DEBUG1;
   if(convType=="pb") {
   }
   else if(convType=="box") {

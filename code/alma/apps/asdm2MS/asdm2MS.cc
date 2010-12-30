@@ -5,6 +5,8 @@
 #include <vector>
 #include <assert.h>
 #include <cmath>
+#include <complex>
+#include <string>
 
 #include <boost/algorithm/string.hpp>
 
@@ -16,6 +18,7 @@ using namespace boost;
 
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/convenience.hpp>
+#include <boost/regex.hpp> 
 
 #include <ASDMAll.h>
 
@@ -97,8 +100,6 @@ void	myTimer( double *cpu_time ,		/* cpu timer */
 
 //using namespace casa;
 
-
-
 ASDM2MSFiller* msFiller;
 string appName;
 bool verbose = true;
@@ -111,13 +112,13 @@ bool verbose = true;
 void info (const string& message) {
   
   if (!verbose){
-	  return;
+    return;
   }
   LogSink::postGlobally(LogMessage(message, LogOrigin(appName,WHERE), LogMessage::NORMAL));
 }
 
 void error(const string& message) {
-	LogSink::postGlobally(LogMessage(message, LogOrigin(appName,WHERE), LogMessage::NORMAL));
+  LogSink::postGlobally(LogMessage(message, LogOrigin(appName,WHERE), LogMessage::NORMAL));
   //os << LogIO::POST;
   exit(1);
 }
@@ -191,6 +192,8 @@ public :
 
   static Stokes::StokesTypes value(StokesParameterMod::StokesParameter s);
   Stokes::StokesTypes* to1DArray(const vector<StokesParameterMod::StokesParameter>& v);
+  static vector<Stokes::StokesTypes> toVectorST(const vector<StokesParameterMod::StokesParameter>& v);
+  static vector<int> toVectorI(const vector<StokesParameterMod::StokesParameter>& v);
 }
   ;
 
@@ -253,6 +256,24 @@ Stokes::StokesTypes* StokesMapper::to1DArray(const vector<StokesParameterMod::St
     sa[i] = value(v.at(i));
 
   return sa;
+}
+
+vector<int> StokesMapper::toVectorI(const vector<StokesParameterMod::StokesParameter>& v) {
+  vector<int> result;
+
+  for (unsigned int i = 0; i < v.size(); i++)
+    result.push_back(value(v[i]));
+
+  return result;
+}
+
+vector<Stokes::StokesTypes> StokesMapper::toVectorST(const vector<StokesParameterMod::StokesParameter>& v) {
+  vector<Stokes::StokesTypes> result;
+
+  for (unsigned int i = 0; i < v.size(); i++)
+    result.push_back(value(v[i]));
+
+  return result;
 }
 
 class FrequencyReferenceMapper {
@@ -327,398 +348,157 @@ vector<string> PolTypeMapper::toStringVector(const vector<PolarizationTypeMod::P
 
 
 
-// These classes provide methods to convert from Vectors to Arrays.
-class DConverter {
-private :
-  double* da;
-  
-  
-public :
-  ~DConverter();
-  DConverter();
-  double* to1DArray(const vector<double>&);
-  double* to1DArray(const vector<vector<double> >& v);
-  double* to1DArray(const vector<Frequency>&);
-  double* to1DArray(const vector<Angle>&);
-  double* to1DArray(const vector<AngularRate>&);
-  double* to1DArray(const vector<Length>&);
-  double* to1DArray(const vector<Speed>&);
-  double* to1DArray(const vector<vector <Angle> >&);
-  double* to1DArray(double, double, double);
-  double* to1DArray(Length, Length, Length);
+// These classes provide methods to convert from vectors of "anything" into vectors of basic types.
+class FConverter {
+public:
+
+  static vector<float> toVectorF(const vector<vector<float> >& vvF, bool tranpose=false);
+
+  template<class T>
+  static vector<float> toVectorF(const vector<vector<T> >& vvT, bool transpose=false) {
+    vector<float> result;
+
+    if (transpose == false) {
+      //
+      // Simply linearize the vector of vectors.
+      //
+      for (unsigned int i = 0; i < vvT.size(); i++)
+	for (unsigned int j = 0; j < vvT.at(i).size(); j++)
+	  result.push_back(vvT.at(i).at(j).get());
+    }
+    else {
+      //
+      // We want to transpose.
+      // Let's consider the very general case where our vector of vectors does not represent
+      // a rectangular matrix, i.e. all the elements of this vector are vectors with possibly
+      // different size. 
+      //
+      unsigned int maxsize = 0;
+      unsigned int cursize = 0;
+      for (unsigned int i = 0; i < vvT.size(); i++) {
+	cursize = vvT.at(i).size();
+	if (cursize > maxsize) maxsize = cursize;
+      }
+      
+      for (unsigned int i = 0; i < maxsize; i++)
+	for (unsigned int j = 0; j < vvT.size(); j++)
+	  if (i < vvT.at(j).size())
+	    result.push_back(vvT.at(j).at(i).get());     
+    }
+    return result;
+  }
 };
 
-DConverter::DConverter() {
-  da = 0;
-}
-
-DConverter::~DConverter() {
-  if (da) {
-    delete[] da;
-    da = 0;
+vector<float> FConverter::toVectorF(const vector< vector <float> > & vvF, bool transpose) {
+  vector<float> result;
+  if (transpose == false) {
+    //
+    // Simply linearize the vector of vectors.
+    //
+    for (unsigned int i = 0; i < vvF.size(); i++)
+      for (unsigned int j = 0; j < vvF.at(i).size(); j++)
+	result.push_back(vvF.at(i).at(j));
   }
-}
-
-double* DConverter::to1DArray(const vector<double>& v) {
-  da = new double[v.size()];
-  for (unsigned int i=0; i < v.size(); i++)
-    da[i] = v.at(i);
-
-  return da;
-}
-
-
-double* DConverter::to1DArray(const vector<vector<double> >& v) {
-  // Calculates the number of integers stored in v.
-  int n = 0;
-  for (unsigned int i = 0; i < v.size(); i++) n += v.at(i).size();
-
-  // Now we can allocate and copy with a transposition.
-  da = new double[n];
-  int k = 0;
-  for (unsigned int i=0; i < v.size(); i++)
-    for (unsigned int j = 0; j < v.at(i).size(); j++)
-      da[k++] = v.at(i).at(j);
-
-  return da;
-
-}
-
-double* DConverter::to1DArray(const vector<Frequency>& v) {
-  da = new double[v.size()];
-  for (unsigned int i=0; i < v.size(); i++)
-    da[i] = v.at(i).get();
-
-  return da;
-}
-
-double*  DConverter::to1DArray(const vector<Angle>& v) {
-  da = new double[v.size()];
-  for (unsigned int i=0; i < v.size(); i++)
-    da[i] = v.at(i).get();
-
-  return da;
-}
-
-double*  DConverter::to1DArray(const vector<Length>& v) {
-  da = new double[v.size()];
-  for (unsigned int i=0; i < v.size(); i++)
-    da[i] = v.at(i).get();
-
-  return da;
-}
-
-
-double*  DConverter::to1DArray(const vector<Speed>& v) {
-  da = new double[v.size()];
-  for (unsigned int i=0; i < v.size(); i++)
-    da[i] = v.at(i).get();
-
-  return da;
-}
-
-double*  DConverter::to1DArray(const vector<AngularRate>& v) {
-  da = new double[v.size()];
-  for (unsigned int i=0; i < v.size(); i++)
-    da[i] = v.at(i).get();
-
-  return da;
-}
-
-double* DConverter::to1DArray(const vector<vector<Angle> >& v) {
-  // Calculates the number of integers stored in v.
-  int n = 0;
-  for (unsigned int i = 0; i < v.size(); i++) n += v.at(i).size();
-
-  // Now we can allocate and copy with a transposition.
-  da = new double[n];
-  int k = 0;
-  for (unsigned int i=0; i < v.size(); i++)
-    for (unsigned int j = 0; j < v.at(i).size(); j++)
-      da[k++] = v.at(i).at(j).get();
-
-  return da;
-
-}
-
-double* DConverter::to1DArray(double e0, double e1, double e2) {
-  da = new double[3];
-
-  da[0]=e0;
-  da[1]=e1;
-  da[2]=e2; 
+  else {
+    //
+    // We want to transpose.
+    // Let's consider the very general case where our vector of vectors does not represent
+    // a rectangular matrix, i.e. all the elements of this vector are vectors with possibly
+    // different size. 
+    //
+    unsigned int maxsize = 0;
+    unsigned int cursize = 0;
+    for (unsigned int i = 0; i < vvF.size(); i++) {
+      cursize = vvF.at(i).size();
+      if (cursize > maxsize) maxsize = cursize;
+    }
+    
+    for (unsigned int i = 0; i < maxsize; i++)
+      for (unsigned int j = 0; j < vvF.size(); j++)
+	if (i < vvF.at(j).size())
+	  result.push_back(vvF.at(j).at(i));     
+  }
   
-  return da;
-}
+  return result;
+}   
 
-double* DConverter::to1DArray(Length e0, Length e1, Length e2) {
-  da = new double[3];
-
-  da[0]=e0.get();
-  da[1]=e1.get();
-  da[2]=e2.get();
+class DConverter {
   
-  return da;
+public :
+
+  static vector<double> toVectorD(const vector<vector<double> >& vv);
+  template<class T>
+
+  static vector<double> toVectorD(const vector<T>& v) {
+    vector<double> result;
+    for (typename vector<T>::const_iterator iter = v.begin(); iter != v.end(); ++iter)
+      result.push_back(iter->get());
+    return result;
+  }
+
+  template<class T>
+  static vector<double> toVectorD(const vector<vector<T> >& vv) {
+    vector<double> result;
+    for (typename vector<vector<T> >::const_iterator iter = vv.begin(); iter != vv.end(); ++iter)
+      for (typename vector<T>::const_iterator iiter = iter->begin(); iiter != iter->end(); ++iiter)
+	result.push_back(iiter->get());
+    return result;
+  }
+};
+
+vector<double> DConverter::toVectorD(const vector<vector<double> >& vv) {
+  vector<double> result;
+  
+  for (vector<vector<double> >::const_iterator iter = vv.begin(); iter != vv.end(); ++iter)
+    result.insert(result.end(), iter->begin(), iter->end());
+
+  return result;
 }
 
 class IConverter {
-private :
-  int* ia;  
   
 public :
-  ~IConverter();
-  IConverter();
-  int* to1DArray(vector<int>);
-  int* to1DArray(vector<Tag>);
-  int* to1DArray(vector<vector <int> >);
+  vector<int> static toVectorI(vector<Tag>& v);
 };
 
-IConverter::IConverter() {
-  ia = 0;
+vector<int> IConverter::toVectorI(vector<Tag>& v) {
+  vector<int> result(v.size());
+  vector<Tag>::const_iterator iiter = v.begin();
+  vector<int>::iterator oiter = result.begin();
+  for (; iiter != v.end(); ++iiter, ++oiter)
+    *oiter = iiter->getTagValue();
+
+  return result;
 }
-
-IConverter::~IConverter() {
-  if (ia) {
-    delete[] ia;
-    ia = 0;
-  }
-}
-
-int* IConverter::to1DArray(vector<int> v) {
-  ia = new int[v.size()];
-  for (unsigned int i=0; i < v.size(); i++)
-    ia[i] = v.at(i);
-
-  return ia;
-}
-
-int* IConverter::to1DArray(vector<Tag> v) {
-  ia = new int[v.size()];
-  for (unsigned int i=0; i < v.size(); i++)
-    ia[i] = v.at(i).getTagValue();
-
-  return ia;
-}
-
-int* IConverter::to1DArray(vector<vector<int> > v) {
-  // Calculates the number of integers stored in v.
-  int n = 0;
-  for (unsigned int i = 0; i < v.size(); i++) n += v.at(i).size();
-
-  // Now we can allocate and copy with a transposition.
-  ia = new int[n];
-  int k = 0;
-  for (unsigned int i=0; i < v.size(); i++)
-    for (unsigned int j = 0; j < v.at(i).size(); j++)
-      ia[k++] = v.at(i).at(j);
-
-  return ia;
-}
-
 
 class SConverter {
-private :
-  char* sa;  
-  char* *ssa;
-  
 public :
-  SConverter();
-  ~SConverter(); 
-  char* to1DCharArray(vector<string>);
-  char* to1DCharArray(vector<vector <string> >);
-  char** to1DCStringArray(vector<string >);
+  template<class Enum, class EnumHelper>
+  static vector<string> toVectorS(const vector<Enum>& vEnum) {
+    vector<string> result(vEnum.size());
+    typename vector<Enum>::const_iterator iiter = vEnum.begin();
+    vector<string>::iterator     oiter = result.begin();
 
-  template<class Enum, class EnumHelper> char** to1DCStringArray(vector<Enum> vEnum) {
-    // Convert the vector of Enum into a vector of string.
-    vector<string> v;
-    for (unsigned int i = 0; i < vEnum.size(); i++)
-      v.push_back(EnumHelper::name(vEnum.at(i)));
+    for (; iiter != vEnum.begin(); ++iiter, ++oiter)
+      *oiter = EnumHelper::name(*iiter);
 
-    // Calculates the number of chars to store the resulting C-strings (including terminating zeros)
-    int n = 0;
-    for (unsigned int i = 0; i < v.size(); i++)
-      n += v.at(i).size() + 1;
-    
-    // Reserve the space to store all the C-Strings
-    sa = new char[n+1];
-    
-    // Reserve the space to store the array of pointers onto these C-Strings
-    ssa = new char*[v.size() +1];
-    
-    int k = 0;
-    for (unsigned int i = 0; i < v.size(); i++) {
-      ssa[i] = &sa[k];
-      for (unsigned int j = 0; j < v.at(i).size(); j++)
-	sa[k++] = v.at(i).at(j);
-      sa[k++] = 0;
-    }
-    ssa[v.size()] = 0;
-    return ssa;
+    return result;
   }
 };
-
-SConverter::SConverter() {
-  sa = 0;
-  ssa = 0;
-}
-
-SConverter::~SConverter() {
-  if (sa) {
-    delete[] sa;
-    sa = 0;
-  }
-
-  if (ssa) {
-    delete[] ssa;
-    ssa = 0;
-  }
-}
-
-char* SConverter::to1DCharArray(vector<string> v) {
-  // Calculates the number of char to store in result.
-  int n = 0;
-  for (unsigned int i = 0; i < v.size(); i++)
-    n += v.at(i).size();
-
-  // Reserve the appropriate number of chars.
-  sa = new char[n+1];
-  sa[n] = 0; // Not really useful but...who knows...
-
-  int k = 0;
-  for (unsigned int i=0; i < v.size(); i++)
-    for (unsigned int j=0; j < v.at(i).size(); j++)
-      sa[k++] = v.at(i).at(j);
-
-  return sa;
-}
-
-char** SConverter::to1DCStringArray(vector<string> v) {
-  // Calculates the number of chars to store the resulting C-strings (including terminating zeros)
-  int n = 0;
-  for (unsigned int i = 0; i < v.size(); i++)
-    n += v.at(i).size() + 1;
-
-  // Reserve the space to store all the C-Strings
-  sa = new char[n+1];
-
-  // Reserve the space to store the array of pointers onto these C-Strings
-  ssa = new char*[v.size() +1];
-
-  int k = 0;
-  for (unsigned int i = 0; i < v.size(); i++) {
-    ssa[i] = &sa[k];
-    for (unsigned int j = 0; j < v.at(i).size(); j++)
-      sa[k++] = v.at(i).at(j);
-    sa[k++] = 0;
-  }
-  ssa[v.size()] = 0;
-  return ssa;
-}
-
-
-char* SConverter::to1DCharArray(vector< vector<string> > v) {
-  // Calculates the number of char to store in result.
-  int n = 0;
-  for (unsigned int i = 0; i < v.size(); i++)
-    for (unsigned int j = 0; j < v.at(i).size(); j++)
-      n += v.at(i).at(j).size();
-
-  // Reserve the appropriate number of chars.
-  sa = new char[n+1];
-  sa[n] = 0; // Not really useful but...who knows...
-
-  int l = 0;
-  for (unsigned int i=0; i < v.size(); i++)
-    for (unsigned int j = 0; j < v.at(i).size(); j++)
-      for (unsigned int k = 0; k < v.at(i).at(j).size(); k++)
-	sa[l++] = v.at(i).at(j).at(k);
-
-  return sa;
-}
 
 class  CConverter {
-private :
-  double* ra;
-  double* ia;
-
-    
 public :
-  ~CConverter();
-  CConverter();
-  double* to1DArrayR(vector<asdm::Complex>);
-  double* to1DArrayI(vector<asdm::Complex>);
-  double* to1DArrayR(vector< vector<asdm::Complex> >);
-  double* to1DArrayI(vector< vector<asdm::Complex> >);
-
+  static vector<std::complex<float> > toVectorCF(const vector<vector<asdm::Complex> >& vv);
 };
 
+vector<std::complex<float> > CConverter::toVectorCF(const vector<vector<asdm::Complex> >& vv) {
+  vector<std::complex<float> > result;
 
-CConverter::CConverter() {
-  ra = 0;
-  ia = 0;
+  for (vector<vector<asdm::Complex> >::const_iterator iter = vv.begin(); iter != vv.end(); ++iter) 
+    result.insert(result.end(), iter->begin(), iter->end());
+
+  return result;
 }
-
-CConverter::~CConverter() {
-  if (ra != 0) {
-    delete[] ra;
-    ra = 0;
-  }
-
-  if (ia != 0) {
-    delete[] ia;
-    ia = 0;
-  }
-}
-
-
-double* CConverter::to1DArrayR(vector<asdm::Complex> v) {
-  ra = new double[v.size()];
-  for (unsigned int i=0; i < v.size(); i++)
-    ra[i] = v.at(i).getReal();
-
-  return ra;
-}
-
-double* CConverter::to1DArrayI(vector<asdm::Complex> v) {
-  ia = new double[v.size()];
-  for (unsigned int i=0; i < v.size(); i++)
-    ia[i] = v.at(i).getImg();
-
-  return ia;
-}
-
-
-double* CConverter::to1DArrayR(vector< vector<asdm::Complex> > v) {
-  // Calculates the number of integers stored in v.
-  int n = 0;
-  for (unsigned int i = 0; i < v.size(); i++) n += v.at(i).size();
-
-  // Now we can allocate and copy with a transposition.
-  ra = new double[n];
-  int k = 0;
-  for (unsigned int i=0; i < v.size(); i++)
-    for (unsigned int j = 0; j < v.at(i).size(); j++)
-      ra[k++] = v.at(i).at(j).getReal();
-  
-  return ra;
-}
-
-
-double* CConverter::to1DArrayI(vector< vector<asdm::Complex> > v) {
-  // Calculates the number of integers stored in v.
-  int n = 0;
-  for (unsigned int i = 0; i < v.size(); i++) n += v.at(i).size();
-
-  // Now we can allocate and copy with a transposition.
-  ra = new double[n];
-  int k = 0;
-  for (unsigned int i=0; i < v.size(); i++)
-    for (unsigned int j = 0; j < v.at(i).size(); j++)
-      ra[k++] = v.at(i).at(j).getImg();
-  
-  return ra;
-}
-
 
 class ComplexDataFilter {
 
@@ -734,7 +514,6 @@ private:
 ComplexDataFilter::ComplexDataFilter() {
   ;
 }
-
 
 ComplexDataFilter::~ComplexDataFilter() {
   for (unsigned int i = 0; i < storage.size(); i++) 
@@ -768,8 +547,6 @@ float *ComplexDataFilter::to4Pol(int numCorr, int numChan, float* cdata) {
     filtered [ 8 * i + 6 ] = cdata[ 6 * i + 4 ] ;
     filtered [ 8 * i + 7 ] = cdata[ 6 * i + 5 ] ;    
   }
-
-
 
   return filtered;
 }
@@ -969,12 +746,190 @@ EnumSet<AtmPhaseCorrection>      es_apc;
 // By default the resulting MS will not contain compressed columns
 // unless the 'compress' option has been given.
 // 
-Bool                             withCompression = false;
+bool                             withCompression = false;
 
 //
 // A function to determine if overTheTop is present in a given row of the Pointing table.
 //
 bool overTheTopExists(PointingRow* row) { return row->isOverTheTopExists(); }
+
+//
+// A collection of declarations and functions used for the parsing of the 'scans' option.
+//
+#include <boost/spirit.hpp>
+#include <boost/spirit/actor/assign_actor.hpp>
+#include <boost/spirit/actor/push_back_actor.hpp>
+using namespace boost::spirit;
+
+vector<int> eb_v;
+int allEbs = -1;
+int ebNumber = allEbs;
+int readEb = allEbs;
+
+set<int> scan_s;
+int scanNumber0, scanNumber1;
+
+map<int, set<int> > eb_scan_m;
+
+template<typename T>
+string displaySet(const set<T> &aSet) {
+  ostringstream oss;
+  oss << "{";
+  typename set<T>::const_iterator iter = aSet.begin();
+  if (iter != aSet.end())
+    oss << *iter++;
+   
+  while (iter != aSet.end())
+    oss << "," << *iter++;  
+  oss<< "}";
+  return oss.str();
+}
+
+/*
+** Inserts all the integer values in the range [scanNumber0, scanNumber1] in the set referred 
+** to by the global variable scan_s.
+** The two parameters begin and end are not used and here only to comply with the Spirit parser's convention.
+**
+*/
+void fillScanSet(const char* begin, const char* end) {
+  for (int i = scanNumber0; i < (scanNumber1+1); i++)
+    scan_s.insert(i);
+}
+
+/*
+** Inserts all the elements of the set referred to by the global variable scan_s into
+** the set associated with the (int) key equal to the last value of the global vector eb_v
+** in the global map eb_scan_m.
+** The two parameters begin and end are not used and here only to comply with the Spirit parser's convention.
+*/  
+void mergeScanSet(const char* begin, const char* end) {
+  int key = eb_v.back();
+  eb_scan_m[key].insert(scan_s.begin(), scan_s.end());
+}
+
+/*
+** Empties the global set scan_s.
+** The two parameters begin and end are not used and here only to comply with the Spirit parser's convention.
+*/
+void clearScanSet(const char* begin, const char* end) {
+  scan_s.clear();
+}
+
+/*
+** Defines the grammar and the behaviour of a Spirit parser
+** able to process a scan selection.
+*/
+struct eb_scan_selection : public grammar<eb_scan_selection> {
+  template<typename ScannerT> struct definition {
+    definition (eb_scan_selection const& self) {
+      eb_scan_list   = eb_scan >> *(';' >> eb_scan);
+      eb_scan	     = (eb[push_back_a(eb_v, ebNumber)][assign_a(ebNumber, allEbs)] >> scan_list)[&mergeScanSet][&clearScanSet];
+      eb	     = !(int_p[assign_a(readEb)] >> ':')[assign_a(ebNumber, readEb)];
+      scan_list	     = !((scan_selection >> *(',' >> scan_selection)));
+      scan_selection = (int_p[assign_a(scanNumber0)][assign_a(scanNumber1)] >> !('~' >> int_p[assign_a(scanNumber1)]))
+	[&fillScanSet]
+	[assign_a(scanNumber0, -1)]
+	[assign_a(scanNumber1, -1)];
+    }
+    rule<ScannerT> eb_scan_list, eb_scan, eb, scan_list, scan_selection;
+    rule<ScannerT> const& start() const { return eb_scan_list ; }
+  };
+};
+
+/*
+** Returns the intersection of two sets.
+**
+** @param T the base type of the two sets.
+** @param s1 the first set.
+** @param s2 the second set.
+** @return a set equal to the intersection of s1 and s2.
+*/
+template<typename T> 
+set<T> SetAndSet(const set<T>& s1, const set<T>& s2) {
+  set<T> result;
+  typename set<T>::iterator iter1_s, iter2_s;
+  for (iter1_s = s1.begin(); iter1_s != s1.end(); iter1_s++) {
+    if ((iter2_s = s2.find(*iter1_s)) != s2.end())
+      result.insert(*iter1_s);
+  }
+  return result;
+}
+
+//
+// A template function which returns true if and only there is at least
+// one element in the vector 'scans' for which the time interval
+// defined by its attributes startTime and endTime has a non empty
+// intersection with the time interval defined by the 'timeInterval'
+// attribute of the generic parameter of 'row' which is expected to 
+// have a method getTimeInterval which returns a TimeInterval object.
+//
+template<typename T>
+bool timeIntervalIntersectsAScan (T* row, const vector<ScanRow *>& scans) {
+  bool result = false;
+
+  int64_t currentScanStartTime, currentScanEndTime;
+  int64_t rowStartTime, rowEndTime;
+  for (vector<ScanRow *>::const_iterator iter = scans.begin(); iter != scans.end(); iter++) {
+    currentScanStartTime = (*iter)->getStartTime().get();
+    currentScanEndTime = (*iter)->getEndTime().get();
+    rowStartTime = row->getTimeInterval().getStart().get();
+    rowEndTime = rowStartTime + row->getTimeInterval().getDuration().get();
+    if (max(currentScanStartTime, rowStartTime) < min(currentScanEndTime, rowEndTime))
+      return true;
+  }
+  return result;
+}
+
+//
+// A template function which calls the template function timeIntervalIntersectsAScan for each
+// element of 'rows' by using the parameter 'scans' to determine if there is at least an intersection.
+// It returns a vector of T* containing copies of elements of 'rows' for which the function timeIntervalIntersectsAScan.
+// returns true.
+//
+template<typename T>
+vector<T *> rowsInAScanbyTimeInterval(const vector<T* >& rows, const vector<ScanRow *>& scans) {
+  vector<T *> result ;
+  for (typename vector<T *>::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
+    if (timeIntervalIntersectsAScan (*iter, scans))
+      result.push_back(*iter);
+  }
+  return result;
+}
+
+
+template<typename T>
+bool timeIsInAScan(T* row, const vector<ScanRow *>& scans) {
+  bool result = false;
+
+  int64_t currentScanStartTime, currentScanEndTime;
+  int64_t rowTime;
+  for (vector<ScanRow *>::const_iterator iter = scans.begin(); iter != scans.end(); iter++) {
+    currentScanStartTime = (*iter)->getStartTime().get();
+    currentScanEndTime = (*iter)->getEndTime().get();
+    rowTime = row->getTime().get();
+    if ((currentScanStartTime <= rowTime) && (rowTime < currentScanEndTime))
+      return true;
+  }
+  return result;
+}
+
+//
+// A template function which calls the template function timeIsInAScan for each
+// element of 'rows' by using the parameter 'scans' to determine if there is at 
+// least a scan which contains the 'time' attribute's value for each row.
+// It returns a vector of T* containing copies of elements of 'rows' for which the function 
+// timeIsInAScan returns true.
+//
+//
+template<typename T>
+vector<T *> rowsInAScanbyTime(const vector<T* >& rows, const vector<ScanRow *>& scans) {
+  vector<T *> result ;
+  for (typename vector<T *>::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
+    if (timeIsInAScan (*iter, scans))
+      result.push_back(*iter);
+  }
+  return result;
+}
 
 
 /**
@@ -990,6 +945,8 @@ int main(int argc, char *argv[]) {
   ofstream ofs;
 
   LogSinkInterface& lsif = LogSink::globalSink();
+
+  bool mute = false;
 
   //   Process command line options and parameters.
   po::variables_map vm;
@@ -1016,10 +973,12 @@ int main(int argc, char *argv[]) {
       ("compression,c", "produces compressed columns in the resulting measurement set (not set by default). When this option is selected the string '-compressed' is inserted in the pathname of the resulting measurement set.")
       ("asis", po::value<string>(), "creates verbatim copies of the ASDM tables in the output measurement set. The value given to this option must be a quoted string containing a list of table names separated by space characters; the wildcard character '*' is allowed in table names.")
       ("wvr-corrected-data", po::value<string>()->default_value("no"),  "specifies wich values are considered in the ASDM binary data to fill the DATA column in the MAIN table of the MS. Expected values for this option are 'no' for the uncorrected data (this is the default), 'yes' for the corrected data and 'both' for corrected and uncorrected data. In the latter case, two measurement sets are created, one containing the uncorrected data and the other one, whose name is suffixed by '-wvr-corrected', containing the corrected data.")
+      ("scans,s", po::value<string>(), "processes only the scans specified in the option's value. This value is a semicolon separated list of scan specifications. A scan specification consists in an exec bock index followed by the character ':' followed by a comma separated list of scan indexes or scan index ranges. A scan index is relative to the exec block it belongs to. Scan indexes are 1-based while exec blocks's are 0-based. \"0:1\" or \"2:2~6\" or \"0:1,1:2~6,8;2:,3:24~30\" \"1,2\" are valid values for the option. \"3:\" alone will be interpreted as 'all the scans of the exec block#3'. An scan index or a scan index range not preceded by an exec block index will be interpreted as 'all the scans with such indexes in all the exec blocks'.  By default all the scans are considered.")
       ("logfile,l", po::value<string>(), "specifies the log filename. If the option is not used then the logged informations are written to the standard error stream.")
       ("verbose,v", "logs numerous informations as the filler is working.")
-      ("revision,r", "logs information about the revision of this application.");
-
+      ("revision,r", "logs information about the revision of this application.")
+      ("mute,m", "produces no output.");
+    
 
     // Hidden options, will be allowed both on command line and
     // in config file, but will not be shown to the user.
@@ -1062,7 +1021,7 @@ int main(int argc, char *argv[]) {
     // Revision ? displays revision's info and don't go further.
     if (vm.count("revision")) {
       errstream.str("");
-      errstream << "$Id: asdm2MS.cpp,v 1.43 2010/05/13 17:54:18 mcaillat Exp $" << "\n" ;
+      errstream << "$Id: asdm2MS.cpp,v 1.54 2010/10/20 14:41:13 mcaillat Exp $" << "\n" ;
       error(errstream.str());
     }
 
@@ -1171,7 +1130,7 @@ int main(int argc, char *argv[]) {
       string dummyMSName = vm["ms-directory-prefix"].as< string >();
       dummyMSName = lrtrim(dummyMSName);
       if (boost::algorithm::ends_with(dummyMSName, "/")) dummyMSName.erase(dummyMSName.size()-1);
-      boost::filesystem::path msPath(lrtrim(dummyMSName), &boost::filesystem::no_check);
+      boost::filesystem::path msPath(lrtrim(dummyMSName),boost::filesystem::no_check);
       string msDirectory = msPath.branch_path().string();
       msDirectory = lrtrim(msDirectory);
       if (msDirectory.size() == 0) msDirectory = ".";
@@ -1182,7 +1141,7 @@ int main(int argc, char *argv[]) {
       msNamePrefix = dsName;
       msNameExtension = ".ms";
     }
-
+    
     // Does the user want compressed columns in the resulting MS ?
 
     if ((withCompression = (vm.count("compression") != 0))) {
@@ -1210,6 +1169,10 @@ int main(int argc, char *argv[]) {
       errstream << generic;
       error(errstream.str());
     }
+
+    // Do we want an MS to be produced or not ?
+    mute = vm.count("mute") != 0;
+
   }
   catch (std::exception& e) {
     errstream.str("");
@@ -1279,6 +1242,70 @@ int main(int argc, char *argv[]) {
   sdmBinData.selectDataSubset(e_query_cm, es_query_apc);
 
   //
+  // Selection of the scans to consider.
+  //
+  vector<ScanRow *>	scanRow_v	       = ds->getScan().get();
+  map<int, set<int> > all_eb_scan_m;
+  for (vector<ScanRow *>::size_type i = 0; i < scanRow_v.size(); i++)
+    all_eb_scan_m[scanRow_v[i]->getExecBlockId().getTagValue()].insert(scanRow_v[i]->getScanNumber());
+
+  vector<ScanRow *>	selectedScanRow_v;
+  map<int, set<int> >   selected_eb_scan_m;
+
+  string scansOptionInfo;
+  if (vm.count("scans")) {
+    string scansOptionValue = vm["scans"].as< string >();
+    eb_scan_selection ebs;
+
+    int status = parse(scansOptionValue.c_str(), ebs, space_p).full;
+
+    if (status == 0) {
+      errstream.str("");
+      errstream << "'" << scansOptionValue << "' is an invalid scans selection." << endl;
+      error(errstream.str());
+    }
+
+    vector<ScanRow *> scanRow_v = ds->getScan().get();
+    map<int, set<int> >::iterator iter_m = eb_scan_m.find(-1);
+
+    if (iter_m != eb_scan_m.end())
+      for (map<int, set<int> >::iterator iterr_m = all_eb_scan_m.begin(); iterr_m != all_eb_scan_m.end(); iterr_m++)
+	if ((iter_m->second).empty())
+	  selected_eb_scan_m[iterr_m->first] = iterr_m->second;
+	else
+	  selected_eb_scan_m[iterr_m->first] = SetAndSet<int>(iter_m->second, iterr_m->second);
+
+    for (map<int, set<int> >::iterator iterr_m = all_eb_scan_m.begin(); iterr_m != all_eb_scan_m.end(); iterr_m++)
+      if ((iter_m=eb_scan_m.find(iterr_m->first)) != eb_scan_m.end())
+	if ((iter_m->second).empty())
+	  selected_eb_scan_m[iterr_m->first].insert((iterr_m->second).begin(), (iterr_m->second).end());
+	else {
+	  set<int> s = SetAndSet<int>(iter_m->second, iterr_m->second);
+	  selected_eb_scan_m[iterr_m->first].insert(s.begin(), s.end());
+	}
+
+    ostringstream	oss;
+    oss << "The following scans will be processed : " << endl;
+    for (map<int, set<int> >::const_iterator iter_m = selected_eb_scan_m.begin(); iter_m != selected_eb_scan_m.end(); iter_m++) {
+      oss << "eb#" << iter_m->first << " -> " << displaySet<int>(iter_m->second) << endl;
+
+      Tag		execBlockTag  = Tag(iter_m->first, TagType::ExecBlock);
+      for (set<int>::const_iterator iter_s = iter_m->second.begin();
+	   iter_s		     != iter_m->second.end();
+	   iter_s++)
+	selectedScanRow_v.push_back(ds->getScan().getRowByKey(execBlockTag, *iter_s));
+
+    }
+
+    scansOptionInfo = oss.str();
+  }
+  else {
+    selectedScanRow_v = ds->getScan().get();
+    selected_eb_scan_m = all_eb_scan_m;
+    scansOptionInfo = "All scans of all exec blocks will be processed \n";
+  }
+
+  //
   // Report the selection's parameters.
   //
   infostream.str("");
@@ -1286,12 +1313,19 @@ int main(int argc, char *argv[]) {
   infostream << "Spectral resolution types requested : " << es_srt.str() << endl;
   infostream << "Time sampling requested : " << es_ts.str() << endl;
   infostream << "WVR uncorrected and|or corrected data requested : " << es_query_apc.str() << endl;
-  info(infostream.str());
+  if (selectedScanRow_v.size()==0) { 
+    errstream.str("");
+    errstream << "No scan number corresponding to your request. Can't go further.";
+    error(errstream.str());
+  }
 
+  infostream << scansOptionInfo;
+  info(infostream.str());
+ 
   //
   // Shall we have Complex or Float data ?
   //
-  bool complexData;
+  bool complexData = true;
   try {
     complexData =  sdmBinData.isComplexData();
   }
@@ -1353,32 +1387,31 @@ int main(int argc, char *argv[]) {
   //
   // Create the measurement set(s). 
   map<AtmPhaseCorrection, ASDM2MSFiller*> msFillers;
-  try {
-    for (map<AtmPhaseCorrection, string>::iterator iter = msNames.begin(); iter != msNames.end(); ++iter) {
-      msFillers[iter->first] = new ASDM2MSFiller(msNames[iter->first].c_str(),
-						 0.0,
-						 false,
-						 (Bool) complexData,
-						 withCompression);
-      info("About to create a filler for the measurement set '" + msNames[iter->first] + "'");
+  if (!false) {
+    try {
+      for (map<AtmPhaseCorrection, string>::iterator iter = msNames.begin(); iter != msNames.end(); ++iter) {
+	msFillers[iter->first] = new ASDM2MSFiller(msNames[iter->first],
+						   0.0,
+						   false,
+						   complexData,
+						   withCompression);
+	info("About to create a filler for the measurement set '" + msNames[iter->first] + "'");
+      }
     }
-  }
-  catch(AipsError & e) {
-    errstream.str("");
-    errstream << e.getMesg();
-    error(errstream.str());
-  }
-  catch (std::exception & e) {
-    errstream.str("");
-    errstream << e.what();
-    error(errstream.str());
-  }
+    catch(AipsError & e) {
+      errstream.str("");
+      errstream << e.getMesg();
+      error(errstream.str());
+    }
+    catch (std::exception & e) {
+      errstream.str("");
+      errstream << e.what();
+      error(errstream.str());
+    }
 
-  //--info("About to create a new measurement set '" + ost.str() + "'");
 
-  msFiller = msFillers.begin()->second;
-  //msFiller = new ASDM2MSFiller(ost.str().c_str(), 0.0, false, (Bool) complexData, withCompression);
-
+    msFiller = msFillers.begin()->second;
+  }
 
   //
   // Firstly convert the basic tables.
@@ -1401,7 +1434,7 @@ int main(int argc, char *argv[]) {
   // At the same time, we populate a map ASDM Station Tag -> MS ANTENNA ID
   // which will be useful when the Weather table will be converted.
   //
-  unsigned int numTrueAntenna;
+  //unsigned int numTrueAntenna;
   { 
     AntennaRow*   r   = 0;
 
@@ -1417,9 +1450,6 @@ int main(int argc, char *argv[]) {
 	error(errstream.str());
       }
 
-      // We assume that wether the ExecBlock table has one row or that all ExecBlocks come from the same site.
-      // reb = execBlockT.get().at(0);
-
       // The MS Antenna position is defined as the sum of the ASDM station position and
       // of the ASDM Antenna position after applying to it a coordinate system transformation.
       // Since the ASDM Antenna position is 0,0,0 for now, we only use the ASDM station position.
@@ -1432,12 +1462,12 @@ int main(int argc, char *argv[]) {
       double xOffset = offset.at(0).get();
       double yOffset = offset.at(1).get();
       double zOffset = offset.at(2).get();
-      
+
       for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
 	   iter != msFillers.end();
 	   ++iter) {
-	int antenna_id = iter->second->addAntenna(r->getName().c_str(),
-						  r->getStationUsingStationId()->getName().c_str(),
+	int antenna_id = iter->second->addAntenna(r->getName(),
+						  r->getStationUsingStationId()->getName(),
 						  xPosition,
 						  yPosition,
 						  zPosition,
@@ -1447,8 +1477,9 @@ int main(int argc, char *argv[]) {
 						  (float)r->getDishDiameter().get());	
       }
     }
-    numTrueAntenna = msFillers.begin()->second->ms()->antenna().nrow();
-    if (nAntenna) {
+
+    int numTrueAntenna = msFillers.begin()->second->ms()->antenna().nrow();
+    if (numTrueAntenna) {
       infostream.str("");
       infostream << "converted in " << numTrueAntenna << " antenna(s)  in the measurement set(s)." ;
       info(infostream.str());
@@ -1481,62 +1512,6 @@ int main(int argc, char *argv[]) {
       }
       
       
-      /*
-       * associated spectral windows and and natures.
-       */
-      
-      unsigned int numAssocValues = 0;
-      if (r->isNumAssocValuesExists()) numAssocValues = r->getNumAssocValues();
-      
-      // Test the simultaneous presence or absence of assocNature and assoSpectralWindowId
-      if ((r->isAssocNatureExists() && !r->isAssocSpectralWindowIdExists()) ||
-	  (!r->isAssocNatureExists() && r->isAssocSpectralWindowIdExists())) {
-	errstream.str("");
-	errstream << "Only one of the attributes assocSpectralWindowId and assocNature is present. Can't go further."
-		  << endl;
-	error(errstream.str());
-      }
-      
-      int* assocSpectralWindowId_ = 0;
-      IConverter assocSpwIdConverter;
-      vector<Tag> assocSpectralWindowId;
-
-      char** assocNature_ = 0;
-      SConverter assocNatureConverter;
-      vector<SpectralResolutionType> assocNature;
-
-      if (r->isAssocSpectralWindowIdExists()) { // it exists then the assocNature exists also, given the test
-	                                        // which is done before.
-	assocSpectralWindowId = r->getAssocSpectralWindowId();
-	if (numAssocValues != assocSpectralWindowId.size()) {
-	  infostream.str("");
-	  infostream << "The size of assocSpectralWindowId ('"
-		     << assocSpectralWindowId.size()
-		     << "') is not equal to the value announced in numAssocValues ('"
-		     << numAssocValues
-		     << "'). Ignoring the difference and sending the full vector assocSpectralWindowId to the filler" 
-	    ;
-	  info(infostream.str());
-	}
-	numAssocValues = assocSpectralWindowId.size();
-	assocSpectralWindowId_ = assocSpwIdConverter.to1DArray(assocSpectralWindowId);
-
-	// Take into account the re ordering of the spectral window indices.
-	for (unsigned int iAssocSw = 0; iAssocSw < numAssocValues; iAssocSw++)
-	  assocSpectralWindowId_[iAssocSw] =  swIdx2Idx[assocSpectralWindowId_[iAssocSw]];
-	
-	assocNature = r->getAssocNature();
-	if (assocNature.size() != assocSpectralWindowId.size()) {
-	  infostream.str("");
-	  infostream << "The size of assocNature ('"
-		     << assocNature.size() 
-		     << "') is not equal to the size of assocSpectralWindowId ('"
-		     << assocSpectralWindowId.size()
-		     << "'). Ignoring the difference and sending the full assocNature vector to the filler.";
-	  info(infostream.str());
-	}
-	assocNature_ = assocNatureConverter.to1DCStringArray<SpectralResolutionType, CSpectralResolutionType>(r->getAssocNature());
-      }
       
       
       /* Processing the chanFreqXXX
@@ -1549,12 +1524,13 @@ int main(int argc, char *argv[]) {
       bool chanArray = r->isChanFreqArrayExists();
       if (!chanStartAndStep && !chanArray) {
 	errstream.str("");
-	errstream << "Did not find (chanFreqStart, chanFreqStep) nor chanFreqArray. Can't go further";
+	errstream << "Did not find (chanFreqStart, chanFreqStep) nor chanFreqArray. Can't go further.";
 	error(errstream.str());
       }
       
-      double* chanFreq1D = (double *) 0;
-      DConverter chanFreqConverter;
+      //double* chanFreq1D = (double *) 0;
+      //DConverter chanFreqConverter;
+      vector<double> chanFreq1D;
       vector<Frequency> chanFreqArray;
       Frequency chanFreqStart, chanFreqStep;
       if (chanArray) { // Frequency channels are specified by an array.
@@ -1575,7 +1551,8 @@ int main(int argc, char *argv[]) {
 	for (int i = 0; i < r->getNumChan(); i++)
 	  chanFreqArray.push_back(chanFreqStart + i * chanFreqStep);
       }
-      chanFreq1D = chanFreqConverter.to1DArray(chanFreqArray);
+      //chanFreq1D = chanFreqConverter.to1DArray(chanFreqArray);
+      chanFreq1D = DConverter::toVectorD<Frequency>(chanFreqArray);
       
       /* Processing the chanWidthXXX
        *
@@ -1585,12 +1562,13 @@ int main(int argc, char *argv[]) {
        */
       if (!r->isChanWidthExists() && !r->isChanWidthArrayExists()) {
 	errstream.str("");
-	errstream << "Did not find chanWidth nor chanWidthArray. Can't go further";
+	errstream << "Did not find chanWidth nor chanWidthArray. Can't go further.";
 	error(errstream.str());
       }
       
-      double* chanWidth1D = (double *) 0;
-      DConverter chanWidthConverter;
+      //double* chanWidth1D = (double *) 0;
+      //DConverter chanWidthConverter;
+      vector<double> chanWidth1D;
       vector<Frequency> chanWidthArray;
       if (r->isChanWidthArrayExists()) { // Frequency channels widths are specified by an array.
 	chanWidthArray = r->getChanWidthArray();
@@ -1608,8 +1586,8 @@ int main(int argc, char *argv[]) {
 	chanWidthArray.resize(r->getNumChan());
 	chanWidthArray.assign(chanWidthArray.size(), r->getChanWidth());
       }
-      chanWidth1D = chanWidthConverter.to1DArray(chanWidthArray);
-      
+      //chanWidth1D = chanWidthConverter.to1DArray(chanWidthArray);
+      chanWidth1D = DConverter::toVectorD<Frequency>(chanWidthArray);
       
       /* Processing the effectiveBwXXX
        *
@@ -1619,12 +1597,13 @@ int main(int argc, char *argv[]) {
        */
       if (!r->isEffectiveBwExists() && !r->isEffectiveBwArrayExists()) {
 	errstream.str("");
-	errstream << "Did not find effectiveBw nor effectiveBwArray. Can't go further";
+	errstream << "Did not find effectiveBw nor effectiveBwArray. Can't go further.";
 	error(errstream.str());
       }
       
-      double* effectiveBw1D = (double *) 0;
-      DConverter effectiveBwConverter;
+      //double* effectiveBw1D = (double *) 0;
+      vector<double> effectiveBw1D;
+      //DConverter effectiveBwConverter;
       vector<Frequency> effectiveBwArray;
       if (r->isEffectiveBwArrayExists()) { // Effective BWs are specified by an array.
 	effectiveBwArray = r->getEffectiveBwArray();
@@ -1642,7 +1621,8 @@ int main(int argc, char *argv[]) {
 	effectiveBwArray.resize(r->getNumChan());
 	effectiveBwArray.assign(effectiveBwArray.size(), r->getEffectiveBw());
       }
-      effectiveBw1D = effectiveBwConverter.to1DArray(effectiveBwArray);
+      //effectiveBw1D = effectiveBwConverter.to1DArray(effectiveBwArray);
+      effectiveBw1D = DConverter::toVectorD<Frequency>(effectiveBwArray);
       
       
       /* Processing the resolutionXXX
@@ -1657,8 +1637,9 @@ int main(int argc, char *argv[]) {
 	error(errstream.str());
       }
       
-      double* resolution1D = (double *) 0;
-      DConverter resolutionConverter;
+      //double* resolution1D = (double *) 0;
+      vector<double> resolution1D;
+      //DConverter resolutionConverter;
       vector<Frequency> resolutionArray;
       if (r->isResolutionArrayExists()) { // Resolutions are specified by an array.
 	resolutionArray = r->getResolutionArray();
@@ -1676,39 +1657,103 @@ int main(int argc, char *argv[]) {
 	resolutionArray.resize(r->getNumChan());
 	resolutionArray.assign(resolutionArray.size(), r->getResolution());
       }
-      resolution1D = resolutionConverter.to1DArray(resolutionArray);
+      //resolution1D = resolutionConverter.to1DArray(resolutionArray);
+      resolution1D = DConverter::toVectorD<Frequency>(resolutionArray);
+
+      /*
+       * associated spectral windows and and natures.
+       */
       
-      int bbcNo = -1;
-      bbcNo = r->getBasebandName();
+      unsigned int numAssocValues = 0;
+      if (r->isNumAssocValuesExists()) numAssocValues = r->getNumAssocValues();
       
-      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
-	   iter != msFillers.end();
-	   ++iter) {
-	iter->second->addSpectralWindow(r->getNumChan(),
-					r->isNameExists()?r->getName().c_str():"",
-					(r->getRefFreq()).get(),
-					chanFreq1D,  
-					chanWidth1D, 
-					r->isMeasFreqRefExists()?FrequencyReferenceMapper::value(r->getMeasFreqRef()):MFrequency::TOPO,
-					effectiveBw1D, 
-					resolution1D,
-					(r->getTotBandwidth()).get(),
-					r->getNetSideband(),
-					r->getBasebandName(),
-					0,  // IFConvChain set to 0.
-					r->isFreqGroupExists()?r->getFreqGroup():0,
-					r->isFreqGroupNameExists()?r->getFreqGroupName().c_str():"",
-					numAssocValues,
-					assocSpectralWindowId_,
-					assocNature_);      
-      }      
+      // Test the simultaneous presence or absence of assocNature and assoSpectralWindowId
+      if ((r->isAssocNatureExists() && !r->isAssocSpectralWindowIdExists()) ||
+	  (!r->isAssocNatureExists() && r->isAssocSpectralWindowIdExists())) {
+	errstream.str("");
+	errstream << "Only one of the attributes assocSpectralWindowId and assocNature is present. Can't go further."
+		  << endl;
+	error(errstream.str());
+      }
+      
+      vector<int> assocSpectralWindowId_;
+      vector<string> assocNature_ ;
+
+      if (r->isAssocSpectralWindowIdExists()) { // it exists then the assocNature exists also, given the test
+	                                        // which is done before.
+	vector<Tag> assocSpectralWindowId = r->getAssocSpectralWindowId();
+	if (numAssocValues != assocSpectralWindowId.size()) {
+	  infostream.str("");
+	  infostream << "The size of assocSpectralWindowId ('"
+		     << assocSpectralWindowId.size()
+		     << "') is not equal to the value announced in numAssocValues ('"
+		     << numAssocValues
+		     << "'). Ignoring the difference and sending the full vector assocSpectralWindowId to the filler" 
+	    ;
+	  info(infostream.str());
+	}
+	numAssocValues = assocSpectralWindowId.size();
+	assocSpectralWindowId_ = IConverter::toVectorI(assocSpectralWindowId);
+
+	// Take into account the re ordering of the spectral window indices.
+	for (unsigned int iAssocSw = 0; iAssocSw < numAssocValues; iAssocSw++)
+	  assocSpectralWindowId_[iAssocSw] =  swIdx2Idx[assocSpectralWindowId_[iAssocSw]];
+
+	vector<SpectralResolutionType> assocNature = r->getAssocNature();
+
+	if (assocNature.size() != assocSpectralWindowId_.size()) {
+	  infostream.str("");
+	  infostream << "The size of assocNature ('"
+		     << assocNature.size() 
+		     << "') is not equal to the size of assocSpectralWindowId ('"
+		     << assocSpectralWindowId.size()
+		     << "'). Ignoring the difference and sending the full assocNature vector to the filler.";
+	  info(infostream.str());
+	}
+	assocNature_ = SConverter::toVectorS<SpectralResolutionType, CSpectralResolutionType>(r->getAssocNature());
+      }
+      
+      int numChan           = r->getNumChan();
+      string name           = r->isNameExists()?r->getName():"";
+      double refFreq        = r->getRefFreq().get();
+      int measFreqRef       = r->isMeasFreqRefExists()?FrequencyReferenceMapper::value(r->getMeasFreqRef()):MFrequency::TOPO;
+      double totalBandwidth = r->getTotBandwidth().get();
+      int netSideband       = r->getNetSideband();
+      int bbcNo             = r->getBasebandName();
+      int ifConvChain       = 0;
+      int freqGroup         = r->isFreqGroupExists()?r->getFreqGroup():0;
+      string freqGroupName  = r->isFreqGroupNameExists()?r->getFreqGroupName().c_str():"";
+
+      if (!false) {
+	for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	     iter != msFillers.end();
+	     ++iter) {
+	  iter->second->addSpectralWindow(numChan,
+					  name,
+					  refFreq,
+					  chanFreq1D,  
+					  chanWidth1D, 
+					  measFreqRef,
+					  effectiveBw1D, 
+					  resolution1D,
+					  totalBandwidth,
+					  netSideband,
+					  bbcNo,
+					  ifConvChain,
+					  freqGroup,
+					  freqGroupName,
+					  numAssocValues,
+					  assocSpectralWindowId_,
+					  assocNature_);      
+	}      
+
+	if (nSpectralWindow) {
+	  infostream.str("");
+	  infostream << "converted in " << msFillers.begin()->second->ms()->spectralWindow().nrow() << " spectral window(s) in the measurement set(s).";
+	  info(infostream.str());
+	}	
+      }
     }
-    if (nSpectralWindow) {
-      infostream.str("");
-      infostream << "converted in " << msFillers.begin()->second->ms()->spectralWindow().nrow() << " spectral window(s) in the measurement set(s).";
-      info(infostream.str());
-    }	
-    
   }
   catch (IllegalAccessException& e) {
     errstream.str("");
@@ -1725,7 +1770,8 @@ int main(int argc, char *argv[]) {
   int corrProduct2[] = { 0, 0, 1, 1};
   int corrProduct4[] = { 0, 0, 0, 1, 1, 0, 1, 1 };
 			 
-  vector<int> polarizationMap;
+  vector<int> polarizationIdx2Idx;
+  int pIdx;
   PolarizationTable& polT = ds->getPolarization();  
   try {
     PolarizationRow* r = 0;
@@ -1748,10 +1794,12 @@ int main(int argc, char *argv[]) {
 	throw ASDM2MSException(oss.str());
       }
 
-      Stokes::StokesTypes * corrType;
+      //Stokes::StokesTypes * corrType;
+      //vector<Stokes::StokesTypes> corrType;
+      vector<int> corrType;
       StokesMapper stokesMapper;
       if (numCorr != 3) {
-	corrType = stokesMapper.to1DArray(r->getCorrType());
+	corrType = StokesMapper::toVectorI(r->getCorrType());
       }
       else {
 	numCorr  = 4;
@@ -1759,13 +1807,17 @@ int main(int argc, char *argv[]) {
 	if ((sp == StokesParameterMod::RR) ||
 	    (sp == StokesParameterMod::LL) ||
 	    (sp == StokesParameterMod::RL) ||
-	    (sp == StokesParameterMod::LR))
-	  corrType = circularCorr;
+	    (sp == StokesParameterMod::LR)) {
+	  corrType.resize(4);
+	  copy (circularCorr, circularCorr+4, corrType.begin());
+	}
 	else if ((sp == StokesParameterMod::XX) ||
 		 (sp == StokesParameterMod::XY) ||
 		 (sp == StokesParameterMod::YX) ||
-		 (sp == StokesParameterMod::YY))
-	  corrType = linearCorr;
+		 (sp == StokesParameterMod::YY)) {
+	  corrType.resize(4);
+	  copy (linearCorr, circularCorr+4, corrType.begin());
+	}
 	else {
 	  errstream.str("");
 	  errstream << " I don't know what to do with the given Stokes parameters for autocorrelation data" << endl;
@@ -1775,23 +1827,25 @@ int main(int argc, char *argv[]) {
       }
       
       
-      int* corrProduct = 0;
+      /*int* corrProduct = 0;*/
+      vector<int> corrProduct; 
       switch (numCorr) {
-      case 1: corrProduct = corrProduct1; break;
-      case 2: corrProduct = corrProduct2; break;
-      case 4: corrProduct = corrProduct4; break;
+      case 1: corrProduct.resize(2); copy(corrProduct1, corrProduct1+2, corrProduct.begin()); break;
+      case 2: corrProduct.resize(4); copy(corrProduct2, corrProduct2+4, corrProduct.begin()); break;
+      case 4: corrProduct.resize(8); copy(corrProduct4, corrProduct4+8, corrProduct.begin()); break;
       }
 
-
-      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
-	   iter != msFillers.end();
-	   ++iter) {
-	polarizationMap.push_back(iter->second->addUniquePolarization(numCorr,
-								      corrType,
-								      corrProduct
-								      ));
+      if (!false) {
+	for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	     iter != msFillers.end();
+	     ++iter) {
+	  pIdx = iter->second->addUniquePolarization(numCorr,
+						     corrType,
+						     corrProduct
+						     );
+	}
+	polarizationIdx2Idx.push_back(pIdx);
       }
-
       if (nPolarization) {
 	infostream.str("");
 	infostream << "converted in " << msFillers.begin()->second->ms()->polarization().nrow() << " polarization(s)." ;
@@ -1808,7 +1862,8 @@ int main(int argc, char *argv[]) {
     
   //
   // Load the DataDescription table.
-  vector<int> dataDescriptionMap;
+  vector<int> dataDescriptionIdx2Idx;
+  int ddIdx;
   DataDescriptionTable& ddT = ds->getDataDescription();
   {
     DataDescriptionRow* r = 0;
@@ -1823,18 +1878,22 @@ int main(int argc, char *argv[]) {
 	(errstream << "Problem while reading the DataDescription table, the row with key = Tag(" << i << ") does not exist.Aborting." << endl);
 	error(errstream.str());
       }
-      
-      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
-	   iter != msFillers.end();
-	   ++iter) {
-	dataDescriptionMap.push_back(msFiller->addUniqueDataDescription(swIdx2Idx[r->getSpectralWindowId().getTagValue()],
-									polarizationMap.at(r->getPolOrHoloId().getTagValue())));
+     
+      if (!false) {
+	for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	     iter != msFillers.end();
+	     ++iter) {
+	  ddIdx = iter->second->addUniqueDataDescription(swIdx2Idx[r->getSpectralWindowId().getTagValue()],
+							 polarizationIdx2Idx.at(r->getPolOrHoloId().getTagValue()));
+	}
+	dataDescriptionIdx2Idx.push_back(ddIdx);
+
+	if (nDataDescription) {
+	  infostream.str("");
+	  infostream << "converted in " << msFillers.begin()->second->ms()->dataDescription().nrow() << " data description(s)  in the measurement set(s)." ;
+	  info(infostream.str());
+	}
       }
-    }
-    if (nDataDescription) {
-      infostream.str("");
-      infostream << "converted in " << msFillers.begin()->second->ms()->dataDescription().nrow() << " data description(s)  in the measurement set(s)." ;
-      info(infostream.str());
     }
   }
 
@@ -1844,17 +1903,23 @@ int main(int argc, char *argv[]) {
   // Issues :
   //    - time (epoch) : at the moment it takes directly the time as it is stored in the ASDM.
   //    - focusLength (in AIPS++) is no defined.
-
-
   FeedTable& feedT = ds->getFeed();
   {
     FeedRow* r = 0;
-    int nFeed = feedT.size();
     infostream.str("");
-    infostream << "The dataset has " << nFeed << " feed(s)...";
+    infostream << "The dataset has " << feedT.size() << " feed(s)...";
+    vector<FeedRow *> v = rowsInAScanbyTimeInterval(feedT.get(), selectedScanRow_v);
+    if(v.size()==0){
+      infostream << endl << "***  possible error in input data: none of the feeds are valid in the selected scans"
+      << endl << "***  will try to continue by accepting all feeds.";
+      v = feedT.get();
+    }
+    else{
+      infostream << v.size() << " of them in the selected scans ... ";
+    }      
     info(infostream.str());
+    int nFeed = v.size();
 
-    vector<FeedRow *> v = feedT.get();
     for (int i = 0; i < nFeed; i++) {
       r = v.at(i);
       // For now we just adapt the types of the time related informations and compute a mid-time.
@@ -1862,9 +1927,10 @@ int main(int argc, char *argv[]) {
       double interval = ((double) r->getTimeInterval().getDuration().get()) / ArrayTime::unitsInASecond ;
       double time =  ((double) r->getTimeInterval().getStart().get()) / ArrayTime::unitsInASecond + interval/2.0;
 
-      double xyzPositionArray[] =  {0.0, 0.0, 0.0};
-      double* xyzPosition = xyzPositionArray;
-      DConverter xyzPositionConverter;
+      vector<double> beam_offset_ =  DConverter::toVectorD(r->getBeamOffset());
+      vector<std::string> polarization_type_ = PolTypeMapper().toStringVector(r->getPolarizationTypes());
+      vector<complex<float> > polarization_response_ = CConverter::toVectorCF(r->getPolResponse());
+      vector<double> xyzPosition (3, 0.0);
       if (r->isPositionExists()) {
 	vector<Length> position = r->getPosition();
 	if (position.size() != 3) {
@@ -1875,35 +1941,36 @@ int main(int argc, char *argv[]) {
 		    << endl;
 	  error(errstream.str());
 	}
-	xyzPosition = xyzPositionConverter.to1DArray(position.at(0),
-						     position.at(1), 
-						     position.at(2));
+	
+	xyzPosition = DConverter::toVectorD<Length>(position);
       }
-      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
-	   iter != msFillers.end();
-	   ++iter) {
-	iter->second->addFeed(r->getAntennaId().getTagValue(),
-			      r->getFeedId(),
-			      swIdx2Idx[r->getSpectralWindowId().getTagValue()],
-			      time,
-			      interval,
-			      r->getNumReceptor(), 
-			      -1,             // We ignore the beamId array
-			      DConverter().to1DArray(r->getBeamOffset()),
-			      PolTypeMapper().toStringVector(r->getPolarizationTypes()),
-			      CConverter().to1DArrayR(r->getPolResponse()),
-			      CConverter().to1DArrayI(r->getPolResponse()),
-			      xyzPosition,
-			      DConverter().to1DArray(r->getReceptorAngle()));
+      vector<double> receptor_angle_ = DConverter::toVectorD<Angle>(r->getReceptorAngle());
+      if (!false) {
+	for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	     iter != msFillers.end();
+	     ++iter) {
+	  iter->second->addFeed((int) r->getAntennaId().getTagValue(),
+				r->getFeedId(),
+				swIdx2Idx[r->getSpectralWindowId().getTagValue()],
+				time,
+				interval,
+				r->getNumReceptor(), 
+				-1,             // We ignore the beamId array
+				beam_offset_,
+				polarization_type_,
+				polarization_response_,
+				xyzPosition,
+				receptor_angle_);
+	}
       }
-    }
-    if (nFeed) {
-      infostream.str("");
-      infostream <<  "converted in " << msFillers.begin()->second->ms()->feed().nrow() << " feed(s) in the measurement set." ;
-      info(infostream.str());
+      if (nFeed) {
+	infostream.str("");
+	infostream <<  "converted in " << msFillers.begin()->second->ms()->feed().nrow() << " feed(s) in the measurement set." ;
+	info(infostream.str());
+      }
     }
   }
-  
+    
   // Load the Field table.
   // Issues :
   // - only processes the case with numPoly == 0 at the moment.
@@ -1917,10 +1984,6 @@ int main(int argc, char *argv[]) {
     infostream << "The dataset has " << nField << " field(s)...";
     info(infostream.str());
 
-    double delayDir[2];
-    double phaseDir[2];
-    double referenceDir[2];
-
     for (int i = 0; i < nField; i++) {
       if ((r=fieldT.getRowByKey(Tag(i, TagType::Field))) == 0) {
 	errstream.str("");
@@ -1928,34 +1991,33 @@ int main(int argc, char *argv[]) {
 	error(errstream.str());
       }
 
-      delayDir[0] = DConverter().to1DArray(r->getDelayDir())[0];
-      delayDir[1] = DConverter().to1DArray(r->getDelayDir())[1];
-      
-      phaseDir[0] = DConverter().to1DArray(r->getPhaseDir())[0];
-      phaseDir[1] = DConverter().to1DArray(r->getPhaseDir())[1];
-      
-      referenceDir[0] = DConverter().to1DArray(r->getReferenceDir())[0];
-      referenceDir[1] = DConverter().to1DArray(r->getReferenceDir())[1];
+      string fieldName = r->getFieldName();
+      string code = r->getCode();
+      vector<double> delayDir     = DConverter::toVectorD<Angle>(r->getDelayDir());
+      vector<double> phaseDir     = DConverter::toVectorD<Angle>(r->getPhaseDir());
+      vector<double> referenceDir = DConverter::toVectorD<Angle>(r->getReferenceDir());
 
       int sourceId = -1;
       if (r->isSourceIdExists()) sourceId = r->getSourceId();
 
-      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
-	   iter != msFillers.end();
-	   ++iter) {
-	iter->second->addField( (const char*)r->getFieldName().c_str(),
-				(const char*)r->getCode().c_str(),
-				r->isTimeExists() ? ((double) r->getTime().get()) / ArrayTime::unitsInASecond : 0.0,
-				delayDir,
-				phaseDir,
-				referenceDir,
-				r->isSourceIdExists()?r->getSourceId():0);
+      if (!false) {
+	for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	     iter != msFillers.end();
+	     ++iter) {
+	  iter->second->addField( fieldName,
+				  code,
+				  r->isTimeExists() ? ((double) r->getTime().get()) / ArrayTime::unitsInASecond : 0.0,
+				  delayDir,
+				  phaseDir,
+				  referenceDir,
+				  r->isSourceIdExists()?r->getSourceId():0);
+	}
+      }  
+      if (nField) {
+	infostream.str("");
+	infostream << "converted in " << msFillers.begin()->second->ms()->field().nrow() << "  field(s) in the measurement set(s)." ;
+	info(infostream.str());
       }
-    }  
-    if (nField) {
-      infostream.str("");
-      infostream << "converted in " << msFillers.begin()->second->ms()->field().nrow() << "  field(s) in the measurement set(s)." ;
-      info(infostream.str());
     }
   }
   catch (IllegalAccessException& e) {
@@ -1969,37 +2031,41 @@ int main(int argc, char *argv[]) {
 
   {
     FlagCmdRow* r = 0;
-    int nFlagCmd = flagCmdT.size();
-    
     infostream.str("");
-    infostream << "The dataset has " << nFlagCmd << " flag(s)...";
+    infostream << "The dataset has " << flagCmdT.size() << " FlagCmd(s)...";
+    vector<FlagCmdRow *> v = rowsInAScanbyTimeInterval(flagCmdT.get(), selectedScanRow_v);
+    infostream << v.size() << " of them in the exec blocks / selected scans ... ";
     info(infostream.str());
+    int nFlagCmd = v.size();
 
-    vector<FlagCmdRow *> v = flagCmdT.get();
     for (int i = 0; i < nFlagCmd; i++) {
       r = v.at(i);
       // For now we just adapt the types of the time related informations and compute a mid-time.
       //
       double interval = ((double) r->getTimeInterval().getDuration().get()) / ArrayTime::unitsInASecond ;
       double time =  ((double) r->getTimeInterval().getStart().get()) / ArrayTime::unitsInASecond + interval/2.0;
-      
-      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
-	   iter != msFillers.end();
-	   ++iter) {
-	iter->second->addFlagCmd(time,
-				 interval,
-				 r->getType().c_str(),
-				 r->getReason().c_str(),
-				 r->getLevel(),
-				 r->getSeverity(),
-				 r->getApplied() ? 1 : 0,
-				 r->getCommand().c_str());
+      string type = r->getType();
+      string reason = r->getReason();
+      string command = r->getCommand();
+      if (!false) {
+	for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	     iter != msFillers.end();
+	     ++iter) {
+	  iter->second->addFlagCmd(time,
+				   interval,
+				   type,
+				   reason,
+				   r->getLevel(),
+				   r->getSeverity(),
+				   r->getApplied() ? 1 : 0,
+				   command);
+	}
       }
-    }
-    if (nFlagCmd) {
-      infostream.str("");
-      infostream << "converted in " << msFillers.begin()->second->ms()->flagCmd().nrow() << " in the measurement set." ;
-      info(infostream.str());
+      if (nFlagCmd) {
+	infostream.str("");
+	infostream << "converted in " << msFillers.begin()->second->ms()->flagCmd().nrow() << " in the measurement set." ;
+	info(infostream.str());
+      }
     }
   }
 
@@ -2010,82 +2076,100 @@ int main(int argc, char *argv[]) {
   HistoryTable& historyT = ds->getHistory();
   {
     HistoryRow* r = 0;
-    vector<HistoryRow *> v = historyT.get();
     int nHistory = historyT.size();
     infostream.str("");
     infostream << "The dataset has " << nHistory << " history(s)...";
-    info(infostream.str());
+    vector<HistoryRow *> v = rowsInAScanbyTime(historyT.get(), selectedScanRow_v);
+    infostream << v.size() << " of them in the selected exec blocks / scans ... ";
+    info(infostream.str()); 
 
     for (int i = 0; i < nHistory; i++) {
       r = v.at(i);
       double time =  ((double) r->getTime().get()) / ArrayTime::unitsInASecond ;
-      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
-	   iter != msFillers.end();
-	   ++iter) {
-	iter->second->addHistory(time,
-				 r->getExecBlockId().getTagValue(),   
-				 r->getMessage().c_str(),
-				 r->getPriority().c_str(),
-				 r->getOrigin().c_str(),
-				 -1,
-				 r->getApplication().c_str(),
-				 r->getCliCommand().c_str(),
-				 r->getAppParms().c_str());
+      string message     = r->getMessage();
+      string priority    = r->getPriority();
+      string origin      = r->getOrigin();
+      string application = r->getApplication();
+      string cliCommand  = r->getCliCommand();
+      string appParams   = r->getAppParms();
+
+      if (!false) {
+	for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	     iter != msFillers.end();
+	     ++iter) {
+	  iter->second->addHistory(time,
+				   r->getExecBlockId().getTagValue(),   
+				   message,
+				   priority,
+				   origin,
+				   -1,
+				   application,
+				   cliCommand,
+				   appParams);
+	}
       }
-    }
-    if (nHistory) {
-      infostream.str("");
-      infostream << "converted in " << msFillers.begin()->second->ms()->history().nrow() << " history(s) in the measurement set(s)." ;
-      info(infostream.str());
+      if (nHistory) {
+	infostream.str("");
+	infostream << "converted in " << msFillers.begin()->second->ms()->history().nrow() << " history(s) in the measurement set(s)." ;
+	info(infostream.str());
+      }
     }
   }
 
-  // Build the MS Observation table with the content of ASDM ExecBlock table.
+  // Build the MS Observation table with the content of the ASDM ExecBlock table.
   // 
   ExecBlockTable& execBlockT = ds->getExecBlock(); 
   {
     ExecBlockRow* r = 0;
     int nExecBlock = execBlockT.size();
     infostream.str("");
-    infostream << "The dataset has " << nExecBlock << " execBlock(s)...";
+    infostream << "The dataset has " << nExecBlock << " execBlock(s) ...";
+
+    vector<ExecBlockRow *> temp_v = execBlockT.get();
+    vector<ExecBlockRow *> v;
+    for (vector<ExecBlockRow *>::iterator iter_v = temp_v.begin(); iter_v != temp_v.end(); iter_v++)
+      if ( selected_eb_scan_m.find((*iter_v)->getExecBlockId().getTagValue()) != selected_eb_scan_m.end() )
+	v.push_back(*iter_v);
+    
+    vector<string> schedule; schedule.resize(2);
+
+    infostream << v.size() << " of them in the selected exec blocks / scans ... ";
     info(infostream.str());
 
-    vector<ExecBlockRow *> v = execBlockT.get();
-    
-    char* schedule[3];
 
-    for (int i = 0; i < nExecBlock; i++) {
+    for (int i = 0; i < v.size(); i++) {
       r = v.at(i);
       
+      string telescopeName  = r->getTelescopeName();
       double startTime      = r->getStartTime().getMJD()*86400;
       double endTime        = r->getEndTime().getMJD()*86400;
+      string observerName   = r->getObserverName();
 
       vector<string> observingLog;
       observingLog.push_back(r->getObservingLog());
+      string scheduleType("ALMA");
+      schedule[0] = "SchedulingBlock " + ds->getSBSummary().getRowByKey(r->getSBSummaryId())->getSbSummaryUID().getEntityId().toString();
+      schedule[1] = "ExecBlock " + r->getExecBlockUID().getEntityId().toString();
+      string project("T.B.D.");
+      double releaseDate = r->isReleaseDateExists() ? r->getReleaseDate().getMJD():0.0;
 
-      string sbString = "SchedulingBlock " + ds->getSBSummary().getRowByKey(r->getSBSummaryId())->getSbSummaryUID().getEntityId().toString();
-      schedule[0] = const_cast<char *>(sbString.c_str());
-
-      string ebString = "ExecBlock " + r->getExecBlockUID().getEntityId().toString();
-      schedule[1] = const_cast<char *>(ebString.c_str());
-
-      schedule[2] = 0;
-
-      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
-	   iter != msFillers.end();
-	   ++iter) {
-	iter->second->addObservation((const char*) r->getTelescopeName().c_str(),
-				     startTime,
-				     endTime,
-				     (const char*) r->getObserverName().c_str(),
-				     (const char**) SConverter().to1DCStringArray(observingLog),
-				     (const char *) "ALMA",
-				     const_cast<const char **>(schedule), // (const char**) 0,
-				     (const char*) "T.B.D.",
-				     r->isReleaseDateExists() ? r->getReleaseDate().getMJD():0.0
-				     );
-      }
-    } 
+      if (!false) {
+	for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	     iter != msFillers.end();
+	     ++iter) {
+	  iter->second->addObservation(telescopeName,
+				       startTime,
+				       endTime,
+				       observerName,
+				       observingLog,
+				       scheduleType,
+				       schedule,
+				       project,
+				       releaseDate
+				       );
+	}
+      } 
+    }
     if (nExecBlock) {
       infostream.str("");
       infostream << "converted in " << msFillers.begin()->second->ms()->observation().nrow() << " observation(s) in the measurement set(s)." ;
@@ -2098,10 +2182,12 @@ int main(int argc, char *argv[]) {
   // - pointingModelId , phaseTracking, sourceOffset and overTheTop not taken into account.
 
   PointingTable& pointingT = ds->getPointing();
-  int nPointing = pointingT.size();
   infostream.str("");
-  infostream << "The dataset has " << nPointing << " pointing(s)...";
+  infostream << "The dataset has " << pointingT.size() << " pointing(s)...";
+  vector<PointingRow *> v = rowsInAScanbyTimeInterval(pointingT.get(), selectedScanRow_v);
+  infostream << v.size() << " of them in the selected exec blocks / scans ... ";
   info(infostream.str());
+  int nPointing = v.size();
 
   if (nPointing > 0) {
 
@@ -2113,21 +2199,12 @@ int main(int argc, char *argv[]) {
     // all the numSample attributes values.
     //
     int numMSPointingRows = 0;
-    vector<PointingRow *> v = pointingT.get();
     for (unsigned int i = 0; i < v.size(); i++) {
       if (v[i]->getUsePolynomials()) {
 	errstream.str("");
-	errstream << "Found usePolynomials equal to true at row #" << i <<". Can't go further"<<endl;
+	errstream << "Found usePolynomials equal to true at row #" << i <<". Can't go further.";
 	error(errstream.str());
       }
-
-      /*
-      if (v[i]->getNumTerm() != 1) {
-	errstream.str("");
-	errstream << "Found numTerm equal to " << v[i]->getNumTerm() <<" at row #" << i <<" and I was expecting 1. But it does not really matter..." << endl;
-	error(errstream.str());
-      }
-      */
 
       numMSPointingRows += v[i]->getNumSample();
     }
@@ -2137,14 +2214,15 @@ int main(int argc, char *argv[]) {
     // to be created into the MS-Pointing, we can proceed.
 
     PointingRow* r = 0;
-    int    *antenna_id_      = new int[numMSPointingRows];
-    double *time_            = new double[numMSPointingRows];
-    double *interval_        = new double[numMSPointingRows];
-    double *direction_       = new double[2 * numMSPointingRows];
-    double *target_          = new double[2 * numMSPointingRows];
-    double *pointing_offset_ = new double[2 * numMSPointingRows];
-    double *encoder_         = new double[2 * numMSPointingRows];
-    bool   *tracking_        = new bool[numMSPointingRows];
+
+    vector<int> antenna_id_(numMSPointingRows, 0);
+    vector<double> time_(numMSPointingRows, 0.0);
+    vector<double> interval_(numMSPointingRows, 0.0);
+    vector<double> direction_(2 * numMSPointingRows, 0.0);
+    vector<double> target_(2 * numMSPointingRows, 0.0);
+    vector<double> pointing_offset_(2 * numMSPointingRows, 0.0);
+    vector<double> encoder_(2 * numMSPointingRows, 0.0);
+    vector<bool> tracking_(numMSPointingRows, false);
 
     //
     // Let's check if the optional attribute overTheTop is present somewhere in the table.
@@ -2152,12 +2230,12 @@ int main(int argc, char *argv[]) {
     unsigned int numOverTheTop = count_if(v.begin(), v.end(), overTheTopExists);
     bool overTheTopExists4All = v.size() == numOverTheTop;
 
-    bool* a_overTheTop_      = 0;
+    vector<bool> v_overTheTop_ ;
 
-    vector<s_overTheTop> v_overTheTop_;
+    vector<s_overTheTop> v_s_overTheTop_;
     
     if (overTheTopExists4All) 
-      a_overTheTop_      = new bool[numMSPointingRows];
+      v_overTheTop_.resize(numMSPointingRows);
     else if (numOverTheTop > 0) 
       v_overTheTop_.resize(numOverTheTop);
 
@@ -2214,21 +2292,23 @@ int main(int argc, char *argv[]) {
 
       // Use 'fill' from algorithm for the cases where values remain constant.
       // ANTENNA_ID
-      fill(antenna_id_+iMSPointingRow, antenna_id_+iMSPointingRow+numSample, antennaId);
+      fill(antenna_id_.begin()+iMSPointingRow, antenna_id_.begin()+iMSPointingRow+numSample, antennaId);
 
       // TRACKING 
-      fill(tracking_+iMSPointingRow, tracking_+iMSPointingRow+numSample, pointingTracking);
+      fill(tracking_.begin()+iMSPointingRow, tracking_.begin()+iMSPointingRow+numSample, pointingTracking);
 
-      // OVER_THE_TOP (if it's present everywhere)
+      // OVER_THE_TOP 
       if (overTheTopExists4All)
-	fill(a_overTheTop_+iMSPointingRow, a_overTheTop_+iMSPointingRow+numSample, r->getOverTheTop());
+	// it's present everywhere
+	fill(v_overTheTop_.begin()+iMSPointingRow, v_overTheTop_.begin()+iMSPointingRow+numSample,
+	     r->getOverTheTop());
       else if (r->isOverTheTopExists()) {
+	// it's present only in some rows.
 	s_overTheTop saux ;
 	saux.start = iMSPointingRow; saux.len = numSample; saux.value = r->getOverTheTop();
-	v_overTheTop_.push_back(saux);
+	v_s_overTheTop_.push_back(saux);
       }
        
-
       // Use an explicit loop for the other values.
       for (int j = 0 ; j < numSample; j++) { // ... must be expanded in numSample MS-Pointing rows.
 
@@ -2270,45 +2350,36 @@ int main(int argc, char *argv[]) {
 
 	
 	// increment the row number in MS Pointing.
-	iMSPointingRow++;
-
+	iMSPointingRow++;	
       }
     }
-   
-    for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
-	 iter != msFillers.end();
-	 ++iter) {
-      iter->second->addPointingSlice(numMSPointingRows,
-				     antenna_id_,
-				     time_,
-				     interval_,
-				     direction_,
-				     target_,
-				     pointing_offset_,
-				     encoder_,
-				     tracking_,
-				     overTheTopExists4All,
-				     a_overTheTop_,
-				     v_overTheTop_);
+    
+    if (!false) {
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	   iter != msFillers.end();
+	   ++iter) {
+	iter->second->addPointingSlice(numMSPointingRows,
+				       antenna_id_,
+				       time_,
+				       interval_,
+				       direction_,
+				       target_,
+				       pointing_offset_,
+				       encoder_,
+				       tracking_,
+				       overTheTopExists4All,
+				       v_overTheTop_,
+				       v_s_overTheTop_);
+      }			       
+      
+      if (nPointing) {
+	infostream.str("");
+	infostream << "converted in " << msFillers.begin()->second->ms()->pointing().nrow() << " pointing(s) in the measurement set." ;
+	info(infostream.str()); 
+      }
     }
-			       
-    delete[] antenna_id_;
-    delete[] time_;
-    delete[] interval_;
-    delete[] direction_;
-    delete[] target_;
-    delete[] pointing_offset_;
-    delete[] encoder_;
-    delete[] tracking_;
   }
-
-  if (nPointing) {
-    infostream.str("");
-    infostream << "converted in " << msFillers.begin()->second->ms()->pointing().nrow() << " pointing(s) in the measurement set." ;
-    info(infostream.str()); 
-  }
-
-
+    
   // Load the processor table
   //
   ProcessorTable& processorT = ds->getProcessor();
@@ -2327,20 +2398,25 @@ int main(int argc, char *argv[]) {
 	error(errstream.str());
       }
 
-      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
-	   iter != msFillers.end();
-	   ++iter) {
-	iter->second->addProcessor((CProcessorType::name(r->getProcessorType())).c_str(),
-				   (CProcessorSubType::name(r->getProcessorSubType())).c_str(),
-				   -1,    // Since there is no typeId in the ASDM.
-				   r->getModeId().getTagValue());
+      string processorType    = CProcessorType::name(r->getProcessorType());
+      string processorSubType = CProcessorSubType::name(r->getProcessorSubType());
+      if (!false) {
+	for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	     iter != msFillers.end();
+	     ++iter) {
+	  iter->second->addProcessor(processorType,
+				     processorSubType,
+				     -1,    // Since there is no typeId in the ASDM.
+				     r->getModeId().getTagValue());
+	}
+
+	if (nProcessor) {
+	  infostream.str("");
+	  infostream << "converted in " << msFillers.begin()->second->ms()->processor().nrow() << " processor(s) in the measurement set." ;
+	  info(infostream.str());
+	} 
       }
     }
-    if (nProcessor) {
-      infostream.str("");
-      infostream << "converted in " << msFillers.begin()->second->ms()->processor().nrow() << " processor(s) in the measurement set." ;
-      info(infostream.str());
-    } 
   }
   
   // Load the source table
@@ -2348,73 +2424,249 @@ int main(int argc, char *argv[]) {
   SourceTable& sourceT = ds->getSource();
   try {
     SourceRow* r = 0;
-    int nSource = sourceT.size();
     infostream.str("");
-    infostream << "The dataset has " << nSource << " source(s)...";
+    infostream << "The dataset has " << sourceT.size() << " sources(s)...";
+    vector<SourceRow *> v = rowsInAScanbyTimeInterval(sourceT.get(), selectedScanRow_v);
+    if(v.size()==0){
+      infostream << endl << "***  possible error in input data: none of the sources are valid in the selected scans"
+      << endl << "***  will try to continue by accepting all sources.";
+      v = sourceT.get();
+    }
+    else{
+      infostream << v.size() << " of them in the selected scans ... ";
+    } 
     info(infostream.str());
+    int nSource = v.size();
 
-    vector<SourceRow *> v = sourceT.get();
     for (int i = 0; i < nSource; i++) {
       r = v.at(i);
+      //
+      // Check some assertions. 
+      // For each row of the Source table, if any of the optional attributes which is an array and depend on numLines for the size of one
+      // of its dimensions then the (optional) attribute numLines must be present and the dimensions depending on on numLines must be 
+      // consistent with the value of numLines.
+      //
+      int numLines = r->isNumLinesExists() ? r->getNumLines() : 0;
+      
+      if (r->isTransitionExists()) {
+	if (!r->isNumLinesExists()) {
+	  errstream.str("");
+	  errstream << "Source row#" << i << ". The attribute 'transition' exists but the attribute 'numLines' which serves to define its shape is missing. Can't go further.";
+	  error(errstream.str());
+	}
+
+	int transitionSize = r->getTransition().size();
+	if (numLines != transitionSize) {
+	  errstream.str("");
+	  errstream << "The value of 'numLines' (" << numLines << ") is not compatible with the found size of 'transition' (" << transitionSize << "). Can't go further.";
+	  error(errstream.str());
+	}
+      }
+
+      if (r->isRestFrequencyExists()) {
+	if (!r->isNumLinesExists()) {
+	  errstream.str("");
+	  errstream << "Source row#" << i << ". The attribute 'restFrequency' exists but the attribute 'numLines' which serves to define its shape is missing. Cant' go further.";
+	  error(errstream.str());
+	}
+	
+	int restFrequencySize = r->getRestFrequency().size();
+	if (numLines != restFrequencySize) {
+	  errstream.str("");
+	  errstream << "The value of 'numLines' (" << numLines << ") is not compatible with the found size of 'restFrequency' (" << restFrequencySize << "). Can't go further.";
+	  error(errstream.str());
+	}
+      }
+
+      if (r->isSysVelExists()) {
+	if (!r->isNumLinesExists()) {
+	  errstream.str("");
+	  errstream << "Source row#" << i << ". The attribute 'sysVel' exists but the attribute 'numLines' which serves to define its shape is missing. Cant' go further.";
+	  error(errstream.str());
+	}
+	
+	int sysVelSize = r->getSysVel().size();
+	if (numLines != sysVelSize) {
+	  errstream.str("");
+	  errstream << "The value of 'numLines' (" << numLines << ") is not compatible with the found size of 'sysVel' (" << sysVelSize << "). Can't go further.";
+	  error(errstream.str());
+	}
+      }          
+
+      int sourceId = r->getSourceId();
       // For now we just adapt the types of the time related informations and compute a mid-time.
       //
       double interval = ((double) r->getTimeInterval().getDuration().get()) / ArrayTime::unitsInASecond ;
       double time =  r->getTimeInterval().getStartInMJD()*86400 + interval / 2.0 ;
 
-      double* position = 0;
-      DConverter positionConverter;
+      int spectralWindowId = swIdx2Idx[r->getSpectralWindowId().getTagValue()];
+
+      string sourceName = r->getSourceName();
+
+      int calibrationGroup = r->isCalibrationGroupExists() ? r->getCalibrationGroup() : 0;
+      
+      string code = r->getCode();
+
+      vector<double> direction = DConverter::toVectorD(r->getDirection());
+ 
+      vector<double> position ;
       if (r->isPositionExists()){
-	vector<Length> vp = r->getPosition();
-	position = positionConverter.to1DArray(vp.at(0), vp.at(1), vp.at(2));
+	position = DConverter::toVectorD<Length>(r->getPosition());
       } 
 				
-      double* restFrequency = 0;
-      DConverter restFrequencyConverter;
-      if (r->isRestFrequencyExists()) {
-	restFrequency = restFrequencyConverter.to1DArray(r->getRestFrequency());
-      }
-
-      double* sysVel = 0;
-      DConverter sysVelConverter;
-      if (r->isSysVelExists()) {
-	sysVel = sysVelConverter.to1DArray(r->getSysVel());
-      }
-
-      
-      char** transition = 0;
-      SConverter transitionConverter;
+      vector<double> properMotion = DConverter::toVectorD(r->getProperMotion());
+  
+      vector<string> transition;
       if (r->isTransitionExists()) {
-	transition = transitionConverter.to1DCStringArray(r->getTransition());
+	transition = r->getTransition();
       }
-      
-      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
-	   iter != msFillers.end();
-	   ++iter) {
-	iter->second->addSource(r->getSourceId(),
-				time,
-				interval,
-				swIdx2Idx[r->getSpectralWindowId().getTagValue()],
-				r->isNumLinesExists() ? r->getNumLines() : 0,
-				r->getSourceName().c_str(),
-				r->isCalibrationGroupExists() ? r->getCalibrationGroup() : 0,
-				r->getCode().c_str(),
-				DConverter().to1DArray(r->getDirection()),
-				position,
-				DConverter().to1DArray(r->getProperMotion()),
-				(const char **)transition,
-				restFrequency,
-				sysVel);
+
+      vector<double> restFrequency;
+      if (r->isRestFrequencyExists()) {
+	restFrequency = DConverter::toVectorD<Frequency>(r->getRestFrequency());
+      }
+
+      vector<double> sysVel;
+      if (r->isSysVelExists()) {
+	sysVel = DConverter::toVectorD<Speed>(r->getSysVel());
+      }
+   
+      if (!false) {
+	for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	     iter != msFillers.end();
+	     ++iter) {
+	  iter->second->addSource(sourceId,
+				  time,
+				  interval,
+				  spectralWindowId,
+				  numLines,
+				  sourceName,
+				  calibrationGroup,
+				  code,
+				  direction,
+				  position,
+				  properMotion,
+				  transition,
+				  restFrequency,
+				  sysVel);
+	}
+
+	if (nSource) {
+	  infostream.str("");
+	  infostream << "converted in " << msFillers.begin()->second->ms()->source().nrow() <<" source(s) in the measurement set(s)." ;
+	  info(infostream.str());
+	}
       }
     }
-    if (nSource) {
-      infostream.str("");
-      infostream << "converted in " << msFillers.begin()->second->ms()->source().nrow() <<" source(s) in the measurement set." ;
-      info(infostream.str());
-    }
-  }  
+  }
   catch (IllegalAccessException& e) {
     errstream.str("");
     error(errstream.str());
+  }
+
+  //
+  // Load the SysCal table
+  //
+  SysCalTable& sysCalT = ds->getSysCal();
+  {
+    SysCalRow* r = 0;
+    infostream.str("");
+    infostream << "The dataset has " << sysCalT.size() << " sysCal(s)...";
+    vector<SysCalRow *> v = rowsInAScanbyTimeInterval(sysCalT.get(), selectedScanRow_v);
+    infostream << v.size() << " of them in the selected scans ... ";
+    info(infostream.str());
+    int nSysCal = v.size();
+
+    for (int i = 0; i < nSysCal; i++) {
+      r = v.at(i);
+      double interval = ((double) r->getTimeInterval().getDuration().get()) / ArrayTime::unitsInASecond ;
+      double time =  ((double) r->getTimeInterval().getStart().get()) / ArrayTime::unitsInASecond + interval / 2.0 ;
+
+      pair<bool, bool> tcal_flag_pair;
+      tcal_flag_pair.first   = r->isTcalFlagExists();
+      tcal_flag_pair.second  = r->isTcalFlagExists() ? r->getTcalFlag() : false;
+
+      pair<bool, vector<float> > tcal_spectrum_pair;
+      tcal_spectrum_pair.first  =  r->isTcalSpectrumExists() ;
+      if (tcal_spectrum_pair.first)
+	tcal_spectrum_pair.second = FConverter::toVectorF<Temperature>(r->getTcalSpectrum(), true);
+
+      pair<bool, bool> trx_flag_pair;
+      trx_flag_pair.first   = r->isTrxFlagExists();
+      trx_flag_pair.second  = r->isTrxFlagExists() ? r->getTrxFlag() : false;
+
+      pair<bool, vector<float> > trx_spectrum_pair;
+      trx_spectrum_pair.first  =  r->isTrxSpectrumExists() ;
+      if (trx_spectrum_pair.first)
+	trx_spectrum_pair.second = FConverter::toVectorF<Temperature>(r->getTrxSpectrum(), true);
+
+      pair<bool, bool> tsky_flag_pair;
+      tsky_flag_pair.first   = r->isTskyFlagExists();
+      tsky_flag_pair.second  = r->isTskyFlagExists() ? r->getTskyFlag() : false;
+
+      pair<bool, vector<float> > tsky_spectrum_pair;
+      tsky_spectrum_pair.first  =  r->isTskySpectrumExists() ;
+      if (tsky_spectrum_pair.first)
+	tsky_spectrum_pair.second = FConverter::toVectorF<Temperature>(r->getTskySpectrum(), true);
+
+      pair<bool, bool> tsys_flag_pair;
+      tsys_flag_pair.first   = r->isTsysFlagExists();
+      tsys_flag_pair.second  = r->isTsysFlagExists() ? r->getTsysFlag() : false;
+
+      pair<bool, vector<float> > tsys_spectrum_pair;
+      tsys_spectrum_pair.first  =  r->isTsysSpectrumExists() ;
+      if (tsys_spectrum_pair.first)
+	tsys_spectrum_pair.second = FConverter::toVectorF<Temperature>(r->getTsysSpectrum(), true);
+
+      pair<bool, bool> tant_flag_pair;
+      tant_flag_pair.first   = r->isTantFlagExists();
+      tant_flag_pair.second  = r->isTantFlagExists() ? r->getTantFlag() : false;
+
+      pair<bool, vector<float> > tant_spectrum_pair;
+      tant_spectrum_pair.first  =  r->isTantSpectrumExists() ;
+      if (tant_spectrum_pair.first)
+	tant_spectrum_pair.second = FConverter::toVectorF(r->getTantSpectrum(), true);
+
+      pair<bool, bool> tant_tsys_flag_pair;
+      tant_tsys_flag_pair.first   = r->isTantTsysFlagExists();
+      tant_tsys_flag_pair.second  = r->isTantTsysFlagExists() ? r->getTantTsysFlag() : false;
+
+      pair<bool, vector<float> > tant_tsys_spectrum_pair;
+      tant_tsys_spectrum_pair.first  =  r->isTantTsysSpectrumExists() ;
+      if (tant_tsys_spectrum_pair.first)
+	tant_tsys_spectrum_pair.second = FConverter::toVectorF(r->getTantTsysSpectrum(), true);
+
+      if (!false) {
+	for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	     iter != msFillers.end();
+	     ++iter) {
+	  iter->second->addSysCal((int) r->getAntennaId().getTagValue(),
+				  (int) r->getFeedId(),
+				  (int) r->getSpectralWindowId().getTagValue(),
+				  time,
+				  interval,
+				  r->getNumReceptor(),
+				  r->getNumChan(),
+				  tcal_spectrum_pair,
+				  tcal_flag_pair,
+				  trx_spectrum_pair,
+				  trx_flag_pair,
+				  tsky_spectrum_pair,
+				  tsky_flag_pair,
+				  tsys_spectrum_pair,
+				  tsys_flag_pair,
+				  tant_spectrum_pair,
+				  tant_flag_pair,
+				  tant_tsys_spectrum_pair,
+				  tant_tsys_flag_pair);				
+	}
+      }
+      if (nSysCal) {
+	infostream.str("");
+	infostream << "converted in " << msFillers.begin()->second->ms()->sysCal().nrow() <<" sysCal(s) in the measurement set(s)." ;
+	info(infostream.str());
+      }
+    }
   }
 
 #if 1
@@ -2424,47 +2676,63 @@ int main(int argc, char *argv[]) {
 
   {
     WeatherRow* r = 0;
-    
-    vector<WeatherRow*> v = weatherT.get();
-
-    int nWeather = weatherT.size();
     infostream.str("");
-    infostream << "The dataset has " << nWeather << " weather(s)...";
+    infostream << "The dataset has " << weatherT.size() << " weather(s)...";
+    vector<WeatherRow *> v = rowsInAScanbyTimeInterval(weatherT.get(), selectedScanRow_v);
+    infostream << v.size() << " of them in the selected scans ... ";
     info(infostream.str());
+    int nWeather = v.size();
 
     for (int i = 0; i < nWeather; i++) {
       r = v.at(i);      
       double interval = ((double) r->getTimeInterval().getDuration().get()) / ArrayTime::unitsInASecond ;
       double time =  ((double) r->getTimeInterval().getStart().get()) / ArrayTime::unitsInASecond + interval / 2.0 ;
-        
-      DConverter position2DArray;
-      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
-	   iter != msFillers.end();
-	   ++iter) {
-	iter->second->addWeather(-1,
-				 time,
-				 interval,
-				 r->getPressure().get() / 100.0,  // We consider that ASDM stores Pascals while MS expects hectoPascals
-				 r->getPressureFlag(),
-				 r->getRelHumidity().get(),
-				 r->getRelHumidityFlag(),
-				 r->getTemperature().get(),
-				 r->getTemperatureFlag(),
-				 r->getWindDirection().get(),
-				 r->getWindDirectionFlag(),
-				 r->getWindSpeed().get(),
-				 r->getWindSpeedFlag(),
-				 r->isDewPointExists(),
-				 r->isDewPointExists()?r->getDewPoint().get():-1.0,
-				 r->isDewPointFlagExists()?r->getDewPointFlag():true,
-				 r->getStationId().getTagValue(),
-				 position2DArray.to1DArray(r->getStationUsingStationId()->getPosition()));
+
+      float pressure                   = r->getPressure().get() / 100.0;// We consider that ASDM stores Pascals & MS expects hectoPascals
+      bool  pressureFlag               = r->getPressureFlag();
+      float humidity                   = r->getRelHumidity().get();
+      bool  humidityFlag               = r->getRelHumidityFlag();
+      float temperature                = r->getTemperature().get();
+      bool  temperatureFlag            = r->getTemperatureFlag();
+      float windDirection              = r->getWindDirection().get();
+      bool  windDirectionFlag          = r->getWindDirectionFlag();
+      float windSpeed                  = r->getWindSpeed().get();
+      bool  windSpeedFlag              = r->getWindSpeedFlag();
+      bool  hasDewPoint                = r->isDewPointExists();
+      float dewPoint                   = r->isDewPointExists()?r->getDewPoint().get():-1.0;
+      bool  dewPointFlag               = r->isDewPointFlagExists()?r->getDewPointFlag():true;
+      int   wxStationId                = r->getStationId().getTagValue();
+      vector<double> wxStationPosition = DConverter::toVectorD(r->getStationUsingStationId()->getPosition());
+      
+      if (!false) {
+	for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	     iter != msFillers.end();
+	     ++iter) {
+	  iter->second->addWeather(-1,
+				   time,
+				   interval,
+				   pressure,
+				   pressureFlag,
+				   humidity,
+				   humidityFlag,
+				   temperature,
+				   temperatureFlag,
+				   windDirection,
+				   windDirectionFlag,
+				   windSpeed,
+				   windSpeedFlag,
+				   hasDewPoint,
+				   dewPoint,
+				   dewPointFlag,
+				   wxStationId,
+				   wxStationPosition);
+	}
       }
-    }
-    if (nWeather) {
-      infostream.str("");
-      infostream << "converted in " << msFillers.begin()->second->ms()->weather().nrow() <<" weather(s) in the measurement set." ;
-      info(infostream.str());
+      if (nWeather) {
+	infostream.str("");
+	infostream << "converted in " << msFillers.begin()->second->ms()->weather().nrow() <<" weather(s) in the measurement set." ;
+	info(infostream.str());
+      }
     }
   }
 #endif
@@ -2482,15 +2750,29 @@ int main(int argc, char *argv[]) {
 
 #if 1 
   {
-
     MainTable& mainT = ds->getMain();
     StateTable& stateT = ds->getState();
 
-    //    SDMBinaryData*                   sdmbdPtr=0;
     MainRow* r = 0;
-    int nMain = mainT.size();
-    vector<MainRow*> v = mainT.get();
-
+    vector<MainRow*> v ;
+    //
+    //
+    // Consider only the Main rows whose execBlockId and scanNumber attributes correspond to the selection.
+    //
+    vector<MainRow *> temp = mainT.get();
+    for ( vector<MainRow *>::iterator iter_v = temp.begin(); iter_v != temp.end(); iter_v++) {
+      map<int, set<int> >::iterator iter_m = selected_eb_scan_m.find((*iter_v)->getExecBlockId().getTagValue());
+      if ( iter_m != selected_eb_scan_m.end() && iter_m->second.find((*iter_v)->getScanNumber()) != iter_m->second.end() )	  
+	v.push_back(*iter_v);
+    }
+      
+    infostream.str("");
+    infostream << "The dataset has " << mainT.size() << " main(s)...";
+    infostream << v.size() << " of them in the selected exec blocks / scans." << endl;
+    info(infostream.str());
+    int nMain = v.size();
+    //
+    // Then select the elements of the previous selection which are in one of the selected scan(s).
     double cpu_time_asdm  = 0.0;
     double real_time_asdm = 0.0;
 
@@ -2540,44 +2822,46 @@ int main(int argc, char *argv[]) {
 	    string obs_mode;
 	    if (scanIntent.size() > 0) {
 	      obs_mode = CScanIntent::name(scanIntent.at(0))+"."+CSubscanIntent::name(subscanIntent);
-
+	      
 	      for (unsigned int iScanIntent = 1; iScanIntent < scanIntent.size(); iScanIntent++) {
 		obs_mode += ",";
 		obs_mode +=  CScanIntent::name(scanIntent.at(iScanIntent))+"."+CSubscanIntent::name(subscanIntent);
 	      }
 	    }
-
+	    
 	    bool pushed = false;
-	    for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
-		 iter != msFillers.end();
-		 ++iter) {
-	      int retId = iter->second->addUniqueState(msState.sig,
-						       msState.ref,
-						       msState.cal,
-						       msState.load,
-						       msState.subscanNum,
-						       obs_mode.c_str(), //msState.obsMode.c_str(),
-						       false);
-	      if (!pushed) {
-		msStateId.push_back(retId);
-		pushed = true;
+	    if (!false) {
+	      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+		   iter != msFillers.end();
+		   ++iter) {
+		int retId = iter->second->addUniqueState(msState.sig,
+							 msState.ref,
+							 msState.cal,
+							 msState.load,
+							 msState.subscanNum,
+							 obs_mode, //msState.obsMode.c_str(),
+							 false);
+		if (!pushed) {
+		  msStateId.push_back(retId);
+		  pushed = true;
+		}
 	      }
 	    }
-	  }
-	  mode = 1; myTimer(&cpu_time_aips, &real_time_aips, &mode);
-	  cpu_time_aips_overall  += cpu_time_aips;
-	  real_time_aips_overall += real_time_aips;
-	  
-	  mode = 0; myTimer(&cpu_time_aips, &real_time_aips, &mode);
-	  
-	  // Then populate the Main table.
-	  ComplexDataFilter filter; // To process the case numCorr == 3
-	  
-	  if (vmsDataPtr->v_antennaId1.size() == 0) {
-	    infostream.str("");
-	    infostream << "No MS data produced for ASDM table row #" << i+1 << endl;
-	    info(infostream.str());
-	    continue;
+	    mode = 1; myTimer(&cpu_time_aips, &real_time_aips, &mode);
+	    cpu_time_aips_overall  += cpu_time_aips;
+	    real_time_aips_overall += real_time_aips;
+	    
+	    mode = 0; myTimer(&cpu_time_aips, &real_time_aips, &mode);
+	    
+	    // Then populate the Main table.
+	    ComplexDataFilter filter; // To process the case numCorr == 3
+	    
+	    if (vmsDataPtr->v_antennaId1.size() == 0) {
+	      infostream.str("");
+	      infostream << "No MS data produced for ASDM table row #" << i+1 << endl;
+	      info(infostream.str());
+	      continue;
+	    }
 	  }
 
 
@@ -2589,7 +2873,7 @@ int main(int argc, char *argv[]) {
 	  
 	  vector<int> filteredDD;
 	  for (unsigned int idd = 0; idd < vmsDataPtr->v_dataDescId.size(); idd++)
-	    filteredDD.push_back(dataDescriptionMap.at(vmsDataPtr->v_dataDescId.at(idd)));
+	    filteredDD.push_back(dataDescriptionIdx2Idx.at(vmsDataPtr->v_dataDescId.at(idd)));
 	  vector<float *> uncorrectedData;
 	  vector<float *> correctedData;
 
@@ -2668,26 +2952,28 @@ int main(int argc, char *argv[]) {
 		       << " rows in the wvr uncorrected MS Main table." << endl;
 	    info(infostream.str());
 
-	    msFillers[AP_UNCORRECTED]->addData(complexData,
-					       (vector<double>&) vmsDataPtr->v_time, // this is already time midpoint
-					       (vector<int>&) vmsDataPtr->v_antennaId1,
-					       (vector<int>&) vmsDataPtr->v_antennaId2,
-					       (vector<int>&) vmsDataPtr->v_feedId1,
-					       (vector<int>&) vmsDataPtr->v_feedId2,
-					       filteredDD,
-					       vmsDataPtr->processorId,
-					       (vector<int>&)vmsDataPtr->v_fieldId,
-					       (vector<double>&) vmsDataPtr->v_interval,
-					       (vector<double>&) vmsDataPtr->v_exposure,
-					       (vector<double>&) vmsDataPtr->v_timeCentroid,
-					       (int) r->getScanNumber(), 
-					       0,                                               // Array Id
-					       (int) r->getExecBlockId().getTagValue(), // Observation Id
-					       (vector<int>&)msStateId,
-					       uvw,
-					       filteredShape, // vmsDataPtr->vv_dataShape after filtering the case numCorr == 3
-					       uncorrectedData,
-					       (vector<unsigned int>&)vmsDataPtr->v_flag);
+	    if (! mute) {
+	      msFillers[AP_UNCORRECTED]->addData(complexData,
+						 (vector<double>&) vmsDataPtr->v_time, // this is already time midpoint
+						 (vector<int>&) vmsDataPtr->v_antennaId1,
+						 (vector<int>&) vmsDataPtr->v_antennaId2,
+						 (vector<int>&) vmsDataPtr->v_feedId1,
+						 (vector<int>&) vmsDataPtr->v_feedId2,
+						 filteredDD,
+						 vmsDataPtr->processorId,
+						 (vector<int>&)vmsDataPtr->v_fieldId,
+						 (vector<double>&) vmsDataPtr->v_interval,
+						 (vector<double>&) vmsDataPtr->v_exposure,
+						 (vector<double>&) vmsDataPtr->v_timeCentroid,
+						 (int) r->getScanNumber(), 
+						 0,                                               // Array Id
+						 (int) r->getExecBlockId().getTagValue(), // Observation Id
+						 (vector<int>&)msStateId,
+						 uvw,
+						 filteredShape, // vmsDataPtr->vv_dataShape after filtering the case numCorr == 3
+						 uncorrectedData,
+						 (vector<unsigned int>&)vmsDataPtr->v_flag);
+	    }
 	    mode = 1; myTimer(&cpu_time_aips, &real_time_aips, &mode);
 	    cpu_time_aips_overall  += cpu_time_aips;
 	    real_time_aips_overall += real_time_aips;
@@ -2700,26 +2986,28 @@ int main(int argc, char *argv[]) {
 		       << " rows in the wvr corrected MS Main table." << endl;
 	    info(infostream.str());
 
-	    msFillers[AP_CORRECTED]->addData(complexData,
-					     correctedTime, // this is already time midpoint
-					     correctedAntennaId1, 
-					     correctedAntennaId2,
-					     correctedFeedId1,
-					     correctedFeedId2,
-					     filteredDD,
-					     vmsDataPtr->processorId,
-					     correctedFieldId,
-					     correctedInterval,
-					     correctedExposure,
-					     correctedTimeCentroid,
-					     (int) r->getScanNumber(), 
-					     0,                                               // Array Id
-					     (int) r->getExecBlockId().getTagValue(), // Observation Id
-					     correctedMsStateId,
-					     correctedUvw,
-					     filteredShape, // vmsDataPtr->vv_dataShape after filtering the case numCorr == 3
-					     correctedData,
-					     correctedFlag);
+	    if (! mute) {
+	      msFillers[AP_CORRECTED]->addData(complexData,
+					       correctedTime, // this is already time midpoint
+					       correctedAntennaId1, 
+					       correctedAntennaId2,
+					       correctedFeedId1,
+					       correctedFeedId2,
+					       filteredDD,
+					       vmsDataPtr->processorId,
+					       correctedFieldId,
+					       correctedInterval,
+					       correctedExposure,
+					       correctedTimeCentroid,
+					       (int) r->getScanNumber(), 
+					       0,                                               // Array Id
+					       (int) r->getExecBlockId().getTagValue(), // Observation Id
+					       correctedMsStateId,
+					       correctedUvw,
+					       filteredShape, // vmsDataPtr->vv_dataShape after filtering the case numCorr == 3
+					       correctedData,
+					       correctedFlag);
+	    }
 	    mode = 1; myTimer(&cpu_time_aips, &real_time_aips, &mode);
 	    cpu_time_aips_overall  += cpu_time_aips;
 	    real_time_aips_overall += real_time_aips;

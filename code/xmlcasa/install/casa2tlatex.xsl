@@ -81,6 +81,9 @@ Requires:
 </xsl:template>
 
 <xsl:template match="aps:task">
+<xsl:choose>
+<xsl:when test="@visibility='hidden'"/>
+<xsl:otherwise>
 \newpage
 \NextFile{<xsl:value-of select="@name"/>-task.html}
 \subsection{<xsl:value-of select="@name"/>}
@@ -104,6 +107,8 @@ Requires:
 \end{tabular}
 <xsl:apply-templates select="aps:returns"/>
 <xsl:apply-templates select="aps:example"/>
+</xsl:otherwise>
+</xsl:choose>
 </xsl:template>
 
 <xsl:template name="methodsummary">

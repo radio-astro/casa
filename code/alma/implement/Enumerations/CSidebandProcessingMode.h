@@ -55,7 +55,7 @@ namespace SidebandProcessingModeMod
   //! SidebandProcessingMode.
   //!  [ASDM.SpectralWindow] Real-time processing to derive sideband data
   
-  const char *const revision = "1.8";
+  const char *const revision = "1.9";
   const int version = 1;
   
   enum SidebandProcessingMode

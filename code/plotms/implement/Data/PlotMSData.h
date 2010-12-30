@@ -38,7 +38,7 @@ using namespace std;
 namespace casa {
 
 //# Forward declarations.
-class PlotMS;
+class PlotMSApp;
 
 
 // Layer between plot cache and the rest of PlotMS and the GenericPlotter
@@ -46,7 +46,7 @@ class PlotMS;
 class PlotMSData : public PlotMaskedPointData, public PlotBinnedData {
 public:
     // Constructor which takes the parent PlotMS.
-    PlotMSData(PlotMS* plotms);
+    PlotMSData(PlotMSApp* plotms);
     
     // Copy constructor.  See operator=().
     PlotMSData(const PlotMSData& copy);
@@ -159,7 +159,7 @@ public:
     
 private:
     // Parent.
-    PlotMS* itsPlotms_;
+    PlotMSApp* itsPlotms_;
     
     // Cache.
     PlotMSCachePtr itsCache_;

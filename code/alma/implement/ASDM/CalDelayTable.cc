@@ -526,7 +526,7 @@ CalDelayRow* CalDelayTable::lookup(string antennaName, AtmPhaseCorrectionMod::At
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalDelayTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cldly=\"http://Alma/XASDM/CalDelayTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalDelayTable http://almaobservatory.org/XML/XASDM/2/CalDelayTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n");
+		buf.append("<CalDelayTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cldly=\"http://Alma/XASDM/CalDelayTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalDelayTable http://almaobservatory.org/XML/XASDM/2/CalDelayTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -604,7 +604,7 @@ CalDelayRow* CalDelayTable::lookup(string antennaName, AtmPhaseCorrectionMod::At
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalDelayTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cldly=\"http://Alma/XASDM/CalDelayTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalDelayTable http://almaobservatory.org/XML/XASDM/2/CalDelayTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.54\">\n";
+		oss << "<CalDelayTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cldly=\"http://Alma/XASDM/CalDelayTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalDelayTable http://almaobservatory.org/XML/XASDM/2/CalDelayTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalDelayTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";

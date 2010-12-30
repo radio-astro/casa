@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TaQLNode.cc 20944 2010-08-30 07:48:24Z gervandiepen $
+//# $Id: TaQLNode.cc 20967 2010-09-27 11:06:03Z gervandiepen $
 
 //# Includes
 #include <tables/Tables/TaQLNode.h>
@@ -43,7 +43,7 @@ TaQLStyle TaQLNode::theirStyle;
 
 TaQLNode TaQLNode::parse (const String& command)
 {
-  // Reset to default TaQL style.
+  // Reset to default TaQL style and no timings.
   theirStyle.reset();
   // Add a newline if not present.
   String str(command);

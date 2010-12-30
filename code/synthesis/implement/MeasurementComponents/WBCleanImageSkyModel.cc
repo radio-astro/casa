@@ -67,8 +67,6 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 #define TMR(a) "[User: " << a.user() << "] [System: " << a.system() << "] [Real: " << a.real() << "]"
-
-#define MEMFACTOR (4.0)
 	
 #define MIN(a,b) ((a)<=(b) ? (a) : (b))
 #define MAX(a,b) ((a)>=(b) ? (a) : (b))
@@ -168,6 +166,9 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	  AlwaysAssert((nmodels_p % ntaylor_p == 0), AipsError);
 	}
 
+	/* Check supplied bandwidth-ratio and print warnings if needed */
+        checkParameters();
+
 	/* Calc the number of fields */
 	nfields_p = nmodels_p/ntaylor_p;
 
@@ -193,14 +194,6 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	/* Calculate the initial residual image for all models. */
 	os << "Calculating initial residual images" << LogIO::POST;
 	solveResiduals(se);
-
-	/* Check if this is an interactive-clean run */
-	if(adbg) cout << "NumberIterations : " << numberIterations() << endl;
-	if(numberIterations() < 1)
-	{
-		return True;
-	}
-
 
 	/* Initialize the MultiTermLatticeCleaners */
 	if(adbg) cout << "Shape of lc_p : " << lc_p.nelements() << endl;
@@ -239,8 +232,18 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	  nmodels_p = original_nmodels + nfields_p * (ntaylor_p - 1);
 	  resizeWorkArrays(nmodels_p);
 
-	  /* Make the 2N-1 PSFs */
-          makeSpectralPSFs(se);
+	  try
+	  {
+	    /* Make the 2N-1 PSFs */
+            makeSpectralPSFs(se);
+	  }
+	  catch(AipsError &x)
+	  {
+	    /* Resize the work arrays to normal size - the destructors use 'nmodels_p' on other lists */
+	    nmodels_p = original_nmodels;
+	    resizeWorkArrays(nmodels_p);
+	    os << "Could not make PSFs. Please check image co-ordinate system : " << x.getMesg() << LogIO::EXCEPTION;
+	  }
 
 	  /* Send all 2N-1 PSFs into the MultiTermLatticeCleaner */
 	  for(Int thismodel=0;thismodel<nfields_p;thismodel++)
@@ -256,6 +259,14 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	  resizeWorkArrays(nmodels_p);
 	   
 	  donePSF_p=True;
+	}
+	
+	/* Return if niter=0 */
+	/* Check if this is an interactive-clean run, or if niter=0 */
+	if(adbg) cout << "NumberIterations : " << numberIterations() << endl;
+	if(numberIterations() < 1)
+	{
+		return True;
 	}
 
 	/* Set up the Mask image */
@@ -301,7 +312,7 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	   /* Exit without further ado if MTLC cannot invert matrices */
 	   if(stopflag == -2)
 	   {
-	      os << "Cannot invert Multi-Term Hessian matrix. Please check the reference-frequency and ensure that the number of frequency-channels in the selected data >= nterms" << LogIO::WARN;
+	      os << "Cannot invert Multi-Term Hessian matrix. Please check the reference-frequency and ensure that the number of frequency-channels in the selected data >= nterms" << LogIO::WARN << LogIO::POST;
 	      break;
 	   }
 	   
@@ -510,7 +521,7 @@ Int WBCleanImageSkyModel::writeResultsToDisk()
     }
 
     /* Print out debugging info for center pixel */
-    /* 
+    /*
     IPosition cgip(4,512,512,0,0);
     IPosition cgip2(4,490,542,0,0);
     for(Int i=0;i<ntaylor_p;i++)
@@ -525,7 +536,6 @@ Int WBCleanImageSkyModel::writeResultsToDisk()
 	    cout << "Coeff residual : " << i << " : " << (*coeffresiduals[i]).getAt(cgip2) << endl;
     }
     */
-    
     
 
     /* Clean up temp arrays */
@@ -636,7 +646,7 @@ Int WBCleanImageSkyModel::makeSpectralPSFs(SkyEquation& se)
      index = getModelIndex(thismodel,0);
      beam(thismodel)=0.0;
      if(!StokesImageUtil::FitGaussianPSF(PSF(index),beam(thismodel))) 
-     os << "Beam fit failed: using default" << LogIO::POST;
+        os << "Beam fit failed: using default" << LogIO::POST;
   }
 #endif
   os << "Made spectral PSFs." << LogIO::POST;
@@ -840,6 +850,51 @@ Bool WBCleanImageSkyModel::resizeWorkArrays(Int length)
    return True;
 }
 
+/************************************************************************************
+Check some input parameters and print warnings for the user  
+	 fbw = (fmax-fmin)/fref.  
+	   if(fbw < 0.1) and nterms>2 
+	       => lever-arm may be insufficient for more than alpha.
+	       => polynomial fit will work but alpha interpretation may not be ok.
+	   if(ref < fmin or ref > fmax) 
+	       => polynomial fit will work, but alpha interpretation will not be right.
+	   if(nchan==1) or fbw = 0, then ask to use only nterms=1, or choose more than one chan 
+	
+***********************************************************************************/
+Bool WBCleanImageSkyModel::checkParameters()
+{
+   /* Check ntaylor_p, nrefFrequency_p with min and max freq from the image-coords */
+   
+   for(Int i=0; i<image(0).coordinates().nCoordinates(); i++)
+   {
+       if( image(0).coordinates().type(i) == Coordinate::SPECTRAL )
+       {
+            SpectralCoordinate speccoord(image(0).coordinates().spectralCoordinate(i));
+	    Double startfreq=0.0,startpixel=-0.5;
+	    Double endfreq=0.0,endpixel=+0.5;
+	    speccoord.toWorld(startfreq,startpixel);
+	    speccoord.toWorld(endfreq,endpixel);
+	    Float fbw = (endfreq - startfreq)/refFrequency_p;
+	    //cout << "Freq range of the mfs channel : " << startfreq << " -> " << endfreq << endl;
+	    //cout << "Fractional bandwidth : " << fbw << endl;
+	     
+	    os << "Fractional Bandwidth : " << fbw*100 << " %." << endl;
+
+	    if(fbw < 0.1 && ntaylor_p == 2 )
+	        os << "Fractional Bandwidth is " << fbw*100 << " %. Please check that the flux variation across the chosen frequency range (" << startfreq << " Hz to " << endfreq << " Hz) is at least twice the single-channel noise-level. If not, please use nterms=1." << LogIO::WARN << LogIO::POST; 
+	    
+	    if(fbw < 0.1 && ntaylor_p > 2)
+	        os << "Fractional Bandwidth is " << fbw*100 << " %. Please check that (a) the flux variation across the chosen frequency range (" << startfreq << " Hz to " << endfreq << " Hz) is at least twice the single-channel noise-level, and (b) a " << ntaylor_p << "-term Taylor-polynomial fit across this frequency range is appropriate. " << LogIO::WARN << LogIO::POST; 
+
+	    if(refFrequency_p < startfreq || refFrequency_p > endfreq)
+	        os << "A Reference frequency of " << refFrequency_p << "Hz is outside the frequency range of the selected data (" << startfreq << " Hz to " << endfreq << " Hz). A power-law interpretation of the resulting Taylor-coefficients may not be accurate." << LogIO::WARN << LogIO::POST;
+
+       }
+   }
+
+   
+   return True;
+}
 
 
 } //# NAMESPACE CASA - END

@@ -285,7 +285,7 @@ public slots:
 signals:
     // This signal is emitted when a new table is opened and its tab added.
     // The String parameter holds the name of the newly opened table.
-    void tableOpened(String name);
+    void tableOpened(String name, String fullpath);
 
     // This signal is emitted when a table is closed and its tab removed.
     // The String parameter holds the name of the table that was closed.

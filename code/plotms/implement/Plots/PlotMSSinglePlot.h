@@ -41,8 +41,8 @@ public:
     
     // See PlotMSPlot::makeParameters().
     // <group>
-    static PlotMSPlotParameters makeParameters(PlotMS* plotms);
-    static void makeParameters(PlotMSPlotParameters& params, PlotMS* plotms);
+    static PlotMSPlotParameters makeParameters(PlotMSApp* plotms);
+    static void makeParameters(PlotMSPlotParameters& params, PlotMSApp* plotms);
     // </group>
     
     
@@ -71,7 +71,7 @@ public:
     
     // Constructor which takes the PlotMS parent.  Starts out with default
     // parameters.
-    PlotMSSinglePlot(PlotMS* parent);
+    PlotMSSinglePlot(PlotMSApp* parent);
     
     // Destructor.
     ~PlotMSSinglePlot();

@@ -52,41 +52,41 @@ namespace casa {
 
 // Constructors/Destructors //
 
-PlotMS::PlotMS(bool connectToDBus) : itsDBus_(NULL) {
+PlotMSApp::PlotMSApp(bool connectToDBus) : itsDBus_(NULL) {
     initialize(connectToDBus); }
 
-PlotMS::PlotMS(const PlotMSParameters& params, bool connectToDBus) :
+PlotMSApp::PlotMSApp(const PlotMSParameters& params, bool connectToDBus) :
         itsPlotter_(NULL), itsParameters_(params), itsDBus_(NULL) 
 {
     initialize(connectToDBus); 
 }
 
-PlotMS::~PlotMS() {
+PlotMSApp::~PlotMSApp() {
     if(itsDBus_ != NULL) delete itsDBus_;
 }
 
 
 // Public Methods //
 
-PlotMSPlotter* PlotMS::getPlotter() { return itsPlotter_; }
-void PlotMS::showGUI(bool show) { itsPlotter_->showGUI(show); }
-bool PlotMS::guiShown() const { return itsPlotter_->guiShown(); }
-int PlotMS::execLoop() { return itsPlotter_->execLoop(); }
-int PlotMS::showAndExec(bool show) { return itsPlotter_->showAndExec(show); }
-void PlotMS::close() { itsPlotter_->close(); }
+PlotMSPlotter* PlotMSApp::getPlotter() { return itsPlotter_; }
+void PlotMSApp::showGUI(bool show) { itsPlotter_->showGUI(show); }
+bool PlotMSApp::guiShown() const { return itsPlotter_->guiShown(); }
+int PlotMSApp::execLoop() { return itsPlotter_->execLoop(); }
+int PlotMSApp::showAndExec(bool show) { return itsPlotter_->showAndExec(show); }
+void PlotMSApp::close() { itsPlotter_->close(); }
 
-void PlotMS::showError(const String& message, const String& title,
+void PlotMSApp::showError(const String& message, const String& title,
         bool isWarning) { itsPlotter_->showError(message, title, isWarning); }
-void PlotMS::showWarning(const String& message, const String& title) {
+void PlotMSApp::showWarning(const String& message, const String& title) {
     itsPlotter_->showError(message, title, true); }
-void PlotMS::showMessage(const String& message, const String& title) {
+void PlotMSApp::showMessage(const String& message, const String& title) {
     itsPlotter_->showMessage(message, title); }
 
-PlotMSParameters& PlotMS::getParameters() { return itsParameters_; }
-void PlotMS::setParameters(const PlotMSParameters& params) {
+PlotMSParameters& PlotMSApp::getParameters() { return itsParameters_; }
+void PlotMSApp::setParameters(const PlotMSParameters& params) {
     itsParameters_ = params; }
 
-void PlotMS::parametersHaveChanged(const PlotMSWatchedParameters& params,
+void PlotMSApp::parametersHaveChanged(const PlotMSWatchedParameters& params,
             int updateFlag) {
 	(void)updateFlag;
     // We only care about PlotMS's parameters.
@@ -107,32 +107,32 @@ void PlotMS::parametersHaveChanged(const PlotMSWatchedParameters& params,
     }
 }
 
-PlotLoggerPtr PlotMS::getLogger() { return itsLogger_; }
-PlotMSPlotManager& PlotMS::getPlotManager() { return itsPlotManager_; }
+PlotLoggerPtr PlotMSApp::getLogger() { return itsLogger_; }
+PlotMSPlotManager& PlotMSApp::getPlotManager() { return itsPlotManager_; }
 
-PlotMSSinglePlot* PlotMS::addSinglePlot(const PlotMSPlotParameters* p) {
+PlotMSSinglePlot* PlotMSApp::addSinglePlot(const PlotMSPlotParameters* p) {
     return itsPlotManager_.addSinglePlot(p); }
 
-PlotMSMultiPlot* PlotMS::addMultiPlot(const PlotMSPlotParameters* p) {
+PlotMSMultiPlot* PlotMSApp::addMultiPlot(const PlotMSPlotParameters* p) {
     return itsPlotManager_.addMultiPlot(p); }
 
 
-bool PlotMS::isDrawing() const {
+bool PlotMSApp::isDrawing() const {
 	return itsPlotter_->isDrawing();
 }
 
-bool PlotMS::isClosed() const {
+bool PlotMSApp::isClosed() const {
 	return itsPlotter_ == NULL ||
                itsPlotter_->isClosed();
 }
 
-bool PlotMS::save(const PlotExportFormat& format, const bool interactive) {
+bool PlotMSApp::save(const PlotExportFormat& format, const bool interactive) {
 	return itsPlotter_->exportPlot(format, interactive, false);
 }
 
 // Private Methods //
 
-void PlotMS::initialize(bool connectToDBus) {
+void PlotMSApp::initialize(bool connectToDBus) {
 
 	its_want_avoid_popups=false;
 	

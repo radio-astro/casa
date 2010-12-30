@@ -36,6 +36,7 @@ CFITSIOINCD := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=
 
 CASAINC   := -I$(CASAROOT)/code/include -I$(COREINCD) -I$(CASAROOT)/$(CASAARCH)/include
 CASALIB   := $(CASAROOT)/$(CASAARCH)/lib
+CASACORELIB := $(filter $(CASALIB)/libcasa%, $(CORELIB))
 
 # the compiler
 ifndef CXX
@@ -45,9 +46,9 @@ endif
 # compiler flags
 CXXFLAGS += -fPIC -DHAVE_LIBPYRAP
 
-PYRAPD := $(ASAPROOT)/external/libpyrap
-PYRAPLIBD := $(PYRAPD)
-PYRAPINCD := $(PYRAPD)/pyrap-0.3.2
+PYRAPD := external/libpyrap
+PYRAPLIBD := $(ASAPROOT)/$(PYRAPD)
+PYRAPINCD := $(ASAPROOT)/$(PYRAPD)/pyrap-0.3.2
 PYRAPLIB := -L$(PYRAPLIBD) -lpyrap
 
 
@@ -81,7 +82,6 @@ LDFLAGS   += -shared
 
 
 # DO NOT MODIFY AFTER THIS
-
 INCDIRS   := -I. $(CASAINC)  -I$(CFITSIOINCD) $(BOOSTINC) $(addprefix -I, $(PYTHONINCD)) -I$(ASAPROOT)/$(ATNFD) -I$(PYRAPINCD)
 LIBS      := $(PYTHONLIB)  $(BOOSTLIB) $(CASAPPLIB)
 
@@ -181,6 +181,15 @@ HEADERS   := MathUtils.h \
 	     PKSFiller.h \
 	     AsapLogSink.h
 
+# external libraries
+ifeq ($(shell uname), Darwin)
+	ATNF := $(ASAPROOT)/$(ATNFD)/libatnf.dylib
+	PYRAP := $(ASAPROOT)/$(PYRAPD)/libpyrap.dylib
+else
+        ATNF := $(ASAPROOT)/$(ATNFD)/libatnf.so
+	PYRAP := $(ASAPROOT)/$(PYRAPD)/libpyrap.so
+endif
+
 STATICCCLIB := libasap.a
 MEMBERS := $(patsubst %,$(STATICCCLIB)(%),$(CCOBJECTS))
 
@@ -209,13 +218,13 @@ all : $(TARGET)
 
 relink : cleanso $(TARGET)
 
-objects : $(OBJECTS)
+objects : $(OBJECTS) 
 
 $(TARGET) : $(OBJECTS)
 	-@ echo
 	  $(LD) $(LDFLAGS) -o $(TARGET) $(OBJECTS) $(LIBS)
 
-$(OBJECTS) : $(HEADERS)
+$(OBJECTS) : $(HEADERS) $(CASACORELIB) $(ATNF) $(PYRAP)
 
 staticlib: $(MEMBERS)
 

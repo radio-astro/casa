@@ -45,20 +45,20 @@ class PlotMSPlotter;
 
 
 // Controller class for plotms.  Handles interactions between the UI and plots.
-class PlotMS : public PlotMSParametersWatcher {
+class PlotMSApp : public PlotMSParametersWatcher {
 public:    
     // Default constructor that uses default options.  If connectToDBus is
     // true, then the application registers itself with CASA's DBus server
     // using the PlotMSDBusApp::dbusName() with the current process ID.
-    PlotMS(bool connectToDBus = false);
+    PlotMSApp(bool connectToDBus = false);
     
     // Constructor which takes the given parameters.  If connectToDBus is true,
     // then the application registers itself with CASA's DBus server using the
     // PlotMSDBusApp::dbusName() with the current process ID.
-    PlotMS(const PlotMSParameters& params, bool connectToDBus = false);
+    PlotMSApp(const PlotMSParameters& params, bool connectToDBus = false);
     
     // Destructor
-    ~PlotMS();
+    ~PlotMSApp();
   
     
     // Plotter Methods //
@@ -159,8 +159,8 @@ private:
     
     // Disable copy constructor and operator for now.
     // <group>
-    PlotMS(const PlotMS& copy);
-    PlotMS& operator=(const PlotMS& copy);
+    PlotMSApp(const PlotMSApp& copy);
+    PlotMSApp& operator=(const PlotMSApp& copy);
     // </group>
     
 };

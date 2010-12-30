@@ -1,9 +1,8 @@
-##loolooaaa
 import casac
 import os
 import commands
 import math
-import pdb
+#import pdb
 import numpy
 import shutil
 
@@ -21,7 +20,6 @@ rg = rgtool.create()
 iatool=casac.homefinder.find_home_by_name('imageHome')
 ia = iatool.create()
 
-
 class cleanhelper:
     def __init__(self, imtool='', vis='', usescratch=False, casalog=None):
         """
@@ -30,7 +28,11 @@ class cleanhelper:
         a=cleanhelper(im, vis)
         """
         if((type(imtool) != str) and (len(vis) !=0)):
-            self.initsinglems(imtool, vis, usescratch)
+            # for multi-mses input (not fully implemented yet)
+            if(type(vis)==list):
+                self.initmultims(imtool, vis, usescratch)
+            else:
+                self.initsinglems(imtool, vis, usescratch)
         self.maskimages={}
         self.finalimages={}
         self.usescratch=usescratch
@@ -39,6 +41,8 @@ class cleanhelper:
         # to use phasecenter parameter in initChannelizaiton stage
         # this is a temporary fix need. 
         self.srcdir=''
+        # for multims handling
+        self.sortedvislist=[]
         if not casalog:  # Not good!
             loghome =  casac.homefinder.find_home_by_name('logsinkHome')
             casalog = loghome.create()
@@ -48,7 +52,11 @@ class cleanhelper:
         
     def initsinglems(self, imtool, vis, usescratch):
         self.im=imtool
-        self.vis=vis
+        # modified for self.vis to be a list for handling multims
+        #self.vis=vis
+        self.vis=[vis]
+        self.sortedvisindx=[0]
+        
         if ((type(vis)==str) & (os.path.exists(vis))):
             self.im.open(vis, usescratch=usescratch)
         else:
@@ -58,6 +66,83 @@ class cleanhelper:
         self.fieldindex=-1
         self.outputmask=''
         self.csys={}
+
+    def initmultims(self, imtool, vislist, usescratch):
+        """
+        initialization for multi-mses 
+        """
+        self.im=imtool
+        self.vis=vislist
+        if type(vislist)==list:
+            #        self.im.selectvis(vis)
+            if ((type(self.vis[0])==str) & (os.path.exists(self.vis[0]))):
+                pass
+            else:
+                raise Exception, 'Visibility data set not found - please verify the name'
+        self.phasecenter=''
+        self.spwindex=-1
+        self.fieldindex=-1
+        self.outputmask=''
+        self.csys={}
+
+    def sortvislist(self,spw,mode,width):
+        """
+        sorting user input vis if it is multiple MSes based on
+        frequencies (spw). So that in sebsequent processing such
+        as setChannelization() correctly works.
+        """
+        import operator
+        reverse=False
+        if mode=='velocity':
+          if qa.quantity(width)['value']>0:
+            reverse=True
+        elif mode=='frequency':
+          if qa.quantity(width)['value']<0:
+            reverse=True 
+        minmaxfs = []
+        # get selection
+        if len(self.vis) > 1:
+          for i in range(len(self.vis)):
+            visname = self.vis[i]
+            if type(spw)==list and len(spw) > 1:
+              inspw=spw[i]
+            else:
+              inspw=spw
+            if len(inspw)==0:
+              # empty string = select all (='*', for msselectindex)
+              inspw='*'
+            mssel=ms.msseltoindex(vis=visname,spw=inspw)
+            tb.open(visname+'/SPECTRAL_WINDOW')
+            chanfreqs=tb.getvarcol('CHAN_FREQ')
+            kys = chanfreqs.keys()
+            selspws=mssel['spw']
+            # find extreme freq in each selected spw
+            minmax0=0.
+            firstone=True
+            minmaxallspw=0.
+            for chansel in mssel['channel']:
+              if reverse:
+                minmaxf = max(chanfreqs[kys[chansel[0]]][chansel[1]:chansel[2]+1])
+              else:
+                minmaxf = min(chanfreqs[kys[chansel[0]]][chansel[1]:chansel[2]+1])
+              if firstone:
+                minmaxf0=minmaxf
+                firstone=False
+              if reverse:
+                minmaxallspw=max(minmaxf,minmaxf0) 
+              else:
+                minmaxallspw=min(minmaxf,minmaxf0) 
+            minmaxfs.append(minmaxallspw)
+          self.sortedvisindx = [x for x, y in sorted(enumerate(minmaxfs),
+                                key=operator.itemgetter(1),reverse=reverse)] 
+          self.sortedvislist = [self.vis[k] for k in self.sortedvisindx]
+        else:
+          self.sortedvisindx=[0]
+          self.sortedvislist=self.vis
+        #print "sortedvislist=",self.sortedvislist
+        #print "sortedvisindx=",self.sortedvisindx
+        return
+
 
     def defineimages(self, imsize, cell, stokes, mode, spw, nchan, start,
                      width, restfreq, field, phasecenter, facets=1, outframe='',
@@ -107,6 +192,10 @@ class cleanhelper:
                (type(start) != int)):
                 raise TypeError, "start (%s), width (%s) have to be integers with mode %s" % (str(start),str(width),mode)
 
+        # changes related multims handling added below (TT)
+        # multi-mses are sorted internally (stored in self.sortedvislist and
+        # indices in self.sortedvisindx) in frequency-wise so that first vis
+        # contains lowest/highest frequency. Note: self.vis is in original user input order.
         #####understand phasecenter
         if(type(phasecenter)==str):
             ### blank means take field[0]
@@ -114,13 +203,24 @@ class cleanhelper:
                 fieldoo=field
                 if(fieldoo==''):
                     fieldoo='0'
-                phasecenter=int(ms.msseltoindex(self.vis,field=fieldoo)['field'][0])
+                #phasecenter=int(ms.msseltoindex(self.vis,field=fieldoo)['field'][0])
+                phasecenter=int(ms.msseltoindex(self.vis[self.sortedvisindx[0]],field=fieldoo)['field'][0])
             else:
                 tmppc=phasecenter
                 try:
-                    if(len(ms.msseltoindex(self.vis, field=phasecenter)['field']) > 0):
-                        tmppc = int(ms.msseltoindex(self.vis,
+                    #if(len(ms.msseltoindex(self.vis, field=phasecenter)['field']) > 0):
+                    #    tmppc = int(ms.msseltoindex(self.vis,
+                    #                                field=phasecenter)['field'][0])
+                    # to handle multims set to the first ms that matches
+                    for i in self.sortedvisindx:
+                        try:
+                            if(len(ms.msseltoindex(self.vis[i], field=phasecenter)['field']) > 0):
+                                tmppc = int(ms.msseltoindex(self.vis[i],
                                                     field=phasecenter)['field'][0])
+                                #print "tmppc,i=", tmppc, i
+                        except Exception, instance:
+                             pass
+
                     ##succesful must be string like '0' or 'NGC*'
                 except Exception, instance:
                     ##failed must be a string 'J2000 18h00m00 10d00m00'
@@ -132,10 +232,33 @@ class cleanhelper:
         if spw in (-1, '-1', '*', '', ' '):
             spwindex = -1
         else:
-            spwindex=ms.msseltoindex(self.vis, spw=spw)['spw'].tolist()
-            if(len(spwindex) == 0):
-                spwindex = -1
-        self.spwindex = spwindex
+            # old, single ms case
+            #spwindex=ms.msseltoindex(self.vis, spw=spw)['spw'].tolist()
+            #if(len(spwindex) == 0):
+            #    spwindex = -1
+        #self.spwindex = spwindex
+
+        # modified for multims hanlding
+            # multims case
+            if len(self.vis)>1:
+                self.spwindex=[]
+                # will set spwindex in datsel
+                spwindex=-1
+                for i in self.sortedvisindx:
+                   if type(spw)==list:
+                      inspw=spw[i]
+                   else:
+                      inspw=spw
+                   if len(inspw)==0: 
+                      inspw='*'
+                   self.spwindex.append(ms.msseltoindex(self.vis[i],spw=inspw)['spw'].tolist())
+            # single ms
+            else:
+                spwindex=ms.msseltoindex(self.vis[0], spw=spw)['spw'].tolist()
+                if(len(spwindex) == 0):
+                    spwindex = -1
+                self.spwindex = spwindex
+
         ##end spwindex
         self.im.defineimage(nx=imsize[0],      ny=imsize[1],
                             cellx=cellx,       celly=celly,
@@ -205,24 +328,30 @@ class cleanhelper:
     		##make .flux image 
                 # for now just make for a main field 
                 ###need to get the pointing so select the fields
-                self.im.selectvis(field=field)
+                # single ms
+                if len(self.vis)==1:
+                  self.im.selectvis(field=field)
+                # multi-ms
+                else: 
+                  # multi-mses case: use first vis that has the specified field
+                  # (use unsorted vis list)
+                  nvis=len(self.vis)
+                  for i in range(nvis):
+                    #if type(field)!=list:
+                    #  field=[field]
+                    try:
+                      selparam=self._selectlistinputs(nvis,i,self.paramlist)
+                      self.im.selectvis(vis=self.vis[i],field=selparam['field'],spw=selparam['spw'])
+                    except:
+                      pass
+
                 # set to default minpb(=0.1), should use input minpb?
                 self.im.setmfcontrol()
                 self.im.setvp(dovp=True)
                 self.im.makeimage(type='pb', image=self.imagelist[n]+'.flux',
                                   compleximage="", verbose=False)
 		self.im.setvp(dovp=False, verbose=False)
-            # Moved the following to a seperate function
-            #if(checkpsf):
-                # make sure psf can be created
-                #self.im.makeimage(type='psf', image=self.imagelist[n]+'.test.psf')
-                #ia.open(self.imagelist[n]+'.test.psf')
-                #imdata=ia.getchunk()
-                #if self.skipclean:
-                #    pass
-                #elif imdata.sum()==0.0:
-                #    self.skipclean=True
-            #    print "checkpsf DONE"
+
                 
     def checkpsf(self,chan):
         """
@@ -270,7 +399,8 @@ class cleanhelper:
         else:
             self.maskimages={}
         masktext=[]
-        if( (len(maskobject)==0) or (maskobject==[''])):
+        if (not hasattr(maskobject, '__len__')) \
+           or (len(maskobject) == 0) or (maskobject == ['']):
             return
         if(type(maskobject)==str):
             maskobject=[maskobject]
@@ -333,7 +463,8 @@ class cleanhelper:
             self.maskimages={}
 
         #print "makemultifieldmask2: intial self.imagelist=",self.imagelist
-        if((len(maskobject)==0) or (maskobject==[''])):
+        if (not hasattr(maskobject, '__len__')) \
+           or (len(maskobject) == 0) or (maskobject == ['']):
             return
         # determine number of input elements
         if (type(maskobject)==str):
@@ -442,7 +573,7 @@ class cleanhelper:
                 try:
                   for tabl in tablerecord:
                     reg.update({tabl:rg.fromfiletorecord(filename=tabl, verbose=False)})
-	        except:
+                except:
 		  raise Exception,'Region-file format not recognized. Please check. If box-file, please start the file with \'#boxfile\' on the first line';
                 if(len(reg)==1):
                     reg=reg[reg.keys()[0]]
@@ -453,6 +584,10 @@ class cleanhelper:
         if(len(masktext) > 0):
             # fill for all fields in boxfiles
             circles, boxes=self.readmultifieldboxfile(masktext)
+            #print 'circles : ', circles, '    boxes : ', boxes;
+            #print 'imageids : ', self.imageids
+            #print 'imagelist :', self.imagelist
+            #print 'maskimages : ', self.maskimages;
             # doit for all fields
             for k in range(len(self.imageids)):
                 if(circles.has_key(self.imageids[k]) and boxes.has_key(self.imageids[k])):
@@ -465,6 +600,7 @@ class cleanhelper:
                 elif(boxes.has_key(self.imageids[k])):
                     self.im.regiontoimagemask(mask=self.maskimages[self.imagelist[k]],
                                                    boxes=boxes[self.imageids[k]])
+                    #print 'put ', boxes[self.imageids[k]] , ' into ', self.maskimages[self.imagelist[k]];
         # set unused mask images to 1 for a whole field
         for key in self.maskimages:
             if(os.path.exists(self.maskimages[key])):
@@ -473,7 +609,43 @@ class cleanhelper:
                 if(fsum[0]==0.0):
                     ia.set(pixels=1.0)
                 ia.done(verbose=False)
-                
+
+    def make_mask_from_threshhold(self, imagename, thresh, outputmask=None):
+        """
+        Makes a mask image with the same coords as imagename where each
+        pixel is True if and only if the corresponding pixel in imagename
+        is >= thresh.
+
+        The mask will be named outputmask (if provided) or imagename +
+        '.thresh_mask'.  The name is returned on success, or False on failure.
+        """
+        if not outputmask:
+            outputmask = imagename + '.thresh_mask'
+
+        # im.mask would be a lot shorter, but it (unnecessarily) needs im to be
+        # open with an MS.
+        # I am not convinced that im.mask should really be using Quantity.
+        # qa.quantity(quantity) = quantity.
+        self.im.mask(imagename, outputmask, qa.quantity(thresh))
+        
+        ## # Copy imagename to a safe name to avoid problems with /, +, -, and ia.
+        ## ia.open(imagename)
+        ## shp = ia.shape()
+        ## ia.close()
+        ## self.copymaskimage(imagename, shp, '__temp_mask')
+        
+        ## self.copymaskimage(imagename, shp, outputmask)
+        ## ia.open(outputmask)
+        ## ###getchunk is a mem hog
+        ## #arr=ia.getchunk()
+        ## #arr[arr>0.01]=1
+        ## #ia.putchunk(arr)
+        ## #inpix="iif("+"'"+outputmask.replace('/','\/')+"'"+">0.01, 1, 0)"
+        ## #ia.calc(pixels=inpix)
+        ## ia.calc(pixels="iif(__temp_mask>" + str(thresh) + ", 1, 0)")
+        ## ia.close()
+        ## ia.removefile('__temp_mask')
+        return outputmask
         
     def makemaskimage(self, outputmask='', imagename='', maskobject=[], slice=-1):
         """
@@ -485,7 +657,8 @@ class cleanhelper:
         b)lists of blc trc's
         c)record output from rg tool for e.g
         """
-        if( (len(maskobject)==0) or (maskobject==[''])):
+        if (not hasattr(maskobject, '__len__')) \
+           or (len(maskobject) == 0) or (maskobject == ['']):
             return
         maskimage=[]
         masklist=[]
@@ -570,21 +743,9 @@ class cleanhelper:
                 ia.done(verbose=False)
                 ia.removefile('__temp_mask')
                 ia.removefile('__temp_mask2')
-            #make image a mask image i.e 1 and 0 only
-            #   make a copy of mask image again since 
-            #   the image name may contain / , +, - which may causes
-            #   problem in evaluating iif.
-            self.copymaskimage(outputmask, shp, '__temp_mask')
-            ia.open(outputmask)
-            ###getchunk is a mem hog
-            #arr=ia.getchunk()
-            #arr[arr>0.01]=1
-            #ia.putchunk(arr)
-            #inpix="iif("+"'"+outputmask.replace('/','\/')+"'"+">0.01, 1, 0)"
-            #ia.calc(pixels=inpix)
-            ia.calc(pixels="iif(__temp_mask>0.01, 1, 0)")
-            ia.close()
-            ia.removefile('__temp_mask')
+	    if(not os.path.exists(outputmask)):
+                outputmask = self.make_mask_from_threshhold(outputmask, 0.01,
+                                                                  outputmask)
         #pdb.set_trace()
         #### This goes when those tablerecord goes
         if(len(tablerecord) > 0):
@@ -616,8 +777,8 @@ class cleanhelper:
                 self.im.regiontoimagemask(mask=outputmask, region=elrec)
 
         self.outputmask=outputmask
-            
         #Done with making masks
+
     def datselweightfilter(self, field, spw, timerange, uvrange, antenna,scan,
                            wgttype, robust, noise, npixels, mosweight,
                            innertaper, outertaper, calready, nchan=-1, start=0, width=1):
@@ -650,6 +811,133 @@ class cleanhelper:
             if(qa.quantity(outertaper[0])['value'] > 0.0):    
                 self.im.filter(type='gaussian', bmaj=outertaper[0],
                                bmin=outertaper[1], bpa=outertaper[2])
+
+    
+    # split version of datselweightfilter
+    def datsel(self, field, spw, timerange, uvrange, antenna,scan,
+                           calready, nchan=-1, start=0, width=1):
+
+        # for multi-MSes, if field,spw,timerage,uvrange,antenna,scan are not
+        # lists the same selection is applied to all the MSes.
+        self.fieldindex=[]
+        #nvislist=range(len(self.vis))
+        vislist=self.sortedvisindx
+        self.paramlist={'field':field,'spw':spw,'timerange':timerange,'antenna':antenna,'scan':scan,'uvrange':uvrange}
+        for i in vislist:
+          selectedparams=self._selectlistinputs(len(vislist),i,self.paramlist)
+          tempfield=selectedparams['field']
+#         if type(field)==list:
+#            if len(field)==nvislist:
+#              tempfield=field[i]
+#            else:
+#              if len(field)==1:
+#                 tempfield=field[0]
+#              else:
+#	          raise Exception, 'The number of field list does not match with the number of vis list'
+#         else:
+#            tempfield=field
+              
+          if len(tempfield)==0:
+            tempfield='*'
+          self.fieldindex.append(ms.msseltoindex(self.vis[i],field=tempfield)['field'].tolist())
+
+        ############################################################
+        # Not sure I need this now.... Nov 15, 2010
+        vislist.reverse()
+        for i in vislist:
+          # select apropriate parameters
+          selectedparams=self._selectlistinputs(len(vislist),i,self.paramlist)
+          inspw=selectedparams['spw'] 
+          intimerange=selectedparams['timerange'] 
+          inantenna=selectedparams['antenna'] 
+          inscan=selectedparams['scan'] 
+          inuvrange=selectedparams['uvrange'] 
+
+          if len(self.vis)==1:
+            #print "single ms case"
+            self.im.selectvis(nchan=nchan,start=start,step=width,field=field,
+                              spw=inspw,time=intimerange, baseline=inantenna,
+                              scan=inscan, uvrange=inuvrange, usescratch=calready)
+          else:
+            #print "multims case: selectvis for vis[",i,"]: spw,field=", inspw, self.fieldindex[i]
+            self.im.selectvis(vis=self.vis[i],nchan=nchan,start=start,step=width,
+                              field=self.fieldindex[i], spw=inspw,time=intimerange,
+                              baseline=inantenna, scan=inscan,
+                              uvrange=inuvrange, usescratch=calready)
+
+    # private function for datsel and datweightfilter
+    def _selectlistinputs(self,nvis,indx,params):
+        """
+        A little private function to do selection and checking for a parameter 
+        given in list of strings.
+        It checks nelement in each param either match with nvis or nelement=1
+        (or a string) otherwise exception is thrown. 
+        """
+        outparams={}
+        if type(params)==dict:
+          for param,val in params.items():
+            msg = 'The number of %s list given in list does not match with the number of vis list given.' % param
+            if type(val)==list:
+              if len(val)==nvis:
+                outval=val[indx]
+              else:
+                if len(val)==1:
+                  outval=val[0]
+                else:
+                  raise Exception, msg
+              outparams[param]=outval
+            else:
+              #has to be a string
+              outparams[param]=val
+          return outparams
+        else:
+          raise Exception, 'params must be a dictionary'
+ 
+    # weighting/filetering part of datselweightfilter
+    def datweightfilter(self, field, spw, timerange, uvrange, antenna,scan,
+                        wgttype, robust, noise, npixels, mosweight,
+                        innertaper, outertaper, calready, nchan=-1, start=0, width=1):
+        rmode='none'
+        weighting='natural';
+        if(wgttype=='briggsabs'):
+            weighting='briggs'
+            rmode='abs'
+        elif(wgttype=='briggs'):
+            weighting='briggs'
+            rmode='norm'
+        else:
+            weighting=wgttype
+         #weighting and tapering should be done together
+        if(weighting=='natural'):
+            mosweight=False
+        vislist=self.sortedvisindx
+        #nvislist.reverse()
+        for i in vislist:
+          # select apropriate parameters
+          selectedparams=self._selectlistinputs(len(vislist),i,self.paramlist)
+          inspw=selectedparams['spw'] 
+          intimerange=selectedparams['timerange'] 
+          inantenna=selectedparams['antenna'] 
+          inscan=selectedparams['scan'] 
+          inuvrange=selectedparams['uvrange'] 
+          
+          if len(self.vis) > 1:
+            self.im.selectvis(vis=self.vis[i], field=self.fieldindex[i],spw=inspw,time=intimerange,
+                              baseline=inantenna, scan=inscan, uvrange=inuvrange, usescratch=calready)
+          else: 
+            self.im.selectvis(field=field,spw=inspw,time=intimerange,
+                              baseline=inantenna, scan=inscan, uvrange=inuvrange, usescratch=calready)
+          self.im.weight(type=weighting,rmode=rmode,robust=robust, 
+                         npixels=npixels, noise=qa.quantity(noise,'Jy'), mosaic=mosweight)
+     
+        if((type(outertaper)==list) and (len(outertaper) > 0)):
+            if(len(outertaper)==1):
+                outertaper.append(outertaper[0])
+                outertaper.append('0deg')
+            if(qa.quantity(outertaper[0])['value'] > 0.0):
+                self.im.filter(type='gaussian', bmaj=outertaper[0],
+                               bmin=outertaper[1], bpa=outertaper[2])
+
 
     def setrestoringbeam(self, restoringbeam):
         if((restoringbeam == ['']) or (len(restoringbeam) ==0)):
@@ -821,8 +1109,6 @@ class cleanhelper:
                            ## might be a facet definition 
                            continue
     
-                       
-    
             except:
                 break
 
@@ -850,7 +1136,6 @@ class cleanhelper:
                         ### its an AIPS boxfile
                         splitline=line.split('\n')
                         splitline2=splitline[0].split()
-                        #print "splitline2=",splitline2
                         if (len(splitline2)<6):
                             ##circles
                             if(int(splitline2[1]) <0):
@@ -860,9 +1145,9 @@ class cleanhelper:
                                 circles[self.imageids[int(splitline2[0])]].append(circlelist)
                             else:
                                 #boxes
-                                if(len(splitline2)==5):
+			        if(len(splitline2)==5):
                                    boxlist=[int(splitline2[1]),int(splitline2[2]),
-                                         int(splitline2[3]),int(splitline2[4])]
+                                            int(splitline2[3]),int(splitline2[4])]
                                    #boxes[splitline2[0]].append(boxlist)
                                    boxes[self.imageids[int(splitline2[0])]].append(boxlist)
                         else:
@@ -925,6 +1210,8 @@ class cleanhelper:
         return imsizes,phasecenters,imageids
 
     def copymaskimage(self, maskimage, shp, outfile):
+        if outfile == maskimage:     # Make it a no-op,
+            return                   # this is more than just peace of mind.
         #pdb.set_trace() 
         ia.open(maskimage)
         oldshp=ia.shape()
@@ -1235,22 +1522,38 @@ class cleanhelper:
         else:
             if vf !=0:
                 raise TypeError, "Unrecognized unit for the velocity or frequency parameter"
-        fldinds=ms.msseltoindex(self.vis, field=field)['field'].tolist()
+        ##fldinds=ms.msseltoindex(self.vis, field=field)['field'].tolist()
+        fldinds=ms.msseltoindex(self.vis[self.sortedvisindx[0]], field=field)['field'].tolist()
         if(len(fldinds) == 0):
             fldid0=0
         else:
             fldid0=fldinds[0]
         if restf=='':
-            tb.open(self.vis+'/FIELD')
-            srcid=tb.getcell('SOURCE_ID',fldid0)
+            #tb.open(self.vis+'/FIELD')
+            tb.open(self.vis[self.sortedvisindx[0]]+'/FIELD')
+            nfld = tb.nrows()
+            if nfld >= fldid0:
+              srcid=tb.getcell('SOURCE_ID',fldid0)
+            else:
+              raise TypeError, ("Cannot set REST_FREQUENCY from the data: "+
+                  "no SOURCE corresponding field ID=%s, please supply restfreq" % fldid0)
             tb.close()
-            if fldid0==-1:
+            # SOUECE_ID in FIELD table = -1 if no SOURCE table
+            if srcid==-1:
                 raise TypeError, "Rest frequency info is not supplied"
-            tb.open(self.vis+'/SOURCE')
-            rfreq=tb.getcell('REST_FREQUENCY',fldid0)
+            #tb.open(self.vis+'/SOURCE')
+            tb.open(self.vis[self.sortedvisindx[0]]+'/SOURCE')
+            tb2=tb.query('SOURCE_ID==%s' % srcid)
+            tb.close()
+            nsrc = tb2.nrows()
+            if nsrc > 0:
+              rfreq=tb2.getcell('REST_FREQUENCY',0)
+            else:
+              raise TypeError, ("Cannot set REST_FREQUENCY from the data: "+
+                   " no SOURCE corresponding field ID=%s, please supply restfreq" % fldid0)
+            tb2.close()
             if(rfreq<=0):
                 raise TypeError, "Rest frequency does not seems to be properly set, check the data"
-            tb.close()
         else:
             if type(restf)==str: restf=[restf]
             if(qa.quantity(restf[0])['unit'].find('Hz') > -1):
@@ -1285,7 +1588,8 @@ class cleanhelper:
         if spw in (-1, '-1', '*', '', ' '):
             spwinds = -1
         else:
-            spwinds=ms.msseltoindex(self.vis, spw=spw)['spw'].tolist()
+            #spwinds=ms.msseltoindex(self.vis, spw=spw)['spw'].tolist()
+            spwinds=ms.msseltoindex(self.vis[self.sortedvisindx[0]], spw=spw)['spw'].tolist()
             if(len(spwinds) == 0):
                 spwinds = -1
 
@@ -1294,7 +1598,8 @@ class cleanhelper:
             spw0=0
         else:
             spw0=spwinds[0]
-        tb.open(self.vis+'/SPECTRAL_WINDOW')
+        #tb.open(self.vis+'/SPECTRAL_WINDOW')
+        tb.open(self.vis[self.sortedvisindx[0]]+'/SPECTRAL_WINDOW')
         chanfreqscol=tb.getvarcol('CHAN_FREQ')
         chanwidcol=tb.getvarcol('CHAN_WIDTH')
         spwframe=tb.getcol('MEAS_FREQ_REF');
@@ -1388,8 +1693,9 @@ class cleanhelper:
         parameters when default values are used
         for mode='velocity' or 'frequency' or 'channel'
         """
-
-        tb.open(self.vis+'/SPECTRAL_WINDOW')
+        #pdb.set_trace()
+        #tb.open(self.vis+'/SPECTRAL_WINDOW')
+        tb.open(self.vis[self.sortedvisindx[0]]+'/SPECTRAL_WINDOW')
         chanfreqscol=tb.getvarcol('CHAN_FREQ')
         chanwidcol=tb.getvarcol('CHAN_WIDTH')
         spwframe=tb.getcol('MEAS_FREQ_REF');
@@ -1406,7 +1712,11 @@ class cleanhelper:
             # spw = range(len(chanfreqscol))
             spw="*"
 
-        sel=ms.msseltoindex(self.vis, spw=spw)
+        if type(spw)==list:
+          spw=spw[self.sortedvisindx[0]]
+         
+        #sel=ms.msseltoindex(self.vis, spw=spw)
+        sel=ms.msseltoindex(self.vis[self.sortedvisindx[0]], spw=spw)
         # spw returned by msseletoindex, spw='0:5~10;10~20' 
         # will give spw=[0] and len(spw) not equal to len(chanids)
         # so get spwids from chaninds instead.
@@ -1414,6 +1724,7 @@ class cleanhelper:
         spwinds=[]
         for k in range(len(chaninds)):
             spwinds.append(chaninds[k][0])
+
         if(len(spwinds) == 0):
             raise Exception, 'unable to parse spw parameter '+spw;
             
@@ -1753,12 +2064,15 @@ class cleanhelper:
                 fieldused = field
                 if (fieldused ==''):
                     fieldused ='0'
-                dir = int(ms.msseltoindex(self.vis,field=fieldused)['field'][0])
+                #dir = int(ms.msseltoindex(self.vis,field=fieldused)['field'][0])
+                dir = int(ms.msseltoindex(self.vis[self.sortedvisindx[0]],field=fieldused)['field'][0])
             else:
                 tmpdir = phasecenter
                 try:
-                    if(len(ms.msseltoindex(self.vis, field=pc)['field']) > 0):
-                        tmpdir  = int(ms.msseltoindex(self.vis,field=pc)['field'][0])
+                    #if(len(ms.msseltoindex(self.vis, field=pc)['field']) > 0):
+                    if(len(ms.msseltoindex(self.vis[self.sortedvisindx[0]], field=pc)['field']) > 0):
+                        #tmpdir  = int(ms.msseltoindex(self.vis,field=pc)['field'][0])
+                        tmpdir  = int(ms.msseltoindex(self.vis[self.sortedvisindx[0]],field=pc)['field'][0])
                 except Exception, instance:
                     tmpdir = pc
                 dir = tmpdir
@@ -1769,12 +2083,14 @@ class cleanhelper:
                 raise TypeError, "Error in a string format  for phasecenter"
             mdir = me.direction(mrf, ra, dec)
         else:
-            tb.open(self.vis+'/FIELD')
+            #tb.open(self.vis+'/FIELD')
+            tb.open(self.vis[self.sortedvisindx[0]]+'/FIELD')
             srcdir=tb.getcell('DELAY_DIR',dir)
             mrf=tb.getcolkeywords('DELAY_DIR')['MEASINFO']['Ref']
             tb.close()
             mdir = me.direction(mrf,str(srcdir[0][0])+'rad',str(srcdir[1][0])+'rad')
-            tb.open(self.vis+'/OBSERVATION')
+            #tb.open(self.vis+'/OBSERVATION')
+            tb.open(self.vis[self.sortedvisindx[0]]+'/OBSERVATION')
         telname=tb.getcell('TELESCOPE_NAME',0)
         # use time in main table instead?
         tmr=tb.getcell('TIME_RANGE',0)
@@ -1796,7 +2112,8 @@ class cleanhelper:
         on spw selection 
         (part copied from setChannelization)
         """
-        tb.open(self.vis+'/SPECTRAL_WINDOW')
+        #tb.open(self.vis+'/SPECTRAL_WINDOW')
+        tb.open(self.vis[self.sortedvisindx[0]]+'/SPECTRAL_WINDOW')
         spwframe=tb.getcol('MEAS_FREQ_REF');
         tb.close()
 
@@ -1806,7 +2123,9 @@ class cleanhelper:
         if spw in (-1, '-1', '*', '', ' '):
             spw="*"
 
-        sel=ms.msseltoindex(self.vis, spw=spw)
+        if type(spw)==list:
+          spw=spw[self.sortedvisindx[0]]
+        sel=ms.msseltoindex(self.vis[self.sortedvisindx[0]], spw=spw)
         # spw returned by msseletoindex, spw='0:5~10;10~20' 
         # will give spw=[0] and len(spw) not equal to len(chanids)
         # so get spwids from chaninds instead.
@@ -1904,6 +2223,9 @@ class cleanhelper:
 
         # readoutlier need to be run first....
         #pdb.set_trace() 
+        self.datsel(field=field, spw=spw, timerange=timerange, uvrange=uvrange, 
+                    antenna=antenna,scan=scan, calready=calready, nchan=-1, start=0, width=1)
+
         self.definemultiimages(rootname=rootname,imsizes=imsizes,cell=cell,
                                 stokes=stokes,mode=mode,
                                spw=spw, nchan=locnchan, start=locstart,
@@ -1913,16 +2235,23 @@ class cleanhelper:
                                outframe=outframe, veltype=veltype,
                                makepbim=False, checkpsf=False)
 
-        self.datselweightfilter(field=field, spw=spw,
-                                 timerange=timerange, uvrange=uvrange,
-                                 antenna=antenna, scan=scan,
-                                 wgttype=weighting, robust=robust,
-                                 noise=noise, npixels=npixels,
-                                 mosweight=mosweight,
-                                 innertaper=innertaper,
-                                 outertaper=outertaper,
-                                 calready=calready, nchan=-1,
-                                 start=0, width=1)
+        self.datweightfilter(field=field, spw=spw, timerange=timerange, 
+                             uvrange=uvrange, antenna=antenna,scan=scan,
+                             wgttype=weighting, robust=robust, noise=noise, 
+                             npixels=npixels, mosweight=mosweight,
+                             innertaper=innertaper, outertaper=outertaper, 
+                             calready=calready, nchan=-1, start=0, width=1)
+        # split this 
+        #self.datselweightfilter(field=field, spw=spw,
+        #                         timerange=timerange, uvrange=uvrange,
+        #                         antenna=antenna, scan=scan,
+        #                         wgttype=weighting, robust=robust,
+        #                         noise=noise, npixels=npixels,
+        #                         mosweight=mosweight,
+        #                         innertaper=innertaper,
+        #                         outertaper=outertaper,
+        #                         calready=calready, nchan=-1,
+        #                         start=0, width=1)
        
         #localAlgorithm = getAlgorithm(psfmode, imagermode, gridmode, mode,
         #                             multiscale, multifield, facets, nterms,
@@ -2145,5 +2474,4 @@ def getAlgorithm(psfmode, imagermode, gridmode, mode,
 
     if (addMultiField and (alg[0:2] != 'mf') and (alg != 'msmfs')):  alg = 'mf' + alg;
     return alg;
-
 

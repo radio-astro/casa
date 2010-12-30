@@ -48,6 +48,9 @@ using asdmIDL::CalFocusModelRowIDL;
 
 
 
+
+
+
 #include <ArrayTime.h>
 using  asdm::ArrayTime;
 
@@ -109,7 +112,7 @@ using namespace AntennaMakeMod;
 
 
 /*\file CalFocusModel.h
-    \brief Generated from model's revision "1.54", branch "HEAD"
+    \brief Generated from model's revision "1.55", branch "HEAD"
 */
 
 namespace asdm {
@@ -130,7 +133,7 @@ typedef void (CalFocusModelRow::*CalFocusModelAttributeFromBin) (EndianISStream&
 /**
  * The CalFocusModelRow class is a row of a CalFocusModelTable.
  * 
- * Generated from model's revision "1.54", branch "HEAD"
+ * Generated from model's revision "1.55", branch "HEAD"
  *
  */
 class CalFocusModelRow {

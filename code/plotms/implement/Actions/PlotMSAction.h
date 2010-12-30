@@ -37,7 +37,7 @@ using namespace std;
 namespace casa {
 
 //# Forward declarations
-class PlotMS;
+class PlotMSApp;
 class PlotMSPlot;
 
 
@@ -106,6 +106,11 @@ public:
         // regions, zoom, pan, and annotate tools can be turned on at one time.
         // Required parameters: P_ON_OFF.
         TOOL_MARK_REGIONS,
+        
+        // Turns on/off the subtract regions tool.  
+        // works like MARK REGIONS, but where user drags, all regions within are deleted.
+        // (note: CAS-1971 DSW)
+        TOOL_SUBTRACT_REGIONS,
 
         // Turns on/off the zoom tool.  Operates on all canvases of all plots
         // AT THE TIME of the call to doAction().  Only one of the mark
@@ -249,9 +254,9 @@ public:
     void setParameter(const String& parameter, const vector<PMS::Axis>& value);
     // </group>
 
-    // Performs the action, using the given PlotMS, and returns true for
+    // Performs the action, using the given PlotMSApp, and returns true for
     // success or false or failure.
-    bool doAction(PlotMS* plotms);
+    bool doAction(PlotMSApp* plotms);
 
     // Returns the result of doAction(), if applicable.  Usually this is used
     // to return the error/reason why the action failed.

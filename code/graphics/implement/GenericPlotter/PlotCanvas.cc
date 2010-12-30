@@ -24,9 +24,13 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id: $
-#include <graphics/GenericPlotter/PlotCanvas.h>
 
+
+#include <graphics/GenericPlotter/PlotCanvas.h>
 #include <graphics/GenericPlotter/PlotFactory.h>
+#include <graphics/GenericPlotter/PlotOptions.h>
+
+
 
 namespace casa {
 
@@ -162,32 +166,49 @@ void PlotCanvas::setBackground(const String& color,
     setBackground(*bg);
 }
 
-bool PlotCanvas::axisShown(PlotAxis axis) const { return shownAxes() & axis; }
 
-void PlotCanvas::showAxis(PlotAxis axis, bool show) {
-    int axes = shownAxes();
-    if(show) axes |= axis;
-    else     axes &= !axis;
-    showAxes(axes);
+
+#if (0)  // checking hypothesis: this is not used anywhere
+bool PlotCanvas::isAxisShown(PlotAxis axis) const { 
+	return shownAxes() & axis; 
 }
+#endif
+
+
+/* DSW: SITE OF X-Y SHORTCIRCUIT */
+void PlotCanvas::showAxis(PlotAxis axis, bool show) {
+    PlotAxisBitset  axes = shownAxes();
+    if (show) axes |=  (PlotAxisBitset)axis;
+    else      axes &= ~(PlotAxisBitset)axis;
+    showAxes(axes);  /* calls QPCanvas::showAxes() */
+}
+
+
 
 void PlotCanvas::showAxes(PlotAxis xAxis, PlotAxis yAxis, bool show) {
-    int axes = shownAxes();
-    if(show) axes |= xAxis | yAxis;
-    else     axes &= !xAxis && !yAxis;
-    showAxes(axes);
+    PlotAxisBitset combined = ( ((PlotAxisBitset)xAxis) | ((PlotAxisBitset)yAxis) );
+    PlotAxisBitset axes = shownAxes();
+    if (show) axes |=  combined;
+    else      axes &= ~combined;
+    showAxes(axes);   /* calls casaqt's QPCanvas::showAxes() */
 }
 
-void PlotCanvas::showAxes(bool show) {
+
+
+void PlotCanvas::showAllAxes(bool show) {
     if(show) showAxes(X_BOTTOM | X_TOP | Y_LEFT | Y_RIGHT);
     else     showAxes(0);
 }
+
+
 
 void PlotCanvas::setAxesScales(PlotAxis xAxis, PlotAxisScale xScale,
             PlotAxis yAxis, PlotAxisScale yScale) {
     setAxisScale(xAxis, xScale);
     setAxisScale(yAxis, yScale);
 }
+
+
 
 void PlotCanvas::showCartesianAxis(PlotAxis mirrorAxis, bool show,
         bool hideNormalAxis) {
@@ -201,10 +222,14 @@ void PlotCanvas::showCartesianAxis(PlotAxis mirrorAxis, bool show,
     }
 }
 
+
+
 void PlotCanvas::showCartesianAxes(bool show, bool hideNormal) {
     showCartesianAxis(X_BOTTOM, show, hideNormal);
     showCartesianAxis(Y_LEFT, show, hideNormal);
 }
+
+
 
 void PlotCanvas::clearAxesLabels() {
     setAxisLabel(X_BOTTOM, "");
@@ -213,8 +238,11 @@ void PlotCanvas::clearAxesLabels() {
     setAxisLabel(Y_RIGHT, "");
 }
 
+
+
 void PlotCanvas::setAxisFont(PlotAxis axis, const PlotFontPtr font) {
-    if(!font.null()) setAxisFont(axis, *font); }
+    if(!font.null()) setAxisFont(axis, *font); 
+}
 
 
 PlotRegion PlotCanvas::axesRanges(PlotAxis xAxis, PlotAxis yAxis) const {
@@ -223,8 +251,13 @@ PlotRegion PlotCanvas::axesRanges(PlotAxis xAxis, PlotAxis yAxis) const {
                       PlotCoordinate(x.second, y.first));
 }
 
+
+
 void PlotCanvas::setAxisRange(PlotAxis axis, const prange_t& range){
-    setAxisRange(axis, range.first, range.second); }
+    setAxisRange(axis, range.first, range.second); 
+}
+
+
 
 void PlotCanvas::setAxesRanges(PlotAxis xAxis, double xFrom, double xTo,
         PlotAxis yAxis, double yFrom, double yTo) {
@@ -232,11 +265,15 @@ void PlotCanvas::setAxesRanges(PlotAxis xAxis, double xFrom, double xTo,
     setAxisRange(yAxis, yFrom, yTo);
 }
 
+
+
 void PlotCanvas::setAxesRanges(PlotAxis xAxis, const prange_t& xRange,
         PlotAxis yAxis, const prange_t& yRange) {
     setAxesRanges(xAxis, xRange.first, xRange.second, yAxis, yRange.first,
                   yRange.second);
 }
+
+
 
 void PlotCanvas::setAxesRegion(PlotAxis xAxis, PlotAxis yAxis,
         const PlotRegion& region) {
@@ -281,25 +318,54 @@ bool PlotCanvas::axesStackMove(int delta) {
     return true;
 }
 
+
+
 int PlotCanvas::axesStackLengthLimit() const {
-    return axesStack().lengthLimit(); }
+    return axesStack().lengthLimit(); 
+}
+
+
 
 void PlotCanvas::setAxesStackLengthLimit(int lengthLimit) {
-    axesStack().setLengthLimit(lengthLimit); }
+    axesStack().setLengthLimit(lengthLimit); 
+}
 
-pair<int, int> PlotCanvas::cachedAxesStackImageSize() const {
-    return pair<int, int>(-1, -1); }
-void PlotCanvas::setCachedAxesStackImageSize(int width, int height) { (void)width, (void)height; }
+
+
+pair<int, int> PlotCanvas::cachedAxesStackImageSize() const  {
+    return pair<int, int>(-1, -1); 
+}
+    
+    
+    
+void PlotCanvas::setCachedAxesStackImageSize(int width, int height) { 
+	(void)width, (void)height; 
+}
 
 
 bool PlotCanvas::plot(PlotPtr plot, bool overplot) {
     if(!overplot) clearPlots();
     return plotItem(plot, MAIN);
 }
-bool PlotCanvas::plotPoint(PlotPointPtr point){ return plotItem(point, MAIN); }
-bool PlotCanvas::drawShape(PlotShapePtr shape){ return plotItem(shape, MAIN); }
+
+
+
+bool PlotCanvas::plotPoint(PlotPointPtr point){ 
+	return plotItem(point, MAIN); 
+}
+
+
+bool PlotCanvas::drawShape(PlotShapePtr shape){ 
+	return plotItem(shape, MAIN); 
+}
+
+
 bool PlotCanvas::drawAnnotation(PlotAnnotationPtr annotation) {
-    return plotItem(annotation, MAIN); }
+    return plotItem(annotation, MAIN); 
+}
+
+
+
 
 // Macro for common method definitions.
 #define PC_ALL(ITEM,CLASS)                                                    \
@@ -543,8 +609,12 @@ void PlotCanvas::setLegendFont(const PlotFontPtr font) {
     if(!font.null()) setLegendFont(*font); }
 
 
-PlotOperationPtr PlotCanvas::operationExport() {
-    return operationDraw(PlotMutexPtr()); }
+PlotOperationPtr PlotCanvas::operationExport()    {
+    return operationDraw(PlotMutexPtr()); 
+}
+
+
+
 PlotOperationPtr PlotCanvas::operationExport(PlotMutexPtr m) {
     if(m_exportOperation.null())
         m_exportOperation = new PlotOperation(OPERATION_EXPORT, mutex());

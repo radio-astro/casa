@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableRecord.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: TableRecord.cc 20969 2010-09-27 12:45:04Z gervandiepen $
 
 #include <tables/Tables/TableRecord.h>
 #include <tables/Tables/TableKeyword.h>
@@ -221,12 +221,13 @@ DataType TableRecord::type (Int whichField) const
     return description().type (whichField);
 }
 
-void TableRecord::removeField (const RecordFieldId& id)
+void TableRecord::removeField(const RecordFieldId& id)
 {
     throwIfFixed();
-    Int whichField = idToNumber (id);
-    rwRef().removeField (whichField);
-    notify (RecordNotice (RecordNotice::REMOVE, whichField));
+    Int whichField = idToNumber(id);	// Throws an exception if id is absent.
+
+    rwRef().removeField(whichField);
+    notify(RecordNotice(RecordNotice::REMOVE, whichField));
 }
 
 void TableRecord::renameField (const String& newName, const RecordFieldId& id)
@@ -400,7 +401,7 @@ void TableRecord::getRecord (AipsIO& os, const TableAttr& parentAttr)
     notify (RecordNotice (RecordNotice::DETACH, 0));
     // Reading the record type back means casting it from an int
     // to the correct type.
-    int type;
+    Int type;
     rwRef().getRecord (os, type, parentAttr);
     recordType() = (RecordInterface::RecordType)type;
 }

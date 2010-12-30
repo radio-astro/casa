@@ -103,6 +103,24 @@ int main()
          }
       }
 
+      {
+         SpectralCoordinate lc = 
+            makeNonLinearCoordinate(MFrequency::TOPO, freqs, restFreq);
+         Vector<Double> wavelengths;
+         lc.setWavelengthUnit (String("m"));
+         lc.frequencyToWavelength(wavelengths, freqs);
+         SpectralCoordinate lc2(MFrequency::TOPO, wavelengths, String("m"));
+         Double freq;
+         for (uInt i=0; i<wavelengths.nelements(); i++) {
+            if (!lc2.toWorld(freq, Double(i))) {
+               throw(AipsError(String("Failed wavelength construction consistency test toWorld conversion because ") + lc.errorMessage()));
+            }
+            if (!near(freq, freqs(i))) {
+               throw(AipsError(String("Failed wavelength construction consistency test comparison")));
+            }
+         }
+      }
+
 // Test near function
 
      {
@@ -365,7 +383,7 @@ int main()
             lc.setVelocity (String("m/s"), MDoppler::Z);
             String str = lc.format(unit, Coordinate::FIXED, val, 0, True, True, 4);
             if (str != String("0.0000")) {
-               throw(AipsError("Failed format test 3"));
+	      throw(AipsError("Failed format test 3"));
             }
          }
          {
@@ -393,6 +411,20 @@ int main()
             if (str != String("1400000000.0000")) {	
                cerr << str << endl;
                throw(AipsError("Failed format test 5"));
+            }
+         }
+	 ///////
+//
+         lc.setWavelengthUnit (String("m"));
+         AlwaysAssert(lc.wavelengthUnit()==String("m"), AipsError);
+//
+         {
+            String unit("m");
+            Double val = 100E9;
+            String str = lc.format(unit, Coordinate::FIXED, val, 0, True, True, 4);
+            if (str != String("0.0030")) {
+	       cerr << str << endl;
+               throw(AipsError("Failed format test 6"));
             }
          }
 //
@@ -787,6 +819,41 @@ int main()
          if (!near(velQ.getValue(), dVel)) {
             throw(AipsError(String("frequencyToVelocity 9 gave wrong answer")));
          }
+
+// Frequency <-> Wavelength
+//
+	 Vector<Double> wavelengths;
+         frequencies(0) = f0;
+         frequencies(1) = f0 + finc;
+	 Double w0 = C::c/f0*1000.; // default unit is mm
+	 Double w1 = C::c/frequencies(1)*1000.;
+         if (!lc.frequencyToWavelength(wavelengths, frequencies)) {
+            throw(AipsError(String("frequencyToWavelength conversion failed because ") + lc.errorMessage()));
+         }
+         if (!near(wavelengths(0), w0) || !near(wavelengths(1), w1)) {
+            throw(AipsError(String("frequencyToWavelength gave wrong answer")));
+         }
+         if (!lc.wavelengthToFrequency (frequencies2, wavelengths)) {
+            throw(AipsError(String("wavelengthToFrequency conversion failed because ") + lc.errorMessage()));
+         }
+         if (!near(frequencies2(0), frequencies(0)) || !near(frequencies2(1), frequencies(1))) {
+            throw(AipsError(String("wavelengthToFrequency gave wrong answer")));
+         }
+//
+         lc.setWavelengthUnit(String("m"));
+         if (!lc.frequencyToWavelength(wavelengths, frequencies)) {
+            throw(AipsError(String("frequencyToWavelength b conversion failed because ") + lc.errorMessage()));
+         }
+         if (!near(wavelengths(0), w0/1000.) || !near(wavelengths(1), w1/1000.)) {
+            throw(AipsError(String("frequencyToWavelength b gave wrong answer")));
+         }
+         if (!lc.wavelengthToFrequency (frequencies2, wavelengths)) {
+            throw(AipsError(String("wavelengthToFrequency b conversion failed because ") + lc.errorMessage()));
+         }
+         if (!near(frequencies2(0), frequencies(0)) || !near(frequencies2(1), frequencies(1))) {
+            throw(AipsError(String("wavelengthToFrequency b gave wrong answer")));
+         }
+
      }
 
 // Test reference conversions

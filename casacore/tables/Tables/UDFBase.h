@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: UDFBase.h 20942 2010-08-26 11:35:06Z gervandiepen $
+//# $Id: UDFBase.h 20983 2010-10-01 10:02:48Z gervandiepen $
 
 #ifndef TABLES_UDFBASE_H
 #define TABLES_UDFBASE_H
@@ -183,6 +183,10 @@ namespace casa {
     virtual Array<String>   getArrayString   (const TableExprId& id);
     virtual Array<MVTime>   getArrayDate     (const TableExprId& id);
     // </group>
+
+    // Get the unit.
+    const String& getUnit() const
+      { return itsUnit; }
 
   private:
     // Set up the function object.

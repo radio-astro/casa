@@ -71,6 +71,7 @@ from __main__ import *
 import unittest
 
 image = "gauss_no_pol.fits"
+myia = iatool.create()
 
 class getchunk_test(unittest.TestCase):
     
@@ -80,14 +81,15 @@ class getchunk_test(unittest.TestCase):
 
     def tearDown(self):
         os.system('rm -rf ' + image)
+        myia.done()
 
     def test_CAS_2355(self):
         '''getchunk: test 32/64 bit resolution'''
-        ia.open(image)
-        bb = ia.boundingbox( ia.setboxregion() )
+        myia.open(image)
+        bb = myia.boundingbox( myia.setboxregion() )
         trc = bb['trc']
         blc = bb['blc']
-        chunk = ia.getchunk(blc=blc, trc=trc)
+        chunk = myia.getchunk(blc=blc, trc=trc)
         # if the last statement didn't throw an exception, then that's proof enough
         # the fix worked, but just for kicks...
         self.assertTrue(chunk[0][0][0] > 1973 and chunk[0][0][0] < 1974) 

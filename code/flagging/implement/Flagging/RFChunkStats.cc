@@ -32,21 +32,13 @@
 #include <msvis/MSVis/VisBuffer.h>
 #include <stdio.h>
 #include <casa/sstream.h>
-#include <casa/System/PGPlotter.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
-
-// when no plotter is specified for screen/report,
-// use a null (unattached plotter)
-static class PGPlotter nullPGPlotter;
-        
-RFChunkStats::RFChunkStats( VisibilityIterator &vi,VisBuffer &vb,Flagger &rf,
-    PGPlotterInterface *pgp_scr,PGPlotterInterface *pgp_rep )
+      
+RFChunkStats::RFChunkStats( VisibilityIterator &vi,VisBuffer &vb,Flagger &rf )
   : visiter(vi),
     visbuf(vb),
-    flagger(rf),
-    pgp_screen(pgp_scr?pgp_scr:&nullPGPlotter),
-    pgp_report(pgp_rep?pgp_rep:&nullPGPlotter)
+    flagger(rf)
 {
   chunk_no=0;
   counts[ANT] = flagger.numAnt();
@@ -74,13 +66,6 @@ const Vector<Double> & RFChunkStats::frequency ()
 { 
   return visiter.frequency(freq); 
 }
-
-PGPlotterInterface & RFChunkStats::pgpscr() const  
-{ return flagger.pgpscr(); }
-PGPlotterInterface & RFChunkStats::pgprep() const  
-{ return flagger.pgprep(); }
-void RFChunkStats::setReportPanels (Int nx,Int ny) const 
-{ flagger.setReportPanels(nx,ny); }
 
 void RFChunkStats::newChunk(bool init_quack)
 {

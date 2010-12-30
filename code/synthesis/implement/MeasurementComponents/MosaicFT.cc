@@ -290,8 +290,14 @@ void MosaicFT::findConvFunction(const ImageInterface<Complex>& iimage,
   pbConvFunc_p->setSkyJones(sj_p);
   pbConvFunc_p->findConvFunction(iimage, vb, convSampling, convFunc, weightConvFunc_p, convSizePlanes_p, convSupportPlanes_p, convRowMap_p);
   //For now only use one size and support
-  convSize=max(convSizePlanes_p);
-  convSupport=max(convSupportPlanes_p);
+  if(convSizePlanes_p.nelements() ==0)
+    convSize=0;
+  else
+    convSize=max(convSizePlanes_p);
+  if(convSupportPlanes_p.nelements() ==0)
+    convSupport=0;
+  else
+    convSupport=max(convSupportPlanes_p);
  				 
 }
 
@@ -759,6 +765,9 @@ void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 
 
   findConvFunction(*image, vb);
+  //nothing to grid here as the pointing resulted in a zero support convfunc
+  if(convSupport <= 0)
+    return;
 
   const Matrix<Float> *imagingweight;
   if(imwght.nelements()>0){
@@ -957,6 +966,9 @@ void MosaicFT::get(VisBuffer& vb, Int row)
   
 
   findConvFunction(*image, vb);
+  // no valid pointing in this buffer
+  if(convSupport <= 0)
+    return;
   // If row is -1 then we pass through all rows
   Int startRow, endRow, nRow;
   if (row==-1) {

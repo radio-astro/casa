@@ -59,7 +59,7 @@ bool PlotMSCache::axisIsMetaData(PMS::Axis axis) {
 const unsigned int PlotMSCache::THREAD_SEGMENT = 10;
 
                                            
-PlotMSCache::PlotMSCache(PlotMS* parent):
+PlotMSCache::PlotMSCache(PlotMSApp* parent):
   plotms_(parent),
   nAnt_(0),
   nChunk_(0),
@@ -1355,7 +1355,7 @@ PlotLogMessage* PlotMSCache::locateNearest(Double x, Double y) {
 
   stringstream ss;
   reportMeta(minic,minidx,ss);
-  return new PlotLogGeneric(PlotMS::CLASS_NAME, PlotMS::LOG_LOCATE, ss.str());
+  return new PlotLogGeneric(PlotMSApp::CLASS_NAME, PlotMSApp::LOG_LOCATE, ss.str());
 
   */
 
@@ -1753,7 +1753,10 @@ void PlotMSCache::reportMeta(Double x, Double y,stringstream& ss) {
   else 	 
     ss << "Field=" << fldnames_(fld) << "(" << fld << ")" << " "; 	 
   
-  ss << "Time=" << MVTime(getTime()/C::day).string(MVTime::YMD,7) << " ";
+  
+  const int number_of_digits_after_decimal_for_seconds = 2;
+  const int time_prec = 6  + number_of_digits_after_decimal_for_seconds;
+  ss << "Time=" << MVTime(getTime()/C::day).string(MVTime::YMD, time_prec) << " ";
   ss << "BL=";
 
   // Antenna names

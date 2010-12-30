@@ -651,16 +651,16 @@ void ImageInputProcessor::_setRegion(
     HashMap<uInt, Vector<Double> > axisCornerMap;
     for (uInt i=0; i<nRegions; i++) {
         for (uInt axisNumber=0; axisNumber<image->ndim(); axisNumber++) {
-    	    if (directionAxisNumbers.size() > 1 && axisNumber == directionAxisNumbers[0]) {
+    	    if (directionAxisNumbers.size() > 1 && (Int)axisNumber == directionAxisNumbers[0]) {
 			    axisCornerMap(axisNumber) = xCorners;
     	    }
-    	    else if (directionAxisNumbers.size() > 1 && axisNumber == directionAxisNumbers[1]) {
+    	    else if (directionAxisNumbers.size() > 1 && (Int)axisNumber == directionAxisNumbers[1]) {
     		    axisCornerMap(axisNumber) = yCorners;
     	    }
-    	    else if (axisNumber == spectralAxisNumber) {
+    	    else if ((Int)axisNumber == spectralAxisNumber) {
     		    axisCornerMap(axisNumber) = chanEndPtsDouble;
     	    }
-    	    else if (axisNumber == polarizationAxisNumber) {
+    	    else if ((Int)axisNumber == polarizationAxisNumber) {
     		    axisCornerMap(axisNumber) = polEndPtsDouble;
     	    }
     	    else {

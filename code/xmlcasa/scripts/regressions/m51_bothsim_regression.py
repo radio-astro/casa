@@ -56,10 +56,11 @@ antennalist="alma;0.5arcsec"
 #thermalnoise = 'tsys-manual'  #w/ noise 
 
 image = True
-vis = '$project.ms'  #w/ noise
+vis = '$project.ms,$project.sd.ms'  #w/ noise
 imsize = [512,512]
 cell = '0.2arcsec'
-modelimage='m51sdmed_co32.sd.image'  # should make parse $project
+#modelimage='m51sdmed_co32.sd.image'  # should make parse $project
+modelimage='m51both_co32.sd.image'  # should make parse $project
 
 analyze = True
 # show psf & residual are not available for SD-only simulation
@@ -96,19 +97,20 @@ ia.open(project + '.diff')
 m51sd_diffstats=ia.statistics(verbose=False,list=False)
 ia.close()
 
+# KS - updated 2010-12-17 (13767@active)
 # reference statistic values for simulated image
-refstats = { 'sum': 29.349,
-             'max': 0.10809,
-             'min': -0.039872,
-             'rms': 0.011892,
-             'sigma': 0.011889 }
+refstats = { 'sum': 531.76,
+             'max': 0.11337,
+             'min': -0.032224,
+             'rms': 0.013376,
+             'sigma': 0.012521 }
 
 # reference statistic values for diff image
-diffstats = {'sum': 838.2,
-             'max': 0.079668,
-             'min': -0.010396,
-             'rms': 0.011987,
-             'sigma': 0.0094131 }
+diffstats = {'sum': 335.78,
+             'max': 0.053222,
+             'min': -0.042831,
+             'rms': 0.0094158,
+             'sigma': 0.0089342 }
 
 
 # relative tolerances to reference values

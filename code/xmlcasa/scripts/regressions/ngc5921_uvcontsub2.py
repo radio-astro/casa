@@ -741,7 +741,7 @@ listvisOut = prefix + '.listvis.out'
 
 default('listvis')
 vis = srcsplitms
-datacolumn = 'corrected'  # change to 'data' when uvcontsub2 changes.
+datacolumn = 'data'
 selectdata=True
 antenna='VA03&VA04'
 listfile = listvisOut

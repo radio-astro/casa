@@ -39,11 +39,14 @@ casa_add_library( synthesis
   implement/MeasurementComponents/CalCorruptor.cc
   implement/MeasurementComponents/Calibrater.cc
   implement/MeasurementComponents/CEMemImageSkyModel.cc
+  implement/MeasurementComponents/CFCache.cc
+  implement/MeasurementComponents/CFStore.cc
   implement/MeasurementComponents/ClarkCleanAlgorithm.cc
   implement/MeasurementComponents/ClarkCleanImageSkyModel.cc
   implement/MeasurementComponents/CleanImageSkyModel.cc
   implement/MeasurementComponents/ComponentFTMachine.cc
   implement/MeasurementComponents/ConvFuncDiskCache.cc
+  implement/MeasurementComponents/ConvolutionFunction.cc
   implement/MeasurementComponents/CSCleanImageSkyModel.cc
   implement/MeasurementComponents/DBeamSkyJones.cc
   implement/MeasurementComponents/EJones.cc
@@ -98,6 +101,7 @@ casa_add_library( synthesis
   implement/MeasurementComponents/StandardVisCal.cc
   implement/MeasurementComponents/SteepestDescentSolver.cc
   implement/MeasurementComponents/SynthesisError.cc
+  implement/MeasurementComponents/TsysGainCal.cc
   implement/MeasurementComponents/Utils.cc
   implement/MeasurementComponents/UVMod.cc
   implement/MeasurementComponents/VisCal.cc
@@ -122,6 +126,7 @@ casa_add_library( synthesis
   implement/MeasurementEquations/Deconvolver.cc
   implement/MeasurementEquations/Entropy.cc
   implement/MeasurementEquations/Imager.cc
+  implement/MeasurementEquations/Imager2.cc		
   implement/MeasurementEquations/ImagerMultiMS.cc
   implement/MeasurementEquations/ImageMSCleaner.cc		
   implement/MeasurementEquations/IncCEMemModel.cc
@@ -130,7 +135,6 @@ casa_add_library( synthesis
   implement/MeasurementEquations/LatConvEquation.cc
   implement/MeasurementEquations/LatticeModel.cc
   implement/MeasurementEquations/MatrixCleaner.cc	
-  implement/MeasurementEquations/MosaicSkyEquation.cc
   implement/MeasurementEquations/PSkyEquation.cc
   implement/MeasurementEquations/Qimager.cc
   implement/MeasurementEquations/Simulator.cc

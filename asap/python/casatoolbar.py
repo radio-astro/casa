@@ -168,7 +168,7 @@ class CustomToolbarCommon:
 
     def _new_page(self,next=True):
         self.plotter._plotter.hold()
-        self.plotter._plotter.clear()
+        #self.plotter._plotter.clear()
         self.plotter._plot(self.plotter._data)
         self.plotter._plotter.release()
         self.plotter._plotter.tidy()

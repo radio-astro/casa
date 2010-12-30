@@ -39,14 +39,14 @@ namespace casa {
 
 // Static //
 
-PlotMSPlotParameters PlotMSSinglePlot::makeParameters(PlotMS* plotms) {
+PlotMSPlotParameters PlotMSSinglePlot::makeParameters(PlotMSApp* plotms) {
     PlotMSPlotParameters p = PlotMSPlot::makeParameters(plotms);
     makeParameters(p, plotms);
     return p;
 }
 
 void PlotMSSinglePlot::makeParameters(PlotMSPlotParameters& params,
-        PlotMS* plotms) {
+        PlotMSApp* plotms) {
     PlotMSPlot::makeParameters(params, plotms);
     
     // Add cache parameters if needed.
@@ -69,7 +69,7 @@ void PlotMSSinglePlot::makeParameters(PlotMSPlotParameters& params,
 
 // Constructors/Destructors //
 
-PlotMSSinglePlot::PlotMSSinglePlot(PlotMS* parent) : PlotMSPlot(parent) {
+PlotMSSinglePlot::PlotMSSinglePlot(PlotMSApp* parent) : PlotMSPlot(parent) {
     constructorSetup(); }
 
 PlotMSSinglePlot::~PlotMSSinglePlot() { }
@@ -296,8 +296,10 @@ bool PlotMSSinglePlot::updateCanvas() {
         PMS_PP_Canvas* c = itsParams_.typedGroup<PMS_PP_Canvas>();
         if(a== NULL || d== NULL || c== NULL) return false; // shouldn't happen
         
-        PlotAxis cx = a->xAxis(), cy = a->yAxis();
-        PMS::Axis x = d->xAxis(), y = d->yAxis();
+        PlotAxis cx = a->xAxis(); 
+        PlotAxis cy = a->yAxis();
+        PMS::Axis x = d->xAxis();
+        PMS::Axis y = d->yAxis();
         
         // Set axes scales
         itsCanvas_->setAxisScale(cx, PMS::axisScale(x));
@@ -330,9 +332,11 @@ bool PlotMSSinglePlot::updateCanvas() {
             itsCanvas_->setAxisRange(cy, a->yRange());
         
         // Show/hide axes
-        itsCanvas_->showAxes(false);
-        itsCanvas_->showAxis(cx, set && c->xAxisShown());
-        itsCanvas_->showAxis(cy, set && c->yAxisShown());
+        bool showx = set && c->xAxisShown();
+        bool showy = set && c->yAxisShown();
+        itsCanvas_->showAllAxes(false);
+        itsCanvas_->showAxis(cx, showx);
+        itsCanvas_->showAxis(cy, showy);
         
         // Legend
         itsCanvas_->showLegend(set && c->legendShown(), c->legendPosition());

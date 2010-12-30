@@ -146,8 +146,7 @@ virtual void endRows(uInt /* itime */) {};
   virtual String getDesc () { return ""; }
 // called (before endChunk()) to obtain a statistics report 
   virtual String getStats () { return ""; }
-// called (before endChunk()) to plots a graphical flagging report  
-  virtual void plotFlaggingReport ( PGPlotterInterface & ) {};
+
   virtual void printFlaggingReport ( ) {};
 
   virtual String getID() {return String("");};

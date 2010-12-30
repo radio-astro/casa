@@ -48,6 +48,9 @@ using asdmIDL::CalGainRowIDL;
 
 
 
+
+
+
 #include <ArrayTime.h>
 using  asdm::ArrayTime;
 
@@ -83,7 +86,7 @@ using  asdm::Tag;
 
 
 /*\file CalGain.h
-    \brief Generated from model's revision "1.54", branch "HEAD"
+    \brief Generated from model's revision "1.55", branch "HEAD"
 */
 
 namespace asdm {
@@ -104,7 +107,7 @@ typedef void (CalGainRow::*CalGainAttributeFromBin) (EndianISStream& eiss);
 /**
  * The CalGainRow class is a row of a CalGainTable.
  * 
- * Generated from model's revision "1.54", branch "HEAD"
+ * Generated from model's revision "1.55", branch "HEAD"
  *
  */
 class CalGainRow {

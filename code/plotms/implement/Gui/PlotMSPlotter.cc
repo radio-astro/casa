@@ -53,7 +53,7 @@ namespace casa {
 
 // Constructors/Destructors //
 
-PlotMSPlotter::PlotMSPlotter(PlotMS* parent, Plotter::Implementation impl) :
+PlotMSPlotter::PlotMSPlotter(PlotMSApp* parent, Plotter::Implementation impl) :
         itsParent_(parent), itsAnnotator_(parent)
         {
     initialize(impl);
@@ -433,6 +433,7 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
     itsActionMap_.insert(PlotMSAction::ITER_LAST, actionIterLast);
     
     itsActionMap_.insert(PlotMSAction::TOOL_MARK_REGIONS, actionMarkRegions);
+    itsActionMap_.insert(PlotMSAction::TOOL_SUBTRACT_REGIONS, actionMinusRegions);
     itsActionMap_.insert(PlotMSAction::TOOL_ZOOM, actionZoom);
     itsActionMap_.insert(PlotMSAction::TOOL_PAN, actionPan);
     itsActionMap_.insert(PlotMSAction::TOOL_ANNOTATE_TEXT, actionAnnotateText);
@@ -483,6 +484,9 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
         maxWidth = itsAnnotatorTab_->maximumWidth();
     if(itsOptionsTab_->maximumWidth() < maxWidth)
         maxWidth = itsOptionsTab_->maximumWidth();
+    //
+    // Put in to avoid display issues on the mack
+    //
     tabWidget->setMaximumWidth(325);
     itsPlotTab_->setupForMaxWidth(maxWidth);
     itsFlaggingTab_->setupForMaxWidth(maxWidth);
@@ -517,6 +521,7 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
     // Set up exclusive tool actions.
     QtActionGroup* toolGroup = new QtActionGroup(this);
     toolGroup->addAction(actionMarkRegions);
+    toolGroup->addAction(actionMinusRegions);
     toolGroup->addAction(actionZoom);
     toolGroup->addAction(actionPan);
     toolGroup->addAction(actionAnnotateText);

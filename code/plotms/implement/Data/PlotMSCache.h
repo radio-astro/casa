@@ -43,7 +43,7 @@
 namespace casa {
 
 //# Forward declarations.
-class PlotMS;
+class PlotMSApp;
 
 
 class PlotMSCache {
@@ -64,7 +64,7 @@ public:
     static const unsigned int THREAD_SEGMENT;
 
   // Constructor which takes parent PlotMS.
-  PlotMSCache(PlotMS* parent);
+  PlotMSCache(PlotMSApp* parent);
   
   // Destructor
   virtual ~PlotMSCache();
@@ -362,7 +362,7 @@ protected:
   // Private data
   
   // Parent plotms.
-  PlotMS* plotms_;
+  PlotMSApp* plotms_;
 
   // The number of antennas
   Int nAnt_;

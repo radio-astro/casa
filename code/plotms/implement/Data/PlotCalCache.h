@@ -42,7 +42,7 @@
 namespace casa {
 
 //# Forward declarations.
-class PlotMS;
+class PlotMSApp;
 
 
 class PlotCalCache : public PlotMSCache {
@@ -53,7 +53,7 @@ class PlotCalCache : public PlotMSCache {
 public:    
 
   // Constructor which takes parent PlotMS.
-  PlotCalCache(PlotMS* parent);
+  PlotCalCache(PlotMSApp* parent);
   
   // Destructor
   virtual ~PlotCalCache();

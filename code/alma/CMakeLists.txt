@@ -122,6 +122,8 @@ casa_add_library( alma
   implement/ASDM/FeedTable.cc
   implement/ASDM/FieldRow.cc
   implement/ASDM/FieldTable.cc
+  implement/ASDM/FlagRow.cc
+  implement/ASDM/FlagTable.cc
   implement/ASDM/FlagCmdRow.cc
   implement/ASDM/FlagCmdTable.cc
   implement/ASDM/Float.cc

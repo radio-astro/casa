@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Record.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Record.cc 20969 2010-09-27 12:45:04Z gervandiepen $
 
 #include <casa/Containers/Record.h>
 #include <casa/Containers/RecordDesc.h>
@@ -297,7 +297,7 @@ void Record::getRecord (AipsIO& os)
     notify (RecordNotice (RecordNotice::DETACH, 0));
     // Reading the record type back means casting it from an int
     // to the correct type.
-    int type;
+    Int type;
     rwRef().getRecord (os, type);
     recordType() = (RecordInterface::RecordType)type;
 }

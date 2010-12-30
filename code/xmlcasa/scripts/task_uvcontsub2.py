@@ -18,9 +18,7 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
         csvis = vis.rstrip('/') + '.contsub'
         
         # The working copy will need all of the channels in fitspw + spw, so we
-        # may or may not need an additional split at the end to filter it down
-        # to spw.
-        do_resplit = False
+        # may or may not need to filter it down to spw at the end.
         myfitspw = fitspw
         myspw = spw
 
@@ -36,13 +34,25 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
             myfitspw, spwmap = update_spw(fitspw, None)
             myspw = update_spw(spw, spwmap)
 
-        if spw and spw != tempspw:
-            do_resplit = True
-            final_csvis = csvis
-            csvis = tempfile.mkdtemp(suffix=csvis)
+        final_csvis = csvis
+        workingdir = os.path.abspath(os.path.dirname(vis.rstrip('/')))
+        csvis = tempfile.mkdtemp(suffix=csvis.split('/')[-1], dir=workingdir)
 
+        # ms does not have a colnames method, so open vis with tb even though
+        # it is already open with ms.  Note that both use nomodify=True, however,
+        # and no problem was revealed in testing.
+        tb.open(vis, nomodify=True)
+        if 'CORRECTED_DATA' in tb.colnames():
+            whichcol = 'CORRECTED_DATA'
+        else:
+            # DON'T remind the user that split before uvcontsub2 wastes time -
+            # scratch columns will eventually go away.
+            whichcol = 'DATA'
+        tb.close()
+        
         # tempspw is chan free, so averchan doesn't matter.
-        ms.split(csvis, field=field, spw=tempspw, whichcol='CORRECTED_DATA')
+        ms.split(csvis, field=field, spw=tempspw, whichcol=whichcol)
+
         ms.close()       
         
         if (type(csvis) == str) and os.path.isdir(csvis):
@@ -134,15 +144,14 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
         # Delete the temporary caltable
         shutil.rmtree(amuellertab)
 
-        if do_resplit:                   # Do final filtering by spw.
-            ms.open(csvis)
-            # Using ^ in spw is untested here!
-            ms.split(final_csvis, spw=myspw, whichcol='all')
-            ms.close()
-            shutil.rmtree(csvis)
-            csvis = final_csvis
+        # Move the line data from CORRECTED_DATA to DATA, and do any
+        # final filtering by spw.
+        ms.open(csvis)
+        # Using ^ in spw is untested here!
+        ms.split(final_csvis, spw=myspw, whichcol='corrected')
+        ms.close()
 
-        ms.open(csvis, nomodify=False)
+        ms.open(final_csvis, nomodify=False)
         ms.writehistory('taskname = uvcontsub2', origin='uvcontsub2')
         ms.writehistory(message='vis       = ' + str(vis),
                         origin='uvcontsub2')
@@ -165,9 +174,12 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
             # No channel averaging (== skipping for fitorder == 0) is done
             # here, but it would be a reasonable option.  The user can always
             # do it by running split again.
-            ms.split(csvis[:-3],             # .contsub -> .cont
-                     whichcol='MODEL_DATA', averchan=False)
+            ms.split(final_csvis[:-3],             # .contsub -> .cont
+                     whichcol='MODEL_DATA',
+                     spw=myspw, averchan=False)
             ms.close()
+
+        shutil.rmtree(csvis)
 
     except Exception, instance:
         print '*** Error in ', instance

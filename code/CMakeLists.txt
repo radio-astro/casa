@@ -28,7 +28,7 @@ include( target )
 include( CASA )
 
 set( CASA_MAJOR_VERSION 3 )
-set( CASA_MINOR_VERSION 1 )
+set( CASA_MINOR_VERSION 2 )
 set( CASA_PATCH_VERSION 0 )
 set( CASA_API_VERSION "${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_VERSION}" )
 
@@ -187,33 +187,33 @@ if( APPLE )
 	endif()
 	execute_process( COMMAND ${CMAKE_Fortran_COMPILER} --version
 			 COMMAND head -1
-			 COMMAND perl -pe "s|.*?(\\S+)$|$1|"
+			 COMMAND perl -pe "s|.*?(\\d+\\.\\d+)\\.\\d+$|$1|"
 			 OUTPUT_VARIABLE _gfortran_version
 			 OUTPUT_STRIP_TRAILING_WHITESPACE )
 	execute_process( COMMAND ${CMAKE_CXX_COMPILER} -dumpmachine
 			 COMMAND head -1
-			 COMMAND perl -pe "s|.*?(\\S+)$|$1|"
+			 COMMAND perl -pe "s|.*?(\\d+\\.\\d+)\\.\\d+$|$1|"
 			 OUTPUT_VARIABLE _gcc_machine
 			 OUTPUT_STRIP_TRAILING_WHITESPACE )
 	execute_process( COMMAND ${CMAKE_CXX_COMPILER} --version
 			 COMMAND head -1
-			 COMMAND perl -pe "s|.*?(\\S+)$|$1|"
+			 COMMAND perl -pe "s|.*?(\\d+\\.\\d+)\\.\\d+$|$1|"
 			 OUTPUT_VARIABLE _cxx_version
 			 OUTPUT_STRIP_TRAILING_WHITESPACE )
-	if( NOT _gfortran_version STREQUAL "4.4.4" )
+	if( NOT _gfortran_version STREQUAL "4.4" )
 	    set( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -arch ${archflag}" )
         endif()
         set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -arch ${archflag} -framework AppKit" )
         # Which part of CASA needs -framework AppKit to run? This should probably *not* be added
         # as a generic linker flag.
-	if( NOT _cxx_version STREQUAL "4.4.4" )
+	if( NOT _cxx_version STREQUAL "4.4" )
 	    set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -arch ${archflag}" )
 	endif()
     else()
         message( WARNING "Unsupported Mac: ${CMAKE_SYSTEM}" )
     endif()
 
-    if( _cxx_version STREQUAL "4.4.4" )
+    if( _cxx_version STREQUAL "4.4" )
 	set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -dynamic -mtune=nocona -ftree-vectorize -ffast-math -mfpmath=sse" )
     else()
 	set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -dynamic -mtune=nocona -ftree-vectorize -ffast-math -mfpmath=sse -fasm-blocks" )
@@ -475,7 +475,7 @@ if( NOT SKIP_PGPLOT )
   casa_find( PGPLOT
     VERSION 5.3.1
     INCLUDES cpgplot.h
-    LIBS pgplot cpgplot
+    LIBS pgplot${pgplot_ext} cpgplot${pgplot_ext}
     DEPENDS ${_deps} )
 endif()
 
@@ -569,7 +569,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.31
+           VERSION 1.0.38
            INCLUDES casa/aips.h
                     casa/version.h
                     scimath/Mathematics/MatrixMathLA.h  # declares symbols defined in LAPACK

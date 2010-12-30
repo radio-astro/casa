@@ -58,7 +58,10 @@ const String PlotMSAction::P_INTERACTIVE = "interactive";
 
 bool PlotMSAction::requires(Type type, const String& parameter) {
     switch(type) {
-    case TOOL_MARK_REGIONS: case TOOL_ZOOM: case TOOL_PAN:
+    case TOOL_MARK_REGIONS: 
+    case TOOL_SUBTRACT_REGIONS: 
+    case TOOL_ZOOM: 
+    case TOOL_PAN:
     case TOOL_ANNOTATE_TEXT: 
     case TOOL_ANNOTATE_RECTANGLE: 
     case TRACKER_ENABLE_HOVER:
@@ -92,7 +95,10 @@ PlotMSAction::Type PlotMSAction::type() const { return itsType_; }
 
 bool PlotMSAction::isValid() const {
 	switch(itsType_) {
-	case TOOL_MARK_REGIONS: case TOOL_ZOOM: case TOOL_PAN:
+	case TOOL_MARK_REGIONS: 
+	case TOOL_SUBTRACT_REGIONS: 
+	case TOOL_ZOOM: 
+	case TOOL_PAN:
 	case TOOL_ANNOTATE_TEXT: 
 	case TOOL_ANNOTATE_RECTANGLE: 
 	case TRACKER_ENABLE_HOVER:
@@ -132,21 +138,11 @@ void PlotMSAction::setParameter(const String& parameter, const String& value) {
 void PlotMSAction::setParameter(const String& parameter, int value) {
 	itsIntValues_[parameter] = value; }
 
-#define PMSA_PRINTPARAMS1(TYPE,MEMBER)                                        \
-    for(map<String, TYPE >::iterator iter = MEMBER .begin();                  \
-        iter != MEMBER .end(); iter++) {
 
-#define PMSA_PRINTPARAMS2 cout << ", " << iter->first << "=";
-#define PMSA_PRINTPARAMS3 cout << iter->second;
-#define PMSA_PRINTPARAMS4 }
 
-#define PMSA_PRINTPARAMS(TYPE,MEMBER)                                         \
-    PMSA_PRINTPARAMS1(TYPE,MEMBER)                                            \
-    PMSA_PRINTPARAMS2                                                         \
-    PMSA_PRINTPARAMS3                                                         \
-    PMSA_PRINTPARAMS4
 
-bool PlotMSAction::doAction(PlotMS* plotms) {
+
+bool PlotMSAction::doAction(PlotMSApp* plotms) {
 	itsDoActionResult_ = "";
 
 	if(!isValid() || plotms == NULL) {
@@ -154,30 +150,12 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
 		return false;
 	}
 
-	/*
-	cout << "Executing action: {type=" << itsType_;
-	
-	PMSA_PRINTPARAMS(PlotMSPlot*, itsPlotValues_)
-	PMSA_PRINTPARAMS(bool, itsBoolValues_)
-	PMSA_PRINTPARAMS(String, itsStringValues_)
-	PMSA_PRINTPARAMS(int, itsIntValues_)
-	
-	PMSA_PRINTPARAMS1(vector<PMS::Axis>, itsAxesValues_)
-        PMSA_PRINTPARAMS2
-        cout << "[";
-        for(unsigned int i = 0; i < iter->second.size(); i++) {
-            if(i > 0) cout << ", ";
-            cout << PMS::axis(iter->second[i]);
-        }
-        cout << "]";
-	PMSA_PRINTPARAMS4
-	
-	cout << "}" << endl;
-	*/
-	
+
 	switch(itsType_) {
 	
-	case SEL_FLAG: case SEL_UNFLAG: case SEL_LOCATE: {
+	case SEL_FLAG: 
+	case SEL_UNFLAG: 
+	case SEL_LOCATE: {
 	    // Locate/Flag/Unflag on all visible canvases.
 	    const vector<PlotMSPlot*>& plots = plotms->getPlotManager().plots();
 	    vector<PlotCanvasPtr> visibleCanv = plotms->getPlotter()
@@ -320,6 +298,7 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
 	    return true;
 	}
 
+
 	case SEL_CLEAR_REGIONS: {
 		const vector<PlotMSPlot*>& plots = plotms->getPlotManager().plots();
 		vector<PlotCanvasPtr> visibleCanv = plotms->getPlotter()
@@ -347,16 +326,33 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
 		return true;
 	}
 
-	case TOOL_MARK_REGIONS:	case TOOL_ZOOM:	case TOOL_PAN:
-	case TOOL_ANNOTATE_TEXT: case TOOL_ANNOTATE_RECTANGLE: {
+
+	case TOOL_MARK_REGIONS:	
+	case TOOL_SUBTRACT_REGIONS:	
+	case TOOL_ZOOM:	
+	case TOOL_PAN:
+	case TOOL_ANNOTATE_TEXT: 
+	case TOOL_ANNOTATE_RECTANGLE: {
+		
 		bool on = valueBool(P_ON_OFF);
-	    PlotStandardMouseToolGroup::Tool tool=PlotStandardMouseToolGroup::NONE;
-	    if(on && itsType_ == TOOL_MARK_REGIONS)
-	    	tool = PlotStandardMouseToolGroup::SELECT;
-	    else if(on && itsType_ == TOOL_ZOOM)
-	    	tool = PlotStandardMouseToolGroup::ZOOM;
-	    else if(on && itsType_ == TOOL_PAN)
-	    	tool = PlotStandardMouseToolGroup::PAN;
+	    ToolCode toolcode;  
+	    
+	    toolcode=NONE_TOOL;
+	    
+	    // Set tool to enum value corresponding to desired tool,
+	    // based on this Action's type (also an enum).
+	    // Note that the SelectTool, as the entity holding the rectangles, doubles 
+	    // for selection and for subtracting selections, distinguished by
+	    // having separate enum values.
+	    // 
+	    if      (on && (itsType_ == TOOL_MARK_REGIONS))
+	    	toolcode = SELECT_TOOL;
+	    else if (on && (itsType_ == TOOL_SUBTRACT_REGIONS))
+	    	toolcode = SUBTRACT_TOOL;
+	    else if (on && (itsType_ == TOOL_ZOOM))
+	    	toolcode = ZOOM_TOOL;
+	    else if (on && (itsType_ == TOOL_PAN))
+	    	toolcode = PAN_TOOL;
 	    
 	    bool useAnnotator = on && (itsType_ == TOOL_ANNOTATE_TEXT ||
 	                        itsType_ == TOOL_ANNOTATE_RECTANGLE);
@@ -374,8 +370,11 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
 	    		
 	    		// Update standard mouse tools.
 	    		canv[j]->standardMouseTools()->setActive(!useAnnotator);
-	    		if(!useAnnotator)
-	    		    canv[j]->standardMouseTools()->setActiveTool(tool);
+	    		if(!useAnnotator)   {
+					PlotStandardMouseToolGroupPtr x;
+	    		    x=canv[j]->standardMouseTools();
+	    		    x->setActiveTool(toolcode);
+	    		}
 	    	}
 	    }
 	    
@@ -386,6 +385,8 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
 
 	    return true;
 	}
+
+
 
 	case TRACKER_ENABLE_HOVER:	
 	case TRACKER_ENABLE_DISPLAY: {
@@ -410,7 +411,9 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
 	    return true;
 	}
 
-	case STACK_BACK: case STACK_BASE: case STACK_FORWARD: {
+	case STACK_BACK: 
+	case STACK_BASE: 
+	case STACK_FORWARD: {
 	    int delta = 0;
 	    if(itsType_ == STACK_BACK)         delta = -1;
 	    else if(itsType_ == STACK_FORWARD) delta = 1;
@@ -619,9 +622,13 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
 	    Bool interactive = ! (
 	    	isDefinedBool(P_INTERACTIVE) && ! valueBool(P_INTERACTIVE)
 	    );
+	    
+	    // Create Export Thread and start executing it
+	    // Note: new object is deleted in PlotMSPlotter::currentThreadFinished() 
 	    plotms->getPlotter()->doThreadedOperation(
 	    	new PlotMSExportThread(valuePlot(P_PLOT), format, interactive)
 	    );
+	    
 	    return true;
 	}
 

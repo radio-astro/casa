@@ -835,16 +835,16 @@ void TBConstants::strtrim(String& str) {
     if(str.length() == 0) return;
 
     // find beginning whitespace
-    unsigned int n = str.length();
-    unsigned int i = 0;
+    int n = str.length();
+    int i = 0;
     while(i < n && isWS(str[i])) i++;
 
     // find ending whitespace
-    unsigned int j = n - 1;
-    while(j >= 0 && isWS(str[j])) j--;
+    int j = n - 1;
+    while (j >= 0 && isWS(str[j])) j--;
 
-    if(j != n - 1) str.erase(j + 1);
-    if(i != 0) str.erase(0, i);
+    if (j != n - 1) str.erase(j + 1);
+    if (i != 0) str.erase(0, i);
 }
 
 void TBConstants::toLower(String& str) {

@@ -119,7 +119,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     The listhistory function lists the contents of the measurement set
     history table.  The history table contains a record of changes
-    made to the measurement set by autoflag, calibrater, imager and
+    made to the measurement set by flagger, calibrater, imager and
     other tools.
 
   \medskip\noindent\textbf{Selecting data}
@@ -192,7 +192,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
    The writehistory function allows messages to be appended to the measurement
    set history table should you wish to do so.  The listhistory function lists
-   your messages and those created by autoflag, calibrater, imager and other
+   your messages and those created by flagger, calibrater, imager and other
    tools.
 
   \medskip\noindent\textbf{Conversions to \fits}
@@ -2126,6 +2126,99 @@ Date/Time:                         RR:                      RL:                 
   </example>
 </method>
 
+<method type="function" name="cvelfreqs">
+   <shortdescription>calculate the transformed grid of the SPW obtained by combining a given set of SPWs (MS is not modified)
+   </shortdescription>
+   
+  <keyword>cvelfreqs</keyword>
+  <input>
+
+
+     <param type="intArray" direction="in" name="spwids">
+     <description>The list of ids of the spectral windows from which the input grid is to be taken.
+     </description>
+     </param>
+
+     <param type="intArray" direction="in" name="fieldids">
+     <description>The list of ids of the fields which are selected (for observation time determination), default: all
+     </description>
+     </param>
+    
+     <param type="string" direction="in" name="obstime">
+     <description>the observation time to assume, default: time of the first row of the MS = 
+     </description>
+     <value></value>     
+     </param>
+
+     <param type="string" direction="in" name="mode">
+     <description> "channel", "velocity", "frequency", or "channel_b", default = 
+     </description>
+     <value>channel</value>
+     </param>
+
+     <param type="int" direction="in" name="nchan">
+     <description> number of channels, default = all = 
+     </description>
+     <value>-1</value>
+     </param>
+
+     <param type="any" direction="in" name="start">
+     <description> start channel, default =  
+     </description>
+     <any type="variant"/>
+     <value>0</value>
+     </param>
+
+     <param type="any" direction="in" name="width">
+     <description> new channel width, default =  
+     </description>
+     <any type="variant"/>
+     <value>1</value>
+     </param>
+
+     <param type="any" direction="in" name="phasec">
+     <description> phase center, default = first field =
+     </description>
+     <any type="variant"/>
+     <value>0</value>
+     </param>
+
+     <param type="any" direction="in" name="restfreq">
+     <description> rest frequency, default = 
+     </description>
+     <any type="variant"/>
+     <value>1.4GHz</value>
+     </param>
+
+     <param type="string" direction="in" name="outframe">
+     <description>LSRK, LSRD, BARY, GALACTO, LGROUP, CMB, GEO, or TOPO, default = keep reference frame = </description>
+     <value></value>
+     </param>
+
+     <param type="string" direction="in" name="veltype">
+     <description>radio or optical, default = </description>
+     <value>radio</value>
+     </param>
+
+  </input>
+  <returns type="doubleArray"/>
+
+  <description>
+    Take the spectral grid of a given spectral window, tranform and regrid it as prescribed by the given
+    grid parameters (same as in cvel and clean) and return the transformed values as a list.
+    The MS is not modified. Useful for tests of gridding parameters before using them in cvel or clean.
+  </description>
+  <example>
+    ms.open('my.ms')
+    ms.cvelfreqs(spwid=[1], mode='channel', nchan=20, start=2, width=3, outframe='LSRK')
+
+    will take the grid of SPW 1 (i.e. the second in the SPW table), regrid it as in cvel
+    with the given grid parameters and return the resulting channel centers as an array.
+    The MS is not modified. See help cvel for more details on the grid parameters.
+
+  </example>
+</method>
+
 
  
    <method type="function" name="getdata">
@@ -2451,6 +2544,59 @@ for i in range(len(tcoord)):
     deciding if the spw and field in the measurementsets are
     similar or not. 
   </example>
+
+</method>
+   <method type="function" name="testconcatenate">
+   <shortdescription>Concatenate only the subtables of two measurement sets (resulting MAIN table not useful)</shortdescription>
+   
+  <keyword>testconcatenate</keyword>
+  <input>
+    
+     <param type="string" direction="in" name="msfile">
+     <description>The name of the measurement set from which the subtables should be appended</description>
+     <value></value>
+     </param>
+    
+     <param type="any" direction="in" name="freqtol">
+     <description>Frequency difference  within which 2
+ spectral windows are considered similar; e.g '10Hz'</description>
+     <any type="variant"/>
+     <value>1Hz</value>
+     </param>
+    
+     <param type="any" direction="in" name="dirtol">
+     <description>Direction difference within which 2
+ fields are considered the same; e.g '1mas'</description>
+     <any type="variant"/>
+     <value>1mas</value>
+     </param>
+  </input>
+  <returns type="bool"/>
+
+  <description>
+    This function acts like ms.concatenate() except that the MAIN table
+    is not modified. This is useful for generating, e.g.,
+    SPECTRAL_WINDOW and FIELD tables which contain all used SPW and FIELD ids
+    for a set of MSs without having to actually carry out a time-consuming
+    concatenation on disk. The MAIN table in the resulting output MS is
+    that of the original MS, i.e. it is not touched. 
+  </description>
+  <example>
+    
+      tb.open("3C273XC1.MS")
+      tb.copy("TEMP.MS", norows=True)
+      tb.close()
+      ms.open("TEMP.MS", nomodify=False)
+      ms.testconcatenate("3C273XC1.ms", '1GHz', '1arcsec')
+      ms.testconcatenate("BLLAC.ms", '1GHz', '1arcsec')
+      ms.done()
+    
+    This example makes a copy of the structure of an MS and then
+    appends the subtables data from two  measurement sets to the empty structure. 
+    Its going to assume a frequency tolerance of 1GHz and position tolerance 
+    of 1 arcsec in deciding if the spw and field in the measurementsets are
+    similar or not. 
+  </example>
 </method>
 
    <method type="function" name="timesort">
@@ -2566,8 +2712,8 @@ for i in range(len(tcoord)):
      <value>true</value>
      </param>
 
-     <param type="string" direction="in" name="ignorables">
-     <description>Columns (array, scan, and/or state) to ignore when time averaging.</description>
+     <param type="string" direction="in" name="combine">
+     <description>Ignore changes in these columns (scan, and/or state) when time averaging.</description>
      <value></value>
      </param>
 
@@ -2636,7 +2782,7 @@ from spwid 1 of the input data, starting at channel 4, and every
 
      
   ms.open("WSRT.ms")
-  ms.split('subms.ms', timebin='20s', whichcol='all', ignorables='scan')
+  ms.split('subms.ms', timebin='20s', whichcol='all', combine='scan')
   ms.close()
 
 

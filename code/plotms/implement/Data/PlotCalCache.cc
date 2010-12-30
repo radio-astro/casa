@@ -38,7 +38,7 @@
 
 namespace casa {
 
-PlotCalCache::PlotCalCache(PlotMS* parent) :
+PlotCalCache::PlotCalCache(PlotMSApp* parent) :
   PlotMSCache(parent),
   tab_p(NULL),
   seltab_p(NULL),

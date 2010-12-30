@@ -36,6 +36,26 @@ at = attool.create()
 </example>
 </method>
 
+<method type="function" name="getAtmVersion">
+   <shortdescription>Returns the version of ATM library.
+   </shortdescription>
+<description> 
+Returns the version of ATM library implemented to this tool.
+</description>
+   <returns type="string">The ATM library tag.
+   </returns>
+<example>
+
+"""
+#
+at.getAtmVersion()
+# 'ATM-0_4_3'
+#
+"""
+
+</example>
+</method>
+
    <method type="function" name="listAtmosphereTypes">
    <shortdescription>Returns a list of atmospheric types used by ATM.
    </shortdescription>

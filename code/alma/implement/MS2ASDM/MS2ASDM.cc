@@ -3763,7 +3763,7 @@ namespace casa {
       // scan finished
       // complete and write scan table row
       mainTabRow--; // return to the last row of the scan
-      scanEndTime = ArrayTime( timestampEndSecs(mainTabRow) );	  
+      scanEndTime = ASDMArrayTime( timestampEndSecs(mainTabRow) );	  
       scanNumIntent = 1; // hardwired (???)
       for(uInt i=0; i<(uInt)scanNumIntent; i++){
 	scanIntent.push_back(ScanIntentMod::OBSERVE_TARGET); // hardwired for the moment (???)

@@ -9,16 +9,18 @@
     <shortdescription> All purpose flagging task based on selections. It allows the combination of several modes.</shortdescription>
     <description>
         The task will select a subset of data explicitly for flagging,
-        quacking, clipping, autocorrelation flagging, rfi or flagging
-        of shadowed antennas. Unflagging is also available.
+        quacking, clipping, autocorrelation flagging, rfi, flagging
+        of shadowed antennas or flagging based on elevation. Unflagging
+        is also available.
         
         The parameter selectdata will pre-select a subset of the data for flagging.
         Any flagging will be applied to the subset data only. Some modes contain
         specific subparameters for further selections.
         
         Any combination of the following modes can be applied: manualflag, clip,
-        shadow, quack, autoflag, rfi and summary. When mode summary is combined with any
-        other mode(s), it will run as last and report what has been flagged by the other modes.
+        shadow, elevation, quack, autoflag, rfi and summary. When mode summary is 
+        combined with any other mode(s), it will run as last and report what has
+        been flagged by the other modes.
 
         In a dual polarization data set, each polarization can be flagged
         separately.  However, at present the calibration and imaging will
@@ -180,6 +182,19 @@
                    <description>Effective diameter (m) to use. -1 ==>antenna diameter</description>
                    <value>-1.0</value>
             </param>
+
+        <param type="bool" name="elevation">
+               <description>Flag data from antennas below and above the given elevation range</description>
+               <value>False</value>
+        </param>       
+        <param type="double" name="lowerlimit" subparam="true">
+                <description>Lower limiting elevation in degrees</description>
+                <value>0.0</value>
+         </param>
+        <param type="double" name="upperlimit" subparam="true">
+                <description>Upper limiting elevation in degrees</description>
+                <value>90.0</value>
+         </param>
 
         <param type="bool" name="quack">
                <description>Clip beginning or ending of scans</description>
@@ -367,6 +382,13 @@
                 <default param="diameter"><value type="double">-1.0</value></default>
             </equals>
             </when>
+            <when param="elevation">
+            <equals type="bool" value="False"/>
+            <equals type="bool" value="True">
+                <default param="lowerlimit"><value type="double">0.0</value></default>
+                <default param="upperlimit"><value type="double">90.0</value></default>
+            </equals>
+            </when>
             <when param="quack">
             <equals type="bool" value="False"/>
             <equals type="bool" value="True">
@@ -426,6 +448,7 @@
             clip       = clip data according to values
             quack      = remove/keep specific time range at scan beginning/end
             shadow     = remove antenna-shadowed data
+            elevation  = remove data below/above given elevations
             rfi        = Radio Frequency Interference auto-flagging
             autoflag   = experimental auto-flagging outliers
             summary    = report the amount of flagged data
@@ -590,6 +613,28 @@
                     for all antennas. If this is set to a negative number the actual 
                     antenna diameters are used.
                   default: -1.0
+
+        elevation -- Option to flag based on antenna elevation
+                default: False
+                options: True, False
+                 
+              lowerlimit -- Lower limiting elevation in degrees. Data coming from a baseline
+                  where one or both antennas were pointing at a strictly lower elevation
+                  (as function of time), will be flagged.
+                  default: 0.0
+
+              upperlimit -- Upper limiting elevation in degrees. Data coming from a baseline
+                  where one or both antennas were pointing at a strictly higher elevation
+                  (as function of time), will be flagged.
+                  default: 90.0
+
+
+              For example, the following
+
+                   flagdata2(elevation = True, upperlimit = 85.0, ...)
+
+              would flag everything above 85 degrees of elevation (as well as data below 0
+              degrees of elevation, if any).
 
         autoflag -- Automatic flagging of outliers (Experimental)
                 default: False
@@ -770,7 +815,7 @@
 
            vis = 'my.ms'
            manualflag = True
-           mf_antenna = ['2', '3, '5', '8']
+           mf_antenna = ['2', '3', '5', '8']
            mf_scan = ['4']
            clip = True
            clipminmax = [0.0, 0.2]
@@ -778,7 +823,7 @@
            flagdata2()
            
            Or the command line call is:
-           flagdata2(vis='my.ms', manualflag=True, mf_antenna=['2', '3, '5', '8'], mf_scan=['4'],
+           flagdata2(vis='my.ms', manualflag=True, mf_antenna=['2', '3', '5', '8'], mf_scan=['4'],
                      clip=True, clipminmax=[0.0,0.2])
                      
            At run time, flagdata2 will first flag manually in parallel mode, then it will clip.
@@ -802,7 +847,16 @@
               flagdata2()
               
 
+           Another possibility of improving the performance [in vector mode, when the vector is
+           already so long that the I/O overhead gets negligible and the runtime is proportional 
+           to the vector length] is to combine several vector entries into fewer equivalent entries.
+           For example, the specification
+           
+              mf_antenna = ['2', '3', &lt;many more parameters&gt; ]
 
+           could be combined into the equivalent and marginally faster,
+
+              mf_antenna = ['2,3', &lt;many more parameters&gt; ]
  </example>
  </task>
  </casaxml>

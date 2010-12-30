@@ -55,7 +55,7 @@ namespace WVRMethodMod
   //! WVRMethod.
   //! [CalDM.CalWVR] Methods for WVR Data processing in TelCal
   
-  const char *const revision = "1.8";
+  const char *const revision = "1.9";
   const int version = 1;
   
   enum WVRMethod

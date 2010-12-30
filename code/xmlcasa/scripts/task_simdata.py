@@ -208,8 +208,7 @@ def simdata(
         # read antenna file here to get Primary Beam
         predict_uv=False
         predict_sd=False
-        tp_only=False
-        tpset=False
+        sd_only=False
         aveant=-1
         stnx=[]  # for later, to know if we read an array in or not
 
@@ -241,7 +240,6 @@ def simdata(
 
             
         if os.path.exists(sdantlist):
-            tpset=True
             tpx, tpy, tpz, tpd, tp_padnames, tp_nant, tp_telescopename = util.readantenna(sdantlist)
             tp_antnames=[]
             #for k in range(0,tp_nant): tp_antnames.append('TP%02d'%k)
@@ -262,7 +260,7 @@ def simdata(
             if not predict_uv:
                 aveant=tp_aveant
                 msg("Only single-dish observation is predicted",priority="info")
-                tp_only=True
+                sd_only=True
             # check for image size (need to be > 2*pb)
             if not components_only:
                 pb2 = 2.*1.2*0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/tp_aveant*3600.*180/pl.pi
@@ -297,13 +295,21 @@ def simdata(
         util.direction=dir0
 
         if setpointings:
+            import re
             if verbose:
                 util.msg("calculating map pointings centered at "+str(dir0))
+
             if len(pointingspacing)<1:
+                pointingspacing="0.5PB"
+            q=re.compile('(\d+.?\d+)\s*PB')
+            qq=q.match(pointingspacing.upper())
+            if qq:
+                z=qq.groups()
                 if pb<=0:
                     util.msg("Can't calculate pointingspacing in terms of primary beam because neither antennalist nor sdantlist exist",priority="error")
                     return False
-                pointingspacing="%farcsec" % (0.5*pb)
+                pointingspacing="%farcsec" % (float(z[0])*pb)
+                # todo make more robust to nonconforming z[0] strings
             pointings = util.calc_pointings2(pointingspacing,mapsize,maptype=maptype, direction=dir)
             nfld=len(pointings)
             etime = qa.convert(qa.quantity(integration),"s")['value']
@@ -448,10 +454,11 @@ def simdata(
 
         ##################################################################
         # set up observatory, feeds, etc        
-        quickpsf_current=False
+        quickpsf_current = False
 
-        msfile=project+'.ms'
-        sdmsfile=project+'.sd.ms'
+        msfile = project+'.ms'
+        sdmsfile = project+'.sd.ms'
+        sd_any = False
         if predict:
             if not(predict_uv or predict_sd):
                 util.msg("must specify at least one of antennalist, sdantlist",priority="error")
@@ -615,76 +622,6 @@ def simdata(
                 sm.done()        
                 msg('generation of measurement set ' + msfile + ' complete')
 
-            ############################################
-            # create figure 
-            if grfile:            
-                file=project+".predict.png"
-            else:
-                file=""
-            if predict_uv:
-                multi=[2,2,1]
-            else:
-                multi=0
-
-            if (grscreen or grfile):
-                util.newfig(multi=multi,show=grscreen)
-                if tp_only: telescopename=tp_telescopename
-                util.ephemeris(refdate,direction=util.direction,telescope=telescopename)
-                casalog.origin('simdata')
-                if predict_uv:
-                    util.nextfig()
-                    util.plotants(stnx, stny, stnz, stnd, padnames)
-                    
-                    # uv coverage
-                    util.nextfig()
-                    tb.open(msfile)  
-                    rawdata=tb.getcol("UVW")
-                    tb.done()
-                    pl.box()
-                    maxbase=max([max(rawdata[0,]),max(rawdata[1,])])  # in m
-                    klam_m=300/qa.convert(model_center,'GHz')['value']
-                    pl.plot(rawdata[0,]/klam_m,rawdata[1,]/klam_m,'b,')
-                    pl.plot(-rawdata[0,]/klam_m,-rawdata[1,]/klam_m,'b,')
-                    ax=pl.gca()
-                    ax.yaxis.LABELPAD=-4
-                    pl.xlabel('u[klambda]',fontsize='x-small')
-                    pl.ylabel('v[klambda]',fontsize='x-small')
-                    pl.axis('equal')
-
-                    # show dirty beam from observed uv coverage
-                    util.nextfig()
-                    im.open(msfile)  
-                    # TODO spectral parms
-                    im.defineimage(cellx=qa.tos(model_cell[0]))  
-                    #im.makeimage(type='psf',image=project+".quick.psf")
-                    if os.path.exists(project+".quick.psf"):
-                        shutil.rmtree(project+".quick.psf")
-                    im.approximatepsf(psf=project+".quick.psf")
-                    quickpsf_current=True
-                    beam=im.fitpsf(psf=project+".quick.psf")
-                    im.done()                    
-                    ia.open(project+".quick.psf")            
-                    beamcs=ia.coordsys()
-                    beam_array=ia.getchunk(axes=[beamcs.findcoordinate("spectral")['pixel'],beamcs.findcoordinate("stokes")['pixel']],dropdeg=True)
-                    pixsize=(qa.convert(qa.quantity(model_cell[0]),'arcsec')['value'])
-                    xextent=128*pixsize*0.5
-                    xextent=[xextent,-xextent]
-                    yextent=128*pixsize*0.5
-                    yextent=[-yextent,yextent]
-                    flipped_array=beam_array.transpose()
-                    ttrans_array=flipped_array.tolist()
-                    ttrans_array.reverse()
-                    pl.imshow(ttrans_array,interpolation='bilinear',cmap=pl.cm.jet,extent=xextent+yextent,origin="bottom")
-                    pl.title(project+".quick.psf",fontsize="x-small")
-                    b=qa.convert(beam['bmaj'],'arcsec')['value']
-                    pl.xlim([-3*b,3*b])
-                    pl.ylim([-3*b,3*b])
-                    ax=pl.gca()
-                    pl.text(0.05,0.95,"bmaj=%7.1e\nbmin=%7.1e" % (beam['bmaj']['value'],beam['bmin']['value']),transform = ax.transAxes,bbox=dict(facecolor='white', alpha=0.7),size="x-small",verticalalignment="top")
-                    ia.done()
-                util.endfig(show=grscreen,filename=file)
-
-
 
             ##################################################################
             # predict single dish observation
@@ -693,6 +630,8 @@ def simdata(
                     if not overwrite:
                         util.msg("measurement set "+sdmsfile+" already exists and user does not wish to overwrite",priority="error")
                         return False
+                sd_any = True
+
                 sm.open(sdmsfile)
                 posobs=me.observatory(tp_telescopename)
                 diam=tpd
@@ -807,32 +746,95 @@ def simdata(
                     sm.predict(complist=complist)
             
                 sm.done()
-
-                # modify STATE table information for ASAP
-                # Ugly part!! need improvement. 
-                nstate=1
-                tb.open(tablename=sdmsfile+'/STATE',nomodify=False)
-                tb.addrows(nrow=nstate)
-                tb.putcol(columnname='CAL',value=[0.]*nstate,startrow=0,nrow=nstate,rowincr=1)
-                tb.putcol(columnname='FLAG_ROW',value=[False]*nstate,startrow=0,nrow=nstate,rowincr=1)
-                tb.putcol(columnname='LOAD',value=[0.]*nstate,startrow=0,nrow=nstate,rowincr=1)
-                tb.putcol(columnname='REF',value=[False]*nstate,startrow=0,nrow=nstate,rowincr=1)
-                tb.putcol(columnname='SIG',value=[True]*nstate,startrow=0,nrow=nstate,rowincr=1)
-                tb.putcol(columnname='SUB_SCAN',value=[0]*nstate,startrow=0,nrow=nstate,rowincr=1)
-                tb.flush()
-                tb.close()
-            
-                tb.open(tablename=sdmsfile,nomodify=False)
-                tb.putcol(columnname='STATE_ID',value=[0]*nscan,startrow=0,nrow=nscan,rowincr=1)
-                tb.flush()
-                tb.close()
                 
                 msg('generation of measurement set ' + sdmsfile + ' complete')
+
+
+            ############################################
+            # create figure 
+            if grfile:            
+                file=project+".predict.png"
+            else:
+                file=""
+            if predict_uv:
+                multi=[2,2,1]
+            else:
+                multi=0
+
+            if (grscreen or grfile):
+                util.newfig(multi=multi,show=grscreen)
+                if predict_uv:
+                    util.ephemeris(refdate,direction=util.direction,telescope=telescopename)
+                if predict_sd:
+                    util.ephemeris(refdate,direction=util.direction,telescope=tp_telescopename)
+                casalog.origin('simdata')
+                if predict_uv:
+                    util.nextfig()
+                    util.plotants(stnx, stny, stnz, stnd, padnames)
+                    if predict_sd:
+                        msg("The total power antenna will not be shown on the array configuration")
+                    
+                    # uv coverage
+                    util.nextfig()
+                    tb.open(msfile)  
+                    rawdata=tb.getcol("UVW")
+                    tb.done()
+                    pl.box()
+                    maxbase=max([max(rawdata[0,]),max(rawdata[1,])])  # in m
+                    klam_m=300/qa.convert(model_center,'GHz')['value']
+                    pl.plot(rawdata[0,]/klam_m,rawdata[1,]/klam_m,'b,')
+                    pl.plot(-rawdata[0,]/klam_m,-rawdata[1,]/klam_m,'b,')
+                    ax=pl.gca()
+                    ax.yaxis.LABELPAD=-4
+                    pl.xlabel('u[klambda]',fontsize='x-small')
+                    pl.ylabel('v[klambda]',fontsize='x-small')
+                    pl.axis('equal')
+                    # Add single dish (zero-spacing)
+                    if predict_sd:
+                        pl.plot([0.],[0.],'r,')
+
+                    # show dirty beam from observed uv coverage
+                    util.nextfig()
+                    im.open(msfile)  
+                    # TODO spectral parms
+                    if not image:
+                        msg("using default model cell "+qa.tos(model_cell[0])+" for PSF calculation",priority="warn")
+                    im.defineimage(cellx=qa.tos(model_cell[0]))  
+                    #im.makeimage(type='psf',image=project+".quick.psf")
+                    if os.path.exists(project+".quick.psf"):
+                        shutil.rmtree(project+".quick.psf")
+                    im.approximatepsf(psf=project+".quick.psf")
+                    quickpsf_current=True
+                    beam=im.fitpsf(psf=project+".quick.psf")
+                    im.done()
+                    ia.open(project+".quick.psf")
+                    beamcs=ia.coordsys()
+                    beam_array=ia.getchunk(axes=[beamcs.findcoordinate("spectral")['pixel'],beamcs.findcoordinate("stokes")['pixel']],dropdeg=True)
+                    pixsize=(qa.convert(qa.quantity(model_cell[0]),'arcsec')['value'])
+                    xextent=128*pixsize*0.5
+                    xextent=[xextent,-xextent]
+                    yextent=128*pixsize*0.5
+                    yextent=[-yextent,yextent]
+                    flipped_array=beam_array.transpose()
+                    ttrans_array=flipped_array.tolist()
+                    ttrans_array.reverse()
+                    pl.imshow(ttrans_array,interpolation='bilinear',cmap=pl.cm.jet,extent=xextent+yextent,origin="bottom")
+                    pl.title(project+".quick.psf",fontsize="x-small")
+                    b=qa.convert(beam['bmaj'],'arcsec')['value']
+                    pl.xlim([-3*b,3*b])
+                    pl.ylim([-3*b,3*b])
+                    ax=pl.gca()
+                    pl.text(0.05,0.95,"bmaj=%7.1e\nbmin=%7.1e" % (beam['bmaj']['value'],beam['bmin']['value']),transform = ax.transAxes,bbox=dict(facecolor='white', alpha=0.7),size="x-small",verticalalignment="top")
+                    ia.done()
+                util.endfig(show=grscreen,filename=file)
+
+
 
         else:
             # if not predicting this time, but are imageing or analyzing, 
             # get telescopename from ms
-            if image or analyze:
+            # KS - telescopename seems not used in image and analyze
+            if (image or analyze) and os.path.exists(project+'.ms'):
                 tb.open(project+".ms/OBSERVATION")
                 n=tb.getcol("TELESCOPE_NAME")
                 telescopename=n[0]
@@ -843,28 +845,19 @@ def simdata(
         ######################################################################
         # noisify
 
-        noise_any=False
-        msroot=project  # if leakage, can just copy from this project
+        noise_any = False
+        msroot = project  # if leakage, can just copy from this project
     
         if thermalnoise!="":
-            if not (telescopename == 'ALMA' or telescopename == 'ACA' or telescopename == "SMA" or telescopename=="EVLA" or telescopename=="VLA"):
-                msg("thermal noise only works properly for ALMA/ACA or EVLA",origin="noise",priority="warn")
-                
-            noise_any=True
+            knowntelescopes = ["ALMA", "ACA", "SMA", "EVLA", "VLA"]
+            
+            noise_any = True
 
-            eta_p, eta_s, eta_b, eta_t, eta_q, t_rx = util.noisetemp(freq=model_center)
-
-            # antenna efficiency
-            eta_a = eta_p * eta_s * eta_b * eta_t
-            if verbose: 
-                msg('antenna efficiency    = ' + str(eta_a),origin="noise")
-                msg('spillover efficiency  = ' + str(eta_s),origin="noise")
-                msg('correlator efficiency = ' + str(eta_q),origin="noise")
+            noisymsroot = msroot+".noisy"
  
             # Cosmic background radiation temperature in K. 
             t_cmb = 2.725
 
-            noisymsroot = msroot+".noisy"
 
             # check for interferometric ms:
             if os.path.exists(msroot+".ms"):
@@ -884,10 +877,30 @@ def simdata(
                     msg("table persistence error on %s" % sm.name(),priority="error")
                     return
 
-                if tp_only:
-                    msg("tp_only set to False since you have "+msroot+".ms",priority="warn")
-                    tp_only=False
+                #if sd_only:
+                #    msg("sd_only set to False since you have "+msroot+".ms",priority="warn")
+                #    sd_only=False
                 
+                # if not predicted this time, get telescopename from ms
+                if not predict:
+                    tb.open(noisymsroot+".ms/OBSERVATION")
+                    n=tb.getcol("TELESCOPE_NAME")
+                    telescopename=n[0]
+                    # todo add check that entire column is the same
+                    tb.done()
+                    msg("telescopename read from "+noisymsroot+".ms: "+telescopename)
+
+                if telescopename not in knowntelescopes:
+                    msg("thermal noise only works properly for ALMA/ACA or EVLA",origin="noise",priority="warn")
+                eta_p, eta_s, eta_b, eta_t, eta_q, t_rx = util.noisetemp(telescope=telescopename,freq=model_center)
+
+                # antenna efficiency
+                eta_a = eta_p * eta_s * eta_b * eta_t
+                if verbose: 
+                    msg('antenna efficiency    = ' + str(eta_a),origin="noise")
+                    msg('spillover efficiency  = ' + str(eta_s),origin="noise")
+                    msg('correlator efficiency = ' + str(eta_q),origin="noise")
+
                 sm.openfromms(noisymsroot+".ms")    # an existing MS
                 sm.setdata(fieldid=[]) # force to get all fields
                 if thermalnoise=="tsys-manual":
@@ -920,8 +933,10 @@ def simdata(
                 sm.done();
 
             # now TP ms:
-            if os.path.exists(msroot+".sd.ms"):
-                tpset=True
+            # KS note: You want to noisify it if SD is predicted this time
+            # (predict=predict_sd=T => sd_any=T) or not predicted but 
+            # sdantlist is specified (predict=F, predict_sd=T).
+            if (predict_sd or sd_any) and os.path.exists(sdmsfile):
                 #msg('copying '+msroot+'.sd.ms to ' +
                 msg('copying '+sdmsfile+' to ' + 
                     noisymsroot+'.sd.ms and adding thermal noise',
@@ -933,6 +948,26 @@ def simdata(
                 if sm.name()!='':
                     msg("table persistence error on %s" % sm.name(),priority="error")
                     return
+
+                # if not predicted this time, get telescopename from ms
+                if not predict:
+                    tb.open(noisymsroot+".sd.ms/OBSERVATION")
+                    n=tb.getcol("TELESCOPE_NAME")
+                    tp_telescopename=n[0]
+                    # todo add check that entire column is the same
+                    tb.done()
+                    msg("telescopename read from "+noisymsroot+".sd.ms: "+tp_telescopename)
+
+                if tp_telescopename not in knowntelescopes:
+                    msg("thermal noise only works properly for ALMA/ACA or EVLA",origin="noise",priority="warn")
+                eta_p, eta_s, eta_b, eta_t, eta_q, t_rx = util.noisetemp(telescope=tp_telescopename,freq=model_center)
+
+                # antenna efficiency
+                eta_a = eta_p * eta_s * eta_b * eta_t
+                if verbose: 
+                    msg('antenna efficiency    = ' + str(eta_a),origin="noise")
+                    msg('spillover efficiency  = ' + str(eta_s),origin="noise")
+                    msg('correlator efficiency = ' + str(eta_q),origin="noise")
 
                 sm.openfromms(noisymsroot+".sd.ms")    # an existing MS
                 sm.setdata(fieldid=[]) # force to get all fields
@@ -952,7 +987,9 @@ def simdata(
                     return False
                 sm.corrupt();
                 sm.done();
+                # update TP ms name for the following steps
                 sdmsfile=noisymsroot+".sd.ms"
+                sd_any = True
 
             msroot=noisymsroot
             if verbose: msg("done corrupting with thermal noise",origin="noise")
@@ -1029,66 +1066,83 @@ def simdata(
 
         #####################################################################
         if image:
-            tpms=None
-            if predict_sd:
-                tpms=sdmsfile
-
-            if not tpset and os.path.exists(modelimage):
-                # should be CASA image so far. 
-                tpimage=modelimage
-                tpset=True
+            # if you neither predict nor noisify this time and already
+            # have modelimage generated, set the name to tpimage
+            #if not tpset and os.path.exists(modelimage):
+            #    # should be CASA image so far. 
+            #    tpimage=modelimage # KS-don't think this is necessary
+            #    tpset=True
 
             # parse ms parameter and check for existance; 
             # if noise_any
             #     mstoimage = noisymsfile
             # else:
-            #     mstoimage = msfile            
-                 
-            mslist=vis.split(',')
-            mstoimage=[]
+            #     mstoimage = msfile                 
+            mslist = vis.split(',')
+            mstoimage = []
+            tpmstoimage = None
             for ms0 in mslist:
                 if not len(ms0): continue
                 # if noisy ms was created, check for defaults:
-                if ms0=="$project.ms" and noise_any:
-                    msg("you are requesting to image $project.ms, but have created a corrupted $project.noisy.ms",priority="error");
-                    msg("If you want to image the corrupted visibilites, you need to set vis=$project.noisy.ms in the image subtask",priority="error");
+                if (ms0=="$project.ms" or ms0=="$project.sd.ms") and noise_any:
+                    msg("you are requesting to image $project[.sd].ms, but have created a corrupted $project.noisy[.sd].ms",priority="error");
+                    msg("If you want to image the corrupted visibilites, you need to set vis=$project.noisy[.sd].ms in the image subtask",priority="error");
 
                 ms1=ms0.replace('$project',project)
                 if os.path.exists(ms1):
                     # check if the ms is tp data or not.
-                    if util.ismstp(ms1,halt=False) and tpset:
-                        tpms=ms1
-                        tpset=True
+                    #if util.ismstp(ms1,halt=False) and tpset:
+                    if util.ismstp(ms1,halt=False):
+                        # if any SD operation in previous steps, check for vis
+                        if sd_any and ms1!=sdmsfile:
+                            msg("inconsistent vis name. you have generated a total power MS "+sdmsfile+", but are requesting vis="+ms1+" for imaging",priority="error")
+                            return False
+                        tpmstoimage = ms1
                     else: mstoimage.append(ms1)
                 else:
                     if verbose:
-                        msg("measurement set "+ms1+" not found -- removing from clean list",priority="warn")
+                        msg("measurement set "+ms1+" not found -- removing from imaging list",priority="warn")
+
                     else:
-                        msg("measurement set "+ms1+" not found -- removing from clean list")
+                        msg("measurement set "+ms1+" not found -- removing from imaging list")
+
+            if not tpmstoimage and sd_any and os.path.exists(sdmsfile):
+                msg("you have generated a total power MS "+sdmsfile+", but not specified it in 'vis' for imaging",priority="warn")
+                msg("assuming you want to image it and creating a total power image",priority="warn")
+                tpmstoimage = sdmsfile
+
             if len(mstoimage)<=0:
-                if not tpset:
+                if tpmstoimage:
+                    sd_only=True
+                else:
                     msg("no measurement sets found to image",priority="warn")
                     image=False
-                else:
-                    tp_only=True
+            else:
+                sd_only = False
 
-            # Do single dish imaging first if tpms exists.
-            if tpms and os.path.exists(tpms):
-                msg('creating image from generated ms: '+tpms)
+            # Do single dish imaging first if tpmstoimage exists.
+            if tpmstoimage and os.path.exists(tpmstoimage):
+                msg('creating image from generated ms: '+tpmstoimage)
                 if len(mstoimage):
                     tpimage = project+'.sd.image'
                 else:
                     tpimage = project+'.image'
-                if tp_only: 
-                    msfile=tpms
-                else:
+                #if sd_only:
+                #    # for analysis step -> do it later
+                #    msfile=tpmstoimage
+                #else:
+                # check for modelimage
+                if len(mstoimage):
                     if len(modelimage) and modelimage!=tpimage:
                         msg("modelimage parameter set to "+modelimage+" but also creating a new total power image "+tpimage,priority="warn")
                         msg("assuming you know what you want, and using modelimage="+modelimage+" in deconvolution",priority="warn")
                     else:
+                        # This forces to use TP image as a model for clean
+                        if len(modelimage) <= 0:
+                            msg("you are generating total power image "+tpimage+". this is used as a model image for clean",priority="warn")
                         modelimage=tpimage
-                #im.open(msfile)
-                im.open(tpms)
+                
+                im.open(tpmstoimage)
                 im.selectvis(nchan=model_nchan,start=0,step=1,spw=0)
                 im.defineimage(mode='channel',nx=imsize[0],ny=imsize[1],cellx=cell[0],celly=cell[1],phasecenter=model_refdir,nchan=model_nchan,start=0,step=1,spw=0)
                 #im.setoptions(ftmachine='sd',gridfunction='pb')
@@ -1103,7 +1157,7 @@ def simdata(
                     msg('setting primary beam information to image.')
                     # !! aveant will only be set if modifymodel or setpointingsm and in 
                     # any case it will the the aveant of the INTERFM array - we want the SD
-                    tb.open(tpms+"/ANTENNA")
+                    tb.open(tpmstoimage+"/ANTENNA")
                     diams=tb.getcol("DISH_DIAMETER")
                     tb.done()
                     aveant=pl.mean(diams)
@@ -1117,8 +1171,18 @@ def simdata(
                 del beam
 
                 msg('generation of total power image ' + tpimage + ' complete.')
+                # update TP ms name the for following steps
+                sdmsfile = tpmstoimage
+                sd_any = True
+                
                 # End of single dish imaging part
 
+        outflat_current=False
+        convsky_current=False
+        beam_current=False
+        imagename=project
+
+        if image and len(mstoimage)>0:
             if not predict:
                 # get nfld, sourcefieldlist, from (interfm) ms if it was not just created
                 tb.open(mstoimage[0]+"/SOURCE")
@@ -1129,18 +1193,11 @@ def simdata(
                 msfile=mstoimage[0]
 
             # set cleanmode automatically (for interfm)
-            if len(mstoimage):
-                if nfld==1:
-                    cleanmode="csclean"
-                else:
-                    cleanmode="mosaic"
+            if nfld==1:
+                cleanmode="csclean"
+            else:
+                cleanmode="mosaic"
 
-        outflat_current=False
-        convsky_current=False
-        beam_current=False
-        imagename=project
-
-        if image and len(mstoimage)>0:
             if not docalibrator:
                 sourcefieldlist=""  # sourcefieldlist should be ok, but this is safer
             
@@ -1189,7 +1246,7 @@ def simdata(
                 file=""
 
         # create fake model from components for analysis
-        if components_only:
+        if components_only and (image or analyze):
             newmodel=project+".compskymodel"
             if not os.path.exists(project+".image"):
                 msg("must image before analyzing",priority="error")
@@ -1334,7 +1391,7 @@ def simdata(
                 outflat_current=True
                 
             # regridded and convolved input:?
-            if not convsky_current:                
+            if not convsky_current:
                 util.convimage(modelim+".flat",imagename+".image.flat")
                 convsky_current=True
             
@@ -1385,13 +1442,22 @@ def simdata(
 
             # now, what does the user want to actually display?
             if len(stnx)<=0:
+                # array configuration is read from antenna list.
+                # no use for SD only
                 if showarray: msg("input data is not an array -- the array will not be plotted",priority="warn")
                 showarray=False
+            # need MS for showuv and showpsf
             if not (predict or image):
-                msfile=project+".ms"
-            if showpsf and (tp_only or util.ismstp(msfile,halt=False)):
-                    msg("single dish simulation -- psf will not be plotted",priority='warn')
-                    showpsf=False
+                msfile = project+".ms"
+            if sd_only and os.path.exists(sdmsfile):
+                # use TP ms for UV plot if only SD sim, i.e.,
+                # image=sd_only=T or (image=F=predict_uv and predict_sd=T)
+                msfile = sdmsfile
+            # psf is not available for SD only sim
+            #if sd_only or util.ismstp(msfile,halt=False):
+            if util.ismstp(msfile,halt=False):
+                if showpsf: msg("single dish simulation -- psf will not be plotted",priority='warn')
+                showpsf=False
 
             # if the order in the task input changes, change it here too
             figs=[showarray,showuv,showpsf,showmodel,showconvolved,showclean,showresidual,showdifference,showfidelity]
@@ -1419,10 +1485,12 @@ def simdata(
                 # if order in task parameters changes, change here too
                 if showarray:
                     util.plotants(stnx, stny, stnz, stnd, padnames)
+                    if predict_sd:
+                        msg("The total power antenna will not be shown on the array configuration")
                     util.nextfig()
 
                 if showuv:
-                    tb.open(msfile)  
+                    tb.open(msfile)
                     rawdata=tb.getcol("UVW")
                     tb.done()
                     pl.box()
@@ -1435,6 +1503,9 @@ def simdata(
                     pl.xlabel('u[klambda]',fontsize='x-small')
                     pl.ylabel('v[klambda]',fontsize='x-small')
                     pl.axis('equal')
+                    # Add zero-spacing (single dish) if not yet plotted
+                    if predict_sd and not util.ismstp(msfile,halt=False):
+                        pl.plot([0.],[0.],'r,')
                     util.nextfig()
 
                 if showpsf:

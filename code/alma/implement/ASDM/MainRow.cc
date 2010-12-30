@@ -1643,7 +1643,7 @@ void MainRow::flagRowFromBin(EndianISStream& eiss) {
   * Returns the StateRow linked to this row via the Tag stored in stateId
   * at position i.
   */
- StateRow* MainRow::getState(int i) {
+ StateRow* MainRow::getStateUsingStateId(int i) {
  	return table.getContainer().getState().getRowByKey(stateId.at(i));
  } 
  
@@ -1651,7 +1651,7 @@ void MainRow::flagRowFromBin(EndianISStream& eiss) {
   * Returns the vector of StateRow* linked to this row via the Tags stored in stateId
   *
   */
- vector<StateRow *> MainRow::getStates() {
+ vector<StateRow *> MainRow::getStatesUsingStateId() {
  	vector<StateRow *> result;
  	for (unsigned int i = 0; i < stateId.size(); i++)
  		result.push_back(table.getContainer().getState().getRowByKey(stateId.at(i)));

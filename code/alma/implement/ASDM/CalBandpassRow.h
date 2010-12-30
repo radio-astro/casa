@@ -48,6 +48,9 @@ using asdmIDL::CalBandpassRowIDL;
 
 
 
+
+
+
 #include <ArrayTime.h>
 using  asdm::ArrayTime;
 
@@ -122,7 +125,7 @@ using namespace PolarizationTypeMod;
 
 
 /*\file CalBandpass.h
-    \brief Generated from model's revision "1.54", branch "HEAD"
+    \brief Generated from model's revision "1.55", branch "HEAD"
 */
 
 namespace asdm {
@@ -143,7 +146,7 @@ typedef void (CalBandpassRow::*CalBandpassAttributeFromBin) (EndianISStream& eis
 /**
  * The CalBandpassRow class is a row of a CalBandpassTable.
  * 
- * Generated from model's revision "1.54", branch "HEAD"
+ * Generated from model's revision "1.55", branch "HEAD"
  *
  */
 class CalBandpassRow {

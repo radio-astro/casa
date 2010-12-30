@@ -146,7 +146,7 @@ void RFATimeFreqCrop :: startData (bool verbose)
 //	if(CorrChoice==0 && vb.nRow()) ---> Check what to do if there are no selfs and the user asks to operate on selfs........
 
 	/* If channel range is invalid - reset to the complete range */
-	if(StartChan<0 || StartChan >= num(CHAN)-10) StartChan=0;
+        // redundant because StartChan is unsigned:	if(StartChan<0 || StartChan >= num(CHAN)-10) StartChan=0;
 	if(EndChan <= 10 || EndChan >=num(CHAN)) EndChan=num(CHAN)-1;
 	if(EndChan <= StartChan) {StartChan=0;EndChan=num(CHAN)-1;}
 	// print a warning
@@ -552,7 +552,7 @@ for(int pl=0;pl<matpos[0];pl++)
 		
 		for(int ch=0;ch<matpos[2];ch++)
 		{ 
-			uInt fsum=0;
+                        // uInt fsum=0;
 			for(uInt tm=0;tm<Nmt;tm++)
 			{       
 				// flagging one timestamp before and after
@@ -802,7 +802,7 @@ return RFA::CONT;
 
 
 /* Redflagger call for each ROW - each baseline in a VisBuf */
-RFA::IterMode RFATimeFreqCrop :: iterRow  (uInt irow) 
+RFA::IterMode RFATimeFreqCrop :: iterRow  (uInt /* irow */) 
 {
 	/* DUMMY CALL */
 	return RFA::CONT;
@@ -1073,7 +1073,7 @@ void RFATimeFreqCrop :: CleanBand(Vector<Float> data,Vector<Float> fit)
 	   for(uInt j=i+1;j<tdata.nelements();j++)
 		   if(tdata[j]!=0){indr=j;break;}
 	   Int indl=-1;
-	   for(uInt j=i;j>=0;j--)
+	   for(int j = i ; j >= 0 ; j--)
 		   if(tdata[j]!=0){indl=j;break;}
 
 	   if(indl==-1 && indr==0) tdata[i]=0;
@@ -1449,11 +1449,11 @@ void RFATimeFreqCrop :: PolyFit(Vector<Float> data,Vector<Bool> flag, Vector<Flo
    Polynomial<AutoDiff<Double> > combination(deg);
 
    
-   if(deg>=0)combination.setCoefficient(0,0.0);
-   if(deg>=1)combination.setCoefficient(1,0.0);
-   if(deg>=2)combination.setCoefficient(2,0.0);
-   if(deg>=3)combination.setCoefficient(3,0.0);
-   if(deg>=4)combination.setCoefficient(4,0.0);
+   combination.setCoefficient(0,0.0);
+   if (deg >= 1) combination.setCoefficient(1, 0.0);
+   if (deg >= 2) combination.setCoefficient(2, 0.0);
+   if (deg >= 3) combination.setCoefficient(3, 0.0);
+   if (deg >= 4) combination.setCoefficient(4, 0.0);
 
   x.resize(lim2-lim1+1);
   y.resize(lim2-lim1+1);

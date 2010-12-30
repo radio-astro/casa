@@ -2,7 +2,7 @@ import time
 import os
 import sys
 from taskinit import *
-im,cb,ms,tb,fg,af,me,ia,po,sm,cl,cs,rg,sl,dc,vp=gentools()
+im,cb,ms,tb,fg,me,ia,po,sm,cl,cs,rg,sl,dc,vp=gentools()
 
 debug = False
 def flagdata2(vis = None,
@@ -34,6 +34,9 @@ def flagdata2(vis = None,
              channelavg = None,
              shadow = None,
              diameter = None,
+             elevation = None,
+             lowerlimit = None,
+             upperlimit = None,
              quack = None,
              quackinterval = None, 
              quackmode = None, 
@@ -64,6 +67,10 @@ def flagdata2(vis = None,
              minabs = None,
              maxabs = None):
 
+    if pCASA.is_mms(vis):
+        pCASA.execute("flagdata2", locals())
+        return
+
     casalog.origin('flagdata2')
     fglocal = casac.homefinder.find_home_by_name('flaggerHome').create()
     mslocal = casac.homefinder.find_home_by_name('msHome').create()
@@ -81,7 +88,8 @@ def flagdata2(vis = None,
         mslocal.writehistory(message='taskname = flagdata2', origin='flagdata2')
         mslocal.open(vis,nomodify=False)
         
-        if (not manualflag and not clip and not quack and not shadow and not rfi and 
+        if (not manualflag and not clip and not quack and not shadow and
+            not elevation and not rfi and 
             not autoflag and not unflag and not summary):
 #            casalog.post('No flagging mode was selected', 'WARN')
 #            casalog.post('Please, set at least one mode to run this task', 'WARN')
@@ -89,7 +97,7 @@ def flagdata2(vis = None,
             casalog.post(msg, 'SEVERE')
             raise Exception
         
-        if (unflag and (manualflag or clip or quack or shadow or rfi or autoflag)):
+        if (unflag and (manualflag or clip or quack or shadow or elevation or rfi or autoflag)):
             casalog.post('Cannot run unflag simultaneously with any other mode', 'SEVERE')
             casalog.post('Please, verify your parameters.', 'SEVERE')
             raise Exception
@@ -197,8 +205,27 @@ def flagdata2(vis = None,
                        diameter = diameter)
             modestr = modestr+"shadow_"
             mslocal.writehistory(message='mode     = "' + str(mode) + '"', origin='flagdata2')
-#            fglocal.setshadowflags(diameter = diameter)
             
+        if elevation:
+            mode = 'elevation'
+            casalog.post('Flagging elevations < ' + str(lowerlimit) + \
+                         ' degrees and > ' + str(upperlimit) + ' degrees')
+            fglocal.setelevationflags( \
+                        field = field, \
+                        spw = spw, \
+                        array = array, \
+                        feed = feed, \
+                        scan = scan, \
+                        baseline = antenna, \
+                        uvrange = uvrange, \
+                        time = timerange, \
+                        correlation = correlation, \
+                        lowerlimit = lowerlimit,
+                        upperlimit = upperlimit)
+            modestr = modestr+"elevation_"
+            mslocal.writehistory(message='mode     = "' + str(mode) + '"', origin='flagdata2')
+            
+
         if autoflag:
             mode = 'autoflag'
             casalog.post('Flagging in autoflag mode')
@@ -314,7 +341,7 @@ def flagdata2(vis = None,
 
         # Backup flags
         if flagbackup:
-            if (manualflag or clip or quack or shadow or rfi 
+            if (manualflag or clip or quack or shadow or elevation or rfi 
                 or autoflag or unflag or not summary):
                 backup_flags(fglocal, modestr)
 
@@ -362,6 +389,7 @@ def flagdata2(vis = None,
     except Exception, instance:
 #        fglocal.done()
         print '*** Error ***', instance
+        raise
 
 #    fglocal.done()
     

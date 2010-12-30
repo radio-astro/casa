@@ -2094,7 +2094,7 @@ void FeedRow::beamIdFromBin(EndianISStream& eiss) {
   * Returns the BeamRow linked to this row via the Tag stored in beamId
   * at position i.
   */
- BeamRow* FeedRow::getBeam(int i) {
+ BeamRow* FeedRow::getBeamUsingBeamId(int i) {
  	return table.getContainer().getBeam().getRowByKey(beamId.at(i));
  } 
  
@@ -2102,7 +2102,7 @@ void FeedRow::beamIdFromBin(EndianISStream& eiss) {
   * Returns the vector of BeamRow* linked to this row via the Tags stored in beamId
   *
   */
- vector<BeamRow *> FeedRow::getBeams() {
+ vector<BeamRow *> FeedRow::getBeamsUsingBeamId() {
  	vector<BeamRow *> result;
  	for (unsigned int i = 0; i < beamId.size(); i++)
  		result.push_back(table.getContainer().getBeam().getRowByKey(beamId.at(i)));

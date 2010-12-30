@@ -114,7 +114,7 @@ private:
     virtual void doExtend (uInt nrBucket);
 
     // A bucket full of zeros
-    std::auto_ptr<char> zeros;
+    const char * zeros;
 
     // Initialize the bucket buffer.
     // The uninitialized buckets before this bucket are also initialized.

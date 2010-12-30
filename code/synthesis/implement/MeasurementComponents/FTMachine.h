@@ -42,6 +42,8 @@
 #include <images/Images/TempImage.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <scimath/Mathematics/InterpolateArray1D.h>
+#include <synthesis/MeasurementComponents/CFCache.h>
+#include <synthesis/MeasurementComponents/ConvolutionFunction.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -115,6 +117,8 @@ public:
 
   FTMachine();
 
+  FTMachine(CountedPtr<CFCache>& cfcache,CountedPtr<ConvolutionFunction>& cfctor);
+
   FTMachine(const FTMachine& other);
 
   FTMachine& operator=(const FTMachine& other);
@@ -126,9 +130,7 @@ public:
 
 
 
-  virtual void initializeToVis(ImageInterface<Complex>& image,
-		       const VisBuffer& vb, Array<Complex>& griddedVis,
-		       Vector<Double>& uvscale, UVWMachine* &uvwMachine){};
+  
 
   // Finalize transform to Visibility plane
   virtual void finalizeToVis() = 0;
@@ -136,10 +138,7 @@ public:
   // Initialize transform to Sky plane
   virtual void initializeToSky(ImageInterface<Complex>& image,
 			       Matrix<Float>& weight, const VisBuffer& vb) = 0;
-  virtual void initializeToSky(ImageInterface<Complex>& image,
-			       Matrix<Float>& weight, const VisBuffer& vb,
-			       Vector<Double>& uvscale,
-			       UVWMachine* &uvwmachine){}; 
+  
   // Finalize transform to Sky plane
   virtual void finalizeToSky() = 0;
 
@@ -148,27 +147,18 @@ public:
   // Get actual coherence from grid
   virtual void get(VisBuffer& vb, Int row=-1) = 0;
 
-  // Get the coherence from modelImage return it in the degrid cube. 
-  // Is to be used especially when scratch columns are not 
-  // present in ms and/or if memory is available to support such non
-  // non-disk operations.
-  virtual void get(VisBuffer& vb, Cube<Complex>& degrid, 
-		   Array<Complex>& griddedVis, Vector<Double>& scale, 
-		   UVWMachine *uvwMachine,
-		   Int row=-1){ };
 
   // Put coherence to grid
   virtual void put(const VisBuffer& vb, Int row=-1, Bool dopsf=False, 
 		   FTMachine::Type type= FTMachine::OBSERVED, 
 		   const Matrix<Float>& imweight = Matrix<Float>(0,0)) = 0;
 
-  virtual void put(const VisBuffer& vb, TempImage<Complex>& image,
-		   Vector<Double>& scale,
-		   Int row=-1, UVWMachine *uvwMachine=0, 
-		   Bool dopsf=False){ };
-
   // Get the final image
   virtual ImageInterface<Complex>& getImage(Matrix<Float>&, Bool normalize=True) = 0;
+  virtual void normalizeImage(Lattice<Complex>& skyImage,
+			      const Matrix<Double>& sumOfWts,
+			      Lattice<Float>& sensitivityImage,
+			      Bool fftNorm) = 0;
 
   // Get the final weights image
   virtual void getWeightImage(ImageInterface<Float>&, Matrix<Float>&) = 0;
@@ -278,7 +268,7 @@ protected:
   Bool useDoubleGrid_p;
 
   void initMaps(const VisBuffer& vb);
-
+  virtual void initPolInfo(const VisBuffer& vb);
 
 
   // Sum of weights per polarization and per chan
@@ -341,14 +331,18 @@ protected:
   SpectralCoordinate spectralCoord_p;
   Vector<Bool> doConversion_p;
   Bool freqFrameValid_p;
-  Vector<Float> imageFreq_p;
+  Vector<Double> imageFreq_p;
   //Vector of float lsrfreq needed for regridding
   Vector<Double> lsrFreq_p;
   Vector<Double> interpVisFreq_p;
-  InterpolateArray1D<Float,Complex>::InterpolationMethod freqInterpMethod_p;
+  InterpolateArray1D<Double,Complex>::InterpolationMethod freqInterpMethod_p;
   String pointingDirCol_p;
   Cube<Int> spwChanSelFlag_p;
-
+  Vector<Int> cfStokes_p;
+  Int polInUse_p;
+  CountedPtr<CFCache> cfCache_p;
+  CFStore cfs_p, cfwts_p;
+  CountedPtr<ConvolutionFunction> convFuncCtor_p;
  private:
   //Some temporary wasteful function for swapping axes because we don't 
   //Interpolation along the second axis...will need to implement 

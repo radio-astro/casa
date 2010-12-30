@@ -38,14 +38,15 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-WedgeDD::WedgeDD() :
+WedgeDD::WedgeDD( DisplayData *image) :
   itsMin(0.0),
   itsMax(1.0),
   itsLength(512),
   itsDataUnit(""),
   itsPowerCycles(0.0),
   itsPowerScaleHandler(0),
-  itsOptionsMode("vertical") {
+  itsOptionsMode("vertical"),
+  ihandle_(image) {
   itsColorbar.resize(2,itsLength);
   itsPowerScaleHandler = new WCPowerScaleHandler;
   setup();
@@ -161,7 +162,26 @@ WedgeDD::~WedgeDD() {
   itsPowerScaleHandler = 0;
 }
 
+bool WedgeDD::isDisplayable( ) const {
+    DisplayData::DisplayState idstate = DisplayData::UNDISPLAYED;
+    try {
+	// ihandle_ will be null if our image has been deleted, and
+	// dereferencing the handle will throw an exception...
+	idstate = ihandle_->getDisplayState();
+    } catch( ... ) {
+	idstate = DisplayData::UNDISPLAYED;
+    }
+    return idstate == DisplayData::DISPLAYED ? true : false;
+}
+
+
 Bool WedgeDD::labelAxes(const WCRefreshEvent &ev) {
+
+  DisplayData::DisplayState idstate = ihandle_->getDisplayState();
+
+  if ( idstate != DisplayData::DISPLAYED )
+	return False;
+
   if (itsMin == itsMax) {
     return False;
   }

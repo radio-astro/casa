@@ -105,8 +105,8 @@ average over frequency (channels) and time (integrations).
 		<value type="string"></value>
 	</param>
 
-	<param type="any" name="ignorables" subparam="true">
-		<description>Let time bins ignore changes in array, scan, and/or state</description>
+	<param type="any" name="combine" subparam="true">
+		<description>Let time bins span changes in scan and/or state</description>
 		<any type="variant" limittypes="string stringArray"/>
 		<value type="string"></value>
 	</param>
@@ -117,7 +117,7 @@ average over frequency (channels) and time (integrations).
         <constraints>
 	  <when param="timebin">
             <notequals type="string" value="0s">
-              <default param="ignorables"><value type="string"></value></default>
+              <default param="combine"><value type="string"></value></default>
             </notequals>
           </when>
         </constraints>
@@ -227,17 +227,14 @@ average over frequency (channels) and time (integrations).
             default: ''=all
         correlation -- Select correlations, e.g. 'rr, ll' or ['XY', 'YX'].
                        default '' (all).
-        ignorables -- Let time bins ignore boundaries in array, scan, and/or
-                      state.
-                      default = '' (separate time bins by all of the above)
-                      ignorables = 'scan': Can be useful when the scan number
-                                           goes up with each integration,
-                                           as in many WSRT MSes.
-                      ignorables = ['array', 'state']: disregard array and state
-                                                       IDs when time averaging.
-                      ignorables = 'state,subarr': Same as above.  ignorables
-                                                   matches on 'arr', 'scan', and
-                                                   'state'.
+        combine -- Let time bins span changes in scan and/or state.
+                   default = '' (separate time bins by both of the above)
+                   combine = 'scan': Can be useful when the scan number
+                                     goes up with each integration,
+                                     as in many WSRT MSes.
+                   combine = ['scan', 'state']: disregard scan and state
+                                                numbers when time averaging.
+                   combine = 'state,scan': Same as above.
         keepflags -- If practical, keep completely flagged rows instead of
                      dropping them.  This has absolutely no effect on averaging
                      calculations, or partially flagged rows.  All of the

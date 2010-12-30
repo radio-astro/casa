@@ -515,8 +515,8 @@ Float CSCleanImageSkyModel::maxField(Block<Vector<Float> >& imagemax,
       // If we are using a mask then multiply by it
       if (hasMask(model)) {
 	Array<Float> limage=imageli.cursor();
-	limage*=maskArray;
-	minMax(imin, imax, imageposmin, imageposmax, limage);
+	//limage*=maskArray;
+	minMaxMasked(imin, imax, imageposmin, imageposmax, limage, maskArray);
 	maskli++;
 	if (maskli.cursor().shape().nelements() > 1) maskArray=maskli.cursor();
       

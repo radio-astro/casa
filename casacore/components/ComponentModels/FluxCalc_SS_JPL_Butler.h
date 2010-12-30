@@ -131,12 +131,6 @@ class FluxCalc_SS_JPL_Butler
   ComponentType::Shape compute(Vector<Flux<Double> >& values,
                                Vector<Flux<Double> >& errors, Double& angdiam,
                                const Vector<MFrequency>& mfreqs);
-
-  // Returns the value in units unit of ks's keyword kw.  success is set to
-  // whether or not it succeeded.
-  static Double get_Quantity_keyword(const TableRecord& ks,
-				     const String& kw,
-				     const Unit& unit, Bool& success);
  private:
   enum KnownObjects {
     Mercury = 0,
@@ -188,6 +182,9 @@ class FluxCalc_SS_JPL_Butler
                   const Vector<MFrequency>& mfreqs,
                   const Vector<Double>& temps);
 
+  void compute_venus(Vector<Flux<Double> >& values,
+		     Vector<Flux<Double> >& errors, const Double angdiam,
+		     const Vector<MFrequency>& mfreqs);
   void compute_jupiter(Vector<Flux<Double> >& values,
                        Vector<Flux<Double> >& errors, const Double angdiam,
                        const Vector<MFrequency>& mfreqs);

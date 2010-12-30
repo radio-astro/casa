@@ -187,14 +187,22 @@ public:
 
   Int arrayId() const {return arrayIdOK_p ? arrayId_p : This->fillArrayId();}
 
+  // Return flag for each channel & row
   Matrix<Bool>& flag() { return flagOK_p ? flag_p : fillFlag();}
   const Matrix<Bool>& flag() const { return This->flag();}
 
+  // Return flag for each polarization, channel and row
   Cube<Bool>& flagCube() { return flagCubeOK_p ? flagCube_p : fillFlagCube();}
   const Cube<Bool>& flagCube() const { return This->flagCube();}
 
   Vector<Bool>& flagRow() {return flagRowOK_p ? flagRow_p : fillFlagRow();}
   const Vector<Bool>& flagRow() const { return This->flagRow();}
+
+  // Return flags for each polarization, channel, category, and row.
+  Array<Bool>& flagCategory() {
+    return flagCategoryOK_p ? flagCategory_p : fillFlagCategory();
+  }
+  const Array<Bool>& flagCategory() const { return This->flagCategory(); }
 
   Vector<Int>& scan() {return scanOK_p ? scan_p : fillScan();}
   const Vector<Int>& scan() const { return This->scan();}
@@ -202,6 +210,15 @@ public:
   // scalar version for convenience, when scan known constant for
   // entire iteration/buffer.
   Int scan0() { return scan()(0);  }
+
+  Vector<Int>& processorId() {return processorIdOK_p ? processorId_p : fillProcessorId();}
+  const Vector<Int>& processorId() const { return This->processorId();}
+
+  Vector<Int>& observationId() {return observationIdOK_p ? observationId_p : fillObservationId();}
+  const Vector<Int>& observationId() const { return This->observationId();}
+
+  Vector<Int>& stateId() {return stateIdOK_p ? stateId_p : fillStateId();}
+  const Vector<Int>& stateId() const { return This->stateId();}
 
   Vector<Double>& frequency() {return freqOK_p ? frequency_p : fillFreq();}
   const Vector<Double>& frequency() const {return This->frequency();}
@@ -242,9 +259,17 @@ public:
   Vector<Double>& time() {return timeOK_p ? time_p : fillTime();}
   const Vector<Double>& time() const {return This->time();}
 
+  Vector<Double>& timeCentroid() {
+    return timeCentroidOK_p ? timeCentroid_p : fillTimeCentroid();
+  }
+  const Vector<Double>& timeCentroid() const {return This->timeCentroid();}
+
   Vector<Double>& timeInterval() {
     return timeIntervalOK_p ? timeInterval_p : fillTimeInterval();}
   const Vector<Double>& timeInterval() const {return This->timeInterval();}
+
+  Vector<Double>& exposure() {return exposureOK_p ? exposure_p : fillExposure();}
+  const Vector<Double>& exposure() const {return This->exposure();}
 
   Vector<RigidVector<Double,3> >& uvw() {return uvwOK_p ? uvw_p : filluvw();}
   const Vector<RigidVector<Double,3> >& uvw() const {return This->uvw();}
@@ -300,10 +325,16 @@ public:
   }
   const Cube<Complex>& correctedVisCube() const {return This->correctedVisCube();}
 
+  Cube<Float>& floatDataCube() {
+    return floatDataCubeOK_p ? floatDataCube_p : fillFloatDataCube();
+  }
+  const Cube<Float>& floatDataCube() const {return This->floatDataCube();}
 
+  // Returns the weights for each row averaged over the parallel hand correlations.
   Vector<Float>& weight() {return weightOK_p ? weight_p : fillWeight();}
   const Vector<Float>& weight() const {return This->weight();}
 
+  // Returns the nPol_p x curNumRow_p weight matrix.
   Matrix<Float>& weightMat() {return weightMatOK_p ? weightMat_p : fillWeightMat();}
   const Matrix<Float>& weightMat() const {return This->weightMat();}
 
@@ -353,6 +384,7 @@ public:
   // Average channel axis by factor
   void channelAve(const Matrix<Int>& chanavebounds);
   void chanAveVisCube(Cube<Complex>& data,Int nChanOut);
+  void chanAveVisCube(Cube<Float>& data,Int nChanOut);
   void chanAveFlagCube(Cube<Bool>& flagcube,Int nChanOut);
 
   // Form Stokes parameters from correlations
@@ -360,6 +392,7 @@ public:
   void formStokes();
   void formStokesWeightandFlag();
   void formStokes(Cube<Complex>& vis);
+  void formStokes(Cube<Float>& fcube);    // Will throw up if asked to do all 4.
 
   // Sort/unsort the correlations, if necessary
   //  (Rudimentary handling of non-canonically sorted correlations--use with care!)
@@ -394,9 +427,11 @@ public:
   void setModelVisCube(const Cube<Complex>& vis);
   void setCorrectedVisCube(const Cube<Complex>& vis);
 
+  // Like the above, but for FLOAT_DATA, keeping it as real floats.
+  void setFloatDataCube(const Cube<Float>& fcube);
+
   // Set model according to a Stokes vector
   void setModelVisCube(const Vector<Float>& stokes);
-
 
   // Reference external model visibilities
   void refModelVis(const Matrix<CStokesVector>& mvis);
@@ -456,7 +491,11 @@ private:
   Matrix<Bool>& fillFlag();
   Cube<Bool>& fillFlagCube();
   Vector<Bool> & fillFlagRow();
+  Array<Bool>& fillFlagCategory();
   Vector<Int> & fillScan();
+  Vector<Int> & fillObservationId();
+  Vector<Int> & fillProcessorId();
+  Vector<Int> & fillStateId();
   Vector<Double>& fillFreq();
   Vector<Double>& fillLSRFreq();
   MDirection& fillPhaseCenter();
@@ -467,10 +506,13 @@ private:
   Int& fillSpW();
   Vector<Double>& fillTime();
   Vector<Double>& fillTimeInterval();
+  Vector<Double>& fillTimeCentroid();
+  Vector<Double>& fillExposure();
   Vector<RigidVector<Double,3> >& filluvw();
   Matrix<Double>& filluvwMat();
   Matrix<CStokesVector>& fillVis(VisibilityIterator::DataColumn whichOne);
   Cube<Complex>& fillVisCube(VisibilityIterator::DataColumn whichOne);
+  Cube<Float>& fillFloatDataCube();
   Vector<Float>& fillWeight();
   Matrix<Float>& fillWeightMat();
   Cube<Float>& fillWeightSpectrum();
@@ -495,12 +537,14 @@ private:
   // variables to track validity of cache
   Bool nCorrOK_p, nChannelOK_p, channelOK_p, nRowOK_p, ant1OK_p, ant2OK_p,
     feed1OK_p, feed2OK_p, cjonesOK_p,
-    fieldIdOK_p, arrayIdOK_p, flagOK_p, flagRowOK_p, scanOK_p, freqOK_p,
+    fieldIdOK_p, arrayIdOK_p, flagOK_p, flagRowOK_p, flagCategoryOK_p, scanOK_p, 
+    observationIdOK_p, stateIdOK_p, processorIdOK_p, freqOK_p,
     lsrFreqOK_p, phaseCenterOK_p, polFrameOK_p, sigmaOK_p, sigmaMatOK_p,spwOK_p,
-    timeOK_p, timeIntervalOK_p, uvwOK_p, uvwMatOK_p,visOK_p, weightOK_p, 
-    weightMatOK_p, weightSpectrumOK_p;
+    timeOK_p, timeCentroidOK_p, timeIntervalOK_p, exposureOK_p, uvwOK_p, uvwMatOK_p,
+    visOK_p, weightOK_p, weightMatOK_p, weightSpectrumOK_p;
   Bool corrTypeOK_p, flagCubeOK_p, visCubeOK_p, imagingWeightOK_p,
-    modelVisOK_p, correctedVisOK_p, modelVisCubeOK_p, correctedVisCubeOK_p;
+    modelVisOK_p, correctedVisOK_p, modelVisCubeOK_p, correctedVisCubeOK_p,
+    floatDataCubeOK_p;
   Bool msOK_p, newMS_p;
   Bool feed1_paOK_p,feed2_paOK_p,direction1OK_p,direction2OK_p;
   Bool rowIdsOK_p;
@@ -516,7 +560,11 @@ private:
   Int arrayId_p;
   Matrix<Bool> flag_p;
   Vector<Bool> flagRow_p;
+  Array<Bool> flagCategory_p;
   Vector<Int> scan_p;
+  Vector<Int> observationId_p;
+  Vector<Int> processorId_p;
+  Vector<Int> stateId_p;
   Vector<Double> frequency_p, lsrFrequency_p;
   MDirection phaseCenter_p;
   Int polFrame_p;
@@ -526,6 +574,8 @@ private:
   Int spectralWindow_p;
   Vector<Double> time_p;
   Vector<Double> timeInterval_p;
+  Vector<Double> timeCentroid_p;
+  Vector<Double> exposure_p;
   Vector<RigidVector<Double,3> > uvw_p;
   Matrix<Double> uvwMat_p;
   Matrix<CStokesVector> visibility_p, modelVisibility_p, correctedVisibility_p;
@@ -534,9 +584,11 @@ private:
   Cube<Float> weightSpectrum_p;
   Cube<Bool> flagCube_p;
   Cube<Complex> visCube_p, modelVisCube_p, correctedVisCube_p;
+  Cube<Float> floatDataCube_p;
   Vector<uInt> rowIds_p;
   Matrix<Float> imagingWeight_p;
   Int oldMSId_p;
+  Int lastPointTableRow_p;
 
   Cube<Float> weightCube_p;
 

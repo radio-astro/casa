@@ -48,6 +48,9 @@ using asdmIDL::CalSeeingRowIDL;
 
 
 
+
+
+
 #include <ArrayTime.h>
 using  asdm::ArrayTime;
 
@@ -106,7 +109,7 @@ using namespace AtmPhaseCorrectionMod;
 
 
 /*\file CalSeeing.h
-    \brief Generated from model's revision "1.54", branch "HEAD"
+    \brief Generated from model's revision "1.55", branch "HEAD"
 */
 
 namespace asdm {
@@ -127,7 +130,7 @@ typedef void (CalSeeingRow::*CalSeeingAttributeFromBin) (EndianISStream& eiss);
 /**
  * The CalSeeingRow class is a row of a CalSeeingTable.
  * 
- * Generated from model's revision "1.54", branch "HEAD"
+ * Generated from model's revision "1.55", branch "HEAD"
  *
  */
 class CalSeeingRow {

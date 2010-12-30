@@ -39,6 +39,7 @@
 #include <casa/Exceptions.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <casa/sstream.h>
+#include <synthesis/MeasurementComponents/Utils.h>
 namespace casa{
 
   Int getVLABandID(Double& freq,String&telescopeName);
@@ -51,9 +52,9 @@ namespace casa{
     ~VLACalcIlluminationConvFunc() {delete ap.aperture;};
 
     void setBandID(Int bandID) {ap.band=(BeamCalcBandCode)bandID;}
-    void storeImg(String &fileName,ImageInterface<Complex>& img);
-    void storeImg(String &fileName,ImageInterface<Float>& img);
-    void store(String &fileName);
+    // void storeImg(String &fileName,ImageInterface<Complex>& img);
+    // void storeImg(String &fileName,ImageInterface<Float>& img);
+    // void store(String &fileName);
     void loadFromImage(String &fileName);
     void getIdealConvFunc(Array<Complex>& buf);
     void ftAperture(TempImage<Complex>& uvgrid);
@@ -63,7 +64,7 @@ namespace casa{
     Bool pbReady() {return pbRead_p;}
 
     CoordinateSystem makeUVCoords(CoordinateSystem& imageCoordSys,
-				  IPosition& shape);
+				  IPosition& shape, Double refFreq=-1.0);
     void regridAperture(CoordinateSystem& skyCS, 
 			IPosition& skyShape, 
 			TempImage<Complex>& uvGrid, 
@@ -88,6 +89,14 @@ namespace casa{
     void applyPBSq(ImageInterface<Complex>& pbImage, const VisBuffer& vb, Int bandID=-1, 
 		   Bool doSquint=True);
     void skyMuller(ImageInterface<Complex>& skyJones);
+    Bool findSupport(Array<Complex>& func, Float& threshold,Int& origin, Int& R) 
+    {throw(AipsError("VLACalcIlluminationConvFunc::findSupport() not implemented"));};
+    virtual Bool makeAverageResponse(const VisBuffer& vb, 
+				     const ImageInterface<Complex>& image,
+				     //				     TempImage<Float>& theavgPB,
+				     ImageInterface<Float>& theavgPB,
+				     Bool reset=True)
+    {throw(AipsError("VLACalc::makeAverageRes() called"));};
 
 
   private:
@@ -101,18 +110,6 @@ namespace casa{
     Bool pbRead_p;
     Float freq_p,lastPA;
     struct ApertureCalcParams ap;
-//  =
-//       {
-// 	1,
-// 	{0, 0, 0, 0},
-// 	-13.0, -13.0, 
-// 	0.5, 0.5,
-// 	52, 52,
-// 	15.0*M_PI/180.0,
-// 	1.4,
-// 	BeamCalc_VLA_L
-//       };
-
   };
 
 };

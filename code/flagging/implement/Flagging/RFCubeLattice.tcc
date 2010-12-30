@@ -171,20 +171,18 @@ template<class T> RFCubeLattice<T>::RFCubeLattice ( uInt nchan,
                                                     uInt nifr,
                                                     uInt ntime,
                                                     uInt ncorr,
-                                                    uInt nAgent,
-                                                    Int maxmem )
+                                                    uInt nAgent)
 {
-  init(nchan, nifr, ntime, ncorr, nAgent, maxmem);
+  init(nchan, nifr, ntime, ncorr, nAgent);
 }
 template<class T> RFCubeLattice<T>::RFCubeLattice ( uInt nchan,
                                                     uInt nifr,
                                                     uInt ntime,
                                                     uInt ncorr,
                                                     uInt nAgent,
-                                                    const T &init_val,
-                                                    Int maxmem )
+                                                    const T &init_val)
 {
-  init(nchan, nifr, ntime, ncorr, nAgent, init_val, maxmem);
+  init(nchan, nifr, ntime, ncorr, nAgent, init_val);
 }
 
 template<class T> RFCubeLattice<T>::~RFCubeLattice ()
@@ -197,9 +195,7 @@ RFCubeLattice<T>::init(uInt nchan,
                        uInt nifr,
                        uInt ntime,
 		       uInt ncorr,
-		       uInt nAgent,
-                       Int maxmem,
-                       Int tile_mb)
+		       uInt nAgent)
 {
   n_bit = ncorr + nAgent;
 
@@ -232,16 +228,14 @@ template<class T> void RFCubeLattice<T>::init(uInt nchan,
                                               uInt ntime,
 					      uInt ncorr,
 					      uInt nAgent,
-                                              const T &init_val,
-                                              Int maxmem,
-                                              Int tile_mb)
+                                              const T &init_val)
 {
   n_chan = nchan;
   n_ifr = nifr;
   n_time = ntime;
   n_bit = ncorr + nAgent;
   n_corr = ncorr;
-  init(nchan, nifr, ntime, ncorr, nAgent, maxmem, tile_mb);
+  init(nchan, nifr, ntime, ncorr, nAgent);
 
   uInt nbits = ncorr + nAgent;
 

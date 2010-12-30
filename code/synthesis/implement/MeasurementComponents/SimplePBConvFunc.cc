@@ -34,6 +34,9 @@
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Cube.h>
 #include <casa/Utilities/Assert.h>
+#include <casa/Quanta/MVTime.h>
+#include <casa/Quanta/MVAngle.h>
+#include <measures/Measures/MeasTable.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 
@@ -45,6 +48,7 @@
 #include <casa/Logging/LogSink.h>
 #include <casa/Logging/LogMessage.h>
 
+#include <ms/MeasurementSets/MSColumns.h>
 #include <lattices/Lattices/ArrayLattice.h>
 #include <lattices/Lattices/SubLattice.h>
 #include <lattices/Lattices/LCBox.h>
@@ -63,16 +67,21 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-  SimplePBConvFunc::SimplePBConvFunc(): PixelatedConvFunc<Complex>(),nchan_p(-1),npol_p(-1),filledFluxScale_p(False),doneMainConv_p(False),
+  SimplePBConvFunc::SimplePBConvFunc(): PixelatedConvFunc<Complex>(),nchan_p(-1),
+					npol_p(-1), pointToPix_p(), directionIndex_p(-1), thePix_p(0),
+					filledFluxScale_p(False),doneMainConv_p(False),
 					convFunctionMap_p(-1), 
-						actualConvIndex_p(-1), convSize_p(0), 
-							convSupport_p(0) {
+					actualConvIndex_p(-1), convSize_p(0), 
+					convSupport_p(0) {
     //
 
      pbClass_p=PBMathInterface::COMMONPB;
   }
 
-  SimplePBConvFunc::SimplePBConvFunc(const PBMathInterface::PBClass typeToUse): PixelatedConvFunc<Complex>(),nchan_p(-1),npol_p(-1),filledFluxScale_p(False),doneMainConv_p(False), convFunctionMap_p(-1), actualConvIndex_p(-1), convSize_p(0), convSupport_p(0) {
+  SimplePBConvFunc::SimplePBConvFunc(const PBMathInterface::PBClass typeToUse): 
+    PixelatedConvFunc<Complex>(),nchan_p(-1),npol_p(-1),pointToPix_p(),
+    directionIndex_p(-1), thePix_p(0), filledFluxScale_p(False),doneMainConv_p(False), 
+    convFunctionMap_p(-1), actualConvIndex_p(-1), convSize_p(0), convSupport_p(0) {
     //
     pbClass_p=typeToUse;
 
@@ -83,13 +92,36 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
-  void SimplePBConvFunc::storeImageParams(const ImageInterface<Complex>& iimage){
+  void SimplePBConvFunc::storeImageParams(const ImageInterface<Complex>& iimage,
+					  const VisBuffer& vb){
+    //image signature changed...rather simplistic for now
     if((iimage.shape().product() != nx_p*ny_p*nchan_p*npol_p) || nchan_p < 1){
       csys_p=iimage.coordinates();
       Int coordIndex=csys_p.findCoordinate(Coordinate::DIRECTION);
       AlwaysAssert(coordIndex>=0, AipsError);
-      
-   
+      directionIndex_p=coordIndex;
+      dc_p=csys_p.directionCoordinate(directionIndex_p);
+      ObsInfo imInfo=csys_p.obsInfo();
+      String tel= imInfo.telescope();
+      MPosition pos;
+      if (vb.msColumns().observation().nrow() > 0) {
+	tel = vb.msColumns().observation().telescopeName()(vb.msColumns().observationId()(0));
+      }
+      if (tel.length() == 0 || 
+	  !MeasTable::Observatory(pos,tel)) {
+	// unknown observatory, use first antenna
+	pos=vb.msColumns().antenna().positionMeas()(0);
+      }
+      cout << "TELESCOPE " << tel << endl;
+      //Store this to build epochs via the time access of visbuffer later
+      timeMType_p=MEpoch::castType(vb.msColumns().timeMeas()(0).getRef().getType());
+      timeUnit_p=Unit(vb.msColumns().timeMeas().measDesc().getUnits()(0).getName());
+      // timeUnit_p=Unit("s");
+      cout << "UNIT " << timeUnit_p.getValue() << " name " << timeUnit_p.getName()  << endl;
+      pointFrame_p=MeasFrame(imInfo.obsDate(), pos);
+      MDirection::Ref elRef(dc_p.directionType(), pointFrame_p);
+      //For now we set the conversion from this direction 
+      pointToPix_p=MDirection::Convert( MDirection(), elRef);
       nx_p=iimage.shape()(coordIndex);
       ny_p=iimage.shape()(coordIndex+1);
       coordIndex=csys_p.findCoordinate(Coordinate::SPECTRAL);
@@ -101,6 +133,39 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       
     }
 
+  }
+
+  void SimplePBConvFunc::toPix(const VisBuffer& vb){
+    thePix_p.resize(2);
+
+    if(dc_p.directionType() !=  MDirection::castType(vb.direction1()(0).getRef().getType())){
+      //pointToPix_p.setModel(theDir);
+      
+      MEpoch timenow(Quantity(vb.time()(0), timeUnit_p), timeMType_p);
+      //cout << "Ref " << vb.direction1()(0).getRefString() <<  " ep " << timenow.getRefString() << " time " << MVTime(timenow.getValue().getTime()).string(MVTime::YMD) << endl; 
+      pointFrame_p.resetEpoch(timenow);
+      ///////////////////////////
+      //MDirection some=pointToPix_p(vb.direction1()(0));
+      //MVAngle mvRa=some.getAngle().getValue()(0);
+      //MVAngle mvDec=some.getAngle().getValue()(1);
+      
+      //cout  << mvRa(0.0).string(MVAngle::TIME,8) << "   ";
+      // cout << mvDec.string(MVAngle::DIG2,8) << "   ";
+      //cout << MDirection::showType(some.getRefPtr()->getType()) << endl;
+
+      //////////////////////////
+      //pointToPix holds pointFrame_p by reference...
+      //thus good to go for conversion
+      direction1_p=pointToPix_p(vb.direction1()(0));
+      direction2_p=pointToPix_p(vb.direction2()(0));
+      dc_p.toPixel(thePix_p, direction1_p);
+
+    }
+    else{
+      direction1_p=vb.direction1()(0);
+      direction2_p=vb.direction2()(0);
+      dc_p.toPixel(thePix_p, vb.direction1()(0));
+    }
   }
 
   void SimplePBConvFunc::setWeightImage(CountedPtr<TempImage<Float> >& wgtimage){
@@ -119,7 +184,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					  ){
 
 
-    storeImageParams(iimage);
+    storeImageParams(iimage, vb);
     //Only one plane in this version
     convFuncMap.resize();
     convFuncMap=Vector<Int>(vb.nRow(),0);
@@ -145,7 +210,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Make a two dimensional image to calculate the
     // primary beam. We want this on a fine grid in the
     // UV plane 
-    Int directionIndex=coords.findCoordinate(Coordinate::DIRECTION);
+    Int directionIndex=directionIndex_p;
     AlwaysAssert(directionIndex>=0, AipsError);
 
     // Set up the convolution function.
@@ -158,16 +223,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       convSize_p=4*(sj_p->support(vb, coords))*convSampling;
     }
     
-    MDirection fieldDir=vb.direction1()(0);
+   
 
     addPBToFlux(vb);
 
-    DirectionCoordinate dc=coords.directionCoordinate(directionIndex);
+    DirectionCoordinate dc=dc_p;
 
     //where in the image in pixels is this pointing
     Vector<Double> pixFieldDir(2);
-    dc.toPixel(pixFieldDir, fieldDir);
+    toPix(vb);
+    pixFieldDir=thePix_p;
 
+    MDirection fieldDir=direction1_p;
     //shift from center
     pixFieldDir(0) = pixFieldDir(0) - Double(nx / 2);
     pixFieldDir(1) = pixFieldDir(1) - Double(ny / 2);

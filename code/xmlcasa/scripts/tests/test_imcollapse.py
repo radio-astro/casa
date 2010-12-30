@@ -78,13 +78,13 @@ datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/imcoll
 
 
 def run_collapse(
-    imagename, function, axis, outfile, region, box, chans,
+    imagename, function, axes, outfile, region, box, chans,
     stokes, mask, overwrite
 ):
     myia = iatool.create()
     myia.open(imagename)
     res = myia.collapse(
-        function=function, axis=axis, outfile=outfile,
+        function=function, axes=axes, outfile=outfile,
         region=region, box=box, chans=chans, stokes=stokes,
         mask=mask, overwrite=overwrite
     )
@@ -93,11 +93,11 @@ def run_collapse(
     return res
 
 def run_imcollapse(
-    imagename, function, axis, outfile, region, box, chans,
+    imagename, function, axes, outfile, region, box, chans,
     stokes, mask, overwrite, wantreturn
 ):
     return imcollapse(
-        imagename=imagename, function=function, axis=axis,
+        imagename=imagename, function=function, axes=axes,
         outfile=outfile, region=region, box=box, chans=chans,
         stokes=stokes, mask=mask, overwrite=overwrite,
         wantreturn=wantreturn
@@ -129,7 +129,7 @@ class imcollapse_test(unittest.TestCase):
         fracDiffRef = (
             gotCsys.referencevalue()['numeric'] - expectedCsys.referencevalue()['numeric']
         )/expectedCsys.referencevalue()['numeric'];
-        self.assertTrue(abs(fracDiffRef).max() <= 1e-13)
+        self.assertTrue(abs(fracDiffRef).max() <= 1.5e-6)
         got.close()
         got.done()
         expected.close()
@@ -139,20 +139,20 @@ class imcollapse_test(unittest.TestCase):
         """imcollapse: Test various exception cases"""
         
         def testit(
-            imagename, function, axis, outfile, region,
+            imagename, function, axes, outfile, region,
             box, chans, stokes, mask, overwrite, wantreturn
         ):
             for i in [0,1]:
                 if (i==0):
                     self.assertRaises(
                         Exception, run_collapse, imagename,
-                        function, axis, outfile, region, box,
+                        function, axes, outfile, region, box,
                         chans, stokes, mask, overwrite
                     )
                 else:
                     self.assertFalse(
                         run_imcollapse(
-                            imagename, function, axis,
+                            imagename, function, axes,
                             outfile, region, box, chans,
                             stokes, mask, overwrite,
                             wantreturn
@@ -172,9 +172,9 @@ class imcollapse_test(unittest.TestCase):
         testit(good_image, "mean", 0, "", "", "abc", "", "", "", False, True)
         # another bogus box
         testit(good_image, "mean", 0, "", "", "0,0,1000,1000", "", "", "", False, True)
-        # no axis
+        # no axes
         testit(good_image, "mean", "", "", "", "", "", "", "", False, True)
-        # bogus axis
+        # bogus axes
         testit(good_image, "mean", 10, "", "", "", "", "", "", False, True)
 
     def test_1(self):
@@ -325,6 +325,27 @@ class imcollapse_test(unittest.TestCase):
         mytool2 = mytool.collapse("mean", 3)
         expected = [3, 3, 1, 1]
         self.assertTrue(mytool2.shape() == expected)
+ 
+    def test_7(self):
+        """imcollapse: verify collapsing along multiple axes works"""
+        expected = "collapse_avg_0_1.fits"
+        shutil.copy(datapath + expected, expected)
+        for i in [0, 1]:
+            if i == 0:
+                mytool = run_collapse(
+                    good_image, "mean", [0, 1], "", "", "",
+                    "", "", "", False
+                )
+                self.assertTrue(type(mytool) == type(ia))
+                self.checkImage(mytool, expected)
+            else:
+                mytool = run_imcollapse(
+                    good_image, "mean", [0, 1], "", "", "",
+                    "", "", "", False, True
+                )
+                self.assertTrue(type(mytool) == type(ia))
+                self.checkImage(mytool, expected)
+
 
 
 def suite():

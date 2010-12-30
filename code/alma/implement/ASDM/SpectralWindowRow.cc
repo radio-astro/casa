@@ -4057,7 +4057,7 @@ void SpectralWindowRow::dopplerIdFromBin(EndianISStream& eiss) {
   * Returns the SpectralWindowRow linked to this row via the Tag stored in assocSpectralWindowId
   * at position i.
   */
- SpectralWindowRow* SpectralWindowRow::getSpectralWindow(int i) {
+ SpectralWindowRow* SpectralWindowRow::getSpectralWindowUsingAssocSpectralWindowId(int i) {
  	return table.getContainer().getSpectralWindow().getRowByKey(assocSpectralWindowId.at(i));
  } 
  
@@ -4065,7 +4065,7 @@ void SpectralWindowRow::dopplerIdFromBin(EndianISStream& eiss) {
   * Returns the vector of SpectralWindowRow* linked to this row via the Tags stored in assocSpectralWindowId
   *
   */
- vector<SpectralWindowRow *> SpectralWindowRow::getSpectralWindows() {
+ vector<SpectralWindowRow *> SpectralWindowRow::getSpectralWindowsUsingAssocSpectralWindowId() {
  	vector<SpectralWindowRow *> result;
  	for (unsigned int i = 0; i < assocSpectralWindowId.size(); i++)
  		result.push_back(table.getContainer().getSpectralWindow().getRowByKey(assocSpectralWindowId.at(i)));

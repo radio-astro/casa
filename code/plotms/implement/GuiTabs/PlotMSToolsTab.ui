@@ -72,6 +72,16 @@
        </widget>
       </item>
       <item>
+       <widget class="QRadioButton" name="handSubtractRegions" >
+        <property name="text" >
+         <string>Subtract Regions</string>
+        </property>
+        <property name="icon" >
+         <iconset resource="../Gui/PlotMSPlotter.qrc" >:/actions/images/minus-bv.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QRadioButton" name="handZoom" >
         <property name="text" >
          <string>Zoom</string>

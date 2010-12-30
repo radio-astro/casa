@@ -25,7 +25,7 @@
 
 
 casa_add_python( xmlcasa xmlcasa_parallel_python python/${PYTHONV}/parallel
-  pcont.py
   parallel_cont.py
+  pimager.py
   __init__.py
 )

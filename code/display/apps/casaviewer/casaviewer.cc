@@ -39,7 +39,10 @@
 
 #include <display/QtViewer/QtDisplayData.qo.h>
 #include <display/QtViewer/QtDisplayPanelGui.qo.h>
+#include <display/QtViewer/QtESOPanelGui.qo.h>
 #include <display/QtViewer/QtViewer.qo.h>
+
+#include <display/Utilities/Lowlevel.h>
 
 #include <unistd.h>
 #include <sys/stat.h>
@@ -56,7 +59,7 @@ static pid_t manager_root_pid = 0;
 static bool sigterm_received = false;
 static void preprocess_args( int argc, const char *argv[], int &numargs, char **&args,
 			     char *&dbus_name, bool &inital_run, bool &server_startup,
-			     bool &without_gui, bool &persistent, bool &casapy_start );
+			     bool &without_gui, bool &persistent, bool &casapy_start, bool &eso_3d);
 static void start_manager_root( const char *origname, int numargs, char **args,
 				const char *dbusname, bool without_gui, pid_t root_pid );
 static void launch_server( const char *origname, int numargs, char **args,
@@ -64,7 +67,6 @@ static void launch_server( const char *origname, int numargs, char **args,
 			   bool persistent, bool casapy_start );
 static char *find_xvfb( const char *paths );
 static pid_t launch_xvfb( const char *name, pid_t pid, char *&display, char *&authority );
-static int make_it_a_dir( const char *path );
 
 static void exiting_server( int sig ) { exit(0); }
 static void signal_manager_root( int sig ) {
@@ -102,6 +104,7 @@ int main( int argc, const char *argv[] ) {
     bool without_gui = false;
     bool persistent = false;
     bool casapy_start = false;
+    bool eso_3d = false;
     char *dbus_name = 0;
     bool initial_run = false;
 
@@ -112,7 +115,7 @@ int main( int argc, const char *argv[] ) {
     signal( SIGTERM, exiting_server );
 
     preprocess_args( argc, argv, numargs, args, dbus_name, initial_run,
-		     server_startup, without_gui, persistent, casapy_start );
+		     server_startup, without_gui, persistent, casapy_start , eso_3d);
 
     if ( (server_startup || without_gui) && initial_run ) {
 	launch_server( argv[0], numargs, args, dbus_name, without_gui,
@@ -151,13 +154,22 @@ int main( int argc, const char *argv[] ) {
 	if(narg>3) arg3     = args[3];
 #endif
 
+
 	// Workaround for python task's "empty parameter" disability....
 	if(filename==".") filename="";
 
 	QtViewer* v = new QtViewer(server_startup,dbus_name);
 
 	if ( ! server_startup ) {
-	    QtDisplayPanelGui* dpg = new QtDisplayPanelGui(v);
+
+		// define the panel
+		QtDisplayPanelGui* dpg;
+
+		// create the correct panel
+		if (eso_3d)
+			dpg = new QtESOPanelGui(v);
+		else
+			dpg = new QtDisplayPanelGui(v);
 
 	    QtDisplayData* qdd = 0;
 
@@ -273,7 +285,7 @@ int main( int argc, const char *argv[] ) {
 // of args, and the last arg (not included in numargs count) is null (for execvp)
 static void preprocess_args( int argc, const char *argv[], int &numargs, char **&args,
 			     char *&dbus_name, bool &initial_run, bool &server_startup,
-			     bool &without_gui, bool &persistent, bool &casapy_start ) {
+			     bool &without_gui, bool &persistent, bool &casapy_start, bool &eso_3d) {
 
     without_gui = false;
     persistent = false;
@@ -318,6 +330,10 @@ static void preprocess_args( int argc, const char *argv[], int &numargs, char **
 	    persistent = true;
 	} else if ( ! strcmp(argv[x],"--casapy") ) {
 	    casapy_start = true;
+	// check for ESO 3D param
+	} else if ( ! strcmp(argv[x],"--eso3d") ) {
+		// set flag true
+		eso_3d = true;
 	}
     }
 
@@ -356,7 +372,8 @@ static void preprocess_args( int argc, const char *argv[], int &numargs, char **
 	if ( strncmp( argv[x], "--server", 8 ) &&
 	     strncmp( argv[x], "--nogui", 7 ) &&
 	     strcmp( argv[x], "--persist" ) &&
-	     strcmp( argv[x], "--casapy" ) )
+	     strcmp( argv[x], "--casapy" ) &&
+	     strcmp( argv[x], "--eso3d" ))
 	    args[numargs++] = strdup(argv[x]);
     }
     args[numargs] = 0;
@@ -552,7 +569,7 @@ pid_t launch_xvfb( const char *name, pid_t pid, char *&display, char *&authority
 
     authority = (char*) malloc( sizeof(char)*(strlen(home)+160) );
     sprintf( authority, "%s/.casa", home );
-    make_it_a_dir( authority );
+    viewer::make_it_a_dir( authority );
     sprintf( authority, "%s/.casa/xauthority", home );
 
     const int display_start=6;
@@ -646,33 +663,3 @@ pid_t launch_xvfb( const char *name, pid_t pid, char *&display, char *&authority
     return child_xvfb;
 }
 
-//
-//  helper function to create ~/.casa/ipython/security
-//
-int make_it_a_dir( const char *path ) {
-    struct stat buf;
-    if ( stat( path, &buf ) == 0 ) {
-	if ( ! S_ISDIR(buf.st_mode) ) {
-	    char *savepath = (char*) malloc(sizeof(char) * (strlen(path) + 12));
-	    int count = 0;
-
-	    do {
-		count += 1;
-		sprintf( savepath, "%s_SAV%03d", path, count );
-	    } while ( stat( savepath, &buf ) == 0 );
-
-	    if ( rename( path, savepath ) != 0 ) {
-		return 1;
-	    }
-	    if ( mkdir( path, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH ) != 0 ) {
-		return 1;
-	    }
-	    free(savepath);
-	}
-    } else {
-	if ( mkdir( path, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH ) != 0 ) {
-	    return 1;
-	}
-    }
-    return 0;
-}

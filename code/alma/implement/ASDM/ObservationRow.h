@@ -48,6 +48,9 @@ using asdmIDL::ObservationRowIDL;
 
 
 
+
+
+
 #include <Tag.h>
 using  asdm::Tag;
 
@@ -64,7 +67,7 @@ using  asdm::Tag;
 
 
 /*\file Observation.h
-    \brief Generated from model's revision "1.54", branch "HEAD"
+    \brief Generated from model's revision "1.55", branch "HEAD"
 */
 
 namespace asdm {
@@ -79,7 +82,7 @@ typedef void (ObservationRow::*ObservationAttributeFromBin) (EndianISStream& eis
 /**
  * The ObservationRow class is a row of a ObservationTable.
  * 
- * Generated from model's revision "1.54", branch "HEAD"
+ * Generated from model's revision "1.55", branch "HEAD"
  *
  */
 class ObservationRow {

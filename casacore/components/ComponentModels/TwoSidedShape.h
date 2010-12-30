@@ -247,6 +247,10 @@ public:
   virtual void visibility(Vector<DComplex>& scale, const Matrix<Double>& uvw,
 			  const Double& frequency) const = 0;
 
+  // same as above but with many frequencies
+ virtual void visibility(Matrix<DComplex>& scale, const Matrix<Double>& uvw,
+			  const Vector<Double>& frequency) const = 0; 
+
   // determine whether the shape is symmetric or not. Always returns True.
   virtual Bool isSymmetric() const;
 
@@ -315,6 +319,10 @@ public:
     	Bool includeUncertainties = True, Quantity majorErr = 0,
     	Quantity minorErr = 0, Quantity posanErr = 0
   );
+
+  // Shush a compiler warning about ComponentShape::sizeToString() being
+  // hidden.
+  virtual String sizeToString() const = 0;
 
 protected:
   // The constructors and assignment operator are protected as only derived

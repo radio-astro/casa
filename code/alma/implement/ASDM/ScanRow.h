@@ -48,6 +48,9 @@ using asdmIDL::ScanRowIDL;
 
 
 
+
+
+
 #include <ArrayTime.h>
 using  asdm::ArrayTime;
 
@@ -110,7 +113,7 @@ using namespace AntennaMotionPatternMod;
 
 
 /*\file Scan.h
-    \brief Generated from model's revision "1.54", branch "HEAD"
+    \brief Generated from model's revision "1.55", branch "HEAD"
 */
 
 namespace asdm {
@@ -128,7 +131,7 @@ typedef void (ScanRow::*ScanAttributeFromBin) (EndianISStream& eiss);
 /**
  * The ScanRow class is a row of a ScanTable.
  * 
- * Generated from model's revision "1.54", branch "HEAD"
+ * Generated from model's revision "1.55", branch "HEAD"
  *
  */
 class ScanRow {

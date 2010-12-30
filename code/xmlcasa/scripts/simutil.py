@@ -4,12 +4,16 @@ import casac
 import os
 import shutil
 import commands
-import pdb
+#import pdb
 # all I really need is casalog, but how to get it:?
 from taskinit import *
 import pylab as pl
-qatool = casac.homefinder.find_home_by_name('quantaHome')
-qa = qatool.create()
+
+# qa doesn't hold state.
+#qatool = casac.homefinder.find_home_by_name('quantaHome')
+#qa = qatool.create()
+
+im, cb, ms, tb, fg, me, ia, po, sm, cl, cs, rg, sl, dc, vp = gentools()
 
 class compositenumber:
     def __init__(self, maxval=100):
@@ -184,12 +188,22 @@ class simutil:
 
     def ismstp(self,s,halt=False):
         try:
-            istp=False
+            istp = False
             # check if the ms is tp data or not.
             tb.open(s+'/ANTENNA')
-            antname=tb.getcol('NAME')
+            antname = tb.getcol('NAME')
             tb.close()
-            if antname[0].find('TP') > -1: istp=True
+            if antname[0].find('TP') > -1:
+                istp = True
+            elif len(antname) == 1:
+                istp = True
+            else:
+                # need complete testing of UVW
+                tb.open(s)
+                uvw = tb.getcol("UVW")
+                tb.close()
+                if uvw.all() == 0.:
+                    istp = True 
         except:
             if halt:
                 self.msg("can't understand the file '"+str(s)+"'",priority="error")
@@ -2780,14 +2794,6 @@ class simutil:
 
 
 
-
-
-
-
-
-
-
-
     ##################################################################
     # image/clean subtask
 
@@ -2917,13 +2923,13 @@ class simutil:
             cleanstr=cleanstr+",uvtaper=False"
         cleanlast.write('innertaper              = []\n');
         if os.path.exists(modelimage):
-            cleanstr=cleanstr+",modelimage="+str(modelimage)
+            cleanstr=cleanstr+",modelimage='"+str(modelimage)+"'"
             cleanlast.write('modelimage              = "'+str(modelimage)+'"\n');
         else:
             cleanlast.write('modelimage              = ""\n');
         cleanlast.write("restoringbeam           = ['']\n");
-        cleanlast.write("pbcor                   = False\n");
-        cleanlast.write("minpb                   = 0.1\n");
+        cleanlast.write("pbcor                   = True\n");
+        cleanlast.write("minpb                   = 0.2\n");
         cleanlast.write("calready                = True\n");
         cleanlast.write('noise                   = ""\n');
         cleanlast.write('npixels                 = 0\n');
@@ -2941,12 +2947,13 @@ class simutil:
         cleanlast.write("#"+cleanstr+"\n")
         cleanlast.close()
         
-        clean(vis=', '.join(mstoimage), imagename=image, mode=chanmode, nchan=nchan,
-                  niter=niter, threshold=threshold, selectdata=False, mask=mask,
-                  psfmode=psfmode, imagermode=imagermode, ftmachine=ftmachine, 
-                  imsize=imsize, cell=map(qa.tos,cell), phasecenter=imcenter,
-                  stokes=stokes, weighting=weighting, robust=robust,
-                  uvtaper=uvtaper,outertaper=outertaper)
+        clean(vis=', '.join(mstoimage), imagename=image, mode=chanmode, 
+              niter=niter, threshold=threshold, selectdata=False, nchan=nchan,
+              psfmode=psfmode, imagermode=imagermode, ftmachine=ftmachine, 
+              imsize=imsize, cell=map(qa.tos,cell), phasecenter=imcenter,
+              stokes=stokes, weighting=weighting, robust=robust,
+              uvtaper=uvtaper,outertaper=outertaper, pbcor=True, mask=mask,
+              modelimage=modelimage)
 
         del freq,nchan # something is holding onto the ms in table cache
 

@@ -213,9 +213,14 @@ ROVisibilityIterator::operator=(const ROVisibilityIterator& other)
   freqCacheOK_p=other.freqCacheOK_p;
   flagOK_p = other.flagOK_p;
   visOK_p = other.visOK_p;
+  floatDataCubeOK_p = other.floatDataCubeOK_p;
   weightSpOK_p = other.weightSpOK_p;
   flagCube_p.resize(other.flagCube_p.shape()); flagCube_p=other.flagCube_p;
   visCube_p.resize(other.visCube_p.shape()); visCube_p=other.visCube_p;
+
+  floatDataCube_p.resize(other.floatDataCube_p.shape());
+  floatDataCube_p = other.floatDataCube_p;
+
   uvwMat_p.resize(other.uvwMat_p.shape()); uvwMat_p=other.uvwMat_p;
   feedpa_p.resize(other.feedpa_p.nelements()); feedpa_p=other.feedpa_p;
   parang0_p=other.parang0_p;
@@ -247,7 +252,9 @@ ROVisibilityIterator::operator=(const ROVisibilityIterator& other)
   colFeed1.reference(other.colFeed1);
   colFeed2.reference(other.colFeed2);
   colTime.reference(other.colTime);
+  colTimeCentroid.reference(other.colTimeCentroid);
   colTimeInterval.reference(other.colTimeInterval);
+  colExposure.reference(other.colExposure);
   colWeight.reference(other.colWeight);
   colWeightSpectrum.reference(other.colWeightSpectrum);
   colVis.reference(other.colVis);
@@ -256,8 +263,12 @@ ROVisibilityIterator::operator=(const ROVisibilityIterator& other)
   colCorrVis.reference(other.colCorrVis);
   colSigma.reference(other.colSigma);
   colFlag.reference(other.colFlag);
+  colFlagCategory.reference(other.colFlagCategory);
   colFlagRow.reference(other.colFlagRow);
+  colObservation.reference(other.colObservation);
+  colProcessor.reference(other.colProcessor);
   colScan.reference(other.colScan);
+  colState.reference(other.colState);
   colUVW.reference(other.colUVW);
   imwgt_p=other.imwgt_p;
   return *this;
@@ -283,6 +294,7 @@ void ROVisibilityIterator::origin()
     freqCacheOK_p=False;
     flagOK_p = weightSpOK_p = False;
     visOK_p.resize(3); visOK_p[0]=visOK_p[1]=visOK_p[2]=False;
+    floatDataCubeOK_p = False;
     setSelTable();
     attachColumns(attachTable());
     getTopoFreqs();
@@ -326,7 +338,12 @@ Bool ROVisibilityIterator::isInSelectedSPW(const Int& spw){
 void ROVisibilityIterator::advance()
 {
   newChanGroup_p=False;
-  flagOK_p = visOK_p[0] = visOK_p[1] = visOK_p[2] = weightSpOK_p = False;
+  flagOK_p = False;
+  visOK_p[0] = False;
+  visOK_p[1] = False;
+  visOK_p[2] = False;
+  floatDataCubeOK_p = False;
+  weightSpOK_p = False;
   curStartRow_p=curEndRow_p+1;
   if (curStartRow_p>=curTableNumRow_p) {
     if (++curChanGroup_p >= curNumChanGroup_p) {
@@ -546,24 +563,28 @@ void ROVisibilityIterator::setTileCache(){
 	  if(!existsWeightSpectrum())
 	    dataManType="";
 
-	// Sometimes *DATA columns may not contain anything yet
-	if(columns[k]==MS::columnName(MS::DATA)) {
-	  if(!colVis.isNull() &&
-	     !colVis.isDefined(0))
+	// Sometimes  columns may not contain anything yet
+	
+	if((columns[k]==MS::columnName(MS::DATA) && (colVis.isNull() ||
+						     !colVis.isDefined(0))) || 
+	   (columns[k]==MS::columnName(MS::MODEL_DATA) && (colModelVis.isNull() ||
+							   !colModelVis.isDefined(0))) ||
+	   (columns[k]==MS::columnName(MS::CORRECTED_DATA) && (colCorrVis.isNull() ||
+							       !colCorrVis.isDefined(0))) ||
+	   (columns[k]==MS::columnName(MS::FLAG) && (colFlag.isNull() ||
+						     !colFlag.isDefined(0))) ||
+	   (columns[k]==MS::columnName(MS::WEIGHT) && (colWeight.isNull() ||
+						       !colWeight.isDefined(0))) ||
+	   (columns[k]==MS::columnName(MS::SIGMA) && (colSigma.isNull() ||
+						      !colSigma.isDefined(0))) ||
+	   (columns[k]==MS::columnName(MS::UVW) && (colUVW.isNull() ||
+						    !colUVW.isDefined(0))) ){
 	    dataManType="";
 	}
-	if(columns[k]==MS::columnName(MS::MODEL_DATA)) {
-	  if(!colModelVis.isNull() &&
-	     !colModelVis.isDefined(0))
-	    dataManType="";
-	}
-	if(columns[k]==MS::columnName(MS::CORRECTED_DATA)) {
-	  if(!colCorrVis.isNull() &&
-	     !colCorrVis.isDefined(0))
-	    dataManType="";
-	}
-
-	if(dataManType.contains("Tiled") ){
+	
+   
+	
+	if(dataManType.contains("Tiled")  && (!String(cdesc.dataManagerGroup()).empty())){
 	  try {
 	    
 	    ROTiledStManAccessor tacc=ROTiledStManAccessor(thems, 
@@ -691,7 +712,9 @@ void ROVisibilityIterator::attachColumns(const Table &t)
   colFeed1.attach(t, MS::columnName(MS::FEED1));
   colFeed2.attach(t, MS::columnName(MS::FEED2));
   colTime.attach(t, MS::columnName(MS::TIME));
+  colTimeCentroid.attach(t, MS::columnName(MS::TIME_CENTROID));
   colTimeInterval.attach(t, MS::columnName(MS::INTERVAL));
+  colExposure.attach(t, MS::columnName(MS::EXPOSURE));
   if (cds.isDefined(MS::columnName(MS::DATA))) {
     colVis.attach(t, MS::columnName(MS::DATA));
   }
@@ -707,8 +730,12 @@ void ROVisibilityIterator::attachColumns(const Table &t)
     colCorrVis.attach(t, "CORRECTED_DATA");
   colUVW.attach(t, MS::columnName(MS::UVW));
   colFlag.attach(t, MS::columnName(MS::FLAG));
+  colFlagCategory.attach(t, MS::columnName(MS::FLAG_CATEGORY));
   colFlagRow.attach(t, MS::columnName(MS::FLAG_ROW));
+  colObservation.attach(t, MS::columnName(MS::OBSERVATION_ID));
+  colProcessor.attach(t, MS::columnName(MS::PROCESSOR_ID));
   colScan.attach(t, MS::columnName(MS::SCAN_NUMBER));
+  colState.attach(t, MS::columnName(MS::STATE_ID));
   colSigma.attach(t, MS::columnName(MS::SIGMA));
   colWeight.attach(t, MS::columnName(MS::WEIGHT));
   if (cds.isDefined("WEIGHT_SPECTRUM")) 
@@ -806,7 +833,13 @@ Cube<Bool>& ROVisibilityIterator::flag(Cube<Bool>& flags) const
     if (!flagOK_p) {
       // need to do the interpolation
       getInterpolatedVisFlagWeight(Corrected);
-      This->flagOK_p=This->visOK_p[Corrected]=This->weightSpOK_p=True;
+      This->flagOK_p = True;
+      This->visOK_p[Corrected] = True;
+      This->weightSpOK_p = True;
+      if(floatDataFound_p){
+        getInterpolatedFloatDataFlagWeight();
+        This->floatDataCubeOK_p = True;
+      }
     }
     flags.resize(flagCube_p.shape());  flags=flagCube_p; 
   } else {
@@ -848,6 +881,25 @@ Matrix<Bool>& ROVisibilityIterator::flag(Matrix<Bool>& flags) const
   return flags;
 }
 
+Array<Bool>& ROVisibilityIterator::flagCategory(Array<Bool>& flagCategories) const
+{
+  if(colFlagCategory.isNull() || !colFlagCategory.isDefined(0)){ // It often is.
+    flagCategories.resize();    // Zap it.
+  }
+  else{
+    if(velSelection_p){
+      throw(AipsError("velocity selection not allowed in flagCategory()."));
+    }
+    else{
+      if(useSlicer_p)
+        getCol(colFlagCategory, slicer_p, flagCategories, True);
+      else
+        getCol(colFlagCategory, flagCategories, True);
+    }
+  }
+  return flagCategories;
+}
+
 Vector<Bool>& ROVisibilityIterator::flagRow(Vector<Bool>& rowflags) const
 {
   rowflags.resize(curNumRow_p);
@@ -855,11 +907,32 @@ Vector<Bool>& ROVisibilityIterator::flagRow(Vector<Bool>& rowflags) const
   return rowflags;
 }
 
+Vector<Int>& ROVisibilityIterator::observationId(Vector<Int>& obsIDs) const
+{
+    obsIDs.resize(curNumRow_p);
+    getCol(colObservation, obsIDs);
+    return obsIDs;
+}
+
+Vector<Int>& ROVisibilityIterator::processorId(Vector<Int>& procIDs) const
+{
+    procIDs.resize(curNumRow_p);
+    getCol(colProcessor, procIDs);
+    return procIDs;
+}
+
 Vector<Int>& ROVisibilityIterator::scan(Vector<Int>& scans) const
 {
     scans.resize(curNumRow_p);
     getCol(colScan, scans);
     return scans;
+}
+
+Vector<Int>& ROVisibilityIterator::stateId(Vector<Int>& stateIds) const
+{
+    stateIds.resize(curNumRow_p);
+    getCol(colState, stateIds);
+    return stateIds;
 }
 
 Vector<Double>& ROVisibilityIterator::frequency(Vector<Double>& freq) const
@@ -906,11 +979,25 @@ Vector<Double>& ROVisibilityIterator::time(Vector<Double>& t) const
   return t;
 }
 
+Vector<Double>& ROVisibilityIterator::timeCentroid(Vector<Double>& t) const
+{
+  t.resize(curNumRow_p);
+  getCol(colTimeCentroid, t);
+  return t;
+}
+
 Vector<Double>& ROVisibilityIterator::timeInterval(Vector<Double>& t) const
 {
   t.resize(curNumRow_p);
   getCol(colTimeInterval, t);
   return t;
+}
+
+Vector<Double>& ROVisibilityIterator::exposure(Vector<Double>& expo) const
+{
+  expo.resize(curNumRow_p);
+  getCol(colExposure, expo);
+  return expo;
 }
 
 Cube<Complex>& 
@@ -919,7 +1006,9 @@ ROVisibilityIterator::visibility(Cube<Complex>& vis, DataColumn whichOne) const
   if (velSelection_p) {
     if (!visOK_p[whichOne]) {
       getInterpolatedVisFlagWeight(whichOne);
-      This->visOK_p[whichOne]=This->flagOK_p=This->weightSpOK_p=True;
+      This->visOK_p[whichOne] = True;
+      This->flagOK_p = True;
+      This->weightSpOK_p = True;
     }
     vis.resize(visCube_p.shape()); vis=visCube_p;
   } else { 
@@ -929,42 +1018,26 @@ ROVisibilityIterator::visibility(Cube<Complex>& vis, DataColumn whichOne) const
   return vis;
 }
 
-// helper function to swap the y and z axes of a Cube
-void swapyz(Cube<Complex>& out, const Cube<Complex>& in)
+Cube<Float>& 
+ROVisibilityIterator::floatData(Cube<Float>& fcube) const
 {
-  IPosition inShape=in.shape();
-  uInt nx=inShape(0),ny=inShape(2),nz=inShape(1);
-  out.resize(nx,ny,nz);
-  Bool deleteIn,deleteOut;
-  const Complex* pin = in.getStorage(deleteIn);
-  Complex* pout = out.getStorage(deleteOut);
-  uInt i=0, zOffset=0;
-  for (uInt iz=0; iz<nz; iz++, zOffset+=nx) {
-    Int yOffset=zOffset;
-    for (uInt iy=0; iy<ny; iy++, yOffset+=nx*nz) {
-      for (uInt ix=0; ix<nx; ix++) pout[i++] = pin[ix+yOffset];
+  if(velSelection_p){
+    if(!floatDataCubeOK_p){
+      getInterpolatedFloatDataFlagWeight();
+      This->floatDataCubeOK_p = True;
+      This->flagOK_p = True;
+      This->weightSpOK_p = True;
     }
+    fcube.resize(floatDataCube_p.shape());
+    fcube = floatDataCube_p;
   }
-  out.putStorage(pout,deleteOut);
-  in.freeStorage(pin,deleteIn);
-}
-
-// helper function to swap the y and z axes of a Cube
-void swapyz(Cube<Bool>& out, const Cube<Bool>& in)
-{
-  IPosition inShape=in.shape();
-  uInt nx=inShape(0),ny=inShape(2),nz=inShape(1);
-  out.resize(nx,ny,nz);
-  Bool deleteIn,deleteOut;
-  const Bool* pin = in.getStorage(deleteIn);
-  Bool* pout = out.getStorage(deleteOut);
-  uInt i=0, zOffset=0;
-  for (uInt iz=0; iz<nz; iz++, zOffset+=nx) {
-    Int yOffset=zOffset;
-    for (uInt iy=0; iy<ny; iy++, yOffset+=nx*nz) {
-      for (uInt ix=0; ix<nx; ix++) pout[i++] = pin[ix+yOffset];
-    }
+  else{ 
+    if(useSlicer_p)
+      getFloatDataColumn(slicer_p, fcube);
+    else
+      getFloatDataColumn(fcube);
   }
+  return fcube;
 }
 
 // transpose a matrix
@@ -1030,6 +1103,48 @@ void ROVisibilityIterator::getInterpolatedVisFlagWeight(DataColumn whichOne)
   transpose(This->imagingWeight_p,intWt);
 }
 
+void ROVisibilityIterator::getInterpolatedFloatDataFlagWeight() const
+{
+  // get floatData, flags & weights
+  // tricky.. to avoid recursion we need to set velSelection_p to False
+  // temporarily.
+  This->velSelection_p = False; 
+  floatData(This->floatDataCube_p);
+  flag(This->flagCube_p); 
+  //imagingWeight(This->imagingWeight_p);
+  Vector<Double> freq; frequency(freq);
+  This->velSelection_p = True;
+
+  // now interpolate floatData, using selFreq as the sample points
+  // we should have two options: flagging output points that have
+  // any flagged inputs or interpolating across flagged data.
+  // Convert frequencies to float (removing offset to keep accuracy) 
+  // so we can multiply them with Complex numbers to do the interpolation.
+  Block<Float> xfreq(channelGroupSize_p),sfreq(nVelChan_p); 
+  Int i;
+  for (i=0; i<channelGroupSize_p; i++) xfreq[i]=freq(i)-freq(0);
+  for (i=0; i<nVelChan_p; i++) sfreq[i]=selFreq_p(i)-freq(0);
+  // we should probably be using the flags for weight interpolation as well
+  // but it's not clear how to combine the 4 pol flags into one.
+  // (AND the flags-> weight flagged if all flagged?)
+  Cube<Float> floatData, intFloatData;
+  swapyz(floatData, floatDataCube_p);
+  Cube<Bool> flag, intFlag;
+  swapyz(flag, flagCube_p);
+  //Matrix<Float> wt, intWt;
+  //transpose(wt,imagingWeight_p);
+  InterpolateArray1D<Float, Float>::InterpolationMethod method =
+    InterpolateArray1D<Float,Float>::linear;
+  if(vInterpolation_p == "nearest")
+    method = InterpolateArray1D<Float, Float>::nearestNeighbour;
+  InterpolateArray1D<Float, Float>::
+    interpolate(intFloatData, intFlag, sfreq, xfreq, floatData, flag, method);
+  //InterpolateArray1D<Float,Float>::interpolate(intWt,sfreq,xfreq,wt,method);
+  swapyz(This->floatDataCube_p,intFloatData);
+  swapyz(This->flagCube_p,intFlag);
+  //transpose(This->imagingWeight_p,intWt);
+}
+
 void ROVisibilityIterator::getDataColumn(DataColumn whichOne, 
 					 const Slicer& slicer,
 					 Cube<Complex>& data) const
@@ -1082,6 +1197,21 @@ void ROVisibilityIterator::getDataColumn(DataColumn whichOne,
     getCol(colModelVis, data,True);
     break;
   }
+}  
+
+void ROVisibilityIterator::getFloatDataColumn(const Slicer& slicer,
+                                              Cube<Float>& data) const
+{
+  // Return FLOAT_DATA as real Floats.
+  if(floatDataFound_p)
+    getCol(colFloatVis, slicer, data, True);
+}
+
+void ROVisibilityIterator::getFloatDataColumn(Cube<Float>& data) const
+{
+  // Return FLOAT_DATA as real Floats.
+  if(floatDataFound_p)
+    getCol(colFloatVis, data, True);
 }  
 
 Matrix<CStokesVector>& 
@@ -1388,7 +1518,7 @@ Bool ROVisibilityIterator::existsWeightSpectrum() const
   Bool rstat(False);
 
   try {
-    rstat = (!colWeightSpectrum.isNull() &&
+    rstat = (!colWeightSpectrum.isNull() && colWeightSpectrum.isDefined(0) &&
 	     colWeightSpectrum.shape(0).isEqual(IPosition(2,nPol_p,channelGroupSize())));
   } catch (AipsError x) {
     rstat = False;
@@ -2257,6 +2387,11 @@ void VisibilityIterator::setSigma(const Vector<Float>& sigma)
   putCol(RWcolSigma, sigmat);
 }
 
+void VisibilityIterator::setSigmaMat(const Matrix<Float>& sigMat)
+{
+  putCol(RWcolSigma, sigMat);
+}
+
 void VisibilityIterator::setInterpolatedVisFlag(const Cube<Complex>& vis, 
 						const Cube<Bool>& flag)
 {
@@ -2412,4 +2547,6 @@ void VisibilityIterator::putCol(ArrayColumn<Complex> &column, const Slicer &slic
 }
 
 } //# NAMESPACE CASA - END
+
+
 

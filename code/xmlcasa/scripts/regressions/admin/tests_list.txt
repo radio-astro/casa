@@ -10,6 +10,7 @@
 
 3C129                           gmoellen aoc.nrao.edu
 3C219D_test                     scastro eso.org
+3C391polim                      ttsutsum nrao.edu
 accum_test                      scastro eso.org
 asdm-imexport+analysis		dpetry eso.org
 async-segfault                  dpetry eso.org
@@ -53,6 +54,7 @@ orionmosaic                     kgolap aoc.nrao.edu
 plotxy_regression               hye aoc.nrao.edu
 pointing_regression             sbhatnag aoc.nrao.edu
 polcal_20080224_cband           gmoellen aoc.nrao.edu
+ppdisk_regression               rindebet nrao.edu
 ppdisk2_regression               rindebet nrao.edu
 pylabmem                        kgolap aoc.nrao.edu
 secondNGC4826                   rreid nrao.edu
@@ -63,3 +65,6 @@ time_then_chan_avg              rreid nrao.edu
 unit_tests                      scastro eso.org
 wideband                        rurvashi aoc.nrao.edu
 wproject_regression             kgolap aoc.nrao.edu
+m51_tpsim_regression		rindebet nrao.edu
+m51_bothsim_regression		rindebet nrao.edu
+

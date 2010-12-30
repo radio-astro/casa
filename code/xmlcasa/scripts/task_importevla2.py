@@ -2,14 +2,14 @@ import os
 from taskinit import *
 
 debug = False
-def importevla2(asdm=None, vis=None, ocorr_mode=None, compression=None, asis=None, verbose=None, overwrite=None, flagzero=None, cliplevel=None, flagpol=None, shadow=None, diameter=None, applyflags=None, tbuff=None, flagbackup=None):
+def importevla2(asdm=None, vis=None, ocorr_mode=None, compression=None, asis=None, scans=None, verbose=None, overwrite=None, online=None, tbuff=None, flagzero=None, cliplevel=None, flagpol=None, shadow=None, diameter=None, applyflags=None, flagbackup=None):
 	""" Convert a Science Data Model (SDM) dataset into a CASA Measurement Set (MS)
 	This version is under development and is geared to handling EVLA specific flag and
-	system files, and is otherwise identical to importasdm.
+	system files, and is otherwise equivalent to importasdm.
 	
 	Keyword arguments:
 	asdm -- Name of input SDM file (directory)
-		default: none; example: asdm='ExecBlock3'
+		default: none; example: asdm='TOSR0001_sb1308595_1.55294.83601028935'
 
 	"""
 	#Python script
@@ -25,8 +25,12 @@ def importevla2(asdm=None, vis=None, ocorr_mode=None, compression=None, asis=Non
 	#Vers7.1 (3.1.0) STM 2010-10-07 remove time_sampling, srt
 	#Vers7.1 (3.1.0) STM 2010-10-07 use helper functions, flagger tool, fill FLAG_CMD 
 	#Vers7.2 (3.1.0) STM 2010-10-29 minor modifications to defaults and messages
+	#Vers8.0 (3.2.0) STM 2010-11-23 tbuff not sub-par of applyflags=T
+	#Vers8.1 (3.2.0) STM 2010-12-01 prec=9 on timestamps
+	#Vers8.2 (3.2.0) MKH 2010-12-06 added scan selection
 	try:
                 casalog.origin('importevla')
+		casalog.post('You are using importevla2 v8.2 STM Updated 2010-12-08')
 		viso = ''
                 casalog.post('corr_mode is forcibly set to all.')
 		if(len(vis) > 0) :
@@ -40,7 +44,7 @@ def importevla2(asdm=None, vis=None, ocorr_mode=None, compression=None, asis=Non
 		srt='all'
 		time_sampling='all'
 		showversion=True
-		execute_string='asdm2MS  --icm \"' +corr_mode + '\" --isrt \"' + srt+ '\" --its \"' + time_sampling+ '\" --ocm \"' + ocorr_mode + '\" --wvr-corrected-data \"' + wvr_corrected_data + '\" --asis \"' + asis + '\" --logfile \"' +casalog.logfile() +'\"'
+		execute_string='asdm2MS  --icm \"' +corr_mode + '\" --isrt \"' + srt+ '\" --its \"' + time_sampling+ '\" --ocm \"' + ocorr_mode + '\" --wvr-corrected-data \"' + wvr_corrected_data + '\" --asis \"' + asis + '\" --scans \"' + scans + '\" --logfile \"' +casalog.logfile() +'\"'
 		if(showversion) :
 		   casalog.post('asdm2MS --revision --logfile \"' +casalog.logfile() +'\"')
 		   os.system('asdm2MS --revision --logfile \"' +casalog.logfile() +'\"')
@@ -108,13 +112,13 @@ def importevla2(asdm=None, vis=None, ocorr_mode=None, compression=None, asis=Non
 		    ms_startmjds = timd['time'][0]
 		    ms_endmjds = timd['time'][1]
 		    t = qa.quantity(ms_startmjds,'s')
-		    ms_starttime = qa.time(t,form="ymd")
+		    ms_starttime = qa.time(t,form="ymd",prec=9)
 		    ms_startdate = qa.time(t,form=["ymd","no_time"])
-		    t0 = qa.totime(ms_startdate+'/00:00:00.0')
+		    t0 = qa.totime(ms_startdate+'/00:00:00.00')
 		    t0d = qa.convert(t0,'d')
 		    t0s = qa.convert(t0,'s')
 		    t = qa.quantity(ms_endmjds,'s')
-		    ms_endtime = qa.time(t,form="ymd")
+		    ms_endtime = qa.time(t,form="ymd",prec=9)
 		    # NOTE: could also use values from OBSERVATION table col TIME_RANGE
 		    casalog.post('MS spans timerange '+ms_starttime+' to '+ms_endtime)
 
@@ -267,6 +271,8 @@ def readflagxml(sdmfile, mytbuff):
     if type(mytbuff)!=float:
         casalog.post('Warning: incorrect type for tbuff, found "'+str(mytbuff)+'", setting to 1.0')
         mytbuff=1.0
+    else:
+        casalog.post('Padding times with tbuff = '+str(mytbuff))
     
     # construct look-up dictionary of name vs. id from Antenna.xml
     xmlants = minidom.parse(sdmfile+'/Antenna.xml')
@@ -300,12 +306,12 @@ def readflagxml(sdmfile, mytbuff):
         start = int(rowstart[0].childNodes[0].nodeValue)
         startmjds = (float(start)*1.0E-9) - mytbuff
         t = qa.quantity(startmjds,'s')
-        starttime = qa.time(t,form="ymd")
+        starttime = qa.time(t,form="ymd",prec=9)
         rowend = rownode.getElementsByTagName("endTime")
         end = int(rowend[0].childNodes[0].nodeValue)
         endmjds = (float(end)*1.0E-9) + mytbuff
         t = qa.quantity(endmjds,'s')
-        endtime = qa.time(t,form="ymd")
+        endtime = qa.time(t,form="ymd",prec=9)
 	# time and interval for FLAG_CMD use
 	times = 0.5*(startmjds+endmjds)
 	intervs = endmjds-startmjds

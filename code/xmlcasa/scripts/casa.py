@@ -63,7 +63,6 @@ __plotmshome__ = casac.homefinder.find_home_by_name('plotmsHome')
 __calplothome__ = casac.homefinder.find_home_by_name('calplotHome')
 __tablehome__ = casac.homefinder.find_home_by_name('tableHome')
 __flaggerhome__ = casac.homefinder.find_home_by_name('flaggerHome')
-__autoflaghome__ = casac.homefinder.find_home_by_name('autoflagHome')
 __imagehome__ = casac.homefinder.find_home_by_name('imageHome')
 __imagepolhome__ = casac.homefinder.find_home_by_name('imagepolHome')
 __simulatorhome__ = casac.homefinder.find_home_by_name('simulatorHome')
@@ -88,7 +87,6 @@ pmtool = __plotmshome__.create( )
 calplot = __calplothome__.create( )
 table = __tablehome__.create( )
 flagger = __flaggerhome__.create( )
-autoflag = __autoflaghome__.create( )
 image = __imagehome__.create( )
 imagepol = __imagepolhome__.create( )
 simulator = __simulatorhome__.create( )
@@ -124,6 +122,7 @@ from find import  find
 from fixvis import  fixvis
 from flagautocorr import  flagautocorr
 from flagdata import  flagdata
+from flagdata2 import  flagdata2
 from flagmanager import  flagmanager
 from fluxscale import  fluxscale
 from fringecal import  fringecal
@@ -153,7 +152,6 @@ from listobs import  listobs
 from listvis import  listvis
 from mosaic import  mosaic
 from msview import msview
-from newflagdata import  newflagdata
 from peel import  peel
 from plotants import  plotants
 from plotcal import  plotcal

@@ -171,6 +171,13 @@ class TagType {
 	
 
 	
+	/**
+	  * The TagType for a Flag Tag.
+	  */
+	static const TagType*  Flag ;
+	
+
+	
 
 	
 
@@ -401,6 +408,10 @@ class TagType {
 
 	
 	if (TagType:: Field) { delete TagType::Field; TagType::Field = 0; }
+	
+
+	
+	if (TagType:: Flag) { delete TagType::Flag; TagType::Flag = 0; }
 	
 
 	

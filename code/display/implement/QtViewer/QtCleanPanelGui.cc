@@ -51,7 +51,7 @@
 #include <casa/sstream.h>	
 namespace casa {
 
-    QtCleanPanelGui::QtCleanPanelGui( QtViewer *v, QWidget *parent ) : QtDisplayPanelGui( v, parent ),
+    QtCleanPanelGui::QtCleanPanelGui( QtViewer *v, QWidget *parent ) : QtDisplayPanelGui( v, parent, "iclean" ),
 								       in_interact_mode(false), interact_id(0),
 								       maskdd_(0), imagedd_(0) {
 
@@ -400,7 +400,14 @@ namespace casa {
 		ImageInterface<Float> *maskim=maskdd_->imageInterface();
 		//Write the region as text...will need to add a box/toggle
 		//to the viewer for that
-		writeRegionText(*imagereg, maskim->name(), value);
+		//It was requested by some but 
+		//latest conclusion is not useful ...so getting rid of it
+		//recent comment from CSSC:
+		//I note that the imagename.mask.text have not ever worked to my 
+		//knowledge, in the sense that you cannot feed them back into clean 
+		//or use them for any image analysis tasks.
+
+		//writeRegionText(*imagereg, maskim->name(), value);
 
 		SubImage<Float> partToMask(*maskim, *imagereg, True);
 		LatticeRegion latReg=imagereg->toLatticeRegion(csys_p, maskim->shape());

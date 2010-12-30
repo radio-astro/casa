@@ -2,7 +2,7 @@ import os
 import shutil
 from taskinit import *
 from cleanhelper import *
-im,cb,ms,tb,fg,af,me,ia,po,sm,cl,cs,rg,sl,dc,vp=gentools()
+im,cb,ms,tb,fg,me,ia,po,sm,cl,cs,rg,sl,dc,vp=gentools()
 #import pdb
 
 def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
@@ -13,7 +13,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
           veltype, imsize, cell, phasecenter, restfreq, stokes, weighting,
           robust, uvtaper, outertaper, innertaper, modelimage, restoringbeam,
           pbcor, minpb, calready, noise, npixels, npercycle, cyclefactor,
-          cyclespeedup, nterms, reffreq, chaniter):
+          cyclespeedup, nterms, reffreq, chaniter, flatnoise):
 
     #Python script
     
@@ -66,6 +66,9 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
         ###if mosweight use scratch columns as there in no
         ###mosweight available for no scratch column /readonly ms yet
         imset=cleanhelper(imCln, vis, (calready or mosweight), casalog)
+
+        # multims input only (do sorting of vis list based on spw)
+        if  type(vis)==list: imset.sortvislist(spw,mode,width)
 
         if((len(imagename) == 0) or
            ((type(imagename) == str) and imagename.isspace())):
@@ -209,6 +212,13 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                 imstart=localstart
                 visnchan=-1
                 visstart=0
+            
+            # data selection only 
+            imset.datsel(field=field, spw=spw,
+                         timerange=timerange, uvrange=uvrange,
+                         antenna=antenna, scan=scan,
+                         calready=calready, nchan=visnchan,
+                         start=visstart, width=1)
 
             imset.definemultiimages(rootname=rootname, imsizes=imsizes,
                                     cell=cell, stokes=stokes, mode=mode,
@@ -219,17 +229,31 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                                     outframe=outframe, veltype=veltype,
                                     makepbim=makepbim, checkpsf=dochaniter) 
 
-            imset.datselweightfilter(field=field, spw=spw,
-                                     timerange=timerange, uvrange=uvrange,
-                                     antenna=antenna, scan=scan,
-                                     wgttype=weighting, robust=robust,
-                                     noise=noise, npixels=npixels,
-                                     mosweight=mosweight,
-                                     innertaper=innertaper,
-                                     outertaper=outertaper,
-                                     calready=calready, nchan=visnchan,
-                                     start=visstart, width=1)
+            # weighting and tapering
+            imset.datweightfilter(field=field, spw=spw,
+                                  timerange=timerange, uvrange=uvrange,
+                                  antenna=antenna, scan=scan,
+                                  wgttype=weighting, robust=robust,
+                                  noise=noise, npixels=npixels,
+                                  mosweight=mosweight,
+                                  innertaper=innertaper,
+                                  outertaper=outertaper,
+                                  calready=calready, nchan=visnchan,
+                                  start=visstart, width=1)
 
+# Do data selection and wieghting,papering all at once.
+# This does not work for multims input  
+#            imset.datselweightfilter(field=field, spw=spw,
+#                                     timerange=timerange, uvrange=uvrange,
+#                                     antenna=antenna, scan=scan,
+#                                     wgttype=weighting, robust=robust,
+#                                     noise=noise, npixels=npixels,
+#                                     mosweight=mosweight,
+#                                     innertaper=innertaper,
+#                                     outertaper=outertaper,
+#                                     calready=calready, nchan=visnchan,
+#                                     start=visstart, width=1)
+#
             if maskimage=='':
                 maskimage=imset.imagelist[0]+'.mask'
 
@@ -400,7 +424,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                                        cyclefactor=cyclefactor,
                                        cyclespeedup=cyclespeedup,
                     #                   fluxscale=[imagename+'.flux'])
-                                       fluxscale=fluximage)
+                                       fluxscale=fluximage, flatnoise=flatnoise)
             else:
                 imCln.setmfcontrol(stoplargenegatives=negcomponent,
                                    cyclefactor=cyclefactor,

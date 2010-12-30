@@ -235,26 +235,41 @@ image::addnoise(const std::string& type, const std::vector<double>& pars,
 }
 
 casac::image * image::collapse(
-	const string& function, const int axis, const string& outfile,
+	const string& function, const variant& axes, const string& outfile,
 	const string& region, const string& box, const string& chans,
 	const string& stokes, const string& mask,
 	const bool overwrite
 ) {
-	casac::image *newImageTool = 0;
+	image *newImageTool = 0;
     *itsLog << LogOrigin("image", __FUNCTION__);
     if (detached()) {
     	return NULL;
     }
 
 	try {
+		Vector<uInt> myAxes;
+		if (axes.type() == variant::INT) {
+			myAxes.resize(1);
+			myAxes[0] = (uInt)axes.toInt();
+		}
+		else if (axes.type() == variant::INTVEC) {
+			vector<int> tmp = axes.getIntVec();
+			myAxes.resize(tmp.size());
+			for (uInt i=0; i<tmp.size(); i++) {
+				myAxes[i] = tmp[i];
+			}
+		}
+		else {
+			throw AipsError("Unsupported type for parameter axes");
+		}
 		String aggString = function;
 		// FIXME allow user to specify multiple axes at python level
 		ImageCollapser collapser(
 			aggString, itsImage->getImage(), region,
-		    box, chans, stokes, mask, axis,
+		    box, chans, stokes, mask, myAxes,
 		    outfile, overwrite
 		);
-		newImageTool = new ::casac::image(collapser.collapse(True), False);
+		newImageTool = new image(collapser.collapse(True), False);
 	}
 	catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
@@ -1357,11 +1372,11 @@ image::fitpolynomial(const std::string& residFile, const std::string& fitFile,
     }
 	try {
 		ImageFitter *fitter = 0;
-		String imName = itsImage->name();
+		const ImageInterface<Float> *image = itsImage->getImage();
 		if (region.type() == ::casac::variant::STRING || region.size() == 0) {
 			String regionString = (region.size() == 0) ? "" : region.toString();
 			fitter = new ImageFitter(
-				imName, regionString, box, chan, stokes, mask, includepix, excludepix,
+				image, regionString, box, chan, stokes, mask, includepix, excludepix,
 				residual, model, estimates, logfile, append, newestimates
 			);
 		}
@@ -1369,7 +1384,7 @@ image::fitpolynomial(const std::string& residFile, const std::string& fitFile,
 			::casac::variant regionCopy = region;
 			Record *regionRecord = toRecord(regionCopy.asRecord());
 			fitter = new ImageFitter(
-				imName, regionRecord, box, chan, stokes, mask, includepix, excludepix,
+				image, regionRecord, box, chan, stokes, mask, includepix, excludepix,
 				residual, model, estimates, logfile, append, newestimates
 			);
 		}
@@ -1381,14 +1396,21 @@ image::fitpolynomial(const std::string& residFile, const std::string& fitFile,
 		delete fitter;
 		Record returnRecord, compListRecord;
 		String error;
+
+		Vector<String> allowFluxUnits(1);
+		allowFluxUnits[0] = "Jy.km/s";
+		FluxRep<Double>::setAllowedUnits(allowFluxUnits);
+
 	    if (! compList.toRecord(error, compListRecord)) {
 	        *itsLog << "Failed to generate output record from result. " << error
 	                << LogIO::POST;
 	    }
+	    FluxRep<Double>::clearAllowedUnits();
 		returnRecord.defineRecord("results", compListRecord);
 		returnRecord.define("converged", converged);
 	    rstat = fromRecord(returnRecord);
-	}catch (AipsError x) {
+	} catch (AipsError x) {
+	    FluxRep<Double>::clearAllowedUnits();
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
@@ -2671,7 +2693,8 @@ image::tofits(const std::string& fitsfile, const bool velocity,
 	      const ::casac::record& region, const ::casac::variant& vmask,
 	      const bool overwrite,
 	      const bool dropdeg, const bool deglast,
-	      const bool dropstokes, const bool stokeslast, const bool async)
+	      const bool dropstokes, const bool stokeslast, 
+	      const bool wavelength, const bool async)
 {
   bool rstat(false);
   try {
@@ -2687,7 +2710,8 @@ image::tofits(const std::string& fitsfile, const bool velocity,
     rstat=itsImage->tofits(fitsfile, velocity, optical, bitpix, minpix,
 			   maxpix, *pRegion, mask, overwrite,
 			   dropdeg, deglast,
-			   dropstokes, stokeslast);
+			   dropstokes, stokeslast,
+			   wavelength);
     delete pRegion;
     //
   } catch (AipsError x) {

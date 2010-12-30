@@ -159,6 +159,12 @@ void TwoSidedShape::visibility(Vector<DComplex>& scale,
   ComponentShape::visibility(scale, uvw, frequency);
 }
 
+void TwoSidedShape::visibility(Matrix<DComplex>& scale,
+			       const Matrix<Double>& uvw,
+			       const Vector<Double>& frequency) const {
+  ComponentShape::visibility(scale, uvw, frequency);
+}
+
 Bool TwoSidedShape::isSymmetric() const {
   DebugAssert(ok(), AipsError);
   return True;
@@ -691,12 +697,12 @@ String TwoSidedShape::sizeToString(
 
 	ostringstream summary;
 	summary << std::fixed << setprecision(precision1);
-	summary << "       --- major axis:     " << major.getValue();
+	summary << "       --- major axis FWHM:     " << major.getValue();
 	if (includeUncertainties) {
 		summary << " +/- " << majorErr.getValue();
 	}
 	summary << " " << prefUnits << endl;
-	summary << "       --- minor axis:     " << minor.getValue();
+	summary << "       --- minor axis FWHM:     " << minor.getValue();
 	if (includeUncertainties) {
 		summary << " +/- " << minorErr.getValue();
 	}

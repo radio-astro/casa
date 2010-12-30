@@ -43,7 +43,7 @@ namespace casa {
 
 //# Forward Declarations
 class QtProgressWidget;
-class PlotMS;
+class PlotMSApp;
 class PlotMSAnnotatorTab;
 class PlotMSFlaggingTab;
 class PlotMSOptionsTab;
@@ -70,7 +70,7 @@ public:
     
     // Constructor that creates a plotter with the given parent using the given
     // implementation.
-    PlotMSPlotter(PlotMS* parent,
+    PlotMSPlotter(PlotMSApp* parent,
                   Plotter::Implementation impl = Plotter::DEFAULT);
     
     // Destructor.
@@ -79,7 +79,7 @@ public:
     
     // Accessor methods.
     // <group>
-    PlotMS* getParent() { return itsParent_; }
+    PlotMSApp* getParent() { return itsParent_; }
     PlotFactoryPtr getFactory() { return itsFactory_; }
     PlotterPtr getPlotter() { return itsPlotter_; }
     QtProgressWidget* getProgressWidget() { return itsThreadProgress_; }
@@ -165,8 +165,8 @@ public:
     
     // Action Methods //
     
-    // Returns a map between PlotMS actions and the QActions associated with
-    // them in the GUI.  Triggering the QActions will trigger the proper PlotMS
+    // Returns a map between PlotMSApp actions and the QActions associated with
+    // them in the GUI.  Triggering the QActions will trigger the proper PlotMSApp
     // action, and the QAction will be kept properly checked as needed.
     const QMap<PlotMSAction::Type, QAction*>& plotActionMap() const;
     
@@ -174,14 +174,14 @@ public:
     // QtActionSynchronizer class.)
     void synchronizeAction(PlotMSAction::Type action, QAbstractButton* button);
     
-    // Gets/Sets the text for the QAction associated with the given PlotMS
+    // Gets/Sets the text for the QAction associated with the given PlotMSApp
     // action.
     // <group>
     String actionText(PlotMSAction::Type type);
     void setActionText(PlotMSAction::Type type, const String& text);
     // </group>
     
-    // Gets/Sets whether the QAction associated with the given PlotMS action
+    // Gets/Sets whether the QAction associated with the given PlotMSApp action
     // is checked.  Has no effect on actions that are not checkable.
     // <group>
     bool actionIsChecked(PlotMSAction::Type type) const;
@@ -215,8 +215,8 @@ protected:
     void closeEvent(QCloseEvent* event);
     
 private:
-    // PlotMS parent.
-    PlotMS* itsParent_;
+    // PlotMSApp parent.
+    PlotMSApp* itsParent_;
     
     // Flag for whether the underlying Plotter is Qt-based or not.
     bool isQt_;
@@ -260,7 +260,7 @@ private:
     // Waiting threads.
     vector<PlotMSThread*> itsWaitingThreads_;
     
-    // Map between PlotMS actions and QActions.
+    // Map between PlotMSApp actions and QActions.
     QMap<PlotMSAction::Type, QAction*> itsActionMap_;
     
     // Action synchronizer.

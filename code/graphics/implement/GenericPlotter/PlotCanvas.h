@@ -217,17 +217,20 @@ public:
     
     // Axes Methods //
     
-    // Returns a bitwise-or of PlotAxis values corresponding to which are shown
-    // or hidden.
-    virtual int shownAxes() const = 0;
+    // Returns a bitwise-or of PlotAxis values corresponding to which sides are shown
+    virtual PlotAxisBitset  shownAxes() const = 0;
     
-    // Shows/Hides axes based on the given flag, which should be a bitwise-or
+    // Shows/Hides axes based on the given bitset, which should be a bitwise-or
     // of PlotAxis values.
-    virtual void showAxes(int axesFlag) = 0;
+    virtual void showAxes(PlotAxisBitset axes) = 0;
     
+    
+    #if (0)  // checking hypothesis: this is not used anywhere
     // Returns true if the given axis is shown, false otherwise.
     // DEFAULT IMPLEMENTATION.
-    virtual bool axisShown(PlotAxis axis) const;
+    virtual bool isAxisShown(PlotAxis axis) const;
+    #endif 
+    
     
     // Shows/hides the given axis.
     // DEFAULT IMPLEMENTATION.
@@ -239,7 +242,7 @@ public:
     
     // Convenience method for showing/hiding all four axes at once.
     // DEFAULT IMPLEMENTATION.
-    virtual void showAxes(bool show = true);
+    virtual void showAllAxes(bool show);
     
     // Returns the scale for the given axis.
     virtual PlotAxisScale axisScale(PlotAxis axis) const = 0;

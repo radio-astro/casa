@@ -55,7 +55,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>25</height>
+     <height>29</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile" >
@@ -108,6 +108,7 @@
    <addaction name="actionStackForward" />
    <addaction name="separator" />
    <addaction name="actionMarkRegions" />
+   <addaction name="actionMinusRegions" />
    <addaction name="actionClearRegions" />
    <addaction name="actionFlag" />
    <addaction name="actionUnflag" />
@@ -418,6 +419,9 @@
    <property name="text" >
     <string>Annotate Rectangle</string>
    </property>
+   <property name="toolTip" >
+     <string>Mark regions by dragging a new rectangle</string>
+   </property>
   </action>
   <action name="actionPlot" >
    <property name="text" >
@@ -427,6 +431,23 @@
   <action name="actionMSSummary" >
    <property name="text" >
     <string>MS Summary</string>
+   </property>
+  </action>
+  <action name="actionMinusRegions" >
+   <property name="checkable" >
+    <bool>true</bool>
+   </property>
+   <property name="icon" >
+    <iconset resource="PlotMSPlotter.qrc" >:/actions/images/minus-bv.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Minus Regions</string>
+   </property>
+   <property name="iconText" >
+    <string>Minus Regions</string>
+   </property>
+   <property name="toolTip" >
+    <string>Subtract existing regions within new rectangle</string>
    </property>
   </action>
  </widget>

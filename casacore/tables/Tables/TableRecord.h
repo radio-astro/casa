@@ -300,12 +300,13 @@ public:
     virtual DataType type (Int whichField) const;
 
     // Remove a field from the record.
+    // If id is not in the record, an exception will be thrown.
     // <note role=caution>
     // Removing a field means that the field number of the fields following
     // it will be decremented. Only the RecordFieldPtr's
     // pointing to the removed field will be invalidated.
     // </note>
-    void removeField (const RecordFieldId&);
+    void removeField(const RecordFieldId& id);
 
     // Rename the given field.
     void renameField (const String& newName, const RecordFieldId&);

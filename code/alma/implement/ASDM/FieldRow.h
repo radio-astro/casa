@@ -48,6 +48,9 @@ using asdmIDL::FieldRowIDL;
 
 
 
+
+
+
 #include <ArrayTime.h>
 using  asdm::ArrayTime;
 
@@ -93,7 +96,7 @@ using namespace DirectionReferenceCodeMod;
 
 
 /*\file Field.h
-    \brief Generated from model's revision "1.54", branch "HEAD"
+    \brief Generated from model's revision "1.55", branch "HEAD"
 */
 
 namespace asdm {
@@ -117,7 +120,7 @@ typedef void (FieldRow::*FieldAttributeFromBin) (EndianISStream& eiss);
 /**
  * The FieldRow class is a row of a FieldTable.
  * 
- * Generated from model's revision "1.54", branch "HEAD"
+ * Generated from model's revision "1.55", branch "HEAD"
  *
  */
 class FieldRow {

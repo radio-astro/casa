@@ -144,6 +144,9 @@ C++  := $(shell type g++-mp-4.4 2> /dev/null | perl -pe 's@^\S+\s+is\s+@@')
 endif
 endif
 ifeq "$(FC)" ""
+FC  := $(shell type gfortran-mp-4.2 2> /dev/null | perl -pe 's@^\S+\s+is\s+@@')
+endif
+ifeq "$(FC)" ""
 FC  := $(shell type g77 2> /dev/null | perl -pe 's@^\S+\s+is\s+@@')
 endif
 ifeq "$(shell echo $(FC) | perl -pe 's|.*?gfortran.*|gfortran|')" "gfortran"
@@ -154,7 +157,7 @@ archcompile :=
 archlink :=
 ifeq "$(os)" "darwin"
 _darwin_major_version:=$(shell uname -r | perl -pe "s|^(\d+)\..*|\$$1|")
-_gfortran_path := $(shell $(FC) -print-search-dirs | perl -e "while(<>) { if( m|^libraries:\s*=(.*?\$$)| ) { foreach \$$d (split(':',\$$1) ) { if ( -e \"\$$d/libgfortran.dylib\" ) { print \"\$$d\n\"; break;}}}}")
+_gfortran_path := $(shell $(FC) -print-search-dirs | perl -e "while(<>) { if( m|^libraries:\s*=(.*?\$$)| ) { foreach \$$d (split(':',\$$1) ) { if ( -e \"\$$d/libgfortran.dylib\" || -e \"\$$d/libgfortran.a\" ) { print \"\$$d\n\"; break;}}}}")
 archlink := -L/opt/local/lib -L$(_gfortran_path)
 archcompile := -I/opt/local/include
 ifeq "$(_darwin_major_version)" "10"
@@ -406,6 +409,23 @@ MSFITSDEP := $(shell echo $(MSFITSOBJ) | perl -pe "s|(\w+)\\.o|\$$1.dep|g")
 endif
 MSFITSLIB_PATH := $(LIBDIR)/libcasa_msfits.$(SOV)
 MSFITSLNK_PATH := $(LIBDIR)/libcasa_msfits.$(SO)
+###  derivedmscal -> 
+###
+DMSCALCC := $(shell find derivedmscal -type f -name '*.cc' | egrep -v '/test/|/apps/')
+DMSCALOBJ := $(DMSCALCC:%.cc=%.o)
+TDMSCAL := $(shell find derivedmscal -type f -name 't*.cc' | grep /test/)
+ADMSCAL := $(shell find derivedmscal -type f -name '*.cc' | grep /apps/)
+DMSCALINC := $(shell find derivedmscal -type f \( -name '*.h' -o -name '*.tcc' \) | egrep -v '/test/|/apps/' | perl -pe "s@^derivedmscal/@$(INCDIR)/casacore/derivedmscal/@g")
+ifneq "$(ARCH)" ""
+DMSCALLIB := $(shell echo $(DMSCALOBJ) | perl -pe "s|(\w+\\.o)|$(ARCH)/\$$1|g")
+DMSCALDEP := $(shell echo $(DMSCALOBJ) | perl -pe "s|(\w+)\\.o|$(ARCH)/\$$1.dep|g")
+else
+DMSCALLIB := $(DMSCALOBJ)
+DMSCALDEP := $(shell echo $(DMSCALOBJ) | perl -pe "s|(\w+)\\.o|\$$1.dep|g")
+endif
+DMSCALLIB_PATH := $(LIBDIR)/libcasa_derivedmscal.$(SOV)
+DMSCALLNK_PATH := $(LIBDIR)/libcasa_derivedmscal.$(SO)
+
 ###
 MIRCC := $(shell find mirlib -type f -name '*.c' | egrep -v '/test/|/apps/')
 MIROBJ := $(MIRCC:%.c=%.o)
@@ -520,6 +540,9 @@ $(INCDIR)/casacore/ms/%.h: ms/%.h
 $(INCDIR)/casacore/msfits/%.h: msfits/%.h
 	$(call install-header,$<,$@)
 
+$(INCDIR)/casacore/derivedmscal/%.h: derivedmscal/%.h
+	$(call install-header,$<,$@)
+
 $(INCDIR)/casacore/scimath/%.h: scimath/%.h
 	$(call install-header,$<,$@)
 
@@ -551,6 +574,9 @@ $(INCDIR)/casacore/ms/%.tcc: ms/%.tcc
 	$(call install-header,$<,$@)
 
 $(INCDIR)/casacore/msfits/%.tcc: msfits/%.tcc
+	$(call install-header,$<,$@)
+
+$(INCDIR)/casacore/derivedmscal/%.tcc: derivedmscal/%.tcc
 	$(call install-header,$<,$@)
 
 $(INCDIR)/casacore/scimath/%.tcc: scimath/%.tcc
@@ -637,7 +663,7 @@ else
 ifeq "$(ONELIB)" "1"
 allsys: libcasacore
 else
-allsys: cleandep_recurse_allsys images msfits
+allsys: cleandep_recurse_allsys images msfits derivedmscal
 endif
 endif
 
@@ -647,9 +673,9 @@ endif
 libcasacore: cleandep_recurse_libcasacore $(CORELNK_PATH)
 
 $(CORELIB_PATH): $(LASTVERSION) $(CASALIB) $(COMPONENTSLIB) $(COORDINATESLIB) $(LATTICESLIB) $(IMAGESLIB) $(TABLESLIB) $(SCIMATHLIB) \
-			$(SCIMATHFLIB) $(MEASURESLIB) $(MEASURESFLIB) $(MSLIB) $(FITSLIB) $(MSFITSLIB) $(MIRLIB) \
+			$(SCIMATHFLIB) $(MEASURESLIB) $(MEASURESFLIB) $(MSLIB) $(FITSLIB) $(MSFITSLIB) $(DMSCALLIB) $(MIRLIB) \
 			$(CASAINC) $(COMPONENTSINC) $(COORDINATESINC) $(LATTICESINC) $(IMAGESINC) $(TABLESINC) $(SCIMATHINC) \
-			$(MEASURESINC) $(MSINC) $(FITSINC) $(MSFITSINC) $(MIRINC)
+			$(MEASURESINC) $(MSINC) $(FITSINC) $(MSFITSINC) $(DMSCALLIB) $(MIRINC)
 	@if test ! -d $(dir $@); then $(call mkpath,$(dir $@)); fi
 	@$(call orphan-objects,$(ARCH),.)
 	@$(call orphan-headers,$(INCDIR),.)
@@ -856,6 +882,23 @@ ifeq "$(os)" "darwin"
 endif
 ifeq "$(os)" "linux"
 	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) $(EXTRA_LDFLAGS) -L$(dir $@) $(archlink) -lcasa_ms -lcasa_measures -lcasa_measures_f -lcasa_tables -lcasa_fits -lcasa_casa -lcfitsio -llapack -lblas $(FC_LIB)
+endif
+
+
+###
+###  derivedmscal
+###
+derivedmscal: $(DMSCALLNK_PATH)
+
+$(DMSCALLIB_PATH): $(LASTVERSION) $(MSLNK_PATH) $(DMSCALLIB) $(DMSCALINC)
+	@if test ! -d $(dir $@); then $(call mkpath,$(dir $@)); fi
+	@$(call orphan-objects,$(ARCH),msfits)
+	@$(call orphan-headers,$(INCDIR),msfits)
+ifeq "$(os)" "darwin"
+	$(C++) -dynamiclib -install_name $(instlib_path)$(notdir $@) -o $@ $(filter %.o,$^) $(EXTRA_LDFLAGS) -L$(dir $@) $(archlink) -lcasa_ms -lcasa_measures -lcasa_measures_f -lcasa_tables -lcasa_casa -lcfitsio -llapack -lblas $(FC_LIB)
+endif
+ifeq "$(os)" "linux"
+	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) $(EXTRA_LDFLAGS) -L$(dir $@) $(archlink) -lcasa_ms -lcasa_measures -lcasa_measures_f -lcasa_tables -lcasa_casa -lcfitsio -llapack -lblas $(FC_LIB)
 endif
 
 

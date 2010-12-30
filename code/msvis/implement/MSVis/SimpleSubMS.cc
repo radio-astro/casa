@@ -25,7 +25,7 @@
 //#
 //# $Id: $
 #include <casa/System/AppInfo.h>
-
+#include <casa/Utilities/GenSort.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisibilityIterator.h>
 #include <msvis/MSVis/SimpleSubMS.h>
@@ -40,7 +40,7 @@ namespace casa {
 
   }
 
-  MeasurementSet* SimpleSubMS::makeMemSubMS(const MS::PredefinedColumns& whichcol){
+  MeasurementSet* SimpleSubMS::makeMemSubMS(const MS::PredefinedColumns& whichcol, const String& name){
     LogIO os(LogOrigin("SimpleSubMS", "makeMemSubMS()"));
     
     if(max(fieldid_p) >= Int(ms_p.field().nrow())){
@@ -68,16 +68,34 @@ namespace casa {
       ms_p=MeasurementSet();
       return 0;
     }
-    mscIn_p=new ROMSColumns(mssel_p);
-    String msname=AppInfo::workFileName(100, "TempSubMS");
+    //Make sure the damn ms is sorted the way we want ...to copy the meta-columns as is.
+    Block<String> sortcol(4);
+    sortcol[0]=MS::columnName(MS::ARRAY_ID);
+    sortcol[1]=MS::columnName(MS::FIELD_ID);
+    sortcol[2]=MS::columnName(MS::DATA_DESC_ID);
+    sortcol[3]=MS::columnName(MS::TIME);
+    MeasurementSet msselsort(mssel_p.sort(sortcol, Sort::Ascending, Sort::QuickSort));
+
+    mscIn_p=new ROMSColumns(msselsort);
+    String msname=name;
+    if(msname==""){
+      msname=AppInfo::workFileName(100, "TempSubMS");
+    }
     MeasurementSet* ah=setupMS(msname, nchan_p[0], ncorr_p[0],  
 			       mscIn_p->observation().telescopeName()(0),
 			       Vector<MS::PredefinedColumns>(1,whichcol));
     if(!ah)
       return 0;
-    ah->markForDelete();
-    MeasurementSet * outpointer= new MeasurementSet(ah->copyToMemoryTable("TmpMemoryMS"));
-    delete ah;
+    
+    MeasurementSet * outpointer;
+    if(name==""){
+      ah->markForDelete();
+      outpointer= new MeasurementSet(ah->copyToMemoryTable("TmpMemoryMS"));
+      delete ah;
+    }
+    else{
+      outpointer=ah;
+    }
     if(!outpointer)
       return 0;
     outpointer->initRefs();
@@ -112,8 +130,14 @@ namespace casa {
     // copyWeather();
     /////////////Done with the sub tables...now to the main
     fillAccessoryMainCols();
-    Block<Int> sort(0);
-    ROVisibilityIterator vi(mssel_p, sort);
+    msc_p->weight().putColumn(mscIn_p->weight());
+    msc_p->sigma().putColumn(mscIn_p->sigma());
+    Block<Int> sort(4);
+    sort[0]=MS::ARRAY_ID;
+    sort[1]=MS::FIELD_ID;
+    sort[2]=MS::DATA_DESC_ID;
+    sort[3]=MS::TIME;
+    ROVisibilityIterator vi(msselsort, sort);
     for (Int k=0; k < spw_p.shape()(0) ; ++k){ 
        os << LogIO::NORMAL
 	  << "Selecting "<< nchan_p[k] << " channels, starting at " <<chanStart_p[k] << " for spw " << spw_p[k] << LogIO::POST; ;
@@ -121,6 +145,9 @@ namespace casa {
        vi.selectChannel(1, chanStart_p[k], nchan_p[k],
 			chanStep_p[k], spw_p[k]);
     }
+    /////slurp test
+    //vi.slurp();
+    ///
     Bool doSpWeight = !(mscIn_p->weightSpectrum().isNull()) &&
                       mscIn_p->weightSpectrum().isDefined(0);
     Int rowsdone=0;
@@ -134,7 +161,7 @@ namespace casa {
       for (vi.origin(); vi.more(); vi++) {
 	Int spw=spwindex[vb.spectralWindow()];
 	if(spw <0){
-	  cerr << "Huh ?: The programmer is useless.." << endl;
+	  cerr << "Huh ?: The programmer calling this code is useless.." << endl;
 	  return 0;
 	}
 	rowsnow=vb.nRow();	
@@ -144,7 +171,7 @@ namespace casa {
 	else if(whichcol==MS::MODEL_DATA)
 	  msc_p->data().putColumnCells(rowstoadd, vb.modelVisCube());
 	else if(whichcol==MS::CORRECTED_DATA)
-	  msc_p->data().putColumnCells(rowstoadd, vb.modelVisCube());
+	  msc_p->data().putColumnCells(rowstoadd, vb.correctedVisCube());
 	else
 	  cerr << "Column not requested not yet supported to be loaded to memory" << endl;
 	msc_p->flag().putColumnCells(rowstoadd, vb.flagCube());

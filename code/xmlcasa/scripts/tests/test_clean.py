@@ -278,14 +278,16 @@ class clean_test1(unittest.TestCase):
         self.res = clean(vis=self.msfile,imagename=self.img,selectdata=True,
                          timerange='>11:28:00',field='0~2',imsize=[100,100],niter=10)
         
-        os.system('cp -r ' + self.img+'.image' + ' myimage.im')
+        os.system('cp -r ' + self.img + '.image' + ' myimage.im')
         self.assertEqual(self.res, None)
-        self.assertTrue(os.path.exists(self.img+'.image'))
+        self.assertTrue(os.path.exists(self.img + '.image'))
 #        ref = 0.007161217276006937
         ref = 0.011824539862573147
-        value = self.getpixval(self.img+'.image',50)
+#        ref = 0.009637                                 # active rev. 12908
+        value = self.getpixval(self.img+'.image', 50)
         diff = abs(ref - value)
-        self.assertTrue(diff < 10e-5,'Something changed the flux values. ref_val=%s, new_val=%s'
+        self.assertTrue(diff < 10e-4,
+                        'Something changed the pixel brightness. ref_val=%s, new_val=%s'
                                         %(ref,value))
         
     def test35(self):
@@ -326,7 +328,7 @@ class clean_test1(unittest.TestCase):
         '''Clean 40: Test chaniter=T clean with flagged channels'''
         # test CAS-2369 bug fix 
         flagdata(vis=self.msfile,mode='manualflag',spw='0:0~0')
-        self.res=clean(vis=self.msfile,imagename=self.img,mode='channel',spw=0)
+        self.res=clean(vis=self.msfile,imagename=self.img,mode='channel',spw='0')
         self.assertEqual(self.res, None)
         self.assertTrue(os.path.exists(self.img+'.image'))
          
@@ -341,6 +343,20 @@ class clean_test1(unittest.TestCase):
         # This tests if a numerical failure-mode is detected and returned without fuss.
         self.res=clean(vis=self.msfile,imagename=self.img,nterms=2,reffreq='23691.4682MHz',spw='0:0');
         self.assertFalse(self.res);
+
+    def test43(self):
+        '''Clean 43: Test multiple MS input(including two cases with wrong numbers of spw or field given)'''
+        datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/'
+        # copy the ms to make another ms
+        shutil.copytree(datapath+self.msfile, self.msfile+'2')
+        resfail1=clean(vis=[self.msfile,self.msfile+'2'],spw=['0~1','0~1','0'],field=['0~2','0~2'],imagename=self.img)
+        resfail2=clean(vis=[self.msfile,self.msfile+'2'],spw=['0~1','0~1'],field=['0~2','0~2','0~2'],imagename=self.img)
+        self.res=clean(vis=[self.msfile,self.msfile+'2'],spw=['0~1','0~1'],field=['0~2','0~2'],imagename=self.img)
+        self.assertFalse(resfail1)
+        self.assertFalse(resfail2)
+        self.assertEqual(self.res,None)
+        # cleanup the copied ms
+        os.system('rm -rf ' + self.msfile+'2')
 
 
 class clean_test2(unittest.TestCase):

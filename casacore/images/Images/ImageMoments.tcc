@@ -106,14 +106,14 @@ ImageMoments<T>::ImageMoments (ImageInterface<T>& image,
 
 template <class T>
 ImageMoments<T>::ImageMoments(const ImageMoments<T> &other)
-: pInImage_p(0)
+: MomentsBase<T>(other), pInImage_p(0)
 {
    operator=(other);
 }
 
 template <class T>
 ImageMoments<T>::ImageMoments(ImageMoments<T> &other)
-: pInImage_p(0)
+: MomentsBase<T>(other), pInImage_p(0)
 {
    operator=(other);
 }
@@ -349,6 +349,13 @@ Bool ImageMoments<T>::setSmoothMethod(const Vector<Int>& smoothAxesU,
    return True;
 }
 
+template <class T>
+Bool ImageMoments<T>::setSmoothMethod(const Vector<Int>& smoothAxesU,
+                                      const Vector<Int>& kernelTypesU,
+                                      const Vector<Double> & kernelWidthsPix)
+{
+  return MomentsBase<T>::setSmoothMethod(smoothAxesU, kernelTypesU, kernelWidthsPix);
+}
 
 template <class T>
 Bool ImageMoments<T>::createMoments(PtrBlock<MaskedLattice<T>* >& outPt,

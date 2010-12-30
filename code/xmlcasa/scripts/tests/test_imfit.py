@@ -81,6 +81,8 @@ stokes_image = "imfit_stokes.fits"
 two_gaussians_estimates = "estimates_2gauss.txt"
 expected_new_estimates = "expected_new_estimates.txt"
 gauss_no_pol = "gauss_no_pol.fits"
+jyperbeamkms = "jyperbeamkmpersec.fits";
+masked_image = 'myout.im'
 msgs = ''
 
 # are the two specified numeric values relatively close to each other? 
@@ -117,28 +119,23 @@ class imfit_test(unittest.TestCase):
     
     def setUp(self):
         datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/imfit/'
-        os.system('cp -r ' +datapath + noisy_image + ' ' +noisy_image)
-        os.system('cp -r ' +datapath + expected_model + ' ' +expected_model)
-        os.system('cp -r ' +datapath + expected_residual + ' ' +expected_residual)
-        os.system('cp -r ' +datapath + convolved_model + ' ' +convolved_model)
-        os.system('cp -r ' +datapath + estimates_convolved + ' ' +estimates_convolved)
-        os.system('cp -r ' +datapath + two_gaussians_image + ' ' +two_gaussians_image)
-        os.system('cp -r ' +datapath + two_gaussians_estimates + ' ' +two_gaussians_estimates)
-        os.system('cp -r ' +datapath + expected_new_estimates + ' ' + expected_new_estimates)
-        os.system('cp -r ' +datapath + stokes_image + ' ' + stokes_image)
-        os.system('cp -r ' +datapath + gauss_no_pol + ' ' + gauss_no_pol)
+        for f in [
+            noisy_image, expected_model, expected_residual, convolved_model,
+            estimates_convolved, two_gaussians_image, two_gaussians_estimates,
+            expected_new_estimates, stokes_image, gauss_no_pol, jyperbeamkms,
+            masked_image
+        ] :
+            os.system('cp -r ' + datapath + f + ' ' + f)
+
 
     def tearDown(self):
-        os.system('rm -rf ' +noisy_image)
-        os.system('rm -rf ' +expected_model)
-        os.system('rm -rf ' +expected_residual)
-        os.system('rm -rf ' +convolved_model)
-        os.system('rm -rf ' +estimates_convolved)
-        os.system('rm -rf ' +two_gaussians_image)
-        os.system('rm -rf ' +two_gaussians_estimates)
-        os.system('rm -rf ' +expected_new_estimates)
-        os.system('rm -rf ' +stokes_image)
-            
+        for f in [
+            noisy_image, expected_model, expected_residual, convolved_model,
+            estimates_convolved, two_gaussians_image, two_gaussians_estimates,
+            expected_new_estimates, stokes_image, gauss_no_pol, jyperbeamkms,
+            masked_image
+        ] :
+            os.system('rm -rf ' + f)
 
     def test_fit_using_full_image(self):
         '''Imfit: Fit using full image'''
@@ -339,7 +336,7 @@ class imfit_test(unittest.TestCase):
         '''Imfit: Fit using range'''
         success = True
         global msgs
-        for i in range(3):
+        for i in range(4):
             test = 'fit_using_range, loop #' + str(i) + ': '
             # the ranges and mask defined all define the same pixels to be used
             # so that the results are the same for each loop (which makes the
@@ -347,28 +344,38 @@ class imfit_test(unittest.TestCase):
             # i = 0: use mask keyword
             # i = 1: use includepix keyword
             # i = 2: use excludepix keyword
+            # i = 3 use masked image
             if (i == 0):
                 mask = noisy_image + ">40"
                 includepix = []
                 excludepix = []
+                pixelmask = ""
             elif (i == 1):
                 mask = ''
                 includepix = [40,400]
                 excludepix = []
+                pixelmask = ""
             elif (i == 2):
                 mask = ''
                 includepix = []
                 excludepix = [-10,40]
+                pixelmask = ""
+            elif (i == 3):
+                mask = ''
+                includepix = []
+                excludepix = []
+                pixelmask = "mymask"
     
             def run_fitcomponents():
                 myia = iatool.create()
-                myia.open(noisy_image)
+                myia.open(masked_image)
+                myia.maskhandler("set", pixelmask)
                 res = myia.fitcomponents(mask=mask, includepix=includepix, excludepix=excludepix)
                 myia.close()
                 return res
             def run_imfit():
                 default('imfit')
-                return imfit(imagename=noisy_image, mask=mask, includepix=includepix, excludepix=excludepix)
+                return imfit(imagename=masked_image, mask=mask, includepix=includepix, excludepix=excludepix)
     
             for code in [run_fitcomponents, run_imfit]:
                 res = code()
@@ -382,46 +389,46 @@ class imfit_test(unittest.TestCase):
                 expected = 60354.3232
                 if (not near(got, expected, epsilon)):
                     success = False
-                    msgs += method + "I flux density test failure, got " + str(got) \
+                    msgs += test + "I flux density test failure, got " + str(got) \
                         + " expected " + str(expected) + "\n"
                 # Q flux test
                 got = clist['component0']['flux']['value'][1]
                 expected = 0
                 if (got != expected):
                     success = False
-                    msgs += method + "Q flux density test failure, got " + str(got) \
+                    msgs += test + "Q flux density test failure, got " + str(got) \
                         + " expected " + str(expected) + "\n"
                 # RA test
                 got = clist['component0']['shape']['direction']['m0']['value']
                 expected = 0.000213391
                 if (not near(got, expected, epsilon)):
                     success = False
-                    msgs += method + "RA test failure, got " + str(got) + " expected " + str(expected) + "\n"
+                    msgs += test + "RA test failure, got " + str(got) + " expected " + str(expected) + "\n"
                 # Dec test
                 got = clist['component0']['shape']['direction']['m1']['value']
                 expected = 1.93449e-05
                 if (not near(got, expected, epsilon)):
                     success = False
-                    msgs += method + "Dec test failure, got " + str(got) + " expected " + str(expected) + "\n"
+                    msgs += test + "Dec test failure, got " + str(got) + " expected " + str(expected) + "\n"
                 # Major axis test
                 got = clist['component0']['shape']['majoraxis']['value']
                 expected = 23.541712
                 epsilon = 1e-7
                 if (not near(got, expected, epsilon)):
                     success = False
-                    msgs += method + "Major axis test failure, got " + str(got) + " expected " + str(expected) + "\n"
+                    msgs += test + "Major axis test failure, got " + str(got) + " expected " + str(expected) + "\n"
                 # Minor axis test
                 got = clist['component0']['shape']['minoraxis']['value']
                 expected = 18.882029
                 if (not near(got, expected, epsilon)):
                     success = False
-                    msgs += method + "Minor axis test failure, got " + str(got) + " expected " + str(expected) + "\n"
+                    msgs += test + "Minor axis test failure, got " + str(got) + " expected " + str(expected) + "\n"
                 # Position angle test
                 got = clist['component0']['shape']['positionangle']['value']
                 expected = 119.769648
                 if (not near(got, expected, epsilon)):
                     success = False
-                    msgs += method + "Position angle test failure, got " + str(got) + \
+                    msgs += test + "Position angle test failure, got " + str(got) + \
                         " expected " + str(expected) + "\n"
     
         self.assertTrue(success,msgs)
@@ -479,6 +486,8 @@ class imfit_test(unittest.TestCase):
             myia = iatool.create()
             myia.open(convolved_model)
             res = myia.fitcomponents(estimates=estimates_convolved)
+            print "** image " + convolved_model
+            print "*** estimates " + estimates_convolved
             myia.done()
             return res
         def run_imfit():
@@ -506,39 +515,85 @@ class imfit_test(unittest.TestCase):
                 success = False
                 msgs += test + "Q flux density test failure, got " + str(got) + " expected " + str(expected) + "\n"
             # RA test
-            got = clist['component0']['shape']['direction']['m0']['value']
+            shape = clist['component0']['shape']
+            got = shape['direction']['m0']['value']
             expected = 0.000213318
             if (not near(got, expected, epsilon)):
                 success = False
                 msgs += test + "RA test failure, got " + str(got) + " expected " + str(expected) + "\n"
             # Dec test
-            got = clist['component0']['shape']['direction']['m1']['value']
+            got = shape['direction']['m1']['value']
             expected = 1.939254e-5 
             if (not near(got, expected, epsilon)):
                 success = False
                 msgs += test + "Dec test failure, got " + str(got) + " expected " + str(expected) + "\n"
             # Major axis test
-            got = clist['component0']['shape']['majoraxis']['value']
+            got = shape['majoraxis']['value']
             expected = 28.21859344 
             epsilon = 1e-7
             if (not near(got, expected, epsilon)):
                 success = False
                 msgs += test+ "Major axis test failure, got " + str(got) + " expected " + str(expected) + "\n"
             # Minor axis test
-            got = clist['component0']['shape']['minoraxis']['value']
+            got = shape['minoraxis']['value']
             expected = 25.55011520
             if (not near(got, expected, epsilon)):
                 success = False
                 msgs += test + "Minor axis test failure, got " + str(got) + " expected " + str(expected) + "\n"
             # Position angle test
-            got = clist['component0']['shape']['positionangle']['value']
+            got = shape['positionangle']['value']
             expected = 126.3211050
             if (not near(got, expected, epsilon)):
                 success = False
                 msgs += test + "Position angle test failure, got " + str(got) + " expected " + str(expected) + "\n"
     
+            # test errors
+
+
         self.assertTrue(success,msgs)
-       
+
+    def test_position_errors(self):
+        '''Imfit: Test position errors'''
+        success = True
+        test = 'test_position_errors: '
+        global msgs
+    
+        def run_fitcomponents():
+            myia = iatool.create()
+            myia.open(convolved_model)
+            res = myia.fitcomponents()
+            myia.done()
+            return res
+        def run_imfit():
+            default('imfit')
+            return imfit(imagename=convolved_model)
+    
+        for code in [run_fitcomponents, run_imfit]:
+            res = code()
+            clist = res['results']
+            shape = clist['component0']['shape']
+
+            if (not res['converged']):
+                success = False
+                msgs += test + "fit did not converge unexpectedly"
+            epsilon = 1e-5
+
+            got = shape['direction']['error']['latitude']['value']
+            expected = 1.0511699866407922e-07
+            if (not near(got, expected, epsilon)):
+                success = False
+                msgs += test + "Dec error test failure, got " + str(got) + " expected " + str(expected) + "\n"
+    
+            got = shape['direction']['error']['longitude']['value']
+            expected = 8.8704046316191542e-08
+            if (not near(got, expected, epsilon)):
+                success = False
+                msgs += test + "RA error test failure, got " + str(got) + " expected " + str(expected) + "\n"
+
+        self.assertTrue(success,msgs)
+
+
+
     
     # test writing, appending, and overwriting log files
     def test_logfile(self):
@@ -756,6 +811,118 @@ class imfit_test(unittest.TestCase):
             got = clist['component0']['flux']['value'][0]
             expected = 394312.65593496
             self.assertTrue(near(got, expected, 1e-5))
+
+    def test_CAS_1233(self):
+        method = "test_CAS_1233"
+        test = "test_CAS_1233"
+
+        global msgs
+        success = True
+        def run_fitcomponents():
+            myia = iatool.create()
+            myia.open(jyperbeamkms)
+            res = myia.fitcomponents()
+            myia.done()
+            return res
+        def run_imfit():
+            default('imfit')
+            return imfit(imagename=jyperbeamkms)
+    
+        for i in [0 ,1]:
+            if (i == 0):
+                code = run_fitcomponents
+                method = test + "ia.fitcomponents: "
+            else:
+                code = run_imfit
+                method += test + "imfit: "
+            res = code()
+            clist = res['results']
+            if (not res['converged']):
+                success = False
+                msgs += method + "fit did not converge unexpectedly"
+            epsilon = 1e-5
+            # I flux test
+            self.assertTrue(clist['component0']['flux']['unit'] == 'Jy.km/s')
+
+            got = clist['component0']['flux']['value'][0]
+            expected = 60318.6
+            if (not near(got, expected, epsilon)):
+                success = False
+                msgs += method + "I flux density test failure, got " + str(got) + " expected " + str(expected) + "\n"
+
+            # RA test
+            got = clist['component0']['shape']['direction']['m0']['value']
+            expected = 0.000213318
+            if (not near_abs(got, expected, epsilon)):
+                success = False
+                msgs += method + "RA test failure, got " + str(got) + " expected " + str(expected) + "\n"
+            # Dec test
+            got = clist['component0']['shape']['direction']['m1']['value']
+            expected = 1.939254e-5
+            if (not near_abs(got, expected, epsilon)):
+                success = False
+                msgs += method + "Dec test failure, got " + str(got) + " expected " + str(expected) + "\n"
+            # Major axis test
+            got = clist['component0']['shape']['majoraxis']['value']
+            expected =  26.50461508
+            epsilon = 1e-6
+            if (not near(got, expected, epsilon)):
+                success = False
+                msgs += method + "Major axis test failure, got " + str(got) + " expected " + str(expected) + "\n"
+            # Minor axis test
+            got = clist['component0']['shape']['minoraxis']['value']
+            expected = 23.99821851
+            if (not near(got, expected, epsilon)):
+                success = False
+                msgs += method + "Minor axis test failure, got " + str(got) + " expected " + str(expected) + "\n"
+            # Position angle test
+            got = clist['component0']['shape']['positionangle']['value']
+            expected = 126.3211060
+            epsilon = 1e-5
+            if (not near_abs(got, expected, epsilon)):
+                success = False
+                msgs += method + "Position angle test failure, got " + str(got) + " expected " + str(expected) + "\n"
+
+        self.assertTrue(success,msgs)
+
+    def test_CAS_2633(self):
+        method = "test_CAS_2633"
+        test = "test_CAS_2633"
+
+        global msgs
+        success = True
+        def run_fitcomponents():
+            myia = iatool.create()
+            myia.open(jyperbeamkms)
+            res = myia.fitcomponents()
+            myia.done()
+            return res
+        def run_imfit():
+            default('imfit')
+            return imfit(imagename=jyperbeamkms)
+    
+        for i in [0 ,1]:
+            if (i == 0):
+                code = run_fitcomponents
+                method = test + "ia.fitcomponents: "
+            else:
+                code = run_imfit
+                method += test + "imfit: "
+            res = code()
+            clist = res['results']
+            if (not res['converged']):
+                success = False
+                msgs += method + "fit did not converge unexpectedly"
+            epsilon = 1e-7
+            # ref freq test
+            got = clist['component0']['spectrum']['frequency']['m0']['value']
+            expected = 1.415
+            if (not near(got, expected, epsilon)):
+                success = False
+                msgs += method + "frequency test failure, got " + str(got) + " expected " + str(expected) + "\n"
+
+
+        self.assertTrue(success,msgs)
 
 
 def suite():

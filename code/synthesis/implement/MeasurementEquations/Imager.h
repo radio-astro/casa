@@ -333,11 +333,17 @@ class Imager
   Bool clipimage(const String& image, const Quantity& threshold);
 
   // Make a mask image
-  Bool mask(const String& mask, const String& imageName,
-	    const Quantity& threshold);
+  static Bool mask(const String& mask, const String& imageName,
+                   const Quantity& threshold);
   
   // Restore
   Bool restore(const Vector<String>& model, const String& complist,
+	       const Vector<String>& image, const Vector<String>& residual);
+
+  // similar to restore except this is to be called if you fiddle with the model and complist
+  // outside of this object (say you clip stuff etc) ...keep the sm_p and se_p state but just calculate new residuals and 
+  // restored images. Will throw an exception is se_p or sm_p is not valid (i.e you should have used clean, mem etc before hand).
+  Bool updateresidual(const Vector<String>& model, const String& complist,
 	       const Vector<String>& image, const Vector<String>& residual);
 
   // Setbeam
@@ -412,14 +418,18 @@ class Imager
 	    const Vector<String>& residual);
 
   // Multi-field control parameters
+  //flat noise is the parameter that control the search of clean components
+  //in a flat noise image or an optimum beam^2 image
   Bool setmfcontrol(const Float cyclefactor,
 		    const Float cyclespeedup,
+		    const Float cyclemaxpsffraction,
 		    const Int stoplargenegatives, 
 		    const Int stoppointmode,
 		    const String& scaleType,
 		    const Float  minPB,
 		    const Float constPB,
-		    const Vector<String>& fluxscale);
+		    const Vector<String>& fluxscale,
+		    const Bool flatnoise=True);
   
   // Feathering algorithm
   Bool feather(const String& image,
@@ -484,7 +494,7 @@ class Imager
 		       String& maskImage);
 
   // Clone an image
-  Bool clone(const String& imageName, const String& newImageName);
+  static Bool clone(const String& imageName, const String& newImageName);
   
   // Fit the psf
   Bool fitpsf(const String& psf, Quantity& mbmaj, Quantity& mbmin,
@@ -611,6 +621,7 @@ protected:
   // special mf control parms, etc
   Float cyclefactor_p;
   Float cyclespeedup_p;
+  Float cyclemaxpsffraction_p;
   Int stoplargenegatives_p;
   Int stoppointmode_p;
   Vector<String> fluxscale_p;
@@ -642,6 +653,8 @@ protected:
   Bool doWideBand_p;          // Do Multi Frequency Synthesis Imaging
   String freqInterpMethod_p; //frequency interpolation mode
 
+  Bool flatnoise_p;
+
   // Set the defaults
   void defaults();
 
@@ -671,6 +684,8 @@ protected:
 			 const String complist="");
   void destroySkyEquation();
 
+  //add residual to the private vars or create residual images
+  Bool addResiduals(const Vector<String>& residual);
   // Add the residuals to the SkyEquation
   Bool addResidualsToSkyEquation(const Vector<String>& residual);
 

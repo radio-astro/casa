@@ -26,6 +26,7 @@
 //# $Id: $
 #include <graphics/GenericPlotter/PlotTool.h>
 #include <graphics/GenericPlotter/PlotFactory.h>
+/////!!!!!  + + ++ + + + + + + + + + #include <qwt_plot_picker.h>  -- needed for draw rubber band box in different color
 
 #include <iomanip>
 
@@ -35,34 +36,93 @@ namespace casa {
 // PLOTTOOL DEFINITIONS //
 //////////////////////////
 
-PlotTool::PlotTool(PlotCoordinate::System sys): m_canvas(NULL),m_factory(NULL),
+PlotTool::PlotTool(PlotCoordinate::System sys)
+        : m_canvas(NULL),m_factory(NULL),
         m_active(false), m_blocking(true), m_xAxis(X_BOTTOM), m_yAxis(Y_LEFT),
-        m_coordSystem(sys), m_lastEventHandled(false) { }
+        m_coordSystem(sys), m_lastEventHandled(false) 
+        { }
 
-PlotTool::PlotTool(PlotAxis xAxis, PlotAxis yAxis, PlotCoordinate::System sys):
-        m_canvas(NULL), m_factory(NULL), m_active(false), m_blocking(true),
+
+PlotTool::PlotTool(PlotAxis xAxis, PlotAxis yAxis, PlotCoordinate::System sys)
+        : m_canvas(NULL), m_factory(NULL), m_active(false), m_blocking(true),   
         m_xAxis(xAxis), m_yAxis(yAxis), m_coordSystem(sys),
-        m_lastEventHandled(false) { }
+        m_lastEventHandled(false) 
+        { }
 
-PlotTool::~PlotTool() { if(m_factory != NULL) delete m_factory; }
 
 
-bool PlotTool::isActive() const { return m_active; }
-void PlotTool::setActive(bool isActive) { m_active = isActive; }
-bool PlotTool::isBlocking() const { return m_blocking; }
-void PlotTool::setBlocking(bool blocking) { m_blocking = blocking; }
-PlotAxis PlotTool::getXAxis() const { return m_xAxis; }
-PlotAxis PlotTool::getYAxis() const { return m_yAxis; }
+PlotTool::~PlotTool()    { 
+    if(m_factory != NULL) delete m_factory; 
+}
+
+
+
+bool PlotTool::isActive() const   { 
+    return m_active; 
+}
+
+
+
+void PlotTool::setActive(bool isActive) { 
+    m_active = isActive; 
+}
+
+
+
+bool PlotTool::isBlocking() const { 
+    return m_blocking; 
+}
+
+
+
+void PlotTool::setBlocking(bool blocking) { 
+    m_blocking = blocking; 
+}
+
+
+
+PlotAxis PlotTool::getXAxis() const { 
+    return m_xAxis; 
+}
+
+
+
+PlotAxis PlotTool::getYAxis() const { 
+    return m_yAxis; 
+}
+
+
+
 PlotCoordinate::System PlotTool::getCoordinateSystem() const {
-    return m_coordSystem; }
-bool PlotTool::lastEventWasHandled() const { return m_lastEventHandled; }
+    return m_coordSystem; 
+}
 
 
-PlotCanvas* PlotTool::canvas() const { return m_canvas; }
-PlotFactory* PlotTool::factory() const { return m_factory; }
-bool PlotTool::isAttached() const { return m_canvas != NULL; }
 
-void PlotTool::attach(PlotCanvas* canvas) {
+bool PlotTool::lastEventWasHandled() const { 
+    return m_lastEventHandled; 
+}
+
+
+
+PlotCanvas* PlotTool::canvas() const { 
+    return m_canvas; 
+}
+
+
+
+PlotFactory* PlotTool::factory() const { 
+    return m_factory; 
+}
+
+
+bool PlotTool::isAttached() const { 
+    return m_canvas != NULL; 
+}
+
+
+
+void PlotTool::attach(PlotCanvas* canvas)    {
     if(m_canvas != NULL) detach();
     m_canvas = canvas;
     if(m_canvas != NULL) {
@@ -75,6 +135,7 @@ void PlotTool::attach(PlotCanvas* canvas) {
     }
 }
 
+
 void PlotTool::detach() { m_canvas = NULL; }
 
 
@@ -82,34 +143,66 @@ void PlotTool::detach() { m_canvas = NULL; }
 // PLOTSELECTTOOL DEFINITIONS //
 ////////////////////////////////
 
-PlotSelectTool::PlotSelectTool(PlotCoordinate::System system) :
-        PlotMouseTool(system), m_drawRects(false) { }
+PlotSelectTool::PlotSelectTool(PlotCoordinate::System system) 
+        : PlotMouseTool(system),  
+          m_subtraction_mode(false),
+           m_drawRects(false)
+{ 
+}
+
 
 PlotSelectTool::PlotSelectTool(PlotAxis xAxis, PlotAxis yAxis,
         PlotCoordinate::System system) : PlotMouseTool(xAxis, yAxis, system),
-        m_drawRects(false) { }
+        m_subtraction_mode(false),
+        m_drawRects(false)
+{ 
+}
+
+
 
 PlotSelectTool::~PlotSelectTool() { }
+
+
 
 void PlotSelectTool::addNotifier(PlotSelectToolNotifier* notifier) {
     if(notifier == NULL) return;
     for(unsigned int i = 0; i < m_notifiers.size(); i++)
         if(m_notifiers[i] == notifier) return;
     m_notifiers.push_back(notifier);
+
+
 }
+
+
 
 void PlotSelectTool::setSelectLine(PlotLinePtr line) {
     if(line != m_selLine) {
         m_selLine = line;
         if(m_canvas != NULL) {
-            if(!line.null()) m_canvas->setSelectLine(line);
+            if(!line.null() && !m_subtraction_mode /*DSW:not sure if this test is needed. fix also next method.*/) m_canvas->setSelectLine(line);
             else             m_canvas->setSelectLineShown(false);
         }
     }
 }
 
+
+void PlotSelectTool::setSubtractLine(PlotLinePtr line) {
+    if(line != m_subLine) {
+        m_subLine = line;
+        if(m_canvas != NULL) {
+            if(!line.null() && m_subtraction_mode) m_canvas->setSelectLine(line);
+            else             m_canvas->setSelectLineShown(false);
+        }
+    }
+}
+
+
+
+
 void PlotSelectTool::setSelectLine(bool on) {
     if(m_canvas != NULL) m_canvas->setSelectLineShown(on); }
+
+
 
 void PlotSelectTool::setDrawRects(bool on) {
     if(on != m_drawRects) {
@@ -123,6 +216,8 @@ void PlotSelectTool::setDrawRects(bool on) {
     }
 }
 
+
+
 void PlotSelectTool::setRectLine(PlotLinePtr line) {
     if(line != m_rectLine) {
         m_rectLine = line;
@@ -130,6 +225,8 @@ void PlotSelectTool::setRectLine(PlotLinePtr line) {
             m_rects[i]->setLine(line);
     }
 }
+
+
 
 void PlotSelectTool::setRectFill(PlotAreaFillPtr fill) {
     if(fill != m_rectFill) {
@@ -139,7 +236,13 @@ void PlotSelectTool::setRectFill(PlotAreaFillPtr fill) {
     }
 }
 
-unsigned int PlotSelectTool::numSelectedRects() const{ return m_rects.size(); }
+
+
+unsigned int PlotSelectTool::numSelectedRects() const   { 
+    return m_rects.size(); 
+}
+
+
 
 void PlotSelectTool::getSelectedRects(vector<double>& upperLeftXs,
         vector<double>& upperLeftYs, vector<double>& lowerRightXs,
@@ -154,6 +257,8 @@ void PlotSelectTool::getSelectedRects(vector<double>& upperLeftXs,
         lowerRightYs[i] = v[i].lowerRight().y();
     }
 }
+
+
 
 vector<PlotRegion>
 PlotSelectTool::getSelectedRects(PlotCoordinate::System system) const {
@@ -172,6 +277,8 @@ PlotSelectTool::getSelectedRects(PlotCoordinate::System system) const {
     return v;
 }
 
+
+
 void PlotSelectTool::clearSelectedRects() {
     if(m_drawRects && m_canvas != NULL && m_rects.size() > 0) {
         vector<PlotItemPtr> v(m_rects.size());
@@ -181,58 +288,147 @@ void PlotSelectTool::clearSelectedRects() {
     m_rects.clear();
 }
 
+
+
 void PlotSelectTool::setActive(bool active) {
-    if(active != m_active) {
-        PlotMouseTool::setActive(active);
-        if(m_canvas != NULL) {
-            if(active && !m_selLine.null()) m_canvas->setSelectLine(m_selLine);
-            else                          m_canvas->setSelectLineShown(active);
-            if(!active) m_canvas->setCursor(NORMAL_CURSOR);
+    // We may be acting as either a genuine Select Tool, or as a Subtraction Tool
+    // The distinction is found from m_subtraction_mode
+    
+    // Set line style etc only if different from existing
+    if (active == m_active)  return;
+    PlotMouseTool::setActive(active);
+    
+    if (!m_canvas)  return;
+    
+    if (active)   {
+        if (m_subtraction_mode)  {
+            if (!m_subLine.null())  m_canvas->setSelectLine(m_subLine);
+        }
+        else    {
+            if (!m_selLine.null())  m_canvas->setSelectLine(m_selLine);
         }
     }
+    else { 
+        m_canvas->setCursor(NORMAL_CURSOR); 
+    }
+    
+    m_canvas->setSelectLineShown(active);
 }
 
-void PlotSelectTool::handleMouseEvent(const PlotEvent& event) {
+
+
+
+void PlotSelectTool::handleMouseEvent(const PlotEvent& event)    {
     m_lastEventHandled = false;
     if(m_canvas == NULL || !m_active) return; // shouldn't happen
     
     // cursor nice-ness
     const PlotMousePressEvent* mp; const PlotMouseReleaseEvent* mr;
-    if((mp = dynamic_cast<const PlotMousePressEvent*>(&event)) != NULL)
+    if((mp = dynamic_cast<const PlotMousePressEvent*>(&event)) != NULL)  {
         m_canvas->setCursor(CROSSHAIR);
-    else if((mr = dynamic_cast<const PlotMouseReleaseEvent*>(&event)) != NULL)
+// restore the following lines after figuring out how to make #include <qwt_plot_picker.h> compile - needs tweak of cmake files
+////!!!!!        QwtPlotPicker  *pp = m_canvas->getSelecter();  // http://www.qtcentre.org/threads/33160-Different-Colored-Rectangles-in-QwtPlotPicker
+////!!!!!        pp->setRubberBandPen( QColor( Qt::blue ) );
+    }
+    else if((mr = dynamic_cast<const PlotMouseReleaseEvent*>(&event)) != NULL)  {
         m_canvas->setCursor(NORMAL_CURSOR);
+    }
     
     // for now we only care about select events, assuming that the canvas has
     // done its selection-pen-drawing duty
-    const PlotSelectEvent* select=dynamic_cast<const PlotSelectEvent*>(&event);
+    const PlotSelectEvent* select =  dynamic_cast<const PlotSelectEvent*>(&event);
     if(select != NULL && m_canvas != NULL) {
         PlotRegion r = select->region();
         if(r.upperLeft().system() != m_coordSystem ||
            r.lowerRight().system() != m_coordSystem)
             r = m_canvas->convertRegion(r, m_coordSystem);
-        PlotShapeRectanglePtr rect = m_factory->shapeRectangle(r.upperLeft(),
-                r.lowerRight());
-        rect->setLine(m_rectLine);
-        rect->setAreaFill(m_rectFill);
-        if(m_drawRects) m_canvas->plotItem(rect, ANNOTATION);
-        m_rects.push_back(rect);
-        m_lastEventHandled = true;
+            
+        // The rectangle the user just finished dragging out with the mouse
+        PlotShapeRectanglePtr rect = m_factory->shapeRectangle(r.upperLeft(), r.lowerRight());
         
+        if (m_subtraction_mode)  {
+            
+            float zapper_x1 = r.upperLeft().x();
+            float zapper_x2 = r.lowerRight().x();
+            float zapper_y1 = r.lowerRight().y();
+            float zapper_y2 = r.upperLeft().y();
+            
+            int n = m_rects.size();
+            #if (0)    // testing overlap logic
+            printf("\n\n  Region Subtractor Starts!            m_rects n=%d  zap (%.3f to %.3f)  X  (%.3f to %.3f) \n\n", 
+                                               (int)m_rects.size() ,
+                                               zapper_x1, zapper_x2, zapper_y1, zapper_y2);
+            #endif
+            for (int j=n-1;  j>=0;  j--)   {
+                
+                // test if [j]th rect in our list m_rects fits inside the newly dragged rect
+                PlotShapeRectanglePtr pr = m_rects[j];
+                vector<PlotCoordinate> coords =  pr->coordinates();
+                float x1 = min(coords[0].x(), coords[1].x() );
+                float x2 = max(coords[0].x(), coords[1].x() );
+                float y1 = min(coords[0].y(), coords[1].y() );
+                float y2 = max(coords[0].y(), coords[1].y() );
+
+                bool it_fits =  (x1 >= zapper_x1)
+                             && (x2 <= zapper_x2)
+                             && (y1 >= zapper_y1)
+                             && (y2 <= zapper_y2);
+#if (0)  // testing overlap logic
+bool ffx1, ffx2, ffy1, ffy2;
+ffx1 =  (x1 >= zapper_x1),
+ffx2= (x2 <= zapper_x2),
+ffy1= (y1 >= zapper_y1),
+ffy2= (y2 <= zapper_y2);
+printf("     test   (%.3f %d to %.3f %d)  X  (%.3f %d to %.3f %d)  %s  ncoord=%d\n",
+                    x1, ffx1, x2, ffx2, y1,ffy1, y2,ffy2,  it_fits? "it fits!":  " no ",   coords.size() );
+#endif
+
+                if (it_fits)   {
+                    // Must remove both the PlotItem in the canvas and the rect in our list
+                    m_canvas->removePlotItem(pr);
+                    m_rects.erase( m_rects.begin()+ j);
+                }
+            }
+#if (0) // testing overlap logic
+            printf("\n\n  Post-surgical stats:             m_rects n=%d  \n\n", (int)m_rects.size() );
+#endif 
+            m_lastEventHandled = true;
+            
+        }
+        else  {
+            // Normal addition of a new region to the list
+            rect->setLine(m_rectLine);
+            rect->setAreaFill(m_rectFill);
+            if(m_drawRects) m_canvas->plotItem(rect, ANNOTATION);
+            m_rects.push_back(rect);
+            m_lastEventHandled = true;
+        }
+
+        // Whether adding or subtracting regions, notify anyone who asked to be informed
         for(unsigned int i = 0; i < m_notifiers.size(); i++)
             m_notifiers[i]->notifySelectionAdded(*this);
     }
 }
+
+
 
 void PlotSelectTool::attach(PlotCanvas* canvas) {
     PlotMouseTool::attach(canvas);
     if(canvas != NULL && m_active) {
         for(unsigned int i = 0; i < m_rects.size(); i++)
             canvas->drawShape(m_rects[i]);
-        if(!m_selLine.null()) m_canvas->setSelectLine(m_selLine);
-        else                  m_canvas->setSelectLineShown(true);
+        if (m_subtraction_mode)  {
+            if(!m_selLine.null()) m_canvas->setSelectLine(m_subLine);
+            else                  m_canvas->setSelectLineShown(true);
+        }
+        else  {
+            if(!m_subLine.null()) m_canvas->setSelectLine(m_selLine);
+            else                  m_canvas->setSelectLineShown(true);
+        }
     }
 }
+
+
 
 void PlotSelectTool::detach() {
     if(m_canvas != NULL && m_drawRects && m_rects.size() > 0) {
@@ -247,18 +443,27 @@ void PlotSelectTool::detach() {
 }
 
 
+
+
+
 //////////////////////////////
 // PLOTZOOMTOOL DEFINITIONS //
 //////////////////////////////
 
+
 PlotZoomTool::PlotZoomTool(PlotCoordinate::System sys) : PlotMouseTool(sys),
         m_stack(NULL) { }
+
 
 PlotZoomTool::PlotZoomTool(PlotAxis xAxis, PlotAxis yAxis,
         PlotCoordinate::System sys) : PlotMouseTool(xAxis, yAxis, sys),
         m_stack(NULL) { }
 
+
+
 PlotZoomTool::~PlotZoomTool() { }
+
+
 
 void PlotZoomTool::addNotifier(PlotZoomToolNotifier* notifier) {
     if(notifier == NULL) return;
@@ -266,6 +471,8 @@ void PlotZoomTool::addNotifier(PlotZoomToolNotifier* notifier) {
         if(m_notifiers[i] == notifier) return;
     m_notifiers.push_back(notifier);
 }
+
+
 
 void PlotZoomTool::setSelectLine(PlotLinePtr line) {
     if(line != m_selLine) {
@@ -458,8 +665,10 @@ void PlotPanTool::handleMouseEvent(const PlotEvent& event) {
     m_lastEventHandled = false;
     if(m_canvas == NULL) return;
     
-    const PlotMousePressEvent* mp; const PlotMouseReleaseEvent* mr;
-    const PlotMouseDragEvent* mm; const PlotWheelEvent* w;
+    const PlotMousePressEvent* mp; 
+    const PlotMouseReleaseEvent* mr;
+    const PlotMouseDragEvent* mm; 
+    const PlotWheelEvent* w;
     const PlotClickEvent* c;
     
     // dragging
@@ -719,12 +928,18 @@ const String PlotTrackerTool::DEFAULT_FORMAT = "("+FORMAT_DIVIDER+FORMAT_X+
 
 PlotMouseToolGroup::PlotMouseToolGroup() { }
 
+
 PlotMouseToolGroup::~PlotMouseToolGroup() { }
 
+
+
 unsigned int PlotMouseToolGroup::numTools() const { return m_tools.size(); }
+
+
 vector<PlotMouseToolPtr> PlotMouseToolGroup::tools() const { return m_tools; }
 
-unsigned int PlotMouseToolGroup::addTool(PlotMouseToolPtr tool, bool makeAtv) {
+
+unsigned int PlotMouseToolGroup::addTool(PlotMouseToolPtr tool) {
     if(tool.null()) return m_tools.size();
     for(unsigned int i = 0; i < m_tools.size(); i++)
         if(m_tools[i] == tool) return i;    
@@ -735,18 +950,19 @@ unsigned int PlotMouseToolGroup::addTool(PlotMouseToolPtr tool, bool makeAtv) {
     // bookkeeping: blocking, active, active tool
     tool->setBlocking(m_blocking);
     tool->setActive(false);
-    if(makeAtv) setActiveTool(tool);
     
     return m_tools.size() - 1;
 }
 
+
+
 bool PlotMouseToolGroup::removeTool(PlotMouseToolPtr tool) {
-    if(tool.null()) return false;
-    for(unsigned int i = 0; i < m_tools.size(); i++) {
-        if(m_tools[i] == tool) {
+    if (tool.null()) return false;
+    for (unsigned int i = 0; i < m_tools.size(); i++)   {
+        if (m_tools[i] == tool) {
             m_tools.erase(m_tools.begin() + i);
-            if(tool == m_activeTool) {
-                if(m_tools.size() > 0) setActiveTool(m_tools[0]);
+            if (tool == m_activeTool) {
+                if (m_tools.size() > 0) setActiveTool(m_tools[0]);
                 else                   m_activeTool = PlotMouseToolPtr();
             }
             return true;
@@ -755,10 +971,14 @@ bool PlotMouseToolGroup::removeTool(PlotMouseToolPtr tool) {
     return false;
 }
 
+
+
 PlotMouseToolPtr PlotMouseToolGroup::toolAt(unsigned int index) const {
     if(index < m_tools.size()) return m_tools[index];
     else                       return PlotMouseToolPtr();
 }
+
+
 
 unsigned int PlotMouseToolGroup::indexOf(PlotMouseToolPtr tool) const {
     if(tool.null()) return m_tools.size();
@@ -767,18 +987,33 @@ unsigned int PlotMouseToolGroup::indexOf(PlotMouseToolPtr tool) const {
     return m_tools.size();
 }
 
-void PlotMouseToolGroup::setActiveTool(PlotMouseToolPtr tool) {
-    addTool(tool, false);
-    m_activeTool = tool;
-    for(unsigned int i = 0; i < m_tools.size(); i++)
+
+
+void PlotMouseToolGroup::setActiveTool(PlotMouseToolPtr tool,  ToolCode toolcode)  {
+    
+    addTool(tool);
+    m_activeTool = tool;  /* FIND-ME DEBUG - DSW 878*/
+    
+    for (unsigned int i = 0; i < m_tools.size(); i++)
         m_tools[i]->setActive(false);
-    if(!tool.null()) tool->setActive(m_active);
+        
+    if (!tool.null())   {
+        PlotSelectTool* seltool = dynamic_cast<PlotSelectTool*> (&*tool);
+        if (seltool!=NULL)  {
+            seltool->m_subtraction_mode = (toolcode==SUBTRACT_TOOL);
+        }
+        tool->setActive(m_active);
+    }
 }
+
+
 
 void PlotMouseToolGroup::setActive(bool isActive) {
     PlotMouseTool::setActive(isActive);
     if(!m_activeTool.null()) m_activeTool->setActive(isActive);
 }
+
+
 
 void PlotMouseToolGroup::setBlocking(bool blocking) {
     PlotMouseTool::setBlocking(blocking);
@@ -786,48 +1021,71 @@ void PlotMouseToolGroup::setBlocking(bool blocking) {
         m_tools[i]->setBlocking(blocking);
 }
 
+
+
 void PlotMouseToolGroup::handleMouseEvent(const PlotEvent& event) {
     if(m_active && !m_activeTool.null()) {
         m_activeTool->handleMouseEvent(event);
         m_lastEventHandled = m_activeTool->lastEventWasHandled();
     } else m_lastEventHandled = false;
 }
+
+
+
 void PlotMouseToolGroup::handleSelect(const PlotSelectEvent& event) {
     if(m_active && !m_activeTool.null()) {
         m_activeTool->handleSelect(event);
         m_lastEventHandled = m_activeTool->lastEventWasHandled();
     } else m_lastEventHandled = false;
 }
+
+
+
 void PlotMouseToolGroup::handleClick(const PlotClickEvent& event) {
     if(m_active && !m_activeTool.null()) {
         m_activeTool->handleClick(event);
         m_lastEventHandled = m_activeTool->lastEventWasHandled();
     } else m_lastEventHandled = false;
 }
+
+
+
 void PlotMouseToolGroup::handleMousePress(const PlotMousePressEvent& event) {
     if(m_active && !m_activeTool.null()) {
         m_activeTool->handleMousePress(event);
         m_lastEventHandled = m_activeTool->lastEventWasHandled();
     } else m_lastEventHandled = false;
 }
+
+
+
 void PlotMouseToolGroup::handleMouseRelease(const PlotMouseReleaseEvent& event) {
     if(m_active && !m_activeTool.null()) {
         m_activeTool->handleMouseRelease(event);
         m_lastEventHandled = m_activeTool->lastEventWasHandled();
     } else m_lastEventHandled = false;
 }
+
+
+
 void PlotMouseToolGroup::handleMouseDrag(const PlotMouseDragEvent& event) {
     if(m_active && !m_activeTool.null()) {
         m_activeTool->handleMouseDrag(event);
         m_lastEventHandled = m_activeTool->lastEventWasHandled();
     } else m_lastEventHandled = false;
 }
+
+
+
 void PlotMouseToolGroup::handleMouseMove(const PlotMouseMoveEvent& event) {
     if(m_active && !m_activeTool.null()) {
         m_activeTool->handleMouseMove(event);
         m_lastEventHandled = m_activeTool->lastEventWasHandled();
     } else m_lastEventHandled = false;
 }
+
+
+
 void PlotMouseToolGroup::handleWheel(const PlotWheelEvent& event) {
     if(m_active && !m_activeTool.null()) {
         m_activeTool->handleWheel(event);
@@ -835,11 +1093,15 @@ void PlotMouseToolGroup::handleWheel(const PlotWheelEvent& event) {
     } else m_lastEventHandled = false;
 }
 
+
+
 PlotAxis PlotMouseToolGroup::getXAxis() const {
     if(!m_activeTool.null()) return m_activeTool->getXAxis();
     else if(m_tools.size() > 0) return m_tools[0]->getXAxis();
     else return m_xAxis;
 }
+
+
 
 PlotAxis PlotMouseToolGroup::getYAxis() const {
     if(!m_activeTool.null()) return m_activeTool->getYAxis();
@@ -847,16 +1109,22 @@ PlotAxis PlotMouseToolGroup::getYAxis() const {
     else return m_yAxis;
 }
 
+
+
 PlotCoordinate::System PlotMouseToolGroup::getCoordinateSystem() const {
     if(!m_activeTool.null()) return m_activeTool->getCoordinateSystem();
     else if(m_tools.size() > 0) return m_tools[0]->getCoordinateSystem();
     else return m_coordSystem;
 }
 
+
+
 bool PlotMouseToolGroup::lastEventWasHandled() const {
     if(!m_activeTool.null()) return m_activeTool->lastEventWasHandled();
     else return false;
 }
+
+
 
 void PlotMouseToolGroup::reset() {
     for(unsigned int i = 0; i < m_tools.size(); i++) {
@@ -872,18 +1140,26 @@ void PlotMouseToolGroup::attach(PlotCanvas* canvas) {
     for(unsigned int i = 0; i< m_tools.size(); i++) m_tools[i]->attach(canvas);
 }
 
+
+
 void PlotMouseToolGroup::detach() {
     PlotMouseTool::detach();
     for(unsigned int i = 0; i < m_tools.size(); i++) m_tools[i]->detach();
 }
 
 
+
+
+
+
 ////////////////////////////////////////////
 // PLOTSTANDARDMOUSETOOLGROUP DEFINITIONS //
 ////////////////////////////////////////////
 
-PlotStandardMouseToolGroup::PlotStandardMouseToolGroup(Tool activeTool,
-        PlotCoordinate::System system) {
+
+PlotStandardMouseToolGroup::PlotStandardMouseToolGroup(ToolCode activeTool,
+        PlotCoordinate::System system)     {
+            
     addTool(new PlotSelectTool(system));
     addTool(new PlotZoomTool(system));
     addTool(new PlotPanTool(system));
@@ -893,8 +1169,13 @@ PlotStandardMouseToolGroup::PlotStandardMouseToolGroup(Tool activeTool,
     m_coordSystem = system;
 }
 
+
+
 PlotStandardMouseToolGroup::PlotStandardMouseToolGroup(PlotAxis xAxis,
-        PlotAxis yAxis,Tool activeTool, PlotCoordinate::System system) {
+        PlotAxis yAxis,
+        ToolCode activeTool, 
+        PlotCoordinate::System system)    {
+            
     addTool(new PlotSelectTool(xAxis, yAxis, system));
     addTool(new PlotZoomTool(xAxis, yAxis, system));
     addTool(new PlotPanTool(xAxis, yAxis, system));
@@ -906,10 +1187,15 @@ PlotStandardMouseToolGroup::PlotStandardMouseToolGroup(PlotAxis xAxis,
     m_coordSystem = system;
 }
 
+
+
 PlotStandardMouseToolGroup::PlotStandardMouseToolGroup(
-        PlotSelectToolPtr selectTool, PlotZoomToolPtr zoomTool,
-        PlotPanToolPtr panTool, PlotTrackerToolPtr trackerTool,
-        Tool activeTool) {
+        PlotSelectToolPtr selectTool, 
+        PlotZoomToolPtr zoomTool,
+        PlotPanToolPtr panTool, 
+        PlotTrackerToolPtr trackerTool,
+        ToolCode activeTool)    {
+            
     addTool(!selectTool.null() ? selectTool : new PlotSelectTool());
     addTool(!zoomTool.null()   ? zoomTool   : new PlotZoomTool());
     addTool(!panTool.null()    ? panTool    : new PlotPanTool());
@@ -918,42 +1204,66 @@ PlotStandardMouseToolGroup::PlotStandardMouseToolGroup(
     m_tracker->setBlocking(false);
 }
 
-PlotStandardMouseToolGroup::~PlotStandardMouseToolGroup() { }
 
-void PlotStandardMouseToolGroup::setActiveTool(Tool tool) {
-    if(tool == NONE) {
+
+PlotStandardMouseToolGroup::~PlotStandardMouseToolGroup()     { }
+
+
+
+
+void PlotStandardMouseToolGroup::setActiveTool(ToolCode toolcode) {
+    
+    if(toolcode == NONE_TOOL) {
         PlotMouseToolGroup::setActiveTool(PlotMouseToolPtr());
         return;
     }
-    for(unsigned int i = 0; i < m_tools.size(); i++) {
-        if((dynamic_cast<PlotSelectTool*>(&*m_tools[i]) != NULL &&
-           tool == SELECT) || (dynamic_cast<PlotZoomTool*>(&*m_tools[i])!= NULL
-           && tool==ZOOM)|| (dynamic_cast<PlotPanTool*>(&*m_tools[i])!= NULL)){
-            PlotMouseToolGroup::setActiveTool(i);
+    for(unsigned int i = 0; i < m_tools.size(); i++)    {
+        if ((dynamic_cast<PlotSelectTool*> (&*m_tools[i]) != NULL  && toolcode==SELECT_TOOL) 
+         || (dynamic_cast<PlotSelectTool*> (&*m_tools[i]) != NULL  && toolcode==SUBTRACT_TOOL)
+         || (dynamic_cast<PlotZoomTool*>   (&*m_tools[i]) != NULL  && toolcode==ZOOM_TOOL)
+         || (dynamic_cast<PlotPanTool*>    (&*m_tools[i]) != NULL) && toolcode==PAN_TOOL)    
+        {
+            PlotMouseToolGroup::setActiveTool(i, toolcode);
             return;
         }
     }
 }
 
-PlotStandardMouseToolGroup::Tool
-PlotStandardMouseToolGroup::activeToolType() const {
-    if(m_activeTool.null()) return NONE;
-    if(dynamic_cast<const PlotSelectTool*>(&*m_activeTool)!=NULL)return SELECT;
-    if(dynamic_cast<const PlotZoomTool*>(&*m_activeTool) != NULL)return ZOOM;
-    if(dynamic_cast<const PlotPanTool*>(&*m_activeTool) != NULL) return PAN;
-    return NONE;
+
+
+ToolCode  PlotStandardMouseToolGroup::activeToolType()   const {
+    if(m_activeTool.null()) return NONE_TOOL;
+    if(dynamic_cast<const PlotSelectTool*>(&*m_activeTool)!=NULL)  return SELECT_TOOL;
+    if(dynamic_cast<const PlotZoomTool*>(&*m_activeTool) != NULL)  return ZOOM_TOOL;
+    if(dynamic_cast<const PlotPanTool*>(&*m_activeTool) != NULL)   return PAN_TOOL;
+    return NONE_TOOL;
 }
 
-void PlotStandardMouseToolGroup::turnTracker(bool on) {
-    m_tracker->setActive(on); }
-bool PlotStandardMouseToolGroup::trackerIsOn() const {
-    return m_tracker->isActive(); }
-void PlotStandardMouseToolGroup::turnTrackerDrawText(bool on) {
-    m_tracker->setDrawText(on); }
-bool PlotStandardMouseToolGroup::trackerDrawsText() const {
-    return m_tracker->drawsText(); }
 
-PlotSelectToolPtr PlotStandardMouseToolGroup::selectTool() {
+
+void PlotStandardMouseToolGroup::turnTracker(bool on) {
+    m_tracker->setActive(on); 
+}
+    
+    
+bool PlotStandardMouseToolGroup::trackerIsOn() const {
+    return m_tracker->isActive(); 
+}
+    
+    
+void PlotStandardMouseToolGroup::turnTrackerDrawText(bool on) {
+    m_tracker->setDrawText(on); 
+}
+
+
+bool PlotStandardMouseToolGroup::trackerDrawsText() const {
+    return m_tracker->drawsText(); 
+}
+
+
+
+
+PlotSelectToolPtr PlotStandardMouseToolGroup::selectTool()   {
     for(unsigned int i = 0; i < m_tools.size(); i++)
         if(dynamic_cast<PlotSelectTool*>(&*m_tools[i]) != NULL)
             return PlotSelectToolPtr(m_tools[i]);
@@ -963,6 +1273,7 @@ PlotSelectToolPtr PlotStandardMouseToolGroup::selectTool() {
     m_tools.push_back(t);
     return t;
 }
+
 
 PlotZoomToolPtr PlotStandardMouseToolGroup::zoomTool() {
     for(unsigned int i = 0; i < m_tools.size(); i++)
@@ -975,6 +1286,7 @@ PlotZoomToolPtr PlotStandardMouseToolGroup::zoomTool() {
     return t;
 }
 
+
 PlotPanToolPtr PlotStandardMouseToolGroup::panTool() {
     for(unsigned int i = 0; i < m_tools.size(); i++)
         if(dynamic_cast<PlotPanTool*>(&*m_tools[i]) != NULL)
@@ -986,8 +1298,12 @@ PlotPanToolPtr PlotStandardMouseToolGroup::panTool() {
     return t;
 }
 
+
 PlotTrackerToolPtr PlotStandardMouseToolGroup::trackerTool() {
-    return m_tracker; }
+    return m_tracker; 
+}
+
+
 
 
 // Protected Methods //
@@ -997,9 +1313,14 @@ void PlotStandardMouseToolGroup::attach(PlotCanvas* canvas) {
     m_tracker->attach(canvas);
 }
 
+
+
 void PlotStandardMouseToolGroup::detach() {
     PlotMouseToolGroup::detach();
     m_tracker->detach();
 }
 
-}
+
+
+}  // namespace 
+

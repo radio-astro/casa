@@ -29,30 +29,23 @@
 
 #include <flagging/Flagging/RFCommon.h>
 #include <flagging/Flagging/RFABase.h>
+#include <tableplot/TablePlot/FlagVersion.h>
 
-#include <flagging/Flagging/FlagIndex.h>
-
-#include <casa/System/PGPlotter.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Containers/Record.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSSelection.h>
-#include <casa/Logging/LogIO.h>
-
-#include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MPosition.h>
 #include <measures/Measures/MRadialVelocity.h>
-
-#include <tableplot/TablePlot/FlagVersion.h>
+#include <casa/Logging/LogIO.h>
+#include <casa/Arrays/Vector.h>
+#include <casa/Containers/Record.h>
+#include <casa/Quanta/Quantum.h>
 
 #include <boost/smart_ptr.hpp>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 class VisSet;
-class PGPlotter;
-class PGPlotterInterface;
 class RFChunkStats;
         
 // <summary>
@@ -69,8 +62,7 @@ class RFChunkStats;
 // </prerequisite>
 //
 // <etymology>
-// If it flags, why not red? Plus MSFlagger and plain flagger were already
-// taken.
+// MSFlagger and plain flagger were already taken.
 // </etymology>
 //
 // <synopsis>
@@ -116,19 +108,10 @@ protected:
 // sets up record of agents and default parameters
   const RecordInterface & setupAgentDefaults ();
 
-// sets up debug and report plotting objects
-  void setupPlotters     ( const RecordInterface &opt );
-
-// detaches from all active plotters
-  void cleanupPlotters   ();
-
-// plots flagging reports from individual agents
-  void plotAgentReports  ( PGPlotterInterface &pgp);
+// print flagging reports from individual agents
   void printAgentReports  ( );
 
-// plots a flagging summary
-  void plotSummaryReport ( PGPlotterInterface &pgp,RFChunkStats &chunk,const RecordInterface &opt );
-  void printSummaryReport ( RFChunkStats &chunk,const RecordInterface &opt );
+  void printSummaryReport ( RFChunkStats &chunk );
   Bool selectDataChannel();
  
   MeasurementSet   ms;
@@ -160,10 +143,7 @@ protected:
   Vector<Int> ifr2ant1,ifr2ant2;
   Vector<String> antnames;
   Vector<Double> spwfreqs;
-  
-  PGPlotter pgp_report,pgp_screen;
-  Int pgprep_nx,pgprep_ny;
-  
+    
   Record agent_defaults;
 
   static LogIO os;
@@ -202,9 +182,9 @@ public:
                       String quackmode=String("beg"),
                       Bool quackincrement=Bool(false),
                       String opmode=String("flag"),
-                      Double diameter = -1.0);
-
-  Bool applyFlags(const std::vector<FlagIndex> &fi);
+                      Double diameter = -1.0,
+                      Double lowerlimit = -1.0,
+                      Double upperlimit = 91.0);
 
   // Clean up all agents of type "select".
   //Bool clearflagselections(Vector<Int> &recordlist,Vector<String> &agentlist);
@@ -227,7 +207,7 @@ public:
   
   Record run(Bool trial, Bool reset);    
 
-  void summary ( const RecordInterface &agents,const RecordInterface &opt ); 
+  void summary ( const RecordInterface &agents ); 
 
     // flag version support.
   Bool  saveFlagVersion(String versionname, String comment, String merge);
@@ -277,24 +257,6 @@ public:
 
 // returns the log sink 
   static LogIO & logSink ()       { return os; }
-
-// returns the flag report plotter
-  PGPlotterInterface & pgprep ()   { return pgp_report; }
-
-// returns the screen ("debug") plotter
-  PGPlotterInterface & pgpscr ()   { return pgp_screen; }
-
-// Uses SUBP to divide the flag report PGPlotter into subpanes.
-// Keeps track of the current setting, so no extra pagebreaks are produced
-  void setReportPanels ( Int nx,Int ny );
-
-// Utility function to do channel selection
-  /*
-  Bool selectDataChannel(Vector<Int>& spwidnchans,
-                         Vector<Int>& spectralwindowids, 
-			 Vector<Int>& dataStart, 
-			 Vector<Int>& dataEnd, Vector<Int>& dataStep);
-*/			 
 
   /* Get rid of negative indices (meaning negation of antenna) in baselinelist */
   static void reform_baselinelist(Matrix<Int> &baselinelist, unsigned nant);

@@ -97,6 +97,8 @@
 
 #include <FieldRow.h>
 
+#include <FlagRow.h>
+
 #include <FlagCmdRow.h>
 
 #include <FocusRow.h>
@@ -220,6 +222,8 @@
 #include <FeedTable.h>
 
 #include <FieldTable.h>
+
+#include <FlagTable.h>
 
 #include <FlagCmdTable.h>
 

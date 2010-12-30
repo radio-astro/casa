@@ -2609,7 +2609,6 @@ image='3C273XC1.clean.residual')
 </example>
 </method>
 
- 
    <method type="function" name="restore">
    <shortdescription>Calculate the restored image with restored model, component list, and  residuals</shortdescription>
    
@@ -2656,6 +2655,48 @@ parameters.
 
 </example>
 </method>
+ 
+   <method type="function" name="updateresidual">
+   <shortdescription>Calculate the residual and restored images with new modified model, component list,</shortdescription>
+   
+<description>
+This function is for efficiency and speed purpose only. Same as <link anchor="imager:imager.restore.function">restore</link>
+It is to be used after you have used <link anchor="imager:imager.clean.function">clean</link> or <link anchor="imager:imager.mem.function">mem</link> ...but you wish to tweak the model image, say by clipping unwanted components and it will avoid unnecessary recalculating of psf but will do a proper prediction of the new model visibilities and recalculate residual and restored images.
+
+
+</description>
+<input>
+
+     <param type="stringArray" name="model">
+     <description>Names of input model</description>
+     <value></value>
+     </param>
+
+     <param type="string" name="complist">
+     <description>Name of component list</description>
+     <value></value>
+     </param>
+
+     <param type="stringArray" name="image">
+     <description>Names of output restored images</description>
+     <value></value>
+     </param>
+
+     <param type="stringArray" name="residual">
+     <description>Names of residual images</description>
+     <value></value>
+     </param>
+
+</input>
+<returns type="bool"/>
+<example>
+
+- im.setbeam(bmaj='2.0arcsec', bmin='2.0arcsec')
+- im.restore(model='3C273XC1.clean', image='3C273XC1.clean.restored',
+
+</example>
+</method>
+
  
    <method type="function" name="sensitivity">
    <shortdescription>Calculate rms  sensitivity</shortdescription>
@@ -3162,6 +3203,10 @@ deconvolution cycles are ended.
 \item cyclespeedup: this is used if the PSF is not well behaved and
   you want clean to raise by 2 the threshold if it has not reached the
   threshold in this number of iteration
+\item cyclemaxpsffraction: similar to cyclefactor, but this is an
+explicit fraction of the PSF peak. The final threshold is computed
+using  min( cyclemaxpsffraction, cyclefactor * maxPSFsidelobe).
+Valid values are between 0.0 and 1.0. 
 \item stoplargenegatives: This parameter is exclusively for when using
   multiscale clean. This is used to stop the component
   search when the largest scale has found this number of negative
@@ -3184,19 +3229,25 @@ deconvolution cycles are ended.
   Primary beam the noise floor is kept uniform, when using SAULT as scaletype.
 \item fluxscale: use this to give a filename to store the factor image
   to apply to the image to get the fluxscale right.
+\item flatnoise: (default true) Set to false if you want clean components for mosaic  to be searched in the residual image that is effectively multiplied by the $beam^2$. This means when the noise is determined after the antenna, searching in the optimum domain of $signal/(sigma^2)$. For meter wavelengths where noise is determined by the sky, it is no longer optimal.
 \end{description}
 
 </description>
 <input>
 
      <param type="double" name="cyclefactor">
-     <description>Cycle threshold = this * max sidelobe * max resid</description>
+     <description>Cycle threshold = max_resid * min(cyclemaxpsffraction,  this * max_sidelobe) </description>
      <value>1.5</value>
      </param>
 
      <param type="double" name="cyclespeedup">
      <description>Cycle threshold doubles in this number of iterations</description>
      <value>-1</value>
+     </param>
+
+     <param type="double" name="cyclemaxpsffraction">
+     <description>Cycle threshold = max_resid * min(this,  cyclefactor * max_sidelobe) </description>
+     <value>0.8</value>
      </param>
 
      <param type="int" name="stoplargenegatives">
@@ -3232,12 +3283,16 @@ deconvolution cycles are ended.
      <description>Names of flux scale images for mosaicing</description>
      <value></value>
      </param>
+     <param type="bool" name="flatnoise">
+       <description>Set to false if clean component search is to be done in an optimal signal/noise residual image if true will clean in a constant noise image</description>
+     <value>true</value>
+     </param>
 </input>
 
 <returns type="bool"/>
 <example>
 
-im.setmfcontrol(cyclefactor=2.0, cyclespeedup=niter/10, 
+im.setmfcontrol(cyclefactor=2.0, cyclespeedup=niter/10, cyclemaxpsffraction=0.8,
 stoplargenegatives=T, stoppointmode=10, fluxscale='image.fluxscale');
 
 </example>

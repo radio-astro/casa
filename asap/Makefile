@@ -40,7 +40,6 @@ doc:
 
 install:
 	@if ( test -f getsvnrev.sh ) ; then /bin/bash getsvnrev.sh ; fi
-	@cd $(ASAPROOT)/$(ATNFD); make install
 	@if ( test ! -d $(PYDIR)/asap ) ; then mkdir -p $(PYDIR)/asap ; fi
 	@if ( test ! -d $(PREFIX)/bin ) ; then mkdir -p $(PREFIX)/bin ; fi
 	@cd $(ASAPROOT)/$(ATNFD); make install

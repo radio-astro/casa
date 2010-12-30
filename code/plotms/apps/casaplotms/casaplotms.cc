@@ -38,6 +38,11 @@
 #include <casa/namespace.h>
 
 int main(int argc, char* argv[]) {    
+
+#if (0)
+setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediately always */
+#endif
+
     // Parameter defaults.
     String ms    = "",
            xaxis = PMS::axis(PMS::DEFAULT_XAXIS),
@@ -243,24 +248,24 @@ int main(int argc, char* argv[]) {
         params.setCachedImageSizeToResolution();
     
     // Set up plotms object.
-    PlotMS plotms(params, casapy);
-    if(!casapy) plotms.showGUI(true); // don't automatically show for casapy
+    PlotMSApp plotmsapp(params, casapy);
+    if(!casapy) plotmsapp.showGUI(true); // don't automatically show for casapy
     
     if (nopopups)
-		plotms.its_want_avoid_popups = true;
+		plotmsapp.its_want_avoid_popups = true;
 		
 		
 	// check for hackjob env var CASAPLOTMS_NOPOPUPS set to "yes" (or
 	// anything starting with 'Y')
 	const char *ev = getenv("CASAPLOTMS_NOPOPUPS");
 	if (ev && (ev[0]=='Y' || ev[0]=='y'))
-		plotms.its_want_avoid_popups = true;
+		plotmsapp.its_want_avoid_popups = true;
 		
 	
     // Set up parameters for plot.
     PlotMSPlotParameters plotparams = multiPlot ?
-            PlotMSMultiPlot::makeParameters(&plotms) :
-            PlotMSSinglePlot::makeParameters(&plotms);
+            PlotMSMultiPlot::makeParameters(&plotmsapp) :
+            PlotMSSinglePlot::makeParameters(&plotmsapp);
     PMS_PP_CALL(plotparams, PMS_PP_MSData, setFilename, ms)
     PMS_PP_CALL(plotparams, PMS_PP_MSData, setSelection, select)
     PMS_PP_CALL(plotparams, PMS_PP_MSData, setAveraging, averaging)
@@ -275,8 +280,8 @@ int main(int argc, char* argv[]) {
     }
     
     // Add the plot to plotms.
-    if(multiPlot) plotms.addMultiPlot(&plotparams);
-    else          plotms.addSinglePlot(&plotparams);
+    if(multiPlot) plotmsapp.addMultiPlot(&plotparams);
+    else          plotmsapp.addSinglePlot(&plotparams);
     
     // If we're connected to DBus, don't quite the application when the window
     // is closed.  This is somewhat risky in that if the remote applications

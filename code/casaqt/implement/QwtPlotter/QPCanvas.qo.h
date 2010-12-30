@@ -30,6 +30,7 @@
 #ifdef AIPS_HAS_QWT
 
 #include <graphics/GenericPlotter/PlotCanvas.h>
+#include <graphics/GenericPlotter/PlotOptions.h>
 #include <graphics/GenericPlotter/PlotLogger.h>
 #include <graphics/GenericPlotter/Plotter.h>
 #include <casaqt/QwtPlotter/QPImageCache.h>
@@ -153,10 +154,12 @@ public:
 
     
     // Implements PlotCanvas::shownAxes().
-    int shownAxes() const;
+    // Returns a bit set (really an int) of bits defined by PlotAxis enum or'd together
+    PlotAxisBitset shownAxes() const;
 
     // Implements PlotCanvas::showAxes().
-    void showAxes(int axesFlag);
+    // Takes a bit set, as an int, of bits defined by PlotAxis enum or'd together
+    void showAxes(PlotAxisBitset axes);
     
     // Implements PlotCanvas::axisScale().
     PlotAxisScale axisScale(PlotAxis axis) const;
@@ -523,16 +526,49 @@ private:
     
     // Static //
     
-    // Helper method for static exportPlotter() and exportCanvas() methods.
-    static bool exportHelper(vector<PlotCanvasPtr>& canvases,
+    // Method for static exportPlotter() and exportCanvas() methods.
+    // (Formerly exportHelper.  "Helper" in a class or method name is a code smell!)
+    static bool exportCanvases(vector<PlotCanvasPtr>& canvases,
             const PlotExportFormat& format, QPCanvas* grabCanvas,
             QPPlotter* grabPlotter);
+
+	
+	
+	// Methods to perform particular types of exports - internal use only!
+	static 
+	bool  exportToImageFile(
+					const PlotExportFormat& format, 
+					vector<QPCanvas*> &qcanvases,
+					QPCanvas* grabCanvas,
+					QPPlotter* grabPlotter
+					);
+    static 
+    QImage produceHighResImage(
+					const PlotExportFormat& format,
+					vector<QPCanvas*> &qcanvases,
+					int width, int height,
+					bool &wasCanceled
+					);   
+    static 
+    QImage  grabImageFromCanvas(
+			        const PlotExportFormat& format, 
+			        QPCanvas* grabCanvas,
+			        QPPlotter* grabPlotter
+			        );
+    static 
+    bool   exportPostscript(
+			        const PlotExportFormat& format, 
+			        vector<QPCanvas*> &qcanvases
+			        );
+
     
-    // Converts between axes and vector indices.
+    // Converts between axes bitset flags (1,2,4,8 in PlotAxis and vector indices (0-3).
+    // (Does not deal with bitsets for combinations of axes, only single axis)
     // <group>
     static unsigned int axisIndex(PlotAxis a);   
     static PlotAxis axisIndex(unsigned int i);
     // </group>
+    
     
 private slots:    
     // For when the selecter has selected a region; emit a PlotSelectEvent.

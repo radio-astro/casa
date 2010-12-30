@@ -78,6 +78,60 @@ class test_shadow(test_base):
         flagdata2(vis=self.vis, selectdata=True, correlation='LL', shadow=True )
         test_eq(flagdata2(vis=self.vis, summary=True), 70902, 1456)
 
+class test_elevation(test_base):
+    """Test of mode = 'shadow'"""
+    def setUp(self):
+        self.setUp_ngc5921()
+        self.x55 = 666792    # data below 55 degrees, etc.
+        self.x60 = 1428840
+        self.x65 = 2854278
+        self.all = 2854278
+
+    def test_lower(self):
+        flagdata2(vis = self.vis,
+                  elevation = True)
+        
+        test_eq(flagdata2(vis=self.vis, summary=True), self.all, 0)
+
+        flagdata2(vis = self.vis,
+                  elevation = True,
+                  lowerlimit = 50)
+
+        test_eq(flagdata2(vis=self.vis, summary=True), self.all, 0)
+
+        flagdata2(vis = self.vis,
+                  elevation = True,
+                  lowerlimit = 55)
+
+        test_eq(flagdata2(vis=self.vis, summary=True), self.all, self.x55)
+
+        flagdata2(vis = self.vis,
+                  elevation = True,
+                  lowerlimit = 60)
+
+        test_eq(flagdata2(vis=self.vis, summary=True), self.all, self.x60)
+
+        flagdata2(vis = self.vis,
+                  elevation = True,
+                  lowerlimit = 65)
+
+        test_eq(flagdata2(vis=self.vis, summary=True), self.all, self.x65)
+
+    def test_upper(self):
+        flagdata2(vis = self.vis,
+                  elevation = True,
+                  upperlimit = 60)
+
+        test_eq(flagdata2(vis=self.vis, summary=True), self.all, self.all - self.x60)
+
+
+    def test_interval(self):
+        flagdata2(vis = self.vis,
+                  elevation = True,
+                  lowerlimit = 55,
+                  upperlimit = 60)
+
+        test_eq(flagdata2(vis=self.vis, summary=True), self.all, self.all - (self.x60 - self.x55))
 
 class test_vector(test_base):
     def setUp(self):
@@ -102,6 +156,21 @@ class test_vector(test_base):
             self.assertEqual(s['antenna'][a]['flagged'], 5252)
         for a in ["VLA1", "VLA2", "VLA5", "VLA8", "VLA9", "VLA10", "VLA11", "VLA24"]:
             self.assertEqual(s['antenna'][a]['flagged'], 808)
+
+    def test_many_agents(self):
+        """More than 32 agents"""
+        # 1 agent
+        flagdata2(vis = self.vis, manualflag=True, selectdata=True,
+                  mf_antenna="3")
+        test_eq(flagdata2(vis = self.vis, summary=True), 70902, 5252)
+
+        flagdata2(vis=self.vis, unflag=True)
+
+        # 500 agents
+        flagdata2(vis = self.vis, manualflag=True, selectdata=True,
+                  mf_antenna=["3"] * 500)
+        test_eq(flagdata2(vis = self.vis, summary=True), 70902, 5252)
+
 
 class test_vector_ngc5921(test_base):
     def setUp(self):
@@ -226,6 +295,29 @@ class test_flagmanager(test_base):
         print "After restoring pre-antenna 3 flagging, there are", restore2, "flags, should be", ant2
 
         assert restore2 == ant2
+
+    def test_CAS2701(self):
+        """Do not allow flagversion=''"""
+       
+        fg.open(self.vis)
+        l = len(fg.getflagversionlist())
+        fg.done()
+        
+        flagmanager(vis = self.vis,
+                    mode = "save",
+                    versionname = "non-empty-string")
+
+        fg.open(self.vis)
+        self.assertEqual(len(fg.getflagversionlist()), l+1)
+        fg.done()
+
+        flagmanager(vis = self.vis,
+                    mode = "save",
+                    versionname = "non-empty-string")
+
+        fg.open(self.vis)
+        self.assertEqual(len(fg.getflagversionlist()), l+1)
+        fg.done()
 
 class test_msselection(test_base):
 
@@ -674,6 +766,7 @@ class cleanup(test_base):
         os.system('rm -rf ngc5921.ms.flagversions')
         os.system('rm -rf flagdatatest.ms')
         os.system('rm -rf flagdatatest.ms.flagversions')
+        os.system('rm -rf missing-baseline.ms')
 
     def test1(self):
         '''flagdata2: Cleanup'''
@@ -689,6 +782,7 @@ def suite():
             test_flagmanager,
             test_rfi,
             test_shadow,
+            test_elevation,
             test_msselection,
             test_autoflag,
             test_multimode1,

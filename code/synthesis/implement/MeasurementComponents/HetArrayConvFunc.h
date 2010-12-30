@@ -84,13 +84,19 @@ namespace casa{
     private:
       
       Int factorial(Int n);
-      Bool checkPBOfField(const VisBuffer& vb, Vector<Int>& rowMap);
+      // the return value are -1 or False for not in cache yet but pointing direction 
+      //seems to be inside image
+      // 1 if value is cached
+      // 2 pointing is off image ...thus valid but not useful
+      Int checkPBOfField(const VisBuffer& vb, Vector<Int>& rowMap);
       void findAntennaSizes(const VisBuffer& vb);
       void supportAndNormalize(Int plane, Int convSampling);
       void init(const PBMathInterface::PBClass typeToUse);
       void makerowmap(const VisBuffer& vb, Vector<Int>& rowMap);
       PBMathInterface::PBClass pbClass_p;
-      SimpleOrderedMap <String, Int> convFunctionMap_p;
+      //SimpleOrderedMap <String, Int> convFunctionMap_p;
+      Vector<Int64> convFunctionMap_p;
+      Int64 nDefined_p;
       SimpleOrderedMap <Double, Int> antDiam2IndexMap_p;
       Vector<Int> antIndexToDiamIndex_p;
       Block<CountedPtr<PBMathInterface> > antMath_p;

@@ -27,6 +27,7 @@
 #ifndef ArrayTimeInterval_CLASS
 #define ArrayTimeInterval_CLASS
 
+#include <stdint.h>
 #include <Long.h>
 #include <ArrayTime.h>
 #include <Interval.h>
@@ -70,7 +71,7 @@ public:
 			  double durationInDays);
 			  
 	ArrayTimeInterval(int64_t startInNanoSeconds,
-			  int64_t durationInNanoSeconds);		  				  
+			  int64_t durationInNanoSeconds);
 					  
 	ArrayTimeInterval(ArrayTime start);
 	ArrayTimeInterval(double startInMJD);
@@ -192,7 +193,7 @@ public:
  inline ArrayTimeInterval::ArrayTimeInterval(int64_t startInNanoSeconds,
 					     int64_t durationInNanoSeconds){
    start = startInNanoSeconds;
-   duration = min(durationInNanoSeconds, int64_t(Long::MAX_VALUE - startInNanoSeconds));
+   duration = min(durationInNanoSeconds, Long::MAX_VALUE - startInNanoSeconds);
  }				
  
  inline ArrayTimeInterval::ArrayTimeInterval(ArrayTime  start_):
@@ -229,7 +230,7 @@ public:
  
  
  inline void ArrayTimeInterval::setDuration(double duration) {
-   this->duration = Interval((int64_t) (ArrayTime::unitsInADay * duration));	
+   this->duration = Interval((int64_t) (ArrayTime::unitsInADay * duration));
  }
  
  inline void ArrayTimeInterval::setDuration(int64_t duration) {

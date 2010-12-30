@@ -45,6 +45,7 @@ class PlotTrackerToolNotifier;
 class PlotZoomToolNotifier;
 
 
+
 ///////////////////////////
 // ABSTRACT TOOL CLASSES //
 ///////////////////////////
@@ -152,7 +153,10 @@ protected:
     // Detaches this tool from its canvas.
     virtual void detach();
 };
+
 typedef CountedPtr<PlotTool> PlotToolPtr;
+
+
 
 
 // A PlotMouseTool is a specialization of PlotTool that handles all mouse
@@ -210,9 +214,32 @@ public:
 INHERITANCE_POINTER2(PlotMouseTool, PlotMouseToolPtr, PlotTool, PlotToolPtr)
 
 
+
+
+
+
 ///////////////////////////
 // CONCRETE TOOL CLASSES //
 ///////////////////////////
+
+
+
+
+// Was in PlotStandardMouseToolGroup, but needed here, so it can be  passed
+// to setActiveTool, which needs it to adjust the Select tool to either work
+// normal or as Subtraction tool.
+
+// Enum for standard tools in group.
+enum ToolCode {
+    SELECT_TOOL,   
+    SUBTRACT_TOOL,   
+    ZOOM_TOOL, 
+    PAN_TOOL, 
+    NONE_TOOL
+};
+    
+
+
 
 
 // A PlotSelectTool is a concrete subclass of PlotMouseTool that mainly handles
@@ -244,6 +271,7 @@ public:
     // Sets the selection line to the given.
     // <group>
     virtual void setSelectLine(PlotLinePtr line);
+    virtual void setSubtractLine(PlotLinePtr line);
     virtual void setSelectLine(bool on = true);
     // </group>
     
@@ -254,15 +282,17 @@ public:
     virtual void setRectFill(PlotAreaFillPtr fill);
     // </group>
     
-    // Manage selected regions.
+    // Selected regions.
     // <group>
     virtual unsigned int numSelectedRects() const;
-    virtual void getSelectedRects(vector<double>& upperLeftXs,
-            vector<double>& upperLeftYs, vector<double>& lowerRightXs,
-            vector<double>& lowerRightYs,
-            PlotCoordinate::System system = PlotCoordinate::WORLD) const;
+    virtual void getSelectedRects( 
+                vector<double>& upperLeftXs,
+                vector<double>& upperLeftYs, 
+                vector<double>& lowerRightXs,
+                vector<double>& lowerRightYs,
+                PlotCoordinate::System system = PlotCoordinate::WORLD)  const;
     virtual vector<PlotRegion> getSelectedRects(
-            PlotCoordinate::System system = PlotCoordinate::WORLD) const;
+                PlotCoordinate::System system = PlotCoordinate::WORLD)  const;
     virtual void clearSelectedRects();
     // </group>
     
@@ -272,6 +302,13 @@ public:
     // Implements PlotMouseTool::handleMouseEvent().
     virtual void handleMouseEvent(const PlotEvent& event);
     
+    bool inSubtractionMode()      { return m_subtraction_mode; }
+
+
+
+    bool m_subtraction_mode;
+
+
 protected:
     // Notifiers.
     vector<PlotSelectToolNotifier*> m_notifiers;
@@ -279,6 +316,7 @@ protected:
     // Copy of selection line to set on the canvas, or NULL if none has been
     // set.
     PlotLinePtr m_selLine;
+    PlotLinePtr m_subLine;
     
     // Whether or not to draw selected regions on the canvas.
     bool m_drawRects;
@@ -292,6 +330,7 @@ protected:
     // Selected regions.
     vector<PlotShapeRectanglePtr> m_rects;
     
+
     
     // Overrides PlotTool::attach().
     virtual void attach(PlotCanvas* canvas);
@@ -299,8 +338,17 @@ protected:
     // Overrides PlotTool::detach().
     virtual void detach();
 };
+
+
 INHERITANCE_POINTER(PlotSelectTool, PlotSelectToolPtr, PlotMouseTool,
                     PlotMouseToolPtr, PlotTool, PlotToolPtr)
+
+
+
+
+
+
+
 
 
 // A PlotZoomTool is a concrete subclass of PlotMouseTool that provides
@@ -376,6 +424,8 @@ INHERITANCE_POINTER(PlotZoomTool, PlotZoomToolPtr, PlotMouseTool,
                     PlotMouseToolPtr, PlotTool, PlotToolPtr)
 
 
+
+
 // A PlotPanTool is a concrete subclass of PlotMouseTool that provides
 // convenient panning functionality.  Standard behavior is to pan the canvas
 // on a drag event, go through the pan stack on a wheel event, and go to the
@@ -443,6 +493,8 @@ protected:
 };
 INHERITANCE_POINTER(PlotPanTool, PlotPanToolPtr, PlotMouseTool,
                     PlotMouseToolPtr, PlotTool, PlotToolPtr)
+
+
 
 
 // A PlotTrackerTool is a concrete subclass of PlotMouseTool that provides
@@ -639,7 +691,11 @@ public:
     
     // Adds the given tool to the group and returns its index.  If makeActive
     // is true, the given tool becomes the group's active tool.
-    unsigned int addTool(PlotMouseToolPtr tool, bool makeActive = false);
+    // Note (dec 2010): used to take 2nd arg, boolean, to make tool active.
+    // This is confusing design.  Caller of addTool should just call  setActiveTool(tool)
+    // after calling addTool() if it wants the tool to become active.
+    // In practice, source code does not anywhere call addTool with make_active=true.
+    unsigned int addTool(PlotMouseToolPtr tool);
     
     // Removes the given tool from the group, and returns true on success.
     // <group>
@@ -662,10 +718,15 @@ public:
     
     // Sets the active tool to the given.  If the given tool is not in the
     // group it is first added.
-    void setActiveTool(PlotMouseToolPtr tool);
+    // Toolcode is optional - meaningful only if tool has double usage, like
+    // Select tool which doubles as the Subtraction tool.  Otherwise, just stuff NONE_TOOL
+    // in for that arg.
+    void setActiveTool(PlotMouseToolPtr tool,  ToolCode toolcode=NONE_TOOL);
     
     // Sets the active tool to the one at the given index.
-    void setActiveTool(unsigned int index) { setActiveTool(toolAt(index)); }
+    void setActiveTool(unsigned int index, ToolCode c=NONE_TOOL)   { 
+            setActiveTool(toolAt(index), c); 
+            }
     
     // Overrides PlotTool::setActive().
     void setActive(bool isActive = true);
@@ -730,23 +791,17 @@ class PlotStandardMouseToolGroup : public PlotMouseToolGroup {
 public:
     // Static //
     
-    // Enum for standard tools in group.
-    enum Tool {
-        SELECT, ZOOM, PAN, NONE
-    };
-    
-    
     // Non-Static //
     
     // Constructor which creates default tools with the given coordinate
     // system, and sets the active tool to the given.
-    PlotStandardMouseToolGroup(Tool activeTool = NONE,
+    PlotStandardMouseToolGroup(ToolCode activeTool = NONE_TOOL,
             PlotCoordinate::System system = PlotCoordinate::WORLD);
     
     // Constructor which creates default tools with the given coordinate
     // system and axes, and sets the active tool to the given.
     PlotStandardMouseToolGroup(PlotAxis xAxis, PlotAxis yAxis,
-            Tool activeTool = NONE,
+            ToolCode activeTool = NONE_TOOL,
             PlotCoordinate::System system = PlotCoordinate::WORLD);
     
     // Constructor which uses the given tools (or creates default tools if the
@@ -755,15 +810,15 @@ public:
                                PlotZoomToolPtr zoomTool,
                                PlotPanToolPtr panTool,
                                PlotTrackerToolPtr trackerTool,
-                               Tool activeTool = NONE);
+                               ToolCode activeTool = NONE_TOOL);
     
     // Destructor.
     ~PlotStandardMouseToolGroup();
     
     // Gets/sets the active standard tool.
     // <group>
-    void setActiveTool(Tool tool);
-    Tool activeToolType() const;
+    void setActiveTool(ToolCode tool);
+    ToolCode activeToolType() const;
     // </group>
     
     // Provides access to the tracker.
@@ -789,24 +844,31 @@ public:
     void handleMouseEvent(const PlotEvent& event) {
         if(m_tracker->isActive()) m_tracker->handleMouseEvent(event);
         PlotMouseToolGroup::handleMouseEvent(event); }
+        
     void handleSelect(const PlotSelectEvent& event) {
         if(m_tracker->isActive()) m_tracker->handleSelect(event);
         PlotMouseToolGroup::handleSelect(event); }
+        
     void handleClick(const PlotClickEvent& event) {
         if(m_tracker->isActive()) m_tracker->handleClick(event);
         PlotMouseToolGroup::handleClick(event); }
+        
     void handleMousePress(const PlotMousePressEvent& event) {
         if(m_tracker->isActive()) m_tracker->handleMousePress(event);
         PlotMouseToolGroup::handleMousePress(event); }
+        
     void handleMouseRelease(const PlotMouseReleaseEvent& event) {
         if(m_tracker->isActive()) m_tracker->handleMouseRelease(event);
         PlotMouseToolGroup::handleMouseRelease(event); }
+        
     void handleMouseDrag(const PlotMouseDragEvent& event) {
         if(m_tracker->isActive()) m_tracker->handleMouseDrag(event);
         PlotMouseToolGroup::handleMouseDrag(event); }
+        
     void handleMouseMove(const PlotMouseMoveEvent& event) {
         if(m_tracker->isActive()) m_tracker->handleMouseMove(event);
         PlotMouseToolGroup::handleMouseMove(event); }
+        
     void handleWheel(const PlotWheelEvent& event) {
         if(m_tracker->isActive()) m_tracker->handleWheel(event);
         PlotMouseToolGroup::handleWheel(event); }

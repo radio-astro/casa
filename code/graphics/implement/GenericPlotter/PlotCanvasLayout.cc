@@ -38,7 +38,9 @@ PlotLayoutSingle::PlotLayoutSingle(PlotCanvasPtr c) : m_canvas(c) { }
 PlotLayoutSingle::~PlotLayoutSingle() { }
 
 void PlotLayoutSingle::setCanvasAt(const PlotLayoutCoordinate& coord,
-                                   PlotCanvasPtr c) {
+                                   PlotCanvasPtr c)  
+                                   {
+    (void)coord;
     m_canvas = c;
 
     if(m_plotter != NULL) m_plotter->canvasLayoutChanged(*this);
@@ -49,10 +51,21 @@ void PlotLayoutSingle::setCanvas(PlotCanvasPtr canvas) {
     if(m_plotter != NULL) m_plotter->canvasLayoutChanged(*this);
 }
 
-PlotCanvasPtr PlotLayoutSingle::canvas() const { return m_canvas; }
+
+
+PlotCanvasPtr PlotLayoutSingle::canvas() const { 
+    return m_canvas; 
+}
+
+
 
 PlotCanvasPtr PlotLayoutSingle::canvasAt(const PlotLayoutCoordinate& coord)
-                                         const { return m_canvas; }
+                                         const { 
+    (void)coord;
+    return m_canvas; 
+}
+
+
 
 vector<PlotCanvasPtr> PlotLayoutSingle::allCanvases() const {
     vector<PlotCanvasPtr> v(m_canvas.null() ? 0 : 1);
@@ -61,6 +74,10 @@ vector<PlotCanvasPtr> PlotLayoutSingle::allCanvases() const {
 }
 
 bool PlotLayoutSingle::isValid() const { return !m_canvas.null(); }
+
+
+
+
 
 
 ////////////////////////////////

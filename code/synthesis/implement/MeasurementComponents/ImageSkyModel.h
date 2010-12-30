@@ -103,11 +103,16 @@ public:
 
   // Add a componentlist
   virtual Bool add(ComponentList& compList);
+  //update componentlist
+  virtual Bool updatemodel(ComponentList& compList);
+
 
   // Add an image. maxNumXfr is the maximum Number of transfer functions
   // that we might want to associate with this image.
   virtual Int add(ImageInterface<Float>& image, const Int maxNumXfr=100);
-  
+  //update model image...you have to have added it before...nmodels_p held has to be bigger that image here
+  //its left to the caller to make sure the image is conformant...otherwise you are in trouble.
+  virtual Bool  updatemodel(const Int thismodel, ImageInterface<Float>& image);
   // Add a residual image
   virtual Bool addResidual(Int image, ImageInterface<Float>& residual);
 
@@ -212,8 +217,29 @@ public:
   // to inch up)
   void setCycleSpeedup(float x) { cycleSpeedup_p = x; }
 
+  // Yet another control for the minor cycle threshold.
+  // This is in response to CAS-2673
+  // This allows control similar to 'cyclefactor' - used in MFClarkCleanSkyModel
+  void setCycleMaxPsfFraction(float x) { cycleMaxPsfFraction_p = x; }
+
   // Set the variable that switches on the progress display
   void setDisplayProgress (const Bool display ) {displayProgress_p = display; };
+
+  // Tries to return a pointer to a TempImage (allocated with new, so remember
+  // to use delete) with the given shape and CoordinateSystem.
+  //
+  // @param imgShp
+  // @param imgCoords
+  // @param nMouthsToFeed: If > 1 it is taken as a hint that it should leave
+  //                       room for nMouthsToFeed - 1 more TempImages. 
+  //
+  // <throws>
+  // AipsError on memory allocation error.
+  // </throws>
+  template<class M>
+  static TempImage<M>* getTempImage(const TiledShape& imgShp,
+                                    const CoordinateSystem& imgCoords,
+                                    const uInt nMouthsToFeed=1);
 
 protected:
 
@@ -278,6 +304,8 @@ protected:
   // (ie, use a large number if you don't want cycle threshold
   // to inch up)
   Float cycleSpeedup_p;
+  // Cycle threshold = maxResidual x min(Max-Psf-Fraction , cyclefactor x maxpsfsidelobe)
+  Float cycleMaxPsfFraction_p;
   // If PSF is done..should not redo it.
   Bool donePSF_p;
   // check if model has been modified especially for continuing
@@ -288,6 +316,11 @@ protected:
 
 
 } //# NAMESPACE CASA - END
+
+
+#ifndef AIPS_NO_TEMPLATE_SRC
+#include <synthesis/MeasurementComponents/ImageSkyModel.tcc>
+#endif //# AIPS_NO_TEMPLATE_SRC
 
 #endif
 

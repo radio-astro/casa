@@ -744,8 +744,8 @@ class asaplotbase:
                         fp.set_size(max(fsz,6))
                         sp['axes'].legend(tuple(lines), tuple(labels),
                                           self.loc, prop=fp)
-                    else:
-                        sp['axes'].legend((' '))
+                    #else:
+                    #    sp['axes'].legend((' '))
 
             from matplotlib.artist import setp
             fpx = FP(size=rcParams['xtick.labelsize'])

@@ -261,7 +261,7 @@ public:
   casa::CountedPtr<Scantable> dofold( const casa::CountedPtr<Scantable> &sig,
                                       const casa::CountedPtr<Scantable> &ref,
                                       casa::Double choffset,
-                                      casa::Double choffset = 0.0 );
+                                      casa::Double choffset2 = 0.0 );
 
   /**
    * ALMA calibration

@@ -46,8 +46,8 @@ PlotMSToolsTab::PlotMSToolsTab(PlotMSPlotter* parent) : PlotMSTab(parent) {
     // Synchronize hand tool buttons
     itsPlotter_->synchronizeAction(PlotMSAction::TOOL_MARK_REGIONS,
             handMarkRegions);
-    itsPlotter_->synchronizeAction(PlotMSAction::TOOL_MARK_REGIONS,
-            handMarkRegions);
+    itsPlotter_->synchronizeAction(PlotMSAction::TOOL_SUBTRACT_REGIONS,
+            handSubtractRegions);
     itsPlotter_->synchronizeAction(PlotMSAction::TOOL_ZOOM, handZoom);
     itsPlotter_->synchronizeAction(PlotMSAction::TOOL_PAN, handPan);
     itsPlotter_->synchronizeAction(PlotMSAction::TOOL_ANNOTATE_TEXT,

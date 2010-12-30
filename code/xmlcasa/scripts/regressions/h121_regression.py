@@ -147,13 +147,13 @@ splitsrctime=time.time()
 default('clean')
 clean(vis='nrao150.3mm.split.ms',imagename='nrao150.3mm',
       psfmode='clark',niter=500,gain=0.1,nchan=1,start=0,width=48,
-      spw=0,field='0',stokes='I',interpolation='nearest',
+      spw='0',field='0',stokes='I',interpolation='nearest',
       weighting='briggs',robust=2.,cell=[1.,1.],
       imsize=[64,64],mode='mfs')
 default('clean')
 clean(vis='h121.co10.split.ms',imagename='h121.co10',
       psfmode='clark',niter=1000,gain=0.1,threshold=20.,
-      nchan=80,start=1,width=3,spw=0,interpolation='nearest',
+      nchan=80,start=1,width=3,spw='0',interpolation='nearest',
       field='0',stokes='I',
       weighting='briggs',robust=2.,
       cell=[0.5,0.5],imsize=[128,128],mode='channel')
@@ -287,41 +287,54 @@ splitsrctime=time.time()
 default('clean')
 clean(vis='0224b.3mm.split.ms',imagename='0224b.3mm',
       psfmode='clark',niter=500,gain=0.1,nchan=1,start=0,width=48,
-      spw=0,field='0',stokes='I',interpolation='nearest',
+      spw='0',field='0',stokes='I',interpolation='nearest',
       weighting='briggs',robust=2.,
       cell=[1.,1.],imsize=[64,64],mode='mfs')
 default('clean')
 clean(vis='h121b.co10.split.ms',imagename='h121b.co10',
       psfmode='clark',niter=1000,gain=0.1,threshold=20.,
       nchan=80,start=1,width=3,interpolation='nearest',
-      spw=0,field='0',stokes='I',
+      spw='0',field='0',stokes='I',
       weighting='briggs',robust=2.,
       cell=[1.,1.],imsize=[64,64],mode='channel')
 image1time=time.time()
 
 #Concatenate datasets
-print '--concatenate datasets--'
-os.system('cp -r h121.3mm.split.ms h121.3mm.concat.ms')
-os.system('cp -r h121.co10.split.ms h121.co10.concat.ms')
-default('concat')
-concat(concatvis='h121.3mm.concat.ms',vis='h121b.3mm.split.ms',
-       freqtol='0.1MHz',dirtol='0.1arcsec', timesort=True)
-default('concat')
-concat(concatvis='h121.co10.concat.ms',vis='h121b.co10.split.ms',
-       freqtol='0.1MHz',dirtol='0.1arcsec', timesort=True)
-concattime=time.time()
+#print '--concatenate datasets--'
+#os.system('cp -r h121.3mm.split.ms h121.3mm.concat.ms')
+#os.system('cp -r h121.co10.split.ms h121.co10.concat.ms')
+#default('concat')
+#concat(concatvis='h121.3mm.concat.ms',vis='h121b.3mm.split.ms',
+#       freqtol='0.1MHz',dirtol='0.1arcsec', timesort=True)
+#default('concat')
+#concat(concatvis='h121.co10.concat.ms',vis='h121b.co10.split.ms',
+#       freqtol='0.1MHz',dirtol='0.1arcsec', timesort=True)
+#concattime=time.time()
+
+# skip concat
+# use multims input in clean (to test CAS-1625)
 
 #Image target in 3mm continuum emission
 default('clean')
-clean(vis='h121.3mm.concat.ms',imagename='h121all.3mm',
+#clean(vis='h121.3mm.concat.ms',imagename='h121all.3mm',
+#      psfmode='clark',niter=2000,gain=0.1,nchan=1,start=0,width=48,
+#      spw='0',field='0',stokes='I',interpolation='nearest',
+#      weighting='briggs',robust=2.,
+#      cell=[1.,1.],imsize=[64,64],mode='mfs')
+clean(vis=['h121.3mm.split.ms','h121b.3mm.split.ms'],imagename='h121all.3mm',
       psfmode='clark',niter=2000,gain=0.1,nchan=1,start=0,width=48,
-      spw=0,field='0',stokes='I',interpolation='nearest',
+      spw='0',field='0',stokes='I',interpolation='nearest',
       weighting='briggs',robust=2.,
       cell=[1.,1.],imsize=[64,64],mode='mfs')
 default('clean')
-clean(vis='h121.co10.concat.ms',imagename='h121c.co10',
+#clean(vis='h121.co10.concat.ms',imagename='h121c.co10',
+#      psfmode='clark',niter=100,gain=0.1,nchan=80,start=1,width=3,
+#      spw='0',field='0',stokes='I',interpolation='nearest',
+#      weighting='briggs',robust=.5,
+#      cell=[0.2,0.2],imsize=[256,256],mode='channel')
+clean(vis=['h121.co10.split.ms','h121b.co10.split.ms'],imagename='h121c.co10',
       psfmode='clark',niter=100,gain=0.1,nchan=80,start=1,width=3,
-      spw=0,field='0',stokes='I',interpolation='nearest',
+      spw='0',field='0',stokes='I',interpolation='nearest',
       weighting='briggs',robust=.5,
       cell=[0.2,0.2],imsize=[256,256],mode='channel')
 
@@ -357,12 +370,12 @@ cont3mmmax=statistics['max'][0]
 cont3mmrms=statistics['rms'][0]
 ia.close()
 
-srca=3.182
-srcb=3.203
-coa=0.4728
+srca=3.235
+srcb=3.260
+coa=0.4755
 cob=0.4043
-coc=0.3145
-contmax=0.00962
+coc=0.3300
+contmax=0.00963
 
 diff_3mma=abs((srca-thistest_3mm)/srca)
 diff_3mmb=abs((srcb-thistest_3mmb)/srcb)

@@ -1752,7 +1752,7 @@ print csys.referencecode('dir')
 
 
 In this example we first get the list of all possible reference codes
-for a direction coordinate.<!-- (and print some of the normal ones).--> Then we
+ofor a direction coordinate.<!-- (and print some of the normal ones).--> Then we
 get the actual reference code for the direction coordinate in our
 Coordinate System.
 
@@ -3815,6 +3815,57 @@ cs2.fromrecord(rec);
 print csys.ncoordinates(), cs2.ncoordinates()
 #2 2
 #
+"""
+
+</example>
+</method>
+
+
+<method type="function" name="subimage">
+   <shortdescription>delivers a coordinate origin re-referenced for a subimage</shortdescription>
+
+   <input>
+ 
+     <param type="any" direction="in" name="originshft">
+       <any type="variant"/>
+       <description>The shift value from original reference (vector of values in pixels)</description>
+     </param>
+ 
+     <param type="intArray" direction="in" name="newshape">
+       <description>The new shape of the image it will applicable to (pixel shape)</description>
+       <value type="vector"></value>
+     </param>
+   </input>
+
+   
+   <returns type="any"><any type="record"/></returns>
+  
+<description>
+
+  You can convert a Coordinate System to another coordinatesystem applicable to a
+  subImage. The newshape does not matter as this is the coordinatesystem not the 
+  image except for Stokes axis; therefore you can ignore {\tt newshape} except 
+  when your sub-image you are considering has only a section of your original Stokes 
+  axis.
+
+
+</description>
+
+<example>
+
+"""
+#
+print "\t----\t subimage Ex 1 \t----"
+ia.open('original.image')
+csys = ia.coordsys()
+imshape=ia.shape()
+#want to make an empty sub image of the 11th channel
+#keeping other reference pixel as is
+refshft=[0,0,0,10]
+subcoordsysrec=csys.subimage(neworigin=refshft)
+imshape[3]=1
+ia.fromshape(outfile='Eleventh_chan_template.image', shape=imshape, csys=subcoordsysrec)
+
 """
 
 </example>

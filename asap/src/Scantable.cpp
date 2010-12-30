@@ -683,11 +683,18 @@ int Scantable::getPol(int whichrow) const
 
 std::string Scantable::formatTime(const MEpoch& me, bool showdate) const
 {
+  return formatTime(me, showdate, 0);
+}
+
+std::string Scantable::formatTime(const MEpoch& me, bool showdate, uInt prec) const
+{
   MVTime mvt(me.getValue());
   if (showdate)
-    mvt.setFormat(MVTime::YMD);
+    //mvt.setFormat(MVTime::YMD);
+    mvt.setFormat(MVTime::YMD, prec);
   else
-    mvt.setFormat(MVTime::TIME);
+    //mvt.setFormat(MVTime::TIME);
+    mvt.setFormat(MVTime::TIME, prec);
   ostringstream oss;
   oss << mvt;
   return String(oss);
@@ -1034,18 +1041,25 @@ std::string Scantable::summary( bool verbose )
   return String(oss);
 }
 
-std::string Scantable::getTime(int whichrow, bool showdate) const
+// std::string Scantable::getTime(int whichrow, bool showdate) const
+// {
+//   MEpoch::ROScalarColumn timeCol(table_, "TIME");
+//   MEpoch me;
+//   if (whichrow > -1) {
+//     me = timeCol(uInt(whichrow));
+//   } else {
+//     Double tm;
+//     table_.keywordSet().get("UTC",tm);
+//     me = MEpoch(MVEpoch(tm));
+//   }
+//   return formatTime(me, showdate);
+// }
+
+std::string Scantable::getTime(int whichrow, bool showdate, uInt prec) const
 {
-  MEpoch::ROScalarColumn timeCol(table_, "TIME");
   MEpoch me;
-  if (whichrow > -1) {
-    me = timeCol(uInt(whichrow));
-  } else {
-    Double tm;
-    table_.keywordSet().get("UTC",tm);
-    me = MEpoch(MVEpoch(tm));
-  }
-  return formatTime(me, showdate);
+  me = getEpoch(whichrow);
+  return formatTime(me, showdate, prec);
 }
 
 MEpoch Scantable::getEpoch(int whichrow) const

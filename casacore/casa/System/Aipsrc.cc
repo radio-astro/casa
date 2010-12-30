@@ -404,6 +404,7 @@ uInt Aipsrc::parse() {
     // Otherwise use CASAPATH.
     // This parse based on order HOME, AIPSROOT, AIPSHOST, AIPSSITE, AIPSARCH
     filelist = fillAips(uhome) + String("/.casarc:");
+    filelist += fillAips(uhome) + String("/.casa/rc:");
     filelist += fillAips(uhome) + String("/.aipsrc:");
     filelist += (root + String("/.aipsrc:"));
     filelist += (host + String("/aipsrc:"));

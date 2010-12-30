@@ -230,7 +230,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     {if (fieldIDs_p.nelements() <= 0) getTEN(ms); return fieldIDs_p.copy();}
     
     // Accessor for the list of the specified time range(s) as the
-    // start and end MJD values.
+    // start and end MJD values.  The time ranges are stored as columns,
+    // i.e. the output Matrix is 2 x n_ranges.
     inline Matrix<Double> getTimeList(const MeasurementSet* ms=NULL)
     {getTEN(ms); return selectedTimesList_p.copy();}
     
@@ -260,8 +261,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // was supplied as part of the expression, the value of Step is
     // replaced with the value of the defaultStep parameter. Multiple
     // channel specifications for the same Spectral Window selection,
-    // results in multiple rows in the Matrix.
-    Matrix<Int> getChanList(const MeasurementSet* ms=NULL, const Int defaultStep=1);
+    // results in multiple rows in the Matrix. If sorted==True, the
+    // rows of the output Matrix will be sorted by the SPW IDs (the
+    // entires in the first column).
+    Matrix<Int> getChanList(const MeasurementSet* ms=NULL, 
+			    const Int defaultStep=1,
+			    const Bool sorted=False);
 
     // Accessor for the list of the selected Data Description IDs.
     inline Vector<Int> getDDIDList(const MeasurementSet* ms=NULL) 

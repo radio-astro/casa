@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ImageProxy.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: ImageProxy.cc 20966 2010-09-27 09:43:20Z gervandiepen $
 
 //# Do not use automatic template instantiation.
 #define CACACORE_NO_AUTO_TEMPLATES
@@ -727,6 +727,30 @@ namespace casa { //# name space casa begins
     Record rec;
     itsCoordSys->save (rec, "x");
     return rec.subRecord("x");
+  }
+
+  Vector<Double> ImageProxy::toWorld (const Vector<Double>& pixel,
+                                      Bool reverseAxes)
+  {
+    Vector<Double> coord(pixel.size());
+    if (!reverseAxes) {
+      coord = pixel;
+    } else {
+      for (uInt i=0; i<pixel.size(); ++i) {
+        coord[i] = pixel[pixel.size()-i-1];
+      }
+    }
+    Vector<Double> world;
+    if (! itsCoordSys->toWorld (world, coord)) {
+      throw AipsError (itsCoordSys->errorMessage());
+    }
+    if (!reverseAxes) {
+      return world;
+    }
+    for (uInt i=0; i<world.size(); ++i) {
+      coord[i] = world[world.size()-i-1];
+    }
+    return coord;  
   }
 
   Record ImageProxy::imageInfo() const

@@ -53,13 +53,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       
       for(uInt k = 0; k < nInCol; ++k){
         if(!outTab.actualTableDesc().isColumn(oldColNames[k])){
-          TableDesc tabDesc;
+          //TableDesc tabDesc;
           try{
-            M::addColumnToDesc(tabDesc, M::columnType(oldColNames[k]));
-            if(tabDesc.ncolumn())                 // The tabDesc[0] is too 
-              outTab.addColumn(tabDesc[0]);       // dangerous otherwise - it 
-            else                                  // can dump core without
-              throw(AipsError("Unknown column")); // throwing an exception.
+            //M::addColumnToDesc(tabDesc, M::columnType(oldColNames[k]));
+            //if(tabDesc.ncolumn())                 // The tabDesc[0] is too 
+            //  outTab.addColumn(tabDesc[0]);       // dangerous otherwise - it 
+            //else                                  // can dump core without
+            //  throw(AipsError("Unknown column")); // throwing an exception.
+	    outTab.addColumn(inTD.columnDesc(k), false);
             ++nAdded;
           }
           catch(...){   // NOT AipsError x

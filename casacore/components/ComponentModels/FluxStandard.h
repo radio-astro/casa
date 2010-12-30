@@ -94,6 +94,9 @@ class FluxStandard
     PERLEY_TAYLOR_99,
 
     // Baars scale
+    // Baars J. W. M., Genzel R., Pauliny-Toth I. I. K., et al., 1977,
+    // A&A, 61, 99
+    // http://cdsads.u-strasbg.fr/abs/1977A%26A....61...99B
     BAARS,
 
     // Perley-Butler 2010 Scale (using VLA [not EVLA!] data)

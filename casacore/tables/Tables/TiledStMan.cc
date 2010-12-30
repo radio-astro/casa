@@ -46,6 +46,7 @@
 #include <casa/IO/AipsIO.h>
 #include <casa/OS/DOos.h>
 #include <casa/BasicMath/Math.h>
+#include <casa/System/AipsrcValue.h>
 #include <tables/Tables/DataManError.h>
 
 
@@ -1174,11 +1175,19 @@ TSMFile* TiledStMan::getFile (uInt sequenceNumber)
 
 TSMOption TiledStMan::tsmMode(uInt nrDim) const
 {
-  if (nrDim == 4) {
-    return TSMOption(TSMOption::Cache);
+  String opt;
+  AipsrcValue<String>::find (opt, "table.tsm.option", String("default"));
+  opt.downcase();
+  if(opt==String("default")){
+    if (nrDim == 4) {
+      return TSMOption(TSMOption::Cache);
+    }
+    else {
+      return TSMOption(TSMOption::MMap);
+    }
   }
-  else {
-    return TSMOption(TSMOption::MMap);
+  else{
+    return tsmOption().option();
   }
 }
 

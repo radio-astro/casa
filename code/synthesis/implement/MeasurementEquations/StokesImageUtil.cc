@@ -255,9 +255,13 @@ void StokesImageUtil::MaskFrom(ImageInterface<Float>& mask,
 			       ImageInterface<Float>& image,
 			       const Quantity& threshold) 
 {
-  
-  Double thres=threshold.get("Jy").getValue();
-  
+  MaskFrom(mask, image, threshold.get("Jy").getValue());
+}
+
+void StokesImageUtil::MaskFrom(ImageInterface<Float>& mask,
+			       ImageInterface<Float>& image,
+			       const Double thres) 
+{
   AlwaysAssert(image.ndim()==4,AipsError);
   AlwaysAssert(mask.shape()==image.shape(),AipsError);
   
@@ -291,7 +295,6 @@ void StokesImageUtil::MaskFrom(ImageInterface<Float>& mask,
       }
     }
   }
-  
 }
 
 void StokesImageUtil::MaskOnStokesI(ImageInterface<Float>& image,
@@ -488,7 +491,7 @@ try{
 	      iy(npoints) = lpsf(irow,jrow);
 	      isigma(npoints) = 1.0;
 	      ++npoints;
-	      if(npoints>(maxnpoints-1)) {
+	      if(npoints > (maxnpoints-1)) {
 		inlobe=False;
 		break;
 	      }

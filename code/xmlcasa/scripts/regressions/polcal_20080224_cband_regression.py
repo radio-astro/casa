@@ -110,19 +110,8 @@ gaincalfield = ['0137+331','2202+422','1743-038','1924-292','2136+006','2253+161
 targets = []
 
 # Assemble field strings from lists
-fieldgain = ''
-if ( len(gaincalfield) > 0 ):
-    for fn in range(len(gaincalfield)):
-        if ( fn > 0 ):
-            fieldgain += ','
-        fieldgain += gaincalfield[fn]
-
-fieldtargets = ''
-if ( len(targets) > 0 ):
-    for fn in range(len(targets)):
-        if ( fn > 0 ):
-            fieldtargets += ','
-        fieldtargets += targets[fn]
+fieldgain = ','.join(gaincalfield)
+fieldtargets = ','.join(targets)
 
 #
 # This list is used for final clean and stats

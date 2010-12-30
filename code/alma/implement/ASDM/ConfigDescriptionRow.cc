@@ -2227,7 +2227,7 @@ void ConfigDescriptionRow::assocConfigDescriptionIdFromBin(EndianISStream& eiss)
   * Returns the ConfigDescriptionRow linked to this row via the Tag stored in assocConfigDescriptionId
   * at position i.
   */
- ConfigDescriptionRow* ConfigDescriptionRow::getConfigDescription(int i) {
+ ConfigDescriptionRow* ConfigDescriptionRow::getConfigDescriptionUsingAssocConfigDescriptionId(int i) {
  	return table.getContainer().getConfigDescription().getRowByKey(assocConfigDescriptionId.at(i));
  } 
  
@@ -2235,7 +2235,7 @@ void ConfigDescriptionRow::assocConfigDescriptionIdFromBin(EndianISStream& eiss)
   * Returns the vector of ConfigDescriptionRow* linked to this row via the Tags stored in assocConfigDescriptionId
   *
   */
- vector<ConfigDescriptionRow *> ConfigDescriptionRow::getConfigDescriptions() {
+ vector<ConfigDescriptionRow *> ConfigDescriptionRow::getConfigDescriptionsUsingAssocConfigDescriptionId() {
  	vector<ConfigDescriptionRow *> result;
  	for (unsigned int i = 0; i < assocConfigDescriptionId.size(); i++)
  		result.push_back(table.getContainer().getConfigDescription().getRowByKey(assocConfigDescriptionId.at(i)));
@@ -2303,7 +2303,7 @@ void ConfigDescriptionRow::assocConfigDescriptionIdFromBin(EndianISStream& eiss)
   * Returns the AntennaRow linked to this row via the Tag stored in antennaId
   * at position i.
   */
- AntennaRow* ConfigDescriptionRow::getAntenna(int i) {
+ AntennaRow* ConfigDescriptionRow::getAntennaUsingAntennaId(int i) {
  	return table.getContainer().getAntenna().getRowByKey(antennaId.at(i));
  } 
  
@@ -2311,7 +2311,7 @@ void ConfigDescriptionRow::assocConfigDescriptionIdFromBin(EndianISStream& eiss)
   * Returns the vector of AntennaRow* linked to this row via the Tags stored in antennaId
   *
   */
- vector<AntennaRow *> ConfigDescriptionRow::getAntennas() {
+ vector<AntennaRow *> ConfigDescriptionRow::getAntennasUsingAntennaId() {
  	vector<AntennaRow *> result;
  	for (unsigned int i = 0; i < antennaId.size(); i++)
  		result.push_back(table.getContainer().getAntenna().getRowByKey(antennaId.at(i)));
@@ -2451,7 +2451,7 @@ void ConfigDescriptionRow::assocConfigDescriptionIdFromBin(EndianISStream& eiss)
   * Returns the SwitchCycleRow linked to this row via the Tag stored in switchCycleId
   * at position i.
   */
- SwitchCycleRow* ConfigDescriptionRow::getSwitchCycle(int i) {
+ SwitchCycleRow* ConfigDescriptionRow::getSwitchCycleUsingSwitchCycleId(int i) {
  	return table.getContainer().getSwitchCycle().getRowByKey(switchCycleId.at(i));
  } 
  
@@ -2459,7 +2459,7 @@ void ConfigDescriptionRow::assocConfigDescriptionIdFromBin(EndianISStream& eiss)
   * Returns the vector of SwitchCycleRow* linked to this row via the Tags stored in switchCycleId
   *
   */
- vector<SwitchCycleRow *> ConfigDescriptionRow::getSwitchCycles() {
+ vector<SwitchCycleRow *> ConfigDescriptionRow::getSwitchCyclesUsingSwitchCycleId() {
  	vector<SwitchCycleRow *> result;
  	for (unsigned int i = 0; i < switchCycleId.size(); i++)
  		result.push_back(table.getContainer().getSwitchCycle().getRowByKey(switchCycleId.at(i)));
@@ -2527,7 +2527,7 @@ void ConfigDescriptionRow::assocConfigDescriptionIdFromBin(EndianISStream& eiss)
   * Returns the DataDescriptionRow linked to this row via the Tag stored in dataDescriptionId
   * at position i.
   */
- DataDescriptionRow* ConfigDescriptionRow::getDataDescription(int i) {
+ DataDescriptionRow* ConfigDescriptionRow::getDataDescriptionUsingDataDescriptionId(int i) {
  	return table.getContainer().getDataDescription().getRowByKey(dataDescriptionId.at(i));
  } 
  
@@ -2535,7 +2535,7 @@ void ConfigDescriptionRow::assocConfigDescriptionIdFromBin(EndianISStream& eiss)
   * Returns the vector of DataDescriptionRow* linked to this row via the Tags stored in dataDescriptionId
   *
   */
- vector<DataDescriptionRow *> ConfigDescriptionRow::getDataDescriptions() {
+ vector<DataDescriptionRow *> ConfigDescriptionRow::getDataDescriptionsUsingDataDescriptionId() {
  	vector<DataDescriptionRow *> result;
  	for (unsigned int i = 0; i < dataDescriptionId.size(); i++)
  		result.push_back(table.getContainer().getDataDescription().getRowByKey(dataDescriptionId.at(i)));

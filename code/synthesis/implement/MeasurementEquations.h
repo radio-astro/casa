@@ -153,7 +153,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <linkto module="MeasurementSets">MeasurementSet</linkto>.
 // To expedite processing, we use a 
 // <linkto class="VisibilityIterator">VisibilityIterator</linkto>
-// (found in this module)
+// (found in msvis/)
 // to iterate through the MeasurementSet as needed. Setting up the
 // iterator is relatively expensive so we store the iterator
 // in a <linkto class="VisSet">VisSet</linkto> (also found in this

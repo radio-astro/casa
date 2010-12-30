@@ -48,6 +48,9 @@ using asdmIDL::CalAtmosphereRowIDL;
 
 
 
+
+
+
 #include <ArrayTime.h>
 using  asdm::ArrayTime;
 
@@ -155,7 +158,7 @@ using namespace SyscalMethodMod;
 
 
 /*\file CalAtmosphere.h
-    \brief Generated from model's revision "1.54", branch "HEAD"
+    \brief Generated from model's revision "1.55", branch "HEAD"
 */
 
 namespace asdm {
@@ -176,7 +179,7 @@ typedef void (CalAtmosphereRow::*CalAtmosphereAttributeFromBin) (EndianISStream&
 /**
  * The CalAtmosphereRow class is a row of a CalAtmosphereTable.
  * 
- * Generated from model's revision "1.54", branch "HEAD"
+ * Generated from model's revision "1.55", branch "HEAD"
  *
  */
 class CalAtmosphereRow {

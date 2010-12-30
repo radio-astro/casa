@@ -302,6 +302,48 @@ flagger::setshadowflags(const std::string& field,
     }
 }
 
+bool
+flagger::setelevationflags(const std::string& field,
+                           const std::string& spw,
+                           const std::string& array,
+                           const std::string& feed,
+                           const std::string& scan,
+                           const std::string& baseline, 
+                           const std::string& uvrange,
+                           const std::string& time, 
+                           const std::string& correlation,
+                           double lowerlimit,
+                           double upperlimit)
+{
+    try {
+	if(flagger_p) {
+	    Bool ret;
+	    ret = flagger_p->selectdata(
+		False, 
+		String(field), String(spw), String(array),
+		String(feed), String(scan), String(baseline),
+		String(uvrange), String(time), String(correlation));
+
+	    if(ret) {
+		ret = flagger_p->setmanualflags(
+		    False, False,
+		    String(""), Vector<Double>(), String(""),
+		    False, False,
+                    0.0, String("beg"), False,
+                    String("ELEVATION"), 0, lowerlimit, upperlimit);
+	    }
+	    
+	    return true;
+        }
+
+        return false;
+
+    } catch (AipsError x) {
+	*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+	RETHROW(x);
+    }
+}
+
 
 bool
 flagger::setqueryflag(const std::string& field, const std::string& spw, const std::string& array, const std::string& feed, const std::string& scan, const std::string& baseline, const std::string& uvrange, const std::string& time, const std::string& correlation,const std::string& what, const double fractionthreshold, const int nflagsthreshold, const bool morethan)

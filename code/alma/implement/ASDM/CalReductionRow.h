@@ -48,6 +48,9 @@ using asdmIDL::CalReductionRowIDL;
 
 
 
+
+
+
 #include <ArrayTime.h>
 using  asdm::ArrayTime;
 
@@ -90,7 +93,7 @@ using namespace InvalidatingConditionMod;
 
 
 /*\file CalReduction.h
-    \brief Generated from model's revision "1.54", branch "HEAD"
+    \brief Generated from model's revision "1.55", branch "HEAD"
 */
 
 namespace asdm {
@@ -105,7 +108,7 @@ typedef void (CalReductionRow::*CalReductionAttributeFromBin) (EndianISStream& e
 /**
  * The CalReductionRow class is a row of a CalReductionTable.
  * 
- * Generated from model's revision "1.54", branch "HEAD"
+ * Generated from model's revision "1.55", branch "HEAD"
  *
  */
 class CalReductionRow {

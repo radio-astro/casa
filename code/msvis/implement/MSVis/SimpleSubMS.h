@@ -73,7 +73,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //Die...die
   ~SimpleSubMS();
   // In this form whichDataCol gets passed to parseColumnNames().
-  virtual MeasurementSet* makeMemSubMS(const MS::PredefinedColumns& datacol);
+  virtual MeasurementSet* makeMemSubMS(const MS::PredefinedColumns& datacol, const String& diskname=String(""));
   
 
 
