@@ -172,6 +172,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       useDoubleGrid_p=other.useDoubleGrid_p;
       cfStokes_p = other.cfStokes_p;
       polInUse_p = other.polInUse_p;
+      cfs_p = other.cfs_p;
+      cfwts_p = other.cfwts_p;
     };
     return *this;
   };
