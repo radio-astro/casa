@@ -71,7 +71,7 @@ public:
   Bool setmask(Matrix<Float> & mask);
  
   // Run the minor cycle
-  Int mtclean();
+  Int mtclean(Int maxniter, Float stopfraction, Float inputgain, Float userthreshold);
 
   // Output : Model images
   Bool getmodel(int order, Matrix<Float> & model);
@@ -110,11 +110,18 @@ private:
   Int nscales_p; // Number of scales to use for the multiscale part.
   Int nx_p;
   Int ny_p;
-  Int totalIters_p;
+  Int totalIters_p; // Total number of minor-cycle iterations
   Float globalmaxval_p;
   Int maxscaleindex_p;
   IPosition globalmaxpos_p;
-  
+  Int itercount_p; // Number of minor cycle iterations
+  Int maxniter_p;
+  Float stopfraction_p;
+  Float inputgain_p;
+  Float userthreshold_p;
+  Float prev_max_p;
+  Float min_max_p;
+
   Vector<Float> scaleSizes_p; // Vector of scale sizes in pixels.
   Vector<Float> scaleBias_p; // Vector of scale biases !!
   Vector<Float> totalScaleFlux_p; // Vector of total scale fluxes.
@@ -184,7 +191,7 @@ private:
   Int chooseComponent(Int ntaylor,Int scale, Int criterion);
   Int updateModelAndRHS(Float loopgain);
   Int updateRHS(Int ntaylor, Int scale, Float loopgain,Vector<Float> coeffs, IPosition blc, IPosition trc, IPosition blcPsf, IPosition trcPsf);
-  Int checkConvergence(Int updatetype, Float thresh, Float fluxlimit); 
+  Int checkConvergence(Int updatetype, Float &fluxlimit, Float &loopgain); 
 
   // Helper functions
   Int writeMatrixToDisk(String imagename, Matrix<Float> &themat);

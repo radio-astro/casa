@@ -281,8 +281,9 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
            interactive vs non-interactive use (user specified total niter, vs niters per 
            major cycle...) is a bit of a mess. Needs cleanup. Right now, hard-coded for
            nfields=1 */
+        previous_maxresidual_p=1e+10;
 	Int index=0;
-        Float cyclethreshold=0.0;
+        Float fractionOfPsf=0.1;
         Int iterationcount=0;
         Int moreiterations=0;
         Int thiscycleniter=0;
@@ -294,16 +295,22 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	  for(Int thismodel=0;thismodel<nfields_p;thismodel++) // For now, nfields_p=1 always.
 	    {
              /* Compute stopping threshold for this major cycle */
-             stopflag = computeFluxLimit(thismodel,cyclethreshold);
+             stopflag = computeFluxLimit(thismodel,fractionOfPsf);
 	     /* If the peak residual is already less than the user-threshold, stop */
              if(stopflag==1) break;
+             /* If we detect divergence across major cycles, stop */
+             if(stopflag==-1) break;
              /* Number of iterations left to do */ 
              moreiterations = numberIterations() - iterationcount;
              /* If all iterations are done for this run, stop */
              if(moreiterations <=0 ) {stopflag=-1;break;}
              
              /* Send in control parameters */
-             lc_p[thismodel].setcontrol(CleanEnums::MULTISCALE, moreiterations, gain(), Quantity(cyclethreshold,"Jy"));
+	     ///////          lc_p[thismodel].setcontrol(CleanEnums::MULTISCALE, moreiterations, gain(), Quantity(cyclethreshold,"Jy"));
+
+             // cyclethreshold = fractionOfPsf... use this ro get fluxlimit internally, and set max loop gain to 1-this...
+             // ignoring user-specified loop gain.
+             //lc_p[thismodel].setcontrol(CleanEnums::MULTISCALE, moreiterations, cyclethreshold, Quantity(threshold(),"Jy"));
 		
 	     /* Send in the current model and residual */
 	     for (Int order=0;order<ntaylor_p;order++)
@@ -324,12 +331,14 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 
 	     /* Deconvolve */
              /* Return value is the number of minor-cycle iterations done */
-	     thiscycleniter = lc_p[thismodel].mtclean();
+	     thiscycleniter = lc_p[thismodel].mtclean(moreiterations, fractionOfPsf, gain(), threshold());
 
              /* A signal for a singular Hessian : stop */
              if(thiscycleniter==-2) { stopflag=-2; break;}
              /* A signal for convergence with no iterations  */
              if(thiscycleniter==0) { stopflag=1; break; }
+	     /* A signal for divergence. Stop with previous model. */
+             if(thiscycleniter==-1) { stopflag=1; break; }
 
              /* Increment the minor-cycle iteration counter */
              iterationcount += thiscycleniter;
@@ -394,12 +403,12 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
               TODO : Perhaps move this function back into MTMC. 
                           (It was brought out to conform to the other devonvolvers..)
 */
-Float WBCleanImageSkyModel::computeFluxLimit(Int model,Float &cyclethreshold)
+Float WBCleanImageSkyModel::computeFluxLimit(Int model,Float &fractionOfPsf)
 {
   LogIO os(LogOrigin("WBCleanImageSkyModel", "computeFluxLimit", WHERE));
   Float maxres=0.0,maxval=0.0,minval=0.0;
 
-  /* Measure the peak residual */
+   /* Measure the peak residual */
   Float index = getModelIndex(model,0);
   Array<Float> tempArr;
   (residual(index)).get(tempArr,True);
@@ -414,19 +423,27 @@ Float WBCleanImageSkyModel::computeFluxLimit(Int model,Float &cyclethreshold)
       return 1;
   }
 
+  /* If we detect divergence across major cycles, STOP */
+  if(maxres > previous_maxresidual_p)
+  {
+    os << "Peak residual : " << maxres << " has increased across major cycles => divergence. Stopping." << LogIO::POST;
+    return -1;
+  }
+  previous_maxresidual_p = maxres;
+
   /* Find PSF sidelobe level */
   /* abs(min of the PSF) will be treated as the max sidelobe level */
   (PSF(index)).get(tempArr,True);
   minMax(minval,maxval, minpos, maxpos,tempArr);
 
-  Float fractionOfPsf = min(cycleMaxPsfFraction_p, cycleFactor_p * abs(minval));
+  fractionOfPsf = min(cycleMaxPsfFraction_p, cycleFactor_p * abs(minval));
   if(fractionOfPsf>0.8) fractionOfPsf=0.8;
-  cyclethreshold = max(threshold(), fractionOfPsf * maxres);
+  // cyclethreshold = max(threshold(), fractionOfPsf * maxres);
 
   // if(adbg) 
     {
-       os << "Max Residual : " << maxres << "  Max PSF Sidelobe : " << abs(minval) << "  User Threshold : " << threshold()  <<  " User maxPsfFraction : " << cycleMaxPsfFraction_p  << "  User cyclefactor : " << cycleFactor_p << "  fractionOfPsf = max(maxPsfFraction, PSFsidelobe x cyclefactor) : " << fractionOfPsf << LogIO::POST;
-       os << "Stopping threshold for this major cycle min(user threshold , fractionOfPsf x Max Residual) : " <<  cyclethreshold  << endl;
+       os << "Peak Residual : " << maxres  << "  User Threshold : " << threshold() << "  Max PSF Sidelobe : " << abs(minval) <<  " User maxPsfFraction : " << cycleMaxPsfFraction_p  << "  User cyclefactor : " << cycleFactor_p << "  fractionOfPsf = max(maxPsfFraction, PSFsidelobe x cyclefactor) : " << fractionOfPsf << LogIO::POST;
+       //    os << "Stopping threshold for this major cycle min(user threshold , fractionOfPsf x Max Residual) : " <<  cyclethreshold  << endl;
     }
 
   return 0;

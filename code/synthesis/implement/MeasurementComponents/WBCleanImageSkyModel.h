@@ -147,6 +147,7 @@ private:
   Int nx,ny;
 
   Int numbermajorcycles_p;
+  Float previous_maxresidual_p;
   
   // Memory to be allocated per TempLattice
   Double memoryMB_p;
@@ -165,7 +166,7 @@ private:
   Int makeSpectralPSFs(SkyEquation& se);
    //Int addTo(Lattice<Float>& to, const Lattice<Float>& add, Float multiplier);
   Int writeResultsToDisk();
-  Float computeFluxLimit(Int model, Float &cyclethreshold);
+  Float computeFluxLimit(Int model, Float &fractionOfPsf);
   
   Timer tmr1,tmr2;
   Int adbg;
