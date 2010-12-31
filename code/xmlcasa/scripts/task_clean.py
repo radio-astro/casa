@@ -84,16 +84,18 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                                       ftmachine);
 
         casalog.post("FTMachine used is  %s "%localFTMachine)
-        
+       
+         
         #some default value handling for channelization
         if (mode=='velocity' or mode=='frequency' or mode=='channel'):
-            (localnchan, localstart, localwidth)=imset.setChannelization(mode,spw,field,nchan,start,width,outframe,veltype,restfreq)
+            #(localnchan, localstart, localwidth)=imset.setChannelization(mode,spw,field,nchan,start,width,outframe,veltype,restfreq)
+            (localnchan, localstart, localwidth)=imset.setChannelizeDefault(mode,spw,field,nchan,start,width,outframe,veltype,phasecenter, restfreq)
         else:
             imset.setspecframe(spw)
             localnchan=nchan
             localstart=start
             localwidth=width
-
+        print "localcalnchan,localstart,localwidth=",localnchan, localstart, localwidth
         #setup for 'per channel' clean
         dochaniter=False
         #if interactive and chaniter:
@@ -112,20 +114,23 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                                     phasecenter, restfreq, stokes, weighting,
                                     robust, uvtaper, outertaper, innertaper, modelimage, 
                                     restoringbeam, calready, noise, npixels, padding)
-
+            print "DONE making template cube."
             nchaniter=localnchan
             # check nchan in templatecube
             ia.open(imagename+'.image')
             if localnchan > ia.shape()[3]:
                 nchaniter = ia.shape()[3]
             ia.close()
+            print "imagename, nchaniter=",imagename, nchaniter
             finalimagename=imagename
             if type(finalimagename)==str:
                 finalimagename=[finalimagename]
             imset.finalimages=finalimagename
             # move the following to a helper func.
             # create a temporary directory to put channel images
+            print "calling initChaniter.."
             (freqs,finc,newmode,tmppath)=imset.initChaniter(localnchan,spw,localstart,localwidth,finalimagename,mode)
+            print "DONE calling initChaniter.."
             mode=newmode
         else:
             nchaniter=1
@@ -137,8 +142,8 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
 
                 print "Processing channel %s of %s" % (j+1, nchaniter)
                 casalog.post("Processing channel %s of %s"% (j+1, nchaniter))
-                #chaniterParms=imset.setChaniterParms(finalimagename,spw,j,localstart,localwidth,freqs,finc,tmppath)
-                chaniterParms=imset.setChaniterParms(finalimagename,spw,j,localstart,width,freqs,finc,tmppath)
+                chaniterParms=imset.setChaniterParms(finalimagename,spw,j,localstart,localwidth,freqs,finc,tmppath)
+                ##chaniterParms=imset.setChaniterParms(finalimagename,spw,j,localstart,width,freqs,finc,tmppath)
                 imagename=chaniterParms['imagename']
                 imnchan=chaniterParms['imnchan']
                 chanslice=chaniterParms['chanslice']
@@ -220,6 +225,14 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                          calready=calready, nchan=visnchan,
                          start=visstart, width=1)
 
+            # FOR Clean chan params check
+            print "Python clean channelization setup"
+            print "start (imstart)=", imstart
+            print "width (localwidth) =", localwidth
+            print "nchan (imnchan) =", imnchan
+            print "spw =", spw
+           
+ 
             imset.definemultiimages(rootname=rootname, imsizes=imsizes,
                                     cell=cell, stokes=stokes, mode=mode,
                                     spw=spw, nchan=imnchan, start=imstart,
@@ -444,6 +457,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
             maskimg = mask
             if mask == True:
                 maskimg = minpb
+
             if ((len(maskimage) == 0 or maskimage[0] == '') and
                 isinstance(maskimg, float) and maskimg > 0.0 and maskimg < 1.0
                 # and imagermode == 'mosaic'
