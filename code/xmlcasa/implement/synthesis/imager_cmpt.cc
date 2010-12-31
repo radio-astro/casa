@@ -1284,38 +1284,7 @@ imager::defineimage(const int nx, const int ny, const ::casac::variant& cellx,
   }
   return rstat;
 }
-// added a test method (TT)
-/*** this is not needed 
-bool 
-imager::setimfreqs(const std::vector<int>& spwids, const std::vector<int>& fieldids,
-              const std::string& obstime, const std::string& mode,
-              const int nchan,
-              const ::casac::variant& start,
-              const ::casac::variant& width,
-              const ::casac::variant& phasec,
-              const ::casac::variant& restfreq,
-              const std::string& outframe,
-              const std::string& veltype
-              )
-{
-  Bool rstat(False);
-  if(hasValidMS_p){
-    try {   
-      std::vector<double> newfreqs;
-      ms itsms;
-      newfreqs=itsms.cvelfreqs(spwids,fieldids,obstime,mode,nchan,start,width,phasec,restfreq,outframe,veltype); 
-      itsImager->setGridFreqs(Vector<Double>(newfreqs));
 
-    } catch  (AipsError x) {
-      *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-      RETHROW(x);
-    }    
-  } else {
-    *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open or selectvis" << LogIO::POST;
-  }
-  return rstat;
-}
-**/
 
 
 bool

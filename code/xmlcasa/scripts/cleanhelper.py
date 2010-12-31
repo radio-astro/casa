@@ -335,11 +335,13 @@ class cleanhelper:
                 else: 
                   # multi-mses case: use first vis that has the specified field
                   # (use unsorted vis list)
-                  for i in range(len(self.vis)):
-                    if type(field)!=list:
-                      field=[field]
-                    try: 
-                      self.im.selectvis(vis=self.vis[i],field=field)
+                  nvis=len(self.vis)
+                  for i in range(nvis):
+                    #if type(field)!=list:
+                    #  field=[field]
+                    try:
+                      selparam=self._selectlistinputs(nvis,i,self.paramlist)
+                      self.im.selectvis(vis=self.vis[i],field=selparam['field'],spw=selparam['spw'])
                     except:
                       pass
 
@@ -867,7 +869,7 @@ class cleanhelper:
     def _selectlistinputs(self,nvis,indx,params):
         """
         A little private function to do selection and checking for a parameter 
-        given in list param should be string or list of strings.
+        given in list of strings.
         It checks nelement in each param either match with nvis or nelement=1
         (or a string) otherwise exception is thrown. 
         """
@@ -1527,6 +1529,7 @@ class cleanhelper:
         else:
             fldid0=fldinds[0]
         if restf=='':
+            #tb.open(self.vis+'/FIELD')
             tb.open(self.vis[self.sortedvisindx[0]]+'/FIELD')
             nfld = tb.nrows()
             if nfld >= fldid0:
@@ -2179,12 +2182,8 @@ class cleanhelper:
             ia.open(imagename[0]+'.image')
             imcsys=ia.coordsys().torecord()
             ia.close()
-            if imcsys['spectral2'].has_key('tabular'):
-              key='tabular'
-            else:
-              key='wcs'
-            cdelt=imcsys['spectral2'][key]['cdelt']
-            crval=imcsys['spectral2'][key]['crval']
+            cdelt=imcsys['spectral2']['wcs']['cdelt']
+            crval=imcsys['spectral2']['wcs']['crval']
             for i in range(nchan):
                 if i==0: freqs.append(crval)
                 freqs.append(freqs[-1]+cdelt)
@@ -2331,8 +2330,6 @@ class cleanhelper:
         visnchan=-1
         retparms['visnchan']=visnchan
         visstart=0
-        print "setChaniterparm:: start=",start
-        print "setChaniterparm:: width=",width
 
         if type(start)==int:
             # need to convert to frequencies
@@ -2416,137 +2413,6 @@ class cleanhelper:
             if os.path.exists(dir):
                shutil.rmtree(dir)
 
-    def setChannelizeDefault(self,mode,spw,field,nchan,start,width,frame,veltype,phasec, restf,obstime=''):
-    #def setChannelization(self,mode,spw,field,nchan,start,width,frame,veltype,restf):
-        """
-        Determine appropriate values for channelization
-        parameters when default values are used
-        for mode='velocity' or 'frequency' or 'channel'
-        This replaces setChannelization and make use of ms.cvelfreqs.
-        """
-        tb.open(self.vis[self.sortedvisindx[0]]+'/SPECTRAL_WINDOW')
-        chanfreqscol=tb.getvarcol('CHAN_FREQ')
-        chanwidcol=tb.getvarcol('CHAN_WIDTH')
-        spwframe=tb.getcol('MEAS_FREQ_REF');
-        tb.close()
-
-        # first parse spw parameter:
-        # use MSSelect if possible
-        #ms.open(self.vis)
-        if len(self.sortedvislist) > 0:
-          invis = self.sortedvislist[0]
-        else:
-          invis = self.vis[0]
-        ms.open(invis)
-        if spw in ('-1', '*', '', ' '):
-          spw='*'
-        if type(spw)==list:
-          spw=spw[invis]
-        if field=='':
-          field='*'
-        mssel=ms.msseltoindex(vis=invis, spw=spw, field=field)
-        selspw=mssel['spw']
-        selfield=mssel['field']
-
-        # frame
-        spw0=selspw[0]
-        chanfreqs=chanfreqscol['r'+str(spw0+1)].transpose()
-        chanres = chanwidcol['r'+str(spw0+1)].transpose()
-
-        # set dataspecframe:
-        elspecframe=["REST",
-                     "LSRK",
-                     "LSRD",
-                     "BARY",
-                     "GEO",
-                     "TOPO",
-                     "GALACTO",
-                     "LGROUP",
-                     "CMB"]
-        self.dataspecframe=elspecframe[spwframe[spw0]];
-
-        # set usespecframe:  user's frame if set, otherwise data's frame
-        if(frame != ''):
-            self.usespecframe=frame
-        else:
-            self.usespecframe=self.dataspecframe
-
-        # width handling
-        if mode!='channel':
-          if width==1:
-             width=''
-         
-        #get restfreq
-        if restf=='':
-          tb.open(invis+'/FIELD')
-          nfld=tb.nrows()
-          try:
-            if nfld >= selfield[0]:
-              srcid=tb.getcell('SOURCE_ID',selfield[0])
-            else:
-              raise TypeError, ("Cannot set REST_FREQUENCY from the data: "+
-                 "no SOURCE corresponding field ID=%s, please supply restfreq" % selfield[0])
-          finally:
-            tb.close()
-          #SOUECE_ID in FIELD table = -1 if no SOURCE table
-          if srcid==-1:
-            if self.usespecframe!=self.dataspecframe:
-              raise TypeError, "Rest frequency info is not supplied"
-          try:
-            tb.open(invis+'/SOURCE')
-            tb2=tb.query('SOURCE_ID==%s' % srcid)
-            nsrc = tb2.nrows()
-            if nsrc > 0:
-              restf=str(tb2.getcell('REST_FREQUENCY',0)[0])+'Hz'
-            else:
-              if self.usespecframe!=self.dataspecframe:
-                raise TypeError, ("Cannot set REST_FREQUENCY from the data: "+
-                 " no SOURCE corresponding field ID=%s, please supply restfreq" % selfield[0])
-          finally:
-            tb.close()
-            tb2.close()
-       
-        if nchan==1: 
-          # use data chan freqs
-          newfreqs=chanfreqs
-        else:
-          # obstime not included here
-          newfreqs=ms.cvelfreqs(spwids=selspw,fieldids=selfield,mode=mode,nchan=nchan,
-                              start=start,width=width,phasec=phasec, restfreq=restf,
-                              outframe=frame,veltype=veltype)
-        ms.close()
-        if nchan ==1:
-          retnchan=1
-        else:
-          retnchan=len(newfreqs)
-        if start!="":
-          retstart=start
-        else:
-          # default cases
-          if mode=="frequency":
-            retstart=str(newfreqs[0])+'Hz'
-          elif mode=="velocity":
-            startfreq=str(newfreqs[-1])+'Hz'
-            retstart=self.convertvf(startfreq,frame,field,restf,veltype)
-          elif mode=="channel":
-            retstart=0
-        if width!="":
-          retwidth=width
-        else:
-          if nchan==1:
-            finc = chanres[0]
-          else:
-            finc = newfreqs[1]-newfreqs[0]
-          if mode=="frequency":
-            retwidth=str(finc)+'Hz'
-          elif mode=="velocity":
-            v1 = self.convertvf(str(newfreqs[-1])+'Hz',self.dataspecframe,field,restf,veltype=veltype)
-            v0 = self.convertvf(str(newfreqs[-2])+'Hz',self.dataspecframe,field,restf,veltype=veltype)
-            retwidth = str(qa.quantity(qa.sub(qa.quantity(v0),qa.quantity(v1)))['value'])+'m/s'
-          else:
-            retwidth=1
-        return retnchan, retstart, retwidth
-        
 
 def getFTMachine(gridmode, imagermode, mode, wprojplanes, userftm):
     """
