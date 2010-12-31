@@ -153,6 +153,8 @@ Bool MultiTermMatrixCleaner::initialise(Int nx, Int ny)
   setupScaleFunctions();
 
   totalIters_p=0;
+  prev_max_p = 1e+10;
+  min_max_p = 1e+10;
 
   if(adbg) os << "Finished initializing MultiTermMatrixCleaner" << LogIO::POST;
   return True;
@@ -167,6 +169,8 @@ Bool MultiTermMatrixCleaner::setpsf(int order, Matrix<Float> & psf)
         // The FT'd matrix is reshaped automatically.
 	fftcomplex.fft0(vecPsfFT_p[order],psf,False);
         //fftcomplex.flip(vecPsfFT_p[order],False,False);
+	//        Matrix<Float> temp(real(vecPsfFT_p[order]));
+	//        writeMatrixToDisk("psfFT_"+String::toString(order), temp);
         return True;
 }
 
@@ -227,18 +231,25 @@ Bool MultiTermMatrixCleaner::getinvhessian(Matrix<Double> & invhessian)
 }
 
 /* Do the deconvolution */
-Int MultiTermMatrixCleaner::mtclean()
+Int MultiTermMatrixCleaner::mtclean(Int maxniter, Float stopfraction, Float inputgain, Float userthreshold)
 {
   LogIO os(LogOrigin("MultiTermMatrixCleaner", "mtclean()", WHERE));
   if(adbg)os << "SOLVER for Multi-Frequency Synthesis deconvolution" << LogIO::POST;
 
   /* Initialize some variables */  
+
+ maxniter_p = maxniter;
+ stopfraction_p=  stopfraction;
+ inputgain_p=inputgain;
+ userthreshold_p=userthreshold;
+
+
   Int convergedflag = 0;
   Float fluxlimit = -1;
-  Float loopgain = itsGain;
-  Float thresh = itsThreshold.getValue("Jy");
-  Int criterion=5;
-  Int itercount=0;
+  Float loopgain = 0.5; 
+  if(inputgain>0) loopgain=inputgain;
+  Int criterion=5; // This chooses among a list of 'penalty functions'
+  itercount_p=0;
  
   /* Compute all convolutions and the matrix A */
   /* If matrix is not invertible, return ! */
@@ -255,15 +266,16 @@ Int MultiTermMatrixCleaner::mtclean()
   computeRHS();
 
   /* Check if peak RHS is already less than the threshold */
-  convergedflag = checkConvergence(criterion,thresh,fluxlimit);
-  if(convergedflag) return 0;
+  /* This step computes the flux limit also - when called here... */
+  convergedflag = checkConvergence(criterion,fluxlimit,loopgain);
+  if(convergedflag==1) return 0;
   
   /* Compute the flux limits that determine the depth of the minor cycles. */
-  computeFluxLimit(fluxlimit,thresh);
+  //  computeFluxLimit(fluxlimit,thresh);
   
  /********************** START MINOR CYCLE ITERATIONS ***********************/
   os << "Doing deconvolution iterations..." << LogIO::POST;
-  for(itercount=0;itercount<itsMaxNiter;itercount++)
+  for(itercount_p=0;itercount_p<maxniter_p;itercount_p++)
   {
       globalmaxval_p=-1e+10;
       Int scale=0;
@@ -296,13 +308,13 @@ Int MultiTermMatrixCleaner::mtclean()
       
         /* Increment iteration count */
         totalIters_p++;
-    
+  
         /* Check for convergence */
-        convergedflag = checkConvergence(criterion,thresh,fluxlimit);
+        convergedflag = checkConvergence(criterion,fluxlimit,loopgain);
 
 	/* Reached stopping threshold for this major cycle */
         /* Break out of minor-cycle loop, but signal that major cycles should continue */
-       if(convergedflag == 1)
+       if(convergedflag)
         {
           break;
         }
@@ -313,6 +325,12 @@ Int MultiTermMatrixCleaner::mtclean()
       os << "Reached max number of iterations for this minor cycle " << LogIO::POST;
     }
 
+  /* returning because of non-convergence */
+  if(convergedflag == -1)
+    {
+      return(-1);
+    }
+  
   /********************** END MINOR CYCLE ITERATIONS ***********************/		
   
   /* Print out flux counts so far */
@@ -330,9 +348,9 @@ Int MultiTermMatrixCleaner::mtclean()
   /* Write out the multiscale model images - to disk */ 
   //  for(Int scale=0;scale<nscales_p;scale++)
   //  writeMatrixToDisk("modelimage_scale_"+String::toString(scale) , vecScaleModel_p[scale]);
-  
+
   /* Return the number of minor-cycle iterations completed in this run */
-  return(itercount+1);
+  return(itercount_p+1);
 }
 
 /* Indexing Rules... */
@@ -837,7 +855,9 @@ Int MultiTermMatrixCleaner::computeFluxLimit(Float &fluxlimit, Float threshold)
   // LogIO os(LogOrigin("MultiTermMatrixCleaner", "computeFluxLimit", WHERE));
 
   // For now, since this calculation is being done outside.....
-  fluxlimit = threshold;
+    fluxlimit = threshold;
+
+    /// fluxlimit = MAX(threshold , itsGain * max....
 
   // Later, implement the equivalent of an iteration-based cycle-speedup - if required.
 
@@ -958,6 +978,20 @@ Int MultiTermMatrixCleaner::chooseComponent(Int ntaylor, Int scale, Int criterio
 
        }
        break;
+     case 6 : /* chi-square for this scale = sum of abs of residual images for taylor terms */
+       {
+
+	 /// Code block using pre-allocated matrices
+	        vecWork_p[scale] = 0.0;
+                for(Int taylor1=0;taylor1<ntaylor;taylor1++)
+                {
+		  vecWork_p[scale] = vecWork_p[scale] + (  abs(matR_p[IND2(taylor1,scale)])  );
+                }
+                findMaxAbsMask(vecWork_p[scale],vecScaleMasks_p[scale],maxScaleVal_p[scale],maxScalePos_p[scale]);
+		
+
+       }
+       break;
      default:
        os << LogIO::SEVERE << "Internal error : Unknown option for type of update direction" << LogIO::POST;
      }
@@ -1072,7 +1106,7 @@ Int MultiTermMatrixCleaner::updateModelAndRHS(Float loopgain)
 }/* end of updateModelAndRHS() */
 
 /* ................ */
-Int MultiTermMatrixCleaner::checkConvergence(Int criterion, Float thresh, Float fluxlimit)
+Int MultiTermMatrixCleaner::checkConvergence(Int criterion, Float &fluxlimit, Float &loopgain)
 {
     Float rmaxval=0.0;
     
@@ -1086,11 +1120,56 @@ Int MultiTermMatrixCleaner::checkConvergence(Int criterion, Float thresh, Float 
     
     /* Check for convergence */
     Int convergedflag = 0;
-    if( fabs(rmaxval) < thresh ) 
+    if( fabs(rmaxval) < MAX(userthreshold_p,fluxlimit) ) 
     {
       os << "Reached stopping threshold at iteration " << totalIters_p << ". Peak residual " << fabs(rmaxval) << LogIO::POST;
        convergedflag=1; 
     }
+
+    /* Levenberg-Macquart-like change in step size */
+   if(itercount_p>1 && inputgain_p<=0)
+   { 
+     
+	if (globalmaxval_p < prev_max_p) 
+            loopgain = loopgain * 1.5;
+        else 
+            loopgain = loopgain / 1.5;
+
+        loopgain = MIN((1-stopfraction_p),loopgain);
+        loopgain = MIN(0.6,loopgain);
+        
+        /* detect divergence by approximately 10 consecutive increases in maxval */
+        if(loopgain < 0.01)
+   	{
+	  os << "Not converging any more. May be diverging. Stopping minor cycles at iteration " << totalIters_p << ". Peak residual " << fabs(rmaxval) << LogIO::POST;
+          convergedflag=-1; 
+	 }
+     
+    /* Stop if there is divergence : 200% increase from the current minimum value */
+    if( abs(  (min_max_p-globalmaxval_p)/min_max_p ) > 2 )
+      {
+	os << "Diverging.... Stopping minor cycles at iteration " << totalIters_p << ". Peak residual " << fabs(rmaxval) << " Max: " << globalmaxval_p << LogIO::POST;
+        convergedflag=-1;
+      }
+
+    // Stop if the maxval has changed by less than 5% in 5 iterations 
+    // --- this is similar to saying less than 1% change per iteration.... same as a loopgain < 0.01 
+	
+	//	if( abs(prev5_max - globalmaxval_p) < 0.01*abs(prev5_max) )
+	//  { 
+        //    os << "Not converging any more. Flattening out. Stopping minor cycles at iteration " << totalIters_p << ". Peak residual " << fabs(rmaxval) << LogIO::POST;
+        //    convergedflag=-1;
+	//  }
+
+
+	
+    }// end of if(itercount_p>1)
+
+    /* Store current max value - to use in the next iteration */    
+    prev_max_p = globalmaxval_p;
+    //    if(itercount_p%5 == 0) 
+    //     prev5_max=globalmaxval_p;
+    min_max_p = MIN(min_max_p,abs(globalmaxval_p));
 
     /* Stop, if there are negatives on the largest scale in the Io image */
     //if(nscales_p>1 && maxscaleindex_p == nscales_p-2)
@@ -1103,14 +1182,18 @@ Int MultiTermMatrixCleaner::checkConvergence(Int criterion, Float thresh, Float 
     /* Print out coefficients for a few iterations */
     if(fluxlimit==-1) 
     {
-        os << "Peak convolved residual : " << rmaxval << "    Minor cycle stopping threshold : " << itsThreshold.getValue("Jy")  << LogIO::POST;
+         fluxlimit = rmaxval * stopfraction_p;
+	 //        os << "Peak convolved residual : " << rmaxval << "    Minor cycle stopping threshold : " << itsThreshold.getValue("Jy")  << LogIO::POST;
+        os << "Peak convolved residual : " << rmaxval << "    Minor cycle stopping threshold : " << fluxlimit  << LogIO::POST;
     }
     else
     {
-      if( totalIters_p==itsMaxNiter || adbg || totalIters_p%(MIN(itsMaxNiter/5,20))==0 )
+      ////      if( totalIters_p==maxniter_p || adbg || totalIters_p%(MIN(maxniter_p/5,20))==0 )
+      if( totalIters_p==maxniter_p || totalIters_p%(MIN(maxniter_p/5,20))==0 )
        {
 	 
 	    os << "[" << totalIters_p << "] Res: " << rmaxval << " Max: " << globalmaxval_p;
+            os << " Gain: " << loopgain;
 	     ////        os << "[" << totalIters_p << "] Res: " << rmaxval;
 	    //os << "[" << totalIters_p << "] Max: " << globalmaxval_p;
             os << " Pos: " <<  globalmaxpos_p << " Scale: " << scaleSizes_p[maxscaleindex_p];
@@ -1123,7 +1206,7 @@ Int MultiTermMatrixCleaner::checkConvergence(Int criterion, Float thresh, Float 
             os << LogIO::POST;
         }
     }
- 
+
     return convergedflag;
 
 }/* end of checkConvergence */
