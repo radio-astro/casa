@@ -238,7 +238,9 @@ measures::direction(const std::string& rf, const ::casac::variant& v0, const ::c
     }
     MDirection d(q0,q1);
     if (!d.setRefString(rf)) {
-      *itsLog << LogIO::WARN << "Illegal reference frame string.  Reference string set to DEFAULT" << LogIO::POST;
+      *itsLog << LogIO::WARN
+	      << "Illegal reference frame string.  Reference string set to DEFAULT"
+	      << LogIO::POST;
     }
 
     Record *pOff = toRecord(off);
@@ -458,6 +460,44 @@ measures::comettopo()
     *itsLog << LogIO::SEVERE << "Exception Reports: " << x.getMesg() << LogIO::POST;
   }
   return recordFromQuantity(Quantum<Vector<Double> >(retval,unit));
+}
+
+// Get the distance of the current comet
+::casac::record* measures::cometdist()
+{
+  casa::Quantity retval(-1.0, "AU");	// Default to absurdity.
+  String unit("");
+
+  try {
+    if(pcomet_p){
+      MVPosition relpos;
+      //String error;
+
+      // MeasureHolder out;
+      // MeasureHolder in(relpos);
+      // if(!measures::measure(error, out, in, "COMET")){
+      // 	error += String ("Non-measure type offset in measure conversion\n");
+      // 	*itsLog << LogIO::WARN << error << LogIO::POST;
+      // 	error = "";
+      // 	return retval;
+      // }
+      
+      if(pcomet_p->get(relpos,
+		       dynamic_cast<const MEpoch *>(frame_p->epoch())->get("d").getValue())){
+	retval = relpos.getLength("AU");
+      }
+      else{
+	*itsLog << LogIO::SEVERE
+		<< "cometdist:  "
+		<< "No comet table with a distance for the right time present."
+		<< LogIO::POST;
+      }
+    }
+  }
+  catch(AipsError(x)){
+    *itsLog << LogIO::SEVERE << "Exception reported: " << x.getMesg() << LogIO::POST;
+  }
+  return recordFromQuantity(retval);
 }
 
 // set a comet frame
