@@ -704,6 +704,40 @@ class split_test_blankov(unittest.TestCase):
         myf['__rethrow_casa_exceptions'] = original_throw_pref
         assert not splitran
 
+class split_test_almapol(unittest.TestCase):
+    """
+    Check that correlations can be selected when WVR data is in spw 0.
+    """
+    inpms = datapath + 'unittest/split/ixxxyyxyy.ms'
+    outms = 'xxyyspw1_3.ms'
+
+    def setUp(self):
+        try:
+            shutil.rmtree(self.outms, ignore_errors=True)
+        except Exception, e:
+            print "Error in rm -rf", self.outms
+            raise e
+
+    def tearDown(self):
+        shutil.rmtree(self.outms, ignore_errors=True)
+
+    def test_almapol(self):
+        """
+        Can we select corrs when WVR data is in spw 0?
+        """
+        splitran = False
+        try:
+            splitran = split(self.inpms, self.outms, datacolumn='data',
+                             field='', spw='1~3', width=1,
+                             antenna='',
+                             timebin='0s', timerange='',
+                             scan='', array='', uvrange='',
+                             correlation='xx,yy', async=False)
+        except Exception, e:
+            splitran = False
+            print "Error running split:", e
+        assert os.path.isdir(self.outms)
+
 class split_test_unorderedpolspw(SplitChecker):
     """
     Check spw selection from a tricky MS.
@@ -936,5 +970,6 @@ class split_test_tav_then_cvel(SplitChecker):
 def suite():
     return [split_test_tav, split_test_cav, split_test_cst, split_test_state,
             split_test_singchan, split_test_unorderedpolspw, split_test_blankov,
-            split_test_tav_then_cvel, split_test_genericsubtables, split_test_chanwidth]
+            split_test_tav_then_cvel, split_test_genericsubtables,
+            split_test_chanwidth, split_test_almapol]
     
