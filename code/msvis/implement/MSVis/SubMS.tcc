@@ -115,8 +115,8 @@ void SubMS::filterChans(const ROArrayColumn<M>& data, ArrayColumn<M>& outDataCol
 
   const ROScalarColumn<Int> dataDescIn(mscIn_p->dataDescId());
 
-  // Guarantee oldDDID != ddID on 1st iteration.
-  Int oldDDID = spwRelabel_p[oldDDSpwMatch_p[dataDescIn(0)]] - 1;
+  // Guarantee oldOutDDID != ddID on 1st iteration.
+  Int oldOutDDID = spwRelabel_p[oldDDSpwMatch_p[dataDescIn(0)]] - 1;
 
   // chanStart_p is Int, therefore inChanInd is too.
   Int inChanInc;
@@ -128,69 +128,69 @@ void SubMS::filterChans(const ROArrayColumn<M>& data, ArrayColumn<M>& outDataCol
 		      True, nrow / 100);
 
   for(Int row = 0; row < nrow; ++row){
-    Int ddID = spwRelabel_p[oldDDSpwMatch_p[dataDescIn(row)]];
-    Bool newDDID = (ddID != oldDDID);
+    Int outDDID = spwRelabel_p[oldDDSpwMatch_p[dataDescIn(row)]];
+    Bool newDDID = (outDDID != oldOutDDID);
 
     if(newDDID){
-      if(ddID < 0){                      // Paranoia
+      if(outDDID < 0){                      // Paranoia
         os << LogIO::WARN
-           << "Treating DATA_DESCRIPTION_ID " << ddID << " as 0."
+           << "Treating DATA_DESCRIPTION_ID " << outDDID << " as 0."
            << LogIO::POST;
-	ddID = 0;
+	outDDID = 0;
       }
       
-      inChanInc = averageChannel_p ? 1 : chanStep_p[ddID];
-      nperbin = averageChannel_p ? chanStep_p[ddID] : 1;
+      inChanInc = averageChannel_p ? 1 : chanStep_p[outDDID];
+      nperbin = averageChannel_p ? chanStep_p[outDDID] : 1;
       // .tcc files are hard to debug without print statements,
       //  but it is too easy to  make the logger thrash
       // the disk if these are left in.
       // os << LogIO::DEBUG1
-      // 	 << ddID << ": inChanInc = " << inChanInc
+      // 	 << outDDID << ": inChanInc = " << inChanInc
       // 	 << " nperbin = " << nperbin
-      // 	 << "\nrow " << row << ": inNumCorr_p[ddID] = "
-      //         << inNumCorr_p[ddID]
-      // 	 << ", ncorr_p[ddID] = " << ncorr_p[ddID]
-      // 	 << "\ninNumChan_p[ddID] = " << inNumChan_p[ddID]
-      // 	 << ", nchan_p[ddID] = " << nchan_p[ddID]
+      // 	 << "\nrow " << row << ": inNumCorr_p[outDDID] = "
+      //         << inNumCorr_p[outDDID]
+      // 	 << ", ncorr_p[outDDID] = " << ncorr_p[outDDID]
+      // 	 << "\ninNumChan_p[outDDID] = " << inNumChan_p[outDDID]
+      // 	 << ", nchan_p[outDDID] = " << nchan_p[outDDID]
       // 	 << LogIO::POST;
       
       // resize() will return right away if the size does not change, so
-      // it is not essential to check ncorr_p[ddID] != ncorr_p[oldDDID], etc.
-      indatatmp.resize(inNumCorr_p[ddID], inNumChan_p[ddID]);
-      inflagtmp.resize(inNumCorr_p[ddID], inNumChan_p[ddID]);
-      outflag.resize(ncorr_p[ddID], nchan_p[ddID]);
-      outdata.resize(ncorr_p[ddID], nchan_p[ddID]);
-      outdatatmp.resize(ncorr_p[ddID]);
+      // it is not essential to check ncorr_p[outDDID] != ncorr_p[oldOutDDID], etc.
+      indatatmp.resize(inNumCorr_p[outDDID], inNumChan_p[outDDID]);
+      inflagtmp.resize(inNumCorr_p[outDDID], inNumChan_p[outDDID]);
+      outflag.resize(ncorr_p[outDDID], nchan_p[outDDID]);
+      outdata.resize(ncorr_p[outDDID], nchan_p[outDDID]);
+      outdatatmp.resize(ncorr_p[outDDID]);
       if(doSpWeight){
-        inwgtspectmp.resize(inNumCorr_p[ddID], inNumChan_p[ddID]);
-	outspweight.resize(ncorr_p[ddID], nchan_p[ddID]);
-	outwgtspectmp.resize(ncorr_p[ddID]);
+        inwgtspectmp.resize(inNumCorr_p[outDDID], inNumChan_p[outDDID]);
+	outspweight.resize(ncorr_p[outDDID], nchan_p[outDDID]);
+	outwgtspectmp.resize(ncorr_p[outDDID]);
       }
 
       if(calcWtSig){
-	rowwtfac = static_cast<Float>(nchan_p[ddID]) / inNumChan_p[ddID];
+	rowwtfac = static_cast<Float>(nchan_p[outDDID]) / inNumChan_p[outDDID];
 	if(averageChannel_p)
-	  rowwtfac *= chanStep_p[ddID];
+	  rowwtfac *= chanStep_p[outDDID];
 	sigfac = 1.0 / sqrt(rowwtfac);
 	os << LogIO::DEBUG1
-	   << ddID << ": inNumChan_p[ddID] = " << inNumChan_p[ddID]
-	   << ", nchan_p[ddID] = " << nchan_p[ddID]
+	   << outDDID << ": inNumChan_p[outDDID] = " << inNumChan_p[outDDID]
+	   << ", nchan_p[outDDID] = " << nchan_p[outDDID]
 	   << "\nrowwtfac = " << rowwtfac
 	   << ", sigfac = " << sigfac
 	   << LogIO::POST;
-	inrowwttmp.resize(inNumCorr_p[ddID]);
-	outrowwt.resize(ncorr_p[ddID]);
-	inrowsigtmp.resize(inNumCorr_p[ddID]);
-	outrowsig.resize(ncorr_p[ddID]);
+	inrowwttmp.resize(inNumCorr_p[outDDID]);
+	outrowwt.resize(ncorr_p[outDDID]);
+	inrowsigtmp.resize(inNumCorr_p[outDDID]);
+	outrowsig.resize(ncorr_p[outDDID]);
 	os << LogIO::DEBUG1
-	   << "inNumCorr_p[ddID] = " << inNumCorr_p[ddID]
-	   << ", ncorr_p[ddID] = " << ncorr_p[ddID]
+	   << "inNumCorr_p[outDDID] = " << inNumCorr_p[outDDID]
+	   << ", ncorr_p[outDDID] = " << ncorr_p[outDDID]
 	   << LogIO::POST;
       }
 
-      avcounter.resize(ncorr_p[ddID]);
+      avcounter.resize(ncorr_p[outDDID]);
 
-      oldDDID = ddID;
+      oldOutDDID = outDDID;
     }
 
     // Should come after any resize()s.
@@ -218,9 +218,9 @@ void SubMS::filterChans(const ROArrayColumn<M>& data, ArrayColumn<M>& outDataCol
     const M *iptr = indatatmp.getStorage(deleteIptr);
     const Float *inwptr = inwgtspectmp.getStorage(deleteIWptr);
     const Bool *iflg = inflagtmp.getStorage(deleteIFptr);
-    for(Int inChanInd = chanStart_p[ddID];
-	inChanInd < (nchan_p[ddID] * chanStep_p[ddID] +
-		     chanStart_p[ddID]); inChanInd += inChanInc){
+    for(Int inChanInd = chanStart_p[outDDID];
+	inChanInd < (nchan_p[outDDID] * chanStep_p[outDDID] +
+		     chanStart_p[outDDID]); inChanInd += inChanInc){
       if(chancounter == nperbin){
         outdatatmp.set(0); outwgtspectmp.set(0);
         chancounter = 0;
@@ -228,10 +228,10 @@ void SubMS::filterChans(const ROArrayColumn<M>& data, ArrayColumn<M>& outDataCol
       }
       ++chancounter;
 
-      for(Int outCorrInd = 0; outCorrInd < ncorr_p[ddID]; ++outCorrInd){
-        Int offset = inPolOutCorrToInCorrMap_p[polID_p[ddID]][outCorrInd]
-	             + inChanInd * inNumCorr_p[ddID];
-	// //if(ncorr_p[ddID] != inNumCorr_p[ddID])
+      for(Int outCorrInd = 0; outCorrInd < ncorr_p[outDDID]; ++outCorrInd){
+        Int offset = inPolOutCorrToInCorrMap_p[polID_p[spw_uniq_p[outDDID]]][outCorrInd]
+	             + inChanInd * inNumCorr_p[outDDID];
+	// //if(ncorr_p[outDDID] != inNumCorr_p[outDDID])
 	//   os << LogIO::DEBUG2		       // 
 	//      << "outCorrInd = " << outCorrInd  //
 	//      << "\ninChanInd = " << inChanInd	//
@@ -253,7 +253,7 @@ void SubMS::filterChans(const ROArrayColumn<M>& data, ArrayColumn<M>& outDataCol
         }
 
         if(chancounter == nperbin){
-	  // //if(ncorr_p[ddID] != inNumCorr_p[ddID])
+	  // //if(ncorr_p[outDDID] != inNumCorr_p[outDDID])
 	  //   os << LogIO::DEBUG2
 	  //      << "row " << row
 	  //      << ": avcounter[outCorrInd] = " << avcounter[outCorrInd]
@@ -285,14 +285,14 @@ void SubMS::filterChans(const ROArrayColumn<M>& data, ArrayColumn<M>& outDataCol
           }	
         }
       }
-      if(chancounter == chanStep_p[ddID])
+      if(chancounter == chanStep_p[outDDID])
         ++outChanInd;
     }
     outDataCol.put(row, outdata);
     msc_p->flag().put(row, outflag);
     if(calcWtSig){
-      for(Int outCorrInd = 0; outCorrInd < ncorr_p[ddID]; ++outCorrInd){
-        Int inCorr = inPolOutCorrToInCorrMap_p[polID_p[ddID]][outCorrInd];
+      for(Int outCorrInd = 0; outCorrInd < ncorr_p[outDDID]; ++outCorrInd){
+        Int inCorr = inPolOutCorrToInCorrMap_p[polID_p[spw_uniq_p[outDDID]]][outCorrInd];
 	if(!doSpWeight)
 	  outrowwt[outCorrInd] = rowwtfac * inrowwttmp[inCorr];
 	outrowsig[outCorrInd] = sigfac * inrowsigtmp[inCorr];
