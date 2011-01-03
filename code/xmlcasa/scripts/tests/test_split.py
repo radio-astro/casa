@@ -870,11 +870,11 @@ class split_test_tav_then_cvel(SplitChecker):
                              scan='', array='', uvrange='',
                              correlation=corrsel, async=False)
             tb.open(tavms)
-            for c in ['DATA', 'WEIGHT', 'INTERVAL', 'SCAN_NUMBER', 'STATE_ID']:
+            for c in ['DATA', 'WEIGHT', 'INTERVAL', 'SCAN_NUMBER', 'STATE_ID', 'TIME']:
                 record['tav'][c] = {}
                 for r in [0, 4, 5, 6, 7, 90, 91]:
                     record['tav'][c][r] = tb.getcell(c, r)
-            for c in ['SCAN_NUMBER', 'STATE_ID']:
+            for c in ['SCAN_NUMBER', 'STATE_ID', 'TIME']:
                 record['tav'][c][123] = tb.getcell(c, 123)
             tb.close()
         except Exception, e:
@@ -960,6 +960,18 @@ class split_test_tav_then_cvel(SplitChecker):
         """Time averaged SCAN_NUMBER"""
         check_eq(self.records['tav']['SCAN_NUMBER'],
                  {0: 5, 4: 5, 5: 5, 6: 6, 7: 6, 90: 17, 91: 17, 123: 40})
+
+    def test_tav_time(self):
+        """Time averaged TIME"""
+        check_eq(self.records['tav']['TIME'],
+                 {0: 4785963881.0,
+                  4: 4785963921.0,
+                  5: 4785963930.5,
+                  6: 4785963940.0,
+                  7: 4785963950.0,
+                  90: 4785965501.0,
+                  91: 4785965511.0,
+                  123: 4785966907.0})
 
     def test_cv(self):
         """cvel completed"""
