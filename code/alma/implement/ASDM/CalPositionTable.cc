@@ -108,6 +108,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -129,7 +135,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int CalPositionTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -396,10 +405,12 @@ CalPositionRow* CalPositionTable::newRow(CalPositionRow* row) {
 
 
 	 vector<CalPositionRow *> CalPositionTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<CalPositionRow *>& CalPositionTable::get() const {
+	 	const_cast<CalPositionTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -417,8 +428,9 @@ CalPositionRow* CalPositionTable::newRow(CalPositionRow* row) {
  **
  */
  	CalPositionRow* CalPositionTable::getRowByKey(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, Tag calDataId, Tag calReductionId)  {
+ 	checkPresenceInMemory();
 	CalPositionRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -491,8 +503,8 @@ CalPositionRow* CalPositionTable::newRow(CalPositionRow* row) {
  */
 CalPositionRow* CalPositionTable::lookup(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, vector<Length > antennaPosition, string stationName, vector<Length > stationPosition, PositionMethodMod::PositionMethod positionMethod, ReceiverBandMod::ReceiverBand receiverBand, int numAntenna, vector<string > refAntennaNames, Length axesOffset, Length axesOffsetErr, bool axesOffsetFixed, vector<Length > positionOffset, vector<Length > positionErr, double reducedChiSquared) {
 		CalPositionRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(antennaName, atmPhaseCorrection, calDataId, calReductionId, startValidTime, endValidTime, antennaPosition, stationName, stationPosition, positionMethod, receiverBand, numAntenna, refAntennaNames, axesOffset, axesOffsetErr, axesOffsetFixed, positionOffset, positionErr, reducedChiSquared)) return aRow;
 		}			
 		return 0;	
@@ -556,7 +568,7 @@ CalPositionRow* CalPositionTable::lookup(string antennaName, AtmPhaseCorrectionM
 	}
 
 	
-	void CalPositionTable::fromXML(string xmlDoc)  {
+	void CalPositionTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalPositionTable")) 
 			error();
@@ -578,7 +590,6 @@ CalPositionRow* CalPositionTable::lookup(string antennaName, AtmPhaseCorrectionM
 		s = xml.getElementContent("<row>","</row>");
 		CalPositionRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a CalPositionRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

@@ -617,7 +617,7 @@ private:
 	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) ;
+	void fromXML(string& xmlDoc) ;
 		
 	/**
 	  * Private methods involved during the build of this table out of the content
@@ -660,6 +660,18 @@ private:
 	  */
 	  void toFile(string directory);
 	  
+	  /**
+	   * Load the table in memory if necessary.
+	   */
+	  bool loadInProgress;
+	  void checkPresenceInMemory() {
+		if (!presentInMemory && !loadInProgress) {
+			loadInProgress = true;
+			setFromFile(getContainer().getDirectory());
+			presentInMemory = true;
+			loadInProgress = false;
+	  	}
+	  }
 	/**
 	 * Reads and parses a file containing a representation of a CalWVRTable as those produced  by the toFile method.
 	 * This table is populated with the result of the parsing.

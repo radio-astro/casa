@@ -923,6 +923,16 @@ public:
 	 * @return an ASDM::Origin value.
 	 */
 	 Origin getOrigin() const ;
+	 
+	 /**
+	  * Returns the ASDM's directory.
+	  * 
+	  * @return a string containing path to the directory containing the external representation of the ASDM
+	  * if it has been constructed from this representation or an empty string if it has been
+	  * constructed ex nihilo.
+	  */
+	 string getDirectory() const ;
+	 
 	 	
 private:
 

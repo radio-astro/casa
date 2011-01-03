@@ -108,6 +108,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -129,7 +135,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int CalDeviceTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -342,10 +351,12 @@ CalDeviceRow* CalDeviceTable::newRow(CalDeviceRow* row) {
 
 
 	 vector<CalDeviceRow *> CalDeviceTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<CalDeviceRow *>& CalDeviceTable::get() const {
+	 	const_cast<CalDeviceTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -359,6 +370,7 @@ CalDeviceRow* CalDeviceTable::newRow(CalDeviceRow* row) {
 	
 		
 	 vector<CalDeviceRow *> *CalDeviceTable::getByContext(Tag antennaId, Tag spectralWindowId, int feedId) {
+	 	checkPresenceInMemory();
 	  	string k = Key(antennaId, spectralWindowId, feedId);
  
 	    if (context.find(k) == context.end()) return 0;
@@ -383,6 +395,7 @@ CalDeviceRow* CalDeviceTable::newRow(CalDeviceRow* row) {
  				
 				
 	CalDeviceRow* CalDeviceTable::getRowByKey(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId)  {
+		checkPresenceInMemory();
  		string keystr = Key(antennaId, spectralWindowId, feedId);
  		vector<CalDeviceRow *> row;
  		
@@ -499,7 +512,7 @@ CalDeviceRow* CalDeviceTable::newRow(CalDeviceRow* row) {
 	}
 
 	
-	void CalDeviceTable::fromXML(string xmlDoc)  {
+	void CalDeviceTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalDeviceTable")) 
 			error();
@@ -521,7 +534,6 @@ CalDeviceRow* CalDeviceTable::newRow(CalDeviceRow* row) {
 		s = xml.getElementContent("<row>","</row>");
 		CalDeviceRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a CalDeviceRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

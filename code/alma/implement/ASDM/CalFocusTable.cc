@@ -108,6 +108,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -129,7 +135,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int CalFocusTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -406,10 +415,12 @@ CalFocusRow* CalFocusTable::newRow(CalFocusRow* row) {
 
 
 	 vector<CalFocusRow *> CalFocusTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<CalFocusRow *>& CalFocusTable::get() const {
+	 	const_cast<CalFocusTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -427,8 +438,9 @@ CalFocusRow* CalFocusTable::newRow(CalFocusRow* row) {
  **
  */
  	CalFocusRow* CalFocusTable::getRowByKey(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId)  {
+ 	checkPresenceInMemory();
 	CalFocusRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -499,8 +511,8 @@ CalFocusRow* CalFocusTable::newRow(CalFocusRow* row) {
  */
 CalFocusRow* CalFocusTable::lookup(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, Temperature ambientTemperature, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, FocusMethodMod::FocusMethod focusMethod, vector<Frequency > frequencyRange, vector<Angle > pointingDirection, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<bool > wereFixed, vector<vector<Length > > offset, vector<vector<Length > > offsetError, vector<vector<bool > > offsetWasTied, vector<vector<double > > reducedChiSquared) {
 		CalFocusRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(antennaName, receiverBand, calDataId, calReductionId, startValidTime, endValidTime, ambientTemperature, atmPhaseCorrection, focusMethod, frequencyRange, pointingDirection, numReceptor, polarizationTypes, wereFixed, offset, offsetError, offsetWasTied, reducedChiSquared)) return aRow;
 		}			
 		return 0;	
@@ -564,7 +576,7 @@ CalFocusRow* CalFocusTable::lookup(string antennaName, ReceiverBandMod::Receiver
 	}
 
 	
-	void CalFocusTable::fromXML(string xmlDoc)  {
+	void CalFocusTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalFocusTable")) 
 			error();
@@ -586,7 +598,6 @@ CalFocusRow* CalFocusTable::lookup(string antennaName, ReceiverBandMod::Receiver
 		s = xml.getElementContent("<row>","</row>");
 		CalFocusRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a CalFocusRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

@@ -106,6 +106,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -127,7 +133,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int CalSeeingTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -350,10 +359,12 @@ CalSeeingRow* CalSeeingTable::newRow(CalSeeingRow* row) {
 
 
 	 vector<CalSeeingRow *> CalSeeingTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<CalSeeingRow *>& CalSeeingTable::get() const {
+	 	const_cast<CalSeeingTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -371,8 +382,9 @@ CalSeeingRow* CalSeeingTable::newRow(CalSeeingRow* row) {
  **
  */
  	CalSeeingRow* CalSeeingTable::getRowByKey(AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, Tag calDataId, Tag calReductionId)  {
+ 	checkPresenceInMemory();
 	CalSeeingRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -427,8 +439,8 @@ CalSeeingRow* CalSeeingTable::newRow(CalSeeingRow* row) {
  */
 CalSeeingRow* CalSeeingTable::lookup(AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, Interval integrationTime, int numBaseLengths, vector<Length > baselineLengths, vector<Angle > phaseRMS, Angle seeing, Angle seeingError) {
 		CalSeeingRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(atmPhaseCorrection, calDataId, calReductionId, startValidTime, endValidTime, frequencyRange, integrationTime, numBaseLengths, baselineLengths, phaseRMS, seeing, seeingError)) return aRow;
 		}			
 		return 0;	
@@ -492,7 +504,7 @@ CalSeeingRow* CalSeeingTable::lookup(AtmPhaseCorrectionMod::AtmPhaseCorrection a
 	}
 
 	
-	void CalSeeingTable::fromXML(string xmlDoc)  {
+	void CalSeeingTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalSeeingTable")) 
 			error();
@@ -514,7 +526,6 @@ CalSeeingRow* CalSeeingTable::lookup(AtmPhaseCorrectionMod::AtmPhaseCorrection a
 		s = xml.getElementContent("<row>","</row>");
 		CalSeeingRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a CalSeeingRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

@@ -312,6 +312,8 @@ namespace asdm {
 
 	ASDM::Origin ASDM::getOrigin() const { return origin ; }
 	
+	string ASDM::getDirectory() const { return directory ; }
+	
 	/**
 	 * Create an instance of the tables that belong to this model.
 	 */
@@ -1186,6 +1188,7 @@ namespace asdm {
 				error();
 			try {
 				numberRows = Integer::parseInt(s);
+				getTable(tableName).declaredSize = numberRows;
 			} catch (NumberFormatException err) {
 				error();
 			}
@@ -4559,7 +4562,137 @@ namespace asdm {
 				getWeather().setFromFile(directory);
 			}
 	
-		}	
+		}
+		else {
+	
+			getMain().presentInMemory = tableEntity["Main"].getEntityId().getId().length() == 0;	
+	
+			getAlmaRadiometer().presentInMemory = tableEntity["AlmaRadiometer"].getEntityId().getId().length() == 0;	
+	
+			getAnnotation().presentInMemory = tableEntity["Annotation"].getEntityId().getId().length() == 0;	
+	
+			getAntenna().presentInMemory = tableEntity["Antenna"].getEntityId().getId().length() == 0;	
+	
+			getBeam().presentInMemory = tableEntity["Beam"].getEntityId().getId().length() == 0;	
+	
+			getCalAmpli().presentInMemory = tableEntity["CalAmpli"].getEntityId().getId().length() == 0;	
+	
+			getCalAtmosphere().presentInMemory = tableEntity["CalAtmosphere"].getEntityId().getId().length() == 0;	
+	
+			getCalBandpass().presentInMemory = tableEntity["CalBandpass"].getEntityId().getId().length() == 0;	
+	
+			getCalCurve().presentInMemory = tableEntity["CalCurve"].getEntityId().getId().length() == 0;	
+	
+			getCalData().presentInMemory = tableEntity["CalData"].getEntityId().getId().length() == 0;	
+	
+			getCalDelay().presentInMemory = tableEntity["CalDelay"].getEntityId().getId().length() == 0;	
+	
+			getCalDevice().presentInMemory = tableEntity["CalDevice"].getEntityId().getId().length() == 0;	
+	
+			getCalFlux().presentInMemory = tableEntity["CalFlux"].getEntityId().getId().length() == 0;	
+	
+			getCalFocus().presentInMemory = tableEntity["CalFocus"].getEntityId().getId().length() == 0;	
+	
+			getCalFocusModel().presentInMemory = tableEntity["CalFocusModel"].getEntityId().getId().length() == 0;	
+	
+			getCalGain().presentInMemory = tableEntity["CalGain"].getEntityId().getId().length() == 0;	
+	
+			getCalHolography().presentInMemory = tableEntity["CalHolography"].getEntityId().getId().length() == 0;	
+	
+			getCalPhase().presentInMemory = tableEntity["CalPhase"].getEntityId().getId().length() == 0;	
+	
+			getCalPointing().presentInMemory = tableEntity["CalPointing"].getEntityId().getId().length() == 0;	
+	
+			getCalPointingModel().presentInMemory = tableEntity["CalPointingModel"].getEntityId().getId().length() == 0;	
+	
+			getCalPosition().presentInMemory = tableEntity["CalPosition"].getEntityId().getId().length() == 0;	
+	
+			getCalPrimaryBeam().presentInMemory = tableEntity["CalPrimaryBeam"].getEntityId().getId().length() == 0;	
+	
+			getCalReduction().presentInMemory = tableEntity["CalReduction"].getEntityId().getId().length() == 0;	
+	
+			getCalSeeing().presentInMemory = tableEntity["CalSeeing"].getEntityId().getId().length() == 0;	
+	
+			getCalWVR().presentInMemory = tableEntity["CalWVR"].getEntityId().getId().length() == 0;	
+	
+			getConfigDescription().presentInMemory = tableEntity["ConfigDescription"].getEntityId().getId().length() == 0;	
+	
+			getCorrelatorMode().presentInMemory = tableEntity["CorrelatorMode"].getEntityId().getId().length() == 0;	
+	
+			getDataDescription().presentInMemory = tableEntity["DataDescription"].getEntityId().getId().length() == 0;	
+	
+			getDelayModel().presentInMemory = tableEntity["DelayModel"].getEntityId().getId().length() == 0;	
+	
+			getDoppler().presentInMemory = tableEntity["Doppler"].getEntityId().getId().length() == 0;	
+	
+			getEphemeris().presentInMemory = tableEntity["Ephemeris"].getEntityId().getId().length() == 0;	
+	
+			getExecBlock().presentInMemory = tableEntity["ExecBlock"].getEntityId().getId().length() == 0;	
+	
+			getFeed().presentInMemory = tableEntity["Feed"].getEntityId().getId().length() == 0;	
+	
+			getField().presentInMemory = tableEntity["Field"].getEntityId().getId().length() == 0;	
+	
+			getFlag().presentInMemory = tableEntity["Flag"].getEntityId().getId().length() == 0;	
+	
+			getFlagCmd().presentInMemory = tableEntity["FlagCmd"].getEntityId().getId().length() == 0;	
+	
+			getFocus().presentInMemory = tableEntity["Focus"].getEntityId().getId().length() == 0;	
+	
+			getFocusModel().presentInMemory = tableEntity["FocusModel"].getEntityId().getId().length() == 0;	
+	
+			getFreqOffset().presentInMemory = tableEntity["FreqOffset"].getEntityId().getId().length() == 0;	
+	
+			getGainTracking().presentInMemory = tableEntity["GainTracking"].getEntityId().getId().length() == 0;	
+	
+			getHistory().presentInMemory = tableEntity["History"].getEntityId().getId().length() == 0;	
+	
+			getHolography().presentInMemory = tableEntity["Holography"].getEntityId().getId().length() == 0;	
+	
+			getObservation().presentInMemory = tableEntity["Observation"].getEntityId().getId().length() == 0;	
+	
+			getPointing().presentInMemory = tableEntity["Pointing"].getEntityId().getId().length() == 0;	
+	
+			getPointingModel().presentInMemory = tableEntity["PointingModel"].getEntityId().getId().length() == 0;	
+	
+			getPolarization().presentInMemory = tableEntity["Polarization"].getEntityId().getId().length() == 0;	
+	
+			getProcessor().presentInMemory = tableEntity["Processor"].getEntityId().getId().length() == 0;	
+	
+			getReceiver().presentInMemory = tableEntity["Receiver"].getEntityId().getId().length() == 0;	
+	
+			getSBSummary().presentInMemory = tableEntity["SBSummary"].getEntityId().getId().length() == 0;	
+	
+			getScan().presentInMemory = tableEntity["Scan"].getEntityId().getId().length() == 0;	
+	
+			getSeeing().presentInMemory = tableEntity["Seeing"].getEntityId().getId().length() == 0;	
+	
+			getSource().presentInMemory = tableEntity["Source"].getEntityId().getId().length() == 0;	
+	
+			getSpectralWindow().presentInMemory = tableEntity["SpectralWindow"].getEntityId().getId().length() == 0;	
+	
+			getSquareLawDetector().presentInMemory = tableEntity["SquareLawDetector"].getEntityId().getId().length() == 0;	
+	
+			getState().presentInMemory = tableEntity["State"].getEntityId().getId().length() == 0;	
+	
+			getStation().presentInMemory = tableEntity["Station"].getEntityId().getId().length() == 0;	
+	
+			getSubscan().presentInMemory = tableEntity["Subscan"].getEntityId().getId().length() == 0;	
+	
+			getSwitchCycle().presentInMemory = tableEntity["SwitchCycle"].getEntityId().getId().length() == 0;	
+	
+			getSysCal().presentInMemory = tableEntity["SysCal"].getEntityId().getId().length() == 0;	
+	
+			getSysPower().presentInMemory = tableEntity["SysPower"].getEntityId().getId().length() == 0;	
+	
+			getTotalPower().presentInMemory = tableEntity["TotalPower"].getEntityId().getId().length() == 0;	
+	
+			getWVMCal().presentInMemory = tableEntity["WVMCal"].getEntityId().getId().length() == 0;	
+	
+			getWeather().presentInMemory = tableEntity["Weather"].getEntityId().getId().length() == 0;	
+				
+		}
+			
 		origin = FILE;
 		this->directory = directory;			
 	}

@@ -110,6 +110,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -131,7 +137,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int CalPhaseTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -406,10 +415,12 @@ CalPhaseRow* CalPhaseTable::newRow(CalPhaseRow* row) {
 
 
 	 vector<CalPhaseRow *> CalPhaseTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<CalPhaseRow *>& CalPhaseTable::get() const {
+	 	const_cast<CalPhaseTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -427,8 +438,9 @@ CalPhaseRow* CalPhaseTable::newRow(CalPhaseRow* row) {
  **
  */
  	CalPhaseRow* CalPhaseTable::getRowByKey(BasebandNameMod::BasebandName basebandName, ReceiverBandMod::ReceiverBand receiverBand, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, Tag calDataId, Tag calReductionId)  {
+ 	checkPresenceInMemory();
 	CalPhaseRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -507,8 +519,8 @@ CalPhaseRow* CalPhaseTable::newRow(CalPhaseRow* row) {
  */
 CalPhaseRow* CalPhaseTable::lookup(BasebandNameMod::BasebandName basebandName, ReceiverBandMod::ReceiverBand receiverBand, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numBaseline, int numReceptor, vector<vector<float > > ampli, vector<vector<string > > antennaNames, vector<Length > baselineLengths, vector<vector<float > > decorrelationFactor, vector<Angle > direction, vector<Frequency > frequencyRange, Interval integrationTime, vector<vector<float > > phase, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<float > > phaseRMS, vector<vector<float > > statPhaseRMS) {
 		CalPhaseRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(basebandName, receiverBand, atmPhaseCorrection, calDataId, calReductionId, startValidTime, endValidTime, numBaseline, numReceptor, ampli, antennaNames, baselineLengths, decorrelationFactor, direction, frequencyRange, integrationTime, phase, polarizationTypes, phaseRMS, statPhaseRMS)) return aRow;
 		}			
 		return 0;	
@@ -572,7 +584,7 @@ CalPhaseRow* CalPhaseTable::lookup(BasebandNameMod::BasebandName basebandName, R
 	}
 
 	
-	void CalPhaseTable::fromXML(string xmlDoc)  {
+	void CalPhaseTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalPhaseTable")) 
 			error();
@@ -594,7 +606,6 @@ CalPhaseRow* CalPhaseTable::lookup(BasebandNameMod::BasebandName basebandName, R
 		s = xml.getElementContent("<row>","</row>");
 		CalPhaseRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a CalPhaseRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

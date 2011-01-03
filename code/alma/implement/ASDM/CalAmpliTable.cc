@@ -110,6 +110,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -131,7 +137,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int CalAmpliTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -358,10 +367,12 @@ CalAmpliRow* CalAmpliTable::newRow(CalAmpliRow* row) {
 
 
 	 vector<CalAmpliRow *> CalAmpliTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<CalAmpliRow *>& CalAmpliTable::get() const {
+	 	const_cast<CalAmpliTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -379,8 +390,9 @@ CalAmpliRow* CalAmpliTable::newRow(CalAmpliRow* row) {
  **
  */
  	CalAmpliRow* CalAmpliTable::getRowByKey(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId)  {
+ 	checkPresenceInMemory();
 	CalAmpliRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -443,8 +455,8 @@ CalAmpliRow* CalAmpliTable::newRow(CalAmpliRow* row) {
  */
 CalAmpliRow* CalAmpliTable::lookup(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, vector<float > apertureEfficiency, vector<float > apertureEfficiencyError) {
 		CalAmpliRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(antennaName, atmPhaseCorrection, receiverBand, calDataId, calReductionId, numReceptor, polarizationTypes, startValidTime, endValidTime, frequencyRange, apertureEfficiency, apertureEfficiencyError)) return aRow;
 		}			
 		return 0;	
@@ -508,7 +520,7 @@ CalAmpliRow* CalAmpliTable::lookup(string antennaName, AtmPhaseCorrectionMod::At
 	}
 
 	
-	void CalAmpliTable::fromXML(string xmlDoc)  {
+	void CalAmpliTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalAmpliTable")) 
 			error();
@@ -530,7 +542,6 @@ CalAmpliRow* CalAmpliTable::lookup(string antennaName, AtmPhaseCorrectionMod::At
 		s = xml.getElementContent("<row>","</row>");
 		CalAmpliRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a CalAmpliRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

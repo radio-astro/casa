@@ -104,6 +104,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -125,7 +131,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int HistoryTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -324,10 +333,12 @@ HistoryRow* HistoryTable::newRow(HistoryRow* row) {
 
 
 	 vector<HistoryRow *> HistoryTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<HistoryRow *>& HistoryTable::get() const {
+	 	const_cast<HistoryTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -341,6 +352,7 @@ HistoryRow* HistoryTable::newRow(HistoryRow* row) {
 	
 		
 	 vector<HistoryRow *> *HistoryTable::getByContext(Tag execBlockId) {
+	 	checkPresenceInMemory();
 	  	string k = Key(execBlockId);
  
 	    if (context.find(k) == context.end()) return 0;
@@ -365,6 +377,7 @@ HistoryRow* HistoryTable::newRow(HistoryRow* row) {
  				
 				
  	HistoryRow* HistoryTable::getRowByKey(Tag execBlockId, ArrayTime time)  {
+ 		checkPresenceInMemory();
 		string keystr = Key(execBlockId);
  		
  		if (context.find(keystr) == context.end()) return 0;
@@ -469,7 +482,7 @@ HistoryRow* HistoryTable::newRow(HistoryRow* row) {
 	}
 
 	
-	void HistoryTable::fromXML(string xmlDoc)  {
+	void HistoryTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<HistoryTable")) 
 			error();
@@ -491,7 +504,6 @@ HistoryRow* HistoryTable::newRow(HistoryRow* row) {
 		s = xml.getElementContent("<row>","</row>");
 		HistoryRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a HistoryRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

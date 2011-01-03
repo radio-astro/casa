@@ -104,6 +104,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -125,7 +131,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int ScanTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -338,10 +347,12 @@ ScanRow* ScanTable::newRow(ScanRow* row) {
 
 
 	 vector<ScanRow *> ScanTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<ScanRow *>& ScanTable::get() const {
+	 	const_cast<ScanTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -359,8 +370,9 @@ ScanRow* ScanTable::newRow(ScanRow* row) {
  **
  */
  	ScanRow* ScanTable::getRowByKey(Tag execBlockId, int scanNumber)  {
+ 	checkPresenceInMemory();
 	ScanRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -407,8 +419,8 @@ ScanRow* ScanTable::newRow(ScanRow* row) {
  */
 ScanRow* ScanTable::lookup(Tag execBlockId, int scanNumber, ArrayTime startTime, ArrayTime endTime, int numIntent, int numSubScan, vector<ScanIntentMod::ScanIntent > scanIntent, vector<CalDataOriginMod::CalDataOrigin > calDataType, vector<bool > calibrationOnLine, bool flagRow) {
 		ScanRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(execBlockId, scanNumber, startTime, endTime, numIntent, numSubScan, scanIntent, calDataType, calibrationOnLine, flagRow)) return aRow;
 		}			
 		return 0;	
@@ -472,7 +484,7 @@ ScanRow* ScanTable::lookup(Tag execBlockId, int scanNumber, ArrayTime startTime,
 	}
 
 	
-	void ScanTable::fromXML(string xmlDoc)  {
+	void ScanTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<ScanTable")) 
 			error();
@@ -494,7 +506,6 @@ ScanRow* ScanTable::lookup(Tag execBlockId, int scanNumber, ArrayTime startTime,
 		s = xml.getElementContent("<row>","</row>");
 		ScanRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a ScanRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

@@ -102,6 +102,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -123,7 +129,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int PolarizationTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -311,10 +320,12 @@ PolarizationRow* PolarizationTable::newRow(PolarizationRow* row) {
 
 
 	 vector<PolarizationRow *> PolarizationTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<PolarizationRow *>& PolarizationTable::get() const {
+	 	const_cast<PolarizationTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -332,8 +343,9 @@ PolarizationRow* PolarizationTable::newRow(PolarizationRow* row) {
  **
  */
  	PolarizationRow* PolarizationTable::getRowByKey(Tag polarizationId)  {
+ 	checkPresenceInMemory();
 	PolarizationRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -362,8 +374,8 @@ PolarizationRow* PolarizationTable::newRow(PolarizationRow* row) {
  */
 PolarizationRow* PolarizationTable::lookup(int numCorr, vector<StokesParameterMod::StokesParameter > corrType, vector<vector<PolarizationTypeMod::PolarizationType > > corrProduct) {
 		PolarizationRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(numCorr, corrType, corrProduct)) return aRow;
 		}			
 		return 0;	
@@ -427,7 +439,7 @@ PolarizationRow* PolarizationTable::lookup(int numCorr, vector<StokesParameterMo
 	}
 
 	
-	void PolarizationTable::fromXML(string xmlDoc)  {
+	void PolarizationTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<PolarizationTable")) 
 			error();
@@ -449,7 +461,6 @@ PolarizationRow* PolarizationTable::lookup(int numCorr, vector<StokesParameterMo
 		s = xml.getElementContent("<row>","</row>");
 		PolarizationRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a PolarizationRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

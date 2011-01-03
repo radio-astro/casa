@@ -102,6 +102,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -123,7 +129,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int SpectralWindowTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -395,10 +404,12 @@ SpectralWindowRow* SpectralWindowTable::newRow(SpectralWindowRow* row) {
 
 
 	 vector<SpectralWindowRow *> SpectralWindowTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<SpectralWindowRow *>& SpectralWindowTable::get() const {
+	 	const_cast<SpectralWindowTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -416,8 +427,9 @@ SpectralWindowRow* SpectralWindowTable::newRow(SpectralWindowRow* row) {
  **
  */
  	SpectralWindowRow* SpectralWindowTable::getRowByKey(Tag spectralWindowId)  {
+ 	checkPresenceInMemory();
 	SpectralWindowRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -454,8 +466,8 @@ SpectralWindowRow* SpectralWindowTable::newRow(SpectralWindowRow* row) {
  */
 SpectralWindowRow* SpectralWindowTable::lookup(BasebandNameMod::BasebandName basebandName, NetSidebandMod::NetSideband netSideband, int numChan, Frequency refFreq, SidebandProcessingModeMod::SidebandProcessingMode sidebandProcessingMode, Frequency totBandwidth, WindowFunctionMod::WindowFunction windowFunction) {
 		SpectralWindowRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(basebandName, netSideband, numChan, refFreq, sidebandProcessingMode, totBandwidth, windowFunction)) return aRow;
 		}			
 		return 0;	
@@ -519,7 +531,7 @@ SpectralWindowRow* SpectralWindowTable::lookup(BasebandNameMod::BasebandName bas
 	}
 
 	
-	void SpectralWindowTable::fromXML(string xmlDoc)  {
+	void SpectralWindowTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<SpectralWindowTable")) 
 			error();
@@ -541,7 +553,6 @@ SpectralWindowRow* SpectralWindowTable::lookup(BasebandNameMod::BasebandName bas
 		s = xml.getElementContent("<row>","</row>");
 		SpectralWindowRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a SpectralWindowRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

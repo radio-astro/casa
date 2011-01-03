@@ -106,6 +106,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -127,7 +133,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int SubscanTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -336,10 +345,12 @@ SubscanRow* SubscanTable::newRow(SubscanRow* row) {
 
 
 	 vector<SubscanRow *> SubscanTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<SubscanRow *>& SubscanTable::get() const {
+	 	const_cast<SubscanTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -357,8 +368,9 @@ SubscanRow* SubscanTable::newRow(SubscanRow* row) {
  **
  */
  	SubscanRow* SubscanTable::getRowByKey(Tag execBlockId, int scanNumber, int subscanNumber)  {
+ 	checkPresenceInMemory();
 	SubscanRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -409,8 +421,8 @@ SubscanRow* SubscanTable::newRow(SubscanRow* row) {
  */
 SubscanRow* SubscanTable::lookup(Tag execBlockId, int scanNumber, int subscanNumber, ArrayTime startTime, ArrayTime endTime, string fieldName, SubscanIntentMod::SubscanIntent subscanIntent, int numberIntegration, vector<int > numberSubintegration, bool flagRow) {
 		SubscanRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(execBlockId, scanNumber, subscanNumber, startTime, endTime, fieldName, subscanIntent, numberIntegration, numberSubintegration, flagRow)) return aRow;
 		}			
 		return 0;	
@@ -474,7 +486,7 @@ SubscanRow* SubscanTable::lookup(Tag execBlockId, int scanNumber, int subscanNum
 	}
 
 	
-	void SubscanTable::fromXML(string xmlDoc)  {
+	void SubscanTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<SubscanTable")) 
 			error();
@@ -496,7 +508,6 @@ SubscanRow* SubscanTable::lookup(Tag execBlockId, int scanNumber, int subscanNum
 		s = xml.getElementContent("<row>","</row>");
 		SubscanRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a SubscanRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

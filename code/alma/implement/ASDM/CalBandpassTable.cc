@@ -114,6 +114,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -135,7 +141,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int CalBandpassTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -408,10 +417,12 @@ CalBandpassRow* CalBandpassTable::newRow(CalBandpassRow* row) {
 
 
 	 vector<CalBandpassRow *> CalBandpassTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<CalBandpassRow *>& CalBandpassTable::get() const {
+	 	const_cast<CalBandpassTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -429,8 +440,9 @@ CalBandpassRow* CalBandpassTable::newRow(CalBandpassRow* row) {
  **
  */
  	CalBandpassRow* CalBandpassTable::getRowByKey(BasebandNameMod::BasebandName basebandName, NetSidebandMod::NetSideband sideband, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, CalCurveTypeMod::CalCurveType typeCurve, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId)  {
+ 	checkPresenceInMemory();
 	CalBandpassRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -513,8 +525,8 @@ CalBandpassRow* CalBandpassTable::newRow(CalBandpassRow* row) {
  */
 CalBandpassRow* CalBandpassTable::lookup(BasebandNameMod::BasebandName basebandName, NetSidebandMod::NetSideband sideband, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, CalCurveTypeMod::CalCurveType typeCurve, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numAntenna, int numPoly, int numReceptor, vector<string > antennaNames, string refAntennaName, vector<Frequency > freqLimits, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<vector<float > > > curve, vector<double > reducedChiSquared) {
 		CalBandpassRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(basebandName, sideband, atmPhaseCorrection, typeCurve, receiverBand, calDataId, calReductionId, startValidTime, endValidTime, numAntenna, numPoly, numReceptor, antennaNames, refAntennaName, freqLimits, polarizationTypes, curve, reducedChiSquared)) return aRow;
 		}			
 		return 0;	
@@ -578,7 +590,7 @@ CalBandpassRow* CalBandpassTable::lookup(BasebandNameMod::BasebandName basebandN
 	}
 
 	
-	void CalBandpassTable::fromXML(string xmlDoc)  {
+	void CalBandpassTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalBandpassTable")) 
 			error();
@@ -600,7 +612,6 @@ CalBandpassRow* CalBandpassTable::lookup(BasebandNameMod::BasebandName basebandN
 		s = xml.getElementContent("<row>","</row>");
 		CalBandpassRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a CalBandpassRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

@@ -275,9 +275,8 @@ public:
 	 */
 	vector<DataDescriptionRow *> get() ;
 	
+	const vector<DataDescriptionRow *>& get() const;
 
-
- 
 	
 	/**
  	 * Returns a DataDescriptionRow* given a key.
@@ -361,7 +360,7 @@ public:
 	 * be conform to the XML schema defined for a DataDescription (DataDescriptionTable.xsd).
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string& xmlDoc) throw(ConversionException);
 
   /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -387,6 +386,18 @@ public:
 	  * 
 	  */
 	  void toFile(string directory);
+
+	  /**
+	   * Load the table in memory if necessary.
+	   */
+	  void checkPresenceInMemory() {
+		if (!presentInMemory && !loadInProgress) {
+			loadInProgress = true;
+			setFromFile(getContainer().getDirectory());
+			presentInMemory = true;
+			loadInProgress = false;
+	  	}
+	  }
 	  
 	/**
 	 * Reads and parses a collection of files as those produced by the toFile method.

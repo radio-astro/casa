@@ -104,6 +104,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -125,7 +131,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int FocusModelTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -403,10 +412,12 @@ FocusModelRow* FocusModelTable::newRow(FocusModelRow* row) {
 
 
 	 vector<FocusModelRow *> FocusModelTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<FocusModelRow *>& FocusModelTable::get() const {
+	 	const_cast<FocusModelTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -424,8 +435,9 @@ FocusModelRow* FocusModelTable::newRow(FocusModelRow* row) {
  **
  */
  	FocusModelRow* FocusModelTable::getRowByKey(Tag antennaId, int focusModelId)  {
+ 	checkPresenceInMemory();
 	FocusModelRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -470,8 +482,8 @@ FocusModelRow* FocusModelTable::newRow(FocusModelRow* row) {
  */
 FocusModelRow* FocusModelTable::lookup(Tag antennaId, PolarizationTypeMod::PolarizationType polarizationType, ReceiverBandMod::ReceiverBand receiverBand, int numCoeff, vector<string > coeffName, vector<string > coeffFormula, vector<float > coeffVal, string assocNature, int assocFocusModelId) {
 		FocusModelRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(antennaId, polarizationType, receiverBand, numCoeff, coeffName, coeffFormula, coeffVal, assocNature, assocFocusModelId)) return aRow;
 		}			
 		return 0;	
@@ -488,6 +500,7 @@ FocusModelRow* FocusModelTable::lookup(Tag antennaId, PolarizationTypeMod::Polar
  * the autoincrementable attribute that is looked up in the table.
  */
  vector <FocusModelRow *>  FocusModelTable::getRowByFocusModelId(int focusModelId) {
+	checkPresenceInMemory();
 	vector<FocusModelRow *> list;
 	for (unsigned int i = 0; i < row.size(); ++i) {
 		FocusModelRow &x = *row[i];
@@ -555,7 +568,7 @@ FocusModelRow* FocusModelTable::lookup(Tag antennaId, PolarizationTypeMod::Polar
 	}
 
 	
-	void FocusModelTable::fromXML(string xmlDoc)  {
+	void FocusModelTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<FocusModelTable")) 
 			error();
@@ -577,7 +590,6 @@ FocusModelRow* FocusModelTable::lookup(Tag antennaId, PolarizationTypeMod::Polar
 		s = xml.getElementContent("<row>","</row>");
 		FocusModelRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a FocusModelRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

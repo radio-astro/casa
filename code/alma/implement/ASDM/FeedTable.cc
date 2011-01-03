@@ -108,6 +108,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -129,7 +135,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int FeedTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -478,10 +487,12 @@ FeedRow* FeedTable::newRow(FeedRow* row) {
 
 
 	 vector<FeedRow *> FeedTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<FeedRow *>& FeedTable::get() const {
+	 	const_cast<FeedTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -505,7 +516,8 @@ FeedRow* FeedTable::newRow(FeedRow* row) {
  ** no row exists for that key.
  **
  */
- 	FeedRow* FeedTable::getRowByKey(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId)  {	
+ 	FeedRow* FeedTable::getRowByKey(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId)  {
+ 		checkPresenceInMemory();	
 		ArrayTime start = timeInterval.getStart();
 		
 		map<string, ID_TIME_ROWS >::iterator mapIter;
@@ -531,6 +543,7 @@ FeedRow* FeedTable::newRow(FeedRow* row) {
  * the autoincrementable attribute that is looked up in the table.
  */
  vector <FeedRow *>  FeedTable::getRowByFeedId(int feedId) {
+	checkPresenceInMemory();
 	vector<FeedRow *> list;
 	map<string, ID_TIME_ROWS >::iterator mapIter;
 	
@@ -576,7 +589,7 @@ FeedRow* FeedTable::newRow(FeedRow* row) {
  * @param <<ExtrinsicAttribute>> receiverId.
  	 		 
  */
-FeedRow* FeedTable::lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int numReceptor, vector<vector<double > > beamOffset, vector<vector<Length > > focusReference, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<Complex > > polResponse, vector<Angle > receptorAngle, vector<int>  receiverId) {		
+FeedRow* FeedTable::lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int numReceptor, vector<vector<double > > beamOffset, vector<vector<Length > > focusReference, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<Complex > > polResponse, vector<Angle > receptorAngle, vector<int>  receiverId) {	
 		using asdm::ArrayTimeInterval;
 		map<string, ID_TIME_ROWS >::iterator mapIter;
 		string k = Key(antennaId, spectralWindowId);
@@ -651,7 +664,7 @@ FeedRow* FeedTable::lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterva
 	}
 
 	
-	void FeedTable::fromXML(string xmlDoc)  {
+	void FeedTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<FeedTable")) 
 			error();
@@ -673,7 +686,6 @@ FeedRow* FeedTable::lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterva
 		s = xml.getElementContent("<row>","</row>");
 		FeedRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a FeedRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

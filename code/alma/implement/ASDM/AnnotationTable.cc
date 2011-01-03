@@ -102,6 +102,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -123,7 +129,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int AnnotationTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -331,10 +340,12 @@ AnnotationRow* AnnotationTable::newRow(AnnotationRow* row) {
 
 
 	 vector<AnnotationRow *> AnnotationTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<AnnotationRow *>& AnnotationTable::get() const {
+	 	const_cast<AnnotationTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -352,8 +363,9 @@ AnnotationRow* AnnotationTable::newRow(AnnotationRow* row) {
  **
  */
  	AnnotationRow* AnnotationTable::getRowByKey(Tag annotationId)  {
+ 	checkPresenceInMemory();
 	AnnotationRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -382,8 +394,8 @@ AnnotationRow* AnnotationTable::newRow(AnnotationRow* row) {
  */
 AnnotationRow* AnnotationTable::lookup(ArrayTime time, string issue, string details) {
 		AnnotationRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(time, issue, details)) return aRow;
 		}			
 		return 0;	
@@ -447,7 +459,7 @@ AnnotationRow* AnnotationTable::lookup(ArrayTime time, string issue, string deta
 	}
 
 	
-	void AnnotationTable::fromXML(string xmlDoc)  {
+	void AnnotationTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<AnnotationTable")) 
 			error();
@@ -469,7 +481,6 @@ AnnotationRow* AnnotationTable::lookup(ArrayTime time, string issue, string deta
 		s = xml.getElementContent("<row>","</row>");
 		AnnotationRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a AnnotationRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

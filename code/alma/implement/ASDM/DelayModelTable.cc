@@ -104,6 +104,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -125,7 +131,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int DelayModelTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -334,10 +343,12 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
 
 
 	 vector<DelayModelRow *> DelayModelTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<DelayModelRow *>& DelayModelTable::get() const {
+	 	const_cast<DelayModelTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -351,6 +362,7 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
 	
 		
 	 vector<DelayModelRow *> *DelayModelTable::getByContext(Tag antennaId) {
+	 	checkPresenceInMemory();
 	  	string k = Key(antennaId);
  
 	    if (context.find(k) == context.end()) return 0;
@@ -375,6 +387,7 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
  				
 				
 	DelayModelRow* DelayModelTable::getRowByKey(Tag antennaId, ArrayTimeInterval timeInterval)  {
+		checkPresenceInMemory();
  		string keystr = Key(antennaId);
  		vector<DelayModelRow *> row;
  		
@@ -491,7 +504,7 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
 	}
 
 	
-	void DelayModelTable::fromXML(string xmlDoc)  {
+	void DelayModelTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<DelayModelTable")) 
 			error();
@@ -513,7 +526,6 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
 		s = xml.getElementContent("<row>","</row>");
 		DelayModelRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a DelayModelRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

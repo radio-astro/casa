@@ -102,6 +102,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -123,7 +129,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int CalReductionTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -379,10 +388,12 @@ CalReductionRow* CalReductionTable::newRow(CalReductionRow* row) {
 
 
 	 vector<CalReductionRow *> CalReductionTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<CalReductionRow *>& CalReductionTable::get() const {
+	 	const_cast<CalReductionTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -400,8 +411,9 @@ CalReductionRow* CalReductionTable::newRow(CalReductionRow* row) {
  **
  */
  	CalReductionRow* CalReductionTable::getRowByKey(Tag calReductionId)  {
+ 	checkPresenceInMemory();
 	CalReductionRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -444,8 +456,8 @@ CalReductionRow* CalReductionTable::newRow(CalReductionRow* row) {
  */
 CalReductionRow* CalReductionTable::lookup(int numApplied, vector<string > appliedCalibrations, int numParam, vector<string > paramSet, int numInvalidConditions, vector<InvalidatingConditionMod::InvalidatingCondition > invalidConditions, ArrayTime timeReduced, string messages, string software, string softwareVersion) {
 		CalReductionRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(numApplied, appliedCalibrations, numParam, paramSet, numInvalidConditions, invalidConditions, timeReduced, messages, software, softwareVersion)) return aRow;
 		}			
 		return 0;	
@@ -509,7 +521,7 @@ CalReductionRow* CalReductionTable::lookup(int numApplied, vector<string > appli
 	}
 
 	
-	void CalReductionTable::fromXML(string xmlDoc)  {
+	void CalReductionTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalReductionTable")) 
 			error();
@@ -531,7 +543,6 @@ CalReductionRow* CalReductionTable::lookup(int numApplied, vector<string > appli
 		s = xml.getElementContent("<row>","</row>");
 		CalReductionRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a CalReductionRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

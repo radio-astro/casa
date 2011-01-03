@@ -102,6 +102,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -123,7 +129,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int AlmaRadiometerTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -262,10 +271,12 @@ AlmaRadiometerRow* AlmaRadiometerTable::newRow(AlmaRadiometerRow* row) {
 
 
 	 vector<AlmaRadiometerRow *> AlmaRadiometerTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<AlmaRadiometerRow *>& AlmaRadiometerTable::get() const {
+	 	const_cast<AlmaRadiometerTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -283,8 +294,9 @@ AlmaRadiometerRow* AlmaRadiometerTable::newRow(AlmaRadiometerRow* row) {
  **
  */
  	AlmaRadiometerRow* AlmaRadiometerTable::getRowByKey(Tag almaRadiometerId)  {
+ 	checkPresenceInMemory();
 	AlmaRadiometerRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -356,7 +368,7 @@ AlmaRadiometerRow* AlmaRadiometerTable::newRow(AlmaRadiometerRow* row) {
 	}
 
 	
-	void AlmaRadiometerTable::fromXML(string xmlDoc)  {
+	void AlmaRadiometerTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<AlmaRadiometerTable")) 
 			error();
@@ -378,7 +390,6 @@ AlmaRadiometerRow* AlmaRadiometerTable::newRow(AlmaRadiometerRow* row) {
 		s = xml.getElementContent("<row>","</row>");
 		AlmaRadiometerRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a AlmaRadiometerRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

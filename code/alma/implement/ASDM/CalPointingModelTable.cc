@@ -108,6 +108,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -129,7 +135,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int CalPointingModelTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -390,10 +399,12 @@ CalPointingModelRow* CalPointingModelTable::newRow(CalPointingModelRow* row) {
 
 
 	 vector<CalPointingModelRow *> CalPointingModelTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<CalPointingModelRow *>& CalPointingModelTable::get() const {
+	 	const_cast<CalPointingModelTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -411,8 +422,9 @@ CalPointingModelRow* CalPointingModelTable::newRow(CalPointingModelRow* row) {
  **
  */
  	CalPointingModelRow* CalPointingModelTable::getRowByKey(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId)  {
+ 	checkPresenceInMemory();
 	CalPointingModelRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -483,8 +495,8 @@ CalPointingModelRow* CalPointingModelTable::newRow(CalPointingModelRow* row) {
  */
 CalPointingModelRow* CalPointingModelTable::lookup(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, AntennaMakeMod::AntennaMake antennaMake, PointingModelModeMod::PointingModelMode pointingModelMode, PolarizationTypeMod::PolarizationType polarizationType, int numCoeff, vector<string > coeffName, vector<float > coeffVal, vector<float > coeffError, vector<bool > coeffFixed, Angle azimuthRMS, Angle elevationRms, Angle skyRMS, double reducedChiSquared) {
 		CalPointingModelRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(antennaName, receiverBand, calDataId, calReductionId, startValidTime, endValidTime, antennaMake, pointingModelMode, polarizationType, numCoeff, coeffName, coeffVal, coeffError, coeffFixed, azimuthRMS, elevationRms, skyRMS, reducedChiSquared)) return aRow;
 		}			
 		return 0;	
@@ -548,7 +560,7 @@ CalPointingModelRow* CalPointingModelTable::lookup(string antennaName, ReceiverB
 	}
 
 	
-	void CalPointingModelTable::fromXML(string xmlDoc)  {
+	void CalPointingModelTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalPointingModelTable")) 
 			error();
@@ -570,7 +582,6 @@ CalPointingModelRow* CalPointingModelTable::lookup(string antennaName, ReceiverB
 		s = xml.getElementContent("<row>","</row>");
 		CalPointingModelRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a CalPointingModelRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

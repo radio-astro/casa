@@ -106,6 +106,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -127,7 +133,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int SourceTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -468,10 +477,12 @@ SourceRow* SourceTable::newRow(SourceRow* row) {
 
 
 	 vector<SourceRow *> SourceTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<SourceRow *>& SourceTable::get() const {
+	 	const_cast<SourceTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -495,7 +506,8 @@ SourceRow* SourceTable::newRow(SourceRow* row) {
  ** no row exists for that key.
  **
  */
- 	SourceRow* SourceTable::getRowByKey(int sourceId, ArrayTimeInterval timeInterval, Tag spectralWindowId)  {	
+ 	SourceRow* SourceTable::getRowByKey(int sourceId, ArrayTimeInterval timeInterval, Tag spectralWindowId)  {
+ 		checkPresenceInMemory();	
 		ArrayTime start = timeInterval.getStart();
 		
 		map<string, ID_TIME_ROWS >::iterator mapIter;
@@ -521,6 +533,7 @@ SourceRow* SourceTable::newRow(SourceRow* row) {
  * the autoincrementable attribute that is looked up in the table.
  */
  vector <SourceRow *>  SourceTable::getRowBySourceId(int sourceId) {
+	checkPresenceInMemory();
 	vector<SourceRow *> list;
 	map<string, ID_TIME_ROWS >::iterator mapIter;
 	
@@ -558,7 +571,7 @@ SourceRow* SourceTable::newRow(SourceRow* row) {
  * @param <<ASDMAttribute>> sourceName.
  	 		 
  */
-SourceRow* SourceTable::lookup(ArrayTimeInterval timeInterval, Tag spectralWindowId, string code, vector<Angle > direction, vector<AngularRate > properMotion, string sourceName) {		
+SourceRow* SourceTable::lookup(ArrayTimeInterval timeInterval, Tag spectralWindowId, string code, vector<Angle > direction, vector<AngularRate > properMotion, string sourceName) {	
 		using asdm::ArrayTimeInterval;
 		map<string, ID_TIME_ROWS >::iterator mapIter;
 		string k = Key(spectralWindowId);
@@ -633,7 +646,7 @@ SourceRow* SourceTable::lookup(ArrayTimeInterval timeInterval, Tag spectralWindo
 	}
 
 	
-	void SourceTable::fromXML(string xmlDoc)  {
+	void SourceTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<SourceTable")) 
 			error();
@@ -655,7 +668,6 @@ SourceRow* SourceTable::lookup(ArrayTimeInterval timeInterval, Tag spectralWindo
 		s = xml.getElementContent("<row>","</row>");
 		SourceRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a SourceRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

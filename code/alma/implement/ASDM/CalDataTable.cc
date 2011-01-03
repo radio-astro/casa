@@ -102,6 +102,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -123,7 +129,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int CalDataTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -361,10 +370,12 @@ CalDataRow* CalDataTable::newRow(CalDataRow* row) {
 
 
 	 vector<CalDataRow *> CalDataTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<CalDataRow *>& CalDataTable::get() const {
+	 	const_cast<CalDataTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -382,8 +393,9 @@ CalDataRow* CalDataTable::newRow(CalDataRow* row) {
  **
  */
  	CalDataRow* CalDataTable::getRowByKey(Tag calDataId)  {
+ 	checkPresenceInMemory();
 	CalDataRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -420,8 +432,8 @@ CalDataRow* CalDataTable::newRow(CalDataRow* row) {
  */
 CalDataRow* CalDataTable::lookup(ArrayTime startTimeObserved, ArrayTime endTimeObserved, EntityRef execBlockUID, CalDataOriginMod::CalDataOrigin calDataType, CalTypeMod::CalType calType, int numScan, vector<int > scanSet) {
 		CalDataRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(startTimeObserved, endTimeObserved, execBlockUID, calDataType, calType, numScan, scanSet)) return aRow;
 		}			
 		return 0;	
@@ -485,7 +497,7 @@ CalDataRow* CalDataTable::lookup(ArrayTime startTimeObserved, ArrayTime endTimeO
 	}
 
 	
-	void CalDataTable::fromXML(string xmlDoc)  {
+	void CalDataTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalDataTable")) 
 			error();
@@ -507,7 +519,6 @@ CalDataRow* CalDataTable::lookup(ArrayTime startTimeObserved, ArrayTime endTimeO
 		s = xml.getElementContent("<row>","</row>");
 		CalDataRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a CalDataRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

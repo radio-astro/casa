@@ -95,7 +95,10 @@ namespace asdm {
 		archiveAsBin = false;
 		
 		// File binary or XML
-		fileAsBin = false;		
+		fileAsBin = false;
+
+		loadInProgress = false;
+		presentInMemory = true;
 	}
 	
 /**
@@ -308,8 +311,15 @@ namespace asdm {
 	 * @return Alls rows as an array of DataDescriptionRow
 	 */
 	vector<DataDescriptionRow *> DataDescriptionTable::get() {
+	 	checkPresenceInMemory();
 		return privateRows;
 		// return row;
+	}
+
+	const vector<DataDescriptionRow *>& DataDescriptionTable::get() const {
+		const_cast<DataDescriptionTable&>(*this).checkPresenceInMemory();
+		return privateRows;
+
 	}
 
 	
@@ -348,8 +358,8 @@ namespace asdm {
  */
 DataDescriptionRow* DataDescriptionTable::lookup(Tag polOrHoloId, Tag spectralWindowId) {
 		DataDescriptionRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i);
 			if (aRow->compareNoAutoInc(polOrHoloId, spectralWindowId)) return aRow;
 		}			
 		return 0;	
@@ -426,7 +436,7 @@ DataDescriptionRow* DataDescriptionTable::lookup(Tag polOrHoloId, Tag spectralWi
 		return buf;
 	}
 	
-	void DataDescriptionTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void DataDescriptionTable::fromXML(string& xmlDoc) throw(ConversionException) {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<DataDescriptionTable")) 
 			error();
@@ -549,8 +559,10 @@ DataDescriptionRow* DataDescriptionTable::lookup(Tag polOrHoloId, Tag spectralWi
 		// And parse the content with the appropriate method
 		if (fileAsBin) 
 			setFromMIME(ss.str());
-		else
-			fromXML(ss.str());		
+		else {
+			string xmlDocument = ss.str(); ss.str("");
+			fromXML(xmlDocument);
+		}
 	}	
 	
 	

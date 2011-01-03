@@ -108,6 +108,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -129,7 +135,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int FreqOffsetTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -326,10 +335,12 @@ FreqOffsetRow* FreqOffsetTable::newRow(FreqOffsetRow* row) {
 
 
 	 vector<FreqOffsetRow *> FreqOffsetTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<FreqOffsetRow *>& FreqOffsetTable::get() const {
+	 	const_cast<FreqOffsetTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -343,6 +354,7 @@ FreqOffsetRow* FreqOffsetTable::newRow(FreqOffsetRow* row) {
 	
 		
 	 vector<FreqOffsetRow *> *FreqOffsetTable::getByContext(Tag antennaId, Tag spectralWindowId, int feedId) {
+	 	checkPresenceInMemory();
 	  	string k = Key(antennaId, spectralWindowId, feedId);
  
 	    if (context.find(k) == context.end()) return 0;
@@ -367,6 +379,7 @@ FreqOffsetRow* FreqOffsetTable::newRow(FreqOffsetRow* row) {
  				
 				
 	FreqOffsetRow* FreqOffsetTable::getRowByKey(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId)  {
+		checkPresenceInMemory();
  		string keystr = Key(antennaId, spectralWindowId, feedId);
  		vector<FreqOffsetRow *> row;
  		
@@ -483,7 +496,7 @@ FreqOffsetRow* FreqOffsetTable::newRow(FreqOffsetRow* row) {
 	}
 
 	
-	void FreqOffsetTable::fromXML(string xmlDoc)  {
+	void FreqOffsetTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<FreqOffsetTable")) 
 			error();
@@ -505,7 +518,6 @@ FreqOffsetRow* FreqOffsetTable::newRow(FreqOffsetRow* row) {
 		s = xml.getElementContent("<row>","</row>");
 		FreqOffsetRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a FreqOffsetRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

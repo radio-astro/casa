@@ -108,6 +108,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -129,7 +135,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int CalPointingTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -424,10 +433,12 @@ CalPointingRow* CalPointingTable::newRow(CalPointingRow* row) {
 
 
 	 vector<CalPointingRow *> CalPointingTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<CalPointingRow *>& CalPointingTable::get() const {
+	 	const_cast<CalPointingTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -445,8 +456,9 @@ CalPointingRow* CalPointingTable::newRow(CalPointingRow* row) {
  **
  */
  	CalPointingRow* CalPointingTable::getRowByKey(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId)  {
+ 	checkPresenceInMemory();
 	CalPointingRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -521,8 +533,8 @@ CalPointingRow* CalPointingTable::newRow(CalPointingRow* row) {
  */
 CalPointingRow* CalPointingTable::lookup(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, Temperature ambientTemperature, AntennaMakeMod::AntennaMake antennaMake, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, vector<Angle > direction, vector<Frequency > frequencyRange, PointingModelModeMod::PointingModelMode pointingModelMode, PointingMethodMod::PointingMethod pointingMethod, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<Angle > > collOffsetRelative, vector<vector<Angle > > collOffsetAbsolute, vector<vector<Angle > > collError, vector<vector<bool > > collOffsetTied, vector<double > reducedChiSquared) {
 		CalPointingRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(antennaName, receiverBand, calDataId, calReductionId, startValidTime, endValidTime, ambientTemperature, antennaMake, atmPhaseCorrection, direction, frequencyRange, pointingModelMode, pointingMethod, numReceptor, polarizationTypes, collOffsetRelative, collOffsetAbsolute, collError, collOffsetTied, reducedChiSquared)) return aRow;
 		}			
 		return 0;	
@@ -586,7 +598,7 @@ CalPointingRow* CalPointingTable::lookup(string antennaName, ReceiverBandMod::Re
 	}
 
 	
-	void CalPointingTable::fromXML(string xmlDoc)  {
+	void CalPointingTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalPointingTable")) 
 			error();
@@ -608,7 +620,6 @@ CalPointingRow* CalPointingTable::lookup(string antennaName, ReceiverBandMod::Re
 		s = xml.getElementContent("<row>","</row>");
 		CalPointingRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a CalPointingRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

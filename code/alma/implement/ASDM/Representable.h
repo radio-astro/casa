@@ -61,17 +61,19 @@ public:
 
 	virtual ~Representable() {}
 	virtual string toXML()   = 0;
-	virtual void fromXML(string xml) = 0;
+	virtual void fromXML(string& xml) = 0;
 
 	virtual string getName() const = 0;
 	virtual unsigned int size() const = 0;
-	
+		
 protected:
 
 	virtual Entity getEntity() const = 0;
-
 	virtual void setEntity(Entity e) = 0;
 
+	bool presentInMemory;
+	bool loadInProgress;
+	uint32_t declaredSize;
 };
 	
 } // End namespace asdm

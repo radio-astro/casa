@@ -102,6 +102,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -123,7 +129,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int ProcessorTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -309,10 +318,12 @@ ProcessorRow* ProcessorTable::newRow(ProcessorRow* row) {
 
 
 	 vector<ProcessorRow *> ProcessorTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<ProcessorRow *>& ProcessorTable::get() const {
+	 	const_cast<ProcessorTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -330,8 +341,9 @@ ProcessorRow* ProcessorTable::newRow(ProcessorRow* row) {
  **
  */
  	ProcessorRow* ProcessorTable::getRowByKey(Tag processorId)  {
+ 	checkPresenceInMemory();
 	ProcessorRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -360,8 +372,8 @@ ProcessorRow* ProcessorTable::newRow(ProcessorRow* row) {
  */
 ProcessorRow* ProcessorTable::lookup(Tag modeId, ProcessorTypeMod::ProcessorType processorType, ProcessorSubTypeMod::ProcessorSubType processorSubType) {
 		ProcessorRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(modeId, processorType, processorSubType)) return aRow;
 		}			
 		return 0;	
@@ -425,7 +437,7 @@ ProcessorRow* ProcessorTable::lookup(Tag modeId, ProcessorTypeMod::ProcessorType
 	}
 
 	
-	void ProcessorTable::fromXML(string xmlDoc)  {
+	void ProcessorTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<ProcessorTable")) 
 			error();
@@ -447,7 +459,6 @@ ProcessorRow* ProcessorTable::lookup(Tag modeId, ProcessorTypeMod::ProcessorType
 		s = xml.getElementContent("<row>","</row>");
 		ProcessorRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a ProcessorRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

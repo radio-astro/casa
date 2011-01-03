@@ -102,6 +102,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -123,7 +129,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int StationTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -309,10 +318,12 @@ StationRow* StationTable::newRow(StationRow* row) {
 
 
 	 vector<StationRow *> StationTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<StationRow *>& StationTable::get() const {
+	 	const_cast<StationTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -330,8 +341,9 @@ StationRow* StationTable::newRow(StationRow* row) {
  **
  */
  	StationRow* StationTable::getRowByKey(Tag stationId)  {
+ 	checkPresenceInMemory();
 	StationRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -360,8 +372,8 @@ StationRow* StationTable::newRow(StationRow* row) {
  */
 StationRow* StationTable::lookup(string name, vector<Length > position, StationTypeMod::StationType type) {
 		StationRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(name, position, type)) return aRow;
 		}			
 		return 0;	
@@ -425,7 +437,7 @@ StationRow* StationTable::lookup(string name, vector<Length > position, StationT
 	}
 
 	
-	void StationTable::fromXML(string xmlDoc)  {
+	void StationTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<StationTable")) 
 			error();
@@ -447,7 +459,6 @@ StationRow* StationTable::lookup(string name, vector<Length > position, StationT
 		s = xml.getElementContent("<row>","</row>");
 		StationRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a StationRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

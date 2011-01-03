@@ -104,6 +104,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -125,7 +131,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int PointingModelTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -395,10 +404,12 @@ PointingModelRow* PointingModelTable::newRow(PointingModelRow* row) {
 
 
 	 vector<PointingModelRow *> PointingModelTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<PointingModelRow *>& PointingModelTable::get() const {
+	 	const_cast<PointingModelTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -416,8 +427,9 @@ PointingModelRow* PointingModelTable::newRow(PointingModelRow* row) {
  **
  */
  	PointingModelRow* PointingModelTable::getRowByKey(Tag antennaId, int pointingModelId)  {
+ 	checkPresenceInMemory();
 	PointingModelRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -460,8 +472,8 @@ PointingModelRow* PointingModelTable::newRow(PointingModelRow* row) {
  */
 PointingModelRow* PointingModelTable::lookup(Tag antennaId, int numCoeff, vector<string > coeffName, vector<float > coeffVal, PolarizationTypeMod::PolarizationType polarizationType, ReceiverBandMod::ReceiverBand receiverBand, string assocNature, int assocPointingModelId) {
 		PointingModelRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(antennaId, numCoeff, coeffName, coeffVal, polarizationType, receiverBand, assocNature, assocPointingModelId)) return aRow;
 		}			
 		return 0;	
@@ -478,6 +490,7 @@ PointingModelRow* PointingModelTable::lookup(Tag antennaId, int numCoeff, vector
  * the autoincrementable attribute that is looked up in the table.
  */
  vector <PointingModelRow *>  PointingModelTable::getRowByPointingModelId(int pointingModelId) {
+	checkPresenceInMemory();
 	vector<PointingModelRow *> list;
 	for (unsigned int i = 0; i < row.size(); ++i) {
 		PointingModelRow &x = *row[i];
@@ -545,7 +558,7 @@ PointingModelRow* PointingModelTable::lookup(Tag antennaId, int numCoeff, vector
 	}
 
 	
-	void PointingModelTable::fromXML(string xmlDoc)  {
+	void PointingModelTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<PointingModelTable")) 
 			error();
@@ -567,7 +580,6 @@ PointingModelRow* PointingModelTable::lookup(Tag antennaId, int numCoeff, vector
 		s = xml.getElementContent("<row>","</row>");
 		PointingModelRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a PointingModelRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

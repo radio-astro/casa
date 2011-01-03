@@ -110,6 +110,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -131,7 +137,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int CalCurveTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -384,10 +393,12 @@ CalCurveRow* CalCurveTable::newRow(CalCurveRow* row) {
 
 
 	 vector<CalCurveRow *> CalCurveTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<CalCurveRow *>& CalCurveTable::get() const {
+	 	const_cast<CalCurveTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -405,8 +416,9 @@ CalCurveRow* CalCurveTable::newRow(CalCurveRow* row) {
  **
  */
  	CalCurveRow* CalCurveTable::getRowByKey(AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, CalCurveTypeMod::CalCurveType typeCurve, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId)  {
+ 	checkPresenceInMemory();
 	CalCurveRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -477,8 +489,8 @@ CalCurveRow* CalCurveTable::newRow(CalCurveRow* row) {
  */
 CalCurveRow* CalCurveTable::lookup(AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, CalCurveTypeMod::CalCurveType typeCurve, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, int numAntenna, int numPoly, int numReceptor, vector<string > antennaNames, string refAntennaName, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<vector<float > > > curve, vector<double > reducedChiSquared) {
 		CalCurveRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(atmPhaseCorrection, typeCurve, receiverBand, calDataId, calReductionId, startValidTime, endValidTime, frequencyRange, numAntenna, numPoly, numReceptor, antennaNames, refAntennaName, polarizationTypes, curve, reducedChiSquared)) return aRow;
 		}			
 		return 0;	
@@ -542,7 +554,7 @@ CalCurveRow* CalCurveTable::lookup(AtmPhaseCorrectionMod::AtmPhaseCorrection atm
 	}
 
 	
-	void CalCurveTable::fromXML(string xmlDoc)  {
+	void CalCurveTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalCurveTable")) 
 			error();
@@ -564,7 +576,6 @@ CalCurveRow* CalCurveTable::lookup(AtmPhaseCorrectionMod::AtmPhaseCorrection atm
 		s = xml.getElementContent("<row>","</row>");
 		CalCurveRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a CalCurveRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

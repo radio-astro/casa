@@ -102,6 +102,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -123,7 +129,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int SwitchCycleTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -333,10 +342,12 @@ SwitchCycleRow* SwitchCycleTable::newRow(SwitchCycleRow* row) {
 
 
 	 vector<SwitchCycleRow *> SwitchCycleTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<SwitchCycleRow *>& SwitchCycleTable::get() const {
+	 	const_cast<SwitchCycleTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -354,8 +365,9 @@ SwitchCycleRow* SwitchCycleTable::newRow(SwitchCycleRow* row) {
  **
  */
  	SwitchCycleRow* SwitchCycleTable::getRowByKey(Tag switchCycleId)  {
+ 	checkPresenceInMemory();
 	SwitchCycleRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -388,8 +400,8 @@ SwitchCycleRow* SwitchCycleTable::newRow(SwitchCycleRow* row) {
  */
 SwitchCycleRow* SwitchCycleTable::lookup(int numStep, vector<float > weightArray, vector<vector<Angle > > dirOffsetArray, vector<Frequency > freqOffsetArray, vector<Interval > stepDurationArray) {
 		SwitchCycleRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(numStep, weightArray, dirOffsetArray, freqOffsetArray, stepDurationArray)) return aRow;
 		}			
 		return 0;	
@@ -453,7 +465,7 @@ SwitchCycleRow* SwitchCycleTable::lookup(int numStep, vector<float > weightArray
 	}
 
 	
-	void SwitchCycleTable::fromXML(string xmlDoc)  {
+	void SwitchCycleTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<SwitchCycleTable")) 
 			error();
@@ -475,7 +487,6 @@ SwitchCycleRow* SwitchCycleTable::lookup(int numStep, vector<float > weightArray
 		s = xml.getElementContent("<row>","</row>");
 		SwitchCycleRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a SwitchCycleRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

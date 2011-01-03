@@ -102,6 +102,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -123,7 +129,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int HolographyTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -319,10 +328,12 @@ HolographyRow* HolographyTable::newRow(HolographyRow* row) {
 
 
 	 vector<HolographyRow *> HolographyTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<HolographyRow *>& HolographyTable::get() const {
+	 	const_cast<HolographyTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -340,8 +351,9 @@ HolographyRow* HolographyTable::newRow(HolographyRow* row) {
  **
  */
  	HolographyRow* HolographyTable::getRowByKey(Tag holographyId)  {
+ 	checkPresenceInMemory();
 	HolographyRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -372,8 +384,8 @@ HolographyRow* HolographyTable::newRow(HolographyRow* row) {
  */
 HolographyRow* HolographyTable::lookup(Length distance, Length focus, int numCorr, vector<HolographyChannelTypeMod::HolographyChannelType > type) {
 		HolographyRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(distance, focus, numCorr, type)) return aRow;
 		}			
 		return 0;	
@@ -437,7 +449,7 @@ HolographyRow* HolographyTable::lookup(Length distance, Length focus, int numCor
 	}
 
 	
-	void HolographyTable::fromXML(string xmlDoc)  {
+	void HolographyTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<HolographyTable")) 
 			error();
@@ -459,7 +471,6 @@ HolographyRow* HolographyTable::lookup(Length distance, Length focus, int numCor
 		s = xml.getElementContent("<row>","</row>");
 		HolographyRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a HolographyRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

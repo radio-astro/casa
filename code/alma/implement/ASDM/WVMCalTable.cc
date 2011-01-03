@@ -106,6 +106,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -127,7 +133,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int WVMCalTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -342,10 +351,12 @@ WVMCalRow* WVMCalTable::newRow(WVMCalRow* row) {
 
 
 	 vector<WVMCalRow *> WVMCalTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<WVMCalRow *>& WVMCalTable::get() const {
+	 	const_cast<WVMCalTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -359,6 +370,7 @@ WVMCalRow* WVMCalTable::newRow(WVMCalRow* row) {
 	
 		
 	 vector<WVMCalRow *> *WVMCalTable::getByContext(Tag antennaId, Tag spectralWindowId) {
+	 	checkPresenceInMemory();
 	  	string k = Key(antennaId, spectralWindowId);
  
 	    if (context.find(k) == context.end()) return 0;
@@ -383,6 +395,7 @@ WVMCalRow* WVMCalTable::newRow(WVMCalRow* row) {
  				
 				
 	WVMCalRow* WVMCalTable::getRowByKey(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval)  {
+		checkPresenceInMemory();
  		string keystr = Key(antennaId, spectralWindowId);
  		vector<WVMCalRow *> row;
  		
@@ -499,7 +512,7 @@ WVMCalRow* WVMCalTable::newRow(WVMCalRow* row) {
 	}
 
 	
-	void WVMCalTable::fromXML(string xmlDoc)  {
+	void WVMCalTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<WVMCalTable")) 
 			error();
@@ -521,7 +534,6 @@ WVMCalRow* WVMCalTable::newRow(WVMCalRow* row) {
 		s = xml.getElementContent("<row>","</row>");
 		WVMCalRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a WVMCalRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

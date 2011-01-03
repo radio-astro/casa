@@ -102,6 +102,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -123,7 +129,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int FlagTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -341,10 +350,12 @@ FlagRow* FlagTable::newRow(FlagRow* row) {
 
 
 	 vector<FlagRow *> FlagTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<FlagRow *>& FlagTable::get() const {
+	 	const_cast<FlagTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -362,8 +373,9 @@ FlagRow* FlagTable::newRow(FlagRow* row) {
  **
  */
  	FlagRow* FlagTable::getRowByKey(Tag flagId)  {
+ 	checkPresenceInMemory();
 	FlagRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -396,8 +408,8 @@ FlagRow* FlagTable::newRow(FlagRow* row) {
  */
 FlagRow* FlagTable::lookup(ArrayTime startTime, ArrayTime endTime, string reason, int numAntenna, vector<Tag>  antennaId) {
 		FlagRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(startTime, endTime, reason, numAntenna, antennaId)) return aRow;
 		}			
 		return 0;	
@@ -461,7 +473,7 @@ FlagRow* FlagTable::lookup(ArrayTime startTime, ArrayTime endTime, string reason
 	}
 
 	
-	void FlagTable::fromXML(string xmlDoc)  {
+	void FlagTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<FlagTable")) 
 			error();
@@ -483,7 +495,6 @@ FlagRow* FlagTable::lookup(ArrayTime startTime, ArrayTime endTime, string reason
 		s = xml.getElementContent("<row>","</row>");
 		FlagRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a FlagRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

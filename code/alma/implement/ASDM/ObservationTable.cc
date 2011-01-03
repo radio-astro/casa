@@ -102,6 +102,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -123,7 +129,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int ObservationTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -258,10 +267,12 @@ ObservationRow* ObservationTable::newRow(ObservationRow* row) {
 
 
 	 vector<ObservationRow *> ObservationTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<ObservationRow *>& ObservationTable::get() const {
+	 	const_cast<ObservationTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -279,8 +290,9 @@ ObservationRow* ObservationTable::newRow(ObservationRow* row) {
  **
  */
  	ObservationRow* ObservationTable::getRowByKey(Tag observationId)  {
+ 	checkPresenceInMemory();
 	ObservationRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -352,7 +364,7 @@ ObservationRow* ObservationTable::newRow(ObservationRow* row) {
 	}
 
 	
-	void ObservationTable::fromXML(string xmlDoc)  {
+	void ObservationTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<ObservationTable")) 
 			error();
@@ -374,7 +386,6 @@ ObservationRow* ObservationTable::newRow(ObservationRow* row) {
 		s = xml.getElementContent("<row>","</row>");
 		ObservationRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a ObservationRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

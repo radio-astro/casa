@@ -102,6 +102,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -123,7 +129,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int SeeingTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -283,10 +292,12 @@ SeeingRow* SeeingTable::newRow(SeeingRow* row) {
 
 
 	 vector<SeeingRow *> SeeingTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<SeeingRow *>& SeeingTable::get() const {
+	 	const_cast<SeeingTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -314,8 +325,9 @@ SeeingRow* SeeingTable::newRow(SeeingRow* row) {
  **
  */
  	SeeingRow* SeeingTable::getRowByKey(ArrayTimeInterval timeInterval)  {
+ 	checkPresenceInMemory();
 	SeeingRow* aRow = 0;
-		for (unsigned int i = 0; i < row.size(); i++) {
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
 			aRow = row.at(i);
 			if (aRow->timeInterval.contains(timeInterval.getStart())) return aRow;
 		}
@@ -381,7 +393,7 @@ SeeingRow* SeeingTable::newRow(SeeingRow* row) {
 	}
 
 	
-	void SeeingTable::fromXML(string xmlDoc)  {
+	void SeeingTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<SeeingTable")) 
 			error();
@@ -403,7 +415,6 @@ SeeingRow* SeeingTable::newRow(SeeingRow* row) {
 		s = xml.getElementContent("<row>","</row>");
 		SeeingRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a SeeingRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

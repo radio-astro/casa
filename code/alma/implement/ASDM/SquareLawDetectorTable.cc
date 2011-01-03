@@ -102,6 +102,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -123,7 +129,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int SquareLawDetectorTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -299,10 +308,12 @@ SquareLawDetectorRow* SquareLawDetectorTable::newRow(SquareLawDetectorRow* row) 
 
 
 	 vector<SquareLawDetectorRow *> SquareLawDetectorTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<SquareLawDetectorRow *>& SquareLawDetectorTable::get() const {
+	 	const_cast<SquareLawDetectorTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -320,8 +331,9 @@ SquareLawDetectorRow* SquareLawDetectorTable::newRow(SquareLawDetectorRow* row) 
  **
  */
  	SquareLawDetectorRow* SquareLawDetectorTable::getRowByKey(Tag squareLawDetectorId)  {
+ 	checkPresenceInMemory();
 	SquareLawDetectorRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -348,8 +360,8 @@ SquareLawDetectorRow* SquareLawDetectorTable::newRow(SquareLawDetectorRow* row) 
  */
 SquareLawDetectorRow* SquareLawDetectorTable::lookup(int numBand, DetectorBandTypeMod::DetectorBandType bandType) {
 		SquareLawDetectorRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(numBand, bandType)) return aRow;
 		}			
 		return 0;	
@@ -413,7 +425,7 @@ SquareLawDetectorRow* SquareLawDetectorTable::lookup(int numBand, DetectorBandTy
 	}
 
 	
-	void SquareLawDetectorTable::fromXML(string xmlDoc)  {
+	void SquareLawDetectorTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<SquareLawDetectorTable")) 
 			error();
@@ -435,7 +447,6 @@ SquareLawDetectorRow* SquareLawDetectorTable::lookup(int numBand, DetectorBandTy
 		s = xml.getElementContent("<row>","</row>");
 		SquareLawDetectorRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a SquareLawDetectorRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

@@ -102,6 +102,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -123,7 +129,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int EphemerisTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -258,10 +267,12 @@ EphemerisRow* EphemerisTable::newRow(EphemerisRow* row) {
 
 
 	 vector<EphemerisRow *> EphemerisTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<EphemerisRow *>& EphemerisTable::get() const {
+	 	const_cast<EphemerisTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -279,8 +290,9 @@ EphemerisRow* EphemerisTable::newRow(EphemerisRow* row) {
  **
  */
  	EphemerisRow* EphemerisTable::getRowByKey(Tag ephemerisId)  {
+ 	checkPresenceInMemory();
 	EphemerisRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -352,7 +364,7 @@ EphemerisRow* EphemerisTable::newRow(EphemerisRow* row) {
 	}
 
 	
-	void EphemerisTable::fromXML(string xmlDoc)  {
+	void EphemerisTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<EphemerisTable")) 
 			error();
@@ -374,7 +386,6 @@ EphemerisRow* EphemerisTable::newRow(EphemerisRow* row) {
 		s = xml.getElementContent("<row>","</row>");
 		EphemerisRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a EphemerisRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

@@ -1160,8 +1160,9 @@ int main(int argc, char *argv[]) {
       ("verbose,v", "logs numerous informations as the filler is working.")
       ("revision,r", "logs information about the revision of this application.")
       ("dry-run,m", "does not produce any MS MAIN table.")
-      ("ignore-time,t", "all the rows of the tables Feed, History, Pointing, Source, SysCal, CalDevice, SysPower and Weather are processed independently of the time range of the selected exec block / scan.");
-    
+      ("ignore-time,t", "all the rows of the tables Feed, History, Pointing, Source, SysCal, CalDevice, SysPower and Weather are processed independently of the time range of the selected exec block / scan.")
+      ("process-syspower", "the SysPower table is processed if and only if the option is present.")
+      ("process-caldevice", "The CalDevice table is processed if and only if the option is present.");
 
     // Hidden options, will be allowed both on command line and
     // in config file, but will not be shown to the user.
@@ -1204,7 +1205,7 @@ int main(int argc, char *argv[]) {
     // Revision ? displays revision's info and don't go further.
     if (vm.count("revision")) {
       errstream.str("");
-      errstream << "$Id: asdm2MS.cpp,v 1.63 2010/12/27 17:32:16 mcaillat Exp $" << "\n" ;
+      errstream << "$Id: asdm2MS.cpp,v 1.65 2011/01/03 17:06:11 mcaillat Exp $" << "\n" ;
       error(errstream.str());
     }
 
@@ -1380,7 +1381,7 @@ int main(int argc, char *argv[]) {
     infostream.str("");
     infostream << "Input ASDM dataset : " << dsName << endl;
     info(infostream.str());
-    ds->setFromFile(dsName, false);
+    ds->setFromFile(dsName, true);
   }
   catch (ConversionException e) {
     errstream.str("");
@@ -1488,7 +1489,9 @@ int main(int argc, char *argv[]) {
     scansOptionInfo = "All scans of all exec blocks will be processed \n";
   }
 
-  bool ignoreTime = vm.count("ignore-time") != 0;
+  bool	ignoreTime	 = vm.count("ignore-time") != 0;
+  bool	processSysPower	 = vm.count("process-syspower") != 0;
+  bool	processCalDevice = vm.count("process-caldevice") != 0;
 
   //
   // Report the selection's parameters.
@@ -1510,6 +1513,10 @@ int main(int argc, char *argv[]) {
     infostream << "All rows of the tables depending on time intervals will be processed independantly of the selected exec block / scan.";
   info(infostream.str());
 
+  infostream.str("");
+  infostream << "The SysPower table will " << (processSysPower ? "":"not ") << "be processed." << endl;
+  infostream << "The CalDevice table will " << (processCalDevice ? "":"not ") << "be processed." << endl;
+  info(infostream.str());
   //
   // Shall we have Complex or Float data ?
   //
@@ -2846,15 +2853,15 @@ int main(int argc, char *argv[]) {
   //
   // Process the CalDevice table.
   const CalDeviceTable& calDeviceT = ds->getCalDevice();
-  {
+  if (processCalDevice) {
     infostream.str("");
     infostream << "The dataset has " << calDeviceT.size() << " calDevice(s)...";
     rowsInAScanbyTimeIntervalFunctor<CalDeviceRow> selector(selectedScanRow_v);
-
+    
     const vector<CalDeviceRow *>& calDevices = selector(calDeviceT.get(), ignoreTime);
     if (!ignoreTime) 
       infostream << calDevices.size() << " of them in the selected exec blocks / scans ... ";
-
+    
     info(infostream.str());
 
     for (vector<CalDeviceRow*>::const_iterator iter = calDevices.begin(); iter != calDevices.end(); iter++) {
@@ -3057,10 +3064,9 @@ int main(int argc, char *argv[]) {
 
   //
   // Process the SysPower table.
-
+  
   const SysPowerTable& sysPowerT = ds->getSysPower();
-  {
-    
+  if (processSysPower) { 
     vector<int>		antennaId;
     vector<int>		spectralWindowId;
     vector<int>		feedId;
@@ -3070,29 +3076,30 @@ int main(int argc, char *argv[]) {
     vector<float>	switchedPowerDifference;
     vector<float>	switchedPowerSum;
     vector<float>	requantizerGain;
-
+    
     unsigned int        numReceptor0;
     {
       infostream.str("");
-      infostream << "The dataset has " << sysPowerT.size() << " syspower(s)...";
+      infostream << "The dataset has " << sysPowerT.size() << " syspower(s)..."; 
+      info(infostream.str()); infostream.str("");
       rowsInAScanbyTimeIntervalFunctor<SysPowerRow> selector(selectedScanRow_v);
-   
+      
       const vector<SysPowerRow *>& sysPowers = selector(sysPowerT.get(), ignoreTime);
-
+      
       if (!ignoreTime) 
 	infostream << sysPowers.size() << " of them in the selected exec blocks / scans ... ";	
-
+      
       info(infostream.str());
-
+      
       infostream.str("");
       errstream.str("");
-
+      
       antennaId.resize(sysPowers.size());
       spectralWindowId.resize(sysPowers.size());
       feedId.resize(sysPowers.size());
       time.resize(sysPowers.size());
       interval.resize(sysPowers.size());
-
+      
       /*
        * Prepare the mandatory attributes.
        */
@@ -3182,7 +3189,7 @@ int main(int argc, char *argv[]) {
     }
   } // end of filling SysPower by slice.
 
-#if 1
+
   //
   // Load the weather table
   const WeatherTable& weatherT = ds->getWeather();
@@ -3252,7 +3259,7 @@ int main(int argc, char *argv[]) {
       info(infostream.str());
     }
   }
-#endif
+
 
   // And then finally process the state and the main table in parallel.
   //

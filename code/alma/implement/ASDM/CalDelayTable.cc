@@ -112,6 +112,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -133,7 +139,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int CalDelayTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -386,10 +395,12 @@ CalDelayRow* CalDelayTable::newRow(CalDelayRow* row) {
 
 
 	 vector<CalDelayRow *> CalDelayTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<CalDelayRow *>& CalDelayTable::get() const {
+	 	const_cast<CalDelayTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -407,8 +418,9 @@ CalDelayRow* CalDelayTable::newRow(CalDelayRow* row) {
  **
  */
  	CalDelayRow* CalDelayTable::getRowByKey(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, BasebandNameMod::BasebandName basebandName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId)  {
+ 	checkPresenceInMemory();
 	CalDelayRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -479,8 +491,8 @@ CalDelayRow* CalDelayTable::newRow(CalDelayRow* row) {
  */
 CalDelayRow* CalDelayTable::lookup(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, BasebandNameMod::BasebandName basebandName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, string refAntennaName, int numReceptor, vector<double > delayError, vector<double > delayOffset, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > reducedChiSquared) {
 		CalDelayRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(antennaName, atmPhaseCorrection, basebandName, receiverBand, calDataId, calReductionId, startValidTime, endValidTime, refAntennaName, numReceptor, delayError, delayOffset, polarizationTypes, reducedChiSquared)) return aRow;
 		}			
 		return 0;	
@@ -544,7 +556,7 @@ CalDelayRow* CalDelayTable::lookup(string antennaName, AtmPhaseCorrectionMod::At
 	}
 
 	
-	void CalDelayTable::fromXML(string xmlDoc)  {
+	void CalDelayTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalDelayTable")) 
 			error();
@@ -566,7 +578,6 @@ CalDelayRow* CalDelayTable::lookup(string antennaName, AtmPhaseCorrectionMod::At
 		s = xml.getElementContent("<row>","</row>");
 		CalDelayRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a CalDelayRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

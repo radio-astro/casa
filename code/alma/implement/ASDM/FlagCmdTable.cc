@@ -102,6 +102,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -123,7 +129,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int FlagCmdTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -289,10 +298,12 @@ FlagCmdRow* FlagCmdTable::newRow(FlagCmdRow* row) {
 
 
 	 vector<FlagCmdRow *> FlagCmdTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<FlagCmdRow *>& FlagCmdTable::get() const {
+	 	const_cast<FlagCmdTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -320,8 +331,9 @@ FlagCmdRow* FlagCmdTable::newRow(FlagCmdRow* row) {
  **
  */
  	FlagCmdRow* FlagCmdTable::getRowByKey(ArrayTimeInterval timeInterval)  {
+ 	checkPresenceInMemory();
 	FlagCmdRow* aRow = 0;
-		for (unsigned int i = 0; i < row.size(); i++) {
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
 			aRow = row.at(i);
 			if (aRow->timeInterval.contains(timeInterval.getStart())) return aRow;
 		}
@@ -387,7 +399,7 @@ FlagCmdRow* FlagCmdTable::newRow(FlagCmdRow* row) {
 	}
 
 	
-	void FlagCmdTable::fromXML(string xmlDoc)  {
+	void FlagCmdTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<FlagCmdTable")) 
 			error();
@@ -409,7 +421,6 @@ FlagCmdRow* FlagCmdTable::newRow(FlagCmdRow* row) {
 		s = xml.getElementContent("<row>","</row>");
 		FlagCmdRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a FlagCmdRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

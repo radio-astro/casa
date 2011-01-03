@@ -102,6 +102,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -123,7 +129,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int SBSummaryTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -433,10 +442,12 @@ SBSummaryRow* SBSummaryTable::newRow(SBSummaryRow* row) {
 
 
 	 vector<SBSummaryRow *> SBSummaryTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<SBSummaryRow *>& SBSummaryTable::get() const {
+	 	const_cast<SBSummaryTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -454,8 +465,9 @@ SBSummaryRow* SBSummaryTable::newRow(SBSummaryRow* row) {
  **
  */
  	SBSummaryRow* SBSummaryTable::getRowByKey(Tag sBSummaryId)  {
+ 	checkPresenceInMemory();
 	SBSummaryRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -508,8 +520,8 @@ SBSummaryRow* SBSummaryTable::newRow(SBSummaryRow* row) {
  */
 SBSummaryRow* SBSummaryTable::lookup(EntityRef sbSummaryUID, EntityRef projectUID, EntityRef obsUnitSetId, double frequency, ReceiverBandMod::ReceiverBand frequencyBand, SBTypeMod::SBType sbType, Interval sbDuration, vector<Angle > centerDirection, int numObservingMode, vector<string > observingMode, int numberRepeats, int numScienceGoal, vector<string > scienceGoal, int numWeatherConstraint, vector<string > weatherConstraint) {
 		SBSummaryRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(sbSummaryUID, projectUID, obsUnitSetId, frequency, frequencyBand, sbType, sbDuration, centerDirection, numObservingMode, observingMode, numberRepeats, numScienceGoal, scienceGoal, numWeatherConstraint, weatherConstraint)) return aRow;
 		}			
 		return 0;	
@@ -573,7 +585,7 @@ SBSummaryRow* SBSummaryTable::lookup(EntityRef sbSummaryUID, EntityRef projectUI
 	}
 
 	
-	void SBSummaryTable::fromXML(string xmlDoc)  {
+	void SBSummaryTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<SBSummaryTable")) 
 			error();
@@ -595,7 +607,6 @@ SBSummaryRow* SBSummaryTable::lookup(EntityRef sbSummaryUID, EntityRef projectUI
 		s = xml.getElementContent("<row>","</row>");
 		SBSummaryRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a SBSummaryRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

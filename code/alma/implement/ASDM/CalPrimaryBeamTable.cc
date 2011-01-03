@@ -108,6 +108,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -129,7 +135,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int CalPrimaryBeamTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -356,10 +365,12 @@ CalPrimaryBeamRow* CalPrimaryBeamTable::newRow(CalPrimaryBeamRow* row) {
 
 
 	 vector<CalPrimaryBeamRow *> CalPrimaryBeamTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<CalPrimaryBeamRow *>& CalPrimaryBeamTable::get() const {
+	 	const_cast<CalPrimaryBeamTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -377,8 +388,9 @@ CalPrimaryBeamRow* CalPrimaryBeamTable::newRow(CalPrimaryBeamRow* row) {
  **
  */
  	CalPrimaryBeamRow* CalPrimaryBeamTable::getRowByKey(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId)  {
+ 	checkPresenceInMemory();
 	CalPrimaryBeamRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -439,8 +451,8 @@ CalPrimaryBeamRow* CalPrimaryBeamTable::newRow(CalPrimaryBeamRow* row) {
  */
 CalPrimaryBeamRow* CalPrimaryBeamTable::lookup(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, AntennaMakeMod::AntennaMake antennaMake, vector<Frequency > frequencyRange, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > mainBeamEfficiency, EntityRef beamMapUID, float relativeAmplitudeRms) {
 		CalPrimaryBeamRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(antennaName, receiverBand, calDataId, calReductionId, startValidTime, endValidTime, antennaMake, frequencyRange, numReceptor, polarizationTypes, mainBeamEfficiency, beamMapUID, relativeAmplitudeRms)) return aRow;
 		}			
 		return 0;	
@@ -504,7 +516,7 @@ CalPrimaryBeamRow* CalPrimaryBeamTable::lookup(string antennaName, ReceiverBandM
 	}
 
 	
-	void CalPrimaryBeamTable::fromXML(string xmlDoc)  {
+	void CalPrimaryBeamTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalPrimaryBeamTable")) 
 			error();
@@ -526,7 +538,6 @@ CalPrimaryBeamRow* CalPrimaryBeamTable::lookup(string antennaName, ReceiverBandM
 		s = xml.getElementContent("<row>","</row>");
 		CalPrimaryBeamRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a CalPrimaryBeamRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

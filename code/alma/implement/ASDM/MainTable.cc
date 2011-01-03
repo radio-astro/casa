@@ -106,6 +106,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -127,7 +133,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int MainTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -358,10 +367,12 @@ MainRow* MainTable::newRow(MainRow* row) {
 
 
 	 vector<MainRow *> MainTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<MainRow *>& MainTable::get() const {
+	 	const_cast<MainTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -375,6 +386,7 @@ MainRow* MainTable::newRow(MainRow* row) {
 	
 		
 	 vector<MainRow *> *MainTable::getByContext(Tag configDescriptionId, Tag fieldId) {
+	 	checkPresenceInMemory();
 	  	string k = Key(configDescriptionId, fieldId);
  
 	    if (context.find(k) == context.end()) return 0;
@@ -399,6 +411,7 @@ MainRow* MainTable::newRow(MainRow* row) {
  				
 				
  	MainRow* MainTable::getRowByKey(ArrayTime time, Tag configDescriptionId, Tag fieldId)  {
+ 		checkPresenceInMemory();
 		string keystr = Key(configDescriptionId, fieldId);
  		
  		if (context.find(keystr) == context.end()) return 0;
@@ -503,7 +516,7 @@ MainRow* MainTable::newRow(MainRow* row) {
 	}
 
 	
-	void MainTable::fromXML(string xmlDoc)  {
+	void MainTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<MainTable")) 
 			error();
@@ -525,7 +538,6 @@ MainRow* MainTable::newRow(MainRow* row) {
 		s = xml.getElementContent("<row>","</row>");
 		MainRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a MainRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

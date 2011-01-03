@@ -106,6 +106,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -127,7 +133,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int CalWVRTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -380,10 +389,12 @@ CalWVRRow* CalWVRTable::newRow(CalWVRRow* row) {
 
 
 	 vector<CalWVRRow *> CalWVRTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<CalWVRRow *>& CalWVRTable::get() const {
+	 	const_cast<CalWVRTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -401,8 +412,9 @@ CalWVRRow* CalWVRTable::newRow(CalWVRRow* row) {
  **
  */
  	CalWVRRow* CalWVRTable::getRowByKey(string antennaName, Tag calDataId, Tag calReductionId)  {
+ 	checkPresenceInMemory();
 	CalWVRRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -469,8 +481,8 @@ CalWVRRow* CalWVRTable::newRow(CalWVRRow* row) {
  */
 CalWVRRow* CalWVRTable::lookup(string antennaName, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, WVRMethodMod::WVRMethod wvrMethod, int numInputAntennas, vector<string > inputAntennaNames, int numChan, vector<Frequency > chanFreq, vector<Frequency > chanWidth, vector<vector<Temperature > > refTemp, int numPoly, vector<vector<vector<float > > > pathCoeff, vector<Frequency > polyFreqLimits, vector<float > wetPath, vector<float > dryPath, Length water) {
 		CalWVRRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(antennaName, calDataId, calReductionId, startValidTime, endValidTime, wvrMethod, numInputAntennas, inputAntennaNames, numChan, chanFreq, chanWidth, refTemp, numPoly, pathCoeff, polyFreqLimits, wetPath, dryPath, water)) return aRow;
 		}			
 		return 0;	
@@ -534,7 +546,7 @@ CalWVRRow* CalWVRTable::lookup(string antennaName, Tag calDataId, Tag calReducti
 	}
 
 	
-	void CalWVRTable::fromXML(string xmlDoc)  {
+	void CalWVRTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalWVRTable")) 
 			error();
@@ -556,7 +568,6 @@ CalWVRRow* CalWVRTable::lookup(string antennaName, Tag calDataId, Tag calReducti
 		s = xml.getElementContent("<row>","</row>");
 		CalWVRRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a CalWVRRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

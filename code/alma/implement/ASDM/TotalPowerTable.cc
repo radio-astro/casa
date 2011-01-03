@@ -106,6 +106,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = true;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -127,7 +133,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int TotalPowerTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -376,10 +385,12 @@ TotalPowerRow* TotalPowerTable::newRow(TotalPowerRow* row) {
 
 
 	 vector<TotalPowerRow *> TotalPowerTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<TotalPowerRow *>& TotalPowerTable::get() const {
+	 	const_cast<TotalPowerTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -393,6 +404,7 @@ TotalPowerRow* TotalPowerTable::newRow(TotalPowerRow* row) {
 	
 		
 	 vector<TotalPowerRow *> *TotalPowerTable::getByContext(Tag configDescriptionId, Tag fieldId) {
+	 	checkPresenceInMemory();
 	  	string k = Key(configDescriptionId, fieldId);
  
 	    if (context.find(k) == context.end()) return 0;
@@ -417,6 +429,7 @@ TotalPowerRow* TotalPowerTable::newRow(TotalPowerRow* row) {
  				
 				
  	TotalPowerRow* TotalPowerTable::getRowByKey(ArrayTime time, Tag configDescriptionId, Tag fieldId)  {
+ 		checkPresenceInMemory();
 		string keystr = Key(configDescriptionId, fieldId);
  		
  		if (context.find(keystr) == context.end()) return 0;
@@ -521,7 +534,7 @@ TotalPowerRow* TotalPowerTable::newRow(TotalPowerRow* row) {
 	}
 
 	
-	void TotalPowerTable::fromXML(string xmlDoc)  {
+	void TotalPowerTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<TotalPowerTable")) 
 			error();
@@ -543,7 +556,6 @@ TotalPowerRow* TotalPowerTable::newRow(TotalPowerRow* row) {
 		s = xml.getElementContent("<row>","</row>");
 		TotalPowerRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a TotalPowerRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

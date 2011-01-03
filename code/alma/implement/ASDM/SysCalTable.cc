@@ -108,6 +108,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -129,7 +135,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int SysCalTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -360,10 +369,12 @@ SysCalRow* SysCalTable::newRow(SysCalRow* row) {
 
 
 	 vector<SysCalRow *> SysCalTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<SysCalRow *>& SysCalTable::get() const {
+	 	const_cast<SysCalTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -377,6 +388,7 @@ SysCalRow* SysCalTable::newRow(SysCalRow* row) {
 	
 		
 	 vector<SysCalRow *> *SysCalTable::getByContext(Tag antennaId, Tag spectralWindowId, int feedId) {
+	 	checkPresenceInMemory();
 	  	string k = Key(antennaId, spectralWindowId, feedId);
  
 	    if (context.find(k) == context.end()) return 0;
@@ -401,6 +413,7 @@ SysCalRow* SysCalTable::newRow(SysCalRow* row) {
  				
 				
 	SysCalRow* SysCalTable::getRowByKey(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId)  {
+		checkPresenceInMemory();
  		string keystr = Key(antennaId, spectralWindowId, feedId);
  		vector<SysCalRow *> row;
  		
@@ -517,7 +530,7 @@ SysCalRow* SysCalTable::newRow(SysCalRow* row) {
 	}
 
 	
-	void SysCalTable::fromXML(string xmlDoc)  {
+	void SysCalTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<SysCalTable")) 
 			error();
@@ -539,7 +552,6 @@ SysCalRow* SysCalTable::newRow(SysCalRow* row) {
 		s = xml.getElementContent("<row>","</row>");
 		SysCalRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a SysCalRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

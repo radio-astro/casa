@@ -108,6 +108,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -129,7 +135,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int SysPowerTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -332,10 +341,12 @@ SysPowerRow* SysPowerTable::newRow(SysPowerRow* row) {
 
 
 	 vector<SysPowerRow *> SysPowerTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<SysPowerRow *>& SysPowerTable::get() const {
+	 	const_cast<SysPowerTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -349,6 +360,7 @@ SysPowerRow* SysPowerTable::newRow(SysPowerRow* row) {
 	
 		
 	 vector<SysPowerRow *> *SysPowerTable::getByContext(Tag antennaId, Tag spectralWindowId, int feedId) {
+	 	checkPresenceInMemory();
 	  	string k = Key(antennaId, spectralWindowId, feedId);
  
 	    if (context.find(k) == context.end()) return 0;
@@ -373,6 +385,7 @@ SysPowerRow* SysPowerTable::newRow(SysPowerRow* row) {
  				
 				
 	SysPowerRow* SysPowerTable::getRowByKey(Tag antennaId, Tag spectralWindowId, int feedId, ArrayTimeInterval timeInterval)  {
+		checkPresenceInMemory();
  		string keystr = Key(antennaId, spectralWindowId, feedId);
  		vector<SysPowerRow *> row;
  		
@@ -489,7 +502,7 @@ SysPowerRow* SysPowerTable::newRow(SysPowerRow* row) {
 	}
 
 	
-	void SysPowerTable::fromXML(string xmlDoc)  {
+	void SysPowerTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<SysPowerTable")) 
 			error();
@@ -511,7 +524,6 @@ SysPowerRow* SysPowerTable::newRow(SysPowerRow* row) {
 		s = xml.getElementContent("<row>","</row>");
 		SysPowerRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a SysPowerRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

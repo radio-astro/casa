@@ -102,6 +102,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -123,7 +129,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int AntennaTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -361,10 +370,12 @@ AntennaRow* AntennaTable::newRow(AntennaRow* row) {
 
 
 	 vector<AntennaRow *> AntennaTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<AntennaRow *>& AntennaTable::get() const {
+	 	const_cast<AntennaTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -382,8 +393,9 @@ AntennaRow* AntennaTable::newRow(AntennaRow* row) {
  **
  */
  	AntennaRow* AntennaTable::getRowByKey(Tag antennaId)  {
+ 	checkPresenceInMemory();
 	AntennaRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -422,8 +434,8 @@ AntennaRow* AntennaTable::newRow(AntennaRow* row) {
  */
 AntennaRow* AntennaTable::lookup(string name, AntennaMakeMod::AntennaMake antennaMake, AntennaTypeMod::AntennaType antennaType, Length dishDiameter, vector<Length > position, vector<Length > offset, ArrayTime time, Tag stationId) {
 		AntennaRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(name, antennaMake, antennaType, dishDiameter, position, offset, time, stationId)) return aRow;
 		}			
 		return 0;	
@@ -487,7 +499,7 @@ AntennaRow* AntennaTable::lookup(string name, AntennaMakeMod::AntennaMake antenn
 	}
 
 	
-	void AntennaTable::fromXML(string xmlDoc)  {
+	void AntennaTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<AntennaTable")) 
 			error();
@@ -509,7 +521,6 @@ AntennaRow* AntennaTable::lookup(string name, AntennaMakeMod::AntennaMake antenn
 		s = xml.getElementContent("<row>","</row>");
 		AntennaRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a AntennaRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

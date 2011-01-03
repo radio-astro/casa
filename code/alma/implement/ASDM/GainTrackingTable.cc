@@ -108,6 +108,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -129,7 +135,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int GainTrackingTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -382,10 +391,12 @@ GainTrackingRow* GainTrackingTable::newRow(GainTrackingRow* row) {
 
 
 	 vector<GainTrackingRow *> GainTrackingTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<GainTrackingRow *>& GainTrackingTable::get() const {
+	 	const_cast<GainTrackingTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -399,6 +410,7 @@ GainTrackingRow* GainTrackingTable::newRow(GainTrackingRow* row) {
 	
 		
 	 vector<GainTrackingRow *> *GainTrackingTable::getByContext(Tag antennaId, Tag spectralWindowId, int feedId) {
+	 	checkPresenceInMemory();
 	  	string k = Key(antennaId, spectralWindowId, feedId);
  
 	    if (context.find(k) == context.end()) return 0;
@@ -423,6 +435,7 @@ GainTrackingRow* GainTrackingTable::newRow(GainTrackingRow* row) {
  				
 				
 	GainTrackingRow* GainTrackingTable::getRowByKey(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId)  {
+		checkPresenceInMemory();
  		string keystr = Key(antennaId, spectralWindowId, feedId);
  		vector<GainTrackingRow *> row;
  		
@@ -539,7 +552,7 @@ GainTrackingRow* GainTrackingTable::newRow(GainTrackingRow* row) {
 	}
 
 	
-	void GainTrackingTable::fromXML(string xmlDoc)  {
+	void GainTrackingTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<GainTrackingTable")) 
 			error();
@@ -561,7 +574,6 @@ GainTrackingRow* GainTrackingTable::newRow(GainTrackingRow* row) {
 		s = xml.getElementContent("<row>","</row>");
 		GainTrackingRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a GainTrackingRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

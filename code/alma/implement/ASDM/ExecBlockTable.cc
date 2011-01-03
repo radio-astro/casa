@@ -102,6 +102,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -123,7 +129,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int ExecBlockTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -523,10 +532,12 @@ ExecBlockRow* ExecBlockTable::newRow(ExecBlockRow* row) {
 
 
 	 vector<ExecBlockRow *> ExecBlockTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<ExecBlockRow *>& ExecBlockTable::get() const {
+	 	const_cast<ExecBlockTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -544,8 +555,9 @@ ExecBlockRow* ExecBlockTable::newRow(ExecBlockRow* row) {
  **
  */
  	ExecBlockRow* ExecBlockTable::getRowByKey(Tag execBlockId)  {
+ 	checkPresenceInMemory();
 	ExecBlockRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -616,8 +628,8 @@ ExecBlockRow* ExecBlockTable::newRow(ExecBlockRow* row) {
  */
 ExecBlockRow* ExecBlockTable::lookup(ArrayTime startTime, ArrayTime endTime, int execBlockNum, EntityRef execBlockUID, EntityRef projectId, string configName, string telescopeName, string observerName, string observingLog, string sessionReference, EntityRef sbSummary, string schedulerMode, Length baseRangeMin, Length baseRangeMax, Length baseRmsMinor, Length baseRmsMajor, Angle basePa, Length siteAltitude, Angle siteLongitude, Angle siteLatitude, bool aborted, int numAntenna, vector<Tag>  antennaId, Tag sBSummaryId) {
 		ExecBlockRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(startTime, endTime, execBlockNum, execBlockUID, projectId, configName, telescopeName, observerName, observingLog, sessionReference, sbSummary, schedulerMode, baseRangeMin, baseRangeMax, baseRmsMinor, baseRmsMajor, basePa, siteAltitude, siteLongitude, siteLatitude, aborted, numAntenna, antennaId, sBSummaryId)) return aRow;
 		}			
 		return 0;	
@@ -681,7 +693,7 @@ ExecBlockRow* ExecBlockTable::lookup(ArrayTime startTime, ArrayTime endTime, int
 	}
 
 	
-	void ExecBlockTable::fromXML(string xmlDoc)  {
+	void ExecBlockTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<ExecBlockTable")) 
 			error();
@@ -703,7 +715,6 @@ ExecBlockRow* ExecBlockTable::lookup(ArrayTime startTime, ArrayTime endTime, int
 		s = xml.getElementContent("<row>","</row>");
 		ExecBlockRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a ExecBlockRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

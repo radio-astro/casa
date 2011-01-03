@@ -102,6 +102,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -123,7 +129,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int FieldTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -353,10 +362,12 @@ FieldRow* FieldTable::newRow(FieldRow* row) {
 
 
 	 vector<FieldRow *> FieldTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<FieldRow *>& FieldTable::get() const {
+	 	const_cast<FieldTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -374,8 +385,9 @@ FieldRow* FieldTable::newRow(FieldRow* row) {
  **
  */
  	FieldRow* FieldTable::getRowByKey(Tag fieldId)  {
+ 	checkPresenceInMemory();
 	FieldRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -410,8 +422,8 @@ FieldRow* FieldTable::newRow(FieldRow* row) {
  */
 FieldRow* FieldTable::lookup(string fieldName, string code, int numPoly, vector<vector<Angle > > delayDir, vector<vector<Angle > > phaseDir, vector<vector<Angle > > referenceDir) {
 		FieldRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(fieldName, code, numPoly, delayDir, phaseDir, referenceDir)) return aRow;
 		}			
 		return 0;	
@@ -475,7 +487,7 @@ FieldRow* FieldTable::lookup(string fieldName, string code, int numPoly, vector<
 	}
 
 	
-	void FieldTable::fromXML(string xmlDoc)  {
+	void FieldTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<FieldTable")) 
 			error();
@@ -497,7 +509,6 @@ FieldRow* FieldTable::lookup(string fieldName, string code, int numPoly, vector<
 		s = xml.getElementContent("<row>","</row>");
 		FieldRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a FieldRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

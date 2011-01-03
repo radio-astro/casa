@@ -106,6 +106,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -127,7 +133,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int CalFluxTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -360,10 +369,12 @@ CalFluxRow* CalFluxTable::newRow(CalFluxRow* row) {
 
 
 	 vector<CalFluxRow *> CalFluxTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<CalFluxRow *>& CalFluxTable::get() const {
+	 	const_cast<CalFluxTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -381,8 +392,9 @@ CalFluxRow* CalFluxTable::newRow(CalFluxRow* row) {
  **
  */
  	CalFluxRow* CalFluxTable::getRowByKey(string sourceName, Tag calDataId, Tag calReductionId)  {
+ 	checkPresenceInMemory();
 	CalFluxRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -437,8 +449,8 @@ CalFluxRow* CalFluxTable::newRow(CalFluxRow* row) {
  */
 CalFluxRow* CalFluxTable::lookup(string sourceName, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numFrequencyRanges, int numStokes, vector<vector<Frequency > > frequencyRanges, FluxCalibrationMethodMod::FluxCalibrationMethod fluxMethod, vector<vector<double > > flux, vector<vector<double > > fluxError, vector<StokesParameterMod::StokesParameter > stokes) {
 		CalFluxRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(sourceName, calDataId, calReductionId, startValidTime, endValidTime, numFrequencyRanges, numStokes, frequencyRanges, fluxMethod, flux, fluxError, stokes)) return aRow;
 		}			
 		return 0;	
@@ -502,7 +514,7 @@ CalFluxRow* CalFluxTable::lookup(string sourceName, Tag calDataId, Tag calReduct
 	}
 
 	
-	void CalFluxTable::fromXML(string xmlDoc)  {
+	void CalFluxTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalFluxTable")) 
 			error();
@@ -524,7 +536,6 @@ CalFluxRow* CalFluxTable::lookup(string sourceName, Tag calDataId, Tag calReduct
 		s = xml.getElementContent("<row>","</row>");
 		CalFluxRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a CalFluxRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

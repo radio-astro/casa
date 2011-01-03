@@ -102,6 +102,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -123,7 +129,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int CorrelatorModeTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -369,10 +378,12 @@ CorrelatorModeRow* CorrelatorModeTable::newRow(CorrelatorModeRow* row) {
 
 
 	 vector<CorrelatorModeRow *> CorrelatorModeTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<CorrelatorModeRow *>& CorrelatorModeTable::get() const {
+	 	const_cast<CorrelatorModeTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -390,8 +401,9 @@ CorrelatorModeRow* CorrelatorModeTable::newRow(CorrelatorModeRow* row) {
  **
  */
  	CorrelatorModeRow* CorrelatorModeTable::getRowByKey(Tag correlatorModeId)  {
+ 	checkPresenceInMemory();
 	CorrelatorModeRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -432,8 +444,8 @@ CorrelatorModeRow* CorrelatorModeTable::newRow(CorrelatorModeRow* row) {
  */
 CorrelatorModeRow* CorrelatorModeTable::lookup(int numBaseband, vector<BasebandNameMod::BasebandName > basebandNames, vector<int > basebandConfig, AccumModeMod::AccumMode accumMode, int binMode, int numAxes, vector<AxisNameMod::AxisName > axesOrderArray, vector<FilterModeMod::FilterMode > filterMode, CorrelatorNameMod::CorrelatorName correlatorName) {
 		CorrelatorModeRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(numBaseband, basebandNames, basebandConfig, accumMode, binMode, numAxes, axesOrderArray, filterMode, correlatorName)) return aRow;
 		}			
 		return 0;	
@@ -497,7 +509,7 @@ CorrelatorModeRow* CorrelatorModeTable::lookup(int numBaseband, vector<BasebandN
 	}
 
 	
-	void CorrelatorModeTable::fromXML(string xmlDoc)  {
+	void CorrelatorModeTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CorrelatorModeTable")) 
 			error();
@@ -519,7 +531,6 @@ CorrelatorModeRow* CorrelatorModeTable::lookup(int numBaseband, vector<BasebandN
 		s = xml.getElementContent("<row>","</row>");
 		CorrelatorModeRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a CorrelatorModeRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

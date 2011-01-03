@@ -104,6 +104,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -125,7 +131,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int CalGainTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -332,10 +341,12 @@ CalGainRow* CalGainTable::newRow(CalGainRow* row) {
 
 
 	 vector<CalGainRow *> CalGainTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<CalGainRow *>& CalGainTable::get() const {
+	 	const_cast<CalGainTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -353,8 +364,9 @@ CalGainRow* CalGainTable::newRow(CalGainRow* row) {
  **
  */
  	CalGainRow* CalGainTable::getRowByKey(Tag calDataId, Tag calReductionId)  {
+ 	checkPresenceInMemory();
 	CalGainRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -403,8 +415,8 @@ CalGainRow* CalGainTable::newRow(CalGainRow* row) {
  */
 CalGainRow* CalGainTable::lookup(Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, float gain, bool gainValid, float fit, float fitWeight, bool totalGainValid, float totalFit, float totalFitWeight) {
 		CalGainRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(calDataId, calReductionId, startValidTime, endValidTime, gain, gainValid, fit, fitWeight, totalGainValid, totalFit, totalFitWeight)) return aRow;
 		}			
 		return 0;	
@@ -468,7 +480,7 @@ CalGainRow* CalGainTable::lookup(Tag calDataId, Tag calReductionId, ArrayTime st
 	}
 
 	
-	void CalGainTable::fromXML(string xmlDoc)  {
+	void CalGainTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalGainTable")) 
 			error();
@@ -490,7 +502,6 @@ CalGainRow* CalGainTable::lookup(Tag calDataId, Tag calReductionId, ArrayTime st
 		s = xml.getElementContent("<row>","</row>");
 		CalGainRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a CalGainRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

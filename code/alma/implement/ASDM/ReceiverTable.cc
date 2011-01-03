@@ -106,6 +106,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -127,7 +133,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int ReceiverTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -444,10 +453,12 @@ ReceiverRow* ReceiverTable::newRow(ReceiverRow* row) {
 
 
 	 vector<ReceiverRow *> ReceiverTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<ReceiverRow *>& ReceiverTable::get() const {
+	 	const_cast<ReceiverTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -471,7 +482,8 @@ ReceiverRow* ReceiverTable::newRow(ReceiverRow* row) {
  ** no row exists for that key.
  **
  */
- 	ReceiverRow* ReceiverTable::getRowByKey(int receiverId, Tag spectralWindowId, ArrayTimeInterval timeInterval)  {	
+ 	ReceiverRow* ReceiverTable::getRowByKey(int receiverId, Tag spectralWindowId, ArrayTimeInterval timeInterval)  {
+ 		checkPresenceInMemory();	
 		ArrayTime start = timeInterval.getStart();
 		
 		map<string, ID_TIME_ROWS >::iterator mapIter;
@@ -497,6 +509,7 @@ ReceiverRow* ReceiverTable::newRow(ReceiverRow* row) {
  * the autoincrementable attribute that is looked up in the table.
  */
  vector <ReceiverRow *>  ReceiverTable::getRowByReceiverId(int receiverId) {
+	checkPresenceInMemory();
 	vector<ReceiverRow *> list;
 	map<string, ID_TIME_ROWS >::iterator mapIter;
 	
@@ -538,7 +551,7 @@ ReceiverRow* ReceiverTable::newRow(ReceiverRow* row) {
  * @param <<ArrayAttribute>> sidebandLO.
  	 		 
  */
-ReceiverRow* ReceiverTable::lookup(Tag spectralWindowId, ArrayTimeInterval timeInterval, string name, int numLO, ReceiverBandMod::ReceiverBand frequencyBand, vector<Frequency > freqLO, ReceiverSidebandMod::ReceiverSideband receiverSideband, vector<NetSidebandMod::NetSideband > sidebandLO) {		
+ReceiverRow* ReceiverTable::lookup(Tag spectralWindowId, ArrayTimeInterval timeInterval, string name, int numLO, ReceiverBandMod::ReceiverBand frequencyBand, vector<Frequency > freqLO, ReceiverSidebandMod::ReceiverSideband receiverSideband, vector<NetSidebandMod::NetSideband > sidebandLO) {	
 		using asdm::ArrayTimeInterval;
 		map<string, ID_TIME_ROWS >::iterator mapIter;
 		string k = Key(spectralWindowId);
@@ -613,7 +626,7 @@ ReceiverRow* ReceiverTable::lookup(Tag spectralWindowId, ArrayTimeInterval timeI
 	}
 
 	
-	void ReceiverTable::fromXML(string xmlDoc)  {
+	void ReceiverTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<ReceiverTable")) 
 			error();
@@ -635,7 +648,6 @@ ReceiverRow* ReceiverTable::lookup(Tag spectralWindowId, ArrayTimeInterval timeI
 		s = xml.getElementContent("<row>","</row>");
 		ReceiverRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a ReceiverRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

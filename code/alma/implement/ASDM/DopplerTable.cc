@@ -104,6 +104,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -125,7 +131,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int DopplerTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -343,10 +352,12 @@ DopplerRow* DopplerTable::newRow(DopplerRow* row) {
 
 
 	 vector<DopplerRow *> DopplerTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<DopplerRow *>& DopplerTable::get() const {
+	 	const_cast<DopplerTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -364,8 +375,9 @@ DopplerRow* DopplerTable::newRow(DopplerRow* row) {
  **
  */
  	DopplerRow* DopplerTable::getRowByKey(int dopplerId, int sourceId)  {
+ 	checkPresenceInMemory();
 	DopplerRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -398,8 +410,8 @@ DopplerRow* DopplerTable::newRow(DopplerRow* row) {
  */
 DopplerRow* DopplerTable::lookup(int sourceId, int transitionIndex, DopplerReferenceCodeMod::DopplerReferenceCode velDef) {
 		DopplerRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(sourceId, transitionIndex, velDef)) return aRow;
 		}			
 		return 0;	
@@ -416,6 +428,7 @@ DopplerRow* DopplerTable::lookup(int sourceId, int transitionIndex, DopplerRefer
  * the autoincrementable attribute that is looked up in the table.
  */
  vector <DopplerRow *>  DopplerTable::getRowByDopplerId(int dopplerId) {
+	checkPresenceInMemory();
 	vector<DopplerRow *> list;
 	for (unsigned int i = 0; i < row.size(); ++i) {
 		DopplerRow &x = *row[i];
@@ -483,7 +496,7 @@ DopplerRow* DopplerTable::lookup(int sourceId, int transitionIndex, DopplerRefer
 	}
 
 	
-	void DopplerTable::fromXML(string xmlDoc)  {
+	void DopplerTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<DopplerTable")) 
 			error();
@@ -505,7 +518,6 @@ DopplerRow* DopplerTable::lookup(int sourceId, int transitionIndex, DopplerRefer
 		s = xml.getElementContent("<row>","</row>");
 		DopplerRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a DopplerRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

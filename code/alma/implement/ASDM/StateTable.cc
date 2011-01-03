@@ -102,6 +102,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -123,7 +129,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int StateTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -321,10 +330,12 @@ StateRow* StateTable::newRow(StateRow* row) {
 
 
 	 vector<StateRow *> StateTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<StateRow *>& StateTable::get() const {
+	 	const_cast<StateTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -342,8 +353,9 @@ StateRow* StateTable::newRow(StateRow* row) {
  **
  */
  	StateRow* StateTable::getRowByKey(Tag stateId)  {
+ 	checkPresenceInMemory();
 	StateRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -374,8 +386,8 @@ StateRow* StateTable::newRow(StateRow* row) {
  */
 StateRow* StateTable::lookup(CalibrationDeviceMod::CalibrationDevice calDeviceName, bool sig, bool ref, bool onSky) {
 		StateRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(calDeviceName, sig, ref, onSky)) return aRow;
 		}			
 		return 0;	
@@ -439,7 +451,7 @@ StateRow* StateTable::lookup(CalibrationDeviceMod::CalibrationDevice calDeviceNa
 	}
 
 	
-	void StateTable::fromXML(string xmlDoc)  {
+	void StateTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<StateTable")) 
 			error();
@@ -461,7 +473,6 @@ StateRow* StateTable::lookup(CalibrationDeviceMod::CalibrationDevice calDeviceNa
 		s = xml.getElementContent("<row>","</row>");
 		StateRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a StateRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

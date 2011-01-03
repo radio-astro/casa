@@ -104,6 +104,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = true;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -125,7 +131,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int PointingTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -362,10 +371,12 @@ PointingRow* PointingTable::newRow(PointingRow* row) {
 
 
 	 vector<PointingRow *> PointingTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<PointingRow *>& PointingTable::get() const {
+	 	const_cast<PointingTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -379,6 +390,7 @@ PointingRow* PointingTable::newRow(PointingRow* row) {
 	
 		
 	 vector<PointingRow *> *PointingTable::getByContext(Tag antennaId) {
+	 	checkPresenceInMemory();
 	  	string k = Key(antennaId);
  
 	    if (context.find(k) == context.end()) return 0;
@@ -403,6 +415,7 @@ PointingRow* PointingTable::newRow(PointingRow* row) {
  				
 				
 	PointingRow* PointingTable::getRowByKey(Tag antennaId, ArrayTimeInterval timeInterval)  {
+		checkPresenceInMemory();
  		string keystr = Key(antennaId);
  		vector<PointingRow *> row;
  		
@@ -519,7 +532,7 @@ PointingRow* PointingTable::newRow(PointingRow* row) {
 	}
 
 	
-	void PointingTable::fromXML(string xmlDoc)  {
+	void PointingTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<PointingTable")) 
 			error();
@@ -541,7 +554,6 @@ PointingRow* PointingTable::newRow(PointingRow* row) {
 		s = xml.getElementContent("<row>","</row>");
 		PointingRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a PointingRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

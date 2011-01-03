@@ -108,6 +108,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -129,7 +135,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int CalAtmosphereTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -464,10 +473,12 @@ CalAtmosphereRow* CalAtmosphereTable::newRow(CalAtmosphereRow* row) {
 
 
 	 vector<CalAtmosphereRow *> CalAtmosphereTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<CalAtmosphereRow *>& CalAtmosphereTable::get() const {
+	 	const_cast<CalAtmosphereTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -485,8 +496,9 @@ CalAtmosphereRow* CalAtmosphereTable::newRow(CalAtmosphereRow* row) {
  **
  */
  	CalAtmosphereRow* CalAtmosphereTable::getRowByKey(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId)  {
+ 	checkPresenceInMemory();
 	CalAtmosphereRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -579,8 +591,8 @@ CalAtmosphereRow* CalAtmosphereTable::newRow(CalAtmosphereRow* row) {
  */
 CalAtmosphereRow* CalAtmosphereTable::lookup(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numFreq, int numLoad, int numReceptor, vector<vector<float > > forwardEffSpectrum, vector<Frequency > frequencyRange, Pressure groundPressure, Humidity groundRelHumidity, vector<Frequency > frequencySpectrum, Temperature groundTemperature, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<float > > powerSkySpectrum, vector<vector<vector<float > > > powerLoadSpectrum, SyscalMethodMod::SyscalMethod syscalType, vector<vector<Temperature > > tAtmSpectrum, vector<vector<Temperature > > tRecSpectrum, vector<vector<Temperature > > tSysSpectrum, vector<vector<float > > tauSpectrum, vector<Temperature > tAtm, vector<Temperature > tRec, vector<Temperature > tSys, vector<float > tau, vector<Length > water, vector<Length > waterError) {
 		CalAtmosphereRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(antennaName, receiverBand, calDataId, calReductionId, startValidTime, endValidTime, numFreq, numLoad, numReceptor, forwardEffSpectrum, frequencyRange, groundPressure, groundRelHumidity, frequencySpectrum, groundTemperature, polarizationTypes, powerSkySpectrum, powerLoadSpectrum, syscalType, tAtmSpectrum, tRecSpectrum, tSysSpectrum, tauSpectrum, tAtm, tRec, tSys, tau, water, waterError)) return aRow;
 		}			
 		return 0;	
@@ -644,7 +656,7 @@ CalAtmosphereRow* CalAtmosphereTable::lookup(string antennaName, ReceiverBandMod
 	}
 
 	
-	void CalAtmosphereTable::fromXML(string xmlDoc)  {
+	void CalAtmosphereTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalAtmosphereTable")) 
 			error();
@@ -666,7 +678,6 @@ CalAtmosphereRow* CalAtmosphereTable::lookup(string antennaName, ReceiverBandMod
 		s = xml.getElementContent("<row>","</row>");
 		CalAtmosphereRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a CalAtmosphereRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

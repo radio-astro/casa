@@ -106,6 +106,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -127,7 +133,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int CalHolographyTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -402,10 +411,12 @@ CalHolographyRow* CalHolographyTable::newRow(CalHolographyRow* row) {
 
 
 	 vector<CalHolographyRow *> CalHolographyTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<CalHolographyRow *>& CalHolographyTable::get() const {
+	 	const_cast<CalHolographyTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -423,8 +434,9 @@ CalHolographyRow* CalHolographyTable::newRow(CalHolographyRow* row) {
  **
  */
  	CalHolographyRow* CalHolographyTable::getRowByKey(string antennaName, Tag calDataId, Tag calReductionId)  {
+ 	checkPresenceInMemory();
 	CalHolographyRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -493,8 +505,8 @@ CalHolographyRow* CalHolographyTable::newRow(CalHolographyRow* row) {
  */
 CalHolographyRow* CalHolographyTable::lookup(string antennaName, Tag calDataId, Tag calReductionId, AntennaMakeMod::AntennaMake antennaMake, ArrayTime startValidTime, ArrayTime endValidTime, Temperature ambientTemperature, vector<Length > focusPosition, vector<Frequency > frequencyRange, double illuminationTaper, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, int numPanelModes, ReceiverBandMod::ReceiverBand receiverBand, EntityRef beamMapUID, Length rawRMS, Length weightedRMS, EntityRef surfaceMapUID, vector<Angle > direction) {
 		CalHolographyRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(antennaName, calDataId, calReductionId, antennaMake, startValidTime, endValidTime, ambientTemperature, focusPosition, frequencyRange, illuminationTaper, numReceptor, polarizationTypes, numPanelModes, receiverBand, beamMapUID, rawRMS, weightedRMS, surfaceMapUID, direction)) return aRow;
 		}			
 		return 0;	
@@ -558,7 +570,7 @@ CalHolographyRow* CalHolographyTable::lookup(string antennaName, Tag calDataId, 
 	}
 
 	
-	void CalHolographyTable::fromXML(string xmlDoc)  {
+	void CalHolographyTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalHolographyTable")) 
 			error();
@@ -580,7 +592,6 @@ CalHolographyRow* CalHolographyTable::lookup(string antennaName, Tag calDataId, 
 		s = xml.getElementContent("<row>","</row>");
 		CalHolographyRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a CalHolographyRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

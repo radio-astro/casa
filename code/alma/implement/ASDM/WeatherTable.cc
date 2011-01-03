@@ -104,6 +104,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -125,7 +131,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int WeatherTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -368,10 +377,12 @@ WeatherRow* WeatherTable::newRow(WeatherRow* row) {
 
 
 	 vector<WeatherRow *> WeatherTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<WeatherRow *>& WeatherTable::get() const {
+	 	const_cast<WeatherTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -385,6 +396,7 @@ WeatherRow* WeatherTable::newRow(WeatherRow* row) {
 	
 		
 	 vector<WeatherRow *> *WeatherTable::getByContext(Tag stationId) {
+	 	checkPresenceInMemory();
 	  	string k = Key(stationId);
  
 	    if (context.find(k) == context.end()) return 0;
@@ -409,6 +421,7 @@ WeatherRow* WeatherTable::newRow(WeatherRow* row) {
  				
 				
 	WeatherRow* WeatherTable::getRowByKey(Tag stationId, ArrayTimeInterval timeInterval)  {
+		checkPresenceInMemory();
  		string keystr = Key(stationId);
  		vector<WeatherRow *> row;
  		
@@ -525,7 +538,7 @@ WeatherRow* WeatherTable::newRow(WeatherRow* row) {
 	}
 
 	
-	void WeatherTable::fromXML(string xmlDoc)  {
+	void WeatherTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<WeatherTable")) 
 			error();
@@ -547,7 +560,6 @@ WeatherRow* WeatherTable::newRow(WeatherRow* row) {
 		s = xml.getElementContent("<row>","</row>");
 		WeatherRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a WeatherRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {

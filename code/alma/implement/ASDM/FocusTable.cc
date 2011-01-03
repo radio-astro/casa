@@ -104,6 +104,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -125,7 +131,10 @@ namespace asdm {
 	 * Return the number of rows in the table.
 	 */
 	unsigned int FocusTable::size() const {
-		return privateRows.size();
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -312,10 +321,12 @@ FocusRow* FocusTable::newRow(FocusRow* row) {
 
 
 	 vector<FocusRow *> FocusTable::get() {
+	 	checkPresenceInMemory();
 	    return privateRows;
 	 }
 	 
 	 const vector<FocusRow *>& FocusTable::get() const {
+	 	const_cast<FocusTable&>(*this).checkPresenceInMemory();	
 	    return privateRows;
 	 }	 
 	 	
@@ -329,6 +340,7 @@ FocusRow* FocusTable::newRow(FocusRow* row) {
 	
 		
 	 vector<FocusRow *> *FocusTable::getByContext(Tag antennaId) {
+	 	checkPresenceInMemory();
 	  	string k = Key(antennaId);
  
 	    if (context.find(k) == context.end()) return 0;
@@ -353,6 +365,7 @@ FocusRow* FocusTable::newRow(FocusRow* row) {
  				
 				
 	FocusRow* FocusTable::getRowByKey(Tag antennaId, ArrayTimeInterval timeInterval)  {
+		checkPresenceInMemory();
  		string keystr = Key(antennaId);
  		vector<FocusRow *> row;
  		
@@ -469,7 +482,7 @@ FocusRow* FocusTable::newRow(FocusRow* row) {
 	}
 
 	
-	void FocusTable::fromXML(string xmlDoc)  {
+	void FocusTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<FocusTable")) 
 			error();
@@ -491,7 +504,6 @@ FocusRow* FocusTable::newRow(FocusRow* row) {
 		s = xml.getElementContent("<row>","</row>");
 		FocusRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a FocusRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {
