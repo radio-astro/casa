@@ -466,25 +466,44 @@ measures::comettopo()
 ::casac::record* measures::cometdist()
 {
   casa::Quantity retval(-1.0, "AU");	// Default to absurdity.
-  String unit("");
 
   try {
     if(pcomet_p){
       MVPosition relpos;
-      //String error;
-
-      // MeasureHolder out;
-      // MeasureHolder in(relpos);
-      // if(!measures::measure(error, out, in, "COMET")){
-      // 	error += String ("Non-measure type offset in measure conversion\n");
-      // 	*itsLog << LogIO::WARN << error << LogIO::POST;
-      // 	error = "";
-      // 	return retval;
-      // }
       
       if(pcomet_p->get(relpos,
 		       dynamic_cast<const MEpoch *>(frame_p->epoch())->get("d").getValue())){
 	retval = relpos.getLength("AU");
+      }
+      else{
+	*itsLog << LogIO::SEVERE
+		<< "cometdist:  "
+		<< "No comet table with a distance for the right time present."
+		<< LogIO::POST;
+      }
+    }
+  }
+  catch(AipsError(x)){
+    *itsLog << LogIO::SEVERE << "Exception reported: " << x.getMesg() << LogIO::POST;
+  }
+  return recordFromQuantity(retval);
+}
+
+// Get the angular diameter of the current comet
+::casac::record* measures::cometangdiam()
+{
+  casa::Quantity retval(-1.0, "rad");	// Default to absurdity.
+
+  try {
+    if(pcomet_p){
+      MVPosition relpos;
+      
+      if(pcomet_p->get(relpos,
+		       dynamic_cast<const MEpoch *>(frame_p->epoch())->get("d").getValue())){
+	double dist = relpos.getLength("AU").getValue();
+	double meanrad = pcomet_p->getMeanRad(true);
+
+	retval.setValue(2.0 * meanrad / dist);
       }
       else{
 	*itsLog << LogIO::SEVERE

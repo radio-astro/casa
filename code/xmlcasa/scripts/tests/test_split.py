@@ -39,7 +39,7 @@ def check_eq(val, expval, tol=None):
             check_eq(val[k], expval[k], tol)
     else:
         try:
-            if tol:
+            if tol and hasattr(val, '__rsub__'):
                 are_eq = abs(val - expval) < tol
             else:
                 are_eq = val == expval
