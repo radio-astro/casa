@@ -48,6 +48,11 @@
 
       You can also copy the ascii text from the end of the casapy.log
       file in the working directory.
+
+      The 'Int (s)' column is the average of the MS's INTERVAL column
+      for each scan, so in a time-averaged MS 'Int' = 9.83s more likely
+      means 5 10s integrations and 1 9s integration (timebin) than 6
+      9.83s integrations. 
  </example>
  </task>
  </casaxml>
