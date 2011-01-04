@@ -704,39 +704,61 @@ class split_test_blankov(unittest.TestCase):
         myf['__rethrow_casa_exceptions'] = original_throw_pref
         assert not splitran
 
-class split_test_almapol(unittest.TestCase):
+class split_test_almapol(SplitChecker):
     """
-    Check that correlations can be selected when WVR data is in spw 0.
+    Check that correlations can be selected when WVR data is in spw 0,
+    and that nonstandard columns in WEATHER are being copied.
     """
+    need_to_initialize = True
+    corrsels = ['xx,yy']
     inpms = datapath + 'unittest/split/ixxxyyxyy.ms'
-    outms = 'xxyyspw1_3.ms'
+    records = {}
 
-    def setUp(self):
-        try:
-            shutil.rmtree(self.outms, ignore_errors=True)
-        except Exception, e:
-            print "Error in rm -rf", self.outms
-            raise e
+    def do_split(self, corrsel):
+        outms = 'xxyyspw1_3.ms'
+        record = {'ms': outms}
 
-    def tearDown(self):
-        shutil.rmtree(self.outms, ignore_errors=True)
-
-    def test_almapol(self):
-        """
-        Can we select corrs when WVR data is in spw 0?
-        """
+        shutil.rmtree(outms, ignore_errors=True)
         splitran = False
         try:
-            splitran = split(self.inpms, self.outms, datacolumn='data',
+            splitran = split(self.inpms, outms, datacolumn='data',
                              field='', spw='1~3', width=1,
                              antenna='',
                              timebin='0s', timerange='',
                              scan='', array='', uvrange='',
-                             correlation='xx,yy', async=False)
+                             correlation=corrsel, async=False)
+            tb.open(outms + '/WEATHER')
+            record['nsid'] = {0: tb.getcell('NS_WX_STATION_ID', 0),
+                              1: tb.getcell('NS_WX_STATION_ID', 1)}
+            record['nspos'] = {0: tb.getcell('NS_WX_STATION_POSITION', 0),
+                               1: tb.getcell('NS_WX_STATION_POSITION', 1)}
+            tb.close()
         except Exception, e:
-            splitran = False
-            print "Error running split:", e
-        assert os.path.isdir(self.outms)
+            print "Error selecting %s from %s:" % (corrsel, outms)
+            raise e
+        self.records[corrsel] = record
+        return splitran
+            
+    def test_almapol(self):
+        """Can we select corrs when WVR data is in spw 0?"""
+        for corrsel in self.corrsels:
+            assert os.path.isdir(self.records[corrsel]['ms'])
+            shutil.rmtree(self.records[corrsel]['ms'], ignore_errors=True)
+
+    def test_nsid(self):
+        """Did NS_WX_STATION_ID get copied?"""
+        for corrsel in self.corrsels:
+            check_eq(self.records[corrsel]['nsid'][0], 8)
+            check_eq(self.records[corrsel]['nsid'][1], 9)
+            
+    def test_nspos(self):
+        """Did NS_WX_STATION_POS get copied?"""
+        for corrsel in self.corrsels:
+            check_eq(self.records[corrsel]['nspos'][0],
+                     numpy.array([2225262.12, -5440307.30, -2480962.57]), 0.01)
+            check_eq(self.records[corrsel]['nspos'][1],
+                     numpy.array([2224782.10, -5440330.29, -2481339.08]), 0.01)
+            
 
 class split_test_unorderedpolspw(SplitChecker):
     """
