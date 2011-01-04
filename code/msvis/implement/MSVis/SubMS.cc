@@ -1370,7 +1370,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       uInt ncorr = inPolOutCorrToInCorrMap_p[inpid].nelements();
       const Vector<Int> inCT(corrType(inpid));
       
-      if(ncorr < inCT.nelements()){
+      // ncorr will be 0 if none of the selected spws have this pid. 
+      if(ncorr > 0 && ncorr < inCT.nelements()){
 	keepShape_p = false;
 
 	// Check whether the requested correlations can be accessed by slicing.
@@ -6012,13 +6013,14 @@ Bool SubMS::copyDataFlagsWtSp(const Vector<MS::PredefinedColumns>& colNames,
   {
 
     Block<Int> columns;
-    // include scan iteration, for more optimal iteration
-    columns.resize(5);
+    // include scan and state iteration, for more optimal iteration
+    columns.resize(6);
     columns[0]=MS::ARRAY_ID;
     columns[1]=MS::SCAN_NUMBER;
-    columns[2]=MS::FIELD_ID;
-    columns[3]=MS::DATA_DESC_ID;
-    columns[4]=MS::TIME;
+    columns[2]=MS::STATE_ID;
+    columns[3]=MS::FIELD_ID;
+    columns[4]=MS::DATA_DESC_ID;
+    columns[5]=MS::TIME;
 
 #ifdef COPYTIMER
     Timer timer;
@@ -7178,30 +7180,35 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
   const Bool watch_scan(!combine_p.contains("scan"));
   const Bool watch_state(!combine_p.contains("state"));
   const Bool watch_obs(!combine_p.contains("obs"));
-  uInt n_extra_cols_to_watch = 0;
+  uInt n_cols_to_watch = 4;     // At least.
 
   if(watch_scan)
-    ++n_extra_cols_to_watch;
+    ++n_cols_to_watch;
   if(watch_state)
-    ++n_extra_cols_to_watch;
+    ++n_cols_to_watch;
   if(watch_obs)
-    ++n_extra_cols_to_watch;
+    ++n_cols_to_watch;
 
-  Block<Int> sort(n_extra_cols_to_watch);
-  uInt extra_col = 0;
+  Block<Int> sort(n_cols_to_watch);
+  uInt colnum = 1;
 
+  sort[0] = MS::ARRAY_ID;
   if(watch_scan){
-    sort[extra_col] = MS::SCAN_NUMBER;
-    ++extra_col;
+    sort[colnum] = MS::SCAN_NUMBER;
+    ++colnum;
   }
   if(watch_state){
-    sort[extra_col] = MS::STATE_ID;
-    ++extra_col;
+    sort[colnum] = MS::STATE_ID;
+    ++colnum;
   }
-  if(watch_obs){
-    sort[extra_col] = MS::OBSERVATION_ID;
-    ++extra_col;
-  }
+  sort[colnum] = MS::FIELD_ID;
+  ++colnum;
+  sort[colnum] = MS::DATA_DESC_ID;
+  ++colnum;
+  sort[colnum] = MS::TIME;
+  ++colnum;  
+  if(watch_obs)
+    sort[colnum] = MS::OBSERVATION_ID;
 
   // MSIter tends to produce output INTERVALs that are longer than the
   // requested interval length, by ~0.5 input integrations for a random

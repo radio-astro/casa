@@ -38,8 +38,9 @@ copyTime=time.time()
 if(regstate):
    print '--Image with MS-MFS--'
    default('clean')
+   npix=1024;
    ret = clean(vis='VLA_multifrequency_3C286.ms',imagename='reg_3C286',nterms=3,reffreq='1.4GHz',
-               niter=50,gain=0.8,threshold='7.0mJy',imsize=[1024,1024],
+               niter=50,gain=0.8,threshold='7.0mJy',imsize=[npix,npix],
                cell=['2.5arcsec','2.5arcsec'],weighting='briggs',calready=False);
 
 # Stop timers
@@ -86,14 +87,22 @@ print >>logfile,'***************************************************************
 if(not regstate):
    print >>logfile,'* Data file VLA_multifrequency_3C286.ms cannot be found';
 else:
-   # This is the truth (for active, 21Oct2010)
-   correct_sigma = 0.00099339;
-   correct_sumsq = 1.03476342;
-   correct_intensity = 14.8406724;
-   correct_alpha = -0.4706874;
-   correct_beta = -0.12786445;
+   # V.3 : This is the truth (for active, 20Dec2010) - change from MTLC to MTMC (+ algorithm fiddling).
+   # Changes from previous numbers for 'active r13787' are within the noise.
+   correct_sigma = 0.00095900;
+   correct_sumsq = 0.9644402;
+   correct_intensity = 14.8406848;
+   correct_alpha = -0.47158026;
+   correct_beta = -0.12506663;
 
-   # This is the truth (for prerelease, 21Oct2010)
+   # V.2 : This is the truth (for active, 21Oct2010) - with SB's gridding fixes
+   #correct_sigma = 0.00099339;
+   #correct_sumsq = 1.03476342;
+   #correct_intensity = 14.8406724;
+   #correct_alpha = -0.4706874;
+   #correct_beta = -0.12786445;
+
+   # V.1 : This is the truth (for prerelease, 21Oct2010) - without SB's gridding fixes.
    #correct_sigma = 0.0010294;
    #correct_sumsq = 1.11118678;
    #correct_intensity = 14.838494;
@@ -126,7 +135,7 @@ else:
    # Intensity
    if(os.path.exists('reg_3C286.image.tt0')):
       ia.open('reg_3C286.image.tt0');
-      midpix = ia.pixelvalue([512,512])
+      midpix = ia.pixelvalue([npix/2,npix/2])
       ia.close();
       diff_intensity = abs( midpix['value']['value'] - correct_intensity )/ abs(correct_intensity);
       if(diff_intensity<0.02): 
@@ -142,7 +151,7 @@ else:
    # Alpha
    if(os.path.exists('reg_3C286.image.alpha')):
       ia.open('reg_3C286.image.alpha');
-      midpix = ia.pixelvalue([512,512])
+      midpix = ia.pixelvalue([npix/2,npix/2])
       ia.close();
       diff_alpha = abs( midpix['value']['value'] - correct_alpha )/ abs(correct_alpha);
       if(diff_alpha<0.02): 
@@ -158,7 +167,7 @@ else:
    # Beta
    if(os.path.exists('reg_3C286.image.beta')):
       ia.open('reg_3C286.image.beta');
-      midpix = ia.pixelvalue([512,512])
+      midpix = ia.pixelvalue([npix/2,npix/2])
       ia.close();
       diff_beta = abs( midpix['value']['value'] - correct_beta )/ abs(correct_beta);
       if(diff_beta<0.02): 

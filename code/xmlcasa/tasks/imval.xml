@@ -188,6 +188,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	results = imval( 'myImage', chans='&gt;20;0' )
         imval_data=results['data']
         mask=results['mask']
+        # holds the absolute coordinates of the associated pixels in imval_data
+        coords = results['coords']
         print "Data max: ", imval_data.max(), "  mean is ", imval_data.mean()
         swapped_data=imval_data.swapaxes(0,2)
         swapped_mask=mask.swapaxes(0,2)
