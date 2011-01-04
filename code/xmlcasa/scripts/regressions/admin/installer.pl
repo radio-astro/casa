@@ -13,11 +13,11 @@ $safe = 0;
 
 system("date -u");
 
-if (! $prefix) {
+if (! $prefix ) {
     $prefix = "/casa/regression/01";
 }
 if (! $install_dir) {
-    $install_dir = "$prefix/casa_install/";
+    $install_dir = "$prefix/install/";
 }
 if (! $work_dir) {
     $work_dir    = "$prefix/work/";
@@ -26,20 +26,21 @@ if (! $result_dir) {
     $result_dir  = "$prefix/result";
 }
 if (! $data_dir) {
-    $data_dir = "/casa/data/regression";
+    $data_dir = "$prefix/data";
 }
 if (! $first_test) {
     $first_test = 0;
 }
 $scheduler_state = "$result_dir/tests_next.txt";
 
+
 if (`uname` eq "Darwin\n") {
     @release_dir = ("https://svn.cv.nrao.edu/casa/osx_distro/test/10.5/", "https://svn.cv.nrao.edu/casa/osx_distro/stable/10.5/");
     $filename_regexp = "CASA-intel-[0-9]*\\.dmg"
 }
 elsif (`uname` eq "Linux\n") {
-    #$release_dir = "http://svn.cv.nrao.edu/casa/linux_distro/test/";
-    @release_dir = ("/casa/www/linux_distro/test/"); # works in CV
+    @release_dir = ("https://svn.cv.nrao.edu/casa/linux_distro/test/");
+#   @release_dir = ("/casa/www/linux_distro/test/"); # works with CV vmware regression hosts
 
     # different filenames for 32 and 64 bit tar balls
     $arch = `uname -i`;
@@ -71,7 +72,7 @@ else {
 
 if ($release_dir[0] =~ /^http/) {
 # identify latest release by parsing the HTML
-    $cmd = "curl " . join (" ", @release_dir) . " 2>/dev/null | egrep -o \"$filename_regexp\" | sort | tail -1";
+    $cmd = "curl --silent --show-error " . join (" ", @release_dir) . " 2>/dev/null | egrep -o \"$filename_regexp\" | sort | tail -1";
 }
 else {
     $cmd = "/bin/ls -1t $release_dir[0] 2>/dev/null | egrep -o \"$filename_regexp\" | head -1";
@@ -86,7 +87,7 @@ if ($release_dir[0] =~ /^http/) {
     for $r (@release_dir) {
         print "Getting $latest_release from $r...\n";
     
-        sys_exe("curl $r/$latest_release -o $prefix/$latest_release");
+        sys_exe("curl --silent --show-error $r/$latest_release -o $prefix/$latest_release");
         if (system("file $prefix/$latest_release | grep HTML") != 0)
         {
             last;
@@ -206,10 +207,10 @@ if (`uname` eq "Linux\n") {
     } else {
 	die "could not update regression scripts";
     }
-    sys_exe("cp $install_dir/$unpacked_dir/$lib/python$pyver/*.py \$HOME/admin/");
-    sys_exe("cp $install_dir/$unpacked_dir/$lib/python$pyver/regressions/admin/*.sh \$HOME/admin/");
-    sys_exe("cp $install_dir/$unpacked_dir/$lib/python$pyver/regressions/admin/*.txt \$HOME/admin/");
-    sys_exe("cp $install_dir/$unpacked_dir/$lib/python$pyver/regressions/admin/*.pl \$HOME/admin/");
+    sys_exe("cp $install_dir/$unpacked_dir/$lib/python$pyver/*.py $prefix/admin/");
+    sys_exe("cp $install_dir/$unpacked_dir/$lib/python$pyver/regressions/admin/*.sh $prefix/admin/");
+    sys_exe("cp $install_dir/$unpacked_dir/$lib/python$pyver/regressions/admin/*.txt $prefix/admin/");
+#   sys_exe("cp $install_dir/$unpacked_dir/$lib/python$pyver/regressions/admin/*.pl $prefix/admin/");
 }
 else {
     sys_exe("cp $install_dir/$unpacked_dir/CASA.app/Contents/Resources/python/*.py \$HOME/admin/");

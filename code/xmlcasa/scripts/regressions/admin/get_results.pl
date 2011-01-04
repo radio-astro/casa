@@ -9,35 +9,48 @@
 #
 
 # Remove hosts, and where to get tests results from
-%dir = (
-	"el4tst" => "/casa/state/",
-	"ballista" => "http://www.aoc.nrao.edu/~jmlarsen/casa/",
-	"onager" => "http://www.aoc.nrao.edu/~jmlarsen/casa_onager/",
-	"casa-dev-15" => "http://www.aoc.nrao.edu/~jmlarsen/casa_casa-dev-15/",
-	"ma014655.ads.eso.org" => "/opt/casa_test/result/"
+%dir = ( "el5tst" => "/casa/state/",
+	 "casa-dev-15.aoc.nrao.edu" => "/export/home/casa-dev-15-2/casa-regressions/sresult",
 );
 
-# Orphan test failures go to this email
-$default_email = "jmlarsen\@eso.org";
+if (! $prefix ) {
+    $prefix = "/export/data/casa-regressions";
+}
+if (! $mail_dir ) {
+    $mail_dir = "$prefix/mail";
+    die "no mail directory" unless -d $mail_dir;
+}
+if (! $notifications_sent ) {
+    $notifications_sent = "$prefix/state/notification-sent.txt";
+    die "no state directory" unless -d "$prefix/state";
+}
+if (! $tests_file ) {
+    $tests_file = "$prefix/admin/tests_list.txt";
+    die "no notification list" unless -e $tests_file;
+}
+if (! $data_base ) {
+    $data_base = "$prefix/archive";
+    die "no archive directory" unless -d $data_base;
+}
+if (! $log_dir ) {
+    $log_dir = "$prefix/log";
+    die "no log directory" unless -d $log_dir;
+}
 
-$mail_dir = "" if (0); $mail_dir or die;
+# Orphan test failures go to this email
+$default_email = "drs\@nrao.edu";
+
 $mail_no = 0;  # global counter
 
-# This file keeps track of which test failures were already reported
-$notifications_sent = "" if (0); $notifications_sent or die;
-
-# Paths to SVN:
-$svn_path = "" if (0); $svn_path or die;
-#"/diska/jmlarsen/gnuactive/code";
-
-$tests_file = "" if (0); $tests_file or die;
+$tests_file or die;
 #= "xmlcasa/scripts/regressions/admin/tests_list.txt";
 
 $data_base = "" if (0); $data_base or die;
 
-$out_dir = "" if (0); $out_dir or die;
+$log_dir = "" if (0); $log_dir or die;
 
 # Start processing...
+print "---------------------------------------------------------------------------\n";
 system("date -u");
 
 $files_to_get = "result-all.tgz";
@@ -56,14 +69,19 @@ foreach $host (keys %dir) {
 	if ($dir{$host} eq "/casa/regression/01/result/" or
 	    $dir{$host} eq "/casa/state/")
 	{
-	    $ssh_cmd = "ssh 2>/dev/null -T -A -l casagate ssh.cv.nrao.edu --";
-	    # login messages are written to stderr, suppress that
+	    ####
+	    #### command used from ESO to fetch results using casagate ssh forwarder
+	    ####
+	    #$ssh_cmd = "ssh 2>/dev/null -T -A -l casagate ssh.cv.nrao.edu --";
+	    ## login messages are written to stderr, suppress that
+	    $ssh_cmd = "ssh -l casatest -T";
 	}
 	else {
 	    $ssh_cmd = "ssh -T";
 	}
 
-	if ($dir{$host} eq "/casa/state/") {
+	if ($dir{$host} eq "/casa/state/" or
+	    $dir{$host} =~ m|/casa-regressions/sresult$|) {
 	    #$files_to_get = "--after-date '5 hours ago' Result/ Log/";
 	    $files_to_get = "result-*tar.gz";
 	}
@@ -72,7 +90,7 @@ foreach $host (keys %dir) {
 	}
 	$cmd =
 	    'echo "cd ' . ${dir{$host}} . ' ; tar zc ' . $files_to_get . ' " | ' .
-	    $ssh_cmd . ' ' . $host . ' | tar zxf -';
+	    $ssh_cmd . ' ' . $host . ' 2> /dev/null | tar zxf -';
     }
     if (mysystem($cmd) != 0) {
 	warn $cmd . ":" . $!;
@@ -84,19 +102,19 @@ foreach $host (keys %dir) {
 	    # ???
 	}
 	else {
-	    if (mysystem("echo touch ${dir{$host}}/retrieved | $ssh_cmd $host")) {
+	    if (mysystem("echo touch ${dir{$host}}/retrieved | $ssh_cmd $host 2> /dev/null")) {
 		warn $!;
 		next;
 	    }
 	}
 
 	if (1 or $dir{$host} ne "/casa/state/")  {
-	    if ($dir{$host} ne "/casa/state/" and mysystem("tar zxf result-all.tgz")) {
+	    if ($dir{$host} ne "/casa/state/" and $dir{$host} !~ m|/casa-regressions/sresult$| and mysystem("tar zxf result-all.tgz")) {
 		warn "$host: $!";
 		next;
 	    }
 
-            $unextracted_size = `gunzip -l result-*tar.gz | grep totals | awk '{print \$2}'`;
+            $unextracted_size = `gunzip -l result-*tar.gz | awk '{SUM += \$1} END {print SUM}'`;
             chomp($unextracted_size);
 
             if ($unextracted_size > 100*1024*1024) {
@@ -146,8 +164,8 @@ foreach $host (keys %dir) {
     }
 }
 
-mysystem("find $data_base/Log/ -type f | xargs grep       \"Unexpected error\" | tee $out_dir/error.log 1>&2");
-mysystem("find $data_base/Log/ -type f | xargs grep -B200 \"Unexpected error\" >> $out_dir/error.log");
+mysystem("find $data_base/Log/ -type f | xargs grep       \"Unexpected error\" | tee $log_dir/error.log 1>&2");
+mysystem("find $data_base/Log/ -type f | xargs grep -B200 \"Unexpected error\" >> $log_dir/error.log");
 
 exit 0;
 
@@ -156,9 +174,7 @@ exit 0;
 
 sub email_notify 
 {
-    $svn_base = `svn info $svn_path | grep URL | awk '{print \$2}'`; $? == 0 or die $!;
-    chomp($svn_base);
-    $svn_rev = `svn -v status $svn_path/$tests_file | awk '{print \$2}'`; $? == 0 or die $!;
+    $svn_rev = `svn -v status $tests_file | awk '{print \$2}'`; $? == 0 or die $!;
     chomp($svn_rev);
     
     @fail_logs = `find ./Result/ -name \\*.txt | xargs grep -lE \"^status .\*fail\"`;
@@ -176,7 +192,7 @@ sub email_notify
 	chomp($type);
 	chomp($casa); $casa =~ s/\'//g;
 	chomp($host);
-	$email  = `cat $svn_path/$tests_file | grep -w "^$testid" | awk '{print \$2 \"\@\" \$3}'`;  $? == 0 or die $!;
+	$email  = `cat $tests_file | grep -w "^$testid" | awk '{print \$2 \"\@\" \$3}'`;  $? == 0 or die $!;
 	chomp($email);
 
 	if ($type ne "exec") {
@@ -217,7 +233,7 @@ sub email_notify
 	print FILE "-- \n";
 	print FILE "This is an automated message, you can reply.\n";
 	print FILE "You have received this message as contact for $testid according to\n";
-	print FILE "$svn_base/$tests_file r$svn_rev.\n";
+	print FILE "$tests_file r$svn_rev.\n";
 	close FILE or die;
 
 
@@ -248,13 +264,13 @@ sub email_notify
 		if ($type ne "exec") {
 		    $subject = "$testid-$image-$type";
 		}
-		
+
 		$email_file = $mail_dir . "/" . $mail_no . ".email";
 		$mail_no++;
 		open FILE, ">$email_file";
 
-		print FILE "$email\n";
-		#print FILE "jmlarsen\@eso.org\n";   # for testing without spamming
+		#print FILE "$email\n";
+		print FILE "drs\@nrao.edu\n";   # for testing without spamming
 
 		print FILE "CASA regression failure: $subject, $casa, $host\n";
 		close FILE or die;

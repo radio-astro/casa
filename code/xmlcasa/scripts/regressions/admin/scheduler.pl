@@ -14,28 +14,35 @@
 use FindBin;
 use Sys::Hostname;
 
-$#ARGV == 3 or die "Usage: $0 [options] reg_dir data_dir load_limit timeout";
+###$#ARGV == 3 or die "Usage: $0 [options] reg_dir data_dir load_limit timeout";
+$#ARGV == 1 or die "Usage: $0 [options] load_limit timeout";
 
-# Supported command line options
-$work     = "" if (0);   # non-default work dir
-$res_dir  = "" if (0);   # non-default result dir
-$noloop   = "" if (0);   # Iterate through tests only once
-$noclean  = "" if (0);   # Do not cleanup result dir
-$all      = "" if (0);   # Loop through all tests?
-$profile  = "" if (0);   # enable profiling? assumes sudo opcontrol
+$la_limit = $ARGV[0];
+$timeout  = $ARGV[1];
+
+###
+### Avoid perl error for command line options
+###
 $pack_all = "" if (0);   # create a result-all.tgz from all the tar files?
 
-$reg_dir  = $ARGV[0];
-$data_dir = $ARGV[1];
-$workdir  = "/tmp/casa_regression";
-$la_limit = $ARGV[2];
-$timeout  = $ARGV[3];
-
-if ($work) {
-    $workdir = $work;
+if ( ! $prefix ) {
+    $prefix = "/casa/regression/01";
+}
+if ( ! $work_dir ) {
+    $work_dir = "$prefix/work/";
+}
+if (! $reg_dir) {
+    $reg_dir = "$prefix/result/";
 }
 if (! $res_dir) {
-    $res_dir = $reg_dir;
+    $res_dir = "$prefix/sresult/";
+}
+
+if (! $install_dir) {
+    $install_dir = "$prefix/install/";
+}
+if (! $data_dir) {
+    $data_dir = "$prefix/data/";
 }
 
 (-d $res_dir) or mkdir($res_dir) or die;
@@ -47,7 +54,6 @@ if ($?) {
     exit 1;
 }
 chomp($date);
-
 
 $admin_dir = $FindBin::Bin;
 $hostname = hostname();
@@ -94,7 +100,7 @@ printf "la %.2f ", $load_average_15;
 printf "lim %.2f\n", $la_limit;
 
 $reached_the_end = 0;
-$executeproc = `ps -Af | grep execute.py | grep -vw grep | wc -l`;
+$executeproc = `ps -Af | egrep -v '^jmlarsen' | grep execute.py | grep -vw grep | wc -l`;
 if ($load_average_15 < $la_limit) {
     if ($executeproc > 0) {
         print gettime(), "execute.py already running\n";
@@ -138,14 +144,14 @@ if ($load_average_15 < $la_limit) {
 
             $test_number = ($next + $base) % ($#tests+1);	    
 	    $testname = $tests[$test_number];
-	    $runcasa_log     = "$workdir/Log/run-$testname-$hostname.log";
+	    $runcasa_log     = "$work_dir/Log/run-$testname-$hostname.log";
 	    
-	    system("/bin/rm -rf $workdir") == 0 or die $!;
-	    mkdir("$workdir") or die;
-	    mkdir("$workdir/admin") or die;
-	    mkdir("$workdir/Log") or die;
-	    chdir("$workdir") or die;    
-	    system("cp $admin_dir/*.py $admin_dir/*.pl $workdir/admin/") == 0 or die $!;
+	    system("/bin/rm -rf $work_dir") == 0 or die $!;
+	    mkdir("$work_dir") or die;
+	    mkdir("$work_dir/admin") or die;
+	    mkdir("$work_dir/Log") or die;
+	    chdir("$work_dir") or die;    
+	    system("cp $admin_dir/*.py $admin_dir/*.pl $work_dir/admin/") == 0 or die $!;
 	    
 	    $xdisplay = 7;
 	    $p = "0";
@@ -154,7 +160,7 @@ if ($load_average_15 < $la_limit) {
 	    }
 	    $cmd = 
 		"$admin_dir/process_manager.pl $timeout " .
-		"$admin_dir/runcasa_from_shell.sh $xdisplay $workdir/admin/execute.py $data_dir $workdir $testname $p";
+		"$admin_dir/runcasa_from_shell.sh $xdisplay $work_dir/admin/execute.py $data_dir $work_dir $testname $p";
 	    
 	    print gettime(), "Run test $test_number $testname: $cmd > $runcasa_log 2>&1\n";
 	    system("$cmd > $runcasa_log 2>&1"); # no check on return code
@@ -162,16 +168,16 @@ if ($load_average_15 < $la_limit) {
 		# be sure to stop the oprofile deamon if the casapy session did not
                 system("sudo opcontrol --stop") == 0 or die $!;
             }
-	    if (-d "$workdir/result") {
-		rename("$workdir/result/", "$workdir/Result/") or die $!;
+	    if (-d "$work_dir/result") {
+		rename("$work_dir/result/", "$work_dir/Result/") or die $!;
 		$result_files = "Result";
 	    }
 	    else {
 		$result_files = "";
 	    }
-	    chdir("$workdir") or die;
+	    chdir("$work_dir") or die;
 	    # can no longer write to logfile from here
-	    system("/bin/rm -rf $workdir/work") == 0 or die $!;
+	    system("/bin/rm -rf $work_dir/work") == 0 or die $!;
 	    if (! $noclean) {
 		$cmd = "tar zc $result_files Log/ > $res_dir/result-$hostname$date.tar.gz";
 		if (system($cmd) != 0) {
