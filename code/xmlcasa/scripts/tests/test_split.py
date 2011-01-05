@@ -39,7 +39,7 @@ def check_eq(val, expval, tol=None):
             check_eq(val[k], expval[k], tol)
     else:
         try:
-            if tol:
+            if tol and hasattr(val, '__rsub__'):
                 are_eq = abs(val - expval) < tol
             else:
                 are_eq = val == expval
@@ -704,6 +704,62 @@ class split_test_blankov(unittest.TestCase):
         myf['__rethrow_casa_exceptions'] = original_throw_pref
         assert not splitran
 
+class split_test_almapol(SplitChecker):
+    """
+    Check that correlations can be selected when WVR data is in spw 0,
+    and that nonstandard columns in WEATHER are being copied.
+    """
+    need_to_initialize = True
+    corrsels = ['xx,yy']
+    inpms = datapath + 'unittest/split/ixxxyyxyy.ms'
+    records = {}
+
+    def do_split(self, corrsel):
+        outms = 'xxyyspw1_3.ms'
+        record = {'ms': outms}
+
+        shutil.rmtree(outms, ignore_errors=True)
+        splitran = False
+        try:
+            splitran = split(self.inpms, outms, datacolumn='data',
+                             field='', spw='1~3', width=1,
+                             antenna='',
+                             timebin='0s', timerange='',
+                             scan='', array='', uvrange='',
+                             correlation=corrsel, async=False)
+            tb.open(outms + '/WEATHER')
+            record['nsid'] = {0: tb.getcell('NS_WX_STATION_ID', 0),
+                              1: tb.getcell('NS_WX_STATION_ID', 1)}
+            record['nspos'] = {0: tb.getcell('NS_WX_STATION_POSITION', 0),
+                               1: tb.getcell('NS_WX_STATION_POSITION', 1)}
+            tb.close()
+        except Exception, e:
+            print "Error selecting %s from %s:" % (corrsel, outms)
+            raise e
+        self.records[corrsel] = record
+        return splitran
+            
+    def test_almapol(self):
+        """Can we select corrs when WVR data is in spw 0?"""
+        for corrsel in self.corrsels:
+            assert os.path.isdir(self.records[corrsel]['ms'])
+            shutil.rmtree(self.records[corrsel]['ms'], ignore_errors=True)
+
+    def test_nsid(self):
+        """Did NS_WX_STATION_ID get copied?"""
+        for corrsel in self.corrsels:
+            check_eq(self.records[corrsel]['nsid'][0], 8)
+            check_eq(self.records[corrsel]['nsid'][1], 9)
+            
+    def test_nspos(self):
+        """Did NS_WX_STATION_POS get copied?"""
+        for corrsel in self.corrsels:
+            check_eq(self.records[corrsel]['nspos'][0],
+                     numpy.array([2225262.12, -5440307.30, -2480962.57]), 0.01)
+            check_eq(self.records[corrsel]['nspos'][1],
+                     numpy.array([2224782.10, -5440330.29, -2481339.08]), 0.01)
+            
+
 class split_test_unorderedpolspw(SplitChecker):
     """
     Check spw selection from a tricky MS.
@@ -836,11 +892,11 @@ class split_test_tav_then_cvel(SplitChecker):
                              scan='', array='', uvrange='',
                              correlation=corrsel, async=False)
             tb.open(tavms)
-            for c in ['DATA', 'WEIGHT', 'INTERVAL', 'SCAN_NUMBER', 'STATE_ID']:
+            for c in ['DATA', 'WEIGHT', 'INTERVAL', 'SCAN_NUMBER', 'STATE_ID', 'TIME']:
                 record['tav'][c] = {}
                 for r in [0, 4, 5, 6, 7, 90, 91]:
                     record['tav'][c][r] = tb.getcell(c, r)
-            for c in ['SCAN_NUMBER', 'STATE_ID']:
+            for c in ['SCAN_NUMBER', 'STATE_ID', 'TIME']:
                 record['tav'][c][123] = tb.getcell(c, 123)
             tb.close()
         except Exception, e:
@@ -927,6 +983,18 @@ class split_test_tav_then_cvel(SplitChecker):
         check_eq(self.records['tav']['SCAN_NUMBER'],
                  {0: 5, 4: 5, 5: 5, 6: 6, 7: 6, 90: 17, 91: 17, 123: 40})
 
+    def test_tav_time(self):
+        """Time averaged TIME"""
+        check_eq(self.records['tav']['TIME'],
+                 {0: 4785963881.0,
+                  4: 4785963921.0,
+                  5: 4785963930.5,
+                  6: 4785963940.0,
+                  7: 4785963950.0,
+                  90: 4785965501.0,
+                  91: 4785965511.0,
+                  123: 4785966907.0})
+
     def test_cv(self):
         """cvel completed"""
         assert self._cvel_err == False and os.path.isdir(self.records['cvms'])
@@ -936,5 +1004,6 @@ class split_test_tav_then_cvel(SplitChecker):
 def suite():
     return [split_test_tav, split_test_cav, split_test_cst, split_test_state,
             split_test_singchan, split_test_unorderedpolspw, split_test_blankov,
-            split_test_tav_then_cvel, split_test_genericsubtables, split_test_chanwidth]
+            split_test_tav_then_cvel, split_test_genericsubtables,
+            split_test_chanwidth, split_test_almapol]
     

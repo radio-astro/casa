@@ -37,6 +37,7 @@ test_imtrans                    dmehring@nrao.edu
 test_imval                      dmehring@nrao.edu
 test_listhistory                scastro@eso.org
 #test_listvis                    scastro@eso.org
+test_measures			rreid@nrao.edu
 test_pcasa                      jmlarsen@eso.org
 test_plotants                   scastro@eso.org
 #test_plotms                     dmehring@nrao.edu
@@ -44,6 +45,7 @@ test_report                     jmlarsen@eso.org
 test_slsearch                   dmehring@nrao.edu
 #test_sdplot                     kana.sugi@nao.ac.jp
 test_sdsave                     takeshi.nakazato@nao.ac.jp
+test_setjy			rreid@nrao.edu
 test_smoothcal                  scastro@eso.org
 test_specfit                    dmehring@nrao.edu
 test_splattotable               dmehring@nrao.edu

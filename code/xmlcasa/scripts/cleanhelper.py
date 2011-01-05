@@ -2,7 +2,7 @@ import casac
 import os
 import commands
 import math
-#import pdb
+import pdb
 import numpy
 import shutil
 
@@ -273,7 +273,6 @@ class cleanhelper:
                           nchan, start, width, restfreq, field, phasecenters,
                           names=[], facets=1, outframe='', veltype='radio',
                           makepbim=False, checkpsf=False):
-        #pdb.set_trace()
         #will do loop in reverse assuming first image is main field
         if not hasattr(imsizes, '__len__'):
             imsizes = [imsizes]
@@ -451,6 +450,7 @@ class cleanhelper:
                     ia.done(verbose=False)
 
     def makemultifieldmask2(self, maskobject='',slice=-1):
+
         """
         New makemultifieldmask to accomodate different kinds of masks supported
         in clean with flanking fields (added by TT)
@@ -607,7 +607,9 @@ class cleanhelper:
                 ia.open(self.maskimages[key])
                 fsum=ia.statistics()['sum']
                 if(fsum[0]==0.0):
-                    ia.set(pixels=1.0)
+                    #ia.set(pixels=1.0)
+                    # make an empty mask
+                    ia.set(pixels=0.0)
                 ia.done(verbose=False)
 
     def make_mask_from_threshhold(self, imagename, thresh, outputmask=None):
@@ -1173,14 +1175,18 @@ class cleanhelper:
     def readoutlier(self, outlierfile):
         """ Read a file containing clean boxes (kind of
         compliant with AIPS FACET FILE)
-            
+                    
         Format is:
          col0    col1   col2  col3 col4 col5 col6 col7  col8   col9
           C    FIELDID SIZEX SIZEY RAHH RAMM RASS DECDD DECMM DECSS      
         why first column has to have C ... because its should
-        not to be A or B ...now D would be a totally different thing
+        not to be A or B ...now D would be a totally different thing.
+        
+        'C' as in AIPS BOXFILE format indicates the file specify the coordiates
+        for field center(s). 
 
         Note all lines beginning with '#' are ignored.
+        (* Lines with first column other than C or c are also ignored)
         
         """
         imsizes=[]
@@ -1197,7 +1203,7 @@ class cleanhelper:
                     splitline=line.split('\n')
                     splitline2=splitline[0].split()
                     if (len(splitline2)==10):
-                        if(splitline2[0]=='C'):
+                        if(splitline2[0].upper()=='C'):
                             imageids.append(splitline2[1])
                             imsizes.append((int(splitline2[2]),int(splitline2[3])))
                             mydir='J2000  '+splitline2[4]+'h'+splitline2[5]+'m'+splitline2[6]+'  '+splitline2[7]+'d'+splitline2[8]+'m'+splitline2[9]

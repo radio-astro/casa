@@ -1186,7 +1186,11 @@ class report:
                     # This might fail with a "... marshal blah, blah ..." error
                     # if there's a mismatch between this python and
                     # CASA's python which created the binary cProfile.profile
-                    os.system("/usr/lib/casapy/bin/python /tmp/gprof2dot.py -f pstats " +\
+                    lib = "lib64" if os.uname()[4] == 'x86_64' else "lib"
+                    gprof2dot = "/tmp/gprof2dot.py"
+                    if not os.path.isfile(gprof2dot):
+                        gprof2dot = "/export/data/casa-regressions/bin/gprof2dot.py"
+                    os.system("/usr/" + lib + "/casapy/bin/python " + gprof2dot + " -f pstats " +\
                               prof_file + " | dot -Tpng -o " +\
                               report_dir + '/' + plot_file)
                     fd.write('<br><a href="'+plot_file+'">Python profile</a>')
@@ -1653,7 +1657,7 @@ class report:
                             verticalalignment='center')
                     pl.text(v[0], 0, 'fail -', fontsize=20, \
                             horizontalalignment='right', \
-                            verticalalignment='center', name='sans')
+                            verticalalignment='center', name='sans-serif')
                     ax.axis([v[0], v[1], -0.5, 1.5])
                 else:
                     ax.axis([v[0], v[1], 0, v[3]])

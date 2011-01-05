@@ -439,6 +439,62 @@ print me.comettype()
 </example>
 </method>
  
+<method type="function" name="cometdist">
+  <shortdescription>get the distance of the current comet in the current frame</shortdescription>
+  <input>
+  </input>
+  <returns type="any">
+    <any type="record"></any>
+    <shortdescription>Distance quantity or -1 AU</shortdescription>
+  </returns>
+  <description>
+    cometdist returns the distance in AU of the current comet in the current frame,
+    as a quantity.  It will return -1 AU on failure!
+  </description>
+<example>
+
+print "\t----\t cometdist Ex 1 \t----"
+# Directory with several Solar System ephemerides for setjy.
+cometdir = os.getenv("CASAPATH").split()[0] + "/data/ephemerides/JPL-Horizons/"
+me.framecomet(cometdir + "Ganymede_55438-56292dUTC.tab")
+#  Out[5]: True
+me.doframe(me.epoch("utc", "2011/01/03/17:00:00"))
+me.doframe(me.observatory("ALMA"))
+gandist = me.cometdist()
+print gandist
+# {'value': 5.1241088343892631, 'unit': 'AU'}
+
+</example>
+</method>
+ 
+<method type="function" name="cometangdiam">
+  <shortdescription>get the angular diameter of the current comet in the current frame</shortdescription>
+  <input>
+  </input>
+  <returns type="any">
+    <any type="record"></any>
+    <shortdescription>angle quantity or -1 radian</shortdescription>
+  </returns>
+  <description>
+    cometdist returns the angular diameter (as seen from Earth) in AU of the current
+    comet in the current frame, as a quantity.  It will return -1 radians on failure!
+  </description>
+<example>
+
+print "\t----\t cometangdiam Ex 1 \t----"
+# Directory with several Solar System ephemerides for setjy.
+cometdir = os.getenv("CASAPATH").split()[0] + "/data/ephemerides/JPL-Horizons/"
+me.framecomet(cometdir + "Ganymede_55438-56292dUTC.tab")
+#  Out[5]: True
+me.doframe(me.epoch("utc", "2011/01/03/17:00:00"))
+me.doframe(me.observatory("ALMA"))
+gad = me.cometangdiam()
+print gad
+# {'unit': 'rad', 'value': 6.8679673431729014e-06}
+
+</example>
+</method>
+ 
    <method type="function" name="comettopo">
    <shortdescription>get the current comet table coordinates</shortdescription>
    
