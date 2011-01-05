@@ -3437,7 +3437,7 @@ Bool Imager::restore(const Vector<String>& model,
     }
     sm_p->solveResiduals(*se_p);
     for (uInt k=0 ; k < residuals_p.nelements(); ++k){
-      residuals_p[k]->copyData(sm_p->residual(k));
+      residuals_p[k]->copyData(sm_p->getResidual(k));
     }
     restoreImages(image);
     
@@ -3511,7 +3511,7 @@ Bool Imager::updateresidual(const Vector<String>& model,
     addResiduals(residual);
     sm_p->solveResiduals(*se_p);
     for (uInt k=0 ; k < residuals_p.nelements(); ++k){
-      residuals_p[k]->copyData(sm_p->residual(k));
+      residuals_p[k]->copyData(sm_p->getResidual(k));
     }
     restoreImages(image);
     
@@ -4131,10 +4131,11 @@ Bool Imager::clean(const String& algorithm,
         algorithm=="multiscale") && (niter != 0))
       //write the model visibility to ms for now 
       sm_p->solveResiduals(*se_p, True);
-
+    
     for (uInt k=0 ; k < residuals_p.nelements(); ++k){
-      (residuals_p[k])->copyData(sm_p->residual(k));
+      (residuals_p[k])->copyData(sm_p->getResidual(k));
     }
+    
     savePSF(psfnames);
     redoSkyModel_p=False;
     restoreImages(image);

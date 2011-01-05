@@ -52,29 +52,36 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 WFCleanImageSkyModel::WFCleanImageSkyModel():
-  MFCleanImageSkyModel(), imageImage_p(0), residualImage_p(0),
-  maskImage_p(0), facets_p(1), nfacets_p(1), 
-  largeMem_p(False) {};
+  MFCleanImageSkyModel(), facets_p(1), nfacets_p(1), 
+  largeMem_p(False) {
+
+  imageImage_p=0;
+  residualImage_p=0;
+  maskImage_p=0;
+};
 
 WFCleanImageSkyModel::WFCleanImageSkyModel(const Int facets, Bool largeMemory):
-  MFCleanImageSkyModel(), imageImage_p(0), residualImage_p(0),
-  maskImage_p(0), facets_p(facets), nfacets_p(facets*facets), 
+  MFCleanImageSkyModel(), facets_p(facets), nfacets_p(facets*facets), 
   largeMem_p(largeMemory) 
 {
+  imageImage_p=0;
+  residualImage_p=0;
+  maskImage_p=0;
+
 };
 
 Int WFCleanImageSkyModel::add(ImageInterface<Float>& image,
 			      const Int maxNumXfr)
 {
   // Is this the first image?
-  if(imageImage_p==0) {
+  if(imageImage_p.null()) {
     // Create the facet images and copy the relevant region from the 
     // original image
-    imageImage_p=&image;
+    imageImage_p=CountedPtr<ImageInterface<Float> >(&image, False);
     facetImages_p.resize(nfacets_p);
     for (Int facet=0;facet<nfacets_p;facet++) {
       facetImages_p[facet] = makeFacet(facet, image);
-      AlwaysAssert(facetImages_p[facet], AipsError);
+      AlwaysAssert(!facetImages_p[facet].null(), AipsError);
       AlwaysAssert(MFCleanImageSkyModel::add(*facetImages_p[facet], maxNumXfr)==facet,
 		   AipsError);
     }
@@ -92,12 +99,12 @@ Bool WFCleanImageSkyModel::addMask(Int image, ImageInterface<Float>& mask)
   // Create the facet images and copy the relevant region from the 
   // original image
   AlwaysAssert(image>-1, AipsError);
-  if(maskImage_p==0) {
-    maskImage_p=&mask;
+  if(maskImage_p.null()) {
+    maskImage_p=CountedPtr<ImageInterface<Float> >(&mask, False);
     facetMaskImages_p.resize(nfacets_p);
     for (Int facet=0;facet<nfacets_p;facet++) {
       facetMaskImages_p[facet] = makeFacet(facet, mask);
-      AlwaysAssert(facetMaskImages_p[facet], AipsError);
+      AlwaysAssert(!facetMaskImages_p[facet].null(), AipsError);
       AlwaysAssert(MFCleanImageSkyModel::addMask(facet, *facetMaskImages_p[facet]),
 		   AipsError);
     }
@@ -115,12 +122,12 @@ Bool WFCleanImageSkyModel::addResidual(Int image,
   // Create the facet images and copy the relevant region from the 
   // original image
   AlwaysAssert(image>-1, AipsError);
-  if(residualImage_p==0) {
-    residualImage_p=&residual;
+  if(residualImage_p.null()) {
+    residualImage_p=CountedPtr<ImageInterface<Float> >(&residual, False);
     facetResidualImages_p.resize(nfacets_p);
     for (Int facet=0;facet<nfacets_p;facet++) {
       facetResidualImages_p[facet] = makeFacet(facet, residual);
-      AlwaysAssert(facetResidualImages_p[facet], AipsError);
+      AlwaysAssert(!facetResidualImages_p[facet].null(), AipsError);
       AlwaysAssert(MFCleanImageSkyModel::addResidual(facet, *facetResidualImages_p[facet]),
 		   AipsError);
     }
@@ -135,6 +142,7 @@ Bool WFCleanImageSkyModel::addResidual(Int image,
 WFCleanImageSkyModel::~WFCleanImageSkyModel()
 {
   // Now destroy all the facet images
+  /*
   if(imageImage_p !=0){
     for (Int facet=0;facet<nfacets_p;facet++) {
       if(facetImages_p[facet]); delete facetImages_p[facet];
@@ -149,6 +157,7 @@ WFCleanImageSkyModel::~WFCleanImageSkyModel()
       }
     }
   }
+  */
 };
 
 // Clean solver: just call the MF solver
@@ -169,6 +178,32 @@ Bool WFCleanImageSkyModel::solve(SkyEquation& se) {
   return(True);
 };
   
+ImageInterface<Float>& WFCleanImageSkyModel::getResidual(Int trueMod){
+
+  if(trueMod==0){
+    if(residualImage_p.null()){
+      residualImage_p=new TempImage<Float>(imageImage_p->shape(), imageImage_p->coordinates());
+      facetResidualImages_p.resize(nfacets_p);
+      for (Int facet=0;facet<nfacets_p; ++facet) {
+	facetResidualImages_p[facet] = makeFacet(facet, *residualImage_p);
+	AlwaysAssert(!facetResidualImages_p[facet].null(), AipsError);	
+      }
+      
+    }
+    for (Int facet=0;facet<nfacets_p;++facet) 
+      facetResidualImages_p[facet]->copyData(residual(facet));
+    return *residualImage_p;
+    
+  }
+  else{
+    //return the outlying Multi field residuals 
+    return residual(trueMod+nfacets_p-1);
+
+  }
+
+
+
+}
     
 SubImage<Float>* 
 WFCleanImageSkyModel::makeFacet(Int facet, ImageInterface<Float>& image)
@@ -264,3 +299,5 @@ WFCleanImageSkyModel::makeSlicers(const Int facet, const IPosition& imageShape,
 
 } //# NAMESPACE CASA - END
 
+
+C++/l finished at Wed Jan  5 09:48:34
