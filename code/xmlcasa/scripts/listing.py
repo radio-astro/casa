@@ -101,35 +101,32 @@ def diffMetadata(testOut, standardOut, prefix=""):
 
     print "  - Comparing all non-floats in listing (ignore spaces)"
 
-    testList = open(testOut,'r')    
-    stndList = open(standardOut,'r')
-
     #                     Pattern                        Substitution
     unwanted = ((re.compile(r"[ |]([+-]?[0-9]*\.[0-9]+)"), 'x'), # floats
                 (re.compile(r' '),                          ''), # spaces
                 (re.compile(r'-+'),                       '-+')) # dashes
     
-    def filter_out_unwanted(linelist, unwanted):
+    def filter_out_unwanted(filename, unwanted):
         """
-        Given a list of strings and a tuple of (pattern, substitution)
-        pairs, returns a corresponding list of strings with the patterns
+        Given a filename and a tuple of (pattern, substitution)
+        pairs, returns the lines of filename with the patterns
         replaced by the substitutions.
         """
+        fileobj = open(filename, 'r')
         newList = []
-        for line in linelist.readlines():
+        for line in fileobj:
             filtered = line
             for pat, subst in unwanted:
                 filtered = pat.sub(subst, filtered)
             newList.append(filtered)
+        fileobj.close()
         return newList
             
-    newTestList = filter_out_unwanted(testList, unwanted)
-    newStndList = filter_out_unwanted(stndList, unwanted)
+    testList = filter_out_unwanted(testOut, unwanted)
+    stndList = filter_out_unwanted(standardOut, unwanted)
 
     # If everything after filtering is equal, return True
-    if newTestList == newStndList:
-        testList.close()
-        stndList.close()
+    if testList == stndList:
         return True
     
     # else... do the rest
@@ -139,8 +136,8 @@ def diffMetadata(testOut, standardOut, prefix=""):
     printDiff('','',[standardOut,testOut]) # Print some header info
 
     countDiff = 0 # Count number of different lines
-    for linenum in range(len(newTestList)):
-        if ( newTestList[linenum] != newStndList[linenum] ):
+    for linenum in range(len(testList)):
+        if ( testList[linenum] != stndList[linenum] ):
             countDiff += 1
             print "- (line ", linenum, ") Non-float data differs:" 
             printDiff(stndList[linenum],testList[linenum])
@@ -151,10 +148,6 @@ def diffMetadata(testOut, standardOut, prefix=""):
 
     # Restore stdout
     sys.stdout = sys.__stdout__
-
-    # close files
-    testList.close()
-    stndList.close()
     
     return False
 #=============================================================================
@@ -324,7 +317,7 @@ def diffAmpPhsFloat(test, standard, prefix="", precision="1e-6"):
 # Print two different strings
 def printDiff(s1, s2, filenames=[]):
     if (filenames):
-        print "Priting lines with differences for comparison:"
+        print "Printing lines with differences for comparison:"
         print "  < ", filenames[0]
         print "  > ", filenames[1]
     else:
