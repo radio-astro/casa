@@ -26,6 +26,7 @@ if (NOT CMAKE_CXX_FLAGS)
 endif (NOT CMAKE_CXX_FLAGS)
 if( CMAKE_SYSTEM MATCHES ^Darwin-10 )
 	add_definitions( -DCASA_NOTAPE )
+	set( CMAKE_OSX_ARCHITECTURES x86_64 )
 endif(CMAKE_SYSTEM MATCHES ^Darwin-10 )
 
 # Set build type if not given.
