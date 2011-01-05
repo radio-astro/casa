@@ -200,7 +200,9 @@ public:
 
   // Get current residual image: this is either that image specified via
   // addResidual, or a scratch image.
-  ImageInterface<Float>& getResidual (Int model=0);
+  // For example in WFImageSkyModel it might return the whole main image
+  //rather than facets 
+  virtual ImageInterface<Float>& getResidual (Int model=0);
 
   // Return the fitted beam for each model
   Vector<Float>& beam(Int model=0);
