@@ -293,7 +293,9 @@ void SkyCompRep::visibility(Cube<DComplex>& visibilities,
   //Indeed ...write something complex and make believe that 
   // that transformation from different frames can happen and let it bite when some 
   // poor sucker try to use it
-  MeasRef<MFrequency> measRef(MFrequency::REST); //at least lets call it lab frequency !
+  //At least for now making it that the frequency is expected to be in the frame of 
+  // the component
+  MeasRef<MFrequency> measRef(itsSpectrumPtr->refFrequency().getRef()); 
   itsSpectrumPtr->sample(fscale, mvFreq, measRef);
  
 
