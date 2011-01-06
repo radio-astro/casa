@@ -71,6 +71,12 @@ namespace casa {
         // </example>
 
         public:
+			enum CompListWriteControl {
+				NO_WRITE,
+				WRITE_NO_REPLACE,
+				OVERWRITE
+			};
+
             // constructor approprate for API calls.
             // Parameters:
             // <ul>
@@ -101,7 +107,9 @@ namespace casa {
                 const Vector<Float>& excludepix = Vector<Float>(0),
                 const String& residualInp="", const String& modelInp="",
                 const String& estiamtesFilename="", const String& logfile="",
-                const Bool& append=True, const String& newEstimatesInp=""
+                const Bool& append=True, const String& newEstimatesInp="",
+                const String& compListName="",
+                const CompListWriteControl writeControl=NO_WRITE
             ); 
 
             // DEPRECATED, DO NOT USE FOR NEW CODE AND CHANGE OLD CODE TO USE ONE OF THE CONSTRUCTORS BELOW
@@ -113,7 +121,9 @@ namespace casa {
                 const Vector<Float>& excludepix = Vector<Float>(0),
                 const String& residualInp="", const String& modelInp="",
                 const String& estiamtesFilename="", const String& logfile="",
-                const Bool& append=True, const String& newEstimatesInp=""
+                const Bool& append=True, const String& newEstimatesInp="",
+                const String& compListName="",
+                const CompListWriteControl writeControl=NO_WRITE
             );
 
             // use these constructors when you already have a pointer to a valid ImageInterface object
@@ -126,7 +136,9 @@ namespace casa {
                 const Vector<Float>& excludepix = Vector<Float>(0),
                 const String& residualInp="", const String& modelInp="",
                 const String& estiamtesFilename="", const String& logfile="",
-                const Bool& append=True, const String& newEstimatesInp=""
+                const Bool& append=True, const String& newEstimatesInp="",
+                const String& compListName="",
+                const CompListWriteControl writeControl=NO_WRITE
             );
 
             ImageFitter(
@@ -137,7 +149,9 @@ namespace casa {
                 const Vector<Float>& excludepix = Vector<Float>(0),
                 const String& residualInp="", const String& modelInp="",
                 const String& estiamtesFilename="", const String& logfile="",
-                const Bool& append=True, const String& newEstimatesInp=""
+                const Bool& append=True, const String& newEstimatesInp="",
+                const String& compListName="",
+                const CompListWriteControl writeControl=NO_WRITE
             );
 
             // destructor
@@ -156,7 +170,7 @@ namespace casa {
             Record _regionRecord;
             uInt _chan;
             String _stokesString, _mask, _residual, _model, _logfileName,
-				regionString, estimatesString, _newEstimatesFileName;
+				regionString, estimatesString, _newEstimatesFileName, _compListName;
             Vector<Float> includePixelRange, excludePixelRange;
             ComponentList estimates, _results;
             Vector<String> fixed;
@@ -167,6 +181,7 @@ namespace casa {
             Record _residStats, inputStats;
             Double chiSquared;
             String _kludgedStokes;
+            CompListWriteControl _writeControl;
 
             // does the lion's share of constructing the object, ie checks validity of
             // inputs, etc.
@@ -218,6 +233,8 @@ namespace casa {
 			String _statisticsToString() const;
 
 			void setErrors(const Record& residStats);
+
+			void _writeCompList();
     };
 }
 

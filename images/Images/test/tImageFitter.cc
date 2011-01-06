@@ -91,6 +91,11 @@ int main() {
     const ImageInterface<Float> *convolvedModel = new FITSImage("gaussian_convolved.fits");
     const ImageInterface<Float> *jykms = new FITSImage("jyperbeamkmpersec.fits");
     const ImageInterface<Float> *gaussNoPol = new FITSImage("gauss_no_pol.fits");
+    const ImageInterface<Float> *twoGauss = new FITSImage("two_gaussian_model.fits");
+	const Path compTable(dirName + "/myCompList.cl");
+	// Directory compTableDir(compTable.absoluteName());
+	int returnValue = 0;
+
     try {
        {
             writeTestString(
@@ -420,7 +425,7 @@ int main() {
         {
          	writeTestString("Fit two gaussians");
             ImageFitter fitter(
-             		"two_gaussian_model.fits", "", "", 0, "I", "",
+             		twoGauss, "", "", 0, "I", "",
               	Vector<Float>(0), Vector<Float>(0), "",
               	"", "estimates_2gauss.txt"
             );
@@ -593,22 +598,55 @@ int main() {
         	Double refFreq = compList.component(0).spectrum().refFrequency().getValue();
         	AlwaysAssert(near(refFreq, 1.415e9, 1e-7), AipsError);
         }
-
+        {
+        	writeTestString("test writing component list (CAS-2595");
+        	{
+        		ImageFitter fitter(
+        			noisyImage, "", "", 0, "I", "", Vector<Float>(0), Vector<Float>(0),
+        			"", "", "", "", True, "", compTable.absoluteName(), ImageFitter::WRITE_NO_REPLACE
+        		);
+        		fitter.fit();
+        		ComponentList c1(compTable);
+        		AlwaysAssert(c1.nelements() == 1, AipsError);
+        	}
+        	{
+        		ImageFitter fitter(
+        			twoGauss, "", "", 0, "I", "", Vector<Float>(0), Vector<Float>(0),
+        			"", "", "estimates_2gauss.txt", "", True, "", compTable.absoluteName(),
+        			ImageFitter::WRITE_NO_REPLACE
+				);
+        		fitter.fit();
+        		ComponentList c1(compTable);
+        		AlwaysAssert(c1.nelements() == 1, AipsError);
+			}
+        	{
+        		ImageFitter fitter(
+        			twoGauss, "", "", 0, "I", "", Vector<Float>(0), Vector<Float>(0),
+        			"", "", "estimates_2gauss.txt", "", True, "", compTable.absoluteName(),
+        			ImageFitter::OVERWRITE
+        		);
+        		fitter.fit();
+        		ComponentList c1(compTable);
+        		AlwaysAssert(c1.nelements() == 2, AipsError);
+        	}
+        }
         cout << "ok" << endl;
     }
     catch (AipsError x) {
         cerr << "Exception caught: " << x.getMesg() << endl;
-        return 1;
+        returnValue = 1;
     }
+    /*
 	if(workdir.exists()) {
 		workdir.removeRecursive();
 	}
+	*/
     delete gaussianModel;
     delete noisyImage;
     delete convolvedModel;
     delete jykms;
     delete gaussNoPol;
 
-    return 0;
+    return returnValue;
 }
 
