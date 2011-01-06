@@ -59,6 +59,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     CFStore& operator=(const CFStore& other);
     void show(const char *Mesg=NULL,ostream &os=cerr);
     Bool null() {return data.null();};
+    void set(const CFStore& other)
+    {
+      coordSys = other.coordSys; sampling=other.sampling; 
+      xSupport=other.xSupport; ySupport=other.ySupport;
+      maxXSupport=other.maxXSupport;  maxYSupport=other.maxYSupport; pa=other.pa;
+      mosPointingPos = other.mosPointingPos;
+    }
     void set(CFType *dataPtr, CoordinateSystem& cs, Vector<Float>& samp,
 	     Vector<Int>& xsup, Vector<Int>& ysup, Int maxXSup, Int maxYSup,
 	     Quantity PA, const Int mosPointing=0)
