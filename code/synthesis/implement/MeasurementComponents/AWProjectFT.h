@@ -31,6 +31,7 @@
 
 #include <synthesis/MeasurementComponents/VLACalcIlluminationConvFunc.h>
 #include <synthesis/MeasurementComponents/VLAIlluminationConvFunc.h>
+#include <synthesis/MeasurementComponents/AWVisResampler.h>
 //#include <synthesis/MeasurementComponents/ConvolutionFunction.h>
 #include <synthesis/MeasurementComponents/EVLAConvFunc.h>
 #include <synthesis/MeasurementComponents/SolvableVisCal.h>
@@ -452,61 +453,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual void normalizeAvgPB();
     virtual void normalizeAvgPB(ImageInterface<Complex>& inImage,
 				ImageInterface<Float>& outImage);
-    virtual void runFortranGet(Matrix<Double>& uvw,Vector<Double>& dphase,
-			       Cube<Complex>& visdata,
-			       IPosition& s,
-			       //Cube<Complex>& gradVisAzData,
-			       //Cube<Complex>& gradVisElData,
-			       //IPosition& gradS,
-			       Int& Conj,
-			       Cube<Int>& flags,Vector<Int>& rowFlags,
-			       Int& rownr,Vector<Double>& actualOffset,
-			       Array<Complex>* dataPtr,
-			       Int& aNx, Int& aNy, Int& npol, Int& nchan,
-			       VisBuffer& vb,Int& Nant_p, Int& scanNo,
-			       Double& sigma,
-			       Array<Float>& raoffsets,
-			       Array<Float>& decoffsets,
-			       Double area,
-			       Int& doGrad,Int paIndex);
-    virtual void runFortranPut(Matrix<Double>& uvw,Vector<Double>& dphase,
-			       const Complex& visdata_p,
-			       IPosition& s,
-			       //Cube<Complex>& gradVisAzData,
-			       //Cube<Complex>& gradVisElData,
-			       //IPosition& gradS,
-		       Int& Conj,
-		       Cube<Int>& flags,Vector<Int>& rowFlags,
-		       const Matrix<Float>& weight,
-		       Int& rownr,Vector<Double>& actualOffset,
-		       Array<Complex>& dataPtr,
-		       Int& aNx, Int& aNy, Int& npol, Int& nchan,
-		       const VisBuffer& vb,Int& Nant_p, Int& scanNo,
-		       Double& sigma,
-		       Array<Float>& raoffsets,
-		       Array<Float>& decoffsets,
-		       Matrix<Double>& sumWeight,
-		       Double& area,
-		       Int& doGrad,
-		       Int& doPSF,Int paIndex);
-  void runFortranGetGrad(Matrix<Double>& uvw,Vector<Double>& dphase,
-			 Cube<Complex>& visdata,
-			 IPosition& s,
-			 Cube<Complex>& gradVisAzData,
-			 Cube<Complex>& gradVisElData,
-			 //			 IPosition& gradS,
-			 Int& Conj,
-			 Cube<Int>& flags,Vector<Int>& rowFlags,
-			 Int& rownr,Vector<Double>& actualOffset,
-			 Array<Complex>* dataPtr,
-			 Int& aNx, Int& aNy, Int& npol, Int& nchan,
-			 VisBuffer& vb,Int& Nant_p, Int& scanNo,
-			 Double& sigma,
-			 Array<Float>& l_off,
-			 Array<Float>& m_off,
-			 Double area,
-			 Int& doGrad,
-			 Int paIndex);
+    virtual void resampleDataToGrid(VBStore& vbs, const VisBuffer& vb, 
+				    Bool& dopsf);
+    virtual void resampleGridToData(VBStore& vbs, const VisBuffer& vb);
+
+    virtual void setupVBStore(VBStore& vbs,
+			      const VisBuffer& vb,
+			      const Matrix<Float>& imagingweight,
+			      const Cube<Complex>& visData,
+			      const Matrix<Double>& uvw,
+			      const Cube<Int>& flagCube,
+			      const Vector<Double>& dphase);
+
+  AWVisResampler visResampler_p;
+#include "AWProjectFT.FORTRANSTUFF.INC"
   };
 } //# NAMESPACE CASA - END
     // void makeAntiAliasingOp(Vector<Complex>& val, const Int len, const Double HPBW);
