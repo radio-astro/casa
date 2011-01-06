@@ -69,13 +69,20 @@ namespace casa {
         const Vector<Float>& excludepix, const String& residualInp,
         const String& modelInp, const String& estimatesFilename,
         const String& logfile, const Bool& append,
-        const String& newEstimatesInp
+        const String& newEstimatesInp, const String& compListName,
+        const CompListWriteControl writeControl
     ) : _log(new LogIO()), _image(0), _chan(chanInp), _stokesString(stokes),
 		_mask(maskInp), _residual(residualInp),_model(modelInp), _logfileName(logfile),
 		regionString(""), estimatesString(""), _newEstimatesFileName(newEstimatesInp),
+		_compListName(compListName),
 		includePixelRange(includepix), excludePixelRange(excludepix),
 		estimates(), fixed(0), logfileAppend(append), _fitConverged(False),
-		fitDone(False), _noBeam(False), _deleteImageOnDestruct(True), _peakIntensities() {
+		fitDone(False), _noBeam(False), _deleteImageOnDestruct(True), _peakIntensities(),
+		_writeControl(writeControl) {
+        *_log << LogOrigin("ImageFitter", __FUNCTION__);
+        *_log << LogIO::WARN << "This constructor has been deprecated and will be removed "
+        	<< "in an upcoming version. Please modify existing code not to use another constructor"
+        	<< LogIO::POST;
         _construct(imagename, box, region, 0, estimatesFilename);
     }
 
@@ -86,13 +93,20 @@ namespace casa {
         const Vector<Float>& excludepix, const String& residualInp,
         const String& modelInp, const String& estimatesFilename,
         const String& logfile, const Bool& append,
-        const String& newEstimatesInp
+        const String& newEstimatesInp, const String& compListName,
+        const CompListWriteControl writeControl
     ) : _log(new LogIO()), _image(0), _chan(chanInp), _stokesString(stokes),
 		_mask(maskInp), _residual(residualInp),_model(modelInp), _logfileName(logfile),
 		regionString(""), estimatesString(""), _newEstimatesFileName(newEstimatesInp),
+		_compListName(compListName),
 		includePixelRange(includepix), excludePixelRange(excludepix),
 		estimates(), fixed(0), logfileAppend(append), _fitConverged(False),
-		fitDone(False), _noBeam(False), _deleteImageOnDestruct(True), _peakIntensities() {
+		fitDone(False), _noBeam(False), _deleteImageOnDestruct(True), _peakIntensities(),
+		_writeControl(writeControl) {
+        *_log << LogOrigin("ImageFitter", __FUNCTION__);
+        *_log << LogIO::WARN << "This constructor has been deprecated and will be removed "
+        	<< "in an upcoming version. Please modify existing code not to use another constructor"
+        	<< LogIO::POST;
         _construct(imagename, box, "", regionPtr, estimatesFilename);
     }
 
@@ -103,13 +117,16 @@ namespace casa {
         const Vector<Float>& excludepix, const String& residualInp,
         const String& modelInp, const String& estimatesFilename,
         const String& logfile, const Bool& append,
-        const String& newEstimatesInp
+        const String& newEstimatesInp, const String& compListName,
+        const CompListWriteControl writeControl
     ) : _log(new LogIO()), _image(image->cloneII()), _chan(chanInp), _stokesString(stokes),
 		_mask(maskInp), _residual(residualInp),_model(modelInp), _logfileName(logfile),
 		regionString(""), estimatesString(""), _newEstimatesFileName(newEstimatesInp),
+		_compListName(compListName),
 		includePixelRange(includepix), excludePixelRange(excludepix),
 		estimates(), fixed(0), logfileAppend(append), _fitConverged(False),
-		fitDone(False), _noBeam(False), _deleteImageOnDestruct(False), _peakIntensities() {
+		fitDone(False), _noBeam(False), _deleteImageOnDestruct(False), _peakIntensities(),
+		_writeControl(writeControl) {
         _construct(_image, box, region, 0, estimatesFilename);
     }
 
@@ -120,13 +137,16 @@ namespace casa {
         const Vector<Float>& excludepix, const String& residualInp,
         const String& modelInp, const String& estimatesFilename,
         const String& logfile, const Bool& append,
-        const String& newEstimatesInp
+        const String& newEstimatesInp, const String& compListName,
+        const CompListWriteControl writeControl
     ) : _log(new LogIO()), _image(image->cloneII()), _chan(chanInp), _stokesString(stokes),
 		_mask(maskInp), _residual(residualInp),_model(modelInp), _logfileName(logfile),
 		regionString(""), estimatesString(""), _newEstimatesFileName(newEstimatesInp),
+		_compListName(compListName),
 		includePixelRange(includepix), excludePixelRange(excludepix),
 		estimates(), fixed(0), logfileAppend(append), _fitConverged(False),
-		fitDone(False), _noBeam(False), _deleteImageOnDestruct(False), _peakIntensities() {
+		fitDone(False), _noBeam(False), _deleteImageOnDestruct(False), _peakIntensities(),
+		_writeControl(writeControl) {
         _construct(_image, box, "", regionPtr, estimatesFilename);
     }
 
@@ -139,7 +159,7 @@ namespace casa {
     }
 
     ComponentList ImageFitter::fit() {
-        *_log << LogOrigin("ImageFitter", "fit");
+        *_log << LogOrigin("ImageFitter", __FUNCTION__);
         Array<Float> residPixels;
         Array<Bool> residMask;
         Bool converged;
@@ -180,6 +200,7 @@ namespace casa {
         if(converged) {
         	_setFluxes();
         	_setSizes();
+        	_writeCompList();
         }
         String resultsString = _resultsToString();
         if (converged && ! _newEstimatesFileName.empty()) {
@@ -912,6 +933,37 @@ namespace casa {
     	*_log << LogIO::NORMAL << action << " file "
     		<< _newEstimatesFileName << " with new estimates file"
     		<< LogIO::POST;
+    }
+
+    void ImageFitter::_writeCompList() {
+    	if (! _compListName.empty()) {
+    		switch (_writeControl) {
+    		case NO_WRITE:
+    			return;
+    		case WRITE_NO_REPLACE:
+    		{
+    			File file(_compListName);
+    			if (file.exists()) {
+    		    	LogOrigin logOrigin("ImageFitter", __FUNCTION__);
+    		        *_log << logOrigin;
+    		        *_log << LogIO::WARN << "Requested persistent component list " << _compListName
+    		        	<< " already exists and user does not wish to overwrite it so "
+    		        	<< "the component list will not be written" << LogIO::POST;
+    		       return;
+    			}
+    		}
+    		// allow fall through
+    		case OVERWRITE: {
+    			Path path(_compListName);
+    			_results.rename(path, Table::New);
+    			*_log << LogIO::NORMAL << "Wrote component list table " << _compListName << endl;
+    		}
+    		return;
+    		default:
+    			// should never get here
+    			return;
+    		}
+    	}
     }
 
 }
