@@ -9,6 +9,7 @@
 test_boxit                      dmehring@nrao.edu
 test_clearstat                  scastro@eso.org
 test_clean                      scastro@eso.org
+test_cleanhelper                ttsutsum@nrao.edu
 test_componentlist              dmehring@nrao.edu
 #test_concat                     dpetry@eso.org
 test_conjugatevis               dpetry@eso.org
