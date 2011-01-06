@@ -4172,8 +4172,8 @@ tool attached to the residual (continuum subtracted) image.
     <shortdescription>Fit 2-dimensional models to an image.</shortdescription>
     <input>
         <param type="string" direction="in" name="box">
-        <value></value>
-        <description>One or more boxes to use for fit region(s). Default is to use the entire plane.</description>
+            <value></value>
+            <description>One or more boxes to use for fit region(s). Default is to use the entire plane.</description>
         </param>
         
         <param type="any" direction="in" name="region">
@@ -4236,6 +4236,15 @@ tool attached to the residual (continuum subtracted) image.
         <param type="string" direction="in" name="newestimates">
             <description>File to which to write results in "estimates" format suitable as estimates input for another run. Default is do not write an estimates file.</description>
             <value></value>
+        </param>
+    
+        <param type="string" direction="in" name="complist">
+            <description>Output component list table name. Default is do not write a component list table.</description>
+            <value></value>
+        </param>
+        <param type="bool" direction="in" name="overwrite">
+            <description>Overwrite component list if it already exists. Default is False.</description>
+            <value>false</value>
         </param>
     
     </input>
@@ -4378,8 +4387,6 @@ for x in range(3,20):
     imfit
 \end{verbatim}
 
-
-    
 </description>
 <example>
 Here is how one might fit two gaussians to multiple channels of a cube using the fit

@@ -79,13 +79,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <param type="string" name="estimates">
         <description>Name of file containing initial estimates of component parameters.</description>
         <value></value>
-        <example>model='ngc5921_fit_estimates.txt'</example>
+        <example>estimates='ngc5921_fit_estimates.txt'</example>
     </param>
     
     <param type="string" name="logfile">
         <description>Name of file to write fit results.</description>
         <value></value>
-        <example>model='ngc5921_fit_log.txt'</example>
+        <example>logfile="myimfitlog.txt"</example>
     </param>
 
     <param type="bool" name="append" subparam="true"> 
@@ -97,15 +97,31 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <param type="string" name="newestimates">
         <description>File to write fit results which can be used as initial estimates for next run.</description>
         <value></value>
-        <example>model='ngc5921_fit_new_estimates.txt'</example>
+        <example>newestimates="myestimates.txt"</example>
     </param>
-
+    <param type="string" name="complist">
+        <description>Name of output component list table.</description>
+        <value></value>
+        <example>complist='myoutputcomplist.tbl'</example>
+    </param>
+    <param type="bool" name="overwrite" subparam="true">
+        <description>Overwrite component list table if it exists?</description>
+        <value>False</value>
+        <example>overwrite=true</example>
+    </param>
 
     <constraints>
         <when param="logfile">
             <notequals type="string" value="">
                 <default param="append">
                     <value>True</value>
+                </default>
+            </notequals>
+        </when>
+        <when param="complist">
+            <notequals type="string" value="">
+                <default param="overwrite">
+                    <value>False</value>
                 </default>
             </notequals>
         </when>
@@ -141,6 +157,8 @@ logfile          Name of file to write fit results.
 append           If logfile exists, append to it (True) or overwrite it (False).
 newestimates     File to write fit results which can be used as initial estimates
                  for next run.
+complist         Name of output component list table.
+overwrite        Overwrite component list table if it exists?
 
 OVERVIEW
 

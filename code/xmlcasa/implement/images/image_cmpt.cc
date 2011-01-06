@@ -1341,13 +1341,14 @@ image::fitpolynomial(const std::string& residFile, const std::string& fitFile,
 
 
 ::casac::record* image::fitcomponents(
-	const std::string& box, const ::casac::variant& region, const int chan,
-	const std::string& stokes, const ::casac::variant& vmask,
-	const std::vector<double>& in_includepix,
-	const std::vector<double>& in_excludepix,
-	const std::string& residual, const std::string& model,
-	const std::string& estimates, const std::string& logfile,
-	const bool append, const std::string& newestimates
+	const string& box, const variant& region, const int chan,
+	const string& stokes, const variant& vmask,
+	const vector<double>& in_includepix,
+	const vector<double>& in_excludepix,
+	const string& residual, const string& model,
+	const string& estimates, const string& logfile,
+	const bool append, const string& newestimates,
+	const string& complist, const bool overwrite
 ) {
     if (detached()) {
     	return 0;
@@ -1373,11 +1374,17 @@ image::fitpolynomial(const std::string& residFile, const std::string& fitFile,
 	try {
 		ImageFitter *fitter = 0;
 		const ImageInterface<Float> *image = itsImage->getImage();
+		ImageFitter::CompListWriteControl writeControl = complist.empty()
+			? ImageFitter::NO_WRITE
+				: overwrite ? ImageFitter::OVERWRITE
+					: ImageFitter::WRITE_NO_REPLACE;
+
 		if (region.type() == ::casac::variant::STRING || region.size() == 0) {
 			String regionString = (region.size() == 0) ? "" : region.toString();
 			fitter = new ImageFitter(
 				image, regionString, box, chan, stokes, mask, includepix, excludepix,
-				residual, model, estimates, logfile, append, newestimates
+				residual, model, estimates, logfile, append, newestimates, complist,
+				writeControl
 			);
 		}
 		else if (region.type() == ::casac::variant::RECORD) {
@@ -1385,7 +1392,8 @@ image::fitpolynomial(const std::string& residFile, const std::string& fitFile,
 			Record *regionRecord = toRecord(regionCopy.asRecord());
 			fitter = new ImageFitter(
 				image, regionRecord, box, chan, stokes, mask, includepix, excludepix,
-				residual, model, estimates, logfile, append, newestimates
+				residual, model, estimates, logfile, append, newestimates, complist,
+				writeControl
 			);
 		}
 		else {
@@ -2565,9 +2573,6 @@ image::statistics(const std::vector<int>& axes,
       plotStats[1]="sigma";
     }
 
-    //cout << "CMPT in AXES: ";
-    //copy (axes.begin(),axes.end(), ostream_iterator<int>(cout," "));
-    //cout << endl;
     Vector<Int> tmpaxes(axes);
     if (tmpaxes.size()==1 && tmpaxes[0]==-1) {
       tmpaxes.resize(0);
