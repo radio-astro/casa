@@ -300,4 +300,4 @@ WFCleanImageSkyModel::makeSlicers(const Int facet, const IPosition& imageShape,
 } //# NAMESPACE CASA - END
 
 
-C++/l finished at Wed Jan  5 09:48:34
+
