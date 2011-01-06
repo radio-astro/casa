@@ -223,19 +223,14 @@ namespace casa{
 	makePBSq(twoDPBSq);
 	// {
 	//   ostringstream name;
-	//   name << "twoDPB.before." << iw << ".im";
-	//   storeImg(name,twoDPB);
+	//   name << "twoDPBSq.before." << iw << ".im";
+	//   storeImg(name,twoDPBSq);
 	// }
 	
 	Complex cpeak=max(twoDPB.get());
 	twoDPB.put(twoDPB.get()/cpeak);
 	cpeak=max(twoDPBSq.get());
 	twoDPBSq.put(twoDPBSq.get()/cpeak);
-	//	twoDPBSq.set(1.0);
-	// {
-	//   String name("twoDPB.im");
-	//   storeImg(name,twoDPB);
-	// }
 	
 	CoordinateSystem cs=twoDPB.coordinates();
 	Int index= twoDPB.coordinates().findCoordinate(Coordinate::SPECTRAL);
