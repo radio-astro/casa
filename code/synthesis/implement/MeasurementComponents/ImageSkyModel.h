@@ -227,6 +227,11 @@ public:
   // Set the variable that switches on the progress display
   void setDisplayProgress (const Bool display ) {displayProgress_p = display; };
 
+  // Set a variable to indicate the polarization frame in the data (circular or linear).
+  // This is used along with the user's choice of output Stokes parameter
+  // to decide the stokesCoordinate of the temporary images "cImage".
+  void setDataPolFrame(SkyModel::PolRep datapolrep) {dataPolRep_p = datapolrep;};
+
   // Tries to return a pointer to a TempImage (allocated with new, so remember
   // to use delete) with the given shape and CoordinateSystem.
   //
@@ -313,6 +318,9 @@ protected:
   // check if model has been modified especially for continuing
   // a deconvolution
   Bool modified_p;
+  // Parameter to indicate the polaraization type of the data (circular or linear)
+  // Required by cImage() to decide shapes.
+  SkyModel::PolRep dataPolRep_p;
 };
 
 
