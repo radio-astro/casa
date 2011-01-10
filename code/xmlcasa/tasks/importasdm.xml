@@ -85,6 +85,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <description>All the rows of the tables Feed, History, Pointing, Source, SysCal, CalDevice, SysPower, and Weather are processed independently of the time range of the selected exec block / scan.</description>
       <value>False</value>
     </param>
+    
+    <param type="bool" name="process_syspower">
+      <description> The SysPower table is processed if and only if this parameter is set to true.</description>
+      <value>False</value>
+    </param>
+
+    <param type="bool" name="process_caldevice">
+      <description> The CalDevice table is processed if and only if this parameter is set to true.</description>
+      <value>False</value>
+    </param>
 
     <param type="bool" name="verbose">
 	    <description>Output lots of information while the filler is working</description>
@@ -185,6 +195,10 @@ scans --	  processes only the scans specified in the option's value. This value 
 
 ignore_time -- All the rows of the tables Feed, History, Pointing, Source, SysCal, CalDevice, SysPower,
                and Weather are processed independently of the time range of the selected exec block / scan.
+
+process_syspower -- The SysPower table is processed if and only if this parameter is set to True.
+
+process_caldevice -- The CalDevice table is processed if and only if this parameter is set to True.
 
 verbose     -- produce log output as asdm2MS is being run
 
