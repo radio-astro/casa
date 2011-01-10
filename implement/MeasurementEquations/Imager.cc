@@ -777,17 +777,15 @@ Bool Imager::setimage(const Int nx, const Int ny,
 
     // Now make the derived quantities 
     if(stokes_p=="I" || stokes_p=="RR" ||stokes_p=="LL" || 
-       stokes_p=="XX" || stokes_p=="YY") {
+       stokes_p=="XX" || stokes_p=="YY" ) {
       npol_p=1;
     }
-    else if(stokes_p=="IQ" || stokes_p=="RRLL" || stokes_p=="XXYY" || 
-	    stokes_p=="QU") {
+    else if(stokes_p=="IV" || stokes_p=="IQ" || 
+              stokes_p=="RRLL" || stokes_p=="XXYY" || 
+	      stokes_p=="QU" || stokes_p=="UV") {
       npol_p=2;
     }
-    else if(stokes_p=="IV") {
-      npol_p=2;
-    }
-    else if(stokes_p=="IQU") {
+    else if(stokes_p=="IQU" || stokes_p=="IUV") {
       npol_p=3;
     }
     else if(stokes_p=="IQUV") {
@@ -1010,17 +1008,15 @@ Bool Imager::defineImage(const Int nx, const Int ny,
 
     // Now make the derived quantities 
     if(stokes_p=="I" || stokes_p=="RR" ||stokes_p=="LL" || 
-       stokes_p=="XX" || stokes_p=="YY") {
+       stokes_p=="XX" || stokes_p=="YY" ) {
       npol_p=1;
     }
-    else if(stokes_p=="IQ" || stokes_p=="RRLL" || stokes_p=="XXYY" ||
-	    stokes_p=="QU") {
+    else if(stokes_p=="IV" || stokes_p=="IQ" || 
+              stokes_p=="RRLL" || stokes_p=="XXYY" ||
+	      stokes_p=="QU" || stokes_p=="UV") {
       npol_p=2;
     }
-    else if(stokes_p=="IV") {
-      npol_p=2;
-    }
-    else if(stokes_p=="IQU") {
+    else if(stokes_p=="IQU" || stokes_p=="IUV") {
       npol_p=3;
     }
     else if(stokes_p=="IQUV") {
@@ -3907,6 +3903,7 @@ Bool Imager::clean(const String& algorithm,
 	  }
       }
     }
+
     
     // Make an ImageSkyModel with the specified polarization representation
     // (i.e. circular or linear)
@@ -4060,7 +4057,12 @@ Bool Imager::clean(const String& algorithm,
 	
 	return False;
       }
-    
+   
+      // Send the data correlation type to the SkyModel
+      os << LogIO::DEBUG1 << "Data PolRep in Imager.cc : " << polRep_p << LogIO::POST;
+      sm_p->setDataPolFrame(polRep_p);
+
+ 
       AlwaysAssert(sm_p, AipsError);
       sm_p->setAlgorithm("clean");
 
@@ -4089,6 +4091,8 @@ Bool Imager::clean(const String& algorithm,
     //   sm_p->setDisplayProgress(True);
     //   sm_p->setPGPlotter( getPGPlotter() );
     // }
+
+
 
     sm_p->setGain(gain);
     sm_p->setNumberIterations(niter);
