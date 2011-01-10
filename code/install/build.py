@@ -4,7 +4,7 @@
 #
 # This script builds CASA and creates documentation of the build procedure.
 #
-# The documentation is written to $HOME/documentation/
+# The documentation is written to ./html/
 #
 # Possible values for TYPE are full/incremental/test.
 #
@@ -671,7 +671,7 @@ def main(argv):
         sys.exit(0)
 
     dry = (len(argv) > 4)
-    doc_dir = os.getenv('HOME') + "/documentation/" + type + "-" + oss + "-" + arch
+    doc_dir = "html/" + type + "-" + oss + "-" + arch
     if dry:
         print "Writing documentation for", oss, arch, "to", doc_dir + "/build.html"
     else:
