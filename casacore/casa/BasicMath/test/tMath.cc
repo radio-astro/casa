@@ -80,6 +80,24 @@ int main() {
       AlwaysAssert(isInf(x), AipsError);
       AlwaysAssert(!isFinite(x), AipsError);
     }
+    {
+    	Double x = 321.444;
+    	AlwaysAssert(roundLog(x) == 320, AipsError);
+    	x = 21.45554;
+    	AlwaysAssert(roundLog(x) == 21.5, AipsError);
+    	x = -11.324;
+    	AlwaysAssert(roundLog(x) == -11.3, AipsError);
+    	x = -4502034;
+    	AlwaysAssert(roundLog(x) == -4500000, AipsError);
+    	x = -0.012345;
+    	AlwaysAssert(roundLog(x) == -0.0123, AipsError);
+    	x = 0;
+    	AlwaysAssert(roundLog(x) == 0, AipsError);
+
+
+
+
+    }
   }
   catch (AipsError x) {
     cerr << x.getMesg() << endl;

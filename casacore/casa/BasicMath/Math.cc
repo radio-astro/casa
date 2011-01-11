@@ -293,6 +293,9 @@ void setInf(Double& val) {
 }
 
 Double roundLog(Double val) {
+	if (val == 0) {
+		return 0;
+	}
 	Bool isNegative = val < 0;
 	Double sign = isNegative ? -1 : 1;
 	val *= sign;
@@ -300,7 +303,7 @@ Double roundLog(Double val) {
     // shift significand into range 32-320
     Int i = (lgr >= 0) ? int(lgr + 0.5) : int(lgr - 0.5);
     Double temp = val * pow(10.0, (2-i));
-    return sign*(temp + 0.5)*pow(10.0, (i-2));
+    return sign*round(temp)*pow(10.0, (i-2));
 }
 
 // Local Variables: 
