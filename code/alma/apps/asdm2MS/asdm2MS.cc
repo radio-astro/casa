@@ -388,6 +388,8 @@ public:
   }
 };
 
+float d2f(double d) { return (float) d; }
+
 vector<float> FConverter::toVectorF(const vector< vector <float> > & vvF, bool transpose) {
   vector<float> result;
   if (transpose == false) {
@@ -1159,7 +1161,7 @@ int main(int argc, char *argv[]) {
       ("logfile,l", po::value<string>(), "specifies the log filename. If the option is not used then the logged informations are written to the standard error stream.")
       ("verbose,v", "logs numerous informations as the filler is working.")
       ("revision,r", "logs information about the revision of this application.")
-      ("dry-run,m", "does not produce any MS MAIN table.")
+      ("dry-run,m", "does not fill the MS MAIN table.")
       ("ignore-time,t", "all the rows of the tables Feed, History, Pointing, Source, SysCal, CalDevice, SysPower and Weather are processed independently of the time range of the selected exec block / scan.")
       ("process-syspower", "the SysPower table is processed if and only if the option is present.")
       ("process-caldevice", "The CalDevice table is processed if and only if the option is present.");
@@ -1205,7 +1207,7 @@ int main(int argc, char *argv[]) {
     // Revision ? displays revision's info and don't go further.
     if (vm.count("revision")) {
       errstream.str("");
-      errstream << "$Id: asdm2MS.cpp,v 1.65 2011/01/03 17:06:11 mcaillat Exp $" << "\n" ;
+      errstream << "$Id: asdm2MS.cpp,v 1.66 2011/01/11 00:58:54 mcaillat Exp $" << "\n" ;
       error(errstream.str());
     }
 
@@ -1355,7 +1357,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Do we want an MS to be produced or not ?
-    mute = vm.count("mute") != 0;
+    mute = vm.count("dry-run") != 0;
 
   }
   catch (std::exception& e) {
@@ -2945,7 +2947,7 @@ int main(int argc, char *argv[]) {
 	    ignoreThisRow = true;
 	  }
 	  else {
-	    if (find_if(calEff.begin(), calEff.end(), size_lt<float>(numReceptor)) != calEff.end()) {
+	    if (find_if(calEff.begin(), calEff.end(), size_lt<float>(numCalload)) != calEff.end()) {
 	      errstream << "In the table CalDevice, the attribute 'calEff' in row #"
 			<< (unsigned int) (iter - calDevices.begin())
 			<< " has at least one element whose size is too small. All its elements should have their size"
@@ -2960,7 +2962,7 @@ int main(int argc, char *argv[]) {
       }
       
       //
-      // Do we have coupledNoiseCal ?
+      // In priority let's see if we have coupledNoiseCal ?
       vector<vector<float> > coupledNoiseCal;
       if ((*iter)->isCoupledNoiseCalExists()) {
 	//
@@ -2986,11 +2988,11 @@ int main(int argc, char *argv[]) {
 	    ignoreThisRow = true;
 	  }
 	  else {
-	    if (find_if(coupledNoiseCal.begin(), coupledNoiseCal.end(), size_lt<float>(numReceptor)) != coupledNoiseCal.end()) {
+	    if (find_if(coupledNoiseCal.begin(), coupledNoiseCal.end(), size_lt<float>(numCalload)) != coupledNoiseCal.end()) {
 	      errstream << "In the table CalDevice, the attribute 'coupledNoiseCal' in row #"
 			<< (unsigned int) (iter - calDevices.begin())
 			<< " has at least one element whose size is too small. All its elements should have their size"
-			<< " greater then  or equal to the value of the attribute 'numCalload' ("
+			<< " greater than or equal to the value of the attribute 'numCalload' (=="
 			<< numCalload
 			<< ")."
 			<< endl;
@@ -2998,6 +3000,40 @@ int main(int argc, char *argv[]) {
 	    }
 	  }
 	}	
+      }
+      // Ok we don't have coupledNoiseCal , but maybe we have noiseCal ?
+      else if ((*iter)->isNoiseCalExists()) {
+	//
+	// Do we take it into account ?
+	vector<double> noiseCal = (*iter)->getNoiseCal();
+	
+	if (noiseCal.size() < numCalload) {
+	  infostream << "In the table CalDevice, the size of the attribute 'noiseCal' in row #"
+		     << (unsigned int) (iter - calDevices.begin())
+		     << " is too small. It should be greater than or equal to the value of the attribute 'numCalload' ("
+		     << numCalload
+		     << ")."
+		     << endl;
+	  ignoreThisRow = true;
+	}
+	else {
+	  // So yes we have a noiseCal attribute, then pretend we have coupledNoiseCal. 
+	  // Artificially force numReceptor to 2 and fill coupledNoiseCal by replicating what we have in noiseCal :
+	  // coupledNoiseCal[0] = noiseCal
+	  // coupledNoiseCal[1] = noiseCal
+	  //
+	  infostream << "In the table CalDevice  there is no attribute 'coupledNoiseCal' but there an attribute 'noiseCal' in row #"
+		     << (unsigned int) (iter - calDevices.begin())
+		     << " which we are going to use to fill the MS NOISE_CAL by replicating its values."
+		     << endl;
+	  
+	  numReceptor = 2;
+	  coupledNoiseCal.resize(numReceptor);
+	  for (unsigned int iReceptor = 0; iReceptor < numReceptor; iReceptor++) {
+	    coupledNoiseCal[iReceptor].resize(numCalload);
+	    transform(noiseCal.begin(), noiseCal.begin()+numCalload, coupledNoiseCal[iReceptor].begin(), d2f);
+	  } 
+	}
       }
       
       //

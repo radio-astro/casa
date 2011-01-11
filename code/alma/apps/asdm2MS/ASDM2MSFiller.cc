@@ -433,8 +433,11 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
   if (complexData) {
     // DATA hypercolumn
     nTileRow = (tileSizeKBytes * 1024 / (2 * 4 * nTileCorr * nTileChan));
+
+    /* Here I should use MSTileLayout::tileShape(with appropriate parameters) which returns an IPosition.*/
     IPosition dataTileShape(3, nTileCorr, nTileChan, nTileRow);
 
+    /* See Jonas's message in CASA-2348 . JIRA Ticket */
     TiledShapeStMan dataStMan("TiledData", dataTileShape);
     newTab.bindColumn(colData, dataStMan);
       
