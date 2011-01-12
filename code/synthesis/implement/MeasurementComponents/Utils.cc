@@ -82,6 +82,12 @@ namespace casa{
     PagedImage<Complex> ctmp(theImg.shape(), coord, fileName);
     ctmp.put(theImg);
   }
+  void storeArrayAsImage(String fileName, const CoordinateSystem& coord,
+			 const Array<Float>& theImg)
+  {
+    PagedImage<Float> ctmp(theImg.shape(), coord, fileName);
+    ctmp.put(theImg);
+  }
   //
   //---------------------------------------------------------------------
   //
@@ -528,7 +534,7 @@ namespace casa{
     // Re-grid inImage onto outImage
     //
     Vector<Int> pixelAxes;
-    Int linInd = -1, after=-1;
+    Int linInd = -1;
     // Extract LINRAR coords from inCS.
     // Extract axes2
     Vector<Double> refPix = inCS.referencePixel();
@@ -536,7 +542,8 @@ namespace casa{
     refPix(1) = (inArray.shape()(1)+1)/2;
 
     inCS.setReferencePixel(refPix);
-    linInd = inCS.findCoordinate(Coordinate::LINEAR, after);
+    linInd = inCS.findCoordinate(Coordinate::LINEAR);
+
     pixelAxes=inCS.pixelAxes(linInd);
     IPosition axes2(pixelAxes);
     // Set linear transformation matrix in inCS.

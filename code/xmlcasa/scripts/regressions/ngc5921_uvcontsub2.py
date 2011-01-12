@@ -466,8 +466,6 @@ if benchmarking:
 print '--Listcal--'
 listcalOut = prefix + '.listcal.out'
 
-import listing 
-
 default('listcal')
 vis = msfile
 caltable = gtable

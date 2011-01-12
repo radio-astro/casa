@@ -54,6 +54,7 @@ namespace casa
   void storeImg(String fileName,ImageInterface<Complex>& theImg, Bool writeReIm=False);
   void storeImg(String fileName,ImageInterface<Float>& theImg);
   void storeArrayAsImage(String fileName, const CoordinateSystem& coords, const Array<Complex>& cf);
+  void storeArrayAsImage(String fileName, const CoordinateSystem& coords, const Array<Float>& cf);
 			 
   Bool isVBNaN(const VisBuffer& vb, String& mesg);
   namespace SynthesisUtils
@@ -72,6 +73,8 @@ namespace casa
     void findLatticeMax(const ImageInterface<Float>& lattice,
 			Vector<Float>& maxAbs,
 			Vector<IPosition>& posMaxAbs) ;
+    inline  Int nint(const Double& v) {return (Int)std::floor(v+0.5);}
+    inline  Int nint(const Float& v) {return (Int)std::floor(v+0.5);}
   }
 
   void getHADec(MeasurementSet& ms, const VisBuffer& vb, Double &HA, Double& RA, Double& Dec);

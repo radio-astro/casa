@@ -24,6 +24,10 @@ if (NOT CMAKE_CXX_FLAGS)
 ##    set (CMAKE_CXX_FLAGS "-W -Wall -Wpointer-arith -pedantic -Wno-long-long")
     set (CMAKE_CXX_FLAGS "-W -Wall")
 endif (NOT CMAKE_CXX_FLAGS)
+if( CMAKE_SYSTEM MATCHES ^Darwin-10 )
+	add_definitions( -DCASA_NOTAPE )
+	set( CMAKE_OSX_ARCHITECTURES x86_64 )
+endif(CMAKE_SYSTEM MATCHES ^Darwin-10 )
 
 # Set build type if not given.
 if (NOT CMAKE_BUILD_TYPE)
@@ -129,6 +133,14 @@ if (READLINE_FOUND)
 endif (READLINE_FOUND)
 
 # Add the modules to be built.
+#
+# Choose to have correct RPATHs both in the build tree and
+# in the install tree (at the cost of having to change the
+# rpath when installing)
+#
+set( CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib )
+set( CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+set( CMAKE_INSTALL_NAME_DIR ${CMAKE_INSTALL_PREFIX}/lib )
 foreach (module ${_modules})
     add_subdirectory (${module})
     if (APPLE)
@@ -137,6 +149,7 @@ foreach (module ${_modules})
         endif (${module} STREQUAL scimath_f OR ${module} STREQUAL fits OR ${module} STREQUAL mirlib OR ${module} STREQUAL coordinates)
     endif (APPLE)
 endforeach (module)
+#set( CMAKE_INSTALL_NAME_DIR ${CMAKE_INSTALL_PREFIX}/lib )
 
 # Show summary.
 message (STATUS "CMAKE_SYSTEM .......... = ${CMAKE_SYSTEM}")

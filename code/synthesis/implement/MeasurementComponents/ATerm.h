@@ -72,11 +72,11 @@ namespace casa{
     // Not sure if the following method is requried.  Leaving it in
     // the code for now with an implementation that does nothing.
     //
-    virtual void applySky(Matrix<Complex>& screen, const Int wPixel, 
-			  const Vector<Double>& sampling,
-			  const Int wConvSize, const Double wScale,
-			  const Int inner) 
-    {(void)screen; (void)wPixel; (void)sampling; (void)wConvSize; (void)wScale; (void)inner;};
+    // virtual void applySky(Matrix<Complex>& screen, const Int wPixel, 
+    // 			  const Vector<Double>& sampling,
+    // 			  const Int wConvSize, const Double wScale,
+    // 			  const Int inner) 
+    // {(void)screen; (void)wPixel; (void)sampling; (void)wConvSize; (void)wScale; (void)inner;};
 
     //
     // Returns a vector of integers that map each row in the given

@@ -100,12 +100,15 @@ public:
   // Solve for this SkyModel
   virtual Bool solve (SkyEquation& me);
 
+  //This will return for model 0 the main residual image i.e nxn facets
+  virtual ImageInterface<Float>& getResidual(Int physImageID);
+
   //void makeApproxPSFs(SkyEquation& se);
   
-
+  /*
   PtrBlock<TempImage<Complex> *>& cimageBlkPtr() { return cimage_p;};
   PtrBlock<Matrix<Float> * >& weightBlkPtr(){return weight_p; } ;
-
+  */
 protected:
 
   // Make a facet
@@ -121,18 +124,18 @@ protected:
 
 private:
 
-  ImageInterface<Float>* imageImage_p;
-  ImageInterface<Float>* residualImage_p;
-  ImageInterface<Float>* maskImage_p;
+  CountedPtr<ImageInterface<Float> > imageImage_p;
+  CountedPtr<ImageInterface<Float> > residualImage_p;
+  CountedPtr<ImageInterface<Float> > maskImage_p;
 
   Int facets_p;
   Bool largeMem_p;
 
   // Here we store the facets for the various images: Model, Mask
   // and Residual
-  Block<SubImage<Float>* > facetImages_p;
-  Block<SubImage<Float>* > facetMaskImages_p;
-  Block<SubImage<Float>* > facetResidualImages_p;
+  Block<CountedPtr<SubImage<Float> > > facetImages_p;
+  Block<CountedPtr<SubImage<Float> > > facetMaskImages_p;
+  Block<CountedPtr<SubImage<Float> > > facetResidualImages_p;
   
 };
 

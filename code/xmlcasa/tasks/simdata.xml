@@ -346,7 +346,7 @@ it'll do them for the same amount of time -->
     </param>
     
     <param type="bool" name="showarray" subparam="true">
-      <description>like plotants</description>
+      <description>like plotants (ignored in single dish simulation)</description>
       <value>False</value>
     </param>
 
@@ -356,7 +356,7 @@ it'll do them for the same amount of time -->
     </param>
 
     <param type="bool" name="showpsf" subparam="true">
-      <description>display synthesized (dirty) beam</description>
+      <description>display synthesized (dirty) beam (ignored in single dish simulation)</description>
       <value>True</value>
     </param>
 
@@ -376,7 +376,7 @@ it'll do them for the same amount of time -->
     </param>
 
     <param type="bool" name="showresidual" subparam="true">
-      <description>display the clean residual image</description>
+      <description>display the clean residual image (ignored in single dish simulation)</description>
       <value>False</value>
     </param>
 
@@ -725,13 +725,13 @@ mosaic simulation task:
     analyze -- compute and display difference between model and output, 
          fidelity, etc. 
        * it is recommended to have graphics turned on for this subtask
-    showarray -- like plotants
+    showarray -- like plotants (ignored in single dish simulation)
     showuv -- display uv coverage
-    showpsf -- display synthesized (dirty) beam
+    showpsf -- display synthesized (dirty) beam (ignored in single dish simulation)
     showmodel -- display sky model at original resolution
     showconvolved -- display sky model convolved with output beam 
     showclean -- display the synthesized image
-    showresidual -- display the clean residual image
+    showresidual -- display the clean residual image (ignored in single dish simulation)
     showdifference -- display difference image 
     showfidelity -- display fidelity image
     

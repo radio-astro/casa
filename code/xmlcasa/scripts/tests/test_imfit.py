@@ -66,7 +66,8 @@ import os
 import casac
 from tasks import *
 from taskinit import *
-import sha
+import hashlib
+import shutil
 from __main__ import *
 import unittest
 
@@ -704,9 +705,9 @@ class imfit_test(unittest.TestCase):
                 msgs += method + "new estimates file was not written\n"
                 return {'success' : success, 'error_msgs' : msgs}        
      
-            expected_sha = sha.sha(open(expected_new_estimates, 'r').read()).hexdigest()
+            expected_sha = hashlib.sha512(open(expected_new_estimates, 'r').read()).hexdigest()
     
-            got_sha = sha.sha(open(newestimates, 'r').read()).hexdigest()
+            got_sha = hashlib.sha512(open(newestimates, 'r').read()).hexdigest()
             if (got_sha != expected_sha):
                 success = False
                 msgs += method + "new estimates file differs from expected\n"
@@ -923,6 +924,51 @@ class imfit_test(unittest.TestCase):
 
 
         self.assertTrue(success,msgs)
+
+    def test_CAS_2595(self):
+        """ Test CAS-2595 feature addition: write component list table"""
+        method = "test_CAS_2595"
+        test = "test_CAS_2595"
+        mycl = cltool.create()
+        complist = "mycomplist.tbl"
+        def run_fitcomponents(imagename, estimates, overwrite):
+            myia = iatool.create()
+            myia.open(imagename)
+            res = myia.fitcomponents(complist=complist, estimates=estimates, overwrite=overwrite)
+            myia.done()
+            return res
+        def run_imfit(imagename, estimates, overwrite):
+            default('imfit')
+            return imfit(imagename=imagename, estimates=estimates, complist=complist, overwrite=overwrite)
+        #for i in [noisy_image ,two_gaussians_image]:
+        for code in (run_fitcomponents, run_imfit):
+            res = code(noisy_image, "", False)
+            mycl.open(complist)
+            self.assertTrue(
+                mycl.length() == 1,
+                str(code) + " didn't get 1 component as expected from table"
+            )
+            mycl.done()
+            # don't overwrite existing comp list
+            res = code(two_gaussians_image, two_gaussians_estimates, False)
+            mycl.open(complist)
+            self.assertTrue(
+                mycl.length() == 1,
+                str(code) + " didn't get 1 component as expected from table"
+            )
+            mycl.done()
+            # now overwrite existing comp list
+            res = code(two_gaussians_image, two_gaussians_estimates, True)
+            mycl.open(complist)
+            self.assertTrue(
+                mycl.length() == 2,
+                str(code) + " didn't get 2 component as expected from table"
+            )
+            
+            mycl.done()
+            shutil.rmtree(complist)
+ 
+
 
 
 def suite():
