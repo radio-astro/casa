@@ -1207,7 +1207,7 @@ int main(int argc, char *argv[]) {
     // Revision ? displays revision's info and don't go further.
     if (vm.count("revision")) {
       errstream.str("");
-      errstream << "$Id: asdm2MS.cpp,v 1.66 2011/01/11 00:58:54 mcaillat Exp $" << "\n" ;
+      errstream << "$Id: asdm2MS.cpp,v 1.67 2011/01/11 22:56:12 mcaillat Exp $" << "\n" ;
       error(errstream.str());
     }
 
@@ -2855,11 +2855,11 @@ int main(int argc, char *argv[]) {
   //
   // Process the CalDevice table.
   const CalDeviceTable& calDeviceT = ds->getCalDevice();
-  if (processCalDevice) {
-    infostream.str("");
-    infostream << "The dataset has " << calDeviceT.size() << " calDevice(s)...";
-    rowsInAScanbyTimeIntervalFunctor<CalDeviceRow> selector(selectedScanRow_v);
-    
+  infostream.str("");
+  infostream << "The dataset has " << calDeviceT.size() << " calDevice(s)...";
+
+  if (processCalDevice && calDeviceT.size() > 0) {
+    rowsInAScanbyTimeIntervalFunctor<CalDeviceRow> selector(selectedScanRow_v);    
     const vector<CalDeviceRow *>& calDevices = selector(calDeviceT.get(), ignoreTime);
     if (!ignoreTime) 
       infostream << calDevices.size() << " of them in the selected exec blocks / scans ... ";
@@ -3102,7 +3102,10 @@ int main(int argc, char *argv[]) {
   // Process the SysPower table.
   
   const SysPowerTable& sysPowerT = ds->getSysPower();
-  if (processSysPower) { 
+  infostream.str("");
+  infostream << "The dataset has " << sysPowerT.size() << " syspower(s)..."; 
+
+  if (processSysPower && sysPowerT.size() > 0) { 
     vector<int>		antennaId;
     vector<int>		spectralWindowId;
     vector<int>		feedId;
@@ -3115,8 +3118,6 @@ int main(int argc, char *argv[]) {
     
     unsigned int        numReceptor0;
     {
-      infostream.str("");
-      infostream << "The dataset has " << sysPowerT.size() << " syspower(s)..."; 
       info(infostream.str()); infostream.str("");
       rowsInAScanbyTimeIntervalFunctor<SysPowerRow> selector(selectedScanRow_v);
       
