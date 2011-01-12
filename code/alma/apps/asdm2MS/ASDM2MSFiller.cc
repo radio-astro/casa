@@ -1597,7 +1597,6 @@ int ASDM2MSFiller::addPolarization(int num_corr_,
 
 int ASDM2MSFiller::addUniquePolarization(int num_corr_,
 					 const vector<int>& corr_type_,
-					 //					 const vector<Stokes::StokesTypes>& corr_type_,
 					 const vector<int>& corr_product_) {
   uInt crow;
   int  i;
@@ -1606,10 +1605,13 @@ int ASDM2MSFiller::addUniquePolarization(int num_corr_,
   MSPolarization mspolar = itsMS -> polarization();
   MSPolarizationColumns mspolarCol(mspolar);
 
-  const char** p=getPolCombinations(num_corr_);
+  //const char** p=getPolCombinations(num_corr_);
+  int iCorrProduct = 0;
   for (i=0; i < num_corr_; i++) {
-    corrProduct(0, i) = Stokes::receptor1(Stokes::type(p[i]));
-    corrProduct(1, i) = Stokes::receptor2(Stokes::type(p[i]));
+    //corrProduct(0, i) = Stokes::receptor1(Stokes::type(p[i]));
+    corrProduct(0, i) = corr_product_[iCorrProduct++];
+    //corrProduct(1, i) = Stokes::receptor2(Stokes::type(p[i]));
+    corrProduct(1, i) = corr_product_[iCorrProduct++];;
   }
 
   crow = mspolar.nrow();
