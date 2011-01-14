@@ -1679,7 +1679,9 @@ void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis,
 
     logger << LogOrigin("SpectralCoordinate", "toFITS", WHERE);
 
-    AlwaysAssert(!(preferVelocity && preferWavelength), AipsError); // Cannot prefer both velocity and wavelength
+    if(preferVelocity && preferWavelength){
+      throw AipsError("Cannot export spectral axis for velocity AND wavelength. You have to choose one.");
+    }
 
     // Verify that the required headers exist and are the right type
     AlwaysAssert(header.isDefined("ctype") && 
@@ -1698,13 +1700,19 @@ void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis,
 		 header.dataType("cdelt") == TpArrayDouble &&
 		 header.shape("cdelt").nelements() == 1 &&
 		 header.shape("cdelt")(0) > Int(whichAxis), AipsError);
+    AlwaysAssert(header.isDefined("naxis") && 
+		 header.dataType("naxis") == TpArrayInt &&
+		 header.shape("naxis").nelements() == 1 &&
+		 header.shape("naxis")(0) > Int(whichAxis), AipsError);
 
     Vector<String> ctype, cunit;
     Vector<Double> crval, cdelt, crpix;
+    Vector<Int> naxis;
     header.get("ctype", ctype);
     header.get("crval", crval);
     header.get("crpix", crpix);
     header.get("cdelt", cdelt);
+    header.get("naxis",naxis);
 
     if (header.isDefined("cunit")) {
 	AlwaysAssert(header.dataType("cunit") == TpArrayString &&
@@ -1726,85 +1734,101 @@ void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis,
     Double RefPix = referencePixel()(0) + offset;
     MDoppler::Types VelPreference = opticalVelDef ? MDoppler::OPTICAL : MDoppler::RADIO;
 
-    Double dcrpix = 0;
-    Double dcdelt = increment()(0); 
-    Double dcrval = referenceValue()(0);
-
-    // Check if we are linear in the preferred quantity.
+    // Determine possible changes to RefFreq etc. and check if we are linear in the preferred quantity.
     // If not, give a warning.
-    if (pixelValues().nelements() > 1) {
-      Vector<Double> pixel = pixelValues();
-      Vector<Double> world = worldValues();
-      MVFrequency f0, f1;
-      if(!toWorld(f0, 0.) || !toWorld(f1,1.)){
+
+    // Fill pixel numbers
+    Vector<Double> pixel;    
+
+        if (pixelValues().nelements() > 1) { // tabular axis
+      pixel.assign(pixelValues());
+      Vector<Double> vf0, vf1;
+      if(!toWorld(vf0, Vector<Double>(1,pixel(0))) || !toWorld(vf1, Vector<Double>(1,pixel(1)))){
+	logger << LogIO::SEVERE << "Error calculating deviations from linear" 
+	       << errorMessage() << LogIO::POST;
+      }
+      convertFrom(vf0);
+      convertFrom(vf1);
+      RefFreq = vf0(0); // value in Hz in native reference frame
+      FreqInc = vf1(0) - RefFreq; // dto.
+      RefPix = pixel(0);
+    }
+    else{
+      uInt nEl = naxis(whichAxis);
+      pixel.resize(nEl);
+      for(uInt i=0; i<nEl; i++){
+	pixel(i) = Double(i); 
+      }
+    }
+
+    Double maxDeviation = 0.0;
+    Double gridSpacing = 1E99;
+    Vector<Double> vfx;
+    Double fx;
+    for (uInt i=0; i<pixel.nelements(); i++) {
+      Bool ok = toWorld(vfx,  Vector<Double>(1,pixel(i)));
+      if (!ok) {
 	logger << LogIO::SEVERE << "Error calculating deviations "
 	  "from linear" << errorMessage() << LogIO::POST;
+	break;
       }
-      dcrval = f0.get().getBaseValue(); // value in Hz
-      dcdelt = f1.get().getBaseValue() - dcrval; // dto.
-      
-      Double maxDeviation = 0.0;
-      Double maxAbsVal = 0.;
-      MVFrequency fx;
-      for (uInt i=0; i<pixel.nelements(); i++) {
-	Bool ok = toWorld(fx, pixel(i));
-	if (!ok) {
-	  logger << LogIO::SEVERE << "Error calculating deviations "
-	    "from linear" << errorMessage() << LogIO::POST;
+      convertFrom(vfx); // to native reference frame 
+      fx = vfx(0);
+
+      // frequencies
+      Double actual = fx; // value in Hz
+      Double linear = RefFreq + FreqInc*(pixel(i)-pixel(0)); // also in Hz
+      gridSpacing = FreqInc;      
+
+      if(preferWavelength){ // check if we are linear in wavelength
+	if(actual>0. && RefFreq>0. && (RefFreq+FreqInc)>0.){
+	  actual = C::c/actual;
+	  linear = C::c/RefFreq + (C::c/(RefFreq+FreqInc) - C::c/RefFreq)*(pixel(i) - pixel(0));
+	  gridSpacing = -(C::c/(RefFreq+FreqInc) - C::c/RefFreq);
+	}
+	else{
+	  logger << LogIO::SEVERE << "Zero or negative frequency." << LogIO::POST;
 	  break;
 	}
-	Double actual = fx.get().getBaseValue(); // value in Hz
-	Double linear = dcrval + dcdelt*(pixel(i) - dcrpix); // also in Hz
-	if(preferWavelength){
-	  if(actual>0. && linear>0.){
-	    actual = C::c/actual;
-	    linear = C::c/linear;
-	  }
-	  else{
-	    logger << LogIO::SEVERE << "Zero or negative frequency." << LogIO::POST;
-	    break;
-	  }
+      }
+      else if(preferVelocity && opticalVelDef){ // optical velocity
+	if(actual>0. && RefFreq>0.){
+	  Double refVelocity = -C::c * (1.0 - Restfreq / RefFreq);
+	  Double velocityIncrement = -C::c * (1.0 - Restfreq / (RefFreq + FreqInc)) - refVelocity;
+	  actual = -C::c * (1.0 - Restfreq / actual); 
+	  linear = refVelocity + velocityIncrement * (pixel(i) - pixel(0));
+	  gridSpacing = -velocityIncrement;
 	}
-	else if(preferVelocity && opticalVelDef){ // optical velocity
-	  if(actual>0. && linear>0.){
-	    actual = (Restfreq - actual)/actual; // can omit factor C here since we are only comparing
-	    linear = (Restfreq - linear)/linear; // dto.
-	  }
-	  else{
-	    logger << LogIO::SEVERE << "Zero or negative frequency."  << LogIO::POST;
-	    break;
-	  }
+	else{
+	  logger << LogIO::SEVERE << "Zero or negative frequency."  << LogIO::POST;
+	  break;
 	}
-	//else {} // radio velocity or frequency, both linear in frequency
+      }
+      //else {} // radio velocity or frequency, both linear in frequency
 	  
-	// 	    cout << " dcrval " << dcrval << " dcdelt " << dcdelt << " i " << i 
-	// 		 << " pixel(i) " << pixel(i) << " dcrpix " << dcrpix << " actual " << actual << " linear " << linear << endl;
-	if(maxDeviation<abs(actual-linear)){
-	  maxDeviation = abs(actual-linear);
-	}
-	if(maxAbsVal<abs(actual)){
-	  maxAbsVal = abs(actual);
-	}
+      if(maxDeviation<abs(actual-linear)){
+	maxDeviation = abs(actual-linear);
       }
-      if (maxDeviation > 0.0 && maxAbsVal>0. && maxDeviation/maxAbsVal>1E-5) {
-	string sUnit = "Hz";
-	if(preferWavelength){
-	  sUnit = "m";
-	}
-	else if(preferVelocity){
-	  sUnit = "m/s";
-	}
-	logger << LogIO::WARN << "Spectral axis is non-linear but CASA can presently only write linear axes to FITS." << endl
-	       << "In this image, the maximum deviation from linearity is " << maxDeviation << " "
-	       << sUnit << " or " << maxDeviation/maxAbsVal*100. << "% of the upper end of the scale." << LogIO::POST;
+
+//       cout << " RefFreq " << RefFreq << " FreqInc " << FreqInc << " i " << i 
+// 	   << " pixel(i) " << pixel(i) << " RefPix " << RefPix << " actual " << actual << " linear " << linear << endl
+// 	   << " maxDeviation " << maxDeviation << " gridSpacing " << gridSpacing << endl;
+
+    } // end for
+    if (maxDeviation>0. && gridSpacing>0. && maxDeviation/gridSpacing>1E-3) {
+      string sUnit = "Hz";
+      if(preferWavelength){
+	sUnit = "m";
       }
+      else if(preferVelocity && opticalVelDef){
+	sUnit = "m/s";
+      }
+      logger << LogIO::WARN << "Spectral axis is non-linear in the requested output quantity" << endl
+	     << "but CASA can presently only write linear axes to FITS." << endl
+	     << "In this image, the maximum deviation from linearity is " << maxDeviation << " " << sUnit << endl 
+	     << " or " << maxDeviation/gridSpacing*100. << "% of the grid spacing." << LogIO::POST;
     }
 
-    if(preferWavelength || (preferVelocity && opticalVelDef)){
-      RefFreq = dcrval;
-      FreqInc = dcdelt;
-      RefPix = dcrpix;
-    }
 
     AlwaysAssert(FITSSpectralUtil::toFITSHeader(Ctype, Crval, Cdelt, Crpix, HaveAlt, Altrval,
 						Altrpix, Velref, Restfreq, logger,
