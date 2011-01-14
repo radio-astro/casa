@@ -1207,7 +1207,7 @@ int main(int argc, char *argv[]) {
     // Revision ? displays revision's info and don't go further.
     if (vm.count("revision")) {
       errstream.str("");
-      errstream << "$Id: asdm2MS.cpp,v 1.67 2011/01/11 22:56:12 mcaillat Exp $" << "\n" ;
+      errstream << "$Id: asdm2MS.cpp,v 1.68 2011/01/14 18:40:03 mcaillat Exp $" << "\n" ;
       error(errstream.str());
     }
 
@@ -1512,7 +1512,7 @@ int main(int argc, char *argv[]) {
   infostream << scansOptionInfo;
 
   if (ignoreTime)
-    infostream << "All rows of the tables depending on time intervals will be processed independantly of the selected exec block / scan.";
+    infostream << "All rows of the tables depending on time intervals will be processed independently of the selected exec block / scan.";
   info(infostream.str());
 
   infostream.str("");
@@ -2304,7 +2304,7 @@ int main(int argc, char *argv[]) {
   // Process the ExecBlock table,
   // in order to build the MS Observation table.
   // 
-  ExecBlockTable& execBlockT = ds->getExecBlock(); 
+  const ExecBlockTable& execBlockT = ds->getExecBlock(); 
   {
     ExecBlockRow* r = 0;
     int nExecBlock = execBlockT.size();
@@ -2365,7 +2365,7 @@ int main(int argc, char *argv[]) {
   // Issues :
   // - pointingModelId , phaseTracking, sourceOffset and overTheTop not taken into account.
 
-  PointingTable& pointingT = ds->getPointing();
+  const PointingTable& pointingT = ds->getPointing();
   infostream.str("");
   infostream << "The dataset has " << pointingT.size() << " pointing(s)...";
   rowsInAScanbyTimeIntervalFunctor<PointingRow> selector(selectedScanRow_v);
