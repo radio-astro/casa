@@ -640,8 +640,8 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
 
       if(!makeSelection()){
         os << LogIO::SEVERE 
-           << "Failed on selection: combination of spw, field, antenna, correlation and/or timerange"
-           << " may be invalid." 
+           << "Failed on selection: the combination of spw, field, antenna, correlation, "
+           << "and timerange may be invalid." 
            << LogIO::POST;
         ms_p=MeasurementSet();
         return False;
@@ -906,7 +906,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
   if(timeBin_p <= 0.0)
     success &= fillMainTable(datacols);
   else
-    fillAverMainTable(datacols);
+    success &= fillAverMainTable(datacols);
   return success;
 }
   
@@ -7223,7 +7223,7 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
   //                    chanStep_p[spwind], spw_p[spwind]);
   vi.selectChannel(chanSlices_p);
   vi.selectCorrelation(corrSlices_p);
-  VisBuffer vb(vi);
+  //VisBuffer avb(vi);
 
   Vector<Int> spwindex(max(spw_p) + 1);
   spwindex.set(-1);
