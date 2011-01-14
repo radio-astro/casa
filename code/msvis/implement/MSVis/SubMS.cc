@@ -6545,7 +6545,9 @@ Bool SubMS::copyState()
 
 	  uInt outRow = 0;
           for (uInt inRow = 0; inRow < antIds.nrow(); ++inRow){
-            Int newAntInd = antNewIndex_p[antIds(inRow)];
+            Int newAntInd = antIds(inRow);
+	    if(antennaSel_p)
+	      newAntInd = antNewIndex_p[newAntInd];
 	    Double t = time(inRow);
 	    
             if(newAntInd > -1){
@@ -6556,7 +6558,7 @@ Bool SubMS::copyState()
 		  break;
 		}
 	      }
-
+	      
 	      if(matchT){
 		TableCopy::copyRows(newPoint, oldPoint, outRow, inRow, 1, false);
 		outants.put(outRow, newAntInd);
