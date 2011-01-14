@@ -234,6 +234,13 @@ namespace casa {
 #endif
     }
 
+    const std::list<Casarc*> &Casarc::list( ) {
+	if ( rclist == 0 ) {
+	    rclist = new std::list<Casarc*>( );
+	}
+	return *rclist;
+    }
+
     bool Casarc::get( const std::string &keyword, std::string &value ) {
 	sync( );
 	std::map<std::string,std::string>::iterator iter = rcmap.find(keyword);

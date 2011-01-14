@@ -53,7 +53,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    static Casarc &instance( const std::string &path );
 
 	    // return the list of rcfiles that have been loaded
-	    static const std::list<Casarc*> & list( ) { return *rclist; }
+	    static const std::list<Casarc*> & list( );
 
 	    // adds the keyword->value mapping
 	    void put( const std::string &keyword, const std::string &value );
