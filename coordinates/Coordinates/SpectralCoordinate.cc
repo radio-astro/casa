@@ -1732,6 +1732,7 @@ void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis,
     Double FreqInc = Quantity(increment()(0), 
 			      worldAxisUnits()(0)).getBaseValue();
     Double RefPix = referencePixel()(0) + offset;
+
     MDoppler::Types VelPreference = opticalVelDef ? MDoppler::OPTICAL : MDoppler::RADIO;
 
     // Determine possible changes to RefFreq etc. and check if we are linear in the preferred quantity.
@@ -1751,7 +1752,7 @@ void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis,
       convertFrom(vf1);
       RefFreq = vf0(0); // value in Hz in native reference frame
       FreqInc = vf1(0) - RefFreq; // dto.
-      RefPix = pixel(0);
+      RefPix = pixel(0) + offset;
     }
     else{
       uInt nEl = naxis(whichAxis);
@@ -1777,13 +1778,13 @@ void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis,
 
       // frequencies
       Double actual = fx; // value in Hz
-      Double linear = RefFreq + FreqInc*(pixel(i)-pixel(0)); // also in Hz
+      Double linear = RefFreq + FreqInc*(pixel(i)-(RefPix-offset)); // also in Hz
       gridSpacing = FreqInc;      
 
       if(preferWavelength){ // check if we are linear in wavelength
 	if(actual>0. && RefFreq>0. && (RefFreq+FreqInc)>0.){
 	  actual = C::c/actual;
-	  linear = C::c/RefFreq + (C::c/(RefFreq+FreqInc) - C::c/RefFreq)*(pixel(i) - pixel(0));
+	  linear = C::c/RefFreq + (C::c/(RefFreq+FreqInc) - C::c/RefFreq)*(pixel(i) - (RefPix-offset));
 	  gridSpacing = -(C::c/(RefFreq+FreqInc) - C::c/RefFreq);
 	}
 	else{
@@ -1796,7 +1797,7 @@ void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis,
 	  Double refVelocity = -C::c * (1.0 - Restfreq / RefFreq);
 	  Double velocityIncrement = -C::c * (1.0 - Restfreq / (RefFreq + FreqInc)) - refVelocity;
 	  actual = -C::c * (1.0 - Restfreq / actual); 
-	  linear = refVelocity + velocityIncrement * (pixel(i) - pixel(0));
+	  linear = refVelocity + velocityIncrement * (pixel(i) - (RefPix-offset));
 	  gridSpacing = -velocityIncrement;
 	}
 	else{
