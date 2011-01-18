@@ -301,10 +301,15 @@ inline Bool isNaN(Double val)
 }
 // </group>
 
-//Round a number to 2 or 3 significant digits, usually used for formatting for printing.
-// For x = a*10^b, where b is an integer, a is rounded to 2 digits if a > sqrt(10) or three
-// digits if a <= sqrt(10).
-Double roundLog(Double val);
+// Round the value to x significant digits if the significand of the value is
+// less than/equal to  sigBreak value or to y digits if not. Usually used for formatting
+// for printing. If y < 0, the number is rounded to the same number of x digits
+// independent of its significand.
+// sigBreak must be in the range of 1 to 10.
+Double roundDouble(
+	const Double value, const uInt  x, const Int y=-1,
+	const Double sigBreak=sqrt(10.0)
+);
 
 // Functions that return IEEE NaN's. The specific NaN returned has all bits
 // set. This is 'quiet' NaN, and because the sign bit is set it may be
