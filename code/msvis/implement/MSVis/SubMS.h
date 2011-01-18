@@ -501,7 +501,11 @@ class SubMS
                       Matrix<M>& outData);
 
   // Read the input, time average it to timeBin_p, and write the output.
+  // The first version uses VisibilityIterator (much faster), but the second
+  // supports correlation selection using VisIterator.  VisIterator should be
+  // sped up soon!
   Bool doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames);
+  Bool doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNames);
 
   // Fills mapper[ntok] with a map from dataColumn indices to ArrayColumns in
   // the output.  mapper must have ntok slots!
