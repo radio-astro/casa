@@ -363,8 +363,12 @@ Bool FITSSpectralUtil::toFITSHeader(String &ctype,
 
     logger << LogOrigin("FITSUtil", "toFITSHeader", WHERE);
 
-    AlwaysAssert(!(preferVelocity && preferWavelength), AipsError);
-    // Cannot produce FITS header for velocity AND wavelength. You have to choose one.
+    if(preferVelocity && preferWavelength){
+      logger << LogIO::SEVERE 
+	     << "Cannot produce FITS header for velocity AND wavelength. You have to choose one."
+	     <<	LogIO::POST;
+      return False;
+    }
 
     // Calculate the velocity related things first
     
@@ -381,10 +385,10 @@ Bool FITSSpectralUtil::toFITSHeader(String &ctype,
 	case MDoppler::OPTICAL: break; // NOTHING
 	case MDoppler::RADIO: velref += 256; break;
 	default:
-	    {
-	       logger << LogIO::SEVERE << "Can only handle OPTICAL and RADIO "
-		    "velocities. Using OPTICAL" << LogIO::POST;
-	    }
+	  velref += 256;
+	  logger << LogIO::SEVERE << "Can only handle OPTICAL and RADIO velocities. Using RADIO" 
+		 << LogIO::POST;
+	  break;
 	}	
     }
 
@@ -394,11 +398,11 @@ Bool FITSSpectralUtil::toFITSHeader(String &ctype,
 	if (velref < 256) {
 	    // OPTICAL
 	    refVelocity = -C::c * (1.0 - restfreq / refFrequency);
-	    velocityIncrement = -freqIncrement*(C::c + refVelocity)/refFrequency;
+	    velocityIncrement = -C::c * (1.0 - restfreq / (refFrequency + freqIncrement)) - refVelocity;
 	} else {
 	    // RADIO
 	    refVelocity = -C::c * (refFrequency/restfreq - 1.0);
-	    velocityIncrement = -freqIncrement*(C::c - refVelocity)/refFrequency;
+	    velocityIncrement = -C::c * ((refFrequency + freqIncrement)/restfreq - 1.0) - refVelocity;
 	}
     }
 

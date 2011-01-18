@@ -29,9 +29,11 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <ms/MeasurementSets/MSMainEnums.h>
+//#include <msvis/MSVis/VisIterator.h>
 #include <casa/aips.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Vector.h>
+//#include <casa/Utilities/CountedPtr.h>
 #include <map>
 #include <vector>
 #include <scimath/Mathematics/InterpolateArray1D.h>
@@ -577,7 +579,6 @@ class SubMS
   Vector<Vector<Slice> > corrSlices_p;  // Used by VisIterator::selectCorrelation()
   Matrix<Double> selTimeRanges_p;
 };
-
 
 } //# NAMESPACE CASA - END
 

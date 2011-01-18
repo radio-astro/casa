@@ -514,6 +514,16 @@ set( EXEC_INSTALL_DIR bin )
 set( LIB_INSTALL_DIR lib )
 set( PYTHON_INSTALL_DIR python/${PYTHONV}/asap )
 set( SHARED_INSTALL_DIR share/asap )
+# Add the modules to be built.
+#
+# Choose to have correct RPATHs both in the build tree and
+# in the install tree (at the cost of having to change the
+# rpath when installing)
+#
+set( CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib )
+set( CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+set( CMAKE_INSTALL_NAME_DIR ${CMAKE_INSTALL_PREFIX}/lib )
+
 
 
 #

@@ -33,7 +33,7 @@ using namespace casa;
 
 int main(int argc, char* argv[]) {
   // Parse arguments.
-  if(argc < 3 || argc > 6 || String(argv[1]) == "-h" ||
+  if(argc < 3 || argc > 9 || String(argv[1]) == "-h" ||
      String(argv[1]) == "--help"){
     cout << argv[0] << ": Stand-alone executable for splitting an MS.\n"
 	 << "\nUse:\n\t" << argv[0] << " [-n] [-s spwsel] [-t timerange] [-w datacol] inputms outputms [timebin]\n\n"
@@ -68,7 +68,8 @@ int main(int argc, char* argv[]) {
   Bool   averchan = true;
 
   char **args = argv + 1;
-  while(args[0][0] == '-'){
+  int opts_processed = 1;	// Counting argv[0] as an arg.
+  while(args[0][0] == '-' && opts_processed < argc){
     String opt(args[0]);
     
     if(opt == "-n")
@@ -76,37 +77,41 @@ int main(int argc, char* argv[]) {
     else if(opt == "-s"){
       spwsel = args[1];
       ++args;              // <- Like "shift".
+      ++opts_processed;
     }
     else if(opt == "-t"){
       timerange = args[1];
       ++args;              // <- Like "shift".
+      ++opts_processed;
     }
     else if(opt == "-w"){
       t_whichcol = args[1];
       ++args;              // <- Like "shift".
+      ++opts_processed;
     }
     ++args;              // <- Like "shift".
+    ++opts_processed;
   }
+  
   
   String inms(args[0]);
   String outms(args[1]);
   
-  Float  timebin = -1.0;
-  if(argc > 3)
+  Float  timebin = 1.0;
+  if(argc - opts_processed > 3)
     timebin = atof(args[2]);
     
   Bool rstat(False);
   
-  SubMS *splitter = new SubMS(inms);
+  SubMS splitter(inms);
 
   //*itsLog << LogIO::NORMAL2 << "Sub MS created" << LogIO::POST;
 
-  splitter->setmsselect(spwsel, t_field, t_antenna, t_scan, t_uvrange,
-			t_taql, step, averchan);
-  splitter->selectTime(timebin, timerange);
-  splitter->makeSubMS(outms, t_whichcol);
+  splitter.setmsselect(spwsel, t_field, t_antenna, t_scan, t_uvrange,
+		       t_taql, step, averchan);
+  splitter.selectTime(timebin, timerange);
+  splitter.makeSubMS(outms, t_whichcol);
   //*itsLog << LogIO::NORMAL2 << "SubMS made" << LogIO::POST;
-  delete splitter;
   
   return rstat;
 }
