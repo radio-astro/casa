@@ -459,19 +459,18 @@ void rGridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   gridOk(gridder->cSupport()(0));
 
   //Check if ms has changed then cache new spw and chan selection
-  if(vb.newMS())
-    matchAllSpwChans(vb);
+  if(vb.newMS())   matchAllSpwChans(vb);
   
   //Here we redo the match or use previous match
   
   //Channel matching for the actual spectral window of buffer
-  if(doConversion_p[vb.spectralWindow()]){
+  if(doConversion_p[vb.spectralWindow()])
     matchChannel(vb.spectralWindow(), vb);
-  }
-  else{
-    chanMap.resize();
-    chanMap=multiChanMap_p[vb.spectralWindow()];
-  }
+  else
+    {
+      chanMap.resize();
+      chanMap=multiChanMap_p[vb.spectralWindow()];
+    }
 
   //No point in reading data if its not matching in frequency
   if(max(chanMap)==-1) return;
@@ -490,15 +489,8 @@ void rGridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 
 
   Int startRow, endRow, nRow;
-  if (row==-1) {
-    nRow=vb.nRow();
-    startRow=0;
-    endRow=nRow-1;
-  } else {
-    nRow=1;
-    startRow=row;
-    endRow=row;
-  }
+  if (row==-1) { nRow=vb.nRow(); startRow=0; endRow=nRow-1; } 
+  else         { nRow=1; startRow=row; endRow=row; }
 
   // Get the uvws in a form that Fortran can use and do that
   // necessary phase rotation. On a Pentium Pro 200 MHz
@@ -550,21 +542,12 @@ void rGridFT::get(VisBuffer& vb, Int row)
   gridOk(gridder->cSupport()(0));
   // If row is -1 then we pass through all rows
   Int startRow, endRow, nRow;
-  if (row < 0) {
-    nRow=vb.nRow();
-    startRow=0;
-    endRow=nRow-1;
-  } else {
-    nRow=1;
-    startRow=row;
-    endRow=row;
-  }
+  if (row < 0) { nRow=vb.nRow(); startRow=0; endRow=nRow-1;} 
+  else         { nRow=1; startRow=row; endRow=row; }
 
   // Get the uvws in a form that Fortran can use
-  Matrix<Double> uvw(3, vb.uvw().nelements());
-  uvw=0.0;
-  Vector<Double> dphase(vb.uvw().nelements());
-  dphase=0.0;
+  Matrix<Double> uvw(3, vb.uvw().nelements());  uvw=0.0;
+  Vector<Double> dphase(vb.uvw().nelements());  dphase=0.0;
   //NEGATING to correct for an image inversion problem
   for (Int i=startRow;i<=endRow;i++) {
     for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(i)(idim);
@@ -593,6 +576,7 @@ void rGridFT::get(VisBuffer& vb, Int row)
   Cube<Int> flags;
   getInterpolateArrays(vb, data, flags);
 
+  // Apparently we don't support "tiled gridding" any more (good! :)).
   if(isTiled) 
     throw(SynthesisFTMachineError("rGridFT::get(): Internal error.  isTiled is True. "));
   else 
