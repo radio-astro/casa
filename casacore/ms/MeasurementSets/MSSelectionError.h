@@ -301,6 +301,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //-------------------------------------------------------------------
   //  
+  class MSSelectionStateError : public MSSelectionError {
+  public:
+    // Add given message to string "MSSelection time error: ".
+    MSSelectionStateError (const String& message,Category c=GENERAL);
+    ~MSSelectionStateError () throw();
+  };
+  
+  class MSSelectionStateParseError: public MSSelectionStateError {
+  public:
+    MSSelectionStateParseError (const String& message,Category c=GENERAL);
+    ~MSSelectionStateParseError () throw();
+  };
+
+  class MSSelectionStateWarning: public MSSelectionStateError {
+  public:
+    MSSelectionStateWarning (const String& message,Category c=GENERAL);
+    ~MSSelectionStateWarning () throw();
+  };
+
+  //
+  //-------------------------------------------------------------------
+  //  
 
   String constructMessage(const Int pos, const String& command);
 } //# NAMESPACE CASA - END

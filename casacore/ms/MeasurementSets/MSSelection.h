@@ -127,6 +127,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		     UVDIST_EXPR,
 		     POLN_EXPR,
 		     TAQL_EXPR,
+		     STATE_EXPR,
 		     MAX_EXPR = TAQL_EXPR};
     enum MSSMode {PARSE_NOW=0, PARSE_LATE};
 
@@ -148,7 +149,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		const String& taqlExpr="",
 		const String& polnExpr="",
 		const String& scanExpr="",
-		const String& arrayExpr="");
+		const String& arrayExpr="",
+		const String& stateExpr="");
     
     // Construct from a record representing a selection item at the
     // CLI or user interface level.  This is functionally same as the
@@ -179,6 +181,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool setUvDistExpr(const String& uvDistExpr);
     Bool setTaQLExpr(const String& taqlExpr);
     Bool setPolnExpr(const String& polnExpr);
+    Bool setStateExpr(const String& stateExpr);
     
     // Accessor for result of parsing all of the selection
     // expressions.  The final TableExprNode (TEN) is the result of
@@ -228,6 +231,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Accessor for the list of selected field IDs.
     inline Vector<Int> getFieldList(const MeasurementSet* ms=NULL) 
     {if (fieldIDs_p.nelements() <= 0) getTEN(ms); return fieldIDs_p.copy();}
+
+    // Accessor for the list of selected state Obs_Modes.
+    inline Vector<Int> getStateObsModeList(const MeasurementSet* ms=NULL) 
+    {if (stateObsModeIDs_p.nelements() <= 0) getTEN(ms); return stateObsModeIDs_p.copy();}
     
     // Accessor for the list of the specified time range(s) as the
     // start and end MJD values.  The time ranges are stored as columns,
@@ -321,7 +328,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	       const String& taqlExpr="",
 	       const String& polnExpr="",
 	       const String& scanExpr="",
-	       const String& arrayExpr="");
+	       const String& arrayExpr="",
+	       const String& stateExpr="");
     
     void setMaxScan(const Int& n) {maxScans_p=n;};
     
@@ -351,10 +359,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     String uvDistExpr_p;
     String polnExpr_p;
     String taqlExpr_p;
+    String stateExpr_p;
     // Priority
     Vector<Int> exprOrder_p;
     Vector<Int> antenna1IDs_p,antenna2IDs_p,fieldIDs_p, spwIDs_p, scanIDs_p, arrayIDs_p,
-      ddIDs_p;
+      ddIDs_p,stateObsModeIDs_p;
     Matrix<Int> chanIDs_p;
     Matrix<Int> baselineIDs_p;
     Matrix<Double> selectedTimesList_p;
