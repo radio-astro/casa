@@ -73,30 +73,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // The first variant grids onto a double precision grid while the
     // second one does it on a single precision grid.
     //
-    // Note that the following calls allow using any CFStore object
-    // for gridding while de-gridding uses the internal
-    // convFuncStore_p object.
     virtual void DataToGrid(Array<DComplex>& griddedData,  
-			    VBStore& vbs, Matrix<Double>& sumwt,
-			    const Bool& dopsf, CFStore& cfs)
-    {DataToGridImpl_p(griddedData, vbs, sumwt,dopsf,cfs);}
+			    VBStore& vbs, 
+			    Matrix<Double>& sumwt,
+			    const Bool& dopsf)
+    {DataToGridImpl_p(griddedData, vbs, dopsf, sumwt);}
 
     virtual void DataToGrid(Array<Complex>& griddedData, 
-			    VBStore& vbs, Matrix<Double>& sumwt,
-			    const Bool& dopsf, CFStore& cfs)
-    {DataToGridImpl_p(griddedData, vbs, sumwt,dopsf,cfs);}
-    //
-    // Simulating defaulting CFStore arguemnt in the above calls to convFuncStore_p
-    //
-    virtual void DataToGrid(Array<DComplex>& griddedData,  
-			    VBStore& vbs, Matrix<Double>& sumwt,
+			    VBStore& vbs, 
+    			    Matrix<Double>& sumwt,
 			    const Bool& dopsf)
-    {DataToGridImpl_p(griddedData, vbs, sumwt,dopsf,convFuncStore_p);}
-
-    virtual void DataToGrid(Array<Complex>& griddedData, 
-			    VBStore& vbs, Matrix<Double>& sumwt,
-			    const Bool& dopsf)
-    {DataToGridImpl_p(griddedData, vbs, sumwt,dopsf,convFuncStore_p);}
+    {DataToGridImpl_p(griddedData, vbs, dopsf, sumwt);}
 
     //
     //------------------------------------------------------------------------------
@@ -105,14 +92,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     virtual void GridToData(VBStore& vbs,const Array<Complex>& griddedData); 
     //    virtual void GridToData(VBStore& vbs, Array<Complex>& griddedData); 
-  protected:
-    virtual Double getConvFuncVal(const Vector<Double>& convFunc,
-				  const Matrix<Double>& uvw, 
-				  const Int& irow,
-				  const Vector<Int>& pixel)
-    {
-      return convFunc[pixel[0]]*convFunc[pixel[1]] ;
-    }
+
     //
     //------------------------------------------------------------------------------
     //----------------------------Private parts-------------------------------------
@@ -128,19 +108,33 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     template <class T>
     void DataToGridImpl_p(Array<T>& griddedData, VBStore& vb,  
-			  Matrix<Double>& sumwt,const Bool& dopsf,CFStore& cfs);
+			  const Bool& dopsf, Matrix<Double>& sumwt);
 
-    void sgrid(Vector<Double>& pos, Vector<Int>& loc, Vector<Int>& off, 
-	       Complex& phasor, const Int& irow, const Matrix<Double>& uvw, 
-	       const Double& dphase, const Double& freq, 
-	       const Vector<Double>& scale, const Vector<Double>& offset,
-	       const Vector<Float>& sampling);
+    // void sgrid(Vector<Double>& pos, Vector<Int>& loc, Vector<Int>& off, 
+    // 	       Complex& phasor, const Int& irow, const Matrix<Double>& uvw, 
+    // 	       const Double& dphase, const Double& freq, 
+    // 	       const Vector<Double>& scale, const Vector<Double>& offset,
+    // 	       const Vector<Float>& sampling);
 
-    inline Bool onGrid (const Int& nx, const Int& ny, const Vector<Int>& loc, 
-			const Vector<Int>& support)
+    void sgrid(Int& ndim, Double* pos, Int* loc, Int* off, 
+    	       Complex& phasor, const Int& irow, const Double* uvw, 
+    	       const Double& dphase, const Double& freq, 
+    	       const Double* scale, const Double* offset,
+    	       const Float* sampling);
+
+    inline Bool onGrid (const Int& nx, const Int& ny, 
+			const Vector<Int>& __restrict__ loc, 
+			const Vector<Int>& __restrict__ support) __restrict__ 
     {
       return (((loc(0)-support[0]) >= 0 ) && ((loc(0)+support[0]) < nx) &&
 	      ((loc(1)-support[1]) >= 0 ) && ((loc(1)+support[1]) < ny));
+    };
+    inline Bool onGrid (const Int& nx, const Int& ny, 
+			const Int& loc0, const Int& loc1, 
+			const Int& support) __restrict__ 
+    {
+      return (((loc0-support) >= 0 ) && ((loc0+support) < nx) &&
+	      ((loc1-support) >= 0 ) && ((loc1+support) < ny));
     };
 
     // Array assignment operator in CASACore requires lhs.nelements()
@@ -157,15 +151,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // This is called less frequently.  Currently once per VisBuffer
     inline void cacheAxisIncrements(Int& n0, Int& n1, Int& n2, Int& n3)
-    {inc0_p=1, inc1_p=inc0_p*n0, inc2_p=inc1_p*n1, inc3_p=inc2_p*n2;(void)n3;}
+    {inc0_p=1, inc1_p=inc0_p*n0, inc2_p=inc1_p*n1, inc3_p=inc2_p*n2;}
 
 
     // The following two methods are called in the innermost loop.
-    inline Complex getFrom4DArray(const Complex* store,const Int* iPos)
+    inline Complex getFrom4DArray(const Complex* __restrict__ store,
+				  const Int* __restrict__ iPos) __restrict__ 
     {return store[iPos[0] + iPos[1]*inc1_p + iPos[2]*inc2_p +iPos[3]*inc3_p];};
 
     template <class T>
-    void addTo4DArray(T* store,const Int* iPos, Complex& nvalue, Double& wt)
+    void addTo4DArray(T* __restrict__ store,
+		      const Int* __restrict__ iPos, 
+		      Complex& nvalue, Double& wt) __restrict__ 
     {store[iPos[0] + iPos[1]*inc1_p + iPos[2]*inc2_p +iPos[3]*inc3_p] += (nvalue*wt);}
   };
 }; //# NAMESPACE CASA - END
