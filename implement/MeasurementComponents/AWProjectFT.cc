@@ -360,24 +360,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     paChangeDetector.reset();
     makingPSF = False;
   }
-  // //
-  // //---------------------------------------------------------------
-  // //
-  // void AWProjectFT::initPolInfo(const VisBuffer& vb)
-  // {
-  //   //
-  //   // Need to figure out where to compute the following arrays/ints
-  //   // in the re-factored code.
-  //   // ----------------------------------------------------------------
-  //   {
-  //     polInUse_p = 0;
-  //     uInt N=0;
-  //     for(uInt i=0;i<polMap.nelements();i++) if (polMap(i) > -1) polInUse_p++;
-  //     cfStokes_p.resize(polInUse_p);
-  //     for(uInt i=0;i<polMap.nelements();i++) 
-  // 	if (polMap(i) > -1) {cfStokes_p(N) = vb.corrType()(i);N++;}
-  //   }
-  // }
   //
   //---------------------------------------------------------------
   //
@@ -1128,9 +1110,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      //
 	      if (doPBCorrection)
 		{
-		  // PBCorrection(ix) = FUNC(PBCorrection(ix))/(sincConv(ix)*sincConv(iy));
 		  PBCorrection(ix) = pbFunc(PBCorrection(ix),pbLimit_p)*(sincConv(ix)*sincConv(iy));
-		  lix.rwVectorCursor()(ix) /= PBCorrection(ix);
+		  lix.rwVectorCursor()(ix) /= (PBCorrection(ix));
+		  //		  lix.rwVectorCursor()(ix) /= sqrt(PBCorrection(ix));
 		}
 	      else 
 		lix.rwVectorCursor()(ix) /= (1.0/(sincConv(ix)*sincConv(iy)));
@@ -1290,15 +1272,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(imwght.nelements()>0) imagingweight=&imwght;
     else                     imagingweight=&(vb.imagingWeight());
 
-    const Cube<Complex> *data;
-    if(type==FTMachine::MODEL)          data=&(vb.modelVisCube());
-    else if(type==FTMachine::CORRECTED) data=&(vb.correctedVisCube());
-    else                                data=&(vb.visCube());
-    
-    Bool isCopy;
-    const casa::Complex *datStorage=data->getStorage(isCopy);
-    Int NAnt = 0;
+    Cube<Complex> data;
+    //Fortran gridder need the flag as ints 
+    Cube<Int> flags;
+    Matrix<Float> elWeight;
+    interpolateFrequencyTogrid(vb, *imagingweight,data, flags, elWeight, type);
 
+    // Cube<Int> flags(vb.flagCube().shape());
+    // flags=0;
+    // flags(vb.flagCube())=True;
+    
+
+    // if(type==FTMachine::MODEL)          data=&(vb.modelVisCube());
+    // else if(type==FTMachine::CORRECTED) data=&(vb.correctedVisCube());
+    // else                                data=&(vb.visCube());
+    
+    Int NAnt;
     if (doPointing) NAnt = findPointingOffsets(vb,l_offsets,m_offsets,True);
     
     //
@@ -1340,10 +1329,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     // This is the convention for dphase
     dphase*=-1.0;
-    
-    Cube<Int> flags(vb.flagCube().shape());
-    flags=0;
-    flags(vb.flagCube())=True;
     
     // Vector<Int> rowFlags(vb.nRow());
     // rowFlags=0;
@@ -1389,8 +1374,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // 		      l_offsets,m_offsets,sumWeight,area,doGrad,doPSF,tmpPAI);
       // }
     VBStore vbs;
-    setupVBStore(vbs,vb, *imagingweight,*data,uvw,flags, dphase);
-    resampleDataToGrid(vbs, vb, dopsf);//, *imagingweight, *data, uvw,flags,dphase,dopsf);
+    setupVBStore(vbs,vb, elWeight,data,uvw,flags, dphase);
+    resampleDataToGrid(griddedData, vbs, vb, dopsf);//, *imagingweight, *data, uvw,flags,dphase,dopsf);
   }
   //
   //---------------------------------------------------------------
@@ -1439,11 +1424,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // This is the convention for dphase
     dphase*=-1.0;
     
-    
-    Cube<Int> flags(vb.flagCube().shape());
-    flags=0;
-    flags(vb.flagCube())=True;
-    
     //Check if ms has changed then cache new spw and chan selection
     if(vb.newMS())
       matchAllSpwChans(vb);
@@ -1459,6 +1439,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	chanMap.resize();
 	chanMap=multiChanMap_p[vb.spectralWindow()];
       }
+    //No point in reading data if its not matching in frequency
+    if(max(chanMap)==-1) return;
+
+    
+    // Cube<Int> flags(vb.flagCube().shape());
+    // flags=0;
+    // flags(vb.flagCube())=True;
+
+    Cube<Complex> data;
+    Cube<Int> flags;
+    getInterpolateArrays(vb, data, flags);
 
     //   {
     // Vector<Int> rowFlags(vb.nRow());
@@ -1478,8 +1469,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // 		      l_offsets,m_offsets,area,doGrad,tmpPAI);
     //   }
     VBStore vbs;
-    setupVBStore(vbs,vb, vb.imagingWeight(),vb.modelVisCube(),uvw,flags, dphase);
-    resampleGridToData(vbs, vb);//, uvw, flags, dphase);
+    //    setupVBStore(vbs,vb, vb.imagingWeight(),vb.modelVisCube(),uvw,flags, dphase);
+    setupVBStore(vbs,vb, vb.imagingWeight(),data,uvw,flags, dphase);
+    resampleGridToData(vbs, griddedData, vb);//, uvw, flags, dphase);
+    interpolateFrequencyFromgrid(vb, data, FTMachine::MODEL);
   }
   //
   //---------------------------------------------------------------
@@ -2096,18 +2089,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //-------------------------------------------------------------------------
   // Gridding
-  void AWProjectFT::resampleDataToGrid(VBStore& vbs, const VisBuffer& vb, Bool& dopsf)
+  void AWProjectFT::resampleDataToGrid(Array<Complex>& griddedData_l, VBStore& vbs, 
+				       const VisBuffer& vb, Bool& dopsf)
   {
     LogIO log_l(LogOrigin("AWProjectFT", "resampleDataToGrid"));
-    visResampler_p.DataToGrid(griddedData, vbs, sumWeight, dopsf); 
+    visResampler_p.DataToGrid(griddedData_l, vbs, sumWeight, dopsf); 
   }
   //
   //-------------------------------------------------------------------------
   // De-gridding
-  void AWProjectFT::resampleGridToData(VBStore& vbs,const VisBuffer& vb)
+  void AWProjectFT::resampleGridToData(VBStore& vbs, Array<Complex>& griddedData_l,
+				       const VisBuffer& vb)
   {
     LogIO log_l(LogOrigin("AWProjectFT", "resampleGridToData"));
-    visResampler_p.GridToData(vbs, griddedData);
+    visResampler_p.GridToData(vbs, griddedData_l);
   }
   //
   //---------------------------------------------------------------
