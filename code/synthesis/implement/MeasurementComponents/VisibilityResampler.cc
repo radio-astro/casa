@@ -48,12 +48,27 @@ namespace casa{
   }
   //
   //-----------------------------------------------------------------------------------
+  // Re-sample the griddedData on the VisBuffer (a.k.a gridding)
+  //
+  // Template instantiations for re-sampling onto a double precision
+  // or single precision grid.
+  //
+  template
+  void VisibilityResampler::DataToGridImpl_p(Array<DComplex>& grid, VBStore& vbs, 
+					     const Bool& dopsf,  Matrix<Double>& sumwt) __restrict__;
+  template
+  void VisibilityResampler::DataToGridImpl_p(Array<Complex>& grid, VBStore& vbs, 
+  					     const Bool& dopsf,  Matrix<Double>& sumwt) __restrict__;
+
+  template void VisibilityResampler::addTo4DArray(DComplex* store,const Int* iPos, Complex& val, Double& wt) __restrict__;
+  template void VisibilityResampler::addTo4DArray(Complex* store,const Int* iPos, Complex& val, Double& wt) __restrict__;
+  //
+  //-----------------------------------------------------------------------------------
   // Template implementation for DataToGrid
   //
   template <class T>
-  void VisibilityResampler::DataToGridImpl_p(Array<T>& grid,  VBStore& vbs, 
-					     Matrix<Double>& sumwt,const Bool& dopsf,
-					     CFStore& cfs)
+  void VisibilityResampler::DataToGridImpl_p(Array<T>& grid,  VBStore& vbs, const Bool& dopsf,
+					     Matrix<Double>& sumwt)
   {
     Int nDataChan, nDataPol, nGridPol, nGridChan, nx, ny;
     Int achan, apol, rbeg, rend;
@@ -64,7 +79,7 @@ namespace casa{
     //    IPosition grdpos(4);
     Vector<Int> igrdpos(4);
 
-    Double norm=0, wt;
+    Double norm=0, wt, imgWt;
     Complex phasor, nvalue;
 
     rbeg = 0;
@@ -80,18 +95,25 @@ namespace casa{
     support(0) = convFuncStore_p.xSupport[0];
     support(1) = convFuncStore_p.ySupport[0];
 
-    Bool Dummy;
-    T *gridStore = grid.getStorage(Dummy);
-    const Int *iPosPtr = igrdpos.getStorage(Dummy);
-    Double *convFunc=(*(cfs.rdata)).getStorage(Dummy);
-    Vector<Double> convFuncV((*(convFuncStore_p.rdata)));
-    Double *freq=vbs.freq.getStorage(Dummy);
-    Bool *rowFlag=vbs.rowFlag.getStorage(Dummy);
+    Bool Dummy,gDummy;
+    T __restrict__ *gridStore = grid.getStorage(gDummy);
+    const Int * __restrict__ iPosPtr = igrdpos.getStorage(Dummy);
+    Double *__restrict__ convFunc=(*(convFuncStore_p.rdata)).getStorage(Dummy);
+    Double * __restrict__ freq=vbs.freq.getStorage(Dummy);
+    Bool * __restrict__ rowFlag=vbs.rowFlag.getStorage(Dummy);
 
-    Matrix<Float> imagingWeight(vbs.imagingWeight);
-    Cube<Complex> visCube(vbs.visCube);
-    Matrix<Double> uvw(vbs.uvw);
-    Cube<Bool> flagCube(vbs.flagCube);
+    Float * __restrict__ imagingWeight = vbs.imagingWeight.getStorage(Dummy);
+    Double * __restrict__ uvw = vbs.uvw.getStorage(Dummy);
+    Bool * __restrict__ flagCube = vbs.flagCube.getStorage(Dummy);
+    Complex * __restrict__ visCube = vbs.visCube.getStorage(Dummy);
+    Double * __restrict__ scale = uvwScale_p.getStorage(Dummy);
+    Double * __restrict__ offset = offset_p.getStorage(Dummy);
+    Float * __restrict__ samplingPtr = sampling.getStorage(Dummy);
+    Double * __restrict__ posPtr=pos.getStorage(Dummy);
+    Int * __restrict__ locPtr=loc.getStorage(Dummy);
+    Int * __restrict__ offPtr=off.getStorage(Dummy);
+    Double * __restrict__ sumwtPtr = sumwt.getStorage(Dummy);
+    Int nDim = vbs.uvw.shape()[0];
 
     cacheAxisIncrements(nx,ny,nGridPol, nGridChan);
 
@@ -101,29 +123,36 @@ namespace casa{
 	
 	for(Int ichan=0; ichan< nDataChan; ichan++){ // For all channels
 	  
-	  if (imagingWeight(ichan,irow)!=0.0) {  // If weights are not zero
+	  //	  if (vbs.imagingWeight(ichan,irow)!=0.0) {  // If weights are not zero
+	  if (imagingWeight[ichan+irow*nDataChan]!=0.0) {  // If weights are not zero
 	    achan=chanMap_p[ichan];
 	    
 	    if((achan>=0) && (achan<nGridChan)) {   // If selected channels are valid
 	      
-	      sgrid(pos,loc,off, phasor, irow, 
-		    uvw, dphase_p[irow], freq[ichan], 
-		    uvwScale_p, offset_p, sampling);
+	      // sgrid(pos,loc,off, phasor, irow, 
+	      // 	    vbs.uvw,dphase_p[irow], vbs.freq[ichan], 
+	      // 	    uvwScale_p, offset_p, sampling);
+	      sgrid(nDim,posPtr,locPtr,offPtr, phasor, irow, 
+		    uvw,dphase_p[irow], freq[ichan], 
+		    scale, offset, samplingPtr);
 
 	      if (onGrid(nx, ny, loc, support)) {   // If the data co-ords. are with-in the grid
 		
 		for(Int ipol=0; ipol< nDataPol; ipol++) { // For all polarizations
-		  if((!flagCube(ipol,ichan,irow))){   // If the pol. & chan. specific
-							  // flags are not raised
+		  // if((!vbs.flagCube(ipol,ichan,irow))){   // If the pol. & chan. specific
+		  if((!flagCube[ipol+ichan*nDataPol+irow*nDataChan*nDataPol])){
 		    apol=polMap_p(ipol);
 		    if ((apol>=0) && (apol<nGridPol)) {
 		      igrdpos[2]=apol; igrdpos[3]=achan;
 		      
 		      norm=0.0;
 
-		      if(dopsf)  nvalue=Complex(imagingWeight(ichan,irow));
-		      else	 nvalue=imagingWeight(ichan,irow)*
-				   (visCube(ipol,ichan,irow)*phasor);
+		      imgWt=imagingWeight[ichan+irow*nDataChan];
+		      if(dopsf)  nvalue=Complex(imgWt);
+		      else	 nvalue=imgWt*
+				   // (vbs.visCube(ipol,ichan,irow)*phasor);
+				   (visCube[ipol+ichan*nDataPol+irow*nDataPol*nDataChan]*phasor);
+
 		      for(Int iy=-support[1]; iy <= support[1]; iy++) 
 			{
 			  iloc(1)=abs((int)(sampling[1]*iy+off[1]));
@@ -131,8 +160,8 @@ namespace casa{
 			  for(Int ix=-support[0]; ix <= support[0]; ix++) 
 			    {
 			      iloc[0]=abs((int)(sampling[0]*ix+off[0]));
-			      //			      wt = convFunc[iloc[0]]*convFunc[iloc[1]];
-			      wt = getConvFuncVal(convFuncV,uvw,irow,iloc);
+			      wt = convFunc[iloc[0]]*convFunc[iloc[1]];
+
 			      igrdpos[0]=loc[0]+ix;
 			      // grid(grdpos) += nvalue*wt;
 
@@ -141,7 +170,8 @@ namespace casa{
 			      norm+=wt;
 			    }
 			}
-		      sumwt(apol,achan)+=imagingWeight(ichan,irow)*norm;
+		      //		      sumwtPtr[apol+achan*nGridPol]+=imgWt*norm;
+		      sumwt(apol,achan)+=imgWt*norm;
 		    }
 		  }
 		}
@@ -151,13 +181,15 @@ namespace casa{
 	}
       }
     }
-    
+    T *tt=(T *)gridStore;
+    grid.putStorage(tt,gDummy);
   }
   //
   //-----------------------------------------------------------------------------------
   // Re-sample VisBuffer to a regular grid (griddedData) (a.k.a. de-gridding)
   //
   void VisibilityResampler::GridToData(VBStore& vbs, const Array<Complex>& grid)
+  //  void VisibilityResampler::GridToData(VBStore& vbs, Array<Complex>& grid)
   {
     Int nDataChan, nDataPol, nGridPol, nGridChan, nx, ny;
     Int achan, apol, rbeg, rend;
@@ -182,18 +214,25 @@ namespace casa{
     support(0) = convFuncStore_p.xSupport[0];
     support(1) = convFuncStore_p.ySupport[0];
 
-    Bool Dummy;
-    const Complex *gridStore = grid.getStorage(Dummy);
+    Bool Dummy,vbcDummy;
+    const Complex *__restrict__ gridStore = grid.getStorage(Dummy);
     Vector<Int> igrdpos(4);
-    const Int *iPosPtr = igrdpos.getStorage(Dummy);
-    Double *convFunc=(*(convFuncStore_p.rdata)).getStorage(Dummy);
-    Vector<Double> convFuncV((*(convFuncStore_p.rdata)));
-    Double *freq=vbs.freq.getStorage(Dummy);
-    Bool *rowFlag=vbs.rowFlag.getStorage(Dummy);
-    Matrix<Float> imagingWeight(vbs.imagingWeight);
-    Cube<Complex> visCube(vbs.visCube);
-    Matrix<Double> uvw(vbs.uvw);
-    Cube<Bool> flagCube(vbs.flagCube);
+    const Int *__restrict__ iPosPtr = igrdpos.getStorage(Dummy);
+    Double *__restrict__ convFunc=(*(convFuncStore_p.rdata)).getStorage(Dummy);
+    Double *__restrict__ freq=vbs.freq.getStorage(Dummy);
+    Bool *__restrict__ rowFlag=vbs.rowFlag.getStorage(Dummy);
+
+    Float * __restrict__ imagingWeight = vbs.imagingWeight.getStorage(Dummy);
+    Double * __restrict__ uvw = vbs.uvw.getStorage(Dummy);
+    Bool * __restrict__ flagCube = vbs.flagCube.getStorage(Dummy);
+    Complex * __restrict__ visCube = vbs.visCube.getStorage(vbcDummy);
+    Double * __restrict__ scale = uvwScale_p.getStorage(Dummy);
+    Double * __restrict__ offset = offset_p.getStorage(Dummy);
+    Float * __restrict__ samplingPtr = sampling.getStorage(Dummy);
+    Double * __restrict__ posPtr=pos.getStorage(Dummy);
+    Int * __restrict__ locPtr=loc.getStorage(Dummy);
+    Int * __restrict__ offPtr=off.getStorage(Dummy);
+    Int nDim = vbs.uvw.shape()(0);
 
     cacheAxisIncrements(nx,ny,nGridPol, nGridChan);
 
@@ -204,14 +243,17 @@ namespace casa{
 	  achan=chanMap_p[ichan];
 
 	  if((achan>=0) && (achan<nGridChan)) {
-	    sgrid(pos,loc,off,phasor,irow,uvw,
+	    // sgrid(pos,loc,off,phasor,irow,vbs.uvw,
+	    // 	  dphase_p[irow],vbs.freq[ichan],
+	    // 	  uvwScale_p,offset_p,sampling);
+	    sgrid(nDim,posPtr,locPtr,offPtr,phasor,irow,uvw,
 		  dphase_p[irow],freq[ichan],
-		  uvwScale_p,offset_p,sampling);
+		  scale,offset,samplingPtr);
 
 	    if (onGrid(nx, ny, loc, support)) {
 	      for(Int ipol=0; ipol < nDataPol; ipol++) {
 
-		if(!flagCube(ipol,ichan,irow)) { 
+		if(!flagCube[ipol+ichan*nDataPol+irow*nDataChan*nDataPol]) { 
 		  apol=polMap_p[ipol];
 		  
 		  if((apol>=0) && (apol<nGridPol)) {
@@ -229,15 +271,14 @@ namespace casa{
 			    iloc(0)=abs((Int)(sampling[0]*ix+off[0]));
 			    igrdpos[0]=loc[0]+ix;
 			    
-			    //			    wt=convFunc[iloc[1]]*convFunc[iloc[0]];
-			    wt=getConvFuncVal(convFuncV,uvw,irow,iloc);
+			    wt=convFunc[iloc[1]]*convFunc[iloc[0]];
 			    norm+=wt;
 			    //			    nvalue+=wt*grid(grdpos);
 			    // The following uses raw index on the 4D grid
 			    nvalue+=wt*getFrom4DArray(gridStore,iPosPtr);
 			  }
 		      }
-		    visCube(ipol,ichan,irow)=(nvalue*conj(phasor))/norm;
+		    visCube[ipol+ichan*nDataPol+irow*nDataChan*nDataPol]=(nvalue*conj(phasor))/norm;
 		  }
 		}
 	      }
@@ -246,24 +287,34 @@ namespace casa{
 	}
       }
     }
+    Complex *tt=(Complex *) visCube;
+    vbs.visCube.putStorage(tt,vbcDummy);
   }
   //
   //-----------------------------------------------------------------------------------
   //
-  void VisibilityResampler::sgrid(Vector<Double>& pos, Vector<Int>& loc, 
-				  Vector<Int>& off, Complex& phasor, 
-				  const Int& irow, const Matrix<Double>& uvw, 
-				  const Double& dphase, const Double& freq, 
-				  const Vector<Double>& scale, 
-				  const Vector<Double>& offset,
-				  const Vector<Float>& sampling)
+  void VisibilityResampler::sgrid(Int& uvwDim,Double* __restrict__ pos, 
+				  Int* __restrict__ loc, 
+				  Int* __restrict__ off, 
+				  Complex& phasor, const Int& irow,
+				  // const Matrix<Double>& __restrict__ uvw, 
+				  const Double* __restrict__ uvw, 
+				  const Double& __restrict__ dphase, 
+				  const Double& __restrict__ freq, 
+				  const Double* __restrict__ scale, 
+				  const Double* __restrict__ offset,
+				  const Float* __restrict__ sampling) __restrict__ 
+				  // const Vector<Double>& __restrict__ scale, 
+				  // const Vector<Double>& __restrict__ offset,
+				  // const Vector<Float>& __restrict__ sampling) __restrict__ 
   {
     Double phase;
-    Int ndim=pos.shape()(0);
+    //    Int ndim=pos.shape()(0);
+    Int ndim=2;
 
     for(Int idim=0;idim<ndim;idim++)
       {
-	pos[idim]=scale[idim]*uvw(idim,irow)*freq/C::c+offset[idim];
+	pos[idim]=scale[idim]*uvw[idim+irow*uvwDim]*freq/C::c+offset[idim];
 	loc[idim]=(Int)std::floor(pos[idim]+0.5);
 	off[idim]=(Int)std::floor(((loc[idim]-pos[idim])*sampling[idim])+0.5);
       }
@@ -276,24 +327,4 @@ namespace casa{
     else
       phasor=Complex(1.0);
   }
-  //
-  //-----------------------------------------------------------------------------------
-  // Re-sample the griddedData on the VisBuffer (a.k.a gridding)
-  //
-  // Template instantiations for re-sampling onto a double precision
-  // or single precision grid.
-  //
-  template
-  void VisibilityResampler::DataToGridImpl_p(Array<DComplex>& grid, VBStore& vbs, 
-					     Matrix<Double>& sumwt,const Bool& dopsf,
-					     CFStore& cfs);
-  template
-  void VisibilityResampler::DataToGridImpl_p(Array<Complex>& grid, VBStore& vbs, 
-  					     Matrix<Double>& sumwt,const Bool& dopsf,
-					     CFStore& cfs);
-
-  template void VisibilityResampler::addTo4DArray(DComplex* store,const Int* iPos, 
-						  Complex& val, Double& wt);
-  template void VisibilityResampler::addTo4DArray(Complex* store,const Int* iPos, 
-						  Complex& val, Double& wt);
 };// end namespace casa
