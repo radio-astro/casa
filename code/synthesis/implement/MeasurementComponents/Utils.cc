@@ -554,11 +554,13 @@ namespace casa{
 
     Matrix<Double> xf = outCS.coordinate(linInd).linearTransform();
     Matrix<Double> rotm(2,2);
-    Double s = sin(dAngleRad);
-    Double c = cos(dAngleRad);
+    rotm(0,0) = cos(dAngleRad); rotm(0,1) = sin(dAngleRad);
+    rotm(1,0) = -rotm(0,1);     rotm(1,1) = rotm(0,0);
 
-    rotm(0,0) =  c; rotm(0,1) = s;
-    rotm(1,0) = -s; rotm(1,1) = c;
+    // Double s = sin(dAngleRad);
+    // Double c = cos(dAngleRad);
+    // rotm(0,0) =  c; rotm(0,1) = s;
+    // rotm(1,0) = -s; rotm(1,1) = c;
 
     // Create new linear transform matrix
     Matrix<Double> xform(2,2);
