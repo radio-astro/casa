@@ -339,7 +339,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     virtual Bool verifyShapes(IPosition shape0, IPosition shape1);
 
-    inline virtual Float pbFunc(const Float& a, const Float& limit) {if (abs(a) >= limit) return (a);else return 1.0;};
+    inline virtual Float pbFunc(const Float& a, const Float& limit) 
+    {if (abs(a) >= limit) return (a);else return 1.0;};
     inline virtual Complex pbFunc(const Complex& a, const Float& limit) 
     {if (abs(a)>=limit) return (a); else return Complex(1.0,0.0);};
 
@@ -453,9 +454,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual void normalizeAvgPB();
     virtual void normalizeAvgPB(ImageInterface<Complex>& inImage,
 				ImageInterface<Float>& outImage);
-    virtual void resampleDataToGrid(VBStore& vbs, const VisBuffer& vb, 
-				    Bool& dopsf);
-    virtual void resampleGridToData(VBStore& vbs, const VisBuffer& vb);
+    virtual void resampleDataToGrid(Array<Complex>& griddedData, VBStore& vbs, 
+				    const VisBuffer& vb, Bool& dopsf);
+    virtual void resampleGridToData(VBStore& vbs, Array<Complex>& griddedData,
+				    const VisBuffer& vb);
 
     virtual void setupVBStore(VBStore& vbs,
 			      const VisBuffer& vb,
