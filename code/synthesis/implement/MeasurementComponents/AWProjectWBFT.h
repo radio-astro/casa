@@ -130,7 +130,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // member variable pbLimit_p).
     //
     inline virtual Float pbFunc(const Float& pbPixValue, const Float& pbLimit) 
-    {return sqrt(pbPixValue);};
+    {return  sqrt(pbPixValue);};
 
     virtual void finalizeToSky();
     virtual void initializeToSky(ImageInterface<Complex>& image,  Matrix<Float>& weight,
@@ -152,6 +152,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void ftWeightImage(Lattice<Complex>& wtImage, 
 		       const Matrix<Float>& sumWt,
 		       const Bool& doFFTNorm);
+
+    virtual void resampleDataToGrid(Array<Complex>& griddedData,VBStore& vbs, 
+				    const VisBuffer& vb, Bool& dopsf);
+    //    virtual void resampleGridToData(VBStore& vbs, const VisBuffer& vb);
 
     Bool avgPBReady_p,resetPBs_p, wtImageFTDone;
 
