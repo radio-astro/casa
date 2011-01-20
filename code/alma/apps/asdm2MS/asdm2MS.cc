@@ -1207,7 +1207,7 @@ int main(int argc, char *argv[]) {
     // Revision ? displays revision's info and don't go further.
     if (vm.count("revision")) {
       errstream.str("");
-      errstream << "$Id: asdm2MS.cpp,v 1.68 2011/01/14 18:40:03 mcaillat Exp $" << "\n" ;
+      errstream << "$Id: asdm2MS.cpp,v 1.69 2011/01/19 23:58:35 mcaillat Exp $" << "\n" ;
       error(errstream.str());
     }
 
@@ -3382,7 +3382,7 @@ int main(int argc, char *argv[]) {
 	    SubscanIntent subscanIntent = sscanR->getSubscanIntent();
 	    string obs_mode;
 	    if (scanIntent.size() > 0) {
-	      obs_mode = CScanIntent::name(scanIntent.at(0))+"."+CSubscanIntent::name(subscanIntent);
+	      obs_mode = CScanIntent::name(scanIntent.at(0))+"_"+CSubscanIntent::name(subscanIntent);
 	      
 	      for (unsigned int iScanIntent = 1; iScanIntent < scanIntent.size(); iScanIntent++) {
 		obs_mode += ",";
