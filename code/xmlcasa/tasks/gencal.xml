@@ -34,6 +34,7 @@
                             <value>antpos</value>
                             <value>antposvla</value>
                             <value>tsys</value>
+                            <value>evlagain</value>
                         </allowed>
 		</param>
 
@@ -121,6 +122,8 @@
                             selection will be ignored)
                  'antposvla' = antenna position corrections (m) specified
                                in the old VLA-centric coordinate system
+                 'tsys' = Tsys from the SYSCAL table (ALMA)
+                 'evlagain' = EVLA switched-power gains (experimental)
                  default: none.
                  example: caltype='ph'
      spw -- Spectral window selection for specified parameters. 

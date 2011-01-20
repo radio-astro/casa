@@ -311,15 +311,11 @@ void EVLAGainTsys::setSpecify(const Record& specify) {
 
   LogMessage message(LogOrigin("EVLAGainTsys","setSpecify"));
 
-  cout << "WARNING: SKELETEL VERSION!!!!" << endl;
-
-  /*
   // Escape if SYSPOWER or CALDEVICE tables absent
   if (!Table::isReadable(sysPowTabName_))
     throw(AipsError("The SYSPOWER subtable is not present in the specified MS."));
   if (!Table::isReadable(calDevTabName_))
     throw(AipsError("The CALDEVICE subtable is not present in the specified MS."));
-  */
 
   // Not actually applying or solving
   setSolved(False);
@@ -337,14 +333,11 @@ void EVLAGainTsys::setSpecify(const Record& specify) {
 
   // we are creating a table from scratch
   logSink() << "Creating " << typeName()
-	    << " table from CANNED VALUES."
-    //	    << " table from MS SYSPOWER/CALDEVICE subtables."
+    //	    << " table from CANNED VALUES."
+    	    << " table from MS SYSPOWER/CALDEVICE subtables."
 	    << LogIO::POST;
   
-
   Vector<Int> nSlot(nSpw(),0);
-
-  /*
 
   // Count slots per spw, and set nChan  
   Block<String> columns(2);
@@ -355,20 +348,19 @@ void EVLAGainTsys::setSpecify(const Record& specify) {
 
   // Iterate
   Int iter=0;
-  while (!sysCalIter.pastEnd()) {
-    MSSysPower mssp(sysCalIter.table());
-    MSSysPowerColumns spcol(mssp);
+  while (!sysPowIter.pastEnd()) {
+    Table itab(sysPowIter.table());
 
-    Int ispw=spcol.spectralWindowId()(0);
+    ROScalarColumn<Int> spwCol(itab,"SPECTRAL_WINDOW_ID");
+
+    Int ispw=spwCol(0);
     nSlot(ispw)++;
 
-    sysCalIter.next();
+    sysPowIter.next();
     ++iter;
   }
-  */
 
-  // Temporary:
-  nSlot(0)=1;
+  cout << "nSlot = " << nSlot << endl;
 
   // Create a pristine CalSet
   cs_ = new CalSet<Complex>(nSpw());
@@ -376,125 +368,53 @@ void EVLAGainTsys::setSpecify(const Record& specify) {
   
   inflate(nChanParList(),startChanList(),nSlot);
 
-  // Set parOK,etc. to true
-  for (Int ispw=0;ispw<nSpw();ispw++) {
-    if (cs().nTime(ispw)>0) {
-      cs().par(ispw).set(0.0);
-      cs().parOK(ispw)=True;
-      cs().solutionOK(ispw)=True;
-    }
-  }
-
 }
 
 void EVLAGainTsys::specify(const Record& specify) {
 
-  Matrix<Int> gaincount(nSpw(),nElem(),0);
-
-  Int nrec=2;
-  Int ispw=0;
-  Int slot=0;
-
-  Double timestamp=11111.0;
-  Double interval=1.0;
-  Vector<Int> ants(nElem());
-  indgen(ants);
-
-  Matrix<Float> tcal(2,nElem(),1.0);
-  Matrix<Float> pdif(2,nElem(),1.0);
-  Matrix<Float> psum(2,nElem(),100.0);
-  
-  // Set the pdif and psum creatively:
-  for (Int iant=0;iant<nElem();++iant) {
-    for (int ipol=0;ipol<2;++ipol) {
-      Float gain=Float(ipol+1)+Float(iant+1)/100.0;
-      pdif(ipol,iant)=gain*gain*tcal(ipol,iant);
-      psum(ipol,iant)=2*(1000.0*Float(ipol+1)+10.0*Float(iant+1)+pdif(ipol,iant)/2.0);
-    }
-  }
-  
-  cs().fieldId(ispw)(slot)=-1;
-  cs().time(ispw)(slot)=timestamp;
-  
-  // Only stop-start diff matters
-  //  TBD: change CalSet to use only the interval
-  //  TBD: change VisBuffAcc to calculate exposure properly
-  cs().startTime(ispw)(slot)=0.0;
-  cs().stopTime(ispw)(slot)=interval;
-  
-  // For now, just make these non-zero:
-  cs().iFit(ispw).column(slot)=1.0;
-  cs().iFitwt(ispw).column(slot)=1.0;
-  cs().fit(ispw)(slot)=1.0;
-  cs().fitwt(ispw)(slot)=1.0;
-  
-  for (uInt iant=0;iant<ants.nelements();++iant) {
-    Int thisant=ants(iant);
-
-    Vector<Float> currpsum(psum.column(thisant));
-    Vector<Float> currpdif(pdif.column(thisant));
-    Vector<Float> currtcal(tcal.column(thisant));
-    cout << thisant << " " << currpsum.shape() << endl;
-    currpdif(currpsum<=0.0f)=0.0;
-    currpsum(currpsum<=0.0f)=1.0;
-    
-    IPosition blc4(4,0,0,thisant,slot);
-    IPosition trc4(4,2,0,thisant,slot);
-    IPosition stp4(4,nrec,1,1,1);
-
-    Vector<Complex> currgain(cs().par(ispw)(blc4,trc4,stp4).nonDegenerate(1));
-    convertArray(currgain,sqrt(currpdif/currtcal));
-    cs().parOK(ispw)(blc4,trc4,stp4).nonDegenerate(1)= True;
-    cs().parErr(ispw)(blc4,trc4,stp4).nonDegenerate(1)= 0.0;
-    cs().parSNR(ispw)(blc4,trc4,stp4).nonDegenerate(1)= 1.0;
-
-    blc4(0)=1; trc4(0)=3;
-    Vector<Complex> currtsys(cs().par(ispw)(blc4,trc4,stp4).nonDegenerate(1));
-    convertArray(currtsys,currtcal*currpsum/currpdif/2.0);
-    cs().parOK(ispw)(blc4,trc4,stp4).nonDegenerate(1)= True;
-    cs().parErr(ispw)(blc4,trc4,stp4).nonDegenerate(1)= 0.0;
-    cs().parSNR(ispw)(blc4,trc4,stp4).nonDegenerate(1)= 1.0;
-    
-      // Increment counter
-    ++gaincount(ispw,thisant);
-    
-  }    
-  cs().solutionOK(ispw)(slot) = True;
-
-
-  /*
   // Escape if SYSPOWER or CALDEVICE tables absent
   if (!Table::isReadable(sysPowTabName_))
     throw(AipsError("The SYSPOWER subtable is not present in the specified MS."));
   if (!Table::isReadable(calDevTabName_))
     throw(AipsError("The CALDEVICE subtable is not present in the specified MS."));
  
+
+  // Fill the Tcals first
+  fillTcals();
+
   // Keep a count of the number of Tsys found per spw/ant
-  Matrix<Int> gaincount(nSpw(),nElem(),0);
+  Matrix<Int> goodcount(nSpw(),nElem(),0), badcount(nSpw(),nElem(),0);
 
   Block<String> columns(2);
   columns[0] = "TIME";
   columns[1] = "SPECTRAL_WINDOW_ID";
-  Table sysPowTab(sysCalTabName_,Table::Old);
+  Table sysPowTab(sysPowTabName_,Table::Old);
   TableIterator sysPowIter(sysPowTab,columns);
 
   // Iterate
   Int iter(0);
   Vector<Int> islot(nSpw(),0);
   while (!sysPowIter.pastEnd()) {
-    MSSysPow mssp(sysPowIter.table());
-    MSSysPowerColumns spcol(mssp);
 
-    Int ispw=spcol.spectralWindowId()(0);
-    Double timestamp=spcol.time()(0);
-    Double interval=spcol.interval()(0);
+    Table itab(sysPowIter.table());
+
+    ROScalarColumn<Int> spwCol(itab,"SPECTRAL_WINDOW_ID");
+    ROScalarColumn<Double> timeCol(itab,"TIME");
+    ROScalarColumn<Double> intervalCol(itab,"INTERVAL");
+    ROScalarColumn<Int> antCol(itab,"ANTENNA_ID");
+    ROArrayColumn<Float> swsumCol(itab,"SWITCHED_SUM");
+    ROArrayColumn<Float> swdiffCol(itab,"SWITCHED_DIFF");
+
+    Int ispw=spwCol(0);
+    Double timestamp=timeCol(0);
+    Double interval=intervalCol(0);
 
     Vector<Int> ants;
-    spcol.antennaId().getColumn(ants);
+    antCol.getColumn(ants);
 
     Matrix<Float> psum,pdif;
-    spcol.switchedSum().getColumn(psum);
-    spcol.switchedDif().getColumn(pdif);
+    swsumCol.getColumn(psum);
+    swdiffCol.getColumn(pdif);
     IPosition psumshape(psum.shape());
     IPosition pdifshape(pdif.shape());
 
@@ -502,13 +422,6 @@ void EVLAGainTsys::specify(const Record& specify) {
 
     // the number of receptors
     Int nrec=psumshape(0);
-
-    cout << iter << " "
-	 << MVTime(timestamp/C::day).string(MVTime::YMD,7)
-	 << " spw=" << ispw 
-	 << " nrow = " << mssp.nrow() 
-	 << " shape = " << psum.shape() 
-	 << endl;
 
     Int slot=islot(ispw);
 
@@ -526,73 +439,169 @@ void EVLAGainTsys::specify(const Record& specify) {
     cs().iFitwt(ispw).column(slot)=1.0;
     cs().fit(ispw)(slot)=1.0;
     cs().fitwt(ispw)(slot)=1.0;
-
+  
+    Bool anyantgood(False);
     for (uInt iant=0;iant<ants.nelements();++iant) {
       Int thisant=ants(iant);
-      Vector<Float> currpsum(psum.row(thisant));
-      Vector<Float> currpdif(pdif.row(thisant));
-      Vector<Float> currtcal(tcal.row(thisant));
-      currpdif(currpsum<=0.0f)=0.0;
-      currpsum(currpsum<=0.0f)=1.0;
+      Vector<Float> currpsum(psum.column(iant));
+      Vector<Float> currpdif(pdif.column(iant));
+      Vector<Float> currtcal(tcals_.xyPlane(ispw).column(thisant));
 
+      // If any of the required values are goofy, we'll skip this antenna
+      Bool good=(allGT(currtcal,FLT_MIN) &&
+		 allGT(currpdif,FLT_MIN) &&
+		 allGT(currpsum,FLT_MIN));
 
-      IPosition blc4(4,0,        0,thisant,slot);
-      IPosition trc4(4,2*nrec-1,0,thisant,slot);
-      IPosition stp4(4,nrec,1,1,1);
-      Vector<Complex> currgain(cs().par(ispw)(blc4,trc4,stp4).nonDegenerate(1));
-      convertArray(sqrt(currpdif/currtcal),currgain);
-      cs().parOK(ispw)(blc4,trc4,stp4).nonDegenerate(2)= True;
-      cs().parErr(ispw)(blc4,trc4,stp4).nonDegenerate(2)= 0.0;
-      cs().parSNR(ispw)(blc4,trc4,stp4).nonDegenerate(2)= 1.0;
+      if (!good) 
+	// Increment bad counter
+	++badcount(ispw,thisant);
+      else {
 
-      blc4(0)=1;
-      Vector<Complex> currtsys(cs().par(ispw)(blc4,trc4,stp4).nonDegenerate(1));
-      convertArray(currtcal*currpsum/currpdif/2.0,currtsys);
-      cs().parOK(ispw)(blc4,trc4,stp4).nonDegenerate(2)= True;
-      cs().parErr(ispw)(blc4,trc4,stp4).nonDegenerate(2)= 0.0;
-      cs().parSNR(ispw)(blc4,trc4,stp4).nonDegenerate(2)= 1.0;
+	anyantgood=True;
+	IPosition blc4(4,0,0,thisant,slot);
+	//	IPosition trc4(4,1,0,thisant,slot);
+	//	IPosition stp4(4,1,1,1,1);
+	IPosition trc4(4,2*nrec-1,0,thisant,slot);
+	IPosition stp4(4,nrec,1,1,1);
+	Vector<Complex> currgain(cs().par(ispw)(blc4,trc4,stp4).nonDegenerate(1));
+	convertArray(currgain,sqrt(currpdif/currtcal));
+	cs().parOK(ispw)(blc4,trc4,stp4).nonDegenerate(2)= True;
+	cs().parErr(ispw)(blc4,trc4,stp4).nonDegenerate(2)= 0.0;
+	cs().parSNR(ispw)(blc4,trc4,stp4).nonDegenerate(2)= 1.0;
+	
+	blc4(0)=1;
+	Vector<Complex> currtsys(cs().par(ispw)(blc4,trc4,stp4).nonDegenerate(1));
+	convertArray(currtsys,currtcal*currpsum/currpdif/2.0);
+	cs().parOK(ispw)(blc4,trc4,stp4).nonDegenerate(2)= True;
+	cs().parErr(ispw)(blc4,trc4,stp4).nonDegenerate(2)= 0.0;
+	cs().parSNR(ispw)(blc4,trc4,stp4).nonDegenerate(2)= 1.0;
 
-      // Increment counter
-      ++tsyscount(ispw,thisant);
+	// Increment good counter
+	++goodcount(ispw,thisant);
+
+      }
 
     }
-    cs().solutionOK(ispw)(slot) = True;
+    cs().solutionOK(ispw)(slot) = anyantgood;
 
     // increment spw-dep slot counter
     ++islot(ispw);
-
-    sysCalIter.next();
+    sysPowIter.next();
     ++iter;
   }
 
-*/
-
-  logSink() << "Gain counts per spw for antenna Ids 0-"<<nElem()-1<<":" << LogIO::POST;
+  logSink() << "GOOD gain counts per spw for antenna Ids 0-"<<nElem()-1<<":" << LogIO::POST;
   for (Int ispw=0;ispw<nSpw();++ispw) {
-    Vector<Int> gaincountspw(gaincount.row(ispw));
-    if (sum(gaincountspw)>0)
-      logSink() << "Spw " << ispw << ": " << gaincountspw 
-		<< " (" << sum(gaincountspw) << ")" 
+    Vector<Int> goodcountspw(goodcount.row(ispw));
+    if (sum(goodcountspw)>0)
+      logSink() << "  Spw " << ispw << ": " << goodcountspw 
+		<< " (" << sum(goodcountspw) << ")" 
 		<< LogIO::POST;
     else
       logSink() << "Spw " << ispw << ": NONE." << LogIO::POST;
   }
 
+  logSink() << "BAD gain counts per spw for antenna Ids 0-"<<nElem()-1<<":" << LogIO::POST;
+  for (Int ispw=0;ispw<nSpw();++ispw) {
+    Vector<Int> badcountspw(badcount.row(ispw));
+    if (sum(badcountspw)>0)
+      logSink() << "  Spw " << ispw << ": " << badcountspw 
+		<< " (" << sum(badcountspw) << ")" 
+		<< LogIO::POST;
+  }
+
+  logSink() << "BAD gain count FRACTION per spw for antenna Ids 0-"<<nElem()-1<<":" << LogIO::POST;
+  for (Int ispw=0;ispw<nSpw();++ispw) {
+    Vector<Float> badcountspw(badcount.row(ispw).shape());
+    Vector<Float> goodcountspw(goodcount.row(ispw).shape());
+    convertArray(badcountspw,badcount.row(ispw));
+    convertArray(goodcountspw,goodcount.row(ispw));
+    if (sum(badcountspw)>0.0f || sum(goodcountspw)>0.0f) {
+      Vector<Float> fracbad=badcountspw/(badcountspw+goodcountspw);
+      fracbad=floor(1000.0f*fracbad)/1000.0f;
+      Float fracbadsum=sum(badcountspw)/(sum(badcountspw)+sum(goodcountspw));
+      fracbadsum=floor(1000.0f*fracbadsum)/1000.0f;
+      logSink() << "  Spw " << ispw << ": " << fracbad
+		<< " (" << fracbadsum << ")" 
+		<< LogIO::POST;
+    }
+  }
+
 
 }
 
+
+void EVLAGainTsys::fillTcals() {
+
+  logSink() << "Filling Tcals from the CALDEVICE table." << LogIO::POST;
+
+  Block<String> columns(2);
+  columns[0] = "SPECTRAL_WINDOW_ID";
+  columns[1] = "ANTENNA_ID";
+  Table calDevTab(calDevTabName_,Table::Old);
+  TableIterator calDevIter(calDevTab,columns);
+
+  tcals_.resize(2,nElem(),nSpw());
+  tcals_.set(-1.0f);
+
+  // Iterate over CALDEVICE table
+  Int iter(0);
+  Vector<Int> islot(nSpw(),0);
+  while (!calDevIter.pastEnd()) {
+
+    Table itab(calDevIter.table());
+
+    ROScalarColumn<Int> spwCol(itab,"SPECTRAL_WINDOW_ID");
+    ROScalarColumn<Double> timeCol(itab,"TIME");
+    ROScalarColumn<Double> intervalCol(itab,"INTERVAL");
+    ROScalarColumn<Int> antCol(itab,"ANTENNA_ID");
+    ROScalarColumn<Int> numLoadCol(itab,"NUM_CAL_LOAD");
+
+    ROArrayColumn<Float> noiseCalCol(itab,"NOISE_CAL");
+
+    Int ispw=spwCol(0);
+    Int iant=antCol(0);
+    Int nTcal=noiseCalCol(0).nelements();
+    
+    Vector<Float> thisTcal=noiseCalCol(0);
+
+    if (nTcal==1) {
+      AlwaysAssert(thisTcal.nelements()==1,AipsError);
+      tcals_.xyPlane(ispw).column(iant)=thisTcal(0);
+    }
+    else {
+      AlwaysAssert(thisTcal.nelements()==2,AipsError);
+      tcals_.xyPlane(ispw).column(iant)=thisTcal;
+    }
+
+    // Increment the iterator
+    ++iter;
+    calDevIter.next();
+  }
+
+}
 
 void EVLAGainTsys::calcAllJones() {
 
-  // Antenna-based factors are the sqrt(Tsys)
-  /*
-  cout << "currJElem().shape() = " << currJElem().shape() << endl;
-  cout << "currCPar().shape() = " << currCPar().shape() << endl;
+  // 0th and 2nd pars are the gains
+  currJElem()=currCPar()(Slice(0,2,2),Slice(),Slice());
+  currJElemOK()=currParOK()(Slice(0,2,2),Slice(),Slice());
 
-  currJElem()=sqrt(currCPar());
-  currJElemOK()=currParOK();
-  */
 }
 
+void EVLAGainTsys::syncWtScale() {
+
+  Int nPolWt=currCPar().shape()(0)/2;
+
+  currWtScale().resize(nPolWt,nAnt());
+
+  Matrix<Complex> cCP(currCPar().nonDegenerate(0));
+  Matrix<Float> Tsys(nPolWt,nAnt());
+  Tsys=real(cCP(Slice(1,2,2),Slice()));
+  Tsys(Tsys<FLT_MIN)=1.0;
+
+  currWtScale() = 1.0f/Tsys;
+
+}
 
 } //# NAMESPACE CASA - END
