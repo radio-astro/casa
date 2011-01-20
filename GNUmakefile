@@ -356,6 +356,7 @@ MSLIB := ms/MeasurementSets/MSAntennaGram.lcc ms/MeasurementSets/MSAntennaGram.y
 	       ms/MeasurementSets/MSSpwGram.lcc ms/MeasurementSets/MSSpwGram.ycc \
 	       ms/MeasurementSets/MSTimeGram.lcc ms/MeasurementSets/MSTimeGram.ycc \
 	       ms/MeasurementSets/MSUvDistGram.lcc ms/MeasurementSets/MSUvDistGram.ycc \
+	       ms/MeasurementSets/MSStateGram.lcc ms/MeasurementSets/MSStateGram.ycc \
 		$(shell echo $(MSOBJ) | perl -pe "s|(\w+\\.o)|$(ARCH)/\$$1|g")
 MSDEP :=	$(shell echo $(MSOBJ) | perl -pe "s|(\w+)\\.o|$(ARCH)/\$$1.dep|g")
 else
@@ -367,6 +368,7 @@ MSLIB := ms/MeasurementSets/MSAntennaGram.lcc ms/MeasurementSets/MSAntennaGram.y
 	       ms/MeasurementSets/MSSpwGram.lcc ms/MeasurementSets/MSSpwGram.ycc \
 	       ms/MeasurementSets/MSTimeGram.lcc ms/MeasurementSets/MSTimeGram.ycc \
 	       ms/MeasurementSets/MSUvDistGram.lcc ms/MeasurementSets/MSUvDistGram.ycc \
+	       ms/MeasurementSets/MSStateGram.lcc ms/MeasurementSets/MSStateGram.ycc \
 		$(MSOBJ)
 MSDEP :=	$(shell echo $(MSOBJ) | perl -pe "s|(\w+)\\.o|\$$1.dep|g")
 endif
