@@ -191,12 +191,12 @@ String VisCal::applyinfo() {
 
 }
 
-void VisCal::correct(VisBuffer& vb) {
+void VisCal::correct(VisBuffer& vb,Bool avoidACs) {
 
   if (prtlev()>3) cout << "VC::correct(vb)" << endl;
 
   // Call non-in-place version, in-place-wise:
-  correct(vb,vb.visCube());
+  correct(vb,vb.visCube(),avoidACs);
 }
 
 
@@ -208,7 +208,7 @@ void VisCal::corrupt(VisBuffer& vb) {
   corrupt(vb,vb.modelVisCube());
 }
 
-void VisCal::correct(VisBuffer& vb, Cube<Complex>& Vout) {
+void VisCal::correct(VisBuffer& vb, Cube<Complex>& Vout,Bool avoidACs) {
 
   if (prtlev()>3) cout << " VC::correct(vb,Vout)" << endl;
   
@@ -221,7 +221,7 @@ void VisCal::correct(VisBuffer& vb, Cube<Complex>& Vout) {
   syncCal(vb,True);
 
   // Call generic row-by-row apply, with inversion turned ON
-  applyCal(vb,Vout);
+  applyCal(vb,Vout,avoidACs);
 
 }
 
@@ -642,7 +642,8 @@ void VisMueller::state() {
 }
 
 // Apply this calibration to VisBuffer visibilities
-void VisMueller::applyCal(VisBuffer& vb, Cube<Complex>& Vout) {
+void VisMueller::applyCal(VisBuffer& vb, Cube<Complex>& Vout,
+			  Bool avoidACs) {
 
   if (prtlev()>3) cout << "  VM::applyCal()" << endl;
 
@@ -666,7 +667,7 @@ void VisMueller::applyCal(VisBuffer& vb, Cube<Complex>& Vout) {
   for (Int row=0; row<nRow; row++,flagR++,a1++,a2++,wt.next()) {
     
     // Avoid ACs
-    if (*a1==*a2) *flagR=True;
+    if (avoidACs && *a1==*a2) *flagR=True;
 
     if (!*flagR) {  // if this row unflagged
 
@@ -1032,8 +1033,10 @@ void VisJones::state() {
 
 // VisJones: PROTECTED methods
 
+
 // Apply this calibration to VisBuffer visibilities
-void VisJones::applyCal(VisBuffer& vb, Cube<Complex>& Vout) {
+void VisJones::applyCal(VisBuffer& vb, Cube<Complex>& Vout,
+			Bool avoidACs) {
 
   if (prtlev()>3) cout << "  VJ::applyCal()" << endl;
 
@@ -1063,7 +1066,7 @@ void VisJones::applyCal(VisBuffer& vb, Cube<Complex>& Vout) {
     for (Int row=0; row<nRow; row++,flagR++,a1++,a2++,wt.next()) {
       
       // Avoid ACs
-      if (*a1==*a2) *flagR=True;
+      if (avoidACs && *a1==*a2) *flagR=True;
 
       if (!*flagR) {  // if this row unflagged
 	
@@ -1348,21 +1351,6 @@ void VisJones::syncWtScale() {
   IPosition blc(3,0,0,0);
   IPosition trc(3,nWtScale-1,0,nAnt()-1);
 
-  /*
-
-  Cube<Float> cWS;
-  cWS.reference(currWtScale().reform(currJElem()(blc,trc).shape()));
-
-  // Accumulate channels to form freq-INdep wt scale 
-  for (Int ich=0;ich<nChanMat();++ich) {
-    blc(1)=trc(1)=ich;
-    //    cout << "amps = " << amplitude(currJElem()(blc,trc));
-    cWS += amplitude(currJElem()(blc,trc));
-  }
-  currWtScale()/=Float(nChanMat());
-
-  */
-
   Cube<Float> cWS;
   cWS.reference(currWtScale().reform(currJElem()(blc,trc).shape()));
   Cube<Float> cWSswt(cWS.shape(),0.0);
@@ -1375,6 +1363,7 @@ void VisJones::syncWtScale() {
     blc(1)=trc(1)=ich;
     //    cout << "amps = " << amplitude(currJElem()(blc,trc));
 
+    //    cWSi=amplitude(currCPar()(blc,trc));
     cWSi=amplitude(currJElem()(blc,trc));
     cWSi(!currJElemOK()(blc,trc))=0.0;     // zero flagged amps
 
@@ -1398,19 +1387,19 @@ void VisJones::syncWtScale() {
   MaskedArray<Float> nz(currWtScale(),mask);
   nz=Float(1.0)/nz;
 
-  //  cout << "currWtScale() = " << currWtScale() << endl;
-
 }
 
 void VisJones::updateWt(Vector<Float>& wt,const Int& a1,const Int& a2) {
 
-  //  cout << "Updating weights!*****************" << endl;
-
   Vector<Float> ws1(currWtScale().column(a1));
   Vector<Float> ws2(currWtScale().column(a2));
 
- /*
-  if (a1==1)
+/*
+  if (a1==0 && a2==1) {
+    cout << "jonestype() = " << jonesType() 
+	 << " jonesNPar(jonesType()) = " << jonesNPar(jonesType()) 
+	 << " nPar() = " << nPar() 
+	 << endl;
     cout << currSpw() << " "
 	 << a1 << " "
 	 << a2 << " "
@@ -1419,17 +1408,18 @@ void VisJones::updateWt(Vector<Float>& wt,const Int& a1,const Int& a2) {
 	 << ws2 << " "
 	 << ws1(0/nPar()) << " "
 	 << ws2(0%nPar()) << " ";
- */
+  }
+*/
 
-  switch(jonesNPar(jonesType())) {
-  case 1: {
+  switch(jonesType()) {
+  case Jones::Scalar: {
     // pol-indep corrections very simple; all correlations
     //  corrected by same value
     Float ws=(ws1(0)*ws2(0));
     wt*=ws;
     break;
   }
-  case 2: {
+  case Jones::Diagonal: {
     switch (V().type()) {
     case VisVector::Two: {
       for (uInt ip=0;ip<2;++ip) 
@@ -1437,9 +1427,10 @@ void VisJones::updateWt(Vector<Float>& wt,const Int& a1,const Int& a2) {
       break;
     }
     default: {
+      // NB: This always will apply the first weight scale info the a single corr
       for (uInt ip=0;ip<wt.nelements();++ip) {
-	wt(ip)*=ws1(ip/nPar());
-	wt(ip)*=ws2(ip%nPar());
+	wt(ip)*=ws1(ip/2);
+	wt(ip)*=ws2(ip%2);
       }
       break;
     }
@@ -1447,15 +1438,14 @@ void VisJones::updateWt(Vector<Float>& wt,const Int& a1,const Int& a2) {
     break;
   }
   default:
-    // We don't support calwt for JonesNPar>2 (general Jones)
+    // We don't calibrate weights for General Jones matrices (yet)
     break;
   }
 
-/*
-  if (a1==1)
-    cout << wt << endl;
-*/
-
+  /*
+  if (a1==0 && a2==1)
+    cout << " ---> " << wt << endl;
+  */
 }
 
 void VisJones::initVisJones() {

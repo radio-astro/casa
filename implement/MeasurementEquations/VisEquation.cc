@@ -201,8 +201,10 @@ void VisEquation::correct(VisBuffer& vb) {
   vb.sortCorr();
 
   // Apply each VisCal in left-to-right order 
+  //  ACs will NOT be corrected (avoidACs=True)
+  //  TBD: move AC handling up to Calibrater
   for (Int iapp=0;iapp<napp_;iapp++)
-    vc()[iapp]->correct(vb);
+    vc()[iapp]->correct(vb,True);
 
   // Ensure correlations restored to original order
   // (this is a no-op if no sort necessary)
