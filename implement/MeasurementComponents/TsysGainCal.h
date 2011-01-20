@@ -115,8 +115,8 @@ public:
   virtual Type type() { return VisCal::G; };
 
   // Return type name as string (ditto)
-  virtual String typeName()     { return "G EVLA"; };
-  virtual String longTypeName() { return "G EVLA (Switched-power gain)"; };
+  virtual String typeName()     { return "G EVLAGAIN"; };
+  virtual String longTypeName() { return "G EVLAGAIN (Switched-power gain)"; };
 
   // Local setSpecify
   using GJones::setSpecify;
@@ -132,22 +132,30 @@ public:
 protected:
 
   // There are 4 parameters (Gain and Tsys for each pol)
-  virtual Int nPar() { return 4; };
+  virtual Int nPar() { return 4; };  
 
   // The parameter array is not (just) the Jones matrix element array
   virtual Bool trivialJonesElem() { return False; };
 
-  // Invert doInv for Tsys corrections
-  //  virtual void syncJones(const Bool& doInv) { BJones::syncJones(!doInv); };
   
   // Calculate Jones matrix elements (slice out the gains)
   virtual void calcAllJones();
 
+  // Synchronize the weight-scaling factors
+  //  Weights are multiplied by G*G/Tsys per antenna
+  virtual void syncWtScale();
+
+
 private:
+
+  // Fill the Tcals from the CALDEVICE table
+  void fillTcals();
 
   // The name of the SYSCAL table
   String sysPowTabName_,calDevTabName_;
 
+  // Tcal storage
+  Cube<Float> tcals_;
 
 };
 
