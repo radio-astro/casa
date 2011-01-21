@@ -63,7 +63,7 @@ set( CMAKE_INSTALL_PREFIX ${casaroot}/${arch} )
 #
 # casacore
 #
-set( CASACORE_PATHS "${casaroot}/${arch};/usr/local;/usr" )
+set( CASACORE_PATHS "${casaroot}/${arch};${casaroot};/usr/local;/usr" )
 
 
 #
