@@ -87,13 +87,21 @@ print >>logfile,'***************************************************************
 if(not regstate):
    print >>logfile,'* Data file VLA_multifrequency_3C286.ms cannot be found';
 else:
+   # V.4 : (V2.2) This is the truth (for active, 21Jan2010) - removed extra vecpsf0 conv.
+   # Changes from previous numbers 'active r13845' are within the noise.
+   correct_sigma = 0.00095682840;
+   correct_sumsq = 0.959992192;
+   correct_intensity = 14.84169483;
+   correct_alpha = -0.471375882;
+   correct_beta = -0.127162337;
+
    # V.3 : This is the truth (for active, 20Dec2010) - change from MTLC to MTMC (+ algorithm fiddling).
    # Changes from previous numbers for 'active r13787' are within the noise.
-   correct_sigma = 0.00095900;
-   correct_sumsq = 0.9644402;
-   correct_intensity = 14.8406848;
-   correct_alpha = -0.47158026;
-   correct_beta = -0.12506663;
+   #correct_sigma = 0.00095900;
+   #correct_sumsq = 0.9644402;
+   #correct_intensity = 14.8406848;
+   #correct_alpha = -0.47158026;
+   #correct_beta = -0.12506663;
 
    # V.2 : This is the truth (for active, 21Oct2010) - with SB's gridding fixes
    #correct_sigma = 0.00099339;

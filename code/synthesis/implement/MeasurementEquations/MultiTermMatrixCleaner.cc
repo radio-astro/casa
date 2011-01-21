@@ -714,14 +714,15 @@ Int MultiTermMatrixCleaner::computeHessianPeak()
       for (Int scale2=0; scale2<=scale1;scale2++) 
       {
 	Int ttay1 = taylor1+taylor2;
-        if(adbg)
-	   os << "Calculating (PSF_"<< taylor1 << " * Scale_"<<scale1+1 << ") * (PSF_"<< taylor2<<" * Scale_"<<scale2+1<<")   using taylor "<< ttay1 << LogIO::POST;
+        
+        // CALC Hess : Calculate  PSF_(t1+t2)  * scale_1 * scale 2
 
-        cWork_p.assign( ((vecPsfFT_p[ttay1]) *(vecPsfFT_p[0]))*(vecScalesFT_p[scale1])*(vecScalesFT_p[scale2]) );
+	///        cWork_p.assign( ((vecPsfFT_p[ttay1]) *(vecPsfFT_p[0]))*(vecScalesFT_p[scale1])*(vecScalesFT_p[scale2]) );
+        cWork_p.assign( (vecPsfFT_p[ttay1]) *(vecScalesFT_p[scale1])*(vecScalesFT_p[scale2]) );
        	fftcomplex.fft0( cubeA_p[IND4(taylor1,taylor2,scale1,scale2)]  , cWork_p , False  );
-        fftcomplex.flip( cubeA_p[IND4(taylor1,taylor2,scale1,scale2)] , False , False);
+	//        fftcomplex.flip( cubeA_p[IND4(taylor1,taylor2,scale1,scale2)] , False , False);
 
-	//	writeMatrixToDisk("psfconv_t_"+String::toString(taylor1)+"-"+String::toString(taylor2)+"_s_"+String::toString(scale1)+"-"+String::toString(scale2)+".im", cubeA_p[IND4(taylor1,taylor2,scale1,scale2)] );
+	//writeMatrixToDisk("psfconv_t_"+String::toString(taylor1)+"-"+String::toString(taylor2)+"_s_"+String::toString(scale1)+"-"+String::toString(scale2)+".im", cubeA_p[IND4(taylor1,taylor2,scale1,scale2)] );
       }	  
 
       // Construct A, invA for each scale.
@@ -834,11 +835,14 @@ Int MultiTermMatrixCleaner::computeRHS()
 	   
 	   for (Int scale=0; scale<nscales_p;scale++) 
 	   {
-		if(adbg)os << "Calculating I_D * (PSF_"<< taylor << " * Scale_" << scale+1 << ")"<< LogIO::POST;
+
+	     // CALC RHS :  Calculate   Dirty_t  * scale_s
+
                 // Let cWork get resized if needed. Force matR to have the right shape
-                cWork_p.assign( (dirtyFT_p)*(vecPsfFT_p[0])*(vecScalesFT_p[scale]) );
+		////                cWork_p.assign( (dirtyFT_p)*(vecPsfFT_p[0])*(vecScalesFT_p[scale]) );
+                cWork_p.assign( (dirtyFT_p)*(vecScalesFT_p[scale]) );
                 fftcomplex.fft0( matR_p[IND2(taylor,scale)] , cWork_p , False );
-                //fftcomplex.flip(  matR_p[IND2(taylor,scale)] , False , False );
+                fftcomplex.flip(  matR_p[IND2(taylor,scale)] , False , False );
 	   }
 	   //	   writeMatrixToDisk("resid_"+String::toString(taylor)+".im", matR_p[IND2(taylor,0)] );
 	}
