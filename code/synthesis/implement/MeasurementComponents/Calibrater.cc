@@ -1330,7 +1330,9 @@ Bool Calibrater::standardSolve3() {
 	  vb.freqAveCubes();
 	
 	// Accumulate collapsed vb in a time average
-	vbga.accumulate(vb);
+	//  (only if the vb contains any unflagged data)
+	if (nfalse(vb.flag())>0)
+	  vbga.accumulate(vb);
 
       }
       // Advance the VisIter, if possible
@@ -1367,7 +1369,6 @@ Bool Calibrater::standardSolve3() {
 	nGood++;
       }
       else {
-
 
       svc_p->guessPar(vbga(0));
       

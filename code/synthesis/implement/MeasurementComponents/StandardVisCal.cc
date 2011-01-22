@@ -200,6 +200,7 @@ void TJones::guessPar(VisBuffer& vb) {
   // Assumes:  1. corrs in canonical order
   //           2. vb has 1 channel (has been freq-averaged)
 
+
   // Make an antenna-based guess at T
   //  Correlation membership-dependence
   //  nCorr = 1: use icorr=0
@@ -288,24 +289,26 @@ void TJones::guessPar(VisBuffer& vb) {
  
 
   // Scale them by the mean amplitude
-  ampave/=Float(namp);
-  ampave=sqrt(ampave);
 
-  //  cout << "ampave = " << ampave << endl;
+  if (namp>0) {
+    ampave/=Float(namp);
+    ampave=sqrt(ampave);
+    //  solveCPar()*=Complex(ampave);
+    solveCPar()/=Complex(ampave);
+    solveCPar()(0,0,guessant)=solveCPar()(1,0,guessant)=Complex(ampave);
+    solveCPar()(LogicalArray(amplitude(solveCPar())==0.0f)) = Complex(ampave);
+  }
+  else
+    solveCPar()=Complex(0.3);
 
-  solveCPar()*=Complex(ampave);
-  //  solveCPar()/=Complex(ampave);
-  solveCPar()(0,0,guessant) = Complex(ampave);
-  solveCPar()(LogicalArray(amplitude(solveCPar())==0.0f)) = Complex(ampave);
   solveParOK()=True;
 
-  //  solveCPar()*=Complex(0.9);
-
-  //  cout << "Guess:" << endl
-  //       << "amp = " << amplitude(solveCPar())
-  //       << "phase = " << phase(solveCPar())
-  //       << endl;
-
+  /*
+  cout << "Guess:" << endl
+       << "amp = " << amplitude(solveCPar())
+       << "phase = " << phase(solveCPar())
+       << endl;
+  */
 }
 
 // Fill the trivial DJ matrix elements
@@ -606,11 +609,12 @@ void GJones::guessPar(VisBuffer& vb) {
   if (nDataCorr == 1)
     solveCPar()(IPosition(3,1,0,0),IPosition(3,1,0,nAnt()-1))=Complex(0.0);
 
-  //  cout << "Guess:" << endl;
-  //  cout << "amplitude(solveCPar())   = " << amplitude(solveCPar()) << endl;
-  //  cout << "phases       = " << phase(solveCPar())*180.0/C::pi << endl;
-  //  cout << "solveParOK() = " << solveParOK() << endl;
-
+  /*
+  cout << "Guess:" << endl;
+  cout << "amplitude(solveCPar())   = " << amplitude(solveCPar()) << endl;
+  cout << "phases       = " << phase(solveCPar())*180.0/C::pi << endl;
+  cout << "solveParOK() = " << solveParOK() << endl;
+  */
 }
 
 // Fill the trivial DJ matrix elements
@@ -894,7 +898,6 @@ void BJones::fillChanGapArray(Array<Complex>& sol,
   } // done
 
 }
-
 
 
 
