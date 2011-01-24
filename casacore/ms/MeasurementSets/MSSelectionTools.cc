@@ -92,7 +92,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  const String& taQLExpr,
 		  const String& polnExpr,
 		  const String& scanExpr,
-		  const String& arrayExpr
+		  const String& arrayExpr,
+		  const String& stateExpr
 		  )
   {
     //
@@ -102,7 +103,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
     MSSelection *mss = new MSSelection(ms,MSSelection::PARSE_NOW,
 				       timeExpr,antennaExpr,fieldExpr,spwExpr,
-				       uvDistExpr,taQLExpr,polnExpr,scanExpr,arrayExpr);
+				       uvDistExpr,taQLExpr,polnExpr,scanExpr,arrayExpr,
+				       stateExpr);
     //
     // Apply the internal accumulated TEN to the MS and produce the
     // selected MS.  
@@ -131,6 +133,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  const String& polnExpr,
 		  const String& scanExpr,
 		  const String& arrayExpr,
+		  const String& stateExpr,
 		  const Int defaultChanStep
 		  )
   {
@@ -141,7 +144,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
     MSSelection *mss = new MSSelection(ms,MSSelection::PARSE_NOW,
 				       timeExpr,antennaExpr,fieldExpr,spwExpr,
-				       uvDistExpr,taQLExpr,polnExpr,scanExpr,arrayExpr);
+				       uvDistExpr,taQLExpr,polnExpr,scanExpr,arrayExpr,
+				       stateExpr);
     //
     // Apply the internal accumulated TEN to the MS and produce the
     // selected MS.  
