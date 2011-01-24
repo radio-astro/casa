@@ -65,6 +65,7 @@ class Calibrater
 		 const String& spw="",
 		 const String& scan="",
 		 const String& field="",
+		 const String& intent="",
 		 const String& baseline="",
 		 const String& uvrange="",
 		 const String& chanmode="none",

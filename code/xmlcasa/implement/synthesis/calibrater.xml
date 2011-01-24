@@ -106,6 +106,12 @@ cb.open('ngc5921.ms');
      <value></value>
      </param>
 
+     <param type="any" direction="in" name="intent">
+     <description>Select on intent or state</description>
+     <any type="variant"/>
+     <value></value>
+     </param>
+
      <param type="any" direction="in" name="baseline">
      <description>Select on antennas/baselines</description>
      <any type="variant"/>
