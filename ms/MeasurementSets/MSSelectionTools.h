@@ -50,7 +50,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  const String& taQLExpr="",
 		  const String& polnExpr="",
 		  const String& scanExpr="",
-		  const String& arrayExpr=""
+		  const String& arrayExpr="",
+		  const String& stateExpr=""
 		  );
   // Collective selection also returning in-row (corr/chan) slices
   Bool mssSetData(const MeasurementSet& ms, 
@@ -67,6 +68,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  const String& polnExpr="",
 		  const String& scanExpr="",
 		  const String& arrayExpr="",
+		  const String& stateExpr="",
 		  const Int defaultChanStep=1
 		  );
 
