@@ -42,6 +42,7 @@
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MFrequency.h>
+#include <measures/Measures/MCFrequency.h>
 #include <measures/Measures/MCEpoch.h>
 #include <measures/Measures/MCDirection.h>
 #include <measures/Measures/MCPosition.h>
@@ -87,16 +88,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ValidCenter_p.resize();
     ValidCenterMin_p.resize();
     ValidCenterMax_p.resize();
-    NumBands_p.resize();
+    NumSubbands_p.resize();
     BandName_p.resize();
-    BandMinFreq_p.resize();
-    BandMaxFreq_p.resize();
+    SubbandMinFreq_p.resize();
+    SubbandMaxFreq_p.resize();
     FuncType_p.resize();
     FuncName_p.resize();
     FuncChannel_p.resize();
     NomFreq_p.resize();
 
     if(path==""){
+      paths_p.resize(1, "");
       return True;
     }
     else{
@@ -110,6 +112,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     if(isInit(path)){
       // Returns False if the path was already read before.
+      cout << "Path has been read before." << endl;
       return False;
     }
     
@@ -128,10 +131,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       ROScalarMeasColumn<MEpoch> startTimeCol(tab, "START_TIME");
       ROScalarColumn<String> antennaTypeCol(tab, "ANTENNA_TYPE");
       ROScalarColumn<String> receiverTypeCol(tab, "RECEIVER_TYPE");
-      ROScalarColumn<Int> numBandsCol(tab, "NUM_BANDS");
+      ROScalarColumn<Int> numSubbandsCol(tab, "NUM_SUBBANDS");
       ROArrayColumn<String> bandNameCol(tab, "BAND_NAME");
-      ROArrayQuantColumn<Double> bandMinFreqCol(tab, "BAND_MIN_FREQ");
-      ROArrayQuantColumn<Double> bandMaxFreqCol(tab, "BAND_MAX_FREQ");
+      ROArrayQuantColumn<Double> subbandMinFreqCol(tab, "SUBBAND_MIN_FREQ");
+      ROArrayQuantColumn<Double> subbandMaxFreqCol(tab, "SUBBAND_MAX_FREQ");
       ROScalarMeasColumn<MDirection> centerCol(tab, "CENTER");
       ROScalarMeasColumn<MDirection> validCenterMinCol(tab, "VALID_CENTER_MIN");
       ROScalarMeasColumn<MDirection> validCenterMaxCol(tab, "VALID_CENTER_MAX");
@@ -151,10 +154,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       ValidCenter_p.resize(numRows_p,True);
       ValidCenterMin_p.resize(numRows_p,True);
       ValidCenterMax_p.resize(numRows_p,True);
-      NumBands_p.resize(numRows_p,True);
+      NumSubbands_p.resize(numRows_p,True);
       BandName_p.resize(numRows_p,True);
-      BandMinFreq_p.resize(numRows_p,True);
-      BandMaxFreq_p.resize(numRows_p,True);
+      SubbandMinFreq_p.resize(numRows_p,True);
+      SubbandMaxFreq_p.resize(numRows_p,True);
       FuncType_p.resize(numRows_p,True);
       FuncName_p.resize(numRows_p,True);
       FuncChannel_p.resize(numRows_p,True);
@@ -169,20 +172,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	StartTime_p(j) = startTimeCol(i);
 	AntennaType_p(j) = antennaTypeCol(i);
 	ReceiverType_p(j) = receiverTypeCol(i);
-	NumBands_p(j) = numBandsCol(i);
+	NumSubbands_p(j) = numSubbandsCol(i);
 	BandName_p(j).assign(bandNameCol(i));
 
 	Vector<Quantity> tQ;
-	tQ = bandMinFreqCol(i);
-	for(uInt k=0; k<tQ.nelements(); k++){
-	  BandMinFreq_p(j)(k) = MVFrequency(tQ(k));
+	tQ = subbandMinFreqCol(i);
+	uInt nSubB = tQ.nelements();
+	SubbandMinFreq_p(j).resize(nSubB);
+	for(uInt k=0; k<nSubB; k++){
+	  SubbandMinFreq_p(j)(k) = MVFrequency(tQ(k));
 	}
-	tQ = bandMaxFreqCol(i);
-	for(uInt k=0; k<tQ.nelements(); k++){
-	  BandMaxFreq_p(j)(k) = MVFrequency(tQ(k));
+	tQ = subbandMaxFreqCol(i);
+	SubbandMaxFreq_p(j).resize(nSubB);
+	for(uInt k=0; k<nSubB; k++){
+	  SubbandMaxFreq_p(j)(k) = MVFrequency(tQ(k));
 	}
 	tQ = nomFreqCol(i);
-	for(uInt k=0; k<tQ.nelements(); k++){
+	NomFreq_p(j).resize(nSubB);
+	for(uInt k=0; k<nSubB; k++){
 	  NomFreq_p(j)(k) = MVFrequency(tQ(k));
 	}
 
@@ -192,7 +199,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Vector<Int> tFType;
 	tFType = functionTypeCol(i);
-	for(uInt k=0; k<tFType.nelements(); k++){
+	FuncType_p(j).resize(nSubB);
+	for(uInt k=0; k<nSubB; k++){
 	  FuncType_p(j)(k) = FuncType(tFType(k));
 	}
 
@@ -220,45 +228,124 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return found;
   }
 
-  // find the row containing the information pertinent to the given parameters
-  // (this is also the index in the member vectors)
-  // return false if no matching row could be found
-  Bool AntennaResponses::getRow(uInt& row,
-				const String& obsName,
-				const MEpoch& obsTime,
-				const MFrequency& freq,
-				const FuncTypes& requFType,
-				const String& antennaType,
-				const MDirection& center,
-				const String& receiverType,
-				const Int& beamNumber){
-  
+  Bool AntennaResponses::getRowAndIndex(uInt& row, uInt& subBand,
+					const String& obsName,
+					const MEpoch& obsTime,
+					const MFrequency& freq,
+					const FuncTypes& requFType,
+					const String& antennaType,
+					const MDirection& center,
+					const String& receiverType,
+					const Int& beamNumber){
+    Bool rval = False;
+    Unit uS("s");
+    Unit uHz("Hz");
+
+    // calculate azimuth, elevation, and topo frequency
+    // first, get the reference frame 
+    MPosition mp;
+    if (!MeasTable::Observatory(mp,obsName)) {
+      // unknown observatory
+      cout << "Unknown observatory." << endl;
+      return False;
+    }
+    mp=MPosition::Convert(mp, MPosition::ITRF)();
+    MeasFrame frame(mp, obsTime);
+    Vector<Double> azel = MDirection::Convert(center, 
+					      MDirection::Ref(MDirection::AZEL,
+							      frame)		
+			      )().getAngle("deg").getValue();
+
+    Quantity f = MFrequency::Convert(freq, MFrequency::TOPO)().get(uHz);
+
     // loop over rows
+    uInt i,j;
+    for(i=0; i<numRows_p; i++){
+      if(ObsName_p(i) == obsName
+	 && StartTime_p(i).get(uS) <= obsTime.get(uS)
+	 && AntennaType_p(i) == antennaType
+	 && ReceiverType_p(i) == receiverType
+	 && BeamNumber_p(i) == beamNumber
+	 ){
+	// remains to test center and freq and functype
+	// first freq and functype
+	Bool found = False;
+	for(j=0; j<NumSubbands_p(i); j++){
+	  if( (FuncType_p(i)(j) == requFType
+	       || requFType == AntennaResponses::ANY)
+	      && SubbandMinFreq_p(i)(j).get() <= f
+	      && f <= SubbandMaxFreq_p(i)(j).get()
+	      ){
+	    found = True;
+	    break;
+	  }
+	}
+	if(found){ // now test center
+	  Vector<Double> azelMin = MDirection::Convert(ValidCenterMin_p(i), 
+						       MDirection::Ref(MDirection::AZEL,
+								       frame)
+						       )().getAngle("deg").getValue();
+	  Vector<Double> azelMax = MDirection::Convert(ValidCenterMax_p(i), 
+						       MDirection::Ref(MDirection::AZEL,
+								       frame)
+						       )().getAngle("deg").getValue();
 
-    // compare all elements of the key
+	  cout << " i, j, " << i << ", " << j << " az min actual max" << azelMin(0) << " " << azel(0) << " " << azelMax(0) << endl;
+	  cout << " i, j, " << i << ", " << j << " el min actual max" << azelMin(1) << " " << azel(1) << " " << azelMax(1) << endl;
 
-    // if found, set row to the found one and return True
+	  if(azelMin(0) <= azel(0) && azel(0) <= azelMax(0)
+	     && azelMin(1) <= azel(1) && azel(1) <= azelMax(1)){
+	    rval = True;
+	    break;
+	  }
+	}
+      }
+    } // end for
 
-    // else return False
-    return False;
+    if(rval){
+      row = i;
+      subBand = j;
+    }
+    return rval;
 
   }
 
-  // overloaded method: as previous method but using beamId
-  // (instead of obs. time, ant. type,  rec. type, center, and beam number)
-  Bool AntennaResponses::getRow(uInt& row,
-				const String& obsName,
-				const Int& beamId,
-				const MFrequency& freq){
-  
+  Bool AntennaResponses::getRowAndIndex(uInt& row, uInt& subBand,
+					const String& obsName,
+					const Int& beamId,
+					const MFrequency& freq){
+
+    Bool rval = False;
+    Unit uHz("Hz");
+
+    // calculate topo frequency
+    Quantity f = MFrequency::Convert(freq, MFrequency::TOPO)().get(uHz);
+
     // loop over rows
+    uInt i,j;
+    for(i=0; i<numRows_p; i++){
+      if(ObsName_p(i) == obsName
+	 && BeamNumber_p(i) == beamId
+	){
+	for(j=0; j<NumSubbands_p(i); j++){
+	  if(SubbandMinFreq_p(i)(j).get() <= f
+	     && f <= SubbandMaxFreq_p(i)(j).get()
+	     ){
+	    rval = True;
+	    break;
+	  }
+	}
+	if(rval){
+	  break;
+	}
+      }
+    } // end for
 
-    // compare all elements of the key
-
-    // if found, set row to the found one and return True
-
-    // else return False
-    return False;
+    if(rval){
+      row = i;
+      subBand = j;
+    }
+    return rval;
 
   }
 
@@ -275,7 +362,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				      const MDirection& center,
 				      const String& receiverType,
 				      const Int& beamNumber){
-    return False;
+    
+    uInt row, subBand;
+
+    if(!getRowAndIndex(row, subBand,
+		       obsName, obsTime, freq,
+		       requFType, antennaType,
+		       center, receiverType,
+		       beamNumber)){
+      return False;
+    }
+    else{
+      functionImageName = FuncName_p(row)(subBand);
+      functionChannel = FuncChannel_p(row)(subBand);
+      nomFreq = NomFreq_p(row)(subBand);
+      fType = FuncType_p(row)(subBand);
+      return True;
+    }
+
   }
 		
   // overloaded method: as previous method but using beamId
@@ -287,7 +391,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				      const String& obsName, // (the observatory name, e.g. "ALMA" or "ACA")
 				      const Int& beamId,
 				      const MFrequency& freq){
-    return False;
+    uInt row, subBand;
+
+    if(!getRowAndIndex(row, subBand,
+		       obsName, beamId, freq)){
+      return False;
+    }
+    else{
+      cout << "row " << row << " subband " << subBand << endl;
+      cout << "numrows " << numRows_p << endl;
+      for(uInt i=0; i<FuncName_p.nelements(); i++){
+	for(uInt j=0; j< FuncName_p(i).nelements(); j++){
+	  cout << "i, j " << i << ", " << j << " " << FuncName_p(i)(j) << endl;
+	}
+      }
+      functionImageName = FuncName_p(row)(subBand);
+      functionChannel = FuncChannel_p(row)(subBand);
+      nomFreq = NomFreq_p(row)(subBand);
+      fType = FuncType_p(row)(subBand);
+      return True;
+    }
   }
 
 
@@ -295,8 +418,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				const String& obsName,
 				const Int& beamId,
 				const Vector<String>& bandName,
-				const Vector<MVFrequency>& bandMinFreq,
-				const Vector<MVFrequency>& bandMaxFreq,
+				const Vector<MVFrequency>& subbandMinFreq,
+				const Vector<MVFrequency>& subbandMaxFreq,
 				const Vector<FuncTypes>& funcType,
 				const Vector<String>& funcName,
 				const Vector<uInt>& funcChannel,
@@ -313,19 +436,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Returns false, if the table was not initialised or the given data was
     // not consistent.
     if(paths_p.nelements()==0){
+      cout << "Table not initialised." << endl;
       return False;
     }
     // Consistency checks: 
-    //   - all vectors have same dimension which is then used to set numBands
-    uInt tNumBands = bandName.nelements();
+    //   - all vectors have same dimension which is then used to set numSubbands
+    uInt tNumSubbands = bandName.nelements();
     if(!(
-	 tNumBands == bandMinFreq.nelements() &&
-	 tNumBands == bandMaxFreq.nelements() &&
-	 tNumBands == funcType.nelements() &&
-	 tNumBands == funcName.nelements() &&
-	 tNumBands == funcChannel.nelements() &&
-	 tNumBands == nomFreq.nelements())
+	 tNumSubbands == subbandMinFreq.nelements() &&
+	 tNumSubbands == subbandMaxFreq.nelements() &&
+	 tNumSubbands == funcType.nelements() &&
+	 tNumSubbands == funcName.nelements() &&
+	 tNumSubbands == funcChannel.nelements() &&
+	 tNumSubbands == nomFreq.nelements())
        ){
+      cout << "Inconsistent vector dimensions." << endl;
       return False;
     }
     //   - beamId is unique for the given observatory
@@ -337,6 +462,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     }
     if(!isUnique){
+      cout << "beam id not unique" << endl;
       return False;
     }
     //   - center, validCenterMin, and validCenterMax have the same MDirection type
@@ -344,7 +470,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(!(dirRef == validCenterMin.getRefString() &&
 	 dirRef == validCenterMax.getRefString())
        ){
-	 return False;
+      cout << "Inconsisten direction type." << endl; 
+      return False;
     }
     
     uInt theRow = 0;
@@ -367,10 +494,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       ValidCenter_p.resize(numRows_p,True);
       ValidCenterMin_p.resize(numRows_p,True);
       ValidCenterMax_p.resize(numRows_p,True);
-      NumBands_p.resize(numRows_p,True);
+      NumSubbands_p.resize(numRows_p,True);
       BandName_p.resize(numRows_p,True);
-      BandMinFreq_p.resize(numRows_p,True);
-      BandMaxFreq_p.resize(numRows_p,True);
+      SubbandMinFreq_p.resize(numRows_p,True);
+      SubbandMaxFreq_p.resize(numRows_p,True);
       FuncType_p.resize(numRows_p,True);
       FuncName_p.resize(numRows_p,True);
       FuncChannel_p.resize(numRows_p,True);
@@ -386,10 +513,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ValidCenter_p(theRow) = center;
     ValidCenterMin_p(theRow) = validCenterMin;
     ValidCenterMax_p(theRow) = validCenterMax;
-    NumBands_p(theRow) = tNumBands;
+    NumSubbands_p(theRow) = tNumSubbands;
     BandName_p(theRow).assign(bandName);
-    BandMinFreq_p(theRow).assign(bandMinFreq);
-    BandMaxFreq_p(theRow).assign(bandMaxFreq);
+    SubbandMinFreq_p(theRow).assign(subbandMinFreq);
+    SubbandMaxFreq_p(theRow).assign(subbandMaxFreq);
     FuncType_p(theRow).assign(funcType);
     FuncName_p(theRow).assign(funcName);
     FuncChannel_p(theRow).assign(funcChannel);
@@ -413,10 +540,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     tD.addColumn(ScalarColumnDesc<Double> ("START_TIME", "the time from which onwards this table row is valid, measure fixed to UTC"));
     tD.addColumn(ScalarColumnDesc<String> ("ANTENNA_TYPE", "for heterogeneous arrays: indication of the antenna type"));
     tD.addColumn(ScalarColumnDesc<String> ("RECEIVER_TYPE", "permits multiple receivers per band"));
-    tD.addColumn(ScalarColumnDesc<Int> ("NUM_BANDS", "number of elements in the array columns in this table"));
+    tD.addColumn(ScalarColumnDesc<Int> ("NUM_SUBBANDS", "number of elements in the array columns in this table"));
     tD.addColumn(ArrayColumnDesc<String> ("BAND_NAME", "name of the frequency band"));
-    tD.addColumn(ArrayColumnDesc<Double> ("BAND_MIN_FREQ", "minimum frequency of the band in the observatory frame"));
-    tD.addColumn(ArrayColumnDesc<Double> ("BAND_MAX_FREQ", "maximum frequency of the band in the observatory frame"));
+    tD.addColumn(ArrayColumnDesc<Double> ("SUBBAND_MIN_FREQ", "minimum frequency of the subband in the observatory frame"));
+    tD.addColumn(ArrayColumnDesc<Double> ("SUBBAND_MAX_FREQ", "maximum frequency of the subband in the observatory frame"));
     tD.addColumn(ArrayColumnDesc<Double> ("CENTER", "the nominal center sky position where this row is valid"));
     tD.addColumn(ScalarColumnDesc<Int> ("CENTER_REF", ColumnDesc::Direct));
     tD.addColumn(ArrayColumnDesc<Double> ("VALID_CENTER_MIN", "sky position validity range min values"));
@@ -436,9 +563,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     TableQuantumDesc timeQuantDesc(tD, "START_TIME", Unit ("s"));
     timeQuantDesc.write(tD);
 
-    TableQuantumDesc freqQuantDesc(tD, "BAND_MIN_FREQ", Unit ("Hz"));
+    TableQuantumDesc freqQuantDesc(tD, "SUBBAND_MIN_FREQ", Unit ("Hz"));
     freqQuantDesc.write (tD);
-    TableQuantumDesc freqQuantDesc2(tD, "BAND_MAX_FREQ", Unit ("Hz"));
+    TableQuantumDesc freqQuantDesc2(tD, "SUBBAND_MAX_FREQ", Unit ("Hz"));
     freqQuantDesc2.write (tD);
     TableQuantumDesc freqQuantDesc3(tD, "NOMINAL_FREQ", Unit ("Hz"));
     freqQuantDesc3.write (tD);
@@ -467,10 +594,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       ScalarMeasColumn<MEpoch> startTimeCol(tab, "START_TIME");
       ScalarColumn<String> antennaTypeCol(tab, "ANTENNA_TYPE");
       ScalarColumn<String> receiverTypeCol(tab, "RECEIVER_TYPE");
-      ScalarColumn<Int> numBandsCol(tab, "NUM_BANDS");
+      ScalarColumn<Int> numSubbandsCol(tab, "NUM_SUBBANDS");
       ArrayColumn<String> bandNameCol(tab, "BAND_NAME");
-      ArrayQuantColumn<Double> bandMinFreqCol(tab, "BAND_MIN_FREQ");
-      ArrayQuantColumn<Double> bandMaxFreqCol(tab, "BAND_MAX_FREQ");
+      ArrayQuantColumn<Double> subbandMinFreqCol(tab, "SUBBAND_MIN_FREQ");
+      ArrayQuantColumn<Double> subbandMaxFreqCol(tab, "SUBBAND_MAX_FREQ");
       ScalarMeasColumn<MDirection> centerCol(tab, "CENTER");
       ScalarMeasColumn<MDirection> validCenterMinCol(tab, "VALID_CENTER_MIN");
       ScalarMeasColumn<MDirection> validCenterMaxCol(tab, "VALID_CENTER_MAX");
@@ -486,19 +613,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	startTimeCol.put(i, StartTime_p(i));
 	antennaTypeCol.put(i, AntennaType_p(i));
 	receiverTypeCol.put(i, ReceiverType_p(i));
-	numBandsCol.put(i, NumBands_p(i));
+	numSubbandsCol.put(i, NumSubbands_p(i));
 	bandNameCol.put(i, BandName_p(i));
 
-	Vector<Quantity> bMF(BandMinFreq_p(i).nelements());
+	Vector<Quantity> bMF(SubbandMinFreq_p(i).nelements());
 	for(uInt k=0; k<bMF.nelements(); k++){
-	  bMF(k) = (BandMinFreq_p(i)(k)).get(); // convert MVFrequency to Quantity in Hz
+	  bMF(k) = (SubbandMinFreq_p(i)(k)).get(); // convert MVFrequency to Quantity in Hz
 	}
-	bandMinFreqCol.put(i, bMF); 
+	subbandMinFreqCol.put(i, bMF); 
 
 	for(uInt k=0; k<bMF.nelements(); k++){
-	  bMF(k) = (BandMaxFreq_p(i)(k)).get(); // convert MVFrequency to Quantity in Hz
+	  bMF(k) = (SubbandMaxFreq_p(i)(k)).get(); // convert MVFrequency to Quantity in Hz
 	}
-	bandMaxFreqCol.put(i, bMF);
+	subbandMaxFreqCol.put(i, bMF);
 
 	for(uInt k=0; k<bMF.nelements(); k++){
 	  bMF(k) = (NomFreq_p(i)(k)).get(); // convert MVFrequency to Quantity in Hz
@@ -534,6 +661,36 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
   }
 
+  Bool AntennaResponses::getBandName(String& bandName, 
+				     const String& obsName,
+				     const MVFrequency& freq){    
+    // brute force search
+    Quantity f = freq.get();
+    bandName = "";
+    Bool rval = False;
+
+    uInt i, j;
+
+    for(i=0; i<numRows_p; i++){
+      if(obsName == ObsName_p(i)){
+	for(j=0; j<NumSubbands_p(i); j++){
+	  if(SubbandMinFreq_p(i)(j).get() <= f
+	     && f <= SubbandMaxFreq_p(i)(j).get()){
+	    rval = True;
+	    break;
+	  }
+	}
+	if(rval){
+	  break;
+	}
+      }
+    }
+    if(rval){
+      bandName = BandName_p(i)(j);
+    }
+    return rval;
+
+  }
 
 } //# NAMESPACE CASA - END
 

@@ -105,7 +105,7 @@ int main() {
 
       ui = 1;
 
-      AlwaysAssert(aR.putRow(ui,"ALMA", 0, bName, minFreq, maxFreq, fTypB, funcNameB, funcChannel, nomFreq,
+      AlwaysAssert(aR.putRow(ui,"ALMA", 1, bName, minFreq, maxFreq, fTypB, funcNameB, funcChannel, nomFreq,
 			     "DV", MEpoch(MVEpoch(Quantity(50000., "d")), MEpoch::UTC),
 			     MDirection(Quantity( 0., "deg"),
 					Quantity(45., "deg"), 
@@ -139,7 +139,7 @@ int main() {
 
       ui = 2; // test setting of row number
 
-      AlwaysAssert(aR.putRow(ui,"ACA", 0, bName, minFreq, maxFreq, fTypB, funcNameB, funcChannel, nomFreq,
+      AlwaysAssert(aR.putRow(ui,"ACA", 1, bName, minFreq, maxFreq, fTypB, funcNameB, funcChannel, nomFreq,
 			     "DV", MEpoch(MVEpoch(Quantity(50000., "d")), MEpoch::UTC),
 			     MDirection(Quantity( 0., "deg"),
 					Quantity(45., "deg"), 
@@ -160,18 +160,26 @@ int main() {
 
     // initialisation
 
+    cout << "init 0" << endl;
     AntennaResponses aR("testAntennaResponses_tmp.dat");
 
+    cout << "init 1" << endl;
     AlwaysAssert(aR.isInit("testAntennaResponses_tmp.dat"), AipsError);
+    cout << "init 2" << endl;
     AlwaysAssert(!aR.isInit("testAntennaResponsesACA_tmp.dat"), AipsError);
 
+    cout << "init 3" << endl;
     AlwaysAssert(!aR.append("testAntennaResponses_tmp.dat"), AipsError);
+    cout << "init 4" << endl;
     AlwaysAssert(aR.append("testAntennaResponsesACA_tmp.dat"), AipsError);
+    cout << "init 5" << endl;
     AlwaysAssert(aR.isInit("testAntennaResponsesACA_tmp.dat"), AipsError);
+    cout << "init 6" << endl;
     AlwaysAssert(!aR.append("testAntennaResponsesACA_tmp.dat"), AipsError);
 
     // unsuccessful access
 
+    cout << "init 7" << endl;
     AlwaysAssert(aR.init("testAntennaResponses_tmp.dat"), AipsError);
 
     String theImageName;
@@ -181,13 +189,15 @@ int main() {
 
     AntennaResponses::FuncTypes requFType = AntennaResponses::EFP;
 
+    cout << "access 0" << endl;
     AlwaysAssert(!aR.getImageName(theImageName, theImageChannel, theNomFreq, theFType,
-				  "ACA", // wrong obs.
-				  MEpoch(MVEpoch(Quantity(50000., "d")), MEpoch::UTC),
-				  MFrequency( Quantity(160., "GHz"), MFrequency::TOPO),
-				  requFType, "DV"),
+				   "ACA", // wrong obs.
+				   MEpoch(MVEpoch(Quantity(50000., "d")), MEpoch::UTC),
+				   MFrequency( Quantity(160., "GHz"), MFrequency::TOPO),
+				   requFType, "DV"),
 		 AipsError);
 
+    cout << "access 1" << endl;
     AlwaysAssert(!aR.getImageName(theImageName, theImageChannel, theNomFreq, theFType,
 				  "ALMA", 
 				  MEpoch(MVEpoch(Quantity(50000., "d")), MEpoch::UTC),
@@ -195,6 +205,7 @@ int main() {
 				  requFType, "DV"),
 		 AipsError);
 
+    cout << "access 2" << endl;
     AlwaysAssert(!aR.getImageName(theImageName, theImageChannel, theNomFreq, theFType,
 				  "ALMA", 
 				  MEpoch(MVEpoch(Quantity(49999., "d")), MEpoch::UTC), // wrong time
@@ -202,6 +213,7 @@ int main() {
 				  requFType, "DV"), 
 		 AipsError);
 
+    cout << "access 3" << endl;
     AlwaysAssert(!aR.getImageName(theImageName, theImageChannel, theNomFreq, theFType,
 				  "ALMA", 
 				  MEpoch(MVEpoch(Quantity(50000., "d")), MEpoch::UTC), 
@@ -212,6 +224,7 @@ int main() {
 					     MDirection::AZEL)), // wrong center
 		 AipsError);
 
+    cout << "access 4" << endl;
     AlwaysAssert(!aR.getImageName(theImageName, theImageChannel, theNomFreq, theFType,
 				  "ALMA", 
 				  MEpoch(MVEpoch(Quantity(50000., "d")), MEpoch::UTC), 
@@ -222,6 +235,7 @@ int main() {
 					     MDirection::AZEL)), 
 		 AipsError);
 
+    cout << "access 5" << endl;
     AlwaysAssert(!aR.getImageName(theImageName, theImageChannel, theNomFreq, theFType,
 				  "ALMA", 
 				  MEpoch(MVEpoch(Quantity(50000., "d")), MEpoch::UTC), 
@@ -233,6 +247,7 @@ int main() {
 				  "rec typ B"), // wrong receiver type
 		 AipsError);
 
+    cout << "access 6" << endl;
     AlwaysAssert(!aR.getImageName(theImageName, theImageChannel, theNomFreq, theFType,
 				  "ALMA", 
 				  MEpoch(MVEpoch(Quantity(50000., "d")), MEpoch::UTC), 
@@ -245,6 +260,7 @@ int main() {
 				  1), // wrong beam number
 		 AipsError);
 
+    cout << "access 7" << endl;
     AlwaysAssert(!aR.getImageName(theImageName, theImageChannel, theNomFreq, theFType,
 				 "ALMA", 
 				  1, // wrong beam id
@@ -252,6 +268,7 @@ int main() {
 		 AipsError);
 
 
+    cout << "access 8" << endl;
     AlwaysAssert(!aR.getImageName(theImageName, theImageChannel, theNomFreq, theFType,
 				  "ALMA", 
 				  MEpoch(MVEpoch(Quantity(50000., "d")), MEpoch::UTC),
@@ -259,8 +276,24 @@ int main() {
 				  AntennaResponses::AIF), // wrong image type
 		 AipsError);
 
+    String myBandName;
+    AlwaysAssert(!aR.getBandName(myBandName, 
+				 "ALMA",
+				 MVFrequency( Quantity(9., "GHz"))), // too low freq
+		 AipsError);
+    AlwaysAssert(!aR.getBandName(myBandName, 
+				 "ALMA",
+				 MVFrequency( Quantity(900., "GHz"))), // too high freq
+		 AipsError);
+    AlwaysAssert(!aR.getBandName(myBandName, 
+				 "ASKAP", // wrong observatory
+				 MVFrequency( Quantity(9., "GHz"))),
+		 AipsError);
+
+
     // successful access
 
+    cout << "access 9" << endl;
     AlwaysAssert(aR.getImageName(theImageName, theImageChannel, theNomFreq, theFType,
 				 "ALMA", 
 				 MEpoch(MVEpoch(Quantity(50000., "d")), MEpoch::UTC), 
@@ -273,26 +306,41 @@ int main() {
 				 0), 
 		 AipsError);
 
+    cout << "access 10" << endl;
     AlwaysAssert(aR.getImageName(theImageName, theImageChannel, theNomFreq, theFType,
 				 "ALMA", 
 				 0,
 				 MFrequency( Quantity(250., "GHz"), MFrequency::TOPO)), 
 		 AipsError);
 
+    cout << "access 11" << endl;
     AlwaysAssert(aR.getImageName(theImageName, theImageChannel, theNomFreq, theFType,
 				 "ALMA", 
 				 MEpoch(MVEpoch(Quantity(50000., "d")), MEpoch::UTC),
 				 MFrequency( Quantity(160., "GHz"), MFrequency::TOPO),
-				 AntennaResponses::VP),
+				 AntennaResponses::VP, "DV",
+				 MDirection(Quantity(10., "deg"),
+					    Quantity(40., "deg"), 
+					    MDirection::AZEL)
+				 ),
 		 AipsError);
 
     AlwaysAssert(aR.append("testAntennaResponsesACA_tmp.dat"), AipsError);
 
+
+    cout << "access 12" << endl;
     AlwaysAssert(aR.getImageName(theImageName, theImageChannel, theNomFreq, theFType,
 				 "ACA", 
 				 0,
 				 MFrequency( Quantity(250., "GHz"), MFrequency::TOPO)), 
 		 AipsError);
+
+    AlwaysAssert(aR.getBandName(myBandName, 
+				"ALMA",
+				MVFrequency( Quantity(160., "GHz"))),
+		 AipsError);
+
+    AlwaysAssert(myBandName=="band_2", AipsError); 
 
   } 
   catch (AipsError x) {

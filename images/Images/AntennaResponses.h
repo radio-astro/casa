@@ -93,14 +93,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //    column 3: Double START_TIME (a Measure, the time from which onwards this table row is valid)
 //    column 4: String ANTENNA_TYPE (for ALMA: "DV", "DA", "PM", or "CM")
 //    column 5: String RECEIVER_TYPE (for ALMA this will not be filled, at least for the moment)
-//    column 6: Int NUM_BANDS
-//    column 7: Array String (size set by NUM_BANDS) BAND_NAME (for ALMA: "1", "2" etc.)
-//    column 8: Array Double (a Quantum, size set by NUM_BANDS) BAND_MIN_FREQ
-//    column 9: Array Double (a Quantum,  size set by NUM_BANDS) BAND_MAX_FREQ
+//    column 6: Int NUM_SUBBANDS (number of response frequency sub-bands)
+//    column 7: Array String (size set by NUM_SUBBANDS) BAND_NAME (for ALMA: "1", "2" etc.)
+//                            (if there is more than one sub-band per band, the band name repeats)
+//    column 8: Array Double (a Quantum, size set by NUM_SUBBANDS) SUBBAND_MIN_FREQ
+//    column 9: Array Double (a Quantum, size set by NUM_SUBBANDS) SUBBAND_MAX_FREQ
 //    column 10: MDirection CENTER (the nominal center sky position where this row is valid, default (0.,90.) AZEL)
 //    column 11: MDirection VALID_CENTER_MIN (sky position validity range min values, default (0.,0.) AZEL)
 //    column 12: MDirection VALID_CENTER_MAX (sky position validity range max values, default (360.,90.) AZEL)
-//    column 13: Array Int (size set by NUM_BANDS) FUNCTION_TYPE
+//    column 13: Array Int (size set by NUM_SUBBANDS) FUNCTION_TYPE
 //                      (uses enum FuncTypes defined below:
 //                       EFP = complex electric field pattern image,
 //                       VP = voltage pattern image,
@@ -110,16 +111,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //              VPMAN = the function is available in casa via the vp manager (details t.b.d.),
 //              INTERNAL = the function is generated on the fly internally
 //                       using ray-tracing as for the EVLA)
-//    column 14: Array String (size set by NUM_BANDS) FUNCTION_NAME
+//    column 14: Array String (size set by NUM_SUBBANDS) FUNCTION_NAME
 //                   (names of the images as paths relative to the directory
 //                    where this table is located,
 //                    empty string if no image is available for the band, e.g.
 //                    "ticra_efield_patterns/melco12m_band6_efp.im")
-//    column 15: Array uInt (size set by NUM_BANDS) FUNCTION_CHANNEL
+//    column 15: Array uInt (size set by NUM_SUBBANDS) FUNCTION_CHANNEL
 //                   (the spectral image channel to use, can be different from 0 in the case
 //                    that several antenna responses are stored in one image file)
-//    column 16: Array Double (a Quantum, size set by NUM_BANDS) NOMINAL_FREQ
-//                   (the nominal frequency of the channel given by FUNCTION_CHANNEL)
+//    column 16: Array Double (a Quantum, size set by NUM_SUBBANDS) NOMINAL_FREQ
+//                    (the nominal frequency of the channel given by FUNCTION_CHANNEL
 //
 //  It is assured by the table filling code that columns 10, 11, and 12 use the same MDirection type.
 // </synopsis>
@@ -179,25 +180,26 @@ public:
 
   // find the row containing the information pertinent to the given parameters
   // (this is also the index in the member vectors)
+  // and the index (subband) to the frequency channel of the response
   // return false if no matching row could be found
-  Bool getRow(uInt& row,
-	      const String& obsName,
-	      const MEpoch& obsTime,
-	      const MFrequency& freq,
-	      const FuncTypes& requFType = ANY, // the requested function type
-	      const String& antennaType = "",
-	      const MDirection& center = MDirection(Quantity( 0., "deg"), // the center to be matched with the CENTER column,
-						    Quantity(90., "deg"), // default is the Zenith
-						    MDirection::AZEL), // the center to be matched with the CENTER column
-	      const String& receiverType = "",
-	      const Int& beamNumber = 0);
+  Bool getRowAndIndex(uInt& row, uInt& subBand,
+		      const String& obsName,
+		      const MEpoch& obsTime,
+		      const MFrequency& freq,
+		      const FuncTypes& requFType = ANY, // the requested function type
+		      const String& antennaType = "",
+		      const MDirection& center = MDirection(Quantity( 0., "deg"), // the center to be matched with the CENTER column,
+							    Quantity(90., "deg"), // default is the Zenith
+							    MDirection::AZEL), // the center to be matched with the CENTER column
+		      const String& receiverType = "",
+		      const Int& beamNumber = 0);
 
   // overloaded method: as previous method but using beamId
   // (instead of obs. time, ant. type,  rec. type, center, and beam number)
-  Bool getRow(uInt& row,
-	      const String& obsName,
-	      const Int& beamId,
-	      const MFrequency& freq);
+  Bool getRowAndIndex(uInt& row, uInt& subBand,
+		      const String& obsName,
+		      const Int& beamId,
+		      const MFrequency& freq);
 
   // getRow is then used by the following methods
 
@@ -247,15 +249,15 @@ public:
   // Returns false, if the table was not initialised or the given data was
   // not consistent.
   // Consistency checks: 
-  //   - all vectors have same dimension which is then used to set numBands
+  //   - all vectors have same dimension which is then used to set numSubbands
   //   - beamId is unique for the given observatory
   //   - center, validCenterMin, and validCenterMax have the same MDirection type
   Bool putRow(uInt& row,
 	      const String& obsName,
 	      const Int& beamId,
 	      const Vector<String>& bandName,
-	      const Vector<MVFrequency>& bandMinFreq,
-	      const Vector<MVFrequency>& bandMaxFreq,
+	      const Vector<MVFrequency>& subbandMinFreq,
+	      const Vector<MVFrequency>& subbandMaxFreq,
 	      const Vector<FuncTypes>& funcType,
 	      const Vector<String>& funcName,
 	      const Vector<uInt>& funcChannel, 
@@ -282,6 +284,11 @@ public:
   // Convert from Int to FuncType
   FuncTypes FuncType(Int i);
 
+  // get the name of the band corresponding to the frequency (in the rest frame of the observatory)
+  Bool getBandName(String& bandName,
+		   const String& obsName, 
+		   const MVFrequency& freq);
+
 private:
 
   // after initialization, this contains the name of the path where the 
@@ -301,10 +308,10 @@ private:
   Vector<MDirection> ValidCenter_p;
   Vector<MDirection> ValidCenterMin_p;
   Vector<MDirection> ValidCenterMax_p;
-  Vector<Int> NumBands_p;
+  Vector<uInt> NumSubbands_p;
   Vector<Vector<String> > BandName_p;
-  Vector<Vector<MVFrequency> > BandMinFreq_p;
-  Vector<Vector<MVFrequency> > BandMaxFreq_p;
+  Vector<Vector<MVFrequency> > SubbandMinFreq_p;
+  Vector<Vector<MVFrequency> > SubbandMaxFreq_p;
   Vector<Vector<FuncTypes> > FuncType_p;
   Vector<Vector<String> > FuncName_p;
   Vector<Vector<uInt> > FuncChannel_p;
