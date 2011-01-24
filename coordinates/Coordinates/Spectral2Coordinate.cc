@@ -174,6 +174,34 @@ Bool SpectralCoordinate::frequencyToWavelength (Vector<Double>& wavelength, cons
    }
    return True;
 }
+
+Bool SpectralCoordinate::airWavelengthToFrequency (Vector<Double>& frequency, const Vector<Double>& airWavelength) const
+{
+   frequency.resize(airWavelength.nelements());
+
+   // freq = C::c/wave * 1/to_hz_p * 1/to_m_p, wave = n(airwave)*airwave
+   Double factor = C::c/to_hz_p/to_m_p;
+
+   for(uInt i=0; i<airWavelength.nelements(); i++){
+     Double lambda_a = airWavelength(i) * 1E6 * to_m_p; // in micrometers
+     Double lambda_a2 = lambda_a * lambda_a;
+     // based on Greisen et al., 2006, A&A, 464, 746 
+     Double nOfLambda_a = 1.;
+     if(lambda_a > 0.){
+       nOfLambda_a = 1. + 1E-6 * (287.6155 + 1.62887/lambda_a2 
+				  + 0.01360/lambda_a2/lambda_a2);	
+     }
+
+     if(airWavelength(i)>0.){
+       frequency(i) = factor/airWavelength(i)/nOfLambda_a;
+     }
+     else{
+       frequency(i) = HUGE_VAL;
+     }
+   }
+   return True;
+}
+
 Bool SpectralCoordinate::wavelengthToFrequency (Vector<Double>& frequency, const Vector<Double>& wavelength) const
 {
    // since the functional form of the conversion is identical, we can reuse the inverse function

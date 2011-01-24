@@ -308,7 +308,8 @@ SpectralCoordinate::SpectralCoordinate(MFrequency::Types freqType,
 SpectralCoordinate::SpectralCoordinate(MFrequency::Types freqType,
                                        const Vector<Double>& wavelengths,
                                        const String&waveUnit,
-                                       Double restFrequency )
+                                       Double restFrequency,
+				       Bool inAir)
 : Coordinate(),
   pTabular_p(0),
   type_p(freqType),
@@ -340,7 +341,12 @@ SpectralCoordinate::SpectralCoordinate(MFrequency::Types freqType,
    //cout << "waveUnit " << waveUnit << " waveUnit_p " << waveUnit_p << " to_m_p " << to_m_p << " to_hz_p " << to_hz_p << endl;
 
    Vector<Double> frequencies;
-   wavelengthToFrequency(frequencies, wavelengths);
+   if(inAir){
+     airWavelengthToFrequency(frequencies, wavelengths);
+   }
+   else{
+     wavelengthToFrequency(frequencies, wavelengths);
+   }
 
    //for(uInt i=0; i<frequencies.nelements(); i++){
    //    cout << "freq i " << i << " " << frequencies(i) << endl;
