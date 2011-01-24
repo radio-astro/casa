@@ -3630,6 +3630,22 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       return False;
     }      
 
+    Vector<Double> absOldCHAN_WIDTH(oldCHAN_WIDTH);
+    {
+      Bool negativeWidths = False;
+      for(uInt i=0; i<oldCHAN_WIDTH.size(); i++){
+	if(oldCHAN_WIDTH(i) < 0.){
+	  negativeWidths = True;
+	  absOldCHAN_WIDTH(i) = -oldCHAN_WIDTH(i);
+	}
+      }
+      if(negativeWidths){
+	os << LogIO::WARN
+	   << "Encountered negative channel widths in input spectral window. Will ignore sign."
+	   << LogIO::POST;
+      }
+    }
+
     Vector<Double> transNewXin;
     Vector<Double> transCHAN_WIDTH(oldNUM_CHAN);
 
@@ -3644,15 +3660,15 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       for(uInt i=0; i<oldNUM_CHAN; i++){
 	transNewXin[i] = freqTrans(oldCHAN_FREQ[i]).get(unit).getValue();
 	transCHAN_WIDTH[i] = freqTrans(oldCHAN_FREQ[i] +
-				       oldCHAN_WIDTH[i]/2.).get(unit).getValue()
+				       absOldCHAN_WIDTH[i]/2.).get(unit).getValue()
 	  - freqTrans(oldCHAN_FREQ[i] -
-		      oldCHAN_WIDTH[i]/2.).get(unit).getValue(); // eliminate possible offsets
+		      absOldCHAN_WIDTH[i]/2.).get(unit).getValue(); // eliminate possible offsets
       }
     }
     else {
       // just copy
       transNewXin.assign(oldCHAN_FREQ);
-      transCHAN_WIDTH.assign(oldCHAN_WIDTH);
+      transCHAN_WIDTH.assign(absOldCHAN_WIDTH);
     }
 
     // calculate new grid
@@ -3976,6 +3992,20 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	// also take care of the other parameters of the spectral window
 	Int oldNUM_CHAN = numChanCol(theSPWId); 
 	Vector<Double> oldCHAN_WIDTH = chanWidthCol(theSPWId);
+	{
+	  Bool negativeWidths = False;
+	  for(uInt i=0; i<oldCHAN_WIDTH.nelements(); i++){
+	    if(oldCHAN_WIDTH(i) < 0.){
+	      negativeWidths = True;
+	      oldCHAN_WIDTH(i) = -oldCHAN_WIDTH(i);
+	    }
+	  }
+	  if(negativeWidths){
+	    os << LogIO::WARN
+	       << "Encountered negative channel widths in SPECTRAL_WINDOW table. Will ignore sign."
+	       << LogIO::POST;
+	  }
+	}
 	MFrequency oldREF_FREQUENCY = refFrequencyMeasCol(theSPWId);
 	Double oldTOTAL_BANDWIDTH = totalBandwidthCol(theSPWId);
 	Vector<Double> oldEFFECTIVE_BW = effectiveBWCol(theSPWId);   
@@ -4469,6 +4499,20 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       Int newNUM_CHAN = numChanColr(id0);
       newCHAN_FREQ.assign(chanFreqColr(id0));
       newCHAN_WIDTH.assign(chanWidthColr(id0));
+      {
+	Bool negativeWidths = False;
+	for(uInt i=0; i<newCHAN_WIDTH.nelements(); i++){
+	  if(newCHAN_WIDTH(i) < 0.){
+	    negativeWidths = True;
+	    newCHAN_WIDTH(i) = -newCHAN_WIDTH(i);
+	  }
+	}
+	if(negativeWidths){
+	  os << LogIO::WARN
+	     << "Encountered negative channel widths in SPECTRAL_WINDOW table. Will ignore sign."
+	     << LogIO::POST;
+	}
+      }
       Vector<Double> newEFFECTIVE_BW(effectiveBWColr(id0));
       Double newREF_FREQUENCY(refFrequencyColr(id0));
       //MFrequency newREF_FREQUENCY = refFrequencyMeasColr(id0);
@@ -4514,6 +4558,20 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	Int newNUM_CHANi = numChanColr(idi);
 	Vector<Double> newCHAN_FREQi(chanFreqColr(idi));
 	Vector<Double> newCHAN_WIDTHi(chanWidthColr(idi));
+	{
+	  Bool negativeWidths = False;
+	  for(uInt ii=0; ii<newCHAN_WIDTHi.nelements(); ii++){
+	    if(newCHAN_WIDTHi(ii) < 0.){
+	      negativeWidths = True;
+	      newCHAN_WIDTHi(ii) = -newCHAN_WIDTH(ii);
+	    }
+	  }
+	  if(negativeWidths){
+	    os << LogIO::WARN
+	       << "Encountered negative channel widths in SPECTRAL_WINDOW table. Will ignore sign."
+	       << LogIO::POST;
+	  }
+	}
 	Vector<Double> newEFFECTIVE_BWi(effectiveBWColr(idi));
 	//Double newREF_FREQUENCYi(refFrequencyColr(idi));
 	//MFrequency newREF_FREQUENCYi = refFrequencyMeasColr(idi);
