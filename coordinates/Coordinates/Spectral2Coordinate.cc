@@ -183,6 +183,7 @@ Double SpectralCoordinate::refractiveIndex(const Double& lambda_um){
        nOfLambda = 1. + 1E-6 * (287.6155 + 1.62887/lambda2 
 				  + 0.01360/lambda2/lambda2);	
      }
+     //cout << "ref index " << nOfLambda << endl; 
      return nOfLambda;
 }
   
@@ -195,7 +196,9 @@ Bool SpectralCoordinate::frequencyToAirWavelength (Vector<Double>& wavelength, c
    for(uInt i=0; i<frequency.nelements(); i++){
      if(frequency(i)>0.){
        Double vacWave = factor/frequency(i);
+       //cout << "toWave: vacWave " << vacWave << " to_m_p " << to_m_p << endl;
        wavelength(i) = vacWave/refractiveIndex(vacWave* 1E6 * to_m_p);
+       //cout << "toWave air wave " << wavelength(i) << endl;
      }
      else{
        wavelength(i) = HUGE_VAL;
@@ -215,8 +218,10 @@ Bool SpectralCoordinate::airWavelengthToFrequency (Vector<Double>& frequency, co
    for(uInt i=0; i<airWavelength.nelements(); i++){
   
      if(airWavelength(i)>0.){
-      Double lambda_um = airWavelength(i) * 1E6 * to_m_p; // in micrometers
-      frequency(i) = factor/airWavelength(i)/refractiveIndex(lambda_um);
+       Double lambda_um = airWavelength(i) * 1E6L * to_m_p; // in micrometers
+       frequency(i) = factor/airWavelength(i)/refractiveIndex(lambda_um);
+       //cout << "toFreq: air wave " << airWavelength(i) << " lambda_um " << lambda_um << endl;
+       //cout << "toFreq: freq " << frequency(i) << endl;
      }
      else{
        frequency(i) = HUGE_VAL;

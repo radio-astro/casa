@@ -1706,19 +1706,14 @@ void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis,
 		 header.dataType("cdelt") == TpArrayDouble &&
 		 header.shape("cdelt").nelements() == 1 &&
 		 header.shape("cdelt")(0) > Int(whichAxis), AipsError);
-    AlwaysAssert(header.isDefined("naxis") && 
-		 header.dataType("naxis") == TpArrayInt &&
-		 header.shape("naxis").nelements() == 1 &&
-		 header.shape("naxis")(0) > Int(whichAxis), AipsError);
 
     Vector<String> ctype, cunit;
     Vector<Double> crval, cdelt, crpix;
-    Vector<Int> naxis;
+
     header.get("ctype", ctype);
     header.get("crval", crval);
     header.get("crpix", crpix);
     header.get("cdelt", cdelt);
-    header.get("naxis",naxis);
 
     if (header.isDefined("cunit")) {
 	AlwaysAssert(header.dataType("cunit") == TpArrayString &&
@@ -1747,7 +1742,7 @@ void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis,
     // Fill pixel numbers
     Vector<Double> pixel;    
 
-        if (pixelValues().nelements() > 1) { // tabular axis
+    if (pixelValues().nelements() > 1) { // tabular axis
       pixel.assign(pixelValues());
       Vector<Double> vf0, vf1;
       if(!toWorld(vf0, Vector<Double>(1,pixel(0))) || !toWorld(vf1, Vector<Double>(1,pixel(1)))){
@@ -1761,7 +1756,15 @@ void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis,
       RefPix = pixel(0) + offset;
     }
     else{
-      uInt nEl = naxis(whichAxis);
+      uInt nEl = 0;
+      if(header.isDefined("naxis") && 
+	 header.dataType("naxis") == TpArrayInt &&
+	 header.shape("naxis").nelements() == 1 &&
+	 header.shape("naxis")(0) > Int(whichAxis)){
+	Vector<Int> naxis;
+	header.get("naxis",naxis);
+	nEl = naxis(whichAxis);
+      }
       pixel.resize(nEl);
       for(uInt i=0; i<nEl; i++){
 	pixel(i) = Double(i); 

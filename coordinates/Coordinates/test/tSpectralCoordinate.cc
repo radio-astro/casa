@@ -854,6 +854,58 @@ int main()
             throw(AipsError(String("wavelengthToFrequency b gave wrong answer")));
          }
 
+
+// Frequency <-> Air Wavelength
+//
+	 // first test refractive index
+
+
+	 if(abs(SpectralCoordinate::refractiveIndex(.480)-1.00029494145L)>1E-9){
+	   cout << (SpectralCoordinate::refractiveIndex(.480)-1.00029494145L)*1E6 << endl;
+	   throw(AipsError(String("refreactive index in air not correct")));
+	 }	   
+
+	 lc.setWavelengthUnit(String("mm"));
+
+	 Vector<Double> airWavelengths;
+         frequencies(0) = 6.26E14;
+         frequencies(1) = 3.21E14;
+	 Double aw0 = C::c/frequencies(0)*1000.; // default unit is mm
+	 aw0 /= SpectralCoordinate::refractiveIndex(aw0*1000.); // takes wavelength in microns
+	 Double aw1 = C::c/frequencies(1)*1000.;
+	 aw1 /= SpectralCoordinate::refractiveIndex(aw1*1000.);
+         if (!lc.frequencyToAirWavelength(airWavelengths, frequencies)) {
+            throw(AipsError(String("frequencyToAirWavelength conversion failed because ") + lc.errorMessage()));
+         }
+         if (!near(airWavelengths(0), aw0) || !near(airWavelengths(1), aw1)) {
+	    cout << airWavelengths(0) << " " << aw0 << " " << airWavelengths(1) << " " << aw1 << endl;
+	    cout << airWavelengths(0) - aw0 << " " << airWavelengths(1) - aw1 << endl;
+	    throw(AipsError(String("frequencyToAirWavelength gave wrong answer")));
+         }
+
+         if (!lc.airWavelengthToFrequency (frequencies2, airWavelengths)) {
+            throw(AipsError(String("airWavelengthToFrequency conversion failed because ") + lc.errorMessage()));
+         }
+         if (!near(frequencies2(0), frequencies(0),5E-9) || !near(frequencies2(1), frequencies(1),5E-9)) {
+	    cout << frequencies2(0) << " " << frequencies(0) << " " << frequencies2(1) << " " << frequencies(1) << endl;
+	    cout << frequencies2(0) - frequencies(0) << " " << frequencies2(1) - frequencies(1) << endl;
+            throw(AipsError(String("airWavelengthToFrequency gave wrong answer")));
+         }
+//
+         lc.setWavelengthUnit(String("m"));
+         if (!lc.frequencyToAirWavelength(airWavelengths, frequencies)) {
+            throw(AipsError(String("frequencyToAirWavelength b conversion failed because ") + lc.errorMessage()));
+         }
+         if (!near(airWavelengths(0), aw0/1000.) || !near(airWavelengths(1), aw1/1000.)) {
+            throw(AipsError(String("frequencyToAirWavelength b gave wrong answer")));
+         }
+         if (!lc.airWavelengthToFrequency (frequencies2, airWavelengths)) {
+            throw(AipsError(String("airWavelengthToFrequency b conversion failed because ") + lc.errorMessage()));
+         }
+         if (!near(frequencies2(0), frequencies(0), 5E-9) || !near(frequencies2(1), frequencies(1), 5E-9)) {
+            throw(AipsError(String("airWavelengthToFrequency b gave wrong answer")));
+         }
+
      }
 
 // Test reference conversions
