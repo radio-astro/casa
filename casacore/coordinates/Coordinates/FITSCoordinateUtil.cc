@@ -1032,7 +1032,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		Bool inAir = False;
 		if(cType.contains("AWAV")){
-		    os << LogIO::NORMAL << "Translating Air Wavelength into wavelength ..." << LogIO::POST;
+		  // os << LogIO::NORMAL << "Translating Air Wavelength into wavelength ..." << LogIO::POST;
 		    inAir = True;
 		}
 

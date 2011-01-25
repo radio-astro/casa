@@ -327,6 +327,7 @@ public:
     //
     Bool setWavelengthUnit (const String& waveUnit=String("mm"));
     String wavelengthUnit () const {return waveUnit_p;};
+
     // </group>
     // Functions to convert to velocity (uses the current active
     // rest frequency) or wavelength.  There is no reference frame
@@ -351,6 +352,12 @@ public:
     Bool frequencyToVelocity (Vector<Double>& velocity, const Vector<Double>& frequency) const;
     //
     Bool frequencyToWavelength (Vector<Double>& wavelength, const Vector<Double>& frequency) const;
+    Bool frequencyToAirWavelength (Vector<Double>& wavelength, const Vector<Double>& frequency) const;
+    // The refractive index of air (argument can be wavelength or airwavelength)
+    // according to Greisen et al., 2006, A&A, 464, 746.
+    // If airwavelength is used there is an error of the order of 1E-9.
+    // Argument must be in micrometers!  
+    static Double refractiveIndex(const Double& lambda_um);
     // </group>
 
     // Functions to convert from velocity (uses the current active

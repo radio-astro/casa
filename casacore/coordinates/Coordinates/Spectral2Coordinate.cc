@@ -175,6 +175,36 @@ Bool SpectralCoordinate::frequencyToWavelength (Vector<Double>& wavelength, cons
    return True;
 }
 
+Double SpectralCoordinate::refractiveIndex(const Double& lambda_um){
+     Double lambda2 = lambda_um * lambda_um;
+     // based on Greisen et al., 2006, A&A, 464, 746 
+     Double nOfLambda = 1.;
+     if(lambda2 > 0.){
+       nOfLambda = 1. + 1E-6 * (287.6155 + 1.62887/lambda2 
+				  + 0.01360/lambda2/lambda2);	
+     }
+     return nOfLambda;
+}
+  
+Bool SpectralCoordinate::frequencyToAirWavelength (Vector<Double>& wavelength, const Vector<Double>& frequency) const
+{
+   wavelength.resize(frequency.nelements());
+
+   // airwave = C::c/freq * 1/to_hz_p * 1/to_m_p/refractive_index
+   Double factor = C::c/to_hz_p/to_m_p;
+   for(uInt i=0; i<frequency.nelements(); i++){
+     if(frequency(i)>0.){
+       Double vacWave = factor/frequency(i);
+       wavelength(i) = vacWave/refractiveIndex(vacWave* 1E6 * to_m_p);
+     }
+     else{
+       wavelength(i) = HUGE_VAL;
+     }
+   }
+   return True;
+}
+
+
 Bool SpectralCoordinate::airWavelengthToFrequency (Vector<Double>& frequency, const Vector<Double>& airWavelength) const
 {
    frequency.resize(airWavelength.nelements());
@@ -183,17 +213,10 @@ Bool SpectralCoordinate::airWavelengthToFrequency (Vector<Double>& frequency, co
    Double factor = C::c/to_hz_p/to_m_p;
 
    for(uInt i=0; i<airWavelength.nelements(); i++){
-     Double lambda_a = airWavelength(i) * 1E6 * to_m_p; // in micrometers
-     Double lambda_a2 = lambda_a * lambda_a;
-     // based on Greisen et al., 2006, A&A, 464, 746 
-     Double nOfLambda_a = 1.;
-     if(lambda_a > 0.){
-       nOfLambda_a = 1. + 1E-6 * (287.6155 + 1.62887/lambda_a2 
-				  + 0.01360/lambda_a2/lambda_a2);	
-     }
-
+  
      if(airWavelength(i)>0.){
-       frequency(i) = factor/airWavelength(i)/nOfLambda_a;
+      Double lambda_um = airWavelength(i) * 1E6 * to_m_p; // in micrometers
+      frequency(i) = factor/airWavelength(i)/refractiveIndex(lambda_um);
      }
      else{
        frequency(i) = HUGE_VAL;
@@ -207,6 +230,7 @@ Bool SpectralCoordinate::wavelengthToFrequency (Vector<Double>& frequency, const
    // since the functional form of the conversion is identical, we can reuse the inverse function
   return frequencyToWavelength(frequency,wavelength);
 }
+
 
 Bool SpectralCoordinate::velocityToPixel (Double& pixel, Double velocity) const
 {
