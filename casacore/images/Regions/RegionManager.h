@@ -27,6 +27,8 @@
 #ifndef IMAGES_REGIONMANAGER_H
 #define IMAGES_REGIONMANAGER_H
 
+#include <casa/Quanta/Quantum.h>
+#include <coordinates/Coordinates/CoordinateSystem.h>
 #include <lattices/Lattices/RegionType.h>
 #include <tables/Tables/Table.h>
 
@@ -46,21 +48,26 @@ namespace casa {
   class String;
   class Record;
   template<class T> class Vector;
-  class CoordinateSystem;
   class WCRegion;
   class WCBox;
   template<class T> class PtrBlock;
   class ImageRegion;
-  template<class T> class Quantum;
 
   class RegionManager
     {
       
       
     public:
+	  const static String ALL;
+
+		enum StokesControl {
+			USE_FIRST_STOKES,
+			USE_ALL_STOKES
+		};
+
       //blank constructor
       RegionManager();
-      RegionManager(CoordinateSystem& csys);
+      RegionManager(const CoordinateSystem& csys);
       virtual ~RegionManager();
       String absreltype(const Int absrelval=0);
 
@@ -176,9 +183,20 @@ namespace casa {
       //Remove a region from table...refuse is regionname is ""
       Bool removeRegionInTable(const String& tabName, const String& regName);
 
+      ImageRegion fromBCS(
+    		  String& diagnostics, uInt& nSelectedChannels, String& stokes,
+      		  const String& chans, const StokesControl stokesControl,
+      		  const String& box, const IPosition& imShape
+      ) const;
+
+      ImageRegion fromBCS(
+      		  String& diagnostics, uInt& nSelectedChannels, String& stokes,
+      		  Vector<uInt>& chanEndPts, Vector<uInt>& polEndPts,
+      		  const String& chans, const StokesControl stokesControl,
+      		  const Vector<Double>& boxCorners, const IPosition& imShape
+      ) const;
 
     private:
-      
 
       // Function to return the internal Table object to the RegionHandler.
       static Table& getTable (void* ptr, Bool writable);
@@ -188,7 +206,39 @@ namespace casa {
       LogIO *itsLog;
       CoordinateSystem* itsCSys;
       Table tab_p;
+
+
+      Vector<uInt> _consolidateAndOrderRanges(
+      	const Vector<uInt>& ranges
+      ) const;
+
+      String _pairsToString(const Vector<uInt>& pairs) const;
+
+	  void _fillVector(
+			  Vector<Double>& myVector, const uInt nRegions
+	  ) const;
+
+      Vector<uInt> _setSpectralRanges(
+    		  String specification, uInt& nSelectedChannels, const uInt nChannels
+      ) const;
+
+      Vector<uInt> _setPolarizationRanges(
+        	String& specification, const String& firstStokes, const uInt nStokes,
+        	const StokesControl stokesControl
+      ) const;
+
+      Vector<Double> _setBoxCorners(const String& box) const;
+
+      ImageRegion _fromBCS(
+    		  String& diagnostics,
+    		  const Vector<Double>& boxCorners, const Vector<uInt>& chanEndPts,
+    		  const Vector<uInt>& polEndPts, const IPosition imShape
+      ) const;
+
+
     };
+
+
 } // casa namespace
 #endif
 
