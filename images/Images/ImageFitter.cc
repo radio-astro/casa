@@ -302,7 +302,7 @@ namespace casa {
         	_image, _regionRecord, diagnostics, &outputs,
         	_stokesString, imagename, regionPtr,
         	regionName, box, String::toString(_chan),
-        	ImageInputProcessor::USE_FIRST_STOKES, False,
+        	RegionManager::USE_FIRST_STOKES, False,
         	&reqCoordTypes
         );
         _finishConstruction(estimatesFilename);
@@ -325,7 +325,7 @@ namespace casa {
         	_regionRecord, diagnostics, &outputs,
         	_stokesString, image, regionPtr,
         	regionName, box, String::toString(_chan),
-        	ImageInputProcessor::USE_FIRST_STOKES, False,
+        	RegionManager::USE_FIRST_STOKES, False,
         	&reqCoordTypes
         );
         _finishConstruction(estimatesFilename);

@@ -28,6 +28,7 @@
 
 #include <images/Images/ImageInterface.h>
 #include <images/Images/ImageMetaData.h>
+#include <images/Regions/RegionManager.h>
 
 #include <casa/namespace.h>
 
@@ -54,12 +55,14 @@ class ImageInputProcessor {
 
 public:
 	// instruction if input stokes is blank
+	/*
 	enum StokesControl {
 		USE_FIRST_STOKES,
 		USE_ALL_STOKES
 	};
+	*/
 
-	const static String ALL;
+	// const static String ALL;
 
 	// struct for checking output file writability
 	struct OutputStruct {
@@ -98,7 +101,7 @@ public:
     	const String& imagename, const Record* regionPtr,
     	const String& regionName, const String& box,
     	const String& chans,
-    	const StokesControl& stokesControl, const casa::Bool& allowMultipleBoxes,
+    	const RegionManager::StokesControl& stokesControl, const Bool& allowMultipleBoxes,
     	const Vector<Coordinate::Type> *requiredCoordinateTypes
     );
 
@@ -122,12 +125,12 @@ public:
     	const Record* regionPtr,
     	const String& regionName, const String& box,
     	const String& chans,
-    	const StokesControl& stokesControl, const Bool& allowMultipleBoxes,
+    	const RegionManager::StokesControl& stokesControl,
+    	const Bool& allowMultipleBoxes,
     	const Vector<Coordinate::Type> *requiredCoordinateTypes
     );
 
     static void checkOutputs(Vector<OutputStruct> *output, LogIO& log);
-
 
     // Get the number of channels that have been selected. The process() method must
     // be called prior to calling this method or an exception is thrown.
@@ -144,11 +147,12 @@ private:
     	String& stokes, const ImageInterface<Float>* image,
     	const Record*& regionPtr,
     	const String& regionName, const String& box,
-    	const String& chans, const StokesControl& stokesControl,
+    	const String& chans, const RegionManager::StokesControl& stokesControl,
         const Bool& allowMultipleBoxes,
     	const Vector<Coordinate::Type>* requiredCoordinateTypes
     );
 
+    // set region given a pointer to a region record.
     void _setRegion(
     	Record& regionRecord, String& diagnostics,
     	const Record* regionPtr
@@ -158,38 +162,9 @@ private:
     	const ImageInterface<Float> *image, const String& regionName
     ) const;
 
-    void _setRegion(
-    	Record& regionRecord, String& diagnostics,
-    	const Vector<Double>& boxCorners, const Vector<uInt>& chanEndPts,
-    	const Vector<uInt>& polEndPts, const ImageMetaData& md,
-    	const ImageInterface<Float> *iamge
-    ) const;
-
-    Vector<uInt> _setSpectralRanges(
-    	String specification, const ImageMetaData& metaData
-    );
-
-    Vector<Double> _setBoxCorners(const String& box) const;
-
-    Vector<uInt> _consolidateAndOrderRanges(const Vector<uInt>& ranges) const;
-
     String _stokesFromRecord(const Record& region, const ImageMetaData& metaData) const;
 
-    Vector<uInt> _setPolarizationRanges(
-    	String& specification, const ImageMetaData& metaData,
-    	const String& imageName, const StokesControl& stokesControl
-    ) const;
-
     String _pairsToString(const Vector<uInt>& pairs) const;
-
-    String _cornersToString(const Vector<Double>& corners) const;
-
-    Bool _isFractionalRegion(const Record& region) const;
-
-    void _fillVector(
-        Vector<Double> myVector, const uInt nRegions
-    ) const;
-
 
 };
 

@@ -35,10 +35,7 @@
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/MIRIADImage.h>
 #include <images/Regions/WCBox.h>
-#include <images/Regions/RegionManager.h>
 #include <measures/Measures/Stokes.h>
-
-const String ImageInputProcessor::ALL = "ALL";
 
 ImageInputProcessor::ImageInputProcessor()
 : _log(new LogIO()), _processHasRun(False),
@@ -55,7 +52,7 @@ void ImageInputProcessor::process(
 	String& stokes, const String& imagename, const Record* regionPtr,
 	const String& regionName, const String& box,
 	const String& chans,
-	const StokesControl& stokesControl, const Bool& allowMultipleBoxes,
+	const RegionManager::StokesControl& stokesControl, const Bool& allowMultipleBoxes,
 	const Vector<Coordinate::Type> *requiredCoordinateTypes
 ) {
 	LogOrigin origin("ImageInputProcessor", __FUNCTION__);
@@ -85,7 +82,7 @@ void ImageInputProcessor::process(
 	const ImageInterface<Float>*& image,
 	const Record* regionPtr, const String& regionName,
 	const String& box, const String& chans,
-	const StokesControl& stokesControl, const Bool& allowMultipleBoxes,
+	const RegionManager::StokesControl& stokesControl, const Bool& allowMultipleBoxes,
 	const Vector<Coordinate::Type> *requiredCoordinateTypes
 ) {
 	_process(
@@ -101,7 +98,7 @@ void ImageInputProcessor::_process(
     String& stokes, const ImageInterface<Float>* image,
     const Record*& regionPtr,
     const String& regionName, const String& box,
-    const String& chans, const StokesControl& stokesControl,
+    const String& chans, const RegionManager::StokesControl& stokesControl,
     const Bool& allowMultipleBoxes,
     const Vector<Coordinate::Type>* requiredCoordinateTypes
 ) {
@@ -131,30 +128,22 @@ void ImageInputProcessor::_process(
 	// 4. else no box or region specified, process region as entire
 	//    positional plane anding with chans and stokes specs
 
+	RegionManager regionMgr(image->coordinates());
+
     if (! box.empty()) {
     	if (box.freq(",") % 4 != 3) {
     		*_log << "box not specified correctly" << LogIO::EXCEPTION;
     	}
-    	Vector<uInt> chanEndPts = _setSpectralRanges(chans, metaData);
-    	Vector<uInt> polEndPts = _setPolarizationRanges(
-    		stokes, metaData, image->name(), stokesControl
-    	);
-    	Vector<Double> boxCorners = _setBoxCorners(box);
-        _setRegion(
-    		regionRecord, diagnostics, boxCorners,
-    		chanEndPts, polEndPts, metaData, image
-    	);
+    	regionRecord = regionMgr.fromBCS(
+    		diagnostics, _nSelectedChannels, stokes,
+    		chans, stokesControl, box, image->shape()
+    	).toRecord("");
     	*_log << origin;
     	*_log << LogIO::NORMAL << "Using specified box(es) " << box << LogIO::POST;
     }
     else if (regionPtr != 0) {
-
     	_setRegion(regionRecord, diagnostics, regionPtr);
     	*_log << origin;
-        if (_isFractionalRegion(regionRecord)) {
-            *_log << "Fractional regions are not supported by this method/task" << LogIO::EXCEPTION;
-        }
-
     	*_log << LogIO::NORMAL << "Set region from supplied region record"
     		<< LogIO::POST;
         stokes = _stokesFromRecord(regionRecord, metaData);
@@ -162,14 +151,9 @@ void ImageInputProcessor::_process(
     else if (! regionName.empty()) {
     	_setRegion(regionRecord, diagnostics, image, regionName);
     	*_log << origin;
-        if (_isFractionalRegion(regionRecord)) {
-            *_log << "Fractional regions are not supported by this method/task" << LogIO::EXCEPTION;
-        }
- 
        	*_log << LogIO::NORMAL << "Set region from supplied region file "
         	<< regionName << LogIO::POST;
     	stokes = _stokesFromRecord(regionRecord, metaData);
-
     }
     else {
     	// nothing specified, use entire positional plane with spectral and polarization specs
@@ -182,14 +166,12 @@ void ImageInputProcessor::_process(
     		boxCorners[2] = dirShape[0] - 1;
     		boxCorners[3] = dirShape[1] - 1;
     	}
-    	Vector<uInt> chanEndPts = _setSpectralRanges(chans, metaData);
-    	Vector<uInt> polEndPts = _setPolarizationRanges(
-    		stokes, metaData, image->name(), stokesControl
-    	);
-    	_setRegion(
-    		regionRecord, diagnostics, boxCorners,
-    		chanEndPts, polEndPts, metaData, image
-    	);
+    	Vector<uInt> chanEndPts, polEndPts;
+        regionRecord = regionMgr.fromBCS(
+        	diagnostics, _nSelectedChannels, stokes,
+        	chanEndPts, polEndPts, chans,
+        	stokesControl, boxCorners, image->shape()
+        ).toRecord("");
         *_log << origin;
     	*_log << LogIO::NORMAL << "No region specified. Using full positional plane."
     		<< LogIO::POST;
@@ -216,7 +198,6 @@ void ImageInputProcessor::_process(
     _processHasRun = True;
 }
 
-
 uInt ImageInputProcessor::nSelectedChannels() const {
 	if (! _processHasRun) {
 	    *_log << LogOrigin("ImageInputProcessor", __FUNCTION__);
@@ -224,269 +205,6 @@ uInt ImageInputProcessor::nSelectedChannels() const {
 			<< "before ImageInputProcessor::" << __FUNCTION__ << "()" << LogIO::EXCEPTION;
 	}
 	return _nSelectedChannels;
-}
-
-
-Vector<uInt> ImageInputProcessor::_setSpectralRanges(
-	String specification, const ImageMetaData& metaData
-) {
-	Vector<uInt> ranges(0);
-    if (! metaData.hasSpectralAxis()) {
-    	return ranges;
-    }
-
-	specification.trim();
-	specification.upcase();
-	uInt nchan = metaData.nChannels();
-	if (specification.empty() || specification == ALL) {
-		ranges.resize(2);
-		ranges[0] = 0;
-		ranges[1] = nchan - 1;
-		return ranges;
-	}
-
-    // First split on commas
-    Vector<String> parts = stringToVector(specification, Regex("[,;]"));
-    ranges.resize(2*parts.size());
-	Regex regexuInt("^[0-9]+$");
-	Regex regexRange("^[0-9]+[ \n\t\r\v\f]*~[ \n\t\r\v\f]*[0-9]+$");
-	Regex regexLT("^<.*$");
-	Regex regexLTEq("^<=.*$");
-	Regex regexGT("^>.*$");
-	Regex regexGTEq("^>=.*$");
-
-    for (uInt i=0; i<parts.size(); i++) {
-    	parts[i].trim();
-    	uInt min = 0;
-    	uInt max = 0;
-    	if (parts[i].matches(regexuInt)) {
-    		// just one channel
-    		min = String::toInt(parts[i]);
-			max = min;
-    	}
-    	else if(parts[i].matches(regexRange)) {
-    		// a range of channels
-    		Vector<String> values = stringToVector(parts[i], '~');
-    		if (values.size() != 2) {
-    			*_log << "Incorrect specification for channel range "
-    				<< parts[i] << LogIO::EXCEPTION;
-    		}
-    		values[0].trim();
-    		values[1].trim();
-    		for(uInt j=0; j < 2; j++) {
-    			if (! values[j].matches(regexuInt)) {
-    				*_log << "For channel specification " << values[j]
-    				    << " is not a non-negative integer in "
-    					<< parts[i] << LogIO::EXCEPTION;
-    			}
-    		}
-    		min = String::toInt(values[0]);
-    		max = String::toInt(values[1]);
-    	}
-    	else if (parts[i].matches(regexLT)) {
-    		String maxs = parts[i].matches(regexLTEq) ? parts[i].substr(2) : parts[i].substr(1);
-    		maxs.trim();
-    		if (! maxs.matches(regexuInt)) {
-    			*_log << "In channel specification, " << maxs
-    				<< " is not a non-negative integer in " << parts[i]
-    				<< LogIO::EXCEPTION;
-    		}
-    		min = 0;
-    		max = String::toInt(maxs);
-    		if (! parts[i].matches(regexLTEq)) {
-    			if (max == 0) {
-    				*_log << "In channel specification, max channel cannot "
-    					<< "be less than zero in " + parts[i];
-    			}
-    			else {
-    				max--;
-    			}
-    		}
-    	}
-    	else if (parts[i].matches(regexGT)) {
-       		String mins = parts[i].matches(regexGTEq)
-       			? parts[i].substr(2)
-       			: parts[i].substr(1);
-       		mins.trim();
-        	if (! mins.matches(regexuInt)) {
-        		*_log << " In channel specification, " << mins
-        			<< " is not an integer in " << parts[i]
-        		    << LogIO::EXCEPTION;
-        	}
-        	max = nchan - 1;
-        	min = String::toInt(mins);
-        	if(! parts[i].matches(regexGTEq)) {
-        		min++;
-        	}
-        	if (min > nchan - 1) {
-        		*_log << "Min channel cannot be greater than the (zero-based) number of channels ("
-        			<< nchan - 1 << ") in the image" << LogIO::EXCEPTION;
-        	}
-    	}
-    	else {
-    		*_log << "Invalid channel specification in " << parts[i]
-    		    << " of spec " << specification << LogIO::EXCEPTION;
-    	}
-    	if (min > max) {
-    		*_log << "Min channel " << min << " cannot be greater than max channel "
-    			<< max << " in " << parts[i] << LogIO::EXCEPTION;
-    	}
-    	else if (max >= nchan) {
-    		*_log << "Zero-based max channel " << max
-    			<< " must be less than the total number of channels ("
-    			<< nchan << ") in the channel specification " << parts[i] << LogIO::EXCEPTION;
-    	}
-    	ranges[2*i] = min;
-    	ranges[2*i + 1] = max;
-
-    }
-    Vector<uInt> consolidatedRanges = _consolidateAndOrderRanges(ranges);
-    _nSelectedChannels = 0;
-    for (uInt i=0; i<consolidatedRanges.size()/2; i++) {
-    	_nSelectedChannels += consolidatedRanges[2*i + 1] - consolidatedRanges[2*i] + 1;
-    }
-    return consolidatedRanges;
-}
-
-Vector<uInt> ImageInputProcessor::_consolidateAndOrderRanges(
-	const Vector<uInt>& ranges
-) const {
-	uInt arrSize = ranges.size()/2;
-	uInt arrMin[arrSize];
-	uInt arrMax[arrSize];
-	for (uInt i=0; i<arrSize; i++) {
-		arrMin[i] = ranges[2*i];
-		arrMax[i] = ranges[2*i + 1];
-	}
-	Sort sort;
-	sort.sortKey (arrMin, TpUInt);
-	sort.sortKey (arrMax, TpUInt, 0, Sort::Descending);
-	Vector<uInt> inxvec;
-	Vector<uInt> consol(0);
-	sort.sort(inxvec, arrSize);
-	for (uInt i=0; i<arrSize; i++) {
-		uInt idx = inxvec(i);
-		uInt size = consol.size();
-		uInt min = arrMin[idx];
-		uInt max = arrMax[idx];
-		uInt lastMax = (i == 0) ? 0 : consol[size-1];
-		if (i==0) {
-			consol.resize(2, True);
-			consol[0] = min;
-			consol[1] = max;
-		}
-		else if (
-			// overlaps previous range, so extend
-			(min < lastMax && max > lastMax)
-			// or contiguous with previous range, so extend
-			|| min == lastMax + 1
-		) {
-			consol[size-1] = max;
-		}
-
-		else if (min > lastMax + 1) {
-			// non overlap of and not contiguous with previous range,
-			// so create new end point pair
-			uInt newSize = consol.size()+2;
-			consol.resize(newSize, True);
-			consol[newSize-2] = min;
-			consol[newSize-1] = max;
-		}
-	}
-	return consol;
-}
-
-Vector<uInt> ImageInputProcessor::_setPolarizationRanges(
-	String& specification, const ImageMetaData& metaData,
-	const String& imageName, const StokesControl& stokesControl
-) const {
-    Vector<uInt> ranges(0);
-    if (! metaData.hasPolarizationAxis()) {
-    	return ranges;
-    }
-	specification.trim();
-	specification.upcase();
-	if (specification == ALL) {
-		ranges.resize(2);
-		ranges[0] = 0;
-		ranges[1] = metaData.nStokes() - 1;
-		return ranges;
-	}
-	if (specification.empty()) {
-		ranges.resize(2);
-		ranges[0] = 0;
-		switch (stokesControl) {
-			case USE_FIRST_STOKES:
-				ranges[1] = 0;
-				specification = metaData.stokesAtPixel(0);
-				break;
-			case USE_ALL_STOKES:
-				ranges[1] = metaData.nStokes() - 1;
-				specification = "ALL";
-				break;
-			default:
-				// bug if we get here
-				*_log << "Logic error, unhandled stokes control" << LogIO::EXCEPTION;
-		};
-
-		return ranges;
-	}
-    // First split on commas and semi-colons.
-	// in the past for polarization specification.
-    Vector<String> parts = stringToVector(specification, Regex("[,;]"));
-    Vector<String> polNames = Stokes::allNames(False);
-    uInt nNames = polNames.size();
-    Vector<uInt> nameLengths(nNames);
-    for (uInt i=0; i<nNames; i++) {
-    	nameLengths[i] = polNames[i].length();
-    }
-    uInt *lengthData = nameLengths.data();
-    Vector<uInt> idx(nNames);
-    Sort sorter;
-    sorter.sortKey(lengthData, TpUInt, 0, Sort::Descending);
-    sorter.sort(idx, nNames);
-
-    Vector<String> sortedNames(nNames);
-    for (uInt i=0; i<nNames; i++) {
-    	sortedNames[i] = polNames[idx[i]];
-    	sortedNames[i].upcase();
-    }
-
-    for (uInt i=0; i<parts.size(); i++) {
-    	String part = parts[i];
-    	Vector<String>::iterator iter = sortedNames.begin();
-    	while (iter != sortedNames.end() && ! part.empty()) {
-    		if (part.startsWith(*iter)) {
-    			Int stokesPix = metaData.stokesPixelNumber(*iter);
-    			if (stokesPix >= 0) {
-    				uInt newSize = ranges.size() + 2;
-    				ranges.resize(newSize, True);
-    				ranges[newSize-2] = stokesPix;
-    				ranges[newSize-1] = stokesPix;
-    				// consume the string
-    				part = part.substr(iter->length());
-    				if (! part.empty()) {
-    					// reset the iterator to start over at the beginning of the list for
-    					// the next specified polarization
-    					iter = sortedNames.begin();
-    				}
-    			}
-    			else {
-    				*_log << "Polarization " << *iter << " specified in "
-						<< parts[i] << " does not exist in " << imageName
-						<< LogIO::EXCEPTION;
-    			}
-    		}
-    		else {
-    			iter++;
-    		}
-    	}
-    	if (! part.empty()) {
-    		*_log << "(Sub)String " << part << " in stokes specification part " << parts[i]
-    		     << " does not match a known polarization." << LogIO::EXCEPTION;
-    	}
-    }
-    return _consolidateAndOrderRanges(ranges);
 }
 
 String ImageInputProcessor::_stokesFromRecord(const Record& region, const ImageMetaData& metaData) const {
@@ -509,7 +227,6 @@ String ImageInputProcessor::_stokesFromRecord(const Record& region, const ImageM
  	}
  	return stokes;
 }
-
 
 void ImageInputProcessor::_setRegion(
 	Record& regionRecord, String& diagnostics,
@@ -546,176 +263,6 @@ void ImageInputProcessor::_setRegion(
     diagnostics = "Used image region " + regionName;
 }
 
-Bool ImageInputProcessor::_isFractionalRegion(const Record& region) const {
-    if (region.isDefined("fracblc")) {
-        Vector<Bool> myArray;
-        region.toArray("fracblc", myArray);
-        for (uInt i=0; i<myArray.size(); i++) {
-            if (myArray[i]) {
-                return True;
-            }
-        }
-    }
-
-    if (region.isDefined("fractrc")) {
-        Vector<Bool> myArray;
-        region.toArray("fractrc", myArray);
-        for (uInt i=0; i<myArray.size(); i++) {
-            if (myArray[i]) {
-                return True;
-            }
-        }
-    }
-    return False;
-}
-
-Vector<Double> ImageInputProcessor::_setBoxCorners(const String& box) const {
-	Vector<String> boxParts = stringToVector(box);
-	AlwaysAssert(boxParts.size() % 4 == 0, AipsError);
-	Vector<Double> corners(boxParts.size());
-	for(uInt i=0; i<boxParts.size()/4; i++) {
-	    uInt index = 4*i;
-	    for (uInt j=0; j<4; j++) {
-	    	boxParts[index + j].trim();
-	    	if (! boxParts[index + j].matches(RXdouble)) {
-	    		*_log << "Box spec contains non numeric characters and so is invalid"
-	    			<< LogIO::EXCEPTION;
-	    	}
-	    	corners[index + j] = String::toDouble(boxParts[index + j]);
-	    }
-	}
-	return corners;
-}
-
-void ImageInputProcessor::_setRegion(
-	Record& regionRecord, String& diagnostics,
-	const Vector<Double>& boxCorners, const Vector<uInt>& chanEndPts,
-	const Vector<uInt>& polEndPts, const ImageMetaData& md,
-	const ImageInterface<Float> *image
-) const {
-	String method(__FUNCTION__);
-	method += "_1";
-	LogOrigin origin("ImageInputProcessor", method);
-	*_log << origin;
-    IPosition imShape = image->shape();
-    Vector<Double> blc(imShape.nelements(), 0);
-    Vector<Double> trc(imShape.nelements(), 0);
-    CoordinateSystem csys = image->coordinates();
-    Vector<Int> directionAxisNumbers = md.directionAxesNumbers();
-    Int spectralAxisNumber = md.spectralAxisNumber();
-    Int polarizationAxisNumber = md.polarizationAxisNumber();
-
-    Vector<Double> xCorners(boxCorners.size()/2);
-    Vector<Double> yCorners(xCorners.size());
-    for (uInt i=0; i<xCorners.size(); i++) {
-    	Double x = boxCorners[2*i];
-    	Double y = boxCorners[2*i + 1];
-
-    	if (x < 0 || y < 0 ) {
-    		*_log << "blc in box spec is less than 0" << LogIO::EXCEPTION;
-    	}
-    	if (
-    		x >= imShape[directionAxisNumbers[0]]
-    	    || y >= imShape[directionAxisNumbers[1]]
-    	) {
-    		*_log << "trc in box spec is greater than or equal to number "
-    			<< "of direction pixels in the image" << LogIO::EXCEPTION;
-    	}
-    	xCorners[i] = x;
-    	yCorners[i] = y;
-    }
-
-    Vector<Double> polEndPtsDouble(polEndPts.size());
-    for (uInt i=0; i<polEndPts.size(); i++) {
-    	polEndPtsDouble[i] = (Double)polEndPts[i];
-    }
-
-    Vector<Double> chanEndPtsDouble(chanEndPts.size());
-    for (uInt i=0; i<chanEndPts.size(); i++) {
-    	chanEndPtsDouble[i] = (Double)chanEndPts[i];
-    }
-    uInt nRegions = 1;
-    if (md.hasDirectionCoordinate()) {
-    	nRegions *= boxCorners.size()/4;
-    }
-    if (md.hasPolarizationAxis()) {
-    	nRegions *= polEndPts.size()/2;
-    }
-    if (md.hasSpectralAxis()) {
-    	nRegions *= chanEndPts.size()/2;
-    }
-    _fillVector(xCorners, nRegions);
-    _fillVector(yCorners, nRegions);
-    _fillVector(polEndPtsDouble, nRegions);
-    _fillVector(chanEndPtsDouble, nRegions);
-    HashMap<uInt, Vector<Double> > axisCornerMap;
-    for (uInt i=0; i<nRegions; i++) {
-        for (uInt axisNumber=0; axisNumber<image->ndim(); axisNumber++) {
-    	    if (directionAxisNumbers.size() > 1 && (Int)axisNumber == directionAxisNumbers[0]) {
-			    axisCornerMap(axisNumber) = xCorners;
-    	    }
-    	    else if (directionAxisNumbers.size() > 1 && (Int)axisNumber == directionAxisNumbers[1]) {
-    		    axisCornerMap(axisNumber) = yCorners;
-    	    }
-    	    else if ((Int)axisNumber == spectralAxisNumber) {
-    		    axisCornerMap(axisNumber) = chanEndPtsDouble;
-    	    }
-    	    else if ((Int)axisNumber == polarizationAxisNumber) {
-    		    axisCornerMap(axisNumber) = polEndPtsDouble;
-    	    }
-    	    else {
-    		    *_log << "Unhandled image axis number " << axisNumber
-    			    << LogIO::EXCEPTION;
-    	    }
-        }
-    }
-  
-    RegionManager rm;
-    ImageRegion imRegion;
-    for (uInt i=0; i<nRegions; i++) {
-    	for (uInt axisNumber=0; axisNumber<image->ndim(); axisNumber++) {
-    		blc(axisNumber) = axisCornerMap(axisNumber)[2*i];
-    		trc(axisNumber) = axisCornerMap(axisNumber)[2*i + 1];
-    	}
-        LCBox lcBox(blc, trc, imShape);
-		WCBox wcBox(lcBox, csys);
-		ImageRegion thisRegion(wcBox);
-		imRegion = (i == 0)
-			? thisRegion
-			: imRegion = *rm.doUnion(imRegion, thisRegion);
-    }
-    ostringstream os;
-
-    os << "Used image region from " << endl;
-    if (md.hasDirectionCoordinate()) {
-    	os << "    position box corners: ";
-    	for (uInt i=0; i<boxCorners.size()/4; i++) {
-    		os << boxCorners[4*i] << ", " << boxCorners[4*i + 1]
-    		   << ", " << boxCorners[4*i + 2] << ", " << boxCorners[4*i + 3];
-    		if (i < boxCorners.size()/4 - 1) {
-    			os << "; ";
-    		}
-    	}
-
-    }
-    if (md.hasSpectralAxis()) {
-    	os << "    spectral channel ranges: " << _pairsToString(chanEndPts);
-    }
-    if (md.hasPolarizationAxis()) {
-    	os << "    polarization pixel ranges: " << _pairsToString(polEndPts);
-    }
-    regionRecord = Record(imRegion.toRecord(""));
-
-    //_printRecordFields(regionRecord);
-
-    Int fieldNumber = regionRecord.fieldNumber("nr");
-    if (fieldNumber >= 0) {
-    	Int nr;
-    	regionRecord.get(regionRecord.fieldNumber("nr"), nr);
-    }
-    diagnostics = os.str();
-}
-
 String ImageInputProcessor::_pairsToString(const Vector<uInt>& pairs) const {
 	ostringstream os;
 	uInt nPairs = pairs.size()/2;
@@ -723,19 +270,6 @@ String ImageInputProcessor::_pairsToString(const Vector<uInt>& pairs) const {
 		os << pairs[2*i] << " - " << pairs[2*i + 1];
 		if (i < nPairs - 1) {
 			os << "; ";
-		}
-	}
-	return os.str();
-}
-
-String ImageInputProcessor::_cornersToString(const Vector<Double>& corners) const {
-	ostringstream os;
-	uInt nCorners = corners.size()/4;
-	for (uInt i=0; i<nCorners; i++) {
-		os << "blc: (" << corners[4*i] << ", " << corners[4*i + 1] << "), trc: "
-			<< corners[4*i + 2] << ", " << corners[4*i + 3] << ")";
-		if (i < nCorners - 1) {
-			os << endl;
 		}
 	}
 	return os.str();
@@ -789,17 +323,5 @@ void ImageInputProcessor::checkOutputs(
 			continue;
 		}
 	}
-}
-
-void ImageInputProcessor::_fillVector(
-    Vector<Double> myVector, const uInt nRegions
-) const {
-    if (myVector.size() > 0) {
-        Vector<Double> vCopy = myVector.copy();
-        myVector.resize(nRegions*2, True);
-        for (uInt j=vCopy.size(); j<myVector.size(); j++) {
-            myVector[j] = vCopy[j % vCopy.size()];
-        }
-    }
 }
  

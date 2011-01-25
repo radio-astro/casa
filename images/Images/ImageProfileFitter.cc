@@ -151,7 +151,7 @@ void ImageProfileFitter::_construct(const String& imagename) {
     	_image, _regionRecord, diagnostics,
     	outputPtr, _stokes, imagename, 0,
     	_regionName, _box, _chans,
-    	ImageInputProcessor::USE_FIRST_STOKES,
+    	RegionManager::USE_FIRST_STOKES,
     	False, 0
     );
     _finishConstruction();
@@ -172,7 +172,7 @@ void ImageProfileFitter::_construct(const ImageInterface<Float>* image) {
     	_regionRecord, diagnostics,
     	outputPtr, _stokes, image, 0,
     	_regionName, _box, _chans,
-    	ImageInputProcessor::USE_FIRST_STOKES,
+    	RegionManager::USE_FIRST_STOKES,
     	False, 0
     );
     _finishConstruction();

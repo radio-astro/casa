@@ -1,4 +1,4 @@
-//# tImageFitter.cc:  test the PagedImage class
+//# tImageFitter.cc:  test the PagedImage clas
 //# Copyright (C) 1994,1995,1998,1999,2000,2001,2002
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -49,7 +49,7 @@ void testException(
 	const String& imagename, const Record *regionPtr,
 	const String& regionName, const String& box,
 	const String& chans, String& stokes,
-	const ImageInputProcessor::StokesControl& stokesControl,
+	const RegionManager::StokesControl& stokesControl,
 	const Bool allowMultipleBoxes
 ) {
 	ImageInputProcessor processor;
@@ -82,7 +82,7 @@ void testSuccess(
 	const String& imagename, const Record *regionPtr,
 	const String& regionName, const String& box,
 	const String& chans, String& stokes,
-	const ImageInputProcessor::StokesControl& stokesControl,
+	const RegionManager::StokesControl& stokesControl,
 	const Bool allowMultipleBoxes,
 	const Vector<Double>& expectedBlc,
 	const Vector<Double>& expectedTrc
@@ -108,7 +108,7 @@ void runProcess(
 	const String& imagename, const Record *regionPtr,
 	const String& regionName, const String& box,
 	const String& chans, String& stokes,
-	const ImageInputProcessor::StokesControl& stokesControl,
+	const RegionManager::StokesControl& stokesControl,
 	const Bool allowMultipleBoxes
 ) {
 	ImageInputProcessor processor;
@@ -135,94 +135,94 @@ int main() {
         String none = "";
     	testException("Bad image name throws exception",
     		0, "bogus_image", 0, "", "", "", none,
-    		ImageInputProcessor::USE_ALL_STOKES, True
+    		RegionManager::USE_ALL_STOKES, True
     	);
     	testException("Bad region name throws exception", 0, goodImage, 0, "bogus.rgn",
-    		"", "", none, ImageInputProcessor::USE_ALL_STOKES, True
+    		"", "", none, RegionManager::USE_ALL_STOKES, True
     	);
     	testException("Bad region name in another image throws exception",
     		0, goodImage, 0, "bogus.im:bogus.rgn",
-    		"", "", none, ImageInputProcessor::USE_ALL_STOKES, True
+    		"", "", none, RegionManager::USE_ALL_STOKES, True
     	);
     	testException(
     		"Bad box spec #1 throws exception",
     		0, goodImage, 0, "", "-1,0,10,10",
-    		"", none, ImageInputProcessor::USE_ALL_STOKES, True
+    		"", none, RegionManager::USE_ALL_STOKES, True
     	);
     	testException(
     		"Bad box spec #2 throws exception",
     		0, goodImage, 0, "", "0,-1,10,10",
-    		"", none, ImageInputProcessor::USE_ALL_STOKES, True
+    		"", none, RegionManager::USE_ALL_STOKES, True
     	);
     	testException("Bad box spec #3 throws exception",
     		0, goodImage, 0, "", "0,0,100 ,10",
-    		"", none, ImageInputProcessor::USE_ALL_STOKES, True
+    		"", none, RegionManager::USE_ALL_STOKES, True
     	);
     	testException(
     		"Bad box spec #4 throws exception",
     		0, goodImage, 0, "", "0, 0,10 ,100",
-    		"", none, ImageInputProcessor::USE_ALL_STOKES, True
+    		"", none, RegionManager::USE_ALL_STOKES, True
     	);
     	testException(
     		"Bad box spec #5 throws exception",
     		0, goodImage, 0, "", "5, 0, 0,10 ,10",
-    		"", none, ImageInputProcessor::USE_ALL_STOKES, True
+    		"", none, RegionManager::USE_ALL_STOKES, True
     	);
     	testException(
     		"Bad box spec #6 throws exception",
     		0, goodImage, 0, "", "a, 0,10 ,10",
-    		"", none, ImageInputProcessor::USE_ALL_STOKES, True
+    		"", none, RegionManager::USE_ALL_STOKES, True
     	);
     	testException("Bad box spec #7 throws exception",
     		0, goodImage, 0, "", "1a, 0,10 ,10",
-        	"", none, ImageInputProcessor::USE_ALL_STOKES, True
+        	"", none, RegionManager::USE_ALL_STOKES, True
         );
     	testException(
     		"Valid box spec with invalid channel spec #1 throws exception",
 			0, goodImage, 0, "", "0, 0,10 ,10",
-        	"1", none, ImageInputProcessor::USE_ALL_STOKES, True
+        	"1", none, RegionManager::USE_ALL_STOKES, True
         );
     	testException(
     		"Valid box spec with invalid channel spec #2 throws exception",
         	0, goodImage, 0, "", "0, 0,10 ,10",
-        	"a", none, ImageInputProcessor::USE_ALL_STOKES, True
+        	"a", none, RegionManager::USE_ALL_STOKES, True
         );
     	testException(
     		"Valid box spec with invalid channel spec #3 throws exception",
         	0, goodImage, 0, "", "0, 0,10 ,10",
-        	"a-b", none, ImageInputProcessor::USE_ALL_STOKES, True
+        	"a-b", none, RegionManager::USE_ALL_STOKES, True
         );
     	testException(
     		"Valid box spec with invalid channel spec #4 throws exception",
         	0, goodImage, 0, "", "0, 0,10 ,10",
-        	"0-b", none, ImageInputProcessor::USE_ALL_STOKES, True
+        	"0-b", none, RegionManager::USE_ALL_STOKES, True
         );
     	testException(
     		"Valid box spec with invalid channel spec #5 throws exception",
         	0, goodImage, 0, "", "0, 0,10 ,10",
-        	">0", none, ImageInputProcessor::USE_ALL_STOKES, True
+        	">0", none, RegionManager::USE_ALL_STOKES, True
         );
     	testException(
     		"Valid box spec with invalid channel spec #6 throws exception",
         	0, goodImage, 0, "", "0, 0,10 ,10",
-        	"-1", none, ImageInputProcessor::USE_ALL_STOKES, True
+        	"-1", none, RegionManager::USE_ALL_STOKES, True
         );
     	testException(
     		"Valid box spec with invalid channel spec #7 throws exception",
         	0, goodImage, 0, "", "0, 0,10 ,10",
-        	"<5", none, ImageInputProcessor::USE_ALL_STOKES, True
+        	"<5", none, RegionManager::USE_ALL_STOKES, True
         );
         String stokes = "b";
     	testException(
     		"Valid box spec with invalid stokes spec #1 throws exception",
         	0, goodImage, 0, "", "0, 0,10 ,10",
-        	"", stokes, ImageInputProcessor::USE_ALL_STOKES, True
+        	"", stokes, RegionManager::USE_ALL_STOKES, True
         );
         stokes = "yy";
     	testException(
     		"Valid box spec with invalid stokes spec #2 throws exception",
         	0, goodImage, 0, "", "0, 0,10 ,10",
-        	"", stokes, ImageInputProcessor::USE_ALL_STOKES, True
+        	"", stokes, RegionManager::USE_ALL_STOKES, True
         );
     	try {
     		writeTestString("Calling nSelectedChannels() before process() throws an exception");
@@ -248,7 +248,7 @@ int main() {
         	testException(
         		"Non-createable output file throws exception",
         		&outs, goodImage, 0, "", "0, 0,  10,10",
-        		"", none, ImageInputProcessor::USE_ALL_STOKES, True
+        		"", none, RegionManager::USE_ALL_STOKES, True
         	);
        	}
        	{
@@ -264,7 +264,7 @@ int main() {
         	testException(
         		"Non-overwriteable output file throws exception",
         		&outs, goodImage, 0, "", "0, 0,  10,10",
-        		"", none, ImageInputProcessor::USE_ALL_STOKES, True
+        		"", none, RegionManager::USE_ALL_STOKES, True
         	);
         }
 
@@ -281,26 +281,26 @@ int main() {
         	testException(
         		"Non-replaceable output file throws exception",
         		&outs, goodImage, 0, "", "0, 0,  10,10",
-        		"", none, ImageInputProcessor::USE_ALL_STOKES, True
+        		"", none, RegionManager::USE_ALL_STOKES, True
         	);
         }
        	testException(
        		"Multiple boxes with allowMultipleRegions = False throws exception",
         	0, goodImage, 0, "", "0, 0,10 ,10, 20,20,30,30",
-        	"", none, ImageInputProcessor::USE_ALL_STOKES, False
+        	"", none, RegionManager::USE_ALL_STOKES, False
         );
         stokes = "iu";
        	testException(
        		"Multiple stokes ranges with allowMultipleRegions = False throws exception",
         	0, goodImage, 0, "", "0, 0,10 ,10",
-        	"", stokes, ImageInputProcessor::USE_ALL_STOKES, False
+        	"", stokes, RegionManager::USE_ALL_STOKES, False
         );
         {
             stokes = "iu";
         	writeTestString("Multiple stokes ranges with allowMultipleRegions = True succeeds");
         	processor.process(
         		image, region, diagnostics, 0, stokes, goodImage, 0, "", "0, 0,10 ,10",
-        		none, ImageInputProcessor::USE_ALL_STOKES, True, 0
+        		none, RegionManager::USE_ALL_STOKES, True, 0
         	);
         	delete image;
         	// FIXME just checks that no excpetion is thrown at this point, need to
@@ -319,44 +319,44 @@ int main() {
     	testSuccess(
     		"Valid box specification succeeds",
         	0, goodImage, 0, "", "0, 0,  10,10",
-        	"", none, ImageInputProcessor::USE_ALL_STOKES, True,
+        	"", none, RegionManager::USE_ALL_STOKES, True,
         	expectedBlc, expectedTrc
         );
     	testSuccess(
     		"Valid box specification with valid channel specification #1 succeeds",
         	0, goodImage, 0, "", "0, 0,  10,10",
-        	"0~0", none, ImageInputProcessor::USE_ALL_STOKES, True,
+        	"0~0", none, RegionManager::USE_ALL_STOKES, True,
         	expectedBlc, expectedTrc
         );
     	testSuccess(
     		"Valid box specification with valid channel specification #2 succeeds",
         	0, goodImage, 0, "", "0, 0,  10,10",
-        	"0", none, ImageInputProcessor::USE_ALL_STOKES, True,
+        	"0", none, RegionManager::USE_ALL_STOKES, True,
         	expectedBlc, expectedTrc
         );
     	testSuccess(
     		"Valid box specification with valid channel specification #3 succeeds",
         	0, goodImage, 0, "", "0, 0,  10,10",
-        	"0,0,0", none, ImageInputProcessor::USE_ALL_STOKES, True,
+        	"0,0,0", none, RegionManager::USE_ALL_STOKES, True,
         	expectedBlc, expectedTrc
         );
     	testSuccess(
     		"Valid box specification with valid channel specification #4 succeeds",
         	0, goodImage, 0, "", "0, 0,  10,10",
-        	"0;0;0", none, ImageInputProcessor::USE_ALL_STOKES, True,
+        	"0;0;0", none, RegionManager::USE_ALL_STOKES, True,
         	expectedBlc, expectedTrc
         );
     	testSuccess(
     		"Valid box specification with valid channel specification #5 succeeds",
         	0, goodImage, 0, "", "0, 0,  10,10",
-        	"0,0;0", none, ImageInputProcessor::USE_ALL_STOKES, True,
+        	"0,0;0", none, RegionManager::USE_ALL_STOKES, True,
         	expectedBlc, expectedTrc
         );
         stokes = "QVIU";
         testSuccess(
         	"Valid box specification with valid stokes specification #1 succeeds",
         	 0, goodImage, 0, "", "0, 0,  10,10",
-        	"", stokes, ImageInputProcessor::USE_ALL_STOKES, True,
+        	"", stokes, RegionManager::USE_ALL_STOKES, True,
         	expectedBlc, expectedTrc
         );
         {
@@ -365,7 +365,7 @@ int main() {
             testSuccess(
         		"Valid box specification with valid stokes specification #2 succeeds",
         		0, goodImage, 0, "", "0, 0,  10,10", "",
-        		stokes, ImageInputProcessor::USE_ALL_STOKES, True,
+        		stokes, RegionManager::USE_ALL_STOKES, True,
             	expectedBlc, expectedTrc
         	);
         }
@@ -375,7 +375,7 @@ int main() {
         	testSuccess(
         		"Valid box specification with valid stokes specification #3 succeeds",
         		0, goodImage, 0, "", "0, 0,  10,10",
-        		"", stokes, ImageInputProcessor::USE_ALL_STOKES, True,
+        		"", stokes, RegionManager::USE_ALL_STOKES, True,
             	expectedBlc, expectedTrc
         	);
         }
@@ -386,7 +386,7 @@ int main() {
             testSuccess(
         		"Valid box specification with valid stokes specification #4 succeeds",
         		0, goodImage, 0, "", "0, 0,  10,10", "",
-        		stokes, ImageInputProcessor::USE_ALL_STOKES, True,
+        		stokes, RegionManager::USE_ALL_STOKES, True,
             	expectedBlc, expectedTrc
         	);
         }
@@ -397,7 +397,7 @@ int main() {
             testSuccess(
         		"Valid box specification with valid stokes specification #5 succeeds",
         		0, goodImage, 0, "", "0, 0,  10,10", "",
-        		stokes, ImageInputProcessor::USE_ALL_STOKES, True,
+        		stokes, RegionManager::USE_ALL_STOKES, True,
             	expectedBlc, expectedTrc
         	);
         }
@@ -408,7 +408,7 @@ int main() {
             testSuccess(
         		"Valid box specification with valid stokes specification #6 succeeds",
         		0, goodImage, 0, "", "0, 0,  10,10", "",
-        		stokes, ImageInputProcessor::USE_ALL_STOKES, True,
+        		stokes, RegionManager::USE_ALL_STOKES, True,
             	expectedBlc, expectedTrc
         	);
         }
@@ -418,7 +418,7 @@ int main() {
         	testSuccess(
         		"Valid box specification using all polarizations for blank stokes",
         		0, goodImage, 0, "", "0, 0,  10,10",
-        		"", none, ImageInputProcessor::USE_ALL_STOKES, True,
+        		"", none, RegionManager::USE_ALL_STOKES, True,
             	expectedBlc, expectedTrc
             );
         }
@@ -429,7 +429,7 @@ int main() {
         	testSuccess(
         		"Valid box specification using first polarizations for blank stokes",
         		0, goodImage, 0, "", "0, 0,  10,10",
-        		"", stokes, ImageInputProcessor::USE_FIRST_STOKES, True,
+        		"", stokes, RegionManager::USE_FIRST_STOKES, True,
             	expectedBlc, expectedTrc
         	);
         }
@@ -446,7 +446,7 @@ int main() {
         	runProcess(
         		"Non-required, non-overwriteable output file is set to blank",
         		&outs, goodImage, 0, "", "0, 0,  10,10",
-        		"", none, ImageInputProcessor::USE_ALL_STOKES, True
+        		"", none, RegionManager::USE_ALL_STOKES, True
         	);
         	AlwaysAssert(out.empty(), AipsError);
        	}
@@ -462,7 +462,7 @@ int main() {
         	runProcess(
         		"Non-required, non-createable output file is set to blank",
         		&outs, goodImage, 0, "", "0, 0,  10,10",
-        		"", none, ImageInputProcessor::USE_ALL_STOKES, True
+        		"", none, RegionManager::USE_ALL_STOKES, True
         	);
         	AlwaysAssert(out.empty(), AipsError);
        	}
@@ -479,7 +479,7 @@ int main() {
         	runProcess(
         		"Non-required, non-replaceable output file is set to blank",
         		&outs, goodImage, 0, "", "0, 0,  10,10",
-        		"", none, ImageInputProcessor::USE_ALL_STOKES, True
+        		"", none, RegionManager::USE_ALL_STOKES, True
         	);
         	AlwaysAssert(out.empty(), AipsError);
        	}
@@ -496,7 +496,7 @@ int main() {
         	runProcess(
         		"Writeable file is not reset",
         		&outs, goodImage, 0, "", "0, 0,  10,10",
-        		"", none, ImageInputProcessor::USE_ALL_STOKES, True
+        		"", none, RegionManager::USE_ALL_STOKES, True
         	);
         	AlwaysAssert(name == save, AipsError);
        	}
