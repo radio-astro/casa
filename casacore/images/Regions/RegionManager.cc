@@ -1221,7 +1221,6 @@ namespace casa { //# name space casa begins
 	  Vector<Double> extYCorners(2*nRegions);
 	  Vector<Double> extPolEndPts(2*nRegions);
 	  Vector<Double> extChanEndPts(2*nRegions);
-	  cout << "nregions " << nRegions << endl;
 	  uInt count = 0;
 	  for (uInt i=0; i<max(1,xCorners.size()/2); i++) {
 		  for (uInt j=0; j<max(1,polEndPts.size()/2); j++) {
@@ -1244,10 +1243,6 @@ namespace casa { //# name space casa begins
 			  }
 		  }
 	  }
-	  cout << "xcorners " << extXCorners << endl;
-	  cout << "ycorners " << extYCorners << endl;
-	  cout << "pol end  " << extPolEndPts << endl;
-	  cout << "chan end " << extChanEndPts << endl;
 	  HashMap<uInt, Vector<Double> > axisCornerMap;
 	  for (uInt i=0; i<nRegions; i++) {
 		  for (uInt axisNumber=0; axisNumber<itsCSys->nPixelAxes(); axisNumber++) {
