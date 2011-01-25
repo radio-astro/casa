@@ -1001,6 +1001,58 @@ regionmanager::wmask(const std::string& expr)
     return false;
 }
 
+record* regionmanager::frombcs(
+	const record& csys, const vector<int>& shape,
+	const string& box, const string& chans,
+	const string& stokes, const string& stokescontrol
+) {
+    if (! itsIsSetup) {
+    	setup();
+    }
+    record *imRegion = 0;
+    *itsLog << LogOrigin("regionmanager", __FUNCTION__);
+    try {
+    	String myControl = stokescontrol;
+    	RegionManager::StokesControl sControl;
+    	myControl.upcase();
+    	if (myControl.startsWith("A")) {
+    		sControl = RegionManager::USE_ALL_STOKES;
+    	}
+    	else if (myControl.startsWith("F")) {
+    		sControl = RegionManager::USE_FIRST_STOKES;
+    	}
+    	else {
+    		throw AipsError("Unsupported value for stokescontrol: " + stokescontrol);
+    	}
+    	Record *csysRec = toRecord(csys);
+    	if(csysRec->nfields() < 2) {
+    	    throw(AipsError("Given coorsys parameter does not appear to be a valid coordsystem record"));
+    	}
+    	casa::CoordinateSystem *coordsys = CoordinateSystem::restore(*csysRec, "");
+    	if(coordsys==0){
+    	    throw(AipsError("Could not convert given csys record to a CoordinateSystem object"));
+    	}
+    	itsRegMan->setcoordsys(*coordsys);
+    	String diagnostics;
+    	uInt nSelectedChannels;
+    	IPosition imShape(shape);
+    	String myStokes(stokes);
+    	String myChans(chans);
+    	String myBox(box);
+    	imRegion = fromRecord(
+    		itsRegMan->fromBCS(
+    				diagnostics, nSelectedChannels, myStokes,
+    				myChans, sControl, myBox, imShape
+    		).toRecord("")
+    	);
+    }
+    catch (AipsError x) {
+    	*itsLog << LogIO::SEVERE << "Exception Reported: "
+    			<< x.getMesg() << LogIO::POST;
+    	RETHROW(x);
+    }
+    return imRegion;
+}
 
 
 } // casac namespace
