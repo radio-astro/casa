@@ -1,4 +1,4 @@
-/*
+/* -*- C++ -*-
     MSFieldGram.y: Parser for field expressions
     Copyright (C) 2004
     Associated Universities, Inc. Washington DC, USA.
