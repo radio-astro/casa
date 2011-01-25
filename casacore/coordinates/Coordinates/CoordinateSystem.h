@@ -761,6 +761,37 @@ public:
                        const IPosition& latticeShape,
                        const IPosition& tileShape, Bool postLocally=False) const;
 
+   // Does this coordinate system have a spectral axis?
+   Bool hasSpectralAxis() const;
+
+   // what number is the spectral axis? Returns -1 if no spectral axis exists.
+   Int spectralAxisNumber() const;
+
+   // does this coordinate system have a polarizaion/stokes axis?
+   Bool hasPolarizationAxis() const;
+
+   // Given a stokes or polarization parameter, find the pixel location.
+   // Note the client is responsible for any boundedness checks
+   // (eg finite number of stokes in an image).
+   Int stokesPixelNumber(const String& stokesString) const;
+
+   // what is the number of the polarization/stokes coordinate?
+   // Returns -1 if no stokes coordinate exists.
+   Int polarizationCoordinateNumber() const;
+
+   // what is the number of the polarization/stokes axis?
+   // Returns -1 if no stokes axis exists.
+   Int polarizationAxisNumber() const;
+
+   Int directionCoordinateNumber() const;
+
+   Bool hasDirectionCoordinate() const;
+
+   Vector<Int> directionAxesNumbers() const;
+
+   String stokesAtPixel(const uInt pixel) const;
+
+
 private:
     // Where we store copies of the coordinates we are created with.
     PtrBlock<Coordinate *> coordinates_p;

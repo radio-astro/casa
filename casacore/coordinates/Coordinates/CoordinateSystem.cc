@@ -708,8 +708,7 @@ const SpectralCoordinate& CoordinateSystem::spectralCoordinate(uInt which) const
     return dynamic_cast<const SpectralCoordinate &>(*(coordinates_p[which]));
 }
 
-const StokesCoordinate& CoordinateSystem::stokesCoordinate(uInt which) const
-{
+const StokesCoordinate& CoordinateSystem::stokesCoordinate(uInt which) const {
     AlwaysAssert(which < nCoordinates() && 
 		 coordinates_p[which]->type() == Coordinate::STOKES, AipsError);
     return dynamic_cast<const StokesCoordinate &>(*(coordinates_p[which]));
@@ -4252,6 +4251,86 @@ void CoordinateSystem::deleteTemps (const uInt which)
    delete worldMax_tmps_p[which]; 
    worldMax_tmps_p[which] = 0;
 }
+
+Bool CoordinateSystem::hasSpectralAxis() const {
+    Int spectralCoordNum = findCoordinate(Coordinate::SPECTRAL);
+    return (spectralCoordNum >= 0 && spectralCoordNum < (Int)nCoordinates());
+}
+
+Int CoordinateSystem::spectralAxisNumber() const {
+    if (! hasSpectralAxis()) {
+        return -1;
+    }
+    Int specIndex = findCoordinate(Coordinate::SPECTRAL);
+    return pixelAxes(specIndex)[0];
+}
+
+
+Bool CoordinateSystem::hasPolarizationAxis() const {
+    Int polarizationCoordNum = findCoordinate(Coordinate::STOKES);
+    return (
+        polarizationCoordNum >= 0
+        && polarizationCoordNum < (Int)nCoordinates()
+    );
+}
+
+Int CoordinateSystem::polarizationCoordinateNumber() const {
+    // don't do hasPolarizationAxis check or you will go down an infinite recursion path :)
+    return findCoordinate(Coordinate::STOKES);
+}
+
+Int CoordinateSystem::polarizationAxisNumber() const {
+    if (! hasPolarizationAxis()) {
+        return -1;
+    }
+    return pixelAxes(polarizationCoordinateNumber())[0];
+}
+
+Int CoordinateSystem::stokesPixelNumber(const String& stokesString) const {
+    if (! hasPolarizationAxis()) {
+        return -1;
+    }
+    Int polCoordNum = findCoordinate(Coordinate::STOKES);
+    StokesCoordinate stokesCoord = stokesCoordinate(polCoordNum);
+    Int stokesPix = -1;
+    stokesCoord.toPixel(stokesPix, Stokes::type(stokesString));
+    if (stokesPix < 0) {
+        return -1;
+    }
+    return stokesPix;
+}
+
+String CoordinateSystem::stokesAtPixel(const uInt pixel) const {
+    if (! hasPolarizationAxis()) {
+         return "";
+    }
+    Int polCoordNum = polarizationCoordinateNumber();
+    StokesCoordinate stokesCoord = stokesCoordinate(polCoordNum);
+    Int stokes = stokesCoord.stokes()[pixel];
+    Stokes::StokesTypes stokesType = Stokes::type(stokes);
+    return Stokes::name(stokesType);
+}
+
+Int CoordinateSystem::directionCoordinateNumber() const {
+    // don't do a hasDirectionCoordinate() check or you will go down an infinite recursion path
+    return findCoordinate(Coordinate::DIRECTION);
+}
+
+Bool CoordinateSystem::hasDirectionCoordinate() const {
+    Int directionCoordNum = directionCoordinateNumber();
+    return (
+        directionCoordNum >= 0
+        && directionCoordNum < (Int)nCoordinates()
+    );
+}
+
+Vector<Int> CoordinateSystem::directionAxesNumbers() const {
+    if (! hasDirectionCoordinate()) {
+      return Vector<Int>();
+    }
+    return pixelAxes(directionCoordinateNumber());
+}
+
 
 } //# NAMESPACE CASA - END
 
