@@ -103,6 +103,7 @@ void	myTimer( double *cpu_time ,		/* cpu timer */
 ASDM2MSFiller* msFiller;
 string appName;
 bool verbose = true;
+bool isEVLA = false;
 
 //LogIO os;
 
@@ -1017,6 +1018,9 @@ int sysPowerFeedId(const SysPowerRow* row) {
 }
 
 double sysPowerMidTimeInSeconds(const SysPowerRow* row) {
+  if (isEVLA) {
+     return row->getTimeInterval().getStartInMJD()*86400 ; 
+  }
   return row->getTimeInterval().getStartInMJD()*86400 + ((double) row->getTimeInterval().getDuration().get()) / ArrayTime::unitsInASecond / 2.;
 }
 
@@ -1207,7 +1211,7 @@ int main(int argc, char *argv[]) {
     // Revision ? displays revision's info and don't go further.
     if (vm.count("revision")) {
       errstream.str("");
-      errstream << "$Id: asdm2MS.cpp,v 1.69 2011/01/19 23:58:35 mcaillat Exp $" << "\n" ;
+      errstream << "$Id: asdm2MS.cpp,v 1.70 2011/01/23 19:16:31 mcaillat Exp $" << "\n" ;
       error(errstream.str());
     }
 
@@ -2084,6 +2088,80 @@ int main(int argc, char *argv[]) {
     }
   }
 
+  // 
+  // Process the ExecBlock table,
+  // in order to build the MS Observation table.
+  // 
+  const ExecBlockTable& execBlockT = ds->getExecBlock(); 
+  {
+    ExecBlockRow* r = 0;
+    int nExecBlock = execBlockT.size();
+    infostream.str("");
+    infostream << "The dataset has " << nExecBlock << " execBlock(s) ...";
+
+    vector<ExecBlockRow *> temp_v = execBlockT.get();
+    vector<ExecBlockRow *> v;
+    for (vector<ExecBlockRow *>::iterator iter_v = temp_v.begin(); iter_v != temp_v.end(); iter_v++)
+      if ( selected_eb_scan_m.find((*iter_v)->getExecBlockId().getTagValue()) != selected_eb_scan_m.end() )
+	v.push_back(*iter_v);
+    
+    vector<string> schedule; schedule.resize(2);
+
+    infostream << v.size() << " of them in the selected exec blocks / scans ... ";
+    info(infostream.str());
+
+    for (unsigned int i = 0; i < v.size(); i++) {
+      r = v.at(i);
+      
+      string telescopeName  = r->getTelescopeName();
+      double startTime      = r->getStartTime().getMJD()*86400;
+      double endTime        = r->getEndTime().getMJD()*86400;
+      string observerName   = r->getObserverName();
+
+      vector<string> observingLog;
+      observingLog.push_back(r->getObservingLog());
+      string scheduleType("ALMA");
+      schedule[0] = "SchedulingBlock " + ds->getSBSummary().getRowByKey(r->getSBSummaryId())->getSbSummaryUID().getEntityId().toString();
+      schedule[1] = "ExecBlock " + r->getExecBlockUID().getEntityId().toString();
+      string project("T.B.D.");
+      double releaseDate = r->isReleaseDateExists() ? r->getReleaseDate().getMJD():0.0;
+
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	   iter != msFillers.end();
+	   ++iter) {
+	iter->second->addObservation(telescopeName,
+				     startTime,
+				     endTime,
+				     observerName,
+				     observingLog,
+				     scheduleType,
+				     schedule,
+				     project,
+				     releaseDate
+				     );
+      }
+      if (i==0) { // assume same telescope for all execBlocks 
+        if (telescopeName.find("EVLA")!=string::npos) {
+          isEVLA=true;
+        }
+        else if (telescopeName.find("OSF")!=string::npos || 
+                 telescopeName.find("AOS")!=string::npos || 
+                 telescopeName.find("ATF")!=string::npos) {
+          isEVLA=false;
+        }     
+        string telname = (isEVLA ? "EVLA" : "ALMA");
+        infostream.str("");
+        infostream << "Telescope Name:" <<telescopeName << ", process as "<<telname<<" data." ; 
+        info(infostream.str());
+      }
+    }
+    if (nExecBlock) {
+      infostream.str("");
+      infostream << "converted in " << msFillers.begin()->second->ms()->observation().nrow() << " observation(s) in the measurement set(s)." ;
+      info(infostream.str());
+    }
+  }
+
   //
   // Process the Feed table
   // Issues :
@@ -2102,13 +2180,18 @@ int main(int argc, char *argv[]) {
     
     info(infostream.str());
     int nFeed = v.size();
-
     for (int i = 0; i < nFeed; i++) {
       r = v.at(i);
       // For now we just adapt the types of the time related informations and compute a mid-time.
       //
       double interval = ((double) r->getTimeInterval().getDuration().get()) / ArrayTime::unitsInASecond ;
-      double time =  ((double) r->getTimeInterval().getStart().get()) / ArrayTime::unitsInASecond + interval/2.0;
+      double time;
+      if (isEVLA) {
+        time =  ((double) r->getTimeInterval().getStart().get()) / ArrayTime::unitsInASecond;
+      }
+      else {
+        time =  ((double) r->getTimeInterval().getStart().get()) / ArrayTime::unitsInASecond + interval/2.0;
+      }
 
       vector<double> beam_offset_ =  DConverter::toVectorD(r->getBeamOffset());
       vector<std::string> polarization_type_ = PolTypeMapper().toStringVector(r->getPolarizationTypes());
@@ -2220,13 +2303,18 @@ int main(int argc, char *argv[]) {
 
     info(infostream.str());
     int nFlagCmd = v.size();
-
     for (int i = 0; i < nFlagCmd; i++) {
       r = v.at(i);
       // For now we just adapt the types of the time related informations and compute a mid-time.
       //
       double interval = ((double) r->getTimeInterval().getDuration().get()) / ArrayTime::unitsInASecond ;
-      double time =  ((double) r->getTimeInterval().getStart().get()) / ArrayTime::unitsInASecond + interval/2.0;
+      double time;
+      if (isEVLA) {
+        time =  ((double) r->getTimeInterval().getStart().get()) / ArrayTime::unitsInASecond ;
+      }
+      else {
+        time =  ((double) r->getTimeInterval().getStart().get()) / ArrayTime::unitsInASecond + interval/2.0;
+      }
       string type = r->getType();
       string reason = r->getReason();
       string command = r->getCommand();
@@ -2300,65 +2388,6 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  // 
-  // Process the ExecBlock table,
-  // in order to build the MS Observation table.
-  // 
-  const ExecBlockTable& execBlockT = ds->getExecBlock(); 
-  {
-    ExecBlockRow* r = 0;
-    int nExecBlock = execBlockT.size();
-    infostream.str("");
-    infostream << "The dataset has " << nExecBlock << " execBlock(s) ...";
-
-    vector<ExecBlockRow *> temp_v = execBlockT.get();
-    vector<ExecBlockRow *> v;
-    for (vector<ExecBlockRow *>::iterator iter_v = temp_v.begin(); iter_v != temp_v.end(); iter_v++)
-      if ( selected_eb_scan_m.find((*iter_v)->getExecBlockId().getTagValue()) != selected_eb_scan_m.end() )
-	v.push_back(*iter_v);
-    
-    vector<string> schedule; schedule.resize(2);
-
-    infostream << v.size() << " of them in the selected exec blocks / scans ... ";
-    info(infostream.str());
-
-    for (unsigned int i = 0; i < v.size(); i++) {
-      r = v.at(i);
-      
-      string telescopeName  = r->getTelescopeName();
-      double startTime      = r->getStartTime().getMJD()*86400;
-      double endTime        = r->getEndTime().getMJD()*86400;
-      string observerName   = r->getObserverName();
-
-      vector<string> observingLog;
-      observingLog.push_back(r->getObservingLog());
-      string scheduleType("ALMA");
-      schedule[0] = "SchedulingBlock " + ds->getSBSummary().getRowByKey(r->getSBSummaryId())->getSbSummaryUID().getEntityId().toString();
-      schedule[1] = "ExecBlock " + r->getExecBlockUID().getEntityId().toString();
-      string project("T.B.D.");
-      double releaseDate = r->isReleaseDateExists() ? r->getReleaseDate().getMJD():0.0;
-
-      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
-	   iter != msFillers.end();
-	   ++iter) {
-	iter->second->addObservation(telescopeName,
-				     startTime,
-				     endTime,
-				     observerName,
-				     observingLog,
-				     scheduleType,
-				     schedule,
-				     project,
-				     releaseDate
-				     );
-      }
-    }
-    if (nExecBlock) {
-      infostream.str("");
-      infostream << "converted in " << msFillers.begin()->second->ms()->observation().nrow() << " observation(s) in the measurement set(s)." ;
-      info(infostream.str());
-    }
-  }
 
   //
   // Process the Pointing table.
@@ -2438,7 +2467,12 @@ int main(int argc, char *argv[]) {
       if (!r->isSampledTimeIntervalExists()) { // If no sampledTimeInterval then
 	                                       // then compute the first value of MS TIME and INTERVAL.
 	interval   = ((double) r->getTimeInterval().getDuration().get()) / ArrayTime::unitsInASecond / r->getNumSample();
-	time = ((double) r->getTimeInterval().getStart().get()) / ArrayTime::unitsInASecond + interval / 2.0;
+	if (isEVLA) {
+          time = ((double) r->getTimeInterval().getStart().get()) / ArrayTime::unitsInASecond;
+        }
+        else {
+	  time = ((double) r->getTimeInterval().getStart().get()) / ArrayTime::unitsInASecond + interval / 2.0;
+        }
       }
 
       //
@@ -2679,7 +2713,13 @@ int main(int argc, char *argv[]) {
       // For now we just adapt the types of the time related informations and compute a mid-time.
       //
       double interval = ((double) r->getTimeInterval().getDuration().get()) / ArrayTime::unitsInASecond ;
-      double time =  r->getTimeInterval().getStartInMJD()*86400 + interval / 2.0 ;
+      double time;
+      if (isEVLA) {
+        time =  r->getTimeInterval().getStartInMJD()*86400 ;
+      }
+      else {
+        time =  r->getTimeInterval().getStartInMJD()*86400 + interval / 2.0 ;
+      }
 
       int spectralWindowId = swIdx2Idx[r->getSpectralWindowId().getTagValue()];
 
@@ -2765,7 +2805,13 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < nSysCal; i++) {
       r = v.at(i);
       double interval = ((double) r->getTimeInterval().getDuration().get()) / ArrayTime::unitsInASecond ;
-      double time =  ((double) r->getTimeInterval().getStart().get()) / ArrayTime::unitsInASecond + interval / 2.0 ;
+      double time;
+      if (isEVLA) {
+        time =  ((double) r->getTimeInterval().getStart().get()) / ArrayTime::unitsInASecond ;
+      }
+      else {
+        time =  ((double) r->getTimeInterval().getStart().get()) / ArrayTime::unitsInASecond + interval / 2.0 ;
+      }
 
       pair<bool, bool> tcal_flag_pair;
       tcal_flag_pair.first   = r->isTcalFlagExists();
@@ -3072,7 +3118,13 @@ int main(int argc, char *argv[]) {
       //
       // And finally we can add a new row to the MS CALDEVICE table.
       double interval = ((double) (*iter)->getTimeInterval().getDuration().get()) / ArrayTime::unitsInASecond ;
-      double time =  (*iter)->getTimeInterval().getStartInMJD()*86400 + interval / 2.0 ;
+      double time;
+      if (isEVLA) {
+        time =  (*iter)->getTimeInterval().getStartInMJD()*86400 ;
+      }
+      else {
+        time =  (*iter)->getTimeInterval().getStartInMJD()*86400 + interval / 2.0 ;
+      }
       
       for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator msIter = msFillers.begin();
 	   msIter != msFillers.end();
@@ -3247,7 +3299,13 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < nWeather; i++) {
       r = v.at(i);      
       double interval = ((double) r->getTimeInterval().getDuration().get()) / ArrayTime::unitsInASecond ;
-      double time =  ((double) r->getTimeInterval().getStart().get()) / ArrayTime::unitsInASecond + interval / 2.0 ;
+      double time;
+      if (isEVLA) {
+        time =  ((double) r->getTimeInterval().getStart().get()) / ArrayTime::unitsInASecond ;
+      }
+      else {
+        time =  ((double) r->getTimeInterval().getStart().get()) / ArrayTime::unitsInASecond + interval / 2.0 ;
+      }
 
       float pressure                   = r->getPressure().get() / 100.0;// We consider that ASDM stores Pascals & MS expects hectoPascals
       bool  pressureFlag               = r->getPressureFlag();
