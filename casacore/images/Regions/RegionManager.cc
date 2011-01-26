@@ -1222,9 +1222,9 @@ namespace casa { //# name space casa begins
 	  Vector<Double> extPolEndPts(2*nRegions);
 	  Vector<Double> extChanEndPts(2*nRegions);
 	  uInt count = 0;
-	  for (uInt i=0; i<max(1,xCorners.size()/2); i++) {
-		  for (uInt j=0; j<max(1,polEndPts.size()/2); j++) {
-			  for (uInt k=0; k<max(1,chanEndPts.size()/2); k++) {
+	  for (uInt i=0; i<max(uInt(1), xCorners.size()/2); i++) {
+		  for (uInt j=0; j<max((uInt)1, polEndPts.size()/2); j++) {
+			  for (uInt k=0; k<max(uInt(1), chanEndPts.size()/2); k++) {
 				  if (itsCSys->hasDirectionCoordinate()) {
 					  extXCorners[2*count] = xCorners[2*i];
 					  extXCorners[2*count + 1] = xCorners[2*i + 1];
