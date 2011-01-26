@@ -90,7 +90,7 @@ def sdimaging(sdfile, specunit, restfreq, scanlist, field, spw, antenna, stokes,
 
             # stokes
             if stokes=='':
-                stokes='IQUV'
+                stokes='I'
 
             # gridfunction
 
