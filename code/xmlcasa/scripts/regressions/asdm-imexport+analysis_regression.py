@@ -506,7 +506,7 @@ else:
         checktable(name, expected)
 
         expected = [
-                     ['UVW',       557, [-172.89958845,  -80.72977369,   63.39288229], 1E-7], # based on geodetic data r3011 
+                     ['UVW',       557, [-172.89958856,  -80.72977367,   63.39288203], 1E-6], # based on geodetic data r3846 
                      ['EXPOSURE',  557, 6.048, 0],
                      ['DATA',      557,
                       [[ -4.17647697e-03 +3.08606686e-05j,  -1.18642126e-03 +7.54371868e-05j,
