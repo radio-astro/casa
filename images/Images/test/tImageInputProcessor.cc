@@ -295,6 +295,12 @@ int main() {
         	0, goodImage, 0, "", "0, 0,10 ,10",
         	"", stokes, RegionManager::USE_ALL_STOKES, False
         );
+       	stokes = "";
+       	testException(
+       		"Bad region name throws exception",
+        	0, goodImage, 0, "mybox", "",
+        	"", stokes, RegionManager::USE_ALL_STOKES, False
+        );
         {
             stokes = "iu";
         	writeTestString("Multiple stokes ranges with allowMultipleRegions = True succeeds");
@@ -429,6 +435,38 @@ int main() {
         	testSuccess(
         		"Valid box specification using first polarizations for blank stokes",
         		0, goodImage, 0, "", "0, 0,  10,10",
+        		"", stokes, RegionManager::USE_FIRST_STOKES, True,
+            	expectedBlc, expectedTrc
+        	);
+        }
+        {
+        	// these are one relative
+        	expectedBlc.set(1.0);
+        	expectedTrc[0] = 21;
+        	expectedTrc[1] = 21;
+        	expectedTrc[2] = 1;
+        	expectedTrc[3] = 3;
+            stokes = "";
+            String regionFile = goodImage + "/mybox.rgn";
+        	testSuccess(
+        		"Valid region file",
+        		0, goodImage, 0, regionFile, "",
+        		"", stokes, RegionManager::USE_FIRST_STOKES, True,
+            	expectedBlc, expectedTrc
+        	);
+        }
+        {
+        	// these are one relative
+        	expectedBlc.set(1.0);
+        	expectedTrc[0] = 21;
+        	expectedTrc[1] = 21;
+        	expectedTrc[2] = 1;
+        	expectedTrc[3] = 3;
+            stokes = "";
+            String regionDesc = "mybox2";
+        	testSuccess(
+        		"Valid region description from image table",
+        		0, goodImage, 0, regionDesc, "",
         		"", stokes, RegionManager::USE_FIRST_STOKES, True,
             	expectedBlc, expectedTrc
         	);

@@ -35,6 +35,7 @@
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/MIRIADImage.h>
 #include <images/Regions/WCBox.h>
+
 #include <measures/Measures/Stokes.h>
 
 ImageInputProcessor::ImageInputProcessor()
@@ -146,14 +147,13 @@ void ImageInputProcessor::_process(
     	*_log << origin;
     	*_log << LogIO::NORMAL << "Set region from supplied region record"
     		<< LogIO::POST;
-        stokes = _stokesFromRecord(regionRecord, metaData);
+        stokes = _stokesFromRecord(regionRecord, image->coordinates(), image->shape());
     }
     else if (! regionName.empty()) {
     	_setRegion(regionRecord, diagnostics, image, regionName);
     	*_log << origin;
-       	*_log << LogIO::NORMAL << "Set region from supplied region file "
-        	<< regionName << LogIO::POST;
-    	stokes = _stokesFromRecord(regionRecord, metaData);
+       	*_log << LogIO::NORMAL << diagnostics << LogIO::POST;
+    	stokes = _stokesFromRecord(regionRecord, image->coordinates(), image->shape());
     }
     else {
     	// nothing specified, use entire positional plane with spectral and polarization specs
@@ -207,22 +207,48 @@ uInt ImageInputProcessor::nSelectedChannels() const {
 	return _nSelectedChannels;
 }
 
-String ImageInputProcessor::_stokesFromRecord(const Record& region, const ImageMetaData& metaData) const {
+String ImageInputProcessor::_stokesFromRecord(
+	const Record& region, const CoordinateSystem& csys,
+	const IPosition& shape
+) const {
     String stokes = "";
- 	if(metaData.hasPolarizationAxis()) {
- 		Int polAxis = metaData.polarizationAxisNumber();
+ 	if(csys.hasPolarizationAxis()) {
+ 		Int polAxis = csys.polarizationAxisNumber();
  		uInt stokesBegin, stokesEnd;
- 		Array<Double> blc, trc;
- 		region.toArray("blc", blc);
- 		region.toArray("trc", trc);
- 		stokesBegin = (uInt)((Vector<Double>)blc)[polAxis];
- 		stokesEnd = (uInt)((Vector<Double>)trc)[polAxis];
- 		if (region.isDefined("oneRel") && region.asBool("oneRel")) {
+ 		ImageRegion *imreg = ImageRegion::fromRecord(region, "");
+ 		Array<Float> blc, trc;
+ 		Bool oneRelAccountedFor = False;
+ 		if (imreg->isLCSlicer()) {
+ 			blc = imreg->asLCSlicer().blc();
+ 			trc = imreg->asLCSlicer().trc();
+	 		stokesBegin = (uInt)((Vector<Float>)blc)[polAxis];
+	 		stokesEnd = (uInt)((Vector<Float>)trc)[polAxis];
+	 		oneRelAccountedFor = True;
+ 		}
+ 		else if (RegionManager::isPixelRegion(*(ImageRegion::fromRecord(region, "")))) {
+			region.toArray("blc", blc);
+			region.toArray("trc", trc);
+	 		stokesBegin = (uInt)((Vector<Float>)blc)[polAxis];
+	 		stokesEnd = (uInt)((Vector<Float>)trc)[polAxis];
+		}
+		else {
+	    	cout << "region " << region << endl;
+			Record blcRec = region.asRecord("blc");
+			Record trcRec = region.asRecord("trc");
+			stokesBegin = (Int)blcRec.asRecord(
+				String("*" + String::toString(polAxis - 1))
+			).asDouble("value");
+			stokesEnd = (Int)trcRec.asRecord(
+				String("*" + String::toString(polAxis - 1))
+			).asDouble("value");
+		}
+
+ 		if (! oneRelAccountedFor && region.isDefined("oneRel") && region.asBool("oneRel")) {
  			stokesBegin--;
  			stokesEnd--;
  		}
  		for (uInt i=stokesBegin; i<=stokesEnd; i++) {
- 			stokes += metaData.stokesAtPixel(i);
+ 			stokes += csys.stokesAtPixel(i);
  		}
  	}
  	return stokes;
@@ -243,24 +269,38 @@ void ImageInputProcessor::_setRegion(
 	const ImageInterface<Float> *image, const String& regionName
 ) const {
 	// region name provided
-	ImageRegion imRegion;
-	Regex otherImage("(.*)+:(.*)+");
-	try {
-		if (regionName.matches(otherImage)) {
-			String res[2];
-			casa::split(regionName, res, 2, ":");
-			PagedImage<Float> other(res[0]);
-			imRegion = other.getRegion(res[1]);
+	File myFile(regionName);
+	if (myFile.exists()) {
+		Record *rec = RegionManager::readImageFile(regionName, "");
+		regionRecord = *rec;
+		delete rec;
+		diagnostics = "Region read from file " + regionName;
+	}
+	else {
+
+		ImageRegion imRegion;
+		Regex otherImage("(.*)+:(.*)+");
+		try {
+			String imagename;
+			if (regionName.matches(otherImage)) {
+				String res[2];
+				casa::split(regionName, res, 2, ":");
+				imagename = res[0];
+				PagedImage<Float> other(imagename);
+				imRegion = other.getRegion(res[1]);
+			}
+			else {
+				imRegion = image->getRegion(regionName);
+				imagename = image->name();
+			}
+		    regionRecord = Record(imRegion.toRecord(""));
+		    diagnostics = "Used region " + regionName + " from image "
+		    		+ imagename + " table description";
 		}
-		else {
-			imRegion = image->getRegion(regionName);
+		catch (AipsError) {
+			*_log << "Unable to open region file or region table description " << regionName << LogIO::EXCEPTION;
 		}
 	}
-	catch (AipsError) {
-		*_log << "Unable to open region file " << regionName << LogIO::EXCEPTION;
-	}
-    regionRecord = Record(imRegion.toRecord(""));
-    diagnostics = "Used image region " + regionName;
 }
 
 String ImageInputProcessor::_pairsToString(const Vector<uInt>& pairs) const {

@@ -162,7 +162,10 @@ private:
     	const ImageInterface<Float> *image, const String& regionName
     ) const;
 
-    String _stokesFromRecord(const Record& region, const ImageMetaData& metaData) const;
+    String _stokesFromRecord(
+    	const Record& region, const CoordinateSystem& csys,
+    	const IPosition& shape
+    ) const;
 
     String _pairsToString(const Vector<uInt>& pairs) const;
 
