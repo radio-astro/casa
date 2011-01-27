@@ -57,7 +57,10 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
 		casalog.post('Running the asdm2MS standalone invoked as:')
 		#print execute_string
 		casalog.post(execute_string)
-        	os.system(execute_string)
+        	exitcode=os.system(execute_string)
+                if exitcode!=0:
+                   casalog.post('The asdm2MS terminated','SEVERE')
+                   raise Exception, "asdm coversion error, please check if it is a valid ASDM"
 		if compression :
                    #viso = viso + '.compressed'
                    viso = visover.rstrip('.ms') + '.compressed.ms'
