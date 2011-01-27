@@ -488,19 +488,23 @@ regionmanager::extractsimpleregions(const ::casac::record& region)
 }
 
 ::casac::record*
-regionmanager::fromfiletorecord(const std::string& filename, 
-	const bool verbose, 
-	const std::string& regionname)
-{
+regionmanager::fromfiletorecord(
+	const std::string& filename, const bool verbose,
+	const string& regionName
+) {
 
-  
-    if ( !itsIsSetup )
-	setup();
-    *itsLog << LogOrigin("regionmanager", "fromfiletorecord");
-
-    Record * leReg =
-	itsRegMan->readImageFile( String(filename), String(regionname ) );
-    return fromRecord( *leReg );
+    if (! itsIsSetup) {
+    	setup();
+    }
+    *itsLog << LogOrigin("regionmanager", __FUNCTION__);
+    try {
+    	Record *leReg = RegionManager::readImageFile(filename, regionName);
+    	return fromRecord(*leReg);
+    }
+    catch (AipsError x) {
+    	*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    	RETHROW(x);
+    }
 }
 bool 
 regionmanager::tofile(const std::string& filename, const ::casac::record& region){
@@ -512,7 +516,7 @@ regionmanager::tofile(const std::string& filename, const ::casac::record& region
       casa::Record* leRegion=toRecord(region);
       //the string lolo below does not matter its being ignored it seems.
       //may be it was meant for future use
-      retval=itsRegMan->writeImageFile(String(filename), "lolo", *leRegion);
+      retval=RegionManager::writeImageFile(String(filename), "lolo", *leRegion);
       if(leRegion)
 	delete leRegion;
     } catch (AipsError x) {
@@ -679,7 +683,7 @@ regionmanager::ispixelregion(const ::casac::record& region)
 	letblrec.assign(*localvar);
 	ImageRegion* reg=0;
 	reg=ImageRegion::fromRecord(letblrec, "");
-	retval=itsRegMan->isPixelRegion(*reg);
+	retval = RegionManager::isPixelRegion(*reg);
     } catch (AipsError x) {
 	*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	RETHROW(x);
@@ -703,7 +707,7 @@ regionmanager::isworldregion(const ::casac::record& region)
 	letblrec.assign(*localvar);
 	ImageRegion* reg=0;
 	reg=ImageRegion::fromRecord(letblrec, "");
-	retval=itsRegMan->isWorldRegion(*reg);
+	retval = RegionManager::isWorldRegion(*reg);
     } catch (AipsError x) {
 	*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	RETHROW(x);
