@@ -59,6 +59,7 @@ ostream & operator << ( ostream &, const Entity & );
  * entity in the ALMA archive.  It easily maps onto an EntityT
  * object in ACS system entities.
  * 
+ * @throw InvalidArgumentException
  * @version 1.00 Jan. 7, 2005
  * @author Allen Farris
  */
@@ -67,8 +68,7 @@ class Entity {
 	friend istream & operator >> ( istream &, Entity&);
 
 public:
-	static Entity getEntity(StringTokenizer &t) throw(InvalidArgumentException);
-
+	static Entity getEntity(StringTokenizer &t);
 	Entity();
 	Entity(const string &s);
 #ifndef WITHOUT_ACS
@@ -85,11 +85,11 @@ public:
 	bool isNull() const;
 
 	string toString() const;
-	string toXML() const throw(InvalidDataException);
+	string toXML() const;
 #ifndef WITHOUT_ACS
 	IDLEntity toIDLEntity() const;
 #endif
-	void setFromXML(string xml) throw(InvalidArgumentException);
+	void setFromXML(string xml);
 	
 	/**
 	 * Write the binary representation of this to a EndianOSStream.
