@@ -1176,7 +1176,6 @@ namespace asdm {
 
 		// Get each table in the dataset.
 		s = xml.getElementContent("<Table>","</Table>");
-		int numberRows = 0;
 		while (s.length() != 0) {
 			Parser tab(s);
 			s = tab.getElementContent("<Name>","</Name>");
@@ -1186,30 +1185,27 @@ namespace asdm {
 			s = tab.getElementContent("<NumberRows>","</NumberRows>");
 			if (s.length() == 0) 
 				error();
+			int numberRows = 0;
 			try {
 				numberRows = Integer::parseInt(s);
 				getTable(tableName).declaredSize = numberRows;
-			} catch (NumberFormatException err) {
-				error();
+			    if (numberRows > 0 ) {
+				   s = tab.getElementContent("<Entity","/>");
+				   if (s.length() == 0) 
+					 error();
+				   Entity tabE;
+				   tabE.setFromXML(s);
+				   if (tabE.getEntityTypeName() != (tableName + "Table"))
+					 error();
+				   tableEntity[tableName] = tabE;
+				}
+			} 
+			catch (NumberFormatException err) {
+				error(); // Expected to happen while parsing the number of rows.
 			}
-			if (numberRows > 0 ) {
-				s = tab.getElementContent("<Entity","/>");
-				if (s.length() == 0) 
-					error();
-				Entity tabE;
-				tabE.setFromXML(s);
-				if (tabE.getEntityTypeName() != (tableName + "Table"))
-					error();
-				tableEntity[tableName] = tabE;
-				// Get the table entry.
-				//unsigned int i = 0;
-				//for (; i < table.size(); ++i)
-				//	if (table[i]->getName() == tableName) {
-				//		(*tableEntity[i]) = tabE;
-				//		break;
-				//	}
-				//if (i == table.size())
-				//	error();
+			catch (InvalidArgumentException err) {
+		      ; // This happens when the name of a table which is not recognized by this
+			    // version of the software. Then we simply ignore it !
 			}
 			s = xml.getElementContent("<Table>","</Table>");
 		}
