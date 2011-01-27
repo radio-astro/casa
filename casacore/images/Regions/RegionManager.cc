@@ -113,15 +113,11 @@ namespace casa { //# name space casa begins
   const CoordinateSystem& RegionManager::getcoordsys() const{
     return *itsCSys;
   }
-  bool RegionManager::isPixelRegion(const ImageRegion& reg ){
-      *itsLog << LogOrigin("RegionManager", "isPixelRegion");
-
+  Bool RegionManager::isPixelRegion(const ImageRegion& reg ){
       return  reg.isLCRegion();
   }
 	
-  bool RegionManager::isWorldRegion(const ImageRegion& reg ){
-      *itsLog << LogOrigin("RegionManager", "isPixelRegion");
-
+  Bool RegionManager::isWorldRegion(const ImageRegion& reg ){
       return  reg.isWCRegion();
   }
 	
