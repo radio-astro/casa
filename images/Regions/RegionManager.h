@@ -72,8 +72,8 @@ namespace casa {
       String absreltype(const Int absrelval=0);
 
       //Some little but useful tidbits.
-      bool isPixelRegion(const ImageRegion& reg);
-      bool isWorldRegion(const ImageRegion& reg);
+      static Bool isPixelRegion(const ImageRegion& reg);
+      static Bool isWorldRegion(const ImageRegion& reg);
       void setcoordsys(const CoordinateSystem& csys);
       const CoordinateSystem& getcoordsys() const ;
       
@@ -162,9 +162,9 @@ namespace casa {
        **************************************************************/
 
       //Reading of a file containing an ImageRegion in the AipsIO format dump
-      Record* readImageFile( String filename, String regionname );
+      static Record* readImageFile( String filename, String regionname );
       //Writing a file of the AipsIO dump of the record representation of the region
-      Bool writeImageFile(const String& file, const String& regionname, const Record& regionRecord);
+      static Bool writeImageFile(const String& file, const String& regionname, const Record& regionRecord);
 
       
       //save region into a table (image, blank table or any other such)
