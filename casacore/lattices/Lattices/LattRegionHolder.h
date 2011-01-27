@@ -29,19 +29,15 @@
 #define LATTICES_LATTREGIONHOLDER_H
 
 //# Includes
+#include <coordinates/Coordinates/CoordinateSystem.h>
+// I think its a bad idea that this class depending on classes in the images module
+#include <images/Regions/WCRegion.h>
+
 #include <lattices/Lattices/LatticeRegion.h>
+#include <lattices/Lattices/LCSlicer.h>
+#include <lattices/Lattices/LCRegion.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
-
-//# Forward Declarations
-class CoordinateSystem;
-class IPosition;
-class LCRegion;
-class LCSlicer;
-class WCRegion;
-class String;
-class TableRecord;
-
 
 // <summary>
 // Class to hold a region of interest in an image.
