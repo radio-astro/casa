@@ -30,6 +30,8 @@ class hanningsmooth_test(unittest.TestCase):
     def tearDown(self):
         if (os.path.exists(self.msfile)):
             os.system('rm -rf ' + self.msfile)
+        if (os.path.exists('cvelngc.ms')):
+            os.system('rm -rf cvelngc.ms')
         if (os.path.exists(self.out)):
             os.system('rm -rf ' + self.out)
         
@@ -81,7 +83,23 @@ class hanningsmooth_test(unittest.TestCase):
         
     def test3(self):
         '''Test 3: Theoretical and calculated values should be the same with datacolumn==CORRECTED'''
+
+      # check correct flagging (just for one row as a sample)
+        flag_col = self.getvarcol(self.msfile, 'FLAG')
+        self.assertTrue(flag_col['r1'][0][0] == [False])
+        self.assertTrue(flag_col['r1'][0][1] == [False])
+        self.assertTrue(flag_col['r1'][0][61] == [False])
+        self.assertTrue(flag_col['r1'][0][62] == [False])
+
         self.res = hanningsmooth(vis=self.msfile, datacolumn='corrected')
+
+      # check correct flagging (just for one row as a sample)
+        flag_col = self.getvarcol(self.msfile, 'FLAG')
+        self.assertTrue(flag_col['r1'][0][0] == [True])
+        self.assertTrue(flag_col['r1'][0][1] == [False])
+        self.assertTrue(flag_col['r1'][0][61] == [False])
+        self.assertTrue(flag_col['r1'][0][62] == [True])
+
         self.assertTrue(self.checkcol(self.msfile, 'CORRECTED_DATA'))
         data_col = self.getvarcol(self.msfile, 'DATA')
         corr_col = self.getvarcol(self.msfile, 'CORRECTED_DATA')
@@ -93,8 +111,8 @@ class hanningsmooth_test(unittest.TestCase):
             row = 'r%s'%i            
             # polarization is 0-1
             for pol in range(0,2) :
-                # array's channels is 0-62
-                for chan in range(1,61) :
+                # array's channels is 0-63
+                for chan in range(1,62) :
                     # channels must start from second and end before the last
                     data = data_col[row][pol][chan]
                     dataB = data_col[row][pol][chan-1]
@@ -108,10 +126,25 @@ class hanningsmooth_test(unittest.TestCase):
 
     def test4(self):
         '''Test 4: Theoretical and calculated values should be the same with datacolumn==DATA'''
+
+      # check correct flagging (just for one row as a sample)
+        flag_col = self.getvarcol(self.msfile, 'FLAG')
+        self.assertTrue(flag_col['r1'][0][0] == [False])
+        self.assertTrue(flag_col['r1'][0][1] == [False])
+        self.assertTrue(flag_col['r1'][0][61] == [False])
+        self.assertTrue(flag_col['r1'][0][62] == [False])
+        
         data_col = self.getvarcol(self.msfile, 'DATA')
         self.res = hanningsmooth(vis=self.msfile,datacolumn='data')
         corr_col = self.getvarcol(self.msfile, 'DATA')
         nrows = len(corr_col)
+
+      # check correct flagging (just for one row as a sample)
+        flag_col = self.getvarcol(self.msfile, 'FLAG')
+        self.assertTrue(flag_col['r1'][0][0] == [True])
+        self.assertTrue(flag_col['r1'][0][1] == [False])
+        self.assertTrue(flag_col['r1'][0][61] == [False])
+        self.assertTrue(flag_col['r1'][0][62] == [True])
         
       # Loop over every 2nd row,pol and get the data for each channel
         max = 1e-05
@@ -119,8 +152,8 @@ class hanningsmooth_test(unittest.TestCase):
             row = 'r%s'%i            
             # polarization is 0-1
             for pol in range(0,2) :
-                # array's channels is 0-62
-                for chan in range(1,61) :
+                # array's channels is 0-63
+                for chan in range(1,62) :
                     # channels must start from second and end before the last
                     data = data_col[row][pol][chan]
                     dataB = data_col[row][pol][chan-1]
@@ -137,7 +170,68 @@ class hanningsmooth_test(unittest.TestCase):
         shutil.rmtree('mynewms.ms',ignore_errors=True)
         self.res = hanningsmooth(vis=self.msfile, outputvis='mynewms.ms')
         self.assertTrue(self.checkcol('mynewms.ms', 'DATA'))
+
+    def test6(self):
+        '''Test 6: Flagging should be correct with datacolumn==ALL'''
+        clearcal(vis=self.msfile)
         
+      # check correct flagging (just for one row as a sample)
+        flag_col = self.getvarcol(self.msfile, 'FLAG')
+        self.assertTrue(flag_col['r1'][0][0] == [False])
+        self.assertTrue(flag_col['r1'][0][1] == [False])
+        self.assertTrue(flag_col['r1'][0][61] == [False])
+        self.assertTrue(flag_col['r1'][0][62] == [False])
+
+        self.res = hanningsmooth(vis=self.msfile,datacolumn='all')
+
+      # check correct flagging (just for one row as a sample)
+        flag_col = self.getvarcol(self.msfile, 'FLAG')
+        self.assertTrue(flag_col['r1'][0][0] == [True])
+        self.assertTrue(flag_col['r1'][0][1] == [False])
+        self.assertTrue(flag_col['r1'][0][61] == [False])
+        self.assertTrue(flag_col['r1'][0][62] == [True])
+
+    def test7(self):
+        '''Test 7: Flagging should be correct when hanning smoothing within cvel (no transform)'''
+        clearcal(vis=self.msfile)
+        
+      # check correct flagging (just for one row as a sample)
+        flag_col = self.getvarcol(self.msfile, 'FLAG')
+        self.assertTrue(flag_col['r1'][0][0] == [False])
+        self.assertTrue(flag_col['r1'][0][1] == [False])
+        self.assertTrue(flag_col['r1'][0][61] == [False])
+        self.assertTrue(flag_col['r1'][0][62] == [False])
+
+        self.res = cvel(vis=self.msfile, outputvis='cvelngc.ms', hanning=True)
+
+      # check correct flagging (just for one row as a sample)
+        flag_col = self.getvarcol('cvelngc.ms', 'FLAG')
+        self.assertTrue(flag_col['r1'][0][0] == [True])
+        self.assertTrue(flag_col['r1'][0][1] == [False])
+        self.assertTrue(flag_col['r1'][0][61] == [False])
+        self.assertTrue(flag_col['r1'][0][62] == [True])
+
+    def test8(self):
+        '''Test 8: Flagging should be correct when hanning smoothing within cvel (with transform)'''
+        clearcal(vis=self.msfile)
+        
+      # check correct flagging (just for one row as a sample)
+        flag_col = self.getvarcol(self.msfile, 'FLAG')
+        self.assertTrue(flag_col['r1'][0][0] == [False])
+        self.assertTrue(flag_col['r1'][0][1] == [False])
+        self.assertTrue(flag_col['r1'][0][61] == [False])
+        self.assertTrue(flag_col['r1'][0][62] == [False])
+
+        self.res = cvel(vis=self.msfile, outputvis='cvelngc.ms', hanning=True, outframe='bary')
+
+      # check correct flagging (just for one row as a sample)
+        flag_col = self.getvarcol('cvelngc.ms', 'FLAG')
+        self.assertTrue(flag_col['r1'][0][0] == [True])
+        self.assertTrue(flag_col['r1'][0][1] == [False])
+        self.assertTrue(flag_col['r1'][0][61] == [False])
+        self.assertTrue(flag_col['r1'][0][62] == [True])
+
+
 
 def suite():
     return [hanningsmooth_test]

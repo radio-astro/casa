@@ -116,6 +116,7 @@ cleanonly_imstats = copy.deepcopy(cvel_imstats)
 # Also: clean needs write access to the input MS, so we need a local copy anyway.
 
 dataset_name = dataset_name_orig
+os.system('rm -rf input.ms input2.ms')
 os.system('cp -RL '+dataset_name_orig+' input.ms')
 os.system('chmod -R u+w input.ms')
 os.system('cp -RL '+dataset_name_orig+' input2.ms')
@@ -136,6 +137,7 @@ hanningsmooth(vis=clean_inputvis_local_copy2)
 
 # in order to shorten the test, leave out LSRD, GALACTO, and TOPO
 frames_to_do = ['LGROUP', 'LSRK', 'BARY', 'CMB']
+#frames_to_do = ['LSRK']
 
 for frame in frames_to_do:
     

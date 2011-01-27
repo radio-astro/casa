@@ -2007,7 +2007,11 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	Bool youtFlagsWritten(False);
 	Array<Complex> yin;
 	Array<Bool> yinFlags((*oldFLAGColP)(mainTabRow));
-	
+	Array<Bool> yinFlagsUnsmoothed;
+	if(doHanningSmooth){
+	  yinFlagsUnsmoothed.assign(yinFlags);
+	}
+
 	Vector<Double> xindd(xold[iDone].size());
 
 	if(transform[iDone]){
@@ -2035,7 +2039,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    xindd[i] = xin[iDone][i];
 	  }
 	}
-	
+
 	if(!CORRECTED_DATACol.isNull()){
 	  yin.assign((*oldCORRECTED_DATAColP)(mainTabRow));
 
@@ -2045,8 +2049,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    // copy yin to yinUnsmoothed 
 	    Array<Complex> yinUnsmoothed;
 	    yinUnsmoothed.assign(yin);
-	    Array<Bool> yinFlagsUnsmoothed;
-	    yinFlagsUnsmoothed.assign(yinFlags);
 
 	    Smooth<Complex>::hanning(yin, // the output
 				     yinFlags, // the output flags
@@ -2076,8 +2078,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  if(doHanningSmooth){
 	    Array<Complex> yinUnsmoothed;
 	    yinUnsmoothed.assign(yin);
-	    Array<Bool> yinFlagsUnsmoothed;
-	    yinFlagsUnsmoothed.assign(yinFlags);
+
 	    Smooth<Complex>::hanning(yin, yinFlags, yinUnsmoothed, yinFlagsUnsmoothed, False);  
 	  }
 	  InterpolateArray1D<Double,Complex>::interpolate(yout, youtFlags, xout[iDone], xindd, 
@@ -2093,8 +2094,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  if(doHanningSmooth){ 
 	    Array<Complex> yinUnsmoothed;
 	    yinUnsmoothed.assign(yin);
-	    Array<Bool> yinFlagsUnsmoothed;
-	    yinFlagsUnsmoothed.assign(yinFlags);
+
 	    Smooth<Complex>::hanning(yin, yinFlags, yinUnsmoothed, yinFlagsUnsmoothed, False);  
 	  }
 	  InterpolateArray1D<Double,Complex>::interpolate(yout, youtFlags, xout[iDone], xindd, 
@@ -2121,8 +2121,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  if(doHanningSmooth){
 	    Array<Float> yinfUnsmoothed;
 	    yinfUnsmoothed.assign(yinf);
-	    Array<Bool> yinFlagsUnsmoothed;
-	    yinFlagsUnsmoothed.assign(yinFlags);
+
 	    Smooth<Float>::hanning(yinf, yinFlags, yinfUnsmoothed, yinFlagsUnsmoothed, False);  
 	  }
 	  InterpolateArray1D<Double, Float>::interpolate(youtf, youtFlags, xout[iDone], xindd, 

@@ -129,12 +129,12 @@ void VisSetUtil::Sensitivity(ROVisIter &vi, Quantity& pointsourcesens,
   pointsourcesens=Quantity(sqrt(sumwtsq)/sumwt, "Jy");
   relativesens=sqrt(sumwtsq)/sumwt/naturalsens;
 }
-  void VisSetUtil::HanningSmooth(VisSet &vs, const String& dataCol)
+void VisSetUtil::HanningSmooth(VisSet &vs, const String& dataCol, const Bool& doFlagAndWeight)
 {
   VisIter& vi(vs.iter());
-  VisSetUtil::HanningSmooth(vi, dataCol);
+  VisSetUtil::HanningSmooth(vi, dataCol, doFlagAndWeight);
 }
-  void VisSetUtil::HanningSmooth(VisIter &vi, const String& dataCol)
+void VisSetUtil::HanningSmooth(VisIter &vi, const String& dataCol, const Bool& doFlagAndWeight)
 {
   LogIO os(LogOrigin("VisSetUtil", "HanningSmooth()"));
 
@@ -187,13 +187,24 @@ void VisSetUtil::Sensitivity(ROVisIter &vi, Quantity& pointsourcesens,
 	}
 
 	if(dataCol=="data"){
-	  vi.setVisAndFlag(smoothedData,newFlag,VisibilityIterator::Observed);
+	  if(doFlagAndWeight){
+	    vi.setVisAndFlag(smoothedData,newFlag,VisibilityIterator::Observed);
+	    vi.setWeightSpectrum(newWeight);
+	  }
+	  else{
+	    vi.setVis(smoothedData,VisibilityIterator::Observed);
+	  }	    
 	}
 	else{
-	  vi.setVisAndFlag(smoothedData,newFlag,VisibilityIterator::Corrected);
+	  if(doFlagAndWeight){
+	    vi.setVisAndFlag(smoothedData,newFlag,VisibilityIterator::Corrected);
+	    vi.setWeightSpectrum(newWeight);
+	  }
+	  else{
+	    vi.setVis(smoothedData,VisibilityIterator::Corrected);
+	  }
 	}
 
-	vi.setWeightSpectrum(newWeight);
       }
     } else {
       for (vi.origin();vi.more();vi++) {
@@ -232,13 +243,23 @@ void VisSetUtil::Sensitivity(ROVisIter &vi, Quantity& pointsourcesens,
 	}
 
 	if(dataCol=="data"){
-	  vi.setVisAndFlag(smoothedData,newFlag,VisibilityIterator::Observed);
+	  if(doFlagAndWeight){
+	    vi.setVisAndFlag(smoothedData,newFlag,VisibilityIterator::Observed);
+	    vi.setWeightMat(newWeight);
+	  }
+	  else{
+	    vi.setVis(smoothedData,VisibilityIterator::Observed);
+	  }	    
 	}
 	else{
-	  vi.setVisAndFlag(smoothedData,newFlag,VisibilityIterator::Corrected);
+	  if(doFlagAndWeight){
+	    vi.setVisAndFlag(smoothedData,newFlag,VisibilityIterator::Corrected);
+	    vi.setWeightMat(newWeight);
+	  }
+	  else{
+	    vi.setVis(smoothedData,VisibilityIterator::Corrected);
+	  }
 	}
-
-	vi.setWeightMat(newWeight);
       }
     }
   }
