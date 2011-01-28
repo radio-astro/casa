@@ -132,7 +132,7 @@ class ScanRow;
  * A summary of information for each scan.
  * <BR>
  
- * Generated from model's revision "1.55", branch "HEAD"
+ * Generated from model's revision "1.58", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of Scan </CAPTION>
@@ -295,7 +295,7 @@ public:
 	 *
 	 * @return the number of rows in an unsigned int.
 	 */
-	unsigned int size() ;
+	unsigned int size() const;
 	
 	/**
 	 * Return the name of this table.
@@ -433,11 +433,19 @@ public:
 	//
 		
 	/**
-	 * Get all rows.
-	 * @return Alls rows as a vector of pointers of ScanRow. The elements of this vector are stored in the order 
+	 * Get a collection of pointers on the rows of the table.
+	 * @return Alls rows in a vector of pointers of ScanRow. The elements of this vector are stored in the order 
 	 * in which they have been added to the ScanTable.
 	 */
 	vector<ScanRow *> get() ;
+	
+	/**
+	 * Get a const reference on the collection of rows pointers internally hold by the table.
+	 * @return A const reference of a vector of pointers of ScanRow. The elements of this vector are stored in the order 
+	 * in which they have been added to the ScanTable.
+	 *
+	 */
+	 const vector<ScanRow *>& get() const ;
 	
 
 
@@ -563,7 +571,7 @@ private:
 	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) ;
+	void fromXML(string& xmlDoc) ;
 		
 	/**
 	  * Private methods involved during the build of this table out of the content
@@ -606,6 +614,18 @@ private:
 	  */
 	  void toFile(string directory);
 	  
+	  /**
+	   * Load the table in memory if necessary.
+	   */
+	  bool loadInProgress;
+	  void checkPresenceInMemory() {
+		if (!presentInMemory && !loadInProgress) {
+			loadInProgress = true;
+			setFromFile(getContainer().getDirectory());
+			presentInMemory = true;
+			loadInProgress = false;
+	  	}
+	  }
 	/**
 	 * Reads and parses a file containing a representation of a ScanTable as those produced  by the toFile method.
 	 * This table is populated with the result of the parsing.

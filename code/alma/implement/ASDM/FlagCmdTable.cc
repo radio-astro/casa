@@ -102,6 +102,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -122,8 +128,11 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-	unsigned int FlagCmdTable::size() {
-		return privateRows.size();
+	unsigned int FlagCmdTable::size() const {
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -288,20 +297,24 @@ FlagCmdRow* FlagCmdTable::newRow(FlagCmdRow* row) {
 
 
 
+	 vector<FlagCmdRow *> FlagCmdTable::get() {
+	 	checkPresenceInMemory();
+	    return privateRows;
+	 }
+	 
+	 const vector<FlagCmdRow *>& FlagCmdTable::get() const {
+	 	const_cast<FlagCmdTable&>(*this).checkPresenceInMemory();	
+	    return privateRows;
+	 }	 
+	 	
+
+
+
 
 	
 
 	
 	
-		
-	/**
-	 * Get all rows.
-	 * @return Alls rows as an array of FlagCmdRow
-	 */
-	vector<FlagCmdRow *> FlagCmdTable::get() {
-		return privateRows;
-		// return row;
-	}
 		
 	
 
@@ -318,8 +331,9 @@ FlagCmdRow* FlagCmdTable::newRow(FlagCmdRow* row) {
  **
  */
  	FlagCmdRow* FlagCmdTable::getRowByKey(ArrayTimeInterval timeInterval)  {
+ 	checkPresenceInMemory();
 	FlagCmdRow* aRow = 0;
-		for (unsigned int i = 0; i < row.size(); i++) {
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
 			aRow = row.at(i);
 			if (aRow->timeInterval.contains(timeInterval.getStart())) return aRow;
 		}
@@ -366,7 +380,7 @@ FlagCmdRow* FlagCmdTable::newRow(FlagCmdRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<FlagCmdTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:flgcmd=\"http://Alma/XASDM/FlagCmdTable\" xsi:schemaLocation=\"http://Alma/XASDM/FlagCmdTable http://almaobservatory.org/XML/XASDM/2/FlagCmdTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n");
+		buf.append("<FlagCmdTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:flgcmd=\"http://Alma/XASDM/FlagCmdTable\" xsi:schemaLocation=\"http://Alma/XASDM/FlagCmdTable http://almaobservatory.org/XML/XASDM/2/FlagCmdTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -385,7 +399,7 @@ FlagCmdRow* FlagCmdTable::newRow(FlagCmdRow* row) {
 	}
 
 	
-	void FlagCmdTable::fromXML(string xmlDoc)  {
+	void FlagCmdTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<FlagCmdTable")) 
 			error();
@@ -407,7 +421,6 @@ FlagCmdRow* FlagCmdTable::newRow(FlagCmdRow* row) {
 		s = xml.getElementContent("<row>","</row>");
 		FlagCmdRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a FlagCmdRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {
@@ -444,7 +457,7 @@ FlagCmdRow* FlagCmdTable::newRow(FlagCmdRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<FlagCmdTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:flgcmd=\"http://Alma/XASDM/FlagCmdTable\" xsi:schemaLocation=\"http://Alma/XASDM/FlagCmdTable http://almaobservatory.org/XML/XASDM/2/FlagCmdTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n";
+		oss << "<FlagCmdTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:flgcmd=\"http://Alma/XASDM/FlagCmdTable\" xsi:schemaLocation=\"http://Alma/XASDM/FlagCmdTable http://almaobservatory.org/XML/XASDM/2/FlagCmdTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='FlagCmdTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -633,10 +646,22 @@ FlagCmdRow* FlagCmdTable::newRow(FlagCmdRow* row) {
     
     // We do nothing with that but we have to read it.
     Entity containerEntity = Entity::fromBin(eiss);
-    
+
+	// Let's read numRows but ignore it and rely on the value specified in the ASDM.xml file.    
     int numRows = eiss.readInt();
+    if ((numRows != -1)                        // Then these are *not* data produced at the EVLA.
+    	&& ((unsigned int) numRows != this->declaredSize )) { // Then the declared size (in ASDM.xml) is not equal to the one 
+    	                                       // written into the binary representation of the table.
+		cout << "The a number of rows ('" 
+			 << numRows
+			 << "') declared in the binary representation of the table is different from the one declared in ASDM.xml ('"
+			 << this->declaredSize
+			 << "'). I'll proceed with the value declared in ASDM.xml"
+			 << endl;
+    }                                           
+
     try {
-      for (int i = 0; i < numRows; i++) {
+      for (uint32_t i = 0; i < this->declaredSize; i++) {
 	FlagCmdRow* aRow = FlagCmdRow::fromBin(eiss, *this, attributesSeq);
 	checkAndAdd(aRow);
       }

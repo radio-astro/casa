@@ -106,6 +106,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -126,8 +132,11 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-	unsigned int SubscanTable::size() {
-		return privateRows.size();
+	unsigned int SubscanTable::size() const {
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -335,20 +344,21 @@ SubscanRow* SubscanTable::newRow(SubscanRow* row) {
 
 
 
+	 vector<SubscanRow *> SubscanTable::get() {
+	 	checkPresenceInMemory();
+	    return privateRows;
+	 }
+	 
+	 const vector<SubscanRow *>& SubscanTable::get() const {
+	 	const_cast<SubscanTable&>(*this).checkPresenceInMemory();	
+	    return privateRows;
+	 }	 
+	 	
+
+
+
 
 	
-
-	//
-	// ====> Methods returning rows.
-	//	
-	/**
-	 * Get all rows.
-	 * @return Alls rows as an array of SubscanRow
-	 */
-	vector<SubscanRow *> SubscanTable::get() {
-		return privateRows;
-		// return row;
-	}
 
 	
 /*
@@ -358,8 +368,9 @@ SubscanRow* SubscanTable::newRow(SubscanRow* row) {
  **
  */
  	SubscanRow* SubscanTable::getRowByKey(Tag execBlockId, int scanNumber, int subscanNumber)  {
+ 	checkPresenceInMemory();
 	SubscanRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -410,8 +421,8 @@ SubscanRow* SubscanTable::newRow(SubscanRow* row) {
  */
 SubscanRow* SubscanTable::lookup(Tag execBlockId, int scanNumber, int subscanNumber, ArrayTime startTime, ArrayTime endTime, string fieldName, SubscanIntentMod::SubscanIntent subscanIntent, int numberIntegration, vector<int > numberSubintegration, bool flagRow) {
 		SubscanRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(execBlockId, scanNumber, subscanNumber, startTime, endTime, fieldName, subscanIntent, numberIntegration, numberSubintegration, flagRow)) return aRow;
 		}			
 		return 0;	
@@ -456,7 +467,7 @@ SubscanRow* SubscanTable::lookup(Tag execBlockId, int scanNumber, int subscanNum
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<SubscanTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:sbscn=\"http://Alma/XASDM/SubscanTable\" xsi:schemaLocation=\"http://Alma/XASDM/SubscanTable http://almaobservatory.org/XML/XASDM/2/SubscanTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n");
+		buf.append("<SubscanTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:sbscn=\"http://Alma/XASDM/SubscanTable\" xsi:schemaLocation=\"http://Alma/XASDM/SubscanTable http://almaobservatory.org/XML/XASDM/2/SubscanTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -475,7 +486,7 @@ SubscanRow* SubscanTable::lookup(Tag execBlockId, int scanNumber, int subscanNum
 	}
 
 	
-	void SubscanTable::fromXML(string xmlDoc)  {
+	void SubscanTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<SubscanTable")) 
 			error();
@@ -497,7 +508,6 @@ SubscanRow* SubscanTable::lookup(Tag execBlockId, int scanNumber, int subscanNum
 		s = xml.getElementContent("<row>","</row>");
 		SubscanRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a SubscanRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {
@@ -534,7 +544,7 @@ SubscanRow* SubscanTable::lookup(Tag execBlockId, int scanNumber, int subscanNum
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<SubscanTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:sbscn=\"http://Alma/XASDM/SubscanTable\" xsi:schemaLocation=\"http://Alma/XASDM/SubscanTable http://almaobservatory.org/XML/XASDM/2/SubscanTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n";
+		oss << "<SubscanTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:sbscn=\"http://Alma/XASDM/SubscanTable\" xsi:schemaLocation=\"http://Alma/XASDM/SubscanTable http://almaobservatory.org/XML/XASDM/2/SubscanTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='SubscanTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -738,10 +748,22 @@ SubscanRow* SubscanTable::lookup(Tag execBlockId, int scanNumber, int subscanNum
     
     // We do nothing with that but we have to read it.
     Entity containerEntity = Entity::fromBin(eiss);
-    
+
+	// Let's read numRows but ignore it and rely on the value specified in the ASDM.xml file.    
     int numRows = eiss.readInt();
+    if ((numRows != -1)                        // Then these are *not* data produced at the EVLA.
+    	&& ((unsigned int) numRows != this->declaredSize )) { // Then the declared size (in ASDM.xml) is not equal to the one 
+    	                                       // written into the binary representation of the table.
+		cout << "The a number of rows ('" 
+			 << numRows
+			 << "') declared in the binary representation of the table is different from the one declared in ASDM.xml ('"
+			 << this->declaredSize
+			 << "'). I'll proceed with the value declared in ASDM.xml"
+			 << endl;
+    }                                           
+
     try {
-      for (int i = 0; i < numRows; i++) {
+      for (uint32_t i = 0; i < this->declaredSize; i++) {
 	SubscanRow* aRow = SubscanRow::fromBin(eiss, *this, attributesSeq);
 	checkAndAdd(aRow);
       }

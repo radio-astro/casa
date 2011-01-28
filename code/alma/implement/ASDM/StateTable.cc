@@ -102,6 +102,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -122,8 +128,11 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-	unsigned int StateTable::size() {
-		return privateRows.size();
+	unsigned int StateTable::size() const {
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -320,20 +329,21 @@ StateRow* StateTable::newRow(StateRow* row) {
 
 
 
+	 vector<StateRow *> StateTable::get() {
+	 	checkPresenceInMemory();
+	    return privateRows;
+	 }
+	 
+	 const vector<StateRow *>& StateTable::get() const {
+	 	const_cast<StateTable&>(*this).checkPresenceInMemory();	
+	    return privateRows;
+	 }	 
+	 	
+
+
+
 
 	
-
-	//
-	// ====> Methods returning rows.
-	//	
-	/**
-	 * Get all rows.
-	 * @return Alls rows as an array of StateRow
-	 */
-	vector<StateRow *> StateTable::get() {
-		return privateRows;
-		// return row;
-	}
 
 	
 /*
@@ -343,8 +353,9 @@ StateRow* StateTable::newRow(StateRow* row) {
  **
  */
  	StateRow* StateTable::getRowByKey(Tag stateId)  {
+ 	checkPresenceInMemory();
 	StateRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -375,8 +386,8 @@ StateRow* StateTable::newRow(StateRow* row) {
  */
 StateRow* StateTable::lookup(CalibrationDeviceMod::CalibrationDevice calDeviceName, bool sig, bool ref, bool onSky) {
 		StateRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(calDeviceName, sig, ref, onSky)) return aRow;
 		}			
 		return 0;	
@@ -421,7 +432,7 @@ StateRow* StateTable::lookup(CalibrationDeviceMod::CalibrationDevice calDeviceNa
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<StateTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:state=\"http://Alma/XASDM/StateTable\" xsi:schemaLocation=\"http://Alma/XASDM/StateTable http://almaobservatory.org/XML/XASDM/2/StateTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n");
+		buf.append("<StateTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:state=\"http://Alma/XASDM/StateTable\" xsi:schemaLocation=\"http://Alma/XASDM/StateTable http://almaobservatory.org/XML/XASDM/2/StateTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -440,7 +451,7 @@ StateRow* StateTable::lookup(CalibrationDeviceMod::CalibrationDevice calDeviceNa
 	}
 
 	
-	void StateTable::fromXML(string xmlDoc)  {
+	void StateTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<StateTable")) 
 			error();
@@ -462,7 +473,6 @@ StateRow* StateTable::lookup(CalibrationDeviceMod::CalibrationDevice calDeviceNa
 		s = xml.getElementContent("<row>","</row>");
 		StateRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a StateRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {
@@ -499,7 +509,7 @@ StateRow* StateTable::lookup(CalibrationDeviceMod::CalibrationDevice calDeviceNa
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<StateTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:state=\"http://Alma/XASDM/StateTable\" xsi:schemaLocation=\"http://Alma/XASDM/StateTable http://almaobservatory.org/XML/XASDM/2/StateTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n";
+		oss << "<StateTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:state=\"http://Alma/XASDM/StateTable\" xsi:schemaLocation=\"http://Alma/XASDM/StateTable http://almaobservatory.org/XML/XASDM/2/StateTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='StateTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -685,10 +695,22 @@ StateRow* StateTable::lookup(CalibrationDeviceMod::CalibrationDevice calDeviceNa
     
     // We do nothing with that but we have to read it.
     Entity containerEntity = Entity::fromBin(eiss);
-    
+
+	// Let's read numRows but ignore it and rely on the value specified in the ASDM.xml file.    
     int numRows = eiss.readInt();
+    if ((numRows != -1)                        // Then these are *not* data produced at the EVLA.
+    	&& ((unsigned int) numRows != this->declaredSize )) { // Then the declared size (in ASDM.xml) is not equal to the one 
+    	                                       // written into the binary representation of the table.
+		cout << "The a number of rows ('" 
+			 << numRows
+			 << "') declared in the binary representation of the table is different from the one declared in ASDM.xml ('"
+			 << this->declaredSize
+			 << "'). I'll proceed with the value declared in ASDM.xml"
+			 << endl;
+    }                                           
+
     try {
-      for (int i = 0; i < numRows; i++) {
+      for (uint32_t i = 0; i < this->declaredSize; i++) {
 	StateRow* aRow = StateRow::fromBin(eiss, *this, attributesSeq);
 	checkAndAdd(aRow);
       }

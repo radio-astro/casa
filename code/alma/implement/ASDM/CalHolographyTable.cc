@@ -106,6 +106,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -126,8 +132,11 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-	unsigned int CalHolographyTable::size() {
-		return privateRows.size();
+	unsigned int CalHolographyTable::size() const {
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -401,20 +410,21 @@ CalHolographyRow* CalHolographyTable::newRow(CalHolographyRow* row) {
 
 
 
+	 vector<CalHolographyRow *> CalHolographyTable::get() {
+	 	checkPresenceInMemory();
+	    return privateRows;
+	 }
+	 
+	 const vector<CalHolographyRow *>& CalHolographyTable::get() const {
+	 	const_cast<CalHolographyTable&>(*this).checkPresenceInMemory();	
+	    return privateRows;
+	 }	 
+	 	
+
+
+
 
 	
-
-	//
-	// ====> Methods returning rows.
-	//	
-	/**
-	 * Get all rows.
-	 * @return Alls rows as an array of CalHolographyRow
-	 */
-	vector<CalHolographyRow *> CalHolographyTable::get() {
-		return privateRows;
-		// return row;
-	}
 
 	
 /*
@@ -424,8 +434,9 @@ CalHolographyRow* CalHolographyTable::newRow(CalHolographyRow* row) {
  **
  */
  	CalHolographyRow* CalHolographyTable::getRowByKey(string antennaName, Tag calDataId, Tag calReductionId)  {
+ 	checkPresenceInMemory();
 	CalHolographyRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -494,8 +505,8 @@ CalHolographyRow* CalHolographyTable::newRow(CalHolographyRow* row) {
  */
 CalHolographyRow* CalHolographyTable::lookup(string antennaName, Tag calDataId, Tag calReductionId, AntennaMakeMod::AntennaMake antennaMake, ArrayTime startValidTime, ArrayTime endValidTime, Temperature ambientTemperature, vector<Length > focusPosition, vector<Frequency > frequencyRange, double illuminationTaper, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, int numPanelModes, ReceiverBandMod::ReceiverBand receiverBand, EntityRef beamMapUID, Length rawRMS, Length weightedRMS, EntityRef surfaceMapUID, vector<Angle > direction) {
 		CalHolographyRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(antennaName, calDataId, calReductionId, antennaMake, startValidTime, endValidTime, ambientTemperature, focusPosition, frequencyRange, illuminationTaper, numReceptor, polarizationTypes, numPanelModes, receiverBand, beamMapUID, rawRMS, weightedRMS, surfaceMapUID, direction)) return aRow;
 		}			
 		return 0;	
@@ -540,7 +551,7 @@ CalHolographyRow* CalHolographyTable::lookup(string antennaName, Tag calDataId, 
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalHolographyTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clholo=\"http://Alma/XASDM/CalHolographyTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalHolographyTable http://almaobservatory.org/XML/XASDM/2/CalHolographyTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n");
+		buf.append("<CalHolographyTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clholo=\"http://Alma/XASDM/CalHolographyTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalHolographyTable http://almaobservatory.org/XML/XASDM/2/CalHolographyTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -559,7 +570,7 @@ CalHolographyRow* CalHolographyTable::lookup(string antennaName, Tag calDataId, 
 	}
 
 	
-	void CalHolographyTable::fromXML(string xmlDoc)  {
+	void CalHolographyTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalHolographyTable")) 
 			error();
@@ -581,7 +592,6 @@ CalHolographyRow* CalHolographyTable::lookup(string antennaName, Tag calDataId, 
 		s = xml.getElementContent("<row>","</row>");
 		CalHolographyRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a CalHolographyRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {
@@ -618,7 +628,7 @@ CalHolographyRow* CalHolographyTable::lookup(string antennaName, Tag calDataId, 
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalHolographyTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clholo=\"http://Alma/XASDM/CalHolographyTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalHolographyTable http://almaobservatory.org/XML/XASDM/2/CalHolographyTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n";
+		oss << "<CalHolographyTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clholo=\"http://Alma/XASDM/CalHolographyTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalHolographyTable http://almaobservatory.org/XML/XASDM/2/CalHolographyTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalHolographyTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -867,10 +877,22 @@ CalHolographyRow* CalHolographyTable::lookup(string antennaName, Tag calDataId, 
     
     // We do nothing with that but we have to read it.
     Entity containerEntity = Entity::fromBin(eiss);
-    
+
+	// Let's read numRows but ignore it and rely on the value specified in the ASDM.xml file.    
     int numRows = eiss.readInt();
+    if ((numRows != -1)                        // Then these are *not* data produced at the EVLA.
+    	&& ((unsigned int) numRows != this->declaredSize )) { // Then the declared size (in ASDM.xml) is not equal to the one 
+    	                                       // written into the binary representation of the table.
+		cout << "The a number of rows ('" 
+			 << numRows
+			 << "') declared in the binary representation of the table is different from the one declared in ASDM.xml ('"
+			 << this->declaredSize
+			 << "'). I'll proceed with the value declared in ASDM.xml"
+			 << endl;
+    }                                           
+
     try {
-      for (int i = 0; i < numRows; i++) {
+      for (uint32_t i = 0; i < this->declaredSize; i++) {
 	CalHolographyRow* aRow = CalHolographyRow::fromBin(eiss, *this, attributesSeq);
 	checkAndAdd(aRow);
       }

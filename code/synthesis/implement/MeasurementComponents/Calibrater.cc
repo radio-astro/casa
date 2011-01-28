@@ -231,6 +231,7 @@ void Calibrater::selectvis(const String& time,
 			   const String& spw,
 			   const String& scan,
 			   const String& field,
+			   const String& intent,
 			   const String& baseline,
 			   const String& uvrange,
 			   const String& chanmode,
@@ -247,6 +248,7 @@ void Calibrater::selectvis(const String& time,
 //    spw
 //    scan
 //    field
+//    intent
 //    baseline
 //    uvrange
 //    chanmode     const String&            Frequency/velocity selection mode
@@ -276,7 +278,7 @@ void Calibrater::selectvis(const String& time,
     logSink() << "Selecting data" << LogIO::POST;
     
     // Apply selection to the original MeasurementSet
-    logSink() << "Performing selection on MeasurementSet" << LogIO::POST;
+    logSink() << "Performing selection on MeasurementSet" << endl;
     
     // Delete VisSet and selected MS
     if (vs_p) {
@@ -304,19 +306,37 @@ void Calibrater::selectvis(const String& time,
     }
     Table sorted=ms_p->keywordSet().asTable("SORTED_TABLE");
     
+    // Report non-trivial user selections
+    if (time!="")
+      logSink() << " Selecting on time: '" << time << "'" << endl;
+    if (spw!="")
+      logSink() << " Selecting on spw: '" << spw << "'" << endl;
+    if (scan!="")
+      logSink() << " Selecting on scan: '" << scan << "'" << endl;
+    if (field!="")
+      logSink() << " Selecting on field: '" << field << "'" << endl;
+    if (intent!="")
+      logSink() << " Selecting on intent: '" << intent << "'" << endl;
+    if (baseline!="")
+      logSink() << " Selecting on antenna/baseline: '" << baseline << "'" << endl;
+    if (uvrange!="")
+      logSink() << " Selecting on uvrange: '" << uvrange << "'" << endl;
+    if (msSelect!="")
+      logSink() << " Selecting with TaQL: '" << msSelect << "'" << endl;
+    logSink() << LogIO::POST;
 
-    Bool nontrivsel=False;
 
     // Assume no selection, for starters
     mssel_p = new MeasurementSet(sorted);
 
     // Apply user-supplied selection
+    Bool nontrivsel=False;
     nontrivsel= mssSetData(MeasurementSet(sorted),
 			   *mssel_p,"",
 			   time,baseline,
 			   field,spw,
 			   uvrange,msSelect,
-			   "",scan);
+			   "",scan,"",intent);
 
     // If non-trivial MSSelection invoked and nrow reduced:
     if(nontrivsel && mssel_p->nrow()<ms_p->nrow()) {
@@ -1330,7 +1350,9 @@ Bool Calibrater::standardSolve3() {
 	  vb.freqAveCubes();
 	
 	// Accumulate collapsed vb in a time average
-	vbga.accumulate(vb);
+	//  (only if the vb contains any unflagged data)
+	if (nfalse(vb.flag())>0)
+	  vbga.accumulate(vb);
 
       }
       // Advance the VisIter, if possible
@@ -1367,7 +1389,6 @@ Bool Calibrater::standardSolve3() {
 	nGood++;
       }
       else {
-
 
       svc_p->guessPar(vbga(0));
       

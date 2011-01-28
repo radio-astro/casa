@@ -102,6 +102,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -122,8 +128,11 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-	unsigned int CalReductionTable::size() {
-		return privateRows.size();
+	unsigned int CalReductionTable::size() const {
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -378,20 +387,21 @@ CalReductionRow* CalReductionTable::newRow(CalReductionRow* row) {
 
 
 
+	 vector<CalReductionRow *> CalReductionTable::get() {
+	 	checkPresenceInMemory();
+	    return privateRows;
+	 }
+	 
+	 const vector<CalReductionRow *>& CalReductionTable::get() const {
+	 	const_cast<CalReductionTable&>(*this).checkPresenceInMemory();	
+	    return privateRows;
+	 }	 
+	 	
+
+
+
 
 	
-
-	//
-	// ====> Methods returning rows.
-	//	
-	/**
-	 * Get all rows.
-	 * @return Alls rows as an array of CalReductionRow
-	 */
-	vector<CalReductionRow *> CalReductionTable::get() {
-		return privateRows;
-		// return row;
-	}
 
 	
 /*
@@ -401,8 +411,9 @@ CalReductionRow* CalReductionTable::newRow(CalReductionRow* row) {
  **
  */
  	CalReductionRow* CalReductionTable::getRowByKey(Tag calReductionId)  {
+ 	checkPresenceInMemory();
 	CalReductionRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -445,8 +456,8 @@ CalReductionRow* CalReductionTable::newRow(CalReductionRow* row) {
  */
 CalReductionRow* CalReductionTable::lookup(int numApplied, vector<string > appliedCalibrations, int numParam, vector<string > paramSet, int numInvalidConditions, vector<InvalidatingConditionMod::InvalidatingCondition > invalidConditions, ArrayTime timeReduced, string messages, string software, string softwareVersion) {
 		CalReductionRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(numApplied, appliedCalibrations, numParam, paramSet, numInvalidConditions, invalidConditions, timeReduced, messages, software, softwareVersion)) return aRow;
 		}			
 		return 0;	
@@ -491,7 +502,7 @@ CalReductionRow* CalReductionTable::lookup(int numApplied, vector<string > appli
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalReductionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clred=\"http://Alma/XASDM/CalReductionTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalReductionTable http://almaobservatory.org/XML/XASDM/2/CalReductionTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n");
+		buf.append("<CalReductionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clred=\"http://Alma/XASDM/CalReductionTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalReductionTable http://almaobservatory.org/XML/XASDM/2/CalReductionTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -510,7 +521,7 @@ CalReductionRow* CalReductionTable::lookup(int numApplied, vector<string > appli
 	}
 
 	
-	void CalReductionTable::fromXML(string xmlDoc)  {
+	void CalReductionTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalReductionTable")) 
 			error();
@@ -532,7 +543,6 @@ CalReductionRow* CalReductionTable::lookup(int numApplied, vector<string > appli
 		s = xml.getElementContent("<row>","</row>");
 		CalReductionRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a CalReductionRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {
@@ -569,7 +579,7 @@ CalReductionRow* CalReductionTable::lookup(int numApplied, vector<string > appli
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalReductionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clred=\"http://Alma/XASDM/CalReductionTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalReductionTable http://almaobservatory.org/XML/XASDM/2/CalReductionTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n";
+		oss << "<CalReductionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clred=\"http://Alma/XASDM/CalReductionTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalReductionTable http://almaobservatory.org/XML/XASDM/2/CalReductionTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalReductionTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -770,10 +780,22 @@ CalReductionRow* CalReductionTable::lookup(int numApplied, vector<string > appli
     
     // We do nothing with that but we have to read it.
     Entity containerEntity = Entity::fromBin(eiss);
-    
+
+	// Let's read numRows but ignore it and rely on the value specified in the ASDM.xml file.    
     int numRows = eiss.readInt();
+    if ((numRows != -1)                        // Then these are *not* data produced at the EVLA.
+    	&& ((unsigned int) numRows != this->declaredSize )) { // Then the declared size (in ASDM.xml) is not equal to the one 
+    	                                       // written into the binary representation of the table.
+		cout << "The a number of rows ('" 
+			 << numRows
+			 << "') declared in the binary representation of the table is different from the one declared in ASDM.xml ('"
+			 << this->declaredSize
+			 << "'). I'll proceed with the value declared in ASDM.xml"
+			 << endl;
+    }                                           
+
     try {
-      for (int i = 0; i < numRows; i++) {
+      for (uint32_t i = 0; i < this->declaredSize; i++) {
 	CalReductionRow* aRow = CalReductionRow::fromBin(eiss, *this, attributesSeq);
 	checkAndAdd(aRow);
       }

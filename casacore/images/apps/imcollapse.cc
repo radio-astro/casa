@@ -36,8 +36,8 @@ Int main(Int argc, char *argv[]) {
 	input.create("imagename");
 	input.create("box", "");
 	input.create("region", "");
-	input.create("chans", ImageInputProcessor::ALL);
-	input.create("stokes", ImageInputProcessor::ALL);
+	input.create("chans", RegionManager::ALL);
+	input.create("stokes", RegionManager::ALL);
 	input.create("mask", "");
 	input.create("axis", "");
 	input.create("function","");

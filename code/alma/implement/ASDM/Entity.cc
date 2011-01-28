@@ -103,8 +103,7 @@ namespace asdm {
     return o;
   }
 
-  Entity Entity::getEntity(StringTokenizer &t) 
-    throw (InvalidArgumentException) {
+  Entity Entity::getEntity(StringTokenizer &t) {
     try {
       string s = t.nextToken("<>");
       if (s == " ")
@@ -200,7 +199,7 @@ namespace asdm {
    * @return The values of this Entity as an XML-formated string.
    * @throws IllegalStateException if the values of this Entity do not conform to the proper XML format.
    */
-  string Entity::toXML() const throw(InvalidDataException) {
+  string Entity::toXML() const {
     string msg = validXML();
     if (msg.length() != 0) 
       throw InvalidDataException(msg);
@@ -224,7 +223,7 @@ namespace asdm {
   }
 #endif
 
-  void Entity::setFromXML(string xml) throw(InvalidArgumentException) {
+  void Entity::setFromXML(string xml) {
     entityId.setId(getXMLValue(xml,"entityId"));
     entityIdEncrypted = getXMLValue(xml,"entityIdEncrypted");
     entityTypeName = getXMLValue(xml,"entityTypeName");

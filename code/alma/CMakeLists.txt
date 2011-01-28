@@ -196,6 +196,8 @@ casa_add_library( alma
   implement/ASDM/SwitchCycleTable.cc
   implement/ASDM/SysCalRow.cc
   implement/ASDM/SysCalTable.cc
+  implement/ASDM/SysPowerRow.cc
+  implement/ASDM/SysPowerTable.cc
   implement/ASDM/Tag.cc
   implement/ASDM/TagFormatException.cc
   implement/ASDM/TagType.cc

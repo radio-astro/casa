@@ -42,6 +42,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 \begin{description}
 
+\item <link anchor="images:regionmanager.frombcs.function">frombcs</link> (range along one axis)
 \item <link anchor="images:regionmanager.wrange.function">wrange</link> (range along one axis)
 \item <link anchor="images:regionmanager.wbox.function">wbox</link>
 \item <link anchor="images:regionmanager.wpolygon.function">wpolygon</link>
@@ -842,6 +843,55 @@ regionShape=[78 142 256] , imageShape=[155 178 256] ]
 
 This example shows selection by relative to reference pixel fractional
 coordinates plus auto extension to unspecified axes. 
+
+</example>
+</method>
+
+
+<method type="function" name="frombcs">
+<shortdescription>Create a world coordinate region based on box-chan-stokes input</shortdescription>
+<input>  
+  
+     <param type="record" direction="in" name="csys">
+        <description>Coordinate system record. Must be specified.</description>
+        <value/>
+     </param>
+     <param type="intArray" direction="in" name="shape">
+     <description>shape of the image. Necessary for boundedness checks. Must have the same number of dimensions as the associated coordinate system. Default = []</description>
+     <value>0</value>
+     </param>
+  
+     <param type="string" direction="in" name="box">
+     <description>Direction plane box specification as normally provided in image analysis tasks. "" means use entire directional plane as specified in shape. Default "".</description>
+     <value></value>
+     </param>
+  
+     <param type="string" direction="in" name="chans">
+     <description>Channel spec as normally provided to image analysis tasks. "" means use all channels, Default "".</description>
+     <value></value>
+     </param>
+     <param type="string" direction="in" name="stokes">
+     <description>Stokes spec as normally provided to image analysis tasks. "" means use stokescontrol for setting stokes. Default "".</description>
+     <value></value>
+     </param>
+  
+     <param type="string" direction="in" name="stokescontrol">
+     <description>Polarization set to use if stokes parameter is not specified. Choices are "a" (use all stokes) and "f" (use first stokes). Default "a".</description>
+     <value>a</value>
+     </param>
+</input>
+<returns type="any"><any type="record"/> Region tool or fail</returns>
+
+<description>
+
+This function creates a multi-dimensional world coordinate region based
+on box, chans, stokes inputs familiar from image analysis tasks. It is
+being introduced as a temporary means of refactoring some python level
+task code into C++. However, if users find it to have value, its existence
+can be permanent.
+</description>
+
+<example>  
 
 </example>
 </method>
@@ -1650,7 +1700,9 @@ the regions for you.
 -->
 You can specify the name the region will have ({\stfaf
 regionname}) when it is saved in the Table.  If you don't specify this,
-a digit based name is assigned to it or if specify a name that already exists a new one will be generated which is close but different. The function returns you the name the region is assigned
+a digit based name is assigned to it or if specify a name that already
+exists a new one will be generated which is close but different. The
+function returns you the name the region is assigned
 
 </description>
 

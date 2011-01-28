@@ -108,6 +108,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -128,8 +134,11 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-	unsigned int CalDeviceTable::size() {
-		return privateRows.size();
+	unsigned int CalDeviceTable::size() const {
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -164,6 +173,8 @@ namespace asdm {
 		attributesNames.push_back("calEff");
 
 		attributesNames.push_back("noiseCal");
+
+		attributesNames.push_back("coupledNoiseCal");
 
 		attributesNames.push_back("temperatureLoad");
 
@@ -339,34 +350,27 @@ CalDeviceRow* CalDeviceTable::newRow(CalDeviceRow* row) {
 
 
 
+	 vector<CalDeviceRow *> CalDeviceTable::get() {
+	 	checkPresenceInMemory();
+	    return privateRows;
+	 }
+	 
+	 const vector<CalDeviceRow *>& CalDeviceTable::get() const {
+	 	const_cast<CalDeviceTable&>(*this).checkPresenceInMemory();	
+	    return privateRows;
+	 }	 
+	 	
+
+
+
 
 	
 
 	
 	
 		
-	/**
-	 * Get all rows.
-	 * @return Alls rows as an array of CalDeviceRow
-	 */
-	 vector<CalDeviceRow *> CalDeviceTable::get() {
-	    return privateRows;
-	    
-	 /*
-	 	vector<CalDeviceRow *> v;
-	 	map<string, TIME_ROWS>::iterator mapIter;
-	 	vector<CalDeviceRow *>::iterator rowIter;
-	 	
-	 	for (mapIter=context.begin(); mapIter!=context.end(); mapIter++) {
-	 		for (rowIter=((*mapIter).second).begin(); rowIter!=((*mapIter).second).end(); rowIter++) 
-	 			v.push_back(*rowIter); 
-	 	}
-	 	
-	 	return v;
-	 */
-	 }
-	 
 	 vector<CalDeviceRow *> *CalDeviceTable::getByContext(Tag antennaId, Tag spectralWindowId, int feedId) {
+	 	checkPresenceInMemory();
 	  	string k = Key(antennaId, spectralWindowId, feedId);
  
 	    if (context.find(k) == context.end()) return 0;
@@ -391,6 +395,7 @@ CalDeviceRow* CalDeviceTable::newRow(CalDeviceRow* row) {
  				
 				
 	CalDeviceRow* CalDeviceTable::getRowByKey(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId)  {
+		checkPresenceInMemory();
  		string keystr = Key(antennaId, spectralWindowId, feedId);
  		vector<CalDeviceRow *> row;
  		
@@ -488,7 +493,7 @@ CalDeviceRow* CalDeviceTable::newRow(CalDeviceRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalDeviceTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cldvc=\"http://Alma/XASDM/CalDeviceTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalDeviceTable http://almaobservatory.org/XML/XASDM/2/CalDeviceTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n");
+		buf.append("<CalDeviceTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cldvc=\"http://Alma/XASDM/CalDeviceTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalDeviceTable http://almaobservatory.org/XML/XASDM/2/CalDeviceTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -507,7 +512,7 @@ CalDeviceRow* CalDeviceTable::newRow(CalDeviceRow* row) {
 	}
 
 	
-	void CalDeviceTable::fromXML(string xmlDoc)  {
+	void CalDeviceTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalDeviceTable")) 
 			error();
@@ -529,7 +534,6 @@ CalDeviceRow* CalDeviceTable::newRow(CalDeviceRow* row) {
 		s = xml.getElementContent("<row>","</row>");
 		CalDeviceRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a CalDeviceRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {
@@ -566,7 +570,7 @@ CalDeviceRow* CalDeviceTable::newRow(CalDeviceRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalDeviceTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cldvc=\"http://Alma/XASDM/CalDeviceTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalDeviceTable http://almaobservatory.org/XML/XASDM/2/CalDeviceTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n";
+		oss << "<CalDeviceTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cldvc=\"http://Alma/XASDM/CalDeviceTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalDeviceTable http://almaobservatory.org/XML/XASDM/2/CalDeviceTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalDeviceTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -582,6 +586,7 @@ CalDeviceRow* CalDeviceTable::newRow(CalDeviceRow* row) {
 		oss << "<numReceptor/>\n"; 
 		oss << "<calEff/>\n"; 
 		oss << "<noiseCal/>\n"; 
+		oss << "<coupledNoiseCal/>\n"; 
 		oss << "<temperatureLoad/>\n"; 
 		oss << "</Attributes>\n";		
 		oss << "</CalDeviceTable>\n";
@@ -711,6 +716,8 @@ CalDeviceRow* CalDeviceTable::newRow(CalDeviceRow* row) {
      
     attributesSeq.push_back("noiseCal") ; 
      
+    attributesSeq.push_back("coupledNoiseCal") ; 
+     
     attributesSeq.push_back("temperatureLoad") ; 
               
      }
@@ -764,10 +771,22 @@ CalDeviceRow* CalDeviceTable::newRow(CalDeviceRow* row) {
     
     // We do nothing with that but we have to read it.
     Entity containerEntity = Entity::fromBin(eiss);
-    
+
+	// Let's read numRows but ignore it and rely on the value specified in the ASDM.xml file.    
     int numRows = eiss.readInt();
+    if ((numRows != -1)                        // Then these are *not* data produced at the EVLA.
+    	&& ((unsigned int) numRows != this->declaredSize )) { // Then the declared size (in ASDM.xml) is not equal to the one 
+    	                                       // written into the binary representation of the table.
+		cout << "The a number of rows ('" 
+			 << numRows
+			 << "') declared in the binary representation of the table is different from the one declared in ASDM.xml ('"
+			 << this->declaredSize
+			 << "'). I'll proceed with the value declared in ASDM.xml"
+			 << endl;
+    }                                           
+
     try {
-      for (int i = 0; i < numRows; i++) {
+      for (uint32_t i = 0; i < this->declaredSize; i++) {
 	CalDeviceRow* aRow = CalDeviceRow::fromBin(eiss, *this, attributesSeq);
 	checkAndAdd(aRow);
       }

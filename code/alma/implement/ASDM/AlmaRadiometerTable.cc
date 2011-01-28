@@ -102,6 +102,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -122,8 +128,11 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-	unsigned int AlmaRadiometerTable::size() {
-		return privateRows.size();
+	unsigned int AlmaRadiometerTable::size() const {
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -261,20 +270,21 @@ AlmaRadiometerRow* AlmaRadiometerTable::newRow(AlmaRadiometerRow* row) {
 
 
 
+	 vector<AlmaRadiometerRow *> AlmaRadiometerTable::get() {
+	 	checkPresenceInMemory();
+	    return privateRows;
+	 }
+	 
+	 const vector<AlmaRadiometerRow *>& AlmaRadiometerTable::get() const {
+	 	const_cast<AlmaRadiometerTable&>(*this).checkPresenceInMemory();	
+	    return privateRows;
+	 }	 
+	 	
+
+
+
 
 	
-
-	//
-	// ====> Methods returning rows.
-	//	
-	/**
-	 * Get all rows.
-	 * @return Alls rows as an array of AlmaRadiometerRow
-	 */
-	vector<AlmaRadiometerRow *> AlmaRadiometerTable::get() {
-		return privateRows;
-		// return row;
-	}
 
 	
 /*
@@ -284,8 +294,9 @@ AlmaRadiometerRow* AlmaRadiometerTable::newRow(AlmaRadiometerRow* row) {
  **
  */
  	AlmaRadiometerRow* AlmaRadiometerTable::getRowByKey(Tag almaRadiometerId)  {
+ 	checkPresenceInMemory();
 	AlmaRadiometerRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -338,7 +349,7 @@ AlmaRadiometerRow* AlmaRadiometerTable::newRow(AlmaRadiometerRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<AlmaRadiometerTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:ardmtr=\"http://Alma/XASDM/AlmaRadiometerTable\" xsi:schemaLocation=\"http://Alma/XASDM/AlmaRadiometerTable http://almaobservatory.org/XML/XASDM/2/AlmaRadiometerTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n");
+		buf.append("<AlmaRadiometerTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:ardmtr=\"http://Alma/XASDM/AlmaRadiometerTable\" xsi:schemaLocation=\"http://Alma/XASDM/AlmaRadiometerTable http://almaobservatory.org/XML/XASDM/2/AlmaRadiometerTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -357,7 +368,7 @@ AlmaRadiometerRow* AlmaRadiometerTable::newRow(AlmaRadiometerRow* row) {
 	}
 
 	
-	void AlmaRadiometerTable::fromXML(string xmlDoc)  {
+	void AlmaRadiometerTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<AlmaRadiometerTable")) 
 			error();
@@ -379,7 +390,6 @@ AlmaRadiometerRow* AlmaRadiometerTable::newRow(AlmaRadiometerRow* row) {
 		s = xml.getElementContent("<row>","</row>");
 		AlmaRadiometerRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a AlmaRadiometerRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {
@@ -416,7 +426,7 @@ AlmaRadiometerRow* AlmaRadiometerTable::newRow(AlmaRadiometerRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<AlmaRadiometerTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:ardmtr=\"http://Alma/XASDM/AlmaRadiometerTable\" xsi:schemaLocation=\"http://Alma/XASDM/AlmaRadiometerTable http://almaobservatory.org/XML/XASDM/2/AlmaRadiometerTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n";
+		oss << "<AlmaRadiometerTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:ardmtr=\"http://Alma/XASDM/AlmaRadiometerTable\" xsi:schemaLocation=\"http://Alma/XASDM/AlmaRadiometerTable http://almaobservatory.org/XML/XASDM/2/AlmaRadiometerTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='AlmaRadiometerTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -593,10 +603,22 @@ AlmaRadiometerRow* AlmaRadiometerTable::newRow(AlmaRadiometerRow* row) {
     
     // We do nothing with that but we have to read it.
     Entity containerEntity = Entity::fromBin(eiss);
-    
+
+	// Let's read numRows but ignore it and rely on the value specified in the ASDM.xml file.    
     int numRows = eiss.readInt();
+    if ((numRows != -1)                        // Then these are *not* data produced at the EVLA.
+    	&& ((unsigned int) numRows != this->declaredSize )) { // Then the declared size (in ASDM.xml) is not equal to the one 
+    	                                       // written into the binary representation of the table.
+		cout << "The a number of rows ('" 
+			 << numRows
+			 << "') declared in the binary representation of the table is different from the one declared in ASDM.xml ('"
+			 << this->declaredSize
+			 << "'). I'll proceed with the value declared in ASDM.xml"
+			 << endl;
+    }                                           
+
     try {
-      for (int i = 0; i < numRows; i++) {
+      for (uint32_t i = 0; i < this->declaredSize; i++) {
 	AlmaRadiometerRow* aRow = AlmaRadiometerRow::fromBin(eiss, *this, attributesSeq);
 	checkAndAdd(aRow);
       }

@@ -294,8 +294,8 @@ String SkyComponent::positionToString(const CoordinateSystem * const coordinates
 	if ( delta != 0 ) {
 		dra.convert("s");
 		ddec.convert("arcsec");
-		Double drasec  = roundLog(dra.getValue());
-		Double ddecarcsec = roundLog(ddec.getValue());
+		Double drasec  = roundDouble(dra.getValue(), 3, 2);
+		Double ddecarcsec = roundDouble(ddec.getValue(), 3, 2);
 		Vector<Double> dravec(2), ddecvec(2);
 		dravec.set(drasec);
 		ddecvec.set(ddecarcsec);
@@ -323,8 +323,8 @@ String SkyComponent::positionToString(const CoordinateSystem * const coordinates
 			Double raPixErr = dra.getValue("rad")/increment[0];
 			Double decPixErr = ddec.getValue("rad")/increment[1];
 			Vector<Double> raPix(2), decPix(2);
-			raPix.set(roundLog(raPixErr));
-			decPix.set(roundLog(decPixErr));
+			raPix.set(roundDouble(raPixErr, 3, 2));
+			decPix.set(roundDouble(decPixErr, 3, 2));
 			precision = precisionForValueErrorPairs(raPix, decPix);
 			position << setprecision(precision);
 			position << "       --- ra:   " << pixel[0] << " +/- " << raPixErr << " pixels" << endl;

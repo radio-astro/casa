@@ -1,7 +1,7 @@
 import os
 from taskinit import *
 
-def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=None, srt=None, time_sampling=None, ocorr_mode=None, compression=None, asis=None, wvr_corrected_data=None, scans=None, ignore_time=None, verbose=None, overwrite=None, showversion=None):
+def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=None, srt=None, time_sampling=None, ocorr_mode=None, compression=None, asis=None, wvr_corrected_data=None, scans=None, ignore_time=None, process_syspower=None, process_caldevice=None, verbose=None, overwrite=None, showversion=None):
 	""" Convert an ALMA Science Data Model observation into a CASA visibility file (MS)
 	The conversion of the ALMA SDM archive format into a measurement set.  This version
 	is under development and is geared to handling many spectral windows of different
@@ -41,6 +41,10 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
 		   execute_string= execute_string +' --scans ' + scans
 		if (ignore_time) :
 			execute_string= execute_string +' --ignore-time'
+		if (process_syspower) :
+			execute_string = execute_string +' --process-syspower'
+		if (process_caldevice) :
+			execute_string = execute_string +' --process-caldevice'
 		if(compression) :
 		   execute_string= execute_string +' --compression'
 		if(verbose) :
@@ -53,7 +57,10 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
 		casalog.post('Running the asdm2MS standalone invoked as:')
 		#print execute_string
 		casalog.post(execute_string)
-        	os.system(execute_string)
+        	exitcode=os.system(execute_string)
+                if exitcode!=0:
+                   casalog.post('The asdm2MS terminated','SEVERE')
+                   raise Exception, "asdm coversion error, please check if it is a valid ASDM"
 		if compression :
                    #viso = viso + '.compressed'
                    viso = visover.rstrip('.ms') + '.compressed.ms'

@@ -113,7 +113,7 @@ int main() {
     dirName = os.str();
 	Directory workdir(dirName);
     String goodImage("collapse_in.fits");
-    const String ALL = ImageInputProcessor::ALL;
+    const String ALL = RegionManager::ALL;
 	workdir.create();
 	uInt retVal = 0;
     try {

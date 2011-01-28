@@ -1313,6 +1313,7 @@ ms::cvel(const std::string& mode,
       
 	Bool isEquidistant = True;
 	for(Int i=0; i<totNumChan; i++){
+	  cw(i) = abs(cw(i)); // ignore sign of width
 	  if(abs(cw(i)-cw(0))>0.1){
 	    isEquidistant = False;
 	  }
@@ -2461,15 +2462,15 @@ ms::hanningsmooth(const std::string& datacolumn)
        MSMainColumns mainCols(*itsMS);
        if(!mainCols.correctedData().isNull()){ // there are scratch columns
 	 *itsLog << LogIO::NORMAL << "Smoothing MS Main Table column CORRECTED_DATA ... " << LogIO::POST;
-	 VisSetUtil::HanningSmooth(vs, "corrected");
+	 VisSetUtil::HanningSmooth(vs, "corrected", False); // False, i.e. don't change flags and weights here, will be done below
        }
        *itsLog << LogIO::NORMAL << "Smoothing MS Main Table column DATA ... " << LogIO::POST;
-       VisSetUtil::HanningSmooth(vs, "data");
+       VisSetUtil::HanningSmooth(vs, "data", True);
      }
      else{
        *itsLog << LogIO::NORMAL << "Smoothing MS Main Table column \'" 
 	       << datacolumn << "\'" << LogIO::POST;
-       VisSetUtil::HanningSmooth(vs, datacolumn);
+       VisSetUtil::HanningSmooth(vs, datacolumn, True);
      }
 
      rstat = True;

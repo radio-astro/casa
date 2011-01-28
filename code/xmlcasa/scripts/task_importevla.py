@@ -2,7 +2,7 @@ import os
 from taskinit import *
 from flagdata_cli import flagdata_cli as flagdata
 
-def importevla(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=None, srt=None, time_sampling=None, ocorr_mode=None, compression=None, asis=None, wvr_corrected_data=None, verbose=None, overwrite=None, showversion=None, applyflags=None, tbuff=None, flagzero=None, cliplevel=None, flagpol=None, shadow=None, diameter=None, flagbackup=None):
+def importevla(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=None, srt=None, time_sampling=None, ocorr_mode=None, compression=None, asis=None, wvr_corrected_data=None, switchedpower=None, verbose=None, overwrite=None, showversion=None, applyflags=None, tbuff=None, flagzero=None, cliplevel=None, flagpol=None, shadow=None, diameter=None, flagbackup=None):
 	""" Convert a Science Data Model (SDM) dataset into a CASA Measurement Set (MS)
 	This version is under development and is geared to handling EVLA specific flag and
 	system files, and is otherwise identical to importasdm.
@@ -21,6 +21,7 @@ def importevla(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
 	#Vers4.0 (3.0.2) STM 2010-04-20 add flagpol
 	#Vers5.0 (3.0.2) STM 2010-05-27 combine flagzero clips
 	#Vers6.0 (3.1.0) STM 2010-07-01 flagbackup option
+	#Vers7.0 (3.2.0) GAM 2011-01-18 added switchedpower option (sw power gain/tsys)
 	try:
                 casalog.origin('importevla')
 		viso = ''
@@ -43,6 +44,8 @@ def importevla(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
 		execute_string='asdm2MS  --icm \"' +corr_mode + '\" --isrt \"' + srt+ '\" --its \"' + time_sampling+ '\" --ocm \"' + ocorr_mode + '\" --wvr-corrected-data \"' + wvr_corrected_data + '\" --asis \"' + asis + '\" --logfile \"' +casalog.logfile() +'\"'
 		if(compression) :
 		   execute_string= execute_string +' --compression'
+		if (switchedpower) :
+		   execute_string = execute_string +' --process-syspower --process-caldevice'
 		if(verbose) :
 		   execute_string= execute_string +' --verbose'
 		if(showversion) :

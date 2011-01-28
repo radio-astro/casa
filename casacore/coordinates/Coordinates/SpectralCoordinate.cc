@@ -308,7 +308,8 @@ SpectralCoordinate::SpectralCoordinate(MFrequency::Types freqType,
 SpectralCoordinate::SpectralCoordinate(MFrequency::Types freqType,
                                        const Vector<Double>& wavelengths,
                                        const String&waveUnit,
-                                       Double restFrequency )
+                                       Double restFrequency,
+				       Bool inAir)
 : Coordinate(),
   pTabular_p(0),
   type_p(freqType),
@@ -340,7 +341,12 @@ SpectralCoordinate::SpectralCoordinate(MFrequency::Types freqType,
    //cout << "waveUnit " << waveUnit << " waveUnit_p " << waveUnit_p << " to_m_p " << to_m_p << " to_hz_p " << to_hz_p << endl;
 
    Vector<Double> frequencies;
-   wavelengthToFrequency(frequencies, wavelengths);
+   if(inAir){
+     airWavelengthToFrequency(frequencies, wavelengths);
+   }
+   else{
+     wavelengthToFrequency(frequencies, wavelengths);
+   }
 
    //for(uInt i=0; i<frequencies.nelements(); i++){
    //    cout << "freq i " << i << " " << frequencies(i) << endl;
@@ -1700,19 +1706,14 @@ void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis,
 		 header.dataType("cdelt") == TpArrayDouble &&
 		 header.shape("cdelt").nelements() == 1 &&
 		 header.shape("cdelt")(0) > Int(whichAxis), AipsError);
-    AlwaysAssert(header.isDefined("naxis") && 
-		 header.dataType("naxis") == TpArrayInt &&
-		 header.shape("naxis").nelements() == 1 &&
-		 header.shape("naxis")(0) > Int(whichAxis), AipsError);
 
     Vector<String> ctype, cunit;
     Vector<Double> crval, cdelt, crpix;
-    Vector<Int> naxis;
+
     header.get("ctype", ctype);
     header.get("crval", crval);
     header.get("crpix", crpix);
     header.get("cdelt", cdelt);
-    header.get("naxis",naxis);
 
     if (header.isDefined("cunit")) {
 	AlwaysAssert(header.dataType("cunit") == TpArrayString &&
@@ -1732,6 +1733,7 @@ void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis,
     Double FreqInc = Quantity(increment()(0), 
 			      worldAxisUnits()(0)).getBaseValue();
     Double RefPix = referencePixel()(0) + offset;
+
     MDoppler::Types VelPreference = opticalVelDef ? MDoppler::OPTICAL : MDoppler::RADIO;
 
     // Determine possible changes to RefFreq etc. and check if we are linear in the preferred quantity.
@@ -1740,7 +1742,7 @@ void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis,
     // Fill pixel numbers
     Vector<Double> pixel;    
 
-        if (pixelValues().nelements() > 1) { // tabular axis
+    if (pixelValues().nelements() > 1) { // tabular axis
       pixel.assign(pixelValues());
       Vector<Double> vf0, vf1;
       if(!toWorld(vf0, Vector<Double>(1,pixel(0))) || !toWorld(vf1, Vector<Double>(1,pixel(1)))){
@@ -1751,10 +1753,18 @@ void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis,
       convertFrom(vf1);
       RefFreq = vf0(0); // value in Hz in native reference frame
       FreqInc = vf1(0) - RefFreq; // dto.
-      RefPix = pixel(0);
+      RefPix = pixel(0) + offset;
     }
     else{
-      uInt nEl = naxis(whichAxis);
+      uInt nEl = 0;
+      if(header.isDefined("naxis") && 
+	 header.dataType("naxis") == TpArrayInt &&
+	 header.shape("naxis").nelements() == 1 &&
+	 header.shape("naxis")(0) > Int(whichAxis)){
+	Vector<Int> naxis;
+	header.get("naxis",naxis);
+	nEl = naxis(whichAxis);
+      }
       pixel.resize(nEl);
       for(uInt i=0; i<nEl; i++){
 	pixel(i) = Double(i); 
@@ -1777,13 +1787,13 @@ void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis,
 
       // frequencies
       Double actual = fx; // value in Hz
-      Double linear = RefFreq + FreqInc*(pixel(i)-pixel(0)); // also in Hz
+      Double linear = RefFreq + FreqInc*(pixel(i)-(RefPix-offset)); // also in Hz
       gridSpacing = FreqInc;      
 
       if(preferWavelength){ // check if we are linear in wavelength
 	if(actual>0. && RefFreq>0. && (RefFreq+FreqInc)>0.){
 	  actual = C::c/actual;
-	  linear = C::c/RefFreq + (C::c/(RefFreq+FreqInc) - C::c/RefFreq)*(pixel(i) - pixel(0));
+	  linear = C::c/RefFreq + (C::c/(RefFreq+FreqInc) - C::c/RefFreq)*(pixel(i) - (RefPix-offset));
 	  gridSpacing = -(C::c/(RefFreq+FreqInc) - C::c/RefFreq);
 	}
 	else{
@@ -1796,7 +1806,7 @@ void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis,
 	  Double refVelocity = -C::c * (1.0 - Restfreq / RefFreq);
 	  Double velocityIncrement = -C::c * (1.0 - Restfreq / (RefFreq + FreqInc)) - refVelocity;
 	  actual = -C::c * (1.0 - Restfreq / actual); 
-	  linear = refVelocity + velocityIncrement * (pixel(i) - pixel(0));
+	  linear = refVelocity + velocityIncrement * (pixel(i) - (RefPix-offset));
 	  gridSpacing = -velocityIncrement;
 	}
 	else{

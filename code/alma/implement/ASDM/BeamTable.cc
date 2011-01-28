@@ -102,6 +102,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -122,8 +128,11 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-	unsigned int BeamTable::size() {
-		return privateRows.size();
+	unsigned int BeamTable::size() const {
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -257,20 +266,21 @@ BeamRow* BeamTable::newRow(BeamRow* row) {
 
 
 
+	 vector<BeamRow *> BeamTable::get() {
+	 	checkPresenceInMemory();
+	    return privateRows;
+	 }
+	 
+	 const vector<BeamRow *>& BeamTable::get() const {
+	 	const_cast<BeamTable&>(*this).checkPresenceInMemory();	
+	    return privateRows;
+	 }	 
+	 	
+
+
+
 
 	
-
-	//
-	// ====> Methods returning rows.
-	//	
-	/**
-	 * Get all rows.
-	 * @return Alls rows as an array of BeamRow
-	 */
-	vector<BeamRow *> BeamTable::get() {
-		return privateRows;
-		// return row;
-	}
 
 	
 /*
@@ -280,8 +290,9 @@ BeamRow* BeamTable::newRow(BeamRow* row) {
  **
  */
  	BeamRow* BeamTable::getRowByKey(Tag beamId)  {
+ 	checkPresenceInMemory();
 	BeamRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -334,7 +345,7 @@ BeamRow* BeamTable::newRow(BeamRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<BeamTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:beam=\"http://Alma/XASDM/BeamTable\" xsi:schemaLocation=\"http://Alma/XASDM/BeamTable http://almaobservatory.org/XML/XASDM/2/BeamTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n");
+		buf.append("<BeamTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:beam=\"http://Alma/XASDM/BeamTable\" xsi:schemaLocation=\"http://Alma/XASDM/BeamTable http://almaobservatory.org/XML/XASDM/2/BeamTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -353,7 +364,7 @@ BeamRow* BeamTable::newRow(BeamRow* row) {
 	}
 
 	
-	void BeamTable::fromXML(string xmlDoc)  {
+	void BeamTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<BeamTable")) 
 			error();
@@ -375,7 +386,6 @@ BeamRow* BeamTable::newRow(BeamRow* row) {
 		s = xml.getElementContent("<row>","</row>");
 		BeamRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a BeamRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {
@@ -412,7 +422,7 @@ BeamRow* BeamTable::newRow(BeamRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<BeamTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:beam=\"http://Alma/XASDM/BeamTable\" xsi:schemaLocation=\"http://Alma/XASDM/BeamTable http://almaobservatory.org/XML/XASDM/2/BeamTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n";
+		oss << "<BeamTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:beam=\"http://Alma/XASDM/BeamTable\" xsi:schemaLocation=\"http://Alma/XASDM/BeamTable http://almaobservatory.org/XML/XASDM/2/BeamTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='BeamTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -583,10 +593,22 @@ BeamRow* BeamTable::newRow(BeamRow* row) {
     
     // We do nothing with that but we have to read it.
     Entity containerEntity = Entity::fromBin(eiss);
-    
+
+	// Let's read numRows but ignore it and rely on the value specified in the ASDM.xml file.    
     int numRows = eiss.readInt();
+    if ((numRows != -1)                        // Then these are *not* data produced at the EVLA.
+    	&& ((unsigned int) numRows != this->declaredSize )) { // Then the declared size (in ASDM.xml) is not equal to the one 
+    	                                       // written into the binary representation of the table.
+		cout << "The a number of rows ('" 
+			 << numRows
+			 << "') declared in the binary representation of the table is different from the one declared in ASDM.xml ('"
+			 << this->declaredSize
+			 << "'). I'll proceed with the value declared in ASDM.xml"
+			 << endl;
+    }                                           
+
     try {
-      for (int i = 0; i < numRows; i++) {
+      for (uint32_t i = 0; i < this->declaredSize; i++) {
 	BeamRow* aRow = BeamRow::fromBin(eiss, *this, attributesSeq);
 	checkAndAdd(aRow);
       }

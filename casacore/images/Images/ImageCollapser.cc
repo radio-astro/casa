@@ -328,7 +328,7 @@ namespace casa {
         	_image, _regionRecord, diagnostics,
         	outputPtr, _stokesString, imagename,
         	0, regionName, box, _chan,
-        	ImageInputProcessor::USE_ALL_STOKES,
+        	RegionManager::USE_ALL_STOKES,
         	False, 0
         );
         _finishConstruction();
@@ -352,7 +352,7 @@ namespace casa {
         	_regionRecord, diagnostics,
         	outputPtr, _stokesString, image,
         	0, regionName, box, _chan,
-        	ImageInputProcessor::USE_ALL_STOKES,
+        	RegionManager::USE_ALL_STOKES,
         	False, 0
         );
         _finishConstruction();

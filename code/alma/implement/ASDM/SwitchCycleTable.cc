@@ -102,6 +102,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -122,8 +128,11 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-	unsigned int SwitchCycleTable::size() {
-		return privateRows.size();
+	unsigned int SwitchCycleTable::size() const {
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -332,20 +341,21 @@ SwitchCycleRow* SwitchCycleTable::newRow(SwitchCycleRow* row) {
 
 
 
+	 vector<SwitchCycleRow *> SwitchCycleTable::get() {
+	 	checkPresenceInMemory();
+	    return privateRows;
+	 }
+	 
+	 const vector<SwitchCycleRow *>& SwitchCycleTable::get() const {
+	 	const_cast<SwitchCycleTable&>(*this).checkPresenceInMemory();	
+	    return privateRows;
+	 }	 
+	 	
+
+
+
 
 	
-
-	//
-	// ====> Methods returning rows.
-	//	
-	/**
-	 * Get all rows.
-	 * @return Alls rows as an array of SwitchCycleRow
-	 */
-	vector<SwitchCycleRow *> SwitchCycleTable::get() {
-		return privateRows;
-		// return row;
-	}
 
 	
 /*
@@ -355,8 +365,9 @@ SwitchCycleRow* SwitchCycleTable::newRow(SwitchCycleRow* row) {
  **
  */
  	SwitchCycleRow* SwitchCycleTable::getRowByKey(Tag switchCycleId)  {
+ 	checkPresenceInMemory();
 	SwitchCycleRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -389,8 +400,8 @@ SwitchCycleRow* SwitchCycleTable::newRow(SwitchCycleRow* row) {
  */
 SwitchCycleRow* SwitchCycleTable::lookup(int numStep, vector<float > weightArray, vector<vector<Angle > > dirOffsetArray, vector<Frequency > freqOffsetArray, vector<Interval > stepDurationArray) {
 		SwitchCycleRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(numStep, weightArray, dirOffsetArray, freqOffsetArray, stepDurationArray)) return aRow;
 		}			
 		return 0;	
@@ -435,7 +446,7 @@ SwitchCycleRow* SwitchCycleTable::lookup(int numStep, vector<float > weightArray
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<SwitchCycleTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:swtccl=\"http://Alma/XASDM/SwitchCycleTable\" xsi:schemaLocation=\"http://Alma/XASDM/SwitchCycleTable http://almaobservatory.org/XML/XASDM/2/SwitchCycleTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n");
+		buf.append("<SwitchCycleTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:swtccl=\"http://Alma/XASDM/SwitchCycleTable\" xsi:schemaLocation=\"http://Alma/XASDM/SwitchCycleTable http://almaobservatory.org/XML/XASDM/2/SwitchCycleTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -454,7 +465,7 @@ SwitchCycleRow* SwitchCycleTable::lookup(int numStep, vector<float > weightArray
 	}
 
 	
-	void SwitchCycleTable::fromXML(string xmlDoc)  {
+	void SwitchCycleTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<SwitchCycleTable")) 
 			error();
@@ -476,7 +487,6 @@ SwitchCycleRow* SwitchCycleTable::lookup(int numStep, vector<float > weightArray
 		s = xml.getElementContent("<row>","</row>");
 		SwitchCycleRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a SwitchCycleRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {
@@ -513,7 +523,7 @@ SwitchCycleRow* SwitchCycleTable::lookup(int numStep, vector<float > weightArray
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<SwitchCycleTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:swtccl=\"http://Alma/XASDM/SwitchCycleTable\" xsi:schemaLocation=\"http://Alma/XASDM/SwitchCycleTable http://almaobservatory.org/XML/XASDM/2/SwitchCycleTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n";
+		oss << "<SwitchCycleTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:swtccl=\"http://Alma/XASDM/SwitchCycleTable\" xsi:schemaLocation=\"http://Alma/XASDM/SwitchCycleTable http://almaobservatory.org/XML/XASDM/2/SwitchCycleTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='SwitchCycleTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -705,10 +715,22 @@ SwitchCycleRow* SwitchCycleTable::lookup(int numStep, vector<float > weightArray
     
     // We do nothing with that but we have to read it.
     Entity containerEntity = Entity::fromBin(eiss);
-    
+
+	// Let's read numRows but ignore it and rely on the value specified in the ASDM.xml file.    
     int numRows = eiss.readInt();
+    if ((numRows != -1)                        // Then these are *not* data produced at the EVLA.
+    	&& ((unsigned int) numRows != this->declaredSize )) { // Then the declared size (in ASDM.xml) is not equal to the one 
+    	                                       // written into the binary representation of the table.
+		cout << "The a number of rows ('" 
+			 << numRows
+			 << "') declared in the binary representation of the table is different from the one declared in ASDM.xml ('"
+			 << this->declaredSize
+			 << "'). I'll proceed with the value declared in ASDM.xml"
+			 << endl;
+    }                                           
+
     try {
-      for (int i = 0; i < numRows; i++) {
+      for (uint32_t i = 0; i < this->declaredSize; i++) {
 	SwitchCycleRow* aRow = SwitchCycleRow::fromBin(eiss, *this, attributesSeq);
 	checkAndAdd(aRow);
       }

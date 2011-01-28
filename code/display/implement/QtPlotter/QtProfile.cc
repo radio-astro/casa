@@ -230,6 +230,7 @@ QtProfile::QtProfile(ImageInterface<Float>* img,
     ctype->addItem("optical velocity");
     ctype->addItem("frequency ");
     ctype->addItem("wavelength ");
+    ctype->addItem("air wavelength ");
     ctype->addItem("channel");
     frameButton_p->addItem("LSRK");
     frameButton_p->addItem("BARY");
@@ -278,9 +279,18 @@ QtProfile::QtProfile(ImageInterface<Float>* img,
                    "the image to get a image profile");
     
     QString lbl = coordinateType.chars();
-    if (lbl.contains("freq")) lbl.append(" (GHz)");
-    if (lbl.contains("velo")) lbl.append(" (km/s)");
-    if (lbl.contains("wave")) lbl.append(" (mm)");
+    if (lbl.contains("freq")){
+      lbl.append(" (GHz)");
+    }
+    else if (lbl.contains("velo")){
+      lbl.append(" (km/s)");
+    }
+    else if (lbl.contains("air wave")){
+      lbl.append(" (um)");
+    }
+    else if (lbl.contains("wave")){
+      lbl.append(" (mm)");
+    }
     pc->setXLabel(lbl, 12, 0.5, "Helvetica [Cronyx]");
 
     yUnit = QString(img->units().getName().chars());
@@ -608,9 +618,18 @@ void QtProfile::changeCoordinateType(const QString &text) {
     pc->clearCurve();
 
     QString lbl = text;
-    if (text.contains("freq")) lbl.append(" (GHz) " + QString(frameType_p.c_str()));
-    if (text.contains("velo")) lbl.append(" (km/s) " + QString(frameType_p.c_str()));
-    if (text.contains("wave")) lbl.append(" (mm) " + QString(frameType_p.c_str()));
+    if (text.contains("freq")){
+      lbl.append(" (GHz) " + QString(frameType_p.c_str()));
+    }
+    else if (text.contains("velo")){
+      lbl.append(" (km/s) " + QString(frameType_p.c_str()));
+    }
+    else if (text.contains("air wave")){
+      lbl.append(" (um) " + QString(frameType_p.c_str()));
+    }
+    else if (text.contains("wave")){
+      lbl.append(" (mm) " + QString(frameType_p.c_str()));
+    }
     pc->setXLabel(lbl, 12, 0.5, "Helvetica [Cronyx]");
 
     pc->setPlotSettings(QtPlotSettings());
@@ -692,14 +711,24 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
     ctype->addItem("optical velocity ("+nativeRefFrameName+")");
     ctype->addItem("frequency ("+nativeRefFrameName+")");
     ctype->addItem("wavelength ("+nativeRefFrameName+")");
+    ctype->addItem("air wavelength ("+nativeRefFrameName+")");
     ctype->addItem("channel");    
 
     coordinateType = String(ctype->itemText(0).toStdString());
 
     QString lbl = coordinateType.chars();
-    if (lbl.contains("freq")) lbl.append(" (GHz)");
-    if (lbl.contains("velo")) lbl.append(" (km/s)");
-    if (lbl.contains("wave")) lbl.append(" (mm)");
+    if (lbl.contains("freq")){
+      lbl.append(" (GHz)");
+    }
+    else if (lbl.contains("velo")){
+      lbl.append(" (km/s)");
+    }
+    else if (lbl.contains("air wave")){
+      lbl.append(" (um)");
+    }
+    else if (lbl.contains("wave")){
+      lbl.append(" (mm)");
+    }
     pc->setXLabel(lbl, 12, 0.5, "Helvetica [Cronyx]");
 
     yUnit = QString(img->units().getName().chars());
@@ -808,7 +837,7 @@ void QtProfile::wcChanged( const String c,
     //qDebug() << "position:" << position;
     te->setText(position);
 
-    //Get Profile Flux density v/s velocity
+    //Get Profile Flux density v/s coordinateType
     Bool ok = False;
 #ifdef CLOSEST_TO_ORIGINAL_BEHAVIOR
     if ( coordinate != "world" && pxv.size( ) > 1 ) {
@@ -827,9 +856,13 @@ void QtProfile::wcChanged( const String c,
 	}
     }
 #else
+    String xunit = ""; // use default unit
+    if(coordinateType.contains("air wave")){
+      xunit = "um";
+    }
     ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval, 
 				 "world", coordinateType, 
-				 0, 0, 0, String(""), frameType_p);
+				 0, 0, 0, xunit, frameType_p);
 #endif
     if ( ! ok ) {
 	// change to notify user of error... 

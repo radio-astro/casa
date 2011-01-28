@@ -999,7 +999,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	    String cType = wcsDest.ctype[0];
 	    	    
-	    if (cType.contains("WAVE")){
+	    if (cType.contains("WAVE") || cType.contains("AWAV")){
 
 		if(nc==0){
 		    os << LogIO::WARN << "Will omit tabular spectral coordinate with no channels." << LogIO::POST;
@@ -1029,8 +1029,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		    wavelengths(i) = cRval + cDelt * cPc * (Double(i) - cRpix);
 		    //cout << "wave i " << i << " " << wavelengths(i) << " " << waveUnit << endl;
 		}
-		    
-		SpectralCoordinate c(freqSystem, wavelengths, waveUnit, restFrequency);
+
+		Bool inAir = False;
+		if(cType.contains("AWAV")){
+		  // os << LogIO::NORMAL << "Translating Air Wavelength into wavelength ..." << LogIO::POST;
+		    inAir = True;
+		}
+
+		SpectralCoordinate c(freqSystem, wavelengths, waveUnit, restFrequency, inAir);
 		
 		try {
 		    cSys.addCoordinate(c);

@@ -108,6 +108,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -128,8 +134,11 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-	unsigned int FeedTable::size() {
-		return privateRows.size();
+	unsigned int FeedTable::size() const {
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -477,30 +486,22 @@ FeedRow* FeedTable::newRow(FeedRow* row) {
 
 
 
+	 vector<FeedRow *> FeedTable::get() {
+	 	checkPresenceInMemory();
+	    return privateRows;
+	 }
+	 
+	 const vector<FeedRow *>& FeedTable::get() const {
+	 	const_cast<FeedTable&>(*this).checkPresenceInMemory();	
+	    return privateRows;
+	 }	 
+	 	
+
+
+
 
 	
 
-	
-	
-	/**
-	 * Get all rows.
-	 * @return Alls rows as an array of FeedRow
-	 */
-	vector<FeedRow *> FeedTable::get()  {
-		return privateRows;
-	/*	
-		vector<FeedRow *> v;
-		
-		map<string, ID_TIME_ROWS >::iterator mapIter = context.begin();
-		ID_TIME_ROWS::iterator planeIter;
-		vector<FeedRow*>::iterator rowIter; 
-		for (mapIter=context.begin(); mapIter!=context.end(); mapIter++)
-			for (planeIter=((*mapIter).second).begin(); planeIter != ((*mapIter).second).end(); planeIter++)
-				for (rowIter=(*planeIter).begin(); rowIter != (*planeIter).end(); rowIter++)
-					v.push_back(*rowIter);
-		return v;
-	*/
-	}	
 	
 
 
@@ -515,7 +516,8 @@ FeedRow* FeedTable::newRow(FeedRow* row) {
  ** no row exists for that key.
  **
  */
- 	FeedRow* FeedTable::getRowByKey(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId)  {	
+ 	FeedRow* FeedTable::getRowByKey(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId)  {
+ 		checkPresenceInMemory();	
 		ArrayTime start = timeInterval.getStart();
 		
 		map<string, ID_TIME_ROWS >::iterator mapIter;
@@ -541,6 +543,7 @@ FeedRow* FeedTable::newRow(FeedRow* row) {
  * the autoincrementable attribute that is looked up in the table.
  */
  vector <FeedRow *>  FeedTable::getRowByFeedId(int feedId) {
+	checkPresenceInMemory();
 	vector<FeedRow *> list;
 	map<string, ID_TIME_ROWS >::iterator mapIter;
 	
@@ -586,7 +589,7 @@ FeedRow* FeedTable::newRow(FeedRow* row) {
  * @param <<ExtrinsicAttribute>> receiverId.
  	 		 
  */
-FeedRow* FeedTable::lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int numReceptor, vector<vector<double > > beamOffset, vector<vector<Length > > focusReference, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<Complex > > polResponse, vector<Angle > receptorAngle, vector<int>  receiverId) {		
+FeedRow* FeedTable::lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int numReceptor, vector<vector<double > > beamOffset, vector<vector<Length > > focusReference, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<Complex > > polResponse, vector<Angle > receptorAngle, vector<int>  receiverId) {	
 		using asdm::ArrayTimeInterval;
 		map<string, ID_TIME_ROWS >::iterator mapIter;
 		string k = Key(antennaId, spectralWindowId);
@@ -642,7 +645,7 @@ FeedRow* FeedTable::lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterva
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<FeedTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:feed=\"http://Alma/XASDM/FeedTable\" xsi:schemaLocation=\"http://Alma/XASDM/FeedTable http://almaobservatory.org/XML/XASDM/2/FeedTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n");
+		buf.append("<FeedTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:feed=\"http://Alma/XASDM/FeedTable\" xsi:schemaLocation=\"http://Alma/XASDM/FeedTable http://almaobservatory.org/XML/XASDM/2/FeedTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -661,7 +664,7 @@ FeedRow* FeedTable::lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterva
 	}
 
 	
-	void FeedTable::fromXML(string xmlDoc)  {
+	void FeedTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<FeedTable")) 
 			error();
@@ -683,7 +686,6 @@ FeedRow* FeedTable::lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterva
 		s = xml.getElementContent("<row>","</row>");
 		FeedRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a FeedRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {
@@ -720,7 +722,7 @@ FeedRow* FeedTable::lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterva
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<FeedTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:feed=\"http://Alma/XASDM/FeedTable\" xsi:schemaLocation=\"http://Alma/XASDM/FeedTable http://almaobservatory.org/XML/XASDM/2/FeedTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n";
+		oss << "<FeedTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:feed=\"http://Alma/XASDM/FeedTable\" xsi:schemaLocation=\"http://Alma/XASDM/FeedTable http://almaobservatory.org/XML/XASDM/2/FeedTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='FeedTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -933,10 +935,22 @@ FeedRow* FeedTable::lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterva
     
     // We do nothing with that but we have to read it.
     Entity containerEntity = Entity::fromBin(eiss);
-    
+
+	// Let's read numRows but ignore it and rely on the value specified in the ASDM.xml file.    
     int numRows = eiss.readInt();
+    if ((numRows != -1)                        // Then these are *not* data produced at the EVLA.
+    	&& ((unsigned int) numRows != this->declaredSize )) { // Then the declared size (in ASDM.xml) is not equal to the one 
+    	                                       // written into the binary representation of the table.
+		cout << "The a number of rows ('" 
+			 << numRows
+			 << "') declared in the binary representation of the table is different from the one declared in ASDM.xml ('"
+			 << this->declaredSize
+			 << "'). I'll proceed with the value declared in ASDM.xml"
+			 << endl;
+    }                                           
+
     try {
-      for (int i = 0; i < numRows; i++) {
+      for (uint32_t i = 0; i < this->declaredSize; i++) {
 	FeedRow* aRow = FeedRow::fromBin(eiss, *this, attributesSeq);
 	checkAndAdd(aRow);
       }

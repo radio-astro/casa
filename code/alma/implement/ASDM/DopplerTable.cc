@@ -104,6 +104,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -124,8 +130,11 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-	unsigned int DopplerTable::size() {
-		return privateRows.size();
+	unsigned int DopplerTable::size() const {
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -342,20 +351,21 @@ DopplerRow* DopplerTable::newRow(DopplerRow* row) {
 
 
 
+	 vector<DopplerRow *> DopplerTable::get() {
+	 	checkPresenceInMemory();
+	    return privateRows;
+	 }
+	 
+	 const vector<DopplerRow *>& DopplerTable::get() const {
+	 	const_cast<DopplerTable&>(*this).checkPresenceInMemory();	
+	    return privateRows;
+	 }	 
+	 	
+
+
+
 
 	
-
-	//
-	// ====> Methods returning rows.
-	//	
-	/**
-	 * Get all rows.
-	 * @return Alls rows as an array of DopplerRow
-	 */
-	vector<DopplerRow *> DopplerTable::get() {
-		return privateRows;
-		// return row;
-	}
 
 	
 /*
@@ -365,8 +375,9 @@ DopplerRow* DopplerTable::newRow(DopplerRow* row) {
  **
  */
  	DopplerRow* DopplerTable::getRowByKey(int dopplerId, int sourceId)  {
+ 	checkPresenceInMemory();
 	DopplerRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -399,8 +410,8 @@ DopplerRow* DopplerTable::newRow(DopplerRow* row) {
  */
 DopplerRow* DopplerTable::lookup(int sourceId, int transitionIndex, DopplerReferenceCodeMod::DopplerReferenceCode velDef) {
 		DopplerRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(sourceId, transitionIndex, velDef)) return aRow;
 		}			
 		return 0;	
@@ -417,6 +428,7 @@ DopplerRow* DopplerTable::lookup(int sourceId, int transitionIndex, DopplerRefer
  * the autoincrementable attribute that is looked up in the table.
  */
  vector <DopplerRow *>  DopplerTable::getRowByDopplerId(int dopplerId) {
+	checkPresenceInMemory();
 	vector<DopplerRow *> list;
 	for (unsigned int i = 0; i < row.size(); ++i) {
 		DopplerRow &x = *row[i];
@@ -465,7 +477,7 @@ DopplerRow* DopplerTable::lookup(int sourceId, int transitionIndex, DopplerRefer
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<DopplerTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:dpplr=\"http://Alma/XASDM/DopplerTable\" xsi:schemaLocation=\"http://Alma/XASDM/DopplerTable http://almaobservatory.org/XML/XASDM/2/DopplerTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n");
+		buf.append("<DopplerTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:dpplr=\"http://Alma/XASDM/DopplerTable\" xsi:schemaLocation=\"http://Alma/XASDM/DopplerTable http://almaobservatory.org/XML/XASDM/2/DopplerTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -484,7 +496,7 @@ DopplerRow* DopplerTable::lookup(int sourceId, int transitionIndex, DopplerRefer
 	}
 
 	
-	void DopplerTable::fromXML(string xmlDoc)  {
+	void DopplerTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<DopplerTable")) 
 			error();
@@ -506,7 +518,6 @@ DopplerRow* DopplerTable::lookup(int sourceId, int transitionIndex, DopplerRefer
 		s = xml.getElementContent("<row>","</row>");
 		DopplerRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a DopplerRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {
@@ -543,7 +554,7 @@ DopplerRow* DopplerTable::lookup(int sourceId, int transitionIndex, DopplerRefer
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<DopplerTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:dpplr=\"http://Alma/XASDM/DopplerTable\" xsi:schemaLocation=\"http://Alma/XASDM/DopplerTable http://almaobservatory.org/XML/XASDM/2/DopplerTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n";
+		oss << "<DopplerTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:dpplr=\"http://Alma/XASDM/DopplerTable\" xsi:schemaLocation=\"http://Alma/XASDM/DopplerTable http://almaobservatory.org/XML/XASDM/2/DopplerTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='DopplerTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -723,10 +734,22 @@ DopplerRow* DopplerTable::lookup(int sourceId, int transitionIndex, DopplerRefer
     
     // We do nothing with that but we have to read it.
     Entity containerEntity = Entity::fromBin(eiss);
-    
+
+	// Let's read numRows but ignore it and rely on the value specified in the ASDM.xml file.    
     int numRows = eiss.readInt();
+    if ((numRows != -1)                        // Then these are *not* data produced at the EVLA.
+    	&& ((unsigned int) numRows != this->declaredSize )) { // Then the declared size (in ASDM.xml) is not equal to the one 
+    	                                       // written into the binary representation of the table.
+		cout << "The a number of rows ('" 
+			 << numRows
+			 << "') declared in the binary representation of the table is different from the one declared in ASDM.xml ('"
+			 << this->declaredSize
+			 << "'). I'll proceed with the value declared in ASDM.xml"
+			 << endl;
+    }                                           
+
     try {
-      for (int i = 0; i < numRows; i++) {
+      for (uint32_t i = 0; i < this->declaredSize; i++) {
 	DopplerRow* aRow = DopplerRow::fromBin(eiss, *this, attributesSeq);
 	checkAndAdd(aRow);
       }

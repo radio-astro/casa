@@ -108,6 +108,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -128,8 +134,11 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-	unsigned int CalPositionTable::size() {
-		return privateRows.size();
+	unsigned int CalPositionTable::size() const {
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -395,20 +404,21 @@ CalPositionRow* CalPositionTable::newRow(CalPositionRow* row) {
 
 
 
+	 vector<CalPositionRow *> CalPositionTable::get() {
+	 	checkPresenceInMemory();
+	    return privateRows;
+	 }
+	 
+	 const vector<CalPositionRow *>& CalPositionTable::get() const {
+	 	const_cast<CalPositionTable&>(*this).checkPresenceInMemory();	
+	    return privateRows;
+	 }	 
+	 	
+
+
+
 
 	
-
-	//
-	// ====> Methods returning rows.
-	//	
-	/**
-	 * Get all rows.
-	 * @return Alls rows as an array of CalPositionRow
-	 */
-	vector<CalPositionRow *> CalPositionTable::get() {
-		return privateRows;
-		// return row;
-	}
 
 	
 /*
@@ -418,8 +428,9 @@ CalPositionRow* CalPositionTable::newRow(CalPositionRow* row) {
  **
  */
  	CalPositionRow* CalPositionTable::getRowByKey(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, Tag calDataId, Tag calReductionId)  {
+ 	checkPresenceInMemory();
 	CalPositionRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -492,8 +503,8 @@ CalPositionRow* CalPositionTable::newRow(CalPositionRow* row) {
  */
 CalPositionRow* CalPositionTable::lookup(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, vector<Length > antennaPosition, string stationName, vector<Length > stationPosition, PositionMethodMod::PositionMethod positionMethod, ReceiverBandMod::ReceiverBand receiverBand, int numAntenna, vector<string > refAntennaNames, Length axesOffset, Length axesOffsetErr, bool axesOffsetFixed, vector<Length > positionOffset, vector<Length > positionErr, double reducedChiSquared) {
 		CalPositionRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(antennaName, atmPhaseCorrection, calDataId, calReductionId, startValidTime, endValidTime, antennaPosition, stationName, stationPosition, positionMethod, receiverBand, numAntenna, refAntennaNames, axesOffset, axesOffsetErr, axesOffsetFixed, positionOffset, positionErr, reducedChiSquared)) return aRow;
 		}			
 		return 0;	
@@ -538,7 +549,7 @@ CalPositionRow* CalPositionTable::lookup(string antennaName, AtmPhaseCorrectionM
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalPositionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clposn=\"http://Alma/XASDM/CalPositionTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPositionTable http://almaobservatory.org/XML/XASDM/2/CalPositionTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n");
+		buf.append("<CalPositionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clposn=\"http://Alma/XASDM/CalPositionTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPositionTable http://almaobservatory.org/XML/XASDM/2/CalPositionTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -557,7 +568,7 @@ CalPositionRow* CalPositionTable::lookup(string antennaName, AtmPhaseCorrectionM
 	}
 
 	
-	void CalPositionTable::fromXML(string xmlDoc)  {
+	void CalPositionTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalPositionTable")) 
 			error();
@@ -579,7 +590,6 @@ CalPositionRow* CalPositionTable::lookup(string antennaName, AtmPhaseCorrectionM
 		s = xml.getElementContent("<row>","</row>");
 		CalPositionRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a CalPositionRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {
@@ -616,7 +626,7 @@ CalPositionRow* CalPositionTable::lookup(string antennaName, AtmPhaseCorrectionM
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalPositionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clposn=\"http://Alma/XASDM/CalPositionTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPositionTable http://almaobservatory.org/XML/XASDM/2/CalPositionTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n";
+		oss << "<CalPositionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clposn=\"http://Alma/XASDM/CalPositionTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPositionTable http://almaobservatory.org/XML/XASDM/2/CalPositionTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalPositionTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -847,10 +857,22 @@ CalPositionRow* CalPositionTable::lookup(string antennaName, AtmPhaseCorrectionM
     
     // We do nothing with that but we have to read it.
     Entity containerEntity = Entity::fromBin(eiss);
-    
+
+	// Let's read numRows but ignore it and rely on the value specified in the ASDM.xml file.    
     int numRows = eiss.readInt();
+    if ((numRows != -1)                        // Then these are *not* data produced at the EVLA.
+    	&& ((unsigned int) numRows != this->declaredSize )) { // Then the declared size (in ASDM.xml) is not equal to the one 
+    	                                       // written into the binary representation of the table.
+		cout << "The a number of rows ('" 
+			 << numRows
+			 << "') declared in the binary representation of the table is different from the one declared in ASDM.xml ('"
+			 << this->declaredSize
+			 << "'). I'll proceed with the value declared in ASDM.xml"
+			 << endl;
+    }                                           
+
     try {
-      for (int i = 0; i < numRows; i++) {
+      for (uint32_t i = 0; i < this->declaredSize; i++) {
 	CalPositionRow* aRow = CalPositionRow::fromBin(eiss, *this, attributesSeq);
 	checkAndAdd(aRow);
       }

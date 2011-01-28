@@ -292,18 +292,35 @@ void setInf(Double& val) {
   val = doubleInf();
 }
 
-Double roundLog(Double val) {
-	if (val == 0) {
+Double roundDouble(
+	const Double value, const uInt x, const Int y,
+	const Double sigBreak
+) {
+	if (value == 0) {
 		return 0;
 	}
+	if (sigBreak < 1 || sigBreak >= 10) {
+		ostringstream os;
+		os << __FUNCTION__  << ": sigBreak is " << sigBreak << " but must be in the range of 1 to 10";
+		throw AipsError(os.str());
+	}
+	Int z = y;
+	if (y<0) {
+		z = x;
+	}
+	Double val = value;
 	Bool isNegative = val < 0;
 	Double sign = isNegative ? -1 : 1;
 	val *= sign;
     Double lgr = log10(val);
-    // shift significand into range 32-320
-    Int i = (lgr >= 0) ? int(lgr + 0.5) : int(lgr - 0.5);
-    Double temp = val * pow(10.0, (2-i));
-    return sign*round(temp)*pow(10.0, (i-2));
+    Double lgrSig = log10(sigBreak);
+    Int i = (lgr >= 0) ? int(lgr + 1) : int(lgr);
+    Int nDigits = (
+    		(lgr >= 0 && (fabs(lgr - int(lgr)))<=lgrSig)
+			|| (lgr < 0 && (fabs(lgr - int(lgr)))>(1 - lgrSig))
+        ) ? int(x) : z;
+    Double temp = val * pow(10.0, (nDigits-i));
+    return sign*round(temp)*pow(10.0, (i-nDigits));
 }
 
 // Local Variables: 

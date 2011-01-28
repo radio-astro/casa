@@ -75,8 +75,10 @@ public:
 			  Double& relativesens,
 			  Double& sumwt);
   // Hanning smoothing of spectral channels
-  static void HanningSmooth(VisSet &vs, const String& dataCol="corrected");
-  static void HanningSmooth(VisibilityIterator &vi, const String& dataCol="corrected");
+  static void HanningSmooth(VisSet &vs, const String& dataCol="corrected", 
+			    const Bool& doFlagAndWeight=True);
+  static void HanningSmooth(VisibilityIterator &vi, const String& dataCol="corrected",
+			    const Bool& doFlagAndWeight=True);
   // Subtract/add model from/to corrected visibility data
   static void UVSub(VisSet &vs, Bool reverse=False);
   static void UVSub(VisibilityIterator &vs, Bool reverse=False);

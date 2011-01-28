@@ -108,6 +108,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -128,8 +134,11 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-	unsigned int CalAtmosphereTable::size() {
-		return privateRows.size();
+	unsigned int CalAtmosphereTable::size() const {
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -463,20 +472,21 @@ CalAtmosphereRow* CalAtmosphereTable::newRow(CalAtmosphereRow* row) {
 
 
 
+	 vector<CalAtmosphereRow *> CalAtmosphereTable::get() {
+	 	checkPresenceInMemory();
+	    return privateRows;
+	 }
+	 
+	 const vector<CalAtmosphereRow *>& CalAtmosphereTable::get() const {
+	 	const_cast<CalAtmosphereTable&>(*this).checkPresenceInMemory();	
+	    return privateRows;
+	 }	 
+	 	
+
+
+
 
 	
-
-	//
-	// ====> Methods returning rows.
-	//	
-	/**
-	 * Get all rows.
-	 * @return Alls rows as an array of CalAtmosphereRow
-	 */
-	vector<CalAtmosphereRow *> CalAtmosphereTable::get() {
-		return privateRows;
-		// return row;
-	}
 
 	
 /*
@@ -486,8 +496,9 @@ CalAtmosphereRow* CalAtmosphereTable::newRow(CalAtmosphereRow* row) {
  **
  */
  	CalAtmosphereRow* CalAtmosphereTable::getRowByKey(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId)  {
+ 	checkPresenceInMemory();
 	CalAtmosphereRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -580,8 +591,8 @@ CalAtmosphereRow* CalAtmosphereTable::newRow(CalAtmosphereRow* row) {
  */
 CalAtmosphereRow* CalAtmosphereTable::lookup(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numFreq, int numLoad, int numReceptor, vector<vector<float > > forwardEffSpectrum, vector<Frequency > frequencyRange, Pressure groundPressure, Humidity groundRelHumidity, vector<Frequency > frequencySpectrum, Temperature groundTemperature, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<float > > powerSkySpectrum, vector<vector<vector<float > > > powerLoadSpectrum, SyscalMethodMod::SyscalMethod syscalType, vector<vector<Temperature > > tAtmSpectrum, vector<vector<Temperature > > tRecSpectrum, vector<vector<Temperature > > tSysSpectrum, vector<vector<float > > tauSpectrum, vector<Temperature > tAtm, vector<Temperature > tRec, vector<Temperature > tSys, vector<float > tau, vector<Length > water, vector<Length > waterError) {
 		CalAtmosphereRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(antennaName, receiverBand, calDataId, calReductionId, startValidTime, endValidTime, numFreq, numLoad, numReceptor, forwardEffSpectrum, frequencyRange, groundPressure, groundRelHumidity, frequencySpectrum, groundTemperature, polarizationTypes, powerSkySpectrum, powerLoadSpectrum, syscalType, tAtmSpectrum, tRecSpectrum, tSysSpectrum, tauSpectrum, tAtm, tRec, tSys, tau, water, waterError)) return aRow;
 		}			
 		return 0;	
@@ -626,7 +637,7 @@ CalAtmosphereRow* CalAtmosphereTable::lookup(string antennaName, ReceiverBandMod
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalAtmosphereTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clatm=\"http://Alma/XASDM/CalAtmosphereTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalAtmosphereTable http://almaobservatory.org/XML/XASDM/2/CalAtmosphereTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n");
+		buf.append("<CalAtmosphereTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clatm=\"http://Alma/XASDM/CalAtmosphereTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalAtmosphereTable http://almaobservatory.org/XML/XASDM/2/CalAtmosphereTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -645,7 +656,7 @@ CalAtmosphereRow* CalAtmosphereTable::lookup(string antennaName, ReceiverBandMod
 	}
 
 	
-	void CalAtmosphereTable::fromXML(string xmlDoc)  {
+	void CalAtmosphereTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalAtmosphereTable")) 
 			error();
@@ -667,7 +678,6 @@ CalAtmosphereRow* CalAtmosphereTable::lookup(string antennaName, ReceiverBandMod
 		s = xml.getElementContent("<row>","</row>");
 		CalAtmosphereRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a CalAtmosphereRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {
@@ -704,7 +714,7 @@ CalAtmosphereRow* CalAtmosphereTable::lookup(string antennaName, ReceiverBandMod
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalAtmosphereTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clatm=\"http://Alma/XASDM/CalAtmosphereTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalAtmosphereTable http://almaobservatory.org/XML/XASDM/2/CalAtmosphereTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n";
+		oss << "<CalAtmosphereTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clatm=\"http://Alma/XASDM/CalAtmosphereTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalAtmosphereTable http://almaobservatory.org/XML/XASDM/2/CalAtmosphereTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalAtmosphereTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -977,10 +987,22 @@ CalAtmosphereRow* CalAtmosphereTable::lookup(string antennaName, ReceiverBandMod
     
     // We do nothing with that but we have to read it.
     Entity containerEntity = Entity::fromBin(eiss);
-    
+
+	// Let's read numRows but ignore it and rely on the value specified in the ASDM.xml file.    
     int numRows = eiss.readInt();
+    if ((numRows != -1)                        // Then these are *not* data produced at the EVLA.
+    	&& ((unsigned int) numRows != this->declaredSize )) { // Then the declared size (in ASDM.xml) is not equal to the one 
+    	                                       // written into the binary representation of the table.
+		cout << "The a number of rows ('" 
+			 << numRows
+			 << "') declared in the binary representation of the table is different from the one declared in ASDM.xml ('"
+			 << this->declaredSize
+			 << "'). I'll proceed with the value declared in ASDM.xml"
+			 << endl;
+    }                                           
+
     try {
-      for (int i = 0; i < numRows; i++) {
+      for (uint32_t i = 0; i < this->declaredSize; i++) {
 	CalAtmosphereRow* aRow = CalAtmosphereRow::fromBin(eiss, *this, attributesSeq);
 	checkAndAdd(aRow);
       }

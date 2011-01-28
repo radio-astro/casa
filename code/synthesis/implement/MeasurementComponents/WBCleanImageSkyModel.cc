@@ -132,7 +132,7 @@ WBCleanImageSkyModel::~WBCleanImageSkyModel()
  *************************************/
 Bool WBCleanImageSkyModel::solve(SkyEquation& se) 
 {
-	os << "MSMFS algorithm (v2.1) with " << ntaylor_p << " Taylor coefficients and Reference Frequency of " << refFrequency_p  << " Hz" << LogIO::POST;
+	os << "MSMFS algorithm (v2.2) with " << ntaylor_p << " Taylor coefficients and Reference Frequency of " << refFrequency_p  << " Hz" << LogIO::POST;
 	Int stopflag=0;
 	Int nchan=0,npol=0;
 

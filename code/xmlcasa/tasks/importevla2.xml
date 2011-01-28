@@ -46,6 +46,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <value></value>
     </param>
 
+    <param type="bool" name="switchedpower">
+      <description> The SysPower and CalDevice tables are processed if and only if this parameter is set to true, enabling support for switched-power gain and tsys corrections.</description>
+      <value>False</value>
+    </param>
+
     <param type="bool" name="verbose">
 	    <description>Output lots of information while the filler is working</description>
 	    <value>False</value>

@@ -104,6 +104,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -124,8 +130,11 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-	unsigned int DelayModelTable::size() {
-		return privateRows.size();
+	unsigned int DelayModelTable::size() const {
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -333,34 +342,27 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
 
 
 
+	 vector<DelayModelRow *> DelayModelTable::get() {
+	 	checkPresenceInMemory();
+	    return privateRows;
+	 }
+	 
+	 const vector<DelayModelRow *>& DelayModelTable::get() const {
+	 	const_cast<DelayModelTable&>(*this).checkPresenceInMemory();	
+	    return privateRows;
+	 }	 
+	 	
+
+
+
 
 	
 
 	
 	
 		
-	/**
-	 * Get all rows.
-	 * @return Alls rows as an array of DelayModelRow
-	 */
-	 vector<DelayModelRow *> DelayModelTable::get() {
-	    return privateRows;
-	    
-	 /*
-	 	vector<DelayModelRow *> v;
-	 	map<string, TIME_ROWS>::iterator mapIter;
-	 	vector<DelayModelRow *>::iterator rowIter;
-	 	
-	 	for (mapIter=context.begin(); mapIter!=context.end(); mapIter++) {
-	 		for (rowIter=((*mapIter).second).begin(); rowIter!=((*mapIter).second).end(); rowIter++) 
-	 			v.push_back(*rowIter); 
-	 	}
-	 	
-	 	return v;
-	 */
-	 }
-	 
 	 vector<DelayModelRow *> *DelayModelTable::getByContext(Tag antennaId) {
+	 	checkPresenceInMemory();
 	  	string k = Key(antennaId);
  
 	    if (context.find(k) == context.end()) return 0;
@@ -385,6 +387,7 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
  				
 				
 	DelayModelRow* DelayModelTable::getRowByKey(Tag antennaId, ArrayTimeInterval timeInterval)  {
+		checkPresenceInMemory();
  		string keystr = Key(antennaId);
  		vector<DelayModelRow *> row;
  		
@@ -482,7 +485,7 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<DelayModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:dlymdl=\"http://Alma/XASDM/DelayModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/DelayModelTable http://almaobservatory.org/XML/XASDM/2/DelayModelTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n");
+		buf.append("<DelayModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:dlymdl=\"http://Alma/XASDM/DelayModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/DelayModelTable http://almaobservatory.org/XML/XASDM/2/DelayModelTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -501,7 +504,7 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
 	}
 
 	
-	void DelayModelTable::fromXML(string xmlDoc)  {
+	void DelayModelTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<DelayModelTable")) 
 			error();
@@ -523,7 +526,6 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
 		s = xml.getElementContent("<row>","</row>");
 		DelayModelRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a DelayModelRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {
@@ -560,7 +562,7 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<DelayModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:dlymdl=\"http://Alma/XASDM/DelayModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/DelayModelTable http://almaobservatory.org/XML/XASDM/2/DelayModelTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n";
+		oss << "<DelayModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:dlymdl=\"http://Alma/XASDM/DelayModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/DelayModelTable http://almaobservatory.org/XML/XASDM/2/DelayModelTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='DelayModelTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -761,10 +763,22 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
     
     // We do nothing with that but we have to read it.
     Entity containerEntity = Entity::fromBin(eiss);
-    
+
+	// Let's read numRows but ignore it and rely on the value specified in the ASDM.xml file.    
     int numRows = eiss.readInt();
+    if ((numRows != -1)                        // Then these are *not* data produced at the EVLA.
+    	&& ((unsigned int) numRows != this->declaredSize )) { // Then the declared size (in ASDM.xml) is not equal to the one 
+    	                                       // written into the binary representation of the table.
+		cout << "The a number of rows ('" 
+			 << numRows
+			 << "') declared in the binary representation of the table is different from the one declared in ASDM.xml ('"
+			 << this->declaredSize
+			 << "'). I'll proceed with the value declared in ASDM.xml"
+			 << endl;
+    }                                           
+
     try {
-      for (int i = 0; i < numRows; i++) {
+      for (uint32_t i = 0; i < this->declaredSize; i++) {
 	DelayModelRow* aRow = DelayModelRow::fromBin(eiss, *this, attributesSeq);
 	checkAndAdd(aRow);
       }

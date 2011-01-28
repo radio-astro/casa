@@ -147,6 +147,8 @@
 
 #include <SysCalRow.h>
 
+#include <SysPowerRow.h>
+
 #include <TotalPowerRow.h>
 
 #include <WVMCalRow.h>
@@ -272,6 +274,8 @@
 #include <SwitchCycleTable.h>
 
 #include <SysCalTable.h>
+
+#include <SysPowerTable.h>
 
 #include <TotalPowerTable.h>
 

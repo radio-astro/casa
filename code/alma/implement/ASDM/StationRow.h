@@ -79,7 +79,7 @@ using namespace StationTypeMod;
 
 
 /*\file Station.h
-    \brief Generated from model's revision "1.55", branch "HEAD"
+    \brief Generated from model's revision "1.58", branch "HEAD"
 */
 
 namespace asdm {
@@ -94,7 +94,7 @@ typedef void (StationRow::*StationAttributeFromBin) (EndianISStream& eiss);
 /**
  * The StationRow class is a row of a StationTable.
  * 
- * Generated from model's revision "1.55", branch "HEAD"
+ * Generated from model's revision "1.58", branch "HEAD"
  *
  */
 class StationRow {

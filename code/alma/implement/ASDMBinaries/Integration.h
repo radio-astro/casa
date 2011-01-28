@@ -4,7 +4,6 @@
 #include <CorrelationMode.h>
 #include <AxisName.h>
 #include <NetSideband.h>
-#include <stdint.h>
 
 using namespace std;
 

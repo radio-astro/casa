@@ -43,6 +43,7 @@ test_pcasa                      jmlarsen@eso.org
 test_plotants                   scastro@eso.org
 #test_plotms                     dmehring@nrao.edu
 test_report                     jmlarsen@eso.org
+test_rg_frombcs                 dmehring@nrao.edu
 test_slsearch                   dmehring@nrao.edu
 #test_sdplot                     kana.sugi@nao.ac.jp
 test_sdsave                     takeshi.nakazato@nao.ac.jp

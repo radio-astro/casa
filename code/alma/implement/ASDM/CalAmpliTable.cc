@@ -110,6 +110,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -130,8 +136,11 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-	unsigned int CalAmpliTable::size() {
-		return privateRows.size();
+	unsigned int CalAmpliTable::size() const {
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -357,20 +366,21 @@ CalAmpliRow* CalAmpliTable::newRow(CalAmpliRow* row) {
 
 
 
+	 vector<CalAmpliRow *> CalAmpliTable::get() {
+	 	checkPresenceInMemory();
+	    return privateRows;
+	 }
+	 
+	 const vector<CalAmpliRow *>& CalAmpliTable::get() const {
+	 	const_cast<CalAmpliTable&>(*this).checkPresenceInMemory();	
+	    return privateRows;
+	 }	 
+	 	
+
+
+
 
 	
-
-	//
-	// ====> Methods returning rows.
-	//	
-	/**
-	 * Get all rows.
-	 * @return Alls rows as an array of CalAmpliRow
-	 */
-	vector<CalAmpliRow *> CalAmpliTable::get() {
-		return privateRows;
-		// return row;
-	}
 
 	
 /*
@@ -380,8 +390,9 @@ CalAmpliRow* CalAmpliTable::newRow(CalAmpliRow* row) {
  **
  */
  	CalAmpliRow* CalAmpliTable::getRowByKey(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId)  {
+ 	checkPresenceInMemory();
 	CalAmpliRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -444,8 +455,8 @@ CalAmpliRow* CalAmpliTable::newRow(CalAmpliRow* row) {
  */
 CalAmpliRow* CalAmpliTable::lookup(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, vector<float > apertureEfficiency, vector<float > apertureEfficiencyError) {
 		CalAmpliRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(antennaName, atmPhaseCorrection, receiverBand, calDataId, calReductionId, numReceptor, polarizationTypes, startValidTime, endValidTime, frequencyRange, apertureEfficiency, apertureEfficiencyError)) return aRow;
 		}			
 		return 0;	
@@ -490,7 +501,7 @@ CalAmpliRow* CalAmpliTable::lookup(string antennaName, AtmPhaseCorrectionMod::At
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalAmpliTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clmpl=\"http://Alma/XASDM/CalAmpliTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalAmpliTable http://almaobservatory.org/XML/XASDM/2/CalAmpliTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n");
+		buf.append("<CalAmpliTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clmpl=\"http://Alma/XASDM/CalAmpliTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalAmpliTable http://almaobservatory.org/XML/XASDM/2/CalAmpliTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -509,7 +520,7 @@ CalAmpliRow* CalAmpliTable::lookup(string antennaName, AtmPhaseCorrectionMod::At
 	}
 
 	
-	void CalAmpliTable::fromXML(string xmlDoc)  {
+	void CalAmpliTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalAmpliTable")) 
 			error();
@@ -531,7 +542,6 @@ CalAmpliRow* CalAmpliTable::lookup(string antennaName, AtmPhaseCorrectionMod::At
 		s = xml.getElementContent("<row>","</row>");
 		CalAmpliRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a CalAmpliRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {
@@ -568,7 +578,7 @@ CalAmpliRow* CalAmpliTable::lookup(string antennaName, AtmPhaseCorrectionMod::At
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalAmpliTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clmpl=\"http://Alma/XASDM/CalAmpliTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalAmpliTable http://almaobservatory.org/XML/XASDM/2/CalAmpliTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n";
+		oss << "<CalAmpliTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clmpl=\"http://Alma/XASDM/CalAmpliTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalAmpliTable http://almaobservatory.org/XML/XASDM/2/CalAmpliTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalAmpliTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -775,10 +785,22 @@ CalAmpliRow* CalAmpliTable::lookup(string antennaName, AtmPhaseCorrectionMod::At
     
     // We do nothing with that but we have to read it.
     Entity containerEntity = Entity::fromBin(eiss);
-    
+
+	// Let's read numRows but ignore it and rely on the value specified in the ASDM.xml file.    
     int numRows = eiss.readInt();
+    if ((numRows != -1)                        // Then these are *not* data produced at the EVLA.
+    	&& ((unsigned int) numRows != this->declaredSize )) { // Then the declared size (in ASDM.xml) is not equal to the one 
+    	                                       // written into the binary representation of the table.
+		cout << "The a number of rows ('" 
+			 << numRows
+			 << "') declared in the binary representation of the table is different from the one declared in ASDM.xml ('"
+			 << this->declaredSize
+			 << "'). I'll proceed with the value declared in ASDM.xml"
+			 << endl;
+    }                                           
+
     try {
-      for (int i = 0; i < numRows; i++) {
+      for (uint32_t i = 0; i < this->declaredSize; i++) {
 	CalAmpliRow* aRow = CalAmpliRow::fromBin(eiss, *this, attributesSeq);
 	checkAndAdd(aRow);
       }

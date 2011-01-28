@@ -6674,6 +6674,10 @@ Bool ImageAnalysis::getSpectralAxisVal(const String& specaxis,
 				specCoor.setVelocity(xunits, MDoppler::RELATIVISTIC);
 			}
 			ok = specCoor.frequencyToVelocity(xworld, fworld);
+		} else if(ok && axis.contains("air wave")) {
+		        ok = False;
+			specCoor.setWavelengthUnit(xunits);
+			ok = specCoor.frequencyToAirWavelength(xworld, fworld);
 		} else if(ok && axis.contains("wave")) {
 		        ok = False;
 			specCoor.setWavelengthUnit(xunits);

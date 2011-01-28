@@ -89,7 +89,7 @@ using namespace PolarizationTypeMod;
 
 
 /*\file Flag.h
-    \brief Generated from model's revision "1.55", branch "HEAD"
+    \brief Generated from model's revision "1.58", branch "HEAD"
 */
 
 namespace asdm {
@@ -113,7 +113,7 @@ typedef void (FlagRow::*FlagAttributeFromBin) (EndianISStream& eiss);
 /**
  * The FlagRow class is a row of a FlagTable.
  * 
- * Generated from model's revision "1.55", branch "HEAD"
+ * Generated from model's revision "1.58", branch "HEAD"
  *
  */
 class FlagRow {

@@ -110,6 +110,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -130,8 +136,11 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-	unsigned int CalPhaseTable::size() {
-		return privateRows.size();
+	unsigned int CalPhaseTable::size() const {
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -405,20 +414,21 @@ CalPhaseRow* CalPhaseTable::newRow(CalPhaseRow* row) {
 
 
 
+	 vector<CalPhaseRow *> CalPhaseTable::get() {
+	 	checkPresenceInMemory();
+	    return privateRows;
+	 }
+	 
+	 const vector<CalPhaseRow *>& CalPhaseTable::get() const {
+	 	const_cast<CalPhaseTable&>(*this).checkPresenceInMemory();	
+	    return privateRows;
+	 }	 
+	 	
+
+
+
 
 	
-
-	//
-	// ====> Methods returning rows.
-	//	
-	/**
-	 * Get all rows.
-	 * @return Alls rows as an array of CalPhaseRow
-	 */
-	vector<CalPhaseRow *> CalPhaseTable::get() {
-		return privateRows;
-		// return row;
-	}
 
 	
 /*
@@ -428,8 +438,9 @@ CalPhaseRow* CalPhaseTable::newRow(CalPhaseRow* row) {
  **
  */
  	CalPhaseRow* CalPhaseTable::getRowByKey(BasebandNameMod::BasebandName basebandName, ReceiverBandMod::ReceiverBand receiverBand, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, Tag calDataId, Tag calReductionId)  {
+ 	checkPresenceInMemory();
 	CalPhaseRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -508,8 +519,8 @@ CalPhaseRow* CalPhaseTable::newRow(CalPhaseRow* row) {
  */
 CalPhaseRow* CalPhaseTable::lookup(BasebandNameMod::BasebandName basebandName, ReceiverBandMod::ReceiverBand receiverBand, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numBaseline, int numReceptor, vector<vector<float > > ampli, vector<vector<string > > antennaNames, vector<Length > baselineLengths, vector<vector<float > > decorrelationFactor, vector<Angle > direction, vector<Frequency > frequencyRange, Interval integrationTime, vector<vector<float > > phase, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<float > > phaseRMS, vector<vector<float > > statPhaseRMS) {
 		CalPhaseRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(basebandName, receiverBand, atmPhaseCorrection, calDataId, calReductionId, startValidTime, endValidTime, numBaseline, numReceptor, ampli, antennaNames, baselineLengths, decorrelationFactor, direction, frequencyRange, integrationTime, phase, polarizationTypes, phaseRMS, statPhaseRMS)) return aRow;
 		}			
 		return 0;	
@@ -554,7 +565,7 @@ CalPhaseRow* CalPhaseTable::lookup(BasebandNameMod::BasebandName basebandName, R
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalPhaseTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clphas=\"http://Alma/XASDM/CalPhaseTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPhaseTable http://almaobservatory.org/XML/XASDM/2/CalPhaseTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n");
+		buf.append("<CalPhaseTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clphas=\"http://Alma/XASDM/CalPhaseTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPhaseTable http://almaobservatory.org/XML/XASDM/2/CalPhaseTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -573,7 +584,7 @@ CalPhaseRow* CalPhaseTable::lookup(BasebandNameMod::BasebandName basebandName, R
 	}
 
 	
-	void CalPhaseTable::fromXML(string xmlDoc)  {
+	void CalPhaseTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalPhaseTable")) 
 			error();
@@ -595,7 +606,6 @@ CalPhaseRow* CalPhaseTable::lookup(BasebandNameMod::BasebandName basebandName, R
 		s = xml.getElementContent("<row>","</row>");
 		CalPhaseRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a CalPhaseRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {
@@ -632,7 +642,7 @@ CalPhaseRow* CalPhaseTable::lookup(BasebandNameMod::BasebandName basebandName, R
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalPhaseTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clphas=\"http://Alma/XASDM/CalPhaseTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPhaseTable http://almaobservatory.org/XML/XASDM/2/CalPhaseTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n";
+		oss << "<CalPhaseTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clphas=\"http://Alma/XASDM/CalPhaseTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPhaseTable http://almaobservatory.org/XML/XASDM/2/CalPhaseTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalPhaseTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -863,10 +873,22 @@ CalPhaseRow* CalPhaseTable::lookup(BasebandNameMod::BasebandName basebandName, R
     
     // We do nothing with that but we have to read it.
     Entity containerEntity = Entity::fromBin(eiss);
-    
+
+	// Let's read numRows but ignore it and rely on the value specified in the ASDM.xml file.    
     int numRows = eiss.readInt();
+    if ((numRows != -1)                        // Then these are *not* data produced at the EVLA.
+    	&& ((unsigned int) numRows != this->declaredSize )) { // Then the declared size (in ASDM.xml) is not equal to the one 
+    	                                       // written into the binary representation of the table.
+		cout << "The a number of rows ('" 
+			 << numRows
+			 << "') declared in the binary representation of the table is different from the one declared in ASDM.xml ('"
+			 << this->declaredSize
+			 << "'). I'll proceed with the value declared in ASDM.xml"
+			 << endl;
+    }                                           
+
     try {
-      for (int i = 0; i < numRows; i++) {
+      for (uint32_t i = 0; i < this->declaredSize; i++) {
 	CalPhaseRow* aRow = CalPhaseRow::fromBin(eiss, *this, attributesSeq);
 	checkAndAdd(aRow);
       }

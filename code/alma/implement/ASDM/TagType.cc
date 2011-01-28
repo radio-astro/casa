@@ -217,6 +217,8 @@ const TagType* TagType:: SwitchCycle = new TagType("SwitchCycle") ;
 
 	
 
+	
+
 
 TagType::TagTypeMgr TagType::tagTypeMgr;
 map<string, const TagType*> TagType::name2TagType;
@@ -405,6 +407,8 @@ const TagType* TagType::getTagType(string name) {
 
 	
 	TagType::name2TagType["SwitchCycle"] = TagType::SwitchCycle ;
+	
+
 	
 
 	

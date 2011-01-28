@@ -222,10 +222,13 @@
 #include "FlagTable.h"
 #include "FlagRow.h"
 
+#include "SysPowerTable.h"
+#include "SysPowerRow.h"
+
 
 
 /*\file "Merger.h"
-    \brief Generated from model's revision "1.55", branch "HEAD"
+    \brief Generated from model's revision "1.58", branch "HEAD"
 */
 using namespace std;
 
@@ -370,6 +373,8 @@ namespace asdm {
 			bool hasMergedDelayModel;	
 
 			bool hasMergedFlag;	
+
+			bool hasMergedSysPower;	
 			
 
 
@@ -559,6 +564,9 @@ namespace asdm {
 			void mergeFlag();
 			void postMergeFlag();			
 
+			void mergeSysPower();
+			void postMergeSysPower();			
+
 
 
 		void (Merger::*mergeSBSummaryPtr) () ;
@@ -684,6 +692,8 @@ namespace asdm {
 		void (Merger::*mergeDelayModelPtr) () ;
 
 		void (Merger::*mergeFlagPtr) () ;
+
+		void (Merger::*mergeSysPowerPtr) () ;
 
 	};
 } // End namespace asdm

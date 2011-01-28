@@ -73,6 +73,8 @@ using namespace CalibrationDeviceMod;
 
 	
 
+	
+
 
 
 #include <ConversionException.h>
@@ -107,7 +109,7 @@ class CalDeviceRow;
  * Calibration device characteristics. This table is not part of the   Calibration Data Model but describes the actual observations; it refers to   the amplitude calibration device which includes the hot loads.     Calibration device properties are assumed independent of frequency   throughout a spectral window.
  * <BR>
  
- * Generated from model's revision "1.55", branch "HEAD"
+ * Generated from model's revision "1.58", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalDevice </CAPTION>
@@ -195,6 +197,13 @@ class CalDeviceRow;
  * </TR>
 	
  * <TR>
+ * <TD> coupledNoiseCal </TD> 
+ * <TD> vector<vector<float > > </TD>
+ * <TD>  numReceptor, numCalload  </TD>
+ * <TD>&nbsp;  </TD>
+ * </TR>
+	
+ * <TR>
  * <TD> temperatureLoad </TD> 
  * <TD> vector<Temperature > </TD>
  * <TD>  numCalload  </TD>
@@ -232,7 +241,7 @@ public:
 	 *
 	 * @return the number of rows in an unsigned int.
 	 */
-	unsigned int size() ;
+	unsigned int size() const;
 	
 	/**
 	 * Return the name of this table.
@@ -366,11 +375,19 @@ public:
 	//
 		
 	/**
-	 * Get all rows.
-	 * @return Alls rows as a vector of pointers of CalDeviceRow. The elements of this vector are stored in the order 
+	 * Get a collection of pointers on the rows of the table.
+	 * @return Alls rows in a vector of pointers of CalDeviceRow. The elements of this vector are stored in the order 
 	 * in which they have been added to the CalDeviceTable.
 	 */
 	vector<CalDeviceRow *> get() ;
+	
+	/**
+	 * Get a const reference on the collection of rows pointers internally hold by the table.
+	 * @return A const reference of a vector of pointers of CalDeviceRow. The elements of this vector are stored in the order 
+	 * in which they have been added to the CalDeviceTable.
+	 *
+	 */
+	 const vector<CalDeviceRow *>& get() const ;
 	
 
 	/**
@@ -537,7 +554,7 @@ private:
 	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) ;
+	void fromXML(string& xmlDoc) ;
 		
 	/**
 	  * Private methods involved during the build of this table out of the content
@@ -580,6 +597,18 @@ private:
 	  */
 	  void toFile(string directory);
 	  
+	  /**
+	   * Load the table in memory if necessary.
+	   */
+	  bool loadInProgress;
+	  void checkPresenceInMemory() {
+		if (!presentInMemory && !loadInProgress) {
+			loadInProgress = true;
+			setFromFile(getContainer().getDirectory());
+			presentInMemory = true;
+			loadInProgress = false;
+	  	}
+	  }
 	/**
 	 * Reads and parses a file containing a representation of a CalDeviceTable as those produced  by the toFile method.
 	 * This table is populated with the result of the parsing.

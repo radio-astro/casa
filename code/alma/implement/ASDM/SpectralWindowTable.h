@@ -164,7 +164,7 @@ class SpectralWindowRow;
  * Spectral window description. The convention in ALMA is to describe the  frequency axis in the topocentric reference frame. If this is not  the case (for instance if active Doppler tracking is implemented) then  \texttt{measFreqRef} should be set accordingly.
  * <BR>
  
- * Generated from model's revision "1.55", branch "HEAD"
+ * Generated from model's revision "1.58", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of SpectralWindow </CAPTION>
@@ -430,7 +430,7 @@ public:
 	 *
 	 * @return the number of rows in an unsigned int.
 	 */
-	unsigned int size() ;
+	unsigned int size() const;
 	
 	/**
 	 * Return the name of this table.
@@ -559,11 +559,19 @@ public:
 	//
 		
 	/**
-	 * Get all rows.
-	 * @return Alls rows as a vector of pointers of SpectralWindowRow. The elements of this vector are stored in the order 
+	 * Get a collection of pointers on the rows of the table.
+	 * @return Alls rows in a vector of pointers of SpectralWindowRow. The elements of this vector are stored in the order 
 	 * in which they have been added to the SpectralWindowTable.
 	 */
 	vector<SpectralWindowRow *> get() ;
+	
+	/**
+	 * Get a const reference on the collection of rows pointers internally hold by the table.
+	 * @return A const reference of a vector of pointers of SpectralWindowRow. The elements of this vector are stored in the order 
+	 * in which they have been added to the SpectralWindowTable.
+	 *
+	 */
+	 const vector<SpectralWindowRow *>& get() const ;
 	
 
 
@@ -687,7 +695,7 @@ private:
 	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) ;
+	void fromXML(string& xmlDoc) ;
 		
 	/**
 	  * Private methods involved during the build of this table out of the content
@@ -730,6 +738,18 @@ private:
 	  */
 	  void toFile(string directory);
 	  
+	  /**
+	   * Load the table in memory if necessary.
+	   */
+	  bool loadInProgress;
+	  void checkPresenceInMemory() {
+		if (!presentInMemory && !loadInProgress) {
+			loadInProgress = true;
+			setFromFile(getContainer().getDirectory());
+			presentInMemory = true;
+			loadInProgress = false;
+	  	}
+	  }
 	/**
 	 * Reads and parses a file containing a representation of a SpectralWindowTable as those produced  by the toFile method.
 	 * This table is populated with the result of the parsing.

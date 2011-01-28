@@ -201,6 +201,9 @@ public:
     // This axis can be nonlinear; the increments and related 
     // functions return the <src>average</src> values
     // (calculated from the first and last pixel's frequencies).
+    // If inAir is True, the input wavelengths are assumed to be Air Wavelengths.
+    // They are converted to vacuum frequency using the refractive index
+    // which is calculated based on the mean input air wavelength.
     //
     // A linear interpolation/extrapolation is used for pixels which are
     // not supplied. The reference pixel is chosen to be 0.
@@ -208,7 +211,7 @@ public:
     // the toPixel lookup would not be possible).
     SpectralCoordinate(MFrequency::Types freqType,     
 		       const Vector<Double>& wavelengths,  const String& waveUnit,
-                       Double restFrequency = 0.0);
+                       Double restFrequency = 0.0, Bool inAir = False);
 
     // Construct from wcs structure.  Must hold only a spectral wcs structure
     // Specify whether the absolute pixel coordinates in the wcs structure
@@ -324,6 +327,7 @@ public:
     //
     Bool setWavelengthUnit (const String& waveUnit=String("mm"));
     String wavelengthUnit () const {return waveUnit_p;};
+
     // </group>
     // Functions to convert to velocity (uses the current active
     // rest frequency) or wavelength.  There is no reference frame
@@ -348,6 +352,12 @@ public:
     Bool frequencyToVelocity (Vector<Double>& velocity, const Vector<Double>& frequency) const;
     //
     Bool frequencyToWavelength (Vector<Double>& wavelength, const Vector<Double>& frequency) const;
+    Bool frequencyToAirWavelength (Vector<Double>& wavelength, const Vector<Double>& frequency) const;
+    // The refractive index of air (argument can be wavelength or airwavelength)
+    // according to Greisen et al., 2006, A&A, 464, 746.
+    // If airwavelength is used there is an error of the order of 1E-9.
+    // Argument must be in micrometers!  
+    static Double refractiveIndex(const Double& lambda_um);
     // </group>
 
     // Functions to convert from velocity (uses the current active
@@ -369,6 +379,7 @@ public:
     Bool velocityToFrequency (Vector<Double>& frequency, const Vector<Double>& velocity) const;
     //
     Bool wavelengthToFrequency (Vector<Double>& frequency, const Vector<Double>& wavelength) const;
+    Bool airWavelengthToFrequency (Vector<Double>& frequency, const Vector<Double>& wavelength) const;
     // </group>
 
     // The SpectralCoordinate can maintain a list of rest frequencies

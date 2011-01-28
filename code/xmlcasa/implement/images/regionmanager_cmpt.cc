@@ -488,19 +488,23 @@ regionmanager::extractsimpleregions(const ::casac::record& region)
 }
 
 ::casac::record*
-regionmanager::fromfiletorecord(const std::string& filename, 
-	const bool verbose, 
-	const std::string& regionname)
-{
+regionmanager::fromfiletorecord(
+	const std::string& filename, const bool verbose,
+	const string& regionName
+) {
 
-  
-    if ( !itsIsSetup )
-	setup();
-    *itsLog << LogOrigin("regionmanager", "fromfiletorecord");
-
-    Record * leReg =
-	itsRegMan->readImageFile( String(filename), String(regionname ) );
-    return fromRecord( *leReg );
+    if (! itsIsSetup) {
+    	setup();
+    }
+    *itsLog << LogOrigin("regionmanager", __FUNCTION__);
+    try {
+    	Record *leReg = RegionManager::readImageFile(filename, regionName);
+    	return fromRecord(*leReg);
+    }
+    catch (AipsError x) {
+    	*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    	RETHROW(x);
+    }
 }
 bool 
 regionmanager::tofile(const std::string& filename, const ::casac::record& region){
@@ -512,7 +516,7 @@ regionmanager::tofile(const std::string& filename, const ::casac::record& region
       casa::Record* leRegion=toRecord(region);
       //the string lolo below does not matter its being ignored it seems.
       //may be it was meant for future use
-      retval=itsRegMan->writeImageFile(String(filename), "lolo", *leRegion);
+      retval=RegionManager::writeImageFile(String(filename), "lolo", *leRegion);
       if(leRegion)
 	delete leRegion;
     } catch (AipsError x) {
@@ -679,7 +683,7 @@ regionmanager::ispixelregion(const ::casac::record& region)
 	letblrec.assign(*localvar);
 	ImageRegion* reg=0;
 	reg=ImageRegion::fromRecord(letblrec, "");
-	retval=itsRegMan->isPixelRegion(*reg);
+	retval = RegionManager::isPixelRegion(*reg);
     } catch (AipsError x) {
 	*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	RETHROW(x);
@@ -703,7 +707,7 @@ regionmanager::isworldregion(const ::casac::record& region)
 	letblrec.assign(*localvar);
 	ImageRegion* reg=0;
 	reg=ImageRegion::fromRecord(letblrec, "");
-	retval=itsRegMan->isWorldRegion(*reg);
+	retval = RegionManager::isWorldRegion(*reg);
     } catch (AipsError x) {
 	*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	RETHROW(x);
@@ -1001,6 +1005,58 @@ regionmanager::wmask(const std::string& expr)
     return false;
 }
 
+record* regionmanager::frombcs(
+	const record& csys, const vector<int>& shape,
+	const string& box, const string& chans,
+	const string& stokes, const string& stokescontrol
+) {
+    if (! itsIsSetup) {
+    	setup();
+    }
+    record *imRegion = 0;
+    *itsLog << LogOrigin("regionmanager", __FUNCTION__);
+    try {
+    	String myControl = stokescontrol;
+    	RegionManager::StokesControl sControl;
+    	myControl.upcase();
+    	if (myControl.startsWith("A")) {
+    		sControl = RegionManager::USE_ALL_STOKES;
+    	}
+    	else if (myControl.startsWith("F")) {
+    		sControl = RegionManager::USE_FIRST_STOKES;
+    	}
+    	else {
+    		throw AipsError("Unsupported value for stokescontrol: " + stokescontrol);
+    	}
+    	Record *csysRec = toRecord(csys);
+    	if(csysRec->nfields() < 2) {
+    	    throw(AipsError("Given coorsys parameter does not appear to be a valid coordsystem record"));
+    	}
+    	casa::CoordinateSystem *coordsys = CoordinateSystem::restore(*csysRec, "");
+    	if(coordsys==0){
+    	    throw(AipsError("Could not convert given csys record to a CoordinateSystem object"));
+    	}
+    	itsRegMan->setcoordsys(*coordsys);
+    	String diagnostics;
+    	uInt nSelectedChannels;
+    	IPosition imShape(shape);
+    	String myStokes(stokes);
+    	String myChans(chans);
+    	String myBox(box);
+    	imRegion = fromRecord(
+    		itsRegMan->fromBCS(
+    				diagnostics, nSelectedChannels, myStokes,
+    				myChans, sControl, myBox, imShape
+    		).toRecord("")
+    	);
+    }
+    catch (AipsError x) {
+    	*itsLog << LogIO::SEVERE << "Exception Reported: "
+    			<< x.getMesg() << LogIO::POST;
+    	RETHROW(x);
+    }
+    return imRegion;
+}
 
 
 } // casac namespace

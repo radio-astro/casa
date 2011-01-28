@@ -85,6 +85,7 @@ calibrater::selectvis(const ::casac::variant& time,
 		      const ::casac::variant& spw, 
 		      const ::casac::variant& scan,
 		      const ::casac::variant& field,
+		      const ::casac::variant& intent,
 		      const ::casac::variant& baseline,
 		      const ::casac::variant& uvrange,
 		      const std::string& chanmode,
@@ -136,6 +137,8 @@ calibrater::selectvis(const ::casac::variant& time,
     //    cout << "scanS     = " << scanS << " " << scan.typeString() << endl;
     String fieldS=toCasaString(field);
     //    cout << "fieldS    = " << fieldS << " " << field.typeString() << endl;
+    String intentS=toCasaString(intent);
+    //    cout << "intentS     = " << intentS << " " << scan.typeString() << endl;
     String baselineS=toCasaString(baseline);
     //    cout << "baselineS = " << baselineS << " " << baseline.typeString() << endl;
     String uvrangeS=toCasaString(uvrange);
@@ -146,6 +149,7 @@ calibrater::selectvis(const ::casac::variant& time,
 			     spwS,
 			     scanS,
 			     fieldS,
+			     intentS,
 			     baselineS,
 			     uvrangeS,
 			     chanmode, 

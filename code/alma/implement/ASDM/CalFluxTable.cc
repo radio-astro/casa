@@ -106,6 +106,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -126,8 +132,11 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-	unsigned int CalFluxTable::size() {
-		return privateRows.size();
+	unsigned int CalFluxTable::size() const {
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -359,20 +368,21 @@ CalFluxRow* CalFluxTable::newRow(CalFluxRow* row) {
 
 
 
+	 vector<CalFluxRow *> CalFluxTable::get() {
+	 	checkPresenceInMemory();
+	    return privateRows;
+	 }
+	 
+	 const vector<CalFluxRow *>& CalFluxTable::get() const {
+	 	const_cast<CalFluxTable&>(*this).checkPresenceInMemory();	
+	    return privateRows;
+	 }	 
+	 	
+
+
+
 
 	
-
-	//
-	// ====> Methods returning rows.
-	//	
-	/**
-	 * Get all rows.
-	 * @return Alls rows as an array of CalFluxRow
-	 */
-	vector<CalFluxRow *> CalFluxTable::get() {
-		return privateRows;
-		// return row;
-	}
 
 	
 /*
@@ -382,8 +392,9 @@ CalFluxRow* CalFluxTable::newRow(CalFluxRow* row) {
  **
  */
  	CalFluxRow* CalFluxTable::getRowByKey(string sourceName, Tag calDataId, Tag calReductionId)  {
+ 	checkPresenceInMemory();
 	CalFluxRow* aRow = 0;
-	for (unsigned int i = 0; i < row.size(); i++) {
+	for (unsigned int i = 0; i < privateRows.size(); i++) {
 		aRow = row.at(i);
 		
 			
@@ -438,8 +449,8 @@ CalFluxRow* CalFluxTable::newRow(CalFluxRow* row) {
  */
 CalFluxRow* CalFluxTable::lookup(string sourceName, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numFrequencyRanges, int numStokes, vector<vector<Frequency > > frequencyRanges, FluxCalibrationMethodMod::FluxCalibrationMethod fluxMethod, vector<vector<double > > flux, vector<vector<double > > fluxError, vector<StokesParameterMod::StokesParameter > stokes) {
 		CalFluxRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			aRow = privateRows.at(i); 
 			if (aRow->compareNoAutoInc(sourceName, calDataId, calReductionId, startValidTime, endValidTime, numFrequencyRanges, numStokes, frequencyRanges, fluxMethod, flux, fluxError, stokes)) return aRow;
 		}			
 		return 0;	
@@ -484,7 +495,7 @@ CalFluxRow* CalFluxTable::lookup(string sourceName, Tag calDataId, Tag calReduct
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalFluxTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clflx=\"http://Alma/XASDM/CalFluxTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalFluxTable http://almaobservatory.org/XML/XASDM/2/CalFluxTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n");
+		buf.append("<CalFluxTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clflx=\"http://Alma/XASDM/CalFluxTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalFluxTable http://almaobservatory.org/XML/XASDM/2/CalFluxTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -503,7 +514,7 @@ CalFluxRow* CalFluxTable::lookup(string sourceName, Tag calDataId, Tag calReduct
 	}
 
 	
-	void CalFluxTable::fromXML(string xmlDoc)  {
+	void CalFluxTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalFluxTable")) 
 			error();
@@ -525,7 +536,6 @@ CalFluxRow* CalFluxTable::lookup(string sourceName, Tag calDataId, Tag calReduct
 		s = xml.getElementContent("<row>","</row>");
 		CalFluxRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a CalFluxRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {
@@ -562,7 +572,7 @@ CalFluxRow* CalFluxTable::lookup(string sourceName, Tag calDataId, Tag calReduct
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalFluxTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clflx=\"http://Alma/XASDM/CalFluxTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalFluxTable http://almaobservatory.org/XML/XASDM/2/CalFluxTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n";
+		oss << "<CalFluxTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clflx=\"http://Alma/XASDM/CalFluxTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalFluxTable http://almaobservatory.org/XML/XASDM/2/CalFluxTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalFluxTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -790,10 +800,22 @@ CalFluxRow* CalFluxTable::lookup(string sourceName, Tag calDataId, Tag calReduct
     
     // We do nothing with that but we have to read it.
     Entity containerEntity = Entity::fromBin(eiss);
-    
+
+	// Let's read numRows but ignore it and rely on the value specified in the ASDM.xml file.    
     int numRows = eiss.readInt();
+    if ((numRows != -1)                        // Then these are *not* data produced at the EVLA.
+    	&& ((unsigned int) numRows != this->declaredSize )) { // Then the declared size (in ASDM.xml) is not equal to the one 
+    	                                       // written into the binary representation of the table.
+		cout << "The a number of rows ('" 
+			 << numRows
+			 << "') declared in the binary representation of the table is different from the one declared in ASDM.xml ('"
+			 << this->declaredSize
+			 << "'). I'll proceed with the value declared in ASDM.xml"
+			 << endl;
+    }                                           
+
     try {
-      for (int i = 0; i < numRows; i++) {
+      for (uint32_t i = 0; i < this->declaredSize; i++) {
 	CalFluxRow* aRow = CalFluxRow::fromBin(eiss, *this, attributesSeq);
 	checkAndAdd(aRow);
       }

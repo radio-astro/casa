@@ -106,6 +106,12 @@ namespace asdm {
 		
 		// File XML
 		fileAsBin = false;
+		
+		// By default the table is considered as present in memory
+		presentInMemory = true;
+		
+		// By default there is no load in progress
+		loadInProgress = false;
 	}
 	
 /**
@@ -126,8 +132,11 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-	unsigned int ReceiverTable::size() {
-		return privateRows.size();
+	unsigned int ReceiverTable::size() const {
+		if (presentInMemory) 
+			return privateRows.size();
+		else
+			return declaredSize;
 	}
 	
 	/**
@@ -443,30 +452,22 @@ ReceiverRow* ReceiverTable::newRow(ReceiverRow* row) {
 
 
 
+	 vector<ReceiverRow *> ReceiverTable::get() {
+	 	checkPresenceInMemory();
+	    return privateRows;
+	 }
+	 
+	 const vector<ReceiverRow *>& ReceiverTable::get() const {
+	 	const_cast<ReceiverTable&>(*this).checkPresenceInMemory();	
+	    return privateRows;
+	 }	 
+	 	
+
+
+
 
 	
 
-	
-	
-	/**
-	 * Get all rows.
-	 * @return Alls rows as an array of ReceiverRow
-	 */
-	vector<ReceiverRow *> ReceiverTable::get()  {
-		return privateRows;
-	/*	
-		vector<ReceiverRow *> v;
-		
-		map<string, ID_TIME_ROWS >::iterator mapIter = context.begin();
-		ID_TIME_ROWS::iterator planeIter;
-		vector<ReceiverRow*>::iterator rowIter; 
-		for (mapIter=context.begin(); mapIter!=context.end(); mapIter++)
-			for (planeIter=((*mapIter).second).begin(); planeIter != ((*mapIter).second).end(); planeIter++)
-				for (rowIter=(*planeIter).begin(); rowIter != (*planeIter).end(); rowIter++)
-					v.push_back(*rowIter);
-		return v;
-	*/
-	}	
 	
 
 
@@ -481,7 +482,8 @@ ReceiverRow* ReceiverTable::newRow(ReceiverRow* row) {
  ** no row exists for that key.
  **
  */
- 	ReceiverRow* ReceiverTable::getRowByKey(int receiverId, Tag spectralWindowId, ArrayTimeInterval timeInterval)  {	
+ 	ReceiverRow* ReceiverTable::getRowByKey(int receiverId, Tag spectralWindowId, ArrayTimeInterval timeInterval)  {
+ 		checkPresenceInMemory();	
 		ArrayTime start = timeInterval.getStart();
 		
 		map<string, ID_TIME_ROWS >::iterator mapIter;
@@ -507,6 +509,7 @@ ReceiverRow* ReceiverTable::newRow(ReceiverRow* row) {
  * the autoincrementable attribute that is looked up in the table.
  */
  vector <ReceiverRow *>  ReceiverTable::getRowByReceiverId(int receiverId) {
+	checkPresenceInMemory();
 	vector<ReceiverRow *> list;
 	map<string, ID_TIME_ROWS >::iterator mapIter;
 	
@@ -548,7 +551,7 @@ ReceiverRow* ReceiverTable::newRow(ReceiverRow* row) {
  * @param <<ArrayAttribute>> sidebandLO.
  	 		 
  */
-ReceiverRow* ReceiverTable::lookup(Tag spectralWindowId, ArrayTimeInterval timeInterval, string name, int numLO, ReceiverBandMod::ReceiverBand frequencyBand, vector<Frequency > freqLO, ReceiverSidebandMod::ReceiverSideband receiverSideband, vector<NetSidebandMod::NetSideband > sidebandLO) {		
+ReceiverRow* ReceiverTable::lookup(Tag spectralWindowId, ArrayTimeInterval timeInterval, string name, int numLO, ReceiverBandMod::ReceiverBand frequencyBand, vector<Frequency > freqLO, ReceiverSidebandMod::ReceiverSideband receiverSideband, vector<NetSidebandMod::NetSideband > sidebandLO) {	
 		using asdm::ArrayTimeInterval;
 		map<string, ID_TIME_ROWS >::iterator mapIter;
 		string k = Key(spectralWindowId);
@@ -604,7 +607,7 @@ ReceiverRow* ReceiverTable::lookup(Tag spectralWindowId, ArrayTimeInterval timeI
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<ReceiverTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:rcvr=\"http://Alma/XASDM/ReceiverTable\" xsi:schemaLocation=\"http://Alma/XASDM/ReceiverTable http://almaobservatory.org/XML/XASDM/2/ReceiverTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n");
+		buf.append("<ReceiverTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:rcvr=\"http://Alma/XASDM/ReceiverTable\" xsi:schemaLocation=\"http://Alma/XASDM/ReceiverTable http://almaobservatory.org/XML/XASDM/2/ReceiverTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -623,7 +626,7 @@ ReceiverRow* ReceiverTable::lookup(Tag spectralWindowId, ArrayTimeInterval timeI
 	}
 
 	
-	void ReceiverTable::fromXML(string xmlDoc)  {
+	void ReceiverTable::fromXML(string& xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<ReceiverTable")) 
 			error();
@@ -645,7 +648,6 @@ ReceiverRow* ReceiverTable::lookup(Tag spectralWindowId, ArrayTimeInterval timeI
 		s = xml.getElementContent("<row>","</row>");
 		ReceiverRow *row;
 		while (s.length() != 0) {
-			// cout << "Parsing a ReceiverRow" << endl; 
 			row = newRow();
 			row->setFromXML(s);
 			try {
@@ -682,7 +684,7 @@ ReceiverRow* ReceiverTable::lookup(Tag spectralWindowId, ArrayTimeInterval timeI
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<ReceiverTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:rcvr=\"http://Alma/XASDM/ReceiverTable\" xsi:schemaLocation=\"http://Alma/XASDM/ReceiverTable http://almaobservatory.org/XML/XASDM/2/ReceiverTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.55\">\n";
+		oss << "<ReceiverTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:rcvr=\"http://Alma/XASDM/ReceiverTable\" xsi:schemaLocation=\"http://Alma/XASDM/ReceiverTable http://almaobservatory.org/XML/XASDM/2/ReceiverTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.58\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='ReceiverTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -877,10 +879,22 @@ ReceiverRow* ReceiverTable::lookup(Tag spectralWindowId, ArrayTimeInterval timeI
     
     // We do nothing with that but we have to read it.
     Entity containerEntity = Entity::fromBin(eiss);
-    
+
+	// Let's read numRows but ignore it and rely on the value specified in the ASDM.xml file.    
     int numRows = eiss.readInt();
+    if ((numRows != -1)                        // Then these are *not* data produced at the EVLA.
+    	&& ((unsigned int) numRows != this->declaredSize )) { // Then the declared size (in ASDM.xml) is not equal to the one 
+    	                                       // written into the binary representation of the table.
+		cout << "The a number of rows ('" 
+			 << numRows
+			 << "') declared in the binary representation of the table is different from the one declared in ASDM.xml ('"
+			 << this->declaredSize
+			 << "'). I'll proceed with the value declared in ASDM.xml"
+			 << endl;
+    }                                           
+
     try {
-      for (int i = 0; i < numRows; i++) {
+      for (uint32_t i = 0; i < this->declaredSize; i++) {
 	ReceiverRow* aRow = ReceiverRow::fromBin(eiss, *this, attributesSeq);
 	checkAndAdd(aRow);
       }

@@ -2,7 +2,7 @@ import os
 from taskinit import *
 
 debug = False
-def importevla2(asdm=None, vis=None, ocorr_mode=None, compression=None, asis=None, scans=None, verbose=None, overwrite=None, online=None, tbuff=None, flagzero=None, cliplevel=None, flagpol=None, shadow=None, diameter=None, applyflags=None, flagbackup=None):
+def importevla2(asdm=None, vis=None, ocorr_mode=None, compression=None, asis=None, scans=None, switchedpower=None, verbose=None, overwrite=None, online=None, tbuff=None, flagzero=None, cliplevel=None, flagpol=None, shadow=None, diameter=None, applyflags=None, flagbackup=None):
 	""" Convert a Science Data Model (SDM) dataset into a CASA Measurement Set (MS)
 	This version is under development and is geared to handling EVLA specific flag and
 	system files, and is otherwise equivalent to importasdm.
@@ -28,6 +28,7 @@ def importevla2(asdm=None, vis=None, ocorr_mode=None, compression=None, asis=Non
 	#Vers8.0 (3.2.0) STM 2010-11-23 tbuff not sub-par of applyflags=T
 	#Vers8.1 (3.2.0) STM 2010-12-01 prec=9 on timestamps
 	#Vers8.2 (3.2.0) MKH 2010-12-06 added scan selection
+	#Vers8.3 (3.2.0) GAM 2011-01-18 added switchedpower option (sw power gain/tsys)
 	try:
                 casalog.origin('importevla')
 		casalog.post('You are using importevla2 v8.2 STM Updated 2010-12-08')
@@ -50,6 +51,8 @@ def importevla2(asdm=None, vis=None, ocorr_mode=None, compression=None, asis=Non
 		   os.system('asdm2MS --revision --logfile \"' +casalog.logfile() +'\"')
 		if(compression) :
 		   execute_string= execute_string +' --compression'
+		if (switchedpower) :
+		   execute_string = execute_string +' --process-syspower --process-caldevice'
 		if(verbose) :
 		   execute_string= execute_string +' --verbose'
 		if not overwrite and os.path.exists(viso) :
