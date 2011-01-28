@@ -90,9 +90,21 @@ def simdata(
 
         ##################################################################
         # set up skymodelimage
+
+        # check for people re-imaging only, in case they've turned modifymodel 
+        # off without changing their imagename to project.skymodel
+        if image and not predict and not modifymodel:
+            if len(skymodel)<9 or skymodel[-8:]!="skymodel":
+                if os.path.exists(skymodel):
+                    msg("When imaging from a previously predicted project, you should either set modifymodel=T with the same settings as before, or set modifymodel=F and skymodel=$project.skymodel.",priority="warn")
+                    msg("Proceeding with "+project+".skymodel instead of "+skymodel,priority="warn")
+                    skymodel=project+".skymodel"
+                else:
+                    msg("When imaging from a previously predicted project, you should either set modifymodel=T with the same settings as before, or set modifymodel=F and skymodel=$project.skymodel.",priority="error")
+                    return False
+
         if os.path.exists(skymodel):
             components_only=False
-
             # if the skymodel is okay, work from it directly
             if util.is4d(skymodel) and os.path.isdir(skymodel) and not modifymodel:
                 newmodel=skymodel
@@ -1354,6 +1366,10 @@ def simdata(
             # whether modifymodel is true or not.
 
             if not image:
+                if not os.path.exists(imagename+".image"):
+                    msg("you must image before analyzing.",priority="error")
+                    return False
+
                 # get beam from output clean image
                 if verbose: msg("getting beam from "+imagename+".image",origin="analysis")
                 ia.open(imagename+".image")

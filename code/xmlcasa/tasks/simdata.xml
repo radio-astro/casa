@@ -245,7 +245,7 @@ it'll do them for the same amount of time -->
 
     <param type="bool" name="image">
       <description>(re)image $project.ms to $project.image</description>
-      <value type="bool">False</value>
+      <value type="bool">True</value>
     </param>    
 
     <param type="string" name="vis" subparam='true'>
