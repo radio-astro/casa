@@ -660,6 +660,8 @@ class imcontsub_test(unittest.TestCase):
                 # Now that we know something has been done lets check some values
                 # with previously created files to see if the values are the same.
                 # We randomly pick 50 points (almost 10%)
+                # FIXME lovely, yes let's pick random values to make sure any failures 
+                # cannot easily be reproduced, ugh
                 for count in range(0,50):
                     x = random.randint(0,511)
                     y = random.randint(0,511)
@@ -677,8 +679,10 @@ class imcontsub_test(unittest.TestCase):
                             +"\nError: Unable to compare spectral line files."
                     else:
                        #print "Spec line prev value: ", line_prev_value
-                       #print "spec line current value: ", line_cur_value        
-                       if ( line_prev_value != line_cur_value ):
+                       #print "spec line current value: ", line_cur_value  
+                       casalog.post( "*** line_prev_value " + str(line_prev_value), 'WARN')
+                       casalog.post( "*** line_cur_value " + str(line_cur_value), 'WARN')      
+                       if ( (line_prev_value['data'] != line_cur_value['data']).any() ):
                         retValue['success']    = False
                         retValue['error_msgs'] = '\nError: spectral line value differs with '\
                               + "previously calculated value at: "\
@@ -694,7 +698,7 @@ class imcontsub_test(unittest.TestCase):
                     else:
                        #print "Continuum prev value: ", cont_prev_value
                        #print "Continuum current value: ", cont_cur_value        
-                       if ( cont_prev_value != cont_cur_value ):
+                       if ( (cont_prev_value['data'] != cont_cur_value['data']).any() ):
                         retValue['success']    = False
                         retValue['error_msgs'] = '\nError: continuum value differs with '\
                             + "previously calculated value at: "\
