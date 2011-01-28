@@ -37,6 +37,7 @@
 #include <measures/Measures/MeasIERS.h>
 #include <measures/Measures/MeasJPL.h>
 #include <casa/OS/Time.h>
+#include <casa/OS/Path.h>
 #include <casa/Quanta/UnitVal.h>
 #include <casa/Quanta/RotMatrix.h>
 #include <casa/Quanta/Euler.h>
@@ -59,6 +60,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 Bool MeasTable::obsNeedInit = True;
 Vector<String> MeasTable::obsNams(0);
 Vector<MPosition> MeasTable::obsPos(0);
+Vector<String> MeasTable::antResponsesPath(0);
 Bool MeasTable::lineNeedInit = True;
 Vector<String> MeasTable::lineNams(0);
 Vector<MFrequency> MeasTable::linePos(0);
@@ -4074,11 +4076,21 @@ void MeasTable::initObservatories() {
     };
     obsNams.resize(N);
     obsPos.resize(N);
+    antResponsesPath.resize(N);
+    Bool hasAntResp = False;
+    if(row.record().isDefined("AntennaResponses")){
+      cout << "Found antenna responses column." << endl;
+      hasAntResp = True;
+    }
+
     MPosition::Ref mr;
     MPosition tmp;
     for (Int i=0; i<N; i++) {
       row.get(i);
       obsNams(i) = *RORecordFieldPtr<String>(row.record(), "Name");
+      if(hasAntResp){
+	antResponsesPath(i) = *RORecordFieldPtr<String>(row.record(), "AntennaResponses");
+      }
       if (!tmp.giveMe(mr, *RORecordFieldPtr<String>(row.record(), "Type"))) {
 	LogIO os(LogOrigin("MeasTable",
 			   String("initObservatories()"),
@@ -4103,8 +4115,69 @@ Bool MeasTable::Observatory(MPosition &obs, const String &nam) {
   if (i < MeasTable::obsNams.nelements()) {
     obs = MeasTable::obsPos(i);
     return True;
-  };
+  }
   return False;
+}
+
+Bool MeasTable::AntennaResponsesPath(String &antRespPath, const String &nam) {
+  MeasTable::initObservatories();
+  uInt i=MUString::minimaxNC(nam, MeasTable::obsNams);
+  if (i < MeasTable::obsNams.nelements()) {
+    antRespPath = MeasTable::antResponsesPath(i);
+    if(antRespPath.empty()){ // i.e. there is no table for this observatory
+      return False; 
+    }
+    else if(antRespPath[0] == '/'){ // path is absolute
+      Path lPath(antRespPath);
+      Path lAbsPath(lPath.absoluteName());
+      if(!lAbsPath.isValid()){
+	return False;
+      }
+    }
+    else{ // path is relative
+      // find and prepend the path to the data repository
+      String absPathName;
+      Bool isValid = False;
+      {
+	String mdir;
+	Aipsrc::find(mdir, "measures.directory");
+	Path lPath(mdir + "/" + antRespPath);
+	absPathName = lPath.absoluteName();
+	Path lAbsPath(absPathName);
+	isValid = lAbsPath.isValid();
+      }
+      if(!isValid){
+	Path lPath(Aipsrc::aipsHome() + "/data/" + antRespPath);
+	absPathName = lPath.absoluteName();
+	Path lAbsPath(absPathName);
+	isValid = lAbsPath.isValid();
+      }
+      if(!isValid){
+	Path lPath(Aipsrc::aipsRoot() + "/data/" + antRespPath);
+	absPathName = lPath.absoluteName();
+	Path lAbsPath(absPathName);
+	isValid = lAbsPath.isValid();
+      }
+      if(!isValid){
+	Path lPath(String(CASADATA) + "/" + antRespPath);
+	absPathName = lPath.absoluteName();
+	Path lAbsPath(absPathName);
+	isValid = lAbsPath.isValid();
+      }
+      if(!isValid){
+	Path lPath(String(CASADATA)+ "/share/casacore/data/" + antRespPath);
+	absPathName = lPath.absoluteName();
+	Path lAbsPath(absPathName);
+	isValid = lAbsPath.isValid();
+      }
+      if(!isValid){
+	return False; // table not found
+      }
+      antRespPath = absPathName;
+    }
+    return True;
+  }
+  return False; // observatory not found
 }
 
 // Source data
