@@ -342,6 +342,17 @@ int main() {
 
     AlwaysAssert(myBandName=="band_2", AipsError); 
 
+    // getting the AntennaResponses table location from MeasTable
+
+    String theAntRespPath;
+    AlwaysAssert(!MeasTable::AntennaResponsesPath(theAntRespPath, "whatever"), AipsError);
+
+    theAntRespPath = "dummy_to_be_overwritten";
+    AlwaysAssert(!MeasTable::AntennaResponsesPath(theAntRespPath, "LOFAR"), AipsError);
+    // LOFAR exists but is empty
+    AlwaysAssert(theAntRespPath=="", AipsError);
+
+
   } 
   catch (AipsError x) {
     cerr << x.getMesg() << endl;
