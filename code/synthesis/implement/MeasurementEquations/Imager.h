@@ -286,6 +286,8 @@ class Imager
 
   // Return the image coordinates
   Bool imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose=true);
+  // new version
+  Bool imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose=true);
 
   // Return the image shape
   IPosition imageshape() const;
@@ -540,6 +542,14 @@ class Imager
   // Returns whether or not it modified v.
   //   If so, v is modified in place.
   static Bool expand_blank_sel(Vector<Int>& v, const uInt nelem);  
+
+  //spectral gridding calculation for output images (use SubMS::calcChanFreqs)
+  Bool calcImFreqs(Vector<Double>& imfreqs, Vector<Double>& imfreqres,
+                   const MFrequency::Types& oldRefFrame,
+                   const MEpoch& obsEpoch, const MPosition& obsPosition,
+                   const Double& restFreq);
+
+  String dQuantitytoString(const Quantity& dq);
 
 protected:
 
