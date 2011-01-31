@@ -54,6 +54,11 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+#ifndef CASADATA
+#define CASADATA "/usr/local"
+#endif
+
+
 //# Constants
 
 //# Data
