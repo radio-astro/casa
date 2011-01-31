@@ -517,7 +517,7 @@ void ROVisibilityIterator::updateSlicer()
 			IPosition(1,(chanInc_p[spw]<=0)? 1 : chanInc_p[spw]));
   useSlicer_p=channelGroupSize_p<nChan_p;
 
-  if(msIter_p.newMS()){
+  if(msIter_p.newDataDescriptionId()){
     setTileCache();
   }
 }
@@ -527,11 +527,19 @@ void ROVisibilityIterator::setTileCache(){
   // sliced data access that grows memory dramatically in some cases
   //  if(useSlicer_p){
   {
+    if(!msIter_p.newDataDescriptionId())
+      return;
 
     const MeasurementSet& thems=msIter_p.ms();
     if(thems.tableType() == Table::Memory)
       return;
     const ColumnDescSet& cds=thems.tableDesc().columnDescSet();
+
+    // Get the first row number for this DDID.
+    Vector<uInt> rownums;
+    rowIds(rownums);
+    uInt startrow = rownums[0];
+
     /*
     ROArrayColumn<Complex> colVis;
     ROArrayColumn<Bool> colbool;
@@ -586,10 +594,10 @@ void ROVisibilityIterator::setTileCache(){
 	
 	if(dataManType.contains("Tiled")  && (!String(cdesc.dataManagerGroup()).empty())){
 	  try {
-	    
+	 
 	    ROTiledStManAccessor tacc=ROTiledStManAccessor(thems, 
 							   cdesc.dataManagerGroup());
-	    
+	 
 	    /*
 	    //This is for the data columns, weight_spectrum and flag only 
 	    if((columns[k] != MS::columnName(MS::WEIGHT)) && 
@@ -612,19 +620,19 @@ void ROVisibilityIterator::setTileCache(){
 	    nchantile=channelGroupSize_p/nchantile+1;
 	    if(nchantile<3)
 	    nchantile=10;
-	    
-	    
+	 
+	 
 	    tacc.setCacheSize (0, nchantile);
 	    }
 	    else
 	    */
 	    //One tile only for now ...seems to work faster
-	    tacc.setCacheSize (0, 1);
+	    tacc.setCacheSize (startrow, 1);
 	  } catch (AipsError x) {
 	    //It failed so leave the caching as is
 	    continue;
 	  }
-	  
+	
 	}
       }
     }
@@ -2099,7 +2107,7 @@ void ROVisibilityIterator::slurp() const
               bool match = false;
               for (unsigned j = 0; j < columns.nelements(); j++) {
                   String column = columns(IPosition(1, j));
-                  match |= (column == MS::columnName(MS::ANTENNA1) ||
+                  if(column == MS::columnName(MS::ANTENNA1) ||
                             column == MS::columnName(MS::ANTENNA2) ||
                             column == MS::columnName(MS::FEED1) ||
                             column == MS::columnName(MS::FEED2) ||
@@ -2107,7 +2115,10 @@ void ROVisibilityIterator::slurp() const
                             column == MS::columnName(MS::INTERVAL) ||
                             column == MS::columnName(MS::FLAG_ROW) ||
                             column == MS::columnName(MS::SCAN_NUMBER) ||
-                            column == MS::columnName(MS::UVW));
+		     column == MS::columnName(MS::UVW)){
+		    match = true;
+		    break;
+		  }
               }
               //              cout << "columns = " << columns << endl;
               

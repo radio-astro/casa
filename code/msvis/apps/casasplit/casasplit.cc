@@ -33,26 +33,7 @@ using namespace casa;
 
 int main(int argc, char* argv[]) {
   // Parse arguments.
-  if(argc < 3 || argc > 9 || String(argv[1]) == "-h" ||
-     String(argv[1]) == "--help"){
-    cout << argv[0] << ": Stand-alone executable for splitting an MS.\n"
-	 << "\nUse:\n\t" << argv[0] << " [-n] [-s spwsel] [-t timerange] [-w datacol] inputms outputms [timebin]\n\n"
-	 << "where timebin is an averaging time in seconds.\n"
-	 << "\n\t-n: Open inputms read-only.\n"
-	 << "\n\t-s: Spectral window selection."
-	 << "\n\t-t: timerange selection."
-	 << "\n\t-w: Which column (i.e. data, model_data, etc.) to use." << endl;
-    Int retval = 1;    // Exit with fail val unless user _asked_ for help.
-    if(argc > 1){
-      String argv1(argv[1]);
-      
-      retval = !(argv1 == "-h" || argv1 == "--help");
-    }
-    return retval;
-  }
-  
   // Defaults
-  Bool nomodify = false; // Known to work.
   String spwsel("");
 
   Vector<Int> step;
@@ -72,9 +53,7 @@ int main(int argc, char* argv[]) {
   while(args[0][0] == '-' && opts_processed < argc){
     String opt(args[0]);
     
-    if(opt == "-n")
-      nomodify = true;
-    else if(opt == "-s"){
+    if(opt == "-s"){
       spwsel = args[1];
       ++args;              // <- Like "shift".
       ++opts_processed;
@@ -93,12 +72,29 @@ int main(int argc, char* argv[]) {
     ++opts_processed;
   }
   
+  if(argc - opts_processed < 2 || argc - opts_processed > 3 
+     || String(argv[1]) == "-h" || String(argv[1]) == "--help"){
+    cout << argv[0] << ": Stand-alone executable for splitting an MS.\n"
+	 << "\nUse:\n\t" << argv[0] << " [-s spwsel] [-t timerange] [-w datacol] inputms outputms [timebin]\n\n"
+	 << "where timebin is an averaging time in seconds.\n"
+	 << "\n\t-s: Spectral window selection."
+	 << "\n\t-t: timerange selection."
+	 << "\n\t-w: Which column (i.e. data, model_data, etc.) to use." << endl;
+    Int retval = 1;    // Exit with fail val unless user _asked_ for help.
+    if(argc > 1){
+      String argv1(argv[1]);
+      
+      retval = !(argv1 == "-h" || argv1 == "--help");
+    }
+    return retval;
+  }
+  
   
   String inms(args[0]);
   String outms(args[1]);
   
-  Float  timebin = 1.0;
-  if(argc - opts_processed > 3)
+  Float timebin = -1.0;
+  if(argc - opts_processed > 2)
     timebin = atof(args[2]);
     
   Bool rstat(False);

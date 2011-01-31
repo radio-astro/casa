@@ -595,7 +595,7 @@ protected:
   // fact now VisIter just reads one tile (thus the commenting in setTileCache)
   // and lets the OS do the caching rather than than having the table system
   // cache extra tiles.
-  void setTileCache();
+  virtual void setTileCache();
 
   //Check if spw is in selected SPW for actual ms
   Bool isInSelectedSPW(const Int& spw);

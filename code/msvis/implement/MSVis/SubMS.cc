@@ -693,6 +693,19 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
         if (tiled) {
             ROTiledStManAccessor tsm(mssel_p, dataManGroup);
             uInt nHyper = tsm.nhypercubes();
+
+            // Test clause
+            if(1){
+              os << LogIO::DEBUG1
+                 << datacolname << "'s max cache size: "
+                 << tsm.maximumCacheSize() << " bytes.\n"
+                 << "\tnhypercubes: " << nHyper << ".\n"
+                 << "\ttshp of row 0: " << tsm.tileShape(0)
+                 << "\n\thypercube shape of row 0: " << tsm.hypercubeShape(0)
+                 << LogIO::POST;
+            }
+    
+
             // Find smallest tile shape
             Int highestProduct=-INT_MAX;
             Int highestId=0;
@@ -701,10 +714,13 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
               Int product = tshp.product();
 
               os << LogIO::DEBUG2
-                 << "hypercube " << id << ":\n";
-              for(uInt i = 0; i < tshp.nelements(); ++i)
-                os << "  tshp[" << i << "] = " << tshp[i] << "\n";
-              os << LogIO::POST;
+                 << "\thypercube " << id << ":\n"
+		 << "\t\ttshp: " << tshp << "\n"
+		 << "\t\thypercube shape: " << tsm.getHypercubeShape(id)
+		 << ".\n\t\tcache size: " << tsm.getCacheSize(id)
+		 << " buckets.\n\t\tBucket size: " << tsm.getBucketSize(id)
+		 << " bytes."
+		 << LogIO::POST;
 
               if (product > 0 && (product > highestProduct)) {
                 highestProduct = product;
@@ -783,7 +799,7 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
   MeasurementSet* SubMS::makeScratchSubMS(const Vector<MS::PredefinedColumns>& whichDataCols,
                                           const Bool forceInMemory)
   {
-    LogIO os(LogOrigin("SubMS", "makeSubMS()"));
+    LogIO os(LogOrigin("SubMS", "makeScratchSubMS()"));
     
     if(max(fieldid_p) >= Int(ms_p.field().nrow())){
       os << LogIO::SEVERE 
@@ -1262,7 +1278,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       info.readmeAddLine
         ("This is a measurement set Table holding astronomical observations");
     }
-    
     return ms;
   }
   
@@ -7332,7 +7347,7 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
   sort[colnum] = MS::DATA_DESC_ID;
   ++colnum;
   sort[colnum] = MS::TIME;
-  ++colnum;  
+  ++colnum;
   if(watch_obs)
     sort[colnum] = MS::OBSERVATION_ID;
 
@@ -7342,7 +7357,9 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
   // brings it almost in line with binTimes() (which uses -0.5 *
   // interval[bin_start]).
   ROVisibilityIterator vi(mssel_p, sort, timeBin_p - 0.5 * mscIn_p->interval()(0));
-  
+  //vi.slurp();
+  //cerr << "Finished slurping." << endl;
+
   // Apply selection
   for(uInt spwind = 0; spwind < spw_p.nelements(); ++spwind)
     vi.selectChannel(1, chanStart_p[spwind], nchan_p[spwind],
@@ -7474,6 +7491,11 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
     meter.update(inrowsdone);
   }   // End of for(vi.originChunks(); vi.moreChunks(); vi.nextChunk())
   os << LogIO::NORMAL << "Data binned." << LogIO::POST;
+
+  //const ColumnDescSet& cds = mssel_p.tableDesc().columnDescSet();
+  //const ColumnDesc& cdesc = cds[MS::columnName(MS::DATA)];
+  //ROTiledStManAccessor tacc(mssel_p, cdesc.dataManagerGroup());
+  //tacc.showCacheStatistics(cerr);  // A 99.x% hit rate is good.  0% is bad.
 
   os << LogIO::DEBUG1 // helpdesk ticket in from Oleg Smirnov (ODU-232630)
      << "Post binning memory: " << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
