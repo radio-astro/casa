@@ -2293,8 +2293,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 			       const Double regridChanWidthC, 
 			       const Double regridVeloRestfrq, 
 			       const String regridQuant,
-			       const Vector<Double>& transNewXin, 
-			       const Vector<Double>& transCHAN_WIDTH,
+			       const Vector<Double>& transNewXinC, 
+			       const Vector<Double>& transCHAN_WIDTHC,
 			       String& message,
 			       const Bool centerIsStartC,
 			       const Bool startIsEndC,
@@ -2304,16 +2304,50 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 			       ){
     ostringstream oss;
 
-    // verify regridCenter, regridBandwidth, and regridChanWidth 
-    // Note: these are in the units given by regridQuant!
+    //cout << "regridCenterC " <<  regridCenterC << " regridBandwidth " << regridBandwidth << " regridChanWidthC " << endl;
+    //cout << " nchanC " << nchanC << " width " << width << " start " << start << endl;
+    //cout << " regridQuant " << regridQuant << endl;
+    
 
-    Int oldNUM_CHAN = transNewXin.size();
-
+    Vector<Double> transNewXin(transNewXinC);
+    Vector<Double> transCHAN_WIDTH(transCHAN_WIDTHC);
     Bool centerIsStart = centerIsStartC;
     Bool startIsEnd = startIsEndC;
     Double regridChanWidth = regridChanWidthC;
     Double regridCenter = regridCenterC;
     Int nchan = nchanC;
+
+    Int oldNUM_CHAN = transNewXin.size();
+
+
+    // detect spectral windows defined with descending frequency
+    Bool isDescending=False;
+    for(uInt i=1; i<transNewXin.size(); i++){
+      if(transNewXin(i)<transNewXin(i-1)){
+	isDescending = True;
+      }
+      else if(isDescending){ // i.e. descending was detected but now we encounter ascending
+	oss << "Channel frequencies are neither in ascending nor in descending order. Cannot process.";
+	message = oss.str();
+	return False;  
+      }	
+    }
+
+    if(isDescending){ // need to reverse the order for processing and later reverse the result
+      //cout << "SPW has descending order ..." << endl;
+      uInt n = transNewXin.size();
+      Vector<Double> tempF, tempW;
+      tempF.assign(transNewXin);
+      tempW.assign(transCHAN_WIDTH);
+      for(uInt i=0; i<n; i++){
+	transNewXin(i) = tempF(n-1-i);
+	transCHAN_WIDTH(i) = tempW(n-1-i);
+	//cout << "i f w " << i << " " << transNewXin(i) << " " << transCHAN_WIDTH(i) << endl;
+      }
+    }
+
+    // verify regridCenter, regridBandwidth, and regridChanWidth 
+    // Note: these are in the units given by regridQuant!
     
     if(regridQuant=="chan"){ ////////////////////////
       // channel numbers ...
@@ -2500,13 +2534,25 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
           << " original channels" << endl
 	  << " Total width of SPW = " <<  regridBandwidthChan << " original channels == " 
 	  << numNewChanDown + numNewChanUp << " new channels" << endl;
+
       uInt nc = newChanLoBound.size();
       oss << " Total width of SPW (in output frame) = " << newChanHiBound[nc-1] - newChanLoBound[0] 
 	  << " Hz" << endl;
       oss << " Lower edge = " << newChanLoBound[0] << " Hz,"
 	  << " upper edge = " << newChanHiBound[nc-1] << " Hz" << endl;
 
+      if(isDescending){ // original SPW was in reverse order; need to restore that
+	Vector<Double> tempL, tempU;
+	tempL.assign(newChanLoBound);
+	tempU.assign(newChanHiBound);
+	for(uInt i=0; i<nc; i++){
+	  newChanLoBound(i) = tempL(nc-1-i);
+	  newChanHiBound(i) = tempU(nc-1-i);
+	}
+      }
+
       message = oss.str();
+
       return True;
     }
     else { // we operate on real numbers /////////////////
@@ -2971,6 +3017,10 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       }
       oss << endl;
 
+      if(isDescending){
+	oss << " Channel central frequency is decreasing with increasing channel number." << endl;
+      }
+
       oss << " Width of central channel (in output frame) = "
           << theCentralChanWidthF << " Hz";
       if(regridQuant == "vrad"){
@@ -3188,6 +3238,9 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
         //    new channel width, 
 	//    otherwise the center channel is the lower edge of the new center channel
 	lDouble tnumChan = floor((theRegridBWF+edgeTolerance)/theCentralChanWidthF);
+
+	//cout << "theRegridBWF " << theRegridBWF << " upperEndF " << upperEndF << " lowerEndF " << lowerEndF << " tnumChan " << tnumChan << endl;
+
 	if((Int) tnumChan % 2 != 0){
           // odd multiple 
 	  loFBup.push_back(theRegridCenterF-theCentralChanWidthF/2.);
@@ -3345,7 +3398,18 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       oss << " Lower edge = " << newChanLoBound[0] << " Hz,"
 	  << " upper edge = " << newChanHiBound[nc-1] << " Hz" << endl;
 
+      if(isDescending){ // original SPW was in reverse order; need to restore that
+	Vector<Double> tempL, tempU;
+	tempL.assign(newChanLoBound);
+	tempU.assign(newChanHiBound);
+	for(uInt i=0; i<nc; i++){
+	  newChanLoBound(i) = tempL(nc-1-i);
+	  newChanHiBound(i) = tempU(nc-1-i);
+	}
+      }
+
       message = oss.str();
+
       return True;
       
     } // end if (regridQuant=="chan")
@@ -3707,6 +3771,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     for(uInt i=0; i<newNUM_CHAN; i++){
       newCHAN_FREQ[i] = (newChanLoBound[i]+newChanHiBound[i])/2.;
       newCHAN_WIDTH[i] = newChanHiBound[i]-newChanLoBound[i];
+      //cout << "new lo hi freq width " << newChanLoBound[i] << " " << newChanHiBound[i] << " " << newCHAN_FREQ[i] << " " << newCHAN_WIDTH[i] << endl;
     }
     
     return True;
@@ -5318,7 +5383,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	      matchingRowSPWIds.push_back(theSPWId);
 	      matchingRows.push_back(nextRow);
 	      SPWtoRowIndex.define(theSPWId, nextRow);
-	      //	      cout << "matching nextRow = " << nextRow << ", time = " << timeCol(nextRow) << " DDID " << DDIdCol(nextRow) << endl;
+	      // cout << "matching nextRow = " << nextRow << ", time = " << timeCol(nextRow) << " DDID " << DDIdCol(nextRow) << endl;
 	    }
 	    nextRow++;
 	  } // end while nextRow ...
