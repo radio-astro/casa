@@ -1363,23 +1363,23 @@ Bool Calibrater::standardSolve3() {
     // Finalize the averged VisBuffer
     vbga.finalizeAverage();
 
-    // Make data amp- or phase-only, if needed
-    vbga.enforceAPonData(svc_p->apmode());
-
-    // Select on correlation via weights, according to the svc
-    vbga.enforceSolveCorrWeights(svc_p->phandonly());
-
-
     // Establish meta-data for this interval
     //  (some of this may be used _during_ solve)
     //  (this sets currSpw() in the SVC)
-    Bool vbOk=svc_p->syncSolveMeta(vbga);
-
-    // Use spw of first VB in vbga
-    Int thisSpw=svc_p->spwMap()(vbga(0).spectralWindow());
-    slotidx(thisSpw)++;
+    Bool vbOk=(vbga.nBuf()>0 && svc_p->syncSolveMeta(vbga));
 
     if (vbOk) {
+
+      // Use spw of first VB in vbga
+      Int thisSpw=svc_p->spwMap()(vbga(0).spectralWindow());
+      slotidx(thisSpw)++;
+      
+      // Make data amp- or phase-only, if needed
+      vbga.enforceAPonData(svc_p->apmode());
+      
+      // Select on correlation via weights, according to the svc
+      vbga.enforceSolveCorrWeights(svc_p->phandonly());
+
 
       if (svc_p->typeName()=="BPOLY") {
 
