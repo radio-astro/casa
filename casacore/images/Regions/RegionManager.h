@@ -154,7 +154,7 @@ namespace casa {
       //Different versions of unioning regions
       ImageRegion*  doUnion(const WCRegion& reg1, const WCRegion& reg2);
       ImageRegion*  doUnion(const PtrBlock<const WCRegion*>& reg1);
-      ImageRegion*  doUnion(const ImageRegion& reg1, const ImageRegion& reg2);
+      ImageRegion*  doUnion(const ImageRegion& reg1, const ImageRegion& reg2) const;
       
 
       /**************************************************************
@@ -183,18 +183,16 @@ namespace casa {
       //Remove a region from table...refuse is regionname is ""
       Bool removeRegionInTable(const String& tabName, const String& regName);
 
-      ImageRegion fromBCS(
-    		  String& diagnostics, uInt& nSelectedChannels, String& stokes,
+      /*
+       * regionName should be of the form imagename:regionname if the region
+       * is a TableDescriptor in an image
+       */
+      Record fromBCS(
+      		  String& diagnostics, uInt& nSelectedChannels, String& stokes,
+      		  const Record  * const regionPtr, const String& regionName,
       		  const String& chans, const StokesControl stokesControl,
       		  const String& box, const IPosition& imShape
-      ) const;
-
-      ImageRegion fromBCS(
-      		  String& diagnostics, uInt& nSelectedChannels, String& stokes,
-      		  Vector<uInt>& chanEndPts, Vector<uInt>& polEndPts,
-      		  const String& chans, const StokesControl stokesControl,
-      		  const Vector<Double>& boxCorners, const IPosition& imShape
-      ) const;
+        );
 
     private:
 
@@ -214,10 +212,6 @@ namespace casa {
 
       String _pairsToString(const Vector<uInt>& pairs) const;
 
-	  void _fillVector(
-			  Vector<Double>& myVector, const uInt nRegions
-	  ) const;
-
       Vector<uInt> _setSpectralRanges(
     		  String specification, uInt& nSelectedChannels, const uInt nChannels
       ) const;
@@ -230,10 +224,30 @@ namespace casa {
       Vector<Double> _setBoxCorners(const String& box) const;
 
       ImageRegion _fromBCS(
+    		  String& diagnostics, uInt& nSelectedChannels, String& stokes,
+      		  const String& chans, const StokesControl stokesControl,
+      		  const String& box, const IPosition& imShape
+      ) const;
+
+      ImageRegion _fromBCS(
     		  String& diagnostics,
     		  const Vector<Double>& boxCorners, const Vector<uInt>& chanEndPts,
     		  const Vector<uInt>& polEndPts, const IPosition imShape
       ) const;
+
+      static void _setRegion(
+        	Record& regionRecord, String& diagnostics,
+        	const Record* regionPtr
+        );
+
+      String _stokesFromRecord(
+    		  const Record& region
+      ) const;
+
+      void _setRegion(
+      	Record& regionRecord, String& diagnostics,
+      	const String& regionName
+      );
 
 
     };

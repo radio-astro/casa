@@ -130,67 +130,11 @@ void ImageInputProcessor::_process(
 	//    positional plane anding with chans and stokes specs
 
 	RegionManager regionMgr(image->coordinates());
-
-    if (! box.empty()) {
-    	if (box.freq(",") % 4 != 3) {
-    		*_log << "box not specified correctly" << LogIO::EXCEPTION;
-    	}
-    	regionRecord = regionMgr.fromBCS(
-    		diagnostics, _nSelectedChannels, stokes,
-    		chans, stokesControl, box, image->shape()
-    	).toRecord("");
-    	*_log << origin;
-    	*_log << LogIO::NORMAL << "Using specified box(es) " << box << LogIO::POST;
-    }
-    else if (regionPtr != 0) {
-    	_setRegion(regionRecord, diagnostics, regionPtr);
-    	*_log << origin;
-    	*_log << LogIO::NORMAL << "Set region from supplied region record"
-    		<< LogIO::POST;
-        stokes = _stokesFromRecord(regionRecord, image->coordinates(), image->shape());
-    }
-    else if (! regionName.empty()) {
-    	_setRegion(regionRecord, diagnostics, image, regionName);
-    	*_log << origin;
-       	*_log << LogIO::NORMAL << diagnostics << LogIO::POST;
-    	stokes = _stokesFromRecord(regionRecord, image->coordinates(), image->shape());
-    }
-    else {
-    	// nothing specified, use entire positional plane with spectral and polarization specs
-    	Vector<Double> boxCorners(0);
-    	if(metaData.hasDirectionCoordinate()) {
-    		Vector<Int> dirShape = metaData.directionShape();
-    		boxCorners.resize(4);
-    		boxCorners[0] = 0;
-    		boxCorners[1] = 0;
-    		boxCorners[2] = dirShape[0] - 1;
-    		boxCorners[3] = dirShape[1] - 1;
-    	}
-    	Vector<uInt> chanEndPts, polEndPts;
-        regionRecord = regionMgr.fromBCS(
-        	diagnostics, _nSelectedChannels, stokes,
-        	chanEndPts, polEndPts, chans,
-        	stokesControl, boxCorners, image->shape()
-        ).toRecord("");
-        *_log << origin;
-    	*_log << LogIO::NORMAL << "No region specified. Using full positional plane."
-    		<< LogIO::POST;
-    	if (chans.empty()) {
-    		*_log << LogIO::NORMAL << "Using all spectral channels."
-    			<< LogIO::POST;
-    	}
-    	else {
-    		*_log << LogIO::NORMAL << "Using channel range(s) "
-    			<< _pairsToString(chanEndPts) << LogIO::POST;
-    	}
-    	if (!stokes.empty()) {
-    		*_log << LogIO::NORMAL << "Using polarizations " << stokes << LogIO::POST;
-    	}
-    	else {
-    		*_log << LogIO::NORMAL << "Using polarization range(s) "
-    			<< _pairsToString(polEndPts) << LogIO::POST;
-    	}
-    }
+	regionRecord = regionMgr.fromBCS(
+			diagnostics, _nSelectedChannels, stokes,
+			regionPtr, regionName, chans,
+			stokesControl, box, image->shape()
+	);
     if (!allowMultipleBoxes && regionRecord.fieldNumber("regions") >= 0) {
     	*_log << "Only a single n-dimensional rectangular region is supported."
     		<< LogIO::EXCEPTION;
@@ -211,6 +155,7 @@ String ImageInputProcessor::_stokesFromRecord(
 	const Record& region, const CoordinateSystem& csys,
 	const IPosition& shape
 ) const {
+	// FIXME This implementation is incorrect for complex, recursive records
     String stokes = "";
  	if(csys.hasPolarizationAxis()) {
  		Int polAxis = csys.polarizationAxisNumber();
@@ -232,7 +177,6 @@ String ImageInputProcessor::_stokesFromRecord(
 	 		stokesEnd = (uInt)((Vector<Float>)trc)[polAxis];
 		}
 		else {
-	    	cout << "region " << region << endl;
 			Record blcRec = region.asRecord("blc");
 			Record trcRec = region.asRecord("trc");
 			stokesBegin = (Int)blcRec.asRecord(
