@@ -423,17 +423,9 @@ def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
 		    if plotstyle: loc=legendloc
 		    sd.plotter._plotter.legend(loc)
 		    
-		    # Need the actual plotting before setting picker
+		    # The actual plotting
 		    sd.plotter.plot()
 		    
-		    # Set picker to all the spectra
-		    if sd.plotter._visible:
-			    npanel=len(sd.plotter._plotter.subplots)
-			    for ipanel in range(npanel):
-				    ax=sd.plotter._plotter.subplots[ipanel]['axes']
-				    for line in ax.lines:
-					    line.set_picker(5.0)
-
                     # Line catalog
                     dolinc=False
                     if ( linecat != 'none' and linecat != '' ):

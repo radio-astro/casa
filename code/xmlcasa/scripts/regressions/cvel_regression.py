@@ -426,7 +426,7 @@ passed = True
 #avtolerance = 0.00035
 # temporarily relaxed values, should be reduced to the normal ones after March 2011
 tolerance = 0.012
-avtolerance = 0.0031
+avtolerance = 0.0039
 numpoints = 0.
 avdev = 0.
 maxdev = 0.

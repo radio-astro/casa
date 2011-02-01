@@ -100,12 +100,6 @@ ROVisIterator & ROVisIterator::operator++()
 
 void ROVisIterator::updateSlicer()
 {
-
-  // Do we need the following here?
-  //  if(msIter_p.newMS()){
-  //    setTileCache();
-  //  }
-
   useNewSlicer_p=True;
 
   //    cout << "Using new slicer!..." << flush;
@@ -123,9 +117,7 @@ void ROVisIterator::updateSlicer()
   
   newWtSlicer_p(0).reference(corrSlices_p(this->polarizationId()));
 
-  
-  //    cout << "done." << endl;
-
+  setTileCache();
 }
 
 // (Alternative syntax for ROVisIter::chanIds)
@@ -294,10 +286,7 @@ ROVisIterator::visibility(Cube<Complex>& vis, DataColumn whichOne) const
 void ROVisIterator::getDataColumn(DataColumn whichOne, 
 				  const Vector<Vector<Slice> >& slices,
 				  Cube<Complex>& data) const
-{
-
-  //  cout << "Using new getDataColumn. " << endl;
- 
+{ 
   // Return the visibility (observed, model or corrected);
   // deal with DATA and FLOAT_DATA seamlessly for observed data.
   switch (whichOne) {
@@ -741,6 +730,118 @@ Vector<uInt>& ROVisIterator::rowIds(Vector<uInt>& rowids) const
   rowids.resize(curNumRow_p);
   rowids=selTable_p.rowNumbers();
   return rowids;
+}
+
+void ROVisIterator::setTileCache()
+{
+  // Set the cache size when the DDID changes (as opposed to MS) to avoid 
+  // overreading in a case like:
+  // hcubes: [2, 256], [4, 64]
+  // tileshape: [4, 64]
+  // spws (ddids): [4,64], [2, 256], [2, 256], [4,64], [2, 256], [4,64]
+  // and spw = '0:1~7,1:1~7,2:100~200,3:20~40,4:200~230,5:40~50'
+  //
+  // For hypercube 0, spw 2 needs 3 tiles, but spw 4 only needs 1, AND the last
+  // tile at that.  So if hypercube 0 used a cache of 3 tiles throughout, every
+  // read of 4:200~230 would likely also read the unwanted channels 0~127 of
+  // the next row.
+  //
+  if(!curStartRow_p == 0 && !msIter_p.newDataDescriptionId())
+    return;
+  const MeasurementSet& thems = msIter_p.ms();
+  if(thems.tableType() == Table::Memory)
+    return;
+  const ColumnDescSet& cds=thems.tableDesc().columnDescSet();
+
+  // Get the first row number for this DDID.
+  Vector<uInt> rownums;
+  rowIds(rownums);
+  uInt startrow = rownums[0];
+  
+  Vector<String> columns(8);
+  // complex
+  columns(0)=MS::columnName(MS::DATA);
+  columns(1)=MS::columnName(MS::CORRECTED_DATA);
+  columns(2)=MS::columnName(MS::MODEL_DATA);
+  // boolean
+  columns(3)=MS::columnName(MS::FLAG);
+  // float
+  columns(4)=MS::columnName(MS::WEIGHT_SPECTRUM);
+  columns(5)=MS::columnName(MS::WEIGHT);
+  columns(6)=MS::columnName(MS::SIGMA);
+  // double
+  columns(7)=MS::columnName(MS::UVW);
+  //
+  for(uInt k = 0; k < columns.nelements(); ++k){
+    if(cds.isDefined(columns(k))){
+      const ColumnDesc& cdesc = cds[columns(k)];
+      String dataManType="";
+      
+      dataManType = cdesc.dataManagerType();
+      // We have to check WEIGHT_SPECTRUM as it tends to exist but not have
+      // valid data.
+      if(columns[k] == MS::columnName(MS::WEIGHT_SPECTRUM) &&
+         !existsWeightSpectrum())
+        dataManType="";
+
+      // Sometimes columns may not contain anything yet
+      if((columns[k]==MS::columnName(MS::DATA) && (colVis.isNull() ||
+                                                   !colVis.isDefined(0))) || 
+         (columns[k]==MS::columnName(MS::MODEL_DATA) && (colModelVis.isNull() ||
+                                                         !colModelVis.isDefined(0))) ||
+         (columns[k]==MS::columnName(MS::CORRECTED_DATA) && (colCorrVis.isNull() ||
+                                                             !colCorrVis.isDefined(0))) ||
+         (columns[k]==MS::columnName(MS::FLAG) && (colFlag.isNull() ||
+                                                   !colFlag.isDefined(0))) ||
+         (columns[k]==MS::columnName(MS::WEIGHT) && (colWeight.isNull() ||
+                                                     !colWeight.isDefined(0))) ||
+         (columns[k]==MS::columnName(MS::SIGMA) && (colSigma.isNull() ||
+                                                    !colSigma.isDefined(0))) ||
+         (columns[k]==MS::columnName(MS::UVW) && (colUVW.isNull() ||
+                                                  !colUVW.isDefined(0))) ){
+        dataManType="";
+      }
+          
+      if(dataManType.contains("Tiled") &&
+         !String(cdesc.dataManagerGroup()).empty()){
+        try {      
+          ROTiledStManAccessor tacc=ROTiledStManAccessor(thems, 
+                                                         cdesc.dataManagerGroup());
+
+          // This is for the data columns, WEIGHT_SPECTRUM and FLAG only.
+          if((columns[k] != MS::columnName(MS::WEIGHT)) && 
+             (columns[k] != MS::columnName(MS::UVW))){
+            // Figure out how many tiles are needed to span the selected channels.
+            const IPosition tileShape(tacc.tileShape(startrow));
+            Vector<Int> ids;
+            chanIds(ids);
+            uInt startTile = ids[0] / tileShape[1];
+            uInt endTile = ids[ids.nelements() - 1] / tileShape[1];
+            uInt cachesize = endTile - startTile + 1;
+
+            // and the selected correlations.
+            corrIds(ids);
+            startTile = ids[0] / tileShape[0];
+            endTile = ids[ids.nelements() - 1] / tileShape[0];
+            cachesize *= endTile - startTile + 1;
+
+            // Safer until I know which of correlations and channels varies faster on
+            // disk.
+            const IPosition hShape(tacc.hypercubeShape(startrow));
+            cachesize = hShape[0] * hShape[1] / (tileShape[0] * tileShape[1]);
+
+            tacc.setCacheSize(startrow, cachesize);
+          }
+          else
+            tacc.setCacheSize(startrow, 1);
+        }
+        catch (AipsError x) {
+          //It failed so leave the caching as is.
+          continue;
+        }
+      }
+    }
+  }
 }
 
 void VisIterator::putCol(ScalarColumn<Bool> &column, const Vector<Bool> &array)

@@ -205,6 +205,17 @@ protected:
   virtual void updateSlicer();
   // attach the column objects to the currently selected table
 
+  // The ROVisibilityIterator version of this function sets the tile cache to 1
+  // because of a feature in sliced data access that grows memory dramatically in
+  // some cases.  However, ROVisibilityIterator, because it uses
+  // ROArrayColumn::getColumn(Vector<Vector<Slice> >&), is (1/28/2011) incredibly
+  // slow if the tile cache does not span all the selected channels, and it will
+  // read orders of magnitude more data than it needs to.  This sets the tile
+  // cache to the minimum number of tiles required to span the selected channels.
+  // Unlike ROVisibilityIterator, it does it for each hypercube, not just the
+  // first one, and it does its work when the DDID has changed.
+  virtual void setTileCache();
+
   using ROVisibilityIterator::getDataColumn;
   virtual void getDataColumn(DataColumn whichOne, const Vector<Vector<Slice> >& slices, 
 			     Cube<Complex>& data) const;

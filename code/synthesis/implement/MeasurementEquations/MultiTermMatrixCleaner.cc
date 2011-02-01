@@ -328,7 +328,8 @@ Int MultiTermMatrixCleaner::mtclean(Int maxniter, Float stopfraction, Float inpu
   /* returning because of non-convergence */
   if(convergedflag == -1)
     {
-      return(-1);
+      os << "Stopping minor cycle iterations because of possible divergence." << LogIO::POST;
+      //return(-1);
     }
   
   /********************** END MINOR CYCLE ITERATIONS ***********************/		
@@ -1193,7 +1194,7 @@ Int MultiTermMatrixCleaner::checkConvergence(Int criterion, Float &fluxlimit, Fl
     else
     {
       ////      if( totalIters_p==maxniter_p || adbg || totalIters_p%(MIN(maxniter_p/5,20))==0 )
-      if( totalIters_p==maxniter_p || totalIters_p%(MIN(maxniter_p/5,20))==0 )
+      if( totalIters_p==maxniter_p || adbg || totalIters_p%(MIN(maxniter_p/5,20))==0 )
        {
 	 
 	    os << "[" << totalIters_p << "] Res: " << rmaxval << " Max: " << globalmaxval_p;
@@ -1204,9 +1205,12 @@ Int MultiTermMatrixCleaner::checkConvergence(Int criterion, Float &fluxlimit, Fl
             os << " Coeffs: ";
             for(Int taylor=0;taylor<ntaylor_p;taylor++)
                os << (matCoeffs_p[IND2(taylor,maxscaleindex_p)])(globalmaxpos_p) << "  ";
-            //os << " OrigRes: ";
-            //for(Int taylor=0;taylor<ntaylor_p;taylor++)
-            //      os << (*matR_p[IND2(taylor,maxscaleindex_p)]).getAt(globalmaxpos_p) << "  ";
+            if(adbg)
+	      {
+              os << " OrigRes: ";
+              for(Int taylor=0;taylor<ntaylor_p;taylor++)
+                   os << (matR_p[IND2(taylor,maxscaleindex_p)])(globalmaxpos_p) << "  ";
+	      }
             os << LogIO::POST;
         }
     }

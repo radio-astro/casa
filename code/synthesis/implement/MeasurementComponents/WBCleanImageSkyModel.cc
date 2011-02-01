@@ -337,8 +337,8 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
              if(thiscycleniter==-2) { stopflag=-2; break;}
              /* A signal for convergence with no iterations  */
              if(thiscycleniter==0) { stopflag=1; break; }
-	     /* A signal for divergence. Stop with previous model. */
-             if(thiscycleniter==-1) { stopflag=1; break; }
+	     ///* A signal for divergence. Save current model and stop (force a major cycle). */
+             //if(thiscycleniter==-1) { stopflag=1; }
 
              /* Increment the minor-cycle iteration counter */
              iterationcount += thiscycleniter;
