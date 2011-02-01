@@ -67,8 +67,9 @@ int main() {
 	  uInt nSelectedChannels;
 	  Vector<uInt> chanEndPoints, polEndPoints;
 	  RegionManager::StokesControl stokesControl;
-	  ImageRegion imregion;
 	  Record regRec;
+	  RegionManager rm(myImage->coordinates());
+	  IPosition imShape = myImage->shape();
 	  Double box1 = 1.24795026;
 	  Double box2 = 0.782552901;
 	  Double box3 = 1.24794616;
@@ -83,8 +84,6 @@ int main() {
 	  Double chan19 = 1.23351000e+10;
 	  try {
 		  {
-			  RegionManager rm(myImage->coordinates());
-			  IPosition imShape = myImage->shape();
 			  diagnostics = "";
 			  nSelectedChannels = 0;
 			  stokes = "";
@@ -92,12 +91,12 @@ int main() {
 			  stokesControl = RegionManager::USE_ALL_STOKES;
 			  box = "";
 			  writeTestString("Test default gives region of entire image");
-			  imregion = rm.fromBCS(
-			      diagnostics, nSelectedChannels, stokes, chans,
-			      stokesControl, box, imShape
+			  regRec = rm.fromBCS(
+					  diagnostics, nSelectedChannels, stokes,
+					  0, "", chans, stokesControl, box,
+					  imShape
 			  );
-              AlwaysAssert(nSelectedChannels == 20, AipsError);
-			  regRec = imregion.toRecord("");
+			  AlwaysAssert(nSelectedChannels == 20, AipsError);
 			  Vector<Double> gotblc = recToVec(regRec.asRecord("blc"));
 			  Vector<Double> expblc(4);
 			  expblc[0] = 1.24795230;
@@ -115,8 +114,6 @@ int main() {
 			  compVecs(gottrc, exptrc);
 		  }
 		  {
-			  RegionManager rm(myImage->coordinates());
-			  IPosition imShape = myImage->shape();
 			  diagnostics = "";
 			  nSelectedChannels = 0;
 			  stokes = "Q";
@@ -124,12 +121,12 @@ int main() {
 			  stokesControl = RegionManager::USE_ALL_STOKES;
 			  box = "";
 			  writeTestString("Test setting a single stokes");
-			  imregion = rm.fromBCS(
-			      diagnostics, nSelectedChannels, stokes, chans,
-			      stokesControl, box, imShape
+			  regRec = rm.fromBCS(
+				  diagnostics, nSelectedChannels, stokes,
+				  0, "", chans, stokesControl, box,
+				  imShape
 			  );
-              AlwaysAssert(nSelectedChannels == 20, AipsError);
-			  regRec = imregion.toRecord("");
+			  AlwaysAssert(nSelectedChannels == 20, AipsError);
 			  Vector<Double> gotblc = recToVec(regRec.asRecord("blc"));
 			  Vector<Double> expblc(4);
 			  expblc[0] = 1.24795230;
@@ -147,8 +144,6 @@ int main() {
 			  compVecs(gottrc, exptrc);
 		  }
 		  {
-			  RegionManager rm(myImage->coordinates());
-			  IPosition imShape = myImage->shape();
 			  diagnostics = "";
 			  nSelectedChannels = 0;
 			  stokes = "QU";
@@ -156,12 +151,12 @@ int main() {
 			  stokesControl = RegionManager::USE_ALL_STOKES;
 			  box = "";
 			  writeTestString("Test setting a contiguous stokes");
-			  imregion = rm.fromBCS(
-			      diagnostics, nSelectedChannels, stokes, chans,
-			      stokesControl, box, imShape
+			  regRec = rm.fromBCS(
+					  diagnostics, nSelectedChannels, stokes,
+					  0, "", chans, stokesControl, box,
+					  imShape
 			  );
-              AlwaysAssert(nSelectedChannels == 20, AipsError);
-			  regRec = imregion.toRecord("");
+			  AlwaysAssert(nSelectedChannels == 20, AipsError);
 			  Vector<Double> gotblc = recToVec(regRec.asRecord("blc"));
 			  Vector<Double> expblc(4);
 			  expblc[0] = 1.24795230;
@@ -179,8 +174,6 @@ int main() {
 			  compVecs(gottrc, exptrc);
 		  }
 		  {
-			  RegionManager rm(myImage->coordinates());
-			  IPosition imShape = myImage->shape();
 			  diagnostics = "";
 			  nSelectedChannels = 0;
 			  stokes = "";
@@ -188,12 +181,12 @@ int main() {
 			  stokesControl = RegionManager::USE_ALL_STOKES;
 			  box = "";
 			  writeTestString("Test setting a single channel");
-			  imregion = rm.fromBCS(
-			      diagnostics, nSelectedChannels, stokes, chans,
-			      stokesControl, box, imShape
+			  regRec = rm.fromBCS(
+					  diagnostics, nSelectedChannels, stokes,
+					  0, "", chans, stokesControl, box,
+					  imShape
 			  );
-              AlwaysAssert(nSelectedChannels == 1, AipsError);
-			  regRec = imregion.toRecord("");
+			  AlwaysAssert(nSelectedChannels == 1, AipsError);
 			  Vector<Double> gotblc = recToVec(regRec.asRecord("blc"));
 			  Vector<Double> expblc(4);
 			  expblc[0] = 1.24795230;
@@ -211,8 +204,6 @@ int main() {
 			  compVecs(gottrc, exptrc);
 		  }
 		  {
-			  RegionManager rm(myImage->coordinates());
-			  IPosition imShape = myImage->shape();
 			  diagnostics = "";
 			  nSelectedChannels = 0;
 			  stokes = "";
@@ -220,12 +211,12 @@ int main() {
 			  stokesControl = RegionManager::USE_ALL_STOKES;
 			  box = "";
 			  writeTestString("Test setting multiple continuous channels");
-			  imregion = rm.fromBCS(
-			      diagnostics, nSelectedChannels, stokes, chans,
-			      stokesControl, box, imShape
+			  regRec = rm.fromBCS(
+					  diagnostics, nSelectedChannels, stokes,
+					  0, "", chans, stokesControl, box,
+					  imShape
 			  );
-              AlwaysAssert(nSelectedChannels == 6, AipsError);
-			  regRec = imregion.toRecord("");
+			  AlwaysAssert(nSelectedChannels == 6, AipsError);
 			  Vector<Double> gotblc = recToVec(regRec.asRecord("blc"));
 			  Vector<Double> expblc(4);
 			  expblc[0] = 1.24795230;
@@ -243,8 +234,6 @@ int main() {
 			  compVecs(gottrc, exptrc);
 		  }
 		  {
-			  RegionManager rm(myImage->coordinates());
-			  IPosition imShape = myImage->shape();
 			  diagnostics = "";
 			  nSelectedChannels = 0;
 			  stokes = "";
@@ -252,15 +241,15 @@ int main() {
 			  stokesControl = RegionManager::USE_ALL_STOKES;
 			  box = "4,5,8,9";
 			  writeTestString("Test setting box");
-			  imregion = rm.fromBCS(
-			      diagnostics, nSelectedChannels, stokes, chans,
-			      stokesControl, box, imShape
+			  regRec = rm.fromBCS(
+					  diagnostics, nSelectedChannels, stokes,
+					  0, "", chans, stokesControl, box,
+					  imShape
 			  );
-              AlwaysAssert(nSelectedChannels == 20, AipsError);
-			  regRec = imregion.toRecord("");
+			  AlwaysAssert(nSelectedChannels == 20, AipsError);
 			  Vector<Double> gotblc = recToVec(regRec.asRecord("blc"));
 			  Vector<Double> expblc(4);
-              expblc[0] = 1.24794411;
+			  expblc[0] = 1.24794411;
 			  expblc[1] = 0.782557271;
 			  expblc[2] = 4.73510000e+09;
 			  expblc[3] = 1.0;
@@ -275,8 +264,6 @@ int main() {
 			  compVecs(gottrc, exptrc);
 		  }
 		  {
-			  RegionManager rm(myImage->coordinates());
-			  IPosition imShape = myImage->shape();
 			  diagnostics = "";
 			  nSelectedChannels = 0;
 			  stokes = "";
@@ -284,12 +271,12 @@ int main() {
 			  stokesControl = RegionManager::USE_FIRST_STOKES;
 			  box = "";
 			  writeTestString("Test using first stokes");
-			  imregion = rm.fromBCS(
-			      diagnostics, nSelectedChannels, stokes, chans,
-			      stokesControl, box, imShape
+			  regRec = rm.fromBCS(
+					  diagnostics, nSelectedChannels, stokes,
+					  0, "", chans, stokesControl, box,
+					  imShape
 			  );
-              AlwaysAssert(nSelectedChannels == 20, AipsError);
-			  regRec = imregion.toRecord("");
+			  AlwaysAssert(nSelectedChannels == 20, AipsError);
 			  Vector<Double> gotblc = recToVec(regRec.asRecord("blc"));
 			  Vector<Double> expblc(4);
 			  expblc[0] = 1.24795230;
@@ -307,8 +294,6 @@ int main() {
 			  compVecs(gottrc, exptrc);
 		  }
 		  {
-			  RegionManager rm(myImage->coordinates());
-			  IPosition imShape = myImage->shape();
 			  diagnostics = "";
 			  nSelectedChannels = 0;
 			  stokes = "";
@@ -316,12 +301,12 @@ int main() {
 			  stokesControl = RegionManager::USE_ALL_STOKES;
 			  box = "1,2,3,4,5,6,7,8,9,10,11,12";
 			  writeTestString("Test setting multiple boxes");
-			  imregion = rm.fromBCS(
-			      diagnostics, nSelectedChannels, stokes, chans,
-			      stokesControl, box, imShape
+			  regRec = rm.fromBCS(
+					  diagnostics, nSelectedChannels, stokes,
+					  0, "", chans, stokesControl, box,
+					  imShape
 			  );
-              AlwaysAssert(nSelectedChannels == 20, AipsError);
-			  regRec = imregion.toRecord("");
+			  AlwaysAssert(nSelectedChannels == 20, AipsError);
 			  Vector<Double> gotblc = recToVec(regRec.asRecord("regions").asRecord("*2").asRecord("blc"));
 			  Vector<Double> expblc(4);
 			  expblc[0] = 1.24793387;
@@ -339,26 +324,24 @@ int main() {
 			  compVecs(gottrc, exptrc);
 
 			  gotblc = recToVec(regRec.asRecord("regions").asRecord("*1").asRecord("regions").asRecord("*1").asRecord("blc"));
-              expblc[0] = box1;
-              expblc[1] = box2;
-              compVecs(gotblc, expblc);
+			  expblc[0] = box1;
+			  expblc[1] = box2;
+			  compVecs(gotblc, expblc);
 			  gottrc = recToVec(regRec.asRecord("regions").asRecord("*1").asRecord("regions").asRecord("*1").asRecord("trc"));
-              exptrc[0] = box3;
-              exptrc[1] = box4;
-              compVecs(gottrc, exptrc);
+			  exptrc[0] = box3;
+			  exptrc[1] = box4;
+			  compVecs(gottrc, exptrc);
 
-              gotblc = recToVec(regRec.asRecord("regions").asRecord("*1").asRecord("regions").asRecord("*2").asRecord("blc"));
-              expblc[0] = box5;
-              expblc[1] = box6;
-              compVecs(gotblc, expblc);
+			  gotblc = recToVec(regRec.asRecord("regions").asRecord("*1").asRecord("regions").asRecord("*2").asRecord("blc"));
+			  expblc[0] = box5;
+			  expblc[1] = box6;
+			  compVecs(gotblc, expblc);
 			  gottrc = recToVec(regRec.asRecord("regions").asRecord("*1").asRecord("regions").asRecord("*2").asRecord("trc"));
-              exptrc[0] = box7;
-              exptrc[1] = box8;
-              compVecs(gottrc, exptrc);
+			  exptrc[0] = box7;
+			  exptrc[1] = box8;
+			  compVecs(gottrc, exptrc);
 		  }
-          {
-			  RegionManager rm(myImage->coordinates());
-			  IPosition imShape = myImage->shape();
+		  {
 			  diagnostics = "";
 			  nSelectedChannels = 0;
 			  stokes = "IUV";
@@ -366,12 +349,12 @@ int main() {
 			  stokesControl = RegionManager::USE_ALL_STOKES;
 			  box = "";
 			  writeTestString("Test setting multiple stokes ranges");
-			  imregion = rm.fromBCS(
-			      diagnostics, nSelectedChannels, stokes, chans,
-			      stokesControl, box, imShape
+			  regRec = rm.fromBCS(
+					  diagnostics, nSelectedChannels, stokes,
+					  0, "", chans, stokesControl, box,
+					  imShape
 			  );
-              AlwaysAssert(nSelectedChannels == 20, AipsError);
-			  regRec = imregion.toRecord("");
+			  AlwaysAssert(nSelectedChannels == 20, AipsError);
 			  Vector<Double> gotblc = recToVec(regRec.asRecord("regions").asRecord("*1").asRecord("blc"));
 			  Vector<Double> expblc(4);
 			  expblc[0] = 1.24795230;
@@ -388,7 +371,7 @@ int main() {
 			  exptrc[3] = 1.0;
 			  compVecs(gottrc, exptrc);
 
-              gotblc = recToVec(regRec.asRecord("regions").asRecord("*2").asRecord("blc"));
+			  gotblc = recToVec(regRec.asRecord("regions").asRecord("*2").asRecord("blc"));
 			  expblc[0] = 1.24795230;
 			  expblc[1] = 0.782549990;
 			  expblc[2] = 4.73510000e+09;
@@ -400,10 +383,8 @@ int main() {
 			  exptrc[2] = 1.23351000e+10;
 			  exptrc[3] = 4.0;
 			  compVecs(gottrc, exptrc);
-    	  }
+		  }
 		  {
-			  RegionManager rm(myImage->coordinates());
-			  IPosition imShape = myImage->shape();
 			  diagnostics = "";
 			  nSelectedChannels = 0;
 			  stokes = "";
@@ -411,13 +392,12 @@ int main() {
 			  stokesControl = RegionManager::USE_ALL_STOKES;
 			  box = "";
 			  writeTestString("Test multiple channel ranges");
-			  imregion = rm.fromBCS(
-			      diagnostics, nSelectedChannels, stokes, chans,
-			      stokesControl, box, imShape
+			  regRec = rm.fromBCS(
+					  diagnostics, nSelectedChannels, stokes,
+					  0, "", chans, stokesControl, box,
+					  imShape
 			  );
-              AlwaysAssert(nSelectedChannels == 10, AipsError);
-			  regRec = imregion.toRecord("");
-
+			  AlwaysAssert(nSelectedChannels == 10, AipsError);
 			  Vector<Double> gotblc = recToVec(regRec.asRecord("regions").asRecord("*1").asRecord("blc"));
 			  Vector<Double> expblc(4);
 			  expblc[0] = 1.24795230;
@@ -447,8 +427,6 @@ int main() {
 			  compVecs(gottrc, exptrc);
 		  }
 		  {
-			  RegionManager rm(myImage->coordinates());
-			  IPosition imShape = myImage->shape();
 			  diagnostics = "";
 			  nSelectedChannels = 0;
 			  stokes = "IQV";
@@ -456,13 +434,12 @@ int main() {
 			  stokesControl = RegionManager::USE_ALL_STOKES;
 			  box = "1,2,3,4,5,6,7,8";
 			  writeTestString("Test multiple channel ranges, multiple stokes ranges, and multiple boxes");
-			  imregion = rm.fromBCS(
-			      diagnostics, nSelectedChannels, stokes, chans,
-			      stokesControl, box, imShape
+			  regRec = rm.fromBCS(
+					  diagnostics, nSelectedChannels, stokes,
+					  0, "", chans, stokesControl, box,
+					  imShape
 			  );
-              AlwaysAssert(nSelectedChannels == 10, AipsError);
-			  regRec = imregion.toRecord("");
-
+			  AlwaysAssert(nSelectedChannels == 10, AipsError);
 			  // box="5,6,7,8", chans="15~19", stokes="V"
 			  Vector<Double> gotblc = recToVec(regRec.asRecord("regions").asRecord("*2").asRecord("blc"));
 			  Vector<Double> expblc(4);
@@ -481,8 +458,8 @@ int main() {
 
 			  // box="5,6,7,8", chans="0~4", stokes="V"
 			  gotblc = recToVec(
-				  regRec.asRecord("regions").asRecord("*1").asRecord("regions").asRecord("*2")
-				  .asRecord("blc")
+					  regRec.asRecord("regions").asRecord("*1").asRecord("regions").asRecord("*2")
+					  .asRecord("blc")
 			  );
 			  expblc[0] = box5;
 			  expblc[1] = box6;
@@ -492,7 +469,7 @@ int main() {
 			  gottrc = recToVec(
 					  regRec.asRecord("regions").asRecord("*1").asRecord("regions").asRecord("*2")
 					  .asRecord("trc")
-				  );
+			  );
 			  exptrc[0] = box7;
 			  exptrc[1] = box8;
 			  exptrc[2] = chan4;
@@ -501,8 +478,8 @@ int main() {
 
 			  // box="5,6,7,8", chans="15-19", stokes="IQ"
 			  gotblc = recToVec(
-				  regRec.asRecord("regions").asRecord("*1").asRecord("regions").asRecord("*1")
-				  .asRecord("regions").asRecord("*2").asRecord("blc")
+					  regRec.asRecord("regions").asRecord("*1").asRecord("regions").asRecord("*1")
+					  .asRecord("regions").asRecord("*2").asRecord("blc")
 			  );
 			  expblc[0] = box5;
 			  expblc[1] = box6;
@@ -512,7 +489,7 @@ int main() {
 			  gottrc = recToVec(
 					  regRec.asRecord("regions").asRecord("*1").asRecord("regions").asRecord("*1")
 					  .asRecord("regions").asRecord("*2").asRecord("trc")
-				  );
+			  );
 			  exptrc[0] = box7;
 			  exptrc[1] = box8;
 			  exptrc[2] = chan19;
@@ -521,8 +498,8 @@ int main() {
 
 			  // box="5,6,7,8", chans="0~4", stokes="IQ"
 			  gotblc = recToVec(
-				  regRec.asRecord("regions").asRecord("*1").asRecord("regions").asRecord("*1")
-				  .asRecord("regions").asRecord("*1").asRecord("regions").asRecord("*2").asRecord("blc")
+					  regRec.asRecord("regions").asRecord("*1").asRecord("regions").asRecord("*1")
+					  .asRecord("regions").asRecord("*1").asRecord("regions").asRecord("*2").asRecord("blc")
 			  );
 			  expblc[0] = box5;
 			  expblc[1] = box6;
@@ -532,7 +509,7 @@ int main() {
 			  gottrc = recToVec(
 					  regRec.asRecord("regions").asRecord("*1").asRecord("regions").asRecord("*1")
 					  .asRecord("regions").asRecord("*1").asRecord("regions").asRecord("*2").asRecord("trc")
-				  );
+			  );
 			  exptrc[0] = box7;
 			  exptrc[1] = box8;
 			  exptrc[2] = chan4;
@@ -541,9 +518,9 @@ int main() {
 
 			  // box="1,2,3,4", chans="15-19", stokes="V"
 			  gotblc = recToVec(
-				  regRec.asRecord("regions").asRecord("*1").asRecord("regions").asRecord("*1")
-				  .asRecord("regions").asRecord("*1").asRecord("regions")
-				  .asRecord("*1").asRecord("regions").asRecord("*2").asRecord("blc")
+					  regRec.asRecord("regions").asRecord("*1").asRecord("regions").asRecord("*1")
+					  .asRecord("regions").asRecord("*1").asRecord("regions")
+					  .asRecord("*1").asRecord("regions").asRecord("*2").asRecord("blc")
 			  );
 			  expblc[0] = box1;
 			  expblc[1] = box2;
@@ -554,7 +531,7 @@ int main() {
 					  regRec.asRecord("regions").asRecord("*1").asRecord("regions").asRecord("*1")
 					  .asRecord("regions").asRecord("*1").asRecord("regions").asRecord("*1")
 					  .asRecord("regions").asRecord("*2").asRecord("trc")
-				  );
+			  );
 			  exptrc[0] = box3;
 			  exptrc[1] = box4;
 			  exptrc[2] = chan19;
@@ -563,10 +540,10 @@ int main() {
 
 			  // box="1,2,3,4", chans="0-4", stokes="V"
 			  gotblc = recToVec(
-				  regRec.asRecord("regions").asRecord("*1").asRecord("regions").asRecord("*1")
-				  .asRecord("regions").asRecord("*1").asRecord("regions")
-				  .asRecord("*1").asRecord("regions").asRecord("*1").asRecord("regions").
-				  asRecord("*2").asRecord("blc")
+					  regRec.asRecord("regions").asRecord("*1").asRecord("regions").asRecord("*1")
+					  .asRecord("regions").asRecord("*1").asRecord("regions")
+					  .asRecord("*1").asRecord("regions").asRecord("*1").asRecord("regions").
+					  asRecord("*2").asRecord("blc")
 			  );
 			  expblc[0] = box1;
 			  expblc[1] = box2;
@@ -578,7 +555,7 @@ int main() {
 					  .asRecord("regions").asRecord("*1").asRecord("regions").asRecord("*1")
 					  .asRecord("regions").asRecord("*1").asRecord("regions").
 					  asRecord("*2").asRecord("trc")
-				  );
+			  );
 			  exptrc[0] = box3;
 			  exptrc[1] = box4;
 			  exptrc[2] = chan4;
@@ -587,10 +564,10 @@ int main() {
 
 			  // box="1,2,3,4", chans="15-19", stokes="IQ"
 			  gotblc = recToVec(
-				  regRec.asRecord("regions").asRecord("*1").asRecord("regions").asRecord("*1")
-				  .asRecord("regions").asRecord("*1").asRecord("regions").asRecord("*1").asRecord("regions")
-				  .asRecord("*1").asRecord("regions").asRecord("*1").asRecord("regions")
-				  .asRecord("*2").asRecord("blc")
+					  regRec.asRecord("regions").asRecord("*1").asRecord("regions").asRecord("*1")
+					  .asRecord("regions").asRecord("*1").asRecord("regions").asRecord("*1").asRecord("regions")
+					  .asRecord("*1").asRecord("regions").asRecord("*1").asRecord("regions")
+					  .asRecord("*2").asRecord("blc")
 			  );
 			  expblc[0] = box1;
 			  expblc[1] = box2;
@@ -602,7 +579,7 @@ int main() {
 					  .asRecord("regions").asRecord("*1").asRecord("regions").asRecord("*1")
 					  .asRecord("regions").asRecord("*1").asRecord("regions").asRecord("*1").asRecord("regions")
 					  .asRecord("*2").asRecord("trc")
-				  );
+			  );
 			  exptrc[0] = box3;
 			  exptrc[1] = box4;
 			  exptrc[2] = chan19;
@@ -611,9 +588,9 @@ int main() {
 
 			  // box="1,2,3,4", chans="0-4", stokes="IQ"
 			  gotblc = recToVec(
-				  regRec.asRecord("regions").asRecord("*1").asRecord("regions").asRecord("*1")
-				  .asRecord("regions").asRecord("*1").asRecord("regions").asRecord("*1").asRecord("regions")
-				  .asRecord("*1").asRecord("regions").asRecord("*1").asRecord("regions").asRecord("*1").asRecord("blc")
+					  regRec.asRecord("regions").asRecord("*1").asRecord("regions").asRecord("*1")
+					  .asRecord("regions").asRecord("*1").asRecord("regions").asRecord("*1").asRecord("regions")
+					  .asRecord("*1").asRecord("regions").asRecord("*1").asRecord("regions").asRecord("*1").asRecord("blc")
 			  );
 			  expblc[0] = box1;
 			  expblc[1] = box2;
@@ -624,7 +601,7 @@ int main() {
 					  regRec.asRecord("regions").asRecord("*1").asRecord("regions").asRecord("*1")
 					  .asRecord("regions").asRecord("*1").asRecord("regions").asRecord("*1").asRecord("regions")
 					  .asRecord("*1").asRecord("regions").asRecord("*1").asRecord("regions").asRecord("*1").asRecord("trc")
-				  );
+			  );
 			  exptrc[0] = box3;
 			  exptrc[1] = box4;
 			  exptrc[2] = chan4;
@@ -641,12 +618,12 @@ int main() {
 			  stokesControl = RegionManager::USE_ALL_STOKES;
 			  box = "1,2,3,4,5,6,7,8";
 			  writeTestString("Test multiple stokes ranges, and multiple boxes on image with no spectral axis");
-			  imregion = rm.fromBCS(
-			      diagnostics, nSelectedChannels, stokes, chans,
-			      stokesControl, box, imShape
+			  regRec = rm.fromBCS(
+					  diagnostics, nSelectedChannels, stokes,
+					  0, "", chans, stokesControl, box,
+					  imShape
 			  );
-              AlwaysAssert(nSelectedChannels == 0, AipsError);
-			  regRec = imregion.toRecord("");
+			  AlwaysAssert(nSelectedChannels == 0, AipsError);
 
 			  // box="5,6,7,8", stokes="V"
 			  Vector<Double> gotblc = recToVec(regRec.asRecord("regions").asRecord("*2").asRecord("blc"));
@@ -691,7 +668,6 @@ int main() {
 			  exptrc[1] = box4;
 			  exptrc[2] = 4.0;
 			  compVecs(gottrc, exptrc);
-			  cout << "here 2" << endl;
 
 			  // box="1,2,3,4", stokes="IQ"
 			  gotblc = recToVec(regRec.asRecord("regions").asRecord("*1").asRecord("regions").asRecord("*1")
@@ -712,6 +688,7 @@ int main() {
 		  {
 			  RegionManager rm(myImageDirOnly->coordinates());
 			  IPosition imShape = myImageDirOnly->shape();
+			  String imname = myImageDirOnly->name();
 			  diagnostics = "";
 			  nSelectedChannels = 0;
 			  stokes = "";
@@ -719,13 +696,12 @@ int main() {
 			  stokesControl = RegionManager::USE_ALL_STOKES;
 			  box = "1,2,3,4,5,6,7,8";
 			  writeTestString("Test multiple boxes on image with direction coordinate only");
-			  imregion = rm.fromBCS(
-			      diagnostics, nSelectedChannels, stokes, chans,
-			      stokesControl, box, imShape
+			  regRec = rm.fromBCS(
+					  diagnostics, nSelectedChannels, stokes,
+					  0, "", chans, stokesControl, box,
+					  imShape
 			  );
-              AlwaysAssert(nSelectedChannels == 0, AipsError);
-			  regRec = imregion.toRecord("");
-
+			  AlwaysAssert(nSelectedChannels == 0, AipsError);
 			  // box="5,6,7,8"
 			  Vector<Double> gotblc = recToVec(regRec.asRecord("regions").asRecord("*2").asRecord("blc"));
 			  Vector<Double> expblc(2);
@@ -748,7 +724,7 @@ int main() {
 			  exptrc[1] = box8;
 			  compVecs(gottrc, exptrc);
 		  }
-  	  }
+	  }
 	  catch (AipsError x) {
 		  cerr << "Unexpected exception: " << x.getMesg() << endl;
 		  return 1;

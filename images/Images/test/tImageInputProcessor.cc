@@ -28,6 +28,8 @@
 #include <images/Images/ImageInputProcessor.h>
 #include <images/Images/FITSImage.h>
 #include <casa/namespace.h>
+#include <casa/iomanip.h>
+
 
 void writeTestString(const String& test) {
     cout << "\n" << "*** " << test << " ***" << endl;
@@ -39,7 +41,12 @@ void _checkCorner(const Record& gotRecord, const Vector<Double>& expected) {
 		Double got = gotRecord.asRecord(RecordFieldId(
 				"*" + String::toString(fieldNumber))
 			).asDouble(RecordFieldId("value"));
-	    AlwaysAssert(fabs((got-expected[i])/expected[i]) < 1e-9, AipsError);
+		/*
+		cout << setprecision(10);
+		cout << "got " << got << endl;
+		cout << "expected " << expected << endl;
+		*/
+	    AlwaysAssert(fabs((got-expected[i])/expected[i]) < 3e-9, AipsError);
 	}
 }
 
@@ -318,6 +325,17 @@ int main() {
     	expectedBlc[2] = 4.73510000e+09;
     	expectedBlc[3] = 1;
     	Vector<Double> expectedTrc(4);
+    	expectedTrc[0] = 1.24784989e+00;
+    	expectedTrc[1] = 7.82622817e-01;
+    	expectedTrc[2] = 4.73510000e+09;
+    	expectedTrc[3] = 4;
+
+    	testSuccess(
+    		"Nothing specified gives entire image as region",
+    		0, goodImage, 0, "", "", "", none,
+    		RegionManager::USE_ALL_STOKES, True,
+        	expectedBlc, expectedTrc
+    	);
     	expectedTrc[0] = 1.24793182e+00;
     	expectedTrc[1] = 7.82564556e-01;
     	expectedTrc[2] = 4.73510000e+09;
@@ -463,10 +481,10 @@ int main() {
         	expectedTrc[2] = 1;
         	expectedTrc[3] = 3;
             stokes = "";
-            String regionDesc = "mybox2";
+            String region = goodImage + ":" + "mybox2";
         	testSuccess(
         		"Valid region description from image table",
-        		0, goodImage, 0, regionDesc, "",
+        		0, goodImage, 0, region, "",
         		"", stokes, RegionManager::USE_FIRST_STOKES, True,
             	expectedBlc, expectedTrc
         	);
