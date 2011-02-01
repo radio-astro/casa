@@ -39,51 +39,6 @@ def imcontsub(imagename=None,linefile=None,contfile=None,fitorder=None,region=No
         box=box, chans=chans, stokes=stokes, stokescontrol="f",
         region=region
     )
-    """
-    reg = None
-    try:
-        # Get the region information
-        # Note that there could be issues if in the region file
-        # there were channel selections that don't match what the
-        # user is giving as input.
-        if ( len(region)>1 ):
-            if ( len(box)>1 or len(stokes)>1 ):
-                casalog.post( "Ignoring region selection\ninformation"\
-                              " the in box, chans, and stokes parameters."\
-                              " Using region information\nin file: "\
-                              + region, 'WARN' );
-
-            if os.path.exists( region ):
-                # We have a region file on disk!
-                reg=rg.fromfiletorecord( region );
-            else:
-                # The name given is the name of a region stored
-                # with the image.
-                # Note that we accept:
-                #    'regionname'          -  assumed to be in imagename
-                #    'my.image:regionname' - in my.image
-                reg_names=region.split(':')
-                if ( len( reg_names ) == 1 ):
-                    reg=rg.fromtabletorecord( imagename, region, False )
-                else:
-                    reg=rg.fromtabletorecord( reg_names[0], reg_names[1], False )
-        else:
-            #reg=imregion( imagename, chans, stokes, box, '', '' )
-            reg=imregion( imagename, '', stokes, box, '', '' )
-        if ( len( reg .keys() ) < 1 ):
-            casalog.post('Ill-formed region: '+str(reg)+'. can not continue.',\
-                         'SEVERE' )
-            return False
-            
-        #print "REGION: ", reg
-        
-    except Exception, err:
-        casalog.post( 'Error: Unable to create the image region. '+str(err), 'SEVERE' )
-        # Cleanup
-        if ( reg != None ):
-            del reg
-        return  False
-    """
 
     channels=[]
 
