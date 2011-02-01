@@ -879,6 +879,12 @@ coordinates plus auto extension to unspecified axes.
      <description>Polarization set to use if stokes parameter is not specified. Choices are "a" (use all stokes) and "f" (use first stokes). Default "a".</description>
      <value>a</value>
      </param>
+     <param type="any" direction="in" name="region">
+             <any type="variant"/>
+        
+        <description>Named region in the form imagename:regionname or region dictionary. Used only if box, chans, stokes not specified. Default "".</description>   
+       <value>""</value>
+     </param>
 </input>
 <returns type="any"><any type="record"/> Region tool or fail</returns>
 
