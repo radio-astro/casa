@@ -32,6 +32,14 @@ def imcontsub(imagename=None,linefile=None,contfile=None,fitorder=None,region=No
     if ( filesExist ):
         return False
     
+    _myia = iatool.create()
+    _myia.open(imagename)
+    mycsys = _myia.coordsys()
+    reg = rg.frombcs(csys=mycsys.torecord(), shape=_myia.shape(),
+        box=box, chans=chans, stokes=stokes, stokescontrol="f",
+        region=region
+    )
+    """
     reg = None
     try:
         # Get the region information
@@ -75,14 +83,13 @@ def imcontsub(imagename=None,linefile=None,contfile=None,fitorder=None,region=No
         if ( reg != None ):
             del reg
         return  False
+    """
 
     channels=[]
-    _myia = iatool.create()
 
     try:
         # Find the max and min channel.
         axes=getimaxes(imagename)
-        _myia.open( imagename )
         fullSize = _myia.boundingbox(_myia.setboxregion())
         minChan=int(fullSize['blc'][axes[2][0]])
         maxChan=int(fullSize['trc'][axes[2][0]])

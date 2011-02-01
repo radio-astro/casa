@@ -151,6 +151,9 @@ class imcontsub_test(unittest.TestCase):
             os.system('rm -rf input_test*')
             os.system('rm -rf fit_test*')
             os.system('rm -rf line_*')
+            
+            if os.path.exists( 'garbage.rgn' ):
+                os.remove('garbage.rgn')
         
     ####################################################################
     # Incorrect inputs to parameters.  The parameters are:
@@ -165,461 +168,122 @@ class imcontsub_test(unittest.TestCase):
     #
     # Returns True if successful, and False if it has failed.
     ####################################################################
-    def test_input(self):
-        '''Imcontsub: Testing input/ouput parameters'''
-        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
-        casalog.post( "Starting imcontsub INPUT/OUTPUT tests.", 'NORMAL2' )
     
-        # First step get rid of all the old test files!
-        for file in os.listdir( '.' ):
-            if file.startswith( 'input_test_' ):
-                shutil.rmtree( file )
-        if os.path.exists( 'garbage.rgn' ):
-            os.remove('garbage.rgn')
-    
-    
-        #######################################################################
-        # Testing the imagename parameter.
-        #    1. Bad file name should throw and exception
-        #    2. Good file name, a file should be
-        #######################################################################
-        casalog.post( "The IMAGENAME parameter tests will cause errors to occur, do not be alarmed", 'WARN' )
+    def test_bad_imagename(self):
+        """Test bad image name throws exception"""
         
+        exception = False
         try:
-            results = imcontsub( 'g192', contfile='input_test_cont1', linefile='input_test_line1' )
+            imcontsub( 'g192', contfile='input_test_cont1', linefile='input_test_line1' )
+            exception = True
         except:
-            no_op='noop'
-        else:
-            if ( results ):
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']\
-                     +"\nError: Badfile, 'g192', was not reported as missing."
-            
+            exception = False
+        self.assertTrue(exception)
         
-        try:
-            results = imcontsub( 'g192_a2.image', contfile='input_test_cont1', linefile='input_test_line1' )
-    
-        except:
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                    +"\nError: Unable to do continuum subtraction on g192_a2.image"
-            
-        if ( ( not os.path.exists( 'input_test_cont1' ) \
-             or not os.path.exists( 'input_test_line1' ) ) and results ):
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                    +"\nError: continuum files for input_test 1 were not created."
-    
-    
-        #######################################################################
-        # Testing the linefile parameter.
-        #    1. Bad file, file already exists, exception should be thrown
-        #    2. Good file name, a file should be
-        #######################################################################
-        casalog.post( "The LINEFILE parameter tests will cause errors to occur, do not be alarmed", 'WARN' )
+    def test_bad_linefile(self):
+        """ Test bad line file name fails"""
         
-        results = imcontsub( 'g192_a2.image', linefile='input_test_line1' )
-        if ( results ):
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                 +"\nError: Badfile, 'input_test_line1', was not reported as already existing."
+        # FIXME shouldn't a bad linefile name throw an exception?
+        filename = 'input_test_line1'
+        myfile = open(filename, mode="w")
+        myfile.write("x")
+        myfile.close()
+        results = imcontsub( 'g192_a2.image', linefile=filename )
+        self.assertTrue(not results)
             
+    def test_bad_contfile(self):
+        """ Test bad continuum file name fails"""
         
-        try:
-            results=imcontsub( 'g192_a2.image', linefile='input_test_line2' )
-        except:
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                       +"\nError: Unable to create spectral line file on g192"
-        if ( not os.path.exists( 'input_test_line2' ) and results ):
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                       +"\nError: Spectral line file, 'input_test_line2', was not created."
-    
-    
-        #######################################################################
-        # Testing the contfile parameter.
-        #    1. Bad file, file already exists, exception should be thrown
-        #    2. Good file name, a file should be
-        #######################################################################
-        casalog.post( "The CONTFILE parameter tests will cause errors to occur, do not be alarmed", 'WARN' )
-    
-        Results = False
-        try:
-            results = imcontsub( 'g192_a2.image', contfile='input_test_cont1' )
-        except:
-            no_op='noop'
-        else:
-            if ( results ):
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']\
-                     +"\nError: Badfile, 'input_test_cont1', was not "\
-                     +"reported as already existing."        
+        # FIXME shouldn't a bad linefile name throw an exception?
+        filename = 'input_test_cont'
+        myfile = open(filename, mode="w")
+        myfile.write("x")
+        myfile.close()
+        results = imcontsub( 'g192_a2.image', contfile=filename )
+        self.assertTrue(not results)
         
-        try:
-            results=imcontsub( 'g192_a2.image', contfile='input_test_cont2' )
-        except:
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                       +"\nError: Unable to create continuum file for g192"
-        if ( not os.path.exists( 'input_test_cont2' ) or not results ): 
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                       +"\nError: Continuum file, 'input_test_cont2', was not created."\
-                       +"\nResults: "+str(results)
+    def test_bad_fitorder(self):
+        """Test bad fitorder fails"""
             
+        results=imcontsub( 'g192_a2.image', fitorder=-1, contfile='moment_test' )
+        self.assertTrue(not results)
         
-            
-        #######################################################################
-        # Testing FITORDER parameter, valid values 0 and greater
-        #    1. Below valid range: -2, 2.3, and -10
-        #    3. Within range: 0, 1, 2
-        #######################################################################
-        casalog.post( "The FITORDER parameter tests will cause errors to occur, do not be alarmed", 'WARN' )
+        results=imcontsub( 'g192_a2.image', fitorder=-2.3, contfile='moment_test' )
+        self.assertTrue(not results)
         
-        try:
-            results=imcontsub( 'g192_a2.image', fitorder=-1, contfile='moment_test' )
-        except:
-            no_op='noop'
-        else:
-            if ( results ):
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']\
-                       +"\nError: No exception thrown for bad fit order, -1"
-    
-            
-        try:
-            results=imcontsub( 'g192_a2.image', fitorder=2.3, contfile='moment_test' )
-        except:
-            no_op='noop'
-        else:
-            if ( results ):
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']\
-                       +"\nError: No exception thrown for bad fit order, 2.3" 
-                 
-            
-        try:
-            results=imcontsub( 'g192_a2.image', fitorder=-10, contfile='moment_test' )
-        except:
-            no_op='noop'
-        else:
-            if ( results ):
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']\
-                       +"\nError: No exception thrown for bad fit order, -10"
-    
+    def test_bad_region(self):
+        """ Test bad region parameter fails"""
         
-            
-        try:
-            results=imcontsub( 'g192_a2.image', fitorder=0, contfile='input_test_cont3', linefile='input_test_line3' )
-        except Exception, err:
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                     +"\nError: Unable to subtract continuum with a fit order of 0 "
-        if ( not os.path.exists( 'input_test_cont3' ) or not os.path.exists( 'input_test_line3' ) or not results ): 
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                       +"\nError: continuum 3 output files were NOT created."\
-                       + "\n\tRESULTS: "+str(results)
-            
-    
-            
-        try:
-            results=imcontsub( 'g192_a2.image', fitorder=1, contfile='input_test_cont4', linefile='input_test_line4' )
-        except Exception, err:
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                     +"\nError: Unable to subtract continuum with a fit order of 1 "
-        if ( not os.path.exists( 'input_test_cont4' ) or not os.path.exists( 'input_test_cont4' ) or not results ): 
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                       +"\nError: continuum 4 output files were NOT created."
-    
-            
-        try:
-            results=imcontsub( 'g192_a2.image', fitorder=2, contfile='input_test_cont5', linefile='input_test_line5' )
-        except Exception, err:
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                     +"\nError: Unable to subtract continuum with a fit order of 2 "
-    
-        if ( not os.path.exists( 'input_test_cont5' ) or not os.path.exists( 'input_test_cont5' ) or not results ): 
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                       +"\nError: continuum 5 output files were NOT created."        
-            
-    
-    
-        #######################################################################
-        # Testing REGION parameter
-        # Expects a file containing a region record, as created by the viewer.
-        # Tests include bad file name, file with bad content, and good file.
-        ####################################################################### 
-        casalog.post( "The REGION parameter tests will cause errors to occur, do not be alarmed", 'WARN' )
-    
         results = imcontsub( 'g192_a2.image', region=7 )
-        if ( results ):
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                 +"\nError: Bad region file, 7, was not reported as bad."
-    
-    
-    
-        try:
-            results = imcontsub( 'g192_a2.image', region='garbage.rgn' )
-        except:
-            #We want this to fail
-            no_op = 'noop'
-        else:
-            if ( results ):
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']\
-                                        +"\nError: Bad region file, 'garbage.rgn', was not reported as missing."
-    
-        try:
-            filename = os.getcwd()+'garbage.rgn'
-            fp=open( filename, 'w' )
-            fp.writelines('This file does NOT contain a valid CASA region specification\n')
-            fp.close()
-    
-            try:
-                results = imcontsub( 'g192_a2.image', region=filename )
-            except:
-                no_op='noop'
-            else:
-                if ( results ):
-                    retValue['success']=False
-                    retValue['error_msgs']=retValue['error_msgs']\
-                              + "\nError: Bad region file, 'garbage.rgn',"\
-                              + " was not reported as bad."
-        except Exception, err:
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                     +"\nError: Unable to create bad region file.\n\t"
-            raise Exception, err
-    
+        self.assertTrue(not results)
         
-        try:
-            results=imcontsub( 'g192_a2.image', region='g192_a2.image-2.rgn', linefile='input_test_line6' )
-        except:
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                       +"\nError: Unable to do continuum subtraction with region file g192_a2.image-2.rgn"
-        if ( not os.path.exists( 'input_test_line6' ) or not results ):
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                       +"\nError: Spetral line file, 'input_test_line6', was not created."
-    
-    
-    
-        #######################################################################
-        # Testing BOX parameter
-        # The input file has pixel values ranging from
-        #   0-511, 0-511
-        # Tests include -3, -1, 0, 1 random valid value, 500, 511, 525
-        #   for both the x, and y coords
-        #
-        # Note: -1 is a special case implying use the full range, so to
-        #       be out of bounds we need -2 or less.
-        #######################################################################
-        casalog.post( "The BOX parameter tests will cause errors to occur, do not be alarmed", 'WARN' )
+        filename = os.getcwd()+'/garbage.rgn'
+
+        results = imcontsub( 'g192_a2.image', region=filename)
+        self.assertTrue(not results)
         
-        
-        results = imcontsub( 'g192_a2.image', box='-3,0,511,511' )
-        if ( results ):
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                 +"\nError: Bad box value, 'x=-3', was not reported as missing."
-    
-        
-        results = imcontsub( 'g192_a2.image', box='0,-3,511,511' )
-        if ( results ):
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                 +"\nError: Bad box value, 'y=-3', was not reported as missing."
-    
-    
-        
-        results = imcontsub( 'g192_a2.image', box='-2,0,511,511' )
-        if ( results ):
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                 +"\nError: Bad box value, 'x=-2', was not reported."\
-                 +"\n\tRESULTS: "+str(results)
-    
-        
-        results = imcontsub( 'g192_a2.image', box='0,-2,511,511' )
-        if ( results ):
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                 +"\nError: Bad box value, 'y=-2', was not reported as missing."
-    
-        
-        results = imcontsub( 'g192_a2.image', box='0,0,512,511' )
-        if ( results ):
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                 +"\nError: Bad box value, 'x=512', was not reported as missing."
-    
-        
-        results = imcontsub( 'g192_a2.image', box='0,0,511,512' )
-        if ( results ):
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                 +"\nError: Bad box value, 'y=512', was not reported as missing."
-    
-        
-        results = imcontsub( 'g192_a2.image', box='0, 0,525,511' )
-        if ( results ):
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                 +"\nError: Bad box value, 'x=525', was not reported as missing."
-    
-        
-        results = imcontsub( 'g192_a2.image', box='0,0,511,525' )
-        if ( results ):
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                 +"\nError: Bad box value, 'y=525', was not reported as missing."
-    
-        x1=random.randint(0,511)
-        x2=random.randint(x1,511)
-        y1=random.randint(0,511)
-        y2=random.randint(y1,511)
-        boxstr=str(x1)+','+str(y1)+','+str(x2)+','+str(y2)
-        
-        try:
-            results = imcontsub( 'g192_a2.image', box=boxstr, linefile='input_test_line7' )
-        except:
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                       +"\nError: Unable to create moment with box="+boxstr
-        if ( not os.path.exists( 'input_test_line7' ) or not results ):
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                     +"\nError: Moment file, 'input_test_box_1', was not "\
-                     +"created at "+boxstr
-    
-    
-        #######################################################################
-        # Testing CHANS parameter: valid values 0-39 for our image
-        # Values used for testing, -5,-2,0,22~35, 39,40,45
-        #
-        # NOTE: a coord value of -1 indicates use all, so -1 is a valid
-        #       coordiante.
-        #######################################################################
-        casalog.post( "The CHANS parameter tests will cause errors to occur, do not be alarmed", 'WARN' )
-        
+        fp=open( filename, 'w' )
+        fp.writelines('This file does NOT contain a valid CASA region specification\n')
+        fp.close()
+        results = imcontsub( 'g192_a2.image', region=filename)
+        self.assertTrue(not results)
+
+
+    def test_bad_chans(self):
+        """Test bad chans parameter causes failure"""
         
         results = imcontsub( 'g192_a2.image', chans='-5' )
-        if ( results ):
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                 +"\nError: Bad channel value, '-5', was not reported."
-    
-        
+        self.assertTrue(not results)
+
         results = imcontsub( 'g192_a2.image', chans='-2' )
-        if ( results ):
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                 +"\nError: Bad channel value, '-2', was not reported."\
-                 +"\n\tRESULTS: "+str(results)
-    
-        
+        self.assertTrue(not results)
+
         results = imcontsub( 'g192_a2.image', chans='-18' )
-        if ( results ):
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                 +"\nError: Bad channel value of -18 was not reported."
-    
-        
+        self.assertTrue(not results)
+
         results = imcontsub( 'g192_a2.image', chans='45' )
-        if ( results ):
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                 +"\nError: Bad channel value of 45 was not reported."
-    
-        
+        self.assertTrue(not results)
+
         results = imcontsub( 'g192_a2.image', chans='40' )
-        if ( results ):
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                 +"\nError: Bad channel value of 40 was not reported."
-    
+        self.assertTrue(not results)
+
+
+    def test_bad_box(self):
+        """Test bad box parameter causes failure"""
         
-        try:
-            results = imcontsub( 'g192_a2.image', chans='22~35', linefile='input_test_line8' )
-        except:
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                       +"\nError: Unable to spectral line image with chans=22~35"
-        if ( not os.path.exists( 'input_test_line8' ) or not results ): 
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                     +"\nError: Spectral line image file, 'input_test_line8', was not created."
-    
+        results = imcontsub( 'g192_a2.image', box='-3,0,511,511' )
+        self.assertTrue(not results)
+
+        results = imcontsub( 'g192_a2.image', box='0,-3,511,511' )
+        self.assertTrue(not results)
+
+        results = imcontsub( 'g192_a2.image', box='-2,0,511,511' )
+        self.assertTrue(not results)
         
-        try:
-            results = imcontsub( 'g192_a2.image', chans='0', linefile='input_test_line9' )
-        except:
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                       +"\nError: Unable to create moment wit chans=0"
-        if ( not os.path.exists( 'input_test_line9' ) or not results ): 
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                     +"\nError: Spectral line file, 'input_test_line9', was not created."
-    
-    
+        results = imcontsub( 'g192_a2.image', box='0,-2,511,511' )
+        self.assertTrue(not results)
+
+        results = imcontsub( 'g192_a2.image', box='0,0,512,511' )
+        self.assertTrue(not results)
         
-        try:
-            results = imcontsub( 'g192_a2.image', chans='39', linefile='input_test_line10' )
-        except:
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                       +"\nError: Unable to create moment with chans=39"
-        if ( not os.path.exists( 'input_test_line10' ) or not results ): 
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                     +"\nError: Spectral line file, 'input_test_line10', was not created."
-    
-            
-        #######################################################################
-        # Testing STOKES parameter, valid values: 'I'
-        #    Tests are 'Q', 'yellow' (invalid) and 'I'
-        #######################################################################
-        casalog.post( "The STOKES parameter tests will cause errors to occur, do not be alarmed", 'WARN' )
-    
+        results = imcontsub( 'g192_a2.image', box='0,0,511,512' )
+        self.assertTrue(not results)
         
+        results = imcontsub( 'g192_a2.image', box='0, 0,525,511' )
+        self.assertTrue(not results)
+        
+        results = imcontsub( 'g192_a2.image', box='0,0,511,525' )
+        self.assertTrue(not results)
+
+    def test_bad_stokes(self):
+        """Test bad stokes parameter causes failure"""
         results = imcontsub( 'g192_a2.image', stokes='Q' )
-        if ( results ):
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                 +"\nError: Bad stokes value, 'Q', was not reported."
-    
-        
+        self.assertTrue(not results)
+
         results = imcontsub( 'g192_a2.image', stokes='yellow' )
-        if ( results ):
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                 +"\nError: Bad stokes value, 'yellow', was not reported."
-    
-        
-        try:
-            results = imcontsub( 'g192_a2.image', stokes='I', linefile='input_test_line11' )
-        except:
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                       +"\nError: Unable to create moment with stokes=Q"
-        if ( not os.path.exists( 'input_test_line11' ) or not results ):
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                     +"\nError: Spectral line file, 'input_test_line11', was not created."
-    
-        #print "RETURNING", retValue
-        self.assertTrue(retValue['success'],retValue['error_msgs'])
-    
+        self.assertTrue(not results)
+
+
     
     ####################################################################
     # Continuum subtraction correctness test.
@@ -629,6 +293,7 @@ class imcontsub_test(unittest.TestCase):
     # with subtracted continuum files) with pervious results.
     #
     # Random values are selected in the files and compared.
+    # FIXME compare the entire arrays, not bloody random values
     #
     # Returns True if successful, and False if it has failed.
     ####################################################################
@@ -638,12 +303,6 @@ class imcontsub_test(unittest.TestCase):
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
         casalog.post( "Starting imcontsub CONTINUUM SUB CORRECTNESS tests.", 'NORMAL2' )
     
-        # First step get rid of all the old test files!
-        for file in os.listdir( '.' ):
-            if file.startswith( 'cont_test_' ):
-                shutil.rmtree( file )
-    
-        
         try:
             results=imcontsub( 'g192_a2.image', fitorder=0, contfile='cont_test_cont1', linefile='cont_test_line1' )
         except Exception, err:
