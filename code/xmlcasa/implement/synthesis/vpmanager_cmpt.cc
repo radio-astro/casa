@@ -14,10 +14,16 @@
 #include <vpmanager_cmpt.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/BasicSL/String.h>
+#include <casa/OS/Path.h>
 #include <casa/Containers/Record.h>
 #include <casa/Utilities/Assert.h>
 #include <measures/Measures/MDirection.h>
+#include <measures/Measures/MEpoch.h>
+#include <casa/Quanta/MVTime.h>
+#include <casa/Quanta/MVFrequency.h>
+#include <casa/Quanta/Quantum.h>
 #include <synthesis/MeasurementEquations/VPManager.h>
+#include <images/Images/AntennaResponses.h>
 
 using namespace std;
 using namespace casa;
@@ -371,10 +377,6 @@ vpmanager::setpbimage(const std::string& telescope, const std::string& othertele
     RETHROW(x);
   }
 
-
-
-
-
   return r;
 }
 
@@ -421,6 +423,102 @@ vpmanager::setpbpoly(const std::string& telescope, const std::string& otherteles
   }
   return r;
 }
+
+bool 
+vpmanager::createantresp(const std::string& telescope, 
+			 const std::string& imdir, 
+			 const std::string& starttime, 
+			 const std::vector<std::string>& bandnames, 
+			 const std::vector<std::string>& bandminfreq, 
+			 const std::vector<std::string>& bandmaxfreq)
+{
+  bool rstat(False);
+  try{
+
+    *itsLog << LogOrigin("vp", "createantresp");
+
+    cout << "telescope " << telescope << " imdir " << imdir << " starttime " << starttime << endl;
+    for(int i=0; i<bandnames.size(); i++){
+      cout << i << " bandnames " << bandnames[i] << " bandminfreq " << bandminfreq[i] << " bandmaxfreq " << bandmaxfreq[i] << endl;
+    }
+
+    String obsName = toCasaString(telescope);
+    MPosition Xpos;
+    if (obsName.length() == 0 || 
+	!MeasTable::Observatory(Xpos,obsName)) {
+      // unknown observatory
+      *itsLog << LogIO::SEVERE << "Unknown observatory: \"" << obsName << "\"." << LogIO::POST;
+      return rstat;
+    }
+
+    String imDir = toCasaString(imdir);
+    Path imPath(imDir);
+    String absPathName = imPath.absoluteName();
+    Path absImPath(absPathName);
+    if(!absImPath.isValid()){
+      *itsLog << LogIO::SEVERE << "Invalid path: \"" << imDir  << "\"." << LogIO::POST;
+      return rstat;
+    }
+      
+    String startTime = toCasaString(starttime);
+    MEpoch theStartTime; 
+    Quantum<Double> qt;
+    if (MVTime::read(qt,startTime)) {
+      MVEpoch mv(qt);
+      theStartTime = MEpoch(mv, MEpoch::UTC);
+    } else {
+      *itsLog << LogIO::SEVERE << "Invalid time format: " 
+	      << startTime << LogIO::POST;
+      return rstat;
+    }
+
+    uInt nBands = bandnames.size();
+
+    if((nBands != bandminfreq.size()) || (nBands != bandmaxfreq.size())){
+      *itsLog << LogIO::SEVERE << "bandnames, bandminfreq, and bandmaxfreq need to have the same number of elements." 
+	      << LogIO::POST;
+      return rstat;
+    }
+      
+    for(uInt i=0; i<nBands; i++){
+      Quantum<Double> freqmin, freqmax;
+      if(!Quantum<Double>::read(freqmin, toCasaString(bandminfreq[i]))){
+	*itsLog << LogIO::SEVERE << "Invalid quantity in bandminfreq " << i << ": " << bandminfreq[i] 
+		<< LogIO::POST;
+	return rstat;
+      }
+      if(!Quantum<Double>::read(freqmax, toCasaString(bandmaxfreq[i]))){
+	*itsLog << LogIO::SEVERE << "Invalid quantity in bandmaxfreq " << i << ": " << bandmaxfreq[i] 
+		<< LogIO::POST;
+	return rstat;
+      }
+
+      try{
+	MVFrequency fMin(freqmin);
+      }
+      catch(AipsError x) {
+	*itsLog << LogIO::SEVERE << "Error interpreting bandminfreq " << i << " as frequency: " << bandminfreq[i] << endl << x.getMesg() << LogIO::POST;
+	return rstat;
+      }
+      try{
+	MVFrequency fMax(freqmax);
+      }
+      catch(AipsError x) {
+	*itsLog << LogIO::SEVERE << "Error interpreting bandmaxfreq " << i << " as frequency: " << bandmaxfreq[i] << endl << x.getMesg() << LogIO::POST;
+	return rstat;
+      }
+
+    }
+
+    rstat = True;
+
+  } catch  (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+  }
+  return rstat;
+}
+
 
 } // casac namespace
 
