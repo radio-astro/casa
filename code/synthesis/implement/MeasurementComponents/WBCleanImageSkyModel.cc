@@ -424,9 +424,9 @@ Float WBCleanImageSkyModel::computeFluxLimit(Int model,Float &fractionOfPsf)
   }
 
   /* If we detect divergence across major cycles, STOP */
-  if(maxres > previous_maxresidual_p)
+  if(fabs( (maxres - previous_maxresidual_p)/previous_maxresidual_p ) > 2.0 )
   {
-    os << "Peak residual : " << maxres << " has increased across major cycles => divergence. Stopping." << LogIO::POST;
+    os << "Peak residual : " << maxres << " has increased by more than a factor of 2 across major cycles. Could be diverging. Stopping" << LogIO::POST;
     return -1;
   }
   previous_maxresidual_p = maxres;
