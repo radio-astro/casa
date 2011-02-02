@@ -110,6 +110,7 @@ if( !rec.nfields() )
 /* Called at the beginning of each chunk of data */
 Bool RFATimeFreqCrop :: newChunk (Int &i)
 {
+  LogIO os(LogOrigin("tfcrop","newChunk","WHERE"));
 
   if(StopAndExit) 
     {
@@ -154,7 +155,8 @@ Bool RFATimeFreqCrop :: newChunk (Int &i)
             return False;
 	  }
 
-	cout << "Chunk=" << chunk.nchunk() << ", Field=" << chunk.visIter().fieldName() << ", FieldID=" << chunk.visIter().fieldId() << ", Spw=" << chunk.visIter().spectralWindow() << ", nTime=" << num(TIME) << " (" << NumT << " at a time), nBaseline=" << num(IFR) << ", nChan=" << num(CHAN) << ", nCorrs=" << num(POLZN) << " [" << chunk.getCorrString() << "]" <<  endl; // ". Flagging on " << Expr << endl; //" ->  correlations : " << corrlist << endl;
+	//	os << "Chunk=" << chunk.nchunk() << ", Field=" << chunk.visIter().fieldName() << ", FieldID=" << chunk.visIter().fieldId() << ", Spw=" << chunk.visIter().spectralWindow() << ", nTime=" << num(TIME) << " (" << NumT << " at a time), nBaseline=" << num(IFR) << ", nChan=" << num(CHAN) << ", nCorrs=" << num(POLZN) << " [" << chunk.getCorrString() << "]" <<  LogIO::POST;
+	//cout << "Chunk=" << chunk.nchunk() << ", Field=" << chunk.visIter().fieldName() << ", FieldID=" << chunk.visIter().fieldId() << ", Spw=" << chunk.visIter().spectralWindow() << ", nTime=" << num(TIME) << " (" << NumT << " at a time), nBaseline=" << num(IFR) << ", nChan=" << num(CHAN) << ", nCorrs=" << num(POLZN) << " [" << chunk.getCorrString() << "]" <<  endl; // ". Flagging on " << Expr << endl; //" ->  correlations : " << corrlist << endl;
 	//        cout << "Working with " << NumC << " x " << NumT << " subsets (nchan x ntime),  "<< Expr << " on the " << Column << " column, and applying flags to correlations : " << corrlist << endl;
 
 
@@ -1094,6 +1096,7 @@ void RFATimeFreqCrop :: iterFlag(uInt itime)
 
 void RFATimeFreqCrop :: endChunk () 
 {
+  LogIO os(LogOrigin("tfcrop","endChunk","WHERE"));
   //     cout << "endChunk : counting flags" << endl;
   // Count flags
   if(!StopAndExit)
@@ -1131,7 +1134,10 @@ void RFATimeFreqCrop :: endChunk ()
       for(Int corr=0; corr<num(POLZN); corr++)
 	corrlist[corr] = (Int) ( (corrmask >> corr) & 1 );
       
-      cout << "--> Flagged " << 100 * runningflag/runningcount << " % on " << Expr << ". Applying to correlations : " << corrlist << endl;
+      //      cout << "--> Flagged " << 100 * runningflag/runningcount << " % on " << Expr << ". Applying to correlations : " << corrlist << endl;
+      os << "TFCROP : Flagged " << 100 * runningflag/runningcount << " % on " << Expr << ". Applying to corrs : " << corrlist;
+      if(DryRun) os << " (Not writing flags to MS)" << LogIO::POST;
+      else os << " (Writing flags to MS)" << LogIO::POST;
     }
   RFAFlagCubeBase::endChunk();
   ///  (chunk.visIter()).setRowBlocking(0); //reset to default

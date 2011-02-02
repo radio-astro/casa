@@ -1881,9 +1881,10 @@ namespace casa {
               LogIO osss(LogOrigin("Flagger", "run"),logSink_p);
 
               stringstream ss;
-              ss << "Field = " << field_id << ", Spw Id = "
-                   << spw_id
-                   << ", Total rows = " << totalRows
+              ss << "Chunk = " << chunk.nchunk() 
+		 << ", Field = " << field_id << " (" << chunk.visIter().fieldName() << ")"
+		 << ", Spw Id = "  << spw_id << ", Corrs = [" << chunk.getCorrString() << "]"
+		 << ", nTime = " << vi.nSubInterval() << ", Total rows = " << totalRows
                  << ", Total data = " << totalData << endl;
               ss << "Input:    "
                    << "  Rows flagged = " << inRowFlags << " "
@@ -1897,6 +1898,7 @@ namespace casa {
                    << "  Data flagged = "  << outDataFlags - inDataFlags << " "
                    << "(" << 100.0*(outDataFlags-inDataFlags)/totalData << " %)."
                    << endl;
+	      ss << "------------------------------------------------------------------------------------" << endl;
               
               osss << ss.str() << LogIO::POST;
 
