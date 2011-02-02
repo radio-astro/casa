@@ -253,10 +253,16 @@ endif()
 
 #
 # The layout of the source+install directory trees
-# is rather hard-coded in much source code. Do not
-# allow the user to install anywhere else.
+# is rather hard-coded in much source code. However,
+# with care CASA can be built and installed elsewhere...
 #
-set( CMAKE_INSTALL_PREFIX ${casaroot}/${arch} )
+IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set( CMAKE_INSTALL_PREFIX ${casaroot}/${arch} )
+ELSE()
+    set( casaroot ${CMAKE_INSTALL_PREFIX}/.. )
+ENDIF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+
+dump( casaroot )
 dump( CMAKE_INSTALL_PREFIX )
 
 #
