@@ -36,14 +36,14 @@
 
 %union {
   const TableExprNode* node;
-  Block<TableExprNode>* exprb;
-  TableExprNodeSetElem* elem;
-  TableExprNodeSet* settp;
-  Int ival[2];
   char * str;
-  Double dval;
   Vector<Int>* iv;
-  Vector<String>* is;
+  // Block<TableExprNode>* exprb;
+  // TableExprNodeSetElem* elem;
+  // TableExprNodeSet* settp;
+  // Int ival[2];
+  // Double dval;
+  // Vector<String>* is;
 }
 
 
@@ -73,6 +73,7 @@
 %type <iv> stateidlist
 %type <iv> stateid
 %type <iv> stateidbounds
+%type <iv> logicallist
 
 %nonassoc EQ EQASS GT GE LT LE NE COMMA DASH AMPERSAND
 
@@ -122,6 +123,19 @@ indexcombexpr  : indexlist
 		   delete $1;
                  }
 	       ;
+//
+// Ampersand separated list of stateid.  The result is the logical AND
+// of list of indices in stateid.
+logicallist: stateid AMPERSAND stateid
+          {
+	    if (!$$) delete $$;
+	    $$ = new Vector<Int>(set_intersection(*$1,*$3));
+	  };
+        | logicallist AMPERSAND stateid
+	  {
+	    if (!$$) delete $$;
+	    $$ = new Vector<Int>(set_intersection(*$1,*$3));
+	  };
 //
 // A single state name (this could be a regex and
 // hence produce a list of indices)
@@ -246,6 +260,10 @@ stateidlist: stateid // A singe state ID
             {
 	      $$ = $1;
             }
+          | logicallist // Ampersand seperated stateid list
+	    {
+	      $$ = $1;
+	    }
           | stateidrange // ID range ( n0-n1 )
             {
 	      $$ = $1;
