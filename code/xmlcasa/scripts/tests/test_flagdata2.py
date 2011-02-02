@@ -56,9 +56,9 @@ class test_rfi(test_base):
         self.setUp_flagdata2test()
         
     def test1(self):
-        flagdata2(vis=self.vis, rfi=True)
-        test_eq(flagdata2(vis=self.vis, summary=True), 70902, 2626)
-        test_eq(flagdata2(vis=self.vis, selectdata=True, antenna='2', summary=True), 5252, 101)
+        flagdata2(vis=self.vis, rfi=True, rfi_time_amp_cutoff=2.0);
+        test_eq(flagdata2(vis=self.vis, summary=True), 70902, 1872)
+        test_eq(flagdata2(vis=self.vis, selectdata=True, antenna='2', summary=True), 5252, 131)
 
 
 class test_shadow(test_base):

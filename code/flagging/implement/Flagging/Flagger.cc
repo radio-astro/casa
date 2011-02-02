@@ -523,7 +523,8 @@ namespace casa {
     sort2[1]= MS::FIELD_ID;
     sort2[2]= MS::DATA_DESC_ID;
     sort2[3] = MS::TIME;
-    Double timeInterval = 7.0e9; //a few thousand years
+    //    Double timeInterval = 7.0e9; //a few thousand years
+    Double timeInterval = 6000; // seconds : 100 minutes.
 
     if (vs_p) {
 	delete vs_p; vs_p = NULL;
