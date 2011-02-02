@@ -463,6 +463,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   Bool MSSelection::getSelectedMS(MeasurementSet& selectedMS, 
 				  const String& outMSName)
   {
+    if ((ms_p == NULL) || ms_p->isNull())
+      throw(MSSelectionError("MSSelection::getSelectedMS() called without setting the parent MS. "
+			     "Hint: Need to use MSSelection::resetMS() perhaps?"));
     Bool newRefMS=False;
     if (fullTEN_p.isNull()) fullTEN_p=toTableExprNode(ms_p);
     if ((!fullTEN_p.isNull()) && (fullTEN_p.nrow() > 0))
