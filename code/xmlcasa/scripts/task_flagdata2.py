@@ -53,12 +53,8 @@ def flagdata2(vis = None,
              rfi_time_amp_cutoff = None,
              rfi_freq_amp_cutoff = None,
              rfi_freqlinefit = None,
-             rfi_auto_cross = None,
+             rfi_maxnpieces = None,
              rfi_num_time = None,
-             rfi_start_chan = None,
-             rfi_end_chan = None,
-             rfi_bs_cutoff = None,
-             rfi_ant_cutoff = None,
              rfi_flag_level = None,
              unflag = None,
              summary = None,
@@ -273,27 +269,23 @@ def flagdata2(vis = None,
             #print "par =", par
                 
             ## True : Show plots of each time-freq chunk.
-            ## Needs 'gnuplot'
             ## Needs "ds9 &" running in the background (before starting casapy)
             ## Needs xpaset, xpaget, etc.. accessible in the path (for ds9)
             par['showplots']=False
     ## jmlarsen: Do not show plots. There's no way for the user to interrupt
     ## a lengthy sequence of plots (CAS-1655)
-                
-            ## channel range (1 based)
-            par['start_chan']=rfi_start_chan 
-            par['end_chan']=rfi_end_chan
+    ## rurvashi : Now there is. (r14053 onwards). Disable here because it still uses ds9.
                 
             ## number of time-steps in each chunk
             par['num_time']=rfi_num_time
 
-            ## flag on cross-correlations and auto-correlations. (0 : only autocorrelations)
-            par['auto_cross']= rfi_auto_cross   
+            ## Max npieces for the polynomial fit
+            par['maxnpieces'] = rfi_maxnpieces
                 
             ## Flag Level :
             ## 0: flag only what is found. 
-            ## 1: extend flags one timestep before and after
-            ## 2: 1 and extend flags one channel before/after.
+            ## 1: extend flags in time and freq
+            ## 2: 1 and extend flags one time/chan before/after
             par['flag_level']=rfi_flag_level
 
             ## data expression on which to flag.
