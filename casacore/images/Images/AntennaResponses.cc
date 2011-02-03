@@ -661,6 +661,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
   }
 
+  AntennaResponses::FuncTypes AntennaResponses::FuncType(const String& sftyp){
+
+    if(sftyp=="NA") return AntennaResponses::NA;
+    if(sftyp=="AIF") return AntennaResponses::AIF;
+    if(sftyp=="EFP") return AntennaResponses::EFP;
+    if(sftyp=="VP") return AntennaResponses::VP;
+    if(sftyp=="VPMAN") return AntennaResponses::VPMAN;
+    if(sftyp=="INTERNAL") return AntennaResponses::INTERNAL;
+    return AntennaResponses::INVALID;
+
+  }
+
   Bool AntennaResponses::getBandName(String& bandName, 
 				     const String& obsName,
 				     const MVFrequency& freq){    

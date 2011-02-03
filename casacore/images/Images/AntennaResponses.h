@@ -284,6 +284,9 @@ public:
   // Convert from Int to FuncType
   FuncTypes FuncType(Int i);
 
+  // Convert from String to FuncType
+  static FuncTypes FuncType(const String& sftyp);
+
   // get the name of the band corresponding to the frequency (in the rest frame of the observatory)
   Bool getBandName(String& bandName,
 		   const String& obsName, 
