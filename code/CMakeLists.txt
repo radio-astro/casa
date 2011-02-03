@@ -251,19 +251,20 @@ if( NOT CMAKE_C_FLAGS )
 endif()
 
 
-#
-# The layout of the source+install directory trees
-# is rather hard-coded in much source code. However,
-# with care CASA can be built and installed elsewhere...
-#
-IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-    set( CMAKE_INSTALL_PREFIX ${casaroot}/${arch} )
-ELSE()
-    set( casaroot ${CMAKE_INSTALL_PREFIX}/.. )
-ENDIF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+IF( NOT RE_CMAKE )
+    IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+        set( CMAKE_INSTALL_PREFIX ${casaroot}/${arch} CACHE PATH "casa architecture directory" FORCE )
+	set( casaroot ${casaroot} CACHE PATH "toplevel casa directory" FORCE )
+    ELSE()
+        set( CMAKE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX} CACHE PATH "casa architecture directory" FORCE )
+	set( casaroot ${CMAKE_INSTALL_PREFIX}/.. CACHE PATH "toplevel casa directory" FORCE )
+   ENDIF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+ENDIF()
 
 dump( casaroot )
 dump( CMAKE_INSTALL_PREFIX )
+
+set( RE_CMAKE "YES" CACHE STRING "are we rerunning cmake?" FORCE )
 
 #
 # Targets for creating doxygen documentation
