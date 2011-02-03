@@ -5,6 +5,9 @@
 #include <AxisName.h>
 #include <NetSideband.h>
 
+// This is necessary for building with g++ 4.4.5.  Please don't remove it!
+#include <stdint.h>
+
 using namespace std;
 
 namespace sdmbin {
