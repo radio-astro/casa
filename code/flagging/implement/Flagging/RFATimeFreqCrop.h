@@ -97,20 +97,21 @@ private:
   void PolyFit(Vector<Float> data,Vector<Bool> flag, Vector<Float> fit, uInt lim1, uInt lim2,uInt deg);
   void LineFit(Vector<Float> data,Vector<Bool> flag, Vector<Float> fit, uInt lim1, uInt lim2);
   void Ants(uInt bs, uInt *a1, uInt *a2);
+  uInt BaselineIndex(uInt row, uInt a1, uInt a2);
 
   void Display_ds9(Int xdim, Int ydim, Array<Float> &data, Int frame);
   void Plot_ds9(Int dim, Vector<Float> data1, Vector<Float> data2);
 
   void AllocateMemory();  
-  void RunTFCrop();
   void FlagZeros();
-  void FlagTimeSeries();
-  void FitCleanBandPass();
-  void FlagBandPass();
-  void GrowFlags();
+  void RunTFCrop();
+  void FlagTimeSeries(uInt pl, uInt bs);
+  void FitCleanBandPass(uInt pl, uInt bs);
+  void FlagBandPass(uInt pl, uInt bs);
+  void GrowFlags(uInt pl, uInt bs);
   RFA::IterMode ShowFlagPlots();
   void ExtendFlags();
-  void CountAndFillFlags();
+  void FillChunkFlags();
 
   uInt itime;  
   VisibilityIterator &vi; 
@@ -127,6 +128,8 @@ private:
   Cube<Bool> flagc; 	// flagCube
   Cube<Float> meanBP; 	// mean bandpass - npol x nbaselines x nchannels
   Cube<Float> cleanBP; 	// cleaned bandpasses - npol x nbaselines x nchannels
+  Vector<Bool> rowflags; // rowflags from the MS - ntime x nbaselines
+  Vector<Bool> baselineflags; // flags for baselines - NumB (for internal use)
 
   Cube<Bool> chunkflags; // Flags for the entire chunk.
   
