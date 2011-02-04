@@ -250,6 +250,8 @@ def immath(
         varnames.append( 'IM'+str(i) )
     casalog.post( 'Variable name list is: '+str(varnames), 'DEBUG1' )
 
+    _myia = iatool.create()
+
     #file existance check
     ignoreimagename=False
     if mode=='evalexpr':
@@ -298,10 +300,10 @@ def immath(
                 casalog.post("Ignoring mask parameter in favor of polithresh parameter", 'WARN')
             if (qa.getunit(polithresh) != ""):
                 initUnit = qa.getunit(polithresh)
-                ia.open(filenames[0])
-                bunit = ia.brightnessunit()
+                _myia.open(filenames[0])
+                bunit = _myia.brightnessunit()
                 polithresh = qa.convert(polithresh, bunit)
-                ia.done()
+                _myia.done()
                 if (qa.getunit(polithresh) != bunit):
                     raise Exception, "Units of polithresh " + initUnit \
                     + " do not conform to input image units of " + bunit \
@@ -312,7 +314,7 @@ def immath(
             lpolexpr = _immath_expr_from_varnames(lpolexpr, varnames, filenames)
             lpolexpr = lpolexpr + ")"
             lpol = tmpFilePrefix + "_lpol.im"
-            ia.imagecalc(pixels=lpolexpr, outfile=lpol)
+            _myia.imagecalc(pixels=lpolexpr, outfile=lpol)
 
     elif mode=='poli':
         [expr, isLPol, isTPol] = _doPolI(filenames, varnames, tmpFilePrefix, True, True)
@@ -324,9 +326,9 @@ def immath(
             if qa.getvalue(qsigma) >0:
                 sigmaunit=qa.getunit(qsigma)
                 try:
-                    ia.open(filenames[0])
-                    iunit=ia.brightnessunit()
-                    ia.done()
+                    _myia.open(filenames[0])
+                    iunit = _myia.brightnessunit()
+                    _myia.done()
                 except:
                     raise Exception, 'Unable to get brightness unit from image file '+filenames[0]
                 if sigmaunit!=iunit:
@@ -353,25 +355,24 @@ def immath(
         expr = _immath_expr_from_varnames(expr, varnames, filenames)
         casalog.post( 'Will evaluate expression: '+expr, 'DEBUG1' )
         try:
-            ia.imagecalc(pixels=expr, outfile=outfile)
+            _myia.imagecalc(pixels=expr, outfile=outfile)
 
             # need to modify stokes type of output image for pol. intensity image
             if ( mode =="poli" ):
-            	ia.open(outfile)
-                csys=ia.coordsys()
+            	_myia.open(outfile)
+                csys = _myia.coordsys()
                 if isTPol:
                     csys.setstokes('Ptotal')
                 elif isLPol:
                     csys.setstokes('Plinear')
-                ia.setcoordsys(csys.torecord())
-                ia.done()
-            ia.done()
+                _myia.setcoordsys(csys.torecord())
+            _myia.done()
             if (doPolThresh):
                 _immath_createPolMask(polithresh, lpol, outfile)
             return True
         except Exception, error:
             try:
-                ia.done()
+                _myia.done()
             except:
                 pass
             casalog.post( 'Unable to do mathematical expression: '\
@@ -383,13 +384,6 @@ def immath(
     # regions from the images before doing the calculations first.
     # Warning if user has given a region file plus other region
     # selection information
-
-    if ( len(region)>1 ):
-        if ( len(box)>1 or len(chans)>1 or len(stokes)>1 ):
-            casalog.post( "Ignoring region selection\ninformation"\
-                          " the in box, chans, and stokes parameters."\
-                          " Using region information\nin file: "\
-                          + region, 'WARN' );
                 
     # For each file in the list of files, creat a subimage
     # of it and store it.  We need to do this only if the user
@@ -397,61 +391,44 @@ def immath(
     subImages=[]
     casalog.post( "SUBIMAGES: "+str(subImages), 'DEBUG2' )
     file_map = {}
-
-    for i in range( 0,len( filenames ) ):
-        casalog.post( 'Creating tmp image for file '+str(i), 'DEBUG2')
-        # Get the region information
-        # NOTE, we can't do this outside of the loop because
-        #       imregion uses the coordsys of the image to
-        #       create an appropriate region for that image.
-        reg={}
-        if ( len(region)>1 ):        
-            if os.path.exists( region ):
-                # We have a region file on disk!
-                reg=rg.fromfiletorecord( region );
-            else:
-                # The name given is the name of a region stored
-                # with the image.
-                # Note that we accept:
-                #    'regionname'          -  assumed to be in imagename
-                #    'my.image:regionname' - in my.image
-                reg_names=region.split(':')
-                if ( len( reg_names ) == 1 ):
-                    reg=rg.fromtabletorecord( filenames[i], region, False )
-                else:
-                    reg=rg.fromtabletorecord( reg_names[0], reg_names[1], False )
-        else: 
-            reg=imregion( filenames[i], chans, stokes, box, '', '' )
-        casalog.post( 'Region record is: '+str(reg), 'DEBUG2' )
-        if ( reg == {} ):
-            casalog.post( 'Failed to create specified image region.', 'SEVERE' )
-            return False
-
+    
+    i = 0
+    for image in filenames:
+        casalog.post( 'Creating tmp image for image ' + image, 'DEBUG2')
+        
+        _myia.open(image)
+        reg = rg.frombcs(csys=_myia.coordsys().torecord(),
+            shape=_myia.shape(), box=box, chans=chans, stokes=stokes,
+            stokescontrol="a", region=region
+        )
+        _myia.close()
             
         # TODO see if there are issues when NO region given by user
         try:
-            ia.open( filenames[i] )
+            _myia.open(image)
             tmpFile=tmpFilePrefix+str(i)
-            ia.subimage( region=reg, mask=mask, outfile=tmpFile )
+            _myia.subimage( region=reg, mask=mask, outfile=tmpFile )
 
-            file_map[filenames[i]] = tmpFile
+            file_map[image] = tmpFile
             subImages.append( tmpFile )
-            ia.done()
+            _myia.done()
             casalog.post( 'Created temporary image '+tmpFile+' from '+\
-                          filenames[i], 'DEBUG1' )
+                          image, 'DEBUG1' )
+            i = i + 1
+
         except Exception, e:
             try:
-                ia.done()
+                _mia.done()
             except:
                 pass
             casalog.post( 'Exception caught is: '+str(e), 'DEBUG2' )
             casalog.post( 'Unable to apply region to file: '\
-                  +filenames[i]\
+                  + image\
                   +'.\nUsed region: '+str(reg), 'DEBUG2' )
             #raise Exception, 'Unable to apply region to file: '\
             #      +filenames[i]
             casalog.post( 'Unable to apply region to file: '\
-                          +filenames[i], 'SEVERE' )
+                          + image, 'SEVERE' )
             return False
     # Make sure no problems happened
 
@@ -483,7 +460,7 @@ def immath(
 
     try:
         # Do the calculation
-        ia.imagecalc(pixels=expr, outfile=outfile )
+        _myia.imagecalc(pixels=expr, outfile=outfile )
 
         # modify stokes type for polarization intensity image
         if (  mode=="poli" ):                
@@ -492,19 +469,19 @@ def immath(
                 csys.setstokes('Ptotal')
             elif isLPol:
                 csys.setstokes('Plinear')
-            ia.setcoordsys(csys.torecord())
+            _myia.setcoordsys(csys.torecord())
 
         if (doPolThresh):
             _immath_createPolMask(polithresh, lpol, outfile)
 
         #cleanup
-        ia.done()                
+        _myia.done()                
         _immath_cleanup( tmpFilePrefix )
                     
         return True
     except Exception, error:
         try:
-            ia.done()
+            _myia.done()
             _immath_cleanup( tmpFilePrefix )
         except:
             pass
@@ -561,12 +538,13 @@ def _immath_parse( expr='' ):
 
 # check stokes type for the list of images
 def __check_stokes(images):
+        _myia = iatool.create()
         retValue=[]
         for fname in images:
-            ia.open(fname)
-            csys=ia.coordsys()
+            _myia.open(fname)
+            csys = _myia.coordsys()
             stks=csys.stokes()
-            ia.close()
+            _myia.close()
             retValue.append(stks)
         return retValue
        
@@ -589,16 +567,17 @@ def _doPolA(filenames, varnames, tmpFilePrefix):
     # calculate a polarization position angle image
     stkslist = __check_stokes(filenames)
     Uimage = Qimage = ''
+    _myia = iatool.create()
     if len(filenames) == 1:
         # FIXME I really hate creating subimages like this, the poli and pola routines really belong in the as of now non-existant squah task
         if (type(stkslist[0]) != list):
             raise Exception, filenames[0] + " is the only image specified but it is not multi-stokes so cannot do pola calculation"
-        ia.open(filenames[0])
-        stokesPixel = ia.coordsys().findcoordinate('stokes')['pixel']
+        _myia.open(filenames[0])
+        stokesPixel = _myia.coordsys().findcoordinate('stokes')['pixel']
         if (type(stokesPixel) != int):
             raise Exception, filenames[i] + "does not have exactly one stokes axis, cannot do pola calculation"
 
-        trc = ia.shape()
+        trc = _myia.shape()
         blc = []
         for i in range(len(trc)):
             blc.append(0)
@@ -612,12 +591,12 @@ def _doPolA(filenames, varnames, tmpFilePrefix):
             blc[stokesPixel] = pixNum
             trc[stokesPixel] = pixNum
             myfile = tmpFilePrefix + '_' + stokes
-            ia.subimage(outfile=myfile, region=rg.box(blc=blc, trc=trc))
+            _myia.subimage(outfile=myfile, region=rg.box(blc=blc, trc=trc))
             if (stokes == 'Q'):
                 Qimage = myfile
             elif (stokes == 'U'):
                 Uimage = myfile
-        ia.done()
+        _myia.done()
         # to use pass by reference semantics correctly, we have to use the same objects passed in
         # rather than create new objects with the same names
         filenames[0:1] = [Qimage, Uimage]
@@ -663,14 +642,14 @@ def _doPolI(filenames, varnames, tmpFilePrefix, createSubims, tpol):
         # do multistokes image
         if (type(stkslist[0]) != list):
             raise Exception, filenames[0] + " is the only image specified but it is not multi-stokes so cannot do poli calculation"
-        myia = iatool.create()
-        myia.open(filenames[0])
-        stokesPixel = myia.coordsys().findcoordinate('stokes')['pixel']
+        _myia = iatool.create()
+        _myia.open(filenames[0])
+        stokesPixel = _myia.coordsys().findcoordinate('stokes')['pixel']
         if (type(stokesPixel) != int):
-            myia.close()
+            _myia.close()
             raise Exception, filenames[i] + "does not have exactly one stokes axis, cannot do pola calculation"
 
-        trc = myia.shape()
+        trc = _myia.shape()
         blc = []
 
         for i in range(len(trc)):
@@ -682,7 +661,7 @@ def _doPolI(filenames, varnames, tmpFilePrefix, createSubims, tpol):
         Qimage = Uimage = Vimage = ''
         for stokes in (neededStokes):
             if ((stokes == 'Q' or stokes == 'U') and stkslist[0].count(stokes) == 0):
-                myia.close()
+                _myia.close()
                 raise Exception, filenames[0] + " is the only image specified but it does not contain stokes " + stokes \
                 + " so poli calculation cannot be done"
             myfile = tmpFilePrefix + '_' + stokes
@@ -696,8 +675,8 @@ def _doPolI(filenames, varnames, tmpFilePrefix, createSubims, tpol):
                 pixNum = stkslist[0].index(stokes)
                 blc[stokesPixel] = pixNum
                 trc[stokesPixel] = pixNum
-                myia.subimage(outfile=myfile, region=rg.box(blc=blc, trc=trc))
-        myia.done()
+                _myia.subimage(outfile=myfile, region=rg.box(blc=blc, trc=trc))
+        _myia.done()
         isTPol = bool(Vimage)
         isLPol = not isTPol
         filenames = [Qimage, Uimage]
@@ -747,9 +726,10 @@ def _doPolI(filenames, varnames, tmpFilePrefix, createSubims, tpol):
 def _immath_createPolMask(polithresh, lpol, outfile):
     # make the linear polarization threshhold mask CAS-2120
     myexpr = "'" + lpol + "' >= " + str(qa.getvalue(polithresh))
-    ia.open(outfile)
-    ia.calcmask(name='mask0', mask=myexpr)
+    _myia = iatool.create()
+    _myia.open(outfile)
+    _myia.calcmask(name='mask0', mask=myexpr)
     casalog.post('Calculated mask based on linear polarization threshold ' + str(polithresh),
         'INFO')
-    ia.done()
+    _myia.done()
             
