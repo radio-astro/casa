@@ -381,11 +381,25 @@ public:
   // Frequency average the buffer (visCube and [if present] modelVisCube)
   void freqAveCubes();
 
-  // Average channel axis by factor
+  // Average channel axis according to chanavebounds, for whichever of DATA,
+  // MODEL_DATA, CORRECTED_DATA, FLOAT_DATA, FLAG, and WEIGHT_SPECTRUM are
+  // present.  It will only treat the first 5 as present if they have already
+  // been loaded into the buffer!
   void channelAve(const Matrix<Int>& chanavebounds);
-  void chanAveVisCube(Cube<Complex>& data,Int nChanOut);
-  void chanAveVisCube(Cube<Float>& data,Int nChanOut);
-  void chanAveFlagCube(Cube<Bool>& flagcube,Int nChanOut);
+
+  // Average channel axis by factor.  
+  template<class T> void chanAveVisCube(Cube<T>& data, Int nChanOut);
+
+  // Accumulate channel axis by factor, without applying WEIGHT_SPECTRUM even
+  // if it is present.
+  // It is primarily intended for averaging WEIGHT_SPECTRUM itself.
+  template<class T> void chanAccCube(Cube<T>& data, Int nChanOut);
+
+  // This defaults to no conceptual side effects, but usually it is more
+  // efficient to let it leave weightSpectrum() in a channel averaged state.
+  // restoreWeightSpectrum has no effect if !existsWeightSpectrum().
+  void chanAveFlagCube(Cube<Bool>& flagcube, const Int nChanOut,
+                       const Bool restoreWeightSpectrum=True);
 
   // Form Stokes parameters from correlations
   //  (these are preliminary versions)
@@ -593,12 +607,14 @@ private:
   Cube<Float> weightCube_p;
 
   Matrix<Int> chanAveBounds_p;
-
-
 };
 
 
 } //# NAMESPACE CASA - END
+
+#ifndef AIPS_NO_TEMPLATE_SRC
+#include <msvis/MSVis/VisBuffer.tcc>
+#endif //# AIPS_NO_TEMPLATE_SRC
 
 #endif
 

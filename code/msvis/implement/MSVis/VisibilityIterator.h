@@ -389,8 +389,8 @@ public:
   // Returns the nPol_p x curNumRow_p weight matrix
   virtual Matrix<Float>& weightMat(Matrix<Float>& wtmat) const;
 
-  // Determine whether WEIGHT_SPECTRUM exists
-  Bool existsWeightSpectrum() const;
+  // Determine whether WEIGHT_SPECTRUM exists.
+  Bool existsWeightSpectrum();
 
   // Return weightspectrum (a weight for each channel)
   virtual Cube<Float>& weightSpectrum(Cube<Float>& wtsp) const;
@@ -680,6 +680,9 @@ protected:
   Double hourang_p;
 
   Bool floatDataFound_p;
+
+  // Does the current MS have a valid WEIGHT_SPECTRUM?
+  Bool msHasWtSp_p;     // make mutable so existsWeightSpectrum() can be const?
 
   // for PA/AZEL calculations
   MSDerivedValues msd_p;

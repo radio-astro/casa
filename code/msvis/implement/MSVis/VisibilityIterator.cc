@@ -58,7 +58,9 @@ ROVisibilityIterator::ROVisibilityIterator(const MeasurementSet &ms,
     : msIter_p(ms,sortColumns,timeInterval),selRows_p(0, 0),
 curChanGroup_p(0),nChan_p(0),nRowBlocking_p(0),initialized_p(False),
 msIterAtOrigin_p(False),stateOk_p(False),freqCacheOK_p(False),
-floatDataFound_p(False),lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False)
+floatDataFound_p(False),
+      msHasWtSp_p(False),
+lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False)
 {
   initsinglems();
 }
@@ -97,7 +99,9 @@ ROVisibilityIterator::ROVisibilityIterator(const MeasurementSet &ms,
  :msIter_p(ms,sortColumns,timeInterval, addDefaultSort),selRows_p(0, 0),
 curChanGroup_p(0),nChan_p(0),nRowBlocking_p(0),initialized_p(False),
 msIterAtOrigin_p(False),stateOk_p(False),freqCacheOK_p(False),
-  floatDataFound_p(False),lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False){
+  floatDataFound_p(False),
+  msHasWtSp_p(False),
+lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False){
 
 
   initsinglems();
@@ -111,7 +115,9 @@ ROVisibilityIterator::ROVisibilityIterator(const Block<MeasurementSet> &mss,
 : msIter_p(mss,sortColumns,timeInterval),selRows_p(0, 0),
 curChanGroup_p(0),nChan_p(0),nRowBlocking_p(0),initialized_p(False),
 msIterAtOrigin_p(False),stateOk_p(False),freqCacheOK_p(False),
-floatDataFound_p(False),lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False)
+floatDataFound_p(False),
+  msHasWtSp_p(False),
+lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False)
 {
   
   initmultims(mss);
@@ -124,7 +130,9 @@ ROVisibilityIterator::ROVisibilityIterator(const Block<MeasurementSet> &mss,
   : msIter_p(mss,sortColumns,timeInterval,addDefaultSort),selRows_p(0, 0),
 curChanGroup_p(0),nChan_p(0),nRowBlocking_p(0),initialized_p(False),
 msIterAtOrigin_p(False),stateOk_p(False),freqCacheOK_p(False),
-    floatDataFound_p(False),lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False){
+    floatDataFound_p(False),
+    msHasWtSp_p(False),
+    lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False){
 
   initmultims(mss);
 
@@ -229,6 +237,7 @@ ROVisibilityIterator::operator=(const ROVisibilityIterator& other)
   azel_p.resize(other.azel_p.nelements()); azel_p=other.azel_p;
   hourang_p=other.hourang_p;
   floatDataFound_p=other.floatDataFound_p;
+  msHasWtSp_p = other.msHasWtSp_p;
 
   msd_p=other.msd_p;
   lastfeedpaUT_p=other.lastfeedpaUT_p;
@@ -1521,17 +1530,32 @@ Matrix<Float>& ROVisibilityIterator::weightMat(Matrix<Float>& wtmat) const
 }
 
 
-Bool ROVisibilityIterator::existsWeightSpectrum() const
+Bool ROVisibilityIterator::existsWeightSpectrum()
 {
-  Bool rstat(False);
-
-  try {
-    rstat = (!colWeightSpectrum.isNull() && colWeightSpectrum.isDefined(0) &&
-	     colWeightSpectrum.shape(0).isEqual(IPosition(2,nPol_p,channelGroupSize())));
-  } catch (AipsError x) {
-    rstat = False;
+  if(msIter_p.newMS()){ // Cache to avoid testing unnecessarily.
+    try {
+      msHasWtSp_p = (!colWeightSpectrum.isNull() &&
+                     colWeightSpectrum.isDefined(0) &&
+                     colWeightSpectrum.shape(0)[0] > 0 &&
+                     colWeightSpectrum.shape(0)[1] > 0);
+      // Comparing colWeightSpectrum.shape(0) to
+      // IPosition(2, nPol_p, channelGroupSize()) is too strict
+      // when channel averaging might have changed
+      // channelGroupSize() or weightSpectrum() out of sync.  Unfortunately the
+      // right answer might not get cached soon enough.
+      //
+      //       colWeightSpectrum.shape(0).isEqual(IPosition(2, nPol_p,
+      //                                                    channelGroupSize())));
+      // if(!msHasWtSp_p){
+      //   cerr << "colWeightSpectrum.shape(0): " << colWeightSpectrum.shape(0) << endl;
+      //   cerr << "(nPol_p, channelGroupSize()): " << nPol_p 
+      //        << ", " << channelGroupSize() << endl;
+      // }
+    } catch (AipsError x) {
+      msHasWtSp_p = False;
+    }
   }
-  return rstat;
+  return msHasWtSp_p;
 }
 
 

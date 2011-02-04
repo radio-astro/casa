@@ -184,6 +184,11 @@ public:
   // Set up/return channel averaging bounds 
   Vector<Matrix<Int> >& setChanAveBounds(Float factor, Vector<Matrix<Int> >& bounds);
 
+  // Translate slicesv from the form returned by MSSelection::getChanSlices()
+  // to matv as used by setChanAveBounds().
+  void slicesToMatrices(Vector<Matrix<Int> >& matv,
+                        const Vector<Vector<Slice> >& slicesv) const;
+
   // Return number of chans/corrs per spw/pol
   Int numberChan(Int spw) const;
   Int numberCorr(Int pol) const;

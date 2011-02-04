@@ -709,8 +709,6 @@ void VisBuffer::formStokes(Cube<Float>& fcube)
 
 void VisBuffer::channelAve(const Matrix<Int>& chanavebounds) 
 {
-  // TBD: Use/update weightSpec, if present, and update weightMat accordingly
-
   //  Only do something if there is something to do
   if ( chanavebounds.nelements()>0 ) {
 
@@ -720,22 +718,32 @@ void VisBuffer::channelAve(const Matrix<Int>& chanavebounds)
     //  cout << "chanAveBounds = " << chanAveBounds_p << endl;
     
     Int nChanOut(chanAveBounds_p.nrow());
+    Vector<Int> chans(channel()); // Ensure channels pre-filled
+    Int nChan0(chans.nelements());
+
+    const Bool doWtSp(visIter_p->existsWeightSpectrum());
+    
+    uInt nCor = nCorr();
+    uInt nrows = nRow();
     
     // Apply averaging to whatever data is present
     if (visCubeOK_p)          chanAveVisCube(visCube(),nChanOut);
     if (modelVisCubeOK_p)     chanAveVisCube(modelVisCube(),nChanOut);
     if (correctedVisCubeOK_p) chanAveVisCube(correctedVisCube(),nChanOut);
     if (floatDataCubeOK_p)    chanAveVisCube(floatDataCube(), nChanOut);
-    if (flagCubeOK_p)         chanAveFlagCube(flagCube(),nChanOut);
-    
-    // Finally, collapse the frequency values themselves
+
+    // The false makes it leave weightSpectrum() averaged if it is present.
+    if(flagCubeOK_p)
+      chanAveFlagCube(flagCube(), nChanOut, false);
+
+    // Collapse the frequency values themselves, and count the number of
+    // selected channels.
     // TBD: move this up to bounds calculation loop?
     Vector<Double> newFreq(nChanOut,0.0);
     Vector<Int> newChan(nChanOut,0);
     frequency(); // Ensure frequencies pre-filled
-    Vector<Int> chans(channel()); // Ensure channels pre-filled
-    Int nChan0(chans.nelements());
     Int ichan=0;
+    Int totn = 0;
     for (Int ochan=0;ochan<nChanOut;++ochan) {
       Int n=0;
       while (chans(ichan)>=chanAveBounds_p(ochan,0) &&
@@ -750,6 +758,7 @@ void VisBuffer::channelAve(const Matrix<Int>& chanavebounds)
       if (n>0) {
 	newFreq(ochan)/=Double(n);
 	newChan(ochan)/=n;
+        totn += n;
       }
     }
     
@@ -758,109 +767,82 @@ void VisBuffer::channelAve(const Matrix<Int>& chanavebounds)
     channel().reference(newChan);
     nChannel()=nChanOut;
 
-  }
+    // Row weight and sigma refer to the number of channels in the MS,
+    // regardless of any selection.
+    uInt nAllChan0 = visIter_p->msColumns().spectralWindow().numChan()(spectralWindow());
 
-}
+    if(totn < nAllChan0){
+      // Update weightMat and sigmaMat, since only part of the row was used.
+      Matrix<Float> rowWtFac(nCor, nrows);
 
-void VisBuffer::chanAveVisCube(Cube<Complex>& data,Int nChanOut) {
+      if(doWtSp){
+        // chanAccCube(weightSpectrum(), nChanOut); already done.
+        const Cube<Float>& wtsp(weightSpectrum());       
 
-  IPosition csh(data.shape());
-  Int nChan0=csh(1);
-  csh(1)=nChanOut;
+        for(Int row = 0; row < nrows; ++row){
+          for(Int icor = 0; icor < nCor; ++icor){
+            rowWtFac(icor, row) = 0.0;
+            for(Int ochan = 0; ochan < nChanOut; ++ochan)
+              rowWtFac(icor, row) += wtsp(icor, ochan, row);
+          }
+        }
+      }
+      else
+        rowWtFac = static_cast<Float>(totn) / nAllChan0;
 
-  Vector<Int>& chans(channel());
+      for(Int row = 0; row < nrows; ++row){
+        for(Int icor = 0; icor < nCor; ++icor){
+          Float rwfcr = rowWtFac(icor, row);
 
-  Cube<Complex> newCube(csh); newCube=Complex(0.0);
-  Int nCor=nCorr();
-  Int ichan(0);
-  Vector<Int> ngood(nCor,0);
-  for (Int row=0; row<nRow(); row++) {
-    if (!flagRow()(row)) {
-      ichan=0;
-      for (Int ochan=0;ochan<nChanOut;++ochan) {
-	ngood=0;
-	while (chans(ichan)>=chanAveBounds_p(ochan,0) &&
-	       chans(ichan)<=chanAveBounds_p(ochan,1) &&
-	       ichan<nChan0) {
-	  for (Int icor=0;icor<nCor;++icor) 
-	    if (!flagCube()(icor,ichan,row)) {
-	      newCube(icor,ochan,row)+=data(icor,ichan,row);
-	      ngood(icor)++;
-	    }
-	  ichan++;
-	}
-	for (Int icor=0;icor<nCor;++icor) {
-	  if (ngood(icor)>0) {
-	    newCube(icor,ochan,row)*=Complex(1.0f/ngood(icor));
-	  }
-	}
+          weightMat()(icor, row) *= rwfcr;
+          sigmaMat()(icor, row) /= sqrt(rwfcr);
+        }
       }
     }
   }
-
-  // Install averaged info
-  data.reference(newCube);
 }
 
-void VisBuffer::chanAveVisCube(Cube<Float>& data, Int nChanOut)
+void VisBuffer::chanAveFlagCube(Cube<Bool>& flagcube, const Int nChanOut,
+                                const Bool restoreWeightSpectrum)
 {
-  IPosition csh(data.shape());
-  Int nChan0=csh(1);
-  csh(1)=nChanOut;
-
-  Vector<Int>& chans(channel());
-  Cube<Float> newCube(csh); newCube=Float(0.0);
-  Int nCor = nCorr();
-  Int ichan(0);
-
-  Vector<Int> ngood(nCor, 0);
-  for (Int row=0; row<nRow(); row++) {
-    if (!flagRow()(row)) {
-      ichan=0;
-      for (Int ochan=0;ochan<nChanOut;++ochan) {
-	ngood=0;
-	while (chans(ichan)>=chanAveBounds_p(ochan,0) &&
-	       chans(ichan)<=chanAveBounds_p(ochan,1) &&
-	       ichan<nChan0) {
-	  for (Int icor=0;icor<nCor;++icor) 
-	    if (!flagCube()(icor,ichan,row)) {
-	      newCube(icor,ochan,row)+=data(icor,ichan,row);
-	      ++ngood[icor];
-	    }
-	  ichan++;
-	}
-	for(Int icor = 0; icor < nCor; ++icor){
-	  if(ngood[icor] > 0)
-	    newCube(icor, ochan, row) *= 1.0 / ngood[icor];
-	}
-      }
-    }
-  }
-  data.reference(newCube);        // Install averaged info
-}
-
-void VisBuffer::chanAveFlagCube(Cube<Bool>& flagcube,Int nChanOut) {
-
   IPosition csh(flagcube.shape());
   Int nChan0=csh(1);
   csh(1)=nChanOut;
 
+  if(nChan0 < nChanOut)
+    // It's possible that data has already been averaged.  I could try
+    // refilling data if I knew which column to use, but I don't.
+    // Chuck it to the caller.
+    throw(AipsError("Can't average " + String(nChan0) + " channels to " +
+                    String(nChanOut) + " channels!"));
+  if(nChan0 == nChanOut)
+    return;                     // No-op.
+
   Vector<Int>& chans(channel());
 
   Cube<Bool> newFlag(csh); newFlag=True;
+  const Bool doWtSp(visIter_p->existsWeightSpectrum());
+
+  // weightSpectrum could be either averaged or unaveraged.  Choose averaged.
+  if(doWtSp && weightSpectrum().shape()[1] > nChanOut){
+    chanAccCube(weightSpectrum(), nChanOut);
+  }
+
   Int nCor=nCorr();
-  Int ichan(0);
+  Int ichan;
   for (Int row=0; row<nRow(); row++) {
     if (!flagRow()(row)) {
-      ichan=0;
-      for (Int ochan=0;ochan<nChanOut;++ochan) {
-	while (chans(ichan)>=chanAveBounds_p(ochan,0) &&
-	       chans(ichan)<=chanAveBounds_p(ochan,1) &&
-	       ichan<nChan0) {
-	  for (Int icor=0;icor<nCor;++icor) 
-	    if (!flagcube(icor,ichan,row)) 
-	      newFlag(icor,ochan,row)=False;
-	  ichan++;
+      for(Int icor = 0; icor < nCor; ++icor){
+        ichan = 0;
+        for(Int ochan = 0; ochan < nChanOut; ++ochan){
+          while(chans(ichan) >= chanAveBounds_p(ochan, 0) &&
+                chans(ichan) <= chanAveBounds_p(ochan, 1) &&
+                ichan < nChan0){
+       	    if(!flagcube(icor, ichan, row) && 
+               (!doWtSp || weightSpectrum()(icor, ochan, row) > 0.0))
+	      newFlag(icor, ochan, row) = False;
+            ++ichan;
+          }
 	}
       }
     }
@@ -868,6 +850,8 @@ void VisBuffer::chanAveFlagCube(Cube<Bool>& flagcube,Int nChanOut) {
   // Use averaged flags
   flagcube.reference(newFlag);
 
+  if(doWtSp && restoreWeightSpectrum)
+    fillWeightSpectrum();
 }
 
 

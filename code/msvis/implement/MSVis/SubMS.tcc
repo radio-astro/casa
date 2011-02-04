@@ -307,33 +307,6 @@ void SubMS::filterChans(const ROArrayColumn<M>& data, ArrayColumn<M>& outDataCol
   }
 }
 
-template<class M>
-void SubMS::accumUnflgDataWS(Array<M>& data_toikit,
-                             const Array<Float>& unflgWtSpec,
-                             const Array<M>& inData, const Array<Bool>& flag,
-                             Matrix<M>& outData)
-{
-  data_toikit = inData * unflgWtSpec;
-
-  // It's already multiplied by a zero weight, but zero it again
-  // just in case some flagged NaNs or infinities snuck in there.
-  data_toikit(flag) = 0.0;
-              
-  outData += data_toikit;
-}
-
-template<class M>
-void SubMS::accumUnflgData(Array<M>& data_toikit,
-                           const Vector<Float>& unflaggedwt,
-                           const Array<M>& inData, const Array<Bool>& flag,
-                           Matrix<M>& outData)
-{
-  data_toikit = inData;
-  binOpExpandInPlace(data_toikit, unflaggedwt, Multiplies<M, Float>());
-  data_toikit(flag) = 0.0;  // Do this AFTER the multiplication to catch NaNs.
-  outData += data_toikit;
-}
-
 } //# NAMESPACE CASA - END
 
 
