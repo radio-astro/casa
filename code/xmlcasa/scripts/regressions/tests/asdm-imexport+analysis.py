@@ -27,7 +27,7 @@ gl=sys._getframe(stacklevel).f_globals
 def run():
     #####locate the regression script
     try: 
-        lepath=locatescript('asdm-imexport+analysis_regression.py')
+        lepath=locatescript('alma_asdm+reimported-asdm_sf.py')
         print 'Script used is ',lepath
         execfile(lepath, gl, pass_on)
     except:

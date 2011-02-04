@@ -2,8 +2,9 @@
 # $Id:$
 # Test Name:                                                                #
 #    Regression Test Script for ASDM version 1.0 import to MS               #
-#    and the "inverse filler" task exportasdm 
-#                                                                           #
+#    and the "inverse filler" task exportasdm, and subsequent               #
+#    data analysis.                                                         #
+#                                                                           # 
 # Rationale for Inclusion:                                                  #
 #    The conversion of ASDM to MS and back needs to be verified.            #
 #                                                                           # 
@@ -27,7 +28,7 @@
 #                                                                           #
 #############################################################################
 
-myname = 'asdm-imexport+analysis_regression'
+myname = 'alma_asdm+reimported-asdm_sf'
 
 # default ASDM dataset name
 myasdm_dataset_name = 'uid___X5f_X18951_X1'
