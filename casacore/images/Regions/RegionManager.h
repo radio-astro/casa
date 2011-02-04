@@ -241,7 +241,7 @@ namespace casa {
         );
 
       String _stokesFromRecord(
-    		  const Record& region
+    		  const Record& region, const StokesControl stokesControl, const IPosition& shape
       ) const;
 
       void _setRegion(

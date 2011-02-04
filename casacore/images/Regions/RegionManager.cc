@@ -1113,14 +1113,14 @@ namespace casa { //# name space casa begins
 		  *itsLog << origin;
 		  *itsLog << LogIO::NORMAL << "Set region from supplied region record"
 				  << LogIO::POST;
-		  stokes = _stokesFromRecord(regionRecord);
+		  stokes = _stokesFromRecord(regionRecord, stokesControl, imShape);
 	  }
 
 	  else if (! regionName.empty()) {
 		  _setRegion(regionRecord, diagnostics, regionName);
 		  *itsLog << origin;
 		  *itsLog << LogIO::NORMAL << diagnostics << LogIO::POST;
-		  stokes = _stokesFromRecord(regionRecord);
+		  stokes = _stokesFromRecord(regionRecord, stokesControl, imShape);
 	  }
 	  else {
 		  Vector<uInt> chanEndPts, polEndPts;
@@ -1403,49 +1403,70 @@ namespace casa { //# name space casa begins
   }
 
   String RegionManager::_stokesFromRecord(
-  	const Record& region
+  	const Record& region, const StokesControl stokesControl, const IPosition& shape
   ) const {
   	// FIXME This implementation is incorrect for complex, recursive records
       String stokes = "";
-   	if(itsCSys->hasPolarizationAxis()) {
-   		Int polAxis = itsCSys->polarizationAxisNumber();
-   		uInt stokesBegin, stokesEnd;
-   		ImageRegion *imreg = ImageRegion::fromRecord(region, "");
-   		Array<Float> blc, trc;
-   		Bool oneRelAccountedFor = False;
-   		if (imreg->isLCSlicer()) {
-   			blc = imreg->asLCSlicer().blc();
-   			trc = imreg->asLCSlicer().trc();
-  	 		stokesBegin = (uInt)((Vector<Float>)blc)[polAxis];
-  	 		stokesEnd = (uInt)((Vector<Float>)trc)[polAxis];
-  	 		oneRelAccountedFor = True;
-   		}
-   		else if (RegionManager::isPixelRegion(*(ImageRegion::fromRecord(region, "")))) {
-  			region.toArray("blc", blc);
-  			region.toArray("trc", trc);
-  	 		stokesBegin = (uInt)((Vector<Float>)blc)[polAxis];
-  	 		stokesEnd = (uInt)((Vector<Float>)trc)[polAxis];
-  		}
-  		else {
-  			Record blcRec = region.asRecord("blc");
-  			Record trcRec = region.asRecord("trc");
-  			stokesBegin = (Int)blcRec.asRecord(
-  				String("*" + String::toString(polAxis - 1))
-  			).asDouble("value");
-  			stokesEnd = (Int)trcRec.asRecord(
-  				String("*" + String::toString(polAxis - 1))
-  			).asDouble("value");
-  		}
 
-   		if (! oneRelAccountedFor && region.isDefined("oneRel") && region.asBool("oneRel")) {
-   			stokesBegin--;
-   			stokesEnd--;
-   		}
-   		for (uInt i=stokesBegin; i<=stokesEnd; i++) {
-   			stokes += itsCSys->stokesAtPixel(i);
-   		}
-   	}
-   	return stokes;
+      if(! itsCSys->hasPolarizationAxis()) {
+    	  return stokes;
+      }
+      Int polAxis = itsCSys->polarizationAxisNumber();
+      uInt stokesBegin, stokesEnd;
+      ImageRegion *imreg = ImageRegion::fromRecord(region, "");
+      Array<Float> blc, trc;
+      Bool oneRelAccountedFor = False;
+      if (imreg->isLCSlicer()) {
+    	  blc = imreg->asLCSlicer().blc();
+    	  trc = imreg->asLCSlicer().trc();
+    	  stokesBegin = (uInt)((Vector<Float>)blc)[polAxis];
+    	  stokesEnd = (uInt)((Vector<Float>)trc)[polAxis];
+    	  oneRelAccountedFor = True;
+      }
+      else if (RegionManager::isPixelRegion(*(ImageRegion::fromRecord(region, "")))) {
+    	  region.toArray("blc", blc);
+    	  region.toArray("trc", trc);
+    	  stokesBegin = (uInt)((Vector<Float>)blc)[polAxis];
+    	  stokesEnd = (uInt)((Vector<Float>)trc)[polAxis];
+      }
+      else if (region.fieldNumber("x") >= 0 && region.fieldNumber("y") >= 0) {
+    	  // world polygon
+    	  oneRelAccountedFor = True;
+		  stokesBegin = 0;
+
+    	  if (stokesControl == USE_FIRST_STOKES) {
+    		  stokesEnd = 0;
+    	  }
+    	  else if (stokesControl == USE_ALL_STOKES) {
+    		  stokesEnd = shape[polAxis];
+    	  }
+      }
+      else if (region.fieldNumber("blc") >= 0 && region.fieldNumber("blc") >= 0) {
+    	  // world box
+    	  Record blcRec = region.asRecord("blc");
+    	  Record trcRec = region.asRecord("trc");
+    	  stokesBegin = (Int)blcRec.asRecord(
+    			  String("*" + String::toString(polAxis - 1))
+    	  ).asDouble("value");
+    	  stokesEnd = (Int)trcRec.asRecord(
+    			  String("*" + String::toString(polAxis - 1))
+    	  ).asDouble("value");
+      }
+      else {
+    	  // FIXME not very nice, but until all can be implemented this will have to do
+    	  *itsLog << LogIO::WARN << "Stokes cannot be determined because this region type is not handled yet"
+    			 << LogIO::POST;
+    	  return stokes;
+      }
+
+      if (! oneRelAccountedFor && region.isDefined("oneRel") && region.asBool("oneRel")) {
+    	  stokesBegin--;
+    	  stokesEnd--;
+      }
+      for (uInt i=stokesBegin; i<=stokesEnd; i++) {
+    	  stokes += itsCSys->stokesAtPixel(i);
+      }
+      return stokes;
   }
 
 
