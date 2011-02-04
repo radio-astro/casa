@@ -3708,7 +3708,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       return False;
     }      
 
-    Vector<Double> absOldCHAN_WIDTH(oldCHAN_WIDTH);
+    Vector<Double> absOldCHAN_WIDTH;
+    absOldCHAN_WIDTH.assign(oldCHAN_WIDTH);
     {
       Bool negativeWidths = False;
       for(uInt i=0; i<oldCHAN_WIDTH.size(); i++){
