@@ -2991,6 +2991,17 @@ void KJones::setApply(const Record& apply) {
 
 }
 
+void KJones::setSolve(const Record& solve) {
+
+  // Call parent to do conventional things
+  GJones::setSolve(solve);
+
+  // Trap unspecified refant:
+  if (refant()<0)
+    throw(AipsError("Please specify a good reference antenna (refant) explicitly."));
+
+}
+
 
 void KJones::specify(const Record& specify) {
 
@@ -3146,16 +3157,6 @@ void KJones::calcAllJones() {
 
   if (prtlev()>6) cout << "       VJ::calcAllJones()" << endl;
 
-  if (False) {
-    Vector<Complex> x(16,Complex(1.0));
-    cout << "x = " << x << endl;
-  
-    ArrayLattice<Complex> arx(x);
-  
-    LatticeFFT::cfft(arx);
-    cout << "x = " << x << endl;
-  }
-
   // Should handle OK flags in this method, and only
   //  do Jones calc if OK
 
@@ -3207,13 +3208,10 @@ void KJones::calcAllJones() {
 }
 
 // Simple FFT search solver
-void KJones::selfSolve(VisSet& vs, VisEquation& ve) {
+void KJones::selfGatherAndSolve(VisSet& vs, VisEquation& ve) {
 
-  if (prtlev()>4) cout << "   K::selfSolve(ve)" << endl;
+  if (prtlev()>4) cout << "   K::selfGatherAndSolve(ve)" << endl;
 
-  // Trap unspecified refant:
-  if (refant()<0)
-    throw(AipsError("Please specify a good reference antenna (refant) explicitly."));
   // Inform logger/history
   logSink() << "Solving for " << typeName()
             << LogIO::POST;
@@ -3328,6 +3326,19 @@ void KJones::selfSolve(VisSet& vs, VisEquation& ve) {
 }
 
 
+void KJones::selfSolveOne(VisBuffGroupAcc& vbga) {
+
+  // We don't support combine on spw or field (yet),
+  // so there should be only one VB in the vbga
+  if (vbga.nBuf()!=1) 
+    throw(AipsError("KJones can't process multi-VB vbga."));
+
+  // call the single-VB solver with the first VB in the vbga
+  this->solveOneVB(vbga(0));
+
+}
+
+
 // Do the FFTs
 void KJones::solveOneVB(const VisBuffer& vb) {
 
@@ -3339,7 +3350,6 @@ void KJones::solveOneVB(const VisBuffer& vb) {
   //  cout << "solveCPar().shape() = " << solveCPar().shape() << endl;
   //  cout << "vb.nCorr() = " << vb.nCorr() << endl;
   //  cout << "vb.corrType() = " << vb.corrType() << endl;
-
 
   // FFT parallel-hands only
   Int nC= (vb.nCorr()>1 ? 2 : 1);  // number of parallel hands
@@ -3369,7 +3379,7 @@ void KJones::solveOneVB(const VisBuffer& vb) {
   //  cout << "vpad(sl1).shape() = " << vpad(sl1).shape() << endl;
 
 
-  cout << "Starting ffts..." << flush;
+  //  cout << "Starting ffts..." << flush;
 
   if (False) {
     Vector<Complex> testf(64,Complex(1.0));
@@ -3395,7 +3405,7 @@ void KJones::solveOneVB(const VisBuffer& vb) {
   LatticeFFT::cfft(c,ax);        
   //LatticeFFT::cfft2d(c,False);   
       
-  cout << "done." << endl;
+  //  cout << "done." << endl;
 
   // Find peak in each FFT
   Int ipk=0;
@@ -3438,7 +3448,9 @@ void KJones::solveOneVB(const VisBuffer& vb) {
 	  
 	  cout << "Antenna ID=";
 	  if (vb.antenna1()(irow)==refant()) {
-	    cout << vb.antenna2()(irow) << ", pol=" << icor << " delay(nsec)="<< -delay; 
+	    cout << vb.antenna2()(irow) 
+		 << ", spw=" << currSpw() 
+		 << ", pol=" << icor << " delay(nsec)="<< -delay; 
 	    solveCPar()(icor,0,vb.antenna2()(irow))=-Complex(delay);
 	    solveParOK()(icor,0,vb.antenna2()(irow))=True;
 	  }
@@ -3646,9 +3658,9 @@ GlinXphJones::~GlinXphJones() {
 }
 
 
-void GlinXphJones::selfSolve(VisSet& vs, VisEquation& ve) {
+void GlinXphJones::selfGatherAndSolve(VisSet& vs, VisEquation& ve) {
 
-  if (prtlev()>4) cout << "   GlnXph::selfSolve(ve)" << endl;
+  if (prtlev()>4) cout << "   GlnXph::selfGatherAndSolve(ve)" << endl;
 
   // Inform logger/history
   logSink() << "Solving for " << typeName()

@@ -363,7 +363,7 @@ class Calibrater
   // The standard solving mechanism
   Bool standardSolve();
   Bool standardSolve2();
-  Bool standardSolve3();
+  Bool genericGatherAndSolve();
 
   // Input MeasurementSet and derived selected MeasurementSet
   String msname_p;

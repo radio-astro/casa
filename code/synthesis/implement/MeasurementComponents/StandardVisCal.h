@@ -561,11 +561,11 @@ public:
   using SolvableVisCal::setApply;
   virtual void setApply(const Record& apply);
 
-  // M solves for itself
-  virtual Bool standardSolve() { return False; };
+  // M gathers/solves for itself
+  virtual Bool useGenericGatherForSolve() { return False; };
 
   // M solves for itself (by copying averaged data)
-  virtual void selfSolve(VisSet& vs, VisEquation& ve) { newselfSolve(vs,ve); };
+  virtual void selfGatherAndSolve(VisSet& vs, VisEquation& ve) { newselfSolve(vs,ve); };
   virtual void oldselfSolve(VisSet& vs, VisEquation& ve);  // old-fashioned iterator-driven
   virtual void newselfSolve(VisSet& vs, VisEquation& ve);  // new supports combine
 
@@ -764,11 +764,11 @@ public:
   // Turn off normalization by model....
   virtual Bool normalizable() { return False; };
 
-  // X solves for itself
-  virtual Bool standardSolve() { return False; };
+  // X gathers/solves for itself
+  virtual Bool useGenericGatherForSolve() { return False; };
 
-  // X solves for itself 
-  virtual void selfSolve(VisSet& vs, VisEquation& ve) { newselfSolve(vs,ve); };
+  // X gathers/solves for itself 
+  virtual void selfGatherAndSolve(VisSet& vs, VisEquation& ve) { newselfSolve(vs,ve); };
   virtual void oldselfSolve(VisSet& vs, VisEquation& ve);  // old-fashioned iterator-driven
   virtual void newselfSolve(VisSet& vs, VisEquation& ve);  // new supports combine
 
@@ -829,11 +829,11 @@ public:
   // X is normalizable by the model
   virtual Bool normalizable() { return True; };
 
-  // X solves for itself
-  virtual Bool standardSolve() { return False; };
+  // X gathers/solves for itself
+  virtual Bool useGenericGatherForSolve() { return False; };
 
-  // X solves for itself 
-  virtual void selfSolve(VisSet& vs, VisEquation& ve) { newselfSolve(vs,ve); };
+  // X gathers/solves for itself 
+  virtual void selfGatherAndSolve(VisSet& vs, VisEquation& ve) { newselfSolve(vs,ve); };
   virtual void newselfSolve(VisSet& vs, VisEquation& ve);  // new supports combine
 
   virtual void keep(const Int& slot);
@@ -906,6 +906,10 @@ public:
   virtual void setApply(const Record& apply);
   using GJones::setApply;
 
+  // Local setSolve (traps lack of refant)
+  virtual void setSolve(const Record& solve);
+  using GJones::setSolve;
+
   // Return the type enum
   virtual Type type() { return VisCal::K; };
 
@@ -943,9 +947,16 @@ public:
   // Hazard a guess at parameters
   virtual void guessPar(VisBuffer& vb) {};
 
-  // K solves for itself
-  virtual Bool standardSolve() { return False; };
-  virtual void selfSolve(VisSet& vs, VisEquation& ve);
+  // K now uses generic gather, but solves for itself per solution
+  virtual Bool useGenericGatherForSolve() { return True; };
+  virtual Bool useGenericSolveOne() { return False; }
+
+  // This is the old self-directed gather/solve
+  virtual void selfGatherAndSolve(VisSet& vs, VisEquation& ve);
+
+  // Override G here; nothing to do for K, for now
+  virtual void globalPostSolveTinker() {};
+
 
 protected:
 
@@ -960,6 +971,9 @@ protected:
 
   // Initialize trivial dJs
   virtual void initTrivDJ() {};
+
+  // Local implementation of selfSolveOne (generalized signature)
+  virtual void selfSolveOne(VisBuffGroupAcc& vbga);
 
   // FFT solver for on VB
   virtual void solveOneVB(const VisBuffer& vb);
@@ -1012,9 +1026,9 @@ public:
   // Though derived from GJones, this type actually uses the cross-hands
   virtual Bool phandonly() { return False; };
 
-  // Solves for itself
-  virtual Bool standardSolve() { return False; };
-  virtual void selfSolve(VisSet& vs, VisEquation& ve);
+  // GlinXphJones gathers/solves for itself
+  virtual Bool useGenericGatherForSolve() { return False; };
+  virtual void selfGatherAndSolve(VisSet& vs, VisEquation& ve);
 
 protected:
 

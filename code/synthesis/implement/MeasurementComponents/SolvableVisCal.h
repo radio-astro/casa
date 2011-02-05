@@ -103,8 +103,12 @@ public:
     if (cs_) cs().setSpwOK();
     if (cint_) ci().setSpwOK(); }
 
-  // Use standard VisCal solving mechanism?
-  virtual Bool standardSolve() { return True; };
+  // Use generic data gathering mechanism for solve
+  virtual Bool useGenericGatherForSolve() { return True; };
+
+  // Use generic solution engine for a single solve
+  //  (usually inside the generic gathering mechanism)
+  virtual Bool useGenericSolveOne() { return useGenericGatherForSolve(); };
 
   // Solve for point-source X or Q,U?
   //  nominally no (0)
@@ -206,9 +210,11 @@ public:
   virtual Bool verifyConstraints(VisBuffGroupAcc& vbag);
   virtual Bool verifyForSolve(VisBuffer& vb);
   
-  // Self-solving mechanism
-  virtual void selfSolve(VisSet& vs, VisEquation& ve);
-  virtual void selfSolve2(VisBuffGroupAcc& vs);
+  // Self- gather and/or solve prototypes
+  //  (triggered by useGenericGatherForSolve=F or useGenericSolveOne=F; 
+  //   must be overridden in derived specializations)
+  virtual void selfGatherAndSolve(VisSet& vs, VisEquation& ve);
+  virtual void selfSolveOne(VisBuffGroupAcc& vs);
 
   // Set up data and model for pol solve
   void setUpForPolSolve(VisBuffer& vb);

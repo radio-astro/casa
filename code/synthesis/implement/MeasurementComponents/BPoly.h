@@ -86,7 +86,10 @@ public:
   virtual String typeName()     { return "BPOLY"; };
   virtual String longTypeName() { return "B Jones Poly (bandpass)"; };
 
-  virtual Bool standardSolve() { return True; };
+  // BPOLY gathers generically...
+  virtual Bool useGenericGatherForSolve() { return True; };
+  // ...then solves for itself per solution:
+  virtual Bool useGenericSolveOne() { return False; };
 
   // Type of Jones matrix according to nPar()
   virtual Jones::JonesType jonesType() { return Jones::Diagonal; };
@@ -99,9 +102,11 @@ public:
   using BJones::setApply;
   virtual void setApply(const Record& applypar);
 
-  // Solve
-  virtual void selfSolve(VisSet& vs, VisEquation& ve);
-  virtual void selfSolve2(VisBuffGroupAcc& vbga);
+  // Solve 
+  //   (old self-directed gather and solve)
+  virtual void selfGatherAndSolve(VisSet& vs, VisEquation& ve);
+  //   (new per-solution self-solving inside generic gather)
+  virtual void selfSolveOne(VisBuffGroupAcc& vbga);
 
 
 protected:
