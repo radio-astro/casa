@@ -1669,8 +1669,8 @@ Int SolvableVisCal::sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol) {
     if (!allEQ(nChanParList()(spwMap()>-1).getCompressedArray(),nChanParList()(spwlab)))
       throw(AipsError("Spws with different selected channelizations cannot be combined."));
 
-    nChunkPerSpw = 0;
-    nChunkPerSpw(spwlab)=nSol;
+    //    nChunkPerSpw = 0;
+    //    nChunkPerSpw(spwlab)=nSol;
 
     nSolPerSpw=0;
     nSolPerSpw(spwlab)=nSol;
@@ -2607,20 +2607,20 @@ Bool SolvableVisCal::verifyForSolve(VisBuffer& vb) {
     
 }
 
-void SolvableVisCal::selfSolve(VisSet& vs, VisEquation& ve) {
+void SolvableVisCal::selfGatherAndSolve(VisSet& vs, VisEquation& ve) {
     
-  if (standardSolve())
-    throw(AipsError("Spurious call to selfSolve()."));
+  if (useGenericGatherForSolve())
+    throw(AipsError("Spurious call to selfGatherAndSolve() with useGenericGatherForSolve()=T."));
   else
-    throw(AipsError("Attempt to call un-implemented selfSolve()"));
+    throw(AipsError("Attempt to call un-implemented selfGatherAndSolve()"));
 
 }
-void SolvableVisCal::selfSolve2(VisBuffGroupAcc& vbga) {
+void SolvableVisCal::selfSolveOne(VisBuffGroupAcc& vbga) {
     
-  if (standardSolve())
-    throw(AipsError("Spurious call to selfSolve()."));
+  if (useGenericSolveOne())
+    throw(AipsError("Spurious call to selfSolveOne() with useGenericSolveOne()=T."));
   else
-    throw(AipsError("Attempt to call un-implemented selfSolve()"));
+    throw(AipsError("Attempt to call un-implemented selfSolveOne()"));
 
 }
 

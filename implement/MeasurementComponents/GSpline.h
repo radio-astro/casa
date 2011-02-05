@@ -89,7 +89,8 @@ public:
   virtual String longTypeName() { return "G Jones SPLINE (elec. gain)"; };
 
 
-  virtual Bool standardSolve() { return False; };
+  // GSpline gathers/solves for itself
+  virtual Bool useGenericGatherForSolve() { return False; };
 
   // Type of Jones matrix according to nPar()
   // TBD:
@@ -104,7 +105,7 @@ public:
   virtual void setApply(const Record& applypar);
 
   // Solve
-  virtual void selfSolve (VisSet& vs, VisEquation& ve);
+  virtual void selfGatherAndSolve (VisSet& vs, VisEquation& ve);
 
 /*
   // Set raw phase transfer from another spw

@@ -1264,14 +1264,13 @@ Bool Calibrater::solve() {
     svc_p->setChanMask(chanmask_);
 
     // Generally use standard solver
-    if (svc_p->standardSolve())
-      //      standardSolve();   // old way
-      //      standardSolve2();        // new way: supports combine
-      standardSolve3();          // newer way: supports combine,
-                                 // using VisBuffGroupAcc
-    else
-      svc_p->selfSolve(*vs_p,*ve_p);
-
+    if (svc_p->useGenericGatherForSolve())
+      genericGatherAndSolve();   // using VisBuffGroupAcc
+    else {
+      //cout << "Fully self-directed data gather and solve" << endl;
+      // Fully self-directed data gather and solve
+      svc_p->selfGatherAndSolve(*vs_p,*ve_p);
+    }
 
     svc_p->clearChanMask();
 
@@ -1289,7 +1288,9 @@ Bool Calibrater::solve() {
 
 }
 
-Bool Calibrater::standardSolve3() {
+Bool Calibrater::genericGatherAndSolve() {
+
+  //cout << "Generic gather and solve." << endl;
 
   // Create the solver
   VisCalSolver vcs;
@@ -1349,6 +1350,13 @@ Bool Calibrater::standardSolve3() {
 	if (!svc_p->freqDepMat() && vb.nChannel()>1)
 	  vb.freqAveCubes();
 	
+
+
+
+
+
+
+
 	// Accumulate collapsed vb in a time average
 	//  (only if the vb contains any unflagged data)
 	if (nfalse(vb.flag())>0)
@@ -1368,9 +1376,12 @@ Bool Calibrater::standardSolve3() {
     //  (this sets currSpw() in the SVC)
     Bool vbOk=(vbga.nBuf()>0 && svc_p->syncSolveMeta(vbga));
 
+
     if (vbOk) {
 
+
       // Use spw of first VB in vbga
+      // TBD: (currSpw==thisSpw) here??  (I.e., use svc_p->currSpw()?  currSpw is prot!)
       Int thisSpw=svc_p->spwMap()(vbga(0).spectralWindow());
       slotidx(thisSpw)++;
       
@@ -1380,57 +1391,66 @@ Bool Calibrater::standardSolve3() {
       // Select on correlation via weights, according to the svc
       vbga.enforceSolveCorrWeights(svc_p->phandonly());
 
+      if (svc_p->useGenericSolveOne()) {
+	// generic individual solve
 
-      if (svc_p->typeName()=="BPOLY") {
+	//cout << "Generic individual solve: isol=" << isol << endl;
 
-	//	cout << "Delegating directly to BPoly." << endl;
-
-	svc_p->selfSolve2(vbga);
-	nGood++;
+	// First guess
+	svc_p->guessPar(vbga(0));
+	
+	// Solve for each parameter channel (in curr Spw)
+	
+	// (NB: force const version of nChanPar()  [why?])
+	//	for (Int ich=0;ich<((const SolvableVisCal*)svc_p)->nChanPar();++ich) {
+	Bool totalGoodSol(False);
+	for (Int ich=((const SolvableVisCal*)svc_p)->nChanPar()-1;ich>-1;--ich) {
+	  // for (Int ich=0;ich<((const SolvableVisCal*)svc_p)->nChanPar();++ich) {
+	  
+	  // If pars chan-dep, SVC mechanisms for only one channel at a time
+	  svc_p->markTimer();
+	  svc_p->focusChan()=ich;
+	  
+	  // Pass VE, SVC, VB to solver
+	  Bool goodSoln=vcs.solve(*ve_p,*svc_p,vbga);
+	  
+	  // If good... 
+	  if (goodSoln) {
+	    totalGoodSol=True;
+	    
+	    svc_p->formSolveSNR();
+	    svc_p->applySNRThreshold();
+	    
+	    // ..and file this solution in the correct slot
+	    svc_p->keep(slotidx(thisSpw));
+	    Int n=svc_p->nSlots(thisSpw);
+	    svc_p->printActivity(n,slotidx(thisSpw),vi.fieldId(),thisSpw,nGood);	      
+	    
+	  }
+	  else 
+	    // report where this failure occured
+	    svc_p->currMetaNote();
+	  
+	} // parameter channels
+	
+	// Cound good solutions.
+	if (totalGoodSol)	nGood++;
+	
       }
       else {
+	//cout << "Self-directed individual solve: isol=" << isol << endl;
+	// self-directed individual solve
+	// TBD: selfSolveOne should return T/F for "good"
+	svc_p->selfSolveOne(vbga);
 
-      svc_p->guessPar(vbga(0));
-      
-      // Solve for each parameter channel (in curr Spw)
-      
-      // (NB: force const version of nChanPar()  [why?])
-      //	for (Int ich=0;ich<((const SolvableVisCal*)svc_p)->nChanPar();++ich) {
-      Bool totalGoodSol(False);
-      for (Int ich=((const SolvableVisCal*)svc_p)->nChanPar()-1;ich>-1;--ich) {
-	// for (Int ich=0;ich<((const SolvableVisCal*)svc_p)->nChanPar();++ich) {
+	// File this solution in the correct slot of the CalSet
+	svc_p->keep(slotidx(thisSpw));
 
-	// If pars chan-dep, SVC mechanisms for only one channel at a time
-	svc_p->markTimer();
-	svc_p->focusChan()=ich;
-	
-	// Pass VE, SVC, VB to solver
-	Bool goodSoln=vcs.solve(*ve_p,*svc_p,vbga);
+	nGood++;
+      } 
 
-	// If good... 
-	if (goodSoln) {
-	  totalGoodSol=True;
-
-	  svc_p->formSolveSNR();
-	  svc_p->applySNRThreshold();
-
-	  // ..and file this solution in the correct slot
-	  svc_p->keep(slotidx(thisSpw));
-	  Int n=svc_p->nSlots(thisSpw);
-	  svc_p->printActivity(n,slotidx(thisSpw),vi.fieldId(),thisSpw,nGood);	      
-
-	}
-	else 
-	  // report where this failure occured
-	  svc_p->currMetaNote();
-	
-      } // parameter channels
-
-      // Cound good solutions.
-      if (totalGoodSol)	nGood++;
-      }
     } // vbOK
-    
+
   } // isol
 
   logSink() << "  Found good " 
@@ -1439,11 +1459,13 @@ Bool Calibrater::standardSolve3() {
 	    << LogIO::POST;
   
   // Store whole of result in a caltable
-  if (nGood==0)
+  if (nGood==0) {
     logSink() << "No output calibration table written."
 	      << LogIO::POST;
+  }
   else {
 
+    // TBD: Remove BPOLY specificity here
     if (svc_p->typeName()!="BPOLY") {
       // Do global post-solve tinkering (e.g., phase-only, normalization, etc.)
       svc_p->globalPostSolveTinker();
