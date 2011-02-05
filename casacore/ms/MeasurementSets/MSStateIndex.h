@@ -120,6 +120,7 @@ private:
   // Vector cache of field id's
   Vector<Int> stateIds_p;
   Int nrows_p;
+  Int matchAnyRegex(const Vector<String>& strList, const Regex& regex, const Int pos=0);
 };
 
 

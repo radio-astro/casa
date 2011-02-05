@@ -126,6 +126,7 @@ indexcombexpr  : indexlist
 //
 // Ampersand separated list of stateid.  The result is the logical AND
 // of list of indices in stateid.
+//
 logicallist: stateid AMPERSAND stateid
           {
 	    if (!$$) delete $$;
@@ -288,13 +289,6 @@ indexlist : stateidlist
 		(*($$))(i) = (*($3))(i-N0);
 	      delete $3;
             }
-/*
-          | LPAREN indexlist RPAREN //Parenthesis are not
-				    //syntactically useful here
-            {
-	      $$ = $2;
-	    }
-*/
           ;
 %%
 

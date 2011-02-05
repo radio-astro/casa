@@ -57,9 +57,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return IDs;
   }
   //-------------------------------------------------------------------------
-  
+  Int MSStateIndex::matchAnyRegex(const Vector<String>& strList, 
+				  const Regex& regex, 
+				  const Int pos)
+  {
+    Int ret=0;
+    for(uInt i=0;i<strList.nelements();i++)
+      if ((ret=strList[i].matches(regex,pos)) > 0) break;
+    return ret;
+  }
+  //-------------------------------------------------------------------------
   Vector<Int> MSStateIndex::matchStateObsModeRegexOrPattern(const String& pattern,
-							 const Bool regex)
+							    const Bool regex)
   {
     // Match a state name to a set of state id's
     // Input:
@@ -90,9 +99,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	String name = msStateCols_p.obsMode().getColumn()(i);
 	String sname = stripWhite(name); // Strip leading and trailing blanks
-	//	const String &sname = name; // Strip leading and trailing blanks
-	//        cout << "Name = " << name << " SName = " << sname << endl;
-	Int ret=(sname.matches(reg,pos));
+	//	Int ret=(sname.matches(reg,pos));
+	Vector<String> substr;
+	split(sname,',',substr);
+	Int ret=matchAnyRegex(substr,reg,pos);
 	maskArray(i) = ((ret>0) && !msStateCols_p.flagRow().getColumn()(i));
       }
     
@@ -106,7 +116,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return tmp;
   }
   //-------------------------------------------------------------------------
-  
+
   Vector<Int> MSStateIndex::matchStateObsMode(const String& name)
   {
     // Match a state name to a set of state id's
@@ -115,9 +125,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Output:
     //    matchStateName   Vector<Int>              Matching state id's
     //
-    LogicalArray maskArray = (msStateCols_p.obsMode().getColumn()==name &&
-			      !msStateCols_p.flagRow().getColumn());
-    MaskedArray<Int> maskStateId(stateIds_p, maskArray);
+    IPosition irow(1,nrows_p);
+    LogicalArray tmaskArray(irow,False); 
+
+    for(irow(0)=0;irow(0)<nrows_p;irow(0)++)
+      if (!msStateCols_p.flagRow().getColumn()[irow(0)])
+	{
+	  Vector<String> substr;
+	  split(msStateCols_p.obsMode().getColumn()[irow(0)],',',substr);
+	  for (uInt istr=0; istr<substr.nelements(); istr++)
+	    if (substr[istr]==name)
+	      {
+		tmaskArray(irow)=True;
+		break;
+	      }
+	}
+    // LogicalArray maskArray = (msStateCols_p.obsMode().getColumn()==name &&
+    // 			      !msStateCols_p.flagRow().getColumn());
+    MaskedArray<Int> maskStateId(stateIds_p, tmaskArray);
 
     return maskStateId.getCompressedArray();
   }; 
