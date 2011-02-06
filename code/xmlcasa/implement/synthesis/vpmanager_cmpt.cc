@@ -428,8 +428,7 @@ vpmanager::setpbpoly(const std::string& telescope, const std::string& otherteles
 }
 
 bool 
-vpmanager::createantresp(const std::string& telescope, 
-			 const std::string& imdir, 
+vpmanager::createantresp(const std::string& imdir, 
 			 const std::string& starttime, 
 			 const std::vector<std::string>& bandnames, 
 			 const std::vector<std::string>& bandminfreq, 
@@ -440,19 +439,10 @@ vpmanager::createantresp(const std::string& telescope,
 
     *itsLog << LogOrigin("vp", "createantresp");
 
-//     cout << "telescope " << telescope << " imdir " << imdir << " starttime " << starttime << endl;
+//     cout << " imdir " << imdir << " starttime " << starttime << endl;
 //     for(uInt i=0; i<bandnames.size(); i++){
 //       cout << i << " bandnames " << bandnames[i] << " bandminfreq " << bandminfreq[i] << " bandmaxfreq " << bandmaxfreq[i] << endl;
 //     }
-
-    String obsName = toCasaString(telescope);
-    MPosition Xpos;
-    if (obsName.length() == 0 || 
-	!MeasTable::Observatory(Xpos,obsName)) {
-      // unknown observatory
-      *itsLog << LogIO::SEVERE << "Unknown observatory: \"" << obsName << "\"." << LogIO::POST;
-      return rstat;
-    }
 
     String imDir = toCasaString(imdir);
     Path imPath(imDir);
@@ -569,6 +559,14 @@ vpmanager::createantresp(const std::string& telescope,
       
       pos = imNamesV(i).find("_", pos);
       obsnameV(i) = imNamesV(i).substr(0, pos); // use pos as length in this case
+
+      MPosition Xpos;
+      if (obsnameV(i).length() == 0 || 
+	  !MeasTable::Observatory(Xpos,obsnameV(i))) {
+	// unknown observatory
+	*itsLog << LogIO::SEVERE << "Unknown observatory: \"" << obsnameV(i) << "\"." << LogIO::POST;
+	return rstat;
+      }
 
       pos2 = imNamesV(i).find("_", ++pos); // start one after the "_"
       beamnumV(i) = atoi(imNamesV(i).substr(pos, pos2-pos).c_str());
@@ -789,6 +787,101 @@ vpmanager::createantresp(const std::string& telescope,
     RETHROW(x);
   }
   return rstat;
+}
+
+std::string 
+vpmanager::getrespimagename(const std::string& telescope, 
+			    const std::string& starttime, 
+			    const std::string& frequency, 
+			    const std::string& functype, 
+			    const std::string& anttype, 
+			    const std::string& azimuth,
+			    const std::string& elevation, 
+			    const std::string& rectype,
+			    const int beamnumber)
+{
+  std::string rval("");
+  try{
+
+    *itsLog << LogOrigin("vp", "getrespimagename");
+
+    String obsName(telescope);
+    String antRespPath;
+    if (!MeasTable::AntennaResponsesPath(antRespPath, obsName)) {
+      // unknown observatory
+      *itsLog << LogIO::SEVERE << "No antenna responses available for observatory: \"" << obsName << "\"." << LogIO::POST;
+      return rval;
+    }
+
+    AntennaResponses aR(antRespPath);
+
+    String functionImageName;
+    uInt funcChannel;
+    MFrequency nomFreq;
+    AntennaResponses::FuncTypes fType;
+
+    String startTime = toCasaString(starttime);
+    MEpoch theStartTime; 
+    Quantum<Double> qt;
+    if (MVTime::read(qt,startTime)) {
+      MVEpoch mv(qt);
+      theStartTime = MEpoch(mv, MEpoch::UTC);
+    } else {
+      *itsLog << LogIO::SEVERE << "Invalid time format: " 
+	      << startTime << LogIO::POST;
+      return rval;
+    }
+
+    Quantum<Double> freqQ;
+    if(!Quantum<Double>::read(freqQ, toCasaString(frequency))){
+      *itsLog << LogIO::SEVERE << "Invalid quantity in parameter frequency " << frequency 
+	      << LogIO::POST;
+      return rval;
+    }
+    MFrequency freqM(freqQ);
+    AntennaResponses::FuncTypes requFType = AntennaResponses::FuncType(toCasaString(functype));
+    String antennaType = String(anttype);
+    Quantum<Double> az, el;
+    if(!Quantum<Double>::read(az, toCasaString(azimuth))){
+      *itsLog << LogIO::SEVERE << "Invalid quantity in parameter azimuth " << azimuth 
+	      << LogIO::POST;
+      return rval;
+    }
+    if(!Quantum<Double>::read(el, toCasaString(elevation))){
+      *itsLog << LogIO::SEVERE << "Invalid quantity in parameter elevation " << elevation 
+	      << LogIO::POST;
+      return rval;
+    }
+
+    MDirection center = MDirection(az, el, MDirection::AZEL); 
+    String receiverType = toCasaString(rectype);
+
+    if(!aR.getImageName(functionImageName, 
+			funcChannel, 
+			nomFreq, 
+			fType, 
+			obsName,
+			theStartTime,
+			freqM,
+			requFType,
+			antennaType,
+			center,
+			receiverType,
+			beamnumber)){
+      *itsLog << LogIO::SEVERE << "Could not find appropriate response image." << LogIO::POST;
+      return rval;
+    }
+      
+    *itsLog << LogIO::NORMAL << "Found image " << functionImageName << endl
+	    << " of type " << (Int)fType << ". Nominal frequency is " << nomFreq.getValue() 
+	    << " Hz. Use channel " << funcChannel << "." << LogIO::POST;
+    rval = functionImageName;
+
+  } catch  (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+  }
+  return rval;
 }
 
 

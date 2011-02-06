@@ -799,11 +799,6 @@ and create the lookup table in the same directory.
 </description>
 <input>
 
-     <param type="string" direction="in" name="telescope">
-     <description>Which telescope in the MS will use this vp/pb?</description>
-     <value></value>
-     </param>
-
      <param type="string" direction="in" name="imdir">
      <description>Path to the directory containing the response images</description>
      <value></value>
@@ -832,6 +827,65 @@ and create the lookup table in the same directory.
 
 </input>
 <returns type="bool"></returns>
+</method>
+
+   <method type="function" name="getrespimagename">
+   <shortdescription>Get the image name for the given parameters from the given responses table</shortdescription>
+   
+<description>
+Given the observatory name, the antenna type, the receiver type, the observing frequency, the
+observing direction, and the beam number, find the applicable response image and return its name.
+</description>
+<input>
+
+     <param type="string" direction="in" name="telescope">
+     <description>Which telescope is described by this response?</description>
+     <value></value>
+     </param>
+
+     <param type="string" direction="in" name="starttime">
+     <description>Time at which the response has to be valid, format YYYY/MM/DD/hh:mm:ss</description>
+     <value></value>
+     </param>
+
+     <param type="string" name="frequency">
+     <description>The frequency at which the response has to be valid, e.g. "100GHz"</description>
+     <value></value>
+     </param>
+
+     <param type="string" name="functype">
+     <description>Type of the responsefunction requested, e.g. "EFP"</description>
+     <value>ANY</value>
+     </param>
+
+     <param type="string" name="anttype">
+     <description>Antenna type (observatory-dependent)</description>
+     <value></value>
+     </param>
+
+     <param type="string" name="azimuth">
+     <description>Azimuth of the observation (at the location of the observatory, 0 is North), e.g. "5deg"</description>
+     <value>0deg</value>
+     </param>
+
+     <param type="string" name="elevation">
+     <description>Elevation of the observation (at the location of the observatory, 0 is North), e.g. "60deg" </description>
+     <value>45deg</value>
+     </param>
+
+     <param type="string" name="rectype">
+     <description>Receiver type (observatory-dependent)</description>
+     <value></value>
+     </param>
+
+     <param type="int" name="beamnumber">
+     <description>Beam number (for the case of multiple beams per receiver)</description>
+     <value>0</value>
+     </param>
+
+
+</input>
+<returns type="string"></returns>
 </method>
 
 </tool>
