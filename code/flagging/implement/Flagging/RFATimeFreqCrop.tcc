@@ -614,6 +614,8 @@ void RFATimeFreqCrop :: FlagBandPass(uInt pl, uInt bs)
 		}
 	      
 	      /* If sum of power in two adjacent channels is more than thresh, flag both side chans */
+	      if(FlagLevel>0)
+		{
 	      for(int ch=1;ch<NumC-1;ch++)
 		{
 		  if(flagBP[ch])
@@ -622,7 +624,8 @@ void RFATimeFreqCrop :: FlagBandPass(uInt pl, uInt bs)
 			{flagBP[ch-1]=True; flagBP[ch+1]=True;}
 		    }
 		}
-	      
+		}
+
 	      /* Fill the flags into the visbuffer array */
 	      for(Int ch=0;ch<NumC;ch++)
 		flagc(pl,ch,((tm*NumB)+bs))=flagBP[ch];
