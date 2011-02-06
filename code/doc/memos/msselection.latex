@@ -92,7 +92,7 @@ point number is given where only integers are expected (e.g. indexes),
 the floating point value is truncated to the nearest integer.
 
 \subsection{Range specification}
-
+\label{Sec:RANGE}
 Range of numbers (integers or real numbers) can be given in the format
 N0$\sim$N1.  Integer ranges are expanded into a list of integers
 starting from N0 (inclusive) to N1 (inclusive).  Range of real numbers
@@ -127,7 +127,7 @@ the end) and it applies to both the range boundaries. E.g.
 \end{itemize}
 
 \subsection{Strings}
-
+\label{Sec:STRINGS}
 String matching can be done in three ways.  Any component of a comma
 separated list that cannot be parsed as number/number range/physical
 quantity is treated as a regular expression or a literal string.  If
@@ -306,8 +306,6 @@ Possible forms of baseline specifications are tabulated in
 Table~\ref{BASELINE:TAB}.
 
 \begin{table}[h!]
-\caption{Baseline specification syntax}
-\label{BASELINE:TAB}
 \begin{center}
 \begin{tabular}{|l|l|}
 \hline
@@ -346,6 +344,9 @@ ANT1 ; !ANT2 & ANT1 and ANT2 can be any of the above expressions.\\
 \hline
 \end{tabular}
 \end{center}
+\caption{Baseline specification syntax: ANT, ANT1 and ANT2 represent a
+  comma-separated list of antennas.} 
+\label{BASELINE:TAB}
 \end{table}
 
 \subsubsection{Baseline negation operator}
@@ -741,7 +742,7 @@ consists of comma separated list of full specifications.  The
 separator for lists for the individual parts of the specification
 (i.e. {\tt SPW}, {\tt POL}, etc.) is semi-colon. However note that if
 the optional qualifiers are omitted (i.e., {\tt SPW} etc.), either of
-the separaters can be used (comma or semi-colon).  Thus {\tt "RR;LL"}
+the separators can be used (comma or semi-colon).  Thus {\tt "RR;LL"}
 is equivalent to {\tt "RR,LL"}.
 
 The {\tt POL} specification is a semi-colon separated list of
@@ -761,6 +762,117 @@ as a comma separated list.  E.g.
   window 0 and LR and RL from spectral window 1.
 \end{itemize}
 
+\section{"Scan intent'' Based Selection}
+
+"Scan intent" selection is based on the entries in the {\tt
+  "OBS\_MODE"} column of the {\tt "STATE"} sub-table.
+% The main table of a Measurement Set has the {\tt "STATE\_ID"} column
+% containing the row number of the {\tt "STATE"} sub-table appropriate
+% for each row in the main table.  The {\tt "OBS\_MODE"} column of the
+% {\tt STATE} sub-table contrains strings describing the observational
+% intent.  These intents are referred to as "scan intents" and the
+% scan-intent expressions in the MSSelection module can be used for data
+% selection.  Such a data selection is referred to as the "scan-intent
+% selection". 
+
+\subsection{Syntax}
+
+The scan-intent selection expression is a comma-separated list of
+specifications.  Each specification can be a string, an integer or an
+integer range.  As in other such expressions, a range $[N0,N1]$ can be
+specified as {\tt N0~N1} (see Section~\ref{Sec:RANGE}).  Strings can
+be regular expressions or patterns or quoted-strings for as-is
+matching (see Section~\ref{Sec:STRINGS}). 
+
+A single scan can have multiple scan-intents represented by a
+comma-separated list of strings like {\tt
+  "CALIBRATE\_BANDPASS.UNSPECIFIED,CALIBRATE\_AMPLI.UNSPECIFIED"}.
+Each of these comma-separated components are referred to as the
+scan-intent components.  All string specifications in scan-intent
+expression are matched against {\it each} of these comma-separated
+components.  Scans with {\it any} of the scan-intent components
+matching the string(s) in the scan-intent expression are selected.
+E.g. {\tt scanintent=*CAL*, *BAND*} will select all scans which have
+the strings {\tt "CAL"} or {\tt "BAND"}.
+
+Scan-intent selection specifications can also be an
+ampersand-separated ({\tt '\&'}) list string expressions.  Only those
+scans, at least one scan-intent components of which match {\it all} the
+ampersand-separated components are selected.  E.g. {\tt
+  scanintent=*CAL* \& *BAND*} will select only those scans the intent
+strings of which contain the strings {\tt "CAL"} {\it and} {\tt
+  "BAND"}.  See Section~\ref{Sec:SCANINTENTEXAMPLES} for more examples.
+\begin{table}[ht!]
+\caption{Example scan-intent table}
+\begin{center}
+\begin{tabular}{|c|l|}
+\hline
+\small {Scan No.} & \small{Scan-intent strings}\\
+\hline
+   0    &  \small{\tt CALIBRATE\_BANDPASS, CALIBRATE\_PHASE}\\
+   1    &  \small{\tt CALIBRATE\_BANDPASS, CALIBRATE\_AMPLI}\\
+   2    &  \small{\tt CALIBRATE\_BANDPASS, CALIBRATE\_AMPLI, CALIBRATE\_PHASE}\\
+   3    &  \small{\tt AMPLI\_UNSPECIFIED, PHASE\_UNSPECIFIED}\\
+\hline
+\end{tabular}
+\end{center}
+\label{Tab:SCANINTENT}
+\end{table}
+\subsection{Examples}
+\label{Sec:SCANINTENTEXAMPLES}
+Table~\ref{Tab:SCANINTENT} shows an example-table of scan-intents.
+Table~\ref{Tab:SCANINTENTEXPR} shows a list of some scan-intent
+selection expressions and the corresponding list of selected scan
+numbers from Table~\ref{Tab:SCANINTENTEXPR}.
+
+\begin{table}[ht!]
+\caption{Example of scan-intent selection expressions for scan-intents
+in Table~\ref{Tab:SCANINTENT}}
+\begin{center}
+% This LaTeX table template is generated by emacs 23.2.1
+\begin{tabular}{|l|l|l|}
+\hline
+{\bf Scan-intent selection Expressions}& {\bf Selected scans}& {\bf Remarks}\\
+\hline
+\hline
+{\tt CALI*}   & 0,1,2 & \\
+\hline
+{\tt *PHASE*}  & 0,2,3 & Matches \\
+               &       & {\tt CALIBRATE\_PHASE} but \\
+               &       & not {\tt PHASE\_UNSPECIFIED} \\
+\hline
+{\tt *UNSPEC*} & 3     & \\
+\hline
+{\tt *AMPLI, *PHASE} & 1,2 & {\tt *AMPLI} matches \\
+                     &     & {\tt CALIBRATE\_AMPLI}; \\
+                     &     & {\tt *PHASE} matches \\
+                     &     & {\tt CALIBRATE\_PHASE} \\
+\hline
+{\tt *AMP*} & 1,2,3 & {\tt *AMP*} matches \\
+            &       & {\tt CALIBRATE\_AMPLI} and \\
+            &       & {\tt AMPLI\_UNSPECIFIED} \\
+\hline
+{\tt *BAND \& *PHASE} & 0,2 & {\tt *BAND} and {\tt *PHASE} are \\
+                      &     & simultaneous present \\
+                      &     & for scans 0 and 2 only \\
+\hline
+{\tt AMP* \& *PHASE*} & 3 & {\tt *PHASE*} matches scans \\
+                      &   & 0,2,3. {\tt AMP*} matches \\
+                      &   & only scan 3. \\
+\hline
+{\tt *BAND \& *PHASE* \& *AMP*} & 2 & Only scan that matches \\
+                                &   & {\tt *BAND} {\it and} \\
+                                &   & {\tt *PHASE*} {\it and} {\tt *AMP*} is \\
+                                &   & scan 2 \\
+\hline
+{\tt *BAND \& *PHASE*, AMPLI*} & 0,2,3 & {\tt *BAND \& *PHASE} \\
+                               &       & selects scans 0,2. \\
+                               &       & {\tt AMPLI*} selects scan 3 \\
+\hline
+\end{tabular}
+\end{center}
+\label{Tab:SCANINTENTEXPR}
+\end{table}
 
 \section{Scan/Sub-array Selection}
 
@@ -815,28 +927,28 @@ hierarchy:
 
 \begin{center}
 \begin{verbatim}
-                          AipsError
-                              o
-                              |
-                              |
-                       MSSelectionError
-                              o
-                              |
-                              |
-     MSSelection{Time,Spw,UvDist,Antenna,Scan,Subarray}Error
-                              o
-                              |
-                              |
-   MSSelection{Time,Spw,UvDist,Antenna,Scan,Subarray}ParseError
+                             AipsError
+                                 o
+                                 |
+                                 |
+                          MSSelectionError
+                                 o
+                                 |
+                                 |
+  MSSelection{Time,Spw,UvDist,Antenna,Scan,Subarray,Poln,State}Error
+                                 o
+                                 |
+                                 |
+MSSelection{Time,Spw,UvDist,Antenna,Scan,Subarray,Poln,State}ParseError
 \end{verbatim}
 \end{center}
 
 All parsing errors are reported by throwing the {\tt
   MSSelection\{Time, Spw, Field, UvDist, Antenna, Scan,
-  Subarray\}ParseError} exception.  All other forms of errors
+  Subarray,Poln,State\}ParseError} exception.  All other forms of errors
 (e.g. illegal range specification N0$\sim$N1 where N0 $>$ N1) are
 reported by throwing an exception of type {\tt MSSelection\{Time, Spw,
-  Field, UvDist, Antenna, Scan, Subarray\}Error}.
+  Field, UvDist, Antenna, Scan, Subarray,Poln,State\}Error}.
 
 Hence, to catch all errors thrown from the MSSelection sub-system,
 catch the MSSelectionError object.  For more specific exception
