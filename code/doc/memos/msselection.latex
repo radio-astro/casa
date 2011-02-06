@@ -780,7 +780,7 @@ as a comma separated list.  E.g.
 The scan-intent selection expression is a comma-separated list of
 specifications.  Each specification can be a string, an integer or an
 integer range.  As in other such expressions, a range $[N0,N1]$ can be
-specified as {\tt N0~N1} (see Section~\ref{Sec:RANGE}).  Strings can
+specified as {\tt N0$\sim$N1} (see Section~\ref{Sec:RANGE}).  Strings can
 be regular expressions or patterns or quoted-strings for as-is
 matching (see Section~\ref{Sec:STRINGS}). 
 
