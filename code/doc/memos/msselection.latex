@@ -837,7 +837,7 @@ in Table~\ref{Tab:SCANINTENT}}
 \hline
 {\tt CALI*}   & 0,1,2 & \\
 \hline
-{\tt *PHASE*}  & 0,2,3 & Matches \\
+{\tt *PHASE}   & 0,2   & Matches \\
                &       & {\tt CALIBRATE\_PHASE} but \\
                &       & not {\tt PHASE\_UNSPECIFIED} \\
 \hline
