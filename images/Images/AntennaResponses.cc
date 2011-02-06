@@ -63,6 +63,7 @@
 #include <tables/Tables/ScaColDesc.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <casa/OS/Time.h>
+#include <casa/Utilities/GenSort.h>
 #include <casa/System/AipsrcValue.h>
 #include <casa/BasicSL/String.h>
 #include <casa/iostream.h>
@@ -258,8 +259,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     Quantity f = MFrequency::Convert(freq, MFrequency::TOPO)().get(uHz);
 
+    
+
     // loop over rows
     uInt i,j;
+    vector<uInt> rowV, subBandV;
+    vector<Quantity> timeV;
     for(i=0; i<numRows_p; i++){
       if(ObsName_p(i) == obsName
 	 && StartTime_p(i).get(uS) <= obsTime.get(uS)
@@ -290,21 +295,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 								       frame)
 						       )().getAngle("deg").getValue();
 
-	  cout << " i, j, " << i << ", " << j << " az min actual max" << azelMin(0) << " " << azel(0) << " " << azelMax(0) << endl;
-	  cout << " i, j, " << i << ", " << j << " el min actual max" << azelMin(1) << " " << azel(1) << " " << azelMax(1) << endl;
+	  //cout << " i, j, " << i << ", " << j << " az min actual max" << azelMin(0) << " " << azel(0) << " " << azelMax(0) << endl;
+	  //cout << " i, j, " << i << ", " << j << " el min actual max" << azelMin(1) << " " << azel(1) << " " << azelMax(1) << endl;
 
 	  if(azelMin(0) <= azel(0) && azel(0) <= azelMax(0)
 	     && azelMin(1) <= azel(1) && azel(1) <= azelMax(1)){
+	    // memorize the applicable row, sub band, and time
 	    rval = True;
-	    break;
+	    rowV.push_back(i);
+	    subBandV.push_back(j);
+	    timeV.push_back(StartTime_p(i).get(uS));
 	  }
 	}
       }
     } // end for
 
     if(rval){
-      row = i;
-      subBand = j;
+      Vector<uInt> sortIndex;
+      GenSortIndirect<Quantity>::sort(sortIndex, Vector<Quantity>(timeV));
+      // take the latest row
+      row = rowV[sortIndex(sortIndex.nelements()-1)];
+      subBand = subBandV[sortIndex(sortIndex.nelements()-1)];
     }
     return rval;
 
