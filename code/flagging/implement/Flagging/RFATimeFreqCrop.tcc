@@ -799,7 +799,7 @@ RFA::IterMode RFATimeFreqCrop :: ShowFlagPlots()
       */
       
       IPosition shp(2),tshp(2); shp(0)=NumC; shp(1)=NumT;
-      Array<Float> dispdat(shp), flagdat(shp);
+      Matrix<Float> dispdat(shp), flagdat(shp);
       
       //	cout << "About to display : allocated. "  << endl;
       
@@ -832,14 +832,14 @@ RFA::IterMode RFATimeFreqCrop :: ShowFlagPlots()
 		{ 
 		  for(uInt tm=0;tm<NumT;tm++)
 		    {       
-		      //		      dispdat[tm][ch] = visc(pl,ch,(((tm*NumB)+bs)));
-		      //		      flagdat[tm][ch] = dispdat[tm][ch]*(!flagc(pl,ch,(tm*NumB)+bs));
-		      //		      runningsum += dispdat[tm][ch];
-		      //		      runningflag += Float(flagc(pl,ch,(tm*NumB)+bs));
-		      tshp[0]=ch; tshp[1]=tm;
-		      dispdat(tshp) = visc(pl,ch,(((tm*NumB)+bs)));
-		      flagdat(tshp) = dispdat(tshp)*(!flagc(pl,ch,(tm*NumB)+bs));
-		      runningsum += dispdat(tshp);
+		      // tshp[0]=ch; tshp[1]=tm;
+		      // dispdat(tshp) = visc(pl,ch,(((tm*NumB)+bs)));
+		      // flagdat(tshp) = dispdat(tshp)*(!flagc(pl,ch,(tm*NumB)+bs));
+		      // runningsum += dispdat(tshp);
+		      // runningflag += Float(flagc(pl,ch,(tm*NumB)+bs));
+		      dispdat(ch,tm) = visc(pl,ch,(((tm*NumB)+bs)));
+		      flagdat(ch,tm) = dispdat(ch,tm)*(!flagc(pl,ch,(tm*NumB)+bs));
+		      runningsum += dispdat(ch,tm);
 		      runningflag += Float(flagc(pl,ch,(tm*NumB)+bs));
 		    }//for tm
 		}//for ch
@@ -1428,7 +1428,7 @@ uInt RFATimeFreqCrop :: BaselineIndex(uInt row, uInt a1, uInt a2)
 
 
 /* Display a 2D data set on DS9 in gray scale */
-void RFATimeFreqCrop :: Display_ds9(Int xdim, Int ydim, Array<Float> &data, Int frame)
+void RFATimeFreqCrop :: Display_ds9(Int xdim, Int ydim, Matrix<Float> &data, Int frame)
 {
   
   FILE *SAOout = NULL;

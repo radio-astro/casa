@@ -99,7 +99,7 @@ private:
   void Ants(uInt bs, uInt *a1, uInt *a2);
   uInt BaselineIndex(uInt row, uInt a1, uInt a2);
 
-  void Display_ds9(Int xdim, Int ydim, Array<Float> &data, Int frame);
+  void Display_ds9(Int xdim, Int ydim, Matrix<Float> &data, Int frame);
   void Plot_ds9(Int dim, Vector<Float> data1, Vector<Float> data2);
 
   void AllocateMemory();  

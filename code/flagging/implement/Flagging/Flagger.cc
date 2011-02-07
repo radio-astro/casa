@@ -504,17 +504,7 @@ namespace casa {
     else {
 	os << "Selection did not drop any rows" << LogIO::NORMAL3;
     }
-    /* Channel selection */ // Always select all chans
     /* Create a vis iter */
-    /*
-      Matrix<Int> noselection;
-      Block<Int> sort(3);
-      sort[0] = MS::FIELD_ID;
-      sort[1] = MS::DATA_DESC_ID;
-      sort[2] = MS::SCAN_NUMBER;
-      //sort[2] = MS::TIME;
-      */
-    
     Matrix<Int> noselection;
     Block<int> sort2(4);
     //sort2[0] = MS::SCAN_NUMBER;
@@ -523,8 +513,13 @@ namespace casa {
     sort2[1]= MS::FIELD_ID;
     sort2[2]= MS::DATA_DESC_ID;
     sort2[3] = MS::TIME;
-    //    Double timeInterval = 7.0e9; //a few thousand years
-    Double timeInterval = 6000; // seconds : 100 minutes.
+    /* Set the chunk time interval to be the full time-range.
+          - FlagExaminer counters depend on this.
+       However, autoflag agents like tfcrop will take a performance hit
+       since it will store flags for the entire chunk in memory
+    */
+    Double timeInterval = 7.0e9; //a few thousand years
+    //Double timeInterval = 6000; // seconds : 100 minutes.
 
     if (vs_p) {
 	delete vs_p; vs_p = NULL;
@@ -545,6 +540,7 @@ namespace casa {
     // Optimize for iterating randomly through one MS
     vs_p->iter().slurp();
     
+    /* Channel selection */ // Always select all chans
     selectDataChannel();
     ms = *mssel_p;
     
