@@ -514,7 +514,9 @@ class cleanhelper:
                 else:
                     maskobject[maskid]=[maskobject[maskid]]
             for masklets in maskobject[maskid]:
-                if(type(masklets)==int):
+                #if(type(masklets)==int):
+                if(numpy.issubdtype(type(masklets),numpy.int)):
+                    maskobject_tmp = convert_numpydtype(maskobject[maskid])
                     masklist.append(maskobject[maskid])
                 if(type(masklets)==str):
                     if(masklets==''):
@@ -662,6 +664,7 @@ class cleanhelper:
         if (not hasattr(maskobject, '__len__')) \
            or (len(maskobject) == 0) or (maskobject == ['']):
             return
+        print "input mask (maskobj)=",maskobject, " type=:",type(maskobject)
         maskimage=[]
         masklist=[]
         masktext=[]
@@ -680,11 +683,13 @@ class cleanhelper:
         if(type(maskobject) != list):
             ##don't know what to do with this
             raise TypeError, 'Dont know how to deal with maskobject'
-        if((type(maskobject[0])==int) or  (type(maskobject[0])==float)):
-            masklist.append(maskobject)
+        if(numpy.issubdtype(type(maskobject[0]),numpy.int) or \
+            numpy.issubdtype(type(maskobject[0]),numpy.float)):
+            # check and convert if list consist of python int or float  
+            maskobject_tmp = convert_numpydtype(maskobject)
+            masklist.append(maskobject_tmp)
         else:
             for masklets in maskobject:
-                
                 if(type(masklets)==str):
                     if(os.path.exists(masklets)):
                         if(commands.getoutput('file '+masklets).count('directory')):
@@ -696,7 +701,8 @@ class cleanhelper:
                     else:
                        raise TypeError, masklets+' seems to be non-existant' 
                 if(type(masklets)==list):
-                    masklist.append(masklets)
+                    masklets_tmp = convert_numpydtype(masklets)
+                    masklist.append(masklets_tmp)
                 if(type(masklets)==dict):
                     maskrecord=masklets
         if(len(outputmask)==0):
@@ -2481,3 +2487,24 @@ def getAlgorithm(psfmode, imagermode, gridmode, mode,
     if (addMultiField and (alg[0:2] != 'mf') and (alg != 'msmfs')):  alg = 'mf' + alg;
     return alg;
 
+def convert_numpydtype(listobj):
+    """
+    utility function to covert list with elements in numpy.int or
+    numpy.float types to python int/float
+    """
+    import array as pyarr
+    floatarr=False
+    intarr=False
+    for elm in listobj:
+      if numpy.issubdtype(type(elm), numpy.float):
+        floatarr = True
+      elif numpy.issubdtype(type(elm), numpy.int):
+        intarr = True
+    if floatarr or (floatarr and intarr):
+      temparr=pyarr.array('f', listobj)
+    elif intarr:
+      temparr=pyarr.array('i', listobj)
+    else:
+      temparr = listobj
+      return temparr
+    return temparr.tolist()
