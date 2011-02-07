@@ -1314,23 +1314,25 @@ casa::Quantity ImageAnalysis::convertflux(
 	return valueOut;
 }
 
-ImageInterface<Float> *
-ImageAnalysis::convolve2d(const String& outFile, const Vector<Int>& axes,
+ImageInterface<Float>* ImageAnalysis::convolve2d(
+	const String& outFile, const Vector<Int>& axes,
 		const String& type, const Quantity& majorKernel,
 		const Quantity& minorKernel, const Quantity& paKernel, Double scale,
-		Record& Region, const String& mask, const Bool overwrite,
-		const Bool async) {
+		Record& Region, const String& mask, const Bool overwrite
+	) {
 	*itsLog << LogOrigin("ImageAnalysis", "convolve2d");
+    if (majorKernel < minorKernel) {
+    	*itsLog << "Major axis "
+    		<< " is less than minor axis " << LogIO::EXCEPTION;
+    }
 	String kernel(type);
 	Bool autoScale;
-
 	if (scale > 0) {
 		autoScale = False;
 	} else {
 		autoScale = True;
 		scale = 1.0;
 	}
-
 	// Check output file
 	if (!overwrite && !outFile.empty()) {
 		NewFile validfile;
@@ -1344,6 +1346,7 @@ ImageAnalysis::convolve2d(const String& outFile, const Vector<Int>& axes,
 	// to ImageRegion and make SubImage.
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
+
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
 		pRegionRegion, pMaskRegion,
 		*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)),
@@ -1358,9 +1361,7 @@ ImageAnalysis::convolve2d(const String& outFile, const Vector<Int>& axes,
 		*itsLog << "You must give two axes to convolve" << LogIO::EXCEPTION;
 	}
 	IPosition axes3(axes2);
-	//
 	VectorKernel::KernelTypes kernelType = VectorKernel::toKernelType(kernel);
-	//
 	Vector<Quantum<Double> > parameters(3);
 	parameters(0) = majorKernel;
 	parameters(1) = minorKernel;
@@ -1379,6 +1380,7 @@ ImageAnalysis::convolve2d(const String& outFile, const Vector<Int>& axes,
 		imOut.set(new PagedImage<Float> (outShape, subImage.coordinates(),
 				outFile));
 	}
+
 	ImageInterface<Float>* pImOut = imOut.ptr()->cloneII();
 
 	// Make the convolver

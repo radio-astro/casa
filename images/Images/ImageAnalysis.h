@@ -166,16 +166,13 @@ class ImageAnalysis
                          const Bool topeak = True,
                          Bool supressNoBeamWarnings = False);
 
-    ImageInterface<Float> * convolve2d(const String& outfile, 
-                                       const Vector<Int>& axes, 
-                                       const String& type, 
-                                       const Quantity& major, 
-                                       const Quantity& minor, 
-                                       const Quantity& pa, 
-                                       Double scale, Record& region,
-                                       const String& mask, 
-                                       const Bool overwrite = False, 
-                                       const Bool async = False);
+    ImageInterface<Float>* convolve2d(
+    		const String& outfile, const Vector<Int>& axes,
+            const String& type, const Quantity& major,
+            const Quantity& minor, const Quantity& pa,
+            Double scale, Record& region, const String& mask,
+            const Bool overwrite = False
+    );
 
     CoordinateSystem coordsys(const Vector<int>& axes);
 
