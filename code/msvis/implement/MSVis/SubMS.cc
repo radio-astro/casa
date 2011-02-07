@@ -159,7 +159,9 @@ namespace casa {
     LogIO os(LogOrigin("SubMS", "selectSpw()"));
 
     MSSelection mssel;
-    mssel.setSpwExpr(spwstr);
+    String myspwstr(spwstr == "" ? "*" : spwstr);
+
+    mssel.setSpwExpr(myspwstr);
 
     Vector<Int> widths = steps.copy();
     if(widths.nelements() < 1){
@@ -180,7 +182,7 @@ namespace casa {
                                             widths.nelements() == 1 ?
                                             widths[0] : 1);
 
-    if(chansel.nrow() > 0) {         // Use spwstr if it selected anything...
+    if(chansel.nrow() > 0) {         // Use myspwstr if it selected anything...
       spw_p       = chansel.column(0);
       chanStart_p = chansel.column(1);
       nchan_p     = chansel.column(2);
@@ -223,10 +225,6 @@ namespace casa {
       for(uInt k = 0; k < nspw; ++k)
         chanStart_p[k] = 0;
       
-      nchan_p.resize(nspw);
-      for(uInt k = 0; k < nspw; ++k)
-        nchan_p[k] = mySpwTab.numChan()(spw_p[k]);
-      
       if(widths.nelements() != spw_p.nelements()){
         if(widths.nelements() == 1){
           widths.resize(spw_p.nelements(), True);
@@ -241,6 +239,10 @@ namespace casa {
         }
       }
       chanStep_p = widths;
+
+      nchan_p = mySpwTab.numChan().getColumn();
+      for(uInt k = 0; k < nspw; ++k)
+        nchan_p[k] /= chanStep_p[k];
     }
     
     // Check for and filter out selected spws that aren't included in
