@@ -2929,11 +2929,7 @@ ia.close()
      <description>Overwrite (unprompted) pre-existing output file?</description>
      <value>false</value>
      </param>
-  
-     <param type="bool" direction="in" name="async">
-     <description>Run asynchronously?</description>
-     <value>false</value>
-     </param>
+
 </input>
 <returns type="casaimage"/>
 
