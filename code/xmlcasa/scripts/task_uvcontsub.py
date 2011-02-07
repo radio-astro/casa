@@ -6,8 +6,9 @@ def uvcontsub(vis,field,fitspw,spw,solint,fitorder,fitmode,splitdata):
 	#Python script
 	try:
 		casalog.origin('uvcontsub')
+                myms = mstool.create()
                 if ((type(vis)==str) & (os.path.exists(vis))):
-                        ms.open(vis,nomodify=False)
+                        myms.open(vis,nomodify=False)
                 else:
                         raise Exception, 'Visibility data set not found - please verify the name'
 
@@ -15,25 +16,23 @@ def uvcontsub(vis,field,fitspw,spw,solint,fitorder,fitmode,splitdata):
 		if ((splitdata==True) & (fitmode!='subtract')):
 			raise Exception, "Use splitdata=True only with fitmode='subtract'"
 
-		ms.continuumsub(field=field,fitspw=fitspw,spw=spw,
+		myms.continuumsub(field=field,fitspw=fitspw,spw=spw,
 				solint=solint,fitorder=fitorder,mode=fitmode)
 
 		if ((splitdata==True) & (fitmode=='subtract')):
-			ms.split(vis.rstrip('/')+'.cont',field=field,spw=spw,whichcol='MODEL_DATA')
-			ms.split(vis.rstrip('/')+'.contsub',field=field,spw=spw,whichcol='CORRECTED_DATA')
+			myms.split(vis.rstrip('/')+'.cont',field=field,spw=spw,whichcol='MODEL_DATA')
+			myms.split(vis.rstrip('/')+'.contsub',field=field,spw=spw,whichcol='CORRECTED_DATA')
 	
-		#ms.close()
-	        #ms.open(vis,nomodify=False)
-       		ms.writehistory('taskname = uvcontsub',origin='uvcontsub')
-       		ms.writehistory(message='vis         = "'+str(vis)+'"',origin='uvcontsub')
-       		ms.writehistory(message='field       = "'+str(field)+'"',origin='uvcontsub')
-        	ms.writehistory(message='fitspw       = '+str(spw),origin='uvcontsub')
-        	ms.writehistory(message='spw       = '+str(spw),origin='uvcontsub')
-        	ms.writehistory(message='solint      = '+str(solint),origin='uvcontsub')
-        	ms.writehistory(message='fitorder    = '+str(fitorder),origin='uvcontsub')
-        	ms.writehistory(message='fitmode     = "'+str(fitmode)+'"',origin='uvcontsub')
-		ms.writehistory(message='splitdata   = '+str(splitdata),origin='uvcontsub')
-        	ms.close()
+       		myms.writehistory('taskname = uvcontsub',origin='uvcontsub')
+       		myms.writehistory(message='vis         = "'+str(vis)+'"',origin='uvcontsub')
+       		myms.writehistory(message='field       = "'+str(field)+'"',origin='uvcontsub')
+        	myms.writehistory(message='fitspw       = '+str(spw),origin='uvcontsub')
+        	myms.writehistory(message='spw       = '+str(spw),origin='uvcontsub')
+        	myms.writehistory(message='solint      = '+str(solint),origin='uvcontsub')
+        	myms.writehistory(message='fitorder    = '+str(fitorder),origin='uvcontsub')
+        	myms.writehistory(message='fitmode     = "'+str(fitmode)+'"',origin='uvcontsub')
+		myms.writehistory(message='splitdata   = '+str(splitdata),origin='uvcontsub')
+        	myms.close()
 
 	except Exception, instance:
 		print '*** Error ***',instance
