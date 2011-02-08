@@ -51,7 +51,7 @@ ROVisibilityIteratorAsyncImpl::ROVisibilityIteratorAsyncImpl ()
 //	*                        *
 //  **************************
 
-Semaphore VlaData::debugBlockSemaphore_p (0); // used to block a thread for debugging
+//Semaphore VlaData::debugBlockSemaphore_p (0); // used to block a thread for debugging
 const Bool VlaData::loggingInitialized_p = initializeLogging();
 Int VlaData::logLevel_p = 1;
 
@@ -96,25 +96,24 @@ VlaData::clock (Int arg, Int base)
 void
 VlaData::debugBlock ()
 {
-    Log (1, "VlaData::debugBlock(): Blocked\n");
-
-    debugBlockSemaphore_p.wait ();
-
-    Log (1, "VlaData::debugBlock(): Unblocked\n");
-
+//    Log (1, "VlaData::debugBlock(): Blocked\n");
+//
+//    debugBlockSemaphore_p.wait ();
+//
+//    Log (1, "VlaData::debugBlock(): Unblocked\n");
 }
 
 void
 VlaData::debugUnblock ()
 {
-    int v = debugBlockSemaphore_p.getValue();
-
-    if (v == 0){
-        Log (1, "VlaData::debugUnblock()\n");
-        debugBlockSemaphore_p.post ();
-    }
-    else
-        Log (1, "VlaData::debugUnblock(): already unblocked; v=%d\n", v);
+//    int v = debugBlockSemaphore_p.getValue();
+//
+//    if (v == 0){
+//        Log (1, "VlaData::debugUnblock()\n");
+//        debugBlockSemaphore_p.post ();
+//    }
+//    else
+//        Log (1, "VlaData::debugUnblock(): already unblocked; v=%d\n", v);
 }
 
 

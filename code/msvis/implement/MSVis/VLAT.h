@@ -162,7 +162,7 @@ private:
 	mutable ValidChunks validChunks_p;       // Queue of valid chunk numbers
 	mutable ValidSubChunks validSubChunks_p; // Queue of valid subchunk pairs
 
-	static Semaphore debugBlockSemaphore_p; // used to block a thread for debugging
+	//// static Semaphore debugBlockSemaphore_p; // used to block a thread for debugging
 
 	static Bool initializeLogging ();
 
