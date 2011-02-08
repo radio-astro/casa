@@ -112,12 +112,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// unknown observatory, use first antenna
 	pos=vb.msColumns().antenna().positionMeas()(0);
       }
-      cout << "TELESCOPE " << tel << endl;
+      //cout << "TELESCOPE " << tel << endl;
       //Store this to build epochs via the time access of visbuffer later
       timeMType_p=MEpoch::castType(vb.msColumns().timeMeas()(0).getRef().getType());
       timeUnit_p=Unit(vb.msColumns().timeMeas().measDesc().getUnits()(0).getName());
       // timeUnit_p=Unit("s");
-      cout << "UNIT " << timeUnit_p.getValue() << " name " << timeUnit_p.getName()  << endl;
+      //cout << "UNIT " << timeUnit_p.getValue() << " name " << timeUnit_p.getName()  << endl;
       pointFrame_p=MeasFrame(imInfo.obsDate(), pos);
       MDirection::Ref elRef(dc_p.directionType(), pointFrame_p);
       //For now we set the conversion from this direction 
