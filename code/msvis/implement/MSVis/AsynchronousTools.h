@@ -36,7 +36,7 @@ public:
     virtual ~Mutex ();
 
     void lock ();
-    Bool lock (Int milliseconds);
+    // Bool lock (Int milliseconds);
     void unlock ();
     Bool trylock ();
 
@@ -81,7 +81,7 @@ public:
     void broadcast ();
     void signal ();
     void wait (Mutex & mutex);
-    Bool wait (Mutex & mutex, int milliseconds);
+    // Bool wait (Mutex & mutex, int milliseconds);
 
 private:
 

@@ -132,7 +132,7 @@ Condition::wait (Mutex & mutex)
     int code = pthread_cond_wait (impl_p->condition_p, mutex.getRep());
     ThrowIfError (code, "Condition::wait");
 }
-
+/*
 Bool
 Condition::wait (Mutex & mutex, int milliseconds)
 {
@@ -151,7 +151,7 @@ Condition::wait (Mutex & mutex, int milliseconds)
 
     return gotWait;
 }
-
+*/
 
 Bool Logger::loggingStarted_p = False;
 Mutex * Logger::nameMutex_p = NULL;
@@ -371,6 +371,7 @@ Mutex::lock ()
     ThrowIfError (code, "Mutex::lock failed");
 }
 
+/*
 Bool
 Mutex::lock (Int milliseconds)
 {
@@ -390,7 +391,7 @@ Mutex::lock (Int milliseconds)
 
     return gotLock;
 }
-
+*/
 
 Bool
 Mutex::trylock ()
