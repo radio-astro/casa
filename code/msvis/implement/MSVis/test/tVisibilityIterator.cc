@@ -39,6 +39,8 @@
 #include <tables/Tables/ForwardCol.h>
 
 #include <casa/namespace.h>
+
+int
 main(int argc, char **argv)
 {
 // register forward col engine
@@ -74,7 +76,7 @@ main(int argc, char **argv)
 		<< setprecision(9)
 		    <<", freq="<<vb.frequency()[0]
 			<< setprecision(9)
-			    <<", time="<<vb.time()-time0
+			    <<", time="<<vb.time()[0]-time0
 	  //				<<", uvw="<<vb.uvw()
 				    <<", vis="<<vb.visCube()
 					<<", sigma="<<vb.sigma()

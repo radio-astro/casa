@@ -142,7 +142,7 @@ public:
   // Set the application parameters 
   virtual void setApply();
   virtual void setApply(const Record& apply);
-  virtual void setModel(const String& modelImage) 
+  virtual void setModel(const String& )
   {throw(SynthesisError("Internal error: setModel() not yet supported for non EPJones type."));};
 
   // Report apply info/params, e.g. for logging
@@ -225,10 +225,10 @@ public:
 			     Cube<Complex>& V,     
 			     Array<Complex>& dV,
 			     Matrix<Bool>& Vflg)=0;
-  virtual void differentiate(VisBuffer& vb,          // vb.visCube() has the obs. data.  vb.modelVisCube() will receive the residuals
-                             VisBuffer& dV0  ,       // 1st. Derivative w.r.t. first parameter
-                             VisBuffer& dV1,         // 1st. Derivative w.r.t. second parameter
-                             Matrix<Bool>& Vflg){ throw(AipsError("Invalid use of differentiate(vb,dV0,dv1)")); };
+  virtual void differentiate(VisBuffer& ,          // vb.visCube() has the obs. data.  vb.modelVisCube() will receive the residuals
+                             VisBuffer&   ,       // 1st. Derivative w.r.t. first parameter
+                             VisBuffer& ,         // 1st. Derivative w.r.t. second parameter
+                             Matrix<Bool>& ){ throw(AipsError("Invalid use of differentiate(vb,dV0,dv1)")); };
 
 
   // Differentiate VB model w.r.t. Source parameters
@@ -519,43 +519,43 @@ public:
   virtual Bool normalizable() { return (this->muellerType() < Mueller::General); };
 
   // Hazard a guess at the parameters (solvePar) given the data
-  virtual void guessPar(VisBuffer& vb) { throw(AipsError("NYI")); };
+  virtual void guessPar(VisBuffer& ) { throw(AipsError("NYI")); };
 
   // Differentiate VB model w.r.t. Mueller parameters (no 2nd derivative yet)
-  virtual void differentiate(CalVisBuffer& cvb) {throw(AipsError("NYI")); };
-  virtual void differentiate(VisBuffer& vb,          // input data
-			     Cube<Complex>& V,       // trial apply (nCorr,nChan,nRow)
-			     Array<Complex>& dV,     // 1st deriv   (nCorr,nPar,nChan,nRow)
-			     Matrix<Bool>& Vflg) { throw(AipsError("NYI")); };
+  virtual void differentiate(CalVisBuffer& ) {throw(AipsError("NYI")); };
+  virtual void differentiate(VisBuffer& ,          // input data
+			     Cube<Complex>& ,       // trial apply (nCorr,nChan,nRow)
+			     Array<Complex>& ,     // 1st deriv   (nCorr,nPar,nChan,nRow)
+			     Matrix<Bool>& ) { throw(AipsError("NYI")); };
   using SolvableVisCal::differentiate;
 
   // Differentiate VB model w.r.t. Source parameters
-  virtual void diffSrc(VisBuffer& vb,        
-		       Array<Complex>& dV) {throw(AipsError("NYI")); };
+  virtual void diffSrc(VisBuffer& ,
+		       Array<Complex>& ) {throw(AipsError("NYI")); };
 
   // Apply refant (no-op for Muellers)
   virtual void reReference() {};
 
   // Accumulate another VisCal onto this one
-  virtual void accumulate(SolvableVisCal* incr,
-			  const Vector<Int>& fields) { throw(AipsError("NYI")); };
+  virtual void accumulate(SolvableVisCal* ,
+			  const Vector<Int>& ) { throw(AipsError("NYI")); };
 
   // Scale solutions
-  virtual void fluxscale(const Vector<Int>& refFieldIn,
-			 const Vector<Int>& tranFieldIn,
-			 const Vector<Int>& inRefSpwMap,
-			 const Vector<String>& fldNames,
-			 Matrix<Double>& fluxScaleFactor) { throw(AipsError("NYI")); };
+  virtual void fluxscale(const Vector<Int>& ,
+			 const Vector<Int>& ,
+			 const Vector<Int>& ,
+			 const Vector<String>& ,
+			 Matrix<Double>& ) { throw(AipsError("NYI")); };
 
   // Report state:
   inline virtual void state() { stateSVM(True); };
 
   // List calibration solutions in tabular form.
-  virtual void listCal(const Vector<Int> ufldids, 
-                       const Vector<Int> uantids,
-                       const Matrix<Int> uchanids,
-   		               const String& listfile = "",
-                       const Int& pagerows = 50) 
+  virtual void listCal(const Vector<Int> ,
+                       const Vector<Int> ,
+                       const Matrix<Int> ,
+   		               const String& ,
+                       const Int& )
   { throw(AipsError(String("Calibration listing not supported for "+typeName()))); };
 
 protected:
@@ -690,8 +690,8 @@ public:
                   const uInt numAnts,
                   const uInt iElem);
 
-  virtual void nearest(const Double time, Array<Float>& vals) {};
-  virtual void nearest(const Double time, Array<Complex>& vals) {};
+  virtual void nearest(const Double , Array<Float>& ) {};
+  virtual void nearest(const Double , Array<Complex>& ) {};
 protected:
  
   // Number of Cal Matrices to form on baseline axis

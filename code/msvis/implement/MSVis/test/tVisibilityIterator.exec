@@ -1,10 +1,13 @@
 #!/bin/sh
 
+set -x
+
   DATADIR=`echo $CASAPATH | awk '{print $1}'`/data/demo/
-  rm -rf tVisibilityIterator.MS
-  cp -r $DATADIR/autoflag/WSRT-test.MS2 tVisibilityIterator.MS 
+  #rm -rf tVisibilityIterator.MS
+  #cp -r $DATADIR/autoflag/WSRT-test.MS2 tVisibilityIterator.MS 
     PROGRAM="tVisibilityIterator"
     PROGRAMout="tVisibilityIterator_tmp.out"
+    PROGRAM_tmp=${PROGRAM}_tmp
     ARGS="tVisibilityIterator.MS"
     if eval $PROGRAM $ARGS > $PROGRAMout
     then
@@ -17,16 +20,16 @@
       else
         echo "PASS (execution succeeded): $PROGRAM"
         STATUS=0
-	rm -r tVisibilityIterator.MS
+	#rm -r tVisibilityIterator.MS
         exit
       fi
     else
       echo "FAIL (execution failure): $PROGRAM"
-      rm -r tVisibilityIterator.MS
+      #rm -r tVisibilityIterator.MS
       STATUS=1
       exit
     fi
-  rm -r tVisibilityIterator.MS
+  #rm -r tVisibilityIterator.MS
  
 # Strip out demarked text.
   sed -e '/^>>>/,/^<<</d' $PROGRAM_tmp.out > $PROGRAM_tmp.out2
@@ -38,7 +41,7 @@
 
  
 # Compare with the expected output.
-  if $CAT $PROGRAM.out | sed -e '/^>>>/,/^<<</d' | diff $PROGRAM_tmp.out -
+  if $CAT $PROGRAM.out | sed -e '/^>>>/,/^<<</d' | diff --side-by-side $PROGRAM_tmp.out - > $PROGRAM.diff
   then
      echo "PASS (output verified): $PROGRAM"
      STATUS=0

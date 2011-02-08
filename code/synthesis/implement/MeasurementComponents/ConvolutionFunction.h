@@ -85,7 +85,7 @@ namespace casa{
     // the value of the convolution function.  This is however not
     // used anywhere yet (and is therefore also not a pure virtual
     // function).
-    virtual CF_TYPE getValue(Vector<CF_TYPE>& coord, Vector<CF_TYPE>& offset) {return 0.0;};
+    virtual CF_TYPE getValue(Vector<CF_TYPE>& , Vector<CF_TYPE>& ) {return 0.0;};
 
     // A support function which, for now, returns and integer ID
     // corresponding to the on-sky frequency of the supplied VisBuffer.

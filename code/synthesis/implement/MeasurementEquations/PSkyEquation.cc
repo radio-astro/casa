@@ -195,10 +195,10 @@ void PSkyEquation::gradientsChiSquared(Bool incremental) {
        ift_->fromRecord(errorString, container_received);
        applicator.get(sm_->weight(modelDone));
      
-       applySkyJonesInv(vb_p, -1, sm_->cImage(modelDone), sm_->work(modelDone),
+       applySkyJonesInv(* vb_p, -1, sm_->cImage(modelDone), sm_->work(modelDone),
 		   sm_->gS(modelDone));
 
-       applySkyJonesSquare(vb_p, -1, sm_->weight(modelDone), 
+       applySkyJonesSquare(* vb_p, -1, sm_->weight(modelDone),
 			   sm_->work(modelDone),
 			   sm_->ggS(modelDone));
 
@@ -256,10 +256,10 @@ void PSkyEquation::gradientsChiSquared(Bool incremental) {
       
     sm_->cImage(modelDone).copyData(tempoImage);
       
-    applySkyJonesInv(vb_p, -1, sm_->cImage(modelDone), sm_->work(modelDone),
+    applySkyJonesInv(* vb_p, -1, sm_->cImage(modelDone), sm_->work(modelDone),
 		     sm_->gS(modelDone));
 
-    applySkyJonesSquare(vb_p, -1, sm_->weight(modelDone), 
+    applySkyJonesSquare(* vb_p, -1, sm_->weight(modelDone),
 			sm_->work(modelDone), sm_->ggS(modelDone));
 
     sm_->addStatistics(sumwt, chisq);

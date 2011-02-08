@@ -74,6 +74,9 @@
 #include <msvis/MSVis/VisSet.h>
 #include <msvis/MSVis/VisSetUtil.h>
 #include <msvis/MSVis/VisImagingWeight.h>
+#include <msvis/MSVis/VisibilityIteratorAsync.h>
+#include <msvis/MSVis/VisBufferAsync.h>
+
 // Disabling Imager::correct() (gmoellen 06Nov20)
 //#include <synthesis/MeasurementComponents/TimeVarVisJones.h>
 
@@ -483,7 +486,7 @@ Imager::~Imager()
 }
 
 
-Bool Imager::open(MeasurementSet& theMs, Bool compress, Bool useModelCol)
+Bool Imager::open(MeasurementSet& theMs, Bool /*compress*/, Bool useModelCol)
 {
 
 #ifdef PABLO_IO
@@ -520,7 +523,7 @@ Bool Imager::open(MeasurementSet& theMs, Bool compress, Bool useModelCol)
       return False;
     }
     
-    Bool initialize=(!ms_p->tableDesc().isColumn("CORRECTED_DATA"));
+    (!ms_p->tableDesc().isColumn("CORRECTED_DATA")); // if no side effect then delete this statement?
     
     /*if(vs_p) {
       delete vs_p; vs_p=0;
@@ -1325,7 +1328,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
 		     const String& fieldnames, const Vector<Int>& antIndex,
 		     const String& antnames, const String& spwstring,
                      const String& uvdist, const String& scan,
-                     const Bool useModelCol,
+                     const Bool /*useModelCol*/,
                      const Bool be_calm)
 {
   logSink_p.clearLocally();
@@ -3757,7 +3760,7 @@ Bool Imager::clean(const String& algorithm,
 		   const Int niter, 
 		   const Float gain,
 		   const Quantity& threshold, 
-		   const Bool displayProgress, 
+		   const Bool /*displayProgress*/,
 		   const Vector<String>& model, const Vector<Bool>& fixed,
 		   const String& complist,
 		   const Vector<String>& mask,
@@ -3771,6 +3774,7 @@ Bool Imager::clean(const String& algorithm,
 #endif
   Bool converged=True; 
 
+  ROVisibilityIterator::AsyncEnabler enabler (rvi_p);
 
   if(!valid())
     {
@@ -4657,8 +4661,8 @@ Bool Imager::setjy(const Int fieldid,
 
 }
 
-Bool Imager::setjy(const Vector<Int>& fieldid, 
-		   const Vector<Int>& spectralwindowid,
+Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
+		   const Vector<Int>& /*spectralwindowid*/,
 		   const String& fieldnames, const String& spwstring,
 		   const Vector<Double>& fluxDensity, const String& standard)
 {
@@ -4849,8 +4853,8 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
 
 
 // This is the one used by im.setjy() (because it has a model arg).
-Bool Imager::setjy(const Vector<Int>& fieldid, 
-                   const Vector<Int>& spectralwindowid,
+Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
+                   const Vector<Int>& /*spectralwindowid*/,
                    const String& fieldnames, const String& spwstring,
                    const String& model,
                    const Vector<Double>& fluxDensity, 
@@ -5337,8 +5341,8 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
 
 // Temporary copy of setjy() while flux calibration with Solar System objects
 // is being tested.
-Bool Imager::ssoflux(const Vector<Int>& fieldid, 
-                     const Vector<Int>& spectralwindowid,
+Bool Imager::ssoflux(const Vector<Int>& /*fieldid*/,
+                     const Vector<Int>& /*spectralwindowid*/,
                      const String& fieldnames, const String& spwstring,
                      const String& model,
                      const Vector<Double>& fluxDensity, 
