@@ -277,15 +277,16 @@ class cleanhelper:
         if not hasattr(imsizes, '__len__'):
             imsizes = [imsizes]
         self.nimages=len(imsizes)
-        if((len(imsizes)<=2) and ((type(imsizes[0])==int) or
-                                  (type(imsizes[0])==long))):
+        #if((len(imsizes)<=2) and ((type(imsizes[0])==int) or
+        #                          (type(imsizes[0])==long))):
+        if((len(imsizes)<=2) and (numpy.issubdtype(type(imsizes[0]), int))):
             self.nimages=1
             if(len(imsizes)==2):
                 imsizes=[(imsizes[0], imsizes[1])]
             else:
                 imsizes=[(imsizes[0], imsizes[0])]
-
         self._casalog.post('Number of images: ' + str(self.nimages), 'DEBUG1')
+
         #imagelist is to have the list of image model names
         self.imagelist={}
         #imageids is to tag image to mask in aipsbox style file 
@@ -472,10 +473,13 @@ class cleanhelper:
         if(type(maskobject) != list):
             ##don't know what to do with this
             raise TypeError, 'Dont know how to deal with mask object'
-        if(type(maskobject[0])==int or type(maskobject[0])==float):
+        #if(type(maskobject[0])==int or type(maskobject[0])==float):
+        if(numpy.issubdtype(type(maskobject[0]),int) or numpy.issubdtype(type(maskobject[0]),float)):
             maskobject=[maskobject] 
         if(type(maskobject[0][0])==list):
-            if(type(maskobject[0][0][0])!=int and type(maskobject[0][0][0])!=float):        
+            #if(type(maskobject[0][0][0])!=int and type(maskobject[0][0][0])!=float):        
+            if not (numpy.issubdtype(type(maskobject[0][0][0]),int) or \
+                    numpy.issubdtype(type(maskobject[0][0][0]),float)):        
                 maskobject=maskobject[0]
                     
         # define maskimages
