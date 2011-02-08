@@ -73,11 +73,12 @@ getEnv (const String & name, const T & defaultValue)
 	}
 }
 
-template<>
-Bool getEnv (const String & name, const Bool & defaultValue);
+Bool
+getEnv (const String & name, const Bool & defaultValue);
 
-template<>
-Int getEnv (const String & name, const Int & defaultValue);
+Int
+getEnv (const String & name, const Int & defaultValue);
+
 
 String getTimestamp ();
 

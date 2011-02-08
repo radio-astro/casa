@@ -46,7 +46,6 @@ format (const char * formatString, ...)
 	return buffer;
 }
 
-template<>
 Bool
 getEnv (const String & name, const Bool & defaultValue)
 {
@@ -72,7 +71,6 @@ getEnv (const String & name, const Bool & defaultValue)
 	}
 }
 
-template<>
 Int
 getEnv (const String & name, const Int & defaultValue)
 {
@@ -95,6 +93,7 @@ getEnv (const String & name, const Int & defaultValue)
 		return longValue;
 	}
 }
+
 
 String
 getTimestamp ()
