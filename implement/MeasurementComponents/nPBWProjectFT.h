@@ -270,7 +270,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool isFourier() {return True;}
     
     //  Bool changed(const VisBuffer& vb) {return vpSJ->changed(vb,1);};
-    Bool changed(const VisBuffer& vb) {return False;}
+    Bool changed(const VisBuffer& ) {return False;}
     
     virtual Int findPointingOffsets(const VisBuffer&, Array<Float>&, Array<Float>&,
 				    Bool Evaluate=True);

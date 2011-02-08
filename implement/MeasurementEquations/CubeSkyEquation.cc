@@ -57,7 +57,6 @@
 #include <synthesis/MeasurementComponents/SynthesisError.h>
 #include <synthesis/MeasurementEquations/StokesImageUtil.h>
 
-
 #include <images/Images/ImageInterface.h>
 #include <images/Images/SubImage.h>
 
@@ -65,24 +64,80 @@
 #include <msvis/MSVis/VisBufferUtil.h>
 #include <msvis/MSVis/VisSet.h>
 #include <msvis/MSVis/VisibilityIterator.h>
+#include <msvis/MSVis/VisibilityIteratorAsync.h>
 #include <msvis/MSVis/VisBuffer.h>
-
-
-
+#include <msvis/MSVis/VisBufferAsync.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-
-CubeSkyEquation::CubeSkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft, ComponentFTMachine& cft, Bool noModelCol)
-  : SkyEquation(sm, vs, ft, cft, noModelCol), internalChangesPut_p(False), 
-    internalChangesGet_p(False), firstOneChangesPut_p(False), 
-    firstOneChangesGet_p(False)
+CubeSkyEquation::CubeSkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft,
+                                 ComponentFTMachine& cft, Bool noModelCol)
+: SkyEquation(sm, vs, ft, cft, noModelCol),
+  destroyVisibilityIterator_p (False),
+  internalChangesPut_p(False),
+  internalChangesGet_p(False),
+  firstOneChangesPut_p(False),
+  firstOneChangesGet_p(False)
 {
- 
-  init(ft);
+
+    init(ft);
 
 }
-  CubeSkyEquation::CubeSkyEquation(SkyModel& sm, ROVisibilityIterator& vi, FTMachine& ft, ComponentFTMachine& cft, Bool noModelCol) : SkyEquation(sm, vi, ft, cft, noModelCol), internalChangesPut_p(False),internalChangesGet_p(False), firstOneChangesPut_p(False),firstOneChangesGet_p(False){
+
+CubeSkyEquation::CubeSkyEquation(SkyModel& sm, ROVisibilityIterator& vi, FTMachine& ft,
+                                 ComponentFTMachine& cft, Bool noModelCol)
+: SkyEquation(sm, vi, ft, cft, noModelCol),
+  destroyVisibilityIterator_p (False),
+  internalChangesPut_p(False),
+  internalChangesGet_p(False),
+  firstOneChangesPut_p(False),
+  firstOneChangesGet_p(False)
+{
+
+    Block<Int> sort(0);
+    sort.resize(4);
+    sort[0] = MS::ARRAY_ID;
+    sort[1] = MS::FIELD_ID;
+    sort[2] = MS::DATA_DESC_ID;
+    sort[3] = MS::TIME;
+
+    // Create a visibility iterator.  If the
+
+    ROVIA::PrefetchColumns prefetchColumns =
+        ROVIA::prefetchColumns (ROVIA::Ant1,
+                                ROVIA::Ant2,
+                                ROVIA::ArrayId,
+                                ROVIA::CorrectedCube,
+                                ROVIA::CorrType,
+                                ROVIA::Direction1,
+                                ROVIA::Direction2,
+                                ROVIA::Feed1,
+                                ROVIA::Feed1_pa,
+                                ROVIA::Feed2,
+                                ROVIA::Feed2_pa,
+                                ROVIA::FieldId,
+                                ROVIA::FlagCube,
+                                ROVIA::FlagRow,
+                                ROVIA::Freq,
+                                ROVIA::ImagingWeight,
+                                ROVIA::LSRFreq,
+                                ROVIA::NChannel,
+                                ROVIA::NCorr,
+                                ROVIA::NRow,
+                                ROVIA::PhaseCenter,
+                                ROVIA::PolFrame,
+                                ROVIA::SpW,
+                                ROVIA::Time,
+                                ROVIA::Uvw,
+                                -1);
+
+    if (vi.isAsyncEnabled () && ROVisibilityIteratorAsync::isAsynchronousIoEnabled()) {
+
+        rvi_p = ROVisibilityIteratorAsync::create (vi, prefetchColumns);
+        destroyVisibilityIterator_p = True;
+        vb_p.set (rvi_p); // replace existing VB with a potentially async one
+
+    }
 
     init(ft);
 }
@@ -190,13 +245,17 @@ void CubeSkyEquation::init(FTMachine& ft){
 
 }
 
-
 CubeSkyEquation::~CubeSkyEquation(){
   //As we  make an explicit ift_ in the constructor we need 
   //to take care of it here...
   //if(ift_ && (ift_ != ft_))
   //  delete ift_;
 
+    if (destroyVisibilityIterator_p){
+        delete rvi_p;
+        rvi_p = NULL;
+        delete (vb_p.release ()); // free up the associated VisBuffer
+    }
 }
 
 void  CubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col) {
@@ -218,9 +277,9 @@ void  CubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col) {
   VisIter& vi=*wvi_p;
   //Lets get the channel selection for later use
   vi.getChannelSelection(blockNumChanGroup_p, blockChanStart_p,
-			 blockChanWidth_p, blockChanInc_p, blockSpw_p);
+                          blockChanWidth_p, blockChanInc_p, blockSpw_p);
   checkVisIterNumRows(vi);
-  VisBuffer vb(vi);
+  VisBufferAutoPtr vb (vi); // uses write VI so no ROVIA conversion
   Bool changedVI=False;
   // Reset the visibilities only if this is not an incremental
   // change to the model
@@ -240,8 +299,8 @@ void  CubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col) {
     // We are at the begining with an empty model as starting point
     for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
       for (vi.origin(); vi.more(); vi++) {
-	vb.setModelVisCube(Complex(0.0,0.0));
-	vi.setVis(vb.modelVisCube(),visCol);
+	vb->setModelVisCube(Complex(0.0,0.0));
+	vi.setVis(vb->modelVisCube(),visCol);
       }
     }
   }
@@ -255,7 +314,7 @@ void  CubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col) {
   // Now do the images
   for (Int model=0; model < (sm_->numberOfModels());++model){ 
     // Change the model polarization frame
-    if(vb.polFrame()==MSIter::Linear) {
+    if(vb->polFrame()==MSIter::Linear) {
       StokesImageUtil::changeCStokesRep(sm_->cImage(model),
 					SkyModel::LINEAR);
     }
@@ -276,16 +335,16 @@ void  CubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col) {
 			    cubeSlice, nCubeSlice) || changedVI;
     vi.originChunks();
     vi.origin();
-    vb.invalidate();    
-    initializeGetSlice(vb, 0,incremental, cubeSlice, nCubeSlice);
+    //vb.invalidate();
+    initializeGetSlice(* vb, 0,incremental, cubeSlice, nCubeSlice);
     for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
       for (vi.origin(); vi.more(); vi++) {
 	if(!incremental&&!initialized) {
-	  vb.setModelVisCube(Complex(0.0,0.0));
+	  vb->setModelVisCube(Complex(0.0,0.0));
 	}
 	// get the model visibility and write it to the model MS
-	getSlice(vb,incremental, cubeSlice, nCubeSlice);
-	vi.setVis(vb.modelVisCube(),visCol);
+	getSlice(* vb,incremental, cubeSlice, nCubeSlice);
+	vi.setVis(vb->modelVisCube(),visCol);
       }
     }
     finalizeGetSlice();
@@ -335,8 +394,6 @@ void CubeSkyEquation::makeMosaicPSF(PtrBlock<TempImage<Float> * >& psfs){
   //PagedImage<Float> thisScreen(psfs[0]->shape(), psfs[0]->coordinates(), "PSF__.psf");
   //thisScreen.copyData(*(psfs[0]));
 
-
-
   ///////////////////////////////
   if(centered){
     //for cubes some of the planes may not have a central peak
@@ -383,170 +440,167 @@ void CubeSkyEquation::makeMosaicPSF(PtrBlock<TempImage<Float> * >& psfs){
 }
 
 void CubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
-  
 
-  Int nmodels=psfs.nelements();
-  LogIO os(LogOrigin("CubeSkyEquation", "makeSimplePSF"));
-  ft_->setNoPadding(noModelCol_p);
-  isPSFWork_p= True; // avoid PB correction etc for PSF estimation
-  Bool doPSF=True;
-  Bool changedVI=False; 
- // Initialize the gradients
-  sm_->initializeGradients();
-  ROVisIter& vi(*rvi_p);
-  //Lets get the channel selection for later use
-  vi.getChannelSelection(blockNumChanGroup_p, blockChanStart_p,
-			 blockChanWidth_p, blockChanInc_p, blockSpw_p);
-  // Reset the various SkyJones
-  resetSkyJones();
-  checkVisIterNumRows(vi);
-  // Loop over all visibilities and pixels
-  VisBuffer vb(vi);
-  vi.originChunks();
-  vi.origin();
-  // Change the model polarization frame
-  for (Int model=0; model < nmodels; ++model){
-    if(vb.polFrame()==MSIter::Linear) {
-      StokesImageUtil::changeCStokesRep(sm_->cImage(model),
-					SkyModel::LINEAR);
-    }
-    else {
-      StokesImageUtil::changeCStokesRep(sm_->cImage(model),
-					SkyModel::CIRCULAR);
-    }
-  }
 
-  
-  Int nCubeSlice=1;
-  isLargeCube(sm_->cImage(0), nCubeSlice);
-  for (Int cubeSlice=0; cubeSlice< nCubeSlice; ++cubeSlice){
-    changedVI= getFreqRange(vi, sm_->cImage(0).coordinates(),
-				  cubeSlice, nCubeSlice) || changedVI;
+    Int nmodels=psfs.nelements();
+    LogIO os(LogOrigin("CubeSkyEquation", "makeSimplePSF"));
+    ft_->setNoPadding(noModelCol_p);
+    isPSFWork_p= True; // avoid PB correction etc for PSF estimation
+    Bool doPSF=True;
+    Bool changedVI=False;
+    // Initialize the gradients
+    sm_->initializeGradients();
+    ROVisIter& vi(*rvi_p);
+    //Lets get the channel selection for later use
+    vi.getChannelSelection(blockNumChanGroup_p, blockChanStart_p,
+                           blockChanWidth_p, blockChanInc_p, blockSpw_p);
+    // Reset the various SkyJones
+    resetSkyJones();
+    checkVisIterNumRows(vi);
+    // Loop over all visibilities and pixels
+    VisBufferAutoPtr vb (vi);
     vi.originChunks();
     vi.origin();
-    vb.invalidate();
-    Int cohDone=0;
-    ProgressMeter pm(1.0, Double(vi.numberCoh()),
-		     "Gridding weights for PSF",
-		     "", "", "", True);
-      
-    initializePutSlice(vb, cubeSlice, nCubeSlice);
-    
-    for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
-      for (vi.origin(); vi.more(); vi++) {
-	if(noModelCol_p) {
-          //This here forces the modelVisCube shape and prevents reading model column
-	  vb.setModelVisCube(Complex(0.0,0.0));
-	}
-	putSlice(vb, doPSF, FTMachine::MODEL, cubeSlice, nCubeSlice);
-	cohDone+=vb.nRow();
-	pm.update(Double(cohDone));
-	
-      }
+    // Change the model polarization frame
+    for (Int model=0; model < nmodels; ++model){
+        if(vb->polFrame()==MSIter::Linear) {
+            StokesImageUtil::changeCStokesRep(sm_->cImage(model),
+                                              SkyModel::LINEAR);
+        }
+        else {
+            StokesImageUtil::changeCStokesRep(sm_->cImage(model),
+                                              SkyModel::CIRCULAR);
+        }
     }
-    finalizePutSlice(vb, cubeSlice, nCubeSlice);
-  }
 
-  //lets return original selection back to iterator
 
-  
-  if(changedVI)
-    vi.selectChannel(blockNumChanGroup_p, blockChanStart_p, 
-		     blockChanWidth_p, blockChanInc_p, blockSpw_p); 
-  sm_->finalizeGradients();
-  fixImageScale();
-  for(Int model=0; model < nmodels; ++model){
-    {
-      //Normalize the gS image
-      Int nXX=sm_->ggS(model).shape()(0);
-      Int nYY=sm_->ggS(model).shape()(1);
-      Int npola= sm_->ggS(model).shape()(2);
-      Int nchana= sm_->ggS(model).shape()(3);
-      IPosition blc(4,nXX, nYY, npola, nchana);
-      IPosition trc(4, nXX, nYY, npola, nchana);
-      blc(0)=0; blc(1)=0; trc(0)=nXX-1; trc(1)=nYY-1; 
-      //max weights per plane
-      for (Int j=0; j < npola; ++j){
-	for (Int k=0; k < nchana ; ++k){
-	  
-	  blc(2)=j; trc(2)=j;
-	  blc(3)=k; trc(3)=k;
-	  Slicer sl(blc, trc, Slicer::endIsLast);
-	  SubImage<Float> gSSub(sm_->gS(model), sl, False);
-	  SubImage<Float> ggSSub(sm_->ggS(model), sl, False);
-	  SubImage<Float> psfSub(*(psfs[model]), sl, True);
-	  Float planeMax;
-	  LatticeExprNode LEN = max( ggSSub );
-	  planeMax =  LEN.getFloat();
-	  if(planeMax !=0){
-	    psfSub.copyData( (LatticeExpr<Float>) 
-			     (iif(ggSSub > (0.0), 
-				  (gSSub/planeMax),0.0)));
-	  }
-	  else{
-	    psfSub.set(0.0);
-	  }
-	}
-      }
-      //
+    Int nCubeSlice=1;
+    isLargeCube(sm_->cImage(0), nCubeSlice);
+    for (Int cubeSlice=0; cubeSlice< nCubeSlice; ++cubeSlice){
+        changedVI= getFreqRange(vi, sm_->cImage(0).coordinates(),
+                                cubeSlice, nCubeSlice) || changedVI;
+        vi.originChunks();
+        vi.origin();
+        vb->invalidate();
+        Int cohDone=0;
+        ProgressMeter pm(1.0, Double(vb->numberCoh()),
+                         "Gridding weights for PSF",
+                         "", "", "", True);
+
+        initializePutSlice(* vb, cubeSlice, nCubeSlice);
+
+        for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
+            for (vi.origin(); vi.more(); vi++) {
+                if(noModelCol_p) {
+                    //This here forces the modelVisCube shape and prevents reading model column
+                    vb->setModelVisCube(Complex(0.0,0.0));
+                }
+                putSlice(* vb, doPSF, FTMachine::MODEL, cubeSlice, nCubeSlice);
+                cohDone+=vb->nRow();
+                pm.update(Double(cohDone));
+
+            }
+        }
+        finalizePutSlice(* vb, cubeSlice, nCubeSlice);
     }
-   
-    /*
+
+    //lets return original selection back to iterator
+
+
+    if(changedVI)
+        vi.selectChannel(blockNumChanGroup_p, blockChanStart_p,
+                         blockChanWidth_p, blockChanInc_p, blockSpw_p);
+    sm_->finalizeGradients();
+    fixImageScale();
+    for(Int model=0; model < nmodels; ++model){
+        {
+            //Normalize the gS image
+            Int nXX=sm_->ggS(model).shape()(0);
+            Int nYY=sm_->ggS(model).shape()(1);
+            Int npola= sm_->ggS(model).shape()(2);
+            Int nchana= sm_->ggS(model).shape()(3);
+            IPosition blc(4,nXX, nYY, npola, nchana);
+            IPosition trc(4, nXX, nYY, npola, nchana);
+            blc(0)=0; blc(1)=0; trc(0)=nXX-1; trc(1)=nYY-1;
+            //max weights per plane
+            for (Int j=0; j < npola; ++j){
+                for (Int k=0; k < nchana ; ++k){
+
+                    blc(2)=j; trc(2)=j;
+                    blc(3)=k; trc(3)=k;
+                    Slicer sl(blc, trc, Slicer::endIsLast);
+                    SubImage<Float> gSSub(sm_->gS(model), sl, False);
+                    SubImage<Float> ggSSub(sm_->ggS(model), sl, False);
+                    SubImage<Float> psfSub(*(psfs[model]), sl, True);
+                    Float planeMax;
+                    LatticeExprNode LEN = max( ggSSub );
+                    planeMax =  LEN.getFloat();
+                    if(planeMax !=0){
+                        psfSub.copyData( (LatticeExpr<Float>)
+                                         (iif(ggSSub > (0.0),
+                                              (gSSub/planeMax),0.0)));
+                    }
+                    else{
+                        psfSub.set(0.0);
+                    }
+                }
+            }
+            //
+        }
+
+        /*
     if(0){
       PagedImage<Float> thisScreen(psfs[model]->shape(), psfs[model]->coordinates(), String("ELPSF).psf"));
 	LatticeExpr<Float> le(*psfs[model]);
 	thisScreen.copyData(le);
       } 
-    */
-    LatticeExprNode maxPSF=max(*psfs[model]);
-    Float maxpsf=maxPSF.getFloat();
-    if(abs(maxpsf-1.0) > 1e-3) {
-      os << "Maximum of approximate PSF for field " << model << " = "
-	 << maxpsf << " : renormalizing to unity" <<  LogIO::POST;
+         */
+        LatticeExprNode maxPSF=max(*psfs[model]);
+        Float maxpsf=maxPSF.getFloat();
+        if(abs(maxpsf-1.0) > 1e-3) {
+            os << "Maximum of approximate PSF for field " << model << " = "
+                    << maxpsf << " : renormalizing to unity" <<  LogIO::POST;
+        }
+        if(maxpsf > 0.0 ){
+            LatticeExpr<Float> len((*psfs[model])/maxpsf);
+            psfs[model]->copyData(len);
+        }
+        else{
+            if(sm_->numberOfTaylorTerms()>1) { /* MFS */
+                os << "PSF calculation resulted in a PSF with its peak being 0 or less. This is ok for MS-MFS." << LogIO::POST;
+            }
+            else{
+                throw(PSFZero("SkyEquation:: PSF calculation resulted in a PSF with its peak being 0 or less!"));
+            }
+        }
     }
-    if(maxpsf > 0.0 ){
-      LatticeExpr<Float> len((*psfs[model])/maxpsf);
-      psfs[model]->copyData(len);
-    }
-    else{
-      if(sm_->numberOfTaylorTerms()>1) { /* MFS */
-        os << "PSF calculation resulted in a PSF with its peak being 0 or less. This is ok for MS-MFS." << LogIO::POST;
-      }
-      else{
-	throw(PSFZero("SkyEquation:: PSF calculation resulted in a PSF with its peak being 0 or less!"));
-      }
-    }
-  }
 
-  isPSFWork_p=False; // resetting this flag so that subsequent calculation uses
-  // the right SkyJones correction;
+    isPSFWork_p=False; // resetting this flag so that subsequent calculation uses
+    // the right SkyJones correction;
 }
 
-void CubeSkyEquation::gradientsChiSquared(Bool incr, Bool commitModel){
-  AlwaysAssert(cft_, AipsError);
-  AlwaysAssert(sm_, AipsError);
-  //AlwaysAssert(vs_, AipsError);
-  Bool initialized=False;
-  Bool changedVI=False;
-  
-  //For now we don't deal with incremental especially when having multi fields
-  Bool incremental=False;
-  
-  predictComponents(incremental, initialized);
-  Bool predictedComp=initialized;
-  
-  
+void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
+    AlwaysAssert(cft_, AipsError);
+    AlwaysAssert(sm_, AipsError);
+    //AlwaysAssert(vs_, AipsError);
+    Bool initialized=False;
+    Bool changedVI=False;
 
+    //For now we don't deal with incremental especially when having multi fields
+    Bool incremental=False;
 
-  sm_->initializeGradients();
-  // Initialize 
-  //ROVisIter& vi=*rvi_p;
-  //Lets get the channel selection for later use
-  rvi_p->getChannelSelection(blockNumChanGroup_p, blockChanStart_p,
-			 blockChanWidth_p, blockChanInc_p, blockSpw_p);
-  checkVisIterNumRows(*rvi_p);
-  VisBuffer vb(*rvi_p);
-  /**** Do we need to do this
+    predictComponents(incremental, initialized);
+    Bool predictedComp=initialized;
+
+    sm_->initializeGradients();
+    // Initialize
+    //ROVisIter& vi=*rvi_p;
+    //Lets get the channel selection for later use
+    rvi_p->getChannelSelection(blockNumChanGroup_p, blockChanStart_p,
+                               blockChanWidth_p, blockChanInc_p, blockSpw_p);
+    checkVisIterNumRows(*rvi_p);
+    VisBufferAutoPtr vb (rvi_p);
+    /**** Do we need to do this
   if( (sm_->isEmpty(0))  && !initialized && !incremental){ 
     // We are at the begining with an empty model as starting point
     for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
@@ -556,115 +610,110 @@ void CubeSkyEquation::gradientsChiSquared(Bool incr, Bool commitModel){
       }
     }
   }
-  */
-  Bool isEmpty=True;
-  for (Int model=0; model < (sm_->numberOfModels());++model){
-    isEmpty=isEmpty &&  sm_->isEmpty(model);                
-    
-  }
+     */
+    Bool isEmpty=True;
+    for (Int model=0; model < (sm_->numberOfModels());++model){
+        isEmpty=isEmpty &&  sm_->isEmpty(model);
 
-  // Now do the images
-  for (Int model=0;model< (sm_->numberOfModels()); ++model) {  
-    // Don't bother with empty images
-    // Change the model polarization frame
-    if(vb.polFrame()==MSIter::Linear) {
-      StokesImageUtil::changeCStokesRep(sm_->cImage(model),
-					SkyModel::LINEAR);
     }
-    else {
-      StokesImageUtil::changeCStokesRep(sm_->cImage(model),
-					SkyModel::CIRCULAR);
-    }
-    //scaleImage(model, incremental);
-    ft_=&(*ftm_p[model]);
-    scaleImage(model);
-    // Reset the various SkyJones
-  }
-  ft_=&(*ftm_p[0]);
-  resetSkyJones();
-  firstOneChangesPut_p=False;
-  firstOneChangesGet_p=False;
-    
-  Int nCubeSlice=1;
-   
-  isLargeCube(sm_->cImage(0), nCubeSlice);
-    
 
-  for (Int cubeSlice=0; cubeSlice< nCubeSlice; ++cubeSlice){
-
-    //      vi.originChunks();
-    //      vi.origin();      
-    //sliceCube(imGetSlice_p, model, cubeSlice, nCubeSlice, 1);
-    //Redo the channel selection in case of chunked cube to match
-    //data needed for gridding.
-    changedVI= getFreqRange(*rvi_p, sm_->cImage(0).coordinates(),
-			    cubeSlice, nCubeSlice) || changedVI;
-      
-    rvi_p->originChunks();
-    rvi_p->origin();
-    Bool useCorrected= !(rvi_p->msColumns().correctedData().isNull());
-
-    vb.invalidate();
-    if(!isEmpty){
-      initializeGetSlice(vb, 0, False, cubeSlice, nCubeSlice);
-    }
-    initializePutSlice(vb, cubeSlice, nCubeSlice);
-    Int cohDone=0;
-    ProgressMeter pm(1.0, Double(rvi_p->numberCoh()),
-		     "Gridding residual",
-		     "", "", "", True);
-    for (rvi_p->originChunks();rvi_p->moreChunks();rvi_p->nextChunk()) {
-      for (rvi_p->origin(); rvi_p->more(); (*rvi_p)++) {
-	if(!incremental && !predictedComp) {
-          //This here forces the modelVisCube shape and prevents reading model column
-	  vb.setModelVisCube(Complex(0.0,0.0));
-	}
-	// get the model visibility and write it to the model MS
-	if(!isEmpty)
-	  getSlice(vb, (predictedComp || incremental), cubeSlice, nCubeSlice);
-	//saving the model for self-cal most probably
-        if(commitModel && !noModelCol_p)
-	  wvi_p->setVis(vb.modelVisCube(),VisibilityIterator::Model);
-	// Now lets grid the -ve of residual
-        // use visCube if there is no correctedData
-        if(!useCorrected){
-            vb.modelVisCube()-=vb.visCube();
+    // Now do the images
+    for (Int model=0;model< (sm_->numberOfModels()); ++model) {
+        // Don't bother with empty images
+        // Change the model polarization frame
+        if(vb->polFrame()==MSIter::Linear) {
+            StokesImageUtil::changeCStokesRep(sm_->cImage(model),
+                                              SkyModel::LINEAR);
         }
-        else{
-            vb.modelVisCube()-=vb.correctedVisCube();
+        else {
+            StokesImageUtil::changeCStokesRep(sm_->cImage(model),
+                                              SkyModel::CIRCULAR);
         }
-	putSlice(vb, False, FTMachine::MODEL, cubeSlice, nCubeSlice);
-	cohDone+=vb.nRow();
-	pm.update(Double(cohDone));
-	
-      }
+        //scaleImage(model, incremental);
+        ft_=&(*ftm_p[model]);
+        scaleImage(model);
+        // Reset the various SkyJones
+    }
+    ft_=&(*ftm_p[0]);
+    resetSkyJones();
+    firstOneChangesPut_p=False;
+    firstOneChangesGet_p=False;
+
+    Int nCubeSlice=1;
+
+    isLargeCube(sm_->cImage(0), nCubeSlice);
+
+    for (Int cubeSlice=0; cubeSlice< nCubeSlice; ++cubeSlice){
+
+        //      vi.originChunks();
+        //      vi.origin();
+        //sliceCube(imGetSlice_p, model, cubeSlice, nCubeSlice, 1);
+        //Redo the channel selection in case of chunked cube to match
+        //data needed for gridding.
+        changedVI= getFreqRange(*rvi_p, sm_->cImage(0).coordinates(),
+                                cubeSlice, nCubeSlice) || changedVI;
+
+        rvi_p->originChunks();
+        rvi_p->origin();
+        Bool useCorrected= !(vb->msColumns().correctedData().isNull());
+
+        vb->invalidate();
+        if(!isEmpty){
+            initializeGetSlice(* vb, 0, False, cubeSlice, nCubeSlice);
+        }
+        initializePutSlice(* vb, cubeSlice, nCubeSlice);
+        Int cohDone=0;
+        ProgressMeter pm(1.0, Double(vb->numberCoh()),
+                         "Gridding residual",
+                         "", "", "", True);
+        for (rvi_p->originChunks();rvi_p->moreChunks();rvi_p->nextChunk()) {
+            for (rvi_p->origin(); rvi_p->more(); (*rvi_p)++) {
+                if(!incremental && !predictedComp) {
+                    //This here forces the modelVisCube shape and prevents reading model column
+                    vb->setModelVisCube(Complex(0.0,0.0));
+                }
+                // get the model visibility and write it to the model MS
+                if(!isEmpty)
+                    getSlice(* vb, (predictedComp || incremental), cubeSlice, nCubeSlice);
+                //saving the model for self-cal most probably
+                if(commitModel && !noModelCol_p)
+                    wvi_p->setVis(vb->modelVisCube(),VisibilityIterator::Model);
+                // Now lets grid the -ve of residual
+                // use visCube if there is no correctedData
+                if(!useCorrected){
+                    vb->modelVisCube()-=vb->visCube();
+                }
+                else{
+                    vb->modelVisCube()-=vb->correctedVisCube();
+                }
+                putSlice(* vb, False, FTMachine::MODEL, cubeSlice, nCubeSlice);
+                cohDone+=vb->nRow();
+                pm.update(Double(cohDone));
+
+            }
+        }
+
+        finalizeGetSlice();
+        if(!incremental&&!initialized) initialized=True;
+        finalizePutSlice(* vb, cubeSlice, nCubeSlice);
+
     }
 
-    finalizeGetSlice();
-    if(!incremental&&!initialized) initialized=True;
-    finalizePutSlice(vb, cubeSlice, nCubeSlice);
+    for (Int model=0;model<sm_->numberOfModels();model++) {
+        //unScaleImage(model, incremental);
+        ft_=&(*ftm_p[model]);
+        unScaleImage(model);
 
+    }
+    ft_=&(*ftm_p[0]);
 
-  }
-  
-  for (Int model=0;model<sm_->numberOfModels();model++) {
-    //unScaleImage(model, incremental);
-    ft_=&(*ftm_p[model]);
-    unScaleImage(model);
-  
-  }
-  ft_=&(*ftm_p[0]);
-
-  this->fixImageScale();
-  //lets return original selection back to iterator
-  if(changedVI)
-    rvi_p->selectChannel(blockNumChanGroup_p, blockChanStart_p, 
-		     blockChanWidth_p, blockChanInc_p, blockSpw_p); 
-
-  
+    this->fixImageScale();
+    //lets return original selection back to iterator
+    if(changedVI)
+        rvi_p->selectChannel(blockNumChanGroup_p, blockChanStart_p,
+                             blockChanWidth_p, blockChanInc_p, blockSpw_p);
 
 }
-
 
 void  CubeSkyEquation::isLargeCube(ImageInterface<Complex>& theIm, 
 				   Int& nslice) {
@@ -725,10 +774,9 @@ void CubeSkyEquation::initializePutSlice(const VisBuffer& vb,
   }
   assertSkyJones(vb, -1);
   //vb_p is used to finalize things if vb has changed propoerties
-  vb_p.assign(vb, False);
-  vb_p.updateCoordInfo();
+  vb_p->assign(vb, False);
+  vb_p->updateCoordInfo(& vb);
 }
-
 
 void CubeSkyEquation::getCoverageImage(Int model, ImageInterface<Float>& im){
   if ((sm_->doFluxScale(model)) && (ftm_p.nelements() > uInt(model))){
@@ -737,92 +785,92 @@ void CubeSkyEquation::getCoverageImage(Int model, ImageInterface<Float>& im){
 
 }
 
+void
+CubeSkyEquation::putSlice(const VisBuffer & vb, Bool dopsf, FTMachine::Type col, Int cubeSlice, Int nCubeSlice) {
 
-void CubeSkyEquation::putSlice(const VisBuffer & vb, Bool dopsf, FTMachine::Type col, Int cubeSlice, Int nCubeSlice) {
+    AlwaysAssert(ok(),AipsError);
+    Int nRow=vb.nRow();
+    internalChangesPut_p=False;  // Does this VB change inside itself?
+    firstOneChangesPut_p=False;  // Has this VB changed from the previous one?
+    if((ftm_p[0]->name() != "MosaicFT") &&
+            (ftm_p[0]->name() != "PBWProjectFT")) {
 
-  AlwaysAssert(ok(),AipsError);
-  Int nRow=vb.nRow();
-  internalChangesPut_p=False;  // Does this VB change inside itself?
-  firstOneChangesPut_p=False;  // Has this VB changed from the previous one?
-  if((ftm_p[0]->name() != "MosaicFT") && 
-     (ftm_p[0]->name() != "PBWProjectFT")) {
-
-    changedSkyJonesLogic(vb, firstOneChangesPut_p, internalChangesPut_p);
-  }
-  //First ft machine change should be indicative
-  //anyways right now we are allowing only 1 ftmachine for GridBoth
-  Bool IFTChanged=iftm_p[0]->changed(vb);
-  
-
-
-
-  // we might need to recompute the "sky" for every single row, but we
-  // avoid this if possible.
-
-    
-  if(internalChangesPut_p || internalChangesGet_p) {
-    if(internalChangesGet_p)
-      internalChangesGet_p=False;
-    // Yes there are changes: go row by row. 
-    for (Int row=0; row<nRow; row++) {
-      if(IFTChanged||changedSkyJones(vb,row)) {
-	// Need to apply the SkyJones from the previous row
-	// and finish off before starting with this row
-	finalizePutSlice(vb_p, cubeSlice, nCubeSlice);  
-	initializePutSlice(vb, cubeSlice, nCubeSlice);
-      }
-      for (Int model=0; model<sm_->numberOfModels(); ++model){
-	//if(sm_->getAlgorithm()=="MSMFS"){ /* MFS */
-        if(sm_->numberOfTaylorTerms()>1) { /* MFS */
-	  calcVisWeights(vb,model);
-	  iftm_p[model]->put(vb, row, dopsf, col, visweights_p);
-	}
-	else{
-	  iftm_p[model]->put(vb, row, dopsf, col);
-	}
-      }
+        changedSkyJonesLogic(vb, firstOneChangesPut_p, internalChangesPut_p);
     }
-  }
-  else if (IFTChanged || firstOneChangesPut_p || firstOneChangesGet_p) {
+    //First ft machine change should be indicative
+    //anyways right now we are allowing only 1 ftmachine for GridBoth
+    Bool IFTChanged=iftm_p[0]->changed(vb);
 
-    if(firstOneChangesGet_p)
-      firstOneChangesGet_p=False;
-     
 
-    if(!isBeginingOfSkyJonesCache_p){
-      finalizePutSlice(vb_p,  cubeSlice, nCubeSlice);      
+    // we might need to recompute the "sky" for every single row, but we
+    // avoid this if possible.
+
+
+    if(internalChangesPut_p || internalChangesGet_p) {
+
+        if(internalChangesGet_p)
+            internalChangesGet_p=False;
+
+        // Yes there are changes: go row by row.
+
+        for (Int row=0; row<nRow; row++) {
+
+            if(IFTChanged||changedSkyJones(vb,row)) {
+                // Need to apply the SkyJones from the previous row
+                // and finish off before starting with this row
+                finalizePutSlice(* vb_p, cubeSlice, nCubeSlice);
+                initializePutSlice(vb, cubeSlice, nCubeSlice);
+            }
+
+            for (Int model=0; model<sm_->numberOfModels(); ++model){
+                //if(sm_->getAlgorithm()=="MSMFS"){ /* MFS */
+                if(sm_->numberOfTaylorTerms()>1) { /* MFS */
+                    calcVisWeights(vb,model);
+                    iftm_p[model]->put(vb, row, dopsf, col, visweights_p);
+                }
+                else{
+                    iftm_p[model]->put(vb, row, dopsf, col);
+                }
+            }
+        }
     }
-    initializePutSlice(vb, cubeSlice, nCubeSlice);
+    else if (IFTChanged || firstOneChangesPut_p || firstOneChangesGet_p) {
+
+        if(firstOneChangesGet_p)
+            firstOneChangesGet_p=False;
+
+        if(!isBeginingOfSkyJonesCache_p){
+            finalizePutSlice(* vb_p,  cubeSlice, nCubeSlice);
+        }
+        initializePutSlice(vb, cubeSlice, nCubeSlice);
+        isBeginingOfSkyJonesCache_p=False;
+        for (Int model=0; model<sm_->numberOfModels(); ++model){
+            //if(sm_->getAlgorithm()=="MSMFS"){ /* MFS */
+            if(sm_->numberOfTaylorTerms()>1) { /* MFS */
+                calcVisWeights(vb,model);
+                iftm_p[model]->put(vb, -1, dopsf, col, visweights_p);
+            }
+            else{
+                iftm_p[model]->put(vb, -1, dopsf, col);
+            }
+        }
+    }
+    else {
+        for (Int model=0; model<sm_->numberOfModels(); ++model){
+            //if(sm_->getAlgorithm()=="MSMFS"){ /* MFS */
+            if(sm_->numberOfTaylorTerms()>1) { /* MFS */
+                calcVisWeights(vb,model);
+                iftm_p[model]->put(vb, -1, dopsf, col, visweights_p);
+            }
+            else{
+                iftm_p[model]->put(vb, -1, dopsf, col);
+            }
+        }
+    }
+
     isBeginingOfSkyJonesCache_p=False;
-    for (Int model=0; model<sm_->numberOfModels(); ++model){
-	//if(sm_->getAlgorithm()=="MSMFS"){ /* MFS */
-        if(sm_->numberOfTaylorTerms()>1) { /* MFS */
-	  calcVisWeights(vb,model);
-	  iftm_p[model]->put(vb, -1, dopsf, col, visweights_p);
-	}
-	else{
-	  iftm_p[model]->put(vb, -1, dopsf, col);
-	}
-    }
-  }
-  else {
-    for (Int model=0; model<sm_->numberOfModels(); ++model){
-	//if(sm_->getAlgorithm()=="MSMFS"){ /* MFS */
-        if(sm_->numberOfTaylorTerms()>1) { /* MFS */
-	  calcVisWeights(vb,model);
-	  iftm_p[model]->put(vb, -1, dopsf, col, visweights_p);
-	}
-	else{
-	  iftm_p[model]->put(vb, -1, dopsf, col);
-	}
-    }
-  }
-  
-  isBeginingOfSkyJonesCache_p=False;
-  
+
 }
-
-
 
 void CubeSkyEquation::finalizePutSlice(const VisBuffer& vb,  
 				       Int cubeSlice, Int nCubeSlice) {
@@ -846,7 +894,6 @@ void CubeSkyEquation::finalizePutSlice(const VisBuffer& vb,
     sliceCube(workSlice, sm_->work(model), cubeSlice, nCubeSlice);
     sliceCube(gSSlice, sm_->gS(model), cubeSlice, nCubeSlice);
 
-
     applySkyJonesInv(vb, -1, *(imPutSlice_p[model]), *workSlice,
 		     *gSSlice);
     SubImage<Float> *ggSSlice;
@@ -866,7 +913,6 @@ void CubeSkyEquation::finalizePutSlice(const VisBuffer& vb,
   // 4. Finally, we add the statistics
   sm_->addStatistics(sumwt, chisq);
 }
-
 
 void CubeSkyEquation::initializeGetSlice(const VisBuffer& vb, 
 					   Int row, 
@@ -925,7 +971,6 @@ void CubeSkyEquation::sliceCube(CountedPtr<ImageInterface<Complex> >& slice,Int 
 
 }
 
-
 void CubeSkyEquation::sliceCube(SubImage<Float>*& slice,
 				  ImageInterface<Float>& image, Int cubeSlice, 
 				  Int nCubeSlice){
@@ -945,7 +990,6 @@ void CubeSkyEquation::sliceCube(SubImage<Float>*& slice,
   slice=  new SubImage<Float> (image, sl_p, True);
 }
 
-
 VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,  
 				     Bool incremental,
 				     Int cubeSlice, Int nCubeSlice) {
@@ -953,7 +997,7 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
   Int nRow=result.nRow();
 
   result.modelVisCube(); // get the visibility so vb will have it
-  VisBuffer vb(result);
+  VisBuffer vb(result); // method only called using writable VI so no ROVIA
 
   Int nmodels=sm_->numberOfModels();
   Bool FTChanged=ftm_p[0]->changed(vb);
@@ -1035,14 +1079,15 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
 
 }
 
-  void CubeSkyEquation::finalizeGetSlice(){
+void
+CubeSkyEquation::finalizeGetSlice(){
 
+}
 
-  }
-
-  Bool CubeSkyEquation::getFreqRange(ROVisibilityIterator& vi, 
-				     const CoordinateSystem& coords, 
-				     Int slice, Int nslice){
+Bool
+CubeSkyEquation::getFreqRange(ROVisibilityIterator& vi,
+                              const CoordinateSystem& coords,
+                              Int slice, Int nslice){
     //bypass this for now
     //
     // Enforce that all SPWs are in the same frequency frame.
@@ -1054,20 +1099,21 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
     // in LSRK frame, for now, disable data selection since the
     // mapping between image (in LSRK) and MS channels will be time
     // variable.
-    ROScalarMeasColumn<MFrequency> freqFrame=vi.msColumns().spectralWindow().refFrequencyMeas();
-    uInt nrows=vi.msColumns().spectralWindow().nrow();
+    VisBufferAutoPtr vb (vi);
+    ROScalarMeasColumn<MFrequency> freqFrame=vb->msColumns().spectralWindow().refFrequencyMeas();
+    uInt nrows=vb->msColumns().spectralWindow().nrow();
     String firstString = freqFrame(0).getRefString();
     Bool allFramesSame=True;
     for (uInt i=0;i<nrows;i++)
-      if (freqFrame(i).getRefString() != firstString)
-	{allFramesSame = False;break;}
+        if (freqFrame(i).getRefString() != firstString)
+        {allFramesSame = False;break;}
 
     if (!allFramesSame || (firstString!="LSRK"))
-      return False;
+        return False;
 
     // Only one slice lets keep what the user selected
     if(nslice==1)
-      return False;
+        return False;
 
     Double start=0.0; 
     Double end=0.0;
@@ -1076,14 +1122,14 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
     SpectralCoordinate specCoord=coords.spectralCoordinate(specIndex);
     Vector<Int>spectralPixelAxis=coords.pixelAxes(specIndex);
     if(nchanPerSlice_p>0){
-      specCoord.toWorld(start,Double(slice*nchanPerSlice_p)-0.5);
-      specCoord.toWorld(end, Double(nchanPerSlice_p*(slice+1))-0.5);
-      chanwidth=fabs(end-start)/Double(nchanPerSlice_p);
+        specCoord.toWorld(start,Double(slice*nchanPerSlice_p)-0.5);
+        specCoord.toWorld(end, Double(nchanPerSlice_p*(slice+1))-0.5);
+        chanwidth=fabs(end-start)/Double(nchanPerSlice_p);
     }
     if(end < start){
-      Double tempoo=start;
-      start=end;
-      end=tempoo;
+        Double tempoo=start;
+        start=end;
+        end=tempoo;
     }
 
     Block<Vector<Int> > spwb;
@@ -1094,78 +1140,75 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
     // cerr << "CSE: " << start << " " << end << " " << chanwidth << endl
     // 	 << "     " << spwb[0] << " " << startb[0] << " " << nchanb[0] << " " << incrb[0] << endl;
     if(spwb.nelements()==0)
-      return False;
-
-    
+        return False;
 
     //vi.selectChannel(1, startb[0][0], nchanb[0][0], 1, spwb[0][0]); 
     vi.selectChannel(blockNumChanGroup_p, startb, nchanb, incrb, spwb); 
 
     return True;
-    
-  }
 
-  /* MFSCode */
-  Bool CubeSkyEquation::calcVisWeights(const VisBuffer& vb, Int modelindex)
-  { 
+}
+
+/* MFSCode */
+Bool CubeSkyEquation::calcVisWeights(const VisBuffer& vb, Int modelindex)
+{
     Int taylor = sm_->getTaylorIndex(modelindex);
 
     // make sure shape of visweights_p is correct - same as vb.imagingWeight()
     if( taylor == 0 ) 
     {       
-       if(visweights_p.shape() != vb.imagingWeight().shape())
-	       visweights_p.resize(vb.imagingWeight().shape());
-       visweights_p = vb.imagingWeight();
+        if(visweights_p.shape() != vb.imagingWeight().shape())
+            visweights_p.resize(vb.imagingWeight().shape());
+        visweights_p = vb.imagingWeight();
     }
     else
     {
-       Float freq=0.0,mulfactor=1.0;
-       Vector<Double> selfreqlist(vb.frequency());
-       Double reffreq = sm_->getReferenceFrequency();
-    
-       for (Int row=0; row<vb.nRow(); row++) 
-       for (Int chn=0; chn<vb.nChannel(); chn++) 
-       {
-	    freq = selfreqlist(IPosition(1,chn));
-	    mulfactor = ((freq-reffreq)/reffreq);
-	    
-	    visweights_p(chn,row) = (vb.imagingWeight())(chn,row) * pow(mulfactor,taylor);
-	    
-       }
+        Float freq=0.0,mulfactor=1.0;
+        Vector<Double> selfreqlist(vb.frequency());
+        Double reffreq = sm_->getReferenceFrequency();
+
+        for (Int row=0; row<vb.nRow(); row++)
+            for (Int chn=0; chn<vb.nChannel(); chn++)
+            {
+                freq = selfreqlist(IPosition(1,chn));
+                mulfactor = ((freq-reffreq)/reffreq);
+
+                visweights_p(chn,row) = (vb.imagingWeight())(chn,row) * pow(mulfactor,taylor);
+
+            }
     }
 
     return True;
-  }
-	  
-  /* MFSCode */
-  Bool CubeSkyEquation::modifySpecModelVis(VisBuffer& vb, Int modelindex)
-  { 
+}
+
+/* MFSCode */
+Bool CubeSkyEquation::modifySpecModelVis(VisBuffer& vb, Int modelindex)
+{
     Int taylor = sm_->getTaylorIndex(modelindex);
-    
+
     if( taylor == 0 ){ return True; }
     else
     {
-       Float freq=0.0,mulfactor=1.0;
-       Vector<Double> selfreqlist(vb.frequency());
-       Double reffreq = sm_->getReferenceFrequency();
-//       Cube<Complex> modelvis = vb.modelVisCube();
+        Float freq=0.0,mulfactor=1.0;
+        Vector<Double> selfreqlist(vb.frequency());
+        Double reffreq = sm_->getReferenceFrequency();
+        //       Cube<Complex> modelvis = vb.modelVisCube();
 
-       for (uInt pol=0; pol< uInt((vb.modelVisCube()).shape()[0]); pol++) 
-	 for (uInt chn=0; chn< uInt(vb.nChannel()); chn++) 
-	   for (uInt row=0; row< uInt(vb.nRow()); row++) 
-       {
-	    freq = selfreqlist(IPosition(1,chn));
-	    mulfactor = ((freq-reffreq)/reffreq);
-	    
-//	    modelvis(pol,chn,row) *= pow(mulfactor,taylor);
-	    (vb.modelVisCube())(pol,chn,row) *= pow(mulfactor,taylor);
-       }
-      // vb.modelVisCube() = modelvis;
+        for (uInt pol=0; pol< uInt((vb.modelVisCube()).shape()[0]); pol++)
+            for (uInt chn=0; chn< uInt(vb.nChannel()); chn++)
+                for (uInt row=0; row< uInt(vb.nRow()); row++)
+                {
+                    freq = selfreqlist(IPosition(1,chn));
+                    mulfactor = ((freq-reffreq)/reffreq);
+
+                    //	    modelvis(pol,chn,row) *= pow(mulfactor,taylor);
+                    (vb.modelVisCube())(pol,chn,row) *= pow(mulfactor,taylor);
+                }
+        // vb.modelVisCube() = modelvis;
     }
 
     return True;
-  }
-
+}
 
 void CubeSkyEquation::fixImageScale()
 {
@@ -1249,7 +1292,6 @@ void CubeSkyEquation::fixImageScale()
 	  IPosition trc(4, nXX, nYY, npola, nchana);
 	  blc(0)=0; blc(1)=0; trc(0)=nXX-1; trc(1)=nYY-1; 
 
-
 	  //Those damn weights per plane can be wildly different so 
 	  //deal with it properly here
 	  for (Int j=0; j < npola; ++j){
@@ -1319,7 +1361,6 @@ void CubeSkyEquation::fixImageScale()
 				 (iif(sm_->fluxScale(model) > 0.0, 
 				      ((sm_->gS(model))/(sm_->fluxScale(model))), 0.0 )) );
 
-
       }
       */
       ///
@@ -1327,6 +1368,5 @@ void CubeSkyEquation::fixImageScale()
 
   }
 }
-
 
 } //# NAMESPACE CASA - END

@@ -103,6 +103,8 @@ class CubeSkyEquation : public SkyEquation {
   // about it
   void init(FTMachine& ft);
 
+  Bool destroyVisibilityIterator_p;
+
   Bool internalChangesPut_p;
   Bool internalChangesGet_p;
   Bool firstOneChangesPut_p;

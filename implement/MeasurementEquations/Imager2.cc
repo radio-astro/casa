@@ -1701,7 +1701,7 @@ String Imager::state()
 Bool Imager::pb(const String& inimage, 
 		const String& outimage,
 		const String& incomps,
-		const String& outcomps,
+		const String& /*outcomps*/,
 		const String& operation, 
 		const MDirection& pointingCenter,
 		const Quantity& pa,
@@ -2391,7 +2391,7 @@ Bool Imager::expand_blank_sel(Vector<Int>& v, const uInt nelem)
 // This just moves data from observed to corrected.
 // Eventually we should pass in a calibrater
 // object to do the work.
-Bool Imager::correct(const Bool doparallactic, const Quantity& t) 
+Bool Imager::correct(const Bool /*doparallactic*/, const Quantity& /*t*/)
 {
   if(!valid()) return False;
 
@@ -3486,7 +3486,10 @@ Bool Imager::selectDataChannel(Vector<Int>& spectralwindowids,
 	  dataNchan[i]=nch;
 	}
       }	else {
-	Int numberChan=rvi_p->msColumns().spectralWindow().numChan()(0);
+        VisBufferAutoPtr vb (rvi_p);
+        rvi_p->originChunks ();
+        Int numberChan=vb->msColumns().spectralWindow().numChan()(0);
+
 	if(dataNchan[0]<=0){
 	  if(dataStep[0] <=0)
 	    dataStep[0]=1;
@@ -3781,7 +3784,7 @@ Bool Imager::makePBImage(const Table& vpTable, ImageInterface<Float>& pbImage){
 
 }
 
-Bool Imager::makePBImage(const CoordinateSystem& imageCoord, PBMath& pbMath, 
+Bool Imager::makePBImage(const CoordinateSystem& /*imageCoord*/, PBMath& pbMath,
 			 const String& diskPBName){
 
   make(diskPBName);
