@@ -423,9 +423,10 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
       //                                     must be 0.0 < xx < 1.0 (obviously)
       //                                     Default : 0.8
       Float fractionOfPsf = min(cycleMaxPsfFraction_p, cycleFactor_p * maxSidelobe);
-      if (fractionOfPsf > 0.8) 
+      if (fractionOfPsf > (Float)0.8) 
 	{
-          os << LogIO::WARN << "PSF fraction for threshold computation is too high : " << fractionOfPsf << ".  Forcing to 0.8 to ensure that the threshold is smaller than the peak residual !" << LogIO::POST;
+	  //          os << LogIO::WARN << "PSF fraction for threshold computation is too high : " << fractionOfPsf << ".  Forcing to 0.8 to ensure that the threshold is smaller than the peak residual !" << LogIO::POST;
+          os << LogIO::NORMAL << "Current values of max-PSF-fraction, cycle-factor and max PSF sidelobe level result in a stopping threshold more than 80% of the peak residual. Forcing the maximum threshold to 80% of the peak." << LogIO::POST;
           fractionOfPsf = 0.8;   // painfully slow!
 	}
 
