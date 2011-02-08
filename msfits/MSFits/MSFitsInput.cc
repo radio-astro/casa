@@ -1360,7 +1360,6 @@ void MSFitsInput::fillAntennaTable(BinaryTable& bt)
   const Regex trailing(" *$"); // trailing blanks
   TableRecord btKeywords=bt.getKeywords();
   Int nAnt, nAntMax;
-  Bool itsEVLA=((array_p=="VLA") || (array_p=="EVLA"));
   Bool missingAnts = False;
   nAntMax=nAnt_p;
   if (nAnt_p != bt.nrows()){
@@ -1374,7 +1373,7 @@ void MSFitsInput::fillAntennaTable(BinaryTable& bt)
   nAnt=bt.nrows();
   if (nAnt-1 > nAntMax) nAntMax=nAnt-1;
 
-  if (itsEVLA) receptorAngle_p.resize(2*(nAntMax+1));
+  if (missingAnts) receptorAngle_p.resize(2*(nAntMax+1));
   else receptorAngle_p.resize(2*nAnt);
   receptorAngle_p=0.0;
   Vector<Double> arrayXYZ(3);
