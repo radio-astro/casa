@@ -534,16 +534,13 @@ public:
     // Time range
     Bool timeRange(MEpoch & rTime, MVEpoch & rTimeEP, MVEpoch & rInterval) const;
 
-
     // Return the row Ids from the original ms. If the ms used is a subset of
     // another ms then rowIds() return the row ids of the original ms.
-
     virtual Vector<uInt>& rowIds();
 
-    virtual const Vector<uInt>& rowIds()const {
+    virtual const Vector<uInt>& rowIds() const {
         return This->rowIds();
     };
-
 
     //</group>
 

@@ -474,7 +474,7 @@ Vector<Matrix<Int> >& ROVisIterator::setChanAveBounds(Float factor,
       Int nChanOut=1;
       Int lo(chans(0));
       currBounds(0,0)=lo;
-      // currBounds(0,2)=0;     // Already done.
+      currBounds(0,2)=0;
       for (Int ich=0;ich<nChan0;++ich) 
 	if ( (chans(ich)-lo+1)>width ) {
 	  currBounds(nChanOut-1,1)=chans(ich-1);   // end of previous
@@ -727,6 +727,8 @@ void VisIterator::setWeightSpectrum(const Cube<Float>& weightSpectrum)
   else 
     throw(AipsError("Can't set WEIGHT_SPECTRUM -- it doesn't exist!"));
 }
+
+
 
 void VisIterator::putDataColumn(DataColumn whichOne,
 				const Vector<Vector<Slice> >& slices,

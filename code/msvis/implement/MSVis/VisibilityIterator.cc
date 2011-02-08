@@ -62,7 +62,7 @@ curChanGroup_p(0),nChan_p(0),nRowBlocking_p(0),initialized_p(False),
 msIterAtOrigin_p(False),stateOk_p(False),freqCacheOK_p(False),
 floatDataFound_p(False),
       msHasWtSp_p(False),
-lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False)
+      lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False)
 {
   initsinglems(ms);
 }
@@ -99,18 +99,17 @@ void ROVisibilityIterator::initsinglems(const MeasurementSet &ms){
 
 }
 ROVisibilityIterator::ROVisibilityIterator(const MeasurementSet &ms,
-					   const Block<Int>& sortColumns, const Bool addDefaultSort,
+					   const Block<Int>& sortColumns,
+                                           const Bool addDefaultSort,
 					   Double timeInterval)
  :msIter_p(ms,sortColumns,timeInterval, addDefaultSort),selRows_p(0, 0),
 curChanGroup_p(0),nChan_p(0),nRowBlocking_p(0),initialized_p(False),
 msIterAtOrigin_p(False),stateOk_p(False),freqCacheOK_p(False),
   floatDataFound_p(False),
   msHasWtSp_p(False),
-lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False){
-
-
+  lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False)
+{
   initsinglems(ms);
-
 }
 
 
@@ -122,11 +121,9 @@ curChanGroup_p(0),nChan_p(0),nRowBlocking_p(0),initialized_p(False),
 msIterAtOrigin_p(False),stateOk_p(False),freqCacheOK_p(False),
 floatDataFound_p(False),
   msHasWtSp_p(False),
-lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False)
+  lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False)
 {
-  
   initmultims(mss);
-
 }
 
 ROVisibilityIterator::ROVisibilityIterator(const Block<MeasurementSet> &mss,
@@ -137,10 +134,9 @@ curChanGroup_p(0),nChan_p(0),nRowBlocking_p(0),initialized_p(False),
 msIterAtOrigin_p(False),stateOk_p(False),freqCacheOK_p(False),
     floatDataFound_p(False),
     msHasWtSp_p(False),
-    lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False){
-
+    lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False)
+{
   initmultims(mss);
-
 }
 
 void ROVisibilityIterator::initmultims(const Block<MeasurementSet> &mss){
@@ -259,10 +255,10 @@ ROVisibilityIterator::operator=(const ROVisibilityIterator& other)
   visCube_p.assign(other.visCube_p);
   visOK_p = other.visOK_p;
   weightSlicer_p=other.weightSlicer_p;
+  msHasWtSp_p = other.msHasWtSp_p;
   weightSpOK_p = other.weightSpOK_p;
 
   // Column access functions
-  msHasWtSp_p = other.msHasWtSp_p;
 
   colAntenna1.reference(other.colAntenna1);
   colAntenna2.reference(other.colAntenna2);
@@ -1798,7 +1794,7 @@ Matrix<Float>& ROVisibilityIterator::weightMat(Matrix<Float>& wtmat) const
 Bool ROVisibilityIterator::existsWeightSpectrum()
 {
   if(msIter_p.newMS()){ // Cache to avoid testing unnecessarily.
-    try {
+    try{
       msHasWtSp_p = (!colWeightSpectrum.isNull() &&
                      colWeightSpectrum.isDefined(0) &&
                      colWeightSpectrum.shape(0)[0] > 0 &&
@@ -1816,9 +1812,10 @@ Bool ROVisibilityIterator::existsWeightSpectrum()
       //   cerr << "(nPol_p, channelGroupSize()): " << nPol_p 
       //        << ", " << channelGroupSize() << endl;
       // }
-    } catch (AipsError x) {
-      msHasWtSp_p = False;
     }
+    catch (AipsError x) {
+      msHasWtSp_p = False;
+    } 
   }
   return msHasWtSp_p;
 }

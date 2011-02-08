@@ -485,6 +485,21 @@ class SubMS
 				     const MS::PredefinedColumns col,
 				     const Bool writeToDataCol);
 
+  // Figures out the number, maximum, and index of the selected antennas.
+  uInt fillAntIndexer(const ROMSColumns *msc, Vector<Int>& antIndexer);
+
+  // Bits of fillTimeAverData() which were internal to it until they needed to
+  // be templated to support both FLOAT_DATA and the other data columns (all
+  // Complex).
+  template<class M>
+  void accumUnflgDataWS(Array<M>& data_toikit, const Array<Float>& unflgWtSpec,
+                        const Array<M>& inData, const Array<Bool>& flag,
+                        Matrix<M>& outData);
+  template<class M>
+  void accumUnflgData(Array<M>& data_toikit, const Vector<Float>& unflaggedwt,
+                      const Array<M>& inData, const Array<Bool>& flag,
+                      Matrix<M>& outData);
+
   // Read the input, time average it to timeBin_p, and write the output.
   // The first version uses VisibilityIterator (much faster), but the second
   // supports correlation selection using VisIterator.  VisIterator should be
