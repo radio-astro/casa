@@ -56,7 +56,7 @@ const Bool VlaData::loggingInitialized_p = initializeLogging();
 Int VlaData::logLevel_p = 1;
 
 VlaData::VlaData (Int nBuffers)
- : data_p (nBuffers, NULL)
+ : data_p (nBuffers, static_cast<VlaDatum *> (0))
 {
     viResetRequested_p = False;
     viResetComplete_p = False;
