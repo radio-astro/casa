@@ -1101,9 +1101,6 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
       //mfImageStep_p.get("Hz").getValue()/2.0,
       //					  mfImageStep_p.get("Hz").getValue(),
       //					  refChan, restFreq);
-      cerr<<"mfImageStart==="<<mfImageStart_p.get("Hz").getValue()<<endl;
-      cerr<<"mfImageStep==="<<mfImageStep_p.get("Hz").getValue()<<endl;
-      cerr<<"restFreq==="<<restFreq<<endl;
       mySpectral = new SpectralCoordinate(mfreqref,
       					  mfImageStart_p.get("Hz").getValue(),
       					  mfImageStep_p.get("Hz").getValue(),
@@ -1206,9 +1203,6 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
 	finc=freqResolution(IPosition(1,0))*imageStep_p;
       }
 
-      cerr<<"imagecoordinates: channel mode:::finc="<<finc<<endl;
-      cerr<<"freqs(0)="<<freqs(0)<<endl;
-      cerr<<"freqRes="<<freqResolution(IPosition(1,0))<<endl;
 
 	  //in order to outframe to work need to set here original freq frame
       //mySpectral = new SpectralCoordinate(freqFrame_p, freqs(0)-finc/2.0, finc,
