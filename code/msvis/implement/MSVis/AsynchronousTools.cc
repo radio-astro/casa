@@ -13,6 +13,8 @@
 #include <pthread.h>
 #include <queue>
 #include <semaphore.h>
+#include <fcntl.h>
+
 #include <time.h>
 #include <sys/time.h>
 
@@ -372,7 +374,25 @@ Mutex::lock ()
     ThrowIfError (code, "Mutex::lock failed");
 }
 
-/*
+//Bool
+//Mutex::lock (Int milliseconds)
+//{
+//
+//    Assert (milliseconds >= 0); // weird if it's negative
+//
+//    struct timespec t = convertMsDeltaToTimespec (milliseconds);
+//    int code = pthread_mutex_timedlock (impl_p->mutex_p, & t);
+//
+//    bool gotLock = true;
+//    if (code == ETIMEDOUT){
+//        gotLock = false;
+//    }
+//    else{
+//        ThrowIfError (code, format ("Mutex::lock (%d)", milliseconds));
+//    }
+//
+//    return gotLock;
+//}
 Bool
 Mutex::lock (Int milliseconds)
 {
@@ -434,17 +454,35 @@ Semaphore::Semaphore (int initialValue)
     Assert (initialValue >= 0);
 
     impl_p = new SemaphoreImpl ();
-    impl_p->semaphore_p = new sem_t;
-    int code = sem_init (impl_p->semaphore_p, 0, initialValue);
-    ThrowIfError (code == 0 ? 0 : errno, "Semaphore::init");
+
+    // Since Mac doesn't support unnamed semaphores, try and find a
+    // unique name for the semaphore.  Names will be of the form
+    // "/Semaphore_xxx"
+
+    int code = 0;
+    int i = 0;
+
+    do {
+
+        ++ i;
+
+        name_p = utilj::format ("/CasaAsync_%03d", i);
+        impl_p->semaphore_p = sem_open (name_p.c_str(), O_CREAT | O_EXCL, 0700, initialValue);//new sem_t;
+        code = (impl_p->semaphore_p == SEM_FAILED) ? errno : 0;
+
+    } while (impl_p->semaphore_p == SEM_FAILED && code == EEXIST);
+
+    ThrowIfError (code, "Semaphore::open: name='" + name_p + "'");
 }
 
 Semaphore::~Semaphore ()
 {
-    int code = sem_destroy (impl_p->semaphore_p);
-    ThrowIfError (code == 0 ? 0 : errno, "Semaphore::destroy");
+    int code = sem_close (impl_p->semaphore_p);
+    ThrowIfError (code == 0 ? 0 : errno, "Semaphore::close");
 
-    delete impl_p->semaphore_p;
+    code = sem_unlink (name_p.c_str());
+    ThrowIfError (code == 0 ? 0 : errno, "Semaphore::unlink: name='" + name_p + "'");
+
     delete impl_p;
 }
 

@@ -8,10 +8,15 @@
 #include "UtilJ.h"
 using namespace casa::utilj;
 
+#include <casa/Containers/Record.h>
+
 #include "VisBufferAsync.h"
 #include "VisibilityIterator.h"
 #include "VisibilityIteratorAsync.h"
 #include "VLAT.h"
+#include <algorithm>
+
+using std::transform;
 
 #include <ms/MeasurementSets/MSColumns.h>
 #include <typeinfo>
@@ -465,6 +470,49 @@ VisBufferAsync::fillFrom (const VisBufferAsync & other)
 
 }
 
+Vector<MDirection>&
+VisBufferAsync::fillDirection1()
+{
+    // Perform filling in the normal way
+
+    VisBuffer::fillDirection1();
+
+    // Now install unshared copies of the direction objects
+
+    transform (direction1_p.begin(), direction1_p.end(), direction1_p.begin(), unshared);
+
+    return direction1_p;
+}
+
+Vector<MDirection>&
+VisBufferAsync::fillDirection2()
+{
+    // Perform filling in the normal way
+
+    VisBuffer::fillDirection2();
+
+    // Now install unshared copies of the direction objects
+
+    transform (direction2_p.begin(), direction2_p.end(), direction2_p.begin(), unshared);
+
+    return direction2 ();
+}
+
+MDirection &
+VisBufferAsync::fillPhaseCenter()
+{
+    // Perform filling in the normal way
+
+    VisBuffer::fillPhaseCenter();
+
+    // Now convert the value to an unshared one.
+
+    phaseCenter_p = unshared (phaseCenter_p);
+
+    return phaseCenter_p;
+}
+
+
 Double
 VisBufferAsync::hourang(Double time) const
 {
@@ -728,6 +776,35 @@ VisBufferAsync::setVisibilityShape (const IPosition & visibilityShape)
 {
     visibilityShape_p = visibilityShape;
 }
+
+MDirection
+VisBufferAsync::unshared (const MDirection & direction)
+{
+    // Make a completely distinct copy of this direction.  The
+    // methods provided by MDirection always result in the sharing
+    // of the measurement reference object so this roundabout
+    // approach is necessary.
+
+    // Using a MeasureHolder object, transform the contents of the
+    // direction into a generic record.
+
+    MeasureHolder original (direction);
+    Record record;
+    String err;
+
+    original.toRecord(err, record);
+
+    // Now use the record to create another MDirection object using
+    // the record created to hold the original's information.
+
+    MeasureHolder copy;
+    copy.fromRecord (err, record);
+
+    MDirection result = copy.asMDirection();
+
+    return result;
+}
+
 
 void
 VisBufferAsync::updateCoordInfo(const VisBuffer * other)

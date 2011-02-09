@@ -734,8 +734,8 @@ private:
     Vector<Int>& fillChannel();
     Vector<SquareMatrix<Complex, 2> >& fillCjones();
     Vector<Int>& fillCorrType();
-    Vector<MDirection>& fillDirection1();
-    Vector<MDirection>& fillDirection2();
+    virtual Vector<MDirection>& fillDirection1();
+    virtual Vector<MDirection>& fillDirection2();
     Vector<Double>& fillExposure();
     Vector<Int>& fillFeed1();
     Vector<Float>& fillFeed1_pa();
@@ -754,7 +754,7 @@ private:
     Int & fillnCorr();
     Int & fillnRow();
     Vector<Int> & fillObservationId();
-    MDirection & fillPhaseCenter();
+    virtual MDirection & fillPhaseCenter();
     Int & fillPolFrame();
     Vector<Int> & fillProcessorId();
     Vector<Int> & fillScan();

@@ -36,7 +36,7 @@ public:
     virtual ~Mutex ();
 
     void lock ();
-    // Bool lock (Int milliseconds);
+    //Bool lock (Int milliseconds);
     void unlock ();
     Bool trylock ();
 
@@ -106,6 +106,7 @@ public:
 private:
 
     SemaphoreImpl * impl_p;
+    String name_p;
 
     Semaphore (const Semaphore & other); // illegal operation: do not define
     Semaphore operator= (const Semaphore & other); // illegal operation: do not define

@@ -66,6 +66,9 @@ protected:
     void copyAsyncValues (const VisBufferAsync & other);
     template<typename T> void copyVector (const Vector<T> & from, Vector<T> & to);
     void fillFrom (const VisBufferAsync & other);
+    Vector<MDirection>& fillDirection1();
+    Vector<MDirection>& fillDirection2();
+    MDirection & fillPhaseCenter();
     void setDataDescriptionId (Int id);
     void setFilling (Bool isFilling);
     void setLsrInfo (const Block<Int> & channelStart,
@@ -90,6 +93,7 @@ protected:
     void setVisibilityShape (const IPosition & pvisibilityShape);
     void updateCoordInfo (const VisBuffer *);
 
+    static MDirection unshared (const MDirection & direction);
 
 private:
 

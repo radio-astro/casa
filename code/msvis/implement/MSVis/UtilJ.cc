@@ -207,7 +207,7 @@ throwIfError (int errorCode, const String & prefix, const String & file, Int lin
 	// of the error.
 
 	if (errorCode != 0) {
-		AipsErrorTrace e (format ("%s (%d):%s", prefix.c_str(), errorCode, strerror (errorCode)),
+		AipsErrorTrace e (format ("%s (errno=%d):%s", prefix.c_str(), errorCode, strerror (errorCode)),
 				          file.c_str(), line);
 
 #       if defined (NDEBUG)
