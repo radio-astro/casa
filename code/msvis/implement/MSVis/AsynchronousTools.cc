@@ -374,25 +374,7 @@ Mutex::lock ()
     ThrowIfError (code, "Mutex::lock failed");
 }
 
-//Bool
-//Mutex::lock (Int milliseconds)
-//{
-//
-//    Assert (milliseconds >= 0); // weird if it's negative
-//
-//    struct timespec t = convertMsDeltaToTimespec (milliseconds);
-//    int code = pthread_mutex_timedlock (impl_p->mutex_p, & t);
-//
-//    bool gotLock = true;
-//    if (code == ETIMEDOUT){
-//        gotLock = false;
-//    }
-//    else{
-//        ThrowIfError (code, format ("Mutex::lock (%d)", milliseconds));
-//    }
-//
-//    return gotLock;
-//}
+/*
 Bool
 Mutex::lock (Int milliseconds)
 {
