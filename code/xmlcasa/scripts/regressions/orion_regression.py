@@ -265,14 +265,14 @@ print >>logfile,'*                               *'
 #              Test name          Stat type Expected  Label irregularities 
 test_descs = (('Feather 1',           'max',  0.780,  ' '),
 	      ('Feather 2',           'max',  0.978,  ' '),
-	      ('SD Model (MS)',       'max',  1.16),
+	      ('SD Model (MS)',       'max',  1.14),
 	      ('SD Model (MEM)',      'max',  0.906),
 	      ('Joint Deconvolution', 'max',  1.10, '', 'Joint Decon1'), # 1.014
 	      ('Feather 1',           'flux', 242.506,  ' '),
 	      ('Feather 2',           'flux', 242.506,  ' '),
-	      ('SD Model (MS)',       'flux', 368, ' ', 'SD Model (MS)', 'Feather 3'),
+	      ('SD Model (MS)',       'flux', 347, ' ', 'SD Model (MS)', 'Feather 3'),
 	      ('SD Model (MEM)',      'flux', 286, '', 'SD Model (MEM)', 'Joint Deconvolution'),
-	      ('Joint Deconvolution', 'flux', 225, '', 'Joint Decon2')) # 360.468
+	      ('Joint Deconvolution', 'flux', 226, '', 'Joint Decon2')) # 360.468
 
 def log_test_result(test_results, testdesc, logfile):
 	"""Append testdesc to logfile and return whether or not the test was
