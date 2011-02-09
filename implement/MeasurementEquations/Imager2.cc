@@ -1911,7 +1911,7 @@ Bool Imager::pbguts(ImageInterface<Float>& inImage,
       ObsInfo oi = inImage.coordinates().obsInfo();
       String myTelescope = oi.telescope();
       if (myTelescope == "") {
-	os << LogIO::SEVERE << "No telescope imbedded in image" << LogIO::POST;
+	os << LogIO::SEVERE << "No telescope embedded in image" << LogIO::POST;
 	return False;
       }
       {
@@ -1933,11 +1933,16 @@ Bool Imager::pbguts(ImageInterface<Float>& inImage,
       String pbName;
       // get freq from coordinates
       PBMath::whichCommonPBtoUse (myTelescope, qFreq, band, whichPB, pbName);
-      if (whichPB  == PBMath::UNKNOWN) {
-	os << LogIO::SEVERE << "Unknown telescope for PB type: " << myTelescope << LogIO::POST;
-	return False;
+      if (whichPB  != PBMath::UNKNOWN) {
+      
+	myPBp = new PBMath(whichPB);
       }
-      myPBp = new PBMath(whichPB);
+      else{
+	ROMSAntennaColumns ac(ms_p->antenna());
+	Double dishDiam=ac.dishDiameter()(0);
+	myPBp= new PBMath(dishDiam, True, qFreq);
+
+      }
     } else {
       // get the PB from the vpTable
       Table vpTable( vpTableStr_p );
@@ -4198,4 +4203,6 @@ String Imager::dQuantitytoString(const Quantity& dq) {
 } 
 
 } //# NAMESPACE CASA - END
+
+
 

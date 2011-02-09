@@ -90,7 +90,8 @@ MatrixCleaner::MatrixCleaner():
   itsDidStopPointMode(False),
   itsJustStarting(True),
   itsMaskThreshold(0.9),
-  psfShape_p(0)
+  psfShape_p(0),
+  noClean_p(False)
 {
   itsMemoryMB=Double(HostInfo::memoryTotal()/1024)/16.0;
   itsScales.resize(0);
@@ -118,7 +119,8 @@ MatrixCleaner::MatrixCleaner(const Matrix<Float> & psf,
   itsStopAtLargeScaleNegative(False),
   itsStopPointMode(-1),
   itsDidStopPointMode(False),
-  itsJustStarting(True)
+  itsJustStarting(True),
+  noClean_p(False)
 {
   AlwaysAssert(validatePsf(psf), AipsError);
   psfShape_p.resize(0, False);
@@ -191,6 +193,7 @@ MatrixCleaner & MatrixCleaner::operator=(const MatrixCleaner & other) {
     itsMaskThreshold = other.itsMaskThreshold;
     psfShape_p.resize(0, False);
     psfShape_p=other.psfShape_p;
+    noClean_p=other.noClean_p;
   }
   return *this;
 }
@@ -256,7 +259,8 @@ void MatrixCleaner::setMask(Matrix<Float> & mask, const Float& maskThreshold)
   // This is not needed after the first steps
   itsMask = new Matrix<Float>(mask.shape());
   itsMask->assign(mask);
-
+  if(max(*itsMask) < itsMaskThreshold)
+    noClean_p=True;
 
 
   if (itsScalesValid) {
@@ -374,6 +378,9 @@ Int MatrixCleaner::clean(Matrix<Float>& model,
            << "Mask thresholding is not used, values are interpreted as weights"
            <<LogIO::POST;
     } else {
+      // a mask that does not allow for clean was sent
+      if(noClean_p)
+	return 0;
         os << LogIO::NORMAL
            << "Cleaning pixels with mask values above " << itsMaskThreshold
            << LogIO::POST;
@@ -1088,6 +1095,7 @@ void MatrixCleaner::unsetMask()
   destroyMasks();
   if(!itsMask.null())
     itsMask=0;
+  noClean_p=False;
 }
 
 
@@ -1099,9 +1107,10 @@ void MatrixCleaner::unsetMask()
 
 Bool MatrixCleaner::makeScaleMasks()
 {
-  LogIO os(LogOrigin("deconvolver", "makeScaleMasks()", WHERE));
+  LogIO os(LogOrigin("MatrixCleaner", "makeScaleMasks()", WHERE));
   Int scale;
 
+  
   if(!itsScalesValid) {
     os << "Scales are not yet set - cannot set scale masks"
        << LogIO::EXCEPTION;
@@ -1110,7 +1119,7 @@ Bool MatrixCleaner::makeScaleMasks()
 
   destroyMasks();
 
-  if(itsMask.null())
+  if(itsMask.null() || noClean_p)
     return False;
 
   AlwaysAssert((itsMask->shape() == psfShape_p), AipsError);
@@ -1124,7 +1133,7 @@ Bool MatrixCleaner::makeScaleMasks()
   Matrix<Complex> cWork;
   for (scale=0; scale<itsNscales;scale++) {
     //AlwaysAssert(itsScaleXfrs[scale], AipsError);
-    os << "Calculating mask convolution for scale " << scale+1 << LogIO::POST;
+    os << "Calculating mask convolution for scale " << scale << LogIO::POST;
     
     // Mask * scale
      // Allow only 10% overlap by default, hence 0.9 is a default mask threshold

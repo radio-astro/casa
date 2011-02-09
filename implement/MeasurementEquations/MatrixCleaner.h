@@ -344,6 +344,7 @@ private:
   // discarded (although effectively they would be discarded if the mask value is 0.)
 
   IPosition psfShape_p;
+  Bool noClean_p;
 
 };
 
