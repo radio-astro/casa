@@ -6,6 +6,8 @@
  */
 
 #include <stdarg.h>
+#include <cstdio>
+#include <cstring>
 #include <errno.h>
 
 #include <casa/aips.h>

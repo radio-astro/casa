@@ -12,6 +12,7 @@
 #include <casa/BasicSL/String.h>
 #include <casa/Exceptions/Error.h>
 #include <cassert>
+#include <cstdlib>
 
 // The Assert macro is an alias to the standard assert macro when NDEBUG is defined.  When
 // NDEBUG is not defined (release build) then a throw is used to report the error.

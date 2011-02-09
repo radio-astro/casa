@@ -14,6 +14,7 @@ using namespace casa::utilj;
 #include "VLAT.h"
 
 #include <ms/MeasurementSets/MSColumns.h>
+#include <typeinfo>
 
 #define Log(level, ...) \
     {if (VlaData::loggingInitialized_p && level <= VlaData::logLevel_p) \

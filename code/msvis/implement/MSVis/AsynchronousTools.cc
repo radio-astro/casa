@@ -7,6 +7,7 @@
 
 #include <assert.h>
 #include <cstdarg>
+#include <cstring>
 #include <errno.h>
 #include <fstream>
 #include <pthread.h>
