@@ -76,8 +76,6 @@
 import os
 import numpy
 from taskinit import *
-from imregion import *
-
 
 def imsmooth( imagename, kernel, major, minor, pa, targetres, region, box, chans, stokes, mask, outfile):
     casalog.origin( 'imsmooth' )
@@ -126,7 +124,7 @@ def imsmooth( imagename, kernel, major, minor, pa, targetres, region, box, chans
             casalog.post( "Calling convolve2d with Gaussian kernel", 'NORMAL3' )
             _myia.open( imagename )
             if (targetres):
-                [major, minor, pa, dsuccess] = _get_parms_for_targetres(major, minor, pa)
+                [major, minor, pa, dsuccess] = _get_parms_for_targetres(_myia, major, minor, pa)
                 if not dsuccess:
                     _myia.done()
                     return False
@@ -180,8 +178,8 @@ def imsmooth( imagename, kernel, major, minor, pa, targetres, region, box, chans
     
     return retValue
 
-def _get_parms_for_targetres(major, minor, pa):
-    beam = _myia.restoringbeam()
+def _get_parms_for_targetres(myia, major, minor, pa):
+    beam = myia.restoringbeam()
     if (not beam):
         casalog.post(
             "targetres is True but input image does not have a restoring beam so I "
@@ -195,7 +193,7 @@ def _get_parms_for_targetres(major, minor, pa):
     bmaj = qa.tos(beam['major'])
     bmin = qa.tos(beam['minor'])
     bpa = qa.tos(beam['positionangle'])
-    dres = _myia.deconvolvefrombeam(
+    dres = myia.deconvolvefrombeam(
         beam=[bmaj, bmin, bpa], source=[major, minor, pa]
     )
     if not dres['fit']['success']:
@@ -203,7 +201,7 @@ def _get_parms_for_targetres(major, minor, pa):
             "targetres is True but the convolution parameters you have chosen are too "
                 + "small for this image's beam. The convolution parameters must be at "
                 + "least a bit larger than the current beam parameters. "
-                + "The current beam parameters are " + str(_myia.restoringbeam()),
+                + "The current beam parameters are " + str(myia.restoringbeam()),
                 'SEVERE'
         )
         return [0,0,0,False]
@@ -218,7 +216,7 @@ def _get_parms_for_targetres(major, minor, pa):
                 + "least a bit larger than the current beam parameters or in this case "
                 + "you may instead be able to set the position angle so it is more nearly "
                 + "equal to that of the position angle of the clean beam of the input "
-                + "image. The current beam parameters are " + str(_myia.restoringbeam()),
+                + "image. The current beam parameters are " + str(myia.restoringbeam()),
                 'SEVERE'
         )
         return [0,0,0,False]
