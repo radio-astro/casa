@@ -102,60 +102,36 @@ def imval(imagename=None,region=None,box=None,chans=None,stokes=None):
     # If we get to this point and find that nothing was
     # given for the box parameter we use the reference
     # pixel values.
-    if ( len(box) < 1 ):
+    myia.open(imagename)
+    mycsys = myia.coordsys()  
+
+    if ( len(box) == 0 and len(region) == 0):
         try:
-            # Open the image for processing!
-            myia.open(imagename)
-            
-            csys=myia.coordsys()
-            ref_values = csys.referencepixel()['numeric']
+            # Open the image for processing!            
+            ref_values = mycsys.referencepixel()['numeric']
             values = ref_values.tolist()
             box = str(int(round(values[axes[0][0]])))+','\
                   + str(int(round(values[axes[1][0]])))+',' \
                   + str(int(round(values[axes[0][0]])))+','\
                    +str(int(round(values[axes[1][0]])))
-            myia.done()
         except:
             myia.done()
             raise Exception, "Unable to find the size of the input image."
-            
-    # Get the region information, if the user has specified
-    # a region file it is given higher priority.
-    reg={}
-    try:
-        if ( len(region)>1 ):
-            if ( len(box)<1 or len(chans)<1 or len(stokes)<1 ):
-                casalog.post( "Ignoring region selection\ninformation in"\
-                              " the box, chans, and stokes parameters."\
-                              " Using region information\nin file: "\
-                              + region, 'WARN' );                
-            if os.path.exists( region ):
-                # We have a region file on disk!
-                reg=rg.fromfiletorecord( region );
-            else:
-                print "READING TABLE from File:"                
-                # The name given is the name of a region stored
-                # with the image.
-                # Note that we accept:
-                #    'regionname'          -  assumed to be in imagename
-                #    'my.image:regionname' - in my.image
-                reg_names=region.split(':')
-                if ( len( reg_names ) == 1 ):
-                    reg=rg.fromtabletorecord( imagename, region, False )
-                else:
-                    reg=rg.fromtabletorecord( reg_names[0], reg_names[1], False )
-        else:
-            # Need to evaluate wheather we want dropdeg=True of False
-            # here.  Depends if users want the default to be the first
-            # slice/value on a partiuclar axis, or all values along that
-            # axis.
-            reg=imregion( imagename, chans, stokes, box, '', '', False )
-    except:
-        raise Exception, 'Ill-formed region: '+str(reg)+'. can not continue.' 
-    if (not reg or len( reg .keys() ) < 1 ):
-        raise Exception, 'Ill-formed region: '+str(reg)+'. can not continue.'
-    casalog.post( "imval is using region: "+str(reg), 'DEBUG1' )
+          
+    # Because the help file says -1 is valid, apparently that's supported functionality, good grief
     
+    if box.startswith("-1"):
+        box = ""
+    if chans.startswith("-1"):
+        chans = ""
+    if stokes.startswith("-1"):
+        stokes = ""
+    reg = rg.frombcs(
+        mycsys.torecord(), myia.shape(), box, chans,
+        stokes, "a", region
+    )
+    myia.done()
+
     # Now that we know which axes we are using, and have the region
     # selected, lets get that stats!  NOTE: if you have axes size
     # greater then 0 then the maxpos and minpos will not be displayed
@@ -163,8 +139,6 @@ def imval(imagename=None,region=None,box=None,chans=None,stokes=None):
         casalog.post( "Complex region found, only processing the first"\
                       " SIMPLE region found", "WARN" )
         reg=reg['regions']['*1']
-
-
 
     # Make sure they are sorted first.
     reg['blc'].keys().sort()
@@ -202,12 +176,7 @@ def imval(imagename=None,region=None,box=None,chans=None,stokes=None):
  
     retValue = _imval_getregion( imagename, reg )
     retValue['axes']=axes
-    #imval_print( retValue, imagename )
 
-
-    # Cleanup
-    del axes, reg
-    # myia.done()
     casalog.post( 'imval task complete for region bound by blc='+str(retValue['blc'])+' and trc='+str(retValue['trc']), 'NORMAL1' )
     return retValue
                 
