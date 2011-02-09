@@ -263,8 +263,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       Matrix<Float> maskMat;
       Array<Float> mbuf;
       mask_p->get(mbuf, True);
-      //cerr << "mask shape " << mbuf.shape() << endl;
       maskMat.reference(mbuf);
+     
       matClean_p.setMask(maskMat, maskThresh_p);
     }
     if(!psf_p)
@@ -341,6 +341,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    }
 	    //use one plane mask to all planes
 	    else if(nMaskChan_p==1){
+	      if((nMaskPol_p >1) && (mask_p !=0) ){
+		Matrix<Float> maskSub;
+		Array<Float> buf2;
+		mask_p->getSlice(buf2, sl, True);
+		maskSub.reference(buf2);
+		matClean_p.setMask(maskSub, maskThresh_p);
+	      }
 	      matClean_p.makeScaleMasks();
 	    }
 	    else{
