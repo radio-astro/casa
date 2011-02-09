@@ -302,7 +302,7 @@ calibrations can be applied on the fly.
               default: 'inf' (~infinite, up to boundaries controlled by combine); 
               Options: 'inf' (~infinite), 'int' (per integration), any float
                        or integer value with or without units
-              examples: solint='1m'; solint='60s', solint=60 --&gt; 1 minute
+              examples: solint='1min'; solint='60s', solint=60 --&gt; 1 minute
                         solint='0s'; solint=0; solint='int' --&gt; per integration
                         solint-'-1s'; solint='inf' --&gt; ~infinite, up to boundaries
                         enforced by combine
