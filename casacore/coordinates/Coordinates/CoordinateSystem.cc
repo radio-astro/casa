@@ -4331,6 +4331,25 @@ Vector<Int> CoordinateSystem::directionAxesNumbers() const {
     return pixelAxes(directionCoordinateNumber());
 }
 
+Int CoordinateSystem::linearCoordinateNumber() const {
+    // don't do a hasLinearCoordinate() check or you will go down an infinite recursion path
+    return findCoordinate(Coordinate::LINEAR);
+}
+
+Bool CoordinateSystem::hasLinearCoordinate() const {
+    Int linearCoordNum = linearCoordinateNumber();
+    return (
+        linearCoordNum >= 0
+        && linearCoordNum < (Int)nCoordinates()
+    );
+}
+
+Vector<Int> CoordinateSystem::linearAxesNumbers() const {
+    if (! hasLinearCoordinate()) {
+      return Vector<Int>();
+    }
+    return pixelAxes(linearCoordinateNumber());
+}
 
 } //# NAMESPACE CASA - END
 
