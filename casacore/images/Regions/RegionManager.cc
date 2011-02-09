@@ -1174,8 +1174,6 @@ namespace casa { //# name space casa begins
   		diagnostics = "Region read from file " + regionName;
   	}
   	else if (regionName.matches(image)) {
-  	  cout << __FILE__ << " " << __LINE__ << endl;
-
   		ImageRegion imRegion;
   		String res[2];
   		casa::split(regionName, res, 2, ":");
@@ -1205,8 +1203,6 @@ namespace casa { //# name space casa begins
   		}
   	}
   	else {
-  	  cout << __FILE__ << " " << __LINE__ << endl;
-
   		*itsLog << "Unable to open region file or region table description "
   			<< regionName << LogIO::EXCEPTION;
   	}
@@ -1233,8 +1229,18 @@ namespace casa { //# name space casa begins
 	  );
 	  Vector<Double> boxCorners;
 	  if (box.empty()) {
-	    	if(itsCSys->hasDirectionCoordinate()) {
-	    		Vector<Int> dirAxesNumbers = itsCSys->directionAxesNumbers();
+	    	if (
+	    		itsCSys->hasDirectionCoordinate()
+	    		|| itsCSys->hasLinearCoordinate()
+	    	) {
+	    		Vector<Int> dirAxesNumbers;
+	    		if (itsCSys->hasDirectionCoordinate()) {
+	    			dirAxesNumbers = itsCSys->directionAxesNumbers();
+	    		}
+	    		else {
+	    			dirAxesNumbers = itsCSys->linearAxesNumbers();
+
+	    		}
 	    		Vector<Int> dirShape(2);
 	    		dirShape[0] = imShape[dirAxesNumbers[0]];
 	    		dirShape[1] = imShape[dirAxesNumbers[1]];
@@ -1259,12 +1265,13 @@ namespace casa { //# name space casa begins
 		  const Vector<uInt>& chanEndPts, const Vector<uInt>& polEndPts,
 		  const IPosition imShape
   ) const {
-	  String method(__FUNCTION__);
-	  LogOrigin origin("ImageInputProcessor", method);
+	  LogOrigin origin("ImageInputProcessor", __FUNCTION__);
 	  *itsLog << origin;
 	  Vector<Double> blc(imShape.nelements(), 0);
 	  Vector<Double> trc(imShape.nelements(), 0);
 	  Vector<Int> directionAxisNumbers = itsCSys->directionAxesNumbers();
+	  Vector<Int> linearAxisNumbers = itsCSys->linearAxesNumbers();
+
 	  Int spectralAxisNumber = itsCSys->spectralAxisNumber();
 	  Int polarizationAxisNumber = itsCSys->polarizationAxisNumber();
 
@@ -1278,8 +1285,20 @@ namespace casa { //# name space casa begins
 			  *itsLog << "blc in box spec is less than 0" << LogIO::EXCEPTION;
 		  }
 		  if (
-				  x >= imShape[directionAxisNumbers[0]]
-				               || y >= imShape[directionAxisNumbers[1]]
+			  (
+			      itsCSys->hasDirectionCoordinate()
+			      && (
+			          x >= imShape[directionAxisNumbers[0]]
+			          || y >= imShape[directionAxisNumbers[1]]
+			      )
+			  )
+			  || (
+		          itsCSys->hasLinearCoordinate()
+		          && (
+		              x >= imShape[linearAxisNumbers[0]]
+		              || y >= imShape[linearAxisNumbers[1]]
+		          )
+			  )
 		  ) {
 			  *itsLog << "trc in box spec is greater than or equal to number "
 					  << "of direction pixels in the image" << LogIO::EXCEPTION;
@@ -1287,7 +1306,6 @@ namespace casa { //# name space casa begins
 		  xCorners[i] = x;
 		  yCorners[i] = y;
 	  }
-
 	  Vector<Double> polEndPtsDouble(polEndPts.size());
 	  for (uInt i=0; i<polEndPts.size(); i++) {
 		  polEndPtsDouble[i] = (Double)polEndPts[i];
@@ -1298,7 +1316,10 @@ namespace casa { //# name space casa begins
 		  chanEndPtsDouble[i] = (Double)chanEndPts[i];
 	  }
 	  uInt nRegions = 1;
-	  if (itsCSys->hasDirectionCoordinate()) {
+	  if (itsCSys->hasDirectionCoordinate())  {
+		  nRegions *= boxCorners.size()/4;
+	  }
+	  if (itsCSys->hasLinearCoordinate())  {
 		  nRegions *= boxCorners.size()/4;
 	  }
 	  if (itsCSys->hasPolarizationAxis()) {
@@ -1307,16 +1328,19 @@ namespace casa { //# name space casa begins
 	  if (itsCSys->hasSpectralAxis()) {
 		  nRegions *= chanEndPts.size()/2;
 	  }
-
 	  Vector<Double> extXCorners(2*nRegions);
 	  Vector<Double> extYCorners(2*nRegions);
 	  Vector<Double> extPolEndPts(2*nRegions);
 	  Vector<Double> extChanEndPts(2*nRegions);
+
 	  uInt count = 0;
 	  for (uInt i=0; i<max(uInt(1), xCorners.size()/2); i++) {
 		  for (uInt j=0; j<max((uInt)1, polEndPts.size()/2); j++) {
 			  for (uInt k=0; k<max(uInt(1), chanEndPts.size()/2); k++) {
-				  if (itsCSys->hasDirectionCoordinate()) {
+				  if (
+					  itsCSys->hasDirectionCoordinate()
+					  || itsCSys->hasLinearCoordinate()
+			      ) {
 					  extXCorners[2*count] = xCorners[2*i];
 					  extXCorners[2*count + 1] = xCorners[2*i + 1];
 					  extYCorners[2*count] = yCorners[2*i];
@@ -1337,10 +1361,28 @@ namespace casa { //# name space casa begins
 	  HashMap<uInt, Vector<Double> > axisCornerMap;
 	  for (uInt i=0; i<nRegions; i++) {
 		  for (uInt axisNumber=0; axisNumber<itsCSys->nPixelAxes(); axisNumber++) {
-			  if (directionAxisNumbers.size() > 1 && (Int)axisNumber == directionAxisNumbers[0]) {
+			  if (
+			      (
+			          directionAxisNumbers.size() > 1
+			          && (Int)axisNumber == directionAxisNumbers[0]
+			      )
+			      || (
+				      linearAxisNumbers.size() > 1
+				      && (Int)axisNumber == linearAxisNumbers[0]
+				  )
+			  ) {
 				  axisCornerMap(axisNumber) = extXCorners;
 			  }
-			  else if (directionAxisNumbers.size() > 1 && (Int)axisNumber == directionAxisNumbers[1]) {
+			  else if (
+				      (
+				          directionAxisNumbers.size() > 1
+				          && (Int)axisNumber == directionAxisNumbers[1]
+				      )
+				      || (
+					      linearAxisNumbers.size() > 1
+					      && (Int)axisNumber == linearAxisNumbers[1]
+					  )
+			  ) {
 				  axisCornerMap(axisNumber) = extYCorners;
 			  }
 			  else if ((Int)axisNumber == spectralAxisNumber) {
