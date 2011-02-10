@@ -188,23 +188,6 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
 
   log << LogIO::DEBUG1 << "ms shapes verified " << endl << LogIO::POST;
 
-
-  // merge ANTENNA and FEED
-  uInt oldRows = itsMS.antenna().nrow();
-  uInt oldFRows = itsMS.feed().nrow();
-  const Block<uInt> newAntIndices = 
-    copyAntennaAndFeed(otherMS.antenna(), otherMS.feed());
-  {
-    uInt addedRows = itsMS.antenna().nrow() - oldRows;
-    uInt matchedRows = otherMS.antenna().nrow() - addedRows;
-    log << "Added " << addedRows 
-	<< " rows and matched " << matchedRows 
-	<< " from the antenna subtable" << endl;
-    addedRows = itsMS.feed().nrow() - oldFRows;
-    log << "Added " << addedRows 
-	<< " rows to the feed subtable" << endl;
-  }
-
   // merge STATE
   Block<uInt> newStateIndices;
   Bool doState = False;
@@ -234,7 +217,7 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
   }
 
   // DATA_DESCRIPTION
-  oldRows = itsMS.dataDescription().nrow();
+  uInt oldRows = itsMS.dataDescription().nrow();
   const Block<uInt> newDDIndices = copySpwAndPol(otherMS.spectralWindow(),
 						 otherMS.polarization(),
 						 otherMS.dataDescription());
@@ -256,6 +239,23 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
 	  << " redundant rows from the source subtable" << LogIO::POST;
     }
   }
+
+  // merge ANTENNA and FEED
+  oldRows = itsMS.antenna().nrow();
+  uInt oldFeedRows = itsMS.feed().nrow();
+  const Block<uInt> newAntIndices = copyAntennaAndFeed(otherMS.antenna(), 
+						       otherMS.feed());
+  {
+    uInt addedRows = itsMS.antenna().nrow() - oldRows;
+    uInt matchedRows = otherMS.antenna().nrow() - addedRows;
+    log << "Added " << addedRows 
+	<< " rows and matched " << matchedRows 
+	<< " from the antenna subtable" << endl;
+    addedRows = itsMS.feed().nrow() - oldFeedRows;
+    log << "Added " << addedRows 
+	<< " rows to the feed subtable" << endl;
+  }
+
 
   // FIELD
   oldRows = itsMS.field().nrow();
@@ -783,6 +783,7 @@ Int MSConcat::copyObservation(const MSObservation& otherObs,
 
 Block<uInt> MSConcat::copyAntennaAndFeed(const MSAntenna& otherAnt,
 					 const MSFeed& otherFeed) {
+  // uses newSPWIndex_p; to be called after copySpwAndPol
   const uInt nAntIds = otherAnt.nrow();
   Block<uInt> antMap(nAntIds);
 
@@ -797,6 +798,7 @@ Block<uInt> MSConcat::copyAntennaAndFeed(const MSAntenna& otherAnt,
   const ROMSFeedColumns otherFeedCols(otherFeed);
 
   const String& antIndxName = MSFeed::columnName(MSFeed::ANTENNA_ID);
+  const String& spwIndxName = MSFeed::columnName(MSFeed::SPECTRAL_WINDOW_ID);
   MSFeed& feed = itsMS.feed();
   const ROTableRow otherFeedRow(otherFeed);
   TableRow feedRow(feed);
@@ -808,6 +810,7 @@ Block<uInt> MSConcat::copyAntennaAndFeed(const MSAntenna& otherAnt,
   RecordFieldPtr<Int> itsAntInd(itsFeedIndex.accessKey(), antIndxName);
 
   RecordFieldId antField(antIndxName);
+  RecordFieldId spwField(spwIndxName);
   
   for (uInt a = 0; a < nAntIds; a++) {
     const Int newAntId = antCols.matchAntenna(otherAntCols.name()(a), 
@@ -817,8 +820,10 @@ Block<uInt> MSConcat::copyAntennaAndFeed(const MSAntenna& otherAnt,
 
     if (newAntId >= 0 && 
 	antCols.station()(newAntId)==otherAntCols.station()(a) ) { // require that also the STATION matches
+
       // Check that the FEED table contains all the entries for
       // this antenna and that they are the same.      
+
       *antInd = a;
       *itsAntInd = newAntId;
       const Vector<uInt> feedsToCompare = feedIndex.getRowNumbers();
@@ -830,11 +835,17 @@ Block<uInt> MSConcat::copyAntennaAndFeed(const MSAntenna& otherAnt,
       Unit m("m"); 
 
       if(itsFeedsToCompare.nelements() == nFeedsToCompare){
-	//cout << "Antenna " << a << " same number of feeds " << endl;
+	//cout << "Antenna " << a << " same number of feeds: "<< nFeedsToCompare << endl;
 	for(uInt f=0; f<nFeedsToCompare; f++){
 	  uInt k = feedsToCompare(f);
 	  Quantum<Double> newTimeQ;
 	  Quantum<Double> newIntervalQ;
+
+	  Int newSPWId = otherFeedCols.spectralWindowId()(k);
+	  if(doSPW_p){ // the SPW table was rearranged
+	    //cout << "modifiying spwid from " << newSPWId << " to " << newSPWIndex_p(newSPWId) << endl;
+	    newSPWId = newSPWIndex_p(newSPWId);
+	  }
 	  Quantum<Double> fLengthQ;
 	  if(!otherFeedCols.focusLengthQuant().isNull()){
 	    fLengthQ = otherFeedCols.focusLengthQuant()(k);
@@ -842,6 +853,8 @@ Block<uInt> MSConcat::copyAntennaAndFeed(const MSAntenna& otherAnt,
 	  const Int matchingFeedRow = feedCols.matchFeed(newTimeQ,
 							 newIntervalQ,
 							 a,
+							 otherFeedCols.feedId()(k),
+							 newSPWId,
 							 otherFeedCols.timeQuant()(k),
 							 otherFeedCols.intervalQuant()(k),
 							 otherFeedCols.numReceptors()(k),
@@ -857,11 +870,11 @@ Block<uInt> MSConcat::copyAntennaAndFeed(const MSAntenna& otherAnt,
 	    //cout << "Antenna " << a << " found matching feed " << matchingFeedRow << endl;
 	    if(newTimeQ.getValue(s)!=0.){ // need to adjust time information
 
-	      //cout << "this " << feedCols.timeQuant()(matchingFeedRow).getValue(s) << " " 
-	      //    <<  feedCols.intervalQuant()(matchingFeedRow).getValue(s) << endl;
-	      //cout << " other " << otherFeedCols.timeQuant()(k).getValue(s) << " " 
-	      //    << otherFeedCols.intervalQuant()(k).getValue(s)   << endl;
-	      //cout << " new " << newTimeQ.getValue(s) << " " << newIntervalQ.getValue(s) << endl;
+//  	      cout << "this " << feedCols.timeQuant()(matchingFeedRow).getValue(s) << " " 
+//  	          <<  feedCols.intervalQuant()(matchingFeedRow).getValue(s) << endl;
+//  	      cout << " other " << otherFeedCols.timeQuant()(k).getValue(s) << " " 
+//  	          << otherFeedCols.intervalQuant()(k).getValue(s)   << endl;
+//  	      cout << " new " << newTimeQ.getValue(s) << " " << newIntervalQ.getValue(s) << endl;
 
 	      // modify matchingFeedRow
 	      feedCols.timeQuant().put(matchingFeedRow, newTimeQ);
@@ -878,7 +891,8 @@ Block<uInt> MSConcat::copyAntennaAndFeed(const MSAntenna& otherAnt,
       addNewEntry = False;
 
       if(matchingFeeds != nFeedsToCompare){
-	//cout << "Antenna " << a << " did not find all needed feeds " << matchingFeeds << "/" << nFeedsToCompare << endl;
+//  	cout << "Antenna " << a << " did not find all needed feeds " 
+//  	     << matchingFeeds << "/" << nFeedsToCompare << endl;
 	const Vector<uInt> feedsToCopy = feedIndex.getRowNumbers();
 	const uInt nFeedsToCopy = feedsToCopy.nelements();
 	uInt destRow = feed.nrow();
@@ -895,16 +909,22 @@ Block<uInt> MSConcat::copyAntennaAndFeed(const MSAntenna& otherAnt,
 	    feed.addRow(1);
 	    feedRecord = otherFeedRow.get(feedsToCopy(f));
 	    feedRecord.define(antField, static_cast<Int>(antMap[a]));
+	    if(doSPW_p){ // the SPW table was rearranged
+	      Int newSPWId = otherFeedCols.spectralWindowId()(feedsToCopy(f));
+//  	      cout << "When writing new feed row: modifiying spwid from " << newSPWId 
+//  		   << " to " << newSPWIndex_p(newSPWId) << endl;
+	      feedRecord.define(spwField, newSPWIndex_p(newSPWId));
+	    }
 	    feedRow.putMatchingFields(destRow, feedRecord);
 	    rCount++;
 	    destRow++;
 	  }
 	}
-	//cout << "Added " << rCount << " rows to the Feed table." << endl;
+	//	cout << "Added " << rCount << " rows to the Feed table." << endl;
       }	
-      //else{
-      //   cout << "Antenna " << a << " found all matching feeds: " << matchingFeeds << endl;
-      //}
+//       else{
+// 	cout << "Antenna " << a << " found all matching feeds: " << matchingFeeds << endl;
+//       }
 
     }
 
