@@ -166,7 +166,6 @@
 import os
 import shutil
 from taskinit import *
-from imregion import *
 
 def immath(
     imagename, mode, outfile, expr, varnames, sigma,

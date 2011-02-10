@@ -60,17 +60,13 @@ def imval(imagename=None,region=None,box=None,chans=None,stokes=None):
             raise Exception, instance
 
     # If the box parameter only has two value then we copy
-    # them.  The imregion and other code expects for.  We
-    # assume that if there are only 2 that it contains an
-    # x (RA) and y (DEC) value only.
+    # them.  
     if ( box.count(',') == 1 ):
         box = box + ','+ box
 
     # If we are finding the value at a single point this
     # is a special case and we use ia.getpixelvalue()
-    #print "BOX: ", box
-    #print "CHANS: ", chans
-    #print "STOKES: ", stokes
+
     singlePt = _imval_get_single( box, chans, stokes, axes )
     #print "Single point is: ", singlePt, "   ", len(singlePt)
     if ( len( singlePt ) == 4 and singlePt.count( -1 ) < 1 ):

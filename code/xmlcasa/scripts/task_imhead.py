@@ -38,12 +38,6 @@
 # <reviewed reviwer="" date="" tests="" demos="">
 # </reviewed
 #
-# <prerequisite>
-# <ul>
-#   <li> <linkto class="imregion.py:description">imregion</linkto> 
-# </ul>
-# </prerequisite>
-#
 # <etymology>
 # imhead stands for image header
 # </etymology>

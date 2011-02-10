@@ -181,7 +181,6 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/fixvis_util.py
   scripts/get_user.py
   scripts/importarchive.py
-  scripts/imregion.py
   scripts/listing.py
   scripts/mindpipes.py
   scripts/pCASA.py

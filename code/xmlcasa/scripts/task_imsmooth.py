@@ -37,12 +37,6 @@
 # Shannon Jaeger (University of Calgary)
 # </author>
 #
-# <prerequisite>
-# <ul>
-#   <li> <linkto class="imregion.py:description">imregion</linkto> 
-# </ul>
-# </prerequisite>
-#
 # <etymology>
 # imsmooth stands for image smoothing
 # </etymology>

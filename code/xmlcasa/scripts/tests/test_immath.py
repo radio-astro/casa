@@ -40,7 +40,6 @@
 # <prerequisite>
 # <ul>
 #   <li> <linkto class="immath.py:description">immath</linkto> 
-#   <li> <linkto class="imregion.py:description">imregion</linkto> 
 # </ul>
 # </prerequisite>
 #

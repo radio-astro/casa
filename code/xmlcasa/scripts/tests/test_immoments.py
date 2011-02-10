@@ -37,13 +37,6 @@
 # <reviewed reviwer="" date="" tests="" demos="">
 # </reviewed
 #
-# <prerequisite>
-# <ul>
-#   <li> <linkto class="immoments.py:description">imregion</linkto> 
-#   <li> <linkto class="imregion.py:description">imregion</linkto> 
-# </ul>
-# </prerequisite>
-#
 # <etymology>
 # immoments_test stands for image momemnts test
 # </etymology>

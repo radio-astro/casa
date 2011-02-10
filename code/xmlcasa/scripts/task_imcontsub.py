@@ -1,6 +1,5 @@
 import os
 from taskinit import *
-from imregion import *
 
 from odict import odict
 
