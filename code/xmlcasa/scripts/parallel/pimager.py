@@ -10,9 +10,11 @@ import time
 import os
 import shutil
 import pdb
+import copy
 class pimager():
-    def __init__(self):
+    def __init__(self, cluster=''):
         self.msinfo=odict()
+        self.engineinfo=odict()
         self.spw=''
         self.field=''
         self.phasecenter=''
@@ -25,6 +27,7 @@ class pimager():
         self.robust=0.0
         self.stokes='I'
         self.visinmem=False
+        self.c=cluster
         os.environ['IPYTHONDIR']='./i_serpiante'  
         shutil.rmtree(os.environ['IPYTHONDIR'], True)
     def __del__(self):
@@ -1088,7 +1091,6 @@ class pimager():
             raise 'Number of MSs and hosts has to match for now' 
         return
 
-
     def pcontmultims(self, msnames=[], workdirs=[], imagename=None, imsize=[1000, 1000], 
                      pixsize=['1arcsec', '1arcsec'], phasecenter='', 
                      field='', spw='*', freqrange=['', ''],  stokes='I', ftmachine='ft', wprojplanes=128, facets=1, 
@@ -1176,7 +1178,174 @@ class pimager():
         ## the above will return the freqmin, freqmax in the data if freqrange is default
         freq=(freqrange[0]+freqrange[1])/2.0
         band=abs(freqrange[1]-freqrange[0])
-        self.makeconttempimages(imagename, contclean)
+        self.makeconttempimages(imagename, self.numcpu, contclean)
+        def gen_comm(msnames, field, freq, band, imname):
+            spwsel=[]
+            startsel=[]
+            nchansel=[]
+            for k in range(len(msnames)): 
+                msname=msnames[k]
+                spwsel.append(self.msinfo[msname]['spwids'].tolist())
+                startsel.append(self.msinfo[msname]['startsel'])
+                nchansel.append(self.msinfo[msname]['nchansel'])
+            freqsel='"%fHz"'%freq
+            bandsel='"%fHz"'%band
+            return 'a.imagecontmultims(msnames='+str(msnames)+', start='+str(startsel)+', numchan='+str(nchansel)+', field="'+str(field)+'", spw='+str(spwsel)+', freq='+freqsel+', band='+ bandsel+', imname="'+imname+'")'
+        ###major cycle
+        out=range(self.numcpu)
+        
+        for k in range(self.numcpu):
+            self.engineinfo[k]['msnames']=[]
+        t_msnames=copy.deepcopy(msnames)
+        counter=0
+        for k in range(len(msnames)):
+            self.engineinfo[counter]['msnames'].append(t_msnames.pop())
+            counter=counter+1
+            if(counter==self.numcpu):
+                counter=0
+        for maj in range(majorcycles):
+            myrec=self.msinfo
+            ##initial bunch of launches
+            for k in range(self.numcpu):
+                runcomm=gen_comm(msnames=self.engineinfo[k]['msnames'], 
+                                 field=self.field, freq=freq, band=band, 
+                                 imname=self.engineinfo[k]['imname'])
+                print 'cpu', k,  'command is ', runcomm
+                out[k]=self.c.odo(runcomm,k)
+            over=False
+            while (not over):
+                over=True
+                time.sleep(1)
+                for k in range(self.numcpu):
+                    over=(over and self.c.check_job(out[k], False))
+            residual=imagename+'.residual'
+            psf=imagename+'.psf'
+            psfs=range(self.numcpu)
+            residuals=range(self.numcpu)
+            restoreds=range(self.numcpu)
+            for k in range (self.numcpu):
+                psfs[k]=self.engineinfo[k]['imname']+'.psf'
+                residuals[k]=self.engineinfo[k]['imname']+'.residual'
+                restoreds[k]=self.engineinfo[k]['imname']+'.image'
+            self.averimages(residual, residuals)
+            if(maj==0):
+                self.averimages(psf, psfs)
+                if(os.path.exists(maskimage)):
+                    self.regridimage(outimage='__lala.mask', inimage=maskimage, templateimage=residual);
+                    shutil.rmtree(maskimage, True)
+                    shutil.move('__lala.mask', maskimage)
+                else:
+                    self.copyimage(inimage=residual, outimage=maskimage, init=True, initval=1.0);
+                if(not contclean or (not os.path.exists(model))):
+                    self.copyimage(inimage=residual, outimage=model, 
+                                   init=True, initval=0.0)
+            self.incrementaldecon(alg=alg, residual=residual, model=model, niter=niterpercycle, psf=psf, mask=maskimage, thr=threshold, cpuid=0, imholder=self.engineinfo)
+        #######
+        restored=imagename+'.image'
+        self.averimages(restored, restoreds)
+        ###close major cycle loop
+        #shutil.rmtree(imagename+'.image', True)
+        #shutil.move(restored,  imagename+'.image')
+        time2=time.time()
+        ###Clean up
+        for k in range(self.numcpu):
+            imlist=self.engineinfo[k]['imname']
+            shutil.rmtree(imlist+'.model', True)
+            shutil.rmtree(imlist+'.residual', True)
+            shutil.rmtree(imlist+'.image', True)
+            shutil.rmtree(imlist+'.psf', True)
+        print 'Time to image is ', (time2-time1)/60.0, 'mins'
+        self.c.stop_cluster()
+   
+
+    def pcontmultims2(self, msnames=[], workdirs=[], imagename=None, imsize=[1000, 1000], 
+                     pixsize=['1arcsec', '1arcsec'], phasecenter='', 
+                     field='', spw='*', freqrange=['', ''],  stokes='I', ftmachine='ft', wprojplanes=128, facets=1, 
+                     hostnames='', 
+                     numcpuperhost=1, majorcycles=1, niter=1000, threshold='0.0mJy', alg='clark', weight='natural', robust=0.0,
+                     contclean=False, visinmem=False, maskimage='lala.mask',
+                     painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
+                     epjtablename=''):
+        """
+        msnames=  list containing measurementset names
+        imagename = image
+        imsize = list of 2 numbers  [nx,ny] defining image size in x and y
+        pixsize = list of 2 quantities   ['sizex', 'sizey'] defining the pixel size e.g  ['1arcsec', '1arcsec']
+        phasecenter = an integer or a direction string   integer is fieldindex or direction e.g  'J2000 19h30m00 -30d00m00'
+        field = field selection string ...msselection style
+        spw = spw selection string ...msselection style
+        freqrange= continuum image frequency bound e.g ['1GHz', '1.23GHz'] .
+        stokes= string e.g 'I' , 'IV'
+        ftmachine= the ftmachine to use ...'ft', 'wproject' etc
+        wprojplanes is an interger that is valid only of ftmachine is 'wproject', 
+        facets= integer do split image facet, 
+        hostnames= list of strings ..empty string mean localhost
+        numcpuperhos = integer ...number of processes to launch on each host
+        majorcycles= integer number of CS major cycles to do, 
+        niter= integer ...total number of clean iteration 
+        threshold=quantity ...residual peak at which to stop deconvolving
+        alg= string  possibilities are 'clark', 'hogbom', 'msclean'
+        weight= string  possibilities 'natural', 'briggs', 'radial'
+        robust= float  robust factor for briggs
+        scales = scales to use when using alg='msclean'
+        contclean = boolean ...if False the imagename.model is deleted if its on 
+        disk otherwise clean will continue from previous run
+        visinmem = load visibility in memory for major cycles...make sure totalmemory  available to all processes is more than the MS size
+        maskimage an image on disk to limit clean search
+        painc = Parallactic angle increment in degrees after which a new convolution function is computed (default=360.0deg)
+        cfcache = The disk cache directory for convolution functions
+        pblimit = The fraction of the peak of the PB to which the PB corrections are applied (default=0.1)
+        dopbcorr = If true, correct for PB in the major cycles as well
+        applyoffsets = If true, apply antenna pointing offsets from the pointing table given by epjtablename 
+        epjtablename = Table containing antenna pointing offsets
+        """
+        time1=time.time()
+        if len(msnames)==0:
+            return    
+        niterpercycle=niter/majorcycles
+        if(niterpercycle == 0):
+            niterpercycle=niter
+            majorcycles=1
+        num_ext_procs=0
+        self.spw=spw
+        self.field=field
+        self.phasecenter=phasecenter
+        self.stokes=stokes
+        self.ftmachine=ftmachine
+        self.wprojplanes=wprojplanes
+        self.facets=facets
+        self.imsize=imsize
+        self.cell=pixsize
+        self.weight=weight
+        self.robust=robust
+        self.visinmem=visinmem
+        
+        self.setupcluster(hostnames,numcpuperhost, num_ext_procs)
+        model=imagename+'.model' if (len(imagename) != 0) else 'elmodel'
+        if(not contclean):
+            print "Removing ", model, 'and', imagename+'.image'
+            shutil.rmtree(model, True)
+            shutil.rmtree(imagename+'.image', True)
+            shutil.rmtree(imagename+'.residual', True)
+        shutil.rmtree('tempmodel', True)
+        if(len(freqrange) < 2):
+            freqrange=['','']
+        if(freqrange[0]==''):
+            freqrange[0]=0.0
+        if(freqrange[1]==''):
+            freqrange[1]=1e24
+        if(type(freqrange[0])==str):
+            freqrange[0]=qa.convert(qa.quantity(freqrange[0], 'Hz'), 'Hz')['value']
+        if(type(freqrange[1])==str):
+            freqrange[1]=qa.convert(qa.quantity(freqrange[1], 'Hz'), 'Hz')['value']
+        numms=len(msnames) if (type(msnames)==list) else 1
+        if(type(msnames) == str):
+            msnames=[msnames]
+        freqrange=self.findfreqranges(msnames=msnames, spw=spw, freqmin=freqrange[0], freqmax=freqrange[1])
+        ## the above will return the freqmin, freqmax in the data if freqrange is default
+        freq=(freqrange[0]+freqrange[1])/2.0
+        band=abs(freqrange[1]-freqrange[0])
+        self.makeconttempimages(imagename, 0,contclean)
         def gen_comm(msname, startsel, nchansel, field, spw, freq, band, imname):
             spwsel=str(self.msinfo[msname]['spwids'].tolist())
             freqsel='"%fHz"'%freq
@@ -1267,7 +1436,7 @@ class pimager():
                 if(not contclean or (not os.path.exists(model))):
                     self.copyimage(inimage=residual, outimage=model, 
                                    init=True, initval=0.0)
-            self.incrementaldecon(alg=alg, residual=residual, model=model, niter=niterpercycle, psf=psf, mask=maskimage, thr=threshold, cpuid=0)
+            self.incrementaldecon(alg=alg, residual=residual, model=model, niter=niterpercycle, psf=psf, mask=maskimage, thr=threshold, cpuid=0, imholder=self.msinfo)
         #######
         restored=imagename+'.image'
         self.averimages(restored, restoreds)
@@ -1285,7 +1454,7 @@ class pimager():
         print 'Time to image is ', (time2-time1)/60.0, 'mins'
         self.c.stop_cluster()
 
-    def incrementaldecon(self, alg, residual, model, niter, psf,  mask, thr, cpuid):
+    def incrementaldecon(self, alg, residual, model, niter, psf,  mask, thr, cpuid, imholder):
         ##############
             ia.open(residual)
             print 'Residual', ia.statistics() 
@@ -1312,30 +1481,35 @@ class pimager():
             #arr=ia.getchunk()
             print 'min max of model', ia.statistics()['min'], ia.statistics()['max']
             ia.done()
-            msnames=self.msinfo.keys()
-            for k in range(len(msnames)):
-                imlist=self.msinfo[msnames[k]]['imname']
+            imkeys=imholder.keys()
+            for k in range(len(imkeys)):
+                imlist=imholder[imkeys[k]]['imname']
                 ia.open(imlist+'.model')
                 #ia.putchunk(arr)
                 ia.insert(infile=model, locate=[0,0,0,0])
                 ia.done()
         #######
-    def makeconttempimages(self, imname,contclean=False): 
+    def makeconttempimages(self, imname, numim=0, contclean=False): 
         myrec=self.msinfo
         msnames=myrec.keys()
+        if(numim==0):
+            numim=len(msnames)
         char_set=string.ascii_letters
-        for k in range(len(msnames)):
-            substr='Tmp_'+msnames[k]+'_'+string.join(random.sample(char_set,8), sep='')
+        for k in range(numim):
+            substr='Temp_'+str(k)+'_'+string.join(random.sample(char_set,8), sep='')
             substr=string.replace(substr, '/','_')
             while (os.path.exists(substr+'.model')):
-                substr='Tmp_'+msnames[k]+'_'+string.join(random.sample(char_set,8), sep='')
+                substr='Temp_'+str(k)+'_'+string.join(random.sample(char_set,8), sep='')
                 substr=string.replace(substr, '/','_')
-            myrec[msnames[k]]['imname']=substr
+            if(numim==len(msnames)):
+                myrec[msnames[k]]['imname']=substr
+            else:
+                self.engineinfo[k]={'imname':substr}
             model=imname+'.model'
             if(contclean and os.path.exists(model)):
-                self.copyimage(inimage=model, outimage=myrec[msnames[k]]['imname']+'.model', init=False)
+                self.copyimage(inimage=model, outimage=substr+'.model', init=False)
             else:
-                shutil.rmtree(myrec[msnames[k]]['imname']+'.model', True)
+                shutil.rmtree(substr+'.model', True)
     def findfreqranges(self, msnames=[], spw=['*'], freqmin=0.0,  freqmax=1.e24):
         if(type(spw)==str):
             spw=[spw]
@@ -1374,34 +1548,45 @@ class pimager():
         num_ext_procs get to be set on master host (i.e this host) and working dir for them is pwd
         num_ext_procs is basically to help the master process do stuff asynchronously
         """
-        self.c=cluster()
-        hostname=os.getenv('HOSTNAME')
-        wd=os.getcwd()
-        #pdb.set_trace()
-        if((workingdir=='') or (workingdir==['']) or (workingdir==[])):
-            workingdir=[wd]
-        if(type(workingdir)==str):
-            workingdir=[workingdir]
-        self.workingdirs=workingdir
-        if((hostnames==[]) or (hostnames=='')): 
-            self.hostnames=[hostname]
-        else:
-            self.hostnames=hostnames
-        if(len(self.workingdirs)==1):
-            for k in range(1, len(hostnames)):
-                self.workingdirs.append(self.workingdirs[0])
-        if(len(hostnames) != len(self.workingdirs)):
-            raise ValueError, "Length of hostnames and workingdirs do not match"
-
-        for k in range(len(hostnames)):
-            hostname=hostnames[k]
-            print 'starting ', numcpuperhost, 'on', hostname, 'with wd', self.workingdirs[k]
-            self.c.start_engine(hostname,numcpuperhost,self.workingdirs[k])
-        self.numcpu=len(hostnames)*numcpuperhost
-        self.numextraprocs=num_ext_procs
-        if(num_ext_procs >0):
+        if(type(self.c) == str):
+            self.c=cluster()
             hostname=os.getenv('HOSTNAME')
-            self.c.start_engine(hostname,num_ext_procs,wd)
+            wd=os.getcwd()
+        #pdb.set_trace()
+            if((workingdir=='') or (workingdir==['']) or (workingdir==[])):
+                workingdir=[wd]
+            if(type(workingdir)==str):
+                workingdir=[workingdir]
+            self.workingdirs=workingdir
+            if((hostnames==[]) or (hostnames=='')): 
+                self.hostnames=[hostname]
+            else:
+                self.hostnames=hostnames
+            if(len(self.workingdirs)==1):
+                for k in range(1, len(hostnames)):
+                    self.workingdirs.append(self.workingdirs[0])
+            if(len(hostnames) != len(self.workingdirs)):
+                raise ValueError, "Length of hostnames and workingdirs do not match"
+
+            for k in range(len(hostnames)):
+                hostname=hostnames[k]
+                print 'starting ', numcpuperhost, 'on', hostname, 'with wd', self.workingdirs[k]
+                self.c.start_engine(hostname,numcpuperhost,self.workingdirs[k])
+            self.numcpu=len(hostnames)*numcpuperhost
+            self.numextraprocs=num_ext_procs
+            if(num_ext_procs >0):
+                hostname=os.getenv('HOSTNAME')
+                self.c.start_engine(hostname,num_ext_procs,wd)
+        else:
+            ###grab some useful info from the preset cluster
+            self.numcpu=len(self.c.get_ids())-num_ext_procs
+            self.hostnames=self.c.get_nodes()
+            self.c.pgc('import os')
+            self.c.pgc('wd=os.getcwd()')
+            wdrec=self.c.pull('wd')
+            self.workingdirs=['']*len(wdrec)
+            for k in range(len(wdrec)):
+                self.workingdirs[k]=wdrec[k]            
         ###do the common stuff to all child
         self.c.pgc('casalog.filter()')
         self.c.pgc('from  parallel.parallel_cont import *')
