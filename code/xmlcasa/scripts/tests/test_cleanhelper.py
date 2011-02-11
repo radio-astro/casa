@@ -58,14 +58,18 @@ class cleanhelper_test(unittest.TestCase):
         return px['value']['value']
 
     def comparemask(self,maskimage,refmask):
+        """
+        compare the input image with reference image
+        return true if pix values are identical
+        """
         ia.open(maskimage)
         maskvals = ia.getchunk()
         ia.close()
         ia.open(refmask)
         refvals= ia.getchunk()
         ia.close()
-        diff = maskvals - refvals
-        return diff.sum()
+        diff = refvals - maskvals
+        return (diff.all()==0) 
  
     def testDefineimages(self):
         """Cleanhelper defineimages test"""
@@ -86,10 +90,16 @@ class cleanhelper_test(unittest.TestCase):
         self.res=im.summary()
         self.assertTrue(self.res)
 
-    def run_defineimages(self):
+    def run_defineimages(self,sf=False):
         rootname=self.imgname
         makepbim=True
-        imsizes, phasecenters, imageids=self.imset.readoutlier(self.outlierfile)
+        if sf:
+          imsizes=self.imsize
+          phasecenters=self.phasecenter
+          imageids='sf'
+        else:
+          imsizes, phasecenters, imageids=self.imset.readoutlier(self.outlierfile)
+        print "imsizes,imageids=", imsizes,imageids
         self.imset.definemultiimages(rootname=rootname, imsizes=imsizes,
                             cell=self.cell, stokes=self.stokes, mode=self.mode, 
                             spw=self.spw, nchan=self.nchan, start=self.start,
@@ -124,10 +134,10 @@ class cleanhelper_test(unittest.TestCase):
         for imgroot,maskimg in self.imset.maskimages.iteritems():
           self.assertTrue(os.path.exists(maskimg))
           retval=self.comparemask(maskimg, self.refpath+'ref-'+maskimg)
-          if retval > 0.0:
-            self.res=False
-          else:
+          if retval:
             self.res=True
+          else:
+            self.res=False
           self.assertTrue(self.res)  
           os.system('rm -rf ' + maskimg)
 
@@ -138,13 +148,57 @@ class cleanhelper_test(unittest.TestCase):
         self.imset.makemultifieldmask2(maskobject=self.outlierfile)
         for imgroot,maskimg in self.imset.maskimages.iteritems():
           self.assertTrue(os.path.exists(maskimg))
-          retval=self.comparemask(self.refpath+'ref-'+maskimg,maskimg)
-          if retval > 0.0:
-            self.res=False
-          else:
+          retval=self.comparemask(maskimg,self.refpath+'ref-'+maskimg)
+          if retval:
             self.res=True
+          else:
+            self.res=False
           self.assertTrue(self.res)  
           os.system('rm -rf ' + maskimg)
+
+    def testMakemaskimagebox(self):
+        """Cleanhelper makemaskimage test: 2 boxes"""
+        self.run_defineimages(sf=True)
+        ibmask=[[100,85,120,95],[145,145,155,155]]
+        maskimage=self.imset.imagelist[0]+'.mask'
+        self.imset.makemaskimage(outputmask=maskimage,imagename=self.imset.imagelist[0],maskobject=ibmask)
+        self.assertTrue(os.path.exists(maskimage)," int box maskimage does not exist")
+        #retval=self.comparemask(maskimg,self.refpath+'ref-'+maskimg)
+        retval=self.comparemask(maskimage,'../ref-'+maskimage)
+        self.assertTrue(retval,"test on int box mask failed")  
+        os.system('rm -rf ' + self.imset.imagelist[0]+'*')
+        #
+        retval=False
+        fibmask=[[100.0,85.0,120.0,95.0],[145,145,155,155]]
+        self.imset.makemaskimage(outputmask=maskimage,imagename=self.imset.imagelist[0],maskobject=fibmask)
+        self.assertTrue(os.path.exists(maskimage)," float +int box maskimage does not exist")
+        retval=self.comparemask(maskimage,'../ref-'+maskimage)
+        self.assertTrue(retval,"test on float+int boxes failed")  
+        os.system('rm -rf ' + self.imset.imagelist[0]+'*')
+        #
+        retval=False
+        import numpy as np
+        box1=[np.int_(i) for i in ibmask[0]] 
+        box2=[np.int_(i) for i in ibmask[1]] 
+        numpyintmask=[box1,box2]
+        self.imset.makemaskimage(outputmask=maskimage,imagename=self.imset.imagelist[0],maskobject=fibmask)
+        self.assertTrue(os.path.exists(maskimage)," numpy.int box maskimage does not exist")
+        retval=self.comparemask(maskimage,'../ref-'+maskimage)
+        self.assertTrue(retval,"test on numpy.int boxes failed")
+        os.system('rm -rf ' + self.imset.imagelist[0]+'*')
+        #
+        retval=False
+        import numpy as np
+        box1=[np.float_(i) for i in fibmask[0]]
+        box2=[np.float_(i) for i in fibmask[1]]
+        numpyintmask=[box1,box2]
+        self.imset.makemaskimage(outputmask=maskimage,imagename=self.imset.imagelist[0],maskobject=fibmask)
+        self.assertTrue(os.path.exists(maskimage)," numpy.float box maskimage does not exist")
+        retval=self.comparemask(maskimage,'../ref-'+maskimage)
+        self.assertTrue(retval,"test on numpy.float boxes failed")
+        os.system('rm -rf ' + self.imset.imagelist[0]+'*')
+ 
+
 
 def suite():
     return [cleanhelper_test]

@@ -668,7 +668,6 @@ class cleanhelper:
         if (not hasattr(maskobject, '__len__')) \
            or (len(maskobject) == 0) or (maskobject == ['']):
             return
-        print "input mask (maskobj)=",maskobject, " type=:",type(maskobject)
         maskimage=[]
         masklist=[]
         masktext=[]
