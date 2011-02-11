@@ -1211,7 +1211,7 @@ int main(int argc, char *argv[]) {
     // Revision ? displays revision's info and don't go further.
     if (vm.count("revision")) {
       errstream.str("");
-      errstream << "$Id: asdm2MS.cpp,v 1.70 2011/01/23 19:16:31 mcaillat Exp $" << "\n" ;
+      errstream << "$Id: asdm2MS.cpp,v 1.71 2011/02/11 18:52:11 mcaillat Exp $" << "\n" ;
       error(errstream.str());
     }
 
@@ -2011,7 +2011,7 @@ int main(int argc, char *argv[]) {
 		 (sp == StokesParameterMod::YX) ||
 		 (sp == StokesParameterMod::YY)) {
 	  corrType.resize(4);
-	  copy (linearCorr, circularCorr+4, corrType.begin());
+	  copy (linearCorr, linearCorr+4, corrType.begin());
 	}
 	else {
 	  errstream.str("");
