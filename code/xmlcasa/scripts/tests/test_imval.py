@@ -39,7 +39,6 @@
 # <prerequisite>
 # <ul>
 #   <li> <linkto class="imval.py:description">imval</linkto> 
-#   <li> <linkto class="imregion.py:description">imregion</linkto> 
 # </ul>
 # </prerequisite>
 #

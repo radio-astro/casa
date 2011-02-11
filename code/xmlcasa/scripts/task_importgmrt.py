@@ -39,12 +39,6 @@
 # <reviewed reviwer="" date="" tests="" demos="">
 # </reviewed
 #
-# <prerequisite>
-# <ul>
-#   <li> <linkto class="imregion.py:description">imregion</linkto> 
-# </ul>
-# </prerequisite>
-#
 # <etymology>
 # importgmrt stands for import GMRT UV FITS data.
 # </etymology>

@@ -40,7 +40,6 @@
 # <prerequisite>
 # <ul>
 #   <li> <linkto class="imsmooth.py:description">imsmooth</linkto> 
-#   <li> <linkto class="imregion.py:description">imregion</linkto> 
 # </ul>
 # </prerequisite>
 #

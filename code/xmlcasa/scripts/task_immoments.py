@@ -38,13 +38,7 @@
 #
 # <reviewed reviwer="" date="" tests="" demos="">
 # </reviewed
-#
-# <prerequisite>
-# <ul>
-#   <li> <linkto class="imregion.py:description">imregion</linkto> 
-# </ul>
-# </prerequisite>
-#
+
 # <etymology>
 # immoments stands for image momemnts
 # </etymology>
@@ -91,7 +85,6 @@
 
 import os
 from taskinit import *
-from imregion import *
 
 def immoments( imagename, moments, axis, region, box, chans, stokes, mask, includepix, excludepix, outfile):
     

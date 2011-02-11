@@ -140,6 +140,8 @@ void ROMSFeedColumns::attachOptionalCols(const MSFeed& msFeed)
 Int ROMSFeedColumns::matchFeed(Quantum<Double>& newTimeQ,
 			       Quantum<Double>& newIntervalQ,
 			       const Int& antId,
+			       const Int& fId,
+			       const Int& spwId,
 			       const Quantum<Double>& timeQ,
 			       const Quantum<Double>& intervalQ,
 			       const Int& numRec,
@@ -186,6 +188,8 @@ Int ROMSFeedColumns::matchFeed(Quantum<Double>& newTimeQ,
     }
     if (!ignore
 	&& antennaId()(r)== antId
+	&& feedId()(r)== fId
+	&& spectralWindowId()(r)== spwId
 	&& numReceptors()(r) == numRec
 	&& positionQuant()(r)(IPosition(1,0)).getValue(m) == pos0InM
 	&& positionQuant()(r)(IPosition(1,1)).getValue(m) == pos1InM
@@ -206,11 +210,15 @@ Int ROMSFeedColumns::matchFeed(Quantum<Double>& newTimeQ,
 	}
       }
       if(matches){
-	if(!(timeQuant()(r).getValue(s)-intervalQuant()(r).getValue(s) <= timeInS-intervalInS
-	     && timeQuant()(r).getValue(s)+intervalQuant()(r).getValue(s) >= timeInS+intervalInS)
+	Double modIntervalInS = intervalQuant()(r).getValue(s);
+	if(modIntervalInS==0.){ // to accomodate certain misuses of the MS, treat 0 as inf
+	  modIntervalInS = 5E17; // the age of the universe, roughly
+	}
+	if(!(timeQuant()(r).getValue(s)-modIntervalInS <= timeInS-intervalInS
+	     && timeQuant()(r).getValue(s)+modIntervalInS >= timeInS+intervalInS)
 	   ){ // only difference is the validity time
 	  newTimeQ = (timeQuant()(r)+timeQ)/2.;
-	  Double maxTime = max(timeQuant()(r).getValue(s)+intervalQuant()(r).getValue(s),
+	  Double maxTime = max(timeQuant()(r).getValue(s)+modIntervalInS,
 			       timeInS+intervalInS);
 	  newIntervalQ = Quantum<Double>(2*(maxTime-newTimeQ.getValue(s)), s);
 	}

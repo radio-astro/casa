@@ -37,13 +37,6 @@
 # <reviewed reviwer="" date="" tests="" demos="">
 # </reviewed
 #
-# <prerequisite>
-# <ul>
-#   <li> <linkto class="imcontsub.py:description">imregion</linkto> 
-#   <li> <linkto class="imregion.py:description">imregion</linkto> 
-# </ul>
-# </prerequisite>
-#
 # <etymology>
 # imcontsub_test stands for image momemnts test
 # </etymology>

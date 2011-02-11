@@ -34,7 +34,50 @@ class imagecont():
         self.novaliddata={}
         self.applyoffsets=False
         self.cfcache='cfcache.dir'
-        self.epjtablename=''        
+        self.epjtablename=''
+    def setparamcont(self, im, freq, band):
+        im.defineimage(nx=self.pixels[0], ny=self.pixels[1], cellx=self.cell[0], 
+                       celly=self.cell[1], phasecenter=self.phCen, mode='frequency', 
+                       nchan=1, start=freq, step=band, facets=self.facets, 
+                       stokes=self.stokes)
+        im.weight(type=self.weight, rmode='norm', npixels=self.weightnpix, 
+                  robust=self.robust)
+        im.setoptions(ftmachine=self.ft, wprojplanes=self.wprojplanes, 
+                      pastep=self.painc, pblimit=self.pblimit, 
+                      cfcachedirname=self.cfcache, dopbgriddingcorrections=self.dopbcorr, 
+                      applypointingoffsets=self.applyoffsets, imagetilevol=self.imagetilevol)
+
+    def imagecontmultims(self, msnames=[''], start=0, numchan=1, spw=0, field=0, freq='1.20GHz', band='200MHz', imname='newmodel'):
+        im=self.im
+        ###either psf 0 or no channel selected
+        if(self.novaliddata==True):
+            return
+        else:
+            self.novaliddata=False
+        if(not self.imageparamset):
+          try:
+              conlis=lambda a,n: a if (type(a)==list) else [a]*n
+              if (type(msnames)==str):
+                  msnames=[msnames]
+              numms=len(msnames)
+              start=conlis(start,numms)
+              numchan=conlis(numchan, numms)
+              spw=conlis(spw, numms)
+              field=conlis(field, numms)
+              for k  in range(numms):
+                  im.selectvis(vis=msnames[k], field=field[k], spw=spw[k], nchan=numchan[k], start=start[k], step=1, datainmemory=self.visInMem)
+          except Exception, instance:
+                ###failed to selectdata
+                self.novaliddata=True  
+          self.setparamcont(im, freq, band)
+          if((len(numchan)==0) or (np.sum(numchan)==0)):
+              self.novaliddata=True
+        self.makecontimage(im, self.novaliddata, imname)
+        self.imageparamset=True
+
+
+
+ ####
     def imagecont(self, msname='spw00_4chan351rowTile.ms', start=0, numchan=1, spw=0, field=0, freq='1.20GHz', band='200MHz', imname='newmodel'):
         #casalog.post('KEYS '+str(self.imperms.keys()))
         if(not self.imperms.has_key(msname)):
@@ -62,40 +105,11 @@ class imagecont():
                 ###failed to selectdata
                 self.novaliddata[msname]=True
 ####
-        #imname=imname+'_%02d'%(j)
-            im.defineimage(nx=self.pixels[0], ny=self.pixels[1], cellx=self.cell[0], celly=self.cell[1], phasecenter=self.phCen, mode='frequency', nchan=1, start=freq, step=band, facets=self.facets, stokes=self.stokes)
+        #imname=imname+'_%02d'%(j)               
+            self.setparamcont(im, freq, band)
             if((len(numchan)==0) or (np.sum(numchan)==0)):
                 self.novaliddata[msname]=True
-            if(self.novaliddata[msname]):
-                ###make blanks
-                im.make(imname+'.image')
-                im.make(imname+'.residual')
-                im.make(imname+'.model')
-                im.make(imname+'.psf')
-                return
-            im.weight(type=self.weight, rmode='norm', npixels=self.weightnpix, 
-                  robust=self.robust)
-            im.setoptions(ftmachine=self.ft, wprojplanes=self.wprojplanes, pastep=self.painc, pblimit=self.pblimit, cfcachedirname=self.cfcache, dopbgriddingcorrections=self.dopbcorr, applypointingoffsets=self.applyoffsets, imagetilevol=self.imagetilevol)
-        #im.regionmask(mask='lala.mask', boxes=[[0, 0, 3599, 3599]])
-        #im.setmfcontrol(cyclefactor=0.0)
-        #casalog.post('imageparmset'+str(self.imageparamset))
-        if(not self.imageparamset):
-        #if(True):
-            try:
-                im.clean(algorithm='mfclark', niter=0, threshold='0.05mJy', model=imname+'.model', image=imname+'.image', residual=imname+'.residual', psfimage=imname+'.psf')
-            except Exception, instance:
-                if(string.count(instance.message, 'PSFZero') >0):
-                    self.novaliddata[msname]=True
-                    ###make a blank image
-                    im.make(imname+'.image')
-                else:
-                    raise instance
-        else:
-            if(not self.novaliddata[msname]):
-                #casalog.post('Updating '+msname+' imname '+imname)
-                im.updateresidual(model=imname+'.model',  image=imname+'.image', residual=imname+'.residual')
-        #casalog.post('CACHE:  '+ str(tb.showcache()))
-        #im.done()
+        self.makecontimage(im, self.novaliddata[msname], imname)
         self.imageparamset=True
 
     def imagecontbychan(self, msname='spw00_4chan351rowTile.ms', start=[0], numchan=[1], spw=[0], field=0, freq='1.20GHz', band='200MHz', imname='newmodel'):
@@ -376,4 +390,30 @@ class imagecont():
             ia.removefile(inim)
         return True
     #putchanimage=staticmethod(putchanimage)
-
+    def makecontimage(self, im, novaliddata, imname):
+        if(novaliddata==True):
+            ###make blanks
+            im.make(imname+'.image')
+            im.make(imname+'.residual')
+            im.make(imname+'.model')
+            im.make(imname+'.psf')
+            return
+        if(not self.imageparamset):
+            try:
+                im.clean(algorithm='mfclark', niter=0, threshold='0.05mJy', 
+                         model=imname+'.model', image=imname+'.image', 
+                         residual=imname+'.residual', psfimage=imname+'.psf')
+            except Exception, instance:
+                if(string.count(instance.message, 'PSFZero') >0):
+                    novaliddata=True
+                    ###make a blank image
+                    im.make(imname+'.image')
+                else:
+                    raise instance
+        else:  ### else of  (if not self.imageparamset)
+            if(not novaliddata):
+                #casalog.post('Updating '+msname+' imname '+imname)
+                im.updateresidual(model=imname+'.model',  image=imname+'.image', 
+                                  residual=imname+'.residual')
+                #casalog.post('CACHE:  '+ str(tb.showcache()))
+        

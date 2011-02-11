@@ -142,11 +142,12 @@ public:
   // Returns -1 if no match could be found.
   // Ignore the Feed table rows contained in vector ignoreRows. 
   // focusLengthQ is only compared if this optional column is present and
-  // if the value of focusLengthQ is different from Quantum<Double>(), i.e.
-  // dimensionless zero.
+  // if the value of focusLengthQ is not dimensionless.
   Int matchFeed(Quantum<Double>& newTimeQ,
 		Quantum<Double>& newIntervalQ,
 		const Int& antId,
+		const Int& fId, // feedId
+		const Int& spwId, 
 		const Quantum<Double>& timeQ,
 		const Quantum<Double>& intervalQ,
 		const Int& numRec,
