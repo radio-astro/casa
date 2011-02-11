@@ -891,8 +891,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                wprojplanes is the number of pre-computed w-planes used for
                    the W-Projection algorithm.  wprojplanes=1 disables
                    correction for non-coplanar effects. 
-               facets is the number of facets used.  W-Projection is done
-                   for each facet.
+               facets is the number of facets on each side of the image 
+                   (i.e. the total number of facets is 'facets x facets'). 
+                   If wprojplanes>1, W-Projection is done for each facet.
 
   &gt;&gt;&gt; gridmode='aprojection' expandable parameters
                Corrects for the (E)VLA polarization squint using the
