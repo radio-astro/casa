@@ -164,7 +164,7 @@ class cleanhelper_test(unittest.TestCase):
         self.imset.makemaskimage(outputmask=maskimage,imagename=self.imset.imagelist[0],maskobject=ibmask)
         self.assertTrue(os.path.exists(maskimage)," int box maskimage does not exist")
         #retval=self.comparemask(maskimg,self.refpath+'ref-'+maskimg)
-        retval=self.comparemask(maskimage,'../ref-'+maskimage)
+        retval=self.comparemask(maskimage, self.refpath+'ref-'+maskimage)
         self.assertTrue(retval,"test on int box mask failed")  
         os.system('rm -rf ' + self.imset.imagelist[0]+'*')
         #
@@ -172,7 +172,7 @@ class cleanhelper_test(unittest.TestCase):
         fibmask=[[100.0,85.0,120.0,95.0],[145,145,155,155]]
         self.imset.makemaskimage(outputmask=maskimage,imagename=self.imset.imagelist[0],maskobject=fibmask)
         self.assertTrue(os.path.exists(maskimage)," float +int box maskimage does not exist")
-        retval=self.comparemask(maskimage,'../ref-'+maskimage)
+        retval=self.comparemask(maskimage, self.refpath+'ref-'+maskimage)
         self.assertTrue(retval,"test on float+int boxes failed")  
         os.system('rm -rf ' + self.imset.imagelist[0]+'*')
         #
@@ -183,18 +183,17 @@ class cleanhelper_test(unittest.TestCase):
         numpyintmask=[box1,box2]
         self.imset.makemaskimage(outputmask=maskimage,imagename=self.imset.imagelist[0],maskobject=fibmask)
         self.assertTrue(os.path.exists(maskimage)," numpy.int box maskimage does not exist")
-        retval=self.comparemask(maskimage,'../ref-'+maskimage)
+        retval=self.comparemask(maskimage, self.refpath+'ref-'+maskimage)
         self.assertTrue(retval,"test on numpy.int boxes failed")
         os.system('rm -rf ' + self.imset.imagelist[0]+'*')
         #
         retval=False
-        import numpy as np
         box1=[np.float_(i) for i in fibmask[0]]
         box2=[np.float_(i) for i in fibmask[1]]
         numpyintmask=[box1,box2]
         self.imset.makemaskimage(outputmask=maskimage,imagename=self.imset.imagelist[0],maskobject=fibmask)
         self.assertTrue(os.path.exists(maskimage)," numpy.float box maskimage does not exist")
-        retval=self.comparemask(maskimage,'../ref-'+maskimage)
+        retval=self.comparemask(maskimage, self.refpath+'ref-'+maskimage)
         self.assertTrue(retval,"test on numpy.float boxes failed")
         os.system('rm -rf ' + self.imset.imagelist[0]+'*')
  
