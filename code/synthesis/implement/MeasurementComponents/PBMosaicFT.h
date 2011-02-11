@@ -91,7 +91,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual void initializeToSky(ImageInterface<Complex>& image,  Matrix<Float>& weight,
 				 const VisBuffer& vb);
     virtual String name() {return "PBMosaicFT";};
-    virtual Bool verifyShapes(IPosition shape0, IPosition shape1)
+    virtual Bool verifyShapes(IPosition , IPosition )
     {return True;};
 
   private:

@@ -1,5 +1,5 @@
 //# StandardVisCal.h: Declaration of standard (Solvable)VisCal types
-//# Copyright (C) 1996,1997,2000,2001,2002,2003
+//# Copyright (C) 1996,1997,2000,2001,2002,2003,2011
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -561,11 +561,11 @@ public:
   using SolvableVisCal::setApply;
   virtual void setApply(const Record& apply);
 
-  // M solves for itself
-  virtual Bool standardSolve() { return False; };
+  // M gathers/solves for itself
+  virtual Bool useGenericGatherForSolve() { return False; };
 
   // M solves for itself (by copying averaged data)
-  virtual void selfSolve(VisSet& vs, VisEquation& ve) { newselfSolve(vs,ve); };
+  virtual void selfGatherAndSolve(VisSet& vs, VisEquation& ve) { newselfSolve(vs,ve); };
   virtual void oldselfSolve(VisSet& vs, VisEquation& ve);  // old-fashioned iterator-driven
   virtual void newselfSolve(VisSet& vs, VisEquation& ve);  // new supports combine
 
@@ -764,11 +764,11 @@ public:
   // Turn off normalization by model....
   virtual Bool normalizable() { return False; };
 
-  // X solves for itself
-  virtual Bool standardSolve() { return False; };
+  // X gathers/solves for itself
+  virtual Bool useGenericGatherForSolve() { return False; };
 
-  // X solves for itself 
-  virtual void selfSolve(VisSet& vs, VisEquation& ve) { newselfSolve(vs,ve); };
+  // X gathers/solves for itself 
+  virtual void selfGatherAndSolve(VisSet& vs, VisEquation& ve) { newselfSolve(vs,ve); };
   virtual void oldselfSolve(VisSet& vs, VisEquation& ve);  // old-fashioned iterator-driven
   virtual void newselfSolve(VisSet& vs, VisEquation& ve);  // new supports combine
 
@@ -829,11 +829,11 @@ public:
   // X is normalizable by the model
   virtual Bool normalizable() { return True; };
 
-  // X solves for itself
-  virtual Bool standardSolve() { return False; };
+  // X gathers/solves for itself
+  virtual Bool useGenericGatherForSolve() { return False; };
 
-  // X solves for itself 
-  virtual void selfSolve(VisSet& vs, VisEquation& ve) { newselfSolve(vs,ve); };
+  // X gathers/solves for itself 
+  virtual void selfGatherAndSolve(VisSet& vs, VisEquation& ve) { newselfSolve(vs,ve); };
   virtual void newselfSolve(VisSet& vs, VisEquation& ve);  // new supports combine
 
   virtual void keep(const Int& slot);
@@ -892,108 +892,6 @@ protected:
 };
 
 
-// K Jones provides support for SBD delays
-class KJones : public GJones {
-public:
-
-  // Constructor
-  KJones(VisSet& vs);
-  KJones(const Int& nAnt);
-
-  virtual ~KJones();
-
-  // Local setApply to enforce calWt=F for delays
-  virtual void setApply(const Record& apply);
-  using GJones::setApply;
-
-  // Return the type enum
-  virtual Type type() { return VisCal::K; };
-
-  // Return type name as string
-  virtual String typeName()     { return "K Jones"; };
-  virtual String longTypeName() { return "K Jones (single-band delay)"; };
-
-  // Type of Jones matrix according to nPar()
-  virtual Jones::JonesType jonesType() { return Jones::Diagonal; };
-
-  // Freq dependence (delays)
-  virtual Bool freqDepPar() { return False; };
-  virtual Bool freqDepMat() { return True; };
-
-  // Default parameter value
-  virtual Complex defaultPar() { return Complex(0.0); };
-
-  // Type-specific specify
-  virtual void specify(const Record& specify);
-
-  // This type is not yet accumulatable
-  virtual Bool accumulatable() { return False; };
-
-  // This type is not yet smoothable
-  virtual Bool smoothable() { return False; };
-
-  // Calculate phase(chan) from delay
-  virtual void calcAllJones();
-
-  // Delay to phase calculator
-  //  virtual void calcOneJones(Vector<Complex>& mat, Vector<Bool>& mOk, 
-  //                            const Vector<Complex>& par, const Vector<Bool>& pOk );
-
-
-  // Hazard a guess at parameters
-  virtual void guessPar(VisBuffer& vb) {};
-
-  // K solves for itself
-  virtual Bool standardSolve() { return False; };
-  virtual void selfSolve(VisSet& vs, VisEquation& ve);
-
-protected:
-
-  // K has two "real" parameters
-  virtual Int nPar() { return 2; };
-
-  // Jones matrix elements are trivial
-  virtual Bool trivialJonesElem() { return False; };
-
-  // dG/dp are trivial
-  virtual Bool trivialDJ() { return False; };
-
-  // Initialize trivial dJs
-  virtual void initTrivDJ() {};
-
-  // FFT solver for on VB
-  virtual void solveOneVB(const VisBuffer& vb);
-
-  // Reference frequencies
-  Vector<Double> KrefFreqs_;
-
-private:
-
-  
-};
-
-// (sbd) K for cross-hand solve
-class KcrossJones : public KJones {
-public:
-
-  // Constructor
-  KcrossJones(VisSet& vs);
-  KcrossJones(const Int& nAnt);
-
-  virtual ~KcrossJones();
-
-  // Return type name as string
-  virtual String typeName()     { return "Kcross Jones"; };
-  virtual String longTypeName() { return "Kcross Jones (single-band cross delay)"; };
-
-
-
-protected:
-
-  // FFT solver for on VB, that collapses baselines and cross-hands first
-  virtual void solveOneVB(const VisBuffer& vb);
-
-};
 
 // X-Y phase 
 class GlinXphJones : public GJones {
@@ -1012,9 +910,9 @@ public:
   // Though derived from GJones, this type actually uses the cross-hands
   virtual Bool phandonly() { return False; };
 
-  // Solves for itself
-  virtual Bool standardSolve() { return False; };
-  virtual void selfSolve(VisSet& vs, VisEquation& ve);
+  // GlinXphJones gathers/solves for itself
+  virtual Bool useGenericGatherForSolve() { return False; };
+  virtual void selfGatherAndSolve(VisSet& vs, VisEquation& ve);
 
 protected:
 
@@ -1024,81 +922,6 @@ protected:
 };
 
 
-
-// KMBD Jones provides support for multi-band delays
-class KMBDJones : public KJones {
-public:
-
-  // Constructor
-  KMBDJones(VisSet& vs);
-  KMBDJones(const Int& nAnt);
-
-  virtual ~KMBDJones();
-
-  // Return the type enum
-  virtual Type type() { return VisCal::K; };
-
-  // Return type name as string
-  virtual String typeName()     { return "KMBD Jones"; };
-  virtual String longTypeName() { return "KMBD Jones (multi-band delay)"; };
-
- 
-};
-
-
-
-class KAntPosJones : public KJones {
-public:
-
-  // Constructor
-  KAntPosJones(VisSet& vs);
-  KAntPosJones(const Int& nAnt);
-
-  virtual ~KAntPosJones();
-
-  // Return the type enum
-  virtual Type type() { return VisCal::KAntPos; };
-
-  // Return type name as string
-  virtual String typeName()     { return "KAntPos Jones"; };
-  virtual String longTypeName() { return "KAntPos Jones (antenna position errors)"; };
-
-  // This is a scalar Jones matrix
-  virtual Jones::JonesType jonesType() { return Jones::Scalar; };
-
-  virtual Bool timeDepMat() { return True; };
-
-  // Local setApply to enforce spwmap=0 for all spw
-  virtual void setApply(const Record& apply);
-  using KJones::setApply;
-
-  // Type-specific specify
-  virtual void specify(const Record& specify);
-
-  // Calculate phase(chan) from delay
-  virtual void calcAllJones();
-
-protected:
-
-  // AntPos has three "real" parameters (dBx, dBy, dBz)
-  virtual Int nPar() { return 3; };
-
-  // Jones matrix elements are not trivial
-  virtual Bool trivialJonesElem() { return False; };
-
-  // dG/dp are not trivial
-  virtual Bool trivialDJ() { return False; };
-
-  // Initialize trivial dJs
-  virtual void initTrivDJ() {};
-
-private:
-  
-  // Some info from the MS we need for Measures work
-  ArrayMeasColumn<MDirection> dirmeas_p;
-  String epochref_p;
-
-};
 
 } //# NAMESPACE CASA - END
 

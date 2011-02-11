@@ -58,22 +58,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //  
   //# Parse the command.
   //# Do a yyrestart(yyin) first to make the flex scanner reentrant.
-  int msPolnGramParseCommand (const MeasurementSet* ms, const String& command) 
-  {
-    try 
-      {
-	int ret=0;
-	throw(MSSelectionPolnError(String("This version of msPolnGramParseCommand() "
-					  "is deprecated")));
-	return ret;
-      }
-    catch (MSSelectionPolnError &x)
-      {
-	String newMesgs("MSSPolnGramParseCommand");
-	x.addMessage(newMesgs);
-	throw;
-      }
-  }
+
   //
   //------------------------------------------------------------------------------
   //  
@@ -114,6 +99,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   const TableExprNode* msPolnGramParseNode()
   {
     //   return MSPolnParse::node();
+    return NULL;
   }
   //
   //------------------------------------------------------------------------------

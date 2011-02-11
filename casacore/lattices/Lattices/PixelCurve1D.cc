@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: PixelCurve1D.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: PixelCurve1D.cc 20856 2010-01-28 13:35:48Z gervandiepen $
 
 
 #include <lattices/Lattices/PixelCurve1D.h>
@@ -181,7 +181,7 @@ void PixelCurve1D::getPixelCoord (Vector<float>& x, Vector<float>& y,
   uInt nr = 1 + (end-start) / incr;
   x.resize (nr);
   y.resize (nr);
-  for (uint i=0; i<nr; i++) {
+  for (uInt i=0; i<nr; i++) {
     x[i] = itsX[start];
     y[i] = itsY[start];
     start += incr;

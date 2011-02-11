@@ -112,62 +112,35 @@ def immoments( imagename, moments, axis, region, box, chans, stokes, mask, inclu
                       +" returned value\nis saved then you can used in" \
                       +" the same way the image tool (ia). can", 'WARN' )    
         
+    _myia = iatool.create()
     try:
-	# Translate the string value into an index value.
-	axis=_immoments_parse_axis( imagename, axis )
+        # Translate the string value into an index value.
+        axis=_immoments_parse_axis( imagename, axis )
         casalog.post( 'Axis information for '+imagename+' is: '+str(axis),\
                       'DEBUG2' )
+        _myia.open(imagename) 
 
-	# Get the region information, if the user has specified
-	# a region file it is given higher priority.
-	reg={}
-	if ( len(region)>1 ):
-	    if ( len(box)>1 or len(chans)>1 or len(stokes)>1 ):
-		casalog.post( "Ignoring region selection\ninformation in"\
-			      " the box, chans, and stokes parameters."\
-			      " Using region information\nin file: " + region, 'WARN' );
-
-            if os.path.exists( region ):
-                # We have a region file on disk!
-                reg=rg.fromfiletorecord( region );
-            else:
-                # The name given is the name of a region stored
-                # with the image.
-                # Note that we accept:
-                #    'regionname'          -  assumed to be in imagename
-                #    'my.image:regionname' - in my.image
-                reg_names=region.split(':')
-                if ( len( reg_names ) == 1 ):
-                    reg=rg.fromtabletorecord( imagename, region, False )
-                else:
-                    reg=rg.fromtabletorecord( reg_names[0], reg_names[1], False )
-	else:
-	    reg=imregion( imagename, chans, stokes, box, '', '' )
-            
-        if ( len( reg .keys() ) < 1 ):
-            raise Exception, 'Ill-formed region: '+str(reg)+'. can not continue.'
-        casalog.post( 'Momements to be found in region: '+str(reg), 'DEBUG2' )
-
-        # NEXT Two lines are just for debugging purposes.
-        #results=ia.statistics(region=reg,mask=mask,includepix=includepix,excludepix=excludepix)
-
-        #casalog.post( 'Image Statistics of image, '+imagename'\
-        #+', with specified region, mask, and pixels is: '+str(results),\
-        #'DEBUG2' )
-        ia.open( imagename ) 
-        retValue = ia.moments( moments=moments,axis=int(axis),mask=mask,region=reg,includepix=includepix,excludepix=excludepix,outfile=outfile,drop=False)
-	ia.done()
+        reg = rg.frombcs(csys=_myia.coordsys().torecord(),
+            shape=_myia.shape(), box=box, chans=chans, stokes=stokes,
+            stokescontrol="a", region=region
+        )
+        retValue = _myia.moments(
+            moments=moments, axis=int(axis), mask=mask,
+            region=reg, includepix=includepix,
+            excludepix=excludepix, outfile=outfile, drop=False
+        )
+        _myia.done()
         return retValue
     except Exception, instance:
-        ia.done()
-	print '*** Error ***',instance
-	raise Exception, instance
-	    
+        _myia.done()
+        print '*** Error ***',instance
+        raise Exception, instance
+            
 
 def _immoments_parse_axis( imagename='', axis='' ):
     # We already have an integer value nothing to do.
     if ( isinstance( axis, int ) ):
-	return axis
+        return axis
     
     # Find out what we have in each axis of this image.
     # of a particular region in the image. This function
@@ -185,20 +158,20 @@ def _immoments_parse_axis( imagename='', axis='' ):
 
 
     if ( axis=='ra' or axis.startswith( 'long' ) ):
-	# First Directional axis
-	retValue=axes[0][0]
+        # First Directional axis
+        retValue=axes[0][0]
     elif ( axis=='ra' or axis.startswith( 'lat' ) ):
-	# Second  Directional axis
-	retValue=axes[1][0]
+        # Second  Directional axis
+        retValue=axes[1][0]
     elif ( axis.startswith( 'spec' ) ):
-	# Spectral axis
-	retValue=axes[2][0]	
+        # Spectral axis
+        retValue=axes[2][0]        
     elif ( axis.startswith( 'sto') ):
-	# Spectral axis
-	retValue=axes[3][0]	
+        # Spectral axis
+        retValue=axes[3][0]        
     else:
-	raise Exception, "Invalid axis specified: "+str(axis) \
-	      + ". Expecte one of ra, dec, lat, long, spec, or stokes"
+        raise Exception, "Invalid axis specified: "+str(axis) \
+              + ". Expecte one of ra, dec, lat, long, spec, or stokes"
 
     return retValue
     

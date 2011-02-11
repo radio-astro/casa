@@ -808,12 +808,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //-----------------------------------------------------------------------
   //  
-  void LJJones::selfSolve(VisSet& vs, VisEquation& ve)
+  void LJJones::selfGatherAndSolve(VisSet& vs, VisEquation& ve)
   {
     //
     // Inform logger/history
     //
-    logSink() << LogOrigin("LJJones", "selfSolve") << "Solving for " << typeName()
+    logSink() << LogOrigin("LJJones", "selfGatherAndSolve") << "Solving for " << typeName()
 	      << LogIO::POST;
     //
     // Arrange for iteration over data - set up the VisIter and the VisBuffer

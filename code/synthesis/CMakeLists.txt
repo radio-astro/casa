@@ -61,6 +61,7 @@ casa_add_library( synthesis
   implement/MeasurementComponents/IlluminationConvFunc.cc
   implement/MeasurementComponents/ImageSkyModel.cc
   implement/MeasurementComponents/Jones.cc
+  implement/MeasurementComponents/KJones.cc
   implement/MeasurementComponents/LJJones.cc
   implement/MeasurementComponents/MakeApproxPSFAlgorithm.cc
   implement/MeasurementComponents/MFCEMemImageSkyModel.cc

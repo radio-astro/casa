@@ -233,7 +233,7 @@ void BJonesPoly::setApply(const Record& applypar)
 //  Gildas routines and grids each spectrum.  It also does more sanity
 //  checking, logging, and produces a nicer plot.
 
-void BJonesPoly::selfSolve (VisSet& vs, VisEquation& ve)
+void BJonesPoly::selfGatherAndSolve (VisSet& vs, VisEquation& ve)
 {
 // Solver for the polynomial bandpass solution
 // Input:
@@ -250,7 +250,7 @@ void BJonesPoly::selfSolve (VisSet& vs, VisEquation& ve)
 //
 
 
-  LogIO os (LogOrigin("BJonesPoly", "solve()", WHERE));
+  LogIO os (LogOrigin("BJonesPoly", "selfGatherAndSolve()", WHERE));
 
   os << LogIO::NORMAL
      << "Fitting bandpass amplitude and phase polynomials."
@@ -853,7 +853,7 @@ void BJonesPoly::selfSolve (VisSet& vs, VisEquation& ve)
   
 };
 
-void BJonesPoly::selfSolve2(VisBuffGroupAcc& vbga)
+void BJonesPoly::selfSolveOne(VisBuffGroupAcc& vbga)
 {
 // Solver for the polynomial bandpass solution
 
@@ -863,7 +863,7 @@ void BJonesPoly::selfSolve2(VisBuffGroupAcc& vbga)
 //
 
 
-  LogIO os (LogOrigin("BJonesPoly", "solve()", WHERE));
+  LogIO os (LogOrigin("BJonesPoly", "selfSolveOne()", WHERE));
 
   os << LogIO::NORMAL
      << "THIS IS THE NEW MULTI-SPW-FLEXIBLE VERSION"

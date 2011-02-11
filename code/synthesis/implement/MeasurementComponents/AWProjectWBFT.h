@@ -120,14 +120,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // makeSensitivtyImage().
     //
     virtual ImageInterface<Complex>& getImage(Matrix<Float>&, Bool normalize=True);
+    //
+    // Method used to convert the pixel value of the PB image, passed
+    // as pbPixValue, to a value used for PB-normalization.
+    // Typically, this will depend on the units of the "PB image"
+    // constured by the makeSensitivtyImage() methods. pbLimit is the
+    // fractional pb-gain below which imaging is not required (this
+    // value is typically the user-defined parameter in the private
+    // member variable pbLimit_p).
+    //
+    inline virtual Float pbFunc(const Float& pbPixValue, const Float& pbLimit) 
+    {return  sqrt(pbPixValue);};
 
     virtual void finalizeToSky();
     virtual void initializeToSky(ImageInterface<Complex>& image,  Matrix<Float>& weight,
 				 const VisBuffer& vb);
 
     void setObservatoryLocation(const MPosition& mLocation) {mLocation_p=mLocation;};
-
-    inline virtual Float pbFunc(Float& a) {return (a);};
 
     virtual Bool verifyShapes(IPosition shape0, IPosition shape1)
     {(void)shape0; (void)shape1;return False;};
@@ -143,6 +152,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void ftWeightImage(Lattice<Complex>& wtImage, 
 		       const Matrix<Float>& sumWt,
 		       const Bool& doFFTNorm);
+
+    virtual void resampleDataToGrid(Array<Complex>& griddedData,VBStore& vbs, 
+				    const VisBuffer& vb, Bool& dopsf);
+    //    virtual void resampleGridToData(VBStore& vbs, const VisBuffer& vb);
 
     Bool avgPBReady_p,resetPBs_p, wtImageFTDone;
 

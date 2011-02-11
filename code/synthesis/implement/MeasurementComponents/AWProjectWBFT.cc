@@ -267,9 +267,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					   ImageInterface<Float>& sensitivityImage)
   {
     LogIO log_l(LogOrigin("AWProjectWBFT", "makeSensitivityImage"));
-    log_l << "Setting up weights accumulation during gridding to compute sensitivity pattern." << endl
-	  << "First gridding cycle will be slower than the subsequent ones." 
-	  << LogIO::NORMAL << LogIO::POST;
+    log_l << "Setting up for weights accumulation during gridding to compute sensitivity pattern." 
+	  << endl
+	  << "Consequently, the first gridding cycle will be slower than the subsequent ones." 
+	  << LogIO::WARN;
   }
   //
   //---------------------------------------------------------------
@@ -369,7 +370,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Copy one 2D plane at a time, normalizing by the sum of weights
     // and possibly 2D FFT.
     //
-    // Set up Lattice iteratos on wtImage and sensitivityImage
+    // Set up Lattice iterators on wtImage and sensitivityImage
     //
     IPosition axisPath(4, 0, 1, 2, 3);
     IPosition cursorShape(4, sizeX, sizeY, 1, 1);
@@ -700,10 +701,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for(Int i=0;i<N;i++) CFMap[i] = polMap[N-i-1];
     
     Array<Complex> rotatedConvFunc;
-//     SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
-// 				       rotatedConvFunc,(currentCFPA-actualPA),"LINEAR");
-    SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
-				       rotatedConvFunc,0.0);
+
+    // Rotate the convolution function using Image rotation and
+    // disable rotation in the gridder
+    SynthesisUtils::rotateComplexArray(log_l, convFunc_p, cfs_p.coordSys,
+				       rotatedConvFunc,(currentCFPA-actualPA),"LINEAR");
+    actualPA = currentCFPA; 
+
+    // SynthesisUtils::rotateComplexArray(log_l, convFunc_p, cfs_p.coordSys,
+    // 				       rotatedConvFunc,0.0);
 
     ConjCFMap = polMap;
     makeCFPolMap(vb,cfStokes_p,CFMap);
@@ -849,10 +855,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     makeConjPolMap(vb,CFMap,ConjCFMap);
 
     Array<Complex> rotatedConvFunc;
-//     SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
-// 				       rotatedConvFunc,(currentCFPA-actualPA));
-    SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
-				       rotatedConvFunc,0.0);
+    // Rotate the convolution function using Image rotation and
+    // disable rotation in the gridder
+    SynthesisUtils::rotateComplexArray(log_l, convFunc_p, cfs_p.coordSys,
+				       rotatedConvFunc,(currentCFPA-actualPA));
+    actualPA = currentCFPA; 
+
+    // SynthesisUtils::rotateComplexArray(log_l, convFunc_p, cfs_p.coordSys,
+    // 				       rotatedConvFunc,0.0);
 
     ConjCFMap_p     = ConjCFMap.getStorage(deleteThem(CONJCFMAP));
     CFMap_p         = CFMap.getStorage(deleteThem(CFMAP));
@@ -1001,15 +1011,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     makeCFPolMap(vb,cfStokes_p,CFMap);
     makeConjPolMap(vb,CFMap,ConjCFMap);
 
+    // {
+    //   IPosition tt;
+    //   cfs_p.coordSys.list(log_l,MDoppler::RADIO,tt,tt);
+    //   cfwts_p.coordSys.list(log_l,MDoppler::RADIO,tt,tt);
+    // }
     Array<Complex> rotatedConvFunc_l, rotatedConvWeights_l;
-    // SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
-    //     			       rotatedConvFunc_l,(currentCFPA-actualPA));
-    // SynthesisUtils::rotateComplexArray(log_l, convWeights_p, convFuncCS_p, 
-    //     			       rotatedConvWeights_l,(currentCFPA-actualPA));
-    SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
-        			       rotatedConvFunc_l,0.0);
-    SynthesisUtils::rotateComplexArray(log_l, convWeights_p, convFuncCS_p,
-        			       rotatedConvWeights_l,0.0);
+
+    // Rotate the convolution function using Image rotation and
+    // disable rotation in the gridder
+    SynthesisUtils::rotateComplexArray(log_l, convFunc_p, cfs_p.coordSys,
+        			       rotatedConvFunc_l,(currentCFPA-actualPA));
+    if (!avgPBReady_p)
+      SynthesisUtils::rotateComplexArray(log_l, convWeights_p, cfwts_p.coordSys,
+    					 rotatedConvWeights_l,(currentCFPA-actualPA));
+    // Disable rotation in the gridder
+    actualPA = currentCFPA; 
+
+    // SynthesisUtils::rotateComplexArray(log_l, convFunc_p, cfs_p.coordSys,
+    //     			       rotatedConvFunc_l,0.0);
+    // if (!avgPBReady_p)
+    //   SynthesisUtils::rotateComplexArray(log_l, convWeights_p, cfwts_p.coordSys,
+    // 					 rotatedConvWeights_l,0.0);
 
 
     ConjCFMap_p     = ConjCFMap.getStorage(deleteThem(CONJCFMAP));
@@ -1231,5 +1254,59 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     paChangeDetector.reset();
     cfCache_p->flush();
   }
+  //
+  //---------------------------------------------------------------
+  //
+  void AWProjectWBFT::resampleDataToGrid(Array<Complex>& griddedData,
+					 VBStore& vbs, const VisBuffer& vb, 
+					 Bool& dopsf) 
+  {
+    AWProjectFT::resampleDataToGrid(griddedData,vbs,vb,dopsf);
+    if (!avgPBReady_p)
+      {
+	//
+	// Grid the weighted convolution function as well
+	//
+	LogIO log_l(LogOrigin("AWProjectFT", "resampleDataToGrid"));
+
+	// Make a temporary CFStore object, set its internals
+	// (co-ordinate system, support size info., etc.) from the
+	// convolution weight function (cfwts_p).
+	CFStore rotatedCFWts_l; rotatedCFWts_l.data = new Array<Complex>();
+	rotatedCFWts_l.set(cfwts_p);
+
+	// Now rotate and put the rotated convolution weight function
+	// in rotatedCFWts_l object.
+	Double actualPA = getVBPA(vb),currentCFPA = cfwts_p.pa.getValue("rad");
+	SynthesisUtils::rotateComplexArray(log_l, *cfwts_p.data, cfwts_p.coordSys,
+					   *rotatedCFWts_l.data,(currentCFPA-actualPA));
+	// SynthesisUtils::rotateComplexArray(log_l, *cfs_p.data, cfwts_p.coordSys,
+	// 				   *rotatedCFWts_l.data,0.0);
+
+	// Set rotatedCFWts_l object as the convolution function
+	visResampler_p.setConvFunc(rotatedCFWts_l);
+
+	// Make a temporary complex array to receive the gridded weights.
+	Array<Complex> avgAperture;
+	avgAperture.resize(griddedWeights.shape());
+	avgAperture.set(Complex(0,0));
+
+	// Set the uvw array to zero-sized array.  This a gesture to
+	// the re-sampler to put the gridded weights at the origin of
+	// the uv-grid.
+	//
+	// Receive the sum-of-weights in a dummy array.
+	Matrix<Double> uvwOrigin, dummyDataSumWeight(sumWeight.shape(),0.0);
+	vbs.uvw.reference(uvwOrigin); 
+	visResampler_p.DataToGrid(avgAperture, vbs, dummyDataSumWeight, dopsf); 
+
+	// Get the griddedWeigths as a referenced array and use it to
+	// accumulate the latest gridded weights.
+	Array<Complex> gwts; Bool removeDegenerateAxis=False;
+	griddedWeights.get(gwts, removeDegenerateAxis);
+	gwts = gwts + avgAperture;
+      }
+  };
+    //  void AWProjectWBFT::resampleGridToData(VBStore& vbs, const VisBuffer& vb) {};
 
 } //# NAMESPACE CASA - END

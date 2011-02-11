@@ -460,6 +460,7 @@ class immath_test1(unittest.TestCase):
         print "immath( imagename="+imageList[1]+", expr='IM0', "\
                         +"region="+imageList[2]+", outfile='input_test12' )"
         try:
+            rec = rg.fromfiletorecord(imageList[2])
             results=immath( imagename=imageList[1], expr='IM0', \
                         region=imageList[2], outfile='input_test12' )
         except:
@@ -658,7 +659,7 @@ class immath_test1(unittest.TestCase):
 
         self.assertTrue(retValue['success'],retValue['error_msgs'])
     
-    def test_input11(self):
+    def test_input12(self):
         '''Immath 12: Test bad values of channels'''
         #######################################################################
         # Testing CHANS parameter: valid values 0-39 for our image
@@ -758,7 +759,7 @@ class immath_test1(unittest.TestCase):
 
         self.assertTrue(retValue['success'],retValue['error_msgs'])
 
-    def test_input12(self):
+    def test_input13(self):
         '''Immath 12: Test selection of channels'''
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
         results = None            
@@ -802,7 +803,7 @@ class immath_test1(unittest.TestCase):
 
         self.assertTrue(retValue['success'],retValue['error_msgs'])    
 
-    def test_input13(self):
+    def test_input14(self):
         '''Immath 13: Test STOKES parameter, values: I, Q, yellow'''
         #######################################################################
         # Testing STOKES parameter, valid values: 'I'

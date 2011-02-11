@@ -36,6 +36,7 @@
 #include <casa/Logging/LogSink.h>
 #include <synthesis/MeasurementComponents/FTMachine.h>
 #include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBufferAsync.h>
 #include <ms/MeasurementSets/MSMainEnums.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -396,7 +397,8 @@ public:
   // SkyJones;  
   // Set in initializePut and initializePutXFR,
   // Used in finalizePut and finalizePutXFR
-  VisBuffer vb_p;
+
+  mutable VisBufferAutoPtr vb_p;
 
   Float minPB_p;   // ignore model flux below this level in the generalized PB
   Float constPB_p; // make the fluxscale constant for PB above this level

@@ -1123,11 +1123,13 @@ class imsmooth_test2(unittest.TestCase):
 
     def test_targetres(self):
         '''Imsmooth: Targetres tests'''
+        
+        myia = iatool.create()
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
         casalog.post( "Starting imsmooth TARGETRES tests.", 'NORMAL2' )
-        ia.open(targetres_im)
-        input_beam = ia.restoringbeam()
-        ia.done()
+        myia.open(targetres_im)
+        input_beam = myia.restoringbeam()
+        myia.done()
         imajor = qa.tos(input_beam['major'])
         iminor = qa.tos(input_beam['minor'])
         ipa = qa.tos(input_beam['positionangle'])
@@ -1182,9 +1184,9 @@ class imsmooth_test2(unittest.TestCase):
                 minor=ominor, pa=opa, targetres=True, outfile=outfile
             )
             if (results):
-                ia.open(outfile)
-                mybeam = ia.restoringbeam()
-                ia.done()
+                myia.open(outfile)
+                mybeam = myia.restoringbeam()
+                myia.done()
                 if (not _near(mybeam['major'], omajor, 1e-5)):
                     retValue['success'] = False
                     retValue['error_msgs'] += "\ntargetres test 3: wrong major axis for "\

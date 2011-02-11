@@ -87,9 +87,10 @@ void HogbomCleanImageSkyModelmsgput(Int *npol, Int* pol, Int* iter, Int* px, Int
   LogMessage message(LogOrigin("HogbomCleanImageSkyModel","solve"));
   ostringstream o; 
   LogSink logSink;
-
+  /*
   String stokes("Unknown");
-
+  ///UUU
+  // This code allows only  I, IV, IQU, IQUV !!!!!
   if(*npol==1) {
     stokes="I";
   }
@@ -138,21 +139,24 @@ void HogbomCleanImageSkyModelmsgput(Int *npol, Int* pol, Int* iter, Int* px, Int
   else if(*pol==-4) {
     stokes="I,Q,U,V";
   }
-  
+  */  
   if(*npol<0) {
     StokesVector maxVal(fMaxVal[0], fMaxVal[1], fMaxVal[2], fMaxVal[3]);
     if(*iter==0) {
-      o<<stokes<<": Before iteration, peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
+      //      o<<stokes<<": Before iteration, peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
+      o<<"Before iteration, peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
       message.message(o);
       logSink.post(message);
     }
     else if(*iter>-1) {
-      o<<stokes<<": Iteration "<<*iter<<" peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
+      //      o<<stokes<<": Iteration "<<*iter<<" peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
+      o<<"Iteration "<<*iter<<" peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
       message.message(o);
       logSink.post(message);
     }
     else {
-      o<<stokes<<": Final iteration "<<abs(*iter)<<" peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
+      //      o<<stokes<<": Final iteration "<<abs(*iter)<<" peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
+      o<<"Final iteration "<<abs(*iter)<<" peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
       message.message(o);
       logSink.post(message);
     }
@@ -160,17 +164,20 @@ void HogbomCleanImageSkyModelmsgput(Int *npol, Int* pol, Int* iter, Int* px, Int
   else {
     Float maxVal(fMaxVal[0]);
     if(*iter==0) {
-      o<<stokes<<": Before iteration, peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
+      //      o<<stokes<<": Before iteration, peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
+      o<<"Before iteration, peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
       message.message(o);
       logSink.post(message);
     }
     else if(*iter>-1) {
-      o<<stokes<<": Iteration "<<*iter<<" peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
+      //      o<<stokes<<": Iteration "<<*iter<<" peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
+      o<<"Iteration "<<*iter<<" peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
       message.message(o);
       logSink.post(message);
     }
     else {
-      o<<stokes<<": Final iteration "<<abs(*iter)<<" peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
+      //      o<<stokes<<": Final iteration "<<abs(*iter)<<" peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
+      o<<"Final iteration "<<abs(*iter)<<" peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
       message.message(o);
       logSink.post(message);
     }

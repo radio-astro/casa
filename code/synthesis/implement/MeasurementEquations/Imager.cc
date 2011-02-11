@@ -74,6 +74,9 @@
 #include <msvis/MSVis/VisSet.h>
 #include <msvis/MSVis/VisSetUtil.h>
 #include <msvis/MSVis/VisImagingWeight.h>
+#include <msvis/MSVis/VisibilityIteratorAsync.h>
+#include <msvis/MSVis/VisBufferAsync.h>
+
 // Disabling Imager::correct() (gmoellen 06Nov20)
 //#include <synthesis/MeasurementComponents/TimeVarVisJones.h>
 
@@ -483,7 +486,7 @@ Imager::~Imager()
 }
 
 
-Bool Imager::open(MeasurementSet& theMs, Bool compress, Bool useModelCol)
+Bool Imager::open(MeasurementSet& theMs, Bool /*compress*/, Bool useModelCol)
 {
 
 #ifdef PABLO_IO
@@ -520,7 +523,7 @@ Bool Imager::open(MeasurementSet& theMs, Bool compress, Bool useModelCol)
       return False;
     }
     
-    Bool initialize=(!ms_p->tableDesc().isColumn("CORRECTED_DATA"));
+    (!ms_p->tableDesc().isColumn("CORRECTED_DATA")); // if no side effect then delete this statement?
     
     /*if(vs_p) {
       delete vs_p; vs_p=0;
@@ -777,17 +780,15 @@ Bool Imager::setimage(const Int nx, const Int ny,
 
     // Now make the derived quantities 
     if(stokes_p=="I" || stokes_p=="RR" ||stokes_p=="LL" || 
-       stokes_p=="XX" || stokes_p=="YY") {
+       stokes_p=="XX" || stokes_p=="YY" ) {
       npol_p=1;
     }
-    else if(stokes_p=="IQ" || stokes_p=="RRLL" || stokes_p=="XXYY" || 
-	    stokes_p=="QU") {
+    else if(stokes_p=="IV" || stokes_p=="IQ" || 
+              stokes_p=="RRLL" || stokes_p=="XXYY" || 
+	      stokes_p=="QU" || stokes_p=="UV") {
       npol_p=2;
     }
-    else if(stokes_p=="IV") {
-      npol_p=2;
-    }
-    else if(stokes_p=="IQU") {
+    else if(stokes_p=="IQU" || stokes_p=="IUV") {
       npol_p=3;
     }
     else if(stokes_p=="IQUV") {
@@ -1010,17 +1011,15 @@ Bool Imager::defineImage(const Int nx, const Int ny,
 
     // Now make the derived quantities 
     if(stokes_p=="I" || stokes_p=="RR" ||stokes_p=="LL" || 
-       stokes_p=="XX" || stokes_p=="YY") {
+       stokes_p=="XX" || stokes_p=="YY" ) {
       npol_p=1;
     }
-    else if(stokes_p=="IQ" || stokes_p=="RRLL" || stokes_p=="XXYY" ||
-	    stokes_p=="QU") {
+    else if(stokes_p=="IV" || stokes_p=="IQ" || 
+              stokes_p=="RRLL" || stokes_p=="XXYY" ||
+	      stokes_p=="QU" || stokes_p=="UV") {
       npol_p=2;
     }
-    else if(stokes_p=="IV") {
-      npol_p=2;
-    }
-    else if(stokes_p=="IQU") {
+    else if(stokes_p=="IQU" || stokes_p=="IUV") {
       npol_p=3;
     }
     else if(stokes_p=="IQUV") {
@@ -1329,7 +1328,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
 		     const String& fieldnames, const Vector<Int>& antIndex,
 		     const String& antnames, const String& spwstring,
                      const String& uvdist, const String& scan,
-                     const Bool useModelCol,
+                     const Bool /*useModelCol*/,
                      const Bool be_calm)
 {
   logSink_p.clearLocally();
@@ -3761,7 +3760,7 @@ Bool Imager::clean(const String& algorithm,
 		   const Int niter, 
 		   const Float gain,
 		   const Quantity& threshold, 
-		   const Bool displayProgress, 
+		   const Bool /*displayProgress*/,
 		   const Vector<String>& model, const Vector<Bool>& fixed,
 		   const String& complist,
 		   const Vector<String>& mask,
@@ -3775,6 +3774,7 @@ Bool Imager::clean(const String& algorithm,
 #endif
   Bool converged=True; 
 
+  ROVisibilityIterator::AsyncEnabler enabler (rvi_p);
 
   if(!valid())
     {
@@ -3907,6 +3907,7 @@ Bool Imager::clean(const String& algorithm,
 	  }
       }
     }
+
     
     // Make an ImageSkyModel with the specified polarization representation
     // (i.e. circular or linear)
@@ -4060,7 +4061,12 @@ Bool Imager::clean(const String& algorithm,
 	
 	return False;
       }
-    
+   
+      // Send the data correlation type to the SkyModel
+      os << LogIO::DEBUG1 << "Data PolRep in Imager.cc : " << polRep_p << LogIO::POST;
+      sm_p->setDataPolFrame(polRep_p);
+
+ 
       AlwaysAssert(sm_p, AipsError);
       sm_p->setAlgorithm("clean");
 
@@ -4089,6 +4095,8 @@ Bool Imager::clean(const String& algorithm,
     //   sm_p->setDisplayProgress(True);
     //   sm_p->setPGPlotter( getPGPlotter() );
     // }
+
+
 
     sm_p->setGain(gain);
     sm_p->setNumberIterations(niter);
@@ -4653,8 +4661,8 @@ Bool Imager::setjy(const Int fieldid,
 
 }
 
-Bool Imager::setjy(const Vector<Int>& fieldid, 
-		   const Vector<Int>& spectralwindowid,
+Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
+		   const Vector<Int>& /*spectralwindowid*/,
 		   const String& fieldnames, const String& spwstring,
 		   const Vector<Double>& fluxDensity, const String& standard)
 {
@@ -4845,8 +4853,8 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
 
 
 // This is the one used by im.setjy() (because it has a model arg).
-Bool Imager::setjy(const Vector<Int>& fieldid, 
-                   const Vector<Int>& spectralwindowid,
+Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
+                   const Vector<Int>& /*spectralwindowid*/,
                    const String& fieldnames, const String& spwstring,
                    const String& model,
                    const Vector<Double>& fluxDensity, 
@@ -5333,8 +5341,8 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
 
 // Temporary copy of setjy() while flux calibration with Solar System objects
 // is being tested.
-Bool Imager::ssoflux(const Vector<Int>& fieldid, 
-                     const Vector<Int>& spectralwindowid,
+Bool Imager::ssoflux(const Vector<Int>& /*fieldid*/,
+                     const Vector<Int>& /*spectralwindowid*/,
                      const String& fieldnames, const String& spwstring,
                      const String& model,
                      const Vector<Double>& fluxDensity, 

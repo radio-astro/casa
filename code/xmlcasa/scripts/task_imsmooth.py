@@ -76,8 +76,6 @@
 import os
 import numpy
 from taskinit import *
-from imregion import *
-
 
 def imsmooth( imagename, kernel, major, minor, pa, targetres, region, box, chans, stokes, mask, outfile):
     casalog.origin( 'imsmooth' )
@@ -104,45 +102,14 @@ def imsmooth( imagename, kernel, major, minor, pa, targetres, region, box, chans
                       ' exists. imsmooth can not proceed, please\n'+\
                       'remove it or change the output file name.', 'SEVERE' )
         return retValue
-    
-    # Get the region information, if the user has specified
-    # a region file it is given higher priority.
-    reg={}
-    try:
-    	if ( len(region)>1 ):
-	    if ( len(box)>1 or len(chans)>1 or len(stokes)>1 ):
-		casalog.post( "Ignoring region selection\ninformation in" \
-			      " the box, chans, and stokes parameters."\
-			      " Using region information\nin file: " + region, 'WARN' );
-            # Prepend the current working directory if the first
-            # character of the region is not '/'
-            if os.path.exists( region ):
-                    # We have a region file on disk!
-                reg=rg.fromfiletorecord( region );
-            else:
-                # The name given is the name of a region stored
-                # with the image.
-                # Note that we accept:
-                #    'regionname'          -  assumed to be in imagename
-                #    'my.image:regionname' - in my.image
-                reg_names=region.split(':')
-                if ( len( reg_names ) == 1 ):
-                    reg=rg.fromtabletorecord( imagename, region, False )
-                else:
-                    reg=rg.fromtabletorecord( reg_names[0], reg_names[1], False )
-	else: 
-	    reg=imregion( imagename, chans, stokes, box, '', '' )
-    except Exception, instance:
-        casalog.post( 'Unable to construct specified region.', 'SEVERE' )
-	casalog.post( 'Exception thrown is: '+str(instance), 'NORMAL4' )
-        return retValue
-
-    if ( reg == {} ):
-        casalog.post( 'Ill-formed region: '+str(reg)+'. can not continue.',
-                      'SEVERE' )
-        return retValue
-    
-    casalog.post( 'Smoothing to be done in region: '+str(reg), 'DEBUG2' )
+    _myia = iatool.create()
+    _myia.open(imagename)
+    mycsys = _myia.coordsys()
+    reg = rg.frombcs(
+        mycsys.torecord(), _myia.shape(), box, chans,
+        stokes, "a", region
+    )
+    _myia.done()
 
     # If the values given are integers we assume they are given in
     # arcsecs and alter appropriately
@@ -151,27 +118,26 @@ def imsmooth( imagename, kernel, major, minor, pa, targetres, region, box, chans
     if type( minor ) == int:
         minor=str(minor)+'arcsec'                
 
-
     try:        
         if ( kernel.startswith( "gaus" ) ):
             # GAUSSIAN KERNEL
             casalog.post( "Calling convolve2d with Gaussian kernel", 'NORMAL3' )
-            ia.open( imagename )
+            _myia.open( imagename )
             if (targetres):
-                [major, minor, pa, dsuccess] = _get_parms_for_targetres(major, minor, pa)
+                [major, minor, pa, dsuccess] = _get_parms_for_targetres(_myia, major, minor, pa)
                 if not dsuccess:
-                    ia.done()
+                    _myia.done()
                     return False
                
             casalog.post( "ia.convolve2d( major="+str(major)+", minor="\
                           +str(minor)+", outfile="+outfile+")", 'DEBUG2' )
             #retValue = ia.convolve2d( axes=[0,1], region=reg, major=major, \
             #                          minor=minor, outfile=outfile )
-            ia.convolve2d(
+            _myia.convolve2d(
                 axes=[0,1], region=reg, major=major,
                 minor=minor, pa=pa, outfile=outfile
             )
-            ia.done()
+            _myia.done()
             retValue = True
 
         elif (kernel.startswith( "box" ) ):
@@ -186,7 +152,7 @@ def imsmooth( imagename, kernel, major, minor, pa, targetres, region, box, chans
             # be lat.  So this means that we need to use the major quantity
             # on the y axis (or 1) for sepconvolve.
 
-            ia.open( imagename )
+            _myia.open( imagename )
             casalog.post( "ia.sepconvolve( axes=[0,1],"+\
                           "types=['boxcar','boxcar' ],"+\
                           "widths=[ "+str(minor)+", "+str(major)+" ],"+ \
@@ -195,10 +161,10 @@ def imsmooth( imagename, kernel, major, minor, pa, targetres, region, box, chans
             #retValue = ia.sepconvolve( axes=[0,1], types=['box','box' ],\
             #                           widths=[ minor, major ], \
             #                           region=reg,outfile=outfile )
-            ia.sepconvolve( axes=[0,1], types=['box','box' ],\
+            _myia.sepconvolve( axes=[0,1], types=['box','box' ],\
                                        widths=[ minor, major ], \
                                        region=reg,outfile=outfile )
-            ia.done()
+            _myia.done()
             retValue = True
         else:
             casalog.post( 'Unrecognized kernel type: ' + kernel, 'SEVERE' )
@@ -212,8 +178,8 @@ def imsmooth( imagename, kernel, major, minor, pa, targetres, region, box, chans
     
     return retValue
 
-def _get_parms_for_targetres(major, minor, pa):
-    beam = ia.restoringbeam()
+def _get_parms_for_targetres(myia, major, minor, pa):
+    beam = myia.restoringbeam()
     if (not beam):
         casalog.post(
             "targetres is True but input image does not have a restoring beam so I "
@@ -227,7 +193,7 @@ def _get_parms_for_targetres(major, minor, pa):
     bmaj = qa.tos(beam['major'])
     bmin = qa.tos(beam['minor'])
     bpa = qa.tos(beam['positionangle'])
-    dres = ia.deconvolvefrombeam(
+    dres = myia.deconvolvefrombeam(
         beam=[bmaj, bmin, bpa], source=[major, minor, pa]
     )
     if not dres['fit']['success']:
@@ -235,7 +201,7 @@ def _get_parms_for_targetres(major, minor, pa):
             "targetres is True but the convolution parameters you have chosen are too "
                 + "small for this image's beam. The convolution parameters must be at "
                 + "least a bit larger than the current beam parameters. "
-                + "The current beam parameters are " + str(ia.restoringbeam()),
+                + "The current beam parameters are " + str(myia.restoringbeam()),
                 'SEVERE'
         )
         return [0,0,0,False]
@@ -250,7 +216,7 @@ def _get_parms_for_targetres(major, minor, pa):
                 + "least a bit larger than the current beam parameters or in this case "
                 + "you may instead be able to set the position angle so it is more nearly "
                 + "equal to that of the position angle of the clean beam of the input "
-                + "image. The current beam parameters are " + str(ia.restoringbeam()),
+                + "image. The current beam parameters are " + str(myia.restoringbeam()),
                 'SEVERE'
         )
         return [0,0,0,False]

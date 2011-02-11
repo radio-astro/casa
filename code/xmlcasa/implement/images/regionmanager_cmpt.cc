@@ -101,7 +101,7 @@ regionmanager::box(const std::vector<double>& blc, const std::vector<double>& tr
 	setup();
     
     ::casac::record* retval=0;
-    *itsLog << LogOrigin("regionmanager", "box");
+    *itsLog << LogOrigin("regionmanager", __FUNCTION__);
 
     try {
 	Vector<Double> dblc(blc);
@@ -995,7 +995,7 @@ regionmanager::wmask(const std::string& expr)
 {
     if ( !itsIsSetup )
 	setup();
-    *itsLog << LogOrigin("regionmanager", "wmask");
+    *itsLog << LogOrigin("regionmanager", __FUNCTION__);
 
 
     // TODO : IMPLEMENT ME HERE !
@@ -1008,13 +1008,35 @@ regionmanager::wmask(const std::string& expr)
 record* regionmanager::frombcs(
 	const record& csys, const vector<int>& shape,
 	const string& box, const string& chans,
-	const string& stokes, const string& stokescontrol
+	const string& stokes, const string& stokescontrol,
+	const variant& region
 ) {
     if (! itsIsSetup) {
     	setup();
     }
     record *imRegion = 0;
     *itsLog << LogOrigin("regionmanager", __FUNCTION__);
+
+    String regionString;
+    Record *regionPtr = 0;
+	if(region.type() == variant::STRING) {
+		regionString = region.toString();
+	}
+	else if (region.type() == variant::RECORD) {
+		variant *clone = region.clone();
+		regionPtr = toRecord(clone->asRecord());
+		delete clone;
+	}
+	else if (region.type() == variant::BOOLVEC) {
+		// default type for variants apparently, nothing to do
+	}
+	else {
+		*itsLog << "Unrecognized type " << region.typeString()
+			<< " for region, must be either string or region dictionary"
+			<< LogIO::EXCEPTION;
+	}
+
+
     try {
     	String myControl = stokescontrol;
     	RegionManager::StokesControl sControl;
@@ -1030,7 +1052,7 @@ record* regionmanager::frombcs(
     	}
     	Record *csysRec = toRecord(csys);
     	if(csysRec->nfields() < 2) {
-    	    throw(AipsError("Given coorsys parameter does not appear to be a valid coordsystem record"));
+    	    throw(AipsError("Given coordsys parameter does not appear to be a valid coordsystem record"));
     	}
     	casa::CoordinateSystem *coordsys = CoordinateSystem::restore(*csysRec, "");
     	if(coordsys==0){
@@ -1045,10 +1067,12 @@ record* regionmanager::frombcs(
     	String myBox(box);
     	imRegion = fromRecord(
     		itsRegMan->fromBCS(
-    				diagnostics, nSelectedChannels, myStokes,
-    				myChans, sControl, myBox, imShape
-    		).toRecord("")
+    			diagnostics, nSelectedChannels, myStokes,
+    			regionPtr, regionString, myChans, sControl, myBox,
+    			imShape
+    		)
     	);
+    	delete regionPtr;
     }
     catch (AipsError x) {
     	*itsLog << LogIO::SEVERE << "Exception Reported: "

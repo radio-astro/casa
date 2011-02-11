@@ -121,6 +121,7 @@ image::image(
 ) {
 	try {
 		*itsLog << LogOrigin("image", "image");
+
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
@@ -772,51 +773,54 @@ image::convertflux(const ::casac::variant& qvalue, const ::casac::variant& major
   return rstat;
 }
 
-::casac::image *
-image::convolve2d(const std::string& outFile, const std::vector<int>& axes,
-		  const std::string& type, const ::casac::variant& major,
-		  const ::casac::variant& minor, const ::casac::variant& pa,
-		  const double in_scale, const ::casac::record& region,
-		  const ::casac::variant& vmask, const bool overwrite,
-		  const bool async)
-{
-  ::casac::image *rstat = 0;
-  try {
-    *itsLog << LogOrigin("image", "convolve2d");
-    if (detached()) return rstat;
+image* image::convolve2d(
+		const string& outFile, const vector<int>& axes,
+		const string& type, const variant& major,
+		const variant& minor, const variant& pa,
+		const double in_scale, const record& region,
+		const variant& vmask, const bool overwrite
+) {
+	::casac::image *rstat = 0;
+	try {
+		*itsLog << LogOrigin("image", __FUNCTION__);
+		if (detached()) return rstat;
+		UnitMap::putUser("pix",UnitVal(1.0), "pixel units");
+		Record *Region = toRecord(region);
+		String mask = vmask.toString();
 
-    UnitMap::putUser("pix",UnitVal(1.0), "pixel units");
-    Record *Region = toRecord(region);
-    String mask = vmask.toString();
-    if(mask == "[]")
-	    mask = "";
-    String kernel(type);
-    Quantum<Double> majorKernel = casaQuantityFromVar(major);
-    Quantum<Double> minorKernel = casaQuantityFromVar(minor);
-    Quantum<Double> paKernel = casaQuantityFromVar(pa);
+		if(mask == "[]")
+			mask = "";
+		String kernel(type);
+		casa::Quantity majorKernel = casaQuantityFromVar(major);
+		casa::Quantity minorKernel = casaQuantityFromVar(minor);
+		casa::Quantity paKernel = casaQuantityFromVar(pa);
+		*itsLog << LogOrigin("image", __FUNCTION__);
 
-    Vector<Int> Axes(axes);
-    if (Axes.size() == 0) {
-      Axes.resize(2);
-      Axes[0]=0;
-      Axes[1]=1;
-    }
+		Vector<Int> Axes(axes);
+		if (Axes.size() == 0) {
+			Axes.resize(2);
+			Axes[0]=0;
+			Axes[1]=1;
+		}
 
-    // Return image
-    ImageInterface<Float> * tmpIm=
-      itsImage->convolve2d(outFile, Axes, type, majorKernel,
-			   minorKernel, paKernel, in_scale, *Region, mask,
-			   overwrite, async);
-    rstat = new ::casac::image(tmpIm);
-    delete tmpIm;
-    return rstat;
+		// Return image
+
+		ImageInterface<Float> * tmpIm=
+				itsImage->convolve2d(outFile, Axes, type, majorKernel,
+						minorKernel, paKernel, in_scale, *Region, mask,
+						overwrite);
+
+		rstat = new ::casac::image(tmpIm);
+
+		delete tmpIm;
+		return rstat;
 
 
-  } catch (AipsError x) {
-      *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-    RETHROW(x);
-  }
-  return rstat;
+	} catch (AipsError x) {
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		RETHROW(x);
+	}
+	return rstat;
 }
 
 ::casac::coordsys *

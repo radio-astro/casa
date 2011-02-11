@@ -191,14 +191,18 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
 
   // merge ANTENNA and FEED
   uInt oldRows = itsMS.antenna().nrow();
+  uInt oldFRows = itsMS.feed().nrow();
   const Block<uInt> newAntIndices = 
     copyAntennaAndFeed(otherMS.antenna(), otherMS.feed());
   {
-    const uInt addedRows = itsMS.antenna().nrow() - oldRows;
-    const uInt matchedRows = otherMS.antenna().nrow() - addedRows;
+    uInt addedRows = itsMS.antenna().nrow() - oldRows;
+    uInt matchedRows = otherMS.antenna().nrow() - addedRows;
     log << "Added " << addedRows 
 	<< " rows and matched " << matchedRows 
 	<< " from the antenna subtable" << endl;
+    addedRows = itsMS.feed().nrow() - oldFRows;
+    log << "Added " << addedRows 
+	<< " rows to the feed subtable" << endl;
   }
 
   // merge STATE
@@ -789,25 +793,122 @@ Block<uInt> MSConcat::copyAntennaAndFeed(const MSAntenna& otherAnt,
   const ROTableRow otherAntRow(otherAnt);
   TableRow antRow(ant);
 
+  MSFeedColumns& feedCols = feed();
+  const ROMSFeedColumns otherFeedCols(otherFeed);
+
   const String& antIndxName = MSFeed::columnName(MSFeed::ANTENNA_ID);
   MSFeed& feed = itsMS.feed();
   const ROTableRow otherFeedRow(otherFeed);
   TableRow feedRow(feed);
-  TableRecord feedRecord;
+  TableRecord feedRecord, feedRecord2;
   ColumnsIndex feedIndex(otherFeed, Vector<String>(1, antIndxName));
+  ColumnsIndex itsFeedIndex(feed, Vector<String>(1, antIndxName));
+
   RecordFieldPtr<Int> antInd(feedIndex.accessKey(), antIndxName);
+  RecordFieldPtr<Int> itsAntInd(itsFeedIndex.accessKey(), antIndxName);
+
   RecordFieldId antField(antIndxName);
   
   for (uInt a = 0; a < nAntIds; a++) {
     const Int newAntId = antCols.matchAntenna(otherAntCols.name()(a), 
 					      otherAntCols.positionMeas()(a), tol);
+    
+    Bool addNewEntry = True;
+
     if (newAntId >= 0 && 
 	antCols.station()(newAntId)==otherAntCols.station()(a) ) { // require that also the STATION matches
+      // Check that the FEED table contains all the entries for
+      // this antenna and that they are the same.      
+      *antInd = a;
+      *itsAntInd = newAntId;
+      const Vector<uInt> feedsToCompare = feedIndex.getRowNumbers();
+      const Vector<uInt> itsFeedsToCompare = itsFeedIndex.getRowNumbers();
+      const uInt nFeedsToCompare = feedsToCompare.nelements();
+      uInt matchingFeeds = 0;
+      Vector<uInt> ignoreRows;
+      Unit s("s"); 
+      Unit m("m"); 
+
+      if(itsFeedsToCompare.nelements() == nFeedsToCompare){
+	//cout << "Antenna " << a << " same number of feeds " << endl;
+	for(uInt f=0; f<nFeedsToCompare; f++){
+	  uInt k = feedsToCompare(f);
+	  Quantum<Double> newTimeQ;
+	  Quantum<Double> newIntervalQ;
+	  Quantum<Double> fLengthQ;
+	  if(!otherFeedCols.focusLengthQuant().isNull()){
+	    fLengthQ = otherFeedCols.focusLengthQuant()(k);
+	  }
+	  const Int matchingFeedRow = feedCols.matchFeed(newTimeQ,
+							 newIntervalQ,
+							 a,
+							 otherFeedCols.timeQuant()(k),
+							 otherFeedCols.intervalQuant()(k),
+							 otherFeedCols.numReceptors()(k),
+							 otherFeedCols.beamOffsetQuant()(k),
+							 otherFeedCols.polarizationType()(k),
+							 otherFeedCols.polResponse()(k),
+							 otherFeedCols.positionQuant()(k),
+							 otherFeedCols.receptorAngleQuant()(k),
+							 ignoreRows,
+							 fLengthQ
+							 );
+	  if(matchingFeedRow>=0){
+	    //cout << "Antenna " << a << " found matching feed " << matchingFeedRow << endl;
+	    if(newTimeQ.getValue(s)!=0.){ // need to adjust time information
+
+	      //cout << "this " << feedCols.timeQuant()(matchingFeedRow).getValue(s) << " " 
+	      //    <<  feedCols.intervalQuant()(matchingFeedRow).getValue(s) << endl;
+	      //cout << " other " << otherFeedCols.timeQuant()(k).getValue(s) << " " 
+	      //    << otherFeedCols.intervalQuant()(k).getValue(s)   << endl;
+	      //cout << " new " << newTimeQ.getValue(s) << " " << newIntervalQ.getValue(s) << endl;
+
+	      // modify matchingFeedRow
+	      feedCols.timeQuant().put(matchingFeedRow, newTimeQ);
+	      feedCols.intervalQuant().put(matchingFeedRow, newIntervalQ);
+	    }
+	    matchingFeeds++;
+	    ignoreRows.resize(matchingFeeds, True);
+	    ignoreRows(matchingFeeds-1) = matchingFeedRow;
+	  }
+	}
+      }   
+
       antMap[a] = newAntId;
-      // Should really check that the FEED table contains all the entries for
-      // this antenna and that they are the same. I'll just assume this for
-      // now.
-    } else { // need to add a new entry in the ANTENNA subtable
+      addNewEntry = False;
+
+      if(matchingFeeds != nFeedsToCompare){
+	//cout << "Antenna " << a << " did not find all needed feeds " << matchingFeeds << "/" << nFeedsToCompare << endl;
+	const Vector<uInt> feedsToCopy = feedIndex.getRowNumbers();
+	const uInt nFeedsToCopy = feedsToCopy.nelements();
+	uInt destRow = feed.nrow();
+	uInt rCount = 0;
+	for (uInt f = 0; f < nFeedsToCopy; f++) {
+	  Bool present=False;
+	  for(uInt g=0; g<matchingFeeds; g++){
+	    if(feedsToCopy(f)==ignoreRows(g)){
+	      present=True;
+	      break;
+	    }
+	  }
+	  if(!present){
+	    feed.addRow(1);
+	    feedRecord = otherFeedRow.get(feedsToCopy(f));
+	    feedRecord.define(antField, static_cast<Int>(antMap[a]));
+	    feedRow.putMatchingFields(destRow, feedRecord);
+	    rCount++;
+	    destRow++;
+	  }
+	}
+	//cout << "Added " << rCount << " rows to the Feed table." << endl;
+      }	
+      //else{
+      //   cout << "Antenna " << a << " found all matching feeds: " << matchingFeeds << endl;
+      //}
+
+    }
+
+    if(addNewEntry){ // need to add a new entry in the ANTENNA subtable
       antMap[a] = ant.nrow();
       ant.addRow();
       antRow.putMatchingFields(antMap[a], otherAntRow.get(a));

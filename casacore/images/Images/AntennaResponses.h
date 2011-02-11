@@ -201,7 +201,7 @@ public:
 		      const Int& beamId,
 		      const MFrequency& freq);
 
-  // getRow is then used by the following methods
+  // getRowAndIndex is then used by the following methods
 
   // Access methods for the response images: takes an observatory name, 
   // an observation time, the antenna type (e.g. "DV"), the receiverType,
@@ -231,7 +231,7 @@ public:
 		    const String& receiverType = "",
 		    const Int& beamNumber=0);   
 		
-  // overloaded method: as previous method but using beamId
+  // Overloaded method: as previous method but using beamId
   // (instead of obs. time, ant. type,  rec. type, center, and functype)
   Bool getImageName(String& functionImageName,
 		    uInt& funcChannel, // the channel to use in the image  
@@ -283,6 +283,9 @@ public:
 
   // Convert from Int to FuncType
   FuncTypes FuncType(Int i);
+
+  // Convert from String to FuncType
+  static FuncTypes FuncType(const String& sftyp);
 
   // get the name of the band corresponding to the frequency (in the rest frame of the observatory)
   Bool getBandName(String& bandName,

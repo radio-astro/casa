@@ -117,6 +117,20 @@ int main() {
 					Quantity(50., "deg"), 
 					MDirection::AZEL)
 			     ), AipsError);
+      ui = 2;
+
+      AlwaysAssert(aR.putRow(ui,"ALMA", 2, bName, minFreq, maxFreq, fTypB, funcNameB, funcChannel, nomFreq,
+			     "DV", MEpoch(MVEpoch(Quantity(50001., "d")), MEpoch::UTC), // one day later
+			     MDirection(Quantity( 0., "deg"),
+					Quantity(45., "deg"), 
+					MDirection::AZEL),
+			     MDirection(Quantity( -10., "deg"), 
+					Quantity(40., "deg"), 
+					MDirection::AZEL),
+			     MDirection(Quantity( 50., "deg"), // now between 50 deg and 90 deg
+					Quantity(90., "deg"), 
+					MDirection::AZEL)
+			     ), AipsError);
 
       aR.create("testAntennaResponses_tmp.dat"); // write table to disk
 
@@ -222,6 +236,17 @@ int main() {
 				  MDirection(Quantity( 0., "deg"),
 					     Quantity(80., "deg"), 
 					     MDirection::AZEL)), // wrong center
+		 AipsError);
+
+    cout << "access 3b" << endl;
+    AlwaysAssert(!aR.getImageName(theImageName, theImageChannel, theNomFreq, theFType,
+				  "ALMA", 
+				  MEpoch(MVEpoch(Quantity(50001., "d")), MEpoch::UTC), // other time 
+				  MFrequency( Quantity(160., "GHz"), MFrequency::TOPO),
+				  requFType, "DV",
+				  MDirection(Quantity( 0., "deg"),
+					     Quantity(30., "deg"), 
+					     MDirection::AZEL)), // other wrong center
 		 AipsError);
 
     cout << "access 4" << endl;
@@ -334,6 +359,18 @@ int main() {
 				 0,
 				 MFrequency( Quantity(250., "GHz"), MFrequency::TOPO)), 
 		 AipsError);
+
+    cout << "access 13" << endl;
+    AlwaysAssert(!aR.getImageName(theImageName, theImageChannel, theNomFreq, theFType,
+				  "ALMA", 
+				  MEpoch(MVEpoch(Quantity(50001., "d")), MEpoch::UTC), 
+				  MFrequency( Quantity(160., "GHz"), MFrequency::TOPO),
+				  requFType, "DV",
+				  MDirection(Quantity( 0., "deg"),
+					     Quantity(80., "deg"), 
+					     MDirection::AZEL)), 
+		 AipsError);
+
 
     AlwaysAssert(aR.getBandName(myBandName, 
 				"ALMA",

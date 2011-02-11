@@ -43,6 +43,8 @@
 #include <synthesis/MeasurementComponents/AWProjectFT.h>
 #include <synthesis/MeasurementComponents/ExpCache.h>
 #include <synthesis/MeasurementComponents/CExp.h>
+#include <synthesis/MeasurementComponents/AWVisResampler.h>
+#include <synthesis/MeasurementComponents/VBStore.h>
 
 #include <scimath/Mathematics/FFTServer.h>
 #include <scimath/Mathematics/MathFunc.h>
@@ -113,10 +115,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       gridder(0), isTiled(False), arrayLattice(0), lattice(0), 
       maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
       pointingToImage(0), usezero_p(usezero),
-      /*telescopeConvFunc_p(cf),cfs_p(), cfwts_p(),*/ epJ_p(),
+      convFunc_p(), convWeights_p(), epJ_p(),
       doPBCorrection(doPBCorr), /*cfCache_p(cfcache),*/ paChangeDetector(),
       rotateAperture_p(True),
-      Second("s"),Radian("rad"),Day("d"), pbNormalized_p(False)
+      Second("s"),Radian("rad"),Day("d"), pbNormalized_p(False),
+      visResampler_p()
   {
     convSize=0;
     tangentSpecified_p=False;
@@ -145,7 +148,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //---------------------------------------------------------------
   //
   AWProjectFT::AWProjectFT(const RecordInterface& stateRec)
-    : FTMachine(),Second("s"),Radian("rad"),Day("d")
+    : FTMachine(),Second("s"),Radian("rad"),Day("d"),visResampler_p()
   {
     LogIO log_l(LogOrigin("AWProjectFT", "AWProjectFT"));
     //
@@ -256,6 +259,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	avgPBSq_p = other.avgPBSq_p;
 	convFuncCtor_p = other.convFuncCtor_p;
 	pbNormalized_p = other.pbNormalized_p;
+	visResampler_p=other.visResampler_p;
       };
     return *this;
   };
@@ -356,24 +360,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     paChangeDetector.reset();
     makingPSF = False;
   }
-  // //
-  // //---------------------------------------------------------------
-  // //
-  // void AWProjectFT::initPolInfo(const VisBuffer& vb)
-  // {
-  //   //
-  //   // Need to figure out where to compute the following arrays/ints
-  //   // in the re-factored code.
-  //   // ----------------------------------------------------------------
-  //   {
-  //     polInUse_p = 0;
-  //     uInt N=0;
-  //     for(uInt i=0;i<polMap.nelements();i++) if (polMap(i) > -1) polInUse_p++;
-  //     cfStokes_p.resize(polInUse_p);
-  //     for(uInt i=0;i<polMap.nelements();i++) 
-  // 	if (polMap(i) > -1) {cfStokes_p(N) = vb.corrType()(i);N++;}
-  //   }
-  // }
   //
   //---------------------------------------------------------------
   //
@@ -926,11 +912,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					 pa, cfs_p, cfwts_p);
 
 	cfCache_p->cacheConvFunction(cfs_p);
-	cfCache_p->cacheConvFunction(cfwts_p,"WT",False);
+	cfCache_p->cacheConvFunction(cfwts_p,"WT");//,False);
 	cfCache_p->flush(); // Write the aux info file to the disk
 			    // cache
       }
-    convFuncCS_p = cfs_p.coordSys;
 
     // For now, functions for weight gridding is the same as the
     // function for visibility gridding.
@@ -987,9 +972,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Writing obfuscated code can be fun (well....it's not that
     // obfuscated).  Just pulling out the frequency for which the
     // convolution function was computed.
-    cfRefFreq_p = cfs_p.coordSys.spectralCoordinate(image.coordinates().findCoordinate(Coordinate::SPECTRAL))
+    cfRefFreq_p = cfs_p.coordSys.
+      spectralCoordinate(image.coordinates().findCoordinate(Coordinate::SPECTRAL))
       .referenceValue()(0);
 
+    visResampler_p.setConvFunc(cfs_p);
   }
   //
   //------------------------------------------------------------------------------
@@ -1005,6 +992,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     init();
     makingPSF = False;
     initMaps(vb);
+    visResampler_p.setMaps(chanMap, polMap);
     
     findConvFunction(*image, vb);
     if (!cfCache_p->avgPBReady())
@@ -1122,13 +1110,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      //
 	      if (doPBCorrection)
 		{
-		  // PBCorrection(ix) = FUNC(PBCorrection(ix))/(sincConv(ix)*sincConv(iy));
-		  PBCorrection(ix) = (PBCorrection(ix))*(sincConv(ix)*sincConv(iy));
-//		  PBCorrection(ix) = (PBCorrection(ix))*(sincConv(ix)*sincConv(iy));
- 		  if ((abs(PBCorrection(ix))) >= pbLimit_p)
-		    {lix.rwVectorCursor()(ix) /= (PBCorrection(ix));}
- 		  else
-		    {lix.rwVectorCursor()(ix) *= (sincConv(ix)*sincConv(iy));}
+		  PBCorrection(ix) = pbFunc(PBCorrection(ix),pbLimit_p)*(sincConv(ix)*sincConv(iy));
+		  lix.rwVectorCursor()(ix) /= (PBCorrection(ix));
+		  //		  lix.rwVectorCursor()(ix) /= sqrt(PBCorrection(ix));
 		}
 	      else 
 		lix.rwVectorCursor()(ix) /= (1.0/(sincConv(ix)*sincConv(iy)));
@@ -1190,6 +1174,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     init();
     initMaps(vb);
+    visResampler_p.setMaps(chanMap, polMap);
     
     // Initialize the maps for polarization and channel. These maps
     // translate visibility indices into image indices
@@ -1266,629 +1251,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return result;
   }
   
-#define NEED_UNDERSCORES
-#if defined(NEED_UNDERSCORES)
-#define gpbwproj gpbwproj_
-#define dpbwproj dpbwproj_
-#define dpbwgrad dpbwgrad_
-#endif
-  
-  extern "C" { 
-    void gpbwproj(Double *uvw,
-		  Double *dphase,
-		  const Complex *values,
-		  Int *nvispol,
-		  Int *nvischan,
-		  Int *dopsf,
-		  const Int *flag,
-		  const Int *rflag,
-		  const Float *weight,
-		  Int *nrow,
-		  Int *rownum,
-		  Double *scale,
-		  Double *offset,
-		  Complex *grid,
-		  Int *nx,
-		  Int *ny,
-		  Int *npol,
-		  Int *nchan,
-		  const Double *freq,
-		  const Double *c,
-		  Int *support,
-		  Int *convsize,
-		  Int *sampling,
-		  Int *wconvsize,
-		  Complex *convfunc,
-		  Int *chanmap,
-		  Int *polmap,
-		  Int *polused,
-		  Double *sumwt,
-		  Int *ant1,
-		  Int *ant2,
-		  Int *nant,
-		  Int *scanno,
-		  Double *sigma,
-		  Float *raoff,
-		  Float *decoff,
-		  Double *area,
-		  Int *doGrad,
-		  Int *doPointingCorrection,
-		  Int *nPA,
-		  Int *paIndex,
-		  Int *CFMap,
-		  Int *ConjCFMap,
-		  Double *currentCFPA, Double *actualPA,Double *cfRefFreq_p);
-    void dpbwproj(Double *uvw,
-		  Double *dphase,
-		  Complex *values,
-		  Int *nvispol,
-		  Int *nvischan,
-		  const Int *flag,
-		  const Int *rflag,
-		  Int *nrow,
-		  Int *rownum,
-		  Double *scale,
-		  Double *offset,
-		  const Complex *grid,
-		  Int *nx,
-		  Int *ny,
-		  Int *npol,
-		  Int *nchan,
-		  const Double *freq,
-		  const Double *c,
-		  Int *support,
-		  Int *convsize,
-		  Int *sampling,
-		  Int *wconvsize,
-		  Complex *convfunc,
-		  Int *chanmap,
-		  Int *polmap,
-		  Int *polused,
-		  Int *ant1, 
-		  Int *ant2, 
-		  Int *nant, 
-		  Int *scanno,
-		  Double *sigma, 
-		  Float *raoff, Float *decoff,
-		  Double *area, 
-		  Int *dograd,
-		  Int *doPointingCorrection,
-		  Int *nPA,
-		  Int *paIndex,
-		  Int *CFMap,
-		  Int *ConjCFMap,
-		  Double *currentCFPA, Double *actualPA, Double *cfRefFreq_p);
-    void dpbwgrad(Double *uvw,
-		  Double *dphase,
-		  Complex *values,
-		  Int *nvispol,
-		  Int *nvischan,
-		  Complex *gazvalues,
-		  Complex *gelvalues,
-		  Int *doconj,
-		  const Int *flag,
-		  const Int *rflag,
-		  Int *nrow,
-		  Int *rownum,
-		  Double *scale,
-		  Double *offset,
-		  const Complex *grid,
-		  Int *nx,
-		  Int *ny,
-		  Int *npol,
-		  Int *nchan,
-		  const Double *freq,
-		  const Double *c,
-		  Int *support,
-		  Int *convsize,
-		  Int *sampling,
-		  Int *wconvsize,
-		  Complex *convfunc,
-		  Int *chanmap,
-		  Int *polmap,
-		  Int *polused,
-		  Int *ant1, 
-		  Int *ant2, 
-		  Int *nant, 
-		  Int *scanno,
-		  Double *sigma, 
-		  Float *raoff, Float *decoff,
-		  Double *area, 
-		  Int *dograd,
-		  Int *doPointingCorrection,
-		  Int *nPA,
-		  Int *paIndex,
-		  Int *CFMap,
-		  Int *ConjCFMap,
-		  Double *currentCFPA, Double *actualPA, Double *cfRefFreq_p);
-  }
-  //
-  //----------------------------------------------------------------------
-  //
-  void AWProjectFT::runFortranGet(Matrix<Double>& uvw,Vector<Double>& dphase,
-				   Cube<Complex>& visdata,
-				   IPosition& s,
-				   //				Cube<Complex>& gradVisAzData,
-				   //				Cube<Complex>& gradVisElData,
-				   //				IPosition& gradS,
-				   Int& Conj,
-				   Cube<Int>& flags,Vector<Int>& rowFlags,
-				   Int& rownr,Vector<Double>& actualOffset,
-				   Array<Complex>* dataPtr,
-				   Int& aNx, Int& aNy, Int& npol, Int& nchan,
-				   VisBuffer& vb,Int& Nant_p, Int& scanNo,
-				   Double& sigma,
-				   Array<Float>& l_off,
-				   Array<Float>& m_off,
-				   Double area,
-				   Int& doGrad,
-				   Int paIndex)
-  {
-    LogIO log_l(LogOrigin("AWProjectFT", "runFortranGet"));
-    (void)Conj; //To supress the warning
-    enum whichGetStorage {RAOFF,DECOFF,UVW,DPHASE,VISDATA,GRADVISAZ,GRADVISEL,
-			  FLAGS,ROWFLAGS,UVSCALE,ACTUALOFFSET,DATAPTR,VBFREQ,
-			  CONVSUPPORT,CONVFUNC,CHANMAP,POLMAP,VBANT1,VBANT2,CONJCFMAP,CFMAP};
-    Vector<Bool> deleteThem(21);
-    
-    Double *uvw_p, *dphase_p, *actualOffset_p, *vb_freq_p, *uvScale_p;
-    Complex *visdata_p, *dataPtr_p, *f_convFunc_p;
-    Int *flags_p, *rowFlags_p, *chanMap_p, *polMap_p, *convSupport_p, *vb_ant1_p, *vb_ant2_p,
-      *ConjCFMap_p, *CFMap_p;
-    Float *l_off_p, *m_off_p;
-    Double actualPA;
-    
-    Vector<Int> ConjCFMap, CFMap;
-    /*
-      ConjCFMap = CFMap = polMap;
-      CFMap = makeConjPolMap(vb);
-    */
-    Int N;
-    actualPA = getVBPA(vb);
-
-    N=polMap.nelements();
-    CFMap = polMap; ConjCFMap = polMap;
-    for(Int i=0;i<N;i++) CFMap[i] = polMap[N-i-1];
-    
-    Array<Complex> rotatedConvFunc;
-//     SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
-// 				       rotatedConvFunc,(currentCFPA-actualPA),"CUBIC");
-    SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
-    				       rotatedConvFunc,0.0,"LINEAR");
-    // SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
-    // 				       rotatedConvFunc,(currentCFPA-actualPA),"LINEAR");
-
-    ConjCFMap = polMap;
-    makeCFPolMap(vb,cfStokes_p,CFMap);
-    makeConjPolMap(vb,CFMap,ConjCFMap);
-
-    
-    ConjCFMap_p     = ConjCFMap.getStorage(deleteThem(CONJCFMAP));
-    CFMap_p         = CFMap.getStorage(deleteThem(CFMAP));
-    
-    uvw_p           = uvw.getStorage(deleteThem(UVW));
-    dphase_p        = dphase.getStorage(deleteThem(DPHASE));
-    visdata_p       = visdata.getStorage(deleteThem(VISDATA));
-    //  gradVisAzData_p = gradVisAzData.getStorage(deleteThem(GRADVISAZ));
-    //  gradVisElData_p = gradVisElData.getStorage(deleteThem(GRADVISEL));
-    flags_p         = flags.getStorage(deleteThem(FLAGS));
-    rowFlags_p      = rowFlags.getStorage(deleteThem(ROWFLAGS));
-    uvScale_p       = uvScale.getStorage(deleteThem(UVSCALE));
-    actualOffset_p  = actualOffset.getStorage(deleteThem(ACTUALOFFSET));
-    dataPtr_p       = dataPtr->getStorage(deleteThem(DATAPTR));
-    vb_freq_p       = vb.frequency().getStorage(deleteThem(VBFREQ));
-    convSupport_p   = cfs_p.xSupport.getStorage(deleteThem(CONVSUPPORT));
-    //    f_convFunc_p      = convFunc_p.getStorage(deleteThem(CONVFUNC));
-    f_convFunc_p      = rotatedConvFunc.getStorage(deleteThem(CONVFUNC));
-    chanMap_p       = chanMap.getStorage(deleteThem(CHANMAP));
-    polMap_p        = polMap.getStorage(deleteThem(POLMAP));
-    vb_ant1_p       = vb.antenna1().getStorage(deleteThem(VBANT1));
-    vb_ant2_p       = vb.antenna2().getStorage(deleteThem(VBANT2));
-    l_off_p     = l_off.getStorage(deleteThem(RAOFF));
-    m_off_p    = m_off.getStorage(deleteThem(DECOFF));
-    
-    //    Int npa=convSupport.shape()(2),actualConvSize;
-    Int npa=1,actualConvSize;
-    Int paIndex_Fortran = paIndex;
-    actualConvSize = cfs_p.data->shape()(0);
-    
-    //    IPosition shp=convSupport.shape();
-    
-    dpbwproj(uvw_p,
-	     dphase_p,
-	     //		  vb.modelVisCube().getStorage(del),
-	     visdata_p,
-	     &s.asVector()(0),
-	     &s.asVector()(1),
-	     //	   gradVisAzData_p,
-	     //	   gradVisElData_p,
-	     //	    &gradS(0),
-	     //	    &gradS(1),
-	     //	   &Conj,
-	     flags_p,
-	     rowFlags_p,
-	     &s.asVector()(2),
-	     &rownr,
-	     uvScale_p,
-	     actualOffset_p,
-	     dataPtr_p,
-	     &aNx,
-	     &aNy,
-	     &npol,
-	     &nchan,
-	     vb_freq_p,
-	     &C::c,
-	     convSupport_p,
-	     &actualConvSize,
-	     &convSampling,
-	     &wConvSize,
-	     f_convFunc_p,
-	     chanMap_p,
-	     polMap_p,
-	     &polInUse_p,
-	     vb_ant1_p,
-	     vb_ant2_p,
-	     &Nant_p,
-	     &scanNo,
-	     &sigma,
-	     l_off_p, m_off_p,
-	     &area,
-	     &doGrad,
-	     &doPointing,
-	     &npa,
-	     &paIndex_Fortran,
-	     CFMap_p,
-	     ConjCFMap_p,
-	     &currentCFPA
-	     ,&actualPA,&cfRefFreq_p
-	     );
-    
-    ConjCFMap.freeStorage((const Int *&)ConjCFMap_p,deleteThem(CONJCFMAP));
-    CFMap.freeStorage((const Int *&)CFMap_p,deleteThem(CFMAP));
-    
-    l_off.freeStorage((const Float*&)l_off_p,deleteThem(RAOFF));
-    m_off.freeStorage((const Float*&)m_off_p,deleteThem(DECOFF));
-    uvw.freeStorage((const Double*&)uvw_p,deleteThem(UVW));
-    dphase.freeStorage((const Double*&)dphase_p,deleteThem(DPHASE));
-    visdata.putStorage(visdata_p,deleteThem(VISDATA));
-    flags.freeStorage((const Int*&) flags_p,deleteThem(FLAGS));
-    rowFlags.freeStorage((const Int *&)rowFlags_p,deleteThem(ROWFLAGS));
-    actualOffset.freeStorage((const Double*&)actualOffset_p,deleteThem(ACTUALOFFSET));
-    dataPtr->freeStorage((const Complex *&)dataPtr_p,deleteThem(DATAPTR));
-    uvScale.freeStorage((const Double*&) uvScale_p,deleteThem(UVSCALE));
-    vb.frequency().freeStorage((const Double*&)vb_freq_p,deleteThem(VBFREQ));
-    cfs_p.xSupport.freeStorage((const Int*&)convSupport_p,deleteThem(CONVSUPPORT));
-    convFunc_p.freeStorage((const Complex *&)f_convFunc_p,deleteThem(CONVFUNC));
-    chanMap.freeStorage((const Int*&)chanMap_p,deleteThem(CHANMAP));
-    polMap.freeStorage((const Int*&) polMap_p,deleteThem(POLMAP));
-    vb.antenna1().freeStorage((const Int*&) vb_ant1_p,deleteThem(VBANT1));
-    vb.antenna2().freeStorage((const Int*&) vb_ant2_p,deleteThem(VBANT2));
-  }
-  //
-  //----------------------------------------------------------------------
-  //
-  void AWProjectFT::runFortranGetGrad(Matrix<Double>& uvw,Vector<Double>& dphase,
-				       Cube<Complex>& visdata,
-				       IPosition& s,
-				       Cube<Complex>& gradVisAzData,
-				       Cube<Complex>& gradVisElData,
-				       //				     IPosition& gradS,
-				       Int& Conj,
-				       Cube<Int>& flags,Vector<Int>& rowFlags,
-				       Int& rownr,Vector<Double>& actualOffset,
-				       Array<Complex>* dataPtr,
-				       Int& aNx, Int& aNy, Int& npol, Int& nchan,
-				       VisBuffer& vb,Int& Nant_p, Int& scanNo,
-				       Double& sigma,
-				       Array<Float>& l_off,
-				       Array<Float>& m_off,
-				       Double area,
-				       Int& doGrad,
-				       Int paIndex)
-  {
-    LogIO log_l(LogOrigin("AWProjectFT", "runFortranGetGrad"));
-    enum whichGetStorage {RAOFF,DECOFF,UVW,DPHASE,VISDATA,GRADVISAZ,GRADVISEL,
-			  FLAGS,ROWFLAGS,UVSCALE,ACTUALOFFSET,DATAPTR,VBFREQ,
-			  CONVSUPPORT,CONVFUNC,CHANMAP,POLMAP,VBANT1,VBANT2,CONJCFMAP,CFMAP};
-    Vector<Bool> deleteThem(21);
-    
-    Double *uvw_p, *dphase_p, *actualOffset_p, *vb_freq_p, *uvScale_p;
-    Complex *visdata_p, *dataPtr_p, *f_convFunc_p;
-    Complex *gradVisAzData_p, *gradVisElData_p;
-    Int *flags_p, *rowFlags_p, *chanMap_p, *polMap_p, *convSupport_p, *vb_ant1_p, *vb_ant2_p,
-      *ConjCFMap_p, *CFMap_p;
-    Float *l_off_p, *m_off_p;
-    Double actualPA;
-
-    Vector<Int> ConjCFMap, CFMap;
-    actualPA = getVBPA(vb);
-    ConjCFMap = polMap;
-    makeCFPolMap(vb,cfStokes_p,CFMap);
-    makeConjPolMap(vb,CFMap,ConjCFMap);
-
-    Array<Complex> rotatedConvFunc;
-//     SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
-//  				       rotatedConvFunc,(currentCFPA-actualPA),"LINEAR");
-    SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
-    				       rotatedConvFunc,0.0);
-    // SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
-    // 				       rotatedConvFunc,(currentCFPA-actualPA),"LINEAR");
-
-    ConjCFMap_p     = ConjCFMap.getStorage(deleteThem(CONJCFMAP));
-    CFMap_p         = CFMap.getStorage(deleteThem(CFMAP));
-    
-    uvw_p           = uvw.getStorage(deleteThem(UVW));
-    dphase_p        = dphase.getStorage(deleteThem(DPHASE));
-    visdata_p       = visdata.getStorage(deleteThem(VISDATA));
-    gradVisAzData_p = gradVisAzData.getStorage(deleteThem(GRADVISAZ));
-    gradVisElData_p = gradVisElData.getStorage(deleteThem(GRADVISEL));
-    flags_p         = flags.getStorage(deleteThem(FLAGS));
-    rowFlags_p      = rowFlags.getStorage(deleteThem(ROWFLAGS));
-    uvScale_p       = uvScale.getStorage(deleteThem(UVSCALE));
-    actualOffset_p  = actualOffset.getStorage(deleteThem(ACTUALOFFSET));
-    dataPtr_p       = dataPtr->getStorage(deleteThem(DATAPTR));
-    vb_freq_p       = vb.frequency().getStorage(deleteThem(VBFREQ));
-    convSupport_p   = cfs_p.xSupport.getStorage(deleteThem(CONVSUPPORT));
-    //    f_convFunc_p      = convFunc_p.getStorage(deleteThem(CONVFUNC));
-    f_convFunc_p      = rotatedConvFunc.getStorage(deleteThem(CONVFUNC));
-    chanMap_p       = chanMap.getStorage(deleteThem(CHANMAP));
-    polMap_p        = polMap.getStorage(deleteThem(POLMAP));
-    vb_ant1_p       = vb.antenna1().getStorage(deleteThem(VBANT1));
-    vb_ant2_p       = vb.antenna2().getStorage(deleteThem(VBANT2));
-    l_off_p     = l_off.getStorage(deleteThem(RAOFF));
-    m_off_p    = m_off.getStorage(deleteThem(DECOFF));
-    
-    //    Int npa=convSupport.shape()(2),actualConvSize;
-    Int npa=1,actualConvSize;
-    Int paIndex_Fortran = paIndex;
-    actualConvSize = cfs_p.data->shape()(0);
-    
-    //    IPosition shp=convSupport.shape();
-
-    dpbwgrad(uvw_p,
-	     dphase_p,
-	     //		  vb.modelVisCube().getStorage(del),
-	     visdata_p,
-	     &s.asVector()(0),
-	     &s.asVector()(1),
-	     gradVisAzData_p,
-	     gradVisElData_p,
-	     //	    &gradS(0),
-	     //	    &gradS(1),
-	     &Conj,
-	     flags_p,
-	     rowFlags_p,
-	     &s.asVector()(2),
-	     &rownr,
-	     uvScale_p,
-	     actualOffset_p,
-	     dataPtr_p,
-	     &aNx,
-	     &aNy,
-	     &npol,
-	     &nchan,
-	     vb_freq_p,
-	     &C::c,
-	     convSupport_p,
-	     &actualConvSize,
-	     &convSampling,
-	     &wConvSize,
-	     f_convFunc_p,
-	     chanMap_p,
-	     polMap_p,
-	     &polInUse_p,
-	     vb_ant1_p,
-	     vb_ant2_p,
-	     &Nant_p,
-	     &scanNo,
-	     &sigma,
-	     l_off_p, m_off_p,
-	     &area,
-	     &doGrad,
-	     &doPointing,
-	     &npa,
-	     &paIndex_Fortran,
-	     CFMap_p,
-	     ConjCFMap_p,
-	     &currentCFPA
-	     ,&actualPA,&cfRefFreq_p
-	     );
-
-    ConjCFMap.freeStorage((const Int *&)ConjCFMap_p,deleteThem(CONJCFMAP));
-    CFMap.freeStorage((const Int *&)CFMap_p,deleteThem(CFMAP));
-    
-    l_off.freeStorage((const Float*&)l_off_p,deleteThem(RAOFF));
-    m_off.freeStorage((const Float*&)m_off_p,deleteThem(DECOFF));
-    uvw.freeStorage((const Double*&)uvw_p,deleteThem(UVW));
-    dphase.freeStorage((const Double*&)dphase_p,deleteThem(DPHASE));
-    visdata.putStorage(visdata_p,deleteThem(VISDATA));
-    gradVisAzData.putStorage(gradVisAzData_p,deleteThem(GRADVISAZ));
-    gradVisElData.putStorage(gradVisElData_p,deleteThem(GRADVISEL));
-    flags.freeStorage((const Int*&) flags_p,deleteThem(FLAGS));
-    rowFlags.freeStorage((const Int *&)rowFlags_p,deleteThem(ROWFLAGS));
-    actualOffset.freeStorage((const Double*&)actualOffset_p,deleteThem(ACTUALOFFSET));
-    dataPtr->freeStorage((const Complex *&)dataPtr_p,deleteThem(DATAPTR));
-    uvScale.freeStorage((const Double*&) uvScale_p,deleteThem(UVSCALE));
-    vb.frequency().freeStorage((const Double*&)vb_freq_p,deleteThem(VBFREQ));
-    cfs_p.xSupport.freeStorage((const Int*&)convSupport_p,deleteThem(CONVSUPPORT));
-    convFunc_p.freeStorage((const Complex *&)f_convFunc_p,deleteThem(CONVFUNC));
-    chanMap.freeStorage((const Int*&)chanMap_p,deleteThem(CHANMAP));
-    polMap.freeStorage((const Int*&) polMap_p,deleteThem(POLMAP));
-    vb.antenna1().freeStorage((const Int*&) vb_ant1_p,deleteThem(VBANT1));
-    vb.antenna2().freeStorage((const Int*&) vb_ant2_p,deleteThem(VBANT2));
-  }
-  //
-  //----------------------------------------------------------------------
-  //
-  void AWProjectFT::runFortranPut(Matrix<Double>& uvw,Vector<Double>& dphase,
-				   const Complex& visdata,
-				   IPosition& s,
-				   //				Cube<Complex>& gradVisAzData,
-				   //				Cube<Complex>& gradVisElData,
-				   //				IPosition& gradS,
-				   Int& Conj,
-				   Cube<Int>& flags,Vector<Int>& rowFlags,
-				   const Matrix<Float>& weight,
-				   Int& rownr,Vector<Double>& actualOffset,
-				   Array<Complex>& dataPtr,
-				   Int& aNx, Int& aNy, Int& npol, Int& nchan,
-				   const VisBuffer& vb,Int& Nant_p, Int& scanNo,
-				   Double& sigma,
-				   Array<Float>& l_off,
-				   Array<Float>& m_off,
-				   Matrix<Double>& sumWeight,
-				   Double& area,
-				   Int& doGrad,
-				   Int& doPSF,
-				   Int paIndex)
-  {
-    LogIO log_l(LogOrigin("AWProjectFT", "runFortranPut"));
-
-    (void)Conj; //To supress the warning
-    enum whichGetStorage {RAOFF,DECOFF,UVW,DPHASE,VISDATA,GRADVISAZ,GRADVISEL,
-			  FLAGS,ROWFLAGS,UVSCALE,ACTUALOFFSET,DATAPTR,VBFREQ,
-			  CONVSUPPORT,CONVFUNC,CHANMAP,POLMAP,VBANT1,VBANT2,WEIGHT,
-			  SUMWEIGHT,CONJCFMAP,CFMAP};
-    Vector<Bool> deleteThem(23);
-    
-    Double *uvw_p, *dphase_p, *actualOffset_p, *vb_freq_p, *uvScale_p;
-    Complex *dataPtr_p, *f_convFunc_p;
-    //  Complex *gradVisAzData_p, *gradVisElData_p;
-    Int *flags_p, *rowFlags_p, *chanMap_p, *polMap_p, *convSupport_p, *vb_ant1_p, *vb_ant2_p,
-      *ConjCFMap_p, *CFMap_p;
-    Float *l_off_p, *m_off_p;
-    Float *weight_p;Double *sumwt_p;
-    Double actualPA;
-    const Complex *visdata_p=&visdata;
-    
-    Vector<Int> ConjCFMap, CFMap;
-    actualPA = getVBPA(vb);
-    ConjCFMap = polMap;
-
-    Array<Complex> rotatedConvFunc;
-//    SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
-//				       rotatedConvFunc,(currentCFPA-actualPA),"LINEAR");
-    SynthesisUtils::rotateComplexArray(log_l, convFunc_p, convFuncCS_p, 
- 				       rotatedConvFunc,0.0,"LINEAR");
-
-    /*
-    CFMap = polMap; ConjCFMap = polMap;
-    CFMap = makeConjPolMap(vb);
-    */
-    makeCFPolMap(vb,cfStokes_p,CFMap);
-    makeConjPolMap(vb,CFMap,ConjCFMap);
-
-    ConjCFMap_p     = ConjCFMap.getStorage(deleteThem(CONJCFMAP));
-    CFMap_p         = CFMap.getStorage(deleteThem(CFMAP));
-    
-    uvw_p           = uvw.getStorage(deleteThem(UVW));
-    dphase_p        = dphase.getStorage(deleteThem(DPHASE));
-    //  visdata_p       = visdata.getStorage(deleteThem(VISDATA));
-    //  gradVisAzData_p = gradVisAzData.getStorage(deleteThem(GRADVISAZ));
-    //  gradVisElData_p = gradVisElData.getStorage(deleteThem(GRADVISEL));
-    flags_p         = flags.getStorage(deleteThem(FLAGS));
-    rowFlags_p      = rowFlags.getStorage(deleteThem(ROWFLAGS));
-    uvScale_p       = uvScale.getStorage(deleteThem(UVSCALE));
-    actualOffset_p  = actualOffset.getStorage(deleteThem(ACTUALOFFSET));
-    dataPtr_p       = dataPtr.getStorage(deleteThem(DATAPTR));
-    vb_freq_p       = (Double *)(vb.frequency().getStorage(deleteThem(VBFREQ)));
-    convSupport_p   = cfs_p.xSupport.getStorage(deleteThem(CONVSUPPORT));
-    //    f_convFunc_p      = convFunc_p.getStorage(deleteThem(CONVFUNC));
-    f_convFunc_p      = rotatedConvFunc.getStorage(deleteThem(CONVFUNC));
-    chanMap_p       = chanMap.getStorage(deleteThem(CHANMAP));
-    polMap_p        = polMap.getStorage(deleteThem(POLMAP));
-    vb_ant1_p       = (Int *)(vb.antenna1().getStorage(deleteThem(VBANT1)));
-    vb_ant2_p       = (Int *)(vb.antenna2().getStorage(deleteThem(VBANT2)));
-    l_off_p     = l_off.getStorage(deleteThem(RAOFF));
-    m_off_p    = m_off.getStorage(deleteThem(DECOFF));
-    weight_p        = (Float *)(weight.getStorage(deleteThem(WEIGHT)));
-    sumwt_p         = sumWeight.getStorage(deleteThem(SUMWEIGHT));
-    
-    
-    //    Int npa=convSupport.shape()(2),actualConvSize;
-    Int npa=1,actualConvSize;
-    Int paIndex_Fortran = paIndex; 
-    actualConvSize = cfs_p.data->shape()(0);
-    
-    //    IPosition shp=convSupport.shape();
-    
-    gpbwproj(uvw_p,
-	     dphase_p,
-	     //		  vb.modelVisCube().getStorage(del),
-	     visdata_p,
-	     &s.asVector()(0),
-	     &s.asVector()(1),
-	     //	   gradVisAzData_p,
-	     //	   gradVisElData_p,
-	     //	    &gradS(0),
-	     //	    &gradS(1),
-	     //	   &Conj,
-	     &doPSF,
-	     flags_p,
-	     rowFlags_p,
-	     weight_p,
-	     &s.asVector()(2),
-	     &rownr,
-	     uvScale_p,
-	     actualOffset_p,
-	     dataPtr_p,
-	     &aNx,
-	     &aNy,
-	     &npol,
-	     &nchan,
-	     vb_freq_p,
-	     &C::c,
-	     convSupport_p,
-	     &actualConvSize,
-	     &convSampling,
-	     &wConvSize,
-	     f_convFunc_p,
-	     chanMap_p,
-	     polMap_p,
-	     &polInUse_p,
-	     sumwt_p,
-	     vb_ant1_p,
-	     vb_ant2_p,
-	     &Nant_p,
-	     &scanNo,
-	     &sigma,
-	     l_off_p, m_off_p,
-	     &area,
-	     &doGrad,
-	     &doPointing,
-	     &npa,
-	     &paIndex_Fortran,
-	     CFMap_p,
-	     ConjCFMap_p,
-	     &currentCFPA
-	     ,&actualPA,&cfRefFreq_p
-	     );
-    
-    ConjCFMap.freeStorage((const Int *&)ConjCFMap_p,deleteThem(CONJCFMAP));
-    CFMap.freeStorage((const Int *&)CFMap_p,deleteThem(CFMAP));
-    
-    l_off.freeStorage((const Float*&)l_off_p,deleteThem(RAOFF));
-    m_off.freeStorage((const Float*&)m_off_p,deleteThem(DECOFF));
-    uvw.freeStorage((const Double*&)uvw_p,deleteThem(UVW));
-    dphase.freeStorage((const Double*&)dphase_p,deleteThem(DPHASE));
-    //  visdata.putStorage(visdata_p,deleteThem(VISDATA));
-    //  gradVisAzData.putStorage(gradVisAzData_p,deleteThem(GRADVISAZ));
-    //  gradVisElData.putStorage(gradVisElData_p,deleteThem(GRADVISEL));
-    flags.freeStorage((const Int*&) flags_p,deleteThem(FLAGS));
-    rowFlags.freeStorage((const Int *&)rowFlags_p,deleteThem(ROWFLAGS));
-    actualOffset.freeStorage((const Double*&)actualOffset_p,deleteThem(ACTUALOFFSET));
-    dataPtr.freeStorage((const Complex *&)dataPtr_p,deleteThem(DATAPTR));
-    uvScale.freeStorage((const Double*&) uvScale_p,deleteThem(UVSCALE));
-    vb.frequency().freeStorage((const Double*&)vb_freq_p,deleteThem(VBFREQ));
-    cfs_p.xSupport.freeStorage((const Int*&)convSupport_p,deleteThem(CONVSUPPORT));
-    convFunc_p.freeStorage((const Complex *&)f_convFunc_p,deleteThem(CONVFUNC));
-    chanMap.freeStorage((const Int*&)chanMap_p,deleteThem(CHANMAP));
-    polMap.freeStorage((const Int*&) polMap_p,deleteThem(POLMAP));
-    vb.antenna1().freeStorage((const Int*&) vb_ant1_p,deleteThem(VBANT1));
-    vb.antenna2().freeStorage((const Int*&) vb_ant2_p,deleteThem(VBANT2));
-    weight.freeStorage((const Float*&)weight_p,deleteThem(WEIGHT));
-    sumWeight.putStorage(sumwt_p,deleteThem(SUMWEIGHT));
-  }
+  // The following file has the runFORTRAN* stuff. Moving it to a
+  // separate file to reduce clutter and ultimately delete it.
+#include "AWProjectFT.FORTRANSTUFF"
   //
   //---------------------------------------------------------------
   //
@@ -1896,33 +1261,33 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			  FTMachine::Type type,
 			  const Matrix<Float>& imwght)
   {
+    LogIO log_l(LogOrigin("AWProjectFT", "put"));
     // Take care of translation of Bools to Integer
-    Int idopsf=0;
     makingPSF=dopsf;
-    if(dopsf) idopsf=1;
     
     findConvFunction(*image, vb);
     Nant_p     = vb.msColumns().antenna().nrow();
 
-
     const Matrix<Float> *imagingweight;
-    if(imwght.nelements()>0)
-      imagingweight=&imwght;
-    else
-      imagingweight=&(vb.imagingWeight());
+    if(imwght.nelements()>0) imagingweight=&imwght;
+    else                     imagingweight=&(vb.imagingWeight());
 
-    const Cube<Complex> *data;
-    if(type==FTMachine::MODEL)
-      data=&(vb.modelVisCube());
-    else if(type==FTMachine::CORRECTED)
-      data=&(vb.correctedVisCube());
-    else
-      data=&(vb.visCube());
+    Cube<Complex> data;
+    //Fortran gridder need the flag as ints 
+    Cube<Int> flags;
+    Matrix<Float> elWeight;
+    interpolateFrequencyTogrid(vb, *imagingweight,data, flags, elWeight, type);
+
+    // Cube<Int> flags(vb.flagCube().shape());
+    // flags=0;
+    // flags(vb.flagCube())=True;
     
-    Bool isCopy;
-    const casa::Complex *datStorage=data->getStorage(isCopy);
-    Int NAnt = 0;
 
+    // if(type==FTMachine::MODEL)          data=&(vb.modelVisCube());
+    // else if(type==FTMachine::CORRECTED) data=&(vb.correctedVisCube());
+    // else                                data=&(vb.visCube());
+    
+    Int NAnt;
     if (doPointing) NAnt = findPointingOffsets(vb,l_offsets,m_offsets,True);
     
     //
@@ -1965,16 +1330,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // This is the convention for dphase
     dphase*=-1.0;
     
-    Cube<Int> flags(vb.flagCube().shape());
-    flags=0;
-    flags(vb.flagCube())=True;
-    
-    Vector<Int> rowFlags(vb.nRow());
-    rowFlags=0;
-    rowFlags(vb.flagRow())=True;
-    if(!usezero_p) 
-      for (Int rownr=startRow; rownr<=endRow; rownr++) 
-	if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) rowFlags(rownr)=1;
+    // Vector<Int> rowFlags(vb.nRow());
+    // rowFlags=0;
+    // rowFlags(vb.flagRow())=True;
+    // if(!usezero_p) 
+    //   for (Int rownr=startRow; rownr<=endRow; rownr++) 
+    // 	if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) rowFlags(rownr)=1;
     //Check if ms has changed then cache new spw and chan selection
     if(vb.newMS())
       matchAllSpwChans(vb);  
@@ -1989,441 +1350,39 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	chanMap.resize();
 	chanMap=multiChanMap_p[vb.spectralWindow()];
       }
-    
-    if(isTiled) 
-      {// Tiled Version
-	Double invLambdaC=vb.frequency()(0)/C::c;
-	Vector<Double> uvLambda(2);
-	Vector<Int> centerLoc2D(2);
-	centerLoc2D=0;
-	//
-	// Loop over all rows
-	//
-	for (Int rownr=startRow; rownr<=endRow; rownr++) 
-	  {
-	    // Calculate uvw for this row at the center frequency
-	    uvLambda(0)=uvw(0,rownr)*invLambdaC;
-	    uvLambda(1)=uvw(1,rownr)*invLambdaC;
-	    centerLoc2D=gridder->location(centerLoc2D, uvLambda);
-	    //
-	    // Is this point on the grid?
-	    //
-	    if(gridder->onGrid(centerLoc2D)) 
-	      {
-		// Get the tile
-		Array<Complex>* dataPtr=getDataPointer(centerLoc2D, False);
-		Int aNx=dataPtr->shape()(0);
-		Int aNy=dataPtr->shape()(1);
-		//
-		// Now use FORTRAN to do the gridding. Remember to 
-		// ensure that the shape and offsets of the tile are 
-		// accounted for.
-		//
-		Vector<Double> actualOffset(3);
-		for (Int i=0;i<2;i++) actualOffset(i)=uvOffset(i)-Double(offsetLoc(i));
-		
-		actualOffset(2)=uvOffset(2);
-		IPosition s(flags.shape());
-		//
-		// Now pass all the information down to a FORTRAN routine to
-		// do the work
-		//
-		Int Conj=0,doPSF;
-		Int ScanNo=0,doGrad=0;
-		Double area=1.0;
-		
-		Int tmpPAI=1;
-		if (dopsf) doPSF=1; else doPSF=0;
-		runFortranPut(uvw,dphase,*datStorage,s,Conj,flags,rowFlags,
-			      *imagingweight,rownr,actualOffset,
-			      *dataPtr,aNx,aNy,npol,nchan,vb,NAnt,ScanNo,sigma,
-			      l_offsets,m_offsets,sumWeight,area,doGrad,doPSF,tmpPAI);
-	      }
-	  }
-      }
-    else 
-      {//Non-tiled version
-	IPosition s(flags.shape());
+
+      // {//Non-tiled version
+      // 	Vector<Int> rowFlags(vb.nRow());
+      // 	rowFlags=0;
+      // 	rowFlags(vb.flagRow())=True;
+      // 	if(!usezero_p) 
+      // 	  for (Int rownr=startRow; rownr<=endRow; rownr++) 
+      // 	    if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) rowFlags(rownr)=1;
+
+      // 	IPosition s(flags.shape());
 	
-	Int Conj=0,doPSF=0;
-	Int ScanNo=0,doGrad=0;Double area=1.0;
+      // 	Int Conj=0,doPSF=0;
+      // 	Int ScanNo=0,doGrad=0;Double area=1.0;
 	
-	if (dopsf) doPSF=1;
+      // 	if (dopsf) doPSF=1;
 	
-	Int tmpPAI=1;
-	runFortranPut(uvw,dphase,*datStorage,s,Conj,flags,rowFlags,
-		      *imagingweight,
-		      row,uvOffset,
-		      griddedData,nx,ny,npol,nchan,vb,NAnt,ScanNo,sigma,
-		      l_offsets,m_offsets,sumWeight,area,doGrad,doPSF,tmpPAI);
-      }
-    
-    data->freeStorage(datStorage, isCopy);
-  }
-  //
-  //----------------------------------------------------------------------
-  //
-  void AWProjectFT::initVisBuffer(VisBuffer& vb, Type whichVBColumn)
-  {
-    if (whichVBColumn      == FTMachine::MODEL)    vb.modelVisCube()=Complex(0.0,0.0);
-    else if (whichVBColumn == FTMachine::OBSERVED) vb.visCube()=Complex(0.0,0.0);
-  }
-  //
-  //----------------------------------------------------------------------
-  //
-  void AWProjectFT::initVisBuffer(VisBuffer& vb, Type whichVBColumn, Int row)
-  {
-    if (whichVBColumn == FTMachine::MODEL)
-      vb.modelVisCube().xyPlane(row)=Complex(0.0,0.0);
-    else if (whichVBColumn == FTMachine::OBSERVED)
-      vb.visCube().xyPlane(row)=Complex(0.0,0.0);
-  }
-  //
-  //---------------------------------------------------------------
-  //
-  // Predict the coherences as well as their derivatives w.r.t. the
-  // pointing offsets.
-  //
-  void AWProjectFT::nget(VisBuffer& vb,
-			  // These offsets should be appropriate for the VB
-			  Array<Float>& l_off, Array<Float>& m_off,
-			  Cube<Complex>& Mout,
-			  Cube<Complex>& dMout1,
-			  Cube<Complex>& dMout2,
-			  Int Conj, Int doGrad)
-  {
-    LogIO log_l(LogOrigin("AWProjectFT", "nget"));
-    Int startRow, endRow, nRow;
-    nRow=vb.nRow();
-    startRow=0;
-    endRow=nRow-1;
-
-    Mout = dMout1 = dMout2 = Complex(0,0);
-
-    findConvFunction(*image, vb);
-    Int NAnt=0;
-    Nant_p     = vb.msColumns().antenna().nrow();
-    if (doPointing)   
-      NAnt = findPointingOffsets(vb,l_offsets,m_offsets,False);
-
-    l_offsets=l_off;
-    m_offsets=m_off;
-    Matrix<Double> uvw(3, vb.uvw().nelements());
-    uvw=0.0;
-    Vector<Double> dphase(vb.uvw().nelements());
-    dphase=0.0;
-    //NEGATING to correct for an image inversion problem
-    for (Int i=startRow;i<=endRow;i++) 
-      {
-	for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(i)(idim);
-	uvw(2,i)=vb.uvw()(i)(2);
-      }
-    
-    rotateUVW(uvw, dphase, vb);
-    refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
-    
-    // This is the convention for dphase
-    dphase*=-1.0;
-
-    Cube<Int> flags(vb.flagCube().shape());
-    flags=0;
-    flags(vb.flagCube())=True;
-    
-    //Check if ms has changed then cache new spw and chan selection
-    if(vb.newMS())
-      matchAllSpwChans(vb);
-    
-    //Here we redo the match or use previous match
-    //
-    //Channel matching for the actual spectral window of buffer
-    //
-    if(doConversion_p[vb.spectralWindow()])
-      matchChannel(vb.spectralWindow(), vb);
-    else
-      {
-	chanMap.resize();
-	chanMap=multiChanMap_p[vb.spectralWindow()];
-      }
-    
-    Vector<Int> rowFlags(vb.nRow());
-    rowFlags=0;
-    rowFlags(vb.flagRow())=True;
-    if(!usezero_p) 
-      for (Int rownr=startRow; rownr<=endRow; rownr++) 
-	if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) rowFlags(rownr)=1;
-    
-    IPosition s,gradS;
-    Cube<Complex> visdata,gradVisAzData,gradVisElData;
-    //
-    // visdata now references the Mout data structure rather than to the internal VB storeage.
-    //
-    visdata.reference(Mout);
-
-    if (doGrad)
-      {
-	// The following should reference some slice of dMout?
-	gradVisAzData.reference(dMout1);
-	gradVisElData.reference(dMout2);
-      }
-    //
-    // Begin the actual de-gridding.
-    //
-    if(isTiled) 
-      {
-	log_l << "The sky model is tiled" << LogIO::NORMAL << LogIO::POST;
-	Double invLambdaC=vb.frequency()(0)/C::c;
-	Vector<Double> uvLambda(2);
-	Vector<Int> centerLoc2D(2);
-	centerLoc2D=0;
-	
-	// Loop over all rows
-	for (Int rownr=startRow; rownr<=endRow; rownr++) 
-	  {
-	    
-	    // Calculate uvw for this row at the center frequency
-	    uvLambda(0)=uvw(0, rownr)*invLambdaC;
-	    uvLambda(1)=uvw(1, rownr)*invLambdaC;
-	    centerLoc2D=gridder->location(centerLoc2D, uvLambda);
-	    
-	    // Is this point on the grid?
-	    if(gridder->onGrid(centerLoc2D)) 
-	      {
-		
-		// Get the tile
-		Array<Complex>* dataPtr=getDataPointer(centerLoc2D, True);
-		gridder->setOffset(IPosition(2, offsetLoc(0), offsetLoc(1)));
-		Int aNx=dataPtr->shape()(0);
-		Int aNy=dataPtr->shape()(1);
-		
-		// Now use FORTRAN to do the gridding. Remember to 
-		// ensure that the shape and offsets of the tile are 
-		// accounted for.
-		
-		Vector<Double> actualOffset(3);
-		for (Int i=0;i<2;i++) 
-		  actualOffset(i)=uvOffset(i)-Double(offsetLoc(i));
-		
-		actualOffset(2)=uvOffset(2);
-		IPosition s(vb.modelVisCube().shape());
-		
-		Int ScanNo=0, tmpPAI;
-		Double area=1.0;
-		tmpPAI = 1;
-		runFortranGetGrad(uvw,dphase,visdata,s,
-				  gradVisAzData,gradVisElData,
-				  Conj,flags,rowFlags,rownr,
-				  actualOffset,dataPtr,aNx,aNy,npol,nchan,vb,NAnt,ScanNo,sigma,
-				  l_offsets,m_offsets,area,doGrad,tmpPAI);
-	      }
-	  }
-      }
-    else 
-      {
-	IPosition s(vb.modelVisCube().shape());
-	Int ScanNo=0, tmpPAI, trow=-1;
-	Double area=1.0;
-	tmpPAI = 1;
-	runFortranGetGrad(uvw,dphase,visdata/*vb.modelVisCube()*/,s,
-			  gradVisAzData, gradVisElData,
-			  Conj,flags,rowFlags,trow,
-			  uvOffset,&griddedData,nx,ny,npol,nchan,vb,NAnt,ScanNo,sigma,
-			  l_offsets,m_offsets,area,doGrad,tmpPAI);
-      }
-    
-  }
-  void AWProjectFT::get(VisBuffer& vb,       
-			 VisBuffer& gradVBAz,
-			 VisBuffer& gradVBEl,
-			 Cube<Float>& pointingOffsets,
-			 Int row,  // default row=-1 
-			 Type whichVBColumn, // default whichVBColumn = FTMachine::MODEL
-			 Type whichGradVBColumn,// default whichGradVBColumn = FTMachine::MODEL
-			 Int Conj, Int doGrad) // default Conj=0, doGrad=1
-  {
-    // If row is -1 then we pass through all rows
-    Int startRow, endRow, nRow;
-    if (row==-1) 
-      {
-	nRow=vb.nRow();
-	startRow=0;
-	endRow=nRow-1;
-	initVisBuffer(vb,whichVBColumn);
-	if (doGrad)
-	  {
-	    initVisBuffer(gradVBAz, whichGradVBColumn);
-	    initVisBuffer(gradVBEl, whichGradVBColumn);
-	  }
-      }
-    else 
-      {
-	nRow=1;
-	startRow=row;
-	endRow=row;
-	initVisBuffer(vb,whichVBColumn,row);
-	if (doGrad)
-	  {
-	    initVisBuffer(gradVBAz, whichGradVBColumn,row);
-	    initVisBuffer(gradVBEl, whichGradVBColumn,row);
-	  }
-      }
-    
-    findConvFunction(*image, vb);
-
-    Nant_p     = vb.msColumns().antenna().nrow();
-    Int NAnt=0;
-    if (doPointing)   
-      NAnt = findPointingOffsets(vb,pointingOffsets,l_offsets,m_offsets,False);
-
-    Matrix<Double> uvw(3, vb.uvw().nelements());
-    uvw=0.0;
-    Vector<Double> dphase(vb.uvw().nelements());
-    dphase=0.0;
-    //NEGATING to correct for an image inversion problem
-    for (Int i=startRow;i<=endRow;i++) 
-      {
-	for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(i)(idim);
-	uvw(2,i)=vb.uvw()(i)(2);
-      }
-    
-    rotateUVW(uvw, dphase, vb);
-    refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
-    
-    // This is the convention for dphase
-    dphase*=-1.0;
-    
-    
-    Cube<Int> flags(vb.flagCube().shape());
-    flags=0;
-    flags(vb.flagCube())=True;
-    //    
-    //Check if ms has changed then cache new spw and chan selection
-    //
-    if(vb.newMS()) matchAllSpwChans(vb);
-    
-    //Here we redo the match or use previous match
-    //
-    //Channel matching for the actual spectral window of buffer
-    //
-    if(doConversion_p[vb.spectralWindow()])
-      matchChannel(vb.spectralWindow(), vb);
-    else
-      {
-	chanMap.resize();
-	chanMap=multiChanMap_p[vb.spectralWindow()];
-      }
-    
-    Vector<Int> rowFlags(vb.nRow());
-    rowFlags=0;
-    rowFlags(vb.flagRow())=True;
-    if(!usezero_p) 
-      for (Int rownr=startRow; rownr<=endRow; rownr++) 
-	if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) rowFlags(rownr)=1;
-	
-    for (Int rownr=startRow; rownr<=endRow; rownr++) 
-      if (vb.antenna1()(rownr) != vb.antenna2()(rownr)) 
-	rowFlags(rownr) = (vb.flagRow()(rownr)==True);
-    
-    IPosition s,gradS;
-    Cube<Complex> visdata,gradVisAzData,gradVisElData;
-    if (whichVBColumn == FTMachine::MODEL) 
-      {
-	s = vb.modelVisCube().shape();
-	visdata.reference(vb.modelVisCube());
-      }
-    else if (whichVBColumn == FTMachine::OBSERVED)  
-      {
-	s = vb.visCube().shape();
-	visdata.reference(vb.visCube());
-      }
-    
-    if (doGrad)
-      {
-	if (whichGradVBColumn == FTMachine::MODEL) 
-	  {
-	    //	    gradS = gradVBAz.modelVisCube().shape();
-	    gradVisAzData.reference(gradVBAz.modelVisCube());
-	    gradVisElData.reference(gradVBEl.modelVisCube());
-	  }
-	else if (whichGradVBColumn == FTMachine::OBSERVED)  
-	  {
-	    //	    gradS = gradVBAz.visCube().shape();
-	    gradVisAzData.reference(gradVBAz.visCube());
-	    gradVisElData.reference(gradVBEl.visCube());
-	  }
-      }
-    
-    if(isTiled) 
-      {
-	Double invLambdaC=vb.frequency()(0)/C::c;
-	Vector<Double> uvLambda(2);
-	Vector<Int> centerLoc2D(2);
-	centerLoc2D=0;
-	
-	// Loop over all rows
-	for (Int rownr=startRow; rownr<=endRow; rownr++) 
-	  {
-	    
-	    // Calculate uvw for this row at the center frequency
-	    uvLambda(0)=uvw(0, rownr)*invLambdaC;
-	    uvLambda(1)=uvw(1, rownr)*invLambdaC;
-	    centerLoc2D=gridder->location(centerLoc2D, uvLambda);
-	    
-	    // Is this point on the grid?
-	    if(gridder->onGrid(centerLoc2D)) 
-	      {
-		
-		// Get the tile
-		Array<Complex>* dataPtr=getDataPointer(centerLoc2D, True);
-		gridder->setOffset(IPosition(2, offsetLoc(0), offsetLoc(1)));
-		Int aNx=dataPtr->shape()(0);
-		Int aNy=dataPtr->shape()(1);
-		
-		// Now use FORTRAN to do the gridding. Remember to 
-		// ensure that the shape and offsets of the tile are 
-		// accounted for.
-		
-		Vector<Double> actualOffset(3);
-		for (Int i=0;i<2;i++) 
-		  actualOffset(i)=uvOffset(i)-Double(offsetLoc(i));
-		
-		actualOffset(2)=uvOffset(2);
-		IPosition s(vb.modelVisCube().shape());
-		
-		Int ScanNo=0, tmpPAI;
-		Double area=1.0;
-		tmpPAI = 1;
-		runFortranGetGrad(uvw,dphase,visdata,s,
-				  gradVisAzData,gradVisElData,
-				  Conj,flags,rowFlags,rownr,
-				  actualOffset,dataPtr,aNx,aNy,npol,nchan,vb,NAnt,ScanNo,sigma,
-				  l_offsets,m_offsets,area,doGrad,tmpPAI);
-	      }
-	  }
-      }
-    else 
-      {
-	
-	IPosition s(vb.modelVisCube().shape());
-	Int ScanNo=0, tmpPAI;
-	Double area=1.0;
-
-	tmpPAI = 1;
-
-	runFortranGetGrad(uvw,dphase,visdata/*vb.modelVisCube()*/,s,
-			  gradVisAzData, gradVisElData,
-			  Conj,flags,rowFlags,row,
-			  uvOffset,&griddedData,nx,ny,npol,nchan,vb,NAnt,ScanNo,sigma,
-			  l_offsets,m_offsets,area,doGrad,tmpPAI);
-// 	runFortranGet(uvw,dphase,vb.modelVisCube(),s,Conj,flags,rowFlags,row,
-// 		      uvOffset,&griddedData,nx,ny,npol,nchan,vb,NAnt,ScanNo,sigma,
-// 		      l_offsets,m_offsets,area,doGrad,tmpPAI);
-      }
+      // 	Int tmpPAI=1;
+      // 	runFortranPut(uvw,dphase,*datStorage,s,Conj,flags,rowFlags,
+      // 		      *imagingweight,
+      // 		      row,uvOffset,
+      // 		      griddedData,nx,ny,npol,nchan,vb,NAnt,ScanNo,sigma,
+      // 		      l_offsets,m_offsets,sumWeight,area,doGrad,doPSF,tmpPAI);
+      // }
+    VBStore vbs;
+    setupVBStore(vbs,vb, elWeight,data,uvw,flags, dphase);
+    resampleDataToGrid(griddedData, vbs, vb, dopsf);//, *imagingweight, *data, uvw,flags,dphase,dopsf);
   }
   //
   //---------------------------------------------------------------
   //
   void AWProjectFT::get(VisBuffer& vb, Int row)
   {
+    LogIO log_l(LogOrigin("AWProjectFT", "get"));
     // If row is -1 then we pass through all rows
     Int startRow, endRow, nRow;
     if (row==-1) 
@@ -2465,11 +1424,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // This is the convention for dphase
     dphase*=-1.0;
     
-    
-    Cube<Int> flags(vb.flagCube().shape());
-    flags=0;
-    flags(vb.flagCube())=True;
-    
     //Check if ms has changed then cache new spw and chan selection
     if(vb.newMS())
       matchAllSpwChans(vb);
@@ -2485,185 +1439,40 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	chanMap.resize();
 	chanMap=multiChanMap_p[vb.spectralWindow()];
       }
-    
-    Vector<Int> rowFlags(vb.nRow());
-    rowFlags=0;
-    rowFlags(vb.flagRow())=True;
-    
-    if(!usezero_p) 
-      for (Int rownr=startRow; rownr<=endRow; rownr++) 
-	if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) rowFlags(rownr)=1;
-    
-    if(isTiled) 
-      {
-	
-	Double invLambdaC=vb.frequency()(0)/C::c;
-	Vector<Double> uvLambda(2);
-	Vector<Int> centerLoc2D(2);
-	centerLoc2D=0;
-	
-	// Loop over all rows
-	for (Int rownr=startRow; rownr<=endRow; rownr++) 
-	  {
-	    
-	    // Calculate uvw for this row at the center frequency
-	    uvLambda(0)=uvw(0, rownr)*invLambdaC;
-	    uvLambda(1)=uvw(1, rownr)*invLambdaC;
-	    centerLoc2D=gridder->location(centerLoc2D, uvLambda);
-	    
-	    // Is this point on the grid?
-	    if(gridder->onGrid(centerLoc2D)) 
-	      {
-		
-		// Get the tile
-		Array<Complex>* dataPtr=getDataPointer(centerLoc2D, True);
-		gridder->setOffset(IPosition(2, offsetLoc(0), offsetLoc(1)));
-		Int aNx=dataPtr->shape()(0);
-		Int aNy=dataPtr->shape()(1);
-		
-		// Now use FORTRAN to do the gridding. Remember to 
-		// ensure that the shape and offsets of the tile are 
-		// accounted for.
-		
-		Vector<Double> actualOffset(3);
-		for (Int i=0;i<2;i++) 
-		  actualOffset(i)=uvOffset(i)-Double(offsetLoc(i));
-		
-		actualOffset(2)=uvOffset(2);
-		IPosition s(vb.modelVisCube().shape());
-		
-		Int Conj=0,doGrad=0,ScanNo=0;
-		Double area=1.0;
-		Int tmpPAI=1;
-		runFortranGet(uvw,dphase,vb.modelVisCube(),s,Conj,flags,rowFlags,rownr,
-			      actualOffset,dataPtr,aNx,aNy,npol,nchan,vb,NAnt,ScanNo,sigma,
-			      l_offsets,m_offsets,area,doGrad,tmpPAI);
-	      }
-	  }
-      }
-    else 
-      {
-	
-	IPosition s(vb.modelVisCube().shape());
-	Int Conj=0,doGrad=0,ScanNo=0;
-	Double area=1.0;
-	Int tmpPAI=1;
-	runFortranGet(uvw,dphase,vb.modelVisCube(),s,Conj,flags,rowFlags,row,
-		      uvOffset,&griddedData,nx,ny,npol,nchan,vb,NAnt,ScanNo,sigma,
-		      l_offsets,m_offsets,area,doGrad,tmpPAI);
-	/*
-	static int junk=0;
-	if (junk==4)
-	  {
-	    cout << "Time = " << vb.time()/1e9 << endl;
-	  for(Int i=0;i<vb.modelVisCube().shape()(2);i++)
-	    cout << "PBWP: Residual: " << i 
-		 << " " << vb.modelVisCube()(0,0,i) 
-		 << " " << vb.modelVisCube()(3,0,i)
-		 << " " << vb.visCube()(0,0,i) 
-		 << " " << vb.visCube()(3,0,i)
-		 << " " << vb.flag()(0,i) 
-		 << " " << vb.antenna1()(i)<< "-" << vb.antenna2()(i) 
-		 << " " << vb.flagRow()(i) 
-		 << " " << vb.flagCube()(0,0,i) 
-		 << " " << vb.flagCube()(3,0,i) 
-		 << endl;
-	  }
-	junk++;
-	*/
-      }
-  }
-  //
-  //---------------------------------------------------------------
-  //
-  void AWProjectFT::get(VisBuffer& vb, Cube<Complex>& modelVis, 
-			 Array<Complex>& griddedVis, Vector<Double>& scale,
-			 Int row)
-  {
+    //No point in reading data if its not matching in frequency
+    if(max(chanMap)==-1) return;
 
-    (void)scale; //Suppress the warning
+    
+    // Cube<Int> flags(vb.flagCube().shape());
+    // flags=0;
+    // flags(vb.flagCube())=True;
 
-    Int nX=griddedVis.shape()(0);
-    Int nY=griddedVis.shape()(1);
-    Vector<Double> offset(2);
-    offset(0)=Double(nX)/2.0;
-    offset(1)=Double(nY)/2.0;
-    // If row is -1 then we pass through all rows
-    Int startRow, endRow, nRow;
-    if (row==-1) 
-      {
-	nRow=vb.nRow();
-	startRow=0;
-	endRow=nRow-1;
-	modelVis.set(Complex(0.0,0.0));
-      } 
-    else 
-      {
-	nRow=1;
-	startRow=row;
-	endRow=row;
-	modelVis.xyPlane(row)=Complex(0.0,0.0);
-      }
+    Cube<Complex> data;
+    Cube<Int> flags;
+    getInterpolateArrays(vb, data, flags);
+
+    //   {
+    // Vector<Int> rowFlags(vb.nRow());
+    // rowFlags=0;
+    // rowFlags(vb.flagRow())=True;
     
-    Int NAnt=0;
-    
-    if (doPointing) 
-      NAnt = findPointingOffsets(vb,l_offsets, m_offsets,True);
-    
-    
-    //  
-    // Get the uvws in a form that Fortran can use
-    //
-    Matrix<Double> uvw(3, vb.uvw().nelements());
-    uvw=0.0;
-    Vector<Double> dphase(vb.uvw().nelements());
-    dphase=0.0;
-    //
-    //NEGATING to correct for an image inversion problem
-    //
-    for (Int i=startRow;i<=endRow;i++) 
-      {
-	for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(i)(idim);
-	uvw(2,i)=vb.uvw()(i)(2);
-      }
-    
-    rotateUVW(uvw, dphase, vb);
-    refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
-    
-    // This is the convention for dphase
-    dphase*=-1.0;
-    
-    Cube<Int> flags(vb.flagCube().shape());
-    flags=0;
-    flags(vb.flagCube())=True;
-    
-    //Check if ms has changed then cache new spw and chan selection
-    if(vb.newMS())
-      matchAllSpwChans(vb);
-    
-    //Channel matching for the actual spectral window of buffer
-    if(doConversion_p[vb.spectralWindow()])
-      matchChannel(vb.spectralWindow(), vb);
-    else
-      {
-	chanMap.resize();
-	chanMap=multiChanMap_p[vb.spectralWindow()];
-      }
-    
-    Vector<Int> rowFlags(vb.nRow());
-    rowFlags=0;
-    rowFlags(vb.flagRow())=True;
-    if(!usezero_p) 
-      for (Int rownr=startRow; rownr<=endRow; rownr++) 
-	if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) rowFlags(rownr)=1;
-    
-    IPosition s(modelVis.shape());
-    Int Conj=0,doGrad=0,ScanNo=0;
-    Double area=1.0;
-    Int tmpPAI=1;
-    runFortranGet(uvw,dphase,vb.modelVisCube(),s,Conj,flags,rowFlags,row,
-		  offset,&griddedVis,nx,ny,npol,nchan,vb,NAnt,ScanNo,sigma,
-		  l_offsets,m_offsets,area,doGrad,tmpPAI);
+    // if(!usezero_p) 
+    //   for (Int rownr=startRow; rownr<=endRow; rownr++) 
+    // 	if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) rowFlags(rownr)=1;
+	
+    // 	IPosition s(vb.modelVisCube().shape());
+    // 	Int Conj=0,doGrad=0,ScanNo=0;
+    // 	Double area=1.0;
+    // 	Int tmpPAI=1;
+    // 	runFortranGet(uvw,dphase,vb.modelVisCube(),s,Conj,flags,rowFlags,row,
+    // 		      uvOffset,&griddedData,nx,ny,npol,nchan,vb,NAnt,ScanNo,sigma,
+    // 		      l_offsets,m_offsets,area,doGrad,tmpPAI);
+    //   }
+    VBStore vbs;
+    //    setupVBStore(vbs,vb, vb.imagingWeight(),vb.modelVisCube(),uvw,flags, dphase);
+    setupVBStore(vbs,vb, vb.imagingWeight(),data,uvw,flags, dphase);
+    resampleGridToData(vbs, griddedData, vb);//, uvw, flags, dphase);
+    interpolateFrequencyFromgrid(vb, data, FTMachine::MODEL);
   }
   //
   //---------------------------------------------------------------
@@ -2823,13 +1632,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    Int iy=lix.position()(1);
 	    gridder->correctX1D(correction,iy);
 	    
-	    Vector<Float> PBCorrection(liavgpb.rwVectorCursor().shape()),
-	      avgPBVec(liavgpb.rwVectorCursor().shape());
+	    Vector<Float> avgPBVec(liavgpb.rwVectorCursor().shape());
 	    
-	    PBCorrection = liavgpb.rwVectorCursor();
 	    avgPBVec = liavgpb.rwVectorCursor();
 
-	    for(int i=0;i<PBCorrection.shape();i++)
+	    for(int i=0;i<avgPBVec.shape();i++)
 	      {
 		//
 		// This with the PS functions
@@ -2842,15 +1649,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//
 		// This without the PS functions
 		//
-                Float tt=sqrt(avgPBVec(i))/avgPBVec(i);
-                  //		PBCorrection(i)=pbFunc(avgPBVec(i))*sincConv(i)*sincConv(iy);
+		//                Float tt=sqrt(avgPBVec(i))/avgPBVec(i);
+		Float tt = pbFunc(avgPBVec(i),pbLimit_p);
+                  //		PBCorrection(i)=pbFunc(avgPBVec(i),pbLimit_p)*sincConv(i)*sincConv(iy);
                   //                lix.rwVectorCursor()(i) /= PBCorrection(i);
-                lix.rwVectorCursor()(i) *= tt;
+		//                lix.rwVectorCursor()(i) *= tt;
                   
-
-
-		// if ((abs(PBCorrection(i))) >= pbLimit_p)
-		//   lix.rwVectorCursor()(i) /= PBCorrection(i);
+		lix.rwVectorCursor()(i) /= tt;
+		// if ((abs(tt) >= pbLimit_p))
+		//   lix.rwVectorCursor()(i) /= tt;
 		// else if (!makingPSF)
 		//   lix.rwVectorCursor()(i) /= sincConv(i)*sincConv(iy);
 	      }
@@ -2897,6 +1704,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     weights.resize(sumWeight.shape());
     convertArray(weights, sumWeight);
+
     //  
     // If the weights are all zero then we cannot normalize otherwise
     // we don't care.
@@ -2922,6 +1730,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// method, normalizeImage also needs to work with Lattices
 	// (rather than ImageInterface).
 	//
+
         normalizeImage(*lattice,sumWeight,*avgPB_p,fftNormalization);
 
         //	normalizeImage(*lattice,sumWeight,*avgPB_p, *avgPBSq_p, fftNormalization);
@@ -3191,7 +2000,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Normalize by dividing out weights, etc.
     getImage(weight, True);
   }
-  
+  //
+  //-------------------------------------------------------------------------
+  //  
   void AWProjectFT::setPAIncrement(const Quantity& paIncrement)
   {
     LogIO log_l(LogOrigin("AWProjectFT", "setPAIncrement"));
@@ -3199,10 +2010,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     rotateAperture_p = True;
     if (paIncrement.getValue("rad") < 0)
       rotateAperture_p = False;
-    log_l << LogIO::NORMAL <<"Setting PA increment to " << paIncrement.getValue("deg") << " deg" << endl;
+    log_l << LogIO::NORMAL <<"Setting PA increment to " 
+	  << paIncrement.getValue("deg") << " deg" << endl;
     cfCache_p->setPAChangeDetector(paChangeDetector);
   }
-
+  //
+  //-------------------------------------------------------------------------
+  //  
   Bool AWProjectFT::verifyShapes(IPosition pbShape, IPosition skyShape)
   {
     LogIO log_l(LogOrigin("AWProjectFT", "verifyShapes"));
@@ -3218,197 +2032,543 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return True;
     
   }
+  //
+  //-------------------------------------------------------------------------
+  //  
+  void AWProjectFT::setupVBStore(VBStore& vbs,
+				 const VisBuffer& vb, 
+				 const Matrix<Float>& imagingweight,
+				 const Cube<Complex>& visData,
+				 const Matrix<Double>& uvw,
+				 const Cube<Int>& flagCube,
+				 const Vector<Double>& dphase)
+  {
+    LogIO log_l(LogOrigin("AWProjectFT", "setupVBStore"));
 
+    Vector<Int> ConjCFMap, CFMap;
+
+    makeCFPolMap(vb,cfStokes_p,CFMap);
+    makeConjPolMap(vb,CFMap,ConjCFMap);
+
+    visResampler_p.setParams(uvScale,uvOffset,dphase);
+    visResampler_p.setMaps(chanMap, polMap);
+    visResampler_p.setCFMaps(CFMap, ConjCFMap);
+    //
+    // Set up VBStore object to point to the relavent info. of the VB.
+    //
+    vbs.nRow = vb.nRow();
+    vbs.uvw.reference(uvw);
+    vbs.imagingWeight.reference(imagingweight);
+    vbs.visCube.reference(visData);
+    vbs.freq.reference(interpVisFreq_p);
+    //   vbs.rowFlag.resize(0); vbs.rowFlag = vb.flagRow();  
+    vbs.rowFlag.reference(vb.flagRow());
+    if(!usezero_p) 
+      for (Int rownr=0; rownr<vbs.nRow; rownr++) 
+	if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) vbs.rowFlag(rownr)=True;
+
+    // Really nice way of converting a Cube<Int> to Cube<Bool>.
+    // However the VBS objects should ultimately be references
+    // directly to bool cubes.
+    //  vbs.rowFlag.resize(rowFlags.shape());  vbs.rowFlag  = False; vbs.rowFlag(rowFlags) = True;
+    vbs.flagCube.resize(flagCube.shape());  vbs.flagCube = False; vbs.flagCube(flagCube!=0) = True;
+    //
+    // Set the convolution function for the re-sampler.
+    // Here, rotate the conv. func. by the PA difference first.
+    //
+    CFStore rotatedConvFunc; rotatedConvFunc.data=new Array<Complex>();
+    // The everything else from cfs_p other than the data itself.
+    rotatedConvFunc.set(cfs_p);
+
+    Double actualPA = getVBPA(vb), currentCFPA = cfs_p.pa.getValue("rad");
+    SynthesisUtils::rotateComplexArray(log_l, *cfs_p.data, cfs_p.coordSys,
+    				       *rotatedConvFunc.data,currentCFPA-actualPA,"LINEAR");
+    visResampler_p.setConvFunc(rotatedConvFunc);
+  }
+
+  //
+  //-------------------------------------------------------------------------
+  // Gridding
+  void AWProjectFT::resampleDataToGrid(Array<Complex>& griddedData_l, VBStore& vbs, 
+				       const VisBuffer& vb, Bool& dopsf)
+  {
+    LogIO log_l(LogOrigin("AWProjectFT", "resampleDataToGrid"));
+    visResampler_p.DataToGrid(griddedData_l, vbs, sumWeight, dopsf); 
+  }
+  //
+  //-------------------------------------------------------------------------
+  // De-gridding
+  void AWProjectFT::resampleGridToData(VBStore& vbs, Array<Complex>& griddedData_l,
+				       const VisBuffer& vb)
+  {
+    LogIO log_l(LogOrigin("AWProjectFT", "resampleGridToData"));
+    visResampler_p.GridToData(vbs, griddedData_l);
+  }
+  //
+  //---------------------------------------------------------------
+  //
+  // Predict the coherences as well as their derivatives w.r.t. the
+  // pointing offsets.
+  //
+  void AWProjectFT::nget(VisBuffer& vb,
+			  // These offsets should be appropriate for the VB
+			  Array<Float>& l_off, Array<Float>& m_off,
+			  Cube<Complex>& Mout,
+			  Cube<Complex>& dMout1,
+			  Cube<Complex>& dMout2,
+			  Int Conj, Int doGrad)
+  {
+    LogIO log_l(LogOrigin("AWProjectFT", "nget"));
+    Int startRow, endRow, nRow;
+    nRow=vb.nRow();
+    startRow=0;
+    endRow=nRow-1;
+
+    Mout = dMout1 = dMout2 = Complex(0,0);
+
+    findConvFunction(*image, vb);
+    Int NAnt=0;
+    Nant_p     = vb.msColumns().antenna().nrow();
+    if (doPointing)   
+      NAnt = findPointingOffsets(vb,l_offsets,m_offsets,False);
+
+    l_offsets=l_off;
+    m_offsets=m_off;
+    Matrix<Double> uvw(3, vb.uvw().nelements());
+    uvw=0.0;
+    Vector<Double> dphase(vb.uvw().nelements());
+    dphase=0.0;
+    //NEGATING to correct for an image inversion problem
+    for (Int i=startRow;i<=endRow;i++) 
+      {
+	for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(i)(idim);
+	uvw(2,i)=vb.uvw()(i)(2);
+      }
+    
+    rotateUVW(uvw, dphase, vb);
+    refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
+    
+    // This is the convention for dphase
+    dphase*=-1.0;
+
+    Cube<Int> flags(vb.flagCube().shape());
+    flags=0;
+    flags(vb.flagCube())=True;
+    
+    //Check if ms has changed then cache new spw and chan selection
+    if(vb.newMS())
+      matchAllSpwChans(vb);
+    
+    //Here we redo the match or use previous match
+    //
+    //Channel matching for the actual spectral window of buffer
+    //
+    if(doConversion_p[vb.spectralWindow()])
+      matchChannel(vb.spectralWindow(), vb);
+    else
+      {
+	chanMap.resize();
+	chanMap=multiChanMap_p[vb.spectralWindow()];
+      }
+    
+    Vector<Int> rowFlags(vb.nRow());
+    rowFlags=0;
+    rowFlags(vb.flagRow())=True;
+    if(!usezero_p) 
+      for (Int rownr=startRow; rownr<=endRow; rownr++) 
+	if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) rowFlags(rownr)=1;
+    
+    IPosition s,gradS;
+    Cube<Complex> visdata,gradVisAzData,gradVisElData;
+    //
+    // visdata now references the Mout data structure rather than to the internal VB storeage.
+    //
+    visdata.reference(Mout);
+
+    if (doGrad)
+      {
+	// The following should reference some slice of dMout?
+	gradVisAzData.reference(dMout1);
+	gradVisElData.reference(dMout2);
+      }
+      visResampler_p.setParams(uvScale,uvOffset,dphase);
+      visResampler_p.setMaps(chanMap, polMap);
+  Vector<Int> ConjCFMap, CFMap;
+    makeCFPolMap(vb,cfStokes_p,CFMap);
+  makeConjPolMap(vb,CFMap,ConjCFMap);
+  visResampler_p.setCFMaps(CFMap, ConjCFMap);
+    //
+    // Begin the actual de-gridding.
+    //
+    if(isTiled) 
+      {
+	log_l << "The sky model is tiled" << LogIO::NORMAL << LogIO::POST;
+	Double invLambdaC=vb.frequency()(0)/C::c;
+	Vector<Double> uvLambda(2);
+	Vector<Int> centerLoc2D(2);
+	centerLoc2D=0;
+	
+	// Loop over all rows
+	for (Int rownr=startRow; rownr<=endRow; rownr++) 
+	  {
+	    
+	    // Calculate uvw for this row at the center frequency
+	    uvLambda(0)=uvw(0, rownr)*invLambdaC;
+	    uvLambda(1)=uvw(1, rownr)*invLambdaC;
+	    centerLoc2D=gridder->location(centerLoc2D, uvLambda);
+	    
+	    // Is this point on the grid?
+	    if(gridder->onGrid(centerLoc2D)) 
+	      {
+		
+		// Get the tile
+		Array<Complex>* dataPtr=getDataPointer(centerLoc2D, True);
+		gridder->setOffset(IPosition(2, offsetLoc(0), offsetLoc(1)));
+		Int aNx=dataPtr->shape()(0);
+		Int aNy=dataPtr->shape()(1);
+		
+		// Now use FORTRAN to do the gridding. Remember to 
+		// ensure that the shape and offsets of the tile are 
+		// accounted for.
+		
+		Vector<Double> actualOffset(3);
+		for (Int i=0;i<2;i++) 
+		  actualOffset(i)=uvOffset(i)-Double(offsetLoc(i));
+		
+		actualOffset(2)=uvOffset(2);
+		IPosition s(vb.modelVisCube().shape());
+		
+		Int ScanNo=0, tmpPAI;
+		Double area=1.0;
+		tmpPAI = 1;
+		runFortranGetGrad(uvw,dphase,visdata,s,
+				  gradVisAzData,gradVisElData,
+				  Conj,flags,rowFlags,rownr,
+				  actualOffset,dataPtr,aNx,aNy,npol,nchan,vb,NAnt,ScanNo,sigma,
+				  l_offsets,m_offsets,area,doGrad,tmpPAI);
+	      }
+	  }
+      }
+    else 
+      {
+	IPosition s(vb.modelVisCube().shape());
+	Int ScanNo=0, tmpPAI, trow=-1;
+	Double area=1.0;
+	tmpPAI = 1;
+	runFortranGetGrad(uvw,dphase,visdata/*vb.modelVisCube()*/,s,
+			  gradVisAzData, gradVisElData,
+			  Conj,flags,rowFlags,trow,
+			  uvOffset,&griddedData,nx,ny,npol,nchan,vb,NAnt,ScanNo,sigma,
+			  l_offsets,m_offsets,area,doGrad,tmpPAI);
+      }
+    
+  }
+  void AWProjectFT::get(VisBuffer& vb,       
+			 VisBuffer& gradVBAz,
+			 VisBuffer& gradVBEl,
+			 Cube<Float>& pointingOffsets,
+			 Int row,  // default row=-1 
+			 Type whichVBColumn, // default whichVBColumn = FTMachine::MODEL
+			 Type whichGradVBColumn,// default whichGradVBColumn = FTMachine::MODEL
+			 Int Conj, Int doGrad) // default Conj=0, doGrad=1
+  {
+    // If row is -1 then we pass through all rows
+    Int startRow, endRow, nRow;
+    if (row==-1) 
+      {
+	nRow=vb.nRow();
+	startRow=0;
+	endRow=nRow-1;
+	initVisBuffer(vb,whichVBColumn);
+	if (doGrad)
+	  {
+	    initVisBuffer(gradVBAz, whichGradVBColumn);
+	    initVisBuffer(gradVBEl, whichGradVBColumn);
+	  }
+      }
+    else 
+      {
+	nRow=1;
+	startRow=row;
+	endRow=row;
+	initVisBuffer(vb,whichVBColumn,row);
+	if (doGrad)
+	  {
+	    initVisBuffer(gradVBAz, whichGradVBColumn,row);
+	    initVisBuffer(gradVBEl, whichGradVBColumn,row);
+	  }
+      }
+    
+    findConvFunction(*image, vb);
+
+    Nant_p     = vb.msColumns().antenna().nrow();
+    Int NAnt=0;
+    if (doPointing)   
+      NAnt = findPointingOffsets(vb,pointingOffsets,l_offsets,m_offsets,False);
+
+    Matrix<Double> uvw(3, vb.uvw().nelements());
+    uvw=0.0;
+    Vector<Double> dphase(vb.uvw().nelements());
+    dphase=0.0;
+    //NEGATING to correct for an image inversion problem
+    for (Int i=startRow;i<=endRow;i++) 
+      {
+	for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(i)(idim);
+	uvw(2,i)=vb.uvw()(i)(2);
+      }
+    
+    rotateUVW(uvw, dphase, vb);
+    refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
+    
+    // This is the convention for dphase
+    dphase*=-1.0;
+    
+    
+    Cube<Int> flags(vb.flagCube().shape());
+    flags=0;
+    flags(vb.flagCube())=True;
+    //    
+    //Check if ms has changed then cache new spw and chan selection
+    //
+    if(vb.newMS()) matchAllSpwChans(vb);
+    
+    //Here we redo the match or use previous match
+    //
+    //Channel matching for the actual spectral window of buffer
+    //
+    if(doConversion_p[vb.spectralWindow()])
+      matchChannel(vb.spectralWindow(), vb);
+    else
+      {
+	chanMap.resize();
+	chanMap=multiChanMap_p[vb.spectralWindow()];
+      }
+    
+    Vector<Int> rowFlags(vb.nRow());
+    rowFlags=0;
+    rowFlags(vb.flagRow())=True;
+    if(!usezero_p) 
+      for (Int rownr=startRow; rownr<=endRow; rownr++) 
+	if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) rowFlags(rownr)=1;
+	
+    for (Int rownr=startRow; rownr<=endRow; rownr++) 
+      if (vb.antenna1()(rownr) != vb.antenna2()(rownr)) 
+	rowFlags(rownr) = (vb.flagRow()(rownr)==True);
+    
+    IPosition s,gradS;
+    Cube<Complex> visdata,gradVisAzData,gradVisElData;
+    if (whichVBColumn == FTMachine::MODEL) 
+      {
+	s = vb.modelVisCube().shape();
+	visdata.reference(vb.modelVisCube());
+      }
+    else if (whichVBColumn == FTMachine::OBSERVED)  
+      {
+	s = vb.visCube().shape();
+	visdata.reference(vb.visCube());
+      }
+    
+    if (doGrad)
+      {
+	if (whichGradVBColumn == FTMachine::MODEL) 
+	  {
+	    //	    gradS = gradVBAz.modelVisCube().shape();
+	    gradVisAzData.reference(gradVBAz.modelVisCube());
+	    gradVisElData.reference(gradVBEl.modelVisCube());
+	  }
+	else if (whichGradVBColumn == FTMachine::OBSERVED)  
+	  {
+	    //	    gradS = gradVBAz.visCube().shape();
+	    gradVisAzData.reference(gradVBAz.visCube());
+	    gradVisElData.reference(gradVBEl.visCube());
+	  }
+      }
+      visResampler_p.setParams(uvScale,uvOffset,dphase);
+      visResampler_p.setMaps(chanMap, polMap);
+  Vector<Int> ConjCFMap, CFMap;
+    makeCFPolMap(vb,cfStokes_p,CFMap);
+  makeConjPolMap(vb,CFMap,ConjCFMap);
+  visResampler_p.setCFMaps(CFMap, ConjCFMap);
+    
+    if(isTiled) 
+      {
+	Double invLambdaC=vb.frequency()(0)/C::c;
+	Vector<Double> uvLambda(2);
+	Vector<Int> centerLoc2D(2);
+	centerLoc2D=0;
+	
+	// Loop over all rows
+	for (Int rownr=startRow; rownr<=endRow; rownr++) 
+	  {
+	    
+	    // Calculate uvw for this row at the center frequency
+	    uvLambda(0)=uvw(0, rownr)*invLambdaC;
+	    uvLambda(1)=uvw(1, rownr)*invLambdaC;
+	    centerLoc2D=gridder->location(centerLoc2D, uvLambda);
+	    
+	    // Is this point on the grid?
+	    if(gridder->onGrid(centerLoc2D)) 
+	      {
+		
+		// Get the tile
+		Array<Complex>* dataPtr=getDataPointer(centerLoc2D, True);
+		gridder->setOffset(IPosition(2, offsetLoc(0), offsetLoc(1)));
+		Int aNx=dataPtr->shape()(0);
+		Int aNy=dataPtr->shape()(1);
+		
+		// Now use FORTRAN to do the gridding. Remember to 
+		// ensure that the shape and offsets of the tile are 
+		// accounted for.
+		
+		Vector<Double> actualOffset(3);
+		for (Int i=0;i<2;i++) 
+		  actualOffset(i)=uvOffset(i)-Double(offsetLoc(i));
+		
+		actualOffset(2)=uvOffset(2);
+		IPosition s(vb.modelVisCube().shape());
+		
+		Int ScanNo=0, tmpPAI;
+		Double area=1.0;
+		tmpPAI = 1;
+		runFortranGetGrad(uvw,dphase,visdata,s,
+				  gradVisAzData,gradVisElData,
+				  Conj,flags,rowFlags,rownr,
+				  actualOffset,dataPtr,aNx,aNy,npol,nchan,vb,NAnt,ScanNo,sigma,
+				  l_offsets,m_offsets,area,doGrad,tmpPAI);
+	      }
+	  }
+      }
+    else 
+      {
+	
+	IPosition s(vb.modelVisCube().shape());
+	Int ScanNo=0, tmpPAI;
+	Double area=1.0;
+
+	tmpPAI = 1;
+
+	runFortranGetGrad(uvw,dphase,visdata/*vb.modelVisCube()*/,s,
+			  gradVisAzData, gradVisElData,
+			  Conj,flags,rowFlags,row,
+			  uvOffset,&griddedData,nx,ny,npol,nchan,vb,NAnt,ScanNo,sigma,
+			  l_offsets,m_offsets,area,doGrad,tmpPAI);
+// 	runFortranGet(uvw,dphase,vb.modelVisCube(),s,Conj,flags,rowFlags,row,
+// 		      uvOffset,&griddedData,nx,ny,npol,nchan,vb,NAnt,ScanNo,sigma,
+// 		      l_offsets,m_offsets,area,doGrad,tmpPAI);
+      }
+  }
+  //
+  //---------------------------------------------------------------
+  //
+  void AWProjectFT::get(VisBuffer& vb, Cube<Complex>& modelVis, 
+			 Array<Complex>& griddedVis, Vector<Double>& scale,
+			 Int row)
+  {
+
+    (void)scale; //Suppress the warning
+
+    Int nX=griddedVis.shape()(0);
+    Int nY=griddedVis.shape()(1);
+    Vector<Double> offset(2);
+    offset(0)=Double(nX)/2.0;
+    offset(1)=Double(nY)/2.0;
+    // If row is -1 then we pass through all rows
+    Int startRow, endRow, nRow;
+    if (row==-1) 
+      {
+	nRow=vb.nRow();
+	startRow=0;
+	endRow=nRow-1;
+	modelVis.set(Complex(0.0,0.0));
+      } 
+    else 
+      {
+	nRow=1;
+	startRow=row;
+	endRow=row;
+	modelVis.xyPlane(row)=Complex(0.0,0.0);
+      }
+    
+    Int NAnt=0;
+    
+    if (doPointing) 
+      NAnt = findPointingOffsets(vb,l_offsets, m_offsets,True);
+    
+    
+    //  
+    // Get the uvws in a form that Fortran can use
+    //
+    Matrix<Double> uvw(3, vb.uvw().nelements());
+    uvw=0.0;
+    Vector<Double> dphase(vb.uvw().nelements());
+    dphase=0.0;
+    //
+    //NEGATING to correct for an image inversion problem
+    //
+    for (Int i=startRow;i<=endRow;i++) 
+      {
+	for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(i)(idim);
+	uvw(2,i)=vb.uvw()(i)(2);
+      }
+    
+    rotateUVW(uvw, dphase, vb);
+    refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
+    
+    // This is the convention for dphase
+    dphase*=-1.0;
+    
+    Cube<Int> flags(vb.flagCube().shape());
+    flags=0;
+    flags(vb.flagCube())=True;
+    
+    //Check if ms has changed then cache new spw and chan selection
+    if(vb.newMS())
+      matchAllSpwChans(vb);
+    
+    //Channel matching for the actual spectral window of buffer
+    if(doConversion_p[vb.spectralWindow()])
+      matchChannel(vb.spectralWindow(), vb);
+    else
+      {
+	chanMap.resize();
+	chanMap=multiChanMap_p[vb.spectralWindow()];
+      }
+    
+    Vector<Int> rowFlags(vb.nRow());
+    rowFlags=0;
+    rowFlags(vb.flagRow())=True;
+    if(!usezero_p) 
+      for (Int rownr=startRow; rownr<=endRow; rownr++) 
+	if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) rowFlags(rownr)=1;
+    
+    visResampler_p.setParams(uvScale,uvOffset,dphase);
+    visResampler_p.setMaps(chanMap, polMap);
+
+    IPosition s(modelVis.shape());
+    Int Conj=0,doGrad=0,ScanNo=0;
+    Double area=1.0;
+    Int tmpPAI=1;
+    runFortranGet(uvw,dphase,vb.modelVisCube(),s,Conj,flags,rowFlags,row,
+		  offset,&griddedVis,nx,ny,npol,nchan,vb,NAnt,ScanNo,sigma,
+		  l_offsets,m_offsets,area,doGrad,tmpPAI);
+  }
+  //
+  //----------------------------------------------------------------------
+  //
+  void AWProjectFT::initVisBuffer(VisBuffer& vb, Type whichVBColumn)
+  {
+    if (whichVBColumn      == FTMachine::MODEL)    vb.modelVisCube()=Complex(0.0,0.0);
+    else if (whichVBColumn == FTMachine::OBSERVED) vb.visCube()=Complex(0.0,0.0);
+  }
+  //
+  //----------------------------------------------------------------------
+  //
+  void AWProjectFT::initVisBuffer(VisBuffer& vb, Type whichVBColumn, Int row)
+  {
+    if (whichVBColumn == FTMachine::MODEL)
+      vb.modelVisCube().xyPlane(row)=Complex(0.0,0.0);
+    else if (whichVBColumn == FTMachine::OBSERVED)
+      vb.visCube().xyPlane(row)=Complex(0.0,0.0);
+  }
 } //# NAMESPACE CASA - END
-//   void AWProjectFT::makeAntiAliasingOp(Vector<Complex>& op, const Int nx_l, const Double HPBW)
-//   {
-//     MathFunc<Float> sf(SPHEROIDAL);
-//     if (op.nelements() != (uInt)nx_l)
-//       {
-// 	op.resize(nx_l);
-// 	Int inner=nx_l/2, center=nx_l/2;
-// 	//
-// 	// The "complicated" equation below is worthy of a comment (as
-// 	// notes are called in program text).
-//         //
-// 	// uvScale/nx == Size of a pixel size in the image in radians.
-// 	// Lets call it dx.  HPBW is the HPBW for the antenna at the
-// 	// centre freq. in use.  HPBW/dx == Pixel where the PB will be
-// 	// ~0.5x its peak value.  ((2*N*HPBW)/dx) == the pixel where
-// 	// the N th. PB sidelobe will be (rougly speaking).  When this
-// 	// value is equal to 3.0, the Spheroidal implemtation goes to
-// 	// zero!
-// 	//
-// 	Float dx=uvScale(0)*convSampling/nx;
-// 	Float MaxSideLobeNum = 3.0;
-// 	Float S=1.0*dx/(MaxSideLobeNum*2*HPBW),cfScale;
-	
-// 	cout << "UVSCALE = " << uvScale(0) << " " << convSampling << endl;
-// 	cout << "HPBW = " << HPBW 
-// 	     << " " << uvScale(0)/nx 
-// 	     << " " << S 
-// 	     << " " << dx 
-// 	     << endl;
-	
-
-// 	cfScale=S=6.0/inner;
-// 	for(Int ix=-inner;ix<inner;ix++)	    op(ix+center)=sf.value(abs((ix)*cfScale));
-// 	// for(Int ix=-inner;ix<inner;ix++)
-// 	//   if (abs(op(ix+center)) > 1e-8) 
-// 	// 	    cout << "SF: " << ix 
-// 	// 		 << " " << (ix)*cfScale 
-// 	// 		 << " " << real(op(ix+center)) 
-// 	// 		 << " " << imag(op(ix+center))
-// 	// 		 << endl;
-//       }
-//   }
-
-//   void AWProjectFT::makeAntiAliasingCorrection(Vector<Complex>& correction, 
-// 						 const Vector<Complex>& op,
-// 						 const Int nx_l)
-//   {
-//     if (correction.nelements() != (uInt)nx_l)
-//       {
-// 	correction.resize(nx_l);
-// 	correction=0.0;
-// 	Int opLen=op.nelements(), orig=nx_l/2;
-// 	for(Int i=-opLen;i<opLen;i++)
-// 	  {
-// 	    correction(i+orig) += op(abs(i));
-// 	  }
-// 	ArrayLattice<Complex> tmp(correction);
-// 	LatticeFFT::cfft(tmp,False);
-// 	correction=tmp.get();
-//       }
-// //     for(uInt i=0;i<correction.nelements();i++)
-// //       cout << "FTSF: " << real(correction(i)) << " " << imag(correction(i)) << endl;
-//   }
-
-//   void AWProjectFT::correctAntiAliasing(Lattice<Complex>& image)
-//   {
-//     //  applyAntiAliasingOp(cf,2);
-//     IPosition shape(image.shape());
-//     IPosition ndx(shape);
-//     ndx=0;
-//     makeAntiAliasingCorrection(antiAliasingCorrection, 
-// 			       antiAliasingOp,shape(0));
-
-//     Complex tmp,val;
-//     for(Int i=0;i<polInUse_p;i++)
-//       {
-// 	ndx(2)=i;
-// 	for (Int iy=0;iy<shape(1);iy++) 
-// 	  {
-// 	    for (Int ix=0;ix<shape(0);ix++) 
-// 	      {
-// 		ndx(0)=ix;
-// 		ndx(1)=iy;
-// 		tmp = image.getAt(ndx);
-// 		val=(antiAliasingCorrection(ix)*antiAliasingCorrection(iy));
-// 		if (abs(val) > 1e-5) tmp = tmp/val; else tmp=0.0;
-// 		image.putAt(tmp,ndx);
-// 	      }
-// 	  }
-//       }
-//   }
-
-//   void AWProjectFT::applyAntiAliasingOp(ImageInterface<Complex>& cf, 
-// 					Vector<IPosition>& maxPos,
-// 					Double HPBW, Int op, Bool Square)
-//   {
-//     //
-//     // First the spheroidal function
-//     //
-//     IPosition shape(cf.shape());
-//     IPosition ndx(shape);
-//     Vector<Double> refPixel=cf.coordinates().referencePixel();
-//     ndx=0;
-//     Int nx_l=shape(0),posX,posY;
-//     makeAntiAliasingOp(antiAliasingOp, nx_l, HPBW);
-
-//     Complex tmp,gain;
-
-//     for(Int i=0;i<polInUse_p;i++)
-//       {
-// 	ndx(2)=i;
-// 	for (Int iy=-nx_l/2;iy<nx_l/2;iy++) 
-// 	  {
-// 	    for (Int ix=-nx_l/2;ix<nx_l/2;ix++) 
-// 	      {
-// 		ndx(0)=ix+nx_l/2;
-// 		ndx(1)=iy+nx_l/2;
-// 		tmp = cf.getAt(ndx);
-// 		posX=ndx(0)+(Int)(refPixel(0)-maxPos(i)(0))+1;
-// 		posY=ndx(1)+(Int)(refPixel(1)-maxPos(i)(1))+1;
-// 		if ((posX > 0) && (posX < nx_l) &&
-// 		    (posY > 0) && (posY < nx_l))
-// 		  gain = antiAliasingOp(posX)*antiAliasingOp(posY);
-// 		else
-// 		  if (op==2) gain = 1.0; else gain=0.0;
-// 		if (Square) gain *= gain;
-// 		switch (op)
-// 		  {
-// 		  case 0: tmp = tmp+gain;break;
-// 		  case 1: 
-// 		    {
-// 		      tmp = tmp*gain;
-// 		      break;
-// 		    }
-// 		  case 2: tmp = tmp/gain;break;
-// 		  }
-// 		cf.putAt(tmp,ndx);
-// 	      }
-// 	  }
-//       }
-//   };
-//   void AWProjectFT::applyAntiAliasingOp(ImageInterface<Float>& cf, 
-// 					Vector<IPosition>& maxPos,
-// 					Double HPBW, Int op, Bool Square)
-
-//   {
-//     //
-//     // First the spheroidal function
-//     //
-//     IPosition shape(cf.shape());
-//     IPosition ndx(shape);
-//     Vector<Double> refPixel=cf.coordinates().referencePixel();
-//     ndx=0;
-//     Int nx_l=shape(0),posX,posY;
-//     makeAntiAliasingOp(antiAliasingOp, nx_l, HPBW);
-
-//     Float tmp,gain;
-
-//     for(Int i=0;i<polInUse_p;i++)
-//       {
-// 	ndx(2)=i;
-// 	for (Int iy=-nx_l/2;iy<nx_l/2;iy++) 
-// 	  {
-// 	    for (Int ix=-nx_l/2;ix<nx_l/2;ix++) 
-// 	      {
-// 		ndx(0)=ix+nx_l/2;
-// 		ndx(1)=iy+nx_l/2;
-// 		tmp = cf.getAt(ndx);
-// 		posX=ndx(0)+(Int)(refPixel(0)-maxPos(i)(0))+1;
-// 		posY=ndx(1)+(Int)(refPixel(1)-maxPos(i)(1))+1;
-// 		if ((posX > 0) && (posX < nx_l) &&
-// 		    (posY > 0) && (posY < nx_l))
-// 		  gain = real(antiAliasingOp(posX)*antiAliasingOp(posY));
-// 		else
-// 		  if (op==2) gain = 1.0; else gain=0.0;
-// 		if (Square) gain *= gain;
-// 		switch (op)
-// 		  {
-// 		  case 0: tmp = tmp+gain;break;
-// 		  case 1: 
-// 		    {
-// 		      tmp = tmp*gain;
-// 		      break;
-// 		    }
-// 		  case 2: tmp = tmp/gain;break;
-// 		  }
-// 		cf.putAt(tmp,ndx);
-// 	      }
-// 	  }
-//       }
-//   };
 

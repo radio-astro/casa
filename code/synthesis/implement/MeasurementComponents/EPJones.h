@@ -142,9 +142,9 @@ public:
   void store(const String& table,const Bool& append);
   Bool verifyForSolve(VisBuffer& vb);
   virtual void postSolveMassage(const VisBuffer&);
-  virtual void selfSolve(VisSet& vs,VisEquation& ve);
-  virtual Bool standardSolve() {return False;};
-  virtual Float printFraction(const Int& nSlots) {return 0.1;};
+  virtual void selfGatherAndSolve(VisSet& vs,VisEquation& ve);
+  virtual Bool useGenericGatherForSolve() { return False; };
+  virtual Float printFraction(const Int& ) {return 0.1;};
   Array<Float> getOffsets(const Int& spw) {return rcs().par(spw);}
   Array<Double> getTime(const Int& spw) {return rcs().time(spw);}
   void nearest(const Double time, Array<Float>& vals);

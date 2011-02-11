@@ -183,6 +183,7 @@
 
 #include <sys/types.h>
 #include <unistd.h>
+#include <limits>
 
 using namespace std;
 
@@ -433,6 +434,9 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
       Vector<Double> imfreqres;
       rstate=calcImFreqs(imgridfreqs, imfreqres, mfreqref, obsEpoch, obsPosition,restFreq);
 
+      cerr<<"mfImageStart_p.get(Hz).getValue()="<<mfImageStart_p.get("Hz").getValue()<<endl;
+      cerr<<"mfImageStep_p.get(Hz).getValue()="<<mfImageStep_p.get("Hz").getValue()<<endl;
+
       if (imageNchan_p==1) {
         mySpectral = new SpectralCoordinate(mfreqref,
       					  mfImageStart_p.get("Hz").getValue(),
@@ -443,11 +447,9 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
         // tabular form
         //mySpectral = new SpectralCoordinate(mfreqref,imgridfreqs, restFreq);
         //
-        cerr<<"use imgridfreqs(0)="<<imgridfreqs(0)<<endl;
-        cerr<<"use imgridfreqs(1)="<<imgridfreqs(1)<<endl;
-        cerr<<"use imfreqres(0)="<<imfreqres(0)<<endl;
+        Double finc= imgridfreqs(1)-imgridfreqs(0); 
        
-        mySpectral = new SpectralCoordinate(mfreqref, imgridfreqs(0), imfreqres(0), refChan, restFreq);
+        mySpectral = new SpectralCoordinate(mfreqref, imgridfreqs(0), finc, refChan, restFreq);
 
         //debug TT
         //Double wrld,pixl;
@@ -479,11 +481,11 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
     Double restFreq=
       msc.spectralWindow().refFrequency()(spectralwindowids_p(0));
 
-    Bool negativeChanW = False; 
     for (Int spwIndex=0; spwIndex < nspw; ++spwIndex){
  
       Int spw=spectralwindowids_p(spwIndex);
       
+      /***
       Int origsize=chanFreq.shape()(0);
       Int newsize=origsize+msc.spectralWindow().chanFreq()(spw).shape()(0);
       chanFreq.resize(newsize, True);
@@ -491,8 +493,8 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
       freqResolution.resize(newsize, True);
      freqResolution(Slice(origsize, newsize-origsize))=
 	msc.spectralWindow().chanWidth()(spw); 
+      ***/
 
-     if (freqResolution(0) < 0) negativeChanW=True; 
       Vector<Double> restFreqArray;
       if(getRestFreq(restFreqArray, spw)){
 	if(spwIndex==0){
@@ -535,28 +537,15 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
 	 << imageStart_p << " stepped by " << imageStep_p << LogIO::POST;
      
       Double finc;
-      Double startf;
       if(imageNchan_p > 1){
-        if (negativeChanW) {
-           startf = chanFreq(chanFreq.nelements()-1); 
-           finc = chanFreq(chanFreq.nelements()-2) - chanFreq(chanFreq.nelements()-1); 
-        }
-        else {
-          startf = chanFreq(0);
 	  finc=chanFreq(1)-chanFreq(0);
-        }  
       }
       else if(imageNchan_p==1) {
 	finc=freqResolution(IPosition(1,0));
       }
       cerr<<"mySpectral for channel mode"<<endl;
-	  //in order to outframe to work need to set here original freq frame
-      //mySpectral = new SpectralCoordinate(freqFrame_p, freqs(0)-finc/2.0, finc,
-/***
-      mySpectral = new SpectralCoordinate(obsFreqRef, freqs(0)//-finc/2.0
-					  , finc,
-					  refChan, restFreq);
-***/
+      //in order to outframe to work need to set here original freq frame
+      //
       //tabular form
       /***
       if(imageNchan_p > 1){
@@ -573,19 +562,17 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
       }
       ***/
 
+      //
       //mySpectral = new SpectralCoordinate(freqFrame_p,
       mySpectral = new SpectralCoordinate(obsFreqRef,
-      					  //chanFreq(0),
-      					  startf,
+      					  chanFreq(0),
                                           finc,  
       					  refChan, restFreq);
         
       os << (verbose ? LogIO::NORMAL : LogIO::NORMAL3)
          << "Frequency = " // Loglevel INFO
-	 //<< MFrequency(Quantity(chanFreq(0), "Hz")).get("GHz").getValue()
-	 << MFrequency(Quantity(startf, "Hz")).get("GHz").getValue()
+	 << MFrequency(Quantity(chanFreq(0), "Hz")).get("GHz").getValue()
 	 << ", channel increment = "
-	 //<< MFrequency(Quantity(freqResolution(0), "Hz")).get("GHz").getValue() 
 	 << MFrequency(Quantity(finc, "Hz")).get("GHz").getValue() 
 	 << "GHz" << endl;
       os << (verbose ? LogIO::NORMAL : LogIO::NORMAL3)
@@ -613,29 +600,6 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
            << String(oos); // Loglevel INFO
       }
      
-      /**
-      Vector<Double> freqs(2);
-      freqs=0.0;
-      if(Double(mImageStep_p.getValue())!=0.0) {
-	MRadialVelocity mRadVel=mImageStart_p;
-	for (Int chan=0;chan<2;chan++) {
-	  MDoppler mdoppler(mRadVel.getValue().get(), MDoppler::RADIO);
-	  freqs(chan)=
-	    MFrequency::fromDoppler(mdoppler, 
-				    restFreq).getValue().getValue();
-	  Quantity vel=mRadVel.get("m/s");
-	  Quantity inc=mImageStep_p.get("m/s");
-	  vel+=inc;
-	  mRadVel=MRadialVelocity(vel, MRadialVelocity::LSRK);
-	}
-      }else {
-	for (Int chan=0;chan<2;++chan) {
-	  freqs(chan)=chanFreq(chan);
-	}
-     }
-     **/
- 
-
       MFrequency::Types mfreqref=MFrequency::LSRK;
       //Can't convert to frame in mImageStart
       if(!MFrequency::getType(mfreqref, (MRadialVelocity::showType(mImageStart_p.getRef().getType()))))
@@ -643,6 +607,7 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
       mfreqref=(obsFreqRef==(MFrequency::REST)) ? MFrequency::REST : mfreqref; 
       rstate=calcImFreqs(chanFreq, freqResolution, mfreqref, obsEpoch, obsPosition,restFreq);
 
+      Double finc;
       //tabular form
       /***
       if(imageNchan_p > 1){
@@ -650,30 +615,29 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
       }
       else if(imageNchan_p ==1) {
         mySpectral = new SpectralCoordinate(obsFreqRef,
-      					  //mfImageStart_p.get("Hz").getValue(),
-      					  //mfImageStep_p.get("Hz").getValue(),
       					  chanFreq(0),
                                           freqResolution(0),  
       					  refChan, restFreq);
 
       }
       ***/
+      if(imageNchan_p ==1) {
+        finc = freqResolution(0);
+      }
+      else {
+        finc = chanFreq(1)-chanFreq(0);
+      }
       mySpectral = new SpectralCoordinate(obsFreqRef,
       					  chanFreq(0),
-                                          freqResolution(0),  
+                                          finc,  
       					  refChan, restFreq);
-      //cerr.precision(8);
-      //cerr<<"restFreq="<<Quantity(restFreq, "Hz").get("GHz").getValue()<<endl;
-
      
       {
 	ostringstream oos;
 	oos << "Reference Frequency = "
-	    //<< MFrequency(Quantity(freqs(0), "Hz")).get("GHz")
 	    << MFrequency(Quantity(chanFreq(0), "Hz")).get("GHz")
 	    << ", spectral increment = "
-	    //<< MFrequency(Quantity(freqs(1)-freqs(0), "Hz")).get("GHz") 
-	    << MFrequency(Quantity(freqResolution(0), "Hz")).get("GHz") 
+	    << MFrequency(Quantity(finc, "Hz")).get("GHz") 
 	    << ", frequency frame = "
             << MFrequency::showType(mfreqref)
             << endl; 
@@ -707,51 +671,20 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
       //freqs=0.0;
       //Double chanVelResolution=0.0;
       
-      /*** 
-      if(Double(mImageStep_p.getValue())!=0.0) {
-	MRadialVelocity mRadVel=mImageStart_p;
-	MDoppler mdoppler;
-	for (Int chan=0;chan<imageNchan_p;++chan) {
-	  if(imageMode_p.contains("OPTICAL")){
-	    mdoppler=MDoppler(mRadVel.getValue().get(), MDoppler::OPTICAL);
-	  } 
-	  else{
-	    mdoppler=MDoppler(mRadVel.getValue().get(), MDoppler::BETA);
-	  }
-	  freqs(chan)=
-	    MFrequency::fromDoppler(mdoppler, restFreq).getValue().getValue();
-	  mRadVel.set(mRadVel.getValue()+mImageStep_p.getValue());
-	  if(imageNchan_p==1)
-	    chanVelResolution=MFrequency::fromDoppler(mdoppler, restFreq).getValue().getValue()-freqs(0);
-	}
-      }
-      else {
-	for (Int chan=0;chan<imageNchan_p;++chan) {
-	    freqs(chan)=chanFreq(chan);
-	}
-      }
-      ***/
       // Use this next line when non-linear is working
       // when selecting in velocity its specfied freqframe or REST 
       MFrequency::Types imfreqref=(obsFreqRef==MFrequency::REST) ? MFrequency::REST : freqFrame_p;
       rstate=calcImFreqs(chanFreq, freqResolution, imfreqref, obsEpoch, obsPosition,restFreq);
   
-      //tabular form
-      /***
-      if(imageNchan_p>1){
-        mySpectral = new SpectralCoordinate(imfreqref, chanFreq, restFreq);
-      }
-      else if (imageNchan_p==1) {
+      if (imageNchan_p==1) {
 	mySpectral = new SpectralCoordinate(imfreqref,
 					    chanFreq(0),
 					    freqResolution(0),
 					    refChan, restFreq);
       }
-      ***/
-      mySpectral = new SpectralCoordinate(imfreqref,
-				    	  chanFreq(0),
-					  freqResolution(0),
-					  refChan, restFreq);
+      else {
+        mySpectral = new SpectralCoordinate(imfreqref, chanFreq, restFreq);
+      }
 
       {
 	ostringstream oos;
@@ -1168,9 +1101,6 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
       //mfImageStep_p.get("Hz").getValue()/2.0,
       //					  mfImageStep_p.get("Hz").getValue(),
       //					  refChan, restFreq);
-      cerr<<"mfImageStart==="<<mfImageStart_p.get("Hz").getValue()<<endl;
-      cerr<<"mfImageStep==="<<mfImageStep_p.get("Hz").getValue()<<endl;
-      cerr<<"restFreq==="<<restFreq<<endl;
       mySpectral = new SpectralCoordinate(mfreqref,
       					  mfImageStart_p.get("Hz").getValue(),
       					  mfImageStep_p.get("Hz").getValue(),
@@ -1273,9 +1203,6 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
 	finc=freqResolution(IPosition(1,0))*imageStep_p;
       }
 
-      cerr<<"imagecoordinates: channel mode:::finc="<<finc<<endl;
-      cerr<<"freqs(0)="<<freqs(0)<<endl;
-      cerr<<"freqRes="<<freqResolution(IPosition(1,0))<<endl;
 
 	  //in order to outframe to work need to set here original freq frame
       //mySpectral = new SpectralCoordinate(freqFrame_p, freqs(0)-finc/2.0, finc,
@@ -1453,8 +1380,6 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
 					 phaseCenter_p);
   }
 
-
- 
   // Polarization
   Vector<String> polType=msc.feed().polarizationType()(0);
   if (polType(0)!="X" && polType(0)!="Y" &&
@@ -1475,11 +1400,23 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
        << "Preferred polarization representation is circular" << LogIO::POST;
   }
 
+  // Compare user input with whatever is allowed by the data. 
+  // If possible, allow.
   Vector<Int> whichStokes(npol_p);
   switch(npol_p) {
   case 1:
-    whichStokes.resize(1);
+    if( polRep_p==SkyModel::LINEAR &&  (stokes_p=="RR" || stokes_p=="LL" || stokes_p=="RL" || stokes_p=="LR" ) )
+      {
+        os << LogIO::SEVERE << " Stokes " << stokes_p << " is not a valid selection for data taken with Linear feeds." << LogIO::EXCEPTION;
+        return False;
+      }
+    if( polRep_p==SkyModel::CIRCULAR &&  (stokes_p=="XX" || stokes_p=="YY" || stokes_p=="XY" || stokes_p=="YX" ) )
+      {
+        os << LogIO::SEVERE << " Stokes " << stokes_p << " is not a valid selection for data taken with Circular feeds." << LogIO::EXCEPTION;
+        return False;
+      }
     
+    whichStokes.resize(1);
     //possibilities
     if(stokes_p=="RR")
       whichStokes(0)=Stokes::RR;
@@ -1489,11 +1426,28 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
       whichStokes(0)=Stokes::XX;
     else if(stokes_p=="YY")
       whichStokes(0)=Stokes::YY;
-    else
+    else if(stokes_p=="I")
       whichStokes(0)=Stokes::I;
-    os << LogIO::DEBUG1 << "Image polarization = Stokes "<< stokes_p << LogIO::POST;
+    else
+      {
+	    os << LogIO::SEVERE << "Currently, " << stokes_p << " is not supported alone. Please combine with I and retry. " << LogIO::EXCEPTION;
+           return False;
+	   //      whichStokes(0)=Stokes::I;
+	   //  os << LogIO::DEBUG1 << "Image polarization = Stokes "<< stokes_p << LogIO::POST;
+      }
     break;
   case 2:
+    // Check with polRep.
+    if( polRep_p==SkyModel::LINEAR &&  (stokes_p!="XXYY" && stokes_p!="IQ" && stokes_p!="UV") )
+      {
+        os << LogIO::SEVERE << " Stokes " << stokes_p << " is not a valid 2-pol selection for data taken with Linear feeds. Please use IQUV instead." << LogIO::EXCEPTION;
+        return False;
+      }
+    if( polRep_p==SkyModel::CIRCULAR &&  (stokes_p!="RRLL" && stokes_p!="IV" && stokes_p!="QU") )
+      {
+        os << LogIO::SEVERE << " Stokes " << stokes_p << " is not a valid 2-pol selection for data taken with Circular feeds. Please use IQUV instead." << LogIO::EXCEPTION;
+        return False;
+      }
     whichStokes.resize(2);
     //default to IQ or IV if not known
     if(stokes_p=="RRLL"){
@@ -1507,6 +1461,18 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
     else if(stokes_p=="QU"){
       whichStokes(0)=Stokes::Q;
       whichStokes(1)=Stokes::U;
+    }
+    else if(stokes_p=="UV"){ 
+      whichStokes(0)=Stokes::U;
+      whichStokes(1)=Stokes::V;
+    }
+    else if(stokes_p=="IV"){ 
+      whichStokes(0)=Stokes::I;
+      whichStokes(1)=Stokes::V;
+    }
+    else if(stokes_p=="IQ"){
+      whichStokes(0)=Stokes::I;
+      whichStokes(1)=Stokes::Q;
     }
     else{
       whichStokes(0)=Stokes::I;
@@ -1522,10 +1488,28 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
     break;
   case 3:
     whichStokes.resize(3);
-    whichStokes(0)=Stokes::I;
-    whichStokes(1)=Stokes::Q;
-    whichStokes(2)=Stokes::U;
-    os << LogIO::DEBUG1 << "Image polarization = Stokes I,Q,U" << LogIO::POST;
+    if( polRep_p==SkyModel::LINEAR && stokes_p=="IUV" )
+      {
+        whichStokes(0)=Stokes::I;
+        whichStokes(1)=Stokes::U;
+        whichStokes(2)=Stokes::V;
+        os << LogIO::DEBUG1 << "Image polarization = Stokes I,U,V" << LogIO::POST;
+      }
+    else if( polRep_p==SkyModel::CIRCULAR &&  stokes_p=="IQU" )
+      {
+         whichStokes(0)=Stokes::I;
+         whichStokes(1)=Stokes::Q;
+         whichStokes(2)=Stokes::U;
+         os << LogIO::DEBUG1 << "Image polarization = Stokes I,Q,U" << LogIO::POST;
+      }
+    else
+      {
+        if(polRep_p==SkyModel::LINEAR) 
+             os << LogIO::SEVERE << "Stokes option : " << stokes_p << " is not supported for Linear feeds. Please try IUV or IQUV." << LogIO::EXCEPTION;
+        if(polRep_p==SkyModel::CIRCULAR) 
+             os << LogIO::SEVERE << "Stokes option : " << stokes_p << " is not supported for Circular feeds. Please try IQU or IQUV." << LogIO::EXCEPTION;
+        return False;
+      }
     break;
   case 4:
     whichStokes.resize(4);
@@ -1544,6 +1528,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
   
   StokesCoordinate myStokes(whichStokes);
   
+  //  os << LogIO::DEBUG1 << "imagecoordinate : " << (coordInfo).stokesCoordinate((coordInfo).findCoordinate(Coordinate::STOKES)).stokes() << LogIO::POST;
 
   //Set Observatory info
   ObsInfo myobsinfo;
@@ -1560,7 +1545,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
   coordInfo.setObsInfo(myobsinfo);
 
   if(mySpectral) delete mySpectral;
-  
+
   return True;
 }
 
@@ -1710,7 +1695,7 @@ String Imager::state()
 Bool Imager::pb(const String& inimage, 
 		const String& outimage,
 		const String& incomps,
-		const String& outcomps,
+		const String& /*outcomps*/,
 		const String& operation, 
 		const MDirection& pointingCenter,
 		const Quantity& pa,
@@ -1926,7 +1911,7 @@ Bool Imager::pbguts(ImageInterface<Float>& inImage,
       ObsInfo oi = inImage.coordinates().obsInfo();
       String myTelescope = oi.telescope();
       if (myTelescope == "") {
-	os << LogIO::SEVERE << "No telescope imbedded in image" << LogIO::POST;
+	os << LogIO::SEVERE << "No telescope embedded in image" << LogIO::POST;
 	return False;
       }
       {
@@ -1948,11 +1933,16 @@ Bool Imager::pbguts(ImageInterface<Float>& inImage,
       String pbName;
       // get freq from coordinates
       PBMath::whichCommonPBtoUse (myTelescope, qFreq, band, whichPB, pbName);
-      if (whichPB  == PBMath::UNKNOWN) {
-	os << LogIO::SEVERE << "Unknown telescope for PB type: " << myTelescope << LogIO::POST;
-	return False;
+      if (whichPB  != PBMath::UNKNOWN) {
+      
+	myPBp = new PBMath(whichPB);
       }
-      myPBp = new PBMath(whichPB);
+      else{
+	ROMSAntennaColumns ac(ms_p->antenna());
+	Double dishDiam=ac.dishDiameter()(0);
+	myPBp= new PBMath(dishDiam, True, qFreq);
+
+      }
     } else {
       // get the PB from the vpTable
       Table vpTable( vpTableStr_p );
@@ -2400,7 +2390,7 @@ Bool Imager::expand_blank_sel(Vector<Int>& v, const uInt nelem)
 // This just moves data from observed to corrected.
 // Eventually we should pass in a calibrater
 // object to do the work.
-Bool Imager::correct(const Bool doparallactic, const Quantity& t) 
+Bool Imager::correct(const Bool /*doparallactic*/, const Quantity& /*t*/)
 {
   if(!valid()) return False;
 
@@ -3495,7 +3485,10 @@ Bool Imager::selectDataChannel(Vector<Int>& spectralwindowids,
 	  dataNchan[i]=nch;
 	}
       }	else {
-	Int numberChan=rvi_p->msColumns().spectralWindow().numChan()(0);
+        VisBufferAutoPtr vb (rvi_p);
+        rvi_p->originChunks ();
+        Int numberChan=vb->msColumns().spectralWindow().numChan()(0);
+
 	if(dataNchan[0]<=0){
 	  if(dataStep[0] <=0)
 	    dataStep[0]=1;
@@ -3790,7 +3783,7 @@ Bool Imager::makePBImage(const Table& vpTable, ImageInterface<Float>& pbImage){
 
 }
 
-Bool Imager::makePBImage(const CoordinateSystem& imageCoord, PBMath& pbMath, 
+Bool Imager::makePBImage(const CoordinateSystem& /*imageCoord*/, PBMath& pbMath,
 			 const String& diskPBName){
 
   make(diskPBName);
@@ -4082,6 +4075,7 @@ Bool Imager::calcImFreqs(Vector<Double>& imgridfreqs,
     start=dQuantitytoString(mImageStart_p.get("m/s"));
     width=dQuantitytoString(mImageStep_p.get("m/s"));
     if (!width.contains(casa::Regex("^-"))) {
+      //positive vel. width (descending frequencies) 
       reversevec=True;
     }
   }
@@ -4098,6 +4092,7 @@ Bool Imager::calcImFreqs(Vector<Double>& imgridfreqs,
     width=dQuantitytoString(mfImageStep_p.get("Hz"));
     if (width.contains(casa::Regex("^-"))) {
       reversevec=True;
+      cerr<<"reversevec is True"<<endl;
     }
   }
   else if (imageMode_p.contains("CHANNEL")) {
@@ -4138,6 +4133,9 @@ Bool Imager::calcImFreqs(Vector<Double>& imgridfreqs,
         os << LogIO::SEVERE << "Error combining SpWs" << LogIO::POST;
       }
     }
+    Bool isAscendingData=True;
+    if (oldFreqResolution(0) < 0) isAscendingData=False;
+    
     // need theOldRefFrame,theObsTime,mObsPos,mode,nchan,start,width,restfreq,
     // outframe,veltype
     //
@@ -4159,18 +4157,18 @@ Bool Imager::calcImFreqs(Vector<Double>& imgridfreqs,
 			   outframe,
 			   veltype
 			   );
-
-    /***
-     cout.precision(10);
+    
+    /**
+    cout.precision(10);
     cout<<"imgridfreqs(0)="<<imgridfreqs(0)<<endl;
     cout<<"imgridfreqs("<<imgridfreqs.nelements()-1<<")="<<imgridfreqs(imgridfreqs.nelements()-1)<<endl;
     cout<<"imreqres(0)="<<imfreqres(0)<<endl;
+    cout<<"oldFreqRes(0)="<<oldFreqResolution(0)<<endl;
     cout<<"oldChanFreqs(0)="<<oldChanFreqs(0)<<endl;
     cout<<"oldChanFreqs("<<oldChanFreqs.nelements()-1<<")="<<oldChanFreqs(oldChanFreqs.nelements()-1)<<endl;
-    cout<<"oldFreqRes(0)="<<oldFreqResolution(0)<<endl;
-    ***/
+     **/
     
-    if(reversevec) {
+    if(reversevec && isAscendingData ) {
       //Int ndata=imgridfreqs.nelements();
       //tempimgridfreqs.resize(ndata);
       /**
@@ -4205,4 +4203,6 @@ String Imager::dQuantitytoString(const Quantity& dq) {
 } 
 
 } //# NAMESPACE CASA - END
+
+
 

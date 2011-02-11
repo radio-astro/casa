@@ -148,6 +148,9 @@ class CalTable
    // Return the number of unique time slots in the table
    Int numberTimeSlots (const Double& fracError);
 
+   // Return the number of rows per CalDescId
+   void rowsPerCalDescId(Vector<Int>& rowspercdi);
+
  protected:
    // Create a new table
    void createCalTable (const String& tableName, CalTableDesc& ctableDesc,

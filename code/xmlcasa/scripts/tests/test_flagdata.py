@@ -56,9 +56,9 @@ class test_rfi(test_base):
         self.setUp_flagdatatest()
         
     def test1(self):
-        flagdata(vis=self.vis, mode='rfi')
-        test_eq(flagdata(vis=self.vis, mode='summary'), 70902, 2626)
-        test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 5252, 101)
+        flagdata(vis=self.vis, mode='rfi', time_amp_cutoff=2.0)
+        test_eq(flagdata(vis=self.vis, mode='summary'), 70902, 4179)
+        test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 5252, 212)
 
 
 class test_shadow(test_base):
@@ -245,10 +245,10 @@ class test_vector_ngc5921(test_base):
 
         # If any corner of the dictionaries had differed, the test above would have failed
         # (just double checking)
-        stats_serial["channel"]["23"]["total"] = 25703
+        stats_serial["channel"]["0:23"]["total"] = 25703
         self.assertNotEqual(stats_serial, stats_parallel)
 
-        stats_serial["channel"]["23"]["total"] = 25704
+        stats_serial["channel"]["0:23"]["total"] = 25704
         self.assertEqual(stats_serial, stats_parallel)
         
         # And was most data flagged for the specified antennas?
@@ -453,8 +453,8 @@ class test_statistics_queries(test_base):
         s = flagdata(vis=self.vis, mode='summary', minrel=0.9)
         assert s['antenna'].keys() == ['14']
         assert '5&&9' in s['baseline'].keys()
-        assert set(s['channel'].keys()) == set(['17', '18', '19'])
-        assert s['correlation'].keys() == ['1']  # LL
+        assert set(s['channel'].keys()) == set(['0:17', '0:18', '0:19'])
+        assert s['correlation'].keys() == ['0:1']  # LL
         assert s['field'].keys() == ['1']
         assert set(s['scan'].keys()) == set(['2', '4', '5', '7']) # field 1
         s = flagdata(vis=self.vis, mode='summary', maxrel=0.8)

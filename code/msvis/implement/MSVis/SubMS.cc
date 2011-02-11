@@ -159,7 +159,9 @@ namespace casa {
     LogIO os(LogOrigin("SubMS", "selectSpw()"));
 
     MSSelection mssel;
-    mssel.setSpwExpr(spwstr);
+    String myspwstr(spwstr == "" ? "*" : spwstr);
+
+    mssel.setSpwExpr(myspwstr);
 
     Vector<Int> widths = steps.copy();
     if(widths.nelements() < 1){
@@ -180,7 +182,7 @@ namespace casa {
                                             widths.nelements() == 1 ?
                                             widths[0] : 1);
 
-    if(chansel.nrow() > 0) {         // Use spwstr if it selected anything...
+    if(chansel.nrow() > 0) {         // Use myspwstr if it selected anything...
       spw_p       = chansel.column(0);
       chanStart_p = chansel.column(1);
       nchan_p     = chansel.column(2);
@@ -223,10 +225,6 @@ namespace casa {
       for(uInt k = 0; k < nspw; ++k)
         chanStart_p[k] = 0;
       
-      nchan_p.resize(nspw);
-      for(uInt k = 0; k < nspw; ++k)
-        nchan_p[k] = mySpwTab.numChan()(spw_p[k]);
-      
       if(widths.nelements() != spw_p.nelements()){
         if(widths.nelements() == 1){
           widths.resize(spw_p.nelements(), True);
@@ -241,6 +239,10 @@ namespace casa {
         }
       }
       chanStep_p = widths;
+
+      nchan_p = mySpwTab.numChan().getColumn();
+      for(uInt k = 0; k < nspw; ++k)
+        nchan_p[k] /= chanStep_p[k];
     }
     
     // Check for and filter out selected spws that aren't included in
@@ -431,7 +433,8 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
     LogIO os(LogOrigin("SubMS", "setmsselect()"));
     Bool  ok;
     
-    Record selrec = ms_p.msseltoindex(spw, field);
+    String myspwstr(spw == "" ? "*" : spw);
+    Record selrec = ms_p.msseltoindex(myspwstr, field);
 
     ok = selectSource(selrec.asArrayInt("field"));
 
@@ -441,7 +444,7 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
     // (fewer retries).  This is a matter of taste, though.  If the selections
     // turn out to be slow, this function should return on the first false.
 
-    if(!selectSpw(spw, step, averchan)){
+    if(!selectSpw(myspwstr, step, averchan)){
       os << LogIO::SEVERE << "No channels selected." << LogIO::POST;
       ok = false;
     }
@@ -3708,7 +3711,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       return False;
     }      
 
-    Vector<Double> absOldCHAN_WIDTH(oldCHAN_WIDTH);
+    Vector<Double> absOldCHAN_WIDTH;
+    absOldCHAN_WIDTH.assign(oldCHAN_WIDTH);
     {
       Bool negativeWidths = False;
       for(uInt i=0; i<oldCHAN_WIDTH.size(); i++){
@@ -7061,27 +7065,6 @@ Bool SubMS::doChannelMods(const Vector<MS::PredefinedColumns>& datacols)
   return True;
 }
 
-//   Int SubMS::numOfBaselines(Vector<Int>& ant1, Vector<Int>& ant2, 
-// 			    Bool includeAutoCorr)
-//   {
-//     fillAnt(mscIn_p->antenna1().getColumn(), ant1, nant1, maxant1, ant1Indexer);
-//     fillAnt(mscIn_p->antenna2().getColumn(), ant2, nant2, maxant2, ant2Indexer);
-    
-//     Int numBasl=0;
-//     Bool hasAuto = ((nant1 == nant2) && allEQ(ant1, ant2));
-    
-//     //For now we are splitting data without autocorrelation
-    
-//     if(static_cast<uInt>(nant2 / 2.0) * 2 != nant2)
-//       numBasl = hasAuto ? (nant2 - 1) / 2 * nant1 : (nant2 + 1) / 2 * nant1;
-//     else if(static_cast<uInt>(nant1 / 2.0) * 2 != nant1)
-//       numBasl = hasAuto ? (nant1 - 1) / 2 * nant2 : (nant1 + 1) / 2 * nant2;
-//     else
-//       numBasl = hasAuto ?  nant1 * nant2 / 2 : (nant1 + 1) * nant2 / 2;
-    
-//     return numBasl;   
-//   }
-
 // Sets mapper to the distinct values of mscol, in increasing order.
 // A static method that is used by SubMS, but doesn't necessarily have to go
 // with it.  It may belong in something more MSColumnsish.
@@ -7292,28 +7275,23 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
      << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
      << LogIO::POST;
 
-  Vector<MS::PredefinedColumns> columnNames;
-  const Bool doFloat = sepFloat(dataColNames, columnNames);
-  if(doFloat && columnNames.nelements() > 0)           // 2010-12-14
+  Vector<MS::PredefinedColumns> cmplxColLabels;
+  const Bool doFloat = sepFloat(dataColNames, cmplxColLabels);
+  if(doFloat && cmplxColLabels.nelements() > 0)           // 2010-12-14
     os << LogIO::WARN
        << "Using VisibilityIterator to average both FLOAT_DATA and another DATA column is extremely experimental."
        << LogIO::POST;
 
-  uInt ntok = columnNames.nelements();
-  ArrayColumn<Complex> outDataCols[ntok];
-  getDataColMap(outDataCols, ntok, columnNames);
-
-  const Bool doSpWeight = !mscIn_p->weightSpectrum().isNull() &&
-                           mscIn_p->weightSpectrum().isDefined(0) &&
-                           mscIn_p->weightSpectrum().shape(0) ==
-                           right_column(mscIn_p, dataColNames[0]).shape(0);
+  const uInt nCmplx = cmplxColLabels.nelements();
+  ArrayColumn<Complex> outCmplxCols[nCmplx];
+  getDataColMap(outCmplxCols, nCmplx, cmplxColLabels);
 
   // We may need to watch for chunks (timebins) that should be split because of
   // changes in scan, etc. (CAS-2401).  The old split way would have
   // temporarily shortened timeBin, but vi.setInterval() does not work without
-  // calling vi.originChunks(), so that approach does not work with VisibilityIterator.
-  // Instead, get VisibilityIterator's sort (which also controls how the chunks are split)
-  // to do the work.
+  // calling vi.originChunks(), so that approach does not work with
+  // VisibilityIterator.  Instead, get VisibilityIterator's sort (which also
+  // controls how the chunks are split) to do the work.
 
   // Already separated by the chunking.
   //const Bool watch_array(!combine_p.contains("arr")); // Pirate talk for "array".
@@ -7366,6 +7344,8 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
                      chanStep_p[spwind], spw_p[spwind]);
   //vi.selectChannel(chanSlices_p);     // ROVisIterator
   //vi.selectCorrelation(corrSlices_p);
+
+  const Bool doSpWeight = vi.existsWeightSpectrum();
 
   Vector<Int> spwindex(max(spw_p) + 1);
   spwindex.set(-1);
@@ -7438,14 +7418,14 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
       arrID.set(avb.arrayId());                              // Don't remap!
       msc_p->arrayId().putColumnCells(rowstoadd, arrID);
 
-      // outDataCols determines whether the input column is output to DATA or not.
-      for(uInt datacol = 0; datacol < ntok; ++datacol){
+      // outCmplxCols determines whether the input column is output to DATA or not.
+      for(uInt datacol = 0; datacol < nCmplx; ++datacol){
         if(dataColNames[datacol] == MS::DATA)
-          outDataCols[datacol].putColumnCells(rowstoadd, avb.visCube());
+          outCmplxCols[datacol].putColumnCells(rowstoadd, avb.visCube());
         else if(dataColNames[datacol] == MS::MODEL_DATA)
-          outDataCols[datacol].putColumnCells(rowstoadd, avb.modelVisCube());
+          outCmplxCols[datacol].putColumnCells(rowstoadd, avb.modelVisCube());
         else if(dataColNames[datacol] == MS::CORRECTED_DATA)
-          outDataCols[datacol].putColumnCells(rowstoadd, avb.correctedVisCube());
+          outCmplxCols[datacol].putColumnCells(rowstoadd, avb.correctedVisCube());
       }
       if(doFloat)
         msc_p->floatData().putColumnCells(rowstoadd, avb.floatDataCube());
@@ -7530,21 +7510,16 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
      << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
      << LogIO::POST;
 
-  Vector<MS::PredefinedColumns> columnNames;
-  const Bool doFloat = sepFloat(dataColNames, columnNames);
-  if(doFloat && columnNames.nelements() > 0)           // 2010-12-14
+  Vector<MS::PredefinedColumns> cmplxColLabels;
+  const Bool doFloat = sepFloat(dataColNames, cmplxColLabels);
+  if(doFloat && cmplxColLabels.nelements() > 0)           // 2010-12-14
     os << LogIO::WARN
        << "Using VisIterator to average both FLOAT_DATA and another DATA column is extremely experimental."
        << LogIO::POST;
 
-  uInt ntok = columnNames.nelements();
-  ArrayColumn<Complex> outDataCols[ntok];
-  getDataColMap(outDataCols, ntok, columnNames);
-
-  const Bool doSpWeight = !mscIn_p->weightSpectrum().isNull() &&
-                           mscIn_p->weightSpectrum().isDefined(0) &&
-                           mscIn_p->weightSpectrum().shape(0) ==
-                           right_column(mscIn_p, dataColNames[0]).shape(0);
+  const uInt nCmplx = cmplxColLabels.nelements();
+  ArrayColumn<Complex> outCmplxCols[nCmplx];
+  getDataColMap(outCmplxCols, nCmplx, cmplxColLabels);
 
   // We may need to watch for chunks (timebins) that should be split because of
   // changes in scan, etc. (CAS-2401).  The old split way would have
@@ -7599,6 +7574,8 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
   // Apply selection
   vi.selectChannel(chanSlices_p);     // ROVisIterator
   vi.selectCorrelation(corrSlices_p);
+
+  const Bool doSpWeight = vi.existsWeightSpectrum();
 
   Vector<Int> spwindex(max(spw_p) + 1);
   spwindex.set(-1);
@@ -7671,14 +7648,14 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
       arrID.set(avb.arrayId());                              // Don't remap!
       msc_p->arrayId().putColumnCells(rowstoadd, arrID);
 
-      // outDataCols determines whether the input column is output to DATA or not.
-      for(uInt datacol = 0; datacol < ntok; ++datacol){
+      // outCmplxCols determines whether the input column is output to DATA or not.
+      for(uInt datacol = 0; datacol < nCmplx; ++datacol){
         if(dataColNames[datacol] == MS::DATA)
-          outDataCols[datacol].putColumnCells(rowstoadd, avb.visCube());
+          outCmplxCols[datacol].putColumnCells(rowstoadd, avb.visCube());
         else if(dataColNames[datacol] == MS::MODEL_DATA)
-          outDataCols[datacol].putColumnCells(rowstoadd, avb.modelVisCube());
+          outCmplxCols[datacol].putColumnCells(rowstoadd, avb.modelVisCube());
         else if(dataColNames[datacol] == MS::CORRECTED_DATA)
-          outDataCols[datacol].putColumnCells(rowstoadd, avb.correctedVisCube());
+          outCmplxCols[datacol].putColumnCells(rowstoadd, avb.correctedVisCube());
       }
       if(doFloat)
         msc_p->floatData().putColumnCells(rowstoadd, avb.floatDataCube());

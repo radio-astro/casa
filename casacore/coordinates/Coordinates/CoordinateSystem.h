@@ -791,6 +791,11 @@ public:
 
    String stokesAtPixel(const uInt pixel) const;
 
+   Int linearCoordinateNumber() const;
+
+   Bool hasLinearCoordinate() const;
+
+   Vector<Int> linearAxesNumbers() const;
 
 private:
     // Where we store copies of the coordinates we are created with.

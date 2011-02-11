@@ -35,6 +35,8 @@
 #include <casa/Logging/LogFilter.h>
 #include <casa/Logging/LogOrigin.h>
 #include <casa/IO/AipsIO.h>
+#include <casa/OS/File.h>
+
 #include <casa/Quanta/Quantum.h>
 #include <casa/Quanta/QuantumHolder.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
@@ -396,24 +398,24 @@ namespace casa { //# name space casa begins
 
 
   ImageRegion*  RegionManager::doUnion(const WCRegion& reg1, 
-				       const WCRegion& reg2){
-      *itsLog << LogOrigin("RegionManager", "doUnion");
+				       const WCRegion& reg2) {
+      *itsLog << LogOrigin("RegionManager", String(__FUNCTION__) + "_1");
       ImageRegion imageReg1(reg1);
       ImageRegion imageReg2(reg2);
       return doUnion(imageReg1, imageReg2);
   }
 
-  ImageRegion*  RegionManager::doUnion(const PtrBlock<const WCRegion*>& regions){
-      *itsLog << LogOrigin("RegionManager", "doUnion");
+  ImageRegion*  RegionManager::doUnion(const PtrBlock<const WCRegion*>& regions) {
+      *itsLog << LogOrigin("RegionManager", String(__FUNCTION__) + "_2");
       WCUnion leUnion(False, regions);
       ImageRegion* leReturn= new ImageRegion(leUnion);
       return leReturn;
   }
 
   ImageRegion*  RegionManager::doUnion(const ImageRegion& reg1, 
-				       const ImageRegion& reg2){
+				       const ImageRegion& reg2) const {
 
-      *itsLog << LogOrigin("RegionManager", "doUnion");
+      *itsLog << LogOrigin("RegionManager", String(__FUNCTION__) + "_3");
       *itsLog << LogIO::DEBUGGING
 	      << "reg1 type " << reg1.isWCRegion() << " " << reg1.isLCRegion() 
 	      << " "<< reg1.isLCSlicer() 
@@ -714,7 +716,7 @@ namespace casa { //# name space casa begins
 				       const String& regname){
 
     if(!Table::isReadable(tabName)){
-    
+
       *itsLog << LogIO::WARN  << tabName << " is not a valid or readable table" 
 	    << LogIO::POST;
       return 0;
@@ -1087,7 +1089,127 @@ namespace casa { //# name space casa begins
 	  return corners;
   }
 
-  ImageRegion RegionManager::fromBCS(
+  Record RegionManager::fromBCS(
+		  String& diagnostics, uInt& nSelectedChannels, String& stokes,
+		  const Record  * const regionPtr, const String& regionName,
+		  const String& chans, const StokesControl stokesControl,
+		  const String& box, const IPosition& imShape
+  ) {
+	  LogOrigin origin("RegionManager", __FUNCTION__);
+	  Record regionRecord;
+	  if (! box.empty()) {
+		  if (box.freq(",") % 4 != 3) {
+			  *itsLog << "box not specified correctly" << LogIO::EXCEPTION;
+		  }
+		  regionRecord = _fromBCS(
+				  diagnostics, nSelectedChannels, stokes,
+				  chans, stokesControl, box, imShape
+		  ).toRecord("");
+		  *itsLog << origin;
+		  *itsLog << LogIO::NORMAL << "Using specified box(es) " << box << LogIO::POST;
+	  }
+	  else if (regionPtr != 0) {
+		  _setRegion(regionRecord, diagnostics, regionPtr);
+		  *itsLog << origin;
+		  *itsLog << LogIO::NORMAL << "Set region from supplied region record"
+				  << LogIO::POST;
+		  stokes = _stokesFromRecord(regionRecord, stokesControl, imShape);
+	  }
+
+	  else if (! regionName.empty()) {
+		  _setRegion(regionRecord, diagnostics, regionName);
+		  *itsLog << origin;
+		  *itsLog << LogIO::NORMAL << diagnostics << LogIO::POST;
+		  stokes = _stokesFromRecord(regionRecord, stokesControl, imShape);
+	  }
+	  else {
+		  Vector<uInt> chanEndPts, polEndPts;
+		  regionRecord = _fromBCS(
+				  diagnostics, nSelectedChannels, stokes,
+				  chans, stokesControl, box, imShape
+		  ).toRecord("");
+		  *itsLog << origin;
+		  *itsLog << LogIO::NORMAL << "No region specified. Using full positional plane."
+				  << LogIO::POST;
+		  if (chans.empty()) {
+			  *itsLog << LogIO::NORMAL << "Using all spectral channels."
+					  << LogIO::POST;
+		  }
+		  else {
+			  *itsLog << LogIO::NORMAL << "Using channel range(s) "
+					  << _pairsToString(chanEndPts) << LogIO::POST;
+		  }
+		  if (!stokes.empty()) {
+			  *itsLog << LogIO::NORMAL << "Using polarizations " << stokes << LogIO::POST;
+		  }
+		  else {
+			  *itsLog << LogIO::NORMAL << "Using polarization range(s) "
+					  << _pairsToString(polEndPts) << LogIO::POST;
+		  }
+	  }
+	  return regionRecord;
+  }
+
+  void RegionManager::_setRegion(
+  	Record& regionRecord, String& diagnostics,
+  	const Record* regionPtr
+  )  {
+   	// region record pointer provided
+   	regionRecord = *(regionPtr->clone());
+   	// set stokes from the region record
+   	diagnostics = "used provided region record";
+  }
+
+  void RegionManager::_setRegion(
+  	Record& regionRecord, String& diagnostics,
+  	const String& regionName
+  ) {
+  	// region name provided
+	Regex image("(.*)+:(.*)+");
+  	File myFile(regionName);
+  	if (myFile.exists()) {
+  		Record *rec = readImageFile(regionName, "");
+  		regionRecord = *rec;
+  		delete rec;
+  		diagnostics = "Region read from file " + regionName;
+  	}
+  	else if (regionName.matches(image)) {
+  		ImageRegion imRegion;
+  		String res[2];
+  		casa::split(regionName, res, 2, ":");
+  		String imagename = res[0];
+  		String region = res[1];
+  		try {
+  			String imagename = res[0];
+  			String region = res[1];
+  			Record *myRec = tableToRecord(imagename, region);
+  			if (Table::isReadable(imagename)) {
+  				if (myRec == 0) {
+  					*itsLog << "Region " << region << " not found in image "
+  							<< imagename << LogIO::EXCEPTION;
+  				}
+  				regionRecord = *myRec;
+  				diagnostics = "Used region " + region + " from image "
+  					+ imagename + " table description";
+  			}
+  			else {
+  				*itsLog << "Cannot read image " << imagename
+  					<< " to get region " << region << LogIO::EXCEPTION;
+  			}
+  		}
+  		catch (AipsError) {
+  			*itsLog << "Unable to open region file or region table description "
+  					<< region << " in image " << imagename << LogIO::EXCEPTION;
+  		}
+  	}
+  	else {
+  		*itsLog << "Unable to open region file or region table description "
+  			<< regionName << LogIO::EXCEPTION;
+  	}
+  }
+
+
+  ImageRegion RegionManager::_fromBCS(
 		  String& diagnostics, uInt& nSelectedChannels, String& stokes,
 		  const String& chans,
 		  const StokesControl stokesControl, const String& box,
@@ -1107,8 +1229,18 @@ namespace casa { //# name space casa begins
 	  );
 	  Vector<Double> boxCorners;
 	  if (box.empty()) {
-	    	if(itsCSys->hasDirectionCoordinate()) {
-	    		Vector<Int> dirAxesNumbers = itsCSys->directionAxesNumbers();
+	    	if (
+	    		itsCSys->hasDirectionCoordinate()
+	    		|| itsCSys->hasLinearCoordinate()
+	    	) {
+	    		Vector<Int> dirAxesNumbers;
+	    		if (itsCSys->hasDirectionCoordinate()) {
+	    			dirAxesNumbers = itsCSys->directionAxesNumbers();
+	    		}
+	    		else {
+	    			dirAxesNumbers = itsCSys->linearAxesNumbers();
+
+	    		}
 	    		Vector<Int> dirShape(2);
 	    		dirShape[0] = imShape[dirAxesNumbers[0]];
 	    		dirShape[1] = imShape[dirAxesNumbers[1]];
@@ -1128,43 +1260,18 @@ namespace casa { //# name space casa begins
 	  );
   }
 
-  ImageRegion RegionManager::fromBCS(
-		  String& diagnostics, uInt& nSelectedChannels, String& stokes,
-		  Vector<uInt>& chanEndPts, Vector<uInt>& polEndPts,
-		  const String& chans,
-		  const StokesControl stokesControl, const Vector<Double>& boxCorners,
-		  const IPosition& imShape
-  ) const {
-	  Int specAxisNumber = itsCSys->spectralAxisNumber();
-	  uInt nTotalChannels = specAxisNumber >= 0 ? imShape[specAxisNumber] : 0;
-	  chanEndPts = _setSpectralRanges(
-			  chans, nSelectedChannels, nTotalChannels
-	  );
-	  Int polAxisNumber = itsCSys->polarizationAxisNumber();
-	  uInt nTotalPolarizations = polAxisNumber >= 0 ? imShape[polAxisNumber] : 0;
-	  String firstStokes = polAxisNumber >= 0 ? itsCSys->stokesAtPixel(0) : "";
-
-	  polEndPts = _setPolarizationRanges(
-			  stokes, firstStokes,
-			  nTotalPolarizations, stokesControl
-	  );
-	  return _fromBCS(
-			  diagnostics, boxCorners,
-			  chanEndPts, polEndPts, imShape
-	  );
-  }
-
   ImageRegion RegionManager::_fromBCS(
 		  String& diagnostics, const Vector<Double>& boxCorners,
 		  const Vector<uInt>& chanEndPts, const Vector<uInt>& polEndPts,
 		  const IPosition imShape
   ) const {
-	  String method(__FUNCTION__);
-	  LogOrigin origin("ImageInputProcessor", method);
+	  LogOrigin origin("ImageInputProcessor", __FUNCTION__);
 	  *itsLog << origin;
 	  Vector<Double> blc(imShape.nelements(), 0);
 	  Vector<Double> trc(imShape.nelements(), 0);
 	  Vector<Int> directionAxisNumbers = itsCSys->directionAxesNumbers();
+	  Vector<Int> linearAxisNumbers = itsCSys->linearAxesNumbers();
+
 	  Int spectralAxisNumber = itsCSys->spectralAxisNumber();
 	  Int polarizationAxisNumber = itsCSys->polarizationAxisNumber();
 
@@ -1178,8 +1285,20 @@ namespace casa { //# name space casa begins
 			  *itsLog << "blc in box spec is less than 0" << LogIO::EXCEPTION;
 		  }
 		  if (
-				  x >= imShape[directionAxisNumbers[0]]
-				               || y >= imShape[directionAxisNumbers[1]]
+			  (
+			      itsCSys->hasDirectionCoordinate()
+			      && (
+			          x >= imShape[directionAxisNumbers[0]]
+			          || y >= imShape[directionAxisNumbers[1]]
+			      )
+			  )
+			  || (
+		          itsCSys->hasLinearCoordinate()
+		          && (
+		              x >= imShape[linearAxisNumbers[0]]
+		              || y >= imShape[linearAxisNumbers[1]]
+		          )
+			  )
 		  ) {
 			  *itsLog << "trc in box spec is greater than or equal to number "
 					  << "of direction pixels in the image" << LogIO::EXCEPTION;
@@ -1187,7 +1306,6 @@ namespace casa { //# name space casa begins
 		  xCorners[i] = x;
 		  yCorners[i] = y;
 	  }
-
 	  Vector<Double> polEndPtsDouble(polEndPts.size());
 	  for (uInt i=0; i<polEndPts.size(); i++) {
 		  polEndPtsDouble[i] = (Double)polEndPts[i];
@@ -1198,7 +1316,10 @@ namespace casa { //# name space casa begins
 		  chanEndPtsDouble[i] = (Double)chanEndPts[i];
 	  }
 	  uInt nRegions = 1;
-	  if (itsCSys->hasDirectionCoordinate()) {
+	  if (itsCSys->hasDirectionCoordinate())  {
+		  nRegions *= boxCorners.size()/4;
+	  }
+	  if (itsCSys->hasLinearCoordinate())  {
 		  nRegions *= boxCorners.size()/4;
 	  }
 	  if (itsCSys->hasPolarizationAxis()) {
@@ -1207,21 +1328,19 @@ namespace casa { //# name space casa begins
 	  if (itsCSys->hasSpectralAxis()) {
 		  nRegions *= chanEndPts.size()/2;
 	  }
-	  /*
-	  _fillVector(xCorners, nRegions);
-	  _fillVector(yCorners, nRegions);
-	  _fillVector(polEndPtsDouble, nRegions);
-	  _fillVector(chanEndPtsDouble, nRegions);
-	  */
 	  Vector<Double> extXCorners(2*nRegions);
 	  Vector<Double> extYCorners(2*nRegions);
 	  Vector<Double> extPolEndPts(2*nRegions);
 	  Vector<Double> extChanEndPts(2*nRegions);
+
 	  uInt count = 0;
 	  for (uInt i=0; i<max(uInt(1), xCorners.size()/2); i++) {
 		  for (uInt j=0; j<max((uInt)1, polEndPts.size()/2); j++) {
 			  for (uInt k=0; k<max(uInt(1), chanEndPts.size()/2); k++) {
-				  if (itsCSys->hasDirectionCoordinate()) {
+				  if (
+					  itsCSys->hasDirectionCoordinate()
+					  || itsCSys->hasLinearCoordinate()
+			      ) {
 					  extXCorners[2*count] = xCorners[2*i];
 					  extXCorners[2*count + 1] = xCorners[2*i + 1];
 					  extYCorners[2*count] = yCorners[2*i];
@@ -1242,10 +1361,28 @@ namespace casa { //# name space casa begins
 	  HashMap<uInt, Vector<Double> > axisCornerMap;
 	  for (uInt i=0; i<nRegions; i++) {
 		  for (uInt axisNumber=0; axisNumber<itsCSys->nPixelAxes(); axisNumber++) {
-			  if (directionAxisNumbers.size() > 1 && (Int)axisNumber == directionAxisNumbers[0]) {
+			  if (
+			      (
+			          directionAxisNumbers.size() > 1
+			          && (Int)axisNumber == directionAxisNumbers[0]
+			      )
+			      || (
+				      linearAxisNumbers.size() > 1
+				      && (Int)axisNumber == linearAxisNumbers[0]
+				  )
+			  ) {
 				  axisCornerMap(axisNumber) = extXCorners;
 			  }
-			  else if (directionAxisNumbers.size() > 1 && (Int)axisNumber == directionAxisNumbers[1]) {
+			  else if (
+				      (
+				          directionAxisNumbers.size() > 1
+				          && (Int)axisNumber == directionAxisNumbers[1]
+				      )
+				      || (
+					      linearAxisNumbers.size() > 1
+					      && (Int)axisNumber == linearAxisNumbers[1]
+					  )
+			  ) {
 				  axisCornerMap(axisNumber) = extYCorners;
 			  }
 			  else if ((Int)axisNumber == spectralAxisNumber) {
@@ -1260,7 +1397,6 @@ namespace casa { //# name space casa begins
 			  }
 		  }
 	  }
- 	  RegionManager rm;
 	  ImageRegion imRegion;
 	  for (uInt i=0; i<nRegions; i++) {
 		  for (uInt axisNumber=0; axisNumber<itsCSys->nPixelAxes(); axisNumber++) {
@@ -1272,7 +1408,7 @@ namespace casa { //# name space casa begins
 		  ImageRegion thisRegion(wcBox);
 		  imRegion = (i == 0)
   				? thisRegion
-  				: imRegion = *rm.doUnion(imRegion, thisRegion);
+  				: imRegion = *(doUnion(imRegion, thisRegion));
 	  }
 	  ostringstream os;
 	  os << "Used image region from " << endl;
@@ -1308,17 +1444,73 @@ namespace casa { //# name space casa begins
 	  return os.str();
   }
 
-  void RegionManager::_fillVector(
-		  Vector<Double>& myVector, const uInt nRegions
+  String RegionManager::_stokesFromRecord(
+  	const Record& region, const StokesControl stokesControl, const IPosition& shape
   ) const {
-	  if (myVector.size() > 0) {
-		  Vector<Double> vCopy = myVector.copy();
-		  myVector.resize(nRegions*2, True);
-		  for (uInt j=vCopy.size(); j<myVector.size(); j++) {
-              myVector[j] = vCopy[j % vCopy.size()];
-		  }
-	  }
+  	// FIXME This implementation is incorrect for complex, recursive records
+      String stokes = "";
+
+      if(! itsCSys->hasPolarizationAxis()) {
+    	  return stokes;
+      }
+      Int polAxis = itsCSys->polarizationAxisNumber();
+      uInt stokesBegin, stokesEnd;
+      ImageRegion *imreg = ImageRegion::fromRecord(region, "");
+      Array<Float> blc, trc;
+      Bool oneRelAccountedFor = False;
+      if (imreg->isLCSlicer()) {
+    	  blc = imreg->asLCSlicer().blc();
+    	  trc = imreg->asLCSlicer().trc();
+    	  stokesBegin = (uInt)((Vector<Float>)blc)[polAxis];
+    	  stokesEnd = (uInt)((Vector<Float>)trc)[polAxis];
+    	  oneRelAccountedFor = True;
+      }
+      else if (RegionManager::isPixelRegion(*(ImageRegion::fromRecord(region, "")))) {
+    	  region.toArray("blc", blc);
+    	  region.toArray("trc", trc);
+    	  stokesBegin = (uInt)((Vector<Float>)blc)[polAxis];
+    	  stokesEnd = (uInt)((Vector<Float>)trc)[polAxis];
+      }
+      else if (region.fieldNumber("x") >= 0 && region.fieldNumber("y") >= 0) {
+    	  // world polygon
+    	  oneRelAccountedFor = True;
+		  stokesBegin = 0;
+
+    	  if (stokesControl == USE_FIRST_STOKES) {
+    		  stokesEnd = 0;
+    	  }
+    	  else if (stokesControl == USE_ALL_STOKES) {
+    		  stokesEnd = shape[polAxis];
+    	  }
+      }
+      else if (region.fieldNumber("blc") >= 0 && region.fieldNumber("blc") >= 0) {
+    	  // world box
+    	  Record blcRec = region.asRecord("blc");
+    	  Record trcRec = region.asRecord("trc");
+    	  stokesBegin = (Int)blcRec.asRecord(
+    			  String("*" + String::toString(polAxis - 1))
+    	  ).asDouble("value");
+    	  stokesEnd = (Int)trcRec.asRecord(
+    			  String("*" + String::toString(polAxis - 1))
+    	  ).asDouble("value");
+      }
+      else {
+    	  // FIXME not very nice, but until all can be implemented this will have to do
+    	  *itsLog << LogIO::WARN << "Stokes cannot be determined because this region type is not handled yet"
+    			 << LogIO::POST;
+    	  return stokes;
+      }
+
+      if (! oneRelAccountedFor && region.isDefined("oneRel") && region.asBool("oneRel")) {
+    	  stokesBegin--;
+    	  stokesEnd--;
+      }
+      for (uInt i=stokesBegin; i<=stokesEnd; i++) {
+    	  stokes += itsCSys->stokesAtPixel(i);
+      }
+      return stokes;
   }
+
 
 
 } // end of  casa namespace

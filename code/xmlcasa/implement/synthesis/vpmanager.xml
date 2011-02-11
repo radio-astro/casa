@@ -63,7 +63,8 @@ telescopes present, the primary beam of the first telescope present in
 the MS will be used, even if it is not the first telescope specified
 in the VP description table produced by vpmanager.
 
-\item[Antenna-dependent Voltage Patterns] are not yet supported.
+\item[Antenna-dependent Voltage Patterns] are supported via the AntennaReponses table, see.
+<link anchor="synthesis:imager.vpmanager.createantresp.function">createantresp</link>
 
 \item[Two-dimensional Voltage Pattern Images] are supported via
 <link anchor="synthesis:imager.vpmanager.setpbimage.function">setpbimage</link>.
@@ -756,6 +757,135 @@ VP(x) = \sum_{i} coeff_{i} * x^{2i}.
      </param>
 </input>
 <returns type="any"><any type="record"/>itemcontainer</returns>
+</method>
+
+   <method type="function" name="createantresp">
+   <shortdescription>Create a standard-format AntennaResponses table</shortdescription>
+   
+<description>
+The AntennaResponses table serves CASA to look up the location of images describing the
+response of observatory antennas. Three types of images are supported: "VP" - real voltage patterns,
+"AIF" - complex aperture illumination patterns, "EFP" - complex electric field patterns.
+For each image, a validity range can be defined in Azimuth, Elevation, and Frequency.
+Furthermore, a antenna type (for heterogeneous arrays), a receiver type (for the case of
+several receivers on the same antenna having overlapping frequency bands), and a beam number
+(for the case of multiple beams per antenna) are associated with each response image.
+
+The images need to be stored in a single directory DIR of arbitrary name and need to
+have file names following the pattern
+\begin{verbatim}
+obsname_beamnum_anttype_rectype_azmin_aznom_azmax_elmin_elnom_elmax_freqmin_freqnom_freqmax_frequnit_comment_functype.im
+\end{verbatim}
+where the individual name elements mean the following (none of the elements may contain 
+the space character, but they may be empty strings if they are not numerical values):
+\begin{description}
+\item[obsname] - name of the observatory as in the Observatories table, e.g. "ALMA"
+\item[beamnum] - the numerical beam number (integer) for the case of multiple beams, e.g. 0
+\item[anttype] - name of the antenna type, e.g. "DV"
+\item[rectype] - name of the receiver type, e.g. ""
+\item[azmin, aznom, azmax] - numerical value (degrees) of the minimal, the nominal, and 
+  the maximal Azimuth where this response is valid, e.g. "-10.5_0._10.5"
+\item[elmin, elnom, elmax] - numerical value (degrees) of the minimal, the nominal, and 
+  the maximal Elevation where this response is valid, e.g. "10._45._80."
+\item[freqmin, freqnom, freqmax] - numerical value (degrees) of the minimal, the nominal, and 
+  the maximal Frequency (in units of frequnit) where this response is valid, e.g. "84._100._116."
+\item[frequnit] - the unit of the previous three frequencies, e.g. "GHz"
+\item[comment] - any string containing only characters permitted in file names and not empty space
+\item[functype] - the type of the image as defined above ("VP", "AIF", or "EFP")
+ \end{description}
+
+The createantresp method will then extract the parameters from all the images in DIR
+and create the lookup table in the same directory.
+</description>
+<input>
+
+     <param type="string" direction="in" name="imdir">
+     <description>Path to the directory containing the response images</description>
+     <value></value>
+     </param>
+
+     <param type="string" direction="in" name="starttime">
+     <description>Time from which onwards the response is valid, format YYYY/MM/DD/hh:mm:ss</description>
+     <value></value>
+     </param>
+
+     <param type="stringArray" name="bandnames">
+     <description>List containing the names of the observatory's frequency bands</description>
+     <value></value>
+     </param>
+
+     <param type="stringArray" name="bandminfreq">
+     <description>List containing the lower edges of the observatory's frequency bands, e.g. ["80GHz","120GHz"]</description>
+     <value></value>
+     </param>
+
+     <param type="stringArray" name="bandmaxfreq">
+     <description>List containing the upper edges of the observatory's frequency bands, e.g. ["120GHz","180GHz"]</description>
+     <value></value>
+     </param>
+
+
+</input>
+<returns type="bool"></returns>
+</method>
+
+   <method type="function" name="getrespimagename">
+   <shortdescription>Get the image name for the given parameters from the given responses table</shortdescription>
+   
+<description>
+Given the observatory name, the antenna type, the receiver type, the observing frequency, the
+observing direction, and the beam number, find the applicable response image and return its name.
+</description>
+<input>
+
+     <param type="string" direction="in" name="telescope">
+     <description>Which telescope is described by this response?</description>
+     <value></value>
+     </param>
+
+     <param type="string" direction="in" name="starttime">
+     <description>Time at which the response has to be valid, format YYYY/MM/DD/hh:mm:ss</description>
+     <value></value>
+     </param>
+
+     <param type="string" name="frequency">
+     <description>The frequency at which the response has to be valid, e.g. "100GHz"</description>
+     <value></value>
+     </param>
+
+     <param type="string" name="functype">
+     <description>Type of the responsefunction requested, e.g. "EFP"</description>
+     <value>ANY</value>
+     </param>
+
+     <param type="string" name="anttype">
+     <description>Antenna type (observatory-dependent)</description>
+     <value></value>
+     </param>
+
+     <param type="string" name="azimuth">
+     <description>Azimuth of the observation (at the location of the observatory, 0 is North), e.g. "5deg"</description>
+     <value>0deg</value>
+     </param>
+
+     <param type="string" name="elevation">
+     <description>Elevation of the observation (at the location of the observatory, 0 is North), e.g. "60deg" </description>
+     <value>45deg</value>
+     </param>
+
+     <param type="string" name="rectype">
+     <description>Receiver type (observatory-dependent)</description>
+     <value></value>
+     </param>
+
+     <param type="int" name="beamnumber">
+     <description>Beam number (for the case of multiple beams per receiver)</description>
+     <value>0</value>
+     </param>
+
+
+</input>
+<returns type="string"></returns>
 </method>
 
 </tool>

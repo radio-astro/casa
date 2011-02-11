@@ -1,3 +1,4 @@
+//-*- C++ -*-
 //# ArrayMath.cc: Arithmetic functions defined on Arrays
 //# Copyright (C) 1993,1994,1995,1996,1997,1998,1999,2001,2003
 //# Associated Universities, Inc. Washington DC, USA.
@@ -216,7 +217,7 @@ void minMaxMasked(T &minVal, T &maxVal,
   }
   size_t minp = 0;
   size_t maxp = 0;
-  T minv = array.data()[0];
+  T minv = array.data()[0]*weight.data()[0];
   T maxv = minv;
   if (array.contiguousStorage()  &&  weight.contiguousStorage()) {
     typename Array<T>::const_contiter iter = array.cbegin();

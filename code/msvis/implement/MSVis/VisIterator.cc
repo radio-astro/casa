@@ -183,6 +183,59 @@ void ROVisIterator::setSelTable()
     attachColumns(attachTable());
 }
 
+void ROVisIterator::slicesToMatrices(Vector<Matrix<Int> >& matv,
+                                   const Vector<Vector<Slice> >& slicesv) const
+{
+  Int nspw = slicesv.nelements();
+
+  matv.resize(nspw);
+  for(uInt spw = 0; spw < nspw; ++spw){
+    uInt nSlices = slicesv[spw].nelements();
+
+    // Figure out how big to make matv[spw].
+    uInt totOutChan = 0;
+    for(uInt slicenum = 0; slicenum < nSlices; ++slicenum){
+      const Slice& sl = slicesv[spw][slicenum];
+      Int firstchan = sl.start();
+      Int lastchan = sl.all() ? firstchan + chanWidth_p[spw] - 1 : sl.end();
+      Int width = sl.all() ? 1 : sl.inc(); // Default to no averaging.
+
+      totOutChan += 1 + (lastchan - firstchan) / width;
+    }
+    matv[spw].resize(totOutChan, 4);
+
+    // Index of input channel in SELECTED list, i.e.
+    // mschan = vi.chanIds(chanids, spw)[selchanind].
+    uInt selchanind = 0;
+
+    uInt outChan = 0;
+    for(uInt slicenum = 0; slicenum < nSlices; ++slicenum){
+      const Slice& sl = slicesv[spw][slicenum];
+      Int mschan = sl.start();
+      Int lastchan = sl.all() ? mschan + chanWidth_p[spw] - 1 : sl.end();
+      Int width = sl.all() ? 1 : sl.inc(); // Default to no averaging.
+      if(width < 1)
+        throw(AipsError("Cannot channel average with width < 1"));
+
+      Int nChan = 1 + lastchan - mschan;
+
+      for(Int c = 0; c < nChan; c += width){
+        Int inc = min(width, lastchan - mschan + 1);
+
+        // The start and end in MS channel #s.
+        matv[spw](outChan, 0) = mschan;
+        mschan += inc;
+        matv[spw](outChan, 1) = mschan - 1;
+
+        // The start and end in selected reckoning.
+        matv[spw](outChan, 2) = selchanind;
+        selchanind += inc;
+        matv[spw](outChan, 3) = selchanind - 1;
+        ++outChan;
+      }
+    }
+  }      
+}
 
 // Return native correlation _indices_
 Vector<Int>& ROVisIterator::corrIds(Vector<Int>& corrids) const
@@ -674,7 +727,6 @@ void VisIterator::setWeightSpectrum(const Cube<Float>& weightSpectrum)
   else 
     throw(AipsError("Can't set WEIGHT_SPECTRUM -- it doesn't exist!"));
 }
-
 
 
 

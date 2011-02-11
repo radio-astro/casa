@@ -251,7 +251,7 @@
             </param>
 
         <param type="bool" name="rfi">
-               <description>Flagging of narrow-band RFI</description>
+               <description>Automatic flagging of narrow-band RFI (tfcrop algorithm)</description>
                <value>False</value>
         </param>
             <param type="any" name="rfi_clipexpr" subparam="true">
@@ -281,33 +281,16 @@
                    <description>Fit the bandpass with a straight line (True), or fit the bandpass with a piecewise polynomial (False)</description>
                    <value>False</value>
             </param>
-            <param type="int" name="rfi_auto_cross" subparam="true">
-                   <description>flag on cross-correlations and auto-correlations (0 : only autocorrelations)</description>
-                   <value>1</value>
+            <param type="int" name="rfi_maxnpieces" subparam="true">
+                   <description>Number of pieces in the bandpass polynomial-fit (if freqlinefit=False)</description>
+                   <value>7</value>
             </param>
             <param type="int" name="rfi_num_time" subparam="true">
                    <description>number of time-steps in each chunk</description>
                    <value>400</value>
             </param>
-            <param type="int" name="rfi_start_chan" subparam="true">
-                   <description>channel range start (1 based)</description>
-                   <value>1</value>
-            </param>
-            <param type="int" name="rfi_end_chan" subparam="true">
-                   <description>channel range end (1 based)</description>
-                   <value>2048</value>
-            </param>
-            <param type="double" name="rfi_bs_cutoff" subparam="true">
-                   <description>baseline tolerance</description>
-                   <value>0.0</value>
-            </param>
-            <param type="double" name="rfi_ant_cutoff" subparam="true">
-                   <description>total autocorrelation amplitude threshold for a functional antenna</description>
-                   <value>0.0</value>
-            </param>
-
             <param type="int" name="rfi_flag_level" subparam="true">
-                   <description>0: flag only what is found. 1: extend flags one timestep before and after. 2: extend flags one timestep and channel before/after</description>
+                   <description>0: flag only what is found. 1: grow flags in time/freq 2: do 1 and flag one time/chan before/after</description>
                    <value>1</value>
             </param>
 
@@ -411,16 +394,12 @@
             <equals type="bool" value="False"/>
             <equals type="bool" value="True">
                 <default param="rfi_clipcolumn"><value type="string">DATA</value></default>
-                <default param="rfi_clipexpr"><value type="string">ABS RR</value></default>
+                <default param="rfi_clipexpr"><value type="string">ABS I</value></default>
                 <default param="rfi_time_amp_cutoff"><value type="double">4.0</value></default>
                 <default param="rfi_freq_amp_cutoff"><value type="double">3.0</value></default>
                 <default param="rfi_freqlinefit"><value type="bool">False</value></default>
-                <default param="rfi_auto_cross"><value type="int">1</value></default>
-                <default param="rfi_num_time"><value type="int">400</value></default>
-                <default param="rfi_start_chan"><value type="int">1</value></default>
-                <default param="rfi_end_chan"><value type="int">2048</value></default>
-                <default param="rfi_bs_cutoff"><value type="double">0.0</value></default>
-                <default param="rfi_ant_cutoff"><value type="double">0.0</value></default>
+                <default param="rfi_maxnpieces"><value type="int">7</value></default>
+                <default param="rfi_num_time"><value type="int">50</value></default>
                 <default param="rfi_flag_level"><value type="int">1</value></default>
             </equals>
             </when>
@@ -693,7 +672,7 @@
               rfi_clipexpr -- expression to use for flagging option
                   default: 'ABS RR'; example: expr='RE XX'
                   options: 'ABS','ARG','RE','IM','NORM' + ' ' +
-                            'I','XX','YY','RR','LL'
+                            'I','XX','YY','RR','LL', 'XY', 'YX' ,'RL' , 'LR'
               rfi_time_amp_cutoff -- thresholds in units of sigma, where sigma is the stdev of the fit
                   default: 4.0
               rfi_freq_amp_cutoff -- thresholds in units of sigma, where sigma is the stdev of the fit
@@ -701,19 +680,9 @@
               rfi_freqlinefit -- Fit the bandpass with a straight line (True) or with piecewise polynomial (False)
                   default: False
                   options: True, False
-              rfi_auto_cross -- flag on cross-correlations (1) or auto-correlations (0)
-                  default: 1 
-                  options: 1 or 0 
+              rfi_maxnpieces -- Maximum number of pieces in the piece-wise polynomial bandpass fit
               rfi_num_time -- number of time-steps in each chunk
                   default: 400
-              rfi_start_chan -- channel range start (1 based)
-                  default: 1
-              rfi_end_chan -- channel range end (1 based)
-                  default: 2048
-              rfi_bs_cutoff -- baseline tolerance
-                  default: 0.0
-              rfi_ant_cutoff -- total autocorrelation amplitude threshold for a functional antenna
-                  default: 0.0
               rfi_flag_level -- 0: flag only what is found; 1: extend flags one timestep before and after; 
                                #2: extend flags in time and frequency by examining values immediately 
 	                       #   surrounding flagged points.

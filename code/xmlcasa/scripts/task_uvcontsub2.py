@@ -5,6 +5,8 @@ import tempfile
 from taskinit import *
 from update_spw import *
 
+im,cb,ms,tb,fg,me,ia,po,sm,cl,cs,rg,sl,dc,vp=gentools()
+
 def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
     try:
         casalog.origin('uvcontsub2')

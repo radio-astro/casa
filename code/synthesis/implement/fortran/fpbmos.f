@@ -90,8 +90,6 @@
       tcnorm=0
       iloc(3)=1
 
-      
-
       do iy=-scaledSupport,scaledSupport
 c         iloc(2)=(iy*sampling+off(2))* cfscale
          iloc(2)=iy * scaledSampling + off(2)
@@ -330,7 +328,7 @@ c                  wtsupport=rsupport
      $                       (apol.ge.1).and.(apol.le.npol)) then
                            ConjPlane = cfmap(ipol)+1
                            PolnPlane = conjcfmap(ipol)+1
-                           
+
                            if(dopsf.eq.1) then
                               nvalue=cmplx(weight(ichan,irow))
                            else
@@ -1094,8 +1092,13 @@ C
       double precision sinDPA, cosDPA
       integer ix,iy
       
-      ix = nint(cosDPA*inx + sinDPA*iny)
-      iy = nint(-sinDPA*inx + cosDPA*iny)
+      if (sinDPA .eq. 0) then
+         ix = inx
+         iy = iny
+      else
+         ix = nint(cosDPA*inx + sinDPA*iny)
+         iy = nint(-sinDPA*inx + cosDPA*iny)
+      endif
 
       outx = ix+Origin
       outy = iy+Origin

@@ -478,6 +478,25 @@ Int CalTable::numberTimeSlots (const Double& fracError)
 
 //----------------------------------------------------------------------------
 
+// Return the number of rows per CalDescId
+void CalTable::rowsPerCalDescId(Vector<Int>& rowspercdi) {
+
+  Int nCDI=nRowDesc();
+
+  rowspercdi.resize(nCDI);
+
+  ROScalarColumn<Int> cdidcol(*itsMainTable,"CAL_DESC_ID");
+  Vector<Int> cdi;
+  cdidcol.getColumn(cdi);
+
+  for (Int icdi=0;icdi<nCDI;++icdi)
+    rowspercdi(icdi)=ntrue(cdi==icdi);
+
+}
+
+
+//----------------------------------------------------------------------------
+
 void CalTable::createCalTable (const String& tableName, 
 			       CalTableDesc& ctableDesc,
 			       Table::TableOption access)

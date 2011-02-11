@@ -32,57 +32,19 @@ def imcontsub(imagename=None,linefile=None,contfile=None,fitorder=None,region=No
     if ( filesExist ):
         return False
     
-    reg = None
-    try:
-        # Get the region information
-        # Note that there could be issues if in the region file
-        # there were channel selections that don't match what the
-        # user is giving as input.
-        if ( len(region)>1 ):
-            if ( len(box)>1 or len(stokes)>1 ):
-                casalog.post( "Ignoring region selection\ninformation"\
-                              " the in box, chans, and stokes parameters."\
-                              " Using region information\nin file: "\
-                              + region, 'WARN' );
-
-            if os.path.exists( region ):
-                # We have a region file on disk!
-                reg=rg.fromfiletorecord( region );
-            else:
-                # The name given is the name of a region stored
-                # with the image.
-                # Note that we accept:
-                #    'regionname'          -  assumed to be in imagename
-                #    'my.image:regionname' - in my.image
-                reg_names=region.split(':')
-                if ( len( reg_names ) == 1 ):
-                    reg=rg.fromtabletorecord( imagename, region, False )
-                else:
-                    reg=rg.fromtabletorecord( reg_names[0], reg_names[1], False )
-        else:
-            #reg=imregion( imagename, chans, stokes, box, '', '' )
-            reg=imregion( imagename, '', stokes, box, '', '' )
-        if ( len( reg .keys() ) < 1 ):
-            casalog.post('Ill-formed region: '+str(reg)+'. can not continue.',\
-                         'SEVERE' )
-            return False
-            
-        #print "REGION: ", reg
-        
-    except Exception, err:
-        casalog.post( 'Error: Unable to create the image region. '+str(err), 'SEVERE' )
-        # Cleanup
-        if ( reg != None ):
-            del reg
-        return  False
+    _myia = iatool.create()
+    _myia.open(imagename)
+    mycsys = _myia.coordsys()
+    reg = rg.frombcs(csys=mycsys.torecord(), shape=_myia.shape(),
+        box=box, chans=chans, stokes=stokes, stokescontrol="f",
+        region=region
+    )
 
     channels=[]
-    _myia = iatool.create()
 
     try:
         # Find the max and min channel.
         axes=getimaxes(imagename)
-        _myia.open( imagename )
         fullSize = _myia.boundingbox(_myia.setboxregion())
         minChan=int(fullSize['blc'][axes[2][0]])
         maxChan=int(fullSize['trc'][axes[2][0]])

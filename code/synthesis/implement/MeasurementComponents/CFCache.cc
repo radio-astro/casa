@@ -34,13 +34,7 @@
 #include <fstream>
 
 namespace casa{
-  CFCache::~CFCache()
-  {
-    // Int n=memCache_p.nelements();
-    // for (Int i=0;i<n;i++)
-    //   delete memCache_p[i].data;
-    //    memCache_p.resize(0);
-  }
+  CFCache::~CFCache()  {}
   //
   //-------------------------------------------------------------------------
   // Load just the axillary info. if found.  The convolution functions
@@ -145,6 +139,8 @@ namespace casa{
     Long s=0;
     for(uInt i=0;i<memCache_p.nelements();i++)
       s+=memCache_p[0].data->size();
+    for(uInt i=0;i<memCacheWt_p.nelements();i++)
+      s+=memCacheWt_p[0].data->size();
 
     return s*sizeof(Complex);
   }
@@ -255,19 +251,19 @@ namespace casa{
   //-------------------------------------------------------------------------
   // Write the conv. functions from the mem. cache to the disk cache.
   //
-  void CFCache::cacheConvFunction(Int which,  const Float& pa, CFType& cf, 
-				  CoordinateSystem& coords,
-				  CoordinateSystem& ftCoords,
-				  Int &convSize,
-				  Vector<Int> &xConvSupport, 
-				  Vector<Int> &yConvSupport, 
-				  Float convSampling, 
-				  String nameQualifier,
-				  Bool savePA)
+  Int CFCache::cacheConvFunction(Int which,  const Float& pa, CFType& cf, 
+				 CoordinateSystem& coords,
+				 CoordinateSystem& ftCoords,
+				 Int &convSize,
+				 Vector<Int> &xConvSupport, 
+				 Vector<Int> &yConvSupport, 
+				 Float convSampling, 
+				 String nameQualifier,
+				 Bool savePA)
   {
     LogIO log_l(LogOrigin("CFCache","cacheConvFunction"));
-    if (Dir.length() == 0) return;
-    
+    Int whereCached_l=-1;
+    if (Dir.length() == 0) return whereCached_l;
     if (which < 0) 
       {
 	Int i;
@@ -314,12 +310,39 @@ namespace casa{
 	    thisScreen.put(buf);
 	  }
 	if (savePA)
-	  addToMemCache(memCache_p, pa,&cf, ftCoords, xConvSupport, yConvSupport, convSampling);
-	
+	  {
+	    CFStoreCacheType& memCacheObj = getMEMCacheObj(nameQualifier);
+	    whereCached_l=addToMemCache(memCacheObj, pa,&cf, ftCoords, 
+	    				xConvSupport, yConvSupport, convSampling);
+	  }
       }
     catch (AipsError& x)
       {
 	throw(SynthesisFTMachineError("Error while caching CF to disk in "+x.getMesg()));
+      }
+    return whereCached_l;
+  }
+  //
+  //-------------------------------------------------------------------------
+  //  
+  void CFCache::cacheConvFunction(const Float pa, CFStore& cfs, 
+				  String nameQualifier,Bool savePA)
+  {
+    if (cfs.data.null())
+      throw(SynthesisError(LogMessage("Won't cache a NULL CFStore",
+				      LogOrigin("CFCache::cacheConvFunction")).message()));
+    CoordinateSystem ftcoords;
+    Int which=-1, whereCached=-1;
+    Int convSize=(Int)cfs.data->shape()(0);
+      
+    whereCached = cacheConvFunction(which, pa, *(cfs.data), cfs.coordSys, ftcoords, convSize,
+				    cfs.xSupport, cfs.ySupport, cfs.sampling[0],
+				    nameQualifier,savePA);
+    cfs.coordSys = ftcoords;
+    if (whereCached > -1)
+      {
+	CFStoreCacheType& memCacheObj=getMEMCacheObj(nameQualifier);
+	cfs=memCacheObj[whereCached];
       }
   }
   //
@@ -460,8 +483,8 @@ namespace casa{
   // Return TRUE if loaded from disk and FLASE if found in the mem. cache.
   //
   Int CFCache::loadFromDisk(Int where, Float pa, Float dPA,
-			     Int Nw, CFStoreCacheType &convFuncCache,
-			     CFStore& cfs, String prefix)
+			    Int Nw, CFStoreCacheType &convFuncCache,
+			    CFStore& cfs, String nameQualifier)
   {
     LogIO log_l(LogOrigin("CFCache", "loadFromDisk"));
 
@@ -498,7 +521,7 @@ namespace casa{
     for(Int iw=0;iw<Nw;iw++)
       {
 	ostringstream name;
-	name << Dir << prefix << iw << "_" << where;
+	name << Dir << "/" << cfPrefix << nameQualifier << iw << "_" << where;
 	try
 	  {
 	    PagedImage<Complex> tmp(name.str().c_str());
@@ -569,14 +592,14 @@ namespace casa{
 				  const Int Nw, const Float pa, const Float dPA,
 				  const Int mosXPos, const Int mosYPos)
   {
-   Int retVal=locateConvFunction(cfs, Nw, pa, dPA, mosXPos, mosYPos);
-   Int paKey;
-   if (retVal == DISKCACHE)
-     {
-       searchConvFunction(paKey, pa, dPA);
-       loadFromDisk(paKey,pa,dPA,Nw,memCacheWt_p, cfwts,"/CFWT");
-       cfwts=(memCacheWt_p[paKey]);
-     }
+    Int retVal;
+    // This assumes that the return state of locateConvFunction() for
+    // "CF" and "CFWT" will be the same.  I.e. if "CF" is found in the
+    // cache, "CFWT" will be found.  If "CF" is not found "CFWT" won't
+    // be found either.
+    retVal=locateConvFunction(cfs, Nw, pa, dPA,"",mosXPos,mosYPos);
+    locateConvFunction(cfwts, Nw, pa, dPA,"WT",mosXPos,mosYPos);
+
    return retVal;
   }
   //
@@ -591,6 +614,7 @@ namespace casa{
   //
   Int CFCache::locateConvFunction(CFStore& cfs, 
 				  const Int Nw, const Float pa, const Float dPA,
+				  const String& nameQualifier,
 				  const Int mosXPos, const Int mosYPos)
   {
     LogIO log_l(LogOrigin("CFCache", "locatedConvFunction"));
@@ -601,38 +625,48 @@ namespace casa{
     // paKey in memCache_p which has a Conv. Func. within dPA (dPA is
     // given by paCD).  If found, return the key in paKey.
     found = searchConvFunction(paKey,pa, dPA);
+
     if (found)
       {
-	retVal=loadFromDisk(paKey,pa,dPA,Nw,memCache_p,cfs);
-	//	cfs.show("From CFC::locate0");
+	CFStoreCacheType &memCacheObj=getMEMCacheObj(nameQualifier);
+	retVal=loadFromDisk(paKey,pa,dPA,Nw,memCacheObj,cfs,nameQualifier);
 	
 	switch (retVal)
 	  {
 	  case DISKCACHE:
 	    {
-	      //	      *****************	    convWeights.reference(*convWeightsCache[PAIndex]);
-	      if (paKey < (Int)memCache_p.nelements())
+	      if (paKey < (Int)memCacheObj.nelements())
 	      	log_l << "Loaded from disk cache: Conv. func. # "
 		      << paKey << LogIO::POST;
 	      else
 	      	throw(SynthesisFTMachineError("Internal error: paKey out of range"));
-	      //	      break;
 	    }
 	  case MEMCACHE:  
 	    {
-	      //	      cerr << cfs.data.null() << endl;
-	      //	      cfs.show("From CFC::locate1");
-	      //	      cerr << "mem cache size = " << memCache_p.nelements() << endl;
-	      //	      memCache_p[paKey].show("From CFC::locate2");
-	      cfs=(memCache_p[paKey]);
-	      //	      cfs.show("From CFC::locate3");
+	      cfs=(memCacheObj[paKey]);
 	      break;
 	    }
 	  case NOTCACHED: {break;}
 	  };
-	//**************	convWeights.reference(*convWeightsCache[paKey]);
       }
     return retVal;
+  }
+  //
+  //-----------------------------------------------------------------------
+  //
+  CFCache::CFStoreCacheType& CFCache::getMEMCacheObj(const String& nameQualifier)
+  {
+    LogIO log_l(LogOrigin("CFCache::getMEMCacheObj"));
+    if (nameQualifier == "")           return memCache_p;
+    else if (nameQualifier == "WT")    return memCacheWt_p;
+    else
+      log_l << "Internal error. Unknown name qualifier '"+nameQualifier+"'."
+	    << LogIO::EXCEPTION << endl;
+    // 
+    // Return to suppress compiler warning.  Control will never reach
+    // the following line.
+    //
+    return memCache_p;
   }
 
 } // end casa namespace

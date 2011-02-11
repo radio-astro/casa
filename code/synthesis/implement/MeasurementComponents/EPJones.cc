@@ -802,20 +802,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //-----------------------------------------------------------------------
   //  
-  void EPJones::selfSolve(VisSet& vs, VisEquation& ve)
+  void EPJones::selfGatherAndSolve(VisSet& vs, VisEquation& ve)
   {
     //
     // Create the solver
     //
     SteepestDescentSolver sds(nPar(),polMap_p,niter_p,tolerance_p);
-    logSink() << LogOrigin("EPJones","selfSolve")
+    logSink() << LogOrigin("EPJones","selfGatherAndSolve")
 	      << "Pol map = " << polMap_p << endl;
     sds.setGain(gain_p);
     //sds.setGain(1);
     //
     // Inform logger/history
     //
-    logSink() << LogOrigin("EPJones", "selfSolve") << "Solving for " << typeName()
+    logSink() << LogOrigin("EPJones", "selfGatherAndSolve") << "Solving for " << typeName()
 	      << LogIO::POST;
     //
     // Arrange for iteration over data - set up the VisIter and the VisBuffer

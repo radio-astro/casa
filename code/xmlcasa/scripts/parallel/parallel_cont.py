@@ -5,7 +5,7 @@ import time
 import numpy as np
 from cleanhelper import *
 class imagecont():
-    def __init__(self, ftmachine='ft', wprojplanes=10, facets=1, pixels=[3600, 3600], cell=['3arcsec', '3arcsec'], spw='', field='', phasecenter='', weight='natural'):
+    def __init__(self, ftmachine='ft', wprojplanes=10, facets=1, pixels=[3600, 3600], cell=['3arcsec', '3arcsec'], spw='', field='', phasecenter='', weight='natural', robust=0.0, stokes='I'):
         self.im=imtool.create()
         self.imperms={}
         self.dc=dctool.create()
@@ -23,8 +23,9 @@ class imagecont():
         self.phCen=phasecenter
         self.weight=weight
         self.imageparamset=False
-        self.robust=0.0
+        self.robust=robust
         self.weightnpix=0
+        self.stokes=stokes
         self.imagetilevol=1000000
         self.visInMem=False
         self.painc=360.0
@@ -55,13 +56,17 @@ class imagecont():
         #print 'spwstring', spwstring
         if(not self.imageparamset):
             self.origms=msname
-            im.selectvis(vis=msname, field=field, spw=spw, nchan=numchan, start=start, step=1, datainmemory=self.visInMem)
-            #im.selectvis(vis=msname, field=field, spw=spwstring, datainmemory=True)
+            try:
+                im.selectvis(vis=msname, field=field, spw=spw, nchan=numchan, start=start, step=1, datainmemory=self.visInMem)
+            except Exception, instance:
+                ###failed to selectdata
+                self.novaliddata[msname]=True
 ####
         #imname=imname+'_%02d'%(j)
-            im.defineimage(nx=self.pixels[0], ny=self.pixels[1], cellx=self.cell[0], celly=self.cell[1], phasecenter=self.phCen, mode='frequency', nchan=1, start=freq, step=band, facets=self.facets)
+            im.defineimage(nx=self.pixels[0], ny=self.pixels[1], cellx=self.cell[0], celly=self.cell[1], phasecenter=self.phCen, mode='frequency', nchan=1, start=freq, step=band, facets=self.facets, stokes=self.stokes)
             if((len(numchan)==0) or (np.sum(numchan)==0)):
                 self.novaliddata[msname]=True
+            if(self.novaliddata[msname]):
                 ###make blanks
                 im.make(imname+'.image')
                 im.make(imname+'.residual')
@@ -203,7 +208,7 @@ class imagecont():
             dc.setscales(scalemethod='uservector', uservector=sca)
             alg='fullmsclean'
         if(alg=='clark'):
-            dc.clarkclean(niter=niter, threshold=thr, model=model, mask=mask)
+            dc.fullclarkclean(niter=niter, threshold=thr, model=model, mask=mask)
         else:
             dc.clean(algorithm=alg, niter=niter, threshold=thr, model=model, mask=mask)
         dc.done()
@@ -253,6 +258,28 @@ class imagecont():
         #self.putchanimage(cubeim+'.residual', imname+'.residual', imchan*chanchunk)
         #self.putchanimage(cubeim+'.image', imname+'.image', imchan*chanchunk)
 
+
+    @staticmethod
+    def getallchanmodel(inimage, chanchunk=1):
+        #tim1=time.time()
+        ia.open(inimage+'.model')
+        modshape=ia.shape()
+        nchan=modshape[3]/chanchunk;
+        if(nchan >1):
+            blc=[0,0,modshape[2]-1,0]
+            trc=[modshape[0]-1,modshape[1]-1,modshape[2]-1,0+chanchunk]
+            for k in range(nchan):
+                #timbeg=time.time()
+                blc[3]=k*chanchunk
+                trc[3]=k+chanchunk-1
+                if((trc[3]) >= modshape[3]):
+                    trc[3]=modshape[3]-1
+                sbim=ia.subimage(outfile=inimage+str(k)+'.model', region=rg.box(blc,trc), overwrite=True)
+                sbim.done()   
+                #print 'time taken for ', k, time.time()-timbeg
+        ia.done()
+        tb.clearlocks()
+
     @staticmethod
     def getchanimage(inimage, outimage, chan, nchan=1):
         """
@@ -270,8 +297,10 @@ class imagecont():
         blc=[0,0,modshape[2]-1,chan]
         trc=[modshape[0]-1,modshape[1]-1,modshape[2]-1,endchan]
         sbim=ia.subimage(outfile=outimage, region=rg.box(blc,trc), overwrite=True)
-        sbim.close()
-        ia.close()
+        sbim.done()
+        ia.done()
+        tb.clearlocks()
+        #casalog.post('getLOCKS:  '+ str(inimage)+ ' ---  ' + str(tb.listlocks()))
         return True
     #getchanimage = staticmethod(getchanimage)
     def cleanupcubeimages(self, readyputchan, doneputchan, imagename, nchanchunk, chanchunk):
@@ -322,7 +351,7 @@ class imagecont():
         #imdata=ia.getchunk()
         #immask=ia.getchunk(getmask=True)
         ##############
-        ia.close()
+        ia.done()
         ia.open(cubimage)
         cubeshape=ia.shape()
         blc=[0,0,0,chan]
@@ -340,6 +369,9 @@ class imagecont():
         ###########
         ia.insert(infile=inim, locate=blc)
         ia.close()
+        tb.clearlocks()
+        #casalog.post('putLOCKS:  '+ str(inim)+ ' ---  ' + str(tb.listlocks()))
+        
         if(removeinfile):
             ia.removefile(inim)
         return True

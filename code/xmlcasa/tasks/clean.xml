@@ -304,13 +304,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 <!--========================================================= -->
     <param type="string" name="stokes">
-	    <description>Stokes params to image (eg I,IV, QU,IQUV)</description>
+	    <description>Stokes params to image (eg I,IV,IQ,IQUV)</description>
 	    <value>I</value>
     <allowed kind="enum">
 	    <value>I</value>
 	    <value>IV</value>
             <value>IQ</value>
 	    <value>QU</value>
+            <value>UV</value>
+            <value>IQU</value>
+            <value>IUV</value>
 	    <value>IQUV</value>
 	    <value>RR</value>
 	    <value>LL</value>

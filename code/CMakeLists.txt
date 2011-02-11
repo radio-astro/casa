@@ -251,13 +251,20 @@ if( NOT CMAKE_C_FLAGS )
 endif()
 
 
-#
-# The layout of the source+install directory trees
-# is rather hard-coded in much source code. Do not
-# allow the user to install anywhere else.
-#
-set( CMAKE_INSTALL_PREFIX ${casaroot}/${arch} )
+IF( NOT RE_CMAKE )
+    IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+        set( CMAKE_INSTALL_PREFIX ${casaroot}/${arch} CACHE PATH "casa architecture directory" FORCE )
+	set( casaroot ${casaroot} CACHE PATH "toplevel casa directory" FORCE )
+    ELSE()
+        set( CMAKE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX} CACHE PATH "casa architecture directory" FORCE )
+	set( casaroot ${CMAKE_INSTALL_PREFIX}/.. CACHE PATH "toplevel casa directory" FORCE )
+   ENDIF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+ENDIF()
+
+dump( casaroot )
 dump( CMAKE_INSTALL_PREFIX )
+
+set( RE_CMAKE "YES" CACHE STRING "are we rerunning cmake?" FORCE )
 
 #
 # Targets for creating doxygen documentation
@@ -569,7 +576,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.42
+           VERSION 1.0.45
            INCLUDES casa/aips.h
                     casa/version.h
                     scimath/Mathematics/MatrixMathLA.h  # declares symbols defined in LAPACK

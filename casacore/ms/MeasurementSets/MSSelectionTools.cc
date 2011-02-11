@@ -219,4 +219,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return (int)(tokens.nelements());
     */
   }
+  //
+  //----------------------------------------------------------------------------
+  // Split a give string at delimiter delim and return the restul elems.
+  //
+  Vector<String> &split(const String &s, char delim, Vector<String> &elems) 
+  {
+    std::stringstream ss(s);
+    std::string item;
+    vector<string> tmp;
+    while(std::getline(ss, item, delim))   tmp.push_back(item);
+
+    elems.resize(tmp.size());
+    for (uInt i=0;i<tmp.size();i++) elems[i]=tmp[i];
+    return elems;
+  }
 };

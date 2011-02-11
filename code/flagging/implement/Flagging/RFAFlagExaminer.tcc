@@ -401,7 +401,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         for (unsigned ich = 0; ich < chunk.num(CHAN); ich++) {
             if (accumtotal_channel[ich] > 0) {
                 stringstream ss;
-                ss << ich;
+                ss << chunk.visIter().spectralWindow() << ":" << ich;
                 accumflags["channel"][ss.str()] = accumflags_channel[ich];
                 accumtotal["channel"][ss.str()] = accumtotal_channel[ich];
             }
@@ -410,7 +410,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         for (unsigned icorr = 0; icorr < chunk.num(CORR); icorr++) {
             if (accumtotal_correlation[icorr] > 0) {
                 stringstream ss;
-                ss << icorr;
+                ss << chunk.visIter().spectralWindow() << ":" << icorr;
                 accumflags["correlation"][ss.str()] = accumflags_correlation[icorr];
                 accumtotal["correlation"][ss.str()] = accumtotal_correlation[icorr];
             }

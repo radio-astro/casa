@@ -218,7 +218,7 @@ void GJonesSpline::setApply(const Record& applypar)
 
 //----------------------------------------------------------------------------
 
-void GJonesSpline::selfSolve (VisSet& vs, VisEquation& ve)
+void GJonesSpline::selfGatherAndSolve (VisSet& vs, VisEquation& ve)
 {
 // Solver for the electronic gain in spline form
 // Input:
@@ -229,7 +229,7 @@ void GJonesSpline::selfSolve (VisSet& vs, VisEquation& ve)
 //                                      else False
 //
 
-  if (prtlev()>2) cout << "GSpline::selfSolve(vs,ve)" << endl;
+  if (prtlev()>2) cout << "GSpline::selfGatherAndSolve(vs,ve)" << endl;
 
 
   //  cout << "Entering GSpline::solve." << endl;

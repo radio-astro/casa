@@ -31,6 +31,7 @@
 #include <synthesis/MeasurementComponents/BPoly.h>
 #include <synthesis/MeasurementComponents/EJones.h>
 #include <synthesis/MeasurementComponents/EPJones.h>
+#include <synthesis/MeasurementComponents/KJones.h>
 #include <synthesis/MeasurementComponents/LJJones.h>
 #include <synthesis/MeasurementComponents/AMueller.h>
 #include <synthesis/MeasurementComponents/TsysGainCal.h>

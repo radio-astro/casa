@@ -228,15 +228,18 @@ namespace casa{
       {
 	lastPA = pa;
 	
-	const ROMSSpWindowColumns& spwCol = vb.msColumns().spectralWindow();
-	ROArrayColumn<Double> chanfreq = spwCol.chanFreq();
-	ROScalarColumn<Double> reffreq = spwCol.refFrequency();
+	// const ROMSSpWindowColumns& spwCol = vb.msColumns().spectralWindow();
+	// ROArrayColumn<Double> chanfreq = spwCol.chanFreq();
+	// ROScalarColumn<Double> reffreq = spwCol.refFrequency();
 
-	//	Freq = sum(chanFreq)/chanFreq.nelements();
-	Freq = max(chanfreq.getColumn());
-	freqHi = max(chanfreq.getColumn());
-	freqLo = min(chanfreq.getColumn());
-	
+	// //	Freq = sum(chanFreq)/chanFreq.nelements();
+	// Freq = max(chanfreq.getColumn());
+	// freqHi = max(chanfreq.getColumn());
+	// freqLo = min(chanfreq.getColumn());
+	freqHi = max(chanFreq);
+	freqLo = min(chanFreq);
+	Freq   = freqHi;
+	cerr << "Freq = " << chanFreq << endl;
 	ap.freq = freqHi/1E9;
 	
 	IPosition imsize(skyShape);

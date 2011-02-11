@@ -90,12 +90,15 @@ chan4 = 6.33510000e+09
 chan15 = 1.07351000e+10
 chan19 = 1.23351000e+10
 
-def run_frombcs(imagename, box, chans, stokes, stokes_control):
+def run_frombcs(imagename, box, chans, stokes, stokes_control, region=""):
     myia = iatool.create()
     myia.open(imagename)
     mycsys = myia.coordsys()
     myrg = rgtool.create()
-    res = rg.frombcs(mycsys.torecord(), myia.shape(), box, chans, stokes, stokes_control)
+    res = rg.frombcs(
+        mycsys.torecord(), myia.shape(), box, chans,
+        stokes, stokes_control, region
+    )
     myia.close()
     del myia
     del myrg
@@ -127,8 +130,6 @@ class rg_frombcs_test(unittest.TestCase):
         for i in range(len(got)):
             fracDiff = abs((got[i]-exp[i])/exp[i]);
             self.assertTrue(fracDiff < epsilon)
-
-
 
     def test_full_image(self):
         """Test default gives region of entire image"""
@@ -225,6 +226,39 @@ class rg_frombcs_test(unittest.TestCase):
         self.compLists(gotblc, expblc);
         gottrc = recToList(myreg["trc"])
         exptrc = [box3, box4, chan19, 4.0]
+        
+    def test_region_record(self):
+        """Test setting region record"""
+        
+        box = ""
+        chans = ""
+        stokes = ""
+        stokes_control = "a"
+        blahia = iatool.create()
+        blahia.open(image)
+        mycsys = blahia.coordsys()
+        blahia.done()
+        mybox = rg.wbox(
+            ["1pix", "2pix", "0pix", "0pix"],
+            ["3pix", "4pix", "19pix", "3pix"],
+            csys=mycsys.torecord()
+        )
+        myreg = run_frombcs(
+            image, box, chans, stokes, stokes_control, mybox
+        )
+        gotblc = recToList(myreg["blc"])
+        for i in range(len(gotblc)):
+            gotblc[i] = gotblc[i] - 1 
+        gotblc = mycsys.toworld(gotblc)['numeric']
+        expblc = [box1, box2, chan0, 1.0]
+        self.compLists(gotblc, expblc);
+        gottrc = recToList(myreg["trc"])
+        for i in range(len(gottrc)):
+            gottrc[i] = gottrc[i] - 1 
+        gottrc = mycsys.toworld(gottrc)['numeric']
+        exptrc = [box3, box4, chan19, 4.0]
+        self.compLists(gottrc, exptrc);
+
         
     def test_first_stokes(self):
         """Test setting first stokes"""
@@ -499,51 +533,6 @@ class rg_frombcs_test(unittest.TestCase):
         gottrc = recToList(myreg["regions"]["*1"]["trc"])
         exptrc = [box3, box4]
         self.compLists(gottrc, exptrc)
-
-    
-"""
-          {
-              RegionManager rm(myImageDirOnly->coordinates());
-              IPosition imShape = myImageDirOnly->shape();
-              diagnostics = "";
-              nSelectedChannels = 0;
-              stokes = "";
-              chans = "";
-              stokesControl = RegionManager::USE_ALL_STOKES;
-              box = "1,2,3,4,5,6,7,8";
-              writeTestString("Test multiple boxes on image with direction coordinate only");
-              imregion = rm.fromBCS(
-                  diagnostics, nSelectedChannels, stokes, chans,
-                  stokesControl, box, imShape
-              );
-              AlwaysAssert(nSelectedChannels == 0, AipsError);
-              regRec = imregion.toRecord("");
-
-              // box="5,6,7,8"
-              Vector<Double> gotblc = recToVec(regRec.asRecord("regions").asRecord("*2").asRecord("blc"));
-              Vector<Double> expblc(2);
-              expblc[0] = box5;
-              expblc[1] = box6;
-              compVecs(gotblc, expblc);
-              Vector<Double> gottrc = recToVec(regRec.asRecord("regions").asRecord("*2").asRecord("trc"));
-              Vector<Double> exptrc(2);
-              exptrc[0] = box7;
-              exptrc[1] = box8;
-              compVecs(gottrc, exptrc);
-
-              // box="1,2,3,4"
-              gotblc = recToVec(regRec.asRecord("regions").asRecord("*1").asRecord("blc"));
-              expblc[0] = box1;
-              expblc[1] = box2;
-              compVecs(gotblc, expblc);
-              gottrc = recToVec(regRec.asRecord("regions").asRecord("*2").asRecord("trc"));
-              exptrc[0] = box7;
-              exptrc[1] = box8;
-              compVecs(gottrc, exptrc);
-          }
-        }
-      catch (AipsError x) {
-                           """
 
 def suite():
     return [rg_frombcs_test]
