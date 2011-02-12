@@ -73,7 +73,7 @@ Int main(Int argc, char *argv[]) {
 		excludePixelRange[i] = String::toFloat(excludePixParts[i]);
 	}
 	ImageFitter imFitter(
-		imagename, box, region, chan, stokes, mask, includePixelRange,
+		imagename, region, box, chan, stokes, mask, includePixelRange,
 		excludePixelRange, residual, model, estimatesFilename, logfile,
 		append, newEstimatesFileName
 	);

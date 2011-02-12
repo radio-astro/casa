@@ -79,7 +79,10 @@ if( CMAKE_BUILD_TYPE STREQUAL Debug )
   set( CMAKE_CXX_FLAGS_DEBUG "-ggdb3 -O0" )
 endif()
 
-string( REGEX REPLACE /[^/]+/?$ "" casaroot ${CMAKE_SOURCE_DIR} )
+if( NOT RE_CMAKE )
+    string( REGEX REPLACE /[^/]+/?$ "" casaroot ${CMAKE_SOURCE_DIR} )
+endif()
+
 #
 # aipshosts is supported for backwards compatibility
 #
@@ -251,15 +254,15 @@ if( NOT CMAKE_C_FLAGS )
 endif()
 
 
-IF( NOT RE_CMAKE )
-    IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+if( NOT RE_CMAKE )
+    if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
         set( CMAKE_INSTALL_PREFIX ${casaroot}/${arch} CACHE PATH "casa architecture directory" FORCE )
 	set( casaroot ${casaroot} CACHE PATH "toplevel casa directory" FORCE )
-    ELSE()
+    else()
         set( CMAKE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX} CACHE PATH "casa architecture directory" FORCE )
 	set( casaroot ${CMAKE_INSTALL_PREFIX}/.. CACHE PATH "toplevel casa directory" FORCE )
-   ENDIF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-ENDIF()
+   endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+endif()
 
 dump( casaroot )
 dump( CMAKE_INSTALL_PREFIX )
@@ -612,7 +615,7 @@ endif()
 if( NOT PYTHON_FOUND )
 
   if ( NOT PYTHON_LIBNAME )
-    set( _names 2.9 2.8 2.7 2.6 2.5.2 2.5 )
+    set( _names 2.6 2.5.2 2.5 )
     # (The library named libpython.2.5.2.dylib seems to exist only in the CASA world.)
   else()
     set( _names ${PYTHON_LIBNAME} )
