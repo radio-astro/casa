@@ -20,6 +20,8 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 	# v3.1 Updated STM 2010-12-01 (3.2.0) prec=9 on timestamps
 	# v3.2 Updated STM 2010-12-03 (3.2.0) handle comments # again
 	# v3.2 Updated STM 2010-12-08 (3.2.0) bug fixes in flagsort use, parsing
+        # v3.3 Updated STM 2010-12-20 (3.2.0) bug fixes parsing errors
+        # v3.4 Updated STM 2011-02-14 (3.2.0) bug fix mode online from xml
 	#
 	try:
 		from xml.dom import minidom
@@ -27,7 +29,7 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 		raise Exception, 'Failed to load xml.dom.minidom into python'
 
         casalog.origin('flagcmd')
-	casalog.post('You are using flagcmd v3.2 Updated STM 2010-12-08')
+	casalog.post('You are using flagcmd v3.4 Updated STM 2011-02-14')
 
         fg.done()
         fg.clearflagselection(-1)
@@ -379,10 +381,13 @@ def applyflagcmd(msfile, flagbackup, myflags, reset=False, flagtype='Unset'):
 	    kmodes = {}
 	    # Keys to ignore
 	    iparams = ['reason','flagtime','id','level','severity'] # currently not used
+	    # Keys for online flags
+	    oparams = ['antenna','timerange','correlation','feed','array','spw','field']
 	    # Keys to recognize uparams=Universal sparams=Selection
 	    uparams = [] 
 	    sparams = ['antenna','timerange','correlation','scan','feed','array','uvrange','spw','field']
 	    aparams = uparams + sparams
+	    kmodes['online'] = oparams
 	    kmodes['manualflag'] = aparams + ['unflag']
 	    kmodes['clip'] = aparams + ['unflag','cliprange','clipexpr','clipcolumn','clipchanavg']
 	    kmodes['quack'] = aparams + ['unflag','quackinterval','quackmode','quackincrement']
@@ -1160,6 +1165,9 @@ def getflagcmds(cmdlist, ms_startmjds, ms_endmjds):
 #         'level' (int)           set to 0 here on read-in
 #         'severity' (int)        set to 0 here on read-in
 #   
+# v3.2 Updated STM 2010-12-03 (3.2.0) handle comments # again
+# v3.2 Updated STM 2010-12-08 (3.2.0) bug fixes in flagsort use, parsing
+# v3.3 Updated STM 2010-12-20 (3.2.0) bug fixes parsing errors
 #
     myflagd={}
     nrows = cmdlist.__len__()
@@ -1231,8 +1239,18 @@ def getflagcmds(cmdlist, ms_startmjds, ms_endmjds):
 				    if xkey=='timerange':
 					    timstr = xval
 					    # Extract TIME,INTERVAL
-					    (startstr,endstr) = timstr.split('~')
-					    t = qa.totime(startstr)
+					    try:
+					        (startstr,endstr) = timstr.split('~')
+					    except:
+						if timstr.count('~')==0:
+						    #print 'Assuming a single start time '
+						    startstr = timstr
+						    endstr = timstr
+						else:
+						    print 'Not a start~end range: '+timstr
+						    print "ERROR: too may ~'s "
+						    raise Exception, "Error parsing "+timstr
+                                            t = qa.totime(startstr)
 					    starts = qa.convert(t,'s')
 					    if starts['value']<1.E6:
 						    # assume a time offset from ref
@@ -1506,7 +1524,11 @@ def readflagcmd(msfile,myflagrows=[],useapplied=True,myreason='Any'):
 		    keyvlist = cmd.split()
 		    if keyvlist.__len__()>0:
 		        for keyv in keyvlist:
-			    (xkey,val) = keyv.split('=')
+			    try:
+			        (xkey,val) = keyv.split('=')
+			    except:
+			        print 'Error: not key=value pair for '+keyv
+				break
 			    xval = val
 			    # strip quotes from value
 			    if xval.count("'")>0: xval=xval.strip("'")
