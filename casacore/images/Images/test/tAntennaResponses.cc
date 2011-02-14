@@ -49,6 +49,12 @@ int main() {
   try {
 
     {
+      {
+	// not initialised
+	AntennaResponses x;
+	AlwaysAssert(!x.isInit(), AipsError);
+      }
+
       // table creation from scratch
       
       Vector<String> bName(3);
@@ -86,7 +92,7 @@ int main() {
       funcNameB(2) = "tAntennaResponses3B.in";
 
 
-      AntennaResponses aR; // empty table in memory
+      AntennaResponses aR(""); // empty table in memory
 
       uInt ui = 0;
 

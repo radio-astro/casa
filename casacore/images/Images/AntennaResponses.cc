@@ -219,6 +219,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
+  Bool AntennaResponses::isInit(){
+
+    return (paths_p.nelements()!=0);
+  }
+
   Bool AntennaResponses::isInit(const String& path){
     Bool found = False;
     for (uInt i=0; i<paths_p.nelements(); i++){
