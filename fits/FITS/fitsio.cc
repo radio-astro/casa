@@ -565,7 +565,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	char* l_comm = NULL;
 	
 	int l_status = 0;
-		
+
+	OFF_T l_headstart, l_datastart, l_dataend;
+	// get size info of the HDU to be skipped
+	if (ffghof(m_fptr, &l_headstart, &l_datastart, &l_dataend, &l_status) > 0){
+	    fits_report_error(stderr, l_status); // print error report
+	    errmsg(BADSIZE,"[FitsInput::read_header_rec()]Error computing size of data.");
+	    return (int)m_err_status;
+	}
+	m_skipHDU_size = l_dataend-l_headstart;
+
 //	--------------------------------------------------------------------------
 	int l_found_end = 0, l_namelen = 0;
 	for (int nextkey = 1; !l_found_end; nextkey++)  
@@ -1262,7 +1271,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	m_extend(False), m_isaprimary(False), m_header_done(False),
 	m_rec_type(FITS::InitialState), m_hdu_type(FITS::NotAHDU), m_errfn(errhandler), 
 	m_err_status(OK), m_curr(0), m_bytepos(0), m_item_size(0), 
-	m_data_type(FITS::NOVALUE), m_data_size(0), m_curr_size(0)  {
+	m_data_type(FITS::NOVALUE), m_data_size(0), m_curr_size(0), m_skipHDU_size(0)
+    {
     }
 
     FitsInput::FitsInput(const char *n, const FITS::FitsDevice &d, int b, 

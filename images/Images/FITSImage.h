@@ -107,11 +107,11 @@ class FitsInput;
 class FITSImage: public ImageInterface<Float>
 {
 public: 
-  // Construct a FITSImage from the disk FITS file name and apply mask.
-  explicit FITSImage(const String& name, uInt whichRep=0);
+  // Construct a FITSImage from the disk FITS file name  and extension and apply mask.
+  explicit FITSImage(const String& name, uInt whichRep=0, uInt whichHDU=0);
 
-  // Construct a FITSImage from the disk FITS file name and apply mask or not.
-  FITSImage(const String& name, const MaskSpecifier& mask, uInt whichRep=0);
+  // Construct a FITSImage from the disk FITS file name and extension and apply mask or not.
+  FITSImage(const String& name, const MaskSpecifier& mask, uInt whichRep=0, uInt whichHDU=0);
 
   // Copy constructor (reference semantics)
   FITSImage(const FITSImage& other);
@@ -216,6 +216,10 @@ public:
   DataType dataType () const
     { return dataType_p; }
 
+  // Return the HDU number
+  uInt whichHDU () const
+    { return whichHDU_p; }
+
   // Maximum size - not necessarily all used. In pixels.
   virtual uInt maximumCacheSize() const;
 
@@ -257,6 +261,7 @@ private:
   Int64          fileOffset_p;
   Bool           isClosed_p;
   uInt           whichRep_p;
+  uInt           whichHDU_p;
 
 // Reopen the image if needed.
    void reopenIfNeeded() const
@@ -273,18 +278,26 @@ private:
                             IPosition& shape, ImageInfo& info,
                             Unit& brightnessUnit, RecordInterface& miscInfo, 
                             Int& recsize, Int& recno,
-			    FITS::ValueType& dataType, 
+                            FITS::ValueType& dataType,
                             Float& scale, Float& offset, Short& shortMagic, 
                             Int& longMagic, Bool& hasBlanks, const String& name,
-                            uInt whichRep);
+                            uInt whichRep, uInt whichHDU);
 
-// Crack the header
+// Crack a primary header
    template <typename T>
    void crackHeader (CoordinateSystem& cSys, IPosition& shape, ImageInfo& imageInfo,
                      Unit& brightnessUnit, RecordInterface& miscInfo,
                      Float& scale, Float& offset, Short& magicShort,
                      Int& magicLong, Bool& hasBlanks, LogIO& os, FitsInput& infile,
                      uInt whichRep);
+
+// Crack an image extension header
+   template <typename T>
+   void crackExtHeader (CoordinateSystem& cSys, IPosition& shape, ImageInfo& imageInfo,
+                        Unit& brightnessUnit, RecordInterface& miscInfo,
+                        Float& scale, Float& offset, Short& magicShort,
+                        Int& magicLong, Bool& hasBlanks, LogIO& os, FitsInput& infile,
+                        uInt whichRep);
 		     
 };
 
