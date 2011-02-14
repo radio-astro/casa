@@ -426,17 +426,19 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  default: 'spectra'
             &gt;&gt;&gt; plottype expandable parameter
                  stack -- code for stacking on single plot for spectral plotting
-                         options: 'p','b','i','t','s' or
-                                  'pol', 'beam', 'if', 'time', 'scan'
+                         options: 'p','b','i','t','s','r' or
+                                  'pol', 'beam', 'if', 'time', 'scan', 'row'
                          default: 'p'
-                         example: maximum of 25 stacked spectra
+                         example: maximum of 16 stacked spectra
                                   stack by pol, beam, if, time, scan
+                         Note stack selection is ignored when panel='r'.
                  panel -- code for splitting into multiple panels for spectral plotting
-                         options: 'p','b','i','t','s' or
-                                  'pol', 'beam', 'if', 'time', 'scan'
+                         options: 'p','b','i','t','s','r' or
+                                  'pol', 'beam', 'if', 'time', 'scan', 'row'
                          default: 'i'
-                         example: maximum of 25 panels
+                         example: maximum of 16 panels
                                   panel by pol, beam, if, time, scan
+                         Note panel selection is ignored when stack='r'.
                 flrange -- range for flux axis of plot for spectral plotting
                         options: (list) [min,max]
                         default: [] (full range)
