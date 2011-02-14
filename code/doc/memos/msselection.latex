@@ -431,7 +431,7 @@ following logic is used:
 \end{description}
 Hence if the antenna with ID 17 is named "21", the string
 \begin{verbatim}
-"21",VLA22
+                               "21",VLA22
 \end{verbatim}
 will expand into an antenna ID list of 17,22 (assuming that the
 antenna named VLA22 has ID 22).
