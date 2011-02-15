@@ -797,6 +797,12 @@ public:
 
    Vector<Int> linearAxesNumbers() const;
 
+   // Get the 0 based order of the minimal match strings specified in <src>order</src>.
+   // If <src>requireAll</src> is True, checks are done to ensure that all axes in
+   // the coordinate system are uniquely specified in <src>order</src>.
+   Vector<Int> getWorldAxisOrder(Vector<String>& myNames, const Bool requireAll) const;
+
+
 private:
     // Where we store copies of the coordinates we are created with.
     PtrBlock<Coordinate *> coordinates_p;
@@ -911,6 +917,9 @@ private:
     Bool velocityIncrement(Double& velocityInc,  SpectralCoordinate& sc,
                            MDoppler::Types velocityType, const String& velUnits) const;
     // </group>
+
+    void _downcase(Vector<String>& vec) const;
+
 };
 
 } //# NAMESPACE CASA - END
