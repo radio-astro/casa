@@ -2075,6 +2075,10 @@ Bool MSAsRaster::draw_(Display::RefreshReason reason,
 
   if(!msselValid_) return False;	// No data in [selected] MS.
  
+  // The color wedge is no longer displayed for DisplayDatas whose
+  // state is something other than DISPLAYED...
+  setDisplayState( DisplayData::DISPLAYED );
+
   Axis axX=axisOn_[X], axY=axisOn_[Y], axZ=axisOn_[Z];
 
   // Retrieve animator axis position.  NB: this is the only parameter
