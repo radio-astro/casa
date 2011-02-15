@@ -3,10 +3,23 @@ use File::Path;
 use File::Find;
 use IO::Select;
 use IO::Pipe;
+use IO::File;
 use Time::HiRes qw( time );
 use AnyDBM_File;
 use POSIX;
+use Fcntl qw( :flock );
 
+###
+### to avoid mailing an error log into warp.cv.nrao.edu as aips2mgr and do:
+###
+###          touch ~hudson/control/no-mail
+###
+### just remove the file to allow mail notices to flow again...
+###
+
+###
+### verbose output
+###
 $debug = 1;
 
 ###
@@ -88,33 +101,49 @@ $xvfb_pid = 0;
 $complete_success = 0;
 
 ###
-###  keep track of recent failures...
+###  keep track of recent failures and revisions of last attempts...
 ###
-$failures_file = "/tmp/hudson-failures";
+$failures_file = "/tmp/hudson-failures.db";
+$last_revision_file = "/tmp/hudson-revisions.db";
 
 ###
 ### this will keep track of the revisions that we have at least attempted
 ### to build (and reported if they failed)... using this instead of e.g.
 ### $hudson{'code rev'} et al, prevents a failure earlier in the build
 ### process (e.g. 'casacore') from masking a different error later in the
-### process (e.g. 'asap'). Thus, %last_revision will only be updated with
-### revisions for which builds have at least been attempted...
+### process (e.g. 'asap'). Thus, $last_revision_file will only be updated
+### with revisions for which builds have at least been attempted...
 ###
 %build_attempted = ( 'code' => '', 'casacore' => '', 'asap'=> '' );
 
 ###
 ### stop xvfb if it is running...
+### untie any tied hashes...
 ###
+%tied_hashes = ( );
 END {
 
-    $last_revision{'code'} = $build_attempted{'code'} if $build_attempted{'code'};
-    $last_revision{'casacore'} = $build_attempted{'casacore'} if $build_attempted{'casacore'};
-    $last_revision{'asap'} = $build_attempted{'asap'} if $build_attempted{'asap'};
-    untie( %last_revision );
+    ### untie hashes
+    foreach $key ( keys %tied_hashes ) {
+	my $val = $tied_hashes{$key};
+	my $fh = $$val[0];
+	my $hash = $$val[1];
+	untie( %$hash );
+	close( $fh );
+    }
 
-    untie( %failures );
+    ### note last attempted build
+    my %lastrev;
+    my $lock = tie_hash( \%lastrev, $last_revision_file );
+    $lastrev{'code'} = $build_attempted{'code'} if $build_attempted{'code'};
+    $lastrev{'casacore'} = $build_attempted{'casacore'} if $build_attempted{'casacore'};
+    $lastrev{'asap'} = $build_attempted{'asap'} if $build_attempted{'asap'};
+    untie_hash( \%lastrev, $lock );
+
+    ### if build was OK, remove the tally of failures...
     unlink( $failures_file ) if $complete_success;
 
+    ### kill xvfb, if it is running...
     if ( $xvfb_pid ) {
 	print "   => killing $xvfb_pid...\n" if $debug;
 	kill( 2, $xvfb_pid ) 
@@ -133,10 +162,8 @@ fill_hudson_dict( );
 ###
 ### set up failure file within the workspace...
 ###
-$failures_file = $hudson{'workspace'} . "/failures.dbm";
-$last_revision_file = $hudson{'workspace'} . "/last-revision.dbm";
-tie( %failures, AnyDBM_File, $failures_file, O_RDWR | O_CREAT, 0644 );
-tie( %last_revision, AnyDBM_File, $last_revision_file, O_RDWR | O_CREAT, 0644 );
+$failures_file = $hudson{'home'} . "/state/failures.db";
+$last_revision_file = $hudson{'home'} . "/state/last-revision.db";
 
 print_state( );
 build_casa( );
@@ -458,6 +485,42 @@ sub find_runtest {
     return $perlfind_runtestscript_out_script;
 }
 
+###
+### without locking to serialize access to the database, only the
+### first process actually tie's to the dbm file (other process
+### appear to succeed in tying to the dbm file, but their changes
+### are lost)
+###
+sub tie_hash {
+    my $hash = shift(@_);
+    my $file = shift(@_);
+    my $count = 180;
+
+    my $fh = new IO::File( "$file.lock", O_RDONLY | O_CREAT, 0644 );
+    while ( $count && ! flock($fh, LOCK_EX | LOCK_NB) ) {
+	--$count;
+	sleep(1);
+    }
+    die "could not lock $file.lock" unless $count;
+
+    tie( %$hash, AnyDBM_File, $file, O_RDWR | O_CREAT, 0644 );
+    $tied_hashes{$file} = $hash;
+    return $fh;
+}
+
+###
+### untie and unlock a dbm file...
+###
+sub untie_hash {
+    my $hash = shift(@_);
+    my $fh = shift(@_);
+    untie( %$hash );
+    close( $fh );
+}
+
+###
+### launch a X virtual frame buffer server...
+###
 sub launch_xvfb {
     my $path = $ENV{'PATH'};
     my @path = split( /:/, $path);
@@ -562,13 +625,17 @@ sub find_svn_user_and_rev {
 sub old_revision {
     my $pkg = shift(@_);
     my $revision = shift(@_);
+    my %lastrev;
+    my $lock = tie_hash( \%lastrev, $last_revision_file );
+    my $last_pkg_rev = $lastrev{$pkg};
+    untie_hash( \%lastrev, $lock );
 
-    if ( $hudson{"$pkg rev"} && $last_revision{$pkg} &&
-	 $hudson{"$pkg rev"} <= $last_revision{$pkg} ) {
-	print "   => re-run of $pkg test ($hudson{\"$pkg rev\"}/$last_revision{$pkg})...\n" if $debug;
+    if ( $hudson{"$pkg rev"} && $last_pkg_rev &&
+	 $hudson{"$pkg rev"} <= $last_pkg_rev ) {
+	print "   => re-run of $pkg test ($hudson{\"$pkg rev\"}/$last_pkg_rev)...\n" if $debug;
 	return 1;
     }
-    print "   => fresh $pkg change ($hudson{\"$pkg rev\"}/$last_revision{$pkg})...\n" if $debug;
+    print "   => fresh $pkg change ($hudson{\"$pkg rev\"}/$last_pkg_rev)...\n" if $debug;
     return 0;
 }
 
@@ -636,6 +703,9 @@ sub mail_suspect {
 
     $name = join( ' ', @name );
 
+    my %failures;
+    my $lock = tie_hash( \%failures, $failures_file );
+
     unless ( open( SENDMAIL, "| $sendmail -t" ) ) {
     	die "could not mail my message";
     }
@@ -669,5 +739,6 @@ sub mail_suspect {
     ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
     my $time = 	sprintf "%4d-%02d-%02d %02d:%02d:%02d",$year+1900,$mon+1,$mday,$hour,$min,$sec;
     $failures{$time} = $url;
+    untie_hash( \%failures, $lock );
 
 }
