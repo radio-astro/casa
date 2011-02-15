@@ -2603,7 +2603,7 @@ Bool Imager::linearmosaic(const String& mosaic,
     TempImage<Float>  numerator( TiledShape(mosaicImage.shape(), mosaicImage.niceCursorShape()), mosaicImage.coordinates(), meminMB/2.0);
     numerator.set(0.0);
     TempImage<Float>  denominator( TiledShape(mosaicImage.shape(), mosaicImage.niceCursorShape()), mosaicImage.coordinates(), meminMB/2.0);
-    numerator.set(0.0);
+    denominator.set(0.0);
     ImageRegrid<Float> regridder;
     
     ROMSColumns msc(*ms_p);
