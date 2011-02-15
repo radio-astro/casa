@@ -282,10 +282,11 @@ RFA::IterMode RFATimeFreqCrop :: iterTime (uInt itime)
 	      {
 		visc(pl,ch,(timecnt*NumB)+baselinecnt) = mapValue(ch,bs);
 		tfl = chunk.npass() ? flag.anyFlagged(ch,chunk.ifrNum(bs)) : flag.preFlagged(ch,chunk.ifrNum(bs));
+		//tfl = flag.preFlagged(ch,chunk.ifrNum(bs));
 		flagc(pl,ch,(timecnt*NumB)+baselinecnt) = tfl; //flag.anyFlagged(ch,ifrs(bs));
 		chunkflags(pl,ch,(itime*NumB)+baselinecnt) = tfl; //flag.anyFlagged(ch,ifrs(bs));
 		countpnts++;
-		countflags += Int(tfl);
+		countflags += (Int)(tfl);
 	      }
 	    // Read in rowflag
             rowflags( (timecnt*NumB)+baselinecnt ) = flag.getRowFlag( chunk.ifrNum(bs), itime);
@@ -303,7 +304,11 @@ RFA::IterMode RFATimeFreqCrop :: iterTime (uInt itime)
     /////if(iterTimecnt > 0 && (timecnt==NumT || iterTimecnt == (vi.nRowChunk()/NumB)))
     if(iterTimecnt > 0 && (timecnt==NumT || itime==(num(TIME)-1) ))
       {
-        FlagZeros();		
+        //cout << " TIMES : " << timecnt << "   itime : " << itime << endl;
+        Int ctimes = timecnt;
+        NumT = timecnt;
+
+	FlagZeros();		
 
 	RunTFCrop();
 	
@@ -313,7 +318,8 @@ RFA::IterMode RFATimeFreqCrop :: iterTime (uInt itime)
 	ExtendFlags();
 	
 	FillChunkFlags();    
-	
+
+        NumT = ctimes;	
 	// reset the NumT time counter !!!
 	timecnt=0;
       }
@@ -382,12 +388,16 @@ void RFATimeFreqCrop :: FlagZeros()
 	      
 	      // Count flags across channels and time,,,,,
               for(int ch=0; ch<NumC; ch++)
-                bflag *= flagc(pl,ch,tm*NumB+bs);
+                bflag &= flagc(pl,ch,tm*NumB+bs);
 	      
 	    }// for tm
           // If all times/chans are flagged for this baseline, set the baselineflag.
 	  if(bflag) baselineflags(bs)=True;
 	}// for bs
+      Int ubs=0;
+      for(uInt bs=0;bs<NumB;bs++)
+           if(!baselineflags(bs)) ubs++;
+      if(ShowPlots) cout << "Working with " << ubs << " unflagged baseline(s). " << endl;
     }// for pl
 }
 
