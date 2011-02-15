@@ -28,7 +28,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <example>function="mean"</example>
     </param>
     <param type="variant" name="axes">
-        <description>Zero-based axis number(s) to collapse.</description>
+        <description>Zero-based axis number(s) or minimal match strings to collapse.</description>
         <value>[0]</value>
         <example>axis=2</example>
     </param>
@@ -99,7 +99,7 @@ function         Function used to compute aggregation of pixel values along the 
                  axis. Supported functions are avdev, max, mean, median, min, rms, stdev,
                  sum, variance. Minimum match is supported for the function parameter (eg,
                  function="r" will compute the rms of the pixel values).
-axis             Zero-based axis number to compress.
+axis             Zero-based axis number(s) or minimal match strings to compress.
 outfile          Name of output CASA image. If not specified, no image is written
                  but an image analysis tool which references the output image is returned.
 overwrite        If output file is specified, controls if an already existing file by the
@@ -124,6 +124,11 @@ single remaining plane of this axis in the output image. The method returns an i
 tool containing the newly created collapsed image. Choices of aggregate functions are:
 avdev, max, mean, median, min, rms, stdev, sum, variance. Minimum match is supported for
 the function parameter (eg, function="r" will compute the rms of the pixel values). 
+
+Axes can be specified as a single integer or array of integers indicating the zero-based axes along
+which to collapse the image. Axes may also be specified as a single or array of strings which minimally
+and uniquely match (ignoring case) world axes names in the image (eg "dec" or ["ri, "d"] for
+collapsing along the declination axis or along the right ascension and declination axes, respectively).
 
 If outfile is not specified (or contains only white spaces), no image is written but one can
 request the method return an image analysis tool which references the collapsed image by
