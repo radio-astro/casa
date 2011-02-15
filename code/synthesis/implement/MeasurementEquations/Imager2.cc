@@ -2325,6 +2325,14 @@ Bool Imager::writeFluxScales(const Vector<String>& fluxScaleNames)
 				     images_p[thismodel]->coordinates(),
 				     fluxScaleNames(thismodel)+".pbcoverage");
         coverimage.table().markForDelete();
+	if(freqFrameValid_p){
+	  CoordinateSystem cs=fluxScale.coordinates();
+	  String errorMsg;
+	  if (CoordinateUtil::setSpectralConversion (errorMsg, cs,MFrequency::showType(freqFrame_p))) {
+	    fluxScale.setCoordinateInfo(cs);
+            coverimage.setCoordinateInfo(cs);
+	  }
+        }
         if (sm_p->doFluxScale(thismodel)) {
 	  cover=&(sm_p->fluxScale(thismodel));
 	  answer = True;
@@ -3980,6 +3988,13 @@ void Imager::savePSF(const Vector<String>& psf){
 	PagedImage<Float> psfimage(shape,
 				   images_p[thismodel]->coordinates(),
 				   psf(thismodel));
+	if(freqFrameValid_p){
+	  CoordinateSystem cs=psfimage.coordinates();
+	  String errorMsg;
+	  if (CoordinateUtil::setSpectralConversion (errorMsg, cs,MFrequency::showType(freqFrame_p))) {
+	    psfimage.setCoordinateInfo(cs);
+	  }
+        }
 	psfimage.set(0.0);
 	if((shape[0]*shape[1]) > ((sm_p->PSF(whichmodel)).shape()[0]*(sm_p->PSF(whichmodel)).shape()[1])){
 	  IPosition blc(4, 0, 0, 0, 0);

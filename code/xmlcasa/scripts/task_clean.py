@@ -495,6 +495,9 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
             result          = '\'' + newimage + '.image' + '\'';
             fluxscale_image = '\'' + newimage + '.flux'  + '\'';
             pbcov_image=fluxscale_image
+            # convert .flux image, which may not be correct outframe if 
+            # it was made from im tool, to correct outframe
+            imset.convertImageFreqFrame([fluxscale_image.replace('\'','')])
             if(localFTMachine=='mosaic'):
                 pbcov_image = '\'' + newimage + '.flux.pbcoverage'  + '\'';
             residim         = '\'' + newimage + '.residual'  + '\'';
