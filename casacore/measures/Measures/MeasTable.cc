@@ -4084,7 +4084,6 @@ void MeasTable::initObservatories() {
     antResponsesPath.resize(N);
     Bool hasAntResp = False;
     if(row.record().isDefined("AntennaResponses")){
-      cout << "Found antenna responses column." << endl;
       hasAntResp = True;
     }
 
@@ -4134,8 +4133,7 @@ Bool MeasTable::AntennaResponsesPath(String &antRespPath, const String &nam) {
     }
     else if(antRespPath[0] == '/'){ // path is absolute
       Path lPath(antRespPath);
-      Path lAbsPath(lPath.absoluteName());
-      if(!lAbsPath.isValid()){
+      if(!Table::isReadable(lPath.absoluteName())){
 	return False;
       }
     }
@@ -4148,32 +4146,26 @@ Bool MeasTable::AntennaResponsesPath(String &antRespPath, const String &nam) {
 	Aipsrc::find(mdir, "measures.directory");
 	Path lPath(mdir + "/" + antRespPath);
 	absPathName = lPath.absoluteName();
-	Path lAbsPath(absPathName);
-	isValid = lAbsPath.isValid();
+	isValid = Table::isReadable(absPathName);
       }
       if(!isValid){
 	Path lPath(Aipsrc::aipsHome() + "/data/" + antRespPath);
-	absPathName = lPath.absoluteName();
-	Path lAbsPath(absPathName);
-	isValid = lAbsPath.isValid();
+	isValid = Table::isReadable(absPathName);
       }
       if(!isValid){
 	Path lPath(Aipsrc::aipsRoot() + "/data/" + antRespPath);
 	absPathName = lPath.absoluteName();
-	Path lAbsPath(absPathName);
-	isValid = lAbsPath.isValid();
+	isValid = Table::isReadable(absPathName);
       }
       if(!isValid){
 	Path lPath(String(CASADATA) + "/" + antRespPath);
 	absPathName = lPath.absoluteName();
-	Path lAbsPath(absPathName);
-	isValid = lAbsPath.isValid();
+	isValid = Table::isReadable(absPathName);
       }
       if(!isValid){
 	Path lPath(String(CASADATA)+ "/share/casacore/data/" + antRespPath);
 	absPathName = lPath.absoluteName();
-	Path lAbsPath(absPathName);
-	isValid = lAbsPath.isValid();
+	isValid = Table::isReadable(absPathName);
       }
       if(!isValid){
 	return False; // table not found
