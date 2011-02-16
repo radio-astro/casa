@@ -143,7 +143,7 @@ a pair of '/' as delimiters.  A string enclosed within double quotes
 simplified form of regular expressions - used in most UNIX commands
 for string matching). Patterns are internally converted to equivalent
 regular expressions before matching.  Read elsewhere (e.g. use command
-"info regex", or visit http://www.regular-expressions.info) for
+"info regex", or visit \htmladdnormallinkfoot{this link}{http://www.regular-expressions.info}) for
 details of regular expression and patterns.
 
 Strings can include any character except the following:
@@ -765,15 +765,14 @@ as a comma separated list.  E.g.
 \section{"Scan intent'' Based Selection}
 
 "Scan intent" selection is based on the entries in the {\tt
-  "OBS\_MODE"} column of the {\tt "STATE"} sub-table.
-% The main table of a Measurement Set has the {\tt "STATE\_ID"} column
-% containing the row number of the {\tt "STATE"} sub-table appropriate
-% for each row in the main table.  The {\tt "OBS\_MODE"} column of the
-% {\tt STATE} sub-table contrains strings describing the observational
-% intent.  These intents are referred to as "scan intents" and the
-% scan-intent expressions in the MSSelection module can be used for data
-% selection.  Such a data selection is referred to as the "scan-intent
-% selection". 
+  "OBS\_MODE"} column of the {\tt "STATE"} sub-table.  The main table
+of a Measurement Set has the {\tt "STATE\_ID"} column containing the
+row number of the {\tt "STATE"} sub-table appropriate for each row in
+the main table.  The {\tt "OBS\_MODE"} column of the {\tt STATE}
+sub-table contains strings describing the observational intent.
+These intents are referred to as "scan intents" and the scan-intent
+expressions in the MSSelection module can be used for data selection
+based on these intents.
 
 \subsection{Syntax}
 
@@ -795,13 +794,14 @@ matching the string(s) in the scan-intent expression are selected.
 E.g. {\tt scanintent=*CAL*, *BAND*} will select all scans which have
 the strings {\tt "CAL"} or {\tt "BAND"}.
 
-Scan-intent selection specifications can also be an
-ampersand-separated ({\tt '\&'}) list string expressions.  Only those
-scans, at least one scan-intent components of which match {\it all} the
-ampersand-separated components are selected.  E.g. {\tt
-  scanintent=*CAL* \& *BAND*} will select only those scans the intent
-strings of which contain the strings {\tt "CAL"} {\it and} {\tt
-  "BAND"}.  See Section~\ref{Sec:SCANINTENTEXAMPLES} for more examples.
+To allow selection based on scan-intent components, scan-intent
+selection specifications can also be ampersand-separated ({\tt '\&'})
+list strings.  Only those scans, at least one scan-intent components
+of which match {\it all} the ampersand-separated components are
+selected.  E.g. {\tt scanintent=*CAL* \& *BAND*} will select only
+those scans the intent strings of which contain the strings {\tt
+  "CAL"} {\it and} {\tt "BAND"}.  See
+Section~\ref{Sec:SCANINTENTEXAMPLES} for more examples.
 \begin{table}[ht!]
 \caption{Example scan-intent table}
 \begin{center}
