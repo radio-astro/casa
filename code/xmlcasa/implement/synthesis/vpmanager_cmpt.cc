@@ -633,7 +633,7 @@ vpmanager::createantresp(const std::string& imdir,
      
     }
 
-    AntennaResponses aR; // empty table in memory
+    AntennaResponses aR(""); // empty table in memory
     uInt iRow = 0;
     Int currBeamId = 0;
 
