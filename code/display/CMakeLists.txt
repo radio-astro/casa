@@ -323,7 +323,7 @@ casa_add_library( display
   )
 
 casa_add_executable( display casaplotter apps/casaplotter/casaplotter.cc )
-casa_add_executable( display casadrawer apps/casadrawer/casadrawer.cc )
+#casa_add_executable( display casadrawer apps/casadrawer/casadrawer.cc )
 casa_add_executable( display casaviewer apps/casaviewer/casaviewer.cc )
 casa_add_assay( display implement/DisplayEvents/test/tDisplayEvent.cc )
 casa_add_assay( display implement/DisplayEvents/test/tDisplayTool.cc )
