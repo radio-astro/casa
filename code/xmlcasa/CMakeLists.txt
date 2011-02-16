@@ -192,6 +192,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/pointcal.py
   scripts/qtcasapy.py
   scripts/regression.py
+  scripts/regressframe.py
   scripts/regression_utility.py
   scripts/run_sdregress_fls3hi.py
   scripts/run_sdregress_irc.py
