@@ -255,7 +255,6 @@ void PrincipalAxesDM::draw(Display::RefreshReason reason,
     return;
   }
 
-  parentDisplayData()->setDisplayState( DisplayData::DISPLAYED );
   drawListNumber = dataDrawSelf(wCanvas, blc, trc, start, sliceShape,
 				stride, True);
 
