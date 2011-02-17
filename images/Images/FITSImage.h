@@ -129,6 +129,12 @@ public:
   // Register the open function.
   static void registerOpenFunction();
 
+  // Separate any extension specification and return the pure fitsname
+  static String get_fitsname(const String &fullname);
+
+  // Get the extension index for any extension specification given in the full name
+  static uInt get_hdunum(const String &fullname);
+
   //# ImageInterface virtual functions
   
   // Make a copy of the object with new (reference semantics).
@@ -248,6 +254,7 @@ public:
 
 private:  
   String         name_p;
+  String         fullname_p;
   MaskSpecifier  maskSpec_p;
   CountedPtr<TiledFileAccess> pTiledFile_p;
   Lattice<Bool>* pPixelMask_p;
