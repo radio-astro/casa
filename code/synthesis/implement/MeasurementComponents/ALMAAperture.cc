@@ -38,7 +38,7 @@
 
 namespace casa{
 
-  AntennaResponses* ALMAAperture::aR_p = 0;
+  AntennaResponses ALMAAperture::aR_p = AntennaResponses();
 
   ALMAAperture::ALMAAperture(): 
     ATerm(),
@@ -49,11 +49,13 @@ namespace casa{
 
     haveCannedResponses_p = True;
 
-    if(!aR_p){
-      aR_p = new AntennaResponses();
-    }
+//     if(!aR_p){
+//       aR_p = new AntennaResponses();
+//     }
 
-    if(!aR_p->isInit()){ // the shared antenna responses object was not yet initialised
+    if(!aR_p.isInit()){ // the shared antenna responses object was not yet initialised
+
+      cout << "initialising antenna responses" << endl;
 
       String antRespPath;
       if(!MeasTable::AntennaResponsesPath(antRespPath, "ALMA")) {
@@ -65,7 +67,7 @@ namespace casa{
 		<< LogIO::POST;
 	haveCannedResponses_p = False;
       }
-      else if(!aR_p->init(antRespPath)){
+      else if(!aR_p.init(antRespPath)){
 	// init failed
 	String mesg="Initialisation of antenna responses for observatory ALMA failed using path "+antRespPath;
 	SynthesisError err(mesg);
@@ -73,7 +75,7 @@ namespace casa{
       }
       else if(MeasTable::AntennaResponsesPath(antRespPath, "ACA")) {
 	// also have responses for ACA
-	aR_p->append(antRespPath); // dont't throw if this fails because the ACA antennas
+	aR_p.append(antRespPath); // dont't throw if this fails because the ACA antennas
 	                          // may already be in the ALMA table
       }
     }
@@ -84,7 +86,7 @@ namespace casa{
   {
     if(this!=&other) 
       {
-        // aR_p does not need to be copied because it is static (shared)
+        // aR_p does not need to be copied because it is static
 	haveCannedResponses_p = other.haveCannedResponses_p;
  	polMap_p.assign(other.polMap_p);
 // 	Diameter_p=other.Diameter_p;
@@ -99,8 +101,10 @@ namespace casa{
   {
     Vector<String> telescopeNames=vb.msColumns().observation().telescopeName().getColumn();
     for(uInt nt=0;nt<telescopeNames.nelements();nt++){
-      if ((telescopeNames(nt) != "ALMA") && (telescopeNames(nt) != "ACA")){
-	String mesg="Can handle only ALMA and ACA antennas.\n";
+      if ((telescopeNames(nt) != "ALMA") && 
+	  (telescopeNames(nt) != "ACA") && 
+	  (telescopeNames(nt) != "OSF")){
+	String mesg="Can handle only ALMA, ACA, and OSF antennas.\n";
 	mesg += "Erroneous telescope name = " + telescopeNames(nt) + ".";
 	SynthesisError err(mesg);
 	throw(err);
@@ -113,7 +117,7 @@ namespace casa{
     Int bandID = -1;
     if(haveCannedResponses_p){
       String bandName;
-      if(aR_p->getBandName(bandName, "ALMA", FreqQ)){
+      if(aR_p.getBandName(bandName, "ALMA", FreqQ)){
 	bandID = atoi(bandName.substr(bandName.find("and")+3).c_str()); // band names start with "band" 
       }
       else{
@@ -142,9 +146,14 @@ namespace casa{
 //       Long cachesize=(HostInfo::memoryTotal(true)/8)*1024;
 //       almaPB.setMaximumCacheSize(cachesize);
 //       almaPB.applyPB(outImages, vb, doSquint);
+      logIO() << LogOrigin("ALMAAperture", "applySky")
+	      << LogIO::SEVERE
+	      << "Interface to BeamCalc ray tracing is not yet implemented for ALMA."
+	      << LogIO::POST;      
     }
     else{ // use canned antenna responses
       // extract matrix from image
+      
       //   (issue warning if too coarse => will be in method ATerm::OK(vb, PAtolerance, timetolerance)
       //   identify the right AIF based on antenna, freq band, polarizations
       //   Form all convolution pairs (Efield patterns) of antenna types in the Array
@@ -238,20 +247,24 @@ namespace casa{
     Vector<Int> map; 
     map.resize(vb.nRow()); 
 
+    cout << "vb rows: " << vb.nRow() << endl;
+
     if(haveCannedResponses_p){
       // distinguish different antenna types
-      if(antTypeMap_p.nelements()!=vb.numberAnt()){
-	antTypeMap_p.assign(antTypeMap(vb));
+      if(antTypeMap_p.nelements()!=(uInt)vb.numberAnt()){
+	antTypeMap(antTypeMap_p, vb);
+	cout << "initialising antTypeMap to " << antTypeMap_p << endl;
       }
+
       pairTypeToCFKeyMap_p.clear();
       Int cfKeyCount = 0;
-      for(uInt i=0; i<vb.nRow(); i++){
-	Int aT1 = antTypeMap_p(vb.antenna1()(i));
-	Int aT2 = antTypeMap_p(vb.antenna2()(i));
-	Int pair = min(aT1, aT2) + 10000*max(aT1, aT2); // order doesn't matter, convolution commutes
-	map(i) = pairTypeToCFKeyMap_p(pair);
+      for(uInt i=0; i<(uInt)vb.nRow(); i++){
+	Int pairType = antennaPairTypeCode(antTypeMap_p(vb.antenna1()(i)),
+				       antTypeMap_p(vb.antenna2()(i)));
+	map(i) = pairTypeToCFKeyMap_p(pairType);
 	if(map(i)<0){ // new pair type
-	  pairTypeToCFKeyMap_p.define(pair, cfKeyCount);
+	  cout << "new pair type " << pairType << " gets key :" << cfKeyCount << endl;
+	  pairTypeToCFKeyMap_p.define(pairType, cfKeyCount);
 	  map(i) = cfKeyCount;
 	  cfKeyCount++;
 	}
@@ -265,30 +278,42 @@ namespace casa{
     return map;
   }
 
-  Vector<Int> ALMAAperture::antTypeMap(const VisBuffer& vb){
-    Vector<Int> map(vb.numberAnt());
-    for(uInt i; i<map.nelements(); i++){
+  void ALMAAperture::antTypeMap(Vector<ALMAAntennaType>& map, const VisBuffer& vb){
+    map.resize(vb.numberAnt());
+    for(uInt i=0; i<map.nelements(); i++){
       map(i) = antTypeFromName(vb.msColumns().antenna().name()(i));
-      if(map(i)<0){
+      cout << vb.msColumns().antenna().name()(i) << " " << map(i) << endl;
+      if(map(i)==ALMA_INVALID){
 	logIO() << LogOrigin("ALMAAperture", "antTypeMap")
 		<< LogIO::WARN 
 		<< "Unrecognised antenna type for antenna \"" 
 		<< vb.msColumns().antenna().name()(i) << "\""  
 		<< LogIO::POST;
-	map(i) = -1;
       }
     }
-    return map;
   }
 
-  Int ALMAAperture::antTypeFromName(const String& name){
-    Int rval = -1;
+  ALMAAntennaType ALMAAperture::antTypeFromName(const String& name){
+    ALMAAntennaType rval = ALMA_INVALID;
     String typeN = name.substr(0,2);
-    if(typeN=="DV") rval=0;
-    else if(typeN=="DA") rval=1;
-    else if(typeN=="PM") rval=2;
-    else if(typeN=="CM") rval=3;
+    if(typeN=="DV") rval=ALMA_DV;
+    else if(typeN=="DA") rval=ALMA_DA;
+    else if(typeN=="PM") rval=ALMA_PM;
+    else if(typeN=="CM") rval=ALMA_CM;
     return rval;
+  }
+
+  Int ALMAAperture::antennaPairTypeCode(const ALMAAntennaType aT1, const ALMAAntennaType aT2){
+    return min((Int)aT1+1, (Int)aT2+1) + 10000*max((Int)aT1+1, (Int)aT2+1); // order doesn't matter, convolution commutes
+  }
+
+  void ALMAAperture::antennaTypesFromPairType(ALMAAntennaType& aT1, ALMAAntennaType& aT2,
+					      const Int& antennaPairType){
+    Int t1 = (Int) floor(antennaPairType/10000.);
+    Int t2 = antennaPairType - 10000*t1 - 1;
+    t1--;
+    aT1 = (ALMAAntennaType) min(t1,t2);
+    aT2 = (ALMAAntennaType) max(t1,t2);
   }
 
 };

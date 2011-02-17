@@ -50,6 +50,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   template<class T> class ImageInterface;
   template<class T> class Matrix;
   class VisBuffer;
+
+  enum ALMAAntennaType {
+    ALMA_INVALID = -1,
+    ALMA_DV = 0,
+    ALMA_DA,
+    ALMA_PM,
+    ALMA_CM,
+    numAntTypes
+  };
+
   class ALMAAperture : public ATerm
   {
   public:
@@ -82,15 +92,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual Float getSupportThreshold() {return THRESHOLD;};
 
     // tell the antenna type number for each antenna in the antenna table
-    Vector<Int> antTypeMap(const VisBuffer& vb);
+    void antTypeMap(Vector<ALMAAntennaType>& map, const VisBuffer& vb);
+
+    // call this before reusing the same ALMAAperture object on a different MS
+    void resetAntTypeMap(){antTypeMap_p.resize(0);};
 
     // derive type number from first two characters in antenna name, 
     // return -1 if not recognised 
-    static Int antTypeFromName(const String& name);
+    static ALMAAntennaType antTypeFromName(const String& name);
 
-    void destroyAntResp(){ delete aR_p;};
+    static Int antennaPairTypeCode(const ALMAAntennaType aT1, const ALMAAntennaType aT2);
+    static void antennaTypesFromPairType(ALMAAntennaType& aT1, ALMAAntennaType& aT2,
+					 const Int& antennaPairType);
 
-  protected:
+    //    void destroyAntResp(){ delete aR_p;};
+
     Int getVisParams(const VisBuffer& vb);
     Int makePBPolnCoords(const VisBuffer&vb,
 			 const Int& convSize,
@@ -100,10 +116,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			 CoordinateSystem& feedCoord);
 
   private:
-    static AntennaResponses* aR_p; // shared between all instances of this class
+    static AntennaResponses aR_p; // shared between all instances of this class
     Vector<Int> polMap_p;
     Bool haveCannedResponses_p; // true if there are precalculated response images available
-    Vector<Int> antTypeMap_p; // maps antenna id to antenna type
+    Vector<ALMAAntennaType> antTypeMap_p; // maps antenna id to antenna type
     SimpleOrderedMap<Int, Int > pairTypeToCFKeyMap_p; // maps antenna pair type to CFKey 
   };
 };
