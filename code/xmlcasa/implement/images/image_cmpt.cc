@@ -238,15 +238,13 @@ image::addnoise(const std::string& type, const std::vector<double>& pars,
 casac::image * image::collapse(
 	const string& function, const variant& axes, const string& outfile,
 	const string& region, const string& box, const string& chans,
-	const string& stokes, const string& mask,
-	const bool overwrite
+	const string& stokes, const string& mask, const bool overwrite
 ) {
 	image *newImageTool = 0;
     *itsLog << LogOrigin("image", __FUNCTION__);
     if (detached()) {
     	return NULL;
     }
-
 	try {
 		Vector<uInt> myAxes;
 		if (axes.type() == variant::INT) {
@@ -260,11 +258,36 @@ casac::image * image::collapse(
 				myAxes[i] = tmp[i];
 			}
 		}
+		else if (axes.type() == variant::STRINGVEC || axes.type() == variant::STRING) {
+			Vector<String> axVec = (axes.type() == variant::STRING)
+				? Vector<String>(1, axes.getString())
+				: toVectorString(axes.toStringVec());
+			/*
+			if (axes.type() == variant::STRING) {
+				axVec[0] = axes.getString();
+			}
+			else {
+				axVec.resize(axes.size());
+				axVec = toVectorString(axes.toStringVec());
+			}
+			*/
+			Vector<Int> holdAxes = itsImage->getImage()->coordinates().getWorldAxisOrder(
+				axVec, False
+			);
+			myAxes.resize(holdAxes.size());
+			Vector<Int>::const_iterator jiter = holdAxes.begin();
+			for(Vector<uInt>::iterator iter = myAxes.begin(); iter != myAxes.end(); iter++) {
+				if(*jiter < 0) {
+					throw AipsError("At least one specified axis does not exist");
+				}
+				*iter = (uInt)*jiter;
+				jiter++;
+			}
+		}
 		else {
 			throw AipsError("Unsupported type for parameter axes");
 		}
 		String aggString = function;
-		// FIXME allow user to specify multiple axes at python level
 		ImageCollapser collapser(
 			aggString, itsImage->getImage(), region,
 		    box, chans, stokes, mask, myAxes,
@@ -1335,6 +1358,7 @@ image::fitpolynomial(const std::string& residFile, const std::string& fitFile,
 		}
 		outImage = new ::casac::image(reorderer->reorder(), False);
 	} catch (AipsError x) {
+		delete reorderer;
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}

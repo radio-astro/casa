@@ -190,6 +190,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/pointcal.py
   scripts/qtcasapy.py
   scripts/regression.py
+  scripts/regressframe.py
   scripts/regression_utility.py
   scripts/run_sdregress_fls3hi.py
   scripts/run_sdregress_irc.py
@@ -259,6 +260,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_listcal.py
   scripts/task_listhistory.py
   scripts/task_listobs.py
+  scripts/task_listsdm.py
   scripts/task_listvis.py
   scripts/taskmanager.py
   scripts/task_mosaic.py
@@ -374,6 +376,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/listcal.xml
   tasks/listhistory.xml
   tasks/listobs.xml
+  tasks/listsdm.xml
   tasks/listvis.xml
   tasks/mosaic.xml
   tasks/peel.xml

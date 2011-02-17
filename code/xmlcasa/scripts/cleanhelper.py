@@ -2428,6 +2428,22 @@ class cleanhelper:
             if os.path.exists(dir):
                shutil.rmtree(dir)
 
+    def convertImageFreqFrame(self,imlist):
+        """
+        convert output images to proper output frame
+        """
+        if type(imlist)==str:
+          imlist=[imlist]
+        if self.usespecframe.lower() != 'lsrk':
+          for img in imlist:
+            if os.path.exists(img):
+              ia.open(img)
+              csys=ia.coordsys()
+              csys.setconversiontype(spectral=self.usespecframe)
+              ia.setcoordsys(csys.torecord())
+              ia.close()
+
+
 
 def getFTMachine(gridmode, imagermode, mode, wprojplanes, userftm):
     """

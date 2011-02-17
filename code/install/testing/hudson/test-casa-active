@@ -1,0 +1,744 @@
+#!/usr/bin/perl
+use File::Path;
+use File::Find;
+use IO::Select;
+use IO::Pipe;
+use IO::File;
+use Time::HiRes qw( time );
+use AnyDBM_File;
+use POSIX;
+use Fcntl qw( :flock );
+
+###
+### to avoid mailing an error log into warp.cv.nrao.edu as aips2mgr and do:
+###
+###          touch ~hudson/control/no-mail
+###
+### just remove the file to allow mail notices to flow again...
+###
+
+###
+### verbose output
+###
+$debug = 1;
+
+###
+### who is monitoring the testing...
+###
+$testmanager = 'darrell@schiebel.us';
+$hudson_host = 'warp';
+
+###
+### where is sendmail
+###
+$sendmail = "/usr/sbin/sendmail";
+
+###
+### tests to run
+###
+%tests = ( 'linux-x86_64' => { 'test_flagdata' => [ 'test2' ],
+#			       'test_boxit' => [ ],
+			       'test_clearstat' => [ ],
+			       'test_clean' => [ 'test11' ],
+			       'test_vishead' => [ ],
+			       'test_visstat' => [ 'test2', 'test3', 'test4' ],
+#			       'test_uvcontsub2' => [ ],
+#			       'test_split' => [ ],
+#			       'test_splattotable' => [ ],
+#			       'test_smoothcal' => [ ],
+			       'test_setjy' => [ ],
+#			       'test_sdsave' => [ ],
+#			       'test_plotants' => [ ],
+			       'test_measures' => [ ],
+#			       'test_imval' => [ ],
+			       'test_imstat' => [ ] } );
+
+###
+### Cast of characters...
+###
+%addresses = (
+    'urvashi.rao' => 'rurvashi@nrao.edu', 
+    'dirk.petry' => 'dpetry@eso.org',
+    'scott.rankin' => 'srankin@nrao.edu',
+    'martin.kuemmel' => 'mkuemmel@eso.org',
+    'juergen.ott' => 'jott@nrao.edu',
+    'jim.jacobs' => 'jjacobs@nrao.edu',
+    'jeff.kern' => 'jkern@nrao.edu',
+    'daren.wilson' => 'dwilson@nrao.edu',
+    'shannon.jaeger' => 'sdjaeger@ucalgary.ca',
+    'sandra.castro' => 'scastro@eso.org',
+    'dave.mehringer' => 'dmehring@nrao.edu',
+    'michel.caillat' => 'michel.caillat@obspm.fr',
+    'peter.teuben' => 'teuben@astro.umd.edu',
+    'wataru.kawasaki' => 'wataru.kawasaki@nao.ac.jp',
+    'rob.reid' => 'rreid@nrao.edu',
+    'gareth.hunt' => 'ghunt@nrao.edu',
+    'takeshi.nakazato' => 'takeshi.nakazato@nao.ac.jp',
+    'kana.sugimoto' => 'kana.sugi@nao.ac.jp',
+    'remy.indebetouw' => 'remy@virginia.edu',
+    'laura.glendenning' => 'laura.glendenning@gmail.com',
+    'paulo.cortes' => 'pcortes@das.uchile.cl',
+    'honglin.ye' => 'hye@aoc.nrao.edu',
+    'tak.tsutsumi' => 'ttsutsum@nrao.edu',
+    'sanjay.bhatnagar' => 'bhatnagar.sanjay@gmail.com',
+    'george.moellenbrock' => 'gmoellen@nrao.edu',
+    'kumar.golap' => 'kgolap@nrao.edu',
+    'darrell.schiebel' => 'darrell@schiebel.us',
+    'wes.young' => 'wyoung@aoc.nrao.edu',
+    );
+
+###
+### hudson state and over all time...
+###
+%hudson = ( 'code url' => '', 'casacore url' => '', 'asap url' => '' );
+$elapsed_start = time( );
+
+
+###
+###  pid of xvfb and flag to indicate if everything is OK...
+###
+$xvfb_pid = 0;
+$complete_success = 0;
+
+###
+###  keep track of recent failures and revisions of last attempts...
+###
+$failures_file = "/tmp/hudson-failures.db";
+$last_revision_file = "/tmp/hudson-revisions.db";
+
+###
+### this will keep track of the revisions that we have at least attempted
+### to build (and reported if they failed)... using this instead of e.g.
+### $hudson{'code rev'} et al, prevents a failure earlier in the build
+### process (e.g. 'casacore') from masking a different error later in the
+### process (e.g. 'asap'). Thus, $last_revision_file will only be updated
+### with revisions for which builds have at least been attempted...
+###
+%build_attempted = ( 'code' => '', 'casacore' => '', 'asap'=> '' );
+
+###
+### stop xvfb if it is running...
+### untie any tied hashes...
+###
+%tied_hashes = ( );
+END {
+
+    ### untie hashes
+    foreach $key ( keys %tied_hashes ) {
+	my $val = $tied_hashes{$key};
+	my $fh = $$val[0];
+	my $hash = $$val[1];
+	untie( %$hash );
+	close( $fh );
+    }
+
+    ### note last attempted build
+    my %lastrev;
+    my $lock = tie_hash( \%lastrev, $last_revision_file );
+    $lastrev{'code'} = $build_attempted{'code'} if $build_attempted{'code'};
+    $lastrev{'casacore'} = $build_attempted{'casacore'} if $build_attempted{'casacore'};
+    $lastrev{'asap'} = $build_attempted{'asap'} if $build_attempted{'asap'};
+    untie_hash( \%lastrev, $lock );
+
+    ### if build was OK, remove the tally of failures...
+    unlink( $failures_file ) if $complete_success;
+
+    ### kill xvfb, if it is running...
+    if ( $xvfb_pid ) {
+	print "   => killing $xvfb_pid...\n" if $debug;
+	kill( 2, $xvfb_pid ) 
+    } else {
+	print "   => nothing to kill...\n" if $debug;
+    }
+}
+
+
+
+select(STDERR); $| = 1;		# make unbuffered
+select(STDOUT); $| = 1;		# make unbuffered
+
+fill_hudson_dict( );
+
+###
+### set up failure file within the workspace...
+###
+$failures_file = $hudson{'home'} . "/state/failures.db";
+$last_revision_file = $hudson{'home'} . "/state/last-revision.db";
+
+print_state( );
+build_casa( );
+test_casa( );
+
+###
+### everything built, all tests passed, so clear failures db...
+###
+$complete_success = 1;
+$elapsed_end = time( );
+
+printf "-- elapsed time %.2f seconds\n", $elapsed_end - $elapsed_start;
+
+##############################################################################################
+##############################################################################################
+sub build_casa {
+
+    die "workspace does not exist ($hudson{workspace})" unless -d $hudson{'workspace'};
+    die "cannot change to workspace" unless chdir( $hudson{'workspace'} );
+    die "code directory does not exist" unless -d 'code';
+    die "core directory does not exist" unless -d 'casacore';
+    die "asap directory does not exist" unless -d 'asap';
+
+    if ( ! -d "build" ) {
+	die "could not create build directory" unless mkdir( "build" );
+    }
+    die "could not cd to build directory" unless chdir( "build" );
+
+    my $arch = find_arch( );
+    my $workdir = $hudson{'workspace'};
+    build_source( $workdir, "casacore", "-DCFITSIO_INCLUDE_DIR=/usr/include/cfitsio", "install" );
+    build_source( $workdir, "code", "", "" );
+    build_source( $workdir, "asap", "", "" );
+
+}
+
+
+sub test_casa {
+    ### tests are run like:
+    ###
+    ###     casapy -c ../../ppc/python/2.6/runUnitTest.py test_flagdata[test5]
+    ###
+    my $arch = find_arch( );
+    my $workdir = $hudson{'workspace'};
+
+    print "-- testing casa for architecture $arch\n";
+
+    die "cannot change to workspace" unless chdir( "$workdir/build" );
+    die "no casa initialization script" unless -f "casainit.sh";
+
+    my $runtest_script = find_runtest( "$workdir/build" );
+    die "invalid runtest script" unless -f $runtest_script;
+
+    if ( ! -l "data" ) {
+	if ( -d "/home/casa/data" ) {
+	    die "could not create symlink for data repository" unless symlink( "/home/casa/data", "data" );
+	} elsif ( -d "/home/ballista2/casa/data" ) {
+	    die "could not create symlink for data repository" unless symlink( "/home/ballista2/casa/data", "data" );
+	} elsif ( -d "/home/ballista2/aips++/data" ) {
+	    die "could not create symlink for data repository" unless symlink( "/home/ballista2/aips++/data", "data" );
+	} else {
+	    die "do not have a data repository for use";
+	}
+    }
+
+    my $archtests = $tests{$arch};
+    if ( scalar( keys %$archtests ) == 0 ) {
+	print "   no tests listed for this architecture...\n";
+	return;
+    }
+
+    $xvfb_pid = launch_xvfb( );
+    my $success = 1;
+    my $success_count = 0;
+    my $testing_start = time( );
+    foreach $groupkey ( sort (keys %$archtests) ) {
+	my $group = $$archtests{$groupkey};
+	if ( scalar( @$group ) == 0 ) {
+	    if ( -d "testing" ) {
+		die "failed to remove test directory ($!)" unless rmtree("testing");
+	    }
+	    die "failed to create test directory ($!)" unless mkpath("testing");
+	    
+	    print "   $groupkey: ";
+		my $start = time( );
+		unless ( dosystem( "source casainit.sh && cd testing && casapy --nologger -c $runtest_script $groupkey", 1 )) {
+		    $success = 0;
+		    print "failed\n";
+		} else {
+		    my $end = time( );
+		    ++$success_count;
+		    printf "passed (%.2f sec)\n", $end - $start;
+		}
+	} else {
+	    foreach $test ( @$group ) {
+		if ( -d "testing" ) {
+		    die "failed to remove test directory ($!)" unless rmtree("testing");
+		}
+		die "failed to create test directory ($!)" unless mkpath("testing");
+	    
+		print "   $groupkey\[$test\]: ";
+		my $start = time( );
+		unless ( dosystem( "source casainit.sh && cd testing && casapy --nologger -c $runtest_script $groupkey\[$test\]", 1 )) {
+		    $success = 0;
+		    print "failed\n";
+		} else {
+		    my $end = time( );
+		    ++$success_count;
+		    printf "passed (%.2f sec)\n", $end - $start;
+		}
+	    }
+	}
+    }
+
+    unless ( $success ) {
+	mail_suspect( $pkg, "running of unit tests failed" );
+	die "some tests failed";
+    }
+    my $testing_end = time( );
+    printf "   $success_count tests passed (%.2f sec)\n", $testing_end - $testing_start;
+    return 1;
+}
+
+sub fill_hudson_dict {
+    my $core_ext = '';
+    my $code_ext = '';
+    my $asap_ext = '';
+
+    foreach ( keys %ENV ) {
+	if ( m|^SVN_URL| ) {
+	    if ( $ENV{$_} =~ m|/code$| ) {
+		$hudson{'code url'} = $ENV{$_};
+		die "unexpected SVN_URL format for code" unless m|(_\d+)$|;
+		$code_ext = $1;
+	    } elsif ( $ENV{$_} =~ m|/casacore$| ) {
+		$hudson{'casacore url'} = $ENV{$_};
+		die "unexpected SVN_URL format for core" unless m|(_\d+)$|;
+		$core_ext = $1;
+	    } elsif ( $ENV{$_} =~ m|/asap$| ) {
+		$hudson{'asap url'} = $ENV{$_};
+		die "unexpected SVN_URL format for core" unless m|(_\d+)$|;
+		$asap_ext = $1;
+	    }
+	}
+    }
+
+    die "did not find casacore url" unless $hudson{'casacore url'};
+    die "did not find code url" unless $hudson{'code url'};
+
+    foreach ( keys %ENV ) {
+	m|^SVN_REVISION$code_ext| && ( $hudson{'code rev'} = $ENV{$_} );
+	m|^SVN_REVISION$core_ext| && ( $hudson{'casacore rev'} = $ENV{$_} );
+	m|^SVN_REVISION$asap_ext| && ( $hudson{'asap rev'} = $ENV{$_} );
+	m|^WORKSPACE$| && ( $hudson{'workspace'} = $ENV{$_} );
+	m|^JOB_URL$| && ( $hudson{'job url'} = $ENV{$_} );
+	m|^HUDSON_COOKIE$| && ( $hudson{'cookie'} = $ENV{$_} );
+	m|^HUDSON_SERVER_COOKIE$| && ( $hudson{'server cookie'} = $ENV{$_} );
+	m|^HUDSON_HOME$| && ( $hudson{'home'} = $ENV{$_} );
+	m|^HUDSON_URL$| && ( $hudson{'url'} = $ENV{$_} );
+	m|^BUILD_URL$| && ( $hudson{'build url'} = $ENV{$_} );
+	m|^BUILD_TAG$| && ( $hudson{'build tag'} = $ENV{$_} );
+	m|^BUILD_ID$| && ( $hudson{'build id'} = $ENV{$_} );
+	
+    }
+
+    $hudson{'output url'} = "$hudson{'build url'}console";
+
+    ###
+    ### expand hudson urls
+    ###
+    foreach $key ( ( 'url', 'build url', 'job url', 'output url' ) ) {
+	my $url = $hudson{$key};
+	if ( $url ) {
+	    $url =~ s|//$hudson_host:8080/|//$hudson_host.cv.nrao.edu:8080/|g;
+	    $hudson{$key} = $url;
+	}
+    }
+
+    if ( defined $ENV{'HOME'} ) {
+	$hudson{'home'} = $ENV{'HOME'};
+    } else {
+	$hudson{'home'} = "/tmp";
+    }
+
+}
+
+sub build_source {
+    my $workdir = shift(@_);
+    my $pkg = shift(@_);
+    my $flags = shift(@_);
+    my $extra_targets = shift(@_);
+    my $arch = find_arch( );
+
+    print "-- building $pkg (rev $hudson{\"$pkg rev\"}) in $workdir/$pkg\n";
+    $build_attempted{$pkg} = $hudson{"$pkg rev"};
+
+    if ( -d "$workdir/build/$pkg" ) {
+	print "   => reusing $workdir/build/$pkg\n" if $debug;
+	unless ( dosystem( "cd $workdir/build/$pkg && make all $extra_targets" ) ) {
+	    if ( dosystem( "cd $workdir/build/$pkg && rm -f CMakeCache.txt && cmake ../../$pkg -Darch=$arch -DCMAKE_INSTALL_PREFIX=$workdir/build/$arch $flags" ) ) {
+		unless ( dosystem( "cd $workdir/build/$pkg && make all $extra_targets" ) ) {
+		    mail_suspect( $pkg, "update of $pkg failed" );
+		    die "build of $pkg failed";
+		}
+	    } else {
+		    mail_suspect( $pkg, "reconfigure of $pkg failed" );
+		    die "reconfigure of $pkg failed";
+	    }
+	}
+    } else {
+	print "   => creating $workdir/build/$pkg\n" if $debug;
+	die "could not create casacore build directory" unless mkpath("$workdir/build/$pkg");
+	unless ( dosystem( "cd $workdir/build/$pkg && cmake ../../$pkg -Darch=$arch -DCMAKE_INSTALL_PREFIX=$workdir/build/$arch $flags" ) ) {
+	    mail_suspect( $pkg, "configure of $pkg failed" );
+	    die "configure of $pkg failed";
+	}
+	unless ( dosystem( "cd $workdir/build/$pkg && make all $extra_targets" ) ) {
+	    mail_suspect( $pkg, "build of $pkg failed" );
+	    die "could not build $pkg";
+	}
+    }
+}
+
+sub dosystem {
+    my $cmd = shift(@_);
+    my $supress_debug = shift(@_);
+    my @tail = ();
+
+    if ( $debug && ! $supress_debug ) {
+	($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
+	printf "   %4d-%02d-%02d %02d:%02d:%02d\n",$year+1900,$mon+1,$mday,$hour,$min,$sec;
+	print  "   => $cmd\n";
+    }
+    unless ( open( CMD, "$cmd 2>&1 |" ) ) {
+	my $err = $!;
+	print "   failed to execute: $err\n";
+	print "   $cmd\n";
+	return 0;
+    }
+    
+    while ( <CMD> ) {
+	push(@tail, $_);
+    }
+    unless ( close(CMD) ) {
+	my $err = $!;
+	print "   execution failed: $err\n";
+	print "   $cmd\n";
+	print "----------------------------------------------------------------------\n";
+	foreach $e ( @tail ) {
+	    print "      $e";
+	}
+	print "----------------------------------------------------------------------\n";
+	return 0;
+    }
+    if ( $debug && ! $supress_debug ) {
+	($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
+	printf "   %4d-%02d-%02d %02d:%02d:%02d\n",$year+1900,$mon+1,$mday,$hour,$min,$sec;
+	print  "   execution succeeded...\n";
+    }
+    return 1;
+}
+
+sub find_arch {
+    unless ( open( ARCH, "uname -s 2>&1 |" ) ) {
+	my $err = $!;
+	print "   failed to find arch...\n";
+	die $err;
+    }
+    my $arch = <ARCH>;
+    close(ARCH);
+    chop($arch);
+
+    unless ( open( MACH, "uname -m 2>&1 |" ) ) {
+	my $err = $!;
+	print "   failed to find machine...\n";
+	die $err;
+    }
+    my $mach = <MACH>;
+    close(MACH);
+    chop($mach);
+
+
+    if ( $arch eq "Linux" ) {
+	return "linux-$mach";
+    } elsif ( $arch eq "Darwin" ) {
+	return "osx-$mach";
+    } else {
+	die "unknown architecture ($arch)";
+    }
+    return "";
+}
+
+sub print_state {
+    print "Hudson state:\n";
+    print "----------------------------------------------------------------------\n";
+    foreach ( sort(keys %hudson) ) {
+	printf "%18s %s\n", "$_:", $hudson{$_};
+    }
+    print "----------------------------------------------------------------------\n";
+
+}
+
+$perlfind_runtestscript_out_script = "";
+sub perlfind_runtestscript {
+    if ( ! $perlfind_runtestscript_out_script &&
+	 $_ eq "runUnitTest.py" ) {
+	$perlfind_runtestscript_out_script = "$File::Find::dir/$_";
+    }
+}
+
+sub find_runtest {
+    my $workdir = shift(@_);
+    my $arch = shift(@_);
+
+    $perlfind_runtestscript_out_script = "";
+    find( {wanted => \&perlfind_runtestscript}, $workdir );
+    die "could not find run test script" unless $perlfind_runtestscript_out_script;
+    print "   => runtest script: $perlfind_runtestscript_out_script\n" if $debug;
+    return $perlfind_runtestscript_out_script;
+}
+
+###
+### without locking to serialize access to the database, only the
+### first process actually tie's to the dbm file (other process
+### appear to succeed in tying to the dbm file, but their changes
+### are lost)
+###
+sub tie_hash {
+    my $hash = shift(@_);
+    my $file = shift(@_);
+    my $count = 180;
+
+    my $fh = new IO::File( "$file.lock", O_RDONLY | O_CREAT, 0644 );
+    while ( $count && ! flock($fh, LOCK_EX | LOCK_NB) ) {
+	--$count;
+	sleep(1);
+    }
+    die "could not lock $file.lock" unless $count;
+
+    tie( %$hash, AnyDBM_File, $file, O_RDWR | O_CREAT, 0644 );
+    $tied_hashes{$file} = $hash;
+    return $fh;
+}
+
+###
+### untie and unlock a dbm file...
+###
+sub untie_hash {
+    my $hash = shift(@_);
+    my $fh = shift(@_);
+    untie( %$hash );
+    close( $fh );
+}
+
+###
+### launch a X virtual frame buffer server...
+###
+sub launch_xvfb {
+    my $path = $ENV{'PATH'};
+    my @path = split( /:/, $path);
+    my $dir;
+    my $xvfb = "Xvfb";
+    my $xvfb_path = "";
+    my $authfile = "/tmp/hudson-testcasa-xauthority";
+    my $xauth_path = "";
+    my $pid = 0;
+
+    foreach $dir ( @path ) {
+	if ( -x "$dir/$xvfb" ) {
+	    $xvfb_path = "$dir/$xvfb";
+	}
+	if ( -x "$dir/xauth" ) {
+	    $xauth_path = "$dir/xauth";
+	}
+	last if $xauth_path and $xvfb_path;
+    }
+
+    die "could not find $xvfb" unless $xvfb_path and $xauth_path;
+
+    my $display = 0;
+    for ( $display=6; $display < 86; $display += 1 ) {
+
+	$pipe = new IO::Pipe;
+	$pid = fork( );
+
+	if ( $pid == 0 ) {
+	    $pipe->writer();
+	    close(STDERR);
+	    open( STDERR, ">&",$pipe) || print $!;
+
+	    my $d = ":$display";
+	    exec { $xvfb_path }  ("casatest-xvfb", ":$display", "-screen", "0", "2048x2048x24+32", "-auth", $authfile);
+	    die "execl failed";
+	}
+
+	my $failure = 0;
+	$pipe->reader();
+	my $s = IO::Select->new( );
+	$s->add($pipe);
+	my $cnt = 0;
+	@ready = $s->can_read(30);
+
+	if ( scalar(@ready) > 0 ) {
+	    while ( <$pipe> ) {
+		if ( m/already active/ or
+		     m/server already running/ or
+		     m/SocketCreateListener() failed/ ) {
+		    $failure = 1;
+		}
+		last if ! IO::Select->new($pipe)->can_read(2);
+	    }
+	}
+	if ( $failure == 0 ) {
+	    last;
+	}
+    }
+
+    $ENV{'DISPLAY'} = "localhost:$display.0";
+
+    my $hex = "";
+    srand(time+$$);
+    for (1..4) { $hex .= sprintf("%4.5x", ($seed = int(rand(65536)))); }
+
+    open( XAUTH, "$xauth_path -f $authfile add :$display . $hex 2>&1 |" );
+    while ( <XAUTH> ) {
+	print "\t>>$_";
+    }
+    close(XAUTH);
+
+    $ENV{'XAUTHORITY'} = $authfile;
+    return $pid;
+}
+
+sub find_svn_user_and_rev {
+    my $pkg = shift(@_);
+    my $culprit = '';
+    my $revision = '';
+
+    die "could not find $pkg URL" unless defined $hudson{"$pkg url"};
+    die "could not find $pkg revision" unless defined $hudson{"$pkg rev"};
+
+    unless ( open( SVN, "svn info -r $hudson{\"$pkg rev\"} $hudson{\"$pkg url\"} |" ) ) {
+	my $err = $!;
+	print "   failed to open subversion info for $pkg\n";
+	die $err;
+    }
+    while ( <SVN> ) {
+	$culprit = $1 if m|^Last Changed Author:\s+(\S+)|;
+	$revision = $1 if m|^Last Changed Rev:\s+(\S+)|;
+    }
+
+    return [ $culprit, $revision ];
+}
+
+
+###
+### was this change already processed...
+###
+sub old_revision {
+    my $pkg = shift(@_);
+    my $revision = shift(@_);
+    my %lastrev;
+    my $lock = tie_hash( \%lastrev, $last_revision_file );
+    my $last_pkg_rev = $lastrev{$pkg};
+    untie_hash( \%lastrev, $lock );
+
+    if ( $hudson{"$pkg rev"} && $last_pkg_rev &&
+	 $hudson{"$pkg rev"} <= $last_pkg_rev ) {
+	print "   => re-run of $pkg test ($hudson{\"$pkg rev\"}/$last_pkg_rev)...\n" if $debug;
+	return 1;
+    }
+    print "   => fresh $pkg change ($hudson{\"$pkg rev\"}/$last_pkg_rev)...\n" if $debug;
+    return 0;
+}
+
+###
+### was the changed files expected (thus do not send email)...
+###
+sub periodic_change {
+    my $url = shift(@_);
+    my $revision = shift(@_);
+
+    my @mods = ( );
+
+    my $cmd = sprintf( "svn diff -r %d:%d --summarize $url", $revision - 1, $revision );
+    unless( open( SVN, "$cmd |" ) ) {
+	my $err = $!;
+	print "   failed to open subversion diff for revision $revision of $url\n";
+	die $err;
+    }
+    foreach ( <SVN> ) {
+	next if m|/VERSION$|;
+	push( @mods, $_ );
+    }
+
+    if ( scalar( @mods ) == 0 ) {
+	print "   => all modified files were expected, periodic changes...\n" if $debug;
+	return 1;
+    }
+
+    print "   => some modified files appear to be legitimate changes...\n" if $debug;
+    return 0;
+}
+
+sub mail_suspect {
+    my $pkg = shift(@_);
+    my $problem = shift(@_);
+    my $svninfo = find_svn_user_and_rev( $pkg );
+
+    die "failed to find subversion info" unless scalar( @$svninfo ) == 2;
+
+    my $name = $$svninfo[0];
+    my $revision = $$svninfo[1];
+
+    die "missing address for $name" unless defined $addresses{$name};
+
+    my $address = $addresses{$name};
+
+    die "no sendmail" unless -x $sendmail;
+    die "no subversion URL" unless defined $hudson{"$pkg url"};
+
+    my $url = $hudson{"$pkg url"};
+    my $build_url = $hudson{'output url'};
+
+    return if periodic_change( $url, $revision );
+    return if old_revision( $pkg, $revision );
+    if ( -e "$hudson{'home'}/control/no-mail" ) {
+	print "   email not sent due to \"$hudson{'home'}/control/no-mail\"...\n";
+	return;
+    }
+
+    $url =~ s|/svn/|/view/|;
+    $url = "$url?view=rev&revision=$revision";
+
+    $name =~ s/([\w']+)/\u\L$1/g;
+    my @name = split( /\./, $name );
+
+    $name = join( ' ', @name );
+
+    my %failures;
+    my $lock = tie_hash( \%failures, $failures_file );
+
+    unless ( open( SENDMAIL, "| $sendmail -t" ) ) {
+    	die "could not mail my message";
+    }
+    #unless ( open( SENDMAIL, "| cat -n" ) ) {
+    #	die "could not mail my message";
+    #}
+
+    print SENDMAIL "Reply-to: $testmanager\n";
+    print SENDMAIL "From: The Wonderful Hudson of Oz <$testmanager>\n";
+    print SENDMAIL "Subject: [Hudson] revision $revision has broken the standard build\n";
+    print SENDMAIL "To: $name <$address>\n";
+    print SENDMAIL "Bcc: Darrell Schiebel <drs\@nrao.edu>, Scott Rankin <srankin\@nrao.edu>\n";
+    print SENDMAIL "Content-type: text/plain\n";
+    print SENDMAIL "\n\n\n";
+
+    print SENDMAIL "Dear $name[0]:\n\nRevision $revision which I believe was checked in by you:\n\n         $url\n\nhas broken the standard Hudson build. You can see the build log at:\n\n        $build_url\n\nIf you think this is incorrect, please forward this email to Scott or Darrell...\n\nthanks very much,\nHudson\n\nPS: It appears as though the $problem...";
+    if ( scalar( keys %failures ) > 0 ) {
+	print SENDMAIL " also, these recent\nchanges have also failed to build:\n";
+	foreach $key ( sort( keys %failures ) ) {
+	    printf SENDMAIL "    --- %s ---\n        %s\n", $key, $failures{$key};
+	}
+    }
+    print SENDMAIL "\n\n";
+    unless ( close(SENDMAIL) ) {
+	my $err = $!;
+	print "   execution of $sendmail to \"$name <$address>\" failed\n";
+	die $err;
+    }
+
+    my $sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst;
+    ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
+    my $time = 	sprintf "%4d-%02d-%02d %02d:%02d:%02d",$year+1900,$mon+1,$mday,$hour,$min,$sec;
+    $failures{$time} = $url;
+    untie_hash( \%failures, $lock );
+
+}

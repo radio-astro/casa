@@ -28,7 +28,7 @@
         probably too complicated.  Comments welcome.
 
         HISTORY: Task created v1.0 S.T. Myers 2010-08-31 (3.1.0)
-                 Last updated v3.2 S.T. Myers 2010-12-08 (3.2.0)
+                 Last updated v3.4 S.T. Myers 2011-02-14 (3.2.0) code+docs
 
         </description>
         <input>
@@ -213,9 +213,7 @@
 <returns type="void"/>
 
 <example>
-        HISTORY: Last updated v2.5 S.T. Myers 2010-11-01
-
-        The task will flag data based on commands input from source based on flagmode :
+        The flagcmd task will flag data based on commands input based on flagmode :
             table = input from FLAG_CMD table in MS
             file  = input from flagging command file "flagfile"
             cmd   = input from "command" list of strings
@@ -533,7 +531,7 @@
         MS, set flagmode='xml' and desired buffer, e.g.
 
           flagmode = 'xml'
-          tbuff = 1.0    # pad flag times by 1sec
+          tbuff = 1.0    # pad flag times by 1 sec
           optype = 'apply'
 
         You can also specify a set of reasons (a comma separated list)
@@ -541,6 +539,26 @@
         
           reason = 'FOCUS_ERROR,SUBREFLECTOR_ERROR'   # select these flags
           reason = 'ANTENNA_NOT_ON_SOURCE'
+
+        NOTE: The online flag time buffer tbuff is specified in
+        seconds, but in fact should be keyed to the intrinsic online 
+        integration time.  This is particularly true for EVLA data,
+        were a tbuff value of 0.5x to 1.5x the integration time is
+        needed (currently you should use 1.5x for data taken in
+        early 2011 or before).
+
+        Because the Flag.xml is copied to the MS by importevla,
+        you can re-apply the online flags with an increased tbuff
+        simply by running with flagmode='xml' and optype='apply', e.g.
+
+          flagmode = 'xml'
+          tbuff = 15.0    # pad flag times by 15 sec for 10sec integrations
+          optype = 'apply'
+
+        if you originally used a smaller value (e.g. 1.0) by mistake
+        or you want to try longer values.  Note these will be added to
+        the FLAG_CMD table which you would have to clean up manually
+        if you care about this.
 
      -- Flag command useage --
 
@@ -723,7 +741,7 @@
           severity=N         # Severity code for the flag, on a scale of 0-10 in order 
                                of increasing severity; user specified
         
-        4. Extended manual flaggin options (processed separately)
+        4. Extended manual flagging options (processed separately)
         
           unflag=T/F         # this operation is to unflag instead of flag
         
@@ -748,6 +766,9 @@
         NOTE: we do not support syntax for use of mode='rfi' or mode='autoflag' at
         this time
 
- </example>
+HISTORY: Task last updated v3.4 S.T. Myers 2011-02-14 (3.2.0)
+         Docs last updated v3.4 S.T. Myers 2011-02-14 (3.2.0)
+
+</example>
  </task>
  </casaxml>

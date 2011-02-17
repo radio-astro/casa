@@ -143,7 +143,8 @@ public:
   virtual String typeName()     { return "Kcross Jones"; };
   virtual String longTypeName() { return "Kcross Jones (single-band cross delay)"; };
 
-
+  // By definition, we consider cross-hands
+  virtual Bool phandonly() { return False; };
 
 protected:
 

@@ -28,6 +28,9 @@ qt4_wrap_cpp( outfiles_qoh
   implement/QtPlotter/QtMWCTools.qo.h
   implement/QtPlotter/QtPlotter.qo.h
   implement/QtPlotter/QtProfile.qo.h
+  implement/QtPlotter/QtDrawCanvas.qo.h
+  implement/QtPlotter/QtDrawColors.qo.h
+  implement/QtPlotter/QtDrawer.qo.h
   implement/QtViewer/FileBox.qo.h
   implement/QtViewer/MakeMask.qo.h
   implement/QtViewer/MakeRegion.qo.h
@@ -86,6 +89,7 @@ casa_qt4_wrap_ui( outfiles_ui
 
 casa_qt4_add_resources( outfiles_qrc implement/QtAutoGui/QtAutoGui.qrc OPTIONS -name QtAutoGui )
 casa_qt4_add_resources( outfiles_qrc implement/QtPlotter/QtPlotter.qrc OPTIONS -name QtPlotter )
+casa_qt4_add_resources( outfiles_qrc implement/QtPlotter/QtDrawer.qrc OPTIONS -name QtDrawer )
 casa_qt4_add_resources( outfiles_qrc implement/QtViewer/QtViewer.qrc OPTIONS -name QtViewer )
 
 
@@ -276,6 +280,10 @@ casa_add_library( display
   implement/QtPlotter/QtPlotSettings.cc
   implement/QtPlotter/QtPlotter.cc
   implement/QtPlotter/QtProfile.cc
+  implement/QtPlotter/QtDrawCanvas.cc
+  implement/QtPlotter/QtDrawColors.cc
+  implement/QtPlotter/QtDrawSettings.cc
+  implement/QtPlotter/QtDrawer.cc
   implement/QtViewer/FileBox.cc
   implement/QtViewer/MakeMask.cc
   implement/QtViewer/MakeRegion.cc
@@ -315,6 +323,7 @@ casa_add_library( display
   )
 
 casa_add_executable( display casaplotter apps/casaplotter/casaplotter.cc )
+#casa_add_executable( display casadrawer apps/casadrawer/casadrawer.cc )
 casa_add_executable( display casaviewer apps/casaviewer/casaviewer.cc )
 casa_add_assay( display implement/DisplayEvents/test/tDisplayEvent.cc )
 casa_add_assay( display implement/DisplayEvents/test/tDisplayTool.cc )

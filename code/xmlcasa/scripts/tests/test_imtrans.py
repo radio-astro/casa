@@ -80,6 +80,7 @@ cas_2364im = "CAS-2364.im"
 def run_reorder(imagename, outfile, order):
     myia = iatool.create()
     myia.open(imagename)
+    print "*** order " + str(order)
     res = myia.reorder(outfile=outfile, order=order)
     myia.close()
     return res

@@ -1279,7 +1279,8 @@ in this case.  It is evaluated each time it is needed.
             <description>Aggregate function to apply: avdev, max, mean, median, min, rms, stdev, sum, variance.</description>
             <value></value>
         </param>
-        <param type="variant" direction="in" name="axes">
+        <param type="any" direction="in" name="axes">
+            <any type="variant"/>
             <description>Zero-based axis number along which to collapse image.</description>
             <value>0</value>
         </param>
@@ -1320,6 +1321,11 @@ in this case.  It is evaluated each time it is needed.
         tool containing the newly created collapsed image. Choices of aggregate functions are:
         avdev, max, mean, median, min, rms, stdev, sum, variance. Minimum match is supported for
         the function parameter (eg, function="r" will compute the rms of the pixel values).
+        
+        Axes can be specified as a single integer or array of integers indicating the zero-based axes along
+        which to collapse the image. Axes may also be specified as a single or array of strings which minimally
+        and uniquely match (ignoring case) world axes names in the image (eg "dec" or ["ri, "d"] for
+        collapsing along the declination axis or along the right ascension and declination axes, respectively).
         
         If outfile is not specified (or contains only white spaces), no image is written but the
         collapsed image is still able to be accessed via the image analysis tool this method always

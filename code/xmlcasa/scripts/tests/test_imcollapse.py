@@ -182,58 +182,60 @@ class imcollapse_test(unittest.TestCase):
         expected = "collapse_avg_0.fits"
         shutil.copy(datapath + expected, expected)
         for i in [0, 1]:
-            outname = "test_1_" + str(i) + ".im"
-            if i == 0:
-                mytool = run_collapse(
-                    good_image, "mean", 0, outname, "", "",
-                    "", "", "", False
-                )
-                self.assertTrue(type(mytool) == type(ia))
-                self.checkImage(mytool, expected)
-                self.checkImage(outname, expected)
-            else:
-                for wantreturn in [True, False]:
-                    outname = outname + str(wantreturn)
-                    mytool = run_imcollapse(
-                        good_image, "mean", 0, outname, "", "",
-                        "", "", "", False, wantreturn
+            for axis in (0 ,"r", "right"):
+                outname = "test_1_" + str(i) + "_" + str(axis) + ".im"
+                if i == 0:
+                    mytool = run_collapse(
+                        good_image, "mean", axis, outname, "", "",
+                        "", "", "", False
                     )
-                    if (wantreturn):
-                        self.assertTrue(type(mytool) == type(ia))
-                        self.checkImage(mytool, expected)
-                    else:
-                        self.assertTrue(mytool == None)
+                    self.assertTrue(type(mytool) == type(ia))
+                    self.checkImage(mytool, expected)
                     self.checkImage(outname, expected)
-            shutil.rmtree(outname)
+                else:
+                    for wantreturn in [True, False]:
+                        outname = outname + str(wantreturn)
+                        mytool = run_imcollapse(
+                            good_image, "mean", 0, outname, "", "",
+                            "", "", "", False, wantreturn
+                        )
+                        if (wantreturn):
+                            self.assertTrue(type(mytool) == type(ia))
+                            self.checkImage(mytool, expected)
+                        else:
+                            self.assertTrue(mytool == None)
+                        self.checkImage(outname, expected)
+                shutil.rmtree(outname)
 
     def test_2(self):
         """imcollapse: average full image collapse along axis 2"""
         expected = "collapse_avg_2.fits"
         shutil.copy(datapath + expected, expected)
         for i in [0, 1]:
-            outname = "test_2_" + str(i) + ".im"
-            if i == 0:
-                mytool = run_collapse(
-                    good_image, "mean", 2, outname, "", "",
-                    "", "", "", False
-                )
-                self.assertTrue(type(mytool) == type(ia))
-                self.checkImage(mytool, expected)
-                self.checkImage(outname, expected)
-            else:
-                for wantreturn in [True, False]:
-                    outname = outname + str(wantreturn)
-                    mytool = run_imcollapse(
-                        good_image, "mean", 2, outname, "", "",
-                        "", "", "", False, wantreturn
+            for axis in (2, "f", "freq"):
+                outname = "test_2_" + str(i) + str(axis) + ".im"
+                if i == 0:
+                    mytool = run_collapse(
+                        good_image, "mean", axis, outname, "", "",
+                        "", "", "", False
                     )
-                    if (wantreturn):
-                        self.assertTrue(type(mytool) == type(ia))
-                        self.checkImage(mytool, expected)
-                    else:
-                        self.assertTrue(mytool == None)
+                    self.assertTrue(type(mytool) == type(ia))
+                    self.checkImage(mytool, expected)
                     self.checkImage(outname, expected)
-            shutil.rmtree(outname)
+                else:
+                    for wantreturn in [True, False]:
+                        outname = outname + str(wantreturn)
+                        mytool = run_imcollapse(
+                            good_image, "mean", 2, outname, "", "",
+                            "", "", "", False, wantreturn
+                        )
+                        if (wantreturn):
+                            self.assertTrue(type(mytool) == type(ia))
+                            self.checkImage(mytool, expected)
+                        else:
+                            self.assertTrue(mytool == None)
+                        self.checkImage(outname, expected)
+                shutil.rmtree(outname)
 
     def test_3(self):
         """imcollapse: average full image collapse along axis 2 and check output overwritability"""
@@ -331,20 +333,21 @@ class imcollapse_test(unittest.TestCase):
         expected = "collapse_avg_0_1.fits"
         shutil.copy(datapath + expected, expected)
         for i in [0, 1]:
-            if i == 0:
-                mytool = run_collapse(
-                    good_image, "mean", [0, 1], "", "", "",
-                    "", "", "", False
-                )
-                self.assertTrue(type(mytool) == type(ia))
-                self.checkImage(mytool, expected)
-            else:
-                mytool = run_imcollapse(
-                    good_image, "mean", [0, 1], "", "", "",
-                    "", "", "", False, True
-                )
-                self.assertTrue(type(mytool) == type(ia))
-                self.checkImage(mytool, expected)
+            for axes in ([0, 1], ["r", "d"], ["right", "dec"]):
+                if i == 0:
+                    mytool = run_collapse(
+                        good_image, "mean", axes, "", "", "",
+                        "", "", "", False
+                    )
+                    self.assertTrue(type(mytool) == type(ia))
+                    self.checkImage(mytool, expected)
+                else:
+                    mytool = run_imcollapse(
+                        good_image, "mean", [0, 1], "", "", "",
+                        "", "", "", False, True
+                    )
+                    self.assertTrue(type(mytool) == type(ia))
+                    self.checkImage(mytool, expected)
 
 
 
