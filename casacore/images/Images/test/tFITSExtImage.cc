@@ -52,7 +52,7 @@ int main (int argc, const char* argv[])
 {
 try {
 
-   LogIO os(LogOrigin("tFITSImage", "main()", WHERE));
+   LogIO os(LogOrigin("tFITSExtImage", "main()", WHERE));
 
 // Get inputs
 
@@ -64,19 +64,24 @@ try {
 //
    inputs.readArguments(argc, argv);
    String in = inputs.getString("in");
-   const uInt hdunum = (uInt)inputs.getInt("hdunum");
+   uInt hdunum = (uInt)inputs.getInt("hdunum");
    const Bool print = inputs.getBool("print");
    const Int size = inputs.getInt("size");
-//
+
+// Give a default image and extension
    if (in.empty()) {
-     in = "imagetestimage.fits";
+     in = "mexinputtest.fits";
    }   
    Path p(in);
+   if (!hdunum)
+	   hdunum = 3;
 
 // Open FITSImage
 
    FITSImage fitsImage(in, 0, hdunum);
    fitsImage.tempClose();
+
+
    AlwaysAssert(fitsImage.imageType()=="FITSImage", AipsError);
    Unit unit("Jy/beam");
    AlwaysAssert(fitsImage.setUnits(unit), AipsError);
@@ -102,6 +107,7 @@ try {
    AlwaysAssert(fitsImage.ok(), AipsError);
 //
    fitsImage.tempClose();
+
    if (print) {
       IPosition start (fitsImage.ndim(),0);
       IPosition shape(fitsImage.shape());
@@ -112,13 +118,14 @@ try {
       cerr << "Mask = " << fitsImage.getMaskSlice(start, shape) << endl;
    }
 
+
 // Convert from FITS as a comparison
 
    String error;
    ImageInterface<Float>* pTempImage = 0;
    String imageName;
    if (!ImageFITSConverter::FITSToImage(pTempImage, error, 
-                                        imageName, in, 0)) {
+                                        imageName, in, 0, hdunum)) {
       os << error << LogIO::EXCEPTION;
    }
 //
@@ -130,8 +137,9 @@ try {
    CoordinateSystem dataCS = pTempImage->coordinates();
    delete pTempImage;
 //
-   AlwaysAssert(allNear(dataArray, dataMask, fitsArray, fitsMask), AipsError);
    AlwaysAssert(fitsCS.near(dataCS), AipsError);
+   AlwaysAssert(allNear(dataArray, dataMask, fitsArray, fitsMask), AipsError);
+
 
 // Test Clone
 

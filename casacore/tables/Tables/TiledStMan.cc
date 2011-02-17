@@ -1173,18 +1173,23 @@ TSMFile* TiledStMan::getFile (uInt sequenceNumber)
     return fileSet_p[sequenceNumber];
 }
 
-TSMOption TiledStMan::tsmMode(uInt nrDim) const
+TSMOption TiledStMan::tsmMode(uInt) const
 {
   String opt;
   AipsrcValue<String>::find (opt, "table.tsm.option", String("default"));
   opt.downcase();
   if(opt==String("default")){
-    if (nrDim == 4) {
+    /*if (nrDim == 4) {
       return TSMOption(TSMOption::Cache);
     }
     else {
       return TSMOption(TSMOption::MMap);
     }
+    */
+    //switching default to Cache as of 2011/02/14
+    //following tests that shows MMap has terrible performance on lustre
+    //though cache  is a bit  slower  on local disk for flagging
+    return TSMOption(TSMOption::Cache);
   }
   else{
     return tsmOption().option();

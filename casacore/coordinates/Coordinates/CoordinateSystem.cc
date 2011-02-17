@@ -4351,5 +4351,67 @@ Vector<Int> CoordinateSystem::linearAxesNumbers() const {
     return pixelAxes(linearCoordinateNumber());
 }
 
+Vector<Int> CoordinateSystem::getWorldAxisOrder(Vector<String>& myNames, const Bool requireAll) const {
+	uInt naxes = nWorldAxes();
+	uInt raxes = myNames.size();
+	if (requireAll && raxes != naxes) {
+		ostringstream oss;
+		oss << "Image has " << naxes << " axes but " << raxes
+				<< " were given for reordering. Number of axes to reorder must match the number of image axes";
+		throw AipsError(oss.str());
+	}
+	Vector<String> axisNames = worldAxisNames();
+	_downcase(axisNames);
+	_downcase(myNames);
+	Vector<Int> myorder(raxes);
+
+	Vector<String> matchMap(naxes,"");
+	for (uInt i=0; i<myNames.size(); i++) {
+		String spec = myNames[i];
+		Regex orderRE("^" + spec + ".*");
+		Vector<String> matchedNames(0);
+		Vector<uInt> matchedNumbers(0);
+		for (uInt j=0; j<axisNames.size(); j++) {
+			if (axisNames[j].matches(orderRE)) {
+				uInt oldSize = matchedNames.size();
+				matchedNames.resize(oldSize + 1, True);
+				matchedNames[oldSize] = axisNames[j];
+				matchedNumbers.resize(oldSize + 1, True);
+				matchedNumbers[oldSize] = j;
+			}
+		}
+		if(matchedNames.size() == 0) {
+			ostringstream oss;
+			oss << "No axis matches requested axis " << spec
+				<< ". Image axis names are " << axisNames;
+			throw AipsError(oss.str());
+		}
+		else if (matchedNames.size() > 1) {
+			ostringstream oss;
+			oss << "Multiple axes " << matchedNames << " match requested axis "
+				<< spec;
+			throw AipsError(oss.str());
+		}
+		uInt axisIndex = matchedNumbers[0];
+		if (matchMap[axisIndex].empty()) {
+			myorder[i] = axisIndex;
+			matchMap[axisIndex] = spec;
+		}
+		else {
+			ostringstream oss;
+			oss << "Ambiguous axis specification. Both " << matchMap[axisIndex]
+			    << " and " << spec << " match image axis name " << matchedNames[0];
+			throw AipsError(oss.str());
+		}
+	}
+	return myorder;
+}
+
+void CoordinateSystem::_downcase(Vector<String>& vec) const {
+	for (Vector<String>::iterator iter = vec.begin(); iter != vec.end(); iter++) {
+		iter->downcase();
+	}
+}
+
 } //# NAMESPACE CASA - END
 

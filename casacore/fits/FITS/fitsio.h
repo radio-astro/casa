@@ -110,6 +110,10 @@ class FitsIO {
 	// get the fitsfile pointer
 	fitsfile *getfptr() const { return m_fptr; }
 
+	// get the size of the last skipped HDU
+	OFF_T getskipsize() const {return m_skipHDU_size;}
+
+
    protected:
 	FitsIO(FITSErrorHandler);
 
@@ -137,6 +141,9 @@ class FitsIO {
 	// for output, size of data written
 	//uInt m_curr_size;
 	OFF_T m_curr_size;			
+
+	// for size of the last HDU skipped
+	OFF_T m_skipHDU_size;
 
 	// set error message that belongs to one of the enumerated types
 	virtual void errmsg(FitsErrs, const char *) = 0;
@@ -180,6 +187,9 @@ class FitsInput : public FitsIO {
    //  number of logical records read/written
    int recno() const {return m_fin.recno();}
    BlockInput & getfin(){ return m_fin; } // for test use only
+
+   // the number of hdu in this fits file
+   int getnumhdu() const {return m_thdunum;}
 
     private:
 	BlockInput &m_fin;

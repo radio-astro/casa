@@ -79,20 +79,21 @@ public:
 private:
 	LogIO *_log;
 	ImageInterface<Float> *_image;
-	IPosition _order;
+	Vector<Int> _order;
 	String _outputImage;
 	// Do not allow use of default constuctor
 	ImageReorderer();
 
-	void _construct(const String& imagename, const String& outfile);
+	void _construct(const String& imagename);
 
-	IPosition _getOrder(uInt order) const;
+	Vector<Int> _getOrder(uInt order) const;
 
-	IPosition _getOrder(const String& order) const;
-
-	IPosition _getOrder(Vector<String>& order) const;
+	Vector<Int> _getOrder(const String& order) const;
+/*
+	Vector<Int> _getOrder(Vector<String>& order) const;
 
 	void _downcase(Vector<String>& vec) const;
+	*/
 };
 }
 

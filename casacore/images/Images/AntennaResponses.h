@@ -157,8 +157,11 @@ public:
   };
   // this can of course be extended for additional types if necessary
 
+  // Constructor, does not call init()
+  AntennaResponses(){}; 
+
   // Constructor, calls init()
-  AntennaResponses(const String& path=""); 
+  AntennaResponses(const String& path); 
 
   // Takes the path (as taken from the new ANTENNA_RESPONSES column of the Observatories table)
   // and uses it as the name and location of the AntennaResponses table, and then initializes 
@@ -174,6 +177,9 @@ public:
   // Instead it appends to the vectors.
   // Returns False if the path was already read before.
   Bool append(const String& path);
+
+  // returns True if paths_p has at least one member
+  Bool isInit(); 
 
   // returns True if path is a member element of paths_p, i.e. the contents of path was read
   Bool isInit(const String& path); 
