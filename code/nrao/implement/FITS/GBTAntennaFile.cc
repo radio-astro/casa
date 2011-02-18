@@ -433,7 +433,7 @@ Bool GBTAntennaFile::equalPointingModel(const RecordInterface &other) const
 	// same name, type, and value for each field
 	uInt thisField = 0;
 	while (result && thisField < itsPointingKeywords.nfields()) {
-	    uInt otherField = other.fieldNumber(itsPointingKeywords.name(thisField));
+	    Int otherField = other.fieldNumber(itsPointingKeywords.name(thisField));
 	    result = otherField >= 0 && 
 		itsPointingKeywords.dataType(thisField) == itsPointingKeywords.dataType(otherField);
 	    if (result) {
