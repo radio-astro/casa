@@ -125,10 +125,60 @@ prefix=testdir+"/"+'ngc5921'
 # (WARNING! Removes old test directory of the same name if one exists)
 tstutl.maketestdir(testdir)
 
+import datetime
+datestring = datetime.datetime.isoformat(datetime.datetime.today())
+outfile = 'ngc5921.' + datestring + '.log'
+logfile = open(outfile, 'w')
+
+def reportresults(redi):
+    """
+    Helper function to pretty print the results in redi and report whether
+    they all passed.  redi is a dict with format
+    {test_name1: (pass/fail,
+                  (Optional) note,
+                  (Even more optional) quantitative difference),
+     test_name2: (pass/fail,
+                  (Optional) note,
+                  (Even more optional) quantitative difference)}
+    """
+    passfail = {True: '* Passed', False: '* FAILED'}
+    normalsevere = {True: 'NORMAL', False: 'SEVERE'}
+    ok = True
+    
+    for t in redi:
+        tup = redi[t]
+        msg = passfail[tup[0]] + ' ' + t + ' test'
+        print >>logfile, msg
+        tstutl.note(msg, normalsevere[tup[0]])
+        if len(tup) > 1:
+            print >>logfile, tup[1]
+        tstutl.note("\"tup[0]\": \"%s\"" % tup[0], "WARN")
+        if not tup[0]:
+            ok = False
+            if len(tup) > 2:
+                tstutl.note('  ' + t + " difference: " + tup[2],
+                            normalsevere[tup[0]])
+    return ok
+
+def listfailures(redi):
+    """
+    Helper function to summarize any failures in redi at the end.
+    redi has the same format as in reportresults.
+    """
+    for t in redi:
+        tup = redi[t]
+        if not tup[0]:
+            msg = t + "  FAILED"
+            if len(tup) > 2:
+                msg += ":\n  " + tup[1] + "\n    difference: " + tup[2]
+            tstutl.note(msg, "SEVERE")
+    
 # Start benchmarking
 if benchmarking:
     startTime = time.time()
     startProc = time.clock()
+
+passedall = True  # So far!
 
 #
 #=====================================================================
@@ -485,35 +535,24 @@ os.system('rm -f ' + listcalOut + '.tmp')
 # Test the listcal output
 print "Comparing listcal output with standard..."
 standardOut = pathname+'/data/regression/ngc5921/listcal.default.out'
-passlistcal = False
-
-# Test metadata
-print "  1. Checking that metadata agree."
+listcalresults = {}
 try:
-    if listing.diffMetadata(listcalOut,standardOut,prefix=prefix+".listcal"):
-        print "  Metadata agree"
-        passlistcal = True
-    else:
-        print "  Metadata do not agree!"
-
+    print "  1. Checking that metadata agree..."
+    listcalresults['listcal metadata'] = (listing.diffMetadata(listcalOut,
+                                                               standardOut,
+                                                               prefix=prefix + ".listcal"),)
     # Test data (floats)
     print "  2. Checking that data agree to within allowed imprecision..."
     precision = '0.003'
     print "     Allowed visibility imprecision is " + precision
-    if listing.diffAmpPhsFloat(listcalOut,standardOut,
-                               prefix=prefix+".listcal",
-                               precision=precision):
-        passlistcal &= True
-        print "  Data agree"
-    else:
-        print "  Data do not agree!"
+    listcalresults['listcal data'] = (listing.diffAmpPhsFloat(listcalOut,
+                                                              standardOut,
+                                                              prefix = prefix+".listcal",
+                                                              precision = precision),)
+    passedall = reportresults(listcalresults) and passedall
 except Exception, e:
     print "Error", e, "checking listcal."
     raise e
-
-if (passlistcal): print "Passed listcal output test"
-else:             print "FAILED listcal output test"
-
 
 #
 #=====================================================================
@@ -754,30 +793,25 @@ if benchmarking:
 # Test the listvis output
 print "Comparing continuum subtracted listvis output with repository standard..."
 standardOut = pathname+'/data/regression/ngc5921/listvis.ant34.contsub.out'
-passlistvis = True
 
 # Test metadata
-print "  1. Checking that metadata agree."
-if (listing.diffMetadata(listvisOut,standardOut,prefix=prefix+".listvis")):
-    print "  Metadata agree"
-else:
-    print "  Metadata do not agree!"
-    passlistvis = False
-
-# Test data (floats)
-print "  2. Checking that data agree to within allowed imprecision..."
+print "  Checking that metadata agree and that data agree to within allowed imprecision..."
 precision = '0.200'
 print "     Allowed visibility imprecision is ", precision
-if ( listing.diffAmpPhsFloat(listvisOut,standardOut,prefix=prefix+".listvis",
-                             precision=precision) ):
-    print "  Data agree"
-else:
-    print "  Data do not agree!"
-    passlistvis = False
+listvisresults = {}
+try:
+    listvisresults['listvis metadata'] = (listing.diffMetadata(listvisOut,
+                                                               standardOut,
+                                                               prefix=prefix + ".listvis"),)
+    listvisresults['listvis data'] = (listing.diffAmpPhsFloat(listvisOut,
+                                                              standardOut,
+                                                              prefix=prefix + ".listvis",
+                                                              precision=precision),)
+    passedall = reportresults(listvisresults) and passedall
+except Exception, e:
+    print "Error", e, "checking listvis."
+    raise e               
 
-if (passlistvis): print "Passed listvis output test"
-else:             print "FAILED listvis output test"
-#
 #=====================================================================
 #
 # Done with calibration
@@ -1151,11 +1185,6 @@ if not benchmarking:
     print ''
     print '--- Done ---'
 else:
-    import datetime
-    datestring=datetime.datetime.isoformat(datetime.datetime.today())
-    outfile='ngc5921.'+datestring+'.log'
-    logfile=open(outfile,'w')
-
     print >>logfile,''
     print >>logfile,''
     print >>logfile,'********** Data Summary *********'
@@ -1177,77 +1206,36 @@ else:
     print >>logfile,'********* Export Tests***********'
     print >>logfile,'*                               *'
 
-    passuvfits = False
-    if (uvfitsexists):
-        print >>logfile,'*                               *'
-        print >>logfile,'* Passed UVFITS existence test'
-        if (diff_uvfits < 0.05):
-            passuvfits = True
-            print >>logfile,'* Passed UVFITS max test'
-        else:
-            print >>logfile,'* FAILED UVFITS max test'
-        print >>logfile,'*  UVFITS MS max '+str(fitstest_src)
-    else:
-        print >>logfile,'*                               *'
-        print >>logfile,'* FAILED UVFITS existence test'
+    exportresults = {'UVFITS existence': (uvfitsexists,),
+                     'FITS image existence': (fitsimageexists,)}
+    if uvfitsexists:
+        exportresults['UVFITS max'] = (diff_uvfits < 0.05,
+                                       '*  UVFITS MS max ' + str(fitstest_src), diff_uvfits)
 
-    passfits = False
     if (fitsimageexists):
-        print >>logfile,'*                               *'
-        print >>logfile,'* Passed FITS image existence test'
-        if (diff_fitsmax < 0.05):
-            passfits = True
-            print >>logfile,'* Passed FITS image max test'
-        else:
-            print >>logfile,'* FAILED FITS image max test'
-        print >>logfile,'*  FITS Image max '+str(fitstest_immax)
-        if (diff_fitsrms < 0.05):
-            print >>logfile,'* Passed FITS image rms test'
-        else:
-            passfits = False
-            print >>logfile,'* FAILED FITS image rms test'
-        print >>logfile,'*  FITS Image rms '+str(fitstest_imrms)
-    else:
-        print >>logfile,'*                               *'
-        print >>logfile,'* FAILED FITS image existence test'
+        exportresults['FITS image max'] = (diff_fitsmax < 0.05,
+                                           '*  FITS Image max ' + str(fitstest_immax),
+                                           diff_fitsmax)
+        exportresults['FITS image rms'] = (diff_fitsrms < 0.05,
+                                           '*  FITS Image rms ' + str(fitstest_imrms),
+                                           diff_fitsrms)
+    passedall = reportresults(exportresults) and passedall
 
     print >>logfile,''
     print >>logfile,'********** Regression ***********'
     print >>logfile,'*                               *'
-    if (diff_cal < 0.05):
-        passcal = True
-        print >>logfile,'* Passed cal max amplitude test '
-    else:
-        passcal = False
-        print >>logfile,'* FAILED cal max amplitude test '
-    print >>logfile,'*  Cal max amp '+str(thistest_cal)
+    quantresults = {}
+    quantresults['cal max amplitude'] = (diff_cal < 0.05,
+                                         '*  Cal max amp ' + str(thistest_cal), diff_cal)
+    quantresults['src max amplitude'] = (diff_src < 0.05,
+                                         '*  Src max amp ' + str(thistest_src), diff_src)
+    quantresults['image max'] = (diff_immax < 0.05,
+                                 '*  Image max amp ' + str(thistest_immax), diff_immax)
+    quantresults['image rms'] = (diff_imrms < 0.05,
+                                 '*  Image rms ' + str(thistest_imrms), diff_imrms)
+    passedall = reportresults(quantresults) and passedall
 
-    if (diff_src < 0.05):
-        passsrc = True
-        print >>logfile,'* Passed src max amplitude test '
-    else:
-        passsrc = False
-        print >>logfile,'* FAILED src max amplitude test '
-    print >>logfile,'*  Src max amp '+str(thistest_src)
-
-    if (diff_immax < 0.05):
-        passimmax = True
-        print >>logfile,'* Passed image max test'
-    else:
-        passimmax = False
-        print >>logfile,'* FAILED image max test'
-    print >>logfile,'*  Image max '+str(thistest_immax)
-
-    if (diff_imrms < 0.05):
-        passimrms = True
-        print >>logfile,'* Passed image rms test'
-    else:
-        passimrms = False
-        print >>logfile,'* FAILED image rms test'
-    print >>logfile,'*  Image rms '+str(thistest_imrms)
-
-    if ( passcal & passsrc & passimmax & passimrms & passuvfits & passfits &
-         passlistvis & passlistcal ): 
+    if passedall: 
 	regstate=True
 	print >>logfile,'---'
 	print >>logfile,'Passed Regression test for NGC5921'
@@ -1259,6 +1247,10 @@ else:
 	print >>logfile,'FAILED Regression test for NGC5921'
 	print >>logfile,'---'
         tstutl.note("FAILED Regression test for NGC5921","SEVERE")
+        # Specify what failed here...just saying "FAILED" is aggravating.
+        for d in (listvisresults, listcalresults, exportresults, quantresults):
+            listfailures(d)
+        
     print >>logfile,'*********************************'
 
     print >>logfile,''
@@ -1283,13 +1275,13 @@ else:
     print >>logfile,'*   listvis      time was: '+str(listvistime-contsubtime)
     print >>logfile,'*   clean        time was: '+str(cleantime-listvistime)
     print >>logfile,'*****************************************'
-    print >>logfile,'basho (test cpu) time was: ?? seconds'
-
-    logfile.close()
+    #print >>logfile,'basho (test cpu) time was: ?? seconds'
 
     print ""
     print "Done!"
-        
+
+logfile.close()
+
 #exit()
 #
 #=====================================================================
