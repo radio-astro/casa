@@ -38,7 +38,7 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
 
         final_csvis = csvis
         workingdir = os.path.abspath(os.path.dirname(vis.rstrip('/')))
-        csvis = tempfile.mkdtemp(suffix=csvis.split('/')[-1], dir=workingdir)
+        csvis = tempfile.mkdtemp(prefix=csvis.split('/')[-1], dir=workingdir)
 
         # ms does not have a colnames method, so open vis with tb even though
         # it is already open with ms.  Note that both use nomodify=True, however,
@@ -52,7 +52,6 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
             whichcol = 'DATA'
         tb.close()
         
-        # tempspw is chan free, so averchan doesn't matter.
         ms.split(csvis, field=field, spw=tempspw, whichcol=whichcol)
 
         ms.close()       
@@ -119,9 +118,10 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
         #if parang: cb.setapply(type='P')
 
         # Set up the solve
-        amuellertab = 'Temp_contsub.tab'
+        amuellertab = tempfile.mkdtemp(prefix='Temp_contsub.tab', dir=workingdir)
 
-        cb.setsolve(type='A', t=solint, table=amuellertab, combine=combine)
+        cb.setsolve(type='A', t=solint, table=amuellertab, combine=combine,
+                    fitorder=fitorder)
 
         # solve for the continuum
         cb.solve()
@@ -171,6 +171,8 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
                         origin='uvcontsub2')
         ms.close()
 
+        #casalog.post("\"want_cont\" = \"%s\"" % want_cont, 'WARN')
+        #casalog.post("\"csvis\" = \"%s\"" % csvis, 'WARN')
         if want_cont:
             ms.open(csvis)
             # No channel averaging (== skipping for fitorder == 0) is done
@@ -178,12 +180,13 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
             # do it by running split again.
             ms.split(final_csvis[:-3],             # .contsub -> .cont
                      whichcol='MODEL_DATA',
-                     spw=myspw, averchan=False)
+                     spw=myspw)
             ms.close()
 
+        #casalog.post("rming \"%s\"" % csvis, 'WARN')
         shutil.rmtree(csvis)
 
     except Exception, instance:
-        print '*** Error in ', instance
+        casalog.post('Error in uvcontsub2: ' + str(instance), 'SEVERE')
         cb.close()                        # Harmless if cb is closed.
         raise Exception, instance
