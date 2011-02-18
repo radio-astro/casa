@@ -38,7 +38,7 @@
 
 namespace casa{
 
-  AntennaResponses ALMAAperture::aR_p = AntennaResponses();
+  AntennaResponses* ALMAAperture::aR_p = 0;
 
   ALMAAperture::ALMAAperture(): 
     ATerm(),
@@ -48,12 +48,13 @@ namespace casa{
   {
 
     haveCannedResponses_p = True;
+    
+    if(!aR_p){
+      cout << "new antenna responses object" << endl;
+      aR_p = new AntennaResponses();
+    }
 
-//     if(!aR_p){
-//       aR_p = new AntennaResponses();
-//     }
-
-    if(!aR_p.isInit()){ // the shared antenna responses object was not yet initialised
+    if(!aR_p->isInit()){ // the shared antenna responses object was not yet initialised
 
       cout << "initialising antenna responses" << endl;
 
@@ -67,7 +68,7 @@ namespace casa{
 		<< LogIO::POST;
 	haveCannedResponses_p = False;
       }
-      else if(!aR_p.init(antRespPath)){
+      else if(!aR_p->init(antRespPath)){
 	// init failed
 	String mesg="Initialisation of antenna responses for observatory ALMA failed using path "+antRespPath;
 	SynthesisError err(mesg);
@@ -75,7 +76,7 @@ namespace casa{
       }
       else if(MeasTable::AntennaResponsesPath(antRespPath, "ACA")) {
 	// also have responses for ACA
-	aR_p.append(antRespPath); // dont't throw if this fails because the ACA antennas
+	aR_p->append(antRespPath); // dont't throw if this fails because the ACA antennas
 	                          // may already be in the ALMA table
       }
     }
@@ -117,7 +118,7 @@ namespace casa{
     Int bandID = -1;
     if(haveCannedResponses_p){
       String bandName;
-      if(aR_p.getBandName(bandName, "ALMA", FreqQ)){
+      if(aR_p->getBandName(bandName, "ALMA", FreqQ)){
 	bandID = atoi(bandName.substr(bandName.find("and")+3).c_str()); // band names start with "band" 
       }
       else{
