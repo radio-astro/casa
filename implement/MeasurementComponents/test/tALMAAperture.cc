@@ -138,124 +138,132 @@ int main()
     
     ///////////////////////////////////////////
 
-    cout << "new ALMAAperture" << endl;
-    ALMAAperture aa;
+    { // begin tests
 
-    cout << aa.name() << endl;
-
-    cout << (Int)aa.antTypeFromName("DV01") << endl;
-    cout << (Int)aa.antTypeFromName("DA01") << endl;
-    cout << (Int)aa.antTypeFromName("PM01") << endl;
-    cout << (Int)aa.antTypeFromName("CM01") << endl;
-    cout << (Int)aa.antTypeFromName("XY01") << endl;
-    cout << endl;   
-    cout << aa.antennaPairTypeCode(aa.antTypeFromName("DV01"),aa.antTypeFromName("DV02")) << endl;
-    cout << aa.antennaPairTypeCode(aa.antTypeFromName("DV01"),aa.antTypeFromName("DA02")) << endl;
-    cout << aa.antennaPairTypeCode(aa.antTypeFromName("DV01"),aa.antTypeFromName("PM02")) << endl;
-    cout << aa.antennaPairTypeCode(aa.antTypeFromName("DV01"),aa.antTypeFromName("CM02")) << endl;
-    cout << aa.antennaPairTypeCode(aa.antTypeFromName("DV01"),aa.antTypeFromName("XY02")) << endl;
-    cout << endl;
-    cout << aa.antennaPairTypeCode(aa.antTypeFromName("DA01"),aa.antTypeFromName("DV02")) << endl;
-    cout << aa.antennaPairTypeCode(aa.antTypeFromName("DA01"),aa.antTypeFromName("DA02")) << endl;
-    cout << aa.antennaPairTypeCode(aa.antTypeFromName("DA01"),aa.antTypeFromName("PM02")) << endl;
-    cout << aa.antennaPairTypeCode(aa.antTypeFromName("DA01"),aa.antTypeFromName("CM02")) << endl;
-    cout << aa.antennaPairTypeCode(aa.antTypeFromName("DA01"),aa.antTypeFromName("XY02")) << endl;
-    cout << endl;
-    cout << aa.antennaPairTypeCode(aa.antTypeFromName("PM01"),aa.antTypeFromName("DV02")) << endl;
-    cout << aa.antennaPairTypeCode(aa.antTypeFromName("PM01"),aa.antTypeFromName("DA02")) << endl;
-    cout << aa.antennaPairTypeCode(aa.antTypeFromName("PM01"),aa.antTypeFromName("PM02")) << endl;
-    cout << aa.antennaPairTypeCode(aa.antTypeFromName("PM01"),aa.antTypeFromName("CM02")) << endl;
-    cout << aa.antennaPairTypeCode(aa.antTypeFromName("PM01"),aa.antTypeFromName("XY02")) << endl;
-    cout << endl;
-    cout << aa.antennaPairTypeCode(aa.antTypeFromName("CM01"),aa.antTypeFromName("DV02")) << endl;
-    cout << aa.antennaPairTypeCode(aa.antTypeFromName("CM01"),aa.antTypeFromName("DA02")) << endl;
-    cout << aa.antennaPairTypeCode(aa.antTypeFromName("CM01"),aa.antTypeFromName("PM02")) << endl;
-    cout << aa.antennaPairTypeCode(aa.antTypeFromName("CM01"),aa.antTypeFromName("CM02")) << endl;
-    cout << aa.antennaPairTypeCode(aa.antTypeFromName("CM01"),aa.antTypeFromName("XY02")) << endl;
-    cout << endl;
-    cout << aa.antennaPairTypeCode(aa.antTypeFromName("XY01"),aa.antTypeFromName("DV02")) << endl;
-    cout << aa.antennaPairTypeCode(aa.antTypeFromName("XY01"),aa.antTypeFromName("DA02")) << endl;
-    cout << aa.antennaPairTypeCode(aa.antTypeFromName("XY01"),aa.antTypeFromName("PM02")) << endl;
-    cout << aa.antennaPairTypeCode(aa.antTypeFromName("XY01"),aa.antTypeFromName("CM02")) << endl;
-    cout << aa.antennaPairTypeCode(aa.antTypeFromName("XY01"),aa.antTypeFromName("XY02")) << endl;
-    cout << endl;
-    Int c = aa.antennaPairTypeCode(aa.antTypeFromName("DV01"),aa.antTypeFromName("DV02"));
-    ALMAAntennaType a,b;
-    ALMAAperture::antennaTypesFromPairType(a,b, c);
-    cout << (Int)a << " " << (Int)b << " (0,0)" << endl;
-    c = aa.antennaPairTypeCode(aa.antTypeFromName("CM01"),aa.antTypeFromName("CM02"));
-    ALMAAperture::antennaTypesFromPairType(a,b, c);
-    cout << (Int)a << " " << (Int)b << " (3,3)" << endl;
-    c = aa.antennaPairTypeCode(aa.antTypeFromName("DA01"),aa.antTypeFromName("DV02"));
-    ALMAAperture::antennaTypesFromPairType(a,b, c);
-    cout << (Int)a << " " << (Int)b << " (0,1)" << endl;
-    c = aa.antennaPairTypeCode(aa.antTypeFromName("CM01"),aa.antTypeFromName("PM02"));
-    ALMAAperture::antennaTypesFromPairType(a,b, c);
-    cout << (Int)a << " " << (Int)b << " (2,3)" << endl;
-    c = aa.antennaPairTypeCode(aa.antTypeFromName("DV"),aa.antTypeFromName("XY02"));
-    ALMAAperture::antennaTypesFromPairType(a,b, c);
-    cout << (Int)a << " " << (Int)b << " (-1,0)" << endl;
-
-    ////////////////////////////////////////////////
-
-    {
-      const char *sep=" ";
-      char *aipsPath = strtok(getenv("CASAPATH"),sep);
-      if (aipsPath == NULL)
-	throw(AipsError("CASAPATH not found."));
-      
-      String msFileName(aipsPath);
-      msFileName = msFileName + "/data/regression/exportasdm/input/uid___X02_X56142_X1.ms";
-      
-      cout << "Reading " << msFileName << endl;
-      
-      MS ms(msFileName, Table::Old);
-
-      Block<int> sort(4);
-      sort[2] = MS::FIELD_ID;
-      sort[3] = MS::ARRAY_ID;
-      sort[1] = MS::DATA_DESC_ID;
-      sort[0] = MS::TIME;
-
-      ROVisibilityIterator vi(ms, sort, 0.);
-
-      VisBuffer vb(vi);
-      
       cout << "new ALMAAperture" << endl;
-      ALMAAperture apB;
-
-      Int count = 0;
-
-      for(vi.originChunks();vi.moreChunks();vi.nextChunk()) {
-	cout << "next chunk" << endl;
-	for(vi.origin();vi.more();vi++) {
-	  Int nUnique = 0;
-	  Vector<Int> map = apB.vbRow2CFKeyMap(vb, nUnique);
-	  cout << "map " << map << endl;
-	  cout << "Unique " << nUnique << endl;
+      ALMAAperture aa;
+      
+      cout << aa.name() << endl;
+      
+      cout << (Int)aa.antTypeFromName("DV01") << endl;
+      cout << (Int)aa.antTypeFromName("DA01") << endl;
+      cout << (Int)aa.antTypeFromName("PM01") << endl;
+      cout << (Int)aa.antTypeFromName("CM01") << endl;
+      cout << (Int)aa.antTypeFromName("XY01") << endl;
+      cout << endl;   
+      cout << aa.antennaPairTypeCode(aa.antTypeFromName("DV01"),aa.antTypeFromName("DV02")) << endl;
+      cout << aa.antennaPairTypeCode(aa.antTypeFromName("DV01"),aa.antTypeFromName("DA02")) << endl;
+      cout << aa.antennaPairTypeCode(aa.antTypeFromName("DV01"),aa.antTypeFromName("PM02")) << endl;
+      cout << aa.antennaPairTypeCode(aa.antTypeFromName("DV01"),aa.antTypeFromName("CM02")) << endl;
+      cout << aa.antennaPairTypeCode(aa.antTypeFromName("DV01"),aa.antTypeFromName("XY02")) << endl;
+      cout << endl;
+      cout << aa.antennaPairTypeCode(aa.antTypeFromName("DA01"),aa.antTypeFromName("DV02")) << endl;
+      cout << aa.antennaPairTypeCode(aa.antTypeFromName("DA01"),aa.antTypeFromName("DA02")) << endl;
+      cout << aa.antennaPairTypeCode(aa.antTypeFromName("DA01"),aa.antTypeFromName("PM02")) << endl;
+      cout << aa.antennaPairTypeCode(aa.antTypeFromName("DA01"),aa.antTypeFromName("CM02")) << endl;
+      cout << aa.antennaPairTypeCode(aa.antTypeFromName("DA01"),aa.antTypeFromName("XY02")) << endl;
+      cout << endl;
+      cout << aa.antennaPairTypeCode(aa.antTypeFromName("PM01"),aa.antTypeFromName("DV02")) << endl;
+      cout << aa.antennaPairTypeCode(aa.antTypeFromName("PM01"),aa.antTypeFromName("DA02")) << endl;
+      cout << aa.antennaPairTypeCode(aa.antTypeFromName("PM01"),aa.antTypeFromName("PM02")) << endl;
+      cout << aa.antennaPairTypeCode(aa.antTypeFromName("PM01"),aa.antTypeFromName("CM02")) << endl;
+      cout << aa.antennaPairTypeCode(aa.antTypeFromName("PM01"),aa.antTypeFromName("XY02")) << endl;
+      cout << endl;
+      cout << aa.antennaPairTypeCode(aa.antTypeFromName("CM01"),aa.antTypeFromName("DV02")) << endl;
+      cout << aa.antennaPairTypeCode(aa.antTypeFromName("CM01"),aa.antTypeFromName("DA02")) << endl;
+      cout << aa.antennaPairTypeCode(aa.antTypeFromName("CM01"),aa.antTypeFromName("PM02")) << endl;
+      cout << aa.antennaPairTypeCode(aa.antTypeFromName("CM01"),aa.antTypeFromName("CM02")) << endl;
+      cout << aa.antennaPairTypeCode(aa.antTypeFromName("CM01"),aa.antTypeFromName("XY02")) << endl;
+      cout << endl;
+      cout << aa.antennaPairTypeCode(aa.antTypeFromName("XY01"),aa.antTypeFromName("DV02")) << endl;
+      cout << aa.antennaPairTypeCode(aa.antTypeFromName("XY01"),aa.antTypeFromName("DA02")) << endl;
+      cout << aa.antennaPairTypeCode(aa.antTypeFromName("XY01"),aa.antTypeFromName("PM02")) << endl;
+      cout << aa.antennaPairTypeCode(aa.antTypeFromName("XY01"),aa.antTypeFromName("CM02")) << endl;
+      cout << aa.antennaPairTypeCode(aa.antTypeFromName("XY01"),aa.antTypeFromName("XY02")) << endl;
+      cout << endl;
+      Int c = aa.antennaPairTypeCode(aa.antTypeFromName("DV01"),aa.antTypeFromName("DV02"));
+      ALMAAntennaType a,b;
+      ALMAAperture::antennaTypesFromPairType(a,b, c);
+      cout << (Int)a << " " << (Int)b << " (0,0)" << endl;
+      c = aa.antennaPairTypeCode(aa.antTypeFromName("CM01"),aa.antTypeFromName("CM02"));
+      ALMAAperture::antennaTypesFromPairType(a,b, c);
+      cout << (Int)a << " " << (Int)b << " (3,3)" << endl;
+      c = aa.antennaPairTypeCode(aa.antTypeFromName("DA01"),aa.antTypeFromName("DV02"));
+      ALMAAperture::antennaTypesFromPairType(a,b, c);
+      cout << (Int)a << " " << (Int)b << " (0,1)" << endl;
+      c = aa.antennaPairTypeCode(aa.antTypeFromName("CM01"),aa.antTypeFromName("PM02"));
+      ALMAAperture::antennaTypesFromPairType(a,b, c);
+      cout << (Int)a << " " << (Int)b << " (2,3)" << endl;
+      c = aa.antennaPairTypeCode(aa.antTypeFromName("DV"),aa.antTypeFromName("XY02"));
+      ALMAAperture::antennaTypesFromPairType(a,b, c);
+      cout << (Int)a << " " << (Int)b << " (-1,0)" << endl;
+      
+      ////////////////////////////////////////////////
+      
+      {
+	const char *sep=" ";
+	char *aipsPath = strtok(getenv("CASAPATH"),sep);
+	if (aipsPath == NULL)
+	  throw(AipsError("CASAPATH not found."));
+	
+	String msFileName(aipsPath);
+	msFileName = msFileName + "/data/regression/exportasdm/input/uid___X02_X56142_X1.ms";
+	
+	cout << "Reading " << msFileName << endl;
+	
+	MS ms(msFileName, Table::Old);
+	
+	Block<int> sort(4);
+	sort[2] = MS::FIELD_ID;
+	sort[3] = MS::ARRAY_ID;
+	sort[1] = MS::DATA_DESC_ID;
+	sort[0] = MS::TIME;
+	
+	ROVisibilityIterator vi(ms, sort, 0.);
+	
+	VisBuffer vb(vi);
+	
+	cout << "new ALMAAperture" << endl;
+	ALMAAperture apB;
+	
+	Int count = 0;
+	
+	for(vi.originChunks();vi.moreChunks();vi.nextChunk()) {
+	  cout << "next chunk" << endl;
+	  for(vi.origin();vi.more();vi++) {
+	    Int nUnique = 0;
+	    Vector<Int> map = apB.vbRow2CFKeyMap(vb, nUnique);
+	    cout << "map " << map << endl;
+	    cout << "Unique " << nUnique << endl;
+	  }
+	  count++;
+	  // test reset
+	  if(count==10) apB.resetAntTypeMap();
+	  // ten rounds is enough
+	  if(count>10) break;
 	}
-	count++;
-	// test reset
-	if(count==10) apB.resetAntTypeMap();
-	// ten rounds is enough
-	if(count>10) break;
+	
+	count=0;
+	
+	for(vi.originChunks();vi.moreChunks();vi.nextChunk()) {
+	  cout << "next chunk" << endl;
+	  for(vi.origin();vi.more();vi++) {
+	    cout << "band id " << apB.getVisParams(vb) << endl;
+	  }
+	  count++;
+	  // test reset
+	  if(count==10) apB.resetAntTypeMap();
+	  // ten rounds is enough
+	  if(count>10) break;
+	}
       }
 
-      count=0;
-
-      for(vi.originChunks();vi.moreChunks();vi.nextChunk()) {
-	cout << "next chunk" << endl;
-	for(vi.origin();vi.more();vi++) {
-	  cout << "band id " << apB.getVisParams(vb) << endl;
-	}
-	count++;
-	// test reset
-	if(count==10) apB.resetAntTypeMap();
-	// ten rounds is enough
-	if(count>10) break;
-      }
-
-    }
+      aa.destroyAntResp();      
+      cout << "new ALMAAperture, should initialise the response table again" << endl;
+      ALMAAperture apC;
+      cout << apC.name() << endl;
+      
+    } // end tests
 
   } catch (AipsError x) {
     cout << x.getMesg() << endl;

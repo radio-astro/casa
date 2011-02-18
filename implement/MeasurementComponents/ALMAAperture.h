@@ -105,7 +105,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     static void antennaTypesFromPairType(ALMAAntennaType& aT1, ALMAAntennaType& aT2,
 					 const Int& antennaPairType);
 
-    //    void destroyAntResp(){ delete aR_p;};
+    void destroyAntResp(){ delete aR_p; aR_p=0;};
 
     Int getVisParams(const VisBuffer& vb);
     Int makePBPolnCoords(const VisBuffer&vb,
@@ -116,7 +116,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			 CoordinateSystem& feedCoord);
 
   private:
-    static AntennaResponses aR_p; // shared between all instances of this class
+    static AntennaResponses* aR_p; // shared between all instances of this class
     Vector<Int> polMap_p;
     Bool haveCannedResponses_p; // true if there are precalculated response images available
     Vector<ALMAAntennaType> antTypeMap_p; // maps antenna id to antenna type
