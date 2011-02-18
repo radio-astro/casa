@@ -90,10 +90,6 @@ namespace casa{
         // aR_p does not need to be copied because it is static
 	haveCannedResponses_p = other.haveCannedResponses_p;
  	polMap_p.assign(other.polMap_p);
-// 	Diameter_p=other.Diameter_p;
-// 	Nant_p=other.Nant_p;
-// 	HPBW=other.HPBW;
-// 	sigma=other.sigma;
       }
     return *this;
   }
@@ -143,25 +139,83 @@ namespace casa{
   {
 
     if(getVisParams(vb)==-1){ // need to use ray tracing
-//       ALMACalcIlluminationConvFunc almaPB;
-//       Long cachesize=(HostInfo::memoryTotal(true)/8)*1024;
-//       almaPB.setMaximumCacheSize(cachesize);
-//       almaPB.applyPB(outImages, vb, doSquint);
-      logIO() << LogOrigin("ALMAAperture", "applySky")
-	      << LogIO::SEVERE
-	      << "Interface to BeamCalc ray tracing is not yet implemented for ALMA."
-	      << LogIO::POST;      
+      ALMACalcIlluminationConvFunc almaPB;
+      Long cachesize=(HostInfo::memoryTotal(true)/8)*1024;
+      almaPB.setMaximumCacheSize(cachesize);
+      almaPB.applyPB(outImages, vb, doSquint);
+//       logIO() << LogOrigin("ALMAAperture", "applySky")
+// 	      << LogIO::SEVERE
+// 	      << "Interface to BeamCalc ray tracing is not yet implemented for ALMA."
+// 	      << LogIO::POST;  
+      
     }
     else{ // use canned antenna responses
       // extract matrix from image
-      
+      Array<Complex> image = outImages.get();
       //   (issue warning if too coarse => will be in method ATerm::OK(vb, PAtolerance, timetolerance)
+      
       //   identify the right AIF based on antenna, freq band, polarizations
+      Vector<ALMAAntennaType> aTypes = antTypeList(vb);
+      uInt nAntTypes = aTypes.nelements();
+      Int spwId = vb.spectralWindow();
+
+      Vector<String> respImageName(nAntTypes);
+      Vector<uInt> respImageChannel(nAntTypes);
+      Vector<MFrequency> respImageNomFreq(nAntTypes);
+      Vector<AntennaResponses::FuncTypes> respImageFType(nAntTypes);
+
+      MFrequency refFreq = vb.msColumns().spectralWindow().refFrequencyMeas()(spwId);
+      MEpoch obsTime = vb.msColumns().observation().timeRangeMeas()(vb.observationId()(0))(IPosition(1,0)); // start time
+      MDirection obsDir = vb.msColumns().field().phaseDirMeas(vb.fieldId()); 
+
+      for(uInt i=0; i<nAntTypes; i++){
+	cout << "Testing for ant type \"" << antTypeStrFromType(aTypes(i)) << "\", freq " 
+	     << refFreq.get(Unit("Hz")).getValue() << " Hz" << endl;
+	if(!aR_p->getImageName(respImageName(i),
+			       respImageChannel(i),
+			       respImageNomFreq(i),
+			       respImageFType(i),
+			       "ALMA",
+			       obsTime,
+			       refFreq,
+			       AntennaResponses::ANY, // accept all at this stage
+			       antTypeStrFromType(aTypes(i)),
+			       obsDir,
+			       "", // receiver type
+			       0 // beam number
+			       )){ // no matching response found
+	  ostringstream oss;
+	  oss << "No matching antenna response found for frequency "
+	      << refFreq.get(Unit("Hz")).getValue() << " Hz, and antenna type "
+	      << antTypeStrFromType(aTypes(i));
+	  throw(SynthesisError(oss.str()));
+	}
+      }
+
+      // load all necessary images
+      for(uInt i=0; i<nAntTypes; i++){
+	if(respImageFType(i)!=AntennaResponses::EFP){
+	  throw(SynthesisError(String("Can only process antenna responses of type EFP.")));
+	}
+      }
+      respImage_p.resize(nAntTypes);
+      for(uInt i=0; i<nAntTypes; i++){
+	cout << "Loading " << respImageName(i) << endl;
+	respImage_p(i) = new PagedImage<Complex>(respImageName(i));
+      }
+
       //   Form all convolution pairs (Efield patterns) of antenna types in the Array
       //   FT the Efield patterns
       //   rotate using par. angle,
       //   then regrid it to the image, 
       //   multiply with image
+
+      // tidy up
+      for(uInt i=0; i<nAntTypes; i++){
+	delete respImage_p(i);
+      }
+      respImage_p.resize(0);	  
+
     }
 
   }
@@ -172,10 +226,10 @@ namespace casa{
 			      const Int& cfKey)
   {
     if(getVisParams(vb)==-1){ // need to use ray tracing
-//       ALMACalcIlluminationConvFunc almaPB;
-//       Long cachesize=(HostInfo::memoryTotal(true)/8)*1024;
-//       almaPB.setMaximumCacheSize(cachesize);
-//       almaPB.applyPB(outImages, vb, doSquint);
+      ALMACalcIlluminationConvFunc almaPB;
+      Long cachesize=(HostInfo::memoryTotal(true)/8)*1024;
+      almaPB.setMaximumCacheSize(cachesize);
+      almaPB.applyPB(outImages, vb, doSquint);
     }
     else{ // use canned antenna responses
 
@@ -217,7 +271,9 @@ namespace casa{
     //
     Int NPol=0,M,N=0;
     M=polMap_p.nelements();
-    for(Int i=0;i<M;i++) if (polMap_p(i) > -1) NPol++;
+    for(Int i=0;i<M;i++){
+      if (polMap_p(i) > -1) NPol++;
+    }
     Vector<Int> poln(NPol);
     
     Int index;
@@ -225,18 +281,16 @@ namespace casa{
     index = feedCoord.findCoordinate(Coordinate::STOKES);
     inStokes = feedCoord.stokesCoordinate(index).stokes();
     N = 0;
-    try
-      {
-	for(Int i=0;i<M;i++) if (polMap_p(i) > -1) {poln(N) = vb.corrType()(i);N++;}
-	StokesCoordinate polnCoord(poln);
-	Int StokesIndex = feedCoord.findCoordinate(Coordinate::STOKES);
-	feedCoord.replaceCoordinate(polnCoord,StokesIndex);
-      }
-    catch(AipsError& x)
-      {
-	throw(SynthesisFTMachineError("Likely cause: Discrepancy between the poln. "
-				      "axis of the data and the image specifications."));
-      }
+    try{
+      for(Int i=0;i<M;i++) if (polMap_p(i) > -1) {poln(N) = vb.corrType()(i);N++;}
+      StokesCoordinate polnCoord(poln);
+      Int StokesIndex = feedCoord.findCoordinate(Coordinate::STOKES);
+      feedCoord.replaceCoordinate(polnCoord,StokesIndex);
+    }
+    catch(AipsError& x){
+      throw(SynthesisFTMachineError("Likely cause: Discrepancy between the poln. "
+				    "axis of the data and the image specifications."));
+    }
     
     return NPol;
   }
@@ -253,7 +307,7 @@ namespace casa{
     if(haveCannedResponses_p){
       // distinguish different antenna types
       if(antTypeMap_p.nelements()!=(uInt)vb.numberAnt()){
-	antTypeMap(antTypeMap_p, vb);
+	antTypeMap_p.assign(antTypeMap(vb));
 	cout << "initialising antTypeMap to " << antTypeMap_p << endl;
       }
 
@@ -272,15 +326,15 @@ namespace casa{
       }  
       nUnique = cfKeyCount;
     }
-    else{ // raytracing knows only one antenna type
+    else{ // raytracing knows only one antenna type for the moment
       map=0; 
       nUnique=1; 
     }
     return map;
   }
-
-  void ALMAAperture::antTypeMap(Vector<ALMAAntennaType>& map, const VisBuffer& vb){
-    map.resize(vb.numberAnt());
+  
+  Vector<ALMAAntennaType> ALMAAperture::antTypeMap(const VisBuffer& vb){
+    Vector<ALMAAntennaType> map(vb.numberAnt(),ALMA_INVALID);
     for(uInt i=0; i<map.nelements(); i++){
       map(i) = antTypeFromName(vb.msColumns().antenna().name()(i));
       cout << vb.msColumns().antenna().name()(i) << " " << map(i) << endl;
@@ -292,6 +346,7 @@ namespace casa{
 		<< LogIO::POST;
       }
     }
+    return map;
   }
 
   ALMAAntennaType ALMAAperture::antTypeFromName(const String& name){
@@ -303,6 +358,30 @@ namespace casa{
     else if(typeN=="CM") rval=ALMA_CM;
     return rval;
   }
+
+  String ALMAAperture::antTypeStrFromType(const ALMAAntennaType& aType){
+    String tS;
+    switch(aType){
+    case ALMA_DV:
+      tS = "DV";
+      break;
+    case ALMA_DA:
+      tS = "DA";
+      break;
+    case ALMA_PM:
+      tS = "PM";
+      break;
+    case ALMA_CM:
+      tS = "CM";
+      break;
+    case ALMA_INVALID:
+    default:
+      tS = "";
+      break;
+    }
+    return tS;
+  }
+
 
   Int ALMAAperture::antennaPairTypeCode(const ALMAAntennaType aT1, const ALMAAntennaType aT2){
     return min((Int)aT1+1, (Int)aT2+1) + 10000*max((Int)aT1+1, (Int)aT2+1); // order doesn't matter, convolution commutes
@@ -316,5 +395,29 @@ namespace casa{
     aT1 = (ALMAAntennaType) min(t1,t2);
     aT2 = (ALMAAntennaType) max(t1,t2);
   }
+
+  Vector<ALMAAntennaType> ALMAAperture::antTypeList(const VisBuffer& vb){
+    Vector<ALMAAntennaType> aTypeMap = antTypeMap(vb);
+    Vector<Bool> encountered(ALMA_numAntTypes, False);
+    uInt typeCount = 0;
+    for(uInt i=0; i<aTypeMap.nelements(); i++){
+      uInt index = (uInt)aTypeMap(i);
+      if(!encountered(index)){
+	encountered(index) = True;
+	typeCount++;
+      }
+    }
+    Vector<ALMAAntennaType> aTypeList(typeCount);
+    uInt index = 0;
+    for(uInt i=0; i<ALMA_numAntTypes; i++){
+      if(encountered(i)){
+	aTypeList(index) = (ALMAAntennaType)i;
+	index++;
+      }
+    }
+      
+    return aTypeList;
+  }
+
 
 };
