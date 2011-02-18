@@ -14,6 +14,7 @@ def flagdata(vis = None,
              timerange = None,
              correlation = None,
              scan = None,
+             scanintent = None,
              feed = None, array = None,
              clipexpr = None, clipminmax = None,
              clipcolumn = None, clipoutside = None, channelavg = None,
@@ -71,6 +72,7 @@ def flagdata(vis = None,
                                          timerange=timerange,
                                          correlation=correlation,
                                          scan=scan,
+                                         scanintent=scanintent,
                                          feed=feed,
                                          array=array,
                                          uvrange=uvrange)
@@ -89,6 +91,7 @@ def flagdata(vis = None,
                                          timerange=timerange,
                                          correlation=correlation,
                                          scan=scan,
+                                         scanintent=scanintent,
                                          feed=feed,
                                          array=array,
                                          uvrange=uvrange)
@@ -100,6 +103,7 @@ def flagdata(vis = None,
                                 array = array, \
                                 feed = feed, \
                                 scan = scan, \
+                                scanintent = scanintent, \
                                 baseline = antenna, \
                                 uvrange = uvrange, \
                                 time = timerange, \
@@ -115,6 +119,7 @@ def flagdata(vis = None,
                                    array = array, \
                                    feed = feed, \
                                    scan = scan, \
+                                   scanintent = scanintent, \
                                    baseline = antenna, \
                                    uvrange = uvrange, \
                                    time = timerange, \
@@ -142,6 +147,7 @@ def flagdata(vis = None,
                                    array = array, \
                                    feed = feed, \
                                    scan = scan, \
+                                   scanintent = scanintent, \
                                    baseline = antenna, \
                                    uvrange = uvrange, \
                                    time = timerange, \
@@ -210,6 +216,7 @@ def flagdata(vis = None,
                                           array=array, \
                                           feed=feed, \
                                           scan=scan, \
+                                          scanintent=scanintent, \
                                           baseline=antenna, \
                                           uvrange=uvrange, \
                                           time=timerange, \
@@ -256,7 +263,7 @@ def manualflag_quack(fglocal, mode, selectdata, flagbackup, **params):
         if debug: print params
 
         if not selectdata:
-                params['antenna'] = params['timerange'] = params['correlation'] = params['scan'] = params['feed'] = params['array'] = params['uvrange'] = ''
+                params['antenna'] = params['timerange'] = params['correlation'] = params['scan'] = params['scanintent'] = params['feed'] = params['array'] = params['uvrange'] = ''
         
         vector_mode = False         # Are we in vector mode?
         vector_length = -1          # length of all vectors

@@ -342,7 +342,7 @@ class ExtendFlagger
             const String& array = "", const String& feed = "", 
             const String& scan = "", const String& baseline = "", 
             const String& uvrange = "", const String& time = "", 
-            const String& correlation = "");
+            const String& correlation = "", const String& intent = "");
 
       Bool setdata();
 
@@ -365,6 +365,7 @@ class ExtendFlagger
       void setUvrange(const String& uvrange);
       void setTime(const String& time);
       void setCorrelation(const String& correlation);
+      void setIntent(const String& intent);
       void setUnflag(Bool unflg);
 
       void setExtendChan(const String& exchan);
@@ -395,6 +396,7 @@ class ExtendFlagger
       String uvrange;
       String time;
       String correlation;
+      String intent;
    
       String clipexpr;
       Vector<Double> cliprange;
