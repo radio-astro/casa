@@ -58,6 +58,7 @@ RFATimeFreqCrop :: RFATimeFreqCrop( RFChunkStats &ch,const RecordInterface &parm
         DryRun = parm.asBool("dryrun");
         Expr = parm.asArrayString(RF_EXPR);
         Column = parm.asString(RF_COLUMN);
+        IgnorePreflags = parm.asBool(RF_FIGNORE);
 	//	cout << "Flagging on " << parm.asArrayString(RF_EXPR) << " for column : " << parm.asString(RF_COLUMN) << endl;
         StopAndExit=False;
 	/*
@@ -280,11 +281,20 @@ RFA::IterMode RFATimeFreqCrop :: iterTime (uInt itime)
             uInt baselinecnt = BaselineIndex(bs,ant1[bs],ant2[bs]);
 	    for(uInt ch=0;ch<NumC;ch++)
 	      {
+                // read the data. mapvalue evaluates 'expr'.
 		visc(pl,ch,(timecnt*NumB)+baselinecnt) = mapValue(ch,bs);
+                // read existing flags
 		tfl = chunk.npass() ? flag.anyFlagged(ch,chunk.ifrNum(bs)) : flag.preFlagged(ch,chunk.ifrNum(bs));
-		//tfl = flag.preFlagged(ch,chunk.ifrNum(bs));
+                // ignore previous flags....
+                if(IgnorePreflags) tfl=False;
+ 
+                // Fill in the NumT sized flag array
 		flagc(pl,ch,(timecnt*NumB)+baselinecnt) = tfl; //flag.anyFlagged(ch,ifrs(bs));
+
+                // Fill in the chunk sized flag array
 		chunkflags(pl,ch,(itime*NumB)+baselinecnt) = tfl; //flag.anyFlagged(ch,ifrs(bs));
+                
+                // Counters
 		countpnts++;
 		countflags += (Int)(tfl);
 	      }
@@ -815,7 +825,7 @@ RFA::IterMode RFATimeFreqCrop :: ShowFlagPlots()
       
       char choice = 'a';
       
-      Float runningsum=0, runningflag=0;
+      Float runningsum=0, runningflag=0, oldrunningflag=0;
       for(int pl=0;pl<NumP;pl++)
 	{
 	  if(choice == 's') continue;
@@ -826,6 +836,7 @@ RFA::IterMode RFATimeFreqCrop :: ShowFlagPlots()
 	      
 	      runningsum=0;
 	      runningflag=0;
+              oldrunningflag=0;
 	      Ants(bs,&a1,&a2);
 	      if(CorrChoice==0)
 		{if(a1 != a2) continue;} // choose autocorrelations
@@ -842,15 +853,16 @@ RFA::IterMode RFATimeFreqCrop :: ShowFlagPlots()
 		{ 
 		  for(uInt tm=0;tm<NumT;tm++)
 		    {       
-		      // tshp[0]=ch; tshp[1]=tm;
-		      // dispdat(tshp) = visc(pl,ch,(((tm*NumB)+bs)));
-		      // flagdat(tshp) = dispdat(tshp)*(!flagc(pl,ch,(tm*NumB)+bs));
-		      // runningsum += dispdat(tshp);
-		      // runningflag += Float(flagc(pl,ch,(tm*NumB)+bs));
-		      dispdat(ch,tm) = visc(pl,ch,(((tm*NumB)+bs)));
+                      // Data with pre-flags
+		      dispdat(ch,tm) = visc(pl,ch,(((tm*NumB)+bs))) * (!chunkflags(pl,ch,((tm+iterTimecnt-NumT)*NumB)+bs));
+                      // Data with all flags (pre and new)
 		      flagdat(ch,tm) = dispdat(ch,tm)*(!flagc(pl,ch,(tm*NumB)+bs));
-		      runningsum += dispdat(ch,tm);
-		      runningflag += Float(flagc(pl,ch,(tm*NumB)+bs));
+                      // Sum of the visibilities (all of them, flagged and unflagged)
+		      runningsum += visc(pl,ch,(((tm*NumB)+bs)));
+                      // Count of all flags
+		      runningflag += (Float)(flagc(pl,ch,(tm*NumB)+bs));
+                      // Count of only pre-flags
+                      oldrunningflag += (Float)(chunkflags(pl,ch,((tm+iterTimecnt-NumT)*NumB)+bs));
 		    }//for tm
 		}//for ch
 	      
@@ -859,7 +871,7 @@ RFA::IterMode RFATimeFreqCrop :: ShowFlagPlots()
 	      //		cout << "Antenna1 : " << a1 << "  Antenna2 : " << a2 << "  Polarization : " << pl << endl;
 	      //		cout << "Vis sum : " << runningsum << " Flag % : " << 100 * runningflag/(NumC*NumT) << endl;
 	      //	      cout << " Flagged : " << 100 * runningflag/(NumC*NumT) << " %" << endl;
-	      cout << " Flagged : " << 100 * runningflag/(NumC*NumT) << " %  on " << Expr << " for timesteps " << iterTimecnt-NumT << " - " << iterTimecnt << " on baseline " << a1 << "-" << a2;
+	      cout << " Flagged : " << 100 * runningflag/(NumC*NumT) << " %  (Pre-Flag : " << 100 * oldrunningflag/(NumC*NumT) << " %) on " << Expr << " for timesteps " << iterTimecnt-NumT << " - " << iterTimecnt << " on baseline " << a1 << "-" << a2;
 	      
 	      if(!runningsum)
 		{
