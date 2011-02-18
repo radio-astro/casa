@@ -1,4 +1,3 @@
-// -*- C++ -*-
 //# ALMAAperture.h: Definition of the ALMAAperture class
 //# Copyright (C) 1997,1998,1999,2000,2001,2002,2003
 //# Associated Universities, Inc. Washington DC, USA.
@@ -30,7 +29,7 @@
 #ifndef SYNTHESIS_ALMAAPERTURE_H
 #define SYNTHESIS_ALMAAPERTURE_H
 
-#include <images/Images/ImageInterface.h>
+#include <images/Images/PagedImage.h>
 #include <synthesis/MeasurementComponents/ATerm.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <images/Images/AntennaResponses.h>
@@ -52,12 +51,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class VisBuffer;
 
   enum ALMAAntennaType {
-    ALMA_INVALID = -1,
-    ALMA_DV = 0,
+    ALMA_INVALID = 0,
+    ALMA_DV = 1,
     ALMA_DA,
     ALMA_PM,
     ALMA_CM,
-    numAntTypes
+    ALMA_numAntTypes
   };
 
   class ALMAAperture : public ATerm
@@ -65,7 +64,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   public:
     ALMAAperture();
 
-    ~ALMAAperture() {};
+    ~ALMAAperture() { for(uInt i=0;i<respImage_p.nelements();i++) delete respImage_p(i); };
 
     ALMAAperture& operator=(const ALMAAperture& other);
     //
@@ -92,7 +91,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual Float getSupportThreshold() {return THRESHOLD;};
 
     // tell the antenna type number for each antenna in the antenna table
-    void antTypeMap(Vector<ALMAAntennaType>& map, const VisBuffer& vb);
+    Vector<ALMAAntennaType> antTypeMap(const VisBuffer& vb);
 
     // call this before reusing the same ALMAAperture object on a different MS
     void resetAntTypeMap(){antTypeMap_p.resize(0);};
@@ -100,12 +99,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // derive type number from first two characters in antenna name, 
     // return -1 if not recognised 
     static ALMAAntennaType antTypeFromName(const String& name);
+    static String antTypeStrFromType(const ALMAAntennaType& aType);
 
     static Int antennaPairTypeCode(const ALMAAntennaType aT1, const ALMAAntennaType aT2);
     static void antennaTypesFromPairType(ALMAAntennaType& aT1, ALMAAntennaType& aT2,
 					 const Int& antennaPairType);
 
-    void destroyAntResp(){ delete aR_p; aR_p=0;};
+    // generate the lists of antenna pair types and antenna types
+    Vector<ALMAAntennaType> antTypeList(const VisBuffer& vb);
 
     Int getVisParams(const VisBuffer& vb);
     Int makePBPolnCoords(const VisBuffer&vb,
@@ -115,12 +116,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			 const Int& skyNx, const Int& skyNy,
 			 CoordinateSystem& feedCoord);
 
+    void destroyAntResp(){ delete aR_p; aR_p=0;};
+
+
   private:
     static AntennaResponses* aR_p; // shared between all instances of this class
     Vector<Int> polMap_p;
     Bool haveCannedResponses_p; // true if there are precalculated response images available
     Vector<ALMAAntennaType> antTypeMap_p; // maps antenna id to antenna type
     SimpleOrderedMap<Int, Int > pairTypeToCFKeyMap_p; // maps antenna pair type to CFKey 
+    Vector<PagedImage<Complex>* > respImage_p;
   };
 };
 #endif

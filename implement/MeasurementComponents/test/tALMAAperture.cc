@@ -126,12 +126,12 @@ int main()
     String name("tab1");
     TiledShape ts(IPosition(4,128,128,1,1));
 
-    PagedImage<Float> im1(ts, coordsys, name);
+    PagedImage<Complex> im1(ts, coordsys, name);
     PagedImage<Float> im2(ts, coordsys, "tab2");
     PagedImage<Float> im3(ts, coordsys3, "tab3");
     PagedImage<Float> im4(ts, coordsys3, "tab4");
 
-    im1.set(1.0);
+    im1.set(Complex(1.0,1.0));
     im2.set(0.0);
     im3.set(1.0);
     im4.set(0.0);
@@ -198,6 +198,13 @@ int main()
       ALMAAperture::antennaTypesFromPairType(a,b, c);
       cout << (Int)a << " " << (Int)b << " (-1,0)" << endl;
       
+      cout << endl;
+      cout << ALMAAperture::antTypeStrFromType(aa.antTypeFromName("XY01")) << endl;
+      cout << ALMAAperture::antTypeStrFromType(aa.antTypeFromName("DV01")) << endl;
+      cout << ALMAAperture::antTypeStrFromType(aa.antTypeFromName("DA02")) << endl;
+      cout << ALMAAperture::antTypeStrFromType(aa.antTypeFromName("PM01")) << endl;
+      cout << ALMAAperture::antTypeStrFromType(aa.antTypeFromName("CM01")) << endl;
+
       ////////////////////////////////////////////////
       
       {
@@ -243,12 +250,16 @@ int main()
 	  if(count>10) break;
 	}
 	
+	cout << "\nSecond tour through the MS, testing getVisParams and applySky" << endl;
 	count=0;
 	
 	for(vi.originChunks();vi.moreChunks();vi.nextChunk()) {
 	  cout << "next chunk" << endl;
 	  for(vi.origin();vi.more();vi++) {
 	    cout << "band id " << apB.getVisParams(vb) << endl;
+	    cout << "ant type map " << apB.antTypeMap(vb) << endl;
+	    cout << "ant type list " << apB.antTypeList(vb) << endl;
+	    apB.applySky(im1, vb, False, 0);
 	  }
 	  count++;
 	  // test reset
