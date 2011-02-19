@@ -281,6 +281,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// first freq and functype
 	Bool found = False;
 	for(j=0; j<NumSubbands_p(i); j++){
+	  cout << "f " << f << " min " << SubbandMinFreq_p(i)(j).get() << " max " << SubbandMaxFreq_p(i)(j).get() << endl;
 	  if( (FuncType_p(i)(j) == requFType
 	       || requFType == AntennaResponses::ANY)
 	      && SubbandMinFreq_p(i)(j).get() <= f
@@ -300,10 +301,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 								       frame)
 						       )().getAngle("deg").getValue();
 
-	  //cout << " i, j, " << i << ", " << j << " az min actual max" << azelMin(0) << " " << azel(0) << " " << azelMax(0) << endl;
-	  //cout << " i, j, " << i << ", " << j << " el min actual max" << azelMin(1) << " " << azel(1) << " " << azelMax(1) << endl;
+	  // need to accomodate the ambiguity of the AZ
+	  Double modAz = fmod(azel(0) - azelMin(0),360.);
+	  Double modAzMax = fmod(azelMax(0) - azelMin(0), 360.);
 
-	  if(azelMin(0) <= azel(0) && azel(0) <= azelMax(0)
+// 	  cout << " i, j, " << i << ", " << j << " az min actual max" << azelMin(0) << " " 
+// 	       << azel(0) << " " << azelMax(0) << endl;
+// 	  cout << " i, j, " << i << ", " << j << " cannonised az  actual max" << modAz << " " << modAzMax << endl;
+// 	  cout << " i, j, " << i << ", " << j << " el min actual max" << azelMin(1) << " " << azel(1) << " " << azelMax(1) << endl;
+
+	  if((fabs(azelMin(0)-azelMax(0))<1e-5 // all AZ are valid (accomodate numerical problems at 360 deg)
+	      || ( 0. <= modAz  && modAz <= modAzMax))
 	     && azelMin(1) <= azel(1) && azel(1) <= azelMax(1)){
 	    // memorize the applicable row, sub band, and time
 	    rval = True;
