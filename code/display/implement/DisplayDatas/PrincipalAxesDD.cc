@@ -1594,6 +1594,8 @@ Bool PrincipalAxesDD::labelAxes(const WCRefreshEvent &ev)
 		    "object in incorrect state"));
   }
   
+  setDisplayState( DisplayData::DISPLAYED );
+
   // not using internal labellers
   if (!itsUsesAxisLabels) return False;
 

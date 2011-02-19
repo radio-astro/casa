@@ -38,7 +38,6 @@
 			<description>Name of input model image(s)</description>
 			<any type="variant"/>
 			<value type="string"></value>
-			<value></value>
 		</param>
 
 		<param type="int" name="nterms">

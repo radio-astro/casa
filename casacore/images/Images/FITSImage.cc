@@ -27,6 +27,7 @@
 
 #include <images/Images/FITSImage.h>
 
+#include <images/Images/FITSImgParser.h>
 #include <fits/FITS/hdu.h>
 #include <fits/FITS/fitsio.h>
 #include <fits/FITS/FITSKeywordUtil.h>
@@ -64,6 +65,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 FITSImage::FITSImage (const String& name, uInt whichRep, uInt whichHDU)
 : ImageInterface<Float>(),
   name_p      (name),
+  fullname_p  (name),
   pTiledFile_p(0),
   pPixelMask_p(0),
   scale_p     (1.0),
@@ -83,6 +85,7 @@ FITSImage::FITSImage (const String& name, uInt whichRep, uInt whichHDU)
 FITSImage::FITSImage (const String& name, const MaskSpecifier& maskSpec, uInt whichRep, uInt whichHDU)
 : ImageInterface<Float>(),
   name_p      (name),
+  fullname_p  (name),
   maskSpec_p  (maskSpec),
   pTiledFile_p(0),
   pPixelMask_p(0),
@@ -103,6 +106,7 @@ FITSImage::FITSImage (const String& name, const MaskSpecifier& maskSpec, uInt wh
 FITSImage::FITSImage (const FITSImage& other)
 : ImageInterface<Float>(other),
   name_p      (other.name_p),
+  fullname_p  (other.fullname_p),
   maskSpec_p  (other.maskSpec_p),
   pTiledFile_p(other.pTiledFile_p),
   pPixelMask_p(0),
@@ -141,6 +145,7 @@ FITSImage& FITSImage::operator=(const FITSImage& other)
 //
       shape_p     = other.shape_p;
       name_p      = other.name_p;
+      fullname_p  = other.fullname_p;
       maskSpec_p  = other.maskSpec_p;
       scale_p     = other.scale_p;
       offset_p    = other.offset_p;
@@ -174,6 +179,146 @@ void FITSImage::registerOpenFunction()
 					  &openFITSImage);
 }
 
+//
+String FITSImage::get_fitsname(const String &fullname)
+{
+	String fullname_l;
+	String fitsname;
+	Int close_bracepos, open_bracepos, fullname_length;
+
+	fullname_l = fullname;
+	fullname_l.trim();
+	fullname_length = fullname_l.length();
+
+	//cerr << "Initial name: " << fullname_l << endl;
+	// check whether the strings ends with "]"
+	if (fullname_l.compare(fullname_length-1, 1, "]", 1))
+	{
+		// check for an open brace
+		open_bracepos = fullname_l.rfind("[", fullname_length);
+		if (open_bracepos > 0) {
+
+			// check for a closing brace
+			close_bracepos = fullname_l.rfind("]", fullname_length);
+
+			// an open brace at the end indicates a mal-formed name
+			if (close_bracepos < 0 || (open_bracepos > close_bracepos))
+				throw (AipsError(fullname_l + " has opening brace, but no closing brace."));
+		}
+
+		// just copy the input
+		fitsname = fullname_l;
+	}
+	else
+	{
+		// check for the last "["
+		open_bracepos = fullname_l.rfind("[", fullname_length);
+		if (open_bracepos < 0) {
+			throw (AipsError(fullname_l + " has closing brace, but no opening brace."));
+		}
+		else {
+			// separate the filename an the extension name
+			//extexpr_p = String(fullname_l, open_bracepos+1, fullname_length-open_bracepos-2);
+			fitsname =String(fullname_l, 0, open_bracepos);
+		}
+	}
+	//cerr << "FITS name: " << fitsname <<endl;
+
+	return fitsname;
+}
+
+//
+uInt FITSImage::get_hdunum(const String &fullname)
+{
+	String extname=String("");
+
+	String fullname_l;
+	String fitsname;
+	String extstring;
+	Int fullname_length, comma_pos;
+
+	Int  extver=-1;
+	Int  extindex=-1;
+	Int fitsindex=-1;
+	uInt hduindex=0;
+
+	fullname_l = fullname;
+	fullname_l.trim();
+	fullname_length = fullname_l.length();
+
+	// determine the FITS name
+	fitsname = FITSImage::get_fitsname(fullname_l);
+
+	// check whether there is an extension
+	// specification in the full name
+	if (fitsname != fullname_l) {
+
+		// isolate the extension specification
+		extstring = String(fullname_l, fitsname.length()+1, fullname_length-fitsname.length()-2);
+
+		// check for the comma
+		comma_pos = extstring.rfind(",", extstring.length());
+		if (comma_pos < 0) {
+			extstring.trim();
+
+			// check whether an index is given
+			if (String::toInt(extstring)){
+				// get the index
+				extindex = String::toInt(extstring);
+			}
+			// explicitly check for the literal "0"
+			else if (!extstring.compare(0, 1, "0", 1)){
+				extindex = 0;
+			}
+			else {
+				// just copy the extension name
+				extname = extstring;
+			}
+		}
+		else {
+			// separate the extension name
+			extname = String(extstring, 0, comma_pos);
+
+			// find the extension version
+			extver = String::toInt(String(extstring, comma_pos+1, extstring.length()-1));
+
+			if (!extver){
+				throw (AipsError(String(extstring, comma_pos+1, extstring.length()-1) + " Extension version not an integer"));
+				//cerr << "Extension version not an Integer: " << String(extstring, comma_pos+1, extstring.length()-1)<< endl;
+				//exit(0);
+			}
+			else if (extver < 0) {
+				throw (AipsError(extstring + " Extension version must be >0."));
+				//cerr << "Extension version must be >0: " << extver << endl;
+				//exit(0);
+			}
+
+		}
+		// make it pretty
+		extname.trim();
+		extname.upcase();
+	}
+
+	//cerr << "Opening image parser with: "<< fitsname <<endl;
+	FITSImgParser fip = FITSImgParser(fitsname);
+
+	if (extname.length() > 0 || extindex > -1) {
+		FITSExtInfo   fei = FITSExtInfo(fip.fitsname(True), extindex, extname, extver, True);
+		fitsindex = fip.get_index(fei);
+		if (fitsindex > -1)
+			hduindex = (uInt)fitsindex;
+		else
+			throw (AipsError("Extension " + extstring + " does not exist in " + fitsname));
+	}
+	else {
+		hduindex = fip.get_firstdata_index();
+		if (hduindex > 1 || hduindex == fip.get_numhdu())
+			throw (AipsError("No data in the zeroth or first extension of " + fitsname));
+	}
+
+	// return the index
+	return hduindex;
+}
 
 ImageInterface<Float>* FITSImage::cloneII() const
 {
@@ -382,6 +527,23 @@ void FITSImage::showCacheStatistics (ostream& os) const
 
 void FITSImage::setup()
 {
+// Separate the FITS filename from any
+// possible extension specification
+
+   name_p = get_fitsname(fullname_p);
+
+// Compare the file name and the full name
+   if (name_p != fullname_p){
+
+// Determine the HDU index from the extension specification
+	   uInt HDUnum = get_hdunum(fullname_p);
+
+// The extension specification in the name wins
+// over any explicitly given HDU index
+	   if (HDUnum != whichHDU_p)
+		   whichHDU_p = HDUnum;
+   }
+
    if (name_p.empty()) {
       throw AipsError("FITSImage: given file name is empty");
    }

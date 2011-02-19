@@ -141,13 +141,13 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
 
         casalog.post('Channel averaging to ' + cavms)
         myms.split(outputms=cavms,     field=field,
-                 spw=spw,            step=width,
-                 baseline=antenna,   subarray=array,
-                 timebin='',         time=timerange,
-                 whichcol=datacolumn,
-                 scan=scan,          uvrange=uvrange,
-                 combine=combine,
-                 correlation=correlation)
+                   spw=spw,            step=width,
+                   baseline=antenna,   subarray=array,
+                   timebin='',         time=timerange,
+                   whichcol=datacolumn,
+                   scan=scan,          uvrange=uvrange,
+                   combine=combine,
+                   correlation=correlation)
         
         # The selection was already made, so blank them before time averaging.
         field = ''

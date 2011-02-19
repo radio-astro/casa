@@ -97,6 +97,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(msId_p != vb.msId()){
       msId_p=vb.msId();
       const ROMSAntennaColumns& ac=vb.msColumns().antenna();
+      //cerr << "K: Number of rows " << ac.nrow() << endl;
       antIndexToDiamIndex_p.resize(ac.nrow());
       antIndexToDiamIndex_p.set(-1);
       Int diamIndex=antDiam2IndexMap_p.ndefined();
@@ -264,16 +265,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  (antMath_p[k])->applyVP(pBScreen, pBScreen, direction1_p);
 	  //Then the other
 	  (antMath_p[j])->applyVP(pBScreen, pBScreen, direction2_p);
-	  //*****************
-	  //if(0){
+	  /*****************
+	  if(0){
 	    ostringstream os1;
 	    os1 << "PB_field_" << Int(thePix_p[0]) << "_" << Int(thePix_p[1]) << "_antpair_" << k <<"_"<<j ;
 	    PagedImage<Float> thisScreen(pbShape, coords, String(os1));
 	    LatticeExpr<Float> le(abs(pBScreen));
 	    thisScreen.copyData(le);
-	  //
+	  
 	  //	}
-	  //*****************
+	  *****************/
 	  Matrix<Complex> screenoo(convSize_p, convSize_p);
 	  screenoo.set(1.0);
 	  pB2Screen.putSlice(screenoo, start);
@@ -632,3 +633,4 @@ void HetArrayConvFunc::sliceFluxScale(Int npol) {
   }
 
 } //# NAMESPACE CASA - END
+

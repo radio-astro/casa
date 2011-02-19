@@ -740,12 +740,8 @@ void QtDisplayData::setOptions(Record opts, Bool emitAll) {
       else if(cbChg || (wouldDisplayColorBar() && cbSzChg)) {
 	emit colorBarChange();
       }
-    
-    
-      // Trigger redraw of color bar, if necessary.
-      
-      if(cbNeedsRefresh) colorBar_->refresh();  }
 
+    }
     
     
     if(!held) { held=True;  panel_->viewer()->hold();  }
@@ -763,6 +759,8 @@ void QtDisplayData::setOptions(Record opts, Bool emitAll) {
 
     
     held=False;  panel_->viewer()->release();     
+
+    if(cbNeedsRefresh) { emit colorBarChange(); }
     
     errMsg_ = "";		// Just lets anyone interested know that
     emit optionsSet();  }	// options were set ok.  (QtDDGui will

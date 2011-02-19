@@ -70,6 +70,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    ~DlHandle( ) { if ( target_ ) target_->unreg(this); }
 
 	    bool null( ) const { return target_ == 0; }
+	    const T *ptr( ) const { return target_; }
 
 	protected:
 	    void target_gone( ) const { ((DlHandle<T>*)this)->target_ = 0; }

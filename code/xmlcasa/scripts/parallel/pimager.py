@@ -386,19 +386,27 @@ class pimager():
         if(niterpercycle == 0):
             niterpercycle=niter
             majorcycles=1
+        num_ext_procs=0
+        self.spw=spw
+        self.field=field
+        self.phasecenter=phasecenter
+        self.stokes=stokes
+        self.ftmachine=ftmachine
+        self.wprojplanes=wprojplanes
+        self.facets=facets
+        self.imsize=imsize
+        self.cell=pixsize
+        self.weight=weight
+        self.robust=robust
+        self.visinmem=visinmem
+        
+        self.setupcluster(hostnames,numcpuperhost, num_ext_procs)
+      
         if(spw==''):
             spw='*'
         if(field==''):
             field='*'
         spwids=ms.msseltoindex(vis=msname, spw=spw)['spw']
-        c=cluster()
-        if (len(c.get_ids()) > 0 or len(c.get_nodes()) > 0 or 
-            len(c.get_engines())):
-            c.stop_cluster()
-            time.sleep(1)
-        hostname=os.getenv('HOSTNAME')
-        wd=os.getcwd()
-        owd=wd
         timesplit=0
         timeimage=0
         model=imagename+'.model' if (len(imagename) != 0) else 'elmodel'
@@ -409,22 +417,16 @@ class pimager():
             shutil.rmtree(imagename+'.image', True)
             shutil.rmtree(imagename+'.residual', True)
 
-        ###num of cpu per node
-        numcpu=numcpuperhost
-        if((hostnames==[]) or (hostnames=='')): 
-            hostnames=[hostname]
-        print 'Hosts ', hostnames
+        ###num of cpu 
+        numcpu=self.numcpu
         time1=time.time()
-        print 'output will be in directory', owd
-        for hostname in hostnames:
-            c.start_engine(hostname,numcpu,owd)
-        numcpu=numcpu*len(hostnames)
         ###spw and channel selection
         spwsel,startsel,nchansel=self.findchanselcont(msname, spwids, numcpu)
 
         print 'SPWSEL ', spwsel, startsel, nchansel 
 
         out=range(numcpu)  
+        c=self.c
         c.pgc('casalog.filter()')
         c.pgc('from  parallel.parallel_cont import *')
         spwlaunch='"'+spw+'"' if (type(spw)==str) else str(spw)
@@ -433,13 +435,6 @@ class pimager():
         launchcomm='a=imagecont(ftmachine='+'"'+ftmachine+'",'+'wprojplanes='+str(wprojplanes)+',facets='+str(facets)+',pixels='+str(imsize)+',cell='+str(pixsize)+', spw='+spwlaunch +',field='+fieldlaunch+',phasecenter='+pslaunch+',weight="'+weight+'", robust='+str(robust)+ ', stokes="'+stokes+'")'
         print 'launch command', launchcomm
         c.pgc(launchcomm);
-        c.pgc('a.visInMem='+str(visinmem));
-        #c.pgc('a.painc='+str(painc));
-        #c.pgc('a.cfcache='+'"'+str(cfcache)+'"');
-        #c.pgc('a.pblimit='+str(pblimit));
-        #c.pgc('a.dopbcorr='+str(dopbcorr));
-        #c.pgc('a.applyoffsets='+str(applyoffsets));
-        #c.pgc('a.epjtablename='+'"'+str(epjtablename)+'"');
 
 
         tb.open(msname+"/SPECTRAL_WINDOW")
@@ -1095,7 +1090,7 @@ class pimager():
                      pixsize=['1arcsec', '1arcsec'], phasecenter='', 
                      field='', spw='*', freqrange=['', ''],  stokes='I', ftmachine='ft', wprojplanes=128, facets=1, 
                      hostnames='', 
-                     numcpuperhost=1, majorcycles=1, niter=1000, threshold='0.0mJy', alg='clark', weight='natural', robust=0.0,
+                     numcpuperhost=1, majorcycles=1, niter=1000, threshold='0.0mJy', alg='clark', scales=[], weight='natural', robust=0.0,
                      contclean=False, visinmem=False, maskimage='lala.mask',
                      painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
                      epjtablename=''):
@@ -1195,6 +1190,8 @@ class pimager():
         out=range(self.numcpu)
         
         for k in range(self.numcpu):
+            if(not self.engineinfo.has_key(k)):
+                self.engineinfo[k]={}
             self.engineinfo[k]['msnames']=[]
         t_msnames=copy.deepcopy(msnames)
         counter=0
@@ -1239,7 +1236,9 @@ class pimager():
                 if(not contclean or (not os.path.exists(model))):
                     self.copyimage(inimage=residual, outimage=model, 
                                    init=True, initval=0.0)
-            self.incrementaldecon(alg=alg, residual=residual, model=model, niter=niterpercycle, psf=psf, mask=maskimage, thr=threshold, cpuid=0, imholder=self.engineinfo)
+            if scales==[]:
+                scales=[0]
+            self.incrementaldecon(alg=alg, scales=scales, residual=residual, model=model, niter=niterpercycle, psf=psf, mask=maskimage, thr=threshold, cpuid=0, imholder=self.engineinfo)
         #######
         restored=imagename+'.image'
         self.averimages(restored, restoreds)
@@ -1262,7 +1261,7 @@ class pimager():
                      pixsize=['1arcsec', '1arcsec'], phasecenter='', 
                      field='', spw='*', freqrange=['', ''],  stokes='I', ftmachine='ft', wprojplanes=128, facets=1, 
                      hostnames='', 
-                     numcpuperhost=1, majorcycles=1, niter=1000, threshold='0.0mJy', alg='clark', weight='natural', robust=0.0,
+                     numcpuperhost=1, majorcycles=1, niter=1000, threshold='0.0mJy', alg='clark', scales=[0], weight='natural', robust=0.0,
                      contclean=False, visinmem=False, maskimage='lala.mask',
                      painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
                      epjtablename=''):
@@ -1436,7 +1435,7 @@ class pimager():
                 if(not contclean or (not os.path.exists(model))):
                     self.copyimage(inimage=residual, outimage=model, 
                                    init=True, initval=0.0)
-            self.incrementaldecon(alg=alg, residual=residual, model=model, niter=niterpercycle, psf=psf, mask=maskimage, thr=threshold, cpuid=0, imholder=self.msinfo)
+            self.incrementaldecon(alg=alg, scales=scales, residual=residual, model=model, niter=niterpercycle, psf=psf, mask=maskimage, thr=threshold, cpuid=0, imholder=self.msinfo)
         #######
         restored=imagename+'.image'
         self.averimages(restored, restoreds)
@@ -1454,7 +1453,7 @@ class pimager():
         print 'Time to image is ', (time2-time1)/60.0, 'mins'
         self.c.stop_cluster()
 
-    def incrementaldecon(self, alg, residual, model, niter, psf,  mask, thr, cpuid, imholder):
+    def incrementaldecon(self, alg, scales,residual, model, niter, psf,  mask, thr, cpuid, imholder):
         ##############
             ia.open(residual)
             print 'Residual', ia.statistics() 
@@ -1462,7 +1461,7 @@ class pimager():
             ########
             #incremental clean...get rid of tempmodel
             shutil.rmtree('tempmodel', True)
-            rundecon='a.cleancont(alg="'+str(alg)+'", niter='+str(niter)+',psf="'+psf+'", dirty="'+residual+'", model="'+'tempmodel'+'", mask='+'"'+mask+'", thr="'+str(thr)+'")'
+            rundecon='a.cleancont(alg="'+str(alg)+'", scales='+str(scales)+',niter='+str(niter)+',psf="'+psf+'", dirty="'+residual+'", model="'+'tempmodel'+'", mask='+'"'+mask+'", thr="'+str(thr)+'")'
             print 'Deconvolution command', rundecon
             out=self.c.odo(rundecon,cpuid)
             over=False
@@ -1503,8 +1502,7 @@ class pimager():
                 substr=string.replace(substr, '/','_')
             if(numim==len(msnames)):
                 myrec[msnames[k]]['imname']=substr
-            else:
-                self.engineinfo[k]={'imname':substr}
+            self.engineinfo[k]={'imname':substr}
             model=imname+'.model'
             if(contclean and os.path.exists(model)):
                 self.copyimage(inimage=model, outimage=substr+'.model', init=False)
@@ -1522,6 +1520,7 @@ class pimager():
             self.msinfo[msnames[k]]=odict()
             myrec=self.msinfo[msnames[k]]
             freqrange=[0,0]
+            channel=ms.msseltoindex(vis=msnames[k], spw=spw[k])['channel']
             myrec['spwids']=ms.msseltoindex(vis=msnames[k], spw=spw[k])['spw']
             spws, starts, nchans=self.findchanselcont(
                 msname=msnames[k], spwids=myrec['spwids'], 
@@ -1530,6 +1529,15 @@ class pimager():
             myrec['spwsel']=spws[0]
             myrec['startsel']=starts[0]
             myrec['nchansel']=nchans[0]
+            ##try to respect channel selection
+            if(len(channel > 0)):
+                if(channel.shape[0]==len(spws[0])):
+                    for elspw in range(len(spws[0])):
+                        if(myrec['startsel'][elspw] < channel[elspw][1]):
+                            myrec['startsel'][elspw]=channel[elspw][1]
+                        if((myrec['nchansel'][elspw] > (channel[elspw][2]- myrec['startsel'][elspw]))):
+                            myrec['nchansel'][elspw]=(channel[elspw][2]- myrec['startsel'][elspw])
+                                
             retfreqmax=freqrange[1] if (freqrange[1] > retfreqmax) else retfreqmax
             retfreqmin=freqrange[0] if (freqrange[0] <  retfreqmin) else retfreqmin
         freqmin=retfreqmin

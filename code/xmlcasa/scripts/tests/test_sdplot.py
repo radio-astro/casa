@@ -28,6 +28,7 @@ class sdplot_test_plot(unittest.TestCase):
       test20-21 --- header control (spectral plotting)
       test22-23 --- plot layout control (spectral plotting)
       test24-25 --- row panelling or stacking (spectral plotting)
+      test26-27 --- flagg application
 
     Note: input data is generated from a single dish regression data,
     'OrionS_rawACSmod', as follows:
@@ -500,6 +501,49 @@ class sdplot_test_plot(unittest.TestCase):
         stack='row'
         header=False
         result=sdplot(sdfile=sdfile,stack=stack,
+                        header=header,plotfile=self.fig)
+        self.assertEqual(result,None)
+        self._checkPlotFile()
+
+    def testplot26(self):
+        """
+        Test 26: test handling of FLAGROW
+        """
+        from asap import scantable
+        tid = "26"
+        self.fig = self.figroot+tid+self.figpost
+        ### flag rows=[0,3,6,9,12,15]
+        sdfile = "orion_flagrow.asap"
+        scan = scantable(filename=self.sdfile,average=False)
+        scan.flag_row(rows=[0,3,6,9,12,15])
+        scan.save(name=sdfile,format='ASAP')
+        #
+        panel='row'
+        stack='scan'
+        header=False
+        result=sdplot(sdfile=sdfile,panel=panel,stack=stack,
+                        header=header,plotfile=self.fig)
+        self.assertEqual(result,None)
+        self._checkPlotFile()
+
+    def testplot27(self):
+        """
+        Test 27: test handling of FLAGTRA
+        """
+        from asap import scantable
+        tid = "27"
+        self.fig = self.figroot+tid+self.figpost
+        ### flag channels [7168,8191]
+        sdfile = "orion_flagchan7168to8191.asap"
+        scan = scantable(filename=self.sdfile,average=False)
+        scan.set_unit('channel')
+        msk = scan.create_mask([7168,8191])
+        scan.flag(mask=msk)
+        scan.save(name=sdfile,format='ASAP')
+        #
+        panel='row'
+        header=False
+        result=sdplot(sdfile=sdfile,panel=panel,
                         header=header,plotfile=self.fig)
         self.assertEqual(result,None)
         self._checkPlotFile()

@@ -142,7 +142,7 @@ private:
  
   Float T_TOL,F_TOL,ANT_TOL,BASELN_TOL; // Input parameters
   uInt FlagLevel,CorrChoice,NumTime,MaxNPieces;//Input parameters
-  Bool ShowPlots,DryRun;
+  Bool ShowPlots,DryRun,IgnorePreflags;
   uInt nPol;
   Bool FreqLineFit;
   Bool StopAndExit;
