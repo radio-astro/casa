@@ -64,7 +64,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   public:
     ALMAAperture();
 
-    ~ALMAAperture() { for(uInt i=0;i<respImage_p.nelements();i++) delete respImage_p(i); };
+    ~ALMAAperture();
 
     ALMAAperture& operator=(const ALMAAperture& other);
     //

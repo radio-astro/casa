@@ -259,7 +259,16 @@ int main()
 	    cout << "band id " << apB.getVisParams(vb) << endl;
 	    cout << "ant type map " << apB.antTypeMap(vb) << endl;
 	    cout << "ant type list " << apB.antTypeList(vb) << endl;
-	    apB.applySky(im1, vb, False, 0);
+	    if(vb.spectralWindow()<4){ // i.e. not a WVR SPW for this dataset
+	      apB.applySky(im1, vb, False, 0);
+	    }
+	    else{
+	      try{
+		apB.applySky(im1, vb, False, 0);
+	      } catch (AipsError x) {
+		cout << "Caught expected error: " << x.getMesg() << endl;
+	      } 
+	    }
 	  }
 	  count++;
 	  // test reset
@@ -277,7 +286,8 @@ int main()
     } // end tests
 
   } catch (AipsError x) {
-    cout << x.getMesg() << endl;
+    cout << "Caught Error: " << x.getMesg() << endl;
+    exit(1);
   } 
 
   cout << "OK" << endl;

@@ -44,7 +44,8 @@ namespace casa{
     ATerm(),
     polMap_p(),
     antTypeMap_p(),
-    pairTypeToCFKeyMap_p(-1)
+    pairTypeToCFKeyMap_p(-1),
+    respImage_p()
   {
 
     haveCannedResponses_p = True;
@@ -63,8 +64,8 @@ namespace casa{
 	// unknown observatory
 	logIO() << LogOrigin("ALMAAperture", "ctor")
 		<< LogIO::WARN
-		<< "We don't have predefined antenna responses for ALMA at any frequency."
-		<< endl << "Will try to use raytracing instead."
+		<< "We don't have any precalculated antenna responses for ALMA."
+		<< endl << "Will try to generate them using ray tracing instead."
 		<< LogIO::POST;
 	haveCannedResponses_p = False;
       }
@@ -83,6 +84,15 @@ namespace casa{
 	 
   }
   
+  ALMAAperture::~ALMAAperture(){ 
+    for(uInt i=0;i<respImage_p.nelements();i++){
+      if(respImage_p(i)){
+	delete respImage_p(i);
+      } 
+    }
+  };
+
+
   ALMAAperture& ALMAAperture::operator=(const ALMAAperture& other)
   {
     if(this!=&other) 
@@ -143,11 +153,6 @@ namespace casa{
       Long cachesize=(HostInfo::memoryTotal(true)/8)*1024;
       almaPB.setMaximumCacheSize(cachesize);
       almaPB.applyPB(outImages, vb, doSquint);
-//       logIO() << LogOrigin("ALMAAperture", "applySky")
-// 	      << LogIO::SEVERE
-// 	      << "Interface to BeamCalc ray tracing is not yet implemented for ALMA."
-// 	      << LogIO::POST;  
-      
     }
     else{ // use canned antenna responses
       // extract matrix from image
@@ -201,8 +206,18 @@ namespace casa{
       respImage_p.resize(nAntTypes);
       for(uInt i=0; i<nAntTypes; i++){
 	cout << "Loading " << respImageName(i) << endl;
-	respImage_p(i) = new PagedImage<Complex>(respImageName(i));
+	try{
+	  respImage_p(i) = new PagedImage<Complex>(respImageName(i));
+	}
+	catch(std::exception x){
+	  ostringstream oss;
+	  oss << "Error reading antenna response image for frequency from path \""
+	      << respImageName(i) << "\"";
+	  respImage_p.resize(i,True);
+	  throw(SynthesisError(oss.str()));
+	} 
       }
+      cout << "Loaded " << nAntTypes << " images." << endl;
 
       //   Form all convolution pairs (Efield patterns) of antenna types in the Array
       //   FT the Efield patterns
