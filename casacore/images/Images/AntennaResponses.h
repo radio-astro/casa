@@ -326,6 +326,9 @@ private:
   Vector<Vector<uInt> > FuncChannel_p;
   Vector<Vector<MVFrequency> > NomFreq_p;
 
+  // not part of the table but same number of elements:
+  // memory of the path from which the row was read (index to paths_p)
+  Vector<uInt> pathIndex_p; 
 
 };
 
