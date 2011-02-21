@@ -838,7 +838,7 @@ vpmanager::getrespimagename(const std::string& telescope,
 	      << LogIO::POST;
       return rval;
     }
-    MFrequency freqM(freqQ);
+    MFrequency freqM(freqQ, MFrequency::TOPO);
     AntennaResponses::FuncTypes requFType = AntennaResponses::FuncType(toCasaString(functype));
     String antennaType = String(anttype);
     Quantum<Double> az, el;
