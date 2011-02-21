@@ -32,6 +32,15 @@
 #include <images/Images/AntennaResponses.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Exceptions/Error.h>
+#include <casa/Quanta/MVTime.h>
+#include <casa/Quanta/QLogical.h>
+#include <casa/Quanta/Quantum.h>
+#include <casa/OS/Time.h>
+#include <casa/Logging/LogIO.h>
+#include <casa/Utilities/GenSort.h>
+#include <casa/System/AipsrcValue.h>
+#include <casa/BasicSL/String.h>
+#include <casa/iostream.h>
 #include <measures/TableMeasures/ScalarMeasColumn.h>
 #include <measures/TableMeasures/ArrayMeasColumn.h>
 #include <measures/TableMeasures/TableMeasValueDesc.h>
@@ -51,9 +60,6 @@
 #include <measures/Measures/MeasRef.h>
 #include <measures/Measures/MeasFrame.h>
 #include <measures/Measures/MeasConvert.h>
-#include <casa/Quanta/MVTime.h>
-#include <casa/Quanta/QLogical.h>
-#include <casa/Quanta/Quantum.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/ArrayColumn.h>
@@ -62,11 +68,6 @@
 #include <tables/Tables/SetupNewTab.h>
 #include <tables/Tables/ScaColDesc.h>
 #include <tables/Tables/ScalarColumn.h>
-#include <casa/OS/Time.h>
-#include <casa/Utilities/GenSort.h>
-#include <casa/System/AipsrcValue.h>
-#include <casa/BasicSL/String.h>
-#include <casa/iostream.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -98,6 +99,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     FuncChannel_p.resize();
     NomFreq_p.resize();
 
+    pathIndex_p.resize();
+
     if(path==""){
       paths_p.resize(1, "");
       return True;
@@ -113,7 +116,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     if(isInit(path)){
       // Returns False if the path was already read before.
-      cout << "Path has been read before." << endl;
+      //cout << "Path has been read before." << endl;
       return False;
     }
     
@@ -122,6 +125,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // get number of rows
     uInt numRows = tab.nrow();
+
+    uInt nPaths = paths_p.nelements();
 
     if(numRows>0){
       // read columns and append to vectors;
@@ -164,6 +169,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       FuncChannel_p.resize(numRows_p,True);
       NomFreq_p.resize(numRows_p,True);
 
+      pathIndex_p.resize(numRows_p,True);
 
       for(uInt i=0; i<numRows; i++){
 	uInt j = i + numRows_p - numRows;
@@ -207,12 +213,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	FuncName_p(j).assign(functionNameCol(i));
 	FuncChannel_p(j).assign(functionChannelCol(i));
+
+	pathIndex_p(j) = nPaths;
+	
       }
 
     } // end if
 
-    uInt nPaths = paths_p.nelements();
     paths_p.resize(nPaths+1, True);
+    String tempS = path;
+    while(tempS.lastchar()=='/' && tempS.size()>1){ // don't want trailing "/"
+      tempS.erase(tempS.size()-1,1);
+    }
     paths_p(nPaths) = path;
 
     return True;
@@ -252,7 +264,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     MPosition mp;
     if (!MeasTable::Observatory(mp,obsName)) {
       // unknown observatory
-      cout << "Unknown observatory." << endl;
+      LogIO os(LogOrigin("AntennaResponses",
+			 String("getRowAndIndex"),
+			 WHERE));
+      os << LogIO::NORMAL << String("Unknown observatory ") << obsName 
+	 << LogIO::POST;
       return False;
     }
     mp=MPosition::Convert(mp, MPosition::ITRF)();
@@ -281,7 +297,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// first freq and functype
 	Bool found = False;
 	for(j=0; j<NumSubbands_p(i); j++){
-	  cout << "f " << f << " min " << SubbandMinFreq_p(i)(j).get() << " max " << SubbandMaxFreq_p(i)(j).get() << endl;
+	  //cout << "f " << f << " min " << SubbandMinFreq_p(i)(j).get() 
+	  //     << " max " << SubbandMaxFreq_p(i)(j).get() << endl;
 	  if( (FuncType_p(i)(j) == requFType
 	       || requFType == AntennaResponses::ANY)
 	      && SubbandMinFreq_p(i)(j).get() <= f
@@ -398,6 +415,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     else{
       functionImageName = FuncName_p(row)(subBand);
+      if(functionImageName.firstchar()!='/'){ // need to prepend the path
+	String tempS = paths_p(pathIndex_p(row));
+	string::size_type p = tempS.find_last_of('/',tempS.size());
+	functionImageName = tempS.substr(0,p) + "/" + functionImageName;
+      }
       functionChannel = FuncChannel_p(row)(subBand);
       nomFreq = NomFreq_p(row)(subBand);
       fType = FuncType_p(row)(subBand);
@@ -422,14 +444,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       return False;
     }
     else{
-      cout << "row " << row << " subband " << subBand << endl;
-      cout << "numrows " << numRows_p << endl;
-      for(uInt i=0; i<FuncName_p.nelements(); i++){
-	for(uInt j=0; j< FuncName_p(i).nelements(); j++){
-	  cout << "i, j " << i << ", " << j << " " << FuncName_p(i)(j) << endl;
-	}
-      }
+//       cout << "row " << row << " subband " << subBand << endl;
+//       cout << "numrows " << numRows_p << endl;
+//       for(uInt i=0; i<FuncName_p.nelements(); i++){
+// 	for(uInt j=0; j< FuncName_p(i).nelements(); j++){
+// 	  cout << "i, j " << i << ", " << j << " " << FuncName_p(i)(j) << endl;
+// 	}
+//       }
       functionImageName = FuncName_p(row)(subBand);
+      if(functionImageName.firstchar()!='/'){ // need to prepend the path
+	String tempS = paths_p(pathIndex_p(row));
+	string::size_type p = tempS.find_last_of('/',tempS.size());
+	functionImageName = tempS.substr(0,p) + "/" + functionImageName;
+      }
       functionChannel = FuncChannel_p(row)(subBand);
       nomFreq = NomFreq_p(row)(subBand);
       fType = FuncType_p(row)(subBand);
@@ -460,7 +487,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Returns false, if the table was not initialised or the given data was
     // not consistent.
     if(paths_p.nelements()==0){
-      cout << "Table not initialised." << endl;
+      LogIO os(LogOrigin("AntennaResponses",
+			 String("putRow"),
+			 WHERE));
+      os << LogIO::NORMAL << String("Table not initialized.") << obsName 
+	 << LogIO::POST;
       return False;
     }
     // Consistency checks: 
@@ -474,7 +505,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	 tNumSubbands == funcChannel.nelements() &&
 	 tNumSubbands == nomFreq.nelements())
        ){
-      cout << "Inconsistent vector dimensions." << endl;
+      LogIO os(LogOrigin("AntennaResponses", String("putRow"), WHERE));
+      os << LogIO::NORMAL << String("Inconsistent vector dimensions.") << obsName 
+	 << LogIO::POST;
       return False;
     }
     //   - beamId is unique for the given observatory
@@ -486,7 +519,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     }
     if(!isUnique){
-      cout << "beam id not unique" << endl;
+      LogIO os(LogOrigin("AntennaResponses", String("putRow"), WHERE));
+      os << LogIO::WARN << "Beam id " <<  beamId << " not unique." 
+	 << LogIO::POST;
       return False;
     }
     //   - center, validCenterMin, and validCenterMax have the same MDirection type
@@ -494,7 +529,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(!(dirRef == validCenterMin.getRefString() &&
 	 dirRef == validCenterMax.getRefString())
        ){
-      cout << "Inconsisten direction type." << endl; 
+      LogIO os(LogOrigin("AntennaResponses",
+			 String("putRow"),
+			 WHERE));
+      os << LogIO::WARN << "Inconsistent direction type." 
+	 << LogIO::POST;
       return False;
     }
     
