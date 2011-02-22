@@ -74,14 +74,14 @@ public:
                            Double& sumSq, Float& dataMin,
                            Float& dataMax, Int& minPos,
                            Int& maxPos, Bool& minMaxInit,
-                           Bool fixedMinMax, Float datum,
-                           uInt& pos, Float useIt);
+                           const Bool fixedMinMax, const Float datum,
+                           const uInt& pos, const Float useIt);
    static void accumulate (DComplex& nPts, DComplex& sum,
                            DComplex& sumSq, Complex& dataMin,
-                           Complex& dataMax, Int& minPos,
-                           Int& maxPos, Bool& minMaxInit,
-                           Bool fixedMinMax, Complex datum,
-                           uInt& pos, Complex useIt);
+                           Complex& dataMax, const Int& minPos,
+                           const Int& maxPos, Bool& minMaxInit,
+                           const Bool fixedMinMax, const Complex datum,
+                           const uInt& pos, const Complex useIt);
 //
    static Bool hasSomePoints (Double npts);
    static Bool hasSomePoints (DComplex npts);
