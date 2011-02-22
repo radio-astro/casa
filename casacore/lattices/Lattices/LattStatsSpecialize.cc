@@ -54,9 +54,10 @@ void LattStatsSpecialize::accumulate (Double& nPts, Double& sum,
                                       Double& sumSq, Float& dataMin,
                                       Float& dataMax, Int& minPos,
                                       Int& maxPos, Bool& minMaxInit,
-                                      Bool fixedMinMax, Float datum,
-                                      uInt& pos, Float useIt)
+                                      const Bool fixedMinMax, const Float datum,
+                                      const uInt& pos, const Float useIt)
 {
+
    if (useIt < 0) return;
 //
 
@@ -93,10 +94,10 @@ void LattStatsSpecialize::accumulate (Double& nPts, Double& sum,
 
 void LattStatsSpecialize::accumulate (DComplex& nPts, DComplex& sum,
                                       DComplex& sumSq, Complex& dataMin,
-                                      Complex& dataMax, Int&,
-                                      Int&, Bool& minMaxInit,
-                                      Bool fixedMinMax, Complex datum,
-                                      uInt&, Complex useIt)
+                                      Complex& dataMax, const Int&,
+                                      const Int&, Bool& minMaxInit,
+                                      const Bool fixedMinMax, const Complex datum,
+                                      const uInt&, const Complex useIt)
 //
 // minPos and maxPos currently useless for Complex.  Don't
 // try to access.
