@@ -308,6 +308,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <value>I</value>
     <allowed kind="enum">
 	    <value>I</value>
+	    <value>Q</value>
+	    <value>U</value>
+	    <value>V</value>
 	    <value>IV</value>
             <value>IQ</value>
 	    <value>QU</value>
@@ -1001,7 +1004,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                NH_3 (1,1) put restfreq='23.694496GHz'
        stokes -- Stokes parameters to image
                default='I'; example: stokes='IQUV';
-               Options: 'I','IV''QU','IQUV','RR','LL','XX','YY','RRLL','XXYY'
+               Options: 'I','Q','U','V','IV','QU','IQ','UV','IQU','IUV','IQUV','RR','LL','XX','YY','RRLL','XXYY'
        niter -- Maximum number iterations,
                if niter=0, then no CLEANing is done ("invert" only)
                default: 500; example: niter=5000
@@ -1151,6 +1154,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
  		        FWHM 10 arcseconds example:
  		        restoringbeam=['10.0','5.0','45.0deg'] 10"x5" 
  	                at 45 degrees
+
        pbcor -- Output primary beam-corrected image
                 If pbcor=False, the final output image is NOT corrected for the 
                 PB pattern (particularly important for mosaics), and therefore is
