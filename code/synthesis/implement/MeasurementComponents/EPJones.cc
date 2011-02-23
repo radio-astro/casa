@@ -100,15 +100,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				VisBuffer& vb)
   {
     Vector<Int> whichStokes(0);
-    IPosition cimageShape;
-    cimageShape=ModelImage.shape();
-    
-    //    Array<Int> corrType = vb.msColumns().polarization().corrType().getColumn();
-    
-    Int npol=cimageShape(2);
-    if(npol==3) cimageShape(2)=4;
     CoordinateSystem cimageCoord =
-      StokesImageUtil::CStokesCoord(cimageShape,
+      StokesImageUtil::CStokesCoord(//cimageShape,
 				    ModelImage.coordinates(),
 				    whichStokes,
 				    SkyModel::CIRCULAR);

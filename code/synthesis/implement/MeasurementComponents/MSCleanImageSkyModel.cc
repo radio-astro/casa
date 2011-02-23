@@ -252,7 +252,6 @@ Bool MSCleanImageSkyModel::solve(SkyEquation& se) {
 	  if(stopLargeNegatives_p >0)
 	    cleaner.stopAtLargeScaleNegative();
 	  
-	  cout << "Threshold " << Quantity(threshold(), "Jy") << endl;
 	  converged=cleaner.clean(subImage, algorithm, numberIterations(),gain(),  Quantity(threshold(), "Jy"), Quantity(0.0, "%"), True);
 	  Int stoplarge=stopLargeNegatives_p;
 	  while( (converged==-2) && stoplarge > 0){

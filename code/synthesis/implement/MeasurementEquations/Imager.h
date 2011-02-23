@@ -755,6 +755,8 @@ protected:
                            const Flux<Double>& fluxval,
                            const ComponentShape& cmp,
                            const ConstantSpectrum& cspectrum) const;
+
+  Vector<Int> decideNPolPlanes(Bool checkwithMS);
  
   ComponentList* componentList_p;
 

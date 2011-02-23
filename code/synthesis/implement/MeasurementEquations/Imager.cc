@@ -778,39 +778,22 @@ Bool Imager::setimage(const Int nx, const Int ny,
     redoSkyModel_p=True;
     destroySkyEquation();    
 
-    // Now make the derived quantities 
-    if(stokes_p=="I" || stokes_p=="RR" ||stokes_p=="LL" || 
-       stokes_p=="XX" || stokes_p=="YY" ) {
-      npol_p=1;
-    }
-    else if(stokes_p=="IV" || stokes_p=="IQ" || 
-              stokes_p=="RRLL" || stokes_p=="XXYY" || 
-	      stokes_p=="QU" || stokes_p=="UV") {
-      npol_p=2;
-    }
-    else if(stokes_p=="IQU" || stokes_p=="IUV") {
-      npol_p=3;
-    }
-    else if(stokes_p=="IQUV") {
-      npol_p=4;
-    }
-    else {
+     Vector<Int> whichStokes = decideNPolPlanes(False);
+     if( whichStokes.nelements()==1 && whichStokes[0]==0 )
+      {
       this->unlock();
-
-      
-
 #ifdef PABLO_IO
       traceEvent(1,"Exiting Imager::setimage",25);
 #endif
-      os << LogIO::SEVERE << "Illegal Stokes string " << stokes_p
-	 << LogIO::EXCEPTION;
-
+      os << LogIO::SEVERE << "Stokes selection " << stokes_p << " is currently not supported." << LogIO::EXCEPTION;
       return False;
-    };
+      }
+
     
 
     //THIS NEEDS TO GO
-    this->setImageParam(nx_p, ny_p, npol_p, imageNchan_p);
+    ////this->setImageParam(nx_p, ny_p, npol_p, imageNchan_p);
+    nchan_p = imageNchan_p; // check if this is needed.... it's the only non-redundant thing in setImageParam.
 
     // Now do the shifts
     //    MSColumns msc(*ms_p);
@@ -1010,34 +993,16 @@ Bool Imager::defineImage(const Int nx, const Int ny,
     destroySkyEquation();    
 
     // Now make the derived quantities 
-    if(stokes_p=="I" || stokes_p=="RR" ||stokes_p=="LL" || 
-       stokes_p=="XX" || stokes_p=="YY" ) {
-      npol_p=1;
-    }
-    else if(stokes_p=="IV" || stokes_p=="IQ" || 
-              stokes_p=="RRLL" || stokes_p=="XXYY" ||
-	      stokes_p=="QU" || stokes_p=="UV") {
-      npol_p=2;
-    }
-    else if(stokes_p=="IQU" || stokes_p=="IUV") {
-      npol_p=3;
-    }
-    else if(stokes_p=="IQUV") {
-      npol_p=4;
-    }
-    else {
+    Vector<Int> whichStokes = decideNPolPlanes(False);
+    if( whichStokes.nelements()==1 && whichStokes[0]==0 )
+      {
       this->unlock();
-     
-
 #ifdef PABLO_IO
-      traceEvent(1,"Exiting Imager::setimage",25);
+      traceEvent(1,"Exiting Imager::defineimage",25);
 #endif
-      os << LogIO::SEVERE << "Illegal Stokes string " << stokes_p
-	 << LogIO::EXCEPTION;
-      
+      os << LogIO::SEVERE << "Stokes selection " << stokes_p << " is currently not supported." << LogIO::EXCEPTION;
       return False;
-    };
-
+      }
 
     // nchan we need to get rid of one of these variables 
     nchan_p=imageNchan_p;
@@ -1068,6 +1033,7 @@ Bool Imager::defineImage(const Int nx, const Int ny,
   } 
   return True;
 }
+
 
 Bool Imager::advise(const Bool takeAdvice, const Float amplitudeLoss,
 		    const Quantity& fieldOfView, Quantity& cell,
@@ -3428,7 +3394,7 @@ Bool Imager::restore(const Vector<String>& model,
 	fitpsf(psf, bmaj_p, bmin_p, bpa_p);
 	beamValid_p=True;
       }
-    
+
       //      if (!se_p)
       if(!createSkyEquation(model, complist)) return False;
       
@@ -4062,11 +4028,6 @@ Bool Imager::clean(const String& algorithm,
 	return False;
       }
    
-      // Send the data correlation type to the SkyModel
-      os << LogIO::DEBUG1 << "Data PolRep in Imager.cc : " << polRep_p << LogIO::POST;
-      sm_p->setDataPolFrame(polRep_p);
-
- 
       AlwaysAssert(sm_p, AipsError);
       sm_p->setAlgorithm("clean");
 
@@ -4218,7 +4179,7 @@ Bool Imager::clean(const String& algorithm,
       //os << LogIO::WARN << x.what() << LogIO::POST;
       savePSF(psfnames);
       this->unlock();
-      throw(AipsError(String("PSFZero  ")+ x.getMesg()));
+      throw(AipsError(String("PSFZero  ")+ x.getMesg() + String(" : Please check that the required data exists and is not flagged.")));
       return True;
     }  
   catch (exception &x) { 
@@ -4403,7 +4364,7 @@ Bool Imager::mem(const String& algorithm,
 	  <<sigma << ", Target Flux = " << targetFlux;
       os << LogIO::DEBUG1 << String(oos) << LogIO::POST;
     }
-    
+ 
     //    if (!se_p)
     if(!createSkyEquation(modelNames, fixed, maskNames, complist)) 
       {
@@ -4566,7 +4527,7 @@ Bool Imager::nnls(const String&,  const Int niter, const Float tolerance,
     sm_p->setAlgorithm("nnls");
     os << LogIO::DEBUG1
        << "NNLS Niter = " << niter << ", Tolerance = " << tolerance << LogIO::POST;
-    
+
     //    if (!se_p)
     if(!createSkyEquation(model, fixed, dataMask, fluxMask, complist)) return False;
 
@@ -4625,7 +4586,7 @@ Bool Imager::ft(const Vector<String>& model, const String& complist,
       os << LogIO::NORMAL // Loglevel INFO
          << "Fourier transforming: replacing MODEL_DATA column" << LogIO::POST;
     }
-    
+
     //    if (!se_p)
     if(!createSkyEquation(model, complist)) return False;
     if(incremental){
