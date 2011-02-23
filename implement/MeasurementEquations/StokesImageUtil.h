@@ -169,19 +169,23 @@ public:
 					    Int feedID=0);
   
   // Create a CoordinateSystem 
-  static CoordinateSystem CStokesCoord(const IPosition& shape,
+  static CoordinateSystem CStokesCoord(//const IPosition& shape,
 				       const CoordinateSystem& coord, 
 				       Vector<Int>& whichStokes,
-				       SkyModel::PolRep
-				       polRep=SkyModel::CIRCULAR);
+				       SkyModel::PolRep  polRep=SkyModel::CIRCULAR);
+  /*
   static CoordinateSystem
   CStokesCoordFromImage(const ImageInterface<Complex>& image,
 			Vector<Int>& whichStokes,
 			SkyModel::PolRep polRep);
-
+  */
   // Change the stokes representation (but not the data!)
   static void changeCStokesRep(ImageInterface<Complex>& image,
 			       SkyModel::PolRep polRep);
+
+  static void changeLabelsStokesToCorrStokes(StokesCoordinate &stokesCoord, 
+					                             SkyModel::PolRep polRep,
+                                                                     Vector<Int>&whichStokes);
 
   // check to see if Image coordinates have the standard order:
   // Direction, Stokes, Spectral.  Returns false if this is not

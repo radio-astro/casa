@@ -423,6 +423,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     initPolInfo(vb);
     //cerr<<"spwchanselflag_p shape="<<spwChanSelFlag_p.shape()<<endl;
+    /* STOKESDBG */ //cout << "FtMachine::initPolMaps - polMap : " << polMap << "   vispolmap : " << visPolMap << endl;
   }
   
   FTMachine::~FTMachine() 
