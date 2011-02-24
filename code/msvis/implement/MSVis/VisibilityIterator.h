@@ -355,10 +355,10 @@ public:
   // Return the STATE_IDs
   Vector<Int>& stateId(Vector<Int>& stateids) const;
 
-  // Return current frequencies
+  // Return current frequencies (in Hz, acc. to the MS def'n v.2)
   virtual Vector<Double>& frequency(Vector<Double>& freq) const;
 
-  // Return frequencies in selected velocity frame,
+  // Return frequencies  (in Hz, acc. to the MS def'n v.2) in selected velocity frame,
   // returns the same as frequency() if there is no vel selection active.
   virtual Vector<Double>& lsrFrequency(Vector<Double>& freq) const;
 

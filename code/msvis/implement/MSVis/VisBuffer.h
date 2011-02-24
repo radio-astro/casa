@@ -312,6 +312,7 @@ public:
         return This->stateId();
     }
 
+    // Gets SPECTRAL_WINDOW/CHAN_FREQ (in Hz, acc. to the MS def'n v.2).
     Vector<Double>& frequency() {
         return frequencyOK_p ? frequency_p : fillFreq();
     }
@@ -747,7 +748,7 @@ private:
     Cube<Bool>& fillFlagCube();
     Vector<Bool> & fillFlagRow();
     Cube<Float>& fillFloatDataCube();
-    Vector<Double>& fillFreq();
+    Vector<Double>& fillFreq();         // Puts SPECTRAL_WINDOW/CHAN_FREQ in frequency_p.
     Matrix<Float>& fillImagingWeight();
     Vector<Double>& fillLSRFreq();
     Int & fillnChannel();
