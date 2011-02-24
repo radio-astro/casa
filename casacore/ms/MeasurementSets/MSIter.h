@@ -267,7 +267,8 @@ public:
   // Return frame for polarization (returns PolFrame enum)
   Int polFrame() const;
 
-  // Return the frequencies corresponding to the DATA matrix.
+  // Return the frequencies (in Hz, acc. to the MS def'n v.2) corresponding to
+  // the DATA matrix.
   const Vector<Double>& frequency() const;
 
   // Return frequency of first channel with reference frame as a Measure.
