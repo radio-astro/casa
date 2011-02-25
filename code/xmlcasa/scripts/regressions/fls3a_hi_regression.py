@@ -72,7 +72,7 @@ del s0
 splittime=time.time()
 
 print '--Calibrate--'
-s=sd.scantable('FLS3a_HI.asap')			# load in the saved ASAP dataset with FLS3a
+s=sd.scantable('FLS3a_HI.asap',average=False)   # load in the saved ASAP dataset with FLS3a
 s.set_fluxunit('K')				# set the fluxunit to 'K'; ASAP currently doesn't know about
 						# the GBT and mislabels the data as 'Jy'
 scanns = s.getscannos()				# get a list of the scan numbers in the scantable
