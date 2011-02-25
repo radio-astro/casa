@@ -2,6 +2,7 @@
 # Task to retrieve observing information from SDM XML files
 #
 # v1.0: 2010.12.07, M. Krauss
+# v1.1: 2011.02.23, M. Krauss: added functionality for ALMA data
 #
 # Original code based on readscans.py, courtesy S. Meyers
 
@@ -157,7 +158,10 @@ def listsdm(sdm=None):
         rowSpwId = rownode.getElementsByTagName("spectralWindowId")
         rowNChan = rownode.getElementsByTagName("numChan")
         rowRefFreq = rownode.getElementsByTagName("refFreq")
+        # For EVLA
         rowChanWidth = rownode.getElementsByTagName("chanWidth")
+        # For ALMA
+        rowChanWidthArr = rownode.getElementsByTagName("chanWidthArray")
         rowBaseband = rownode.getElementsByTagName("basebandName")
         
         # convert to values or strings and append to the relevant lists:
@@ -167,8 +171,16 @@ def listsdm(sdm=None):
         nChanList.append(nChan)
         refFreq = float(rowRefFreq[0].childNodes[0].nodeValue)
         refFreqList.append(refFreq)
-        chanWidth = float(rowChanWidth[0].childNodes[0].nodeValue)
-        chanWidthList.append(chanWidth)
+        if rowChanWidth:
+            chanWidth = float(rowChanWidth[0].childNodes[0].nodeValue)
+            chanWidthList.append(chanWidth)
+        if rowChanWidthArr:
+            tmpArr = str(rowChanWidthArr[0].childNodes[0].nodeValue).split(' ')
+            tmpWidth = []
+            for cw in range(2, len(tmpArr)):
+                thisWidth = float(tmpArr[cw])
+                tmpWidth.append(thisWidth)
+            chanWidthList.append(tmpWidth)
         baseband = str(rowBaseband[0].childNodes[0].nodeValue)
         basebandList.append(baseband)
 
@@ -201,8 +213,8 @@ def listsdm(sdm=None):
         DecDMS = qa.formxxx(DecInp, format='dms')
         fieldRAList.append(RAHMS)
         fieldDecList.append(DecDMS)
-        fieldSrcIDList.append(int(rowSrcId[0].childNodes[0].nodeValue))
-    
+        fieldSrcIDList.append(int(rowSrcId[0].childNodes[0].nodeValue))    
+
     # read Antenna.xml
     xmlAnt = minidom.parse(sdm+'/Antenna.xml')
     rowlist = xmlAnt.getElementsByTagName("row")
@@ -246,7 +258,7 @@ def listsdm(sdm=None):
         qLat = pos['m1']
         statLatList.append(qa.formxxx(qLat, 'dms', prec=0))
         statLonList.append(qa.formxxx(qLon, 'dms', prec=0))
-                            
+    
     # associate antennas with stations:
     assocStatList = []
     for station in stationList:
@@ -282,6 +294,7 @@ def listsdm(sdm=None):
         rFreqTempList = []
         cWidthTempList = []
         bbandTempList = []
+        
         for dDesc in dataDescList[i]:
             el = np.where(np.array(dataDescElList) == dDesc)[0]
             spwIdN = spwIdDataDescList[el]
@@ -299,16 +312,28 @@ def listsdm(sdm=None):
     
     # add this info to the scan dictionary:
     for scanNum in scandict:
-        # scanEl could have multiple elements if subscans are present:
-        scanEl = np.where(np.array(mainScanList) == scanNum)[0][0]
-        configEl = mainConfigList[scanEl]
-        listEl = np.where(np.array(configDescList) == configEl)[0]
-        scandict[scanNum]['field'] = int(fieldIdList[scanEl])
-        scandict[scanNum]['spws'] = spwOrd[listEl]
-        scandict[scanNum]['nchan'] = nChanOrd[listEl]
-        scandict[scanNum]['reffreq'] = rFreqOrd[listEl]
-        scandict[scanNum]['chanwidth'] = cWidthOrd[listEl]
-        scandict[scanNum]['baseband'] = bbandOrd[listEl]
+        spwOrdList = []
+        nChanOrdList = []
+        rFreqOrdList = []
+        cWidthOrdList = []
+        bbandOrdList = []
+        # scanEl could have multiple elements if subscans are present,
+        # or for ALMA data:
+        scanEl = np.where(np.array(mainScanList) == scanNum)[0]
+        for thisEl in scanEl:
+            configEl = mainConfigList[thisEl]
+            listEl = np.where(np.array(configDescList) == configEl)[0]
+            spwOrdList.append(spwOrd[listEl])
+            nChanOrdList.append(nChanOrd[listEl])
+            rFreqOrdList.append(rFreqOrd[listEl])
+            cWidthOrdList.append(cWidthOrd[listEl])
+            bbandOrdList.append(bbandOrd[listEl])
+        scandict[scanNum]['field'] = int(fieldIdList[scanEl[0]])
+        scandict[scanNum]['spws'] = spwOrdList
+        scandict[scanNum]['nchan'] = nChanOrdList
+        scandict[scanNum]['reffreq'] = rFreqOrdList
+        scandict[scanNum]['chanwidth'] = cWidthOrdList
+        scandict[scanNum]['baseband'] = bbandOrdList
             
     # report informatio to the logger
     casalog.origin('listsdm')
@@ -324,14 +349,16 @@ def listsdm(sdm=None):
     casalog.post("  Timerange (UTC)           Scan FldID  FieldName       SpwIDs         Intent(s)")
 
     for i in range (0, len(scandict)):
-        casalog.post("  %s - %s %s %s  %s %s  %s" % (startTimeShort[i], endTimeShort[i], str(scandict.keys()[i]).rjust(4), str(scandict[i+1]['field']).rjust(5), scandict[i+1]['source'].ljust(15), scandict[i+1]['spws'], scandict[i+1]['intent']))
+        SPWs = np.array(scandict[i+1]['spws']).flatten()
+        printSPWs = sorted(list(SPWs))
+        casalog.post("  %s - %s %s %s  %s %s  %s" % (startTimeShort[i], endTimeShort[i], str(scandict.keys()[i]).rjust(4), str(scandict[i+1]['field']).rjust(5), scandict[i+1]['source'].ljust(15), str(printSPWs), scandict[i+1]['intent']))
 
     casalog.post(" ")
     casalog.post("Spectral window information:")
     casalog.post("  SpwID  #Chans  Ch0(MHz)  ChWidth(kHz) TotBW(MHz)  Baseband")
 
     for i in range(0, len(spwIdList)):
-        casalog.post("  %s   %s    %s  %s     %s    %s" % (string.split(spwIdList[i], '_')[1].ljust(4), str(nChanList[i]).ljust(4), str(refFreqList[i]/1e6).ljust(8), str(chanWidthList[i]/1e3).ljust(8), str(chanWidthList[i]*nChanList[i]/1e6).ljust(8), basebandList[i].ljust(8)))
+        casalog.post("  %s   %s    %s  %s     %s    %s" % (string.split(spwIdList[i], '_')[1].ljust(4), str(nChanList[i]).ljust(4), str(refFreqList[i]/1e6).ljust(8), str(np.array(chanWidthList[i])/1e3).ljust(8), str(np.array(chanWidthList[i])*nChanList[i]/1e6).ljust(8), basebandList[i].ljust(8)))
     
     casalog.post(" ")
     casalog.post("Field information:")

@@ -1,12 +1,25 @@
 import os
+import time
 from taskinit import *
 
 def applycal(vis=None,
-	     field=None,spw=None,
-	     selectdata=None,timerange=None,uvrange=None,antenna=None,scan=None,msselect=None,
-	     gaintable=None,gainfield=None,interp=None,spwmap=None,
-	     gaincurve=None,opacity=None,parang=None,
-	     calwt=None):
+	     field=None,
+	     spw=None,
+	     selectdata=None,
+	     timerange=None,
+	     uvrange=None,
+	     antenna=None,
+	     scan=None,
+	     msselect=None,
+	     gaintable=None,
+	     gainfield=None,
+	     interp=None,
+	     spwmap=None,
+	     gaincurve=None,
+	     opacity=None,
+	     parang=None,
+	     calwt=None,
+	     flagbackup=None):
 
 	#Python script
         casalog.origin('applycal')
@@ -17,6 +30,12 @@ def applycal(vis=None,
                         cb.open(vis)
                 else:
                         raise Exception, 'Visibility data set not found - please verify the name'
+		# Back up the flags, if requested
+		if (flagbackup):
+			fglocal = casac.homefinder.find_home_by_name('flaggerHome').create()
+			fglocal.open(vis)
+			backup_flags(fglocal)
+			fglocal.done()
 
 		# Do data selection according to selectdata
 		if (selectdata):
@@ -105,4 +124,35 @@ def applycal(vis=None,
 		print '*** Error ***',instance
 		cb.close()
 		raise Exception, instance
+
+
+def backup_flags(fglocal):
+
+        # Create names like this:
+        # before_applycal_1,
+        # before_applycal_2,
+        # before_applycal_3,
+        # etc
+        #
+        # Generally  before_applycal_<i>, where i is the smallest
+        # integer giving a name, which does not already exist
+       
+        existing = fglocal.getflagversionlist(printflags=False)
+
+	# remove comments from strings
+	existing = [x[0:x.find(' : ')] for x in existing]
+	i = 1
+	while True:
+		versionname = "before_applycal_" + str(i)
+
+		if not versionname in existing:
+			break
+		else:
+			i = i + 1
+
+        time_string = str(time.strftime('%Y-%m-%d %H:%M:%S'))
+
+        fglocal.saveflagversion(versionname=versionname,
+                           comment='Flag backup before applycal on ' + time_string,
+                           merge='replace')
 
