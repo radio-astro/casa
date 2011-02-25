@@ -115,11 +115,12 @@ localoutfile=sdfile+'_sm'
 # automatically detect lines to exclude from fitting
 default(sdbaseline)
 sdfile=localoutfile
-blmode='auto'
+masking='auto'
 edge=[50]
 thresh=5
-blpoly=2
 avg_limit=4
+blfunc='poly'
+order=2
 overwrite=True
 plotlevel=localplotlevel
 sdbaseline()

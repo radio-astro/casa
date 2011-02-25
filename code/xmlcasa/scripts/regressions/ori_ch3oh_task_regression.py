@@ -116,9 +116,10 @@ localoutfile=sdfile+'_sm'
 # automatically detect lines to exclude from fitting
 default(sdbaseline)
 sdfile=localoutfile
-blmode='list'
+masking='list'
 masklist=[[350,2700],[3500,7500]]
-blpoly=5
+blfunc='poly'
+order=5
 overwrite=True
 plotlevel=localplotlevel
 sdbaseline()
