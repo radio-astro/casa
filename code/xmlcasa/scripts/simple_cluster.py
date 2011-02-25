@@ -244,10 +244,11 @@ def start_cluster():
 ###########################################################################
 def start_logger():
     lg=c.get_casalogs()
+    os.system('rm -f engine-*.log')
     for i in lg:
         eng='engine'+i[str.rfind(i,'-'):]
-        if os.path.exists(eng):
-            os.unlink(eng)
+        #if os.path.exists(eng):
+        #    os.unlink(eng)
         os.symlink(i, eng)
 
 ###########################################################################
@@ -535,8 +536,9 @@ def do_and_record(cmd, id, group=''):
 ###########################################################################
 ###   example to distribute clean task over engines
 ###########################################################################
-def simple_clean(vis, nx, ny, mode='channel'):
-
+def simple_clean(vs, nx, ny, mode='channel'):
+    
+    vis=os.path.abspath(vs)
     tb.clearlocks(vis)
 
     #determine the cell size
@@ -628,6 +630,40 @@ def simple_clean(vis, nx, ny, mode='channel'):
                 if i==len(ids):
                    i=0
     
+    get_status()
+
+def simple_split(vs):
+    vis=os.path.abspath(vs)
+    tb.clearlocks(vis)
+   
+    print 'vis=', vis
+    fdspw=get_field_desc(vis)
+    ids=c.get_ids()
+    pth=c.pull('work_dir')
+    msname=vis[str.rfind(vis,'/')+1:]
+    if msname.endswith('.ms'):
+        msname=msname[:str.rfind(msname, '.ms')]
+
+    i=0
+    for k in fdspw.values():
+        id=ids[i]
+        s={}
+        s['vis']=vis
+        fd=str(k['field'])
+        spw=str(k['spw'])
+        sl=''
+        if not pth[id].endswith('/'):
+            sl='/' 
+        s['outputvis']=pth[id]+sl+msname+'-f'+fd+'-s'+spw+'.ms'
+        s['field']=fd
+        s['spw']=spw
+        s['datacolumn']='DATA'
+        cmd=make_call('split', s) 
+        #print cmd
+        do_and_record(cmd, id, 'hye@nrao.edu')
+        i+=1
+        if i==len(ids):
+           i=0
     get_status()
 
 ###########################################################################
