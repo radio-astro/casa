@@ -6,7 +6,7 @@ from asap.flagplotter import flagplotter
 import pylab as pl
 from numpy import ma, array, logical_not, logical_and
 
-def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow, clip, clipminmax, clipoutside, flagmode, outfile, outform, overwrite, plotlevel):
+def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow, clip, clipminmax, clipoutside, flagmode, interactive, outfile, outform, overwrite, plotlevel):
 
         casalog.origin('sdflag')
 
@@ -48,7 +48,7 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
                   format = 'SDFITS'
 
             # Do at least one
-            if (len(flagrow) == 0) and (len(maskflag) == 0) and (not clip):
+	    if (len(flagrow) == 0) and (len(maskflag) == 0) and (not clip) and (not interactive):
                     raise Exception, 'No mask definition specified'
 
             if ( abs(plotlevel) > 1 ):
@@ -165,11 +165,6 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
 
             #for row in range(ns):
             if ( abs(plotlevel) > 0 ):
-
-                    import time
-                    startTime=time.time()
-                    startProc=time.clock()
-                    
                     #sc=s.copy()
 		    # Plot final spectrum
                     np = nr
@@ -242,11 +237,6 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
                         myp.axes.set_xlim(xlim)
                     myp.release()
 
-                    endProc = time.clock()
-                    endTime = time.time()
-                    print 'Total wall clock time was: '+str(endTime - startTime)
-                    print 'Total CPU        time was: '+str(endProc - startProc)
-
                     #Apply flag
                     if plotlevel > 0:
                             ans=raw_input("Apply %s (y/n)?: " % flgmode)
@@ -283,14 +273,14 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
                     s._add_history( "sdflag", params ) 
 
 
-            #if interactive:
-            #        guiflagger = flagplotter(visible=True)
-            #        guiflagger._plotter.legend(loc=1)
-            #        guiflagger.plot(s)
-            #        finish=raw_input("Press enter to finish interactive flagging:")
-            #        guiflagger._plotter.unmap()
-            #        guiflagger._plotter = None
-            #        del guiflagger
+            if interactive:
+                    guiflagger = flagplotter(visible=True)
+                    guiflagger._plotter.legend(loc=1)
+                    guiflagger.plot(s)
+                    finish=raw_input("Press enter to finish interactive flagging:")
+                    guiflagger._plotter.unmap()
+                    guiflagger._plotter = None
+                    del guiflagger
 
             if ( abs(plotlevel) > 0 ):
                     #Plot the result

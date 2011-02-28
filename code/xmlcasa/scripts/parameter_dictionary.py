@@ -1132,6 +1132,13 @@ class par(str):
 	@staticmethod
 	def interactive():
 		"""
+		(for sdflag)
+		interactive -- determines interactive flagging
+		options: True, False
+		default: False
+
+		----------------------------------------------------------
+
 		(for sdstat)
 		interactive -- determines interactive masking
 		options: True, False

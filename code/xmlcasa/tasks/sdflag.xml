@@ -85,6 +85,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>flag</value>
     </param>
 
+    <param type="bool" name="interactive">
+            <description>determines interactive flagging</description>
+            <value>False</value>
+    </param>
+
     <param type="string" name="outfile">
             <description>name of output file</description>
             <value></value>
@@ -183,6 +188,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 options: 'flag','unflag'
                 WARNING: an option 'restore' has been abolished since CASA 3.2. 
                          To get flag info, use a new SD task 'sdflagmanager'. 
+        interactive -- determines interactive flagging
+                options: (bool) True,False
+                default: False
         outfile -- Name of output file
                 default: ''
                 WARNING: by default (outfile=''), actual output file name is 
