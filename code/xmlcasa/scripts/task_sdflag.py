@@ -2,6 +2,7 @@ import os
 from taskinit import *
 
 import asap as sd
+from asap.flagplotter import flagplotter
 import pylab as pl
 from numpy import ma, array, logical_not, logical_and
 
@@ -46,6 +47,9 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
               else:
                   format = 'SDFITS'
 
+            # Do at least one
+            if (len(flagrow) == 0) and (len(maskflag) == 0) and (not clip):
+                    raise Exception, 'No mask definition specified'
 
             if ( abs(plotlevel) > 1 ):
                     casalog.post( "Initial Scantable:" )
@@ -131,17 +135,22 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
 
             nr=s.nrow()
 
-	    if clip:
-		    casalog.post("Number of spectra to be flagged: %d" % (nr) )
-		    casalog.post("Applying clipping...")
-	    else:
-		    if (len(flagrow) == 0):
-                            casalog.post( "Number of spectra to be flagged: %d" % (nr) )
-                            casalog.post( "Applying channel flagging..." )
-	            else:
-		            casalog.post( "Number of rows to be flagged: %d" % (len(flagrow)) )
-		            casalog.post( "Applying row flagging..." )
-		    
+            if clip:
+                    casalog.post("Number of spectra to be flagged: %d" % (nr) )
+                    casalog.post("Applying clipping...")
+                    if len(flagrow) > 0 or len(maskflag) > 0:
+                            casalog.post("flagrow and maskflag will be ignored",priority = 'WARN')
+            elif len(flagrow) == 0:
+                    # Channel based flag
+                    casalog.post( "Number of spectra to be flagged: %d" % (nr) )
+                    casalog.post( "Applying channel flagging..." )
+            else:
+                    # Row flagging
+                    casalog.post( "Number of rows to be flagged: %d" % (len(flagrow)) )
+                    casalog.post( "Applying row flagging..." )
+                    if len(maskflag) > 0:
+                            casalog.post("maskflag will be ignored",priority = 'WARN')
+
 
 	    dthres = uthres = None
 	    if isinstance(clipminmax, list):
@@ -150,51 +159,37 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
 			    uthres = max(clipminmax)
 			    
 	    
-	    if (len(flagrow) == 0) and (not clip):
-	            #channel flag
-		    if (len(maskflag) == 0):
-			    raise Exception, 'maskflag is undefined'
-		    masks = s.create_mask(maskflag)
+            #channel flag
+            if (len(maskflag) > 0):
+                    masks = s.create_mask(maskflag)
 
             #for row in range(ns):
             if ( abs(plotlevel) > 0 ):
 
+                    import time
+                    startTime=time.time()
+                    startProc=time.clock()
+                    
                     #sc=s.copy()
 		    # Plot final spectrum
-		    if nr < 3:
-			    nrow=1
-			    ncol=nr
-		    elif nr < 5:
-			    nrow=2
-			    ncol=2
-		    elif nr < 7:
-			    nrow=2
-			    ncol=3
-		    elif nr < 10:
-			    nrow=3
-			    ncol=3
-		    else:
-			    nrow=4
-			    ncol=4
-		    
-		    casalog.post( "nrow,ncol= %d,%d" % (nrow, ncol) )
+                    np = nr
 		    if nr >16:
+                            np = 16
 			    casalog.post( "Only first 16 spectra is plotted.", priority = 'WARN' )
 
                     if not myp or myp.is_dead:
-                        if sd.rcParams['plotter.gui']:
+                        if plotlevel > 0 and sd.rcParams['plotter.gui']:
                             from asap.asaplotgui import asaplotgui as asaplot
                         else:
                             from asap.asaplot import asaplot
+
                     myp = asaplot()
                     myp.hold()
                     myp.clear()
-                    myp.set_panels(nrow,ncol)
+                    myp.set_panels(rows=np,cols=0,nplots=np)
+                    myp.legend(loc=1)
                     colours = ["green","red","#dddddd","#777777"]
-                    if nr <17:
-                        rowlist=range(nr)
-                    else:
-                        rowlist=range(16)
+                    rowlist = range(np)
                     for row in rowlist:
                         myp.subplot(row)
                         myp.palette(0,colours)
@@ -245,38 +240,59 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
                         myp.plot(x,ym)
                         xlim=[min(x),max(x)]
                         myp.axes.set_xlim(xlim)
-                        myp.release()
+                    myp.release()
+
+                    endProc = time.clock()
+                    endTime = time.time()
+                    print 'Total wall clock time was: '+str(endTime - startTime)
+                    print 'Total CPU        time was: '+str(endProc - startProc)
 
                     #Apply flag
-                    ans=raw_input("Apply %s (y/n)?: " % flgmode)
-                    if ans.upper() == 'Y':
-		        if (clip):
-				if (uthres != None) and (dthres != None) and (uthres > dthres):
-					s.clip(uthres, dthres, clipoutside, unflag)
-			else:
-				if (len(flagrow) == 0):
-					s.flag(masks,unflag)
-				else:
-					s.flag_row(flagrow, unflag)
-                        params={}
-                        if ( vars()['pols'] == [] ):
-                                params['pols']=list(s.getpolnos())
-                        else:
-                                params['pols']=vars()['pols']
-                        if ( vars()['ifs'] == [] ):
-                                params['ifs']=list(s.getifnos())
-                        else:
-                                params['ifs']=vars()['ifs']
-                        if ( vars()['scans'] == [] ):
-                                params['scans']=list(s.getscannos())
-                        else:
-                                params['scans']=vars()['scans']
-                        params['mode']=vars()['flagmode']
-                        params['maskflag']=vars()['maskflag']
-                        #print "input parameters:\n", params
-                        s._add_history( "sdflag", params ) 
+                    if plotlevel > 0:
+                            ans=raw_input("Apply %s (y/n)?: " % flgmode)
                     else:
-                        return
+                            casalog.post("Applying selected flags")
+                            ans = 'Y'
+            else:
+                    ans='Y'
+            if ans.upper() == 'Y':
+                    if (clip):
+                            if (uthres != None) and (dthres != None) and (uthres > dthres):
+                                    s.clip(uthres, dthres, clipoutside, unflag)
+                    elif (len(flagrow) == 0):
+                            s.flag(mask=masks,unflag=unflag)
+                    else:
+                            s.flag_row(flagrow, unflag)
+
+                    params={}
+                    if ( vars()['pols'] == [] ):
+                            params['pols']=list(s.getpolnos())
+                    else:
+                            params['pols']=vars()['pols']
+                    if ( vars()['ifs'] == [] ):
+                            params['ifs']=list(s.getifnos())
+                    else:
+                            params['ifs']=vars()['ifs']
+                    if ( vars()['scans'] == [] ):
+                            params['scans']=list(s.getscannos())
+                    else:
+                            params['scans']=vars()['scans']
+                    params['mode']=vars()['flagmode']
+                    params['maskflag']=vars()['maskflag']
+                    #print "input parameters:\n", params
+                    s._add_history( "sdflag", params ) 
+
+
+            #if interactive:
+            #        guiflagger = flagplotter(visible=True)
+            #        guiflagger._plotter.legend(loc=1)
+            #        guiflagger.plot(s)
+            #        finish=raw_input("Press enter to finish interactive flagging:")
+            #        guiflagger._plotter.unmap()
+            #        guiflagger._plotter = None
+            #        del guiflagger
+
+            if ( abs(plotlevel) > 0 ):
                     #Plot the result
                     #print "Showing only the first spectrum..."
                     casalog.post( "Showing only the first spectrum..." )
@@ -310,36 +326,7 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
                             pltfile=project+'_flag.eps'
                             myp.save(pltfile)
                     myp.release()
-            else:
-                    ans=raw_input("Apply %s (y/n)?: " % flgmode)
-                    if ans.upper() == 'Y':
-			    if clip:
-				    if (uthres != None) and (dthres != None) and (uthres > dthres):
-					    s.clip(uthres, dthres, clipoutside, unflag)
-			    else:
-				    if (len(flagrow) == 0):
-					    s.flag(masks,unflag)
-				    else:
-					    s.flag_row(flagrow, unflag)
-                            params={}
-                            if ( vars()['pols'] == [] ):
-                                    params['pols']=list(s.getpolnos())
-                            else:
-                                    params['pols']=vars()['pols']
-                            if ( vars()['ifs'] == [] ):
-                                    params['ifs']=list(s.getifnos())
-                            else:
-                                    params['ifs']=vars()['ifs']
-                            if ( vars()['scans'] == [] ):
-                                    params['scans']=list(s.getscannos())
-                            else:
-                                    params['scans']=vars()['scans']
-                            params['mode']=vars()['flagmode']
-                            params['maskflag']=vars()['maskflag']
-                            #print "input parameters:\n", params
-                            s._add_history( "sdflag", params )
-                    else:
-                            return
+
 
            # Now save the spectrum and write out final ms
             if ( (outform == 'ASCII') or (outform == 'ascii') ):
