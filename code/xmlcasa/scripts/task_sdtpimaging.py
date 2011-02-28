@@ -283,9 +283,18 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, backup, flaglist, antenna, st
                 backuptb.close()
         scans = numpy.unique(tb.getcol('SCAN_NUMBER'))
         nscan = len(scans)
-        subscans = numpy.unique(tb.getcol('STATE_ID'))
-        nsubscan = len(subscans)
         casalog.post('There are %s scans in the data.'%nscan)
+        # 2011/2/27 TN
+        # number of subscans can be variable in each scan
+##         subscans = numpy.unique(tb.getcol('STATE_ID'))
+##         nsubscan = len(subscans)
+        subscans = []
+        nsubscan = []
+        for iscan in xrange(nscan):
+            subtb = tb.query( 'SCAN_NUMBER==%s'%(scans[iscan]) )
+            subscans.append( numpy.unique(subtb.getcol('STATE_ID')) )
+            nsubscan.append( len(subscans[iscan]) )
+            casalog.post('There are %s subscans in scan %s'%(nsubscan[iscan],scans[iscan]))
         tb.close()
 
         #print "calibration begins..."
@@ -336,10 +345,12 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, backup, flaglist, antenna, st
                 casalog.post( "select %s data..." % corrtypestr[np] )
                 for i in xrange(nscan):
                     idata = []
-                    for j in xrange(nsubscan):
+                    #for j in xrange(nsubscan):
+                    for j in xrange(nsubscan[i]):
                         # may be need to iterate on each antenna 
                         # identify 'scan' by STATE ID
-                        subtb=tb.query('any(ANTENNA1==%s && ANTENNA2==%s) && SCAN_NUMBER==%s && STATE_ID==%s' % (antid,antid,scans[i],subscans[j]))
+                        #subtb=tb.query('any(ANTENNA1==%s && ANTENNA2==%s) && SCAN_NUMBER==%s && STATE_ID==%s' % (antid,antid,scans[i],subscans[j]))
+                        subtb=tb.query('any(ANTENNA1==%s && ANTENNA2==%s) && SCAN_NUMBER==%s && STATE_ID==%s' % (antid,antid,scans[i],subscans[i][j]))
                         datcol=subtb.getcol(datalab)
                         if npol >1 and selnpol==1:
                             #casalog.post( "select %s data..." % corrtypestr[selpol] )
@@ -360,12 +371,15 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, backup, flaglist, antenna, st
                     pl.setp((t1,t2),fontsize='smaller')
                     mdat = 0
                     for i in xrange(nscan):
-                        for j in xrange(nsubscan):
+                        #for j in xrange(nsubscan):
+                        for j in xrange(nsubscan[i]):
                             mdat0 = mdat
                             mdat += len(data[i][j])
-                            if plotlevel > 0 and (i == nscan-1) and (j == nsubscan-1):
+                            #if plotlevel > 0 and (i == nscan-1) and (j == nsubscan-1):
+                            if plotlevel > 0 and (i == nscan-1) and (j == nsubscan[i]-1):
                                 pl.ion()
-                            pl.plot(xrange(mdat0,mdat),data[i][j],symbols[subscans[j]%2])
+                            #pl.plot(xrange(mdat0,mdat),data[i][j],symbols[subscans[j]%2])
+                            pl.plot(xrange(mdat0,mdat),data[i][j],symbols[subscans[i][j]%2])
                             ax=pl.gca()
                             if i==1: 
                                 leg=ax.legend(('even subscan no.', 'odd subscan no.'),numpoints=1,handletextsep=0.01) 
@@ -387,7 +401,8 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, backup, flaglist, antenna, st
                 pl.ioff()
                 for i in xrange(nscan):
                     casalog.post( "Processing Scan#=%s" % i )
-                    for j in xrange(nsubscan):
+                    #for j in xrange(nsubscan):
+                    for j in xrange(nsubscan[i]):
                         masks=numpy.zeros(len(data[i][j]),dtype=numpy.int)
                         if lmask >= len(data[i][j]) or rmask >= len(data[i][j]):
                             msg = "Too large mask. All data will be used for baseline subtraction.\n The fitting may not be correct since it might confuse signal component as a background..."
@@ -544,8 +559,10 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, backup, flaglist, antenna, st
                 fdatac = numpy.array([])
                 for i in xrange(nscan):
                     #fdata=[]
-                    for j in xrange(nsubscan):
-                        subtb=tb.query('any(ANTENNA1==%s && ANTENNA2==%s) && SCAN_NUMBER==%s && STATE_ID==%s' % (antid,antid,scans[i],subscans[j]))
+                    #for j in xrange(nsubscan):
+                    for j in xrange(nsubscan[i]):
+                        #subtb=tb.query('any(ANTENNA1==%s && ANTENNA2==%s) && SCAN_NUMBER==%s && STATE_ID==%s' % (antid,antid,scans[i],subscans[j]))
+                        subtb=tb.query('any(ANTENNA1==%s && ANTENNA2==%s) && SCAN_NUMBER==%s && STATE_ID==%s' % (antid,antid,scans[i],subscans[i][j]))
                         fcolall=subtb.getcol('FLAG')
                         if npol >1 and selnpol==1:
                             fcol=fcolall[selpol]
