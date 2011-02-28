@@ -1055,6 +1055,8 @@ Bool Calibrater::correct() {
   
   logSink() << LogOrigin("Calibrater","correct") << LogIO::NORMAL;
   
+  Bool retval = true;
+
   try {
 
     if (!ok())
@@ -1087,9 +1089,11 @@ Bool Calibrater::correct() {
     
     // Pass each timestamp (VisBuffer) to VisEquation for correction
     Bool calwt(calWt());
+    Vector<Bool> uncalspw(vi.numberSpw());	// Used to accumulate error messages
+    uncalspw.set(False);		        // instead of bombing the user
+						// in a loop.
     for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
-
-
+      uInt spw = vi.spectralWindow();
       //      Vector<Int> scans;
       //      vi.scan(scans);
       //      cout << " scan = " << scans(0)
@@ -1097,9 +1101,8 @@ Bool Calibrater::correct() {
       //	   << " fld = " << vi.fieldId() 
       //	   << endl;
 
-      // Only procede if spw can be calibrated
-      if (ve_p->spwOK(vi.spectralWindow())) {
-
+      // Only proceed if spw can be calibrated
+      if (ve_p->spwOK(spw)) {
 	for (vi.origin(); vi.more(); vi++) {
 	  
 	  // If we are going to update the weights, reset them first
@@ -1114,32 +1117,33 @@ Bool Calibrater::correct() {
 	  if (calwt) vi.setWeightMat(vb.weightMat()); 
 	}
       }
-      else 
-	cout << "Encountered data spw for which there no calibration." << endl;
-      
+      else
+	uncalspw[spw] = true;      
     }
     // Flush to disk
     vs_p->flush();
 
-    return True;  
-
-  } catch (AipsError x) {
+    // Now that we're out of the loop, summarize any errors.
+    retval = summarize_uncalspws(uncalspw, "correct");
+  }
+  catch (AipsError x) {
     logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg() 
 	      << LogIO::POST;
 
-    logSink() << "Reseting all calibration application settings." << LogIO::POST;
+    logSink() << "Resetting all calibration application settings." << LogIO::POST;
     unsetapply();
 
     throw(AipsError("Error in Calibrater::correct."));
-    return False;
+    retval = False;         // Not that it ever gets here...
   } 
-  return False;
+  return retval;
 }
 
 Bool Calibrater::corrupt() {
   
   logSink() << LogOrigin("Calibrater","corrupt") << LogIO::NORMAL;
-  
+  Bool retval = true;
+
   try {
 
     if (!ok())
@@ -1171,11 +1175,15 @@ Bool Calibrater::corrupt() {
     VisIter& vi(vs_p->iter());
     VisBuffer vb(vi);
     
-    // Pass each timestamp (VisBuffer) to VisEquation for correction
+    // Pass each timestamp (VisBuffer) to VisEquation for corruption.
+    Vector<Bool> uncalspw(vi.numberSpw());	// Used to accumulate error messages
+    uncalspw.set(False);		        // instead of bombing the user
+						// in a loop.
     for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
+      Int spw = vi.spectralWindow();
 
-      // Only procede if spw can be calibrated
-      if (ve_p->spwOK(vi.spectralWindow())) {
+      // Only proceed if spw can be calibrated
+      if (ve_p->spwOK(spw)) {
 
 	for (vi.origin(); vi.more(); vi++) {
 	  
@@ -1187,25 +1195,51 @@ Bool Calibrater::corrupt() {
 	}
       }
       else 
-	cout << "Encountered data spw for which there no calibration." << endl;
-      
+	uncalspw[spw] = true;
     }
     // Flush to disk
     vs_p->flush();
 
-    return True;  
-
-  } catch (AipsError x) {
+    // Now that we're out of the loop, summarize any errors.
+    retval = summarize_uncalspws(uncalspw, "corrupt");
+  }
+  catch (AipsError x) {
     logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg() 
 	      << LogIO::POST;
 
-    logSink() << "Reseting all calibration application settings." << LogIO::POST;
+    logSink() << "Resetting all calibration application settings." << LogIO::POST;
     unsetapply();
 
-    throw(AipsError("Error in Calibrater::correct."));
-    return False;
+    throw(AipsError("Error in Calibrater::corrupt."));
+    retval = False;  // Not that it ever gets here...
   } 
-  return False;
+  return retval;
+}
+
+Bool Calibrater::summarize_uncalspws(const Vector<Bool>& uncalspw,
+				     const String& origin)
+{
+  Bool hadprob = false;
+  uInt totNspw = uncalspw.nelements();
+
+  for(uInt i = 0; i < totNspw; ++i){
+    if(uncalspw[i]){
+      hadprob = true;
+      break;
+    }
+  }
+  if(hadprob){
+    logSink() << LogIO::WARN
+	      << "Spectral window(s) ";
+    for(uInt i = 0; i < totNspw; ++i){
+      if(uncalspw[i]){
+	logSink() << i << ", ";
+      }
+    }
+    logSink() << "\n  are not calibrated and could not be " << origin << "ed!"
+	      << LogIO::POST;
+  }
+  return !hadprob;
 }
 
 Bool Calibrater::solve() {

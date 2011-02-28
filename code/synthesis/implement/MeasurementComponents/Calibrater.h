@@ -357,6 +357,10 @@ class Calibrater
   // Returns True if calibrator object is in a valid state
   Bool ok();
 
+  // Given a (supplied) list of uncalibrated spws, determines and returns if there were
+  // any, and if so sends them as a warning message to the logger.
+  Bool summarize_uncalspws(const Vector<Bool>& uncalspw, const String& origin);
+
   // Create a VisSet for raw phase transfer if needed
   void getRawPhaseVisSet(Vector<Int>& spwid); 
 
