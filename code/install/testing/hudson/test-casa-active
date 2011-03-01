@@ -34,6 +34,12 @@ $hudson_host = 'warp';
 $sendmail = "/usr/sbin/sendmail";
 
 ###
+### the output log from 'dosystem( )'
+###
+@tail = ( );
+
+
+###
 ### tests to run
 ###
 %tests = ( 'linux-x86_64' => { 'test_flagdata' => [ 'test2' ],
@@ -390,7 +396,7 @@ sub build_source {
 sub dosystem {
     my $cmd = shift(@_);
     my $supress_debug = shift(@_);
-    my @tail = ();
+    @tail = ();
 
     if ( $debug && ! $supress_debug ) {
 	($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
@@ -683,6 +689,8 @@ sub mail_suspect {
     my $address_ary = $addresses{$name};
     my $address = join( '@', @$address_ary );
 
+    print "   => email to $address\n" if $debug;
+    
     die "no sendmail" unless -x $sendmail;
     die "no subversion URL" unless defined $hudson{"$pkg url"};
 
