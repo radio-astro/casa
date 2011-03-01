@@ -25,7 +25,7 @@ casa_add_python( xmlcasa xmlcasa_regressions_tests_python python/${PYTHONV}/regr
   accum_test.py
   asdm-imexport+analysis.py
   async-segfault.py
-  b1608.py
+#  b1608.py                   rmed in 14244.
   calstat_test.py
   cleanchan_test.py
   cleanhelper_test.py
