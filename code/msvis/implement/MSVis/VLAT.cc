@@ -1163,7 +1163,7 @@ VLAT::run ()
 		return NULL;
 
 	}
-	catch (exception & e){
+	catch (std::exception & e){
 
 		cerr << "VLAT thread caught exception: " << e.what() << endl;
 		cerr.flush();
