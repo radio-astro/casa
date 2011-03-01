@@ -235,11 +235,11 @@ namespace casa{
 	//
 	// Set the phase of the aperture function to zero if doSquint==F
 	// Poln. axis indices
-        // 0: RR, 1:RL, 2:LR, 3:LL
-	// This is electic field. 0=> Poln R, 
-	//                        1=> Leakage of R->L
-	//                        2=> Leakage of L->R
-	//                        3=> Poln L
+        // 0: XX, 1:XY, 2:YX, 3:YY
+	// This is electic field. 0=> Poln X, 
+	//                        1=> Leakage of X->Y
+	//                        2=> Leakage of Y->X
+	//                        3=> Poln Y
 	//
 	// The squint is removed in the following code using
 	// honest-to-god pixel indexing. If this is not the most
@@ -251,35 +251,35 @@ namespace casa{
 	//
 	if (!doSquint)
 	  {
-	    IPosition PolnRIndex(4,0,0,0,0), PolnLIndex(4,0,0,3,0);
+	    IPosition PolnXIndex(4,0,0,0,0), PolnYIndex(4,0,0,3,0);
 	    IPosition tndx(4,0,0,0,0);
 	    for(tndx(3)=0;tndx(3)<apertureShape(3);tndx(3)++)   // The freq. axis
 	      for(tndx(2)=0;tndx(2)<apertureShape(2);tndx(2)++) // The Poln. axis
 		for(tndx(1)=0;tndx(1)<apertureShape(1);tndx(1)++)   // The spatial
 		  for(tndx(0)=0;tndx(0)<apertureShape(0);tndx(0)++) // axis.
 		    {
-		      PolnRIndex(0)=PolnLIndex(0)=tndx(0);
-		      PolnRIndex(1)=PolnLIndex(1)=tndx(1);
-		      Complex val, Rval, Lval;
+		      PolnXIndex(0)=PolnYIndex(0)=tndx(0);
+		      PolnXIndex(1)=PolnYIndex(1)=tndx(1);
+		      Complex val, Xval, Yval;
 		      Float phase;
 		      val = ap.aperture->getAt(tndx);
-		      Rval = ap.aperture->getAt(PolnRIndex);
-		      Lval = ap.aperture->getAt(PolnLIndex);
-		      phase = arg(Rval);  Rval=Complex(cos(phase),sin(phase));
-		      phase = arg(Lval);  Lval=Complex(cos(phase),sin(phase));
+		      Xval = ap.aperture->getAt(PolnXIndex);
+		      Yval = ap.aperture->getAt(PolnYIndex);
+		      phase = arg(Xval);  Xval=Complex(cos(phase),sin(phase));
+		      phase = arg(Yval);  Yval=Complex(cos(phase),sin(phase));
 		      
-		      if      (tndx(2)==0) ap.aperture->putAt(val*conj(Rval),tndx);
-		      else if (tndx(2)==1) ap.aperture->putAt(val*conj(Lval),tndx);
-		      else if (tndx(2)==2) ap.aperture->putAt(val*conj(Rval),tndx);
-		      else if (tndx(2)==3) ap.aperture->putAt(val*conj(Lval),tndx);
+		      if      (tndx(2)==0) ap.aperture->putAt(val*conj(Xval),tndx);
+		      else if (tndx(2)==1) ap.aperture->putAt(val*conj(Yval),tndx);
+		      else if (tndx(2)==2) ap.aperture->putAt(val*conj(Xval),tndx);
+		      else if (tndx(2)==3) ap.aperture->putAt(val*conj(Yval),tndx);
 		    }
 	  }
 
 	Vector<Int> poln(4);
-	poln(0) = Stokes::RR;
-	poln(1) = Stokes::RL;
-	poln(2) = Stokes::LR;
-	poln(3) = Stokes::LL;
+	poln(0) = Stokes::XX;
+	poln(1) = Stokes::XY;
+	poln(2) = Stokes::YX;
+	poln(3) = Stokes::YY;
 	StokesCoordinate polnCoord(poln);
 	SpectralCoordinate spectralCoord(MFrequency::TOPO,Freq,1.0,0.0);
 	//    uvCoords.addCoordinate(dirCoord);
@@ -369,11 +369,11 @@ namespace casa{
 	//
 	// Set the phase of the aperture function to zero if doSquint==F
 	// Poln. axis indices
-        // 0: RR, 1:RL, 2:LR, 3:LL
-	// This is electic field. 0=> Poln R, 
-	//                        1=> Leakage of R->L
-	//                        2=> Leakage of L->R
-	//                        3=> Poln L
+        // 0: XX, 1:XY, 2:YX, 3:YY
+	// This is electic field. 0=> Poln X, 
+	//                        1=> Leakage of X->Y
+	//                        2=> Leakage of Y->X
+	//                        3=> Poln Y
 	//
 	// The squint is removed in the following code using
 	// honest-to-god pixel indexing. If this is not the most
@@ -385,27 +385,27 @@ namespace casa{
 	//
 	if (!doSquint)
 	  {
-	    IPosition PolnRIndex(4,0,0,0,0), PolnLIndex(4,0,0,3,0);
+	    IPosition PolnXIndex(4,0,0,0,0), PolnYIndex(4,0,0,3,0);
 	    IPosition tndx(4,0,0,0,0);
 	    for(tndx(3)=0;tndx(3)<apertureShape(3);tndx(3)++)   // The freq. axis
 	      for(tndx(2)=0;tndx(2)<apertureShape(2);tndx(2)++) // The Poln. axis
 		for(tndx(1)=0;tndx(1)<apertureShape(1);tndx(1)++)   // The spatial
 		  for(tndx(0)=0;tndx(0)<apertureShape(0);tndx(0)++) // axis.
 		    {
-		      PolnRIndex(0)=PolnLIndex(0)=tndx(0);
-		      PolnRIndex(1)=PolnLIndex(1)=tndx(1);
-		      Complex val, Rval, Lval;
+		      PolnXIndex(0)=PolnYIndex(0)=tndx(0);
+		      PolnXIndex(1)=PolnYIndex(1)=tndx(1);
+		      Complex val, Xval, Yval;
 		      Float phase;
 		      val = ap.aperture->getAt(tndx);
-		      Rval = ap.aperture->getAt(PolnRIndex);
-		      Lval = ap.aperture->getAt(PolnLIndex);
-		      phase = arg(Rval); Rval=Complex(cos(phase),sin(phase));
-		      phase = arg(Lval); Lval=Complex(cos(phase),sin(phase));
+		      Xval = ap.aperture->getAt(PolnXIndex);
+		      Yval = ap.aperture->getAt(PolnYIndex);
+		      phase = arg(Xval); Xval=Complex(cos(phase),sin(phase));
+		      phase = arg(Yval); Yval=Complex(cos(phase),sin(phase));
 		      
-		      if      (tndx(2)==0) ap.aperture->putAt(val*conj(Rval),tndx);
-		      else if (tndx(2)==1) ap.aperture->putAt(val*conj(Lval),tndx);
-		      else if (tndx(2)==2) ap.aperture->putAt(val*conj(Rval),tndx);
-		      else if (tndx(2)==3) ap.aperture->putAt(val*conj(Lval),tndx);
+		      if      (tndx(2)==0) ap.aperture->putAt(val*conj(Xval),tndx);
+		      else if (tndx(2)==1) ap.aperture->putAt(val*conj(Yval),tndx);
+		      else if (tndx(2)==2) ap.aperture->putAt(val*conj(Xval),tndx);
+		      else if (tndx(2)==3) ap.aperture->putAt(val*conj(Yval),tndx);
 		    }
 	  }
 	tmpAperture += *(ap.aperture);
@@ -413,10 +413,10 @@ namespace casa{
     *(ap.aperture) = tmpAperture;
     tmpAperture.resize(IPosition(1,1));//Release temp. store.
     Vector<Int> poln(4);
-    poln(0) = Stokes::RR;
-    poln(1) = Stokes::RL;
-    poln(2) = Stokes::LR;
-    poln(3) = Stokes::LL;
+    poln(0) = Stokes::XX;
+    poln(1) = Stokes::XY;
+    poln(2) = Stokes::YX;
+    poln(3) = Stokes::YY;
     StokesCoordinate polnCoord(poln);
     SpectralCoordinate spectralCoord(MFrequency::TOPO,Freq,1.0,0.0);
     //    uvCoords.addCoordinate(dirCoord);
@@ -495,7 +495,7 @@ namespace casa{
 	if (outStokes(ndx(2)) == Stokes::I)
 	  {
 	    //
-	    // Fill the outImg wiht (inImg(RR)+inImage(LL))/2 
+	    // Fill the outImg wiht (inImg(XX)+inImage(YY))/2 
 	    //
 	    for(ndx(0)=0;ndx(0)<imsize(0);ndx(0)++)
 	      for(ndx(1)=0;ndx(1)<imsize(1);ndx(1)++)
@@ -511,10 +511,10 @@ namespace casa{
 		  outImg.putAt(abs(cval*outImg.getAt(ndx)),ndx);
 		}
 	  }
-	else if ((outStokes(ndx(2)) == Stokes::RR) ||
-		 (outStokes(ndx(2)) == Stokes::RL) ||
-		 (outStokes(ndx(2)) == Stokes::LR) ||
-		 (outStokes(ndx(2)) == Stokes::LL))
+	else if ((outStokes(ndx(2)) == Stokes::XX) ||
+		 (outStokes(ndx(2)) == Stokes::XY) ||
+		 (outStokes(ndx(2)) == Stokes::YX) ||
+		 (outStokes(ndx(2)) == Stokes::YY))
 	  {
 	    for(s=0;s<inShape(2);s++) if (inStokes(s) == outStokes(ndx(2))) break;
 	
@@ -573,29 +573,29 @@ namespace casa{
     if (peak > 1E-8)
       for(t(3)=0;t(3)<shape(3);t(3)++)       // Freq axis
 	for(t(2)=0;t(2)<shape(2);t(2)++)     // Poln axis
-	  for(t(1)=0;t(1)<shape(1);t(1)++)   // y axis
+	  for(t(1)=0;t(1)<shape(1);t(1)++)   // Y axis
 	    for(t(0)=0;t(0)<shape(0);t(0)++) // X axis
 	      buf(t) = buf(t)/peak;
 
     tmp = buf;
 
     t(0)=t(1)=t(2)=t(3)=0;
-    t(2)=0;n0(2)=0;n1(2)=0; //RR
+    t(2)=0;n0(2)=0;n1(2)=0; //XX
     for(  n0(0)=n1(0)=t(0)=0;n0(0)<shape(0);n0(0)++,n1(0)++,t(0)++)
       for(n0(1)=n1(1)=t(1)=0;n0(1)<shape(1);n0(1)++,n1(1)++,t(1)++)
 	buf(t) = (tmp(n0)*conj(tmp(n1)));
 
-    t(2)=1;n0(2)=3;n1(2)=0; //LR
+    t(2)=1;n0(2)=3;n1(2)=0; //XY
     for(  n0(0)=n1(0)=t(0)=0;n0(0)<shape(0);n0(0)++,n1(0)++,t(0)++)
       for(n0(1)=n1(1)=t(1)=0;n0(1)<shape(1);n0(1)++,n1(1)++,t(1)++)
 	buf(t) = (tmp(n0)*conj(tmp(n1)));
 
-    t(2)=2;n0(2)=0;n1(2)=3; //RL
+    t(2)=2;n0(2)=0;n1(2)=3; //YX
     for(  n0(0)=n1(0)=t(0)=0;n0(0)<shape(0);n0(0)++,n1(0)++,t(0)++)
       for(n0(1)=n1(1)=t(1)=0;n0(1)<shape(1);n0(1)++,n1(1)++,t(1)++)
 	buf(t) = (tmp(n0)*conj(tmp(n1)));
 
-    t(2)=3;n0(2)=3;n1(2)=3; //LL
+    t(2)=3;n0(2)=3;n1(2)=3; //YY
     for(  n0(0)=n1(0)=t(0)=0;n0(0)<shape(0);n0(0)++,n1(0)++,t(0)++)
       for(n0(1)=n1(1)=t(1)=0;n0(1)<shape(1);n0(1)++,n1(1)++,t(1)++)
 	buf(t) = (tmp(n0)*conj(tmp(n1)));
