@@ -848,6 +848,184 @@ void StokesImageUtil::ToStokesPSF(ImageInterface<Float>& out, ImageInterface<Com
   
   AlwaysAssert(in.shape()(0)==out.shape()(0), AipsError);
   AlwaysAssert(in.shape()(1)==out.shape()(1), AipsError);
+  AlwaysAssert(in.shape()(3)==out.shape()(3), AipsError);
+  
+  Vector<Int> map;
+  AlwaysAssert(StokesMap(map, in.coordinates()), AipsError);
+  Vector<Int> outmap;
+  AlwaysAssert(StokesMap(outmap, out.coordinates()), AipsError);
+  
+  Int nx = in.shape()(map(0));
+  Int innpol = in.shape()(map(2));
+  Int outnpol = out.shape()(outmap(2));
+  
+  // Loop over all planes
+  LatticeStepper inls(in.shape(), IPosition(4, nx, 1, innpol, 1),
+		      IPosition(4, map(0), map(2), map(1), map(3)));
+  LatticeStepper outls(out.shape(), IPosition(4, nx, 1, outnpol, 1),
+		       IPosition(4, map(0), map(2), map(1), map(3)));
+  RO_LatticeIterator<Complex> inli(in,  inls);
+  LatticeIterator<Float>  outli(out, outls);
+  
+  Vector<Int> inMap(innpol), outMap(outnpol);
+  SkyModel::PolRep polFrame=SkyModel::CIRCULAR;
+  Int nStokesIn=CStokesPolMap(inMap, polFrame, in.coordinates());
+  Int nStokesOut=StokesPolMap(outMap, out.coordinates());
+  if(nStokesOut <=0){
+    directCToR(out, in);
+    return;
+  }
+  AlwaysAssert(nStokesOut, AipsError);
+  // Try taking real part only (uses LatticeExpr)
+  if(nStokesIn==0) {
+    nStokesIn=StokesPolMap(inMap, in.coordinates());
+    if(nStokesIn==nStokesOut) {
+      out.copyData(LatticeExpr<Float>(real(in)));
+      return;
+    }
+    throw(AipsError("Illegal conversion in ToStokesImage"));
+  }
+
+  /* STOKESDBG */  //cout << "ToStokesPSF - nstokesIn :  " <<  nStokesIn << " inmap : " << inMap << "  nstokesOut : " << nStokesOut << " outmap : " << outMap << endl;
+  /* STOKESDBG */  //cout << "IN (data) stokesCoord : " << ( (in.coordinates()).stokesCoordinate( (in.coordinates()).findCoordinate(Coordinate::STOKES)  ) ).stokes() << "     OUT (image) stokesCoord : " << ( (out.coordinates()).stokesCoordinate( (out.coordinates()).findCoordinate(Coordinate::STOKES)  ) ).stokes() << endl;
+
+  Vector<Int> inST =  ( (in.coordinates()).stokesCoordinate( (in.coordinates()).findCoordinate(Coordinate::STOKES)  ) ).stokes();
+  Vector<Int> outST = ( (out.coordinates()).stokesCoordinate( (out.coordinates()).findCoordinate(Coordinate::STOKES)  ) ).stokes();
+
+  Vector<Complex> cs(4);
+  cs=Complex(0.0);
+  CStokesVector csv(0.0, 0.0, 0.0, 0.0);
+  StokesVector sv(0.0, 0.0, 0.0, 0.0);
+  Int pol;
+  if(nStokesIn==1) {
+    for (inli.reset(), outli.reset(); !inli.atEnd() && !outli.atEnd();
+	 inli++,outli++) {
+      for (Int ix=0;ix<nx;ix++) {
+        cs(inMap(0))=inli.vectorCursor()(ix);
+	csv=CStokesVector(cs(0), cs(1), cs(2), cs(3));
+	if(polFrame==SkyModel::LINEAR) {
+	  applySlinInv(sv, csv);
+	}
+	else {
+	  applyScircInv(sv, csv);
+	}
+        // nstokesout will be 1, 2 or 4 only.
+        if(nStokesOut==1) {
+	  //outli.rwVectorCursor()(ix)=sv(0); //sv(outMap(0));
+          // If outstokescoord = I or Q, use (I:0) : XX+YY for the PSF
+          // If outstokescoord = U or V, use (U:2) : XY+YX  for the PSF
+          if( (polFrame==SkyModel::LINEAR) )
+	    { 
+	      if(Stokes::type(outST[0])==Stokes::I || Stokes::type(outST[0])==Stokes::Q ) 
+	          outli.rwVectorCursor()(ix)=sv(0);
+              if( Stokes::type(outST[0])==Stokes::U || Stokes::type(outST[0])==Stokes::V ) 
+	          outli.rwVectorCursor()(ix)=sv(2);
+	    }
+          if( (polFrame==SkyModel::CIRCULAR) )
+	    { 
+	      if(Stokes::type(outST[0])==Stokes::I || Stokes::type(outST[0])==Stokes::V ) 
+	          outli.rwVectorCursor()(ix)=sv(0);
+              if( Stokes::type(outST[0])==Stokes::Q || Stokes::type(outST[0])==Stokes::U ) 
+	          outli.rwVectorCursor()(ix)=sv(1);
+	    }
+	}
+        else if(nStokesOut==2) {
+          // If outstokescoord = IQ, use (I:0) : XX+YY for the PSF in both planes
+          // If outstokescoord = UV, use (U:2) : XY+YX  for the PSF in both planes
+         if( (polFrame==SkyModel::LINEAR) )
+	    { 
+	      if(Stokes::type(outST[0])==Stokes::I || Stokes::type(outST[0])==Stokes::Q || 
+                 Stokes::type(outST[1])==Stokes::I || Stokes::type(outST[1])==Stokes::Q ) 
+		{ outli.rwMatrixCursor()(ix,0)=sv(0);   outli.rwMatrixCursor()(ix,1)=sv(0); }
+              if( Stokes::type(outST[0])==Stokes::U || Stokes::type(outST[0])==Stokes::V ||
+                  Stokes::type(outST[1])==Stokes::U || Stokes::type(outST[1])==Stokes::V ) 
+		{ outli.rwMatrixCursor()(ix,0)=sv(2); outli.rwMatrixCursor()(ix,1)=sv(2); }
+	    }
+          if( (polFrame==SkyModel::CIRCULAR) )
+	    { 
+	      if(Stokes::type(outST[0])==Stokes::I || Stokes::type(outST[0])==Stokes::V ||
+                 Stokes::type(outST[1])==Stokes::I || Stokes::type(outST[1])==Stokes::V ) 
+		{ outli.rwMatrixCursor()(ix,0)=sv(0); outli.rwMatrixCursor()(ix,1)=sv(0); }
+              if( Stokes::type(outST[0])==Stokes::Q || Stokes::type(outST[0])==Stokes::U ||
+                  Stokes::type(outST[1])==Stokes::Q || Stokes::type(outST[1])==Stokes::U ) 
+		{ outli.rwMatrixCursor()(ix,0)=sv(1); outli.rwMatrixCursor()(ix,1)=sv(1); }
+	    }
+	}
+	else { // nstokesout = 4  : do a one-to-one mapping.
+	  for (pol=0;pol<outnpol;pol++)
+       	    outli.rwMatrixCursor()(ix,pol)=sv(outMap(pol));
+	}
+      }
+    }
+  }
+  else {
+    for (inli.reset(), outli.reset(); !inli.atEnd() && !outli.atEnd(); inli++,outli++) {
+      for (Int ix=0;ix<nx;ix++) {
+	cs=Complex(0.0);
+        for (pol=0;pol<innpol;pol++) cs(inMap(pol))=inli.matrixCursor()(ix,pol);
+	csv=CStokesVector(cs(0), cs(1), cs(2), cs(3));
+	if(polFrame==SkyModel::LINEAR) {
+	  applySlinInv(sv, csv);
+	}
+	else {
+	  applyScircInv(sv, csv);
+	}
+        if(nStokesOut==1) {
+	  //outli.rwVectorCursor()(ix)=sv(0); //sv(outMap(0));
+          // If outstokescoord = I or Q, use (I:0)
+          // If outstokescoord = U or V, use (U:2)
+          if( (polFrame==SkyModel::LINEAR) )
+	    { 
+	      if(Stokes::type(outST[0])==Stokes::I || Stokes::type(outST[0])==Stokes::Q ) 
+	          outli.rwVectorCursor()(ix)=sv(0);
+              if( Stokes::type(outST[0])==Stokes::U || Stokes::type(outST[0])==Stokes::V ) 
+	          outli.rwVectorCursor()(ix)=sv(2);
+	    }
+          if( (polFrame==SkyModel::CIRCULAR) )
+	    { 
+	      if(Stokes::type(outST[0])==Stokes::I || Stokes::type(outST[0])==Stokes::V ) 
+	          outli.rwVectorCursor()(ix)=sv(0);
+              if( Stokes::type(outST[0])==Stokes::Q || Stokes::type(outST[0])==Stokes::U ) 
+	          outli.rwVectorCursor()(ix)=sv(1);
+	    }
+	}
+        else if(nStokesOut==2) {
+          // If outstokescoord = IQ, use (I:0) : XX+YY for the PSF in both planes
+          // If outstokescoord = UV, use (U:2) : XY+YX  for the PSF in both planes
+         if( (polFrame==SkyModel::LINEAR) )
+	    { 
+	      if(Stokes::type(outST[0])==Stokes::I || Stokes::type(outST[0])==Stokes::Q || 
+                 Stokes::type(outST[1])==Stokes::I || Stokes::type(outST[1])==Stokes::Q ) 
+		{ outli.rwMatrixCursor()(ix,0)=sv(0);   outli.rwMatrixCursor()(ix,1)=sv(0); }
+              if( Stokes::type(outST[0])==Stokes::U || Stokes::type(outST[0])==Stokes::V ||
+                  Stokes::type(outST[1])==Stokes::U || Stokes::type(outST[1])==Stokes::V ) 
+		{ outli.rwMatrixCursor()(ix,0)=sv(2); outli.rwMatrixCursor()(ix,1)=sv(2); }
+	    }
+          if( (polFrame==SkyModel::CIRCULAR) )
+	    { 
+	      if(Stokes::type(outST[0])==Stokes::I || Stokes::type(outST[0])==Stokes::V ||
+                 Stokes::type(outST[1])==Stokes::I || Stokes::type(outST[1])==Stokes::V ) 
+		{ outli.rwMatrixCursor()(ix,0)=sv(0); outli.rwMatrixCursor()(ix,1)=sv(0); }
+              if( Stokes::type(outST[0])==Stokes::Q || Stokes::type(outST[0])==Stokes::U ||
+                  Stokes::type(outST[1])==Stokes::Q || Stokes::type(outST[1])==Stokes::U ) 
+		{ outli.rwMatrixCursor()(ix,0)=sv(1); outli.rwMatrixCursor()(ix,1)=sv(1); }
+	    }
+	}
+	else { // nstokesout = 4
+	  for (pol=0;pol<outnpol;pol++) {
+	    outli.rwMatrixCursor()(ix,pol)=sv(outMap(0));
+	  }
+	}
+      }
+    }
+  }
+};
+
+#if 0
+void StokesImageUtil::ToStokesPSF(ImageInterface<Float>& out, ImageInterface<Complex>& in) {
+  
+  AlwaysAssert(in.shape()(0)==out.shape()(0), AipsError);
+  AlwaysAssert(in.shape()(1)==out.shape()(1), AipsError);
   AlwaysAssert(out.shape()(2)==out.shape()(3), AipsError);
   AlwaysAssert(in.shape()(3)==out.shape()(4), AipsError);
   
@@ -930,7 +1108,7 @@ void StokesImageUtil::ToStokesPSF(ImageInterface<Float>& out, ImageInterface<Com
     }
   }
 };
-
+#endif
 
 void StokesImageUtil::From(ImageInterface<Complex>& out,
 			   ImageInterface<Float>& in) {
@@ -1236,11 +1414,26 @@ CoordinateSystem StokesImageUtil::StokesCoordFromMS(const IPosition& shape, Vect
   
 }
 
-CoordinateSystem StokesImageUtil::CStokesCoord(const IPosition& shape,
+/*  This function sets up the Stokes labelling for the polarization planes of 
+    'cImage', the complex image that stores gridded correlations.
+      
+     For example, if 'V' is asked for, we need to grid RR and LL (npol = 2 pol planes in cImage).
+
+     Called from the first call of ImageSkyModel::cImage().
+
+     Input :  shape = shape of cImage. 
+                polRep : Circular or Linear - present in the data. 
+     Input/Output : coords = Input polarization labelling is that of the target image ('V')
+                                         Output polarization labelling is for the correlations ('RR','LL').
+                           whichStokes = empty on input (first time). 
+                                                  Fill in the data correlation labels ('RR', 'LL')
+
+*/
+CoordinateSystem StokesImageUtil::CStokesCoord(//const IPosition& shape,
 					       const CoordinateSystem& coord,
 					       Vector<Int>& whichStokes,
 					       SkyModel::PolRep polRep) {
-  
+  /*  
   Int nx=shape(0);
   Int ny=shape(1);
   Int npol=shape(2);
@@ -1249,7 +1442,8 @@ CoordinateSystem StokesImageUtil::CStokesCoord(const IPosition& shape,
   AlwaysAssert(ny>0, AipsError);
   AlwaysAssert(npol>0, AipsError);
   AlwaysAssert(nchan>0, AipsError);
-  
+  */
+
   Int directionIndex=coord.findCoordinate(Coordinate::DIRECTION);
   DirectionCoordinate directionCoord=coord.directionCoordinate(directionIndex);
   
@@ -1260,73 +1454,19 @@ CoordinateSystem StokesImageUtil::CStokesCoord(const IPosition& shape,
   StokesCoordinate
     stokesCoord=coord.stokesCoordinate(stokesIndex);
 
+  /* STOKESDBG */ //cout << "Util : CStokesCoord - input - stokesCoord : " << stokesCoord.stokes()  << endl;
  
   // Polarization: If the specified whichStokes are ok, we use them
-  // otherwise we guess
-  if(Int(whichStokes.nelements())!=npol) {
-    whichStokes.resize(npol);
-    whichStokes=0;
-    // Polarization
-    if (polRep==SkyModel::LINEAR) {
-      switch(npol) {
-      case 1:
-	whichStokes.resize(1);
-	if(Stokes::type(stokesCoord.stokes()[0])==Stokes::XX){
-	  whichStokes(0)=Stokes::XX; 
-	}
-	else if(Stokes::type(stokesCoord.stokes()[0])==Stokes::YY){
-	  whichStokes(0)=Stokes::YY;
-	}
-	else{
-	  whichStokes(0)=Stokes::I;
-	}
-	break;
-      case 2:
-	whichStokes.resize(2);
-	whichStokes(1)=Stokes::XX;
-	whichStokes(0)=Stokes::YY;
-	break;
-      default:
-	whichStokes.resize(4);
-	whichStokes(0)=Stokes::XX;
-	whichStokes(1)=Stokes::XY;
-	whichStokes(2)=Stokes::YX;
-	whichStokes(3)=Stokes::YY;
-        break;
-      }
-    }
-    else {
-      switch(npol) {
-      case 1:
-	whichStokes.resize(1);
-	if(Stokes::type(stokesCoord.stokes()[0])==Stokes::RR){
-	  whichStokes(0)=Stokes::RR; 
-	}
-	else if(Stokes::type(stokesCoord.stokes()[0])==Stokes::LL){
-	  whichStokes(0)=Stokes::LL;
-	}
-	else{
-	  whichStokes(0)=Stokes::I;
-	}
-	break;
-      case 2:
-	whichStokes.resize(2);
-	whichStokes(0)=Stokes::LL;
-	whichStokes(1)=Stokes::RR;
-	break;
-      default:
-	whichStokes.resize(4);
-	whichStokes(0)=Stokes::LL;
-	whichStokes(1)=Stokes::LR;
-	whichStokes(2)=Stokes::RL;
-	whichStokes(3)=Stokes::RR;
-	break;
-      };
-    }
-  }
+  //  if(Int(whichStokes.nelements())!=npol) {
+  //  whichStokes.resize(npol);
+  //  whichStokes=0;
+    changeLabelsStokesToCorrStokes(stokesCoord, polRep, whichStokes);
+    //}
   AlwaysAssert(whichStokes.nelements(), AipsError);
   StokesCoordinate stokesCoordOut(whichStokes);
-  
+
+  /* STOKESDBG */ //cout << "Util : CStokesCoord - output - stokesCoord : " << stokesCoordOut.stokes() << endl;
+ 
   // Now set up coordinates
   CoordinateSystem coordInfo; 
   coordInfo.addCoordinate(directionCoord);
@@ -1336,7 +1476,114 @@ CoordinateSystem StokesImageUtil::CStokesCoord(const IPosition& shape,
 
 }
 
+/*
+     Logic : Read the desired image stokes from "stokesCoord" : 'V'
+                Read the desired "npol" from the length of stokesCoord : '2'
+                For npol = 1,2,3,4, if any image-pol choice requires an explicit mapping
+                                            to correlations, resize 'whichStokes' accordingly, and fill in.
+                             For example, 'V' is mapped to 'RR,LL' for Circular, and 'XY,YX' for Linear.
+                Finally, check that all correlations in 'whichStokes' are present in the data.
 
+      Subsequent calls to this function -- which already have the input stokesCoord in the 
+      correlation basis, will not do anything.
+
+      Rules :
+           npol = 1 : I, XX,YY,XY,YX,RR,LL.RL,LR  --- choose only one correlation 
+                          Q, U, V -- map to 2 correlations as required for Circular vs Linear
+                          Note : "I" is a special-case for which ftmachines and gridders know how to use only one plane.
+           npol = 2 : RRLL,RLLR,XXYY,XYYX;  IV,QU for Circular;  IQ,UV for Linear -- map to 2 correlations
+                           IV, QU for Linear; IQ,UV for Circular -- map to 4 correlations
+           npol = 3,4 : Choose all 4 correlations.
+
+      'whichStokes' contains the output
+*/
+void StokesImageUtil::changeLabelsStokesToCorrStokes(StokesCoordinate &stokesCoord, 
+						     SkyModel::PolRep polRep, //Int npol,
+                                                 Vector<Int>&whichStokes)
+{
+    Int inputNPol = (stokesCoord.stokes()).nelements();
+    Vector<Int> svec = stokesCoord.stokes();
+    AlwaysAssert( (inputNPol==1 || inputNPol==2 || inputNPol==3 || inputNPol), AipsError );
+
+    switch( inputNPol )
+    {
+    case 1:
+           whichStokes.resize(1);
+           // by default, set to what the input is. This will take care of RR,LL,RL,LR,XX,YY,XY,YX and I.
+           whichStokes[0]=svec[0];
+           // for Q,U,V, two correlations needs to be gridded
+           if(polRep==SkyModel::CIRCULAR && Stokes::type(svec[0])==Stokes::Q)
+	          {whichStokes.resize(2); whichStokes[0]=Stokes::RL; whichStokes[1]=Stokes::LR; }
+           else if(polRep==SkyModel::CIRCULAR && Stokes::type(svec[0])==Stokes::U)
+	          {whichStokes.resize(2); whichStokes[0]=Stokes::RL; whichStokes[1]=Stokes::LR; }
+           else if(polRep==SkyModel::CIRCULAR && Stokes::type(svec[0])==Stokes::V)
+	          {whichStokes.resize(2); whichStokes[0]=Stokes::RR; whichStokes[1]=Stokes::LL; }
+           else if(polRep==SkyModel::LINEAR && Stokes::type(svec[0])==Stokes::Q)
+	          {whichStokes.resize(2); whichStokes[0]=Stokes::XX; whichStokes[1]=Stokes::YY; }
+           else if(polRep==SkyModel::LINEAR && Stokes::type(svec[0])==Stokes::U)
+	          {whichStokes.resize(2); whichStokes[0]=Stokes::XY; whichStokes[1]=Stokes::YX; }
+           else if(polRep==SkyModel::LINEAR && Stokes::type(svec[0])==Stokes::V)
+	          {whichStokes.resize(2); whichStokes[0]=Stokes::XY; whichStokes[1]=Stokes::YX; }
+      break;
+    case 2:
+           whichStokes.resize(2);
+           // by default, set to what the input is. This will take care of RRLL, RLLR, XXYY, XYYX
+           whichStokes(0)=svec[0];
+           whichStokes(1)=svec[1];           
+           // only 2 correlations need to be gridded
+           if(polRep==SkyModel::CIRCULAR && Stokes::type(svec[0])==Stokes::I && Stokes::type(svec[1])==Stokes::V) 
+   	        {whichStokes(0)=Stokes::RR; whichStokes(1)=Stokes::LL;}
+           else if(polRep==SkyModel::CIRCULAR && Stokes::type(svec[0])==Stokes::Q && Stokes::type(svec[1])==Stokes::U) 
+   	        {whichStokes(0)=Stokes::RL; whichStokes(1)=Stokes::LR;}
+           else if(polRep==SkyModel::LINEAR && Stokes::type(svec[0])==Stokes::I && Stokes::type(svec[1])==Stokes::Q) 
+   	        {whichStokes(0)=Stokes::XX; whichStokes(1)=Stokes::YY;}
+           else if(polRep==SkyModel::LINEAR && Stokes::type(svec[0])==Stokes::U && Stokes::type(svec[1])==Stokes::V) 
+   	        {whichStokes(0)=Stokes::XY; whichStokes(1)=Stokes::YX;}
+	   // all 4 correlations to be gridded. Only difference with above is CIRC to LIN
+           else if( (polRep==SkyModel::LINEAR && Stokes::type(svec[0])==Stokes::I && Stokes::type(svec[1])==Stokes::V) ||
+		      (polRep==SkyModel::LINEAR && Stokes::type(svec[0])==Stokes::Q && Stokes::type(svec[1])==Stokes::U) )
+	              {
+                          whichStokes.resize(4); 
+                          whichStokes(0)=Stokes::XX; whichStokes(1)=Stokes::XY; 
+                          whichStokes(2)=Stokes::YX; whichStokes(3)=Stokes::YY;
+                      }
+	   else if( (polRep==SkyModel::CIRCULAR && Stokes::type(svec[0])==Stokes::I && Stokes::type(svec[1])==Stokes::Q) ||
+                      (polRep==SkyModel::CIRCULAR && Stokes::type(svec[0])==Stokes::U && Stokes::type(svec[1])==Stokes::V) )
+	              {
+                           whichStokes.resize(4); 
+                           whichStokes(0)=Stokes::RR; whichStokes(1)=Stokes::RL; 
+                           whichStokes(2)=Stokes::LR; whichStokes(3)=Stokes::LL;
+                      }
+       break;
+    case 3: /* If npol=3, all 4 correlations need to be gridded */
+    case 4:  /* Select all 4 correlations when npol=4 */
+ 	whichStokes.resize(4);
+        if( polRep==SkyModel::LINEAR)
+	{
+	   whichStokes(0)=Stokes::XX;
+ 	   whichStokes(1)=Stokes::XY;
+	   whichStokes(2)=Stokes::YX;
+	   whichStokes(3)=Stokes::YY;
+	}
+        else
+	{
+	   whichStokes(0)=Stokes::RR;
+ 	   whichStokes(1)=Stokes::RL;
+	   whichStokes(2)=Stokes::LR;
+	   whichStokes(3)=Stokes::LL;
+	}
+        break;
+    }
+
+    // Verify that all entries in whichStokes are present in the data 
+    // This is to catch things like : dataset contains only RR,LL, but the user has asked for IQUV.
+    
+
+}// end of changeStokesToCorrStokes
+
+
+/*  This function is not called from anywhere !!!!  It should go. */
+#if 0
 CoordinateSystem
 StokesImageUtil::CStokesCoordFromImage(const ImageInterface<Complex>& image,
 				       Vector<Int>& whichStokes,
@@ -1408,6 +1655,7 @@ StokesImageUtil::CStokesCoordFromImage(const ImageInterface<Complex>& image,
   return coordInfo;
 
 }
+#endif
 
 // Return a map to RA, DEC, pol, chan. 0 is RA, 1 is Dec, 2 is
 // polarization, and 3 is Channel
@@ -1484,59 +1732,17 @@ void StokesImageUtil::changeCStokesRep(ImageInterface<Complex>& image,
     stokesCoord=coords.stokesCoordinate(stokesIndex);
 
   Int npol=stokesCoord.stokes().nelements();
+ 
+  /* STOKESDBG */ //cout << "Util::changeCStokesRep - input - stokescoord : " << stokesCoord.stokes() << "   npol : " << npol << endl;
 
+  Vector<Int> whichStokes(0);
+  //whichStokes=0;
+  changeLabelsStokesToCorrStokes(stokesCoord, polRep,  whichStokes);
 
-  Vector<Int> whichStokes(npol);
-
-  AlwaysAssert((npol==1)||(npol==2)||(npol==4), AipsError);
-
-  // Polarization
-  if (polRep==SkyModel::LINEAR) {
-    
-    switch(npol) {
-    case 1:
-      if(!(Stokes::type(stokesCoord.stokes()[0])==Stokes::XX || Stokes::type(stokesCoord.stokes()[0])==Stokes::YY)){
-	whichStokes(0)=Stokes::I;
-      }
-      else{
-	whichStokes(0)=stokesCoord.stokes()[0];
-      }
-      break;
-    case 2:
-      whichStokes(0)=Stokes::YY;
-      whichStokes(1)=Stokes::XX;      
-      break;
-    default:
-      whichStokes(0)=Stokes::XX;
-      whichStokes(1)=Stokes::XY;
-      whichStokes(2)=Stokes::YX;
-      whichStokes(3)=Stokes::YY;
-    }
-  }
-  else {
-    switch(npol) {
-    case 1:
-      if(!(Stokes::type(stokesCoord.stokes()[0])==Stokes::RR || Stokes::type(stokesCoord.stokes()[0])==Stokes::LL)){
-	whichStokes(0)=Stokes::I;
-      }
-      else{
-	whichStokes(0)=stokesCoord.stokes()[0];
-      }
-      break;
-    case 2:
-      whichStokes(0)=Stokes::LL;
-      whichStokes(1)=Stokes::RR;
-      break;
-    default:
-      whichStokes(0)=Stokes::LL;
-      whichStokes(1)=Stokes::LR;
-      whichStokes(2)=Stokes::RL;
-      whichStokes(3)=Stokes::RR;
-    };
-  }
   StokesCoordinate newStokesCoord(whichStokes);
   coords.replaceCoordinate(newStokesCoord, stokesIndex);
   image.setCoordinateInfo(coords);
+  /* STOKESDBG */ //cout << "Util::changeCStokesRep - output - stokescoord : " << newStokesCoord.stokes() << endl;
 }
 
 Bool StokesImageUtil::

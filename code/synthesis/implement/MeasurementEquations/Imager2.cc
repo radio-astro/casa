@@ -218,7 +218,7 @@ String Imager::imageName()
   return String("imagerImage");
 }
 
-// imagecoordinates2 (use subMS method to get freq vectors)
+// imagecoorinates2 (use subMS method to get freq vectors)
 // Make standard choices for coordinates
 Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose) 
 {  
@@ -543,7 +543,7 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
       else if(imageNchan_p==1) {
 	finc=freqResolution(IPosition(1,0));
       }
-      cerr<<"mySpectral for channel mode"<<endl;
+
       //in order to outframe to work need to set here original freq frame
       //
       //tabular form
@@ -739,130 +739,17 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
 
   // Compare user input with whatever is allowed by the data. 
   // If possible, allow.
-  Vector<Int> whichStokes(npol_p);
-  switch(npol_p) {
-  case 1:
-    if( polRep_p==SkyModel::LINEAR &&  (stokes_p=="RR" || stokes_p=="LL" || stokes_p=="RL" || stokes_p=="LR" ) )
-      {
-        os << LogIO::SEVERE << " Stokes " << stokes_p << " is not a valid selection for data taken with Linear feeds." << LogIO::EXCEPTION;
-        return False;
-      }
-    if( polRep_p==SkyModel::CIRCULAR &&  (stokes_p=="XX" || stokes_p=="YY" || stokes_p=="XY" || stokes_p=="YX" ) )
-      {
-        os << LogIO::SEVERE << " Stokes " << stokes_p << " is not a valid selection for data taken with Circular feeds." << LogIO::EXCEPTION;
-        return False;
-      }
-    
-    whichStokes.resize(1);
-    //possibilities
-    if(stokes_p=="RR")
-      whichStokes(0)=Stokes::RR;
-    else if(stokes_p=="LL")
-      whichStokes(0)=Stokes::LL;
-    else if(stokes_p=="XX")
-      whichStokes(0)=Stokes::XX;
-    else if(stokes_p=="YY")
-      whichStokes(0)=Stokes::YY;
-    else if(stokes_p=="I")
-      whichStokes(0)=Stokes::I;
-    else
-      {
-	    os << LogIO::SEVERE << "Currently, " << stokes_p << " is not supported alone. Please combine with I and retry. " << LogIO::EXCEPTION;
-           return False;
-	   //      whichStokes(0)=Stokes::I;
-	   //  os << LogIO::DEBUG1 << "Image polarization = Stokes "<< stokes_p << LogIO::POST;
-      }
-    break;
-  case 2:
-    // Check with polRep.
-    if( polRep_p==SkyModel::LINEAR &&  (stokes_p!="XXYY" && stokes_p!="IQ" && stokes_p!="UV") )
-      {
-        os << LogIO::SEVERE << " Stokes " << stokes_p << " is not a valid 2-pol selection for data taken with Linear feeds. Please use IQUV instead." << LogIO::EXCEPTION;
-        return False;
-      }
-    if( polRep_p==SkyModel::CIRCULAR &&  (stokes_p!="RRLL" && stokes_p!="IV" && stokes_p!="QU") )
-      {
-        os << LogIO::SEVERE << " Stokes " << stokes_p << " is not a valid 2-pol selection for data taken with Circular feeds. Please use IQUV instead." << LogIO::EXCEPTION;
-        return False;
-      }
-    whichStokes.resize(2);
-    //default to IQ or IV if not known
-    if(stokes_p=="RRLL"){
-      whichStokes(0)=Stokes::RR;
-      whichStokes(1)=Stokes::LL;
+
+  Vector<Int> whichStokes = decideNPolPlanes(True);
+  if(whichStokes.nelements()==0 || (whichStokes.nelements()==1 && whichStokes[0]==0) ) 
+    {
+      if(polRep_p==SkyModel::CIRCULAR) 
+	os << LogIO::SEVERE << "Stokes selection of " << stokes_p << " is not valid for Circular feeds." << LogIO::EXCEPTION;
+      else 
+	os << LogIO::SEVERE << "Stokes selection of " << stokes_p << " is not valid for Linear feeds." << LogIO::EXCEPTION;
+      return False;
     }
-    else if(stokes_p=="XXYY"){
-      whichStokes(0)=Stokes::XX;
-      whichStokes(1)=Stokes::YY;
-    }
-    else if(stokes_p=="QU"){
-      whichStokes(0)=Stokes::Q;
-      whichStokes(1)=Stokes::U;
-    }
-    else if(stokes_p=="UV"){ 
-      whichStokes(0)=Stokes::U;
-      whichStokes(1)=Stokes::V;
-    }
-    else if(stokes_p=="IV"){ 
-      whichStokes(0)=Stokes::I;
-      whichStokes(1)=Stokes::V;
-    }
-    else if(stokes_p=="IQ"){
-      whichStokes(0)=Stokes::I;
-      whichStokes(1)=Stokes::Q;
-    }
-    else{
-      whichStokes(0)=Stokes::I;
-      if (polRep_p==SkyModel::LINEAR) {
-	whichStokes(1)=Stokes::Q;
-	os << LogIO::DEBUG1 << "Image polarization = Stokes I,Q" << LogIO::POST;
-      }
-      else {
-	whichStokes(1)=Stokes::V;
-	os << LogIO::DEBUG1 << "Image polarization = Stokes I,V" << LogIO::POST;
-      }
-    }
-    break;
-  case 3:
-    whichStokes.resize(3);
-    if( polRep_p==SkyModel::LINEAR && stokes_p=="IUV" )
-      {
-        whichStokes(0)=Stokes::I;
-        whichStokes(1)=Stokes::U;
-        whichStokes(2)=Stokes::V;
-        os << LogIO::DEBUG1 << "Image polarization = Stokes I,U,V" << LogIO::POST;
-      }
-    else if( polRep_p==SkyModel::CIRCULAR &&  stokes_p=="IQU" )
-      {
-         whichStokes(0)=Stokes::I;
-         whichStokes(1)=Stokes::Q;
-         whichStokes(2)=Stokes::U;
-         os << LogIO::DEBUG1 << "Image polarization = Stokes I,Q,U" << LogIO::POST;
-      }
-    else
-      {
-        if(polRep_p==SkyModel::LINEAR) 
-             os << LogIO::SEVERE << "Stokes option : " << stokes_p << " is not supported for Linear feeds. Please try IUV or IQUV." << LogIO::EXCEPTION;
-        if(polRep_p==SkyModel::CIRCULAR) 
-             os << LogIO::SEVERE << "Stokes option : " << stokes_p << " is not supported for Circular feeds. Please try IQU or IQUV." << LogIO::EXCEPTION;
-        return False;
-      }
-    break;
-  case 4:
-    whichStokes.resize(4);
-    whichStokes(0)=Stokes::I;
-    whichStokes(1)=Stokes::Q;
-    whichStokes(2)=Stokes::U;
-    whichStokes(3)=Stokes::V;
-    os << LogIO::DEBUG1 << "Image polarization = Stokes I,Q,U,V" << LogIO::POST;
-    break;
-  default:
-    this->unlock();
-    os << LogIO::SEVERE << "Illegal number of Stokes parameters: " << npol_p
-       << LogIO::EXCEPTION;
-    return False;
-  };
-  
+ 
   StokesCoordinate myStokes(whichStokes);
   
   //  os << LogIO::DEBUG1 << "imagecoordinate : " << (coordInfo).stokesCoordinate((coordInfo).findCoordinate(Coordinate::STOKES)).stokes() << LogIO::POST;
@@ -1402,134 +1289,20 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
 
   // Compare user input with whatever is allowed by the data. 
   // If possible, allow.
-  Vector<Int> whichStokes(npol_p);
-  switch(npol_p) {
-  case 1:
-    if( polRep_p==SkyModel::LINEAR &&  (stokes_p=="RR" || stokes_p=="LL" || stokes_p=="RL" || stokes_p=="LR" ) )
-      {
-        os << LogIO::SEVERE << " Stokes " << stokes_p << " is not a valid selection for data taken with Linear feeds." << LogIO::EXCEPTION;
-        return False;
-      }
-    if( polRep_p==SkyModel::CIRCULAR &&  (stokes_p=="XX" || stokes_p=="YY" || stokes_p=="XY" || stokes_p=="YX" ) )
-      {
-        os << LogIO::SEVERE << " Stokes " << stokes_p << " is not a valid selection for data taken with Circular feeds." << LogIO::EXCEPTION;
-        return False;
-      }
-    
-    whichStokes.resize(1);
-    //possibilities
-    if(stokes_p=="RR")
-      whichStokes(0)=Stokes::RR;
-    else if(stokes_p=="LL")
-      whichStokes(0)=Stokes::LL;
-    else if(stokes_p=="XX")
-      whichStokes(0)=Stokes::XX;
-    else if(stokes_p=="YY")
-      whichStokes(0)=Stokes::YY;
-    else if(stokes_p=="I")
-      whichStokes(0)=Stokes::I;
-    else
-      {
-	    os << LogIO::SEVERE << "Currently, " << stokes_p << " is not supported alone. Please combine with I and retry. " << LogIO::EXCEPTION;
-           return False;
-	   //      whichStokes(0)=Stokes::I;
-	   //  os << LogIO::DEBUG1 << "Image polarization = Stokes "<< stokes_p << LogIO::POST;
-      }
-    break;
-  case 2:
-    // Check with polRep.
-    if( polRep_p==SkyModel::LINEAR &&  (stokes_p!="XXYY" && stokes_p!="IQ" && stokes_p!="UV") )
-      {
-        os << LogIO::SEVERE << " Stokes " << stokes_p << " is not a valid 2-pol selection for data taken with Linear feeds. Please use IQUV instead." << LogIO::EXCEPTION;
-        return False;
-      }
-    if( polRep_p==SkyModel::CIRCULAR &&  (stokes_p!="RRLL" && stokes_p!="IV" && stokes_p!="QU") )
-      {
-        os << LogIO::SEVERE << " Stokes " << stokes_p << " is not a valid 2-pol selection for data taken with Circular feeds. Please use IQUV instead." << LogIO::EXCEPTION;
-        return False;
-      }
-    whichStokes.resize(2);
-    //default to IQ or IV if not known
-    if(stokes_p=="RRLL"){
-      whichStokes(0)=Stokes::RR;
-      whichStokes(1)=Stokes::LL;
+
+  Vector<Int> whichStokes = decideNPolPlanes(True);
+  if(whichStokes.nelements()==0 || (whichStokes.nelements()==1 && whichStokes[0]==0) ) 
+    {
+      if(polRep_p==SkyModel::CIRCULAR) 
+	os << LogIO::SEVERE << "Stokes selection of " << stokes_p << " is not valid for Circular feeds." << LogIO::EXCEPTION;
+      else 
+	os << LogIO::SEVERE << "Stokes selection of " << stokes_p << " is not valid for Linear feeds." << LogIO::EXCEPTION;
+      return False;
     }
-    else if(stokes_p=="XXYY"){
-      whichStokes(0)=Stokes::XX;
-      whichStokes(1)=Stokes::YY;
-    }
-    else if(stokes_p=="QU"){
-      whichStokes(0)=Stokes::Q;
-      whichStokes(1)=Stokes::U;
-    }
-    else if(stokes_p=="UV"){ 
-      whichStokes(0)=Stokes::U;
-      whichStokes(1)=Stokes::V;
-    }
-    else if(stokes_p=="IV"){ 
-      whichStokes(0)=Stokes::I;
-      whichStokes(1)=Stokes::V;
-    }
-    else if(stokes_p=="IQ"){
-      whichStokes(0)=Stokes::I;
-      whichStokes(1)=Stokes::Q;
-    }
-    else{
-      whichStokes(0)=Stokes::I;
-      if (polRep_p==SkyModel::LINEAR) {
-	whichStokes(1)=Stokes::Q;
-	os << LogIO::DEBUG1 << "Image polarization = Stokes I,Q" << LogIO::POST;
-      }
-      else {
-	whichStokes(1)=Stokes::V;
-	os << LogIO::DEBUG1 << "Image polarization = Stokes I,V" << LogIO::POST;
-      }
-    }
-    break;
-  case 3:
-    whichStokes.resize(3);
-    if( polRep_p==SkyModel::LINEAR && stokes_p=="IUV" )
-      {
-        whichStokes(0)=Stokes::I;
-        whichStokes(1)=Stokes::U;
-        whichStokes(2)=Stokes::V;
-        os << LogIO::DEBUG1 << "Image polarization = Stokes I,U,V" << LogIO::POST;
-      }
-    else if( polRep_p==SkyModel::CIRCULAR &&  stokes_p=="IQU" )
-      {
-         whichStokes(0)=Stokes::I;
-         whichStokes(1)=Stokes::Q;
-         whichStokes(2)=Stokes::U;
-         os << LogIO::DEBUG1 << "Image polarization = Stokes I,Q,U" << LogIO::POST;
-      }
-    else
-      {
-        if(polRep_p==SkyModel::LINEAR) 
-             os << LogIO::SEVERE << "Stokes option : " << stokes_p << " is not supported for Linear feeds. Please try IUV or IQUV." << LogIO::EXCEPTION;
-        if(polRep_p==SkyModel::CIRCULAR) 
-             os << LogIO::SEVERE << "Stokes option : " << stokes_p << " is not supported for Circular feeds. Please try IQU or IQUV." << LogIO::EXCEPTION;
-        return False;
-      }
-    break;
-  case 4:
-    whichStokes.resize(4);
-    whichStokes(0)=Stokes::I;
-    whichStokes(1)=Stokes::Q;
-    whichStokes(2)=Stokes::U;
-    whichStokes(3)=Stokes::V;
-    os << LogIO::DEBUG1 << "Image polarization = Stokes I,Q,U,V" << LogIO::POST;
-    break;
-  default:
-    this->unlock();
-    os << LogIO::SEVERE << "Illegal number of Stokes parameters: " << npol_p
-       << LogIO::EXCEPTION;
-    return False;
-  };
-  
+  /* STOKESDBG */  //cout << "Imager2::imagecoordinate : Image 'whichStokes' : " << whichStokes << endl;
+
   StokesCoordinate myStokes(whichStokes);
   
-  //  os << LogIO::DEBUG1 << "imagecoordinate : " << (coordInfo).stokesCoordinate((coordInfo).findCoordinate(Coordinate::STOKES)).stokes() << LogIO::POST;
-
   //Set Observatory info
   ObsInfo myobsinfo;
   myobsinfo.setTelescope(telescop);
@@ -1548,6 +1321,139 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
 
   return True;
 }
+
+/* Match the user input stokes_p string to all available options.
+   If it matches none, return False - exceptions are thrown.
+   If it matches an option, set npol_p : number of desired image planes.
+
+  If checkwithMS = True, check with the PolRep and valid combinations of what
+                                     is asked for and what the data allows.
+
+  If checkwithMS = False, check only that the inputs are among the valid list
+                                     and give npol=1,2,3 or 4.
+
+  There are two levels of checks because when called from defineimage, it does
+  not know what PolRep is and cannot check with the data. This used to be in
+  two different functions earlier. It is now easier to keep things consistent.
+
+  PLEASE NOTE :  If any stokes options are to be allowed or disallowed,
+                           this is the place to do it. StokesImageUtil handles all combinations,
+*/
+Vector<Int> Imager::decideNPolPlanes(Bool checkwithMS)
+{
+    Vector<Int> whichStokes(0);
+
+    // Check with options for npol=1
+    if(stokes_p=="I" || stokes_p=="Q" || stokes_p=="U" || stokes_p=="V" || 
+       stokes_p=="RR" ||stokes_p=="LL" || //stokes_p=="RL" ||stokes_p=="LR" || 
+       stokes_p=="XX" || stokes_p=="YY" ) //|| stokes_p=="XY" ||stokes_p=="YX" ) 
+      {
+        npol_p=1;
+
+        if(checkwithMS)
+	{
+ 
+           // Fill in the stokes vector for the output image
+           whichStokes.resize(npol_p);
+           // The first 8 depend on circular vs linear
+           if(polRep_p==SkyModel::CIRCULAR && stokes_p=="RR")  whichStokes(0)=Stokes::RR;
+           else if(polRep_p==SkyModel::CIRCULAR && stokes_p=="LL")  whichStokes(0)=Stokes::LL;
+           ////else if(polRep_p==SkyModel::CIRCULAR && stokes_p=="RL")  whichStokes(0)=Stokes::RL;
+           ////else if(polRep_p==SkyModel::CIRCULAR && stokes_p=="LR")  whichStokes(0)=Stokes::LR;
+           else if(polRep_p==SkyModel::LINEAR && stokes_p=="XX") whichStokes(0)=Stokes::XX;
+           else if(polRep_p==SkyModel::LINEAR && stokes_p=="YY")  whichStokes(0)=Stokes::YY;
+           ////else if(polRep_p==SkyModel::LINEAR && stokes_p=="XY")  whichStokes(0)=Stokes::XY;
+           ////else if(polRep_p==SkyModel::LINEAR && stokes_p=="YX")  whichStokes(0)=Stokes::YX;
+           // these next 4 don't depend on circular vs linear
+           else if(stokes_p=="I") whichStokes(0)=Stokes::I;
+           else if(stokes_p=="Q") whichStokes(0)=Stokes::Q;
+           else if(stokes_p=="U")  whichStokes(0)=Stokes::U;
+           else if(stokes_p=="V")  whichStokes(0)=Stokes::V;
+           else {whichStokes.resize(0);}
+
+	}// end of checkwithMS
+
+    }// end of npol=1
+    // Check for options with npol=2
+    else if(stokes_p=="IV" || stokes_p=="IQ" || 
+              stokes_p=="RRLL" || stokes_p=="XXYY" ||
+	    ////stokes_p=="RLLR" || stokes_p=="XYYX" ||
+	      stokes_p=="QU" || stokes_p=="UV") 
+      {
+        npol_p=2;
+
+        if(checkwithMS)
+	{
+            // Check with polrep and fill in the stokes vector for the output image
+           whichStokes.resize(npol_p);
+           // The first 4 depend on circular vs linear
+           if(polRep_p==SkyModel::CIRCULAR && stokes_p=="RRLL")  
+                 {whichStokes(0)=Stokes::RR; whichStokes(1)=Stokes::LL;}
+           ////else if(polRep_p==SkyModel::CIRCULAR && stokes_p=="RLLR") 
+           ////      {whichStokes(0)=Stokes::RL; whichStokes(1)=Stokes::LR;}
+           else if(polRep_p==SkyModel::LINEAR && stokes_p=="XXYY") 
+                  {whichStokes(0)=Stokes::XX; whichStokes(1)=Stokes::YY;}
+           ////else if(polRep_p==SkyModel::LINEAR && stokes_p=="XYYX") 
+	   ////      {whichStokes(0)=Stokes::XY; whichStokes(1)=Stokes::YX;}
+           // These 4 don't care about circular vs linear
+           else if(stokes_p=="IV") 
+                  {whichStokes(0)=Stokes::I; whichStokes(1)=Stokes::V;}
+           else if(stokes_p=="QU") 
+                  {whichStokes(0)=Stokes::Q; whichStokes(1)=Stokes::U;}
+           else if(stokes_p=="IQ") 
+                  {whichStokes(0)=Stokes::I; whichStokes(1)=Stokes::Q;}
+           else if(stokes_p=="UV") 
+                  {whichStokes(0)=Stokes::U; whichStokes(1)=Stokes::V;}
+           else 
+                  {whichStokes.resize(0);}
+
+	}// end of checkwithMS
+
+    }
+    // Check for options with npol=3
+    else if(stokes_p=="IQU" || stokes_p=="IUV") 
+    {
+        npol_p=3;
+ 
+        if(checkwithMS)
+	{
+          whichStokes.resize(npol_p);
+           // Check with polRep_p
+	  if(stokes_p=="IUV")
+	    { whichStokes(0)=Stokes::I; whichStokes(1)=Stokes::U; whichStokes(2)=Stokes::V; }
+          else if(stokes_p=="IQU")
+	    { whichStokes(0)=Stokes::I; whichStokes(1)=Stokes::Q; whichStokes(2)=Stokes::U; }
+          else 
+            { whichStokes.resize(0);}
+
+	}// end of checkwithMS
+
+    }//end of npol=3
+    // Check with options for npol=4
+    else if(stokes_p=="IQUV") // NOT allowing RRLLRLLR and XXYYXYYX !!
+    {
+        npol_p=4;
+ 
+       if(checkwithMS)
+	{
+	  whichStokes.resize(npol_p);
+          whichStokes(0)=Stokes::I;
+          whichStokes(1)=Stokes::Q;
+          whichStokes(2)=Stokes::U;
+          whichStokes(3)=Stokes::V;
+	}// end of checkwithMS
+
+    }// end of npol=4
+    else // If none of the options are valid (checked in setimage/defineimage)
+    {
+      whichStokes.resize(1); whichStokes[0]=0; // undefined.
+    }
+
+    // If no match has been found, or an incompatible match is found, this returns Vector<Int>(0);
+    return whichStokes;
+}// end of decideNPolPlanes
+
+
 
 
 String Imager::state() 
@@ -1691,6 +1597,8 @@ String Imager::state()
 }
 
 
+
+
 // Apply a primary beam or voltage pattern to an image
 Bool Imager::pb(const String& inimage, 
 		const String& outimage,
@@ -1825,7 +1733,7 @@ Bool Imager::pb(const String& inimage,
     if (outImage_pointer!=0) {
       Vector<Int> whichStokes;
       CoordinateSystem cCoords;
-      cCoords=StokesImageUtil::CStokesCoord(inImage_pointer->shape(),
+      cCoords=StokesImageUtil::CStokesCoord(//inImage_pointer->shape(),
 					    inImage_pointer->coordinates(),
 					    whichStokes,
 					    polRep_p);
@@ -1953,7 +1861,7 @@ Bool Imager::pbguts(ImageInterface<Float>& inImage,
 
     Vector<Int> whichStokes;
     CoordinateSystem cCoords;
-    cCoords=StokesImageUtil::CStokesCoord(inImage.shape(),
+    cCoords=StokesImageUtil::CStokesCoord(//inImage.shape(),
 					  inImage.coordinates(),
 					  whichStokes,
 					  polRep_p);
@@ -2930,6 +2838,38 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
     }
   }
   AlwaysAssert(sm_p, AipsError);
+
+  // Read data pol rep from the MS. This is also done in imagecoordinates().
+  // This code segment is repeated here because imagecoordinates
+  // is not always called before SkyModel is made (im.ft).
+  // Note : This should go into a function.
+  {
+    ROMSColumns msc(*ms_p);
+    Vector<String> polType=msc.feed().polarizationType()(0);
+    if (polType(0)!="X" && polType(0)!="Y" &&
+        polType(0)!="R" && polType(0)!="L") {
+       os << LogIO::WARN << "Unknown stokes types in feed table: ["
+       << polType(0) << ", " << polType(1) << "]" << endl
+       << "Results open to question!" << LogIO::POST;
+    }
+  
+    if (polType(0)=="X" || polType(0)=="Y") {
+      polRep_p=SkyModel::LINEAR;
+      os << LogIO::DEBUG1 
+          << "Preferred polarization representation is linear" << LogIO::POST;
+    }
+    else {
+      polRep_p=SkyModel::CIRCULAR;
+      os << LogIO::DEBUG1
+         << "Preferred polarization representation is circular" << LogIO::POST;
+    }
+  }// end of reading-in polRep_p from the MS
+
+  // Send the data correlation type to the SkyModel
+  // This needs to be done before the first call to 'ImageSkyModel::cImage()'
+   os << LogIO::DEBUG1 << "Data PolRep in Imager2.cc::createSkyEquation : " << polRep_p << LogIO::POST;
+   sm_p->setDataPolFrame(polRep_p);
+
 
   // Add the componentlist
   if(complist!="") {

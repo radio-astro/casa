@@ -77,6 +77,7 @@ casa_add_python( xmlcasa xmlcasa_regressions_python python/${PYTHONV}/regression
   ppdisk2_regression.py
   run_orionmos4sim.py
   sdtpimaging_regression.py
+  stokesimagingtest_regression.py
   testcube2_regression.py
   testcube_regression.py
   unit_tests.py

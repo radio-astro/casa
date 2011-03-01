@@ -99,10 +99,11 @@ kernel='boxcar'
 kwidth=5
 # output
 #fit and remove baselines
-blmode='auto'
+masking='auto'
 thresh=5
-blpoly=1
 avg_limit=4
+blfunc='poly'
+order=1
 overwrite=True
 plotlevel=localplotlevel
 sdcal()

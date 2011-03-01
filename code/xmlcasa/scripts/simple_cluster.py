@@ -244,10 +244,11 @@ def start_cluster():
 ###########################################################################
 def start_logger():
     lg=c.get_casalogs()
+    os.system('rm -f engine-*.log')
     for i in lg:
         eng='engine'+i[str.rfind(i,'-'):]
-        if os.path.exists(eng):
-            os.unlink(eng)
+        #if os.path.exists(eng):
+        #    os.unlink(eng)
         os.symlink(i, eng)
 
 ###########################################################################
@@ -401,6 +402,62 @@ def check_status(notify=False):
                     if notify and jobs[job]['status']=="running":
                         print 'engine %d job %s broken' % (eng, sht)
                     jobs[job]['status']="broken"
+        gr=set()
+        for val in jobs.values():
+            gr.add(val['jobgroup'])
+	for i in list(gr):
+            finish=1
+            for val in jobs.values():
+                if val['jobgroup']==i and not (val['status']=='done' or 
+                                            val['status']=='broken'):
+                    finish=0
+            if finish==1:
+                msg='\n'
+                msg+=time.ctime()
+                msg+='\n\nengine    status  time(s)  command\n'
+                rmv=[]
+                for job in jobs.keys():
+                    if jobs[job]['jobgroup']==i:
+                        msg+="%6d%10s%9d%2s%s\n" % (jobs[job]['engine'], 
+                              jobs[job]['status'],
+                              int(jobs[job]['time']), 
+                              '  ',
+                              jobs[job]['command'])
+                        rmv.append(jobs[job]['jobname'])
+                #print msg
+                if i!='':
+                    if i.count(' ')==0 and i.count('@'):
+                        #send email
+                        #import smtplib
+                        #from email.mime.text import MIMEText
+                        #mal=MIMEText(msg)
+                        #mal['Subject']='your parallel job finished'
+                        #me=os.environ['USER']
+                        #mal['From']=me
+                        #mal['To']=i 
+                        #s=smtplib.SMTP()
+                        #s.connect()
+                        #s.sendmail(me, [i], mal.as_string())
+                        #s.close()
+    
+                        msgf='/tmp/emailmsg.txt'
+                        f=open(msgf, 'w')
+                        f.write(msg)
+                        f.write('\n')
+                        f.close()
+                        cmd='/bin/mail -s "your parallel job finished" '+i+' < '+msgf
+                        #print cmd
+                        os.system(cmd)
+                         
+                    else:
+                        #write file
+                        f=open(i, 'a')
+                        f.write(msg)
+                        f.write('\n')
+                        f.close()
+                    for j in rmv:
+                        remove_record(j)
+                        
 
 def start_monitor(): 
     global monitor_on
@@ -461,7 +518,7 @@ def make_call(func, param):
     cmd+=')'
     return cmd
 
-def do_and_record(cmd, id):
+def do_and_record(cmd, id, group=''):
     global job_title
     job=c.odo(cmd, id)
     jobs[job]={}
@@ -472,14 +529,16 @@ def do_and_record(cmd, id):
     jobs[job]['status']="scheduled"
     jobs[job]['engine']=id
     jobs[job]['jobname']=job_title
+    jobs[job]['jobgroup']=group.strip()
     job_title+=1
 
 
 ###########################################################################
 ###   example to distribute clean task over engines
 ###########################################################################
-def simple_clean(vis, nx, ny, mode='channel'):
-
+def simple_clean(vs, nx, ny, mode='channel'):
+    
+    vis=os.path.abspath(vs)
     tb.clearlocks(vis)
 
     #determine the cell size
@@ -522,7 +581,7 @@ def simple_clean(vis, nx, ny, mode='channel'):
             s['calready']=False
             cmd=make_call('clean', s) 
             #print cmd
-            do_and_record(cmd, id)
+            do_and_record(cmd, id, 'hye@nrao.edu')
             i+=1
             if i==len(ids):
                i=0
@@ -566,11 +625,45 @@ def simple_clean(vis, nx, ny, mode='channel'):
                 s['calready']=False
                 cmd=make_call('clean', s) 
                 #print cmd
-                do_and_record(cmd, id)
+                do_and_record(cmd, id, 'hye@nrao.edu')
                 i+=1
                 if i==len(ids):
                    i=0
     
+    get_status()
+
+def simple_split(vs):
+    vis=os.path.abspath(vs)
+    tb.clearlocks(vis)
+   
+    print 'vis=', vis
+    fdspw=get_field_desc(vis)
+    ids=c.get_ids()
+    pth=c.pull('work_dir')
+    msname=vis[str.rfind(vis,'/')+1:]
+    if msname.endswith('.ms'):
+        msname=msname[:str.rfind(msname, '.ms')]
+
+    i=0
+    for k in fdspw.values():
+        id=ids[i]
+        s={}
+        s['vis']=vis
+        fd=str(k['field'])
+        spw=str(k['spw'])
+        sl=''
+        if not pth[id].endswith('/'):
+            sl='/' 
+        s['outputvis']=pth[id]+sl+msname+'-f'+fd+'-s'+spw+'.ms'
+        s['field']=fd
+        s['spw']=spw
+        s['datacolumn']='DATA'
+        cmd=make_call('split', s) 
+        #print cmd
+        do_and_record(cmd, id, 'hye@nrao.edu')
+        i+=1
+        if i==len(ids):
+           i=0
     get_status()
 
 ###########################################################################

@@ -5,9 +5,7 @@ import asap as sd
 from asap._asap import Scantable
 import pylab as pl
 
-
-def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, tau, blmode, blpoly, verify, masklist, thresh, avg_limit, edge, batch, outfile, outform, overwrite, plotlevel):
-	
+def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, tau, masklist, masking, thresh, avg_limit, edge, blfunc, order, npiece, clipthresh, clipniter, verify, verbose, outfile, outform, overwrite, plotlevel):
 	
 	casalog.origin('sdbaseline')
 
@@ -206,7 +204,7 @@ def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 		casalog.post( "Number of scans to be processed: %d" % (len(sn)) )
 		
 		# Warning for multi-IF data
-		if ( len(s.getifnos()) > 1 and not blmode == 'auto' ):
+		if ( len(s.getifnos()) > 1 and not masking == 'auto' ):
 			casalog.post( 'The scantable contains multiple IF data.', priority = 'WARN' )
 			casalog.post( 'Note the same mask(s) are applied to all IFs based on CHANNELS.', priority = 'WARN' )
 			casalog.post( 'Baseline ranges may be incorrect for all but IF=%d.' % (s.getif(0)), priority = 'WARN' )
@@ -216,19 +214,23 @@ def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 			# recalculate az/el (NOT needed for GBT data)
 			if ( antennaname != 'GBT'): s.recalc_azel()
 			s.opacity(tau)
+
+		if (order < 0):
+			casalog.post('Negative order of baseline polynomial given. Exit without baselining.', priority = 'WARN')
+			return
 		
 		# Header data for saving parameters of baseline fit
-		header = "Source Table: "+sdfile+"\n"
+		header =  "Source Table: "+sdfile+"\n"
 		header += " Output File: "+project+"\n"
 		header += "   Flux Unit: "+s.get_fluxunit()+"\n"
-		header += "     Abscissa: "+s.get_unit()+"\n"
-		header += "   Fit order: %d\n"%(blpoly)
-		header += "    Fit mode: "+blmode+"\n"
-		if blmode == 'auto':
+		header += "    Abscissa: "+s.get_unit()+"\n"
+		header += "   Fit order: %d\n"%(order)
+		header += "    Fit mode: "+masking+"\n"
+		if masking == 'auto':
 			header += "   Threshold: %f\n"%(thresh)
 			header += "   avg_limit: %d\n"%(avg_limit)
 			header += "        Edge: "+str(edge)+"\n"
-		elif blmode == 'list':
+		elif masking == 'list':
 			header += "   Fit Range: "+str(masklist)+"\n"
 		
 		blfile = project + "_blparam.txt"
@@ -236,69 +238,22 @@ def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 		separator = "#"*60 + "\n"
 		blf.write(separator)
 		
+		if verbose:
+			bloutfile = blfile
+		else:
+			bloutfile = ""
+		
 		nrow = s.nrow()
 		
-		# Polynomial baseline (if requested, e.g. blpoly=5)
-		if ( blmode == 'auto' ):
-			blf.write(header)
-			blf.write(separator)
-			
-			if( blpoly >= 0 ):
-				basemask = None
-				if (len(masklist) > 0):
-					basemask=s.create_mask(masklist)
-				
-				for r in xrange(nrow):
-					s.auto_poly_baseline(mask=basemask,order=blpoly,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,rows=r)
-					msk = s.actualmask[0]
-					rmsofrow = s._math._statsrow(s, msk, 'rms', r)[0]
-					masklistofrow = s.masklists[0]
-					dataout = _format_output_row(s, s.blpars, rmsofrow, masklistofrow, r)
-					blf.write(dataout)
-					del msk,rmsofrow,masklistofrow,dataout
-
-				del basemask
-
-				blf.write("-"*60 + "\n")
-			
-		elif ( blmode == 'list' ):
-			blf.write(header)
-			blf.write(separator)
-			
-			if( blpoly >= 0 ):
-				basemask = None
-				if (len(masklist) > 0):
-					# Use baseline mask for regions to INCLUDE in baseline fit
-					# Create mask using list, e.g. masklist=[[500,3500],[5000,7500]]
-					basemask=s.create_mask(masklist)
-
-				if batch:
-					s.poly_baseline(mask=basemask,order=blpoly,batch=True)
-				else:
-					for r in xrange(nrow):
-						s.poly_baseline(mask=basemask,order=blpoly,plot=verify,rows=r)
-						msk = s.actualmask[0]
-						rmsofrow = s._math._statsrow(s, msk, 'rms', r)[0]
-						masklistofrow = s.masklists[0]
-						dataout = _format_output_row(s, s.blpars, rmsofrow, masklistofrow, r)
-						blf.write(dataout)
-						del msk,rmsofrow,masklistofrow,dataout
-					
-				del basemask
-				
-				blf.write("-"*60 + "\n")
-			
-		elif ( blmode == 'interact'):
-			# Interactive masking
+		if (masking == 'interact'):
 			new_mask=sd.interactivemask(scan=s)
 			if (len(masklist) > 0):
 				new_mask.set_basemask(masklist=masklist,invert=False)
 			new_mask.select_mask(once=False,showmask=True)
-			# Wait for user to finish mask selection
+
 			finish=raw_input("Press return to calculate statistics.\n")
 			new_mask.finish_selection()
 			
-			# Get final mask list
 			msk=new_mask.get_mask()
 			del new_mask
 			msks=s.get_masklist(msk)
@@ -312,15 +267,58 @@ def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 			
 			blf.write(header)
 			blf.write(separator)
+			blf.close()
 			
-			s.poly_baseline(mask=msk,order=blpoly,plot=verify,batch=False)
+			if (blfunc == 'poly'):
+				s.poly_baseline(mask=msk,order=order,plot=verify,outlog=verbose,blfile=bloutfile)
+			elif (blfunc == 'cspline'):
+				s.cspline_baseline(mask=msk,npiece=npiece,clipthresh=clipthresh,clipniter=clipniter,plot=verify,outlog=verbose,blfile=bloutfile)
+			
+			blf = open(blfile, "a")
+			
 			rmsl=list(s.stats('rms',msk))
+			del msk
 			# NOTICE: Do not modify scantable before formatting output
 			dataout=_format_output(s,s.blpars,rmsl)
-			del msk
-
 			blf.write(dataout)
+		else:
+			blf.write(header)
+			blf.write(separator)
+			blf.close()
 
+			basemask = None
+			if (len(masklist) > 0):
+				# Use baseline mask for regions to INCLUDE in baseline fit
+				# Create mask using list, e.g. masklist=[[500,3500],[5000,7500]]
+				basemask=s.create_mask(masklist)
+
+			if (masking == 'list'):
+				if (blfunc == 'poly'):
+					s.poly_baseline(mask=basemask,order=order,plot=verify,outlog=verbose,blfile=bloutfile)
+				elif (blfunc == 'cspline'):
+					s.cspline_baseline(mask=basemask,npiece=npiece,clipthresh=clipthresh,clipniter=clipniter,plot=verify,outlog=verbose,blfile=bloutfile)
+			elif (masking == 'auto'):
+				if (blfunc == 'poly'):
+					s.auto_poly_baseline(mask=basemask,order=order,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,outlog=verbose,blfile=bloutfile)
+				elif (blfunc == 'cspline'):
+					s.auto_cspline_baseline(mask=basemask,npiece=npiece,clipthresh=clipthresh,clipniter=clipniter,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,outlog=verbose,blfile=bloutfile)
+			
+			#the above 10 lines will eventually become like this:
+			#if (blfunc == 'poly'):
+			#	funcinfo = {'type':'poly', 'order':order}
+			#elif (blfunc == 'cspline'):
+			#	funcinfo = {'type':'cspline', 'npiece':npiece, 'clipthresh':clipthresh, 'clipniter':clipniter}
+			#if (masking == 'auto'):
+			#	lfinfo = {'uselinefinder':True, 'edge':edge, 'threshold':thresh, 'chan_avg_limit':avg_limit}
+			#elif (masking == 'list'):
+			#	lfinfo = {'uselinefinder':False}
+			#s.sub_baseline(mask=basemask,funcinfo=funcinfo,lfinfo=lfinfo,plot=verify,outlog=verbose,blfile=bloutfile)
+			
+			blf = open(blfile, "a")
+			del basemask
+		
+
+		blf.write("-"*60 + "\n")
 		
 		# Plot final spectrum
 		if ( abs(plotlevel) > 0 ):
@@ -404,9 +402,9 @@ def _format_output(scan=None,pars=None,rms=None,masklists=None):
 	# Format data output
 	out = ""
 	sep = "-"*60+"\n"
-	out += sep
 
 	for r in xrange(nrow):
+		out += sep
 		out+=" Scan[%d] Beam[%d] IF[%d] Pol[%d] Cycle[%d]: \n" % \
 			  (scan.getscan(r), scan.getbeam(r), scan.getif(r), \
 			   scan.getpol(r), scan.getcycle(r))
@@ -430,48 +428,4 @@ def _format_output(scan=None,pars=None,rms=None,masklists=None):
                         out += "  rms = %3.6f\n" % (rms[r][0])
                 else:
                         out += "  rms = %3.6f\n" % (rms[r])
-		out += sep
-	return out
-
-
-
-### Format baseline parameters of a scan for output
-def _format_output_row(scan=None, pars=None, rms=None, masklist=None, row=0):
-	out = "-"*60 + "\n"
-
-	out += " Scan[%d] Beam[%d] IF[%d] Pol[%d] Cycle[%d]: \n" % \
-	       (scan.getscan(row), scan.getbeam(row), scan.getif(row), \
-		scan.getpol(row), scan.getcycle(row))
-
-	if masklist is None:
-		mflag = False
-	elif isinstance(masklist, list):
-		mflag = True
-	else:
-		casalog.post("Invalid masklist", priority = "ERROR")
-		return
-	
-	if mflag:
-		out += "Fitter range = " + str(masklist) + "\n"
-
-	out += "Baseline parameters\n"
-
-	if pars is not None:
-		cpars = pars[0]["params"]
-		cfixed = pars[0]["fixed"]
-		c = 0
-		for i in xrange(len(cpars)):
-			fix = ""
-			if len(cfixed) and cfixed[i]:
-				fix = "(fixed)"
-			out += "  p%d%s= %3.6f," % (c, fix, cpars[i])
-			c += 1
-		out = out[:-1]
-		out += "\n"
-	else:
-		out += "  Not fitted\n"
-
-	out += "Results of baseline fit\n"
-	out += "  rms = %3.6f\n" % (rms)
-
 	return out

@@ -58,6 +58,7 @@ ppdisk_regression               rindebet nrao.edu
 ppdisk2_regression               rindebet nrao.edu
 pylabmem                        kgolap aoc.nrao.edu
 secondNGC4826                   rreid nrao.edu
+stokesimagingtest_regression    rurvashi aoc.nrao.edu
 testcube_regression             rindebet nrao.edu
 testcube2_regression             rindebet nrao.edu
 third4826                       rreid nrao.edu

@@ -9,11 +9,14 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
 
 <task type="function" name="sdbaseline" startup="false" category="single dish">
 
-  <shortdescription>ASAP SD task: fit/remove a spectral baseline </shortdescription>
+  <shortdescription>ASAP SD task: fit/subtract a spectral baseline </shortdescription>
 
   <description>ASAP SD calibration task (based on the ALMATST5 recommendations):
-        fit/remove a spectral baseline 
+        fit/subtract a spectral baseline 
 
+        Modified (change parameter order to blfunc's subparam) 2011-02-25 WK
+        Modified (add parameter blfunc,npiece,clipthresh,clipniter) 2011-02-25 WK
+        Modified (rename parameters blmode,blpoly to masking,order, respectively) 2011-02-25 WK
         Modified (rename parameter interactive to verify) 2008-11-20 KS
         Modified (+interactive mask) 2008-08-20 KS
         Task Version 2008-01-28 TT
@@ -93,28 +96,18 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
             <value>0.0</value>
     </param>
 
-    <param type="string" name="blmode">
-	    <description>mode for baseline fitting</description>
-	    <allowed kind="enum">
-	    <value>auto</value>
-	    <value>list</value>
-	    <value>interact</value>
-	    </allowed>
-    </param>
-
-    <param type="int" name="blpoly">
-            <description>order of baseline polynomial</description>
-            <value>5</value>
-    </param>
-
-    <param type="bool" name="verify">
-            <description>verify the results of baseline fitting</description>
-            <value>False</value>
-    </param>
-
     <param type="intArray" name="masklist">
             <description>list of mask regions to INCLUDE in BASELINE fit</description>
             <value></value>
+    </param>
+
+    <param type="string" name="masking">
+	    <description>mode of setting channel masks</description>
+	    <allowed kind="enum">
+	        <value>auto</value>
+	        <value>list</value>
+	        <value>interact</value>
+	    </allowed>
     </param>
 
     <param type="double" name="thresh" subparam='true'>
@@ -132,9 +125,42 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
 	    <value type='vector'><value>0</value></value>
     </param>
 
-    <param type="bool" name="batch" subparam='true'>
-            <description>run faster but no detailed output in logger</description>
+    <param type="string" name="blfunc">
+	    <description>baseline model function</description>
+	    <allowed kind="enum">
+	    <value>poly</value>
+	    <value>cspline</value>
+	    </allowed>
+    </param>
+
+    <param type="int" name="order" subparam="true">
+            <description>order of baseline polynomial</description>
+            <value>5</value>
+    </param>
+
+    <param type="int" name="npiece" subparam="true">
+            <description>number of element polynomials of spline</description>
+            <value>2</value>
+    </param>
+
+    <param type="double" name="clipthresh" subparam="true">
+            <description>clipping threshold for iterative spline fitting</description>
+            <value>3.0</value>
+    </param>
+
+    <param type="int" name="clipniter" subparam="true">
+            <description>maximum number of iteration in spline fitting</description>
+            <value>1</value>
+    </param>
+
+    <param type="bool" name="verify">
+            <description>verify the results of baseline fitting</description>
             <value>False</value>
+    </param>
+
+    <param type="bool" name="verbose">
+            <description>output fitting results to logger and a file as well</description>
+            <value>True</value>
     </param>
 
     <param type="string" name="outfile">
@@ -186,17 +212,24 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
 			<default param="telescopeparm"><value type='string'></value></default>
 	        </equals>
 	    </when>
-	    <when param="blmode">
+	    <when param="masking">
 		<equals value="auto">
 			<default param="thresh"><value>5.0</value></default>
 			<default param="avg_limit"><value>4</value></default>
 			<default param="edge"><value type='vector'><value>0</value></value></default>
-                        <default param="batch"><value>False</value></default>
 	        </equals>
-		<equals value="list">
-                        <default param="batch"><value>False</value></default>
-                </equals>
+                <equals value="list"/>
                 <equals value="interact"/>
+	    </when>
+	    <when param="blfunc">
+		<equals value="poly">
+			<default param="order"><value>5</value></default>
+	        </equals>
+                <equals value="cspline">
+			<default param="npiece"><value>2</value></default>
+			<default param="clipthresh"><value>3.0</value></default>
+			<default param="clipniter"><value>1</value></default>
+	        </equals>
 	    </when>
     </constraints>
 
@@ -261,20 +294,25 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
                 field, and iflist
         tau -- atmospheric optical depth
                 default: 0.0 (no correction)
-        blmode -- mode for baseline fitting
+        masklist -- list of mask regions to INCLUDE in BASELINE fit
+                default: [] (entire spectrum)
+                example: [[1000,3000],[5000,7000]]
+                         if masking='auto' then this mask will be applied
+                         before fitting
+        masking -- mode of setting channel masks
                 options: (str) 'auto','list','interact'
                 default: 'auto'
-                example: blmode='auto' uses expandable parameters 
-                         in addition to blpoly to run linefinder
+                example: masking='auto' uses expandable parameters 
+                         in addition to order to run linefinder
                          to determine line-free regions
                          USE WITH CARE! May need to tweak the parameters,
                          thresh, avg_limit, and edge.
-                         blmode='interact' allows adding and deleting mask 
+                         masking='interact' allows adding and deleting mask 
                          regions by drawing rectangles on the plot with mouse. 
                          Draw a rectangle with LEFT-mouse to ADD the region to 
                          the mask and with RIGHT-mouse to DELETE the region. 
                
-            &gt;&gt;&gt; blmode expandable parameters
+            &gt;&gt;&gt; masking expandable parameters
                  thresh -- S/N threshold for linefinder
                          default: 5
                          example: a single channel S/N ratio above which the channel is
@@ -287,31 +325,46 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
                          default: 0
                          example: [1000] drops 1000 channels at beginning AND end
                                   [1000,500] drops 1000 from beginning and 500 from end
-                 batch -- run faster but no detailed output in logger
-                         default: False
-                         example: If True, this task runs faster, but the detailed 
-                                  info such as the coefficients of the best-fit function 
-                                  is not shown in the CASA logger
                  Note: For bad baselines threshold should be increased,
                  and avg_limit decreased (or even switched off completely by
                  setting this parameter to 1) to avoid detecting baseline
                  undulations instead of real lines.
-        blpoly -- order of baseline polynomial
-                options: (int) (&lt;0 turns off baseline fitting)
-                default: 5
-                example: typically in range 2-9 (higher values
-                         seem to be needed for GBT)
+        blfunc -- baseline model function
+                options: (str) 'poly','cspline'
+                default: 'poly'
+                example: blfunc='poly' uses a single polynomial line of 
+                         any order which should be given as an expandable 
+                         parameter 'order' to fit baseline, while 
+                         blfunc='cspline' uses a cubic spline function, a piecewise 
+                         cubic polynomial having C2-continuity (i.e., the second 
+                         derivative is continuous at the joining points)
+
+            &gt;&gt;&gt; blfunc expandable parameters
+                 order -- order of baseline polynomial
+                         options: (int) (&lt;0 turns off baseline fitting)
+                         default: 5
+                         example: typically in range 2-9 (higher values
+                                  seem to be needed for GBT)
+                 npiece -- number of the element polynomials of cubic spline curve
+                         options: (int) (&lt;0 turns off baseline fitting)
+                         default: 2
+                 clipthresh -- clipping threshold for iterative spline fitting
+                         default: 3
+                 clipniter -- maximum number of iteration in spline fitting
+                         default: 1
         verify -- verify the results of baseline fitting
                 options: (bool) True,False
                 default: False
                 WARNING: Currently this just asks whether you accept
                          the displayed fit and if not, continues
                          without doing any baseline fit.
-        masklist -- list of mask regions to INCLUDE in BASELINE fit
-                default: [] (entire spectrum)
-                example: [[1000,3000],[5000,7000]]
-                         if blmode='auto' then this mask will be applied
-                         before fitting
+        verbose -- output fitting results to logger and a file as well
+                default: True
+                example: If False, the fitting results including coefficients, 
+                         residual rms, etc., are not output to either the CASA 
+                         logger or a text file (&lt;outfile&gt;_blparam.txt), while 
+                         the processing speed gets faster by a factor of about 20 
+                         percent
         outfile -- Name of output file
                 default: '' (&lt;sdfile&gt;_bs)
         outform -- format of output file

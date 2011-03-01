@@ -532,16 +532,28 @@ void FITSImage::setup()
 
    name_p = get_fitsname(fullname_p);
 
-// Compare the file name and the full name
-   if (name_p != fullname_p){
-
 // Determine the HDU index from the extension specification
-	   uInt HDUnum = get_hdunum(fullname_p);
+   uInt HDUnum = get_hdunum(fullname_p);
 
-// The extension specification in the name wins
-// over any explicitly given HDU index
-	   if (HDUnum != whichHDU_p)
+
+// Compare the HDU index given directly and
+// the one extracted from the name
+   if (HDUnum != whichHDU_p){
+
+// if an extension information was given,
+// the index extracted from it wins
+	   if (name_p != fullname_p){
 		   whichHDU_p = HDUnum;
+	   }
+	   else {
+
+// if the index given directly is zero (which means the default),
+// the zeroth index might be emptied and the index retrieved
+// in the method above (which is 1) is used
+		   if (!whichHDU_p) {
+			   whichHDU_p = HDUnum;
+		   }
+	   }
    }
 
    if (name_p.empty()) {

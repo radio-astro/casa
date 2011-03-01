@@ -1319,7 +1319,15 @@ void SkyEquation::applySkyJonesInv(const VisBuffer& vb, Int row,
     if(fj_) fj_->apply(in,in,vb,row,False);
   }
   // Convert to IQUV format
-  StokesImageUtil::To(work, in);
+  if(isPSFWork_p) 
+    { 
+       // For the PSF, choose only those stokes planes that have a valid PSF
+       StokesImageUtil::ToStokesPSF(work,in);
+    }
+  else 
+    {
+       StokesImageUtil::To(work,in);
+    }
 
   // Now add to the existing gradChisq image
   LatticeExpr<Float> le(gS+work);

@@ -345,39 +345,15 @@ ImageInterface<Complex>& ImageSkyModel::cImage(Int model)
     IPosition cimageShape;
     cimageShape=image_p[model]->shape();
 
-    Int npol=cimageShape(2);
-    if(npol==3) cimageShape(2)=4;
-    if(npol==2){
-      Int stokesIndex=image_p[model]->coordinates().findCoordinate(Coordinate::STOKES);
-      StokesCoordinate sC=image_p[model]->coordinates().stokesCoordinate(stokesIndex);
-
-      if(dataPolRep_p==SkyModel::CIRCULAR)
-	{
-          // If 2-pol image asking for I or V, need to grid only RR and LL  => 2 planes for cImage
-          // If 2-pol image asking for Q or U, need to grid RR,LL,RL,LR => 4 planes for cimage
-          if(Stokes::type(sC.stokes()[0])==Stokes::Q || 
-	     Stokes::type(sC.stokes()[0])==Stokes::U ||
-	     Stokes::type(sC.stokes()[1])==Stokes::Q ||
-	     Stokes::type(sC.stokes()[1])==Stokes::U){cimageShape(2)=4;}
-	 }
-
-      if(dataPolRep_p==SkyModel::LINEAR)
-	{
-          // If 2-pol image asking for I or Q, need to grid only XX and YY  => 2 planes for cImage
-          // If 2-pol image asking for U or V, need to grid XX,YY,XY,YX => 4 planes for cimage
-          if(Stokes::type(sC.stokes()[0])==Stokes::U || 
-	     Stokes::type(sC.stokes()[0])==Stokes::V ||
-	     Stokes::type(sC.stokes()[1])==Stokes::U ||
-	     Stokes::type(sC.stokes()[1])==Stokes::V){cimageShape(2)=4;}
-	 }
-
-    }
     CoordinateSystem cimageCoord =
-      StokesImageUtil::CStokesCoord(cimageShape,
+      StokesImageUtil::CStokesCoord(//cimageShape,
 				    image_p[model]->coordinates(),
 				    whichStokes,
 				    dataPolRep_p);
     //				    SkyModel::CIRCULAR);
+
+    /* STOKESDBG */ //cout << "ImageSkyModel::CImage : Correlation Planes 'whichStokes' : " << whichStokes << endl;
+    cimageShape(2)=whichStokes.nelements();
     
     // Now set up the tile size, here we guess only
     //    IPosition tileShape(4, min(32, cimageShape(0)), min(32, cimageShape(1)),

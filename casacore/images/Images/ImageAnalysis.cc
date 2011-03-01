@@ -5103,8 +5103,7 @@ Bool ImageAnalysis::statistics(
 	oldStatsStorageForce_p = disk;
 
 	// Set cursor axes
-	// Reset log origin
-	*itsLog << LogOrigin("ImageAnalysis", "statistics");
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 	Vector<Int> tmpaxes(axes);
 	if (!pStatistics_p->setAxes(tmpaxes)) {
 		*itsLog << pStatistics_p->errorMessage() << LogIO::EXCEPTION;

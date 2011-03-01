@@ -12,9 +12,9 @@ from sdaverage import sdaverage
 from sdsmooth import sdsmooth
 from sdbaseline import sdbaseline
 
-#def sdcal(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, average, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, kernel, kwidth, blmode, blpoly, interactive, masklist, thresh, avg_limit, edge, outfile, outform, overwrite, plotlevel):
-#def sdcal(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, average, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, kernel, kwidth, blmode, blpoly, verify, masklist, thresh, avg_limit, edge, outfile, outform, overwrite, plotlevel):
-def sdcal(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, average, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, kernel, kwidth, blmode, blpoly, verifycal,verifysm,verifybl, masklist, thresh, avg_limit, edge, outfile, outform, overwrite, plotlevel):
+#def sdcal(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, average, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, kernel, kwidth, masking, order, interactive, masklist, thresh, avg_limit, edge, outfile, outform, overwrite, plotlevel):
+#def sdcal(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, average, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, kernel, kwidth, masking, order, verify, masklist, thresh, avg_limit, edge, outfile, outform, overwrite, plotlevel):
+def sdcal(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, average, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, kernel, kwidth, masklist, masking, thresh, avg_limit, edge, blfunc, order, npiece, clipthresh, clipniter, verifycal, verifysm, verifybl, verbosebl, outfile, outform, overwrite, plotlevel):
 
         a=inspect.stack()
         stacklevel=0
@@ -48,32 +48,32 @@ def sdcal(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, ca
 
 
             if calmode != 'none': 
-              if kernel =='none' and blmode=='none':
+              if kernel =='none' and masking=='none':
                 sdaverageout = outfile
               else:
                 sdaverageout = 'sdaverageout.tmp'
                 tmpfilelist+=sdaverageout+' '
                 if kernel !='none':
-                  if blmode !='none':
+                  if masking !='none':
                     sdsmoothout = 'sdsmoothout.tmp'
                     sdbaselineout = outfile
                     tmpfilelist+=sdsmoothout+' '
                   else:
                     sdsmoothout = outfile
                 else:
-                  if blmode != 'none':
+                  if masking != 'none':
                     sdbaselineout = outfile
             else:
               if kernel != 'none':
                 sdaverageout = 'sdaverageout_noncal.tmp'
                 tmpfilelist+=sdaverageout+' '
-                if blmode == 'none':
+                if masking == 'none':
                   sdsmoothout = outfile
                 else:
                   sdsmoothout = 'sdsmoothout.tmp'
                   tmpfilelist+=sdsmoothout+' '
               else:
-                if blmode != 'none':
+                if masking != 'none':
                   sdbaselineout = outfile
                   sdaverageout = 'sdaverageout_noncal.tmp'
                   tmpfilelist+=sdaverageout+' '
@@ -129,11 +129,11 @@ def sdcal(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, ca
             #print "*** sdbaseline stage ***";
             casalog.post( "" )
             casalog.post( "*** sdbaseline stage ***")
-            if blmode != 'none':
+            if masking != 'none':
               tmpoutfile = sdbaselineout
               #sdbaseline.defaults()
-#              sdbaseline(sdfile=tmpsdfile, blmode=blmode,blpoly=blpoly,interactive=interactive,masklist=masklist, thresh=thresh, avg_limit=avg_limit, edge=edge, outfile=tmpoutfile, outform=outform, overwrite=True, plotlevel=plotlevel)
-              sdbaseline(sdfile=tmpsdfile, antenna=antenna, blmode=blmode,blpoly=blpoly,verify=verifybl,masklist=masklist, thresh=thresh, avg_limit=avg_limit, edge=edge, outfile=tmpoutfile, outform=outform, overwrite=True, plotlevel=plotlevel)
+#              sdbaseline(sdfile=tmpsdfile, masking=masking,order=order,interactive=interactive,masklist=masklist, thresh=thresh, avg_limit=avg_limit, edge=edge, outfile=tmpoutfile, outform=outform, overwrite=True, plotlevel=plotlevel)
+              sdbaseline(sdfile=tmpsdfile,antenna=antenna,masklist=masklist,masking=masking,thresh=thresh,avg_limit=avg_limit,edge=edge,blfunc=blfunc,order=order,npiece=npiece,clipthresh=clipthresh,clipniter=clipniter,verify=verifybl,verbose=verbosebl,outfile=tmpoutfile,outform=outform,overwrite=True,plotlevel=plotlevel)
             else:
               #print "No baseline subtraction was applied..."
               #print ""
@@ -163,8 +163,8 @@ def _reset_inputs(param=None):
         internal function to recover inputs of sdcal (containing other tasks) with global task parameter settin
 g
         '''
-#        arg_names=['sdfile','fluxunit','telescopeparm','specunit','frame','doppler','calmode','scanlist','field','iflist','pollist', 'scanaverage','timeaverage','tweight', 'polaverage','pweight', 'kernel','kwidth','tau','blmode','blpoly','interactive','masklist','outfile','outform','overwrite','plotlevel','thresh','avg_limit','edge']
-        arg_names=['sdfile','fluxunit','telescopeparm','specunit','frame','doppler','calmode','scanlist','field','iflist','pollist', 'scanaverage','timeaverage','tweight', 'polaverage','pweight', 'kernel','kwidth','tau','blmode','blpoly','verify','masklist','outfile','outform','overwrite','plotlevel','thresh','avg_limit','edge']
+#        arg_names=['sdfile','fluxunit','telescopeparm','specunit','frame','doppler','calmode','scanlist','field','iflist','pollist', 'scanaverage','timeaverage','tweight', 'polaverage','pweight', 'kernel','kwidth','tau','masking','order','interactive','masklist','outfile','outform','overwrite','plotlevel','thresh','avg_limit','edge']
+        arg_names=['sdfile','fluxunit','telescopeparm','specunit','frame','doppler','calmode','scanlist','field','iflist','pollist', 'scanaverage','timeaverage','tweight', 'polaverage','pweight', 'kernel','kwidth','tau','masklist','masking','thresh','avg_limit','edge','blfunc','order','npiece','clipthresh','clipniter','verify','verbose','outfile','outform','overwrite','plotlevel']
         a=inspect.stack()
         stacklevel=0
         for k in range(len(a)):

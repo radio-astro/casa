@@ -6,7 +6,19 @@ import os
 from regressframe import regressionframe
 
 class regressverify :
-        datarepos = '/opt/casa/data'
+
+	##
+	## try paths, which are known to include the whole repository
+	##
+	if os.path.exists('/opt/casa/data'):
+		datarepos = '/opt/casa/data'
+	elif os.path.exists('/home/casa/data'):
+		datarepos = '/home/casa/data'
+	elif os.path.exists(os.environ['CASAPATH'].split()[0] + "/data"):
+		datarepos = os.environ['CASAPATH'].split()[0] + "/data"
+	else:
+		raise Exception('cannot find data repository')
+	
 	def fill(self) :
 		rstat = True
 		print "Starting fill verification"
@@ -99,7 +111,18 @@ class regressverify :
 pipeline = regressionframe()
 verify = regressverify()
 
-pipeline.datarepos = '/opt/casa/data'
+##
+## try paths, which are known to include the whole repository
+##
+if os.path.exists('/opt/casa/data'):
+	pipeline.datarepos = '/opt/casa/data'
+elif os.path.exists('/home/casa/data'):
+	pipeline.datarepos = '/home/casa/data'
+elif os.path.exists(os.environ['CASAPATH'].split()[0] + "/data"):
+	pipeline.datarepos = os.environ['CASAPATH'].split()[0] + "/data"
+else:
+	raise Exception('cannot find data repository')
+
 pipeline.workdir = './ngc5921_regression'
 pipeline.fill['tasks'] = ['importuvfits', 'listobs']
 pipeline.fill['importuvfits'] = {}
