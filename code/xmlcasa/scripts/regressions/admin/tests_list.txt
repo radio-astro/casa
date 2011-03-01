@@ -15,7 +15,6 @@ accum_test                      scastro eso.org
 asdm-imexport+analysis		dpetry eso.org
 async-segfault                  dpetry eso.org
 b0319_regression                rreid nrao.edu
-b1608                           rreid nrao.edu
 calstat_test                    jmlarsen eso.org
 cleanhelper_test                rindebet nrao.edu
 cleanchan_test                  rindebet nrao.edu
