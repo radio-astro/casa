@@ -44,7 +44,6 @@ namespace casa{
     ATerm(),
     polMap_p(),
     antTypeMap_p(),
-    pairTypeToCFKeyMap_p(-1),
     respImage_p()
   {
 
@@ -100,6 +99,7 @@ namespace casa{
         // aR_p does not need to be copied because it is static
 	haveCannedResponses_p = other.haveCannedResponses_p;
  	polMap_p.assign(other.polMap_p);
+	antTypeMap_p.assign(other.antTypeMap_p);
       }
     return *this;
   }
@@ -139,28 +139,26 @@ namespace casa{
   }
   
   
-  void ALMAAperture::applySky(ImageInterface<Complex>& outImages,  // the image (cube if there is more than one pol)
-			                                           // upon return: the images (cubes) multiplied by the 
-			                                           // different rotated, regridded,
-			                                           // FTed convolution pairs of AIFs  
+  void ALMAAperture::applySky(ImageInterface<Complex>& outImage,  // the image (cube if there is more than one pol)
+			                                           // upon return: FTed convolution pair of AIFs given by the cfKey  
+			                                           // rotated by the PA and regridded to the image
 			      const VisBuffer& vb, // for the parallactic angle
 			      const Bool doSquint,
 			      const Int& cfKey)
   {
 
-    if(getVisParams(vb)==-1){ // need to use ray tracing
+    if(getVisParams(vb)==-1){ // need to use ray tracing, cfKey is ignored
       ALMACalcIlluminationConvFunc almaPB;
       Long cachesize=(HostInfo::memoryTotal(true)/8)*1024;
       almaPB.setMaximumCacheSize(cachesize);
-      almaPB.applyPB(outImages, vb, doSquint);
+      almaPB.applyPB(outImage, vb, doSquint);
     }
     else{ // use canned antenna responses
-      // extract matrix from image
-      Array<Complex> image = outImages.get();
-      //   (issue warning if too coarse => will be in method ATerm::OK(vb, PAtolerance, timetolerance)
+
+      //   (issue warning if image too coarse => will be in method ATerm::OK(vb, PAtolerance, timetolerance)
       
-      //   identify the right AIF based on antenna, freq band, polarizations
-      Vector<ALMAAntennaType> aTypes = antTypeList(vb);
+      //   identify the right response image based on antenna, freq band, polarizations
+      Vector<ALMAAntennaType> aTypes = antennaTypesFromCFKey(cfKey);
       uInt nAntTypes = aTypes.nelements();
       Int spwId = vb.spectralWindow();
 
@@ -168,6 +166,7 @@ namespace casa{
       Vector<uInt> respImageChannel(nAntTypes);
       Vector<MFrequency> respImageNomFreq(nAntTypes);
       Vector<AntennaResponses::FuncTypes> respImageFType(nAntTypes);
+      Vector<Vector<Array<Complex> > > respByPol(nAntTypes); 
 
       MFrequency refFreq = vb.msColumns().spectralWindow().refFrequencyMeas()(spwId);
       MEpoch obsTime = vb.msColumns().observation().timeRangeMeas()(vb.observationId()(0))(IPosition(1,0)); // start time
@@ -197,7 +196,7 @@ namespace casa{
 	}
       }
 
-      // load all necessary images
+      // load all necessary images (max. two)
       for(uInt i=0; i<nAntTypes; i++){
 	if(respImageFType(i)!=AntennaResponses::EFP){
 	  throw(SynthesisError(String("Can only process antenna responses of type EFP.")));
@@ -206,24 +205,150 @@ namespace casa{
       respImage_p.resize(nAntTypes);
       for(uInt i=0; i<nAntTypes; i++){
 	cout << "Loading " << respImageName(i) << endl;
+   	
 	try{
 	  respImage_p(i) = new PagedImage<Complex>(respImageName(i));
 	}
 	catch(std::exception x){
 	  ostringstream oss;
-	  oss << "Error reading antenna response image for frequency from path \""
-	      << respImageName(i) << "\"";
+	  oss << "Error reading antenna response image from path \""
+	      << respImageName(i) << "\": " << x.what();
 	  respImage_p.resize(i,True);
 	  throw(SynthesisError(oss.str()));
 	} 
       }
       cout << "Loaded " << nAntTypes << " images." << endl;
+      
+      // identify polarisations in the response image and fill into respByPol(i)
+      Int rIndex = respImage_p(0)->coordinates().findCoordinate(Coordinate::STOKES);
+      Int rAxis = rIndex+1;
+      Vector<Int> rStokes = respImage_p(0)->coordinates().stokesCoordinate(rIndex).stokes();
+      IPosition rShape = respImage_p(0)->shape();
+      cout << "Resp. image shape " << rShape << endl;
+      uInt rNDim = rShape.size();
+      IPosition rSkyShape(rNDim,1);
+      rSkyShape(0) = rShape(0);
+      rSkyShape(1) = rShape(1);
+      uInt nRPol = rStokes.nelements();
+      if(!(nRPol==4 && 
+	   rStokes(0)==Stokes::XX && rStokes(1)==Stokes::XY && rStokes(2)==Stokes::YX && rStokes(3)==Stokes::YY)){
+	  ostringstream oss;
+	  oss << "Error: Antenna response image from path \""
+	      << respImageName(0) 
+	      << "\" does not contain the necessary polarisation products or products are in the wrong order.\n"
+	      << "Order should be XX, XY, YX, YY.";
+	  throw(SynthesisError(oss.str()));
+      }	
+      for(uInt i=0;i<nAntTypes; i++){ 
+	respByPol(i).resize(nRPol); 
+      }
+      for(uInt i=0; i<nAntTypes; i++){
+	for(uInt iPol=0; iPol<nRPol; iPol++){
+	  IPosition start(rNDim,0);
+	  start(rAxis) = iPol;
+// 	  IPosition end(rNDim,0);
+// 	  end(0) = rShape(0)-1;
+// 	  end(1) = rShape(1)-1;
+// 	  end(rAxis) = iPol;
+// 	  Slicer s(start,end);
+	  respImage_p(i)->getSlice(respByPol(i)(iPol), start, rSkyShape); 
+	}
+      }
 
-      //   Form all convolution pairs (Efield patterns) of antenna types in the Array
-      //   FT the Efield patterns
-      //   rotate using par. angle,
-      //   then regrid it to the image, 
-      //   multiply with image
+      // identify polarizations in the input image, put them into polToDoIndex()
+      Vector<Int> inStokes;
+      Int pIndex;
+      pIndex = outImage.coordinates().findCoordinate(Coordinate::STOKES);
+      inStokes = outImage.coordinates().stokesCoordinate(pIndex).stokes();
+      uInt nPol = inStokes.nelements();
+      Vector<uInt> polToDoIndex(nPol);
+      for(uInt i=0; i<nPol; i++){
+	uInt ival=-1;
+	switch(inStokes(i)){
+	case Stokes::XX:
+	  ival = 0;
+	  break;
+	case Stokes::XY:
+	  ival = 1;
+	  break;
+	case Stokes::YX:
+	  ival = 2;
+	  break;
+	case Stokes::YY:
+	  ival = 3;
+	  break;
+	default:
+	  ostringstream oss;
+	  oss << "Error processing input image: polarization not valid for ALMA: " 
+	      << Stokes::name(Stokes::type(inStokes(i)));
+	  throw(SynthesisError(oss.str()));
+	  break;
+	}
+	polToDoIndex(i) = ival;
+      }
+
+      // Calculate the primary beam for the given baseline type for each polarization
+      ImageConvolver<Complex> iC;
+      LogIO os(LogOrigin("ALMAAperture", "applySky", WHERE));
+      
+      CoordinateSystem dCoord = respImage_p(0)->coordinates(); // assume both response images have same coordsys
+      IPosition dShape = respImage_p(0)->shape();
+      dShape(rAxis) = nPol; // set the number of stokes pixels to that of the output image
+      TempImage<Complex> nearFinal(dShape, dCoord);
+
+      DirectionCoordinate dC = dCoord.directionCoordinate(0);
+      CoordinateSystem tempCoord;
+      tempCoord.addCoordinate(dC);
+
+      for(uInt iPol=0; iPol<nPol; iPol++){
+
+	Array<Complex> pB(respByPol(0)(polToDoIndex(iPol)).shape());
+
+	// multiply EFPs equivalent to convolution of AIFs, get primary beam
+	pB = respByPol(0)(polToDoIndex(iPol)) * respByPol(nAntTypes-1)(polToDoIndex(iPol));
+
+	//   rotate using par. angle
+	Array<Complex> rotPB;
+	Double dAngleRad = getPA(vb);
+	SynthesisUtils::rotateComplexArray(os, pB, tempCoord, rotPB, 
+					   dAngleRad, "LINEAR");
+	// now have the primary beam for polarization iPol in rotPB
+      
+	// combine all PBs into one image
+	IPosition pos(rNDim,0);
+	pos(rAxis) = iPol;
+	nearFinal.putSlice(rotPB, pos);  
+
+      }
+
+      // then regrid it to the image
+
+      // the following mess is necessary since ImageRegrid does not work for Complex images
+
+      Array<Complex> nearFinalArray = nearFinal.get();
+      Array<Complex> outArray = outImage.get();
+
+      CoordinateSystem outCS(outImage.coordinates());
+      Vector<Int> pixAxes=outCS.pixelAxes(outCS.findCoordinate(Coordinate::DIRECTION));
+      IPosition whichOutPixelAxes(pixAxes);
+
+      TempImage<Float> inImage(nearFinalArray.shape(),dCoord);
+      TempImage<Float> tOutImage(outArray.shape(), outCS);
+      ImageRegrid<Float> iR;
+
+      inImage.copyData(LatticeExpr<Float>(real(ArrayLattice<Complex>(nearFinalArray))));
+      tOutImage.set(0.0);
+
+      iR.regrid(tOutImage, Interpolate2D::LINEAR, whichOutPixelAxes, inImage);
+      setReal(outArray,tOutImage.get());
+
+      inImage.copyData(LatticeExpr<Float>(imag(ArrayLattice<Complex>(nearFinalArray))));
+      tOutImage.set(0.0);
+
+      iR.regrid(tOutImage, Interpolate2D::LINEAR, whichOutPixelAxes, inImage);
+      setImag(outArray,tOutImage.get());
+
+      outImage.put(outArray);
 
       // tidy up
       for(uInt i=0; i<nAntTypes; i++){
@@ -232,7 +357,6 @@ namespace casa{
       respImage_p.resize(0);	  
 
     }
-
   }
 
   void ALMAAperture::applySky(ImageInterface<Float>& outImages,
@@ -326,16 +450,14 @@ namespace casa{
 	cout << "initialising antTypeMap to " << antTypeMap_p << endl;
       }
 
-      pairTypeToCFKeyMap_p.clear();
+      SimpleOrderedMap<Int, Int > cFKeysEncountered(-1); 
       Int cfKeyCount = 0;
       for(uInt i=0; i<(uInt)vb.nRow(); i++){
-	Int pairType = antennaPairTypeCode(antTypeMap_p(vb.antenna1()(i)),
-				       antTypeMap_p(vb.antenna2()(i)));
-	map(i) = pairTypeToCFKeyMap_p(pairType);
-	if(map(i)<0){ // new pair type
-	  cout << "new pair type " << pairType << " gets key :" << cfKeyCount << endl;
-	  pairTypeToCFKeyMap_p.define(pairType, cfKeyCount);
-	  map(i) = cfKeyCount;
+	Int cfKey = cFKeyFromAntennaTypes(antTypeMap_p(vb.antenna1()(i)),
+					  antTypeMap_p(vb.antenna2()(i)));
+	map(i) = cfKey;
+	if(cFKeysEncountered(cfKey)<0){ // new cFKey
+	  cFKeysEncountered.define(cfKey, cfKeyCount);
 	  cfKeyCount++;
 	}
       }  
@@ -398,17 +520,24 @@ namespace casa{
   }
 
 
-  Int ALMAAperture::antennaPairTypeCode(const ALMAAntennaType aT1, const ALMAAntennaType aT2){
+  Int ALMAAperture::cFKeyFromAntennaTypes(const ALMAAntennaType aT1, const ALMAAntennaType aT2){
     return min((Int)aT1+1, (Int)aT2+1) + 10000*max((Int)aT1+1, (Int)aT2+1); // order doesn't matter, convolution commutes
   }
 
-  void ALMAAperture::antennaTypesFromPairType(ALMAAntennaType& aT1, ALMAAntennaType& aT2,
-					      const Int& antennaPairType){
-    Int t1 = (Int) floor(antennaPairType/10000.);
-    Int t2 = antennaPairType - 10000*t1 - 1;
+  Vector<ALMAAntennaType> ALMAAperture::antennaTypesFromCFKey(const Int& cFKey){
+    Int t1 = (Int) floor(cFKey/10000.);
+    Int t2 = cFKey - 10000*t1 - 1;
     t1--;
-    aT1 = (ALMAAntennaType) min(t1,t2);
-    aT2 = (ALMAAntennaType) max(t1,t2);
+    Vector<ALMAAntennaType> rval(1);
+    if(t1==t2){
+      rval(0) = (ALMAAntennaType) t1;
+    }
+    else{
+      rval.resize(2);
+      rval(0) = (ALMAAntennaType) min(t1,t2);
+      rval(1) = (ALMAAntennaType) max(t1,t2);
+    }
+    return rval;
   }
 
   Vector<ALMAAntennaType> ALMAAperture::antTypeList(const VisBuffer& vb){
@@ -430,7 +559,6 @@ namespace casa{
 	index++;
       }
     }
-      
     return aTypeList;
   }
 

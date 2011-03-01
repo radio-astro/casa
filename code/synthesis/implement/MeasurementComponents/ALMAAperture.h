@@ -33,6 +33,11 @@
 #include <synthesis/MeasurementComponents/ATerm.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <images/Images/AntennaResponses.h>
+#include <images/Images/ImageConvolver.h>
+#include <images/Images/ImageFFT.h>
+#include <images/Images/ImageRegrid.h>
+#include <images/Images/ImageRegrid.h>
+
 //
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
@@ -101,11 +106,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     static ALMAAntennaType antTypeFromName(const String& name);
     static String antTypeStrFromType(const ALMAAntennaType& aType);
 
-    static Int antennaPairTypeCode(const ALMAAntennaType aT1, const ALMAAntennaType aT2);
-    static void antennaTypesFromPairType(ALMAAntennaType& aT1, ALMAAntennaType& aT2,
-					 const Int& antennaPairType);
+    static Int cFKeyFromAntennaTypes(const ALMAAntennaType aT1, const ALMAAntennaType aT2);
+    static Vector<ALMAAntennaType> antennaTypesFromCFKey(const Int& cFKey);
 
-    // generate the lists of antenna pair types and antenna types
+    // generate the lists of antenna types for the whole vb
     Vector<ALMAAntennaType> antTypeList(const VisBuffer& vb);
 
     Int getVisParams(const VisBuffer& vb);
@@ -124,7 +128,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<Int> polMap_p;
     Bool haveCannedResponses_p; // true if there are precalculated response images available
     Vector<ALMAAntennaType> antTypeMap_p; // maps antenna id to antenna type
-    SimpleOrderedMap<Int, Int > pairTypeToCFKeyMap_p; // maps antenna pair type to CFKey 
     Vector<PagedImage<Complex>* > respImage_p;
   };
 };

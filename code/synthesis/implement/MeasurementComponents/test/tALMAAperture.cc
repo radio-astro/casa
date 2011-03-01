@@ -91,7 +91,9 @@ int main()
       // StokesCoordinate
       Vector<Int> iquv(1);                                         
       iquv(0) = Stokes::I;
-      StokesCoordinate stokesCoords(iquv);	
+      StokesCoordinate stokesCoordsBad(iquv);	
+      iquv(0) = Stokes::XX;
+      StokesCoordinate stokesCoordsGood(iquv);	
       
       // SpectralCoordinate
       SpectralCoordinate spectralCoords(MFrequency::TOPO,           
@@ -115,11 +117,11 @@ int main()
       
       // CoordinateSystem
       coordsys.addCoordinate(dirCoords);
-      coordsys.addCoordinate(stokesCoords);
+      coordsys.addCoordinate(stokesCoordsBad);
       coordsys.addCoordinate(spectralCoords);
       
       coordsys3.addCoordinate(dirCoords);
-      coordsys3.addCoordinate(stokesCoords);
+      coordsys3.addCoordinate(stokesCoordsGood);
       coordsys3.addCoordinate(spectralCoords3);      
     }
     
@@ -151,52 +153,52 @@ int main()
       cout << (Int)aa.antTypeFromName("CM01") << endl;
       cout << (Int)aa.antTypeFromName("XY01") << endl;
       cout << endl;   
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("DV01"),aa.antTypeFromName("DV02")) << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("DV01"),aa.antTypeFromName("DA02")) << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("DV01"),aa.antTypeFromName("PM02")) << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("DV01"),aa.antTypeFromName("CM02")) << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("DV01"),aa.antTypeFromName("XY02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("DV01"),aa.antTypeFromName("DV02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("DV01"),aa.antTypeFromName("DA02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("DV01"),aa.antTypeFromName("PM02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("DV01"),aa.antTypeFromName("CM02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("DV01"),aa.antTypeFromName("XY02")) << endl;
       cout << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("DA01"),aa.antTypeFromName("DV02")) << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("DA01"),aa.antTypeFromName("DA02")) << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("DA01"),aa.antTypeFromName("PM02")) << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("DA01"),aa.antTypeFromName("CM02")) << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("DA01"),aa.antTypeFromName("XY02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("DA01"),aa.antTypeFromName("DV02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("DA01"),aa.antTypeFromName("DA02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("DA01"),aa.antTypeFromName("PM02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("DA01"),aa.antTypeFromName("CM02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("DA01"),aa.antTypeFromName("XY02")) << endl;
       cout << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("PM01"),aa.antTypeFromName("DV02")) << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("PM01"),aa.antTypeFromName("DA02")) << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("PM01"),aa.antTypeFromName("PM02")) << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("PM01"),aa.antTypeFromName("CM02")) << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("PM01"),aa.antTypeFromName("XY02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("PM01"),aa.antTypeFromName("DV02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("PM01"),aa.antTypeFromName("DA02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("PM01"),aa.antTypeFromName("PM02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("PM01"),aa.antTypeFromName("CM02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("PM01"),aa.antTypeFromName("XY02")) << endl;
       cout << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("CM01"),aa.antTypeFromName("DV02")) << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("CM01"),aa.antTypeFromName("DA02")) << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("CM01"),aa.antTypeFromName("PM02")) << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("CM01"),aa.antTypeFromName("CM02")) << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("CM01"),aa.antTypeFromName("XY02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("CM01"),aa.antTypeFromName("DV02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("CM01"),aa.antTypeFromName("DA02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("CM01"),aa.antTypeFromName("PM02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("CM01"),aa.antTypeFromName("CM02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("CM01"),aa.antTypeFromName("XY02")) << endl;
       cout << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("XY01"),aa.antTypeFromName("DV02")) << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("XY01"),aa.antTypeFromName("DA02")) << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("XY01"),aa.antTypeFromName("PM02")) << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("XY01"),aa.antTypeFromName("CM02")) << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("XY01"),aa.antTypeFromName("XY02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("XY01"),aa.antTypeFromName("DV02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("XY01"),aa.antTypeFromName("DA02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("XY01"),aa.antTypeFromName("PM02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("XY01"),aa.antTypeFromName("CM02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("XY01"),aa.antTypeFromName("XY02")) << endl;
       cout << endl;
-      Int c = aa.antennaPairTypeCode(aa.antTypeFromName("DV01"),aa.antTypeFromName("DV02"));
-      ALMAAntennaType a,b;
-      ALMAAperture::antennaTypesFromPairType(a,b, c);
-      cout << (Int)a << " " << (Int)b << " (0,0)" << endl;
-      c = aa.antennaPairTypeCode(aa.antTypeFromName("CM01"),aa.antTypeFromName("CM02"));
-      ALMAAperture::antennaTypesFromPairType(a,b, c);
-      cout << (Int)a << " " << (Int)b << " (3,3)" << endl;
-      c = aa.antennaPairTypeCode(aa.antTypeFromName("DA01"),aa.antTypeFromName("DV02"));
-      ALMAAperture::antennaTypesFromPairType(a,b, c);
-      cout << (Int)a << " " << (Int)b << " (0,1)" << endl;
-      c = aa.antennaPairTypeCode(aa.antTypeFromName("CM01"),aa.antTypeFromName("PM02"));
-      ALMAAperture::antennaTypesFromPairType(a,b, c);
-      cout << (Int)a << " " << (Int)b << " (2,3)" << endl;
-      c = aa.antennaPairTypeCode(aa.antTypeFromName("DV"),aa.antTypeFromName("XY02"));
-      ALMAAperture::antennaTypesFromPairType(a,b, c);
-      cout << (Int)a << " " << (Int)b << " (-1,0)" << endl;
+      Int c = aa.cFKeyFromAntennaTypes(aa.antTypeFromName("DV01"),aa.antTypeFromName("DV02"));
+      Vector<ALMAAntennaType> a;
+      a.assign( ALMAAperture::antennaTypesFromCFKey(c) );
+      cout << (Int)a(0) << " " << (Int)a(1) << " (0,0)" << endl;
+      c = aa.cFKeyFromAntennaTypes(aa.antTypeFromName("CM01"),aa.antTypeFromName("CM02"));
+      a.assign( ALMAAperture::antennaTypesFromCFKey(c) );
+      cout << (Int)a(0) << " " << (Int)a(1) << " (3,3)" << endl;
+      c = aa.cFKeyFromAntennaTypes(aa.antTypeFromName("DA01"),aa.antTypeFromName("DV02"));
+      a.assign( ALMAAperture::antennaTypesFromCFKey(c) );
+      cout << (Int)a(0) << " " << (Int)a(1) << " (0,1)" << endl;
+      c = aa.cFKeyFromAntennaTypes(aa.antTypeFromName("CM01"),aa.antTypeFromName("PM02"));
+      a.assign( ALMAAperture::antennaTypesFromCFKey(c) );
+      cout << (Int)a(0) << " " << (Int)a(1) << " (2,3)" << endl;
+      c = aa.cFKeyFromAntennaTypes(aa.antTypeFromName("DV"),aa.antTypeFromName("XY02"));
+      a.assign( ALMAAperture::antennaTypesFromCFKey(c) );
+      cout << (Int)a(0) << " " << (Int)a(1) << " (-1,0)" << endl;
       
       cout << endl;
       cout << ALMAAperture::antTypeStrFromType(aa.antTypeFromName("XY01")) << endl;
@@ -258,13 +260,21 @@ int main()
 	  for(vi.origin();vi.more();vi++) {
 	    cout << "band id " << apB.getVisParams(vb) << endl;
 	    cout << "ant type map " << apB.antTypeMap(vb) << endl;
-	    cout << "ant type list " << apB.antTypeList(vb) << endl;
+	    Vector<ALMAAntennaType> aTs = apB.antTypeList(vb);
+	    cout << "ant type list " << aTs << endl;
+	    Int cfKey = ALMAAperture::cFKeyFromAntennaTypes(aTs(0), aTs(0));
+
 	    if(vb.spectralWindow()<4){ // i.e. not a WVR SPW for this dataset
-	      apB.applySky(im1, vb, False, 0);
+	      try{
+		apB.applySky(im1, vb, True, cfKey);
+	      } catch (AipsError x) {
+		cout << "Caught expected error: " << x.getMesg() << endl;
+	      } 
+	      apB.applySky(im3, vb, True, cfKey);
 	    }
 	    else{
 	      try{
-		apB.applySky(im1, vb, False, 0);
+		apB.applySky(im1, vb, True, cfKey);
 	      } catch (AipsError x) {
 		cout << "Caught expected error: " << x.getMesg() << endl;
 	      } 
