@@ -70,7 +70,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   <returns type="bool"/>
 </method>
 <method type="function" name="post">
-  <shortdescription>Post A message</shortdescription>
+  <shortdescription>Post a message</shortdescription>
   <description>If the message passes the filter, write it (same as postLocally)</description>
   <input>
     <param type="string" name="message">
