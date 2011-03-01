@@ -57,34 +57,34 @@ $sendmail = "/usr/sbin/sendmail";
 ### Cast of characters...
 ###
 %addresses = (
-    'urvashi.rao' => 'rurvashi@nrao.edu', 
-    'dirk.petry' => 'dpetry@eso.org',
-    'scott.rankin' => 'srankin@nrao.edu',
-    'martin.kuemmel' => 'mkuemmel@eso.org',
-    'juergen.ott' => 'jott@nrao.edu',
-    'jim.jacobs' => 'jjacobs@nrao.edu',
-    'jeff.kern' => 'jkern@nrao.edu',
-    'daren.wilson' => 'dwilson@nrao.edu',
-    'shannon.jaeger' => 'sdjaeger@ucalgary.ca',
-    'sandra.castro' => 'scastro@eso.org',
-    'dave.mehringer' => 'dmehring@nrao.edu',
-    'michel.caillat' => 'michel.caillat@obspm.fr',
-    'peter.teuben' => 'teuben@astro.umd.edu',
-    'wataru.kawasaki' => 'wataru.kawasaki@nao.ac.jp',
-    'rob.reid' => 'rreid@nrao.edu',
-    'gareth.hunt' => 'ghunt@nrao.edu',
-    'takeshi.nakazato' => 'takeshi.nakazato@nao.ac.jp',
-    'kana.sugimoto' => 'kana.sugi@nao.ac.jp',
-    'remy.indebetouw' => 'remy@virginia.edu',
-    'laura.glendenning' => 'laura.glendenning@gmail.com',
-    'paulo.cortes' => 'pcortes@das.uchile.cl',
-    'honglin.ye' => 'hye@aoc.nrao.edu',
-    'tak.tsutsumi' => 'ttsutsum@nrao.edu',
-    'sanjay.bhatnagar' => 'bhatnagar.sanjay@gmail.com',
-    'george.moellenbrock' => 'gmoellen@nrao.edu',
-    'kumar.golap' => 'kgolap@nrao.edu',
-    'darrell.schiebel' => 'darrell@schiebel.us',
-    'wes.young' => 'wyoung@aoc.nrao.edu',
+    'urvashi.rao' =>          [ 'rurvashi', 'nrao.edu' ],
+    'dirk.petry' =>           [ 'dpetry', 'eso.org' ],
+    'scott.rankin' =>         [ 'srankin', 'nrao.edu' ],
+    'martin.kuemmel' =>       [ 'mkuemmel', 'eso.org' ],
+    'juergen.ott' =>          [ 'jott', 'nrao.edu' ],
+    'jim.jacobs' =>           [ 'jjacobs', 'nrao.edu' ],
+    'jeff.kern' =>            [ 'jkern', 'nrao.edu' ],
+    'daren.wilson' =>         [ 'dwilson', 'nrao.edu' ],
+    'shannon.jaeger' =>       [ 'sdjaeger', 'ucalgary.ca' ],
+    'sandra.castro' =>        [ 'scastro', 'eso.org' ],
+    'dave.mehringer' =>       [ 'dmehring', 'nrao.edu' ],
+    'michel.caillat' =>       [ 'michel.caillat', 'obspm.fr' ],
+    'peter.teuben' =>         [ 'teuben', 'astro.umd.edu' ],
+    'wataru.kawasaki' =>      [ 'wataru.kawasaki', 'nao.ac.jp' ],
+    'rob.reid' =>             [ 'rreid', 'nrao.edu' ],
+    'gareth.hunt' =>          [ 'ghunt', 'nrao.edu' ],
+    'takeshi.nakazato' =>     [ 'takeshi.nakazato', 'nao.ac.jp' ],
+    'kana.sugimoto' =>        [ 'kana.sugi', 'nao.ac.jp' ],
+    'remy.indebetouw' =>      [ 'remy', 'virginia.edu' ],
+    'laura.glendenning' =>    [ 'laura.glendenning', 'gmail.com' ],
+    'paulo.cortes' =>         [ 'pcortes', 'das.uchile.cl' ],
+    'honglin.ye' =>           [ 'hye', 'aoc.nrao.edu' ],
+    'tak.tsutsumi' =>         [ 'ttsutsum', 'nrao.edu' ],
+    'sanjay.bhatnagar' =>     [ 'bhatnagar.sanjay', 'gmail.com' ],
+    'george.moellenbrock' =>  [ 'gmoellen', 'nrao.edu' ],
+    'kumar.golap' =>          [ 'kgolap', 'nrao.edu' ],
+    'darrell.schiebel' =>     [ 'darrell', 'schiebel.us' ],
+    'wes.young' =>            [ 'wyoung', 'aoc.nrao.edu' ],
     );
 
 ###
@@ -680,7 +680,8 @@ sub mail_suspect {
 
     die "missing address for $name" unless defined $addresses{$name};
 
-    my $address = $addresses{$name};
+    my $address_ary = $addresses{$name};
+    my $address = join( '@', @$address_ary );
 
     die "no sendmail" unless -x $sendmail;
     die "no subversion URL" unless defined $hudson{"$pkg url"};
