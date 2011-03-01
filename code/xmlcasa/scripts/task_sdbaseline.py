@@ -358,13 +358,15 @@ def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 			os.system('rm -rf %s' % outfilename)
 		
 		# to apply data selections by selector, make copy
-		tmpscn=s.copy()
-		tmpscn.save(spefile,outform,overwrite)
+		#tmpscn=s.copy()
+		#tmpscn.save(spefile,outform,overwrite)
+                s.save(spefile,outform,overwrite)
 		if outform!='ASCII':
 			casalog.post( "Wrote output "+outform+" file "+spefile )
 		
 		# Clean up scantable
-		del s, tmpscn
+		#del s, tmpscn
+                del s
 		
 		blf.close()
 
