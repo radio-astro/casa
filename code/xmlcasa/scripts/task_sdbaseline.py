@@ -358,6 +358,8 @@ def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 			os.system('rm -rf %s' % outfilename)
 		
 		# to apply data selections by selector, make copy
+		# 2011/03/01 TN
+		# The issue was already fixed (Trac #181, r1727 in ASAP trunk)
 		#tmpscn=s.copy()
 		#tmpscn.save(spefile,outform,overwrite)
                 s.save(spefile,outform,overwrite)
