@@ -221,7 +221,7 @@ void ImageProfileFitter::_finishConstruction() {
     		<< _image->ndim() << ")" << LogIO::EXCEPTION;
     }
     if (_fitAxis < 0) {
-		uInt specCoord = _image->coordinates().findCoordinate(Coordinate::SPECTRAL);
+      Int specCoord = _image->coordinates().findCoordinate(Coordinate::SPECTRAL);
 		if (specCoord < 0) {
 			_fitAxis = 0;
 			*_log << LogIO::WARN << "No spectral coordinate found in image, "
@@ -666,7 +666,7 @@ String ImageProfileFitter::_polynomialToString(
 	for (uInt j=0; j<parms.size(); j++) {
 		String unit = _image->units().getName();
         if (j > 0) {
-            String denom = _xUnit.find("/") >= 0
+          String denom = _xUnit.find("/") != String::npos
                 ? "(" + _xUnit + ")"
                 : _xUnit;
 			unit = unit + "/" + denom + "^" + String::toString(j);

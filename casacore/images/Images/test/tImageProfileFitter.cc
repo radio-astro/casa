@@ -54,10 +54,18 @@ String dirName;
 void checkImage(
 	const ImageInterface<Float> *gotImage, const String& expectedName
 ) {
+  Float ftol = 1.0e-12; // 3.0e-13 is too small.
+
 	FITSImage expectedImage(expectedName);
 	AlwaysAssert(gotImage->shape() == expectedImage.shape(), AipsError);
 	Array<Float> diffData = gotImage->get() - expectedImage.get();
-	AlwaysAssert(max(abs(diffData)) == 0, AipsError);
+        Float maxdiff = max(abs(diffData));
+        if(maxdiff > ftol){
+          cerr << "For expectedImage " << expectedName << ":" << endl;
+          cerr << "\tmaxdiff = " << maxdiff << endl;
+          cerr << "\t   ftol = " << ftol << endl;
+        }
+	AlwaysAssert(max(abs(diffData)) <= ftol, AipsError);
 	CoordinateSystem gotCsys = gotImage->coordinates();
 	CoordinateSystem expectedCsys = expectedImage.coordinates();
 	Array<Double> diffPixels = gotCsys.referencePixel() - expectedCsys.referencePixel();
@@ -65,7 +73,7 @@ void checkImage(
 	Array<Double> fracDiffRef = (
 			gotCsys.referenceValue() - expectedCsys.referenceValue()
 		)/expectedCsys.referenceValue();
-	AlwaysAssert(max(abs(fracDiffRef)) <= 3e-13, AipsError);
+	AlwaysAssert(max(abs(fracDiffRef)) <= ftol, AipsError);
 }
 
 void checkImage(
