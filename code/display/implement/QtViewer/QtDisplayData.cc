@@ -127,8 +127,17 @@ QtDisplayData::QtDisplayData(QtDisplayPanelGui *panel, String path,
       
       if(dataType_=="image") {
 
-        switch(ImageOpener::imageType(path)) {
+    	// check for a FITS extension in the path name
+    	String tmp_path;
+    	if (!(int)path.compare(path.length()-1, 1, "]", 1) && (int)path.rfind("[", path.length()) > -1)
+    		// create a string with the file path name only
+    		tmp_path = String(path, 0, path.rfind("[", path.length()));
+    	else
+    		// copy the path name
+    		tmp_path = path;
 
+    	// use the file path name for the opener
+    	switch(ImageOpener::imageType(tmp_path)) {
 
 	  case ImageOpener::AIPSPP: {
 	  
@@ -170,7 +179,7 @@ QtDisplayData::QtDisplayData(QtDisplayPanelGui *panel, String path,
       else {
       
         // Parse LEL expression to create expression-type ImageInterface.
-	
+
         LatticeExprNode expr = ImageExprParse::command(path_);
           
 	if(expr.dataType() == TpFloat) {

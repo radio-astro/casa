@@ -31,6 +31,8 @@
 #include <display/QtViewer/QtDisplayPanelGui.qo.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/TableInfo.h>
+#include <images/Images/FITSImgParser.h>
+#include "fitsio.h"
 #include <casa/BasicSL/String.h>
 #include <casa/OS/File.h>
 #include <casa/iostream.h>
@@ -154,12 +156,9 @@ QtDataManager::QtDataManager(QtDisplayPanelGui* panel,
   
   connect(treeWidget_,    SIGNAL(itemClicked(QTreeWidgetItem*,int)),
 			 SLOT(clickItem(QTreeWidgetItem*)));
-  
-  connect(treeWidget_,    SIGNAL(itemDoubleClicked(QTreeWidgetItem*,int)),
-		         SLOT(doubleClickItem()));
-  
-  //connect(registerCheck, SIGNAL(toggled(bool)), displayGroupBox_,
-  //			 SLOT(setChecked(bool)));
+
+  connect(treeWidget_, SIGNAL(itemExpanded(QTreeWidgetItem*)),
+			SLOT(expandItem(QTreeWidgetItem*)));
   
   connect(toolButton_,    SIGNAL(toggled(bool)),  SLOT(showTools(bool)));
   
@@ -180,13 +179,85 @@ QtDataManager::~QtDataManager(){
 }
 
 
-void QtDataManager::doubleClickItem(){
-  //QMessageBox::warning(this, tr("QtDataManager"), tr("double"));
+void QtDataManager::clickItem(QTreeWidgetItem* item){
+  if(item!=0 && item->text(1)=="Directory") updateDirectory(item->text(0));
 }
 
 
-void QtDataManager::clickItem(QTreeWidgetItem* item){
-  if(item!=0 && item->text(1)=="Directory") updateDirectory(item->text(0));
+static int findNumberOfFITSImageExt( QString path ) {
+    fitsfile *fptr;
+    int status = 0;
+    fits_open_file( &fptr, path.toAscii( ).constData( ), READONLY, &status );
+    if ( status != 0 ) {
+	fits_report_error(stderr, status);
+	return -1;
+    }
+    int number_hdus = 0;
+    fits_get_num_hdus( fptr, &number_hdus, &status );
+    if ( status != 0 ) {
+	fits_report_error(stderr, status);
+	fits_close_file( fptr, &status );
+	return -1;
+    }
+    int number_images = 0;
+    if ( number_hdus > 0 ) {
+	int type = 0;
+	fits_movabs_hdu( fptr, 1, &type, &status );
+	if ( status != 0 ) {
+	    fits_report_error(stderr, status);
+	    fits_close_file( fptr, &status );
+	    return -1;
+	}
+	if ( type == IMAGE_HDU ) ++number_images;
+	for ( int i=2; i <= number_hdus; ++i ) {
+	    type = 0;
+	    fits_movrel_hdu(fptr, 1, &type, &status);
+	    if ( status != 0 ) {
+		fits_report_error(stderr, status);
+		fits_close_file( fptr, &status );
+		return -1;
+	    }
+	    if ( type == IMAGE_HDU ) ++number_images;
+	}
+    }
+
+    fits_close_file( fptr, &status );
+    if ( status != 0 ) {
+	fits_report_error(stderr, status);
+	return -1;
+    }
+    return number_images;
+}
+
+
+void QtDataManager::expandItem(QTreeWidgetItem* item) {
+    if ( item->text(1) == "FITS Image" && item->childCount( ) == 1 ) {
+	// check whether its a FITS image and prevent second generation children
+	if(item!=0 && item->text(1)=="FITS Image" && !item->text(0).endsWith("]")){
+	    delete item->takeChild(0);
+
+	    QString path = dir_.path() + "/" +  item->text(0);
+
+	    // get a list of all extensions with data
+	    QStringList extList = analyseFITSImage(path);
+
+	    // if there is more than one extension
+	    if (extList.size()>1) {
+		QTreeWidgetItem *childItem;
+		int dType = uiDataType_[item->text(1)];
+
+		// add the extensions as child items
+		for (int j = 0; j < extList.size(); j++) {
+		    QString ext = extList.at(j);
+		    childItem = new QTreeWidgetItem(item);
+		    childItem->setText(0, ext);
+		    childItem->setText(1, item->text(1));
+		    childItem->setTextColor(1, getDirColor(dType));
+		}
+	    }
+	    treeWidget_->resizeColumnToContents(0);
+	}
+    }
 }
 
 
@@ -234,7 +305,16 @@ void QtDataManager::buildDirTree() {
         dirItem = new QTreeWidgetItem(treeWidget_);
         dirItem->setText(0, it);
         dirItem->setText(1, type);
-        dirItem->setTextColor(1, getDirColor(dType));  }  }  }
+        dirItem->setTextColor(1, getDirColor(dType));
+	if ( type == "FITS Image" && findNumberOfFITSImageExt( path ) > 1 ) {
+	  QTreeWidgetItem *childItem = new QTreeWidgetItem(dirItem);
+	  childItem->setText(0, "");
+	  childItem->setText(1, "");
+	  childItem->setTextColor(1, getDirColor(dType));
+	}
+      }
+    }
+  }
 
 	    
   // QSettings settings("NRAO", "casa");
@@ -447,5 +527,27 @@ void QtDataManager::showDDCreateError_(String errMsg) {
   // For now, just send to cerr.  (To do: put this on a status line).
   cerr<<endl<<errMsg<<endl;  }
 
+
+QStringList QtDataManager::analyseFITSImage(QString path){
+    String   delim="<delim>";
+    QString qdelim="<delim>";
+    String   extstring;
+    QString qextstring;
+
+    QStringList extlist;
+
+    // create a parser object and get the String information on
+    // the extensions with data
+    FITSImgParser fip = FITSImgParser(String(path.toStdString()));
+    extstring = fip.get_ext_list(delim);
+
+    // convert the String to a QString;
+    // split into a list of QStrings
+    qextstring = QString(extstring.c_str());
+    extlist = qextstring.split(qdelim, QString::SkipEmptyParts);
+
+    // return the QString list
+    return extlist;
+}
 
 } //# NAMESPACE CASA - END

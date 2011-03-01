@@ -77,6 +77,7 @@ class QtDataManager : public QWidget, private Ui::QtDataManager {
   void showDisplayButtons(int);
   void hideDisplayButtons();
   QColor getDirColor(int);
+  QStringList analyseFITSImage(QString path);
 
   enum DATATYPE {UNKNOWN, IMAGE, MEASUREMENT_SET, SKY_CATALOG, RESTORE,
                  DIRECTORY};
@@ -93,8 +94,8 @@ class QtDataManager : public QWidget, private Ui::QtDataManager {
   
   void createButtonClicked();
   void showTools(bool show);
-  void doubleClickItem();
   void clickItem(QTreeWidgetItem* item);
+  void expandItem(QTreeWidgetItem* item);
   void changeItemSelection();
   void returnPressed();
   void buildDirTree();
