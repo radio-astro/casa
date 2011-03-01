@@ -11,6 +11,7 @@
 #include <casa/aips.h>
 #include <casa/aipstype.h>
 #include <casa/BasicSL/String.h>
+#include <boost/utility.hpp>
 
 #include <map>
 #include <queue>
@@ -123,10 +124,10 @@ public:
     virtual ~Thread ();
 
     pthread_t getId () const;
+    bool isTerminationRequested () const;
     void * join ();
     void startThread ();
     virtual void terminate ();
-    bool terminationRequested () const;
 
 protected:
 
@@ -139,17 +140,19 @@ private:
 
     pthread_t * id_p;
     bool started_p;
-    bool terminationRequested_p;
+    volatile bool terminationRequested_p;
 
 };
 
-class Logger : public Thread {
+class Logger : private boost::noncopyable {
 
 public:
 
-    static void log (const char * format, ...);
-    static void registerName (const String & threadName);
-    static void start (const char * logFilename);
+    void log (const char * format, ...);
+    void registerName (const String & threadName);
+    void start (const char * logFilename);
+
+    static Logger * get ();
 
 protected:
 
@@ -159,8 +162,9 @@ protected:
         LoggerThread ();
         ~LoggerThread ();
 
-        void log (char * text);
+        void log (const string & text);
         void setLogFilename (const String & filename);
+        void terminate ();
 
     protected:
 
@@ -169,14 +173,13 @@ protected:
     private:
 
         Bool      deleteStream_p;
-        Semaphore drainSemaphore_p;
         String    logFilename_p;
+        Condition loggerChanged_p;
         ostream * logStream_p;
         Mutex mutex_p;
-        queue<char *> outputQueue_p;
+        queue<string> outputQueue_p;
     };
 
-    static LoggerThread * get();
 
 //    void log (char * format, ...);
 //    void setLogFilename (char * logFilename);
@@ -186,9 +189,12 @@ private:
 
     typedef map <pthread_t, String>  ThreadNames;
 
-    static bool loggingStarted_p;
-    static Mutex * nameMutex_p;
-    static ThreadNames threadNames_p;
+    LoggerThread * loggerThread_p;
+    bool loggingStarted_p;
+    Mutex * nameMutex_p;
+    ThreadNames threadNames_p;
+
+    Logger (); // singleton
 };
 
 

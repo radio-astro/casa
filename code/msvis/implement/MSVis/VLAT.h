@@ -12,7 +12,12 @@
 #include "VisBuffer.h"
 #include "VisibilityIterator.h"
 #include "VisibilityIteratorAsync.h"
+using casa::asyncio::RoviaModifiers;
 #include "VisBufferAsync.h"
+#include <boost/tuple/tuple.hpp>
+
+#include <memory>
+using std::pair;
 
 #include <queue>
 using std::queue;
@@ -48,8 +53,6 @@ public:
 	Bool readStart ();
 	void reset ();
 
-	void terminateFill ();
-
 protected:
 
 private:
@@ -58,11 +61,8 @@ private:
 
 	Int              chunkNumber_p;
 	Int              id_p;
-	Semaphore *      readyToFillSemaphore_p;
-	Semaphore *      readyToReadSemaphore_p;
 	State            state_p;
 	Int              subChunkNumber_p;
-	Bool             terminating_p;
 	VisBufferAsync * visBuffer_p;
 
 	// Illegal operations
@@ -78,17 +78,6 @@ class VlaData {
 public:
 
 
-    class Stats {
-    public:
-
-        Stats () : nReadNoWaits_p (0), nReadWaits_p (0), nWriteNoWaits_p (0), nWriteWaits_p (0) {}
-
-        Int     nReadNoWaits_p; // Number of reads that required waiting
-        Int     nReadWaits_p;   // Number of reads that did not require waiting;
-        Int     nWriteNoWaits_p; // Number of writes that required waiting
-        Int     nWriteWaits_p;   // Number of writes that did not require waiting;
-    };
-
 	VlaData (Int nBuffers);
 	~VlaData ();
 
@@ -96,35 +85,79 @@ public:
 	void fillComplete ();
 	VlaDatum * fillStart (Int chunkNumber, Int subChunkNumber);
 	asyncio::ChannelSelection getChannelSelection () const;
-	Stats getStats () const;
 	void initialize ();
 	void insertValidChunk (Int chunkNumber);
 	void insertValidSubChunk (Int chunkNumber, Int subChunkNumber);
+	Bool isSweepTerminationRequested () const;
 	Bool isValidChunk (Int chunkNumber) const;
 	Bool isValidSubChunk (Int chunkNumber, Int subChunkNumber) const;
 	void readComplete ();
-	const VlaDatum * readStart ();
-    void requestViReset (VLAT *);
+	const VlaDatum * readStart (Int chunkNumber, Int subChunkNumber);
+    void requestViReset ();
 	void setNoMoreData ();
 	void storeChannelSelection (const asyncio::ChannelSelection & channelSelection);
-	void terminateFill(bool alreadyLocked);
-	void terminateReset ();
-	Bool waitForViReset (VLAT *);
+    void terminateLookahead ();
+	pair<Bool,RoviaModifiers> waitForViReset ();
 
 	static void debugBlock ();
 	static void debugUnblock ();
-
 
 	static const Bool loggingInitialized_p;
 	static Int logLevel_p;
 
 protected:
 
-    Int clock (Int arg, Int base);
-    VlaDatum * getNextDatum (Int & index);
-    void resetBufferRing ();
 
 private:
+
+	class Stats {
+	public:
+
+	    typedef enum {Request=1, Begin=2, End=4, Fill=8} Type;
+        enum {Wait,Operate,Cycle} ;
+
+	    Stats ();
+
+	    void addEvent (Int e);
+	    Bool isEnabled () const { return enabled_p;}
+	    String makeReport ();
+	    void reserve (Int size);
+
+	private:
+
+	    typedef boost::tuple <Int,Double> Event;
+	    typedef vector<Event> Events;
+
+	    class OpStats {
+	    public:
+
+	        OpStats ();
+
+	        Double & operator[] (Int i) { return events_p [i];}
+
+	        void accumulate (Double wait, Double operate, Double cycle);
+	        Double getAvg (Int i) { return (n_p != 0) ? sum_p [i] / n_p : 0;}
+	        Int getN () const { return n_p;}
+	        String format (Int component);
+            void update (Int type, Double t);
+
+            static Double dmax (Double a, Double b) { return max (a, b);}
+            static Double dmin (Double a, Double b) { return min (a, b);}
+
+	    private:
+
+	        vector<Double> events_p;
+	        vector<Double> max_p;
+	        vector<Double> min_p;
+	        Int n_p;
+	        vector<Double> ssq_p;
+	        vector<Double> sum_p;
+	    };
+
+	    Bool enabled_p;
+	    Events events_p;
+
+	};
 
     class SubChunkPair : public pair<Int, Int>{
     public:
@@ -150,17 +183,23 @@ private:
     asyncio::ChannelSelection channelSelection_p; // last channels selected for the VI in use
 	Data    data_p;       // Buffer ring
 	Int     fillIndex_p;  // index of buffer to be filled
-	mutable Mutex mutex_p;      // Buffer ring control mutex
+    volatile Bool lookaheadTerminationRequested_p;
 	Int     readIndex_p;  // index of buffer to be read
 	asyncio::RoviaModifiers roviaModifiers_p;
 	Stats   stats_p;
-    mutable Condition validChunksCondition_p;
-	Bool    viResetRequested_p;
-	Condition viResetRequestCondition_p;
-    Bool    viResetComplete_p;
-	Condition viResetCompleteCondition_p;
+    volatile Bool sweepTerminationRequested_p;
+	volatile Bool viResetRequested_p;
+    volatile Bool viResetComplete_p;
 	mutable ValidChunks validChunks_p;       // Queue of valid chunk numbers
 	mutable ValidSubChunks validSubChunks_p; // Queue of valid subchunk pairs
+	mutable Condition vlaDataChanged_p;
+	mutable Mutex vlaDataMutex_p;
+
+    Int clock (Int arg, Int base);
+    VlaDatum * getNextDatum (Int & index);
+    void resetBufferRing ();
+    Bool statsEnabled () const;
+	void terminateSweep ();
 
 	//// static Semaphore debugBlockSemaphore_p; // used to block a thread for debugging
 
@@ -278,7 +317,7 @@ public:
 	Bool isTerminated () const;
 	void setModifiers (asyncio::RoviaModifiers & modifiers);
 	void setPrefetchColumns (const ROVisibilityIteratorAsync::PrefetchColumns & prefetchColumns);
-	void requestFillTermination ();
+	void requestSweepTermination ();
 	void terminate ();
 
 protected:
@@ -320,8 +359,8 @@ protected:
     void fillDatumMiscellanyAfter (VlaDatum * datum);
     void fillDatumMiscellanyBefore (VlaDatum * datum);
     void fillLsrInfo (VlaDatum * datum);
-    Bool fillTerminationRequested () const;
     void * run ();
+    Bool sweepTerminationRequested () const;
     void sweepVi ();
 
 private:
@@ -329,8 +368,8 @@ private:
     //FillerDependencies fillerDependencies_p;
 	FillerDictionary fillerDictionary_p;
 	Fillers fillers_p;
-	Bool fillTerminationRequested_p;
 	asyncio::RoviaModifiers roviaModifiers_p;
+	volatile Bool sweepTerminationRequested_p;
 	Bool threadTerminated_p;
 	ROVisibilityIterator * visibilityIterator_p; // [own]
 	VlaData * vlaData_p; // [use]

@@ -6,19 +6,26 @@
  */
 
 #include <assert.h>
+#include <time.h>
+#include <sys/time.h>
 
 #include "VLAT.h"
 #include "VisBufferAsync.h"
 #include "VisibilityIteratorAsync.h"
 #include <casa/System/AipsrcValue.h>
 
-
 #include "AsynchronousTools.h"
 using namespace casa::async;
 
 #include <algorithm>
-#include <functional>
 #include <cstdarg>
+#include <functional>
+
+#include <boost/lexical_cast.hpp>
+#include <boost/lambda/lambda.hpp>
+#include <boost/function.hpp>
+
+using namespace boost;
 
 using namespace std;
 
@@ -26,7 +33,7 @@ using namespace std;
 
 #define Log(level, ...) \
     {if (VlaData::loggingInitialized_p && level <= VlaData::logLevel_p) \
-         Logger::log (__VA_ARGS__);};
+         Logger::get()->log (__VA_ARGS__);};
 
 using namespace casa::utilj;
 using namespace casa::asyncio;
@@ -58,14 +65,17 @@ Int VlaData::logLevel_p = 1;
 VlaData::VlaData (Int nBuffers)
  : data_p (nBuffers, static_cast<VlaDatum *> (0))
 {
-    viResetRequested_p = False;
+    lookaheadTerminationRequested_p = False;
+    sweepTerminationRequested_p = False;
     viResetComplete_p = False;
+    viResetRequested_p = False;
 }
 
 VlaData::~VlaData ()
 {
-    Log (1, "VlaData dtor: nReadNoWaits=%d, nReadWaits=%d, nWriteNoWaits=%d, nWriteWaits=%d\n",
-         stats_p.nReadNoWaits_p, stats_p.nReadWaits_p, stats_p.nWriteNoWaits_p, stats_p.nWriteWaits_p);
+    if (stats_p.isEnabled()){
+        Log (1, "VlaData stats:\n%s", stats_p.makeReport ().c_str());
+    }
 
     for (Data::iterator d = data_p.begin(); d != data_p.end(); d++){
         delete (* d);
@@ -75,11 +85,12 @@ VlaData::~VlaData ()
 void
 VlaData::addModifier (RoviaModifier * modifier)
 {
-    MutexLocker ml (mutex_p);
+    Log (1, "VlaData::addModifier: {%s}\n", lexical_cast<string> (* modifier).c_str());
+
+    MutexLocker ml (vlaDataMutex_p);
 
     roviaModifiers_p.add (modifier);
 }
-
 
 Int
 VlaData::clock (Int arg, Int base)
@@ -120,33 +131,50 @@ VlaData::debugUnblock ()
 void
 VlaData::fillComplete ()
 {
-	Log (1, "VlaData::fillComplete on %d\n", fillIndex_p);
+    MutexLocker ml (vlaDataMutex_p);
+
+    stats_p.addEvent (Stats::Fill|Stats::End);
+
+    Int chunkNumber = data_p [fillIndex_p]->getChunkNumber();
+    Int subChunkNumber = data_p [fillIndex_p]->getSubChunkNumber();
+
+	Log (2, "VlaData::fillComplete on (%d,%d) at [%d]\n", chunkNumber, subChunkNumber, fillIndex_p);
 
 	assert (fillIndex_p >= 0 && fillIndex_p < (int) data_p.size());
 
 	data_p [fillIndex_p]->fillComplete();
 
+	vlaDataChanged_p.broadcast ();
 }
 
 VlaDatum *
 VlaData::fillStart (Int chunkNumber, Int subChunkNumber)
 {
+    MutexLocker ml (vlaDataMutex_p);
+
+    stats_p.addEvent (Stats::Fill|Stats::Request);
 
 	VlaDatum * datum = getNextDatum (fillIndex_p);
 
-	Log (1, "VlaData::fillStart on %d;\tsubchunk=(%d,%d)\n", fillIndex_p, chunkNumber, subChunkNumber);
+	Log (2, "VlaData::fillStart on (%d,%d) at [%d]\n", chunkNumber, subChunkNumber, fillIndex_p);
 
 	if (validChunks_p.empty() || validChunks_p.back() != chunkNumber)
 	    insertValidChunk (chunkNumber);
 
 	insertValidSubChunk (chunkNumber, subChunkNumber);
 
-	Bool hadToWait = datum->fillStart (chunkNumber, subChunkNumber);
+	Bool hadToWait = False;
 
-	if (hadToWait)
-		++ stats_p.nWriteWaits_p;
-	else
-		++ stats_p.nWriteNoWaits_p;
+	while (! datum->fillStart (chunkNumber, subChunkNumber) &&
+	       ! sweepTerminationRequested_p){
+	    hadToWait = True;
+	    vlaDataChanged_p.wait (vlaDataMutex_p);
+	}
+
+    stats_p.addEvent (Stats::Fill|Stats::Begin);
+
+	if (sweepTerminationRequested_p)
+	    datum = NULL; // datum may not be ready to fill and shouldn't be anyway
 
 	return datum;
 }
@@ -154,7 +182,7 @@ VlaData::fillStart (Int chunkNumber, Int subChunkNumber)
 asyncio::ChannelSelection
 VlaData::getChannelSelection () const
 {
-    MutexLocker ml (mutex_p);
+    MutexLocker ml (vlaDataMutex_p);
 
     return channelSelection_p;
 }
@@ -163,21 +191,15 @@ VlaData::getChannelSelection () const
 VlaDatum *
 VlaData::getNextDatum (Int & index)
 {
-	assert (index >= 0 && index < (int) data_p.size());
+    // Assumes caller has the mutex locked.
 
-	MutexLocker m (mutex_p);
+	assert (index >= 0 && index < (int) data_p.size());
 
 	index = clock (index + 1, data_p.size());
 
 	VlaDatum * datum = data_p [index];
 
 	return datum;
-}
-
-VlaData::Stats
-VlaData::getStats () const
-{
-    return stats_p;
 }
 
 void
@@ -192,6 +214,9 @@ VlaData::initialize ()
 	}
 
 	resetBufferRing ();
+
+    if (statsEnabled())
+        stats_p.reserve (10000);
 }
 
 Bool
@@ -205,17 +230,17 @@ VlaData::initializeLogging()
 
 	String logFilename;
 	Bool logFileFound = AipsrcValue<String>::find (logFilename,
-	                                               ROVisibilityIteratorAsync::getRcBase () + ".debug.logFile",
+	                                               ROVisibilityIteratorAsync::getAipsRcBase () + ".debug.logFile",
 	                                               "");
 
 	if (logFileFound && ! logFilename.empty() && downcase (logFilename) != "null" &&
 	    downcase (logFilename) != "none"){
 
-		Logger::start (logFilename.c_str());
-		AipsrcValue<Int>::find (logLevel_p, ROVisibilityIteratorAsync::getRcBase () + ".debug.logLevel", 1);
-		Logger::log ("VlaData log-level is %d; async I/O: %s; nBuffers=%d\n", logLevel_p,
-		             ROVisibilityIteratorAsync::isAsynchronousIoEnabled() ? "enabled" : "disabled",
-		             ROVisibilityIteratorAsync::getDefaultNBuffers() );
+		Logger::get()->start (logFilename.c_str());
+		AipsrcValue<Int>::find (logLevel_p, ROVisibilityIteratorAsync::getAipsRcBase () + ".debug.logLevel", 1);
+		Logger::get()->log ("VlaData log-level is %d; async I/O: %s; nBuffers=%d\n", logLevel_p,
+		                    ROVisibilityIteratorAsync::isAsynchronousIoEnabled() ? "enabled" : "disabled",
+		                    ROVisibilityIteratorAsync::getDefaultNBuffers() );
 
 		return True;
 
@@ -227,21 +252,27 @@ VlaData::initializeLogging()
 void
 VlaData::insertValidChunk (Int chunkNumber)
 {
-	MutexLocker m (mutex_p);
+    // Caller locks mutex.
 
-	validChunks_p.push (chunkNumber);
+    validChunks_p.push (chunkNumber);
 
-	validChunksCondition_p.broadcast ();
+	vlaDataChanged_p.broadcast ();
 }
 
 void
 VlaData::insertValidSubChunk (Int chunkNumber, Int subChunkNumber)
 {
-	MutexLocker m (mutex_p);
+    // Caller locks mutex.
 
 	validSubChunks_p.push (SubChunkPair (chunkNumber, subChunkNumber));
 
-	validChunksCondition_p.broadcast ();
+	vlaDataChanged_p.broadcast ();
+}
+
+Bool
+VlaData::isSweepTerminationRequested () const
+{
+    return sweepTerminationRequested_p;
 }
 
 Bool
@@ -254,12 +285,12 @@ VlaData::isValidChunk (Int chunkNumber) const
     // chunks available for insert the sentinel value INT_MAX into the data
     // structure.
 
-    MutexLocker ml (mutex_p);
+    MutexLocker ml (vlaDataMutex_p);
 
     do {
 
         while (validChunks_p.empty()){
-            validChunksCondition_p.wait (mutex_p);
+            vlaDataChanged_p.wait (vlaDataMutex_p);
         }
 
         while (! validChunks_p.empty() && validChunks_p.front() < chunkNumber){
@@ -289,12 +320,12 @@ VlaData::isValidSubChunk (Int chunkNumber, Int subChunkNumber) const
     // subchunks available for insert the sentinel value (INT_MAX, INT_MAX) into the data
     // structure.
 
-    MutexLocker ml (mutex_p);
+    MutexLocker ml (vlaDataMutex_p);
 
     do {
 
         while (validSubChunks_p.empty()){
-            validChunksCondition_p.wait (mutex_p);
+            vlaDataChanged_p.wait (vlaDataMutex_p);
         }
 
         while (! validSubChunks_p.empty() && validSubChunks_p.front() < subChunk){
@@ -314,60 +345,65 @@ VlaData::isValidSubChunk (Int chunkNumber, Int subChunkNumber) const
 void
 VlaData::readComplete ()
 {
-	Log (1, "VlaData::readComplete  on %d;\tsubchunk=(%d,%d)\n",
-	     readIndex_p, data_p [readIndex_p]->getChunkNumber(),
-	     data_p [readIndex_p]->getSubChunkNumber());
+    MutexLocker ml (vlaDataMutex_p);
+
+    stats_p.addEvent (Stats::End);
+
+	Log (2, "VlaData::readComplete on (%d,%d) at [%d]\n",
+	     data_p [readIndex_p]->getChunkNumber(),
+	     data_p [readIndex_p]->getSubChunkNumber(),
+	     readIndex_p);
 
 	assert (readIndex_p >= 0 && readIndex_p < (int) data_p.size());
 
 	data_p [readIndex_p]->readComplete();
 
+	vlaDataChanged_p.broadcast();
 }
 
 const VlaDatum *
-VlaData::readStart ()
+VlaData::readStart (Int chunkNumber, Int subChunkNumber)
 {
+    MutexLocker ml (vlaDataMutex_p);
+
+    stats_p.addEvent (Stats::Request);
+
 	VlaDatum * datum = getNextDatum (readIndex_p);
 
-	Log (2, "VlaData::readStart on %d\n", readIndex_p);
+	Log (2, "VlaData::readStart on (%d, %d) at [%d]\n", chunkNumber, subChunkNumber, readIndex_p);
 
-	bool hadToWait = datum->readStart ();
+	bool hadToWait = False;
+	while (! datum->readStart ()){
+	    hadToWait = True;
+	    vlaDataChanged_p.wait(vlaDataMutex_p);
+	}
 
-	if (hadToWait)
-		++ stats_p.nReadWaits_p;
-	else
-		++ stats_p.nReadNoWaits_p;
+    stats_p.addEvent (Stats::Begin);
 
 	return datum;
 }
 
 void
-VlaData::requestViReset (VLAT * vlat)
+VlaData::requestViReset ()
 {
-    MutexLocker ml (mutex_p);  // enter critical section
+    MutexLocker ml (vlaDataMutex_p);  // enter critical section
 
     Log (1, "Requesting VI reset\n");
 
     viResetRequested_p = True; // officially request the reset
     viResetComplete_p = False; // clear any previous completions
 
-    vlat->requestFillTermination (); // ask VLAT to stop filling
-
-    terminateFill (True); // unblock VLAT if waiting for a buffer to free up
-
-    viResetRequestCondition_p.broadcast (); // wake filling thread if
-                                            // already waiting for reset
+    terminateSweep ();
 
     // Wait for the request to be completed.
 
     Log (1, "Waiting for requesting VI reset\n");
 
     while (! viResetComplete_p){
-        viResetCompleteCondition_p.wait (mutex_p);
+        vlaDataChanged_p.wait (vlaDataMutex_p);
     }
 
     Log (1, "Notified that VI reset has completed\n");
-
 
     // The VI was reset
 }
@@ -387,71 +423,72 @@ VlaData::resetBufferRing ()
 
 	while (! validSubChunks_p.empty())
 	    validSubChunks_p.pop();
-
 }
 
 void
 VlaData::setNoMoreData ()
 {
+    MutexLocker ml (vlaDataMutex_p);
+
     insertValidChunk (INT_MAX);
     insertValidSubChunk (INT_MAX, INT_MAX);
 }
 
+Bool
+VlaData::statsEnabled () const
+{
+    // Determines whether asynchronous I/O is enabled by looking for the
+    // expected AipsRc value.  If not found then async i/o is disabled.
+
+    Bool doStats;
+    AipsrcValue<Bool>::find (doStats, ROVisibilityIteratorAsync::getAipsRcBase () + ".doStats", False);
+
+    return doStats;
+}
+
+
 void
 VlaData::storeChannelSelection (const asyncio::ChannelSelection & channelSelection)
 {
-    MutexLocker ml (mutex_p);
+    MutexLocker ml (vlaDataMutex_p);
 
     channelSelection_p = channelSelection;
 }
 
-
 void
-VlaData::terminateFill (bool alreadyLocked)
+VlaData::terminateLookahead ()
 {
-    // Make sure that the fill operation is not
-    // blocking on the semaphore.  This should only be
-    // done when the filler is expected to quickly terminate.
-    // If misused it will destroy the concurrency semantics.
+    // Called by main thread to stop the VLAT, etc.
 
-    if (! alreadyLocked){
-        mutex_p.lock();
-    }
+    MutexLocker ml (vlaDataMutex_p);
 
-    // Terminate filling on all of the buffers so that if the
-    // VLAT is waiting to fill one it will awaken and detect
-    // the termination of fill operations.
-
-    for (uint i = 0; i < data_p.size(); i++)
-        data_p [i] -> terminateFill ();
-
-    if (! alreadyLocked){
-        mutex_p.unlock();
-    }
+    lookaheadTerminationRequested_p = True;
+    terminateSweep();
 }
 
 void
-VlaData::terminateReset ()
+VlaData::terminateSweep ()
 {
-    viResetRequestCondition_p.broadcast ();
+    sweepTerminationRequested_p = True;   // stop filling
+    vlaDataChanged_p.broadcast ();
 }
 
-
-
-Bool
-VlaData::waitForViReset(VLAT * vlat)
+pair<Bool, RoviaModifiers>
+VlaData::waitForViReset()
 {
-    MutexLocker ml (mutex_p);
+    // Called by VLAT
+
+    MutexLocker ml (vlaDataMutex_p);
 
     Log (1, "Waiting for VI reset request\n");
 
-    while (! viResetRequested_p && ! vlat->terminationRequested()){
-        viResetRequestCondition_p.wait (mutex_p);
+    while (! viResetRequested_p && ! lookaheadTerminationRequested_p){
+        vlaDataChanged_p.wait (vlaDataMutex_p);
     }
 
-    if (vlat->terminationRequested()){
-        Log (1, "Terminating VLAT during wait for VI reset.\n")
-        return False;
+    if (lookaheadTerminationRequested_p){
+        Log (1, "Terminating VLAT during wait for VI reset.\n");
+        return make_pair (False, RoviaModifiers ());
     }
     else {
         Log (1, "Carrying out VI reset\n")
@@ -459,15 +496,145 @@ VlaData::waitForViReset(VLAT * vlat)
 
         resetBufferRing ();
 
-        vlat->setModifiers (roviaModifiers_p); // gives possession to vlat
+        asyncio::RoviaModifiers roviaModifiersCopy;
+        roviaModifiers_p.transfer (roviaModifiersCopy);
 
+        sweepTerminationRequested_p = False;
         viResetComplete_p = True;
-        viResetCompleteCondition_p.broadcast();
-        vlat->clearFillTerminationRequest ();
-        return True;
+
+        vlaDataChanged_p.broadcast();
+        return make_pair (True, roviaModifiersCopy);
     }
 }
 
+VlaData::Stats::Stats ()
+{
+    enabled_p = false;
+}
+
+void
+VlaData::Stats::addEvent (Int type)
+{
+    if (enabled_p){
+        struct timeval tVal;
+        gettimeofday (& tVal, NULL);
+
+        Double t = tVal.tv_sec + tVal.tv_usec * 1e-6;
+
+        events_p.push_back (Event (type, t));
+    }
+}
+
+
+String
+VlaData::Stats::makeReport ()
+{
+    String report;
+
+    if (enabled_p) {
+
+        OpStats readStats, fillStats;
+
+        for (Events::iterator event = events_p.begin(); event != events_p.end(); ++ event){
+
+            Int type = event->get<0>();
+
+            if ((type & Fill) != 0){
+                fillStats.update (type, event->get<1>());
+            }
+            else {
+                readStats.update (type, event->get<1>());
+            }
+        }
+
+        report += format ("\nLookahead Stats: nCycles=%d\n...\n", readStats.getN());
+        report += "...ReadWait:    " + readStats.format(Wait) + "\n";
+        report += "...ReadOperate: " + readStats.format(Operate) + "\n";
+        report += "...ReadCycle:   " + readStats.format(Cycle) + "\n";
+
+        report += "...FillWait:    " + fillStats.format(Wait) + "\n";
+        report += "...FillOperate: " + fillStats.format(Operate) + "\n";
+        report += "...FillCycle:   " + fillStats.format(Cycle) + "\n";
+
+        Double syncCycle = fillStats.getAvg (Operate) + readStats.getAvg (Operate);
+        report += format ("...Sync cycle would be %6.1f ms\n", syncCycle * 1000);
+        report += format ("...Speedup is %5.1f%%\n", (syncCycle / readStats.getAvg (Cycle) - 1) * 100);
+
+    }
+
+    return report;
+
+}
+
+void
+VlaData::Stats::reserve (Int size)
+{
+    events_p.reserve (size);
+    enabled_p = True;
+}
+
+VlaData::Stats::OpStats::OpStats ()
+: events_p (End + 1, 0),
+  max_p (3, -1E20),
+  min_p (3, 1E20),
+  n_p (0),
+  ssq_p (3, 0),
+  sum_p (3, 0)
+{}
+
+void
+VlaData::Stats::OpStats::accumulate (Double wait, Double operate, Double cycle)
+{
+    using namespace boost::lambda;
+    ++ n_p;
+    vector<Double> s (3);
+    s [Wait] = wait;
+    s [Operate] = operate;
+    s [Cycle] = cycle;
+
+    transform (sum_p.begin(), sum_p.end(), s.begin(), sum_p.begin(), _1 + _2);
+
+    transform (min_p.begin(), min_p.end(), s.begin(), min_p.begin(), dmin);
+
+    transform (max_p.begin(), max_p.end(), s.begin(), max_p.begin(), dmax);
+
+    transform (ssq_p.begin(), ssq_p.end(), s.begin(), ssq_p.begin(), _1 + _2 * _2);
+
+}
+
+String
+VlaData::Stats::OpStats::format (Int component)
+{
+    Double avg = (n_p != 0) ? sum_p [component] / n_p : 0;
+    Double stdev = (n_p != 0) ? sqrt (ssq_p[component] / n_p - avg * avg) : 0;
+
+    String s = utilj::format ("avg=%6.1f ms, stdev=%6.1f, range=[%6.1f, %6.1f]", avg*1000, stdev * 1000,
+                              min_p[component] * 1000, max_p[component] * 1000);
+
+    return s;
+}
+
+
+void
+VlaData::Stats::OpStats::update (Int type, Double t)
+{
+    Int masked = type & (~Fill);
+
+    events_p [masked] = t;
+
+    if (masked == End){
+
+        Double wait = events_p [Begin] - events_p [Request];
+        Double operate = events_p [End] - events_p [Begin];
+        Double cycle = events_p [End] - events_p [Request];
+
+        accumulate (wait, operate, cycle);
+
+        events_p [Begin] = 0;
+        events_p [Request] = 0;
+        events_p [End] = 0;
+    }
+}
 
 //  ***************************
 //	*                         *
@@ -478,17 +645,12 @@ VlaData::waitForViReset(VLAT * vlat)
 VlaDatum::VlaDatum (Int id)
 {
 	id_p = id;
-	readyToFillSemaphore_p = NULL;
-	readyToReadSemaphore_p = NULL;
 	state_p = Empty;
-	terminating_p = False;
     visBuffer_p = NULL;
 }
 
 VlaDatum::~VlaDatum()
 {
-    delete readyToFillSemaphore_p;
-    delete readyToReadSemaphore_p;
     delete visBuffer_p;
 }
 
@@ -496,30 +658,32 @@ void
 VlaDatum::fillComplete ()
 {
 	assert (state_p == Filling);
-	assert (terminating_p || readyToFillSemaphore_p->getValue() == 0);
-	assert (terminating_p || readyToReadSemaphore_p->getValue() == 0);
 
 	state_p = Full;
-
-	readyToReadSemaphore_p->post ();
 }
 
 Bool
 VlaDatum::fillStart (Int chunkNumber, Int subChunkNumber)
 {
-	Bool hadToWait = readyToFillSemaphore_p->getValue() == 0;
+    // Caller has mutex locked.
 
-	readyToFillSemaphore_p->wait();
+    assert (state_p != Filling);
 
-	assert (terminating_p || state_p == Empty);
-	assert (terminating_p || readyToReadSemaphore_p->getValue() == 0);
+    bool fillStarted = False;
 
-	state_p = Filling;
+    if (state_p == Empty){
 
-	chunkNumber_p = chunkNumber;
-	subChunkNumber_p = subChunkNumber;
+        // Change datum state to be Filling the expected
+        // chunk and subchunk
 
-	return hadToWait;
+        chunkNumber_p = chunkNumber;
+        subChunkNumber_p = subChunkNumber;
+        state_p = Filling;
+
+        fillStarted = True;
+    }
+
+	return fillStarted;
 }
 
 Int
@@ -560,8 +724,6 @@ void
 VlaDatum::initialize ()
 {
     visBuffer_p = new VisBufferAsync ();
-    readyToFillSemaphore_p = new Semaphore (1);
-    readyToReadSemaphore_p = new Semaphore ();
 
     reset ();
 }
@@ -579,65 +741,34 @@ void
 VlaDatum::readComplete ()
 {
 	assert (state_p == Reading);
-	assert (readyToFillSemaphore_p->getValue() == 0);
-	assert (readyToReadSemaphore_p->getValue() == 0);
 
 	state_p = Empty;
-	readyToFillSemaphore_p->post ();
 }
 
 Bool
 VlaDatum::readStart ()
 {
-	Bool hadToWait = readyToReadSemaphore_p->getValue() == 0;
+    Bool readStarted = False;
 
-	readyToReadSemaphore_p->wait ();
+    assert (state_p != Reading);
 
-	assert (state_p == Full);
-	assert (readyToFillSemaphore_p->getValue() == 0);
+    if (state_p == Full){
 
-	state_p = Reading;
+        readStarted = True;
+        state_p = Reading;
+    }
 
-	return hadToWait;
+	return readStarted;
 }
 
 void
 VlaDatum::reset ()
 {
-    terminating_p = False;
 	chunkNumber_p = -1;
 	state_p = Empty;
 	subChunkNumber_p = -1;
 	visBuffer_p->clear();
-
-	// Adjust semaphores so that they indicate a
-	// readiness to be filled buy an unreadiness to be read
-	// ====================================================
-
-	if (readyToFillSemaphore_p->getValue() == 0)
-	    readyToFillSemaphore_p->post(); // set it
-
-	// During fill termination an extra post might occur so to keep the
-	// semaphore binary adjust it back down to one.
-
-	while (readyToFillSemaphore_p->getValue() > 1){
-	    readyToFillSemaphore_p->wait(); // clear one
-	}
-
-
-	while (readyToReadSemaphore_p->getValue() >= 1){
-	    readyToReadSemaphore_p->wait(); // clear it
-	}
-
 }
-
-void
-VlaDatum::terminateFill ()
-{
-    terminating_p = True;
-    readyToFillSemaphore_p -> post ();
-}
-
 
 
 //  ***********************
@@ -651,7 +782,6 @@ VLAT::VLAT (VlaData * vd)
 	vlaData_p = vd;
 	visibilityIterator_p = NULL;
 	threadTerminated_p = False;
-	fillTerminationRequested_p = False;
 }
 
 VLAT::~VLAT ()
@@ -690,13 +820,6 @@ VLAT::applyModifiers (ROVisibilityIterator * rovi)
     vlaData_p -> storeChannelSelection (asyncio::ChannelSelection (blockNGroup, blockStart,
                                                                    blockWidth, blockIncr, blockSpw));
 }
-
-void
-VLAT::clearFillTerminationRequest ()
-{
-    fillTerminationRequested_p = false;
-}
-
 
 void
 VLAT::createFillerDictionary ()
@@ -819,8 +942,10 @@ void
 VLAT::fillDatum (VlaDatum * datum)
 {
 
+    Int fillerId = -1;
     try{
         VisBufferAsync * vb = datum->getVisBuffer();
+
         vb->clear();
         vb->setFilling (true);
         vb->attachToVisIter (* visibilityIterator_p); // invalidates vb's cache as well
@@ -829,24 +954,31 @@ VLAT::fillDatum (VlaDatum * datum)
 
         for (Fillers::iterator filler = fillers_p.begin(); filler != fillers_p.end(); filler ++){
 
-            if (terminationRequested())
-                break;
-
             //Log (2, "Filler id=%d name=%s starting\n", (* filler)->getId(), ROVisibilityIteratorAsync::prefetchColumnName((* filler)->getId()).c_str());
 
+            fillerId = (* filler)->getId();
             (** filler) (vb);
         }
 
+        fillerId = -1; //
+
         fillDatumMiscellanyAfter (datum);
 
-        vb->setFilling (false);
-
         vb->detachFromVisIter ();
+        vb->setFilling (false);
     }
-    catch (AipsError & e){
+    catch (...){
 
-        Log (1, "VLAT: AIPS error while filling datum [%d] at 0x%08x, vb at 0x%08x; rethrowing\n",
-             datum->getId(), datum, datum->getVisBuffer());
+        if (fillerId == -1){
+            Log (1, "VLAT: Error while filling datum [%d] at 0x%08x, vb at 0x%08x; rethrowing\n",
+                 datum->getId(), datum, datum->getVisBuffer());
+        }
+        else{
+            Log (1, "VLAT: Error while filling datum [%d] at 0x%08x, vb at 0x%08x; "
+                 "fillingColumn='%s'; rethrowing\n",
+                 datum->getId(), datum, datum->getVisBuffer(),
+                 ROVisibilityIteratorAsync::prefetchColumnName (fillerId).c_str());
+        }
 
         throw;
     }
@@ -928,12 +1060,6 @@ VLAT::fillLsrInfo (VlaDatum * datum)
                                        velocitySelection);
 }
 
-Bool
-VLAT::fillTerminationRequested () const
-{
-    return fillTerminationRequested_p || terminationRequested();
-}
-
 void
 VLAT::initialize (const ROVisibilityIterator & rovi)
 {
@@ -951,7 +1077,6 @@ VLAT::initialize (const ROVisibilityIterator & rovi)
 	    // do it twice??
 
 }
-
 
 void
 VLAT::initialize (const MeasurementSet & ms,
@@ -1001,19 +1126,13 @@ VLAT::isTerminated () const
     return threadTerminated_p;
 }
 
-void
-VLAT::requestFillTermination ()
-{
-    fillTerminationRequested_p = true;
-}
-
 void *
 VLAT::run ()
 {
 	Log (1, "VLAT starting execution.\n");
 
     if (VlaData::loggingInitialized_p){
-        Logger::registerName ("VLAT");
+        Logger::get()->registerName ("VLAT");
     }
 
 	try {
@@ -1028,14 +1147,13 @@ VLAT::run ()
 
             sweepVi ();
 
-            if (terminationRequested()){
-                break;
+            pair<Bool,asyncio::RoviaModifiers> resetVi = vlaData_p->waitForViReset ();
+
+            if (! resetVi.first){
+                break; // Not resetting so it's time to quit
             }
-
-            Bool resetVi = vlaData_p->waitForViReset (this);
-
-            if (! resetVi){
-                break; // time to quit
+            else{
+                setModifiers (resetVi.second);
             }
 
 	    } while (True);
@@ -1044,7 +1162,8 @@ VLAT::run ()
      	Log (1, "VLAT stopping execution.\n");
 		return NULL;
 
-	} catch (AipsError & e){
+	}
+	catch (exception & e){
 
 		cerr << "VLAT thread caught exception: " << e.what() << endl;
 		cerr.flush();
@@ -1054,10 +1173,20 @@ VLAT::run ()
 		threadTerminated_p = true;
 		throw;
 	}
+	catch (...){
+
+		cerr << "VLAT thread caught unknown exception: " << endl;
+		cerr.flush();
+
+     	Log (1, "VLAT caught unknown exception:\n");
+
+		threadTerminated_p = true;
+		throw;
+	}
 }
 
 void
-VLAT::setModifiers (RoviaModifiers & modifiers)
+VLAT::setModifiers (asyncio::RoviaModifiers & modifiers)
 {
     roviaModifiers_p.transfer (modifiers);
 }
@@ -1106,24 +1235,22 @@ VLAT::sweepVi ()
 
             subChunkNumber ++;
 
-            if (fillTerminationRequested ())
+            if (vlaData_p->isSweepTerminationRequested())
                 goto done;
 
             VlaDatum * vlaDatum = vlaData_p -> fillStart (chunkNumber, subChunkNumber);
 
-            if (fillTerminationRequested ())
+            if (vlaData_p->isSweepTerminationRequested())
                 goto done;
-
-            Log (2, "Filling datum with subchunk (%d,%d)\n", chunkNumber, subChunkNumber);
 
             fillDatum (vlaDatum);
 
-            if (fillTerminationRequested ())
+            if (vlaData_p->isSweepTerminationRequested())
                 goto done;
 
             vlaData_p -> fillComplete ();
 
-            if (fillTerminationRequested ())
+            if (vlaData_p->isSweepTerminationRequested())
                 goto done;
         }
     }
@@ -1138,188 +1265,17 @@ done:
 
 }
 
-
 void
 VLAT::terminate ()
 {
+    // Called by another thread to terminate the VLAT.
+
     Log (2, "Terminating VLAT\n");
     //printBacktrace (cerr, "VLAT termination");
+
     Thread::terminate(); // ask thread to terminate
 
-    vlaData_p->terminateFill (false); // unblock the thread
-    vlaData_p->terminateReset ();
-
+    vlaData_p->terminateLookahead (); // stop lookahead
 }
-
-//void
-//VLAT::FillerDependencies::add (ROVisibilityIteratorAsync::PrefetchColumnIds column,
-//                               ROVisibilityIteratorAsync::PrefetchColumnIds requiresColumn1, ...)
-//{
-//    va_list vaList;
-//
-//    va_start (vaList, requiresColumn1);
-//
-//    Int id = requiresColumn1;
-//    set<ROVisibilityIteratorAsync::PrefetchColumnIds> requiredColumns;
-//
-//    while (id >= 0 && id < ROVisibilityIteratorAsync::N_PrefetchColumnIds){
-//        requiredColumns.insert ((ROVisibilityIteratorAsync::PrefetchColumnIds) id);
-//        id = va_arg (vaList, Int);
-//    }
-//
-//    va_end (vaList);
-//
-//    insert (make_pair (column, requiredColumns));
-//}
-
-//void
-//VLAT::FillerDependencies::checkForCircularDependence ()
-//{
-//    for (iterator i = begin(); i != end (); i++){
-//        for (iterator j = i; j != end(); j++){
-//
-//            if (i != j &&
-//                contains (i->first, j->second) &&
-//                contains (j->first, i->second)){
-//
-//                Log (1, "VLAT:: Detected circular dependency between %s and %s!\n",
-//                     ROVisibilityIteratorAsync::prefetchColumnName(i->first).c_str(),
-//                     ROVisibilityIteratorAsync::prefetchColumnName(j->first).c_str());
-//                Assert (False);
-//            }
-//        }
-//    }
-//}
-
-//Bool
-//VLAT::FillerDependencies::isRequiredBy (ROVisibilityIteratorAsync::PrefetchColumnIds requiree,
-//                                        ROVisibilityIteratorAsync::PrefetchColumnIds requirer) const
-//{
-//    const_iterator bDependencies = find (requirer);
-//    Bool result = False;
-//
-//    if (bDependencies != end()){
-//        result = utilj::contains (requiree, bDependencies->second);
-//    }
-//
-//    return result;
-//}
-
-//Bool
-//VLAT::FillerDependencies::isRequiredByAny (ROVisibilityIteratorAsync::PrefetchColumnIds requiree,
-//                                           const set<ROVisibilityIteratorAsync::PrefetchColumnIds> & requirers) const
-//{
-//    typedef const set<ROVisibilityIteratorAsync::PrefetchColumnIds> Set;
-//
-//    Bool result = false;
-//
-//    // See if any of the members of the requirers need the requiree.
-//
-//    for (Set::const_iterator requirer = requirers.begin(); requirer != requirers.end(); requirer ++){
-//        result = result || isRequiredBy (requiree, * requirer);
-//    }
-//
-//    return result;
-//}
-
-//void
-//VLAT::FillerDependencies::performTransitiveClosure (FillerDictionary & dictionary)
-//{
-//    typedef set<ROVisibilityIteratorAsync::PrefetchColumnIds> DependencySet;
-//    bool workToBeDone = true;
-//
-//    while (workToBeDone){
-//
-//        workToBeDone = false; // assume done until proven otherwise
-//
-//        // Loop through all items having dependencies
-//
-//        for (iterator i = begin(); i != end(); i++){
-//
-//            DependencySet & iDependencies = i->second;
-//            DependencySet newDependencies = iDependencies; // working copy
-//
-//            for (DependencySet::iterator j = iDependencies.begin(); j != iDependencies.end(); j++){
-//
-//                // If an item in i's dependencies, j, has dependencies then add them to i's dependencies
-//
-//                iterator jDependencies = find (*j);
-//
-//                if (jDependencies != end()){
-//                    newDependencies.insert (jDependencies->second.begin(), jDependencies->second.end());
-//                }
-//            }
-//
-//            // If i's dependencies has changed then there's potentially more work to be done
-//
-//            workToBeDone = workToBeDone || iDependencies != newDependencies;
-//
-//            iDependencies = newDependencies;
-//        }
-//        checkForCircularDependence (); // could happen
-//    }
-//
-//    dictionary.setPrecedences (* this);
-//}
-
-//void
-//VLAT::FillerDictionary::setPrecedences (const FillerDependencies & dependencies)
-//{
-//    // Using the dependencies between the different fillers, compute a precedence
-//    // for each filler.  A numerically higher precedence level means a higher
-//    // precedence filler.  Higher precedence filler will be applied first.
-//
-//    typedef set<ROVisibilityIteratorAsync::PrefetchColumnIds> PrecedenceLevel;
-//    vector<PrecedenceLevel> levels (1);
-//
-//    // Put everything into level 0 to start with
-//
-//    for (iterator i = begin(); i != end(); i++){
-//        levels[0].insert (i->first);
-//    }
-//
-//    // Using dependencies, create the next higher precedence level
-//    // based on the previous one.  Higher precedence fillers will
-//    // be applied first.
-//
-//    Int level = 0;
-//    Bool workToBeDone = True;
-//
-//    while (workToBeDone){
-//
-//        PrecedenceLevel plPlus; // next higher predence level is initially empty
-//        PrecedenceLevel & pl = levels [level]; // current highest precedence level
-//        PrecedenceLevel plNew = pl; // interim revised copy of the current level
-//
-//        for (PrecedenceLevel::iterator i = pl.begin(); i != pl.end(); i ++){
-//            if (dependencies.isRequiredByAny (* i, pl)){
-//                plPlus.insert (* i);  // into the next level
-//                plNew.erase (* i);    // out of the current level
-//            }
-//        }
-//
-//        if (! plPlus.empty()){
-//
-//            // The new predence level is not empty: install it
-//            // and the updated previous level and flag that more work
-//            // is required.
-//
-//            workToBeDone = True;
-//
-//            levels.push_back (plPlus);
-//            pl = plNew;
-//            level ++;
-//        }
-//    }
-//
-//    // Now apply the precedences.
-//
-//    for (uint level = 0; level < levels.size(); level ++){
-//        for (PrecedenceLevel::iterator i = levels [level].begin(); i != levels [level].end(); i++){
-//            find (*i)->second->setPrecedence (level);
-//        }
-//    }
-//}
-
 
 } // end namespace casa

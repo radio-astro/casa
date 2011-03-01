@@ -144,6 +144,7 @@ public:
 //    MEpoch getMEpoch () const;
 //    Vector<Float> getReceptor0Angle ();
 
+    void linkWithRovi (ROVisibilityIterator * rovi);
     bool more () const;
     bool moreChunks () const;
     ROVisibilityIteratorAsync & nextChunk ();
@@ -182,7 +183,7 @@ public:
     // -1.
 
     static int getDefaultNBuffers ();
-    static String getRcBase();
+    static String getAipsRcBase();
     static Bool isAsynchronousIoEnabled ();
     static PrefetchColumns prefetchColumnsAll ();
     static PrefetchColumns prefetchAllColumnsExcept (int firstColumnId, ...);
@@ -281,7 +282,7 @@ public:
     Matrix<Float>& weightMat(Matrix<Float>& ) const { NotImplementedROVIA; }
     Cube<Float>& weightSpectrum(Cube<Float>& ) const { NotImplementedROVIA; }
 
-    static String prefetchColumnName (PrefetchColumnIds id); // for debug only
+    static String prefetchColumnName (Int id); // for debug only
 
 protected:
 
@@ -330,6 +331,7 @@ private:
 
     Int chunkNumber_p;
     ROVisibilityIteratorAsyncImpl * impl_p;
+    ROVisibilityIterator * linkedVisibilityIterator_p; // [use]
     PrefetchColumns prefetchColumns_p;
     Int subChunkNumber_p;
     const VlaDatum * vlaDatum_p;
@@ -379,8 +381,16 @@ private:
 
 class RoviaModifier {
 public:
+
+    friend std::ostream & operator<< (std::ostream & o, const RoviaModifier & m);
+
     virtual ~RoviaModifier () {}
     virtual void apply (ROVisibilityIterator *) const = 0;
+
+private:
+
+    virtual void print (std::ostream & o) const = 0;
+
 };
 
 class SelectChannelModifier : public RoviaModifier {
@@ -406,6 +416,10 @@ private:
     Int start_p;
     Int width_p;
 
+    void print (std::ostream & o) const;
+    String toCsv (const Block< Vector<Int> > & bv) const;
+    String toCsv (const Vector<Int> & v) const;
+
 };
 
 class SetIntervalModifier : public RoviaModifier {
@@ -419,6 +433,7 @@ private:
 
     Double timeInterval_p;
 
+    void print (std::ostream & o) const;
 };
 
 
@@ -437,6 +452,7 @@ private:
     Int start_p;
     Int width_p;
 
+    void print (std::ostream & o) const;
 };
 
 class RoviaModifiers {
@@ -454,6 +470,7 @@ private:
 
     typedef vector<RoviaModifier *> Data;
     Data data_p;
+
 };
 
 class SelectVelocityModifier : public RoviaModifier {
@@ -472,6 +489,8 @@ private:
     MRadialVelocity::Types rvType_p;
     MVRadialVelocity vInc_p;
     MVRadialVelocity vStart_p;
+
+    virtual void print (std::ostream & o) const;
 
 };
 

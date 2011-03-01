@@ -156,17 +156,18 @@ Condition::wait (Mutex & mutex, int milliseconds)
 }
 */
 
-Bool Logger::loggingStarted_p = False;
-Mutex * Logger::nameMutex_p = NULL;
-map <pthread_t, String> Logger::threadNames_p;
+Logger::Logger ()
+: loggingStarted_p (False),
+  nameMutex_p (NULL)
+{}
 
-Logger::LoggerThread *
+Logger::Logger *
 Logger::get()
 {
-    static LoggerThread * singleton = NULL;
+    static Logger * singleton = NULL;
 
     if (singleton == NULL){
-        singleton = new LoggerThread ();
+        singleton = new Logger ();
     }
 
     return singleton;
@@ -205,25 +206,21 @@ Logger::log (const char * format, ...)
 
     // Allocate a buffer to put into the queue
 
-    char * outputText = new char [strlen(buffer) + prefix.size() + 1];
-
-    // Fill in the timestamp, delimiter and the log text
-
-    strcpy (outputText, prefix.c_str());
-    strcat (outputText, buffer);
+    string outputText = prefix + buffer;
 
     va_end (vaList);
 
     // Lock the queue, push on the block of text and increment
     // the drain semaphore
 
-    get() -> log (outputText); // ownership passes to the thread
-
+    loggerThread_p -> log (outputText); // ownership passes to the thread
 }
 
 void
 Logger::registerName (const String & threadName)
 {
+    Assert (nameMutex_p != NULL);
+
     MutexLocker ml (* nameMutex_p);
 
     threadNames_p [pthread_self()] = threadName;
@@ -232,13 +229,17 @@ Logger::registerName (const String & threadName)
 void
 Logger::start (const char * filename)
 {
-    nameMutex_p = new Mutex ();
+    if (! loggingStarted_p){  // ignore multiple starts
 
-    get()->setLogFilename (filename == NULL ? "" : filename);
+        nameMutex_p = new Mutex ();
+        loggerThread_p = new LoggerThread ();
 
-    get()->startThread();
+        loggerThread_p ->setLogFilename (filename == NULL ? "" : filename);
 
-    loggingStarted_p = True;
+        loggerThread_p ->startThread();
+
+        loggingStarted_p = True;
+    }
 }
 
 Logger::LoggerThread::LoggerThread ()
@@ -247,8 +248,6 @@ Logger::LoggerThread::LoggerThread ()
 Logger::LoggerThread::~LoggerThread ()
 {
     terminate();
-
-    this->drainSemaphore_p.post(); // wake up stalled thread so it can quit
 
     this->join();
 
@@ -260,75 +259,105 @@ Logger::LoggerThread::~LoggerThread ()
 }
 
 void
-Logger::LoggerThread::log (char * text)
+Logger::LoggerThread::log (const string & text)
 {
     MutexLocker m (mutex_p);
 
     outputQueue_p.push (text);
 
-    drainSemaphore_p.post ();
+    loggerChanged_p.broadcast ();
 }
+
 
 void *
 Logger::LoggerThread::run ()
 {
-    // Determine where to write the logging info.  If nothing is specified or either "cerr" or
-    // "stdout" are specified then use standard error.  If "cout" or "stdout" are specified then
-    // use standard out.  Otherwise open the specified file and write to that.
+    try {
+        // Determine where to write the logging info.  If nothing is specified or either "cerr" or
+        // "stdout" are specified then use standard error.  If "cout" or "stdout" are specified then
+        // use standard out.  Otherwise open the specified file and write to that.
 
-    if (logFilename_p.empty () || logFilename_p == "cerr" || logFilename_p == "stderr"){
-        logStream_p = & cerr;
-        deleteStream_p = False;
-    }
-    else if (logFilename_p == "cout" || logFilename_p == "stdout"){
-        logStream_p = & cout;
-        deleteStream_p = False;
-    }
-    else{
-        logStream_p = new ofstream (logFilename_p.c_str(), ios::out);
-        deleteStream_p = True;
-    }
-
-    * logStream_p << utilj::getTimestamp() << ": Logging started" << endl;
-
-    // Loop waiting on the drain semaphore.  This should be incremented once
-    // every time users add a block of text to the queue.
-
-    while (True){
-
-        if (! terminationRequested ())
-            drainSemaphore_p.wait (); // one count per item on queue
-
-        char * text;
-
-        {
-            // Pop the front block of output off of the queue
-            // Keep mutex locked while accessing queue.
-
-            MutexLocker locker (mutex_p);
-
-            if (terminationRequested() && outputQueue_p.empty()){
-                break;
-            }
-
-            text = outputQueue_p.front();
-
-            outputQueue_p.pop();
+        if (logFilename_p.empty () || logFilename_p == "cerr" || logFilename_p == "stderr"){
+            logStream_p = & cerr;
+            deleteStream_p = False;
+        }
+        else if (logFilename_p == "cout" || logFilename_p == "stdout"){
+            logStream_p = & cout;
+            deleteStream_p = False;
+        }
+        else{
+            logStream_p = new ofstream (logFilename_p.c_str(), ios::out);
+            deleteStream_p = True;
         }
 
-        // Now output the text and then delete the storage
+        * logStream_p << utilj::getTimestamp() << ": Logging started" << endl;
 
-        * logStream_p << text;
+        // Loop waiting on the drain semaphore.  This should be incremented once
+        // every time users add a block of text to the queue.
 
-        logStream_p->flush();
+        while (True){
 
-        delete text;
+            string text;
 
+            {
+                // Pop the front block of output off of the queue
+                // Keep mutex locked while accessing queue.
+
+                MutexLocker locker (mutex_p);
+
+                while (! isTerminationRequested() && outputQueue_p.empty()){
+                    loggerChanged_p.wait (mutex_p);
+                }
+
+                if (isTerminationRequested() && outputQueue_p.empty()){
+                    break;
+                }
+
+                text = outputQueue_p.front();
+
+                outputQueue_p.pop();
+            }
+
+            // Now output the text and then delete the storage
+
+            * logStream_p << text;
+
+            logStream_p->flush();
+        }
+
+        * logStream_p << "*** Logging terminated" << endl;
+
+        return NULL;
     }
+    catch (exception & e){
 
-    * logStream_p << "*** Logging terminated" << endl;
+       char * message = "*** Logging thread caught exception: ";
 
-    return NULL;
+       cerr <<  message << e.what() << endl;
+       cerr.flush();
+
+       if (logStream_p != & cerr){
+
+           * logStream_p << message << e.what() << endl;
+           logStream_p->flush();
+       }
+
+        throw;
+    }
+    catch (...){
+
+       char * message = "*** Logging thread caught unknown exception";
+
+       cerr <<  message << endl;
+       cerr.flush();
+
+       if (logStream_p != & cerr){
+           * logStream_p << message << endl;
+           logStream_p->flush();
+       }
+
+       throw;
+    }
 }
 
 void
@@ -337,6 +366,13 @@ Logger::LoggerThread::setLogFilename (const String & filename)
     logFilename_p = filename;
 }
 
+void
+Logger::LoggerThread::terminate ()
+{
+    Thread::terminate();
+
+    loggerChanged_p.broadcast();
+}
 
 Mutex::Mutex ()
 {
@@ -605,7 +641,7 @@ Thread::terminate ()
 
 
 bool
-Thread::terminationRequested () const
+Thread::isTerminationRequested () const
 {
     return terminationRequested_p;
 }

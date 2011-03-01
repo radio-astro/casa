@@ -17,14 +17,12 @@ class ROVisibilityIteratorAsync;
 class VisBufferAsync : public VisBuffer {
 
     friend class ROVisibilityIteratorAsync;
+    friend class VisBufferAutoPtr;
     friend class VLAT;
     friend class VlaDatum;
 
 public:
 
-    VisBufferAsync ();
-    VisBufferAsync (const VisBufferAsync & other);
-    VisBufferAsync (ROVisibilityIteratorAsync & iter);
     //VisBufferAsync (const VisBuffer& vb);
 
     ~VisBufferAsync ();
@@ -60,6 +58,16 @@ public:
 
 protected:
 
+    // The constructors are not public because creation should be performed
+    // by a factory object (e.g., VisBufferAutoPtr).  The use of a factory
+    // makes it possible to fine tune at run time whether a VisBuffer or a
+    // VisBufferAsync is created.
+
+    VisBufferAsync ();
+    VisBufferAsync (const VisBufferAsync & other);
+    VisBufferAsync (ROVisibilityIteratorAsync & iter);
+
+    void attachToVisIter(ROVisibilityIterator & iter);
     void checkVisIter (const char * func, const char * file, int line) const;
     void clear ();
     void construct ();
@@ -93,7 +101,9 @@ protected:
     void setVisibilityShape (const IPosition & pvisibilityShape);
     void updateCoordInfo (const VisBuffer *);
 
-    static MDirection unshared (const MDirection & direction);
+    static MDirection unsharedCopyDirection (const MDirection & direction);
+    static MEpoch unsharedCopyEpoch (const MEpoch & mEpoch);
+    static MPosition unsharedCopyPosition (const MPosition & position);
 
 private:
 
@@ -121,6 +131,7 @@ private:
     Vector<Int>                    selectedNVisibilityChannels_p;
     Vector<Int>                    selectedSpectralWindows_p;
     Bool                           velSelection_p;
+    ROVisibilityIteratorAsync *    visIterAsync_p;
     IPosition                      visibilityShape_p;
 };
 
@@ -130,8 +141,8 @@ public:
 
     VisBufferAutoPtr ();
     VisBufferAutoPtr (VisBufferAutoPtr & other);
-    VisBufferAutoPtr (VisBuffer &);
-    VisBufferAutoPtr (VisBuffer *);
+    explicit VisBufferAutoPtr (VisBuffer &);
+    explicit VisBufferAutoPtr (VisBuffer *);
     explicit VisBufferAutoPtr (ROVisibilityIterator * rovi);
     explicit VisBufferAutoPtr (ROVisibilityIterator & rovi);
     ~VisBufferAutoPtr ();
