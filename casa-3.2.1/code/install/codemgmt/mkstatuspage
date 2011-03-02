@@ -1,0 +1,14 @@
+#!/bin/sh
+#
+# First bit runs through the unit tests, next through the regression scripts
+#
+AIPSROOT=`echo $CASAPATH | awk '{print $1}'`
+TESTMACHINES="ballista.aoc.nrao.edu-linux-32b galatea.aoc-vis.nrao.edu-macosx-32b"
+cd ~/buildreports
+WEBPAGE=$AIPSROOT/code/doc/html/buildstatus.html
+cat $AIPSROOT/code/doc/html/stdcasaheader.phtm | sed -e 's/CASAWEBPAGETITLE/CASA Build Status/g' > $WEBPAGE
+mkstatustab `ls *.report` >>$WEBPAGE
+cat $AIPSROOT/code/doc/html/stdcasatrail.phtm  >> $WEBPAGE
+cd $AIPSROOT/code/doc/html
+svn commit -m "Updated with lastest results"
+gmake
