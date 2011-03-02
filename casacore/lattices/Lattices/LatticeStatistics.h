@@ -644,6 +644,10 @@ private:
     Block<U> *pSum_p;
     Block<U> *pSumSq_p;
     Block<U>* pNPts_p;
+    Block<U>* pMean_p;
+
+    Block<U>* pVariance_p;
+
     Block<T>* pMin_p;
     Block<T>* pMax_p;
     Block<Bool>* pInitMinMax_p;
