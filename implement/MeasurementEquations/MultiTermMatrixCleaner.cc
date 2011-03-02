@@ -1193,7 +1193,7 @@ Int MultiTermMatrixCleaner::checkConvergence(Int criterion, Float &fluxlimit, Fl
     }
     else
     {
-      if( totalIters_p==maxniter_p || (adbg==(Bool)True) || maxniter_p < (int)5 || (maxniter_p%(Int)20==0) )
+      if( totalIters_p==maxniter_p || (adbg==(Bool)True) || maxniter_p < (int)5 || (totalIters_p%(Int)20==0) )
        {
 	 
 	    os << "[" << totalIters_p << "] Res: " << rmaxval << " Max: " << globalmaxval_p;
