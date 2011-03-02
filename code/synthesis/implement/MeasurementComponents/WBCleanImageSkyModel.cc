@@ -132,7 +132,7 @@ WBCleanImageSkyModel::~WBCleanImageSkyModel()
  *************************************/
 Bool WBCleanImageSkyModel::solve(SkyEquation& se) 
 {
-	os << "MSMFS algorithm (v2.2) with " << ntaylor_p << " Taylor coefficients and Reference Frequency of " << refFrequency_p  << " Hz" << LogIO::POST;
+	os << "MSMFS algorithm (v2.3) with " << ntaylor_p << " Taylor coefficients and Reference Frequency of " << refFrequency_p  << " Hz" << LogIO::POST;
 	Int stopflag=0;
 	Int nchan=0,npol=0;
 
@@ -494,39 +494,28 @@ Int WBCleanImageSkyModel::writeResultsToDisk()
     Matrix<Double> invhessian;
     lc_p[model].getinvhessian(invhessian);
     //cout << "Inverse Hessian : " << invhessian << endl;
-    
-    /* Convolve the residuals with the PSF */
+
     Int tindex;
     LatticeExprNode len_p;
-    PtrBlock<TempLattice<Float>* > coeffresiduals(ntaylor_p),smoothresiduals(ntaylor_p);
+    PtrBlock<TempLattice<Float>* > coeffresiduals(ntaylor_p); //,smoothresiduals(ntaylor_p);
     for(Int taylor1=0;taylor1<ntaylor_p;taylor1++)
     {
 	coeffresiduals[taylor1] = new TempLattice<Float>(gip,memoryMB_p);
-	smoothresiduals[taylor1] = new TempLattice<Float>(gip,memoryMB_p);
-	
-	index = getModelIndex(model,taylor1);
-        LatticeExpr<Float> cop(residual(index));
-	imalpha.copyData(cop);
-	//StokesImageUtil::Convolve(imalpha, bmaj, bmin, bpa,True);
-	StokesImageUtil::Convolve(imalpha,PSF(model));
-	LatticeExpr<Float> le(imalpha); 
-	(*smoothresiduals[taylor1]).copyData(le);
-
     }
     
+    /* Apply the inverse Hessian to the residuals */
     for(Int taylor1=0;taylor1<ntaylor_p;taylor1++)
     {
 	    len_p = LatticeExprNode(0.0);
 	    for(Int taylor2=0;taylor2<ntaylor_p;taylor2++)
 	    {
-                    //tindex = getModelIndex(model,taylor2);
-		    //len_p = len_p + LatticeExprNode((Float)(invhessian)(taylor1,taylor2)*(residual(tindex)));
-		    len_p = len_p + LatticeExprNode((Float)(invhessian)(taylor1,taylor2)*(*smoothresiduals[taylor2]));
+                    tindex = getModelIndex(model,taylor2);
+		    len_p = len_p + LatticeExprNode((Float)(invhessian)(taylor1,taylor2)*(residual(tindex)));
 	    }
 	    (*coeffresiduals[taylor1]).copyData(LatticeExpr<Float>(len_p));
     }
     
-    /* Smooth the model images and add the above residuals */
+    /* Smooth the model images and add the above coefficient residuals */
     for(uInt i=0;i<smoothed.nelements();i++)
     {
 	    smoothed[i] = new TempLattice<Float>(gip,memoryMB_p);
@@ -535,8 +524,8 @@ Int WBCleanImageSkyModel::writeResultsToDisk()
 	    LatticeExpr<Float> cop(image(index));
 	    imalpha.copyData(cop);
 	    StokesImageUtil::Convolve(imalpha, bmaj, bmin, bpa);
-	    LatticeExpr<Float> le(imalpha); 
-	    //LatticeExpr<Float> le(imalpha+( *coeffresiduals[i] )); 
+	    //LatticeExpr<Float> le(imalpha); 
+	    LatticeExpr<Float> le(imalpha+( *coeffresiduals[i] )); 
 	    (*smoothed[i]).copyData(le);
     }
 
@@ -600,7 +589,6 @@ Int WBCleanImageSkyModel::writeResultsToDisk()
     for(uInt i=0;i<coeffresiduals.nelements();i++) 
     {
 	    if(coeffresiduals[i]) delete coeffresiduals[i];
-	    if(smoothresiduals[i]) delete smoothresiduals[i];
     }
 
   }// model loop
