@@ -15,6 +15,8 @@
 // STL
 #include <string>
 #include <vector>
+#include <iostream>
+#include <fstream>
 // AIPS++
 #include <casa/aips.h>
 #include <casa/Containers/Record.h>
@@ -229,7 +231,9 @@ public:
    * to be flagged
    */
   //void flag( const std::vector<bool>& msk = std::vector<bool>());
-  void flag( const std::vector<bool>& msk = std::vector<bool>(), bool unflag=false);
+  //void flag( const std::vector<bool>& msk = std::vector<bool>(), bool unflag=false);
+
+  void flag( int whichrow = -1, const std::vector<bool>& msk = std::vector<bool>(), bool unflag=false);
 
   /**
    * Flag the data in a row-based manner. (CAS-1433 Wataru Kawasaki)
@@ -490,15 +494,54 @@ public:
 
   bool getFlagtraFast(int whichrow);
 
-  void polyBaselineBatch(const std::vector<bool>& mask, int order);
-  STFitEntry polyBaseline(const std::vector<bool>& mask, int order, int rowno);
+  void polyBaseline(const std::vector<bool>& mask, 
+		    int order, 
+		    bool outLogger=false, 
+		    const std::string& blfile="");
+  void autoPolyBaseline(const std::vector<bool>& mask,
+			int order, 
+			const std::vector<int>& edge, 
+			float threshold=3.0, 
+			int chanAvgLimit=1, 
+			bool outLogger=false, 
+			const std::string& blfile="");
+  void cubicSplineBaseline(const std::vector<bool>& mask,
+			   int nPiece,
+			   float thresClip, 
+			   int nIterClip,
+			   bool outLogger=false,
+			   const std::string& blfile="");
+  void autoCubicSplineBaseline(const std::vector<bool>& mask,
+			       int nPiece,
+			       float thresClip, 
+			       int nIterClip,
+			       const std::vector<int>& edge, 
+			       float threshold=3.0, 
+			       int chanAvgLimit=1, 
+			       bool outLogger=false, 
+			       const std::string& blfile="");
+  float getRms(const std::vector<bool>& mask, int whichrow);
+  std::string formatBaselineParams(const std::vector<float>& params, 
+			           const std::vector<bool>& fixed, 
+			           float rms, 
+		   	           const std::string& masklist, 
+			           int whichrow, 
+			           bool verbose=false) const;
+  std::string formatPiecewiseBaselineParams(const std::vector<int>& ranges, 
+					    const std::vector<float>& params, 
+					    const std::vector<bool>& fixed, 
+					    float rms, 
+					    const std::string& masklist, 
+					    int whichrow, 
+					    bool verbose=false) const;
+
 
 private:
 
   casa::Matrix<casa::Float> getPolMatrix( casa::uInt whichrow ) const;
 
   /**
-   * Turns a time vale into a formatted string
+   * Turns a time value into a formatted string
    * @param x
    * @return
    */
@@ -605,9 +648,31 @@ private:
 						      const casa::String&,
 						      const casa::Array<T2>&);
 
-  void doPolyBaseline(const std::vector<bool>& mask, int order, int rowno, Fitter& fitter);
-};
+  void fitBaseline(const std::vector<bool>& mask, int whichrow, Fitter& fitter);
+  std::vector<float> doCubicSplineFitting(const std::vector<float>& data, 
+					  const std::vector<bool>& mask,
+					  std::vector<int>& sectionRanges,
+					  std::vector<float>& params,
+					  int nPiece=2,
+					  float thresClip=3.0, 
+					  int nIterClip=1);
+  bool hasSameNchanOverIFs();
+  std::string getMaskRangeList(const std::vector<bool>& mask, 
+				int whichrow, 
+				const casa::String& coordInfo, 
+				bool hasSameNchan, 
+				int firstIF, 
+				bool silent=false);
+  std::vector<int> getMaskEdgeIndices(const std::vector<bool>& mask, bool getStartIndices=true);
+  std::string formatBaselineParamsHeader(int whichrow, const std::string& masklist, bool verbose) const;
+  std::string formatBaselineParamsFooter(float rms, bool verbose) const;
+  std::vector<bool> getCompositeChanMask(int whichrow, const std::vector<bool>& inMask);
+  //std::vector<bool> getCompositeChanMask(int whichrow, const std::vector<bool>& inMask, const std::vector<int>& edge, const int minEdgeSize, STLineFinder& lineFinder);
 
+  void applyChanFlag( casa::uInt whichrow, const std::vector<bool>& msk, casa::uChar flagval);
+
+
+};
 
 } // namespace
 

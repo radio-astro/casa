@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: python_asap.h 1819 2010-08-02 07:28:20Z KanaSugimoto $
+//# $Id: python_asap.h 1974 2011-01-18 06:52:02Z TakeshiNakazato $
 //#---------------------------------------------------------------------------
 #ifndef PYTHON_ASAP_H
 #define PYTHON_ASAP_H
@@ -39,12 +39,14 @@ namespace asap {
     void python_Scantable();
     void python_STFiller();
     void python_Filler();
+    void python_MSFiller();
     void python_STSelector();
     void python_STMath();
     void python_Fitter();
     void python_STLineFinder();
     void python_STFitEntry();
     void python_STWriter();
+    void python_MSWriter();
     void python_LineCatalog();
     void python_Logger();
     void python_LogSink();

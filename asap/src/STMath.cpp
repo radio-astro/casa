@@ -1046,11 +1046,20 @@ if ( ! calon->conformant(*caloff) ) {
       tcalUsed = tcal;
       if ( tcal <= 0.0 ) {
         caloff->tcal().getEntry(tcalt, tcalout, tcalId);
-        if (polno<=3) {
-          tcalUsed = tcalout[polno];
-        }
+//         if (polno<=3) {
+//           tcalUsed = tcalout[polno];
+//         }
+//         else {
+//           tcalUsed = tcalout[0];
+//         }
+        if ( tcalout.size() == 1 )
+          tcalUsed = tcalout[0] ;
+        else if ( tcalout.size() == nchan ) 
+          tcalUsed = mean(tcalout) ;
         else {
-          tcalUsed = tcalout[0];
+          uInt ipol = polno ;
+          if ( ipol > 3 ) ipol = 0 ;
+          tcalUsed = tcalout[ipol] ;
         }
       }
 

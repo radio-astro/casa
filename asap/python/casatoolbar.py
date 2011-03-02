@@ -1,5 +1,6 @@
 import os
-import matplotlib
+import matplotlib, numpy
+from asap.logging import asaplog, asaplog_post_dec
 
 ######################################
 ##    Add CASA custom toolbar       ##
@@ -166,14 +167,84 @@ class CustomToolbarCommon:
         #print "No text picked"
         return False
 
-    def _new_page(self,next=True):
+    ### Page chages
+    ### go to the previous page
+    def prev_page(self):
+        self.figmgr.toolbar.set_message('plotting the previous page')
+        self._new_page(goback=True)
+
+    ### go to the next page
+    def next_page(self):
+        self.figmgr.toolbar.set_message('plotting the next page')
+        self._new_page(goback=False)
+
+    ### actual plotting of the new page
+    def _new_page(self,goback=False):
+        if self.plotter._startrow <= 0:
+            msg = "The page counter is reset due to chages of plot settings. "
+            msg += "Plotting from the first page."
+            asaplog.push(msg)
+            asaplog.post('WARN')
+            goback = False
+            
         self.plotter._plotter.hold()
+        if goback:
+            self._set_prevpage_counter()
         #self.plotter._plotter.clear()
         self.plotter._plot(self.plotter._data)
+        self.set_pagecounter(self._get_pagenum())
         self.plotter._plotter.release()
         self.plotter._plotter.tidy()
         self.plotter._plotter.show(hardrefresh=False)
-        pass
+
+    ### calculate the panel ID and start row to plot the previous page
+    def _set_prevpage_counter(self):
+        # set row and panel counters to those of the 1st panel of previous page
+        maxpanel = 16
+        # the ID of the last panel in current plot
+        lastpanel = self.plotter._ipanel
+        # the number of current subplots
+        currpnum = len(self.plotter._plotter.subplots)
+        # the nuber of previous subplots
+        prevpnum = None
+        if self.plotter._rows and self.plotter._cols:
+            # when user set layout
+            prevpnum = self.plotter._rows*self.plotter._cols
+        else:
+            # no user specification
+            prevpnum = maxpanel
+            
+        start_ipanel = max(lastpanel-currpnum-prevpnum+1, 0)
+        # set the pannel ID of the last panel of prev-prev page
+        self.plotter._ipanel = start_ipanel-1
+        if self.plotter._panelling == 'r':
+            self.plotter._startrow = start_ipanel
+        else:
+            # the start row number of the next panel
+            self.plotter._startrow = self.plotter._panelrows[start_ipanel]
+        del lastpanel,currpnum,prevpnum,start_ipanel
+
+    ### refresh the page counter
+    ### refresh the page counter
+    def set_pagecounter(self,page):
+        nwidth = int(numpy.ceil(numpy.log10(max(page,1))))+1
+        nwidth = max(nwidth,4)
+        formatstr = '%'+str(nwidth)+'d'
+        self.show_pagenum(page,formatstr)
+
+    def show_pagenum(self,pagenum,formatstr):
+        # passed to backend dependent class
+        pass        
+
+    def _get_pagenum(self):
+        maxpanel = 16
+        # get the ID of last panel in the current page
+        idlastpanel = self.plotter._ipanel
+        if self.plotter._rows and self.plotter._cols:
+            ppp = self.plotter._rows*self.plotter._cols
+        else:
+            ppp = maxpanel
+        return int(idlastpanel/ppp)+1
 
 #####################################
 ##    Backend dependent Classes    ##
@@ -190,40 +261,57 @@ class CustomToolbarTkAgg(CustomToolbarCommon, Tk.Frame):
             return False
         if not parent._plotter:
             return False
-        self._p=parent._plotter
-        self.figmgr=self._p.figmgr
-        self.canvas=self.figmgr.canvas
-        self.mode=''
-        self.button=True
-        self._add_custom_toolbar()
-        self.notewin=NotationWindowTkAgg(master=self.canvas)
+        self._p = parent._plotter
+        self.figmgr = self._p.figmgr
+        self.canvas = self.figmgr.canvas
+        self.mode = ''
+        self.button = True
+        self.pagecount = None
         CustomToolbarCommon.__init__(self,parent)
+        self.notewin=NotationWindowTkAgg(master=self.canvas)
+        self._add_custom_toolbar()
 
     def _add_custom_toolbar(self):
         Tk.Frame.__init__(self,master=self.figmgr.window)
-        self.bSpec=self._NewButton(master=self,
-                                   text='spec value',
-                                   command=self.spec_show)
-        self.bStat=self._NewButton(master=self,
-                                   text='statistics',
-                                   command=self.stat_cal)
+        #self.bSpec=self._NewButton(master=self,
+        #                           text='spec value',
+        #                           command=self.spec_show)
         self.bNote=self._NewButton(master=self,
                                    text='notation',
                                    command=self.modify_note)
-        #self.bPrev=self._NewButton(master=self,
-        #                           text='- page',
-        #                           command=self.prev_page)
-        self.bNext=self._NewButton(master=self,
-                                   text='+ page',
-                                   command=self.next_page)
-        if os.uname()[0] != 'Darwin':
-            #self.bPrev.config(padx=5)
-            self.bNext.config(padx=5)
+
+        self.bStat=self._NewButton(master=self,
+                                   text='statistics',
+                                   command=self.stat_cal)
         self.bQuit=self._NewButton(master=self,
                                    text='Quit',
                                    command=self.quit,
                                    side=Tk.RIGHT)
+
+        # page change oparations
+        frPage = Tk.Frame(master=self,borderwidth=2,relief=Tk.GROOVE)
+        frPage.pack(ipadx=2,padx=10,side=Tk.RIGHT)
+        self.lPagetitle = Tk.Label(master=frPage,text='Page:',padx=5)
+        self.lPagetitle.pack(side=Tk.LEFT)
+        self.pagecount = Tk.StringVar(master=frPage)
+        self.lPagecount = Tk.Label(master=frPage,
+                                   textvariable=self.pagecount,
+                                   padx=5,bg='white')
+        self.lPagecount.pack(side=Tk.LEFT,padx=3)
+        
+        self.bNext=self._NewButton(master=frPage,
+                                   text=' + ',
+                                   command=self.next_page)
+        self.bPrev=self._NewButton(master=frPage,
+                                   text=' - ',
+                                   command=self.prev_page)
+
+        if os.uname()[0] != 'Darwin':
+            self.bPrev.config(padx=5)
+            self.bNext.config(padx=5)
+
         self.pack(side=Tk.BOTTOM,fill=Tk.BOTH)
+        self.pagecount.set(' '*4)
 
         self.disable_button()
         return #self
@@ -237,24 +325,30 @@ class CustomToolbarTkAgg(CustomToolbarCommon, Tk.Frame):
         b.pack(side=side)
         return b
 
+    def show_pagenum(self,pagenum,formatstr):
+        self.pagecount.set(formatstr % (pagenum))
+
     def spec_show(self):
         if not self.figmgr.toolbar.mode == '' or not self.button: return
         self.figmgr.toolbar.set_message('spec value: drag on a spec')
         if self.mode == 'spec': return
-        self.bStat.config(relief='raised')
-        self.bSpec.config(relief='sunken')
-        self.bNote.config(relief='raised')
+        #self.bStat.config(relief='raised')
+        #self.bSpec.config(relief='sunken')
+        #self.bNote.config(relief='raised')
         self.mode='spec'
         self.notewin.close_widgets()
         self.__disconnect_event()
-        #self.canvas.mpl_connect('button_press_event',self._select_spectrum)
         self._p.register('button_press',self._select_spectrum)
 
     def stat_cal(self):
         if not self.figmgr.toolbar.mode == '' or not self.button: return
         self.figmgr.toolbar.set_message('statistics: select a region')
-        if self.mode == 'stat': return
-        self.bSpec.config(relief='raised')
+        if self.mode == 'stat':
+            # go back to spec mode
+            self.bStat.config(relief='raised')
+            self.spec_show()
+            return
+        #self.bSpec.config(relief='raised')
         self.bStat.config(relief='sunken')
         self.bNote.config(relief='raised')
         self.mode='stat'
@@ -265,21 +359,17 @@ class CustomToolbarTkAgg(CustomToolbarCommon, Tk.Frame):
     def modify_note(self):
         if not self.figmgr.toolbar.mode == '': return
         self.figmgr.toolbar.set_message('text: select a position/text')
-        if self.mode == 'note': return
-        self.bSpec.config(relief='raised')
+        if self.mode == 'note':
+            self.bNote.config(relief='raised')
+            self.mode='none'
+            self.spec_show()
+            return
+        #self.bSpec.config(relief='raised')
         self.bStat.config(relief='raised')
         self.bNote.config(relief='sunken')
         self.mode='note'
         self.__disconnect_event()
         self._p.register('button_press',self._mod_note)
-
-    def prev_page(self):
-        self.figmgr.toolbar.set_message('plotting the previous page')
-        self._new_page(next=False)
-
-    def next_page(self):
-        self.figmgr.toolbar.set_message('plotting the next page')
-        self._new_page(next=True)
 
     def quit(self):
         self.__disconnect_event()
@@ -289,17 +379,17 @@ class CustomToolbarTkAgg(CustomToolbarCommon, Tk.Frame):
 
     def enable_button(self):
         if self.button: return
-        self.bSpec.config(state=Tk.NORMAL)
+        #self.bSpec.config(state=Tk.NORMAL)
         self.bStat.config(state=Tk.NORMAL)
         self.button=True
         self.spec_show()
 
     def disable_button(self):
         if not self.button: return
+        #self.bSpec.config(relief='raised', state=Tk.DISABLED)
         self.bStat.config(relief='raised', state=Tk.DISABLED)
-        self.bSpec.config(relief='raised', state=Tk.DISABLED)
-        #self.bPrev.config(state=Tk.DISABLED)
         #self.bNext.config(state=Tk.DISABLED)
+        #self.bPrev.config(state=Tk.DISABLED)
         self.button=False
         self.mode=''
         self.__disconnect_event()
@@ -311,25 +401,15 @@ class CustomToolbarTkAgg(CustomToolbarCommon, Tk.Frame):
         self.bNext.config(state=Tk.DISABLED)
 
     def enable_prev(self):
-        #self.bPrev.config(state=Tk.NORMAL)
-        pass
+        self.bPrev.config(state=Tk.NORMAL)
 
     def disable_prev(self):
-        #self.bPrev.config(state=Tk.DISABLED)
-        pass
+        self.bPrev.config(state=Tk.DISABLED)
 
     def delete_bar(self):
         self.__disconnect_event()
         self.destroy()
 
     def __disconnect_event(self):
-        #idP=self.figmgr.toolbar._idPress
-        #idR=self.figmgr.toolbar._idRelease
-        #if idP is not None:
-        #    self.canvas.mpl_disconnect(idP)
-        #    self.figmgr.toolbar._idPress=None
-        #if idR is not None:
-        #    self.canvas.mpl_disconnect(idR)
-        #    self.figmgr.toolbar._idRelease=None
         self._p.register('button_press',None)
         self._p.register('button_release',None)

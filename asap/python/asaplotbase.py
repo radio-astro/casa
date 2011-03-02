@@ -230,6 +230,9 @@ class asaplotbase:
             line = self.axes.plot(x, y)
         else:
             line = self.axes.plot(x, y, fmt)
+        # add a picker to lines for spectral value mode.
+        # matplotlib.axes.plot returns a list of line object (1 element)
+        line[0].set_picker(5.0)
 
         # Add to an existing line?
         i = None

@@ -1,7 +1,7 @@
 //#---------------------------------------------------------------------------
-//# python_STLineFinder.cc: python exposure of C++ STLineFinder class
+//# python_MSWriter.cc: python exposure of c++ MSWriter class
 //#---------------------------------------------------------------------------
-//# Copyright (C) 2004
+//# Copyright (C) 2010
 //# ATNF
 //#
 //# This program is free software; you can redistribute it and/or modify it
@@ -26,27 +26,25 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: python_STLineFinder.cpp 2012 2011-02-25 05:51:50Z WataruKawasaki $
+//# $Id: python_STFiller.cpp 1774 2010-07-29 08:03:10Z MalteMarquarding $
 //#---------------------------------------------------------------------------
 #include <boost/python.hpp>
+#include <boost/noncopyable.hpp>
 
-#include "STLineFinder.h"
+#include "ScantableWrapper.h"
+#include "MSWriterWrapper.h"
 
 using namespace boost::python;
 
 namespace asap {
   namespace python {
-     void python_STLineFinder() {
-       class_<STLineFinder>("linefinder")
-         .def( init <> () )
-	 .def("setoptions",&STLineFinder::setOptions)
-         .def("setscan",&STLineFinder::setScan)
-         .def("setdata",&STLineFinder::setData)
-         .def("findlines",&STLineFinder::findLines)
-         .def("getmask",&STLineFinder::getMask)
-         .def("getlineranges",&STLineFinder::getLineRanges)
-         .def("getlinerangesinchannels",&STLineFinder::getLineRangesInChannels)
-       ;
-     };
-  } // namespace python
+
+    void python_MSWriter() {
+      class_<MSWriterWrapper, boost::noncopyable>("mswriter",
+                                                  init < ScantableWrapper >() )
+        .def("write", &MSWriterWrapper::write)
+      ;
+    };
+
+  } //namespace python
 } // namespace asap

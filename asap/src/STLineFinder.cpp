@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: STLineFinder.cpp 1670 2009-12-28 11:19:00Z MaximVoronkov $
+//# $Id: STLineFinder.cpp 2012 2011-02-25 05:51:50Z WataruKawasaki $
 //#---------------------------------------------------------------------------
 
 
@@ -924,6 +924,8 @@ void STLineFinder::setOptions(const casa::Float &in_threshold,
   box_size=in_box_size;
   itsNoiseBox = in_noise_box;
   itsUseMedian = in_median;
+
+  useScantable = true;
 }
 
 STLineFinder::~STLineFinder() throw(AipsError) {}
@@ -933,7 +935,15 @@ void STLineFinder::setScan(const ScantableWrapper &in_scan) throw(AipsError)
 {
   scan=in_scan.getCP();
   AlwaysAssert(!scan.null(),AipsError);
+}
 
+// set spectrum data to work with. this is a method to allow linefinder work 
+// without setting scantable for the purpose of using linefinder inside some 
+// method in scantable class. (Dec 22, 2010 by W.Kawasaki)
+void STLineFinder::setData(const std::vector<float> &in_spectrum)
+{
+  spectrum = Vector<Float>(in_spectrum);
+  useScantable = false;
 }
 
 // search for spectral lines. Number of lines found is returned
@@ -947,11 +957,11 @@ int STLineFinder::findLines(const std::vector<bool> &in_mask,
                 const std::vector<int> &in_edge,
                 const casa::uInt &whichRow) throw(casa::AipsError)
 {
-  if (scan.null())
+  if (useScantable && scan.null())
       throw AipsError("STLineFinder::findLines - a scan should be set first,"
                       " use set_scan");
 
-  uInt nchan = scan->nchan(scan->getIF(whichRow));
+  uInt nchan = useScantable ? scan->nchan(scan->getIF(whichRow)) : spectrum.nelements();
   // set up mask and edge rejection
   // no mask given...
   if (in_mask.size() == 0) {
@@ -961,19 +971,22 @@ int STLineFinder::findLines(const std::vector<bool> &in_mask,
     mask=Vector<Bool>(in_mask);
   }
   if (mask.nelements()!=nchan)
-      throw AipsError("STLineFinder::findLines - in_scan and in_mask have different"
-            "number of spectral channels.");
+      throw AipsError("STLineFinder::findLines - in_scan and in_mask, or in_spectrum "
+		      "and in_mask have different number of spectral channels.");
 
   // taking flagged channels into account
-  vector<bool> flaggedChannels = scan->getMask(whichRow);
-  if (flaggedChannels.size()) {
+  if (useScantable) {
+    vector<bool> flaggedChannels = scan->getMask(whichRow);
+    if (flaggedChannels.size()) {
       // there is a mask set for this row
       if (flaggedChannels.size() != mask.nelements()) {
-          throw AipsError("STLineFinder::findLines - internal inconsistency: number of mask elements do not match the number of channels");
+          throw AipsError("STLineFinder::findLines - internal inconsistency: number of "
+			  "mask elements do not match the number of channels");
       }
       for (size_t ch = 0; ch<mask.nelements(); ++ch) {
            mask[ch] &= flaggedChannels[ch];
       }
+    }
   }
 
   // number of elements in in_edge
@@ -1014,8 +1027,10 @@ int STLineFinder::findLines(const std::vector<bool> &in_mask,
   if ((noise_box!= -1) and (noise_box<2))
       throw AipsError("STLineFinder::findLines - noise_box is supposed to be at least 2 elements");
 
-  spectrum.resize();
-  spectrum = Vector<Float>(scan->getSpectrum(whichRow));
+  if (useScantable) {
+    spectrum.resize();
+    spectrum = Vector<Float>(scan->getSpectrum(whichRow));
+  }
 
   lines.resize(0); // search from the scratch
   last_row_used=whichRow;
@@ -1140,39 +1155,40 @@ std::vector<bool> STLineFinder::getMask(bool invert)
                                         const throw(casa::AipsError)
 {
   try {
-       if (scan.null())
-           throw AipsError("STLineFinder::getMask - a scan should be set first,"
-                      " use set_scan followed by find_lines");
-       DebugAssert(mask.nelements()==scan->getChannels(last_row_used), AipsError);
-       /*
-       if (!lines.size())
-           throw AipsError("STLineFinder::getMask - one have to search for "
+    if (useScantable) {
+      if (scan.null())
+	throw AipsError("STLineFinder::getMask - a scan should be set first,"
+			" use set_scan followed by find_lines");
+      DebugAssert(mask.nelements()==scan->getChannels(last_row_used), AipsError);
+    }
+    /*
+    if (!lines.size())
+       throw AipsError("STLineFinder::getMask - one have to search for "
                            "lines first, use find_lines");
-       */
-       std::vector<bool> res_mask(mask.nelements());
-       // iterator through lines
-       std::list<std::pair<int,int> >::const_iterator cli=lines.begin();
-       for (int ch=0;ch<int(res_mask.size());++ch) {
-            if (ch<edge.first || ch>=edge.second) res_mask[ch]=false;
-            else if (!mask[ch]) res_mask[ch]=false;
-            else {
-                    res_mask[ch]=!invert; // no line by default
-                    if (cli!=lines.end())
-                        if (ch>=cli->first && ch<cli->second)
-                             res_mask[ch]=invert; // this is a line
-            }
-            if (cli!=lines.end())
-                if (ch>=cli->second) {
-                    ++cli; // next line in the list
-                }
-       }
-       return res_mask;
+    */
+    std::vector<bool> res_mask(mask.nelements());
+    // iterator through lines
+    std::list<std::pair<int,int> >::const_iterator cli=lines.begin();
+    for (int ch=0;ch<int(res_mask.size());++ch) {
+      if (ch<edge.first || ch>=edge.second) res_mask[ch]=false;
+      else if (!mask[ch]) res_mask[ch]=false;
+      else {
+	res_mask[ch]=!invert; // no line by default
+        if (cli!=lines.end())
+	  if (ch>=cli->first && ch<cli->second)
+	    res_mask[ch]=invert; // this is a line
+      }
+      if (cli!=lines.end())
+	if (ch>=cli->second)
+	  ++cli; // next line in the list
+    }
+    return res_mask;
   }
   catch (const AipsError &ae) {
-      throw;
+    throw;
   }
   catch (const exception &ex) {
-      throw AipsError(String("STLineFinder::getMask - STL error: ")+ex.what());
+    throw AipsError(String("STLineFinder::getMask - STL error: ")+ex.what());
   }
 }
 
@@ -1181,8 +1197,14 @@ std::vector<bool> STLineFinder::getMask(bool invert)
 std::vector<double> STLineFinder::getLineRanges()
                              const throw(casa::AipsError)
 {
-  // convert to required abscissa units
-  std::vector<double> vel=scan->getAbcissa(last_row_used);
+  std::vector<double> vel;
+  if (useScantable) {
+    // convert to required abscissa units
+    vel = scan->getAbcissa(last_row_used);
+  } else {
+    for (int i = 0; i < spectrum.nelements(); ++i)
+      vel.push_back((double)i);
+  }
   std::vector<int> ranges=getLineRangesInChannels();
   std::vector<double> res(ranges.size());
 
@@ -1201,31 +1223,31 @@ std::vector<int> STLineFinder::getLineRangesInChannels()
                                    const throw(casa::AipsError)
 {
   try {
-       if (scan.null())
-           throw AipsError("STLineFinder::getLineRangesInChannels - a scan should be set first,"
-                      " use set_scan followed by find_lines");
-       DebugAssert(mask.nelements()==scan->getChannels(last_row_used), AipsError);
+    if (useScantable) {
+      if (scan.null())
+	throw AipsError("STLineFinder::getLineRangesInChannels - a scan should be set first,"
+			" use set_scan followed by find_lines");
+      DebugAssert(mask.nelements()==scan->getChannels(last_row_used), AipsError);
+    }
 
-       if (!lines.size())
-           throw AipsError("STLineFinder::getLineRangesInChannels - one have to search for "
-                           "lines first, use find_lines");
+    if (!lines.size())
+      throw AipsError("STLineFinder::getLineRangesInChannels - one have to search for "
+		      "lines first, use find_lines");
 
-       std::vector<int> res(2*lines.size());
-       // iterator through lines & result
-       std::list<std::pair<int,int> >::const_iterator cli=lines.begin();
-       std::vector<int>::iterator ri=res.begin();
-       for (;cli!=lines.end() && ri!=res.end();++cli,++ri) {
-            *ri=cli->first;
-            if (++ri!=res.end())
-                *ri=cli->second-1;
-       }
-       return res;
-  }
-  catch (const AipsError &ae) {
-      throw;
-  }
-  catch (const exception &ex) {
-      throw AipsError(String("STLineFinder::getLineRanges - STL error: ")+ex.what());
+    std::vector<int> res(2*lines.size());
+    // iterator through lines & result
+    std::list<std::pair<int,int> >::const_iterator cli = lines.begin();
+    std::vector<int>::iterator ri = res.begin();
+    for (; cli != lines.end() && ri != res.end(); ++cli,++ri) {
+      *ri = cli->first;
+      if (++ri != res.end())
+	*ri = cli->second - 1;
+    }
+    return res;
+  } catch (const AipsError &ae) {
+    throw;
+  } catch (const exception &ex) {
+    throw AipsError(String("STLineFinder::getLineRanges - STL error: ") + ex.what());
   }
 }
 

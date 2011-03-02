@@ -33,6 +33,13 @@
 #ifndef ATNF_SRCTYPE_H
 #define ATNF_SRCTYPE_H
 
+//# Includes
+#include <casa/aips.h>
+#include <casa/BasicSL/String.h>
+
+using namespace std ;
+#include <casa/namespace.h>
+
 // <sumamry>
 // enum to define source type (scan intent)
 //</summary>
@@ -64,7 +71,100 @@ class SrcType {
               FHIHOT   = 37,
               FHIWARM  = 38,
               FHICOLD  = 39,
+              SIG      = 90,
+              REF      = 91,
+              CAL      = 92,
               NOTYPE   = 99 } ;
+
+  static String getName(const Int srctype)
+{
+  String obsType ;
+  switch( srctype ) {
+  case Int(SrcType::PSON):
+    obsType = "PSON" ;
+    break ;
+  case Int(SrcType::PSOFF):
+    obsType = "PSOFF" ;
+    break ;
+  case Int(SrcType::NOD):
+    obsType = "NOD" ;
+    break ;
+  case Int(SrcType::FSON):
+    obsType = "FSON" ;
+    break ;
+  case Int(SrcType::FSOFF):
+    obsType = "FSOFF" ;
+    break ;
+  case Int(SrcType::SKY):
+    obsType = "SKY" ;
+    break ;
+  case Int(SrcType::HOT):
+    obsType = "HOT" ;
+    break ;
+  case Int(SrcType::WARM):
+    obsType = "WARM" ;
+    break ;
+  case Int(SrcType::COLD):
+    obsType = "COLD" ;
+    break ;
+  case Int(SrcType::PONCAL):
+    obsType = "PSON:CALON" ;
+    break ;
+  case Int(SrcType::POFFCAL):
+    obsType = "PSOFF:CALON" ;
+    break ;
+  case Int(SrcType::NODCAL):
+    obsType = "NOD:CALON" ;
+    break ;
+  case Int(SrcType::FONCAL):
+    obsType = "FSON:CALON" ;
+    break ;
+  case Int(SrcType::FOFFCAL):
+    obsType = "FSOFF:CALOFF" ;
+    break ;
+  case Int(SrcType::FSLO):
+    obsType = "FSLO" ;
+    break ;
+  case Int(SrcType::FLOOFF):
+    obsType = "FS:LOWER:OFF" ;
+    break ;
+  case Int(SrcType::FLOSKY):
+    obsType = "FS:LOWER:SKY" ;
+    break ;
+  case Int(SrcType::FLOHOT):
+    obsType = "FS:LOWER:HOT" ;
+    break ;
+  case Int(SrcType::FLOWARM):
+    obsType = "FS:LOWER:WARM" ;
+    break ;
+  case Int(SrcType::FLOCOLD):
+    obsType = "FS:LOWER:COLD" ;
+    break ;
+  case Int(SrcType::FSHI):
+    obsType = "FSHI" ;
+    break ;
+  case Int(SrcType::FHIOFF):
+    obsType = "FS:HIGHER:OFF" ;
+    break ;
+  case Int(SrcType::FHISKY):
+    obsType = "FS:HIGHER:SKY" ;
+    break ;
+  case Int(SrcType::FHIHOT):
+    obsType = "FS:HIGHER:HOT" ;
+    break ;
+  case Int(SrcType::FHIWARM):
+    obsType = "FS:HIGHER:WARM" ;
+    break ;
+  case Int(SrcType::FHICOLD):
+    obsType = "FS:HIGHER:COLD" ;
+    break ;
+  default:
+    obsType = "NOTYPE" ;
+  }
+
+  return obsType ;
+} ;
+
 } ; 
 
 #endif

@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: python_asap.cpp 1901 2010-08-26 01:24:33Z TakeshiNakazato $
+//# $Id: python_asap.cpp 1974 2011-01-18 06:52:02Z TakeshiNakazato $
 //#---------------------------------------------------------------------------
 #include <string>
 #include <vector>
@@ -69,12 +69,14 @@ BOOST_PYTHON_MODULE(_asap) {
   asap::python::python_Scantable();
   asap::python::python_STFiller();
   asap::python::python_Filler();
+  asap::python::python_MSFiller();
   asap::python::python_STSelector();
   asap::python::python_STMath();
   asap::python::python_Fitter();
   asap::python::python_STLineFinder();
   asap::python::python_STFitEntry();
   asap::python::python_STWriter();
+  asap::python::python_MSWriter();
   asap::python::python_LineCatalog();
   asap::python::python_Logger();
   asap::python::python_LogSink();

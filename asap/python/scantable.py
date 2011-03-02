@@ -9,7 +9,7 @@ except ImportError:
 
 from asap.env import is_casapy
 from asap._asap import Scantable
-from asap._asap import filler
+from asap._asap import filler, msfiller
 from asap.parameters import rcParams
 from asap.logging import asaplog, asaplog_post_dec
 from asap.selector import selector
@@ -157,6 +157,8 @@ class scantable(Scantable):
                     Scantable.__init__(self, filename, ondisk)
                     if unit is not None:
                         self.set_fluxunit(unit)
+                    if average:
+                        self._assign( self.average_time( scanav=True ) )
                     # do not reset to the default freqframe
                     #self.set_freqframe(rcParams['scantable.freqframe'])
                 #elif os.path.isdir(filename) \
@@ -231,6 +233,11 @@ class scantable(Scantable):
         format2 = format.upper()
         if format2 == 'ASAP':
             self._save(name)
+        elif format2 == 'MS2':
+            msopt = {'ms': {'overwrite': overwrite } }
+            from asap._asap import mswriter
+            writer = mswriter( self )
+            writer.write( name, msopt ) 
         else:
             from asap._asap import stwriter as stw
             writer = stw(format2)
@@ -481,12 +488,13 @@ class scantable(Scantable):
             workscan = self
         # Select a row
         sel=selector()
-        sel.set_scans([workscan.getscan(row)])
-        sel.set_cycles([workscan.getcycle(row)])
-        sel.set_beams([workscan.getbeam(row)])
-        sel.set_ifs([workscan.getif(row)])
-        sel.set_polarisations([workscan.getpol(row)])
-        sel.set_name(workscan._getsourcename(row))
+        sel.set_rows([row])
+        #sel.set_scans([workscan.getscan(row)])
+        #sel.set_cycles([workscan.getcycle(row)])
+        #sel.set_beams([workscan.getbeam(row)])
+        #sel.set_ifs([workscan.getif(row)])
+        #sel.set_polarisations([workscan.getpol(row)])
+        #sel.set_name(workscan._getsourcename(row))
         workscan.set_selection(sel)
         if not workscan.nrow() == 1:
             msg = "Cloud not identify single row. %d rows selected."%(workscan.nrow())
@@ -1012,12 +1020,15 @@ class scantable(Scantable):
         return abc, lbl
 
     @asaplog_post_dec
-    def flag(self, mask=None, unflag=False):
+    def flag(self, row=-1, mask=None, unflag=False):
         """\
         Flag the selected data using an optional channel mask.
 
         Parameters:
 
+            row:    an optional row number in the scantable.
+                      Default -1 flags all rows
+                      
             mask:   an optional channel mask, created with create_mask. Default
                     (no mask) is all channels.
 
@@ -1026,7 +1037,7 @@ class scantable(Scantable):
         """
         varlist = vars()
         mask = mask or []
-        self._flag(mask, unflag)
+        self._flag(row, mask, unflag)
         self._add_history("flag", varlist)
 
     @asaplog_post_dec
@@ -1259,6 +1270,176 @@ class scantable(Scantable):
                 raise RuntimeError("Mask start index > mask end index")
                 break
         return istart,iend
+
+    @asaplog_post_dec
+    def parse_maskexpr(self,maskstring):
+        """
+        Parse CASA type mask selection syntax (IF dependent).
+
+        Parameters:
+            maskstring : A string mask selection expression.
+                         A comma separated selections mean different IF -
+                         channel combinations. IFs and channel selections
+                         are partitioned by a colon, ':'.
+                     examples:
+                         ''          = all IFs (all channels)
+                         '<2,4~6,9'  = IFs 0,1,4,5,6,9 (all channels)
+                         '3:3~45;60' = channels 3 to 45 and 60 in IF 3
+                         '0~1:2~6,8' = channels 2 to 6 in IFs 0,1, and
+                                       all channels in IF8
+        Returns:
+        A dictionary of selected (valid) IF and masklist pairs,
+        e.g. {'0': [[50,250],[350,462]], '2': [[100,400],[550,974]]}
+        """
+        if not isinstance(maskstring,str):
+            asaplog.post()
+            asaplog.push("Invalid mask expression")
+            asaplog.post("ERROR")
+        
+        valid_ifs = self.getifnos()
+        frequnit = self.get_unit()
+        seldict = {}
+        if maskstring == "":
+            maskstring = str(valid_ifs)[1:-1]
+        ## split each selection
+        sellist = maskstring.split(',')
+        for currselstr in sellist:
+            selset = currselstr.split(':')
+            # spw and mask string (may include ~, < or >)
+            spwmasklist = self._parse_selection(selset[0],typestr='integer',
+                                               offset=1,minval=min(valid_ifs),
+                                               maxval=max(valid_ifs))
+            for spwlist in spwmasklist:
+                selspws = []
+                for ispw in range(spwlist[0],spwlist[1]+1):
+                    # Put into the list only if ispw exists
+                    if valid_ifs.count(ispw):
+                        selspws.append(ispw)
+            del spwmasklist, spwlist
+
+            # parse frequency mask list
+            if len(selset) > 1:
+                freqmasklist = self._parse_selection(selset[1],typestr='float',
+                                                    offset=0.)
+            else:
+                # want to select the whole spectrum
+                freqmasklist = [None]
+
+            ## define a dictionary of spw - masklist combination
+            for ispw in selspws:
+                #print "working on", ispw
+                spwstr = str(ispw)
+                if len(selspws) == 0:
+                    # empty spw
+                    continue
+                else:
+                    ## want to get min and max of the spw and
+                    ## offset to set for '<' and '>'
+                    if frequnit == 'channel':
+                        minfreq = 0
+                        maxfreq = self.nchan(ifno=ispw)
+                        offset = 0.5
+                    else:
+                        ## This is ugly part. need improvement
+                        for ifrow in xrange(self.nrow()):
+                            if self.getif(ifrow) == ispw:
+                                #print "IF",ispw,"found in row =",ifrow
+                                break
+                        freqcoord = self.get_coordinate(ifrow)
+                        freqs = self._getabcissa(ifrow)
+                        minfreq = min(freqs)
+                        maxfreq = max(freqs)
+                        if len(freqs) == 1:
+                            offset = 0.5
+                        elif frequnit.find('Hz') > 0:
+                            offset = abs(freqcoord.to_frequency(1,unit=frequnit)
+                                      -freqcoord.to_frequency(0,unit=frequnit))*0.5
+                        elif frequnit.find('m/s') > 0:
+                            offset = abs(freqcoord.to_velocity(1,unit=frequnit)
+                                      -freqcoord.to_velocity(0,unit=frequnit))*0.5
+                        else:
+                            asaplog.post()
+                            asaplog.push("Invalid frequency unit")
+                            asaplog.post("ERROR")
+                        del freqs, freqcoord, ifrow
+                    for freq in freqmasklist:
+                        selmask = freq or [minfreq, maxfreq]
+                        if selmask[0] == None:
+                            ## selection was "<freq[1]".
+                            if selmask[1] < minfreq:
+                                ## avoid adding region selection
+                                selmask = None
+                            else:
+                                selmask = [minfreq,selmask[1]-offset]
+                        elif selmask[1] == None:
+                            ## selection was ">freq[0]"
+                            if selmask[0] > maxfreq:
+                                ## avoid adding region selection
+                                selmask = None
+                            else:
+                                selmask = [selmask[0]+offset,maxfreq]
+                        if selmask:
+                            if not seldict.has_key(spwstr):
+                                # new spw selection
+                                seldict[spwstr] = []
+                            seldict[spwstr] += [selmask]
+                    del minfreq,maxfreq,offset,freq,selmask
+                del spwstr
+            del freqmasklist
+        del valid_ifs
+        if len(seldict) == 0:
+            asaplog.post()
+            asaplog.push("No valid selection in the mask expression: "+maskstring)
+            asaplog.post("WARN")
+            return None
+        msg = "Selected masklist:\n"
+        for sif, lmask in seldict.iteritems():
+            msg += "   IF"+sif+" - "+str(lmask)+"\n"
+        asaplog.push(msg)
+        return seldict
+
+    def _parse_selection(self,selstr,typestr='float',offset=0.,minval=None,maxval=None):
+        """
+        Parameters:
+            selstr :    The Selection string, e.g., '<3;5~7;100~103;9'
+            typestr :   The type of the values in returned list
+                        ('integer' or 'float')
+            offset :    The offset value to subtract from or add to
+                        the boundary value if the selection string
+                        includes '<' or '>'
+            minval, maxval :  The minimum/maximum values to set if the
+                              selection string includes '<' or '>'.
+                              The list element is filled with None by default.
+        Returns:
+            A list of min/max pair of selections.
+        Example:
+            _parseSelection('<3;5~7;9',typestr='int',offset=1,minval=0)
+            returns [[0,2],[5,7],[9,9]]
+        """
+        selgroups = selstr.split(';')
+        sellists = []
+        if typestr.lower().startswith('int'):
+            formatfunc = int
+        else:
+            formatfunc = float
+        
+        for currsel in  selgroups:
+            if currsel.find('~') > 0:
+                minsel = formatfunc(currsel.split('~')[0].strip())
+                maxsel = formatfunc(currsel.split('~')[1].strip()) 
+            elif currsel.strip().startswith('<'):
+                minsel = minval
+                maxsel = formatfunc(currsel.split('<')[1].strip()) \
+                         - formatfunc(offset)
+            elif currsel.strip().startswith('>'):
+                minsel = formatfunc(currsel.split('>')[1].strip()) \
+                         + formatfunc(offset)
+                maxsel = maxval
+            else:
+                minsel = formatfunc(currsel)
+                maxsel = formatfunc(currsel)
+            sellists.append([minsel,maxsel])
+        return sellists
 
 #    def get_restfreqs(self):
 #        """
@@ -1886,9 +2067,473 @@ class scantable(Scantable):
         if insitu: self._assign(s)
         else: return s
 
+
+    @asaplog_post_dec
+    def cspline_baseline(self, insitu=None, mask=None, npiece=None, clipthresh=None, clipniter=None, plot=None, outlog=None, blfile=None):
+        """\
+        Return a scan which has been baselined (all rows) by cubic spline function (piecewise cubic polynomial).
+        Parameters:
+            insitu:     If False a new scantable is returned.
+                        Otherwise, the scaling is done in-situ
+                        The default is taken from .asaprc (False)
+            mask:       An optional mask
+            npiece:     Number of pieces. (default is 2)
+            clipthresh: Clipping threshold. (default is 3.0, unit: sigma)
+            clipniter:  maximum number of iteration of 'clipthresh'-sigma clipping (default is 1)
+            plot:   *** CURRENTLY UNAVAILABLE, ALWAYS FALSE ***
+                        plot the fit and the residual. In this each
+                        indivual fit has to be approved, by typing 'y'
+                        or 'n'
+            outlog:     Output the coefficients of the best-fit
+                        function to logger (default is False)
+            blfile:     Name of a text file in which the best-fit
+                        parameter values to be written
+                        (default is "": no file/logger output)
+
+        Example:
+            # return a scan baselined by a cubic spline consisting of 2 pieces (i.e., 1 internal knot),
+            # also with 3-sigma clipping, iteration up to 4 times
+            bscan = scan.cspline_baseline(npiece=2,clipthresh=3.0,clipniter=4)
+        """
+        
+        varlist = vars()
+        
+        if insitu is None: insitu = rcParams["insitu"]
+        if insitu:
+            workscan = self
+        else:
+            workscan = self.copy()
+
+        nchan = workscan.nchan()
+        
+        if mask is None: mask = [True for i in xrange(nchan)]
+        if npiece is None: npiece = 2
+        if clipthresh is None: clipthresh = 3.0
+        if clipniter is None: clipniter = 1
+        if plot is None: plot = False
+        if outlog is None: outlog = False
+        if blfile is None: blfile = ""
+
+        outblfile = (blfile != "") and os.path.exists(os.path.expanduser(os.path.expandvars(blfile)))
+        
+        try:
+            #CURRENTLY, PLOT=true UNAVAILABLE UNTIL cubic spline fitting is implemented as a fitter method. 
+            workscan._cspline_baseline(mask, npiece, clipthresh, clipniter, outlog, blfile)
+            
+            workscan._add_history("cspline_baseline", varlist)
+            
+            if insitu:
+                self._assign(workscan)
+            else:
+                return workscan
+            
+        except RuntimeError, e:
+            msg = "The fit failed, possibly because it didn't converge."
+            if rcParams["verbose"]:
+                asaplog.push(str(e))
+                asaplog.push(str(msg))
+                return
+            else:
+                raise RuntimeError(str(e)+'\n'+msg)
+
+
+    def auto_cspline_baseline(self, insitu=None, mask=None, npiece=None, clipthresh=None,
+                              clipniter=None, edge=None, threshold=None,
+                              chan_avg_limit=None, plot=None, outlog=None, blfile=None):
+        """\
+        Return a scan which has been baselined (all rows) by cubic spline
+        function (piecewise cubic polynomial).
+        Spectral lines are detected first using linefinder and masked out
+        to avoid them affecting the baseline solution.
+
+        Parameters:
+            insitu:     if False a new scantable is returned.
+                        Otherwise, the scaling is done in-situ
+                        The default is taken from .asaprc (False)
+            mask:       an optional mask retreived from scantable
+            npiece:     Number of pieces. (default is 2)
+            clipthresh: Clipping threshold. (default is 3.0, unit: sigma)
+            clipniter:  maximum number of iteration of 'clipthresh'-sigma clipping (default is 1)
+            edge:       an optional number of channel to drop at
+                        the edge of spectrum. If only one value is
+                        specified, the same number will be dropped
+                        from both sides of the spectrum. Default
+                        is to keep all channels. Nested tuples
+                        represent individual edge selection for
+                        different IFs (a number of spectral channels
+                        can be different)
+            threshold:  the threshold used by line finder. It is
+                        better to keep it large as only strong lines
+                        affect the baseline solution.
+            chan_avg_limit:
+                        a maximum number of consequtive spectral
+                        channels to average during the search of
+                        weak and broad lines. The default is no
+                        averaging (and no search for weak lines).
+                        If such lines can affect the fitted baseline
+                        (e.g. a high order polynomial is fitted),
+                        increase this parameter (usually values up
+                        to 8 are reasonable). Most users of this
+                        method should find the default value sufficient.
+            plot:   *** CURRENTLY UNAVAILABLE, ALWAYS FALSE ***
+                        plot the fit and the residual. In this each
+                        indivual fit has to be approved, by typing 'y'
+                        or 'n'
+            outlog:     Output the coefficients of the best-fit
+                        function to logger (default is False)
+            blfile:     Name of a text file in which the best-fit
+                        parameter values to be written
+                        (default is "": no file/logger output)
+
+        Example:
+            bscan = scan.auto_cspline_baseline(npiece=3, insitu=False)
+        """
+
+        varlist = vars()
+
+        if insitu is None: insitu = rcParams['insitu']
+        if insitu:
+            workscan = self
+        else:
+            workscan = self.copy()
+
+        nchan = workscan.nchan()
+        
+        if mask is None: mask = [True for i in xrange(nchan)]
+        if npiece is None: npiece = 2
+        if clipthresh is None: clipthresh = 3.0
+        if clipniter is None: clipniter = 1
+        if edge is None: edge = (0, 0)
+        if threshold is None: threshold = 3
+        if chan_avg_limit is None: chan_avg_limit = 1
+        if plot is None: plot = False
+        if outlog is None: outlog = False
+        if blfile is None: blfile = ""
+
+        outblfile = (blfile != "") and os.path.exists(os.path.expanduser(os.path.expandvars(blfile)))
+        
+        from asap.asaplinefind import linefinder
+        from asap import _is_sequence_or_number as _is_valid
+
+        if not (isinstance(edge, list) or isinstance(edge, tuple)): edge = [ edge ]
+        individualedge = False;
+        if len(edge) > 1: individualedge = isinstance(edge[0], list) or isinstance(edge[0], tuple)
+
+        if individualedge:
+            for edgepar in edge:
+                if not _is_valid(edgepar, int):
+                    raise ValueError, "Each element of the 'edge' tuple has \
+                                       to be a pair of integers or an integer."
+        else:
+            if not _is_valid(edge, int):
+                raise ValueError, "Parameter 'edge' has to be an integer or a \
+                                   pair of integers specified as a tuple. \
+                                   Nested tuples are allowed \
+                                   to make individual selection for different IFs."
+
+            if len(edge) > 1:
+                curedge = edge
+            else:
+                curedge = edge + edge
+
+        try:
+            #CURRENTLY, PLOT=true UNAVAILABLE UNTIL cubic spline fitting is implemented as a fitter method. 
+            if individualedge:
+                curedge = []
+                for i in xrange(len(edge)):
+                    curedge += edge[i]
+                
+            workscan._auto_cspline_baseline(mask, npiece, clipthresh, clipniter, curedge, threshold, chan_avg_limit, outlog, blfile)
+
+            workscan._add_history("auto_cspline_baseline", varlist)
+            
+            if insitu:
+                self._assign(workscan)
+            else:
+                return workscan
+            
+        except RuntimeError, e:
+            msg = "The fit failed, possibly because it didn't converge."
+            if rcParams["verbose"]:
+                asaplog.push(str(e))
+                asaplog.push(str(msg))
+                return
+            else:
+                raise RuntimeError(str(e)+'\n'+msg)
+
+
+    @asaplog_post_dec
+    def poly_baseline(self, insitu=None, mask=None, order=None, plot=None, outlog=None, blfile=None):
+        """\
+        Return a scan which has been baselined (all rows) by a polynomial.
+        Parameters:
+            insitu:     if False a new scantable is returned.
+                        Otherwise, the scaling is done in-situ
+                        The default is taken from .asaprc (False)
+            mask:       an optional mask
+            order:      the order of the polynomial (default is 0)
+            plot:       plot the fit and the residual. In this each
+                        indivual fit has to be approved, by typing 'y'
+                        or 'n'
+            outlog:     Output the coefficients of the best-fit
+                        function to logger (default is False)
+            blfile:     Name of a text file in which the best-fit
+                        parameter values to be written
+                        (default is "": no file/logger output)
+
+        Example:
+            # return a scan baselined by a third order polynomial,
+            # not using a mask
+            bscan = scan.poly_baseline(order=3)
+        """
+        
+        varlist = vars()
+        
+        if insitu is None: insitu = rcParams["insitu"]
+        if insitu:
+            workscan = self
+        else:
+            workscan = self.copy()
+
+        nchan = workscan.nchan()
+        
+        if mask is None: mask = [True for i in xrange(nchan)]
+        if order is None: order = 0
+        if plot is None: plot = False
+        if outlog is None: outlog = False
+        if blfile is None: blfile = ""
+
+        outblfile = (blfile != "") and os.path.exists(os.path.expanduser(os.path.expandvars(blfile)))
+        
+        try:
+            rows = xrange(workscan.nrow())
+            
+            #if len(rows) > 0: workscan._init_blinfo()
+
+            if plot:
+                if outblfile: blf = open(blfile, "a")
+                
+                f = fitter()
+                f.set_function(lpoly=order)
+                for r in rows:
+                    f.x = workscan._getabcissa(r)
+                    f.y = workscan._getspectrum(r)
+                    f.mask = mask_and(mask, workscan._getmask(r))    # (CAS-1434)
+                    f.data = None
+                    f.fit()
+                    
+                    f.plot(residual=True)
+                    accept_fit = raw_input("Accept fit ( [y]/n ): ")
+                    if accept_fit.upper() == "N":
+                        #workscan._append_blinfo(None, None, None)
+                        continue
+                    
+                    blpars = f.get_parameters()
+                    masklist = workscan.get_masklist(f.mask, row=r, silent=True)
+                    #workscan._append_blinfo(blpars, masklist, f.mask)
+                    workscan._setspectrum(f.fitter.getresidual(), r)
+                    
+                    if outblfile:
+                        rms = workscan.get_rms(f.mask, r)
+                        dataout = workscan.format_blparams_row(blpars["params"], blpars["fixed"], rms, str(masklist), r, True)
+                        blf.write(dataout)
+
+                f._p.unmap()
+                f._p = None
+
+                if outblfile: blf.close()
+            else:
+                workscan._poly_baseline(mask, order, outlog, blfile)
+            
+            workscan._add_history("poly_baseline", varlist)
+            
+            if insitu:
+                self._assign(workscan)
+            else:
+                return workscan
+            
+        except RuntimeError, e:
+            msg = "The fit failed, possibly because it didn't converge."
+            if rcParams["verbose"]:
+                asaplog.push(str(e))
+                asaplog.push(str(msg))
+                return
+            else:
+                raise RuntimeError(str(e)+'\n'+msg)
+
+
+    def auto_poly_baseline(self, insitu=None, mask=None, order=None, edge=None, threshold=None,
+                           chan_avg_limit=None, plot=None, outlog=None, blfile=None):
+        """\
+        Return a scan which has been baselined (all rows) by a polynomial.
+        Spectral lines are detected first using linefinder and masked out
+        to avoid them affecting the baseline solution.
+
+        Parameters:
+            insitu:     if False a new scantable is returned.
+                        Otherwise, the scaling is done in-situ
+                        The default is taken from .asaprc (False)
+            mask:       an optional mask retreived from scantable
+            order:      the order of the polynomial (default is 0)
+            edge:       an optional number of channel to drop at
+                        the edge of spectrum. If only one value is
+                        specified, the same number will be dropped
+                        from both sides of the spectrum. Default
+                        is to keep all channels. Nested tuples
+                        represent individual edge selection for
+                        different IFs (a number of spectral channels
+                        can be different)
+            threshold:  the threshold used by line finder. It is
+                        better to keep it large as only strong lines
+                        affect the baseline solution.
+            chan_avg_limit:
+                        a maximum number of consequtive spectral
+                        channels to average during the search of
+                        weak and broad lines. The default is no
+                        averaging (and no search for weak lines).
+                        If such lines can affect the fitted baseline
+                        (e.g. a high order polynomial is fitted),
+                        increase this parameter (usually values up
+                        to 8 are reasonable). Most users of this
+                        method should find the default value sufficient.
+            plot:       plot the fit and the residual. In this each
+                        indivual fit has to be approved, by typing 'y'
+                        or 'n'
+            outlog:     Output the coefficients of the best-fit
+                        function to logger (default is False)
+            blfile:     Name of a text file in which the best-fit
+                        parameter values to be written
+                        (default is "": no file/logger output)
+
+        Example:
+            bscan = scan.auto_poly_baseline(order=7, insitu=False)
+        """
+
+        varlist = vars()
+
+        if insitu is None: insitu = rcParams['insitu']
+        if insitu:
+            workscan = self
+        else:
+            workscan = self.copy()
+
+        nchan = workscan.nchan()
+        
+        if mask is None: mask = [True for i in xrange(nchan)]
+        if order is None: order = 0
+        if edge is None: edge = (0, 0)
+        if threshold is None: threshold = 3
+        if chan_avg_limit is None: chan_avg_limit = 1
+        if plot is None: plot = False
+        if outlog is None: outlog = False
+        if blfile is None: blfile = ""
+
+        outblfile = (blfile != "") and os.path.exists(os.path.expanduser(os.path.expandvars(blfile)))
+        
+        from asap.asaplinefind import linefinder
+        from asap import _is_sequence_or_number as _is_valid
+
+        if not (isinstance(edge, list) or isinstance(edge, tuple)): edge = [ edge ]
+        individualedge = False;
+        if len(edge) > 1: individualedge = isinstance(edge[0], list) or isinstance(edge[0], tuple)
+
+        if individualedge:
+            for edgepar in edge:
+                if not _is_valid(edgepar, int):
+                    raise ValueError, "Each element of the 'edge' tuple has \
+                                       to be a pair of integers or an integer."
+        else:
+            if not _is_valid(edge, int):
+                raise ValueError, "Parameter 'edge' has to be an integer or a \
+                                   pair of integers specified as a tuple. \
+                                   Nested tuples are allowed \
+                                   to make individual selection for different IFs."
+
+            if len(edge) > 1:
+                curedge = edge
+            else:
+                curedge = edge + edge
+
+        try:
+            rows = xrange(workscan.nrow())
+            
+            #if len(rows) > 0: workscan._init_blinfo()
+
+            if plot:
+                if outblfile: blf = open(blfile, "a")
+                
+                fl = linefinder()
+                fl.set_options(threshold=threshold,avg_limit=chan_avg_limit)
+                fl.set_scan(workscan)
+                f = fitter()
+                f.set_function(lpoly=order)
+
+                for r in rows:
+                    if individualedge:
+                        if len(edge) <= workscan.getif(r):
+                            raise RuntimeError, "Number of edge elements appear to " \
+                                  "be less than the number of IFs"
+                        else:
+                            curedge = edge[workscan.getif(r)]
+
+                    fl.find_lines(r, mask_and(mask, workscan._getmask(r)), curedge)  # (CAS-1434)
+
+                    f.x = workscan._getabcissa(r)
+                    f.y = workscan._getspectrum(r)
+                    f.mask = fl.get_mask()
+                    f.data = None
+                    f.fit()
+
+                    f.plot(residual=True)
+                    accept_fit = raw_input("Accept fit ( [y]/n ): ")
+                    if accept_fit.upper() == "N":
+                        #workscan._append_blinfo(None, None, None)
+                        continue
+
+                    blpars = f.get_parameters()
+                    masklist = workscan.get_masklist(f.mask, row=r, silent=True)
+                    #workscan._append_blinfo(blpars, masklist, f.mask)
+                    workscan._setspectrum(f.fitter.getresidual(), r)
+
+                    if outblfile:
+                        rms = workscan.get_rms(f.mask, r)
+                        dataout = workscan.format_blparams_row(blpars["params"], blpars["fixed"], rms, str(masklist), r, True)
+                        blf.write(dataout)
+                    
+                f._p.unmap()
+                f._p = None
+
+                if outblfile: blf.close()
+                
+            else:
+                if individualedge:
+                    curedge = []
+                    for i in xrange(len(edge)):
+                        curedge += edge[i]
+                
+                workscan._auto_poly_baseline(mask, order, curedge, threshold, chan_avg_limit, outlog, blfile)
+
+            workscan._add_history("auto_poly_baseline", varlist)
+            
+            if insitu:
+                self._assign(workscan)
+            else:
+                return workscan
+            
+        except RuntimeError, e:
+            msg = "The fit failed, possibly because it didn't converge."
+            if rcParams["verbose"]:
+                asaplog.push(str(e))
+                asaplog.push(str(msg))
+                return
+            else:
+                raise RuntimeError(str(e)+'\n'+msg)
+
+
+    ### OBSOLETE ##################################################################
     @asaplog_post_dec
     def old_poly_baseline(self, mask=None, order=0, plot=False, uselin=False, insitu=None, rows=None):
-        """\
+        """
         Return a scan which has been baselined (all rows) by a polynomial.
         
         Parameters:
@@ -1973,271 +2618,31 @@ class scantable(Scantable):
             msg = "The fit failed, possibly because it didn't converge."
             raise RuntimeError(msg)
 
-    @asaplog_post_dec
-    def poly_baseline(self, mask=None, order=0, plot=False, batch=False, insitu=None, rows=None):
+    def _init_blinfo(self):
         """\
-        Return a scan which has been baselined (all rows) by a polynomial.
-        Parameters:
-            mask:       an optional mask
-            order:      the order of the polynomial (default is 0)
-            plot:       plot the fit and the residual. In this each
-                        indivual fit has to be approved, by typing 'y'
-                        or 'n'. Ignored if batch = True. 
-            batch:      if True a faster algorithm is used and logs
-                        including the fit results are not output
-                        (default is False) 
-            insitu:     if False a new scantable is returned.
-                        Otherwise, the scaling is done in-situ
-                        The default is taken from .asaprc (False)
-            rows:       row numbers of spectra to be baselined.
-                        (default is None: for all rows)
-        Example:
-            # return a scan baselined by a third order polynomial,
-            # not using a mask
-            bscan = scan.poly_baseline(order=3)
+        Initialise the following three auxiliary members:
+           blpars : parameters of the best-fit baseline, 
+           masklists : mask data (edge positions of masked channels) and 
+           actualmask : mask data (in boolean list), 
+        to keep for use later (including output to logger/text files). 
+        Used by poly_baseline() and auto_poly_baseline() in case of
+        'plot=True'. 
         """
-        
-        varlist = vars()
-        
-        if insitu is None: insitu = rcParams["insitu"]
-        if insitu:
-            workscan = self
-        else:
-            workscan = self.copy()
+        self.blpars = []
+        self.masklists = []
+        self.actualmask = []
+        return
 
-        nchan = workscan.nchan()
-        
-        if mask is None:
-            mask = [True for i in xrange(nchan)]
-
-        try:
-            if rows == None:
-                rows = xrange(workscan.nrow())
-            elif isinstance(rows, int):
-                rows = [ rows ]
-            
-            if len(rows) > 0:
-                workscan.blpars = []
-                workscan.masklists = []
-                workscan.actualmask = []
-
-            if batch:
-                workscan._poly_baseline_batch(mask, order)
-            elif plot:
-                f = fitter()
-                f.set_function(lpoly=order)
-                for r in rows:
-                    f.x = workscan._getabcissa(r)
-                    f.y = workscan._getspectrum(r)
-                    f.mask = mask_and(mask, workscan._getmask(r))    # (CAS-1434)
-                    f.data = None
-                    f.fit()
-                    
-                    f.plot(residual=True)
-                    accept_fit = raw_input("Accept fit ( [y]/n ): ")
-                    if accept_fit.upper() == "N":
-                        self.blpars.append(None)
-                        self.masklists.append(None)
-                        self.actualmask.append(None)
-                        continue
-                    workscan._setspectrum(f.fitter.getresidual(), r)
-                    workscan.blpars.append(f.get_parameters())
-                    workscan.masklists.append(workscan.get_masklist(f.mask, row=r))
-                    workscan.actualmask.append(f.mask)
-                    
-                f._p.unmap()
-                f._p = None
-            else:
-                for r in rows:
-                    fitparams = workscan._poly_baseline(mask, order, r)
-                    params = fitparams.getparameters()
-                    fmtd = ", ".join(["p%d = %3.6f" % (i, v) for i, v in enumerate(params)])
-                    errors = fitparams.geterrors()
-                    fmask = mask_and(mask, workscan._getmask(r))
-
-                    workscan.blpars.append({"params":params,
-                                            "fixed": fitparams.getfixedparameters(),
-                                            "formatted":fmtd, "errors":errors})
-                    workscan.masklists.append(workscan.get_masklist(fmask, r, silent=True))
-                    workscan.actualmask.append(fmask)
-                    
-                    asaplog.push(fmtd)
-            
-            workscan._add_history("poly_baseline", varlist)
-            
-            if insitu:
-                self._assign(workscan)
-            else:
-                return workscan
-            
-        except RuntimeError, e:
-            msg = "The fit failed, possibly because it didn't converge."
-            if rcParams["verbose"]:
-                asaplog.push(str(e))
-                asaplog.push(str(msg))
-                return
-            else:
-                raise RuntimeError(str(e)+'\n'+msg)
-
-
-    def auto_poly_baseline(self, mask=None, edge=(0, 0), order=0,
-                           threshold=3, chan_avg_limit=1, plot=False,
-                           insitu=None, rows=None):
+    def _append_blinfo(self, data_blpars, data_masklists, data_actualmask):
         """\
-        Return a scan which has been baselined (all rows) by a polynomial.
-        Spectral lines are detected first using linefinder and masked out
-        to avoid them affecting the baseline solution.
-
-        Parameters:
-
-            mask:       an optional mask retreived from scantable
-
-            edge:       an optional number of channel to drop at the edge of
-                        spectrum. If only one value is
-                        specified, the same number will be dropped from
-                        both sides of the spectrum. Default is to keep
-                        all channels. Nested tuples represent individual
-                        edge selection for different IFs (a number of spectral
-                        channels can be different)
-
-            order:      the order of the polynomial (default is 0)
-
-            threshold:  the threshold used by line finder. It is better to
-                        keep it large as only strong lines affect the
-                        baseline solution.
-
-            chan_avg_limit:
-                        a maximum number of consequtive spectral channels to
-                        average during the search of weak and broad lines.
-                        The default is no averaging (and no search for weak
-                        lines). If such lines can affect the fitted baseline
-                        (e.g. a high order polynomial is fitted), increase this
-                        parameter (usually values up to 8 are reasonable). Most
-                        users of this method should find the default value
-                        sufficient.
-
-            plot:       plot the fit and the residual. In this each
-                        indivual fit has to be approved, by typing 'y'
-                        or 'n'
-
-            insitu:     if False a new scantable is returned.
-                        Otherwise, the scaling is done in-situ
-                        The default is taken from .asaprc (False)
-            rows:       row numbers of spectra to be processed.
-                        (default is None: for all rows)
-
-
-        Example::
-
-            scan2 = scan.auto_poly_baseline(order=7, insitu=False)
-
+        Append baseline-fitting related info to blpars, masklist and
+        actualmask. 
         """
-        if insitu is None: insitu = rcParams['insitu']
-        varlist = vars()
-        from asap.asaplinefind import linefinder
-        from asap import _is_sequence_or_number as _is_valid
-
-        # check whether edge is set up for each IF individually
-        individualedge = False;
-        if len(edge) > 1:
-            if isinstance(edge[0], list) or isinstance(edge[0], tuple):
-                individualedge = True;
-
-        if not _is_valid(edge, int) and not individualedge:
-            raise ValueError, "Parameter 'edge' has to be an integer or a \
-            pair of integers specified as a tuple. Nested tuples are allowed \
-            to make individual selection for different IFs."
-
-        curedge = (0, 0)
-        if individualedge:
-            for edgepar in edge:
-                if not _is_valid(edgepar, int):
-                    raise ValueError, "Each element of the 'edge' tuple has \
-                                       to be a pair of integers or an integer."
-        else:
-            curedge = edge;
-
-        if not insitu:
-            workscan = self.copy()
-        else:
-            workscan = self
-
-        # setup fitter
-        f = fitter()
-        f.set_function(lpoly=order)
-
-        # setup line finder
-        fl = linefinder()
-        fl.set_options(threshold=threshold,avg_limit=chan_avg_limit)
-
-        fl.set_scan(workscan)
-
-        if mask is None:
-            mask = _n_bools(workscan.nchan(), True)
+        self.blpars.append(data_blpars)
+        self.masklists.append(data_masklists)
+        self.actualmask.append(data_actualmask)
+        return
         
-        if rows is None:
-            rows = xrange(workscan.nrow())
-        elif isinstance(rows, int):
-            rows = [ rows ]
-        
-        # Save parameters of baseline fits & masklists as a class attribute.
-        # NOTICE: It does not reflect changes in scantable!
-        if len(rows) > 0:
-            self.blpars=[]
-            self.masklists=[]
-            self.actualmask=[]
-        asaplog.push("Processing:")
-        for r in rows:
-            msg = " Scan[%d] Beam[%d] IF[%d] Pol[%d] Cycle[%d]" % \
-                (workscan.getscan(r), workscan.getbeam(r), workscan.getif(r), \
-                 workscan.getpol(r), workscan.getcycle(r))
-            asaplog.push(msg, False)
-
-            # figure out edge parameter
-            if individualedge:
-                if len(edge) >= workscan.getif(r):
-                    raise RuntimeError, "Number of edge elements appear to " \
-                                        "be less than the number of IFs"
-                    curedge = edge[workscan.getif(r)]
-
-            actualmask = mask_and(mask, workscan._getmask(r))    # (CAS-1434)
-
-            # setup line finder
-            fl.find_lines(r, actualmask, curedge)
-            
-            f.x = workscan._getabcissa(r)
-            f.y = workscan._getspectrum(r)
-            f.mask = fl.get_mask()
-            f.data = None
-            f.fit()
-
-            # Show mask list
-            masklist=workscan.get_masklist(f.mask, row=r, silent=True)
-            msg = "mask range: "+str(masklist)
-            asaplog.push(msg, False)
-
-            if plot:
-                f.plot(residual=True)
-                x = raw_input("Accept fit ( [y]/n ): ")
-                if x.upper() == 'N':
-                    self.blpars.append(None)
-                    self.masklists.append(None)
-                    self.actualmask.append(None)
-                    continue
-
-            workscan._setspectrum(f.fitter.getresidual(), r)
-            self.blpars.append(f.get_parameters())
-            self.masklists.append(masklist)
-            self.actualmask.append(f.mask)
-        if plot:
-            f._p.unmap()
-            f._p = None
-        workscan._add_history("auto_poly_baseline", varlist)
-        if insitu:
-            self._assign(workscan)
-        else:
-            return workscan
-
     @asaplog_post_dec
     def rotate_linpolphase(self, angle):
         """\
@@ -2608,11 +3013,12 @@ class scantable(Scantable):
         self.set_selection(basesel)
 
     def get_row_selector(self, rowno):
-        return selector(beams=self.getbeam(rowno),
-                        ifs=self.getif(rowno),
-                        pols=self.getpol(rowno),
-                        scans=self.getscan(rowno),
-                        cycles=self.getcycle(rowno))
+        #return selector(beams=self.getbeam(rowno),
+        #                ifs=self.getif(rowno),
+        #                pols=self.getpol(rowno),
+        #                scans=self.getscan(rowno),
+        #                cycles=self.getcycle(rowno))
+        return selector(rows=[rowno])
 
     def _add_history(self, funcname, parameters):
         if not rcParams['scantable.history']:
@@ -2680,7 +3086,8 @@ class scantable(Scantable):
         return lbl
 
     def _check_ifs(self):
-        nchans = [self.nchan(i) for i in range(self.nif(-1))]
+        #nchans = [self.nchan(i) for i in range(self.nif(-1))]
+        nchans = [self.nchan(i) for i in self.getifnos()]
         nchans = filter(lambda t: t > 0, nchans)
         return (sum(nchans)/len(nchans) == nchans[0])
 
@@ -2701,9 +3108,15 @@ class scantable(Scantable):
         stype = int(rcParams['scantable.storage'].lower() == 'disk')
         for name in fullnames:
             tbl = Scantable(stype)
-            r = filler(tbl)
-            rx = rcParams['scantable.reference']
-            r.setreferenceexpr(rx)
+            if is_ms( name ):
+                r = msfiller( tbl )
+            else:
+                r = filler( tbl )
+                rx = rcParams['scantable.reference']
+                r.setreferenceexpr(rx)
+            #r = filler(tbl)
+            #rx = rcParams['scantable.reference']
+            #r.setreferenceexpr(rx)
             msg = "Importing %s..." % (name)
             asaplog.push(msg, False)
             #opts = {'ms': {'antenna' : antenna, 'getpt': getpt} }
@@ -2723,6 +3136,7 @@ class scantable(Scantable):
             self.set_fluxunit(unit)
         if not is_casapy():
             self.set_freqframe(rcParams['scantable.freqframe'])
+
 
     def __getitem__(self, key):
         if key < 0:

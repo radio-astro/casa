@@ -108,8 +108,12 @@ public:
   void flag(const std::vector<bool>& msk=std::vector<bool>())
     { table_->flag(msk); }
   **/
+  /**
   void flag(const std::vector<bool>& msk=std::vector<bool>(), bool unflag=false)
     { table_->flag(msk, unflag); }
+  **/
+  void flag(int whichrow=-1, const std::vector<bool>& msk=std::vector<bool>(), bool unflag=false)
+    { table_->flag(whichrow, msk, unflag); }
 
   void flagRow(const std::vector<casa::uInt>& rows=std::vector<casa::uInt>(), bool unflag=false)
     { table_->flagRow(rows, unflag); }
@@ -225,7 +229,7 @@ public:
   STFitEntry getFit(int whichrow) const
   { return table_->getFit(whichrow); }
 
-  void calculateAZEL() { table_->calculateAZEL(); };
+  void calculateAZEL() { table_->calculateAZEL(); }
 
   std::vector<std::string> columnNames() const
     { return table_->columnNames(); }
@@ -252,14 +256,30 @@ public:
   void reshapeSpectrum( int nmin, int nmax )
   { table_->reshapeSpectrum( nmin, nmax ); }
 
-  STFitEntry polyBaseline(const std::vector<bool>& mask, int order, int rowno)
-  { return table_->polyBaseline(mask, order, rowno); }
+  void polyBaseline(const std::vector<bool>& mask, int order, bool outlog=false, const std::string& blfile="")
+  { table_->polyBaseline(mask, order, outlog, blfile); }
 
-  void polyBaselineBatch(const std::vector<bool>& mask, int order)
-  { table_->polyBaselineBatch(mask, order); }
+  void autoPolyBaseline(const std::vector<bool>& mask, int order, const std::vector<int>& edge, float threshold=5.0, int chan_avg_limit=1, bool outlog=false, const std::string& blfile="")
+  { table_->autoPolyBaseline(mask, order, edge, threshold, chan_avg_limit, outlog, blfile); }
+
+  void cubicSplineBaseline(const std::vector<bool>& mask, int npiece, float clipthresh, int clipniter, bool outlog=false, const std::string& blfile="")
+  { table_->cubicSplineBaseline(mask, npiece, clipthresh, clipniter, outlog, blfile); }
+
+  void autoCubicSplineBaseline(const std::vector<bool>& mask, int npiece, float clipthresh, int clipniter, const std::vector<int>& edge, float threshold=5.0, int chan_avg_limit=1, bool outlog=false, const std::string& blfile="")
+  { table_->autoCubicSplineBaseline(mask, npiece, clipthresh, clipniter, edge, threshold, chan_avg_limit, outlog, blfile); }
+
+  float getRms(const std::vector<bool>& mask, int whichrow)
+  { return table_->getRms(mask, whichrow); }
+
+  std::string formatBaselineParams(const std::vector<float>& params, const std::vector<bool>& fixed, float rms, const std::string& masklist, int whichrow, bool verbose=false)
+  { return table_->formatBaselineParams(params, fixed, rms, masklist, whichrow, verbose); }
+
+  std::string formatPiecewiseBaselineParams(const std::vector<int>& ranges, const std::vector<float>& params, const std::vector<bool>& fixed, float rms, const std::string& masklist, int whichrow, bool verbose=false)
+  { return table_->formatPiecewiseBaselineParams(ranges, params, fixed, rms, masklist, whichrow, verbose); }
 
   bool getFlagtraFast(int whichrow=0) const
-    { return table_->getFlagtraFast(whichrow); }
+  { return table_->getFlagtraFast(whichrow); }
+
 
 
 private:
