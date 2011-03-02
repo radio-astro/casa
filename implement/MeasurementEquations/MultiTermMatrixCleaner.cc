@@ -247,7 +247,7 @@ Int MultiTermMatrixCleaner::mtclean(Int maxniter, Float stopfraction, Float inpu
   Int convergedflag = 0;
   Float fluxlimit = -1;
   Float loopgain = 0.5; 
-  if(inputgain>0) loopgain=inputgain;
+  if(inputgain>(Float)0.0) loopgain=inputgain;
   Int criterion=5; // This chooses among a list of 'penalty functions'
   itercount_p=0;
  
@@ -549,9 +549,9 @@ Int MultiTermMatrixCleaner::setupUserMask()
         for (Int j=0 ; j < (itsMask->shape())(1); ++j)
         for (Int k =0 ; k < (itsMask->shape())(0); ++k)
         {
-	        if(itsMaskThreshold > 0)  // if negative, use the continuous mask
+	  if(itsMaskThreshold > (Float)0.0)  // if negative, use the continuous mask
                 {
-	            (vecScaleMasks_p[scale])(k,j) =  (vecScaleMasks_p[scale])(k,j) > 0.1 ? 1.0 : 0.0;
+		  (vecScaleMasks_p[scale])(k,j) =  (vecScaleMasks_p[scale])(k,j) > (Float)0.1 ? 1.0 : 0.0;
 	        }
         }
 	
@@ -1132,7 +1132,7 @@ Int MultiTermMatrixCleaner::checkConvergence(Int criterion, Float &fluxlimit, Fl
     }
 
     /* Levenberg-Macquart-like change in step size */
-   if(itercount_p>1 && inputgain_p<=0)
+    if(itercount_p>1 && inputgain_p<=(Float)0.0)
    { 
      
 	if (globalmaxval_p < prev_max_p) 
@@ -1141,17 +1141,17 @@ Int MultiTermMatrixCleaner::checkConvergence(Int criterion, Float &fluxlimit, Fl
             loopgain = loopgain / 1.5;
 
         loopgain = MIN((1-stopfraction_p),loopgain);
-        loopgain = MIN(0.6,loopgain);
+        loopgain = MIN((Float)0.6,loopgain);
         
         /* detect divergence by approximately 10 consecutive increases in maxval */
-        if(loopgain < 0.01)
+        if(loopgain < (Float)0.01)
    	{
 	  os << "Not converging any more. May be diverging. Stopping minor cycles at iteration " << totalIters_p << ". Peak residual " << fabs(rmaxval) << LogIO::POST;
           convergedflag=-1; 
 	 }
      
     /* Stop if there is divergence : 200% increase from the current minimum value */
-    if( abs(  (min_max_p-globalmaxval_p)/min_max_p ) > 2 )
+	if( fabs(  (min_max_p-globalmaxval_p)/min_max_p ) > (Float)2.0 )
       {
 	os << "Diverging.... Stopping minor cycles at iteration " << totalIters_p << ". Peak residual " << fabs(rmaxval) << " Max: " << globalmaxval_p << LogIO::POST;
         convergedflag=-1;
@@ -1193,8 +1193,7 @@ Int MultiTermMatrixCleaner::checkConvergence(Int criterion, Float &fluxlimit, Fl
     }
     else
     {
-      ////      if( totalIters_p==maxniter_p || adbg || totalIters_p%(MIN(maxniter_p/5,20))==0 )
-      if( totalIters_p==maxniter_p || adbg || totalIters_p%(MIN(maxniter_p/5,20))==0 )
+      if( totalIters_p==maxniter_p || (adbg==(Bool)True) || maxniter_p < (int)5 || (maxniter_p%(Int)20==0) )
        {
 	 
 	    os << "[" << totalIters_p << "] Res: " << rmaxval << " Max: " << globalmaxval_p;
