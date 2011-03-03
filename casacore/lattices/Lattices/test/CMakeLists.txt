@@ -30,6 +30,7 @@ tLatticeStatistics
 tLatticeStepper
 tLatticeTwoPtCorr
 tLatticeUtilities
+tLattStatsSpecialize
 tLCComplement
 tLCConcatenation
 tLCDifference

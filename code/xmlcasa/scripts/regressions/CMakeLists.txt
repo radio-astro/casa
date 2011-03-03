@@ -26,7 +26,7 @@ casa_add_python( xmlcasa xmlcasa_regressions_python python/${PYTHONV}/regression
   alma_asdm+reimported-asdm_sf.py
   async-segfault_regression.py
   b0319_regression.py
-  b1608_demo_regression.py
+#  b1608_demo_regression.py      rmed in 14244.
   cleanchan_regression.py
   cleanhelper_regression.py
   coordsystest_regression.py

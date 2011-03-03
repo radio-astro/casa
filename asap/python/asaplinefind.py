@@ -100,6 +100,20 @@ class linefinder:
            raise RuntimeError, 'Please give a correct scan'
         self.finder.setscan(scan)
 
+    def set_data(self, spectrum):
+        """
+        Set the 'data' (spectrum) to work with
+        Parameters: a method to allow linefinder work without setting scantable
+        for the purpose of using linefinder inside some method in scantable
+        class. (Dec 22, 2010 by W.Kawasaki)
+        """
+        if isinstance(spectrum, list) or isinstance(spectrum, tuple):
+            if not isinstance(spectrum[0], float):
+                raise RuntimeError, "Parameter 'spectrum' has to be a list or a tuple of float"
+        else:
+            raise RuntimeError, "Parameter 'spectrum' has to be a list or a tuple of float"
+        self.finder.setdata(spectrum)
+        
     def find_lines(self,nRow=0,mask=[],edge=(0,0)):
         """
         Search for spectral lines in the scan assigned in set_scan.

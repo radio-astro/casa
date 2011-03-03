@@ -112,7 +112,7 @@ public:
 
     // Attach to a VisIter. Detaches itself first if already attached
     // to a VisIter. Will remain synchronized with iterator.
-    void attachToVisIter(ROVisibilityIterator & iter);
+    virtual void attachToVisIter(ROVisibilityIterator & iter);
     virtual void detachFromVisIter ();
 
     // Invalidate the cache

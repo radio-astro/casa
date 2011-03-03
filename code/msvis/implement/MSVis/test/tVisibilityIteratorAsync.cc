@@ -70,10 +70,11 @@ main(int argc, char **argv)
 
             ROVisibilityIteratorAsync::PrefetchColumns prefetchColumns =
                     ROVisibilityIteratorAsync::prefetchColumns(VIA::Ant1, VIA::Ant2, VIA::Freq, VIA::Time,
-                                                             VIA::ObservedCube, VIA::Sigma, VIA::Flag,
+							       VIA::ObservedCube, VIA::Sigma, VIA::Flag, VIA::Uvw,
                                                              -1);
             auto_ptr<ROVisibilityIterator> syniter (ROVisibilityIteratorAsync::create (synms,prefetchColumns, bi));
-            auto_ptr<VisBuffer> vb (VisBufferAsync::create (syniter.get()));
+            VisBufferAutoPtr vb (syniter.get());
+
             // set iterator to start of data
             syniter->origin();
 
@@ -138,7 +139,7 @@ main(int argc, char **argv)
             auto_ptr <ROVisibilityIterator>
             syniter2 (ROVisibilityIteratorAsync::create (synms,prefetchColumns, bi,10.));
 
-            auto_ptr <VisBuffer> vb2 (VisBufferAsync::create (* syniter2));
+            VisBufferAutoPtr vb2 (* syniter2);
 
             for (syniter2->originChunks();syniter2->moreChunks(); syniter2->nextChunk()) {
                 syniter2->origin();
@@ -166,7 +167,7 @@ main(int argc, char **argv)
             syniter3 (ROVisibilityIteratorAsync::create(synms,prefetchColumns, bi,10.));
 
             syniter3->setInterval(1000.);
-            auto_ptr<VisBuffer> vb3 (VisBufferAsync::create (* syniter3));
+            VisBufferAutoPtr vb3 (* syniter3);
 
             for (int i = 0; i < 3; i++){ // see if rewinding works
 

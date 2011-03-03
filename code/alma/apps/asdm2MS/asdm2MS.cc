@@ -866,7 +866,7 @@ set<T> SetAndSet(const set<T>& s1, const set<T>& s2) {
 // have a method getTimeInterval which returns a TimeInterval object.
 //
 template<typename T>
-bool timeIntervalIntersectsAScan (T* row, const vector<ScanRow *>& scans) {
+bool timeIntervalIntersectsAScan (T* row, const vector<ScanRow *>& scans, bool midpoint) {
   bool result = false;
 
   int64_t currentScanStartTime, currentScanEndTime;
@@ -874,7 +874,16 @@ bool timeIntervalIntersectsAScan (T* row, const vector<ScanRow *>& scans) {
   for (vector<ScanRow *>::const_iterator iter = scans.begin(); iter != scans.end(); iter++) {
     currentScanStartTime = (*iter)->getStartTime().get();
     currentScanEndTime = (*iter)->getEndTime().get();
-    rowStartTime = row->getTimeInterval().getStart().get();
+
+    if (midpoint) {
+      // Then we assume that what's expected as being the start time is actually a mid point
+      rowStartTime = row->getTimeInterval().getStart().get() - row->getTimeInterval().getDuration().get() / 2;
+    }
+    else {
+      // Otherwise getStartTime does return a start time !
+      rowStartTime = row->getTimeInterval().getStart().get();
+    }
+
     rowEndTime = rowStartTime + row->getTimeInterval().getDuration().get();
     if (max(currentScanStartTime, rowStartTime) < min(currentScanEndTime, rowEndTime))
       return true;
@@ -885,16 +894,17 @@ bool timeIntervalIntersectsAScan (T* row, const vector<ScanRow *>& scans) {
 template<typename T>
 struct rowsInAScanbyTimeIntervalFunctor {
 private:
-  const vector<ScanRow *>& scans;
-  vector<T *> result;
+  const vector<ScanRow *>&	scans;
+  bool				midpoint;
+  vector<T *>			result;
 
 public:
-  rowsInAScanbyTimeIntervalFunctor(const vector<ScanRow *>& scans): scans(scans) {};
+  rowsInAScanbyTimeIntervalFunctor(const vector<ScanRow *>& scans, bool midpoint): scans(scans), midpoint(midpoint) {};
   const vector<T *> & operator() (const vector<T *>& rows, bool ignoreTime=false) {
     if (ignoreTime) return rows;
 
     for (typename vector<T *>::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
-      if (timeIntervalIntersectsAScan (*iter, scans))
+      if (timeIntervalIntersectsAScan (*iter, scans, midpoint))
 	result.push_back(*iter);
     }
     return result;    
@@ -908,26 +918,30 @@ public:
 // returns true.
 //
 template<typename T>
-vector<T *> rowsInAScanbyTimeInterval(const vector<T* >& rows, const vector<ScanRow *>& scans) {
+vector<T *> rowsInAScanbyTimeInterval(const vector<T* >& rows, const vector<ScanRow *>& scans, bool midpoint) {
   vector<T *> result ;
   for (typename vector<T *>::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
-    if (timeIntervalIntersectsAScan (*iter, scans))
+    if (timeIntervalIntersectsAScan (*iter, scans, midpoint))
       result.push_back(*iter);
   }
   return result;
 }
 
-
+//
+// A template function which checks if there is at least one element scan of the vector scans for which
+// the time  contained by returned by row->getTime() is embedded in the time range defined in scan. 
+// Returns true there is such a scan.
+//
 template<typename T>
-bool timeIsInAScan(T* row, const vector<ScanRow *>& scans) {
+bool timeIsInAScan(T* row, const vector<ScanRow *>& scans, bool midpoint) {
   bool result = false;
 
   int64_t currentScanStartTime, currentScanEndTime;
   int64_t rowTime;
+  rowTime = row->getTime().get();
   for (vector<ScanRow *>::const_iterator iter = scans.begin(); iter != scans.end(); iter++) {
     currentScanStartTime = (*iter)->getStartTime().get();
     currentScanEndTime = (*iter)->getEndTime().get();
-    rowTime = row->getTime().get();
     if ((currentScanStartTime <= rowTime) && (rowTime < currentScanEndTime))
       return true;
   }
@@ -937,16 +951,17 @@ bool timeIsInAScan(T* row, const vector<ScanRow *>& scans) {
 template<typename T>
 struct rowsInAScanbyTimeFunctor {
 private:
-  const vector<ScanRow *>& scans;
-  vector<T *> result;
+  const vector<ScanRow *>&	scans;
+  bool				midpoint;
+  vector<T *>			result;
 
 public:
-  rowsInAScanbyTimeFunctor(const vector<ScanRow *>& scans): scans(scans) {};
+  rowsInAScanbyTimeFunctor(const vector<ScanRow *>& scans, bool midpoint): scans(scans), midpoint(midpoint) {};
   const vector<T *> & operator() (const vector<T *>& rows, bool ignoreTime=false) {
     if (ignoreTime) return rows;
 
     for (typename vector<T *>::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
-      if (timeIsInAScan (*iter, scans))
+      if (timeIsInAScan (*iter, scans, midpoint))
 	result.push_back(*iter);
     }
 
@@ -963,10 +978,10 @@ public:
 //
 //
 template<typename T>
-vector<T *> rowsInAScanbyTime(const vector<T* >& rows, const vector<ScanRow *>& scans) {
+vector<T *> rowsInAScanbyTime(const vector<T* >& rows, const vector<ScanRow *>& scans, bool midpoint) {
   vector<T *> result ;
   for (typename vector<T *>::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
-    if (timeIsInAScan (*iter, scans))
+    if (timeIsInAScan (*iter, scans, midpoint))
       result.push_back(*iter);
   }
   return result;
@@ -1211,7 +1226,7 @@ int main(int argc, char *argv[]) {
     // Revision ? displays revision's info and don't go further.
     if (vm.count("revision")) {
       errstream.str("");
-      errstream << "$Id: asdm2MS.cpp,v 1.71 2011/02/11 18:52:11 mcaillat Exp $" << "\n" ;
+      errstream << "$Id: asdm2MS.cpp,v 1.72 2011/02/28 16:41:10 mcaillat Exp $" << "\n" ;
       error(errstream.str());
     }
 
@@ -2172,7 +2187,7 @@ int main(int argc, char *argv[]) {
     FeedRow* r = 0;
     infostream.str("");
     infostream << "The dataset has " << feedT.size() << " feed(s)...";
-    rowsInAScanbyTimeIntervalFunctor<FeedRow> selector(selectedScanRow_v);
+    rowsInAScanbyTimeIntervalFunctor<FeedRow> selector(selectedScanRow_v, isEVLA);
     
     const vector<FeedRow *>& v = selector(feedT.get(), ignoreTime);
     if (!ignoreTime)
@@ -2295,7 +2310,7 @@ int main(int argc, char *argv[]) {
     FlagCmdRow* r = 0;
     infostream.str("");
     infostream << "The dataset has " << flagCmdT.size() << " FlagCmd(s)...";
-    rowsInAScanbyTimeIntervalFunctor<FlagCmdRow> selector(selectedScanRow_v);
+    rowsInAScanbyTimeIntervalFunctor<FlagCmdRow> selector(selectedScanRow_v, isEVLA);
 
     const vector<FlagCmdRow *>& v = selector(flagCmdT.get(), ignoreTime);
     if (!ignoreTime)
@@ -2349,7 +2364,7 @@ int main(int argc, char *argv[]) {
     int nHistory = historyT.size();
     infostream.str("");
     infostream << "The dataset has " << nHistory << " history(s)...";
-    rowsInAScanbyTimeFunctor<HistoryRow> selector(selectedScanRow_v);
+    rowsInAScanbyTimeFunctor<HistoryRow> selector(selectedScanRow_v, isEVLA);
 
     const vector<HistoryRow *>& v = selector(historyT.get(), ignoreTime);;
     if (!ignoreTime) 
@@ -2397,7 +2412,7 @@ int main(int argc, char *argv[]) {
   const PointingTable& pointingT = ds->getPointing();
   infostream.str("");
   infostream << "The dataset has " << pointingT.size() << " pointing(s)...";
-  rowsInAScanbyTimeIntervalFunctor<PointingRow> selector(selectedScanRow_v);
+  rowsInAScanbyTimeIntervalFunctor<PointingRow> selector(selectedScanRow_v, isEVLA);
 
   const vector<PointingRow *>& v = selector(pointingT.get(), ignoreTime);
   if (!ignoreTime) 
@@ -2645,7 +2660,7 @@ int main(int argc, char *argv[]) {
     SourceRow* r = 0;
     infostream.str("");
     infostream << "The dataset has " << sourceT.size() << " sources(s)...";
-    rowsInAScanbyTimeIntervalFunctor<SourceRow> selector(selectedScanRow_v);
+    rowsInAScanbyTimeIntervalFunctor<SourceRow> selector(selectedScanRow_v, isEVLA);
 
     const vector<SourceRow *>& v = selector(sourceT.get(), ignoreTime);
     if (!ignoreTime) 
@@ -2793,7 +2808,7 @@ int main(int argc, char *argv[]) {
     SysCalRow* r = 0;
     infostream.str("");
     infostream << "The dataset has " << sysCalT.size() << " sysCal(s)...";
-    rowsInAScanbyTimeIntervalFunctor<SysCalRow> selector(selectedScanRow_v);
+    rowsInAScanbyTimeIntervalFunctor<SysCalRow> selector(selectedScanRow_v, isEVLA);
 
     const vector<SysCalRow *>& v = selector(sysCalT.get(), ignoreTime);
     if (!ignoreTime) 
@@ -2905,7 +2920,7 @@ int main(int argc, char *argv[]) {
   infostream << "The dataset has " << calDeviceT.size() << " calDevice(s)...";
 
   if (processCalDevice && calDeviceT.size() > 0) {
-    rowsInAScanbyTimeIntervalFunctor<CalDeviceRow> selector(selectedScanRow_v);    
+    rowsInAScanbyTimeIntervalFunctor<CalDeviceRow> selector(selectedScanRow_v, isEVLA);    
     const vector<CalDeviceRow *>& calDevices = selector(calDeviceT.get(), ignoreTime);
     if (!ignoreTime) 
       infostream << calDevices.size() << " of them in the selected exec blocks / scans ... ";
@@ -3171,7 +3186,7 @@ int main(int argc, char *argv[]) {
     unsigned int        numReceptor0;
     {
       info(infostream.str()); infostream.str("");
-      rowsInAScanbyTimeIntervalFunctor<SysPowerRow> selector(selectedScanRow_v);
+      rowsInAScanbyTimeIntervalFunctor<SysPowerRow> selector(selectedScanRow_v, isEVLA);
       
       const vector<SysPowerRow *>& sysPowers = selector(sysPowerT.get(), ignoreTime);
       
@@ -3287,7 +3302,7 @@ int main(int argc, char *argv[]) {
     WeatherRow* r = 0;
     infostream.str("");
     infostream << "The dataset has " << weatherT.size() << " weather(s)...";
-    rowsInAScanbyTimeIntervalFunctor<WeatherRow> selector(selectedScanRow_v);
+    rowsInAScanbyTimeIntervalFunctor<WeatherRow> selector(selectedScanRow_v, isEVLA);
     
     const vector<WeatherRow *>& v = selector(weatherT.get(), ignoreTime);
     if (!ignoreTime) 

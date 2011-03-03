@@ -14,7 +14,10 @@
 
 #include <algorithm>
 #include <cstdarg>
+#include <ostream>
+#include <boost/lexical_cast.hpp>
 
+using namespace boost;
 using namespace std;
 
 #include "UtilJ.h"
@@ -24,7 +27,7 @@ using namespace casa::asyncio;
 
 #define Log(level, ...) \
     {if (VlaData::loggingInitialized_p && level <= VlaData::logLevel_p) \
-         Logger::log (__VA_ARGS__);};
+         Logger::get()->log (__VA_ARGS__);};
 
 #define NotImplemented     Throw ("ROVisibilityIteratorAsync: Method not implemented!");
 
@@ -172,6 +175,10 @@ ROVisibilityIteratorAsync::advance ()
 
     fillVisBuffer ();
 
+    if (linkedVisibilityIterator_p != NULL){
+        ++ (* linkedVisibilityIterator_p);
+    }
+
 }
 
 void
@@ -195,10 +202,11 @@ void
 ROVisibilityIteratorAsync::construct (const PrefetchColumns & prefetchColumns, Int nReadAheadBuffers)
 {
     if (VlaData::loggingInitialized_p){
-        Logger::registerName ("Main");
+        Logger::get()->registerName ("Main");
     }
 
     chunkNumber_p = 0;
+    linkedVisibilityIterator_p = NULL;
     subChunkNumber_p = -1;
     vlaDatum_p = NULL;
 
@@ -456,7 +464,7 @@ ROVisibilityIteratorAsync::fillVisBuffer()
 
         readComplete ();
 
-        vlaDatum_p = impl_p->vlaData_p->readStart ();
+        vlaDatum_p = impl_p->vlaData_p->readStart (chunkNumber_p, subChunkNumber_p);
 
         Assert (vlaDatum_p != NULL);
         ThrowIf (! vlaDatum_p->isChunk (chunkNumber_p, subChunkNumber_p),
@@ -510,7 +518,7 @@ int
 ROVisibilityIteratorAsync::getDefaultNBuffers ()
 {
     int nBuffers;
-    AipsrcValue<Int>::find (nBuffers, getRcBase () + ".nBuffers", 2);
+    AipsrcValue<Int>::find (nBuffers, getAipsRcBase () + ".nBuffers", 2);
 
     return nBuffers;
 }
@@ -523,15 +531,18 @@ ROVisibilityIteratorAsync::getDefaultNBuffers ()
 
 
 String
-ROVisibilityIteratorAsync::getRcBase ()
+ROVisibilityIteratorAsync::getAipsRcBase ()
 {
-    static const String RcBase ("ROVisibilityIteratorAsync");
-    return RcBase;
+    // Get the top-level name(s) for the async i/o related AipsRc variables
+
+    return "ROVisibilityIteratorAsync";
 }
 
 VisBuffer *
 ROVisibilityIteratorAsync::getVisBuffer ()
 {
+    // Returns the currently attached VisBufferAsync or NULL if none attached
+
     VisBuffer * vb = (! visBufferAsyncStack_p.empty()) ? visBufferAsyncStack_p.top() : NULL;
     return vb;
 }
@@ -539,15 +550,27 @@ ROVisibilityIteratorAsync::getVisBuffer ()
 Bool
 ROVisibilityIteratorAsync::isAsynchronousIoEnabled()
 {
+    // Determines whether asynchronous I/O is enabled by looking for the
+    // expected AipsRc value.  If not found then async i/o is disabled.
+
     Bool isDisabled;
-    AipsrcValue<Bool>::find (isDisabled, getRcBase () + ".disabled", True);
+    AipsrcValue<Bool>::find (isDisabled, getAipsRcBase () + ".disabled", True);
 
     return ! isDisabled;
 }
 
+void
+ROVisibilityIteratorAsync::linkWithRovi (ROVisibilityIterator * rovi)
+{
+    linkedVisibilityIterator_p = rovi;
+}
+
+
 Bool
 ROVisibilityIteratorAsync::more () const
 {
+    // Returns true if the lookahead data structure has the next subchunk.
+
     Bool b = impl_p->vlaData_p->isValidSubChunk (chunkNumber_p, subChunkNumber_p);
 
     return b;
@@ -556,6 +579,9 @@ ROVisibilityIteratorAsync::more () const
 Bool
 ROVisibilityIteratorAsync::moreChunks () const
 {
+    // Returns true if the looahead data structure has the first subchunk of the
+    // next chunk.
+
     Bool b = impl_p->vlaData_p->isValidChunk (chunkNumber_p);
 
     return b;
@@ -564,10 +590,18 @@ ROVisibilityIteratorAsync::moreChunks () const
 ROVisibilityIteratorAsync &
 ROVisibilityIteratorAsync::nextChunk ()
 {
+    // Terminates the current read and advances the state of this
+    // object to expect to access the first subchunk of the next
+    // chunk
+
     readComplete (); // complete any pending read
 
     chunkNumber_p ++;
     subChunkNumber_p = 0;
+
+    if (linkedVisibilityIterator_p != NULL){
+        linkedVisibilityIterator_p->nextChunk();
+    }
 
     return * this;
 }
@@ -575,11 +609,16 @@ ROVisibilityIteratorAsync::nextChunk ()
 void
 ROVisibilityIteratorAsync::origin ()
 {
+    // Terminates the current read and
     readComplete (); // complete any pending read
 
     subChunkNumber_p = 0;
 
     fillVisBuffer ();
+
+    if (linkedVisibilityIterator_p != NULL){
+        linkedVisibilityIterator_p->origin();
+    }
 }
 
 void
@@ -594,7 +633,11 @@ ROVisibilityIteratorAsync::originChunks ()
         chunkNumber_p = 0;
         subChunkNumber_p = -1;
 
-        impl_p->vlaData_p->requestViReset (impl_p->vlat_p);
+        impl_p->vlaData_p->requestViReset ();
+    }
+
+    if (linkedVisibilityIterator_p != NULL){
+        linkedVisibilityIterator_p->originChunks ();
     }
 }
 
@@ -648,8 +691,10 @@ ROVisibilityIteratorAsync::prefetchAllColumnsExcept (Int firstColumn, ...)
 }
 
 String
-ROVisibilityIteratorAsync::prefetchColumnName (PrefetchColumnIds id)
+ROVisibilityIteratorAsync::prefetchColumnName (Int id)
 {
+    assert (id >= 0 && id < N_PrefetchColumnIds);
+
     static String names [] =
     {"Ant1",
      "Ant2",
@@ -844,15 +889,10 @@ ChannelSelection::ChannelSelection (const Block< Vector<Int> > & blockNGroup,
                                                                const Block< Vector<Int> > & blockIncr,
                                                                const Block< Vector<Int> > & blockSpw)
 {
-    blockNGroup_p.resize(0, True, False);
     blockNGroup_p = blockNGroup;
-    blockStart_p.resize(0, True, False);
     blockStart_p = blockStart;
-    blockWidth_p.resize(0, True, False);
     blockWidth_p = blockWidth;
-    blockIncr_p.resize(0, True, False);
     blockIncr_p = blockIncr;
-    blockSpw_p.resize(0, True, False);
     blockSpw_p = blockSpw;
 }
 
@@ -866,19 +906,10 @@ ChannelSelection::operator= (const ChannelSelection & other)
 {
     if (this != & other){
 
-        blockNGroup_p.resize(0, True, False);
         blockNGroup_p = other.blockNGroup_p;
-
-        blockStart_p.resize(0, True, False);
         blockStart_p = other.blockStart_p;
-
-        blockWidth_p.resize(0, True, False);
         blockWidth_p = other.blockWidth_p;
-
-        blockIncr_p.resize(0, True, False);
         blockIncr_p = other.blockIncr_p;
-
-        blockSpw_p.resize(0, True, False);
         blockSpw_p = other.blockSpw_p;
     }
 
@@ -893,15 +924,10 @@ ChannelSelection::get (Block< Vector<Int> > & blockNGroup,
                        Block< Vector<Int> > & blockIncr,
                        Block< Vector<Int> > & blockSpw) const
 {
-    blockNGroup.resize(0, True, False);
     blockNGroup=blockNGroup_p;
-    blockStart.resize(0, True, False);
     blockStart=blockStart_p;
-    blockWidth.resize(0, True, False);
     blockWidth=blockWidth_p;
-    blockIncr.resize(0, True, False);
     blockIncr=blockIncr_p;
-    blockSpw.resize(0, True, False);
     blockSpw=blockSpw_p;
 }
 
@@ -946,6 +972,15 @@ ChannelSelection::get (Block< Vector<Int> > & blockNGroup,
 //    return rovi;
 //}
 
+std::ostream &
+operator<< (std::ostream & o, const RoviaModifier & m)
+{
+    m.print (o);
+
+    return o;
+}
+
+
 RoviaModifiers::~RoviaModifiers ()
 {
     // Free the objects owned by the vector
@@ -967,8 +1002,10 @@ RoviaModifiers::apply (ROVisibilityIterator * rovi)
     // Free the objects owned by the vector
 
     for (Data::iterator i = data_p.begin(); i != data_p.end(); i++){
+        Log (1, "Applying vi modifier: %s\n", lexical_cast<String> (** i).c_str());
         (* i) -> apply (rovi);
     }
+
 }
 
 void
@@ -1027,6 +1064,69 @@ SelectChannelModifier::apply (ROVisibilityIterator * rovi) const
     }
 }
 
+void
+SelectChannelModifier::print (ostream & os) const
+{
+    os << "SelectChannel::{";
+
+    if (channelBlocks_p){
+        Block< Vector<Int> > blockNGroup;
+        Block< Vector<Int> > blockStart;
+        Block< Vector<Int> > blockWidth;
+        Block< Vector<Int> > blockIncr;
+        Block< Vector<Int> > blockSpw;
+
+        channelSelection_p.get (blockNGroup, blockStart, blockWidth, blockIncr, blockSpw);
+
+        os << "nGroup=" << toCsv (blockNGroup)
+           << ", start=" << toCsv (blockStart)
+           << ", width=" << toCsv (blockWidth)
+           << ", increment=" << toCsv (blockIncr)
+           << ", spw=" << toCsv (blockSpw);
+    }
+    else {
+        os << "nGroup=" << nGroup_p
+           << ", start=" << start_p
+           << ", width=" << width_p
+           << ", increment=" << increment_p
+           << ", spw=" << spectralWindow_p;
+    }
+    os << "}";
+}
+
+String
+SelectChannelModifier::toCsv (const Block< Vector<Int> > & bv) const
+{
+    String result = "{";
+
+    for (Block<Vector<Int> >::const_iterator v = bv.begin(); v != bv.end(); ++ v){
+        if (result.size() != 1)
+            result += ",";
+
+        result += "{" + toCsv (* v) + "}";
+
+    }
+
+    result += "}";
+
+    return result;
+
+}
+
+String
+SelectChannelModifier::toCsv (const Vector<Int> & v) const
+{
+    String result = "";
+    for (Vector<Int>::const_iterator i = v.begin(); i != v.end(); ++ i){
+        if (! result.empty())
+            result += ",";
+        result +=  String::toString (* i);
+    }
+
+    return result;
+}
+
+
 SelectVelocityModifier::SelectVelocityModifier (Int nChan, const MVRadialVelocity& vStart, const MVRadialVelocity& vInc,
                                                 MRadialVelocity::Types rvType, MDoppler::Types dType, Bool precise)
 
@@ -1044,6 +1144,21 @@ SelectVelocityModifier::apply (ROVisibilityIterator * rovi) const
     rovi-> selectVelocity (nChan_p, vStart_p, vInc_p, rvType_p, dType_p, precise_p);
 }
 
+void
+SelectVelocityModifier::print (std::ostream & os) const
+{
+    os << "SelectVelocity::{"
+
+       << "dType=" << dType_p
+       << ",nChan=" << nChan_p
+       << ",precise=" << precise_p
+       << ",rvType=" << rvType_p
+       << ",vInc=" << vInc_p
+       << ",vStart=" << vStart_p
+
+       << "}";
+}
+
 SetIntervalModifier::SetIntervalModifier  (Double timeInterval)
 : timeInterval_p (timeInterval)
 {}
@@ -1054,14 +1169,36 @@ SetIntervalModifier::apply (ROVisibilityIterator * rovi) const
     rovi -> setInterval (timeInterval_p);
 }
 
+void
+SetIntervalModifier::print (std::ostream & os) const
+{
+    os << "SetInterval::{" << timeInterval_p << "}";
+}
+
+
 
 SetRowBlockingModifier::SetRowBlockingModifier (Int nRows)
 : nRows_p (nRows)
 {}
 
-void SetRowBlockingModifier::apply (ROVisibilityIterator * rovi) const
+void
+SetRowBlockingModifier::apply (ROVisibilityIterator * rovi) const
 {
     rovi->setRowBlocking (nRows_p);
+}
+
+void
+SetRowBlockingModifier::print (std::ostream & os) const
+{
+    os << "SetRowBlocking::{"
+
+       << "nRows=" << nRows_p
+       << ",nGroup=" << nGroup_p
+       << ",spectralWindow=" << spectralWindow_p
+       << ",start=" << start_p
+       << ",width=" << width_p
+
+       << "}";
 }
 
 } // end namespace asyncio

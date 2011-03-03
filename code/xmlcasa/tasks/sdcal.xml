@@ -174,9 +174,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>5</value>
     </param>
 
+<!--
     <param type="intArray" name="masklist">
-            <description>list of mask regions to INCLUDE in BASELINE fit</description>
+            <description>list or string of mask regions to INCLUDE in BASELINE fit</description>
             <value></value>
+    </param>
+-->
+    <param type="any" name="masklist">
+            <description>list or string of mask regions to INCLUDE in BASELINE fit</description>
+            <any type="variant" limittype="string  doubleArray"/>
+            <value type="doubleArray"></value>
     </param>
 
     <param type="string" name="masking">
@@ -462,9 +469,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                          example: 5 or 10 seem to be popular for boxcar
                                   ignored for hanning (fixed at 5 chans)
                                   (0 will turn off gaussian or boxcar)
-        masklist -- list of mask regions to INCLUDE in BASELINE fit
+        masklist -- list or string of mask regions to INCLUDE in BASELINE fit
+                    a string masklist allows per IF selection of channels.
                 default: [] (entire spectrum)
                 example: [[1000,3000],[5000,7000]]
+                         '0:1000~3000;5000~7000, 1:200~350;450~600'
                          if masking='auto' then this mask will be applied
                          before fitting
         masking -- mode of setting channel masks

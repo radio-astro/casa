@@ -1132,6 +1132,13 @@ class par(str):
 	@staticmethod
 	def interactive():
 		"""
+		(for sdflag)
+		interactive -- determines interactive flagging
+		options: True, False
+		default: False
+
+		----------------------------------------------------------
+
 		(for sdstat)
 		interactive -- determines interactive masking
 		options: True, False
@@ -1357,9 +1364,12 @@ class par(str):
 	def masklist():
 		"""
                 (for sdbaseline and sdcal)
-		masklist -- list of mask regions to INCLUDE in BASELINE fitting
+		masklist -- list or string of mask regions to INCLUDE in BASELINE fitting
+                    a string masklist allows per IF selection of channels as the
+                    parameter 'spw'. See the parameter help of 'spw' for more details.
 		default: []  (entire spectrum)
 		example: [[1000,3000],[5000,7000]]
+                 '0:1000~3000;5000~7000, 1:200~350;450~600'
 		         if blmode='auto' then this mask will be applied
 			 before fitting
 

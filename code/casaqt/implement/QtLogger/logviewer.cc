@@ -721,12 +721,15 @@ void LogViewer::fileChanged(const QString& fileName)
 		}
 		*(ptr+1) = '\0';
 
+                int wid = logView->columnWidth(3);
 		if (mutex.tryLock()) {
 			logModel->appendData(buf);
 			if (!lockScroll->isChecked())
 				logView->scrollToBottom();
 
 			logView->resizeColumnToContents(3);
+                        wid = qMax(wid, logView->columnWidth(3));
+                        logView->setColumnWidth(3, wid);
 			logView->update();
 			mutex.unlock();
 		}

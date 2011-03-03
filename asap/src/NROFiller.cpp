@@ -20,6 +20,7 @@
 #include "NROFiller.h"
 #include "STHeader.h"
 #include <casa/Containers/Record.h>
+#include <casa/Quanta/MVTime.h>
 #include <atnf/PKSIO/SrcType.h>
 
 using namespace casa;
@@ -121,6 +122,8 @@ void NROFiller::fill()
 
   STHeader header = table_->getHeader() ;
   String obsType = header.obstype.substr( 0, 3 ) ;
+  Vector<Float> defaultTcal( 1, 1.0 ) ;
+  String tcalTime = MVTime( header.utc ).string( MVTime::YMD ) ;
   for ( Int irow = 0 ; irow < (Int)nRow ; irow++ ) {
     // check scan intent
     string scanType = reader_->getScanType( irow ) ;
@@ -197,7 +200,7 @@ void NROFiller::fill()
 
     // TCAL subtable row
     // use default since NRO input is calibrated data
-    setTcal() ;
+    setTcal( tcalTime, defaultTcal ) ;
     
 
     // set row attributes

@@ -112,16 +112,21 @@ with images made by excluding the line channels.
 		field = '13*' will retrieve '1328+307' and any other fields
 		   beginning with '13'
 	fitspw -- Selection of spectral windows and channels to use in the
-	          fit for the continuum, using general spw syntax
-		default: (all); example: fitspw='0:5~30;40~55'
-        combine -- Data axes to combine for the continuum estimate
+	          fit for the continuum, using general spw:chan syntax.
+	          See the note under combine.
+		default: '' (all)
+                example: fitspw='0:5~30;40~55'
+        combine -- Data axes to combine for the continuum estimate.
+	        It must include 'spw' if spw contains spws that are not in
+	        fitspw!
                 default: '' --> solutions will break at scan, field, and spw
                       boundaries according to solint
               Options: '', 'spw'', 'scan', 'field', or any comma-separated
                        combination
               example: combine='spw' --> form spw-merged continuum estimate
 	solint -- Timescale for per-baseline fit (units optional)
-		default: 'int' --&gt; no averaging, fit every integration;
+		default (recommended): 'int' --&gt; no time averaging, fit every
+				       integration.
 		example: solint='10s'  --&gt; average to 10s before fitting
                          10 or '10' --&gt; '10s' (unitless: assumes seconds)
                 options: 'int' --&gt; per integration
@@ -129,7 +134,10 @@ with images made by excluding the line channels.
 	fitorder -- Polynomial order for the fit of the continuum
 		default: 0 (constant); example: fitorder=1
 	spw -- Optional per spectral window selection of channels to include
-               in the output.
+               in the output.  See the note under combine.
+
+               The spectral windows will be renumbered to start from 0, as in
+	       split.
 	want_cont -- Create vis + '.cont' to hold the continuum estimate.
 		default: 'False'; example: want_cont=True
 		The continuum estimate will be placed in: vis.cont

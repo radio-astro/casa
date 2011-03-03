@@ -11,9 +11,20 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
     try:
         casalog.origin('uvcontsub2')
 
-        # Get this check done and out of the way.
+        # Get these checks done and out of the way.
+        # This one is redundant - it is already checked at the XML level.
         if not os.path.isdir(vis):
             raise Exception, 'Visibility data set not found - please verify the name'
+        if 'spw' not in combine:
+            spwmfitspw = subtract_spws(spw, fitspw)
+            if spwmfitspw == 'UNKNOWN':
+                # Rats.  We need to make '' explicit.
+                tb.open(vis + '/SPECTRAL_WINDOW')
+                spwmfitspw = subtract_spws('0~' + str(tb.nrows() - 1), fitspw)
+                tb.close()
+            if spwmfitspw:
+                raise Exception, "combine must include 'spw' when the fit is being applied to spws outside fitspw."
+        
         # cb will put the continuum-subtracted data in CORRECTED_DATA, so
         # protect vis by splitting out its relevant parts to a working copy.
         ms.open(vis, nomodify=True)
@@ -24,15 +35,17 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
         myfitspw = fitspw
         myspw = spw
 
-        tempspw = ''  # Conservatively default to keeping everything.
-        if 'spw' not in combine:
-            # We only need the spws (but potentially all the channels) listed
-            # in fitspw.
-            tempspw = re.sub(r':[^,]+', '', fitspw)
+        tempspw = join_spws(fitspw, spw)
+#        if 'spw' not in combine:
+#            # We only need the spws (but potentially all the channels) listed
+#            # in fitspw.
+#            tempspw = re.sub(r':[^,]+', '', fitspw)
         if tempspw:
             # The split will reindex the spws.  Update spw and fitspw.
             # Do fitspw first because the spws in spw are supposed to be
             # a subset of the ones in fitspw.
+            casalog.post('split is being run internally, and the selected spws will be')
+            casalog.post('  renumbered to start from 0 in the output!')
             myfitspw, spwmap = update_spw(fitspw, None)
             myspw = update_spw(spw, spwmap)
 
@@ -189,4 +202,4 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
     except Exception, instance:
         casalog.post('Error in uvcontsub2: ' + str(instance), 'SEVERE')
         cb.close()                        # Harmless if cb is closed.
-        raise Exception, instance
+        raise Exception

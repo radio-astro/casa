@@ -22,6 +22,8 @@ set( PYTHON_MODULES
      ${PYTHONDIR}/compatibility.py
      ${PYTHONDIR}/coordinate.py
      ${PYTHONDIR}/env.py
+     ${PYTHONDIR}/flagplotter.py
+     ${PYTHONDIR}/flagtoolbar.py
      ${PYTHONDIR}/__init__.py
      ${PYTHONDIR}/interactivemask.py
      ${PYTHONDIR}/ipysupport.py

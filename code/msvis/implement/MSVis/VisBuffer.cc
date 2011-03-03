@@ -232,13 +232,11 @@ VisBuffer::attachToVisIter(ROVisibilityIterator & iter)
 void
 VisBuffer::detachFromVisIter ()
 {
-    if (visIter_p == NULL) {
-        throw AipsError ("No VisIter to detach from!", __FILE__, __LINE__);
+    if (visIter_p != NULL) {
+        visIter_p->detachVisBuffer(* this);
+
+        visIter_p = NULL;
     }
-
-    visIter_p->detachVisBuffer(* this);
-
-    visIter_p = NULL;
 }
 
 void VisBuffer::invalidate()

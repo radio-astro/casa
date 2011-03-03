@@ -52,6 +52,8 @@ set( ASAP_SRCS
      ${SRCDIR}/FillerBase.cpp
      ${SRCDIR}/NROFiller.cpp
      ${SRCDIR}/PKSFiller.cpp
+     ${SRCDIR}/MSFiller.cpp
+     ${SRCDIR}/MSWriter.cpp
      ${SRCDIR}/AsapLogSink.cpp
      ${SRCDIR}/Templates.cpp )
 
@@ -70,6 +72,8 @@ set( ASAP_PYSRCS
      ${SRCDIR}/python_STAtmosphere.cpp
      ${SRCDIR}/python_STCoordinate.cpp
      ${SRCDIR}/python_Filler.cpp
+     ${SRCDIR}/python_MSFiller.cpp
+     ${SRCDIR}/python_MSWriter.cpp
      ${SRCDIR}/python_LogSink.cpp
      ${SRCDIR}/python_asap.cpp )
 

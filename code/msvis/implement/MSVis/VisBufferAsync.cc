@@ -23,9 +23,45 @@ using std::transform;
 
 #define Log(level, ...) \
     {if (VlaData::loggingInitialized_p && level <= VlaData::logLevel_p) \
-         Logger::log (__VA_ARGS__);};
+         Logger::get()->log (__VA_ARGS__);};
 
 namespace casa {
+
+namespace asyncio {
+
+template <typename MeasureType, typename AsMeasure>
+MeasureType
+unsharedCopyMeasure (const MeasureType & measure, AsMeasure asMeasure)
+{
+    // MeasureType is a derived type of MeasBase<> (e.g., MDirection, MEpoch, etc.)
+    // AsMeasure is the MeasureHolder converter for the desired type (e.g., asMDirection, asMEpoch, etc.)
+
+    // Make a completely distinct copy of this measure.  The
+    // methods provided by a Measure always result in the sharing
+    // of the measurement reference object so this roundabout
+    // approach is necessary.
+
+    // Using a MeasureHolder object, transform the contents of the
+    // measure into a generic record.
+
+    MeasureHolder original (measure);
+    Record record;
+    String err;
+
+    original.toRecord(err, record);
+
+    // Now use the record to create another MMeasure object using
+    // the record created to hold the original's information.
+
+    MeasureHolder copy;
+    copy.fromRecord (err, record);
+
+    MeasureType result = (copy .* asMeasure) ();
+
+    return result;
+}
+
+}
 
 VisBufferAsync::VisBufferAsync ()
   : VisBuffer ()
@@ -49,8 +85,9 @@ VisBufferAsync::VisBufferAsync (ROVisibilityIteratorAsync & iter)
 {
     construct ();
 
+    Log (2, "VisBufferAsync::VisBufferAsync: attaching in constructor this=%08x\n", this);
     iter.attachVisBuffer (*this);
-    visIter_p = & iter;
+    visIterAsync_p = & iter;
 }
 
 
@@ -58,7 +95,10 @@ VisBufferAsync::~VisBufferAsync ()
 {
     Log (2, "Destroying VisBufferAsync; addr=0x%016x\n", this);
 
-    if (visIter_p != NULL){
+    Assert (visIter_p == NULL); // Should never be attached at the
+                                // synchronous level
+
+    if (visIterAsync_p != NULL){
         detachFromVisIter();
     }
 
@@ -95,6 +135,7 @@ VisBufferAsync::assign (const VisBuffer & other, Bool copy)
     Log (2, "Assign from VisBufferAsync @ 0x%08x to VisBufferAsync @ 0x%08x\n", & other, this);
 
     Assert (dynamic_cast<const VisBufferAsync *> (& other) != NULL);
+    Assert (visIter_p == NULL); // shouldn't be attached at sync level
 
     if (other.corrSorted_p)
         throw(AipsError("Cannot assign a VisBuffer that has had correlations sorted!"));
@@ -103,7 +144,7 @@ VisBufferAsync::assign (const VisBuffer & other, Bool copy)
 
         // Detach from visibility iterator if attached
 
-        if (visIter_p != NULL){
+        if (visIterAsync_p != NULL){
             detachFromVisIter ();
         }
 
@@ -129,6 +170,14 @@ VisBufferAsync::assign (const VisBuffer & other, Bool copy)
     return * this;
 }
 
+void
+VisBufferAsync::attachToVisIter(ROVisibilityIterator & iter)
+{
+    Assert (isFilling_p == True); // Only allowed while being filled
+    Assert (visIter_p == NULL);   // Shouldn't already be attached
+
+    VisBuffer::attachToVisIter(iter);
+}
 
 Vector<MDirection>
 VisBufferAsync::azel(Double time) const
@@ -175,9 +224,6 @@ void
 VisBufferAsync::clear ()
 {
     Log (2, "Clearing VisBufferAsync; addr=0x%016x\n", this);
-
-    delete msColumns_p;
-    msColumns_p = NULL;
 
     // Put scalars to deterministic values
 
@@ -240,6 +286,7 @@ VisBufferAsync::clear ()
         modelVisCube_p.resize();
     if (modelVisibilityOK_p)
         modelVisibility_p.resize();
+    delete msColumns_p;
     msColumns_p = NULL;
     msID_p = -1;
     nAntennas_p = -1;
@@ -300,6 +347,7 @@ VisBufferAsync::construct ()
     Log (2, "Constructing VisBufferAsync; addr=0x%016x\n", this);
     msColumns_p = NULL;
     visIter_p = NULL;
+    visIterAsync_p = NULL;
     isFilling_p = False;
 
     clear ();
@@ -324,7 +372,6 @@ VisBufferAsync::copyAsyncValues (const VisBufferAsync & other)
     msColumns_p = NULL;
 
     msID_p = other.msID_p;
-
     nAntennas_p = other.nAntennas_p;
     obsMFreqTypes_p = other.obsMFreqTypes_p;
     observatoryPosition_p = other.observatoryPosition_p;
@@ -422,13 +469,19 @@ VisBufferAsync::dataDescriptionId() const
 void
 VisBufferAsync::detachFromVisIter ()
 {
-	if (visIter_p == NULL){
-		throw AipsError ("No VisIter to detach from!", __FILE__, __LINE__);
+
+	if (visIterAsync_p != NULL){
+
+	    Log (2, "VisBufferAsync::detachFromVisIter this=%08x\n", this);
+
+        visIterAsync_p->detachVisBuffer(* this);
+
+        visIterAsync_p = NULL;
 	}
 
-	visIter_p->detachVisBuffer(* this);
-
-	visIter_p = NULL;
+	if (isFilling_p){
+	    VisBuffer::detachFromVisIter();
+	}
 }
 
 
@@ -479,7 +532,7 @@ VisBufferAsync::fillDirection1()
 
     // Now install unshared copies of the direction objects
 
-    transform (direction1_p.begin(), direction1_p.end(), direction1_p.begin(), unshared);
+    transform (direction1_p.begin(), direction1_p.end(), direction1_p.begin(), unsharedCopyDirection);
 
     return direction1_p;
 }
@@ -493,7 +546,7 @@ VisBufferAsync::fillDirection2()
 
     // Now install unshared copies of the direction objects
 
-    transform (direction2_p.begin(), direction2_p.end(), direction2_p.begin(), unshared);
+    transform (direction2_p.begin(), direction2_p.end(), direction2_p.begin(), unsharedCopyDirection);
 
     return direction2 ();
 }
@@ -507,7 +560,7 @@ VisBufferAsync::fillPhaseCenter()
 
     // Now convert the value to an unshared one.
 
-    phaseCenter_p = unshared (phaseCenter_p);
+    phaseCenter_p = unsharedCopyDirection (phaseCenter_p);
 
     return phaseCenter_p;
 }
@@ -680,7 +733,7 @@ VisBufferAsync::setLsrInfo (const Block<Int> & channelStart,
     chanFreqs_p = chanFreqs;
     channelGroupNumber_p = channelGroupNumber;
     obsMFreqTypes_p = obsMFreqTypes;
-    observatoryPosition_p = observatoryPosition;
+    observatoryPosition_p = unsharedCopyPosition (observatoryPosition);
     phaseCenter_p = phaseCenter;
     velSelection_p = velocitySelection;
 }
@@ -705,7 +758,7 @@ VisBufferAsync::setMeasurementSetId (Int id, Bool isNew)
 void
 VisBufferAsync::setMEpoch (const MEpoch & mEpoch)
 {
-    mEpoch_p = mEpoch;
+    mEpoch_p = unsharedCopyEpoch (mEpoch);
 }
 
 void
@@ -778,33 +831,22 @@ VisBufferAsync::setVisibilityShape (const IPosition & visibilityShape)
 }
 
 MDirection
-VisBufferAsync::unshared (const MDirection & direction)
+VisBufferAsync::unsharedCopyDirection (const MDirection & direction)
 {
-    // Make a completely distinct copy of this direction.  The
-    // methods provided by MDirection always result in the sharing
-    // of the measurement reference object so this roundabout
-    // approach is necessary.
-
-    // Using a MeasureHolder object, transform the contents of the
-    // direction into a generic record.
-
-    MeasureHolder original (direction);
-    Record record;
-    String err;
-
-    original.toRecord(err, record);
-
-    // Now use the record to create another MDirection object using
-    // the record created to hold the original's information.
-
-    MeasureHolder copy;
-    copy.fromRecord (err, record);
-
-    MDirection result = copy.asMDirection();
-
-    return result;
+    return asyncio::unsharedCopyMeasure (direction, & MeasureHolder::asMDirection);
 }
 
+MEpoch
+VisBufferAsync::unsharedCopyEpoch (const MEpoch & epoch)
+{
+    return asyncio::unsharedCopyMeasure (epoch, & MeasureHolder::asMEpoch);
+}
+
+MPosition
+VisBufferAsync::unsharedCopyPosition (const MPosition & position)
+{
+    return asyncio::unsharedCopyMeasure (position, & MeasureHolder::asMPosition);
+}
 
 void
 VisBufferAsync::updateCoordInfo(const VisBuffer * other)

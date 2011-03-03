@@ -48,6 +48,7 @@ test_slsearch                   dmehring@nrao.edu
 test_sdlist                     kana.sugi@nao.ac.jp
 #test_sdplot                     kana.sugi@nao.ac.jp
 test_sdsave                     takeshi.nakazato@nao.ac.jp
+test_sdtpimaging                takeshi.nakazato@nao.ac.jp
 test_setjy			rreid@nrao.edu
 test_smoothcal                  scastro@eso.org
 test_specfit                    dmehring@nrao.edu

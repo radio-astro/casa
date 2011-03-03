@@ -96,9 +96,10 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
             <value>0.0</value>
     </param>
 
-    <param type="intArray" name="masklist">
-            <description>list of mask regions to INCLUDE in BASELINE fit</description>
-            <value></value>
+    <param type="any" name="masklist">
+            <description>list or string of mask regions to INCLUDE in BASELINE fit</description>
+            <any type="variant" limittype="string  doubleArray"/>
+            <value type="doubleArray"></value>
     </param>
 
     <param type="string" name="masking">
@@ -294,9 +295,11 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
                 field, and iflist
         tau -- atmospheric optical depth
                 default: 0.0 (no correction)
-        masklist -- list of mask regions to INCLUDE in BASELINE fit
+        masklist -- list or string of mask regions to INCLUDE in BASELINE fit
+                    a string masklist allows per IF selection of channels.
                 default: [] (entire spectrum)
                 example: [[1000,3000],[5000,7000]]
+                         '0:1000~3000;5000~7000, 1:200~350;450~600'
                          if masking='auto' then this mask will be applied
                          before fitting
         masking -- mode of setting channel masks

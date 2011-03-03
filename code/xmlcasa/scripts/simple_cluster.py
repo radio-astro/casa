@@ -107,6 +107,7 @@ def validate_hosts():
             return False
     return True
 
+
 ###########################################################################
 ###   project management
 ###########################################################################
@@ -216,6 +217,9 @@ def reset_project():
     job_title=1
     monitor_on=True
 
+def get_hosts():
+    return hosts 
+
 ###########################################################################
 ###   cluster management
 ###########################################################################
@@ -238,6 +242,31 @@ def stop_nodes():
 def start_cluster():
     for i in range(len(hosts)):
         c.start_engine(hosts[i][0], hosts[i][1], hosts[i][2]+'/'+project)
+
+def get_host(id):
+    '''get hostname of an engine'''
+    ids=c.get_ids()
+    if type(id)!=int:
+        print 'the argument must be an engine id (int)'
+        return ''
+    if ids.count(id)!=1:
+        print 'engine %d does not exist' % id
+        return ''
+    e=c.get_engines()
+    for i in range(len(e)):
+        if e[i][0]==id:
+            return e[i][1] 
+
+def get_engine_store(id):
+    '''get the root path where an engine write out result'''
+    hst=get_host(id)
+    for i in range(len(hosts)):
+        if hosts[i][0]==hst:
+            pth=hosts[i][2]
+            sl=''
+            if not pth.endswith('/'):
+                sl='/' 
+            return pth+sl+project+'/'
 
 ###########################################################################
 ###   log management
@@ -413,7 +442,7 @@ def check_status(notify=False):
                     finish=0
             if finish==1:
                 msg='\n'
-                msg+=time.ctime()
+                msg+='Label: '+time.ctime()
                 msg+='\n\nengine    status  time(s)  command\n'
                 rmv=[]
                 for job in jobs.keys():
@@ -426,6 +455,14 @@ def check_status(notify=False):
                         rmv.append(jobs[job]['jobname'])
                 #print msg
                 if i!='':
+
+                    #append to project result file
+                    f=open(project+'.result', 'a')
+                    #f.write('\n'+i)
+                    f.write(msg)
+                    f.write('\n')
+                    f.close()
+
                     if i.count(' ')==0 and i.count('@'):
                         #send email
                         #import smtplib
@@ -449,12 +486,6 @@ def check_status(notify=False):
                         #print cmd
                         os.system(cmd)
                          
-                    else:
-                        #write file
-                        f=open(i, 'a')
-                        f.write(msg)
-                        f.write('\n')
-                        f.close()
                     for j in rmv:
                         remove_record(j)
                         
@@ -532,11 +563,121 @@ def do_and_record(cmd, id, group=''):
     jobs[job]['jobgroup']=group.strip()
     job_title+=1
 
+###########################################################################
+###   result processing functions
+###########################################################################
+
+def list_result():
+    '''read the project.result file and write out all labels'''
+    f=open(project+'.result', 'r')
+    s=f.readlines()
+    vec=[]
+    for line in s:
+        sLine=line.rstrip()
+        if str.find(sLine, 'Label:')==0:
+            vec.append(sLine[6:].strip())
+        else:
+            continue
+    f.close()
+    return vec
+
+def get_result(tm):
+    '''read the project.result file and write out result for a label'''
+    f=open(project+'.result', 'r')
+    s=f.readlines()
+    reach=False
+    vec=[]
+    for line in s:
+        sLine=line.strip()
+        if str.find(sLine, 'Label:')==0:
+            if str.count(sLine, tm)>0 and reach==False:
+                reach=True
+            else:
+                reach=False
+        else:
+            if reach and sLine!='' and not sLine.startswith('engine'):
+                vec.append(sLine)
+    f.close()
+    return vec
+
+def get_output(result, item, **kwargs):
+    '''pick from result list the item that meets condistion in kwargs'''
+    if type(result)!=list:
+        print 'result must be a list of strings'
+        return []
+    if len(result)==0:
+        return []
+    if type(item)!=str:
+        print 'the item name must be a string'
+        return []
+        print "another keyword arg: %s: %s" % (key, kwargs[key])
+
+    vals=[]
+    for key in kwargs:
+        v=kwargs[key]
+        if type(v)==str:
+            vals.append(str(key)+'="'+v+'"')
+        elif type(v)==np.ndarray:
+            vals.append(str(key)+'='+repr(v))
+        else:
+            vals.append(str(key)+'='+str(v))
+    #print vals
+
+    vec=[]
+    for i in result:
+        pick=True
+        for j in vals:
+            if str.count(i, j)==0:
+                pick=False
+        if pick:
+            a=str.find(i, item)
+            a=str.find(i, '=', a)
+            b=str.find(i, ',', a+1)
+            if a>=0 and b>=0:
+                vec.append(i[a+2:b-1])
+    return vec
+
+def get_engines(use_id=[], spreadhost=1):
+    '''get a ordered engine list'''
+    if len(use_id)>0:
+        int_ok=True
+        for i in use_id:
+            if type(i)!=int:
+                int_ok=False
+        if int_ok:
+            return use_id
+        else:
+            print 'engine id in use_id must be integer'
+            return []
+    elif spreadhost==0:
+        return c.get_ids()
+    else:
+        e=dict()
+        hst=get_hosts()
+        for i in range(len(hst)):
+            e[hst[i][0]]=[]
+        for i in cluster().get_engines():
+            e[i[1]].append(i[0])
+        val=e.values()
+        lenth=[]
+        pos=[]
+        for i in xrange(len(val)):
+            lenth.append(len(val[i]))
+            pos.append(0)
+        vec=[]
+        #print pos, lenth, val, cluster().get_ids()
+        while len(vec)<len(cluster().get_ids()):
+            for i in xrange(len(val)):
+               if pos[i]<lenth[i]:
+                   #print val[i][pos[i]]
+                   vec.append(val[i][pos[i]])
+                   pos[i]+=1
+        return vec
 
 ###########################################################################
 ###   example to distribute clean task over engines
 ###########################################################################
-def simple_clean(vs, nx, ny, mode='channel'):
+def simple_clean(vs, nx, ny, mode='channel', email=''):
     
     vis=os.path.abspath(vs)
     tb.clearlocks(vis)
@@ -551,10 +692,7 @@ def simple_clean(vs, nx, ny, mode='channel'):
     print 'vis=', vis
     fdspw=get_field_desc(vis)
     ids=c.get_ids()
-    pth=c.pull('work_dir')
-    msname=vis[str.rfind(vis,'/')+1:]
-    if msname.endswith('.ms'):
-        msname=msname[:str.rfind(msname, '.ms')]
+    msname=get_msname(vis)
 
     if len(fdspw)>len(ids):
         #more job chunks than engines, simply distribute by field and spw
@@ -565,10 +703,7 @@ def simple_clean(vs, nx, ny, mode='channel'):
             s['vis']=vis
             fd=str(k['field'])
             spw=str(k['spw'])
-            sl=''
-            if not pth[id].endswith('/'):
-                sl='/' 
-            s['imagename']=pth[id]+sl+msname+'-f'+fd+'-s'+spw
+            s['imagename']=get_engine_store(id)+msname+'-f'+fd+'-s'+spw
             s['field']=fd
             s['spw']=spw
             s['mode']='channel'
@@ -581,7 +716,7 @@ def simple_clean(vs, nx, ny, mode='channel'):
             s['calready']=False
             cmd=make_call('clean', s) 
             #print cmd
-            do_and_record(cmd, id, 'hye@nrao.edu')
+            do_and_record(cmd, id, email)
             i+=1
             if i==len(ids):
                i=0
@@ -606,10 +741,7 @@ def simple_clean(vs, nx, ny, mode='channel'):
                 s['vis']=vis
                 fd=str(k['field'])
                 spw=str(k['spw'])
-                sl=''
-                if not pth[id].endswith('/'):
-                    sl='/' 
-                s['imagename']=(pth[id]+sl+msname+'-f'+fd+'-s'+spw+
+                s['imagename']=(get_engine_store(id)+msname+'-f'+fd+'-s'+spw+
                                 '-b'+str(start)+'-e'+str(start+nchan))
                 s['field']=fd
                 s['spw']=spw
@@ -625,24 +757,23 @@ def simple_clean(vs, nx, ny, mode='channel'):
                 s['calready']=False
                 cmd=make_call('clean', s) 
                 #print cmd
-                do_and_record(cmd, id, 'hye@nrao.edu')
+                do_and_record(cmd, id, email)
                 i+=1
                 if i==len(ids):
                    i=0
     
     get_status()
 
-def simple_split(vs):
+def simple_split(vs, email):
+    '''split by source (field, spw)'''
     vis=os.path.abspath(vs)
     tb.clearlocks(vis)
    
     print 'vis=', vis
     fdspw=get_field_desc(vis)
-    ids=c.get_ids()
-    pth=c.pull('work_dir')
-    msname=vis[str.rfind(vis,'/')+1:]
-    if msname.endswith('.ms'):
-        msname=msname[:str.rfind(msname, '.ms')]
+    #ids=c.get_ids()
+    ids=get_engines()
+    msname=get_msname(vis)
 
     i=0
     for k in fdspw.values():
@@ -651,16 +782,15 @@ def simple_split(vs):
         s['vis']=vis
         fd=str(k['field'])
         spw=str(k['spw'])
-        sl=''
-        if not pth[id].endswith('/'):
-            sl='/' 
-        s['outputvis']=pth[id]+sl+msname+'-f'+fd+'-s'+spw+'.ms'
+        s['outputvis']=get_engine_store(id)+msname+'-f'+fd+'-s'+spw+'.ms'
+        if os.path.exists(s['outputvis']):
+            os.system('rm -rf '+s['outputvis'])
         s['field']=fd
         s['spw']=spw
         s['datacolumn']='DATA'
         cmd=make_call('split', s) 
         #print cmd
-        do_and_record(cmd, id, 'hye@nrao.edu')
+        do_and_record(cmd, id, email)
         i+=1
         if i==len(ids):
            i=0
@@ -669,7 +799,16 @@ def simple_split(vs):
 ###########################################################################
 ###   ms knowledge functions
 ###########################################################################
+def get_msname(vis):
+    '''get the ms name of given vis'''
+    vs=os.path.abspath(vis)
+    msname=vs[str.rfind(vs,'/')+1:]
+    if msname.endswith('.ms'):
+        msname=msname[:str.rfind(msname, '.ms')]
+    return msname
+
 def get_antenna_diam(vis):
+    '''get the diameter of antennas'''
     tb.open(vis+'/ANTENNA')
     diams=tb.getcol('DISH_DIAMETER')
     diam=np.min(diams)
@@ -679,60 +818,70 @@ def get_antenna_diam(vis):
     return diam
 
 def get_mean_reff(vis):
+    '''get the mean reference frequency'''
     tb.open(vis+'/SPECTRAL_WINDOW')
     reff=tb.getcol('REF_FREQUENCY')
     tb.done()
     return reff.mean()
 
 def get_spw_reff(vis, spw=0):
+    '''get the reference frequency of spw'''
     tb.open(vis+'/SPECTRAL_WINDOW')
     spw_reff=tb.getcell('REF_FREQUENCY', spw)
     tb.done()
     return spw_reff
 
 def get_spw_chan(vis, spw=0):
+    '''get the number of channels of spw'''
     tb.open(vis+'/SPECTRAL_WINDOW')
     spw_chan=tb.getcell('NUM_CHAN', spw)
     tb.done()
     return spw_chan
 
 def get_pol_corr(vis, pol=0):
+    '''get the number of coorelation of polarization '''
     tb.open(vis+'/POLARIZATION')
     pol_corr=tb.getcell('NUM_CORR', pol)
     tb.done()
     return pol_corr
 
 def get_num_field(vis):
+    '''get the number of fields '''
     tb.open(vis+'/FIELD')
     num_field=tb.nrows()
     tb.done()
     return num_field
 
 def get_num_spw(vis):
+    '''get the number of spectral windows '''
     tb.open(vis+'/SPECTRAL_WINDOW')
     num_spw=tb.nrows()
     tb.done()
     return num_spw
 
 def get_num_desc(vis):
+    '''get number of data descriptions'''
     tb.open(vis+'/DATA_DESCRIPTION')
     num_desc=tb.nrows()
     tb.done()
     return num_desc
 
 def get_spw_id(vis, desc=0):
+    '''get spectraol window id for desc'''
     tb.open(vis+'/DATA_DESCRIPTION')
     spw_id=tb.getcell('SPECTRAL_WINDOW_ID', desc)
     tb.done()
     return spw_id
 
 def get_pol_id(vis, desc=0):
+    '''get polarization id for desc'''
     tb.open(vis+'/DATA_DESCRIPTION')
     pol_id=tb.getcell('POLARIZATION_ID', desc)
     tb.done()
     return pol_id
 
 def get_field_desc(vis):
+    '''get source'''
     tb.open(vis)
     nrows=tb.nrows() 
     tb.done()

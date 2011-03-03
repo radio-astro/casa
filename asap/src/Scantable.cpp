@@ -60,11 +60,13 @@
 #include <measures/TableMeasures/ScalarMeasColumn.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
 
+#include <atnf/PKSIO/SrcType.h>
 #include "Scantable.h"
 #include "STPolLinear.h"
 #include "STPolCircular.h"
 #include "STPolStokes.h"
 #include "STAttr.h"
+#include "STLineFinder.h"
 #include "MathUtils.h"
 
 using namespace casa;
@@ -777,52 +779,61 @@ void Scantable::srchChannelsToClip(uInt whichrow, const Float uthres, const Floa
     }
 }
 
-void Scantable::flag(const std::vector<bool>& msk, bool unflag)
-{
+
+void Scantable::flag( int whichrow, const std::vector<bool>& msk, bool unflag ) {
   std::vector<bool>::const_iterator it;
   uInt ntrue = 0;
+  if (whichrow >= int(table_.nrow()) ) {
+    throw(AipsError("Invalid row number"));
+  }
   for (it = msk.begin(); it != msk.end(); ++it) {
     if ( *it ) {
       ntrue++;
     }
   }
-  if ( selector_.empty()  && (msk.size() == 0 || msk.size() == ntrue) )
+  //if ( selector_.empty()  && (msk.size() == 0 || msk.size() == ntrue) )
+  if ( whichrow == -1 && !unflag && selector_.empty() && (msk.size() == 0 || msk.size() == ntrue) )
     throw(AipsError("Trying to flag whole scantable."));
-  if ( msk.size() == 0 ) {
-    uChar userflag = 1 << 7;
-    if ( unflag ) {
-      userflag = 0 << 7;
-    }
+  uChar userflag = 1 << 7;
+  if ( unflag ) {
+    userflag = 0 << 7;
+  }
+  if (whichrow > -1 ) {
+    applyChanFlag(uInt(whichrow), msk, userflag);
+  } else {
     for ( uInt i=0; i<table_.nrow(); ++i) {
-      Vector<uChar> flgs = flagsCol_(i);
-      flgs = userflag;
-      flagsCol_.put(i, flgs);
+      applyChanFlag(i, msk, userflag);
     }
+  }
+}
+
+void Scantable::applyChanFlag( uInt whichrow, const std::vector<bool>& msk, uChar flagval )
+{
+  if (whichrow >= table_.nrow() ) {
+    throw( casa::indexError<int>( whichrow, "asap::Scantable::applyChanFlag: Invalid row number" ) );
+  }
+  Vector<uChar> flgs = flagsCol_(whichrow);
+  if ( msk.size() == 0 ) {
+    flgs = flagval;
+    flagsCol_.put(whichrow, flgs);
     return;
   }
   if ( int(msk.size()) != nchan() ) {
     throw(AipsError("Mask has incorrect number of channels."));
   }
-  for ( uInt i=0; i<table_.nrow(); ++i) {
-    Vector<uChar> flgs = flagsCol_(i);
-    if ( flgs.nelements() != msk.size() ) {
-      throw(AipsError("Mask has incorrect number of channels."
-                      " Probably varying with IF. Please flag per IF"));
-    }
-    std::vector<bool>::const_iterator it;
-    uInt j = 0;
-    uChar userflag = 1 << 7;
-    if ( unflag ) {
-      userflag = 0 << 7;
-    }
-    for (it = msk.begin(); it != msk.end(); ++it) {
-      if ( *it ) {
-        flgs(j) = userflag;
-      }
-      ++j;
-    }
-    flagsCol_.put(i, flgs);
+  if ( flgs.nelements() != msk.size() ) {
+    throw(AipsError("Mask has incorrect number of channels."
+		    " Probably varying with IF. Please flag per IF"));
   }
+  std::vector<bool>::const_iterator it;
+  uInt j = 0;
+  for (it = msk.begin(); it != msk.end(); ++it) {
+    if ( *it ) {
+      flgs(j) = flagval;
+    }
+    ++j;
+  }
+  flagsCol_.put(whichrow, flgs);
 }
 
 void Scantable::flagRow(const std::vector<uInt>& rows, bool unflag)
@@ -984,7 +995,8 @@ std::string Scantable::summary( bool verbose )
                   + getDirectionRefString()
                   + ")";
   oss << setw(5) << "Scan" << setw(15) << "Source"
-      << setw(10) << "Time" << setw(18) << "Integration" << endl;
+      << setw(10) << "Time" << setw(18) << "Integration" 
+      << setw(15) << "Source Type" << endl;
   oss << setw(5) << "" << setw(5) << "Beam" << setw(3) << "" << dirtype << endl;
   oss << setw(10) << "" << setw(3) << "IF" << setw(3) << ""
       << setw(8) << "Frame" << setw(16)
@@ -1010,7 +1022,8 @@ std::string Scantable::summary( bool verbose )
       ++cyciter;
     }
     oss << setw(3) << std::right << nint  << setw(3) << " x " << std::left
-        << setw(6) <<  formatSec(rec.asFloat("INTERVAL")) << endl;
+        << setw(11) <<  formatSec(rec.asFloat("INTERVAL")) << setw(1) << ""
+	<< setw(15) << SrcType::getName(rec.asInt("SRCTYPE")) << endl;
 
     TableIterator biter(subt, "BEAMNO");
     while (!biter.pastEnd()) {
@@ -1204,6 +1217,7 @@ void asap::Scantable::setRestFrequencies( const std::string& name )
   ///@todo implement
 }
 **/
+
 void Scantable::setRestFrequencies( const vector<std::string>& name )
 {
   throw(AipsError("setRestFrequencies( const vector<std::string>& name ) NYI"));
@@ -1266,6 +1280,12 @@ String Scantable::getAntennaName() const
 {
   String out;
   table_.keywordSet().get("AntennaName", out);
+  String::size_type pos1 = out.find("@") ;
+  String::size_type pos2 = out.find("//") ;
+  if ( pos2 != String::npos ) 
+    out = out.substr(pos2+2,pos1) ;
+  else if ( pos1 != String::npos )
+    out = out.substr(0,pos1) ;
   return out;
 }
 
@@ -1730,55 +1750,778 @@ bool Scantable::getFlagtraFast(int whichrow)
   uChar flag;
   Vector<uChar> flags;
   flagsCol_.get(uInt(whichrow), flags);
-  for (int i = 0; i < flags.size(); i++) {
-    if (i==0) {
-      flag = flags[i];
-    }
-    else {
-      flag &= flags[i];
-    }
-    return ((flag >> 7) == 1);
-   }
+  flag = flags[0];
+  for (int i = 1; i < flags.size(); ++i) {
+    flag &= flags[i];
+  }
+  return ((flag >> 7) == 1);
 }
 
-void Scantable::doPolyBaseline(const std::vector<bool>& mask, int order, int rowno, Fitter& fitter)
-{
-  fitter.setExpression("poly", order);
+void Scantable::cubicSplineBaseline(const std::vector<bool>& mask, int nPiece, float thresClip, int nIterClip, bool outLogger, const std::string& blfile) {
+  ofstream ofs;
+  String coordInfo;
+  bool hasSameNchan;
+  int firstIF;
+  bool outTextFile = false;
 
-  std::vector<double> abcsd = getAbcissa(rowno);
+  if (blfile != "") {
+    ofs.open(blfile.c_str(), ios::out | ios::app);
+    if (ofs) outTextFile = true;
+  }
+
+  if (outLogger || outTextFile) {
+    coordInfo = getCoordInfo()[0];
+    if (coordInfo == "") coordInfo = "channel";
+    hasSameNchan = hasSameNchanOverIFs();
+    firstIF = getIF(0);
+  }
+
+  //Fitter fitter = Fitter();
+  //fitter.setExpression("cspline", nPiece, thresClip, nIterClip);
+
+  int nRow = nrow();
+  std::vector<bool> chanMask;
+
+  for (int whichrow = 0; whichrow < nRow; ++whichrow) {
+
+    chanMask = getCompositeChanMask(whichrow, mask);
+    //fitBaseline(chanMask, whichrow, fitter);
+    //setSpectrum(fitter.getResidual(), whichrow);
+    std::vector<int> pieceRanges;
+    std::vector<float> params;
+    std::vector<float> res = doCubicSplineFitting(getSpectrum(whichrow), chanMask, pieceRanges, params, nPiece, thresClip, nIterClip);
+    setSpectrum(res, whichrow);
+
+    if (outLogger || outTextFile) {
+      std::vector<bool>  fixed;
+      fixed.clear();
+      float rms = getRms(chanMask, whichrow);
+      String masklist = getMaskRangeList(chanMask, whichrow, coordInfo, hasSameNchan, firstIF, true);
+
+      if (outLogger) {
+	LogIO ols(LogOrigin("Scantable", "cubicSplineBaseline()", WHERE));
+	ols << formatPiecewiseBaselineParams(pieceRanges, params, fixed, rms, masklist, whichrow, false) << LogIO::POST ;
+      }
+      if (outTextFile) {
+	ofs << formatPiecewiseBaselineParams(pieceRanges, params, fixed, rms, masklist, whichrow, true) << flush;
+      }
+    }
+
+  }
+
+  if (outTextFile) ofs.close();
+}
+
+
+void Scantable::autoCubicSplineBaseline(const std::vector<bool>& mask, int nPiece, float thresClip, int nIterClip, const std::vector<int>& edge, float threshold, int chanAvgLimit, bool outLogger, const std::string& blfile)
+{
+  ofstream ofs;
+  String coordInfo;
+  bool hasSameNchan;
+  int firstIF;
+  bool outTextFile = false;
+
+  if (blfile != "") {
+    ofs.open(blfile.c_str(), ios::out | ios::app);
+    if (ofs) outTextFile = true;
+  }
+
+  if (outLogger || outTextFile) {
+    coordInfo = getCoordInfo()[0];
+    if (coordInfo == "") coordInfo = "channel";
+    hasSameNchan = hasSameNchanOverIFs();
+    firstIF = getIF(0);
+  }
+
+  //Fitter fitter = Fitter();
+  //fitter.setExpression("cspline", nPiece, thresClip, nIterClip);
+
+  int nRow = nrow();
+  std::vector<bool> chanMask;
+  int minEdgeSize = getIFNos().size()*2;
+  STLineFinder lineFinder = STLineFinder();
+  lineFinder.setOptions(threshold, 3, chanAvgLimit);
+
+  for (int whichrow = 0; whichrow < nRow; ++whichrow) {
+
+    //-------------------------------------------------------
+    //chanMask = getCompositeChanMask(whichrow, mask, edge, minEdgeSize, lineFinder);
+    //-------------------------------------------------------
+    int edgeSize = edge.size();
+    std::vector<int> currentEdge;
+    if (edgeSize >= 2) {
+      int idx = 0;
+      if (edgeSize > 2) {
+	if (edgeSize < minEdgeSize) {
+	  throw(AipsError("Length of edge element info is less than that of IFs"));
+	}
+	idx = 2 * getIF(whichrow);
+      }
+      currentEdge.push_back(edge[idx]);
+      currentEdge.push_back(edge[idx+1]);
+    } else {
+      throw(AipsError("Wrong length of edge element"));
+    }
+    lineFinder.setData(getSpectrum(whichrow));
+    lineFinder.findLines(getCompositeChanMask(whichrow, mask), currentEdge, whichrow);
+    chanMask = lineFinder.getMask();
+    //-------------------------------------------------------
+
+
+    //fitBaseline(chanMask, whichrow, fitter);
+    //setSpectrum(fitter.getResidual(), whichrow);
+    std::vector<int> pieceRanges;
+    std::vector<float> params;
+    std::vector<float> res = doCubicSplineFitting(getSpectrum(whichrow), chanMask, pieceRanges, params, nPiece, thresClip, nIterClip);
+    setSpectrum(res, whichrow);
+
+    if (outLogger || outTextFile) {
+      std::vector<bool> fixed;
+      fixed.clear();
+      float rms = getRms(chanMask, whichrow);
+      String masklist = getMaskRangeList(chanMask, whichrow, coordInfo, hasSameNchan, firstIF, true);
+
+      if (outLogger) {
+	LogIO ols(LogOrigin("Scantable", "autoCubicSplineBaseline()", WHERE));
+	ols << formatPiecewiseBaselineParams(pieceRanges, params, fixed, rms, masklist, whichrow, false) << LogIO::POST ;
+      }
+      if (outTextFile) {
+	ofs << formatPiecewiseBaselineParams(pieceRanges, params, fixed, rms, masklist, whichrow, true) << flush;
+      }
+    }
+
+  }
+
+  if (outTextFile) ofs.close();
+}
+
+
+std::vector<float> Scantable::doCubicSplineFitting(const std::vector<float>& data, const std::vector<bool>& mask, std::vector<int>& sectionRanges, std::vector<float>& params, int nPiece, float thresClip, int nIterClip) {
+  if (nPiece < 1) {
+    throw(AipsError("wrong number of the sections for fitting"));
+  }
+  if (data.size() != mask.size()) {
+    throw(AipsError("data and mask have different size"));
+  }
+
+  int nChan = data.size();
+  std::vector<int> maskArray;
+  std::vector<int> x;
+  for (int i = 0; i < nChan; ++i) {
+    maskArray.push_back(mask[i] ? 1 : 0);
+    if (mask[i]) {
+      x.push_back(i);
+    }
+  }
+
+  int nData = x.size();
+  int nElement = (int)(floor(floor((double)(nData/nPiece))+0.5));
+
+  std::vector<double> sectionList0, sectionList1, sectionListR;
+  sectionList0.push_back((double)x[0]);
+  sectionRanges.clear();
+  sectionRanges.push_back(x[0]);
+  for (int i = 1; i < nPiece; ++i) {
+    double valX = (double)x[nElement*i];
+    sectionList0.push_back(valX);
+    sectionList1.push_back(valX);
+    sectionListR.push_back(1.0/valX);
+
+    sectionRanges.push_back(x[nElement*i]-1);
+    sectionRanges.push_back(x[nElement*i]);
+  }
+  sectionList1.push_back((double)(x[x.size()-1]+1));
+  sectionRanges.push_back(x[x.size()-1]);
+
+  std::vector<double> x1, x2, x3, z1, x1z1, x2z1, x3z1, r1;
+  for (int i = 0; i < nChan; ++i) {
+    x1.push_back((double)i);
+    x2.push_back((double)(i*i));
+    x3.push_back((double)(i*i*i));
+    z1.push_back((double)data[i]);
+    x1z1.push_back(((double)i)*(double)data[i]);
+    x2z1.push_back(((double)(i*i))*(double)data[i]);
+    x3z1.push_back(((double)(i*i*i))*(double)data[i]);
+    r1.push_back(0.0);
+  }
+
+  int currentNData = nData;
+  int nDOF = nPiece + 3;  //number of parameters to solve, namely, 4+(nPiece-1).
+
+  for (int nClip = 0; nClip < nIterClip+1; ++nClip) {
+    //xMatrix : horizontal concatenation of the least-sq. matrix (left) and an 
+    //identity matrix (right).
+    //the right part is used to calculate the inverse matrix of the left part. 
+    double xMatrix[nDOF][2*nDOF];
+    double zMatrix[nDOF];
+    for (int i = 0; i < nDOF; ++i) {
+      for (int j = 0; j < 2*nDOF; ++j) {
+	xMatrix[i][j] = 0.0;
+      }
+      xMatrix[i][nDOF+i] = 1.0;
+      zMatrix[i] = 0.0;
+    }
+
+    for (int n = 0; n < nPiece; ++n) {
+      for (int i = sectionList0[n]; i < sectionList1[n]; ++i) {
+	if (maskArray[i] == 0) continue;
+	xMatrix[0][0] += 1.0;
+	xMatrix[0][1] += x1[i];
+	xMatrix[0][2] += x2[i];
+	xMatrix[0][3] += x3[i];
+	xMatrix[1][1] += x2[i];
+	xMatrix[1][2] += x3[i];
+	xMatrix[1][3] += x2[i]*x2[i];
+	xMatrix[2][2] += x2[i]*x2[i];
+	xMatrix[2][3] += x3[i]*x2[i];
+	xMatrix[3][3] += x3[i]*x3[i];
+	zMatrix[0] += z1[i];
+	zMatrix[1] += x1z1[i];
+	zMatrix[2] += x2z1[i];
+	zMatrix[3] += x3z1[i];
+	for (int j = 0; j < n; ++j) {
+	  double q = 1.0 - x1[i]*sectionListR[j];
+	  q = q*q*q;
+	  xMatrix[0][j+4] += q;
+	  xMatrix[1][j+4] += q*x1[i];
+	  xMatrix[2][j+4] += q*x2[i];
+	  xMatrix[3][j+4] += q*x3[i];
+	  for (int k = 0; k < j; ++k) {
+	    double r = 1.0 - x1[i]*sectionListR[k];
+	    r = r*r*r;
+	    xMatrix[k+4][j+4] += r*q;
+	  }
+	  xMatrix[j+4][j+4] += q*q;
+	  zMatrix[j+4] += q*z1[i];
+	}
+      }
+    }
+
+    for (int i = 0; i < nDOF; ++i) {
+      for (int j = 0; j < i; ++j) {
+	xMatrix[i][j] = xMatrix[j][i];
+      }
+    }
+
+    std::vector<double> invDiag;
+    for (int i = 0; i < nDOF; ++i) {
+      invDiag.push_back(1.0/xMatrix[i][i]);
+      for (int j = 0; j < nDOF; ++j) {
+	xMatrix[i][j] *= invDiag[i];
+      }
+    }
+
+    for (int k = 0; k < nDOF; ++k) {
+      for (int i = 0; i < nDOF; ++i) {
+	if (i != k) {
+	  double factor1 = xMatrix[k][k];
+	  double factor2 = xMatrix[i][k];
+	  for (int j = k; j < 2*nDOF; ++j) {
+	    xMatrix[i][j] *= factor1;
+	    xMatrix[i][j] -= xMatrix[k][j]*factor2;
+	    xMatrix[i][j] /= factor1;
+	  }
+	}
+      }
+      double xDiag = xMatrix[k][k];
+      for (int j = k; j < 2*nDOF; ++j) {
+	xMatrix[k][j] /= xDiag;
+      }
+    }
+    
+    for (int i = 0; i < nDOF; ++i) {
+      for (int j = 0; j < nDOF; ++j) {
+	xMatrix[i][nDOF+j] *= invDiag[j];
+      }
+    }
+    //compute a vector y which consists of the coefficients of the best-fit spline curves 
+    //(a0,a1,a2,a3(,b3,c3,...)), namely, the ones for the leftmost piece and the ones of 
+    //cubic terms for the other pieces (in case nPiece>1).
+    std::vector<double> y;
+    for (int i = 0; i < nDOF; ++i) {
+      y.push_back(0.0);
+      for (int j = 0; j < nDOF; ++j) {
+	y[i] += xMatrix[i][nDOF+j]*zMatrix[j];
+      }
+    }
+
+    double a0 = y[0];
+    double a1 = y[1];
+    double a2 = y[2];
+    double a3 = y[3];
+    params.clear();
+
+    for (int n = 0; n < nPiece; ++n) {
+      for (int i = sectionList0[n]; i < sectionList1[n]; ++i) {
+	r1[i] = a0 + a1*x1[i] + a2*x2[i] + a3*x3[i];
+      }
+      params.push_back(a0);
+      params.push_back(a1);
+      params.push_back(a2);
+      params.push_back(a3);
+
+      if (n == nPiece-1) break;
+
+      double d = y[4+n];
+      a0 += d;
+      a1 -= 3.0*d*sectionListR[n];
+      a2 += 3.0*d*sectionListR[n]*sectionListR[n];
+      a3 -= d*sectionListR[n]*sectionListR[n]*sectionListR[n];
+    }
+
+    if ((nClip == nIterClip) || (thresClip <= 0.0)) {
+      break;
+    } else {
+      std::vector<double> rz;
+      double stdDev = 0.0;
+      for (int i = 0; i < nChan; ++i) {
+	double val = abs(r1[i] - z1[i]);
+	rz.push_back(val);
+	stdDev += val*val*(double)maskArray[i];
+      }
+      stdDev = sqrt(stdDev/(double)nData);
+      
+      double thres = stdDev * thresClip;
+      int newNData = 0;
+      for (int i = 0; i < nChan; ++i) {
+	if (rz[i] >= thres) {
+	  maskArray[i] = 0;
+	}
+	if (maskArray[i] > 0) {
+	  newNData++;
+	}
+      }
+      if (newNData == currentNData) {
+	break;                   //no additional flag. finish iteration.
+      } else {
+	currentNData = newNData;
+      }
+    }
+  }
+
+  std::vector<float> residual;
+  for (int i = 0; i < nChan; ++i) {
+    residual.push_back((float)(z1[i] - r1[i]));
+  }
+  return residual;
+
+}
+
+void Scantable::fitBaseline(const std::vector<bool>& mask, int whichrow, Fitter& fitter)
+{
+  std::vector<double> abcsd = getAbcissa(whichrow);
   std::vector<float> abcs;
-  for (int i = 0; i < abcsd.size(); i++) {
+  for (int i = 0; i < abcsd.size(); ++i) {
     abcs.push_back((float)abcsd[i]);
   }
-  std::vector<float> spec = getSpectrum(rowno);
+  std::vector<float> spec = getSpectrum(whichrow);
+
+  fitter.setData(abcs, spec, mask);
+  fitter.lfit();
+}
+
+std::vector<bool> Scantable::getCompositeChanMask(int whichrow, const std::vector<bool>& inMask)
+{
+  std::vector<bool> chanMask = getMask(whichrow);
+  int chanMaskSize = chanMask.size();
+  if (chanMaskSize != inMask.size()) {
+    throw(AipsError("different mask sizes"));
+  }
+  for (int i = 0; i < chanMaskSize; ++i) {
+    chanMask[i] = chanMask[i] && inMask[i];
+  }
+
+  return chanMask;
+}
+
+/*
+std::vector<bool> Scantable::getCompositeChanMask(int whichrow, const std::vector<bool>& inMask, const std::vector<int>& edge, const int minEdgeSize, STLineFinder& lineFinder)
+{
+  int edgeSize = edge.size();
+  std::vector<int> currentEdge;
+  if (edgeSize >= 2) {
+      int idx = 0;
+      if (edgeSize > 2) {
+	if (edgeSize < minEdgeSize) {
+	  throw(AipsError("Length of edge element info is less than that of IFs"));
+	}
+	idx = 2 * getIF(whichrow);
+      }
+      currentEdge.push_back(edge[idx]);
+      currentEdge.push_back(edge[idx+1]);
+  } else {
+    throw(AipsError("Wrong length of edge element"));
+  }
+
+  lineFinder.setData(getSpectrum(whichrow));
+  lineFinder.findLines(getCompositeChanMask(whichrow, inMask), currentEdge, whichrow);
+
+  return lineFinder.getMask();
+}
+*/
+
+void Scantable::polyBaseline(const std::vector<bool>& mask, int order, bool outLogger, const std::string& blfile)
+{
+  ofstream ofs;
+  String coordInfo;
+  bool hasSameNchan;
+  int firstIF;
+  bool outTextFile = false;
+
+  if (blfile != "") {
+    ofs.open(blfile.c_str(), ios::out | ios::app);
+    if (ofs) outTextFile = true;
+  }
+
+  if (outLogger || outTextFile) {
+    coordInfo = getCoordInfo()[0];
+    if (coordInfo == "") coordInfo = "channel";
+    hasSameNchan = hasSameNchanOverIFs();
+    firstIF = getIF(0);
+  }
+
+  Fitter fitter = Fitter();
+  fitter.setExpression("poly", order);
+
+  int nRow = nrow();
+  std::vector<bool> chanMask;
+
+  for (int whichrow = 0; whichrow < nRow; ++whichrow) {
+
+    chanMask = getCompositeChanMask(whichrow, mask);
+    fitBaseline(chanMask, whichrow, fitter);
+    setSpectrum(fitter.getResidual(), whichrow);
+    
+    if (outLogger || outTextFile) {
+      std::vector<float> params = fitter.getParameters();
+      std::vector<bool>  fixed  = fitter.getFixedParameters();
+      float rms = getRms(chanMask, whichrow);
+      String masklist = getMaskRangeList(chanMask, whichrow, coordInfo, hasSameNchan, firstIF, true);
+
+      if (outLogger) {
+	LogIO ols(LogOrigin("Scantable", "polyBaseline()", WHERE));
+	ols << formatBaselineParams(params, fixed, rms, masklist, whichrow, false) << LogIO::POST ;
+      }
+      if (outTextFile) {
+	ofs << formatBaselineParams(params, fixed, rms, masklist, whichrow, true) << flush;
+      }
+    }
+
+  }
+
+  if (outTextFile) ofs.close();
+}
+
+void Scantable::autoPolyBaseline(const std::vector<bool>& mask, int order, const std::vector<int>& edge, float threshold, int chanAvgLimit, bool outLogger, const std::string& blfile)
+{
+  ofstream ofs;
+  String coordInfo;
+  bool hasSameNchan;
+  int firstIF;
+  bool outTextFile = false;
+
+  if (blfile != "") {
+    ofs.open(blfile.c_str(), ios::out | ios::app);
+    if (ofs) outTextFile = true;
+  }
+
+  if (outLogger || outTextFile) {
+    coordInfo = getCoordInfo()[0];
+    if (coordInfo == "") coordInfo = "channel";
+    hasSameNchan = hasSameNchanOverIFs();
+    firstIF = getIF(0);
+  }
+
+  Fitter fitter = Fitter();
+  fitter.setExpression("poly", order);
+
+  int nRow = nrow();
+  std::vector<bool> chanMask;
+  int minEdgeSize = getIFNos().size()*2;
+  STLineFinder lineFinder = STLineFinder();
+  lineFinder.setOptions(threshold, 3, chanAvgLimit);
+
+  for (int whichrow = 0; whichrow < nRow; ++whichrow) {
+
+    //-------------------------------------------------------
+    //chanMask = getCompositeChanMask(whichrow, mask, edge, minEdgeSize, lineFinder);
+    //-------------------------------------------------------
+    int edgeSize = edge.size();
+    std::vector<int> currentEdge;
+    if (edgeSize >= 2) {
+      int idx = 0;
+      if (edgeSize > 2) {
+	if (edgeSize < minEdgeSize) {
+	  throw(AipsError("Length of edge element info is less than that of IFs"));
+	}
+	idx = 2 * getIF(whichrow);
+      }
+      currentEdge.push_back(edge[idx]);
+      currentEdge.push_back(edge[idx+1]);
+    } else {
+      throw(AipsError("Wrong length of edge element"));
+    }
+    lineFinder.setData(getSpectrum(whichrow));
+    lineFinder.findLines(getCompositeChanMask(whichrow, mask), currentEdge, whichrow);
+    chanMask = lineFinder.getMask();
+    //-------------------------------------------------------
+
+
+    fitBaseline(chanMask, whichrow, fitter);
+    setSpectrum(fitter.getResidual(), whichrow);
+
+    if (outLogger || outTextFile) {
+      std::vector<float> params = fitter.getParameters();
+      std::vector<bool>  fixed  = fitter.getFixedParameters();
+      float rms = getRms(chanMask, whichrow);
+      String masklist = getMaskRangeList(chanMask, whichrow, coordInfo, hasSameNchan, firstIF, true);
+
+      if (outLogger) {
+	LogIO ols(LogOrigin("Scantable", "autoPolyBaseline()", WHERE));
+	ols << formatBaselineParams(params, fixed, rms, masklist, whichrow, false) << LogIO::POST ;
+      }
+      if (outTextFile) {
+	ofs << formatBaselineParams(params, fixed, rms, masklist, whichrow, true) << flush;
+      }
+    }
+
+  }
+
+  if (outTextFile) ofs.close();
+}
+
+
+float Scantable::getRms(const std::vector<bool>& mask, int whichrow) {
+  Vector<Float> spec;
+  specCol_.get(whichrow, spec);
+
+  float mean = 0.0;
+  float smean = 0.0;
+  int n = 0;
+  for (int i = 0; i < spec.nelements(); ++i) {
+    if (mask[i]) {
+      mean += spec[i];
+      smean += spec[i]*spec[i];
+      n++;
+    }
+  }
+
+  mean /= (float)n;
+  smean /= (float)n;
+
+  return sqrt(smean - mean*mean);
+}
+
+
+std::string Scantable::formatBaselineParamsHeader(int whichrow, const std::string& masklist, bool verbose) const
+{
+  ostringstream oss;
+
+  if (verbose) {
+    for (int i = 0; i < 60; ++i) {
+      oss << "-";
+    }
+    oss << endl;
+    oss <<  " Scan[" << getScan(whichrow)  << "]";
+    oss <<  " Beam[" << getBeam(whichrow)  << "]";
+    oss <<    " IF[" << getIF(whichrow)    << "]";
+    oss <<   " Pol[" << getPol(whichrow)   << "]";
+    oss << " Cycle[" << getCycle(whichrow) << "]: " << endl;
+    oss << "Fitter range = " << masklist << endl;
+    oss << "Baseline parameters" << endl;
+    oss << flush;
+  }
+
+  return String(oss);
+}
+
+std::string Scantable::formatBaselineParamsFooter(float rms, bool verbose) const
+{
+  ostringstream oss;
+
+  if (verbose) {
+    oss << endl;
+    oss << "Results of baseline fit" << endl;
+    oss << "  rms = " << setprecision(6) << rms << endl;
+  }
+
+  return String(oss);
+}
+
+std::string Scantable::formatPiecewiseBaselineParams(const std::vector<int>& ranges, const std::vector<float>& params, const std::vector<bool>& fixed, float rms, const std::string& masklist, int whichrow, bool verbose) const
+{
+  ostringstream oss;
+  oss << formatBaselineParamsHeader(whichrow, masklist, verbose);
+
+  if ((params.size() > 0) && (ranges.size() > 0)) {
+    if (((ranges.size() % 2) == 0) && ((params.size() % (ranges.size() / 2)) == 0)) {
+      int nParam = params.size() / (ranges.size() / 2);
+      for (uInt j = 0; j < ranges.size(); j+=2) {
+        oss << "[" << ranges[j] << "," << ranges[j+1] << "]";
+        for (uInt i = 0; i < nParam; ++i) {
+          if (i > 0) {
+	    oss << ",";
+          }
+          String fix = ((fixed.size() > 0) && (fixed[i]) && verbose) ? "(fixed)" : "";
+          oss << "  p" << i << fix << "= " << setprecision(6) << params[j/2*nParam+i];
+        }
+      }
+    } else {
+      oss << "  ";
+    }
+  } else {
+    oss << "  Not fitted";
+  }
+
+  oss << formatBaselineParamsFooter(rms, verbose);
+  oss << flush;
+
+  return String(oss);
+}
+
+std::string Scantable::formatBaselineParams(const std::vector<float>& params, const std::vector<bool>& fixed, float rms, const std::string& masklist, int whichrow, bool verbose) const
+{
+  ostringstream oss;
+  oss << formatBaselineParamsHeader(whichrow, masklist, verbose);
+
+  if (params.size() > 0) {
+    for (uInt i = 0; i < params.size(); ++i) {
+      if (i > 0) {
+	oss << ",";
+      }
+      String fix = ((fixed.size() > 0) && (fixed[i]) && verbose) ? "(fixed)" : "";
+      oss << "  p" << i << fix << "= " << setprecision(6) << params[i];
+    }
+  } else {
+    oss << "  Not fitted";
+  }
+
+  oss << formatBaselineParamsFooter(rms, verbose);
+  oss << flush;
+
+  return String(oss);
+}
+
+std::string Scantable::getMaskRangeList(const std::vector<bool>& mask, int whichrow, const casa::String& coordInfo, bool hasSameNchan, int firstIF, bool silent)
+{
+  if (mask.size() < 2) {
+    throw(AipsError("The mask elements should be > 1"));
+  }
+  if (mask.size() != nchan()) {
+    throw(AipsError("Number of channels in scantable != number of mask elements"));
+  }
+
+  std::vector<int> startIdx = getMaskEdgeIndices(mask, true);
+  std::vector<int> endIdx   = getMaskEdgeIndices(mask, false);
+
+  if (startIdx.size() != endIdx.size()) {
+    throw(AipsError("Numbers of mask start and mask end are not identical"));
+  }
+  for (int i = 0; i < startIdx.size(); ++i) {
+    if (startIdx[i] > endIdx[i]) {
+      throw(AipsError("Mask start index > mask end index"));
+    }
+  }
+
+  if (!silent) {
+    LogIO logOs(LogOrigin("Scantable", "getMaskRangeList()", WHERE));
+    logOs << LogIO::WARN << "The current mask window unit is " << coordInfo;
+    if (!hasSameNchan) {
+      logOs << endl << "This mask is only valid for IF=" << firstIF;
+    }
+    logOs << LogIO::POST;
+  }
+
+  std::vector<double> abcissa = getAbcissa(whichrow);
+  ostringstream oss;
+  oss.setf(ios::fixed);
+  oss << setprecision(1) << "[";
+  for (int i = 0; i < startIdx.size(); ++i) {
+    std::vector<float> aMaskRange;
+    aMaskRange.push_back((float)abcissa[startIdx[i]]);
+    aMaskRange.push_back((float)abcissa[endIdx[i]]);
+    sort(aMaskRange.begin(), aMaskRange.end());
+    if (i > 0) oss << ",";
+    oss << "[" << aMaskRange[0] << "," << aMaskRange[1] << "]";
+  }
+  oss << "]" << flush;
+
+  return String(oss);
+}
+
+bool Scantable::hasSameNchanOverIFs()
+{
+  int nIF = nif(-1);
+  int nCh;
+  int totalPositiveNChan = 0;
+  int nPositiveNChan = 0;
+
+  for (int i = 0; i < nIF; ++i) {
+    nCh = nchan(i);
+    if (nCh > 0) {
+      totalPositiveNChan += nCh;
+      nPositiveNChan++;
+    }
+  }
+
+  return (totalPositiveNChan == (nPositiveNChan * nchan(0)));
+}
+
+std::vector<int> Scantable::getMaskEdgeIndices(const std::vector<bool>& mask, bool getStartIndices)
+{
+  if (mask.size() < 2) {
+    throw(AipsError("The mask elements should be > 1"));
+  }
+  if (mask.size() != nchan()) {
+    throw(AipsError("Number of channels in scantable != number of mask elements"));
+  }
+
+  std::vector<int> out;
+  int endIdx = mask.size() - 1;
+
+  if (getStartIndices) {
+    if (mask[0]) {
+      out.push_back(0);
+    }
+    for (int i = 0; i < endIdx; ++i) {
+      if ((!mask[i]) && mask[i+1]) {
+	out.push_back(i+1);
+      }
+    }
+  } else {
+    for (int i = 0; i < endIdx; ++i) {
+      if (mask[i] && (!mask[i+1])) {
+	out.push_back(i);
+      }
+    }
+    if (mask[endIdx]) {
+      out.push_back(endIdx);
+    }
+  }
+
+  return out;
+}
+
+
+/*
+STFitEntry Scantable::polyBaseline(const std::vector<bool>& mask, int order, int rowno)
+{
+  Fitter fitter = Fitter();
+  fitter.setExpression("poly", order);
+
   std::vector<bool> fmask = getMask(rowno);
   if (fmask.size() != mask.size()) {
     throw(AipsError("different mask sizes"));
   }
-  for (int i = 0; i < fmask.size(); i++) {
+  for (int i = 0; i < fmask.size(); ++i) {
     fmask[i] = fmask[i] && mask[i];
   }
-  fitter.setData(abcs, spec, fmask);
 
-  fitter.lfit();
-}
-
-void Scantable::polyBaselineBatch(const std::vector<bool>& mask, int order)
-{
-  Fitter fitter = Fitter();
-  for (uInt rowno=0; rowno < nrow(); ++rowno) {
-    doPolyBaseline(mask, order, rowno, fitter);
-    setSpectrum(fitter.getResidual(), rowno);
-  }
-}
-
-STFitEntry Scantable::polyBaseline(const std::vector<bool>& mask, int order, int rowno)
-{
-  Fitter fitter = Fitter();
-  doPolyBaseline(mask, order, rowno, fitter);
+  fitBaseline(fmask, rowno, fitter);
   setSpectrum(fitter.getResidual(), rowno);
   return fitter.getFitEntry();
 }
+*/
 
 }
 //namespace asap

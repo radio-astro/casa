@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: STWriter.cpp 1819 2010-08-02 07:28:20Z KanaSugimoto $
+//# $Id: STWriter.cpp 2023 2011-03-02 05:31:40Z TakeshiNakazato $
 //#---------------------------------------------------------------------------
 
 #include <string>
@@ -162,8 +162,13 @@ Int STWriter::write(const CountedPtr<Scantable> in,
 
   // Create the output file and write static data.
   Int status;
+//   status = writer_->create(String(filename), hdr.observer, hdr.project,
+//                            hdr.antennaname, hdr.antennaposition,
+//                            hdr.obstype, hdr.fluxunit,
+//                            hdr.equinox, hdr.freqref,
+//                            nChan, nPol, havexpol, False);
   status = writer_->create(String(filename), hdr.observer, hdr.project,
-                           hdr.antennaname, hdr.antennaposition,
+                           inst->getAntennaName(), hdr.antennaposition,
                            hdr.obstype, hdr.fluxunit,
                            hdr.equinox, hdr.freqref,
                            nChan, nPol, havexpol, False);
@@ -203,72 +208,105 @@ Int STWriter::write(const CountedPtr<Scantable> in,
       pksrec.cycleNo = 1;
       while (!cycit.pastEnd() ) {
         Table ctable = cycit.table();
-        TableIterator ifit(ctable, "IFNO", TableIterator::Ascending, TableIterator::HeapSort);
-        MDirection::ScalarColumn dirCol(ctable, "DIRECTION");
-        pksrec.direction = dirCol(0).getAngle("rad").getValue();
-        pksrec.IFno = 1;
-        while (!ifit.pastEnd() ) {
-          Table itable = ifit.table();
-          TableRow row(itable);
-          // use the first row to fill in all the "metadata"
-          const TableRecord& rec = row.get(0);
-          ROArrayColumn<Float> specCol(itable, "SPECTRA");
-          pksrec.IFno = rec.asuInt("IFNO")+1;
-          uInt nchan = specCol(0).nelements();
-          Double crval,crpix;
-          //Vector<Double> restfreq;
-          Float tmp0,tmp1,tmp2,tmp3,tmp4;
-          String tcalt;
-          Vector<String> stmp0, stmp1;
-          inst->frequencies().getEntry(crpix,crval, pksrec.freqInc,
-                                     rec.asuInt("FREQ_ID"));
-          inst->focus().getEntry(pksrec.parAngle, pksrec.focusAxi, pksrec.focusTan,
-                                 pksrec.focusRot, tmp0,tmp1,tmp2,tmp3,tmp4,
-                                 rec.asuInt("FOCUS_ID"));
-          inst->molecules().getEntry(pksrec.restFreq,stmp0,stmp1,
-                                   rec.asuInt("MOLECULE_ID"));
-          inst->tcal().getEntry(pksrec.tcalTime, pksrec.tcal,
-                              rec.asuInt("TCAL_ID"));
-          inst->weather().getEntry(pksrec.temperature, pksrec.pressure,
-                                 pksrec.humidity, pksrec.windSpeed,
-                                 pksrec.windAz, rec.asuInt("WEATHER_ID"));
-          Double pixel = Double(nchan/2);
-          pksrec.refFreq = (pixel-crpix)*pksrec.freqInc + crval;
-          // ok, now we have nrows for the n polarizations in this table
-          polConversion(pksrec.spectra, pksrec.flagged, pksrec.xPol, itable);
-          pksrec.tsys = tsysFromTable(itable);
-          // dummy data
-          uInt npol = pksrec.spectra.ncolumn();
-
-          pksrec.mjd       = rec.asDouble("TIME");
-          pksrec.interval  = rec.asDouble("INTERVAL");
-          pksrec.fieldName = rec.asString("FIELDNAME");
-          pksrec.srcName   = rec.asString("SRCNAME");
-          //pksrec.obsType   = obstypes[rec.asInt("SRCTYPE")];
-          pksrec.obsType = getObsTypes( rec.asInt("SRCTYPE") ) ;
-          pksrec.bandwidth = nchan * abs(pksrec.freqInc);
-          pksrec.azimuth   = rec.asFloat("AZIMUTH");
-          pksrec.elevation = rec.asFloat("ELEVATION");
-          pksrec.refBeam   = rec.asInt("REFBEAMNO") + 1;
-          pksrec.sigma.resize(npol);
-          pksrec.sigma     = 0.0f;
-          pksrec.calFctr.resize(npol);
-          pksrec.calFctr   = 0.0f;
-          pksrec.baseLin.resize(npol,2);
-          pksrec.baseLin   = 0.0f;
-          pksrec.baseSub.resize(npol,9);
-          pksrec.baseSub   = 0.0f;
-          pksrec.xCalFctr  = 0.0;
-	  pksrec.flagrow = rec.asuInt("FLAGROW");
-
-          status = writer_->write(pksrec);
-          if ( status ) {
-            writer_->close();
-            throw(AipsError("STWriter: Failed to export Scantable."));
+        TableIterator typeit( ctable, "SRCTYPE" ) ;
+        while(!typeit.pastEnd() ) {
+          Table ttable = typeit.table() ;
+          TableIterator ifit(ttable, "IFNO", TableIterator::Ascending, TableIterator::HeapSort);
+          MDirection::ScalarColumn dirCol(ctable, "DIRECTION");
+          pksrec.direction = dirCol(0).getAngle("rad").getValue();
+          pksrec.IFno = 1;
+          while (!ifit.pastEnd() ) {
+            Table itable = ifit.table();
+            TableRow row(itable);
+            // use the first row to fill in all the "metadata"
+            const TableRecord& rec = row.get(0);
+            ROArrayColumn<Float> specCol(itable, "SPECTRA");
+            pksrec.IFno = rec.asuInt("IFNO")+1;
+            uInt nchan = specCol(0).nelements();
+            Double crval,crpix;
+            //Vector<Double> restfreq;
+            Float tmp0,tmp1,tmp2,tmp3,tmp4;
+            String tcalt;
+            Vector<String> stmp0, stmp1;
+            inst->frequencies().getEntry(crpix,crval, pksrec.freqInc,
+                                         rec.asuInt("FREQ_ID"));
+            inst->focus().getEntry(pksrec.parAngle, pksrec.focusAxi, pksrec.focusTan,
+                                   pksrec.focusRot, tmp0,tmp1,tmp2,tmp3,tmp4,
+                                   rec.asuInt("FOCUS_ID"));
+            inst->molecules().getEntry(pksrec.restFreq,stmp0,stmp1,
+                                       rec.asuInt("MOLECULE_ID"));
+//             inst->tcal().getEntry(pksrec.tcalTime, pksrec.tcal,
+//                                   rec.asuInt("TCAL_ID"));
+            inst->weather().getEntry(pksrec.temperature, pksrec.pressure,
+                                     pksrec.humidity, pksrec.windSpeed,
+                                     pksrec.windAz, rec.asuInt("WEATHER_ID"));
+            Double pixel = Double(nchan/2);
+            pksrec.refFreq = (pixel-crpix)*pksrec.freqInc + crval;
+            // ok, now we have nrows for the n polarizations in this table
+            polConversion(pksrec.spectra, pksrec.flagged, pksrec.xPol, itable);
+            pksrec.tsys = tsysFromTable(itable);
+            // dummy data
+            uInt npol = pksrec.spectra.ncolumn();
+            
+            // TCAL
+            inst->tcal().getEntry( pksrec.tcalTime, pksrec.tcal,
+                                   rec.asuInt("TCAL_ID") ) ;
+            if ( pksrec.tcal.nelements() == 1 ) {
+              ROScalarColumn<uInt> uintCol( itable, "TCAL_ID" ) ;
+              Vector<uInt> tcalids = uintCol.getColumn() ;
+              pksrec.tcal.resize( npol ) ;
+              Vector<Float> dummyA ;
+              String dummyS ;
+              for ( uInt ipol = 0 ; ipol < npol ; ipol++ ) {
+                inst->tcal().getEntry( dummyS, dummyA, tcalids[ipol] ) ;
+                pksrec.tcal[ipol] = dummyA[0] ;
+              }
+            }
+            else if ( pksrec.tcal.nelements() == nchan ) {
+              ROScalarColumn<uInt> uintCol( itable, "TCAL_ID" ) ;
+              Vector<uInt> tcalids = uintCol.getColumn() ;
+              pksrec.tcal.resize( npol ) ;
+              Vector<Float> dummyA ;
+              String dummyS ;
+              for ( uInt ipol = 0 ; ipol < npol ; ipol++ ) {
+                inst->tcal().getEntry( dummyS, dummyA, tcalids[ipol] ) ;
+                pksrec.tcal[ipol] = mean( dummyA ) ;
+              }
+            }
+            //LogIO os ;
+            //os << "npol = " << npol << " pksrec.tcal = " << pksrec.tcal << LogIO::POST ;
+            
+            pksrec.mjd       = rec.asDouble("TIME");
+            pksrec.interval  = rec.asDouble("INTERVAL");
+            pksrec.fieldName = rec.asString("FIELDNAME");
+            pksrec.srcName   = rec.asString("SRCNAME");
+            //pksrec.obsType   = obstypes[rec.asInt("SRCTYPE")];
+            pksrec.obsType = getObsTypes( rec.asInt("SRCTYPE") ) ;
+            pksrec.bandwidth = nchan * abs(pksrec.freqInc);
+            pksrec.azimuth   = rec.asFloat("AZIMUTH");
+            pksrec.elevation = rec.asFloat("ELEVATION");
+            pksrec.refBeam   = rec.asInt("REFBEAMNO") + 1;
+            pksrec.sigma.resize(npol);
+            pksrec.sigma     = 0.0f;
+            pksrec.calFctr.resize(npol);
+            pksrec.calFctr   = 0.0f;
+            pksrec.baseLin.resize(npol,2);
+            pksrec.baseLin   = 0.0f;
+            pksrec.baseSub.resize(npol,9);
+            pksrec.baseSub   = 0.0f;
+            pksrec.xCalFctr  = 0.0;
+            pksrec.flagrow = rec.asuInt("FLAGROW");
+            
+            status = writer_->write(pksrec);
+            if ( status ) {
+              writer_->close();
+              throw(AipsError("STWriter: Failed to export Scantable."));
+            }
+            ++count;
+            //++pksrec.IFno;
+            ++ifit;
           }
-          ++count;
-          //++pksrec.IFno;
-          ++ifit;
+          ++typeit ;
         }
         ++pksrec.cycleNo;
         ++cycit;
@@ -282,6 +320,7 @@ Int STWriter::write(const CountedPtr<Scantable> in,
   ostringstream oss;
   oss << "STWriter: wrote " << count << " rows to " << filename;
   pushLog(String(oss));
+  
   writer_->close();
   //if MS2 delete POINTING table exists and copy the one in the keyword
   if ( format_ == "MS2" ) {
@@ -358,91 +397,7 @@ void STWriter::replacePtTab (const Table& tab, const std::string& fname)
 // get obsType string from SRCTYPE value
 String STWriter::getObsTypes( Int srctype )
 {
-  String obsType ;
-  switch( srctype ) {
-  case Int(SrcType::PSON):
-    obsType = "PSON" ;
-    break ;
-  case Int(SrcType::PSOFF):
-    obsType = "PSOFF" ;
-    break ;
-  case Int(SrcType::NOD):
-    obsType = "NOD" ;
-    break ;
-  case Int(SrcType::FSON):
-    obsType = "FSON" ;
-    break ;
-  case Int(SrcType::FSOFF):
-    obsType = "FSOFF" ;
-    break ;
-  case Int(SrcType::SKY):
-    obsType = "SKY" ;
-    break ;
-  case Int(SrcType::HOT):
-    obsType = "HOT" ;
-    break ;
-  case Int(SrcType::WARM):
-    obsType = "WARM" ;
-    break ;
-  case Int(SrcType::COLD):
-    obsType = "COLD" ;
-    break ;
-  case Int(SrcType::PONCAL):
-    obsType = "PSON:CALON" ;
-    break ;
-  case Int(SrcType::POFFCAL):
-    obsType = "PSOFF:CALON" ;
-    break ;
-  case Int(SrcType::NODCAL):
-    obsType = "NOD:CALON" ;
-    break ;
-  case Int(SrcType::FONCAL):
-    obsType = "FSON:CALON" ;
-    break ;
-  case Int(SrcType::FOFFCAL):
-    obsType = "FSOFF:CALOFF" ;
-    break ;
-  case Int(SrcType::FSLO):
-    obsType = "FSLO" ;
-    break ;
-  case Int(SrcType::FLOOFF):
-    obsType = "FS:LOWER:OFF" ;
-    break ;
-  case Int(SrcType::FLOSKY):
-    obsType = "FS:LOWER:SKY" ;
-    break ;
-  case Int(SrcType::FLOHOT):
-    obsType = "FS:LOWER:HOT" ;
-    break ;
-  case Int(SrcType::FLOWARM):
-    obsType = "FS:LOWER:WARM" ;
-    break ;
-  case Int(SrcType::FLOCOLD):
-    obsType = "FS:LOWER:COLD" ;
-    break ;
-  case Int(SrcType::FSHI):
-    obsType = "FSHI" ;
-    break ;
-  case Int(SrcType::FHIOFF):
-    obsType = "FS:HIGHER:OFF" ;
-    break ;
-  case Int(SrcType::FHISKY):
-    obsType = "FS:HIGHER:SKY" ;
-    break ;
-  case Int(SrcType::FHIHOT):
-    obsType = "FS:HIGHER:HOT" ;
-    break ;
-  case Int(SrcType::FHIWARM):
-    obsType = "FS:HIGHER:WARM" ;
-    break ;
-  case Int(SrcType::FHICOLD):
-    obsType = "FS:HIGHER:COLD" ;
-    break ;
-  default:
-    obsType = "NOTYPE" ;
-  }
-
-  return obsType ;
+  return SrcType::getName(srctype) ;
 }
 
 }

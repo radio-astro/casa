@@ -51,8 +51,9 @@ class asapplotter:
         self._fp = FontProperties()
         self._panellayout = self.set_panellayout(refresh=False)
         self._offset = None
-        self._rowcount = 0
-        self._panelcnt = 0
+        self._startrow = 0
+        self._ipanel = -1
+        self._panelrows = []
 
     def _translate(self, instr):
         keys = "s b i p t r".split()
@@ -81,7 +82,9 @@ class asapplotter:
         if self._visible and backend == "TkAgg":
             from asap.casatoolbar import CustomToolbarTkAgg
             return CustomToolbarTkAgg(self)
-        else: return None
+            #from asap.casatoolbar import CustomFlagToolbarTkAgg
+            #return CustomFlagToolbarTkAgg(self)
+        return None
 
     @asaplog_post_dec
     def plot(self, scan=None):
@@ -95,12 +98,16 @@ class asapplotter:
             NO checking is done that the abcissas of the scantable
             are consistent e.g. all 'channel' or all 'velocity' etc.
         """
-        self._rowcount = self._panelcnt = 0
+        self._startrow = 0
+        self._ipanel = -1
         if self._plotter.is_dead:
             if hasattr(self._plotter.figmgr,'casabar'):
                 del self._plotter.figmgr.casabar
             self._plotter = self._newplotter()
             self._plotter.figmgr.casabar=self._newcasabar()
+        if self._plotter.figmgr.casabar:
+            self._plotter.figmgr.casabar.set_pagecounter(1)
+        self._panelrows = []
         self._plotter.hold()
         #self._plotter.clear()
         if not self._data and not scan:
@@ -334,15 +341,18 @@ class asapplotter:
                  'pol' 'Pol' 'p':       Polarisations
                  'scan' 'Scan' 's':     Scans
                  'time' 'Time' 't':     Times
+                 'row' 'Row' 'r':       Rows
+            When either 'stacking' or 'panelling' is set to 'row',
+            the other parameter setting is ignored.
         """
         msg = "Invalid mode"
         if not self.set_panelling(panelling) or \
                not self.set_stacking(stacking):
             raise TypeError(msg)
-        if self._panelling == 'r':
-            self._stacking = '_r'
-        elif self._stacking == 'r':
-            self._panelling = '_r'
+        #if self._panelling == 'r':
+        #    self._stacking = '_r'
+        #if self._stacking == 'r':
+        #    self._panelling = '_r'
         if refresh and self._data: self.plot(self._data)
         return
 
@@ -358,8 +368,10 @@ class asapplotter:
         if md:
             self._panelling = md
             self._title = None
-            if md == 'r':
-                self._stacking = '_r'
+            #if md == 'r':
+            #    self._stacking = '_r'
+            # you need to reset counters for multi page plotting
+            self._reset_counters()
             return True
         return False
 
@@ -393,10 +405,17 @@ class asapplotter:
         if md:
             self._stacking = md
             self._lmap = None
-            if md == 'r':
-                self._panelling = '_r'
+            #if md == 'r':
+            #    self._panelling = '_r'
+            # you need to reset counters for multi page plotting
+            self._reset_counters()
             return True
         return False
+
+    def _reset_counters(self):
+        self._startrow = 0
+        self._ipanel = -1
+        self._panelrows = []
 
     def set_range(self,xstart=None,xend=None,ystart=None,yend=None,refresh=True, offset=None):
         """
@@ -831,9 +850,8 @@ class asapplotter:
             sel.set_order(order)
         scan.set_selection(sel)
         d = {'b': scan.getbeam, 's': scan.getscan,
-             #'i': scan.getif, 'p': scan.getpol, 't': scan._gettime,
              'i': scan.getif, 'p': scan.getpol, 't': scan.get_time,
-             'r': int, '_r': int}
+             'r': int}#, '_r': int}
 
         polmodes = dict(zip(self._selection.get_pols(),
                             self._selection.get_poltypes()))
@@ -844,6 +862,12 @@ class asapplotter:
         else: n = len(n0)
         if isinstance(nstack0, int): nstack = nstack0
         else: nstack = len(nstack0)
+        # In case of row stacking
+        rowstack = False
+        titlemode = self._panelling
+        if self._stacking == "r" and self._panelling != "r":
+            rowstack = True
+            titlemode = '_r'
         nptot = n
         maxpanel, maxstack = 16,16
         if nstack > maxstack:
@@ -852,8 +876,9 @@ class asapplotter:
             asaplog.push(msg)
             asaplog.post('WARN')
             nstack = min(nstack,maxstack)
-        n = min(n,maxpanel)
-            
+        n = min(n-self._ipanel-1,maxpanel)
+
+        ganged = False
         if n > 1:
             ganged = rcParams['plotter.ganged']
             if self._panelling == 'i':
@@ -861,22 +886,28 @@ class asapplotter:
             if self._rows and self._cols:
                 n = min(n,self._rows*self._cols)
                 self._plotter.set_panels(rows=self._rows,cols=self._cols,
-#                                         nplots=n,ganged=ganged)
                                          nplots=n,layout=self._panellayout,ganged=ganged)
             else:
-#                self._plotter.set_panels(rows=n,cols=0,nplots=n,ganged=ganged)
                 self._plotter.set_panels(rows=n,cols=0,nplots=n,layout=self._panellayout,ganged=ganged)
         else:
-#            self._plotter.set_panels()
             self._plotter.set_panels(layout=self._panellayout)
         #r = 0
-        r = self._rowcount
+        r = self._startrow
         nr = scan.nrow()
         a0,b0 = -1,-1
         allxlim = []
         allylim = []
-        newpanel=True
+        #newpanel=True
+        newpanel=False
         panelcount,stackcount = 0,0
+        # If this is not the first page
+        if r > 0:
+            # panelling value of the prev page 
+            a0 = d[self._panelling](r-1)
+            # set the initial stackcount large not to plot
+            # the start row automatically
+            stackcount = nstack
+
         while r < nr:
             a = d[self._panelling](r)
             b = d[self._stacking](r)
@@ -893,35 +924,47 @@ class asapplotter:
                        or scan._get_ordinate_label()
                 self._plotter.set_axes('xlabel', xlab)
                 self._plotter.set_axes('ylabel', ylab)
-                lbl = self._get_label(scan, r, self._panelling, self._title)
-                #if self._panelling == 'r': lbl = ''
+                #lbl = self._get_label(scan, r, self._panelling, self._title)
+                lbl = self._get_label(scan, r, titlemode, self._title)
                 if isinstance(lbl, list) or isinstance(lbl, tuple):
                     if 0 <= panelcount < len(lbl):
                         lbl = lbl[panelcount]
                     else:
                         # get default label
-                        lbl = self._get_label(scan, r, self._panelling, None)
+                        #lbl = self._get_label(scan, r, self._panelling, None)
+                        lbl = self._get_label(scan, r, titlemode, None)
                 self._plotter.set_axes('title',lbl)
                 newpanel = True
                 stackcount = 0
                 panelcount += 1
+                # save the start row to plot this panel for future revisit.
+                if self._panelling != 'r' and \
+                       len(self._panelrows) < self._ipanel+1+panelcount:
+                    self._panelrows += [r]
+                    
             #if (b > b0 or newpanel) and stackcount < nstack:
-            if stackcount < nstack and (newpanel or (a == a0 and b > b0)):
+            if stackcount < nstack and (newpanel or rowstack or (a == a0 and b > b0)):
                 y = []
                 if len(polmodes):
                     y = scan._getspectrum(r, polmodes[scan.getpol(r)])
                 else:
                     y = scan._getspectrum(r)
-                m = scan._getmask(r)
-                from numpy import logical_not, logical_and
-                if self._maskselection and len(self._usermask) == len(m):
-                    if d[self._stacking](r) in self._maskselection[self._stacking]:
-                        m = logical_and(m, self._usermask)
+                # flag application
+                mr = scan._getflagrow(r)
                 from numpy import ma, array
+                if mr:
+                    y = ma.masked_array(y,mask=mr)
+                else:
+                    m = scan._getmask(r)
+                    from numpy import logical_not, logical_and
+                    if self._maskselection and len(self._usermask) == len(m):
+                        if d[self._stacking](r) in self._maskselection[self._stacking]:
+                            m = logical_and(m, self._usermask)
+                    y = ma.masked_array(y,mask=logical_not(array(m,copy=False)))
+
                 x = array(scan._getabcissa(r))
                 if self._offset:
                     x += self._offset
-                y = ma.masked_array(y,mask=logical_not(array(m,copy=False)))
                 if self._minmaxx is not None:
                     s,e = self._slice_indeces(x)
                     x = x[s:e]
@@ -941,7 +984,7 @@ class asapplotter:
                 self._plotter.set_line(label=llbl)
                 plotit = self._plotter.plot
                 if self._hist: plotit = self._plotter.hist
-                if len(x) > 0:
+                if len(x) > 0 and not mr:
                     plotit(x,y)
                     xlim= self._minmaxx or [min(x),max(x)]
                     allxlim += xlim
@@ -953,37 +996,44 @@ class asapplotter:
                     ylim= self._minmaxy or []
                     allylim += ylim
                 stackcount += 1
+                a0=a
+                b0=b
                 # last in colour stack -> autoscale x
                 if stackcount == nstack and len(allxlim) > 0:
                     allxlim.sort()
                     self._plotter.subplots[panelcount-1]['axes'].set_xlim([allxlim[0],allxlim[-1]])
-                    # clear
-                    allxlim =[]
+                    if ganged:
+                        allxlim = [allxlim[0],allxlim[-1]]
+                    else:
+                        # clear
+                        allxlim =[]
 
             newpanel = False
-            a0=a
-            b0=b
+            #a0=a
+            #b0=b
             # ignore following rows
-            if (panelcount == n) and (stackcount == nstack):
+            if (panelcount == n and stackcount == nstack) or (r == nr-1):
                 # last panel -> autoscale y if ganged
-                if rcParams['plotter.ganged'] and len(allylim) > 0:
+                #if rcParams['plotter.ganged'] and len(allylim) > 0:
+                if ganged and len(allylim) > 0:
                     allylim.sort()
                     self._plotter.set_limits(ylim=[allylim[0],allylim[-1]])
                 break
             r+=1 # next row
-        ###-S
-        self._rowcount = r+1
-        self._panelcnt += panelcount
+
+        # save the current counter for multi-page plotting
+        self._startrow = r+1
+        self._ipanel += panelcount
         if self._plotter.figmgr.casabar:
-            if self._panelcnt >= nptot-1:
+            if self._ipanel >= nptot-1:
                 self._plotter.figmgr.casabar.disable_next()
             else:
                 self._plotter.figmgr.casabar.enable_next()
-            #if self._panelcnt - panelcount > 0:
-            #    self._plotter.figmgr.casabar.enable_prev()
-            #else:
-            #    self._plotter.figmgr.casabar.disable_prev()
-        ###-E
+            if self._ipanel + 1 - panelcount > 0:
+                self._plotter.figmgr.casabar.enable_prev()
+            else:
+                self._plotter.figmgr.casabar.disable_prev()
+
         #reset the selector to the scantable's original
         scan.set_selection(savesel)
 
@@ -1001,6 +1051,9 @@ class asapplotter:
         if len(lorders) > 0:
             lsorts = []
             for order in lorders:
+                if order == "r":
+                    # don't sort if row panelling/stacking
+                    return None
                 ssort = d0[order]
                 if ssort:
                     lsorts.append(ssort)
@@ -1038,15 +1091,20 @@ class asapplotter:
     def _get_selected_n(self, scan):
         d1 = {'b': scan.getbeamnos, 's': scan.getscannos,
              'i': scan.getifnos, 'p': scan.getpolnos, 't': scan.ncycle,
-             'r': scan.nrow, '_r': False}
+             'r': scan.nrow}#, '_r': False}
         d2 = { 'b': self._selection.get_beams(),
                's': self._selection.get_scans(),
                'i': self._selection.get_ifs(),
                'p': self._selection.get_pols(),
                't': self._selection.get_cycles(),
-               'r': False, '_r': 1}
+               'r': False}#, '_r': 1}
         n =  d2[self._panelling] or d1[self._panelling]()
         nstack = d2[self._stacking] or d1[self._stacking]()
+        # handle row panelling/stacking
+        if self._panelling == 'r':
+            nstack = 1
+        elif self._stacking == 'r':
+            n = 1
         return n,nstack
 
     def _get_label(self, scan, row, mode, userlabel=None):
