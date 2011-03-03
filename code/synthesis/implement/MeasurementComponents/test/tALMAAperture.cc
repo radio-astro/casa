@@ -97,8 +97,6 @@ int main()
 					 xform,                              
 					 63.5, 63.5);  
 
-      // reference position is in lower left corner; easier for beam inspection!
-      
       Vector<String> units(2); units = "deg";                       
       dirCoords.setWorldAxisUnits(units);                               
       
