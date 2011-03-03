@@ -77,14 +77,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     virtual String name() {return String("ALMA Aperture");};
 
-    virtual void applySky(ImageInterface<Float>& outputImages,
+    virtual void applySky(ImageInterface<Float>& outputImage,
 			  const VisBuffer& vb, 
 			  const Bool doSquint=True,
-			  const Int& cfKey=0);
-    virtual void applySky(ImageInterface<Complex>& outputImages,
+			  const Int& cfKey=0){
+      applySky(outputImage, vb, doSquint, cfKey, False);};
+    virtual void applySky(ImageInterface<Complex>& outputImage,
 			  const VisBuffer& vb, 
 			  const Bool doSquint=True,
-			  const Int& cfKey=0);
+			  const Int& cfKey=0){
+      applySky(outputImage, vb, doSquint, cfKey, False);};
+
+    void applySky(ImageInterface<Float>& outputImage,
+		  const VisBuffer& vb, 
+		  const Bool doSquint,
+		  const Int& cfKey,
+		  const Bool raytrace); // if True, use raytracing even if canned responses exist
+    void applySky(ImageInterface<Complex>& outputImage,
+		  const VisBuffer& vb, 
+		  const Bool doSquint,
+		  const Int& cfKey,
+		  const Bool raytrace); // if True, use raytracing even if canned responses exist
 
     virtual Vector<Int> vbRow2CFKeyMap(const VisBuffer& vb, Int& nUnique);
 

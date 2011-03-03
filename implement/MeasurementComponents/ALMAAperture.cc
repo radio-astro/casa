@@ -144,10 +144,11 @@ namespace casa{
 			                                           // rotated by the PA and regridded to the image
 			      const VisBuffer& vb, // for the parallactic angle
 			      const Bool doSquint,
-			      const Int& cfKey)
+			      const Int& cfKey,
+			      const Bool raytrace)
   {
 
-    if(getVisParams(vb)==-1){ // need to use ray tracing, cfKey is ignored
+    if(getVisParams(vb)==-1 || raytrace){ // need to use ray tracing, cfKey is ignored
       ALMACalcIlluminationConvFunc almaPB;
       Long cachesize=(HostInfo::memoryTotal(true)/8)*1024;
       almaPB.setMaximumCacheSize(cachesize);
@@ -218,14 +219,32 @@ namespace casa{
 	} 
       }
       cout << "Loaded " << nAntTypes << " images." << endl;
-      
+
+      // check if there are spectral and stokes axes in the output image
+      Int pIndex = outImage.coordinates().findCoordinate(Coordinate::STOKES);
+      if(pIndex==-1){
+	  ostringstream oss;
+	  oss << "Error: input image does not contain the necessary polarisation axis.";
+	  throw(SynthesisError(oss.str()));
+      }	
+      Int pSIndex = outImage.coordinates().findCoordinate(Coordinate::SPECTRAL);
+
       // identify polarisations in the response image and fill into respByPol(i)
       Int rIndex = respImage_p(0)->coordinates().findCoordinate(Coordinate::STOKES);
-      Int rAxis = rIndex+1;
+      Int rAxis = respImage_p(0)->coordinates().pixelAxes(rIndex)(0);
       Vector<Int> rStokes = respImage_p(0)->coordinates().stokesCoordinate(rIndex).stokes();
       IPosition rShape = respImage_p(0)->shape();
-      cout << "Resp. image shape " << rShape << endl;
-      uInt rNDim = rShape.size();
+      if( (nAntTypes>1) && rShape != respImage_p(1)->shape()){
+	ostringstream oss;
+	oss << "Error: response images for different antenna types (but otherwise identical parameters)"
+	    << endl << "need to have the same shape:"
+	    << "Resp. image 1 shape " << rShape << endl
+	    << "Resp. image 2 shape " << respImage_p(1)->shape() << endl;
+	throw(SynthesisError(oss.str()));
+      }	
+	  
+      const uInt rNDim = rShape.size();
+
       IPosition rSkyShape(rNDim,1);
       rSkyShape(0) = rShape(0);
       rSkyShape(1) = rShape(1);
@@ -246,19 +265,12 @@ namespace casa{
 	for(uInt iPol=0; iPol<nRPol; iPol++){
 	  IPosition start(rNDim,0);
 	  start(rAxis) = iPol;
-// 	  IPosition end(rNDim,0);
-// 	  end(0) = rShape(0)-1;
-// 	  end(1) = rShape(1)-1;
-// 	  end(rAxis) = iPol;
-// 	  Slicer s(start,end);
 	  respImage_p(i)->getSlice(respByPol(i)(iPol), start, rSkyShape); 
 	}
       }
 
       // identify polarizations in the input image, put them into polToDoIndex()
       Vector<Int> inStokes;
-      Int pIndex;
-      pIndex = outImage.coordinates().findCoordinate(Coordinate::STOKES);
       inStokes = outImage.coordinates().stokesCoordinate(pIndex).stokes();
       uInt nPol = inStokes.nelements();
       Vector<uInt> polToDoIndex(nPol);
@@ -288,34 +300,49 @@ namespace casa{
       }
 
       // Calculate the primary beam for the given baseline type for each polarization
-      ImageConvolver<Complex> iC;
       LogIO os(LogOrigin("ALMAAperture", "applySky", WHERE));
       
       CoordinateSystem dCoord = respImage_p(0)->coordinates(); // assume both response images have same coordsys
-      IPosition dShape = respImage_p(0)->shape();
-      dShape(rAxis) = nPol; // set the number of stokes pixels to that of the output image
-      TempImage<Complex> nearFinal(dShape, dCoord);
+      CoordinateSystem dCoordFinal(dCoord);
+      uInt rNDimFinal = rNDim;
+      IPosition dShapeFinal = respImage_p(0)->shape();
+      dShapeFinal(rAxis) = nPol; // set the number of stokes pixels to that of the output image
 
-      DirectionCoordinate dC = dCoord.directionCoordinate(0);
-      CoordinateSystem tempCoord;
-      tempCoord.addCoordinate(dC);
+      // check if we need to add a degenerate spectral axis to the response image
+      Int rSIndex = dCoord.findCoordinate(Coordinate::SPECTRAL);
+      if(rSIndex==-1 && pSIndex!=-1){// no spectral coordinate in resp. image but input has one
+	SpectralCoordinate sC;
+	dCoordFinal.addCoordinate(sC);
+	rSIndex = dCoordFinal.findCoordinate(Coordinate::SPECTRAL);
+	dShapeFinal.resize(4,True);
+	dShapeFinal(3)=1;
+	rNDimFinal +=1;
+      }
+      
+      TempImage<Complex> nearFinal(dShapeFinal, dCoordFinal);
 
       for(uInt iPol=0; iPol<nPol; iPol++){
 
-	Array<Complex> pB(respByPol(0)(polToDoIndex(iPol)).shape());
+	Array<Complex> pB( respByPol(0)(polToDoIndex(iPol)).shape() );
 
-	// multiply EFPs equivalent to convolution of AIFs, get primary beam
-	pB = respByPol(0)(polToDoIndex(iPol)) * respByPol(nAntTypes-1)(polToDoIndex(iPol));
+	// multiply EFPs (equivalent to convolution of AIFs) to get primary beam
+	if(doSquint){
+	  pB = respByPol(0)(polToDoIndex(iPol)) * respByPol(nAntTypes-1)(polToDoIndex(iPol));
+	}
+	else{
+	  pB = abs(respByPol(0)(polToDoIndex(iPol))) * abs(respByPol(nAntTypes-1)(polToDoIndex(iPol)));
+	}
 
 	//   rotate using par. angle
-	Array<Complex> rotPB;
+	Array<Complex> rotPB(pB.shape());
 	Double dAngleRad = getPA(vb);
-	SynthesisUtils::rotateComplexArray(os, pB, tempCoord, rotPB, 
+	cout << "PA is (rad) " << dAngleRad << endl;
+	SynthesisUtils::rotateComplexArray(os, pB, dCoord, rotPB, 
 					   dAngleRad, "LINEAR");
 	// now have the primary beam for polarization iPol in rotPB
       
 	// combine all PBs into one image
-	IPosition pos(rNDim,0);
+	IPosition pos(rNDimFinal,0);
 	pos(rAxis) = iPol;
 	nearFinal.putSlice(rotPB, pos);  
 
@@ -326,25 +353,74 @@ namespace casa{
       // the following mess is necessary since ImageRegrid does not work for Complex images
 
       Array<Complex> nearFinalArray = nearFinal.get();
-      Array<Complex> outArray = outImage.get();
 
       CoordinateSystem outCS(outImage.coordinates());
       Vector<Int> pixAxes=outCS.pixelAxes(outCS.findCoordinate(Coordinate::DIRECTION));
       IPosition whichOutPixelAxes(pixAxes);
 
-      TempImage<Float> inImage(nearFinalArray.shape(),dCoord);
-      TempImage<Float> tOutImage(outArray.shape(), outCS);
+      // get the world coordinates of the center of outImage
+      // and set the reference Value of inImage to it
+      Vector<Double> wCenterOut(2);
+      Vector<Double> pCenterOut(2);
+      pCenterOut(0) = (outImage.shape()(whichOutPixelAxes(0))-1.)/2.;
+      pCenterOut(1) = (outImage.shape()(whichOutPixelAxes(1))-1.)/2.;
+      Vector<String> wAU = outCS.directionCoordinate(0).worldAxisUnits();
+      outCS.directionCoordinate(0).toWorld(wCenterOut, pCenterOut);
+      //cout << "pixel center " << pCenterOut << " world center " << wCenterOut << " " << wAU(0) << endl;
+
+      uInt dirCoordIndex = dCoordFinal.findCoordinate(Coordinate::DIRECTION);
+      DirectionCoordinate dCoordFinalDir = dCoordFinal.directionCoordinate(0);
+      Vector<String> wAUI = dCoordFinalDir.worldAxisUnits();
+      if(!(wAU(0)==wAUI(0))){
+	Unit uIn(wAU(0));
+	Unit uOut(wAUI(0));
+	Quantum<Double> q0(wCenterOut(0), uIn);
+	Quantum<Double> q1(wCenterOut(1), uIn);
+	wCenterOut(0) = q0.getValue(uOut);
+	wCenterOut(1) = q1.getValue(uOut);
+      }
+      cout << "pixel center " << pCenterOut << " world center " << wCenterOut << " " << wAUI(0) << endl;
+      dCoordFinalDir.setReferenceValue(wCenterOut);
+      Unit uIn(wAU(0));
+      Unit uOut("deg");
+      Quantum<Double> q0(wCenterOut(0), uIn);
+      Quantum<Double> q1(wCenterOut(1), uIn);
+      wCenterOut(0) = q0.getValue(uOut);
+      wCenterOut(1) = q1.getValue(uOut);
+      cout << "pixel center " << pCenterOut << " world center " << wCenterOut << " deg" << endl;
+
+      // Scale response image with frequency
+      Unit uHz("Hz");
+      Double refFreqHz = MFrequency::Convert(refFreq, MFrequency::TOPO)().get(uHz).getValue();
+      Double nomFreqHz = MFrequency::Convert(respImageNomFreq(0), MFrequency::TOPO)().get(uHz).getValue();
+      if(refFreqHz<=0.){
+	 throw(SynthesisError("Reference frequency in input image is <=0."));
+      }
+      Double fScale = nomFreqHz/refFreqHz;
+      Vector<Double> newIncr = dCoordFinalDir.increment();
+      cout << "increment before scaling " << newIncr << ", after scaling " << newIncr * fScale << endl;
+      dCoordFinalDir.setIncrement(newIncr * fScale);
+
+      dCoordFinal.replaceCoordinate(dCoordFinalDir, dirCoordIndex);
+
+      dCoordFinal.setObsInfo(outCS.obsInfo()); // set the same obs info
+
+      TempImage<Float> inImage(nearFinalArray.shape(),dCoordFinal);
+      TempImage<Float> tOutImage(outImage.shape(), outCS);
+      Array<Complex> outArray(outImage.shape(), Complex(0.,0.));
+
       ImageRegrid<Float> iR;
+      //iR.showDebugInfo(1);
 
       inImage.copyData(LatticeExpr<Float>(real(ArrayLattice<Complex>(nearFinalArray))));
       tOutImage.set(0.0);
-
-      iR.regrid(tOutImage, Interpolate2D::LINEAR, whichOutPixelAxes, inImage);
+      
+      iR.regrid(tOutImage, Interpolate2D::LINEAR, whichOutPixelAxes, inImage); 
       setReal(outArray,tOutImage.get());
-
+      
       inImage.copyData(LatticeExpr<Float>(imag(ArrayLattice<Complex>(nearFinalArray))));
       tOutImage.set(0.0);
-
+      
       iR.regrid(tOutImage, Interpolate2D::LINEAR, whichOutPixelAxes, inImage);
       setImag(outArray,tOutImage.get());
 
@@ -356,22 +432,26 @@ namespace casa{
       }
       respImage_p.resize(0);	  
 
-    }
+    }  
   }
 
-  void ALMAAperture::applySky(ImageInterface<Float>& outImages,
+  void ALMAAperture::applySky(ImageInterface<Float>& outImage,
 			      const VisBuffer& vb, 
 			      const Bool doSquint,
-			      const Int& cfKey)
+			      const Int& cfKey,
+			      const Bool raytrace)
   {
-    if(getVisParams(vb)==-1){ // need to use ray tracing
+    if(getVisParams(vb)==-1 || raytrace){ // need to use ray tracing
       ALMACalcIlluminationConvFunc almaPB;
       Long cachesize=(HostInfo::memoryTotal(true)/8)*1024;
       almaPB.setMaximumCacheSize(cachesize);
-      almaPB.applyPB(outImages, vb, doSquint);
+      almaPB.applyPB(outImage, vb, doSquint);
     }
     else{ // use canned antenna responses
-
+      TempImage<Complex> tI(outImage.shape(), outImage.coordinates());
+      tI.set(Complex(0.,0.));
+      applySky(tI, vb, doSquint, cfKey, False);
+      outImage.put(real(abs(tI.get())));
     }
   }
 
