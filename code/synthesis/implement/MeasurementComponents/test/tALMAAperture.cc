@@ -73,15 +73,30 @@ int main()
 
     CoordinateSystem coordsys;
     CoordinateSystem coordsys3;
+    CoordinateSystem coordsys3Big;
+    CoordinateSystem coordsys3Small;
     {
       Matrix<Double> xform(2,2);                                    
       xform = 0.0; xform.diagonal() = 1.0;                          
       DirectionCoordinate dirCoords(MDirection::J2000,                  
 				    Projection(Projection::SIN),        
 				    135*C::pi/180.0, 60*C::pi/180.0,    
-				    -1*C::pi/180.0/3600.0, 1*C::pi/180.0/3600.0,        
+				    -0.5*C::pi/180.0/3600.0, 0.5*C::pi/180.0/3600.0,        
 				    xform,                              
-				    0, 0);  
+				    63.5, 63.5);  
+      DirectionCoordinate dirCoordsBig(MDirection::J2000,                  
+				       Projection(Projection::SIN),        
+				       135*C::pi/180.0, 60*C::pi/180.0,    
+				       -1.*C::pi/180.0/3600.0, 1.*C::pi/180.0/3600.0,        
+				       xform,                              
+				       63.5, 63.5);  
+      DirectionCoordinate dirCoordsSmall(MDirection::J2000,                  
+					 Projection(Projection::SIN),        
+					 135*C::pi/180.0, 60*C::pi/180.0,    
+					 -0.1*C::pi/180.0/3600.0, 0.1*C::pi/180.0/3600.0,        
+					 xform,                              
+					 63.5, 63.5);  
+
       // reference position is in lower left corner; easier for beam inspection!
       
       Vector<String> units(2); units = "deg";                       
@@ -92,8 +107,12 @@ int main()
       Vector<Int> iquv(1);                                         
       iquv(0) = Stokes::I;
       StokesCoordinate stokesCoordsBad(iquv);	
-      iquv(0) = Stokes::XX;
-      StokesCoordinate stokesCoordsGood(iquv);	
+      Vector<Int> stoks(4);
+      stoks(0) = Stokes::XX;
+      stoks(1) = Stokes::XY;
+      stoks(2) = Stokes::YX;
+      stoks(3) = Stokes::YY;
+      StokesCoordinate stokesCoordsGood(stoks);	
       
       // SpectralCoordinate
       SpectralCoordinate spectralCoords(MFrequency::TOPO,           
@@ -123,19 +142,28 @@ int main()
       coordsys3.addCoordinate(dirCoords);
       coordsys3.addCoordinate(stokesCoordsGood);
       coordsys3.addCoordinate(spectralCoords3);      
+
+      coordsys3Big.addCoordinate(dirCoordsBig);
+      coordsys3Big.addCoordinate(stokesCoordsGood);
+      coordsys3Big.addCoordinate(spectralCoords3);      
+
+      coordsys3Small.addCoordinate(dirCoordsSmall);
+      coordsys3Small.addCoordinate(stokesCoordsGood);
+      coordsys3Small.addCoordinate(spectralCoords3);      
     }
     
     String name("tab1");
     TiledShape ts(IPosition(4,128,128,1,1));
+    TiledShape ts2(IPosition(4,128,128,4,1));
 
     PagedImage<Complex> im1(ts, coordsys, name);
     PagedImage<Float> im2(ts, coordsys, "tab2");
-    PagedImage<Float> im3(ts, coordsys3, "tab3");
-    PagedImage<Float> im4(ts, coordsys3, "tab4");
+    PagedImage<Complex> im3(ts2, coordsys3, "tab3");
+    PagedImage<Float> im4(ts2, coordsys3, "tab4");
 
     im1.set(Complex(1.0,1.0));
     im2.set(0.0);
-    im3.set(1.0);
+    im3.set(Complex(1.0,1.0));
     im4.set(0.0);
     
     ///////////////////////////////////////////
@@ -247,9 +275,9 @@ int main()
 	  }
 	  count++;
 	  // test reset
-	  if(count==10) apB.resetAntTypeMap();
-	  // ten rounds is enough
-	  if(count>10) break;
+	  if(count==5) apB.resetAntTypeMap();
+	  // five rounds is enough
+	  if(count>5) break;
 	}
 	
 	cout << "\nSecond tour through the MS, testing getVisParams and applySky" << endl;
@@ -282,17 +310,137 @@ int main()
 	  }
 	  count++;
 	  // test reset
-	  if(count==10) apB.resetAntTypeMap();
-	  // ten rounds is enough
-	  if(count>10) break;
+	  if(count==5) apB.resetAntTypeMap();
+	  // five rounds is enough
+	  if(count>5) break;
 	}
+
+	cout << endl << "******** ApplySky to unity image with squint and without ***********" << endl << endl;
+
+	count = 0;
+	Int count2 = 0;
+
+	for(vi.originChunks();vi.moreChunks();vi.nextChunk()) {
+	  cout << "next chunk" << endl;
+	  for(vi.origin();vi.more();vi++) {
+
+	    if(vb.spectralWindow()<4){ // i.e. not a WVR SPW for this dataset
+	      if(count2==0){ // first occurence
+		Vector<ALMAAntennaType> aTs = apB.antTypeList(vb);
+		Int cfKey = ALMAAperture::cFKeyFromAntennaTypes(aTs(0), aTs(0));
+		Int cfKey2 = ALMAAperture::cFKeyFromAntennaTypes(aTs(0), aTs(1));
+		Int cfKey3 = ALMAAperture::cFKeyFromAntennaTypes(aTs(1), aTs(1));
+		Int cfKey4 = ALMAAperture::cFKeyFromAntennaTypes(ALMAAperture::antTypeFromName("DV"),ALMAAperture::antTypeFromName("DA"));
+		Int cfKey5 = ALMAAperture::cFKeyFromAntennaTypes(ALMAAperture::antTypeFromName("DA"),ALMAAperture::antTypeFromName("DA"));
+
+		PagedImage<Complex> im5(ts2, coordsys3, "pb_squintDVDV");
+		im5.set(Complex(1.0,1.0));
+		apB.applySky(im5, vb, True, cfKey);
+		
+		PagedImage<Complex> im6(ts2, coordsys3, "pb_nosquintDVDV");
+		im6.set(Complex(1.0,1.0));
+		apB.applySky(im6, vb, False, cfKey);
+		
+		PagedImage<Complex> im7(ts2, coordsys3, "pb_squintDVPM");
+		im7.set(Complex(1.0,1.0));
+		apB.applySky(im7, vb, True, cfKey2);
+		
+		PagedImage<Complex> im8(ts2, coordsys3, "pb_nosquintDVPM");
+		im8.set(Complex(1.0,1.0));
+		apB.applySky(im8, vb, False, cfKey2);
+		
+		PagedImage<Complex> im9(ts2, coordsys3, "pb_squintPMPM");
+		im9.set(Complex(1.0,1.0));
+		apB.applySky(im9, vb, True, cfKey3);
+		
+		PagedImage<Complex> im10(ts2, coordsys3, "pb_nosquintPMPM");
+		im10.set(Complex(1.0,1.0));
+		apB.applySky(im10, vb, False, cfKey3);
+		
+		PagedImage<Complex> im11(ts2, coordsys3, "pb_squintDVDA");
+		im11.set(Complex(1.0,1.0));
+		apB.applySky(im11, vb, True, cfKey4);
+		
+		PagedImage<Complex> im12(ts2, coordsys3, "pb_squintDADA");
+		im12.set(Complex(1.0,1.0));
+		apB.applySky(im12, vb, True, cfKey5);
+		
+		PagedImage<Complex> im13(ts2, coordsys3Big, "pb_squintDVDABig");
+		im13.set(Complex(1.0,1.0));
+		apB.applySky(im13, vb, True, cfKey4);
+		
+		PagedImage<Complex> im14(ts2, coordsys3Small, "pb_squintDVDASmall");
+		im14.set(Complex(1.0,1.0));
+		apB.applySky(im14, vb, True, cfKey4);
+
+		count2++;
+		
+	      }
+	      else if(count2>200 && vb.fieldId()!=1){ // pick later occurance (to vary PA) but avoid Mars because it has invalid coords 
+
+		Vector<ALMAAntennaType> aTs = apB.antTypeList(vb);
+		Int cfKey = ALMAAperture::cFKeyFromAntennaTypes(aTs(0), aTs(0));
+		Int cfKey2 = ALMAAperture::cFKeyFromAntennaTypes(aTs(0), aTs(1));
+		Int cfKey3 = ALMAAperture::cFKeyFromAntennaTypes(aTs(1), aTs(1));
+		Int cfKey4 = ALMAAperture::cFKeyFromAntennaTypes(ALMAAperture::antTypeFromName("DV"),ALMAAperture::antTypeFromName("DA"));
+		Int cfKey5 = ALMAAperture::cFKeyFromAntennaTypes(ALMAAperture::antTypeFromName("DA"),ALMAAperture::antTypeFromName("DA"));
+		
+		PagedImage<Complex> im15(ts2, coordsys3, "pb2_squintDVDA");
+		im15.set(Complex(1.0,1.0));
+		apB.applySky(im15, vb, True, cfKey4);
+		
+		PagedImage<Complex> im16(ts2, coordsys3, "pb2_squintDADA");
+		im16.set(Complex(1.0,1.0));
+		apB.applySky(im16, vb, True, cfKey5);
+		
+		PagedImage<Complex> im17(ts2, coordsys3Big, "pb2_squintDVDABig");
+		im17.set(Complex(1.0,1.0));
+		apB.applySky(im17, vb, True, cfKey4);
+		
+		PagedImage<Complex> im18(ts2, coordsys3Small, "pb2_squintDVDASmall");
+		im18.set(Complex(1.0,1.0));
+		apB.applySky(im18, vb, True, cfKey4);
+
+		////////// with ray tracing
+
+		cout << "Now using ray tracing ..." << endl;
+
+		PagedImage<Complex> im19(ts2, coordsys3, "pb2_squintDVDAray");
+		im19.set(Complex(1.0,1.0));
+		apB.applySky(im19, vb, True, cfKey4, True);
+		
+		PagedImage<Complex> im20(ts2, coordsys3, "pb2_squintDADAray");
+		im20.set(Complex(1.0,1.0));
+		apB.applySky(im20, vb, True, cfKey5, True);
+		
+		PagedImage<Complex> im21(ts2, coordsys3Big, "pb2_squintDVDABigray");
+		im21.set(Complex(1.0,1.0));
+		apB.applySky(im21, vb, True, cfKey4, True);
+		
+		PagedImage<Complex> im22(ts2, coordsys3Small, "pb2_squintDVDASmallray");
+		im22.set(Complex(1.0,1.0));
+		apB.applySky(im22, vb, True, cfKey4, True);
+
+		count2++;		
+
+		count = -1;
+	      }
+	      else{
+		count2++;
+	      }
+	    }
+	  }
+	  if(count<0) break;
+	  count++;
+	}
+
       }
 
       aa.destroyAntResp();      
       cout << "new ALMAAperture, should initialise the response table again" << endl;
       ALMAAperture apC;
       cout << apC.name() << endl;
-      
+
     } // end tests
 
   } catch (AipsError x) {
