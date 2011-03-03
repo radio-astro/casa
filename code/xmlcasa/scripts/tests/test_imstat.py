@@ -57,7 +57,7 @@ class imstat_test(unittest.TestCase):
         pixperbeam = qa.div(qa.mul(major,minor),(qa.mul(rainc,decinc)))['value']*(math.pi/(4*math.log(2)))
         got = stats['flux'][0]
         expected = (mean*npts/pixperbeam)[0]
-        self.assertTrue(abs(got - expected) < 1e-13)
+        self.assertTrue(abs(got - expected) < 1e-11)
  
     def test002(self):
         """ Test 2: test position format for 150 arcsec pixel image is correct """
