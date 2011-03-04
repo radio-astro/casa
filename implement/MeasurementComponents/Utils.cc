@@ -517,7 +517,8 @@ namespace casa{
 					  CoordinateSystem& inCS,
 					  Array<Complex>& outArray,
 					  Double dAngleRad,
-					  String interpMethod)
+					  String interpMethod,
+					  Bool modifyInCS)
   {
 //     logio << LogOrigin("SynthesisUtils", "rotateComplexArray")
 // 	  << "Rotating CF using " << interpMethod << " interpolation." 
@@ -537,11 +538,14 @@ namespace casa{
     Int coordInd = -1;
     // Extract LINRAR coords from inCS.
     // Extract axes2
-    Vector<Double> refPix = inCS.referencePixel();
-    refPix(0) = (inArray.shape()(0)+1)/2;
-    refPix(1) = (inArray.shape()(1)+1)/2;
 
-    inCS.setReferencePixel(refPix);
+    if(modifyInCS){
+      Vector<Double> refPix = inCS.referencePixel();
+      refPix(0) = (inArray.shape()(0)+1)/2;
+      refPix(1) = (inArray.shape()(1)+1)/2;
+      inCS.setReferencePixel(refPix);
+    }
+
     coordInd = inCS.findCoordinate(Coordinate::LINEAR);
     Bool haveLinear = True;
 

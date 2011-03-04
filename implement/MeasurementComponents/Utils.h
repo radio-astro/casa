@@ -63,7 +63,8 @@ namespace casa
 			    CoordinateSystem& inCS,
 			    Array<Complex>& outArray, 
 			    Double dAngleRad, 
-			    String interpMathod=String("CUBIC"));
+			    String interpMathod=String("CUBIC"),
+			    Bool modifyInCS=True);
     void findLatticeMax(const Array<Complex>& lattice,
 			Vector<Float>& maxAbs,
 			Vector<IPosition>& posMaxAbs) ;

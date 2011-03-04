@@ -54,8 +54,8 @@ namespace casa{
   ALMACalcIlluminationConvFunc::ALMACalcIlluminationConvFunc():IlluminationConvFunc()
   {
     ap.oversamp = 3;
-    ap.x0=-13.0; ap.y0=-13.0;
-    ap.dx=0.5; ap.dy=0.5;
+    ap.x0=-6.5; ap.y0=-6.5;
+    ap.dx=0.25; ap.dy=0.25;
 
     ap.nx=ap.ny=104;
     ap.pa=lastPA=18000000;
@@ -138,29 +138,16 @@ namespace casa{
     Float pa;
     if (bandID != -1) ap.band = (ALMABeamCalcBandCode)bandID;
     AlwaysAssert(ap.band>=-1, AipsError);
-    // {
-    //   Vector<Float> antPA = vb.feed_pa(timeValue);
-    //   pa = sum(antPA)/(antPA.nelements()-1);
-    // }
-    //
+
     pa = getPA(vb);
-    //
-    // Till we understand and fix the origin of 180 deg. flip in EALMA
-    // data, rotate the PA by 180 deg. only for EALMA.
-    //
+
     String telescopeName=vb.msColumns().observation().telescopeName().getColumn()[0];
-    // if (telescopeName == "EALMA") 
-    //   {
-    // 	logIO << "Fixing PA computation for EALMA"  << LogIO::WARN;
-    // 	pa += M_PI;
-    //   }
-    // pa=0.0;
+
     Float Freq, freqLo, freqHi;
     Vector<Double> chanFreq = vb.frequency();
 
     if (lastPA == pa)
       {
-	//	LogIO logIO;
 	logIO << "Your CPU is being used to do computations for the same PA as for the previous call.  Report this!" 
 	      << LogIO::NORMAL1;
       }
