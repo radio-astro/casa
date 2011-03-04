@@ -125,7 +125,7 @@ mycyclefactor = 1.5
 myminpb = 0.2
 
 #Sim params
-myflux = 1.0
+myflux = 1000000.0
 mynoise = ""
 #mynoise = "0.019Jy"
 # EVLA X-band SEFD is 300Jy (1Hz,1sec) so 50MHz,5sec would be 19mJy per vis
@@ -600,39 +600,34 @@ mypath = os.environ.get('CASAPATH')
 walltime = (endTime - startTime)
 cputime = (endProc - startProc)
 
-# Print to terminal
-print 'Running '+myvers+' on host '+myhost
-print '  at '+datestring
-print '  using '+mypath
-#
-# Save in logfile
+# Print to terminal, and also save most things to a logfile
 outfile = 'out.'+prefix+'.'+datestring+'.log'
-logfile=open(outfile,'w')
+logfile = open(outfile,'w')
 
-print >>logfile,'Running '+myvers+' on host '+myhost
-print >>logfile,'  at '+datestring
-print >>logfile,'  using '+mypath
+def lprint(msg, lfile):
+    """
+    Prints msg to both stdout and lfile.
+    """
+    print msg
+    print >> logfile, msg
+    
+lprint('Running '+myvers+' on host '+myhost, logfile)
+lprint('  at '+datestring, logfile)
+lprint('  using '+mypath, logfile)
 
 #
 ##########################################################################
 # Write some more stuff to logfile
-print >>logfile,''
-print >>logfile,'---'
-print >>logfile,'Script version: '+params['version']
-print >>logfile,'User set parameters used in execution:'
-print >>logfile,'---'
-print ''
-print '---'
-print 'Script version: '+params['version']
-print 'User set parameters used in execution:'
-print '---'
+lprint('', logfile)
+lprint('---', logfile)
+lprint('Script version: '+params['version'], logfile)
+lprint('User set parameters used in execution:', logfile)
+lprint('---', logfile)
 
 for keys in params['user'].keys():
-    print >>logfile,'  %s  =  %s ' % ( keys, params['user'][keys] )
-    print '  %s  =  %s ' % ( keys, params['user'][keys] )
+    lprint('  %s  =  %s ' % ( keys, params['user'][keys] ), logfile)
 
-print >>logfile,''
-print ''
+lprint('', logfile)
 
 #
 ##########################################################################
@@ -952,39 +947,26 @@ testresults = {}
 testcompresults = {}
 
 if regression['exist']:
-    print >>logfile,'---'
-    print >>logfile,'Regression versus previous values:'
-    print >>logfile,'---'
-    print >>logfile,"  Regression results filled from "+regressfile
-    print >>logfile,"  Regression from version "+regression['version']+" on "+regression['date']
-    print >>logfile,"  Regression platform "+regression['host']+" using "+regression['aipspath']
-    print '---'
-    print 'Regression versus previous values:'
-    print '---'
-
-    print "  Regression results filled from "+regressfile
-    print "  Regression from version "+regression['version']+" on "+regression['date']
-    print "  Regression platform "+regression['host']+" using "+regression['aipspath']
-    
+    lprint('---', logfile)
+    lprint('Regression versus previous values:', logfile)
+    lprint('---', logfile)
+    lprint("  Regression results filled from "+regressfile, logfile)
+    lprint("  Regression from version " + regression['version'] + " on " +
+           regression['date'], logfile)
+    lprint("  Regression platform " + regression['host'] + " using " +
+           regression['aipspath'], logfile)    
     final_status = 'Passed'
 else:
     # Just print results
-    print >>logfile,'---'
-    print >>logfile,'Results of imaging:'
-    print >>logfile,'---'
-    print >>logfile,"  No previous regression file"
-    print '---'
-    print 'Results of imaging:'
-    print '---'
-    print "  No previous regression file"
-
+    lprint('---', logfile)
+    lprint('Results of imaging:', logfile)
+    lprint('---', logfile)
+    lprint("  No previous regression file", logfile)
 
 # Do the component results
 for comp in compnames:
-    print ""
-    print " Component "+comp+" :"
-    print >>logfile,""
-    print >>logfile," Component "+comp+" :"
+    lprint("", logfile)
+    lprint(" Component " + comp + " :", logfile)
 
     if regression['exist']:
         # Set up storage for regression results
@@ -1012,7 +994,7 @@ for comp in compnames:
                     else:
                         new_diff = new_val - prev_val
                         
-                    if abs(new_diff)>res['tol']:
+                    if abs(new_diff) > res['tol']:
                         new_status = 'Failed'
                     else:
                         new_status = 'Passed'
@@ -1039,23 +1021,25 @@ for comp in compnames:
             # Save results
             testcompresults[comp][keys] = testres
                             
-            # Print results
-            print '--%30s : %12.6f was %12.6f %4s %12.6f (%6s) %s ' % ( res['name'], testres['value'], testres['prev'], testres['op'], testres['diff'], testres['status'], testres['test'] )
-            print >>logfile,'--%30s : %12.6f was %12.6f %4s %12.6f (%6s) %s ' % ( res['name'], testres['value'], testres['prev'], testres['op'], testres['diff'], testres['status'], testres['test'] )
-                
             if testres['status']=='Failed':
                 final_status = 'Failed'
                 
+            # Print results
+            lprint('--%30s : %12.6f was %12.6f %4s %12.6f (%6s) %s ' % (res['name'],
+                                                                       testres['value'],
+                                                                       testres['prev'],
+                                                                       testres['op'],
+                                                                       testres['diff'],
+                                                                       testres['status'],
+                                                                       testres['test']),
+                   logfile)
         else:
             # Just print results
-            print '--%30s : %12.6f ' % ( res['name'], res['value'] )
-            print >>logfile,'--%30s : %12.6f ' % ( res['name'], res['value'] )
-
+            lprint('--%30s : %12.6f ' % ( res['name'], res['value'] ), logfile)
+            
 # Do the overall results
-print ""
-print " Whole image :"
-print >>logfile,""
-print >>logfile," Whole image :"
+lprint("", logfile)
+lprint(" Whole image :", logfile)
 for keys in resultlist:
     res = results[keys]
     new_val = res['value']
@@ -1097,15 +1081,20 @@ for keys in resultlist:
         testresults[keys] = testres
 
         # Print results
-        print '--%30s : %12.6f was %12.6f %4s %12.6f (%6s) %s ' % ( res['name'], testres['value'], testres['prev'], testres['op'], testres['diff'], testres['status'], testres['test'] )
-        print >>logfile,'--%30s : %12.6f was %12.6f %4s %12.6f (%6s) %s ' % ( res['name'], testres['value'], testres['prev'], testres['op'], testres['diff'], testres['status'], testres['test'] )
+        lprint('--%30s : %12.6f was %12.6f %4s %12.6f (%6s) %s ' % (res['name'],
+                                                                    testres['value'],
+                                                                    testres['prev'],
+                                                                    testres['op'],
+                                                                    testres['diff'],
+                                                                    testres['status'],
+                                                                    testres['test'] ),
+               logfile)
         if testres['status']=='Failed':
             final_status = 'Failed'
 
     else:
         # Just print the current results
-        print '--%30s : %12.6f ' % ( res['name'], res['value'] )
-        print >>logfile,'--%30s : %12.6f ' % ( res['name'], res['value'] )
+        lprint('--%30s : %12.6f ' % ( res['name'], res['value'] ), logfile)
     
 # Done
                     
@@ -1114,57 +1103,42 @@ if regression['exist']:
     if (final_status == 'Passed'):
         regstate=True
         print >>logfile,'---'
-        print >>logfile,'Passed Regression test for '+mydataset
+        lprint('Passed Regression test for ' + mydataset, logfile)
         print >>logfile,'---'
-        print 'Passed Regression test for '+mydataset
     else:
         regstate=False
-        print >>logfile,'----FAILED Regression test for '+mydataset
-        print '----FAILED Regression test for '+mydataset
+        lprint('----FAILED Regression test for ' + mydataset, logfile)
         
     # Write these regression test results to the dictionary
     new_regression['testresults'] = testresults
     new_regression['testcompresults'] = testcompresults
 else:
     regstate=False
-    print >>logfile,'----Unable to complete regression test for '+mydataset
-    print '----Unable to complete regression test for '+mydataset
+    lprint('----Unable to complete regression test for '+ mydataset, logfile)
 
 #
 ##########################################################################
 # Final stats and timing
 
-print ''
-print '********* Benchmarking *************************'
-print '*                                              *'
-print 'Total wall clock time was: %10.3f ' % total['wall']
-print 'Total CPU        time was: %10.3f ' % total['cpu']
-print 'Raw processing rate MB/s was: %8.1f ' % total['rate_raw']
-print 'MS  processing rate MB/s was: %8.1f ' % total['rate_ms']
-print ''
-print '* Breakdown:                                   *'
-
-print >>logfile,''
-print >>logfile,'********* Benchmarking *************************'
-print >>logfile,'*                                              *'
-print >>logfile,'Total wall clock time was: %10.3f ' % total['wall']
-print >>logfile,'Total CPU        time was: %10.3f ' % total['cpu']
-print >>logfile,'Raw processing rate MB/s was: %8.1f ' % total['rate_raw']
-print >>logfile,'MS  processing rate MB/s was: %8.1f ' % total['rate_ms']
-print >>logfile,''
-print >>logfile,'* Breakdown:                                   *'
+lprint('', logfile)
+lprint('********* Benchmarking *************************', logfile)
+lprint('*                                              *', logfile)
+lprint('Total wall clock time was: %10.3f ' % total['wall'], logfile)
+lprint('Total CPU        time was: %10.3f ' % total['cpu'], logfile)
+lprint('Raw processing rate MB/s was: %8.1f ' % total['rate_raw'], logfile)
+lprint('MS  processing rate MB/s was: %8.1f ' % total['rate_ms'], logfile)
+lprint('', logfile)
+lprint('* Breakdown:                                   *', logfile)
 
 for i in range(nstages):
-    print '* %16s * time was: %10.3f ' % tuple(stages[i])
-    print >>logfile,'* %16s * time was: %10.3f ' % tuple(stages[i])
+    lprint('* %16s * time was: %10.3f ' % tuple(stages[i]), logfile)
 
-print '************************************************'
-print >>logfile,'************************************************'
+lprint('************************************************', logfile)
 if regression['exist']:
-    print 'Previous wall time was %10.3f sec on %s ' % ( regression['timing']['total']['wall'], regression['host'] )
-    print 'Previous CPU  time was %10.3f sec on %s ' % ( regression['timing']['total']['cpu'], regression['host'] )
-    print >>logfile,'Previous wall time was %10.3f sec on %s ' % ( regression['timing']['total']['wall'], regression['host'] )
-    print >>logfile,'Previous CPU  time was %10.3f sec on %s ' % ( regression['timing']['total']['cpu'], regression['host'] )
+    lprint('Previous wall time was %10.3f sec on %s ' %
+           (regression['timing']['total']['wall'], regression['host'] ), logfile)
+    lprint('Previous CPU  time was %10.3f sec on %s ' %
+           (regression['timing']['total']['cpu'], regression['host'] ), logfile)
 
 #
 ##########################################################################
@@ -1190,13 +1164,11 @@ print ""
 # polmodel = u.load()
 # f.close()
 
-print >>logfile,""
-print >>logfile,"Done with "+mydataset
+lprint("", logfile)
+lprint("Done with " + mydataset, logfile)
 
 logfile.close()
 print "Results are in "+outfile
 
-print ""
-print "Done with "+mydataset
 #
 ##########################################################################

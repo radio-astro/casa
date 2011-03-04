@@ -1306,11 +1306,9 @@ def imagepoltest(which=None):
 # Get on with it
 #
 note ('', priority='WARN', origin='imagepoltest_regression.py')
-note ('These tests include forced errors.  If the logger GUI is active ',
+note ('These tests include intentional errors.  You should expect to see error messages in the log.',
       priority='WARN', origin='imagepoltest.py')
-note ('you should expect to see Red Boxes Of Death (RBOD) with many errors',
-      priority='WARN', origin='imagepoltest.py')
-note ('If the test finally returns T, then it has succeeded\n\n',
+note ('If the test finally returns True, then it has succeeded\n\n',
       priority='WARN', origin='imagepoltest.py')
 note ('', priority='WARN', origin='imagepoltest.py')
 #
