@@ -714,7 +714,7 @@ C
                                     griduvw(1)=(iu)/(scale(1)*sampling)
                                     griduvw(2)=(iv)/(scale(2)*sampling)
                                     ii = PolnPlane
-                                    ii=apol
+c                                    ii=apol
                                     ra1 = raoff(ii,1,ant1(irow)+1)
                                     ra2 = raoff(ii,1,ant2(irow)+1)
                                     dec1= decoff(ii,1,ant1(irow)+1)
