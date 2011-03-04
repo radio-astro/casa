@@ -83,19 +83,19 @@ int main()
 				    135*C::pi/180.0, 60*C::pi/180.0,    
 				    -0.5*C::pi/180.0/3600.0, 0.5*C::pi/180.0/3600.0,        
 				    xform,                              
-				    63.5, 63.5);  
+				    64., 64.);  
       DirectionCoordinate dirCoordsBig(MDirection::J2000,                  
 				       Projection(Projection::SIN),        
 				       135*C::pi/180.0, 60*C::pi/180.0,    
 				       -1.*C::pi/180.0/3600.0, 1.*C::pi/180.0/3600.0,        
 				       xform,                              
-				       63.5, 63.5);  
+				       64., 64.);  
       DirectionCoordinate dirCoordsSmall(MDirection::J2000,                  
 					 Projection(Projection::SIN),        
 					 135*C::pi/180.0, 60*C::pi/180.0,    
 					 -0.1*C::pi/180.0/3600.0, 0.1*C::pi/180.0/3600.0,        
 					 xform,                              
-					 63.5, 63.5);  
+					 64., 64.);  
 
       Vector<String> units(2); units = "deg";                       
       dirCoords.setWorldAxisUnits(units);                               
@@ -406,10 +406,6 @@ int main()
 		PagedImage<Complex> im19(ts2, coordsys3, "pb2_squintDVDAray");
 		im19.set(Complex(1.0,1.0));
 		apB.applySky(im19, vb, True, cfKey4, True);
-		
-		PagedImage<Complex> im20(ts2, coordsys3, "pb2_squintDADAray");
-		im20.set(Complex(1.0,1.0));
-		apB.applySky(im20, vb, True, cfKey5, True);
 		
 		PagedImage<Complex> im21(ts2, coordsys3Big, "pb2_squintDVDABigray");
 		im21.set(Complex(1.0,1.0));

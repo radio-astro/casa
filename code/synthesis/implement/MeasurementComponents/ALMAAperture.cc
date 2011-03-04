@@ -50,13 +50,12 @@ namespace casa{
     haveCannedResponses_p = True;
     
     if(!aR_p){
-      cout << "new antenna responses object" << endl;
       aR_p = new AntennaResponses();
     }
 
     if(!aR_p->isInit()){ // the shared antenna responses object was not yet initialised
 
-      cout << "initialising antenna responses" << endl;
+      cout << "Initialising antenna responses ..." << endl;
 
       String antRespPath;
       if(!MeasTable::AntennaResponsesPath(antRespPath, "ALMA")) {
@@ -174,7 +173,7 @@ namespace casa{
       MDirection obsDir = vb.msColumns().field().phaseDirMeas(vb.fieldId()); 
 
       for(uInt i=0; i<nAntTypes; i++){
-	cout << "Testing for ant type \"" << antTypeStrFromType(aTypes(i)) << "\", freq " 
+	cout << "Looking for ant type \"" << antTypeStrFromType(aTypes(i)) << "\", freq " 
 	     << refFreq.get(Unit("Hz")).getValue() << " Hz" << endl;
 	if(!aR_p->getImageName(respImageName(i),
 			       respImageChannel(i),
@@ -303,6 +302,7 @@ namespace casa{
       LogIO os(LogOrigin("ALMAAperture", "applySky", WHERE));
       
       CoordinateSystem dCoord = respImage_p(0)->coordinates(); // assume both response images have same coordsys
+
       CoordinateSystem dCoordFinal(dCoord);
       uInt rNDimFinal = rNDim;
       IPosition dShapeFinal = respImage_p(0)->shape();
@@ -318,7 +318,7 @@ namespace casa{
 	dShapeFinal(3)=1;
 	rNDimFinal +=1;
       }
-      
+
       TempImage<Complex> nearFinal(dShapeFinal, dCoordFinal);
 
       for(uInt iPol=0; iPol<nPol; iPol++){
@@ -333,12 +333,16 @@ namespace casa{
 	  pB = abs(respByPol(0)(polToDoIndex(iPol))) * abs(respByPol(nAntTypes-1)(polToDoIndex(iPol)));
 	}
 
+	//PagedImage<Complex> imX(pB.shape(),dCoord, "PB.im");
+	//imX.put(pB);  
+
 	//   rotate using par. angle
 	Array<Complex> rotPB(pB.shape());
 	Double dAngleRad = getPA(vb);
-	cout << "PA is (rad) " << dAngleRad << endl;
+	cout << "PA = " << dAngleRad << " rad" << endl;
 	SynthesisUtils::rotateComplexArray(os, pB, dCoord, rotPB, 
-					   dAngleRad, "LINEAR");
+					   dAngleRad, "LINEAR", 
+					   False); // don't modify dCoord
 	// now have the primary beam for polarization iPol in rotPB
       
 	// combine all PBs into one image
@@ -346,11 +350,15 @@ namespace casa{
 	pos(rAxis) = iPol;
 	nearFinal.putSlice(rotPB, pos);  
 
+	//PagedImage<Complex> im0(rotPB.shape(),dCoord, "rotPB.im");
+	//im0.put(rotPB);  
+
       }
 
-      // then regrid it to the image
+      // Then regrid it to the image
 
-      // the following mess is necessary since ImageRegrid does not work for Complex images
+      // The following mess is necessary since ImageRegrid does not work for Complex images
+      // (Interpolate2D is not templated)
 
       Array<Complex> nearFinalArray = nearFinal.get();
 
@@ -359,35 +367,16 @@ namespace casa{
       IPosition whichOutPixelAxes(pixAxes);
 
       // get the world coordinates of the center of outImage
-      // and set the reference Value of inImage to it
       Vector<Double> wCenterOut(2);
       Vector<Double> pCenterOut(2);
-      pCenterOut(0) = (outImage.shape()(whichOutPixelAxes(0))-1.)/2.;
-      pCenterOut(1) = (outImage.shape()(whichOutPixelAxes(1))-1.)/2.;
+      pCenterOut(0) = outImage.shape()(whichOutPixelAxes(0))/2.-1.;
+      pCenterOut(1) = outImage.shape()(whichOutPixelAxes(1))/2.-1.;
       Vector<String> wAU = outCS.directionCoordinate(0).worldAxisUnits();
       outCS.directionCoordinate(0).toWorld(wCenterOut, pCenterOut);
       //cout << "pixel center " << pCenterOut << " world center " << wCenterOut << " " << wAU(0) << endl;
 
       uInt dirCoordIndex = dCoordFinal.findCoordinate(Coordinate::DIRECTION);
       DirectionCoordinate dCoordFinalDir = dCoordFinal.directionCoordinate(0);
-      Vector<String> wAUI = dCoordFinalDir.worldAxisUnits();
-      if(!(wAU(0)==wAUI(0))){
-	Unit uIn(wAU(0));
-	Unit uOut(wAUI(0));
-	Quantum<Double> q0(wCenterOut(0), uIn);
-	Quantum<Double> q1(wCenterOut(1), uIn);
-	wCenterOut(0) = q0.getValue(uOut);
-	wCenterOut(1) = q1.getValue(uOut);
-      }
-      cout << "pixel center " << pCenterOut << " world center " << wCenterOut << " " << wAUI(0) << endl;
-      dCoordFinalDir.setReferenceValue(wCenterOut);
-      Unit uIn(wAU(0));
-      Unit uOut("deg");
-      Quantum<Double> q0(wCenterOut(0), uIn);
-      Quantum<Double> q1(wCenterOut(1), uIn);
-      wCenterOut(0) = q0.getValue(uOut);
-      wCenterOut(1) = q1.getValue(uOut);
-      cout << "pixel center " << pCenterOut << " world center " << wCenterOut << " deg" << endl;
 
       // Scale response image with frequency
       Unit uHz("Hz");
@@ -398,14 +387,32 @@ namespace casa{
       }
       Double fScale = nomFreqHz/refFreqHz;
       Vector<Double> newIncr = dCoordFinalDir.increment();
-      cout << "increment before scaling " << newIncr << ", after scaling " << newIncr * fScale << endl;
+      cout << "Image increment before freq scaling " << newIncr << ", after scaling " << newIncr * fScale << endl;
       dCoordFinalDir.setIncrement(newIncr * fScale);
+
+      // and set the reference Value of inImage to the world center of the outImage
+      Vector<String> wAUI = dCoordFinalDir.worldAxisUnits();
+      if(!(wAU(0)==wAUI(0))){
+	Unit uIn(wAU(0));
+	Unit uOut(wAUI(0));
+	Quantum<Double> q0(wCenterOut(0), uIn);
+	Quantum<Double> q1(wCenterOut(1), uIn);
+	wCenterOut(0) = q0.getValue(uOut);
+	wCenterOut(1) = q1.getValue(uOut);
+      }
+
+      cout << "Image pixel center " << pCenterOut << ", world center " << wCenterOut << " " << wAUI(0) << endl;
+      dCoordFinalDir.setReferenceValue(wCenterOut);
 
       dCoordFinal.replaceCoordinate(dCoordFinalDir, dirCoordIndex);
 
-      dCoordFinal.setObsInfo(outCS.obsInfo()); // set the same obs info
+      //PagedImage<Float> im1(nearFinalArray.shape(),dCoordFinal, "inImageReal.im");
+      //im1.copyData(LatticeExpr<Float>(real(ArrayLattice<Complex>(nearFinalArray))));  
+      //PagedImage<Float> im2(nearFinalArray.shape(),dCoordFinal, "inImageImag.im");
+      //im2.copyData(LatticeExpr<Float>(imag(ArrayLattice<Complex>(nearFinalArray))));  
 
       TempImage<Float> inImage(nearFinalArray.shape(),dCoordFinal);
+
       TempImage<Float> tOutImage(outImage.shape(), outCS);
       Array<Complex> outArray(outImage.shape(), Complex(0.,0.));
 
@@ -521,7 +528,7 @@ namespace casa{
     Vector<Int> map; 
     map.resize(vb.nRow()); 
 
-    cout << "vb rows: " << vb.nRow() << endl;
+    //cout << "vb rows: " << vb.nRow() << endl;
 
     if(haveCannedResponses_p){
       // distinguish different antenna types
