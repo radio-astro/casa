@@ -57,7 +57,7 @@ namespace casa{
     ap.x0=-6.5; ap.y0=-6.5;
     ap.dx=0.25; ap.dy=0.25;
 
-    ap.nx=ap.ny=104;
+    ap.nx=ap.ny=52;
     ap.pa=lastPA=18000000;
     ap.freq=84.; // GHz
     ap.band = BeamCalc_ALMA_3;
