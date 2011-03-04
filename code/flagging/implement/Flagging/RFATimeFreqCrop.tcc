@@ -192,11 +192,11 @@ void RFATimeFreqCrop :: AllocateMemory()
 	
 	/* Cube to hold visibility flags : POLZN x CHAN x (IFR*TIME) */
 	flagc.resize(NumP,NumC,NumB*NumT);
-	flagc=False;
+	flagc=True;
 
 	/* Vector to hold Row Flags : (IFR*TIME) */
 	rowflags.resize(NumB*NumT);
-	rowflags=False;
+	rowflags=True;
 
         /* Vector to hold baseline flags - to prevent unnecessary computation */
         baselineflags.resize(NumB);
@@ -216,13 +216,14 @@ void RFATimeFreqCrop :: AllocateMemory()
 	  }
 
 	matpos = meanBP.shape();
-	meanBP=0;
-	cleanBP=0;
+	meanBP=0.0;
+	cleanBP=0.0;
 
 	//	cout << " BP Shape = " << matpos << endl;
 
 	/* Cube to hold flags for the entire Chunk (channel subset, but all times) */
 	chunkflags.resize(NumP,NumC,NumB*num(TIME));
+        chunkflags=True;
 
 	
 	/* Temporary workspace vectors */	
@@ -279,12 +280,17 @@ RFA::IterMode RFATimeFreqCrop :: iterTime (uInt itime)
 	  {
             Int countflags=0, countpnts=0;
             uInt baselinecnt = BaselineIndex(bs,ant1[bs],ant2[bs]);
+            AlwaysAssert( (baselinecnt>=0 && baselinecnt<NumB), AipsError );
+	    // Read in rowflag
+            rowflags( (timecnt*NumB)+baselinecnt ) = flag.getRowFlag( chunk.ifrNum(bs), itime);
 	    for(uInt ch=0;ch<NumC;ch++)
 	      {
                 // read the data. mapvalue evaluates 'expr'.
 		visc(pl,ch,(timecnt*NumB)+baselinecnt) = mapValue(ch,bs);
                 // read existing flags
 		tfl = chunk.npass() ? flag.anyFlagged(ch,chunk.ifrNum(bs)) : flag.preFlagged(ch,chunk.ifrNum(bs));
+                // sync with rowflag
+                if( rowflags( (timecnt*NumB)+baselinecnt ) ) tfl=True;
                 // ignore previous flags....
                 if(IgnorePreflags) tfl=False;
  
@@ -296,10 +302,8 @@ RFA::IterMode RFATimeFreqCrop :: iterTime (uInt itime)
                 
                 // Counters
 		countpnts++;
-		countflags += (Int)(tfl);
+		if(tfl) countflags ++;
 	      }
-	    // Read in rowflag
-            rowflags( (timecnt*NumB)+baselinecnt ) = flag.getRowFlag( chunk.ifrNum(bs), itime);
 	    //	    if(countflags>0) cout << "Time : " << itime << " Preflags for baseline : " << bs << " (" << ant1(bs) << "," << ant2(bs) << ") : " << countflags << " out of " << countpnts << " " << corrlist << endl;
 	  }
       }
@@ -314,9 +318,11 @@ RFA::IterMode RFATimeFreqCrop :: iterTime (uInt itime)
     /////if(iterTimecnt > 0 && (timecnt==NumT || iterTimecnt == (vi.nRowChunk()/NumB)))
     if(iterTimecnt > 0 && (timecnt==NumT || itime==(num(TIME)-1) ))
       {
-        //cout << " TIMES : " << timecnt << "   itime : " << itime << endl;
-        Int ctimes = timecnt;
-        NumT = timecnt;
+        //ut << " timecnt : " << timecnt << "   itime : " << itime << "  iterTimecnt : " << iterTimecnt << "   NumT : " << NumT << endl;
+	//        Int ctimes = timecnt;
+        Int ctimes = NumT; // User-specified time-interval
+        NumT = timecnt; // Available time-interval. Usually same as NumT - but could be less.
+        //ut << " NumT going into all functions : " << NumT << endl;
 
 	FlagZeros();		
 
@@ -329,7 +335,9 @@ RFA::IterMode RFATimeFreqCrop :: iterTime (uInt itime)
 	
 	FillChunkFlags();    
 
+        // reset NumT to the user-specified time-interval
         NumT = ctimes;	
+
 	// reset the NumT time counter !!!
 	timecnt=0;
       }
@@ -358,6 +366,7 @@ void RFATimeFreqCrop :: FlagZeros()
 {
   Float temp=0;
   Bool flg=False;
+  baselineflags=False;
   
   /* Check if the data in all channels are filled with zeros.
      If so, set the flags to zero  */    
@@ -369,7 +378,7 @@ void RFATimeFreqCrop :: FlagZeros()
     {
       for(uInt bs=0;bs<NumB;bs++)
 	{
-          Bool bflag=True;
+          Bool bflag=True; // default is flagged. If anything is unflagged, this will change to False
 	  for(uInt tm=0;tm<NumT;tm++)
 	    {
               // If rowflag is set, flag all chans in it
@@ -381,11 +390,11 @@ void RFATimeFreqCrop :: FlagZeros()
 	      
               // Count flags across channels, and also count the data.
 	      temp=0;
-	      flg=True;
+	      //flg=True;
 	      for(int ch=0;ch<NumC;ch++)
 		{
 		  temp += visc(pl,ch,tm*NumB+bs);
-		  flg &= flagc(pl,ch,tm*NumB+bs);
+		  //flg &= flagc(pl,ch,tm*NumB+bs);
 		}
 	      
               // If data is zero for all channels (not read in), set flags to zero.
@@ -397,19 +406,21 @@ void RFATimeFreqCrop :: FlagZeros()
 		}
 	      
 	      // Count flags across channels and time,,,,,
+              // If any flag is false, bflag will become false
               for(int ch=0; ch<NumC; ch++)
                 bflag &= flagc(pl,ch,tm*NumB+bs);
 	      
 	    }// for tm
           // If all times/chans are flagged for this baseline, set the baselineflag.
 	  if(bflag) baselineflags(bs)=True;
+	  else baselineflags(bs)=False;
 	}// for bs
       Int ubs=0;
       for(uInt bs=0;bs<NumB;bs++)
            if(!baselineflags(bs)) ubs++;
       if(ShowPlots) cout << "Working with " << ubs << " unflagged baseline(s). " << endl;
     }// for pl
-}
+}// end of FlagZeros()
 
 
 
@@ -490,6 +501,7 @@ void RFATimeFreqCrop :: FlagTimeSeries(uInt pl, uInt bs)
 		}
 	      
 	      // If sum of 2 adjacent flags also crosses threshold, flag 
+	      /*
 	      for(uInt i=1;i<NumT-1;i++)
 		{
 		  if(flagTS[i])
@@ -498,7 +510,7 @@ void RFATimeFreqCrop :: FlagTimeSeries(uInt pl, uInt bs)
 			{flagTS[i-1]=True; flagTS[i+1]=True;}
 		    }
 		}
-	      
+	      */
 	      
 	      meanBP(pl,bs,ch) = UMean(tempTS,flagTS) ;
 	      
@@ -510,7 +522,6 @@ void RFATimeFreqCrop :: FlagTimeSeries(uInt pl, uInt bs)
 	  
 	  
 	  /* Check for completely flagged ants/bs */
-	  // UUU : DOES NOT WORK. rmean is often ZERO for no reason.
 	  if(1)
 	    {
 	      if((CorrChoice==0 && a1 == a2)||(CorrChoice!=0 && a1 != a2)) 
@@ -859,10 +870,16 @@ RFA::IterMode RFATimeFreqCrop :: ShowFlagPlots()
 		      flagdat(ch,tm) = dispdat(ch,tm)*(!flagc(pl,ch,(tm*NumB)+bs));
                       // Sum of the visibilities (all of them, flagged and unflagged)
 		      runningsum += visc(pl,ch,(((tm*NumB)+bs)));
+		      /*
                       // Count of all flags
 		      runningflag += (Float)(flagc(pl,ch,(tm*NumB)+bs));
                       // Count of only pre-flags
                       oldrunningflag += (Float)(chunkflags(pl,ch,((tm+iterTimecnt-NumT)*NumB)+bs));
+		      */  ////// CHECK that iterTimecnt is correct, and a valid part of chunkflags is being read !!!!!!!!!
+                      // Count of all flags
+		      if( (flagc(pl,ch,(tm*NumB)+bs)) ) runningflag++;
+                      // Count of only pre-flags
+                      if(chunkflags(pl,ch,((tm+iterTimecnt-NumT)*NumB)+bs)) oldrunningflag++;
 		    }//for tm
 		}//for ch
 	      
@@ -1032,7 +1049,7 @@ void RFATimeFreqCrop :: iterFlag(uInt itime)
 	      uInt baselinecnt = BaselineIndex(bs,ant1[bs],ant2[bs]);
 	      for(uInt ch=0;ch<NumC;ch++)
 		{
-		  if(chunkflags(pl,ch,(itime*NumB)+baselinecnt))
+		  if(chunkflags(pl,ch,(itime*NumB)+baselinecnt)==(Bool)True)
 		    flag.setFlag(ch,ifrs(bs));
                   bflag &= chunkflags(pl,ch,(itime*NumB)+baselinecnt);
 		}
@@ -1111,7 +1128,7 @@ void RFATimeFreqCrop :: endChunk ()
 		{
 		  for(uInt tm=0;tm<num(TIME);tm++)
 		    {
-		      runningflag += Float(chunkflags(pl,ch,((tm)*NumB)+baselinecnt));
+		      if (chunkflags(pl,ch,((tm)*NumB)+baselinecnt)) runningflag++;
 		      runningcount++;
 		    }
 		}
