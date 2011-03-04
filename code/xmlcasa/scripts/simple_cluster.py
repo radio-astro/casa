@@ -785,7 +785,8 @@ def simple_split(vs, email):
         s['outputvis']=get_engine_store(id)+msname+'-f'+fd+'-s'+spw+'.ms'
         if os.path.exists(s['outputvis']):
             os.system('rm -rf '+s['outputvis'])
-        s['field']=fd
+        #s['field']=fd
+        s['field']=get_field_name(vis, k['field']) 
         s['spw']=spw
         s['datacolumn']='DATA'
         cmd=make_call('split', s) 
@@ -851,6 +852,13 @@ def get_num_field(vis):
     num_field=tb.nrows()
     tb.done()
     return num_field
+
+def get_field_name(vis, id):
+    '''get the name of a field '''
+    tb.open(vis+'/FIELD')
+    fn=tb.getcell('NAME', id)
+    tb.done()
+    return fn
 
 def get_num_spw(vis):
     '''get the number of spectral windows '''
@@ -925,13 +933,24 @@ def get_field_desc(vis):
 ###########################################################################
 ###   setup -  
 ###########################################################################
-def init_cluster(clusterfile, project):
-    if clusterfile==None or type(clusterfile)!=str or clusterfile.strip()=="":
-        print 'cluster file name must be a non-empty string'
-        return
+def init_cluster(clusterfile='', project=''):
     if project==None or type(project)!=str or project.strip()=="":
-        print 'project name must be a non-empty string'
-        return
+        #project name must be a non-empty string, otherwise set default
+        project='cluster_project'
+        print 'use the default project: cluster_project'
+
+    if clusterfile==None or type(clusterfile)!=str or clusterfile.strip()=="":
+        #cluster file name must be a non-empty string, otherwise generate
+        #a default clusterfile
+        import multiprocessing
+        ncpu=multiprocessing.cpu_count()
+        (sysname, nodename, release, version, machine)=os.uname()
+        homedir = os.path.expanduser('~')
+        msg=nodename+', '+str(ncpu)+', '+homedir
+        clusterfile='/tmp/default_cluster'
+        f=open(clusterfile, 'w')
+        f.write(msg)
+        f.close()
 
     config_cluster(clusterfile, True)
     if not configdone:
