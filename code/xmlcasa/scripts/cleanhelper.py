@@ -2076,7 +2076,7 @@ class cleanhelper:
         ###############
         # for debugging
         ###############
-        debug=True
+        debug=False
         ###############
         tb.open(self.vis[self.sortedvisindx[0]]+'/SPECTRAL_WINDOW')
         chanfreqscol=tb.getvarcol('CHAN_FREQ')
@@ -2172,7 +2172,7 @@ class cleanhelper:
                               start=start,width=width,phasec=phasec, restfreq=restf,
                               outframe=self.usespecframe,veltype=veltype)
         if debug: print "Start, width after cvelfreqs =",start,width 
-        if len(newfreqs) ==0:
+        if type(newfreqs)==list and len(newfreqs) ==0:
           raise TypeError, ("Output frequency grid cannot be calculated: "+
                  " please check start and width parameters")
         if debug:
