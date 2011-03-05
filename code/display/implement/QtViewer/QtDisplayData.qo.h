@@ -131,6 +131,9 @@ class QtDisplayData : public QObject {
   virtual ImageRegion* mouseToImageRegion(Record mouseRegion,
                                           WorldCanvasHolder* wch,
 					  Bool allChannels=False,
+                                          Bool allPols=False,
+                                          Bool allRAs=False,
+                                          Bool allDECs=False,
 					  Bool allAxes=False);
   virtual ImageRegion* mouseToImageRegion(
         Record mouseRegion, WorldCanvasHolder* wch,
@@ -144,9 +147,10 @@ class QtDisplayData : public QObject {
 
   // Return the number of the spectral axis within the DD's original
   // image lattice and coordinate system (-1 if none).
-  virtual Int spectralAxis();
+  //virtual Int spectralAxis();
   
-  
+  virtual Int getAxisIndex(String axtype=String("Spectral"));
+
   //#  colorbar methods
   
   

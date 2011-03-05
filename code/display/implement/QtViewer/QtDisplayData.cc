@@ -994,8 +994,7 @@ void QtDisplayData::unregisterNotice(QtDisplayPanel* qdp) {
   dd()->setDisplayState( DisplayData::UNDISPLAYED );
 }
 
-
-
+  /*
 Int QtDisplayData::spectralAxis() {
   // Return the number of the spectral axis within the DD's original
   // image lattice and coordinate system (-1 if none).
@@ -1024,12 +1023,65 @@ Int QtDisplayData::spectralAxis() {
   }
 
   return -1;  }
+  */
+
+  // Return the number/index of input axis name, if it is present in the 
+  // DD's original image lattice and coordinate system list (-1 if none).
+  // Supported axis strings are "Spectral", "Stokes", 'Right Ascension', 'Declination'
+  // Note : Right Ascension and Declination are both of type 'Direction'.
+  Int QtDisplayData::getAxisIndex(String axtype) { 
+  
+  if(dd_==0 || (im_==0 && cim_==0)) return -1;
+  
+  const CoordinateSystem* cs=0;
+  try { cs = &((im_!=0)? im_->coordinates() : cim_->coordinates());  }
+  catch(...) { cs = 0;  }	// (necessity of try-catch is doubtful...).
+  if(cs==0) return -1;
+
+  try
+    {    
+
+      Int nAxes = (im_!=0)? im_->ndim() : cim_->ndim();
+      for(Int ax=0; ax<nAxes && ax<Int(cs->nWorldAxes()); ax++) 
+      {
+	  // coordno : type of coordinate
+          // axisincoord : index within the coordinate list defined by coordno
+          Int coordno, axisincoord;
+          cs->findWorldAxis(coordno, axisincoord, ax);
+    
+	  //cout << "coordno=" << coordno << "  axisincoord : " << axisincoord << "  type : " << cs->showType(coordno) << endl;
+
+          if( cs->showType(coordno) == String("Direction") )
+          {
+	    // Check for Right Ascension and Declination 
+	     Vector<String> axnames = (cs->directionCoordinate(coordno)).axisNames(MDirection::DEFAULT);
+             AlwaysAssert( axisincoord>=0 && axisincoord < axnames.nelements(), AipsError);
+	     if( axnames[axisincoord] == axtype )
+	     {
+	         return ax;
+	     }
+          }
+          else if(cs->showType(coordno)==axtype) // Check for Stokes and Spectral
+          {
+             return ax;  
+          }
+      }//end of for ax
+  }//end of try
+  catch (...) { 
+    errMsg_ = "Unknown error converting region ***";
+    // cerr<<"mse2ImgReg: "<<errMsg_<<endl;	//#dg
+    // emit qddRegnError(errMsg_);
+    return -1;
+  }
+  
+  return -1;  
+}// end of getAxisIndex
 
 
 
 ImageRegion* QtDisplayData::mouseToImageRegion(Record mouseRegion,
                                                WorldCanvasHolder* wch,
-					       Bool allChannels,
+					       Bool allChannels,Bool allPols, Bool allRAs, Bool allDECs,
 					       Bool allAxes) {
   // Convert 2-D 'pseudoregion' (or 'mouse region' Record, from the region
   // mouse tools) to a full Image Region, with same dimensionality as the
@@ -1108,7 +1160,7 @@ ImageRegion* QtDisplayData::mouseToImageRegion(Record mouseRegion,
     dispAxes.resize(2, True);	// Now assure that dispAxes is restricted
 				// to just the axes on display X and Y,
 				// (for WCPolygon definition, below).
-          
+
     // unitInit() assures that the special region Unit "pix" is defined.
     // I'm trying to use the WCBox constructor that requires Quanta to
     // be passed to it -- with "pix" units in this case.  I can't wait
@@ -1125,9 +1177,11 @@ ImageRegion* QtDisplayData::mouseToImageRegion(Record mouseRegion,
     // the WCBox corners on the display axes.
     //
     // The WCBox restricts to the plane of interest (displayed plane),
-    // except that if allChannels==True, it also extends along the
-    // spectral axis (_if_ it exists _and_ is not a display axis); or if
-    // allAxes is True, the region extends along all non-display axes. 
+    // except if an extension is required.
+    // Extensions across an axis are done only _if_ it exists _and_ is not a display axis.
+    // - If allAxes is True, the region extends along all non-display axes. 
+    // Extensions can be done on 'allChannels', 'allPols', 'allRAs',' allDECs' if any of 
+    // them are non-display axes.
     // 
     // For a "polygon" type mouse region, the WCBox is intersected with a
     // WCPolygon which defines the cross-section to use on the display axes.
@@ -1139,16 +1193,26 @@ ImageRegion* QtDisplayData::mouseToImageRegion(Record mouseRegion,
 		// Establishes "pix" as a default unit (overridden
 		// below in some cases).  Initializes blcq to pixel 0.
 
+    // To extend flags along any hidden axis, first get the index of the
+    //   coordinate to extend across. (if it exists) 
+    //   Note : extension axes must be one of the hidden axes.
     Int spaxis = -1;
-    if(allChannels) spaxis = spectralAxis();
-	// Retrieve number of spectral axis (if any), for allChannels case.
-      
+    if(allChannels) spaxis = getAxisIndex(String("Spectral"));
+    Int polaxis = -1;
+    if(allPols) polaxis = getAxisIndex(String("Stokes"));
+    Int raaxis = -1; 
+    if(allRAs) raaxis = getAxisIndex(String("Right Ascension"));
+    Int decaxis = -1;
+    if(allDECs) decaxis = getAxisIndex(String("Declination"));
+
+
     for(Int ax = 0; ax<nAxes; ax++) {
       
-      if(ax==dispAxes[0] || ax==dispAxes[1] || allAxes || ax==spaxis) {
-        trcq[ax].setValue(shp[ax]-1);  } 
-		// Set full image extent on display axes (may be further
-		// restricted below), and on non-display axes if requested.
+      if(ax==dispAxes[0] || ax==dispAxes[1] || 
+         allAxes || ax==spaxis || ax==polaxis || ax==raaxis || ax==decaxis) // mask extensions
+       { trcq[ax].setValue(shp[ax]-1);  } 
+       // Set full image extent on display axes (may be further
+       // restricted below), and on non-display axes if requested.
       else  {
         blcq[ax].setValue(pos[ax]);	    // set one-pixel-wide slice on
         trcq[ax].setValue(pos[ax]);  }   }  // other non-displayed axes.
@@ -1868,8 +1932,8 @@ ImageRegion* QtDisplayData::mouseToImageRegion(
 
     Int spaxis = -1;
     if (extChan.length() == 0) 
-       spaxis = spectralAxis();
-      
+      spaxis = getAxisIndex(String("Spectral"));
+       
     for (Int ax = 0; ax < nAxes; ax++) {
       if (ax == dispAxes[0] || ax == dispAxes[1] || 
           extChan.length() == 0 || ax == spaxis) {

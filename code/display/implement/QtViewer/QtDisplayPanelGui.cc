@@ -1326,7 +1326,7 @@ void QtDisplayPanelGui::showImageProfile() {
                 }
               }
 
-              if (pdd->spectralAxis() == -1) {
+              if (pdd->getAxisIndex(String("Spectral")) == -1) {
                   profileDD_ = 0;
 	          hideImageProfile();  
               }
@@ -1339,7 +1339,7 @@ void QtDisplayPanelGui::showImageProfile() {
 	      //break;
             }
             else {
-              if (pdd->spectralAxis() != -1) 
+              if (pdd->getAxisIndex(String("Spectral")) != -1) 
                  overlap[pdd->name().chars()] = img;
             }
             }
