@@ -324,34 +324,71 @@ namespace casa{
       for(uInt iPol=0; iPol<nPol; iPol++){
 
 	Array<Complex> pB( respByPol(0)(polToDoIndex(iPol)).shape() );
+	Array<Complex> fact1( pB.shape() );
+	Array<Complex> fact2( pB.shape() );
+
+	// rotate the two factor arrays into the right PA including the feed coordsys
+	Double dAngleRad = getPA(vb);
+	cout << "PA = " << dAngleRad << " rad" << endl;
+
+	uInt fact1Index, fact2Index;
+	Double pA1, pA2;
+
+	switch(polToDoIndex(iPol)){
+	case 0: // XX
+	  fact1Index = fact2Index = 0;
+	  pA1 = pA2 = dAngleRad;
+	  break;
+	case 1: //XY
+	  fact1Index = 0;
+	  fact2Index = 2;
+	  pA1 = dAngleRad;
+	  pA2 = dAngleRad + C::pi/2.; // + 90 deg (sign to be confirmed!)
+	  break;
+	case 2: //YX
+	  fact1Index = 1;
+	  fact2Index = 3;
+	  pA1 = dAngleRad;
+	  pA2 = dAngleRad + C::pi/2.; // + 90 deg (sign to be confirmed!)
+	  break;
+	case 3: //YY
+	  fact1Index = fact2Index = 3;
+	  pA1 = dAngleRad + C::pi/2.;// + 90 deg (sign to be confirmed!)
+	  pA2 = dAngleRad + C::pi/2.; 
+	  break;
+	}
+	  
+	// rotate factor 1 
+	SynthesisUtils::rotateComplexArray(os, respByPol(0)(fact1Index), dCoord, fact1, 
+					   pA1, "LINEAR", 
+					   False); // don't modify dCoord
+	// if necessary rotate factor 2 
+	if((nAntTypes-1)==0 &&  fact2Index==fact1Index){ // also implies that pA1==PA2
+	  fact2.assign(fact1);
+	}
+	else{
+	  SynthesisUtils::rotateComplexArray(os, respByPol(nAntTypes-1)(fact2Index), dCoord, fact2, 
+					     pA2, "LINEAR", 
+					     False); // don't modify dCoord
+	}
 
 	// multiply EFPs (equivalent to convolution of AIFs) to get primary beam
 	if(doSquint){
-	  pB = respByPol(0)(polToDoIndex(iPol)) * respByPol(nAntTypes-1)(polToDoIndex(iPol));
+	  pB = fact1 * fact2;
 	}
 	else{
-	  pB = abs(respByPol(0)(polToDoIndex(iPol))) * abs(respByPol(nAntTypes-1)(polToDoIndex(iPol)));
+	  pB = abs(fact1) * abs(fact2);
 	}
 
 	//PagedImage<Complex> imX(pB.shape(),dCoord, "PB.im");
 	//imX.put(pB);  
 
-	//   rotate using par. angle
-	Array<Complex> rotPB(pB.shape());
-	Double dAngleRad = getPA(vb);
-	cout << "PA = " << dAngleRad << " rad" << endl;
-	SynthesisUtils::rotateComplexArray(os, pB, dCoord, rotPB, 
-					   dAngleRad, "LINEAR", 
-					   False); // don't modify dCoord
-	// now have the primary beam for polarization iPol in rotPB
+	// now have the primary beam for polarization iPol in pB
       
 	// combine all PBs into one image
 	IPosition pos(rNDimFinal,0);
 	pos(rAxis) = iPol;
-	nearFinal.putSlice(rotPB, pos);  
-
-	//PagedImage<Complex> im0(rotPB.shape(),dCoord, "rotPB.im");
-	//im0.put(rotPB);  
+	nearFinal.putSlice(pB, pos);  
 
       }
 
@@ -608,7 +645,7 @@ namespace casa{
 
 
   Int ALMAAperture::cFKeyFromAntennaTypes(const ALMAAntennaType aT1, const ALMAAntennaType aT2){
-    return min((Int)aT1+1, (Int)aT2+1) + 10000*max((Int)aT1+1, (Int)aT2+1); // order doesn't matter, convolution commutes
+    return min((Int)aT1+1, (Int)aT2+1) + 10000*max((Int)aT1+1, (Int)aT2+1); // assume order doesn't matter
   }
 
   Vector<ALMAAntennaType> ALMAAperture::antennaTypesFromCFKey(const Int& cFKey){

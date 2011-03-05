@@ -81,19 +81,19 @@ int main()
       DirectionCoordinate dirCoords(MDirection::J2000,                  
 				    Projection(Projection::SIN),        
 				    135*C::pi/180.0, 60*C::pi/180.0,    
-				    -0.5*C::pi/180.0/3600.0, 0.5*C::pi/180.0/3600.0,        
+				    -1.*C::pi/180.0/3600.0, 1.*C::pi/180.0/3600.0,        
 				    xform,                              
 				    64., 64.);  
       DirectionCoordinate dirCoordsBig(MDirection::J2000,                  
 				       Projection(Projection::SIN),        
 				       135*C::pi/180.0, 60*C::pi/180.0,    
-				       -1.*C::pi/180.0/3600.0, 1.*C::pi/180.0/3600.0,        
+				       -5.*C::pi/180.0/3600.0, 5.*C::pi/180.0/3600.0,        
 				       xform,                              
 				       64., 64.);  
       DirectionCoordinate dirCoordsSmall(MDirection::J2000,                  
 					 Projection(Projection::SIN),        
 					 135*C::pi/180.0, 60*C::pi/180.0,    
-					 -0.1*C::pi/180.0/3600.0, 0.1*C::pi/180.0/3600.0,        
+					 -0.5*C::pi/180.0/3600.0, 0.5*C::pi/180.0/3600.0,        
 					 xform,                              
 					 64., 64.);  
 
