@@ -4,6 +4,7 @@ from taskinit import *
 import asap as sd
 import pylab as pl
 #import Tkinter as Tk
+from asap import _to_list
 
 def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, beamlist, scanaverage, timeaverage, tweight, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, colormap, linestyles, linewidth, histogram, header, headsize, plotstyle, layout, legendloc, plotfile, overwrite):
 
@@ -192,41 +193,21 @@ def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
                     #print 'Using current doppler convention'
                     casalog.post( 'Using current doppler convention' )
 
-            # Prepare a selection
-            scans = ifs = pols = beams = []
-
+            # A scantable selection
             # Scan selection
-            if ( type(scanlist) == list ):
-                    # is a list
-                    scans = scanlist
-            else:
-                    # is a single int, make into list
-                    scans = [ scanlist ]
+            scans = _to_list(scanlist,int) or []
 
             # IF selection
-            if ( type(iflist) == list ):
-                    # is a list
-                    ifs = iflist
-            else:
-                    # is a single int, make into list
-                    ifs = [ iflist ]
+            ifs = _to_list(iflist,int) or []
 
             # Select polarizations
-            if (type(pollist) == list):
-              pols = pollist
-            else:
-              pols = [pollist]
+            pols = _to_list(pollist,int) or []
 
             # Beam selection
-            if ( type(beamlist) == list ):
-                    # is a list
-                    beams = beamlist
-            else:
-                    # is a single int, make into list
-                    beams = [ beamlist ]
+            beams = _to_list(beamlist,int) or []
 
             # Actual selection
-            sel=sd.selector(scans=scans, ifs=ifs, pols=pols, beams=beams)
+            sel = sd.selector(scans=scans, ifs=ifs, pols=pols, beams=beams)
 
             # Select source names
             if ( field != '' ):
