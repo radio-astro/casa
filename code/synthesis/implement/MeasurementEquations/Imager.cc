@@ -1621,7 +1621,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     }
     else {
       os << (be_calm ? LogIO::NORMAL4 : LogIO::NORMAL)
-         << "Selected all visibilities" << LogIO::POST; // Loglevel INFO
+         << "Selected all " << nvis_sel << " visibilities" << LogIO::POST; // Loglevel INFO
     }
     //    }
     
