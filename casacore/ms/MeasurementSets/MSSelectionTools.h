@@ -51,7 +51,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  const String& polnExpr="",
 		  const String& scanExpr="",
 		  const String& arrayExpr="",
-		  const String& stateExpr=""
+		  const String& stateExpr="",
+		  MSSelection *mss=NULL
 		  );
   // Collective selection also returning in-row (corr/chan) slices
   Bool mssSetData(const MeasurementSet& ms, 
@@ -69,8 +70,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  const String& scanExpr="",
 		  const String& arrayExpr="",
 		  const String& stateExpr="",
-		  const Int defaultChanStep=1
+		  const Int defaultChanStep=1,
+		  MSSelection *mss=NULL
 		  );
+  
+  Record mssSelectedIndices(MSSelection& mss, const MeasurementSet *ms);
 
   String stripWhite(const String& str, Bool onlyends=True);
   int tokenize(const String& str, const String& sep, Vector<String>& tokens,Bool upCase=False);

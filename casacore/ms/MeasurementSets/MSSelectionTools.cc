@@ -26,6 +26,7 @@
 //# $Id: MSSelectionTools.cc 20750 2009-10-01 06:32:18Z Malte.Marquarding $
 //# Includes
 #include <casa/aips.h>
+#include <casa/Containers/Record.h>
 #include <casa/Arrays/Vector.h>
 #include <ms/MeasurementSets/MSSelection.h>
 #include <string.h>
@@ -93,7 +94,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  const String& polnExpr,
 		  const String& scanExpr,
 		  const String& arrayExpr,
-		  const String& stateExpr
+		  const String& stateExpr,
+		  MSSelection *mymss
 		  )
   {
     //
@@ -101,10 +103,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // internally.
     //
 	
-    MSSelection *mss = new MSSelection(ms,MSSelection::PARSE_NOW,
-				       timeExpr,antennaExpr,fieldExpr,spwExpr,
-				       uvDistExpr,taQLExpr,polnExpr,scanExpr,arrayExpr,
-				       stateExpr);
+    MSSelection *mss=mymss;
+    if (mss == NULL) mss= new MSSelection();
+
+    mss->reset(ms,MSSelection::PARSE_NOW,
+	       timeExpr,antennaExpr,fieldExpr,spwExpr,
+	       uvDistExpr,taQLExpr,polnExpr,scanExpr,arrayExpr,
+	       stateExpr);
     //
     // Apply the internal accumulated TEN to the MS and produce the
     // selected MS.  
@@ -113,7 +118,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // return True.
     //
     Bool rstat = mss->getSelectedMS(selectedMS,outMSName);
-    delete mss;
+    if (mymss==NULL) delete mss;
     return rstat;
   }
   //
@@ -134,18 +139,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  const String& scanExpr,
 		  const String& arrayExpr,
 		  const String& stateExpr,
-		  const Int defaultChanStep
+		  const Int defaultChanStep,
+		  MSSelection *mymss
 		  )
   {
     //
     // Parse the various expressions and produce the accmuluated TEN
     // internally.
     //
-	
-    MSSelection *mss = new MSSelection(ms,MSSelection::PARSE_NOW,
-				       timeExpr,antennaExpr,fieldExpr,spwExpr,
-				       uvDistExpr,taQLExpr,polnExpr,scanExpr,arrayExpr,
-				       stateExpr);
+    MSSelection *mss=mymss;
+    if (mss == NULL) mss = new MSSelection();
+
+    mss->reset(ms,MSSelection::PARSE_NOW,
+	       timeExpr,antennaExpr,fieldExpr,spwExpr,
+	       uvDistExpr,taQLExpr,polnExpr,scanExpr,arrayExpr,
+	       stateExpr);
     //
     // Apply the internal accumulated TEN to the MS and produce the
     // selected MS.  
@@ -159,7 +167,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     mss->getChanSlices(chanSlices,&ms,defaultChanStep);
     mss->getCorrSlices(corrSlices,&ms);
 
-    delete mss;
+    if (mymss == NULL) delete mss;
     return rstat;
   }
   //
@@ -176,6 +184,37 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	while((j1 >= j0) && (str[j1] == ' ')) j1--;
       }
     return str.substr(j0,j1-j0+1);
+  }
+  //
+  //----------------------------------------------------------------------------
+  //
+  Record mssSelectedIndices(MSSelection& thisSelection, const MeasurementSet *ms)
+  {
+    Record retval;
+    TableExprNode exprNode=thisSelection.toTableExprNode(ms);
+    Vector<Int> fieldlist=thisSelection.getFieldList();
+    Vector<Int> spwlist=thisSelection.getSpwList();
+    Vector<Int> scanlist=thisSelection.getScanList();
+    Vector<Int> antenna1list=thisSelection.getAntenna1List();
+    Vector<Int> antenna2list=thisSelection.getAntenna2List();
+    Matrix<Int> chanlist=thisSelection.getChanList();
+    Matrix<Int> baselinelist=thisSelection.getBaselineList();
+    Vector<Int> ddIDList=thisSelection.getDDIDList();
+    Vector<Int> stateIDList=thisSelection.getStateObsModeList();
+    OrderedMap<Int, Vector<Int > > polMap=thisSelection.getPolMap();
+    OrderedMap<Int, Vector<Vector<Int> > > corrMap=thisSelection.getCorrMap();
+
+    retval.define("spw", spwlist);
+    retval.define("field", fieldlist);
+    retval.define("scan",scanlist);
+    retval.define("antenna1", antenna1list);
+    retval.define("antenna2", antenna2list);
+    retval.define("baselines",baselinelist);
+    retval.define("channel", chanlist);
+    retval.define("dd",ddIDList);
+    retval.define("stateid",stateIDList);
+
+    return retval;
   }
   //
   //----------------------------------------------------------------------------
