@@ -532,7 +532,7 @@ def sdstat(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, s
                     retValue['max']=maxl[0]
 		    retValue['max_abscissa']=qa.quantity(maxabcl[0],xunit)
                     retValue['min']=minl[0]
-		    retValue['max_abscissa']=qa.quantity(minabcl[0],xunit)
+		    retValue['min_abscissa']=qa.quantity(minabcl[0],xunit)
                     retValue['sum']=suml[0]
                     retValue['median']=medianl[0]
                     retValue['mean']=meanl[0]

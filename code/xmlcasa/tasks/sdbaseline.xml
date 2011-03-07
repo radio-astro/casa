@@ -128,6 +128,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
 
     <param type="string" name="blfunc">
 	    <description>baseline model function</description>
+	    <value>poly</value>
 	    <allowed kind="enum">
 	    <value>poly</value>
 	    <value>cspline</value>

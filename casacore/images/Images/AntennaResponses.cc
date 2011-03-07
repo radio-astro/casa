@@ -421,7 +421,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	functionImageName = tempS.substr(0,p) + "/" + functionImageName;
       }
       functionChannel = FuncChannel_p(row)(subBand);
-      nomFreq = NomFreq_p(row)(subBand);
+      nomFreq = MFrequency(NomFreq_p(row)(subBand),MFrequency::TOPO);
       fType = FuncType_p(row)(subBand);
       return True;
     }
@@ -458,7 +458,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	functionImageName = tempS.substr(0,p) + "/" + functionImageName;
       }
       functionChannel = FuncChannel_p(row)(subBand);
-      nomFreq = NomFreq_p(row)(subBand);
+      nomFreq = MFrequency(NomFreq_p(row)(subBand),MFrequency::TOPO);
       fType = FuncType_p(row)(subBand);
       return True;
     }

@@ -116,7 +116,7 @@ another visibility file.
 
 	<param type="bool" name="calwt">
 		<description>Calibrate data weights from all relevant calibrations</description>
-		<value>False</value>
+		<value>True</value>
 	</param>
 
 	<param type="bool" name="flagbackup">
@@ -267,7 +267,7 @@ another visibility file.
                default: False
        calwt -- Calibrate weights along with data for all
                relevant calibrations
-               default: False; example: calwt=True
+               default: True; example: calwt=False
        flagbackup -- Back up the state of the flags before applying calibration
                      default: True
        async -- Run task in a separate process 

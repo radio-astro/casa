@@ -517,7 +517,8 @@ namespace casa{
 					  CoordinateSystem& inCS,
 					  Array<Complex>& outArray,
 					  Double dAngleRad,
-					  String interpMethod)
+					  String interpMethod,
+					  Bool modifyInCS)
   {
 //     logio << LogOrigin("SynthesisUtils", "rotateComplexArray")
 // 	  << "Rotating CF using " << interpMethod << " interpolation." 
@@ -534,17 +535,26 @@ namespace casa{
     // Re-grid inImage onto outImage
     //
     Vector<Int> pixelAxes;
-    Int linInd = -1;
+    Int coordInd = -1;
     // Extract LINRAR coords from inCS.
     // Extract axes2
-    Vector<Double> refPix = inCS.referencePixel();
-    refPix(0) = (inArray.shape()(0)+1)/2;
-    refPix(1) = (inArray.shape()(1)+1)/2;
 
-    inCS.setReferencePixel(refPix);
-    linInd = inCS.findCoordinate(Coordinate::LINEAR);
+    if(modifyInCS){
+      Vector<Double> refPix = inCS.referencePixel();
+      refPix(0) = (inArray.shape()(0)+1)/2;
+      refPix(1) = (inArray.shape()(1)+1)/2;
+      inCS.setReferencePixel(refPix);
+    }
 
-    pixelAxes=inCS.pixelAxes(linInd);
+    coordInd = inCS.findCoordinate(Coordinate::LINEAR);
+    Bool haveLinear = True;
+
+    if(coordInd == -1){ // no linear coordinate found, look for DIRECTION instead
+      coordInd = inCS.findCoordinate(Coordinate::DIRECTION);
+      haveLinear = False;
+    }
+
+    pixelAxes=inCS.pixelAxes(coordInd);
     IPosition axes2(pixelAxes);
     // Set linear transformation matrix in inCS.
 //     CoordinateSystem outCS =
@@ -552,7 +562,7 @@ namespace casa{
 
     CoordinateSystem outCS(inCS);
 
-    Matrix<Double> xf = outCS.coordinate(linInd).linearTransform();
+    Matrix<Double> xf = outCS.coordinate(coordInd).linearTransform();
     Matrix<Double> rotm(2,2);
     rotm(0,0) = cos(dAngleRad); rotm(0,1) = sin(dAngleRad);
     rotm(1,0) = -rotm(0,1);     rotm(1,1) = rotm(0,0);
@@ -569,9 +579,16 @@ namespace casa{
     xform(1,0) = rotm(1,0)*xf(0,0)+rotm(1,1)*xf(1,0);
     xform(1,1) = rotm(1,0)*xf(0,1)+rotm(1,1)*xf(1,1);
 
-    LinearCoordinate linCoords = outCS.linearCoordinate(linInd);
-    linCoords.setLinearTransform(xform);
-    outCS.replaceCoordinate(linCoords, linInd);
+    if(haveLinear){
+      LinearCoordinate linCoords = outCS.linearCoordinate(coordInd);
+      linCoords.setLinearTransform(xform);
+      outCS.replaceCoordinate(linCoords, coordInd);
+    }
+    else{
+      DirectionCoordinate dirCoords = outCS.directionCoordinate(coordInd);
+      dirCoords.setLinearTransform(xform);
+      outCS.replaceCoordinate(dirCoords, coordInd);
+    }      
     
     outArray.resize(inArray.shape());
     outArray.set(0);

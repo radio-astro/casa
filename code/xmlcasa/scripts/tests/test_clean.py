@@ -317,12 +317,12 @@ class clean_test1(unittest.TestCase):
     def test39(self):
         '''Clean 39: Input mask image specified'''
         datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/'
-        shutil.copytree(datapath+self.msk, self.msk)
-        self.res=clean(vis=self.msfile,imagename=self.img2,mask=self.msk)
+        shutil.copytree(datapath+self.msk, '1_'+self.msk)
+        self.res=clean(vis=self.msfile,imagename=self.img2,mask='1_'+self.msk)
         self.assertEqual(self.res, None)
         self.assertTrue(os.path.exists(self.img2+'.image'))
         # cleanup
-        os.system('rm -rf ' + self.msk + ' '+ self.img2+'*')
+        os.system('rm -rf ' + '1_'+self.msk+ ' ' + self.img2+'*')
 
     def test40(self):
         '''Clean 40: Test chaniter=T clean with flagged channels'''

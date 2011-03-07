@@ -258,7 +258,11 @@ def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 		basesel = s.get_selection()
 		for sif, lmask in maskdict.iteritems():
 			if len(sif) > 0:
-				s.set_selection(selection=basesel+sd.selector(ifs=[int(sif)]))
+				#s.set_selection(selection=(basesel+sd.selector(ifs=[int(sif)])))
+				sel = sd.selector(basesel)
+				sel.set_ifs([int(sif)])
+				s.set_selection(sel)
+				del sel
 				casalog.post("working on IF"+sif)
 			if (masking == 'interact'):
 				new_mask=sd.interactivemask(scan=s)
