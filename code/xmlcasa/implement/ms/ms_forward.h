@@ -7,5 +7,6 @@ class MeasurementSet;
 class LogIO;
 class MSSelector;
 class MSFlagger;
+class MSSelection;
 };
 

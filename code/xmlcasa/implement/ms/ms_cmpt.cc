@@ -80,9 +80,11 @@ ms::ms()
 {
   try {
      itsMS = new MeasurementSet();
+     itsOriginalMS = new MeasurementSet();
      itsSel = new MSSelector();
      itsLog = new LogIO();
      itsFlag = new MSFlagger();
+     itsMSS = new MSSelection();
    } catch (AipsError x) {
        *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
@@ -176,6 +178,7 @@ ms::open(const std::string& thems, const bool nomodify, const bool lock)
         close();
      }
      *itsMS = MeasurementSet(thems, tl, openOption);
+     *itsOriginalMS = MeasurementSet(*itsMS);
      //
      // itsSel and itsFlag were not being reset by using the set commands so
      // delete them and renew them.
@@ -195,6 +198,30 @@ ms::open(const std::string& thems, const bool nomodify, const bool lock)
        Table::relinquishAutoLocks(True);
        RETHROW(x);
   }
+  return True;
+}
+
+bool
+ms::reset()
+{
+  try 
+    {
+      *itsLog << LogOrigin("ms", "reset");
+      // Set itsMS to the original MS, and re-make the various objects
+      // that hold the pointer to working MS
+      *itsMS = MeasurementSet(*itsOriginalMS);
+      if(itsSel)  {delete itsSel;  itsSel = new MSSelector();}
+      if(itsFlag) {delete itsFlag; itsFlag = new MSFlagger();}
+      if (itsMSS) {delete itsMSS;  itsMSS = new MSSelection();itsMSS->resetMS(*itsMS);}
+      itsSel->setMS(*itsMS);
+      itsFlag->setMSSelector(*itsSel);
+    }
+  catch (AipsError x) 
+    {
+      *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+      Table::relinquishAutoLocks(True);
+      RETHROW(x);
+    }
   return True;
 }
 
@@ -2660,6 +2687,61 @@ ms::moments(const std::vector<int>& moments,
   Table::relinquishAutoLocks(True);
 
   return rstat;
+}
+
+bool ms::msselect(const ::casac::record& exprs)
+{
+  Bool retVal;
+  try
+    {
+     *itsLog << LogOrigin("ms", "msselect");
+      Record *casaRec = toRecord(exprs);
+      String spwExpr, timeExpr, fieldExpr, baselineExpr, scanExpr, scanIntentExpr, polnExpr, uvDistExpr;
+      Int nFields = casaRec->nfields();
+      for (Int i=0; i<nFields; i++)
+	{
+	  if (casaRec->name(i) == "spw")           {spwExpr        = casaRec->asString(RecordFieldId(i));}
+	  if (casaRec->name(i) == "time")          {timeExpr       = casaRec->asString(RecordFieldId(i));}
+	  if (casaRec->name(i) == "field")         {fieldExpr      = casaRec->asString(RecordFieldId(i));}
+	  if (casaRec->name(i) == "baseline")      {baselineExpr   = casaRec->asString(RecordFieldId(i));}
+	  if (casaRec->name(i) == "scan")          {scanExpr       = casaRec->asString(RecordFieldId(i));}
+	  if (casaRec->name(i) == "scanintent")    {scanIntentExpr = casaRec->asString(RecordFieldId(i));}
+	  if (casaRec->name(i) == "polarization")  {polnExpr       = casaRec->asString(RecordFieldId(i));}
+	  if (casaRec->name(i) == "uvdist")        {uvDistExpr     = casaRec->asString(RecordFieldId(i));}
+	}
+      // if (itsSelectedMS) delete itsSelectedMS;
+      // itsSelectedMS = new MeasurementSet();
+      retVal = mssSetData(*itsMS, *itsMS, "",/*outMSName*/
+			  timeExpr, baselineExpr, fieldExpr, spwExpr, uvDistExpr,
+			  "",/*taQLExpr*/ polnExpr, scanExpr,
+			  "",/*arrayExpr*/ scanIntentExpr, itsMSS);
+      itsSel->setMS(*itsMS);
+      return retVal;
+    }
+  catch (AipsError x)
+    {
+      Table::relinquishAutoLocks(True);
+      RETHROW(x);
+    }
+  return retVal;
+}
+
+::casac::record*
+ms::msselectedindices()
+{
+  casac::record *selectedIndices(0);
+  try
+    {
+     *itsLog << LogOrigin("ms", "msselectedindices");
+      Record tmp =  mssSelectedIndices(*itsMSS, itsMS);
+      selectedIndices = fromRecord(tmp);
+    }
+  catch (AipsError x)
+    {
+      Table::relinquishAutoLocks(True);
+      RETHROW(x);
+    }
+  return selectedIndices;
 }
 
 } // casac namespace
