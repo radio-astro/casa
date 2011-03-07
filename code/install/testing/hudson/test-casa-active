@@ -12,7 +12,7 @@ use Fcntl qw( :flock );
 ###
 ### to avoid mailing an error log into warp.cv.nrao.edu as aips2mgr and do:
 ###
-###          touch ~hudson/control/no-mail
+###          touch ~jenkins/control/no-mail
 ###
 ### just remove the file to allow mail notices to flow again...
 ###
@@ -26,7 +26,7 @@ $debug = 1;
 ### who is monitoring the testing...
 ###
 $testmanager = 'darrell@schiebel.us';
-$hudson_host = 'warp';
+$jenkins_host = 'warp';
 
 ###
 ### where is sendmail
@@ -94,9 +94,9 @@ $sendmail = "/usr/sbin/sendmail";
     );
 
 ###
-### hudson state and over all time...
+### jenkins state and over all time...
 ###
-%hudson = ( 'code url' => '', 'casacore url' => '', 'asap url' => '' );
+%jenkins = ( 'code url' => '', 'casacore url' => '', 'asap url' => '' );
 $elapsed_start = time( );
 
 
@@ -109,13 +109,13 @@ $complete_success = 0;
 ###
 ###  keep track of recent failures and revisions of last attempts...
 ###
-$failures_file = "/tmp/hudson-failures.db";
-$last_revision_file = "/tmp/hudson-revisions.db";
+$failures_file = "/tmp/jenkins-failures.db";
+$last_revision_file = "/tmp/jenkins-revisions.db";
 
 ###
 ### this will keep track of the revisions that we have at least attempted
 ### to build (and reported if they failed)... using this instead of e.g.
-### $hudson{'code rev'} et al, prevents a failure earlier in the build
+### $jenkins{'code rev'} et al, prevents a failure earlier in the build
 ### process (e.g. 'casacore') from masking a different error later in the
 ### process (e.g. 'asap'). Thus, $last_revision_file will only be updated
 ### with revisions for which builds have at least been attempted...
@@ -163,13 +163,13 @@ END {
 select(STDERR); $| = 1;		# make unbuffered
 select(STDOUT); $| = 1;		# make unbuffered
 
-fill_hudson_dict( );
+fill_jenkins_dict( );
 
 ###
 ### set up failure file within the workspace...
 ###
-$failures_file = $hudson{'home'} . "/state/failures.db";
-$last_revision_file = $hudson{'home'} . "/state/last-revision.db";
+$failures_file = $jenkins{'home'} . "/state/failures.db";
+$last_revision_file = $jenkins{'home'} . "/state/last-revision.db";
 
 print_state( );
 build_casa( );
@@ -187,8 +187,8 @@ printf "-- elapsed time %.2f seconds\n", $elapsed_end - $elapsed_start;
 ##############################################################################################
 sub build_casa {
 
-    die "workspace does not exist ($hudson{workspace})" unless -d $hudson{'workspace'};
-    die "cannot change to workspace" unless chdir( $hudson{'workspace'} );
+    die "workspace does not exist ($jenkins{workspace})" unless -d $jenkins{'workspace'};
+    die "cannot change to workspace" unless chdir( $jenkins{'workspace'} );
     die "code directory does not exist" unless -d 'code';
     die "core directory does not exist" unless -d 'casacore';
     die "asap directory does not exist" unless -d 'asap';
@@ -199,7 +199,7 @@ sub build_casa {
     die "could not cd to build directory" unless chdir( "build" );
 
     my $arch = find_arch( );
-    my $workdir = $hudson{'workspace'};
+    my $workdir = $jenkins{'workspace'};
     build_source( $workdir, "casacore", "-DCFITSIO_INCLUDE_DIR=/usr/include/cfitsio", "install" );
     build_source( $workdir, "code", "", "" );
     build_source( $workdir, "asap", "", "" );
@@ -213,7 +213,7 @@ sub test_casa {
     ###     casapy -c ../../ppc/python/2.6/runUnitTest.py test_flagdata[test5]
     ###
     my $arch = find_arch( );
-    my $workdir = $hudson{'workspace'};
+    my $workdir = $jenkins{'workspace'};
 
     print "-- testing casa for architecture $arch\n";
 
@@ -293,7 +293,7 @@ sub test_casa {
     return 1;
 }
 
-sub fill_hudson_dict {
+sub fill_jenkins_dict {
     my $core_ext = '';
     my $code_ext = '';
     my $asap_ext = '';
@@ -301,57 +301,61 @@ sub fill_hudson_dict {
     foreach ( keys %ENV ) {
 	if ( m|^SVN_URL| ) {
 	    if ( $ENV{$_} =~ m|/code$| ) {
-		$hudson{'code url'} = $ENV{$_};
+		$jenkins{'code url'} = $ENV{$_};
 		die "unexpected SVN_URL format for code" unless m|(_\d+)$|;
 		$code_ext = $1;
 	    } elsif ( $ENV{$_} =~ m|/casacore$| ) {
-		$hudson{'casacore url'} = $ENV{$_};
+		$jenkins{'casacore url'} = $ENV{$_};
 		die "unexpected SVN_URL format for core" unless m|(_\d+)$|;
 		$core_ext = $1;
 	    } elsif ( $ENV{$_} =~ m|/asap$| ) {
-		$hudson{'asap url'} = $ENV{$_};
+		$jenkins{'asap url'} = $ENV{$_};
 		die "unexpected SVN_URL format for core" unless m|(_\d+)$|;
 		$asap_ext = $1;
 	    }
 	}
     }
 
-    die "did not find casacore url" unless $hudson{'casacore url'};
-    die "did not find code url" unless $hudson{'code url'};
+    die "did not find casacore url" unless $jenkins{'casacore url'};
+    die "did not find code url" unless $jenkins{'code url'};
 
     foreach ( keys %ENV ) {
-	m|^SVN_REVISION$code_ext| && ( $hudson{'code rev'} = $ENV{$_} );
-	m|^SVN_REVISION$core_ext| && ( $hudson{'casacore rev'} = $ENV{$_} );
-	m|^SVN_REVISION$asap_ext| && ( $hudson{'asap rev'} = $ENV{$_} );
-	m|^WORKSPACE$| && ( $hudson{'workspace'} = $ENV{$_} );
-	m|^JOB_URL$| && ( $hudson{'job url'} = $ENV{$_} );
-	m|^HUDSON_COOKIE$| && ( $hudson{'cookie'} = $ENV{$_} );
-	m|^HUDSON_SERVER_COOKIE$| && ( $hudson{'server cookie'} = $ENV{$_} );
-	m|^HUDSON_HOME$| && ( $hudson{'home'} = $ENV{$_} );
-	m|^HUDSON_URL$| && ( $hudson{'url'} = $ENV{$_} );
-	m|^BUILD_URL$| && ( $hudson{'build url'} = $ENV{$_} );
-	m|^BUILD_TAG$| && ( $hudson{'build tag'} = $ENV{$_} );
-	m|^BUILD_ID$| && ( $hudson{'build id'} = $ENV{$_} );
+	m|^SVN_REVISION$code_ext| && ( $jenkins{'code rev'} = $ENV{$_} );
+	m|^SVN_REVISION$core_ext| && ( $jenkins{'casacore rev'} = $ENV{$_} );
+	m|^SVN_REVISION$asap_ext| && ( $jenkins{'asap rev'} = $ENV{$_} );
+	m|^WORKSPACE$| && ( $jenkins{'workspace'} = $ENV{$_} );
+	m|^JOB_URL$| && ( $jenkins{'job url'} = $ENV{$_} );
+	m|^HUDSON_COOKIE$| && ( $jenkins{'cookie'} = $ENV{$_} );
+	m|^HUDSON_SERVER_COOKIE$| && ( $jenkins{'server cookie'} = $ENV{$_} );
+	m|^HUDSON_HOME$| && ( $jenkins{'home'} = $ENV{$_} );
+	m|^HUDSON_URL$| && ( $jenkins{'url'} = $ENV{$_} );
+	m|^JENKINS_COOKIE$| && ( $jenkins{'cookie'} = $ENV{$_} );
+	m|^JENKINS_SERVER_COOKIE$| && ( $jenkins{'server cookie'} = $ENV{$_} );
+	m|^JENKINS_HOME$| && ( $jenkins{'home'} = $ENV{$_} );
+	m|^JENKINS_URL$| && ( $jenkins{'url'} = $ENV{$_} );
+	m|^BUILD_URL$| && ( $jenkins{'build url'} = $ENV{$_} );
+	m|^BUILD_TAG$| && ( $jenkins{'build tag'} = $ENV{$_} );
+	m|^BUILD_ID$| && ( $jenkins{'build id'} = $ENV{$_} );
 	
     }
 
-    $hudson{'output url'} = "$hudson{'build url'}console";
+    $jenkins{'output url'} = "$jenkins{'build url'}console";
 
     ###
-    ### expand hudson urls
+    ### expand jenkins urls
     ###
     foreach $key ( ( 'url', 'build url', 'job url', 'output url' ) ) {
-	my $url = $hudson{$key};
+	my $url = $jenkins{$key};
 	if ( $url ) {
-	    $url =~ s|//$hudson_host:8080/|//$hudson_host.cv.nrao.edu:8080/|g;
-	    $hudson{$key} = $url;
+	    $url =~ s|//$jenkins_host:8080/|//$jenkins_host.cv.nrao.edu:8080/|g;
+	    $jenkins{$key} = $url;
 	}
     }
 
     if ( defined $ENV{'HOME'} ) {
-	$hudson{'home'} = $ENV{'HOME'};
+	$jenkins{'home'} = $ENV{'HOME'};
     } else {
-	$hudson{'home'} = "/tmp";
+	$jenkins{'home'} = "/tmp";
     }
 
 }
@@ -363,8 +367,8 @@ sub build_source {
     my $extra_targets = shift(@_);
     my $arch = find_arch( );
 
-    print "-- building $pkg (rev $hudson{\"$pkg rev\"}) in $workdir/$pkg\n";
-    $build_attempted{$pkg} = $hudson{"$pkg rev"};
+    print "-- building $pkg (rev $jenkins{\"$pkg rev\"}) in $workdir/$pkg\n";
+    $build_attempted{$pkg} = $jenkins{"$pkg rev"};
 
     if ( -d "$workdir/build/$pkg" ) {
 	print "   => reusing $workdir/build/$pkg\n" if $debug;
@@ -463,10 +467,10 @@ sub find_arch {
 }
 
 sub print_state {
-    print "Hudson state:\n";
+    print "Jenkins state:\n";
     print "----------------------------------------------------------------------\n";
-    foreach ( sort(keys %hudson) ) {
-	printf "%18s %s\n", "$_:", $hudson{$_};
+    foreach ( sort(keys %jenkins) ) {
+	printf "%18s %s\n", "$_:", $jenkins{$_};
     }
     print "----------------------------------------------------------------------\n";
 
@@ -510,7 +514,7 @@ sub tie_hash {
     die "could not lock $file.lock" unless $count;
 
     tie( %$hash, AnyDBM_File, $file, O_RDWR | O_CREAT, 0644 );
-    $tied_hashes{$file} = $hash;
+    $tied_hashes{$file} = [ $fh, $hash ];
     return $fh;
 }
 
@@ -533,7 +537,7 @@ sub launch_xvfb {
     my $dir;
     my $xvfb = "Xvfb";
     my $xvfb_path = "";
-    my $authfile = "/tmp/hudson-testcasa-xauthority";
+    my $authfile = "/tmp/jenkins-testcasa-xauthority";
     my $xauth_path = "";
     my $pid = 0;
 
@@ -608,10 +612,10 @@ sub find_svn_user_and_rev {
     my $culprit = '';
     my $revision = '';
 
-    die "could not find $pkg URL" unless defined $hudson{"$pkg url"};
-    die "could not find $pkg revision" unless defined $hudson{"$pkg rev"};
+    die "could not find $pkg URL" unless defined $jenkins{"$pkg url"};
+    die "could not find $pkg revision" unless defined $jenkins{"$pkg rev"};
 
-    unless ( open( SVN, "svn info -r $hudson{\"$pkg rev\"} $hudson{\"$pkg url\"} |" ) ) {
+    unless ( open( SVN, "svn info -r $jenkins{\"$pkg rev\"} $jenkins{\"$pkg url\"} |" ) ) {
 	my $err = $!;
 	print "   failed to open subversion info for $pkg\n";
 	die $err;
@@ -636,12 +640,12 @@ sub old_revision {
     my $last_pkg_rev = $lastrev{$pkg};
     untie_hash( \%lastrev, $lock );
 
-    if ( $hudson{"$pkg rev"} && $last_pkg_rev &&
-	 $hudson{"$pkg rev"} <= $last_pkg_rev ) {
-	print "   => re-run of $pkg test ($hudson{\"$pkg rev\"}/$last_pkg_rev)...\n" if $debug;
+    if ( $jenkins{"$pkg rev"} && $last_pkg_rev &&
+	 $jenkins{"$pkg rev"} <= $last_pkg_rev ) {
+	print "   => re-run of $pkg test ($jenkins{\"$pkg rev\"}/$last_pkg_rev)...\n" if $debug;
 	return 1;
     }
-    print "   => fresh $pkg change ($hudson{\"$pkg rev\"}/$last_pkg_rev)...\n" if $debug;
+    print "   => fresh $pkg change ($jenkins{\"$pkg rev\"}/$last_pkg_rev)...\n" if $debug;
     return 0;
 }
 
@@ -692,15 +696,15 @@ sub mail_suspect {
     print "   => email to $address\n" if $debug;
     
     die "no sendmail" unless -x $sendmail;
-    die "no subversion URL" unless defined $hudson{"$pkg url"};
+    die "no subversion URL" unless defined $jenkins{"$pkg url"};
 
-    my $url = $hudson{"$pkg url"};
-    my $build_url = $hudson{'output url'};
+    my $url = $jenkins{"$pkg url"};
+    my $build_url = $jenkins{'output url'};
 
     return if periodic_change( $url, $revision );
     return if old_revision( $pkg, $revision );
-    if ( -e "$hudson{'home'}/control/no-mail" ) {
-	print "   email not sent due to \"$hudson{'home'}/control/no-mail\"...\n";
+    if ( -e "$jenkins{'home'}/control/no-mail" ) {
+	print "   email not sent due to \"$jenkins{'home'}/control/no-mail\"...\n";
 	return;
     }
 
