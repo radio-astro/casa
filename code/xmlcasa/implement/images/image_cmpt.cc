@@ -262,15 +262,6 @@ casac::image * image::collapse(
 			Vector<String> axVec = (axes.type() == variant::STRING)
 				? Vector<String>(1, axes.getString())
 				: toVectorString(axes.toStringVec());
-			/*
-			if (axes.type() == variant::STRING) {
-				axVec[0] = axes.getString();
-			}
-			else {
-				axVec.resize(axes.size());
-				axVec = toVectorString(axes.toStringVec());
-			}
-			*/
 			Vector<Int> holdAxes = itsImage->getImage()->coordinates().getWorldAxisOrder(
 				axVec, False
 			);
@@ -2583,7 +2574,7 @@ image::statistics(const std::vector<int>& axes,
 {
    ::casac::record *rstat = 0;
    try {
-   *itsLog << LogOrigin("image", "statistics");
+   *itsLog << LogOrigin("image", __FUNCTION__);
     if (detached()){
 	    *itsLog << "Image not attached" << LogIO::POST;
 	    return rstat;
@@ -2617,7 +2608,8 @@ image::statistics(const std::vector<int>& axes,
         for(uInt i=0;i<excludepix.size();i++)
             tmpexclude[i] = excludepix[i];
     }
-
+    *itsLog << LogIO::NORMAL << "Determining stats for image "
+    	<< itsImage->name(True) << LogIO::POST;
     Record retval;
     Bool status;
     status = itsImage->statistics(retval, tmpaxes, *regionRec, mtmp,
