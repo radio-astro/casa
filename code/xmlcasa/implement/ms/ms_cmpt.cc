@@ -1,3 +1,4 @@
+// -*- C++ -*-
 //# Framework independent implementation file for ms..
 //# Copyright (C) 2006-2007-2008
 //# Associated Universities, Inc. Washington DC, USA.
@@ -103,6 +104,7 @@ ms::~ms()
         delete itsFlag;
      if(itsLog)
         delete itsLog;
+     if (itsMSS) {delete itsMSS; itsMSS=NULL;}
    } catch (AipsError x) {
        *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
@@ -191,6 +193,12 @@ ms::open(const std::string& thems, const bool nomodify, const bool lock)
 	     delete itsFlag;
 	     itsFlag = new MSFlagger();
      }
+     if (itsMSS) 
+       {
+	 delete itsMSS;
+	 itsMSS = new MSSelection();
+	 itsMSS->resetMS(*itsMS);
+       }
      itsSel->setMS(*itsMS);
      itsFlag->setMSSelector(*itsSel);
   } catch (AipsError x) {
