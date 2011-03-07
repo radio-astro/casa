@@ -5,6 +5,7 @@ import math
 import pdb
 import numpy
 import shutil
+from numpy import unique
 
 ###some helper tools
 mstool = casac.homefinder.find_home_by_name('msHome')
@@ -1812,6 +1813,7 @@ class cleanhelper:
 
         # flatten:
         chanfreqs1d = chanfreqs1dx.flatten()        
+        chanfreqs1d = unique(chanfreqs1d);
         # flatten() does not sort.
         chanfreqs1d.sort()
         chanfreqs0.sort()
@@ -1927,7 +1929,6 @@ class cleanhelper:
             
 
 
-
         self._casalog.post('fstart = %f, finc = %f' % (fstart,finc), 'DEBUG')
         #print 'fstart = %f, finc = %f' % (fstart,finc)
         # we now have fstart and finc, the start and increment in Hz.  finc can be <0        
@@ -1965,7 +1966,6 @@ class cleanhelper:
             
         if nchan<=0:
             raise TypeError, "values of spw, start, width, and nchan result in no output cube"
-
 
         # here are the output channels in Hz
         freqlist = numpy.array(range(nchan)) * finc + fstart
@@ -2056,7 +2056,7 @@ class cleanhelper:
                     retwidth = self.convertvf(str(finc)+'Hz',self.dataspecframe,field,restf,veltype=veltype)
         else:
             raise TypeError, "Specified mode is not supported"
-
+        
         # XXX do we need to set usespecframe=dataspecframe, overriding the user's, if start was ""?
         # the old code seemed to do that.
         # use data frame for default start (will be passed to defineimage in
