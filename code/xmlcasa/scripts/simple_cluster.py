@@ -620,7 +620,62 @@ class simple_cluster:
                     vec.append(i[a+2:b-1])
         return vec
     
-    def get_engines(self, use_id=[], spreadhost=1):
+    ###########################################################################
+    ###   engine selection functions
+    ###########################################################################
+
+
+    def use_hosts(self, host_list=[], engines_each=0):
+        '''use engines on the given nodes'''
+        if len(host_list)==0 and  engines_each==0:
+            return self._cluster.get_ids()
+
+        hst=self.get_hosts()
+        a=[]
+        if type(host_list)!=list:
+            a.append(host_list)
+            host_list=a
+        if len(host_list)>0:
+            int_ok=True
+            for i in host_list:
+                if type(i)!=str:
+                    int_ok=False
+            if not int_ok:
+                print 'host name in host_list must be string'
+                return []
+        else:
+            host_list=[]
+            for j in range(len(hst)):
+                host_list.append(hst[j][0])
+
+        for i in host_list:
+            host_ok=False
+            for j in range(len(hst)):
+                if hst[j][0]==i:
+                    host_ok=True
+            if not host_ok:
+                print 'no host by name', i 
+                return []
+
+       
+        e=dict()
+        for k in host_list:
+            e[k]=[]
+            for i in self._cluster.get_engines():
+                if i[1]==k: 
+                    e[k].append(i[0])
+        val=e.values()
+        vec=[]
+        if engines_each==0:
+            engines_each=100
+        for i in xrange(len(val)):
+            j=0
+            while j<min(engines_each, len(val[i])):
+                vec.append(val[i][j])
+                j+=1
+        return vec
+
+    def use_engines(self, use_id=[], spreadhost=1):
         '''get a ordered engine list'''
         if len(use_id)>0:
             int_ok=True
@@ -922,7 +977,7 @@ class simple_cluster:
         print 'vis=', vis
         fdspw=self.get_field_desc(vis)
         #ids=self._cluster.get_ids()
-        ids=self.get_engines()
+        ids=self.use_engines()
         msname=self.get_msname(vis)
     
         i=0
