@@ -27,7 +27,6 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
         
         # cb will put the continuum-subtracted data in CORRECTED_DATA, so
         # protect vis by splitting out its relevant parts to a working copy.
-        ms.open(vis, nomodify=True)
         csvis = vis.rstrip('/') + '.contsub'
         
         # The working copy will need all of the channels in fitspw + spw, so we
@@ -64,10 +63,16 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
             # scratch columns will eventually go away.
             whichcol = 'DATA'
         tb.close()
-        
-        ms.split(csvis, field=field, spw=tempspw, whichcol=whichcol)
 
-        ms.close()       
+        if whichcol != 'DATA' or field != '' or tempspw != '':
+            casalog.post('splitting to ' + csvis + ' with tempspw="'
+                         + tempspw + '"', 'DEBUG1')
+            ms.open(vis, nomodify=True)
+            ms.split(csvis, field=field, spw=tempspw, whichcol=whichcol)
+            ms.close()       
+        else:
+            casalog.post('cping to ' + csvis, 'DEBUG1')
+            shutil.copytree(vis, csvis)
         
         if (type(csvis) == str) and os.path.isdir(csvis):
             cb.open(csvis)
@@ -133,8 +138,8 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
         # Set up the solve
         amuellertab = tempfile.mkdtemp(prefix='Temp_contsub.tab', dir=workingdir)
 
-        cb.setsolve(type='A', t=solint, table=amuellertab, combine=combine,
-                    fitorder=fitorder)
+        cb.setsolve(type='A', t=solint, table=amuellertab, combine=combine)
+                    #fitorder=fitorder)
 
         # solve for the continuum
         cb.solve()
