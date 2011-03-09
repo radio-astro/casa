@@ -46,19 +46,12 @@ Appears to be a small test program -- exclude from library build
 Synchornising with the ALMA CVS Version
 ---------------------------------------
 
+These are notes for my own use -- they show how to directly pull the
+files from the CVS layout.
 
-rsync -r appcs:/home/bn204/d/almasw2/TELCAL/TelCalResults/Libraries/ATM/include/ src/ --exclude 'Makefile' --exclude '.cvsignore' --exclude "CVS"
+rsync -r appcs:/home/bn204/d/almasw5/TELCAL/TelCalResults/Libraries/ATM/include/ src/ --exclude 'Makefile' --exclude '.cvsignore' --exclude "CVS"
 
-rsync -r appcs:/home/bn204/d/almasw2/TELCAL/TelCalResults/Libraries/ATM/src/ src/ --exclude 'Makefile' --exclude '.cvsignore' --exclude "CVS"
-
-rsync -r appcs:/home/bn204/d/almasw/TELCAL/TelCalResults/Libraries/ATM/test/ otest/ --exclude 'Makefile' --exclude '.cvsignore' --exclude "CVS"
-
-
-new branch
-
-rsync -r appcs:/home/bn204/d/almasw3/TELCAL/TelCalResults/Libraries/ATM/include/ src/ --exclude 'Makefile' --exclude '.cvsignore' --exclude "CVS"
-
-rsync -r appcs:/home/bn204/d/almasw3/TELCAL/TelCalResults/Libraries/ATM/src/ src/ --exclude 'Makefile' --exclude '.cvsignore' --exclude "CVS"
+rsync -r appcs:/home/bn204/d/almasw5/TELCAL/TelCalResults/Libraries/ATM/src/ src/ --exclude 'Makefile' --exclude '.cvsignore' --exclude "CVS"
 
 
 

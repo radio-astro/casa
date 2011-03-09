@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMRefractiveIndexProfile.cpp,v 1.10 2010/09/02 22:33:55 dbroguie Exp $"
+ * "@(#) $Id: ATMRefractiveIndexProfile.cpp,v 1.10.12.2 2011/03/04 14:49:05 dbroguie Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------
@@ -287,7 +287,9 @@ void RefractiveIndexProfile::mkRefractiveIndexProfile()
 
   double abun_O3, abun_CO, abun_N2O, abun_NO2, abun_SO2;
   double wvt, wv, t;
-  double nu, nu2, nu_pi;
+  double nu, nu2, nu_pi; 
+  // double width;s
+  // unsigned int npoints;
   RefractiveIndex atm;
   //    double sumAbsO3Lines1, sumAbsCOLines1, sumAbsN2OLines1, sumAbsNO2Lines1, sumAbsSO2Lines1; 
 
@@ -354,6 +356,37 @@ void RefractiveIndexProfile::mkRefractiveIndexProfile()
     v_N_SO2LinesPtr->reserve(numLayer_);
 
     nu = 1.0E-9 * v_chanFreq_[nc]; // ATM uses GHz units
+
+    // cout << "freq. points =" << v_chanFreq_.size() << endl;
+
+    /*       TO BE IMPLEMENTED IN NEXT RELEASE
+
+    if (v_chanFreq_.size()>1){
+      if(nc==0){
+	width = fabs(v_chanFreq_[nc+1]-v_chanFreq_[nc])*1e-9;       // width en GHz para ATM
+	npoints=(unsigned int)round(width*100);                     // One point every 10 MHz
+      }else{
+	if(nc==v_chanFreq_.size()-1){
+	  width = fabs(v_chanFreq_[nc]-v_chanFreq_[nc-1])*1e-9;     // width en GHz para ATM
+	  npoints=(unsigned int)round(width*100);                   // One point every 10 MHz 
+	}else{
+	  width = fabs((v_chanFreq_[nc+1]-v_chanFreq_[nc-1])/2.0)*1e-9;    // width en GHz para ATM
+	  npoints=(unsigned int)round(width*100);                          // One point every 10 MHz
+	}
+      }
+    }else{
+      width = 0.001;      // default width = 1 MHz = 0.001 GHz
+      npoints=1;
+    }
+
+    if(npoints==0){npoints=1;}
+
+    */
+
+
+
+    // cout << "nc =" << nc << " nu=" << nu << " width=" << width << " GHz    npoints=" << npoints << endl;
+
     nu2 = nu * nu;
     nu_pi = nu / pi;
 
@@ -363,66 +396,42 @@ void RefractiveIndexProfile::mkRefractiveIndexProfile()
       wvt = wv * v_layerTemperature_[j] / 217.0; // v_layerWaterVapor_[j] está en kg/m**3
       t = v_layerTemperature_[j] / 300.0;
 
-      //	complex<double>  o2lines = atm.getMeaningfulSpecificRefractivity_16o2(v_layerTemperature_[j],v_layerPressure_[j],wvt,nu);
-      //       o2lines = o2lines*(1.0-2.0*(abun_18o+abun_17o))*o2_mixing_ratio*(1.0-exp(-1556.38*1.43/v_layerTemperature_[j]))*v_layerPressure_[j]*100.0/(1.380662e-23*v_layerTemperature_[j]);
 
-      //	complex<double>  o2lines_vib = atm.getMeaningfulSpecificRefractivity_16o2_vib(v_layerTemperature_[j],v_layerPressure_[j],wvt,nu);
-      //	o2lines_vib = o2lines_vib*(1.0-2.0*(abun_18o+abun_17o))*o2_mixing_ratio*exp(-1556.38*1.43/v_layerTemperature_[j])*v_layerPressure_[j]*100.0/(1.380662e-23*v_layerTemperature_[j]);
-
-      //	complex<double>  o16o18lines = atm.getMeaningfulSpecificRefractivity_16o18o(v_layerTemperature_[j],v_layerPressure_[j],wvt,nu);
-      //	o16o18lines = o16o18lines*2.0*abun_18o*o2_mixing_ratio*v_layerPressure_[j]*100.0/(1.380662e-23*v_layerTemperature_[j]);
-
-      //	complex<double>  o16o17lines = atm.getMeaningfulSpecificRefractivity_16o17o(v_layerTemperature_[j],v_layerPressure_[j],wvt,nu);
-      //	o16o17lines = o16o17lines*2.0*abun_17o*o2_mixing_ratio*v_layerPressure_[j]*100.0/(1.380662e-23*v_layerTemperature_[j]);
-
-
-      //	v_N_O2LinesPtr->push_back(o2lines+o16o17lines+o16o18lines+o2lines_vib);
+      // cout <<"ATMRefractiveIndexProfile: " << v_layerTemperature_[j] << " K " << v_layerPressure_[j] << " mb "  << nu << " GHz " << endl;
+      // cout <<"ATMRefractiveIndexProfile: O2" <<  atm.getRefractivity_o2(v_layerTemperature_[j],v_layerPressure_[j],wvt,nu) << endl;
+      // cout << "ATMRefractiveIndexProfile: O2" << atm.getRefractivity_o2(v_layerTemperature_[j],v_layerPressure_[j],wvt,nu,width,npoints) << endl;
+      // cout << "ATMRefractiveIndexProfile: H2O" << atm.getRefractivity_h2o(v_layerTemperature_[j],v_layerPressure_[j],wvt,nu) << endl;
+      // cout << "ATMRefractiveIndexProfile: H2O" << atm.getRefractivity_h2o(v_layerTemperature_[j],v_layerPressure_[j],wvt,nu,width,npoints) << endl;
+      // cout <<"ATMRefractiveIndexProfile: O3" <<  atm.getRefractivity_o3(v_layerTemperature_[j],v_layerPressure_[j],nu,v_layerO3_[j]) << endl;
+      // cout << "ATMRefractiveIndexProfile: O3" << atm.getRefractivity_o3(v_layerTemperature_[j],v_layerPressure_[j],nu,width,npoints,v_layerO3_[j]) << endl;      
+      // cout <<"ATMRefractiveIndexProfile: CO" <<  atm.getSpecificRefractivity_co(v_layerTemperature_[j],v_layerPressure_[j],nu) << endl;
+      // cout << "ATMRefractiveIndexProfile: CO" << atm.getSpecificRefractivity_co(v_layerTemperature_[j],v_layerPressure_[j],nu,width,npoints) << endl;
 
       v_N_O2LinesPtr->push_back(atm.getRefractivity_o2(v_layerTemperature_[j],
                                                        v_layerPressure_[j],
                                                        wvt,
-                                                       nu));
+                                                       nu));     // ,width,npoints)); TO BE IMPLEMENTED IN NEXT RELEASE
 
       complex<double> cont_h2o =
-          atm.getMeaningfulSpecificRefractivity_cnth2o(v_layerTemperature_[j],
-                                                       v_layerPressure_[j],
-                                                       wvt,
-                                                       nu);
+        atm.getSpecificRefractivity_cnth2o(v_layerTemperature_[j],
+                                           v_layerPressure_[j],
+                                           wvt,
+                                           nu);                   // ,width,npoints); TO BE IMPLEMENTED IN NEXT RELEASE
       complex<double> cont_dry =
-          atm.getMeaningfulSpecificRefractivity_cntdry(v_layerTemperature_[j],
-                                                       v_layerPressure_[j],
-                                                       wvt,
-                                                       nu);
+          atm.getSpecificRefractivity_cntdry(v_layerTemperature_[j],
+                                             v_layerPressure_[j],
+                                             wvt,
+                                             nu);                  // ,width,npoints); TO BE IMPLEMENTED IN NEXT RELEASE
 
       v_N_H2OContPtr->push_back(cont_h2o);
       v_N_DryContPtr->push_back(cont_dry);
 
       if(v_layerWaterVapor_[j] > 0) {
 
-        // complex<double>  h2olines = atm.getMeaningfulSpecificRefractivity_hh16o(v_layerTemperature_[j],v_layerPressure_[j],wvt,nu);
-        //  h2olines = h2olines*(6.023e23*v_layerWaterVapor_[j]*1000/mmol_h2o)*(1-abun_18o-abun_17o-2.0*abun_D)*(1.0-exp(-2322.92/v_layerTemperature_[j]));  // (m^2 * m^-3 = m -1)
-
-        //  complex<double>  hh18olines = atm.getMeaningfulSpecificRefractivity_hh18o(v_layerTemperature_[j],v_layerPressure_[j],wvt,nu);
-        //  hh18olines = hh18olines*(6.023e23*v_layerWaterVapor_[j]*1000/mmol_h2o)*abun_18o;  // (m^2 * m^-3 = m -1)
-
-        //  complex<double>  hh17olines = atm.getMeaningfulSpecificRefractivity_hh17o(v_layerTemperature_[j],v_layerPressure_[j],wvt,nu);
-        //  hh17olines = hh17olines*(6.023e23*v_layerWaterVapor_[j]*1000/mmol_h2o)*abun_17o;  // (m^2 * m^-3 = m -1)
-
-        // HDO LINES DOES NOT WORK PROPERLY 5/3/2007
-        //  complex<double>  hdolines = atm.getMeaningfulSpecificRefractivity_hdo(v_layerTemperature_[j],v_layerPressure_[j],wvt,nu);
-        //  hdolines = hdolines*(6.023e23*v_layerWaterVapor_[j]*1000.0/mmol_h2o)*2.0*abun_D;  // (m^2 * m^-3 = m -1)
-
-        //  complex<double>  h2olines_v2 = atm.getMeaningfulSpecificRefractivity_hh16o_v2(v_layerTemperature_[j],v_layerPressure_[j],wvt,nu);
-        //  h2olines_v2 = h2olines_v2*(6.023e23*v_layerWaterVapor_[j]*1000/mmol_h2o)*(1-abun_18o-abun_17o-2.0*abun_D)*exp(-2322.92/v_layerTemperature_[j]);  // (m^2 * m^-3 = m -1)
-
-
-        // v_N_H2OLinesPtr->push_back(h2olines+h2olines_v2+hh18olines+hh17olines);
-
         v_N_H2OLinesPtr->push_back(atm.getRefractivity_h2o(v_layerTemperature_[j],
                                                            v_layerPressure_[j],
                                                            wvt,
-                                                           nu));
-
+                                                           nu)); // ,width,npoints)); TO BE IMPLEMENTED IN NEXT RELEASE
       } else {
         v_N_H2OLinesPtr->push_back(0.0);
       }
@@ -434,62 +443,51 @@ void RefractiveIndexProfile::mkRefractiveIndexProfile()
         abun_O3 = v_layerO3_[j] * 1E-6;
         v_N_O3LinesPtr->push_back(atm.getRefractivity_o3(v_layerTemperature_[j],
                                                          v_layerPressure_[j],
-                                                         nu,
+                                                         nu,      // width,npoints, TO BE IMPLEMENTED IN NEXT RELEASE
                                                          abun_O3 * 1e6));
-        //	     v_N_O3LinesPtr->push_back(
-        //		       (atm.getMeaningfulSpecificRefractivity_16o16o16o(v_layerTemperature_[j],v_layerPressure_[j],nu)+
-        //			atm.getMeaningfulSpecificRefractivity_16o16o17o(v_layerTemperature_[j],v_layerPressure_[j],nu)*(2*abun_17o)+
-        //			atm.getMeaningfulSpecificRefractivity_16o16o18o(v_layerTemperature_[j],v_layerPressure_[j],nu)*(2*abun_18o)+
-        //			atm.getMeaningfulSpecificRefractivity_16o17o16o(v_layerTemperature_[j],v_layerPressure_[j],nu)*(abun_17o)+
-        //			atm.getMeaningfulSpecificRefractivity_16o18o16o(v_layerTemperature_[j],v_layerPressure_[j],nu)*(abun_18o))
-        //		       *abun_O3*1e6/(1.0+3.0*(abun_18o+abun_17o)));  // m^-1
-
       } else {
         v_N_O3LinesPtr->push_back(0.0);
       }
 
       if(v_layerCO_[j] > 0) {
         abun_CO = v_layerCO_[j] * 1E-6; // in cm^-3
-        v_N_COLinesPtr->push_back(atm.getMeaningfulSpecificRefractivity_co(v_layerTemperature_[j],
-                                                                           v_layerPressure_[j],
-                                                                           nu)
-            * abun_CO * 1e6); // m^2 * m^-3 = m^-1
-      } else {
+        v_N_COLinesPtr->push_back(atm.getSpecificRefractivity_co(v_layerTemperature_[j],
+								 v_layerPressure_[j],
+								 nu)            // ,width,npoints) TO BE IMPLEMENTED IN NEXT RELEASE
+				  * abun_CO * 1e6); // m^2 * m^-3 = m^-1
+        } else {
         v_N_COLinesPtr->push_back(0.0);
       }
 
       if(v_layerN2O_[j] > 0) {
         abun_N2O = v_layerN2O_[j] * 1E-6;
-        v_N_N2OLinesPtr->push_back(atm.getMeaningfulSpecificRefractivity_n2o(v_layerTemperature_[j],
-                                                                             v_layerPressure_[j],
-                                                                             nu)
-            * abun_N2O * 1e6); // m^2 * m^-3 = m^-1
-      } else {
+        v_N_N2OLinesPtr->push_back(atm.getSpecificRefractivity_n2o(v_layerTemperature_[j],
+								   v_layerPressure_[j],
+								   nu)             // ,width,npoints) TO BE IMPLEMENTED IN NEXT RELEASE
+				   * abun_N2O * 1e6); // m^2 * m^-3 = m^-1
+        } else {
         v_N_N2OLinesPtr->push_back(0.0);
       }
 
       if(v_layerNO2_[j] > 0) {
         abun_NO2 = v_layerNO2_[j] * 1E-6;
-        v_N_NO2LinesPtr->push_back(atm.getMeaningfulSpecificRefractivity_no2(v_layerTemperature_[j],
-                                                                             v_layerPressure_[j],
-                                                                             nu)
-            * abun_NO2 * 1e6); // m^2 * m^-3 = m^-1
+        v_N_NO2LinesPtr->push_back(atm.getSpecificRefractivity_no2(v_layerTemperature_[j],
+								   v_layerPressure_[j],
+								   nu)             // ,width,npoints) TO BE IMPLEMENTED IN NEXT RELEASE
+				   * abun_NO2 * 1e6); // m^2 * m^-3 = m^-1
       } else {
         v_N_NO2LinesPtr->push_back(0.0);
       }
 
       if(v_layerSO2_[j] > 0) {
         abun_SO2 = v_layerSO2_[j] * 1E-6;
-        v_N_SO2LinesPtr->push_back(atm.getMeaningfulSpecificRefractivity_so2(v_layerTemperature_[j],
-                                                                             v_layerPressure_[j],
-                                                                             nu)
-            * abun_SO2 * 1e6); // m^2 * m^-3 = m^-1
+        v_N_SO2LinesPtr->push_back(atm.getSpecificRefractivity_so2(v_layerTemperature_[j],
+								   v_layerPressure_[j],
+								   nu)            // ,width,npoints) TO BE IMPLEMENTED IN NEXT RELEASE
+				   * abun_SO2 * 1e6); // m^2 * m^-3 = m^-1
       } else {
         v_N_SO2LinesPtr->push_back(0.0);
       }
-
-
-
     }
 
     if(vv_N_H2OLinesPtr_.size() == 0) first = true;
@@ -810,7 +808,13 @@ Opacity RefractiveIndexProfile::getO3LinesOpacity(unsigned int spwid,
 
 Opacity RefractiveIndexProfile::getWetOpacity(Length integratedwatercolumn)
 {
-  return getWetOpacity(integratedwatercolumn,0)*(integratedwatercolumn.get()/getGroundWH2O().get());
+//   cout << "1 integratedwatercolumn.get()="  << integratedwatercolumn.get() << endl;
+//   cout << "2 getGroundWH2O().get()="   << getGroundWH2O().get() << endl;
+//   cout << "3 getWetOpacity()="  << endl;
+//   cout << "4 " << endl;
+  return getWetOpacity(getGroundWH2O(),0)*(integratedwatercolumn.get()/getGroundWH2O().get());
+
+  // 2010_SEP02: return getWetOpacity(integratedwatercolumn,0)*(integratedwatercolumn.get()/getGroundWH2O().get());
 }
 
   Opacity RefractiveIndexProfile::getWetOpacity(Length integratedwatercolumn, 

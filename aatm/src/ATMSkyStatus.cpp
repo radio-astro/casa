@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMSkyStatus.cpp,v 1.11 2010/09/02 22:44:27 dbroguie Exp $"
+ * "@(#) $Id: ATMSkyStatus.cpp,v 1.11.12.1 2011/03/03 15:17:09 dbroguie Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------
@@ -210,7 +210,7 @@ SkyStatus::SkyStatus(RefractiveIndexProfile refractiveIndexProfile,
 
 SkyStatus::SkyStatus(const SkyStatus & a)
 {
-     cout <<"Enter RefractiveIndexProfile copy constructor version Fri May 20 00:59:47 CEST 2005"<<endl;
+  //cout <<"Enter RefractiveIndexProfile copy constructor version Fri May 20 00:59:47 CEST 2005"<<endl;
 
   // level AtmProfile
 
@@ -2450,8 +2450,6 @@ double SkyStatus::mkSkyCouplingRetrieval_fromTEBB(unsigned int spwId,
   }
 
 
-
-
 double SkyStatus::RT(double pfit_wh2o,
                      double skycoupling,
                      double tspill,
@@ -2462,6 +2460,7 @@ double SkyStatus::RT(double pfit_wh2o,
 
   double radiance;
   double singlefreq;
+  double chanwidth;
   double tebb;
   double h_div_k = 0.04799274551; /* plank=6.6262e-34,boltz=1.3806E-23 */
   double kv;
@@ -2469,33 +2468,35 @@ double SkyStatus::RT(double pfit_wh2o,
   double tbgr = skyBackgroundTemperature_.get("K");
   double ratioWater = pfit_wh2o;
 
+  singlefreq = getChanFreq(spwid, nc).get("GHz");
+  chanwidth = getChanWidth(spwid, nc).get("GHz");
+  // cout << "Chan freq. =" << singlefreq << " GHz" << endl;
+  // cout << "Chan width =" << chanwidth << " GHz" << endl;
+
+  tebb=0.0;
   kv = 0.0;
   radiance = 0.0;
-  singlefreq = getChanFreq(spwid, nc).get("GHz");
-
-  getDryOpacity(spwid, nc).get();
 
   for(unsigned int i = 0; i < getNumLayer(); i++) {
-
-    tau_layer = ((getAbsTotalWet(spwid, nc, i).get()) * ratioWater
-        + getAbsTotalDry(spwid, nc, i).get()) * getLayerThickness(i).get();
-
-    radiance = radiance + (1.0 / (exp(h_div_k * singlefreq
-        / getLayerTemperature(i).get()) - 1.0)) * exp(-kv * airm) * (1.0
-        - exp(-airm * tau_layer));
-
+    
+    tau_layer = ((getAbsTotalWet(spwid, nc, i).get()) * ratioWater+ getAbsTotalDry(spwid, nc, i).get()) * getLayerThickness(i).get();
+    
+    // cout << i << "  " <<  getAbsTotalWet(spwid, nc, i).get() << "  " << getAbsTotalDry(spwid, nc, i).get() << endl;
+      
+    radiance = radiance + (1.0 / (exp(h_div_k * singlefreq/ getLayerTemperature(i).get()) - 1.0)) * exp(-kv * airm) * (1.0- exp(-airm * tau_layer));
+    
     kv = kv + tau_layer;
-
+      
   }
-
-  radiance = skycoupling * (radiance + (1.0 / (exp(h_div_k * singlefreq / tbgr)
-      - 1.0)) * exp(-kv * airm)) + (1.0 / (exp(h_div_k * singlefreq / tspill)
-      - 1.0)) * (1 - skycoupling);
-
-  tebb = h_div_k * singlefreq / log(1 + (1 / radiance));
+    
+  radiance = skycoupling * (radiance + (1.0 / (exp(h_div_k * singlefreq / tbgr)- 1.0)) * exp(-kv * airm)) + (1.0 / (exp(h_div_k * singlefreq / tspill)- 1.0)) * (1 - skycoupling);
+    
+  tebb = tebb + h_div_k * singlefreq / log(1 + (1 / radiance));
+    
+  // cout << "singlefreq = " << singlefreq <<  " total opacity = " << kv << " tebb = " << tebb << endl;
 
   return tebb;
-
+  
 }
 
 void SkyStatus::iniSkyStatus()

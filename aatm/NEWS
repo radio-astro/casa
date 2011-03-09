@@ -1,6 +1,18 @@
 AATM News
 =========
 
+Version 0.5
+-----------
+
+Correct a memory leak. Initial work to support averageing over channel
+width.
+
+Version 0.4.3.1
+---------------
+
+Fix bug in the "absorption" test program which was causing incorrect
+opacities. No changes to the main library.
+
 Version 0.4.3
 -------------
 
