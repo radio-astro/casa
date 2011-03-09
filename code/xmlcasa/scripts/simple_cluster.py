@@ -624,6 +624,59 @@ class simple_cluster:
     ###   engine selection functions
     ###########################################################################
 
+    def use_paths(self, dir_list=[]):
+        '''use engines that most close to the dirs'''
+        if len(dir_list)==0:
+            print 'dir_list can not be empty'
+            return []
+        a=[]
+        if type(dir_list)!=list:
+            a.append(dir_list)
+            dir_list=a
+        if len(dir_list)>0:
+            int_ok=True
+            for i in dir_list:
+                if type(i)!=str:
+                    int_ok=False
+            if not int_ok:
+                print 'path name in dir_list must be string'
+                return []
+    
+        a=[]
+        hst=self.get_hosts()
+        for i in dir_list:
+            int_ok=False
+            for j in range(len(hst)):
+                if i.count(hst[j][2])>0:
+                    a.append(hst[j][0])
+                    int_ok=True
+            if not int_ok:
+                print 'could not find a host for', i
+                return []
+        
+        e=dict()
+        for k in xrange(len(hst)):
+            h=hst[k][0]
+            e[h]=[]
+            for i in self._cluster.get_engines():
+                if i[1]==h: 
+                    e[h].append(i[0])
+        val=e.values()
+        key=e.keys()
+        lenth=[]
+        pos=[]
+        for i in xrange(len(val)):
+            lenth.append(len(val[i]))
+            pos.append(0)
+        vec=[]
+        for k in a:
+            for s in xrange(len(e)):
+                if k==key[s]:
+                    if pos[s]==lenth[s]:
+                       pos[s]=0
+                    vec.append(val[s][pos[s]])
+                    pos[s]+=1
+        return vec
 
     def use_hosts(self, host_list=[], engines_each=0):
         '''use engines on the given nodes'''
