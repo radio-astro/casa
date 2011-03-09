@@ -83,19 +83,19 @@ int main()
 				    135*C::pi/180.0, 60*C::pi/180.0,    
 				    -1.*C::pi/180.0/3600.0, 1.*C::pi/180.0/3600.0,        
 				    xform,                              
-				    64., 64.);  
+				    63.5, 63.5);  // (128-1)/2.
       DirectionCoordinate dirCoordsBig(MDirection::J2000,                  
 				       Projection(Projection::SIN),        
 				       135*C::pi/180.0, 60*C::pi/180.0,    
 				       -5.*C::pi/180.0/3600.0, 5.*C::pi/180.0/3600.0,        
 				       xform,                              
-				       64., 64.);  
+				       63.5, 63.5);  
       DirectionCoordinate dirCoordsSmall(MDirection::J2000,                  
 					 Projection(Projection::SIN),        
 					 135*C::pi/180.0, 60*C::pi/180.0,    
 					 -0.5*C::pi/180.0/3600.0, 0.5*C::pi/180.0/3600.0,        
 					 xform,                              
-					 64., 64.);  
+					 63.5, 63.5);  
 
       Vector<String> units(2); units = "deg";                       
       dirCoords.setWorldAxisUnits(units);                               
@@ -212,19 +212,49 @@ int main()
       Int c = aa.cFKeyFromAntennaTypes(aa.antTypeFromName("DV01"),aa.antTypeFromName("DV02"));
       Vector<ALMAAntennaType> a;
       a.assign( ALMAAperture::antennaTypesFromCFKey(c) );
-      cout << (Int)a(0) << " " << (Int)a(1) << " (0,0)" << endl;
+      cout << (Int)a(0) << " ";
+      if(a.nelements()>1){
+	cout << (Int)a(1) << " (2) Error!" << endl;
+      }
+      else{
+	cout << " (2)" << endl;
+      }	
       c = aa.cFKeyFromAntennaTypes(aa.antTypeFromName("CM01"),aa.antTypeFromName("CM02"));
       a.assign( ALMAAperture::antennaTypesFromCFKey(c) );
-      cout << (Int)a(0) << " " << (Int)a(1) << " (3,3)" << endl;
+      cout << (Int)a(0) << " ";
+      if(a.nelements()>1){
+	cout << (Int)a(1) << " (3) Error!" << endl;
+      }
+      else{
+	cout << " (3)" << endl;
+      }	
       c = aa.cFKeyFromAntennaTypes(aa.antTypeFromName("DA01"),aa.antTypeFromName("DV02"));
       a.assign( ALMAAperture::antennaTypesFromCFKey(c) );
-      cout << (Int)a(0) << " " << (Int)a(1) << " (0,1)" << endl;
+      cout << (Int)a(0) << " " << (Int)a(1) << " (1,2)" << endl;
+      c = aa.cFKeyFromAntennaTypes(aa.antTypeFromName("DV02"),aa.antTypeFromName("DA01"));
+      a.assign( ALMAAperture::antennaTypesFromCFKey(c) );
+      cout << (Int)a(0) << " " << (Int)a(1) << " (2,1)" << endl;
       c = aa.cFKeyFromAntennaTypes(aa.antTypeFromName("CM01"),aa.antTypeFromName("PM02"));
       a.assign( ALMAAperture::antennaTypesFromCFKey(c) );
-      cout << (Int)a(0) << " " << (Int)a(1) << " (2,3)" << endl;
+      cout << (Int)a(0) << " " << (Int)a(1) << " (3,4)" << endl;
+      c = aa.cFKeyFromAntennaTypes(aa.antTypeFromName("PM01"),aa.antTypeFromName("CM02"));
+      a.assign( ALMAAperture::antennaTypesFromCFKey(c) );
+      cout << (Int)a(0) << " " << (Int)a(1) << " (4,3)" << endl;
+      c = aa.cFKeyFromAntennaTypes(aa.antTypeFromName("XY"),aa.antTypeFromName("DV02"));
+      a.assign( ALMAAperture::antennaTypesFromCFKey(c) );
+      cout << (Int)a(0) << " " << (Int)a(1) << " (0,2)" << endl;
       c = aa.cFKeyFromAntennaTypes(aa.antTypeFromName("DV"),aa.antTypeFromName("XY02"));
       a.assign( ALMAAperture::antennaTypesFromCFKey(c) );
-      cout << (Int)a(0) << " " << (Int)a(1) << " (-1,0)" << endl;
+      cout << (Int)a(0) << " " << (Int)a(1) << " (2,0)" << endl;
+      c = aa.cFKeyFromAntennaTypes(aa.antTypeFromName("ZZ"),aa.antTypeFromName("XY02"));
+      a.assign( ALMAAperture::antennaTypesFromCFKey(c) );
+      cout << (Int)a(0) << " ";
+      if(a.nelements()>1){
+	cout << (Int)a(1) << " (0) Error!" << endl;
+      }
+      else{
+	cout << " (0)" << endl;
+      }	
       
       cout << endl;
       cout << ALMAAperture::antTypeStrFromType(aa.antTypeFromName("XY01")) << endl;
