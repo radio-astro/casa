@@ -524,6 +524,10 @@ atmosphere::addSpectralWindow(const Quantity& fCenter,
       pSpectralGrid->add(numChan,refChan,refFreq,chanSep);
       if (pRefractiveIndexProfile != 0)	delete pRefractiveIndexProfile;
       pRefractiveIndexProfile = new RefractiveIndexProfile(*pSpectralGrid,*pAtmProfile);
+      if (pSkyStatus != 0) delete pSkyStatus;
+      pSkyStatus = new SkyStatus(*pRefractiveIndexProfile);
+      // WORK AROUND to set the 1st guess water column as a coefficient
+      pSkyStatus->setUserWH2O(pSkyStatus->getGroundWH2O());
       rstat = numChan;
     } else {
       *itsLog << LogIO::WARN
