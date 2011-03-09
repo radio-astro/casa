@@ -39,6 +39,7 @@
 namespace casa{
 
   AntennaResponses* ALMAAperture::aR_p = 0;
+  Bool ALMAAperture::orderMattersInCFKey = True;
 
   ALMAAperture::ALMAAperture(): 
     ATerm(),
@@ -406,8 +407,8 @@ namespace casa{
       // get the world coordinates of the center of outImage
       Vector<Double> wCenterOut(2);
       Vector<Double> pCenterOut(2);
-      pCenterOut(0) = outImage.shape()(whichOutPixelAxes(0))/2.-1.;
-      pCenterOut(1) = outImage.shape()(whichOutPixelAxes(1))/2.-1.;
+      pCenterOut(0) = outImage.shape()(whichOutPixelAxes(0))/2.-0.5;
+      pCenterOut(1) = outImage.shape()(whichOutPixelAxes(1))/2.-0.5;
       Vector<String> wAU = outCS.directionCoordinate(0).worldAxisUnits();
       outCS.directionCoordinate(0).toWorld(wCenterOut, pCenterOut);
       //cout << "pixel center " << pCenterOut << " world center " << wCenterOut << " " << wAU(0) << endl;
@@ -637,7 +638,7 @@ namespace casa{
       break;
     case ALMA_INVALID:
     default:
-      tS = "";
+      tS = "UNKOWN";
       break;
     }
     return tS;
@@ -645,7 +646,12 @@ namespace casa{
 
 
   Int ALMAAperture::cFKeyFromAntennaTypes(const ALMAAntennaType aT1, const ALMAAntennaType aT2){
-    return min((Int)aT1+1, (Int)aT2+1) + 10000*max((Int)aT1+1, (Int)aT2+1); // assume order doesn't matter
+    if(orderMattersInCFKey){
+      return (Int)aT2+1 + 10000*((Int)aT1+1); 
+    }
+    else{
+      return min((Int)aT1+1, (Int)aT2+1) + 10000*max((Int)aT1+1, (Int)aT2+1); // assume order doesn't matter
+    }
   }
 
   Vector<ALMAAntennaType> ALMAAperture::antennaTypesFromCFKey(const Int& cFKey){
@@ -658,8 +664,14 @@ namespace casa{
     }
     else{
       rval.resize(2);
-      rval(0) = (ALMAAntennaType) min(t1,t2);
-      rval(1) = (ALMAAntennaType) max(t1,t2);
+      if(orderMattersInCFKey){
+	rval(0) = (ALMAAntennaType)t1;
+	rval(1) = (ALMAAntennaType)t2;
+      }
+      else{
+	rval(0) = (ALMAAntennaType) min(t1,t2);
+	rval(1) = (ALMAAntennaType) max(t1,t2);
+      }
     }
     return rval;
   }
