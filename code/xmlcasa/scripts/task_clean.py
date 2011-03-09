@@ -87,7 +87,10 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
         
         #some default value handling for channelization
         if (mode=='velocity' or mode=='frequency' or mode=='channel'):
-            (localnchan, localstart, localwidth)=imset.setChannelization(mode,spw,field,nchan,start,width,outframe,veltype,restfreq)
+            #(localnchan, localstart, localwidth)=imset.setChannelization(mode,spw,field,nchan,start,width,outframe,veltype,restfreq)
+            # new version: uses  ms.cvelfreqs
+            (localnchan, localstart, localwidth)=imset.setChannelizeDefault(mode,spw,field,nchan,start,width,outframe,veltype,phasecenter, restfreq)
+
         else:
             imset.setspecframe(spw)
             localnchan=nchan
@@ -137,8 +140,8 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
 
                 print "Processing channel %s of %s" % (j+1, nchaniter)
                 casalog.post("Processing channel %s of %s"% (j+1, nchaniter))
-                #chaniterParms=imset.setChaniterParms(finalimagename,spw,j,localstart,localwidth,freqs,finc,tmppath)
-                chaniterParms=imset.setChaniterParms(finalimagename,spw,j,localstart,width,freqs,finc,tmppath)
+                chaniterParms=imset.setChaniterParms(finalimagename,spw,j,localstart,localwidth,freqs,finc,tmppath)
+                #chaniterParms=imset.setChaniterParms(finalimagename,spw,j,localstart,width,freqs,finc,tmppath)
                 imagename=chaniterParms['imagename']
                 imnchan=chaniterParms['imnchan']
                 chanslice=chaniterParms['chanslice']

@@ -2132,7 +2132,6 @@ class cleanhelper:
 
         #get restfreq
         if restf=='':
-          print "TRYING TO SET REST FREQ"
           tb.open(invis+'/FIELD')
           nfld=tb.nrows()
           try:
@@ -2216,8 +2215,6 @@ class cleanhelper:
           if mode=="frequency":
             retwidth=str(finc)+'Hz'
           elif mode=="velocity":
-            finc = newfreqs[1]-newfreqs[0]
-            if debug: print "finc(newfreqs1-newfreqs0)=",finc
             # for default width assume it is vel<0 (incresing in freq)
             v1 = self.convertvf(str(newfreqs[-1])+'Hz',frame,field,restf,veltype=veltype)
             v0 = self.convertvf(str(newfreqs[-2])+'Hz',frame,field,restf,veltype=veltype)
@@ -2226,6 +2223,7 @@ class cleanhelper:
             retwidth = str(qa.quantity(qa.sub(qa.quantity(v0),qa.quantity(v1)))['value'])+'m/s'
           else:
             retwidth=1
+          if debug: print "setChan retwidth=",retwidth
         return retnchan, retstart, retwidth
 
     def convertframe(self,fin,frame,field):
