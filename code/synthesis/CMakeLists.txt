@@ -30,6 +30,10 @@ casa_add_library( synthesis
   implement/DataSampling/SDDataSampling.cc
   implement/DataSampling/SynDataSampling.cc
   implement/IDL/IDL.cc
+  implement/MeasurementComponents/ALMAAperture.cc
+  implement/MeasurementComponents/ALMABeamCalc.cc
+  implement/MeasurementComponents/ALMABeamCalcParams.cc
+  implement/MeasurementComponents/ALMACalcIlluminationConvFunc.cc
   implement/MeasurementComponents/AMueller.cc
   implement/MeasurementComponents/BeamCalc.cc
   implement/MeasurementComponents/BeamCalcParams.cc
@@ -160,6 +164,7 @@ casa_add_library( synthesis
 
 casa_add_assay( synthesis implement/DataSampling/test/tPixonProcessor.cc )
 casa_add_assay( synthesis implement/IDL/test/tIDL.cc )
+casa_add_assay( synthesis implement/MeasurementComponents/test/tALMAAperture.cc )
 casa_add_assay( synthesis implement/MeasurementComponents/test/tAlgoPClark.cc )
 casa_add_assay( synthesis implement/MeasurementComponents/test/tBeamSquint.cc )
 casa_add_assay( synthesis implement/MeasurementComponents/test/tCalibrater.cc )

@@ -60,7 +60,7 @@ class vpmanager_test(unittest.TestCase):
         self.assertTrue(self.res)
         tb.open(self.inputdir+'/AntennaResponses')
         self.assertTrue(tb.nrows()==2)
-        self.assertTrue(tb.ncols()==18)
+        self.assertTrue(tb.ncols()==19)
         self.assertTrue(tb.getcell('NUM_SUBBANDS',0)==3)
         self.assertTrue(tb.getcell('NUM_SUBBANDS',1)==3)
         tb.close()

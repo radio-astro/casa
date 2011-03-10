@@ -167,6 +167,7 @@ namespace casa{
       Vector<uInt> respImageChannel(nAntTypes);
       Vector<MFrequency> respImageNomFreq(nAntTypes);
       Vector<AntennaResponses::FuncTypes> respImageFType(nAntTypes);
+      Vector<MVAngle> respImageRotOffset(nAntTypes);
       Vector<Vector<Array<Complex> > > respByPol(nAntTypes); 
 
       MFrequency refFreq = vb.msColumns().spectralWindow().refFrequencyMeas()(spwId);
@@ -180,6 +181,7 @@ namespace casa{
 			       respImageChannel(i),
 			       respImageNomFreq(i),
 			       respImageFType(i),
+			       respImageRotOffset(i),
 			       "ALMA",
 			       obsTime,
 			       refFreq,
@@ -254,7 +256,7 @@ namespace casa{
 	  ostringstream oss;
 	  oss << "Error: Antenna response image from path \""
 	      << respImageName(0) 
-	      << "\" does not contain the necessary polarisation products or products are in the wrong order.\n"
+	      << "\" does not contain the necessary polarisation products or they are in the wrong order.\n"
 	      << "Order should be XX, XY, YX, YY.";
 	  throw(SynthesisError(oss.str()));
       }	
@@ -332,7 +334,7 @@ namespace casa{
 	Double dAngleRad = getPA(vb);
 	cout << "PA = " << dAngleRad << " rad" << endl;
 
-	uInt fact1Index, fact2Index;
+	Int fact1Index, fact2Index;
 	Double pA1, pA2;
 
 	switch(polToDoIndex(iPol)){
@@ -359,6 +361,10 @@ namespace casa{
 	  break;
 	}
 	  
+	// apply the rotation offset from the response table
+	pA1 += respImageRotOffset(0).radian();
+	pA2 += respImageRotOffset(nAntTypes-1).radian();
+
 	// rotate factor 1 
 	SynthesisUtils::rotateComplexArray(os, respByPol(0)(fact1Index), dCoord, fact1, 
 					   pA1, "LINEAR", 
