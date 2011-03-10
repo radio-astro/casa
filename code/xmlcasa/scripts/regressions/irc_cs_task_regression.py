@@ -113,16 +113,21 @@ sdsmooth()
 localoutfile=sdfile+'_sm'
 
 #fit and remove baselines
-# do baseline fit with polynomial order of 2
+# do baseline fit with cubic spline with one knot (npiece=2)
+# 3-sigma clipping plus 1 iteration applied.
 # automatically detect lines to exclude from fitting
 default(sdbaseline)
 sdfile=localoutfile
-masking='auto'
+maskmode='auto'
 #edge=[50]
 thresh=5
 avg_limit=4
-blfunc='poly'
-order=1
+#blfunc='poly'
+#order=1
+blfunc='cspline'
+npiece=2
+clipthresh=3.0
+clipniter=1
 overwrite=True
 plotlevel=localplotlevel
 sdbaseline()
@@ -176,14 +181,22 @@ endProc = time.clock()
 endTime = time.time()
 
 # --- end of irc cs script
+
 #irc_max=3.3
 #irc_rms=0.147
 #irc_sum=627.5
 # Regression values of CASA 2.3(#6654)+ASAP 2.2.0(#1448)
 # on 64bit REL5.2 (2008/12/01)
-irc_max=3.325
+#irc_max=3.325
+#irc_rms=0.1473
+#irc_sum=627.9
+# Regression values of CASA 3.1+ASAP3 on 64bit RHEL5.5 (2010/10?)
+# Regression values of CASA 3.2(#14238)+ASAP3(#2031) on 64bit RHEL5.5
+#   using cspline with (npiece,clipthresh,clipniter)=(2,3.0,1) in sdbaseline (2011/3/10 WK)
+irc_max=3.360
 irc_rms=0.1473
-irc_sum=627.9
+irc_sum=642.8
+
 diff_max = abs((irc_max-max)/irc_max)
 diff_rms = abs((irc_rms-rms)/irc_rms)
 diff_sum = abs((irc_sum-sum)/irc_sum)

@@ -99,7 +99,7 @@ kernel='boxcar'
 kwidth=5
 # output
 #fit and remove baselines
-masking='auto'
+maskmode='auto'
 thresh=5
 avg_limit=4
 blfunc='poly'

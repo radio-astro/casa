@@ -186,7 +186,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value type="doubleArray"></value>
     </param>
 
-    <param type="string" name="masking">
+    <param type="string" name="maskmode">
             <description>mode of setting channel masks</description>
             <value>none</value>
             <allowed kind="enum">
@@ -329,7 +329,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                         <default param="kwidth"><value>5</value></default>
                 </equals>
             </when>
-            <when param="masking">
+            <when param="maskmode">
                 <equals value="none"/>
                 <equals value="list"/>
                 <equals value="interact"/>
@@ -474,22 +474,22 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 default: [] (entire spectrum)
                 example: [[1000,3000],[5000,7000]]
                          '0:1000~3000;5000~7000, 1:200~350;450~600'
-                         if masking='auto' then this mask will be applied
+                         if maskmode='auto' then this mask will be applied
                          before fitting
-        masking -- mode of setting channel masks
+        maskmode -- mode of setting channel masks
                 options: (str) 'none','auto','list','interact'
                 default: 'none'
-                example: masking='auto' uses expandable parameters
+                example: maskmode='auto' uses expandable parameters
                          in addition to order to run linefinder
                          to determine line-free regions
                          USE WITH CARE! May need to tweak the parameters,
                          thresh, avg_limit, and edge.
-                         masking='interact' allows adding and deleting mask 
+                         maskmode='interact' allows adding and deleting mask 
                          regions by drawing rectangles on the plot with mouse. 
                          Draw a rectangle with LEFT-mouse to ADD the region to 
                          the mask and with RIGHT-mouse to DELETE the region. 
 
-            &gt;&gt;&gt; masking expandable parameters
+            &gt;&gt;&gt; maskmode expandable parameters
                  thresh -- S/N threshold for linefinder
                          default: 5
                          example: a single channel S/N ratio above which the channel is
