@@ -2108,7 +2108,7 @@ String SpectralCoordinate::format (String& units,
 	 worldValue = world(worldAxis);
        }
 //
-       MVFrequency mvFreq(worldValue);
+       MVFrequency mvFreq(worldValue*to_hz_p);
        worldValue = mvFreq.get(unit).getValue();
        if (!showAsAbsolute) {
 // Find relative coordinate in m consistent units
