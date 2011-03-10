@@ -20,8 +20,8 @@ class sdbaseline_basictest(unittest.TestCase):
 
     The list of tests:
     test00   --- default parameters (raises an error)
-    test01   --- test polynominal baseline with masking = 'auto'
-    test02   --- test polynominal baseline with masking = 'list'
+    test01   --- test polynominal baseline with maskmode = 'auto'
+    test02   --- test polynominal baseline with maskmode = 'list'
 
     Note: input data is generated from a single dish regression data,
     'OrionS_rawACSmod', as follows:
@@ -57,14 +57,14 @@ class sdbaseline_basictest(unittest.TestCase):
         self.assertFalse(result)
 
     def testbl01(self):
-        """Test 1: masking = 'auto'"""
+        """Test 1: maskmode = 'auto'"""
         tid = "01"
         sdfile = self.sdfile
         outfile = self.outroot+tid+".asap"
         mode = "auto"
         iflist = [0,2]
         pollist=[0]
-        result = sdbaseline(sdfile=sdfile,masking=mode,outfile=outfile,
+        result = sdbaseline(sdfile=sdfile,maskmode=mode,outfile=outfile,
                             blfunc='poly',iflist=iflist,pollist=pollist)
         # sdbaseline returns None if it runs successfully
         self.assertEqual(result,None,
@@ -84,14 +84,14 @@ class sdbaseline_basictest(unittest.TestCase):
 
 
     def testbl02(self):
-        """Test 2: masking = 'list' and masklist=[] (all channels)"""
+        """Test 2: maskmode = 'list' and masklist=[] (all channels)"""
         tid = "02"
         sdfile = self.sdfile
         outfile = self.outroot+tid+".asap"
         mode = "list"
         iflist = [2]
         pollist = [1]
-        result = sdbaseline(sdfile=sdfile,masking=mode,outfile=outfile,
+        result = sdbaseline(sdfile=sdfile,maskmode=mode,outfile=outfile,
                             iflist=iflist,pollist=pollist)
         # sdbaseline returns None if it runs successfully
         self.assertEqual(result,None,
@@ -243,7 +243,7 @@ class sdbaseline_masktest(unittest.TestCase):
 
 
     def testblmask01(self):
-        """Mask test 1: test masklist (list) with masking = 'auto'"""
+        """Mask test 1: test masklist (list) with maskmode = 'auto'"""
         self.tid="01"
         sdfile = self.sdfile
         outfile = self.outroot+self.tid+".asap"
@@ -251,7 +251,7 @@ class sdbaseline_masktest(unittest.TestCase):
         masklist = [[200.,7599]]
         iflist = [0,2]
         pollist=[0]
-        result = sdbaseline(sdfile=sdfile,masking=mode,masklist=masklist,
+        result = sdbaseline(sdfile=sdfile,maskmode=mode,masklist=masklist,
                             outfile=outfile,iflist=iflist,pollist=pollist)
         # sdbaseline returns None if it runs successfully
         self.assertEqual(result,None,
@@ -259,7 +259,7 @@ class sdbaseline_masktest(unittest.TestCase):
         self._compareStats(self.ref_if02pol0)
 
     def testblmask02(self):
-        """Mask test 2: test masklist (list) with masking = 'list'"""
+        """Mask test 2: test masklist (list) with maskmode = 'list'"""
         self.tid="02"
         sdfile = self.sdfile
         outfile = self.outroot+self.tid+".asap"
@@ -267,7 +267,7 @@ class sdbaseline_masktest(unittest.TestCase):
         masklist = [[200,2959],[3120,7599]]
         iflist = [2]
         pollist=[0]
-        result = sdbaseline(sdfile=sdfile,masking=mode,masklist=masklist,
+        result = sdbaseline(sdfile=sdfile,maskmode=mode,masklist=masklist,
                             outfile=outfile,iflist=iflist,pollist=pollist)
         # sdbaseline returns None if it runs successfully
         self.assertEqual(result,None,
@@ -275,7 +275,7 @@ class sdbaseline_masktest(unittest.TestCase):
         self._compareStats(self.ref_if2pol0)
 
     def testblmask03(self):
-        """Mask test 3: test masklist (string) with masking = 'auto'"""
+        """Mask test 3: test masklist (string) with maskmode = 'auto'"""
         self.tid="03"
         sdfile = self.sdfile
         outfile = self.outroot+self.tid+".asap"
@@ -283,7 +283,7 @@ class sdbaseline_masktest(unittest.TestCase):
         masklist = "0~2:200~7599"
         iflist = [0,2]
         pollist=[0]
-        result = sdbaseline(sdfile=sdfile,masking=mode,masklist=masklist,
+        result = sdbaseline(sdfile=sdfile,maskmode=mode,masklist=masklist,
                             outfile=outfile,iflist=iflist,pollist=pollist)
         # sdbaseline returns None if it runs successfully
         self.assertEqual(result,None,
@@ -291,7 +291,7 @@ class sdbaseline_masktest(unittest.TestCase):
         self._compareStats(self.ref_if02pol0)
 
     def testblmask04(self):
-        """Mask test 4: test masklist (string) with masking = 'list'"""
+        """Mask test 4: test masklist (string) with maskmode = 'list'"""
         self.tid="04"
         sdfile = self.sdfile
         outfile = self.outroot+self.tid+".asap"
@@ -299,7 +299,7 @@ class sdbaseline_masktest(unittest.TestCase):
         masklist = "0:200~3979;4152~7599, 2:200~2959;3120~7599"
         iflist = [0,2]
         pollist=[0]
-        result = sdbaseline(sdfile=sdfile,masking=mode,masklist=masklist,
+        result = sdbaseline(sdfile=sdfile,maskmode=mode,masklist=masklist,
                             outfile=outfile,iflist=iflist,pollist=pollist)
         # sdbaseline returns None if it runs successfully
         self.assertEqual(result,None,
@@ -307,7 +307,7 @@ class sdbaseline_masktest(unittest.TestCase):
         self._compareStats(self.ref_if02pol0)
 
     def testblmask05(self):
-        """Mask test 5: test specunit='GHz' with masklist (list) and masking = 'auto'"""
+        """Mask test 5: test specunit='GHz' with masklist (list) and maskmode = 'auto'"""
         self.tid="05"
         sdfile = self.sdfile
         outfile = self.outroot+self.tid+".asap"
@@ -316,7 +316,7 @@ class sdbaseline_masktest(unittest.TestCase):
         masklist = [[44.0511472,44.0963125]]
         iflist = [2]
         pollist=[0]
-        result = sdbaseline(sdfile=sdfile,masking=mode,masklist=masklist,
+        result = sdbaseline(sdfile=sdfile,maskmode=mode,masklist=masklist,
                             outfile=outfile,iflist=iflist,pollist=pollist,
                             specunit=specunit)
         # sdbaseline returns None if it runs successfully
@@ -325,7 +325,7 @@ class sdbaseline_masktest(unittest.TestCase):
         self._compareStats(self.ref_if2pol0f)
 
     def testblmask06(self):
-        """Mask test 6: test specunit='GHz' with masklist (list) and masking = 'list'"""
+        """Mask test 6: test specunit='GHz' with masklist (list) and maskmode = 'list'"""
         self.tid="06"
         sdfile = self.sdfile
         outfile = self.outroot+self.tid+".asap"
@@ -334,7 +334,7 @@ class sdbaseline_masktest(unittest.TestCase):
         masklist = [[44.0511472,44.0679889],[44.0689716,44.0963125]]
         iflist = [2]
         pollist=[0]
-        result = sdbaseline(sdfile=sdfile,masking=mode,masklist=masklist,
+        result = sdbaseline(sdfile=sdfile,maskmode=mode,masklist=masklist,
                             outfile=outfile,iflist=iflist,pollist=pollist,
                             specunit=specunit)
         # sdbaseline returns None if it runs successfully
@@ -343,7 +343,7 @@ class sdbaseline_masktest(unittest.TestCase):
         self._compareStats(self.ref_if2pol0f)
 
     def testblmask07(self):
-        """Mask test 7: test specunit='GHz' with masklist (string) and masking = 'auto'"""
+        """Mask test 7: test specunit='GHz' with masklist (string) and maskmode = 'auto'"""
         self.tid="07"
         sdfile = self.sdfile
         outfile = self.outroot+self.tid+".asap"
@@ -352,7 +352,7 @@ class sdbaseline_masktest(unittest.TestCase):
         masklist = "0:45.4655714~45.5107367, 2:44.0511472~44.0963125"
         iflist = [0,2]
         pollist=[0]
-        result = sdbaseline(sdfile=sdfile,masking=mode,masklist=masklist,
+        result = sdbaseline(sdfile=sdfile,maskmode=mode,masklist=masklist,
                             outfile=outfile,iflist=iflist,pollist=pollist,
                             specunit=specunit)
         # sdbaseline returns None if it runs successfully
@@ -361,7 +361,7 @@ class sdbaseline_masktest(unittest.TestCase):
         self._compareStats(self.ref_if02pol0f)
 
     def testblmask08(self):
-        """Mask test 8: test specunit='GHz' with masklist (string) and masking = 'list'"""
+        """Mask test 8: test specunit='GHz' with masklist (string) and maskmode = 'list'"""
         self.tid="08"
         sdfile = self.sdfile
         outfile = self.outroot+self.tid+".asap"
@@ -370,7 +370,7 @@ class sdbaseline_masktest(unittest.TestCase):
         masklist = "0:45.4655714~45.4886394;45.4896954~45.5107367, 2:44.0511472~44.0679889;44.0689716~44.0963125"
         iflist = [0,2]
         pollist=[0]
-        result = sdbaseline(sdfile=sdfile,masking=mode,masklist=masklist,
+        result = sdbaseline(sdfile=sdfile,maskmode=mode,masklist=masklist,
                             outfile=outfile,iflist=iflist,pollist=pollist,
                             specunit=specunit)
         # sdbaseline returns None if it runs successfully
@@ -379,7 +379,7 @@ class sdbaseline_masktest(unittest.TestCase):
         self._compareStats(self.ref_if02pol0f)
 
     def testblmask09(self):
-        """Mask test 9: test specunit='km/s' with masklist (list) and masking = 'auto'"""
+        """Mask test 9: test specunit='km/s' with masklist (list) and maskmode = 'auto'"""
         self.tid="09"
         sdfile = self.sdfile
         outfile = self.outroot+self.tid+".asap"
@@ -388,7 +388,7 @@ class sdbaseline_masktest(unittest.TestCase):
         masklist = [[9186.458, 9484.109]]
         iflist = [2]
         pollist=[0]
-        result = sdbaseline(sdfile=sdfile,masking=mode,masklist=masklist,
+        result = sdbaseline(sdfile=sdfile,maskmode=mode,masklist=masklist,
                             outfile=outfile,iflist=iflist,pollist=pollist,
                             specunit=specunit)
         # sdbaseline returns None if it runs successfully
@@ -397,7 +397,7 @@ class sdbaseline_masktest(unittest.TestCase):
         self._compareStats(self.ref_if2pol0v)
 
     def testblmask10(self):
-        """Mask test 10: test specunit='km/s' with masklist (list) and masking = 'list'"""
+        """Mask test 10: test specunit='km/s' with masklist (list) and maskmode = 'list'"""
         self.tid="10"
         sdfile = self.sdfile
         outfile = self.outroot+self.tid+".asap"
@@ -406,7 +406,7 @@ class sdbaseline_masktest(unittest.TestCase):
         masklist = [[9186.458, 9366.642],[9373.118, 9484.109]]
         iflist = [2]
         pollist=[0]
-        result = sdbaseline(sdfile=sdfile,masking=mode,masklist=masklist,
+        result = sdbaseline(sdfile=sdfile,maskmode=mode,masklist=masklist,
                             outfile=outfile,iflist=iflist,pollist=pollist,
                             specunit=specunit)
         # sdbaseline returns None if it runs successfully
@@ -415,7 +415,7 @@ class sdbaseline_masktest(unittest.TestCase):
         self._compareStats(self.ref_if2pol0v)
 
     def testblmask11(self):
-        """Mask test 11: test specunit='km/s' with masklist (string) and masking = 'auto'"""
+        """Mask test 11: test specunit='km/s' with masklist (string) and maskmode = 'auto'"""
         self.tid="11"
         sdfile = self.sdfile
         outfile = self.outroot+self.tid+".asap"
@@ -424,7 +424,7 @@ class sdbaseline_masktest(unittest.TestCase):
         masklist = "0:-134.960~162.691, 2:9186.458~9484.109"
         iflist = [0,2]
         pollist=[0]
-        result = sdbaseline(sdfile=sdfile,masking=mode,masklist=masklist,
+        result = sdbaseline(sdfile=sdfile,maskmode=mode,masklist=masklist,
                             outfile=outfile,iflist=iflist,pollist=pollist,
                             specunit=specunit)
         # sdbaseline returns None if it runs successfully
@@ -433,7 +433,7 @@ class sdbaseline_masktest(unittest.TestCase):
         self._compareStats(self.ref_if02pol0v)
 
     def testblmask12(self):
-        """Mask test 12: test specunit='km/s' with masklist (string) and masking = 'list'"""
+        """Mask test 12: test specunit='km/s' with masklist (string) and maskmode = 'list'"""
         self.tid="12"
         sdfile = self.sdfile
         outfile = self.outroot+self.tid+".asap"
@@ -442,7 +442,7 @@ class sdbaseline_masktest(unittest.TestCase):
         masklist = "0:-134.960~3.708;10.667~162.691, 2:9373.118~9484.109;9186.458~9366.642"
         iflist = [0,2]
         pollist=[0]
-        result = sdbaseline(sdfile=sdfile,masking=mode,masklist=masklist,
+        result = sdbaseline(sdfile=sdfile,maskmode=mode,masklist=masklist,
                             outfile=outfile,iflist=iflist,pollist=pollist,
                             specunit=specunit)
         # sdbaseline returns None if it runs successfully
