@@ -345,6 +345,7 @@ Bool FITSSpectralUtil::toFITSHeader(String &ctype,
 				    Double &altrpix,
 				    Int &velref,
 				    Double &restfreq,
+				    String &specsys,
 				    LogIO &logger,
 				    Double refFrequency,
 				    Double refChannel,
@@ -360,6 +361,7 @@ Bool FITSSpectralUtil::toFITSHeader(String &ctype,
     haveAlt = False;
     altrval = altrpix = 0.0;
     velref = 0;
+    specsys = "";
 
     logger << LogOrigin("FITSUtil", "toFITSHeader", WHERE);
 
@@ -389,7 +391,14 @@ Bool FITSSpectralUtil::toFITSHeader(String &ctype,
 	  logger << LogIO::SEVERE << "Can only handle OPTICAL and RADIO velocities. Using RADIO" 
 		 << LogIO::POST;
 	  break;
-	}	
+	}
+
+	if (!FITSSpectralUtil::specsysFromFrame(specsys, referenceFrame)) {
+	  logger << LogIO::SEVERE << "Cannot turn spectral type# " << 
+	    Int(referenceFrame) <<	
+	    " into a FITS SPECSYS keyword. Will use " << specsys <<
+	    LogIO::POST;
+	}
     }
 
     // Calculate velocity quantities
@@ -568,6 +577,45 @@ Bool FITSSpectralUtil::tagFromFrame(String &tag,
     default:
 	tag = "-OBS";
 	velref = 3;
+	result = False;
+    }
+    return result;
+}
+
+Bool FITSSpectralUtil::specsysFromFrame(String &specsys,
+					MFrequency::Types refFrame)
+{
+    Bool result = True;
+    switch (refFrame) {
+    case MFrequency::LSRK:
+	specsys = "LSRK";
+	break;
+    case MFrequency::BARY:
+	specsys = "BARYCENT";
+	break;
+    case MFrequency::LSRD:
+	specsys = "LSRD";
+	break;
+    case MFrequency::GEO:
+	specsys = "GEOCENTR";
+	break;
+    case MFrequency::REST:
+	specsys = "SOURCE";
+	break;
+    case MFrequency::GALACTO:
+	specsys = "GALACTOC";
+	break;
+    case MFrequency::LGROUP:
+	specsys = "LOCALGRP";
+	break;
+    case MFrequency::CMB:
+	specsys = "CMBDIPOL";
+	break;
+    case MFrequency::TOPO:
+	specsys = "TOPOCENT";
+	break;
+    default:
+	specsys = "TOPOCENT";
 	result = False;
     }
     return result;
