@@ -15,7 +15,8 @@ def plotms(vis=None, xaxis=None, xdatacolumn=None, yaxis=None,
            extendflag=None,
            extcorr=None, extchannel=None,
            plotfile=None, format=None,
-           highres=None, interactive=None, overwrite=None
+           highres=None, interactive=None, overwrite=None,
+           showgui=None
 ):
 
 # we'll add these later
@@ -112,6 +113,8 @@ def plotms(vis=None, xaxis=None, xdatacolumn=None, yaxis=None,
         extfield -- extend flags based on field?  only valid if time extension
                     is turned on.
                     default: False.
+        showgui -- Whether or not to display the plotting GUI
+                  default: True; example showgui=False
     """
     # Check if DISPLAY environment variable is set.
     if os.getenv('DISPLAY') == None:
@@ -145,6 +148,8 @@ def plotms(vis=None, xaxis=None, xdatacolumn=None, yaxis=None,
         if(synonyms.has_key(xaxis)): xaxis = synonyms[xaxis]
         if(synonyms.has_key(yaxis)): yaxis = synonyms[yaxis]
         
+        tp.setgui( showgui );
+
         # Set filename and axes
 
         pm.setPlotMSFilename(vis, False)
@@ -183,7 +188,8 @@ def plotms(vis=None, xaxis=None, xdatacolumn=None, yaxis=None,
         pm.setFlagExtension(extendflag, extcorrstr, extchannel)
         # Update and show
         pm.update()
-        pm.show()
+        if (showgui):
+            pm.show()
         
         # write file if requested
         if(plotfile != ""):

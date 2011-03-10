@@ -377,6 +377,8 @@ void plotms::update() {
 }
 
 void plotms::show()   {
+
+printf(">>> DSW <<< plotms::show beign called!!   >>>>>\n");
  	callAsync(PlotMSDBusApp::METHOD_SHOW);
  	/*
 	Record result;

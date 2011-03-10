@@ -387,7 +387,24 @@ Flag Extension Parameters
          <description>Overwrite plot file if it already exists?</description>
          <value>False</value>
      </param>
-     
+
+
+
+
+<!--
+###############################################################################
+    Misc Parameters
+###############################################################################
+-->
+
+     <param type="bool" name="showgui">
+         <description>Show GUI</description>
+         <value>True</value>
+     </param>
+
+
+
+
 <!--
 ###############################################################################
 Plotxy Compliance Parameters
@@ -816,6 +833,10 @@ Constraints
                   default: false (e.g., for automated scripts to prevent blocking).
         overwrite -- Overwrite plot file if it already exists?
                   default: false
+    
+    showgui -- Whether or not to display the plotting GUI
+              default: True; example showgui=False
+
 
 <!--
         extspw - extend flags based on spw?
@@ -832,6 +853,7 @@ Constraints
                     is turned on.
                     default: False.
     
+
     plotxycomp - use plotxy compliance parameters?  WARNING: if used,
                   subparameters will override their corresponding plotms
                   parameter values.
