@@ -420,7 +420,9 @@ int main()
 //
          {
             String unit("m");
-            Double val = 100E9;
+	    units(0) = "GHz";
+	    lc.setWorldAxisUnits(units);
+            Double val = 100; 
             String str = lc.format(unit, Coordinate::FIXED, val, 0, True, True, 4);
             if (str != String("0.0030")) {
 	       cerr << str << endl;
