@@ -62,7 +62,7 @@ def simdata(
     if type(skymodel)==type([]):
         skymodel=skymodel[0]
     skymodel=skymodel.replace('$project',project)
-            
+
     if((not os.path.exists(skymodel)) and (not os.path.exists(complist))):
         msg("No sky input found.  At least one of skymodel or complist must be set.",priority="error")
         return False
@@ -71,6 +71,9 @@ def simdata(
         msg("No skymodel found. Simulating from components only is new and still considered an 'expert' feature.",priority="warn")
 #        if analyze:
 #            msg("In particular, fidelity image may be misleading due to division by small values",priority="warn")
+
+    # handle '$project' in modelimage
+    modelimage = modelimage.replace('$project',project)
 
     grscreen=False
     grfile=False
@@ -1154,13 +1157,21 @@ def simdata(
                             msg("you are generating total power image "+tpimage+". this is used as a model image for clean",priority="warn")
                         modelimage=tpimage
                 
+                # format image size properly
+                sdimsize = imsize
+                if not isinstance(imsize,list):
+                    sdimsize = [imsize,imsize]
+                elif len(imsize) == 1:
+                    sdimsize = [imsize[0],imsize[0]]
+
                 im.open(tpmstoimage)
                 im.selectvis(nchan=model_nchan,start=0,step=1,spw=0)
-                im.defineimage(mode='channel',nx=imsize[0],ny=imsize[1],cellx=cell[0],celly=cell[1],phasecenter=model_refdir,nchan=model_nchan,start=0,step=1,spw=0)
+                im.defineimage(mode='channel',nx=sdimsize[0],ny=sdimsize[1],cellx=cell[0],celly=cell[1],phasecenter=model_refdir,nchan=model_nchan,start=0,step=1,spw=0)
                 #im.setoptions(ftmachine='sd',gridfunction='pb')
                 im.setoptions(ftmachine='sd',gridfunction='pb')
                 im.makeimage(type='singledish',image=tpimage)
                 im.close()
+                del sdimsize
 
                 # For single dish: manually set the primary beam
                 ia.open(tpimage)
