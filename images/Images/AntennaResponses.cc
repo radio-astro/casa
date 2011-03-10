@@ -98,6 +98,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     FuncName_p.resize();
     FuncChannel_p.resize();
     NomFreq_p.resize();
+    RotAngOffset_p.resize();
 
     pathIndex_p.resize();
 
@@ -148,6 +149,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       ROArrayColumn<String> functionNameCol(tab, "FUNCTION_NAME");
       ROArrayColumn<uInt> functionChannelCol(tab, "FUNCTION_CHANNEL");
       ROArrayQuantColumn<Double> nomFreqCol(tab, "NOMINAL_FREQ");
+      ROArrayQuantColumn<Double> rotAngOffsetCol(tab, "RESPONSE_ROTATION_OFFSET");
 
       numRows_p += numRows;
 
@@ -168,6 +170,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       FuncName_p.resize(numRows_p,True);
       FuncChannel_p.resize(numRows_p,True);
       NomFreq_p.resize(numRows_p,True);
+      RotAngOffset_p.resize(numRows_p,True);
 
       pathIndex_p.resize(numRows_p,True);
 
@@ -198,6 +201,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	NomFreq_p(j).resize(nSubB);
 	for(uInt k=0; k<nSubB; k++){
 	  NomFreq_p(j)(k) = MVFrequency(tQ(k));
+	}
+	tQ = rotAngOffsetCol(i);
+	RotAngOffset_p(j).resize(nSubB);
+	for(uInt k=0; k<nSubB; k++){
+	  RotAngOffset_p(j)(k) = MVAngle(tQ(k));
 	}
 
 	ValidCenter_p(j) = centerCol(i);
@@ -395,6 +403,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				      uInt& functionChannel, // the channel to use
 				      MFrequency& nomFreq, // nominal frequency of the image (at the given channel)
 				      FuncTypes& fType, // the function type of the image
+				      MVAngle& rotAngOffset, // response rotation angle offset
 				      const String& obsName, // (the observatory name, e.g. "ALMA" or "ACA")
 				      const MEpoch& obsTime,
 				      const MFrequency& freq,
@@ -423,6 +432,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       functionChannel = FuncChannel_p(row)(subBand);
       nomFreq = MFrequency(NomFreq_p(row)(subBand),MFrequency::TOPO);
       fType = FuncType_p(row)(subBand);
+      rotAngOffset = RotAngOffset_p(row)(subBand);
       return True;
     }
 
@@ -434,6 +444,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				      uInt& functionChannel,
 				      MFrequency& nomFreq, // nominal frequency of the image
 				      FuncTypes& fType, // the function type of the image
+				      MVAngle& rotAngOffset, // response rotation angle offset
 				      const String& obsName, // (the observatory name, e.g. "ALMA" or "ACA")
 				      const Int& beamId,
 				      const MFrequency& freq){
@@ -460,6 +471,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       functionChannel = FuncChannel_p(row)(subBand);
       nomFreq = MFrequency(NomFreq_p(row)(subBand),MFrequency::TOPO);
       fType = FuncType_p(row)(subBand);
+      rotAngOffset = RotAngOffset_p(row)(subBand);
       return True;
     }
   }
@@ -475,6 +487,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				const Vector<String>& funcName,
 				const Vector<uInt>& funcChannel,
 				const Vector<MVFrequency>& nomFreq,
+				const Vector<MVAngle>& rotAngOffset,
 				const String& antennaType,
 				const MEpoch& startTime,
 				const MDirection& center,
@@ -503,7 +516,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	 tNumSubbands == funcType.nelements() &&
 	 tNumSubbands == funcName.nelements() &&
 	 tNumSubbands == funcChannel.nelements() &&
-	 tNumSubbands == nomFreq.nelements())
+	 tNumSubbands == nomFreq.nelements() &&
+	 tNumSubbands == rotAngOffset.nelements())
        ){
       LogIO os(LogOrigin("AntennaResponses", String("putRow"), WHERE));
       os << LogIO::NORMAL << String("Inconsistent vector dimensions.") << obsName 
@@ -565,6 +579,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       FuncName_p.resize(numRows_p,True);
       FuncChannel_p.resize(numRows_p,True);
       NomFreq_p.resize(numRows_p,True);
+      RotAngOffset_p.resize(numRows_p,True);
     }  
 
     ObsName_p(theRow) = obsName;
@@ -584,6 +599,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     FuncName_p(theRow).assign(funcName);
     FuncChannel_p(theRow).assign(funcChannel);
     NomFreq_p(theRow).assign(nomFreq);
+    RotAngOffset_p(theRow).assign(rotAngOffset);
 
     return True;
 
@@ -615,6 +631,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     tD.addColumn(ArrayColumnDesc<String> ("FUNCTION_NAME"));
     tD.addColumn(ArrayColumnDesc<uInt> ("FUNCTION_CHANNEL"));
     tD.addColumn(ArrayColumnDesc<Double> ("NOMINAL_FREQ"));
+    tD.addColumn(ArrayColumnDesc<Double> ("RESPONSE_ROTATION_OFFSET"));
 
     // Add TableMeasures information for designated Measures/Quanta columns
 
@@ -632,6 +649,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     freqQuantDesc2.write (tD);
     TableQuantumDesc freqQuantDesc3(tD, "NOMINAL_FREQ", Unit ("Hz"));
     freqQuantDesc3.write (tD);
+    TableQuantumDesc angQuantDesc(tD, "RESPONSE_ROTATION_OFFSET", Unit ("deg"));
+    angQuantDesc.write (tD);
 
     TableMeasValueDesc refDirMeasVal (tD, "CENTER");
     TableMeasRefDesc refDirMeasRef (tD, "CENTER_REF");
@@ -668,6 +687,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       ArrayColumn<String> functionNameCol(tab, "FUNCTION_NAME");
       ArrayColumn<uInt> functionChannelCol(tab, "FUNCTION_CHANNEL");
       ArrayQuantColumn<Double> nomFreqCol(tab, "NOMINAL_FREQ");
+      ArrayQuantColumn<Double> rotAngOffsetCol(tab, "RESPONSE_ROTATION_OFFSET");
 
       for(uInt i=0; i<numRows_p; i++){
 	beamIdCol.put(i, BeamId_p(i));
@@ -694,6 +714,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  bMF(k) = (NomFreq_p(i)(k)).get(); // convert MVFrequency to Quantity in Hz
 	}
 	nomFreqCol.put(i, bMF);
+
+	for(uInt k=0; k<bMF.nelements(); k++){
+	  bMF(k) = (RotAngOffset_p(i)(k)).get(Unit("deg")); // convert MVAngle to Quantity in deg
+	}
+	rotAngOffsetCol.put(i, bMF);
 
 	centerCol.put(i, ValidCenter_p(i));
 	validCenterMinCol.put(i, ValidCenterMin_p(i));
