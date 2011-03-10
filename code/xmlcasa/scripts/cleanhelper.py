@@ -728,6 +728,8 @@ class cleanhelper:
         ia.open(outputmask)
         shp=ia.shape()
         self.csys=ia.coordsys().torecord()
+        # keep this info for reading worldbox
+        self.csysorder=ia.coordsys().coordinatetype()
         # respect dataframe or outframe
         if self.usespecframe=='': 
             maskframe=self.dataspecframe
@@ -777,6 +779,8 @@ class cleanhelper:
                 polydic,listbox=self.readboxfile(textfile)
                 masklist.extend(listbox)
                 if(len(polydic) > 0):
+                    ia.open(outputmask)
+                    ia.close()
                     self.im.regiontoimagemask(mask=outputmask, region=polydic)
         if((type(masklist)==list) and (len(masklist) > 0)):
             self.im.regiontoimagemask(mask=outputmask, boxes=masklist)
@@ -1101,6 +1105,83 @@ class cleanhelper:
                                 elreg=rg.wpolygon(x=x, y=y, csys=self.csys)
                                 temprec.update({counter:elreg})
                                 
+                    elif(line.count('worldbox')==1): 
+                        #ascii box file from viewer or boxit
+                        # expected foramt: 'worldbox' pos_ref [lat
+                        line=line.replace('[',' ')
+                        line=line.replace(']',' ')
+                        line=line.replace(',',' ')
+                        line=line.replace('\'',' ')
+                        splitline=line.split() 
+                        if len(splitline) != 13:
+                           raise TypeError, 'Error reading worldbox file'      
+                        #
+                        refframe=self.csys['direction0']['conversionSystem']
+                        ra =[splitline[2],splitline[3]]
+                        dec = [splitline[4],splitline[5]]
+
+                        #set frames
+                        obsdate=self.csys['obsdate']
+                        me.doframe(me.epoch(obsdate['refer'], str(obsdate['m0']['value'])+obsdate['m0']['unit']))
+                        me.doframe(me.observatory(self.csys['telescope']))
+                        if splitline[1]!=refframe: 
+                            # coversion between different epoch (and to/from AZEL also)
+                            radec0 = me.measure(me.direction(splitline[1],ra[0],dec[0]), refframe)
+                            radec1 = me.measure(me.direction(splitline[1],ra[1],dec[1]), refframe) 
+                            ra=[str(radec0['m0']['value'])+radec0['m0']['unit'],\
+                                str(radec1['m0']['value'])+radec1['m0']['unit']]
+                            dec=[str(radec0['m1']['value'])+radec0['m1']['unit'],\
+                                 str(radec1['m1']['value'])+radec1['m1']['unit']]
+                        # check for stokes 
+                        stokes=[]
+                        imstokes = self.csys['stokes1']['stokes']
+                        for st in [splitline[10],splitline[11]]:
+                            prevlen = len(stokes)
+                            for i in range(len(imstokes)):
+                                if st==imstokes[i]:
+                                    stokes.append(str(i)+'pix')
+                            if len(stokes)<=prevlen:
+                                #raise TypeError, "Stokes %s for the box boundaries is outside image" % st              
+                                self._casalog.post('Stokes %s for the box boundaries is outside image, -ignored' % st, 'WARN')              
+                        # frequency
+                        freqs=[splitline[7].replace('s-1','Hz'), splitline[9].replace('s-1','Hz')]
+                        fframes=[splitline[6],splitline[8]]
+                        imframe = self.csys['spectral2']['system']
+                        # the worldbox file created viewer's "box in file"
+                        # currently says TOPO in frequency axis but seems to
+                        # wrong (the freuencies look like in the image's base
+                        # frame). 
+                        for k in [0,1]:
+                            if fframes[k]!=imframe:
+                                #do frame conversion
+                                #self._casalog.post('Ignoring the frequency frame of the box for now', 'WARN')              
+                                # uncomment the following when box file correctly labeled the frequency frame
+                                me.doframe(me.direction(splitline[1],ra[k],dec[k]))
+                                mf=me.measure(me.frequency(fframes[k],freqs[k]),imframe)
+                                freqs[k]=str(mf['m0']['value'])+mf['m0']['unit']
+                        coordorder=self.csysorder
+                        wblc = []
+                        wtrc = []
+                        for type in coordorder:
+                          if type=='Direction':
+                             wblc.append(ra[0])
+                             wblc.append(dec[0])
+                             wtrc.append(ra[1])
+                             wtrc.append(dec[1])     
+                          if type=='Stokes':
+                             wblc.append(stokes[0])
+                             wtrc.append(stokes[1])
+                          if type=='Spectral':
+                             wblc.append(freqs[0])
+                             wtrc.append(freqs[1])
+
+                        #wblc = [ra[0], dec[0], stokes[0], freqs[0]]
+                        #wtrc = [ra[1], dec[1], stokes[1], freqs[1]]
+                        #wblc = ra[0]+" "+dec[0]
+                        #wtrc = ra[1]+" "+dec[1]
+                        wboxreg = rg.wbox(blc=wblc,trc=wtrc,csys=self.csys)
+                        temprec.update({counter:wboxreg})
+ 
                     else:
                         ### its an AIPS boxfile
                         splitline=line.split('\n')
@@ -1128,7 +1209,9 @@ class cleanhelper:
         if(len(temprec)==1):
             polyg=temprec[temprec.keys()[0]]
         elif (len(temprec) > 1):
-            polyg=rg.dounion(temprec)
+            #polyg=rg.dounion(temprec)
+            polyg=rg.makeunion(temprec)
+        
         return polyg,union
 
     def readmultifieldboxfile(self, boxfiles):
