@@ -160,6 +160,7 @@ public:
 			     Double &altrpix,
 			     Int &velref,
 			     Double &restfreq,
+			     String &specsys,
 			     LogIO &logger,
 			     Double refFrequency,
 			     Double refChannel,
@@ -194,6 +195,12 @@ public:
     // to "-OBS".
     static Bool tagFromFrame(String &tag, Int &velref,
 			     MFrequency::Types referenceFrame);
+
+    // Construct a SPECSYS keyword value from the given referenceFrame
+    // This returns False if the reference frame is not recognized.  
+    // The value of tag defaults to "TOPOCENT".
+    static Bool specsysFromFrame(String &specsys,
+				 MFrequency::Types referenceFrame);
 			  
 };
 

@@ -1722,7 +1722,7 @@ void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis,
 	header.get("cunit", cunit);
     }
 
-    String Ctype;
+    String Ctype, Specsys;
     Double Crval, Cdelt, Crpix, Altrval, Altrpix;
     Int Velref;
     Bool HaveAlt;
@@ -1841,7 +1841,8 @@ void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis,
 
 
     AlwaysAssert(FITSSpectralUtil::toFITSHeader(Ctype, Crval, Cdelt, Crpix, HaveAlt, Altrval,
-						Altrpix, Velref, Restfreq, logger,
+						Altrpix, Velref, Restfreq, Specsys, 
+						logger,
 						RefFreq, RefPix,
   					        FreqInc, type_p, preferVelocity,
 						VelPreference, preferWavelength), AipsError);
@@ -1865,6 +1866,7 @@ void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis,
     if (Restfreq > 0) {
 	header.define("restfreq", Restfreq);
 	header.setComment("restfreq", "Rest Frequency (Hz)");
+	header.define("specsys", Specsys);
     }
     if (HaveAlt) {
 	header.define("altrval", Altrval);
@@ -2112,7 +2114,7 @@ String SpectralCoordinate::format (String& units,
        worldValue = mvFreq.get(unit).getValue();
        if (!showAsAbsolute) {
 // Find relative coordinate in m consistent units
-	 mvFreq = MVFrequency(referenceValue()(worldAxis));
+	 mvFreq = MVFrequency(referenceValue()(worldAxis)*to_hz_p);
 	 worldValue = worldValue - mvFreq.get(unit).getValue(); // subtract reference
        }
 
