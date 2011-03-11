@@ -86,7 +86,8 @@ public:
     static const String PARAM_EXPORT_HIGHRES; // bool
     static const String PARAM_EXPORT_INTERACTIVE; // bool
     static const String PARAM_EXPORT_ASYNC; // bool
-
+    static const String PARAM_COLORIZE;  // bool
+    static const String PARAM_COLORAXIS;  // string
     // </group>
 
     // DBus method name for getting the log parameters, including: the sink

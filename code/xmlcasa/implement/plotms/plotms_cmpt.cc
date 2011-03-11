@@ -104,6 +104,7 @@ const unsigned int plotms::LAUNCH_TOTAL_WAIT_US    = 5000000;
 #define GETSINGLEINT(METHOD, PKEY) GETSINGLE(METHOD, PKEY, TpInt, asInt, 0)
 
 #define GETSINGLEPLOTSTR(PKEY) GETSINGLEPLOT(PKEY, TpString, asString, "")
+#define GETSINGLEPLOTBOOL(PKEY) GETSINGLEPLOT(PKEY, TpBool,  asBool, "")
 
 void plotms::setLogFilename(const std::string& logFilename) {
     if(app.dbusName( ).empty()) itsLogFilename_ = logFilename;
@@ -271,20 +272,63 @@ void plotms::setPlotMSTransformationsRec(const record& transformations,
 
 record* plotms::getPlotMSTransformations(const int plotIndex) {
   launchApp();
-  GETSINGLEPLOTREC(TRANSFORMATIONS) }
+  GETSINGLEPLOTREC(TRANSFORMATIONS) 
+}
 
 
 
+void plotms::setColorizeFlag(const bool colorize, const bool updateImmediately, const int plotIndex) 
+{
+    launchApp();
+    Record params;
+    params.define(PlotMSDBusApp::PARAM_COLORIZE, colorize);
+    params.define(PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY, updateImmediately);
+    params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);
+    QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName( ),
+         PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, true);
+}
 
+
+bool plotms::getColorizeFlag(const int plotIndex) 
+{
+    launchApp();
+    GETSINGLEPLOTBOOL(COLORIZE) 
+}
+
+
+void plotms::setColorAxis(const string&  coloraxis, const bool updateImmediately, const int plotIndex) 
+{
+    launchApp();
+    Record params;
+    params.define(PlotMSDBusApp::PARAM_COLORAXIS, coloraxis);
+    params.define(PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY, updateImmediately);
+    params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);
+    QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName( ),
+            PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, true);
+}
+
+
+string plotms::getColorAxis(const int plotIndex) 
+{
+    launchApp();
+    GETSINGLEPLOTSTR(COLORAXIS) 
+}
 
 
 
 void plotms::setPlotXAxis(const string& xAxis, const string& xDataColumn,
-		const bool updateImmediately, const int plotIndex) {
-    setPlotAxes(xAxis, xDataColumn, "", "", updateImmediately, plotIndex); }
+                   const bool updateImmediately, const int plotIndex) 
+{
+    setPlotAxes(xAxis, xDataColumn, "", "", updateImmediately, plotIndex); 
+}
+
+
 void plotms::setPlotYAxis(const string& yAxis, const string& yDataColumn,
-		const bool updateImmediately, const int plotIndex) {
-    setPlotAxes("", "", yAxis, yDataColumn, updateImmediately, plotIndex); }
+                   const bool updateImmediately, const int plotIndex) 
+{
+    setPlotAxes("", "", yAxis, yDataColumn, updateImmediately, plotIndex); 
+}
+
 
 void plotms::setPlotAxes(const string& xAxis, const string& yAxis,
         const string& xDataColumn, const string& yDataColumn,
@@ -304,20 +348,34 @@ void plotms::setPlotAxes(const string& xAxis, const string& yAxis,
             PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, true);
 }
 
-string plotms::getPlotXAxis(const int plotIndex) {
-    launchApp();
-    GETSINGLEPLOTSTR(AXIS_X) }
-string plotms::getPlotXDataColumn(const int plotIndex) {
-    launchApp();
-    GETSINGLEPLOTSTR(DATACOLUMN_X) }
-string plotms::getPlotYAxis(const int plotIndex) {
-    launchApp();
-    GETSINGLEPLOTSTR(AXIS_Y) }
-string plotms::getPlotYDataColumn(const int plotIndex) {
-    launchApp();
-    GETSINGLEPLOTSTR(DATACOLUMN_Y) }
 
-record* plotms::getPlotParams(const int plotIndex) {
+string plotms::getPlotXAxis(const int plotIndex) 
+{
+    launchApp();
+    GETSINGLEPLOTSTR(AXIS_X) 
+}
+
+string plotms::getPlotXDataColumn(const int plotIndex) 
+{
+    launchApp();
+    GETSINGLEPLOTSTR(DATACOLUMN_X) 
+}
+
+string plotms::getPlotYAxis(const int plotIndex) 
+{
+    launchApp();
+    GETSINGLEPLOTSTR(AXIS_Y) 
+}
+
+string plotms::getPlotYDataColumn(const int plotIndex) 
+{
+    launchApp();
+    GETSINGLEPLOTSTR(DATACOLUMN_Y) 
+}
+
+
+record* plotms::getPlotParams(const int plotIndex) 
+{
     launchApp();
     Record params, retValue;
     params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);

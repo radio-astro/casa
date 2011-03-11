@@ -2,8 +2,10 @@ import os
 import time
 from taskinit import *
 
-def plotms(vis=None, xaxis=None, xdatacolumn=None, yaxis=None,
-           ydatacolumn=None,
+def plotms(vis=None, 
+           xaxis=None, xdatacolumn=None, 
+           yaxis=None, ydatacolumn=None,
+           colorize=None, coloraxis=None,
            selectdata=None, field=None, spw=None,
            timerange=None, uvrange=None, antenna=None, scan=None,
            correlation=None, array=None, msselect=None,
@@ -45,6 +47,12 @@ def plotms(vis=None, xaxis=None, xdatacolumn=None, yaxis=None,
         xdatacolumn, ydatacolumn -- which data column to use for data axes
                                     default: '' (uses PlotMS default/current
                                     set).
+    
+    colorize -- to color data points according to some quantity
+                default: false
+      &gt;&gt;&gt; colorize expandable parameters
+        coloraxis -- which data column ('axis') to use for colorizing
+                     default: ''  (ignored - same as colorizing off)
     
     selectdata -- data selection parameters flag
                   (see help par.selectdata for more detailed information)
@@ -150,11 +158,19 @@ def plotms(vis=None, xaxis=None, xdatacolumn=None, yaxis=None,
         
         tp.setgui( showgui );
 
-        # Set filename and axes
 
+        # Set filename and axes
         pm.setPlotMSFilename(vis, False)
         pm.setPlotAxes(xaxis, yaxis, xdatacolumn, ydatacolumn, False)
 
+        # Set colorizing parameters
+        pm.setColorizeFlag(colorize)
+        if (colorize):
+            pm.setColorAxis(coloraxis)
+#        else:
+#            pm.setColorAxis('')
+
+        
         # Set selection
         if (selectdata):
             pm.setPlotMSSelection(field, spw, timerange, uvrange, antenna, scan, correlation, array, msselect, False)

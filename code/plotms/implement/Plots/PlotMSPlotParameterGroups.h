@@ -111,7 +111,7 @@ private:
 // * selection
 // * averaging
 //
-class PMS_PP_MSData:public PlotMSPlotParameters::Group {
+class PMS_PP_MSData : public PlotMSPlotParameters::Group {
 
 public:
      /* Constructor which takes a factory */
@@ -226,7 +226,7 @@ private:
 // * x and y data columns
 // Parameters are vector-based, on a per-plot basis.
 //
-class PMS_PP_Cache:public PlotMSPlotParameters::Group {
+class PMS_PP_Cache : public PlotMSPlotParameters::Group {
 
 public:
      /* Constructor which takes a factory */
@@ -415,7 +415,7 @@ private:
 // * axes ranges, if any
 // Parameters are vector-based, on a per-plot basis.
 //
-class PMS_PP_Axes:public PlotMSPlotParameters::Group {
+class PMS_PP_Axes : public PlotMSPlotParameters::Group {
 
 public:
      /* Constructor which takes a factory */
@@ -663,7 +663,7 @@ private:
 // * whether to show grid lines, and their properties
 // Parameters are vector-based, on a per-canvas basis.
 //
-class PMS_PP_Canvas:public PlotMSPlotParameters::Group {
+class PMS_PP_Canvas : public PlotMSPlotParameters::Group {
 
 public:
      /* Constructor which takes a factory */
@@ -1035,7 +1035,7 @@ private:
 // * colorize flag and axis
 // Parameters are vector-based, on a per-plot basis.
 //
-class PMS_PP_Display:public PlotMSPlotParameters::Group {
+class PMS_PP_Display : public PlotMSPlotParameters::Group {
 
 public:
      /* Constructor which takes a factory */
@@ -1232,7 +1232,7 @@ private:
 // * rows, columns to fit onto each page
 // Parameters apply to whole set of plots
 //
-class PMS_PP_Iteration:public PlotMSPlotParameters::Group {
+class PMS_PP_Iteration : public PlotMSPlotParameters::Group {
 
 
 	
