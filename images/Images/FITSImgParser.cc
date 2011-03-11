@@ -125,7 +125,7 @@ void FITSImgParser::setup(void)
 
 	uInt extindex = 0;
 	Bool isfitsimg=True;
-	while (fin.rectype() != FITS::EndOfFile && isfitsimg){
+	while (fin.rectype() != FITS::EndOfFile && isfitsimg && fin.err() < 10){
 		extindex++;
 		if (fin.rectype() == FITS::HDURecord) {
 			switch (fin.hdutype()) {
@@ -227,7 +227,6 @@ void FITSImgParser::process_extension(HeaderDataUnit *h,const uInt &extindex)
 	uInt   actindex=extindex-1;
 
 	const FitsKeyword *actkeyw;
-
 	// check whether there is data
 	// in the extension;
 	// set the flag and skip to
