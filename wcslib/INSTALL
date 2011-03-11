@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------------
-WCSLIB 4.3 and PGSBOX 4.3 INSTALLATION
+WCSLIB 4.7 and PGSBOX 4.7 INSTALLATION
 --------------------------------------
 
 WCSLIB requires an ANSI C compiler with standard ANSI C environment, that is,
@@ -10,8 +10,8 @@ Installation of WCSLIB is handled by GNU autoconf; GNU make (referred to here
 as 'gmake') must be used.  The WCSLIB distribution also includes PGSBOX (refer
 to the README file), to unpack it type
 
-  zcat wcslib-4.3.tar.gz | tar pvxf -
-  cd wcslib-4.3
+  zcat wcslib-4.7.tar.gz | tar pvxf -
+  cd wcslib-4.7
 
 then if you do not need to specify any configuration options, simply run
 
@@ -30,7 +30,7 @@ Of course you do not need to exercise the test suite in order to build and
 install the library - if configure fails to find anything required for that it
 will issue an explicit error message.
 
-Then build and exercise the test-suite use
+To build and exercise the test suite use
 
   gmake check
 
@@ -53,7 +53,15 @@ Use
 
   ./configure --help
 
-to list configure's options.
+to list configure's options.  Useful options are
+
+  --with-pgplotinc
+  --with-pgplotlib
+  --with-cfitsioinc
+  --with-cfitsiolib
+
+Which allow additional directories to be added to the library and include
+file search path.
 
 Installation of WCSLIB differs a little from most packages in that all
 configurable makefile variables are defined in a single file, "makedefs",
@@ -85,7 +93,7 @@ The INSTALL file provided with GNU autoconf 2.53 is appended without change.
 
 Author: Mark Calabretta, Australia Telescope National Facility
 http://www.atnf.csiro.au/~mcalabre/index.html
-$Id: INSTALL,v 4.3 2007/12/27 05:57:06 cal103 Exp $
+$Id: INSTALL,v 4.7 2011/02/07 07:03:43 cal103 Exp $
 
 ==============================================================================
 

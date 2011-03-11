@@ -1,34 +1,34 @@
 *=======================================================================
 *
-*   PGSBOX 4.3 - an implementation of the FITS WCS standard.
-*   Copyright (C) 1997-2007, Mark Calabretta
+* PGSBOX 4.7 - draw curvilinear coordinate axes for PGPLOT.
+* Copyright (C) 1997-2011, Mark Calabretta
 *
-*   This file is part of PGSBOX.
+* This file is part of PGSBOX.
 *
-*   PGSBOX is free software: you can redistribute it and/or modify
-*   it under the terms of the GNU Lesser General Public License as
-*   published by the Free Software Foundation, either version 3 of
-*   the License, or (at your option) any later version.
+* PGSBOX is free software: you can redistribute it and/or modify it
+* under the terms of the GNU Lesser General Public License as published
+* by the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
 *
-*   PGSBOX is distributed in the hope that it will be useful, but
-*   WITHOUT ANY WARRANTY; without even the implied warranty of
-*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*   GNU Lesser General Public License for more details.
+* PGSBOX is distributed in the hope that it will be useful, but WITHOUT
+* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+* FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
+* License for more details.
 *
-*   You should have received a copy of the GNU Lesser General Public
-*   License along with PGSBOX.  If not, see http://www.gnu.org/licenses.
+* You should have received a copy of the GNU Lesser General Public
+* License along with PGSBOX.  If not, see http://www.gnu.org/licenses.
 *
-*   Correspondence concerning PGSBOX may be directed to:
-*      Internet email: mcalabre@atnf.csiro.au
-*      Postal address: Dr. Mark Calabretta
-*                      Australia Telescope National Facility, CSIRO
-*                      PO Box 76
-*                      Epping NSW 1710
-*                      AUSTRALIA
+* Correspondence concerning PGSBOX may be directed to:
+*   Internet email: mcalabre@atnf.csiro.au
+*   Postal address: Dr. Mark Calabretta
+*                   Australia Telescope National Facility, CSIRO
+*                   PO Box 76
+*                   Epping NSW 1710
+*                   AUSTRALIA
 *
-*   Author: Mark Calabretta, Australia Telescope National Facility
-*   http://www.atnf.csiro.au/~mcalabre/index.html
-*   $Id: pgtest.f,v 4.3 2007/12/27 05:49:14 cal103 Exp $
+* Author: Mark Calabretta, Australia Telescope National Facility
+* http://www.atnf.csiro.au/~mcalabre/index.html
+* $Id: pgtest.f,v 4.7 2011/02/07 07:03:43 cal103 Exp $
 *=======================================================================
       PROGRAM PGTEST
 *=======================================================================
@@ -73,18 +73,18 @@
      :    DEVTYP.EQ.'VPS' .OR.
      :    DEVTYP.EQ.'CPS' .OR.
      :    DEVTYP.EQ.'VCPS') THEN
-*        Switch black and white.
-         CALL PGSCR (0, 1.0, 1.0, 1.0)
-         CALL PGSCR (1, 0.0, 0.0, 0.0)
+*       Switch black and white.
+        CALL PGSCR (0, 1.0, 1.0, 1.0)
+        CALL PGSCR (1, 0.0, 0.0, 0.0)
       END IF
 
       LARGE = DEVTYP.EQ.'XWINDOW'
       IF (LARGE) THEN
-         SCL = 1.0
-         CALL PGVSTD ()
+        SCL = 1.0
+        CALL PGVSTD ()
       ELSE
-         SCL = 0.7
-         CALL PGVSIZ (1.0, 3.0, 1.0, 3.0)
+        SCL = 0.7
+        CALL PGVSIZ (1.0, 3.0, 1.0, 3.0)
       END IF
 
 *     Yellow.
@@ -118,18 +118,18 @@
 
 *     Longitude-velocity map; the y-axis is regularly spaced in
 *     frequency but is to be labelled as a true relativistic velocity.
-*        - PGSBOX uses subroutine LNGVEL.
-*        - Separable (i.e. orthogonal), non-linear coordinate system.
-*        - Automatic choice of coordinate increments.
-*        - Extraction of a common scaling factor.
-*        - Automatic choice of what edges to label.
-*        - Request for tickmarks (internal) for one coordinate and grid
-*          lines for the other.
-*        - Simple two-colour grid using two calls with deferred
-*          labelling on the first call.
-*        - Degree labelling.
-*        - Suppression of zero arcmin and arcsec fields in sexagesimal
-*          degree format.
+*       - PGSBOX uses subroutine LNGVEL.
+*       - Separable (i.e. orthogonal), non-linear coordinate system.
+*       - Automatic choice of coordinate increments.
+*       - Extraction of a common scaling factor.
+*       - Automatic choice of what edges to label.
+*       - Request for tickmarks (internal) for one coordinate and grid
+*         lines for the other.
+*       - Simple two-colour grid using two calls with deferred
+*         labelling on the first call.
+*       - Degree labelling.
+*       - Suppression of zero arcmin and arcsec fields in sexagesimal
+*         degree format.
 
       WRITE (*, '(/,A)') 'Longitude-velocity map'
 
@@ -167,8 +167,8 @@
 *     Defer labelling.
       IC = -1
       CALL PGSBOX (BLC, TRC, IDENTS, OPT, -1, 0, C0, GCODE, 2D0, 0, 0D0,
-     :   0, 0D0, .FALSE., LNGVEL, 1, 1, 7, ' ', 0, NLDPRM, 256, IC,
-     :   CACHE, IERR)
+     :  0, 0D0, .FALSE., LNGVEL, 1, 1, 7, ' ', 0, NLDPRM, 256, IC,
+     :  CACHE, IERR)
 
 *     Draw fiducial grid lines in white and do labelling.
       CALL PGSCI (1)
@@ -177,8 +177,8 @@
       GRID1(1) = 180D0
       GRID2(1) = 0D0
       CALL PGSBOX (BLC, TRC, IDENTS, OPT, 0, 0, C0, GCODE, 0D0, 1,
-     :   GRID1, 1, GRID2, .FALSE., LNGVEL, 1, 1, 7, ' ', 0, NLDPRM, 256,
-     :   IC, CACHE, IERR)
+     :  GRID1, 1, GRID2, .FALSE., LNGVEL, 1, 1, 7, ' ', 0, NLDPRM, 256,
+     :  IC, CACHE, IERR)
 
 *     Draw the frame.
       CALL PGBOX ('BC', 0.0, 0, 'BC', 0.0, 0)
@@ -191,20 +191,20 @@
 *     Azimuth-frequency scan; this sort of output might be obtained from
 *     an antenna that scans in azimuth with a receiver that scans
 *     simultaneously in frequency.
-*        - PGSBOX uses subroutine FSCAN.
-*        - Non-separable (i.e. non-orthogonal) non-linear coordinate
-*          system.
-*        - Automatic choice of what edges to label; results in labelling
-*          the bottom, left and right sides of the plot.
-*        - Cyclic labelling.  FSCAN returns the azimuth in the range
-*          0 - 720 degrees but PGSBOX is set to normalize this to two
-*          cycles of 0 - 360 degrees.
-*        - Logarithmic labelling.
-*        - Automatic choice of coordinate increments but with request
-*          for all grid lines for the logarithmic coordinate.
-*        - Degree labelling.
-*        - Suppression of common zero arcmin and arcsec fields in
-*          sexagesimal degree format.
+*       - PGSBOX uses subroutine FSCAN.
+*       - Non-separable (i.e. non-orthogonal) non-linear coordinate
+*         system.
+*       - Automatic choice of what edges to label; results in labelling
+*         the bottom, left and right sides of the plot.
+*       - Cyclic labelling.  FSCAN returns the azimuth in the range
+*         0 - 720 degrees but PGSBOX is set to normalize this to two
+*         cycles of 0 - 360 degrees.
+*       - Logarithmic labelling.
+*       - Automatic choice of coordinate increments but with request
+*         for all grid lines for the logarithmic coordinate.
+*       - Degree labelling.
+*       - Suppression of common zero arcmin and arcsec fields in
+*         sexagesimal degree format.
 
       WRITE (*, '(/,A)') 'Azimuth-frequency scan'
 
@@ -243,8 +243,8 @@
 *     drawn.
       IC = -1
       CALL PGSBOX (BLC, TRC, IDENTS, OPT, 0, 9900, C0, GCODE, 2D0, 0,
-     :   0D0, 0, 0D0, .FALSE., FSCAN, 1, 1, 7, ' ', 0, NLDPRM, 256, IC,
-     :   CACHE, IERR)
+     :  0D0, 0, 0D0, .FALSE., FSCAN, 1, 1, 7, ' ', 0, NLDPRM, 256, IC,
+     :  CACHE, IERR)
 
 *     Draw the frame.
       CALL PGBOX ('BC', 0.0, 0, 'BC', 0.0, 0)
@@ -254,14 +254,14 @@
 *-----------------------------------------------------------------------
 
 *     Z versus time plot.
-*        - PGSBOX uses subroutine PGCRFN.
-*        - Separable (i.e. orthogonal), non-linear coordinate system.
-*        - Use of function PGCRFN for separable axis types.
-*        - Automatic choice of what edges to label; results in labelling
-*          the bottom and left sides of the plot.
-*        - Automatic choice of coordinate increments.
-*        - Logarithmic labelling over many orders of magnitude.
-*        - Single-character annotation on a vertical axis is upright.
+*       - PGSBOX uses subroutine PGCRFN.
+*       - Separable (i.e. orthogonal), non-linear coordinate system.
+*       - Use of function PGCRFN for separable axis types.
+*       - Automatic choice of what edges to label; results in labelling
+*         the bottom and left sides of the plot.
+*       - Automatic choice of coordinate increments.
+*       - Logarithmic labelling over many orders of magnitude.
+*       - Single-character annotation on a vertical axis is upright.
 
       WRITE (*, '(/,A)') 'Z versus time plot'
 
@@ -299,8 +299,8 @@
 
       IC = -1
       CALL PGSBOX (BLC, TRC, IDENTS, OPT, 0, 0, C0, GCODE, 2D0, 0, 0D0,
-     :   0, 0D0, .FALSE., PGCRFN, 8, 2, 4, FCODE, NLIPRM, NLDPRM, 256,
-     :   IC, CACHE, IERR)
+     :  0, 0D0, .FALSE., PGCRFN, 8, 2, 4, FCODE, NLIPRM, NLDPRM, 256,
+     :  IC, CACHE, IERR)
 
 *     Draw the frame.
       CALL PGBOX ('BC', 0.0, 0, 'BC', 0.0, 0)
@@ -310,25 +310,25 @@
 *-----------------------------------------------------------------------
 
 *     Simple SIN projection near the south celestial pole.
-*        - PGSBOX uses subroutine PGWCSL to interface to WCSLIB.
-*        - Non-separable (i.e. non-orthogonal) curvilinear coordinate
-*          system.
-*        - Demonstrate parameter definition for PGWCSL.
-*        - Discovery of grid lines that do not cross any axis.
-*        - Automatic choice of what edges to label; results in labelling
-*          all sides of the plot.
-*        - Automatic choice of coordinate increments but with request
-*          for increased grid density for each coordinate.
-*        - Double precision accuracy.
-*        - Cyclic coordinates.  PGWCSL returns the right ascension in
-*          the range -180 to +180 degrees, i.e. with a discontinuity
-*          at +/- 180 degrees.
-*        - Labelling of degrees as time in the range 0 - 24h.
-*        - Suppression of labels that would overlap one another.
-*        - Sexagesimal degree labelling with automatically determined
-*          precision.
-*        - Suppression of common zero minute and second fields in
-*          sexagesimal time format.
+*       - PGSBOX uses subroutine PGWCSL to interface to WCSLIB.
+*       - Non-separable (i.e. non-orthogonal) curvilinear coordinate
+*         system.
+*       - Demonstrate parameter definition for PGWCSL.
+*       - Discovery of grid lines that do not cross any axis.
+*       - Automatic choice of what edges to label; results in labelling
+*         all sides of the plot.
+*       - Automatic choice of coordinate increments but with request
+*         for increased grid density for each coordinate.
+*       - Double precision accuracy.
+*       - Cyclic coordinates.  PGWCSL returns the right ascension in
+*         the range -180 to +180 degrees, i.e. with a discontinuity
+*         at +/- 180 degrees.
+*       - Labelling of degrees as time in the range 0 - 24h.
+*       - Suppression of labels that would overlap one another.
+*       - Sexagesimal degree labelling with automatically determined
+*         precision.
+*       - Suppression of common zero minute and second fields in
+*         sexagesimal time format.
 
       WRITE (*, '(/,A)') 'Simple SIN projection'
 
@@ -378,8 +378,8 @@
 *     coordinate by specifying LABDEN = 1224.
       IC = -1
       CALL PGSBOX (BLC, TRC, IDENTS, OPT, 0, 1224, C0, GCODE, 0D0, 0,
-     :   0D0, 0, 0D0, .FALSE., PGWCSL, 1, WCSLEN, 1, NLCPRM, WCS,
-     :   NLDPRM, 256, IC, CACHE, IERR)
+     :  0D0, 0, 0D0, .FALSE., PGWCSL, 1, WCSLEN, 1, NLCPRM, WCS,
+     :  NLDPRM, 256, IC, CACHE, IERR)
 
 *     Draw the frame.
       CALL PGBOX ('BC', 0.0, 0, 'BC', 0.0, 0)
@@ -389,24 +389,24 @@
 *-----------------------------------------------------------------------
 
 *     Conic equal area projection.
-*        - PGSBOX uses subroutine PGWCSL to interface to WCSLIB.
-*        - Non-separable (i.e. non-orthogonal) curvilinear coordinate
-*          system.
-*        - Coordinate system undefined in areas of the plot.
-*        - Demonstrate parameter definition for PGWCSL.
-*        - Discontinuous grid lines handled by PGWCSL.
-*        - Discovery of grid lines that do not cross any axis.
-*        - Colour control for grid and labelling.
-*        - Reduced size lettering.
-*        - Automatic choice of what edges to label; results in labelling
-*          all sides of the plot.
-*        - Automatic choice of coordinate increments.
-*        - Cyclic coordinates.  PGWCSL returns the longitude in the
-*          range -180 to +180 degrees, i.e. with a discontinuity at
-*          +/- 180 degrees.
-*        - Suppression of labels that would overlap one another.
-*        - Suppression of common zero arcmin and arcsec fields in
-*          sexagesimal degree format.
+*       - PGSBOX uses subroutine PGWCSL to interface to WCSLIB.
+*       - Non-separable (i.e. non-orthogonal) curvilinear coordinate
+*         system.
+*       - Coordinate system undefined in areas of the plot.
+*       - Demonstrate parameter definition for PGWCSL.
+*       - Discontinuous grid lines handled by PGWCSL.
+*       - Discovery of grid lines that do not cross any axis.
+*       - Colour control for grid and labelling.
+*       - Reduced size lettering.
+*       - Automatic choice of what edges to label; results in labelling
+*         all sides of the plot.
+*       - Automatic choice of coordinate increments.
+*       - Cyclic coordinates.  PGWCSL returns the longitude in the
+*         range -180 to +180 degrees, i.e. with a discontinuity at
+*         +/- 180 degrees.
+*       - Suppression of labels that would overlap one another.
+*       - Suppression of common zero arcmin and arcsec fields in
+*         sexagesimal degree format.
 
       WRITE (*, '(/,A)') 'Conic equal area projection'
 
@@ -477,8 +477,8 @@
 *     Draw the celestial grid letting PGSBOX choose the increments.
       IC = -1
       CALL PGSBOX (BLC, TRC, IDENTS, OPT, 0, 0, CI, GCODE, 0D0, 0, 0D0,
-     :   0, 0D0, .TRUE., PGWCSL, 1, WCSLEN, 1, NLCPRM, WCS, NLDPRM, 256,
-     :   IC, CACHE, IERR)
+     :  0, 0D0, .TRUE., PGWCSL, 1, WCSLEN, 1, NLCPRM, WCS, NLDPRM, 256,
+     :  IC, CACHE, IERR)
 
 *     Set parameters to draw the native grid.
       STATUS = WCSPUT (WCS, WCS_CRVAL,  0D0, 1, 0)
@@ -495,8 +495,8 @@
 
       IC = -1
       CALL PGSBOX (BLC, TRC, IDENTS, OPT, -1, 0, C0, GCODE, 0D0, 2,
-     :   GRID1, 2, GRID2, .TRUE., PGWCSL, 1, WCSLEN, 1, NLCPRM, WCS,
-     :   NLDPRM, 256, IC, CACHE, IERR)
+     :  GRID1, 2, GRID2, .TRUE., PGWCSL, 1, WCSLEN, 1, NLCPRM, WCS,
+     :  NLDPRM, 256, IC, CACHE, IERR)
 
 *     Draw the frame.
       CALL PGSCI (1)
@@ -507,28 +507,28 @@
 *-----------------------------------------------------------------------
 
 *     Polyconic projection with colour-coded grid.
-*        - PGSBOX uses subroutine PGWCSL to interface to WCSLIB.
-*        - Non-separable (i.e. non-orthogonal) curvilinear coordinate
-*          system.
-*        - Coordinate system undefined in areas of the plot.
-*        - Demonstrate parameter definition for PGWCSL.
-*        - Discontinuous grid lines handled by PGWCSL.
-*        - Colour coded labelling.
-*        - Colour coded grid implemented by the caller.
-*        - Basic management of the axis-crossing table (see code).
-*        - Reduced size lettering.
-*        - Tick marks external to the frame.
-*        - User selection of what edges to label with request for both
-*          coordinates to be labelled on bottom, left and top edges.
-*        - User selection of grid lines to plot.
-*        - Concatenation of annotation at bottom and left; automatically
-*          suppressed at the top since only one coordinate is labelled
-*          there.
-*        - Suppression of labels that would overlap one another.
-*        - Degree labelling.
-*        - Labelling of degrees as time in the range -12 - +12h.
-*        - Suppression of common zero minute and second fields in
-*          sexagesimal time format.
+*       - PGSBOX uses subroutine PGWCSL to interface to WCSLIB.
+*       - Non-separable (i.e. non-orthogonal) curvilinear coordinate
+*         system.
+*       - Coordinate system undefined in areas of the plot.
+*       - Demonstrate parameter definition for PGWCSL.
+*       - Discontinuous grid lines handled by PGWCSL.
+*       - Colour coded labelling.
+*       - Colour coded grid implemented by the caller.
+*       - Basic management of the axis-crossing table (see code).
+*       - Reduced size lettering.
+*       - Tick marks external to the frame.
+*       - User selection of what edges to label with request for both
+*         coordinates to be labelled on bottom, left and top edges.
+*       - User selection of grid lines to plot.
+*       - Concatenation of annotation at bottom and left; automatically
+*         suppressed at the top since only one coordinate is labelled
+*         there.
+*       - Suppression of labels that would overlap one another.
+*       - Degree labelling.
+*       - Labelling of degrees as time in the range -12 - +12h.
+*       - Suppression of common zero minute and second fields in
+*         sexagesimal time format.
 
       WRITE (*, '(/,A)') 'Polyconic projection with colour-coded grid'
 
@@ -579,8 +579,8 @@
 
       IC = -1
       CALL PGSBOX (BLC, TRC, IDENTS, OPT, -1, 0, C0, GCODE, TIKLEN, 0,
-     :   5D0, 0, 5D0, .TRUE., PGWCSL, 1, WCSLEN, 1, NLCPRM, WCS, NLDPRM,
-     :   256, IC, CACHE, IERR)
+     :  5D0, 0, 5D0, .TRUE., PGWCSL, 1, WCSLEN, 1, NLCPRM, WCS, NLDPRM,
+     :  256, IC, CACHE, IERR)
 
 *     Resetting the table index to zero causes information about the
 *     tick marks to be discarded.
@@ -595,8 +595,8 @@
       GRID1(1) = 0D0
       GRID2(1) = 0D0
       CALL PGSBOX (BLC, TRC, IDENTS, OPT, -1, 0, C0, GCODE, 0D0, 1,
-     :   GRID1, 1, GRID2, .TRUE., PGWCSL, 1, WCSLEN, 1, NLCPRM, WCS,
-     :   NLDPRM, 256, IC, CACHE, IERR)
+     :  GRID1, 1, GRID2, .TRUE., PGWCSL, 1, WCSLEN, 1, NLCPRM, WCS,
+     :  NLDPRM, 256, IC, CACHE, IERR)
 
 *     At this point the axis-crossing table will have entries for the
 *     primary meridian and equator.  Labelling was deferred in the
@@ -611,8 +611,8 @@
       GRID2(1) = -90D0
       GRID2(2) =  90D0
       CALL PGSBOX (BLC, TRC, IDENTS, OPT, -1, 0, C0, GCODE, 0D0, 3,
-     :   GRID1, 2, GRID2, .TRUE., PGWCSL, 1, WCSLEN, 1, NLCPRM, WCS,
-     :   NLDPRM, 256, IC, CACHE, IERR)
+     :  GRID1, 2, GRID2, .TRUE., PGWCSL, 1, WCSLEN, 1, NLCPRM, WCS,
+     :  NLDPRM, 256, IC, CACHE, IERR)
 
 *     Draw the first set of 15 degree meridians and parallels in blue.
       CALL PGSCI (4)
@@ -629,8 +629,8 @@
       GRID2(3) =  15D0
       GRID2(4) =  60D0
       CALL PGSBOX (BLC, TRC, IDENTS, OPT, -1, 0, C0, GCODE, 0D0, 8,
-     :   GRID1, 4, GRID2, .TRUE., PGWCSL, 1, WCSLEN, 1, NLCPRM, WCS,
-     :   NLDPRM, 256, IC, CACHE, IERR)
+     :  GRID1, 4, GRID2, .TRUE., PGWCSL, 1, WCSLEN, 1, NLCPRM, WCS,
+     :  NLDPRM, 256, IC, CACHE, IERR)
 
 *     Draw the second set of 15 degree meridians and parallels in red.
       CALL PGSCI (5)
@@ -647,8 +647,8 @@
       GRID2(3) =  30D0
       GRID2(4) =  75D0
       CALL PGSBOX (BLC, TRC, IDENTS, OPT, -1, 0, C0, GCODE, 0D0, 8,
-     :   GRID1, 4, GRID2, .TRUE., PGWCSL, 1, WCSLEN, 1, NLCPRM, WCS,
-     :   NLDPRM, 256, IC, CACHE, IERR)
+     :  GRID1, 4, GRID2, .TRUE., PGWCSL, 1, WCSLEN, 1, NLCPRM, WCS,
+     :  NLDPRM, 256, IC, CACHE, IERR)
 
 *     The axis-crossing table has now accumulated information for all of
 *     the preceding meridians and parallels but no labels have been
@@ -690,8 +690,8 @@
       GRID2(1) = -45D0
       GRID2(2) =  45D0
       CALL PGSBOX (BLC, TRC, IDENTS, OPT, 2333, 0, CI, GCODE, 0D0, 4,
-     :   GRID1, 2, GRID2, .TRUE., PGWCSL, 1, WCSLEN, 1, NLCPRM, WCS,
-     :   NLDPRM, 256, IC, CACHE, IERR)
+     :  GRID1, 2, GRID2, .TRUE., PGWCSL, 1, WCSLEN, 1, NLCPRM, WCS,
+     :  NLDPRM, 256, IC, CACHE, IERR)
 
 *     Native grid in green (delineates boundary).
       CALL PGSCI (7)
@@ -705,8 +705,8 @@
 
       IC = -1
       CALL PGSBOX (BLC, TRC, IDENTS, OPT, -1, 0, C0, GCODE, 0D0, 2,
-     :   GRID1, 1, GRID2, .TRUE., PGWCSL, 1, WCSLEN, 1, NLCPRM, WCS,
-     :   NLDPRM, 256, IC, CACHE, IERR)
+     :  GRID1, 1, GRID2, .TRUE., PGWCSL, 1, WCSLEN, 1, NLCPRM, WCS,
+     :  NLDPRM, 256, IC, CACHE, IERR)
 
 *     Draw the frame.
       CALL PGSCI (1)
@@ -717,21 +717,21 @@
 *-----------------------------------------------------------------------
 
 *     Plate Carree projection.
-*        - PGSBOX uses subroutine PGWCSL to interface to WCSLIB.
-*        - Rectangular image.
-*        - Dual coordinate grids.
-*        - Non-separable (i.e. non-orthogonal) curvilinear coordinate
-*          system.
-*        - Demonstrate parameter definition for PGWCSL.
-*        - Discontinuous grid lines handled by PGWCSL.
-*        - Colour coding of grid and labelling.
-*        - Reduced size lettering.
-*        - Manual labelling control.
-*        - Manual and automatic choice of coordinate increments.
-*        - Cyclic coordinates.  PGWCSL returns the longitude in the
-*          range -180 to +180 degrees, i.e. with a discontinuity at
-*          +/- 180 degrees.
-*        - Suppression of labels that would overlap one another.
+*       - PGSBOX uses subroutine PGWCSL to interface to WCSLIB.
+*       - Rectangular image.
+*       - Dual coordinate grids.
+*       - Non-separable (i.e. non-orthogonal) curvilinear coordinate
+*         system.
+*       - Demonstrate parameter definition for PGWCSL.
+*       - Discontinuous grid lines handled by PGWCSL.
+*       - Colour coding of grid and labelling.
+*       - Reduced size lettering.
+*       - Manual labelling control.
+*       - Manual and automatic choice of coordinate increments.
+*       - Cyclic coordinates.  PGWCSL returns the longitude in the
+*         range -180 to +180 degrees, i.e. with a discontinuity at
+*         +/- 180 degrees.
+*       - Suppression of labels that would overlap one another.
 
       WRITE (*, '(/,A)') 'Plate Carree projection'
 
@@ -746,9 +746,9 @@
 *     Reset viewport for rectangular image.
 
       IF (LARGE) THEN
-         CALL PGVSTD ()
+        CALL PGVSTD ()
       ELSE
-         CALL PGVSIZ (1.0, 3.0, 1.0, 3.0)
+        CALL PGVSIZ (1.0, 3.0, 1.0, 3.0)
       END IF
       CALL PGWNAD (0.0, 1.0, 0.0, REAL(NAXIS(2))/REAL(NAXIS(1)))
 
@@ -817,8 +817,8 @@
 
       IC = -1
       CALL PGSBOX (BLC, TRC, IDENTS, OPT, 2100, 0, CI, GCODE, 0D0, 0,
-     :   15D0, 0, 15D0, .TRUE., PGWCSL, 1, WCSLEN, 1, NLCPRM, WCS,
-     :   NLDPRM, 256, IC, CACHE, IERR)
+     :  15D0, 0, 15D0, .TRUE., PGWCSL, 1, WCSLEN, 1, NLCPRM, WCS,
+     :  NLDPRM, 256, IC, CACHE, IERR)
 
 *     Reset CRPIX previously modified by CYLFIX.
       STATUS = WCSPUT (WCS, WCS_CRPIX, 226D0, 1, 0)
@@ -864,8 +864,8 @@
 *     Draw the celestial grid letting PGSBOX choose the increments.
       IC = -1
       CALL PGSBOX (BLC, TRC, IDENTS, OPT, 21, 0, CI, GCODE, 0D0, 0, 0D0,
-     :   0, 0D0, .TRUE., PGWCSL, 1, WCSLEN, 1, NLCPRM, WCS, NLDPRM, 256,
-     :   IC, CACHE, IERR)
+     :  0, 0D0, .TRUE., PGWCSL, 1, WCSLEN, 1, NLCPRM, WCS, NLDPRM, 256,
+     :  IC, CACHE, IERR)
 
 *     Draw the frame.
       CALL PGSCI (1)
@@ -876,14 +876,14 @@
 *-----------------------------------------------------------------------
 
 *     Plate Carree projection.
-*        - PGSBOX uses subroutine PGWCSL to interface to WCSLIB.
-*        - BLC, TRC unrelated to pixel coordinates.
-*        - Demonstrate parameter definition for PGWCSL.
-*        - Poles and 180 meridian projected along edges of the frame.
-*        - Reduced size lettering.
-*        - Manual and automatic choice of coordinate increments.
-*        - Suppression of common zero minute and second fields in
-*          sexagesimal time format.
+*       - PGSBOX uses subroutine PGWCSL to interface to WCSLIB.
+*       - BLC, TRC unrelated to pixel coordinates.
+*       - Demonstrate parameter definition for PGWCSL.
+*       - Poles and 180 meridian projected along edges of the frame.
+*       - Reduced size lettering.
+*       - Manual and automatic choice of coordinate increments.
+*       - Suppression of common zero minute and second fields in
+*         sexagesimal time format.
 
       WRITE (*, '(/,A)') 'Plate Carree projection'
 
@@ -895,9 +895,9 @@
 *     Reset viewport for rectangular image.
 
       IF (LARGE) THEN
-         CALL PGVSTD ()
+        CALL PGVSTD ()
       ELSE
-         CALL PGVSIZ (1.0, 3.0, 1.0, 3.0)
+        CALL PGVSIZ (1.0, 3.0, 1.0, 3.0)
       END IF
       CALL PGWNAD (BLC(1), TRC(1), BLC(2), TRC(2))
 
@@ -940,8 +940,8 @@
 
       IC = -1
       CALL PGSBOX (BLC, TRC, IDENTS, OPT, 2121, 1212, C0, GCODE, 0D0, 0,
-     :   0D0, 0, 0D0, .TRUE., PGWCSL, 1, WCSLEN, 1, NLCPRM, WCS, NLDPRM,
-     :   256, IC, CACHE, IERR)
+     :  0D0, 0, 0D0, .TRUE., PGWCSL, 1, WCSLEN, 1, NLCPRM, WCS, NLDPRM,
+     :  256, IC, CACHE, IERR)
 
 *     Draw the frame.
       CALL PGBOX ('BC', 0.0, 0, 'BC', 0.0, 0)
@@ -951,13 +951,13 @@
 *-----------------------------------------------------------------------
 
 *     Cylindrical perspective projection.
-*        - PGSBOX uses subroutine PGWCSL to interface to WCSLIB.
-*        - BLC, TRC unrelated to pixel coordinates.
-*        - Demonstrate parameter definition for PGWCSL.
-*        - Reduced size lettering.
-*        - Manual and automatic choice of coordinate increments.
-*        - Suppression of common zero minute and second fields in
-*          sexagesimal time format.
+*       - PGSBOX uses subroutine PGWCSL to interface to WCSLIB.
+*       - BLC, TRC unrelated to pixel coordinates.
+*       - Demonstrate parameter definition for PGWCSL.
+*       - Reduced size lettering.
+*       - Manual and automatic choice of coordinate increments.
+*       - Suppression of common zero minute and second fields in
+*         sexagesimal time format.
 
       WRITE (*, '(/,A)') 'Cylindrical perspective projection'
 
@@ -969,9 +969,9 @@
 *     Reset viewport for rectangular image.
 
       IF (LARGE) THEN
-         CALL PGVSTD ()
+        CALL PGVSTD ()
       ELSE
-         CALL PGVSIZ (1.0, 3.0, 1.0, 3.0)
+        CALL PGVSIZ (1.0, 3.0, 1.0, 3.0)
       END IF
       CALL PGWNAD (BLC(1), TRC(1), BLC(2), TRC(2))
 
@@ -1019,8 +1019,8 @@
 
       IC = -1
       CALL PGSBOX (BLC, TRC, IDENTS, OPT, 2121, 1212, C0, GCODE, 0D0, 0,
-     :   0D0, 0, 0D0, .TRUE., PGWCSL, 1, WCSLEN, 1, NLCPRM, WCS, NLDPRM,
-     :   256, IC, CACHE, IERR)
+     :  0D0, 0, 0D0, .TRUE., PGWCSL, 1, WCSLEN, 1, NLCPRM, WCS, NLDPRM,
+     :  256, IC, CACHE, IERR)
 
 *     Draw the frame.
       CALL PGBOX ('BC', 0.0, 0, 'BC', 0.0, 0)
@@ -1029,12 +1029,12 @@
 
 *-----------------------------------------------------------------------
 *     Gnomonic projection.
-*        - PGSBOX uses subroutine PGWCSL to interface to WCSLIB.
-*        - Demonstrate parameter definition for PGWCSL.
-*        - Reduced size lettering.
-*        - Manual and automatic choice of coordinate increments.
-*        - Suppression of common zero minute and second fields in
-*          sexagesimal time format.
+*       - PGSBOX uses subroutine PGWCSL to interface to WCSLIB.
+*       - Demonstrate parameter definition for PGWCSL.
+*       - Reduced size lettering.
+*       - Manual and automatic choice of coordinate increments.
+*       - Suppression of common zero minute and second fields in
+*         sexagesimal time format.
 
       WRITE (*, '(/,A)') 'TAN projection'
 
@@ -1048,9 +1048,9 @@
 
 *     Reset viewport for rectangular image.
       IF (LARGE) THEN
-         CALL PGVSTD ()
+        CALL PGVSTD ()
       ELSE
-         CALL PGVSIZ (1.0, 3.0, 1.0, 3.0)
+        CALL PGVSIZ (1.0, 3.0, 1.0, 3.0)
       END IF
       CALL PGWNAD (0.0, 1.0, 0.0, REAL(NAXIS(2))/REAL(NAXIS(1)))
 
@@ -1094,8 +1094,8 @@
 
       IC = -1
       CALL PGSBOX (BLC, TRC, IDENTS, OPT, 0, 1212, C0, GCODE, 0D0, 0,
-     :   0D0, 0, 0D0, .FALSE., PGWCSL, 1, WCSLEN, 1, NLCPRM, WCS,
-     :   NLDPRM, 256, IC, CACHE, IERR)
+     :  0D0, 0, 0D0, .FALSE., PGWCSL, 1, WCSLEN, 1, NLCPRM, WCS,
+     :  NLDPRM, 256, IC, CACHE, IERR)
 
 *     Draw the frame.
       CALL PGBOX ('BC', 0.0, 0, 'BC', 0.0, 0)
@@ -1105,21 +1105,21 @@
 *-----------------------------------------------------------------------
 
 *     Linear-linear plot with two types of alternative labelling.
-*        - PGSBOX uses subroutine PGCRFN.
-*        - Separable (i.e. orthogonal), linear coordinate system.
-*        - Use of function PGCRFN for separable axis types.
-*        - Alternative labelling and axis annotation.
-*        - Direct manipulation of the axis-crossing table.
-*        - Tick mark and grid line control.
-*        - User selection of what edges to label.
-*        - Automatic choice of coordinate increments.
+*       - PGSBOX uses subroutine PGCRFN.
+*       - Separable (i.e. orthogonal), linear coordinate system.
+*       - Use of function PGCRFN for separable axis types.
+*       - Alternative labelling and axis annotation.
+*       - Direct manipulation of the axis-crossing table.
+*       - Tick mark and grid line control.
+*       - User selection of what edges to label.
+*       - Automatic choice of coordinate increments.
 
       WRITE (*, '(/,A)') 'Linear plot with alternative labelling'
 
       IF (LARGE) THEN
-         CALL PGVSTD ()
+        CALL PGVSTD ()
       ELSE
-         CALL PGVSIZ (1.0, 3.0, 1.0, 3.0)
+        CALL PGVSIZ (1.0, 3.0, 1.0, 3.0)
       END IF
       CALL PGWNAD (0.0, 1.0, 0.0, 1.0)
 
@@ -1171,8 +1171,8 @@
 *     Set LABCTL = 21 to label the bottom and left edges only.
       IC = -1
       CALL PGSBOX (BLC, TRC, IDENTS, OPT, 21, 0, C0, GCODE, 2D0, 0, 0D0,
-     :   0, 0D0, .FALSE., PGCRFN, 8, 2, 4, FCODE, NLIPRM, NLDPRM, 256,
-     :   IC, CACHE, IERR)
+     :  0, 0D0, .FALSE., PGCRFN, 8, 2, 4, FCODE, NLIPRM, NLDPRM, 256,
+     :  IC, CACHE, IERR)
 
 *     Information for labels on the right edge was stored in the
 *     crossing table on the first call to PGSBOX.  We now want to
@@ -1182,12 +1182,12 @@
 *     the slightly more difficult requirement of labelling grid lines
 *     with different values at each end.
       DO 10 J = 1, IC
-*        Look for entries associated with the right edge of the frame.
-         IF (CACHE(1,J).EQ.4D0) THEN
-*           Convert to feet, rounding to the nearest 0.1.
-            CACHE(4,J) = CACHE(4,J) * 1D3/(25.4*12D0)
-            CACHE(4,J) = AINT(CACHE(4,J)*10D0 + 0.5D0)/10D0
-         END IF
+*       Look for entries associated with the right edge of the frame.
+        IF (CACHE(1,J).EQ.4D0) THEN
+*         Convert to feet, rounding to the nearest 0.1.
+          CACHE(4,J) = CACHE(4,J) * 1D3/(25.4*12D0)
+          CACHE(4,J) = AINT(CACHE(4,J)*10D0 + 0.5D0)/10D0
+        END IF
  10   CONTINUE
 
 *     Annotation for the right edge.
@@ -1197,8 +1197,8 @@
 *     Set LABCTL = 12000 to label the right edge with the second
 *     coordinate without redrawing the grid lines.
       CALL PGSBOX (BLC, TRC, IDENTS, OPT, 12000, 0, C0, GCODE, 2D0, 0,
-     :   0D0, 0, 0D0, .FALSE., PGCRFN, 8, 2, 4, FCODE, NLIPRM, NLDPRM,
-     :   256, IC, CACHE, IERR)
+     :  0D0, 0, 0D0, .FALSE., PGCRFN, 8, 2, 4, FCODE, NLIPRM, NLDPRM,
+     :  256, IC, CACHE, IERR)
 
 *     The alternative temperature scale in Fahrenheit is to be
 *     constructed with a new set of tick marks.
@@ -1218,8 +1218,8 @@
 *     the coordinate extrema.
       IC = -1
       CALL PGSBOX (BLC, TRC, IDENTS, OPT, 100, 0, C0, GCODE, 2D0, 0,
-     :   0D0, 0, 0D0, .FALSE., PGCRFN, 8, 2, 4, FCODE, NLIPRM, NLDPRM,
-     :   256, IC, CACHE, IERR)
+     :  0D0, 0, 0D0, .FALSE., PGCRFN, 8, 2, 4, FCODE, NLIPRM, NLDPRM,
+     :  256, IC, CACHE, IERR)
 
 *     Draw the frame.
       CALL PGBOX ('BC', 0.0, 0, 'BC', 0.0, 0)
@@ -1229,13 +1229,13 @@
 *-----------------------------------------------------------------------
 
 *     Calendar axes using subroutine PGLBOX.
-*        - Separable (i.e. orthogonal), linear coordinate system.
-*        - Use of PGLBOX for simple linear axis types.
-*        - Automatic choice of what edges to label; results in labelling
-*          the bottom and left sides of the plot.
-*        - Automatic choice of coordinate increments.
-*        - Calendar date axis labelling.
-*        - Single-character annotation on a vertical axis is upright.
+*       - Separable (i.e. orthogonal), linear coordinate system.
+*       - Use of PGLBOX for simple linear axis types.
+*       - Automatic choice of what edges to label; results in labelling
+*         the bottom and left sides of the plot.
+*       - Automatic choice of coordinate increments.
+*       - Calendar date axis labelling.
+*       - Single-character annotation on a vertical axis is upright.
 
       WRITE (*, '(/,A)') 'Calendar axes using subroutine PGLBOX'
 
@@ -1259,7 +1259,7 @@
 
       IC = -1
       CALL PGLBOX (IDENTS, OPT, 0, 0, C0, GCODE, 2D0, 0, 0D0, 0, 0D0,
-     :   .FALSE., 256, IC, CACHE, IERR)
+     :  .FALSE., 256, IC, CACHE, IERR)
 
 *     Draw the frame.
       CALL PGBOX ('BC', 0.0, 0, 'BC', 0.0, 0)
@@ -1269,12 +1269,12 @@
 *-----------------------------------------------------------------------
 
 *     Simple linear axes handled by PGWCSL.
-*        - Separable (i.e. orthogonal), linear coordinate system.
-*        - Automatic choice of what edges to label; results in labelling
-*          the bottom and left sides of the plot.
-*        - Automatic choice of coordinate increments.
-*        - Tick marks and labels at the edges of the frame.
-*        - Single-character annotation on a vertical axis is upright.
+*       - Separable (i.e. orthogonal), linear coordinate system.
+*       - Automatic choice of what edges to label; results in labelling
+*         the bottom and left sides of the plot.
+*       - Automatic choice of coordinate increments.
+*       - Tick marks and labels at the edges of the frame.
+*       - Single-character annotation on a vertical axis is upright.
 
       WRITE (*, '(/,A)') 'Simple linear axes handled by pgwcsl()'
 
@@ -1323,8 +1323,8 @@
 
       IC = -1
       CALL PGSBOX (BLC, TRC, IDENTS, OPT, 0, 0, C0, GCODE, 2D0, 0,
-     :   0D0, 0, 0D0, .FALSE., PGWCSL, 1, WCSLEN, 1, NLCPRM, WCS,
-     :   NLDPRM, 256, IC, CACHE, IERR)
+     :  0D0, 0, 0D0, .FALSE., PGWCSL, 1, WCSLEN, 1, NLCPRM, WCS,
+     :  NLDPRM, 256, IC, CACHE, IERR)
 
 *     Draw the frame.
       CALL PGBOX ('BC', 0.0, 0, 'BC', 0.0, 0)

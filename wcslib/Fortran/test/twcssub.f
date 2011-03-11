@@ -1,41 +1,41 @@
 *=======================================================================
 *
-*   WCSLIB 4.3 - an implementation of the FITS WCS standard.
-*   Copyright (C) 1995-2007, Mark Calabretta
+* WCSLIB 4.7 - an implementation of the FITS WCS standard.
+* Copyright (C) 1995-2011, Mark Calabretta
 *
-*   This file is part of WCSLIB.
+* This file is part of WCSLIB.
 *
-*   WCSLIB is free software: you can redistribute it and/or modify
-*   it under the terms of the GNU Lesser General Public License as
-*   published by the Free Software Foundation, either version 3 of
-*   the License, or (at your option) any later version.
+* WCSLIB is free software: you can redistribute it and/or modify it
+* under the terms of the GNU Lesser General Public License as published
+* by the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
 *
-*   WCSLIB is distributed in the hope that it will be useful, but
-*   WITHOUT ANY WARRANTY; without even the implied warranty of
-*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*   GNU Lesser General Public License for more details.
+* WCSLIB is distributed in the hope that it will be useful, but WITHOUT
+* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+* FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
+* License for more details.
 *
-*   You should have received a copy of the GNU Lesser General Public
-*   License along with WCSLIB.  If not, see http://www.gnu.org/licenses.
+* You should have received a copy of the GNU Lesser General Public
+* License along with WCSLIB.  If not, see http://www.gnu.org/licenses.
 *
-*   Correspondence concerning WCSLIB may be directed to:
-*      Internet email: mcalabre@atnf.csiro.au
-*      Postal address: Dr. Mark Calabretta
-*                      Australia Telescope National Facility, CSIRO
-*                      PO Box 76
-*                      Epping NSW 1710
-*                      AUSTRALIA
+* Correspondence concerning WCSLIB may be directed to:
+*   Internet email: mcalabre@atnf.csiro.au
+*   Postal address: Dr. Mark Calabretta
+*                   Australia Telescope National Facility, CSIRO
+*                   PO Box 76
+*                   Epping NSW 1710
+*                   AUSTRALIA
 *
-*   Author: Mark Calabretta, Australia Telescope National Facility
-*   http://www.atnf.csiro.au/~mcalabre/index.html
-*   $Id: twcssub.f,v 4.3 2007/12/27 05:42:52 cal103 Exp $
+* Author: Mark Calabretta, Australia Telescope National Facility
+* http://www.atnf.csiro.au/~mcalabre/index.html
+* $Id: twcssub.f,v 4.7 2011/02/07 07:03:43 cal103 Exp $
 *=======================================================================
 
       PROGRAM TWCSSUB
 *-----------------------------------------------------------------------
 *
-*   TWCSSUB tests WCSSUB which extracts the coordinate description for a
-*   subimage from a wcsprm struct.
+* TWCSSUB tests WCSSUB which extracts the coordinate description for a
+* subimage from a wcsprm struct.
 *
 *-----------------------------------------------------------------------
 *     Number of axes.
@@ -53,6 +53,8 @@
       INCLUDE 'wcs.inc'
 
       INTEGER   WCS(WCSLEN), WCSEXT(WCSLEN)
+      DOUBLE PRECISION DUMMY1, DUMMY2
+      EQUIVALENCE (WCS,DUMMY1), (WCSEXT,DUMMY2)
 
       DATA (CRPIX(J), J=1,NAXIS)
      :             / 1025D0,  64D0, 512D0,  513D0/
@@ -92,17 +94,17 @@
       STATUS = WCSINI (NAXIS, WCS)
 
       DO 20 I = 1, NAXIS
-         STATUS = WCSPUT (WCS, WCS_CRPIX, CRPIX(I), I, 0)
+        STATUS = WCSPUT (WCS, WCS_CRPIX, CRPIX(I), I, 0)
 
-         DO 10 J = 1, NAXIS
-            STATUS = WCSPUT (WCS, WCS_PC, PC(I,J), I, J)
- 10      CONTINUE
+        DO 10 J = 1, NAXIS
+          STATUS = WCSPUT (WCS, WCS_PC, PC(I,J), I, J)
+ 10     CONTINUE
 
-         STATUS = WCSPUT (WCS, WCS_CDELT, CDELT(I), I, 0)
-         STATUS = WCSPUT (WCS, WCS_CUNIT, CUNIT(I), I, 0)
-         STATUS = WCSPUT (WCS, WCS_CTYPE, CTYPE(I), I, 0)
-         STATUS = WCSPUT (WCS, WCS_CRVAL, CRVAL(I), I, 0)
-         STATUS = WCSPUT (WCS, WCS_CNAME, CNAME(I), I, 0)
+        STATUS = WCSPUT (WCS, WCS_CDELT, CDELT(I), I, 0)
+        STATUS = WCSPUT (WCS, WCS_CUNIT, CUNIT(I), I, 0)
+        STATUS = WCSPUT (WCS, WCS_CTYPE, CTYPE(I), I, 0)
+        STATUS = WCSPUT (WCS, WCS_CRVAL, CRVAL(I), I, 0)
+        STATUS = WCSPUT (WCS, WCS_CNAME, CNAME(I), I, 0)
  20   CONTINUE
 
       STATUS = WCSPUT (WCS, WCS_LONPOLE, LONPOLE, 0, 0)
@@ -112,26 +114,26 @@
       STATUS = WCSPUT (WCS, WCS_RESTWAV, RESTWAV, 0, 0)
 
       DO 30 K = 1, NPV
-         STATUS = WCSPUT (WCS, WCS_PV, PV(K), PVI(K), PVM(K))
+        STATUS = WCSPUT (WCS, WCS_PV, PV(K), PVI(K), PVM(K))
  30   CONTINUE
 
       DO 40 K = 1, NPS
-         STATUS = WCSPUT (WCS, WCS_PS, PS(K), PSI(K), PSM(K))
+        STATUS = WCSPUT (WCS, WCS_PS, PS(K), PSI(K), PSM(K))
  40   CONTINUE
 
 *     Extract information from the FITS header.
       STATUS = WCSSET (WCS)
       IF (STATUS.NE.0) THEN
-         WRITE (*, 50) STATUS
- 50      FORMAT ('WCSSET ERROR',I3,'.')
-         GO TO 999
+        WRITE (*, 50) STATUS
+ 50     FORMAT ('WCSSET ERROR',I3,'.')
+        GO TO 999
       END IF
 
       WRITE (*, 60)
  60   FORMAT (
-     :   'Testing WCSLIB subimage extraction subroutine (twcssub.f)',/,
-     :   '---------------------------------------------------------',/,
-     :   'Initial contents of wcsprm struct:')
+     :  'Testing WCSLIB subimage extraction subroutine (twcssub.f)',/,
+     :  '---------------------------------------------------------',/,
+     :  'Initial contents of wcsprm struct:')
       STATUS = WCSPRT (WCS)
 
 
@@ -147,16 +149,16 @@
       STATUS = WCSSUB (WCS, NSUB, AXES, WCSEXT)
 
       IF (STATUS.NE.0) THEN
-         WRITE (6, 80) STATUS
- 80      FORMAT ('WCSSUB ERROR', I3,'.')
+        WRITE (6, 80) STATUS
+ 80     FORMAT ('WCSSUB ERROR', I3,'.')
       ELSE
-         STATUS = WCSSET (WCSEXT)
-         IF (STATUS.NE.0) THEN
-            WRITE (6, 90) STATUS
- 90         FORMAT ('WCSSET ERROR', I3,'.')
-         ELSE
-            STATUS = WCSPRT (WCSEXT)
-         END IF
+        STATUS = WCSSET (WCSEXT)
+        IF (STATUS.NE.0) THEN
+          WRITE (6, 90) STATUS
+ 90       FORMAT ('WCSSET ERROR', I3,'.')
+        ELSE
+          STATUS = WCSPRT (WCSEXT)
+        END IF
       END IF
 
 
@@ -167,14 +169,14 @@
       AXES(2) = 3
       STATUS = WCSSUB(WCS, NSUB, AXES, WCSEXT)
       IF (STATUS.EQ.13) THEN
-         WRITE (6, 100)
- 100     FORMAT (//,'Received wcssub status 13 for a non-separable ',
-     :      'subimage coordinate system,',/,'as expected.')
+        WRITE (6, 100)
+ 100    FORMAT (//,'Received wcssub status 13 for a non-separable ',
+     :    'subimage coordinate system,',/,'as expected.')
       ELSE
-         WRITE (6, 110) STATUS
- 110     FORMAT (//,'ERROR: expected wcssub status 13 for a non-',
-     :      'separable subimage coordinate',/,'system, but received ',
-     :      'status',I3,' instead.')
+        WRITE (6, 110) STATUS
+ 110    FORMAT (//,'ERROR: expected wcssub status 13 for a non-',
+     :    'separable subimage coordinate',/,'system, but received ',
+     :    'status',I3,' instead.')
       END IF
 
 

@@ -1,76 +1,76 @@
 /*============================================================================
 
-    WCSLIB 4.3 - an implementation of the FITS WCS standard.
-    Copyright (C) 1995-2007, Mark Calabretta
+  WCSLIB 4.7 - an implementation of the FITS WCS standard.
+  Copyright (C) 1995-2011, Mark Calabretta
 
-    This file is part of WCSLIB.
+  This file is part of WCSLIB.
 
-    WCSLIB is free software: you can redistribute it and/or modify it under
-    the terms of the GNU Lesser General Public License as published by the
-    Free Software Foundation, either version 3 of the License, or (at your
-    option) any later version.
+  WCSLIB is free software: you can redistribute it and/or modify it under the
+  terms of the GNU Lesser General Public License as published by the Free
+  Software Foundation, either version 3 of the License, or (at your option)
+  any later version.
 
-    WCSLIB is distributed in the hope that it will be useful, but WITHOUT ANY
-    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-    FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for
-    more details.
+  WCSLIB is distributed in the hope that it will be useful, but WITHOUT ANY
+  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+  FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for
+  more details.
 
-    You should have received a copy of the GNU Lesser General Public License
-    along with WCSLIB.  If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU Lesser General Public License
+  along with WCSLIB.  If not, see <http://www.gnu.org/licenses/>.
 
-    Correspondence concerning WCSLIB may be directed to:
-       Internet email: mcalabre@atnf.csiro.au
-       Postal address: Dr. Mark Calabretta
-                       Australia Telescope National Facility, CSIRO
-                       PO Box 76
-                       Epping NSW 1710
-                       AUSTRALIA
+  Correspondence concerning WCSLIB may be directed to:
+    Internet email: mcalabre@atnf.csiro.au
+    Postal address: Dr. Mark Calabretta
+                    Australia Telescope National Facility, CSIRO
+                    PO Box 76
+                    Epping NSW 1710
+                    AUSTRALIA
 
-    Author: Mark Calabretta, Australia Telescope National Facility
-    http://www.atnf.csiro.au/~mcalabre/index.html
-    $Id: wcsbth.l,v 4.3 2007/12/27 05:41:36 cal103 Exp $
+  Author: Mark Calabretta, Australia Telescope National Facility
+  http://www.atnf.csiro.au/~mcalabre/index.html
+  $Id: wcsbth.l,v 4.7 2011/02/07 07:03:42 cal103 Exp $
 *=============================================================================
 *
-*   wcsbth.l is a Flex description file containing the definition of a lexical
-*   scanner for parsing the WCS keyrecords for one or more image arrays and/or
-*   pixel lists in a FITS binary table header.  It can also handle primary
-*   image and image extension headers.
+* wcsbth.l is a Flex description file containing the definition of a lexical
+* scanner for parsing the WCS keyrecords for one or more image arrays and/or
+* pixel lists in a FITS binary table header.  It can also handle primary image
+* and image extension headers.
 *
-*   wcsbth.l requires Flex v2.5.4 or later.  Refer to wcshdr.h for a
-*   description of the user interface and operating notes.
+* wcsbth.l requires Flex v2.5.4 or later.  Refer to wcshdr.h for a description
+* of the user interface and operating notes.
 *
-*   Implementation notes
-*   --------------------
-*   wcsbth() may be invoked with an option that causes it to recognise the
-*   image-header form of WCS keywords as defaults for each alternate
-*   coordinate representation (up to 27).  By design, with this option enabled
-*   wcsbth() can also handle primary image and image extension headers,
-*   effectively treating them as a single-column binary table though with WCS
-*   keywords of a different form.
+* Implementation notes
+* --------------------
+* wcsbth() may be invoked with an option that causes it to recognise the
+* image-header form of WCS keywords as defaults for each alternate coordinate
+* representation (up to 27).  By design, with this option enabled wcsbth() can
+* also handle primary image and image extension headers, effectively treating
+* them as a single-column binary table though with WCS keywords of a different
+* form.
 *
-*   NAXIS is always 2 for binary tables, it refers to the two-dimensional
-*   nature of the table.  Thus NAXIS does not count the number of image axes
-*   in either image arrays or pixels lists and for the latter there is not
-*   even a formal equivalent of WCSAXESa.  Hence NAXIS is always ignored and a
-*   first pass through the header is required to determine the number of
-*   images, the number of alternate coordinate representations for each image
-*   (up to 27), and the number of coordinate axes in each representation; this
-*   pass also counts the number of iPVn_ma and iPSn_ma or TVk_ma and TSk_ma
-*   keywords in each representation.
+* NAXIS is always 2 for binary tables, it refers to the two-dimensional nature
+* of the table.  Thus NAXIS does not count the number of image axes in either
+* image arrays or pixels lists and for the latter there is not even a formal
+* equivalent of WCSAXESa.  Hence NAXIS is always ignored and a first pass
+* through the header is required to determine the number of images, the number
+* of alternate coordinate representations for each image (up to 27), and the
+* number of coordinate axes in each representation; this pass also counts the
+* number of iPVn_ma and iPSn_ma or TVk_ma and TSk_ma keywords in each
+* representation.
 *
-*   On completion of the first pass, the association between column number
-*   and axis number is defined for each representation of a pixel list.
-*   Memory is allocated for an array of the required number of wcsprm structs
-*   and each of these is initialized appropriately.  These structs are filled
-*   in the second pass.
+* On completion of the first pass, the association between column number and
+* axis number is defined for each representation of a pixel list.  Memory is
+* allocated for an array of the required number of wcsprm structs and each of
+* these is initialized appropriately.  These structs are filled in the second
+* pass.
 *
-*   It is permissible for a scalar table column to contain degenerate (single-
-*   point) image arrays and simultaneously form one axis of a pixel list.
+* It is permissible for a scalar table column to contain degenerate (single-
+* point) image arrays and simultaneously form one axis of a pixel list.
 *
-*   The parser does not check for duplicated keywords, for most keywords it
-*   accepts the last encountered.
+* The parser does not check for duplicated keywords, for most keywords it
+* accepts the last encountered.
 *
-*   wcsbth() does not currently handle the Greenbank convention.
+* wcsbth() does not currently handle the Green Bank convention.
 *
 *===========================================================================*/
 
@@ -110,6 +110,7 @@ STRING	'([^']|'')*'
 
 %{
 #include <math.h>
+#include <setjmp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -127,7 +128,7 @@ STRING	'([^']|'')*'
 #define IMGAUX  0x1	/* Auxiliary image header, e.g. LONPOLEa or */
 			/* DATE-OBS.                                */
 #define IMGAXIS 0x2	/* Image header with axis number, e.g.      */
-                        /* CTYPEia.                                 */
+			/* CTYPEia.                                 */
 #define IMGHEAD 0x3	/* Image header of either type.             */
 #define BIMGARR 0x4	/* Binary table image array with axis       */
 			/* number, e.g. iCTYna.                     */
@@ -164,9 +165,13 @@ STRING	'([^']|'')*'
 char *wcsbth_hdr;
 int  wcsbth_nkeyrec;
 
+/* Used in preempting the call to exit() by yy_fatal_error(). */
+jmp_buf wcsbth_abort_jmp_env;
+#define exit(status) longjmp(wcsbth_abort_jmp_env, status)
+
 /* Struct used internally for header bookkeeping. */
 struct wcsbth_alts {
-  int ncol, iax, icol, imgherit;
+  int ncol, ialt, icol, imgherit;
   short int (*arridx)[27];
   short int pixidx[27];
   short int pad1;
@@ -180,15 +185,14 @@ struct wcsbth_alts {
 };
 
 int wcsbth_pass1(int keytype, int i, int j, int n, int k, char a, char ptype,
-                 struct wcsbth_alts *alts);
+        struct wcsbth_alts *alts);
 int wcsbth_init1(struct wcsbth_alts *alts, int *nwcs, struct wcsprm **wcs);
 
 struct wcsprm *wcsbth_idx(struct wcsprm *wcs, struct wcsbth_alts *alts,
-                 int keytype, int n, char a);
+        int keytype, int n, char a);
 int wcsbth_colax(struct wcsprm *wcs, struct wcsbth_alts *alts, int k, char a);
 
 int wcsbth_epoch(void *wptr);
-int wcsbth_velref(void *wptr);
 int wcsbth_vsource(void *wptr);
 
 int wcsbth_final(struct wcsbth_alts *alts, int *nwcs, struct wcsprm **wcs);
@@ -202,13 +206,13 @@ int wcsbth_final(struct wcsbth_alts *alts, int *nwcs, struct wcsprm **wcs);
 	
 	char *cptr, *errmsg, errtxt[80], exclude[1000], *extkey, *hptr, ptype,
 	     stmp[16];
-	int  altlin, iax, icol, incl, ipass, ipx, itmp, ix, jx, keytype,
+	int  altlin, ialt, icol, incl, ipass, ipx, itmp, ix, jx, keytype,
 	     nsel, npass, status, valtype, voff;
 	void   *vptr, *wptr;
 	struct wcsbth_alts alts;
 	struct wcsprm *wcsp, wcstem;
 	int (*special)(void *);
-        int yylex_destroy (void);
+	int yylex_destroy(void);
 	
 	/* The data structures produced. */
 	*nwcs = 0;
@@ -235,10 +239,10 @@ int wcsbth_final(struct wcsbth_alts *alts, int *nwcs, struct wcsprm **wcs);
 	alts.npv = 0x0;
 	alts.nps = 0x0;
 	
-	for (iax = 0; iax < 27; iax++) {
-	  alts.pixidx[iax] = 0;
-	  alts.pixnpv[iax] = 0;
-	  alts.pixnps[iax] = 0;
+	for (ialt = 0; ialt < 27; ialt++) {
+	  alts.pixidx[ialt] = 0;
+	  alts.pixnpv[ialt] = 0;
+	  alts.pixnps[ialt] = 0;
 	}
 	
 	/* For decoding the keyvalue. */
@@ -280,6 +284,12 @@ int wcsbth_final(struct wcsbth_alts *alts, int *nwcs, struct wcsprm **wcs);
 	/* Control variables. */
 	ipass = 1;
 	npass = 2;
+	
+	/* Return here via longjmp() invoked by yy_fatal_error(). */
+	if (setjmp(wcsbth_abort_jmp_env)) {
+	  return 4;
+	}
+	
 	BEGIN(INITIAL);
 
 
@@ -1142,7 +1152,6 @@ int wcsbth_final(struct wcsbth_alts *alts, int *nwcs, struct wcsprm **wcs);
 	  if (a == ' ' || (relax & WCSHDR_VELREFa)) {
 	    valtype = INTEGER;
 	    vptr = wcstem.specsys;
-	    special = wcsbth_velref;
 	
 	    unput(a);
 	    extkey = "VELREF";
@@ -1160,7 +1169,7 @@ int wcsbth_final(struct wcsbth_alts *alts, int *nwcs, struct wcsprm **wcs);
 	}
 
 ^VSOURCE{ALT} {
-	  if (relax & WCSHDR_VSOURCEa) {
+	  if (relax & WCSHDR_VSOURCE) {
 	    valtype = FLOAT;
 	    vptr = &(wcstem.zsource);
 	    special = wcsbth_vsource;
@@ -1183,7 +1192,7 @@ int wcsbth_final(struct wcsbth_alts *alts, int *nwcs, struct wcsprm **wcs);
 ^VSOU{I1}{ALT}"  " |
 ^VSOU{I2}{ALT}" "  |
 ^VSOU{I3}{ALT} {
-	  if (relax & WCSHDR_VSOURCEa) {
+	  if (relax & WCSHDR_VSOURCE) {
 	    valtype = FLOAT;
 	    vptr = &(wcstem.zsource);
 	    special = wcsbth_vsource;
@@ -1204,7 +1213,7 @@ int wcsbth_final(struct wcsbth_alts *alts, int *nwcs, struct wcsprm **wcs);
 	}
 
 ^WCSNAME |
-^WCSN |
+^WCSN	 |
 ^TWCS	{
 	  valtype = STRING;
 	  vptr = wcstem.wcsname;
@@ -1763,7 +1772,7 @@ int wcsbth_final(struct wcsbth_alts *alts, int *nwcs, struct wcsprm **wcs);
 	    } else {
 	      BEGIN(DISCARD);
 	    }
-
+	
 	  } else if (i > 99 || j > 99 || m > 99 || n > 999 || k > 999) {
 	    if (relax & WCSHDR_reject) {
 	      errmsg = errtxt;
@@ -1791,7 +1800,7 @@ int wcsbth_final(struct wcsbth_alts *alts, int *nwcs, struct wcsprm **wcs);
 	
 	  } else if (vptr) {
 	    alts.icol = 0;
-	    alts.iax  = 0;
+	    alts.ialt = 0;
 	    voff = (char *)vptr - (char *)(&wcstem);
 	
 	    if (valtype == INTEGER) {
@@ -1822,7 +1831,6 @@ int wcsbth_final(struct wcsbth_alts *alts, int *nwcs, struct wcsprm **wcs);
 	  if (ipass == 1) {
 	    /* Do first-pass bookkeeping. */
 	    wcsbth_pass1(keytype, i, j, n, k, a, ptype, &alts);
-	    if (alts.imgherit) npass = 3;
 	    BEGIN(FLUSH);
 	
 	  } else {
@@ -1851,7 +1859,6 @@ int wcsbth_final(struct wcsbth_alts *alts, int *nwcs, struct wcsprm **wcs);
 	  if (ipass == 1) {
 	    /* Do first-pass bookkeeping. */
 	    wcsbth_pass1(keytype, i, j, n, k, a, ptype, &alts);
-	    if (alts.imgherit) npass = 3;
 	    BEGIN(FLUSH);
 	
 	  } else {
@@ -1901,7 +1908,6 @@ int wcsbth_final(struct wcsbth_alts *alts, int *nwcs, struct wcsprm **wcs);
 	  if (ipass == 1) {
 	    /* Do first-pass bookkeeping. */
 	    wcsbth_pass1(keytype, i, j, n, k, a, ptype, &alts);
-	    if (alts.imgherit) npass = 3;
 	    BEGIN(FLUSH);
 	
 	  } else {
@@ -2019,13 +2025,15 @@ int wcsbth_final(struct wcsbth_alts *alts, int *nwcs, struct wcsprm **wcs);
 	  BEGIN(INITIAL);
 	}
 
-<<EOF>> {
+<<EOF>>	 {
 	  /* End-of-input. */
 	  if (ipass == 1) {
 	    if ((status = wcsbth_init1(&alts, nwcs, wcs)) || *nwcs == 0) {
 	      yylex_destroy();
 	      return status;
 	    }
+
+	    if (alts.imgherit) npass = 3;
 	
 	    if (abs(ctrl) > 2) {
 	      if (*nwcs == 1) {
@@ -2073,29 +2081,29 @@ int wcsbth_final(struct wcsbth_alts *alts, int *nwcs, struct wcsprm **wcs);
 %%
 
 /*----------------------------------------------------------------------------
-*   Perform first-pass tasks:
+* Perform first-pass tasks:
 *
-*   1) Count the number of coordinate axes in each of the 27 possible
-*      alternate image-header coordinate representations.  Also count the
-*      number of PVi_ma and PSi_ma keywords in each representation.
+* 1) Count the number of coordinate axes in each of the 27 possible alternate
+*    image-header coordinate representations.  Also count the number of PVi_ma
+*    and PSi_ma keywords in each representation.
 *
-*   2) Determine the number of binary table columns that have an image array
-*      with a coordinate representation (up to 999), and count the number of
-*      coordinate axes in each of the 27 possible alternates.  Also count the
-*      number of iVn_ma and iSn_ma keywords in each representation.
+* 2) Determine the number of binary table columns that have an image array
+*    with a coordinate representation (up to 999), and count the number of
+*    coordinate axes in each of the 27 possible alternates.  Also count the
+*    number of iVn_ma and iSn_ma keywords in each representation.
 *
-*   3) Determine the number of alternate pixel list coordinate representations
-*      (up to 27) and the table columns associated with each.  Also count the
-*      number of TVn_ma and TSn_ma keywords in each representation.
+* 3) Determine the number of alternate pixel list coordinate representations
+*    (up to 27) and the table columns associated with each.  Also count the
+*    number of TVn_ma and TSn_ma keywords in each representation.
 *
-*   In the first pass alts->arridx[icol][27] is used to determine the number
-*   of axes in each of 27 possible image-header coordinate descriptions
-*   (icol == 0) and each of the 27 possible coordinate representations for an
-*   image array in each column.
+* In the first pass alts->arridx[icol][27] is used to determine the number of
+* axes in each of 27 possible image-header coordinate descriptions (icol == 0)
+* and each of the 27 possible coordinate representations for an image array in
+* each column.
 *
-*   The elements of alts->pixlist[icol] are used as bit arrays to flag which
-*   of the 27 possible pixel list coordinate representations are associated
-*   each table column.
+* The elements of alts->pixlist[icol] are used as bit arrays to flag which of
+* the 27 possible pixel list coordinate representations are associated with
+* each table column.
 *---------------------------------------------------------------------------*/
 
 int wcsbth_pass1(
@@ -2109,7 +2117,7 @@ int wcsbth_pass1(
   struct wcsbth_alts *alts)
 
 {
-  int iax, icol, mask, ncol;
+  int ialt, icol, mask, ncol;
 
   if (a == 0) {
     /* Keywords such as DATE-OBS go along for the ride. */
@@ -2134,6 +2142,10 @@ int wcsbth_pass1(
         !(alts->npv     =  calloc((1 + ncol)*27, sizeof(unsigned char)))  ||
         !(alts->nps     =  calloc((1 + ncol)*27, sizeof(unsigned char)))  ||
         !(alts->pixlist =  calloc((1 + ncol),    sizeof(unsigned int)))) {
+      if (alts->arridx)  free(alts->arridx);
+      if (alts->npv)     free(alts->npv);
+      if (alts->nps)     free(alts->nps);
+      if (alts->pixlist) free(alts->pixlist);
       return 2;
     }
 
@@ -2150,25 +2162,29 @@ int wcsbth_pass1(
                                     27*(1 + ncol)*sizeof(unsigned char)))  ||
         !(alts->pixlist = realloc(alts->pixlist,
                                        (1 + ncol)*sizeof(unsigned int)))) {
+      if (alts->arridx)  free(alts->arridx);
+      if (alts->npv)     free(alts->npv);
+      if (alts->nps)     free(alts->nps);
+      if (alts->pixlist) free(alts->pixlist);
       return 2;
     }
 
     /* Since realloc() doesn't initialize the extra memory. */
     for (icol = (1 + alts->ncol); icol < (1 + ncol); icol++) {
-      for (iax = 0; iax < 27; iax++) {
-        alts->arridx[icol][iax] = 0;
-        alts->npv[icol][iax] = 0;
-        alts->nps[icol][iax] = 0;
-        alts->pixlist[icol]  = 0;
+      for (ialt = 0; ialt < 27; ialt++) {
+        alts->arridx[icol][ialt] = 0;
+        alts->npv[icol][ialt] = 0;
+        alts->nps[icol][ialt] = 0;
+        alts->pixlist[icol]   = 0;
       }
     }
 
     alts->ncol = ncol;
   }
 
-  iax = 0;
+  ialt = 0;
   if (a != ' ') {
-    iax = a - 'A' + 1;
+    ialt = a - 'A' + 1;
   }
 
   /* A BINTAB keytype such as LONPna, in conjunction with an IMGAXIS keytype
@@ -2176,26 +2192,26 @@ int wcsbth_pass1(
   if (keytype & IMGHEAD || keytype & BIMGARR) {
     /* n == 0 is expected for IMGHEAD keywords. */
     if (i == 0 && j == 0) {
-      if (alts->arridx[n][iax] == 0) {
+      if (alts->arridx[n][ialt] == 0) {
         /* Flag that an auxiliary keyword was seen. */
-        alts->arridx[n][iax] = -1;
+        alts->arridx[n][ialt] = -1;
       }
 
     } else {
       /* Record the maximum axis number found. */
-      if (alts->arridx[n][iax] < i) {
-        alts->arridx[n][iax] = i;
+      if (alts->arridx[n][ialt] < i) {
+        alts->arridx[n][ialt] = i;
       }
 
-      if (alts->arridx[n][iax] < j) {
-        alts->arridx[n][iax] = j;
+      if (alts->arridx[n][ialt] < j) {
+        alts->arridx[n][ialt] = j;
       }
     }
 
     if (ptype == 'v') {
-      alts->npv[n][iax]++;
+      alts->npv[n][ialt]++;
     } else if (ptype == 's') {
-      alts->nps[n][iax]++;
+      alts->nps[n][ialt]++;
     }
   }
 
@@ -2203,7 +2219,7 @@ int wcsbth_pass1(
      image arrays, never contribute to recognizing a table column as a pixel
      list axis.  A PIXLIST keytype is required for that. */
   if (keytype == PIXLIST) {
-    mask = 1 << iax;
+    mask = 1 << ialt;
 
     /* n > 0 for PIXLIST keytypes. */
     alts->pixlist[n] |= mask;
@@ -2213,9 +2229,9 @@ int wcsbth_pass1(
     alts->pixlist[0] |= mask;
 
     if (ptype == 'v') {
-      alts->pixnpv[iax]++;
+      alts->pixnpv[ialt]++;
     } else if (ptype == 's') {
-      alts->pixnps[iax]++;
+      alts->pixnps[ialt]++;
     }
   }
 
@@ -2224,11 +2240,10 @@ int wcsbth_pass1(
 
 
 /*----------------------------------------------------------------------------
-*   Perform initializations at the end of the first pass:
+* Perform initializations at the end of the first pass:
 *
-*   1) Determine the required number of wcsprm structs, allocate memory for
-*      an array of them and initialize each one.
-*
+* 1) Determine the required number of wcsprm structs, allocate memory for
+*    an array of them and initialize each one.
 *---------------------------------------------------------------------------*/
 
 int wcsbth_init1(
@@ -2237,7 +2252,7 @@ int wcsbth_init1(
   struct wcsprm **wcs)
 
 {
-  int iax, icol, inherit[27], ix, mask, ncol, npsmax, npvmax, status = 0;
+  int ialt, icol, inherit[27], ix, mask, ncol, npsmax, npvmax, status = 0;
   struct wcsprm *wcsp;
 
 
@@ -2248,13 +2263,13 @@ int wcsbth_init1(
 
   /* Determine the number of axes in each pixel list representation. */
   ncol = alts->ncol;
-  for (iax = 0, mask = 1; iax < 27; iax++, mask <<= 1) {
-    alts->pixidx[iax] = 0;
+  for (ialt = 0, mask = 1; ialt < 27; ialt++, mask <<= 1) {
+    alts->pixidx[ialt] = 0;
 
     if (alts->pixlist[0] | mask) {
       for (icol = 1; icol <= ncol; icol++) {
         if (alts->pixlist[icol] & mask) {
-          alts->pixidx[iax]++;
+          alts->pixidx[ialt]++;
         }
       }
     }
@@ -2263,29 +2278,29 @@ int wcsbth_init1(
   /* Find the total number of coordinate representations. */
   *nwcs = 0;
   alts->imgherit = 0;
-  for (iax = 0; iax < 27; iax++) {
-    inherit[iax] = 0;
+  for (ialt = 0; ialt < 27; ialt++) {
+    inherit[ialt] = 0;
 
     for (icol = 1; icol <= ncol; icol++) {
-      if (alts->arridx[icol][iax] < 0) {
+      if (alts->arridx[icol][ialt] < 0) {
         /* No BIMGARR keytype but there's at least one BINTAB. */
-        if (alts->arridx[0][iax] > 0) {
+        if (alts->arridx[0][ialt] > 0) {
           /* There is an IMGAXIS keytype that we will inherit, so count this
-	     representation. */
-          alts->arridx[icol][iax] = alts->arridx[0][iax];
+             representation. */
+          alts->arridx[icol][ialt] = alts->arridx[0][ialt];
         } else {
-          alts->arridx[icol][iax] = 0;
+          alts->arridx[icol][ialt] = 0;
         }
       }
 
-      if (alts->arridx[icol][iax]) {
-        if (alts->arridx[0][iax]) {
-          /* All IMGHEAD keywords are inherited for this iax. */
-          inherit[iax] = 1;
+      if (alts->arridx[icol][ialt]) {
+        if (alts->arridx[0][ialt]) {
+          /* All IMGHEAD keywords are inherited for this ialt. */
+          inherit[ialt] = 1;
 
-          if (alts->arridx[icol][iax] < alts->arridx[0][iax]) {
+          if (alts->arridx[icol][ialt] < alts->arridx[0][ialt]) {
             /* The extra axes are also inherited. */
-            alts->arridx[icol][iax] = alts->arridx[0][iax];
+            alts->arridx[icol][ialt] = alts->arridx[0][ialt];
           }
         }
 
@@ -2294,10 +2309,10 @@ int wcsbth_init1(
     }
 
     /* Count every "a" found in any IMGHEAD keyword... */
-    if (alts->arridx[0][iax]) {
-      if (inherit[iax]) {
+    if (alts->arridx[0][ialt]) {
+      if (inherit[ialt]) {
         /* ...but not if the IMGHEAD keywords will be inherited. */
-        alts->arridx[0][iax] = 0;
+        alts->arridx[0][ialt] = 0;
         alts->imgherit = 1;
       } else {
         (*nwcs)++;
@@ -2305,7 +2320,7 @@ int wcsbth_init1(
     }
 
     /* We need a struct for every "a" found in a PIXLIST keyword. */
-    if (alts->pixidx[iax]) {
+    if (alts->pixidx[ialt]) {
       (*nwcs)++;
     }
   }
@@ -2325,21 +2340,21 @@ int wcsbth_init1(
     wcsp = *wcs;
     *nwcs = 0;
     for (icol = 0; icol <= ncol; icol++) {
-      for (iax = 0; iax < 27; iax++) {
-        if (alts->arridx[icol][iax]) {
+      for (ialt = 0; ialt < 27; ialt++) {
+        if (alts->arridx[icol][ialt]) {
           /* Image-header representations that are not for inheritance
              (icol == 0) or binary table image array representations. */
           wcsp->flag = -1;
-          wcsnpv(alts->npv[icol][iax]);
-          wcsnps(alts->nps[icol][iax]);
-          if ((status = wcsini(1, (int)(alts->arridx[icol][iax]), wcsp))) {
+          wcsnpv(alts->npv[icol][ialt]);
+          wcsnps(alts->nps[icol][ialt]);
+          if ((status = wcsini(1, (int)(alts->arridx[icol][ialt]), wcsp))) {
             wcsvfree(nwcs, wcs);
             break;
           }
 
           /* Record the alternate version code. */
-          if (iax) {
-            wcsp->alt[0] = 'A' + iax - 1;
+          if (ialt) {
+            wcsp->alt[0] = 'A' + ialt - 1;
           }
 
           /* Record the table column number. */
@@ -2347,35 +2362,35 @@ int wcsbth_init1(
 
           /* On the second pass alts->arridx[icol][27] indexes the array of
              wcsprm structs. */
-          alts->arridx[icol][iax] = (*nwcs)++;
+          alts->arridx[icol][ialt] = (*nwcs)++;
 
           wcsp++;
 
         } else {
           /* Signal that this column has no WCS for this "a". */
-          alts->arridx[icol][iax] = -1;
+          alts->arridx[icol][ialt] = -1;
         }
       }
     }
 
-    for (iax = 0; iax < 27; iax++) {
-      if (alts->pixidx[iax]) {
+    for (ialt = 0; ialt < 27; ialt++) {
+      if (alts->pixidx[ialt]) {
         /* Pixel lists representations. */
         wcsp->flag = -1;
-        wcsnpv(alts->pixnpv[iax]);
-        wcsnps(alts->pixnps[iax]);
-        if ((status = wcsini(1, (int)(alts->pixidx[iax]), wcsp))) {
+        wcsnpv(alts->pixnpv[ialt]);
+        wcsnps(alts->pixnps[ialt]);
+        if ((status = wcsini(1, (int)(alts->pixidx[ialt]), wcsp))) {
           wcsvfree(nwcs, wcs);
           break;
         }
 
         /* Record the alternate version code. */
-        if (iax) {
-          wcsp->alt[0] = 'A' + iax - 1;
+        if (ialt) {
+          wcsp->alt[0] = 'A' + ialt - 1;
         }
 
         /* Record the pixel list column numbers. */
-        mask = (1 << iax);
+        mask = (1 << ialt);
         for (icol = 1, ix = 0; icol <= ncol; icol++) {
           if (alts->pixlist[icol] & mask) {
             wcsp->colax[ix++] = icol;
@@ -2383,13 +2398,13 @@ int wcsbth_init1(
         }
 
         /* alts->pixidx[] indexes the array of wcsprm structs. */
-        alts->pixidx[iax] = (*nwcs)++;
+        alts->pixidx[ialt] = (*nwcs)++;
 
         wcsp++;
 
       } else {
         /* Signal that this column is not a pixel list axis for this "a". */
-        alts->pixidx[iax] = -1;
+        alts->pixidx[ialt] = -1;
       }
     }
 
@@ -2403,8 +2418,8 @@ int wcsbth_init1(
 
 
 /*----------------------------------------------------------------------------
-*   Return a pointer to the next wcsprm struct for a particular column number
-*   and alternate.
+* Return a pointer to the next wcsprm struct for a particular column number
+* and alternate.
 *---------------------------------------------------------------------------*/
 
 struct wcsprm *wcsbth_idx(
@@ -2421,28 +2436,28 @@ struct wcsprm *wcsbth_idx(
   if (!wcs) return 0x0;
 
   iwcs = -1;
-  for (; iwcs < 0 && alts->iax < 27; alts->iax++) {
+  for (; iwcs < 0 && alts->ialt < 27; alts->ialt++) {
     /* Note that a == 0 applies to every alternate, otherwise this
-       loop simply determines the appropriate value of alts->iax. */
-    if (a && a != as[alts->iax]) continue;
+       loop simply determines the appropriate value of alts->ialt. */
+    if (a && a != as[alts->ialt]) continue;
 
     if (keytype & (IMGHEAD | BIMGARR)) {
       for (; iwcs < 0 && alts->icol <= alts->ncol; alts->icol++) {
         /* Image header keywords, n == 0, apply to all columns, otherwise this
            loop simply determines the appropriate value of alts->icol. */
         if (n && n != alts->icol) continue;
-        iwcs = alts->arridx[alts->icol][alts->iax];
+        iwcs = alts->arridx[alts->icol][alts->ialt];
       }
 
-      /* Break out of the loop to stop alts->iax from being incremented. */
+      /* Break out of the loop to stop alts->ialt from being incremented. */
       if (iwcs >= 0) break;
 
-      /* Start from scratch for the next alts->iax. */
+      /* Start from scratch for the next alts->ialt. */
       alts->icol = 0;
     }
 
     if (keytype & (IMGAUX | PIXLIST)) {
-      iwcs = alts->pixidx[alts->iax];
+      iwcs = alts->pixidx[alts->ialt];
     }
   }
 
@@ -2451,8 +2466,8 @@ struct wcsprm *wcsbth_idx(
 
 
 /*----------------------------------------------------------------------------
-*   Return the axis number associated with the specified column number in a
-*   particular pixel list coordinate representation.
+* Return the axis number associated with the specified column number in a
+* particular pixel list coordinate representation.
 *---------------------------------------------------------------------------*/
 
 int wcsbth_colax(
@@ -2483,7 +2498,7 @@ int wcsbth_colax(
 
 
 /*----------------------------------------------------------------------------
-*   Interpret EPOCH keywords.
+* Interpret EPOCH keywords.
 *---------------------------------------------------------------------------*/
 
 int wcsbth_epoch(void *wptr)
@@ -2502,33 +2517,7 @@ int wcsbth_epoch(void *wptr)
 
 
 /*----------------------------------------------------------------------------
-*   Interpret VELREF keywords.
-*---------------------------------------------------------------------------*/
-
-int wcsbth_velref(void *wptr)
-
-{
-  const char *frames[] = {"LSRK", "BARYCENT", "TOPOCENT",
-                          "LSRD", "GEOCENTR", "SOURCE", "GALACTOC"};
-  char *specsys;
-  int ivf, velref;
-
-  /* If SPECSYSa is currently undefined then set it from VELREF. */
-  specsys = (char *)wptr;
-  if (specsys[0] == '\0') {
-    sscanf(yytext, "%d", &velref);
-    ivf = velref%256 - 1;
-    if (0 <= ivf && ivf < 7) {
-      sprintf(specsys, "%s", frames[ivf]);
-    }
-  }
-
-  return 0;
-}
-
-
-/*----------------------------------------------------------------------------
-*   Interpret VSOURCE keywords.
+* Interpret VSOURCE keywords.
 *---------------------------------------------------------------------------*/
 
 int wcsbth_vsource(void *wptr)
@@ -2543,7 +2532,7 @@ int wcsbth_vsource(void *wptr)
 
     /* Convert relativistic Doppler velocity to redshift. */
     beta = vsource/c;
-    *zsource = (1.0+beta)/sqrt(1.0 - beta*beta) - 1.0;
+    *zsource = (1.0 + beta)/sqrt(1.0 - beta*beta) - 1.0;
   }
 
   return 0;
@@ -2551,7 +2540,7 @@ int wcsbth_vsource(void *wptr)
 
 
 /*----------------------------------------------------------------------------
-*   Tie up loose ends.
+* Tie up loose ends.
 *---------------------------------------------------------------------------*/
 
 int wcsbth_final(
@@ -2560,11 +2549,16 @@ int wcsbth_final(
   struct wcsprm **wcs)
 
 {
-  int iax, status;
+  int ialt, status;
 
-  for (iax = 0; iax < *nwcs; iax++) {
+  if (alts->arridx)  free(alts->arridx);
+  if (alts->npv)     free(alts->npv);
+  if (alts->nps)     free(alts->nps);
+  if (alts->pixlist) free(alts->pixlist);
+
+  for (ialt = 0; ialt < *nwcs; ialt++) {
     /* Interpret -TAB header keywords. */
-    if ((status = wcstab(*wcs+iax))) {
+    if ((status = wcstab(*wcs+ialt))) {
        wcsvfree(nwcs, wcs);
        return status;
     }

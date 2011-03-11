@@ -1,42 +1,42 @@
 *=======================================================================
 *
-*   WCSLIB 4.3 - an implementation of the FITS WCS standard.
-*   Copyright (C) 1995-2007, Mark Calabretta
+* WCSLIB 4.7 - an implementation of the FITS WCS standard.
+* Copyright (C) 1995-2011, Mark Calabretta
 *
-*   This file is part of WCSLIB.
+* This file is part of WCSLIB.
 *
-*   WCSLIB is free software: you can redistribute it and/or modify
-*   it under the terms of the GNU Lesser General Public License as
-*   published by the Free Software Foundation, either version 3 of
-*   the License, or (at your option) any later version.
+* WCSLIB is free software: you can redistribute it and/or modify it
+* under the terms of the GNU Lesser General Public License as published
+* by the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
 *
-*   WCSLIB is distributed in the hope that it will be useful, but
-*   WITHOUT ANY WARRANTY; without even the implied warranty of
-*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*   GNU Lesser General Public License for more details.
+* WCSLIB is distributed in the hope that it will be useful, but WITHOUT
+* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+* FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
+* License for more details.
 *
-*   You should have received a copy of the GNU Lesser General Public
-*   License along with WCSLIB.  If not, see http://www.gnu.org/licenses.
+* You should have received a copy of the GNU Lesser General Public
+* License along with WCSLIB.  If not, see http://www.gnu.org/licenses.
 *
-*   Correspondence concerning WCSLIB may be directed to:
-*      Internet email: mcalabre@atnf.csiro.au
-*      Postal address: Dr. Mark Calabretta
-*                      Australia Telescope National Facility, CSIRO
-*                      PO Box 76
-*                      Epping NSW 1710
-*                      AUSTRALIA
+* Correspondence concerning WCSLIB may be directed to:
+*   Internet email: mcalabre@atnf.csiro.au
+*   Postal address: Dr. Mark Calabretta
+*                   Australia Telescope National Facility, CSIRO
+*                   PO Box 76
+*                   Epping NSW 1710
+*                   AUSTRALIA
 *
-*   Author: Mark Calabretta, Australia Telescope National Facility
-*   http://www.atnf.csiro.au/~mcalabre/index.html
-*   $Id: ttab3.f,v 4.3 2007/12/27 05:42:52 cal103 Exp $
+* Author: Mark Calabretta, Australia Telescope National Facility
+* http://www.atnf.csiro.au/~mcalabre/index.html
+* $Id: ttab3.f,v 4.7 2011/02/07 07:03:43 cal103 Exp $
 *=======================================================================
 
       PROGRAM TTAB3
 *-----------------------------------------------------------------------
 *
-*   TTAB3 tests the -TAB routines using PGPLOT for graphical display.
-*   It constructs a table that approximates Bonne's projection and uses
-*   it to draw a graticule.
+* TTAB3 tests the -TAB routines using PGPLOT for graphical display.  It
+* constructs a table that approximates Bonne's projection and uses it to
+* draw a graticule.
 *
 *-----------------------------------------------------------------------
 
@@ -58,6 +58,8 @@
       INCLUDE 'prj.inc'
       INCLUDE 'tab.inc'
       INTEGER   PRJ(PRJLEN), TAB(TABLEN)
+      DOUBLE PRECISION DUMMY1, DUMMY2
+      EQUIVALENCE (PRJ,DUMMY1), (TAB,DUMMY2)
 *-----------------------------------------------------------------------
 
       WRITE (*, 10)
@@ -89,28 +91,28 @@
       STATUS = TABPUT (TAB, TAB_FLAG, -1, 0, 0)
       STATUS = TABINI(M, K, TAB)
       IF (STATUS.NE.0) THEN
-         WRITE (*, 20) STATUS
- 20      FORMAT ('TABINI ERROR',I2,'.')
-         GO TO 999
+        WRITE (*, 20) STATUS
+ 20     FORMAT ('TABINI ERROR',I2,'.')
+        GO TO 999
       END IF
 
       STATUS = TABPUT (TAB, TAB_M, M, 0, 0)
       DO 40 IM = 1, M
-         STATUS = TABPUT (TAB, TAB_K,     K(IM),     IM, 0)
-         STATUS = TABPUT (TAB, TAB_MAP,   MAP(IM),   IM, 0)
-         STATUS = TABPUT (TAB, TAB_CRVAL, CRVAL(IM), IM, 0)
+        STATUS = TABPUT (TAB, TAB_K,     K(IM),     IM, 0)
+        STATUS = TABPUT (TAB, TAB_MAP,   MAP(IM),   IM, 0)
+        STATUS = TABPUT (TAB, TAB_CRVAL, CRVAL(IM), IM, 0)
 
-         DO 30 IK = 1, K(IM)
-            STATUS = TABPUT (TAB, TAB_INDEX, DBLE(IK-1), IM, IK)
- 30      CONTINUE
+        DO 30 IK = 1, K(IM)
+          STATUS = TABPUT (TAB, TAB_INDEX, DBLE(IK-1), IM, IK)
+ 30     CONTINUE
  40   CONTINUE
 
 *     Set up the lookup table to approximate Bonne's projection.
       DO 50 I = 1, K1
-         X(I) = 136 - I
+        X(I) = 136 - I
  50   CONTINUE
       DO 60 J = 1, K2
-         Y(J) = J - 96
+        Y(J) = J - 96
  60   CONTINUE
 
       STATUS = PRJINI (PRJ)
@@ -120,96 +122,94 @@
 
       IK = 1
       DO 80 J = 1, K2
-         DO 70 I = 1, K1
-            IF (STAT(I,J).NE.0) THEN
-               COORD(1,I,J) = 999D0
-               COORD(2,I,J) = 999D0
-            END IF
+        DO 70 I = 1, K1
+          IF (STAT(I,J).NE.0) THEN
+            COORD(1,I,J) = 999D0
+            COORD(2,I,J) = 999D0
+          END IF
 
-            STATUS = TABPUT (TAB, TAB_COORD, COORD(1,I,J), IK, 0)
-            STATUS = TABPUT (TAB, TAB_COORD, COORD(2,I,J), IK+1, 0)
-            IK = IK + 2
- 70      CONTINUE
+          STATUS = TABPUT (TAB, TAB_COORD, COORD(1,I,J), IK, 0)
+          STATUS = TABPUT (TAB, TAB_COORD, COORD(2,I,J), IK+1, 0)
+          IK = IK + 2
+ 70     CONTINUE
  80   CONTINUE
 
 
 *     Draw meridians.
       CI = 1
-      DO 110 ILNG = 0, 0, 15
-*      DO 110 ILNG = -180, 180, 15
-         CI = CI + 1
-         IF (CI.GT.7) CI = 2
-         IF (ILNG.NE.0) THEN
-            CALL PGSCI (CI)
-         ELSE
-            CALL PGSCI (1)
-         END IF
+      DO 110 ILNG = -180, 180, 15
+        CI = CI + 1
+        IF (CI.GT.7) CI = 2
+        IF (ILNG.NE.0) THEN
+          CALL PGSCI (CI)
+        ELSE
+          CALL PGSCI (1)
+        END IF
 
-         J = 0
-         DO 90 ILAT = -90, 90
-            J = J + 1
-            WORLD(1,J) = DBLE(ILNG)
-            WORLD(2,J) = DBLE(ILAT)
- 90      CONTINUE
+        J = 0
+        DO 90 ILAT = -90, 90
+          J = J + 1
+          WORLD(1,J) = DBLE(ILNG)
+          WORLD(2,J) = DBLE(ILAT)
+ 90     CONTINUE
 
-*        A fudge to account for the singularity at the poles.
-         WORLD(1,1)   = 0D0
-         WORLD(1,181) = 0D0
+*       A fudge to account for the singularity at the poles.
+        WORLD(1,1)   = 0D0
+        WORLD(1,181) = 0D0
 
-         STATUS = TABS2X (TAB, 181, 2, WORLD, XY, STAT)
+        STATUS = TABS2X (TAB, 181, 2, WORLD, XY, STAT)
 
-         IK = 0
-         DO 100 J = 1, 181
-            IF (STAT(J,1).NE.0) THEN
-               IF (IK.GT.1) CALL PGLINE (K, XR, YR)
-               IK = 0
-               GO TO 100
-            END IF
+        IK = 0
+        DO 100 J = 1, 181
+          IF (STAT(J,1).NE.0) THEN
+            IF (IK.GT.1) CALL PGLINE (K, XR, YR)
+            IK = 0
+            GO TO 100
+          END IF
 
-            IK = IK + 1
-            XR(IK) = XY(1,J)
-            YR(IK) = XY(2,J)
- 100     CONTINUE
+          IK = IK + 1
+          XR(IK) = XY(1,J)
+          YR(IK) = XY(2,J)
+ 100    CONTINUE
 
-         CALL PGLINE (IK, XR, YR)
+        CALL PGLINE (IK, XR, YR)
  110  CONTINUE
 
 
 *     Draw parallels.
       CI = 1
-      DO 140 ILAT = -15, -15, 15
-*      DO 140 ILAT = -75, 75, 15
-         CI = CI + 1
-         IF (CI.GT.7) CI = 2
-         IF (ILAT.NE.0) THEN
-            CALL PGSCI (CI)
-         ELSE
-            CALL PGSCI (1)
-         END IF
+      DO 140 ILAT = -75, 75, 15
+        CI = CI + 1
+        IF (CI.GT.7) CI = 2
+        IF (ILAT.NE.0) THEN
+          CALL PGSCI (CI)
+        ELSE
+          CALL PGSCI (1)
+        END IF
 
-         J = 0
-         DO 120 ILNG = -180, 180
-            J = J + 1
-            WORLD(1,J) = DBLE(ILNG)
-            WORLD(2,J) = DBLE(ILAT)
- 120     CONTINUE
+        J = 0
+        DO 120 ILNG = -180, 180
+          J = J + 1
+          WORLD(1,J) = DBLE(ILNG)
+          WORLD(2,J) = DBLE(ILAT)
+ 120    CONTINUE
 
-         STATUS = TABS2X (TAB, 361, 2, WORLD, XY, STAT)
+        STATUS = TABS2X (TAB, 361, 2, WORLD, XY, STAT)
 
-         IK = 0
-         DO 130 J = 1, 361
-            IF (STAT(J,1).NE.0) THEN
-               IF (IK.GT.1) CALL PGLINE (IK, XR, YR)
-               IK = 0
-               GO TO 130
-            END IF
+        IK = 0
+        DO 130 J = 1, 361
+          IF (STAT(J,1).NE.0) THEN
+            IF (IK.GT.1) CALL PGLINE (IK, XR, YR)
+            IK = 0
+            GO TO 130
+          END IF
 
-            IK = IK + 1
-            XR(IK) = XY(1,J)
-            YR(IK) = XY(2,J)
- 130     CONTINUE
+          IK = IK + 1
+          XR(IK) = XY(1,J)
+          YR(IK) = XY(2,J)
+ 130    CONTINUE
 
-         CALL PGLINE (IK, XR, YR)
+        CALL PGLINE (IK, XR, YR)
  140  CONTINUE
 
       CALL PGEND ()

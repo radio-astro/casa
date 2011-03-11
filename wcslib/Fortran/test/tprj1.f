@@ -1,43 +1,45 @@
 *=======================================================================
 *
-*   WCSLIB 4.3 - an implementation of the FITS WCS standard.
-*   Copyright (C) 1995-2007, Mark Calabretta
+* WCSLIB 4.7 - an implementation of the FITS WCS standard.
+* Copyright (C) 1995-2011, Mark Calabretta
 *
-*   This file is part of WCSLIB.
+* This file is part of WCSLIB.
 *
-*   WCSLIB is free software: you can redistribute it and/or modify
-*   it under the terms of the GNU Lesser General Public License as
-*   published by the Free Software Foundation, either version 3 of
-*   the License, or (at your option) any later version.
+* WCSLIB is free software: you can redistribute it and/or modify it
+* under the terms of the GNU Lesser General Public License as published
+* by the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
 *
-*   WCSLIB is distributed in the hope that it will be useful, but
-*   WITHOUT ANY WARRANTY; without even the implied warranty of
-*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*   GNU Lesser General Public License for more details.
+* WCSLIB is distributed in the hope that it will be useful, but WITHOUT
+* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+* FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
+* License for more details.
 *
-*   You should have received a copy of the GNU Lesser General Public
-*   License along with WCSLIB.  If not, see http://www.gnu.org/licenses.
+* You should have received a copy of the GNU Lesser General Public
+* License along with WCSLIB.  If not, see http://www.gnu.org/licenses.
 *
-*   Correspondence concerning WCSLIB may be directed to:
-*      Internet email: mcalabre@atnf.csiro.au
-*      Postal address: Dr. Mark Calabretta
-*                      Australia Telescope National Facility, CSIRO
-*                      PO Box 76
-*                      Epping NSW 1710
-*                      AUSTRALIA
+* Correspondence concerning WCSLIB may be directed to:
+*   Internet email: mcalabre@atnf.csiro.au
+*   Postal address: Dr. Mark Calabretta
+*                   Australia Telescope National Facility, CSIRO
+*                   PO Box 76
+*                   Epping NSW 1710
+*                   AUSTRALIA
 *
-*   Author: Mark Calabretta, Australia Telescope National Facility
-*   http://www.atnf.csiro.au/~mcalabre/index.html
-*   $Id: tprj1.f,v 4.3 2007/12/27 05:42:52 cal103 Exp $
+* Author: Mark Calabretta, Australia Telescope National Facility
+* http://www.atnf.csiro.au/~mcalabre/index.html
+* $Id: tprj1.f,v 4.7 2011/02/07 07:03:43 cal103 Exp $
 *=======================================================================
 
       PROGRAM TPRJ1
 *-----------------------------------------------------------------------
 *
-*   TPRJ1 tests forward and reverse spherical projections for closure.
+* TPRJ1 tests forward and reverse spherical projections for closure.
 *
 *-----------------------------------------------------------------------
-      INTEGER   J
+      INCLUDE 'prj.inc'
+
+      INTEGER   J, K, STATUS
       DOUBLE PRECISION PV(0:29)
 
       DOUBLE PRECISION PI
@@ -52,9 +54,21 @@
      :        '-----------------------------------------------',
      :        '------------------')
 
-      DO 20 J = 0, 29
-         PV(J) = 0D0
- 20   CONTINUE
+      WRITE (*, '(/,A)') 'List of prj status return values:'
+      DO 40 STATUS = 1, 4
+        DO 30 K = 80, 1, -1
+          IF (PRJ_ERRMSG(STATUS)(K:K).NE.' ') THEN
+            WRITE(*, 20) STATUS, PRJ_ERRMSG(STATUS)(:K)
+ 20         FORMAT(I4,': ',A,'.')
+            GO TO 40
+          ENDIF
+ 30     CONTINUE
+ 40   CONTINUE
+      WRITE(*, '()')
+
+      DO 50 J = 0, 29
+        PV(J) = 0D0
+ 50   CONTINUE
 
 *     AZP: zenithal/azimuthal perspective.
       PV(1) = 0.5D0
@@ -192,6 +206,8 @@
 
       INCLUDE 'prj.inc'
       INTEGER   PRJ(PRJLEN)
+      DOUBLE PRECISION DUMMY
+      EQUIVALENCE (PRJ,DUMMY)
 
       DOUBLE PRECISION D2R, PI
       PARAMETER (PI = 3.141592653589793238462643D0)
@@ -200,7 +216,7 @@
       STATUS = PRJINI(PRJ)
 
       DO 10 J = 0, 29
-         STATUS = PRJPUT (PRJ, PRJ_PV, PV(J), J)
+        STATUS = PRJPUT (PRJ, PRJ_PV, PV(J), J)
  10   CONTINUE
 
       STATUS = PRJPUT (PRJ, PRJ_CODE, PCODE, 0)
@@ -217,59 +233,59 @@
       DLATMX = 0D0
 
       DO 80 LAT = NORTH, SOUTH, -1
-         LAT1 = DBLE(LAT)
+        LAT1 = DBLE(LAT)
 
-         J = 1
-         DO 30 LNG = -180, 180
-            LNG1(J) = DBLE(LNG)
-            J = J + 1
- 30      CONTINUE
+        J = 1
+        DO 30 LNG = -180, 180
+          LNG1(J) = DBLE(LNG)
+          J = J + 1
+ 30     CONTINUE
 
-         STATUS = PRJS2X (PRJ, 361, 1, 1, 1, LNG1, LAT1, X, Y, STAT1)
-         IF (STATUS.EQ.1) THEN
-            WRITE (*, 40) PCODE, STATUS
- 40         FORMAT (3X,A3,'(S2X) ERROR',I2)
-            GO TO 80
-         END IF
+        STATUS = PRJS2X (PRJ, 361, 1, 1, 1, LNG1, LAT1, X, Y, STAT1)
+        IF (STATUS.EQ.1) THEN
+          WRITE (*, 40) PCODE, STATUS
+ 40       FORMAT (3X,A3,'(S2X) ERROR',I2)
+          GO TO 80
+        END IF
 
-         STATUS = PRJX2S (PRJ, 361, 0, 1, 1, X, Y, LNG2, LAT2, STAT2)
-         IF (STATUS.EQ.1) THEN
-            WRITE (*, 50) PCODE, STATUS
- 50         FORMAT (3X,A3,'(X2S) ERROR',I2)
-            GO TO 80
-         END IF
+        STATUS = PRJX2S (PRJ, 361, 0, 1, 1, X, Y, LNG2, LAT2, STAT2)
+        IF (STATUS.EQ.1) THEN
+          WRITE (*, 50) PCODE, STATUS
+ 50       FORMAT (3X,A3,'(X2S) ERROR',I2)
+          GO TO 80
+        END IF
 
-         LNG = -180
-         DO 70 J = 1, 361
-            IF (STAT1(J).NE.0) GO TO 70
+        LNG = -180
+        DO 70 J = 1, 361
+          IF (STAT1(J).NE.0) GO TO 70
 
-            IF (STAT2(J).NE.0) THEN
-               WRITE (*, 55) PCODE, LNG1(J), LAT1, X(J), Y(J), STAT2(J)
- 55            FORMAT (3X,A3,'(X2S): lng1 =',F20.15,'  lat1 =',F20.15,/,
-     :                 '                x =',F20.15,'     y =',F20.15,
-     :                 '  ERROR',I3)
-               GO TO 70
-            END IF
+          IF (STAT2(J).NE.0) THEN
+            WRITE (*, 55) PCODE, LNG1(J), LAT1, X(J), Y(J), STAT2(J)
+ 55         FORMAT (3X,A3,'(X2S): lng1 =',F20.15,'  lat1 =',F20.15,/,
+     :              '                x =',F20.15,'     y =',F20.15,
+     :              '  ERROR',I3)
+            GO TO 70
+          END IF
 
-            DLNG = ABS(LNG2(J) - LNG1(J))
-            IF (DLNG.GT.180D0) DLNG = ABS(DLNG-360D0)
-            IF (ABS(LAT).NE.90 .AND. DLNG.GT.DLNGMX) DLNGMX = DLNG
-            DLAT = ABS(LAT2(J) - LAT1)
-            IF (DLAT.GT.DLATMX) DLATMX = DLAT
+          DLNG = ABS(LNG2(J) - LNG1(J))
+          IF (DLNG.GT.180D0) DLNG = ABS(DLNG-360D0)
+          IF (ABS(LAT).NE.90 .AND. DLNG.GT.DLNGMX) DLNGMX = DLNG
+          DLAT = ABS(LAT2(J) - LAT1)
+          IF (DLAT.GT.DLATMX) DLATMX = DLAT
 
-            IF (DLAT.GT.TOL) THEN
-               WRITE (*, 60) PCODE, LNG1(J), LAT1, X(J), Y(J), LNG2(J),
-     :                       LAT2(J)
- 60            FORMAT (8X,A3,': lng1 =',F20.15,'  lat1 =',F20.15,/,
-     :                 8X,'        x =',F20.15,'     y =',F20.15,/,
-     :                 8X,'     lng2 =',F20.15,'  lat2 =',F20.15)
-            ELSE IF (ABS(LAT).NE.90) THEN
-               IF (DLNG.GT.TOL) THEN
-                  WRITE (*, 60) PCODE, LNG1(J), LAT1, X(J), Y(J),
-     :                          LNG2(J), LAT2(J)
-               END IF
-            END IF
- 70      CONTINUE
+          IF (DLAT.GT.TOL) THEN
+            WRITE (*, 60) PCODE, LNG1(J), LAT1, X(J), Y(J), LNG2(J),
+     :                    LAT2(J)
+ 60         FORMAT (8X,A3,': lng1 =',F20.15,'  lat1 =',F20.15,/,
+     :              8X,'        x =',F20.15,'     y =',F20.15,/,
+     :              8X,'     lng2 =',F20.15,'  lat2 =',F20.15)
+          ELSE IF (ABS(LAT).NE.90) THEN
+            IF (DLNG.GT.TOL) THEN
+              WRITE (*, 60) PCODE, LNG1(J), LAT1, X(J), Y(J),
+     :                      LNG2(J), LAT2(J)
+             END IF
+          END IF
+ 70     CONTINUE
  80   CONTINUE
 
       WRITE (*, 90) DLNGMX, DLATMX
@@ -283,38 +299,38 @@
       DRMAX = 0D0
 
       DO 140 J = 1, 12
-         X1(1) = R*COS(THETA*D2R)
-         Y1(1) = R*SIN(THETA*D2R)
+        X1(1) = R*COS(THETA*D2R)
+        Y1(1) = R*SIN(THETA*D2R)
 
-         STATUS = PRJX2S (PRJ, 1, 1, 1, 1, X1, Y1, LNG1, LAT1, STAT2)
-         IF (STATUS.NE.0) THEN
-            WRITE (*, 100) PCODE, X1(1), Y1(1), STATUS
- 100        FORMAT (8X,A3,'(X2S):   x1 =',F20.15,'    y1 =',F20.15,
-     :              '  ERROR',I3)
-            GO TO 130
-         END IF
+        STATUS = PRJX2S (PRJ, 1, 1, 1, 1, X1, Y1, LNG1, LAT1, STAT2)
+        IF (STATUS.NE.0) THEN
+          WRITE (*, 100) PCODE, X1(1), Y1(1), STATUS
+ 100      FORMAT (8X,A3,'(X2S):   x1 =',F20.15,'    y1 =',F20.15,
+     :            '  ERROR',I3)
+          GO TO 130
+        END IF
 
-         STATUS = PRJS2X (PRJ, 1, 1, 1, 1, LNG1, LAT1, X2, Y2, STAT1)
-         IF (STATUS.NE.0) THEN
-            WRITE (*, 110) PCODE, X1(1), Y1(1), LNG1(1), LAT1, STATUS
- 110        FORMAT (3X,A3,':   x1 =',F20.15,'    y1 =',F20.15,/,
-     :              3X,'      lng =',F20.15,'   lat =',F20.15,'  ERROR',
-     :              I3)
-            GO TO 130
-         END IF
+        STATUS = PRJS2X (PRJ, 1, 1, 1, 1, LNG1, LAT1, X2, Y2, STAT1)
+        IF (STATUS.NE.0) THEN
+          WRITE (*, 110) PCODE, X1(1), Y1(1), LNG1(1), LAT1, STATUS
+ 110      FORMAT (3X,A3,':   x1 =',F20.15,'    y1 =',F20.15,/,
+     :            3X,'      lng =',F20.15,'   lat =',F20.15,'  ERROR',
+     :            I3)
+          GO TO 130
+        END IF
 
-         DR = SQRT((X2(1)-X1(1))**2 + (Y2(1)-Y1(1))**2)
-         IF (DR.GT.DRMAX) DRMAX = DR
-         IF (DR.GT.TOL) THEN
-            WRITE (*, 120) PCODE, X1(1), Y1(1), LNG1(1), LAT1, X2(1),
-     :                     Y2(1)
- 120        FORMAT (8X,A3,':   x1 =',F20.15,'    y1 =',F20.15,/,
-     :              8X,'      lng =',F20.15,'   lat =',F20.15,/,
-     :              8X,'       x2 =',F20.15,'    y2 =',F20.15)
-         END IF
+        DR = SQRT((X2(1)-X1(1))**2 + (Y2(1)-Y1(1))**2)
+        IF (DR.GT.DRMAX) DRMAX = DR
+        IF (DR.GT.TOL) THEN
+          WRITE (*, 120) PCODE, X1(1), Y1(1), LNG1(1), LAT1, X2(1),
+     :                   Y2(1)
+ 120      FORMAT (8X,A3,':   x1 =',F20.15,'    y1 =',F20.15,/,
+     :            8X,'      lng =',F20.15,'   lat =',F20.15,/,
+     :            8X,'       x2 =',F20.15,'    y2 =',F20.15)
+        END IF
 
- 130     R = R/10D0
-         THETA = THETA + 15D0
+ 130    R = R/10D0
+        THETA = THETA + 15D0
  140  CONTINUE
 
       WRITE (*, 150) DRMAX

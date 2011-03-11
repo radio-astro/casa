@@ -1,27 +1,27 @@
 *=======================================================================
-*                              PGSBOX 4.3
+*                              PGSBOX 4.7
 *-----------------------------------------------------------------------
 *
-*   ATTENTION!
-*   ----------
+* ATTENTION!
+* ----------
 *
-*   PGCRVL is defunct.
+* PGCRVL is defunct.
 *
-*   Do not use this routine - use PGSBOX instead.
-*   ---------------------------------------------
+* Do not use this routine - use PGSBOX instead.
+* ---------------------------------------------
 *
-*   What remains here is a driver for the more general PGSBOX routine
-*   which is not based on pixel coordinates.
+* What remains here is a driver for the more general PGSBOX routine
+* which is not based on pixel coordinates.
 *
-*   This residue of PGCRVL exists mainly for backwards compatibility.
-*   PGCRVL's old AXEN argument is here translated into the BLC and TRC
-*   arguments required by PGSBOX.
+* This residue of PGCRVL exists mainly for backwards compatibility.
+* PGCRVL's old AXEN argument is here translated into the BLC and TRC
+* arguments required by PGSBOX.
 *
-*   New applications should use PGSBOX directly.
+* New applications should use PGSBOX directly.
 *
-*   Author: Mark Calabretta, Australia Telescope National Facility
-*   http://www.atnf.csiro.au/~mcalabre/index.html
-*   $Id: pgcrvl.f,v 4.3 2007/12/27 05:49:14 cal103 Exp $
+* Author: Mark Calabretta, Australia Telescope National Facility
+* http://www.atnf.csiro.au/~mcalabre/index.html
+* $Id: pgcrvl.f,v 4.7 2011/02/07 07:03:43 cal103 Exp $
 *=======================================================================
       SUBROUTINE PGCRVL (AXEN, IDENTS, OPT, LABCTL, LABDEN, CI, GCODE,
      :   TIKLEN, NG1, GRID1, NG2, GRID2, DOEQ, NLFUNC, NLC, NLI, NLD,
@@ -43,8 +43,8 @@
       TRC(2) = AXEN(2) + 0.5
 
       CALL PGSBOX (BLC, TRC, IDENTS, OPT, LABCTL, LABDEN, CI, GCODE,
-     :   TIKLEN, NG1, GRID1, NG2, GRID2, DOEQ, NLFUNC, NLC, NLI, NLD,
-     :   NLCPRM, NLIPRM, NLDPRM, NC, IC, CACHE, IERR)
+     :  TIKLEN, NG1, GRID1, NG2, GRID2, DOEQ, NLFUNC, NLC, NLI, NLD,
+     :  NLCPRM, NLIPRM, NLDPRM, NC, IC, CACHE, IERR)
 
       RETURN
       END

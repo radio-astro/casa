@@ -1,55 +1,44 @@
 #-----------------------------------------------------------------------------
-#   GNU makefile for building WCSLIB 4.3.1.
+# GNU makefile for building WCSLIB 4.7
 #
-#   Summary of the main targets
-#   ---------------------------
-#      all:       Do 'make all' in each subdirectory.
-#      check:     Do 'make check' in each subdirectory.
-#      tests:     Do 'make tests' in each subdirectory.
-#      install:   Do 'make install' in each subdirectory.
-#      realclean (or cleanest): Do 'make realclean' in each subdirectory.
-#      show_all:  Print the values of all variables used in this GNUmakefile.
-#      writable:  Run chmod recursively to make all sources writable.
+# Summary of the main targets
+# ---------------------------
+#   all:       Do 'make all' in each subdirectory (excluding ./doxygen).
+#   check:     Do 'make check' in each subdirectory (compile and run tests).
+#   tests:     Do 'make tests' in each subdirectory (compile test programs but
+#              don't run them).
+#   install:   Do 'make install' in each subdirectory.
+#   clean:     Recursively delete intermediate files produced as part of the
+#              build, e.g. object modules, core dumps, etc.
+#   cleaner:   Recursively clean, and also delete test executables, test
+#              input and output, and intermediates produced in compiling the
+#              programmers' manual.
+#   distclean (or realclean): Recursively delete all platform-dependent files
+#              generated during the build, preserving only the programmers'
+#              manual (which is normally provided pre-built).  It is the one
+#              to use between builds for multiple platforms.
+#   cleanest:  Like distclean, but deletes everything that can be regenerated
+#              from the source files, including the programmers' manual, but
+#              excluding 'configure'.
+#   show:      Print the values of important variables used in this and the
+#              other makefiles.
+#   writable:  Run chmod recursively to make all sources writable.
 #
-#   Notes:
-#      1) If you need to make changes then preferably modify makedefs.in
-#         instead.
+# Notes:
+#   1) If you need to make changes then preferably modify makedefs.in instead.
 #
-#      2) Refer also to the GNUmakefiles in subdirectories, particularly
-#         C/GNUmakefile.
+#   2) Refer also to the makefiles in subdirectories, particularly
+#      C/GNUmakefile.
 #
-#   Author: Mark Calabretta, Australia Telescope National Facility
-#   http://www.atnf.csiro.au/~mcalabre/index.html
-#   $Id: GNUmakefile,v 4.3.1.3 2008/02/20 01:00:07 cal103 Exp cal103 $
+# Author: Mark Calabretta, Australia Telescope National Facility
+# http://www.atnf.csiro.au/~mcalabre/index.html
+# $Id: GNUmakefile,v 4.7 2011/02/07 07:03:43 cal103 Exp $
 #-----------------------------------------------------------------------------
 # Get configure settings.
 include makedefs
 
-SUBDIRS := C Fortran pgsbox utils
-TSTDIRS := C Fortran pgsbox
-
-# Top of the 'make install' hierarchy: psgbox -> Fortran -> C.
-INSTDIR := pgsbox
-
-# Is a Fortran compiler available?
-ifeq "$(FC)" ""
-  SUBDIRS := C Fortran utils
-  TSTDIRS := C
-  INSTDIR := Fortran
-endif
-
-# Is PGPLOT available?
-ifeq "$(PGPLOTINC)" ""
-  SUBDIRS := $(filter-out pgsbox, $(SUBDIRS))
-  INSTDIR := Fortran
-endif
-
-ifeq "$(PGPLOTLIB)" ""
-  TSTDIRS := $(filter-out pgsbox, $(TSTDIRS))
-endif
-
-
-.PHONY : build check chmod cleanest install realclean show_all tests writable
+.PHONY : build check chmod clean cleaner cleanest distclean install \
+         realclean show tests writable
 
 build :
 	-@ for DIR in $(SUBDIRS) ; do \
@@ -58,7 +47,7 @@ build :
 	     $(MAKE) -k -C $$DIR build ; \
 	   done
 
-check tests : show_all
+check tests : show
 	-@ echo ''
 	-@ $(TIMER)
 	 @ for DIR in $(SUBDIRS) ; do \
@@ -70,26 +59,48 @@ check tests : show_all
 	     echo '' ; \
 	     $(TIMER) ; \
 	     $(MAKE) -k -C $$DIR $@ ; \
-	   done 
+	   done
 
 install :
-	$(MAKE) -k -C $(INSTDIR) $@
-	$(MAKE) -k -C utils $@
-	$(INSTALL) -m 444 wcsconfig.h wcsconfig_f77.h $(INCDIR)
-	$(INSTALL) -m 444 COPYING $(INCDIR)/COPYING
-	$(INSTALL) -m 444 README  $(INCDIR)/README
+	 @ for DIR in $(INSTDIR) ; do \
+	     $(MAKE) -k -C $$DIR $@ ; \
+	   done
+	   $(INSTALL) -m 444 wcsconfig.h wcsconfig_f77.h $(INCDIR)
+	-  if [ ! -d "$(DOCDIR)" ] ; then \
+	     $(INSTALL) -d -m 2775 $(DOCDIR) ; \
+	   fi
+	   $(INSTALL) -m 444 CHANGES COPYING* README $(DOCDIR)
+	-  if [ ! -d "$(PDFDIR)" ] ; then \
+	     $(INSTALL) -d -m 2775 $(PDFDIR) ; \
+	   fi
+	   $(INSTALL) -m 444 wcslib.pdf $(PDFDIR)
+	-  if [ ! -d "$(HTMLDIR)/html" ] ; then \
+	     $(INSTALL) -d -m 2775 $(HTMLDIR)/html ; \
+	   fi
+	   $(INSTALL) -m 444 html/* $(HTMLDIR)/html
+	   if [ ! -d "$(LIBDIR)/pkgconfig" ] ; then \
+	     $(INSTALL) -d -m 2775 $(LIBDIR)/pkgconfig ; \
+	   fi
+	   $(INSTALL) -m 444 wcslib.pc $(LIBDIR)/pkgconfig/wcslib.pc
 
-realclean cleanest :
-	for DIR in $(SUBDIRS) ; do \
-	   $(MAKE) -C $$DIR realclean ; \
-	done
-	$(RM) -r autom4te.cache autoscan.log
-	$(RM) confdefs.h conftest.*
-	$(RM) config.log config.status configure.lineno
-	$(RM) wcsconfig.h wcsconfig_*.h makedefs
-	$(RM) wcslib-*.tar.gz
+clean cleaner :
+	   for DIR in $(SUBDIRS) doxygen ; do \
+	     $(MAKE) -C $$DIR $@ ; \
+	   done
 
-show_all ::
+cleanest distclean realclean :
+	   for DIR in $(SUBDIRS) doxygen ; do \
+	     $(MAKE) -C $$DIR $@ ; \
+	   done
+	-  $(RM) *.log
+	-  $(RM) -r autom4te.cache autoscan.log
+	-  $(RM) confdefs.h conftest.*
+	-  $(RM) config.log config.status configure.lineno
+	-  $(RM) makedefs wcslib.pc
+	-  $(RM) wcsconfig.h wcsconfig_*.h
+	-  $(RM) wcslib-*.tar.gz
+
+show ::
 	-@ echo 'Subdirectories to be built...'
 	-@ echo '  SUBDIRS     := $(SUBDIRS)'
 	-@ echo '  TSTDIRS     := $(TSTDIRS)'
@@ -126,23 +137,42 @@ config.status : configure
 
 .PHONY : dist
 
-dist : realclean
-	-@ echo $(WCSLIBV)/C/RCS        >  wcslib.X
-	-@ echo $(WCSLIBV)/C/flexed/RCS >> wcslib.X
-	-@ echo $(WCSLIBV)/C/test/RCS   >> wcslib.X
-	-@ echo $(WCSLIBV)/Fortran/RCS  >> wcslib.X
-	-@ echo $(WCSLIBV)/Fortran/test/RCS >> wcslib.X
-	-@ echo $(WCSLIBV)/makedefs     >> wcslib.X
-	-@ echo $(WCSLIBV)/other        >> wcslib.X
-	-@ echo $(WCSLIBV)/pgsbox/RCS   >> wcslib.X
-	-@ echo $(WCSLIBV)/RCS          >> wcslib.X
-	-@ echo $(WCSLIBV)/utils/RCS    >> wcslib.X
-	-@ echo $(WCSLIBV)/wcslib.X     >> wcslib.X
-	   tar cvfX ../$(WCSLIBV).tar wcslib.X -C .. $(WCSLIBV)
-	   mv ../$(WCSLIBV).tar ./$(WCSLIBV).tar
-	   rm -f wcslib.X $(WCSLIBV).tar.gz
-	   gzip --best $(WCSLIBV).tar
-	   chmod 444 $(WCSLIBV).tar.gz
+dist :
+	   $(MAKE) -C doxygen cleanest build
+	   $(MAKE) distclean
+	-@ echo $(WCSLIBPKG)/C/RCS        >  wcslib.X
+	-@ echo $(WCSLIBPKG)/C/flexed/RCS >> wcslib.X
+	-@ echo $(WCSLIBPKG)/C/test/RCS   >> wcslib.X
+	-@ echo $(WCSLIBPKG)/doxygen/RCS  >> wcslib.X
+	-@ echo $(WCSLIBPKG)/Fortran/RCS  >> wcslib.X
+	-@ echo $(WCSLIBPKG)/Fortran/test/RCS >> wcslib.X
+	-@ echo $(WCSLIBPKG)/makedefs     >> wcslib.X
+	-@ echo $(WCSLIBPKG)/other        >> wcslib.X
+	-@ echo $(WCSLIBPKG)/pgsbox/RCS   >> wcslib.X
+	-@ echo $(WCSLIBPKG)/RCS          >> wcslib.X
+	-@ echo $(WCSLIBPKG)/TODO         >> wcslib.X
+	-@ echo $(WCSLIBPKG)/utils/RCS    >> wcslib.X
+	-@ echo $(WCSLIBPKG)/wcslib.T     >> wcslib.X
+	-@ echo $(WCSLIBPKG)/wcslib.X     >> wcslib.X
+	   rm -f $(WCSLIBPKG).tar.bz2
+	   tar cf - -C .. -X wcslib.X $(WCSLIBPKG) | \
+	     tar t | \
+	     grep -v '/$$' | \
+	     sort > wcslib.T
+	   rm -f wcslib.X
+	   tar cvf $(WCSLIBPKG).tar -C .. -T wcslib.T
+	   rm -f wcslib.T
+	   bzip2 $(WCSLIBPKG).tar
+	   chmod 444 $(WCSLIBPKG).tar.bz2
+
+install_dist :
+	   cp -fp $(WCSLIBPKG).tar.bz2 /nfs/ftp/software/wcslib/
+	   mv -f  $(WCSLIBPKG).tar.bz2 ../wcslib-releases/
+	   (cd /nfs/ftp/software/wcslib/ && \
+	     rm -f wcslib.tar.bz2 && \
+	     ln -s $(WCSLIBPKG).tar.bz2 wcslib.tar.bz2)
+	   cp -fp CHANGES wcslib.pdf ~/public_html/WCS/
+	   rsync --archive --delete html/ ~/public_html/WCS/wcslib/
 
 configure : configure.ac
 	-@ echo ''
