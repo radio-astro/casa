@@ -433,13 +433,9 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
       Vector<Double> imgridfreqs;
       Vector<Double> imfreqres;
       //rstate=calcImFreqs(imgridfreqs, imfreqres, mfreqref, obsEpoch, obsPosition,restFreq);
+      // should use obsFreqRef
       rstate=calcImFreqs(imgridfreqs, imfreqres, obsFreqRef, obsEpoch, obsPosition,restFreq);
-
-
-      //cerr<<"mfImageStart_p.get(Hz).getValue()="<<mfImageStart_p.get("Hz").getValue()<<endl;
-      //cerr<<"mfImageStep_p.get(Hz).getValue()="<<mfImageStep_p.get("Hz").getValue()<<endl;
-      cerr<<"imfreqres(0)="<<imfreqres(0)<<endl;
-      cerr<<"mfreqref==="<<mfreqref<<endl;
+      //cerr<<"imfreqres(0)="<<imfreqres(0)<<endl;
 
 
       if (imageNchan_p==1) {
@@ -449,11 +445,7 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
       					  refChan, restFreq);
       }
       else {
-        // tabular form
-        //mySpectral = new SpectralCoordinate(mfreqref,imgridfreqs, restFreq);
-        //
         Double finc= imgridfreqs(1)-imgridfreqs(0); 
-       
         mySpectral = new SpectralCoordinate(mfreqref, imgridfreqs(0), finc, refChan, restFreq);
 
         //debug TT
@@ -490,16 +482,6 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
  
       Int spw=spectralwindowids_p(spwIndex);
       
-      /***
-      Int origsize=chanFreq.shape()(0);
-      Int newsize=origsize+msc.spectralWindow().chanFreq()(spw).shape()(0);
-      chanFreq.resize(newsize, True);
-      chanFreq(Slice(origsize, newsize-origsize))=msc.spectralWindow().chanFreq()(spw);
-      freqResolution.resize(newsize, True);
-     freqResolution(Slice(origsize, newsize-origsize))=
-	msc.spectralWindow().chanWidth()(spw); 
-      ***/
-
       Vector<Double> restFreqArray;
       if(getRestFreq(restFreqArray, spw)){
 	if(spwIndex==0){
@@ -550,23 +532,6 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
 
       //in order to outframe to work need to set here original freq frame
       //
-      //tabular form
-      /***
-      if(imageNchan_p > 1){
-	finc=chanFreq(1)-chanFreq(0);
-        cerr<<"restFreq="<<restFreq<<endl;
-        mySpectral = new SpectralCoordinate(obsFreqRef, chanFreq, restFreq);
-      }
-      else if(imageNchan_p==1) {
-	finc=chanFreq(0);
-        mySpectral = new SpectralCoordinate(obsFreqRef,
-      					  chanFreq(0),
-                                          freqResolution(0),  
-      					  refChan, restFreq);
-      }
-      ***/
-
-      cerr<<"mySpectral for channel mode"<<endl;
       //
       //mySpectral = new SpectralCoordinate(freqFrame_p,
       mySpectral = new SpectralCoordinate(obsFreqRef,
@@ -612,23 +577,9 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
       mfreqref=(obsFreqRef==(MFrequency::REST)) ? MFrequency::REST : mfreqref; 
       //rstate=calcImFreqs(chanFreq, freqResolution, mfreqref, obsEpoch, obsPosition,restFreq);
       rstate=calcImFreqs(chanFreq, freqResolution, obsFreqRef, obsEpoch, obsPosition,restFreq);
-      cerr<<"radio vel mode: mfreqref="<<mfreqref<<endl;
 
 
       Double finc;
-      //tabular form
-      /***
-      if(imageNchan_p > 1){
-        mySpectral = new SpectralCoordinate(mfreqref, chanFreq,restFreq);
-      }
-      else if(imageNchan_p ==1) {
-        mySpectral = new SpectralCoordinate(obsFreqRef,
-      					  chanFreq(0),
-                                          freqResolution(0),  
-      					  refChan, restFreq);
-
-      }
-      ***/
       if(imageNchan_p ==1) {
         finc = freqResolution(0);
       }
@@ -676,19 +627,12 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
 	os << (verbose ? LogIO::NORMAL : LogIO::NORMAL3)
            << String(oos); // Loglevel INFO
       }
-      //Vector<Double> freqs(imageNchan_p);
-      //freqs=0.0;
-      //Double chanVelResolution=0.0;
       
       // Use this next line when non-linear is working
       // when selecting in velocity its specfied freqframe or REST 
       MFrequency::Types imfreqref=(obsFreqRef==MFrequency::REST) ? MFrequency::REST : freqFrame_p;
       //rstate=calcImFreqs(chanFreq, freqResolution, imfreqref, obsEpoch, obsPosition,restFreq);
       rstate=calcImFreqs(chanFreq, freqResolution, obsFreqRef, obsEpoch, obsPosition,restFreq);
-      cerr<<"opt vel mode: imfreqref="<<imfreqref<<endl;
-      cerr<<"obsFreqRef="<<obsFreqRef<<endl;
-      cerr<<"chanFreq(0)="<<chanFreq(0)<<endl;
-
   
       if (imageNchan_p==1) {
 	mySpectral = new SpectralCoordinate(imfreqref,
@@ -4139,32 +4083,27 @@ Bool Imager::calcImFreqs(Vector<Double>& imgridfreqs,
 			   veltype
 			   );
     
-    cerr<<"returned from calcChanFreqs="<<rst<<endl;
     if (!rst) {
       os << LogIO::SEVERE << "calcChanFreqs failed, check input start and width parameters"
          << LogIO::EXCEPTION;
       return False;
     }
 
-    /**
-    cout.precision(10);
-    cout<<"imgridfreqs(0)="<<imgridfreqs(0)<<endl;
-    cout<<"imgridfreqs("<<imgridfreqs.nelements()-1<<")="<<imgridfreqs(imgridfreqs.nelements()-1)<<endl;
-    cout<<"imreqres(0)="<<imfreqres(0)<<endl;
-    cout<<"oldFreqRes(0)="<<oldFreqResolution(0)<<endl;
-    cout<<"oldChanFreqs(0)="<<oldChanFreqs(0)<<endl;
-    cout<<"oldChanFreqs("<<oldChanFreqs.nelements()-1<<")="<<oldChanFreqs(oldChanFreqs.nelements()-1)<<endl;
-     **/
-    cout<<"=================calcChanFreqs arguments ======================"<<endl;
-    cout<<"imgridfreqs(0)="<<imgridfreqs(0)<<endl;
-    cout<<"phaseCenter_p="<<phaseCenter_p<<endl;
-    cout<<"oldRefFrame="<<oldRefFrame<<endl;
-    cout<<"obsEpoch="<<obsEpoch<<endl;
-    cout<<"obsPosition="<<obsPosition<<endl;
-    cout<<"start="<<start<<" width="<<width<<endl;
-    cout<<"restfreq="<<restfreq<<endl;
-    cout<<"veltype="<<veltype<<endl;
-    cout<<"=================calcChanFreqs arguments end==================="<<endl;
+    //cout<<"=================calcChanFreqs arguments ======================"<<endl;
+    //cout.precision(10);
+    //cout<<"imgridfreqs(0)="<<imgridfreqs(0)<<endl;
+    //cout<<"imgridfreqs("<<imgridfreqs.nelements()-1<<")="<<imgridfreqs(imgridfreqs.nelements()-1)<<endl;
+    //cout<<"oldChanFreqs(0)="<<oldChanFreqs(0)<<endl;
+    //cout<<"oldChanFreqs("<<oldChanFreqs.nelements()-1<<")="<<oldChanFreqs(oldChanFreqs.nelements()-1)<<endl;
+    //cout<<"phaseCenter_p="<<phaseCenter_p<<endl;
+    //cout<<"oldRefFrame="<<oldRefFrame<<endl;
+    //cout<<"outframe="<<outframe<<endl;
+    //cout<<"obsEpoch="<<obsEpoch<<endl;
+    //cout<<"obsPosition="<<obsPosition<<endl;
+    //cout<<"start="<<start<<" width="<<width<<endl;
+    //cout<<"restfreq="<<restfreq<<endl;
+    //cout<<"veltype="<<veltype<<endl;
+    //cout<<"=================calcChanFreqs arguments end==================="<<endl;
 
 
     
