@@ -2469,7 +2469,15 @@ class par(str):
 
 	@staticmethod
 	def subplot():
-		""" 
+		"""
+		(for sdplot)
+		subplot -- number of subplots (row and column) on a page.
+		           NOTICE plotter will slow down when a large number is
+ specified
+                           default: -1 (auto)
+                           example: 23 (2 rows by 3 columns)
+		---------------------------------------------------------------
+		(for the others)
 		subplot -- Panel number on the display screen
                 default: 111 (full screen display); example:
                 if iteration is non-blank, then
