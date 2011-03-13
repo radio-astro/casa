@@ -447,17 +447,17 @@ class sdplot_test_plot(unittest.TestCase):
 
     def testplot22(self):
         """
-        Test 22: plot layout control (spectral plotting) --- panel layout
+        Test 22: plot layout control (spectral plotting) --- panel margin
         """
         tid = "22"
         self.fig = self.figroot+tid+self.figpost
         sdfile=self.sdfile
         iflist=[0,2]
         plotstyle=True
-        layout=[0.15,0.3,0.85,0.7,0.25,0.25]
+        margin=[0.15,0.3,0.85,0.7,0.25,0.25]
         header=False
         result=sdplot(sdfile=sdfile,iflist=iflist,plotstyle=plotstyle,
-                        layout=layout,header=header,plotfile=self.fig)
+                        margin=margin,header=header,plotfile=self.fig)
         self.assertEqual(result,None)
         self._checkPlotFile()
 
