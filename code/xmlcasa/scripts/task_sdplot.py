@@ -6,7 +6,7 @@ import pylab as pl
 #import Tkinter as Tk
 from asap import _to_list
 
-def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, beamlist, scanaverage, timeaverage, tweight, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, colormap, linestyles, linewidth, histogram, header, headsize, plotstyle, layout, legendloc, plotfile, overwrite):
+def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, beamlist, scanaverage, timeaverage, tweight, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, colormap, linestyles, linewidth, histogram, header, headsize, plotstyle, margin, legendloc, plotfile, overwrite):
 
         casalog.origin('sdplot')
 
@@ -234,7 +234,7 @@ def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
 	    oldpanel = sd.plotter._panelling
 	    oldstack = sd.plotter._stacking
 	    oldhist = sd.plotter._hist
-	    oldlayout = sd.plotter._panellayout
+	    oldmargins = sd.plotter._margins
 	    # Line properties
 	    colormapold=sd.plotter._plotter.colormap
 	    linestylesold=sd.plotter._plotter.linestyles
@@ -253,7 +253,7 @@ def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
 	    #	    sd.plotter._plotter.figmgr.sdplotbar=CustomToolbarTkAgg(figmgr=sd.plotter._plotter.figmgr)
 
 	    # Set panel layout
-	    if layout != oldlayout: sd.plotter.set_panellayout(layout=layout,refresh=False)
+	    if margin != oldmargins: sd.plotter.set_margin(margin=margin,refresh=False)
 	    
             # Plotting
 	    asaplot=False
@@ -448,7 +448,7 @@ def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
                                     sd.plotter.plot_lines(linc,doppler=linedop)
 
 	    # List observation header
-	    if header and (not plotstyle or layout==[]):
+	    if header and (not plotstyle or margin==[]):
 		    # automatic layout
 		    sd.plotter._plotter.figure.subplots_adjust(top=0.8)
 	    datname='Data File:     '+sdfile
@@ -479,7 +479,7 @@ def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
 	    #sd.plotter._panelling = oldpanel
 	    #sd.plotter._stacking = oldstack
 	    #sd.plotter._hist = oldhist
-	    #sd.plotter._panellayout = oldlayout
+	    #sd.plotter._margins = oldmargins
 
 	    # Define Pick event
 	    #if sd.plotter._visible:

@@ -1226,16 +1226,6 @@ class par(str):
 		"""
 
 	@staticmethod
-	def layout():
-		"""
-                layout -- a list of subplots layout in figure coordinate (0-1), 
-                          i.e., fraction of the figure width or height.
-	        The order of elements should be:
-                [left, bottom, right, top, horizontal space btw panels,
-                vertical space btw panels]
- 		"""
-
-	@staticmethod
 	def legendloc():
 		"""
 		legendloc -- legend location on the axes (0-10)
@@ -1313,6 +1303,16 @@ class par(str):
 	@staticmethod
 	def lowres():
 		""" Name of low resolution (single dish) image: """
+
+	@staticmethod
+	def margin():
+		"""
+                margin -- a list of subplot margins in figure coordinate (0-1), 
+                          i.e., fraction of the figure width or height.
+	        The order of elements should be:
+                [left, bottom, right, top, horizontal space btw panels,
+                vertical space btw panels]
+ 		"""
 
 	@staticmethod
 	def markersize():	
