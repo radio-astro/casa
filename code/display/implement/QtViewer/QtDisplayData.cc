@@ -68,7 +68,6 @@
 #include <images/Images/ImageExprParse.h>
 
 
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 

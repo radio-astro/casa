@@ -45,7 +45,6 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-
 QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string rcstr ) :
 		   QtPanelBase(parent), qdm_(0), qdo_(0), qfb_(0),
 		   v_(v), qdp_(0), qpm_(0), qcm_(0), qap_(0), qmr_(0), qrm_(0), 

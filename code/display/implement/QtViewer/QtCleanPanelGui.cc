@@ -56,8 +56,8 @@ namespace casa {
     static const char *this_freq_ = "This Channel";
 
     static const char *comp_pol_  = "Stokes";
-    static const char *all_pol_   = "All Polorizations";
-    static const char *this_pol_  = "This Polorization";
+    static const char *all_pol_   = "All Polarizations";
+    static const char *this_pol_  = "This Polarization";
 
     static const char *comp_ra_   = "Right Ascension";
     static const char *all_ra_    = "All RAs";

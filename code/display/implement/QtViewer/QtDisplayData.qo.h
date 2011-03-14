@@ -34,7 +34,6 @@
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <display/Display/DParameterChoice.h>
 #include <display/Display/DParameterRange.h>
-//#include <casa/Containers/SimOrdMap.tcc>
 #include <casa/BasicMath/Math.h>
 #include <display/Display/DisplayEnums.h>
 
