@@ -1152,7 +1152,7 @@ class cleanhelper:
                         # wrong (the freuencies look like in the image's base
                         # frame). 
                         for k in [0,1]:
-                            if fframes[k]!=imframe:
+                            if fframes[k]!=imframe and freqs[k].count('pix')==0:
                                 #do frame conversion
                                 #self._casalog.post('Ignoring the frequency frame of the box for now', 'WARN')              
                                 # uncomment the following when box file correctly labeled the frequency frame
