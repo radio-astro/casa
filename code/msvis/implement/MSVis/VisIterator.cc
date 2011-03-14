@@ -184,23 +184,35 @@ void ROVisIterator::setSelTable()
 }
 
 void ROVisIterator::slicesToMatrices(Vector<Matrix<Int> >& matv,
-                                   const Vector<Vector<Slice> >& slicesv) const
+                                     const Vector<Vector<Slice> >& slicesv,
+                                     const Vector<Int>& widthsv) const
 {
   Int nspw = slicesv.nelements();
 
   matv.resize(nspw);
+  uInt selspw = 0;
   for(uInt spw = 0; spw < nspw; ++spw){
     uInt nSlices = slicesv[spw].nelements();
 
     // Figure out how big to make matv[spw].
     uInt totOutChan = 0;
+    
+    Int width = (nSlices > 0) ? widthsv[selspw] : 1;
+    if(width < 1)
+      throw(AipsError("Cannot channel average with width < 1"));
+
     for(uInt slicenum = 0; slicenum < nSlices; ++slicenum){
       const Slice& sl = slicesv[spw][slicenum];
       Int firstchan = sl.start();
       Int lastchan = sl.all() ? firstchan + chanWidth_p[spw] - 1 : sl.end();
-      Int width = sl.all() ? 1 : sl.inc(); // Default to no averaging.
+      Int inc = sl.all() ? 1 : sl.inc();
 
-      totOutChan += 1 + (lastchan - firstchan) / width;
+      // Even if negative increments are desirable, the for loop below has a <.
+      if(inc < 1)
+        throw(AipsError("The channel increment must be >= 1"));
+
+      // This formula is very dependent on integer division.  Don't rearrange it.
+      totOutChan += 1 + ((lastchan - firstchan) / inc) / (1 + (width - 1) / inc);
     }
     matv[spw].resize(totOutChan, 4);
 
@@ -208,33 +220,33 @@ void ROVisIterator::slicesToMatrices(Vector<Matrix<Int> >& matv,
     // mschan = vi.chanIds(chanids, spw)[selchanind].
     uInt selchanind = 0;
 
+    // Fill matv with channel boundaries.
     uInt outChan = 0;
     for(uInt slicenum = 0; slicenum < nSlices; ++slicenum){
       const Slice& sl = slicesv[spw][slicenum];
-      Int mschan = sl.start();
-      Int lastchan = sl.all() ? mschan + chanWidth_p[spw] - 1 : sl.end();
-      Int width = sl.all() ? 1 : sl.inc(); // Default to no averaging.
-      if(width < 1)
-        throw(AipsError("Cannot channel average with width < 1"));
+      Int firstchan = sl.start();
+      Int lastchan = sl.all() ? firstchan + chanWidth_p[spw] - 1 : sl.end();
+      Int inc = sl.all() ? 1 : sl.inc(); // Default to no skipping
 
-      Int nChan = 1 + lastchan - mschan;
+      // Again, these depend on integer division.  Don't rearrange them.
+      Int selspan = 1 + (width - 1) / inc;
+      Int span = inc * selspan;
 
-      for(Int c = 0; c < nChan; c += width){
-        Int inc = min(width, lastchan - mschan + 1);
-
+      for(Int mschan = firstchan; mschan <= lastchan; mschan += span){
         // The start and end in MS channel #s.
         matv[spw](outChan, 0) = mschan;
-        mschan += inc;
-        matv[spw](outChan, 1) = mschan - 1;
+        matv[spw](outChan, 1) = mschan + width - 1;
 
         // The start and end in selected reckoning.
         matv[spw](outChan, 2) = selchanind;
-        selchanind += inc;
+        selchanind += selspan;
         matv[spw](outChan, 3) = selchanind - 1;
         ++outChan;
       }
     }
-  }      
+    if(nSlices > 0)     // spw was selected
+      ++selspw;
+  }
 }
 
 // Return native correlation _indices_
@@ -431,67 +443,67 @@ void ROVisIterator::selectCorrelation(const Vector<Vector<Slice> >& corrsel) {
 }
 
 Vector<Matrix<Int> >& ROVisIterator::setChanAveBounds(Float factor,
-						      Vector<Matrix<Int> >& bounds) {
-
-  if (!useNewSlicer_p) throw(AipsError("Help!"));
+						      Vector<Matrix<Int> >& bounds)
+{
+  if(!useNewSlicer_p)
+    throw(AipsError("Help!"));
 
   // For every spw...
   bounds.resize(numberSpw());
 
   // If factor greater than zero, fill the bounds non-trivially
-  if (factor>0) {
+  if (factor > 0) {
     
     // Decipher averaging factor
-    Int width(1);
-    if (factor>1.0) width=Int(factor); // factor supplied in channel units
+    Int width = 1;
+    if(factor > 1.0)
+      width = Int(factor); // factor supplied in channel units
     
     // Calculate bounds for each spw
-    for (Int ispw=0;ispw<numberSpw();++ispw) {
+    for(Int ispw = 0; ispw < numberSpw(); ++ispw){
       
       // Number of SELECTED channels PRIOR to averaging
-      Int nChan0=numberChan(ispw);
+      Int nChan0 = numberChan(ispw);
       
-      // factor might have been supplied in factional units;
+      // factor might have been supplied as a fraction;
       //  width is then potentially spw-dependent
-      if (factor<=1.0)
-	width=Int(factor*Float(nChan0));
+      if(factor <= 1.0)
+	width = Int(factor * Float(nChan0));
       
       // Get the selected channel list
       Vector<Int> chans;
-      chanIds(chans,ispw);
+      chanIds(chans, ispw);
 
       // The nominal number of output channels depends on the full
       // range of channels selected (not the number of them)
       //  (will be revised later, if nec.)
-      Int nChanOut0((chans(nChan0-1)-chans(0)+1+width)/width);
+      Int nChanOut0 = 1 + (chans[nChan0 - 1] - chans[0]) / width;
       
       // Initialize the bounds container for this spw
-      Matrix<Int>& currBounds(bounds(ispw));
-      currBounds.resize(nChanOut0,4);
-      currBounds.set(0);
+      Matrix<Int>& currBounds(bounds[ispw]);
+      currBounds.resize(nChanOut0, 4);
+      //currBounds.set(0);
       
-      // Actual output channel count; initialization
-      Int nChanOut=1;
-      Int lo(chans(0));
-      currBounds(0,0)=lo;
-      currBounds(0,2)=0;
-      for (Int ich=0;ich<nChan0;++ich) 
-	if ( (chans(ich)-lo+1)>width ) {
-	  currBounds(nChanOut-1,1)=chans(ich-1);   // end of previous
-	  currBounds(nChanOut-1,3)=ich-1;
-	  lo=currBounds(nChanOut,0)=chans(ich);    // start of next
-	  currBounds(nChanOut,2)=ich;    // start of next
-	  ++nChanOut;
-	}
-      currBounds(nChanOut-1,1)=chans(nChan0-1);    // end of final set
-      currBounds(nChanOut-1,3)=(nChan0-1);    // end of final set
-      
-      // contract bounds container, if necessary
-      if (nChanOut<nChanOut0)
-	currBounds.resize(nChanOut,4,True);
-      
-    } // ispw
+      Int outChan = 0;
+      Int firstchan = chans[0];
+      Int lastchan = chans[nChan0 - 1];
 
+      // Index of input channel in SELECTED list, i.e.
+      // ich = vi.chanIds(chanids, spw)[selchanind].
+      uInt selchanind = 0;
+
+      for(Int ich = firstchan; ich <= lastchan; ich += width){
+        // The start and end in MS channel #s.
+        currBounds(outChan, 0) = ich;
+        currBounds(outChan, 1) = ich + width - 1;
+
+        // The start and end in selected reckoning.
+        currBounds(outChan, 2) = selchanind;
+        selchanind += width;
+        currBounds(outChan, 3) = selchanind - 1;
+        ++outChan;
+      }
+    } // ispw
 
   } // factor > 0
 
@@ -500,7 +512,6 @@ Vector<Matrix<Int> >& ROVisIterator::setChanAveBounds(Float factor,
 
   // Return the bounds Vector reference
   return bounds;
-
 }
 
 Int ROVisIterator::numberChan(Int spw) const {

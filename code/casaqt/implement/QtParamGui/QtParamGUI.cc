@@ -1954,14 +1954,14 @@ String QtParamGUI::strNLtrim(const String& str) {
     }
     if(i == str.size()) return String();
         
-    unsigned int j = str.size() - 1;
+    int j = str.size() - 1;
     for(; j >= 0; j--) {
         c = str[j];
         if(c != '\n' && c != '\r' && c != ' ' && c != '\t') break;
     }
     
     if(i == 0 && j == str.size() - 1) return str;
-    else return str.substr(i, (j - i) + 1);
+    else return str.substr(i, max(j, 0) - i + 1);
 }
 
 bool QtParamGUI::valuesEqual(const RecordInterface& r1, RecordFieldId id1,

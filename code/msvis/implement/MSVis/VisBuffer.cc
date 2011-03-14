@@ -305,6 +305,34 @@ VisBuffer::setAllCacheStatuses (bool status)
     weightSpectrumOK_p = status;
 }
 
+Cube<Complex>& VisBuffer::dataCube(const MS::PredefinedColumns whichcol)
+{
+  switch(whichcol){
+  case MS::DATA:
+    return visCube();
+  case MS::MODEL_DATA:
+    return modelVisCube();
+  case MS::CORRECTED_DATA:
+    return correctedVisCube();
+  default:
+    throw(AipsError(MS::columnName(whichcol) + " is not supported as a data Cube."));
+  }
+}
+
+const Cube<Complex>& VisBuffer::dataCube(const MS::PredefinedColumns whichcol) const
+{
+  switch(whichcol){
+  case MS::DATA:
+    return visCube();
+  case MS::MODEL_DATA:
+    return modelVisCube();
+  case MS::CORRECTED_DATA:
+    return correctedVisCube();
+  default:
+    throw(AipsError(MS::columnName(whichcol) + " is not supported as a data Cube."));
+  }
+}
+
 void VisBuffer::freqAverage()
 {
     Matrix<CStokesVector> newVisibility(1, nRow());
@@ -762,8 +790,14 @@ void VisBuffer::channelAve(const Matrix<Int>& chanavebounds)
         for(uInt row = 0; row < nrows; ++row){
           for(uInt icor = 0; icor < nCor; ++icor){
             rowWtFac(icor, row) = 0.0;
-            for(Int ochan = 0; ochan < nChanOut; ++ochan)
-              rowWtFac(icor, row) += wtsp(icor, ochan, row);
+            for(Int ochan = 0; ochan < nChanOut; ++ochan){
+              Float oswt = wtsp(icor, ochan, row);       // output spectral
+                                                         // weight
+              if(oswt > 0.0)
+                rowWtFac(icor, row) += oswt;
+              else
+                flagCube()(icor, ochan, row) = True;
+            }
           }
         }
       }

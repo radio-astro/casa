@@ -140,9 +140,9 @@ Bool Calibrater::initialize(MeasurementSet& inputMS,
     hist_p= new MSHistoryHandler(*ms_p, "calibrater");
 
 
-    // Recognize if we'll need to initialize the imaging weights
-    //  TBD: should Calibrater care?  (Imager doesn't know how to verify)
-    Bool hadScratch=(ms_p->tableDesc().isColumn("CORRECTED_DATA"));
+    // // Recognize if we'll need to initialize the imaging weights
+    // //  TBD: should Calibrater care?  (Imager doesn't know how to verify)
+    // Bool hadScratch=(ms_p->tableDesc().isColumn("CORRECTED_DATA"));
 
     msname_p=ms_p->tableName();
 
@@ -180,7 +180,7 @@ Bool Calibrater::initialize(MeasurementSet& inputMS,
     reset(True,True);
 
     // Do we have the scratch columns (either previously, or created here)?
-    scrOk_p = hadScratch || addScratch;
+    scrOk_p = addScratch || ms_p->tableDesc().isColumn("CORRECTED_DATA");
 
     return True;
 
@@ -617,17 +617,18 @@ Bool Calibrater::setsolve (const String& type,
 Bool Calibrater::setsolve (const String& type, 
 			   const String& solint,
 			   const String& table,
-                           const Bool& append,
-                           const Double& preavg, 
+                           const Bool append,
+                           const Double preavg, 
 			   const String& apmode,
-			   const Int& minblperant,
+			   const Int minblperant,
                            const String& refant,
-			   const Bool& solnorm,
-			   const Float& minsnr,
+			   const Bool solnorm,
+			   const Float minsnr,
 			   const String& combine,
-			   const Int& fillgaps,
+			   const Int fillgaps,
 			   const String& cfcache,
-			   const Double& painc)
+			   const Double painc,
+                           const Int fitorder)
 {
   
   logSink() << LogOrigin("Calibrater","setsolve") << LogIO::NORMAL3;
@@ -648,6 +649,7 @@ Bool Calibrater::setsolve (const String& type,
   solveparDesc.addField ("maxgap", TpInt);
   solveparDesc.addField ("cfcache", TpString);
   solveparDesc.addField ("painc", TpDouble);
+  solveparDesc.addField ("fitorder", TpInt);
   
   // Create a solver record with the requisite field values
   Record solvepar(solveparDesc);
@@ -672,9 +674,9 @@ Bool Calibrater::setsolve (const String& type,
   solvepar.define("maxgap",fillgaps);
   solvepar.define ("cfcache", cfcache);
   solvepar.define ("painc", painc);
+  solvepar.define("fitorder", fitorder);
 
   return setsolve(type,solvepar);
-
 }
 
 Bool Calibrater::setsolvebandpoly(const String& table,
@@ -1274,7 +1276,7 @@ Bool Calibrater::solve() {
       if (!svc_p->append() &&
 	  Table::isReadable(svc_p->calTableName()) &&
 	  !Table::canDeleteTable(svc_p->calTableName()) ) {
-	cout << "Table CAN'T be deleted!!!!!" << endl;
+	//cout << "Table CAN'T be deleted!!!!!" << endl;
 	
 	throw(AipsError("Specified caltable ("+svc_p->calTableName()+") exists and\n cannot be replaced because it appears to be open somewhere."));
       }
@@ -1467,7 +1469,7 @@ Bool Calibrater::genericGatherAndSolve() {
 	  
 	} // parameter channels
 	
-	// Cound good solutions.
+	// Count good solutions.
 	if (totalGoodSol)	nGood++;
 	
       }

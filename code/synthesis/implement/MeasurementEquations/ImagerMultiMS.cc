@@ -102,7 +102,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			      Table::Old);
     SimpleSubMS splitter(thisms);
     splitter.setmsselect(spwstring, fieldnames, antnames, scan, uvdist, 
-			 msSelect, nchan, start, step, True, "");
+			 msSelect, nchan, start, step, "");
     splitter.selectCorrelations("");
     splitter.selectTime(-1.0, timerng);
     MS::PredefinedColumns whichCol=MS::DATA;

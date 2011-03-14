@@ -1441,6 +1441,14 @@ clean_momentzero_rms = 13.737679
 clean_momentone_median = 435.368103
 model_pbcor_sum = 69.119642
 
+## # RR, 3/11/2011 - The rmses went up, but not to their historical maxima.  The
+## # model_pbcor_sum went down, but not to its historical minimum.  Nobody seems
+## # to know why.
+## clean_offsrc_rms = 0.0535
+## clean_offline_rms = 0.0563
+## model_pbcor_sum = 62.5022
+## # RR, 3/12/2011 - And now, mysteriously, they're back to their 1/19/2011 values.
+
 canonical = {}
 canonical['exist'] = True
 

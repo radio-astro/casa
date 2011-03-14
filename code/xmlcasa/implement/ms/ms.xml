@@ -2771,11 +2771,6 @@ for i in range(len(tcoord)):
      <value></value>
      </param>
 
-     <param type="bool" name="averchan">
-     <description>If true, step will be used to average channels.  Otherwise it will be used to skip channels.</description>
-     <value>true</value>
-     </param>
-
      <param type="string" direction="in" name="combine">
      <description>Ignore changes in these columns (scan, and/or state) when time averaging.</description>
      <value></value>

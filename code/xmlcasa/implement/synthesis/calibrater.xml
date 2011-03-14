@@ -598,6 +598,10 @@ will be computed for the entire range of observation.</description>
      <value>360.0</value>
      </param>
 
+     <param type="int" direction="in" name="fitorder">
+     <description>Order of the polynomial fit, used when type='A'.</description>
+     <value>0</value>
+     </param>
 </input>
 <returns type="bool"/>
 

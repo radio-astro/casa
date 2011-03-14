@@ -478,6 +478,14 @@ public:
         return This->correctedVisCube();
     }
 
+    // Return visCube(), modelVisCube(), or correctedVisCube(),
+    // according to whichcol.  They throw an exception if whichcol is
+    // unsupported, but note the encouraged default.
+    // TODO: Optionally return DATA if whichcol is unavailable.
+    Cube<Complex>& dataCube(const MS::PredefinedColumns whichcol=MS::DATA);
+    const Cube<Complex>& dataCube(const MS::PredefinedColumns
+                                  whichcol=MS::DATA) const;
+
     Cube<Float>& floatDataCube() {
         return floatDataCubeOK_p ? floatDataCube_p : fillFloatDataCube();
     }
@@ -499,6 +507,11 @@ public:
     }
     const Matrix<Float>& weightMat() const {
         return This->weightMat();
+    }
+
+    // Is a valid WEIGHT_SPECTRUM available?
+    Bool existsWeightSpectrum() const {
+      return visIter_p ? visIter_p->existsWeightSpectrum() : false;
     }
 
     Cube<Float>& weightSpectrum() {

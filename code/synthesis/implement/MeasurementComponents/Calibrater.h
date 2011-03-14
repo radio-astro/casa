@@ -119,17 +119,18 @@ class Calibrater
   Bool setsolve (const String& type, 
 		 const String& solint,
 		 const String& table,
-		 const Bool& append,
-		 const Double& preavg, 
+		 const Bool append,
+		 const Double preavg, 
 		 const String& apmode="AP",
-		 const Int& minblperant=4,
+		 const Int minblperant=4,
 		 const String& refant="",
-		 const Bool& solnorm=False,
-		 const Float& minsnr=0.0f,
+		 const Bool solnorm=False,
+		 const Float minsnr=0.0f,
 		 const String& combine="",
-		 const Int& fillgaps=0,
+		 const Int fillgaps=0,
 		 const String& cfcache="",
-		 const Double& painc=360.0);
+		 const Double painc=360.0,
+                 const Int fitorder=0);
 
   // Arrange to solve for BPOLY
   Bool setsolvebandpoly(const String& table,

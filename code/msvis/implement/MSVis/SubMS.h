@@ -106,16 +106,13 @@ class SubMS
   void setMS(MeasurementSet& ms);
 
   // Select spw and channels for each spw.
-  // If averchan is true, chanStep_p will be used as a width for channel
-  // averaging.  Otherwise it will be used as a step for channel skipping.
   // This is the version used by split.  It returns true on success and false
   // on failure.
-  Bool selectSpw(const String& spwstr, const Vector<Int>& steps,
-                 const Bool averchan=true);
+  Bool selectSpw(const String& spwstr, const Vector<Int>& steps);
 
   // This older version is used by the older version of setmsselect().
   void selectSpw(Vector<Int> spw, Vector<Int> nchan, Vector<Int> start, 
-                 Vector<Int> step, const Bool averchan);
+                 Vector<Int> step);
   
   // Setup polarization selection (for now, only from available correlations -
   // no Stokes transformations.)
@@ -132,17 +129,15 @@ class SubMS
 		   const String& baseline="", const String& scan="",
                    const String& uvrange="", const String& taql="", 
 		   const Vector<Int>& step=Vector<Int> (1,1),
-		   const Bool averchan=True, const String& subarray="",
-                   const String& correlation="");
+		   const String& subarray="", const String& correlation="");
 
   // This older version does not return a success value, and does need nchan,
-  // start, and step.  It is used elsewhere.
+  // start, and step.  It is used elsewhere (i.e. ImagerMultiMS).
   void setmsselect(const String& spw,        const String& field, 
                    const String& baseline,   const String& scan,
                    const String& uvrange,    const String& taql,
                    const Vector<Int>& nchan, const Vector<Int>& start,
-                   const Vector<Int>& step,  const Bool averchan,
-                   const String& subarray);
+                   const Vector<Int>& step,  const String& subarray);
 
   // Select source or field
   Bool selectSource(const Vector<Int>& fieldid);
@@ -458,15 +453,6 @@ class SubMS
     
   Bool doChannelMods(const Vector<MS::PredefinedColumns>& colNames);
 
-  // The guts of doChannelMods(), ripped out so they can handle either
-  // Float or Complex data.
-  template<class M>
-  void filterChans(const ROArrayColumn<M>& data, ArrayColumn<M>& outDataCol,
-		   const Bool doSpWeight, ROArrayColumn<Float>& wgtSpec,
-		   const Int nrow, 
-		   const Bool calcWtSig, const ROArrayColumn<Float>& rowWt,
-		   const ROArrayColumn<Float>& sigma);
-
   // return the number of unique antennas selected
   //Int numOfBaselines(Vector<Int>& ant1, Vector<Int>& ant2,
   //                   Bool includeAutoCorr=False);
@@ -487,18 +473,6 @@ class SubMS
 
   // Figures out the number, maximum, and index of the selected antennas.
   uInt fillAntIndexer(const ROMSColumns *msc, Vector<Int>& antIndexer);
-
-  // Bits of fillTimeAverData() which were internal to it until they needed to
-  // be templated to support both FLOAT_DATA and the other data columns (all
-  // Complex).
-  template<class M>
-  void accumUnflgDataWS(Array<M>& data_toikit, const Array<Float>& unflgWtSpec,
-                        const Array<M>& inData, const Array<Bool>& flag,
-                        Matrix<M>& outData);
-  template<class M>
-  void accumUnflgData(Array<M>& data_toikit, const Vector<Float>& unflaggedwt,
-                      const Array<M>& inData, const Array<Bool>& flag,
-                      Matrix<M>& outData);
 
   // Read the input, time average it to timeBin_p, and write the output.
   // The first version uses VisibilityIterator (much faster), but the second
@@ -556,12 +530,13 @@ class SubMS
               nchan_p,    // The # of output channels for each range.
               totnchan_p, // The # of output channels for each output spw.
               chanStart_p,
-              chanStep_p,
+              chanStep_p, // Increment between input chans, i.e. if 3, only every third
+                          // input channel will be used. 
+              widths_p,   // # of input chans per output chan for each range.
               ncorr_p,    // The # of output correlations for each DDID.
               inNumChan_p,    // The # of input channels for each spw.
               inNumCorr_p;    // The # of input correlations for each DDID.
   Vector<Int> fieldid_p;
-  Bool averageChannel_p;
   Vector<Int> spwRelabel_p, fieldRelabel_p, sourceRelabel_p;
   Vector<Int> oldDDSpwMatch_p;
   Vector<String> antennaSelStr_p;

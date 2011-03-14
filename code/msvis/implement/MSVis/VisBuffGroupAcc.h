@@ -101,8 +101,12 @@ public:
   //   is applied that will mix them with the parallel hands
   void enforceSolveCorrWeights(const Bool phandonly=False);
 
-  // How many separate VisBuffers contained herein?
-  inline Int nBuf() { return nBuf_p; };
+  // How many separate VisBuffers are contained herein?
+  Int nBuf() const {return nBuf_p;}
+
+  Int nAnt() const {return nAnt_p;}
+  Int nSpw() const {return nSpw_p;}
+  Int nFld() const {return nFld_p;}
 
   // The global timestamp
   Double& globalTimeStamp() { return globalTimeStamp_p; };

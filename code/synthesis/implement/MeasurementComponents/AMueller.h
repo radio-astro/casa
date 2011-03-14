@@ -35,6 +35,8 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+class VisBuffGroupAcc;
+
 class AMueller : public MMueller {
 public:
 
@@ -57,7 +59,28 @@ public:
 
   // Local setsolve (overrides preavg)
   using SolvableVisCal::setSolve;
+  // Parameters particular to this class:
+  //    fitorder: Order of the polynomial fit.  If 0, it is just an average.
   virtual void setSolve(const Record& solvepar);
+
+  // The fitorder = 0 version (in M) skips LinearFitSVD by just averaging.
+  virtual Bool useGenericGatherForSolve() {return fitOrder_p != 0;}
+
+  // Only called if useGenericGatherForSolve() == True.  If
+  // useGenericGatherForSolve() == True, then genericGatherAndSolve() will call
+  // AMueller's selfSolveOne().  Otherwise MMueller's selfGatherAndSolve() will
+  // do everything.
+  virtual Bool useGenericSolveOne() {return False;}
+
+  // Per-solution self-solving inside generic gather.  Flexible enough for
+  // fitorder != 0, but overkill otherwise.
+  virtual void selfSolveOne(VisBuffGroupAcc& vbga);
+
+  virtual void keep(const Int& slot);
+
+  // Freq dependence
+  virtual Bool freqDepPar() { return False; };
+  virtual Bool freqDepMat() { return fitOrder_p != 0; };
 
   // We do not normalize by the model, since we are estimating
   //  directly from the data  (we should optimize here by avoiding 
@@ -68,6 +91,11 @@ public:
   virtual void corrupt(VisBuffer& vb);
   using VisMueller::corrupt;
 
+private:
+  Int fitOrder_p;  // Stores the order of the fitted polynomials.
+  Double lofreq_p; // Lowest and highest frequencies (Hz) used
+  Double hifreq_p; // to make the fit.
+  Int maxAnt_p;    // Maximum antenna number (0 based) used to make the fit.
 };
 
 

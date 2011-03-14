@@ -256,7 +256,8 @@ calibrater::setsolve(const std::string& type,
 		     const std::string& combine,
 		     const int fillgaps,
 		     const std::string& cfcache,
-		     const float painc)
+		     const float painc,
+                     const int fitorder)
 {
   if (! itsMS) {
     *itsLog << LogIO::SEVERE << "Must first open a MeasurementSet."
@@ -282,7 +283,7 @@ calibrater::setsolve(const std::string& type,
     itsCalibrater->setsolve(type,toCasaString(t),table,append,preavg,mode,
 			    minblperant,
 			    toCasaString(refant),solnorm,minsnr,combine,fillgaps,
-			    cfcache,painc);
+			    cfcache, painc, fitorder);
     
   } catch(AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;

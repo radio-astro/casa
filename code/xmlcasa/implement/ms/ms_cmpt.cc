@@ -2017,8 +2017,8 @@ ms::split(const std::string&      outputms,   const ::casac::variant& field,
           const std::string&      timerange,  const ::casac::variant& scan,
           const ::casac::variant& uvrange,    const std::string&      taql,
           const std::string&      whichcol,   const ::casac::variant& tileShape,
-          const ::casac::variant& subarray,   const bool averchan,
-          const std::string&      combine, const std::string& correlation)
+          const ::casac::variant& subarray,   const std::string&      combine,
+          const std::string& correlation)
 {
   Bool rstat(False);
   try {
@@ -2048,8 +2048,7 @@ ms::split(const std::string&      outputms,   const ::casac::variant& field,
      //  t_correlation = "*";   // * doesn't work.
      
      if(!splitter->setmsselect(t_spw, t_field, t_antenna, t_scan, t_uvrange, 
-                               t_taql, Vector<Int>(step), averchan,
-                               t_subarray, t_correlation)){
+                               t_taql, Vector<Int>(step), t_subarray, t_correlation)){
        *itsLog << LogIO::SEVERE
                << "Error selecting data."
                << LogIO::POST;

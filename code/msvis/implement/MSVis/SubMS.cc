@@ -153,8 +153,7 @@ namespace casa {
   }
   
   // This is the version used by split.
-  Bool SubMS::selectSpw(const String& spwstr, const Vector<Int>& steps,
-                        const Bool averchan)
+  Bool SubMS::selectSpw(const String& spwstr, const Vector<Int>& steps)
   {
     LogIO os(LogOrigin("SubMS", "selectSpw()"));
 
@@ -163,24 +162,26 @@ namespace casa {
 
     mssel.setSpwExpr(myspwstr);
 
-    Vector<Int> widths = steps.copy();
-    if(widths.nelements() < 1){
-      widths.resize(1);
-      widths[0] = 1;
+    widths_p = steps.copy();
+    if(widths_p.nelements() < 1){
+      widths_p.resize(1);
+      widths_p[0] = 1;
     }
-    if(widths[0] == 0){
-      os << LogIO::WARN
-         << "0 cannot be used for channel width...using 1 instead."
-         << LogIO::POST;
-      widths[0] = 1;
+    else{
+      for(uInt k = 0; k < widths_p.nelements(); ++k){
+        if(widths_p[k] == 0){
+          os << LogIO::WARN
+             << "0 cannot be used for channel width...using 1 instead."
+             << LogIO::POST;
+          widths_p[k] = 1;
+        }
+      }
     }
 
     // Each row should have spw, start, stop, step
     // A single width is a default, but multiple widths should be used
     // literally.
-    Matrix<Int> chansel = mssel.getChanList(&ms_p,
-                                            widths.nelements() == 1 ?
-                                            widths[0] : 1);
+    Matrix<Int> chansel = mssel.getChanList(&ms_p, 1);
 
     if(chansel.nrow() > 0) {         // Use myspwstr if it selected anything...
       spw_p       = chansel.column(0);
@@ -190,16 +191,18 @@ namespace casa {
 
       // A single width is a default, but multiple widths should be used
       // literally.
-      if(widths.nelements() > 1){
-        if(widths.nelements() != spw_p.nelements()){
-          os << LogIO::SEVERE
-             << "Mismatch between the # of widths specified by width and the # of spws."
-             << LogIO::POST;
-          return false;
-        }
-        else{
-          chanStep_p = widths;
-        }
+      if(widths_p.nelements() > 1 && widths_p.nelements() != spw_p.nelements()){
+        os << LogIO::SEVERE
+           << "Mismatch between the # of widths specified by width and the # of spws."
+           << LogIO::POST;
+        return false;
+      }
+
+      // Copy the default width to all spws.
+      if(widths_p.nelements() < spw_p.nelements()){
+        widths_p.resize(spw_p.nelements(), True);
+        for(uInt k = 1; k < spw_p.nelements(); ++k)
+          widths_p[k] = widths_p[0];
       }
 
       // SubMS uses a different meaning for nchan_p from MSSelection.  For
@@ -209,7 +212,7 @@ namespace casa {
 	if(chanStep_p[k] == 0)	// CAS-2224, triggered by spw='0:2'
 	  chanStep_p[k] = 1;	// (as opposed to '0:2~2').
 	
-        nchan_p[k] = (nchan_p[k] - chanStart_p[k] + 1) / chanStep_p[k];
+        nchan_p[k] = (nchan_p[k] - chanStart_p[k] + 1) / (chanStep_p[k] * widths_p[k]);
         if(nchan_p[k] < 1)
           nchan_p[k] = 1;
       }
@@ -222,14 +225,17 @@ namespace casa {
       indgen(spw_p);
       
       chanStart_p.resize(nspw);
-      for(uInt k = 0; k < nspw; ++k)
+      chanStep_p.resize(nspw);
+      for(uInt k = 0; k < nspw; ++k){
         chanStart_p[k] = 0;
-      
-      if(widths.nelements() != spw_p.nelements()){
-        if(widths.nelements() == 1){
-          widths.resize(spw_p.nelements(), True);
+        chanStep_p[k]  = 1;
+      }
+
+      if(widths_p.nelements() != spw_p.nelements()){
+        if(widths_p.nelements() == 1){
+          widths_p.resize(spw_p.nelements(), True);
           for(uInt k = 1; k < spw_p.nelements(); ++k)
-            widths[k] = widths[0];
+            widths_p[k] = widths_p[0];
 	}
         else{
           os << LogIO::SEVERE
@@ -238,11 +244,10 @@ namespace casa {
           return false;
         }
       }
-      chanStep_p = widths;
 
       nchan_p = mySpwTab.numChan().getColumn();
       for(uInt k = 0; k < nspw; ++k)
-        nchan_p[k] /= chanStep_p[k];
+        nchan_p[k] /= widths_p[k];
     }
     
     // Check for and filter out selected spws that aren't included in
@@ -297,15 +302,13 @@ namespace casa {
       chanStep_p = chanStepc;
     }
     
-    averageChannel_p = averchan;
-    mssel.getChanSlices(chanSlices_p, &ms_p,
-                        widths.nelements() == 1 ? widths[0] : 1);
+    mssel.getChanSlices(chanSlices_p, &ms_p, 1);
     return true;
   }
   
   // This older version is used elsewhere.
   void SubMS::selectSpw(Vector<Int> spw, Vector<Int> nchan, Vector<Int> start, 
-			Vector<Int> step, const Bool averchan)
+			Vector<Int> step)
   {
     spw_p.resize();
     spw_p = spw;
@@ -343,7 +346,6 @@ namespace casa {
     chanStart_p = start;
     chanStep_p.resize();
     chanStep_p = step;
-    averageChannel_p = averchan;
     // check for defaults
     if(nchan_p[0]<=0 || (nchan_p.nelements() != spw_p.nelements())){
       nchan_p.resize(spw_p.nelements());
@@ -427,8 +429,8 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
   Bool SubMS::setmsselect(const String& spw, const String& field,
                           const String& baseline, const String& scan,
                           const String& uvrange, const String& taql,
-                          const Vector<Int>& step, const Bool averchan,
-                          const String& subarray, const String& correlation)
+                          const Vector<Int>& step, const String& subarray,
+                          const String& correlation)
   {
     LogIO os(LogOrigin("SubMS", "setmsselect()"));
     Bool  ok;
@@ -444,7 +446,7 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
     // (fewer retries).  This is a matter of taste, though.  If the selections
     // turn out to be slow, this function should return on the first false.
 
-    if(!selectSpw(myspwstr, step, averchan)){
+    if(!selectSpw(myspwstr, step)){
       os << LogIO::SEVERE << "No channels selected." << LogIO::POST;
       ok = false;
     }
@@ -475,7 +477,7 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
                           const String& scan, const String& uvrange, 
                           const String& taql, const Vector<Int>& nchan, 
                           const Vector<Int>& start, const Vector<Int>& step,
-                          const Bool averchan, const String& subarray)
+                          const String& subarray)
   {
     Vector<Int> inchan(1, -1);
     Vector<Int> istart(1, 0);
@@ -542,7 +544,7 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
         }
       } 
     }
-    selectSpw(spwids, inchan, istart, istep, averchan);
+    selectSpw(spwids, inchan, istart, istep);
     
     if(baseline != ""){
       Vector<Int> antid(0);
@@ -1503,16 +1505,16 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
           for(Int j = 0; j < nchan_p[k]; ++j){
             Int inpChan = chanStart_p[k] + j * chanStep_p[k];
+            Int span = widths_p[k] * chanStep_p[k];
 
-            if(averageChannel_p){
+            if(span > 1){
               chanFreqOut[outChan] = (chanFreqIn[inpChan] +
-                                      chanFreqIn[inpChan + chanStep_p[k]
-                                                 - 1])/2;
-              spwResolOut[outChan] = spwResolIn[inpChan] * chanStep_p[k];
-              chanWidthOut[outChan] = chanWidthIn[inpChan] * chanStep_p[k];
+                                      chanFreqIn[inpChan + span - 1]) / 2;
+              spwResolOut[outChan] = spwResolIn[inpChan] * span;
+              chanWidthOut[outChan] = chanWidthIn[inpChan] * widths_p[k];
 
-              for(Int avgChan = inpChan; avgChan < inpChan + chanStep_p[k];
-                  ++avgChan)
+              for(Int avgChan = inpChan; avgChan < inpChan + span;
+                  avgChan += chanStep_p[k])
                 effBWOut[outChan] += effBWIn[avgChan];
             }
             else{
@@ -1559,9 +1561,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       msDD.polarizationId().put(min_k, newPolId[min_k]);
       msDD.spectralWindowId().put(min_k, min_k);
     }
-    
     return true;
-    
   }
   
   
@@ -7029,39 +7029,157 @@ Bool SubMS::copyState()
 Bool SubMS::doChannelMods(const Vector<MS::PredefinedColumns>& datacols)
 {
   LogIO os(LogOrigin("SubMS", "doChannelMods()"));
-  Int nrow = mssel_p.nrow();
 
-  ROArrayColumn<Float> rowWt;
-  rowWt.reference(mscIn_p->weight());
-  ROArrayColumn<Float> sigma;
-  sigma.reference(mscIn_p->sigma());
-  
-  const Bool doSpWeight = !mscIn_p->weightSpectrum().isNull() &&
-                          mscIn_p->weightSpectrum().isDefined(0);
-  ROArrayColumn<Float> wgtSpec;
-  if(doSpWeight)
-    wgtSpec.reference(mscIn_p->weightSpectrum());
+  Vector<MS::PredefinedColumns> cmplxColLabels;
+  const Bool doFloat = sepFloat(datacols, cmplxColLabels);
+  const uInt nCmplx = cmplxColLabels.nelements();
+  if(doFloat && nCmplx > 0)           // 2010-12-14
+    os << LogIO::WARN
+       << "Using VisIter to average both FLOAT_DATA and another DATA column is extremely experimental."
+       << LogIO::POST;
 
-  const uInt ntok = datacols.nelements();
-  const Bool writeToDataCol = mustConvertToData(ntok, datacols);
+  //ArrayColumn<Complex> outCmplxCols[nCmplx];
+  //outDataColMap(outCmplxCols, nCmplx, cmplxColLabels);
+  const Bool writeToData = mustConvertToData(nCmplx, cmplxColLabels);
   
-  for(uInt colind = 0; colind < ntok; colind++){
-    if(ntok > 1)
-      os << LogIO::NORMAL // PROGRESS
-	 << "Writing filtered " << MS::columnName(datacols[colind])
-	 << " channels."
-	 << LogIO::POST;
-    
-    if(datacols[colind] == MS::FLOAT_DATA)
-      filterChans<Float>(mscIn_p->floatData(), msc_p->floatData(),
-			 doSpWeight, wgtSpec, nrow,
-			 !colind, rowWt, sigma);
-    else
-      filterChans<Complex>(right_column(mscIn_p, datacols[colind]),
-			   right_column(msc_p, datacols[colind], writeToDataCol),
-			   doSpWeight, wgtSpec, nrow,
-			   !colind, rowWt, sigma);
-  }
+  Vector<Int> spwindex(max(spw_p) + 1);
+  spwindex.set(-1);
+  for(uInt k = 0; k < spw_p.nelements(); ++k)
+    spwindex[spw_p[k]] = k;
+
+  Block<Int> columns;
+  // include scan and state iteration, for more optimal iteration
+  columns.resize(6);
+  columns[0]=MS::ARRAY_ID;
+  columns[1]=MS::SCAN_NUMBER;
+  columns[2]=MS::STATE_ID;
+  columns[3]=MS::FIELD_ID;
+  columns[4]=MS::DATA_DESC_ID;
+  columns[5]=MS::TIME;
+
+#ifdef COPYTIMER
+  Timer timer;
+  timer.mark();
+
+  Vector<Int> inscan, outscan;
+#endif  
+
+  ROVisIterator viIn(mssel_p, columns, 0.0);
+  //ROVisibilityIterator viIn(mssel_p, columns, 0.0);
+  VisIter viOut(msOut_p,columns,0.0);
+
+  viIn.setRowBlocking(1000);
+  viOut.setRowBlocking(1000);
+  //viIn.slurp();
+  //cerr << "Finished slurping." << endl;
+
+  // Translate chanSlices_p into the form vb.channelAve() wants.
+  Vector<Matrix<Int> > chanAveBounds;
+  viIn.slicesToMatrices(chanAveBounds, chanSlices_p, widths_p);
+
+  // // If we don't want to skip every (width - 1) out of width channels,
+  // // the increments in chanSlices_p must be set to 1.
+  // if(averageChannel_p){
+  //   for(uInt spwind = 0; spwind < chanSlices_p.nelements(); ++spwind){
+  //     Vector<Slice>& spwsls = chanSlices_p[spwind];
+
+  //     for(uInt slnum = 0; slnum < spwsls.nelements(); ++slnum){
+  //       Slice& sl = spwsls[slnum];
+
+  //       spwsls[slnum] = Slice(sl.start(), sl.length());
+  //     }
+  //   }
+  // }
+
+  // Apply selection
+  // for(uInt spwind = 0; spwind < spw_p.nelements(); ++spwind)
+  //   viOut.selectChannel(1, chanStart_p[spwind], nchan_p[spwind],
+  //                       chanStep_p[spwind], spw_p[spwind]);
+  viIn.selectChannel(chanSlices_p);     // ROVisIterator
+  viIn.selectCorrelation(corrSlices_p);
+  
+  viIn.originChunks();                                // Makes me feel better.
+
+  const Bool doSpWeight = viIn.existsWeightSpectrum();
+  uInt rowsdone = 0;
+  ProgressMeter meter(0.0, mssel_p.nrow() * 1.0, "split", "rows averaged", "", "",
+		      True, 1);
+  Cube<Complex> vis;
+  Cube<Float> floatvis;
+  VisBuffer vb(viIn);
+
+  for(viOut.originChunks(), viIn.originChunks();
+      viOut.moreChunks(), viIn.moreChunks();
+      viOut.nextChunk(), viIn.nextChunk()){
+    for(viIn.origin(),viOut.origin(); viIn.more(),viOut.more();
+        ++viIn, ++viOut){
+      uInt rowsnow = vb.nRow();
+
+      if(rowsnow > 0){
+        //RefRows rr(rowsdone, rowsdone + rowsnow - 1);
+
+        // Preload the things that need to be channel averaged.
+        for(uInt colind = 0; colind < nCmplx; ++colind){
+          if(cmplxColLabels[colind] == MS::DATA)
+            vb.visCube();
+          else if(cmplxColLabels[colind] == MS::MODEL_DATA)
+            vb.modelVisCube();
+          else if(cmplxColLabels[colind] == MS::CORRECTED_DATA)
+            vb.correctedVisCube();
+        }
+        if(doFloat)
+          vb.floatDataCube();
+
+        // The flags and weights are already loaded by this point, UNLESS the
+        // row flag was True for all the rows.  Make sure they're loaded, or
+        // they could end up with the wrong shape.
+        vb.flagCube();
+        // if(viIn.existsWeightSpectrum())
+        //   vb.weightSpectrum();
+        // vb.weightMat();
+      
+        vb.channelAve(chanAveBounds[viIn.spectralWindow()]);
+
+        if(vb.flagCube().shape() != vb.visCube().shape())
+          throw(AipsError("Shape error after channel averaging!"));
+
+        // Write the output.
+        for(uInt colind = 0; colind < nCmplx; ++colind){
+          if(cmplxColLabels[colind] == MS::DATA)
+            viOut.setVis(vb.visCube(), VisibilityIterator::Observed);
+          else if(cmplxColLabels[colind] == MS::MODEL_DATA)
+            viOut.setVis(vb.modelVisCube(),
+                         writeToData ? VisibilityIterator::Observed :
+                                       VisibilityIterator::Model);
+          else if(cmplxColLabels[colind] == MS::CORRECTED_DATA)
+            viOut.setVis(vb.correctedVisCube(),
+                         writeToData ? VisibilityIterator::Observed :
+                                       VisibilityIterator::Corrected);
+        }
+        //if(doFloat)
+        //  viOut.setFloatData(vb.floatDataCube());    TBD!
+        viOut.setFlag(vb.flagCube());
+        viOut.setWeightMat(vb.weightMat());
+        viOut.setSigmaMat(vb.sigmaMat());
+        if(doSpWeight)
+          viOut.setWeightSpectrum(vb.weightSpectrum());
+      
+        rowsdone += rowsnow;
+      }
+    }
+    meter.update(rowsdone);
+  }   // End of for(viIn.originChunks(); viIn.moreChunks(); viIn.nextChunk())
+  os << LogIO::NORMAL << "Data binned." << LogIO::POST;
+
+  //const ColumnDescSet& cds = mssel_p.tableDesc().columnDescSet();
+  //const ColumnDesc& cdesc = cds[MS::columnName(MS::DATA)];
+  //ROTiledStManAccessor tacc(mssel_p, cdesc.dataManagerGroup());
+  //tacc.showCacheStatistics(cerr);  // A 99.x% hit rate is good.  0% is bad.
+
+  os << LogIO::DEBUG1 // helpdesk ticket in from Oleg Smirnov (ODU-232630)
+     << "Post binning memory: " << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
+     << LogIO::POST;
+
   return True;
 }
 
@@ -7277,12 +7395,12 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
 
   Vector<MS::PredefinedColumns> cmplxColLabels;
   const Bool doFloat = sepFloat(dataColNames, cmplxColLabels);
+  const uInt nCmplx = cmplxColLabels.nelements();
   if(doFloat && cmplxColLabels.nelements() > 0)           // 2010-12-14
     os << LogIO::WARN
        << "Using VisibilityIterator to average both FLOAT_DATA and another DATA column is extremely experimental."
        << LogIO::POST;
 
-  const uInt nCmplx = cmplxColLabels.nelements();
   ArrayColumn<Complex> outCmplxCols[nCmplx];
   getDataColMap(outCmplxCols, nCmplx, cmplxColLabels);
 
@@ -7512,12 +7630,12 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
 
   Vector<MS::PredefinedColumns> cmplxColLabels;
   const Bool doFloat = sepFloat(dataColNames, cmplxColLabels);
-  if(doFloat && cmplxColLabels.nelements() > 0)           // 2010-12-14
+  const uInt nCmplx = cmplxColLabels.nelements();
+  if(doFloat && nCmplx > 0)                             // 2010-12-14
     os << LogIO::WARN
        << "Using VisIterator to average both FLOAT_DATA and another DATA column is extremely experimental."
        << LogIO::POST;
 
-  const uInt nCmplx = cmplxColLabels.nelements();
   ArrayColumn<Complex> outCmplxCols[nCmplx];
   getDataColMap(outCmplxCols, nCmplx, cmplxColLabels);
 
