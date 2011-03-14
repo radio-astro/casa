@@ -2,6 +2,11 @@ import os
 import re
 import shutil
 import tempfile
+
+# shutil.copytree is useless with directories created by tempfile
+# (or any directories that already exist).
+from distutils.dir_util import copy_tree
+
 from taskinit import *
 from update_spw import *
 
@@ -72,7 +77,7 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
             ms.close()       
         else:
             casalog.post('cping to ' + csvis, 'DEBUG1')
-            shutil.copytree(vis, csvis)
+            copy_tree(vis, csvis)
         
         if (type(csvis) == str) and os.path.isdir(csvis):
             cb.open(csvis)
