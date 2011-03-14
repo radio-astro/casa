@@ -93,6 +93,10 @@ namespace casa {
 	// Accumulates [/ displays] selected boxes.
 	virtual void newMouseRegion(Record mouseRegion, WorldCanvasHolder* wch);
 
+	virtual void changeMaskAxis(String, String, String);
+	virtual void changeImageAxis(String, String, String);
+	virtual void changeMaskSelectionText( String x, String y, String z );
+
     signals:
 	void interact( QVariant );
 
@@ -108,6 +112,8 @@ namespace casa {
 	QRadioButton* eraseRB_;
 	QRadioButton* allChanRB_;
 	QRadioButton* thisPlaneRB_;
+	QRadioButton* allHiddenRB_;
+	QRadioButton* thisHiddenRB_;
 	QPushButton* maskNoMorePB_;
 	QPushButton* maskDonePB_;
 	QPushButton* stopPB_;
@@ -128,7 +134,9 @@ namespace casa {
 	void writeRegionText(const ImageRegion& imageReg, const String& filename, Float value);
 
 	QtDisplayData* imagedd_;
-	QtDisplayData* maskdd_;		// later: to display clean region.
+	QtDisplayData* maskdd_;			// later: to display clean region.
+	std::string axis_change;
+
 	CoordinateSystem csys_p;  
 	DirectionCoordinate dirCoord_p;
 
