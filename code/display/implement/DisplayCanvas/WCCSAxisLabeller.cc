@@ -93,7 +93,15 @@ void WCCSAxisLabeller::setDefaultOptions() {
      if (restFreq > 0) {
         itsSpectralUnit = String("km/s");
      } else {
-        itsSpectralUnit = String("GHz");
+         Quantity q;
+         q.setValue(coord.referenceValue()(0));
+         q.setUnit(coord.worldAxisUnits()(0));
+         MVFrequency mvFreq(q);
+         if (mvFreq.get(Unit("Hz")).getValue() > 1.0e+13) {
+     		itsSpectralUnit = String("nm");
+     	} else{
+     		itsSpectralUnit = String("GHz");
+     	}
      }
 //
      MFrequency::Types ctype;
@@ -317,15 +325,36 @@ Record WCCSAxisLabeller::getOptions() const
            vunits(2) = "GHz";
            vunits(3) = "MHz";
            vunits(4) = "Hz";
+           spectralunit.define("default", vunits(0));
         } else {
-           vunits.resize(3);        
-           vunits(0) = "GHz";
-           vunits(1) = "MHz";
-           vunits(2) = "Hz";
+            Quantity q;
+            q.setValue(sc.referenceValue()(0));
+            q.setUnit(sc.worldAxisUnits()(0));
+            MVFrequency mvFreq(q);
+            if (mvFreq.get(Unit("Hz")).getValue() > 1.0e+13) {
+        		// optical domain
+        		vunits.resize(7);
+        		vunits(0) = "GHz";
+        		vunits(1) = "MHz";
+        		vunits(2) = "Hz";
+        		vunits(3) = "mm";
+        		vunits(4) = "um";
+        		vunits(5) = "nm";
+        		vunits(6) = "Angstrom";
+                spectralunit.define("default", vunits(5));
+        	}
+        	else {
+        		// radio domain
+        		vunits.resize(3);
+        		vunits(0) = "GHz";
+        		vunits(1) = "MHz";
+        		vunits(2) = "Hz";
+        		// does not seem to have any influence
+                spectralunit.define("default", vunits(0));
+        	}
         }
 //
         spectralunit.define("popt", vunits);
-        spectralunit.define("default", vunits(0));
         spectralunit.define("value", itsSpectralUnit);
         spectralunit.define("allowunset", False);
         rec.defineRecord("axislabelspectralunit", spectralunit);
@@ -549,6 +578,8 @@ void WCCSAxisLabeller::setSpectralState (CoordinateSystem& cs) const
 
 // Set velocity and/or world unit state in SpectralCoordinate
 
+   //cout << "I am in WCCSAxisLabeller::setSpectralState!" << endl;
+   //cout << "itsSpectralUnit: " << itsSpectralUnit << " itsDoppler: " << itsDoppler << endl;
    String errorMsg;
    if (!CoordinateUtil::setSpectralState (errorMsg, cs,
                                           itsSpectralUnit, itsDoppler)) {
@@ -562,13 +593,13 @@ void WCCSAxisLabeller::setSpectralState (CoordinateSystem& cs) const
       os << errorMsg << LogIO::EXCEPTION;
    }
 
-// Set Spectral formatting (for movie axis labelling done via formatter)
+   // Set Spectral formatting (for movie axis labelling done via formatter)
 
    if (!CoordinateUtil::setSpectralFormatting (errorMsg, cs,
                                                itsSpectralUnit, itsDoppler)) {
       os << errorMsg << LogIO::EXCEPTION;
    }
-   
+
 // Indicate whether we are asking for kms or Hz conformant spectral units
 
    static Unit KMS(String("km/s"));
