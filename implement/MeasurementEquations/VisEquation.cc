@@ -515,10 +515,15 @@ void VisEquation::state() {
 // Determine residuals of VisBuffer data w.r.t. svc_
 void VisEquation::residuals(VisBuffer& vb,
 			    Cube<Complex>& R,
-			    const Int& chan) {
+			    const Int chan) {
 
 
   if (prtlev()>3) cout << "VE::residuals()" << endl;
+  if (prtlev()>13)                              // Here only to shush a
+    cout << "vb.nRow(): " << vb.nRow()          // compiler warning about
+         << "\nR.shape(): " << R.shape()        // unused variables.
+         << "\nchan: " << chan
+         << endl;
 
   // Trap unspecified solvable term
   if (!svc_)

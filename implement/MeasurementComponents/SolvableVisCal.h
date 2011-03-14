@@ -203,7 +203,9 @@ public:
   Bool syncSolveMeta(VisBuffer& vb, const Int& fieldId);
   Bool syncSolveMeta(VisBuffGroupAcc& vbga);
 
-  // Make vb phase-only
+  // If apmode() is "A", convert vb's visibilities to amp + 0i.
+  // If it is "P", convert them to phase + 0i.
+  // Otherwise (i.e. "AP"), leave them alone.
   virtual void enforceAPonData(VisBuffer& vb);
 
   // Verify VisBuffer data sufficient for solving (wts, etc.)

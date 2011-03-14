@@ -2815,7 +2815,7 @@ void XJones::solveOneVB(const VisBuffer& vb) {
   Int nChan=vb.nChannel();
 
   Complex d,md;
-  Float wt,a;
+  Float wt;
   Vector<DComplex> rl(nChan,0.0),lr(nChan,0.0);
   Double sumwt(0.0);
   for (Int irow=0;irow<vb.nRow();++irow) {
