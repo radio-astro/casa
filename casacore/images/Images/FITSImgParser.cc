@@ -113,8 +113,11 @@ void FITSImgParser::setup(void)
 	else if (fin.err())
 		throw (AipsError(name_p + " Error reading initial record -- exiting."));
 
+	// get the number of HDU's
+	int num_hdu = fin.getnumhdu();
+
 	// allocate the extensions
-	extensions_p = new FITSExtInfo[fin.getnumhdu()];
+	extensions_p = new FITSExtInfo[num_hdu];
 
 	HeaderDataUnit *hdu;
 	PrimaryArray<unsigned char> *paB;
@@ -125,7 +128,7 @@ void FITSImgParser::setup(void)
 
 	uInt extindex = 0;
 	Bool isfitsimg=True;
-	while (fin.rectype() != FITS::EndOfFile && isfitsimg && fin.err() < 10){
+	while (fin.rectype() != FITS::EndOfFile && isfitsimg && !fin.err() && extindex < (uInt)num_hdu){
 		extindex++;
 		if (fin.rectype() == FITS::HDURecord) {
 			switch (fin.hdutype()) {

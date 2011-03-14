@@ -1210,8 +1210,12 @@ Bool CoordinateUtil::setSpectralState (String& errorMsg, CoordinateSystem& cSys,
                                        const String& doppler)
 {
    static Unit KMS(String("km/s"));
-   static Unit HZ(String("Hz"));
+   static Unit HZ(String("GHz"));
+   static Unit M(String("m"));
 //
+
+   //cout << "SpecState: " << unit << " new doppler: " << doppler << endl;
+
    Int after = -1;
    Int iS = cSys.findCoordinate(Coordinate::SPECTRAL, after);
    if (iS>=0) {
@@ -1221,6 +1225,7 @@ Bool CoordinateUtil::setSpectralState (String& errorMsg, CoordinateSystem& cSys,
 
       MDoppler::Types newDoppler(sCoord.velocityDoppler());
       String newVelUnit(sCoord.velocityUnit());
+      String newWaveUnit(sCoord.wavelengthUnit());
       Vector<String> newWorldAxisUnits(sCoord.worldAxisUnits().copy());
 
 // Find new Doppler, if any
@@ -1239,15 +1244,26 @@ Bool CoordinateUtil::setSpectralState (String& errorMsg, CoordinateSystem& cSys,
 
      if (!unit.empty()) {
         Unit t(unit);
+        //cout << "Unit name: " << t.getName() << endl;
+        //cout << "Unit value: " << t.getValue() << endl;
+
         if (t == HZ) {
+        	//cout << "New HZ" << endl;
            newWorldAxisUnits[0] = unit;         
         } else if (t == KMS) {
+        	//cout << "New velocity" << endl;
            newVelUnit = unit;
+        } else if (t == M) {
+        	//cout << "New wavelength unit " <<endl;
+        	newWaveUnit = unit;
+            //newWorldAxisUnits[0] = "Hz";
         } else {
            errorMsg = String("Illegal spectral unit");
            return False;
         }
      }
+     //cout << "New world axis Units: " << newWorldAxisUnits << endl;
+     //cout << "New vel unit        : " << newVelUnit << endl;
 
 // Set new state.  
 
@@ -1260,6 +1276,14 @@ Bool CoordinateUtil::setSpectralState (String& errorMsg, CoordinateSystem& cSys,
         errorMsg = sCoord.errorMessage();
         return False;
      }
+
+//
+     //cout << "Old wavelength unit: "<< sCoord.wavelengthUnit() << " set to: "<<newWaveUnit<< endl;
+     if (!sCoord.setWavelengthUnit(newWaveUnit)) {
+    	 errorMsg = sCoord.errorMessage();
+    	 return False;
+     }
+     //cout << "New wavelength unit: "<< sCoord.wavelengthUnit() <<endl;
 
 // Replace in CS
 
@@ -1289,6 +1313,7 @@ Bool CoordinateUtil::setSpectralFormatting (String& errorMsg,
       SpectralCoordinate sCoord = cSys.spectralCoordinate(iS);
      
 // Set format Unit
+      //cout << "SpectralFormatting unit: " << unit << " doppler: " << doppler << endl;
            
       sCoord.setFormatUnit (unit);
       
