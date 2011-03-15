@@ -976,12 +976,14 @@ def splitant(filename, outprefix='',overwrite=False):
         prefix=filename.rstrip('/')
     # Now do the actual splitting.
     outfiles=[]
-    tb.open(tablename=filename+'/ANTENNA',nomodify=True)
-    nant=tb.nrows()
-    antnames=tb.getcol('NAME',0,nant,1)
-    tb.close()
     tb.open(tablename=filename,nomodify=True)
     ant1=tb.getcol('ANTENNA1',0,-1,1)
+    anttab=tb.getkeyword('ANTENNA').split()[-1]
+    tb.close()
+    #tb.open(tablename=filename+'/ANTENNA',nomodify=True)
+    tb.open(tablename=anttab,nomodify=True)
+    nant=tb.nrows()
+    antnames=tb.getcol('NAME',0,nant,1)
     tb.close()
     tmpname='asapmath.splitant.tmp'
     for antid in set(ant1):

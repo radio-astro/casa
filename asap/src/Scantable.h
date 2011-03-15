@@ -492,7 +492,7 @@ public:
   void regridChannel( int nchan, double dnu ) ;
   void regridChannel( int nchan, double dnu, int irow ) ;
 
-  bool getFlagtraFast(int whichrow);
+  bool getFlagtraFast(casa::uInt whichrow);
 
   void polyBaseline(const std::vector<bool>& mask, 
 		    int order, 
@@ -520,6 +520,23 @@ public:
 			       int chanAvgLimit=1, 
 			       bool outLogger=false, 
 			       const std::string& blfile="");
+  void sinusoidBaseline(const std::vector<bool>& mask,
+			int nMinWavesInSW,
+			int nMaxWavesInSW,
+			float thresClip, 
+		        int nIterClip,
+		        bool outLogger=false,
+		        const std::string& blfile="");
+  void autoSinusoidBaseline(const std::vector<bool>& mask,
+			    int nMinWavesInSW,
+			    int nMaxWavesInSW,
+		            float thresClip, 
+		            int nIterClip,
+		            const std::vector<int>& edge, 
+		            float threshold=3.0, 
+		            int chanAvgLimit=1, 
+		            bool outLogger=false, 
+		            const std::string& blfile="");
   float getRms(const std::vector<bool>& mask, int whichrow);
   std::string formatBaselineParams(const std::vector<float>& params, 
 			           const std::vector<bool>& fixed, 
@@ -656,18 +673,27 @@ private:
 					  int nPiece=2,
 					  float thresClip=3.0, 
 					  int nIterClip=1);
+  std::vector<float> doSinusoidFitting(const std::vector<float>& data, 
+				       const std::vector<bool>& mask,
+				       int nMinWavesInSW,
+				       int nMaxWavesInSW,
+				       std::vector<float>& params,
+				       float thresClip=3.0, 
+				       int nIterClip=1);
   bool hasSameNchanOverIFs();
   std::string getMaskRangeList(const std::vector<bool>& mask, 
 				int whichrow, 
 				const casa::String& coordInfo, 
-				bool hasSameNchan, 
-				int firstIF, 
-				bool silent=false);
-  std::vector<int> getMaskEdgeIndices(const std::vector<bool>& mask, bool getStartIndices=true);
+				bool hasSameNchan,
+				bool verbose=false);
+  std::vector<int> getMaskEdgeIndices(const std::vector<bool>& mask);
   std::string formatBaselineParamsHeader(int whichrow, const std::string& masklist, bool verbose) const;
   std::string formatBaselineParamsFooter(float rms, bool verbose) const;
   std::vector<bool> getCompositeChanMask(int whichrow, const std::vector<bool>& inMask);
   //std::vector<bool> getCompositeChanMask(int whichrow, const std::vector<bool>& inMask, const std::vector<int>& edge, const int minEdgeSize, STLineFinder& lineFinder);
+  void outputFittingResult(bool outLogger, bool outTextFile, const std::vector<bool>& chanMask, int whichrow, const casa::String& coordInfo, bool hasSameNchan, std::ofstream& ofs, const casa::String& funcName, Fitter& fitter);
+  void outputFittingResult(bool outLogger, bool outTextFile, const std::vector<bool>& chanMask, int whichrow, const casa::String& coordInfo, bool hasSameNchan, std::ofstream& ofs, const casa::String& funcName, const std::vector<int>& pieceEdges, const std::vector<float>& params, const std::vector<bool>& fixed);
+  void outputFittingResult(bool outLogger, bool outTextFile, const std::vector<bool>& chanMask, int whichrow, const casa::String& coordInfo, bool hasSameNchan, std::ofstream& ofs, const casa::String& funcName, const std::vector<float>& params, const std::vector<bool>& fixed);
 
   void applyChanFlag( casa::uInt whichrow, const std::vector<bool>& msk, casa::uChar flagval);
 

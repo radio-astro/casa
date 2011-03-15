@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: python_Scantable.cpp 2012 2011-02-25 05:51:50Z WataruKawasaki $
+//# $Id: python_Scantable.cpp 2047 2011-03-15 07:31:04Z WataruKawasaki $
 //#---------------------------------------------------------------------------
 #include <vector>
 
@@ -145,6 +145,8 @@ void python_Scantable() {
     .def("_auto_poly_baseline", &ScantableWrapper::autoPolyBaseline)
     .def("_cspline_baseline", &ScantableWrapper::cubicSplineBaseline)
     .def("_auto_cspline_baseline", &ScantableWrapper::autoCubicSplineBaseline)
+    .def("_sinusoid_baseline", &ScantableWrapper::sinusoidBaseline)
+    .def("_auto_sinusoid_baseline", &ScantableWrapper::autoSinusoidBaseline)
     .def("get_rms", &ScantableWrapper::getRms)
     .def("format_blparams_row", &ScantableWrapper::formatBaselineParams)
     .def("format_piecewise_blparams_row", &ScantableWrapper::formatPiecewiseBaselineParams)

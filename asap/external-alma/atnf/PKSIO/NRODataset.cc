@@ -791,6 +791,9 @@ vector<double> NRODataset::getFrequencies( int i )
   else {
     cw = getBERES()[ib] ;
     
+    if ( iu == 2 )
+      cw *= -1.0 ;
+
     if ( cw == 0.0 ) {
       cw = ( freqs[1] - freqs[0] ) 
         / ( chcal[1] - chcal[0] ) ;

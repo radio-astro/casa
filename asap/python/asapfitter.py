@@ -72,15 +72,17 @@ class fitter:
         """
         Set the function to be fit.
         Parameters:
-            poly:    use a polynomial of the order given with nonlinear least squares fit
-            lpoly:   use polynomial of the order given with linear least squares fit
-            gauss:   fit the number of gaussian specified
-            lorentz: fit the number of lorentzian specified
+            poly:     use a polynomial of the order given with nonlinear least squares fit
+            lpoly:    use polynomial of the order given with linear least squares fit
+            gauss:    fit the number of gaussian specified
+            lorentz:  fit the number of lorentzian specified
+            sinusoid: fit the number of sinusoid specified
         Example:
             fitter.set_function(poly=3)  # will fit a 3rd order polynomial via nonlinear method
             fitter.set_function(lpoly=3)  # will fit a 3rd order polynomial via linear method
             fitter.set_function(gauss=2) # will fit two gaussians
             fitter.set_function(lorentz=2) # will fit two lorentzians
+            fitter.set_function(sinusoid=3) # will fit three sinusoids
         """
         #default poly order 0
         n=0
@@ -106,6 +108,12 @@ class fitter:
             n = kwargs.get('lorentz')
             self.fitfunc = 'lorentz'
             self.fitfuncs = [ 'lorentz' for i in range(n) ]
+            self.components = [ 3 for i in range(n) ]
+            self.uselinear = False
+        elif kwargs.has_key('sinusoid'):
+            n = kwargs.get('sinusoid')
+            self.fitfunc = 'sinusoid'
+            self.fitfuncs = [ 'sinusoid' for i in range(n) ]
             self.components = [ 3 for i in range(n) ]
             self.uselinear = False
         else:
@@ -203,8 +211,8 @@ class fitter:
               params:    a vector of parameters
               fixed:     a vector of which parameters are to be held fixed
                          (default is none)
-              component: in case of multiple gaussians/lorentzians,
-                         the index of the component
+              component: in case of multiple gaussians/lorentzians/sinusoidals,
+                         the index of the target component
         """
         component = None
         fixed = None
@@ -219,18 +227,18 @@ class fitter:
         if self.fitfunc is None:
             msg = "Please specify a fitting function first."
             raise RuntimeError(msg)
-        if (self.fitfunc == "gauss" or self.fitfunc == 'lorentz') and component is not None:
+        if (self.fitfunc == "gauss" or self.fitfunc == "lorentz" or self.fitfunc == "sinusoid") and component is not None:
             if not self.fitted and sum(self.fitter.getparameters()) == 0:
                 pars = _n_bools(len(self.components)*3, False)
-                fxd = _n_bools(len(pars), False)
+                fxd  = _n_bools(len(pars), False)
             else:
                 pars = list(self.fitter.getparameters())
-                fxd = list(self.fitter.getfixedparameters())
+                fxd  = list(self.fitter.getfixedparameters())
             i = 3*component
             pars[i:i+3] = params
-            fxd[i:i+3] = fixed
+            fxd[i:i+3]  = fixed
             params = pars
-            fixed = fxd
+            fixed  = fxd
         self.fitter.setparameters(params)
         if fixed is not None:
             self.fitter.setfixedparameters(fixed)
@@ -294,6 +302,35 @@ class fitter:
             msg = "Please select a valid  component."
             raise ValueError(msg)
 
+    @asaplog_post_dec
+    def set_sinusoid_parameters(self, ampl, period, x0,
+                             amplfixed=0, periodfixed=0,
+                             x0fixed=0,
+                             component=0):
+        """
+        Set the Parameters of a 'Sinusoidal' component, set with set_function.
+        Parameters:
+            ampl, period, x0:  The sinusoidal parameters
+            amplfixed,
+            periodfixed,
+            x0fixed:             Optional parameters to indicate if
+                                 the paramters should be held fixed during
+                                 the fitting process. The default is to keep
+                                 all parameters flexible.
+            component:           The number of the component (Default is the
+                                 component 0)
+        """
+        if self.fitfunc != "sinusoid":
+            msg = "Function only operates on Sinusoidal components."
+            raise ValueError(msg)
+        if 0 <= component < len(self.components):
+            d = {'params':[ampl, period, x0],
+                 'fixed': [amplfixed, periodfixed, x0fixed]}
+            self.set_parameters(d, component)
+        else:
+            msg = "Please select a valid  component."
+            raise ValueError(msg)
+
     def get_area(self, component=None):
         """
         Return the area under the fitted gaussian/lorentzian component.
@@ -337,7 +374,7 @@ class fitter:
         errs = list(self.fitter.geterrors())
         cerrs = errs
         if component is not None:
-            if self.fitfunc == "gauss" or self.fitfunc == "lorentz":
+            if self.fitfunc == "gauss" or self.fitfunc == "lorentz" or self.fitfunc == "sinusoid":
                 i = 3*component
                 if i < len(errs):
                     cerrs = errs[i:i+3]
@@ -360,25 +397,26 @@ class fitter:
         errs = list(self.fitter.geterrors())
         area = []
         if component is not None:
-            if self.fitfunc == "gauss" or self.fitfunc == "lorentz":
+            if self.fitfunc == "poly" or self.fitfunc == "lpoly":
+                cpars = pars
+                cfixed = fixed
+                cerrs = errs
+            else:
                 i = 3*component
                 cpars = pars[i:i+3]
                 cfixed = fixed[i:i+3]
                 cerrs = errs[i:i+3]
-                a = self.get_area(component)
-                area = [a for i in range(3)]
-            else:
-                cpars = pars
-                cfixed = fixed
-                cerrs = errs
+                if self.fitfunc == "gauss" or self.fitfunc == "lorentz":
+                    a = self.get_area(component)
+                    area = [a for i in range(3)]
         else:
             cpars = pars
             cfixed = fixed
             cerrs = errs
             if self.fitfunc == "gauss" or self.fitfunc == "lorentz":
                 for c in range(len(self.components)):
-                  a = self.get_area(c)
-                  area += [a for i in range(3)]
+                    a = self.get_area(c)
+                    area += [a for i in range(3)]
         fpars = self._format_pars(cpars, cfixed, errors and cerrs, area)
         asaplog.push(fpars)
         return {'params':cpars, 'fixed':cfixed, 'formatted': fpars,
@@ -386,30 +424,39 @@ class fitter:
 
     def _format_pars(self, pars, fixed, errors, area):
         out = ''
-        if self.fitfunc == 'poly':
+        if self.fitfunc == "poly" or self.fitfunc == "lpoly":
             c = 0
             for i in range(len(pars)):
                 fix = ""
                 if len(fixed) and fixed[i]: fix = "(fixed)"
-                if errors :
-                    out += '  p%d%s= %3.6f (%1.6f),' % (c,fix,pars[i], errors[i])
-                else:
-                    out += '  p%d%s= %3.6f,' % (c,fix,pars[i])
+                out += "  p%d%s= %3.6f" % (c, fix, pars[i])
+                if errors : out += " (%1.6f)" % errors[i]
+                out += ","
                 c+=1
             out = out[:-1]  # remove trailing ','
-        elif self.fitfunc == 'gauss' or self.fitfunc == 'lorentz':
+        else:
             i = 0
             c = 0
-            aunit = ''
-            ounit = ''
+            if self.fitfunc == "gauss" or self.fitfunc == "lorentz":
+                pnam = ["peak", "centre", "FWHM"]
+            elif self.fitfunc == "sinusoid":
+                pnam = ["amplitude", "period", "x0"]
+            aunit = ""
+            ounit = ""
             if self.data:
                 aunit = self.data.get_unit()
                 ounit = self.data.get_fluxunit()
             while i < len(pars):
-                if len(area):
-                    out += '  %2d: peak = %3.3f %s , centre = %3.3f %s, FWHM = %3.3f %s\n      area = %3.3f %s %s\n' % (c,pars[i],ounit,pars[i+1],aunit,pars[i+2],aunit, area[i],ounit,aunit)
-                else:
-                    out += '  %2d: peak = %3.3f %s , centre = %3.3f %s, FWHM = %3.3f %s\n' % (c,pars[i],ounit,pars[i+1],aunit,pars[i+2],aunit,ounit,aunit)
+                fix0 = fix1 = fix2 = ""
+                if i < len(fixed)-2:
+                    if fixed[i]:   fix0 = "(fixed)"
+                    if fixed[i+1]: fix1 = "(fixed)"
+                    if fixed[i+2]: fix2 = "(fixed)"
+                out += "  %2d: " % c
+                out += "%s%s = %3.3f %s, " % (pnam[0], fix0, pars[i],   ounit)
+                out += "%s%s = %3.3f %s, " % (pnam[1], fix1, pars[i+1], aunit)
+                out += "%s%s = %3.3f %s\n" % (pnam[2], fix2, pars[i+2], aunit)
+                if len(area): out += "      area = %3.3f %s %s\n" % (area[i], ounit, aunit)
                 c+=1
                 i+=3
         return out

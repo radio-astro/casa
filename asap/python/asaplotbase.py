@@ -580,7 +580,7 @@ class asaplotbase:
 
 
     #def set_panels(self, rows=1, cols=0, n=-1, nplots=-1, ganged=True):
-    def set_panels(self, rows=1, cols=0, n=-1, nplots=-1, layout=None,ganged=True):
+    def set_panels(self, rows=1, cols=0, n=-1, nplots=-1, margin=None,ganged=True):
         """
         Set the panel layout.
 
@@ -603,8 +603,8 @@ class asaplotbase:
             self.figure.clear()
             self.set_title()
 
-        if layout:
-            lef, bot, rig, top, wsp, hsp = layout
+        if margin:
+            lef, bot, rig, top, wsp, hsp = margin
             self.figure.subplots_adjust(
                 left=lef,bottom=bot,right=rig,top=top,wspace=wsp,hspace=hsp)
             del lef,bot,rig,top,wsp,hsp
@@ -688,7 +688,7 @@ class asaplotbase:
             self.rows = rows
             self.cols = cols
             self.subplot(0)
-        del rows,cols,n,nplots,layout,ganged,i
+        del rows,cols,n,nplots,margin,ganged,i
 
 
     def tidy(self):

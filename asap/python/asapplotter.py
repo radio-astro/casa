@@ -49,7 +49,7 @@ class asapplotter:
         self._selection = selector()
         self._hist = rcParams['plotter.histogram']
         self._fp = FontProperties()
-        self._panellayout = self.set_panellayout(refresh=False)
+        self._margins = self.set_margin(refresh=False)
         self._offset = None
         self._startrow = 0
         self._ipanel = -1
@@ -640,11 +640,11 @@ class asapplotter:
         self._fp = FontProperties(**fdict)
         if refresh and self._data: self.plot(self._data)
 
-    def set_panellayout(self,layout=[],refresh=True):
+    def set_margin(self,margin=[],refresh=True):
         """
-        Set the layout of subplots.
+        Set margins between subplots and plot edges.
         Parameters:
-            layout:   a list of subplots layout in figure coordinate (0-1),
+            margin:   a list of margins in figure coordinate (0-1),
                       i.e., fraction of the figure width or height.
                       The order of elements should be:
                       [left, bottom, right, top, horizontal space btw panels,
@@ -653,18 +653,18 @@ class asapplotter:
                       replotted based on the new parameter setting(s).
                       Otherwise,the parameter(s) are set without replotting.
         Note
-        * When layout is not specified, the values are reset to the defaults
+        * When margin is not specified, the values are reset to the defaults
           of matplotlib.
         * If any element is set to be None, the current value is adopted.
         """
-        if layout == []: self._panellayout=self._reset_panellayout()
+        if margin == []: self._margins=self._reset_margin()
         else:
-            self._panellayout=[None]*6
-            self._panellayout[0:len(layout)]=layout
-        #print "panel layout set to ",self._panellayout
+            self._margins=[None]*6
+            self._margins[0:len(margin)]=margin
+        #print "panel margin set to ",self._margins
         if refresh and self._data: self.plot(self._data)
 
-    def _reset_panellayout(self):
+    def _reset_margin(self):
         ks=map(lambda x: 'figure.subplot.'+x,
                ['left','bottom','right','top','hspace','wspace'])
         return map(matplotlib.rcParams.get,ks)
@@ -876,7 +876,8 @@ class asapplotter:
             asaplog.push(msg)
             asaplog.post('WARN')
             nstack = min(nstack,maxstack)
-        n = min(n-self._ipanel-1,maxpanel)
+        #n = min(n-self._ipanel-1,maxpanel)
+        n = n-self._ipanel-1
 
         ganged = False
         if n > 1:
@@ -886,11 +887,12 @@ class asapplotter:
             if self._rows and self._cols:
                 n = min(n,self._rows*self._cols)
                 self._plotter.set_panels(rows=self._rows,cols=self._cols,
-                                         nplots=n,layout=self._panellayout,ganged=ganged)
+                                         nplots=n,margin=self._margins,ganged=ganged)
             else:
-                self._plotter.set_panels(rows=n,cols=0,nplots=n,layout=self._panellayout,ganged=ganged)
+                n = min(n,maxpanel)
+                self._plotter.set_panels(rows=n,cols=0,nplots=n,margin=self._margins,ganged=ganged)
         else:
-            self._plotter.set_panels(layout=self._panellayout)
+            self._plotter.set_panels(margin=self._margins)
         #r = 0
         r = self._startrow
         nr = scan.nrow()
@@ -1149,10 +1151,10 @@ class asapplotter:
         PL.cla()
         PL.ioff()
         PL.clf()
-        # Adjust subplot layouts
-        if len(self._panellayout) != 6:
-            self.set_panellayout(refresh=False)
-        lef, bot, rig, top, wsp, hsp = self._panellayout
+        # Adjust subplot margins
+        if len(self._margins) != 6:
+            self.set_margin(refresh=False)
+        lef, bot, rig, top, wsp, hsp = self._margins
         PL.gcf().subplots_adjust(left=lef,bottom=bot,right=rig,top=top,
                                  wspace=wsp,hspace=hsp)
 
@@ -1249,10 +1251,10 @@ class asapplotter:
         PL.cla()
         #PL.ioff()
         PL.clf()
-        # Adjust subplot layouts
-        if len(self._panellayout) != 6:
-            self.set_panellayout(refresh=False)
-        lef, bot, rig, top, wsp, hsp = self._panellayout
+        # Adjust subplot margins
+        if len(self._margins) != 6:
+            self.set_margin(refresh=False)
+        lef, bot, rig, top, wsp, hsp = self._margins
         PL.gcf().subplots_adjust(left=lef,bottom=bot,right=rig,top=top,
                                  wspace=wsp,hspace=hsp)
         ax = PL.gca()
@@ -1301,9 +1303,9 @@ class asapplotter:
         #    self._abcunit = self._data.get_unit()
         #    self._datamask = None
 
-        # Adjust subplot layouts
-        if len(self._panellayout) !=6: self.set_panellayout(refresh=False)
-        lef, bot, rig, top, wsp, hsp = self._panellayout
+        # Adjust subplot margins
+        if len(self._margins) !=6: self.set_margin(refresh=False)
+        lef, bot, rig, top, wsp, hsp = self._margins
         self._plotter.figure.subplots_adjust(
             left=lef,bottom=bot,right=rig,top=top,wspace=wsp,hspace=hsp)
         if self._plotter.figmgr.casabar: self._plotter.figmgr.casabar.disable_button()

@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: STFitter.cpp 1932 2010-09-17 08:35:58Z WataruKawasaki $
+//# $Id: STFitter.cpp 2047 2011-03-15 07:31:04Z WataruKawasaki $
 //#---------------------------------------------------------------------------
 #include <casa/aips.h>
 #include <casa/Arrays/ArrayMath.h>
@@ -38,6 +38,7 @@
 #include <scimath/Functionals/CompoundFunction.h>
 #include <scimath/Functionals/Gaussian1D.h>
 #include "Lorentzian1D.h"
+#include <scimath/Functionals/Sinusoid1D.h>
 #include <scimath/Functionals/Polynomial.h>
 #include <scimath/Mathematics/AutoDiff.h>
 #include <scimath/Mathematics/AutoDiffMath.h>
@@ -148,13 +149,6 @@ bool Fitter::setExpression(const std::string& expr, int ncomp)
       funcnames_.push_back(expr);
       funccomponents_.push_back(3);
     }
-  } else if (expr == "poly") {
-    funcs_.resize(1);
-    funcnames_.clear();
-    funccomponents_.clear();
-    funcs_[0] = new Polynomial<Float>(ncomp);
-      funcnames_.push_back(expr);
-      funccomponents_.push_back(ncomp);
   } else if (expr == "lorentz") {
     if (ncomp < 1) throw (AipsError("Need at least one lorentzian to fit."));
     funcs_.resize(ncomp);
@@ -165,8 +159,24 @@ bool Fitter::setExpression(const std::string& expr, int ncomp)
       funcnames_.push_back(expr);
       funccomponents_.push_back(3);
     }
+  } else if (expr == "sinusoid") {
+    if (ncomp < 1) throw (AipsError("Need at least one sinusoid to fit."));
+    funcs_.resize(ncomp);
+    funcnames_.clear();
+    funccomponents_.clear();
+    for (Int k=0; k<ncomp; ++k) {
+      funcs_[k] = new Sinusoid1D<Float>();
+      funcnames_.push_back(expr);
+      funccomponents_.push_back(3);
+    }
+  } else if (expr == "poly") {
+    funcs_.resize(1);
+    funcnames_.clear();
+    funccomponents_.clear();
+    funcs_[0] = new Polynomial<Float>(ncomp);
+      funcnames_.push_back(expr);
+      funccomponents_.push_back(ncomp);
   } else {
-    //cerr << " compiled functions not yet implemented" << endl;
     LogIO os( LogOrigin( "Fitter", "setExpression()", WHERE ) ) ;
     os << LogIO::WARN << " compiled functions not yet implemented" << LogIO::POST;
     //funcs_.resize(1);
@@ -243,11 +253,6 @@ bool Fitter::setParameters(std::vector<float> params)
                 ++count;
             }
         }
-    } else if (dynamic_cast<Polynomial<Float>* >(funcs_[0]) != 0) {
-        for (uInt i=0; i < funcs_[0]->nparameters(); ++i) {
-            parameters_[i] = tmppar[i];
-            (funcs_[0]->parameters())[i] =  tmppar[i];
-        }
     } else if (dynamic_cast<Lorentzian1D<Float>* >(funcs_[0]) != 0) {
         uInt count = 0;
         for (uInt j=0; j < funcs_.nelements(); ++j) {
@@ -256,6 +261,20 @@ bool Fitter::setParameters(std::vector<float> params)
                 parameters_[count] = tmppar[count];
                 ++count;
             }
+        }
+    } else if (dynamic_cast<Sinusoid1D<Float>* >(funcs_[0]) != 0) {
+        uInt count = 0;
+        for (uInt j=0; j < funcs_.nelements(); ++j) {
+            for (uInt i=0; i < funcs_[j]->nparameters(); ++i) {
+                (funcs_[j]->parameters())[i] = tmppar[count];
+                parameters_[count] = tmppar[count];
+                ++count;
+            }
+        }
+    } else if (dynamic_cast<Polynomial<Float>* >(funcs_[0]) != 0) {
+        for (uInt i=0; i < funcs_[0]->nparameters(); ++i) {
+            parameters_[i] = tmppar[i];
+            (funcs_[0]->parameters())[i] =  tmppar[i];
         }
     }
     // reset
@@ -285,11 +304,6 @@ bool Fitter::setFixedParameters(std::vector<bool> fixed)
                 ++count;
             }
         }
-    } else if (dynamic_cast<Polynomial<Float>* >(funcs_[0]) != 0) {
-        for (uInt i=0; i < funcs_[0]->nparameters(); ++i) {
-            fixedpar_[i] = fixed[i];
-            funcs_[0]->mask(i) =  !fixed[i];
-        }
     } else if (dynamic_cast<Lorentzian1D<Float>* >(funcs_[0]) != 0) {
       uInt count = 0;
         for (uInt j=0; j < funcs_.nelements(); ++j) {
@@ -298,6 +312,20 @@ bool Fitter::setFixedParameters(std::vector<bool> fixed)
                 fixedpar_[count] = fixed[count];
                 ++count;
             }
+        }
+    } else if (dynamic_cast<Sinusoid1D<Float>* >(funcs_[0]) != 0) {
+      uInt count = 0;
+        for (uInt j=0; j < funcs_.nelements(); ++j) {
+            for (uInt i=0; i < funcs_[j]->nparameters(); ++i) {
+                funcs_[j]->mask(i) = !fixed[count];
+                fixedpar_[count] = fixed[count];
+                ++count;
+            }
+        }
+    } else if (dynamic_cast<Polynomial<Float>* >(funcs_[0]) != 0) {
+        for (uInt i=0; i < funcs_[0]->nparameters(); ++i) {
+            fixedpar_[i] = fixed[i];
+            funcs_[0]->mask(i) =  !fixed[i];
         }
     }
     return true;
