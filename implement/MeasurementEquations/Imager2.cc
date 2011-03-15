@@ -3997,7 +3997,7 @@ Bool Imager::calcImFreqs(Vector<Double>& imgridfreqs,
     mode="velocity";
     start=dQuantitytoString(mImageStart_p.get("m/s"));
     width=dQuantitytoString(mImageStep_p.get("m/s"));
-    cerr<<"optical vel width USED="<<width<<endl;
+    //cerr<<"optical vel width USED="<<width<<endl;
     if (!width.contains(casa::Regex("^-"))) {
       //positive vel. width (descending frequencies)
       reversevec=True;
@@ -4010,7 +4010,6 @@ Bool Imager::calcImFreqs(Vector<Double>& imgridfreqs,
     width=dQuantitytoString(mfImageStep_p.get("Hz"));
     if (width.contains(casa::Regex("^-"))) {
       reversevec=True;
-      cerr<<"reversevec is True"<<endl;
     }
   }
   else if (imageMode_p.contains("CHANNEL")) {
