@@ -2276,7 +2276,9 @@ class cleanhelper:
           else:
             retnchan=nchan
             newfreqs=chanfreqs
-        if start!="":
+        #if start!="":
+        if (start!="" and mode=='channel') or \
+           (start!="" and type(start)!=int and mode!='channel'):
           retstart=start
         else:
           # default cases

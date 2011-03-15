@@ -2077,6 +2077,7 @@ Bool Imager::boxmask(const String& mask, const Vector<Int>& blc,
  
   
   if(unionReg !=0){
+    cerr<<"calling regionToMask"<<endl;
     regionToMask(maskImage, *unionReg, value);
     delete unionReg; unionReg=0;
   }
@@ -2094,6 +2095,7 @@ Bool Imager::boxmask(const String& mask, const Vector<Int>& blc,
 
 Bool Imager::regionToMask(ImageInterface<Float>& maskImage, ImageRegion& imagreg, const Float& value){
 
+  
   SubImage<Float> partToMask(maskImage, imagreg, True);
   LatticeRegion latReg=imagreg.toLatticeRegion(maskImage.coordinates(), maskImage.shape());
   ArrayLattice<Bool> pixmask(latReg.get());
@@ -3135,7 +3137,8 @@ Bool Imager::makeimage(const String& type, const String& image,
 	}
       }
       CoordinateSystem coordsys;
-      imagecoordinates(coordsys, verbose);
+      //imagecoordinates(coordsys, verbose);
+      imagecoordinates2(coordsys, verbose);
       if (doDefaultVP_p) {
 	if(telescope_p!=""){
 	  ObsInfo myobsinfo=this->latestObsInfo();
@@ -3195,7 +3198,8 @@ Bool Imager::makeimage(const String& type, const String& image,
     }
 
     CoordinateSystem imagecoords;
-    if(!imagecoordinates(imagecoords, false))
+    //if(!imagecoordinates(imagecoords, false))
+    if(!imagecoordinates2(imagecoords, false))
       {
 
 #ifdef PABLO_IO
@@ -3230,7 +3234,8 @@ Bool Imager::makeimage(const String& type, const String& image,
     IPosition tileShape(4, min(tilex, cimageShape(0)), min(tilex, cimageShape(1)),
 			min(4, cimageShape(2)), min(32, cimageShape(3)));
     CoordinateSystem cimagecoords;
-    if(!imagecoordinates(cimagecoords, false))
+    //if(!imagecoordinates(cimagecoords, false))
+    if(!imagecoordinates2(cimagecoords, false))
       {
 
 #ifdef PABLO_IO
@@ -3796,7 +3801,8 @@ Bool Imager::clean(const String& algorithm,
     else{
       Bool coordMatch=False;
       CoordinateSystem coordsys;
-      imagecoordinates(coordsys, firstrun);
+      //imagecoordinates(coordsys, firstrun);
+      imagecoordinates2(coordsys, firstrun);
       for (uInt modelNum=0; modelNum < modelNames.nelements(); ++modelNum){
 	if(Table::isWritable(modelNames(modelNum))){
 	  coordMatch= coordMatch || 
@@ -5731,7 +5737,8 @@ Bool Imager::make(const String& model)
     
     removeTable(modelName);
     CoordinateSystem coords;
-    if(!imagecoordinates(coords, false)) 
+    //if(!imagecoordinates(coords, false)) 
+    if(!imagecoordinates2(coords, false)) 
       {
 
 #ifdef PABLO_IO
@@ -6686,7 +6693,8 @@ Bool Imager::makemodelfromsd(const String& sdImage, const String& modelImage,
        << " from single dish image " << sdImage << LogIO::POST;
     
     CoordinateSystem coordsys;
-    imagecoordinates(coordsys);
+    //imagecoordinates(coordsys);
+    imagecoordinates2(coordsys);
     String modelName=modelImage;
     this->makeEmptyImage(coordsys, modelName, fieldid_p);
     
