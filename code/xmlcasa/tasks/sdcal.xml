@@ -215,8 +215,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <param type="string" name="blfunc">
 	    <description>baseline model function</description>
 	    <allowed kind="enum">
-	    <value>poly</value>
-	    <value>cspline</value>
+	        <value>poly</value>
+	        <value>cspline</value>
+	        <value>sinusoid</value>
 	    </allowed>
     </param>
 
@@ -228,6 +229,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <param type="int" name="npiece" subparam="true">
             <description>number of element polynomials of spline</description>
             <value>2</value>
+    </param>
+
+    <param type="int" name="minnwave" subparam="true">
+            <description>minumum sinusoidal wave number in the spectral window</description>
+            <value>0</value>
+    </param>
+
+    <param type="int" name="maxnwave" subparam="true">
+            <description>maximum sinusoidal wave number in the spectral window</description>
+            <value>3</value>
     </param>
 
     <param type="double" name="clipthresh" subparam="true">
@@ -345,6 +356,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	        </equals>
                 <equals value="cspline">
 			<default param="npiece"><value>2</value></default>
+			<default param="clipthresh"><value>3.0</value></default>
+			<default param="clipniter"><value>1</value></default>
+	        </equals>
+                <equals value="sinusoid">
+			<default param="minnwave"><value>0</value></default>
+			<default param="maxnwave"><value>3</value></default>
 			<default param="clipthresh"><value>3.0</value></default>
 			<default param="clipniter"><value>1</value></default>
 	        </equals>
@@ -509,15 +526,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  undulations instead of real lines.
 
         blfunc -- baseline model function
-                options: (str) 'poly','cspline'
+                options: (str) 'poly','cspline','sinusoid'
                 default: 'poly'
                 example: blfunc='poly' uses a single polynomial line of 
                          any order which should be given as an expandable 
-                         parameter 'order' to fit baseline, while 
+                         parameter 'order' to fit baseline. 
                          blfunc='cspline' uses a cubic spline function, a piecewise 
                          cubic polynomial having C2-continuity (i.e., the second 
-                         derivative is continuous at the joining points)
-
+                         derivative is continuous at the joining points).
+                         blfunc='sinusoid' uses a combination of sinusoidal curves. 
             &gt;&gt;&gt; blfunc expandable parameters
                  order -- order of baseline polynomial
                          options: (int) (&lt;0 turns off baseline fitting)
@@ -527,6 +544,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  npiece -- number of the element polynomials of cubic spline curve
                          options: (int) (&lt;0 turns off baseline fitting)
                          default: 2
+                 minnwave -- minimum wave number of sinusoid in the spectral window
+                         options: (int) (&lt;0 turns off baseline fitting)
+                         default: 0
+                 maxnwave -- maximum wave number of sinusoid in the spectral window
+                         options: (int)
+                         default: 3
                  clipthresh -- clipping threshold for iterative spline fitting
                          default: 3
                  clipniter -- maximum number of iteration in spline fitting

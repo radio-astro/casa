@@ -5,7 +5,7 @@ import asap as sd
 from asap._asap import Scantable
 import pylab as pl
 
-def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, tau, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, clipthresh, clipniter, verify, verbose, outfile, outform, overwrite, plotlevel):
+def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, tau, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, minnwave, maxnwave, clipthresh, clipniter, verify, verbose, outfile, outform, overwrite, plotlevel):
 	
 	casalog.origin('sdbaseline')
 
@@ -232,6 +232,11 @@ def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 			header += "      nPiece: %d\n"%(npiece)
 			header += "  clipThresh: %f\n"%(clipthresh)
 			header += "   clipNIter: %d\n"%(clipniter)
+		elif blfunc == 'sinusoid':
+			header += "    minNWave: %d\n"%(minnwave)
+			header += "    maxNWave: %d\n"%(maxnwave)
+			header += "  clipThresh: %f\n"%(clipthresh)
+			header += "   clipNIter: %d\n"%(clipniter)
 		header += "   Mask mode: "+maskmode+"\n"
 		if maskmode == 'auto':
 			header += "   Threshold: %f\n"%(thresh)
@@ -294,6 +299,8 @@ def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 					s.poly_baseline(mask=msk,order=order,plot=verify,outlog=verbose,blfile=bloutfile)
 				elif (blfunc == 'cspline'):
 					s.cspline_baseline(mask=msk,npiece=npiece,clipthresh=clipthresh,clipniter=clipniter,plot=verify,outlog=verbose,blfile=bloutfile)
+				elif (blfunc == 'sinusoid'):
+					s.sinusoid_baseline(mask=msk,minnwave=minnwave,maxnwave=maxnwave,clipthresh=clipthresh,clipniter=clipniter,plot=verify,outlog=verbose,blfile=bloutfile)
 				del msk
 			else:
 				basemask = None
@@ -307,17 +314,23 @@ def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 						s.poly_baseline(mask=basemask,order=order,plot=verify,outlog=verbose,blfile=bloutfile)
 					elif (blfunc == 'cspline'):
 						s.cspline_baseline(mask=basemask,npiece=npiece,clipthresh=clipthresh,clipniter=clipniter,plot=verify,outlog=verbose,blfile=bloutfile)
+					elif (blfunc == 'sinusoid'):
+						s.sinusoid_baseline(mask=basemask,minnwave=minnwave,maxnwave=maxnwave,clipthresh=clipthresh,clipniter=clipniter,plot=verify,outlog=verbose,blfile=bloutfile)
 				elif (maskmode == 'auto'):
 					if (blfunc == 'poly'):
 						s.auto_poly_baseline(mask=basemask,order=order,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,outlog=verbose,blfile=bloutfile)
 					elif (blfunc == 'cspline'):
 						s.auto_cspline_baseline(mask=basemask,npiece=npiece,clipthresh=clipthresh,clipniter=clipniter,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,outlog=verbose,blfile=bloutfile)
+					elif (blfunc == 'sinusoid'):
+						s.auto_sinusoid_baseline(mask=basemask,minnwave=minnwave,maxnwave=maxnwave,clipthresh=clipthresh,clipniter=clipniter,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,outlog=verbose,blfile=bloutfile)
 			
 				#the above 10 lines will eventually become like this:
 				#if (blfunc == 'poly'):
 				#	funcinfo = {'type':'poly', 'order':order}
 				#elif (blfunc == 'cspline'):
 				#	funcinfo = {'type':'cspline', 'npiece':npiece, 'clipthresh':clipthresh, 'clipniter':clipniter}
+				#elif (blfunc == 'sinusoid'):
+				#	funcinfo = {'type':'sinusoid', 'minnwave':minnwave, 'maxnwave':maxnwave, 'clipthresh':clipthresh, 'clipniter':clipniter}
 				#if (maskmode == 'auto'):
 				#	lfinfo = {'uselinefinder':True, 'edge':edge, 'threshold':thresh, 'chan_avg_limit':avg_limit}
 				#elif (maskmode == 'list'):
