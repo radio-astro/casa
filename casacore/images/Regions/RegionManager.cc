@@ -1093,7 +1093,7 @@ namespace casa { //# name space casa begins
 		  String& diagnostics, uInt& nSelectedChannels, String& stokes,
 		  const Record  * const regionPtr, const String& regionName,
 		  const String& chans, const StokesControl stokesControl,
-		  const String& box, const IPosition& imShape
+		  const String& box, const IPosition& imShape, const String& imageName
   ) {
 	  LogOrigin origin("RegionManager", __FUNCTION__);
 	  Record regionRecord;
@@ -1117,7 +1117,7 @@ namespace casa { //# name space casa begins
 	  }
 
 	  else if (! regionName.empty()) {
-		  _setRegion(regionRecord, diagnostics, regionName);
+		  _setRegion(regionRecord, diagnostics, regionName, imageName);
 		  *itsLog << origin;
 		  *itsLog << LogIO::NORMAL << diagnostics << LogIO::POST;
 		  stokes = _stokesFromRecord(regionRecord, stokesControl, imShape);
@@ -1162,7 +1162,7 @@ namespace casa { //# name space casa begins
 
   void RegionManager::_setRegion(
   	Record& regionRecord, String& diagnostics,
-  	const String& regionName
+  	const String& regionName, const String& imageName
   ) {
   	// region name provided
 	Regex image("(.*)+:(.*)+");
@@ -1171,17 +1171,23 @@ namespace casa { //# name space casa begins
   		Record *rec = readImageFile(regionName, "");
   		regionRecord = *rec;
   		delete rec;
-  		diagnostics = "Region read from file " + regionName;
+  		diagnostics = "Region read from binary region file " + regionName;
   	}
-  	else if (regionName.matches(image)) {
+  	else if (regionName.matches(image) || ! imageName.empty()) {
   		ImageRegion imRegion;
-  		String res[2];
-  		casa::split(regionName, res, 2, ":");
-  		String imagename = res[0];
-  		String region = res[1];
+  		String imagename, region;
+  		if (regionName.matches(image)) {
+  			String res[2];
+  			casa::split(regionName, res, 2, ":");
+  			imagename = res[0];
+  			region = res[1];
+  		}
+  		else {
+  			// imageName is not empty if we get here
+  			imagename = imageName;
+  			region = regionName;
+  		}
   		try {
-  			String imagename = res[0];
-  			String region = res[1];
   			Record *myRec = tableToRecord(imagename, region);
   			if (Table::isReadable(imagename)) {
   				if (myRec == 0) {
