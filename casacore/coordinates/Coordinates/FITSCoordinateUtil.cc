@@ -1026,7 +1026,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Double restFrequency = wcs.restfrq;
 
 		for(uInt i=0; i<nc; i++){
-		    wavelengths(i) = cRval + cDelt * cPc * (Double(i) - cRpix);
+		  wavelengths(i) = cRval + cDelt * cPc * (Double(i + 1) - cRpix); // +1 because FITS works 1-based
 		    //cout << "wave i " << i << " " << wavelengths(i) << " " << waveUnit << endl;
 		}
 
@@ -1083,7 +1083,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Unit mps("m/s");
 
 		for(uInt i=0; i<nc; i++){
-		    Quantity velQ(cRval + cDelt * cPc * (Double(i) - cRpix), uCunit);
+		    Quantity velQ(cRval + cDelt * cPc * (Double(i+1) - cRpix), uCunit); // +1 because FITS works 1-based
 		    Double vel = velQ.getValue(mps);
 		    if(vel>-C::c){
 			frequencies(i) = restFrequency/(vel/C::c+1.); // in Hz

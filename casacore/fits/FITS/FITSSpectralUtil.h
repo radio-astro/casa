@@ -168,7 +168,8 @@ public:
 			     MFrequency::Types referenceFrame,
 			     Bool preferVelocity = True,
 			     MDoppler::Types velocityPreference = MDoppler::OPTICAL,
-			     Bool preferWavelength = False);
+			     Bool preferWavelength = False,
+			     Bool useDeprecatedCtypes = False);
 
     // Convert a reference frame tag (typically found as the characters
     // after the first 4 characters in a ctype string for the
@@ -201,6 +202,8 @@ public:
     // The value of tag defaults to "TOPOCENT".
     static Bool specsysFromFrame(String &specsys,
 				 MFrequency::Types referenceFrame);
+
+    static Bool frameFromSpecsys(MFrequency::Types& refFrame, String& specsys);
 			  
 };
 
