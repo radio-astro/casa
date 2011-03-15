@@ -35,7 +35,7 @@ class imagecont():
         self.applyoffsets=False
         self.cfcache='cfcache.dir'
         self.epjtablename=''
-    def setparamcont(self, im, freq, band):
+    def setparamcont(self, im, freq, band, singleprec=False):
         im.defineimage(nx=self.pixels[0], ny=self.pixels[1], cellx=self.cell[0], 
                        celly=self.cell[1], phasecenter=self.phCen, mode='frequency', 
                        nchan=1, start=freq, step=band, facets=self.facets, 
@@ -45,7 +45,8 @@ class imagecont():
         im.setoptions(ftmachine=self.ft, wprojplanes=self.wprojplanes, 
                       pastep=self.painc, pblimit=self.pblimit, 
                       cfcachedirname=self.cfcache, dopbgriddingcorrections=self.dopbcorr, 
-                      applypointingoffsets=self.applyoffsets, imagetilevol=self.imagetilevol)
+                      applypointingoffsets=self.applyoffsets, imagetilevol=self.imagetilevol,
+                       singleprecisiononly=singleprec)
 
     def imagecontmultims(self, msnames=[''], start=0, numchan=1, spw=0, field=0, freq='1.20GHz', band='200MHz', imname='newmodel'):
         im=self.im
@@ -69,7 +70,7 @@ class imagecont():
           except Exception, instance:
                 ###failed to selectdata
                 self.novaliddata=True  
-          self.setparamcont(im, freq, band)
+          self.setparamcont(im, freq, band, singleprec=True)
           if((len(numchan)==0) or (np.sum(numchan)==0)):
               self.novaliddata=True
         self.makecontimage(im, self.novaliddata, imname)
