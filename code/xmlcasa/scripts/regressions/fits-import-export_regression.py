@@ -15,6 +15,7 @@
 #    3) Is the export performed without raising exceptions?                 #
 #    4) Is the exported file compatible with the original?                  #
 #    5) Does the bitpix=16 feature work                                     #
+#    6) Is spectral WCS correctly read and written                          #
 #                                                                           #
 # Input data:                                                               #
 #    28 sample fits files constructed by Mark Calabretta                    #
@@ -235,19 +236,19 @@ print myname, ' ***********************************************************'
 print myname, ' ***********************************************************'
 print myname, ' Test of the stokeslast parameter and the SPECSYS keyword:'
 exportfits(imagename='stokeslast-test.image', fitsimage='stokeslast-test.fits', stokeslast=True)
-myresult0 = os.system('grep SPECSYS stokeslast-test.fits')
+myresult0 = os.system('grep SPECSYS stokeslast-test.fits > /dev/null')
 specsyspresent = (myresult0 == 0)
 importfits(imagename='stokeslast-test2.image', fitsimage='stokeslast-test.fits')
 myrgn1 = rg.box([0,0,1,0],[64,64,1,0])
 myrgn2 = rg.box([0,0,0,1],[64,64,0,1])
 ia.open('stokeslast-test.image')
-ia.subimage(outfile='sub1.im', region = myrgn1)
+ia.subimage(outfile='sub1.im', region = myrgn1, overwrite=True)
 ia.close()
 ia.open('stokeslast-test2.image')
-ia.subimage(outfile='sub2.im', region = myrgn2)
+ia.subimage(outfile='sub2.im', region = myrgn2, overwrite=True)
 ia.close()
-myresult1 = imstat('sub1.im')
-myresult2 = imstat('sub2.im')
+myresult1 = imstat('sub1.im', verbose=False)
+myresult2 = imstat('sub2.im', verbose=False)
 # imagecalc is on strike here because the formal coordinates of the slices disagree because the order is different
 # so use min, max, and sum
 passed = (myresult1['min']==myresult2['min']) and (myresult1['max']==myresult2['max']) \
@@ -292,6 +293,87 @@ if passed:
 else:
     print myname, ' trivial export test failed.'
     failed_tests.append('trivial')
+print myname, ' ***********************************************************'
+
+print myname, ' ***********************************************************'
+print myname, ' Test of import and export of FITs images with spectral WCS:'
+expecta = {'freq': 2.190956850600E+11,
+           'vrad': 2.183247880000E+11,
+           'vopt': 2.183247880000E+11,
+           'wave': 2.204356308820E+11,
+           'awav': 2.203722484080E+11}
+expectb = {'freq': 'Hz',
+           'vrad': 'Hz',
+           'vopt': 'Hz',
+           'wave': 'Hz',
+           'awav': 'Hz'}
+expectc = {'freq': 'LSRK',
+           'vrad': 'BARY',
+           'vopt': 'LSRD',
+           'wave': 'GALACTO',
+           'awav': 'CMB'}
+passedx = {'freq': False,
+           'vrad': False,
+           'vopt': False,
+           'wave': False,
+           'awav': False}
+passed = True
+#for ctype in ['freq','vrad','wave']:
+for myctype in ['freq','vrad','vopt','wave','awav']:
+    try:
+        print 'Testing CTYPE ', myctype, ' ...'
+        importfits(imagename=myctype+'.im', fitsimage='spec-test-'+myctype+'.fits')
+        cond0 = ia.open(myctype+'.im')
+        coordm = ia.coordmeasures()
+        cond1 = (abs(coordm['measure']['spectral']['frequency']['m0']['value']-expecta[myctype])<1.) # avoid Python precision problems
+        print 'value, expectation, diff:', coordm['measure']['spectral']['frequency']['m0']['value'],',',\
+              expecta[myctype], ",", coordm['measure']['spectral']['frequency']['m0']['value']-expecta[myctype]
+        cond2 = (coordm['measure']['spectral']['frequency']['m0']['unit']==expectb[myctype])
+        cond3 = (coordm['measure']['spectral']['frequency']['refer']==expectc[myctype])
+        print cond0, cond1, cond2, cond3
+        passed1 = cond0 and cond1 and cond2 and cond3
+        ia.close()
+        if(myctype=='freq'):
+            exportfits(imagename=myctype+'.im', fitsimage='spec-test-'+myctype+'-ex.fits')
+        elif(myctype=='vrad'):
+            exportfits(imagename=myctype+'.im', fitsimage='spec-test-'+myctype+'-ex.fits', velocity=True, optical=False)
+        elif(myctype=='vopt'):
+            exportfits(imagename=myctype+'.im', fitsimage='spec-test-'+myctype+'-ex.fits', velocity=True, optical=True)
+        elif(myctype=='wave'):
+            ia.open(myctype+'.im')
+            ia.tofits(outfile='spec-test-'+myctype+'-ex.fits', wavelength=True)
+            ia.close()
+        else:
+            print "Skipping export test for ", myctype
+
+        passed2 = True
+        if(not myctype=="awav"):
+            importfits(imagename=myctype+'2.im', fitsimage='spec-test-'+myctype+'-ex.fits')
+            cond0 = ia.open(myctype+'2.im')
+            coordm = ia.coordmeasures()
+            cond1 = (abs(coordm['measure']['spectral']['frequency']['m0']['value']-expecta[myctype])<1.) # avoid Python precision problems
+            print 'value, expectation, diff:', coordm['measure']['spectral']['frequency']['m0']['value'],',',\
+                  expecta[myctype], ",", coordm['measure']['spectral']['frequency']['m0']['value']-expecta[myctype]
+            cond2 = (coordm['measure']['spectral']['frequency']['m0']['unit']==expectb[myctype])
+            cond3 = (coordm['measure']['spectral']['frequency']['refer']==expectc[myctype])
+            print cond0, cond1, cond2, cond3
+            passed2 = cond0 and cond1 and cond2 and cond3
+            ia.close()
+            
+        passedx[myctype] = passed1 and passed2
+        passed = passed and passedx[myctype]
+    except:
+        print myname, ' Error ', sys.exc_info()[0]
+        passedx[myctype] = False
+        passed = False
+        
+if passed:
+    print myname, ' Spectral WCS im/export tests passed.'
+    passed_tests.append('spectralwcs')
+else:
+    print myname, ' Spectral WCS im/export tests failed.'
+    print passedx
+    failed_tests.append('spectralwcs')
 print myname, ' ***********************************************************'
 
 

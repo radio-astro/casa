@@ -73,6 +73,11 @@ def data():
         myfiles.append(pass_on['datasets'][i][0] + '.fits')
     myfiles.append('stokeslast-test.image')    
     myfiles.append('xxx-clean.image')    
+    myfiles.append('spec-test-freq.fits')    
+    myfiles.append('spec-test-vopt.fits')    
+    myfiles.append('spec-test-vrad.fits')    
+    myfiles.append('spec-test-wave.fits')    
+    myfiles.append('spec-test-awav.fits')    
     return myfiles
 
 def doCopy():
@@ -84,6 +89,11 @@ def doCopy():
     cp = []
     for i in (pass_on['datasets']).keys():
         cp.append(0)
+    cp.append(0)
+    cp.append(0)
+    cp.append(0)
+    cp.append(0)
+    cp.append(0)
     cp.append(0)
     cp.append(0)
     return cp
