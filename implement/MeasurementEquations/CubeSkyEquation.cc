@@ -86,7 +86,7 @@ CubeSkyEquation::CubeSkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft,
 
 CubeSkyEquation::CubeSkyEquation(SkyModel& sm, ROVisibilityIterator& vi, FTMachine& ft,
                                  ComponentFTMachine& cft, Bool noModelCol)
-: SkyEquation(sm, vi, ft, cft, noModelCol),
+: SkyEquation(sm, vi, ft, cft, True /*noModelCol*/), // jhj kluge for now
   destroyVisibilityIterator_p (False),
   internalChangesPut_p(False),
   internalChangesGet_p(False),
@@ -134,6 +134,9 @@ CubeSkyEquation::CubeSkyEquation(SkyModel& sm, ROVisibilityIterator& vi, FTMachi
     if (vi.isAsyncEnabled () && ROVisibilityIteratorAsync::isAsynchronousIoEnabled()) {
 
         rvi_p = ROVisibilityIteratorAsync::create (vi, prefetchColumns);
+//        if (dynamic_cast<VisibilityIterator *> (& vi) != NULL){
+//            dynamic_cast<ROVisibilityIteratorAsync *> (rvi_p) -> linkWithRovi (& vi);
+//        }
         destroyVisibilityIterator_p = True;
         vb_p.set (rvi_p); // replace existing VB with a potentially async one
 

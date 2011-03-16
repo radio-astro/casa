@@ -1598,11 +1598,12 @@ void SkyEquation::fixImageScale()
 
 void SkyEquation::checkVisIterNumRows(ROVisibilityIterator& vi){
 
-  Bool destroyVb = False;
   VisBuffer * vb = vi.getVisBuffer();
+  VisBufferAutoPtr vbap;
   if (vb == NULL){
-      vb = VisBufferAsync::create (vi);
-      destroyVb = true;
+      VisBufferAutoPtr tmp (vi);
+      vbap = tmp;
+      vb = vbap.get();
   }
 
   vi.originChunks();
@@ -1614,10 +1615,6 @@ void SkyEquation::checkVisIterNumRows(ROVisibilityIterator& vi){
       vi.originChunks();
       vi.origin();
     }
-  }
-
-  if (destroyVb){
-      delete vb;
   }
 }
 
