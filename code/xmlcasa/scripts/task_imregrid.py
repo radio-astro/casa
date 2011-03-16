@@ -4,15 +4,16 @@ from taskinit import *
 
 def imregrid(imagename, template, output):
     casalog.origin('imregrid')
-    # First check to see if the output file exists.  If it
-    # does then we abort.  CASA doesn't allow files to be
-    # over-written, just a policy.
-    if len(output) < 1:
-        output = imagename + '.regridded'
-        casalog.post("output was not specified - defaulting to\n\t"
+    if (not template.lower() == "get"):
+        # First check to see if the output file exists.  If it
+        # does then we abort.  CASA doesn't allow files to be
+        # over-written, just a policy.
+        if len(output) < 1:
+            output = imagename + '.regridded'
+            casalog.post("output was not specified - defaulting to\n\t"
                      + output, 'INFO')
-    if os.path.exists(output):
-        raise Exception, 'Output destination ' + output + \
+        if os.path.exists(output):
+            raise Exception, 'Output destination ' + output + \
               " exists.\nPlease remove it or change the output file name."
     
     try:
