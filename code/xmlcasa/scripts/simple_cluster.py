@@ -21,7 +21,9 @@ import traceback
 
 
 class simple_cluster:
-
+    '''The simple_cluster creates and maintains an ipcluster environment
+    for controlling parallel execution of casa tasks (tools and scripts)
+    '''
     def __init__(self):
         self._project=""
         self._hosts=[]
@@ -37,6 +39,26 @@ class simple_cluster:
     ###   cluster verifiction
     ###########################################################################
     def config_cluster(self, cfg, force=False):
+        '''Read the configuration file and validate cluster definitions.  
+
+        Keyword arguments:
+        cfg -- the name of cluster configuration file
+        force -- whether or not to reconfigure if a configured cluster exists
+
+        A configuration file is an ASCII text file. Each line defines a node
+        (also called host) with comma separated entries of host_name,
+        number_of_engines and work_dir. A line that starts with # is ignored.
+        The following is the contents of a configuration file:
+        ############################################
+        casa-dev-07, 4, /home/casa-dev-07/hye/ptest
+        #casa-dev-08, 4, /home/casa-dev-08/hye/ptest
+        casa-dev-10, 4, /home/casa-dev-10/hye/ptest
+        ############################################
+
+        Normally, one does not call this function directly. The init_cluster
+        function will trigger this function.
+
+        '''
         if (len(self._hosts)>0 or self._configdone) and not force:
             print 'cluster already configured'
             return
@@ -85,6 +107,12 @@ class simple_cluster:
             pass
     
     def validate_hosts(self):
+        '''Validate the cluster specification.
+
+        This function is normally called internally by configure_cluster
+        function. 
+
+        '''
         uhost=set()
         for i in range(len(self._hosts)):
             uhost.add(self._hosts[i][0])
@@ -108,7 +136,8 @@ class simple_cluster:
                 f = open(tfile, 'w')
                 os.remove(tfile)
             except IOError:
-                print 'no writhe permision in directory "%s"' % self._hosts[i][2]
+                print 'no writhe permision in directory "%s"' % \
+                       self._hosts[i][2]
                 return False
         return True
     
@@ -117,6 +146,41 @@ class simple_cluster:
     ###   project management
     ###########################################################################
     def create_project(self, proj=""):
+        '''Create a project. 
+
+        Keyword arguments:
+        proj -- the name of project (default: 'proj'+timestamp).  
+
+        A project maintains a subdirectory under each node's work_dir. All 
+        output files of an engine hosted on that node will by default store
+        under the subdirectory.
+
+        This function is normally called internally by init_cluster function. 
+
+        Example:
+        CASA <33>: sl.list_projects
+        host: casa-dev-07 ------------------------>>>>
+        bProj  bsplit  csplit  my_project
+        host: casa-dev-08 ------------------------>>>>
+        bProj  bsplit  csplit  my_project
+        host: casa-dev-10 ------------------------>>>>
+        bProj  bsplit  csplit
+
+        CASA <34>: sl.create_project('dflag')
+        output directory:
+        /home/casa-dev-07/hye/ptest/dflag
+        /home/casa-dev-08/hye/ptest/dflag
+        /home/casa-dev-10/hye/ptest/dflag
+
+        CASA <36>: sl.list_projects
+        host: casa-dev-07 ------------------------>>>>
+        bProj  bsplit  csplit  dflag  my_project
+        host: casa-dev-08 ------------------------>>>>
+        bProj  bsplit  csplit  dflag  my_project
+        host: casa-dev-10 ------------------------>>>>
+        bProj  bsplit  csplit  dflag
+
+        '''
         if not self._configdone:
             return
         if type(proj)!=str:
@@ -137,6 +201,29 @@ class simple_cluster:
             print self._hosts[i][2]+'/'+self._project
     
     def do_project(self, proj):
+        '''Use a project previously created. 
+
+        Keyword arguments:
+        proj -- the name of project.
+
+        A project maintains a subdirectory under each node's work_dir. All 
+        output files of an engine hosted on that node will by default store
+        under the subdirectory.
+
+        Example:
+        CASA <38>: sl._project
+        Out[38]: 'dflag'
+
+        CASA <39>: sl.do_project('csplit')
+        output directory:
+        /home/casa-dev-07/hye/ptest/csplit
+        /home/casa-dev-08/hye/ptest/csplit
+        /home/casa-dev-10/hye/ptest/csplit
+
+        CASA <40>: sl._project
+        Out[40]: 'csplit'
+
+        '''
         if not self._configdone:
             return
         if type(proj)!=str or proj.strip()=="":
@@ -155,6 +242,35 @@ class simple_cluster:
             print self._hosts[i][2]+'/'+self._project
     
     def erase_project(self, proj):
+        '''Erase files and dirs of a project. 
+
+        Keyword arguments:
+        proj -- the name of project.
+
+        A project maintains a subdirectory under each node's work_dir. All 
+        output files of an engine hosted on that node will by default store
+        under the subdirectory.
+
+        Example:
+        CASA <30>: sl.list_projects
+        host: casa-dev-07 ------------------------>>>>
+        aNew  bProj  bsplit  csplit  my_project
+        host: casa-dev-08 ------------------------>>>>
+        aNew  bProj  bsplit  csplit  my_project
+        host: casa-dev-10 ------------------------>>>>
+        bProj  bsplit  csplit
+
+        CASA <31>: sl.erase_project('aNew')
+
+        CASA <32>: sl.list_projects
+        host: casa-dev-07 ------------------------>>>>
+        bProj  bsplit  csplit  my_project
+        host: casa-dev-08 ------------------------>>>>
+        bProj  bsplit  csplit  my_project
+        host: casa-dev-10 ------------------------>>>>
+        bProj  bsplit  csplit
+
+        '''
         if not self._configdone:
             return
         if type(proj)!=str or proj.strip()=="":
@@ -170,7 +286,32 @@ class simple_cluster:
             pass
     
     def clear_project(self, proj):
-        '''remove all previous results of the proj'''
+        '''Remove all previous results of the proj
+
+        Keyword arguments:
+        proj -- the name of project.
+
+        A project maintains a subdirectory under each node's work_dir. All 
+        output files of an engine hosted on that node will by default store
+        under the subdirectory.
+
+        Example:
+        CASA <27>: sl.list_project('my_project')
+        host: casa-dev-07 ------------------------>>>>
+        casapy-20101122165601-5.log  sim.alma.csv.mid-f0-s0-b640-e768.flux
+        host: casa-dev-08 ------------------------>>>>
+        casapy-20101122165601-6.log  sim.alma.csv.mid-f0-s0-b768-e896.flux
+        host: casa-dev-10 ------------------------>>>>
+        casapy-20101122165601-7.log  sim.alma.csv.mid-f0-s0-b320-e640.flux
+
+        CASA <28>: sl.clear_project('my_project')
+
+        CASA <29>: sl.list_project('my_project')
+        host: casa-dev-07 ------------------------>>>>
+        host: casa-dev-08 ------------------------>>>>
+        host: casa-dev-10 ------------------------>>>>
+
+        '''
         #this can be a slow operation, it is better to do it parallel
         if not self._configdone:
             return
@@ -182,6 +323,25 @@ class simple_cluster:
             os.system(cmd)
     
     def list_project(self, proj):
+        '''List previous results of the proj
+
+        Keyword arguments:
+        proj -- the name of project.
+
+        A project maintains a subdirectory under each node's work_dir. All 
+        output files of an engine hosted on that node will by default store
+        under the subdirectory.
+
+        Example:
+        CASA <19>: sl.list_project('bsplit')
+        host: casa-dev-07 ------------------------>>>>
+        test_regression_TDEM0003-f0-s11.ms   test_regression_TDEM0003-f0-s13.ms
+        host: casa-dev-08 ------------------------>>>>
+        test_regression_TDEM0003-f0-s10.ms  test_regression_TDEM0003-f3-s9.ms
+        host: casa-dev-10 ------------------------>>>>
+        test_regression_TDEM0003-f0-s0.ms   test_regression_TDEM0003-f4-s11.ms
+
+        '''
         if not self._configdone:
             return
         if type(proj)!=str or proj.strip()=="":
@@ -193,15 +353,38 @@ class simple_cluster:
             os.system(cmd)
     
     def erase_projects(self):
+        '''Erase all previous results of all projects
+
+        A project maintains a subdirectory under each node's work_dir. All 
+        output files of an engine hosted on that node will by default store
+        under the subdirectory.
+
+        '''
         if not self._configdone:
             return
         for i in range(len(self._hosts)):
             cmd='rm -rf '+self._hosts[i][2]+'/*'
             os.system(cmd)
         self._project=""
-        print 'project name not set'
+        #print 'project name not set'
     
     def list_projects(self):
+        '''List all previous projects
+
+        A project maintains a subdirectory under each node's work_dir. All 
+        output files of an engine hosted on that node will by default store
+        under the subdirectory.
+
+        Example:
+        <CASA 16:>sl.list_projects
+        host: casa-dev-07 ------------------------>>>>
+        aNew  bProj  bsplit  csplit  my_project
+        host: casa-dev-08 ------------------------>>>>
+        aNew  bProj  bsplit  csplit  my_project
+        host: casa-dev-10 ------------------------>>>>
+        bProj  bsplit  csplit
+
+        '''
         if not self._configdone:
             return
         for i in range(len(self._hosts)):
@@ -210,6 +393,30 @@ class simple_cluster:
             os.system(cmd)
     
     def reset_project(self):
+        '''Erase previous result and reset the status current project.
+
+        A project maintains a subdirectory under each node's work_dir. All 
+        output files of an engine hosted on that node will by default store
+        under the subdirectory.
+
+        Example:
+        CASA <43>: sl.list_project('bProj')
+        ....too many here...
+
+        CASA <44>: sl.do_project('bProj')
+        output directory:
+        /home/casa-dev-07/hye/ptest/bProj
+        /home/casa-dev-08/hye/ptest/bProj
+        /home/casa-dev-10/hye/ptest/bProj
+
+        CASA <45>: sl.list_project('bProj')
+        host: casa-dev-07 ------------------------>>>>
+        host: casa-dev-08 ------------------------>>>>
+        host: casa-dev-10 ------------------------>>>>
+
+        '''
+        if not self._configdone:
+            return
         self.stop_monitor()
         self.clear_project(self._project)
         self._jobs={}
@@ -217,28 +424,74 @@ class simple_cluster:
         self._monitor_on=True
     
     def get_hosts(self):
+        '''List current cluster.
+
+        CASA <48>: sl.get_hosts
+        Out[48]:
+        [['casa-dev-07', 4, '/home/casa-dev-07/hye/ptest'],
+         ['casa-dev-08', 4, '/home/casa-dev-08/hye/ptest'],
+         ['casa-dev-10', 4, '/home/casa-dev-10/hye/ptest']]
+
+        '''
+        if not self._configdone:
+            return
         return self._hosts 
     
     ###########################################################################
     ###   cluster management
     ###########################################################################
     def cold_start(self):
+        '''kill all engines on all hosts. Shutdown current cluster.
+        
+        This is used if a complete restart of the cluster is needed. One can
+        rerun init_cluster after this. This also kills possible leftover
+        engines from previous sessions.
+
+        '''
+        if not self._configdone:
+            return
         for i in range(len(self._hosts)):
             cmd='ssh '+self._hosts[i][0]+' "killall -9 ipengine"'
             os.system(cmd)
         self._cluster.stop_cluster()
     
     def stop_nodes(self):
+        '''Stop all engines on all hosts of current cluster.
+        
+        After running this, the cluster contains no engines.
+
+        '''
+        if not self._configdone:
+            return
         for i in self._cluster.get_nodes():
             self._cluster.stop_node(i)
     
     def start_cluster(self):
+        '''Start a cluster with current configuration.
+        
+        Normally, one does not need to run this function directly. The 
+        init_cluster will call this internally.
+
+        '''
+        if not self._configdone:
+            return
         for i in range(len(self._hosts)):
             self._cluster.start_engine(self._hosts[i][0], self._hosts[i][1], 
                                    self._hosts[i][2]+'/'+self._project)
     
     def get_host(self, id):
-        '''get hostname of an engine'''
+        '''Find out the name of the node that hosts this engine.
+
+        Keyword arguments:
+        id -- the engine id
+
+        Example:
+        CASA <50>: sl.get_host(8)
+        Out[50]: 'casa-dev-10'
+
+        '''
+        if not self._configdone:
+            return
         ids=self._cluster.get_ids()
         if type(id)!=int:
             print 'the argument must be an engine id (int)'
@@ -252,7 +505,18 @@ class simple_cluster:
                 return e[i][1] 
     
     def get_engine_store(self, id):
-        '''get the root path where an engine write out result'''
+        '''Get the root path where an engine writes out result
+
+        Keyword arguments:
+        id -- the engine id
+
+        Example:
+        CASA <52>: sl.get_engine_store(8)
+        Out[52]: '/home/casa-dev-10/hye/ptest/bProj/'
+
+        '''
+        if not self._configdone:
+            return
         hst=self.get_host(id)
         for i in range(len(self._hosts)):
             if self._hosts[i][0]==hst:
@@ -266,6 +530,15 @@ class simple_cluster:
     ###   log management
     ###########################################################################
     def start_logger(self):
+        '''Link all engine logs to the current directory. 
+
+        After running this, the current directory contains links to each of
+        the engine logs with file name 'engine-[id].log such that one can 
+        conveniently browse engine logs with casa logviewer.
+
+        '''
+        if not self._configdone:
+            return
         lg=self._cluster.get_casalogs()
         os.system('rm -f engine-*.log')
         for i in lg:
@@ -278,6 +551,18 @@ class simple_cluster:
     ###   resource management
     ###########################################################################
     def check_resource(self):
+        '''Check the resource usage on all hosts.
+
+        This function checks and calculates current %cpu, %iowait, %mem and 
+        %memswap on all hosts. The results are stored internally and can be
+        viewed by calling show_resource.
+
+        Normally, one does not call this function directly. The init_cluster
+        will call this function.
+
+        '''
+        if not self._configdone:
+            return
         for i in range(len(self._hosts)):
             cpu=[0.]*11
             b=commands.getoutput("ssh "+self._hosts[i][0]+ 
@@ -326,6 +611,19 @@ class simple_cluster:
             self._rsrc[self._hosts[i][0]]=cpu 
     
     def start_resource(self): 
+        '''Start monitoring resource usage.
+
+        Four critical resource usage indicators (for parallel execution), 
+        namely, %cpu, %iowait, %mem and %memswap on all hosts are continuously
+        checked. This infomation can be used to tune the parallel performance.
+
+        Normally, one does not call this function directly. The init_cluster
+        will call this function.
+
+        '''
+        
+        if not self._configdone:
+            return
         #fig=pl.figure(98)
         #title='casa cluster resource usage'
     
@@ -338,15 +636,58 @@ class simple_cluster:
         return thread.start_new_thread(self.update_resource, ())
     
     def update_resource(self):
+        '''Set up repeated resource checking.
+
+        Four critical resource usage indicators (for parallel execution), 
+        namely, %cpu, %iowait, %mem and %memswap on all hosts are continuously
+        checked. This infomation can be used to tune the parallel performance.
+
+        Normally, one does not call this function directly. The init_cluster
+        will call this function.
+
+        '''
+        if not self._configdone:
+            return
         while self._resource_on:
             time.sleep(5)
             self.check_resource()
     
     def stop_resource(self): 
+        '''Stop monitoring resource usage.
+
+        Four critical resource usage indicators (for parallel execution), 
+        namely, %cpu, %iowait, %mem and %memswap on all hosts are continuously
+        checked. This infomation can be used to tune the parallel performance.
+
+        Normally, one does not call this function directly. The init_cluster
+        will call this function.
+
+        '''
+        if not self._configdone:
+            return
         self._resource_on=False 
         self._rsrc={}
     
     def show_resource(self, long=False):
+        '''Display resource usage on all hosts.
+
+        Keyword arguments:
+        long -- whether or not to display detailed resource usage info
+
+        Four critical resource usage indicators (for parallel execution), 
+        namely, %cpu, %iowait, %mem and %memswap on all hosts are continuously
+        checked. This infomation can be used to tune the parallel performance.
+
+        Example:
+        CASA <53>: sl.show_resource
+        host          cpu    iowait mem    swap
+        casa-dev-08   0.13   0.01   0.80   0.00
+        casa-dev-10   0.17   0.01   0.94   0.00
+        casa-dev-07   0.15   0.00   0.88   0.00
+
+        '''
+        if not self._configdone:
+            return
         if long:
             return self._rsrc
         else:
@@ -367,14 +708,42 @@ class simple_cluster:
     ###   execution status management
     ###########################################################################
     def check_job(self):
+        '''Check the execution status of current noblock jobs  on all engines.
+
+        This function can be used to block the terminal until all submitted
+        jobs finish. 
+
+        Example:
+        CASA <2>: from simple_cluster import simple_cluster
+        CASA <3>: sl=simple_cluster()
+        CASA <4>: sl.init_cluster("my_cluster", "csplit")
+        CASA <5>: sl.simple_split('/lustre/casa-store/hye/10B-209a_5s.ms/', '')
+        CASA <6>: sl.check_job()
+
+        '''
+
+        if not self._configdone:
+            return
         done=False
         while(not done):
             time.sleep(5)
             done=True
-            for i in jobs.keys():
+            for i in sl._jobs.keys():
                 done=self._cluster.check_job(i) and done
     
     def check_status(self, notify=False):
+        '''Check the execution status of submitted no-block jobs
+
+        Keyword arguments:
+        notify -- whether or not to display detailed resource usage info
+
+        Normally, one does not call this function directly. The start_monitor
+        will call this function internally.
+
+        '''
+
+        if not self._configdone:
+            return
         while self._monitor_on:
             time.sleep(5)
             curr={}
@@ -421,15 +790,28 @@ class simple_cluster:
             for val in self._jobs.values():
                 gr.add(val['jobgroup'])
     	    for i in list(gr):
+                eml=''
+                jobname='None'
+                if i.count(':')>0:
+                    pos=i.find(':')
+                    jobname=i[pos+1:].strip()
+                    eml=i[:pos].strip()
+                elif i.count('@')>0:
+                    eml=i.strip()
+                else:
+                    jobname=i.strip()
+                    
                 finish=True
                 for val in self._jobs.values():
                     if val['jobgroup']==i and not (val['status']=='done' or 
                                                 val['status']=='broken'):
                         finish=False
                 if finish==True:
-                    msg='\n'
-                    msg+='Label: '+time.ctime()
-                    msg+='\n\nengine    status  time(s)  command\n'
+                    tm=time.ctime()
+                    jobname=jobname[0:30]
+                    msg='\n#### '+jobname+' '+ \
+                          '#'*(68-len(jobname)-len(tm))+' '+tm+' ####'
+                    msg+='\nengine    status  time(s)  command\n'
                     rmv=[]
                     for job in self._jobs.keys():
                         if self._jobs[job]['jobgroup']==i:
@@ -440,7 +822,7 @@ class simple_cluster:
                                   self._jobs[job]['command'])
                             rmv.append(self._jobs[job]['jobname'])
                     #print msg
-                    if i!='':
+                    if i.strip()!='':
     
                         #append to project result file
                         f=open(self._project+'.result', 'a')
@@ -449,7 +831,7 @@ class simple_cluster:
                         f.write('\n')
                         f.close()
     
-                        if i.count(' ')==0 and i.count('@'):
+                        if eml!='' and eml.count(' ')==0:
                             #send email
                             #import smtplib
                             #from email.mime.text import MIMEText
@@ -468,7 +850,8 @@ class simple_cluster:
                             f.write(msg)
                             f.write('\n')
                             f.close()
-                            cmd='/bin/mail -s "your parallel job finished" '+i+' < '+msgf
+                            cmd='/bin/mail -s "parallel job \''+jobname+\
+                                '\' finished" '+eml+' < '+msgf
                             #print cmd
                             os.system(cmd)
                              
@@ -477,16 +860,67 @@ class simple_cluster:
                             
     
     def start_monitor(self): 
+        '''Start monitoring  execution status of submitted no-block jobs
+
+        Normally, one does not call this function directly. The init_cluster
+        will call this function.
+
+        '''
+        if not self._configdone:
+            return
         self._monitor_on=True 
         return thread.start_new_thread(self.check_status, (True,))
     
     def stop_monitor(self): 
+        '''Stop monitoring execution status of submitted no-block jobs
+
+        Normally, one does not call this function directly. 
+
+        '''
+        if not self._configdone:
+            return
         self.monitor_on=False 
     
     def show_queue(self):
+        '''Display job queue.
+
+        Example:
+        CASA <2>: from simple_cluster import simple_cluster
+        CASA <3>: sl=simple_cluster()
+        CASA <4>: sl.init_cluster("my_cluster", "csplit")
+        CASA <5>: sl.simple_split('/lustre/casa-store/hye/10B-209a_5s.ms/', 
+                                  'you@nrao.edu:3rd split')
+        CASA <6>: sl.show_queue()
+
+        '''
+        if not self._configdone:
+            return
         return self._cluster.queue_status()
     
     def get_status(self, long=False):
+        '''Display job execution status.
+
+        Keyword arguments:
+        long -- whether or not to display detailed execution status info
+
+        Example:
+        CASA <2>: from simple_cluster import simple_cluster
+        CASA <3>: sl=simple_cluster()
+        CASA <4>: sl.init_cluster("my_cluster", "csplit")
+        CASA <5>: sl.simple_split('/lustre/casa-store/hye/10B-209a_5s.ms/', 
+                                  'you@nrao.edu:3rd split')
+        CASA <6>: sl.get_status()
+        engine    status  time(s)     start  command   title
+             0      done       31  16:41:56    split      15
+             2 scheduled        0              split      78
+             7      done       41  16:42:38    split      16
+             9   running       51  16:42:59    split      17
+             1      done       36  16:41:56    split      18
+
+        '''
+
+        if not self._configdone:
+            return
         if long:
             return self._jobs
         else:
@@ -506,6 +940,15 @@ class simple_cluster:
                            self._jobs[job]['jobname'])
     
     def remove_record(self, jobname):
+        '''Remove job execution status of a job.
+
+        Keyword arguments:
+        jobname -- the jobname or status of job(s) to be removed from display
+
+        '''
+
+        if not self._configdone:
+            return
         for job in self._jobs.keys():
             if type(jobname)==int and self._jobs[job]['jobname']==jobname:
                del self._jobs[job]
@@ -516,6 +959,20 @@ class simple_cluster:
     ###   job distribution functions
     ###########################################################################
     def make_call(self, func, param):
+        '''Make a function call string with function name and parameters.
+
+        Keyword arguments:
+        func -- the name of the function
+        param -- the dictionary of parameters and values
+
+        Example:
+        CASA <12>: param=dict()
+        CASA <13>: param['vis']='NGC5921.ms'
+        CASA <14>: param['spw']='4'
+        CASA <15>: sl.make_call('flagdata', param)
+          Out[15]: 'flagdata(vis="NGC5921.ms", spw=4)'
+
+        '''
         if type(func)!=str or type(param)!=dict:
             print 'func must be a str and param must be a dictionary'
             return None 
@@ -534,6 +991,26 @@ class simple_cluster:
         return cmd
     
     def do_and_record(self, cmd, id, group=''):
+        '''Submit a function call to an engine and record its execution status.
+
+        Keyword arguments:
+        cmd -- the function call string
+        id -- the id of the engine to be assigned 
+        group -- the group this cmd belongs to and the receipt of notification
+                 group can be an email address or a label of the job or both
+                 separated by a ':'. Once all the jobs that has the same label
+                 finish, an email notification will be sent.
+
+        Example:
+        CASA <12>: param=dict()
+        CASA <13>: param['vis']='NGC5921.ms'
+        CASA <14>: param['spw']='4'
+        CASA <15>: cmd=sl.make_call('flagdata', param)
+        CASA <17>: sl.do_and_record(cmd, 7, 'you@nrao.edu:flag ngc5921')
+
+        '''
+        if not self._configdone:
+            return
         job=self._cluster.odo(cmd, id)
         self._jobs[job]={}
         self._jobs[job]['start']=''
@@ -551,29 +1028,56 @@ class simple_cluster:
     ###########################################################################
     
     def list_result(self):
-        '''read the project.result file and write out all labels'''
+        '''read the project.result file and write out all labels
+
+        Example:
+        CASA <33>: sl.list_result
+        Out[33]:
+        ['#### new split ####################### Mon Mar 14 14:48:08 2011 ####',
+         '#### flag ngc5921 #################### Wed Mar 16 10:43:12 2011 ####']
+
+        '''
+        if not self._configdone:
+            return
         f=open(self._project+'.result', 'r')
         s=f.readlines()
         vec=[]
         for line in s:
             sLine=line.rstrip()
-            if str.find(sLine, 'Label:')==0:
-                vec.append(sLine[6:].strip())
+            if str.find(sLine, '#### ')==0:
+                vec.append(sLine.strip())
             else:
                 continue
         f.close()
         return vec
     
     def get_result(self, tm):
-        '''read the project.result file and write out result for a label'''
+        '''read the project.result file and write out result for a label
+
+        Keyword arguments:
+        tm -- the result label
+
+        Example:
+        CASA <33>: sl.list_result
+        Out[33]:
+        ['#### new split ####################### Mon Mar 14 14:48:08 2011 ####',
+         '#### flag ngc5921 #################### Wed Mar 16 10:43:12 2011 ####']
+        CASA <34>: sl.get_result('new split')
+        Out[34]:
+        ....ommit...
+
+        '''
+
+        if not self._configdone:
+            return
         f=open(self._project+'.result', 'r')
         s=f.readlines()
         reach=False
         vec=[]
         for line in s:
             sLine=line.strip()
-            if str.find(sLine, 'Label:')==0:
-                if str.count(sLine, tm)>0 and reach==False:
+            if str.find(sLine, '#### ')==0:
+                if str.count(sLine, ' '+tm+' ')>0 and reach==False:
                     reach=True
                 else:
                     reach=False
@@ -582,11 +1086,80 @@ class simple_cluster:
                     vec.append(sLine)
         f.close()
         return vec
+
+    def erase_result(self, tm):
+        '''read the project.result file and erase result for a label
+
+        Keyword arguments:
+        tm -- the result label
+
+        Example:
+        CASA <33>: sl.list_result
+        Out[33]:
+        ['#### new split ####################### Mon Mar 14 14:48:08 2011 ####',
+         '#### flag ngc5921 #################### Wed Mar 16 10:43:12 2011 ####']
+        CASA <34>: sl.erase_result('flag ngc5921')
+        CASA <35>: sl.list_result
+        Out[35]:
+        ['#### new split ####################### Mon Mar 14 14:48:08 2011 ####']
+
+        '''
+        if not self._configdone:
+            return
+        if type(tm)!=str or len(tm)==tm.count('#'):
+            return 
+        f=open(self._project+'.result', 'r')
+        s=f.readlines()
+        f.close()
+        a=-1
+        b=-1
+        for line in xrange(len(s)):
+            sLine=s[line].strip()
+            if str.find(sLine, '#### ')==0:
+                if str.count(sLine, ' '+tm+' ')>0 and a==-1:
+                    a=line
+                else:
+                    b=line
+                #if b>0:
+                #    break
+        if a>-1 and b>a:
+            f=open(self._project+'.result', 'w')
+            f.writelines(s[:a])
+            f.writelines(s[b:])
+            f.close()
+        return
     
     def get_output(self, result, item, **kwargs):
-        '''pick from result list the item that meets condistion in kwargs'''
+        '''pick from result list the item that meets condistion in kwargs
+
+        Keyword arguments:
+        result -- the result label or the result from running get_result 
+        item -- the result item to get
+        kwargs -- the conditions to limit the result
+
+        Example:
+        CASA <33>: sl.list_result
+          Out[33]:
+        ['#### new split ####################### Mon Mar 14 14:48:08 2011 ####',
+         '#### flag ngc5921 #################### Wed Mar 16 10:43:12 2011 ####']
+        CASA <34>: sl.get_result('new split')
+          Out[34]:
+        ['10      done       30  split(vis="/lustre/casa-store/hye/10B-209a_5s.ms", outputvis="/home/casa-dev-10/hye/ptest/csplit/10B-209a_5s-f5-s10.ms", spw="10", datacolumn="DATA", field="J0738+1742")',
+         '1      done       40  split(vis="/lustre/casa-store/hye/10B-209a_5s.ms", outputvis="/home/casa-dev-07/hye/ptest/csplit/10B-209a_5s-f3-s2.ms", spw="2", datacolumn="DATA", field="J0738+1742")',
+         '2      done       75  split(vis="/lustre/casa-store/hye/10B-209a_5s.ms", outputvis="/home/casa-dev-07/hye/ptest/csplit/10B-209a_5s-f4-s10.ms", spw="10", datacolumn="DATA", field="2MJ0746")',
+         ..... many other entries ...]
+        CASA <35>: sl.get_output('new split', 'outputvis', field='3C84')
+          Out[35]:
+        ['/home/casa-dev-07/hye/ptest/csplit/10B-209a_5s-f1-s8.ms',
+         '/home/casa-dev-10/hye/ptest/csplit/10B-209a_5s-f1-s14.ms',
+         '/home/casa-dev-08/hye/ptest/csplit/10B-209a_5s-f0-s0.ms']
+
+        '''
+        if not self._configdone:
+            return
+        if type(result)==str:
+            result=self.get_result(result)
         if type(result)!=list:
-            print 'result must be a list of strings'
             return []
         if len(result)==0:
             return []
@@ -625,7 +1198,27 @@ class simple_cluster:
     ###########################################################################
 
     def use_paths(self, dir_list=[]):
-        '''use engines that most close to the dirs'''
+        '''use engines that most close to the dirs (or ms)
+
+        Keyword arguments:
+        dir_list -- the result label
+
+        Example:
+        CASA <33>: sl.list_result
+        Out[33]:
+        ['#### new split ####################### Mon Mar 14 14:48:08 2011 ####',
+        CASA <34>: sl.get_output('new split', 'outputvis', field='3C84')
+          Out[34]:
+        ['/home/casa-dev-07/hye/ptest/csplit/10B-209a_5s-f1-s8.ms',
+         '/home/casa-dev-07/hye/ptest/csplit/10B-209a_5s-f0-s1.ms',
+         '/home/casa-dev-07/hye/ptest/csplit/10B-209a_5s-f1-s9.ms']
+        CASA <35>: sl.use_paths(
+                     '/home/casa-dev-10/hye/ptest/csplit/10B-209a_5s-f1-s14.ms')
+          Out[35]: [8]
+
+        '''
+        if not self._configdone:
+            return
         if len(dir_list)==0:
             print 'dir_list can not be empty'
             return []
@@ -679,7 +1272,25 @@ class simple_cluster:
         return vec
 
     def use_hosts(self, host_list=[], engines_each=0):
-        '''use engines on the given nodes'''
+        '''use engines on the given nodes
+
+        Keyword arguments:
+        host_list -- the list of hosts
+        engines_each -- number of engines to use on each host
+
+        Example:
+        CASA <45>: sl.get_hosts
+          Out[45]:
+                  [['casa-dev-07', 4, '/home/casa-dev-07/hye/ptest'],
+                   ['casa-dev-08', 4, '/home/casa-dev-08/hye/ptest'],
+                   ['casa-dev-10', 4, '/home/casa-dev-10/hye/ptest']]
+        CASA <46>: sl.use_hosts(['casa-dev-07', 'casa-dev-10'], 2)
+          Out[46]: [8, 9, 0, 1]
+
+        '''
+
+        if not self._configdone:
+            return
         if len(host_list)==0 and  engines_each==0:
             return self._cluster.get_ids()
 
@@ -729,7 +1340,23 @@ class simple_cluster:
         return vec
 
     def use_engines(self, use_id=[], spreadhost=1):
-        '''get a ordered engine list'''
+        '''use engines on from a given list
+
+        Keyword arguments:
+        use_id -- the list of engine ids
+        spreadhost -- whether to apply host first policy
+
+        Example:
+        CASA <52>: sl._cluster.get_ids()
+          Out[52]: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+        CASA <54>: sl.use_engines([0, 1, 2, 9])
+          Out[54]: [0, 1, 2, 9]
+        CASA <55>: sl.use_engines()
+          Out[55]: [4, 8, 0, 5, 9, 1, 6, 10, 2, 7, 11, 3]
+
+        '''
+        if not self._configdone:
+            return
         if len(use_id)>0:
             int_ok=True
             for i in use_id:
@@ -769,7 +1396,18 @@ class simple_cluster:
     ###   ms knowledge functions
     ###########################################################################
     def get_msname(self, vis):
-        '''get the ms name of given vis'''
+        '''get the ms name of given vis
+
+        Keyword arguments:
+        vis -- the path+name of visibility data
+
+        Example:
+        CASA <15>: vis="/lustre/casa-store/hye/10B-209a_5s.ms"
+        CASA <16>: sl.get_msname(vis)
+          Out[18]: '10B-209a_5s'
+
+        '''
+
         vs=os.path.abspath(vis)
         msname=vs[str.rfind(vs,'/')+1:]
         if msname.endswith('.ms'):
@@ -777,7 +1415,18 @@ class simple_cluster:
         return msname
     
     def get_antenna_diam(self, vis):
-        '''get the diameter of antennas'''
+        '''get the diameter of antennas
+
+        Keyword arguments:
+        vis -- the path+name of visibility data
+
+        Example:
+        CASA <15>: vis="/lustre/casa-store/hye/10B-209a_5s.ms"
+        CASA <19>: sl.get_antenna_diam(vis)
+          Out[19]: 25.0
+
+        '''
+
         tb.open(vis+'/ANTENNA')
         diams=tb.getcol('DISH_DIAMETER')
         diam=np.min(diams)
@@ -787,77 +1436,237 @@ class simple_cluster:
         return diam
     
     def get_mean_reff(self, vis):
-        '''get the mean reference frequency'''
+        '''get the mean reference frequency
+
+        Keyword arguments:
+        vis -- the path+name of visibility data
+
+        Example:
+        CASA <15>: vis="/lustre/casa-store/hye/10B-209a_5s.ms"
+        CASA <20>: sl.get_mean_reff(vis)
+          Out[20]: 6298222222.2222223
+
+        '''
+
         tb.open(vis+'/SPECTRAL_WINDOW')
         reff=tb.getcol('REF_FREQUENCY')
         tb.done()
         return reff.mean()
     
     def get_spw_reff(self, vis, spw=0):
-        '''get the reference frequency of spw'''
+        '''get the reference frequency of spw
+
+        Keyword arguments:
+        vis -- the path+name of visibility data
+        spw -- the spectral window id
+
+        Example:
+        CASA <15>: vis="/lustre/casa-store/hye/10B-209a_5s.ms"
+        CASA <21>: sl.get_spw_reff(vis, 8)
+          Out[21]: 5056000000.0
+
+        '''
+
         tb.open(vis+'/SPECTRAL_WINDOW')
+        if spw<0 or spw>=tb.nrows():
+            print 'no such spectral window:', spw
+            return
         spw_reff=tb.getcell('REF_FREQUENCY', spw)
         tb.done()
         return spw_reff
     
     def get_spw_chan(self, vis, spw=0):
-        '''get the number of channels of spw'''
+        '''get the number of channels of spw
+
+        Keyword arguments:
+        vis -- the path+name of visibility data
+        spw -- the spectral window id
+
+        Example:
+        CASA <15>: vis="/lustre/casa-store/hye/10B-209a_5s.ms"
+        CASA <24>: sl.get_spw_chan(vis, 8)
+          Out[24]: 64
+
+        '''
         tb.open(vis+'/SPECTRAL_WINDOW')
+        if spw<0 or spw>=tb.nrows():
+            print 'no such spectral window:', spw
+            return
         spw_chan=tb.getcell('NUM_CHAN', spw)
         tb.done()
         return spw_chan
     
     def get_pol_corr(self, vis, pol=0):
-        '''get the number of coorelation of polarization '''
+        '''get the number of coorelation of polarization 
+
+        Keyword arguments:
+        vis -- the path+name of visibility data
+        pol -- the polarization id
+
+        Example:
+        CASA <15>: vis="/lustre/casa-store/hye/10B-209a_5s.ms"
+        CASA <31>: sl.get_pol_corr(vis, 0)
+          Out[31]: 4
+
+        '''
         tb.open(vis+'/POLARIZATION')
+        if pol<0 or pol>=tb.nrows():
+            print 'no such polarization:', pol
+            return
         pol_corr=tb.getcell('NUM_CORR', pol)
         tb.done()
         return pol_corr
     
     def get_num_field(self, vis):
-        '''get the number of fields '''
+        '''get the number of fields 
+
+        Keyword arguments:
+        vis -- the path+name of visibility data
+
+        Example:
+        CASA <15>: vis="/lustre/casa-store/hye/10B-209a_5s.ms"
+        CASA <32>: sl.get_num_field(vis)
+          Out[32]: 6L
+
+        '''
+
         tb.open(vis+'/FIELD')
         num_field=tb.nrows()
         tb.done()
         return num_field
     
     def get_field_name(self, vis, id):
-        '''get the name of a field '''
+        '''get the name of a field 
+
+        Keyword arguments:
+        vis -- the path+name of visibility data
+        id -- the field id
+
+        Example:
+        CASA <15>: vis="/lustre/casa-store/hye/10B-209a_5s.ms"
+        CASA <35>: sl.get_field_name(vis, 5)
+          Out[35]: 'J0738+1742'
+
+        '''
         tb.open(vis+'/FIELD')
+        if id<0 or id>=tb.nrows():
+            print 'no such field:', id 
+            return
         fn=tb.getcell('NAME', id)
         tb.done()
         return fn
     
     def get_num_spw(self, vis):
-        '''get the number of spectral windows '''
+        '''get the number of spectral windows 
+
+        Keyword arguments:
+        vis -- the path+name of visibility data
+
+        Example:
+        CASA <15>: vis="/lustre/casa-store/hye/10B-209a_5s.ms"
+        CASA <36>: sl.get_num_spw(vis)
+          Out[36]: 18L
+
+        '''
+
         tb.open(vis+'/SPECTRAL_WINDOW')
         num_spw=tb.nrows()
         tb.done()
         return num_spw
     
     def get_num_desc(self, vis):
-        '''get number of data descriptions'''
+        '''get number of data descriptions
+
+        Keyword arguments:
+        vis -- the path+name of visibility data
+
+        Example:
+        CASA <15>: vis="/lustre/casa-store/hye/10B-209a_5s.ms"
+        CASA <37>: sl.get_num_desc(vis)
+          Out[37]: 18L
+
+        '''
+
         tb.open(vis+'/DATA_DESCRIPTION')
         num_desc=tb.nrows()
         tb.done()
         return num_desc
     
     def get_spw_id(self, vis, desc=0):
-        '''get spectraol window id for desc'''
+        '''get spectral window id for desc
+
+        Keyword arguments:
+        vis -- the path+name of visibility data
+        desc -- the data description id
+
+        Example:
+        CASA <15>: vis="/lustre/casa-store/hye/10B-209a_5s.ms"
+        CASA <38>: sl.get_spw_id(vis, 17)
+          Out[38]: 17
+
+        '''
+
         tb.open(vis+'/DATA_DESCRIPTION')
+        if desc<0 or desc>=tb.nrows():
+            print 'no such data description:', desc
+            return
         spw_id=tb.getcell('SPECTRAL_WINDOW_ID', desc)
         tb.done()
         return spw_id
     
     def get_pol_id(self, vis, desc=0):
-        '''get polarization id for desc'''
+        '''get polarization id for desc
+
+        Keyword arguments:
+        vis -- the path+name of visibility data
+        desc -- the data description id
+
+        Example:
+        CASA <15>: vis="/lustre/casa-store/hye/10B-209a_5s.ms"
+        CASA <39>: sl.get_pol_id(vis, 17)
+          Out[39]: 0
+
+        '''
+
         tb.open(vis+'/DATA_DESCRIPTION')
+        if desc<0 or desc>=tb.nrows():
+            print 'no such data description:', desc
+            return
         pol_id=tb.getcell('POLARIZATION_ID', desc)
         tb.done()
         return pol_id
     
     def get_field_desc(self, vis):
-        '''get source'''
+        '''get source
+
+        Keyword arguments:
+        vis -- the path+name of visibility data
+
+        Example:
+        CASA <15>: vis="/lustre/casa-store/hye/10B-209a_5s.ms"
+        CASA <40>: sl.get_field_desc(vis)
+          Out[40]:
+        {(0, 0): {'cost': [0, 82],
+                  'desc': 0,
+                  'field': 0,
+                  'nchan': 64,
+                  'ncorr': 4,
+                  'nrows': 16848,
+                  'pol': 0,
+                  'spw': 0},
+         (0, 1): {'cost': [0, 82],
+                  'desc': 1,
+                  'field': 0,
+                  'nchan': 64,
+                  'ncorr': 4,
+                  'nrows': 16848,
+                  'pol': 0,
+                  'spw': 1}
+         ... ommit ...
+        }
+
+        '''
+
         tb.open(vis)
         nrows=tb.nrows() 
         tb.done()
@@ -902,6 +1711,33 @@ class simple_cluster:
     ###   setup -  
     ###########################################################################
     def init_cluster(self, clusterfile='', project=''):
+        '''Setup the cluster
+
+        Keyword arguments:
+        clusterfile -- the cluster definition file
+        project -- the name of project (default: 'proj'+timestamp).  
+
+        A configuration file is an ASCII text file. Each line defines a node
+        (also called host) with comma separated entries of host_name,
+        number_of_engines and work_dir. A line that starts with # is ignored.
+        The following is the contents of a configuration file:
+        ############################################
+        casa-dev-07, 4, /home/casa-dev-07/hye/ptest
+        #casa-dev-08, 4, /home/casa-dev-08/hye/ptest
+        casa-dev-10, 4, /home/casa-dev-10/hye/ptest
+        ############################################
+
+        A project maintains a subdirectory under each node's work_dir. All 
+        output files of an engine hosted on that node will by default store
+        under the subdirectory.
+
+        Example:
+        CASA <15>: from simple_cluster import *
+        CASA <16>: sl=simple_cluster()
+        CASA <17>: sl.init_cluster('my_cluster', 'aProj')
+
+        '''
+
         if project==None or type(project)!=str or project.strip()=="":
             #project name must be a non-empty string, otherwise set default
             project='cluster_project'
@@ -936,6 +1772,23 @@ class simple_cluster:
     ###   example to distribute clean task over engines
     ###########################################################################
     def simple_clean(self, vs, nx, ny, mode='channel', email=''):
+        '''Make images with a simple cluster
+
+        Keyword arguments:
+        vs -- the visibility data
+        nx, ny -- the size (pixels) of the image
+        mode -- either 'channel' or 'continuum'
+        email -- the email address to notify the completion
+
+        Example:
+        CASA <15>: from simple_cluster import *
+        CASA <16>: sl=simple_cluster()
+        CASA <17>: sl.init_cluster('my_cluster', 'aProj')
+        CASA <18>: simple_clean(
+            vis='/home/casa-dev-09/hye/ptest/sim.alma.csv.mid.ms', 
+            nx=256, ny=256, mode='channel')
+
+        '''
         
         vis=os.path.abspath(vs)
         tb.clearlocks(vis)
@@ -1023,7 +1876,20 @@ class simple_cluster:
         self.get_status()
     
     def simple_split(self, vs, email):
-        '''split by source (field, spw)'''
+        '''split by source (field, spw) with parallel engines
+
+        Keyword arguments:
+        vs -- the visibility data
+        email -- the email address to notify the completion
+
+        Example:
+        CASA <15>: from simple_cluster import *
+        CASA <16>: sl=simple_cluster()
+        CASA <17>: sl.init_cluster('my_cluster', 'aProj')
+        CASA <18): vis='/home/casa-dev-09/hye/ptest/sim.alma.csv.mid.ms', 
+        CASA <18>: simple_split(vis)
+
+        '''
         vis=os.path.abspath(vs)
         tb.clearlocks(vis)
        
@@ -1057,6 +1923,14 @@ class simple_cluster:
         self.get_status()
     
 #if __name__ == "__main__":
+    #from simple_cluster import *
+    #sl=simple_cluster()
+    #sl.init_cluster('my_cluster', 'aProj')
+    #vis='/home/casa-dev-09/hye/ptest/sim.alma.csv.mid.ms', 
+    #simple_split(vis)
+
+    #get_status()
+
     #init_cluster('my_cluster', 'my_project')
     #simple_clean(vis='/home/casa-dev-09/hye/ptest/sim.alma.csv.mid.ms', 
     #             nx=256, ny=256, mode='channel')
@@ -1067,4 +1941,3 @@ class simple_cluster:
     #simple_clean(vis='/home/casa-dev-09/hye/pclean/sim100g_4chan15kRows.ms',
     #             nx=256, ny=256, mode='channel')
         
-    #check_status()
