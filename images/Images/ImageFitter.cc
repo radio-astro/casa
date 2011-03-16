@@ -603,17 +603,19 @@ namespace casa {
     		_positionAngleErrors[i].setValue(
     				max(_positionAngleErrors[i].getValue(), posAngErrorFromSN.getValue())
     			);
-     	   	Vector<Double> newErrors(3);
-     	   _majorAxisErrors[i].convert("rad");
-     	   _minorAxisErrors[i].convert("rad");
-     	   _positionAngleErrors[i].convert("rad");
 
-     	   	newErrors[0] = _majorAxisErrors[i].getValue();
-     	   	newErrors[1] = _minorAxisErrors[i].getValue();
-     	   	newErrors[2] = _positionAngleErrors[i].getValue();
-     	   	ComponentShape* newShape = compShape->clone();
+    		_majorAxisErrors[i].convert(_majorAxes[i].getUnit());
+    		_minorAxisErrors[i].convert(_minorAxes[i].getUnit());
+    		_positionAngleErrors[i].convert(_positionAngles[i].getUnit());
 
-     	   	newShape->setErrors(newErrors);
+     	   	GaussianShape* newShape = dynamic_cast<GaussianShape *>(compShape->clone());
+
+     	   	newShape->setErrors(
+     	   		_majorAxisErrors[i], _minorAxisErrors[i],
+     	   		_positionAngleErrors[i]
+     	    );
+
+     	   	// newShape->setErrors(newErrors);
 
      	   	// set the position uncertainties
 
