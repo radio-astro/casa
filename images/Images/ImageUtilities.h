@@ -266,13 +266,14 @@ public:
     static Bool deconvolveFromBeam(
         Quantity& majorFit, casa::Quantity& minorFit,
         Quantity& paFit, Bool& successFit, LogIO& os,
-        const Vector<Quantity>& beam
+        const Vector<Quantity>& beam, const Bool verbose=True
     );
 
     static Bool deconvolveFromBeam(
         Quantity& majorFit, Quantity& minorFit,
         Quantity& paFit, casa::Bool& successFit, casa::LogIO& os,
-        const Vector<Quantity>& sourceIn, const Vector<Quantity>& beam
+        const Vector<Quantity>& sourceIn, const Vector<Quantity>& beam,
+        const Bool verbose=True
     );
 
 //

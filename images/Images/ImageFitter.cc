@@ -687,7 +687,6 @@ namespace casa {
     		Bool isPointSource = ImageUtilities::deconvolveFromBeam(
     		    bestFit[0], bestFit[1], bestFit[2], fitSuccess, *_log, best, beam
     		);
-
     		size << "Image component size (deconvolved from beam) ---" << endl;
 
     		if(fitSuccess) {
@@ -708,8 +707,12 @@ namespace casa {
     						sourceIn[1] = minRange[j];
     						for (uInt k=0; k<2; k++) {
     							sourceIn[2] = paRange[k];
+    							minFit = Quantity();
+    							majFit = Quantity();
+    							paFit = Quantity();
     							isPointSource = ImageUtilities::deconvolveFromBeam(
-    									majFit, minFit, paFit, fitSuccess, *_log, sourceIn, beam
+    								majFit, minFit, paFit, fitSuccess,
+    								*_log, sourceIn, beam, False
     							);
     							if (fitSuccess) {
     								Quantity errMaj = bestFit[0] - majFit;
