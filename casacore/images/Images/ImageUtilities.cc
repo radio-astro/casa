@@ -469,7 +469,9 @@ Vector<Double> ImageUtilities::decodeSkyComponent (const SkyComponent& sky,
 
 Bool ImageUtilities::deconvolveFromBeam(
     Quantity& majorFit, Quantity& minorFit,
-    Quantity& paFit, Bool& successFit, LogIO& os, const Vector<Quantity >& beam) {
+    Quantity& paFit, Bool& successFit, LogIO& os, const Vector<Quantity >& beam,
+    const Bool verbose
+   ) {
     // moved from ImageAnalysis
 
     // The position angle of the component is measured in the frame
@@ -486,20 +488,16 @@ Bool ImageUtilities::deconvolveFromBeam(
                 majorFit, minorFit, paFit, beam(0), beam(1), beam(2));
     } catch (AipsError x) {
     	successFit = False;
-        os << LogIO::WARN << "Could not deconvolve beam from source - "
+    	if (verbose) {
+    		os << LogIO::WARN << "Could not deconvolve beam from source - "
                 << x.getMesg() << endl;
-        {
-            ostringstream oss;
-            oss << "Model = " << majorFit << ", " << minorFit << ", " << paFit
-                    << endl;
-            os << String(oss);
-        }
-        {
-            ostringstream oss;
-            oss << "Beam  = " << beam(0) << ", " << beam(1) << ", " << beam(2)
-                    << endl;
-            os << String(oss) << LogIO::POST;
-        }
+    		ostringstream oss;
+    		oss << "Model = " << majorFit << ", " << minorFit << ", " << paFit
+    			<< endl;
+    		oss << "Beam  = " << beam(0) << ", " << beam(1) << ", " << beam(2)
+            	<< endl;
+    		os << String(oss) << LogIO::POST;
+    	}
         return False;
     }
     majorFit = majorOut;
@@ -512,14 +510,15 @@ Bool ImageUtilities::deconvolveFromBeam(
 Bool ImageUtilities::deconvolveFromBeam(
     Quantity& majorOut, Quantity& minorOut,
     Quantity& paOut, Bool& successFit, LogIO& os,
-    const Vector<Quantity>& sourceIn, const Vector<Quantity>& beam
+    const Vector<Quantity>& sourceIn, const Vector<Quantity>& beam,
+    const Bool verbose
 ) {
 	Quantity tmpMaj = sourceIn[0];
 	Quantity tmpMin = sourceIn[1];
 	Quantity tmpPA = sourceIn[2];
 
 	Bool isPointSource = deconvolveFromBeam(
-	    tmpMaj, tmpMin, tmpPA, successFit, os, beam
+	    tmpMaj, tmpMin, tmpPA, successFit, os, beam, verbose
 	);
 	majorOut = tmpMaj;
 	minorOut = tmpMin;
