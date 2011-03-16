@@ -123,8 +123,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //    column 16: Array Double (a Quantum, size set by NUM_SUBBANDS) NOMINAL_FREQ
 //                    (the nominal frequency of the channel given by FUNCTION_CHANNEL)
 //    column 17: Array Double (a Quantum, size set by NUM_SUBBANDS) RESPONSE_ROTATION_OFFSET
-//                    (the angle of an additional constant rotation of the response image for the purpose of,
-//                     e.g., aligning the (linear) polarization axis coordinate system of the response,
+//                    (the angle of an additional constant rotation of the response image)
 //                     project-dependent implementation) 
 //
 //  It is assured by the table filling code that columns 10, 11, and 12 use the same MDirection type.
