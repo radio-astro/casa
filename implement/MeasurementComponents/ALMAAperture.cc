@@ -329,54 +329,56 @@ namespace casa{
 	Array<Complex> pB( respByPol(0)(polToDoIndex(iPol)).shape() );
 	Array<Complex> fact1( pB.shape() );
 	Array<Complex> fact2( pB.shape() );
+	Array<Complex> fact3( pB.shape() );
+	Array<Complex> fact4( pB.shape() );
 
-	// rotate the two factor arrays into the right PA including the feed coordsys
+	// rotate the two factor arrays into the right PA
 	Double dAngleRad = getPA(vb);
 	cout << "PA = " << dAngleRad << " rad" << endl;
 
 	Int fact1Index, fact2Index;
 	Double pA1, pA2;
 
+	// apply the rotation offset from the response table
+	pA1 = dAngleRad + respImageRotOffset(0).radian();
+	pA2 = dAngleRad + respImageRotOffset(nAntTypes-1).radian();
+
 	switch(polToDoIndex(iPol)){
 	case 0: // XX
 	  fact1Index = fact2Index = 0;
-	  pA1 = pA2 = dAngleRad;
 	  break;
 	case 1: //XY
 	  fact1Index = 0;
 	  fact2Index = 2;
-	  pA1 = dAngleRad;
-	  pA2 = dAngleRad + C::pi/2.; // + 90 deg (sign to be confirmed!)
 	  break;
 	case 2: //YX
 	  fact1Index = 1;
 	  fact2Index = 3;
-	  pA1 = dAngleRad;
-	  pA2 = dAngleRad + C::pi/2.; // + 90 deg (sign to be confirmed!)
 	  break;
 	case 3: //YY
 	  fact1Index = fact2Index = 3;
-	  pA1 = dAngleRad + C::pi/2.;// + 90 deg (sign to be confirmed!)
-	  pA2 = dAngleRad + C::pi/2.; 
 	  break;
 	}
 	  
-	// the rotation offset from the response table
-	Double off1Rad = respImageRotOffset(0).radian();
-	Double off2Rad = respImageRotOffset(nAntTypes-1).radian();
+	if(pA1 != pA2){ // rotate individual factors before multiplication
 
-	// rotate factor 1 
-	SynthesisUtils::rotateComplexArray(os, respByPol(0)(fact1Index), dCoord, fact1, 
-					   pA1, "LINEAR", 
-					   False); // don't modify dCoord
-	// if necessary rotate factor 2 
-	if((nAntTypes-1)==0 &&  fact2Index==fact1Index){ // also implies that pA1==PA2
-	  fact2.assign(fact1);
-	}
-	else{
-	  SynthesisUtils::rotateComplexArray(os, respByPol(nAntTypes-1)(fact2Index), dCoord, fact2, 
-					     pA2, "LINEAR", 
+	  // rotate factor 1
+	  SynthesisUtils::rotateComplexArray(os, respByPol(0)(fact1Index), dCoord, fact1, 
+					     pA1, "LINEAR", 
 					     False); // don't modify dCoord
+	  // if necessary rotate factor 2 
+	  if((nAntTypes-1)==0 &&  fact2Index==fact1Index){ // also implies that pA1==PA2
+	    fact2.assign(fact1);
+	  }
+	  else{
+	    SynthesisUtils::rotateComplexArray(os, respByPol(nAntTypes-1)(fact2Index), dCoord, fact2, 
+					       pA2, "LINEAR", 
+					       False); // don't modify dCoord
+	  }
+	}
+	else{ // rotate PB later
+	  fact1.assign(respByPol(0)(fact1Index));
+	  fact2.assign(respByPol(nAntTypes-1)(fact2Index));
 	}
 
 	// multiply EFPs (equivalent to convolution of AIFs) to get primary beam
@@ -387,15 +389,24 @@ namespace casa{
 	  pB = abs(fact1) * abs(fact2);
 	}
 
-	//PagedImage<Complex> imX(pB.shape(),dCoord, "PB.im");
-	//imX.put(pB);  
-
 	// now have the primary beam for polarization iPol in pB
-      
+
 	// combine all PBs into one image
 	IPosition pos(rNDimFinal,0);
 	pos(rAxis) = iPol;
-	nearFinal.putSlice(pB, pos);  
+
+	if(pA1 == pA2){ // still need to rotate pB by PA
+
+	  Array<Complex> pBrot( pB.shape() );
+	  SynthesisUtils::rotateComplexArray(os, pB, dCoord, pBrot, 
+					     pA1, "LINEAR", 
+					     False); // don't modify dCoord
+	  nearFinal.putSlice(pBrot, pos);  
+
+	}
+	else{ // pB was already rotated above
+	  nearFinal.putSlice(pB, pos);  
+	}      
 
       }
 
