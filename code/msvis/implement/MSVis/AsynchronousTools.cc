@@ -161,6 +161,13 @@ Logger::Logger ()
   nameMutex_p (NULL)
 {}
 
+Logger::~Logger ()
+{
+    if (loggingStarted_p){
+        delete get();
+    }
+}
+
 Logger::Logger *
 Logger::get()
 {
@@ -326,6 +333,8 @@ Logger::LoggerThread::run ()
         }
 
         * logStream_p << "*** Logging terminated" << endl;
+
+        logStream_p->flush();
 
         return NULL;
     }

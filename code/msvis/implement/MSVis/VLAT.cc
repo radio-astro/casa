@@ -1,9 +1,30 @@
-/*
- * VLAT.cc
- *
- *  Created on: Nov 2, 2010
- *      Author: jjacobs
- */
+//# VLAT.cc: Implemenation of visibility lookahead thread related functionality.
+//# Copyright (C) 2011
+//# Associated Universities, Inc. Washington DC, USA.
+//#
+//# This library is free software; you can redistribute it and/or modify it
+//# under the terms of the GNU Library General Public License as published by
+//# the Free Software Foundation; either version 2 of the License, or (at your
+//# option) any later version.
+//#
+//# This library is distributed in the hope that it will be useful, but WITHOUT
+//# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+//# License for more details.
+//#
+//# You should have received a copy of the GNU Library General Public License
+//# along with this library; if not, write to the Free Software Foundation,
+//# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+//#
+//# Correspondence concerning CASA should be addressed as follows:
+//#        Internet email: CASA-request@nrao.edu.
+//#        Postal address: CASA Project Office
+//#                        National Radio Astronomy Observatory
+//#                        520 Edgemont Road
+//#                        Charlottesville, VA 22903-2475 USA
+//#
+//#
+//# $Id$
 
 #include <assert.h>
 #include <time.h>
@@ -23,6 +44,7 @@ using namespace casa::async;
 
 #include <boost/lexical_cast.hpp>
 #include <boost/lambda/lambda.hpp>
+#include <boost/bind.hpp>
 #include <boost/function.hpp>
 
 using namespace boost;
@@ -585,21 +607,30 @@ VlaData::Stats::OpStats::OpStats ()
 void
 VlaData::Stats::OpStats::accumulate (Double wait, Double operate, Double cycle)
 {
-    using namespace boost::lambda;
     ++ n_p;
     vector<Double> s (3);
     s [Wait] = wait;
     s [Operate] = operate;
     s [Cycle] = cycle;
 
+    using boost::lambda::_1;
+    using boost::lambda::_2;
+
+    // Compute the sum for all periods.
+
     transform (sum_p.begin(), sum_p.end(), s.begin(), sum_p.begin(), _1 + _2);
 
-    transform (min_p.begin(), min_p.end(), s.begin(), min_p.begin(), dmin);
-
-    transform (max_p.begin(), max_p.end(), s.begin(), max_p.begin(), dmax);
+    // Compute the sum of squares for all periods.
 
     transform (ssq_p.begin(), ssq_p.end(), s.begin(), ssq_p.begin(), _1 + _2 * _2);
 
+    // Compute the min for all periods using simple wrapper of min function.
+
+    transform (min_p.begin(), min_p.end(), s.begin(), min_p.begin(), dmin);
+
+    // Compute the max for all periods using simple wrapper of max function.
+
+    transform (max_p.begin(), max_p.end(), s.begin(), max_p.begin(), dmax);
 }
 
 String
