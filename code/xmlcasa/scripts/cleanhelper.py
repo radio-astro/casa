@@ -2686,11 +2686,16 @@ class cleanhelper:
         if type(imlist)==str:
           imlist=[imlist]
         if self.usespecframe.lower() != 'lsrk':
+          if self.usespecframe=='':
+            inspectral=self.dataspecframe
+          else: 
+            inspectral=self.usespecframe
           for img in imlist:
             if os.path.exists(img):
               ia.open(img)
               csys=ia.coordsys()
-              csys.setconversiontype(spectral=self.usespecframe)
+              csys.setconversiontype(spectral=inspectral)
+              #print "csys.torecord spectral2=", csys.torecord()['spectral2']
               ia.setcoordsys(csys.torecord())
               ia.close()
 
