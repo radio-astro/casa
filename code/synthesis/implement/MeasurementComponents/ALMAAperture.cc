@@ -361,9 +361,9 @@ namespace casa{
 	  break;
 	}
 	  
-	// apply the rotation offset from the response table
-	pA1 += respImageRotOffset(0).radian();
-	pA2 += respImageRotOffset(nAntTypes-1).radian();
+	// the rotation offset from the response table
+	Double off1Rad = respImageRotOffset(0).radian();
+	Double off2Rad = respImageRotOffset(nAntTypes-1).radian();
 
 	// rotate factor 1 
 	SynthesisUtils::rotateComplexArray(os, respByPol(0)(fact1Index), dCoord, fact1, 
