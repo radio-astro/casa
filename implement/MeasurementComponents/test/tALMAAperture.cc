@@ -429,6 +429,10 @@ int main()
 		im18.set(Complex(1.0,1.0));
 		apB.applySky(im18, vb, True, cfKey4);
 
+		PagedImage<Float> im18b(ts2, coordsys3Small, "pb2_squintDVDASmall_float");
+		im18b.set(1.0);
+		apB.applySky(im18b, vb, True, cfKey4);
+
 		////////// with ray tracing
 
 		cout << "Now using ray tracing ..." << endl;
