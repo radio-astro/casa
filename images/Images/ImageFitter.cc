@@ -231,17 +231,8 @@ namespace casa {
 	}
 
 	Double ImageFitter::_getStatistic(const String& type, const Record& stats) const {
-		// FIXME ? I cannot figure out a better way of accessing an array element (neither
-		// array[0] nor array(0) work) without having to convert it to a vector or creating
-		// an IPosition object.
-		// I would also think I could get the value of a record element by simply referencing
-		// its key, without having to get a field number, but I cannot figure out how to do that
-		// either.
-
-		Array<Double> statArray;
-		stats.get(stats.fieldNumber(type), statArray);
-		vector<Double> statVec;
-		statArray.tovector(statVec);
+		Vector<Double> statVec;
+		stats.get(stats.fieldNumber(type), statVec);
 		return statVec[0];
 	}
 
