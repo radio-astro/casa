@@ -36,6 +36,7 @@
 #include <display/Display/DParameterRange.h>
 #include <casa/BasicMath/Math.h>
 #include <display/Display/DisplayEnums.h>
+#include <vector>
 
 
 #include <graphics/X11/X_enter.h>
@@ -283,10 +284,8 @@ class QtDisplayData : public QObject {
   //# to connect to QtViewerBase::ddRemoved() instead).
 //# void dying(QtDisplayData*);
   
+  void axisChanged(String, String, String, std::vector<int> );
 
- 
-  void axisChanged(String, String, String);
-  void axisChanged4(String, String, String, int);
   void statsReady(const String&);
 
  protected slots:

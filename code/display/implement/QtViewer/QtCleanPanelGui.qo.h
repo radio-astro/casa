@@ -93,8 +93,8 @@ namespace casa {
 	// Accumulates [/ displays] selected boxes.
 	virtual void newMouseRegion(Record mouseRegion, WorldCanvasHolder* wch);
 
-	virtual void changeMaskAxis(String, String, String);
-	virtual void changeImageAxis(String, String, String);
+	virtual void changeMaskAxis(String, String, String, std::vector<int> );
+	virtual void changeImageAxis(String, String, String, std::vector<int> );
 	virtual void changeMaskSelectionText( String x, String y, String z );
 
     signals:

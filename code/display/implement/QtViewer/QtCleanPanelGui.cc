@@ -49,6 +49,8 @@
 #include <casa/iostream.h>
 #include <casa/fstream.h>
 #include <casa/sstream.h>
+
+
 namespace casa {
 
     static const char *comp_freq_ = "Frequency";
@@ -394,22 +396,22 @@ namespace casa {
 	    csys_p=maskim->coordinates();
 	    Int dirIndex=csys_p.findCoordinate(Coordinate::DIRECTION);
 	    dirCoord_p=csys_p.directionCoordinate(dirIndex);
-	    connect(dd, SIGNAL(axisChanged(String, String, String)),
-			SLOT(changeMaskAxis(String, String, String)));
+	    connect(dd, SIGNAL(axisChanged(String, String, String, std::vector<int> )),
+			SLOT(changeMaskAxis(String, String, String, std::vector<int> )));
 	} else if ( type == "raster" ) {
 	    imagedd_ = dd;
 	    Record opts;
 	    opts.define("axislabelswitch", True);
 	    imagedd_->setOptions(opts);
-	    connect(dd, SIGNAL(axisChanged(String, String, String)),
-			SLOT(changeImageAxis(String, String, String)));
+	    connect(dd, SIGNAL(axisChanged(String, String, String, std::vector<int> )),
+			SLOT(changeImageAxis(String, String, String, std::vector<int> )));
 	}
 
     }
 
 
 #define CHANGEAXIS( NAME, MYSTR, OTHERSTR, DD )					\
-void QtCleanPanelGui::NAME( String x, String y, String z ) {			\
+void QtCleanPanelGui::NAME( String x, String y, String z, std::vector<int> hidden ) {	\
 										\
     if ( DD  && axis_change != MYSTR ) {					\
 										\
@@ -436,6 +438,17 @@ void QtCleanPanelGui::NAME( String x, String y, String z ) {			\
 		Record zaxis;							\
 		zaxis.define( "value", z );					\
 		optionsChangedRec.defineRecord( "zaxis", zaxis );		\
+	    }									\
+										\
+	    char field[24];							\
+	    int index = 0;							\
+	    for ( std::vector<int>::iterator iter = hidden.begin();		\
+		  iter != hidden.end(); ++iter ) {				\
+		sprintf( field, "haxis%d", ++index );				\
+		rec.define( field, *iter );					\
+		Record haxis;							\
+		haxis.define( "value", *iter );					\
+		optionsChangedRec.defineRecord( field, haxis );			\
 	    }									\
 										\
 	    displayPanel()->hold();						\
@@ -470,7 +483,7 @@ CHANGEAXIS( changeMaskAxis, "mask", "image", imagedd_ )
 	    } else if ( x != comp_dec_ && y != comp_dec_ ) {
 		thisHiddenRB_->setText( this_dec_ );
 		allHiddenRB_->setText( all_dec_ );
-	    }	      
+	    }
 	} else if ( z == comp_pol_ ) {
 	    allChanRB_->setText( all_pol_ );
 	    thisPlaneRB_->setText( this_pol_ );
@@ -483,7 +496,7 @@ CHANGEAXIS( changeMaskAxis, "mask", "image", imagedd_ )
 	    } else if ( x != comp_dec_ && y != comp_dec_ ) {
 		thisHiddenRB_->setText( this_dec_ );
 		allHiddenRB_->setText( all_dec_ );
-	    }	      
+	    }
 	} else if ( z == comp_dec_ ) {
 	    allChanRB_->setText( all_dec_ );
 	    thisPlaneRB_->setText( this_dec_ );
@@ -496,7 +509,7 @@ CHANGEAXIS( changeMaskAxis, "mask", "image", imagedd_ )
 	    } else if ( x != comp_pol_ && y != comp_pol_ ) {
 		thisHiddenRB_->setText( this_pol_ );
 		allHiddenRB_->setText( all_pol_ );
-	    }	      
+	    }
 	} else if ( z == comp_ra_ ) {
 	    allChanRB_->setText( all_ra_ );
 	    thisPlaneRB_->setText( this_ra_ );
@@ -509,8 +522,8 @@ CHANGEAXIS( changeMaskAxis, "mask", "image", imagedd_ )
 	    } else if ( x != comp_pol_ && y != comp_pol_ ) {
 		thisHiddenRB_->setText( this_pol_ );
 		allHiddenRB_->setText( all_pol_ );
-	    }	      
-	} 
+	    }
+	}
     }
 
     void QtCleanPanelGui::closeEvent(QCloseEvent *event) {

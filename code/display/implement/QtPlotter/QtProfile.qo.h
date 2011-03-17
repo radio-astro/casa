@@ -105,7 +105,7 @@ public slots:
     void wcChanged( const String,
 		    const Vector<Double>, const Vector<Double>,
 		    const Vector<Double>, const Vector<Double> );
-    void changeAxis(String, String, String);
+    void changeAxis(String, String, String, std::vector<int> );
 
     void overplot(QHash<QString, ImageInterface<float>*>);
 signals:

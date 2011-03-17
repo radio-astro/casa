@@ -1053,7 +1053,7 @@ void QtProfile::wcChanged( const String c,
     lastPY.assign(pyv);
 }
 
-void QtProfile::changeAxis(String xa, String ya, String za) {
+void QtProfile::changeAxis(String xa, String ya, String za, std::vector<int> ) {
    //cout << "change axis=" << xa << " " << ya 
    //     << " " << za << " cube=" << cube << endl;
    int cb = 0;

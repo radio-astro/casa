@@ -66,7 +66,7 @@ class MakeMask : public QWidget {
   void newRegion_(String imgFilename);
 
   //handle switch display axis
-  void changeAxis(String, String, String, int);
+  void changeAxis(String, String, String, std::vector<int> );
 
   //handle single click to select a box
   void activate(Record);

@@ -584,12 +584,21 @@ void QtDisplayData::checkAxis() {
    Record rec = getOptions();
    //cout << "dd=" << rec << endl;
    try {
-       String xaxis = rec.subRecord("xaxis").asString("value");
-       String yaxis = rec.subRecord("yaxis").asString("value");
-       String zaxis = rec.subRecord("zaxis").asString("value");
-       emit axisChanged(xaxis, yaxis, zaxis);
-       Int haxis = rec.subRecord("haxis1").asInt("value");
-       emit axisChanged4(xaxis, yaxis, zaxis, haxis);
+
+	String xaxis = rec.subRecord("xaxis").asString("value");
+	String yaxis = rec.subRecord("yaxis").asString("value");
+	String zaxis = rec.subRecord("zaxis").asString("value");
+
+	std::vector<int> hidden;
+	char field[24];
+	int index = 0;
+	while ( 1 ) {
+	    sprintf( field, "haxis%d", ++index );
+	    if ( rec.fieldNumber( field ) < 0 ) { break; }
+	    Int haxis = rec.subRecord("haxis1").asInt("value");
+	    hidden.push_back(haxis);
+	}
+       emit axisChanged(xaxis, yaxis, zaxis, hidden);
    }
    catch(...) {
    } 

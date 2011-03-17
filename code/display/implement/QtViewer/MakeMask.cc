@@ -216,12 +216,14 @@ MakeMask::MakeMask(QtDisplayPanel* qdp) {
 
 }
   
-void MakeMask::changeAxis(String xa, String ya, String za, int ha) {
+void MakeMask::changeAxis(String xa, String ya, String za, std::vector<int> ha ) {
    //cout << "change axis=" << xa << " " << ya
    //     << " " << za << " " << ha << endl;
    int ccb = 0;
    zAxis = "";
-   pIndex = ha;
+   pIndex = 0;
+   if ( ha.size() > 0 )
+      pIndex = ha[0];
    if (za.contains("Stoke"))   
       zAxis = "Stokes"; 
    if (za.contains("Frequency"))  
