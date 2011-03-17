@@ -29,11 +29,27 @@
 MS Parameters
 ###############################################################################
 -->
-
   <param type="string" name="vis" kind="ms">
     <description>input visibility dataset (blank for none)</description>
     <value />
   </param>
+
+
+  <param type="string" name="title">    
+    <description>Title written along top of plot</description>
+    <value />
+  </param>
+  
+  <param type="string" name="xlabel">    
+    <description>Text for horizontal axis. Blank for default.</description>
+    <value />
+  </param>
+  
+  <param type="string" name="ylabel">    
+    <description>Text for vertical axis. Blank for default.</description>
+    <value />
+  </param>
+
 
   <param type="string" name="xaxis">
     <description>plot x-axis (blank for default/current)</description>

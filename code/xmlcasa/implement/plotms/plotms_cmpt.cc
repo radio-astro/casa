@@ -316,6 +316,67 @@ string plotms::getColorAxis(const int plotIndex)
 
 
 
+void plotms::setTitle(const string& text,  const bool updateImmediately, const int plotIndex) 
+{
+    launchApp();
+    
+    Record params;
+    params.define(PlotMSDBusApp::PARAM_CANVASTITLE,  text);
+    params.define(PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY, updateImmediately);
+    params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);
+    QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName( ),
+            PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, true);    
+}
+
+
+void plotms::setXAxisLabel(const string& text,  const bool updateImmediately, const int plotIndex) 
+{
+    launchApp();
+    Record params;
+    params.define(PlotMSDBusApp::PARAM_XAXISLABEL,  text);
+    params.define(PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY, updateImmediately);
+    params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);
+    QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName( ),
+            PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, true);    
+}
+
+
+void plotms::setYAxisLabel(const string& text,  const bool updateImmediately, const int plotIndex) 
+{
+    launchApp();
+    
+    Record params;
+    params.define(PlotMSDBusApp::PARAM_YAXISLABEL,  text);
+    params.define(PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY, updateImmediately);
+    params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);
+    QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName( ),
+            PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, true);    
+}
+
+
+string plotms::getTitle(const int plotIndex) 
+{
+    launchApp();
+    GETSINGLEPLOTSTR(CANVASTITLE) 
+}
+
+
+string plotms::getXAxisLabel(const int plotIndex) 
+{
+    launchApp();
+    GETSINGLEPLOTSTR(XAXISLABEL) 
+}
+
+
+string plotms::getYAxisLabel(const int plotIndex) 
+{
+    launchApp();
+    GETSINGLEPLOTSTR(YAXISLABEL) 
+}
+
+
+
+
 void plotms::setPlotXAxis(const string& xAxis, const string& xDataColumn,
                    const bool updateImmediately, const int plotIndex) 
 {
@@ -328,6 +389,9 @@ void plotms::setPlotYAxis(const string& yAxis, const string& yDataColumn,
 {
     setPlotAxes("", "", yAxis, yDataColumn, updateImmediately, plotIndex); 
 }
+
+
+
 
 
 void plotms::setPlotAxes(const string& xAxis, const string& yAxis,
@@ -436,7 +500,6 @@ void plotms::update() {
 
 void plotms::show()   {
 
-printf(">>> DSW <<< plotms::show beign called!!   >>>>>\n");
  	callAsync(PlotMSDBusApp::METHOD_SHOW);
  	/*
 	Record result;

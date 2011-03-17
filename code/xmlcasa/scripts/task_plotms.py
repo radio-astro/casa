@@ -3,6 +3,7 @@ import time
 from taskinit import *
 
 def plotms(vis=None, 
+           title=None, xlabel=None, ylabel=None,
            xaxis=None, xdatacolumn=None, 
            yaxis=None, ydatacolumn=None,
            colorize=None, coloraxis=None,
@@ -41,8 +42,12 @@ def plotms(vis=None,
     Keyword arguments:
     vis -- input visibility dataset
            default: ''
+    title  -- title along top of plot (called "canvas" in some places)
+    xlabel, ylabel -- text to label horiz. and vert. axes, with formatting (%% and so on)
+    
     xaxis, yaxis -- what to plot on the two axes
                     default: '' (uses PlotMS defaults/current set).
+                    
       &gt;&gt;&gt; xaxis, yaxis expandable parameters
         xdatacolumn, ydatacolumn -- which data column to use for data axes
                                     default: '' (uses PlotMS default/current
@@ -162,13 +167,14 @@ def plotms(vis=None,
         # Set filename and axes
         pm.setPlotMSFilename(vis, False)
         pm.setPlotAxes(xaxis, yaxis, xdatacolumn, ydatacolumn, False)
+        pm.setTitle(title)
+        pm.setXAxisLabel(xlabel)
+        pm.setYAxisLabel(ylabel)
+
 
         # Set colorizing parameters
         pm.setColorizeFlag(colorize)
-        if (colorize):
-            pm.setColorAxis(coloraxis)
-#        else:
-#            pm.setColorAxis('')
+        pm.setColorAxis(coloraxis)
 
         
         # Set selection

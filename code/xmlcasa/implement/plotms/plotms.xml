@@ -690,6 +690,140 @@ Plot Axes Parameters Methods
 ###############################################################################
 -->
 
+
+
+<method type="function" name="setTitle">
+  <keyword>setTitle</keyword>
+  <shortdescription>Sets the title for a plot</shortdescription>
+  <description />
+  <input>
+    <param type="string" name="text">
+      <description>Title (blank for automatic, resembling [yaxis] vs. [x])</description>
+      <value />
+    </param>
+    
+    <param type="bool" name="updateImmediately">
+      <description>whether to apply this change immediately, IF the window is currently shown</description>
+      <value>true</value>
+    </param>
+    
+    <param type="int" name="plotIndex">
+      <description>the index of the plot to apply this change</description>
+      <value>0</value>
+    </param>
+    
+  </input>
+  <example />  
+  <returns />
+</method>
+
+
+<method type="function" name="setXAxisLabel">
+  <keyword>setXAxisLabel</keyword>
+  <shortdescription>Sets the text to label the horizontal axis</shortdescription>
+  <description />
+  <input>
+    <param type="string" name="text">
+      <description>The title (blank for automatic)</description>
+      <value />
+    </param>
+    
+    <param type="bool" name="updateImmediately">
+      <description>whether to apply this change immediately, IF the window is currently shown</description>
+      <value>true</value>
+    </param>
+    
+    <param type="int" name="plotIndex">
+      <description>the index of the plot to apply this change</description>
+      <value>0</value>
+    </param>
+    
+  </input>
+  <example />  
+  <returns />
+</method>
+
+
+<method type="function" name="setYAxisLabel">
+  <keyword>setYAxisLabel</keyword>
+  <shortdescription>Sets the text to label the vertical axis</shortdescription>
+  <description />
+  <input>
+    <param type="string" name="text">
+      <description>The text (blank for automatic)</description>
+      <value />
+    </param>
+    
+    <param type="bool" name="updateImmediately">
+      <description>whether to apply this change immediately, IF the window is currently shown</description>
+      <value>true</value>
+    </param>
+    
+    <param type="int" name="plotIndex">
+      <description>the index of the plot to apply this change</description>
+      <value>0</value>
+    </param>
+    
+  </input>
+  <example />  
+  <returns />
+</method>
+
+
+
+<method type="function" name="getTitle">
+  <keyword>getTitle</keyword>
+  <shortdescription>Gets the title for the plot</shortdescription>
+  <description />
+  <input>
+    <param type="int" name="plotIndex">
+      <description>the index of the plot to get the value for</description>
+      <value>0</value>
+    </param>
+  </input>
+  <example />
+  <returns type="string">
+    <description>string</description>
+  </returns>
+</method>
+
+
+<method type="function" name="getXAxisLabel">
+  <keyword>getXAxisLabel</keyword>
+  <shortdescription>Gets the text for the horizontal axis</shortdescription>
+  <description />
+  <input>
+    <param type="int" name="plotIndex">
+      <description>the index of the plot to get the value for</description>
+      <value>0</value>
+    </param>
+  </input>
+  <example />
+  <returns type="string">
+    <description>string</description>
+  </returns>
+</method>
+
+
+<method type="function" name="getYAxisLabel">
+  <keyword>getYAxisLabel</keyword>
+  <shortdescription>Gets the text for the vertical axis</shortdescription>
+  <description />
+  <input>
+    <param type="int" name="plotIndex">
+      <description>the index of the plot to get the value for</description>
+      <value>0</value>
+    </param>
+  </input>
+  <example />
+  <returns type="string">
+    <description>string</description>
+  </returns>
+</method>
+
+
+
+
 <method type="function" name="setPlotXAxis">
   <keyword>setPlotXAxis</keyword>
   

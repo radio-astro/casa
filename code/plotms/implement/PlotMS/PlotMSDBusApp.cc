@@ -74,6 +74,9 @@ const String PlotMSDBusApp::PARAM_EXPORT_ASYNC = "exportasync";
 
 const String PlotMSDBusApp::PARAM_COLORIZE = "colorize";
 const String PlotMSDBusApp::PARAM_COLORAXIS = "coloraxis";
+const String PlotMSDBusApp::PARAM_CANVASTITLE = "canvastitle";
+const String PlotMSDBusApp::PARAM_XAXISLABEL = "xaxislabel";
+const String PlotMSDBusApp::PARAM_YAXISLABEL = "yaxislabel";
 
 
 
@@ -126,6 +129,8 @@ PlotMSDBusApp::~PlotMSDBusApp() {
 }
 
 
+
+
 // Public Methods //
 
 bool PlotMSDBusApp::connectToDBus( const QString & ) {
@@ -135,8 +140,12 @@ bool PlotMSDBusApp::connectToDBus( const QString & ) {
     return res;
 }
 
+
+
+
 void PlotMSDBusApp::parametersHaveChanged(const PlotMSWatchedParameters& p,
         int updateFlag) {
+    (void)updateFlag;
     if(&p == &itsPlotms_.getParameters()) {
         itsParams_ = dynamic_cast<const PlotMSParameters&>(p);
 
@@ -150,12 +159,17 @@ void PlotMSDBusApp::parametersHaveChanged(const PlotMSWatchedParameters& p,
     }
 }
 
+
+
+
 void PlotMSDBusApp::plotsChanged(const PlotMSPlotManager& manager) {
     const vector<PlotMSPlotParameters*>& p = manager.plotParameters();
     itsPlotParams_.resize(p.size(),
             PlotMSPlotParameters(itsPlotms_.getPlotter()->getFactory()));
     for(unsigned int i = 0; i < p.size(); i++) itsPlotParams_[i] = *p[i];
 }
+
+
 
 
 // Protected Methods //
@@ -250,6 +264,7 @@ void PlotMSDBusApp::dbusRunXmlMethod(
             const PlotMSPlotParameters& p = itsPlotParams_[index];
             const PMS_PP_MSData* d = p.typedGroup<PMS_PP_MSData>();
             const PMS_PP_Cache* c = p.typedGroup<PMS_PP_Cache>();
+            const PMS_PP_Canvas* can = p.typedGroup<PMS_PP_Canvas>();            
             const PMS_PP_Display *disp = p.typedGroup<PMS_PP_Display>();
             
             Record ret;
@@ -274,7 +289,12 @@ void PlotMSDBusApp::dbusRunXmlMethod(
                 ret.define(PARAM_COLORIZE, disp->colorizeFlag());
                 PMS::Axis  ax = disp->colorizeAxis();
                 ret.define(PARAM_COLORAXIS, PMS::Axis(ax));
-                printf(">>>> DSW <<<< just retrieved colorizeflag from PMS_PP_DISPLAY = %d  axis=%d\n", disp->colorizeFlag(), ax);
+            }
+
+            if (can!=NULL)   {
+                ret.define(PARAM_CANVASTITLE,  can->titleFormat().format);
+                ret.define(PARAM_XAXISLABEL,  can->xLabelFormat().format);
+                ret.define(PARAM_YAXISLABEL,  can->yLabelFormat().format);
             }
             
             if(ret.nfields() != 0) retValue.defineRecord(0, ret);
@@ -302,6 +322,13 @@ void PlotMSDBusApp::dbusRunXmlMethod(
             ppp.setGroup<PMS_PP_Display>();
             ppdisp = ppp.typedGroup<PMS_PP_Display>();
         }
+
+        PMS_PP_Canvas* ppcan = ppp.typedGroup<PMS_PP_Canvas>();
+        if (ppcan == NULL) {
+            ppp.setGroup<PMS_PP_Canvas>();
+            ppcan = ppp.typedGroup<PMS_PP_Canvas>();
+        }
+        
         
         if(parameters.isDefined(PARAM_FILENAME) &&
            parameters.dataType(PARAM_FILENAME) == TpString)
@@ -355,18 +382,41 @@ void PlotMSDBusApp::dbusRunXmlMethod(
         }
 
 
-        if(parameters.isDefined(PARAM_COLORIZE) &&
-           parameters.dataType(PARAM_COLORIZE) == TpBool) {
-            bool want = parameters.asBool(PARAM_COLORIZE);
-            printf("<<< DSW >>> setting colorize bool = %d  ok=%d\n", int(want));
-            if (ok)  ppdisp->setColorize(want);
+        if(parameters.isDefined(PARAM_CANVASTITLE) &&
+           parameters.dataType(PARAM_CANVASTITLE) == TpString)   {
+            PlotMSLabelFormat f = ppcan->titleFormat();
+            f.format =parameters.asString(PARAM_CANVASTITLE);
+            ppcan->setTitleFormat(f);
         }
+
+        if(parameters.isDefined(PARAM_XAXISLABEL) &&
+           parameters.dataType(PARAM_XAXISLABEL) == TpString)   {
+            PlotMSLabelFormat f = ppcan->xLabelFormat();
+            f.format =parameters.asString(PARAM_XAXISLABEL);
+            ppcan->setXLabelFormat(f);
+
+        }
+
+        if(parameters.isDefined(PARAM_YAXISLABEL) &&
+           parameters.dataType(PARAM_YAXISLABEL) == TpString)   {
+            PlotMSLabelFormat f = ppcan->yLabelFormat();
+            f.format =parameters.asString(PARAM_YAXISLABEL);
+            ppcan->setYLabelFormat(f);
+        }
+
+
+        if(parameters.isDefined(PARAM_COLORIZE) &&
+           parameters.dataType(PARAM_COLORIZE) == TpBool)   {
+            bool want = parameters.asBool(PARAM_COLORIZE);
+            ppdisp->setColorize(want);
+        }
+
         if(parameters.isDefined(PARAM_COLORAXIS) &&
-           parameters.dataType(PARAM_COLORAXIS) == TpString) {
+           parameters.dataType(PARAM_COLORAXIS) == TpString)   {
             a = PMS::axis(parameters.asString(PARAM_COLORAXIS), &ok);
-            printf("<<< DSW >>> setting colorize axis = %d  ok=%d\n", int(a), (int)ok);
             if (ok)  ppdisp->setColorize(a);
         }
+
         
         if(updateImmediately && itsPlotms_.guiShown()) {
             if(resized) itsPlotms_.addSinglePlot(&ppp);
@@ -415,6 +465,9 @@ void PlotMSDBusApp::dbusRunXmlMethod(
     }
     if(callError) log("Method " + methodName + " was called incorrectly.");
 }
+
+
+
 
 bool PlotMSDBusApp::_savePlot(const Record& parameters) {
 	bool ok = true;

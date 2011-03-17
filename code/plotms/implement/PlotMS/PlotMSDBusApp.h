@@ -88,6 +88,9 @@ public:
     static const String PARAM_EXPORT_ASYNC; // bool
     static const String PARAM_COLORIZE;  // bool
     static const String PARAM_COLORAXIS;  // string
+    static const String PARAM_CANVASTITLE;     // string
+    static const String PARAM_XAXISLABEL;   // string
+    static const String PARAM_YAXISLABEL;   // string
     // </group>
 
     // DBus method name for getting the log parameters, including: the sink
