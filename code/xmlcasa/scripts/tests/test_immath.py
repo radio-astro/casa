@@ -908,27 +908,15 @@ class immath_test2(unittest.TestCase):
                        + size + ".\nExpected the resulting image to"\
                        + "be 256x256x1x1 pixels."
             else:
-                inPoints = [ [0,0,0,5], [255,255,0,5], [127,127,0,5], [9,178,0,5] ];
-                outPoints = [ [0,0,0,0], [255,255,0,0], [127,127,0,0], [9,178,0,0] ];
-                try:
-                    for i in range( len(inPoints) ):
-                        inValue  = _getPixelValue( imageList2[0], inPoints[i] );
-                        outValue = _getPixelValue( outimage, outPoints[i] );
-            
-                        if ( inValue != outValue ):
-                            retValue['success']=False
-                            retValue['error_msgs']=retValue['error_msgs']\
-                              +'\nError: Values have not been copied properly to '\
-                              +'the image slice.'\
-                              +"\n       at positions "\
-                              +str(inPoints[i])+' = '+str(inValue)+"   and  "\
-                              +str(outPoints[i])+' = '+str(outValue)
-                except Exception, e:
-                    casalog.post( "Exception occured getting image slice values ... "+str(e), 'DEBUG1')
-                    retValue['success']=False
-                    retValue['error_msgs']=retValue['error_msgs']\
-                       +"\nError: Unable to get pixel values of image slice."
-
+                myia = iatool.create()
+                myia.open(imageList2[0])
+                expected = myia.getchunk()[:,:,:,5:5]
+                myia.done()
+                myia.open(outimage)
+                got = myia.getchunk()
+                myia.done()
+                self.assertTrue((got == expected).all()) 
+                
         self.assertTrue(retValue['success'],retValue['error_msgs'])
     
     def test_expr3(self):
