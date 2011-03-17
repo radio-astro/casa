@@ -308,9 +308,9 @@ sub fill_jenkins_dict {
 		$jenkins{'casacore url'} = $ENV{$_};
 		die "unexpected SVN_URL format for core" unless m|(_\d+)$|;
 		$core_ext = $1;
-	    } elsif ( $ENV{$_} =~ m|/asap$| ) {
+	    } elsif ( $ENV{$_} =~ m|/asap$| || $ENV{$_} =~ m|/asap/| ) {
 		$jenkins{'asap url'} = $ENV{$_};
-		die "unexpected SVN_URL format for core" unless m|(_\d+)$|;
+		die "unexpected SVN_URL format for asap" unless m|(_\d+)$|;
 		$asap_ext = $1;
 	    }
 	}
