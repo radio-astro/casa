@@ -76,11 +76,8 @@ $sendmail = "/usr/sbin/sendmail";
     'dave.mehringer' =>       [ 'dmehring', 'nrao.edu' ],
     'michel.caillat' =>       [ 'michel.caillat', 'obspm.fr' ],
     'peter.teuben' =>         [ 'teuben', 'astro.umd.edu' ],
-    'wataru.kawasaki' =>      [ 'wataru.kawasaki', 'nao.ac.jp' ],
     'rob.reid' =>             [ 'rreid', 'nrao.edu' ],
     'gareth.hunt' =>          [ 'ghunt', 'nrao.edu' ],
-    'takeshi.nakazato' =>     [ 'takeshi.nakazato', 'nao.ac.jp' ],
-    'kana.sugimoto' =>        [ 'kana.sugi', 'nao.ac.jp' ],
     'remy.indebetouw' =>      [ 'remy', 'virginia.edu' ],
     'laura.glendenning' =>    [ 'laura.glendenning', 'gmail.com' ],
     'paulo.cortes' =>         [ 'pcortes', 'das.uchile.cl' ],
@@ -91,6 +88,13 @@ $sendmail = "/usr/sbin/sendmail";
     'kumar.golap' =>          [ 'kgolap', 'nrao.edu' ],
     'darrell.schiebel' =>     [ 'darrell', 'schiebel.us' ],
     'wes.young' =>            [ 'wyoung', 'aoc.nrao.edu' ],
+    'wataru.kawasaki' =>      [ 'wataru.kawasaki', 'nao.ac.jp' ],
+    'WataruKawasaki' =>       [ 'wataru.kawasaki', 'nao.ac.jp' ],
+    'kana.sugimoto' =>        [ 'kana.sugi', 'nao.ac.jp' ],
+    'KanaSugimoto' =>         [ 'kana.sugi', 'nao.ac.jp' ],
+    'MalteMarquarding' =>     [ 'kana.sugi', 'nao.ac.jp' ],
+    'takeshi.nakazato' =>     [ 'takeshi.nakazato', 'nao.ac.jp' ],
+    'TakeshiNakazato' =>      [ 'takeshi.nakazato', 'nao.ac.jp' ],
     );
 
 ###
@@ -711,10 +715,19 @@ sub mail_suspect {
     $url =~ s|/svn/|/view/|;
     $url = "$url?view=rev&revision=$revision";
 
-    $name =~ s/([\w']+)/\u\L$1/g;
-    my @name = split( /\./, $name );
+    my @name;
+    if ( $name =~ m/\./ ) {
+	$name =~ s/([\w']+)/\u\L$1/g;
+	@name = split( /\./, $name );
+	$name = join( ' ', @name );
+    } elsif ( $name =~ m/([A-Z][a-z]+)([A-Z][a-z]+)/ ) {
+	@name = ( $1 );
+	$name = "$1 $2";
+    } else {
+	@name = ( $name );
+    }
 
-    $name = join( ' ', @name );
+    print "   => name: $name (" . join( ' ', @name ) . ")\n" if $debug;
 
     my %failures;
     my $lock = tie_hash( \%failures, $failures_file );
