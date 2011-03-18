@@ -23,6 +23,13 @@ use Fcntl qw( :flock );
 $debug = 1;
 
 ###
+### cache command output, and only show
+### it when there is a problem...
+###
+$cache = 0;
+
+
+###
 ### who is monitoring the testing...
 ###
 $testmanager = 'darrell@schiebel.us';
@@ -419,17 +426,23 @@ sub dosystem {
     }
     
     while ( <CMD> ) {
-	push(@tail, $_);
+	if ( $cache ) {
+	    push(@tail, $_);
+	} else {
+	    print;
+	}
     }
     unless ( close(CMD) ) {
 	my $err = $!;
 	print "   execution failed: $err\n";
 	print "   $cmd\n";
-	print "----------------------------------------------------------------------\n";
-	foreach $e ( @tail ) {
-	    print "      $e";
+	if ( $cache ) {
+	    print "----------------------------------------------------------------------\n";
+	    foreach $e ( @tail ) {
+		print "      $e";
+	    }
+	    print "----------------------------------------------------------------------\n";
 	}
-	print "----------------------------------------------------------------------\n";
 	return 0;
     }
     if ( $debug && ! $supress_debug ) {
