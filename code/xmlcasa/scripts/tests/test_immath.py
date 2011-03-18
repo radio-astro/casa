@@ -1058,25 +1058,22 @@ class immath_test2(unittest.TestCase):
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
         casalog.post( "Starting immath many (>9) image test.", 'NORMAL2' )
     
-        # First make the I, Q, U, and V files.  This step may not be
-        # needed if immath learns to do this for the user.
-     
         self.copy_img()
         imagename = [
             'immath0.im', 'immath1.im', 'immath2.im', 'immath3.im', 'immath4.im', 'immath5.im',
             'immath6.im', 'immath7.im', 'immath8.im', 'immath9.im','immath10.im'
         ]
         expr = 'IM0+IM1+IM2+IM3+IM4+IM5+IM6+IM7+IM8+IM9+IM10'
+        myia = iatool.create()
         try:
             # full image test
             outfile = 'full_image_sum.im'
             if (immath(imagename=imagename, expr=expr, outfile=outfile)):
                 expected = numpy.ndarray([2,2])
                 expected.put(range(expected.size),66)
-                ia.open(outfile)
-                got = ia.getchunk()
-                ia.done()
-                casalog.post("here 6", "WARN")
+                myia.open(outfile)
+                got = myia.getchunk()
+                myia.done()
                 if (not (got == expected).all()):
                     retValue['success'] = False
                     retValue['error_msgs'] += "\n Full image sum not correctly calculated"
@@ -1087,17 +1084,16 @@ class immath_test2(unittest.TestCase):
             retValue['success'] = False
             retValue['error_msgs'] += "\nFull image calculation threw an exception: " + str(sys.exc_info()[0])
     
-        os.system('rm -rf '+outfile)
-        
+        shutil.rmtree(outfile)        
         try:
             # subimage image test
             outfile = 'subimage_sum.im'
             if (immath(imagename=imagename, expr=expr, outfile=outfile, box='0,0,0,0')):
                 expected = numpy.ndarray([1,1])
                 expected.put(range(expected.size), 66)
-                ia.open(outfile)
-                got = ia.getchunk()
-                ia.done()
+                myia.open(outfile)
+                got = myia.getchunk()
+                myia.done()
                 if (not (got == expected).all()):
                     retValue['success'] = False
                     retValue['error_msgs'] += "\n sub image sum not correctly calculated"
@@ -1109,7 +1105,7 @@ class immath_test2(unittest.TestCase):
             retValue['error_msgs'] += "\nSub image calculation threw an exception"
 
         self.rm_img()
-        os.system('rm -rf '+outfile)
+        shutil.rmtree(outfile)
         self.assertTrue(retValue['success'],retValue['error_msgs'])
     
     
