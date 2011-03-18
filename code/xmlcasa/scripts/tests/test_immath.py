@@ -932,9 +932,6 @@ class immath_test2(unittest.TestCase):
             results = immath( mode='evalexpr', outfile=outimage,  \
                     imagename=[ 'expr_test2', imageList2[0] ], \
                     expr='IM0+IM1' )
-    
-            #expr=str('"')+image1+str('"' ) + str(" + " ) + str('"')+image1+str('"[INDEXIN(4,[5])]' );
-    
         except Exception, e:
             casalog.post( "Exception occured getting image slice ... "+str(e), 'DEBUG1')
             retValue['success']=False
@@ -961,41 +958,25 @@ class immath_test2(unittest.TestCase):
                 retValue['error_msgs']=retValue['error_msgs']\
                         +"\nError: Unable to get shape of image "+outimage
             
-    
-            if ( len(size) < 4 or ( size[0]!=256 or size[1]!=256 or \
-                                size[2]!=1 or size[3]!=46 ) ):
+            if ( not size == [256, 256, 1, 46]):
                 retValue['success']=False
                 retValue['error_msgs']=retValue['error_msgs']\
                       +"\nError: Size of output plane is incorrect: "+str(size)\
                       +"\n       Excepted a shape of 256x256x1x46"
-            else: 
-                # Note that the first 3 axes need to match was was used for the
-                # inPoints list above in order to use the planeValues gathered above.
-                try :
-                    points = [ [0,0,0,0], [255,255,0,0], [127,127,0,12], [9,178,0,33] ];
-                    slicePoints = [ [0,0,0,5], [255,255,0,5], [127,127,0,5], [9,178,0,5] ]
-                    
-                    for i in range( len(points) ):
-                        point=points[i]
-                        inValue    = _getPixelValue( imageList2[0], point );
-                        sliceValue = _getPixelValue( imageList2[0], slicePoints[i] );
-                        outValue   = _getPixelValue( outimage, point );
-                        
-                        # NOTE: There can be rounding errors so we don't expect it
-                        #       to be exact.
-                        if ( abs(inValue+sliceValue-outValue) > 0.000001 ):
-                            retValue['success']=False
-                            retValue['error_msgs']=retValue['error_msgs']\
-                              +'\nError: Values have not been doubled in image '\
-                              +imageList2[0]\
-                              +"\n       at position "+str(point)\
-                              +' are '+str(inValue)+"   and   " +str(outValue)
-                except Exception, e:
-                    casalog.post( "Exception occured comparing image points ... "+str(e), 'DEBUG1')
-                    retValue['success']=False
-                    retValue['error_msgs']=retValue['error_msgs']\
-                                       +"\nError: Unable to get pixel values."
-    
+            else:
+                myia = iatool.create()
+                myia.open("expr_test2")
+                chunk1 = myia.getchunk()
+                myia.done()
+                myia.open(imageList2[0])
+                chunk2 = myia.getchunk()
+                myia.done()
+                expected = chunk1 + chunk2
+                myia.open(outimage)
+                got = myia.getchunk()
+                myia.done()
+                self.assertTrue((got - expected < 0.000001 ).all())
+
         self.assertTrue(retValue['success'],retValue['error_msgs'])
     
     
