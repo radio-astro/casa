@@ -86,7 +86,7 @@ CubeSkyEquation::CubeSkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft,
 
 CubeSkyEquation::CubeSkyEquation(SkyModel& sm, ROVisibilityIterator& vi, FTMachine& ft,
                                  ComponentFTMachine& cft, Bool noModelCol)
-: SkyEquation(sm, vi, ft, cft, True /*noModelCol*/), // jhj kluge for now
+: SkyEquation(sm, vi, ft, cft, noModelCol),
   destroyVisibilityIterator_p (False),
   internalChangesPut_p(False),
   internalChangesGet_p(False),
