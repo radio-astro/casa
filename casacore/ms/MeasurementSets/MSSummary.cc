@@ -214,6 +214,8 @@ void MSSummary::listHow (LogIO& os, Bool verbose) const
   void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
                             Bool fillRecord) const
 {
+
+
   if (nrow()<=0) {
     os << "The MAIN table is empty: there are no data!!!" << endl;
   }
@@ -474,7 +476,12 @@ void MSSummary::listHow (LogIO& os, Bool verbose) const
 	      String name=fieldnames(lastfldids(0));
 	      if (name.length()>12) name.replace(11,1,'*');
 	      os.output().width(widthField); os << name.at(0,12);
-              String obsMode=obsModes(laststids(0));
+              
+              // The Obsmode column can be empty only report them if it is not
+              String obsMode = "";
+              if (obsModes.size() > (unsigned int) 0) {
+                String obsMode=obsModes(laststids(0));
+              }
               if (obsMode.length()>=widthObsMode) 
                 obsMode.replace(widthObsMode-2,1,'*');
               os.output().width(widthObsMode); 
@@ -634,6 +641,7 @@ void MSSummary::listHow (LogIO& os, Bool verbose) const
 
   void MSSummary::getScanSummary (Record& outRec) const
 {
+
   if (nrow()<=0) {
     return;
   }
