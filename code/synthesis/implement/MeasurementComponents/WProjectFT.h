@@ -225,7 +225,7 @@ public:
 
   void setConvFunc(CountedPtr<WPConvFunc>& pbconvFunc);
   CountedPtr<WPConvFunc>& getConvFunc();
-
+  virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
 
 protected:
 
