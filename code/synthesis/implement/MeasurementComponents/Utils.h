@@ -76,6 +76,12 @@ namespace casa
 			Vector<IPosition>& posMaxAbs) ;
     inline  Int nint(const Double& v) {return (Int)std::floor(v+0.5);}
     inline  Int nint(const Float& v) {return (Int)std::floor(v+0.5);}
+    inline  Bool near(const Double& d1, const Double& d2, 
+		      const Double EPS=1E-6) 
+    {
+      Bool b1=(fabs(d1-d2) < EPS)?True:False;
+      return b1;
+    }
   }
 
   void getHADec(MeasurementSet& ms, const VisBuffer& vb, Double &HA, Double& RA, Double& Dec);
