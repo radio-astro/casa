@@ -89,7 +89,7 @@ namespace casa{
 
     // A support function which, for now, returns and integer ID
     // corresponding to the on-sky frequency of the supplied VisBuffer.
-    virtual int getVisParams(const VisBuffer& vb)=0;
+    virtual int getVisParams(const VisBuffer& vb,const CoordinateSystem& skyCoord=CoordinateSystem())=0;
 
     // This method computes the convolution function and the
     // convolution function used for gridding the weights (typically
