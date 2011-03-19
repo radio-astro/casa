@@ -142,7 +142,7 @@ public:
   // Finalize transform to Sky plane
   virtual void finalizeToSky() = 0;
 
-  virtual void finalizeToSky(ImageInterface<Complex>& iimage){};
+  virtual void finalizeToSky(ImageInterface<Complex>& iimage){(void)iimage;};
 
   // Get actual coherence from grid
   virtual void get(VisBuffer& vb, Int row=-1) = 0;
@@ -165,7 +165,7 @@ public:
 
   // Get a flux (divide by this to get a flux density correct image) 
   // image if there is one
-  virtual void getFluxImage(ImageInterface<Float>& image){};
+  virtual void getFluxImage(ImageInterface<Float>& image){(void)image;};
 
   // Make the entire image
   virtual void makeImage(FTMachine::Type type,
@@ -205,7 +205,7 @@ public:
   virtual Bool doublePrecGrid();
 
   // To make sure no padding is used in certain gridders
-  virtual void setNoPadding(Bool nopad){};
+  virtual void setNoPadding(Bool nopad){(void)nopad;};
   
   // Return the name of the machine
 
@@ -233,6 +233,11 @@ public:
   virtual String getPointingDirColumnInUse();
 
   virtual void setSpwChanSelection(const Cube<Int>& spwchansels);
+
+  // set the order of the Taylor term for MFS this is to tell
+  // A-Projection to qualify the accumulated avgPB for each Taylor
+  // term in the CFCache.
+  virtual void setMiscInfo(const Int qualifier)=0;
 
 protected:
 

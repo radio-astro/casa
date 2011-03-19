@@ -442,6 +442,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Cube<Bool> modflagCube;
     Vector<Double> visFreq(vb.frequency().nelements());
     if(doConversion_p[vb.spectralWindow()]){
+      visFreq.resize(lsrFreq_p.shape());
       convertArray(visFreq, lsrFreq_p);
     }
     else{      
