@@ -223,7 +223,7 @@ public:
 
   //reset weight image
   virtual void reset();
-
+  virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
 
 protected:        
 

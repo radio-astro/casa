@@ -264,6 +264,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<Int>& getPolMap() {return polMap;};
     virtual String name(){ return "WOnlyProjectFT";};
     virtual Bool verifyShapes(IPosition shape0, IPosition shape1);
+    virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
 
   protected:
     
