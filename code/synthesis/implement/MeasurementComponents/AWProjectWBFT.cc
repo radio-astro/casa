@@ -267,7 +267,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					   ImageInterface<Float>& sensitivityImage)
   {
     LogIO log_l(LogOrigin("AWProjectWBFT", "makeSensitivityImage"));
-    log_l << "Setting up for weights accumulation during gridding to compute sensitivity pattern." 
+    log_l << "Setting up for weights accumulation ";
+    if (sensitivityPatternQualifierStr_p != "") log_l << "for term " << sensitivityPatternQualifier_p << " ";
+    log_l << "during gridding to compute sensitivity pattern." 
 	  << endl
 	  << "Consequently, the first gridding cycle will be slower than the subsequent ones." 
 	  << LogIO::WARN;
@@ -327,20 +329,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Therefore, for now, normalize the peak of the average weight
     // function (wavgPB) to 1.0.
     //
-    for(wtImIter.reset(); !wtImIter.atEnd(); wtImIter++)
-      {
-	Int pol=wtImIter.position()(2), chan=wtImIter.position()(3);
-	if (doSumWtNorm) sumWtVal=sumWt(pol,chan);
-	// wtImIter.rwCursor() = (wtImIter.rwCursor()
-	// 			*Float(sizeX)*Float(sizeY)/sumWtVal);
+    if (sensitivityPatternQualifier_p == 0)
+      for(wtImIter.reset(); !wtImIter.atEnd(); wtImIter++)
+	{
+	  Int pol=wtImIter.position()(2), chan=wtImIter.position()(3);
+	  if (doSumWtNorm) sumWtVal=sumWt(pol,chan);
+	  // wtImIter.rwCursor() = (wtImIter.rwCursor()
+	  // 			*Float(sizeX)*Float(sizeY)/sumWtVal);
 	
-	//
-	// Normalizing the peak to unity instead of normalization by
-	// the sum-of-weights (due to the reason in the long comment
-	// above).
-	//
-	wtImIter.rwCursor() /= max(wtImIter.rwCursor());
-      }
+	  //
+	  // Normalizing the peak to unity instead of normalization by
+	  // the sum-of-weights (due to the reason in the long comment
+	  // above).
+	  //
+	  wtImIter.rwCursor() /= max(wtImIter.rwCursor());
+	}
   }
   //
   //---------------------------------------------------------------
@@ -403,8 +406,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     pbNormalized_p=False;
 
     resetPBs_p=False;
-    String name("avgPBSq.im");
-    storeImg(name,sensitivitySqImage);
+    // String name("avgPBSq.im");
+    // storeImg(name,sensitivitySqImage);
   }
   //
   //---------------------------------------------------------------
@@ -450,15 +453,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     senLat.getSlice(polPlane0F,slicePol0);
     senLat.getSlice(polPlane1F,slicePol1);
     wtLat.getSlice(polPlane0C, slicePol0);
-    wtLat.getSlice(polPlane1C, slicePol1);
+    //    wtLat.getSlice(polPlane1C, slicePol1);
 
     // abs(Array<Complex>&) also returns Array<Complex> instead of
     // Array<Float>.  Hence the real(abs(...)).
     //    polPlane0F = sqrt(real(abs(polPlane0C*polPlane1C)));
-    polPlane0F = (real(abs(polPlane0C)));
+    //    polPlane0F = (real(abs(polPlane0C)));
+    polPlane0F = real(polPlane0C);
     polPlane1F = polPlane0F;
 
-    cfCache_p->flush(sensitivityImage);
+    cfCache_p->flush(sensitivityImage,sensitivityPatternQualifierStr_p);
 
     pbNormalized_p=False;
     resetPBs_p=False;
@@ -507,9 +511,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // normalizes the raw image by the sensitivty pattern (avgPB_p).
     //
     AWProjectFT::getImage(weights,fftNormalization);
-    // if (!makingPSF)
+    // if (makingPSF)
     //   {
-    //     String name("cdirty.im");
+    //     String name("psf.im");
     //     image->put(griddedData);
     //     storeImg(name,*image);
     //   }
@@ -1229,8 +1233,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	pbPeaks.set(0.0);
 	resetPBs_p=False;
       }
-    cfCache_p->loadAvgPB(avgPB_p);
-    avgPBReady_p = cfCache_p->avgPBReady();
+    avgPBReady_p = (cfCache_p->loadAvgPB(avgPB_p,sensitivityPatternQualifierStr_p) != CFDefs::NOTCACHED);
+    //    avgPBReady_p = cfCache_p->avgPBReady(sensitivityPatternQualifierStr_p);
   }
   //
   //---------------------------------------------------------------
