@@ -116,7 +116,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     typedef Vector< CFStore > CFStoreCacheType;
     CFCache(const char *cfDir="CF"):
       memCache_p(), memCacheWt_p(), XSup(), YSup(), paList(), key2IndexMap(),
-      cfPrefix(cfDir), aux("aux.dat"), paCD_p(), avgPBReady_p(False)
+      cfPrefix(cfDir), aux("aux.dat"), paCD_p(), avgPBReady_p(False),
+      avgPBReadyQualifier_p("")
     {};
     CFCache& operator=(const CFCache& other);
     ~CFCache();
@@ -219,7 +220,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int loadAvgPB(CountedPtr<ImageInterface<Float> > & avgPB, String qualifier=String(""))
     {if (avgPB.null()) avgPB = new TempImage<Float>(); return loadAvgPB(*avgPB,qualifier);};
 
-    Bool avgPBReady() {return avgPBReady_p;};
+    Bool avgPBReady(const String& qualifier=String("")) 
+    {return (avgPBReady_p && (avgPBReadyQualifier_p == qualifier));};
 
   private:
     CFStoreCacheType memCache_p, memCacheWt_p;
@@ -248,6 +250,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     CFStoreCacheType& getMEMCacheObj(const String& nameQualifier);
 
     Bool avgPBReady_p;
+    String avgPBReadyQualifier_p;
   };
 }
 

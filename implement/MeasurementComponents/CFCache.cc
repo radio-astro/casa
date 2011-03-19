@@ -431,6 +431,7 @@ namespace casa{
       {
 	storeImg(Name, avgPB);
 	avgPBReady_p=True;
+	avgPBReadyQualifier_p = qualifier;
       }
     catch(AipsError &x)
       {
