@@ -3643,7 +3643,7 @@ Taylor terms to be used. Options are 1,2,3.
 
      <param type="double" name="reffreq">
      <description>Reference Frequency</description>
-     <value>1.4e+09</value>
+     <value>0.0</value>
      </param>
 
 </input>
