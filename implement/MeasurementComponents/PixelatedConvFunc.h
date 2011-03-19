@@ -52,7 +52,7 @@ namespace casa{
     };
 
     virtual T getValue(Vector<T>& coord, Vector<T>& offset) { return (T)(1.0);};
-    virtual int getVisParams(const VisBuffer& vb) {return 0;};
+    virtual int getVisParams(const VisBuffer& vb,const CoordinateSystem& skyCoord=CoordinateSystem()) {return 0;};
     virtual void makeConvFunction(const ImageInterface<Complex>& image,
 				  const VisBuffer& vb,
 				  const Int wConvSize,
