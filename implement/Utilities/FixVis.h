@@ -136,6 +136,7 @@ public:
   // there already is a UVW column, using FTMachine.  Returns true if _any_
   // fields are modified.
   Bool fixvis(const String& refcode, const String& dataColName);
+  virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
 
 private:
   // Interpret field indices (MSSelection)
