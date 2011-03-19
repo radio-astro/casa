@@ -67,7 +67,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				     const ImageInterface<Complex>& image,
 				     ImageInterface<Complex>& theavgPB,
 				     Bool reset=True);
-    virtual int getVisParams(const VisBuffer& vb) {return ATerm_p->getVisParams(vb);};
+    virtual int getVisParams(const VisBuffer& vb,const CoordinateSystem& skyCoord=CoordinateSystem())
+    {return ATerm_p->getVisParams(vb,skyCoord);};
     virtual void setPolMap(const Vector<Int>& polMap) {ATerm_p->setPolMap(polMap);};
     //    virtual void setFeedStokes(const Vector<Int>& feedStokes) {ATerm_p->setFeedStokes(feedStokes);};
     virtual Bool findSupport(Array<Complex>& func, Float& threshold,Int& origin, Int& R);
