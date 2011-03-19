@@ -119,7 +119,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       doPBCorrection(doPBCorr), /*cfCache_p(cfcache),*/ paChangeDetector(),
       rotateAperture_p(True),
       Second("s"),Radian("rad"),Day("d"), pbNormalized_p(False),
-      visResampler_p()
+      visResampler_p(), sensitivityPatternQualifier_p(0),sensitivityPatternQualifierStr_p("")
   {
     convSize=0;
     tangentSpecified_p=False;
@@ -260,6 +260,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	convFuncCtor_p = other.convFuncCtor_p;
 	pbNormalized_p = other.pbNormalized_p;
 	visResampler_p=other.visResampler_p;
+	sensitivityPatternQualifier_p = other.sensitivityPatternQualifier_p;
+	sensitivityPatternQualifierStr_p = other.sensitivityPatternQualifierStr_p;
       };
     return *this;
   };
@@ -651,7 +653,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					 ImageInterface<Float>& sensitivityImage)
   {
     if (convFuncCtor_p->makeAverageResponse(vb, imageTemplate, sensitivityImage))
-      cfCache_p->flush(sensitivityImage); 
+      cfCache_p->flush(sensitivityImage,sensitivityPatternQualifierStr_p); 
   }
   //
   //---------------------------------------------------------------
@@ -936,7 +938,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Load the average PB (sensitivity pattern) from the cache.  If
     // not found in the cache, make one and cache it.
     //
-    if (cfCache_p->loadAvgPB(avgPB_p) == CFDefs::NOTCACHED)
+    if (cfCache_p->loadAvgPB(avgPB_p,sensitivityPatternQualifierStr_p) == CFDefs::NOTCACHED)
 	makeSensitivityImage(vb,image,*avgPB_p);
 
     verifyShapes(avgPB_p->shape(), image.shape());
@@ -1619,7 +1621,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // ArrayLattice<Float> senLat(senArray,True);
     //    LatticeIterator<Float> liavgpb(senLat, lavgpb);
     LatticeIterator<Float> liavgpb(sensitivityImage, lavgpb);
-	  
+
     for(lix.reset(),liavgpb.reset();
 	!lix.atEnd();
 	lix++,liavgpb++) 
