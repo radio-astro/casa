@@ -78,7 +78,7 @@ namespace casa{
 			     Double& currentCFPA
 			     //		  ,Double lsigma
 			     );
-    int getVisParams(const casa::VisBuffer&) {return 0;};
+    int getVisParams(const casa::VisBuffer&, const CoordinateSystem& skyCoord=CoordinateSystem()) {return 0;};
     void makeConvFunction(const casa::ImageInterface<std::complex<float> >&, 
 			  const casa::VisBuffer&, casa::Int, casa::Float, 
 			  casa::CFStore&, casa::CFStore&) {};
