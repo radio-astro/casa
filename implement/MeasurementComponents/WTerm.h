@@ -31,9 +31,11 @@
 
 
 #include <casa/Arrays/Vector.h>
+#include <msvis/MSVis/VisBuffer.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/TempImage.h>
+#include <synthesis/MeasurementComponents/CFTerms.h>
 
 
 namespace casa{
@@ -49,17 +51,57 @@ namespace casa{
   // <synopsis> 
   // 
   //</synopsis>
-  class WTerm
+  class WTerm: public CFTerms
   {
   public:
-    WTerm () {};
+    WTerm () : CFTerms() {};
     ~WTerm () {};
 
-    void applySky(Matrix<Complex>& screen, 
-		  const Int wPixel, 
-		  const Vector<Double>& sampling,
-		  const Double wScale,
-		  const Int inner);
+    virtual void applySky(Matrix<Complex>& screen, 
+			  const Int wPixel, 
+			  const Vector<Double>& sampling,
+			  const Double wScale,
+			  const Int inner);
+    int getVisParams(const VisBuffer& vb,const CoordinateSystem& skyCoord=CoordinateSystem()) 
+    {(void)vb;(void)skyCoord;return 0;};
+    void setPolMap(const Vector<Int>& polMap) {(void)polMap;};
+    virtual Float getSupportThreshold() {return 1e-3;};
+
+    // WTerm normalizes the image be unity
+    virtual void normalizeImage(Lattice<Complex>& skyImage,
+				const Matrix<Float>& weights) 
+    {(void)skyImage;(void)weights;};
+    virtual String name() {return String("W Term");};
+    //
+    // The following functions are not required for W-Term but need to
+    // be implemented here since they are pure virtuals in CFTerms
+    // base class.
+    void applySky(ImageInterface<Float>& outputImages,
+		  const VisBuffer& vb, 
+		  const Bool doSquint=True,
+		  const Int& cfKey=0) 
+    {(void)outputImages;(void)vb;(void)doSquint;(void)cfKey;}
+    void applySky(ImageInterface<Complex>& outputImages,
+		  const VisBuffer& vb, 
+		  const Bool doSquint=True,
+		  const Int& cfKey=0) 
+    {(void)outputImages;(void)vb;(void)doSquint;(void)cfKey;};
+    Vector<Int> vbRow2CFKeyMap(const VisBuffer& vb, Int& nUnique) 
+    {(void)vb;(void)nUnique;return Vector<Int>();};
+    Int makePBPolnCoords(const VisBuffer& vb,
+			 const Int& convSize,
+			 const Int& convSampling,
+			 const CoordinateSystem& skyCoord,
+			 const Int& skyNx, const Int& skyNy,
+			 CoordinateSystem& feedCoord) 
+    {
+      (void)vb;(void)convSize;(void)convSampling;(void)skyCoord;(void)skyNx;(void)skyNy;(void)feedCoord;
+      return 0;
+    };
+
+    Int getConvSize() {return 0;};
+    Int getOversampling() {return 1;};
+    Float getConvWeightSizeFactor() {return 1.0;};
   };
 
 };

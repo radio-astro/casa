@@ -1,4 +1,4 @@
-//# ATerm.h: Definition for ATerm
+//# CFTerms.h: Definition for CFTerms
 //# Copyright (C) 2007
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -26,8 +26,8 @@
 //#
 //# $Id$
 
-#ifndef SYNTHESIS_ATERM_H
-#define SYNTHESIS_ATERM_H
+#ifndef SYNTHESIS_CFTERMS_H
+#define SYNTHESIS_CFTERMS_H
 
 
 #include <casa/Arrays/Vector.h>
@@ -36,7 +36,6 @@
 #include <images/Images/TempImage.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <casa/Containers/Block.h>
-#include <synthesis/MeasurementComponents/CFTerms.h>
 
 namespace casa{
   // <summary>  
@@ -53,11 +52,11 @@ namespace casa{
   // <synopsis> 
   // 
   //</synopsis>
-  class ATerm: public CFTerms
+  class CFTerms
   {
   public:
-    ATerm (): CFTerms() {};
-    virtual ~ATerm () {};
+    CFTerms () {};
+    virtual ~CFTerms () {};
 
     virtual String name() = 0;
 
@@ -103,13 +102,9 @@ namespace casa{
     virtual Int getOversampling() = 0;
     virtual Float getConvWeightSizeFactor() = 0;
     virtual Float getSupportThreshold() = 0;
-
+    
     virtual void normalizeImage(Lattice<Complex>& skyImage,
-				const Matrix<Float>& weights) 
-    {
-      (void)skyImage;(void)weights;
-      throw(AipsError("Make ATerm::normalizeImage() pure virtual and implement in specializations"));
-    };
+				const Matrix<Float>& weights) = 0;
 
     virtual int getVisParams(const VisBuffer& vb, const CoordinateSystem& skyCoord=CoordinateSystem()) = 0;
     //
@@ -118,10 +113,12 @@ namespace casa{
     // which is passed to the FTMachine in Imager.cc
     //
     // The map is available in the FTMachine which uses this method to
-    // set the map for the ATerm object.
+    // set the map for the CFTerms object.
     //
     virtual void setPolMap(const Vector<Int>& polMap) {polMap_p_base.resize(0);polMap_p_base=polMap;}
     virtual void getPolMap(Vector<Int>& polMap) {polMap.resize(0); polMap = polMap_p_base;};
+
+
 
   protected:
     LogIO& logIO() {return logIO_p;}

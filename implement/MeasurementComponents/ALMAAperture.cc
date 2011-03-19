@@ -104,7 +104,7 @@ namespace casa{
     return *this;
   }
 
-  Int ALMAAperture::getVisParams(const VisBuffer& vb)
+  Int ALMAAperture::getVisParams(const VisBuffer& vb, const CoordinateSystem& skyCoord)
   {
     Vector<String> telescopeNames=vb.msColumns().observation().telescopeName().getColumn();
     for(uInt nt=0;nt<telescopeNames.nelements();nt++){

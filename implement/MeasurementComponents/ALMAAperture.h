@@ -125,7 +125,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // generate the lists of antenna types for the whole vb
     Vector<ALMAAntennaType> antTypeList(const VisBuffer& vb);
 
-    Int getVisParams(const VisBuffer& vb);
+    Int getVisParams(const VisBuffer& vb, const CoordinateSystem& skyCoord=CoordinateSystem());
     Int makePBPolnCoords(const VisBuffer&vb,
 			 const Int& convSize,
 			 const Int& convSampling,
