@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMRefractiveIndex.cpp,v 1.9.14.1 2010/10/15 16:16:42 dbroguie Exp $"
+ * "@(#) $Id: ATMRefractiveIndex.cpp,v 1.10.4.1 2011/03/03 15:17:09 dbroguie Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------
@@ -65,6 +65,25 @@ ATM_NAMESPACE_BEGIN
 
   }
 
+  complex<double> RefractiveIndex::getRefractivity_o2(double temperature,double pressure,double wvpressure,
+						      double frequency,double width,unsigned int n)
+  {
+    complex<double> average(0.0,0.0);
+    double newfreq;
+    for(unsigned int i=0; i<n; i++){
+      if(n==1){
+	newfreq=frequency;
+      }else{
+	newfreq=frequency-(width/2.0)+(width/(n-1))*i;
+      }
+      average=average+getRefractivity_o2(temperature,pressure,wvpressure,newfreq);
+    }
+    complex<double> averagen(real(average)/n,imag(average)/n);
+    return averagen;
+  }
+
+
+
   complex<double> RefractiveIndex::getRefractivity_h2o(double temperature, double pressure, double wvpressure, double frequency){
 
     static const double abun_18o=0.0020439;
@@ -82,36 +101,73 @@ ATM_NAMESPACE_BEGIN
       (6.023e23*wvpressure*217.0/(temperature*mmol_h2o));
   }
 
+  complex<double> RefractiveIndex::getRefractivity_h2o(double temperature,double pressure,double wvpressure,
+						       double frequency,double width,unsigned int n)
+  {
+    complex<double> average(0.0,0.0);
+    double newfreq;
+    for(unsigned int i=0; i<n; i++){
+      if(n==1){
+	newfreq=frequency;
+      }else{
+	newfreq=frequency-(width/2.0)+(width/(n-1))*i;
+      }
+      average=average+getRefractivity_h2o(temperature,pressure,wvpressure,newfreq);
+    }
+    complex<double> averagen(real(average)/n,imag(average)/n);
+    return averagen;
+  }
+  
+ 
   complex<double> RefractiveIndex::getSpecificRefractivity_o3(double temperature, double pressure, double frequency){
-
+    
     static const double abun_18o=0.0020439;
     static const double abun_17o=0.0003750;
     static const double Tex_nu2=1009.5;   //(in Kelvin)  Degeneracy=1  http://www.cfa.harvard.edu/hitran/vibrational.html
     static const double Tex_nu1=1588.41;  //(in Kelvin)  Degeneracy=1
     static const double Tex_nu3=1500.48;  //(in Kelvin)  Degeneracy=1
-
-
+    
+    
     double pob_v2=exp(-Tex_nu2/temperature);
     double pob_v1=exp(-Tex_nu1/temperature);
     double pob_v3=exp(-Tex_nu3/temperature);
-
-
-
+    
+    
     complex<double> ccc =  ((mkSpecificRefractivity_16o16o16o(temperature,pressure,frequency)+
-			    mkSpecificRefractivity_16o16o17o(temperature,pressure,frequency)*(2*abun_17o)+
-			    mkSpecificRefractivity_16o16o18o(temperature,pressure,frequency)*(2*abun_18o)+
-			    mkSpecificRefractivity_16o17o16o(temperature,pressure,frequency)*(abun_17o)+
-			    mkSpecificRefractivity_16o18o16o(temperature,pressure,frequency)*(abun_18o))
-			    /(1.0+3.0*(abun_18o+abun_17o)))*(1-pob_v2-pob_v1-pob_v3)+  
-                            mkSpecificRefractivity_16o16o16o_v2(temperature,pressure,frequency)*pob_v2;    
-                            mkSpecificRefractivity_16o16o16o_v1(temperature,pressure,frequency)*pob_v1;    
-                            mkSpecificRefractivity_16o16o16o_v3(temperature,pressure,frequency)*pob_v3;    //m^2
-
+			     mkSpecificRefractivity_16o16o17o(temperature,pressure,frequency)*(2*abun_17o)+
+			     mkSpecificRefractivity_16o16o18o(temperature,pressure,frequency)*(2*abun_18o)+
+			     mkSpecificRefractivity_16o17o16o(temperature,pressure,frequency)*(abun_17o)+
+			     mkSpecificRefractivity_16o18o16o(temperature,pressure,frequency)*(abun_18o))
+			    /(1.0+3.0*(abun_18o+abun_17o)))*(1-pob_v2-pob_v1-pob_v3)
+      +mkSpecificRefractivity_16o16o16o_v2(temperature,pressure,frequency)*pob_v2    
+      +mkSpecificRefractivity_16o16o16o_v1(temperature,pressure,frequency)*pob_v1    
+      +mkSpecificRefractivity_16o16o16o_v3(temperature,pressure,frequency)*pob_v3;    //m^2
+    
     //cout << "temperature=" << temperature << " pob_v2=" << pob_v2 << endl;
-
+    
     return ccc;
+    
+  }
+  
+  complex<double> RefractiveIndex::getSpecificRefractivity_o3(double temperature,double pressure,double frequency,
+							      double width,unsigned int n)
+  {
+    complex<double> average(0.0,0.0);
+    double newfreq;
+    for(unsigned int i=0; i<n; i++){
+      if(n==1){
+	newfreq=frequency;
+      }else{
+	newfreq=frequency-(width/2.0)+(width/(n-1))*i;
+      }
+      average=average+getSpecificRefractivity_o3(temperature,pressure,newfreq);
+    }
+    complex<double> averagen(real(average)/n,imag(average)/n);
+    return averagen;
+  }
 
-}
+
+
 
 
   double RefractiveIndex::linebroadening(double nu, double temp, double pr, double mmol, double dv0_lines, double texp_lines){
@@ -240,6 +296,67 @@ ATM_NAMESPACE_BEGIN
 
   }
 
+  ////////////////////////////////////////////////////////////////////////////////
+  //   ATM    1: 16o16o      7: no2        13: hh18o          19: 16o16o16o_v3  //
+  // opacity  2: 16o16o_vib  8: so2        14: hh17o          20: 16o16o18o     //
+  // sources  3: 16o18o      9: cnth2o     15: hdo            21: 16o16o17o     //
+  //          4: 16o17o     10: cntdry     16: 16o16o16o      22: 16o18o16o     //
+  //  Jan-24  5: co         11: hh16o      17: 16o16o16o_v2   23: 16o17o16o     //
+  //   2011   6: n2o        12: hh16o_v2   18: 16o16o16o_v1                     //
+  ////////////////////////////////////////////////////////////////////////////////
+
+
+  complex<double>  RefractiveIndex::mkSpecificRefractivity(unsigned int species, 
+							   double tt, double pp, double eh2o,  
+							   double nu, double width, unsigned int n)
+  {
+    complex<double> average(0.0,0.0);
+    double newfreq;
+    for(unsigned int i=0; i<n; i++){
+      if(n==1){
+	newfreq=nu;
+      }else{
+	newfreq=nu-(width/2.0)+(width/(n-1))*i;
+      }
+      average=average+mkSpecificRefractivity(species,tt,pp,eh2o,nu);
+    }
+    complex<double> averagen(real(average)/n,imag(average)/n);
+    return averagen;
+  }
+  
+  complex<double>  RefractiveIndex::mkSpecificRefractivity(unsigned int species, 
+							   double tt, double pp, double eh2o,  
+							   double nu)
+  {
+    if(species==1){return mkSpecificRefractivity_16o16o(tt,pp,eh2o,nu);}
+    if(species==2){return mkSpecificRefractivity_16o16o_vib(tt,pp,eh2o,nu);}
+    if(species==3){return mkSpecificRefractivity_16o18o(tt,pp, eh2o, nu);}
+    if(species==4){return mkSpecificRefractivity_16o17o(tt, pp, eh2o, nu);}
+    if(species==5){return mkSpecificRefractivity_co(tt, pp, nu);}
+    if(species==6){return mkSpecificRefractivity_n2o(tt, pp, nu);}
+    if(species==7){return mkSpecificRefractivity_no2(tt, pp, nu);}
+    if(species==8){return mkSpecificRefractivity_so2(tt, pp, nu);}
+    if(species==9){return mkSpecificRefractivity_cnth2o(tt, pp, eh2o, nu);}
+    if(species==10){return mkSpecificRefractivity_cntdry(tt, pp, eh2o, nu);}
+    if(species==11){return mkSpecificRefractivity_hh16o(tt, pp, eh2o, nu);}
+    if(species==12){return mkSpecificRefractivity_hh16o_v2(tt, pp, eh2o, nu);}
+    if(species==13){return mkSpecificRefractivity_hh18o(tt, pp, eh2o, nu);}
+    if(species==14){return mkSpecificRefractivity_hh17o(tt, pp, eh2o, nu);}
+    if(species==15){return mkSpecificRefractivity_hdo(tt, pp, eh2o, nu);}
+    if(species==16){return mkSpecificRefractivity_16o16o16o(tt, pp, nu);}
+    if(species==17){return mkSpecificRefractivity_16o16o16o_v2(tt, pp, nu);}
+    if(species==18){return mkSpecificRefractivity_16o16o16o_v1(tt, pp, nu);}
+    if(species==19){return mkSpecificRefractivity_16o16o16o_v3(tt, pp, nu);}
+    if(species==20){return mkSpecificRefractivity_16o16o18o(tt, pp, nu);}
+    if(species==21){return mkSpecificRefractivity_16o16o17o(tt, pp, nu);}
+    if(species==22){return mkSpecificRefractivity_16o18o16o(tt, pp, nu);}
+    if(species==23){return mkSpecificRefractivity_16o18o16o(tt, pp, nu);}
+    complex<double> aa(0.0,0.0);
+    return aa;
+  }
+  
+
+  //////////////////////// Opacity Source Number: 8 //////////////////////////////
 
   complex<double>  RefractiveIndex::mkSpecificRefractivity_so2(double tt, double pp, double nu){
 
@@ -620,6 +737,8 @@ ATM_NAMESPACE_BEGIN
 
 
 
+  //////////////////////// Opacity Source Number: 7 //////////////////////////////
+
   complex<double>  RefractiveIndex::mkSpecificRefractivity_no2(double tt, double pp, double nu){
 
 
@@ -819,7 +938,7 @@ ATM_NAMESPACE_BEGIN
 	lshapeacum=lshapeacum*(nu/pi)*(0.047992745509/tt)*(fac2fixed*pow(mu,2.0)/q);  // imaginary part: absorption coefficient in cm^2
 	                                                                                                  // real part: delay in rad*cm^2
 
-	return lshapeacum*1e-4;    // to give it in SI units (m^2)    // (  rad m^2 , m^2 )
+	return lshapeacum*1e-4;    // to give it in SI units (  rad m^2 , m^2 )
 
 
       }
@@ -828,7 +947,7 @@ ATM_NAMESPACE_BEGIN
 
   }
 
-
+  //////////////////////// Opacity Source Number: 6 //////////////////////////////
 
   complex<double>  RefractiveIndex::mkSpecificRefractivity_n2o(double tt, double pp, double nu){
 
@@ -1237,7 +1356,7 @@ ATM_NAMESPACE_BEGIN
 	lshapeacum=lshapeacum*(nu/pi)*(0.047992745509/tt)*(fac2fixed*pow(mu,2.0)/q);  // imaginary part: absorption coefficient in cm^2
 	                                                                                                  // real part: delay in rad*cm^2
 
-	return lshapeacum*1e-4;    // to give it in SI units (m^2)    // (  rad m^2 , m^2 )
+	return lshapeacum*1e-4;    // to give it in SI units (  rad m^2 , m^2 )
 
 
       }
@@ -1246,6 +1365,7 @@ ATM_NAMESPACE_BEGIN
 
   }
 
+  //////////////////////// Opacity Source Number: 5 //////////////////////////////
 
   complex<double>  RefractiveIndex::mkSpecificRefractivity_co(double tt, double pp, double nu){
 
@@ -1621,7 +1741,7 @@ ATM_NAMESPACE_BEGIN
 	lshapeacum=lshapeacum*(nu/pi)*(0.047992745509/tt)*(fac2fixed*pow(mu,2.0)/q);  // imaginary part: absorption coefficient in cm^2
 	                                                                                                  // real part: delay in rad*cm^2
 
-	return lshapeacum*1e-4;    // to give it in SI units (m^2)    // (  rad m^2 , m^2 )
+	return lshapeacum*1e-4;    // to give it in SI units (  rad m^2 , m^2 )
 
 
       }
@@ -1629,6 +1749,8 @@ ATM_NAMESPACE_BEGIN
     }
 
   }
+
+  //////////////////////// Opacity Source Number: 9 //////////////////////////////
 
   complex<double>  RefractiveIndex::mkSpecificRefractivity_cnth2o(double tt, double pp, double eh2o, double nu){
 
@@ -1655,6 +1777,9 @@ ATM_NAMESPACE_BEGIN
     return complex<double> (delayh2o,cnth2o);       // (  rad m^-1 , m^-1 )
 
   }
+
+
+  //////////////////////// Opacity Source Number: 10 /////////////////////////////
 
   complex<double>  RefractiveIndex::mkSpecificRefractivity_cntdry(double tt, double pp, double eh2o, double nu){
 
@@ -1695,6 +1820,7 @@ ATM_NAMESPACE_BEGIN
   }
 
 
+  //////////////////////// Opacity Source Number: 12 /////////////////////////////
 
   complex<double>  RefractiveIndex::mkSpecificRefractivity_hh16o_v2(double tt, double pp, double eh2o, double nu){
 
@@ -2655,7 +2781,7 @@ ATM_NAMESPACE_BEGIN
   }
 
 
-
+  //////////////////////// Opacity Source Number: 11 /////////////////////////////
 
   complex<double>  RefractiveIndex::mkSpecificRefractivity_hh16o(double tt, double pp, double eh2o, double nu){
 
@@ -3841,7 +3967,7 @@ ATM_NAMESPACE_BEGIN
       lshapeacum=lshapeacum*(nu/pi)*(fac2fixed*pow(mu,2.0)/q); // imaginary part: absorption coefficient in cm^2
       // real part: delay in rad*cm^2
 
-      return lshapeacum*1e-4;    // to give it in SI units (m^2)    // (  rad m^2 , m^2 )
+      return lshapeacum*1e-4;    // to give it in SI units (  rad m^2 , m^2 )
 
     }
 
@@ -3849,6 +3975,8 @@ ATM_NAMESPACE_BEGIN
 
   }
 
+
+  //////////////////////// Opacity Source Number: 14 /////////////////////////////
 
   complex<double>  RefractiveIndex::mkSpecificRefractivity_hh17o(double tt, double pp, double eh2o, double nu){
 
@@ -4258,13 +4386,15 @@ ATM_NAMESPACE_BEGIN
 
 	lshapeacum=lshapeacum*(nu/pi)*(fac2fixed*pow(mu,2.0)/q); // imaginary part: absorption coefficient in cm^2
 	                                                                    // real part: delay in rad*cm^2
-	return lshapeacum*1e-4;    // to give it in SI units (m^2)    // (  rad m^2 , m^2 )
+	return lshapeacum*1e-4;    // to give it in SI units (  rad m^2 , m^2 )
 
       }
 
     }
 
   }
+
+  //////////////////////// Opacity Source Number: 15 /////////////////////////////
 
   complex<double>  RefractiveIndex::mkSpecificRefractivity_hdo(double tt, double pp, double eh2o, double nu){
 
@@ -5027,7 +5157,7 @@ ATM_NAMESPACE_BEGIN
 	                                                                    // real part: delay in rad*cm^2
       }
 
-      return (lshapeacum1+lshapeacum2)*1e-4;    // to give it in SI units (m^2)    // (  rad m^2 , m^2 )
+      return (lshapeacum1+lshapeacum2)*1e-4;    // to give it in SI units (  rad m^2 , m^2 )
 
 
     }
@@ -5035,6 +5165,7 @@ ATM_NAMESPACE_BEGIN
   }
 
 
+  //////////////////////// Opacity Source Number: 13 /////////////////////////////
 
   complex<double>  RefractiveIndex::mkSpecificRefractivity_hh18o(double tt, double pp, double eh2o, double nu){
 
@@ -5443,7 +5574,7 @@ ATM_NAMESPACE_BEGIN
 	lshapeacum=lshapeacum*(nu/pi)*(fac2fixed*pow(mu,2.0)/q); // imaginary part: absorption coefficient in cm^2
 	                                                                    // real part: delay in rad*cm^2
 
-	return lshapeacum*1e-4;    // to give it in SI units (m^2)    // (  rad m^2 , m^2 )
+	return lshapeacum*1e-4;    // to give it in SI units (  rad m^2 , m^2 )
 
       }
 
@@ -5451,6 +5582,7 @@ ATM_NAMESPACE_BEGIN
 
   }
 
+  //////////////////////// Opacity Source Number: 2 //////////////////////////////
 
   complex<double>  RefractiveIndex::mkSpecificRefractivity_16o16o_vib(double tt, double pp, double eh2o, double nu){
 
@@ -5485,10 +5617,11 @@ ATM_NAMESPACE_BEGIN
     lshapeacum=lshapeacum*(nu/pi)*(fac2fixed*pow(mu,2.0)/q); // imaginary part: absorption coefficient in cm^2
                                                                         // real part: delay in rad*cm^2
 
-    return lshapeacum*1e-4;    // to give it in SI units (m^2)
+    return lshapeacum*1e-4;    // to give it in SI units (  rad m^2 , m^2 )
 
   }
 
+  //////////////////////// Opacity Source Number: 4 //////////////////////////////
 
   complex<double>  RefractiveIndex::mkSpecificRefractivity_16o17o(double tt, double pp, double eh2o, double nu){
 
@@ -5533,11 +5666,12 @@ ATM_NAMESPACE_BEGIN
     lshapeacum=lshapeacum*(nu/pi)*(fac2fixed*pow(mu,2.0)/q); // imaginary part: absorption coefficient in cm^2
     // real part: delay in rad*cm^2
 
-    return lshapeacum*1e-4;    // to give it in SI units (m^2)    // (  rad m^2 , m^2 )
+    return lshapeacum*1e-4;    // to give it in SI units (  rad m^2 , m^2 )
 
   }
 
 
+  //////////////////////// Opacity Source Number: 3 //////////////////////////////
 
 complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, double pp, double eh2o, double nu){
 
@@ -5585,6 +5719,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 
   }
 
+  //////////////////////// Opacity Source Number: 1 //////////////////////////////
 
   complex<double>  RefractiveIndex::mkSpecificRefractivity_16o16o(double tt, double pp, double eh2o, double nu){
 
@@ -6013,7 +6148,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
       49,  49,  49,  50,  50,  50,  50,  50,  50,  50,
       50,  50,  50,  50,  50,  50,  50,  50,  50,  50};
 
-    static const unsigned int ifin3[800]={
+    /*    static const unsigned int ifin3[800]={
       0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
       0,   0,   0,   0,   0,   2,   5,   9,  14,  17,
       21,  26,  29,  33,  37,  37,  37,  37,  37,  37,
@@ -6175,7 +6310,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
       50,  50,  50,  50,  50,  50,  50,  50,  50,  50,
       50,  50,  50,   1,   1,   1,   1,   1,   1,   1,
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
-      1,   1,   1,   1,   1,   1,   1,   1,   1,   1};
+      1,   1,   1,   1,   1,   1,   1,   1,   1,   1};  */
 
     static const double pi=3.141592654;
     static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
@@ -6262,6 +6397,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 
   }
 
+  //////////////////////// Opacity Source Number: 18 /////////////////////////////
 
   complex<double>  RefractiveIndex::mkSpecificRefractivity_16o16o16o_v1(double tt, double pp, double nu){
 
@@ -6682,6 +6818,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
   
   
   
+  //////////////////////// Opacity Source Number: 19 /////////////////////////////
 
   complex<double>  RefractiveIndex::mkSpecificRefractivity_16o16o16o_v3(double tt, double pp, double nu){
 
@@ -7120,6 +7257,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
   }
 
 
+  //////////////////////// Opacity Source Number: 17 /////////////////////////////
 
   complex<double>  RefractiveIndex::mkSpecificRefractivity_16o16o16o_v2(double tt, double pp, double nu){
 
@@ -7493,7 +7631,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 
 
 
-
+  //////////////////////// Opacity Source Number: 16 /////////////////////////////
 
   complex<double>  RefractiveIndex::mkSpecificRefractivity_16o16o16o(double tt, double pp, double nu){
 
@@ -8679,7 +8817,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 
 
 
-	return lshapeacum*1e-4;    // to give it in SI units (m^2)    // (  rad m^2 , m^2 )
+	return lshapeacum*1e-4;    // to give it in SI units (  rad m^2 , m^2 )
 
 
       }
@@ -8688,6 +8826,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 
   }
 
+  //////////////////////// Opacity Source Number: 20 /////////////////////////////
 
   complex<double>  RefractiveIndex::mkSpecificRefractivity_16o16o18o(double tt, double pp, double nu){
 
@@ -9769,6 +9908,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 
   }
 
+  //////////////////////// Opacity Source Number: 21 /////////////////////////////
 
   complex<double>  RefractiveIndex::mkSpecificRefractivity_16o16o17o(double tt, double pp, double nu){
 
@@ -10800,6 +10940,11 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 	vp=vp-1;
       }
 
+      //      cout << "vp=" << vp << endl;
+      //      cout << "ini3[" << vp << "]=" <<  ini3[vp]  << endl;
+      //      cout << "ifin3[" << vp << "]=" <<  ifin3[vp]  << endl;
+
+
       if(pp<25){
 	ini=ini3[vp];
 	ifin=ifin3[vp];
@@ -10843,6 +10988,8 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
     }
 
   }
+
+  //////////////////////// Opacity Source Number: 22 /////////////////////////////
 
   complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o16o(double tt, double pp, double nu){
 
@@ -11612,6 +11759,8 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
     }
 
   }
+
+  //////////////////////// Opacity Source Number: 23 /////////////////////////////
 
   complex<double>  RefractiveIndex::mkSpecificRefractivity_16o17o16o(double tt, double pp, double nu){
 

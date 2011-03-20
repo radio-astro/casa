@@ -91,6 +91,7 @@ void dispersive_fgrid(const boost::program_options::variables_map &vm)
   const double fmin=vm["fmin"].as<double>();
   const double fmax=vm["fmax"].as<double>();
   const double fstep=vm["fstep"].as<double>();
+  const double pwv=vm["pwv"].as<double>();
   const size_t nc=(fmax-fmin)/fstep;
 
   atm::SpectralGrid grid(nc,
@@ -109,8 +110,8 @@ void dispersive_fgrid(const boost::program_options::variables_map &vm)
   {
     oRow(std::cout,
 	 grid.getChanFreq(i).get(),
-	 rip.getNonDispersiveH2OPathLength(i).get(),
-	 rip.getDispersiveH2OPathLength(i).get(),
+	 rip.getNonDispersiveH2OPathLength(atm::Length(pwv,"mm"),i).get(),
+	 rip.getDispersiveH2OPathLength(atm::Length(pwv,"mm"),i).get(),
 	 rip.getNonDispersiveDryPathLength(i).get());
   }
 }

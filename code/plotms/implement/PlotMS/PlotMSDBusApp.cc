@@ -72,6 +72,11 @@ const String PlotMSDBusApp::PARAM_EXPORT_HIGHRES = "exporthighres";
 const String PlotMSDBusApp::PARAM_EXPORT_INTERACTIVE = "exportinteractive";
 const String PlotMSDBusApp::PARAM_EXPORT_ASYNC = "exportasync";
 
+const String PlotMSDBusApp::PARAM_COLORIZE = "colorize";
+const String PlotMSDBusApp::PARAM_COLORAXIS = "coloraxis";
+const String PlotMSDBusApp::PARAM_CANVASTITLE = "canvastitle";
+const String PlotMSDBusApp::PARAM_XAXISLABEL = "xaxislabel";
+const String PlotMSDBusApp::PARAM_YAXISLABEL = "yaxislabel";
 
 
 
@@ -124,6 +129,8 @@ PlotMSDBusApp::~PlotMSDBusApp() {
 }
 
 
+
+
 // Public Methods //
 
 bool PlotMSDBusApp::connectToDBus( const QString & ) {
@@ -133,8 +140,12 @@ bool PlotMSDBusApp::connectToDBus( const QString & ) {
     return res;
 }
 
+
+
+
 void PlotMSDBusApp::parametersHaveChanged(const PlotMSWatchedParameters& p,
         int updateFlag) {
+    (void)updateFlag;
     if(&p == &itsPlotms_.getParameters()) {
         itsParams_ = dynamic_cast<const PlotMSParameters&>(p);
 
@@ -148,12 +159,17 @@ void PlotMSDBusApp::parametersHaveChanged(const PlotMSWatchedParameters& p,
     }
 }
 
+
+
+
 void PlotMSDBusApp::plotsChanged(const PlotMSPlotManager& manager) {
     const vector<PlotMSPlotParameters*>& p = manager.plotParameters();
     itsPlotParams_.resize(p.size(),
             PlotMSPlotParameters(itsPlotms_.getPlotter()->getFactory()));
     for(unsigned int i = 0; i < p.size(); i++) itsPlotParams_[i] = *p[i];
 }
+
+
 
 
 // Protected Methods //
@@ -246,9 +262,10 @@ void PlotMSDBusApp::dbusRunXmlMethod(
     } else if(methodName == METHOD_GETPLOTPARAMS) {
         if(indexValid) {
             const PlotMSPlotParameters& p = itsPlotParams_[index];
-            
             const PMS_PP_MSData* d = p.typedGroup<PMS_PP_MSData>();
             const PMS_PP_Cache* c = p.typedGroup<PMS_PP_Cache>();
+            const PMS_PP_Canvas* can = p.typedGroup<PMS_PP_Canvas>();            
+            const PMS_PP_Display *disp = p.typedGroup<PMS_PP_Display>();
             
             Record ret;
             if(d != NULL) {
@@ -268,46 +285,74 @@ void PlotMSDBusApp::dbusRunXmlMethod(
                         PMS::dataColumn(c->yDataColumn()));
             }
             
+            if (disp!=NULL)  {
+                ret.define(PARAM_COLORIZE, disp->colorizeFlag());
+                PMS::Axis  ax = disp->colorizeAxis();
+                ret.define(PARAM_COLORAXIS, PMS::Axis(ax));
+            }
+
+            if (can!=NULL)   {
+                ret.define(PARAM_CANVASTITLE,  can->titleFormat().format);
+                ret.define(PARAM_XAXISLABEL,  can->xLabelFormat().format);
+                ret.define(PARAM_YAXISLABEL,  can->yLabelFormat().format);
+            }
+            
             if(ret.nfields() != 0) retValue.defineRecord(0, ret);
         } else callError = true;
         
-    } else if(methodName == METHOD_SETPLOTPARAMS) {
+    } 
+    else if (methodName == METHOD_SETPLOTPARAMS)  {
         bool resized = plotParameters(index);
-        PlotMSPlotParameters& p = itsPlotParams_[index];
-        PMS_PP_MSData* d = p.typedGroup<PMS_PP_MSData>();
-        if(d == NULL) {
-            p.setGroup<PMS_PP_MSData>();
-            d = p.typedGroup<PMS_PP_MSData>();
+        PlotMSPlotParameters& ppp = itsPlotParams_[index];
+
+        PMS_PP_MSData* ppdata = ppp.typedGroup<PMS_PP_MSData>();
+        if (ppdata == NULL) {
+            ppp.setGroup<PMS_PP_MSData>();
+            ppdata = ppp.typedGroup<PMS_PP_MSData>();
         }
-        PMS_PP_Cache* c = p.typedGroup<PMS_PP_Cache>();
-        if(c == NULL) {
-            p.setGroup<PMS_PP_Cache>();
-            c = p.typedGroup<PMS_PP_Cache>();
+
+        PMS_PP_Cache* ppcache = ppp.typedGroup<PMS_PP_Cache>();
+        if (ppcache == NULL) {
+            ppp.setGroup<PMS_PP_Cache>();
+            ppcache = ppp.typedGroup<PMS_PP_Cache>();
         }
+
+        PMS_PP_Display* ppdisp = ppp.typedGroup<PMS_PP_Display>();
+        if (ppdisp == NULL) {
+            ppp.setGroup<PMS_PP_Display>();
+            ppdisp = ppp.typedGroup<PMS_PP_Display>();
+        }
+
+        PMS_PP_Canvas* ppcan = ppp.typedGroup<PMS_PP_Canvas>();
+        if (ppcan == NULL) {
+            ppp.setGroup<PMS_PP_Canvas>();
+            ppcan = ppp.typedGroup<PMS_PP_Canvas>();
+        }
+        
         
         if(parameters.isDefined(PARAM_FILENAME) &&
            parameters.dataType(PARAM_FILENAME) == TpString)
-            d->setFilename(parameters.asString(PARAM_FILENAME));
+            ppdata->setFilename(parameters.asString(PARAM_FILENAME));
         
         if(parameters.isDefined(PARAM_SELECTION) &&
            parameters.dataType(PARAM_SELECTION) == TpRecord) {
-            PlotMSSelection sel = d->selection();
+            PlotMSSelection sel = ppdata->selection();
             sel.fromRecord(parameters.asRecord(PARAM_SELECTION));
-            d->setSelection(sel);
+            ppdata->setSelection(sel);
         }
         
         if(parameters.isDefined(PARAM_AVERAGING) &&
            parameters.dataType(PARAM_AVERAGING) == TpRecord) {
-            PlotMSAveraging avg = d->averaging();
+            PlotMSAveraging avg = ppdata->averaging();
             avg.fromRecord(parameters.asRecord(PARAM_AVERAGING));
-            d->setAveraging(avg);
+            ppdata->setAveraging(avg);
         }
 
         if(parameters.isDefined(PARAM_TRANSFORMATIONS) &&
            parameters.dataType(PARAM_TRANSFORMATIONS) == TpRecord) {
-            PlotMSTransformations trans = d->transformations();
+            PlotMSTransformations trans = ppdata->transformations();
             trans.fromRecord(parameters.asRecord(PARAM_TRANSFORMATIONS));
-            d->setTransformations(trans);
+            ppdata->setTransformations(trans);
         }
 
         
@@ -316,33 +361,70 @@ void PlotMSDBusApp::dbusRunXmlMethod(
         if(parameters.isDefined(PARAM_AXIS_X) &&
            parameters.dataType(PARAM_AXIS_X) == TpString) {
             a = PMS::axis(parameters.asString(PARAM_AXIS_X), &ok);
-            if(ok) c->setXAxis(a);
+            if(ok) ppcache->setXAxis(a);
         }
         if(parameters.isDefined(PARAM_AXIS_Y) &&
            parameters.dataType(PARAM_AXIS_Y) == TpString) {
             a = PMS::axis(parameters.asString(PARAM_AXIS_Y), &ok);
-            if(ok) c->setYAxis(a);
+            if(ok) ppcache->setYAxis(a);
         }
         
         PMS::DataColumn dc;
         if(parameters.isDefined(PARAM_DATACOLUMN_X) &&
            parameters.dataType(PARAM_DATACOLUMN_X) == TpString) {
             dc = PMS::dataColumn(parameters.asString(PARAM_DATACOLUMN_X), &ok);
-            if(ok) c->setXDataColumn(dc);
+            if(ok) ppcache->setXDataColumn(dc);
         }
         if(parameters.isDefined(PARAM_DATACOLUMN_Y) &&
            parameters.dataType(PARAM_DATACOLUMN_Y) == TpString) {
             dc = PMS::dataColumn(parameters.asString(PARAM_DATACOLUMN_Y), &ok);
-            if(ok) c->setYDataColumn(dc);
+            if(ok) ppcache->setYDataColumn(dc);
         }
+
+
+        if(parameters.isDefined(PARAM_CANVASTITLE) &&
+           parameters.dataType(PARAM_CANVASTITLE) == TpString)   {
+            PlotMSLabelFormat f = ppcan->titleFormat();
+            f.format =parameters.asString(PARAM_CANVASTITLE);
+            ppcan->setTitleFormat(f);
+        }
+
+        if(parameters.isDefined(PARAM_XAXISLABEL) &&
+           parameters.dataType(PARAM_XAXISLABEL) == TpString)   {
+            PlotMSLabelFormat f = ppcan->xLabelFormat();
+            f.format =parameters.asString(PARAM_XAXISLABEL);
+            ppcan->setXLabelFormat(f);
+
+        }
+
+        if(parameters.isDefined(PARAM_YAXISLABEL) &&
+           parameters.dataType(PARAM_YAXISLABEL) == TpString)   {
+            PlotMSLabelFormat f = ppcan->yLabelFormat();
+            f.format =parameters.asString(PARAM_YAXISLABEL);
+            ppcan->setYLabelFormat(f);
+        }
+
+
+        if(parameters.isDefined(PARAM_COLORIZE) &&
+           parameters.dataType(PARAM_COLORIZE) == TpBool)   {
+            bool want = parameters.asBool(PARAM_COLORIZE);
+            ppdisp->setColorize(want);
+        }
+
+        if(parameters.isDefined(PARAM_COLORAXIS) &&
+           parameters.dataType(PARAM_COLORAXIS) == TpString)   {
+            a = PMS::axis(parameters.asString(PARAM_COLORAXIS), &ok);
+            if (ok)  ppdisp->setColorize(a);
+        }
+
         
         if(updateImmediately && itsPlotms_.guiShown()) {
-            if(resized) itsPlotms_.addSinglePlot(&p);
+            if(resized) itsPlotms_.addSinglePlot(&ppp);
             else {
                 PlotMSPlotParameters* sp =
                     itsPlotms_.getPlotManager().plotParameters(index);
                 sp->holdNotification(this);
-                *sp = p;
+                *sp = ppp;
                 sp->releaseNotification();
             }
         } else if(updateImmediately) itsUpdateFlag_ = true;
@@ -383,6 +465,9 @@ void PlotMSDBusApp::dbusRunXmlMethod(
     }
     if(callError) log("Method " + methodName + " was called incorrectly.");
 }
+
+
+
 
 bool PlotMSDBusApp::_savePlot(const Record& parameters) {
 	bool ok = true;

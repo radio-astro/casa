@@ -5,7 +5,7 @@ import asap as sd
 from asap._asap import Scantable
 import pylab as pl
 
-def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, tau, masklist, masking, thresh, avg_limit, edge, blfunc, order, npiece, clipthresh, clipniter, verify, verbose, outfile, outform, overwrite, plotlevel):
+def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, tau, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, minnwave, maxnwave, clipthresh, clipniter, verify, verbose, outfile, outform, overwrite, plotlevel):
 	
 	casalog.origin('sdbaseline')
 
@@ -204,8 +204,8 @@ def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 		casalog.post( "Number of scans to be processed: %d" % (len(sn)) )
 		
 		# Warning for multi-IF data
-		#if ( len(s.getifnos()) > 1 and not masking == 'auto' ):
-		if ( len(s.getifnos()) > 1 and isinstance(masklist,list) and not masking == 'auto' ):
+		#if ( len(s.getifnos()) > 1 and not maskmode == 'auto' ):
+		if ( len(s.getifnos()) > 1 and isinstance(masklist,list) and not maskmode == 'auto' ):
 			casalog.post( 'The scantable contains multiple IF data.', priority = 'WARN' )
 			casalog.post( 'Note the same mask(s) are applied to all IFs based on CHANNELS.', priority = 'WARN' )
 			casalog.post( 'Baseline ranges may be incorrect for all but IF=%d.' % (s.getif(0)), priority = 'WARN' )
@@ -225,13 +225,24 @@ def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 		header += " Output File: "+project+"\n"
 		header += "   Flux Unit: "+s.get_fluxunit()+"\n"
 		header += "    Abscissa: "+s.get_unit()+"\n"
-		header += "   Fit order: %d\n"%(order)
-		header += "    Fit mode: "+masking+"\n"
-		if masking == 'auto':
+		header += "    Function: "+blfunc+"\n"
+		if blfunc == 'poly':
+			header += "   Fit order: %d\n"%(order)
+		elif blfunc == 'cspline':
+			header += "      nPiece: %d\n"%(npiece)
+			header += "  clipThresh: %f\n"%(clipthresh)
+			header += "   clipNIter: %d\n"%(clipniter)
+		elif blfunc == 'sinusoid':
+			header += "    minNWave: %d\n"%(minnwave)
+			header += "    maxNWave: %d\n"%(maxnwave)
+			header += "  clipThresh: %f\n"%(clipthresh)
+			header += "   clipNIter: %d\n"%(clipniter)
+		header += "   Mask mode: "+maskmode+"\n"
+		if maskmode == 'auto':
 			header += "   Threshold: %f\n"%(thresh)
 			header += "   avg_limit: %d\n"%(avg_limit)
 			header += "        Edge: "+str(edge)+"\n"
-		elif masking == 'list':
+		elif maskmode == 'list':
 			header += "   Fit Range: "+str(masklist)+"\n"
 		
 		blfile = project + "_blparam.txt"
@@ -264,7 +275,7 @@ def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 				s.set_selection(sel)
 				del sel
 				casalog.post("working on IF"+sif)
-			if (masking == 'interact'):
+			if (maskmode == 'interact'):
 				new_mask=sd.interactivemask(scan=s)
 				if (len(lmask) > 0):
 					new_mask.set_basemask(masklist=lmask,invert=False)
@@ -288,6 +299,8 @@ def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 					s.poly_baseline(mask=msk,order=order,plot=verify,outlog=verbose,blfile=bloutfile)
 				elif (blfunc == 'cspline'):
 					s.cspline_baseline(mask=msk,npiece=npiece,clipthresh=clipthresh,clipniter=clipniter,plot=verify,outlog=verbose,blfile=bloutfile)
+				elif (blfunc == 'sinusoid'):
+					s.sinusoid_baseline(mask=msk,minnwave=minnwave,maxnwave=maxnwave,clipthresh=clipthresh,clipniter=clipniter,plot=verify,outlog=verbose,blfile=bloutfile)
 				del msk
 			else:
 				basemask = None
@@ -296,25 +309,31 @@ def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 					# Create mask using list, e.g. masklist=[[500,3500],[5000,7500]]
 					basemask=s.create_mask(lmask)
 
-				if (masking == 'list'):
+				if (maskmode == 'list'):
 					if (blfunc == 'poly'):
 						s.poly_baseline(mask=basemask,order=order,plot=verify,outlog=verbose,blfile=bloutfile)
 					elif (blfunc == 'cspline'):
 						s.cspline_baseline(mask=basemask,npiece=npiece,clipthresh=clipthresh,clipniter=clipniter,plot=verify,outlog=verbose,blfile=bloutfile)
-				elif (masking == 'auto'):
+					elif (blfunc == 'sinusoid'):
+						s.sinusoid_baseline(mask=basemask,minnwave=minnwave,maxnwave=maxnwave,clipthresh=clipthresh,clipniter=clipniter,plot=verify,outlog=verbose,blfile=bloutfile)
+				elif (maskmode == 'auto'):
 					if (blfunc == 'poly'):
 						s.auto_poly_baseline(mask=basemask,order=order,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,outlog=verbose,blfile=bloutfile)
 					elif (blfunc == 'cspline'):
 						s.auto_cspline_baseline(mask=basemask,npiece=npiece,clipthresh=clipthresh,clipniter=clipniter,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,outlog=verbose,blfile=bloutfile)
+					elif (blfunc == 'sinusoid'):
+						s.auto_sinusoid_baseline(mask=basemask,minnwave=minnwave,maxnwave=maxnwave,clipthresh=clipthresh,clipniter=clipniter,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,outlog=verbose,blfile=bloutfile)
 			
 				#the above 10 lines will eventually become like this:
 				#if (blfunc == 'poly'):
 				#	funcinfo = {'type':'poly', 'order':order}
 				#elif (blfunc == 'cspline'):
 				#	funcinfo = {'type':'cspline', 'npiece':npiece, 'clipthresh':clipthresh, 'clipniter':clipniter}
-				#if (masking == 'auto'):
+				#elif (blfunc == 'sinusoid'):
+				#	funcinfo = {'type':'sinusoid', 'minnwave':minnwave, 'maxnwave':maxnwave, 'clipthresh':clipthresh, 'clipniter':clipniter}
+				#if (maskmode == 'auto'):
 				#	lfinfo = {'uselinefinder':True, 'edge':edge, 'threshold':thresh, 'chan_avg_limit':avg_limit}
-				#elif (masking == 'list'):
+				#elif (maskmode == 'list'):
 				#	lfinfo = {'uselinefinder':False}
 				#s.sub_baseline(mask=basemask,funcinfo=funcinfo,lfinfo=lfinfo,plot=verify,outlog=verbose,blfile=bloutfile)
 			

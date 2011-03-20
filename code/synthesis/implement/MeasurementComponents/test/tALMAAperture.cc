@@ -73,17 +73,30 @@ int main()
 
     CoordinateSystem coordsys;
     CoordinateSystem coordsys3;
+    CoordinateSystem coordsys3Big;
+    CoordinateSystem coordsys3Small;
     {
       Matrix<Double> xform(2,2);                                    
       xform = 0.0; xform.diagonal() = 1.0;                          
       DirectionCoordinate dirCoords(MDirection::J2000,                  
 				    Projection(Projection::SIN),        
 				    135*C::pi/180.0, 60*C::pi/180.0,    
-				    -1*C::pi/180.0/3600.0, 1*C::pi/180.0/3600.0,        
+				    -1.*C::pi/180.0/3600.0, 1.*C::pi/180.0/3600.0,        
 				    xform,                              
-				    0, 0);  
-      // reference position is in lower left corner; easier for beam inspection!
-      
+				    63.5, 63.5);  // (128-1)/2.
+      DirectionCoordinate dirCoordsBig(MDirection::J2000,                  
+				       Projection(Projection::SIN),        
+				       135*C::pi/180.0, 60*C::pi/180.0,    
+				       -5.*C::pi/180.0/3600.0, 5.*C::pi/180.0/3600.0,        
+				       xform,                              
+				       63.5, 63.5);  
+      DirectionCoordinate dirCoordsSmall(MDirection::J2000,                  
+					 Projection(Projection::SIN),        
+					 135*C::pi/180.0, 60*C::pi/180.0,    
+					 -0.5*C::pi/180.0/3600.0, 0.5*C::pi/180.0/3600.0,        
+					 xform,                              
+					 63.5, 63.5);  
+
       Vector<String> units(2); units = "deg";                       
       dirCoords.setWorldAxisUnits(units);                               
       
@@ -91,7 +104,13 @@ int main()
       // StokesCoordinate
       Vector<Int> iquv(1);                                         
       iquv(0) = Stokes::I;
-      StokesCoordinate stokesCoords(iquv);	
+      StokesCoordinate stokesCoordsBad(iquv);	
+      Vector<Int> stoks(4);
+      stoks(0) = Stokes::XX;
+      stoks(1) = Stokes::XY;
+      stoks(2) = Stokes::YX;
+      stoks(3) = Stokes::YY;
+      StokesCoordinate stokesCoordsGood(stoks);	
       
       // SpectralCoordinate
       SpectralCoordinate spectralCoords(MFrequency::TOPO,           
@@ -115,25 +134,34 @@ int main()
       
       // CoordinateSystem
       coordsys.addCoordinate(dirCoords);
-      coordsys.addCoordinate(stokesCoords);
+      coordsys.addCoordinate(stokesCoordsBad);
       coordsys.addCoordinate(spectralCoords);
       
       coordsys3.addCoordinate(dirCoords);
-      coordsys3.addCoordinate(stokesCoords);
+      coordsys3.addCoordinate(stokesCoordsGood);
       coordsys3.addCoordinate(spectralCoords3);      
+
+      coordsys3Big.addCoordinate(dirCoordsBig);
+      coordsys3Big.addCoordinate(stokesCoordsGood);
+      coordsys3Big.addCoordinate(spectralCoords3);      
+
+      coordsys3Small.addCoordinate(dirCoordsSmall);
+      coordsys3Small.addCoordinate(stokesCoordsGood);
+      coordsys3Small.addCoordinate(spectralCoords3);      
     }
     
     String name("tab1");
     TiledShape ts(IPosition(4,128,128,1,1));
+    TiledShape ts2(IPosition(4,128,128,4,1));
 
     PagedImage<Complex> im1(ts, coordsys, name);
     PagedImage<Float> im2(ts, coordsys, "tab2");
-    PagedImage<Float> im3(ts, coordsys3, "tab3");
-    PagedImage<Float> im4(ts, coordsys3, "tab4");
+    PagedImage<Complex> im3(ts2, coordsys3, "tab3");
+    PagedImage<Float> im4(ts2, coordsys3, "tab4");
 
     im1.set(Complex(1.0,1.0));
     im2.set(0.0);
-    im3.set(1.0);
+    im3.set(Complex(1.0,1.0));
     im4.set(0.0);
     
     ///////////////////////////////////////////
@@ -151,52 +179,82 @@ int main()
       cout << (Int)aa.antTypeFromName("CM01") << endl;
       cout << (Int)aa.antTypeFromName("XY01") << endl;
       cout << endl;   
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("DV01"),aa.antTypeFromName("DV02")) << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("DV01"),aa.antTypeFromName("DA02")) << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("DV01"),aa.antTypeFromName("PM02")) << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("DV01"),aa.antTypeFromName("CM02")) << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("DV01"),aa.antTypeFromName("XY02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("DV01"),aa.antTypeFromName("DV02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("DV01"),aa.antTypeFromName("DA02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("DV01"),aa.antTypeFromName("PM02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("DV01"),aa.antTypeFromName("CM02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("DV01"),aa.antTypeFromName("XY02")) << endl;
       cout << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("DA01"),aa.antTypeFromName("DV02")) << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("DA01"),aa.antTypeFromName("DA02")) << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("DA01"),aa.antTypeFromName("PM02")) << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("DA01"),aa.antTypeFromName("CM02")) << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("DA01"),aa.antTypeFromName("XY02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("DA01"),aa.antTypeFromName("DV02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("DA01"),aa.antTypeFromName("DA02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("DA01"),aa.antTypeFromName("PM02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("DA01"),aa.antTypeFromName("CM02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("DA01"),aa.antTypeFromName("XY02")) << endl;
       cout << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("PM01"),aa.antTypeFromName("DV02")) << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("PM01"),aa.antTypeFromName("DA02")) << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("PM01"),aa.antTypeFromName("PM02")) << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("PM01"),aa.antTypeFromName("CM02")) << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("PM01"),aa.antTypeFromName("XY02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("PM01"),aa.antTypeFromName("DV02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("PM01"),aa.antTypeFromName("DA02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("PM01"),aa.antTypeFromName("PM02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("PM01"),aa.antTypeFromName("CM02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("PM01"),aa.antTypeFromName("XY02")) << endl;
       cout << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("CM01"),aa.antTypeFromName("DV02")) << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("CM01"),aa.antTypeFromName("DA02")) << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("CM01"),aa.antTypeFromName("PM02")) << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("CM01"),aa.antTypeFromName("CM02")) << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("CM01"),aa.antTypeFromName("XY02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("CM01"),aa.antTypeFromName("DV02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("CM01"),aa.antTypeFromName("DA02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("CM01"),aa.antTypeFromName("PM02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("CM01"),aa.antTypeFromName("CM02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("CM01"),aa.antTypeFromName("XY02")) << endl;
       cout << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("XY01"),aa.antTypeFromName("DV02")) << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("XY01"),aa.antTypeFromName("DA02")) << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("XY01"),aa.antTypeFromName("PM02")) << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("XY01"),aa.antTypeFromName("CM02")) << endl;
-      cout << aa.antennaPairTypeCode(aa.antTypeFromName("XY01"),aa.antTypeFromName("XY02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("XY01"),aa.antTypeFromName("DV02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("XY01"),aa.antTypeFromName("DA02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("XY01"),aa.antTypeFromName("PM02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("XY01"),aa.antTypeFromName("CM02")) << endl;
+      cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("XY01"),aa.antTypeFromName("XY02")) << endl;
       cout << endl;
-      Int c = aa.antennaPairTypeCode(aa.antTypeFromName("DV01"),aa.antTypeFromName("DV02"));
-      ALMAAntennaType a,b;
-      ALMAAperture::antennaTypesFromPairType(a,b, c);
-      cout << (Int)a << " " << (Int)b << " (0,0)" << endl;
-      c = aa.antennaPairTypeCode(aa.antTypeFromName("CM01"),aa.antTypeFromName("CM02"));
-      ALMAAperture::antennaTypesFromPairType(a,b, c);
-      cout << (Int)a << " " << (Int)b << " (3,3)" << endl;
-      c = aa.antennaPairTypeCode(aa.antTypeFromName("DA01"),aa.antTypeFromName("DV02"));
-      ALMAAperture::antennaTypesFromPairType(a,b, c);
-      cout << (Int)a << " " << (Int)b << " (0,1)" << endl;
-      c = aa.antennaPairTypeCode(aa.antTypeFromName("CM01"),aa.antTypeFromName("PM02"));
-      ALMAAperture::antennaTypesFromPairType(a,b, c);
-      cout << (Int)a << " " << (Int)b << " (2,3)" << endl;
-      c = aa.antennaPairTypeCode(aa.antTypeFromName("DV"),aa.antTypeFromName("XY02"));
-      ALMAAperture::antennaTypesFromPairType(a,b, c);
-      cout << (Int)a << " " << (Int)b << " (-1,0)" << endl;
+      Int c = aa.cFKeyFromAntennaTypes(aa.antTypeFromName("DV01"),aa.antTypeFromName("DV02"));
+      Vector<ALMAAntennaType> a;
+      a.assign( ALMAAperture::antennaTypesFromCFKey(c) );
+      cout << (Int)a(0) << " ";
+      if(a.nelements()>1){
+	cout << (Int)a(1) << " (2) Error!" << endl;
+      }
+      else{
+	cout << " (2)" << endl;
+      }	
+      c = aa.cFKeyFromAntennaTypes(aa.antTypeFromName("CM01"),aa.antTypeFromName("CM02"));
+      a.assign( ALMAAperture::antennaTypesFromCFKey(c) );
+      cout << (Int)a(0) << " ";
+      if(a.nelements()>1){
+	cout << (Int)a(1) << " (3) Error!" << endl;
+      }
+      else{
+	cout << " (3)" << endl;
+      }	
+      c = aa.cFKeyFromAntennaTypes(aa.antTypeFromName("DA01"),aa.antTypeFromName("DV02"));
+      a.assign( ALMAAperture::antennaTypesFromCFKey(c) );
+      cout << (Int)a(0) << " " << (Int)a(1) << " (1,2)" << endl;
+      c = aa.cFKeyFromAntennaTypes(aa.antTypeFromName("DV02"),aa.antTypeFromName("DA01"));
+      a.assign( ALMAAperture::antennaTypesFromCFKey(c) );
+      cout << (Int)a(0) << " " << (Int)a(1) << " (2,1)" << endl;
+      c = aa.cFKeyFromAntennaTypes(aa.antTypeFromName("CM01"),aa.antTypeFromName("PM02"));
+      a.assign( ALMAAperture::antennaTypesFromCFKey(c) );
+      cout << (Int)a(0) << " " << (Int)a(1) << " (3,4)" << endl;
+      c = aa.cFKeyFromAntennaTypes(aa.antTypeFromName("PM01"),aa.antTypeFromName("CM02"));
+      a.assign( ALMAAperture::antennaTypesFromCFKey(c) );
+      cout << (Int)a(0) << " " << (Int)a(1) << " (4,3)" << endl;
+      c = aa.cFKeyFromAntennaTypes(aa.antTypeFromName("XY"),aa.antTypeFromName("DV02"));
+      a.assign( ALMAAperture::antennaTypesFromCFKey(c) );
+      cout << (Int)a(0) << " " << (Int)a(1) << " (0,2)" << endl;
+      c = aa.cFKeyFromAntennaTypes(aa.antTypeFromName("DV"),aa.antTypeFromName("XY02"));
+      a.assign( ALMAAperture::antennaTypesFromCFKey(c) );
+      cout << (Int)a(0) << " " << (Int)a(1) << " (2,0)" << endl;
+      c = aa.cFKeyFromAntennaTypes(aa.antTypeFromName("ZZ"),aa.antTypeFromName("XY02"));
+      a.assign( ALMAAperture::antennaTypesFromCFKey(c) );
+      cout << (Int)a(0) << " ";
+      if(a.nelements()>1){
+	cout << (Int)a(1) << " (0) Error!" << endl;
+      }
+      else{
+	cout << " (0)" << endl;
+      }	
       
       cout << endl;
       cout << ALMAAperture::antTypeStrFromType(aa.antTypeFromName("XY01")) << endl;
@@ -245,9 +303,9 @@ int main()
 	  }
 	  count++;
 	  // test reset
-	  if(count==10) apB.resetAntTypeMap();
-	  // ten rounds is enough
-	  if(count>10) break;
+	  if(count==5) apB.resetAntTypeMap();
+	  // five rounds is enough
+	  if(count>5) break;
 	}
 	
 	cout << "\nSecond tour through the MS, testing getVisParams and applySky" << endl;
@@ -258,26 +316,164 @@ int main()
 	  for(vi.origin();vi.more();vi++) {
 	    cout << "band id " << apB.getVisParams(vb) << endl;
 	    cout << "ant type map " << apB.antTypeMap(vb) << endl;
-	    cout << "ant type list " << apB.antTypeList(vb) << endl;
-	    apB.applySky(im1, vb, False, 0);
+	    Vector<ALMAAntennaType> aTs = apB.antTypeList(vb);
+	    cout << "ant type list " << aTs << endl;
+	    Int cfKey = ALMAAperture::cFKeyFromAntennaTypes(aTs(0), aTs(0));
+
+	    if(vb.spectralWindow()<4){ // i.e. not a WVR SPW for this dataset
+	      try{
+		apB.applySky(im1, vb, True, cfKey);
+	      } catch (AipsError x) {
+		cout << "Caught expected error: " << x.getMesg() << endl;
+	      } 
+	      apB.applySky(im3, vb, True, cfKey);
+	    }
+	    else{
+	      try{
+		apB.applySky(im1, vb, True, cfKey);
+	      } catch (AipsError x) {
+		cout << "Caught expected error: " << x.getMesg() << endl;
+	      } 
+	    }
 	  }
 	  count++;
 	  // test reset
-	  if(count==10) apB.resetAntTypeMap();
-	  // ten rounds is enough
-	  if(count>10) break;
+	  if(count==5) apB.resetAntTypeMap();
+	  // five rounds is enough
+	  if(count>5) break;
 	}
+
+	cout << endl << "******** ApplySky to unity image with squint and without ***********" << endl << endl;
+
+	count = 0;
+	Int count2 = 0;
+
+	for(vi.originChunks();vi.moreChunks();vi.nextChunk()) {
+	  cout << "next chunk" << endl;
+	  for(vi.origin();vi.more();vi++) {
+
+	    if(vb.spectralWindow()<4){ // i.e. not a WVR SPW for this dataset
+	      if(count2==0){ // first occurence
+		Vector<ALMAAntennaType> aTs = apB.antTypeList(vb);
+		Int cfKey = ALMAAperture::cFKeyFromAntennaTypes(aTs(0), aTs(0));
+		Int cfKey2 = ALMAAperture::cFKeyFromAntennaTypes(aTs(0), aTs(1));
+		Int cfKey3 = ALMAAperture::cFKeyFromAntennaTypes(aTs(1), aTs(1));
+		Int cfKey4 = ALMAAperture::cFKeyFromAntennaTypes(ALMAAperture::antTypeFromName("DV"),ALMAAperture::antTypeFromName("DA"));
+		Int cfKey5 = ALMAAperture::cFKeyFromAntennaTypes(ALMAAperture::antTypeFromName("DA"),ALMAAperture::antTypeFromName("DA"));
+
+		PagedImage<Complex> im5(ts2, coordsys3, "pb_squintDVDV");
+		im5.set(Complex(1.0,1.0));
+		apB.applySky(im5, vb, True, cfKey);
+		
+		PagedImage<Complex> im6(ts2, coordsys3, "pb_nosquintDVDV");
+		im6.set(Complex(1.0,1.0));
+		apB.applySky(im6, vb, False, cfKey);
+		
+		PagedImage<Complex> im7(ts2, coordsys3, "pb_squintDVPM");
+		im7.set(Complex(1.0,1.0));
+		apB.applySky(im7, vb, True, cfKey2);
+		
+		PagedImage<Complex> im8(ts2, coordsys3, "pb_nosquintDVPM");
+		im8.set(Complex(1.0,1.0));
+		apB.applySky(im8, vb, False, cfKey2);
+		
+		PagedImage<Complex> im9(ts2, coordsys3, "pb_squintPMPM");
+		im9.set(Complex(1.0,1.0));
+		apB.applySky(im9, vb, True, cfKey3);
+		
+		PagedImage<Complex> im10(ts2, coordsys3, "pb_nosquintPMPM");
+		im10.set(Complex(1.0,1.0));
+		apB.applySky(im10, vb, False, cfKey3);
+		
+		PagedImage<Complex> im11(ts2, coordsys3, "pb_squintDVDA");
+		im11.set(Complex(1.0,1.0));
+		apB.applySky(im11, vb, True, cfKey4);
+		
+		PagedImage<Complex> im12(ts2, coordsys3, "pb_squintDADA");
+		im12.set(Complex(1.0,1.0));
+		apB.applySky(im12, vb, True, cfKey5);
+		
+		PagedImage<Complex> im13(ts2, coordsys3Big, "pb_squintDVDABig");
+		im13.set(Complex(1.0,1.0));
+		apB.applySky(im13, vb, True, cfKey4);
+		
+		PagedImage<Complex> im14(ts2, coordsys3Small, "pb_squintDVDASmall");
+		im14.set(Complex(1.0,1.0));
+		apB.applySky(im14, vb, True, cfKey4);
+
+		count2++;
+		
+	      }
+	      else if(count2>200 && vb.fieldId()!=1){ // pick later occurance (to vary PA) but avoid Mars because it has invalid coords 
+
+		Vector<ALMAAntennaType> aTs = apB.antTypeList(vb);
+		Int cfKey = ALMAAperture::cFKeyFromAntennaTypes(aTs(0), aTs(0));
+		Int cfKey2 = ALMAAperture::cFKeyFromAntennaTypes(aTs(0), aTs(1));
+		Int cfKey3 = ALMAAperture::cFKeyFromAntennaTypes(aTs(1), aTs(1));
+		Int cfKey4 = ALMAAperture::cFKeyFromAntennaTypes(ALMAAperture::antTypeFromName("DV"),ALMAAperture::antTypeFromName("DA"));
+		Int cfKey5 = ALMAAperture::cFKeyFromAntennaTypes(ALMAAperture::antTypeFromName("DA"),ALMAAperture::antTypeFromName("DA"));
+		
+		PagedImage<Complex> im15(ts2, coordsys3, "pb2_squintDVDA");
+		im15.set(Complex(1.0,1.0));
+		apB.applySky(im15, vb, True, cfKey4);
+		
+		PagedImage<Complex> im16(ts2, coordsys3, "pb2_squintDADA");
+		im16.set(Complex(1.0,1.0));
+		apB.applySky(im16, vb, True, cfKey5);
+		
+		PagedImage<Complex> im17(ts2, coordsys3Big, "pb2_squintDVDABig");
+		im17.set(Complex(1.0,1.0));
+		apB.applySky(im17, vb, True, cfKey4);
+		
+		PagedImage<Complex> im18(ts2, coordsys3Small, "pb2_squintDVDASmall");
+		im18.set(Complex(1.0,1.0));
+		apB.applySky(im18, vb, True, cfKey4);
+
+		PagedImage<Float> im18b(ts2, coordsys3Small, "pb2_squintDVDASmall_float");
+		im18b.set(1.0);
+		apB.applySky(im18b, vb, True, cfKey4);
+
+		////////// with ray tracing
+
+		cout << "Now using ray tracing ..." << endl;
+
+		PagedImage<Complex> im19(ts2, coordsys3, "pb2_squintDVDAray");
+		im19.set(Complex(1.0,1.0));
+		apB.applySky(im19, vb, True, cfKey4, True);
+		
+		PagedImage<Complex> im21(ts2, coordsys3Big, "pb2_squintDVDABigray");
+		im21.set(Complex(1.0,1.0));
+		apB.applySky(im21, vb, True, cfKey4, True);
+		
+		PagedImage<Complex> im22(ts2, coordsys3Small, "pb2_squintDVDASmallray");
+		im22.set(Complex(1.0,1.0));
+		apB.applySky(im22, vb, True, cfKey4, True);
+
+		count2++;		
+
+		count = -1;
+	      }
+	      else{
+		count2++;
+	      }
+	    }
+	  }
+	  if(count<0) break;
+	  count++;
+	}
+
       }
 
       aa.destroyAntResp();      
       cout << "new ALMAAperture, should initialise the response table again" << endl;
       ALMAAperture apC;
       cout << apC.name() << endl;
-      
+
     } // end tests
 
   } catch (AipsError x) {
-    cout << x.getMesg() << endl;
+    cout << "Caught Error: " << x.getMesg() << endl;
+    exit(1);
   } 
 
   cout << "OK" << endl;

@@ -29,7 +29,7 @@
 #define TRIALDISPLAY_WORLDCANVASHOLDER_H
 
 #include <casa/aips.h>
-#include <casa/Containers/List.h>
+#include <list>
 #include <display/DisplayEvents/WCRefreshEH.h>
 #include <display/DisplayEvents/WCPositionEH.h>
 #include <display/DisplayEvents/WCMotionEH.h>
@@ -234,8 +234,7 @@ private:
 
   // A list containing the DisplayDatas that are registered on this
   // WorldCanvasHolder.
-  List<DisplayData *> itsDisplayList;
-
+  std::list<DisplayData*> itsDisplayList;
   // A buffer to contain the restrictions that DisplayDatas must match
   // if they are to be allowed to draw themselves.
   AttributeBuffer itsRestrictions;

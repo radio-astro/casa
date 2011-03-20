@@ -188,6 +188,7 @@ public:
 
   // Has this operator changed since the last application?
   virtual Bool changed(const VisBuffer& vb);
+  virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
 
 private:
 

@@ -18,7 +18,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMSpectralGrid.h,v 1.3 2010/02/08 17:37:52 jroche Exp $"
+ * "@(#) $Id: ATMSpectralGrid.h,v 1.3.24.1 2011/03/03 11:16:36 dbroguie Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------
@@ -297,6 +297,7 @@ public:
    * @ return the frequency (Hz) corresponding to the center of the channel
    */
   Frequency getChanFreq(unsigned int chanNum);
+  Frequency getChanWidth(unsigned int chanNum);
 
   /** Accessor to the frequency (Hz) for a given grid point for the specified spectral window
    * @param spwId     spectral window identifier (0-based)
@@ -304,6 +305,8 @@ public:
    * @ return the frequency (Hz) corresponding to the center of the channel
    */
   Frequency getChanFreq(unsigned int spwId, unsigned int chanNum);
+  Frequency getChanWidth(unsigned int spwId, unsigned int chanNum);
+
 
   /** Accessor to the frequencies in the specified units for a given channel index (0-based) for the
    * the specified spectral window its corresponding other sideband.

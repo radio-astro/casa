@@ -1,9 +1,30 @@
-/*
- * VLAT.h
- *
- *  Created on: Nov 1, 2010
- *      Author: jjacobs
- */
+//# VLAT.h: Visibility lookahead concurrency definitions (classes VlaDatum, VlaData, VLAT)
+//# Copyright (C) 2011
+//# Associated Universities, Inc. Washington DC, USA.
+//#
+//# This library is free software; you can redistribute it and/or modify it
+//# under the terms of the GNU Library General Public License as published by
+//# the Free Software Foundation; either version 2 of the License, or (at your
+//# option) any later version.
+//#
+//# This library is distributed in the hope that it will be useful, but WITHOUT
+//# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+//# License for more details.
+//#
+//# You should have received a copy of the GNU Library General Public License
+//# along with this library; if not, write to the Free Software Foundation,
+//# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+//#
+//# Correspondence concerning CASA should be addressed as follows:
+//#        Internet email: CASA-request@nrao.edu.
+//#        Postal address: CASA Project Office
+//#                        National Radio Astronomy Observatory
+//#                        520 Edgemont Road
+//#                        Charlottesville, VA 22903-2475 USA
+//#
+//#
+//# $Id$
 
 #ifndef VLAT_H_
 #define VLAT_H_
@@ -27,6 +48,58 @@ using namespace casa::async;
 namespace casa {
 
 class VisBuffer;
+
+// <summary>
+//    VlaDatum is a single elemement in the VlaDatum buffer ring used to support the
+//    ROVisibilityIteratorAsync.
+// </summary>
+
+// <use visibility=local>
+
+// <reviewed reviewer="" date="yyyy/mm/dd" tests="" demos="">
+// </reviewed>
+
+// <prerequisite>
+//   <li> VisBuffer
+//   <li> VisBufferAsync
+//   <li> ROVisibilityIteratorAsync
+//   <li> VlaData
+//   <li> VLAT
+// </prerequisite>
+//
+// <etymology>
+//    VlaDatum is the quantum of data associated with a single position of the visibility
+//    look-ahead scheme.
+// </etymology>
+//
+// <synopsis>
+//    VlaDatum is a single buffer for data produced by the VLAT thread and consumed by the
+//    main thread.  A collection of VlaDatum objects is organized as a buffer ring in a
+//    VlaData object.
+//
+//    A VlaDatum object is responsible for maintaining its state as well as containing the set
+//    of data accessed from a single position of a ROVisibilityIterator.  It contains a
+//    VisibilityBufferAsync object to hold the data that will be used by the main thread; other
+//    data is maintained in member variables.
+//
+//    VlaDatum has no concurrency mechanisms built in it; that is handled by the VlaData object.
+//    It does support a set of states that indicate its current use:
+//        Empty -> Filling -> Full -> Reading -> Empty.
+//    Changing state is accomplished by the methods fillStart, fillComplete, readStart and readComplete.
+// </synopsis>
+//
+// <example>
+// </example>
+//
+// <motivation>
+// </motivation>
+//
+// <thrown>
+//    <li>AipsError for unhandleable errors
+// </thrown>
+//
+// <todo asof="yyyy/mm/dd">
+// </todo>
 
 class VlaDatum {
 
@@ -73,10 +146,91 @@ private:
 
 class VLAT;
 
+// <summary>
+//    The VlaData class is a buffer ring used to support the communication between
+//    the visiblity lookahead thread (VLAT) and the main application thread.  It
+//    implements the required concurrency control to support this communication.
+// </summary>
+
+// <use visibility=local>
+
+// <reviewed reviewer="" date="yyyy/mm/dd" tests="" demos="">
+// </reviewed>
+
+// <prerequisite>
+//   <li> VisBuffer
+//   <li> VisBufferAsync
+//   <li> ROVisibilityIteratorAsync
+//   <li> VlaData
+//   <li> VLAT
+// </prerequisite>
+//
+// <etymology>
+//    VlaData is the entire collection of visibility look-ahead data currently (or potentially)
+//    shared between the lookahead and main threads.
+// </etymology>
+//
+// <synopsis>
+//    The VlaData object supports the sharing of information between the VLAT look ahead thread and
+//    the main thread.  It contains a buffer ring of VlaDatum objects which each hold all of the
+//    data that is normally access by a position of a ROVisibiltyIterator.  Other data that is shared
+//    or communicated between the two threads is also managed by VlaData.
+//
+//    A single mutex (member variable mutex_p) is used to protect data that is shared between the
+//    two threads.  In addition there is a single PThreads condition variable, vlaDataChanged_p used
+//    to allow either thread to wait for the other to change the state of VlaData object.
+//
+//    Buffer ring concurrency has two levels: the mutex protecting VlaData and the state of the
+//    VlaDatum object.  Whenever a free buffer (VlaDatum object) is available the VLAT thread will
+//    fill it with the data from the next position of the ROVisibilityIterator; a buffer is free for
+//    filling when it is in the Empty state.  Before the VLAT fills a buffer it must call fillStart;
+//    this method will block the caller until the next buffer in the ring becomes free; as a side effect
+//    the buffer's state becomes Filling.  After fillStart is complete, the VLAT owns the buffer.
+//    When the VLAT is done with the buffer it calls fillComplete to relinquish the buffer; this causes
+//    the buffer state to change from Filling to Full.
+//
+//    The main thread calls readStart to get the next filled buffer; the main thread is blocked until
+//    the a filled buffer is available.  When the full buffer is ready its state is changed to Reading
+//    and readStart returns.  The VLAT thread will not access the buffer while the main thread is reading.
+//    The read operation is terminated by calling readComplete; this changes the buffer state to Empty and
+//    does not block the main thread except potentially to acquire the mutex.
+//
+//    The concurrency scheme is fairly sound except for the possibility of low-level data sharing through
+//    CASA data structures.  Some of the CASA containers (e.g., Array<T>) can potentially share storage
+//    although it appears that normal operation they do not.  Some problems have been encountered with
+//    objects that share data via reference-counted pointers.  For instance, objects derived from
+//    MeasBase<T,U> (e.g., MDirection, MPosition, MEpoch, etc.) share the object that serves as the
+//    frame of reference for the measurement; only by converting the object to text and back again can
+//    a user easily obtain a copy which does not share values with another.  It is possible that other
+//    objects deep many layers down a complex object may still be waiting to trip up VlaData's
+//    concurrency scheme.
+//
+//    On unusual interaction mediated by VlaData occurs when it is necessary to reset the visibility
+//    iterator back to the start of a MeasurementSet.  This usually happens either at the start of the MS
+//    sweep (e.g., to reset the row blocking factor of the iterator) or at the end (e.g., to make an
+//    additional pass through the MS).  The main thread requests a reset of the VI and then is blocked
+//    until the VI is reset.  The sweepTerminationRequested_p variable is set to true; when the VLAT
+//    discovers that this variable is true it resets the buffer ring, repositions its VI to the start
+//    of the MS and then informs the blocked main thread by setting viResetComplete to true and
+//    signalling vlaDataChanged_p.
+// </synopsis>
+//
+// <example>
+// </example>
+//
+// <motivation>
+// </motivation>
+//
+// <thrown>
+//    <li> AipsError
+// </thrown>
+//
+// <todo asof="yyyy/mm/dd">
+// </todo>
+
 class VlaData {
 
 public:
-
 
 	VlaData (Int nBuffers);
 	~VlaData ();
@@ -106,7 +260,6 @@ public:
 	static Int logLevel_p;
 
 protected:
-
 
 private:
 
@@ -216,6 +369,14 @@ private:
 class MeasurementSet;
 template<typename T> class Block;
 
+// VlatFunctor is an abstract class for functor objects used to encapsulate the various
+// filling methods (e.g., fillVis, fillAnt1, etc.).  This allows the various functions
+// to be put into a list of fill methods that are used by the VLAT everytime the VLAT's
+// visibliity iterator is advanced.  There are two subclasses VlatFunctor0 and VlatFunctor1
+// which support nullar and unary fill methods.  The fillers for visibility-related data
+// (e.g., fillVis and fillVisCube) take a parameter to indicate which sort of visibility
+// (e.g., actual, model, corrected) is to be filled.
+
 class VlatFunctor {
 
 public:
@@ -290,6 +451,71 @@ template <typename Ret, typename Arg>
 VlatFunctor1<Ret, Arg> * vlatFunctor1 (Ret (VisBuffer::* f) (Arg), Arg i)
 { return new VlatFunctor1<Ret, Arg> (f, i);}
 
+// <summary>
+// VLAT is the Visibility LookAhead Thread.  This thread advances a visibility iterator
+// and fills the data indicated by the visibility iterator into the VlaData buffer ring.
+// </summary>
+
+// <use visibility=local>
+
+// <reviewed reviewer="" date="yyyy/mm/dd" tests="" demos="">
+// </reviewed>
+
+// <prerequisite>
+//   <li> VisBuffer
+//   <li> VisBufferAsync
+//   <li> ROVisibilityIteratorAsync
+//   <li> VlaData
+//   <li> VLAT
+// </prerequisite>
+//
+// <etymology>
+//    VLAT is the Visibility LookAhead Thread.  It is not related to the more common NRAO
+//    acronym VLA.
+// </etymology>
+//
+// <synopsis>
+//
+//    The VLAT is a thread object that buffers up data from successive visibility iterator positions
+//    in a MeasurementSet.  It is part of the backend to a ROVisibilityIteratorAsync (ROVIA)
+//    object used by the main thread to replace the normal, synchronous ROVisibilityIterator.
+//    When the user creates a ROVIA object the information normally used to create a ROVisibilityIterator
+//    is passed to the VLAT which uses it to create a ROVisibilityIterator local to itself.  The VLAT then
+//    uses this ROVisibilityIterator to fill buffers in the VlaData-managed buffer ring (this interaction
+//    is described in VlaData).  Filling consists of attaching VLAT's ROVisibilityIterator to the
+//    VisBufferAsync object associated with a buffer and then calling the fill operations for the data
+//    items (e.g., visCube, Ant1, etc.) which the user has requested be prefetched.  The fill operations
+//    will likely result in synchronous I/O operations being performed by the column access methods
+//    related to the Table system (memory-resident tables, columns, etc., may be able to satisfy a fill
+//    operation without performing I/O).
+//
+//    The thread may be terminated by calling the terminate method.  This will cause the VLAT to terminate
+//    when it notices the termination request.  The termination may not be immediate since the VLAT may
+//    be engaged in a syncrhonous I/O operation and is uanble to detect the termination request until
+//    that I/O has completed.
+//
+//    Normally the VLAT sweeps the VI to the end of the measurement set and then awaits further instructions.
+//    The main thread may stop the sweep early by calling VlaData::terminateSweep which will eventually be
+//    detected by the VLAT and result in a coordinated reset of the sweep.  When the sweep reset is applied
+//    the VLAT will also detect visibility iterator modification requests (e.g., setRowBlocking, selectChannel,
+//    setInterval, etc.) that were queued up in VlaData; for the set of available VI modification requests
+//    supported see ROVisibilityIteratorAsync.
+//
+// </synopsis>
+//
+// <example>
+// </example>
+//
+// <motivation>
+// </motivation>
+//
+// <thrown>
+//    <li> AipsError for unrecoverable errors.  These will not be caught (in C++ anyway) and cause
+//         application termination.
+// </thrown>
+//
+// <todo asof="yyyy/mm/dd">
+// </todo>
 
 class VLAT : public casa::async::Thread {
 
@@ -321,23 +547,6 @@ public:
 	void terminate ();
 
 protected:
-
-	//class FillerDictionary;
-
-//	class FillerDependencies : public map<ROVisibilityIteratorAsync::PrefetchColumnIds,
-//	                                      set<ROVisibilityIteratorAsync::PrefetchColumnIds> >{
-//
-//    public:
-//
-//	    void add (ROVisibilityIteratorAsync::PrefetchColumnIds column,
-//	              ROVisibilityIteratorAsync::PrefetchColumnIds requiresColumn1, ...);
-//        void checkForCircularDependence ();
-//        Bool isRequiredBy (ROVisibilityIteratorAsync::PrefetchColumnIds requiree,
-//                           ROVisibilityIteratorAsync::PrefetchColumnIds requirer) const;
-//        Bool isRequiredByAny (ROVisibilityIteratorAsync::PrefetchColumnIds requiree,
-//                              const set<ROVisibilityIteratorAsync::PrefetchColumnIds> & requirers) const;
-//	    void performTransitiveClosure (FillerDictionary &);
-//	};
 
 	class FillerDictionary : public map<ROVisibilityIteratorAsync::PrefetchColumnIds, VlatFunctor *> {
 

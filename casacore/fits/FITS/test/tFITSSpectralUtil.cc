@@ -47,6 +47,7 @@ int main()
 	Double crval, cdelt, crpix, altrval, altrpix;
 	Int velref;
 	Bool haveAlt;
+	String specsys;
 	Double restFreq = 1420.4058e6;
 	Double refFreq = 1400.0e6;
 	Double freqInc = 2.5e6;
@@ -57,14 +58,15 @@ int main()
 	AlwaysAssertExit(FITSSpectralUtil::
 			 toFITSHeader(ctype, crval, cdelt,
 				      crpix, haveAlt, altrval,
-				      altrpix, velref, restFreq, logger,
+				      altrpix, velref, restFreq, 
+				      specsys, logger,
 				      refFreq, refPix, freqInc,
 				      refFrame, True, velPref));
 	// Actually construct the header record
 	Record header;
 	if (restFreq > 0) {
-	    header.define("restfreq",restFreq);
-	    header.setComment("restfreq","Rest Frequency (Hz)");
+	    header.define("restfrq",restFreq);
+	    header.setComment("restfrq","Rest Frequency (Hz)");
 	}
 	if (haveAlt) {
 	    header.define("altrval",altrval);
@@ -83,6 +85,7 @@ int main()
 		addComment(header,
 		   "casacore non-standard usage: 4 LSD, 5 GEO, 6 SOU, 7 GAL");
 	}
+	header.define("specsys",specsys);
 	
 	// dummy primary header axes
 	Vector<String> ctypeVec(2), cunitVec(2);
@@ -160,6 +163,10 @@ int main()
 		    throw(AipsError("testFITSSpectralUtil: frameFromTag did not return original frame"));
 		}
 	    }
+	    if (!FITSSpectralUtil::specsysFromFrame(tag, inFrame)) {
+	      throw(AipsError("testFITSSpectralUtil: unexpected failure in specsysFromFrame"));
+	    }
+
 	}
     } catch (AipsError x) {
 	cout << "Caught an exception: " << x.getMesg() << endl;
@@ -167,7 +174,7 @@ int main()
     }
     try { // same as above, however with wavelength spectral axis
 	// to from FITSHeader
-	String ctype;
+      String ctype, specsys;
 	Double crval, cdelt, crpix, altrval, altrpix;
 	Int velref;
 	Bool haveAlt;
@@ -181,7 +188,8 @@ int main()
 	AlwaysAssertExit(FITSSpectralUtil::
 			 toFITSHeader(ctype, crval, cdelt,
 				      crpix, haveAlt, altrval,
-				      altrpix, velref, restFreq, logger,
+				      altrpix, velref, restFreq, 
+				      specsys, logger,
 				      refFreq, refPix, freqInc,
 				      refFrame, False, velPref,
 				      True)); // wavelength preferred
@@ -208,7 +216,8 @@ int main()
 		addComment(header,
 		   "casacore non-standard usage: 4 LSD, 5 GEO, 6 SOU, 7 GAL");
 	}
-	
+	header.define("specsys",specsys);
+
 	// dummy primary header axes
 	Vector<String> ctypeVec(2), cunitVec(2);
 	Vector<Double> crvalVec(2), crpixVec(2), cdeltVec(2);
@@ -256,7 +265,7 @@ int main()
 	// fromFITSHeader
 	AlwaysAssertExit(near(refPix,refPixOut));
 	AlwaysAssertExit(near(refFreq,refFreqOut));
-	AlwaysAssertExit(near(freqInc,freqIncOut));
+	AlwaysAssertExit(near(freqInc,freqIncOut, 3E-6));
 	AlwaysAssertExit(refFrame==refFrameOut);
 	AlwaysAssertExit(near(restFreq,restFreqOut));
 	

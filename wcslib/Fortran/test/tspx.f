@@ -1,40 +1,40 @@
 *=======================================================================
 *
-*   WCSLIB 4.3 - an implementation of the FITS WCS standard.
-*   Copyright (C) 1995-2007, Mark Calabretta
+* WCSLIB 4.7 - an implementation of the FITS WCS standard.
+* Copyright (C) 1995-2011, Mark Calabretta
 *
-*   This file is part of WCSLIB.
+* This file is part of WCSLIB.
 *
-*   WCSLIB is free software: you can redistribute it and/or modify
-*   it under the terms of the GNU Lesser General Public License as
-*   published by the Free Software Foundation, either version 3 of
-*   the License, or (at your option) any later version.
+* WCSLIB is free software: you can redistribute it and/or modify it
+* under the terms of the GNU Lesser General Public License as published
+* by the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
 *
-*   WCSLIB is distributed in the hope that it will be useful, but
-*   WITHOUT ANY WARRANTY; without even the implied warranty of
-*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*   GNU Lesser General Public License for more details.
+* WCSLIB is distributed in the hope that it will be useful, but WITHOUT
+* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+* FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
+* License for more details.
 *
-*   You should have received a copy of the GNU Lesser General Public
-*   License along with WCSLIB.  If not, see http://www.gnu.org/licenses.
+* You should have received a copy of the GNU Lesser General Public
+* License along with WCSLIB.  If not, see http://www.gnu.org/licenses.
 *
-*   Correspondence concerning WCSLIB may be directed to:
-*      Internet email: mcalabre@atnf.csiro.au
-*      Postal address: Dr. Mark Calabretta
-*                      Australia Telescope National Facility, CSIRO
-*                      PO Box 76
-*                      Epping NSW 1710
-*                      AUSTRALIA
+* Correspondence concerning WCSLIB may be directed to:
+*   Internet email: mcalabre@atnf.csiro.au
+*   Postal address: Dr. Mark Calabretta
+*                   Australia Telescope National Facility, CSIRO
+*                   PO Box 76
+*                   Epping NSW 1710
+*                   AUSTRALIA
 *
-*   Author: Mark Calabretta, Australia Telescope National Facility
-*   http://www.atnf.csiro.au/~mcalabre/index.html
-*   $Id: tspx.f,v 4.3 2007/12/27 05:42:52 cal103 Exp $
+* Author: Mark Calabretta, Australia Telescope National Facility
+* http://www.atnf.csiro.au/~mcalabre/index.html
+* $Id: tspx.f,v 4.7 2011/02/07 07:03:43 cal103 Exp $
 *=======================================================================
 
       PROGRAM TSPX
 *-----------------------------------------------------------------------
 *
-*   TSPEC tests the spectral transformation routines for closure.
+* TSPEC tests the spectral transformation routines for closure.
 *
 *-----------------------------------------------------------------------
 *     Length of spectral axis - see CLOSURE.
@@ -46,14 +46,6 @@
      :          SPC1(NSPEC), SPC2(NSPEC), STEP, VELO(NSPEC), WAVE(NSPEC)
 
       INCLUDE 'spx.inc'
-
-      EXTERNAL FREQAFRQ, AFRQFREQ, FREQENER, ENERFREQ,
-     :         FREQWAVN, WAVNFREQ, FREQVRAD, VRADFREQ,
-     :         FREQWAVE, WAVEFREQ, FREQAWAV, AWAVFREQ,
-     :         FREQVELO, VELOFREQ, WAVEVOPT, VOPTWAVE,
-     :         WAVEZOPT, ZOPTWAVE, WAVEAWAV, AWAVWAVE,
-     :         WAVEVELO, VELOWAVE, AWAVVELO, VELOAWAV,
-     :         VELOBETA, BETAVELO
 
       DATA C /2.99792458D8/
 *-----------------------------------------------------------------------
@@ -100,8 +92,8 @@
       STEP = (2D0*C/NSPEC) / 2D0
       K = -NSPEC
       DO 50 J = 1, NSPEC
-         VELO(J) = (K+1)*STEP
-         K = K + 2
+        VELO(J) = (K+1)*STEP
+        K = K + 2
  50   CONTINUE
 
       WRITE (*, 60) VELO(1)*1D-3, VELO(NSPEC)*1D-3,
@@ -206,64 +198,64 @@
 *     Convert the first to the second.
       STATUS = FWD(PARM, NSPEC, 1, 1, SPEC1, SPEC2, STAT1)
       IF (STATUS.NE.0) THEN
-         WRITE (*, 10) FROM, TO, STATUS
- 10      FORMAT (A,A,' ERROR',I2,'.')
+        WRITE (*, 10) FROM, TO, STATUS
+ 10     FORMAT (A,A,' ERROR',I2,'.')
       END IF
 
 *     Convert the second back to the first.
       STATUS = REV(PARM, NSPEC, 1, 1, SPEC2, CLOS, STAT2)
       IF (STATUS.NE.0) THEN
-         WRITE (*, 10) TO, FROM, STATUS
+        WRITE (*, 10) TO, FROM, STATUS
       END IF
 
       RESIDMAX = 0.0
 
 *     Test closure.
       DO 50 J = 1, NSPEC
-         IF (STAT1(J).NE.0) THEN
-            IF (SKIP) WRITE (*, *)
-            WRITE (*, 20) FROM, TO, FROM, SPEC1(J), TO, STAT1(J)
- 20         FORMAT (A,A,': ',A,' =',1PE19.12,' -> ',A,
-     :              ' = ???, stat = ',I2)
-            SKIP = .FALSE.
-            GO TO 50
-         END IF
+        IF (STAT1(J).NE.0) THEN
+          IF (SKIP) WRITE (*, *)
+          WRITE (*, 20) FROM, TO, FROM, SPEC1(J), TO, STAT1(J)
+ 20       FORMAT (A,A,': ',A,' =',1PE19.12,' -> ',A,
+     :            ' = ???, stat = ',I2)
+          SKIP = .FALSE.
+          GO TO 50
+        END IF
 
-         IF (STAT2(J).NE.0) THEN
-            IF (SKIP) WRITE (*, *)
-            WRITE (*, 30) TO, FROM, FROM, SPEC1(J), TO, SPEC2(J), FROM,
-     :                    STAT2(J)
- 30         FORMAT (A,A,': ',A,' =',1PE19.12,' -> ',A,' =',1PE19.12,
-     :              ' -> ',A,' = ???, stat = ',I2)
-            SKIP = .FALSE.
-            GO TO 50
-         END IF
+        IF (STAT2(J).NE.0) THEN
+          IF (SKIP) WRITE (*, *)
+          WRITE (*, 30) TO, FROM, FROM, SPEC1(J), TO, SPEC2(J), FROM,
+     :                  STAT2(J)
+ 30       FORMAT (A,A,': ',A,' =',1PE19.12,' -> ',A,' =',1PE19.12,
+     :            ' -> ',A,' = ???, stat = ',I2)
+          SKIP = .FALSE.
+          GO TO 50
+        END IF
 
-         IF (SPEC1(J).EQ.0.0) THEN
-            RESID = ABS(CLOS(J) - SPEC1(J))
-         ELSE
-            RESID = ABS((CLOS(J) - SPEC1(J))/SPEC1(J))
-            IF (RESID.GT.RESIDMAX) RESIDMAX = RESID
-         END IF
+        IF (SPEC1(J).EQ.0.0) THEN
+          RESID = ABS(CLOS(J) - SPEC1(J))
+        ELSE
+          RESID = ABS((CLOS(J) - SPEC1(J))/SPEC1(J))
+          IF (RESID.GT.RESIDMAX) RESIDMAX = RESID
+        END IF
 
-         IF (RESID.GT.TOL) THEN
-            IF (SKIP) WRITE (*, *)
-            WRITE (*, 40) FROM, TO, FROM, SPEC1(J), TO, SPEC2(J), FROM,
-     :                    CLOS(J), RESID
- 40         FORMAT (A,A,': ',A,' =',1PE19.12,' -> ',A,' =',1PE19.12,
-     :              ' ->',/,'          ',A,' =',1PE19.12,',  resid =',
-     :              1PE19.12)
-            SKIP = .FALSE.
-         END IF
+        IF (RESID.GT.TOL) THEN
+          IF (SKIP) WRITE (*, *)
+          WRITE (*, 40) FROM, TO, FROM, SPEC1(J), TO, SPEC2(J), FROM,
+     :                  CLOS(J), RESID
+ 40       FORMAT (A,A,': ',A,' =',1PE19.12,' -> ',A,' =',1PE19.12,
+     :            ' ->',/,'          ',A,' =',1PE19.12,',  resid =',
+     :            1PE19.12)
+          SKIP = .FALSE.
+        END IF
  50   CONTINUE
 
       WRITE (*, 60) FROM, TO, RESIDMAX
  60   FORMAT (A,A,': Maximum closure residual =',1PE19.12)
       IF (RESIDMAX.GT.TOL) THEN
-         WRITE (*, *)
-         SKIP = .FALSE.
+        WRITE (*, *)
+        SKIP = .FALSE.
       ELSE
-         SKIP = .TRUE.
+        SKIP = .TRUE.
       END IF
 
       RETURN

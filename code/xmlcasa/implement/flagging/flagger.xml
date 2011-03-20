@@ -115,6 +115,7 @@ All data selection parameters follow the ms-selection syntax.
      <value>""</value>
      </param>
     
+
      <param type="string" name="baseline">
      <description>Baseline number : example : '2-3,4-5,132 ????' </description>
      <value>""</value>
@@ -135,6 +136,10 @@ All data selection parameters follow the ms-selection syntax.
      <value>""</value>
      </param>
 
+     <param type="string" name="scanintent">
+     <description>Scan intent : example : '*CAL*, *BAND*' </description>
+     <value>""</value>
+     </param>
 <!-- Selection parameters : end -->
      
 </input>
@@ -179,6 +184,7 @@ Note that fg.setmanualflags() can be called multiple times before a call to fg.r
      <value>""</value>
      </param>
     
+
      <param type="string" name="baseline">
      <description>Baseline number : example : '2-3,4-5,132 ????' </description>
      <value>""</value>
@@ -200,6 +206,10 @@ Note that fg.setmanualflags() can be called multiple times before a call to fg.r
      <value>""</value>
      </param>
 
+     <param type="string" name="scanintent">
+     <description>Scan intent : example : '*CAL*, *BAND*' </description>
+     <value>""</value>
+     </param>
 <!-- Selection parameters : end -->
  
      <param type="bool" name="autocorrelation">
@@ -419,6 +429,11 @@ Defines data selection parameters.
      <value>""</value>
      </param>
 
+     <param type="string" name="scanintent">
+     <description>Scan intent : example : '*CAL*, *BAND*' </description>
+     <value>""</value>
+     </param>
+
      <param type="double" name="diameter">
      <description>Antenna diameter to use. If negative,
      the default dish sizes stored in the MS are used : example : diameter = '30'
@@ -487,6 +502,11 @@ Defines data selection parameters.
 
      <param type="string" name="correlation">
      <description>Correlations/polarizations : example : 'RR,LL,RL,LR,XX,YY,XY,YX'</description>
+     <value>""</value>
+     </param>
+
+     <param type="string" name="scanintent">
+     <description>Scan intent : example : '*CAL*, *BAND*' </description>
      <value>""</value>
      </param>
 
@@ -567,6 +587,11 @@ Flag summary.
      <value>""</value>
      </param>
 
+     <param type="string" name="scanintent">
+     <description>Scan intent : example : '*CAL*, *BAND*' </description>
+     <value>""</value>
+     </param>
+
 <!-- Selection parameters : end -->
  
 </input>
@@ -631,6 +656,11 @@ Flag query
 
      <param type="string" name="correlation">
      <description>Correlations/polarizations : example : 'RR,LL,RL,LR,XX,YY,XY,YX'</description>
+     <value>""</value>
+     </param>
+
+     <param type="string" name="scanintent">
+     <description>Scan intent : example : '*CAL*, *BAND*' </description>
      <value>""</value>
      </param>
 
@@ -730,6 +760,11 @@ Extend flags along a specific direction.
 
      <param type="string" name="correlation">
      <description>Correlations/polarizations : example : 'RR,LL,RL,LR,XX,YY,XY,YX'</description>
+     <value>""</value>
+     </param>
+
+     <param type="string" name="scanintent">
+     <description>Scan intent : example : '*CAL*, *BAND*' </description>
      <value>""</value>
      </param>
 

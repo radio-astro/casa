@@ -119,7 +119,7 @@ Bool FITSSpectralUtil::fromFITSHeader(Int &spectralAxis,
     for (Int i=0; i<ndim; i++) {
 	if (ctype(i).contains("FELO") || ctype(i).contains("FREQ") ||
 	    ctype(i).contains("VELO") || ctype(i).contains("VOPT") ||
-	    ctype(i).contains("WAVE")) {
+	    ctype(i).contains("VRAD") || ctype(i).contains("WAVE")) {
 	    spectralAxis = i;
 	    break;
 	}
@@ -137,7 +137,7 @@ Bool FITSSpectralUtil::fromFITSHeader(Int &spectralAxis,
 	    header.get("velref", velref);
 	}
     } else {
-	if (ctype(spectralAxis).contains("VELO")) {
+	if (ctype(spectralAxis).contains("VELO") || ctype(spectralAxis).contains("VRAD")) {
 	    velref = 259; // radio + OBS
 	}
     }
@@ -159,6 +159,16 @@ Bool FITSSpectralUtil::fromFITSHeader(Int &spectralAxis,
 	    header.get("restfreq", restFrequency);
 	}
     }
+    else if (header.isDefined("restfrq")) {
+      if (header.dataType("restfrq") != TpDouble && 
+	  header.dataType("restfrq") != TpFloat) {
+	logger << LogIO::SEVERE << "Illegal type for RESTFRQ" <<
+	  ", assuming 0.0 - velocity conversions will be impossible" 
+	       << LogIO::POST;
+      } else {
+	header.get("restfrq", restFrequency);
+      }
+    }
 
     // convert the velocity frame tag in ctype  to a reference frame
     String spectralAxisQualifier;
@@ -168,22 +178,32 @@ Bool FITSSpectralUtil::fromFITSHeader(Int &spectralAxis,
       spectralAxisQualifier = ctype(spectralAxis).after(4);
     };
 
-    if (!FITSSpectralUtil::frameFromTag(refFrame, 
-					spectralAxisQualifier, 
-					velref)) {
-	if (spectralAxisQualifier == "") {
-	    if ((velref%256) >= 0) {
-		// no tag and velref is unrecognized
-		logger << LogIO::SEVERE << "Illegal value for VELREF("
-		       << velref << 
-		    ") assuming topocentric" << LogIO::POST;
-	    }
-	} else {
-	    // unrecognized tag
-	    logger << LogIO::SEVERE << "Unknown spectral reference frame " 
-		   << spectralAxisQualifier << 
-		". Assuming topocentric." << LogIO::POST;
+
+    if (header.isDefined("specsys")) {
+      String specsys;
+      header.get("specsys", specsys);
+      if(!FITSSpectralUtil::frameFromSpecsys(refFrame, specsys)){
+	logger << LogIO::WARN << "Illegal value for SPECSYS ("
+		 << specsys << 
+	  "), will assume topocentric" << LogIO::POST;
+      }
+    }
+    else if (!FITSSpectralUtil::frameFromTag(refFrame, 
+					     spectralAxisQualifier, 
+					     velref)) {
+      if (spectralAxisQualifier == "") {
+	if ((velref%256) >= 0) {
+	  // no tag and velref is unrecognized
+	  logger << LogIO::SEVERE << "Illegal value for VELREF("
+		 << velref << 
+	    ") assuming topocentric" << LogIO::POST;
 	}
+      } else {
+	// unrecognized tag
+	logger << LogIO::SEVERE << "Unknown spectral reference frame " 
+	       << spectralAxisQualifier << 
+	  ". Assuming topocentric." << LogIO::POST;
+      }
     }
 
     referenceChannel = crpix(spectralAxis) - offset;
@@ -241,7 +261,7 @@ Bool FITSSpectralUtil::fromFITSHeader(Int &spectralAxis,
       
     } else if (ctype(spectralAxis).contains("FELO") || (ctype(spectralAxis).contains("VOPT"))) {
       if (restFrequency < 0) {
-	logger << LogIO::SEVERE << "FELO axis does not have rest frequency "
+	logger << LogIO::SEVERE << "VOPT axis does not have rest frequency "
 	  "information (RESTFREQ)" << LogIO::POST;
 	return False;
       } else {
@@ -249,23 +269,17 @@ Bool FITSSpectralUtil::fromFITSHeader(Int &spectralAxis,
 	referenceChannel = rpix;
 	switch(velocityPreference) {
 	case MDoppler::OPTICAL:
-	  {
-	    referenceFrequency = restFrequency / (1.0 + rval/C::c);
-	    deltaFrequency =   -delt*referenceFrequency / (
-							   ( (C::c + rval) ) );
-	  }
+	  referenceFrequency = restFrequency / (1.0 + rval/C::c);
+	  deltaFrequency = -delt*referenceFrequency /(C::c + rval);
 	  break;
 	case MDoppler::RADIO:
-	  {
-	    logger << LogIO::SEVERE << "FELO/RADIO is illegal" <<
-	      LogIO::POST;
-	    return False;
-	  }
+	  logger << LogIO::SEVERE << "FELO/RADIO is illegal" <<
+	    LogIO::POST;
+	  return False;
 	  break;
 	default:
-	  {
-	    AlwaysAssert(0, AipsError); // NOTREACHED
-	  }
+	  AlwaysAssert(0, AipsError); // NOTREACHED
+	  break;
 	}
 	frequencies.resize(nChan);
 	for (Int i=0; i<nChan; i++) {
@@ -273,33 +287,27 @@ Bool FITSSpectralUtil::fromFITSHeader(Int &spectralAxis,
 	    (Double(i)-referenceChannel) * deltaFrequency;
 	}
       }
-    } else if (ctype(spectralAxis).contains("VELO")) {
+    } else if (ctype(spectralAxis).contains("VELO") || ctype(spectralAxis).contains("VRAD")) {
       if (restFrequency < 0) {
-	logger << LogIO::SEVERE << "VELO axis does not have rest frequency "
+	logger << LogIO::SEVERE << "VRAD axis does not have rest frequency "
 	  "information (RESTFREQ)" << LogIO::POST;
 	return False;
       } else { // Have RESTFREQ
 	referenceChannel = rpix;
 	switch(velocityPreference) {
 	case MDoppler::RADIO:
-	  {
-	    referenceFrequency = -rval/C::c*restFrequency + 
-	      restFrequency;
-	    deltaFrequency =  
-	      -delt*referenceFrequency / (C::c - rval);
-	  }
+	  referenceFrequency = -rval/C::c*restFrequency + 
+	    restFrequency;
+	  deltaFrequency =  
+	    -delt*referenceFrequency / (C::c - rval);
 	  break;
 	case MDoppler::OPTICAL:
-		{
-		  logger << LogIO::SEVERE << 
-		    "VELO/OPTICAL is not implemented" <<LogIO::POST;
-		  return False;
-		}
-		break;
+	  logger << LogIO::SEVERE << 
+	    "VELO/OPTICAL is not implemented" <<LogIO::POST;
+	  return False;
+	  break;
 	default:
-	  {
-	    AlwaysAssert(0, AipsError); // NOTREACHED
-	  }
+	  AlwaysAssert(0, AipsError); // NOTREACHED
 	}
 	frequencies.resize(nChan);
 	for (Int i=0; i<nChan; i++) {
@@ -345,6 +353,7 @@ Bool FITSSpectralUtil::toFITSHeader(String &ctype,
 				    Double &altrpix,
 				    Int &velref,
 				    Double &restfreq,
+				    String &specsys,
 				    LogIO &logger,
 				    Double refFrequency,
 				    Double refChannel,
@@ -352,7 +361,8 @@ Bool FITSSpectralUtil::toFITSHeader(String &ctype,
 				    MFrequency::Types referenceFrame,
 				    Bool preferVelocity,
 				    MDoppler::Types velocityPreference,
-				    Bool preferWavelength)
+				    Bool preferWavelength,
+				    Bool useDeprecatedCtypes)
 {
     // Dummy defaults
     ctype = "";
@@ -360,6 +370,7 @@ Bool FITSSpectralUtil::toFITSHeader(String &ctype,
     haveAlt = False;
     altrval = altrpix = 0.0;
     velref = 0;
+    specsys = "";
 
     logger << LogOrigin("FITSUtil", "toFITSHeader", WHERE);
 
@@ -375,21 +386,29 @@ Bool FITSSpectralUtil::toFITSHeader(String &ctype,
     String ctypetag = "";
     if (restfreq > 0.0) {
 	haveAlt = True;
-	if (!FITSSpectralUtil::tagFromFrame(ctypetag, velref, referenceFrame)) {
-	    logger << LogIO::SEVERE << "Cannot turn spectral type# " << 
-		Int(referenceFrame) <<	
-		" into a FITS spectral frame. Using " << ctypetag <<
-		LogIO::POST;
-	}
+	// the following call to tagFromFrame is deprecated, better use SPECSYS
+ 	if (!FITSSpectralUtil::tagFromFrame(ctypetag, velref, referenceFrame)) {
+	  logger << LogIO::NORMAL << "Cannot turn spectral type# " << 
+	    Int(referenceFrame) <<	
+	    " into a AIPS-standard FITS spectral frame." <<
+	    LogIO::POST;
+ 	}
 	switch (velocityPreference) {
 	case MDoppler::OPTICAL: break; // NOTHING
 	case MDoppler::RADIO: velref += 256; break;
 	default:
 	  velref += 256;
-	  logger << LogIO::SEVERE << "Can only handle OPTICAL and RADIO velocities. Using RADIO" 
+	  logger << LogIO::WARN << "Can only handle OPTICAL and RADIO velocities. Using RADIO" 
 		 << LogIO::POST;
 	  break;
-	}	
+	}
+
+	if (!FITSSpectralUtil::specsysFromFrame(specsys, referenceFrame)) {
+	  logger << LogIO::WARN << "Cannot turn spectral type# " << 
+	    Int(referenceFrame) <<	
+	    " into a FITS SPECSYS keyword. Will use " << specsys <<
+	    LogIO::POST;
+	}
     }
 
     // Calculate velocity quantities
@@ -413,14 +432,13 @@ Bool FITSSpectralUtil::toFITSHeader(String &ctype,
 	    return False;
 	}
 	ctype = String("WAVE");
-	crval = C::c/refFrequency;
-	cdelt = C::c/(refFrequency+freqIncrement) - crval;
+	crval = roundDouble(C::c/refFrequency, 12);
+	cdelt = roundDouble(C::c/(refFrequency+freqIncrement) - crval, 12);
 	crpix = refChannel;
     }
     else if (!haveAlt || !preferVelocity) {
 	// FREQ is primary
-	//	ctype = String("FREQ") + ctypetag;
-	ctype = String("FREQ"); // no tag here. change requested by C. Brogan
+	ctype = String("FREQ");
 	crval = refFrequency;
 	cdelt = freqIncrement;
 	crpix = refChannel;
@@ -432,10 +450,20 @@ Bool FITSSpectralUtil::toFITSHeader(String &ctype,
 	// Velocity of some type is primary
 	if (velref < 256) {
 	    // Optical
-	    ctype = String("FELO")+ctypetag;
+	  if(useDeprecatedCtypes){
+	    ctype = String("FELO")+ctypetag; // deprecated, non-standard FITS
+	  }
+	  else{
+	    ctype = String("VOPT");
+	  }
 	} else {
 	    // Radio
-	    ctype = String("VELO")+ctypetag;
+	  if(useDeprecatedCtypes){
+	    ctype = String("VELO")+ctypetag; // deprecated, non-standard FITS
+	  }
+	  else{
+	    ctype = String("VRAD");
+	  }
 	}
 	crval = refVelocity;
 	cdelt = velocityIncrement;
@@ -569,6 +597,81 @@ Bool FITSSpectralUtil::tagFromFrame(String &tag,
 	tag = "-OBS";
 	velref = 3;
 	result = False;
+    }
+    return result;
+}
+
+Bool FITSSpectralUtil::specsysFromFrame(String &specsys,
+					MFrequency::Types refFrame)
+{
+    Bool result = True;
+    switch (refFrame) {
+    case MFrequency::LSRK:
+	specsys = "LSRK";
+	break;
+    case MFrequency::BARY:
+	specsys = "BARYCENT";
+	break;
+    case MFrequency::LSRD:
+	specsys = "LSRD";
+	break;
+    case MFrequency::GEO:
+	specsys = "GEOCENTR";
+	break;
+    case MFrequency::REST:
+	specsys = "SOURCE";
+	break;
+    case MFrequency::GALACTO:
+	specsys = "GALACTOC";
+	break;
+    case MFrequency::LGROUP:
+	specsys = "LOCALGRP";
+	break;
+    case MFrequency::CMB:
+	specsys = "CMBDIPOL";
+	break;
+    case MFrequency::TOPO:
+	specsys = "TOPOCENT";
+	break;
+    default:
+	specsys = "TOPOCENT";
+	result = False;
+    }
+    return result;
+}
+Bool FITSSpectralUtil::frameFromSpecsys(MFrequency::Types& refFrame, String& specsys)
+{
+    Bool result = True;
+    if(specsys == "LSRK"){
+      refFrame = MFrequency::LSRK;
+    }
+    else if(specsys == "BARYCENT"){
+      refFrame = MFrequency::BARY;
+    }
+    else if(specsys == "LSRD"){
+      refFrame = MFrequency::LSRD;
+    }
+    else if(specsys == "GEOCENTR"){
+      refFrame = MFrequency::GEO;
+    }
+    else if(specsys == "SOURCE"){
+      refFrame = MFrequency::REST;
+    }
+    else if(specsys == "GALACTOC"){
+      refFrame = MFrequency::GALACTO;
+    }
+    else if(specsys == "LOCALGRP"){
+      refFrame = MFrequency::LGROUP;
+    }
+    else if(specsys == "CMBDIPOL"){
+      refFrame = MFrequency::CMB;
+    }
+    else if(specsys == "TOPOCENT"){
+      refFrame = MFrequency::TOPO;
+    }
+    else{
+      refFrame = MFrequency::TOPO;
+      result = False;
     }
     return result;
 }

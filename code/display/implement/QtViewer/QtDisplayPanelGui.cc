@@ -45,7 +45,6 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-
 QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string rcstr ) :
 		   QtPanelBase(parent), qdm_(0), qdo_(0), qfb_(0),
 		   v_(v), qdp_(0), qpm_(0), qcm_(0), qap_(0), qmr_(0), qrm_(0), 
@@ -1067,9 +1066,9 @@ void QtDisplayPanelGui::showRegionManager() {
         PanelDisplay* ppd = qdp_->panelDisplay();
         if (ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0) {
            connect(pdd, 
-                   SIGNAL(axisChanged(String, String, String)),
+                   SIGNAL(axisChanged(String, String, String, std::vector<int> )),
                    qrm_, 
-                   SLOT(changeAxis(String, String, String)));
+                   SLOT(changeAxis(String, String, String, std::vector<int> )));
         }
       }
   }
@@ -1119,9 +1118,9 @@ void QtDisplayPanelGui::showFileBoxPanel() {
            connect(qfb_,  SIGNAL(hideFileBox()),
                           SLOT(hideFileBoxPanel()));
            connect(pdd, 
-                   SIGNAL(axisChanged4(String, String, String, int)),
+                   SIGNAL(axisChanged(String, String, String, std::vector<int> )),
                    qfb_, 
-                   SLOT(changeAxis(String, String, String, int)));
+                   SLOT(changeAxis(String, String, String, std::vector<int> )));
         }
       }
   }
@@ -1158,9 +1157,9 @@ void QtDisplayPanelGui::showAnnotatorPanel() {
            connect(qap_,  SIGNAL(hideRegionInFile()),
                           SLOT(hideAnnotatorPanel()));
            connect(pdd, 
-                   SIGNAL(axisChanged4(String, String, String, int)),
+                   SIGNAL(axisChanged(String, String, String, std::vector<int> )),
                    qap_, 
-                   SLOT(changeAxis(String, String, String, int)));
+                   SLOT(changeAxis(String, String, String, std::vector<int> )));
         }
       }
   }
@@ -1247,9 +1246,9 @@ void QtDisplayPanelGui::showImageProfile() {
                 connect(qdp_,      SIGNAL(registrationChange()),
                                    SLOT(hideImageProfile()));
                 connect(pdd, 
-                     SIGNAL(axisChanged(String, String, String)),
+			SIGNAL(axisChanged(String, String, String, std::vector<int> )),
                         profile_, 
-                     SLOT(changeAxis(String, String, String)));
+			SLOT(changeAxis(String, String, String, std::vector<int> )));
 
                 QtCrossTool *pos = (QtCrossTool*)
                       (ppd->getTool(QtMouseToolNames::POSITION));
@@ -1326,7 +1325,7 @@ void QtDisplayPanelGui::showImageProfile() {
                 }
               }
 
-              if (pdd->spectralAxis() == -1) {
+              if (pdd->getAxisIndex(String("Spectral")) == -1) {
                   profileDD_ = 0;
 	          hideImageProfile();  
               }
@@ -1339,7 +1338,7 @@ void QtDisplayPanelGui::showImageProfile() {
 	      //break;
             }
             else {
-              if (pdd->spectralAxis() != -1) 
+              if (pdd->getAxisIndex(String("Spectral")) != -1) 
                  overlap[pdd->name().chars()] = img;
             }
             }

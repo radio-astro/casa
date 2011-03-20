@@ -48,8 +48,12 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
                   format = 'SDFITS'
 
             # Do at least one
-	    if (len(flagrow) == 0) and (len(maskflag) == 0) and (not clip) and (not interactive):
-                    raise Exception, 'No mask definition specified'
+	    docmdflag = True
+	    if (len(flagrow) == 0) and (len(maskflag) == 0) and (not clip):
+                    if not interactive:
+			    raise Exception, 'No flag operation specified.'
+		    # interactive flagging only
+                    docmdflag = False
 
             if ( abs(plotlevel) > 1 ):
                     casalog.post( "Initial Scantable:" )
@@ -245,7 +249,7 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
                             ans = 'Y'
             else:
                     ans='Y'
-            if ans.upper() == 'Y':
+            if docmdflag and ans.upper() == 'Y':
                     if (clip):
                             if (uthres != None) and (dthres != None) and (uthres > dthres):
                                     s.clip(uthres, dthres, clipoutside, unflag)

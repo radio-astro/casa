@@ -197,6 +197,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>0.0</value>
     </param>
 
+    <param type="int" name="subplot" subparam='true'>
+            <description>number of subplots (row and column)</description>
+            <value type="int">-1</value>
+            <allowed kind="range">
+            <value range="min">-1</value>
+            <value range="max">99</value>
+            </allowed>
+    </param>
+
     <param type="string" name="colormap" subparam="true">
             <description>the colours to be used for plot lines</description>
             <value>none</value>
@@ -233,8 +242,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <value>False</value>
     </param>
 
-    <param type="doubleArray" name="layout" subparam='true'>
-            <description>subplot layout in [left, bottom, right, top, horizontal space, vertical space]</description>
+    <param type="doubleArray" name="margin" subparam='true'>
+            <description>subplot margins in [left, bottom, right, top, horizontal space, vertical space]</description>
             <value type="vector"></value>
     </param>
 
@@ -288,6 +297,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                         <default param="sprange"><value type="vector"></value></default>
                         <default param="linecat"><value type="string">none</value></default>
                         <default param="linedop"><value>0.0</value></default>
+                        <default param="subplot"><value type="int">-1</value></default>
                         <default param="colormap"><value type="string">none</value></default>
                         <default param="linestyles"><value type="string">none</value></default>
                         <default param="linewidth"><value>1</value></default>
@@ -321,7 +331,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <when param="plotstyle">
                 <equals type="bool" value="False"/>
                 <equals type="bool" value="True">
-                        <default param="layout"><value type="vector"></value></default>
+                        <default param="margin"><value type="vector"></value></default>
                         <default param="legendloc"><value type="int">1</value></default>
                 </equals>
             </when>
@@ -473,6 +483,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                         options: (float) doppler velocity (km/s)
                         default: 0.0
                         example: linedop=-30.0
+                subplot -- number of subplots (row and column) on a page
+                           NOTICE plotter will slow down when a large number is specified
+                           default: -1 (auto)
+                           example: 23 (2 rows by 3 columns)
                 colormap -- the colours to be used for plot lines. 
                         default: None
                         example: colormap="green red black cyan magenta" (html standard)
@@ -504,9 +518,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                         default: 9
         plotstyle -- customise plot settings
                 options: (bool) True, False
-                default: True
+                default: False
             &gt;&gt;&gt; plotstyle expandable parameter
-                layout -- a list of subplots layout in figure coordinate (0-1), 
+                margin -- a list of subplot margins in figure coordinate (0-1), 
                           i.e., fraction of the figure width or height.
                           The order of elements should be:
                           [left, bottom, right, top, horizontal space btw panels,

@@ -1,34 +1,34 @@
 /*============================================================================
 
-    PGSBOX 4.3 - an implementation of the FITS WCS standard.
-    Copyright (C) 1997-2007, Mark Calabretta
+  PGSBOX 4.7 - draw curvilinear coordinate axes for PGPLOT.
+  Copyright (C) 1997-2011, Mark Calabretta
 
-    This file is part of PGSBOX.
+  This file is part of PGSBOX.
 
-    PGSBOX is free software: you can redistribute it and/or modify it under
-    the terms of the GNU Lesser General Public License as published by the
-    Free Software Foundation, either version 3 of the License, or (at your
-    option) any later version.
+  PGSBOX is free software: you can redistribute it and/or modify it under the
+  terms of the GNU Lesser General Public License as published by the Free
+  Software Foundation, either version 3 of the License, or (at your option)
+  any later version.
 
-    PGSBOX is distributed in the hope that it will be useful, but WITHOUT ANY
-    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-    FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for
-    more details.
+  PGSBOX is distributed in the hope that it will be useful, but WITHOUT ANY
+  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+  FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for
+  more details.
 
-    You should have received a copy of the GNU Lesser General Public License
-    along with PGSBOX.  If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU Lesser General Public License
+  along with PGSBOX.  If not, see <http://www.gnu.org/licenses/>.
 
-    Correspondence concerning PGSBOX may be directed to:
-       Internet email: mcalabre@atnf.csiro.au
-       Postal address: Dr. Mark Calabretta
-                       Australia Telescope National Facility, CSIRO
-                       PO Box 76
-                       Epping NSW 1710
-                       AUSTRALIA
+  Correspondence concerning PGSBOX may be directed to:
+    Internet email: mcalabre@atnf.csiro.au
+    Postal address: Dr. Mark Calabretta
+                    Australia Telescope National Facility, CSIRO
+                    PO Box 76
+                    Epping NSW 1710
+                    AUSTRALIA
 
-    Author: Mark Calabretta, Australia Telescope National Facility
-    http://www.atnf.csiro.au/~mcalabre/index.html
-    $Id: cpgsbox.c,v 4.3 2007/12/27 05:49:14 cal103 Exp $
+  Author: Mark Calabretta, Australia Telescope National Facility
+  http://www.atnf.csiro.au/~mcalabre/index.html
+  $Id: cpgsbox.c,v 4.7 2011/02/07 07:03:43 cal103 Exp $
 *===========================================================================*/
 
 #include <string.h>

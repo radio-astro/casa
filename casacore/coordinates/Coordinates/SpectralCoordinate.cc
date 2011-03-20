@@ -1722,7 +1722,7 @@ void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis,
 	header.get("cunit", cunit);
     }
 
-    String Ctype;
+    String Ctype, Specsys;
     Double Crval, Cdelt, Crpix, Altrval, Altrpix;
     Int Velref;
     Bool HaveAlt;
@@ -1841,7 +1841,8 @@ void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis,
 
 
     AlwaysAssert(FITSSpectralUtil::toFITSHeader(Ctype, Crval, Cdelt, Crpix, HaveAlt, Altrval,
-						Altrpix, Velref, Restfreq, logger,
+						Altrpix, Velref, Restfreq, Specsys, 
+						logger,
 						RefFreq, RefPix,
   					        FreqInc, type_p, preferVelocity,
 						VelPreference, preferWavelength), AipsError);
@@ -1851,11 +1852,12 @@ void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis,
     crpix(whichAxis) = Crpix;
     cdelt(whichAxis) = Cdelt;
     if (cunit.nelements() > 0) {
-	if (Ctype.contains("VELO") || Ctype.contains("FELO")) {
+	if (Ctype.contains("VELO") || Ctype.contains("FELO")|| 
+	    Ctype.contains("VRAD")|| Ctype.contains("VOPT")) {
 	    cunit(whichAxis) = "M/S";
 	} else if (Ctype.contains("FREQ")) {
 	    cunit(whichAxis) = "HZ";
-	} else if (Ctype.contains("WAVE")) {
+	} else if (Ctype.contains("WAVE")|| Ctype.contains("AWAV")) {
 	    cunit(whichAxis) = "M";
 	} else {
 	    AlwaysAssert(0, AipsError); // NOTREACHED
@@ -1863,22 +1865,18 @@ void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis,
     }
 
     if (Restfreq > 0) {
-	header.define("restfreq", Restfreq);
-	header.setComment("restfreq", "Rest Frequency (Hz)");
+	header.define("restfrq", Restfreq); // FITS standard v3.0 is RESTFRQ, no longer RESTFREQ
+	header.setComment("restfrq", "Rest Frequency (Hz)"); 
+	header.define("specsys", Specsys);
+	header.setComment("specsys", "Spectral reference frame"); 
     }
-    if (HaveAlt) {
+    if (HaveAlt && !preferWavelength) { // alternate representation not valid for ctype WAVE
 	header.define("altrval", Altrval);
 	header.setComment("altrval", "Alternate frequency reference value");
 	header.define("altrpix", Altrpix);
 	header.setComment("altrpix", "Alternate frequency reference pixel");
 	header.define("velref", Velref);
 	header.setComment("velref", "1 LSR, 2 HEL, 3 OBS, +256 Radio");
-	// the following agree with the current usage in FITSSpectralUtil
-	// which in turn follows from Greisen, Paper III.  On the other
-	// hand, that usage as applied here, to VELREF, is unlikely to
-	// be understood by other FITS readers.  Still, its better than
-	// doing nothing for these rest frames until the convention in
-	// Paper III or its successor is formally adopted.
 	FITSKeywordUtil::addComment(header, 
           "casacore non-standard usage: 4 LSD, 5 GEO, 6 SOU, 7 GAL");
     }
@@ -2108,11 +2106,11 @@ String SpectralCoordinate::format (String& units,
 	 worldValue = world(worldAxis);
        }
 //
-       MVFrequency mvFreq(worldValue);
+       MVFrequency mvFreq(worldValue*to_hz_p);
        worldValue = mvFreq.get(unit).getValue();
        if (!showAsAbsolute) {
 // Find relative coordinate in m consistent units
-	 mvFreq = MVFrequency(referenceValue()(worldAxis));
+	 mvFreq = MVFrequency(referenceValue()(worldAxis)*to_hz_p);
 	 worldValue = worldValue - mvFreq.get(unit).getValue(); // subtract reference
        }
 

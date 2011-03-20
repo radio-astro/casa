@@ -39,6 +39,7 @@
 namespace casa{
 
   AntennaResponses* ALMAAperture::aR_p = 0;
+  Bool ALMAAperture::orderMattersInCFKey = True;
 
   ALMAAperture::ALMAAperture(): 
     ATerm(),
@@ -103,7 +104,7 @@ namespace casa{
     return *this;
   }
 
-  Int ALMAAperture::getVisParams(const VisBuffer& vb)
+  Int ALMAAperture::getVisParams(const VisBuffer& vb, const CoordinateSystem& skyCoord)
   {
     Vector<String> telescopeNames=vb.msColumns().observation().telescopeName().getColumn();
     for(uInt nt=0;nt<telescopeNames.nelements();nt++){
@@ -166,6 +167,7 @@ namespace casa{
       Vector<uInt> respImageChannel(nAntTypes);
       Vector<MFrequency> respImageNomFreq(nAntTypes);
       Vector<AntennaResponses::FuncTypes> respImageFType(nAntTypes);
+      Vector<MVAngle> respImageRotOffset(nAntTypes);
       Vector<Vector<Array<Complex> > > respByPol(nAntTypes); 
 
       MFrequency refFreq = vb.msColumns().spectralWindow().refFrequencyMeas()(spwId);
@@ -179,6 +181,7 @@ namespace casa{
 			       respImageChannel(i),
 			       respImageNomFreq(i),
 			       respImageFType(i),
+			       respImageRotOffset(i),
 			       "ALMA",
 			       obsTime,
 			       refFreq,
@@ -253,7 +256,7 @@ namespace casa{
 	  ostringstream oss;
 	  oss << "Error: Antenna response image from path \""
 	      << respImageName(0) 
-	      << "\" does not contain the necessary polarisation products or products are in the wrong order.\n"
+	      << "\" does not contain the necessary polarisation products or they are in the wrong order.\n"
 	      << "Order should be XX, XY, YX, YY.";
 	  throw(SynthesisError(oss.str()));
       }	
@@ -326,50 +329,56 @@ namespace casa{
 	Array<Complex> pB( respByPol(0)(polToDoIndex(iPol)).shape() );
 	Array<Complex> fact1( pB.shape() );
 	Array<Complex> fact2( pB.shape() );
+	Array<Complex> fact3( pB.shape() );
+	Array<Complex> fact4( pB.shape() );
 
-	// rotate the two factor arrays into the right PA including the feed coordsys
+	// rotate the two factor arrays into the right PA
 	Double dAngleRad = getPA(vb);
 	cout << "PA = " << dAngleRad << " rad" << endl;
 
-	uInt fact1Index, fact2Index;
+	Int fact1Index, fact2Index;
 	Double pA1, pA2;
+
+	// apply the rotation offset from the response table
+	pA1 = dAngleRad + respImageRotOffset(0).radian();
+	pA2 = dAngleRad + respImageRotOffset(nAntTypes-1).radian();
 
 	switch(polToDoIndex(iPol)){
 	case 0: // XX
 	  fact1Index = fact2Index = 0;
-	  pA1 = pA2 = dAngleRad;
 	  break;
 	case 1: //XY
 	  fact1Index = 0;
 	  fact2Index = 2;
-	  pA1 = dAngleRad;
-	  pA2 = dAngleRad + C::pi/2.; // + 90 deg (sign to be confirmed!)
 	  break;
 	case 2: //YX
 	  fact1Index = 1;
 	  fact2Index = 3;
-	  pA1 = dAngleRad;
-	  pA2 = dAngleRad + C::pi/2.; // + 90 deg (sign to be confirmed!)
 	  break;
 	case 3: //YY
 	  fact1Index = fact2Index = 3;
-	  pA1 = dAngleRad + C::pi/2.;// + 90 deg (sign to be confirmed!)
-	  pA2 = dAngleRad + C::pi/2.; 
 	  break;
 	}
 	  
-	// rotate factor 1 
-	SynthesisUtils::rotateComplexArray(os, respByPol(0)(fact1Index), dCoord, fact1, 
-					   pA1, "LINEAR", 
-					   False); // don't modify dCoord
-	// if necessary rotate factor 2 
-	if((nAntTypes-1)==0 &&  fact2Index==fact1Index){ // also implies that pA1==PA2
-	  fact2.assign(fact1);
-	}
-	else{
-	  SynthesisUtils::rotateComplexArray(os, respByPol(nAntTypes-1)(fact2Index), dCoord, fact2, 
-					     pA2, "LINEAR", 
+	if(pA1 != pA2){ // rotate individual factors before multiplication
+
+	  // rotate factor 1
+	  SynthesisUtils::rotateComplexArray(os, respByPol(0)(fact1Index), dCoord, fact1, 
+					     pA1, "LINEAR", 
 					     False); // don't modify dCoord
+	  // if necessary rotate factor 2 
+	  if((nAntTypes-1)==0 &&  fact2Index==fact1Index){ // also implies that pA1==PA2
+	    fact2.assign(fact1);
+	  }
+	  else{
+	    SynthesisUtils::rotateComplexArray(os, respByPol(nAntTypes-1)(fact2Index), dCoord, fact2, 
+					       pA2, "LINEAR", 
+					       False); // don't modify dCoord
+	  }
+	}
+	else{ // rotate PB later
+	  fact1.assign(respByPol(0)(fact1Index));
+	  fact2.assign(respByPol(nAntTypes-1)(fact2Index));
 	}
 
 	// multiply EFPs (equivalent to convolution of AIFs) to get primary beam
@@ -380,15 +389,24 @@ namespace casa{
 	  pB = abs(fact1) * abs(fact2);
 	}
 
-	//PagedImage<Complex> imX(pB.shape(),dCoord, "PB.im");
-	//imX.put(pB);  
-
 	// now have the primary beam for polarization iPol in pB
-      
+
 	// combine all PBs into one image
 	IPosition pos(rNDimFinal,0);
 	pos(rAxis) = iPol;
-	nearFinal.putSlice(pB, pos);  
+
+	if(pA1 == pA2){ // still need to rotate pB by PA
+
+	  Array<Complex> pBrot( pB.shape() );
+	  SynthesisUtils::rotateComplexArray(os, pB, dCoord, pBrot, 
+					     pA1, "LINEAR", 
+					     False); // don't modify dCoord
+	  nearFinal.putSlice(pBrot, pos);  
+
+	}
+	else{ // pB was already rotated above
+	  nearFinal.putSlice(pB, pos);  
+	}      
 
       }
 
@@ -406,8 +424,8 @@ namespace casa{
       // get the world coordinates of the center of outImage
       Vector<Double> wCenterOut(2);
       Vector<Double> pCenterOut(2);
-      pCenterOut(0) = outImage.shape()(whichOutPixelAxes(0))/2.-1.;
-      pCenterOut(1) = outImage.shape()(whichOutPixelAxes(1))/2.-1.;
+      pCenterOut(0) = outImage.shape()(whichOutPixelAxes(0))/2.-0.5;
+      pCenterOut(1) = outImage.shape()(whichOutPixelAxes(1))/2.-0.5;
       Vector<String> wAU = outCS.directionCoordinate(0).worldAxisUnits();
       outCS.directionCoordinate(0).toWorld(wCenterOut, pCenterOut);
       //cout << "pixel center " << pCenterOut << " world center " << wCenterOut << " " << wAU(0) << endl;
@@ -637,7 +655,7 @@ namespace casa{
       break;
     case ALMA_INVALID:
     default:
-      tS = "";
+      tS = "UNKOWN";
       break;
     }
     return tS;
@@ -645,7 +663,12 @@ namespace casa{
 
 
   Int ALMAAperture::cFKeyFromAntennaTypes(const ALMAAntennaType aT1, const ALMAAntennaType aT2){
-    return min((Int)aT1+1, (Int)aT2+1) + 10000*max((Int)aT1+1, (Int)aT2+1); // assume order doesn't matter
+    if(orderMattersInCFKey){
+      return (Int)aT2+1 + 10000*((Int)aT1+1); 
+    }
+    else{
+      return min((Int)aT1+1, (Int)aT2+1) + 10000*max((Int)aT1+1, (Int)aT2+1); // assume order doesn't matter
+    }
   }
 
   Vector<ALMAAntennaType> ALMAAperture::antennaTypesFromCFKey(const Int& cFKey){
@@ -658,8 +681,14 @@ namespace casa{
     }
     else{
       rval.resize(2);
-      rval(0) = (ALMAAntennaType) min(t1,t2);
-      rval(1) = (ALMAAntennaType) max(t1,t2);
+      if(orderMattersInCFKey){
+	rval(0) = (ALMAAntennaType)t1;
+	rval(1) = (ALMAAntennaType)t2;
+      }
+      else{
+	rval(0) = (ALMAAntennaType) min(t1,t2);
+	rval(1) = (ALMAAntennaType) max(t1,t2);
+      }
     }
     return rval;
   }

@@ -29,11 +29,27 @@
 MS Parameters
 ###############################################################################
 -->
-
   <param type="string" name="vis" kind="ms">
     <description>input visibility dataset (blank for none)</description>
     <value />
   </param>
+
+
+  <param type="string" name="title">    
+    <description>Title written along top of plot</description>
+    <value />
+  </param>
+  
+  <param type="string" name="xlabel">    
+    <description>Text for horizontal axis. Blank for default.</description>
+    <value />
+  </param>
+  
+  <param type="string" name="ylabel">    
+    <description>Text for vertical axis. Blank for default.</description>
+    <value />
+  </param>
+
 
   <param type="string" name="xaxis">
     <description>plot x-axis (blank for default/current)</description>
@@ -129,7 +145,8 @@ MS Parameters
       <value>ant-parang</value><value>ant-parallacticangle</value>
       <value>row</value>
       <value>flagrow</value>
-    </allowed>  </param>
+    </allowed>  
+    </param>
     
     <param type="string" name="ydatacolumn" subparam="true">
       <description>data column to use for y-axis (blank for default/current)</description>
@@ -141,6 +158,29 @@ MS Parameters
         <value>model</value>
         <value>residual</value>
       </allowed>
+    </param>
+
+
+
+    <param type="bool" name="colorize">
+        <description>colorize data points</description>
+        <value>False</value>
+    </param>
+    
+    <param type="string" name="coloraxis" subparam="true">
+        <description>which data column to use for colorizing</description>
+        <value />
+        <allowed kind="enum">
+            <value />
+            <value>scan</value>
+            <value>field</value>
+            <value>spw</value>
+            <value>antenna1</value><value>ant1</value>
+            <value>antenna2</value><value>ant2</value>
+            <value>baseline</value>
+            <value>channel</value><value>chan</value>
+            <value>corr</value>
+        </allowed>
     </param>
 
 
@@ -387,7 +427,24 @@ Flag Extension Parameters
          <description>Overwrite plot file if it already exists?</description>
          <value>False</value>
      </param>
-     
+
+
+
+
+<!--
+###############################################################################
+    Misc Parameters
+###############################################################################
+-->
+
+     <param type="bool" name="showgui">
+         <description>Show GUI</description>
+         <value>True</value>
+     </param>
+
+
+
+
 <!--
 ###############################################################################
 Plotxy Compliance Parameters
@@ -626,7 +683,15 @@ Constraints
       <equals value="row"/>
       <equals value="flagrow"/>
     </when>
-  
+
+    <when param="colorize">
+        <equals type="bool" value="True">
+            <default param="coloraxis"><value type="string" /></default>
+        </equals>
+        <equals type="bool" value="False" />
+    </when>
+
+
     <when param="selectdata">
       <equals type="bool" value="True">
         <default param="field"><value type="string" /></default>
@@ -816,6 +881,10 @@ Constraints
                   default: false (e.g., for automated scripts to prevent blocking).
         overwrite -- Overwrite plot file if it already exists?
                   default: false
+    
+    showgui -- Whether or not to display the plotting GUI
+              default: True; example showgui=False
+
 
 <!--
         extspw - extend flags based on spw?
@@ -832,6 +901,7 @@ Constraints
                     is turned on.
                     default: False.
     
+
     plotxycomp - use plotxy compliance parameters?  WARNING: if used,
                   subparameters will override their corresponding plotms
                   parameter values.

@@ -731,6 +731,9 @@ vpmanager::createantresp(const std::string& imdir,
       Vector<AntennaResponses::FuncTypes> sortedFTyp(nSubBands);
       Vector<String> sortedFuncName(nSubBands); 
       Vector<uInt> sortedFuncChannel(nSubBands);
+
+      Vector<MVAngle> rotAngOffset(nSubBands,MVAngle(0.));
+
       Vector<MVFrequency> sortedNomFreq(nomFreqAV); // convert this std::vector to a Vector at the same time
 
       GenSortIndirect<MVFrequency>::sort(sortIndex, sortedNomFreq);
@@ -750,6 +753,7 @@ vpmanager::createantresp(const std::string& imdir,
 		    sortedBName, sortedMinFreq, sortedMaxFreq, 
 		    sortedFTyp, sortedFuncName, 
 		    sortedFuncChannel, sortedNomFreq,
+		    rotAngOffset, // all zero, no sorting necessary
 		    currAntType, theStartTime,
 		    MDirection(casa::Quantity(currAzNom, "deg"),
 			       casa::Quantity(currElNom, "deg"), 
@@ -819,6 +823,7 @@ vpmanager::getrespimagename(const std::string& telescope,
     uInt funcChannel;
     MFrequency nomFreq;
     AntennaResponses::FuncTypes fType;
+    MVAngle rotAngOffset;
 
     String startTime = toCasaString(starttime);
     MEpoch theStartTime; 
@@ -859,7 +864,8 @@ vpmanager::getrespimagename(const std::string& telescope,
     if(!aR.getImageName(functionImageName, 
 			funcChannel, 
 			nomFreq, 
-			fType, 
+			fType,
+			rotAngOffset,
 			obsName,
 			theStartTime,
 			freqM,

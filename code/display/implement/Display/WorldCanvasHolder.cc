@@ -67,15 +67,14 @@ WorldCanvasHolder::WorldCanvasHolder(WorldCanvas *wCanvas) :
 WorldCanvasHolder::~WorldCanvasHolder() {
   itsCSmaster = 0;
   // remove all displaydatas
-  ListIter<DisplayData *> dds(itsDisplayList);
-  dds.toStart();
-  DisplayData *dData = 0;
+  
   worldCanvas()->hold();
-  while ( !dds.atEnd() ) {
-    dData = dds.getRight();
-    dds.removeRight();
-    dData->notifyUnregister(*this, True);
+  for ( std::list<DisplayData*>::iterator iter = itsDisplayList.begin();
+	iter != itsDisplayList.end(); ++iter ) {
+    (*iter)->notifyUnregister(*this, True);
   }
+  itsDisplayList.clear( );
+
   // Unregister this as various event handlers for the WorldCanvas.
   itsWorldCanvas->removeRefreshEventHandler(*this);
   itsWorldCanvas->removeMotionEventHandler(*this);
@@ -91,14 +90,12 @@ void WorldCanvasHolder::addDisplayData(DisplayData *dData) {
     throw (AipsError("WorldCanvasHolder::addDisplayData - "
                      "null pointer passed"));
   }
-  ListIter<DisplayData *> dds(itsDisplayList);
-  // move the iterator to the end of the List
-  dds.toEnd();
   worldCanvas()->hold();
   // Notify DisplayData
   dData->notifyRegister(this);
   // and add the new displayData
-  dds.addRight(dData);
+  itsDisplayList.push_back(dData);
+
   if(csMaster()==0) executeSizeControl(worldCanvas());
 	// If the new DD can assume the CS master role, let it set up
 	// WC state immediately, since there is no master at present.
@@ -106,21 +103,16 @@ void WorldCanvasHolder::addDisplayData(DisplayData *dData) {
 }
 void WorldCanvasHolder::removeDisplayData(DisplayData &dData,
 					  Bool ignoreRefresh) {
-  ListIter<DisplayData *> dds(itsDisplayList);
-  dds.toStart();
+
   worldCanvas()->hold();
-  if(csMaster()==&dData) itsCSmaster=0;		// CS master removed.
-  while (!dds.atEnd()) {
-    if (&dData == dds.getRight()) {
-      // remove from list
-      dds.removeRight();
-      // Notify DisplayData
-      dData.notifyUnregister(*this, ignoreRefresh);
-      break;
-    } else {
-      dds++;
-    }
+  std::list <DisplayData*>::iterator pos = find( itsDisplayList.begin(), itsDisplayList.end(), &dData );
+  if ( pos != itsDisplayList.end() ) {
+    if(csMaster()==&dData) itsCSmaster=0;		// CS master removed.
+    itsDisplayList.erase(pos);
+    // Notify DisplayData
+    dData.notifyUnregister(*this, ignoreRefresh);
   }
+
   if(csMaster()==0) executeSizeControl(worldCanvas());
 	// If any remaining DD can assume CS master role, let it set up
 	// WC state immediately, since there is no master at present.
@@ -128,7 +120,7 @@ void WorldCanvasHolder::removeDisplayData(DisplayData &dData,
 }
 
 const uInt WorldCanvasHolder::nDisplayDatas() const {
-  return itsDisplayList.len();
+  return itsDisplayList.size();
 }
 
 
@@ -303,18 +295,19 @@ Bool WorldCanvasHolder::executeSizeControl(WorldCanvas *wCanvas) {
   // maximum zoom extents, for example).  (At present (6/04), no non-master
   // DD is making any such adjustments, however).
   
-  ListIter<DisplayData*> dds(itsDisplayList);
-  for(dds.toStart(); !dds.atEnd(); dds++) {
-    DisplayData* dd = dds.getRight();
-    if ( ! dd->isDisplayable( ) ) continue; // not displayable
-    if(dd==itsCSmaster) continue;	// (already given the chance).
-    if(!masterFound) itsCSmaster = dd;	// (This assignment does not
+
+  for ( std::list<DisplayData*>::iterator iter = itsDisplayList.begin();
+	iter != itsDisplayList.end(); ++iter ) {
+    if ( ! (*iter)->isDisplayable( ) ) continue;	// not displayable
+    if ( *iter == itsCSmaster ) continue;	// (already given the chance).
+    if ( ! masterFound ) itsCSmaster = *iter;	// (This assignment does not
 		// yet confirm the CS master; it only indicates an offer
 		// at this stage.  But setting itsCSmaster here also puts the
 		// dd in charge, at least temporarily, of any WC coordinate
 		// conversions it needs to do during sizeControl execution).
-    if(dd->sizeControl(*this, sizeControlAtts)) masterFound=True;  }
-						// CS master confirmed.
+    if ( (*iter)->sizeControl(*this, sizeControlAtts)) masterFound=True;
+		// CS master confirmed.
+  }
   
   if (masterFound) wCanvas->setAttributes(sizeControlAtts);
 		// Store the WC state attributes produced by sizeControl[s].
@@ -350,21 +343,21 @@ Bool WorldCanvasHolder::syncCSmaster(const WorldCanvasHolder* wch) {
   // used by PanelDisplay on new WCHs to keep a consistent CS master on
   // all its main display WC[H]s.  Sets [default] CS master dd to that of
   // passed wch (if that dd is registered here).
-  ConstListIter<DisplayData *> dds(itsDisplayList);
-  for(dds.toStart(); !dds.atEnd(); dds++) {
-    DisplayData* dd = dds.getRight();
-    if ( ! dd->isDisplayable( ) ) continue; // not displayable
-    if(dd==wch->csMaster()) {
-      itsCSmaster=dd;
+  for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
+	iter != itsDisplayList.end(); ++iter ) {
+    if ( ! (*iter)->isDisplayable( ) ) continue; // not displayable
+    if ( *iter == wch->csMaster()) {
+      itsCSmaster = *iter;
       executeSizeControl(worldCanvas());
 	// Makes sure the new master sets up WC state immediately.
-      return True;  }  }
-  
-  return False;  }
-      
+      return True;
+    }
+  }
 
-   
-  
+  return False;
+}
+
+
 void WorldCanvasHolder::operator()(const WCRefreshEvent &ev) {
   // DisplayDatas are not expected to draw unbuffered data...
   if (ev.reason() == Display::BackCopiedToFront) {
@@ -405,34 +398,32 @@ void WorldCanvasHolder::operator()(const WCRefreshEvent &ev) {
   pc->enable(Display::ClipWindow);
 
   
-  ConstListIter<DisplayData *> dds(itsDisplayList);
-  DisplayData *dData;
-  
   // record dd conformity to WC[H] state.  Non-conforming DDs
   // will not be requested to draw.
   
   Int dd;
-  Vector<Bool> conforms(dds.len());
-  
-  for(dds.toStart(),dd=0; !dds.atEnd(); dds++,dd++) {
-	dData = dds.getRight();
-	if ( ! dData->isDisplayable( ) ){
-	  conforms[dd] = False;
-	  continue; // not displayable
+  Vector<Bool> conforms(itsDisplayList.size());
+
+  dd = 0;
+  for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
+	iter != itsDisplayList.end(); ++iter,++dd ) {
+	if ( ! (*iter)->isDisplayable( ) ) {
+	    conforms[dd] = False;
+	    continue;
 	} else {
-	  conforms[dd] = dData->conformsTo(*this);
+	    conforms[dd] = (*iter)->conformsTo(*this);
 	}
   }
-  
 
   // iteration one - do rasters:
   int count = 0;
-  for(dds.toStart(),dd=0; !dds.atEnd(); dds++,dd++) {
-	if(conforms[dd]) {
-	    dData = dds.getRight();
-	    if ( ! dData->isDisplayable( ) ) continue; // not displayable
-	    if ( dData->classType() == Display::Raster ) {
-		dData->refreshEH(ev);
+  dd = 0;
+  for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
+	iter != itsDisplayList.end(); ++iter, ++dd ) {
+	if ( conforms[dd] ) {
+	    if ( ! (*iter)->isDisplayable( ) ) continue;	// not displayable
+	    if ( (*iter)->classType( ) == Display::Raster ) {
+	      (*iter)->refreshEH(ev);
 	    }
 	}
   }
@@ -440,20 +431,26 @@ void WorldCanvasHolder::operator()(const WCRefreshEvent &ev) {
 
   
   // iteration two - do vector graphics:
-  for(dds.toStart(),dd=0; !dds.atEnd(); dds++,dd++) if(conforms[dd]) {
-	dData = dds.getRight();
-	if ( dData->classType() == Display::Vector &&
-	     dData->isDisplayable( ) )
-	    dData->refreshEH(ev);
+  dd = 0;
+  for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
+	iter != itsDisplayList.end(); ++iter, ++dd ) {
+	if ( conforms[dd] ) {
+	    if ( (*iter)->classType() == Display::Vector &&
+		 (*iter)->isDisplayable( ) )
+		(*iter)->refreshEH(ev);
+	}
   }
 
   
   // iteration three - do annotation graphics in the draw area:
-  for(dds.toStart(),dd=0; !dds.atEnd(); dds++,dd++) if(conforms[dd]) {
-	dData = dds.getRight();
-	if ( dData->classType( ) == Display::Annotation &&
-	     dData->isDisplayable( ) )
-	    dData->refreshEH(ev);
+  dd = 0;
+  for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
+	iter != itsDisplayList.end(); ++iter, ++dd ) {
+	if ( conforms[dd] ) {
+	    if ( (*iter)->classType() == Display::Annotation &&
+		 (*iter)->isDisplayable( ) )
+		(*iter)->refreshEH(ev);
+	}
   }
 
     
@@ -465,11 +462,13 @@ void WorldCanvasHolder::operator()(const WCRefreshEvent &ev) {
 
   
   // iteration four - do full canvas annotation graphics:
-  for(dds.toStart(),dd=0; !dds.atEnd(); dds++,dd++) if(conforms[dd]) {
-	dData = dds.getRight();
-	if ( dData->classType() == Display::CanvasAnnotation &&
-	     dData->isDisplayable( ) ) {
-	    dData->refreshEH(ev);
+  dd = 0;
+  for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
+	iter != itsDisplayList.end(); ++iter, ++dd ) {
+	if ( conforms[dd] ) {
+	    if ( (*iter)->classType() == Display::CanvasAnnotation &&
+		 (*iter)->isDisplayable( ) )
+		(*iter)->refreshEH(ev);
 	}
   }
 
@@ -494,12 +493,11 @@ void WorldCanvasHolder::operator()(const WCRefreshEvent &ev) {
   // private CS as well sometimes....  First conforming DD that wants to will
   // now label.  (This may not be CSMaster, in blink mode, e.g.; that should
   // eliminate the 'wrong title' bug...).
-  
-  for(dds.toStart(),dd=0; !dds.atEnd(); dds++,dd++) {
-	dData = dds.getRight();
-	if( conforms[dd]  &&  
-	    dData->isDisplayable( ) &&
-	    dData->labelAxes(ev) ) break;
+  dd = 0;
+  for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
+	iter != itsDisplayList.end(); ++iter, ++dd ) {
+	if ( conforms[dd] && (*iter)->isDisplayable( ) && (*iter)->labelAxes(ev) )
+	    break;
   }
 
     
@@ -511,28 +509,26 @@ void WorldCanvasHolder::operator()(const WCRefreshEvent &ev) {
 
 // Distribute a WCPositionEvent over the DisplayDatas
 void WorldCanvasHolder::operator()(const WCPositionEvent &ev) {
-  ConstListIter<DisplayData *> dds(itsDisplayList);
-  dds.toStart();
-  while (!dds.atEnd()) {
-    dds.getRight()->positionEH(ev);
-    dds++;
+  for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
+	iter != itsDisplayList.end(); ++iter ) {
+	(*iter)->positionEH(ev);
   }
 }
 
 // Distribute a WCMotionEvent over the DisplayDatas
 void WorldCanvasHolder::operator()(const WCMotionEvent &ev) {
-  ConstListIter<DisplayData *> dds(itsDisplayList);
-  dds.toStart();
-  while (!dds.atEnd()) {
-    dds.getRight()->motionEH(ev);
-    dds++;
+  for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
+	iter != itsDisplayList.end(); ++iter ) {
+	(*iter)->motionEH(ev);
   }
 }
 
 // Distribute generic events sent via this new interface over the DDs
 void WorldCanvasHolder::handleEvent(DisplayEvent& ev) {
-  ConstListIter<DisplayData *> dds(itsDisplayList);
-  for(dds.toStart(); !dds.atEnd(); dds++) dds.getRight()->handleEvent(ev);
+  for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
+	iter != itsDisplayList.end(); ++iter ) {
+	(*iter)->handleEvent(ev);
+  }
 }
 
 
@@ -576,29 +572,27 @@ const uInt WorldCanvasHolder::nelements() {
 	// axis change on CS master).
 	
   uInt maxNelements = 0;
-  ConstListIter<DisplayData*> dds(itsDisplayList);
-  for(dds.toStart(); !dds.atEnd(); dds++) {
-    DisplayData* dd = dds.getRight();
+  for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
+	iter != itsDisplayList.end(); ++iter ) {
 
-    if ( ! dd->isDisplayable( ) ) continue; // not displayable
+	if ( ! (*iter)->isDisplayable( ) ) continue;	// not displayable
 
-    if(itsCSmaster==0 || isCSmaster(dd) || dd->conformsToCS(*this)) {
-      maxNelements = max(maxNelements, dd->nelements());  }  }
-      
-  return maxNelements;  }
-
-
-    
-void WorldCanvasHolder::cleanup() {  
-  ListIter<DisplayData *> dds(itsDisplayList);
-  dds.toStart();
-  DisplayData *dData;
-  while ( !dds.atEnd() ) {
-    dData = dds.getRight();
-    dData->cleanup();
-    dds++;
+	if ( itsCSmaster == 0 || isCSmaster(*iter) || (*iter)->conformsToCS(*this) ) {
+	    maxNelements = max(maxNelements, (*iter)->nelements());
+	}
   }
-  itsWorldCanvas->clear();
+
+  return maxNelements;
+}
+
+
+void WorldCanvasHolder::cleanup() {
+    for ( std::list<DisplayData*>::iterator iter = itsDisplayList.begin();
+	  iter != itsDisplayList.end(); ++iter ) {
+	(*iter)->cleanup();
+    }
+
+    itsWorldCanvas->clear();
 }
 
 

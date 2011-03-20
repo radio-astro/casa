@@ -43,6 +43,7 @@
 #include <measures/Measures/MeasTable.h>
 #include <images/Images/TempImage.h>
 #include <casa/OS/Time.h>
+#include <casa/Quanta/MVAngle.h>
 #include <casa/System/AipsrcValue.h>
 #include <casa/BasicSL/String.h>
 #include <casa/iostream.h>
@@ -120,7 +121,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //                   (the spectral image channel to use, can be different from 0 in the case
 //                    that several antenna responses are stored in one image file)
 //    column 16: Array Double (a Quantum, size set by NUM_SUBBANDS) NOMINAL_FREQ
-//                    (the nominal frequency of the channel given by FUNCTION_CHANNEL
+//                    (the nominal frequency of the channel given by FUNCTION_CHANNEL)
+//    column 17: Array Double (a Quantum, size set by NUM_SUBBANDS) RESPONSE_ROTATION_OFFSET
+//                    (the angle of an additional constant rotation of the response image)
+//                     project-dependent implementation) 
 //
 //  It is assured by the table filling code that columns 10, 11, and 12 use the same MDirection type.
 // </synopsis>
@@ -226,6 +230,7 @@ public:
 		    uInt& funcChannel, // the channel to use in the image  
 		    MFrequency& nomFreq, // nominal frequency of the image (in the given channel)
 		    FuncTypes& fType, // the function type of the image
+		    MVAngle& rotAngOffset, // the response rotation angle offset
 		    const String& obsName, // (the observatory name, e.g. "ALMA" or "ACA")
 		    const MEpoch& obsTime,
 		    const MFrequency& freq,
@@ -243,6 +248,7 @@ public:
 		    uInt& funcChannel, // the channel to use in the image  
 		    MFrequency& nomFreq, // nominal frequency of the image (at the given channel) 
 		    FuncTypes& fType, // the function type of the image
+		    MVAngle& rotAngOffset, // the response rotation angle offset
 		    const String& obsName, // (the observatory name, e.g. "ALMA" or "ACA")
 		    const Int& beamId,
 		    const MFrequency& freq);
@@ -268,6 +274,7 @@ public:
 	      const Vector<String>& funcName,
 	      const Vector<uInt>& funcChannel, 
 	      const Vector<MVFrequency>& nomFreq,
+	      const Vector<MVAngle>& rotAngOffset, 
 	      const String& antennaType = "",
 	      const MEpoch& startTime = MEpoch(MVEpoch(Quantity(40588., "d")), MEpoch::UTC), // beginning of 1970
 	      const MDirection& center = MDirection(Quantity( 0., "deg"), // the center to be matched with the CENTER column,
@@ -325,6 +332,7 @@ private:
   Vector<Vector<String> > FuncName_p;
   Vector<Vector<uInt> > FuncChannel_p;
   Vector<Vector<MVFrequency> > NomFreq_p;
+  Vector<Vector<MVAngle> > RotAngOffset_p;
 
   // not part of the table but same number of elements:
   // memory of the path from which the row was read (index to paths_p)

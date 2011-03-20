@@ -1226,16 +1226,6 @@ class par(str):
 		"""
 
 	@staticmethod
-	def layout():
-		"""
-                layout -- a list of subplots layout in figure coordinate (0-1), 
-                          i.e., fraction of the figure width or height.
-	        The order of elements should be:
-                [left, bottom, right, top, horizontal space btw panels,
-                vertical space btw panels]
- 		"""
-
-	@staticmethod
 	def legendloc():
 		"""
 		legendloc -- legend location on the axes (0-10)
@@ -1313,6 +1303,16 @@ class par(str):
 	@staticmethod
 	def lowres():
 		""" Name of low resolution (single dish) image: """
+
+	@staticmethod
+	def margin():
+		"""
+                margin -- a list of subplot margins in figure coordinate (0-1), 
+                          i.e., fraction of the figure width or height.
+	        The order of elements should be:
+                [left, bottom, right, top, horizontal space btw panels,
+                vertical space btw panels]
+ 		"""
 
 	@staticmethod
 	def markersize():	
@@ -2469,7 +2469,15 @@ class par(str):
 
 	@staticmethod
 	def subplot():
-		""" 
+		"""
+		(for sdplot)
+		subplot -- number of subplots (row and column) on a page.
+		           NOTICE plotter will slow down when a large number is
+ specified
+                           default: -1 (auto)
+                           example: 23 (2 rows by 3 columns)
+		---------------------------------------------------------------
+		(for the others)
 		subplot -- Panel number on the display screen
                 default: 111 (full screen display); example:
                 if iteration is non-blank, then

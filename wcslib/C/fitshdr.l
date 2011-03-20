@@ -1,43 +1,43 @@
 /*============================================================================
 
-    WCSLIB 4.3 - an implementation of the FITS WCS standard.
-    Copyright (C) 1995-2007, Mark Calabretta
+  WCSLIB 4.7 - an implementation of the FITS WCS standard.
+  Copyright (C) 1995-2011, Mark Calabretta
 
-    This file is part of WCSLIB.
+  This file is part of WCSLIB.
 
-    WCSLIB is free software: you can redistribute it and/or modify it under
-    the terms of the GNU Lesser General Public License as published by the
-    Free Software Foundation, either version 3 of the License, or (at your
-    option) any later version.
+  WCSLIB is free software: you can redistribute it and/or modify it under the
+  terms of the GNU Lesser General Public License as published by the Free
+  Software Foundation, either version 3 of the License, or (at your option)
+  any later version.
 
-    WCSLIB is distributed in the hope that it will be useful, but WITHOUT ANY
-    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-    FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for
-    more details.
+  WCSLIB is distributed in the hope that it will be useful, but WITHOUT ANY
+  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+  FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for
+  more details.
 
-    You should have received a copy of the GNU Lesser General Public License
-    along with WCSLIB.  If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU Lesser General Public License
+  along with WCSLIB.  If not, see <http://www.gnu.org/licenses/>.
 
-    Correspondence concerning WCSLIB may be directed to:
-       Internet email: mcalabre@atnf.csiro.au
-       Postal address: Dr. Mark Calabretta
-                       Australia Telescope National Facility, CSIRO
-                       PO Box 76
-                       Epping NSW 1710
-                       AUSTRALIA
+  Correspondence concerning WCSLIB may be directed to:
+    Internet email: mcalabre@atnf.csiro.au
+    Postal address: Dr. Mark Calabretta
+                    Australia Telescope National Facility, CSIRO
+                    PO Box 76
+                    Epping NSW 1710
+                    AUSTRALIA
 
-    Author: Mark Calabretta, Australia Telescope National Facility
-    http://www.atnf.csiro.au/~mcalabre/index.html
-    $Id: fitshdr.l,v 4.3 2007/12/27 05:41:36 cal103 Exp $
+  Author: Mark Calabretta, Australia Telescope National Facility
+  http://www.atnf.csiro.au/~mcalabre/index.html
+  $Id: fitshdr.l,v 4.7 2011/02/07 07:03:42 cal103 Exp $
 *=============================================================================
 *
-*   fitshdr.l is a Flex description file containing a lexical scanner
-*   definition for extracting keywords and keyvalues from a FITS header.
+* fitshdr.l is a Flex description file containing a lexical scanner
+* definition for extracting keywords and keyvalues from a FITS header.
 *
-*   It requires Flex v2.5.4 or later.
+* It requires Flex v2.5.4 or later.
 *
-*   Refer to fitshdr.h for a description of the user interface and operating
-*   notes.
+* Refer to fitshdr.h for a description of the user interface and operating
+* notes.
 *
 *===========================================================================*/
 
@@ -81,6 +81,7 @@ UNITSTR \[[-+*/^(). 0-9a-zA-Z]+\]
 %{
 #include <math.h>
 #include <limits.h>
+#include <setjmp.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -103,22 +104,20 @@ UNITSTR \[[-+*/^(). 0-9a-zA-Z]+\]
 	  } \
 	}
 
-#ifdef DEBUG
-  /* Print text as it is matched. */
-  #define YY_USER_ACTION printf("Rule %03d: \"%s\"\n", yy_act, yytext);
-#endif
-
 /* These global variables are required by YY_INPUT. */
 const char *fitshdr_hdr;
 int  fitshdr_nkeyrec;
+
+/* Used in preempting the call to exit() by yy_fatal_error(). */
+jmp_buf fitshdr_abort_jmp_env;
+#define exit(status) longjmp(fitshdr_abort_jmp_env, status)
 
 /* Map status return value to message. */
 const char *fitshdr_errmsg[] = {
    "Success",
    "Null fitskey pointer-pointer passed",
-   "Memory allocation failed"};
-
-void fitshdr_nullfill(char cptr[], int len);
+   "Memory allocation failed",
+   "Fatal error returned by Flex parser"};
 
 %}
 
@@ -128,7 +127,8 @@ void fitshdr_nullfill(char cptr[], int len);
 	double dtmp;
 	struct fitskey *kptr;
 	struct fitskeyid *iptr;
-        int yylex_destroy(void);
+	void nullfill(char cptr[], int len);
+	int  yylex_destroy(void);
 	
 	fitshdr_hdr = header;
 	fitshdr_nkeyrec = nkeyrec;
@@ -158,10 +158,15 @@ void fitshdr_nullfill(char cptr[], int len);
 	continuation = 0;
 	end = 0;
 	
+	/* Return here via longjmp() invoked by yy_fatal_error(). */
+	if (setjmp(fitshdr_abort_jmp_env)) {
+	  return 3;
+	}
+	
 	BEGIN(INITIAL);
 
 ^" "{80} {
-	  /* Rule 001: A completely blank keyrecord. */
+	  /* A completely blank keyrecord. */
 	  strncpy(kptr->keyword, yytext, 8);
 	  yyless(0);
 	  blank = 1;
@@ -169,49 +174,46 @@ void fitshdr_nullfill(char cptr[], int len);
 	}
 
 ^(COMMENT|HISTORY|" "{8}) {
-	  /* Rule 002. */
 	  strncpy(kptr->keyword, yytext, 8);
 	  BEGIN(COMMENT);
 	}
 
 ^END" "{77} {
-	  /* Rule 003. */
 	  strncpy(kptr->keyword, yytext, 8);
 	  end = 1;
 	  BEGIN(FLUSH);
 	}
 
 ^END" "{5}=" "+ {
-	  /* Rule 004: Illegal END keyrecord. */
+	  /* Illegal END keyrecord. */
 	  strncpy(kptr->keyword, yytext, 8);
 	  kptr->status |= FITSHDR_KEYREC;
 	  BEGIN(VALUE);
 	}
 
 ^END" "{5} {
-	  /* Rule 005: Illegal END keyrecord. */
+	  /* Illegal END keyrecord. */
 	  strncpy(kptr->keyword, yytext, 8);
 	  kptr->status |= FITSHDR_KEYREC;
 	  BEGIN(COMMENT);
 	}
 
 ^{KEYWORD}=" "+ {
-	  /* Rule 006. */
 	  strncpy(kptr->keyword, yytext, 8);
 	  BEGIN(VALUE);
 	}
 
 ^CONTINUE"  "+{STRING} {
-	  /* Rule 007: Continued string keyvalue. */
+	  /* Continued string keyvalue. */
 	  strncpy(kptr->keyword, yytext, 8);
-
+	
 	  if (keyno > 0 && (kptr-1)->type%10 == 8) {
 	    /* Put back the string keyvalue. */
 	    for (k = 10; yytext[k] != '\''; k++);
 	    yyless(k);
 	    continuation = 1;
 	    BEGIN(VALUE);
-
+	
 	  } else {
 	    /* Not a valid continuation. */
 	    yyless(8);
@@ -220,39 +222,39 @@ void fitshdr_nullfill(char cptr[], int len);
 	}
 
 ^{KEYWORD} {
-	  /* Rule 008: Keyword without value. */
+	  /* Keyword without value. */
 	  strncpy(kptr->keyword, yytext, 8);
 	  BEGIN(COMMENT);
 	}
 
 ^.{8}=" "+ {
-	  /* Rule 009: Illegal keyword, carry on regardless. */
+	  /* Illegal keyword, carry on regardless. */
 	  strncpy(kptr->keyword, yytext, 8);
 	  kptr->status |= FITSHDR_KEYWORD;
 	  BEGIN(VALUE);
 	}
 
 ^.{8}	{
-	  /* Rule 010: Illegal keyword, carry on regardless. */
+	  /* Illegal keyword, carry on regardless. */
 	  strncpy(kptr->keyword, yytext, 8);
 	  kptr->status |= FITSHDR_KEYWORD;
 	  BEGIN(COMMENT);
 	}
 
 <VALUE>" "*/\/ {
-	  /* Rule 011: Null keyvalue. */
+	  /* Null keyvalue. */
 	  BEGIN(INLINE);
 	}
 
 <VALUE>{LOGICAL} {
-	  /* Rule 012: Logical keyvalue. */
+	  /* Logical keyvalue. */
 	  kptr->type = 1;
 	  kptr->keyvalue.i = (*yytext == 'T');
 	  BEGIN(INLINE);
 	}
 
 <VALUE>{INT32} {
-	  /* Rule 013: 32-bit signed integer keyvalue. */
+	  /* 32-bit signed integer keyvalue. */
 	  kptr->type = 2;
 	  if (sscanf(yytext, "%d", &(kptr->keyvalue.i)) < 1) {
 	    kptr->status |= FITSHDR_KEYVALUE;
@@ -263,7 +265,7 @@ void fitshdr_nullfill(char cptr[], int len);
 	}
 
 <VALUE>{INT64} {
-	  /* Rule 014: 64-bit signed integer keyvalue (up to 18 digits). */
+	  /* 64-bit signed integer keyvalue (up to 18 digits). */
 	  if (sscanf(yytext, "%lf", &dtmp) < 1) {
 	    kptr->status |= FITSHDR_KEYVALUE;
 	    BEGIN(ERROR);
@@ -304,7 +306,7 @@ void fitshdr_nullfill(char cptr[], int len);
 	}
 
 <VALUE>{INTVL} {
-	  /* Rule 015: Very long integer keyvalue (and 19-digit int64). */
+	  /* Very long integer keyvalue (and 19-digit int64). */
 	  kptr->type = 4;
 	  strcpy(ctmp, yytext);
 	  k = yyleng;
@@ -340,12 +342,12 @@ void fitshdr_nullfill(char cptr[], int len);
 	      }
 	    #endif
 	  }
-
+	
 	  BEGIN(INLINE);
 	}
 
 <VALUE>{FLOAT} {
-	  /* Rule 016: Float keyvalue. */
+	  /* Float keyvalue. */
 	  kptr->type = 5;
 	  if (sscanf(yytext, "%lf", &(kptr->keyvalue.f)) < 1) {
 	    kptr->status |= FITSHDR_KEYVALUE;
@@ -356,7 +358,7 @@ void fitshdr_nullfill(char cptr[], int len);
 	}
 
 <VALUE>{ICOMPLX} {
-	  /* Rule 017: Integer complex keyvalue. */
+	  /* Integer complex keyvalue. */
 	  kptr->type = 6;
 	  if (sscanf(yytext, "(%lf,%lf)", kptr->keyvalue.c,
 	      kptr->keyvalue.c+1) < 2) {
@@ -368,7 +370,7 @@ void fitshdr_nullfill(char cptr[], int len);
 	}
 
 <VALUE>{FCOMPLX} {
-	  /* Rule 018: Floating point complex keyvalue. */
+	  /* Floating point complex keyvalue. */
 	  kptr->type = 7;
 	  if (sscanf(yytext, "(%lf,%lf)", kptr->keyvalue.c,
 	      kptr->keyvalue.c+1) < 2) {
@@ -380,7 +382,7 @@ void fitshdr_nullfill(char cptr[], int len);
 	}
 
 <VALUE>{STRING} {
-	  /* Rule 019: String keyvalue. */
+	  /* String keyvalue. */
 	  kptr->type = 8;
 	  cptr = kptr->keyvalue.s;
 	  strcpy(cptr, yytext+1);
@@ -404,86 +406,77 @@ void fitshdr_nullfill(char cptr[], int len);
 	
 	  if (*cptr) {
 	    /* Retain the initial blank in all-blank strings. */
-	    fitshdr_nullfill(cptr+1, 71);
+	    nullfill(cptr+1, 71);
 	  } else {
-	    fitshdr_nullfill(cptr, 72);
+	    nullfill(cptr, 72);
 	  }
 	
 	  BEGIN(INLINE);
 	}
 
 <VALUE>. {
-	  /* Rule 020. */
 	  kptr->status |= FITSHDR_KEYVALUE;
 	  BEGIN(ERROR);
 	}
 
 <INLINE>" "*$ {
-	  /* Rule 021. */
 	  BEGIN(FLUSH);
 	}
 
 <INLINE>" "*\/" "*$ {
-	  /* Rule 022. */
 	  BEGIN(FLUSH);
 	}
 
 <INLINE>" "*\/" "* {
-	  /* Rule 023. */
 	  BEGIN(UNITS);
 	}
 
 <INLINE>" " {
-	  /* Rule 024. */
 	  kptr->status |= FITSHDR_COMMENT;
 	  BEGIN(ERROR);
 	}
 
 <INLINE>. {
-	  /* Rule 025: Keyvalue parsing must now also be suspect. */
+	  /* Keyvalue parsing must now also be suspect. */
 	  kptr->status |= FITSHDR_COMMENT;
 	  kptr->type = 0;
 	  BEGIN(ERROR);
 	}
 
 <UNITS>{UNITSTR} {
-	  /* Rule 026. */
 	  kptr->ulen = yyleng;
 	  yymore();
 	  BEGIN(COMMENT);
 	}
 
 <UNITS>. {
-	  /* Rule 027. */
 	  yymore();
 	  BEGIN(COMMENT);
 	}
 
 <COMMENT>.* {
-	  /* Rule 028. */
 	  strcpy(kptr->comment, yytext);
-	  fitshdr_nullfill(kptr->comment, 84);
+	  nullfill(kptr->comment, 84);
 	  BEGIN(FLUSH);
 	}
 
 <ERROR>.* {
-	  /* Rule 029. */
 	  if (!continuation) kptr->type = -abs(kptr->type);
 	
 	  sprintf(kptr->comment, "%.80s", fitshdr_hdr-80);
 	  kptr->comment[80] = '\0';
-	  fitshdr_nullfill(kptr->comment+80, 4);
+	  nullfill(kptr->comment+80, 4);
 	
 	  BEGIN(FLUSH);
 	}
 
 <FLUSH>.*\n {
-	  /* Rule 030: Discard the rest of the input line. */
+	  /* Discard the rest of the input line. */
 	  kptr->keyno = ++keyno;
 	
 	  /* Null-fill the keyword. */
 	  kptr->keyword[8] = '\0';
-	  fitshdr_nullfill(kptr->keyword, 12);
+	  nullfill(kptr->keyword, 12);
 	
 	  /* Do indexing. */
 	  iptr = keyids;
@@ -491,7 +484,7 @@ void fitshdr_nullfill(char cptr[], int len);
 	  for (j = 0; j < nkeyids; j++, iptr++) {
 	    cptr = iptr->name;
 	    cptr[8] = '\0';
-	    fitshdr_nullfill(cptr, 12);
+	    nullfill(cptr, 12);
 	    for (k = 0; k < 8; k++, cptr++) {
 	      if (*cptr != '.' && *cptr != kptr->keyword[k]) break;
 	    }
@@ -516,7 +509,7 @@ void fitshdr_nullfill(char cptr[], int len);
 	    if ((kptr-1)->type == 8) (kptr-1)->type += 10;
 	    cptr = (kptr-1)->keyvalue.s;
 	    if (cptr[strlen(cptr)-1] == '&') cptr[strlen(cptr)-1] = '\0';
-
+	
 	    kptr->type = (kptr-1)->type + 10;
 	  }
 	
@@ -533,8 +526,8 @@ void fitshdr_nullfill(char cptr[], int len);
 	  BEGIN(INITIAL);
 	}
 
-<<EOF>> {
-	  /* Rule unnumbered: End-of-input. */
+<<EOF>>	{
+	  /* End-of-input. */
 	  yylex_destroy();
 	  return 0;
 	}
@@ -543,7 +536,7 @@ void fitshdr_nullfill(char cptr[], int len);
 
 /*--------------------------------------------------------------------------*/
 
-void fitshdr_nullfill(char cptr[], int len)
+void nullfill(char cptr[], int len)
 
 {
   int j, k;

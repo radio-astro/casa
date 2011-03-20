@@ -126,8 +126,10 @@ class imfit_test(unittest.TestCase):
             expected_new_estimates, stokes_image, gauss_no_pol, jyperbeamkms,
             masked_image
         ] :
-            os.system('cp -r ' + datapath + f + ' ' + f)
-
+            if (os.path.isdir(datapath + f)):
+                shutil.copytree(datapath + f, f)
+            if (os.path.isfile(datapath + f)):
+                shutil.copy(datapath + f, f)
 
     def tearDown(self):
         for f in [
@@ -136,7 +138,10 @@ class imfit_test(unittest.TestCase):
             expected_new_estimates, stokes_image, gauss_no_pol, jyperbeamkms,
             masked_image
         ] :
-            os.system('rm -rf ' + f)
+            if (os.path.isdir(f)):
+                shutil.rmtree(f)
+            if (os.path.isfile(f)):
+                os.remove(f)
 
     def test_fit_using_full_image(self):
         '''Imfit: Fit using full image'''
@@ -291,12 +296,35 @@ class imfit_test(unittest.TestCase):
                 if (not near(got, expected, epsilon)):
                     success = False
                     msgs += method + "Major axis test failure, got " + str(got) + " expected " + str(expected) + "\n"
+                got = clist['component0']['shape']['majoraxiserror']['value']
+                expected = 0.09198805
+                epsilon = 1e-6
+                if (not near(got, expected, epsilon)):
+                    success = False
+                    msgs += method + "Major axis error test failure, got " + str(got) + " expected " + str(expected) + "\n"
+                if (
+                    not clist['component0']['shape']['majoraxis']['unit']
+                    == clist['component0']['shape']['majoraxiserror']['unit']
+                ):
+                    success = False
+                    msgs += method + "Major axis and major axis error units are different\n"
                 # Minor axis test
                 got = clist['component0']['shape']['minoraxis']['value']
                 expected = 18.86450
                 if (not near(got, expected, epsilon)):
                     success = False
                     msgs += method + "Minor axis test failure, got " + str(got) + " expected " + str(expected) + "\n"
+                got = clist['component0']['shape']['minoraxiserror']['value']
+                expected = 0.091988052
+                if (not near(got, expected, epsilon)):
+                    success = False
+                    msgs += method + "Minor axis error test failure, got " + str(got) + " expected " + str(expected) + "\n"
+                if (
+                    not clist['component0']['shape']['minoraxis']['unit']
+                    == clist['component0']['shape']['minoraxiserror']['unit']
+                ):
+                    success = False
+                    msgs += method + "Minor axis and minor axis error units are different\n"
                 # Position angle test
                 got = clist['component0']['shape']['positionangle']['value']
                 expected = 119.81296
@@ -305,7 +333,17 @@ class imfit_test(unittest.TestCase):
                     success = False
                     msgs += method + "Position angle test failure, got " + str(got) \
                         + " expected " + str(expected) + "\n"
-
+                got = clist['component0']['shape']['positionangleerror']['value']
+                expected = 0.1425508
+                if (not near(got, expected, epsilon)):
+                    success = False
+                    msgs += method + "Position angle error test failure, got " + str(got) + " expected " + str(expected) + "\n"
+                if (
+                    not clist['component0']['shape']['positionangle']['unit']
+                    == clist['component0']['shape']['positionangleerror']['unit']
+                ):
+                    success = False
+                    msgs += method + "Position angle and position angle error units are different\n"
         self.assertTrue(success,msgs)
         
     def test_nonconvergence(self):

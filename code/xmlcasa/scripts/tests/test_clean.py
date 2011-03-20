@@ -116,7 +116,12 @@ class clean_test1(unittest.TestCase):
     def test11(self):
         """Clean 11: Non-default mode velocity"""
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }            
-        res = clean(vis=self.msfile,imagename=self.img,mode='velocity',restfreq='23600MHz')
+        # The introduction of a new image frequency gridding method
+        # in imager (CAS-2576) causes the image channel width 
+        # to change (wider, since the velocity width was calculated from lower
+        # frequency side) for the default velocity mode. This cause the last
+        # channel image to be blank. To avoid this use nearest interpolation. 
+        res = clean(vis=self.msfile,imagename=self.img,mode='velocity',restfreq='23600MHz', interpolation='nearest')
         if(res != None):
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
@@ -129,6 +134,7 @@ class clean_test1(unittest.TestCase):
         # Verify if there are blank planes at the edges
         vals = imval(self.img+'.image')
         size = len(vals['data'])
+
         if (vals['data'][0]==0 or vals['data'][size-1]==0):
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\

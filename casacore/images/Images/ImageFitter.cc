@@ -231,17 +231,8 @@ namespace casa {
 	}
 
 	Double ImageFitter::_getStatistic(const String& type, const Record& stats) const {
-		// FIXME ? I cannot figure out a better way of accessing an array element (neither
-		// array[0] nor array(0) work) without having to convert it to a vector or creating
-		// an IPosition object.
-		// I would also think I could get the value of a record element by simply referencing
-		// its key, without having to get a field number, but I cannot figure out how to do that
-		// either.
-
-		Array<Double> statArray;
-		stats.get(stats.fieldNumber(type), statArray);
-		vector<Double> statVec;
-		statArray.tovector(statVec);
+		Vector<Double> statVec;
+		stats.get(stats.fieldNumber(type), statVec);
 		return statVec[0];
 	}
 
@@ -603,17 +594,19 @@ namespace casa {
     		_positionAngleErrors[i].setValue(
     				max(_positionAngleErrors[i].getValue(), posAngErrorFromSN.getValue())
     			);
-     	   	Vector<Double> newErrors(3);
-     	   _majorAxisErrors[i].convert("rad");
-     	   _minorAxisErrors[i].convert("rad");
-     	   _positionAngleErrors[i].convert("rad");
 
-     	   	newErrors[0] = _majorAxisErrors[i].getValue();
-     	   	newErrors[1] = _minorAxisErrors[i].getValue();
-     	   	newErrors[2] = _positionAngleErrors[i].getValue();
-     	   	ComponentShape* newShape = compShape->clone();
+    		_majorAxisErrors[i].convert(_majorAxes[i].getUnit());
+    		_minorAxisErrors[i].convert(_minorAxes[i].getUnit());
+    		_positionAngleErrors[i].convert(_positionAngles[i].getUnit());
 
-     	   	newShape->setErrors(newErrors);
+     	   	GaussianShape* newShape = dynamic_cast<GaussianShape *>(compShape->clone());
+
+     	   	newShape->setErrors(
+     	   		_majorAxisErrors[i], _minorAxisErrors[i],
+     	   		_positionAngleErrors[i]
+     	    );
+
+     	   	// newShape->setErrors(newErrors);
 
      	   	// set the position uncertainties
 
@@ -685,7 +678,6 @@ namespace casa {
     		Bool isPointSource = ImageUtilities::deconvolveFromBeam(
     		    bestFit[0], bestFit[1], bestFit[2], fitSuccess, *_log, best, beam
     		);
-
     		size << "Image component size (deconvolved from beam) ---" << endl;
 
     		if(fitSuccess) {
@@ -706,8 +698,12 @@ namespace casa {
     						sourceIn[1] = minRange[j];
     						for (uInt k=0; k<2; k++) {
     							sourceIn[2] = paRange[k];
+    							minFit = Quantity();
+    							majFit = Quantity();
+    							paFit = Quantity();
     							isPointSource = ImageUtilities::deconvolveFromBeam(
-    									majFit, minFit, paFit, fitSuccess, *_log, sourceIn, beam
+    								majFit, minFit, paFit, fitSuccess,
+    								*_log, sourceIn, beam, False
     							);
     							if (fitSuccess) {
     								Quantity errMaj = bestFit[0] - majFit;

@@ -313,9 +313,9 @@ namespace casa {
    */
   Bool Flagger::selectdata(Bool useoriginalms,
 			   String field, String spw, String array,
-			   String feed, String scan,
+			   String feed, String scan, 
 			   String baseline, String uvrange, String time,
-			   String correlation)
+			   String correlation, String intent)
   {
     if (dbg) cout << "selectdata: "
         << "useoriginalms=" << useoriginalms
@@ -323,7 +323,7 @@ namespace casa {
         << " array=" << array << " feed=" << feed
         << " scan=" << scan << " baseline=" << baseline
         << " uvrange=" << uvrange << " time=" << time
-        << " correlation=" << correlation << endl;
+        << " correlation=" << correlation << " scan intent="<< intent << endl;
 
     LogIO os(LogOrigin("Flagger", "selectdata()", WHERE));
     if (ms.isNull()) {
@@ -373,7 +373,8 @@ namespace casa {
 				    dummyExpr, // taqlExpr
 				    dummyExpr, // corrExpr
 				    (const String)scan,
-				    (const String)array);
+				    (const String)array,
+                                    (const String)intent);
     spw_selection = ((spw != "" && spw != "*") || uvrange.length() > 0);
     // multiple spw agents are also needed for uvrange selections...
 
@@ -409,6 +410,7 @@ namespace casa {
 	cout << "Scans : " << msselection_p->getScanList() << endl;
 	cout << "Arrays : " << msselection_p->getSubArrayList() << endl;
 	// cout << "Feeds : " << msselection_p->getFeedList() << endl;
+	cout << "Scan intent : " << msselection_p->getStateObsModeList() << endl;
 	
       }
     
@@ -430,14 +432,14 @@ namespace casa {
       String field, String spw, String array, 
       String feed, String scan,
       String baseline,  String uvrange,  String time,
-      String correlation) 
+      String correlation, String intent) 
   {
     if (dbg) cout << "setdata: " 
         << " field=" << field << " spw=" << spw
         << " array=" << array << " feed=" << feed
         << " scan=" << scan << " baseline=" << baseline
         << " uvrange=" << uvrange << " time=" << time
-        << " correlation=" << correlation << endl;
+        << " correlation=" << correlation << " scan intent=" << intent << endl;
 
     LogIO os(LogOrigin("Flagger", "setdata()", WHERE));
     setdata_p = False;
@@ -453,7 +455,7 @@ namespace casa {
     /* Parse selection parameters */
     if (!spw.length()) spw = String("*");
 
-    if (!selectdata(True,field,spw,array,feed,scan,baseline,uvrange,time,correlation))
+    if (!selectdata(True,field,spw,array,feed,scan, baseline,uvrange,time,correlation,intent))
 	{
 	    os << LogIO::SEVERE << "Selection failed !!"
 	       << LogIO::POST;
@@ -703,6 +705,16 @@ namespace casa {
 	Record flagRec(flagDesc);  
 	flagRec.define(RF_SCAN, scanlist);
 	rec.mergeField(flagRec, RF_SCAN, RecordInterface::OverwriteDuplicates);
+      }
+    /* State ID  (obsMode) */
+    Vector<Int> stateobsmodelist = msselection_p->getStateObsModeList();
+    if (stateobsmodelist.nelements())
+      {
+	RecordDesc flagDesc;       
+	flagDesc.addField(RF_INTENT, TpArrayInt);
+	Record flagRec(flagDesc);  
+	flagRec.define(RF_INTENT, stateobsmodelist);
+	rec.mergeField(flagRec, RF_INTENT, RecordInterface::OverwriteDuplicates);
       }
     
     return True;

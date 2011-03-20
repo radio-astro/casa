@@ -116,7 +116,7 @@ localoutfile=sdfile+'_sm'
 # automatically detect lines to exclude from fitting
 default(sdbaseline)
 sdfile=localoutfile
-masking='list'
+maskmode='list'
 masklist=[[500,3500],[5000,7500]]
 blfunc='poly'
 order=5

@@ -1,26 +1,26 @@
-/** \mainpage C++ interface of the ATM model for ALMA (Sep 02, 2010 status)  
+/** \mainpage C++ interface of the ATM model for ALMA (Jan 31st, 2011 status)  
  *
  * \section HISTORY ATM history
  *
  * The Atmospheric Transmission at Microwaves model (ATM) has been the result of research conducted through 
- * the years by under the leadership of J. Cernicharo (1985-1995) and Juan R. Pardo (1995-2008) with the collaboration 
+ * the years by under the leadership of J. Cernicharo (1985-1995) and Juan R. Pardo (1995-2011) with the collaboration 
  * of many different people and groups (see list of collaborators in the different publications). This work has combined 
- * modeling efforts, literature research, spectroscopy calculations, experimental refinement and validation, and research 
+ * theoretical efforts, literature research, spectroscopy calculations, experimental refinement and validation, and research 
  * applications. A fortran-77 code was written and distributed upon request to scientists from both the astrophysics and remote 
  * sensing communities.
  *
  * An agreement was signed between Consejo Superior de Investigaciones Cientificas (CSIC, Spain) and the European Southern 
  * Observatory (ESO) to develop a C++ interface of ATM for use within the TelCal subsystem of ALMA. Such an interface to a fortran 
- * core of libraries was written an finalized by the beginning of 2007. As of June 2007 the fortran core of libraries had been 
+ * core of libraries was written an finalized by the beginning of 2007. As of January 2011 the fortran core of libraries is 
  * completely translated into C++ code so that now there is no dependency on any fortran code. 
  *
- * Together with the C++ ATM module, a set of test examples had been implemented. Retrieval procedures are tested against real data 
+ * Together with the C++ ATM module, a set of test examples have been implemented. Retrieval procedures are tested against real data 
  * provided mostly by FTS and WVR experiments from both Mauna Kea and Chajnantor. 
  *
  * A new contract between CSIC and ESO was signed in June 2007 for tests and maintenance of ATM C++. The new contract is for 5 years with 
  * a 0.1 FTE effort per year provided by CSIC.
  *
- * Finally, a new agreement to use ATM C++ as free LPGL software for the ALMA project has been signed in Feb. 2008.
+ * Finally, a new agreement to use ATM C++ as free LPGL software for the ALMA project was signed on Feb. 2008.
  *
  * \section ATMFORALMA ATM C++ for ALMA
  *
@@ -92,20 +92,27 @@
  * Several tests examples for the different main classes have been developed and documented. These tests 
  * are described in the links provided below. The executables can be found in /TelCalResults/Libraries/ATM/bin.
  *
- * - AtmosphereTypeTest is a test of this enumeration. See <a href="AtmosphereTypeTest_8cpp.html">AtmosphereTypeTest.cpp</a>
- * - AtmProfileTest is a very simple test and example of how to create an object of the 
- * <a href="classatm_1_1AtmProfile.html">AtmProfile</a> class. See <a href="AtmProfileTest_8cpp.html">AtmProfileTest.cpp</a> 
- * to check how it works.
- * - SpectrslGridTest provides a quite complete test of the <a href="classatm_1_1SpectralGrid.html">SpectralGrid</a> class. See <a href="SpectralGridTest_8cpp.html">SpectralGridTest.cpp</a> 
- * to check how it works.
- * - RefractiveIndexProfileTest provides a very straightforward test of the <a href="classatm_1_1RefractiveIndexProfile.html">RefractiveIndexProfile</a> class, but also fo the <a href="classatm_1_1AtmProfile.html">AtmProfile</a> class. See <a href="RefractiveIndexProfileTest_8cpp.html">RefractiveIndexProfileTest.cpp</a> to check how it works.
- * - SkyStatusTest provides a test of the <a href="classatm_1_1SkyStatus.html">SkyStatus</a> class. One object of this class can be used per antenna in order to account for the sky status for that particular antenna. See <a href="SkyStatusTest_8cpp.html">SkyStatusTest.cpp</a> to check how it works.
- * - FTSRetrievalTest provides a test of the <a href="classatm_1_1SkyStatus.html">SkyStatus</a> class combined with the capabilities of 
+ * Tests of the basic classes:
+ *
+ * - <a href="AtmProfileTest_8cpp.html">AtmProfileTest</a> is a very simple test and example of how to create an object of the 
+ * <a href="classatm_1_1AtmProfile.html">AtmProfile</a> class. 
+ * - <a href="SpectralGridTest_8cpp.html">SpectrslGridTest</a> provides a quite complete test of the <a href="classatm_1_1SpectralGrid.html">SpectralGrid</a> class. 
+ * - <a href="RefractiveIndexProfileTest_8cpp.html">RefractiveIndexProfileTest</a> provides a very straightforward test of the <a href="classatm_1_1RefractiveIndexProfile.html">RefractiveIndexProfile</a> class, but also fo the <a href="classatm_1_1AtmProfile.html">AtmProfile</a> class. 
+ * - <a href="SkyStatusTest_8cpp.html">SkyStatusTest</a> provides a test of the <a href="classatm_1_1SkyStatus.html">SkyStatus</a> class. One object of this class can be used per antenna in order to account for the sky status for that particular antenna. 
+ * - <a href="AtmBasicTest_8cpp.html">AtmBasicTest</a> provides a test for all basic classes: <a href="classatm_1_1AtmProfile.html">AtmProfile</a>, <a href="classatm_1_1SpectralGrid.html">SpectralGrid</a>, <a href="classatm_1_1RefractiveIndexProfile.html">RefractiveIndexProfile</a> and <a href="classatm_1_1SkyStatus.html">SkyStatus</a>
+ *
+ * Other tests (retrievals):
+ *
+ * - <a href="FTSRetrievalTest_8cpp.html">FTSRetrievalTest</a> provides a test of the <a href="classatm_1_1SkyStatus.html">SkyStatus</a> class combined with the capabilities of 
  *   the <a href="classatm_1_1SkyStatus.html#z13_110">WaterVaporRetrieval_fromFTS</a> function. See <a href="FTSRetrievalTest_8cpp.html">FTSRetrievalTest.cpp</a> to check how it works.
- * - WVRRetrievalTest provides a very complete test of all ATM classes, focussing on water vapor retrieval capabilities from real data. This test is 
+ * - <a href="WVRRetrievalTest_8cpp.html">WVRRetrievalTest</a> provides a very complete test of all ATM classes, focussing on water vapor retrieval capabilities from real data. This test is 
  *   based in the publication Pardo et al., Astrophysical Journal Suppl., 153, 363-367 (2004). See <a href="WVRRetrievalTest_8cpp.html">WVRRetrievalTest.cpp</a> to check how it works.
  * 
- *  
+ * Other tests (based on real atmosphere site-testing data from different sites):
+ *
+ * - <a href="APEX__SkyDipTest_8cpp.html">APEX_SkyDipTest</a> (APEX telescope at Chajnantor. Details on next release)
+ * - <a href="MITORetrievalTest_8cpp.html">MITORetrievalTest</a> (MITO telescope at Testa Grigia, the Alps. Details on next release)
+ * - <a href="SMATest_8cpp.html">SMATest</a> (SMA Array on Mauna Kea. Details on next release)
  *
  * \section PUBLICATIONS ATM publications
  *

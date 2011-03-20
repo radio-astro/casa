@@ -89,14 +89,16 @@ flagger::setdata(
     const std::string& baseline, 
     const std::string& uvrange, 
     const std::string& time, 
-    const std::string& correlation)
+    const std::string& correlation,
+    const std::string& scanintent)
 {
     try {
 	if (flagger_p) {
 	    return flagger_p->setdata(
 		String(field),String(spw),String(array),
 		String(feed),String(scan),String(baseline),
-		String(uvrange),String(time),String(correlation));
+		String(uvrange),String(time),String(correlation), 
+                String(scanintent));
         }
 	return false;
     } catch (AipsError x) {
@@ -116,6 +118,7 @@ flagger::setmanualflags(
     const std::string& uvrange, 
     const std::string& time, 
     const std::string& correlation, 
+    const std::string& scanintent,
     const bool autocorrelation, 
     const bool unflag, 
     const std::string& clipexpr, 
@@ -141,7 +144,8 @@ flagger::setmanualflags(
 		False, 
 		String(field), String(spw), String(array),
 		String(feed), String(scan), String(baseline),
-		String(uvrange), String(time), String(correlation));
+		String(uvrange), String(time), String(correlation),
+                String(scanintent));
 	    
 	    if(ret) {
 		ret = flagger_p->setmanualflags(
@@ -232,7 +236,7 @@ flagger::setautoflag(const std::string& algorithm, const ::casac::record& parame
 }
 
 bool
-flagger::setflagsummary(const std::string& field, const std::string& spw, const std::string& array, const std::string& feed, const std::string& scan, const std::string& baseline, const std::string& uvrange, const std::string& time, const std::string& correlation)
+flagger::setflagsummary(const std::string& field, const std::string& spw, const std::string& array, const std::string& feed, const std::string& scan, const std::string& baseline, const std::string& uvrange, const std::string& time, const std::string& correlation, const std::string& scanintent)
 {
     try {
 	if(flagger_p) {
@@ -240,7 +244,8 @@ flagger::setflagsummary(const std::string& field, const std::string& spw, const 
 	    ret = flagger_p->selectdata(
 		False, String(field), String(spw), String(array),
 		String(feed), String(scan), String(baseline),
-		String(uvrange), String(time), String(correlation));
+		String(uvrange), String(time), String(correlation),
+                String(scanintent));
 
 	    if(ret) {
 		ret = flagger_p->setmanualflags(False,False,
@@ -271,6 +276,7 @@ flagger::setshadowflags(const std::string& field,
 			const std::string& uvrange,
 			const std::string& time, 
 			const std::string& correlation,
+			const std::string& scanintent,
                         double diameter)
 {
     try {
@@ -280,7 +286,8 @@ flagger::setshadowflags(const std::string& field,
 		False, 
 		String(field), String(spw), String(array),
 		String(feed), String(scan), String(baseline),
-		String(uvrange), String(time), String(correlation));
+		String(uvrange), String(time), String(correlation),
+                String(scanintent));
 
 	    if(ret) {
 		ret = flagger_p->setmanualflags(
@@ -312,6 +319,7 @@ flagger::setelevationflags(const std::string& field,
                            const std::string& uvrange,
                            const std::string& time, 
                            const std::string& correlation,
+                           const std::string& scanintent,
                            double lowerlimit,
                            double upperlimit)
 {
@@ -322,7 +330,8 @@ flagger::setelevationflags(const std::string& field,
 		False, 
 		String(field), String(spw), String(array),
 		String(feed), String(scan), String(baseline),
-		String(uvrange), String(time), String(correlation));
+		String(uvrange), String(time), String(correlation),
+                String(scanintent));
 
 	    if(ret) {
 		ret = flagger_p->setmanualflags(
@@ -346,7 +355,7 @@ flagger::setelevationflags(const std::string& field,
 
 
 bool
-flagger::setqueryflag(const std::string& field, const std::string& spw, const std::string& array, const std::string& feed, const std::string& scan, const std::string& baseline, const std::string& uvrange, const std::string& time, const std::string& correlation,const std::string& what, const double fractionthreshold, const int nflagsthreshold, const bool morethan)
+flagger::setqueryflag(const std::string& field, const std::string& spw, const std::string& array, const std::string& feed, const std::string& scan, const std::string& baseline, const std::string& uvrange, const std::string& time, const std::string& correlation, const std::string& scanintent, const std::string& what, const double fractionthreshold, const int nflagsthreshold, const bool morethan)
 {
     try
     {
@@ -365,7 +374,7 @@ flagger::setqueryflag(const std::string& field, const std::string& spw, const st
 }
 
 bool
-flagger::setextendflag(const std::string& field, const std::string& spw, const std::string& array, const std::string& feed, const std::string& scan, const std::string& baseline, const std::string& uvrange, const std::string& time, const std::string& correlation,const std::string& along, const int width)
+flagger::setextendflag(const std::string& field, const std::string& spw, const std::string& array, const std::string& feed, const std::string& scan, const std::string& baseline, const std::string& uvrange, const std::string& time, const std::string& correlation, const std::string& scanintent, const std::string& along, const int width)
 {
     try
     {

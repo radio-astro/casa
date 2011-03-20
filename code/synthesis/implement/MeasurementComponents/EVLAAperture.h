@@ -78,9 +78,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual Float getSupportThreshold() {return THRESHOLD;};
 
   protected:
-    int getVisParams(const VisBuffer& vb);
+    int getVisParams(const VisBuffer& vb,const CoordinateSystem& skyCoord=CoordinateSystem());
     Bool findSupport(Array<Complex>& func, Float& threshold,Int& origin, Int& R);
-    Int getVLABandID(Double& freq,String&telescopeName);
+    Int getVLABandID(Double& freq,String&telescopeName, const CoordinateSystem& skyCoord=CoordinateSystem());
     Int makePBPolnCoords(const VisBuffer&vb,
 			 const Int& convSize,
 			 const Int& convSampling,

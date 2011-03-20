@@ -763,6 +763,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	int l_status = 0;
 	if (ffghof(m_fptr, &l_headstart, &l_datastart, &l_dataend, &l_status) > 0){
 	    fits_report_error(stderr, l_status); // print error report
+	    errmsg(BADSIZE,"[FitsInput::read_all()]Error computing size of data.");
 	    return 0;
 	}
 
@@ -983,6 +984,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	int l_status = 0;
 	if (ffghof(m_fptr, &l_headstart, &l_datastart, &l_dataend, &l_status) > 0){
 	    fits_report_error(stderr, l_status); /* print error report */
+	    errmsg(BADSIZE,"[FitsInput::skip_all()()]Error computing size of data.");
 	    return;
 	}
 	// Determine how many byte of data left within the current hdu data unit.

@@ -72,6 +72,7 @@ const String QPCanvas::EXPORT_NAME = "export";
 
 bool QPCanvas::exportPlotter(QPPlotter* plotter, const PlotExportFormat& fmt) {
 	
+printf("\n>>> DSW QPC ExPr \n");
     vector<PlotCanvasPtr> canvases;
     if(plotter != NULL && !plotter->canvasLayout().null())
         canvases = plotter->canvasLayout()->allCanvases();
@@ -163,7 +164,17 @@ QImage QPCanvas::produceHighResImage(
     // Fill with background color.
     QPCanvas* canv = qcanvases[0];
     image.fill(canv->palette().color(canv->backgroundRole()).rgba());
-    
+    image.fill((uint)(-1));
+
+    // Change canvas' background color to white for a nice bright clean image file
+    //PlotAreaFillPtr  pAllWhite = QPFactory::areaFill("#f0822F");
+    //PlotFactory* f = implementationFactory();
+    PlotFactory* f = canv->implementationFactory();
+    PlotAreaFillPtr paf = f->areaFill(String("#ff77ff"));
+    delete f;
+    paf->setColor("#FFFFFF");
+    canv->setBackground(*paf);
+
     // Print each canvas.
     QPainter painter(&image);
     double widthRatio  = ((double)width)  / widgetWidth,
@@ -219,6 +230,12 @@ bool QPCanvas::exportToImageFile(
     int width  = grabCanvas != NULL ? grabCanvas->width()  : grabPlotter->width();
     int height = grabCanvas != NULL ? grabCanvas->height() : grabPlotter->height();    
     
+    // Remember the current background color, used for on-screen GUI
+    // We want to temporarily change this to white for making the image file.
+    // Later we will restore this color.
+    PlotAreaFillPtr normal_background = grabCanvas->background();
+    
+    
     // Just grab the widget if: 1) screen resolution, or 2) high resolution
     // but size is <= widget size or not set.
     bool wasCanceled = false;
@@ -265,7 +282,10 @@ bool QPCanvas::exportToImageFile(
     save_ok= image.save(format.location.c_str(),
           PlotExportFormat::exportFormat(format.type).c_str(), 
           quality);
-
+    
+    // Restore background color
+    grabCanvas->setBackground(normal_background);
+    
     return !wasCanceled && !image.isNull() && save_ok;
 }
 

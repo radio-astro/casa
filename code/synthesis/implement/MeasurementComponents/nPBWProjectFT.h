@@ -350,6 +350,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			     Int op=0, 
 			     Bool Square=False);
     void correctAntiAliasing(Lattice<Complex>& cf);
+    virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
   protected:
     
     // Padding in FFT

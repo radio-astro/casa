@@ -26,7 +26,7 @@ class sdplot_test_plot(unittest.TestCase):
       test13-15 --- plot range control (spectral plotting)
       test16-19 --- plot style control (spectral plotting)
       test20-21 --- header control (spectral plotting)
-      test22-23 --- plot layout control (spectral plotting)
+      test22-23,28 --- plot layout control (spectral plotting)
       test24-25 --- row panelling or stacking (spectral plotting)
       test26-27 --- flagg application
 
@@ -447,17 +447,17 @@ class sdplot_test_plot(unittest.TestCase):
 
     def testplot22(self):
         """
-        Test 22: plot layout control (spectral plotting) --- panel layout
+        Test 22: plot layout control (spectral plotting) --- panel margin
         """
         tid = "22"
         self.fig = self.figroot+tid+self.figpost
         sdfile=self.sdfile
         iflist=[0,2]
         plotstyle=True
-        layout=[0.15,0.3,0.85,0.7,0.25,0.25]
+        margin=[0.15,0.3,0.85,0.7,0.25,0.25]
         header=False
         result=sdplot(sdfile=sdfile,iflist=iflist,plotstyle=plotstyle,
-                        layout=layout,header=header,plotfile=self.fig)
+                        margin=margin,header=header,plotfile=self.fig)
         self.assertEqual(result,None)
         self._checkPlotFile()
 
@@ -545,6 +545,23 @@ class sdplot_test_plot(unittest.TestCase):
         header=False
         result=sdplot(sdfile=sdfile,panel=panel,
                         header=header,plotfile=self.fig)
+        self.assertEqual(result,None)
+        self._checkPlotFile()
+
+    def testplot28(self):
+        """
+        Test 28: plot layout control (spectral plotting) --- panel layout
+        """
+        tid = "28"
+        self.fig = self.figroot+tid+self.figpost
+        sdfile = self.sdfile
+        iflist = [0,2]
+        panel = 'r'
+        plotstyle = True
+        subplot = 24
+        header = False
+        result = sdplot(sdfile=sdfile,iflist=iflist,plotstyle=plotstyle,
+                        subplot=subplot,header=header,plotfile=self.fig)
         self.assertEqual(result,None)
         self._checkPlotFile()
 

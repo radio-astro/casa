@@ -148,6 +148,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual Bool computeAvgPB(const Double& actualPA, const Double& lastPAUsedForWtImg) 
     {return (avgPBReady_p==False);};
 
+    // virtual void setMiscInfo(const Int qualifier)
+    // {sensitivityPatternQualifier_p=qualifier;}
+    //    {qualifier_p = qualifier;taylorQualifier_p = "_MFS_"+String::toString(qualifier_p)+"_";};
+
   protected:
     void ftWeightImage(Lattice<Complex>& wtImage, 
 		       const Matrix<Float>& sumWt,

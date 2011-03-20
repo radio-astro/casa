@@ -1,73 +1,73 @@
 /*============================================================================
 
-    WCSLIB 4.3 - an implementation of the FITS WCS standard.
-    Copyright (C) 1995-2007, Mark Calabretta
+  WCSLIB 4.7 - an implementation of the FITS WCS standard.
+  Copyright (C) 1995-2011, Mark Calabretta
 
-    This file is part of WCSLIB.
+  This file is part of WCSLIB.
 
-    WCSLIB is free software: you can redistribute it and/or modify it under
-    the terms of the GNU Lesser General Public License as published by the
-    Free Software Foundation, either version 3 of the License, or (at your
-    option) any later version.
+  WCSLIB is free software: you can redistribute it and/or modify it under the
+  terms of the GNU Lesser General Public License as published by the Free
+  Software Foundation, either version 3 of the License, or (at your option)
+  any later version.
 
-    WCSLIB is distributed in the hope that it will be useful, but WITHOUT ANY
-    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-    FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for
-    more details.
+  WCSLIB is distributed in the hope that it will be useful, but WITHOUT ANY
+  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+  FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for
+  more details.
 
-    You should have received a copy of the GNU Lesser General Public License
-    along with WCSLIB.  If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU Lesser General Public License
+  along with WCSLIB.  If not, see <http://www.gnu.org/licenses/>.
 
-    Correspondence concerning WCSLIB may be directed to:
-       Internet email: mcalabre@atnf.csiro.au
-       Postal address: Dr. Mark Calabretta
-                       Australia Telescope National Facility, CSIRO
-                       PO Box 76
-                       Epping NSW 1710
-                       AUSTRALIA
+  Correspondence concerning WCSLIB may be directed to:
+    Internet email: mcalabre@atnf.csiro.au
+    Postal address: Dr. Mark Calabretta
+                    Australia Telescope National Facility, CSIRO
+                    PO Box 76
+                    Epping NSW 1710
+                    AUSTRALIA
 
-    Author: Mark Calabretta, Australia Telescope National Facility
-    http://www.atnf.csiro.au/~mcalabre/index.html
-    $Id: wcspih.l,v 4.3 2007/12/27 05:41:36 cal103 Exp $
+  Author: Mark Calabretta, Australia Telescope National Facility
+  http://www.atnf.csiro.au/~mcalabre/index.html
+  $Id: wcspih.l,v 4.7 2011/02/07 07:03:42 cal103 Exp $
 *=============================================================================
 *
-*   wcspih.l is a Flex description file containing the definition of a lexical
-*   scanner for parsing the WCS keyrecords from a FITS primary image or image
-*   extension header.
+* wcspih.l is a Flex description file containing the definition of a lexical
+* scanner for parsing the WCS keyrecords from a FITS primary image or image
+* extension header.
 *
-*   wcspih.l requires Flex v2.5.4 or later.  Refer to wcshdr.h for a
-*   description of the user interface and operating notes.
+* wcspih.l requires Flex v2.5.4 or later.  Refer to wcshdr.h for a description
+* of the user interface and operating notes.
 *
-*   Implementation notes
-*   --------------------
-*   Use of the WCSAXESa keyword is not mandatory.  Its default value is "the
-*   larger of NAXIS and the largest index of these keywords [i.e. CRPIXj,
-*   PCi_j or CDi_j, CDELTi, CTYPEi, CRVALi, and CUNITi] found in the FITS
-*   header".  Consequently the definition of WCSAXESa effectively invalidates
-*   the use of NAXIS for determining the number of coordinate axes and forces
-*   a preliminary pass through the header to determine the "largest index" in
-*   headers where WCSAXESa was omitted.
+* Implementation notes
+* --------------------
+* Use of the WCSAXESa keyword is not mandatory.  Its default value is "the
+* larger of NAXIS and the largest index of these keywords [i.e. CRPIXj, PCi_j
+* or CDi_j, CDELTi, CTYPEi, CRVALi, and CUNITi] found in the FITS header".
+* Consequently the definition of WCSAXESa effectively invalidates the use of
+* NAXIS for determining the number of coordinate axes and forces a preliminary
+* pass through the header to determine the "largest index" in headers where
+* WCSAXESa was omitted.
 *
-*   Furthermore, since the use of WCSAXESa is optional, there is no way to
-*   determine the number of coordinate representations (the "a" value) other
-*   than by parsing all of the WCS keywords in the header; even if WCSAXESa
-*   was specified for some representations it cannot be known in advance
-*   whether it was specified for all of those present in the header.
+* Furthermore, since the use of WCSAXESa is optional, there is no way to
+* determine the number of coordinate representations (the "a" value) other
+* than by parsing all of the WCS keywords in the header; even if WCSAXESa was
+* specified for some representations it cannot be known in advance whether it
+* was specified for all of those present in the header.
 *
-*   Hence the definition of WCSAXESa forces the scanner must be implemented in
-*   two passes.  The first pass is used to determine the number of coordinate
-*   representations (up to 27) and the number of coordinate axes in each.
-*   Effectively WCSAXESa is ignored unless it exceeds the "largest index" in
-*   which case the keywords for the extra axes assume their default values.
-*   The number of PVi_ma and PSi_ma keywords in each representation is also
-*   counted in the first pass.
+* Hence the definition of WCSAXESa forces the scanner to be implemented in two
+* passes.  The first pass is used to determine the number of coordinate
+* representations (up to 27) and the number of coordinate axes in each.
+* Effectively WCSAXESa is ignored unless it exceeds the "largest index" in
+* which case the keywords for the extra axes assume their default values.  The
+* number of PVi_ma and PSi_ma keywords in each representation is also counted
+* in the first pass.
 *
-*   On completion of the first pass, memory is allocated for an array of the
-*   required number of wcsprm structs and each of these is initialized
-*   appropriately.  These structs are filled in the second pass.
+* On completion of the first pass, memory is allocated for an array of the
+* required number of wcsprm structs and each of these is initialized
+* appropriately.  These structs are filled in the second pass.
 *
-*   The parser does not check for duplicated keywords, it accepts the last
-*   encountered.
+* The parser does not check for duplicated keywords, it accepts the last
+* encountered.
 *
 *===========================================================================*/
 
@@ -103,6 +103,7 @@ STRING	'([^']|'')*'
 
 %{
 #include <math.h>
+#include <setjmp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -135,11 +136,15 @@ STRING	'([^']|'')*'
 char *wcspih_hdr;
 int  wcspih_nkeyrec;
 
+int wcspih_final(int alts[], double epoch[], double vsource[], int *nwcs,
+        struct wcsprm **wcs);
+int wcspih_inits(int naxis, int alts[], int npv[], int nps[], int *nwcs,
+        struct wcsprm **wcs);
 void wcspih_naxes(int naxis, int i, int j, char a, int alts[], int *npptr);
-int  wcspih_inits(int alts[], int npv[], int nps[], int *nwcs,
-                  struct wcsprm **wcs);
-int  wcspih_final(int alts[], double epoch[], int velref[], double vsource[],
-                  int *nwcs, struct wcsprm **wcs);
+
+/* Used in preempting the call to exit() by yy_fatal_error(). */
+jmp_buf wcspih_abort_jmp_env;
+#define exit(status) longjmp(wcspih_abort_jmp_env, status)
 
 %}
 
@@ -149,21 +154,20 @@ int  wcspih_final(int alts[], double epoch[], int velref[], double vsource[],
 	int  i, j, m;
 	
 	char *cptr, *errmsg, errtxt[80], *hptr, *keep;
-	int  altlin, alts[27], iax, idx, ipx, ix, jx, naxis, *npptr,
-	     nps[27], npv[27], pass, status, valtype, velref[27], voff;
+	int  altlin, alts[27], ialt, idx, ipx, ix, jx, naxis, *npptr,
+	     nps[27], npv[27], pass, status, valtype, voff;
 	double epoch[27], vsource[27];
 	void *vptr, *wptr;
 	struct wcsprm *wcsp;
-        int yylex_destroy(void);
+	int yylex_destroy(void);
 	
 	naxis = 0;
-	for (iax = 0; iax < 27; iax++) {
-	  alts[iax] = 0;
-	  npv[iax] = 0;
-	  nps[iax] = 0;
-	  epoch[iax]   = UNDEFINED;
-	  velref[iax]  = 0;
-	  vsource[iax] = UNDEFINED;
+	for (ialt = 0; ialt < 27; ialt++) {
+	  alts[ialt] = 0;
+	  npv[ialt] = 0;
+	  nps[ialt] = 0;
+	  epoch[ialt]   = UNDEFINED;
+	  vsource[ialt] = UNDEFINED;
 	}
 	
 	/* Parameters used to implement YY_INPUT. */
@@ -193,6 +197,12 @@ int  wcspih_final(int alts[], double epoch[], int velref[], double vsource[],
 	*wcs  = 0x0;
 	
 	pass = 1;
+	
+	/* Return here via longjmp() invoked by yy_fatal_error(). */
+	if (setjmp(wcspih_abort_jmp_env)) {
+	  return 3;
+	}
+	
 	BEGIN(INITIAL);
 
 
@@ -476,14 +486,9 @@ int  wcspih_final(int alts[], double epoch[], int velref[], double vsource[],
 	
 	  if (a == ' ' || relax & WCSHDR_VELREFa) {
 	    valtype = INTEGER;
-	    if (pass == 2) {
-	      vptr = velref;
-	      if (a >= 'A') {
-	        vptr = (void *)((int *)vptr + alts[a-'A'+1]);
-	      }
-	    }
+	    if (pass == 2) vptr = &((*wcs)->velref);
 	
-	    unput(' ');
+	    unput(a);
 	    BEGIN(CCCCCCCa);
 	
 	  } else if (relax & WCSHDR_reject) {
@@ -498,7 +503,7 @@ int  wcspih_final(int alts[], double epoch[], int velref[], double vsource[],
 ^VSOURCE{ALT} {
 	  sscanf(yytext, "VSOURCE%c", &a);
 	
-	  if (relax & WCSHDR_VSOURCEa) {
+	  if (relax & WCSHDR_VSOURCE) {
 	    valtype = FLOAT;
 	    if (pass == 2) {
 	      vptr = vsource;
@@ -585,7 +590,7 @@ int  wcspih_final(int alts[], double epoch[], int velref[], double vsource[],
 <CCi_ja>{I2}_{I3} |
 <CCi_ja>{I3}_{I2} |
 <CCi_ja>{I4}_{I1} {
-	  /* Invalid axis number will be caught by <VALUE>. */
+	  /* Invalid axis numbers will be caught by <VALUE>. */
 	  sscanf(yytext, "%d_%d", &i, &j);
 	  BEGIN(VALUE);
 	}
@@ -675,7 +680,7 @@ int  wcspih_final(int alts[], double epoch[], int velref[], double vsource[],
 <CCi_ma>{I2}_{I3} |
 <CCi_ma>{I3}_{I2} |
 <CCi_ma>{I4}_{I0} {
-	  /* Invalid parameter will be caught by <VALUE>. */
+	  /* Invalid parameters will be caught by <VALUE>. */
 	  sscanf(yytext, "%d_%d", &i, &m);
 	  BEGIN(VALUE);
 	}
@@ -751,16 +756,16 @@ int  wcspih_final(int alts[], double epoch[], int velref[], double vsource[],
 	  } else {
 	    if (vptr) {
 	      /* Determine the coordinate representation. */
-	      for (iax = 0; iax < *nwcs; iax++) {
+	      for (ialt = 0; ialt < *nwcs; ialt++) {
 	        /* The loop here is for keywords that apply */
 	        /* to every alternate; these have a == 0. */
 	        if (a >= 'A') {
-	          iax = alts[a-'A'+1];
+	          ialt = alts[a-'A'+1];
 	        }
 	
 	        wptr = vptr;
-	        if (iax) {
-	          voff = (char *)(*wcs+iax) - (char *)(*wcs);
+	        if (ialt) {
+	          voff = (char *)(*wcs+ialt) - (char *)(*wcs);
 	          wptr = (void *)((char *)vptr + voff);
 	        }
 	
@@ -797,16 +802,16 @@ int  wcspih_final(int alts[], double epoch[], int velref[], double vsource[],
 	  } else {
 	    if (vptr) {
 	      /* Determine the coordinate representation. */
-	      for (iax = 0; iax < *nwcs; iax++) {
+	      for (ialt = 0; ialt < *nwcs; ialt++) {
 	        /* The loop here is for keywords like MJD-OBS that */
 	        /* apply to every alternate; these have a == 0.  */
 	        if (a >= 'A') {
-	          iax = alts[a-'A'+1];
+	          ialt = alts[a-'A'+1];
 	        }
 	
 	        wptr = vptr;
-	        if (iax) {
-	          voff = (char *)(*wcs+iax) - (char *)(*wcs);
+	        if (ialt) {
+	          voff = (char *)(*wcs+ialt) - (char *)(*wcs);
 	          wptr = (void *)((char *)vptr + voff);
 	        }
 	
@@ -815,10 +820,10 @@ int  wcspih_final(int alts[], double epoch[], int velref[], double vsource[],
 	          wptr = *((double **)wptr) + idx;
 	
 	        } else if (npptr == npv) {
-	          ipx = (*wcs+iax)->npv++;
-	          (*wcs+iax)->pv[ipx].i = i;
-	          (*wcs+iax)->pv[ipx].m = m;
-	          wptr = &((*wcs+iax)->pv[ipx].value);
+	          ipx = (*wcs+ialt)->npv++;
+	          (*wcs+ialt)->pv[ipx].i = i;
+	          (*wcs+ialt)->pv[ipx].m = m;
+	          wptr = &((*wcs+ialt)->pv[ipx].value);
 	        }
 	
 	        /* Read the keyvalue. */
@@ -826,7 +831,7 @@ int  wcspih_final(int alts[], double epoch[], int velref[], double vsource[],
 	
 	        /* Flag the presence of PCi_ja, or CDi_ja and/or CROTAia. */
 	        if (altlin) {
-	          (*wcs+iax)->altlin |= altlin;
+	          (*wcs+ialt)->altlin |= altlin;
 	          altlin = 0;
 	        }
 	
@@ -855,16 +860,16 @@ int  wcspih_final(int alts[], double epoch[], int velref[], double vsource[],
 	  } else {
 	    if (vptr) {
 	      /* Determine the coordinate representation. */
-	      for (iax = 0; iax < *nwcs; iax++) {
+	      for (ialt = 0; ialt < *nwcs; ialt++) {
 	        /* The loop here is for keywords like DATE-OBS that */
 	        /* apply to every alternate; these have a == 0.   */
 	        if (a >= 'A') {
-	          iax = alts[a-'A'+1];
+	          ialt = alts[a-'A'+1];
 	        }
 	
 	        wptr = vptr;
-	        if (iax) {
-	          voff = (char *)(*wcs+iax) - (char *)(*wcs);
+	        if (ialt) {
+	          voff = (char *)(*wcs+ialt) - (char *)(*wcs);
 	          wptr = (void *)((char *)vptr + voff);
 	        }
 	
@@ -873,10 +878,10 @@ int  wcspih_final(int alts[], double epoch[], int velref[], double vsource[],
 	          wptr = *((char (**)[72])wptr) + idx;
 	
 	        } else if (npptr == nps) {
-	          ipx = (*wcs+iax)->nps++;
-	          (*wcs+iax)->ps[ipx].i = i;
-	          (*wcs+iax)->ps[ipx].m = m;
-	          wptr = (*wcs+iax)->ps[ipx].value;
+	          ipx = (*wcs+ialt)->nps++;
+	          (*wcs+ialt)->ps[ipx].i = i;
+	          (*wcs+ialt)->ps[ipx].m = m;
+	          wptr = (*wcs+ialt)->ps[ipx].value;
 	        }
 	
 	        /* Read the keyvalue. */
@@ -973,10 +978,10 @@ int  wcspih_final(int alts[], double epoch[], int velref[], double vsource[],
 	  BEGIN(INITIAL);
 	}
 
-<<EOF>> {
+<<EOF>>	 {
 	  /* End-of-input. */
 	  if (pass == 1) {
-	    if ((status = wcspih_inits(alts, npv, nps, nwcs, wcs)) ||
+	    if ((status = wcspih_inits(naxis, alts, npv, nps, nwcs, wcs)) ||
 	         *nwcs == 0) {
 	      yylex_destroy();
 	      return status;
@@ -1004,7 +1009,7 @@ int  wcspih_final(int alts[], double epoch[], int velref[], double vsource[],
 	
 	  } else {
 	    yylex_destroy();
-
+	
 	    if (ctrl < 0) {
 	      *hptr = '\0';
 	    } else if (ctrl == 1) {
@@ -1012,16 +1017,16 @@ int  wcspih_final(int alts[], double epoch[], int velref[], double vsource[],
 	        *nreject);
 	    }
 	
-	    return wcspih_final(alts, epoch, velref, vsource, nwcs, wcs);
+	    return wcspih_final(alts, epoch, vsource, nwcs, wcs);
 	  }
 	}
 
 %%
 
 /*----------------------------------------------------------------------------
-*   Determine the number of coordinate representations (up to 27) and the
-*   number of coordinate axes in each, and count the number of PVi_ma and
-*   PSi_ma keywords in each representation.
+* Determine the number of coordinate representations (up to 27) and the
+* number of coordinate axes in each, and count the number of PVi_ma and
+* PSi_ma keywords in each representation.
 *---------------------------------------------------------------------------*/
 
 void wcspih_naxes(int naxis, int i, int j, char a, int alts[], int *npptr)
@@ -1029,18 +1034,18 @@ void wcspih_naxes(int naxis, int i, int j, char a, int alts[], int *npptr)
 {
   /* On the first pass alts[] is used to determine the number of axes */
   /* for each of the 27 possible alternate coordinate descriptions.   */
-  int iax, *ip;
+  int ialt, *ip;
 
   if (a == 0) {
     return;
   }
 
-  iax = 0;
+  ialt = 0;
   if (a != ' ') {
-    iax = a - 'A' + 1;
+    ialt = a - 'A' + 1;
   }
 
-  ip = alts + iax;
+  ip = alts + ialt;
 
   if (*ip < naxis) {
     *ip = naxis;
@@ -1056,17 +1061,18 @@ void wcspih_naxes(int naxis, int i, int j, char a, int alts[], int *npptr)
   }
 
   if (npptr) {
-    npptr[iax]++;
+    npptr[ialt]++;
   }
 }
 
 
 /*----------------------------------------------------------------------------
-*   Allocate memory for an array of the required number of wcsprm structs and
-*   initialize each of them.
+* Allocate memory for an array of the required number of wcsprm structs and
+* initialize each of them.
 *---------------------------------------------------------------------------*/
 
 int wcspih_inits(
+  int naxis,
   int alts[],
   int npv[],
   int nps[],
@@ -1074,13 +1080,20 @@ int wcspih_inits(
   struct wcsprm **wcs)
 
 {
-  int iax, npsmax, npvmax, status = 0;
+  int ialt, npsmax, npvmax, status = 0;
   struct wcsprm *wcsp;
 
   /* Find the number of coordinate descriptions. */
   *nwcs = 0;
-  for (iax = 0; iax < 27; iax++) {
-    if (alts[iax]) (*nwcs)++;
+  for (ialt = 0; ialt < 27; ialt++) {
+    if (alts[ialt]) (*nwcs)++;
+  }
+
+  if (!(*nwcs) && naxis) {
+    /* NAXIS is non-zero but there were no WCS keywords with an alternate
+       version code; create a default WCS with blank alternate version. */
+    wcspih_naxes(naxis, 0, 0, ' ', alts, 0x0);
+    *nwcs = 1;
   }
 
   if (*nwcs) {
@@ -1096,23 +1109,23 @@ int wcspih_inits(
     /* Initialize each wcsprm struct. */
     wcsp = *wcs;
     *nwcs = 0;
-    for (iax = 0; iax < 27; iax++) {
-      if (alts[iax]) {
+    for (ialt = 0; ialt < 27; ialt++) {
+      if (alts[ialt]) {
         wcsp->flag = -1;
-        wcsnpv(npv[iax]);
-        wcsnps(nps[iax]);
-        if ((status = wcsini(1, alts[iax], wcsp))) {
+        wcsnpv(npv[ialt]);
+        wcsnps(nps[ialt]);
+        if ((status = wcsini(1, alts[ialt], wcsp))) {
           wcsvfree(nwcs, wcs);
           break;
         }
 
         /* Record the alternate version code. */
-        if (iax) {
-          wcsp->alt[0] = 'A' + iax - 1;
+        if (ialt) {
+          wcsp->alt[0] = 'A' + ialt - 1;
         }
 
         /* On the second pass alts[] indexes the array of wcsprm structs. */
-        alts[iax] = (*nwcs)++;
+        alts[ialt] = (*nwcs)++;
 
         wcsp++;
       }
@@ -1128,51 +1141,36 @@ int wcspih_inits(
 
 
 /*----------------------------------------------------------------------------
-*   Interpret any VELREF keywords encountered for each coordinate
-*   representation.
+* Interpret special keywords encountered for each coordinate representation.
 *---------------------------------------------------------------------------*/
 
 int wcspih_final(
   int alts[],
   double epoch[],
-  int velref[],
   double vsource[],
   int *nwcs,
   struct wcsprm **wcs)
 
 {
-  const char *specsys[] = {"LSRK", "BARYCENT", "TOPOCENT",
-                           "LSRD", "GEOCENTR", "SOURCE", "GALACTOC"};
-  int iax, ivf, status;
+  int ialt, status;
   double beta, c = 299792458.0;
 
-  for (iax = 0; iax < *nwcs; iax++) {
+  for (ialt = 0; ialt < *nwcs; ialt++) {
     /* Check for EPOCH overriding EQUINOXa. */
-    if (undefined((*wcs+iax)->equinox) && !undefined(epoch[iax])) {
+    if (undefined((*wcs+ialt)->equinox) && !undefined(epoch[ialt])) {
       /* Set EQUINOXa. */
-      (*wcs+iax)->equinox = epoch[iax];
-    }
-
-    /* Check for VELREF overriding SPECSYSa. */
-    if (velref[iax]) {
-      /* Set SPECSYSa. */
-      if ((*wcs+iax)->specsys[0] == '\0') {
-        ivf = velref[iax]%256 - 1;
-        if (0 <= ivf && ivf < 7) {
-          sprintf((*wcs+iax)->specsys, "%s", specsys[ivf]);
-        }
-      }
+      (*wcs+ialt)->equinox = epoch[ialt];
     }
 
     /* Check for VSOURCEa overriding ZSOURCEa. */
-    if (undefined((*wcs+iax)->zsource) && !undefined(vsource[iax])) {
+    if (undefined((*wcs+ialt)->zsource) && !undefined(vsource[ialt])) {
       /* Convert relativistic Doppler velocity to redshift. */
-      beta = vsource[iax]/c;
-      (*wcs+iax)->zsource = (1.0+beta)/sqrt(1.0 - beta*beta) - 1.0;
+      beta = vsource[ialt]/c;
+      (*wcs+ialt)->zsource = (1.0+beta)/sqrt(1.0 - beta*beta) - 1.0;
     }
 
     /* Interpret -TAB header keywords. */
-    if ((status = wcstab(*wcs+iax))) {
+    if ((status = wcstab(*wcs+ialt))) {
        wcsvfree(nwcs, wcs);
        return status;
     }

@@ -165,7 +165,7 @@ public:
 	FITSExtInfo()
 	{
 		FITSExtInfo("", 0, "", 0, False);
-	}
+	};
 
 	// Destructor does nothing
 	~FITSExtInfo();

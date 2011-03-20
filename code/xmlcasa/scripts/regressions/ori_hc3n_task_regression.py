@@ -115,7 +115,7 @@ localoutfile=sdfile+'_sm'
 # automatically detect lines to exclude from fitting
 default(sdbaseline)
 sdfile=localoutfile
-masking='auto'
+maskmode='auto'
 edge=[50]
 thresh=5
 avg_limit=4

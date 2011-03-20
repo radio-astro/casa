@@ -198,6 +198,11 @@ Bool MultiTermMatrixCleaner::setmask(Matrix<Float> & mask)
 {
   if(itsMask.null()) 
        itsMask = new Matrix<Float>(mask);  // it's a counted ptr
+  else
+    {
+      AlwaysAssert(itsMask->shape()==mask.shape(), AipsError);
+      (*itsMask).assign(mask);
+    }
   return True;
 }
 

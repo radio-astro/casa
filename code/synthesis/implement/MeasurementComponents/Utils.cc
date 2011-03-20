@@ -523,6 +523,7 @@ namespace casa{
 //     logio << LogOrigin("SynthesisUtils", "rotateComplexArray")
 // 	  << "Rotating CF using " << interpMethod << " interpolation." 
 // 	  << LogIO::POST;
+    (void)logio;
     //
     // If no rotation required, just copy the inArray to outArray.
     //

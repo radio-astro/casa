@@ -542,7 +542,10 @@ Bool LatticeStatistics<T>::getStatistic (Array<AccumType>& stats,
    } else if (type==LatticeStatsBase::MAX) {
       return retrieveStorageStatistic(stats, MAX, dropDeg);
    } else if (type==LatticeStatsBase::MEAN) {
-	      return retrieveStorageStatistic(stats, MEAN, dropDeg);
+	   // we prefer to calculate the mean rather than use the accumulated value
+	   	   // because the accumulated value may include accumulated finite precision errors
+	     // return retrieveStorageStatistic(stats, MEAN, dropDeg);
+	   return calculateStatistic(stats, MEAN, dropDeg);
    } else if (type==LatticeStatsBase::VARIANCE) {
 	      return retrieveStorageStatistic(stats, VARIANCE, dropDeg);
    } else if (type==LatticeStatsBase::SIGMA) {
@@ -698,7 +701,21 @@ Bool LatticeStatistics<T>::calculateStatistic (Array<AccumType>& slice,
 
    Array<AccumType> sum;
    Array<AccumType> sumSq;
-	if (type==FLUX) {
+   if (type==MEAN) {
+	   retrieveStorageStatistic (sum, SUM, dropDeg);
+       ReadOnlyVectorIterator<AccumType> sumIt(sum);
+       while (!nPtsIt.pastEnd()) {
+    	   for (uInt i=0; i<n1; i++) {
+    		   sliceIt.vector()(i) =
+    				   LattStatsSpecialize::getMean(sumIt.vector()(i),
+    						   nPtsIt.vector()(i));
+    	   }
+    	   nPtsIt.next();
+    	   sumIt.next();
+    	   sliceIt.next();
+       }
+   }
+   else if (type==FLUX) {
        Double beamArea;
        if (!getBeamArea(beamArea)) {
           slice.resize(IPosition(0,0));
@@ -1113,12 +1130,14 @@ Bool LatticeStatistics<T>::getLayerStats(
       AccumType  quartile= statsV(pos);
       pos(0) = SUMSQ;
       AccumType  sumSq = statsV(pos);
-      pos(0) = MEAN;
-      AccumType  mean = statsV(pos);
+      // pos(0) = MEAN;
+      // AccumType  mean = statsV(pos);
       pos(0) = VARIANCE;
       AccumType  var = statsV(pos);
 
-      //AccumType  mean = LattStatsSpecialize::getMean(sum, nPts);
+      // prefer the calculated mean over the accumulated mean because
+      // the accumulated mean can have accumulated precision errors
+      AccumType  mean = LattStatsSpecialize::getMean(sum, nPts);
       // AccumType  var = LattStatsSpecialize::getVariance(sum, sumSq, nPts);
       AccumType  rms = LattStatsSpecialize::getRms(sumSq, nPts);
       AccumType  sigma = LattStatsSpecialize::getSigma(var);

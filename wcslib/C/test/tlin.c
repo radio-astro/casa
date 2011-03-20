@@ -1,37 +1,37 @@
 /*============================================================================
 
-    WCSLIB 4.3 - an implementation of the FITS WCS standard.
-    Copyright (C) 1995-2007, Mark Calabretta
+  WCSLIB 4.7 - an implementation of the FITS WCS standard.
+  Copyright (C) 1995-2011, Mark Calabretta
 
-    This file is part of WCSLIB.
+  This file is part of WCSLIB.
 
-    WCSLIB is free software: you can redistribute it and/or modify it under
-    the terms of the GNU Lesser General Public License as published by the
-    Free Software Foundation, either version 3 of the License, or (at your
-    option) any later version.
+  WCSLIB is free software: you can redistribute it and/or modify it under the
+  terms of the GNU Lesser General Public License as published by the Free
+  Software Foundation, either version 3 of the License, or (at your option)
+  any later version.
 
-    WCSLIB is distributed in the hope that it will be useful, but WITHOUT ANY
-    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-    FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for
-    more details.
+  WCSLIB is distributed in the hope that it will be useful, but WITHOUT ANY
+  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+  FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for
+  more details.
 
-    You should have received a copy of the GNU Lesser General Public License
-    along with WCSLIB.  If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU Lesser General Public License
+  along with WCSLIB.  If not, see <http://www.gnu.org/licenses/>.
 
-    Correspondence concerning WCSLIB may be directed to:
-       Internet email: mcalabre@atnf.csiro.au
-       Postal address: Dr. Mark Calabretta
-                       Australia Telescope National Facility, CSIRO
-                       PO Box 76
-                       Epping NSW 1710
-                       AUSTRALIA
+  Correspondence concerning WCSLIB may be directed to:
+    Internet email: mcalabre@atnf.csiro.au
+    Postal address: Dr. Mark Calabretta
+                    Australia Telescope National Facility, CSIRO
+                    PO Box 76
+                    Epping NSW 1710
+                    AUSTRALIA
 
-    Author: Mark Calabretta, Australia Telescope National Facility
-    http://www.atnf.csiro.au/~mcalabre/index.html
-    $Id: tlin.c,v 4.3 2007/12/27 05:35:51 cal103 Exp $
+  Author: Mark Calabretta, Australia Telescope National Facility
+  http://www.atnf.csiro.au/~mcalabre/index.html
+  $Id: tlin.c,v 4.7 2011/02/07 07:03:42 cal103 Exp $
 *=============================================================================
 *
-*   tlin tests the linear transformation routines supplied with WCSLIB.
+*  tlin tests the linear transformation routines supplied with WCSLIB.
 *
 *---------------------------------------------------------------------------*/
 
@@ -59,83 +59,83 @@ double img[2][9];
 int main()
 
 {
-   int i, j, k, status;
-   double *pcij;
-   struct linprm lin;
+  int i, j, k, status;
+  double *pcij;
+  struct linprm lin;
 
 
-   printf("Testing WCSLIB linear transformation routines (tlin.c)\n"
-          "------------------------------------------------------\n");
+  printf("Testing WCSLIB linear transformation routines (tlin.c)\n"
+         "------------------------------------------------------\n");
 
-   /* List status return messages. */
-   printf("\nList of lin status return values:\n");
-   for (status = 1; status <= 3; status++) {
-      printf("%4d: %s.\n", status, lin_errmsg[status]);
-   }
+  /* List status return messages. */
+  printf("\nList of lin status return values:\n");
+  for (status = 1; status <= 3; status++) {
+    printf("%4d: %s.\n", status, lin_errmsg[status]);
+  }
 
 
-   lin.flag = -1;
-   linini(1, NAXIS, &lin);
+  lin.flag = -1;
+  linini(1, NAXIS, &lin);
 
-   pcij = lin.pc;
-   for (i = 0; i < lin.naxis; i++) {
-      lin.crpix[i] = CRPIX[i];
+  pcij = lin.pc;
+  for (i = 0; i < lin.naxis; i++) {
+    lin.crpix[i] = CRPIX[i];
 
-      for (j = 0; j < lin.naxis; j++) {
-         *(pcij++) = PC[i][j];
-      }
+    for (j = 0; j < lin.naxis; j++) {
+      *(pcij++) = PC[i][j];
+    }
 
-      lin.cdelt[i] = CDELT[i];
-   }
+    lin.cdelt[i] = CDELT[i];
+  }
 
-   for (k = 0; k < NCOORD; k++) {
-      printf("\nPIX %d:", k+1);
-      for (j = 0; j < NAXIS; j++) {
-         printf("%14.8f", pix[k][j]);
-      }
-   }
-   printf("\n");
+  for (k = 0; k < NCOORD; k++) {
+    printf("\nPIX %d:", k+1);
+    for (j = 0; j < NAXIS; j++) {
+      printf("%14.8f", pix[k][j]);
+    }
+  }
+  printf("\n");
 
-   if ((status = linp2x(&lin, NCOORD, NELEM, pix[0], img[0]))) {
-      printf("linp2x ERROR %d\n", status);
-      return 1;
-   }
+  if ((status = linp2x(&lin, NCOORD, NELEM, pix[0], img[0]))) {
+    printf("linp2x ERROR %d\n", status);
+    return 1;
+  }
 
-   for (k = 0; k < NCOORD; k++) {
-      printf("\nIMG %d:", k+1);
-      for (j = 0; j < NAXIS; j++) {
-         printf("%14.8f", img[k][j]);
-      }
-   }
-   printf("\n");
+  for (k = 0; k < NCOORD; k++) {
+    printf("\nIMG %d:", k+1);
+    for (j = 0; j < NAXIS; j++) {
+      printf("%14.8f", img[k][j]);
+    }
+  }
+  printf("\n");
 
-   if ((status = linx2p(&lin, NCOORD, NELEM, img[0], pix[0]))) {
-      printf("linx2p ERROR %d\n", status);
-      return 1;
-   }
+  if ((status = linx2p(&lin, NCOORD, NELEM, img[0], pix[0]))) {
+    printf("linx2p ERROR %d\n", status);
+    return 1;
+  }
 
-   for (k = 0; k < NCOORD; k++) {
-      printf("\nPIX %d:", k+1);
-      for (j = 0; j < NAXIS; j++) {
-         printf("%14.8f", pix[k][j]);
-      }
-   }
-   printf("\n");
+  for (k = 0; k < NCOORD; k++) {
+    printf("\nPIX %d:", k+1);
+    for (j = 0; j < NAXIS; j++) {
+      printf("%14.8f", pix[k][j]);
+    }
+  }
+  printf("\n");
 
-   if ((status = linp2x(&lin, NCOORD, NELEM, pix[0], img[0]))) {
-      printf("linp2x ERROR %d\n", status);
-      return 1;
-   }
+  if ((status = linp2x(&lin, NCOORD, NELEM, pix[0], img[0]))) {
+    printf("linp2x ERROR %d\n", status);
+    return 1;
+  }
 
-   for (k = 0; k < NCOORD; k++) {
-      printf("\nIMG %d:", k+1);
-      for (j = 0; j < NAXIS; j++) {
-         printf("%14.8f", img[k][j]);
-      }
-   }
-   printf("\n");
+  for (k = 0; k < NCOORD; k++) {
+    printf("\nIMG %d:", k+1);
+    for (j = 0; j < NAXIS; j++) {
+      printf("%14.8f", img[k][j]);
+    }
+  }
+  printf("\n");
 
-   linfree(&lin);
+  linfree(&lin);
 
-   return 0;
+  return 0;
 }

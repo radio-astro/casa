@@ -36,6 +36,7 @@
 #include <images/Images/TempImage.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <casa/Containers/Block.h>
+#include <synthesis/MeasurementComponents/CFTerms.h>
 
 namespace casa{
   // <summary>  
@@ -52,10 +53,10 @@ namespace casa{
   // <synopsis> 
   // 
   //</synopsis>
-  class ATerm
+  class ATerm: public CFTerms
   {
   public:
-    ATerm () {};
+    ATerm (): CFTerms() {};
     virtual ~ATerm () {};
 
     virtual String name() = 0;
@@ -103,7 +104,14 @@ namespace casa{
     virtual Float getConvWeightSizeFactor() = 0;
     virtual Float getSupportThreshold() = 0;
 
-    virtual int getVisParams(const VisBuffer& vb) = 0;
+    virtual void normalizeImage(Lattice<Complex>& skyImage,
+				const Matrix<Float>& weights) 
+    {
+      (void)skyImage;(void)weights;
+      throw(AipsError("Make ATerm::normalizeImage() pure virtual and implement in specializations"));
+    };
+
+    virtual int getVisParams(const VisBuffer& vb, const CoordinateSystem& skyCoord=CoordinateSystem()) = 0;
     //
     // The mapping from VisBuffer polarizations map to the Image plane
     // polarization.  The latter is determined by the user input,

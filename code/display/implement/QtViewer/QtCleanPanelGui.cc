@@ -35,7 +35,7 @@
 #include <display/QtViewer/QtMouseToolBar.qo.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <lattices/Lattices/ArrayLattice.h>
-#include <lattices/Lattices/LatticeExpr.h> 
+#include <lattices/Lattices/LatticeExpr.h>
 #include <lattices/Lattices/LCBox.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/SubImage.h>
@@ -48,29 +48,52 @@
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/iostream.h>
 #include <casa/fstream.h>
-#include <casa/sstream.h>	
+#include <casa/sstream.h>
+
+
 namespace casa {
+
+    static const char *comp_freq_ = "Frequency";
+    static const char *all_freq_  = "All Channels";
+    static const char *this_freq_ = "This Channel";
+
+    static const char *comp_pol_  = "Stokes";
+    static const char *all_pol_   = "All Polarizations";
+    static const char *this_pol_  = "This Polarization";
+
+    static const char *comp_ra_   = "Right Ascension";
+    static const char *all_ra_    = "All RAs";
+    static const char *this_ra_   = "This RA";
+
+    static const char *comp_dec_  = "Declination";
+    static const char *all_dec_   = "All Declinations";
+    static const char *this_dec_  = "This Declination";
+
+
 
     QtCleanPanelGui::QtCleanPanelGui( QtViewer *v, QWidget *parent ) : QtDisplayPanelGui( v, parent, "iclean" ),
 								       in_interact_mode(false), interact_id(0),
 								       maskdd_(0), imagedd_(0) {
 
 	resize(700,900);
-	
+
 	autoDDOptionsShow = False;		// Prevents automatically showing 'adjust' panel.
 	setStatsPrint(False);			// Turns off statistics printing.
 
 	QDockWidget *dock = new QDockWidget(this, Qt::Widget);
+	dock->setAllowedAreas( Qt::TopDockWidgetArea );
+	dock->setFeatures( QDockWidget::NoDockWidgetFeatures );
 
 	QWidget *widget = new QWidget(dock);
 	if (widget->objectName().isEmpty())
 	    widget->setObjectName(QString::fromUtf8("Interactive_Clean"));
-	widget->setFixedSize(641, 51);
-	    
+	// widget->setFixedSize(881, 51);
+	widget->setFixedSize(820, 51);
+
 	QFont smallFont;
 	smallFont.setPointSize(8);
 
-	    
+
 	////////
 	// Drawing Mode
 	//
@@ -81,7 +104,7 @@ namespace casa {
 	frame_2->setFrameShape(QFrame::StyledPanel);
 	frame_2->setFrameShadow(QFrame::Raised);
 	frame_2->setLineWidth(1);
-		
+
 	addRB_ = new QRadioButton(frame_2);
 	addRB_->setObjectName(QString::fromUtf8("addRB_"));
 	addRB_->setGeometry(QRect(20, 4, 79, 21));
@@ -104,19 +127,19 @@ namespace casa {
 
 	////////
 	// channels or planes
-	// 
+	//
 	QFrame *frame_4;
 	frame_4 = new QFrame(widget);
 	frame_4->setObjectName(QString::fromUtf8("frame_4"));
-	frame_4->setGeometry(QRect(330, 0, 141, 51));
+	frame_4->setGeometry(QRect(330, 0, 161, 51));
 	frame_4->setFrameShape(QFrame::StyledPanel);
-	    
+
 	thisPlaneRB_ = new QRadioButton(frame_4);
 	thisPlaneRB_->setObjectName(QString::fromUtf8("thisPlaneRB_"));
 	thisPlaneRB_->setGeometry(QRect(10, 4, 121, 16));
 	thisPlaneRB_->setChecked(True);
 	thisPlaneRB_->setToolTip("Limit mask(or erasure) to the displayed plane only");
-	    
+
 	allChanRB_ = new QRadioButton(frame_4);
 	allChanRB_->setObjectName(QString::fromUtf8("allChanRB_"));
 	allChanRB_->setGeometry(QRect(10, 28, 113, 16));
@@ -127,13 +150,38 @@ namespace casa {
 	frame_4->setAutoFillBackground(true);
 	disabled_widgets.push_back(frame_4);
 
+
+	///////////
+	//  hidden axis
+	QFrame *frame_4H;
+	frame_4H = new QFrame(widget);
+	frame_4H->setObjectName(QString::fromUtf8("frame_4H"));
+	frame_4H->setGeometry(QRect(490, 0, 161, 51));
+	frame_4H->setFrameShape(QFrame::StyledPanel);
+
+	thisHiddenRB_ = new QRadioButton(frame_4H);
+	thisHiddenRB_->setObjectName(QString::fromUtf8("thisHiddenRB_"));
+	thisHiddenRB_->setGeometry(QRect(10, 4, 171, 16));
+	thisHiddenRB_->setChecked(True);
+	thisHiddenRB_->setToolTip("Limit mask(or erasure) to the current hidden plane only");
+
+	allHiddenRB_ = new QRadioButton(frame_4H);
+	allHiddenRB_->setObjectName(QString::fromUtf8("allHiddenRB_"));
+	allHiddenRB_->setGeometry(QRect(10, 28, 163, 16));
+	allHiddenRB_->setChecked(False);
+	allHiddenRB_->setToolTip("Propagate mask(or erasure) to all hidden planes");
+
+	frame_4H->setEnabled(false);
+	frame_4H->setAutoFillBackground(true);
+	disabled_widgets.push_back(frame_4H);
+
 	////////
 	// Action Buttons
 	//
 	QFrame *frame_3;
 	frame_3 = new QFrame(widget);
 	frame_3->setObjectName(QString::fromUtf8("frame_3"));
-	frame_3->setGeometry(QRect(470, 0, 171, 51));
+	frame_3->setGeometry(QRect(650, 0, 171, 51));
 	frame_3->setFrameShape(QFrame::StyledPanel);
 
 	QLabel *label_5 = new QLabel(frame_3);
@@ -172,7 +220,7 @@ namespace casa {
 
 	////////
 	// Iteration Control Items
-	// 
+	//
 	QFrame *frame;
 	frame = new QFrame(widget);
 	frame->setObjectName(QString::fromUtf8("frame"));
@@ -223,7 +271,7 @@ namespace casa {
 	frame->setAutoFillBackground(true);
 	disabled_widgets.push_back(frame);
 
-	// 
+	//
 	//////// end iteration control items
 
 	threshED_->setText(QApplication::translate("InteractiveClean", "8 mJy", 0, QApplication::UnicodeUTF8));
@@ -238,13 +286,15 @@ namespace casa {
 	maskNoMorePB_->setText(QString());
 	stopPB_->setText(QString());
 	maskDonePB_->setText(QString());
-	thisPlaneRB_->setText(QApplication::translate("InteractiveClean", "Displayed Plane", 0, QApplication::UnicodeUTF8));
-	allChanRB_->setText(QApplication::translate("InteractiveClean", "All Channels", 0, QApplication::UnicodeUTF8));
+	thisPlaneRB_->setText(QApplication::translate("InteractiveClean", this_freq_, 0, QApplication::UnicodeUTF8));
+	allChanRB_->setText(QApplication::translate("InteractiveClean", all_freq_, 0, QApplication::UnicodeUTF8));
+	thisHiddenRB_->setText(QApplication::translate("InteractiveClean", this_pol_, 0, QApplication::UnicodeUTF8));
+	allHiddenRB_->setText(QApplication::translate("InteractiveClean", all_pol_, 0, QApplication::UnicodeUTF8));
 
 	dock->setWidget(widget);
 
 	// Receives rectangle regions from the mouse tool.
-	connect( displayPanel(), SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),	
+	connect( displayPanel(), SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),
 		 SLOT( newMouseRegion(Record, WorldCanvasHolder*)) );
 
 	connect(stopPB_, SIGNAL(clicked()), this, SLOT(exitStop()));
@@ -311,7 +361,7 @@ namespace casa {
 	  ncyclesED_->setText(input["ncycle"].toString());
        if(input.contains("threshold"))
 	 threshED_->setText(input["threshold"].toString());
-      
+
 	return QVariant(true);
     }
 
@@ -346,11 +396,133 @@ namespace casa {
 	    csys_p=maskim->coordinates();
 	    Int dirIndex=csys_p.findCoordinate(Coordinate::DIRECTION);
 	    dirCoord_p=csys_p.directionCoordinate(dirIndex);
+	    connect(dd, SIGNAL(axisChanged(String, String, String, std::vector<int> )),
+			SLOT(changeMaskAxis(String, String, String, std::vector<int> )));
 	} else if ( type == "raster" ) {
 	    imagedd_ = dd;
 	    Record opts;
 	    opts.define("axislabelswitch", True);
-	    imagedd_->setOptions(opts); 
+	    imagedd_->setOptions(opts);
+	    connect(dd, SIGNAL(axisChanged(String, String, String, std::vector<int> )),
+			SLOT(changeImageAxis(String, String, String, std::vector<int> )));
+	}
+
+    }
+
+
+#define CHANGEAXIS( NAME, MYSTR, OTHERSTR, DD )					\
+void QtCleanPanelGui::NAME( String x, String y, String z, std::vector<int> hidden ) {	\
+										\
+    if ( DD  && axis_change != MYSTR ) {					\
+										\
+	if ( axis_change != OTHERSTR ) {					\
+	    Record rec;								\
+	    Record optionsChangedRec;						\
+										\
+	    if ( x.length() > 0 ) {						\
+		rec.define( "xaxis", x );					\
+		Record xaxis;							\
+		xaxis.define( "value", x );					\
+		optionsChangedRec.defineRecord( "xaxis", xaxis );		\
+	    }									\
+										\
+	    if ( y.length() > 0 ) {						\
+		rec.define( "yaxis", y );					\
+		Record yaxis;							\
+		yaxis.define( "value", y );					\
+		optionsChangedRec.defineRecord( "yaxis", yaxis );		\
+	    }									\
+										\
+	    if ( z.length() > 0 ) {						\
+		rec.define( "zaxis", z );					\
+		Record zaxis;							\
+		zaxis.define( "value", z );					\
+		optionsChangedRec.defineRecord( "zaxis", zaxis );		\
+	    }									\
+										\
+	    char field[24];							\
+	    int index = 0;							\
+	    for ( std::vector<int>::iterator iter = hidden.begin();		\
+		  iter != hidden.end(); ++iter ) {				\
+		sprintf( field, "haxis%d", ++index );				\
+		rec.define( field, *iter );					\
+		Record haxis;							\
+		haxis.define( "value", *iter );					\
+		optionsChangedRec.defineRecord( field, haxis );			\
+	    }									\
+										\
+	    displayPanel()->hold();						\
+	    axis_change = MYSTR;						\
+	    DD->setOptions(rec,true);						\
+	    DD->emitOptionsChanged( optionsChangedRec );			\
+	    axis_change = "";							\
+	    displayPanel()->release();						\
+	}									\
+    }										\
+										\
+    if ( DD == maskdd_ ) {							\
+	/*** only need to change radio button text once ***/			\
+	changeMaskSelectionText( x, y, z );					\
+    }										\
+										\
+}
+
+CHANGEAXIS( changeImageAxis, "image", "mask", maskdd_ )
+CHANGEAXIS( changeMaskAxis, "mask", "image", imagedd_ )
+
+    void QtCleanPanelGui::changeMaskSelectionText( String x, String y, String z ) {
+	if ( z == comp_freq_ ) {
+	    allChanRB_->setText( all_freq_ );
+	    thisPlaneRB_->setText( this_freq_ );
+	    if ( x != comp_pol_ && y != comp_pol_ ) {
+		thisHiddenRB_->setText( this_pol_ );
+		allHiddenRB_->setText( all_pol_ );
+	    } else if ( x != comp_ra_ && y != comp_ra_ ) {
+		thisHiddenRB_->setText( this_ra_ );
+		allHiddenRB_->setText( all_ra_ );
+	    } else if ( x != comp_dec_ && y != comp_dec_ ) {
+		thisHiddenRB_->setText( this_dec_ );
+		allHiddenRB_->setText( all_dec_ );
+	    }
+	} else if ( z == comp_pol_ ) {
+	    allChanRB_->setText( all_pol_ );
+	    thisPlaneRB_->setText( this_pol_ );
+	    if ( x != comp_freq_ && y != comp_freq_ ) {
+		thisHiddenRB_->setText( this_freq_ );
+		allHiddenRB_->setText( all_freq_ );
+	    } else if ( x != comp_ra_ && y != comp_ra_ ) {
+		thisHiddenRB_->setText( this_ra_ );
+		allHiddenRB_->setText( all_ra_ );
+	    } else if ( x != comp_dec_ && y != comp_dec_ ) {
+		thisHiddenRB_->setText( this_dec_ );
+		allHiddenRB_->setText( all_dec_ );
+	    }
+	} else if ( z == comp_dec_ ) {
+	    allChanRB_->setText( all_dec_ );
+	    thisPlaneRB_->setText( this_dec_ );
+	    if ( x != comp_freq_ && y != comp_freq_ ) {
+		thisHiddenRB_->setText( this_freq_ );
+		allHiddenRB_->setText( all_freq_ );
+	    } else if ( x != comp_ra_ && y != comp_ra_ ) {
+		thisHiddenRB_->setText( this_ra_ );
+		allHiddenRB_->setText( all_ra_ );
+	    } else if ( x != comp_pol_ && y != comp_pol_ ) {
+		thisHiddenRB_->setText( this_pol_ );
+		allHiddenRB_->setText( all_pol_ );
+	    }
+	} else if ( z == comp_ra_ ) {
+	    allChanRB_->setText( all_ra_ );
+	    thisPlaneRB_->setText( this_ra_ );
+	    if ( x != comp_freq_ && y != comp_freq_ ) {
+		thisHiddenRB_->setText( this_freq_ );
+		allHiddenRB_->setText( all_freq_ );
+	    } else if ( x != comp_dec_ && y != comp_dec_ ) {
+		thisHiddenRB_->setText( this_dec_ );
+		allHiddenRB_->setText( all_dec_ );
+	    } else if ( x != comp_pol_ && y != comp_pol_ ) {
+		thisHiddenRB_->setText( this_pol_ );
+		allHiddenRB_->setText( all_pol_ );
+	    }
 	}
     }
 
@@ -363,9 +535,9 @@ namespace casa {
 //	if ( ! v_->exiting( ) && ! isOverridedClose( ) ) {
 	if ( ! isOverridedClose( ) ) {
 
-	  
+
 	  event->ignore( );
-	  //hide( );	  
+	  //hide( );
 	  //That is what is meant most probably at this stage
 	  exitStop();
 
@@ -391,20 +563,31 @@ namespace casa {
 	    //Lets see if we can change the mask
 	    ImageRegion* imagereg=0;
 	    try{
-	      if(value > 0.0){
-		maskDonePB_->setEnabled(true);
-		maskNoMorePB_->setEnabled(true);
-	      }
-		imagereg=imagedd_->mouseToImageRegion( mouseRegion, wch, allChanRB_->isChecked() );
+
+		if(value > 0.0){
+		    maskDonePB_->setEnabled(true);
+		    maskNoMorePB_->setEnabled(true);
+		}
+
+		bool allchan =	allChanRB_->isChecked() && allChanRB_->text() == all_freq_ ||
+				allHiddenRB_->isChecked() && allHiddenRB_->text() == all_freq_;
+		bool allpol  =	allChanRB_->isChecked() && allChanRB_->text() == all_pol_ ||
+				allHiddenRB_->isChecked() && allHiddenRB_->text() == all_pol_;
+		bool allra =	allChanRB_->isChecked() && allChanRB_->text() == all_ra_ ||
+				allHiddenRB_->isChecked() && allHiddenRB_->text() == all_ra_;
+		bool alldec =	allChanRB_->isChecked() && allChanRB_->text() == all_dec_ ||
+				allHiddenRB_->isChecked() && allHiddenRB_->text() == all_dec_;
+
+		imagereg=imagedd_->mouseToImageRegion( mouseRegion, wch, allchan, allpol, allra, alldec );
 
 		ImageInterface<Float> *maskim=maskdd_->imageInterface();
 		//Write the region as text...will need to add a box/toggle
 		//to the viewer for that
-		//It was requested by some but 
+		//It was requested by some but
 		//latest conclusion is not useful ...so getting rid of it
 		//recent comment from CSSC:
-		//I note that the imagename.mask.text have not ever worked to my 
-		//knowledge, in the sense that you cannot feed them back into clean 
+		//I note that the imagename.mask.text have not ever worked to my
+		//knowledge, in the sense that you cannot feed them back into clean
 		//or use them for any image analysis tasks.
 
 		//writeRegionText(*imagereg, maskim->name(), value);
@@ -442,20 +625,20 @@ namespace casa {
 	    x=Vector<Float>(regRec.asArrayFloat("blc"));
 	    y=Vector<Float>(regRec.asArrayFloat("trc"));
 	    x.resize(2,True);
-	    y.resize(2,True);	
+	    y.resize(2,True);
 	}
 
 	if(regRec.isDefined("name") && regRec.asString("name")=="LCPolygon"){
 	    x.resize();
 	    y.resize();
 	    x=Vector<Float>(regRec.asArrayFloat("x"));
-	    y=Vector<Float>(regRec.asArrayFloat("y"));	
+	    y=Vector<Float>(regRec.asArrayFloat("y"));
 	}
 
 	if(regRec.isDefined("oneRel") && regRec.asBool("oneRel")){
 	    x-=Float(1.0);
 	    y-=Float(1.0);
-	}		
+	}
 
 	String textfile=filename+".text";
 	ofstream outfile(textfile.c_str(), ios::out | ios::app);

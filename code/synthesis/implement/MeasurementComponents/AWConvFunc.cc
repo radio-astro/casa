@@ -40,6 +40,7 @@
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/StokesCoordinate.h>
 #include <lattices/Lattices/LatticeFFT.h>
+#include <casa/Utilities/CompositeNumber.h>
 #include <ostream.h>
 namespace casa{
 
@@ -87,7 +88,7 @@ namespace casa{
     Double cfRefFreq;
     
     Int nx=image.shape()(0);
-    if (bandID_l == -1) bandID_l=getVisParams(vb);
+    if (bandID_l == -1) bandID_l=getVisParams(vb,image.coordinates());
     
     log_l << "Making a new convolution function for PA="
 	  << pa*(180/C::pi) << "deg"
@@ -191,14 +192,19 @@ namespace casa{
     
     for (Int iw=0;iw<wConvSize;iw++) 
       {
+	//
+	// Fill the complex image with the FT(W-Kernel) for the iw
+	// th. w-plane....
+	//
+
+	//
 	//	wterm.applySky(screen, iw, sampling, wConvSize, wScale, inner);
 	wterm.applySky(screen, iw, sampling,  wScale, convSize);
-	//
-	// Fill the complex image with the w-term...
-	//
 	IPosition PolnPlane(4,0,0,0,0);
 	IPosition ndx(4,0,0,0,0);
-	
+	//
+	// Copy the FT(W-Kernel) to all polarization planes of the image.	
+	//
 	for(Int i=0;i<polInUse;i++)
 	  {
 	    PolnPlane(2)=i;
@@ -206,20 +212,12 @@ namespace casa{
 	    twoDPBSq.putSlice(screen, PolnPlane);
 	  }
 	//
-	// Apply the PB...
+	// Multiply the image planes with appropriate PB functions.  
+	// This results in FT(W-Kernel) x FT(A-Kernel).
 	//
 	Bool doSquint=True;
-	// Block<CountedPtr<ImageInterface<Complex> > > tmpBlock(1);
-	// Block<CountedPtr<ImageInterface<Complex> > > tmpPBSqBlock(1);
-	// tmpBlock[0]=CountedPtr<ImageInterface<Complex> >(&twoDPB, False);
-	//	ATerm_p->applySky(tmpBlock, vb, 0, doSquint);
-	//      doSquint=False;
-	//	tmpPBSqBlock[0]=CountedPtr<ImageInterface<Complex> >(&twoDPBSq, False);
-	//	ATerm_p->applySky(tmpPBSqBlock, vb, 0, doSquint);
 	ATerm_p->applySky(twoDPB, vb, doSquint, 0);
-	//	doSquint = False;
 	ATerm_p->applySky(twoDPBSq, vb, doSquint, 0);
-	//	twoDPBSq = twoDPB;
 	makePBSq(twoDPBSq);
 	// {
 	//   ostringstream name;
@@ -241,7 +239,9 @@ namespace casa{
 	SpCS.setReferenceValue(refValue);
 	cs.replaceCoordinate(SpCS,index);
 	//
-	// Now FFT and get the result back
+	// Now FFT and get the result.  This is FTInverse [
+	// FT(W-Kernel) x FT(A-Kernel) ] which is equal to convoultion
+	// of the A-Kernel with the W-Kernel.
 	//
 	// {
 	//   String name("twoDPB.im");
@@ -254,7 +254,8 @@ namespace casa{
 	//   storeImg(name,twoDPB);
 	// }
 	//
-	// Fill the convolution function planes with the result.
+	// Fill the convolution function planes with the result.  This
+	// fills the convFunc_l buffer, one w-plane in a loop.
 	//
 	{
 	  IPosition start(4, 0, 0, 0, 0),
@@ -274,7 +275,6 @@ namespace casa{
 	  
 	  convWeights_l(Slicer(sqSliceStart,sqSliceLength)).nonDegenerate()
 	    =(twoDPBSq.getSlice(sqStart, pbSqSlice, True));
-	  
 	}
       }
     
@@ -378,6 +378,9 @@ namespace casa{
 	cfwts.data->resize(tmp.shape());
 	*cfwts.data = tmp;
 	convWeights_l.reference(*cfwts.data);
+	// CompositeNumber compNum;
+	// cerr << "Nearest larger composite number = " << tmp.shape()[0] 
+	//      << " "  << compNum.nextLarger(tmp.shape()[0]) << endl;
       }
     }    
     

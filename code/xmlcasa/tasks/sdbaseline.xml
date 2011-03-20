@@ -14,6 +14,8 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
   <description>ASAP SD calibration task (based on the ALMATST5 recommendations):
         fit/subtract a spectral baseline 
 
+        Modified (add parameters minnwave,maxnwave) 2011-03-15 WK
+        Modified (rename parameter masking to maskmode) 2011-03-10 WK
         Modified (change parameter order to blfunc's subparam) 2011-02-25 WK
         Modified (add parameter blfunc,npiece,clipthresh,clipniter) 2011-02-25 WK
         Modified (rename parameters blmode,blpoly to masking,order, respectively) 2011-02-25 WK
@@ -102,7 +104,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
             <value type="doubleArray"></value>
     </param>
 
-    <param type="string" name="masking">
+    <param type="string" name="maskmode">
 	    <description>mode of setting channel masks</description>
 	    <allowed kind="enum">
 	        <value>auto</value>
@@ -130,8 +132,9 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
 	    <description>baseline model function</description>
 	    <value>poly</value>
 	    <allowed kind="enum">
-	    <value>poly</value>
-	    <value>cspline</value>
+	            <value>poly</value>
+	            <value>cspline</value>
+	            <value>sinusoid</value>
 	    </allowed>
     </param>
 
@@ -143,6 +146,16 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
     <param type="int" name="npiece" subparam="true">
             <description>number of element polynomials of spline</description>
             <value>2</value>
+    </param>
+
+    <param type="int" name="minnwave" subparam="true">
+            <description>minumum sinusoidal wave number in the spectral window</description>
+            <value>0</value>
+    </param>
+
+    <param type="int" name="maxnwave" subparam="true">
+            <description>maximum sinusoidal wave number in the spectral window</description>
+            <value>3</value>
     </param>
 
     <param type="double" name="clipthresh" subparam="true">
@@ -214,7 +227,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
 			<default param="telescopeparm"><value type='string'></value></default>
 	        </equals>
 	    </when>
-	    <when param="masking">
+	    <when param="maskmode">
 		<equals value="auto">
 			<default param="thresh"><value>5.0</value></default>
 			<default param="avg_limit"><value>4</value></default>
@@ -229,6 +242,12 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
 	        </equals>
                 <equals value="cspline">
 			<default param="npiece"><value>2</value></default>
+			<default param="clipthresh"><value>3.0</value></default>
+			<default param="clipniter"><value>1</value></default>
+	        </equals>
+                <equals value="sinusoid">
+			<default param="minnwave"><value>0</value></default>
+			<default param="maxnwave"><value>3</value></default>
 			<default param="clipthresh"><value>3.0</value></default>
 			<default param="clipniter"><value>1</value></default>
 	        </equals>
@@ -301,22 +320,22 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
                 default: [] (entire spectrum)
                 example: [[1000,3000],[5000,7000]]
                          '0:1000~3000;5000~7000, 1:200~350;450~600'
-                         if masking='auto' then this mask will be applied
+                         if maskmode='auto' then this mask will be applied
                          before fitting
-        masking -- mode of setting channel masks
+        maskmode -- mode of setting channel masks
                 options: (str) 'auto','list','interact'
                 default: 'auto'
-                example: masking='auto' uses expandable parameters 
+                example: maskmode='auto' uses expandable parameters 
                          in addition to order to run linefinder
                          to determine line-free regions
                          USE WITH CARE! May need to tweak the parameters,
                          thresh, avg_limit, and edge.
-                         masking='interact' allows adding and deleting mask 
+                         maskmode='interact' allows adding and deleting mask 
                          regions by drawing rectangles on the plot with mouse. 
                          Draw a rectangle with LEFT-mouse to ADD the region to 
                          the mask and with RIGHT-mouse to DELETE the region. 
                
-            &gt;&gt;&gt; masking expandable parameters
+            &gt;&gt;&gt; maskmode expandable parameters
                  thresh -- S/N threshold for linefinder
                          default: 5
                          example: a single channel S/N ratio above which the channel is
@@ -334,15 +353,15 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
                  setting this parameter to 1) to avoid detecting baseline
                  undulations instead of real lines.
         blfunc -- baseline model function
-                options: (str) 'poly','cspline'
+                options: (str) 'poly','cspline','sinusoid'
                 default: 'poly'
                 example: blfunc='poly' uses a single polynomial line of 
                          any order which should be given as an expandable 
-                         parameter 'order' to fit baseline, while 
+                         parameter 'order' to fit baseline. 
                          blfunc='cspline' uses a cubic spline function, a piecewise 
                          cubic polynomial having C2-continuity (i.e., the second 
-                         derivative is continuous at the joining points)
-
+                         derivative is continuous at the joining points). 
+                         blfunc='sinusoid' uses a combination of sinusoidal curves. 
             &gt;&gt;&gt; blfunc expandable parameters
                  order -- order of baseline polynomial
                          options: (int) (&lt;0 turns off baseline fitting)
@@ -352,6 +371,12 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
                  npiece -- number of the element polynomials of cubic spline curve
                          options: (int) (&lt;0 turns off baseline fitting)
                          default: 2
+                 minnwave -- minimum wave number of sinusoid in the spectral window
+                         options: (int) (&lt;0 turns off baseline fitting)
+                         default: 0
+                 maxnwave -- maximum wave number of sinusoid in the spectral window
+                         options: (int)
+                         default: 3
                  clipthresh -- clipping threshold for iterative spline fitting
                          default: 3
                  clipniter -- maximum number of iteration in spline fitting

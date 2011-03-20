@@ -34,9 +34,9 @@
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <display/Display/DParameterChoice.h>
 #include <display/Display/DParameterRange.h>
-//#include <casa/Containers/SimOrdMap.tcc>
 #include <casa/BasicMath/Math.h>
 #include <display/Display/DisplayEnums.h>
+#include <vector>
 
 
 #include <graphics/X11/X_enter.h>
@@ -131,6 +131,9 @@ class QtDisplayData : public QObject {
   virtual ImageRegion* mouseToImageRegion(Record mouseRegion,
                                           WorldCanvasHolder* wch,
 					  Bool allChannels=False,
+                                          Bool allPols=False,
+                                          Bool allRAs=False,
+                                          Bool allDECs=False,
 					  Bool allAxes=False);
   virtual ImageRegion* mouseToImageRegion(
         Record mouseRegion, WorldCanvasHolder* wch,
@@ -144,9 +147,10 @@ class QtDisplayData : public QObject {
 
   // Return the number of the spectral axis within the DD's original
   // image lattice and coordinate system (-1 if none).
-  virtual Int spectralAxis();
+  //virtual Int spectralAxis();
   
-  
+  virtual Int getAxisIndex(String axtype=String("Spectral"));
+
   //#  colorbar methods
   
   
@@ -280,10 +284,8 @@ class QtDisplayData : public QObject {
   //# to connect to QtViewerBase::ddRemoved() instead).
 //# void dying(QtDisplayData*);
   
+  void axisChanged(String, String, String, std::vector<int> );
 
- 
-  void axisChanged(String, String, String);
-  void axisChanged4(String, String, String, int);
   void statsReady(const String&);
 
  protected slots:

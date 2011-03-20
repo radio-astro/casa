@@ -1,40 +1,40 @@
 *=======================================================================
 *
-*   WCSLIB 4.3 - an implementation of the FITS WCS standard.
-*   Copyright (C) 1995-2007, Mark Calabretta
+* WCSLIB 4.7 - an implementation of the FITS WCS standard.
+* Copyright (C) 1995-2011, Mark Calabretta
 *
-*   This file is part of WCSLIB.
+* This file is part of WCSLIB.
 *
-*   WCSLIB is free software: you can redistribute it and/or modify
-*   it under the terms of the GNU Lesser General Public License as
-*   published by the Free Software Foundation, either version 3 of
-*   the License, or (at your option) any later version.
+* WCSLIB is free software: you can redistribute it and/or modify it
+* under the terms of the GNU Lesser General Public License as published
+* by the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
 *
-*   WCSLIB is distributed in the hope that it will be useful, but
-*   WITHOUT ANY WARRANTY; without even the implied warranty of
-*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*   GNU Lesser General Public License for more details.
+* WCSLIB is distributed in the hope that it will be useful, but WITHOUT
+* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+* FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
+* License for more details.
 *
-*   You should have received a copy of the GNU Lesser General Public
-*   License along with WCSLIB.  If not, see http://www.gnu.org/licenses.
+* You should have received a copy of the GNU Lesser General Public
+* License along with WCSLIB.  If not, see http://www.gnu.org/licenses.
 *
-*   Correspondence concerning WCSLIB may be directed to:
-*      Internet email: mcalabre@atnf.csiro.au
-*      Postal address: Dr. Mark Calabretta
-*                      Australia Telescope National Facility, CSIRO
-*                      PO Box 76
-*                      Epping NSW 1710
-*                      AUSTRALIA
+* Correspondence concerning WCSLIB may be directed to:
+*   Internet email: mcalabre@atnf.csiro.au
+*   Postal address: Dr. Mark Calabretta
+*                   Australia Telescope National Facility, CSIRO
+*                   PO Box 76
+*                   Epping NSW 1710
+*                   AUSTRALIA
 *
-*   Author: Mark Calabretta, Australia Telescope National Facility
-*   http://www.atnf.csiro.au/~mcalabre/index.html
-*   $Id: tspc.f,v 4.3 2007/12/27 05:42:52 cal103 Exp $
+* Author: Mark Calabretta, Australia Telescope National Facility
+* http://www.atnf.csiro.au/~mcalabre/index.html
+* $Id: tspc.f,v 4.7 2011/02/07 07:03:43 cal103 Exp $
 *=======================================================================
 
       PROGRAM TSPC
 *-----------------------------------------------------------------------
 *
-*   TSPC tests the spectral transformation driver routines for closure.
+* TSPC tests the spectral transformation driver routines for closure.
 *
 *-----------------------------------------------------------------------
 *     Maximum length of spectral axis - see CLOSURE.
@@ -252,6 +252,8 @@
       INCLUDE 'spx.inc'
       INCLUDE 'spc.inc'
       INTEGER   SPC(SPCLEN)
+      DOUBLE PRECISION DUMMY
+      EQUIVALENCE (SPC,DUMMY)
 
       COMMON /SPECTRO/ MARS
 
@@ -261,28 +263,28 @@
       STATUS = SPCXPS (CTYPES, CRVALX, RESTFRQ, RESTWAV, PTYPE, XTYPE,
      :                 RESTREQ, CRVALS, DSDX)
       IF (STATUS.NE.0) THEN
-         WRITE (*, 5) STATUS, CTYPES
- 5       FORMAT ('ERROR',I2,' from SPCXPS for',A,'.')
-         RETURN
+        WRITE (*, 5) STATUS, CTYPES
+ 5      FORMAT ('ERROR',I2,' from SPCXPS for',A,'.')
+        RETURN
       END IF
       CDELTS = CDELTX * DSDX
 
       STATUS = SPCINI(SPC)
 
       IF (CTYPES(6:6).EQ.'G') THEN
-*        KPNO MARS spectrograph grism parameters.
-         STATUS = SPCPUT (SPC, SPC_PV, MARS(0), 0)
-         STATUS = SPCPUT (SPC, SPC_PV, MARS(1), 1)
-         STATUS = SPCPUT (SPC, SPC_PV, MARS(2), 2)
-         STATUS = SPCPUT (SPC, SPC_PV, MARS(3), 3)
-         STATUS = SPCPUT (SPC, SPC_PV, MARS(4), 4)
-         STATUS = SPCPUT (SPC, SPC_PV, MARS(5), 5)
-         STATUS = SPCPUT (SPC, SPC_PV, MARS(6), 6)
+*       KPNO MARS spectrograph grism parameters.
+        STATUS = SPCPUT (SPC, SPC_PV, MARS(0), 0)
+        STATUS = SPCPUT (SPC, SPC_PV, MARS(1), 1)
+        STATUS = SPCPUT (SPC, SPC_PV, MARS(2), 2)
+        STATUS = SPCPUT (SPC, SPC_PV, MARS(3), 3)
+        STATUS = SPCPUT (SPC, SPC_PV, MARS(4), 4)
+        STATUS = SPCPUT (SPC, SPC_PV, MARS(5), 5)
+        STATUS = SPCPUT (SPC, SPC_PV, MARS(6), 6)
       END IF
 
 *     Construct the axis.
       DO 10 J = 1, NAXISJ
-         SPEC1(J) = (J - CRPIXJ)*CDELTS
+        SPEC1(J) = (J - CRPIXJ)*CDELTS
  10   CONTINUE
 
       WRITE (*, 20) CTYPES, CRVALS+SPEC1(1), CRVALS+SPEC1(NAXISJ),
@@ -302,17 +304,17 @@
 *     Convert the first to the second.
       STATUS = SPCX2S(SPC, NAXISJ, 1, 1, SPEC1, SPEC2, STAT1)
       IF (STATUS.NE.0) THEN
-         WRITE (*, 30) STATUS
- 30      FORMAT ('SPCX2S ERROR',I2,'.')
-         RETURN
+        WRITE (*, 30) STATUS
+ 30     FORMAT ('SPCX2S ERROR',I2,'.')
+        RETURN
       END IF
 
 *     Convert the second back to the first.
       STATUS = SPCS2X(SPC, NAXISJ, 1, 1, SPEC2, CLOS, STAT2)
       IF (STATUS.NE.0) THEN
-         WRITE (*, 40) STATUS
- 40      FORMAT ('SPCS2X ERROR',I2,'.')
-         RETURN
+        WRITE (*, 40) STATUS
+ 40     FORMAT ('SPCS2X ERROR',I2,'.')
+        RETURN
       END IF
 
       RESIDMAX = 0D0
@@ -320,28 +322,28 @@
 *     Test closure.
       STATUS = SPCGET (SPC, SPC_TYPE, STYPE, 0)
       DO 80 J = 1, NAXISJ
-         IF (STAT1(J).NE.0) THEN
-            WRITE (*, 50) CTYPES, SPEC1(J), STYPE, STAT1(J)
- 50         FORMAT (A,': w =',1PE20.12,' -> ',A,' = ???, stat = ',I2)
-            GO TO 80
-         END IF
+        IF (STAT1(J).NE.0) THEN
+          WRITE (*, 50) CTYPES, SPEC1(J), STYPE, STAT1(J)
+ 50       FORMAT (A,': w =',1PE20.12,' -> ',A,' = ???, stat = ',I2)
+          GO TO 80
+        END IF
 
-         IF (STAT2(J).NE.0) THEN
-            WRITE (*, 60) CTYPES, SPEC1(J), STYPE, SPEC2(J), STAT2(J)
- 60         FORMAT (A,': w =',1PE20.12,' -> ',A,' =',1PE20.12,
-     :              ' -> w = ???, stat = ',I2)
-            GO TO 80
-         END IF
+        IF (STAT2(J).NE.0) THEN
+          WRITE (*, 60) CTYPES, SPEC1(J), STYPE, SPEC2(J), STAT2(J)
+ 60       FORMAT (A,': w =',1PE20.12,' -> ',A,' =',1PE20.12,
+     :            ' -> w = ???, stat = ',I2)
+          GO TO 80
+        END IF
 
-         RESID = ABS((CLOS(J) - SPEC1(J))/CDELTS)
-         IF (RESID.GT.RESIDMAX) RESIDMAX = RESID
+        RESID = ABS((CLOS(J) - SPEC1(J))/CDELTS)
+        IF (RESID.GT.RESIDMAX) RESIDMAX = RESID
 
-         IF (RESID.GT.TOL) THEN
-            WRITE (*, 70) CTYPES, SPEC1(J), STYPE, SPEC2(J), CLOS(J),
-     :                    RESID
- 70         FORMAT (A,': w =',1PE20.12,' -> ',A,' =',1PE20.12,' ->',/,
-     :             '          w =',1PE20.12,',  resid =',1PE20.12)
-         END IF
+        IF (RESID.GT.TOL) THEN
+          WRITE (*, 70) CTYPES, SPEC1(J), STYPE, SPEC2(J), CLOS(J),
+     :                  RESID
+ 70       FORMAT (A,': w =',1PE20.12,' -> ',A,' =',1PE20.12,' ->',/,
+     :           '          w =',1PE20.12,',  resid =',1PE20.12)
+        END IF
  80   CONTINUE
 
       WRITE (*, 90) CTYPES, RESIDMAX
@@ -357,17 +359,17 @@
       YMIN = REAL(SPEC2(1)) - XMIN
       YMAX = YMIN
       DO 100 J = 1, NAXISJ
-         X(J) = REAL(J)
-         Y(J) = REAL(SPEC2(J) - (CRVALS + SPEC1(J)))
-         IF (Y(J).GT.YMAX) YMAX = Y(J)
-         IF (Y(J).LT.YMIN) YMIN = Y(J)
+        X(J) = REAL(J)
+        Y(J) = REAL(SPEC2(J) - (CRVALS + SPEC1(J)))
+        IF (Y(J).GT.YMAX) YMAX = Y(J)
+        IF (Y(J).LT.YMIN) YMIN = Y(J)
  100  CONTINUE
 
       J = INT(CRPIXJ+1)
       IF (Y(J).LT.0D0) then
-         TMP  = YMIN
-         YMIN = YMAX
-         YMAX = TMP
+        TMP  = YMIN
+        YMIN = YMAX
+        YMAX = TMP
       END IF
 
       CALL PGASK(0)
@@ -379,18 +381,18 @@
       STATUS = SPCTYP (CTYPES, STYPE, SCODE, SNAME, UNITS, PTYPE, XTYPE,
      :                 RESTREQ)
       DO 110 J = 21, 1, -1
-         IF (SNAME(J:J).NE.' ') GO TO 120
+        IF (SNAME(J:J).NE.' ') GO TO 120
  110  CONTINUE
  120  YLAB  = SNAME(:J) // ' - correction ' // UNITS
       TITLE = CTYPES // ':  CRVALk + w ' // UNITS
       CALL PGLAB('Pixel coordinate', YLAB, TITLE)
 
       CALL PGAXIS('N', 0.0, YMAX, REAL(NAXISJ), YMAX, XMIN, XMAX, 0.0,
-     :        0, -0.5, 0.0, 0.5, -0.5, 0.0)
+     :            0, -0.5, 0.0, 0.5, -0.5, 0.0)
 
       CALL PGAXIS('N', REAL(NAXISJ), ymin, REAL(NAXISJ), YMAX,
-     :        REAL(YMIN/CDELTS), REAL(YMAX/CDELTS), 0.0, 0, 0.5, 0.0,
-     :        0.5, 0.1, 0.0)
+     :            REAL(YMIN/CDELTS), REAL(YMAX/CDELTS), 0.0, 0, 0.5,
+     :            0.0, 0.5, 0.1, 0.0)
       CALL PGMTXT('R', 2.2, 0.5, 0.5, 'Pixel offset')
 
       CALL PGLINE(NAXISJ, X, Y)
@@ -399,7 +401,7 @@
       CALL PGEBUF()
 
       WRITE (*, '(A,$)') 'Type <RETURN> for next page: '
-      READ (5, *, END=130)
+      READ (*, *, END=130)
  130  WRITE (*, *)
 
       RETURN

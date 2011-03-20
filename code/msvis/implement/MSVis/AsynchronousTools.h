@@ -195,6 +195,7 @@ private:
     ThreadNames threadNames_p;
 
     Logger (); // singleton
+    ~Logger ();
 };
 
 

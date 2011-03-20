@@ -65,15 +65,19 @@ int main() {
       Vector<MVFrequency> minFreq(3);
       Vector<MVFrequency> maxFreq(3);
       Vector<MVFrequency> nomFreq(3);
+      Vector<MVAngle> rotAngOffset(3);
       minFreq(0) = MVFrequency( Quantity(10., "GHz"));
       maxFreq(0) = MVFrequency( Quantity(100., "GHz"));
       nomFreq(0) = MVFrequency( Quantity(60., "GHz"));
+      rotAngOffset(0) = MVAngle( Quantity(60., "deg"));
       minFreq(1) = MVFrequency( Quantity(100., "GHz"));
       maxFreq(1) = MVFrequency( Quantity(200., "GHz"));
       nomFreq(1) = MVFrequency( Quantity(150., "GHz"));
+      rotAngOffset(1) = MVAngle( Quantity(60., "deg"));
       minFreq(2) = MVFrequency( Quantity(200., "GHz"));
       maxFreq(2) = MVFrequency( Quantity(300., "GHz"));
       nomFreq(2) = MVFrequency( Quantity(250., "GHz"));
+      rotAngOffset(2) = MVAngle( Quantity(60., "deg"));
 
       Vector<AntennaResponses::FuncTypes> fTyp(3, AntennaResponses::EFP);
 
@@ -97,7 +101,7 @@ int main() {
       uInt ui = 0;
 
       AlwaysAssert(aR.putRow(ui,"ALMA", 0, bName, minFreq, maxFreq, fTyp, funcName, funcChannel, nomFreq,
-			     "DV", MEpoch(MVEpoch(Quantity(50000., "d")), MEpoch::UTC),
+			     rotAngOffset, "DV", MEpoch(MVEpoch(Quantity(50000., "d")), MEpoch::UTC),
 			     MDirection(Quantity( 0., "deg"),
 					Quantity(45., "deg"), 
 					MDirection::AZEL),
@@ -112,7 +116,7 @@ int main() {
       ui = 1;
 
       AlwaysAssert(aR.putRow(ui,"ALMA", 1, bName, minFreq, maxFreq, fTypB, funcNameB, funcChannel, nomFreq,
-			     "DV", MEpoch(MVEpoch(Quantity(50000., "d")), MEpoch::UTC),
+			     rotAngOffset, "DV", MEpoch(MVEpoch(Quantity(50000., "d")), MEpoch::UTC),
 			     MDirection(Quantity( 0., "deg"),
 					Quantity(45., "deg"), 
 					MDirection::AZEL),
@@ -126,7 +130,7 @@ int main() {
       ui = 2;
 
       AlwaysAssert(aR.putRow(ui,"ALMA", 2, bName, minFreq, maxFreq, fTypB, funcNameB, funcChannel, nomFreq,
-			     "DV", MEpoch(MVEpoch(Quantity(50001., "d")), MEpoch::UTC), // one day later
+			     rotAngOffset, "DV", MEpoch(MVEpoch(Quantity(50001., "d")), MEpoch::UTC), // one day later
 			     MDirection(Quantity( 0., "deg"),
 					Quantity(45., "deg"), 
 					MDirection::AZEL),
@@ -145,7 +149,7 @@ int main() {
       ui = 0;
 
       AlwaysAssert(aR.putRow(ui,"ACA", 0, bName, minFreq, maxFreq, fTyp, funcName, funcChannel, nomFreq,
-			     "DV", MEpoch(MVEpoch(Quantity(50000., "d")), MEpoch::UTC),
+			     rotAngOffset, "DV", MEpoch(MVEpoch(Quantity(50000., "d")), MEpoch::UTC),
 			     MDirection(Quantity( 0., "deg"),
 					Quantity(45., "deg"), 
 					MDirection::AZEL),
@@ -160,7 +164,7 @@ int main() {
       ui = 2; // test setting of row number
 
       AlwaysAssert(aR.putRow(ui,"ACA", 1, bName, minFreq, maxFreq, fTypB, funcNameB, funcChannel, nomFreq,
-			     "DV", MEpoch(MVEpoch(Quantity(50000., "d")), MEpoch::UTC),
+			     rotAngOffset, "DV", MEpoch(MVEpoch(Quantity(50000., "d")), MEpoch::UTC),
 			     MDirection(Quantity( 0., "deg"),
 					Quantity(45., "deg"), 
 					MDirection::AZEL),
@@ -206,11 +210,13 @@ int main() {
     uInt theImageChannel;
     MFrequency theNomFreq;
     AntennaResponses::FuncTypes theFType;
+    MVAngle theRotAngOffset;
 
     AntennaResponses::FuncTypes requFType = AntennaResponses::EFP;
 
     cout << "access 0" << endl;
     AlwaysAssert(!aR.getImageName(theImageName, theImageChannel, theNomFreq, theFType,
+				  theRotAngOffset,
 				   "ACA", // wrong obs.
 				   MEpoch(MVEpoch(Quantity(50000., "d")), MEpoch::UTC),
 				   MFrequency( Quantity(160., "GHz"), MFrequency::TOPO),
@@ -219,6 +225,7 @@ int main() {
 
     cout << "access 1" << endl;
     AlwaysAssert(!aR.getImageName(theImageName, theImageChannel, theNomFreq, theFType,
+				  theRotAngOffset,
 				  "ALMA", 
 				  MEpoch(MVEpoch(Quantity(50000., "d")), MEpoch::UTC),
 				  MFrequency( Quantity(600., "GHz"), MFrequency::TOPO), // wrong freq
@@ -227,6 +234,7 @@ int main() {
 
     cout << "access 2" << endl;
     AlwaysAssert(!aR.getImageName(theImageName, theImageChannel, theNomFreq, theFType,
+				  theRotAngOffset,
 				  "ALMA", 
 				  MEpoch(MVEpoch(Quantity(49999., "d")), MEpoch::UTC), // wrong time
 				  MFrequency( Quantity(160., "GHz"), MFrequency::TOPO), 
@@ -235,6 +243,7 @@ int main() {
 
     cout << "access 3" << endl;
     AlwaysAssert(!aR.getImageName(theImageName, theImageChannel, theNomFreq, theFType,
+				  theRotAngOffset,
 				  "ALMA", 
 				  MEpoch(MVEpoch(Quantity(50000., "d")), MEpoch::UTC), 
 				  MFrequency( Quantity(160., "GHz"), MFrequency::TOPO),
@@ -246,6 +255,7 @@ int main() {
 
     cout << "access 3b" << endl;
     AlwaysAssert(!aR.getImageName(theImageName, theImageChannel, theNomFreq, theFType,
+				  theRotAngOffset,
 				  "ALMA", 
 				  MEpoch(MVEpoch(Quantity(50001., "d")), MEpoch::UTC), // other time 
 				  MFrequency( Quantity(160., "GHz"), MFrequency::TOPO),
@@ -257,6 +267,7 @@ int main() {
 
     cout << "access 4" << endl;
     AlwaysAssert(!aR.getImageName(theImageName, theImageChannel, theNomFreq, theFType,
+				  theRotAngOffset,
 				  "ALMA", 
 				  MEpoch(MVEpoch(Quantity(50000., "d")), MEpoch::UTC), 
 				  MFrequency( Quantity(160., "GHz"), MFrequency::TOPO),
@@ -268,6 +279,7 @@ int main() {
 
     cout << "access 5" << endl;
     AlwaysAssert(!aR.getImageName(theImageName, theImageChannel, theNomFreq, theFType,
+				  theRotAngOffset,
 				  "ALMA", 
 				  MEpoch(MVEpoch(Quantity(50000., "d")), MEpoch::UTC), 
 				  MFrequency( Quantity(160., "GHz"), MFrequency::TOPO),
@@ -280,6 +292,7 @@ int main() {
 
     cout << "access 6" << endl;
     AlwaysAssert(!aR.getImageName(theImageName, theImageChannel, theNomFreq, theFType,
+				  theRotAngOffset,
 				  "ALMA", 
 				  MEpoch(MVEpoch(Quantity(50000., "d")), MEpoch::UTC), 
 				  MFrequency( Quantity(160., "GHz"), MFrequency::TOPO),
@@ -293,6 +306,7 @@ int main() {
 
     cout << "access 7" << endl;
     AlwaysAssert(!aR.getImageName(theImageName, theImageChannel, theNomFreq, theFType,
+				  theRotAngOffset,
 				 "ALMA", 
 				  1, // wrong beam id
 				  MFrequency( Quantity(160., "GHz"), MFrequency::TOPO)),
@@ -301,6 +315,7 @@ int main() {
 
     cout << "access 8" << endl;
     AlwaysAssert(!aR.getImageName(theImageName, theImageChannel, theNomFreq, theFType,
+				  theRotAngOffset,
 				  "ALMA", 
 				  MEpoch(MVEpoch(Quantity(50000., "d")), MEpoch::UTC),
 				  MFrequency( Quantity(160., "GHz"), MFrequency::TOPO),
@@ -326,6 +341,7 @@ int main() {
 
     cout << "access 9" << endl;
     AlwaysAssert(aR.getImageName(theImageName, theImageChannel, theNomFreq, theFType,
+				 theRotAngOffset,
 				 "ALMA", 
 				 MEpoch(MVEpoch(Quantity(50000., "d")), MEpoch::UTC), 
 				 MFrequency( Quantity(250., "GHz"), MFrequency::TOPO),
@@ -337,8 +353,11 @@ int main() {
 				 0), 
 		 AipsError);
 
+    AlwaysAssert((theRotAngOffset.degree()-60.)<1E-14, AipsError);
+
     cout << "access 10" << endl;
     AlwaysAssert(aR.getImageName(theImageName, theImageChannel, theNomFreq, theFType,
+				 theRotAngOffset,
 				 "ALMA", 
 				 0,
 				 MFrequency( Quantity(250., "GHz"), MFrequency::TOPO)), 
@@ -346,6 +365,7 @@ int main() {
 
     cout << "access 11" << endl;
     AlwaysAssert(aR.getImageName(theImageName, theImageChannel, theNomFreq, theFType,
+				 theRotAngOffset,
 				 "ALMA", 
 				 MEpoch(MVEpoch(Quantity(50000., "d")), MEpoch::UTC),
 				 MFrequency( Quantity(160., "GHz"), MFrequency::TOPO),
@@ -361,6 +381,7 @@ int main() {
 
     cout << "access 12" << endl;
     AlwaysAssert(aR.getImageName(theImageName, theImageChannel, theNomFreq, theFType,
+				 theRotAngOffset,
 				 "ACA", 
 				 0,
 				 MFrequency( Quantity(250., "GHz"), MFrequency::TOPO)), 
@@ -368,6 +389,7 @@ int main() {
 
     cout << "access 13" << endl;
     AlwaysAssert(!aR.getImageName(theImageName, theImageChannel, theNomFreq, theFType,
+				  theRotAngOffset,
 				  "ALMA", 
 				  MEpoch(MVEpoch(Quantity(50001., "d")), MEpoch::UTC), 
 				  MFrequency( Quantity(160., "GHz"), MFrequency::TOPO),

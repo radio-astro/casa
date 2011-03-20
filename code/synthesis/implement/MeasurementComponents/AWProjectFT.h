@@ -344,6 +344,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     inline virtual Complex pbFunc(const Complex& a, const Float& limit) 
     {if (abs(a)>=limit) return (a); else return Complex(1.0,0.0);};
 
+    virtual void setMiscInfo(const Int qualifier)
+    {
+      sensitivityPatternQualifier_p=qualifier;
+      sensitivityPatternQualifierStr_p = "_tt"+String::toString(sensitivityPatternQualifier_p);
+    }
   protected:
     
     Int nint(Double val) {return Int(floor(val+0.5));};
@@ -467,7 +472,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			      const Cube<Int>& flagCube,
 			      const Vector<Double>& dphase);
 
-  AWVisResampler visResampler_p;
+    AWVisResampler visResampler_p;
+    Int sensitivityPatternQualifier_p;
+    String sensitivityPatternQualifierStr_p;
 #include "AWProjectFT.FORTRANSTUFF.INC"
   };
 } //# NAMESPACE CASA - END

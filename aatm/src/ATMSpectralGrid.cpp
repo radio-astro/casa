@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMSpectralGrid.cpp,v 1.11.2.2 2010/10/15 16:19:02 dbroguie Exp $"
+ * "@(#) $Id: ATMSpectralGrid.cpp,v 1.15.2.1 2011/03/03 11:22:17 dbroguie Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------
@@ -222,6 +222,7 @@ unsigned int SpectralGrid::add(unsigned int numChan,
   vector<string> v_dummyNature;
   vv_assocNature_.push_back(v_dummyNature);
 
+  delete [] chanFreq;
   return spwId;
 }
 
@@ -560,10 +561,39 @@ Frequency SpectralGrid::getChanFreq(unsigned int i)
 {
   return Frequency(v_chanFreq_[i], "Hz");
 }
+
+Frequency SpectralGrid::getChanWidth(unsigned int i)
+{
+ if(i == 0){
+   return getChanFreq(i+1)-getChanFreq(i);
+ }else{
+   return getChanFreq(i)-getChanFreq(i-1);
+ }
+}
+
 Frequency SpectralGrid::getChanFreq(unsigned int spwId, unsigned int chanIdx)
 {
   if(wrongSpwId(spwId)) return 32767.;
   return Frequency(v_chanFreq_[v_transfertId_[spwId] + chanIdx], "Hz");
+}
+
+Frequency SpectralGrid::getChanWidth(unsigned int spwId, unsigned int chanIdx)
+{
+  if(wrongSpwId(spwId)) return 32767.;
+
+  unsigned int banda=spwId;
+  unsigned int canalmasuno=chanIdx+1;
+  unsigned int canal=chanIdx;
+  unsigned int canalmenosuno=chanIdx-1;
+  //  cout << "banda,canal-1,canal,canal+1= " << banda << " " << canalmenosuno << " " << canal << " " << canalmasuno << endl;
+
+  if(chanIdx == 0){
+    return getChanFreq(spwId,canalmasuno)-getChanFreq(spwId,canal);
+  }else{
+    //  cout << "ChanFreq(" << banda << "," << canal << ")=" << getChanFreq(banda,canal).get("GHz") << endl;
+    //  cout << "ChanFreq(" << banda << "," << canalmenosuno << ")=" << getChanFreq(banda,canalmenosuno).get("GHz") << endl;
+    return getChanFreq(banda,canal)-getChanFreq(banda,canalmenosuno);
+  }
 }
 
 vector<double> SpectralGrid::getSbChanFreq(unsigned int spwId,

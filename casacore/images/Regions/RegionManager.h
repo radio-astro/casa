@@ -191,7 +191,7 @@ namespace casa {
       		  String& diagnostics, uInt& nSelectedChannels, String& stokes,
       		  const Record  * const regionPtr, const String& regionName,
       		  const String& chans, const StokesControl stokesControl,
-      		  const String& box, const IPosition& imShape
+      		  const String& box, const IPosition& imShape, const String& imageName=""
         );
 
     private:
@@ -246,7 +246,7 @@ namespace casa {
 
       void _setRegion(
       	Record& regionRecord, String& diagnostics,
-      	const String& regionName
+      	const String& regionName, const String& imageName
       );
 
 

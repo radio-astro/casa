@@ -57,10 +57,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   enum ALMAAntennaType {
     ALMA_INVALID = 0,
-    ALMA_DV = 1,
-    ALMA_DA,
-    ALMA_PM,
+    ALMA_DA = 1,
+    ALMA_DV,
     ALMA_CM,
+    ALMA_PM,
     ALMA_numAntTypes
   };
 
@@ -125,7 +125,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // generate the lists of antenna types for the whole vb
     Vector<ALMAAntennaType> antTypeList(const VisBuffer& vb);
 
-    Int getVisParams(const VisBuffer& vb);
+    Int getVisParams(const VisBuffer& vb, const CoordinateSystem& skyCoord=CoordinateSystem());
     Int makePBPolnCoords(const VisBuffer&vb,
 			 const Int& convSize,
 			 const Int& convSampling,
@@ -138,6 +138,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   private:
     static AntennaResponses* aR_p; // shared between all instances of this class
+    static Bool orderMattersInCFKey;
     Vector<Int> polMap_p;
     Bool haveCannedResponses_p; // true if there are precalculated response images available
     Vector<ALMAAntennaType> antTypeMap_p; // maps antenna id to antenna type

@@ -238,7 +238,9 @@ for te in tests:
     if pyonly:
         try:
             print te['mode'],spw,"",nchan,sta,wid,outframe,vtype,str(reffreq_ms)+'kHz'
-            st = imset.setChannelization(te['mode'],spw,"",nchan,sta,wid,outframe,vtype,str(reffreq_ms)+'kHz')        
+            # test the new version
+            st = imset.setChannelizeDefault(te['mode'],spw,"",nchan,sta,wid,outframe,vtype,"", str(reffreq_ms)+'kHz')
+            #st = imset.setChannelization(te['mode'],spw,"",nchan,sta,wid,outframe,vtype,str(reffreq_ms)+'kHz')        
             # (localnchan, localstart, localwidth)=imset.setChannelization(mode,spw,field,nchan,start,width,outframe,veltype,restfreq)
         except:
             st = (-1,"","")

@@ -2,8 +2,11 @@ import os
 import time
 from taskinit import *
 
-def plotms(vis=None, xaxis=None, xdatacolumn=None, yaxis=None,
-           ydatacolumn=None,
+def plotms(vis=None, 
+           title=None, xlabel=None, ylabel=None,
+           xaxis=None, xdatacolumn=None, 
+           yaxis=None, ydatacolumn=None,
+           colorize=None, coloraxis=None,
            selectdata=None, field=None, spw=None,
            timerange=None, uvrange=None, antenna=None, scan=None,
            correlation=None, array=None, msselect=None,
@@ -15,7 +18,8 @@ def plotms(vis=None, xaxis=None, xdatacolumn=None, yaxis=None,
            extendflag=None,
            extcorr=None, extchannel=None,
            plotfile=None, format=None,
-           highres=None, interactive=None, overwrite=None
+           highres=None, interactive=None, overwrite=None,
+           showgui=None
 ):
 
 # we'll add these later
@@ -38,12 +42,22 @@ def plotms(vis=None, xaxis=None, xdatacolumn=None, yaxis=None,
     Keyword arguments:
     vis -- input visibility dataset
            default: ''
+    title  -- title along top of plot (called "canvas" in some places)
+    xlabel, ylabel -- text to label horiz. and vert. axes, with formatting (%% and so on)
+    
     xaxis, yaxis -- what to plot on the two axes
                     default: '' (uses PlotMS defaults/current set).
+                    
       &gt;&gt;&gt; xaxis, yaxis expandable parameters
         xdatacolumn, ydatacolumn -- which data column to use for data axes
                                     default: '' (uses PlotMS default/current
                                     set).
+    
+    colorize -- to color data points according to some quantity
+                default: false
+      &gt;&gt;&gt; colorize expandable parameters
+        coloraxis -- which data column ('axis') to use for colorizing
+                     default: ''  (ignored - same as colorizing off)
     
     selectdata -- data selection parameters flag
                   (see help par.selectdata for more detailed information)
@@ -112,6 +126,8 @@ def plotms(vis=None, xaxis=None, xdatacolumn=None, yaxis=None,
         extfield -- extend flags based on field?  only valid if time extension
                     is turned on.
                     default: False.
+        showgui -- Whether or not to display the plotting GUI
+                  default: True; example showgui=False
     """
     # Check if DISPLAY environment variable is set.
     if os.getenv('DISPLAY') == None:
@@ -145,11 +161,22 @@ def plotms(vis=None, xaxis=None, xdatacolumn=None, yaxis=None,
         if(synonyms.has_key(xaxis)): xaxis = synonyms[xaxis]
         if(synonyms.has_key(yaxis)): yaxis = synonyms[yaxis]
         
-        # Set filename and axes
+        tp.setgui( showgui );
 
+
+        # Set filename and axes
         pm.setPlotMSFilename(vis, False)
         pm.setPlotAxes(xaxis, yaxis, xdatacolumn, ydatacolumn, False)
+        pm.setTitle(title)
+        pm.setXAxisLabel(xlabel)
+        pm.setYAxisLabel(ylabel)
 
+
+        # Set colorizing parameters
+        pm.setColorizeFlag(colorize)
+        pm.setColorAxis(coloraxis)
+
+        
         # Set selection
         if (selectdata):
             pm.setPlotMSSelection(field, spw, timerange, uvrange, antenna, scan, correlation, array, msselect, False)
@@ -183,7 +210,8 @@ def plotms(vis=None, xaxis=None, xdatacolumn=None, yaxis=None,
         pm.setFlagExtension(extendflag, extcorrstr, extchannel)
         # Update and show
         pm.update()
-        pm.show()
+        if (showgui):
+            pm.show()
         
         # write file if requested
         if(plotfile != ""):

@@ -1,42 +1,42 @@
 *=======================================================================
 *
-*   WCSLIB 4.3 - an implementation of the FITS WCS standard.
-*   Copyright (C) 1995-2007, Mark Calabretta
+* WCSLIB 4.7 - an implementation of the FITS WCS standard.
+* Copyright (C) 1995-2011, Mark Calabretta
 *
-*   This file is part of WCSLIB.
+* This file is part of WCSLIB.
 *
-*   WCSLIB is free software: you can redistribute it and/or modify
-*   it under the terms of the GNU Lesser General Public License as
-*   published by the Free Software Foundation, either version 3 of
-*   the License, or (at your option) any later version.
+* WCSLIB is free software: you can redistribute it and/or modify it
+* under the terms of the GNU Lesser General Public License as published
+* by the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
 *
-*   WCSLIB is distributed in the hope that it will be useful, but
-*   WITHOUT ANY WARRANTY; without even the implied warranty of
-*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*   GNU Lesser General Public License for more details.
+* WCSLIB is distributed in the hope that it will be useful, but WITHOUT
+* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+* FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
+* License for more details.
 *
-*   You should have received a copy of the GNU Lesser General Public
-*   License along with WCSLIB.  If not, see http://www.gnu.org/licenses.
+* You should have received a copy of the GNU Lesser General Public
+* License along with WCSLIB.  If not, see http://www.gnu.org/licenses.
 *
-*   Correspondence concerning WCSLIB may be directed to:
-*      Internet email: mcalabre@atnf.csiro.au
-*      Postal address: Dr. Mark Calabretta
-*                      Australia Telescope National Facility, CSIRO
-*                      PO Box 76
-*                      Epping NSW 1710
-*                      AUSTRALIA
+* Correspondence concerning WCSLIB may be directed to:
+*   Internet email: mcalabre@atnf.csiro.au
+*   Postal address: Dr. Mark Calabretta
+*                   Australia Telescope National Facility, CSIRO
+*                   PO Box 76
+*                   Epping NSW 1710
+*                   AUSTRALIA
 *
-*   Author: Mark Calabretta, Australia Telescope National Facility
-*   http://www.atnf.csiro.au/~mcalabre/index.html
-*   $Id: twcs.f,v 4.3 2007/12/27 05:42:52 cal103 Exp $
+* Author: Mark Calabretta, Australia Telescope National Facility
+* http://www.atnf.csiro.au/~mcalabre/index.html
+* $Id: twcs.f,v 4.7 2011/02/07 07:03:43 cal103 Exp $
 *=======================================================================
 
       PROGRAM TWCS
 *-----------------------------------------------------------------------
 *
-*   TWCS1 tests WCSS2P and WCSP2S for closure on an oblique 2-D slice
-*   through a 4-D image with celestial, spectral and logarithmic
-*   coordinate axes.
+* TWCS1 tests WCSS2P and WCSP2S for closure on an oblique 2-D slice
+* through a 4-D image with celestial, spectral and logarithmic
+* coordinate axes.
 *
 *-----------------------------------------------------------------------
       DOUBLE PRECISION TOL
@@ -100,6 +100,8 @@
       INCLUDE 'cel.inc'
       INCLUDE 'prj.inc'
       INTEGER   WCS(WCSLEN)
+      DOUBLE PRECISION DUMMY
+      EQUIVALENCE (WCS,DUMMY)
 *-----------------------------------------------------------------------
       WRITE (*, 10)
  10   FORMAT ('Testing closure of WCSLIB world coordinate ',
@@ -125,79 +127,79 @@
       TIME = 1D0
       FREQ = 1.42040595D9 - 180D0 * 62500D0
       DO 30 K = 0, 360
-         WORLD1(1,K) = 0D0
-         WORLD1(2,K) = 0D0
-         WORLD1(3,K) = 0D0
-         WORLD1(4,K) = 0D0
+        WORLD1(1,K) = 0D0
+        WORLD1(2,K) = 0D0
+        WORLD1(3,K) = 0D0
+        WORLD1(4,K) = 0D0
 
-         WORLD1(3,K) = TIME
-         TIME = 1.01D0 * TIME
+        WORLD1(3,K) = TIME
+        TIME = 1.01D0 * TIME
 
-         WORLD1(SPCIDX,K) = 2.99792458D8 / FREQ
-         FREQ = FREQ + 62500D0
+        WORLD1(SPCIDX,K) = 2.99792458D8 / FREQ
+        FREQ = FREQ + 62500D0
  30   CONTINUE
 
       RESMAX = 0D0
       DO 110 LAT = 90, -90, -1
-         LAT1 = DBLE(LAT)
+        LAT1 = DBLE(LAT)
 
-         K = 0
-         DO 40 LNG = -180, 180
-            LNG1 = DBLE(LNG)
+        K = 0
+        DO 40 LNG = -180, 180
+          LNG1 = DBLE(LNG)
 
-            WORLD1(LNGIDX,K) = LNG1
-            WORLD1(LATIDX,K) = LAT1
-            K = K + 1
- 40      CONTINUE
+          WORLD1(LNGIDX,K) = LNG1
+          WORLD1(LATIDX,K) = LAT1
+          K = K + 1
+ 40     CONTINUE
 
-         STATUS = WCSS2P (WCS, 361, NELEM, WORLD1, PHI, THETA, IMG,
-     :                    PIXEL1, STAT)
-         IF (STATUS.NE.0) THEN
-            WRITE (*, 50) STATUS, LAT1
- 50         FORMAT (3X,'WCSS2P(1) ERROR',I3,' (LAT1 =',F20.15, ')')
-            GO TO 110
-         END IF
+        STATUS = WCSS2P (WCS, 361, NELEM, WORLD1, PHI, THETA, IMG,
+     :                   PIXEL1, STAT)
+        IF (STATUS.NE.0) THEN
+          WRITE (*, 50) STATUS, LAT1
+ 50       FORMAT (3X,'WCSS2P(1) ERROR',I3,' (LAT1 =',F20.15, ')')
+          GO TO 110
+        END IF
 
-         STATUS = WCSP2S (WCS, 361, NELEM, PIXEL1, IMG, PHI, THETA,
-     :                    WORLD2, STAT)
-         IF (STATUS.NE.0) THEN
-            WRITE (*, 60) STATUS, LAT1
- 60         FORMAT (3X,'WCSP2S ERROR',I3,' (LAT1 =',F20.15, ')')
-            GO TO 110
-         END IF
+        STATUS = WCSP2S (WCS, 361, NELEM, PIXEL1, IMG, PHI, THETA,
+     :                   WORLD2, STAT)
+        IF (STATUS.NE.0) THEN
+          WRITE (*, 60) STATUS, LAT1
+ 60       FORMAT (3X,'WCSP2S ERROR',I3,' (LAT1 =',F20.15, ')')
+          GO TO 110
+        END IF
 
-         STATUS = WCSS2P (WCS, 361, NELEM, WORLD2, PHI, THETA, IMG,
-     :                    PIXEL2, STAT)
-         IF (STATUS.NE.0) THEN
-            WRITE (*, 70) STATUS, LAT1
- 70         FORMAT (3X,'WCSS2P(2) ERROR',I3,' (LAT1 =',F20.15, ')')
-            GO TO 110
-         END IF
+        STATUS = WCSS2P (WCS, 361, NELEM, WORLD2, PHI, THETA, IMG,
+     :                   PIXEL2, STAT)
+        IF (STATUS.NE.0) THEN
+          WRITE (*, 70) STATUS, LAT1
+ 70       FORMAT (3X,'WCSS2P(2) ERROR',I3,' (LAT1 =',F20.15, ')')
+          GO TO 110
+        END IF
 
-         DO 100 K = 0, 360
-            RESID = 0D0
-            DO 80 I = 1, NAXIS
-               R = PIXEL2(I,K) - PIXEL1(I,K)
-               RESID = RESID + R*R
- 80         CONTINUE
+        DO 100 K = 0, 360
+          RESID = 0D0
+          DO 80 I = 1, NAXIS
+            R = PIXEL2(I,K) - PIXEL1(I,K)
+            RESID = RESID + R*R
+ 80       CONTINUE
 
-            RESID = SQRT(RESID)
-            IF (RESID.GT.RESMAX) RESMAX = RESID
+          RESID = SQRT(RESID)
+          IF (RESID.GT.RESMAX) RESMAX = RESID
 
-            IF (RESID.GT.TOL) THEN
-               WRITE (*, 90) (WORLD1(I,K), I=1,NAXIS),
-     :                       (PIXEL1(I,K), I=1,NAXIS),
-     :                       (WORLD2(I,K), I=1,NAXIS),
-     :                       (PIXEL2(I,K), I=1,NAXIS)
- 90            FORMAT (/,'Closure error:',/,
-     :                   'world1:',4F18.12,/,
-     :                   'pixel1:',4F18.12,/,
-     :                   'world2:',4F18.12,/,
-     :                   'pixel2:',4F18.12)
-            END IF
+          IF (RESID.GT.TOL) THEN
+            WRITE (*, 90) (WORLD1(I,K), I=1,NAXIS),
+     :                    (PIXEL1(I,K), I=1,NAXIS),
+     :                    (WORLD2(I,K), I=1,NAXIS),
+     :                    (PIXEL2(I,K), I=1,NAXIS)
+ 90         FORMAT (/,'Closure error:',/,
+     :                'world1:',4F18.12,/,
+     :                'pixel1:',4F18.12,/,
+     :                'world2:',4F18.12,/,
+     :                'pixel2:',4F18.12)
+          END IF
 
-            LNG1 = LNG1 + 1D0
- 100     CONTINUE
+          LNG1 = LNG1 + 1D0
+ 100    CONTINUE
  110  CONTINUE
 
       WRITE (*, 120) RESMAX

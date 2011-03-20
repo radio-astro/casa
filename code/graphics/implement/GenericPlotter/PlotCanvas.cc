@@ -153,13 +153,19 @@ bool PlotCanvas::hasCachedAxesStack() const {
 }
 
 
-void PlotCanvas::setTitleFont(const PlotFontPtr font) {
-    if(!font.null()) setTitleFont(*font); }
 
-void PlotCanvas::setBackground(const PlotAreaFillPtr areaFill) {
-    if(!areaFill.null()) setBackground(*areaFill); }
+void PlotCanvas::setTitleFont(const PlotFontPtr font) {
+    if(!font.null()) setTitleFont(*font); 
+}
+
+
+void PlotCanvas::setBackground(const PlotAreaFillPtr areaFill)   {
+    if(!areaFill.null()) setBackground(*areaFill); 
+}
+
+
 void PlotCanvas::setBackground(const String& color,
-        PlotAreaFill::Pattern pattern) {
+        PlotAreaFill::Pattern pattern)    {
     PlotAreaFillPtr bg = background();
     bg->setColor(color);
     bg->setPattern(pattern);

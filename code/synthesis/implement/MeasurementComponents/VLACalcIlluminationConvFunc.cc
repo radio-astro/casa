@@ -232,14 +232,22 @@ namespace casa{
 	// ROArrayColumn<Double> chanfreq = spwCol.chanFreq();
 	// ROScalarColumn<Double> reffreq = spwCol.refFrequency();
 
-	// //	Freq = sum(chanFreq)/chanFreq.nelements();
-	// Freq = max(chanfreq.getColumn());
-	// freqHi = max(chanfreq.getColumn());
-	// freqLo = min(chanfreq.getColumn());
+	Vector<Double> chanFreq = vb.frequency();
+	index = skyCS.findCoordinate(Coordinate::SPECTRAL);
+	SpectralCoordinate SpC = skyCS.spectralCoordinate(index);
+	Vector<Double> refVal = SpC.referenceValue();
+	//	refVal(0) = freqHi;
+	refVal(0) += SpC.increment()(0)/2.0;
+	SpC.setReferenceValue(refVal);
+	skyCS.replaceCoordinate(SpC,index);
+
+
 	freqHi = max(chanFreq);
 	freqLo = min(chanFreq);
-	Freq   = freqHi;
-	cerr << "Freq = " << chanFreq << endl;
+	// Freq   = freqHi;
+	// Freq = freqHi = 1856e6;
+	Freq = freqHi ;//= refVal(0);
+	cerr << "CF Ref. Freq = " << freqHi << endl;
 	ap.freq = freqHi/1E9;
 	
 	IPosition imsize(skyShape);
@@ -251,12 +259,6 @@ namespace casa{
 	Vector<Double> incr = lc.increment();
 	Double Lambda = C::c/freqHi;
 	
-    index = skyCS.findCoordinate(Coordinate::SPECTRAL);
-    SpectralCoordinate SpC = skyCS.spectralCoordinate(index);
-    Vector<Double> refVal = SpC.referenceValue();
-    refVal(0) = freqHi;
-    SpC.setReferenceValue(refVal);
-    skyCS.replaceCoordinate(SpC,index);
 
 	ap.nx = skyShape(0); ap.ny = skyShape(1);
 	IPosition apertureShape(ap.aperture->shape());

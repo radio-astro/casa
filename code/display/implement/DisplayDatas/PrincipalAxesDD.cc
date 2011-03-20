@@ -69,7 +69,7 @@ PrincipalAxesDD::PrincipalAxesDD(uInt xAxis, uInt yAxis,
 : iAmRubbish(True),
   itsNotation(Coordinate::MIXED),
   itsNumImages(0),
-  itsSpectralUnit("km/s"),
+  //itsSpectralUnit("km/s"),
   itsDoppler("radio"),
   itsAbsolute(True),
   itsFractionalPixels(False),
@@ -1002,8 +1002,7 @@ void PrincipalAxesDD::refreshEH(const WCRefreshEvent &ev)
   // Derived classes implement if applicable (at present, LatticePADDs
   // will draw a beam ellipse if they have an image with beam data and
   // the WorldCanvas CoordinateSystem is set for sky coordinates).
-  if ( getDisplayState( ) == DisplayData::DISPLAYED )
-	drawBeamEllipse_(wCanvas);
+  drawBeamEllipse_(wCanvas);
   
 }
 
@@ -1669,6 +1668,26 @@ void PrincipalAxesDD::setDefaultOptions()
   setVelocityState (itsCoordSys, itsDoppler, itsSpectralUnit);
   setVelocityState (itsOrigCoordSys, itsDoppler, itsSpectralUnit);
 
+// Improve the default unit accorind to the
+// domain the data is located in.
+
+  Int after = -1;
+  Int iS = itsCoordSys.findCoordinate(Coordinate::SPECTRAL, after);
+  if (iS>=0) {
+	// separate at 10 micron
+	Quantity q;
+	q.setValue(itsOrigCoordSys.spectralCoordinate(iS).referenceValue()(0));
+	q.setUnit(itsOrigCoordSys.spectralCoordinate(iS).worldAxisUnits()(0));
+	MVFrequency mvFreq(q);
+  	// separate at 10 micron
+   	if (mvFreq.get(Unit("Hz")).getValue() > 1.0e+13) {
+		  itsSpectralUnit="nm";
+	  }
+       	else {
+  		  itsSpectralUnit="km/s";
+       	}
+  }
+
 // Set up the default formatting for the SpectralCoordinate (handles km/s or Hz)
 
   setSpectralFormatting (itsPosTrackCoordSys, 
@@ -2065,7 +2084,8 @@ Record PrincipalAxesDD::getLabellerOptions(){
   }
   fracpix.define("allowunset", False);
   rec.defineRecord("fracpix", fracpix);
-//
+
+  //
   Int after = -1;
   Int iS = itsOrigCoordSys.findCoordinate(Coordinate::SPECTRAL, after);
   if (iS>=0) {
@@ -2083,15 +2103,36 @@ Record PrincipalAxesDD::getLabellerOptions(){
         vunits(2) = "GHz";
         vunits(3) = "MHz";
         vunits(4) = "Hz";
+        spectralunit.define("default", vunits(0));
      } else {
-        vunits.resize(3);
-        vunits(0) = "GHz";
-        vunits(1) = "MHz";
-        vunits(2) = "Hz";
+         Quantity q;
+         q.setValue(itsOrigCoordSys.spectralCoordinate(iS).referenceValue()(0));
+         q.setUnit(itsOrigCoordSys.spectralCoordinate(iS).worldAxisUnits()(0));
+         MVFrequency mvFreq(q);
+     	// separate at 10 micron
+      	if (mvFreq.get(Unit("Hz")).getValue() > 1.0e+13) {
+     		// optical domain
+     		vunits.resize(7);
+     		vunits(0) = "GHz";
+     		vunits(1) = "MHz";
+     		vunits(2) = "Hz";
+     		vunits(3) = "mm";
+     		vunits(4) = "um";
+     		vunits(5) = "nm";
+     		vunits(6) = "Angstrom";
+     		spectralunit.define("default", vunits(2));
+     	}
+     	else {
+     		// radio domain
+     		vunits.resize(3);
+     		vunits(0) = "GHz";
+     		vunits(1) = "MHz";
+     		vunits(2) = "Hz";
+     		spectralunit.define("default", vunits(0));
+     	}
      }
 //
      spectralunit.define("popt", vunits);
-     spectralunit.define("default", vunits(0));
      spectralunit.define("value", itsSpectralUnit);
      spectralunit.define("allowunset", False);
      rec.defineRecord("spectralunit", spectralunit);
@@ -2143,6 +2184,7 @@ void PrincipalAxesDD::setSpectralFormatting  (CoordinateSystem& cSys,
 {
    static LogIO os(LogOrigin("PrincipleAxesDD", "setSpectralFormatting", WHERE));
    String errorMsg;
+   //cout << "I am in PrincipalAxesDD::setSpectralFormatting!" << endl;
    if( doppler.length() > 0 && unit.length( ) > 0 &&
        ! CoordinateUtil::setSpectralFormatting(errorMsg, cSys, unit, doppler) ) {
       os << LogIO::WARN 
@@ -2154,6 +2196,7 @@ void PrincipalAxesDD::setSpectralFormatting  (CoordinateSystem& cSys,
          << "Failed to update SpectralCoordinate reference frame because"
          << errorMsg << LogIO::POST;
    }
+   //cout << endl;
 }
 
 
@@ -2161,7 +2204,7 @@ void PrincipalAxesDD::setVelocityState (CoordinateSystem& cSys,
                                         const String& doppler,
                                         const String& unit)
 {
-   static LogIO os(LogOrigin("PrincipleAxesDD", "setSpectralState", WHERE));
+   static LogIO os(LogOrigin("PrincipleAxesDD", "setVelocityState", WHERE));
    String errorMsg;
    if (!CoordinateUtil::setVelocityState (errorMsg, cSys, unit, doppler)) {
       os << LogIO::WARN << "Failed to update SpectralCoordinate velocity state because" << LogIO::POST;

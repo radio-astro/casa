@@ -105,6 +105,7 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 	       key,val = item
 	       keyVal = eval(key)
 	       exec('myparams[key] = keyVal')
+	       self.parameters[key] = keyVal
 	       if (keyVal == None):
 	           exec('myparams[key] = '+ key + ' = self.itsdefault(key)')
 		   keyVal = eval(key)
@@ -655,15 +656,15 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 <xsl:when test="@type">
 <xsl:choose>
 <xsl:when test="@type='string'">
-        if a[&apos;<xsl:value-of select="$paramname"></xsl:value-of><xsl:text disable-output-escaping="yes">&apos;] </xsl:text> == &apos;<xsl:value-of select="@value"/>&apos;:
+        if self.parameters[&apos;<xsl:value-of select="$paramname"></xsl:value-of><xsl:text disable-output-escaping="yes">&apos;] </xsl:text> == &apos;<xsl:value-of select="@value"/>&apos;:
 </xsl:when>
 <xsl:otherwise>
-        if a[&apos;<xsl:value-of select="$paramname"></xsl:value-of><xsl:text disable-output-escaping="yes">&apos;] </xsl:text> == <xsl:value-of select="@value"/>:
+        if self.parameters[&apos;<xsl:value-of select="$paramname"></xsl:value-of><xsl:text disable-output-escaping="yes">&apos;] </xsl:text> == <xsl:value-of select="@value"/>:
 </xsl:otherwise>
 </xsl:choose>
 </xsl:when>
 <xsl:otherwise>
-        if a[&apos;<xsl:value-of select="$paramname"></xsl:value-of><xsl:text disable-output-escaping="yes">&apos;] </xsl:text> == &apos;<xsl:value-of select="@value"/>&apos;:
+        if self.parameters[&apos;<xsl:value-of select="$paramname"></xsl:value-of><xsl:text disable-output-escaping="yes">&apos;] </xsl:text> == &apos;<xsl:value-of select="@value"/>&apos;:
 </xsl:otherwise>
 </xsl:choose>
 </xsl:when>
@@ -685,15 +686,15 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 <xsl:when test="@type">
 <xsl:choose>
 <xsl:when test="@type='string'">
-        if a[&apos;<xsl:value-of select="$paramname"></xsl:value-of><xsl:text disable-output-escaping="yes">&apos;] </xsl:text> != &apos;<xsl:value-of select="@value"/>&apos;:
+        if self.parameters[&apos;<xsl:value-of select="$paramname"></xsl:value-of><xsl:text disable-output-escaping="yes">&apos;] </xsl:text> != &apos;<xsl:value-of select="@value"/>&apos;:
 </xsl:when>
 <xsl:otherwise>
-        if a[&apos;<xsl:value-of select="$paramname"></xsl:value-of><xsl:text disable-output-escaping="yes">&apos;] </xsl:text> != <xsl:value-of select="@value"/>:
+        if self.parameters[&apos;<xsl:value-of select="$paramname"></xsl:value-of><xsl:text disable-output-escaping="yes">&apos;] </xsl:text> != <xsl:value-of select="@value"/>:
 </xsl:otherwise>
 </xsl:choose>
 </xsl:when>
 <xsl:otherwise>
-        if a[&apos;<xsl:value-of select="$paramname"></xsl:value-of><xsl:text disable-output-escaping="yes">&apos;] </xsl:text> != &apos;<xsl:value-of select="@value"/>&apos;:
+        if self.parameters[&apos;<xsl:value-of select="$paramname"></xsl:value-of><xsl:text disable-output-escaping="yes">&apos;] </xsl:text> != &apos;<xsl:value-of select="@value"/>&apos;:
 </xsl:otherwise>
 </xsl:choose>
 </xsl:when>

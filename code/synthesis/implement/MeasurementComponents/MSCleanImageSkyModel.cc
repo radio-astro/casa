@@ -165,29 +165,32 @@ Bool MSCleanImageSkyModel::solve(SkyEquation& se) {
   // Loop over all channels and polarizations
   for (Int chan=0; chan<nchan; chan++) {
 
-    LCBox psfbox(blcDirty, trcDirty,PSF(0).shape());
-    SubImage<Float>  psf_sl (PSF(0), psfbox, False);
-    Float psfmax;
-    {
-      LatticeExprNode node = max(psf_sl);
-      psfmax = node.getFloat();
-    }
     if(nchan>1) {
      os<<"Processing channel "<<chan<<" of  0 to "<<nchan-1<<LogIO::POST;
     }
-    if(psfmax==0.0) {
-      os << "No data for this channel: skipping" << LogIO::POST;
-    } else {
+ 
+      // Load the PSF for this channel
+      // Decide whether to clean this channel or not, based on PSF peak being non-zero.
       blcDirty(3) = chan; trcDirty(3) = chan;
       blcDirty(2) = 0; trcDirty(2) = 0;
       LCBox firstPolPlane(blcDirty, trcDirty, image(0).shape());
       SubImage<Float> subPsf(PSF(0), firstPolPlane);
-      SubImage<Float> subMask;
-      for (Int pol=0; pol<npol; pol++) {
-	blcDirty(2) = pol; trcDirty(2) = pol;
-	if(npol>1) {
-	  os<<"Processing polarization "<<pol+1<<" of "<<npol<<LogIO::POST;
-	}
+      Float psfmax;
+      {
+         LatticeExprNode node = max(subPsf);
+         psfmax = node.getFloat();
+      }
+
+      if(psfmax==0.0) { // PSF is not valid
+         os << "No data for this channel: skipping" << LogIO::POST;
+    } else { // PSF is valid.
+     SubImage<Float> subMask;
+     for (Int pol=0; pol<npol; pol++) { // Run MS-Clean on each polarization
+ 	 blcDirty(2) = pol; trcDirty(2) = pol;
+	 if(npol>1) {
+	    os<<"Processing polarization "<<pol+1<<" of "<<npol<<LogIO::POST;
+         }
+
 
 	LCBox onePlane(blcDirty, trcDirty, image(0).shape());
 	SubImage<Float> subDirty(residual(0), onePlane, True);
@@ -267,9 +270,9 @@ Bool MSCleanImageSkyModel::solve(SkyEquation& se) {
 	  eqn.residual(restl, lm);
 	  subDirty.copyData(restl);
 	}
-      }
-    }
-  }
+     }// end of polarization loop
+    }// end of if (valid psf)
+  }// end of channel loop
   modified_p=True;
 
   return(converged);

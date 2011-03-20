@@ -822,6 +822,7 @@ Bool WCCSNLAxisLabeller::draw(const WCRefreshEvent &ev)
         if (!cs.toWorld(tWrld,tPix)) {
         } else {
            zLabel = cs.format(tStr, Coordinate::DEFAULT, tWrld(2), 2);
+           //cout << "zlabel: " << zLabel << " tStr: "<<tStr<< " World value: "<< tWrld(2)<<endl;
         }
 //
 	zLabel += " ";

@@ -133,7 +133,7 @@ void ImageInputProcessor::_process(
 	regionRecord = regionMgr.fromBCS(
 			diagnostics, _nSelectedChannels, stokes,
 			regionPtr, regionName, chans,
-			stokesControl, box, image->shape()
+			stokesControl, box, image->shape(), image->name()
 	);
     if (!allowMultipleBoxes && regionRecord.fieldNumber("regions") >= 0) {
     	*_log << "Only a single n-dimensional rectangular region is supported."

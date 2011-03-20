@@ -90,6 +90,7 @@ import random
 import time
 import casac
 import numpy
+import glob
 import struct
 from tasks import *
 from taskinit import *
@@ -204,29 +205,7 @@ class immath_test1(unittest.TestCase):
             os.system('rm -rf ' +img)
             os.system('rm -rf input_test*')
                        
-    
-    def test_input1(self):
-        '''Immath 1: Valid/Invalid input to parameters'''
-        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
-        casalog.post( "Starting immath INPUT/OUTPUT tests.", 'NORMAL2' )
-    
-        #######################################################################
-        # Test invalid paramter name provided.
-        ######################################################################
-        result = None
-        try:
-            results = immath( imageList[0], outfile='input_test0', invalid='invalid' )
-        except:
-            pass
-        else:
-            if ( results != None and \
-                 ( not isinstance(results, bool) or results==True ) ):
-                retValue['success'] = False
-                retValue['error_msgs'] = retValue['error_msgs']\
-                     +"\nError: Invalid paramter, 'invalid', was not reported."    
-        
-        self.assertTrue(retValue['success'],retValue['error_msgs'])
-        
+
     def test_input2(self):
         '''Immath 2: Test bad input file'''
         #######################################################################
@@ -329,23 +308,6 @@ class immath_test1(unittest.TestCase):
         self.assertTrue(retValue['success'],retValue['error_msgs'])
 
 
-    def test_input6(self):
-        '''Immath 6: test non-string outfile'''
-        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
-        results = None
-        try:
-            results = immath( imageList[0], outfile={0: 'test', 1: 'magic'}, expr='IM0*1' )
-        except:
-            pass
-        else:
-            if ( ( results != None and not ( isinstance(results, bool) )
-                 or results==True ) ):
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']\
-                      +"\nError: Bad outfile was not reported."
-
-        self.assertTrue(retValue['success'],retValue['error_msgs'])
-
     def test_input7(self):
         '''Immath 7: test outfile'''
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
@@ -382,24 +344,6 @@ class immath_test1(unittest.TestCase):
         ####################################################################### 
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
         casalog.post( "The REGION parameter tests will cause errors to occur, do not be alarmed", 'WARN' )
-        # First remove the default results file
-        try:
-            shutil.rmtree( 'immath_results.im' )
-        except:
-            pass
-        
-        results=None
-        try:
-            results = immath( imageList[1], region=7 )
-        except:
-            pass
-        else:
-            if ( ( results != None and not isinstance(results, bool) )\
-                   or results==True ):
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']\
-                     +"\nError: Bad region file, 7, was not reported as bad."+str(results)
-    
 
         # First remove the default results file
         try:
@@ -633,31 +577,6 @@ class immath_test1(unittest.TestCase):
     
         self.assertTrue(retValue['success'],retValue['error_msgs'])
 
-    def test_input11(self):
-        '''Immath 11: Test random region in box parameter'''
-        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
-        # Find a random region in the file, legal one.
-        x1=random.randint(0,254)
-        x2=random.randint(x1,254)
-        y1=random.randint(0,254)
-        y2=random.randint(y1,254)
-        boxstr=str(x1)+','+str(y1)+','+str(x2)+','+str(y2)
-        
-        try:
-            results = None
-            results = immath( imageList[0], box=boxstr, outfile='input_test13', expr='IM0' )
-        except:
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                       +"\nError: Unable to do image math in box="+boxstr
-        if ( not os.path.exists( 'input_test13' ) or results==None ):
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                     +"\nError: output file 'input_test13' was not "\
-                     +"created at "+boxstr
-
-        self.assertTrue(retValue['success'],retValue['error_msgs'])
-    
     def test_input12(self):
         '''Immath 12: Test bad values of channels'''
         #######################################################################
@@ -866,17 +785,27 @@ class immath_test2(unittest.TestCase):
     def setUp(self):
         if(os.path.exists(imageList2[0])):
             for img in imageList2:
-                os.system('rm -rf ' +img)
+                shutil.rmtree(img)
                 
         # FIXME: add links to repository
         for img in imageList2:
-            os.system('cp -RL ' +datapath + img +' ' + img)
-            
+            if os.path.isdir(datapath + img):
+                shutil.copytree(datapath + img, img)
+            else:
+                shutil.copy(datapath + img, img)
+
 
     def tearDown(self):
         for img in imageList2:
-            os.system('rm -rf ' +img)
-            os.system('rm -rf pol_test*')
+            if os.path.isdir(img):
+                shutil.rmtree(img)
+            else:
+                os.remove(img)
+        for img in glob.glob("pol_test*"):
+            if os.path.isdir(img):
+                shutil.rmtree(img)
+            else:
+                os.remove(img)
                        
     def copy_img(self):
         '''Copy images to local disk'''
@@ -922,32 +851,15 @@ class immath_test2(unittest.TestCase):
             retValue['error_msgs']=retValue['error_msgs']\
                     +"\nError: outfile 'expr_test1' was not created."
         else:
-            # Check all of the corners, note we really should get the coordsys
-            # of these images and from that get their sizes with the topixel
-            # function, however, we are assuming that its a 256x256x1x46 image.
-            points = [ [0,0,0,0], [255,255,0,45], [0, 255, 0, 0], [0, 255, 0, 45],\
-                       [255, 0, 0, 45], [255, 0, 0, 0], [127,127,0,21], \
-                       [12,43,0,3] ];
-            try: 
-                for i in range( len(points) ):
-                    point=points[i]
-                
-                    inValue = _getPixelValue( imageList2[0], point )
-                    outValue = _getPixelValue( 'expr_test1', point )
+            myia = iatool.create()
+            myia.open(imageList2[0])
+            expected = 2*myia.getchunk()
+            myia.done()
+            myia.open("expr_test1")
+            got = myia.getchunk()
+            myia.done()
+            self.assertTrue((expected == got).all(), "got not equal to expected for doubling pixel values")
             
-                    if ( inValue*2 != outValue ):
-                        retValue['success']=False
-                        retValue['error_msgs']=retValue['error_msgs']\
-                              +'\nError: Values have not been doubled in image '\
-                              +imageList2[0]\
-                              +'\n       at position '+str(point)\
-                              +'\n       The values are:'+str(inValue)\
-                              +" and "+str(outValue)
-            except Exception, e:
-                casalog.post( "Exception occured evaluating doubled image ... "+str(e), 'DEBUG1')
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']\
-                       +"\nError: Unable to get pixel values of doubled image."
 
         self.assertTrue(retValue['success'],retValue['error_msgs'])
                 
@@ -996,27 +908,15 @@ class immath_test2(unittest.TestCase):
                        + size + ".\nExpected the resulting image to"\
                        + "be 256x256x1x1 pixels."
             else:
-                inPoints = [ [0,0,0,5], [255,255,0,5], [127,127,0,5], [9,178,0,5] ];
-                outPoints = [ [0,0,0,0], [255,255,0,0], [127,127,0,0], [9,178,0,0] ];
-                try:
-                    for i in range( len(inPoints) ):
-                        inValue  = _getPixelValue( imageList2[0], inPoints[i] );
-                        outValue = _getPixelValue( outimage, outPoints[i] );
-            
-                        if ( inValue != outValue ):
-                            retValue['success']=False
-                            retValue['error_msgs']=retValue['error_msgs']\
-                              +'\nError: Values have not been copied properly to '\
-                              +'the image slice.'\
-                              +"\n       at positions "\
-                              +str(inPoints[i])+' = '+str(inValue)+"   and  "\
-                              +str(outPoints[i])+' = '+str(outValue)
-                except Exception, e:
-                    casalog.post( "Exception occured getting image slice values ... "+str(e), 'DEBUG1')
-                    retValue['success']=False
-                    retValue['error_msgs']=retValue['error_msgs']\
-                       +"\nError: Unable to get pixel values of image slice."
-
+                myia = iatool.create()
+                myia.open(imageList2[0])
+                expected = myia.getchunk()[:,:,:,5:5]
+                myia.done()
+                myia.open(outimage)
+                got = myia.getchunk()
+                myia.done()
+                self.assertTrue((got == expected).all()) 
+                
         self.assertTrue(retValue['success'],retValue['error_msgs'])
     
     def test_expr3(self):
@@ -1032,9 +932,6 @@ class immath_test2(unittest.TestCase):
             results = immath( mode='evalexpr', outfile=outimage,  \
                     imagename=[ 'expr_test2', imageList2[0] ], \
                     expr='IM0+IM1' )
-    
-            #expr=str('"')+image1+str('"' ) + str(" + " ) + str('"')+image1+str('"[INDEXIN(4,[5])]' );
-    
         except Exception, e:
             casalog.post( "Exception occured getting image slice ... "+str(e), 'DEBUG1')
             retValue['success']=False
@@ -1061,41 +958,25 @@ class immath_test2(unittest.TestCase):
                 retValue['error_msgs']=retValue['error_msgs']\
                         +"\nError: Unable to get shape of image "+outimage
             
-    
-            if ( len(size) < 4 or ( size[0]!=256 or size[1]!=256 or \
-                                size[2]!=1 or size[3]!=46 ) ):
+            if ( not size == [256, 256, 1, 46]):
                 retValue['success']=False
                 retValue['error_msgs']=retValue['error_msgs']\
                       +"\nError: Size of output plane is incorrect: "+str(size)\
                       +"\n       Excepted a shape of 256x256x1x46"
-            else: 
-                # Note that the first 3 axes need to match was was used for the
-                # inPoints list above in order to use the planeValues gathered above.
-                try :
-                    points = [ [0,0,0,0], [255,255,0,0], [127,127,0,12], [9,178,0,33] ];
-                    slicePoints = [ [0,0,0,5], [255,255,0,5], [127,127,0,5], [9,178,0,5] ]
-                    
-                    for i in range( len(points) ):
-                        point=points[i]
-                        inValue    = _getPixelValue( imageList2[0], point );
-                        sliceValue = _getPixelValue( imageList2[0], slicePoints[i] );
-                        outValue   = _getPixelValue( outimage, point );
-                        
-                        # NOTE: There can be rounding errors so we don't expect it
-                        #       to be exact.
-                        if ( abs(inValue+sliceValue-outValue) > 0.000001 ):
-                            retValue['success']=False
-                            retValue['error_msgs']=retValue['error_msgs']\
-                              +'\nError: Values have not been doubled in image '\
-                              +imageList2[0]\
-                              +"\n       at position "+str(point)\
-                              +' are '+str(inValue)+"   and   " +str(outValue)
-                except Exception, e:
-                    casalog.post( "Exception occured comparing image points ... "+str(e), 'DEBUG1')
-                    retValue['success']=False
-                    retValue['error_msgs']=retValue['error_msgs']\
-                                       +"\nError: Unable to get pixel values."
-    
+            else:
+                myia = iatool.create()
+                myia.open("expr_test2")
+                chunk1 = myia.getchunk()
+                myia.done()
+                myia.open(imageList2[0])
+                chunk2 = myia.getchunk()
+                myia.done()
+                expected = chunk1 + chunk2
+                myia.open(outimage)
+                got = myia.getchunk()
+                myia.done()
+                self.assertTrue((got - expected < 0.000001 ).all())
+
         self.assertTrue(retValue['success'],retValue['error_msgs'])
     
     
@@ -1177,25 +1058,22 @@ class immath_test2(unittest.TestCase):
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
         casalog.post( "Starting immath many (>9) image test.", 'NORMAL2' )
     
-        # First make the I, Q, U, and V files.  This step may not be
-        # needed if immath learns to do this for the user.
-     
         self.copy_img()
         imagename = [
             'immath0.im', 'immath1.im', 'immath2.im', 'immath3.im', 'immath4.im', 'immath5.im',
             'immath6.im', 'immath7.im', 'immath8.im', 'immath9.im','immath10.im'
         ]
         expr = 'IM0+IM1+IM2+IM3+IM4+IM5+IM6+IM7+IM8+IM9+IM10'
+        myia = iatool.create()
         try:
             # full image test
             outfile = 'full_image_sum.im'
             if (immath(imagename=imagename, expr=expr, outfile=outfile)):
                 expected = numpy.ndarray([2,2])
                 expected.put(range(expected.size),66)
-                ia.open(outfile)
-                got = ia.getchunk()
-                ia.done()
-                casalog.post("here 6", "WARN")
+                myia.open(outfile)
+                got = myia.getchunk()
+                myia.done()
                 if (not (got == expected).all()):
                     retValue['success'] = False
                     retValue['error_msgs'] += "\n Full image sum not correctly calculated"
@@ -1206,17 +1084,16 @@ class immath_test2(unittest.TestCase):
             retValue['success'] = False
             retValue['error_msgs'] += "\nFull image calculation threw an exception: " + str(sys.exc_info()[0])
     
-        os.system('rm -rf '+outfile)
-        
+        shutil.rmtree(outfile)        
         try:
             # subimage image test
             outfile = 'subimage_sum.im'
             if (immath(imagename=imagename, expr=expr, outfile=outfile, box='0,0,0,0')):
                 expected = numpy.ndarray([1,1])
                 expected.put(range(expected.size), 66)
-                ia.open(outfile)
-                got = ia.getchunk()
-                ia.done()
+                myia.open(outfile)
+                got = myia.getchunk()
+                myia.done()
                 if (not (got == expected).all()):
                     retValue['success'] = False
                     retValue['error_msgs'] += "\n sub image sum not correctly calculated"
@@ -1228,7 +1105,7 @@ class immath_test2(unittest.TestCase):
             retValue['error_msgs'] += "\nSub image calculation threw an exception"
 
         self.rm_img()
-        os.system('rm -rf '+outfile)
+        shutil.rmtree(outfile)
         self.assertTrue(retValue['success'],retValue['error_msgs'])
     
     

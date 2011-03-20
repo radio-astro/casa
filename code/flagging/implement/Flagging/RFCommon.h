@@ -89,6 +89,7 @@ const char
     RF_BASELINE[] = "baseline",
     RF_AUTOCORR[] = "autocorr",
 
+    RF_INTENT[] = "intent",
     RF_SCAN[]    = "scan",
     RF_ARRAY[]   = "array",
     RF_FEED[]    = "feed",

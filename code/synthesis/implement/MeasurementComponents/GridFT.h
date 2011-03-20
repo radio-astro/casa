@@ -215,6 +215,7 @@ public:
   virtual void setNoPadding(Bool nopad){noPadding_p=nopad;};
 
   virtual String name();
+  virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
 protected:
 
 

@@ -160,6 +160,7 @@ public:
 			     Double &altrpix,
 			     Int &velref,
 			     Double &restfreq,
+			     String &specsys,
 			     LogIO &logger,
 			     Double refFrequency,
 			     Double refChannel,
@@ -167,7 +168,8 @@ public:
 			     MFrequency::Types referenceFrame,
 			     Bool preferVelocity = True,
 			     MDoppler::Types velocityPreference = MDoppler::OPTICAL,
-			     Bool preferWavelength = False);
+			     Bool preferWavelength = False,
+			     Bool useDeprecatedCtypes = False);
 
     // Convert a reference frame tag (typically found as the characters
     // after the first 4 characters in a ctype string for the
@@ -194,6 +196,14 @@ public:
     // to "-OBS".
     static Bool tagFromFrame(String &tag, Int &velref,
 			     MFrequency::Types referenceFrame);
+
+    // Construct a SPECSYS keyword value from the given referenceFrame
+    // This returns False if the reference frame is not recognized.  
+    // The value of tag defaults to "TOPOCENT".
+    static Bool specsysFromFrame(String &specsys,
+				 MFrequency::Types referenceFrame);
+
+    static Bool frameFromSpecsys(MFrequency::Types& refFrame, String& specsys);
 			  
 };
 

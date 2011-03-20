@@ -632,7 +632,7 @@ def update_params(func, printtext=True, ipython_globals=None):
                                 if(myf.has_key(subkey[kk])):
                                     itsparams.update({subkey[kk]:myf[subkey[kk]]})
                                 else:
-                                    itsparams.update({subkey[kk]:itsdef(params[k], None, itsparams[params[k]], subkey[kk])})
+                                    itsparams.update({subkey[kk]:userdict[subkey[kk]]})
                                 subkeyupdated[subkey[kk]]=True
                             elif((not subkeyupdated[subkey[kk]])):
                                 itsparams.update({subkey[kk]:itsdef(params[k], None, itsparams[params[k]], subkey[kk])})

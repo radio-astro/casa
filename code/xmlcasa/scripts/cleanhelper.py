@@ -5,6 +5,7 @@ import math
 import pdb
 import numpy
 import shutil
+from numpy import unique
 
 ###some helper tools
 mstool = casac.homefinder.find_home_by_name('msHome')
@@ -727,6 +728,8 @@ class cleanhelper:
         ia.open(outputmask)
         shp=ia.shape()
         self.csys=ia.coordsys().torecord()
+        # keep this info for reading worldbox
+        self.csysorder=ia.coordsys().coordinatetype()
         # respect dataframe or outframe
         if self.usespecframe=='': 
             maskframe=self.dataspecframe
@@ -776,6 +779,8 @@ class cleanhelper:
                 polydic,listbox=self.readboxfile(textfile)
                 masklist.extend(listbox)
                 if(len(polydic) > 0):
+                    ia.open(outputmask)
+                    ia.close()
                     self.im.regiontoimagemask(mask=outputmask, region=polydic)
         if((type(masklist)==list) and (len(masklist) > 0)):
             self.im.regiontoimagemask(mask=outputmask, boxes=masklist)
@@ -1100,6 +1105,83 @@ class cleanhelper:
                                 elreg=rg.wpolygon(x=x, y=y, csys=self.csys)
                                 temprec.update({counter:elreg})
                                 
+                    elif(line.count('worldbox')==1): 
+                        #ascii box file from viewer or boxit
+                        # expected foramt: 'worldbox' pos_ref [lat
+                        line=line.replace('[',' ')
+                        line=line.replace(']',' ')
+                        line=line.replace(',',' ')
+                        line=line.replace('\'',' ')
+                        splitline=line.split() 
+                        if len(splitline) != 13:
+                           raise TypeError, 'Error reading worldbox file'      
+                        #
+                        refframe=self.csys['direction0']['conversionSystem']
+                        ra =[splitline[2],splitline[3]]
+                        dec = [splitline[4],splitline[5]]
+
+                        #set frames
+                        obsdate=self.csys['obsdate']
+                        me.doframe(me.epoch(obsdate['refer'], str(obsdate['m0']['value'])+obsdate['m0']['unit']))
+                        me.doframe(me.observatory(self.csys['telescope']))
+                        if splitline[1]!=refframe: 
+                            # coversion between different epoch (and to/from AZEL also)
+                            radec0 = me.measure(me.direction(splitline[1],ra[0],dec[0]), refframe)
+                            radec1 = me.measure(me.direction(splitline[1],ra[1],dec[1]), refframe) 
+                            ra=[str(radec0['m0']['value'])+radec0['m0']['unit'],\
+                                str(radec1['m0']['value'])+radec1['m0']['unit']]
+                            dec=[str(radec0['m1']['value'])+radec0['m1']['unit'],\
+                                 str(radec1['m1']['value'])+radec1['m1']['unit']]
+                        # check for stokes 
+                        stokes=[]
+                        imstokes = self.csys['stokes1']['stokes']
+                        for st in [splitline[10],splitline[11]]:
+                            prevlen = len(stokes)
+                            for i in range(len(imstokes)):
+                                if st==imstokes[i]:
+                                    stokes.append(str(i)+'pix')
+                            if len(stokes)<=prevlen:
+                                #raise TypeError, "Stokes %s for the box boundaries is outside image" % st              
+                                self._casalog.post('Stokes %s for the box boundaries is outside image, -ignored' % st, 'WARN')              
+                        # frequency
+                        freqs=[splitline[7].replace('s-1','Hz'), splitline[9].replace('s-1','Hz')]
+                        fframes=[splitline[6],splitline[8]]
+                        imframe = self.csys['spectral2']['system']
+                        # the worldbox file created viewer's "box in file"
+                        # currently says TOPO in frequency axis but seems to
+                        # wrong (the freuencies look like in the image's base
+                        # frame). 
+                        for k in [0,1]:
+                            if fframes[k]!=imframe and freqs[k].count('pix')==0:
+                                #do frame conversion
+                                #self._casalog.post('Ignoring the frequency frame of the box for now', 'WARN')              
+                                # uncomment the following when box file correctly labeled the frequency frame
+                                me.doframe(me.direction(splitline[1],ra[k],dec[k]))
+                                mf=me.measure(me.frequency(fframes[k],freqs[k]),imframe)
+                                freqs[k]=str(mf['m0']['value'])+mf['m0']['unit']
+                        coordorder=self.csysorder
+                        wblc = []
+                        wtrc = []
+                        for type in coordorder:
+                          if type=='Direction':
+                             wblc.append(ra[0])
+                             wblc.append(dec[0])
+                             wtrc.append(ra[1])
+                             wtrc.append(dec[1])     
+                          if type=='Stokes':
+                             wblc.append(stokes[0])
+                             wtrc.append(stokes[1])
+                          if type=='Spectral':
+                             wblc.append(freqs[0])
+                             wtrc.append(freqs[1])
+
+                        #wblc = [ra[0], dec[0], stokes[0], freqs[0]]
+                        #wtrc = [ra[1], dec[1], stokes[1], freqs[1]]
+                        #wblc = ra[0]+" "+dec[0]
+                        #wtrc = ra[1]+" "+dec[1]
+                        wboxreg = rg.wbox(blc=wblc,trc=wtrc,csys=self.csys)
+                        temprec.update({counter:wboxreg})
+ 
                     else:
                         ### its an AIPS boxfile
                         splitline=line.split('\n')
@@ -1127,7 +1209,9 @@ class cleanhelper:
         if(len(temprec)==1):
             polyg=temprec[temprec.keys()[0]]
         elif (len(temprec) > 1):
-            polyg=rg.dounion(temprec)
+            #polyg=rg.dounion(temprec)
+            polyg=rg.makeunion(temprec)
+        
         return polyg,union
 
     def readmultifieldboxfile(self, boxfiles):
@@ -1812,6 +1896,7 @@ class cleanhelper:
 
         # flatten:
         chanfreqs1d = chanfreqs1dx.flatten()        
+        chanfreqs1d = unique(chanfreqs1d);
         # flatten() does not sort.
         chanfreqs1d.sort()
         chanfreqs0.sort()
@@ -1927,7 +2012,6 @@ class cleanhelper:
             
 
 
-
         self._casalog.post('fstart = %f, finc = %f' % (fstart,finc), 'DEBUG')
         #print 'fstart = %f, finc = %f' % (fstart,finc)
         # we now have fstart and finc, the start and increment in Hz.  finc can be <0        
@@ -1965,7 +2049,6 @@ class cleanhelper:
             
         if nchan<=0:
             raise TypeError, "values of spw, start, width, and nchan result in no output cube"
-
 
         # here are the output channels in Hz
         freqlist = numpy.array(range(nchan)) * finc + fstart
@@ -2056,7 +2139,7 @@ class cleanhelper:
                     retwidth = self.convertvf(str(finc)+'Hz',self.dataspecframe,field,restf,veltype=veltype)
         else:
             raise TypeError, "Specified mode is not supported"
-
+        
         # XXX do we need to set usespecframe=dataspecframe, overriding the user's, if start was ""?
         # the old code seemed to do that.
         # use data frame for default start (will be passed to defineimage in
@@ -2132,7 +2215,6 @@ class cleanhelper:
 
         #get restfreq
         if restf=='':
-          print "TRYING TO SET REST FREQ"
           tb.open(invis+'/FIELD')
           nfld=tb.nrows()
           try:
@@ -2194,7 +2276,9 @@ class cleanhelper:
           else:
             retnchan=nchan
             newfreqs=chanfreqs
-        if start!="":
+        #if start!="":
+        if (start!="" and mode=='channel') or \
+           (start!="" and type(start)!=int and mode!='channel'):
           retstart=start
         else:
           # default cases
@@ -2216,8 +2300,6 @@ class cleanhelper:
           if mode=="frequency":
             retwidth=str(finc)+'Hz'
           elif mode=="velocity":
-            finc = newfreqs[1]-newfreqs[0]
-            if debug: print "finc(newfreqs1-newfreqs0)=",finc
             # for default width assume it is vel<0 (incresing in freq)
             v1 = self.convertvf(str(newfreqs[-1])+'Hz',frame,field,restf,veltype=veltype)
             v0 = self.convertvf(str(newfreqs[-2])+'Hz',frame,field,restf,veltype=veltype)
@@ -2226,6 +2308,7 @@ class cleanhelper:
             retwidth = str(qa.quantity(qa.sub(qa.quantity(v0),qa.quantity(v1)))['value'])+'m/s'
           else:
             retwidth=1
+          if debug: print "setChan retwidth=",retwidth
         return retnchan, retstart, retwidth
 
     def convertframe(self,fin,frame,field):
@@ -2603,11 +2686,16 @@ class cleanhelper:
         if type(imlist)==str:
           imlist=[imlist]
         if self.usespecframe.lower() != 'lsrk':
+          if self.usespecframe=='':
+            inspectral=self.dataspecframe
+          else: 
+            inspectral=self.usespecframe
           for img in imlist:
             if os.path.exists(img):
               ia.open(img)
               csys=ia.coordsys()
-              csys.setconversiontype(spectral=self.usespecframe)
+              csys.setconversiontype(spectral=inspectral)
+              #print "csys.torecord spectral2=", csys.torecord()['spectral2']
               ia.setcoordsys(csys.torecord())
               ia.close()
 
