@@ -63,8 +63,14 @@ public:
   //    fitorder: Order of the polynomial fit.  If 0, it is just an average.
   virtual void setSolve(const Record& solvepar);
 
+  // AMueller's caltables have polynomial orders where channels would normally
+  // go.  setSolve() above sets the number of "channels", but
+  // SolvableVisCal::setSolveChannelization() would just reset it to 1 if it
+  // was not overrode here.
+  virtual void setSolveChannelization(VisSet& vs);
+
   // The fitorder = 0 version (in M) skips LinearFitSVD by just averaging.
-  virtual Bool useGenericGatherForSolve() {return fitOrder_p != 0;}
+  virtual Bool useGenericGatherForSolve() {return fitorder_p != 0;}
 
   // Only called if useGenericGatherForSolve() == True.  If
   // useGenericGatherForSolve() == True, then genericGatherAndSolve() will call
@@ -76,11 +82,20 @@ public:
   // fitorder != 0, but overkill otherwise.
   virtual void selfSolveOne(VisBuffGroupAcc& vbga);
 
-  virtual void keep(const Int& slot);
+  virtual void store();
+
+  virtual void setApply() {SolvableVisCal::setApply();}
+  virtual void setApply(const Record& applypar);
+
+  // Apply this calibration to vb.  AMueller does NOT support avoidACs,
+  // and ignores it!
+  virtual void applyCal(VisBuffer& vb, Cube<Complex>& Vout, Bool avoidACs);
 
   // Freq dependence
   virtual Bool freqDepPar() { return False; };
-  virtual Bool freqDepMat() { return fitOrder_p != 0; };
+  virtual Bool freqDepMat() {
+    return fitorder_p != 0 || nChanPar() > 1; // The latter is for applying.
+  }
 
   // We do not normalize by the model, since we are estimating
   //  directly from the data  (we should optimize here by avoiding 
@@ -88,17 +103,33 @@ public:
   virtual Bool normalizable() {return False;};
 
   // Specialize corrupt to pre-zero model for corruption
-  virtual void corrupt(VisBuffer& vb);
   using VisMueller::corrupt;
+  virtual void corrupt(VisBuffer& vb);
+
+  // Set (repeatedly, unfortunately) whether or not subtraction is being done,
+  // and IF fitorder == 0, sync matrices for current meta data (VisMueller
+  // override).  (Mueller matrices aren't used for fitorder != 0.)
+  void syncCalMat(const Bool& doInv)
+  {
+    doSub_p = doInv;
+    if(fitorder_p == 0)
+      VisMueller::syncCalMat(doInv);
+  }
 
 private:
-  Int fitOrder_p;  // Stores the order of the fitted polynomials.
-  Double lofreq_p; // Lowest and highest frequencies (Hz) used
-  Double hifreq_p; // to make the fit.
-  Int maxAnt_p;    // Maximum antenna number (0 based) used to make the fit.
+  void init();  // Common code for the c'tors.
+  
+  // Initialized to 0 in the initialization lists of the c'tors.
+  Int fitorder_p;  // Stores the order of the fitted polynomials.
+
+  // Resized and set to impossible values in init().
+  Vector<Double> lofreq_p; // Lowest and highest frequencies (Hz) used
+  Vector<Double> hifreq_p; // to make the fit.
+  Vector<uInt> totnumchan_p; // The total number of input channels that will be
+                             // looked at (including masked ones!)
+  Bool doSub_p; // For apply, whether or not to subtract or give the continuum
+                // estimate.
 };
-
-
 
 // Additive noise
 // In practice, this is not really solvable, but it
