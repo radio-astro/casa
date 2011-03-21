@@ -18,6 +18,7 @@ class cleanhelper_test(unittest.TestCase):
     # use simulated data with 3 point sources
     msfile = 'simptsrcs.ms'
     outlierfilename='outlier.txt'
+    boxfilename='cleanhelpertest-sf.box'
     imgname='cleanhelpertest'
     # some other fixed parameters
     imsize=[300,300]
@@ -34,6 +35,7 @@ class cleanhelper_test(unittest.TestCase):
     refpath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/cleanhelper/reference/'
     datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/cleanhelper/'
     outlierfile=datapath+outlierfilename 
+    boxfile=datapath+boxfilename
     res = None
 
     def setUp(self):
@@ -142,7 +144,7 @@ class cleanhelper_test(unittest.TestCase):
           os.system('rm -rf ' + maskimg)
 
     def testMakemultifieldmaskboxfile(self):
-        """Cleanhelper makemultfieldmask2 test: boxes given as a boxfile"""
+        """Cleanhelper makemultfieldmask2 test: boxes given as a AIPS boxfile"""
         self.imset.maskimages={}
         self.run_defineimages()
         self.imset.makemultifieldmask2(maskobject=self.outlierfile)
@@ -198,6 +200,18 @@ class cleanhelper_test(unittest.TestCase):
         os.system('rm -rf ' + self.imset.imagelist[0]+'*')
  
 
+    def testMakemaskimageboxfile(self):
+        """Cleanhelper makemaskimage test: make mask from boxfile ("worldbox")"""
+        self.run_defineimages(sf=True)
+        boxfile=self.boxfile
+        maskimage=self.imset.imagelist[0]+'.mask'
+        self.imset.makemaskimage(outputmask=maskimage,imagename=self.imset.imagelist[0],maskobject=boxfile)
+        self.assertTrue(os.path.exists(maskimage)," boxfile  maskimage does not exist")
+        #retval=self.comparemask(maskimg,self.refpath+'ref-'+maskimg)
+        retval=self.comparemask(maskimage, self.refpath+'ref-'+maskimage)
+        self.assertTrue(retval,"test on int box mask failed")
+        os.system('rm -rf ' + self.imset.imagelist[0]+'*')
+        #
 
 def suite():
     return [cleanhelper_test]
