@@ -115,6 +115,17 @@ public:
   CalVisBuffer& operator()(const Int& buf);
   CalVisBuffer& operator()(const Int& spw, const Int& fld);
 
+  // Return a map from row numbers in the VisBuffer returned by the above
+  // operator()s to row numbers in the corresponding input VisBuffer.  Only
+  // useful if there is exactly one corresponding input VisBuffer or you are
+  // sure that the last corresponding input VisBuffer will meet your
+  // needs (i.e. all the corresponding input VisBuffers had same set of
+  // antennas and the metadata you want also matches).  hurl controls whether
+  // an exception will be thrown if the number of VisBuffers that went into the
+  // output of operator() != 1.  Unfilled rows point to -1.
+  const Vector<Int>& outToInRow(const Int buf, const Bool hurl=true) const;
+  const Vector<Int>& outToInRow(const Int spw, const Int fld,
+                                const Bool hurl=true) const;
 private:
 
   // Prohibit in-public null constructor, copy constructor and assignment

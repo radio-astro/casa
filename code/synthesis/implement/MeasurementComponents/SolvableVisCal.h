@@ -280,7 +280,7 @@ public:
 			 Matrix<Double>& fluxScaleFactor)=0;
 
   // Tell the CalSet to write a CalTable
-  void store();
+  virtual void store();
   void store(const String& tableName,const Bool& append);
 
   // Report state:
@@ -354,7 +354,7 @@ protected:
   void syncPar(const Int& spw, const Int& slot);
 
   // Set matrix channelization according to a VisSet
-  void setSolveChannelization(VisSet& vs);
+  virtual void setSolveChannelization(VisSet& vs);
 
   // Fill CalSet meta-data according to a VisSet
   void fillMetaData(VisSet& vs);

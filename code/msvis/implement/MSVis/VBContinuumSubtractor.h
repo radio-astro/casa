@@ -103,17 +103,33 @@ public:
 
   ~VBContinuumSubtractor();
 
+  // Set the # of correlations and fitorder from shp, the total number of input
+  // channels to look at (including masked ones!), and the low and high scaling
+  // frequencies.
+  void init(const IPosition& shp, const uInt maxAnt, const uInt totnumchan,
+            const Double lof, const Double hif);
+
+  // Set the low and high frequencies, and #s of correlations, antennas, and
+  // channels from vbga.
+  void initFromVBGA(VisBuffGroupAcc& vbga);
+
   // Makes the continuum estimate by fitting a frequency polynomial of order
   // fitorder to the data in vbga.  It sets the low and high frequencies used
   // for scaling the frequencies in the polynomial to the min and max
   // frequencies in vbga.
-  // Input: vbga, fitorder
+  // Input: vbga,         The data
+  //        fitorder,     e.g. 2 for a + bf + cf**2
+  //        doInit,       if true call initFromVBGA(vbga)
+  //        doResize      if true set coeffs and coeffsOK to the right shape.
   // Output (these will be resized):
   //   coeffs:   Polynomial coefficients for the continuum, indexed by (corr,
   //             order, hash(ant1, ant2).
   //   coeffsOK: and whether or not they're usable.
   void fit(VisBuffGroupAcc& vbga, const Int fitorder,
-           Cube<Complex>& coeffs, Cube<Bool>& coeffsOK);
+           MS::PredefinedColumns whichcol,
+           Cube<Complex>& coeffs, Cube<Bool>& coeffsOK,
+           const Bool doInit=False, const Bool doResize=False,
+           const Bool squawk=True);
 
   // Apply the continuum estimate in coeffs (from fit) to vb.  The affected
   // column of vb is chosen by whichcol, which must be exactly one of MS::DATA,
@@ -149,15 +165,49 @@ public:
   // VBContinuumSubtractor for fitting and application, but the rest of CASA
   // isn't ready for that yet (3/7/2011).
   Int getOrder() const {return fitorder_p;}
+
   Double getLowFreq() const {return lofreq_p;}  // Lowest frequency used in the fit,
   Double getHighFreq() const {return hifreq_p;} // and highest, in Hz, acc. to
                                                 // the MS def'n v.2.
   Int getMaxAntNum() const {return maxAnt_p;}   // -1 if unready.
 
-  void setLowFreq(Double f) {lofreq_p = f;}  // Lowest frequency used in the fit,
-  void setHighFreq(Double f) {hifreq_p = f;} // and highest, in Hz.
-  // This is even more dangerous since it could lead to a segfault!
-  void setMaxAntNum(Int ma) {maxAnt_p = ma;}
+  // The total number of input channels that will be looked at (including
+  // masked ones!)
+  uInt getTotNumChan() const {return totnumchan_p;}
+
+  // Low (lof) and high (hif) frequencies, in Hz, used for renormalizing
+  // frequencies in the polynomials.
+  void setScalingFreqs(Double lof, Double hif){
+    lofreq_p = lof;
+    hifreq_p = hif;
+    midfreq_p = 0.5 * (lof + hif);
+    freqscale_p = calcFreqScale();
+  }
+
+  // Set the maximum number of antennas (actually, 1 + the maximum antenna
+  // number).
+  void setNAnt(const uInt nAnt){
+    maxAnt_p = nAnt - 1;
+    nHashes_p = (nAnt * (nAnt + 1)) / 2;  // Allows for autocorrs.  
+  }
+
+  // Set the total number of input channels that will be looked at (including
+  // masked ones!)
+  void setTotNumChan(const uInt tnc) {totnumchan_p = tnc;}
+
+  // A convenience function for prepping coeffs and coeffsOK to hold the
+  // polynomial coefficients and their validities.
+  void resize(Cube<Complex>& coeffs, Cube<Bool>& coeffsOK) const;
+
+  Bool checkSize(Cube<Complex>& coeffs, Cube<Bool>& coeffsOK) const
+  {
+    return coeffs.shape()[0] == static_cast<Int>(ncorr_p) &&
+      coeffs.shape()[1] == fitorder_p + 1 &&
+      coeffs.shape()[2] == static_cast<Int>(nHashes_p) &&
+      coeffsOK.shape()[0] == static_cast<Int>(ncorr_p) &&
+      coeffsOK.shape()[1] == fitorder_p + 1 &&
+      coeffsOK.shape()[2] == static_cast<Int>(nHashes_p);
+  }
 
   Double calcFreqScale() const {
     return hifreq_p > midfreq_p ? 1.0 / (hifreq_p - midfreq_p) : 1.0;
@@ -189,6 +239,7 @@ private:
                               // used with the fits.  -1 if not ready.
   uInt      nHashes_p;        // Calculated and cached from maxAnt_p.
   uInt      ncorr_p;
+  uInt      totnumchan_p;
 };
 
 } //# NAMESPACE CASA - END

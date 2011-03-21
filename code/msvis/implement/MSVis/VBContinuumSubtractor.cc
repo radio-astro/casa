@@ -41,7 +41,7 @@
 #include <ms/MeasurementSets/MSColumns.h>
 #include <msvis/MSVis/VBContinuumSubtractor.h>
 #include <msvis/MSVis/VisBuffGroupAcc.h>
-#include <msvis/MSVis/CalVisBuffer.h>
+#include <msvis/MSVis/VisBuffer.h>
 #include <scimath/Fitting/LinearFitSVD.h>
 #include <scimath/Functionals/Polynomial.h>
 
@@ -57,7 +57,8 @@ VBContinuumSubtractor::VBContinuumSubtractor():
   freqscale_p(1.0),
   maxAnt_p(-1),
   nHashes_p(0),
-  ncorr_p(0)
+  ncorr_p(0),
+  totnumchan_p(0)
 {
 }
 
@@ -70,68 +71,125 @@ VBContinuumSubtractor::VBContinuumSubtractor(const Double lofreq,
   freqscale_p(1.0),
   maxAnt_p(-1),
   nHashes_p(0),
-  ncorr_p(0)
+  ncorr_p(0),
+  totnumchan_p(0)
 {
   midfreq_p = 0.5 * (lofreq + hifreq);
   freqscale_p = calcFreqScale();
 }
 
-void VBContinuumSubtractor::fit(VisBuffGroupAcc& vbga, const Int fitorder,
-                                Cube<Complex>& coeffs, Cube<Bool>& coeffsOK)
+void VBContinuumSubtractor::resize(Cube<Complex>& coeffs,
+                                   Cube<Bool>& coeffsOK) const
 {
-  LogIO os(LogOrigin("VBContinuumSubtractor", "VBContinuumSubtractor()", WHERE));
+  if(maxAnt_p < 0 || fitorder_p < 0 || ncorr_p < 1)
+    throw(AipsError("The fit order, # of corrs, and/or max antenna # must be set."));
 
-  fitorder_p = fitorder;
-
-  // Make the estimate
-  // Initialize the baseline index
-  maxAnt_p = 0;
-  for(Int ibuf = 0; ibuf < vbga.nBuf(); ++ibuf)
-    maxAnt_p = max(static_cast<Int>(maxAnt_p), max(vbga(ibuf).antenna2()));
-  nHashes_p = (maxAnt_p * (maxAnt_p + 3)) / 2;  // Allows for autocorrs.
-
-  ncorr_p = vbga(0).nCorr();
-
-  LinearFitSVD<Float> fitter;
- 
   // An nth order polynomial has n + 1 coefficients.
   coeffs.resize(ncorr_p, fitorder_p + 1, nHashes_p);
   // Calibrater wants coeffsOK to be a Cube, even though a Matrix would do for
-  // VBContinuumSubtractor.  Let's see whether coeffsOK really has to have the
-  // same shape as coeffs.
-  //coeffsOK.resize(ncorr_p, fitorder_p + 1, nHashes_p);
-  coeffsOK.resize(ncorr_p, 1, nHashes_p);
-  coeffsOK.set(False);
+  // VBContinuumSubtractor.  Unfortunately problems arise (worse, quietly) in
+  // SolvableVisCal::keep() and store() if one tries to get away with
+  //coeffsOK.resize(ncorr_p, 1, nHashes_p);
+  coeffsOK.resize(ncorr_p, fitorder_p + 1, nHashes_p);
+}
 
-  // Translate vbga to arrays for use by LinearFitSVD.
-  // First count the total number of channels, and get the minimum and maximum
+void VBContinuumSubtractor::init(const IPosition& shp, const uInt maxAnt,
+                                 const uInt totnumchan,
+                                 const Double lof, const Double hif)
+{
+  ncorr_p    = shp[0];
+  fitorder_p = shp[1] - 1;
+
+  //// Going from the number of baselines to the number of antennas is a little
+  //// backwards, but so is this function.
+  // uInt nAnt = round((-1 + sqrt(1 + 8 * shp[2])) / 2);
+  setNAnt(maxAnt + 1);
+  
+  totnumchan_p = totnumchan;
+  setScalingFreqs(lof, hif);
+}
+
+void VBContinuumSubtractor::initFromVBGA(VisBuffGroupAcc& vbga)
+{
+  ncorr_p = vbga(0).nCorr();
+  setNAnt(vbga.nAnt());
+  
+  // Count the total number of channels, and get the minimum and maximum
   // frequencies for scaling.
-  uInt totnumchan = 0;
+  totnumchan_p = 0;
   hifreq_p = -1.0;
   lofreq_p = DBL_MAX;
   for(Int ibuf = 0; ibuf < vbga.nBuf(); ++ibuf){
-    CalVisBuffer& cvb(vbga(ibuf));
+    VisBuffer& vb(vbga(ibuf));
 
-    totnumchan += cvb.nChannel();
-    getMinMaxFreq(cvb, lofreq_p, hifreq_p, False);
+    totnumchan_p += vb.nChannel();
+    getMinMaxFreq(vb, lofreq_p, hifreq_p, False);
   }
+  midfreq_p = 0.5 * (lofreq_p + hifreq_p);
+  freqscale_p = calcFreqScale();
+}
+
+VBContinuumSubtractor::~VBContinuumSubtractor()
+{}
+
+void VBContinuumSubtractor::fit(VisBuffGroupAcc& vbga, const Int fitorder,
+                                MS::PredefinedColumns whichcol,
+                                Cube<Complex>& coeffs,
+                                Cube<Bool>& coeffsOK, const Bool doInit,
+                                const Bool doResize,
+                                const Bool squawk)
+{
+  LogIO os(LogOrigin("VBContinuumSubtractor", "fit()", WHERE));
+
+  fitorder_p = fitorder;
+
+  if(!(whichcol == MS::DATA || whichcol == MS::MODEL_DATA ||
+       whichcol == MS::CORRECTED_DATA)){
+    if(squawk)
+      os << LogIO::SEVERE
+         << MS::columnName(whichcol) << " is not supported.\n"
+         << MS::columnName(MS::DATA) << " will be used instead."
+         << LogIO::POST;
+    whichcol = MS::DATA;
+  }
+
+  if(doInit)
+    initFromVBGA(vbga);
+
+  if(maxAnt_p < 0 || fitorder_p < 0 || ncorr_p < 1 || totnumchan_p < 1
+     || lofreq_p < 0.0 || hifreq_p < 0.0)
+    throw(AipsError("The continuum fitter must first be initialized."));
+
+  if(doResize)
+    resize(coeffs, coeffsOK);
+
+  if(!checkSize(coeffs, coeffsOK))
+    throw(AipsError("Shape mismatch in the coefficient storage cubes."));
+
+  // Make the estimate
+  LinearFitSVD<Float> fitter;
+ 
+  coeffsOK.set(False);
+
+  // Translate vbga to arrays for use by LinearFitSVD.
+
   // The fitorder will actually be clamped on a baseline-by-baseline basis
   // because of flagging, but a summary note is in order here.
-  if(static_cast<Int>(totnumchan) < fitorder_p)
+  if(static_cast<Int>(totnumchan_p) < fitorder_p)
     os << LogIO::WARN
        << "fitorder = " << fitorder_p
-       << ", but only " << totnumchan << " channels were selected.\n"
+       << ", but only " << totnumchan_p << " channels were selected.\n"
        << "The polynomial order will be lowered accordingly."
        << LogIO::POST;
   // Scale frequencies to [-1, 1].
   midfreq_p = 0.5 * (lofreq_p + hifreq_p);
   freqscale_p = calcFreqScale();
-  Vector<Float> freqs(totnumchan);
+  Vector<Float> freqs(totnumchan_p);
   uInt totchan = 0;
   for(Int ibuf = 0; ibuf < vbga.nBuf(); ++ibuf){
-    CalVisBuffer& cvb(vbga(ibuf));
-    Vector<Double> freq(cvb.frequency());
-    uInt nchan = cvb.nChannel();
+    VisBuffer& vb(vbga(ibuf));
+    Vector<Double> freq(vb.frequency());
+    uInt nchan = vb.nChannel();
 
     for(uInt c = 0; c < nchan; ++c){
       freqs[totchan] = freqscale_p * (freq[c] - midfreq_p);
@@ -139,62 +197,76 @@ void VBContinuumSubtractor::fit(VisBuffGroupAcc& vbga, const Int fitorder,
     }
   }
 
-  Vector<Float> sigma(totnumchan);
-  Vector<Float> unflaggedfreqs(totnumchan);
-  Vector<Complex> vizzes(totnumchan);
-  Vector<Float> floatvs(totnumchan);
+  Vector<Float> sigma(totnumchan_p);
+  Vector<Float> unflaggedfreqs(totnumchan_p);
+  Vector<Complex> vizzes(totnumchan_p);
+  Vector<Float> floatvs(totnumchan_p);
+  Vector<Float> realsolution(fitorder_p + 1);
+  Vector<Float> imagsolution(fitorder_p + 1);
+
   for(uInt corrind = 0; corrind < ncorr_p; ++corrind){
     for(uInt blind = 0; blind < nHashes_p; ++blind){
-      // Fill sigma and vizzes with the baseline's values for all channels
-      // being used in the fit.
       uInt totchan = 0;
       uInt totunflaggedchan = 0;
-      sigma.resize(totnumchan);
-      vizzes.resize(totnumchan);
-      unflaggedfreqs.resize(totnumchan);
+
+      // Fill sigma, unflaggedfreqs, and vizzes with the baseline's values for
+      // all channels being used in the fit.
+      sigma.resize(totnumchan_p);
+      vizzes.resize(totnumchan_p);
+      unflaggedfreqs.resize(totnumchan_p);
+
       for(Int ibuf = 0; ibuf < vbga.nBuf(); ++ibuf){
-        CalVisBuffer& cvb(vbga(ibuf));
-        uInt nchan = cvb.nChannel();
-        Float sig;
+        VisBuffer& vb(vbga(ibuf));
+        Int vbrow = vbga.outToInRow(ibuf)[blind];
 
-        // 2/24/2011: VisBuffer doesn't (yet) have sigmaSpectrum, and I have
-        // never seen it in an MS anyway.  Settle for 1/sqrt(weightSpectrum) if
-        // it is available or sigmaMat otherwise.
-        const Bool haveWS = cvb.existsWeightSpectrum();
+        if(vbrow >= 0 && !vb.flagRow()[blind]){
+          uInt nchan = vb.nChannel();
+          Cube<Complex>& viscube(vb.dataCube(whichcol));
+          Float sig;
 
-        if(!haveWS)
-          sig = cvb.sigmaMat()(corrind, blind);
-        for(uInt c = 0; c < nchan; ++c){
-          if(!cvb.flagCube()(corrind, c, blind)){
-            unflaggedfreqs[totunflaggedchan] = freqs[totchan];
-            if(haveWS){
-              Double ws = cvb.weightSpectrum()(corrind, c, blind);
+          // 2/24/2011: VisBuffer doesn't (yet) have sigmaSpectrum, and I have
+          // never seen it in an MS anyway.  Settle for 1/sqrt(weightSpectrum)
+          // if it is available or sigmaMat otherwise.
+          const Bool haveWS = vb.existsWeightSpectrum();
 
-              sigma[totunflaggedchan] = ws != 0.0 ? 1.0 / sqrt(ws) : sig;
+          //if(!haveWS) // sig is needed either way, in case ws == 0.0.
+          sig = vb.sigmaMat()(corrind, vbrow);
+          for(uInt c = 0; c < nchan; ++c){
+            // AAARRGGGHHH!!  With Calibrater you have to use vb.flag(), not
+            // flagCube(), to get the channel selection!
+            //if(!vb.flagCube()(corrind, c, vbrow)){
+            if(!vb.flag()(c, blind)){
+              unflaggedfreqs[totunflaggedchan] = freqs[totchan];
+              if(haveWS){
+                Double ws = vb.weightSpectrum()(corrind, c, vbrow);
+
+                sigma[totunflaggedchan] = ws != 0.0 ? 1.0 / sqrt(ws) : sig;
+              }
+              else
+                sigma[totunflaggedchan] = sig;
+              vizzes[totunflaggedchan] = viscube(corrind, c, blind);
+              ++totunflaggedchan;
             }
-            else
-              sigma[totunflaggedchan] = sig;
-            vizzes[totunflaggedchan] = cvb.visCube()(corrind, c, blind);
-            ++totunflaggedchan;
+            ++totchan;
           }
-          ++totchan;
         }
       }
-      if(totunflaggedchan > 0){
-        coeffsOK(corrind, 0, blind) = True;
 
+      if(totunflaggedchan > 0){                 // OK, try a fit.
+        // Truncate the Vectors.
         sigma.resize(totunflaggedchan, True);
         //vizzes.resize(totunflaggedchan, True);
         floatvs.resize(totunflaggedchan);
         unflaggedfreqs.resize(totunflaggedchan, True);
 
-        // perform least-squares fit
+        // perform least-squares fit of a polynomial.
+        // Don't try to solve for more coefficients than valid channels.
+        Int locFitOrd = min(fitorder_p, static_cast<Int>(totunflaggedchan) - 1);
+        Polynomial<AutoDiff<Float> > pnom(locFitOrd);
+
         // The way LinearFit is templated, "y" can be Complex, but at the cost
         // of "x" being Complex as well, and worse, sigma too.  It is better to
         // seperately fit the reals and imags.
-        Int locFitOrd = min(fitorder_p, static_cast<Int>(totunflaggedchan));
-        Polynomial<AutoDiff<Float> > pnom(locFitOrd);
-
         // Do reals.
         for(Int ordind = 0; ordind <= locFitOrd; ++ordind)       // Note <=.
           pnom.setCoefficient(ordind, 1.0);
@@ -203,7 +275,7 @@ void VBContinuumSubtractor::fit(VisBuffGroupAcc& vbga, const Int fitorder,
           floatvs[c] = vizzes[c].real();
 
         fitter.setFunction(pnom);
-        Vector<Float> realsolution = fitter.fit(freqs, floatvs, sigma);
+        realsolution = fitter.fit(unflaggedfreqs, floatvs, sigma);
 
         // Do imags.
         for(Int ordind = 0; ordind <= locFitOrd; ++ordind)       // Note <=.
@@ -213,23 +285,30 @@ void VBContinuumSubtractor::fit(VisBuffGroupAcc& vbga, const Int fitorder,
           floatvs[c] = vizzes[c].imag();
 
         fitter.setFunction(pnom);
-        Vector<Float> imagsolution = fitter.fit(freqs, floatvs, sigma);
+        imagsolution = fitter.fit(unflaggedfreqs, floatvs, sigma);
 
-        for(Int ordind = 0; ordind <= locFitOrd; ++ordind)       // Note <=.
+        for(Int ordind = 0; ordind <= locFitOrd; ++ordind){      // Note <=.
           coeffs(corrind, ordind, blind) = Complex(realsolution[ordind],
                                                    imagsolution[ordind]);
+          coeffsOK(corrind, ordind, blind) = True;
+        }
+
         // Pad remaining orders (if any) with 0.0.  Note <=.
-        for(Int ordind = locFitOrd + 1; ordind <= fitorder_p; ++ordind)
+        for(Int ordind = locFitOrd + 1; ordind <= fitorder_p; ++ordind){
           coeffs(corrind, ordind, blind) = 0.0;
+
+          // Since coeffs(corrind, ordind, blind) == 0, it isn't necessary to
+          // pay attention to coeffsOK(corrind, ordind, blind) (especially?) if
+          // ordind > 0.  But Calibrater's SolvableVisCal::keep() and store()
+          // quietly go awry if you try coeffsOK.resize(ncorr_p, 1, nHashes_p);
+          coeffsOK(corrind, ordind, blind) = False;
+        }
 
         // TODO: store uncertainties
       }
     }
   }
 }
-
-VBContinuumSubtractor::~VBContinuumSubtractor()
-{}
 
 void VBContinuumSubtractor::getMinMaxFreq(VisBuffer& vb,
                                           Double& minfreq,
@@ -310,7 +389,7 @@ Bool VBContinuumSubtractor::apply(VisBuffer& vb,
                                   const Bool doSubtraction,
                                   const Bool squawk)
 {
-  LogIO os(LogOrigin("VBContinuumSubtractor", "cont_subtracted"));
+  LogIO os(LogOrigin("VBContinuumSubtractor", "apply"));
 
   if(!doShapesMatch(vb, os, squawk))
     return False;
@@ -328,6 +407,7 @@ Bool VBContinuumSubtractor::apply(VisBuffer& vb,
   Cube<Complex>& viscube(vb.dataCube(whichcol));
   
   uInt nchan = vb.nChannel();
+  uInt nvbrow = vb.nRow();
   Vector<Double> freqpow(fitorder_p + 1);           // sf**ordind
   freqpow[0] = 1.0;
   Vector<Double>& freq(vb.frequency());
@@ -338,23 +418,26 @@ Bool VBContinuumSubtractor::apply(VisBuffer& vb,
     for(Int ordind = 1; ordind <= fitorder_p; ++ordind)
       freqpow[ordind] = sf * freqpow[ordind - 1];
 
-    for(uInt blind = 0; blind < nHashes_p; ++blind){
-      vb.flagRow()(blind) = false;
+    for(uInt vbrow = 0; vbrow < nvbrow; ++vbrow){
+      uInt blind = hashFunction(vb.antenna1()[vbrow],
+                                vb.antenna2()[vbrow]);
 
       for(uInt corrind = 0; corrind < ncorr_p; ++corrind){
         if(coeffsOK(corrind, 0, blind)){
           Complex cont = coeffs(corrind, 0, blind);
 
-          vb.flagRow()(blind) = false;
           for(Int ordind = 1; ordind <= fitorder_p; ++ordind)
             cont += coeffs(corrind, ordind, blind) * freqpow[ordind];
           if(doSubtraction)
-            viscube(corrind, c, blind) -= cont;
+            viscube(corrind, c, vbrow) -= cont;
           else
-            viscube(corrind, c, blind) = cont;
+            viscube(corrind, c, vbrow) = cont;
 
-          // TODO: Adjust WEIGHT_SPECTRUM (create if necessary?), WEIGHT, and SIGMA.
+          // TODO: Adjust WEIGHT_SPECTRUM (create if necessary?), WEIGHT, and
+          // SIGMA.
         }
+        else
+          vb.flagCube()(corrind, c, vbrow) = true;
       }
     }
   }

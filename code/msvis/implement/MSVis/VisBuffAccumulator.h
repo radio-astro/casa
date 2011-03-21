@@ -101,6 +101,21 @@ public:
   Double& timeStamp() { return globalTime_p; };
   Double& timeStampWt() { return globalTimeWt_p; };
 
+  // The number of VisBuffers that have been accumulated.
+  uInt nBuf() {return nBuf_p;}
+
+  // Return a map from row numbers in the VisBuffer returned by aveVisBuff() or
+  // aveCalVisBuff() to row numbers in the input VisBuffer.  Only useful if
+  // nBuf_p == 1 or you are sure that the last input VisBuffer will meet your
+  // needs (i.e. all the input VisBuffers had same set of antennas and the
+  // metadata you want also matches).  hurl controls whether an exception will
+  // be thrown if nBuf() != 1.  Unfilled rows point to -1.
+  const Vector<Int>& outToInRow(const Bool hurl=true){
+    if(hurl && nBuf_p != 1)
+      throw_err("outToInRow", "The output to input row map is unreliable");
+    return outToInRow_p;
+  }
+
 protected:
   // Averaging buffer
   CalVisBuffer avBuf_p;
@@ -125,6 +140,10 @@ private:
 
   // Hash function to return the row offset for an interferometer (ant1, ant2)
   Int hashFunction (const Int& ant1, const Int& ant2);
+
+  // Shuffle error handling elsewhere in an attempt to let the calling function
+  // be efficient and inlinable.
+  void throw_err(const String& origin, const String &msg);
 
   // Number of antennas
   Int nAnt_p;
@@ -153,6 +172,12 @@ private:
   // Diagnostic print level
   Int prtlev_;
 
+  // How many VisBuffers have been accumulated.
+  uInt nBuf_p;
+
+  // A map from avBuf_p's row numbers to row numbers in the VisBuffer used to
+  // fill avBuf_p.  Only useful if nBuf_p == 1.  Unfilled rows point to -1.
+  Vector<Int> outToInRow_p;
 };
 
 

@@ -45,28 +45,39 @@ AMueller::AMueller(VisSet& vs) :
   VisCal(vs),             // virtual base
   VisMueller(vs),         // virtual base
   MMueller(vs),            // immediate parent
-  fitOrder_p(0),
-  lofreq_p(-1.0),
-  hifreq_p(-1.0),
-  maxAnt_p(-1)
+  fitorder_p(0),
+  doSub_p(true)
 {
   if (prtlev()>2) cout << "A::A(vs)" << endl;
+
+  init();
 }
 
 AMueller::AMueller(const Int& nAnt) :
   VisCal(nAnt),
   VisMueller(nAnt),
   MMueller(nAnt),            // immediate parent
-  fitOrder_p(0),
-  lofreq_p(-1.0),
-  hifreq_p(-1.0),
-  maxAnt_p(-1)
+  fitorder_p(0),
+  doSub_p(true)
 {
   if (prtlev()>2) cout << "A::A(nAnt)" << endl;
+
+  init();
 }
 
 AMueller::~AMueller() {
   if (prtlev()>2) cout << "A::~A()" << endl;
+}
+
+void AMueller::init()
+{
+  lofreq_p.resize(nSpw());
+  hifreq_p.resize(nSpw());
+  totnumchan_p.resize(nSpw());
+  
+  lofreq_p = -1.0;
+  hifreq_p = -1.0;
+  totnumchan_p = 0;
 }
 
 void AMueller::setSolve(const Record& solvepar) {
@@ -76,58 +87,167 @@ void AMueller::setSolve(const Record& solvepar) {
 
   // Extract the AMueller-specific solve parameters
   if(solvepar.isDefined("fitorder"))
-    fitOrder_p = solvepar.asInt("fitorder");
+    fitorder_p = solvepar.asInt("fitorder");
+
+  nChanParList() = fitorder_p + 1;  // Orders masquerade as output chans.
 
   // Override preavg 
   // (solver will fail if we don't average completely in each solint)
   preavg()=DBL_MAX;
 }
 
+void AMueller::setSolveChannelization(VisSet& vs)
+{
+  Vector<Int> startDatChan(vs.startChan());
+
+  // If fitorder_p != 0, this is frequency dependent.
+  if(fitorder_p){
+    // AMueller keeps its polynomial orders where channels would normally go,
+    // and typically (advisedly) the number of orders is << the number of data
+    // channels.  *Otherwise* the overall par shape follows the data shape.
+    nChanParList() = fitorder_p + 1;  // Deja vu from setSolve().
+    startChanList() = startDatChan;
+
+    // However, for solving, we will only consider one channel at a time:
+    nChanMatList() = 1;
+  }
+  else {
+    // Pars are not themselves channel-dependent
+    nChanParList() = 1;
+
+    // Check if matrices may still be freq-dep:
+    if (freqDepMat()) {
+      // cal is an explicit f(freq) (e.g., like delay)
+      nChanMatList()  = vs.numberChan();
+      startChanList() = startDatChan;
+    } else {
+      // cal has no freq dep at all
+      nChanMatList()  = Vector<Int>(nSpw(),1);
+      startChanList() = Vector<Int>(nSpw(),0);
+    }
+  }
+
+  // At this point:
+  //  1. nChanParList() represents the number of coefficients per polynomial,
+  //     appropriate for shaping the CalSet.
+  //  2. nChanMatList() represents the per-Spw matrix channel axis length to
+  //     be used during the solve, independent of the parameter channel
+  //     axis length.  In the solve context, nChanMat()>1 when there is
+  //     more than one channel of data upon which the (single channel)
+  //     solve parameters depend (e.g. polynomial order != 1)
+}
+
 void AMueller::selfSolveOne(VisBuffGroupAcc& vbga)
 {
-  // Solver for the polynomial continuum fit.  It is overkill for fitOrder_p ==
+  // Solver for the polynomial continuum fit.  It is overkill for fitorder_p ==
   // 0, and not used in that case.
 
   LogIO os(LogOrigin("AMueller", "selfSolveOne()", WHERE));
   VBContinuumSubtractor vbcs;
 
-  vbcs.fit(vbga, fitOrder_p, solveCPar(), solveParOK());
-  lofreq_p = vbcs.getLowFreq();
-  hifreq_p = vbcs.getHighFreq();
-  maxAnt_p = vbcs.getMaxAntNum();
+  // Initialize
+  if(lofreq_p[currSpw()] < 0.0){  // 1st time for this spw, so let vbga
+    vbcs.initFromVBGA(vbga);      // provide the info.
+    lofreq_p[currSpw()] = vbcs.getLowFreq();
+    hifreq_p[currSpw()] = vbcs.getHighFreq();
+    totnumchan_p[currSpw()] = vbcs.getTotNumChan();
+  }
+  else                            // Reuse the prev vals for consistency.
+    vbcs.init(solveParOK().shape(), nAnt() - 1, totnumchan_p[currSpw()],
+              lofreq_p[currSpw()], hifreq_p[currSpw()]);
+
+  vbcs.fit(vbga, fitorder_p, MS::DATA, solveCPar(), solveParOK(),
+           false, false, !append());
 }
 
-void AMueller::keep(const Int& slot)
+void AMueller::store()
 {
-  if(fitOrder_p != 0){
-    SolvableVisCal::keep(slot);
-
-    Int cspw = currSpw();
-
-    if(slot < cs().nTime(cspw)){ // If slot is an available valid slot,
-      // Open the caltable
-      Table::TableOption accessMode = Table::New;
-      if(append() && Table::isWritable(calTableName()))
-        accessMode = Table::Update;
-      CalTable2 calTable(calTableName(), accessMode);
-      CalDescColumns2 cd(calTable);
-      Matrix<Double> lhfreqs(1, 2);       // Why is this a Matrix instead of a Vector?
+  MMueller::store();
+  if(fitorder_p != 0){        // Store lofreq_p[currSpw()] and hifreq_p[currSpw()]
+    // Open the caltable
+    CalTable2 calTable(calTableName(), Table::Update);
+    CalDescColumns2 cd(calTable);
+    Matrix<Double> lhfreqs(1, 2);       // Why is this a Matrix instead of a Vector?
     
-      lhfreqs(0, 0) = lofreq_p;
-      lhfreqs(0, 1) = hifreq_p;
+    for(Int cspw = 0; cspw < nSpw(); ++cspw){
+      lhfreqs(0, 0) = lofreq_p[cspw];
+      lhfreqs(0, 1) = hifreq_p[cspw];
 
       // Storing lo and hifreq_p in chanFreq (suggested by George Moellenbrock)
-      // is a hack, but it does not seem to be otherwise used, and it avoids more
-      // serious mucking with the caltable.
+      // is a hack, but it does not seem to be otherwise used, and it avoids
+      // more serious mucking with the caltable.
       cd.chanFreq().put(cspw, lhfreqs);
-
-      // This is not so easy to shoehorn in, but it can be inferred from the CPars
-      // shape.
-      //cs().maxant(cspw)[slot] = maxAnt_p;
     }
   }
-  else
-    MMueller::keep(slot);
+}
+
+void AMueller::setApply(const Record& applypar)
+{
+  LogIO os(LogOrigin("AMueller", "setApply()", WHERE));
+
+  MMueller::setApply(applypar);
+
+  fitorder_p = nChanPar() - 1;
+
+  if(fitorder_p != 0){
+    // Open the caltable
+    CalTable2 calTable(calTableName());
+    CalDescColumns2 cd(calTable);
+    Matrix<Double> lhfreqs(1, 2); // Why is this a Matrix instead of a Vector?
+
+    // if(cd.chanFreq()) is a valid column...
+    if(!cd.chanFreq().isNull() && cd.chanFreq().isDefined(0) &&
+       cd.chanFreq().shape(0)[0] > 0 && cd.chanFreq().shape(0)[1] > 0){
+      uInt nrows = cd.chanFreq().nrow();    //   get number of spws (rows)
+      lofreq_p.resize(nrows);
+      hifreq_p.resize(nrows);
+      for(Int cspw = 0; cspw < nSpw(); ++cspw){
+        // Storing lo and hifreq_p in chanFreq (suggested by George
+        // Moellenbrock) is a hack, but it does not seem to be otherwise used,
+        // and it avoids more serious mucking with the caltable.
+        cd.chanFreq().get(cspw, lhfreqs);
+
+        lofreq_p[cspw] = lhfreqs(0, 0);
+        hifreq_p[cspw] = lhfreqs(0, 1);
+      }
+    }
+    else{
+      os << LogIO::WARN
+         << "CHAN_FREQ was not found in the caltable...setting fitorder to 0"
+         << LogIO::POST;
+      fitorder_p = 0;
+    }
+  }
+}
+
+// Apply this calibration to VisBuffer visibilities
+void AMueller::applyCal(VisBuffer& vb, Cube<Complex>& Vout,
+                        Bool avoidACs)
+{
+  LogIO os(LogOrigin("AMueller", "applyCal()", WHERE));
+
+  if(fitorder_p == 0){
+    VisMueller::applyCal(vb, Vout, avoidACs && false);
+  }
+  else{
+    if(prtlev() > 3)
+      os << "  AMueller::applyCal()" << LogIO::POST;
+
+    Int cspw = currSpw();
+    VBContinuumSubtractor vbcs;
+    vbcs.init(currCPar().shape(), nAnt() - 1, totnumchan_p[cspw],
+              lofreq_p[cspw], hifreq_p[cspw]);
+
+    // correct() writes to vb.visCube(), not vb.correctedVisCube()!  I don't
+    // get this...
+    // MS::PredefinedColumns whichcol = MS::CORRECTED_DATA;
+    MS::PredefinedColumns whichcol = MS::DATA;
+    
+    if(!vbcs.apply(vb, whichcol, currCPar(), currParOK(), doSub_p,
+                   !append()))
+      throw(AipsError("Could not place the continuum-subtracted data in "
+                      + MS::columnName(whichcol)));
+  }
 }
 
 void AMueller::corrupt(VisBuffer& vb)
@@ -137,7 +257,7 @@ void AMueller::corrupt(VisBuffer& vb)
   if(prtlev() > 3)
     os << LogIO::NORMAL << "  A::corrupt()" << LogIO::POST;
 
-  if(fitOrder_p == 0){
+  if(fitorder_p == 0){
     // Initialize model data to zero, so corruption contains
     //  only the AMueller solution
     //  TBD: may wish to make this user togglable.
@@ -156,19 +276,13 @@ void AMueller::corrupt(VisBuffer& vb)
     syncCal(vb,False);
 
     Int cspw = currSpw();
-    CalTable2 calTable(calTableName(), Table::Old);
-    CalDescColumns2 cd(calTable);
-    Matrix<Double> lhfreqs(1, 2);       // Why is this a Matrix instead of a Vector?
-    
-    // Storing lo and hifreq_p in chanFreq (suggested by George Moellenbrock)
-    // is a hack, but it does not seem to be otherwise used, and it avoids more
-    // serious mucking with the caltable.
-    cd.chanFreq().get(cspw, lhfreqs);
-    
-    VBContinuumSubtractor vbcs(lhfreqs(0, 0), lhfreqs(0, 1));
+    VBContinuumSubtractor vbcs;
+    vbcs.init(currCPar().shape(), nAnt() - 1, totnumchan_p[cspw],
+              lofreq_p[cspw], hifreq_p[cspw]);
+
     MS::PredefinedColumns whichcol = MS::MODEL_DATA;
     
-    if(!vbcs.apply(vb, whichcol, solveCPar(), solveParOK(), false, !append()))
+    if(!vbcs.apply(vb, whichcol, currCPar(), currParOK(), false, !append()))
       throw(AipsError("Could not place the continuum estimate in "
                       + MS::columnName(whichcol)));
 

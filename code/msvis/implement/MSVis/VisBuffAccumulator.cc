@@ -29,6 +29,8 @@
 #include <msvis/MSVis/VisBuffAccumulator.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/Arrays/ArrayLogical.h>
+#include <casa/Exceptions/Error.h>
+#include <casa/Logging/LogIO.h>
 
 #define PRTLEV_VBA 0
 
@@ -42,7 +44,8 @@ VisBuffAccumulator::VisBuffAccumulator(const Int& nAnt, const Double& interval,
     interval_p(interval), 
     prenorm_p(prenorm),
     avBuf_p(),
-    prtlev_(PRTLEV_VBA)
+    prtlev_(PRTLEV_VBA),
+    nBuf_p(0)
 {
 // Construct from the number of antennas and the averaging interval
 // Input:
@@ -96,6 +99,7 @@ void VisBuffAccumulator::reset()
   aveTimeWt_p = 0.0;
   globalTime_p = 0.0;
   globalTimeWt_p = 0.0;
+  nBuf_p = 0;
 
   if (prtlev()>2) cout << " VBA::reset()" << endl;
 
@@ -187,6 +191,10 @@ void VisBuffAccumulator::accumulate (const VisBuffer& vb)
 
       // Calculate row from antenna numbers with the hash function.
       Int outrow = avrow_p + hashFunction (ant1, ant2);
+
+      // Record the row in vb that corresponds to outrow in avBuf_p.
+      outToInRow_p[outrow] = row;
+
       Float wt = vb.weight()(row);
       Vector<Float> wtM(vb.weightMat().column(row));
 
@@ -238,7 +246,7 @@ void VisBuffAccumulator::accumulate (const VisBuffer& vb)
       row++;
     }; // if (row < vb.nRow())
   }; // while (row < vb.nRow())
-
+  ++nBuf_p;
 };
 
 //----------------------------------------------------------------------------
@@ -291,6 +299,10 @@ void VisBuffAccumulator::initialize(const Bool& copydata)
 
   avBuf_p.flag().resize(nChan_p, nRow,copydata);
 
+  // Setup the map from avBuf_p's row numbers to input row numbers.
+  outToInRow_p.resize(nRow, copydata);
+  if(!copydata)
+    outToInRow_p = -1;                   // Unfilled rows point to -1.
 
   // Fill in the antenna numbers for all rows
   Int row = avrow_p;
@@ -404,9 +416,11 @@ Int VisBuffAccumulator::hashFunction (const Int& ant1, const Int& ant2)
 
 //----------------------------------------------------------------------------
 
-  
-
-
+void VisBuffAccumulator::throw_err(const String& origin, const String &msg)
+{
+  LogOrigin("VisBuffAccumulator", origin);
+  throw(AipsError(msg));
+}
 
 } //# NAMESPACE CASA - END
 

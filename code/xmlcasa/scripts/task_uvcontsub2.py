@@ -84,9 +84,9 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
         else:
             raise Exception, 'Visibility data set not found - please verify the name'
 
-        # for now, forbid requests for fitorder>0 
-        if (fitorder>0):
-            raise Exception, "Sorry, uvcontsub2 currently only supports fitorder=0."
+        ## for now, forbid requests for fitorder>0 
+        #if (fitorder>0):
+        #    raise Exception, "Sorry, uvcontsub2 currently only supports fitorder=0."
         
         # select the data for continuum subtraction
         cb.reset()
@@ -143,8 +143,8 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
         # Set up the solve
         amuellertab = tempfile.mkdtemp(prefix='Temp_contsub.tab', dir=workingdir)
 
-        cb.setsolve(type='A', t=solint, table=amuellertab, combine=combine)
-                    #fitorder=fitorder)
+        cb.setsolve(type='A', t=solint, table=amuellertab, combine=combine,
+                    fitorder=fitorder)
 
         # solve for the continuum
         cb.solve()
