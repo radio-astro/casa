@@ -584,7 +584,7 @@ int main() {
         	// Q stokes flux test
         	AlwaysAssert(flux(1).getValue() == 0, AipsError);
 
-        	Vector<complex<double> > fluxErrors = compList.component(0).flux().errors();
+        	Vector<std::complex<double> > fluxErrors = compList.component(0).flux().errors();
         	AlwaysAssert(near(fluxErrors[0].real(), 0.000863785, 1e-5), AipsError);
         	AlwaysAssert(fluxErrors[0].imag() == 0, AipsError);
         	AlwaysAssert(fluxErrors[1].real() == 0, AipsError);
