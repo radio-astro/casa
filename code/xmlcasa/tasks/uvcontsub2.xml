@@ -22,11 +22,11 @@ is stored in a <em>new</em> MS (vis + ".contsub").
 uvcontsub2 will read from the CORRECTED_DATA column of vis if it
 is present, and from the DATA column otherwise.
 
-If want_cont is True, the continuum fit is placed in a second new MS
-(vis + ".cont").  N.B. because the continuum model is necessarily a
-smoothed fit, images made with it are liable to have their field of
-view reduced in some strange way, and if possible should be compared
-with images made by excluding the line channels.
+If want_cont is True, the continuum fit is placed in a second new MS (vis +
+".cont").  N.B. because the continuum model is necessarily a smoothed fit,
+images made with it are liable to have their field of view reduced in some
+strange way.  Images of the continuum should be made by simply excluding the
+line channels (and probably averaging the remaining ones).
 </description>
 <input>
 	<param type="string" name="vis" mustexist="true">
@@ -57,12 +57,12 @@ with images made by excluding the line channels.
 	</param>
 
 	<param type="int" name="fitorder">
-		<description>Polynomial order for the fit (CURRENTLY, only 0 is supported)</description>
+		<description>Polynomial order for the fits</description>
 		<value>0</value>
 	</param>
 
 	<param type="string" name="spw">
-		<description>Spectral window selection for subtraction/export</description>
+		<description>Spectral window selection for output</description>
 		<value></value>
 	</param>
 
@@ -94,12 +94,12 @@ with images made by excluding the line channels.
         If want_cont is True, the continuum fit is placed in a second new MS
         (vis + '.cont').  N.B. because the continuum model is necessarily a
         smoothed fit, images made with it are liable to have their field of
-        view reduced in some strange way, and if possible should be compared
-        with images made by excluding the line channels.
+        view reduced in some strange way.  Images of the continuum should be
+        made by simply excluding the line channels (and probably averaging the
+        remaining ones).
 
-        Unlike uvcontsub, higher fitorders are not yet supported, and there are
-        no "scratch columns" (MODEL_DATA and CORRECTED_DATA) in the output
-        MS(es).
+        Unlike uvcontsub, there are no "scratch columns" (MODEL_DATA and
+        CORRECTED_DATA) in the output MS(es).
 
 	Keyword arguments:
 	vis -- Name of input visibility file
@@ -126,12 +126,14 @@ with images made by excluding the line channels.
               example: combine='spw' --> form spw-merged continuum estimate
 	solint -- Timescale for per-baseline fit (units optional)
 		default (recommended): 'int' --&gt; no time averaging, fit every
-				       integration.
+				       integration and let the noisy fits
+				       average out in the image.
 		example: solint='10s'  --&gt; average to 10s before fitting
                          10 or '10' --&gt; '10s' (unitless: assumes seconds)
                 options: 'int' --&gt; per integration
                          'inf' --&gt; per scan
-	fitorder -- Polynomial order for the fit of the continuum
+	fitorder -- Polynomial order for the fits of the continuum w.r.t.
+                    frequency.
 		default: 0 (constant); example: fitorder=1
 	spw -- Optional per spectral window selection of channels to include
                in the output.  See the note under combine.
@@ -140,7 +142,7 @@ with images made by excluding the line channels.
 	       split.
 	want_cont -- Create vis + '.cont' to hold the continuum estimate.
 		default: 'False'; example: want_cont=True
-		The continuum estimate will be placed in: vis.cont
+		The continuum estimate will be placed in vis + '.cont'
         async -- Run task in a separate process (return CASA prompt)
                 default: False; example: async=True
 
