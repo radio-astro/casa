@@ -1,4 +1,4 @@
-//# PlotMSCache.h: Data cache for plotms.
+//# PlotMSCache2.h: Data cache for plotms.
 //# Copyright (C) 2009
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -24,8 +24,8 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id: $
-#ifndef PLOTMSCACHE_H_
-#define PLOTMSCACHE_H_
+#ifndef PLOTMSCACHE2_H_
+#define PLOTMSCACHE2_H_
 
 #include <plotms/PlotMS/PlotMSAveraging.h>
 #include <plotms/PlotMS/PlotMSConstants.h>
@@ -44,13 +44,14 @@ namespace casa {
 
 //# Forward declarations.
 class PlotMSApp;
+class PlotMSIndexer;
 
-
-class PlotMSCache {
+class PlotMSCache2 {
     
     // Friend class declarations.
     friend class PlotMSData;
-  
+    friend class PlotMSIndexer;
+
 public:    
 
     // Varieties of cache
@@ -64,32 +65,49 @@ public:
     static const unsigned int THREAD_SEGMENT;
 
   // Constructor which takes parent PlotMS.
-  PlotMSCache(PlotMSApp* parent);
+  PlotMSCache2(PlotMSApp* parent);
   
   // Destructor
-  virtual ~PlotMSCache();
+  virtual ~PlotMSCache2();
 
   // Identify myself
-  PlotMSCache::Type cacheType() { return PlotMSCache::MS; };
+  PlotMSCache2::Type cacheType() { return PlotMSCache2::MS; };
+
+  // Reference an indexer
+  Int nIter() { return indexer_.nelements(); };
+  PlotMSIndexer& indexer(uInt i) {return (*indexer_[i]);};
 
   // Report the number of chunks
   Int nChunk() const { return nChunk_; };
 
+  // Returns whether cache is filled
+  bool cacheReady() const { return dataLoaded_; }
+
   // Report the data shapes
   inline Matrix<Int>& chunkShapes() {return chshapes_;};
 
-
-  // Report the total number of points currently arranged for plotting
-  //  (TBD: this is incorrect unless ALL cache spaces are full!!)
-  Int nPoints() const { return nPoints_(nChunk_-1); };
-
-  // Report the reference time for this cache (in seconds)
-  inline Double refTime() { return refTime_p; };
-
-  // Clears the cache of all stored values.  This should be called when the
-  // underlying MS or MS selection is changed, thus invalidating stored data.
-  void clear();
+  // Is there a reference value for the specified axis?
+  inline bool hasReferenceValue(PMS::Axis axis) { return (axis==PMS::TIME && cacheReady()); };
+  inline double referenceValue(PMS::Axis axis) { return (hasReferenceValue(axis) ? refTime() : 0.0); };
   
+  // Report the reference time for this cache (in seconds)
+  inline Double refTime() const { return refTime_p; };
+
+  // Returns which axes have been loaded into the cache, including metadata.
+  // Also includes the size (number of points) for each axis (which will
+  // eventually be used for a cache manager to let the user know the
+  // relative memory use of each axis).
+  vector<pair<PMS::Axis, unsigned int> > loadedAxes() const;
+
+  // Access to averaging state in the cache:
+  PlotMSAveraging& averaging() { return averaging_; }
+
+  // Access to transformations state in the cache
+  PlotMSTransformations& transformations() { return transformations_; }
+
+  // Access to channel averaging bounds
+  Matrix<Int>& chanAveBounds(Int spw) { return chanAveBounds_p(spw); };
+
   // Loads the cache for the given axes and data
   // columns.  IMPORTANT: this method assumes that any currently loaded data is
   // valid for the given VisIter; i.e., if the meta-information or either of
@@ -104,53 +122,20 @@ public:
 		    const PlotMSAveraging& averaging,
 		    const PlotMSTransformations& transformations,
 		    PlotMSCacheThread* thread = NULL);
-
-  // Convenience method for loading x and y axes.
-  void load(PMS::Axis xAxis, PMS::Axis yAxis,
-            PMS::DataColumn xData, PMS::DataColumn yData,
-            const String& msname,
-            const PlotMSSelection& selection,
-            const PlotMSAveraging& averaging,
-            const PlotMSTransformations& transformations,
-            PlotMSCacheThread* thread = NULL) {
-
-    cout << "AHHHHHHHHHHHH*********************" << endl;
-
-      vector<PMS::Axis> axes(2);
-      axes[0] = xAxis; axes[1] = yAxis;
-      vector<PMS::DataColumn> data(2);
-      data[0] = xData; data[1] = yData;
-      load(axes, data, msname, selection, averaging,transformations, thread);
-  }
+  
+  // Clears the cache of all stored values.  This should be called when the
+  // underlying MS or MS selection is changed, thus invalidating stored data.
+  void clear();
   
   // Releases the given axes from the cache.
   void release(const vector<PMS::Axis>& axes);
   
-  // Set up indexing for the plot (amp vs freq hardwired version)
-  void setUpCacheForPlot(PMS::Axis xAxis, PMS::Axis yAxis);
-  void getAxesMask(PMS::Axis axis,Vector<Bool>& axismask);
-  
-  // Returns whether cache is filled
-  bool cacheReady() const { return dataLoaded_; }
-
-  // Returns whether the cache is filled AND ready to return plotting 
-  //  data via the get methods or not.
-  bool readyForPlotting() const { return cacheReady() && axesSet_; };
-
-  // Get X and Y limits (amp vs freq hardwired version)
-  void getRanges(Double& minX, Double& maxX, Double& minY, Double& maxY);
-
-  // Get single values for x-y plotting 
-  Double getX(Int i);
-  Double getY(Int i);
-  void getXY(Int i, Double& x, Double& y);
-  Double get(PMS::Axis axis);
-
-  Bool getFlagMask(Int i);
+  // Set up indexing for the plot
+  void setUpIndexer(PMS::Axis iteraxis=PMS::SCAN,
+		    Bool globalXRange=False, Bool globalYRange=False);
 
   // Access to flags per chunk
   inline Array<Bool>& flag(Int chunk) { return *flag_[chunk]; };
-
 
   // Axis-specific generic gets
   inline Double getScan(Int chnk,Int irel)     { return scan_(chnk);   (void)irel; };
@@ -181,6 +166,8 @@ public:
   inline Double getFlagRow(Int chnk,Int irel) { return *(flagrow_[chnk]->data()+irel); };
   inline Double getRow(Int chnk,Int irel) { return *(row_[chnk]->data()+irel); };
 
+  inline Double getImWt(Int chnk,Int irel) { return *(imwt_[chnk]->data()+irel); };
+
   // These are array-global (one value per chunk)
   inline Double getAz0(Int chnk,Int irel) { return az0_(chnk);  (void)irel; };
   inline Double getEl0(Int chnk,Int irel) { return el0_(chnk);  (void)irel; };
@@ -193,87 +180,17 @@ public:
   inline Double getEl(Int chnk,Int irel)      { return *(el_[chnk]->data()+irel); };
   inline Double getParAng(Int chnk,Int irel)  { return *(parang_[chnk]->data()+irel); };
 
-  // Axis-specific gets
-  inline Double getScan()      { return scan_(currChunk_); };
-  inline Double getField()     { return field_(currChunk_); };
-  inline Double getTime()      { return time_(currChunk_); };
-  inline Double getTimeIntr()  { return timeIntr_(currChunk_); };
-  inline Double getSpw()       { return spw_(currChunk_); };
-  inline Double getFreq() { return *(freq_[currChunk_]->data()+(irel_/nperchan_(currChunk_))%ichanmax_(currChunk_)); };
-  inline Double getVel() { return *(vel_[currChunk_]->data()+(irel_/nperchan_(currChunk_))%ichanmax_(currChunk_)); };
-  inline Double getChan() { return *(chan_[currChunk_]->data()+(irel_/nperchan_(currChunk_))%ichanmax_(currChunk_)); };
-  inline Double getCorr() { return *(corr_[currChunk_]->data()+(irel_%icorrmax_(currChunk_))); };
-  inline Double getAnt1() { return *(antenna1_[currChunk_]->data()+(irel_/nperbsln_(currChunk_))%ibslnmax_(currChunk_)); };
-  inline Double getAnt2() { return *(antenna2_[currChunk_]->data()+(irel_/nperbsln_(currChunk_))%ibslnmax_(currChunk_)); };
-  inline Double getBsln() { return *(baseline_[currChunk_]->data()+(irel_/nperbsln_(currChunk_))%ibslnmax_(currChunk_)); };
-  inline Double getUVDist() { return *(uvdist_[currChunk_]->data()+(irel_/nperbsln_(currChunk_))%ibslnmax_(currChunk_)); };
-  inline Double getUVDistL() { return *(uvdistL_[currChunk_]->data()+(irel_/nperchan_(currChunk_))%ichanbslnmax_(currChunk_)); };
-  inline Double getU() { return *(u_[currChunk_]->data()+(irel_/nperbsln_(currChunk_))%ibslnmax_(currChunk_)); };
-  inline Double getV() { return *(v_[currChunk_]->data()+(irel_/nperbsln_(currChunk_))%ibslnmax_(currChunk_)); };
-  inline Double getW() { return *(w_[currChunk_]->data()+(irel_/nperbsln_(currChunk_))%ibslnmax_(currChunk_)); };
-
-  inline Double getAmp()  { return *(amp_[currChunk_]->data()+(irel_%idatamax_(currChunk_))); }; 
-  inline Double getPha()  { return  *(pha_[currChunk_]->data()+(irel_%idatamax_(currChunk_))); };
-  inline Double getReal() { return *(real_[currChunk_]->data()+(irel_%idatamax_(currChunk_))); };
-  //  inline Double getImag() { return *(imag_[currChunk_]->data()+(irel_%idatamax_(currChunk_))); };
-  inline Double getImag() { return getImag2(currChunk_,(irel_%idatamax_(currChunk_))); };
-  inline Double getImag2(Int ch, Int i) { return *(imag_[ch]->data()+i); };
-
-  inline Double getFlag() { return *(flag_[currChunk_]->data()+(irel_%idatamax_(currChunk_))); };
-  inline Double getFlagRow() { return *(flagrow_[currChunk_]->data()+(irel_/nperbsln_(currChunk_))%ibslnmax_(currChunk_)); };
-  inline Double getRow() { return *(row_[currChunk_]->data()+(irel_/nperbsln_(currChunk_))%ibslnmax_(currChunk_)); };
-
-  inline Double getWt() { return *(wt_[currChunk_]->data()+(irel_/nperbsln_(currChunk_))*nperchan_(currChunk_) + irel_%nperchan_(currChunk_)); };
-
-  // These are array-global (one value per chunk):
-  inline Double getAz0() { return az0_(currChunk_); };
-  inline Double getEl0() { return el0_(currChunk_); };
-  inline Double getHA0() { return ha0_(currChunk_); };
-  inline Double getPA0() { return pa0_(currChunk_); };
-
-  // These are antenna-based
-  inline Double getAntenna() { return *(antenna_[currChunk_]->data()+(irel_/nperant_(currChunk_))%iantmax_(currChunk_)); };
-  inline Double getAz() { return *(az_[currChunk_]->data()+(irel_/nperant_(currChunk_))%iantmax_(currChunk_)); };
-  inline Double getEl() { return *(el_[currChunk_]->data()+(irel_/nperant_(currChunk_))%iantmax_(currChunk_)); };
-  inline Double getParAng() { return *(parang_[currChunk_]->data()+(irel_/nperant_(currChunk_))%iantmax_(currChunk_)); };
-
-  // Locate datum nearest to specified x,y (amp vs freq hardwired versions)
-  PlotLogMessage* locateNearest(Double x, Double y);
-  PlotLogMessage* locateRange(const Vector<PlotRegion>& regions);
-  PlotLogMessage* flagRange(const PlotMSFlagging& flagging,
-          const Vector<PlotRegion>& regions, Bool flag = True);
-
-  // Access to averaging state in the cache:
-  PlotMSAveraging& averaging() { return averaging_; }
-
-  // Access to transformations state in the cache
-  PlotMSTransformations& transformations() { return transformations_; }
-
-  // Access to channel averaging bounds
-  Matrix<Int>& chanAveBounds(Int spw) { return chanAveBounds_p(spw); };
-
-  // Set flags in the cache
-  void flagInCache(const PlotMSFlagging& flagging,Bool flag);
-
-  // Sets the plot mask for a single chunk
-  void setPlotMask(Int chunk);
-
-  // Set flags in the MS
-  virtual void flagToDisk(const PlotMSFlagging& flagging,Vector<Int>& chunks, Vector<Int>& relids,Bool flag);
-
-  // Returns which axes have been loaded into the cache, including metadata.
-  // Also includes the size (number of points) for each axis (which will
-  // eventually be used for a cache manager to let the user know the
-  // relative memory use of each axis).
-  vector<pair<PMS::Axis, unsigned int> > loadedAxes() const;
-
 protected:
     
   // Forbid copy for now
-  PlotMSCache(const PlotMSCache& mc);
+  PlotMSCache2(const PlotMSCache2& mc);
 
   // Increase the number of chunks
   void increaseChunks(Int nc=0);
+
+  // Clean up the PtrBlocks
+  void deleteCache();
+  void deleteIndexer();
 
   // Setup the VisIter
   void setUpVisIter(const String& msname,
@@ -282,6 +199,10 @@ protected:
 		    Bool chanselect=True,
 		    Bool corrselect=True);
 
+  // Count the chunks required in the cache
+  void countChunks(ROVisibilityIterator& vi,PlotMSCacheThread* thread);  // old
+  void countChunks(ROVisibilityIterator& vi, Vector<Int>& nIterPerAve,  // supports time-averaging 
+		   const PlotMSAveraging& averaging,PlotMSCacheThread* thread);
 
   // Loop over VisIter, filling the cache
   void loadChunks(ROVisibilityIterator& vi,
@@ -307,35 +228,29 @@ protected:
 		   vector<PMS::DataColumn> loadData,
 		   PlotMSVBAverager& vba);
 
-
-  // Count the chunks required in the cache
-  void countChunks(ROVisibilityIterator& vi,PlotMSCacheThread* thread);  // old
-  void countChunks(ROVisibilityIterator& vi, Vector<Int>& nIterPerAve,  // supports time-averaging 
-		   const PlotMSAveraging& averaging,PlotMSCacheThread* thread);
-
-  // Fill a chunk with a VisBuffer.  
-  void append(const VisBuffer& vb, Int vbnum, PMS::Axis xAxis, PMS::Axis yAxis,
-              PMS::DataColumn xData, PMS::DataColumn yData);
-  
-  // Issue meta info report to the given stringstream.
-  void reportMeta(Double x, Double y, stringstream& ss);
-
-  // Set currChunk_ according to a supplied index
-  void setChunk(Int i);
-
-  // Clean up the PtrBlocks
-  void deleteCache();
-  
   // Loads the specific axis/metadata into the cache using the given VisBuffer.
   void loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 		PMS::DataColumn data = PMS::DEFAULT_DATACOLUMN);
   
+  // Set the net axes mask (defines how to collapse flags for the chosen plot axes)
+  void setAxesMask(PMS::Axis axis,Vector<Bool>& axismask);
+
+  // Derive the plot mask by appropriately collapsing the flags
+  void setPlotMask();           // all chunks
+  void setPlotMask(Int chunk);  // per chunk
+
+  // Delete the whole plot mask
+  void deletePlotMask();
+
+  // Set flags in the MS
+  virtual void flagToDisk(const PlotMSFlagging& flagging,
+			  Vector<Int>& chunks, 
+			  Vector<Int>& relids,
+			  Bool flag,
+			  PlotMSIndexer* indexer);
+
   // Returns the number of points loaded for the given axis or 0 if not loaded.
   unsigned int nPointsForAxis(PMS::Axis axis) const;
-  
-  // Computes the X and Y limits for the currently set axes.  In the future we
-  // may want to cache ALL ranges for all loaded values to avoid recomputation.
-  void computeRanges();
   
   // Convenience methods that call log() with the given method name and the
   // appropriate event type.
@@ -362,29 +277,22 @@ protected:
   // Private data
   
   // Parent plotms.
+  //  (used only for access to logger, so far)
   PlotMSApp* plotms_;
 
-  // The number of antennas
-  Int nAnt_;
+  // The indexer into the cache
+  PtrBlock<PlotMSIndexer*> indexer_;
 
-  // The number of chunks
+  // The number of chunks in the cache
   Int nChunk_;
-
-  // The in-focus chunk and relative index offset
-  Int currChunk_, irel_;
-
-  // The cumulative running total of points
-  Vector<Int> nPoints_;
-
-  // the net number of flagged, unflagged, total points
-  Int nTotalPoints_,nUnFlagPoints_, nFlagPoints_;
 
   // The reference time for this cache, in seconds
   Double refTime_p;
 
-  // Axes mask
-  Vector<Bool> netAxesMask_;
+  // The number of antennas
+  Int nAnt_;
 
+  // Global min/max
   Double minX_,maxX_,minY_,maxY_;
 
   // The fundamental meta-data cache
@@ -408,8 +316,7 @@ protected:
   PtrBlock<Vector<Bool>*> flagrow_;
   
   PtrBlock<Array<Float>*> wt_;
-
-  PtrBlock<Array<Bool>*> plmask_;
+  PtrBlock<Array<Float>*> imwt_;
 
   PtrBlock<Vector<Float>*> parang_;
   PtrBlock<Vector<Int>*> antenna_;
@@ -417,24 +324,26 @@ protected:
 
   Vector<Double> az0_,el0_,ha0_,pa0_;
 
-  // Indexing help
-  Vector<Int> icorrmax_, ichanmax_, ibslnmax_, idatamax_;
-  Vector<Int> nperchan_, nperbsln_, nperant_;
-  Vector<Int> ichanbslnmax_;
-  Vector<Int> iantmax_;
-
   // Current setup/state.
   bool dataLoaded_;
-  bool axesSet_;
   PMS::Axis currentX_, currentY_;
   map<PMS::Axis, bool> loadedAxes_;
   map<PMS::Axis, PMS::DataColumn> loadedAxesData_;
+
+  // Global ranges
+  Double xminG_,yminG_,xflminG_,yflminG_,xmaxG_,ymaxG_,xflmaxG_,yflmaxG_;
 
   // A copy of the Data parameters 
   String msname_;
   PlotMSSelection selection_;
   PlotMSAveraging averaging_;
   PlotMSTransformations transformations_;
+
+  // Axes mask
+  Vector<Bool> netAxesMask_;
+
+  // collapsed flag mask for plotting
+  PtrBlock<Array<Bool>*> plmask_;
 
   // meta info for locate output
   Vector<String> antnames_; 	 
@@ -455,9 +364,9 @@ protected:
 
     
 };
-typedef CountedPtr<PlotMSCache> PlotMSCachePtr;
+typedef CountedPtr<PlotMSCache2> PlotMSCache2Ptr;
 
 
 }
 
-#endif /* PLOTMSCACHE_H_ */
+#endif /* PLOTMSCACHE2_H_ */

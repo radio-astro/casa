@@ -29,6 +29,8 @@
 
 #include <graphics/GenericPlotter/PlotFactory.h>
 #include <plotms/Data/PlotMSData.h>
+#include <plotms/Data/PlotMSCache2.h>
+#include <plotms/Data/PlotMSIndexer.h>
 #include <plotms/PlotMS/PlotMSRegions.h>
 #include <plotms/Plots/PlotMSPlotParameters.h>
 
@@ -74,6 +76,9 @@ public:
     // Returns a human-readable name for this plot.  Does not have to be
     // unique.
     virtual String name() const = 0;
+
+    // Returns specialization Id for this plot
+    virtual String spectype() const { return "Unknown";};
     
     // Returns the plots assigned to this plot.
     virtual vector<MaskedScatterPlotPtr> plots() const = 0;
@@ -124,13 +129,25 @@ public:
     
     // Gets the plot's data source.
     // <group>
-    virtual PlotMSData& data();
-    virtual const PlotMSData& data() const;
+    virtual PlotMSData& data() { return itsData_; };
+    virtual const PlotMSData& data() const { return itsData_; };
+    virtual PlotMSCache& cache() { return itsCache_; };
+    virtual const PlotMSCache& cache() const { return itsCache_; };
+    virtual PlotMSCache2& cache2() { return itsCache2_; };
+    virtual const PlotMSCache2& cache2() const { return itsCache2_; };
+    virtual Int iter() { return 0; };
     // </group>
     
     // Gets the plot's parent.
-    virtual PlotMSApp* parent();
+    virtual PlotMSApp* parent() { return itsParent_; };
     
+    // Steps the iteration
+    virtual bool firstIter() { return False;};
+    virtual bool prevIter() { return False;};
+    virtual bool nextIter() { return False;};
+    virtual bool lastIter() { return False;};
+
+
     // Implements PlotMSParametersWatcher::parametersHaveChanged().  Updates
     // the data parameters and then calls parametersHaveChanged_().
     virtual void parametersHaveChanged(const PlotMSWatchedParameters& params,
@@ -183,7 +200,7 @@ protected:
     virtual void constructorSetup();
     
     // Force data update by clearing the cache
-    virtual bool updateData() { itsData_.clearCache(); return True; };   
+    virtual bool updateData() { itsData_.clearCache();itsCache2_.clear();  return True; };   
     
     // Returns true if drawing is currently being held on all plot canvases,
     // false otherwise.
@@ -209,6 +226,8 @@ protected:
     
     // Data.
     PlotMSData itsData_;
+    PlotMSCache itsCache_;
+    PlotMSCache2 itsCache2_;
     
 private:
     // Disable copy constructor and operator for now.

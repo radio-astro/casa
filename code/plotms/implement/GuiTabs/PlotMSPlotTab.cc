@@ -40,6 +40,7 @@
 #include <plotms/Plots/PlotMSMultiPlot.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
 #include <plotms/Plots/PlotMSSinglePlot.h>
+#include <plotms/Plots/PlotMSIterPlot.h>
 
 namespace casa {
 
@@ -127,7 +128,7 @@ void PlotMSPlotTab::parametersHaveChanged(const PlotMSWatchedParameters& p,
 
 void PlotMSPlotTab::plotsChanged(const PlotMSPlotManager& manager) {
     goChooser->clear();
-    
+
     // Add plot names to go chooser.
     const PlotMSPlot* plot;
     int setIndex = -1;
@@ -212,6 +213,9 @@ PMS::SummaryType PlotMSPlotTab::msSummaryType() const {
 // Public Slots //
 
 void PlotMSPlotTab::plot() {
+
+  //  cout << "PlotMSPlotTab::plot()" << endl;
+
     if(itsCurrentParameters_ != NULL) {
         PlotMSPlotParameters params = currentlySetParameters();
         PMS_PP_MSData* d = params.typedGroup<PMS_PP_MSData>(),
@@ -590,7 +594,7 @@ void PlotMSPlotTab::goClicked() {
             // this will update the go chooser as necessary
             PlotMSPlot* plot = index == newSinglePlot ?
                                (PlotMSPlot*)itsPlotManager_.addSinglePlot() :
-                               (PlotMSPlot*)itsPlotManager_.addMultiPlot();
+                               (PlotMSPlot*)itsPlotManager_.addIterPlot();
             
             // switch to new plot if needed
             if(itsCurrentPlot_ != NULL) {

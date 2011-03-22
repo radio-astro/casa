@@ -118,11 +118,7 @@ public:
 	      WT,
 	      AZ0,EL0,HA0,PA0,
 	      ANTENNA,AZIMUTH,ELEVATION,PARANG,
-	      ROW,FLAG_ROW)
-
-      // VEL_RADIO, VEL_OPTICAL, VEL_RELATIVISTIC
-      // HOURANGLE, 
-      // WEIGHT, FLAG_ROW)
+	      ROW,FLAG_ROW,NONE)
 
     PMS_ENUM2(Axis, axes, axesStrings, axis,
 	      "Scan","Field","Time","Time_interval",
@@ -133,13 +129,8 @@ public:
 	      "Wt",
 	      "Azimuth","Elevation","HourAngle","ParAngle",
 	      "Antenna","Ant-Azimuth","Ant-Elevation","Ant-ParAng",
-	      "Row","FlagRow")
+	      "Row","FlagRow","None")
 
-    //              "time", "uvdist", "channel", "corr", "frequency", "vel_radio",
-    //              "vel_optical", "vel_relativistic", "u", "v", "w", "azimuth",
-    //              "elevation", "baseline", "hourangle", "parallacticangle", "amp",
-    //              "phase", "real", "imag", "weight", "antenna1", "antenna2",
-    //              "time_interval", "field", "scan", "spw", "flag", "flag_row")
     // </group>
               
     // Returns the axes scale for the given axis.  Currently NORMAL unless the

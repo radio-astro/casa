@@ -45,7 +45,7 @@ PlotMSAxisWidget::PlotMSAxisWidget(PMS::Axis defaultAxis, int attachAxes,
     // Setup axes choices.
     const vector<String>& axes = PMS::axesStrings();
     String def = PMS::axis(defaultAxis);
-    for(unsigned int i = 0; i < axes.size(); i++) {
+    for(unsigned int i = 0; i < axes.size()-1; i++) {
         chooser->addItem(axes[i].c_str());
         if(axes[i] == def) chooser->setCurrentIndex(i);
     }

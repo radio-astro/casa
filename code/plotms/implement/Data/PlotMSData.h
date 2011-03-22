@@ -54,6 +54,8 @@ public:
     // Destructor.
     ~PlotMSData();
     
+    // Set the internal cache
+    void setCache(PlotMSCache* cache) {itsCache_=cache;};
     
     // Implemented PlotData methods.
     // <group>

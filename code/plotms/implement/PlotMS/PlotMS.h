@@ -123,6 +123,9 @@ public:
     
     // See PlotMSPlotManager::addMultiPlot();
     PlotMSMultiPlot* addMultiPlot(const PlotMSPlotParameters* p = NULL);
+
+    // See PlotMSPlotManager::addIterPlot();
+    PlotMSIterPlot* addIterPlot(const PlotMSPlotParameters* p = NULL);
     
     bool isDrawing() const;
     bool isClosed() const;

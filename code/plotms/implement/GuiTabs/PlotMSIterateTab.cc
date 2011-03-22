@@ -46,41 +46,33 @@ PlotMSIterateTab::PlotMSIterateTab(PlotMSPlotTab* tab, PlotMSPlotter* parent)
     
     // Fill list of available iteration axis choices
     // For now, is same as colorize list
+    iterationAxisChooser->addItem(PMS::axis(PMS::NONE).c_str());
     iterationAxisChooser->addItem(PMS::axis(PMS::SCAN).c_str());
     iterationAxisChooser->addItem(PMS::axis(PMS::FIELD).c_str());
     iterationAxisChooser->addItem(PMS::axis(PMS::SPW).c_str());
+    iterationAxisChooser->addItem(PMS::axis(PMS::BASELINE).c_str());
+    iterationAxisChooser->addItem(PMS::axis(PMS::ANTENNA).c_str());
+    /* not yet:
     iterationAxisChooser->addItem(PMS::axis(PMS::ANTENNA1).c_str());
     iterationAxisChooser->addItem(PMS::axis(PMS::ANTENNA2).c_str());
-    iterationAxisChooser->addItem(PMS::axis(PMS::BASELINE).c_str());
     iterationAxisChooser->addItem(PMS::axis(PMS::CHANNEL).c_str());
     iterationAxisChooser->addItem(PMS::axis(PMS::CORR).c_str());
+    */
 
     // Set up label defaults.
 ///    itsLabelDefaults_.insert(enableIterationChk,  enableIterationChk->text());
 	itsLabelDefaults_.insert(iterationAxisChooserLabel,  iterationAxisChooserLabel->text());
-	itsLabelDefaults_.insert(rowsLabel,           rowsLabel->text());
-	itsLabelDefaults_.insert(columnsLabel,        columnsLabel->text());
+//	itsLabelDefaults_.insert(rowsLabel,           rowsLabel->text());
+//	itsLabelDefaults_.insert(columnsLabel,        columnsLabel->text());
 ///	itsLabelDefaults_.insert(VertAxesGroupBox,    VertAxesGroupBox->title());
 ///	itsLabelDefaults_.insert(HorizAxesGroupBox,   HorizAxesGroupBox->title());
 
     // Connect widgets.
-    connect(enableIterationChk,  SIGNAL(toggled(bool)),  SIGNAL(changed()) );
     connect(iterationAxisChooser, SIGNAL(currentIndexChanged(int)), SIGNAL(changed()) );
-    connect(nColsSpinBox, SIGNAL(valueChanged(int)),  SIGNAL(changed()) );
-    connect(nRowsSpinBox, SIGNAL(valueChanged(int)),  SIGNAL(changed()) );
+    //    connect(nColsSpinBox, SIGNAL(valueChanged(int)),  SIGNAL(changed()) );
+    //    connect(nRowsSpinBox, SIGNAL(valueChanged(int)),  SIGNAL(changed()) );
     
     
-    // Radio buttons for shared scale, repeated scale, etc
-    /* REMOVED - .getValue and .setValue interact directly with controls.  No need to handle events.
-    connect(VertAxisRadio_common,  SIGNAL(toggled(bool)), this, SLOT(changedAxisSharingMode(bool)));
-    connect(VertAxisRadio_repeat,  SIGNAL(toggled(bool)), this, SLOT(changedAxisSharingMode(bool)));
-    connect(VertAxisRadio_indiv,  SIGNAL(toggled(bool)), this, SLOT(changedAxisSharingMode(bool)));
-    connect(VertAxisRadio_none,  SIGNAL(toggled(bool)), this, SLOT(changedAxisSharingMode(bool)));
-    connect(HorizAxisRadio_common,  SIGNAL(toggled(bool)), this, SLOT(changedAxisSharingMode(bool)));
-    connect(HorizAxisRadio_repeat,  SIGNAL(toggled(bool)), this, SLOT(changedAxisSharingMode(bool)));
-    connect(HorizAxisRadio_indiv,  SIGNAL(toggled(bool)), this, SLOT(changedAxisSharingMode(bool)));
-    connect(HorizAxisRadio_none,  SIGNAL(toggled(bool)), this, SLOT(changedAxisSharingMode(bool)));
-	*/
 }
 
 
@@ -97,29 +89,20 @@ void PlotMSIterateTab::getValue(PlotMSPlotParameters& params) const   {
         d = params.typedGroup<PMS_PP_Iteration>();
     }
         
-	d->setEnableIteration( enableIterationChk->isChecked() );
 	
     d->setIterationAxis(
            PMS::axis(iterationAxisChooser->currentText().toStdString()) );
            
            
 	if      (VertAxisRadio_common->isChecked())  
-		d->setYAxisSharingMode( PMS_PP_Iteration::COMMON_AXIS );
-	else if (VertAxisRadio_repeat->isChecked())  
-		d->setYAxisSharingMode( PMS_PP_Iteration::REPEAT_AXES );
+		d->setYAxisScaleMode( PMS_PP_Iteration::GLOBAL );
 	else if (VertAxisRadio_indiv->isChecked())  
-		d->setYAxisSharingMode( PMS_PP_Iteration::INDIV_AXES );
-	else if (VertAxisRadio_none->isChecked())  
-		d->setYAxisSharingMode( PMS_PP_Iteration::REPEAT_AXES );
+		d->setYAxisScaleMode( PMS_PP_Iteration::SELF );
 		
 	if      (HorizAxisRadio_common->isChecked())  
-		d->setXAxisSharingMode( PMS_PP_Iteration::COMMON_AXIS );
-	else if (HorizAxisRadio_repeat->isChecked())  
-		d->setXAxisSharingMode( PMS_PP_Iteration::REPEAT_AXES );
+		d->setXAxisScaleMode( PMS_PP_Iteration::GLOBAL );
 	else if (HorizAxisRadio_indiv->isChecked())  
-		d->setXAxisSharingMode( PMS_PP_Iteration::INDIV_AXES );
-	else if (HorizAxisRadio_none->isChecked())  
-		d->setXAxisSharingMode( PMS_PP_Iteration::REPEAT_AXES );
+		d->setXAxisScaleMode( PMS_PP_Iteration::SELF );
 	
 	d->setNumColumns( nColsSpinBox->value() );
 	d->setNumRows( nRowsSpinBox->value() );
@@ -129,30 +112,22 @@ void PlotMSIterateTab::getValue(PlotMSPlotParameters& params) const   {
 
 void PlotMSIterateTab::setValue(const PlotMSPlotParameters& params) {
 
-    const PMS_PP_Iteration* d = params.typedGroup<PMS_PP_Iteration>();
-    
-    
-    enableIterationChk->setChecked( d->enableIteration() );
-
-    // wrongway:  iterationAxisChooser->setCurrentIndex( (int)d->iterationAxis() );
-    PlotMSTab::setChooser(iterationAxisChooser, PMS::axis(d->iterationAxis()));
-	
-	switch (d->xAxisSharingMode())   {
-	case PMS_PP_Iteration::COMMON_AXIS:  HorizAxisRadio_common->setChecked(true); break;
-	case PMS_PP_Iteration::REPEAT_AXES:  HorizAxisRadio_repeat->setChecked(true); break;
-	case PMS_PP_Iteration::INDIV_AXES:   HorizAxisRadio_indiv->setChecked(true); break;
-	case PMS_PP_Iteration::NO_AXES:      HorizAxisRadio_none->setChecked(true); break;
-	}
-
-	switch (d->yAxisSharingMode())   {
-	case PMS_PP_Iteration::COMMON_AXIS:  VertAxisRadio_common->setChecked(true); break;
-	case PMS_PP_Iteration::REPEAT_AXES:  VertAxisRadio_repeat->setChecked(true); break;
-	case PMS_PP_Iteration::INDIV_AXES:   VertAxisRadio_indiv->setChecked(true); break;
-	case PMS_PP_Iteration::NO_AXES:      VertAxisRadio_none->setChecked(true); break;
-	}
-	
-	nRowsSpinBox->setValue( d->numRows() );
-	nColsSpinBox->setValue( d->numColumns() );
+  const PMS_PP_Iteration* d = params.typedGroup<PMS_PP_Iteration>();
+  
+  PlotMSTab::setChooser(iterationAxisChooser, PMS::axis(d->iterationAxis()));
+  
+  switch (d->xAxisScaleMode())   {
+  case PMS_PP_Iteration::GLOBAL:  HorizAxisRadio_common->setChecked(true); break;
+  case PMS_PP_Iteration::SELF:   HorizAxisRadio_indiv->setChecked(true); break;
+  }
+  
+  switch (d->yAxisScaleMode())   {
+  case PMS_PP_Iteration::GLOBAL:  VertAxisRadio_common->setChecked(true); break;
+  case PMS_PP_Iteration::SELF:   VertAxisRadio_indiv->setChecked(true); break;
+  }
+  
+  nRowsSpinBox->setValue( d->numRows() );
+  nColsSpinBox->setValue( d->numColumns() );
 }
 
 
@@ -173,9 +148,8 @@ void PlotMSIterateTab::update(const PlotMSPlot& plot) {
 	highlightWidgetText(rowsLabel,     d->numRows() != d2->numRows() );
 
 #if (1)  // turn on for testing, off for demo - somehow thisis crashing
-	highlightWidgetText(HorizAxisSharingGroup, d->xAxisSharingMode() != d2->xAxisSharingMode());
-	highlightWidgetText(VertAxisSharingGroup, d->yAxisSharingMode() != d2->yAxisSharingMode());	
-	highlightWidgetText(enableIterationLabel,  d->enableIteration()  != d2->enableIteration());
+	highlightWidgetText(HorizAxisSharingGroup, d->xAxisScaleMode() != d2->xAxisScaleMode());
+	highlightWidgetText(VertAxisSharingGroup, d->yAxisScaleMode() != d2->yAxisScaleMode());	
 #endif
 }
 

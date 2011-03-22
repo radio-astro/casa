@@ -41,6 +41,7 @@ class PlotMSPlot;
 class PlotMSPlotManagerWatcher;
 class PlotMSPlotParameters;
 class PlotMSSinglePlot;
+class PlotMSIterPlot;
 
 
 // Class which manages PlotMSPlots for plotms.  Mainly handles adding new plots
@@ -98,6 +99,11 @@ public:
     // plotter, and returns a pointer to it.  If parameters are given, they are
     // used; otherwise the defaults are used.
     PlotMSSinglePlot* addSinglePlot(const PlotMSPlotParameters* p = NULL);
+
+    // Creates a new PlotMSIterPlot, initializes it properly, adds it to the
+    // plotter, and returns a pointer to it.  If parameters are given, they are
+    // used; otherwise the defaults are used.
+    PlotMSIterPlot* addIterPlot(const PlotMSPlotParameters* p = NULL);
     
     // Creates a new PlotMSMultiPlot, initializes it properly, adds it to the
     // plotter, and returns a pointer to it.  If parameters are given, they are

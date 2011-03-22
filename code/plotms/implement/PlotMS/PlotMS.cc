@@ -116,6 +116,9 @@ PlotMSSinglePlot* PlotMSApp::addSinglePlot(const PlotMSPlotParameters* p) {
 PlotMSMultiPlot* PlotMSApp::addMultiPlot(const PlotMSPlotParameters* p) {
     return itsPlotManager_.addMultiPlot(p); }
 
+PlotMSIterPlot* PlotMSApp::addIterPlot(const PlotMSPlotParameters* p) {
+    return itsPlotManager_.addIterPlot(p); }
+
 
 bool PlotMSApp::isDrawing() const {
 	return itsPlotter_->isDrawing();
@@ -139,7 +142,7 @@ void PlotMSApp::initialize(bool connectToDBus) {
     itsParameters_.addWatcher(this);
     
     itsPlotter_ = new PlotMSPlotter(this);
-    itsPlotter_->showIterationButtons(false);
+    itsPlotter_->showIterationButtons(true);
     itsLogger_ = itsPlotter_->getPlotter()->logger();
     
     itsPlotManager_.setParent(this);

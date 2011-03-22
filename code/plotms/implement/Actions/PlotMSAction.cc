@@ -150,7 +150,6 @@ bool PlotMSAction::doAction(PlotMSApp* plotms) {
 		return false;
 	}
 
-
 	switch(itsType_) {
 	
 	case SEL_FLAG: 
@@ -178,6 +177,11 @@ bool PlotMSAction::doAction(PlotMSApp* plotms) {
 	        PMS_PP_Cache* c = params.typedGroup<PMS_PP_Cache>();
 	        PlotMSData& data = plot->data();
 
+		// Detect if we are showing flagged/unflagged points (for locate)
+	        PMS_PP_Display* d = params.typedGroup<PMS_PP_Display>();
+		Bool showUnflagged=(d->unflaggedSymbol()->symbol()!=PlotSymbol::NOSYMBOL);
+		Bool showFlagged=(d->flaggedSymbol()->symbol()!=PlotSymbol::NOSYMBOL);
+
 	        vector<PlotCanvasPtr> canv = plot->canvases();
 	        for(unsigned int j = 0; j < canv.size(); j++) {
 	            // Only apply to visible canvases.
@@ -195,12 +199,23 @@ bool PlotMSAction::doAction(PlotMSApp* plotms) {
 	            PlotLogMessage* m = NULL;
 	            try {
 	                if(itsType_ == SEL_LOCATE) {
-	                    m = data.locateRange(Vector<PlotRegion>(regions));
-	                    
+			  if (plot->spectype()=="Iter")
+			    m = plot->cache2().indexer(plot->iter()).locateRange(Vector<PlotRegion>(regions),
+										 showUnflagged,showFlagged);
+			  else
+			    m = data.locateRange(Vector<PlotRegion>(regions));
+			  
+			  
+			  
 	                } else {
-	                    m = data.flagRange(flagging,
-	                            Vector<PlotRegion>(regions),
-	                            itsType_ == SEL_FLAG);
+			  if (plot->spectype()=="Iter")
+			    m = plot->cache2().indexer(plot->iter()).flagRange(flagging,
+									       Vector<PlotRegion>(regions),
+									       itsType_ == SEL_FLAG);
+			  else
+			    m = data.flagRange(flagging,
+					       Vector<PlotRegion>(regions),
+					       itsType_ == SEL_FLAG);
 	                }
 	                
 	            // ...and catch any reported errors.
@@ -500,6 +515,8 @@ bool PlotMSAction::doAction(PlotMSApp* plotms) {
 	        PlotMSCacheThread* ct;
 	        
 	        if(itsType_ == CACHE_LOAD) {
+
+		  //		  cout << "    calling PlotMSCacheThread from PlotMSAction" << endl;
 	            ct = new PlotMSCacheThread(plot, &plot->data(), a,
 	                    vector<PMS::DataColumn>(a.size(), PMS::DEFAULT_DATACOLUMN),
 	                    paramsData->filename(),paramsData->selection(),
@@ -645,13 +662,79 @@ bool PlotMSAction::doAction(PlotMSApp* plotms) {
 		plotms->getPlotManager().clearPlotsAndCanvases();
 		return true;
 
+	case ITER_FIRST: {
+
+	  //	  cout << "***You pressed the FIRST button***" << endl;
+	  bool hold = plotms->getPlotter()->allDrawingHeld();
+	  if(!hold) plotms->getPlotter()->holdDrawing();
+
+	  if (plotms->getPlotManager().plots()[0]->firstIter())
+	    plotms->getPlotManager().plots()[0]->plotDataChanged();
+	  else
+	    cout << "No more iterations." << endl;
+
+	  if(!hold) plotms->getPlotter()->releaseDrawing();
+
+	  //	  plotms->getPlotter()->getPlotTab()->plot();
+	  return true;
+	}
+	case ITER_PREV: {
+
+	  //	  cout << "***You pressed the PREV button***" << endl;
+	  bool hold = plotms->getPlotter()->allDrawingHeld();
+	  if(!hold) plotms->getPlotter()->holdDrawing();
+
+	  if (plotms->getPlotManager().plots()[0]->prevIter())
+	    plotms->getPlotManager().plots()[0]->plotDataChanged();
+	  else
+	    cout << "No more iterations." << endl;
+
+	  if(!hold) plotms->getPlotter()->releaseDrawing();
+
+	  //	  plotms->getPlotter()->getPlotTab()->plot();
+	  return true;
+	}
+	case ITER_NEXT: {
+
+	  //	  cout << "***You pressed the NEXT button***" << endl;
+	  bool hold = plotms->getPlotter()->allDrawingHeld();
+	  if(!hold) plotms->getPlotter()->holdDrawing();
+
+	  if (plotms->getPlotManager().plots()[0]->nextIter())
+	    plotms->getPlotManager().plots()[0]->plotDataChanged();
+	  else
+	    cout << "No more iterations." << endl;
+
+	  if(!hold) plotms->getPlotter()->releaseDrawing();
+
+	  //	  plotms->getPlotter()->getPlotTab()->plot();
+	  return true;
+	}
+	case ITER_LAST: {
+
+	  //	  cout << "***You pressed the LAST button***" << endl;
+	  bool hold = plotms->getPlotter()->allDrawingHeld();
+	  if(!hold) plotms->getPlotter()->holdDrawing();
+
+	  if (plotms->getPlotManager().plots()[0]->lastIter())
+	    plotms->getPlotManager().plots()[0]->plotDataChanged();
+	  else
+	    cout << "No more iterations." << endl;
+
+	  if(!hold) plotms->getPlotter()->releaseDrawing();
+
+	  //	  plotms->getPlotter()->getPlotTab()->plot();
+	  return true;
+	}
+
+
 	case QUIT:
 	    //QApplication::setQuitOnLastWindowClosed(true);
 		plotms->close();
 		return true;
 
 	// Unimplemented actions.
-	case ITER_FIRST: case ITER_PREV: case ITER_NEXT: case ITER_LAST:
+	default:
 		itsDoActionResult_ = "Action type is currently unimplemented!";
 		return false;
 	}
