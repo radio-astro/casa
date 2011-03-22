@@ -2318,7 +2318,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 			       const Bool startIsEndC,
 			       const Int nchanC,
 			       const Int width,
-			       const Int start
+			       const Int startC
 			       ){
     ostringstream oss;
 
@@ -2334,6 +2334,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     Double regridChanWidth = regridChanWidthC;
     Double regridCenter = regridCenterC;
     Int nchan = nchanC;
+    Int start = startC;
 
     Int oldNUM_CHAN = transNewXin.size();
 
@@ -2361,6 +2362,13 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	transNewXin(i) = tempF(n-1-i);
 	transCHAN_WIDTH(i) = tempW(n-1-i);
 	//cout << "i f w " << i << " " << transNewXin(i) << " " << transCHAN_WIDTH(i) << endl;
+      }
+      // also need to adjust the start values
+      if(centerIsStartC){
+	startIsEnd = !startIsEnd;
+      }
+      if(startC>=0){
+	start = n-1-startC;
       }
     }
 
@@ -5371,7 +5379,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	      continue;
 	    }
 	    // check that the intervals are the same
-	    if(intervalCol(nextRow) != theInterval){
+	    if(fabs(intervalCol(nextRow)-theInterval) > 1E-5){
 	      os << LogIO::SEVERE << "Error: for time " <<  MVTime(theTime/C::day).string(MVTime::DMY,7) << ", baseline (" << theAntenna1 << ", "
 		 << theAntenna2 << "), field "<< theField << ", DataDescID " << DDIdCol(mainTabRow)
 		 << " found matching row with DataDescID " << DDIdCol(nextRow) << endl
@@ -5381,7 +5389,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	      return False;
 	    }
 	    // check that the exposures are the same
-	    if(exposureCol(nextRow) != theExposure){
+	    if(fabs(exposureCol(nextRow)-theExposure) > 1E-5){
 	      os << LogIO::SEVERE << "Error: for time " <<  MVTime(theTime/C::day).string(MVTime::DMY,7) << ", baseline (" << theAntenna1 << ", "
 		 << theAntenna2 << "), field "<< theField << ", DataDescID " << DDIdCol(mainTabRow)
 		 << " found matching row with DataDescID " << DDIdCol(nextRow) << endl

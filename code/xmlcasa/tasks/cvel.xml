@@ -198,21 +198,21 @@ Hanning smoothing may not be necessary.
 			<default param="interpolation"><value type="string">linear</value></default>
 		</equals>
 	        <equals value="velocity">
-			<default param="nchan"><value type="int">-1</value></default>
-			<default param="start"><value type="string">""</value>
+		        <default param="nchan"><value type="int">-1</value></default>
+			<default param="start"><value type="string"></value>
 			    <description>Velocity of first image channel: e.g \'0.0km/s\'</description>
-		    </default>
-		    <default param="width"><value type="string">""</value>
+		        </default>
+		        <default param="width"><value type="string"></value>
 			    <description>image channel width in velocity units: e.g \'-1.0km/s\'</description>
-		    </default>
-		    <default param="interpolation"><value type="string">linear</value></default>
+		        </default>
+		        <default param="interpolation"><value type="string">linear</value></default>
 	        </equals>
 	        <equals value="frequency">
 			<default param="nchan"><value type="int">-1</value></default>
-			<default param="start"><value type="string">""</value>
+			<default param="start"><value type="string"></value>
 			    <description>Frequency of first image channel: e.q. \'1.4GHz\'</description>
 		    </default>
-		    <default param="width"><value type="string">""</value>
+		    <default param="width"><value type="string"></value>
 			    <description>Image channel width in frequency units: e.g \'1.0kHz\'</description>
 		    </default>
 		    <default param="interpolation"><value type="string">linear</value></default>
