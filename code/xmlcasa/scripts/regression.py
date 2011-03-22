@@ -9,7 +9,7 @@ DO_L02D			= True
 DO_NGC5921		= True
 DO_NGC7538		= True
 #----------
-DO_NGC1333		= True
+DO_NGC1333		= False  # Disabled by S. Rankin.  This test causes this script to fail to run following tests.
 DO_NGC4826		= True
 #---------
 DO_NGC4826C		= True
@@ -17,7 +17,7 @@ DO_ORION		= True
 #---------
 DO_B0319		= True
 #---------
-DO_ORI_HC3N		= True
+DO_ORI_HC3N		= False  # Disabled by S. Rankin.  This test causes a segmentation fault which ends all tests.
 DO_ORI_SIO		= True
 DO_ORI_CH3OH		= True
 DO_IRC_HC3N		= True
