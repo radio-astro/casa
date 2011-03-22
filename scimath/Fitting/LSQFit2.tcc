@@ -33,7 +33,6 @@
 #include <scimath/Fitting/LSQFit.h>
 #include <algorithm>
 
-using namespace std;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
