@@ -457,7 +457,7 @@ namespace casa {
     		for (uInt j=0; j<polarization.size(); j++) {
     			if (polarization[j] == _kludgedStokes) {
     				_fluxDensities[i] = fluxQuant[j];
-    				complex<double> error = _results.component(i).flux().errors()[j];
+				std::complex<double> error = _results.component(i).flux().errors()[j];
     				_fluxDensityErrors[i].setValue(sqrt(error.real()*error.real() + error.imag()*error.imag()));
     				_fluxDensityErrors[i].setUnit(_fluxDensities[i].getUnit());
     	    		polNum = j;
@@ -497,8 +497,8 @@ namespace casa {
             				rmsFluxError.getValue()
             			)
 					);
-            	Vector<complex<double> > errors(4, complex<double>(0, 0));
-            	errors[polNum] = complex<double>(_fluxDensityErrors[i].getValue(), 0);
+            	Vector<std::complex<double> > errors(4, std::complex<double>(0, 0));
+            	errors[polNum] = std::complex<double>(_fluxDensityErrors[i].getValue(), 0);
             	_results.component(i).flux().setErrors(errors);
 
             }
@@ -758,7 +758,7 @@ namespace casa {
 		/*
 		for (uInt i=0; i<polarization.nelements(); i++) {
             if (polarization[i] == _kludgedStokes) {
-            	complex<double> error = _results.component(compNumber).flux().errors()[i];
+            	std::complex<double> error = _results.component(compNumber).flux().errors()[i];
             	fluxDensityError.setValue(sqrt(error.real()*error.real() + error.imag()*error.imag()));
             	fluxDensityError.setUnit(fluxDensity.getUnit());
             	break;

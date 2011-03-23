@@ -322,16 +322,10 @@ def cvel(vis, outputvis,
                      scan=scan,          uvrange="")
             ms.close()
 
-            # time sort it (required for cvel)
-            ms.open(outputvis, nomodify=False)
-            casalog.post("Sorting SubMS main table by time ...", 'INFO')
-            ms.timesort()        
-            ms.close()
         else:
-            # no selection necessary, do SubMS creation and timesort in one go
-            casalog.post("Creating SubMS with time-sorted main table ...", 'INFO')
-            ms.timesort(newmsname=outputvis)
-            ms.close()
+            # no selection necessary, just copy
+            casalog.post("Creating working copy ...", 'INFO')
+            os.system('rm -rf '+outputvis+';cp -RL '+vis+' '+outputvis)
 
         # Combine and if necessary regrid it
 	ms.open(outputvis, nomodify=False)

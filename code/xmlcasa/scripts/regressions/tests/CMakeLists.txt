@@ -25,7 +25,6 @@ casa_add_python( xmlcasa xmlcasa_regressions_tests_python python/${PYTHONV}/regr
   accum_test.py
   asdm-imexport+analysis.py
   async-segfault.py
-#  b1608.py                   rmed in 14244.
   calstat_test.py
   cleanchan_test.py
   cleanhelper_test.py
@@ -33,23 +32,17 @@ casa_add_python( xmlcasa xmlcasa_regressions_tests_python python/${PYTHONV}/regr
   cvel_test2.py
   equinox_vis.py
   fits-import-export.py
-  g192redux.py
-  ggtau.py
   h121.py
   ic2233.py
   l02d.py
   leo2pt_test.py
-  ngc1333.py
   ngc2403.py
-  ngc4826redux.py
   ngc5921redux.py
   ngc5921uvcontsub2.py
-  ngc7538.py
   orionmos4sim.py
   orionmosaic.py
   polcal_20080224_cband.py
   pylabmem.py
-  secondNGC4826.py
   third4826.py
   time_then_chan_avg.py
   wideband.py

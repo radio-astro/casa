@@ -26,20 +26,14 @@ casa_add_python( xmlcasa xmlcasa_regressions_python python/${PYTHONV}/regression
   alma_asdm+reimported-asdm_sf.py
   async-segfault_regression.py
   b0319_regression.py
-#  b1608_demo_regression.py      rmed in 14244.
   cleanchan_regression.py
   cleanhelper_regression.py
   coordsystest_regression.py
   cvel_regression.py
   cvel_regression2.py
   fits-import-export_regression.py
-  fls3a_hi_regression.py
   g192_regression.py
-  ggtau_regression.py
-  ghii2_regression.py
-  ghii_regression.py
   h121_regression.py
-  ic2233_regression.py
   imagepoltest_regression.py
   imagetest_regression.py
   irc_cs_regression.py
@@ -47,7 +41,6 @@ casa_add_python( xmlcasa xmlcasa_regressions_python python/${PYTHONV}/regression
   irc_hc3n_regression.py
   irc_hc3n_task_regression.py
   irc_sio_regression.py
-  irc_sio_task_regression.py
   l02d_regression.py
   leo2pt_regression.py
   listcal_regression.py
@@ -56,16 +49,13 @@ casa_add_python( xmlcasa xmlcasa_regressions_python python/${PYTHONV}/regression
   m51_bothsim_regression.py
   maclog_regression.py
   nf_regression.py
-  ngc1333_regression.py
   ngc2403_tutorial_regression.py
   ngc4826c_regression.py
   ngc4826_regression.py
   ngc4826_tutorial_regression.py
   ngc5921_regression.py
   ngc5921_uvcontsub2.py
-  ngc7538_regression.py
   ori_ch3oh_regression.py
-  ori_ch3oh_task_regression.py
   ori_hc3n_regression.py
   ori_hc3n_task_regression.py
   orion_regression.py
@@ -74,12 +64,10 @@ casa_add_python( xmlcasa xmlcasa_regressions_python python/${PYTHONV}/regression
   plotxy_regression.py
   pointing_regression.py
   polcal_20080224_cband_regression.py
-  ppdisk2_regression.py
   run_orionmos4sim.py
   sdtpimaging_regression.py
   stokesimagingtest_regression.py
   testcube2_regression.py
-  testcube_regression.py
   unit_tests.py
   vla_uvfits_line_sf.py
   wf_regression.py

@@ -1654,9 +1654,9 @@ namespace casa {
             
 		  sprintf(subtitle,"pass %d (data)",npass+1);
 
-                  auto_ptr<ProgressMeter> progmeter(NULL);
+                  std::auto_ptr<ProgressMeter> progmeter(NULL);
                   if (chunk.num(TIME) > progmeter_limit) {
-                      progmeter = auto_ptr<ProgressMeter>(new ProgressMeter(1.0,static_cast<Double>(chunk.num(TIME)+0.001),title+subtitle,"","","",True,pm_update_freq));
+                      progmeter = std::auto_ptr<ProgressMeter>(new ProgressMeter(1.0,static_cast<Double>(chunk.num(TIME)+0.001),title+subtitle,"","","",True,pm_update_freq));
                   }
 
 		  // start pass for all active agents
@@ -1755,9 +1755,9 @@ namespace casa {
 		  sprintf(subtitle,"pass %d (dry)",npass+1);
                   //cout << "-----------subtitle=" << subtitle << endl;
 
-                  auto_ptr<ProgressMeter> progmeter(NULL);
+                  std::auto_ptr<ProgressMeter> progmeter(NULL);
                   if (chunk.num(TIME) > progmeter_limit) {
-                      progmeter = auto_ptr<ProgressMeter>(new ProgressMeter (1.0,static_cast<Double>(chunk.num(TIME)+0.001),title+subtitle,"","","",True,pm_update_freq));
+                      progmeter = std::auto_ptr<ProgressMeter>(new ProgressMeter (1.0,static_cast<Double>(chunk.num(TIME)+0.001),title+subtitle,"","","",True,pm_update_freq));
                   }
 		  // start pass for all active agents
 		  for( uInt ival = 0; ival<acc.size(); ival++ ) 
@@ -1799,9 +1799,9 @@ namespace casa {
 	      sprintf(subtitle,"pass (flag)");
               //cout << "-----------subtitle=" << subtitle << endl;
               
-              auto_ptr<ProgressMeter> progmeter(NULL);
+              std::auto_ptr<ProgressMeter> progmeter(NULL);
               if (chunk.num(TIME) > progmeter_limit) {
-                  progmeter = auto_ptr<ProgressMeter>(new ProgressMeter(1.0,static_cast<Double>(chunk.num(TIME)+0.001),title+"storing flags","","","",True,pm_update_freq));
+                  progmeter = std::auto_ptr<ProgressMeter>(new ProgressMeter(1.0,static_cast<Double>(chunk.num(TIME)+0.001),title+"storing flags","","","",True,pm_update_freq));
               }
 	      for (uInt i = 0; i<acc.size(); i++)
 		if (active_init(i))

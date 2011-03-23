@@ -980,9 +980,10 @@ import platform
 ##
 
 if (platform.architecture()[0]=='64bit'):
-    pl.ioff( )
-    pl.clf( )
-    pl.ion( )
+    if os.environ.has_key('DISPLAY'):
+        pl.ioff( )
+        pl.clf( )
+        pl.ion( )
 ##
 ##
 

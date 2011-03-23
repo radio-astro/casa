@@ -150,6 +150,7 @@ namespace casa {
     // parseColumnNames unavoidably has a static String and Vector<MS::PredefinedColumns>.
     // Collapse them down to free most of that memory.
     parseColumnNames("None");
+
   }
   
   // This is the version used by split.
@@ -1965,12 +1966,19 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     MSDataDescription ddtable=ms_p.dataDescription();
     MSDataDescColumns DDCols(ddtable);
     ScalarColumn<Int> SPWIdCol = DDCols.spectralWindowId(); 
-    
+
     // Loop 3: Apply to MAIN table rows
     
     //    cout << "Modifying main table ..." << endl;
 
     uInt nMainTabRows = ms_p.nrow();
+
+    // create time-sorted index for main table access
+    Vector<uInt> sortedI(nMainTabRows);
+    {
+      Vector<Double> mainTimesV = mainCols.time().getColumn();
+      GenSortIndirect<Double>::sort(sortedI,mainTimesV);
+    }
 
     // prepare progress meter
     Float progress = 0.4;
@@ -1980,11 +1988,17 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       progressStep = 0.2;
     }
 
-    for(uInt mainTabRow=0; mainTabRow<nMainTabRows; mainTabRow++){
+    for(uInt mainTabRowI=0; mainTabRowI<nMainTabRows; mainTabRowI++){
       
+      uInt mainTabRow = sortedI(mainTabRowI); // i.e. mainTabRow is sorted in time
+
+      //if(mainTabRow!=mainTabRowI){
+      //  cout << "processing row " << mainTabRow << ", index " << mainTabRowI << endl;
+      //}
+
       // For each MAIN table row, the FIELD_ID cell and the DATA_DESC_ID cell are read 
-      Int theFieldId = fieldIdCol(mainTabRow);
-      Int theDataDescId = DDIdCol(mainTabRow);
+      Int theFieldId = fieldIdCol(sortedI(mainTabRow));
+      Int theDataDescId = DDIdCol(sortedI(mainTabRow));
       // and the SPW_ID extracted from the corresponding row in the DATA_DESCRIPTION table.
       Int theSPWId = SPWIdCol(theDataDescId);
 
@@ -3964,9 +3978,18 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       }
     }
     
+    // create time-sorted index for main table access
+    uInt nMainTabRows = ms_p.nrow();
+    Vector<uInt> sortedI(nMainTabRows);
+    {
+      Vector<Double> mainTimesV = mainCols.time().getColumn();
+      GenSortIndirect<Double>::sort(sortedI,mainTimesV);
+    }
     
-    for(uInt mainTabRow=0; mainTabRow<ms_p.nrow(); mainTabRow++){
+    for(uInt mainTabRowI=0; mainTabRowI<nMainTabRows; mainTabRowI++){
     
+      uInt mainTabRow = sortedI(mainTabRowI); // i.e. mainTabRow is sorted in Time
+
       // For each MAIN table row, the FIELD_ID cell and the DATA_DESC_ID cell are read 
       Int theFieldId = fieldIdCol(mainTabRow);
       Int theDataDescId = DDIdCol(mainTabRow);
@@ -4559,13 +4582,22 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       ROArrayColumn<Double> resolutionColr = SPWColrs.resolution(); 
       ROScalarColumn<Double> totalBandwidthColr = SPWColrs.totalBandwidth();
 
-      // create a list of the spw ids sorted by first channel frequency
+      // create a list of the spw ids sorted by first (lowest) channel frequency
       vector<Int> spwsSorted(origNumSPWs);
+      Vector<Bool> isDescending(origNumSPWs, False);
       {
 	Double* firstFreq = new Double[origNumSPWs];
 	for(uInt i=0; (Int)i<origNumSPWs; i++){
 	  Vector<Double> CHAN_FREQ(chanFreqColr(i));
-	  firstFreq[i] = CHAN_FREQ(0);
+	  // if frequencies are ascending, take the first channel, otherwise the last
+	  uInt nCh = CHAN_FREQ.nelements();
+	  if(CHAN_FREQ(0)<=CHAN_FREQ(nCh-1)){
+	    firstFreq[i] = CHAN_FREQ(0);
+	  }
+	  else{
+	    firstFreq[i] = CHAN_FREQ(nCh-1);
+	    isDescending(i) = True;
+	  }	    
 	}
 	Sort sort;
 	sort.sortKey (firstFreq, TpDouble); // define sort key
@@ -4579,12 +4611,13 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
       Int id0 = spwsSorted[0];
 
-      Int newNUM_CHAN = numChanColr(id0);
+      uInt newNUM_CHAN = numChanColr(id0);
       newCHAN_FREQ.assign(chanFreqColr(id0));
       newCHAN_WIDTH.assign(chanWidthColr(id0));
+      Bool newIsDescending = isDescending(id0);
       {
 	Bool negativeWidths = False;
-	for(uInt i=0; i<newCHAN_WIDTH.nelements(); i++){
+	for(uInt i=0; i<newNUM_CHAN; i++){
 	  if(newCHAN_WIDTH(i) < 0.){
 	    negativeWidths = True;
 	    newCHAN_WIDTH(i) = -newCHAN_WIDTH(i);
@@ -4596,6 +4629,17 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	     << LogIO::POST;
 	}
       }
+
+      if(newIsDescending){ // need to reverse the order for processing 
+	Vector<Double> tempF, tempW;
+	tempF.assign(newCHAN_FREQ);
+	tempW.assign(newCHAN_WIDTH);
+	for(uInt i=0; i<newNUM_CHAN; i++){
+	  newCHAN_FREQ(i) = tempF(newNUM_CHAN-1-i);
+	  newCHAN_WIDTH(i) = tempW(newNUM_CHAN-1-i);
+	}
+      }
+
       Vector<Double> newEFFECTIVE_BW(effectiveBWColr(id0));
       Double newREF_FREQUENCY(refFrequencyColr(id0));
       //MFrequency newREF_FREQUENCY = refFrequencyMeasColr(id0);
@@ -4616,14 +4660,19 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	vector<Int> tv; // just a temporary auxiliary vector
 	tv.push_back(id0);
 	averageWhichSPW.push_back(tv);
-	tv[0] = i;
+	if(newIsDescending){
+	  tv[0] = newNUM_CHAN-1-i;
+	}
+	else{
+	  tv[0] = i;
+	}
 	averageWhichChan.push_back(tv);
 	vector<Double> tvd; // another one
 	tvd.push_back(1.);
 	averageChanFrac.push_back(tvd);
       }
 
-      os << LogIO::NORMAL << "Original SPWs sorted by first channel frequency:" << LogIO::POST;
+      os << LogIO::NORMAL << "Original SPWs sorted by first (lowest) channel frequency:" << LogIO::POST;
       {
 	ostringstream oss; // needed for iomanip functions
 	oss << "   SPW " << std::setw(3) << id0 << ": " << std::setw(5) << newNUM_CHAN 
@@ -4638,15 +4687,16 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       for(uInt i=1; i<nSpwsToCombine; i++){
 	Int idi = spwsSorted[i];
       
-	Int newNUM_CHANi = numChanColr(idi);
+	uInt newNUM_CHANi = numChanColr(idi);
 	Vector<Double> newCHAN_FREQi(chanFreqColr(idi));
 	Vector<Double> newCHAN_WIDTHi(chanWidthColr(idi));
+	Bool newIsDescendingI = isDescending(idi);
 	{
 	  Bool negativeWidths = False;
-	  for(uInt ii=0; ii<newCHAN_WIDTHi.nelements(); ii++){
+	  for(uInt ii=0; ii<newNUM_CHANi; ii++){
 	    if(newCHAN_WIDTHi(ii) < 0.){
 	      negativeWidths = True;
-	      newCHAN_WIDTHi(ii) = -newCHAN_WIDTH(ii);
+	      newCHAN_WIDTHi(ii) = -newCHAN_WIDTHi(ii);
 	    }
 	  }
 	  if(negativeWidths){
@@ -4655,6 +4705,16 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	       << LogIO::POST;
 	  }
 	}
+	if(newIsDescendingI){ // need to reverse the order for processing 
+	  Vector<Double> tempF, tempW;
+	  tempF.assign(newCHAN_FREQi);
+	  tempW.assign(newCHAN_WIDTHi);
+	  for(uInt ii=0; ii<newNUM_CHANi; ii++){
+	    newCHAN_FREQi(ii) = tempF(newNUM_CHANi-1-ii);
+	    newCHAN_WIDTHi(ii) = tempW(newNUM_CHANi-1-ii);
+	  }
+	}
+
 	Vector<Double> newEFFECTIVE_BWi(effectiveBWColr(idi));
 	//Double newREF_FREQUENCYi(refFrequencyColr(idi));
 	//MFrequency newREF_FREQUENCYi = refFrequencyMeasColr(idi);
@@ -4715,7 +4775,12 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    mergedRes.push_back(newRESOLUTIONi(j));
 	    mergedAverageN.push_back(1); // so far only one channel
 	    mergedAverageWhichSPW.push_back(tv);
-	    tv2[0] = j;
+	    if(newIsDescendingI){
+	      tv2[0] = newNUM_CHANi-1-j;
+	    }
+	    else{
+	      tv2[0] = j;
+	    }
 	    mergedAverageWhichChan.push_back(tv2); // channel number is j
 	    mergedAverageChanFrac.push_back(tvd);
 	  }
@@ -4736,7 +4801,12 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    mergedRes.push_back(newRESOLUTIONi(j));
 	    mergedAverageN.push_back(1); // so far only one channel
 	    mergedAverageWhichSPW.push_back(tv);
-	    tv2[0] = j;
+	    if(newIsDescendingI){
+	      tv2[0] = newNUM_CHANi-1-j;
+	    }
+	    else{
+	      tv2[0] = j;
+	    }
 	    mergedAverageWhichChan.push_back(tv2); // channel number is j
 	    mergedAverageChanFrac.push_back(tvd);
 	  }
@@ -4783,7 +4853,12 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	      mergedRes.push_back(newRESOLUTIONi(k));
 	      mergedAverageN.push_back(1); // so far only one channel
 	      mergedAverageWhichSPW.push_back(tv);
-	      tv2[0] = k;
+	      if(newIsDescendingI){
+		tv2[0] = newNUM_CHANi-1-k;
+	      }
+	      else{
+		tv2[0] = k;
+	      }
 	      mergedAverageWhichChan.push_back(tv2); // channel number is k
 	      mergedAverageChanFrac.push_back(tvd);	    
 	    }
@@ -4898,7 +4973,12 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 		mergedRes.push_back(newWidth);
 		mergedAverageN.push_back(1); // so far only one channel
 		mergedAverageWhichSPW.push_back(tv);
-		tv2[0] = k;
+		if(newIsDescendingI){
+		  tv2[0] = newNUM_CHANi-1-k;
+		}
+		else{
+		  tv2[0] = k;
+		}
 		mergedAverageWhichChan.push_back(tv2); // channel number is k
 		mergedAverageChanFrac.push_back(tvd);
 	      }
@@ -4918,7 +4998,12 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	      mergedRes.push_back(newRESOLUTIONi(m));
 	      mergedAverageN.push_back(1); // so far only one channel
 	      mergedAverageWhichSPW.push_back(tv);
-	      tv2[0] = m;
+		if(newIsDescendingI){
+		  tv2[0] = newNUM_CHANi-1-m;
+		}
+		else{
+		  tv2[0] = m;
+		}
 	      mergedAverageWhichChan.push_back(tv2); // channel number is m
 	      mergedAverageChanFrac.push_back(tvd);
 	    }
@@ -4940,6 +5025,16 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	averageChanFrac = mergedAverageChanFrac;
 
       } // end loop over SPWs
+
+//       // print channel fractions for debugging
+//       for(Int i=0; i<newNUM_CHAN; i++){
+//  	   cout << "i freq width " << i << " " << newCHAN_FREQ(i) << " " << newCHAN_WIDTH(i) << endl;
+// 	   for(Int j=0; j<averageN[i]; j++){
+// 	     cout << " i, j " << i << ", " << j << " averageWhichChan[i][j] " << averageWhichChan[i][j]
+// 	          << " averageWhichSPW[i][j] " << averageWhichSPW[i][j] << endl;
+// 	     cout << " averageChanFrac[i][j] " << averageChanFrac[i][j] << endl;
+// 	   }
+//       }	
       
       if(noModify){ // newCHAN_FREQ and newCHAN_WIDTH have been determined now
 	return True;
@@ -4961,14 +5056,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
       os << LogIO::NORMAL << "Combined SPW will have " << newNUM_CHAN << " channels. May change in later regridding." << LogIO::POST;
 
-//       // print channel fractions for debugging
-//       for(Int i=0; i<newNUM_CHAN; i++){
-// 	for(Int j=0; j<averageN[i]; j++){
-// 	  cout << " i, j " << i << ", " << j << " averageWhichChan[i][j] " << averageWhichChan[i][j]
-// 	       << " averageWhichSPW[i][j] " << averageWhichSPW[i][j] << endl;
-// 	  cout << " averageChanFrac[i][j] " << averageChanFrac[i][j] << endl;
-// 	}
-//       }	
 
       // Create new row in the SPW table (with ID nextSPWId) by copying
       // all information from row theSPWId
@@ -5157,9 +5244,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
       // 6) MAIN
 
-      // expect a time-sorted main table
-      os << LogIO::NORMAL5 << "Note: combineSpw assumes the input MAIN table to be sorted in TIME ..." << LogIO::POST;
-      
       ms_p.flush(True); // with fsync
       
       Table newMain(TableCopy::makeEmptyTable( tempNewName,
@@ -5230,11 +5314,19 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       Array<Bool> newFlagCategory; // has three dimensions
       Bool newFlagRow; 
 
+      // create time-sorted index for main table access
+      Vector<uInt> sortedI(nMainTabRows);
+      {
+	Vector<Double> mainTimesV = oldMainCols.time().getColumn();
+	GenSortIndirect<Double>::sort(sortedI,mainTimesV);
+      }
+
       // find the first row affected by the spw combination
       Int firstAffRow = 0;
       for(uInt mRow=0; mRow<nMainTabRows; mRow++){
-	if(DDtoSPWIndex.isDefined(DDIdCol(mRow))){
-	  firstAffRow = mRow;
+	uInt sortedMRow = sortedI(mRow);
+	if(DDtoSPWIndex.isDefined(DDIdCol(sortedMRow))){
+	  firstAffRow = sortedMRow;
 	  break;
 	}
       }
@@ -5299,10 +5391,12 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	} 
       }
       
-      ///////////////////////////////////////// 
+      /////////////////////////////////////////
+ 
       // Loop over main table rows
-      uInt mainTabRow = 0;
-      uInt newMainTabRow = 0;
+      uInt mainTabRowI = 0;
+      uInt mainTabRow = sortedI(mainTabRowI);
+      uInt newMainTabRow = mainTabRow;
       uInt nIncompleteCoverage = 0; // number of rows with incomplete SPW coverage
       // prepare progress meter
       Float progress = 0.4;
@@ -5312,7 +5406,9 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	progressStep = 0.2;
       }
 
-      while(mainTabRow<nMainTabRows){
+      while(mainTabRowI<nMainTabRows &&
+	    (mainTabRow = sortedI(mainTabRowI)) < nMainTabRows
+	    ){
 	
 	// should row be combined with others, i.e. has SPW changed?
 	// no -> just renumber DD ID (because of shrunk DD ID table)
@@ -5332,7 +5428,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	// row was already combined with a previous row?
 	if(theTime == 0){
 	  //	  cout << "skipping row with zero time " << mainTabRow << endl;
-	  mainTabRow++;
+	  mainTabRowI++;
 	  continue;
 	}
 	
@@ -5356,9 +5452,11 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
 	  //	  cout << "theRow = " << mainTabRow << ", time = " << theTime << " DDID " << theDataDescId << endl;
 	  
-	  uInt nextRow = mainTabRow+1;
+	  uInt nextRowI = mainTabRowI+1;
+	  uInt nextRow;
 	  //	  cout << "nextRow = " << nextRow << ", time diff  = " << timeCol(nextRow) - theTime << " DDID " << DDIdCol(nextRow) << endl;
-	  while(nextRow<nMainTabRows &&
+	  while(nextRowI<nMainTabRows && 
+		(nextRow = sortedI(nextRowI))<nMainTabRows && // assignment!
 		(timeCol(nextRow) - theTime)< toleratedTimeDiff &&
 		matchingRows.size() < nSpwsToCombine // there should be one matching row per SPW
 		){
@@ -5367,7 +5465,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	       antenna1Col(nextRow) != theAntenna1 ||
 	       antenna2Col(nextRow) != theAntenna2 ||
 	       fieldCol(nextRow) != theField ){ // not a matching row
-	      nextRow++;
+	      nextRowI++;
 	      continue;
 	    }
 	    // check that the intervals are the same
@@ -5404,8 +5502,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	      SPWtoRowIndex.define(theSPWId, nextRow);
 	      // cout << "matching nextRow = " << nextRow << ", time = " << timeCol(nextRow) << " DDID " << DDIdCol(nextRow) << endl;
 	    }
-	    nextRow++;
-	  } // end while nextRow ...
+	    nextRowI++;
+	  } // end while nextRowI ...
 	  
 	  // now we have a set of matching rows
 	  uInt nMatchingRows = matchingRows.size();
@@ -5689,8 +5787,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  
 	} // end if row is affected
 	
-	mainTabRow++;
-	if(mainTabRow>nMainTabRows*progress){
+	mainTabRowI++;
+	if(mainTabRowI>nMainTabRows*progress){
 	  cout << "combineSpws progress: " << progress*100 << "% processed ... " << endl;
 	  progress += progressStep;
 	}
@@ -5699,7 +5797,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       cout << "combineSpws progress: 100% processed." << endl;
       ////////////////////////////////////////////
 
-      os << LogIO::NORMAL << "Processed " << mainTabRow << " original rows, wrote "
+      os << LogIO::NORMAL << "Processed " << mainTabRowI << " original rows, wrote "
 	 << newMainTabRow << " new ones." << LogIO::POST;
 
       if(nIncompleteCoverage>0){
