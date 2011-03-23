@@ -4619,12 +4619,13 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
       Int id0 = spwsSorted[0];
 
-      Int newNUM_CHAN = numChanColr(id0);
+      uInt newNUM_CHAN = numChanColr(id0);
       newCHAN_FREQ.assign(chanFreqColr(id0));
       newCHAN_WIDTH.assign(chanWidthColr(id0));
+      Bool newIsDescending = isDescending(id0);
       {
 	Bool negativeWidths = False;
-	for(uInt i=0; i<newCHAN_WIDTH.nelements(); i++){
+	for(uInt i=0; i<newNUM_CHAN; i++){
 	  if(newCHAN_WIDTH(i) < 0.){
 	    negativeWidths = True;
 	    newCHAN_WIDTH(i) = -newCHAN_WIDTH(i);
@@ -4637,6 +4638,15 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	}
       }
 
+      if(newIsDescending){ // need to reverse the order for processing 
+	Vector<Double> tempF, tempW;
+	tempF.assign(newCHAN_FREQ);
+	tempW.assign(newCHAN_WIDTH);
+	for(uInt i=0; i<newNUM_CHAN; i++){
+	  newCHAN_FREQ(i) = tempF(newNUM_CHAN-1-i);
+	  newCHAN_WIDTH(i) = tempW(newNUM_CHAN-1-i);
+	}
+      }
 
       Vector<Double> newEFFECTIVE_BW(effectiveBWColr(id0));
       Double newREF_FREQUENCY(refFrequencyColr(id0));
@@ -4658,7 +4668,12 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	vector<Int> tv; // just a temporary auxiliary vector
 	tv.push_back(id0);
 	averageWhichSPW.push_back(tv);
-	tv[0] = i;
+	if(newIsDescending){
+	  tv[0] = newNUM_CHAN-1-i;
+	}
+	else{
+	  tv[0] = i;
+	}
 	averageWhichChan.push_back(tv);
 	vector<Double> tvd; // another one
 	tvd.push_back(1.);
@@ -4680,15 +4695,16 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       for(uInt i=1; i<nSpwsToCombine; i++){
 	Int idi = spwsSorted[i];
       
-	Int newNUM_CHANi = numChanColr(idi);
+	uInt newNUM_CHANi = numChanColr(idi);
 	Vector<Double> newCHAN_FREQi(chanFreqColr(idi));
 	Vector<Double> newCHAN_WIDTHi(chanWidthColr(idi));
+	Bool newIsDescendingI = isDescending(idi);
 	{
 	  Bool negativeWidths = False;
-	  for(uInt ii=0; ii<newCHAN_WIDTHi.nelements(); ii++){
+	  for(uInt ii=0; ii<newNUM_CHANi; ii++){
 	    if(newCHAN_WIDTHi(ii) < 0.){
 	      negativeWidths = True;
-	      newCHAN_WIDTHi(ii) = -newCHAN_WIDTH(ii);
+	      newCHAN_WIDTHi(ii) = -newCHAN_WIDTHi(ii);
 	    }
 	  }
 	  if(negativeWidths){
@@ -4697,6 +4713,16 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	       << LogIO::POST;
 	  }
 	}
+	if(newIsDescendingI){ // need to reverse the order for processing 
+	  Vector<Double> tempF, tempW;
+	  tempF.assign(newCHAN_FREQi);
+	  tempW.assign(newCHAN_WIDTHi);
+	  for(uInt ii=0; ii<newNUM_CHANi; ii++){
+	    newCHAN_FREQi(ii) = tempF(newNUM_CHANi-1-ii);
+	    newCHAN_WIDTHi(ii) = tempW(newNUM_CHANi-1-ii);
+	  }
+	}
+
 	Vector<Double> newEFFECTIVE_BWi(effectiveBWColr(idi));
 	//Double newREF_FREQUENCYi(refFrequencyColr(idi));
 	//MFrequency newREF_FREQUENCYi = refFrequencyMeasColr(idi);
@@ -4757,7 +4783,12 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    mergedRes.push_back(newRESOLUTIONi(j));
 	    mergedAverageN.push_back(1); // so far only one channel
 	    mergedAverageWhichSPW.push_back(tv);
-	    tv2[0] = j;
+	    if(newIsDescendingI){
+	      tv2[0] = newNUM_CHANi-1-j;
+	    }
+	    else{
+	      tv2[0] = j;
+	    }
 	    mergedAverageWhichChan.push_back(tv2); // channel number is j
 	    mergedAverageChanFrac.push_back(tvd);
 	  }
@@ -4778,7 +4809,12 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    mergedRes.push_back(newRESOLUTIONi(j));
 	    mergedAverageN.push_back(1); // so far only one channel
 	    mergedAverageWhichSPW.push_back(tv);
-	    tv2[0] = j;
+	    if(newIsDescendingI){
+	      tv2[0] = newNUM_CHANi-1-j;
+	    }
+	    else{
+	      tv2[0] = j;
+	    }
 	    mergedAverageWhichChan.push_back(tv2); // channel number is j
 	    mergedAverageChanFrac.push_back(tvd);
 	  }
@@ -4825,7 +4861,12 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	      mergedRes.push_back(newRESOLUTIONi(k));
 	      mergedAverageN.push_back(1); // so far only one channel
 	      mergedAverageWhichSPW.push_back(tv);
-	      tv2[0] = k;
+	      if(newIsDescendingI){
+		tv2[0] = newNUM_CHANi-1-k;
+	      }
+	      else{
+		tv2[0] = k;
+	      }
 	      mergedAverageWhichChan.push_back(tv2); // channel number is k
 	      mergedAverageChanFrac.push_back(tvd);	    
 	    }
@@ -4940,7 +4981,12 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 		mergedRes.push_back(newWidth);
 		mergedAverageN.push_back(1); // so far only one channel
 		mergedAverageWhichSPW.push_back(tv);
-		tv2[0] = k;
+		if(newIsDescendingI){
+		  tv2[0] = newNUM_CHANi-1-k;
+		}
+		else{
+		  tv2[0] = k;
+		}
 		mergedAverageWhichChan.push_back(tv2); // channel number is k
 		mergedAverageChanFrac.push_back(tvd);
 	      }
@@ -4960,7 +5006,12 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	      mergedRes.push_back(newRESOLUTIONi(m));
 	      mergedAverageN.push_back(1); // so far only one channel
 	      mergedAverageWhichSPW.push_back(tv);
-	      tv2[0] = m;
+		if(newIsDescendingI){
+		  tv2[0] = newNUM_CHANi-1-m;
+		}
+		else{
+		  tv2[0] = m;
+		}
 	      mergedAverageWhichChan.push_back(tv2); // channel number is m
 	      mergedAverageChanFrac.push_back(tvd);
 	    }
@@ -4982,6 +5033,16 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	averageChanFrac = mergedAverageChanFrac;
 
       } // end loop over SPWs
+
+//       // print channel fractions for debugging
+//       for(Int i=0; i<newNUM_CHAN; i++){
+//  	   cout << "i freq width " << i << " " << newCHAN_FREQ(i) << " " << newCHAN_WIDTH(i) << endl;
+// 	   for(Int j=0; j<averageN[i]; j++){
+// 	     cout << " i, j " << i << ", " << j << " averageWhichChan[i][j] " << averageWhichChan[i][j]
+// 	          << " averageWhichSPW[i][j] " << averageWhichSPW[i][j] << endl;
+// 	     cout << " averageChanFrac[i][j] " << averageChanFrac[i][j] << endl;
+// 	   }
+//       }	
       
       if(noModify){ // newCHAN_FREQ and newCHAN_WIDTH have been determined now
 	return True;
@@ -5003,14 +5064,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
       os << LogIO::NORMAL << "Combined SPW will have " << newNUM_CHAN << " channels. May change in later regridding." << LogIO::POST;
 
-//       // print channel fractions for debugging
-//       for(Int i=0; i<newNUM_CHAN; i++){
-// 	for(Int j=0; j<averageN[i]; j++){
-// 	  cout << " i, j " << i << ", " << j << " averageWhichChan[i][j] " << averageWhichChan[i][j]
-// 	       << " averageWhichSPW[i][j] " << averageWhichSPW[i][j] << endl;
-// 	  cout << " averageChanFrac[i][j] " << averageChanFrac[i][j] << endl;
-// 	}
-//       }	
 
       // Create new row in the SPW table (with ID nextSPWId) by copying
       // all information from row theSPWId
