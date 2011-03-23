@@ -213,6 +213,6 @@ def stats():
         print "###Error in ic2233 regression: ",instance;
 
 
-# for i in range(1):
-#     run();
-#     stats();
+for i in range(1):
+     run();
+     stats();
