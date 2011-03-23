@@ -32,7 +32,6 @@ casa_add_python( xmlcasa xmlcasa_regressions_tests_python python/${PYTHONV}/regr
   cvel_test2.py
   equinox_vis.py
   fits-import-export.py
-  ggtau.py
   h121.py
   ic2233.py
   l02d.py
