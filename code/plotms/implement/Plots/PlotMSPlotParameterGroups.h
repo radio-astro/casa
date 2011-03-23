@@ -1237,11 +1237,9 @@ class PMS_PP_Iteration : public PlotMSPlotParameters::Group {
 
 	
 public:
-	enum AxisSharingMode   {
-		COMMON_AXIS,
-		REPEAT_AXES,
-		INDIV_AXES,
-		NO_AXES
+	enum AxisScaleMode   {
+		GLOBAL,
+		SELF
 	};
 
 
@@ -1326,25 +1324,29 @@ public:
           }
      }
 
+     Bool globalXRange() const { 
+       return itsXAxisScaleMode_==PMS_PP_Iteration::GLOBAL; };
 
+     Bool globalYRange() const { 
+       return itsYAxisScaleMode_==PMS_PP_Iteration::GLOBAL; };
 
-     AxisSharingMode xAxisSharingMode() const {
-          return itsXAxisSharingMode_;
+     AxisScaleMode xAxisScaleMode() const {
+          return itsXAxisScaleMode_;
      }
-     void setXAxisSharingMode(AxisSharingMode value) {
-          if (itsXAxisSharingMode_ != value) {
-               itsXAxisSharingMode_ = value;
+     void setXAxisScaleMode(AxisScaleMode value) {
+          if (itsXAxisScaleMode_ != value) {
+               itsXAxisScaleMode_ = value;
                updated();
           }
      }
 
 
-     AxisSharingMode yAxisSharingMode() const {
-          return itsYAxisSharingMode_;
+     AxisScaleMode yAxisScaleMode() const {
+          return itsYAxisScaleMode_;
      }
-     void setYAxisSharingMode (AxisSharingMode value) {
-          if (itsYAxisSharingMode_ != value) {
-               itsYAxisSharingMode_ = value;
+     void setYAxisScaleMode (AxisScaleMode value) {
+          if (itsYAxisScaleMode_ != value) {
+               itsYAxisScaleMode_ = value;
                updated();
           }
      }
@@ -1356,16 +1358,16 @@ private:
      PMS::Axis itsIterationAxis_;
      int itsNumRows_;
      int itsNumColumns_;
-     AxisSharingMode itsXAxisSharingMode_;
-     AxisSharingMode itsYAxisSharingMode_;
+     AxisScaleMode itsXAxisScaleMode_;
+     AxisScaleMode itsYAxisScaleMode_;
 
      /* Key strings for Record */
      static const String REC_ENABLEITERATION;
      static const String REC_ITERATIONAXIS;
      static const String REC_NUMROWS;
      static const String REC_NUMCOLUMNS;
-     static const String REC_XAXISSHARINGMODE;
-     static const String REC_YAXISSHARINGMODE;
+     static const String REC_XAXISSCALEMODE;
+     static const String REC_YAXISSCALEMODE;
 
      void setDefaults();
 };

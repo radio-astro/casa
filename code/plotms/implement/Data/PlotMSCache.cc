@@ -980,7 +980,7 @@ void PlotMSCache::release(const vector<PMS::Axis>& axes) {
     if(!dataLoaded_ || !axesSet_) nChunk_ = 0;
 }
 
-void PlotMSCache::setUpPlot(PMS::Axis xAxis, PMS::Axis yAxis) {
+void PlotMSCache::setUpCacheForPlot(PMS::Axis xAxis, PMS::Axis yAxis) {
 
   // Put axes on a Vector so we can loop over them below
   Vector<Int> plaxes(2);
@@ -1546,6 +1546,8 @@ void PlotMSCache::setPlotMask(Int chunk) {
     (*plmask_[chunk]) = operator>(partialNFalse(*flag_[chunk],csh).reform(nsh),uInt(0));
   }
   
+  //  cout << "plmask_[chunk]->shape() = " << plmask_[chunk]->shape() << endl;
+
 }
 
 void PlotMSCache::flagToDisk(const PlotMSFlagging& flagging,

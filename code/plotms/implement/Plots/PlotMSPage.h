@@ -46,6 +46,7 @@ class PlotMSPage {
     friend class PlotMSMultiPlot;
     friend class PlotMSPages;
     friend class PlotMSSinglePlot;
+    friend class PlotMSIterPlot;
     
 public:    
     // Copy constructor.
@@ -126,6 +127,7 @@ class PlotMSPages {
     friend class PlotMSPlot;
     friend class PlotMSPlotManager;
     friend class PlotMSSinglePlot;
+    friend class PlotMSIterPlot;
     
 public:    
     // Copy constructor.

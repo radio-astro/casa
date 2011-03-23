@@ -1144,21 +1144,21 @@ const String PMS_PP_Iteration::REC_ENABLEITERATION = "enableIteration";
 const String PMS_PP_Iteration::REC_ITERATIONAXIS = "iterationAxis";
 const String PMS_PP_Iteration::REC_NUMROWS = "numRows";
 const String PMS_PP_Iteration::REC_NUMCOLUMNS = "numColumns";
-const String PMS_PP_Iteration::REC_XAXISSHARINGMODE = "xAxisSharingMode";
-const String PMS_PP_Iteration::REC_YAXISSHARINGMODE = "yAxisSharingMode";
-
-
+const String PMS_PP_Iteration::REC_XAXISSCALEMODE = "xAxisScaleMode";
+const String PMS_PP_Iteration::REC_YAXISSCALEMODE = "yAxisScaleMode";
 
 PMS_PP_Iteration::PMS_PP_Iteration(PlotFactoryPtr factory) : PlotMSPlotParameters::Group(factory)
     {
     setDefaults();
-    } PMS_PP_Iteration::PMS_PP_Iteration(const PMS_PP_Iteration& copy) : PlotMSPlotParameters::Group(copy)
+    } 
+
+PMS_PP_Iteration::PMS_PP_Iteration(const PMS_PP_Iteration& copy) : PlotMSPlotParameters::Group(copy)
     {
     setDefaults();
     operator=(copy);
-    } PMS_PP_Iteration::~PMS_PP_Iteration() { }
+    } 
 
-
+PMS_PP_Iteration::~PMS_PP_Iteration() { }
 
 Record PMS_PP_Iteration::toRecord() const
     {
@@ -1167,12 +1167,10 @@ Record PMS_PP_Iteration::toRecord() const
     rec.define(REC_ITERATIONAXIS, itsIterationAxis_);
     rec.define(REC_NUMROWS, itsNumRows_);
     rec.define(REC_NUMCOLUMNS, itsNumColumns_);
-    rec.define(REC_XAXISSHARINGMODE, itsXAxisSharingMode_);
-    rec.define(REC_YAXISSHARINGMODE, itsYAxisSharingMode_);
+    rec.define(REC_XAXISSCALEMODE, itsXAxisScaleMode_);
+    rec.define(REC_YAXISSCALEMODE, itsYAxisScaleMode_);
     return rec;
     }
-
-
 
 void PMS_PP_Iteration::fromRecord(const Record& record)
     {
@@ -1197,14 +1195,14 @@ void PMS_PP_Iteration::fromRecord(const Record& record)
         itsNumColumns_ = record.asInt(REC_NUMCOLUMNS);
         valuesChanged = true;
         }
-    if (record.isDefined(REC_XAXISSHARINGMODE) && record.dataType(REC_XAXISSHARINGMODE) == TpInt && itsXAxisSharingMode_ != record.asInt(REC_XAXISSHARINGMODE))
+    if (record.isDefined(REC_XAXISSCALEMODE) && record.dataType(REC_XAXISSCALEMODE) == TpInt && itsXAxisScaleMode_ != record.asInt(REC_XAXISSCALEMODE))
         {
-        itsXAxisSharingMode_ = (AxisSharingMode)record.asInt(REC_XAXISSHARINGMODE);
+        itsXAxisScaleMode_ = (AxisScaleMode)record.asInt(REC_XAXISSCALEMODE);
         valuesChanged = true;
         }
-    if (record.isDefined(REC_YAXISSHARINGMODE) && record.dataType(REC_YAXISSHARINGMODE) == TpInt && itsYAxisSharingMode_ != record.asInt(REC_YAXISSHARINGMODE))
+    if (record.isDefined(REC_YAXISSCALEMODE) && record.dataType(REC_YAXISSCALEMODE) == TpInt && itsYAxisScaleMode_ != record.asInt(REC_YAXISSCALEMODE))
         {
-        itsYAxisSharingMode_ = (AxisSharingMode)record.asInt(REC_YAXISSHARINGMODE);
+        itsYAxisScaleMode_ = (AxisScaleMode)record.asInt(REC_YAXISSCALEMODE);
         valuesChanged = true;
         }
     if (valuesChanged) updated();
@@ -1221,8 +1219,8 @@ PlotMSPlotParameters::Group& PMS_PP_Iteration::operator=(const Group& other)
         itsIterationAxis_ = o->itsIterationAxis_;
         itsNumRows_ = o->itsNumRows_;
         itsNumColumns_ = o->itsNumColumns_;
-        itsXAxisSharingMode_ = o->itsXAxisSharingMode_;
-        itsYAxisSharingMode_ = o->itsYAxisSharingMode_;
+        itsXAxisScaleMode_ = o->itsXAxisScaleMode_;
+        itsYAxisScaleMode_ = o->itsYAxisScaleMode_;
         updated();
         }
     return *this;
@@ -1238,8 +1236,8 @@ bool PMS_PP_Iteration::operator==(const Group& other) const
     if (itsIterationAxis_ != o->itsIterationAxis_) return false;
     if (itsNumRows_ != o->itsNumRows_) return false;
     if (itsNumColumns_ != o->itsNumColumns_) return false;
-    if (itsXAxisSharingMode_ != o->itsXAxisSharingMode_) return false;
-    if (itsYAxisSharingMode_ != o->itsYAxisSharingMode_) return false;
+    if (itsXAxisScaleMode_ != o->itsXAxisScaleMode_) return false;
+    if (itsYAxisScaleMode_ != o->itsYAxisScaleMode_) return false;
     return true;
     }
 
@@ -1248,11 +1246,12 @@ bool PMS_PP_Iteration::operator==(const Group& other) const
 void PMS_PP_Iteration::setDefaults()
     {
     itsEnableIteration_ = 0;
-    itsIterationAxis_ = PMS::DEFAULT_COLOR_AXIS;
+    itsIterationAxis_ = PMS::NONE;
+    //    itsIterationAxis_ = PMS::SCAN;
     itsNumRows_ = 1;
     itsNumColumns_ = 1;
-    itsXAxisSharingMode_ = COMMON_AXIS;
-    itsYAxisSharingMode_ = COMMON_AXIS;
+    itsXAxisScaleMode_ = GLOBAL;
+    itsYAxisScaleMode_ = GLOBAL;
     }
 
 

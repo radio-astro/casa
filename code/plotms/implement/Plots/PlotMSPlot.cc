@@ -55,7 +55,7 @@ void PlotMSPlot::makeParameters(PlotMSPlotParameters& params, PlotMSApp* plotms)
 
 PlotMSPlot::PlotMSPlot(PlotMSApp* parent) : itsParent_(parent),
         itsFactory_(parent->getPlotter()->getFactory()),
-        itsParams_(itsFactory_), itsData_(parent) { }
+        itsParams_(itsFactory_), itsData_(parent),itsCache_(parent),itsCache2_(parent) { }
 
 PlotMSPlot::~PlotMSPlot() {
     
@@ -88,6 +88,7 @@ PlotMSRegions PlotMSPlot::visibleSelectedRegions() const {
     return selectedRegions(visibleCanvases()); }
 
 bool PlotMSPlot::initializePlot(PlotMSPages& pages) {    
+
     bool hold = allDrawingHeld();
     if(!hold) holdDrawing();
     
@@ -126,13 +127,9 @@ void PlotMSPlot::detachFromCanvases() {
 }
 */
 
-PlotMSData& PlotMSPlot::data() { return itsData_; }
-const PlotMSData& PlotMSPlot::data() const { return itsData_; }
-
-PlotMSApp* PlotMSPlot::parent() { return itsParent_; }
-
 void PlotMSPlot::parametersHaveChanged(const PlotMSWatchedParameters& p,
-        int updateFlag) {    
+        int updateFlag) {
+
     // Make sure it's this plot's parameters.
     if(&p != &parameters()) return;
     
@@ -159,6 +156,7 @@ void PlotMSPlot::parametersHaveChanged(const PlotMSWatchedParameters& p,
     // Update MS as needed.
     const PMS_PP_MSData* d = parameters().typedGroup<PMS_PP_MSData>();
     bool dataSuccess = d->isSet();
+
     if(dataSuccess && (updateFlag & PMS_PP::UPDATE_MSDATA))
         dataSuccess = updateData();
 
@@ -265,8 +263,6 @@ bool PlotMSPlot::updateData() {
 	OrderedMap<Int, Vector<Vector<Int> > > corrsel(Vector<Vector<Int> >(0));
         d->selection().apply(itsMS_, itsSelectedMS_, chansel,corrsel);
 
-	cout << "chansel = " << chansel << endl;
-        
         // Sort appropriately.
         double solint(DBL_MAX);
         double interval(max(solint, DBL_MIN));

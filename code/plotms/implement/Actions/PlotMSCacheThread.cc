@@ -29,6 +29,8 @@
 #include <plotms/Gui/PlotMSPlotter.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSPlot.h>
+#include <plotms/Data/PlotMSCache2.h>
+
 
 namespace casa {
 
@@ -48,11 +50,63 @@ PlotMSCacheThread::PlotMSCacheThread(PlotMSPlot* plot, PlotMSData* data,
 				     PMSPTObject postThreadObject) :
         PlotMSThread(plot->parent()->getPlotter()->getProgressWidget(),
         postThreadMethod, postThreadObject), itsPlot_(plot),
-        itsData_(data), itsLoad_(true),
+        itsData_(data), itsCache_(NULL), itsCache2_(NULL),
+	itsLoad_(true),
         itsAxes_(axes), itsAxesData_(dataCols), 
 	itsMSName_(msname),itsSelection_(selection),
 	itsAveraging_(averaging),itsTransformations_(transformations),
         itsSetupPlot_(setupPlot && axes.size() >= 2), wasCanceled_(false) {
+    // Make sure axes data vector is same length as axes vector.
+    if(itsAxesData_.size() != itsAxes_.size())
+        itsAxesData_.resize(itsAxes_.size(), PMS::DEFAULT_DATACOLUMN);
+}
+PlotMSCacheThread::PlotMSCacheThread(PlotMSPlot* plot, PlotMSCache* cache,
+				     const vector<PMS::Axis>& axes, 
+				     const vector<PMS::DataColumn>& dataCols,
+				     const String& msname, 
+				     const PlotMSSelection& selection, 
+				     const PlotMSAveraging& averaging, 
+				     const PlotMSTransformations& transformations, 
+				     bool setupPlot,
+				     PMSPTMethod postThreadMethod, 
+				     PMSPTObject postThreadObject) :
+        PlotMSThread(plot->parent()->getPlotter()->getProgressWidget(),
+        postThreadMethod, postThreadObject), itsPlot_(plot),
+        itsData_(NULL), itsCache_(cache), itsCache2_(NULL),
+	itsLoad_(true),
+        itsAxes_(axes), itsAxesData_(dataCols), 
+	itsMSName_(msname),itsSelection_(selection),
+	itsAveraging_(averaging),itsTransformations_(transformations),
+        itsSetupPlot_(setupPlot && axes.size() >= 2), wasCanceled_(false) {
+
+  //  cout << "FILLING VIA CACHE, NOT DATA***********************" << endl;
+
+    // Make sure axes data vector is same length as axes vector.
+    if(itsAxesData_.size() != itsAxes_.size())
+        itsAxesData_.resize(itsAxes_.size(), PMS::DEFAULT_DATACOLUMN);
+}
+
+PlotMSCacheThread::PlotMSCacheThread(PlotMSPlot* plot, PlotMSCache2* cache,
+				     const vector<PMS::Axis>& axes, 
+				     const vector<PMS::DataColumn>& dataCols,
+				     const String& msname, 
+				     const PlotMSSelection& selection, 
+				     const PlotMSAveraging& averaging, 
+				     const PlotMSTransformations& transformations, 
+				     bool setupPlot,
+				     PMSPTMethod postThreadMethod, 
+				     PMSPTObject postThreadObject) :
+        PlotMSThread(plot->parent()->getPlotter()->getProgressWidget(),
+        postThreadMethod, postThreadObject), itsPlot_(plot),
+        itsData_(NULL), itsCache_(NULL), itsCache2_(cache),
+	itsLoad_(true),
+        itsAxes_(axes), itsAxesData_(dataCols), 
+	itsMSName_(msname),itsSelection_(selection),
+	itsAveraging_(averaging),itsTransformations_(transformations),
+        itsSetupPlot_(setupPlot && axes.size() >= 2), wasCanceled_(false) {
+
+  //  cout << "FILLING VIA **CACHE2**, NOT DATA***********************" << endl;
+
     // Make sure axes data vector is same length as axes vector.
     if(itsAxesData_.size() != itsAxes_.size())
         itsAxesData_.resize(itsAxes_.size(), PMS::DEFAULT_DATACOLUMN);
@@ -63,7 +117,7 @@ PlotMSCacheThread::PlotMSCacheThread(PlotMSPlot* plot,
         PMSPTObject postThreadObject) :
         PlotMSThread(plot->parent()->getPlotter()->getProgressWidget(),
         postThreadMethod, postThreadObject), itsPlot_(plot),
-        itsData_(&plot->data()), itsLoad_(false),
+        itsData_(&plot->data()), itsCache_(&plot->cache()),itsLoad_(false),
         itsAxes_(axes), itsSetupPlot_(false), wasCanceled_(false) { }
 
 PlotMSCacheThread::~PlotMSCacheThread() { }
@@ -140,31 +194,66 @@ PlotMSCacheThreadHelper::~PlotMSCacheThreadHelper() { }
 void PlotMSCacheThreadHelper::run() {
     try {
         // Load
-        if(itsParent_.itsLoad_) {
-            itsParent_.itsData_->loadCache(itsParent_.itsAxes_, 
-					   itsParent_.itsAxesData_,
-					   itsParent_.itsMSName_, 
-					   itsParent_.itsSelection_, 
-					   itsParent_.itsAveraging_, 
-					   itsParent_.itsTransformations_, 
-					   &itsParent_);
-            if(itsParent_.itsSetupPlot_)
-                itsParent_.itsData_->setupCache(itsParent_.itsAxes_[0],
-                                                itsParent_.itsAxes_[1]);
-        
+      if(itsParent_.itsLoad_) {
+	if (itsParent_.itsCache2_)
+	  itsParent_.itsCache2_->load(itsParent_.itsAxes_, 
+				      itsParent_.itsAxesData_,
+				      itsParent_.itsMSName_, 
+				      itsParent_.itsSelection_, 
+				      itsParent_.itsAveraging_, 
+				      itsParent_.itsTransformations_, 
+				      &itsParent_);
+	else if (itsParent_.itsCache_)
+	  itsParent_.itsCache_->load(itsParent_.itsAxes_, 
+				     itsParent_.itsAxesData_,
+				     itsParent_.itsMSName_, 
+				     itsParent_.itsSelection_, 
+				     itsParent_.itsAveraging_, 
+				     itsParent_.itsTransformations_, 
+				     &itsParent_);
+	else if (itsParent_.itsData_) 
+	  itsParent_.itsData_->loadCache(itsParent_.itsAxes_, 
+					 itsParent_.itsAxesData_,
+					 itsParent_.itsMSName_, 
+					 itsParent_.itsSelection_, 
+					 itsParent_.itsAveraging_, 
+					 itsParent_.itsTransformations_, 
+					 &itsParent_);
+	else
+	  throw(AipsError("Problem in PlotMSCacheThreadHelper::run A"));
+	
+	if(itsParent_.itsSetupPlot_) {
+	  if (itsParent_.itsCache2_)
+	    itsParent_.itsCache2_->setUpIndexer(PMS::NONE);
+	  else if (itsParent_.itsCache_)
+	    itsParent_.itsCache_->setUpCacheForPlot(itsParent_.itsAxes_[0],
+						    itsParent_.itsAxes_[1]);
+	  else if (itsParent_.itsData_)
+	    itsParent_.itsData_->setupCache(itsParent_.itsAxes_[0],
+					    itsParent_.itsAxes_[1]);
+	  else
+	    throw(AipsError("Problem in PlotMSCacheThreadHelper::run B"));
+	}
         // Release
-        } else {
-            itsParent_.itsData_->releaseCache(itsParent_.itsAxes_);
-        }
-        
+      } else {
+	if (itsParent_.itsCache2_)
+	  itsParent_.itsCache2_->release(itsParent_.itsAxes_);
+	else if (itsParent_.itsCache_)
+	  itsParent_.itsCache_->release(itsParent_.itsAxes_);
+	else if (itsParent_.itsData_)
+	  itsParent_.itsData_->releaseCache(itsParent_.itsAxes_);
+	else
+	  throw(AipsError("Problem in PlotMSCacheThreadHelper::run C"));
+      }
+      
     } catch(AipsError& err) {
-        itsParent_.itsCacheError_ = "Error during cache ";
-        itsParent_.itsCacheError_+=itsParent_.itsLoad_? "loading": "releasing";
-        itsParent_.itsCacheError_ += ": " + err.getMesg();
+      itsParent_.itsCacheError_ = "Error during cache ";
+      itsParent_.itsCacheError_+=itsParent_.itsLoad_? "loading": "releasing";
+      itsParent_.itsCacheError_ += ": " + err.getMesg();
     } catch(...) {
-        itsParent_.itsCacheError_ = "Unknown error during cache ";
-        itsParent_.itsCacheError_+=itsParent_.itsLoad_? "loading": "releasing";
-        itsParent_.itsCacheError_+="!";
+      itsParent_.itsCacheError_ = "Unknown error during cache ";
+      itsParent_.itsCacheError_+=itsParent_.itsLoad_? "loading": "releasing";
+      itsParent_.itsCacheError_+="!";
     }
 }
 

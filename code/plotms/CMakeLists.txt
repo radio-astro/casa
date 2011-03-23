@@ -88,6 +88,8 @@ casa_add_library( plotms
   implement/Actions/PlotMSThread.cc
   implement/Data/PlotCalCache.cc
   implement/Data/PlotMSCache.cc
+  implement/Data/PlotMSCache2.cc
+  implement/Data/PlotMSIndexer.cc
   implement/Data/PlotMSCacheIndexer.cc
   implement/Data/PlotMSData.cc
   implement/Data/PlotMSVBAverager.cc
@@ -133,6 +135,7 @@ casa_add_library( plotms
   implement/Plots/PlotMSPlotParameterGroups.cc
   implement/Plots/PlotMSPlotParameters.cc
   implement/Plots/PlotMSSinglePlot.cc
+  implement/Plots/PlotMSIterPlot.cc
   )
 
 casa_add_executable( plotms casaplotms apps/casaplotms/casaplotms.cc )

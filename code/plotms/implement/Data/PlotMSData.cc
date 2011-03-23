@@ -44,11 +44,13 @@ PlotMSData::PlotMSData(PlotMSApp* parent) :
   itsColorize_(false), 
   itsColorizeAxis_(PMS::DEFAULT_COLOR_AXIS) {
   
-  itsIndexer_ = new PlotMSCacheIndexer(&*itsCache_);
-
   // Nominally, point to the MS Cache
   //  (this gets updated on-demand in loadCache)
   itsCache_=itsMSCache_;
+
+
+  itsIndexer_ = new PlotMSCacheIndexer(&*itsCache_);
+
 
 }
 
@@ -238,7 +240,7 @@ void PlotMSData::setupCache(PMS::Axis xAxis, PMS::Axis yAxis) {
 bool PlotMSData::cacheReady() const { return itsCache_->readyForPlotting(); }
 
 void PlotMSData::setupCache(PMS::Axis xAxis, PMS::Axis yAxis) {
-    itsCache_->setUpPlot(xAxis, yAxis); }
+    itsCache_->setUpCacheForPlot(xAxis, yAxis); }
 #endif
 
 void PlotMSData::releaseCache(const vector<PMS::Axis>& axes) {

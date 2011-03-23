@@ -38,6 +38,7 @@ namespace casa {
 
 // Static //
 
+
 const int dum_a =
     PlotMSWatchedParameters::REGISTER_UPDATE_FLAG("REDRAW");
 const int dum_b =
@@ -50,11 +51,12 @@ const int dum_e =
     PlotMSWatchedParameters::REGISTER_UPDATE_FLAG("CANVAS");
 const int dum_f =
     PlotMSWatchedParameters::REGISTER_UPDATE_FLAG("DISPLAY");
+const int dum_g =
+    PlotMSWatchedParameters::REGISTER_UPDATE_FLAG("ITERATION");
 const int PlotMSParameters::UPDATE_LOG =
     PlotMSWatchedParameters::REGISTER_UPDATE_FLAG("LOG");
 const int PlotMSParameters::UPDATE_PLOTMS_OPTIONS =
     PlotMSWatchedParameters::REGISTER_UPDATE_FLAG("PLOTMS_OPTIONS");
-
 
 int PlotMSParameters::chooserHistoryLimit() {
     return QtFileDialog::historyLimit(); }

@@ -30,6 +30,7 @@
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSMultiPlot.h>
 #include <plotms/Plots/PlotMSSinglePlot.h>
+#include <plotms/Plots/PlotMSIterPlot.h>
 
 namespace casa {
 
@@ -103,6 +104,14 @@ PlotMSSinglePlot* PlotMSPlotManager::addSinglePlot(
         const PlotMSPlotParameters* params) {
     if(itsParent_ == NULL) return NULL;
     PlotMSSinglePlot* plot = new PlotMSSinglePlot(itsParent_);
+    addPlot(plot, params);
+    return plot;
+}
+
+PlotMSIterPlot* PlotMSPlotManager::addIterPlot(
+        const PlotMSPlotParameters* params) {
+    if(itsParent_ == NULL) return NULL;
+    PlotMSIterPlot* plot = new PlotMSIterPlot(itsParent_);
     addPlot(plot, params);
     return plot;
 }
