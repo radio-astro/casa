@@ -668,6 +668,8 @@ class cvel_test(unittest.TestCase):
         tb.open('myinput.ms/SPECTRAL_WINDOW')
         a = tb.getcell('CHAN_FREQ')
         b = numpy.array([a[1], a[2], a[3]])
+        tb.close()
+
         rval = cvel(
             vis = 'myinput.ms',
             outputvis = outfile,
@@ -686,6 +688,8 @@ class cvel_test(unittest.TestCase):
         tb.open('myinput.ms/SPECTRAL_WINDOW')
         a = tb.getcell('CHAN_FREQ')
         b = numpy.array([a[1], a[2], a[3]])
+        tb.close()
+
         rval = cvel(
             vis = 'myinput.ms',
             outputvis = outfile,
@@ -704,6 +708,8 @@ class cvel_test(unittest.TestCase):
         tb.open('myinput.ms/SPECTRAL_WINDOW')
         a = tb.getcell('CHAN_FREQ')
         b = numpy.array([a[1], a[2], a[3]])
+        tb.close()
+
         rval = cvel(
             vis = 'myinput.ms',
             outputvis = outfile,
@@ -723,6 +729,8 @@ class cvel_test(unittest.TestCase):
         tb.open('myinput.ms/SPECTRAL_WINDOW')
         a = tb.getcell('CHAN_FREQ')
         b = numpy.array([a[1], a[2], a[3]])
+        tb.close()
+
         rval = cvel(
             vis = 'myinput.ms',
             outputvis = outfile,
@@ -742,6 +750,7 @@ class cvel_test(unittest.TestCase):
         tb.open('myinput.ms/SPECTRAL_WINDOW')
         a = tb.getcell('CHAN_FREQ')
         c =  qa.constants('c')['value']
+        tb.close()
         
         restf = a[0] 
         bv1 = c * (restf-a[5])/restf 
@@ -769,7 +778,8 @@ class cvel_test(unittest.TestCase):
         tb.open('myinput.ms/SPECTRAL_WINDOW')
         a = tb.getcell('CHAN_FREQ')
         c =  qa.constants('c')['value']
-        
+        tb.close()
+
         restf = a[0] 
         bv1 = c * (restf-a[3])/restf 
         bv2 = c * (restf-a[4])/restf 
@@ -796,6 +806,7 @@ class cvel_test(unittest.TestCase):
         tb.open('myinput.ms/SPECTRAL_WINDOW')
         a = tb.getcell('CHAN_FREQ')
         c =  qa.constants('c')['value']
+        tb.close()
         
         restf = a[0] 
         bv1 = c * (restf-a[5])/a[5] 
@@ -827,6 +838,7 @@ class cvel_test(unittest.TestCase):
         tb.open('myinput.ms/SPECTRAL_WINDOW')
         a = tb.getcell('CHAN_FREQ')
         c =  qa.constants('c')['value']
+        tb.close()
         
         restf = a[0] 
         bv1 = c * (restf-a[5])/a[5] 
