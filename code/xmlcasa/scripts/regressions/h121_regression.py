@@ -372,9 +372,18 @@ ia.close()
 
 srca=3.235
 srcb=3.260
-coa=0.4755
-cob=0.4043
-coc=0.3300
+#coa=0.4755
+#cob=0.4043
+#coc=0.3300
+# new values for CO images after cvel-clean param 
+# unification (last relevant change r.14424)
+# The values are from the run on 64b RHEL(rishi), 
+# with active # r.14436. Lower max values but 
+# slightly better rms # as compared to ones get with casa3.1 
+coa=0.4172
+cob=0.3712
+coc=0.3362
+
 contmax=0.00963
 
 diff_3mma=abs((srca-thistest_3mm)/srca)
