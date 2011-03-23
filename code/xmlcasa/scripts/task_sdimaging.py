@@ -11,9 +11,15 @@ def sdimaging(sdfile, specunit, restfreq, scanlist, field, spw, antenna, stokes,
         try:
             # file check
             sdfile=sdfile.rstrip('/')+'/'
+            ftab=''
+            spwtab=''
+            srctab=''
             if os.path.isdir(sdfile):
                 tb.open(sdfile)
                 tbkeys=tb.getkeywords()
+                ftab=tbkeys['FIELD'].split()[-1]
+                spwtab=tbkeys['SPECTRAL_WINDOW'].split()[-1]
+                srctab=tbkeys['SOURCE'].split()[-1]
                 tb.close()
                 if any(key=='MS_VERSION' for key in tbkeys):
                     casalog.post( 'MS format' )
@@ -38,7 +44,7 @@ def sdimaging(sdfile, specunit, restfreq, scanlist, field, spw, antenna, stokes,
             # field
             fieldid=-1
             sourceid=-1
-            tb.open(sdfile+'FIELD')
+            tb.open(ftab)
             fieldnames=tb.getcol('NAME')
             fsrcids=tb.getcol('SOURCE_ID')
             tb.close()
@@ -61,18 +67,22 @@ def sdimaging(sdfile, specunit, restfreq, scanlist, field, spw, antenna, stokes,
             
             # restfreq
             if restfreq=='':
-                tb.open(sdfile+'SOURCE')
-                rfcol=tb.getcol('REST_FREQUENCY')
+                tb.open(srctab)
+                rfcol=tb.getcol('REST_FREQUENCY').transpose()
                 srcidcol=tb.getcol('SOURCE_ID')
+                tb.close()
                 for i in range(tb.nrows()):
                     if sourceid==srcidcol[i]:
-                        restfreq=rfcol[i][0]
+                        if len(rfcol[i])==0:
+                            restfreq=0.0
+                        else:
+                            restfreq=rfcol[i][0]
                         break
                 casalog.post("restfreq set to %s"%restfreq, "INFO")
 
             # spw
             spwid=-1
-            tb.open(sdfile+'SPECTRAL_WINDOW')
+            tb.open(spwtab)
             nrows=tb.nrows()
             tb.close()
             if spw < nrows:
