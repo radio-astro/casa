@@ -2301,19 +2301,19 @@ class cleanhelper:
         if descending:
           # channel mode case (width always >0) 
           if width!="" and (type(width)==int or type(width)==float):
-            if descendnewfreqs:
+            if descendingnewfreqs:
               reverse=False 
             else:
               reverse=True
           elif width=="":
-            if descendnewfreqs:
+            if descendingnewfreqs:
               reverse=False
             else:
               reverse=True
           elif type(width)==str:
             if width.lstrip().find('-')==0:
               negativew=True
-            if descendnewfreqs:
+            if descendingnewfreqs:
               if negativew: 
                 reverse=False
               else:
