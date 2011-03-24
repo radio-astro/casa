@@ -4565,16 +4565,19 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       Int newSPWId = origNumSPWs;
 
       vector<Int> spwsToCombine;
+      Vector<Bool> includeIt(origNumSPWs, False);
 
       if(spwids(0) == -1){
 	for(Int i=0; i<origNumSPWs; i++){
 	  spwsToCombine.push_back(i);
+	  includeIt(i) = True;
 	}
       }
       else {
 	for(uInt i=0; i<spwids.nelements(); i++){
 	  if(spwids(i)<origNumSPWs && spwids(i)>=0){
 	    spwsToCombine.push_back(spwids(i));
+	    includeIt(i) = True;
 	  }
 	  else{
 	    os << LogIO::SEVERE << "Invalid SPW ID selected for combination " << spwids(i) 
@@ -4608,28 +4611,32 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       ROScalarColumn<Double> totalBandwidthColr = SPWColrs.totalBandwidth();
 
       // create a list of the spw ids sorted by first (lowest) channel frequency
-      vector<Int> spwsSorted(origNumSPWs);
-      Vector<Bool> isDescending(origNumSPWs, False);
+      vector<Int> spwsSorted(nSpwsToCombine);
+      Vector<Bool> isDescending(nSpwsToCombine, False);
       Bool negChanWidthWarned = False;
       {
-	Double* firstFreq = new Double[origNumSPWs];
+	Double* firstFreq = new Double[nSpwsToCombine];
+	uInt count = 0;
 	for(uInt i=0; (Int)i<origNumSPWs; i++){
-	  Vector<Double> CHAN_FREQ(chanFreqColr(i));
-	  // if frequencies are ascending, take the first channel, otherwise the last
-	  uInt nCh = CHAN_FREQ.nelements();
-	  if(CHAN_FREQ(0)<=CHAN_FREQ(nCh-1)){
-	    firstFreq[i] = CHAN_FREQ(0);
+	  if(includeIt(i)){
+	    Vector<Double> CHAN_FREQ(chanFreqColr(i));
+	    // if frequencies are ascending, take the first channel, otherwise the last
+	    uInt nCh = CHAN_FREQ.nelements();
+	    if(CHAN_FREQ(0)<=CHAN_FREQ(nCh-1)){
+	      firstFreq[count] = CHAN_FREQ(0);
+	    }
+	    else{
+	      firstFreq[count] = CHAN_FREQ(nCh-1);
+	      isDescending(count) = True;
+	    }	   
+	    count++;
 	  }
-	  else{
-	    firstFreq[i] = CHAN_FREQ(nCh-1);
-	    isDescending(i) = True;
-	  }	    
 	}
 	Sort sort;
 	sort.sortKey (firstFreq, TpDouble); // define sort key
-	Vector<uInt> inx(origNumSPWs);
-	sort.sort(inx, (uInt)origNumSPWs);
-	for (uInt i=0; (Int)i<origNumSPWs; i++) {
+	Vector<uInt> inx(nSpwsToCombine);
+	sort.sort(inx, nSpwsToCombine);
+	for (uInt i=0; i<nSpwsToCombine; i++) {
 	  spwsSorted[i] = spwsToCombine[inx(i)];
 	}
 	delete[] firstFreq;
