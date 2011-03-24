@@ -988,17 +988,17 @@ if doimage:
 # 7499.6601 (n1333_both.ms)
 
 # test values 
-cal1_2may=4.427 # (channel averaged)
-cal2_2may=3.978 # (channel averaged)
-cal1_8may=5.988 # (channel averaged)
-cal2_8may=7.232 # (channel averaged)
-src2may=3.091   # (channel averaged)
-src8may=8.823   # (channel averaged)
+cal1_2may=4.55 # (channel averaged)
+cal2_2may=4.12 # (channel averaged)
+cal1_8may=5.97 # (channel averaged)
+cal2_8may=7.13 # (channel averaged)
+src2may=3.23   # (channel averaged)
+src8may=8.72   # (channel averaged)
 #immax=0.493
 #imrms=0.0671
 #new values after changing to flat sigma image
-immax=0.7339
-imrms=0.07303
+immax=0.570
+imrms=0.0670
 
 diff_cal1_2may=abs((cal1_2may-gcal1_2may)/cal1_2may)
 diff_cal2_2may=abs((cal2_2may-gcal2_2may)/cal2_2may)
