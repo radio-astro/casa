@@ -2244,6 +2244,12 @@ class cleanhelper:
             tb.close()
             tb2.close()
 
+        if type(phasec==list):
+           inphasec=phasec[0]
+        else:
+           inpasec=phasec
+        if type(inphasec)==str and inphasec.isdigit():
+          inphasec=int(inphasec)
         #if nchan==1:
           # use data chan freqs
         #  newfreqs=chanfreqs
@@ -2251,7 +2257,7 @@ class cleanhelper:
           # obstime not included here
         if debug: print "before ms.cvelfreqs (start,width,nchan)===>",start, width, nchan
         newfreqs=ms.cvelfreqs(spwids=selspw,fieldids=selfield,mode=mode,nchan=nchan,
-                              start=start,width=width,phasec=phasec, restfreq=restf,
+                              start=start,width=width,phasec=inphasec, restfreq=restf,
                               outframe=self.usespecframe,veltype=veltype)
         if debug: print "Start, width after cvelfreqs =",start,width 
         if type(newfreqs)==list and len(newfreqs) ==0:
