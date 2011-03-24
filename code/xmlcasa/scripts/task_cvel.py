@@ -325,7 +325,8 @@ def cvel(vis, outputvis,
         else:
             # no selection necessary, just copy
             casalog.post("Creating working copy ...", 'INFO')
-            os.system('rm -rf '+outputvis+';cp -RL '+vis+' '+outputvis)
+            shutil.rmtree(outputvis,ignore_errors=True)
+            shutil.copytree(vis,outputvis)
 
         # Combine and if necessary regrid it
 	ms.open(outputvis, nomodify=False)

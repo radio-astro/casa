@@ -2336,9 +2336,10 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 			       ){
     ostringstream oss;
 
-    //cout << "regridCenterC " <<  regridCenterC << " regridBandwidth " << regridBandwidth << " regridChanWidthC " << endl;
-    //cout << " nchanC " << nchanC << " width " << width << " start " << start << endl;
-    //cout << " regridQuant " << regridQuant << endl;
+//     cout << "regridCenterC " <<  regridCenterC << " regridBandwidth " << regridBandwidth 
+// 	 << " regridChanWidthC " << regridChanWidthC << endl;
+//     cout << " nchanC " << nchanC << " width " << width << " startC " << startC << endl;
+//     cout << " regridQuant " << regridQuant << " centerIsStartC " <<  centerIsStartC << " startIsEndC " << startIsEndC << endl;
     
 
     Vector<Double> transNewXin(transNewXinC);
@@ -2946,6 +2947,22 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    // need to update
 	    theRegridCenterF = transNewXin[0] - transCHAN_WIDTH[0]/2. + theRegridBWF/2.;
 	    centerIsStart = False;
+	  }
+	  else if(nchan<0){ // center but not nchan was set by user
+	    // verify that the bandwidth is correct
+	    if(centerIsStart){
+	      if(startIsEnd){
+		theRegridBWF = theRegridCenterF - transNewXin[0] + transCHAN_WIDTH[0]/2.;
+	      }
+	      else{ // start is start
+		theRegridBWF = transNewXin[oldNUM_CHAN-1] + transCHAN_WIDTH[oldNUM_CHAN-1] - theRegridCenterF;
+	      }
+	    }
+	    else{ // center is center
+	      theRegridBWF = 2. * min((Double)(theRegridCenterF - transNewXin[0] - transCHAN_WIDTH[0]), 
+				      (Double)(transNewXin[oldNUM_CHAN-1] + transCHAN_WIDTH[oldNUM_CHAN-1] 
+					       - theRegridCenterF));
+	    }
 	  }
 	}
 	// now can convert start to center
@@ -4302,7 +4319,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    newCHAN_WIDTH.resize(newNUM_CHAN);
 	    newRESOLUTION.resize(newNUM_CHAN);
  	    newEFFECTIVE_BW.resize(newNUM_CHAN);
-	    for(Int i=0; i<newNUM_CHAN; i++){
+	    for(uInt i=0; i<newNUM_CHAN; i++){
 	      newXout[i] = (newChanLoBound[i]+newChanHiBound[i])/2.;
 	      newCHAN_WIDTH[i] = newChanHiBound[i]-newChanLoBound[i];
 	      newRESOLUTION[i] = newCHAN_WIDTH[i]; // to be revisited
@@ -4326,7 +4343,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 //                                                             transNewXin,
 //                                                             oldEffBWSquared,
 //                                                             InterpolateArray1D<Double,Double>::linear);
-// 	    for(Int i=0; i<newNUM_CHAN; i++){
+// 	    for(uInt i=0; i<newNUM_CHAN; i++){
 // 	      newEFFECTIVE_BW[i] = sqrt(newEffBWSquared[i]);
 // 	    }
 
@@ -4593,6 +4610,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       // create a list of the spw ids sorted by first (lowest) channel frequency
       vector<Int> spwsSorted(origNumSPWs);
       Vector<Bool> isDescending(origNumSPWs, False);
+      Bool negChanWidthWarned = False;
       {
 	Double* firstFreq = new Double[origNumSPWs];
 	for(uInt i=0; (Int)i<origNumSPWs; i++){
@@ -4635,6 +4653,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  os << LogIO::WARN
 	     << "Encountered negative channel widths in SPECTRAL_WINDOW table. Will ignore sign."
 	     << LogIO::POST;
+	  negChanWidthWarned = True;
 	}
       }
 
@@ -4663,7 +4682,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       vector<vector<Double> > averageChanFrac; // for each new channel store the
       // channel fraction for each old channel
       // initialise the averaging vectors
-      for(Int i=0; i<newNUM_CHAN; i++){
+      for(uInt i=0; i<newNUM_CHAN; i++){
 	averageN.push_back(1);
 	vector<Int> tv; // just a temporary auxiliary vector
 	tv.push_back(id0);
@@ -4707,10 +4726,11 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	      newCHAN_WIDTHi(ii) = -newCHAN_WIDTHi(ii);
 	    }
 	  }
-	  if(negativeWidths){
+	  if(negativeWidths && !negChanWidthWarned){
 	    os << LogIO::WARN
 	       << "Encountered negative channel widths in SPECTRAL_WINDOW table. Will ignore sign."
 	       << LogIO::POST;
+	    negChanWidthWarned = True;
 	  }
 	}
 	if(newIsDescendingI){ // need to reverse the order for processing 
@@ -4760,7 +4780,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	if(newCHAN_FREQ(newNUM_CHAN-1) + newCHAN_WIDTH(newNUM_CHAN-1)/2. 
 	   < newCHAN_FREQi(0) - newCHAN_WIDTHi(0)/2.) {
 	  // no overlap, and need to append
-	  for(Int j=0; j<newNUM_CHAN; j++){
+	  for(uInt j=0; j<newNUM_CHAN; j++){
 	    mergedChanFreq.push_back(newCHAN_FREQ(j));
 	    mergedChanWidth.push_back(newCHAN_WIDTH(j));
 	    mergedEffBW.push_back(newEFFECTIVE_BW(j));
@@ -4776,7 +4796,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  tv2.push_back(0);
 	  vector<Double> tvd;
 	  tvd.push_back(1.); // fraction is 1.
-	  for(Int j=0; j<newNUM_CHANi; j++){
+	  for(uInt j=0; j<newNUM_CHANi; j++){
 	    mergedChanFreq.push_back(newCHAN_FREQi(j));
 	    mergedChanWidth.push_back(newCHAN_WIDTHi(j));
 	    mergedEffBW.push_back(newEFFECTIVE_BWi(j));
@@ -4802,7 +4822,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  tv2.push_back(0);
 	  vector<Double> tvd;
 	  tvd.push_back(1.); // fraction is 1.
-	  for(Int j=0; j<newNUM_CHANi; j++){
+	  for(uInt j=0; j<newNUM_CHANi; j++){
 	    mergedChanFreq.push_back(newCHAN_FREQi(j));
 	    mergedChanWidth.push_back(newCHAN_WIDTHi(j));
 	    mergedEffBW.push_back(newEFFECTIVE_BWi(j));
@@ -4818,7 +4838,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    mergedAverageWhichChan.push_back(tv2); // channel number is j
 	    mergedAverageChanFrac.push_back(tvd);
 	  }
-	  for(Int j=0; j<newNUM_CHAN; j++){
+	  for(uInt j=0; j<newNUM_CHAN; j++){
 	    mergedChanFreq.push_back(newCHAN_FREQ(j));
 	    mergedChanWidth.push_back(newCHAN_WIDTH(j));
 	    mergedEffBW.push_back(newEFFECTIVE_BW(j));
@@ -4848,7 +4868,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    Double lbound0 = newCHAN_FREQ(0) - newCHAN_WIDTH(0)/2.;
 	    Double uboundk = 0.;
 	    Double lboundk = 0.;	      
-	    Int k;
+	    uInt k;
 	    for(k=0; k<newNUM_CHANi; k++){
 	      uboundk = newCHAN_FREQi(k) + newCHAN_WIDTHi(k)/2.;
 	      lboundk = newCHAN_FREQi(k) - newCHAN_WIDTHi(k)/2.;	      
@@ -4892,12 +4912,12 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    }
 	  }
 	  // now move along SPW id0 and merge until end of id0 is reached, then just copy
-	  for(Int j=id0StartChan; j<newNUM_CHAN; j++){
+	  for(uInt j=id0StartChan; j<newNUM_CHAN; j++){
 	    mergedChanFreq.push_back(newCHAN_FREQ(j));
 	    mergedChanWidth.push_back(newCHAN_WIDTH(j));
 	    mergedEffBW.push_back(newEFFECTIVE_BW(j));
 	    mergedRes.push_back(newRESOLUTION(j));
-	    for(Int k=0; k<newNUM_CHANi; k++){
+	    for(uInt k=0; k<newNUM_CHANi; k++){
 	      Double overlap_frac = 0.;
 	      // does channel j in spw id0 overlap with channel k in spw idi?
 	      Double uboundj = newCHAN_FREQ(j) + newCHAN_WIDTH(j)/2.;
@@ -4999,7 +5019,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    tv2.push_back(0);
 	    vector<Double> tvd;
 	    tvd.push_back(1.); // fraction is 1.
-	    for(Int m=k; m<newNUM_CHANi; m++){
+	    for(uInt m=k; m<newNUM_CHANi; m++){
 	      mergedChanFreq.push_back(newCHAN_FREQi(m));
 	      mergedChanWidth.push_back(newCHAN_WIDTHi(m));
 	      mergedEffBW.push_back(newEFFECTIVE_BWi(m));
@@ -5035,7 +5055,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       } // end loop over SPWs
 
 //       // print channel fractions for debugging
-//       for(Int i=0; i<newNUM_CHAN; i++){
+//       for(uInt i=0; i<newNUM_CHAN; i++){
 //  	   cout << "i freq width " << i << " " << newCHAN_FREQ(i) << " " << newCHAN_WIDTH(i) << endl;
 // 	   for(Int j=0; j<averageN[i]; j++){
 // 	     cout << " i, j " << i << ", " << j << " averageWhichChan[i][j] " << averageWhichChan[i][j]
@@ -5404,7 +5424,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       // Loop over main table rows
       uInt mainTabRowI = 0;
       uInt mainTabRow = sortedI(mainTabRowI);
-      uInt newMainTabRow = mainTabRow;
+      uInt newMainTabRow = 0;
       uInt nIncompleteCoverage = 0; // number of rows with incomplete SPW coverage
       // prepare progress meter
       Float progress = 0.4;
@@ -5606,7 +5626,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  // averageN[], averageWhichSPW[], averageWhichChan[], averageChanFrac[]
 	  
 	  // loop over new channels
-	  for(Int i=0; i<newNUM_CHAN; i++){
+	  for(uInt i=0; i<newNUM_CHAN; i++){
 	    // initialise special treatment for Bool columns
 	    if(FLAGColIsOK){
 	      for(uInt k=0; k<nCorrelations; k++){ 

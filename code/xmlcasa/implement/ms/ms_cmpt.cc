@@ -1329,6 +1329,8 @@ ms::cvel(const std::string& mode,
 
     // end prepare regridding parameters
 
+    *itsLog << LogOrigin("ms", "cvel");
+
     String originalName = itsMS->tableName();
 
     // test parameters of input SPWs
@@ -1372,15 +1374,21 @@ ms::cvel(const std::string& mode,
 	else{
 	  oss << "   Channel center = " << setprecision(9) << setw(9) << cf(0) << " Hz";
 	}
+
+	Double chanOrderSign = 1.;
+	if((cf(0)-cf(totNumChan-1))>0.){ // i.e. channel order is descending
+	  chanOrderSign = -1.;
+	  oss << "\n  i.e. channels are in order of decreasing frequency.\n";
+	}
 	
 	for(Int i=0; i<totNumChan-2; i++){
-	  if( abs((cf(i)+cw(i)/2.) - (cf(i+1)-cw(i+1)/2.))>1.0 ){
+	  if( abs((cf(i)+cw(i)/2. * chanOrderSign) - (cf(i+1)-cw(i+1)/2. * chanOrderSign))>1.0 ){
 	    oss << "\n   Internal ERROR: Center of channel " << i <<  " is off nominal center by " 
-		<< ((cf(i)+cw(i)/2.) - (cf(i+1)-cw(i+1)/2.)) << " Hz\n" 
+		<< ((cf(i)+cw(i)/2.* chanOrderSign) - (cf(i+1)-cw(i+1)/2.* chanOrderSign)) << " Hz\n" 
 		<< "   Distance between channels " << i << " and " << i+1 << " (" 
 		<< scientific << setprecision(6) << setw(6) << cf(i+1)-cf(i) << " Hz) is not equal to what is"
 		<< " expected\n   from their channel widths which would be " 
-		<< scientific << setprecision(6) << setw(6) << +cw(i)/2.+cw(i+1)/2. << " Hz.\n"
+		<< scientific << setprecision(6) << setw(6) << + chanOrderSign * (cw(i)/2.+cw(i+1)/2.) << " Hz.\n"
 		<< "   Will skip other channels in this SPW.";
 	    foundInconsistentSPW = True;
 	    break;
@@ -1521,14 +1529,22 @@ ms::cvel(const std::string& mode,
       else{
 	oss << "Channel center = " << setprecision(9) << setw(9) << cf(0) << " Hz";
       }
-      *itsLog << LogIO::NORMAL  << oss.str() << LogIO::POST;
 
+      Double chanOrderSign = 1.;
+      if((cf(0)-cf(totNumChan-1))>0.){ // i.e. channel order is descending
+	chanOrderSign = -1.;
+	oss << "\n  i.e. channels are in order of decreasing frequency.\n";
+      }
+	
       for(Int i=0; i<totNumChan-2; i++){
-	if( abs((cf(i)+cw(i)/2.) - (cf(i+1)-cw(i+1)/2.))>0.1 ){
-	  *itsLog << LogIO::WARN << "Internal error: Center of channel " << i <<  " is off nominal center by " 
-		  << ((cf(i)+cw(i)/2.) - (cf(i+1)-cw(i+1)/2.)) << " Hz" << LogIO::POST;
+	if( abs((cf(i)+cw(i)/2. * chanOrderSign) - (cf(i+1)-cw(i+1)/2. * chanOrderSign))>1.0 ){
+	  oss << "\n   Internal Error: Center of channel " << i <<  " is off nominal center by " 
+	      << ((cf(i)+cw(i)/2.* chanOrderSign) - (cf(i+1)-cw(i+1)/2.* chanOrderSign)) << " Hz\n"
+	      << "     Will not test subsequent channels."; 
+	  break;
 	}
       }
+      *itsLog << LogIO::NORMAL  << oss.str() << LogIO::POST;
     } 
     
     if(rstat){ // re-open MS for writing, unlocked
