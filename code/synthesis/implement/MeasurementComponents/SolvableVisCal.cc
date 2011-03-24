@@ -202,7 +202,7 @@ void SolvableVisCal::makeCalSet(Bool newtable)
 	    cs_ = new CalSet<Complex>(calTableName(),calTableSelect(),nSpw(),nPar(),nElem());
 	  }
 	  catch (AipsError x) {
-	    throw(AipsError("Error loading '"+calTableName()+"' with parsed selection: "+calTableSelect()+"."));
+	    throw(AipsError("Error loading '"+calTableName()+"' with parsed selection: "+calTableSelect()+".\n  "+x.getMesg()));
 	  }
 	}
 	cs().initCalTableDesc(typeName(),parType_);

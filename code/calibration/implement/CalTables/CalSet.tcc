@@ -340,6 +340,14 @@ template<class T> void CalSet<T>::load (const String& file,
     if (nSpw > 1) {};  // ERROR!!!  Should only be one spw per cal desc!
     spwmap(idesc)=spwlist(0);
 
+    // Trap spwids that do not occur in the MS
+    // (Since we rely on the MS meta info for the calibration solutions,
+    //  we cannot identify spws that do not occur in the MS.)
+    if (spwlist(0)>nSpw_-1)
+      throw(AipsError("Caltable '"+file+"' contains spw = "+
+		      String::toString(spwlist(0))+
+		      " which does not occur in the MS.  Cannot proceed."));
+
     // In next few steps, need to watch for repeat spws in new cal descs!!
 
     // Get number of channels this spw
