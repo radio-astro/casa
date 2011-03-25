@@ -69,6 +69,9 @@ public:
   // was not overrode here.
   virtual void setSolveChannelization(VisSet& vs);
 
+  // Size up the solving arrays, etc.  (supports combine)
+  virtual Int sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol);
+
   // The fitorder = 0 version (in M) skips LinearFitSVD by just averaging.
   virtual Bool useGenericGatherForSolve() {return fitorder_p != 0;}
 
@@ -116,19 +119,33 @@ public:
       VisMueller::syncCalMat(doInv);
   }
 
+protected:
+  virtual Int nPar() {
+    if(nCorr_p < 0)
+      hurl("nPar()", "nPar() called before being set.");
+    return nCorr_p;
+  }
+
 private:
   void init();  // Common code for the c'tors.
-  
+
+  // Logs and throws msg as an exception from origin.
+  void hurl(const String& origin, const String& msg);
+
   // Initialized to 0 in the initialization lists of the c'tors.
   Int fitorder_p;  // Stores the order of the fitted polynomials.
+
+  Bool doSub_p; // For apply, whether or not to subtract or give the continuum
+                // estimate.
+  Int  nCorr_p; // # of correlations.  -1 if not yet known.
 
   // Resized and set to impossible values in init().
   Vector<Double> lofreq_p; // Lowest and highest frequencies (Hz) used
   Vector<Double> hifreq_p; // to make the fit.
   Vector<uInt> totnumchan_p; // The total number of input channels that will be
                              // looked at (including masked ones!)
-  Bool doSub_p; // For apply, whether or not to subtract or give the continuum
-                // estimate.
+  Vector<Bool> spwApplied_p;  // Just keeps track of which spws have been
+                              // applied to.
 };
 
 // Additive noise

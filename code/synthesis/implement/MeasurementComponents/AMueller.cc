@@ -46,7 +46,8 @@ AMueller::AMueller(VisSet& vs) :
   VisMueller(vs),         // virtual base
   MMueller(vs),            // immediate parent
   fitorder_p(0),
-  doSub_p(true)
+  doSub_p(true),
+  nCorr_p(-1)
 {
   if (prtlev()>2) cout << "A::A(vs)" << endl;
 
@@ -58,7 +59,8 @@ AMueller::AMueller(const Int& nAnt) :
   VisMueller(nAnt),
   MMueller(nAnt),            // immediate parent
   fitorder_p(0),
-  doSub_p(true)
+  doSub_p(true),
+  nCorr_p(-1)
 {
   if (prtlev()>2) cout << "A::A(nAnt)" << endl;
 
@@ -74,10 +76,12 @@ void AMueller::init()
   lofreq_p.resize(nSpw());
   hifreq_p.resize(nSpw());
   totnumchan_p.resize(nSpw());
+  spwApplied_p.resize(nSpw());
   
   lofreq_p = -1.0;
   hifreq_p = -1.0;
   totnumchan_p = 0;
+  spwApplied_p = False;
 }
 
 void AMueller::setSolve(const Record& solvepar) {
@@ -137,6 +141,18 @@ void AMueller::setSolveChannelization(VisSet& vs)
   //     solve parameters depend (e.g. polynomial order != 1)
 }
 
+Int AMueller::sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol)
+{
+  sortVisSet(vs);
+  VisIter& vi(vs.iter());
+
+  nCorr_p = fitorder_p ? vi.nCorr() : 2;
+
+  // Would SolvableVisCal be better here?  After all the need for this
+  // specialization started with MMueller::nPar()...
+  return MMueller::sizeUpSolve(vs, nChunkPerSol);
+}
+
 void AMueller::selfSolveOne(VisBuffGroupAcc& vbga)
 {
   // Solver for the polynomial continuum fit.  It is overkill for fitorder_p ==
@@ -163,52 +179,120 @@ void AMueller::selfSolveOne(VisBuffGroupAcc& vbga)
 void AMueller::store()
 {
   MMueller::store();
-  if(fitorder_p != 0){        // Store lofreq_p[currSpw()] and hifreq_p[currSpw()]
+  if(fitorder_p != 0){    // Store lofreq_p[currSpw()] and hifreq_p[currSpw()]
     // Open the caltable
     CalTable2 calTable(calTableName(), Table::Update);
     CalDescColumns2 cd(calTable);
-    Matrix<Double> lhfreqs(1, 2);       // Why is this a Matrix instead of a Vector?
-    
-    for(Int cspw = 0; cspw < nSpw(); ++cspw){
-      lhfreqs(0, 0) = lofreq_p[cspw];
-      lhfreqs(0, 1) = hifreq_p[cspw];
 
-      // Storing lo and hifreq_p in chanFreq (suggested by George Moellenbrock)
-      // is a hack, but it does not seem to be otherwise used, and it avoids
-      // more serious mucking with the caltable.
-      cd.chanFreq().put(cspw, lhfreqs);
+    // Why is this a Matrix instead of a Vector?
+    Matrix<Double> lhfreqs(1, 2);
+
+    // If combspw(), cd will only have one row.  Only store lhfreqs for spws
+    // that have rows in cd.
+    uInt nOutSpws = 0;
+
+    for(Int cspw = 0; cspw < nSpw(); ++cspw){
+      if(nSlots(cspw) > 0){
+        lhfreqs(0, 0) = lofreq_p[cspw];
+        lhfreqs(0, 1) = hifreq_p[cspw];
+
+        // Storing lo and hifreq_p in chanFreq (suggested by George
+        // Moellenbrock) is a hack, but it does not seem to be otherwise used,
+        // and it avoids more serious mucking with the caltable.
+        cd.chanFreq().put(nOutSpws, lhfreqs);
+        ++nOutSpws;
+      }
     }
   }
+}
+
+void AMueller::hurl(const String& origin, const String& msg)
+{
+  LogIO os(LogOrigin("AMueller", origin, WHERE));
+  
+  os << msg << LogIO::EXCEPTION;
 }
 
 void AMueller::setApply(const Record& applypar)
 {
   LogIO os(LogOrigin("AMueller", "setApply()", WHERE));
 
+  if(applypar.isDefined("table")){
+    calTableName() = applypar.asString("table");
+    verifyCalTable(calTableName());
+
+    // Get nPar().
+    CalTable2 caltab(calTableName());
+    ROSolvableCalSetMCol<Complex> svjmcols(caltab);
+    nCorr_p = svjmcols.gain().shape(0)[0];
+  }
+  else
+    os << "AMueller::setApply(Record&) needs the record to have a table"
+       << LogIO::EXCEPTION;
+
   MMueller::setApply(applypar);
 
   fitorder_p = nChanPar() - 1;
 
   if(fitorder_p != 0){
-    // Open the caltable
+    // Open the caltable to get the scaling frequencies.
     CalTable2 calTable(calTableName());
     CalDescColumns2 cd(calTable);
-    Matrix<Double> lhfreqs(1, 2); // Why is this a Matrix instead of a Vector?
 
     // if(cd.chanFreq()) is a valid column...
     if(!cd.chanFreq().isNull() && cd.chanFreq().isDefined(0) &&
        cd.chanFreq().shape(0)[0] > 0 && cd.chanFreq().shape(0)[1] > 0){
-      uInt nrows = cd.chanFreq().nrow();    //   get number of spws (rows)
-      lofreq_p.resize(nrows);
-      hifreq_p.resize(nrows);
-      for(Int cspw = 0; cspw < nSpw(); ++cspw){
-        // Storing lo and hifreq_p in chanFreq (suggested by George
-        // Moellenbrock) is a hack, but it does not seem to be otherwise used,
-        // and it avoids more serious mucking with the caltable.
-        cd.chanFreq().get(cspw, lhfreqs);
+      // Why is this a Matrix instead of a Vector?
+      Matrix<Double> lhfreqs(1, 2);
+      uInt nrows = cd.chanFreq().nrow();
 
-        lofreq_p[cspw] = lhfreqs(0, 0);
-        hifreq_p[cspw] = lhfreqs(0, 1);
+      lofreq_p.resize(nSpw());
+      hifreq_p.resize(nSpw());
+
+      if(nrows == 1){   // Use a single set of scaling frequencies for all
+                        // spws.
+        // -999 is the secret code for combspw() == True.
+        // nSpw() != 1 && (applypar.asArrayInt("spwmap")[0] != -999)
+        // seems to be flustered by overloaded overloading ambiguity.
+        // Break it down.
+        Vector<Int> spwmap(applypar.asArrayInt("spwmap"));
+        if(nSpw() != 1 && spwmap[0] != -999)
+          os << LogIO::WARN
+             << "There is > 1 spw but only one set of scaling frequencies,"
+             << "\nand applypar did not call for combining spws."
+             << "The same scaling frequencies will be applied to all spws."
+             << LogIO::POST;
+
+        cd.chanFreq().get(0, lhfreqs);
+
+        for(Int cspw = 0; cspw < nSpw(); ++cspw){
+          lofreq_p[cspw] = lhfreqs(0, 0);
+          hifreq_p[cspw] = lhfreqs(0, 1);
+        }
+      }
+      else{
+        Bool allvalidspws = True;  // I think this might be already assured.
+
+        for(uInt row = 0; row < nrows; ++row){
+          Int cspw = spwMap()[row];
+
+          if(cspw > 0 && cspw < nSpw()){
+            // Storing lo and hifreq_p in chanFreq (suggested by George
+            // Moellenbrock) is a hack, but it does not seem to be otherwise
+            // used, and it avoids more serious mucking with the caltable.
+            cd.chanFreq().get(row, lhfreqs);
+          
+            lofreq_p[cspw] = lhfreqs(0, 0);
+            hifreq_p[cspw] = lhfreqs(0, 1);
+          }
+          else
+            allvalidspws = False;
+        }
+        if(!allvalidspws)
+          os << LogIO::WARN
+             << "The caltable pointed to some entries in the spwmap that do"
+             << "\nnot point to spws in the MS."
+             << LogIO::POST;
       }
     }
     else{
@@ -242,11 +326,13 @@ void AMueller::applyCal(VisBuffer& vb, Cube<Complex>& Vout,
     // get this...
     // MS::PredefinedColumns whichcol = MS::CORRECTED_DATA;
     MS::PredefinedColumns whichcol = MS::DATA;
-    
+   
+
     if(!vbcs.apply(vb, whichcol, currCPar(), currParOK(), doSub_p,
-                   !append()))
+                   !spwApplied_p[cspw]))
       throw(AipsError("Could not place the continuum-subtracted data in "
                       + MS::columnName(whichcol)));
+    spwApplied_p[cspw] = True;
   }
 }
 
@@ -282,10 +368,11 @@ void AMueller::corrupt(VisBuffer& vb)
 
     MS::PredefinedColumns whichcol = MS::MODEL_DATA;
     
-    if(!vbcs.apply(vb, whichcol, currCPar(), currParOK(), false, !append()))
+    if(!vbcs.apply(vb, whichcol, currCPar(), currParOK(), false,
+                   !spwApplied_p[cspw]))
       throw(AipsError("Could not place the continuum estimate in "
                       + MS::columnName(whichcol)));
-
+    spwApplied_p[cspw] = True;
     // Restore user's calWt()
     calWt()=userCalWt; 
   }

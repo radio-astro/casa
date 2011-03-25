@@ -266,7 +266,7 @@ void VBContinuumSubtractor::fit(VisBuffGroupAcc& vbga, const Int fitorder,
 
         // The way LinearFit is templated, "y" can be Complex, but at the cost
         // of "x" being Complex as well, and worse, sigma too.  It is better to
-        // seperately fit the reals and imags.
+        // separately fit the reals and imags.
         // Do reals.
         for(Int ordind = 0; ordind <= locFitOrd; ++ordind)       // Note <=.
           pnom.setCoefficient(ordind, 1.0);
@@ -347,8 +347,8 @@ Bool VBContinuumSubtractor::areFreqsInBounds(VisBuffer& vb,
 
     os << LogIO::WARN
        << "The frequency range [" << 1.0e-9 * minfreq << ", "
-       << 1.0e-9 * maxfreq << "] (GHz)\n"
-       << "is outside the one used for the continuum fit: ["
+       << 1.0e-9 * maxfreq << "] (GHz) is outside\n"
+       << "the one used for the continuum fit: ["
        << 1.0e-9 * lofreq_p << ", "
        << 1.0e-9 * hifreq_p << "] (GHz)"
        << LogIO::POST;
@@ -369,10 +369,10 @@ Bool VBContinuumSubtractor::doShapesMatch(VisBuffer& vb,
          << ", does not match the expected " << ncorr_p
          << LogIO::POST;
   }
-  // It's no longer the number of rows that matter but the maximum antenna number.
+  // It's no longer the # of rows that matter but the maximum antenna #.
   // if(vb.nRow() != nrow_p){
   if(max(vb.antenna2()) > maxAnt_p){
-    theydo = False;                     // Should it just flag unknown baselines?
+    theydo = False;             // Should it just flag unknown baselines?
     if(squawk)
       os << LogIO::SEVERE
          << "The fit is only valid for antennas with indices <= " << maxAnt_p
@@ -395,6 +395,8 @@ Bool VBContinuumSubtractor::apply(VisBuffer& vb,
     return False;
     
   Bool ok = areFreqsInBounds(vb, squawk); // A Bool might be too Boolean here.
+  ok = True;                              // Yep, returning False for a slight
+                                          // extrapolation is too harsh.
 
   if(!(whichcol == MS::DATA || whichcol == MS::MODEL_DATA ||
        whichcol == MS::CORRECTED_DATA)){
