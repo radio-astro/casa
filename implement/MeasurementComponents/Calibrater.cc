@@ -411,7 +411,9 @@ Bool Calibrater::setapply(const String& type,
 {
   //                           const Vector<Int>& rawspw)
 
-  logSink() << LogOrigin("Calibrater", "setapply") << LogIO::NORMAL;
+  logSink() << LogOrigin("Calibrater",
+                         "setapply(type, t, table, interp, select, calwt, spwmap, opacity)")
+            << LogIO::NORMAL;
  
   // Set record format for calibration table application information
   RecordDesc applyparDesc;
@@ -455,7 +457,9 @@ Bool Calibrater::setapply(const String& type,
 {
   //                           const Vector<Int>& rawspw)
 
-  logSink() << LogOrigin("Calibrater", "setapply") << LogIO::NORMAL;
+  logSink() << LogOrigin("Calibrater",
+                         "setapply(type, t, table, spw, field, interp, calwt, spwmap, opacity)")
+            << LogIO::NORMAL;
  
   // Set record format for calibration table application information
   RecordDesc applyparDesc;
@@ -492,7 +496,9 @@ Bool Calibrater::setapply(const String& type,
 }
 
 Bool Calibrater::setapply (const String& type, 
-			   const Record& applypar) {
+			   const Record& applypar)
+{
+  logSink() << LogOrigin("Calibrater", "setapply(type, applypar)");
 
   // First try to create the requested VisCal object
   VisCal *vc(NULL);

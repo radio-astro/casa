@@ -172,7 +172,7 @@ public:
   virtual void specify(const Record& specify);
 
   // Size up the solving arrays, etc.  (supports combine)
-  Int sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol);
+  virtual Int sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol);
 
   // Initialize internal shapes for solving
   void initSolve(VisSet& vs);
@@ -387,6 +387,8 @@ protected:
 
   // Check if a cal table is appropriate
   void verifyCalTable(const String& caltablename);
+
+  void sortVisSet(VisSet& vs, const Bool verbose=False);
 
   Int parType_;
   // Solution/Interpolation 
