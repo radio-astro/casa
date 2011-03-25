@@ -685,10 +685,10 @@ Constraints
     </when>
 
     <when param="colorize">
+        <equals type="bool" value="False" />
         <equals type="bool" value="True">
             <default param="coloraxis"><value type="string" /></default>
         </equals>
-        <equals type="bool" value="False" />
     </when>
 
 

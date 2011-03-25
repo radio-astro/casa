@@ -14,6 +14,7 @@ vis_b = 'test.ms'
 vis_c = 'jupiter6cm.demo-thinned.ms'
 vis_d = 'g19_d2usb_targets_line-shortened-thinned.ms'
 vis_e = 'evla-highres-sample-thinned.ms'
+vis_f = 'test_uvcontsub2.ms'
 outfile = 'cvel-output.ms'
 
 def verify_ms(msname, expnumspws, expnumchan, inspw, expchanfreqs=[]):
@@ -67,6 +68,8 @@ class cvel_test(unittest.TestCase):
             os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/cvel/input/g19_d2usb_targets_line-shortened-thinned.ms .') # 48 MB
         if(not os.path.exists(vis_e)):
             os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/cvel/input/evla-highres-sample-thinned.ms .') # 74 MB
+        if(not os.path.exists(vis_f)):
+            os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/unittest/uvcontsub2/test_uvcontsub2.ms .') # 39 MB
 
 
     def tearDown(self):
@@ -552,7 +555,7 @@ class cvel_test(unittest.TestCase):
             outputvis = outfile
             )
         self.assertNotEqual(rval,False)
-        ret = verify_ms(outfile, 1, 2440, 0)
+        ret = verify_ms(outfile, 1, 2441, 0)
         self.assertTrue(ret[0],ret[1])
     
     def test28(self):
@@ -612,7 +615,7 @@ class cvel_test(unittest.TestCase):
             phasecenter = "J2000 18h25m56.09 -12d04m28.20"
             )
         self.assertNotEqual(rval,False)
-        ret = verify_ms(outfile, 1, 2440, 0)
+        ret = verify_ms(outfile, 1, 2441, 0)
         self.assertTrue(ret[0],ret[1])
 
     def test32(self):
@@ -628,7 +631,7 @@ class cvel_test(unittest.TestCase):
             hanning = True
             )
         self.assertNotEqual(rval,False)
-        ret = verify_ms(outfile, 1, 2440, 0)
+        ret = verify_ms(outfile, 1, 2441, 0)
         self.assertTrue(ret[0],ret[1])
 
     def test33(self):
@@ -863,6 +866,90 @@ class cvel_test(unittest.TestCase):
         ret = verify_ms(outfile, 1, 3, 0, b)
         self.assertTrue(ret[0],ret[1])
 
+    def test43(self):
+        '''Cvel 43: SMA input MS, 1 spw, channel mode, nchan not set'''
+        myvis = vis_d
+        os.system('ln -sf ' + myvis + ' myinput.ms')
+        rval = cvel(
+            vis = 'myinput.ms',
+            outputvis = outfile,
+            mode='channel',
+            spw='1',
+            start = 98,
+            width = 3,
+            phasecenter = "J2000 18h25m56.09 -12d04m28.20"
+            )
+        self.assertNotEqual(rval,False)
+        ret = verify_ms(outfile, 1, 10, 0)
+        self.assertTrue(ret[0],ret[1])
+
+    def test44(self):
+        '''Cvel 44: SMA input MS, 2 spws to combine, channel mode, nchan not set'''
+        myvis = vis_d
+        os.system('ln -sf ' + myvis + ' myinput.ms')
+        rval = cvel(
+            vis = 'myinput.ms',
+            outputvis = outfile,
+            mode='channel',
+            spw='1,15',
+            start = 199,
+            width = 3,
+            phasecenter = "J2000 18h25m56.09 -12d04m28.20"
+            )
+        self.assertNotEqual(rval,False)
+        ret = verify_ms(outfile, 1, 10, 0)
+        self.assertTrue(ret[0],ret[1])
+
+    def test45(self):
+        '''Cvel 45: SMA input MS, 1 spw, channel mode, nchan not set, negative width'''
+        myvis = vis_d
+        os.system('ln -sf ' + myvis + ' myinput.ms')
+        rval = cvel(
+            vis = 'myinput.ms',
+            outputvis = outfile,
+            mode='channel',
+            spw='1',
+            start = 29,
+            width = -3,
+            phasecenter = "J2000 18h25m56.09 -12d04m28.20"
+            )
+        self.assertNotEqual(rval,False)
+        ret = verify_ms(outfile, 1, 10, 0)
+        self.assertTrue(ret[0],ret[1])
+
+    def test46(self):
+        '''Cvel 46: SMA input MS with descending freq, 24 spws, nchan=100'''
+        myvis = vis_f
+        os.system('ln -sf ' + myvis + ' myinput.ms')
+        rval = cvel(
+            vis = 'myinput.ms',
+            outputvis = outfile,
+            mode='channel',
+            spw='',
+            start = 29,
+            nchan = 100
+            )
+        self.assertNotEqual(rval,False)
+        ret = verify_ms(outfile, 1, 100, 0)
+        self.assertTrue(ret[0],ret[1])
+
+    def test47(self):
+        '''Cvel 47: SMA input MS with descending freq, 1 spw, nchan not set'''
+        myvis = vis_f
+        os.system('ln -sf ' + myvis + ' myinput.ms')
+        rval = cvel(
+            vis = 'myinput.ms',
+            outputvis = outfile,
+            mode='channel',
+            spw='10',
+            start = 98,
+            width=3
+            )
+        self.assertNotEqual(rval,False)
+        ret = verify_ms(outfile, 1, 10, 0)
+        self.assertTrue(ret[0],ret[1])
+
+
 class cleanup(unittest.TestCase):
     def setUp(self):
         pass
@@ -874,6 +961,7 @@ class cleanup(unittest.TestCase):
         shutil.rmtree(vis_c,ignore_errors=True)
         shutil.rmtree(vis_d,ignore_errors=True)
         shutil.rmtree(vis_e,ignore_errors=True)
+        shutil.rmtree(vis_f,ignore_errors=True)
         
     def test_cleanup(self):
         '''Cvel: Cleanup'''
