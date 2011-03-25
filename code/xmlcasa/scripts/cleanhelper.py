@@ -2298,6 +2298,7 @@ class cleanhelper:
         # set start parameter
         # first analyze data order etc
         reverse=False
+        negativew=False
         if descending:
           # channel mode case (width always >0) 
           if width!="" and (type(width)==int or type(width)==float):
