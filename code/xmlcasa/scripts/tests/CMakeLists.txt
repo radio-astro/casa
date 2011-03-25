@@ -76,5 +76,6 @@ casa_add_python( xmlcasa xmlcasa_tests_python python/${PYTHONV}/tests
   test_vishead.py
   test_visstat.py
   test_vpmanager.py
+  test_simplecluster.py
   unittests_list.txt
 )
