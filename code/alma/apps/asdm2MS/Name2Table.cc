@@ -117,6 +117,8 @@ bool Name2Table::init() {
 	
 	  name2Table_["Field"] = ASDM_FIELD::instance();	
 	
+	  name2Table_["Flag"] = ASDM_FLAG::instance();	
+	
 	  name2Table_["FlagCmd"] = ASDM_FLAGCMD::instance();	
 	
 	  name2Table_["Focus"] = ASDM_FOCUS::instance();	
@@ -164,6 +166,8 @@ bool Name2Table::init() {
 	  name2Table_["SwitchCycle"] = ASDM_SWITCHCYCLE::instance();	
 	
 	  name2Table_["SysCal"] = ASDM_SYSCAL::instance();	
+	
+	  name2Table_["SysPower"] = ASDM_SYSPOWER::instance();	
 	
 	  name2Table_["TotalPower"] = ASDM_TOTALPOWER::instance();	
 	
