@@ -2077,7 +2077,6 @@ Bool Imager::boxmask(const String& mask, const Vector<Int>& blc,
  
   
   if(unionReg !=0){
-    cerr<<"calling regionToMask"<<endl;
     regionToMask(maskImage, *unionReg, value);
     delete unionReg; unionReg=0;
   }
