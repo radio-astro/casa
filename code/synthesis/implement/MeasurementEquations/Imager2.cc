@@ -3980,7 +3980,7 @@ Bool Imager::calcImFreqs(Vector<Double>& imgridfreqs,
   String start;
   String width;
   String outframe;
-  //Bool reversevec(False);
+  Bool reversevec(False);
   Bool descendfreq(False);
   
   if (imageMode_p.contains("RADIO")) {
@@ -4021,6 +4021,10 @@ Bool Imager::calcImFreqs(Vector<Double>& imgridfreqs,
     mode="channel";
     start=String::toString(imageStart_p);
     width=String::toString(imageStep_p);
+    if (width.contains(casa::Regex("^-"))) {
+      // means here going to lower chan index
+      descendfreq=True;
+    }
   }
   else if (imageMode_p.contains("MFS")) {
     veltype="radio";
@@ -4061,8 +4065,8 @@ Bool Imager::calcImFreqs(Vector<Double>& imgridfreqs,
         os << LogIO::SEVERE << "Error combining SpWs" << LogIO::POST;
       }
     }
-    //Bool isAscendingData=True;
-    //if (oldFreqResolution(0) < 0) isAscendingData=False;
+    Bool isDescendingData=False;
+    if (oldFreqResolution(0) < 0) isDescendingData=True;
     
     // need theOldRefFrame,theObsTime,mObsPos,mode,nchan,start,width,restfreq,
     // outframe,veltype
@@ -4109,8 +4113,22 @@ Bool Imager::calcImFreqs(Vector<Double>& imgridfreqs,
     //cout<<"=================calcChanFreqs arguments end==================="<<endl;
     Bool isDescendingNewData=False;
     if (imgridfreqs(0)-imgridfreqs(1)>0) isDescendingNewData=True;
-    //reverse frequency vector 
-    if((descendfreq && !isDescendingNewData) | (!descendfreq && isDescendingNewData)){ 
+    //reverse frequency vector? 
+    //evaluate reversing condition differ for chan mode from other modes
+    if(mode.contains('channel')) {
+      if ((descendfreq && !isDescendingNewData && !isDescendingData) |
+          (descendfreq && isDescendingNewData && isDescendingData) |
+          (!descendfreq && !isDescendingNewData && isDescendingData)) {
+        reversevec = True;
+      }
+    }
+    else {
+      if ((descendfreq && !isDescendingNewData) | 
+          (!descendfreq && isDescendingNewData)) { 
+        reversevec = True;
+      }
+    }
+    if (reversevec) {
     //if(reversevec && isAscendingData ) {
       //Int ndata=imgridfreqs.nelements();
       //tempimgridfreqs.resize(ndata);
