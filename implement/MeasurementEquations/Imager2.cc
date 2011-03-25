@@ -3980,7 +3980,8 @@ Bool Imager::calcImFreqs(Vector<Double>& imgridfreqs,
   String start;
   String width;
   String outframe;
-  Bool reversevec(False);
+  //Bool reversevec(False);
+  Bool descendfreq(False);
   
   if (imageMode_p.contains("RADIO")) {
     veltype="radio";
@@ -3989,7 +3990,8 @@ Bool Imager::calcImFreqs(Vector<Double>& imgridfreqs,
     width=dQuantitytoString(mImageStep_p.get("m/s"));
     if (!width.contains(casa::Regex("^-"))) {
       //positive vel. width (descending frequencies) 
-      reversevec=True;
+      //reversevec=True;
+      descendfreq=True;
     }
   }
   else if (imageMode_p.contains("OPTICAL")) {
@@ -4000,7 +4002,8 @@ Bool Imager::calcImFreqs(Vector<Double>& imgridfreqs,
     //cerr<<"optical vel width USED="<<width<<endl;
     if (!width.contains(casa::Regex("^-"))) {
       //positive vel. width (descending frequencies)
-      reversevec=True;
+      //reversevec=True;
+      descendfreq=True;
     }
   }
   else if (imageMode_p.contains("FREQ")) {
@@ -4009,7 +4012,8 @@ Bool Imager::calcImFreqs(Vector<Double>& imgridfreqs,
     start=dQuantitytoString(mfImageStart_p.get("Hz"));
     width=dQuantitytoString(mfImageStep_p.get("Hz"));
     if (width.contains(casa::Regex("^-"))) {
-      reversevec=True;
+      //reversevec=True;
+      descendfreq=True;
     }
   }
   else if (imageMode_p.contains("CHANNEL")) {
@@ -4057,8 +4061,8 @@ Bool Imager::calcImFreqs(Vector<Double>& imgridfreqs,
         os << LogIO::SEVERE << "Error combining SpWs" << LogIO::POST;
       }
     }
-    Bool isAscendingData=True;
-    if (oldFreqResolution(0) < 0) isAscendingData=False;
+    //Bool isAscendingData=True;
+    //if (oldFreqResolution(0) < 0) isAscendingData=False;
     
     // need theOldRefFrame,theObsTime,mObsPos,mode,nchan,start,width,restfreq,
     // outframe,veltype
@@ -4103,10 +4107,11 @@ Bool Imager::calcImFreqs(Vector<Double>& imgridfreqs,
     //cout<<"restfreq="<<restfreq<<endl;
     //cout<<"veltype="<<veltype<<endl;
     //cout<<"=================calcChanFreqs arguments end==================="<<endl;
-
-
-    
-    if(reversevec && isAscendingData ) {
+    Bool isDescendingNewData=False;
+    if (imgridfreqs(0)-imgridfreqs(1)>0) isDescendingNewData=True;
+    //reverse frequency vector 
+    if((descendfreq && !isDescendingNewData) | (!descendfreq && isDescendingNewData)){ 
+    //if(reversevec && isAscendingData ) {
       //Int ndata=imgridfreqs.nelements();
       //tempimgridfreqs.resize(ndata);
       /**
@@ -4122,6 +4127,7 @@ Bool Imager::calcImFreqs(Vector<Double>& imgridfreqs,
       std::reverse(stlimgridfreqs.begin(),stlimgridfreqs.end());  
       imgridfreqs=stlimgridfreqs;
     }
+    //cerr<<"Final imgridfreqs(0)="<<imgridfreqs(0)<<endl;
     
   } catch (AipsError x) {
     this->unlock();
