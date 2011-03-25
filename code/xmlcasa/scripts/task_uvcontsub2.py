@@ -50,8 +50,13 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
             # a subset of the ones in fitspw.
             casalog.post('split is being run internally, and the selected spws will be')
             casalog.post('  renumbered to start from 0 in the output!')
-            myfitspw, spwmap = update_spw(fitspw, None)
-            myspw = update_spw(spw, spwmap)
+
+            # Initialize spwmap.
+            spwmap = update_spw(tempspw, None)[1]
+
+            # Now get myfitspw.
+            myfitspw = update_spw(fitspw, spwmap)[0]
+            myspw = update_spw(spw, spwmap)[0]
 
         final_csvis = csvis
         workingdir = os.path.abspath(os.path.dirname(vis.rstrip('/')))

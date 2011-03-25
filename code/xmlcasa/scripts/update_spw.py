@@ -19,14 +19,16 @@ import copy, re
 
 def update_spw(spw, spwmap=None):
     """
-    Given an spw:chan selection string, return what it should be after
-    the spws have been remapped (i.e. by split).  It does not change spw.
+    Given an spw:chan selection string, return what it should be after the spws
+    have been remapped (i.e. by split), and a map from input to output spws
+    (spwmap).  It does not change spw.
 
     If given, spwmap will be used as a dictionary from (string) input spw to
-    (string) output spws.  Otherwise it will be freshly calculated.
-    Supplying spwmap doesn't just save work: it is also necessary for
-    chaining update_spw() calls when the first selection includes more spws
-    than the subsequent one(s).
+    (string) output spws.  Otherwise it will be freshly calculated.  Supplying
+    spwmap doesn't just save work: it is also necessary for chaining
+    update_spw() calls when the first selection includes more spws than the
+    subsequent one(s).  HOWEVER, if given, spwmap must have slots for all the
+    spws that will appear in the output MS, i.e. it can't be grown once made.
 
     Examples:
     >>> from update_spw import update_spw
@@ -38,6 +40,21 @@ def update_spw(spw, spwmap=None):
     '1,4,5:8~10'
     >>> update_spw('0~3,5;6:1~7;11~13,7~9:0~3,11,7~8:6~8', None)[0]
     '0~3,4,5:1~7;11~13,6~8:0~3,9,6~7:6~8'
+    
+    # Let's say we want updates of both fitspw and spw, but fitspw and spw
+    # are disjoint (in spws).
+    >>> fitspw = '1~10:5~122,15~22:5~122'
+    >>> spw = '6~14'
+    
+    #  Initialize spwmap with the union of them.
+    >>> spwmap = update_spw(join_spws(fitspw, spw), None)[1]
+    
+    >>> myfitspw = update_spw(fitspw, spwmap)[0]
+    >>> myfitspw
+    '0~9:5~122,14~21:5~122'
+    >>> myspw = update_spw(spw, spwmap)[0]
+    >>> myspw
+    '5~13'
     """
     # Blank is valid.  Blank is good.
     if not spw:
