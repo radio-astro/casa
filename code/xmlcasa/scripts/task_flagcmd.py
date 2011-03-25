@@ -22,6 +22,8 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 	# v3.2 Updated STM 2010-12-08 (3.2.0) bug fixes in flagsort use, parsing
         # v3.3 Updated STM 2010-12-20 (3.2.0) bug fixes parsing errors
         # v3.4 Updated STM 2011-02-14 (3.2.0) bug fix mode online from xml
+        # v3.5 Updated STM 2011-03-21 (3.2.0) go to fglocal and mslocal
+        # v3.5 Updated STM 2011-03-23 (3.2.0) bug fix casalog.post long lines
 	#
 	try:
 		from xml.dom import minidom
@@ -29,10 +31,10 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 		raise Exception, 'Failed to load xml.dom.minidom into python'
 
         casalog.origin('flagcmd')
-	casalog.post('You are using flagcmd v3.4 Updated STM 2011-02-14')
+	casalog.post('You are using flagcmd v3.5 Updated STM 2011-03-23')
 
-        fg.done()
-        fg.clearflagselection(-1)
+        fglocal = casac.homefinder.find_home_by_name('flaggerHome').create()
+        mslocal = casac.homefinder.find_home_by_name('msHome').create()
         
         try: 
                 if not os.path.exists(vis):
@@ -59,9 +61,9 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 			# Get overall MS time range for later use (if needed)
 			try:
 				# this might take too long for large MS
-				ms.open(vis)
-				timd = ms.range(["time"])
-				ms.close()
+				mslocal.open(vis)
+				timd = mslocal.range(["time"])
+				mslocal.close()
 			except:
 				raise Exception, "Error opening MS "+vis 
 		        ms_startmjds = timd['time'][0]
@@ -130,9 +132,9 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 			# Get overall MS time range for later use (if needed)
 			try:
 				# this might take too long for large MS
-				ms.open(vis)
-				timd = ms.range(["time"])
-				ms.close()
+				mslocal.open(vis)
+				timd = mslocal.range(["time"])
+				mslocal.close()
 			except:
 				raise Exception, "Error opening MS "+vis 
 		        ms_startmjds = timd['time'][0]
@@ -179,7 +181,7 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 				myflagd = myflagcmd
 
 			# Apply flags to data using flagger
-			nappl = applyflagcmd(vis, flagbackup, myflagd, reset)
+			nappl = applyflagcmd(fglocal, vis, flagbackup, myflagd, reset)
 			# Save flags to file
 			if nappl>0:
 			    if outfile=='':
@@ -218,7 +220,7 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 				myflagd = myflagcmd
 
 			# (Un)Apply flags to data using flagger
-			nappl = applyflagcmd(vis, flagbackup, myflagd, flagtype='UNFLAG')
+			nappl = applyflagcmd(fglocal, vis, flagbackup, myflagd, flagtype='UNFLAG')
 			# Save flags to file
 			if nappl>0:
 			    if flagmode=='table' and flagfile=='':
@@ -310,22 +312,22 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 				print 'Warning: empty flagcmd dictionary, nothing to plot'
 				casalog.post('Warning: empty flag dictionary, nothing to plot')
         except Exception, instance:
-                #fg.done()
+                #fglocal.done()
                 print '*** Error ***', instance
                 #raise
 				
         #write history
 	try:
-		ms.open(vis,nomodify=False)
-		ms.writehistory(message='taskname = flagcmd', origin='flagcmd')
-		ms.writehistory(message='vis      = "' + str(vis) + '"', origin='flagcmd')
-		ms.writehistory(message='flagmode = "' + str(flagmode) + '"', origin='flagcmd')
+		mslocal.open(vis,nomodify=False)
+		mslocal.writehistory(message='taskname = flagcmd', origin='flagcmd')
+		mslocal.writehistory(message='vis      = "' + str(vis) + '"', origin='flagcmd')
+		mslocal.writehistory(message='flagmode = "' + str(flagmode) + '"', origin='flagcmd')
 		if flagmode == 'file':
-			ms.writehistory(message='flagfile = "' + str(flagfile) + '"', origin='flagcmd')
+			mslocal.writehistory(message='flagfile = "' + str(flagfile) + '"', origin='flagcmd')
 		elif flagmode=='cmd':
 			for cmd in command:
-				ms.writehistory(message='command  = "' + str(cmd) + '"', origin='flagcmd')
-		ms.close()
+				mslocal.writehistory(message='command  = "' + str(cmd) + '"', origin='flagcmd')
+		mslocal.close()
 	except:
 		casalog.post('Cannot open vis for history, ignoring','WARN')
 
@@ -341,7 +343,7 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 # Apply flag commands using flagger tool
 #===============================================================================
 
-def applyflagcmd(msfile, flagbackup, myflags, reset=False, flagtype='Unset'):
+def applyflagcmd(fglocal, msfile, flagbackup, myflags, reset=False, flagtype='Unset'):
         #
 	# Takes input flag dictionary myflags (e.g. from readflagxml) 
 	# and applies using flagger tool to MS msfile.
@@ -357,8 +359,8 @@ def applyflagcmd(msfile, flagbackup, myflags, reset=False, flagtype='Unset'):
 	#
 	ncmd = 0
 
-        fg.done()
-        fg.clearflagselection(-1)
+        #fglocal.done()
+        #fglocal.clearflagselection(-1)
 
 	if flagtype=='FLAG' or flagtype=='flag':
 	    mytype='FLAG'
@@ -369,7 +371,7 @@ def applyflagcmd(msfile, flagbackup, myflags, reset=False, flagtype='Unset'):
 
 	try:
 	    if ((type(msfile)==str) & (os.path.exists(msfile))):
-	        fg.open(msfile)
+	        fglocal.open(msfile)
 	    else:
 	        print 'ERROR MS '+msfile+' not found'
 		casalog.post('ERROR MS '+msfile+' not found','SEVERE')
@@ -400,7 +402,7 @@ def applyflagcmd(msfile, flagbackup, myflags, reset=False, flagtype='Unset'):
 	    nkeys = keylist.__len__()
 	    casalog.post('Found '+str(nkeys)+' flags to apply')
 	    if nkeys>0:
-	        fg.setdata()
+	        fglocal.setdata()
 		cmdlist = []
 		param_set = {}
 		for key in keylist:
@@ -510,7 +512,10 @@ def applyflagcmd(msfile, flagbackup, myflags, reset=False, flagtype='Unset'):
 						#raise Exception(str(x)+' has unknown key')
 						print str(x)+' has unknown key'
 				# Have list of params (besides a mode), may be zero length
-				casalog.post(param_list)
+				#casalog.post(param_list)
+				#the above was too long for logger, truncate
+				pstr = param_list[:128]
+				casalog.post(pstr)
 				# Special cases of parameter mapping to flagger tool
 				parse_cmdparams(param_i)
 				if debug: print param_i
@@ -540,27 +545,27 @@ def applyflagcmd(msfile, flagbackup, myflags, reset=False, flagtype='Unset'):
 		    if nf > 0:
 			print 'Processing '+str(nf)+' flagging commands for mode '+mode
 			casalog.post('Processing '+str(nf)+' flagging commands for mode '+mode)
-			fg.setdata()
-			fg.clearflagselection(-1)
+			fglocal.setdata()
+			fglocal.clearflagselection(-1)
 			for s in param_set[mode].keys():
 			    param_i = param_set[mode][s]
 			    if mode=='shadow':
 			        if debug: print 'Applying shadow with params: ',param_i
 				if param_i.__len__()>0:
-				    fg.setshadowflags(**param_i)
+				    fglocal.setshadowflags(**param_i)
 			        else:
-				    fg.setshadowflags()
+				    fglocal.setshadowflags()
 			    else:
 			        if param_i.__len__()>0:
-				    fg.setmanualflags(**param_i)
+				    fglocal.setmanualflags(**param_i)
 			        else:
-				    fg.setmanualflags()
+				    fglocal.setmanualflags()
 			if flagbackup:
-			    backup_cmdflags('flagcmd_'+mode)
+			    backup_cmdflags(fglocal, 'flagcmd_'+mode)
 			if reset:
-			    fg.run(reset=True)
+			    fglocal.run(reset=True)
 		        else:
-			    fg.run()
+			    fglocal.run()
 			print 'Applied '+str(nf)+' flagging commands for mode '+mode
 			casalog.post('Applied '+str(nf)+' flagging commands for mode '+mode)
 		
@@ -574,10 +579,10 @@ def applyflagcmd(msfile, flagbackup, myflags, reset=False, flagtype='Unset'):
 		    casalog.post('Warning: no valid flagging commands executed')
 
         except Exception, instance:
-                fg.done()
+                fglocal.done()
                 print '*** Error ***', instance
                 #raise
-        fg.done()
+        fglocal.done()
 
 	return ncmd
 
@@ -636,7 +641,7 @@ def parse_cmdparams(params):
         if params.has_key('diameter'):
 		params['diameter'] = float(params['diameter'])
 
-def backup_cmdflags(mode):
+def backup_cmdflags(fglocal, mode):
 
         # Create names like this:
         # before_manualflag_1,
@@ -647,7 +652,7 @@ def backup_cmdflags(mode):
         # Generally  before_<mode>_<i>, where i is the smallest
         # integer giving a name, which does not already exist
        
-        existing = fg.getflagversionlist(printflags=False)
+        existing = fglocal.getflagversionlist(printflags=False)
 
 	# remove comments from strings
 	existing = [x[0:x.find(' : ')] for x in existing]
@@ -664,7 +669,7 @@ def backup_cmdflags(mode):
 
         casalog.post("Saving current flags to " + versionname + " before applying new flags")
 
-        fg.saveflagversion(versionname=versionname,
+        fglocal.saveflagversion(versionname=versionname,
                            comment='flagcmd autosave before ' + mode + ' on ' + time_string,
                            merge='replace')
 
@@ -1638,7 +1643,8 @@ def updateflagcmd(msfile,mycol='',myval=None,myrowlist=[]):
     nlist = myrowlist.__len__()
     if nlist>0:
 	    rowlist = myrowlist
-	    casalog.post('Will update column '+mycol+' for rows '+str(rowlist))
+	    #casalog.post('Will update column '+mycol+' for rows '+str(rowlist))
+	    casalog.post('Will update column '+mycol+' for '+str(nlist)+' rows')
     else:
 	    rowlist = range(nrows)
 	    nlist = nrows

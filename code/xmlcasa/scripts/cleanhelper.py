@@ -2188,6 +2188,13 @@ class cleanhelper:
         chanfreqs=chanfreqscol['r'+str(spw0+1)].transpose()[0]
         chanres = chanwidcol['r'+str(spw0+1)].transpose()[0]
 
+        # ascending or desending data frequencies?
+        # based on selected first spw's first CHANNEL WIDTH 
+        if chanres[0] < 0:
+          descending = True        
+        else:
+          descending = False
+
         # set dataspecframe:
         elspecframe=["REST",
                      "LSRK",
@@ -2206,7 +2213,7 @@ class cleanhelper:
         else:
             self.usespecframe=self.dataspecframe
 
-        # some tart and width default handling
+        # some start and width default handling
         if mode!='channel':
           if width==1:
              width=''
@@ -2244,10 +2251,10 @@ class cleanhelper:
             tb.close()
             tb2.close()
 
-        if type(phasec==list):
+        if type(phasec)==list:
            inphasec=phasec[0]
         else:
-           inpasec=phasec
+           inphasec=phasec
         if type(inphasec)==str and inphasec.isdigit():
           inphasec=int(inphasec)
         #if nchan==1:
@@ -2259,6 +2266,10 @@ class cleanhelper:
         newfreqs=ms.cvelfreqs(spwids=selspw,fieldids=selfield,mode=mode,nchan=nchan,
                               start=start,width=width,phasec=inphasec, restfreq=restf,
                               outframe=self.usespecframe,veltype=veltype)
+        if newfreqs[0]-newfreqs[1] < 0:
+          descendingnewfreqs=False
+        else:
+          descendingnewfreqs=True
         if debug: print "Start, width after cvelfreqs =",start,width 
         if type(newfreqs)==list and len(newfreqs) ==0:
           raise TypeError, ("Output frequency grid cannot be calculated: "+
@@ -2274,6 +2285,7 @@ class cleanhelper:
             print "newfreqs=",newfreqs
         ms.close()
 
+        # set output number of channels
         if nchan ==1:
           retnchan=1
         else:
@@ -2282,7 +2294,38 @@ class cleanhelper:
           else:
             retnchan=nchan
             newfreqs=chanfreqs
-        #if start!="":
+
+        # set start parameter
+        # first analyze data order etc
+        reverse=False
+        negativew=False
+        if descending:
+          # channel mode case (width always >0) 
+          if width!="" and (type(width)==int or type(width)==float):
+            if descendingnewfreqs:
+              reverse=False 
+            else:
+              reverse=True
+          elif width=="":
+            if descendingnewfreqs:
+              reverse=False
+            else:
+              reverse=True
+          elif type(width)==str:
+            if width.lstrip().find('-')==0:
+              negativew=True
+            if descendingnewfreqs:
+              if negativew: 
+                reverse=False
+              else:
+                reverse=True
+            else:
+              if negativew:
+                reverse=True
+              else:
+                reverse=False
+        if reverse:
+           newfreqs.reverse()
         if (start!="" and mode=='channel') or \
            (start!="" and type(start)!=int and mode!='channel'):
           retstart=start
@@ -2295,6 +2338,8 @@ class cleanhelper:
             retstart=self.convertvf(startfreq,frame,field,restf,veltype)
           elif mode=="channel":
             retstart=0
+        
+        # set width parameter
         if width!="":
           retwidth=width
         else:

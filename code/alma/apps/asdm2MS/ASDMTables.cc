@@ -1785,6 +1785,8 @@ ASDM_CALDEVICE::ASDM_CALDEVICE() {
   		
   tableDesc_.addColumn(ArrayColumnDesc<double>("noiseCal", "blabla"));
   		
+  tableDesc_.addColumn(ArrayColumnDesc<float>("coupledNoiseCal", "blabla"));
+  		
   tableDesc_.addColumn(ArrayColumnDesc<double>("temperatureLoad", "blabla"));
   		  		
 }
@@ -1823,6 +1825,8 @@ void ASDM_CALDEVICE::fill(const ASDM& asdm) {
     ArrayColumn<float> calEff(*table_p_, "calEff");             
   		
     ArrayColumn<double> noiseCal(*table_p_, "noiseCal");             
+  		
+    ArrayColumn<float> coupledNoiseCal(*table_p_, "coupledNoiseCal");             
   		
     ArrayColumn<double> temperatureLoad(*table_p_, "temperatureLoad");             
   		  	
@@ -1868,6 +1872,11 @@ void ASDM_CALDEVICE::fill(const ASDM& asdm) {
 	
 	if (rows.at(i)->isNoiseCalExists())
 		noiseCal.put(rowIndex, basic2CASA1D<double,double>(rows.at(i)->getNoiseCal()));
+	
+
+	
+	if (rows.at(i)->isCoupledNoiseCalExists())
+		coupledNoiseCal.put(rowIndex, basic2CASA2D<float,float>(rows.at(i)->getCoupledNoiseCal()));
 	
 
 	
@@ -5589,6 +5598,143 @@ void ASDM_FIELD::fill(const ASDM& asdm) {
 	table_p_->flush();
 }
 	 
+ASDM_FLAG::ASDM_FLAG() {
+  name_ = "ASDM_FLAG";
+  tableDesc_.comment() = "The verbatim copy of the ASDM's dataset Flag table";
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<String>("flagId", "blabla"));
+  		
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("startTime", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("endTime", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<String>("reason", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<int>("numAntenna", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<String>("antennaId", "blabla"));
+  		
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<int>("numPolarizationType", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<int>("numSpectralWindow", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<int>("numPairedAntenna", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<String>("polarizationType", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<String>("pairedAntennaId", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<String>("spectralWindowId", "blabla"));
+  		  		
+}
+
+ASDM_FLAG::~ASDM_FLAG() {
+}
+
+const TableDesc& ASDM_FLAG::tableDesc() const {
+  return tableDesc_;
+}
+
+#include "FlagTable.h"
+#include "FlagRow.h"
+
+void ASDM_FLAG::fill(const ASDM& asdm) {
+	vector<FlagRow*> rows = asdm.getFlag().get();
+	unsigned int rowIndex = table_p_->nrow();
+	table_p_->addRow(rows.size());
+  		
+    ScalarColumn<String> flagId(*table_p_, "flagId");             
+  		
+  		
+    ScalarColumn<double> startTime(*table_p_, "startTime");             
+  		
+    ScalarColumn<double> endTime(*table_p_, "endTime");             
+  		
+    ScalarColumn<String> reason(*table_p_, "reason");             
+  		
+    ScalarColumn<int> numAntenna(*table_p_, "numAntenna");             
+  		
+    ArrayColumn<String> antennaId(*table_p_, "antennaId");             
+  		
+  		
+    ScalarColumn<int> numPolarizationType(*table_p_, "numPolarizationType");             
+  		
+    ScalarColumn<int> numSpectralWindow(*table_p_, "numSpectralWindow");             
+  		
+    ScalarColumn<int> numPairedAntenna(*table_p_, "numPairedAntenna");             
+  		
+    ArrayColumn<String> polarizationType(*table_p_, "polarizationType");             
+  		
+    ArrayColumn<String> pairedAntennaId(*table_p_, "pairedAntennaId");             
+  		
+    ArrayColumn<String> spectralWindowId(*table_p_, "spectralWindowId");             
+  		  	
+
+	for (unsigned int i = 0; i < rows.size(); i++) {
+		
+	
+	flagId.put(rowIndex, rows.at(i)->getFlagId().toString());
+	
+
+		
+	
+	startTime.put(rowIndex, rows.at(i)->getStartTime().get()/(1.0e9));
+	
+
+	
+	endTime.put(rowIndex, rows.at(i)->getEndTime().get()/(1.0e9));
+	
+
+	
+	reason.put(rowIndex, rows.at(i)->getReason());
+	
+
+	
+	numAntenna.put(rowIndex, rows.at(i)->getNumAntenna());
+	
+
+	
+	antennaId.put(rowIndex, _2CASAString1D<Tag,String>(rows.at(i)->getAntennaId()));
+	
+
+		
+	
+	if (rows.at(i)->isNumPolarizationTypeExists())
+		numPolarizationType.put(rowIndex, rows.at(i)->getNumPolarizationType());
+	
+
+	
+	if (rows.at(i)->isNumSpectralWindowExists())
+		numSpectralWindow.put(rowIndex, rows.at(i)->getNumSpectralWindow());
+	
+
+	
+	if (rows.at(i)->isNumPairedAntennaExists())
+		numPairedAntenna.put(rowIndex, rows.at(i)->getNumPairedAntenna());
+	
+
+	
+	if (rows.at(i)->isPolarizationTypeExists())
+		polarizationType.put(rowIndex, enum2CASA1D<PolarizationType,CPolarizationType>(rows.at(i)->getPolarizationType()));
+	
+
+	
+	if (rows.at(i)->isPairedAntennaIdExists())
+		pairedAntennaId.put(rowIndex, _2CASAString1D<Tag,String>(rows.at(i)->getPairedAntennaId()));
+	
+
+	
+	if (rows.at(i)->isSpectralWindowIdExists())
+		spectralWindowId.put(rowIndex, _2CASAString1D<Tag,String>(rows.at(i)->getSpectralWindowId()));
+	
+
+		rowIndex++;		
+	}
+	table_p_->flush();
+}
+	 
 ASDM_FLAGCMD::ASDM_FLAGCMD() {
   name_ = "ASDM_FLAGCMD";
   tableDesc_.comment() = "The verbatim copy of the ASDM's dataset FlagCmd table";
@@ -8607,6 +8753,108 @@ void ASDM_SYSCAL::fill(const ASDM& asdm) {
 	
 	if (rows.at(i)->isPhaseDiffSpectrumExists())
 		phaseDiffSpectrum.put(rowIndex, basic2CASA2D<float,float>(rows.at(i)->getPhaseDiffSpectrum()));
+	
+
+		rowIndex++;		
+	}
+	table_p_->flush();
+}
+	 
+ASDM_SYSPOWER::ASDM_SYSPOWER() {
+  name_ = "ASDM_SYSPOWER";
+  tableDesc_.comment() = "The verbatim copy of the ASDM's dataset SysPower table";
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<String>("antennaId", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<String>("spectralWindowId", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<int>("feedId", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<double>("timeInterval", "blabla"));
+  		
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<int>("numReceptor", "blabla"));
+  		
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<float>("switchedPowerDifference", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<float>("switchedPowerSum", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<float>("requantizerGain", "blabla"));
+  		  		
+}
+
+ASDM_SYSPOWER::~ASDM_SYSPOWER() {
+}
+
+const TableDesc& ASDM_SYSPOWER::tableDesc() const {
+  return tableDesc_;
+}
+
+#include "SysPowerTable.h"
+#include "SysPowerRow.h"
+
+void ASDM_SYSPOWER::fill(const ASDM& asdm) {
+	vector<SysPowerRow*> rows = asdm.getSysPower().get();
+	unsigned int rowIndex = table_p_->nrow();
+	table_p_->addRow(rows.size());
+  		
+    ScalarColumn<String> antennaId(*table_p_, "antennaId");             
+  		
+    ScalarColumn<String> spectralWindowId(*table_p_, "spectralWindowId");             
+  		
+    ScalarColumn<int> feedId(*table_p_, "feedId");             
+  		
+    ArrayColumn<double> timeInterval(*table_p_, "timeInterval");             
+  		
+  		
+    ScalarColumn<int> numReceptor(*table_p_, "numReceptor");             
+  		
+  		
+    ArrayColumn<float> switchedPowerDifference(*table_p_, "switchedPowerDifference");             
+  		
+    ArrayColumn<float> switchedPowerSum(*table_p_, "switchedPowerSum");             
+  		
+    ArrayColumn<float> requantizerGain(*table_p_, "requantizerGain");             
+  		  	
+
+	for (unsigned int i = 0; i < rows.size(); i++) {
+		
+	
+	antennaId.put(rowIndex, rows.at(i)->getAntennaId().toString());
+	
+
+	
+	spectralWindowId.put(rowIndex, rows.at(i)->getSpectralWindowId().toString());
+	
+
+	
+	feedId.put(rowIndex, rows.at(i)->getFeedId());
+	
+
+	
+	timeInterval.put(rowIndex, ati2CASA1D<double>(rows.at(i)->getTimeInterval()));
+	
+
+		
+	
+	numReceptor.put(rowIndex, rows.at(i)->getNumReceptor());
+	
+
+		
+	
+	if (rows.at(i)->isSwitchedPowerDifferenceExists())
+		switchedPowerDifference.put(rowIndex, basic2CASA1D<float,float>(rows.at(i)->getSwitchedPowerDifference()));
+	
+
+	
+	if (rows.at(i)->isSwitchedPowerSumExists())
+		switchedPowerSum.put(rowIndex, basic2CASA1D<float,float>(rows.at(i)->getSwitchedPowerSum()));
+	
+
+	
+	if (rows.at(i)->isRequantizerGainExists())
+		requantizerGain.put(rowIndex, basic2CASA1D<float,float>(rows.at(i)->getRequantizerGain()));
 	
 
 		rowIndex++;		

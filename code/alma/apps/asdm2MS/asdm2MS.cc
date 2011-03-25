@@ -1034,7 +1034,7 @@ int sysPowerFeedId(const SysPowerRow* row) {
 
 double sysPowerMidTimeInSeconds(const SysPowerRow* row) {
   if (isEVLA) {
-     return row->getTimeInterval().getStartInMJD()*86400 ; 
+    return row->getTimeInterval().getStartInMJD()*86400 ; 
   }
   return row->getTimeInterval().getStartInMJD()*86400 + ((double) row->getTimeInterval().getDuration().get()) / ArrayTime::unitsInASecond / 2.;
 }
@@ -1226,7 +1226,7 @@ int main(int argc, char *argv[]) {
     // Revision ? displays revision's info and don't go further.
     if (vm.count("revision")) {
       errstream.str("");
-      errstream << "$Id: asdm2MS.cpp,v 1.72 2011/02/28 16:41:10 mcaillat Exp $" << "\n" ;
+      errstream << "$Id: asdm2MS.cpp,v 1.73 2011/03/25 10:25:11 mcaillat Exp $" << "\n" ;
       error(errstream.str());
     }
 
@@ -2915,195 +2915,46 @@ int main(int argc, char *argv[]) {
   
   //
   // Process the CalDevice table.
-  const CalDeviceTable& calDeviceT = ds->getCalDevice();
-  infostream.str("");
-  infostream << "The dataset has " << calDeviceT.size() << " calDevice(s)...";
+  try {
+    const CalDeviceTable& calDeviceT = ds->getCalDevice();
+    infostream.str("");
+    infostream << "The dataset has " << calDeviceT.size() << " calDevice(s)...";
 
-  if (processCalDevice && calDeviceT.size() > 0) {
-    rowsInAScanbyTimeIntervalFunctor<CalDeviceRow> selector(selectedScanRow_v, isEVLA);    
-    const vector<CalDeviceRow *>& calDevices = selector(calDeviceT.get(), ignoreTime);
-    if (!ignoreTime) 
-      infostream << calDevices.size() << " of them in the selected exec blocks / scans ... ";
+    if (processCalDevice && calDeviceT.size() > 0) {
+      rowsInAScanbyTimeIntervalFunctor<CalDeviceRow> selector(selectedScanRow_v, isEVLA);    
+      const vector<CalDeviceRow *>& calDevices = selector(calDeviceT.get(), ignoreTime);
+      if (!ignoreTime) 
+	infostream << calDevices.size() << " of them in the selected exec blocks / scans ... ";
     
-    info(infostream.str());
+      info(infostream.str());
 
-    for (vector<CalDeviceRow*>::const_iterator iter = calDevices.begin(); iter != calDevices.end(); iter++) {
-      bool ignoreThisRow = false;
-      unsigned int numCalload = 0;
-      unsigned int numReceptor = 0;
+      for (vector<CalDeviceRow*>::const_iterator iter = calDevices.begin(); iter != calDevices.end(); iter++) {
+	bool ignoreThisRow = false;
+	unsigned int numCalload = 0;
+	unsigned int numReceptor = 0;
       
-      //
-      // Let's make some checks on the attributes.
-      errstream.str("");
-      infostream.str("");
+	//
+	// Let's make some checks on the attributes.
+	errstream.str("");
+	infostream.str("");
 
-      //
-      // Is numCalload > 0 ?
-      if ((numCalload = (*iter)->getNumCalload()) <= 0) { 
-	errstream << "In the table CalDevice, the attribute 'numCalload' in row #"
-		  << (unsigned int) (iter - calDevices.begin())
-		  << " has an invalid value '("
-		  << numCalload << "'), a strictly positive value is expected."
-		  << endl; 
-	ignoreThisRow = true;
-      }
-      
-      //
-      // Do we have enough elements in calLoadNames ?
-      vector<CalibrationDevice> temp = (*iter)->getCalLoadNames();
-      vector<string> calLoadNames;
-      if (temp.size() < numCalload) { 
-	errstream  << "In the table CalDevice, the size of the attribute 'calLoadNames' in row #"
-		   << (unsigned int) (iter - calDevices.begin())
-		   << " is too small. It should be greater than or equal to the value of the atttribute 'numCalload' ("
-		   << numCalload
-		   <<")."
-		   << endl;
-	ignoreThisRow = true;
-      }
-      else {
-	calLoadNames.resize(temp.size());
-	transform(temp.begin(), temp.end(), calLoadNames.begin(), stringValue<CalibrationDevice, CCalibrationDevice>);	  
-      }
-
-      //
-      // Do we have numReceptor ?
-      if ((*iter)->isNumReceptorExists()) {
-	numReceptor = (*iter)->getNumReceptor();
-	if (numReceptor == 0) {
-	  errstream << "In the table CalDevice, the value of the attribute 'numReceptor' in row #"
+	//
+	// Is numCalload > 0 ?
+	if ((numCalload = (*iter)->getNumCalload()) <= 0) { 
+	  errstream << "In the table CalDevice, the attribute 'numCalload' in row #"
 		    << (unsigned int) (iter - calDevices.begin())
-		    << " is invalid (" 
-		    << numReceptor 
-		    << "). It is expected to be strictly positive."
-		    << endl;
+		    << " has an invalid value '("
+		    << numCalload << "'), a strictly positive value is expected."
+		    << endl; 
 	  ignoreThisRow = true;
 	}
-      }
-
-      //
-      // Do we have calEff ?
-      vector<vector<float> > calEff;
-      if ((*iter)->isCalEffExists()) {
-	//
-	// Do we take it into account ?
-	if (numReceptor == 0) {
-	  infostream << "In the table CalDevice, the attribute 'calEff' is present in row #"
-		     << (unsigned int) (iter - calDevices.begin())
-		     << " but it will be ignored due to the fact that the attribute 'numReceptor' is null."
-		     << endl;
-	}
-	else {
-	  calEff = (*iter)->getCalEff();
-	  
-	  //
-	  // Let's check the sizes of its content.
-	  if (calEff.size() < numReceptor) {
-	    errstream << "In the table CalDevice, the size of the attribute 'calEff' in row #"
-		      << (unsigned int) (iter - calDevices.begin())
-		      << " is too small. It should be greater than or equal to the value of the attribute 'numReceptor' ("
-		      << numReceptor
-		      <<")."
-		      << endl;
-	    ignoreThisRow = true;
-	  }
-	  else {
-	    if (find_if(calEff.begin(), calEff.end(), size_lt<float>(numCalload)) != calEff.end()) {
-	      errstream << "In the table CalDevice, the attribute 'calEff' in row #"
-			<< (unsigned int) (iter - calDevices.begin())
-			<< " has at least one element whose size is too small. All its elements should have their size"
-			<< " greater then  or equal to the value of the attribute 'numCalload' ("
-			<< numCalload
-			<< ")."
-			<< endl;
-	      ignoreThisRow = true;
-	    }
-	  }
-	}	
-      }
       
-      //
-      // In priority let's see if we have coupledNoiseCal ?
-      vector<vector<float> > coupledNoiseCal;
-      if ((*iter)->isCoupledNoiseCalExists()) {
 	//
-	// Do we take it into account ?
-	if (numReceptor == 0) {
-	  infostream << "In the table CalDevice, the attribute 'coupledNoiseCal' is present in row #"
-		     << (unsigned int) (iter - calDevices.begin())
-		     << " but it will be ignored due to the fact that the attribute 'numReceptor' is null."
-		     << endl;
-	}
-	else {
-	  coupledNoiseCal = (*iter)->getCoupledNoiseCal();
-	  
-	  //
-	  // Let's check the sizes of its content.
-	  if (coupledNoiseCal.size() < numReceptor) {
-	    errstream << "In the table CalDevice, the size of the attribute 'coupledNoiseCal' in row #"
-		      << (unsigned int) (iter - calDevices.begin())
-		      << " is too small. It should be greater than or equal to the value of the attribute 'numReceptor' ("
-		      << numReceptor
-		      <<")."
-		      << endl;
-	    ignoreThisRow = true;
-	  }
-	  else {
-	    if (find_if(coupledNoiseCal.begin(), coupledNoiseCal.end(), size_lt<float>(numCalload)) != coupledNoiseCal.end()) {
-	      errstream << "In the table CalDevice, the attribute 'coupledNoiseCal' in row #"
-			<< (unsigned int) (iter - calDevices.begin())
-			<< " has at least one element whose size is too small. All its elements should have their size"
-			<< " greater than or equal to the value of the attribute 'numCalload' (=="
-			<< numCalload
-			<< ")."
-			<< endl;
-	      ignoreThisRow = true;
-	    }
-	  }
-	}	
-      }
-      // Ok we don't have coupledNoiseCal , but maybe we have noiseCal ?
-      else if ((*iter)->isNoiseCalExists()) {
-	//
-	// Do we take it into account ?
-	vector<double> noiseCal = (*iter)->getNoiseCal();
-	
-	if (noiseCal.size() < numCalload) {
-	  infostream << "In the table CalDevice, the size of the attribute 'noiseCal' in row #"
-		     << (unsigned int) (iter - calDevices.begin())
-		     << " is too small. It should be greater than or equal to the value of the attribute 'numCalload' ("
-		     << numCalload
-		     << ")."
-		     << endl;
-	  ignoreThisRow = true;
-	}
-	else {
-	  // So yes we have a noiseCal attribute, then pretend we have coupledNoiseCal. 
-	  // Artificially force numReceptor to 2 and fill coupledNoiseCal by replicating what we have in noiseCal :
-	  // coupledNoiseCal[0] = noiseCal
-	  // coupledNoiseCal[1] = noiseCal
-	  //
-	  infostream << "In the table CalDevice  there is no attribute 'coupledNoiseCal' but there an attribute 'noiseCal' in row #"
-		     << (unsigned int) (iter - calDevices.begin())
-		     << " which we are going to use to fill the MS NOISE_CAL by replicating its values."
-		     << endl;
-	  
-	  numReceptor = 2;
-	  coupledNoiseCal.resize(numReceptor);
-	  for (unsigned int iReceptor = 0; iReceptor < numReceptor; iReceptor++) {
-	    coupledNoiseCal[iReceptor].resize(numCalload);
-	    transform(noiseCal.begin(), noiseCal.begin()+numCalload, coupledNoiseCal[iReceptor].begin(), d2f);
-	  } 
-	}
-      }
-      
-      //
-      // Do we have temperatureLoad ?
-      vector<double> temperatureLoad;
-      if ((*iter)->isTemperatureLoadExists()) {
-	vector<Temperature> temp = (*iter)->getTemperatureLoad();
-	if (temp.size() < numCalload) {
-	  errstream  << "In the table CalDevice, the size of the attribute 'temperatureLoad' in row #"
+	// Do we have enough elements in calLoadNames ?
+	vector<CalibrationDevice> temp = (*iter)->getCalLoadNames();
+	vector<string> calLoadNames;
+	if (temp.size() < numCalload) { 
+	  errstream  << "In the table CalDevice, the size of the attribute 'calLoadNames' in row #"
 		     << (unsigned int) (iter - calDevices.begin())
 		     << " is too small. It should be greater than or equal to the value of the atttribute 'numCalload' ("
 		     << numCalload
@@ -3112,187 +2963,360 @@ int main(int argc, char *argv[]) {
 	  ignoreThisRow = true;
 	}
 	else {
-	  temperatureLoad.resize(temp.size());
-	  transform(temp.begin(), temp.end(), temperatureLoad.begin(), basicTypeValue<Temperature, float>);	  
+	  calLoadNames.resize(temp.size());
+	  transform(temp.begin(), temp.end(), calLoadNames.begin(), stringValue<CalibrationDevice, CCalibrationDevice>);	  
 	}
-      }
-      
-      if (errstream.str().size() > 0) 
-	error(errstream.str());
-      
-      if (infostream.str().size() > 0)
-	info(infostream.str());
 
-      if (ignoreThisRow) {
+	//
+	// Do we have numReceptor ?
+	if ((*iter)->isNumReceptorExists()) {
+	  numReceptor = (*iter)->getNumReceptor();
+	  if (numReceptor == 0) {
+	    errstream << "In the table CalDevice, the value of the attribute 'numReceptor' in row #"
+		      << (unsigned int) (iter - calDevices.begin())
+		      << " is invalid (" 
+		      << numReceptor 
+		      << "). It is expected to be strictly positive."
+		      << endl;
+	    ignoreThisRow = true;
+	  }
+	}
+
+	//
+	// Do we have calEff ?
+	vector<vector<float> > calEff;
+	if ((*iter)->isCalEffExists()) {
+	  //
+	  // Do we take it into account ?
+	  if (numReceptor == 0) {
+	    infostream << "In the table CalDevice, the attribute 'calEff' is present in row #"
+		       << (unsigned int) (iter - calDevices.begin())
+		       << " but it will be ignored due to the fact that the attribute 'numReceptor' is null."
+		       << endl;
+	  }
+	  else {
+	    calEff = (*iter)->getCalEff();
+	  
+	    //
+	    // Let's check the sizes of its content.
+	    if (calEff.size() < numReceptor) {
+	      errstream << "In the table CalDevice, the size of the attribute 'calEff' in row #"
+			<< (unsigned int) (iter - calDevices.begin())
+			<< " is too small. It should be greater than or equal to the value of the attribute 'numReceptor' ("
+			<< numReceptor
+			<<")."
+			<< endl;
+	      ignoreThisRow = true;
+	    }
+	    else {
+	      if (find_if(calEff.begin(), calEff.end(), size_lt<float>(numCalload)) != calEff.end()) {
+		errstream << "In the table CalDevice, the attribute 'calEff' in row #"
+			  << (unsigned int) (iter - calDevices.begin())
+			  << " has at least one element whose size is too small. All its elements should have their size"
+			  << " greater then  or equal to the value of the attribute 'numCalload' ("
+			  << numCalload
+			  << ")."
+			  << endl;
+		ignoreThisRow = true;
+	      }
+	    }
+	  }	
+	}
+      
+	//
+	// In priority let's see if we have coupledNoiseCal ?
+	vector<vector<float> > coupledNoiseCal;
+	if ((*iter)->isCoupledNoiseCalExists()) {
+	  //
+	  // Do we take it into account ?
+	  if (numReceptor == 0) {
+	    infostream << "In the table CalDevice, the attribute 'coupledNoiseCal' is present in row #"
+		       << (unsigned int) (iter - calDevices.begin())
+		       << " but it will be ignored due to the fact that the attribute 'numReceptor' is null."
+		       << endl;
+	  }
+	  else {
+	    coupledNoiseCal = (*iter)->getCoupledNoiseCal();
+	  
+	    //
+	    // Let's check the sizes of its content.
+	    if (coupledNoiseCal.size() < numReceptor) {
+	      errstream << "In the table CalDevice, the size of the attribute 'coupledNoiseCal' in row #"
+			<< (unsigned int) (iter - calDevices.begin())
+			<< " is too small. It should be greater than or equal to the value of the attribute 'numReceptor' ("
+			<< numReceptor
+			<<")."
+			<< endl;
+	      ignoreThisRow = true;
+	    }
+	    else {
+	      if (find_if(coupledNoiseCal.begin(), coupledNoiseCal.end(), size_lt<float>(numCalload)) != coupledNoiseCal.end()) {
+		errstream << "In the table CalDevice, the attribute 'coupledNoiseCal' in row #"
+			  << (unsigned int) (iter - calDevices.begin())
+			  << " has at least one element whose size is too small. All its elements should have their size"
+			  << " greater than or equal to the value of the attribute 'numCalload' (=="
+			  << numCalload
+			  << ")."
+			  << endl;
+		ignoreThisRow = true;
+	      }
+	    }
+	  }	
+	}
+	// Ok we don't have coupledNoiseCal , but maybe we have noiseCal ?
+	else if ((*iter)->isNoiseCalExists()) {
+	  //
+	  // Do we take it into account ?
+	  vector<double> noiseCal = (*iter)->getNoiseCal();
+	
+	  if (noiseCal.size() < numCalload) {
+	    infostream << "In the table CalDevice, the size of the attribute 'noiseCal' in row #"
+		       << (unsigned int) (iter - calDevices.begin())
+		       << " is too small. It should be greater than or equal to the value of the attribute 'numCalload' ("
+		       << numCalload
+		       << ")."
+		       << endl;
+	    ignoreThisRow = true;
+	  }
+	  else {
+	    // So yes we have a noiseCal attribute, then pretend we have coupledNoiseCal. 
+	    // Artificially force numReceptor to 2 and fill coupledNoiseCal by replicating what we have in noiseCal :
+	    // coupledNoiseCal[0] = noiseCal
+	    // coupledNoiseCal[1] = noiseCal
+	    //
+	    infostream << "In the table CalDevice  there is no attribute 'coupledNoiseCal' but there an attribute 'noiseCal' in row #"
+		       << (unsigned int) (iter - calDevices.begin())
+		       << " which we are going to use to fill the MS NOISE_CAL by replicating its values."
+		       << endl;
+	  
+	    numReceptor = 2;
+	    coupledNoiseCal.resize(numReceptor);
+	    for (unsigned int iReceptor = 0; iReceptor < numReceptor; iReceptor++) {
+	      coupledNoiseCal[iReceptor].resize(numCalload);
+	      transform(noiseCal.begin(), noiseCal.begin()+numCalload, coupledNoiseCal[iReceptor].begin(), d2f);
+	    } 
+	  }
+	}
+      
+	//
+	// Do we have temperatureLoad ?
+	vector<double> temperatureLoad;
+	if ((*iter)->isTemperatureLoadExists()) {
+	  vector<Temperature> temp = (*iter)->getTemperatureLoad();
+	  if (temp.size() < numCalload) {
+	    errstream  << "In the table CalDevice, the size of the attribute 'temperatureLoad' in row #"
+		       << (unsigned int) (iter - calDevices.begin())
+		       << " is too small. It should be greater than or equal to the value of the atttribute 'numCalload' ("
+		       << numCalload
+		       <<")."
+		       << endl;
+	    ignoreThisRow = true;
+	  }
+	  else {
+	    temperatureLoad.resize(temp.size());
+	    transform(temp.begin(), temp.end(), temperatureLoad.begin(), basicTypeValue<Temperature, float>);	  
+	  }
+	}
+      
+	if (errstream.str().size() > 0) 
+	  error(errstream.str());
+      
+	if (infostream.str().size() > 0)
+	  info(infostream.str());
+
+	if (ignoreThisRow) {
+	  infostream.str("");
+	  infostream << "This row will be ignored." << endl;
+	  info(infostream.str());
+	  continue;
+	}
+
+	//
+	// And finally we can add a new row to the MS CALDEVICE table.
+	double interval = ((double) (*iter)->getTimeInterval().getDuration().get()) / ArrayTime::unitsInASecond ;
+	double time;
+	if (isEVLA) {
+	  time =  (*iter)->getTimeInterval().getStartInMJD()*86400 ;
+	}
+	else {
+	  time =  (*iter)->getTimeInterval().getStartInMJD()*86400 + interval / 2.0 ;
+	}
+      
+	for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator msIter = msFillers.begin();
+	     msIter != msFillers.end();
+	     ++msIter) {
+	  msIter->second->addCalDevice((*iter)->getAntennaId().getTagValue(),
+				       (*iter)->getFeedId(),
+				       swIdx2Idx[(*iter)->getSpectralWindowId().getTagValue()],
+				       time,
+				       interval,
+				       numCalload,
+				       calLoadNames,
+				       numReceptor,
+				       calEff,
+				       coupledNoiseCal,
+				       temperatureLoad);
+	}      
+      }
+      unsigned int numMSCalDevices = (const_cast<casa::MeasurementSet*>(msFillers.begin()->second->ms()))->rwKeywordSet().asTable("CALDEVICE").nrow();
+      if (numMSCalDevices > 0) {
 	infostream.str("");
-	infostream << "This row will be ignored." << endl;
+	infostream << "converted in " << numMSCalDevices << " caldevice(s) in the measurement set.";
 	info(infostream.str());
-	continue;
       }
-
-      //
-      // And finally we can add a new row to the MS CALDEVICE table.
-      double interval = ((double) (*iter)->getTimeInterval().getDuration().get()) / ArrayTime::unitsInASecond ;
-      double time;
-      if (isEVLA) {
-        time =  (*iter)->getTimeInterval().getStartInMJD()*86400 ;
-      }
-      else {
-        time =  (*iter)->getTimeInterval().getStartInMJD()*86400 + interval / 2.0 ;
-      }
-      
-      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator msIter = msFillers.begin();
-	   msIter != msFillers.end();
-	   ++msIter) {
-	msIter->second->addCalDevice((*iter)->getAntennaId().getTagValue(),
-				     (*iter)->getFeedId(),
-				     swIdx2Idx[(*iter)->getSpectralWindowId().getTagValue()],
-				     time,
-				     interval,
-				     numCalload,
-				     calLoadNames,
-				     numReceptor,
-				     calEff,
-				     coupledNoiseCal,
-				     temperatureLoad);
-      }      
-    }
-    unsigned int numMSCalDevices = (const_cast<casa::MeasurementSet*>(msFillers.begin()->second->ms()))->rwKeywordSet().asTable("CALDEVICE").nrow();
-    if (numMSCalDevices > 0) {
-      infostream.str("");
-      infostream << "converted in " << numMSCalDevices << " caldevice(s) in the measurement set.";
-      info(infostream.str());
     }
   }
+  catch (ConversionException e) {
+    errstream.str("");
+    errstream << e.getMessage();
+    error(errstream.str());
+  }
+  catch ( std::exception & e) {
+    errstream.str("");
+    errstream << e.what();
+    error(errstream.str());      
+  }
+ 
+  
 
   //
   // Process the SysPower table.
-  
-  const SysPowerTable& sysPowerT = ds->getSysPower();
-  infostream.str("");
-  infostream << "The dataset has " << sysPowerT.size() << " syspower(s)..."; 
+  try {
+    const SysPowerTable& sysPowerT = ds->getSysPower();
+    infostream.str("");
+    infostream << "The dataset has " << sysPowerT.size() << " syspower(s)..."; 
 
-  if (processSysPower && sysPowerT.size() > 0) { 
-    vector<int>		antennaId;
-    vector<int>		spectralWindowId;
-    vector<int>		feedId;
-    vector<double>	time;
-    vector<double>	interval;
-    vector<int>		numReceptor;
-    vector<float>	switchedPowerDifference;
-    vector<float>	switchedPowerSum;
-    vector<float>	requantizerGain;
+    if (processSysPower && sysPowerT.size() > 0) { 
+      vector<int>		antennaId;
+      vector<int>		spectralWindowId;
+      vector<int>		feedId;
+      vector<double>	time;
+      vector<double>	interval;
+      vector<int>		numReceptor;
+      vector<float>	switchedPowerDifference;
+      vector<float>	switchedPowerSum;
+      vector<float>	requantizerGain;
     
-    unsigned int        numReceptor0;
-    {
-      info(infostream.str()); infostream.str("");
-      rowsInAScanbyTimeIntervalFunctor<SysPowerRow> selector(selectedScanRow_v, isEVLA);
+      unsigned int        numReceptor0;
+      {
+	info(infostream.str()); infostream.str("");
+	rowsInAScanbyTimeIntervalFunctor<SysPowerRow> selector(selectedScanRow_v, isEVLA);
       
-      const vector<SysPowerRow *>& sysPowers = selector(sysPowerT.get(), ignoreTime);
+	const vector<SysPowerRow *>& sysPowers = selector(sysPowerT.get(), ignoreTime);
       
-      if (!ignoreTime) 
-	infostream << sysPowers.size() << " of them in the selected exec blocks / scans ... ";	
+	if (!ignoreTime) 
+	  infostream << sysPowers.size() << " of them in the selected exec blocks / scans ... ";	
       
-      info(infostream.str());
+	info(infostream.str());
       
-      infostream.str("");
-      errstream.str("");
+	infostream.str("");
+	errstream.str("");
       
-      antennaId.resize(sysPowers.size());
-      spectralWindowId.resize(sysPowers.size());
-      feedId.resize(sysPowers.size());
-      time.resize(sysPowers.size());
-      interval.resize(sysPowers.size());
+	antennaId.resize(sysPowers.size());
+	spectralWindowId.resize(sysPowers.size());
+	feedId.resize(sysPowers.size());
+	time.resize(sysPowers.size());
+	interval.resize(sysPowers.size());
       
-      /*
-       * Prepare the mandatory attributes.
-       */
-      transform(sysPowers.begin(), sysPowers.end(), antennaId.begin(), sysPowerAntennaId);
-      transform(sysPowers.begin(), sysPowers.end(), spectralWindowId.begin(), sysPowerSpectralWindowId);
-      transform(sysPowers.begin(), sysPowers.end(), feedId.begin(), sysPowerFeedId);
-      transform(sysPowers.begin(), sysPowers.end(), time.begin(), sysPowerMidTimeInSeconds);
-      transform(sysPowers.begin(), sysPowers.end(), interval.begin(), sysPowerIntervalInSeconds);
+	/*
+	 * Prepare the mandatory attributes.
+	 */
+	transform(sysPowers.begin(), sysPowers.end(), antennaId.begin(), sysPowerAntennaId);
+	transform(sysPowers.begin(), sysPowers.end(), spectralWindowId.begin(), sysPowerSpectralWindowId);
+	transform(sysPowers.begin(), sysPowers.end(), feedId.begin(), sysPowerFeedId);
+	transform(sysPowers.begin(), sysPowers.end(), time.begin(), sysPowerMidTimeInSeconds);
+	transform(sysPowers.begin(), sysPowers.end(), interval.begin(), sysPowerIntervalInSeconds);
       
-      /*
-       * Prepare the optional attributes.
-       */
-      numReceptor0 = (unsigned int) sysPowers[0]->getNumReceptor();
-      //
-      // Do we have a constant numReceptor all over the array numReceptor.
-      if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckConstantNumReceptor(numReceptor0)) != sysPowers.end()) {
-	errstream << "In SysPower table, numReceptor is varying. Can't go further." << endl;
-	error(errstream.str());
-      }
-      else 
-	infostream << "In SysPower table, numReceptor is uniformly equal to '" << numReceptor0 << "'." << endl;
+	/*
+	 * Prepare the optional attributes.
+	 */
+	numReceptor0 = (unsigned int) sysPowers[0]->getNumReceptor();
+	//
+	// Do we have a constant numReceptor all over the array numReceptor.
+	if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckConstantNumReceptor(numReceptor0)) != sysPowers.end()) {
+	  errstream << "In SysPower table, numReceptor is varying. Can't go further." << endl;
+	  error(errstream.str());
+	}
+	else 
+	  infostream << "In SysPower table, numReceptor is uniformly equal to '" << numReceptor0 << "'." << endl;
             
-      bool switchedPowerDifferenceExists0 = sysPowers[0]->isSwitchedPowerDifferenceExists();
-      if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckSwitchedPowerDifference(numReceptor0, switchedPowerDifferenceExists0)) == sysPowers.end())
-	if (switchedPowerDifferenceExists0) {
-	  infostream << "In SysPower table all rows have switchedPowerDifference with " << numReceptor0 << " elements." << endl;
-	  switchedPowerDifference.resize(numReceptor0 * sysPowers.size());
-	  for_each(sysPowers.begin(), sysPowers.end(), sysPowerSwitchedPowerDifference(switchedPowerDifference.begin()));
+	bool switchedPowerDifferenceExists0 = sysPowers[0]->isSwitchedPowerDifferenceExists();
+	if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckSwitchedPowerDifference(numReceptor0, switchedPowerDifferenceExists0)) == sysPowers.end())
+	  if (switchedPowerDifferenceExists0) {
+	    infostream << "In SysPower table all rows have switchedPowerDifference with " << numReceptor0 << " elements." << endl;
+	    switchedPowerDifference.resize(numReceptor0 * sysPowers.size());
+	    for_each(sysPowers.begin(), sysPowers.end(), sysPowerSwitchedPowerDifference(switchedPowerDifference.begin()));
+	  }
+	  else
+	    infostream << "In SysPower table no switchedPowerDifference recorded." << endl;
+	else {
+	  errstream << "In SysPower table, switchedPowerDifference has a variable shape or is not present everywhere or both. Can't go further." ;
+	  error(errstream.str());
 	}
-	else
-	  infostream << "In SysPower table no switchedPowerDifference recorded." << endl;
-      else {
-	errstream << "In SysPower table, switchedPowerDifference has a variable shape or is not present everywhere or both. Can't go further." ;
-	error(errstream.str());
-      }
       
-      bool switchedPowerSumExists0 = sysPowers[0]->isSwitchedPowerSumExists();
-      if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckSwitchedPowerSum(numReceptor0, switchedPowerSumExists0)) == sysPowers.end())
-	if (switchedPowerSumExists0) {
-	  infostream << "In SysPower table all rows have switchedPowerSum with " << numReceptor0 << " elements." << endl;
-	  switchedPowerSum.resize(numReceptor0 * sysPowers.size());
-	  for_each(sysPowers.begin(), sysPowers.end(), sysPowerSwitchedPowerSum(switchedPowerSum.begin()));
+	bool switchedPowerSumExists0 = sysPowers[0]->isSwitchedPowerSumExists();
+	if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckSwitchedPowerSum(numReceptor0, switchedPowerSumExists0)) == sysPowers.end())
+	  if (switchedPowerSumExists0) {
+	    infostream << "In SysPower table all rows have switchedPowerSum with " << numReceptor0 << " elements." << endl;
+	    switchedPowerSum.resize(numReceptor0 * sysPowers.size());
+	    for_each(sysPowers.begin(), sysPowers.end(), sysPowerSwitchedPowerSum(switchedPowerSum.begin()));
+	  }
+	  else
+	    infostream << "In SysPower table no switchedPowerSum recorded." << endl;
+	else {
+	  errstream << "In SysPower table, switchedPowerSum has a variable shape or is not present everywhere or both. Can't go further." ;
+	  error(errstream.str());
 	}
-	else
-	  infostream << "In SysPower table no switchedPowerSum recorded." << endl;
-      else {
-	errstream << "In SysPower table, switchedPowerSum has a variable shape or is not present everywhere or both. Can't go further." ;
-	error(errstream.str());
-      }
       
-      bool requantizerGainExists0 = sysPowers[0]->isRequantizerGainExists();
-      if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckRequantizerGain(numReceptor0, requantizerGainExists0)) == sysPowers.end())
-	if (requantizerGainExists0) {
-	  infostream << "In SysPower table all rows have switchedPowerSum with " << numReceptor0 << " elements." << endl;
-	  requantizerGain.resize(numReceptor0 * sysPowers.size());
-	  for_each(sysPowers.begin(), sysPowers.end(), sysPowerRequantizerGain(requantizerGain.begin()));  
+	bool requantizerGainExists0 = sysPowers[0]->isRequantizerGainExists();
+	if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckRequantizerGain(numReceptor0, requantizerGainExists0)) == sysPowers.end())
+	  if (requantizerGainExists0) {
+	    infostream << "In SysPower table all rows have switchedPowerSum with " << numReceptor0 << " elements." << endl;
+	    requantizerGain.resize(numReceptor0 * sysPowers.size());
+	    for_each(sysPowers.begin(), sysPowers.end(), sysPowerRequantizerGain(requantizerGain.begin()));  
+	  }
+	  else
+	    infostream << "In SysPower table no switchedPowerSum recorded." << endl;
+	else {
+	  errstream << "In SysPower table, requantizerGain has a variable shape or is not present everywhere or both. Can't go further." ;
+	  error(errstream.str());
 	}
-	else
-	  infostream << "In SysPower table no switchedPowerSum recorded." << endl;
-      else {
-	errstream << "In SysPower table, requantizerGain has a variable shape or is not present everywhere or both. Can't go further." ;
-	error(errstream.str());
       }
-    }
-    info(infostream.str());
-        
-    for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator msIter = msFillers.begin();
-	 msIter != msFillers.end();
-	 ++msIter) {
-      msIter->second->addSysPowerSlice(antennaId.size(),
-				       antennaId,
-				       spectralWindowId,
-				       feedId,
-				       time,
-				       interval,
-				       (unsigned int) numReceptor0,
-				       switchedPowerDifference,
-				       switchedPowerSum,
-				       requantizerGain);
-    }
-     
-    unsigned int numMSSysPowers =  (const_cast<casa::MeasurementSet*>(msFillers.begin()->second->ms()))->rwKeywordSet().asTable("SYSPOWER").nrow();
-    if (numMSSysPowers > 0) {
-      infostream.str("");
-      infostream << "converted in " << numMSSysPowers << " syspower(s) in the measurement set.";
       info(infostream.str());
-    }
-  } // end of filling SysPower by slice.
-
+        
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator msIter = msFillers.begin();
+	   msIter != msFillers.end();
+	   ++msIter) {
+	msIter->second->addSysPowerSlice(antennaId.size(),
+					 antennaId,
+					 spectralWindowId,
+					 feedId,
+					 time,
+					 interval,
+					 (unsigned int) numReceptor0,
+					 switchedPowerDifference,
+					 switchedPowerSum,
+					 requantizerGain);
+      }
+     
+      unsigned int numMSSysPowers =  (const_cast<casa::MeasurementSet*>(msFillers.begin()->second->ms()))->rwKeywordSet().asTable("SYSPOWER").nrow();
+      if (numMSSysPowers > 0) {
+	infostream.str("");
+	infostream << "converted in " << numMSSysPowers << " syspower(s) in the measurement set.";
+	info(infostream.str());
+      }
+    } // end of filling SysPower by slice.
+  }
+  catch (ConversionException e) {
+    errstream.str("");
+    errstream << e.getMessage();
+    error(errstream.str());
+  }
+  catch ( std::exception & e) {
+    errstream.str("");
+    errstream << e.what();
+    error(errstream.str());      
+  }
 
   //
   // Load the weather table
@@ -3316,10 +3340,10 @@ int main(int argc, char *argv[]) {
       double interval = ((double) r->getTimeInterval().getDuration().get()) / ArrayTime::unitsInASecond ;
       double time;
       if (isEVLA) {
-        time =  ((double) r->getTimeInterval().getStart().get()) / ArrayTime::unitsInASecond ;
+	time =  ((double) r->getTimeInterval().getStart().get()) / ArrayTime::unitsInASecond ;
       }
       else {
-        time =  ((double) r->getTimeInterval().getStart().get()) / ArrayTime::unitsInASecond + interval / 2.0 ;
+	time =  ((double) r->getTimeInterval().getStart().get()) / ArrayTime::unitsInASecond + interval / 2.0 ;
       }
 
       float pressure                   = r->getPressure().get() / 100.0;// We consider that ASDM stores Pascals & MS expects hectoPascals
@@ -3659,6 +3683,11 @@ int main(int argc, char *argv[]) {
       error(errstream.str());
     }
     catch ( SDMDataObjectReaderException& e ) {
+      errstream.str("");
+      errstream << e.getMessage();
+      error(errstream.str());
+    }
+    catch (ConversionException e) {
       errstream.str("");
       errstream << e.getMessage();
       error(errstream.str());

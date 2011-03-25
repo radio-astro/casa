@@ -289,8 +289,22 @@ Bool CalInterp::findSlot(const Double& time) {
 
     if (exactTime_) newSlot=True;
 
-    // Find index in timelist where time would be:
-    slot=binarySearch(exactTime_,timelist,time,nTime(),0);
+    // Behave as nearest outside absolute range of available calibration   
+    //   to avoid wild extrapolation, else search for the correct soln slot
+    if (time<timelist(0)) {
+      // Before first timestamp, use first slot as nearest one
+      slot=0;
+      exactTime_=True;
+    }
+    else if (time>timelist(nTime()-1)) {
+      // After last timestamp, use last slot as nearest one
+      slot=nTime()-1;
+      exactTime_=True;
+    }
+    else
+      // Find index in timelist where time would be:
+      slot=binarySearch(exactTime_,timelist,time,nTime(),0);
+
     //    cout << "time = " << time << "  slot = " << slot << " nTime() = " << nTime() << endl; 
     // If not already an exact match...
     if ( !exactTime_ ) {

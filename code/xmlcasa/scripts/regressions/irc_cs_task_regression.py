@@ -192,10 +192,10 @@ endTime = time.time()
 #irc_sum=627.9
 # Regression values of CASA 3.1+ASAP3 on 64bit RHEL5.5 (2010/10?)
 # Regression values of CASA 3.2(#14238)+ASAP3(#2031) on 64bit RHEL5.5
-#   using cspline with (npiece,clipthresh,clipniter)=(2,3.0,1) in sdbaseline (2011/3/10 WK)
-irc_max=3.360
-irc_rms=0.1473
-irc_sum=642.8
+#   using cspline with (npiece,clipthresh,clipniter)=(2,3.0,1) in sdbaseline (2011/03/25 WK)
+irc_max=3.3270
+irc_rms=0.1472
+irc_sum=630.75
 
 diff_max = abs((irc_max-max)/irc_max)
 diff_rms = abs((irc_rms-rms)/irc_rms)

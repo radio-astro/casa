@@ -477,6 +477,19 @@ class ASDM_FIELD : public ASDM_TABLE_SINGLETON<ASDM_FIELD>, public ASDM_TABLE_BA
   void fill(const ASDM& asdm);
 };
 	
+class ASDM_FLAG : public ASDM_TABLE_SINGLETON<ASDM_FLAG>, public ASDM_TABLE_BASE {
+  friend class ASDM_TABLE_SINGLETON<ASDM_FLAG>;
+
+ private:
+  ASDM_FLAG();
+  ~ASDM_FLAG();
+  TableDesc tableDesc_;
+
+ public:
+  const TableDesc& tableDesc() const;
+  void fill(const ASDM& asdm);
+};
+	
 class ASDM_FLAGCMD : public ASDM_TABLE_SINGLETON<ASDM_FLAGCMD>, public ASDM_TABLE_BASE {
   friend class ASDM_TABLE_SINGLETON<ASDM_FLAGCMD>;
 
@@ -782,6 +795,19 @@ class ASDM_SYSCAL : public ASDM_TABLE_SINGLETON<ASDM_SYSCAL>, public ASDM_TABLE_
  private:
   ASDM_SYSCAL();
   ~ASDM_SYSCAL();
+  TableDesc tableDesc_;
+
+ public:
+  const TableDesc& tableDesc() const;
+  void fill(const ASDM& asdm);
+};
+	
+class ASDM_SYSPOWER : public ASDM_TABLE_SINGLETON<ASDM_SYSPOWER>, public ASDM_TABLE_BASE {
+  friend class ASDM_TABLE_SINGLETON<ASDM_SYSPOWER>;
+
+ private:
+  ASDM_SYSPOWER();
+  ~ASDM_SYSPOWER();
   TableDesc tableDesc_;
 
  public:

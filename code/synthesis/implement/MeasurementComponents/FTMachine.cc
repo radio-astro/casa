@@ -219,8 +219,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Set the frame for the UVWMachine
     mFrame_p=MeasFrame(MEpoch(Quantity(vb.time()(0), "s")), mLocation_p);
     
-    
-    
     // First get the CoordinateSystem for the image and then find
     // the DirectionCoordinate
     CoordinateSystem coords=image->coordinates();
@@ -316,7 +314,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
       convertArray(imageFreq_p,tempStorFreq);
     }
-    
     //Destroy any conversion layer Freq coord if freqframe is not valid
     if(!freqFrameValid_p){
       MFrequency::Types imageFreqType=spectralCoord_p.frequencySystem();
@@ -332,7 +329,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // pixel then we set the corresponding chanMap to -1.
     // This means that put and get must always check for this
     // value (see e.g. GridFT)
-    
     
     nvischan  = vb.frequency().nelements();
     interpVisFreq_p.resize();
@@ -437,7 +433,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					     Cube<Int>& flags, 
 					     Matrix<Float>& weight, 
 					     FTMachine::Type type){
-    
     Cube<Complex> origdata;
     Cube<Bool> modflagCube;
     Vector<Double> visFreq(vb.frequency().nelements());
@@ -486,14 +481,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       return False;
     }
     
-    
-    
-    
     Cube<Bool>flag;
     
     //okay at this stage we have at least 2 channels
     Double width=fabs(imageFreq_p[1]-imageFreq_p[0])/fabs(visFreq[1]-visFreq[0]);
     //if width is smaller than number of points needed for interpolation ...do it directly
+    //
+    // If image chan width is more than twice the data chan width, make a new list of
+    // data frequencies on which to interpolate. This new list is sync'd with the starting image chan
+    // and have the same width as the data chans.
     if(((width >2.0) && (freqInterpMethod_p==InterpolateArray1D<Double, Complex>::linear)) || 
 	   (width >4.0) && (freqInterpMethod_p !=InterpolateArray1D<Double, Complex>::linear)){
       Double minVF=min(visFreq);
@@ -508,17 +504,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	chanMap.resize(interpVisFreq_p.nelements());
 	chanMap.set(-1);
       }
-      else{ 
+      else{ // Make a new list of frequencies.
 	Bool found;
 	uInt where=0;
-	Int firstchan=0;
 	Double interpwidth=visFreq[1]-visFreq[0];
-	if(minIF < minVF){
+	if(minIF < minVF){ // Need to find the first image-channel with data in it
 	  where=binarySearchBrackets(found, imageFreq_p, minVF, imageFreq_p.nelements());
 	  if(where != imageFreq_p.nelements()){
 	    minIF=imageFreq_p[where];
-	    if(interpwidth >0.0)
-	      firstchan=where;
 	  }
 	}
 
@@ -526,54 +519,53 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	   where=binarySearchBrackets(found, imageFreq_p, maxVF, imageFreq_p.nelements());
 	   if(where!= imageFreq_p.nelements()){
 	    maxIF=imageFreq_p[where];
-	    if(interpwidth < 0.0)
-	      firstchan=where;
 	   }
 	  
 	}
-	
-	
-	Int ninterpchan=(Int)floor((maxIF-minIF+(imageFreq_p[1]-imageFreq_p[0]))/fabs(interpwidth));
+
+        // This new list of frequencies starts at the first image channel minus half image channel.
+	// It ends at the last image channel plus half image channel.
+	Int ninterpchan=(Int)ceil((maxIF-minIF+fabs(imageFreq_p[1]-imageFreq_p[0]))/fabs(interpwidth));
 	chanMap.resize(ninterpchan);
 	chanMap.set(-1);
 	interpVisFreq_p.resize(ninterpchan);
 	interpVisFreq_p[0]=(interpwidth > 0) ? minIF : maxIF;
-	interpVisFreq_p[0] -= (imageFreq_p[1]-imageFreq_p[0])/2.0;
-	chanMap[0]=firstchan;
+	interpVisFreq_p[0] -= fabs(imageFreq_p[1]-imageFreq_p[0])/2.0;
 	for (Int k=1; k < ninterpchan; ++k){
 	  interpVisFreq_p[k] = interpVisFreq_p[k-1]+ interpwidth;
+	}
+
+	for (Int k=0; k < ninterpchan; ++k){
 	  ///chanmap with width
 	  Double nearestchanval = interpVisFreq_p[k]- (imageFreq_p[1]-imageFreq_p[0])/2.0;
 	  where=binarySearchBrackets(found, imageFreq_p, nearestchanval, imageFreq_p.nelements());
 	  if(where != imageFreq_p.nelements())
 	    chanMap[k]=where;
 	}
-      }
 
-      
-
-      
-      
-    }
+      }// By now, we have a new list of frequencies, synchronized with image channels, but with data chan widths.
+    }// end of ' if (we have to make new frequencies) '
     else{
+      // Interpolate directly onto output image frequencies.
       interpVisFreq_p.resize(imageFreq_p.nelements());
       convertArray(interpVisFreq_p, imageFreq_p);
       chanMap.resize(interpVisFreq_p.nelements());
       indgen(chanMap);
     }
 
-    if(type != FTMachine::PSF){
-      //if(freqInterpMethod_p != InterpolateArray1D<Float, Complex>::linear){
-      if(1){
-	
-	//Need to get  new interpolate functions that interpolate explicitly on the 2nd axis
+    // Read flags from the vb.
+    setSpectralFlag(vb,modflagCube);
+
+    if(type != FTMachine::PSF){ // Interpolating the data
+ 	//Need to get  new interpolate functions that interpolate explicitly on the 2nd axis
 	//2 swap of axes needed
 	Cube<Complex> flipdata;
 	Cube<Bool> flipflag;
 
-
-	setSpectralFlag(vb,modflagCube);
-	//swapyz(flipflag,vb.flagCube());
+        // Interpolate the data. 
+        //      Input flags are from the previous step ( setSpectralFlag ). 
+        //      Output flags contain info about channels that could not be interpolated 
+        //                                   (for example, linear interp with only one data point)
 	swapyz(flipflag,modflagCube);
 	swapyz(flipdata,origdata);
 	InterpolateArray1D<Double,Complex>::
@@ -586,61 +578,63 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	swapyz(flipflag,flag);
 	flag.resize();     
 	flag.reference(flipflag);
-      }
-      else{
-	//InterpolateArray1D<Float,Complex>::
-	//  interpolatey(data,flag,imageFreq_p,visFreq,origdata,vb.flagCube(),freqInterpMethod_p);
-	setSpectralFlag(vb,modflagCube);
-	InterpolateArray1D<Double,Complex>::
-	  interpolatey(data,flag,interpVisFreq_p,visFreq,origdata,modflagCube,freqInterpMethod_p);
-      }
+        // Note : 'flag' will get augmented with the flags coming out of weight interpolation
+     }
+    else
+      { // get the flag array to the correct shape.
+	// This will get filled at the end of weight-interpolation.
+         flag.resize(vb.nCorr(), interpVisFreq_p.nelements(), vb.nRow());
+         flag.set(False);
     }
-    else{
-      //For now don't read data to just interpolate flags...need a interpolate 
-      //flag only function
-      flag.resize(vb.nCorr(), interpVisFreq_p.nelements(), vb.nRow());
-      flag.set(True);
-      ArrayIterator<Bool> iter(flag, IPosition(2,0,2));
-      //ReadOnlyArrayIterator<Bool> origiter(vb.flagCube(), IPosition(2,0,2));
-      setSpectralFlag(vb,modflagCube);
-      ReadOnlyArrayIterator<Bool> origiter(modflagCube, IPosition(2,0,2));
-      Int channum=0;
-      Float step=interpVisFreq_p[1]-interpVisFreq_p[0];
-      Float origstep=lsrFreq_p[1]-lsrFreq_p[0];
-      while (!iter.pastEnd()){
-	Int closest=Int((interpVisFreq_p[channum]+step-lsrFreq_p[0])/origstep);
-	//if(closest <0) closest=0;	
-	//if(closest >=vb.nChannel()) closest=vb.nChannel()-1;
-        origiter.origin();
-	if((closest >=0) && (closest <  vb.nChannel())){
-	  iter.array().set(False);
-	  for (Int k=0; k < closest; ++k){
-	    origiter.next();
-	  }
-	  iter.array()=iter.array()+origiter.array();
-	}
-	iter.next();
-	++channum;
-      }
-    }
-    
-    Matrix<Float> flipweight;
-    flipweight=transpose(wt);
-    InterpolateArray1D<Double,Float>::interpolate(weight,interpVisFreq_p, visFreq,flipweight,freqInterpMethod_p);
-    
-    flipweight.resize();
-    flipweight=transpose(weight);    
-    weight.resize();
-    weight.reference(flipweight);
-    
-    flags.resize(flag.shape());
-    flags=0;
-    flags(flag)=True;
-    //interpVisFreq_p.resize(imageFreq_p.nelements());
-    //convertArray(interpVisFreq_p, imageFreq_p);
-    
-    //chanMap.resize(imageFreq_p.nelements());
-    //indgen(chanMap);
+      // Now, interpolate the weights also.
+      //   (1) Read in the flags from the vb ( setSpectralFlags -> modflagCube )
+      //   (2) Collapse the flags along the polarization dimension to match shape of weight.
+       Matrix<Bool> chanflag(wt.shape());
+       AlwaysAssert( chanflag.shape()[0]==modflagCube.shape()[1], AipsError);
+       AlwaysAssert( chanflag.shape()[1]==modflagCube.shape()[2], AipsError);
+       chanflag=False;
+       for(uInt pol=0;pol<modflagCube.shape()[0];pol++)
+	 chanflag = chanflag | modflagCube.yzPlane(pol);
+
+       // (3) Interpolate the weights.
+       //      Input flags are the collapsed vb flags : 'chanflag'
+       //      Output flags are in tempoutputflag 
+       //            - contains info about channels that couldn't be interpolated.
+       Matrix<Float> flipweight;
+       flipweight=transpose(wt);
+       Matrix<Bool> flipchanflag;
+       flipchanflag=transpose(chanflag);
+       Matrix<Bool> tempoutputflag;
+       InterpolateArray1D<Double,Float>::
+	 interpolate(weight,tempoutputflag, interpVisFreq_p, visFreq,flipweight,flipchanflag,freqInterpMethod_p);
+       flipweight.resize();
+       flipweight=transpose(weight);    
+       weight.resize();
+       weight.reference(flipweight);
+       flipchanflag.resize();
+       flipchanflag=transpose(tempoutputflag);
+       tempoutputflag.resize();
+       tempoutputflag.reference(flipchanflag);
+
+       // (4) Now, fill these flags back into the flag cube 
+       //                 so that they get USED while gridding the PSF (and data)
+       //      Taking the OR of the flags that came out of data-interpolation 
+       //                         and weight-interpolation, in case they're different.
+       //      Expanding flags across polarization.  This will destroy any 
+       //                          pol-dependent flags for imaging, but msvis::VisImagingWeight 
+       //                          uses the OR of flags across polarization anyway
+       //                          so we don't lose anything.
+
+       AlwaysAssert( tempoutputflag.shape()[0]==flag.shape()[1], AipsError);
+       AlwaysAssert( tempoutputflag.shape()[1]==flag.shape()[2], AipsError);
+       for(uInt pol=0;pol<flag.shape()[0];pol++)
+	 flag.yzPlane(pol) = tempoutputflag | flag.yzPlane(pol);
+
+       // Fill the output array of image-channel flags.
+       flags.resize(flag.shape());
+       flags=0;
+       flags(flag)=True;
+
     return True;
   }
   

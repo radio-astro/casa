@@ -29,9 +29,10 @@ def importevla2(asdm=None, vis=None, ocorr_mode=None, compression=None, asis=Non
 	#Vers8.1 (3.2.0) STM 2010-12-01 prec=9 on timestamps
 	#Vers8.2 (3.2.0) MKH 2010-12-06 added scan selection
 	#Vers8.3 (3.2.0) GAM 2011-01-18 added switchedpower option (sw power gain/tsys)
+	#Vers8.4 (3.2.0) STM 2011-03-24 fix casalog.post line-length bug
 	try:
                 casalog.origin('importevla')
-		casalog.post('You are using importevla2 v8.2 STM Updated 2010-12-08')
+		casalog.post('You are using importevla2 v8.4 STM Updated 2011-03-24')
 		viso = ''
                 casalog.post('corr_mode is forcibly set to all.')
 		if(len(vis) > 0) :
@@ -718,7 +719,10 @@ def applyflagcmd(msfile, flagbackup, myflags):
 						#raise Exception(str(x)+' has unknown key')
 						print str(x)+' has unknown key'
 				# Have list of params (besides a mode), may be zero length
-				casalog.post(param_list)
+				#casalog.post(param_list)
+				#the above was too long for logger, truncate
+				pstr = param_list[:128]
+				casalog.post(pstr)
 				# Special cases of parameter mapping to flagger tool
 				parse_cmdparams(param_i)
 				if debug: print param_i
