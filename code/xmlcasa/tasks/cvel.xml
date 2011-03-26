@@ -122,6 +122,7 @@ Hanning smoothing may not be necessary.
 	       <value>linear</value>
 	       <value>cubic</value>
 	       <value>spline</value>
+	       <value>fftshift</value>
             </allowed>
         </param>
 
@@ -335,7 +336,7 @@ Hanning smoothing may not be necessary.
                width -- Output channel width in units of the input
  		     channel width (sign indicates whether the start parameter is lower(+) or upper(-) end of the range)
                  default=1; example: width=4
-               interpolation -- Interpolation method (linear, nearest, cubic, spline)
+               interpolation -- Interpolation method (linear, nearest, cubic, spline, fftshift)
                  default = 'linear'
            examples:
                spw = '0,1'; mode = 'channel'

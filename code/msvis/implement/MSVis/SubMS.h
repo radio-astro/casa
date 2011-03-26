@@ -370,8 +370,9 @@ class SubMS
 			   vector< Vector<Double> >& xold, 
 			   vector< Vector<Double> >& xout, 
 			   vector< Vector<Double> >& xin, 
-			   vector< InterpolateArray1D<Double,Complex>::InterpolationMethod >& method,
-			   vector< InterpolateArray1D<Double,Float>::InterpolationMethod >& methodF,
+			   vector< Int >& method, // interpolation method cast to Int
+			   //vector< InterpolateArray1D<Double,Complex>::InterpolationMethod >& method,
+			   //vector< InterpolateArray1D<Double,Float>::InterpolationMethod >& methodF,
 			   Bool& msMod,
 			   const String& outframe,
 			   const String& regridQuant,

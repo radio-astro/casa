@@ -1995,7 +1995,7 @@ Date/Time:                         RR:                      RL:                 
 
      <param type="string" direction="in" name="interpolation">
      <description>
-      Name of the interpolation method (NEAREST, LINEAR, SPLINE, CUBIC) used in the regridding. 
+      Name of the interpolation method (NEAREST, LINEAR, SPLINE, CUBIC, FFTSHIFT) used in the regridding. 
       Flagging information is combined using "inclusive or". 
      </description>
      <value>LINEAR</value>
@@ -2144,7 +2144,7 @@ Date/Time:                         RR:                      RL:                 
      </param>
 
      <param type="string" direction="in" name="interp">
-     <description> interpolation method, default = linear
+     <description> interpolation method "nearest", "linear", "spline", "cubic", "fftshift", default = linear
      </description>
      <value>linear</value>
      </param>

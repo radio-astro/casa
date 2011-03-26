@@ -1,12 +1,11 @@
 # Unit test for ms.cvelfreqs()
 
-# In order to run individual test cases, comment out the following line
-tests_to_do = []
-# and set the variable tests_to_do to the list of cases before calling this script
-
-if(not os.path.exists('test_uvcontsub2.ms')):
-    print "Copying test data ..."
-    os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/unittest/uvcontsub2/test_uvcontsub2.ms .')
+import os
+import shutil
+from __main__ import default
+from tasks import *
+from taskinit import *
+import unittest
 
 # Test Matrix
 # mode = 'channel', 'frequency', 'velocity'
@@ -25,6 +24,10 @@ if(not os.path.exists('test_uvcontsub2.ms')):
 # width = 1, -1 (equivalent freqs and velos)
 # ascending and descending
 
+tests_to_do = []
+mytotal = 0
+myfailures = 0
+failed = []
 
 def testit():
     global mymode, mycase, myspwids, mynchan, mystart, mywidth, myexpectation, mytotal, myfailures
@@ -941,168 +944,213 @@ def testchannelmode(caseoffset, isDesc):
 
 ### end function testchannelmode() #########
 
+class cvelfreqs_test(unittest.TestCase):
 
-# ascending frequencies #########
+    def setUp(self):
 
-os.system('rm -rf sample.ms')
-shutil.copytree('test_uvcontsub2.ms','sample.ms')
-tb.open('sample.ms/SPECTRAL_WINDOW', nomodify=False)
-# spw 0
-spwid = 0
-newnumchan = 10
-newchanfreq = range(1,newnumchan+1) # i.e. [1,2,3,...,10]
-cw = newchanfreq[1] - newchanfreq[0]
-newchanwidth = []
-for i in range(0,newnumchan):
-    newchanwidth.append(cw)
+        # In order to run individual test cases, comment out the following line
+        # and set the variable tests_to_do to the list of cases before calling this script
 
-print spwid,': ', newchanfreq
-print '    ', newchanwidth
+        if(not os.path.exists('test_uvcontsub2.ms')):
+            print "Copying test data ..."
+            os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/unittest/uvcontsub2/test_uvcontsub2.ms .')
+            
+    def tearDown(self):
+        os.system('rm -rf sample.ms sample2.ms')   
+        pass
 
-tb.putcell('NUM_CHAN', spwid, newnumchan)
-tb.putcell('CHAN_FREQ', spwid, newchanfreq)
-tb.putcell('CHAN_WIDTH', spwid, newchanwidth)
-tb.putcell('EFFECTIVE_BW', spwid, newchanwidth)
-tb.putcell('RESOLUTION', spwid, newchanwidth)
-tb.putcell('REF_FREQUENCY', spwid, newchanfreq[0])
-tb.putcell('TOTAL_BANDWIDTH', spwid, abs(newchanfreq[-1]-newchanfreq[0])+abs(newchanwidth[0]))
+    def test1(self):
 
-# spw 1
-spwid = 1
-newnumchan = 10
-newchanfreq = range(10,newnumchan+1+9) # i.e. [10,11,...,19]
-cw = newchanfreq[1] - newchanfreq[0]
-newchanwidth = []
-for i in range(0,newnumchan):
-    newchanwidth.append(cw)
+        '''cvelfreqs 1: test ascending frequencies'''
 
-print spwid,': ', newchanfreq
-print '    ', newchanwidth
+        os.system('rm -rf sample.ms')
+        shutil.copytree('test_uvcontsub2.ms','sample.ms')
+        tb.open('sample.ms/SPECTRAL_WINDOW', nomodify=False)
+        # spw 0
+        spwid = 0
+        newnumchan = 10
+        newchanfreq = range(1,newnumchan+1) # i.e. [1,2,3,...,10]
+        cw = newchanfreq[1] - newchanfreq[0]
+        newchanwidth = []
+        for i in range(0,newnumchan):
+            newchanwidth.append(cw)
+            
+        print spwid,': ', newchanfreq
+        print '    ', newchanwidth
+            
+        tb.putcell('NUM_CHAN', spwid, newnumchan)
+        tb.putcell('CHAN_FREQ', spwid, newchanfreq)
+        tb.putcell('CHAN_WIDTH', spwid, newchanwidth)
+        tb.putcell('EFFECTIVE_BW', spwid, newchanwidth)
+        tb.putcell('RESOLUTION', spwid, newchanwidth)
+        tb.putcell('REF_FREQUENCY', spwid, newchanfreq[0])
+        tb.putcell('TOTAL_BANDWIDTH', spwid, abs(newchanfreq[-1]-newchanfreq[0])+abs(newchanwidth[0]))
 
-tb.putcell('NUM_CHAN', spwid, newnumchan)
-tb.putcell('CHAN_FREQ', spwid, newchanfreq)
-tb.putcell('CHAN_WIDTH', spwid, newchanwidth)
-tb.putcell('EFFECTIVE_BW', spwid, newchanwidth)
-tb.putcell('RESOLUTION', spwid, newchanwidth)
-tb.putcell('REF_FREQUENCY', spwid, newchanfreq[0])
-tb.putcell('TOTAL_BANDWIDTH', spwid, abs(newchanfreq[-1]-newchanfreq[0])+abs(newchanwidth[0]))
+        # spw 1
+        spwid = 1
+        newnumchan = 10
+        newchanfreq = range(10,newnumchan+1+9) # i.e. [10,11,...,19]
+        cw = newchanfreq[1] - newchanfreq[0]
+        newchanwidth = []
+        for i in range(0,newnumchan):
+            newchanwidth.append(cw)
 
-# spw 2
-spwid = 2
-newnumchan = 10
-newchanfreq = range(19,newnumchan+1+18) # i.e. [19,20,...,28]
-cw = newchanfreq[1] - newchanfreq[0]
-newchanwidth = []
-for i in range(0,newnumchan):
-    newchanwidth.append(cw)
+        print spwid,': ', newchanfreq
+        print '    ', newchanwidth
 
-print spwid,': ', newchanfreq
-print '    ', newchanwidth
+        tb.putcell('NUM_CHAN', spwid, newnumchan)
+        tb.putcell('CHAN_FREQ', spwid, newchanfreq)
+        tb.putcell('CHAN_WIDTH', spwid, newchanwidth)
+        tb.putcell('EFFECTIVE_BW', spwid, newchanwidth)
+        tb.putcell('RESOLUTION', spwid, newchanwidth)
+        tb.putcell('REF_FREQUENCY', spwid, newchanfreq[0])
+        tb.putcell('TOTAL_BANDWIDTH', spwid, abs(newchanfreq[-1]-newchanfreq[0])+abs(newchanwidth[0]))
 
-tb.putcell('NUM_CHAN', spwid, newnumchan)
-tb.putcell('CHAN_FREQ', spwid, newchanfreq)
-tb.putcell('CHAN_WIDTH', spwid, newchanwidth)
-tb.putcell('EFFECTIVE_BW', spwid, newchanwidth)
-tb.putcell('RESOLUTION', spwid, newchanwidth)
-tb.putcell('REF_FREQUENCY', spwid, newchanfreq[0])
-tb.putcell('TOTAL_BANDWIDTH', spwid, abs(newchanfreq[-1]-newchanfreq[0])+abs(newchanwidth[0]))
+        # spw 2
+        spwid = 2
+        newnumchan = 10
+        newchanfreq = range(19,newnumchan+1+18) # i.e. [19,20,...,28]
+        cw = newchanfreq[1] - newchanfreq[0]
+        newchanwidth = []
+        for i in range(0,newnumchan):
+            newchanwidth.append(cw)
 
-tb.close()    
+        print spwid,': ', newchanfreq
+        print '    ', newchanwidth
 
-##############################
+        tb.putcell('NUM_CHAN', spwid, newnumchan)
+        tb.putcell('CHAN_FREQ', spwid, newchanfreq)
+        tb.putcell('CHAN_WIDTH', spwid, newchanwidth)
+        tb.putcell('EFFECTIVE_BW', spwid, newchanwidth)
+        tb.putcell('RESOLUTION', spwid, newchanwidth)
+        tb.putcell('REF_FREQUENCY', spwid, newchanfreq[0])
+        tb.putcell('TOTAL_BANDWIDTH', spwid, abs(newchanfreq[-1]-newchanfreq[0])+abs(newchanwidth[0]))
 
-ms.open('sample.ms')
+        tb.close()    
 
-mytotal = 0
-myfailures = 0
-failed = []
+        ##############################
+        
+        ms.open('sample.ms')
 
-testchannelmode(0,False) # start counting at case 0, non-descending frequencies as input
+        mytotal = 0
+        myfailures = 0
+        failed = []
+        
+        testchannelmode(0,False) # start counting at case 0, non-descending frequencies as input
+        
+        ms.close()
 
-ms.close()
+        print myfailures, " failures in ", mytotal, " subtests."
+        if(myfailures>0):
+            print "Failed cases: ", failed
 
-###############################
-# now for descending frequencies
+        self.assertEqual(myfailures,0)
 
-os.system('rm -rf sample-desc.ms')
-shutil.copytree('test_uvcontsub2.ms','sample-desc.ms')
-tb.open('sample-desc.ms/SPECTRAL_WINDOW', nomodify=False)
-# spw 0
-spwid = 0
-newnumchan = 10
-newchanfreq = range(newnumchan,0,-1) # i.e. [10,9,8,...,1]
-cw = newchanfreq[1] - newchanfreq[0]
-newchanwidth = []
-newabschanwidth = []
-for i in range(0,newnumchan):
-    newchanwidth.append(cw)
-    newabschanwidth.append(cw)
+    def test2(self):
 
-print spwid,': ', newchanfreq
-print '    ', newchanwidth
+        '''cvelfreqs 2: test descending frequencies'''
 
-tb.putcell('NUM_CHAN', spwid, newnumchan)
-tb.putcell('CHAN_FREQ', spwid, newchanfreq)
-tb.putcell('CHAN_WIDTH', spwid, newchanwidth)
-tb.putcell('EFFECTIVE_BW', spwid, newabschanwidth)
-tb.putcell('RESOLUTION', spwid, newabschanwidth)
-tb.putcell('REF_FREQUENCY', spwid, newchanfreq[0])
-tb.putcell('TOTAL_BANDWIDTH', spwid, abs(newchanfreq[-1]-newchanfreq[0])+abs(newchanwidth[0]))
+        os.system('rm -rf sample-desc.ms')
+        shutil.copytree('test_uvcontsub2.ms','sample-desc.ms')
+        tb.open('sample-desc.ms/SPECTRAL_WINDOW', nomodify=False)
+        # spw 0
+        spwid = 0
+        newnumchan = 10
+        newchanfreq = range(newnumchan,0,-1) # i.e. [10,9,8,...,1]
+        cw = newchanfreq[1] - newchanfreq[0]
+        newchanwidth = []
+        newabschanwidth = []
+        for i in range(0,newnumchan):
+            newchanwidth.append(cw)
+            newabschanwidth.append(cw)
 
-# spw 1
-spwid = 1
-newnumchan = 10
-newchanfreq = range(newnumchan+9,9,-1) # i.e. [19,...,10]
-cw = newchanfreq[1] - newchanfreq[0]
-newchanwidth = []
-newabschanwidth = []
-for i in range(0,newnumchan):
-    newchanwidth.append(cw)
-    newabschanwidth.append(cw)
+        print spwid,': ', newchanfreq
+        print '    ', newchanwidth
 
-print spwid,': ', newchanfreq
-print '    ', newchanwidth
+        tb.putcell('NUM_CHAN', spwid, newnumchan)
+        tb.putcell('CHAN_FREQ', spwid, newchanfreq)
+        tb.putcell('CHAN_WIDTH', spwid, newchanwidth)
+        tb.putcell('EFFECTIVE_BW', spwid, newabschanwidth)
+        tb.putcell('RESOLUTION', spwid, newabschanwidth)
+        tb.putcell('REF_FREQUENCY', spwid, newchanfreq[0])
+        tb.putcell('TOTAL_BANDWIDTH', spwid, abs(newchanfreq[-1]-newchanfreq[0])+abs(newchanwidth[0]))
 
-tb.putcell('NUM_CHAN', spwid, newnumchan)
-tb.putcell('CHAN_FREQ', spwid, newchanfreq)
-tb.putcell('CHAN_WIDTH', spwid, newchanwidth)
-tb.putcell('EFFECTIVE_BW', spwid, newabschanwidth)
-tb.putcell('RESOLUTION', spwid, newabschanwidth)
-tb.putcell('REF_FREQUENCY', spwid, newchanfreq[0])
-tb.putcell('TOTAL_BANDWIDTH', spwid, abs(newchanfreq[-1]-newchanfreq[0])+abs(newchanwidth[0]))
+        # spw 1
+        spwid = 1
+        newnumchan = 10
+        newchanfreq = range(newnumchan+9,9,-1) # i.e. [19,...,10]
+        cw = newchanfreq[1] - newchanfreq[0]
+        newchanwidth = []
+        newabschanwidth = []
+        for i in range(0,newnumchan):
+            newchanwidth.append(cw)
+            newabschanwidth.append(cw)
 
-# spw 2
-spwid = 2
-newnumchan = 10
-newchanfreq = range(newnumchan+18,18,-1) # i.e. [28,...,19]
-cw = newchanfreq[1] - newchanfreq[0]
-newchanwidth = []
-newabschanwidth = []
-for i in range(0,newnumchan):
-    newchanwidth.append(cw)
-    newabschanwidth.append(cw)
+        print spwid,': ', newchanfreq
+        print '    ', newchanwidth
 
-print spwid,': ', newchanfreq
-print '    ', newchanwidth
+        tb.putcell('NUM_CHAN', spwid, newnumchan)
+        tb.putcell('CHAN_FREQ', spwid, newchanfreq)
+        tb.putcell('CHAN_WIDTH', spwid, newchanwidth)
+        tb.putcell('EFFECTIVE_BW', spwid, newabschanwidth)
+        tb.putcell('RESOLUTION', spwid, newabschanwidth)
+        tb.putcell('REF_FREQUENCY', spwid, newchanfreq[0])
+        tb.putcell('TOTAL_BANDWIDTH', spwid, abs(newchanfreq[-1]-newchanfreq[0])+abs(newchanwidth[0]))
 
-tb.putcell('NUM_CHAN', spwid, newnumchan)
-tb.putcell('CHAN_FREQ', spwid, newchanfreq)
-tb.putcell('CHAN_WIDTH', spwid, newchanwidth)
-tb.putcell('EFFECTIVE_BW', spwid, newabschanwidth)
-tb.putcell('RESOLUTION', spwid, newabschanwidth)
-tb.putcell('REF_FREQUENCY', spwid, newchanfreq[0])
-tb.putcell('TOTAL_BANDWIDTH', spwid, abs(newchanfreq[-1]-newchanfreq[0])+abs(newchanwidth[0]))
+        # spw 2
+        spwid = 2
+        newnumchan = 10
+        newchanfreq = range(newnumchan+18,18,-1) # i.e. [28,...,19]
+        cw = newchanfreq[1] - newchanfreq[0]
+        newchanwidth = []
+        newabschanwidth = []
+        for i in range(0,newnumchan):
+            newchanwidth.append(cw)
+            newabschanwidth.append(cw)
 
-tb.close()    
+        print spwid,': ', newchanfreq
+        print '    ', newchanwidth
 
-####################
+        tb.putcell('NUM_CHAN', spwid, newnumchan)
+        tb.putcell('CHAN_FREQ', spwid, newchanfreq)
+        tb.putcell('CHAN_WIDTH', spwid, newchanwidth)
+        tb.putcell('EFFECTIVE_BW', spwid, newabschanwidth)
+        tb.putcell('RESOLUTION', spwid, newabschanwidth)
+        tb.putcell('REF_FREQUENCY', spwid, newchanfreq[0])
+        tb.putcell('TOTAL_BANDWIDTH', spwid, abs(newchanfreq[-1]-newchanfreq[0])+abs(newchanwidth[0]))
 
-ms.open('sample-desc.ms')
+        tb.close()    
 
-testchannelmode(1000, True) # start counting at case 1000, descending freqs as input
+        ####################
 
-ms.close()
+        ms.open('sample-desc.ms')
 
-print myfailures, " failures in ", mytotal, " tests."
-if(myfailures>0):
-    print "Failed cases: ", failed
+        mytotal = 0
+        myfailures = 0
+        failed = []
+
+        testchannelmode(1000, True) # start counting at case 1000, descending freqs as input
+
+        ms.close()
+
+        print myfailures, " failures in ", mytotal, " subtests."
+        if(myfailures>0):
+            print "Failed cases: ", failed
+
+        self.assertEqual(myfailures,0)
+
+class cleanup(unittest.TestCase):
+    def setUp(self):
+        pass
+    
+    def tearDown(self):
+        # It will ignore errors in case files don't exist
+        shutil.rmtree('test_uvcontsub2.ms',ignore_errors=True)
+        
+    def test_cleanup(self):
+        '''Cvelfreqs: Cleanup'''
+        pass
+
+
+def suite():
+    return [cvelfreqs_test,cleanup]
