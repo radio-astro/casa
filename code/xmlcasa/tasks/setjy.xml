@@ -66,7 +66,7 @@
 
 		<param type="string" name="standard">
 			<description>Flux density standard</description>
-			<value>Perley-Taylor 99</value>
+			<value>Perley-Butler 2010</value>
 			<allowed kind="enum">
 			<value>Perley-Butler 2010</value>
 			<value>Perley-Taylor 99</value>
@@ -176,11 +176,10 @@
                          and 0.02, respectively, in the model column.
 
        standard -- Flux density standard, used if fluxdensity&lt;0
-               default: 'Perley-Taylor 99'; example: standard='Baars'
+               default: 'Perley-Butler 2010'; example: standard='Baars'
                Options: 'Baars','Perley 90','Perley-Taylor 95',
                   'Perley-Taylor 99', 'Perley-Butler 2010',
                   and 'Butler-JPL-Horizons 2010'.
-               'Perley-Butler 2010' is preliminary as of CASA 3.1.0.
                All but the last one are for extragalactic calibrators,
                and the final one is for Solar System objects.  Recognized Solar
                System objects are: 
