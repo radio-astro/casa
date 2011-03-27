@@ -22,6 +22,11 @@
                 <value></value>
         </param>
 
+	<param type="string" name="intent">
+		<description>Select observing intent</description>
+		<value></value>
+	</param>
+
 
 	</input>
 <returns type="void"/>
@@ -57,6 +62,10 @@
               spw='0,10,3:3~45'; spw 0,10 all channels, spw 3, channels 3 to 45.
               spw='0~2:2:6'; spw 0,1,2 with channels 2 through 6 in each.
               NB: Multiple channel ranges per spw are not supported in clearcal.
+      intent -- Select observing intent
+                default: ''  (no selection by intent)
+                intent='*BANDPASS*'  (selects data labelled with
+                                      BANDPASS intent)
 
  </example>
  </task>
