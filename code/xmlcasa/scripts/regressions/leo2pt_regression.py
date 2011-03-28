@@ -272,7 +272,7 @@ tb.close()
 
 # Calculates 14.7461Jy
 print '---Setjy---'
-setjy(vis='leo2pt_regression.split10sec.ms',field='4',modimage='3C286_L.im')
+setjy(vis='leo2pt_regression.split10sec.ms',field='4',modimage='3C286_L.im',standard='Perley-Taylor 99')
 currTime=time.time()
 stagetime.append(currTime-prevTime)
 stagename.append('setjy')

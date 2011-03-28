@@ -565,7 +565,10 @@ if ( setjymode == 'flux' ):
 
     # If we need a model for flux calibrator then put this here
     modimage = fluxcaldir + fluxcalmodel
-    
+
+    # enforce older standard
+    standard='Perley-Taylor 99'  
+
     # Loop over spw
     for spw in usespwlist:
         fluxdensity = fcalmodel[fluxcalfield][spw]
@@ -598,7 +601,10 @@ else:
 
     # If we need a model or fluxdensities then put those here
     modimage = fluxcaldir + fluxcalmodel
-    
+
+    # enforce older standard
+    standard='Perley-Taylor 99'  
+
     saveinputs('setjy',prefix+'.setjy.saved')
     setjy()
     #

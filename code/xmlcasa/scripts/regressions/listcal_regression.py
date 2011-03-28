@@ -174,7 +174,7 @@ def load_ngc4826(prefix,msname,caltable):
     # Set the flux density of 3C273 to 23 Jy
     print '--Setjy (3C273)--'
     default('setjy')
-    setjy(vis=msname,field='0',fluxdensity=[23.0,0.,0.,0.],spw='0~3')
+    setjy(vis=msname,field='0',fluxdensity=[23.0,0.,0.,0.],spw='0~3',standard='Perley-Taylor 99')
     # Not really necessary to set spw but you get lots of warning messages if
     # you don't
     ##########################################################################
@@ -438,6 +438,7 @@ def load_jupiter6cm(prefix,msname,caltable):
     field = '1331+305'     
     
     # Setjy knows about this source so we dont need anything more
+    standard='Perley-Taylor 99'
     
     setjy()
     

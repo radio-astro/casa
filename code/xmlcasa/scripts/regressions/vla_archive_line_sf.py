@@ -48,8 +48,9 @@ pipeline.calibrate['bandpass'] = {}
 pipeline.calibrate['fluxscale'] = {}
 pipeline.calibrate['applycal'] = {}
 pipeline.calibrate['setjy']['args'] = {'vis':'g192_a.ms',
-	                            'field':'4'
-	                           }
+				       'field':'4',
+				       'standard':'Perley-Taylor 99'
+				       }
 pipeline.calibrate['gaincal']['args'] = {'vis':'g192_a.ms',
 	                              'caltable':'g192_a.gcal',
 	                              'field':'0,2,3,4',

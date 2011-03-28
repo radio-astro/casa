@@ -30,7 +30,7 @@ flagautocorr(vis='ngc7538.ms')
 flagtime = time.time()
 print '--Setjy--'
 default('setjy')
-setjy(vis='ngc7538.ms',field='0') #set flux density for 1331+305 (3C286)
+setjy(vis='ngc7538.ms',field='0',standard='Perley-Taylor 99') #set flux density for 1331+305 (3C286)
 setjytime = time.time()
 print '--Gaincal--'
 default('gaincal')
