@@ -2935,6 +2935,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  else{ 
 	    theRegridBWF = regridChanWidthF*nchan;
 	  }
+
 	  if(regridCenterF <= 0.|| regridCenter <-C::c ){ // center was not set by user but calculated
 	    // need to update
 	    theRegridCenterF = transNewXin[0] - transCHAN_WIDTH[0]/2. + theRegridBWF/2.;
@@ -2947,7 +2948,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 		theRegridBWF = theRegridCenterF - transNewXin[0] + transCHAN_WIDTH[0]/2.;
 	      }
 	      else{ // start is start
-		theRegridBWF = transNewXin[oldNUM_CHAN-1] + transCHAN_WIDTH[oldNUM_CHAN-1] - theRegridCenterF;
+		theRegridBWF = transNewXin[oldNUM_CHAN-1] + transCHAN_WIDTH[oldNUM_CHAN-1]/2. - theRegridCenterF;
 	      }
 	    }
 	    else{ // center is center
@@ -4569,7 +4570,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	for(uInt i=0; i<spwids.nelements(); i++){
 	  if(spwids(i)<origNumSPWs && spwids(i)>=0){
 	    spwsToCombine.push_back(spwids(i));
-	    includeIt(i) = True;
+	    includeIt(spwids(i)) = True;
 	  }
 	  else{
 	    os << LogIO::SEVERE << "Invalid SPW ID selected for combination " << spwids(i) 
@@ -4604,7 +4605,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
       // create a list of the spw ids sorted by first (lowest) channel frequency
       vector<Int> spwsSorted(nSpwsToCombine);
-      Vector<Bool> isDescending(nSpwsToCombine, False);
+      Vector<Bool> isDescending(origNumSPWs, False);
       Bool negChanWidthWarned = False;
       {
 	Double* firstFreq = new Double[nSpwsToCombine];
@@ -4619,7 +4620,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    }
 	    else{
 	      firstFreq[count] = CHAN_FREQ(nCh-1);
-	      isDescending(count) = True;
+	      isDescending(i) = True;
 	    }	   
 	    count++;
 	  }

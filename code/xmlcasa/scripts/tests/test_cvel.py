@@ -555,7 +555,7 @@ class cvel_test(unittest.TestCase):
             outputvis = outfile
             )
         self.assertNotEqual(rval,False)
-        ret = verify_ms(outfile, 1, 2441, 0)
+        ret = verify_ms(outfile, 1, 2440, 0)
         self.assertTrue(ret[0],ret[1])
     
     def test28(self):
@@ -615,7 +615,7 @@ class cvel_test(unittest.TestCase):
             phasecenter = "J2000 18h25m56.09 -12d04m28.20"
             )
         self.assertNotEqual(rval,False)
-        ret = verify_ms(outfile, 1, 2441, 0)
+        ret = verify_ms(outfile, 1, 2440, 0)
         self.assertTrue(ret[0],ret[1])
 
     def test32(self):
@@ -631,7 +631,7 @@ class cvel_test(unittest.TestCase):
             hanning = True
             )
         self.assertNotEqual(rval,False)
-        ret = verify_ms(outfile, 1, 2441, 0)
+        ret = verify_ms(outfile, 1, 2440, 0)
         self.assertTrue(ret[0],ret[1])
 
     def test33(self):
