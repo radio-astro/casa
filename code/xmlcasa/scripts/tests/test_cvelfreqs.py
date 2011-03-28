@@ -17,7 +17,7 @@ import unittest
 # number of cases: 3 x 5 x 4 x 3 x 6 x 2 = 2160 !
 
 # Test Matrix covered so far:
-# mode = 'channel'
+# mode = 'channel', 'optical velocity', 'frequency'
 # spwids = [0], [1], [0,1], [1,2], [0,1,2]
 # nchan = -1, 10, 5, 6
 # start = 0, 1, 15 (equivalent freqs and velos)
@@ -25,6 +25,7 @@ import unittest
 # ascending and descending
 
 tests_to_do = []
+    
 mytotal = 0
 myfailures = 0
 failed = []
@@ -35,6 +36,8 @@ def testit():
     if (mycase in tests_to_do) or (tests_to_do==[]):
         try:
             outf = ms.cvelfreqs(spwids=myspwids,mode=mymode,nchan=mynchan,start=mystart,width=mywidth)
+            if not type(outf)==type([]):
+                outf = [outf]
             print mycase
             print outf
             print myexpectation
@@ -52,6 +55,111 @@ def testit():
             failed.append(mycase)
         mytotal = mytotal + 1
 
+def v_iseq(a,b,tol): # test if velocity arrays are equal
+    if(len(a)!=len(b)):
+        print len(a), len(b)
+        return False
+    for i in range(0,len(a)):
+        if(abs(a[i]-b[i])>tol):
+            print i, a[i], b[i]
+            return False
+    return True
+
+def vopt(f):
+    global myrestfrq
+    return (myrestfrq/f - 1.) * qa.constants('c')['value']
+
+def freq_from_vopt(v):
+    global myrestfrq
+    return myrestfrq/(1. + v/qa.constants('c')['value'])
+
+def vrad(f):
+    global myrestfrq
+    return qa.constants('c')['value'] * (1. - f/myrestfrq)
+
+def freq_from_vrad(v):
+    global myrestfrq
+    return myrestfrq * (1. - v/qa.constants('c')['value'])
+
+def testitb():
+    # for vopt mode
+    global mymode, mycase, myspwids, mynchan, mystart, mywidth, myveltype, myrestfrq, myexpectation, mytotal, myfailures
+    global tests_to_do, failed
+    if (mycase in tests_to_do) or (tests_to_do==[]):
+        try:
+            outf = ms.cvelfreqs(spwids=myspwids,mode=mymode,nchan=mynchan,start=mystart,width=mywidth, veltype=myveltype, restfreq=str(myrestfrq)+'Hz')
+            print mycase
+            print outf
+            if not type(outf)==type([]):
+                outf = [outf]
+            fexpectation = []
+            vexpectation = []
+            vout = []
+            for i in range(0,len(myexpectation)):
+                fexpectation.append(freq_from_vopt(myexpectation[i]))
+                vexpectation.append(vopt(fexpectation[i]))
+            vout = []
+            for i in range(0,len(outf)):
+                vout.append(vopt(outf[i]))
+            print "expected: ", myexpectation
+            print "exp freq: ", fexpectation
+            print "output v: ", vout
+            print "exp v:    ", vexpectation
+            if not v_iseq(outf,fexpectation,10.0): # 10 Hz tolerance
+                print "Test failed for case ", mycase
+                print "spwids=", myspwids,", mode=",mymode,",nchan=",mynchan,", start=",mystart,","
+                print "   width=",mywidth,", veltype=",myveltype, ", restfreq=", str(myrestfrq)+'Hz'
+                myfailures = myfailures + 1
+                failed.append(mycase)
+            else:
+                print mycase, " OK"
+        except:
+            print "Test failed with exception ", sys.exc_info()," for case ", mycase
+            print "spwids=", myspwids,", mode=",mymode,",nchan=",mynchan,", start=",mystart,", width=",mywidth,", veltype=",myveltype
+            myfailures = myfailures + 1         
+            failed.append(mycase)
+        mytotal = mytotal + 1
+
+def testitc():
+    # for vrad mode
+    global mymode, mycase, myspwids, mynchan, mystart, mywidth, myveltype, myrestfrq, myexpectation, mytotal, myfailures
+    global tests_to_do, failed
+    if (mycase in tests_to_do) or (tests_to_do==[]):
+        try:
+            outf = ms.cvelfreqs(spwids=myspwids,mode=mymode,nchan=mynchan,start=mystart,width=mywidth, veltype=myveltype, restfreq=str(myrestfrq)+'Hz')
+            print mycase
+            print outf
+            if not type(outf)==type([]):
+                outf = [outf]
+            fexpectation = []
+            vexpectation = []
+            vout = []
+            for i in range(0,len(myexpectation)):
+                fexpectation.append(freq_from_vrad(myexpectation[i]))
+                vexpectation.append(vrad(fexpectation[i]))
+            vout = []
+            for i in range(0,len(outf)):
+                vout.append(vrad(outf[i]))
+            print "expected: ", myexpectation
+            print "exp freq: ", fexpectation
+            print "output v: ", vout
+            print "exp v:    ", vexpectation
+            if not v_iseq(outf,fexpectation,10.0): # 10 Hz tolerance
+                print "Test failed for case ", mycase
+                print "spwids=", myspwids,", mode=",mymode,",nchan=",mynchan,", start=",mystart,","
+                print "   width=",mywidth,", veltype=",myveltype, ", restfreq=", str(myrestfrq)+'Hz'
+                myfailures = myfailures + 1
+                failed.append(mycase)
+            else:
+                print mycase, " OK"
+        except:
+            print "Test failed with exception ", sys.exc_info()," for case ", mycase
+            print "spwids=", myspwids,", mode=",mymode,",nchan=",mynchan,", start=",mystart,", width=",mywidth,", veltype=",myveltype
+            myfailures = myfailures + 1         
+            failed.append(mycase)
+        mytotal = mytotal + 1
+
+
 def testchannelmode(caseoffset, isDesc):
     global mymode, mycase, myspwids, mynchan, mystart, mywidth, myexpectation, mytotal, myfailures
     global tests_to_do, failed
@@ -66,6 +174,7 @@ def testchannelmode(caseoffset, isDesc):
     myexpectation = [1,2,3,4,5,6,7,8,9,10]
     if(isDesc):
         myexpectation.reverse()
+        
     testit()
 
     #################
@@ -944,6 +1053,756 @@ def testchannelmode(caseoffset, isDesc):
 
 ### end function testchannelmode() #########
 
+def testvoptmode(caseoffset, isDesc):
+    global mymode, mycase, myspwids, mynchan, mystart, mywidth, myveltype, myrestfrq, myexpectation, mytotal, myfailures
+    global tests_to_do, failed
+
+    # rest = (vopt/c + 1) * f 
+    myrestfrq =  (-1000./299792458.0 + 1.) * (1E10 + 10.)  
+
+    # mode = vopt
+    mymode = 'velocity'
+    myveltype = 'optical'
+
+    ###################
+    mystart = "-1000m/s"
+    mywidth = "-1m/s"
+    ###################
+    
+    mycase = caseoffset + 0
+    myspwids = [0]
+    mynchan = -1
+
+    myexpectation = [-1000,-1001,-1002,-1003,-1004,-1005,-1006,-1007,-1008,-1009]
+
+    if(isDesc):
+        myexpectation.reverse()
+
+    testitb()
+
+    #################
+    mycase = caseoffset + 1
+    myspwids = [0]
+    mynchan = 10
+
+    myexpectation = [-1000,-1001,-1002,-1003,-1004,-1005,-1006,-1007,-1008,-1009]
+
+    if(isDesc):
+        myexpectation.reverse()
+
+    testitb()
+
+    #################
+    mycase = caseoffset + 2
+    myspwids = [0]
+    mynchan = 5
+
+    myexpectation = [-1000,-1001,-1002,-1003,-1004]
+
+    if(isDesc):
+        myexpectation.reverse()
+
+    testitb()
+
+    #################
+    mycase = caseoffset + 3
+    myspwids = [0]
+    mynchan = 6
+
+    myexpectation = [-1000,-1001,-1002,-1003,-1004,-1005]
+
+    if(isDesc):
+        myexpectation.reverse()
+
+    testitb()
+
+    #################
+    #################
+    mycase = caseoffset + 4
+    myspwids = [1]
+    mynchan = -1
+    mystart = "-1010m/s"
+
+    myexpectation = [-1010,-1011,-1012,-1013,-1014,-1015,-1016,-1017,-1018,-1019]
+    if(isDesc):
+        myexpectation.reverse()
+
+    testitb()
+
+    #################
+    mycase = caseoffset + 5
+    myspwids = [1]
+    mynchan = 10
+
+    myexpectation = [-1010,-1011,-1012,-1013,-1014,-1015,-1016,-1017,-1018,-1019]
+    if(isDesc):
+        myexpectation.reverse()
+
+    testitb()
+
+    #################
+    mycase = caseoffset + 6
+    myspwids = [1]
+    mynchan = 5
+
+    myexpectation = [-1010,-1011,-1012,-1013,-1014]
+    if(isDesc):
+        myexpectation.reverse()
+
+    testitb()
+
+    #################
+    mycase = caseoffset + 7
+    myspwids = [1]
+    mynchan = 6
+
+    myexpectation = [-1010,-1011,-1012,-1013,-1014,-1015]
+    if(isDesc):
+        myexpectation.reverse()
+
+    testitb()
+    #################
+    #################
+    mycase = caseoffset + 8
+    myspwids = [0,1]
+    mynchan = -1
+    mystart = "-1000m/s"
+
+    myexpectation = range(-1000,-1020,-1)
+
+    testitb()
+
+    #################
+    mycase = caseoffset + 9
+    myspwids = [0,1]
+    mynchan = 10
+
+    myexpectation = [-1000,-1001,-1002,-1003,-1004,-1005,-1006,-1007,-1008,-1009]
+
+    testitb()
+
+    #################
+    mycase = caseoffset + 10
+    myspwids = [0,1]
+    mynchan = 5
+
+    myexpectation = [-1000,-1001,-1002,-1003,-1004]
+
+    testitb()
+
+    #################
+    mycase = caseoffset + 11
+    myspwids = [0,1]
+    mynchan = 6
+    mystart = "-1009m/s"
+
+    myexpectation = [-1009,-1010,-1011,-1012,-1013,-1014]
+
+    testitb()
+
+    #################
+    #################
+    mycase = caseoffset + 12
+    myspwids = [1,2]
+    mynchan = -1
+    mystart = "-1010m/s"
+
+    myexpectation = range(-1010,-1030,-1)
+
+    testitb()
+
+    #################
+    mycase = caseoffset + 13
+    myspwids = [1,2]
+    mynchan = 10
+    mystart = "-1010m/s"
+
+    myexpectation = [-1010,-1011,-1012,-1013,-1014,-1015,-1016,-1017,-1018,-1019]
+
+    testitb()
+
+    #################
+    mycase = caseoffset + 14
+    myspwids = [1,2]
+    mynchan = 5
+    mystart = "-1010m/s"
+
+
+    myexpectation = [-1010,-1011,-1012,-1013,-1014]
+
+    testitb()
+
+    #################
+    mycase = caseoffset + 15
+    myspwids = [1,2]
+    mynchan = 6
+    mystart = "-1010m/s"
+
+    myexpectation = [-1010,-1011,-1012,-1013,-1014,-1015]
+
+    testitb()
+    #################
+    #################
+    mycase = caseoffset + 16
+    myspwids = [0,1,2]
+    mynchan = -1
+    mystart = "-1000m/s"
+
+    myexpectation = range(-1000,-1030,-1)
+
+    testitb()
+
+    #################
+    mycase = caseoffset + 17
+    myspwids = [0,1,2]
+    mynchan = 10
+    mystart = "-1000m/s"
+
+    myexpectation = range(-1000,-1010,-1)
+
+    testitb()
+
+    #################
+    mycase = caseoffset + 18
+    myspwids = [0,1,2]
+    mynchan = 5
+    mystart = "-1020m/s"
+
+    myexpectation = [-1020,-1021,-1022,-1023,-1024]
+
+    testitb()
+
+    #################
+    mycase = caseoffset + 19
+    myspwids = [0,1,2]
+    mynchan = 6
+    mystart = "-1005m/s"
+    mywidth = "1m/s"
+
+    myexpectation = [-1000,-1001,-1002,-1003,-1004,-1005]
+
+    testitb()
+
+    #################
+    mycase = caseoffset + 20
+    myspwids = [0,1,2]
+    mynchan = 6
+    mystart = "-1018m/s"
+    mywidth = "2m/s"
+
+    myexpectation = [-1008,-1010,-1012,-1014,-1016,-1018]
+
+    testitb()
+
+
+### end function testvoptmode() #########
+
+def testfreqmode(caseoffset, isDesc):
+    global mymode, mycase, myspwids, mynchan, mystart, mywidth, myexpectation, mytotal, myfailures
+    global tests_to_do, failed
+
+    mymode = 'frequency'
+    mycase = caseoffset + 0
+    myspwids = [0]
+    mynchan = -1
+    mystart = 1
+    mywidth = 1
+    myexpectation = [1,2,3,4,5,6,7,8,9,10]
+    if(isDesc):
+        myexpectation.reverse()
+    testit()
+
+    #################
+    mycase = caseoffset + 1
+    myspwids = [0]
+    mynchan = 10
+
+    myexpectation = [1,2,3,4,5,6,7,8,9,10]
+
+    if(isDesc):
+        myexpectation.reverse()
+    testit()
+
+    #################
+    mycase = caseoffset + 2
+    myspwids = [0]
+    mynchan = 5
+
+    myexpectation = [1,2,3,4,5]
+
+    if(isDesc):
+        myexpectation.reverse()
+    testit()
+
+    #################
+    mycase = caseoffset + 3
+    myspwids = [0]
+    mynchan = 6
+
+    myexpectation = [1,2,3,4,5,6]
+
+    if(isDesc):
+        myexpectation.reverse()
+    testit()
+
+    #################
+    #################
+    mycase = caseoffset + 4
+    myspwids = [1]
+    mynchan = -1
+    mystart = 10
+
+    myexpectation = [10,11,12,13,14,15,16,17,18,19]
+
+    if(isDesc):
+        myexpectation.reverse()
+    testit()
+
+    #################
+    mycase = caseoffset + 5
+    myspwids = [1]
+    mynchan = 10
+    mystart = 10
+    mywidth = 1
+    myexpectation = [10,11,12,13,14,15,16,17,18,19]
+
+    if(isDesc):
+        myexpectation.reverse()
+    testit()
+
+    #################
+    mycase = caseoffset + 6
+    myspwids = [1]
+    mynchan = 5
+    mystart = 10
+    mywidth = 1
+    myexpectation = [10,11,12,13,14]
+
+    if(isDesc):
+        myexpectation.reverse()
+    testit()
+
+    #################
+    mycase = caseoffset + 7
+    myspwids = [1]
+    mynchan = 6
+    mystart = 10
+    mywidth = 1
+    myexpectation = [10,11,12,13,14,15]
+
+    if(isDesc):
+        myexpectation.reverse()
+    testit()
+    #################
+    #################
+    mycase = caseoffset + 8
+    myspwids = [0,1]
+    mynchan = -1
+    mystart = 1
+    mywidth = 1
+    myexpectation = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
+
+    testit()
+
+    #################
+    mycase = caseoffset + 9
+    myspwids = [0,1]
+    mynchan = 10
+    mystart = 1
+    mywidth = 1
+    myexpectation = [1,2,3,4,5,6,7,8,9,10]
+
+    testit()
+
+    #################
+    mycase = caseoffset + 10
+    myspwids = [0,1]
+    mynchan = 5
+    mystart = 1
+    mywidth = 1
+    myexpectation = [1,2,3,4,5]
+
+    testit()
+
+    #################
+    mycase = caseoffset + 11
+    myspwids = [0,1]
+    mynchan = 6
+    mystart = 1
+    mywidth = 1
+    myexpectation = [1,2,3,4,5,6]
+
+    testit()
+
+    #################
+    #################
+    mycase = caseoffset + 12
+    myspwids = [1,2]
+    mynchan = -1
+    mystart = 10
+    mywidth = 1
+    myexpectation = [10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28]
+
+    testit()
+
+    #################
+    mycase = caseoffset + 13
+    myspwids = [1,2]
+    mynchan = 10
+    mystart = 10
+    mywidth = 1
+    myexpectation = [10,11,12,13,14,15,16,17,18,19]
+
+    testit()
+
+    #################
+    mycase = caseoffset + 14
+    myspwids = [1,2]
+    mynchan = 5
+    mystart = 10
+    mywidth = 1
+    myexpectation = [10,11,12,13,14]
+
+    testit()
+
+    #################
+    mycase = caseoffset + 15
+    myspwids = [1,2]
+    mynchan = 6
+    mystart = 10
+    mywidth = 1
+    myexpectation = [10,11,12,13,14,15]
+
+    testit()
+    #################
+    #################
+    mycase = caseoffset + 16
+    myspwids = [0,1,2]
+    mynchan = -1
+    mystart = 1
+    mywidth = 1
+    myexpectation = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28]
+
+    testit()
+
+    #################
+    mycase = caseoffset + 17
+    myspwids = [0,1,2]
+    mynchan = 10
+    mystart = 1
+    mywidth = 1
+    myexpectation = [1,2,3,4,5,6,7,8,9,10]
+
+    testit()
+
+    #################
+    mycase = caseoffset + 18
+    myspwids = [0,1,2]
+    mynchan = 5
+    mystart = 1
+    mywidth = 1
+    myexpectation = [1,2,3,4,5]
+
+    testit()
+
+    #################
+    mycase = caseoffset + 19
+    myspwids = [0,1,2]
+    mynchan = 6
+    mystart = 1
+    mywidth = 1
+    myexpectation = [1,2,3,4,5,6]
+
+    testit()
+
+    #################
+    mycase = caseoffset + 20
+    myspwids = [0]
+    mynchan = -1
+    mystart = 2
+
+    mywidth = 1
+    myexpectation = [2,3,4,5,6,7,8,9,10]
+
+    if(isDesc):
+        myexpectation.reverse()
+    testit()
+
+    #################
+    mycase = caseoffset + 21
+    myspwids = [0]
+    mynchan = 10
+    mystart = 2
+
+    mywidth = 1
+    myexpectation = [2,3,4,5,6,7,8,9,10,11] # feature 
+
+    if(isDesc):
+        myexpectation.reverse()
+    testit()
+
+    #################
+    mycase = caseoffset + 22
+    myspwids = [0]
+    mynchan = 3
+    mystart = 2
+
+    mywidth = 2
+    myexpectation = [2,4,6]
+
+    if(isDesc):
+        myexpectation.reverse()
+    testit()
+
+
+### end function testfreqmode() #########
+
+def testvradmode(caseoffset, isDesc):
+    global mymode, mycase, myspwids, mynchan, mystart, mywidth, myveltype, myrestfrq, myexpectation, mytotal, myfailures
+    global tests_to_do, failed
+
+    # vrad = c * ( 1 - f/r)
+    # r = f/(1. - vrad/c)
+    myrestfrq = (1E10 + 10.) / (1 - (-1000./299792458.0))
+
+    # mode = vopt
+    mymode = 'velocity'
+    myveltype = 'radio'
+
+    ###################
+    mystart = "-1000m/s"
+    mywidth = "-1m/s"
+    ###################
+    
+    mycase = caseoffset + 0
+    myspwids = [0]
+    mynchan = -1
+
+    myexpectation = [-1000,-1001,-1002,-1003,-1004,-1005,-1006,-1007,-1008,-1009]
+
+    if(isDesc):
+        myexpectation.reverse()
+
+    testitc()
+
+    #################
+    mycase = caseoffset + 1
+    myspwids = [0]
+    mynchan = 10
+
+    myexpectation = [-1000,-1001,-1002,-1003,-1004,-1005,-1006,-1007,-1008,-1009]
+
+    if(isDesc):
+        myexpectation.reverse()
+
+    testitc()
+
+    #################
+    mycase = caseoffset + 2
+    myspwids = [0]
+    mynchan = 5
+
+    myexpectation = [-1000,-1001,-1002,-1003,-1004]
+
+    if(isDesc):
+        myexpectation.reverse()
+
+    testitc()
+
+    #################
+    mycase = caseoffset + 3
+    myspwids = [0]
+    mynchan = 6
+
+    myexpectation = [-1000,-1001,-1002,-1003,-1004,-1005]
+
+    if(isDesc):
+        myexpectation.reverse()
+
+    testitc()
+
+    #################
+    #################
+    mycase = caseoffset + 4
+    myspwids = [1]
+    mynchan = -1
+    mystart = "-1010m/s"
+
+    myexpectation = [-1010,-1011,-1012,-1013,-1014,-1015,-1016,-1017,-1018,-1019]
+    if(isDesc):
+        myexpectation.reverse()
+
+    testitc()
+
+    #################
+    mycase = caseoffset + 5
+    myspwids = [1]
+    mynchan = 10
+
+    myexpectation = [-1010,-1011,-1012,-1013,-1014,-1015,-1016,-1017,-1018,-1019]
+    if(isDesc):
+        myexpectation.reverse()
+
+    testitc()
+
+    #################
+    mycase = caseoffset + 6
+    myspwids = [1]
+    mynchan = 5
+
+    myexpectation = [-1010,-1011,-1012,-1013,-1014]
+    if(isDesc):
+        myexpectation.reverse()
+
+    testitc()
+
+    #################
+    mycase = caseoffset + 7
+    myspwids = [1]
+    mynchan = 6
+
+    myexpectation = [-1010,-1011,-1012,-1013,-1014,-1015]
+    if(isDesc):
+        myexpectation.reverse()
+
+    testitc()
+    #################
+    #################
+    mycase = caseoffset + 8
+    myspwids = [0,1]
+    mynchan = -1
+    mystart = "-1000m/s"
+
+    myexpectation = range(-1000,-1020,-1)
+
+    testitc()
+
+    #################
+    mycase = caseoffset + 9
+    myspwids = [0,1]
+    mynchan = 10
+
+    myexpectation = [-1000,-1001,-1002,-1003,-1004,-1005,-1006,-1007,-1008,-1009]
+
+    testitc()
+
+    #################
+    mycase = caseoffset + 10
+    myspwids = [0,1]
+    mynchan = 5
+
+    myexpectation = [-1000,-1001,-1002,-1003,-1004]
+
+    testitc()
+
+    #################
+    mycase = caseoffset + 11
+    myspwids = [0,1]
+    mynchan = 6
+    mystart = "-1009m/s"
+
+    myexpectation = [-1009,-1010,-1011,-1012,-1013,-1014]
+
+    testitc()
+
+    #################
+    #################
+    mycase = caseoffset + 12
+    myspwids = [1,2]
+    mynchan = -1
+    mystart = "-1010m/s"
+
+    myexpectation = range(-1010,-1030,-1)
+
+    testitc()
+
+    #################
+    mycase = caseoffset + 13
+    myspwids = [1,2]
+    mynchan = 10
+    mystart = "-1010m/s"
+
+    myexpectation = [-1010,-1011,-1012,-1013,-1014,-1015,-1016,-1017,-1018,-1019]
+
+    testitc()
+
+    #################
+    mycase = caseoffset + 14
+    myspwids = [1,2]
+    mynchan = 5
+    mystart = "-1010m/s"
+
+
+    myexpectation = [-1010,-1011,-1012,-1013,-1014]
+
+    testitc()
+
+    #################
+    mycase = caseoffset + 15
+    myspwids = [1,2]
+    mynchan = 6
+    mystart = "-1010m/s"
+
+    myexpectation = [-1010,-1011,-1012,-1013,-1014,-1015]
+
+    testitc()
+    #################
+    #################
+    mycase = caseoffset + 16
+    myspwids = [0,1,2]
+    mynchan = -1
+    mystart = "-1000m/s"
+
+    myexpectation = range(-1000,-1030,-1)
+
+    testitc()
+
+    #################
+    mycase = caseoffset + 17
+    myspwids = [0,1,2]
+    mynchan = 10
+    mystart = "-1000m/s"
+
+    myexpectation = range(-1000,-1010,-1)
+
+    testitc()
+
+    #################
+    mycase = caseoffset + 18
+    myspwids = [0,1,2]
+    mynchan = 5
+    mystart = "-1020m/s"
+
+    myexpectation = [-1020,-1021,-1022,-1023,-1024]
+
+    testitc()
+
+    #################
+    mycase = caseoffset + 19
+    myspwids = [0,1,2]
+    mynchan = 6
+    mystart = "-1005m/s"
+    mywidth = "1m/s"
+
+    myexpectation = [-1000,-1001,-1002,-1003,-1004,-1005]
+
+    testitc()
+
+    #################
+    mycase = caseoffset + 20
+    myspwids = [0,1,2]
+    mynchan = 6
+    mystart = "-1018m/s"
+    mywidth = "2m/s"
+
+    myexpectation = [-1008,-1010,-1012,-1014,-1016,-1018]
+
+    testitc()
+
+
+### end function testvradmode() #########
+
+
 class cvelfreqs_test(unittest.TestCase):
 
     def setUp(self):
@@ -956,12 +1815,14 @@ class cvelfreqs_test(unittest.TestCase):
             os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/unittest/uvcontsub2/test_uvcontsub2.ms .')
             
     def tearDown(self):
-        os.system('rm -rf sample.ms sample2.ms')   
+        os.system('rm -rf sample.ms sample2.ms sample3.ms sample4.ms')   
         pass
 
     def test1(self):
 
-        '''cvelfreqs 1: test ascending frequencies'''
+        '''cvelfreqs 1: test ascending frequencies, channel mode'''
+
+        global mytotal, myfailures, tests_to_do, failed
 
         os.system('rm -rf sample.ms')
         shutil.copytree('test_uvcontsub2.ms','sample.ms')
@@ -1048,7 +1909,9 @@ class cvelfreqs_test(unittest.TestCase):
 
     def test2(self):
 
-        '''cvelfreqs 2: test descending frequencies'''
+        '''cvelfreqs 2: test descending frequencies, channel mode'''
+
+        global mytotal, myfailures, tests_to_do, failed
 
         os.system('rm -rf sample-desc.ms')
         shutil.copytree('test_uvcontsub2.ms','sample-desc.ms')
@@ -1138,6 +2001,588 @@ class cvelfreqs_test(unittest.TestCase):
             print "Failed cases: ", failed
 
         self.assertEqual(myfailures,0)
+
+    def test3(self):
+
+        '''cvelfreqs 3: test ascending frequencies, optical velocity mode'''
+
+        global mytotal, myfailures, tests_to_do, failed
+
+        os.system('rm -rf sample3.ms')
+        shutil.copytree('test_uvcontsub2.ms','sample3.ms')
+        tb.open('sample3.ms/SPECTRAL_WINDOW', nomodify=False)
+        # spw 0
+        spwid = 0
+        newnumchan = 11
+        newchanfreq = []
+        cw = 33.
+        newchanwidth = []
+        for i in range(0,newnumchan):
+            newchanfreq.append(1E10+i*cw)
+            newchanwidth.append(cw)
+            
+        print spwid,': ', newchanfreq
+        print '    ', newchanwidth
+            
+        tb.putcell('NUM_CHAN', spwid, newnumchan)
+        tb.putcell('CHAN_FREQ', spwid, newchanfreq)
+        tb.putcell('CHAN_WIDTH', spwid, newchanwidth)
+        tb.putcell('EFFECTIVE_BW', spwid, newchanwidth)
+        tb.putcell('RESOLUTION', spwid, newchanwidth)
+        tb.putcell('REF_FREQUENCY', spwid, newchanfreq[0])
+        tb.putcell('TOTAL_BANDWIDTH', spwid, abs(newchanfreq[-1]-newchanfreq[0])+abs(newchanwidth[0]))
+
+        lastfreq = newchanfreq[newnumchan-1]
+
+        # spw 1
+        spwid = 1
+        newnumchan = 11
+        newchanfreq = []
+        cw = 33.
+        newchanwidth = []
+        for i in range(0,newnumchan):
+            newchanfreq.append(lastfreq+i*cw)
+            newchanwidth.append(cw)
+            
+        print spwid,': ', newchanfreq
+        print '    ', newchanwidth
+            
+        tb.putcell('NUM_CHAN', spwid, newnumchan)
+        tb.putcell('CHAN_FREQ', spwid, newchanfreq)
+        tb.putcell('CHAN_WIDTH', spwid, newchanwidth)
+        tb.putcell('EFFECTIVE_BW', spwid, newchanwidth)
+        tb.putcell('RESOLUTION', spwid, newchanwidth)
+        tb.putcell('REF_FREQUENCY', spwid, newchanfreq[0])
+        tb.putcell('TOTAL_BANDWIDTH', spwid, abs(newchanfreq[-1]-newchanfreq[0])+abs(newchanwidth[0]))
+
+        lastfreq = newchanfreq[newnumchan-1]
+
+        # spw 2
+        spwid = 2
+        newnumchan = 11
+        newchanfreq = []
+        cw = 33.
+        newchanwidth = []
+        for i in range(0,newnumchan):
+            newchanfreq.append(lastfreq+i*cw)
+            newchanwidth.append(cw)
+            
+        print spwid,': ', newchanfreq
+        print '    ', newchanwidth
+            
+        tb.putcell('NUM_CHAN', spwid, newnumchan)
+        tb.putcell('CHAN_FREQ', spwid, newchanfreq)
+        tb.putcell('CHAN_WIDTH', spwid, newchanwidth)
+        tb.putcell('EFFECTIVE_BW', spwid, newchanwidth)
+        tb.putcell('RESOLUTION', spwid, newchanwidth)
+        tb.putcell('REF_FREQUENCY', spwid, newchanfreq[0])
+        tb.putcell('TOTAL_BANDWIDTH', spwid, abs(newchanfreq[-1]-newchanfreq[0])+abs(newchanwidth[0]))
+
+        tb.close()    
+
+        ##############################
+        
+        ms.open('sample3.ms')
+
+        mytotal = 0
+        myfailures = 0
+        failed = []
+        
+        testvoptmode(2000,False) # start counting at case 2000, non-descending frequencies as input
+        
+        ms.close()
+
+        print myfailures, " failures in ", mytotal, " subtests."
+        if(myfailures>0):
+            print "Failed cases: ", failed
+
+        self.assertEqual(myfailures,0)
+
+    def test4(self):
+
+        '''cvelfreqs 4: test descending frequencies, optical velocity mode'''
+
+        global mytotal, myfailures, tests_to_do, failed
+
+        os.system('rm -rf sample4.ms')
+        shutil.copytree('test_uvcontsub2.ms','sample4.ms')
+        tb.open('sample4.ms/SPECTRAL_WINDOW', nomodify=False)
+        # spw 0
+        spwid = 0
+        newnumchan = 11
+        newchanfreq = []
+        cw = 33.
+        newchanwidth = []
+        for i in range(0,newnumchan):
+            newchanfreq.append(1E10+i*cw)
+            newchanwidth.append(-cw)
+
+        newchanfreq.reverse()
+            
+        print spwid,': ', newchanfreq
+        print '    ', newchanwidth
+            
+        tb.putcell('NUM_CHAN', spwid, newnumchan)
+        tb.putcell('CHAN_FREQ', spwid, newchanfreq)
+        tb.putcell('CHAN_WIDTH', spwid, newchanwidth)
+        tb.putcell('EFFECTIVE_BW', spwid, newchanwidth)
+        tb.putcell('RESOLUTION', spwid, newchanwidth)
+        tb.putcell('REF_FREQUENCY', spwid, newchanfreq[0])
+        tb.putcell('TOTAL_BANDWIDTH', spwid, abs(newchanfreq[-1]-newchanfreq[0])+abs(newchanwidth[0]))
+
+        lastfreq = newchanfreq[0]
+
+        # spw 1
+        spwid = 1
+        newnumchan = 11
+        newchanfreq = []
+        cw = 33.
+        newchanwidth = []
+        for i in range(0,newnumchan):
+            newchanfreq.append(lastfreq+i*cw)
+            newchanwidth.append(-cw)
+
+        newchanfreq.reverse()
+            
+        print spwid,': ', newchanfreq
+        print '    ', newchanwidth
+            
+        tb.putcell('NUM_CHAN', spwid, newnumchan)
+        tb.putcell('CHAN_FREQ', spwid, newchanfreq)
+        tb.putcell('CHAN_WIDTH', spwid, newchanwidth)
+        tb.putcell('EFFECTIVE_BW', spwid, newchanwidth)
+        tb.putcell('RESOLUTION', spwid, newchanwidth)
+        tb.putcell('REF_FREQUENCY', spwid, newchanfreq[0])
+        tb.putcell('TOTAL_BANDWIDTH', spwid, abs(newchanfreq[-1]-newchanfreq[0])+abs(newchanwidth[0]))
+
+        lastfreq = newchanfreq[0]
+
+        # spw 2
+        spwid = 2
+        newnumchan = 11
+        newchanfreq = []
+        cw = 33.
+        newchanwidth = []
+        for i in range(0,newnumchan):
+            newchanfreq.append(lastfreq+i*cw)
+            newchanwidth.append(-cw)
+            
+        newchanfreq.reverse()
+            
+        print spwid,': ', newchanfreq
+        print '    ', newchanwidth
+            
+        tb.putcell('NUM_CHAN', spwid, newnumchan)
+        tb.putcell('CHAN_FREQ', spwid, newchanfreq)
+        tb.putcell('CHAN_WIDTH', spwid, newchanwidth)
+        tb.putcell('EFFECTIVE_BW', spwid, newchanwidth)
+        tb.putcell('RESOLUTION', spwid, newchanwidth)
+        tb.putcell('REF_FREQUENCY', spwid, newchanfreq[0])
+        tb.putcell('TOTAL_BANDWIDTH', spwid, abs(newchanfreq[-1]-newchanfreq[0])+abs(newchanwidth[0]))
+
+        tb.close()    
+
+        ##############################
+        
+        ms.open('sample4.ms')
+
+        mytotal = 0
+        myfailures = 0
+        failed = []
+        
+        testvoptmode(3000,True) # start counting at case 3000, descending frequencies as input
+        
+        ms.close()
+
+        print myfailures, " failures in ", mytotal, " subtests."
+        if(myfailures>0):
+            print "Failed cases: ", failed
+
+        self.assertEqual(myfailures,0)
+
+
+    def test5(self):
+
+        '''cvelfreqs 5: test ascending frequencies, frequency mode'''
+
+        global mytotal, myfailures, tests_to_do, failed
+
+        os.system('rm -rf sample.ms')
+        shutil.copytree('test_uvcontsub2.ms','sample.ms')
+        tb.open('sample.ms/SPECTRAL_WINDOW', nomodify=False)
+        # spw 0
+        spwid = 0
+        newnumchan = 10
+        newchanfreq = range(1,newnumchan+1) # i.e. [1,2,3,...,10]
+        cw = newchanfreq[1] - newchanfreq[0]
+        newchanwidth = []
+        for i in range(0,newnumchan):
+            newchanwidth.append(cw)
+            
+        print spwid,': ', newchanfreq
+        print '    ', newchanwidth
+            
+        tb.putcell('NUM_CHAN', spwid, newnumchan)
+        tb.putcell('CHAN_FREQ', spwid, newchanfreq)
+        tb.putcell('CHAN_WIDTH', spwid, newchanwidth)
+        tb.putcell('EFFECTIVE_BW', spwid, newchanwidth)
+        tb.putcell('RESOLUTION', spwid, newchanwidth)
+        tb.putcell('REF_FREQUENCY', spwid, newchanfreq[0])
+        tb.putcell('TOTAL_BANDWIDTH', spwid, abs(newchanfreq[-1]-newchanfreq[0])+abs(newchanwidth[0]))
+
+        # spw 1
+        spwid = 1
+        newnumchan = 10
+        newchanfreq = range(10,newnumchan+1+9) # i.e. [10,11,...,19]
+        cw = newchanfreq[1] - newchanfreq[0]
+        newchanwidth = []
+        for i in range(0,newnumchan):
+            newchanwidth.append(cw)
+
+        print spwid,': ', newchanfreq
+        print '    ', newchanwidth
+
+        tb.putcell('NUM_CHAN', spwid, newnumchan)
+        tb.putcell('CHAN_FREQ', spwid, newchanfreq)
+        tb.putcell('CHAN_WIDTH', spwid, newchanwidth)
+        tb.putcell('EFFECTIVE_BW', spwid, newchanwidth)
+        tb.putcell('RESOLUTION', spwid, newchanwidth)
+        tb.putcell('REF_FREQUENCY', spwid, newchanfreq[0])
+        tb.putcell('TOTAL_BANDWIDTH', spwid, abs(newchanfreq[-1]-newchanfreq[0])+abs(newchanwidth[0]))
+
+        # spw 2
+        spwid = 2
+        newnumchan = 10
+        newchanfreq = range(19,newnumchan+1+18) # i.e. [19,20,...,28]
+        cw = newchanfreq[1] - newchanfreq[0]
+        newchanwidth = []
+        for i in range(0,newnumchan):
+            newchanwidth.append(cw)
+
+        print spwid,': ', newchanfreq
+        print '    ', newchanwidth
+
+        tb.putcell('NUM_CHAN', spwid, newnumchan)
+        tb.putcell('CHAN_FREQ', spwid, newchanfreq)
+        tb.putcell('CHAN_WIDTH', spwid, newchanwidth)
+        tb.putcell('EFFECTIVE_BW', spwid, newchanwidth)
+        tb.putcell('RESOLUTION', spwid, newchanwidth)
+        tb.putcell('REF_FREQUENCY', spwid, newchanfreq[0])
+        tb.putcell('TOTAL_BANDWIDTH', spwid, abs(newchanfreq[-1]-newchanfreq[0])+abs(newchanwidth[0]))
+
+        tb.close()    
+
+        ##############################
+        
+        ms.open('sample.ms')
+
+        mytotal = 0
+        myfailures = 0
+        failed = []
+        
+        testfreqmode(4000,False) # start counting at case 0, non-descending frequencies as input
+        
+        ms.close()
+
+        print myfailures, " failures in ", mytotal, " subtests."
+        if(myfailures>0):
+            print "Failed cases: ", failed
+
+        self.assertEqual(myfailures,0)
+
+    def test6(self):
+
+        '''cvelfreqs 6: test descending frequencies, frequency mode'''
+
+        global mytotal, myfailures, tests_to_do, failed
+
+        os.system('rm -rf sample-desc.ms')
+        shutil.copytree('test_uvcontsub2.ms','sample-desc.ms')
+        tb.open('sample-desc.ms/SPECTRAL_WINDOW', nomodify=False)
+        # spw 0
+        spwid = 0
+        newnumchan = 10
+        newchanfreq = range(newnumchan,0,-1) # i.e. [10,9,8,...,1]
+        cw = newchanfreq[1] - newchanfreq[0]
+        newchanwidth = []
+        newabschanwidth = []
+        for i in range(0,newnumchan):
+            newchanwidth.append(cw)
+            newabschanwidth.append(cw)
+
+        print spwid,': ', newchanfreq
+        print '    ', newchanwidth
+
+        tb.putcell('NUM_CHAN', spwid, newnumchan)
+        tb.putcell('CHAN_FREQ', spwid, newchanfreq)
+        tb.putcell('CHAN_WIDTH', spwid, newchanwidth)
+        tb.putcell('EFFECTIVE_BW', spwid, newabschanwidth)
+        tb.putcell('RESOLUTION', spwid, newabschanwidth)
+        tb.putcell('REF_FREQUENCY', spwid, newchanfreq[0])
+        tb.putcell('TOTAL_BANDWIDTH', spwid, abs(newchanfreq[-1]-newchanfreq[0])+abs(newchanwidth[0]))
+
+        # spw 1
+        spwid = 1
+        newnumchan = 10
+        newchanfreq = range(newnumchan+9,9,-1) # i.e. [19,...,10]
+        cw = newchanfreq[1] - newchanfreq[0]
+        newchanwidth = []
+        newabschanwidth = []
+        for i in range(0,newnumchan):
+            newchanwidth.append(cw)
+            newabschanwidth.append(cw)
+
+        print spwid,': ', newchanfreq
+        print '    ', newchanwidth
+
+        tb.putcell('NUM_CHAN', spwid, newnumchan)
+        tb.putcell('CHAN_FREQ', spwid, newchanfreq)
+        tb.putcell('CHAN_WIDTH', spwid, newchanwidth)
+        tb.putcell('EFFECTIVE_BW', spwid, newabschanwidth)
+        tb.putcell('RESOLUTION', spwid, newabschanwidth)
+        tb.putcell('REF_FREQUENCY', spwid, newchanfreq[0])
+        tb.putcell('TOTAL_BANDWIDTH', spwid, abs(newchanfreq[-1]-newchanfreq[0])+abs(newchanwidth[0]))
+
+        # spw 2
+        spwid = 2
+        newnumchan = 10
+        newchanfreq = range(newnumchan+18,18,-1) # i.e. [28,...,19]
+        cw = newchanfreq[1] - newchanfreq[0]
+        newchanwidth = []
+        newabschanwidth = []
+        for i in range(0,newnumchan):
+            newchanwidth.append(cw)
+            newabschanwidth.append(cw)
+
+        print spwid,': ', newchanfreq
+        print '    ', newchanwidth
+
+        tb.putcell('NUM_CHAN', spwid, newnumchan)
+        tb.putcell('CHAN_FREQ', spwid, newchanfreq)
+        tb.putcell('CHAN_WIDTH', spwid, newchanwidth)
+        tb.putcell('EFFECTIVE_BW', spwid, newabschanwidth)
+        tb.putcell('RESOLUTION', spwid, newabschanwidth)
+        tb.putcell('REF_FREQUENCY', spwid, newchanfreq[0])
+        tb.putcell('TOTAL_BANDWIDTH', spwid, abs(newchanfreq[-1]-newchanfreq[0])+abs(newchanwidth[0]))
+
+        tb.close()    
+
+        ####################
+
+        ms.open('sample-desc.ms')
+
+        mytotal = 0
+        myfailures = 0
+        failed = []
+
+        testfreqmode(5000, True) # start counting at case 5000, descending freqs as input
+
+        ms.close()
+
+        print myfailures, " failures in ", mytotal, " subtests."
+        if(myfailures>0):
+            print "Failed cases: ", failed
+
+        self.assertEqual(myfailures,0)
+
+    def test7(self):
+
+        '''cvelfreqs 7: test ascending frequencies, radio velocity mode'''
+
+        global mytotal, myfailures, tests_to_do, failed
+
+        os.system('rm -rf sample3.ms')
+        shutil.copytree('test_uvcontsub2.ms','sample3.ms')
+        tb.open('sample3.ms/SPECTRAL_WINDOW', nomodify=False)
+        # spw 0
+        spwid = 0
+        newnumchan = 11
+        newchanfreq = []
+        cw = 33.
+        newchanwidth = []
+        for i in range(0,newnumchan):
+            newchanfreq.append(1E10+i*cw)
+            newchanwidth.append(cw)
+            
+        print spwid,': ', newchanfreq
+        print '    ', newchanwidth
+            
+        tb.putcell('NUM_CHAN', spwid, newnumchan)
+        tb.putcell('CHAN_FREQ', spwid, newchanfreq)
+        tb.putcell('CHAN_WIDTH', spwid, newchanwidth)
+        tb.putcell('EFFECTIVE_BW', spwid, newchanwidth)
+        tb.putcell('RESOLUTION', spwid, newchanwidth)
+        tb.putcell('REF_FREQUENCY', spwid, newchanfreq[0])
+        tb.putcell('TOTAL_BANDWIDTH', spwid, abs(newchanfreq[-1]-newchanfreq[0])+abs(newchanwidth[0]))
+
+        lastfreq = newchanfreq[newnumchan-1]
+
+        # spw 1
+        spwid = 1
+        newnumchan = 11
+        newchanfreq = []
+        cw = 33.
+        newchanwidth = []
+        for i in range(0,newnumchan):
+            newchanfreq.append(lastfreq+i*cw)
+            newchanwidth.append(cw)
+            
+        print spwid,': ', newchanfreq
+        print '    ', newchanwidth
+            
+        tb.putcell('NUM_CHAN', spwid, newnumchan)
+        tb.putcell('CHAN_FREQ', spwid, newchanfreq)
+        tb.putcell('CHAN_WIDTH', spwid, newchanwidth)
+        tb.putcell('EFFECTIVE_BW', spwid, newchanwidth)
+        tb.putcell('RESOLUTION', spwid, newchanwidth)
+        tb.putcell('REF_FREQUENCY', spwid, newchanfreq[0])
+        tb.putcell('TOTAL_BANDWIDTH', spwid, abs(newchanfreq[-1]-newchanfreq[0])+abs(newchanwidth[0]))
+
+        lastfreq = newchanfreq[newnumchan-1]
+
+        # spw 2
+        spwid = 2
+        newnumchan = 11
+        newchanfreq = []
+        cw = 33.
+        newchanwidth = []
+        for i in range(0,newnumchan):
+            newchanfreq.append(lastfreq+i*cw)
+            newchanwidth.append(cw)
+            
+        print spwid,': ', newchanfreq
+        print '    ', newchanwidth
+            
+        tb.putcell('NUM_CHAN', spwid, newnumchan)
+        tb.putcell('CHAN_FREQ', spwid, newchanfreq)
+        tb.putcell('CHAN_WIDTH', spwid, newchanwidth)
+        tb.putcell('EFFECTIVE_BW', spwid, newchanwidth)
+        tb.putcell('RESOLUTION', spwid, newchanwidth)
+        tb.putcell('REF_FREQUENCY', spwid, newchanfreq[0])
+        tb.putcell('TOTAL_BANDWIDTH', spwid, abs(newchanfreq[-1]-newchanfreq[0])+abs(newchanwidth[0]))
+
+        tb.close()    
+
+        ##############################
+        
+        ms.open('sample3.ms')
+
+        mytotal = 0
+        myfailures = 0
+        failed = []
+        
+        testvradmode(6000,False) # start counting at case 6000, non-descending frequencies as input
+        
+        ms.close()
+
+        print myfailures, " failures in ", mytotal, " subtests."
+        if(myfailures>0):
+            print "Failed cases: ", failed
+
+        self.assertEqual(myfailures,0)
+
+    def test8(self):
+
+        '''cvelfreqs 8: test descending frequencies, radio velocity mode'''
+
+        global mytotal, myfailures, tests_to_do, failed
+
+        os.system('rm -rf sample4.ms')
+        shutil.copytree('test_uvcontsub2.ms','sample4.ms')
+        tb.open('sample4.ms/SPECTRAL_WINDOW', nomodify=False)
+        # spw 0
+        spwid = 0
+        newnumchan = 11
+        newchanfreq = []
+        cw = 33.
+        newchanwidth = []
+        for i in range(0,newnumchan):
+            newchanfreq.append(1E10+i*cw)
+            newchanwidth.append(-cw)
+
+        newchanfreq.reverse()
+            
+        print spwid,': ', newchanfreq
+        print '    ', newchanwidth
+            
+        tb.putcell('NUM_CHAN', spwid, newnumchan)
+        tb.putcell('CHAN_FREQ', spwid, newchanfreq)
+        tb.putcell('CHAN_WIDTH', spwid, newchanwidth)
+        tb.putcell('EFFECTIVE_BW', spwid, newchanwidth)
+        tb.putcell('RESOLUTION', spwid, newchanwidth)
+        tb.putcell('REF_FREQUENCY', spwid, newchanfreq[0])
+        tb.putcell('TOTAL_BANDWIDTH', spwid, abs(newchanfreq[-1]-newchanfreq[0])+abs(newchanwidth[0]))
+
+        lastfreq = newchanfreq[0]
+
+        # spw 1
+        spwid = 1
+        newnumchan = 11
+        newchanfreq = []
+        cw = 33.
+        newchanwidth = []
+        for i in range(0,newnumchan):
+            newchanfreq.append(lastfreq+i*cw)
+            newchanwidth.append(-cw)
+
+        newchanfreq.reverse()
+            
+        print spwid,': ', newchanfreq
+        print '    ', newchanwidth
+            
+        tb.putcell('NUM_CHAN', spwid, newnumchan)
+        tb.putcell('CHAN_FREQ', spwid, newchanfreq)
+        tb.putcell('CHAN_WIDTH', spwid, newchanwidth)
+        tb.putcell('EFFECTIVE_BW', spwid, newchanwidth)
+        tb.putcell('RESOLUTION', spwid, newchanwidth)
+        tb.putcell('REF_FREQUENCY', spwid, newchanfreq[0])
+        tb.putcell('TOTAL_BANDWIDTH', spwid, abs(newchanfreq[-1]-newchanfreq[0])+abs(newchanwidth[0]))
+
+        lastfreq = newchanfreq[0]
+
+        # spw 2
+        spwid = 2
+        newnumchan = 11
+        newchanfreq = []
+        cw = 33.
+        newchanwidth = []
+        for i in range(0,newnumchan):
+            newchanfreq.append(lastfreq+i*cw)
+            newchanwidth.append(-cw)
+            
+        newchanfreq.reverse()
+            
+        print spwid,': ', newchanfreq
+        print '    ', newchanwidth
+            
+        tb.putcell('NUM_CHAN', spwid, newnumchan)
+        tb.putcell('CHAN_FREQ', spwid, newchanfreq)
+        tb.putcell('CHAN_WIDTH', spwid, newchanwidth)
+        tb.putcell('EFFECTIVE_BW', spwid, newchanwidth)
+        tb.putcell('RESOLUTION', spwid, newchanwidth)
+        tb.putcell('REF_FREQUENCY', spwid, newchanfreq[0])
+        tb.putcell('TOTAL_BANDWIDTH', spwid, abs(newchanfreq[-1]-newchanfreq[0])+abs(newchanwidth[0]))
+
+        tb.close()    
+
+        ##############################
+        
+        ms.open('sample4.ms')
+
+        mytotal = 0
+        myfailures = 0
+        failed = []
+        
+        testvradmode(7000,True) # start counting at case 7000, descending frequencies as input
+        
+        ms.close()
+
+        print myfailures, " failures in ", mytotal, " subtests."
+        if(myfailures>0):
+            print "Failed cases: ", failed
+
+        self.assertEqual(myfailures,0)
+
 
 class cleanup(unittest.TestCase):
     def setUp(self):

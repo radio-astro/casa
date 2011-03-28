@@ -1761,8 +1761,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     vector< Vector<Double> > xout; 
     vector< Vector<Double> > xin; 
     vector< Int > method;
-    //    vector< InterpolateArray1D<Double,Complex>::InterpolationMethod > method;
-    //    vector< InterpolateArray1D<Double,Float>::InterpolationMethod > methodF;
     
 
     Bool msModified = False;
@@ -1781,7 +1779,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 			    xout, 
 			    xin, 
 			    method,
-			    //methodF,
 			    msModified,
 			    outframe,
 			    regridQuant,
@@ -1819,7 +1816,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 			    xout, 
 			    xin, 
 			    method,
-			    //methodF,
 			    msModified,
 			    outframe,
 			    regridQuant,
@@ -2349,7 +2345,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     ostringstream oss;
 
 //     cout << "regridCenterC " <<  regridCenterC << " regridBandwidth " << regridBandwidth 
-// 	 << " regridChanWidthC " << regridChanWidthC << endl;
+//  	 << " regridChanWidthC " << regridChanWidthC << endl;
 //     cout << " nchanC " << nchanC << " width " << width << " startC " << startC << endl;
 //     cout << " regridQuant " << regridQuant << " centerIsStartC " <<  centerIsStartC << " startIsEndC " << startIsEndC << endl;
     
@@ -2390,17 +2386,18 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	transCHAN_WIDTH(i) = tempW(n-1-i);
 	//cout << "i f w " << i << " " << transNewXin(i) << " " << transCHAN_WIDTH(i) << endl;
       }
-      // also need to adjust the start values
-      if(centerIsStartC){
-	startIsEnd = !startIsEnd;
-      }
+      // also need to adjust the start values 
       if(startC>=0){
 	start = n-1-startC;
+	if(centerIsStartC){
+	  startIsEnd = !startIsEnd;
+	}
       }
+      //}
     }
 
     // verify regridCenter, regridBandwidth, and regridChanWidth 
-    // Note: these are in the units given by regridQuant!
+    // Note: these are in the units corresponding to regridQuant!
     
     if(regridQuant=="chan"){ ////////////////////////
       // channel numbers ...
@@ -2594,7 +2591,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       oss << " Lower edge = " << newChanLoBound[0] << " Hz,"
 	  << " upper edge = " << newChanHiBound[nc-1] << " Hz" << endl;
 
-      if(isDescending){ // original SPW was in reverse order; need to restore that
+      if(isDescending){ 
 	Vector<Double> tempL, tempU;
 	tempL.assign(newChanLoBound);
 	tempU.assign(newChanHiBound);
@@ -2916,13 +2913,13 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       else { // regridCenterF was set
 	// keep center in limits
 	theRegridCenterF = regridCenterF;
-	if(theRegridCenterF > transNewXin[oldNUM_CHAN-1]+transCHAN_WIDTH[oldNUM_CHAN-1]/2.){
+	if( (theRegridCenterF - (transNewXin[oldNUM_CHAN-1]+transCHAN_WIDTH[oldNUM_CHAN-1]/2.)) > 1. ){ // 1 Hz tolerance
 	  oss << "*** Requested center of SPW " << theRegridCenterF << " Hz is too large by "
 	      << theRegridCenterF - transNewXin[oldNUM_CHAN-1]+transCHAN_WIDTH[oldNUM_CHAN-1]/2. << " Hz\n";
 	  theRegridCenterF = transNewXin[oldNUM_CHAN-1]+transCHAN_WIDTH[oldNUM_CHAN-1]/2.;
 	  oss << "*** Reset to maximum possible value " <<  theRegridCenterF  << " Hz";
 	}
-	else if(theRegridCenterF < transNewXin[0]-transCHAN_WIDTH[0]/2.){
+	else if( theRegridCenterF < (transNewXin[0]-transCHAN_WIDTH[0]/2.)  ){ 
 	  Double diff = (transNewXin[0]-transCHAN_WIDTH[0]/2.) - theRegridCenterF;
 	  // cope with numerical accuracy problems
 	  if(diff>1.){
@@ -2941,12 +2938,14 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  + transCHAN_WIDTH[0]/2. + transCHAN_WIDTH[oldNUM_CHAN-1]/2.;
 	if(nchan!=0){ // use nchan parameter if available
 	  if(nchan<0){
-	    // define via width of first channel to avoid numerical problems
-	    if(regridChanWidthF <= 0.){ // channel width not set
-	      theRegridBWF = transCHAN_WIDTH[0]*floor((theRegridBWF+transCHAN_WIDTH[0]*0.01)/transCHAN_WIDTH[0]);
-	    }
-	    else{
-	      theRegridBWF = regridChanWidthF*floor((theRegridBWF+regridChanWidthF*0.01)/regridChanWidthF);
+	    if(regridQuant=="freq" || regridQuant=="vrad"){ // i.e. equidistant in freq
+	      // define via width of first channel to avoid numerical problems
+	      if(regridChanWidthF <= 0.){ // channel width not set
+		theRegridBWF = transCHAN_WIDTH[0]*floor((theRegridBWF+transCHAN_WIDTH[0]*0.01)/transCHAN_WIDTH[0]);
+	      }
+	      else{
+		theRegridBWF = regridChanWidthF*floor((theRegridBWF+regridChanWidthF*0.01)/regridChanWidthF);
+	      }
 	    }
 	  }
 	  else if(regridChanWidthF <= 0.){ // channel width not set
@@ -3004,20 +3003,20 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  }
 	  centerIsStart = False;
 	}
-	if(theRegridCenterF + theRegridBWF / 2. >
-           transNewXin[oldNUM_CHAN-1] + transCHAN_WIDTH[oldNUM_CHAN-1]/2.){
+	if((theRegridCenterF + theRegridBWF / 2.) -  (transNewXin[oldNUM_CHAN-1] + transCHAN_WIDTH[oldNUM_CHAN-1]/2.) > 1. ){ // 1 Hz tolerance
 	  oss << " *** Input spectral window exceeds upper end of original window. Adjusting to max. possible value." << endl;	  
-	  theRegridBWF = (transNewXin[oldNUM_CHAN-1] +
-                          transCHAN_WIDTH[oldNUM_CHAN-1]/2. - theRegridCenterF)*2.;
+	  theRegridBWF = min((Double)fabs(transNewXin[oldNUM_CHAN-1] + transCHAN_WIDTH[oldNUM_CHAN-1]/2. - theRegridCenterF),
+			     (Double)fabs(theRegridCenterF - transNewXin[0] + transCHAN_WIDTH[0]/2.)) * 2.;
 	  if(theRegridBWF<transCHAN_WIDTH[0]){
 	    theRegridCenterF = (transNewXin[0]+transCHAN_WIDTH[oldNUM_CHAN-1]+transCHAN_WIDTH[oldNUM_CHAN-1]/2.-transCHAN_WIDTH[0]/2.)/2.;
 	    theRegridBWF = transCHAN_WIDTH[oldNUM_CHAN-1]-transNewXin[0]
 	      +transCHAN_WIDTH[oldNUM_CHAN-1]/2. + transCHAN_WIDTH[0]/2.;
 	  }
 	}
-	if(theRegridCenterF - theRegridBWF/2. < transNewXin[0] - transCHAN_WIDTH[0]/2.){
-	  oss << " *** Input spectral window exceeds lower end of original window. Adjusting to min. possible value." << endl;
-	  theRegridBWF = (theRegridCenterF - transNewXin[0] + transCHAN_WIDTH[0]/2.)*2.;
+	if((theRegridCenterF - theRegridBWF/2.) - (transNewXin[0] - transCHAN_WIDTH[0]/2.) < -1. ){ // 1 Hz tolerance
+	  oss << " *** Input spectral window exceeds lower end of original window. Adjusting to max. possible value." << endl;
+	  theRegridBWF = min((Double)fabs(transNewXin[oldNUM_CHAN-1] + transCHAN_WIDTH[oldNUM_CHAN-1]/2. - theRegridCenterF),
+			     (Double)fabs(theRegridCenterF - transNewXin[0] + transCHAN_WIDTH[0]/2.)) * 2.;
 	  if(theRegridBWF<transCHAN_WIDTH[0]){
 	    theRegridCenterF = (transNewXin[0]+transCHAN_WIDTH[oldNUM_CHAN-1]+transCHAN_WIDTH[oldNUM_CHAN-1]/2.-transCHAN_WIDTH[0]/2.)/2.;
 	    theRegridBWF = transCHAN_WIDTH[oldNUM_CHAN-1]-transNewXin[0]
@@ -3041,7 +3040,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	if(theCentralChanWidthF>theRegridBWF){ // too large => make a single channel
 	  theCentralChanWidthF = theRegridBWF;
 	  oss << " *** Requested new channel width exceeds defined SPW width." << endl
-	      << "     Crating a single channel with the defined SPW width." << endl;
+	      << "     Creating a single channel with the defined SPW width." << endl;
 	}
 	else if(theCentralChanWidthF<transCHAN_WIDTH[0]){ // check if too small
 	  // determine smallest channel width
@@ -3224,7 +3223,9 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	//    new channel width,
 	//    otherwise the center channel is the lower edge of the new center
 	//    channel
-	lDouble tnumChan = floor((theRegridBWF+edgeTolerance)/theCentralChanWidthF);
+
+	// enlarged edge tolerance since channels non-equidistant in freq
+	lDouble tnumChan = floor((theRegridBWF+edgeTolerance)/theCentralChanWidthF); 
 	if((Int)tnumChan % 2 != 0 ){
           // odd multiple 
 	  loFBup.push_back(theRegridCenterF-theCentralChanWidthF/2.);
@@ -3482,7 +3483,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
       return True;
       
-    } // end if (regridQuant=="chan")
+    } // end if (regridQuant== ...
 
   }
 
@@ -3862,8 +3863,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 				  vector< Vector<Double> >& xold, 
 				  vector< Vector<Double> >& xout, 
 				  vector< Vector<Double> >& xin, 
-				  //vector<InterpolateArray1D<Double, Complex>::InterpolationMethod >& method,
-				  //vector<InterpolateArray1D<Double, Float>::InterpolationMethod >& methodF,
 				  vector<Int>& method,
 				  Bool& msModified,
 				  const String& outframe,
@@ -3900,7 +3899,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     outFrameV.resize(0);
     MFrequency::Ref outFrame;
     method.resize(0);
-    //methodF.resize(0);
     regrid.resize(0);	
     transform.resize(0);	
     
@@ -4215,8 +4213,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	Vector<Double> newEFFECTIVE_BW;
 	newEFFECTIVE_BW.assign(oldEFFECTIVE_BW);
 	Int theMethod;
-	//InterpolateArray1D<Double,Complex>::InterpolationMethod theMethod;
-	//InterpolateArray1D<Double,Float>::InterpolationMethod theMethodF;
 
 	// check if theSPWId was already handled
 	Int iDone2 = -1;
@@ -4241,7 +4237,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  transNewXin.assign(xin[equivalentSpwFieldPair]);
 	  newXout.assign(xout[equivalentSpwFieldPair]);
 	  theMethod = method[equivalentSpwFieldPair];
-	  //theMethodF = methodF[equivalentSpwFieldPair];
 	  doRegrid = regrid[equivalentSpwFieldPair];
 
 	}
@@ -4259,7 +4254,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    // No regridding will take place.
 	    // Set the interpol methods to some dummy value
 	    theMethod = (Int) InterpolateArray1D<Double,Complex>::linear;
-	    //theMethodF = InterpolateArray1D<Double,Float>::linear;
 	    methodName = "linear";
 	    message = " output frame = " + MFrequency::showType(theFrame) + " (pure transformation of the channel definition)";
 	    // cout <<  regridQuant << " " << regridCenter << " " << regridBandwidth << " " << regridChanWidth << endl;
@@ -4271,17 +4265,14 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    meth.downcase();
 	    if(meth.contains("nearest")){
 	      theMethod = (Int) InterpolateArray1D<Double,Complex>::nearestNeighbour;
-	      //theMethodF = InterpolateArray1D<Double,Float>::nearestNeighbour;
 	      methodName = "nearestNeighbour";
 	    }
 	    else if(meth.contains("splin")){
 	      theMethod = (Int) InterpolateArray1D<Double,Complex>::spline;
-	      //theMethodF = InterpolateArray1D<Double,Float>::spline;
 	      methodName = "spline";
 	    }	    
 	    else if(meth.contains("cub")){
 	      theMethod = (Int) InterpolateArray1D<Double,Complex>::cubic;
-	      //theMethodF = InterpolateArray1D<Double,Float>::cubic;
 	      methodName = "cubic spline";
 	    }
 	    else if(meth.contains("fft")){
@@ -4296,7 +4287,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 		return False;
 	      }
 	      theMethod = (Int) InterpolateArray1D<Double,Complex>::linear;
-	      //theMethodF = InterpolateArray1D<Double,Float>::linear;
 	      methodName = "linear";
 	    }
 	    
@@ -4505,7 +4495,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	xin.push_back(transNewXin);
 	xout.push_back(newXout);
 	method.push_back(theMethod);
-	//methodF.push_back(theMethodF);
 	regrid.push_back(doRegrid);
 	transform.push_back(needTransform);
 	theFieldDirV.push_back(theFieldDir);
