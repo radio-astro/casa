@@ -1,7 +1,7 @@
 import os
 from taskinit import *
 
-def clearcal(vis=None,field=None,spw=None):
+def clearcal(vis=None,field=None,spw=None,intent=None):
 
         casalog.origin('clearcal')
 
@@ -26,7 +26,7 @@ def clearcal(vis=None,field=None,spw=None):
 
 		# If necessary (scr col not just created), initialize scr cols
 		if doinit:
-			cb.selectvis(field=field,spw=spw)
+			cb.selectvis(field=field,spw=spw,intent=intent)
 			cb.initcalset()
 		cb.close()
 
@@ -37,6 +37,7 @@ def clearcal(vis=None,field=None,spw=None):
 		if (doinit):
 			ms.writehistory(message='field       = "'+str(field)+'"',origin='clearcal')
 			ms.writehistory(message='spw         = "'+str(spw)+'"',origin='clearcal')
+			ms.writehistory(message='intent      = "'+str(intent)+'"',origin='clearcal')
         	ms.writehistory(message='vis         = "'+str(vis)+'"',origin='clearcal')
 		ms.close()
 

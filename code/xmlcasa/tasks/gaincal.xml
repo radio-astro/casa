@@ -38,6 +38,11 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
 		<value></value>
 	</param>
 
+	<param type="string" name="intent">
+		<description>Select observing intent</description>
+		<value></value>
+	</param>
+
 	<param type="bool" name="selectdata">
 		<description>Other data selection parameters</description>
 		<value>False</value>
@@ -249,7 +254,7 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
               field='3C286,3C295'; field named 3C286 and 3C295
               field = '3,4C*'; field id 3, all names starting with 4C
           DON'T FORGET TO INCLUDE THE FLUX DENSITY CALIBRATOR IF YOU HAVE ONE
-     spw -- Select spectral window/channels 
+      spw -- Select spectral window/channels 
                type 'help par.selection' for more examples.
              spw='0~2,4'; spectral windows 0,1,2,4 (all channels)
              spw='&lt;2';  spectral windows less than 2 (i.e. 0,1)
@@ -261,6 +266,10 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
                        NOTE ';' to separate channel selections
              spw='0:0~10^2,1:20~30^5'; spw 0, channels 0,2,4,6,8,10,
                    spw 1, channels 20,25,30
+      intent -- Select observing intent
+                default: ''  (no selection by intent)
+                intent='*BANDPASS*'  (selects data labelled with
+                                      BANDPASS intent)
       selectdata -- Other data selection parameters
               default: False 
 
