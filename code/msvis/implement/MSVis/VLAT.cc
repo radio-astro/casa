@@ -44,7 +44,7 @@ using namespace casa::async;
 
 #include <boost/lexical_cast.hpp>
 #include <boost/lambda/lambda.hpp>
-#include <boost/bind.hpp>
+//#include <boost/bind.hpp>
 #include <boost/function.hpp>
 
 using namespace boost;
@@ -613,8 +613,9 @@ VlaData::Stats::OpStats::accumulate (Double wait, Double operate, Double cycle)
     s [Operate] = operate;
     s [Cycle] = cycle;
 
-    using boost::lambda::_1;
-    using boost::lambda::_2;
+    using namespace boost::lambda;
+    //using boost::lambda::_1;
+    //using boost::lambda::_2;
 
     // Compute the sum for all periods.
 
