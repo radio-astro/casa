@@ -106,7 +106,9 @@ protected:
     { return itsLatticeConcatPtr; }
 
   virtual Display::DisplayDataType classType()
-    { return Display::Raster; }      
+    { return Display::Raster; }
+  // Pure virtual function from DisplayData...
+  String dataType() const { return "scrolling"; }
   
   virtual String showValue(const Vector<Double> &world);
   virtual const Float dataValue(IPosition pos);

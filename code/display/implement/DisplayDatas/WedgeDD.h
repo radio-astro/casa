@@ -119,6 +119,8 @@ public:
   // Return the type of this DisplayData.
   virtual Display::DisplayDataType classType()
   { return Display::Raster;}
+  // Pure virtual function from DisplayData...
+  String dataType() const { return "wedge"; }
   
   // Create a new AxesDisplayMethod for drawing on the given
   // WorldCanvas when the AttributeBuffers are suitably matched to the

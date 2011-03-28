@@ -52,6 +52,9 @@ class CoordinateSystem;
 class WCCSNLAxisLabeller;
 class PrincipalAxesDM;
 
+class ImageAnalysis;
+template <class T> class ImageInterface;
+
 // <summary>
 // Interface for DisplayDatas which have data arranged in axes.
 // </summary>
@@ -316,6 +319,14 @@ class PrincipalAxesDD : public DisplayData {
 
   // (Required) copy assignment.
   void operator=(const PrincipalAxesDD &other);
+
+  // ImageAnalysis class does not support complex images...
+  // so these functions are used to allow only the
+  // LatticePADisplayData<T> template to only return an
+  // image analysis object for the non-complex version...
+  ImageAnalysis *create_image_analysis( ImageInterface<float>* ) const;
+  ImageAnalysis *create_image_analysis( ImageInterface<Complex>* ) const { return 0; }
+
 
  private:
 

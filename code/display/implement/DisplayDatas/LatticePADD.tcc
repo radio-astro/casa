@@ -46,6 +46,7 @@
 #include <lattices/Lattices/LatticeLocker.h>
 #include <lattices/Lattices/SubLattice.h>
 #include <images/Images/ImageInterface.h>
+#include <images/Images/ImageAnalysis.h>
 #include <images/Images/SubImage.h>
 #include <images/Regions/ImageRegion.h>
 #include <images/Regions/WCLELMask.h>
@@ -322,6 +323,11 @@ const Unit LatticePADisplayData<T>::dataUnit() {
   if(itsDataUnit==Unit("_")) return Unit("");
 
   return itsDataUnit;
+}
+
+template <class T>
+ImageAnalysis *LatticePADisplayData<T>::imageanalysis( ) const {
+    return create_image_analysis( itsBaseImagePtr );
 }
 
 template <class T>

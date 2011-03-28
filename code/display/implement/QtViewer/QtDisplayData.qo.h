@@ -76,7 +76,7 @@ class QtDisplayData : public QObject {
   virtual void setName(const String& name) { name_ = name;  }
  
   virtual String path() { return path_;  }
-  virtual String dataType() { return dataType_;  }
+  virtual String dataType() const { return dataType_;  }
   virtual String displayType() { return displayType_;  }
 
   String description( ) const;

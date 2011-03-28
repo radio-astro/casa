@@ -54,6 +54,7 @@ class WCPositionEvent;
 class WCMotionEvent;
 class WCRefreshEvent;
 class Record;
+class ImageAnalysis;
 
 // <summary> 
 // Base class for display objects.
@@ -594,6 +595,12 @@ public:
   // Return the DisplayData type; used by the WorldCanvasHolder to
   // determine the order of drawing.
   virtual Display::DisplayDataType classType() = 0;
+  virtual String dataType() const = 0;
+
+  // Get image analyis about images... for non-image
+  // "DisplayData" this function will return null...
+  // Use dataType() to check...
+  virtual ImageAnalysis *imageanalysis( ) const { return 0; }
 
   // Identify the WorldCanvasHolder for the given WorldCanvas.  Return
   // <src>0</src> if the DisplayData does not know of a

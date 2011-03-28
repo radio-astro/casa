@@ -195,6 +195,8 @@ class MSAsRaster: public ActiveCaching2dDD {
   // Return the type of this DisplayData.
   virtual Display::DisplayDataType classType()
     { return Display::Raster; }
+  // Pure virtual function from DisplayData...
+  String dataType() const { return "ms"; }
 
 
   // return the size of the animation axis.
