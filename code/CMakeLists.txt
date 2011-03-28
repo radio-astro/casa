@@ -896,7 +896,7 @@ if( NOT BOOST_ROOT )
   set( BOOST_ROOT ${casa_packages} )
 endif()
 
-set( boost_components regex program_options filesystem )
+set( boost_components regex program_options filesystem thread)
 find_package( Boost REQUIRED ${boost_components} )
 
 if( NOT Boost_FOUND )
