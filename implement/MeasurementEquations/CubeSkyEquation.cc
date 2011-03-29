@@ -131,16 +131,16 @@ CubeSkyEquation::CubeSkyEquation(SkyModel& sm, ROVisibilityIterator& vi, FTMachi
                                 ROVIA::Uvw,
                                 -1);
 
-    if (vi.isAsyncEnabled () && ROVisibilityIteratorAsync::isAsynchronousIoEnabled()) {
-
-        rvi_p = ROVisibilityIteratorAsync::create (vi, prefetchColumns);
-//        if (dynamic_cast<VisibilityIterator *> (& vi) != NULL){
-//            dynamic_cast<ROVisibilityIteratorAsync *> (rvi_p) -> linkWithRovi (& vi);
-//        }
-        destroyVisibilityIterator_p = True;
-        vb_p.set (rvi_p); // replace existing VB with a potentially async one
-
-    }
+//    if (vi.isAsyncEnabled () && ROVisibilityIteratorAsync::isAsynchronousIoEnabled()) {
+//
+//        rvi_p = ROVisibilityIteratorAsync::create (vi, prefetchColumns);
+////        if (dynamic_cast<VisibilityIterator *> (& vi) != NULL){
+////            dynamic_cast<ROVisibilityIteratorAsync *> (rvi_p) -> linkWithRovi (& vi);
+////        }
+//        destroyVisibilityIterator_p = True;
+//        vb_p.set (rvi_p); // replace existing VB with a potentially async one
+//
+//    }
 
     init(ft);
 }
@@ -595,6 +595,49 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
     predictComponents(incremental, initialized);
     Bool predictedComp=initialized;
 
+    ROVIA::PrefetchColumns prefetchColumns =
+        ROVIA::prefetchColumns (ROVIA::Ant1,
+                                ROVIA::Ant2,
+                                ROVIA::ArrayId,
+                                ROVIA::CorrectedCube,
+                                ROVIA::CorrType,
+                                ROVIA::Direction1,
+                                ROVIA::Direction2,
+                                ROVIA::Feed1,
+                                ROVIA::Feed1_pa,
+                                ROVIA::Feed2,
+                                ROVIA::Feed2_pa,
+                                ROVIA::FieldId,
+                                ROVIA::FlagCube,
+                                ROVIA::FlagRow,
+                                ROVIA::Freq,
+                                ROVIA::ImagingWeight,
+                                ROVIA::LSRFreq,
+                                ROVIA::NChannel,
+                                ROVIA::NCorr,
+                                ROVIA::NRow,
+                                ROVIA::PhaseCenter,
+                                ROVIA::PolFrame,
+                                ROVIA::SpW,
+                                ROVIA::Time,
+                                ROVIA::Uvw,
+                                -1);
+
+//        rvi_p = ROVisibilityIteratorAsync::create (vi, prefetchColumns);
+////        if (dynamic_cast<VisibilityIterator *> (& vi) != NULL){
+////            dynamic_cast<ROVisibilityIteratorAsync *> (rvi_p) -> linkWithRovi (& vi);
+////        }
+//        destroyVisibilityIterator_p = True;
+//        vb_p.set (rvi_p); // replace existing VB with a potentially async one
+
+    ROVisibilityIterator * oldRvi = NULL;
+
+    if (! commitModel && ROVisibilityIteratorAsync::isAsynchronousIoEnabled()){
+        oldRvi = rvi_p;
+        rvi_p = ROVisibilityIteratorAsync::create (* rvi_p, prefetchColumns);
+        vb_p.set (rvi_p);  // detach from current vi
+    }
+
     sm_->initializeGradients();
     // Initialize
     //ROVisIter& vi=*rvi_p;
@@ -715,6 +758,15 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
     if(changedVI)
         rvi_p->selectChannel(blockNumChanGroup_p, blockChanStart_p,
                              blockChanWidth_p, blockChanInc_p, blockSpw_p);
+
+    // If using async, put things back the way they were.
+
+    if (oldRvi != NULL){
+        delete vb.release(); // get rid of local attached to Vi
+        vb_p.set (oldRvi);   // reattach vb_p to the old vi
+        delete rvi_p;        // kill the new vi
+        rvi_p = oldRvi;      // make the old vi the current vi
+    }
 
 }
 
