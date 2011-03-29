@@ -35,6 +35,7 @@ casa_add_library( msvis
   implement/MSVis/VisBuffAccumulator.cc
   implement/MSVis/VisBuffer.cc
   implement/MSVis/VisBufferAsync.cc
+  implement/MSVis/VisBufferAsyncWrapper.cc
   implement/MSVis/VisBufferUtil.cc
   implement/MSVis/VisBuffGroupAcc.cc
   implement/MSVis/VisibilityIterator.cc

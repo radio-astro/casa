@@ -11,6 +11,7 @@ using namespace casa::utilj;
 #include <casa/Containers/Record.h>
 
 #include "VisBufferAsync.h"
+#include "VisBufferAsyncWrapper.h"
 #include "VisibilityIterator.h"
 #include "VisibilityIteratorAsync.h"
 #include "VLAT.h"
@@ -80,15 +81,15 @@ VisBufferAsync::VisBufferAsync (const VisBufferAsync & vb)
     * this = vb;
 }
 
-VisBufferAsync::VisBufferAsync (ROVisibilityIteratorAsync & iter)
-  : VisBuffer ()
-{
-    construct ();
-
-    Log (2, "VisBufferAsync::VisBufferAsync: attaching in constructor this=%08x\n", this);
-    iter.attachVisBuffer (*this);
-    visIterAsync_p = & iter;
-}
+//VisBufferAsync::VisBufferAsync (ROVisibilityIteratorAsync & iter)
+//  : VisBuffer ()
+//{
+//    construct ();
+//
+//    Log (2, "VisBufferAsync::VisBufferAsync: attaching in constructor this=%08x\n", this);
+//    attachToVisIterAsync (iter);
+//
+//}
 
 
 VisBufferAsync::~VisBufferAsync ()
@@ -97,10 +98,6 @@ VisBufferAsync::~VisBufferAsync ()
 
     Assert (visIter_p == NULL); // Should never be attached at the
                                 // synchronous level
-
-    if (visIterAsync_p != NULL){
-        detachFromVisIter();
-    }
 
     delete msColumns_p;
     //delete msd_p;
@@ -143,10 +140,6 @@ VisBufferAsync::assign (const VisBuffer & other, Bool copy)
     if (this != & other){
 
         // Detach from visibility iterator if attached
-
-        if (visIterAsync_p != NULL){
-            detachFromVisIter ();
-        }
 
         if (copy){
 
@@ -329,7 +322,7 @@ VisBufferAsync::clear ()
     channelIncrement_p.resize (0);
     channelStart_p.resize (0);
     channelWidth_p.resize (0);
-    lsrFreq_p.resize (0);
+    lsrFrequency_p.resize (0);
     mEpoch_p = MEpoch();
     observatoryPosition_p = MPosition();
     phaseCenter_p = MDirection();
@@ -347,11 +340,17 @@ VisBufferAsync::construct ()
     Log (2, "Constructing VisBufferAsync; addr=0x%016x\n", this);
     msColumns_p = NULL;
     visIter_p = NULL;
-    visIterAsync_p = NULL;
     isFilling_p = False;
 
     clear ();
 }
+
+void
+VisBufferAsync::copyCache (const VisBuffer & other)
+{
+    VisBuffer::copyCache (other);
+}
+
 
 void
 VisBufferAsync::copyAsyncValues (const VisBufferAsync & other)
@@ -364,7 +363,7 @@ VisBufferAsync::copyAsyncValues (const VisBufferAsync & other)
     channelWidth_p = other.channelWidth_p;
 
     dataDescriptionId_p = other.dataDescriptionId_p;
-    lsrFreq_p = other.lsrFreq_p;
+    lsrFrequency_p = other.lsrFrequency_p;
     measurementSet_p = other.measurementSet_p;
     mEpoch_p = other.mEpoch_p;
 
@@ -407,57 +406,57 @@ VisBufferAsync::copyAsyncValues (const VisBufferAsync & other)
 //}
 
 
-VisBuffer *
-VisBufferAsync::create (ROVisibilityIterator & iter)
-{
-    return create (& iter);
-}
-
-VisBuffer *
-VisBufferAsync::create (ROVisibilityIterator * iter)
-{
-    VisBuffer * result = NULL;
-    ROVisibilityIteratorAsync * via = dynamic_cast<ROVisibilityIteratorAsync *> (iter);
-
-    bool createAsynchronous = ROVisibilityIteratorAsync::isAsynchronousIoEnabled () &&
-                              via != NULL;
-
-    if (createAsynchronous){
-
-        // Asynchronous I/O is enabled so return a
-        // VisBufferAsync
-
-        Assert (via != NULL); // mixing VB with other than a ROVIA is not good
-        result = new VisBufferAsync (* via);
-    }
-    else {
-
-        // By default return a normal VisBuffer
-
-        Assert (via == NULL); // mixing VB with a ROVIA is not good
-
-        result = new VisBuffer (* iter);
-    }
-
-    String reason;
-    if (ROVisibilityIteratorAsync::isAsynchronousIoEnabled ()){
-        if (via == NULL){
-            reason = format (" (synchronous iterator received: %s)", typeid (* iter).name());
-        }
-        else{
-            reason = format ("Async; addr=0x%016x", result);
-        }
-
-    }
-    else{
-        reason = " (async I/O disabled)";
-    }
-
-    Log (2, "Created VisBuffer%s\n", reason.c_str());
-    //printBacktrace (cerr, "VisBufferAsync creation");
-
-    return result;
-}
+//VisBuffer *
+//VisBufferAsync::create (ROVisibilityIterator & iter)
+//{
+//    return create (& iter);
+//}
+//
+//VisBuffer *
+//VisBufferAsync::create (ROVisibilityIterator * iter)
+//{
+//    VisBuffer * result = NULL;
+//    ROVisibilityIteratorAsync * via = dynamic_cast<ROVisibilityIteratorAsync *> (iter);
+//
+//    bool createAsynchronous = ROVisibilityIteratorAsync::isAsynchronousIoEnabled () &&
+//                              via != NULL;
+//
+//    if (createAsynchronous){
+//
+//        // Asynchronous I/O is enabled so return a
+//        // VisBufferAsync
+//
+//        Assert (via != NULL); // mixing VB with other than a ROVIA is not good
+//        result = new VisBufferAsync (* via);
+//    }
+//    else {
+//
+//        // By default return a normal VisBuffer
+//
+//        Assert (via == NULL); // mixing VB with a ROVIA is not good
+//
+//        result = new VisBuffer (* iter);
+//    }
+//
+//    String reason;
+//    if (ROVisibilityIteratorAsync::isAsynchronousIoEnabled ()){
+//        if (via == NULL){
+//            reason = format (" (synchronous iterator received: %s)", typeid (* iter).name());
+//        }
+//        else{
+//            reason = format ("Async; addr=0x%016x", result);
+//        }
+//
+//    }
+//    else{
+//        reason = " (async I/O disabled)";
+//    }
+//
+//    Log (2, "Created VisBuffer%s\n", reason.c_str());
+//    //printBacktrace (cerr, "VisBufferAsync creation");
+//
+//    return result;
+//}
 
 
 Int
@@ -469,15 +468,6 @@ VisBufferAsync::dataDescriptionId() const
 void
 VisBufferAsync::detachFromVisIter ()
 {
-
-	if (visIterAsync_p != NULL){
-
-	    Log (2, "VisBufferAsync::detachFromVisIter this=%08x\n", this);
-
-        visIterAsync_p->detachVisBuffer(* this);
-
-        visIterAsync_p = NULL;
-	}
 
 	if (isFilling_p){
 	    VisBuffer::detachFromVisIter();
@@ -531,8 +521,11 @@ VisBufferAsync::fillDirection1()
     VisBuffer::fillDirection1();
 
     // Now install unshared copies of the direction objects
+    //
+    // 3/29/11 Don't try to break the sharing and see if the new approach to
+    //         passing the VB one-way fixes the sharing problem this addresses
 
-    transform (direction1_p.begin(), direction1_p.end(), direction1_p.begin(), unsharedCopyDirection);
+    ////transform (direction1_p.begin(), direction1_p.end(), direction1_p.begin(), unsharedCopyDirection);
 
     return direction1_p;
 }
@@ -545,8 +538,11 @@ VisBufferAsync::fillDirection2()
     VisBuffer::fillDirection2();
 
     // Now install unshared copies of the direction objects
+    //
+    // 3/29/11 Don't try to break the sharing and see if the new approach to
+    //         passing the VB one-way fixes the sharing problem this addresses
 
-    transform (direction2_p.begin(), direction2_p.end(), direction2_p.begin(), unsharedCopyDirection);
+    ////transform (direction2_p.begin(), direction2_p.end(), direction2_p.begin(), unsharedCopyDirection);
 
     return direction2 ();
 }
@@ -594,12 +590,25 @@ VisBufferAsync::invalidateAsync ()
     VisBuffer::invalidate ();
 }
 
+Vector<Double>&
+VisBufferAsync::lsrFrequency ()
+{
+    return VisBuffer::lsrFrequency();
+}
+
+const Vector<Double>&
+VisBufferAsync::lsrFrequency () const
+{
+    return VisBuffer::lsrFrequency();
+}
+
+
 void
 VisBufferAsync::lsrFrequency(const Int& spw, Vector<Double>& freq, Bool& convert) const
 {
 
     if (velSelection_p) {
-        freq.assign (lsrFreq_p);
+        freq.assign (lsrFrequency_p);
         return;
     }
 
@@ -690,11 +699,11 @@ VisBufferAsync::parang0(Double time) const
 }
 
 
-Vector<uInt>&
-VisBufferAsync::rowIds()
-{
-    return rowIds_p;
-}
+//Vector<uInt>&
+//VisBufferAsync::rowIds()
+//{
+//    return rowIds_p;
+//}
 
 void
 VisBufferAsync::setDataDescriptionId (Int id)
@@ -709,6 +718,26 @@ VisBufferAsync::setCorrectedVisCube(Complex c)
     correctedVisCube_p.set(c);
     correctedVisCubeOK_p=True;
 }
+
+void
+VisBufferAsync::setCorrectedVisCube (const Cube<Complex> & vis)
+{
+    VisBuffer::setCorrectedVisCube (vis);
+}
+
+
+void
+VisBufferAsync::setModelVisCube (const Cube<Complex> & vis)
+{
+    VisBuffer::setModelVisCube (vis);
+}
+
+void
+VisBufferAsync::setModelVisCube (const Vector<Float> & stokes)
+{
+    VisBuffer::setModelVisCube (stokes);
+}
+
 
 void
 VisBufferAsync::setFilling (Bool isFilling)
@@ -734,7 +763,7 @@ VisBufferAsync::setLsrInfo (const Block<Int> & channelStart,
     channelGroupNumber_p = channelGroupNumber;
     obsMFreqTypes_p = obsMFreqTypes;
     observatoryPosition_p = unsharedCopyPosition (observatoryPosition);
-    phaseCenter_p = phaseCenter;
+    phaseCenter_p = unsharedCopyDirection (phaseCenter);
     velSelection_p = velocitySelection;
 }
 
@@ -811,7 +840,7 @@ VisBufferAsync::setSelectedSpectralWindows (const Vector<Int> & spectralWindows)
 void
 VisBufferAsync::setTopoFreqs (const Vector<Double> & lsrFreq, const Vector<Double> & selFreq)
 {
-    lsrFreq_p.assign (lsrFreq);
+    lsrFrequency_p.assign (lsrFreq);
     selFreq_p.assign (selFreq);
 }
 
@@ -823,6 +852,13 @@ VisBufferAsync::setVisCube(Complex c)
     visCube_p.set(c);
     visCubeOK_p=True;
 }
+
+void
+VisBufferAsync::setVisCube (const Cube<Complex>& vis)
+{
+    VisBuffer::setVisCube (vis);
+}
+
 
 void
 VisBufferAsync::setVisibilityShape (const IPosition & visibilityShape)
@@ -953,13 +989,13 @@ VisBufferAutoPtr::construct (ROVisibilityIterator * rovi, Bool attachVi)
 
         // Create an asynchronous VisBuffer
 
-        VisBufferAsync * vba;
+        VisBufferAsyncWrapper * vba;
 
         if (attachVi){
-            vba = new VisBufferAsync (* rovia);
+            vba = new VisBufferAsyncWrapper (* rovia);
         }
         else{
-            vba = new VisBufferAsync ();
+            vba = new VisBufferAsyncWrapper ();
         }
 
         visBuffer_p = vba;
@@ -986,7 +1022,7 @@ VisBufferAutoPtr::constructVb (VisBuffer * vb)
 
         // Create an asynchronous VisBuffer
 
-        VisBufferAsync * vbaNew = new VisBufferAsync (* vba);
+        VisBufferAsyncWrapper * vbaNew = new VisBufferAsyncWrapper (* vba);
 
         visBuffer_p = vbaNew;
     }

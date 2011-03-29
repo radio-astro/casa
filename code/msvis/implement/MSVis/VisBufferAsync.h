@@ -8,7 +8,7 @@
 #ifndef VISIBILITYBUFFERASYNC_H_
 #define VISIBILITYBUFFERASYNC_H_
 
-#include "VisBuffer.h"
+#include <msvis/MSVis/VisBuffer.h>
 
 namespace casa {
 
@@ -17,6 +17,7 @@ class ROVisibilityIteratorAsync;
 class VisBufferAsync : public VisBuffer {
 
     friend class ROVisibilityIteratorAsync;
+    friend class VisBufferAsyncWrapper;
     friend class VisBufferAutoPtr;
     friend class VLAT;
     friend class VlaDatum;
@@ -39,6 +40,8 @@ public:
     virtual Double hourang(Double time) const;
     virtual void invalidate (); // This one is booby-trapped right now
     virtual void invalidateAsync (); // Use this one in async code
+    virtual Vector<Double> & lsrFrequency ();
+    virtual const Vector<Double> & lsrFrequency () const;
     virtual void lsrFrequency(const Int& spw, Vector<Double>& freq, Bool& convert) const;
     virtual const ROMSColumns& msColumns() const;
     Int msId () const;
@@ -47,14 +50,19 @@ public:
     Int numberCoh () const;
     virtual Vector<Float> parang(Double time) const;
     virtual Float parang0(Double time) const;
-    virtual Vector<uInt>& rowIds();
+    virtual Vector<uInt>& rowIds(){throw(AipsError("rowIds() not implemented for VBA."));}
+    virtual const Vector<uInt>& rowIds() const {throw(AipsError("rowIds() const not implemented for VBA."));}
     virtual void setCorrectedVisCube(Complex c);
+    virtual void setCorrectedVisCube (const Cube<Complex> & vis);
     virtual void setModelVisCube(Complex c);
+    virtual void setModelVisCube (const Cube<Complex> & vis);
+    virtual void setModelVisCube (const Vector<Float> & stokes);
     virtual void setVisCube(Complex c);
+    virtual void setVisCube (const Cube<Complex>& vis);
 
     //static VisBuffer * create (const VisBuffer & other);
-    static VisBuffer * create (ROVisibilityIterator & iter);
-    static VisBuffer * create (ROVisibilityIterator * iter);
+//    static VisBuffer * create (ROVisibilityIterator & iter);
+//    static VisBuffer * create (ROVisibilityIterator * iter);
 
 protected:
 
@@ -71,7 +79,8 @@ protected:
     void checkVisIter (const char * func, const char * file, int line) const;
     void clear ();
     void construct ();
-    void copyAsyncValues (const VisBufferAsync & other);
+    virtual void copyAsyncValues (const VisBufferAsync & other);
+    virtual void copyCache (const VisBuffer & other);
     template<typename T> void copyVector (const Vector<T> & from, Vector<T> & to);
     void fillFrom (const VisBufferAsync & other);
     Vector<MDirection>& fillDirection1();
@@ -114,24 +123,19 @@ private:
     Block<Int>                     channelWidth_p;
     Int                            dataDescriptionId_p;
     Bool                           isFilling_p;
-    Vector<Double>                 lsrFreq_p;
     MEpoch                         mEpoch_p;
     const MeasurementSet *         measurementSet_p;  // [use]
     mutable ROMSColumns *          msColumns_p; // [own]
     Int                            msID_p;
-    //mutable MSDerivedValues *    msd_p;
     Int                            nAntennas_p;
     Int                            nCoh_p;
     const ROScalarColumn<Int> *    obsMFreqTypes_p; // [use]
     MPosition                      observatoryPosition_p;
-    MDirection                     phaseCenter_p;
     Vector<Float>                  receptor0Angle_p;
-    Vector<uInt>                   rowIds_p;
     Vector<Double>                 selFreq_p;
     Vector<Int>                    selectedNVisibilityChannels_p;
     Vector<Int>                    selectedSpectralWindows_p;
     Bool                           velSelection_p;
-    ROVisibilityIteratorAsync *    visIterAsync_p;
     IPosition                      visibilityShape_p;
 };
 

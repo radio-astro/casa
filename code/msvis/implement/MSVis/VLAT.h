@@ -101,29 +101,43 @@ class VisBuffer;
 // <todo asof="yyyy/mm/dd">
 // </todo>
 
+class SubChunkPair : public pair<Int, Int>{
+public:
+
+    SubChunkPair () : pair<Int,Int> (-1, -1) {}
+    SubChunkPair (Int a, Int b) : pair<Int,Int> (a,b) {}
+
+    Bool operator== (const SubChunkPair & other){
+        return first == other.first && second == other.second;
+    }
+
+    Bool operator< (const SubChunkPair & other){
+        return first < other.first ||
+               (first == other.first && second < other.second);
+    }
+
+    String toString () const
+    {
+        return utilj::format ("(%d,%d)", first, second);
+    }
+
+};
+
 class VlaDatum {
 
 public:
 
 	typedef enum {Empty, Filling, Full, Reading} State;
 
-	VlaDatum (int id);
+	VlaDatum (Int chunkNumber, Int subChunkNumber);
 	~VlaDatum ();
 
-	void fillComplete ();
-	Bool fillStart (Int chunkNumber, Int subChunkNumber);
+	SubChunkPair  getSubChunkPair () const;
+    VisBufferAsync * getVisBuffer ();
+    //const VisBufferAsync * getVisBuffer () const;
+    Bool isSubChunk (Int chunkNumber, Int subchunkNumber) const;
 
-	Int getChunkNumber () const;
-	Int getSubChunkNumber () const;
-	Int getId () const;
-	//String getStatus () const;
-    VisBufferAsync * getVisBuffer (Bool bypassAssert = False);
-    const VisBufferAsync * getVisBuffer () const;
-    void initialize ();
-    Bool isChunk (Int chunkNumber, Int subchunkNumber) const;
-
-	void readComplete ();
-	Bool readStart ();
+	VisBufferAsync * releaseVisBufferAsync ();
 	void reset ();
 
 protected:
@@ -133,8 +147,6 @@ private:
 	// Add: --> Cache of values normally obtained from MSIter
 
 	Int              chunkNumber_p;
-	Int              id_p;
-	State            state_p;
 	Int              subChunkNumber_p;
 	VisBufferAsync * visBuffer_p;
 
@@ -232,11 +244,11 @@ class VlaData {
 
 public:
 
-	VlaData (Int nBuffers);
+	VlaData (Int maxNBuffers);
 	~VlaData ();
 
 	void addModifier (asyncio::RoviaModifier * modifier);
-	void fillComplete ();
+	void fillComplete (VlaDatum * datum);
 	VlaDatum * fillStart (Int chunkNumber, Int subChunkNumber);
 	asyncio::ChannelSelection getChannelSelection () const;
 	void initialize ();
@@ -245,8 +257,8 @@ public:
 	Bool isSweepTerminationRequested () const;
 	Bool isValidChunk (Int chunkNumber) const;
 	Bool isValidSubChunk (Int chunkNumber, Int subChunkNumber) const;
-	void readComplete ();
-	const VlaDatum * readStart (Int chunkNumber, Int subChunkNumber);
+	void readComplete (Int chunkNumber, Int subChunkNumber);
+	VisBufferAsync * readStart (Int chunkNumber, Int subChunkNumber);
     void requestViReset ();
 	void setNoMoreData ();
 	void storeChannelSelection (const asyncio::ChannelSelection & channelSelection);
@@ -312,32 +324,15 @@ private:
 
 	};
 
-    class SubChunkPair : public pair<Int, Int>{
-    public:
 
-    	SubChunkPair () : pair<Int,Int> (-1, -1) {}
-    	SubChunkPair (Int a, Int b) : pair<Int,Int> (a,b) {}
-
-    	Bool operator== (const SubChunkPair & other){
-    		return first == other.first && second == other.second;
-    	}
-
-    	Bool operator< (const SubChunkPair & other){
-    		return first < other.first ||
-    			   (first == other.first && second < other.second);
-    	}
-
-    };
-
-    typedef vector<VlaDatum *> Data;
+    typedef queue<VlaDatum *> Data;
     typedef queue<Int> ValidChunks;
     typedef queue<SubChunkPair> ValidSubChunks;
 
     asyncio::ChannelSelection channelSelection_p; // last channels selected for the VI in use
-	Data    data_p;       // Buffer ring
-	Int     fillIndex_p;  // index of buffer to be filled
+	Data    data_p;       // Buffer queue
     volatile Bool lookaheadTerminationRequested_p;
-	Int     readIndex_p;  // index of buffer to be read
+    const Int MaxNBuffers_p;
 	asyncio::RoviaModifiers roviaModifiers_p;
 	Stats   stats_p;
     volatile Bool sweepTerminationRequested_p;
@@ -349,8 +344,7 @@ private:
 	mutable Mutex vlaDataMutex_p;
 
     Int clock (Int arg, Int base);
-    VlaDatum * getNextDatum (Int & index);
-    void resetBufferRing ();
+    void resetBufferData ();
     Bool statsEnabled () const;
 	void terminateSweep ();
 

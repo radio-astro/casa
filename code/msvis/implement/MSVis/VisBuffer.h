@@ -80,6 +80,7 @@ class VisBuffer {
 
     friend class VLAT; // for async i/o
     friend class VisBufferAsync; // for async i/o
+    friend class VisBufferAsyncWrapper; // for async i/o
 
 public:
     // Create empty VisBuffer you can assign to or attach.
@@ -121,59 +122,59 @@ public:
     // <group>
     // Access functions
     //
-    Int & nCorr() {
+    virtual Int & nCorr() {
         return nCorrOK_p ? nCorr_p : fillnCorr();
     }
-    Int nCorr() const {
+    virtual Int nCorr() const {
         return This->nCorr();
     }
 
-    Int & nChannel() {
+    virtual Int & nChannel() {
         return nChannelOK_p ? nChannel_p : fillnChannel();
     }
-    Int nChannel() const {
+    virtual Int nChannel() const {
         return This->nChannel();
     }
 
-    Vector<Int>& channel() {
+    virtual Vector<Int>& channel() {
         return channelOK_p ? channel_p : fillChannel();
     }
-    const Vector<Int>& channel() const {
+    virtual const Vector<Int>& channel() const {
         return This->channel();
     }
 
-    Int & nRow() {
+    virtual Int & nRow() {
         return nRowOK_p ? nRow_p : fillnRow();
     }
-    Int nRow() const {
+    virtual Int nRow() const {
         return This->nRow();
     }
 
-    Vector<Int>& antenna1() {
+    virtual Vector<Int>& antenna1() {
         return antenna1OK_p ? antenna1_p : fillAnt1();
     }
-    const Vector<Int>& antenna1() const {
+    virtual const Vector<Int>& antenna1() const {
         return This->antenna1();
     }
 
-    Vector<Int>& antenna2() {
+    virtual Vector<Int>& antenna2() {
         return antenna2OK_p ? antenna2_p : fillAnt2();
     }
-    const Vector<Int>& antenna2() const {
+    virtual const Vector<Int>& antenna2() const {
         return This->antenna2();
     }
 
-    Vector<Int>& feed1() {
+    virtual Vector<Int>& feed1() {
         return feed1OK_p ? feed1_p : fillFeed1();
     }
-    const Vector<Int>& feed1() const {
+    virtual const Vector<Int>& feed1() const {
         return This->feed1();
     }
 
-    Vector<Int>& feed2() {
+    virtual Vector<Int>& feed2() {
         return feed2OK_p ? feed2_p : fillFeed2();
     }
-    const Vector<Int>& feed2() const {
+    virtual const Vector<Int>& feed2() const {
         return This->feed2();
     }
 
@@ -182,24 +183,24 @@ public:
     // row in the current buffer. In contrast, feed_pa() calculates
     // the angles for each antenna. These methods are implemented for
     // VisBuffer only to benefit from caching of the feed and antenna IDs.
-    Vector<Float>& feed1_pa() {
+    virtual Vector<Float>& feed1_pa() {
         return feed1_paOK_p ? feed1_pa_p : fillFeed1_pa();
     }
-    const Vector<Float>& feed1_pa() const {
+    virtual const Vector<Float>& feed1_pa() const {
         return This->feed1_pa();
     }
 
-    Vector<Float>& feed2_pa() {
+    virtual Vector<Float>& feed2_pa() {
         return feed2_paOK_p ? feed2_pa_p : fillFeed2_pa();
     }
-    const Vector<Float>& feed2_pa() const {
+    virtual const Vector<Float>& feed2_pa() const {
         return This->feed2_pa();
     }
 
-    Vector<SquareMatrix<Complex, 2> >& CJones() {
+    virtual Vector<SquareMatrix<Complex, 2> >& CJones() {
         return cjonesOK_p ? cjones_p : fillCjones();
     }
-    const Vector<SquareMatrix<Complex, 2> >& CJones() const {
+    virtual const Vector<SquareMatrix<Complex, 2> >& CJones() const {
         return This->CJones();
     }
 
@@ -209,19 +210,19 @@ public:
     // direction1() and direction2() return arrays of directions where
     // the first and the second antenna/feed are pointed to. One value for
     // each row in the current buffer.
-    Vector<MDirection>& direction1() {
+    virtual Vector<MDirection>& direction1() {
         return direction1OK_p ? direction1_p
                : fillDirection1();
     }
-    const Vector<MDirection>& direction1()  const {
+    virtual const Vector<MDirection>& direction1()  const {
         return This->direction1();
     }
 
-    Vector<MDirection>& direction2() {
+    virtual Vector<MDirection>& direction2() {
         return direction2OK_p ? direction2_p :
                fillDirection2();
     }
-    const Vector<MDirection>& direction2()  const {
+    virtual const Vector<MDirection>& direction2()  const {
         return This->direction2();
     }
 
@@ -232,98 +233,98 @@ public:
 
     // Note that azel is a function instead of a cached value
     virtual MDirection azel0(Double time) const;
-    Vector<Double>& azel0Vec(Double time, Vector<Double>& azelVec) const;
+    virtual Vector<Double>& azel0Vec(Double time, Vector<Double>& azelVec) const;
     virtual Vector<MDirection> azel(Double time) const;
-    Matrix<Double>& azelMat(Double time, Matrix<Double>& azelMat) const;
+    virtual Matrix<Double>& azelMat(Double time, Matrix<Double>& azelMat) const;
 
     // Hour angle for specified time
     virtual Double hourang(Double time) const;
 
-    Int fieldId() const {
+    virtual Int fieldId() const {
         return fieldIdOK_p ? fieldId_p : This->fillFieldId();
     }
 
-    Int arrayId() const {
+    virtual Int arrayId() const {
         return arrayIdOK_p ? arrayId_p : This->fillArrayId();
     }
 
     // Return flag for each channel & row
-    Matrix<Bool>& flag() {
+    virtual Matrix<Bool>& flag() {
         return flagOK_p ? flag_p : fillFlag();
     }
-    const Matrix<Bool>& flag() const {
+    virtual const Matrix<Bool>& flag() const {
         return This->flag();
     }
 
     // Return flag for each polarization, channel and row
-    Cube<Bool>& flagCube() {
+    virtual Cube<Bool>& flagCube() {
         return flagCubeOK_p ? flagCube_p : fillFlagCube();
     }
-    const Cube<Bool>& flagCube() const {
+    virtual const Cube<Bool>& flagCube() const {
         return This->flagCube();
     }
 
-    Vector<Bool>& flagRow() {
+    virtual Vector<Bool>& flagRow() {
         return flagRowOK_p ? flagRow_p : fillFlagRow();
     }
-    const Vector<Bool>& flagRow() const {
+    virtual const Vector<Bool>& flagRow() const {
         return This->flagRow();
     }
 
     // Return flags for each polarization, channel, category, and row.
-    Array<Bool>& flagCategory() {
+    virtual Array<Bool>& flagCategory() {
         return flagCategoryOK_p ? flagCategory_p : fillFlagCategory();
     }
-    const Array<Bool>& flagCategory() const {
+    virtual const Array<Bool>& flagCategory() const {
         return This->flagCategory();
     }
 
-    Vector<Int>& scan() {
+    virtual Vector<Int>& scan() {
         return scanOK_p ? scan_p : fillScan();
     }
-    const Vector<Int>& scan() const {
+    virtual const Vector<Int>& scan() const {
         return This->scan();
     }
 
     // scalar version for convenience, when scan known constant for
     // entire iteration/buffer.
-    Int scan0() {
+    virtual Int scan0() {
         return scan()(0);
     }
 
-    Vector<Int>& processorId() {
+    virtual Vector<Int>& processorId() {
         return processorIdOK_p ? processorId_p : fillProcessorId();
     }
-    const Vector<Int>& processorId() const {
+    virtual const Vector<Int>& processorId() const {
         return This->processorId();
     }
 
-    Vector<Int>& observationId() {
+    virtual Vector<Int>& observationId() {
         return observationIdOK_p ? observationId_p : fillObservationId();
     }
-    const Vector<Int>& observationId() const {
+    virtual const Vector<Int>& observationId() const {
         return This->observationId();
     }
 
-    Vector<Int>& stateId() {
+    virtual Vector<Int>& stateId() {
         return stateIdOK_p ? stateId_p : fillStateId();
     }
-    const Vector<Int>& stateId() const {
+    virtual const Vector<Int>& stateId() const {
         return This->stateId();
     }
 
     // Gets SPECTRAL_WINDOW/CHAN_FREQ (in Hz, acc. to the MS def'n v.2).
-    Vector<Double>& frequency() {
+    virtual Vector<Double>& frequency() {
         return frequencyOK_p ? frequency_p : fillFreq();
     }
-    const Vector<Double>& frequency() const {
+    virtual const Vector<Double>& frequency() const {
         return This->frequency();
     }
 
-    Vector<Double>& lsrFrequency() {
+    virtual Vector<Double>& lsrFrequency() {
         return lsrFrequencyOK_p ? lsrFrequency_p : fillLSRFreq();
     }
-    const Vector<Double>& lsrFrequency() const {
+    virtual const Vector<Double>& lsrFrequency() const {
         return This->lsrFrequency();
     }
 
@@ -336,125 +337,125 @@ public:
 
     virtual Int numberCoh () const;
 
-    MDirection & phaseCenter() {
+    virtual MDirection & phaseCenter() {
         return phaseCenterOK_p ? phaseCenter_p : fillPhaseCenter();
     }
-    const MDirection & phaseCenter() const {
+    virtual const MDirection & phaseCenter() const {
         return This->phaseCenter();
     }
 
-    Int polFrame() const {
+    virtual Int polFrame() const {
         return polFrameOK_p ? polFrame_p : This->fillPolFrame();
     }
 
-    Vector<Int>& corrType() {
+    virtual Vector<Int>& corrType() {
         return corrTypeOK_p ? corrType_p : fillCorrType();
     }
-    const Vector<Int>& corrType() const {
+    virtual const Vector<Int>& corrType() const {
         return This->corrType();
     }
 
-    Vector<Float>& sigma() {
+    virtual Vector<Float>& sigma() {
         return sigmaOK_p ? sigma_p : fillSigma();
     }
-    const Vector<Float>& sigma() const {
+    virtual const Vector<Float>& sigma() const {
         return This->sigma();
     }
 
-    Matrix<Float>& sigmaMat() {
+    virtual Matrix<Float>& sigmaMat() {
         return sigmaMatOK_p ? sigmaMat_p : fillSigmaMat();
     }
-    const Matrix<Float>& sigmaMat() const {
+    virtual const Matrix<Float>& sigmaMat() const {
         return This->sigmaMat();
     }
 
-    Int & spectralWindow() {
+    virtual Int & spectralWindow() {
         return spectralWindowOK_p ? spectralWindow_p : This->fillSpW();
     }
-    Int spectralWindow() const {
+    virtual Int spectralWindow() const {
         return spectralWindowOK_p ? spectralWindow_p : This->fillSpW();
     }
     virtual Int dataDescriptionId() const {
         return visIter_p->dataDescriptionId();
     }
-    Vector<Double>& time() {
+    virtual Vector<Double>& time() {
         return timeOK_p ? time_p : fillTime();
     }
-    const Vector<Double>& time() const {
+    virtual const Vector<Double>& time() const {
         return This->time();
     }
 
-    Vector<Double>& timeCentroid() {
+    virtual Vector<Double>& timeCentroid() {
         return timeCentroidOK_p ? timeCentroid_p : fillTimeCentroid();
     }
-    const Vector<Double>& timeCentroid() const {
+    virtual const Vector<Double>& timeCentroid() const {
         return This->timeCentroid();
     }
 
-    Vector<Double>& timeInterval() {
+    virtual Vector<Double>& timeInterval() {
         return timeIntervalOK_p ? timeInterval_p : fillTimeInterval();
     }
-    const Vector<Double>& timeInterval() const {
+    virtual const Vector<Double>& timeInterval() const {
         return This->timeInterval();
     }
 
-    Vector<Double>& exposure() {
+    virtual Vector<Double>& exposure() {
         return exposureOK_p ? exposure_p : fillExposure();
     }
-    const Vector<Double>& exposure() const {
+    virtual const Vector<Double>& exposure() const {
         return This->exposure();
     }
 
-    Vector<RigidVector<Double, 3> >& uvw() {
+    virtual Vector<RigidVector<Double, 3> >& uvw() {
         return uvwOK_p ? uvw_p : filluvw();
     }
-    const Vector<RigidVector<Double, 3> >& uvw() const {
+    virtual const Vector<RigidVector<Double, 3> >& uvw() const {
         return This->uvw();
     }
 
-    Matrix<Double>& uvwMat() {
+    virtual Matrix<Double>& uvwMat() {
         return uvwMatOK_p ? uvwMat_p : filluvwMat();
     }
-    const Matrix<Double>& uvwMat() const {
+    virtual const Matrix<Double>& uvwMat() const {
         return This->uvwMat();
     }
 
-    Matrix<CStokesVector>& visibility() {
+    virtual Matrix<CStokesVector>& visibility() {
         return visibilityOK_p ? visibility_p : fillVis(VisibilityIterator::Observed);
     }
-    const Matrix<CStokesVector>& visibility() const {
+    virtual const Matrix<CStokesVector>& visibility() const {
         return This->visibility();
     }
 
-    Matrix<CStokesVector>& modelVisibility() {
+    virtual Matrix<CStokesVector>& modelVisibility() {
         return modelVisibilityOK_p ? modelVisibility_p :
                fillVis(VisibilityIterator::Model);
     }
-    const Matrix<CStokesVector>& modelVisibility() const {
+    virtual const Matrix<CStokesVector>& modelVisibility() const {
         return This->modelVisibility();
     }
 
-    Matrix<CStokesVector>& correctedVisibility() {
+    virtual Matrix<CStokesVector>& correctedVisibility() {
         return correctedVisibilityOK_p ? correctedVisibility_p :
                fillVis(VisibilityIterator::Corrected);
     }
-    const Matrix<CStokesVector>& correctedVisibility() const {
+    virtual const Matrix<CStokesVector>& correctedVisibility() const {
         return This->correctedVisibility();
     }
 
-    Cube<Complex>& visCube() {
+    virtual Cube<Complex>& visCube() {
         return visCubeOK_p ? visCube_p : fillVisCube(VisibilityIterator::Observed);
     }
-    const Cube<Complex>& visCube() const {
+    virtual const Cube<Complex>& visCube() const {
         return This->visCube();
     }
 
-    Cube<Complex>& modelVisCube() {
+    virtual Cube<Complex>& modelVisCube() {
         return modelVisCubeOK_p ? modelVisCube_p :
                fillVisCube(VisibilityIterator::Model);
     }
 
-    Cube<Complex>& modelVisCube(const Bool & matchVisCubeShape) {
+    virtual Cube<Complex>& modelVisCube(const Bool & matchVisCubeShape) {
         // Avoids call to fillVisCube(VisIter::Model)
         modelVisCubeOK_p = True;
         if (matchVisCubeShape) {
@@ -466,15 +467,15 @@ public:
         return modelVisCube();
     }
 
-    const Cube<Complex>& modelVisCube() const {
+    virtual const Cube<Complex>& modelVisCube() const {
         return This->modelVisCube();
     }
 
-    Cube<Complex>& correctedVisCube() {
+    virtual Cube<Complex>& correctedVisCube() {
         return correctedVisCubeOK_p ? correctedVisCube_p :
                fillVisCube(VisibilityIterator::Corrected);
     }
-    const Cube<Complex>& correctedVisCube() const {
+    virtual const Cube<Complex>& correctedVisCube() const {
         return This->correctedVisCube();
     }
 
@@ -486,49 +487,49 @@ public:
     const Cube<Complex>& dataCube(const MS::PredefinedColumns
                                   whichcol=MS::DATA) const;
 
-    Cube<Float>& floatDataCube() {
+    virtual Cube<Float>& floatDataCube() {
         return floatDataCubeOK_p ? floatDataCube_p : fillFloatDataCube();
     }
-    const Cube<Float>& floatDataCube() const {
+    virtual const Cube<Float>& floatDataCube() const {
         return This->floatDataCube();
     }
 
     // Returns the weights for each row averaged over the parallel hand correlations.
-    Vector<Float>& weight() {
+    virtual Vector<Float>& weight() {
         return weightOK_p ? weight_p : fillWeight();
     }
-    const Vector<Float>& weight() const {
+    virtual const Vector<Float>& weight() const {
         return This->weight();
     }
 
     // Returns the nPol_p x curNumRow_p weight matrix.
-    Matrix<Float>& weightMat() {
+    virtual Matrix<Float>& weightMat() {
         return weightMatOK_p ? weightMat_p : fillWeightMat();
     }
-    const Matrix<Float>& weightMat() const {
+    virtual const Matrix<Float>& weightMat() const {
         return This->weightMat();
     }
 
     // Is a valid WEIGHT_SPECTRUM available?
-    Bool existsWeightSpectrum() const {
+    virtual Bool existsWeightSpectrum() const {
       return visIter_p ? visIter_p->existsWeightSpectrum() : false;
     }
 
-    Cube<Float>& weightSpectrum() {
+    virtual Cube<Float>& weightSpectrum() {
         return weightSpectrumOK_p ? weightSpectrum_p : fillWeightSpectrum();
     }
-    const Cube<Float>& weightSpectrum() const {
+    virtual const Cube<Float>& weightSpectrum() const {
         return This->weightSpectrum();
     }
 
-    Matrix<Float>& imagingWeight() {
+    virtual Matrix<Float>& imagingWeight() {
         return imagingWeightOK_p ? imagingWeight_p : fillImagingWeight();
     }
-    const Matrix<Float>& imagingWeight() const {
+    virtual const Matrix<Float>& imagingWeight() const {
         return This->imagingWeight();
     }
 
-    Cube<Float>& weightCube() {
+    virtual Cube<Float>& weightCube() {
         return weightCube_p;
     }
     //</group>
@@ -540,13 +541,13 @@ public:
     // Generic accessor to column ranges of integer type, as specified by
     // enumerations defined in class MSCalEnums. Throws an exception
     // if the enum is not for a recognized integer column.
-    Vector<Int> vecIntRange(const MSCalEnums::colDef & calEnum) const;
+    virtual Vector<Int> vecIntRange(const MSCalEnums::colDef & calEnum) const;
 
     // Antenna id. range (includes both ANTENNA1 and ANTENNA2 columns)
-    Vector<Int> antIdRange() const;
+    virtual Vector<Int> antIdRange() const;
 
     // Time range
-    Bool timeRange(MEpoch & rTime, MVEpoch & rTimeEP, MVEpoch & rInterval) const;
+    virtual Bool timeRange(MEpoch & rTime, MVEpoch & rTimeEP, MVEpoch & rInterval) const;
 
     // Return the row Ids from the original ms. If the ms used is a subset of
     // another ms then rowIds() return the row ids of the original ms.
@@ -559,7 +560,7 @@ public:
     //</group>
 
     // Frequency average the buffer (visibility() column only)
-    void freqAverage();
+    virtual void freqAverage();
 
     // Frequency average the buffer (visCube and [if present] modelVisCube)
     void freqAveCubes();
@@ -581,30 +582,30 @@ public:
     // This defaults to no conceptual side effects, but usually it is more
     // efficient to let it leave weightSpectrum() in a channel averaged state.
     // restoreWeightSpectrum has no effect if !existsWeightSpectrum().
-    void chanAveFlagCube(Cube<Bool>& flagcube, const Int nChanOut,
+    virtual void chanAveFlagCube(Cube<Bool>& flagcube, const Int nChanOut,
                          const Bool restoreWeightSpectrum = True);
 
     // Form Stokes parameters from correlations
     //  (these are preliminary versions)
-    void formStokes();
-    void formStokesWeightandFlag();
-    void formStokes(Cube<Complex>& vis);
-    void formStokes(Cube<Float>& fcube);    // Will throw up if asked to do all 4.
+    virtual void formStokes();
+    virtual void formStokesWeightandFlag();
+    virtual void formStokes(Cube<Complex>& vis);
+    virtual void formStokes(Cube<Float>& fcube);    // Will throw up if asked to do all 4.
 
     // Sort/unsort the correlations, if necessary
     //  (Rudimentary handling of non-canonically sorted correlations--use with care!)
-    void sortCorr();
-    void unSortCorr();
+    virtual void sortCorr();
+    virtual void unSortCorr();
 
     // Normalize the visCube by the modelVisCube
     //   (and optionally also divide visCube_p by its normalized amp)
-    void normalize(const Bool & phaseOnly = False);
+    virtual void normalize(const Bool & phaseOnly = False);
 
     // Fill weightMat according to sigma column
-    void resetWeightMat();
+    virtual void resetWeightMat();
 
     // Rotate visibility phase for phase center offsets
-    void phaseCenterShift(Double dx, Double dy);
+    virtual void phaseCenterShift(Double dx, Double dy);
 
     // Update coordinate info - useful for copied VisBuffers that need
     // to retain some state for later reference.
@@ -620,21 +621,21 @@ public:
 
     // Set the visibility, note that this only changes the buffer,
     // no values are written back to tables from here.
-    void setVisCube(const Cube<Complex>& vis);
-    void setModelVisCube(const Cube<Complex>& vis);
-    void setCorrectedVisCube(const Cube<Complex>& vis);
+    virtual void setVisCube(const Cube<Complex>& vis);
+    virtual void setModelVisCube(const Cube<Complex>& vis);
+    virtual void setCorrectedVisCube(const Cube<Complex>& vis);
 
     // Like the above, but for FLOAT_DATA, keeping it as real floats.
-    void setFloatDataCube(const Cube<Float>& fcube);
+    virtual void setFloatDataCube(const Cube<Float>& fcube);
 
     // Set model according to a Stokes vector
-    void setModelVisCube(const Vector<Float>& stokes);
+    virtual void setModelVisCube(const Vector<Float>& stokes);
 
     // Reference external model visibilities
-    void refModelVis(const Matrix<CStokesVector>& mvis);
+    virtual void refModelVis(const Matrix<CStokesVector>& mvis);
 
     // Remove scratch cols data from vb
-    void removeScratchCols();
+    virtual void removeScratchCols();
 
     // Access the current ROMSColumns object via VisIter
     virtual const ROMSColumns & msColumns() const {
@@ -650,7 +651,7 @@ public:
         visIter_p->allSelectedSpectralWindows(spws, nvischan);
     }
 
-    void allSelectedSpectralWindows(Vector<Int>& spws, Vector<Int>& nvischan) const {
+    virtual void allSelectedSpectralWindows(Vector<Int>& spws, Vector<Int>& nvischan) const {
         This->allSelectedSpectralWindows(spws, nvischan);
     }
 
@@ -673,12 +674,12 @@ protected:
 
     virtual Bool checkMSId();
     virtual void checkVisIter (const char * func, const char * file, int line) const;
-    void copyCache (const VisBuffer & other);
+    virtual void copyCache (const VisBuffer & other);
 
 private:
 
     // validate the cache
-    void validate();
+    virtual void validate();
 
     template<typename T>
     static void cacheCopyArray (Bool & newStatus, Bool oldStatus, T & newCache,
@@ -702,13 +703,13 @@ private:
         }
     }
 
-    void setAllCacheStatuses (bool status);
+    virtual void setAllCacheStatuses (bool status);
 
 
-    Bool nonCanonCorr(); // Are correlations in non-canonical order?
+    virtual Bool nonCanonCorr(); // Are correlations in non-canonical order?
 
     // Filter index arrays for unique elements
-    Vector<Int> unique(const Vector<Int>& indices) const;
+    virtual Vector<Int> unique(const Vector<Int>& indices) const;
 
     Bool corrSorted_p; // Have correlations been sorted by sortCorr?
     Int lastPointTableRow_p;
@@ -741,51 +742,51 @@ private:
     // attached.  The filler must also set the cache status variable to True during
     // its execution.
 
-    Vector<Int>& fillAnt1();
-    Vector<Int>& fillAnt2();
-    Int & fillArrayId();
-    Matrix<Int>& fillChanAveBounds();
-    Vector<Int>& fillChannel();
-    Vector<SquareMatrix<Complex, 2> >& fillCjones();
-    Vector<Int>& fillCorrType();
+    virtual Vector<Int>& fillAnt1();
+    virtual Vector<Int>& fillAnt2();
+    virtual Int & fillArrayId();
+    //virtual Matrix<Int>& fillChanAveBounds();
+    virtual Vector<Int>& fillChannel();
+    virtual Vector<SquareMatrix<Complex, 2> >& fillCjones();
+    virtual Vector<Int>& fillCorrType();
     virtual Vector<MDirection>& fillDirection1();
     virtual Vector<MDirection>& fillDirection2();
-    Vector<Double>& fillExposure();
-    Vector<Int>& fillFeed1();
-    Vector<Float>& fillFeed1_pa();
-    Vector<Int>& fillFeed2();
-    Vector<Float>& fillFeed2_pa();
-    Int & fillFieldId();
-    Matrix<Bool>& fillFlag();
-    Array<Bool>& fillFlagCategory();
-    Cube<Bool>& fillFlagCube();
-    Vector<Bool> & fillFlagRow();
-    Cube<Float>& fillFloatDataCube();
-    Vector<Double>& fillFreq();         // Puts SPECTRAL_WINDOW/CHAN_FREQ in frequency_p.
-    Matrix<Float>& fillImagingWeight();
-    Vector<Double>& fillLSRFreq();
-    Int & fillnChannel();
-    Int & fillnCorr();
-    Int & fillnRow();
-    Vector<Int> & fillObservationId();
+    virtual Vector<Double>& fillExposure();
+    virtual Vector<Int>& fillFeed1();
+    virtual Vector<Float>& fillFeed1_pa();
+    virtual Vector<Int>& fillFeed2();
+    virtual Vector<Float>& fillFeed2_pa();
+    virtual Int & fillFieldId();
+    virtual Matrix<Bool>& fillFlag();
+    virtual Array<Bool>& fillFlagCategory();
+    virtual Cube<Bool>& fillFlagCube();
+    virtual Vector<Bool> & fillFlagRow();
+    virtual Cube<Float>& fillFloatDataCube();
+    virtual Vector<Double>& fillFreq();         // Puts SPECTRAL_WINDOW/CHAN_FREQ in frequency_p.
+    virtual Matrix<Float>& fillImagingWeight();
+    virtual Vector<Double>& fillLSRFreq();
+    virtual Int & fillnChannel();
+    virtual Int & fillnCorr();
+    virtual Int & fillnRow();
+    virtual Vector<Int> & fillObservationId();
     virtual MDirection & fillPhaseCenter();
-    Int & fillPolFrame();
-    Vector<Int> & fillProcessorId();
-    Vector<Int> & fillScan();
-    Vector<Float>& fillSigma();
-    Matrix<Float>& fillSigmaMat();
-    Int & fillSpW();
-    Vector<Int> & fillStateId();
-    Vector<Double>& fillTime();
-    Vector<Double>& fillTimeCentroid();
-    Vector<Double>& fillTimeInterval();
-    Vector<RigidVector<Double, 3> >& filluvw();
-    Matrix<Double>& filluvwMat();
-    Matrix<CStokesVector>& fillVis(VisibilityIterator::DataColumn whichOne);
-    Cube<Complex>& fillVisCube(VisibilityIterator::DataColumn whichOne);
-    Vector<Float>& fillWeight();
-    Matrix<Float>& fillWeightMat();
-    Cube<Float>& fillWeightSpectrum();
+    virtual Int & fillPolFrame();
+    virtual Vector<Int> & fillProcessorId();
+    virtual Vector<Int> & fillScan();
+    virtual Vector<Float>& fillSigma();
+    virtual Matrix<Float>& fillSigmaMat();
+    virtual Int & fillSpW();
+    virtual Vector<Int> & fillStateId();
+    virtual Vector<Double>& fillTime();
+    virtual Vector<Double>& fillTimeCentroid();
+    virtual Vector<Double>& fillTimeInterval();
+    virtual Vector<RigidVector<Double, 3> >& filluvw();
+    virtual Matrix<Double>& filluvwMat();
+    virtual Matrix<CStokesVector>& fillVis(VisibilityIterator::DataColumn whichOne);
+    virtual Cube<Complex>& fillVisCube(VisibilityIterator::DataColumn whichOne);
+    virtual Vector<Float>& fillWeight();
+    virtual Matrix<Float>& fillWeightMat();
+    virtual Cube<Float>& fillWeightSpectrum();
 
     // Variables to track validity of cache (alphabetical order)
 

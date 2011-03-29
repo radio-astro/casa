@@ -7,6 +7,7 @@
 
 #include "VisibilityIteratorAsync.h"
 #include "VisBufferAsync.h"
+#include "VisBufferAsyncWrapper.h"
 #include "VLAT.h"
 
 #include <ms/MeasurementSets/MSColumns.h>
@@ -41,7 +42,7 @@ ROVisibilityIteratorAsync::ROVisibilityIteratorAsync (const MeasurementSet & ms,
                                                       Double timeInterval,
                                                       Int nReadAheadBuffers)
 : impl_p (NULL),
-  vlaDatum_p (NULL)
+  visBufferAsync_p (NULL)
 {
     construct (prefetchColumns, nReadAheadBuffers);
 
@@ -57,7 +58,7 @@ ROVisibilityIteratorAsync::ROVisibilityIteratorAsync (const ROVisibilityIterator
                                                       const PrefetchColumns & prefetchColumns,
                                                       Int nReadAheadBuffers)
 : impl_p (NULL),
-  vlaDatum_p (NULL)
+  visBufferAsync_p (NULL)
 {
     construct (prefetchColumns, nReadAheadBuffers);
 
@@ -76,7 +77,7 @@ ROVisibilityIteratorAsync::ROVisibilityIteratorAsync (const MeasurementSet & ms,
                                                       Double timeInterval,
                                                       Int nReadAheadBuffers)
 : impl_p (NULL),
-  vlaDatum_p (NULL)
+  visBufferAsync_p (NULL)
 {
     construct (prefetchColumns, nReadAheadBuffers);
 
@@ -96,7 +97,7 @@ ROVisibilityIteratorAsync::ROVisibilityIteratorAsync (const Block<MeasurementSet
                                                       Double timeInterval,
                                                       Int nReadAheadBuffers)
 : impl_p (NULL),
-  vlaDatum_p (NULL)
+  visBufferAsync_p (NULL)
 {
     construct (prefetchColumns, nReadAheadBuffers);
 
@@ -116,7 +117,7 @@ ROVisibilityIteratorAsync::ROVisibilityIteratorAsync (const Block<MeasurementSet
                                                       Double timeInterval,
                                                       Int nReadAheadBuffers)
 : impl_p (NULL),
-  vlaDatum_p (NULL)
+  visBufferAsync_p (NULL)
 {
     construct (prefetchColumns, nReadAheadBuffers);
 
@@ -133,6 +134,15 @@ ROVisibilityIteratorAsync::ROVisibilityIteratorAsync (const Block<MeasurementSet
 
 ROVisibilityIteratorAsync::~ROVisibilityIteratorAsync ()
 {
+    if (! vbaWrapperStack_p.empty()){
+        VisBufferAsync * vba = vbaWrapperStack_p.top()->releaseVba ();
+        assert (vba == visBufferAsync_p);
+        delete visBufferAsync_p;
+    }
+    else if (visBufferAsync_p != NULL){
+        delete visBufferAsync_p;
+    }
+
     // Destroy the VLAT
 
     impl_p->vlat_p->terminate(); // request termination
@@ -184,17 +194,17 @@ ROVisibilityIteratorAsync::advance ()
 void
 ROVisibilityIteratorAsync::attachVisBuffer (VisBuffer & vb0)
 {
-    VisBufferAsync * vb = dynamic_cast<VisBufferAsync *> (& vb0);
-    ThrowIf (vb == NULL, "Attempt to attach other than VisBufferAsync");
+    VisBufferAsyncWrapper * vb = dynamic_cast<VisBufferAsyncWrapper *> (& vb0);
+    ThrowIf (vb == NULL, "Attempt to attach other than VisBufferAsyncWrapper");
 
-    if (! visBufferAsyncStack_p.empty()){
-        visBufferAsyncStack_p.top () -> clear();
+    if (! vbaWrapperStack_p.empty()){
+        vbaWrapperStack_p.top () -> releaseVba ();
     }
 
-    visBufferAsyncStack_p.push (vb);
+    vbaWrapperStack_p.push (vb);
 
-    if (vlaDatum_p != NULL){
-        vb->fillFrom (* vlaDatum_p -> getVisBuffer());
+    if (visBufferAsync_p != NULL){
+        vb->wrap (visBufferAsync_p);
     }
 }
 
@@ -208,7 +218,7 @@ ROVisibilityIteratorAsync::construct (const PrefetchColumns & prefetchColumns, I
     chunkNumber_p = 0;
     linkedVisibilityIterator_p = NULL;
     subChunkNumber_p = -1;
-    vlaDatum_p = NULL;
+    visBufferAsync_p = NULL;
 
     impl_p = new ROVisibilityIteratorAsyncImpl ();
 
@@ -400,33 +410,31 @@ ROVisibilityIteratorAsync::create (const Block<MeasurementSet> & mss,
 void
 ROVisibilityIteratorAsync::detachVisBuffer (VisBuffer & vb0)
 {
-    VisBufferAsync * vb = dynamic_cast<VisBufferAsync *> (& vb0);
+    VisBufferAsyncWrapper * vb = dynamic_cast<VisBufferAsyncWrapper *> (& vb0);
 
-    if (vb == NULL){
-        Throw ("Attempt to detach synchronous VisBuffer");
-    }
-    else if (vb == visBufferAsyncStack_p.top()){
+    ThrowIf (vb == NULL, "Attempt to detach other than a VisBufferAsyncWrapper");
+
+    if (vb == vbaWrapperStack_p.top()){
 
         // Get rid of the old buffer
 
-        vb->clear();
-        visBufferAsyncStack_p.pop ();
+        VisBufferAsync * vba = vb->releaseVba ();
+        Assert (vba == visBufferAsync_p);
+
+        vbaWrapperStack_p.pop ();
 
         // If there is still a VB attached either fill it with the
         // current values for the VI position or clear it.
 
-        if (! visBufferAsyncStack_p.empty()){
+        if (! vbaWrapperStack_p.empty()){
 
-            if (vlaDatum_p != NULL){
-                visBufferAsyncStack_p.top() -> fillFrom (* vlaDatum_p -> getVisBuffer());
-            }
-            else{
-                visBufferAsyncStack_p.top()->clear();
+            if (visBufferAsync_p != NULL){
+                vbaWrapperStack_p.top() -> wrap (visBufferAsync_p);
             }
         }
 
     } else {
-        ThrowIf (true, "ROVisibilityIteratorAsync::detachVisBuffer: VisBufferAsync not attached ");
+        Throw ("ROVisibilityIteratorAsync::detachVisBuffer: VisBufferAsync not attached ");
     }
 }
 
@@ -464,20 +472,15 @@ ROVisibilityIteratorAsync::fillVisBuffer()
 
         readComplete ();
 
-        vlaDatum_p = impl_p->vlaData_p->readStart (chunkNumber_p, subChunkNumber_p);
+        visBufferAsync_p = impl_p->vlaData_p->readStart (chunkNumber_p, subChunkNumber_p);
 
-        Assert (vlaDatum_p != NULL);
-        ThrowIf (! vlaDatum_p->isChunk (chunkNumber_p, subChunkNumber_p),
-                 format ("Expected chunk (%d,%d) but got (%d,%d", chunkNumber_p, subChunkNumber_p,
-                         vlaDatum_p->getChunkNumber(), vlaDatum_p->getSubChunkNumber()));
+        Assert (visBufferAsync_p != NULL);
 
         // If a VisBufferAsync is attached, then copy the prefetched VisBuffer into it.
 
-        if (! visBufferAsyncStack_p.empty ()){
+        if (! vbaWrapperStack_p.empty ()){
 
-            visBufferAsyncStack_p.top() -> clear (); // out with the old
-
-            visBufferAsyncStack_p.top() -> fillFrom (* vlaDatum_p->getVisBuffer()); // in with the new
+            vbaWrapperStack_p.top() -> wrap (visBufferAsync_p);
         }
     }
 }
@@ -543,7 +546,7 @@ ROVisibilityIteratorAsync::getVisBuffer ()
 {
     // Returns the currently attached VisBufferAsync or NULL if none attached
 
-    VisBuffer * vb = (! visBufferAsyncStack_p.empty()) ? visBufferAsyncStack_p.top() : NULL;
+    VisBuffer * vb = (! vbaWrapperStack_p.empty()) ? vbaWrapperStack_p.top() : NULL;
     return vb;
 }
 
@@ -769,28 +772,27 @@ ROVisibilityIteratorAsync::prefetchColumns (Int firstColumn, ...)
 void
 ROVisibilityIteratorAsync::readComplete()
 {
-    if (vlaDatum_p != NULL){
+    if (visBufferAsync_p != NULL){
 
         // A buffer in the buffer ring was in use: clean up
 
-        if (! visBufferAsyncStack_p.empty()){
+        if (! vbaWrapperStack_p.empty()){
 
             // Break connection between our VisBufferAsync and
             // the shared data
 
-            visBufferAsyncStack_p.top()->clear();
+            vbaWrapperStack_p.top()->releaseVba ();
         }
 
         // Clear the pointer to the shared buffer to indicate
         // internally that the read is complete
 
-        vlaDatum_p = NULL;
+        delete visBufferAsync_p;
+        visBufferAsync_p = NULL;
 
         // Inform the buffer ring that the read is complete.
-        //
 
-        impl_p->vlaData_p->readComplete();
-
+        impl_p->vlaData_p->readComplete(chunkNumber_p, subChunkNumber_p);
     }
 }
 

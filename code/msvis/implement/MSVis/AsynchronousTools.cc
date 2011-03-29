@@ -16,9 +16,11 @@
 #include <fcntl.h>
 
 #include <time.h>
+#include <sys/syscall.h>
 #include <sys/time.h>
 
 #include <casa/Exceptions/Error.h>
+#include <boost/thread/once.hpp>
 
 #include "AsynchronousTools.h"
 #include "UtilJ.h"
@@ -156,6 +158,8 @@ Condition::wait (Mutex & mutex, int milliseconds)
 }
 */
 
+Logger::Logger * Logger::singleton_p = NULL;
+
 Logger::Logger ()
 : loggingStarted_p (False),
   nameMutex_p (NULL)
@@ -168,16 +172,20 @@ Logger::~Logger ()
     }
 }
 
+boost::once_flag loggerOnceFlag = BOOST_ONCE_INIT;
+
 Logger::Logger *
 Logger::get()
 {
-    static Logger * singleton = NULL;
+    boost::call_once (loggerOnceFlag, initialize);
 
-    if (singleton == NULL){
-        singleton = new Logger ();
-    }
+    return singleton_p;
+}
 
-    return singleton;
+void
+Logger::initialize ()
+{
+    singleton_p = new Logger ();
 }
 
 void
@@ -297,7 +305,7 @@ Logger::LoggerThread::run ()
             deleteStream_p = True;
         }
 
-        * logStream_p << utilj::getTimestamp() << ": Logging started" << endl;
+        * logStream_p << utilj::getTimestamp() << ": Logging started, tid=" << gettid() << endl;
 
         // Loop waiting on the drain semaphore.  This should be incremented once
         // every time users add a block of text to the queue.
@@ -615,6 +623,16 @@ Thread::getId () const
     return * id_p;
 }
 
+pid_t
+Thread::gettid () const
+{
+   pid_t result = 0;
+#if defined(AIPS_LINUX)
+   result = syscall (SYS_gettid);
+#endif
+    return result;
+}
+
 void *
 Thread::join ()
 {
@@ -648,7 +666,6 @@ Thread::terminate ()
     terminationRequested_p = true;
 }
 
-
 bool
 Thread::isTerminationRequested () const
 {
@@ -664,8 +681,6 @@ Thread::threadFunction (void * arg)
 
     return result; // use thread variable to store any results
 }
-
-
 
 } // end namespace Async
 

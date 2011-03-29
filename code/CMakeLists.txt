@@ -76,7 +76,7 @@ endif()
 
 if( CMAKE_BUILD_TYPE STREQUAL Debug )
   add_definitions( -DAIPS_DEBUG )
-  set( CMAKE_CXX_FLAGS_DEBUG "-ggdb3 -O0" )
+  set( CMAKE_CXX_FLAGS_DEBUG "-ggdb3 -O0 -fno-omit-frame-pointer" )
 endif()
 
 if( NOT RE_CMAKE )

@@ -124,6 +124,7 @@ public:
     virtual ~Thread ();
 
     pthread_t getId () const;
+    pid_t gettid () const; // linux only
     bool isTerminationRequested () const;
     void * join ();
     void startThread ();
@@ -194,8 +195,12 @@ private:
     Mutex * nameMutex_p;
     ThreadNames threadNames_p;
 
+    static Logger * singleton_p;
+
     Logger (); // singleton
     ~Logger ();
+
+    static void initialize ();
 };
 
 
