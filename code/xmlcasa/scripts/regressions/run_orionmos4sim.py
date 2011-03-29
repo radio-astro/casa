@@ -125,7 +125,7 @@ mycyclefactor = 1.5
 myminpb = 0.2
 
 #Sim params
-myflux = 1000000.0
+myflux = 1.0
 mynoise = ""
 #mynoise = "0.019Jy"
 # EVLA X-band SEFD is 300Jy (1Hz,1sec) so 50MHz,5sec would be 19mJy per vis
@@ -367,6 +367,7 @@ imagermode         =  "mosaic"
 ftmachine          =  myftmachine
 mosweight          =  False
 scaletype          =  "SAULT"
+flatnoise           =  False
 multiscale         =  []
 negcomponent       =  -1
 interactive        =  F
