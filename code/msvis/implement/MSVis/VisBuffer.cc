@@ -137,9 +137,9 @@ VisBuffer::copyCache (const VisBuffer & other)
     cacheCopyArray  (direction2OK_p, other.direction2OK_p, direction2_p, other.direction2_p);
     cacheCopyArray  (exposureOK_p, other.exposureOK_p, exposure_p, other.exposure_p);
     cacheCopyArray  (feed1OK_p, other.feed1OK_p, feed1_p, other.feed1_p);
-    cacheCopyArray  (feed1OK_p, other.feed1OK_p, feed1_p, other.feed1_p);
+    cacheCopyArray  (feed1_paOK_p, other.feed1_paOK_p, feed1_pa_p, other.feed1_pa_p);
     cacheCopyArray  (feed2OK_p, other.feed2OK_p, feed2_p, other.feed2_p);
-    cacheCopyArray  (feed2OK_p, other.feed2OK_p, feed2_p, other.feed2_p);
+    cacheCopyArray  (feed2_paOK_p, other.feed2_paOK_p, feed2_pa_p, other.feed2_pa_p);
     cacheCopyNormal (fieldIdOK_p, other.fieldIdOK_p, fieldId_p, other.fieldId_p);
     cacheCopyArray  (flagOK_p, other.flagOK_p, flag_p, other.flag_p);
     cacheCopyArray  (flagCategoryOK_p, other.flagCategoryOK_p, flagCategory_p, other.flagCategory_p);
