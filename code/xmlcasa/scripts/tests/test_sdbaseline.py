@@ -36,7 +36,8 @@ class sdbaseline_basictest(unittest.TestCase):
     # Data path of input/output
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdbaseline/'
     # Input and output names
-    sdfile = 'OrionS_rawACSmod_calTave.asap'
+    #sdfile = 'OrionS_rawACSmod_calTave.asap'
+    sdfile = 'OrionS_rawACSmod_calave.asap'
     outroot = 'sdbaseline_test'
     blrefroot = datapath+'refblparam'
     strefroot = datapath+'refstats'
@@ -195,7 +196,8 @@ class sdbaseline_masktest(unittest.TestCase):
     # Data path of input/output
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdbaseline/'
     # Input and output names
-    sdfile = 'OrionS_rawACSmod_calTave.asap'
+    #sdfile = 'OrionS_rawACSmod_calTave.asap'
+    sdfile = 'OrionS_rawACSmod_calave.asap'
     outroot = 'sdbaseline_masktest'
     blrefroot = datapath+'refblparam_mask'
     #strefroot = datapath+'refstats_mask'
@@ -345,7 +347,7 @@ class sdbaseline_masktest(unittest.TestCase):
         iflist = [2]
         pollist=[0]
 
-        masklist = self._get_chanval(sdfile,self.search,specunit,spw=iflist[0])
+        masklist = self._get_chanval(sdfile,self.search,specunit,spw=iflist[0],addedge=True)
         print "masklist =", masklist
 
         result = sdbaseline(sdfile=sdfile,maskmode=mode,masklist=masklist,
@@ -367,7 +369,7 @@ class sdbaseline_masktest(unittest.TestCase):
         iflist = [2]
         pollist=[0]
 
-        masklist = self._get_chanval(sdfile,self.blchan2,specunit,spw=iflist[0])
+        masklist = self._get_chanval(sdfile,self.blchan2,specunit,spw=iflist[0],addedge=True)
         print "masklist =", masklist
 
         result = sdbaseline(sdfile=sdfile,maskmode=mode,masklist=masklist,
@@ -393,7 +395,7 @@ class sdbaseline_masktest(unittest.TestCase):
         chanlist = (self.search, self.search)
         for i in xrange(len(iflist)):
             sblrange.append("")
-            mlist = self._get_chanval(sdfile,chanlist[i],specunit,spw=iflist[i])
+            mlist = self._get_chanval(sdfile,chanlist[i],specunit,spw=iflist[i],addedge=True)
             for valrange in mlist:
                 if len(sblrange[i]): sblrange[i] += ";"
                 sblrange[i] += self._get_range_in_string(valrange)
@@ -423,7 +425,7 @@ class sdbaseline_masktest(unittest.TestCase):
         chanlist = (self.blchan0, self.blchan2)
         for i in xrange(len(iflist)):
             sblrange.append("")
-            mlist = self._get_chanval(sdfile,chanlist[i],specunit,spw=iflist[i])
+            mlist = self._get_chanval(sdfile,chanlist[i],specunit,spw=iflist[i],addedge=True)
             for valrange in mlist:
                 if len(sblrange[i]): sblrange[i] += ";"
                 sblrange[i] += self._get_range_in_string(valrange)
@@ -449,7 +451,7 @@ class sdbaseline_masktest(unittest.TestCase):
         iflist = [2]
         pollist=[0]
 
-        masklist = self._get_chanval(sdfile,self.search,specunit,spw=iflist[0])
+        masklist = self._get_chanval(sdfile,self.search,specunit,spw=iflist[0],addedge=True)
         print "masklist =", masklist
         
         result = sdbaseline(sdfile=sdfile,maskmode=mode,masklist=masklist,
@@ -471,7 +473,7 @@ class sdbaseline_masktest(unittest.TestCase):
         iflist = [2]
         pollist=[0]
 
-        masklist = self._get_chanval(sdfile,self.blchan2,specunit,spw=iflist[0])
+        masklist = self._get_chanval(sdfile,self.blchan2,specunit,spw=iflist[0],addedge=True)
         print "masklist =", masklist
         
         result = sdbaseline(sdfile=sdfile,maskmode=mode,masklist=masklist,
@@ -497,7 +499,7 @@ class sdbaseline_masktest(unittest.TestCase):
         chanlist = (self.search, self.search)
         for i in xrange(len(iflist)):
             sblrange.append("")
-            mlist = self._get_chanval(sdfile,chanlist[i],specunit,spw=iflist[i])
+            mlist = self._get_chanval(sdfile,chanlist[i],specunit,spw=iflist[i],addedge=True)
             for valrange in mlist:
                 if len(sblrange[i]): sblrange[i] += ";"
                 sblrange[i] += self._get_range_in_string(valrange)
@@ -527,7 +529,7 @@ class sdbaseline_masktest(unittest.TestCase):
         chanlist = (self.blchan0, self.blchan2)
         for i in xrange(len(iflist)):
             sblrange.append("")
-            mlist = self._get_chanval(sdfile,chanlist[i],specunit,spw=iflist[i])
+            mlist = self._get_chanval(sdfile,chanlist[i],specunit,spw=iflist[i],addedge=True)
             for valrange in mlist:
                 if len(sblrange[i]): sblrange[i] += ";"
                 sblrange[i] += self._get_range_in_string(valrange)
@@ -549,15 +551,23 @@ class sdbaseline_masktest(unittest.TestCase):
         else:
             return False
 
-    def _get_chanval(self,file,chanrange,unit,spw=0):
+    def _get_chanval(self,file,chanrange,unit,spw=0,addedge=False):
         mylist = []
         scan = sd.scantable(file, average=False)
         scan.set_unit(unit)
         scan.set_selection(ifs=[spw])
         chanval = scan._getabcissa(0)
-        del scan
+        edge = 0
+        if addedge:
+            # add 1/2 chan to both edges
+            nchan = len(chanval)
+            #edge = 0.0
+            edge = 0.5*abs(chanval[nchan-1]-chanval[0])/float(nchan-1)
         for schan, echan in chanrange:
-            mylist.append([chanval[schan],chanval[echan]])
+            lval = max(chanval[schan],chanval[echan])
+            sval = min(chanval[schan],chanval[echan])
+            mylist.append([sval-edge,lval+edge])
+        del scan, nchan, edge, lval, sval
         return mylist
 
     def _compareBLparam(self):
@@ -576,6 +586,7 @@ class sdbaseline_masktest(unittest.TestCase):
     def _compareStats(self,reference):
         # test if the statistics of baselined spectra are equal to
         # the reference values
+        default(sdstat)
         outfile = self.outroot+self.tid+'.asap'
         self.assertTrue(os.path.exists(outfile))
         currstat = sdstat(sdfile=outfile)
