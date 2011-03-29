@@ -93,14 +93,12 @@ ms::ms()
 ms::~ms()
 {
   try {
-     if(itsMS)
-        delete itsMS;
-     if(itsSel)
-        delete itsSel;
-     if(itsFlag)
-        delete itsFlag;
-     if(itsLog)
-        delete itsLog;
+    if(itsMS)           {delete itsMS;itsMS=NULL;}
+    if(itsOriginalMS)   {delete itsOriginalMS;itsOriginalMS=NULL;}
+    if(itsSel)          {delete itsSel; itsSel=NULL;}
+    if(itsFlag)         {delete itsFlag; itsFlag=NULL;}
+    if(itsLog)          {delete itsLog; itsLog=NULL;}
+    if (itsMSS)         {delete itsMSS; itsMSS=NULL;}
    } catch (AipsError x) {
        *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
@@ -279,8 +277,8 @@ ms::close()
         *itsLog << "Readonly measurement set: just detaching from file.";
       }
       *itsLog << LogIO::POST;
-      delete itsMS;
-      itsMS = new MeasurementSet();
+      delete itsMS;          itsMS = new MeasurementSet();
+      delete itsOriginalMS;  itsOriginalMS = new MeasurementSet();
       itsSel->setMS(*itsMS);
       itsFlag->setMSSelector(*itsSel);
       rstat = True;
