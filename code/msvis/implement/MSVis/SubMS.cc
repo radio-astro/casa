@@ -2969,6 +2969,15 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	      else{ // start is start
 		theRegridBWF = transNewXin[oldNUM_CHAN-1] + transCHAN_WIDTH[oldNUM_CHAN-1]/2. - theRegridCenterF;
 	      }
+	      if(regridQuant=="freq" || regridQuant=="vrad"){ // i.e. equidistant in freq
+		// define via width of first channel to avoid numerical problems
+		if(regridChanWidthF <= 0.){ // channel width not set
+		  theRegridBWF = transCHAN_WIDTH[0]*floor((theRegridBWF+transCHAN_WIDTH[0]*0.01)/transCHAN_WIDTH[0]);
+		}
+		else{
+		  theRegridBWF = regridChanWidthF*floor((theRegridBWF+regridChanWidthF*0.01)/regridChanWidthF);
+		}
+	      }
 	    }
 	    else{ // center is center
 	      theRegridBWF = 2. * min((Double)(theRegridCenterF - transNewXin[0] - transCHAN_WIDTH[0]), 
@@ -3775,8 +3784,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	}
       }
       if(negativeWidths){
-	os << LogIO::WARN
-	   << "Encountered negative channel widths in input spectral window. Will ignore sign."
+	os << LogIO::NORMAL
+	   << " *** Encountered negative channel widths in input spectral window."
 	   << LogIO::POST;
       }
     }
@@ -4144,8 +4153,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    }
 	  }
 	  if(negativeWidths){
-	    os << LogIO::WARN
-	       << "Encountered negative channel widths in SPECTRAL_WINDOW table. Will ignore sign."
+	    os << LogIO::NORMAL
+	       << " *** Encountered negative channel widths in SPECTRAL_WINDOW table."
 	       << LogIO::POST;
 	  }
 	}
@@ -4665,8 +4674,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  }
 	}
 	if(negativeWidths){
-	  os << LogIO::WARN
-	     << "Encountered negative channel widths in SPECTRAL_WINDOW table. Will ignore sign."
+	  os << LogIO::NORMAL
+	     << " *** Encountered negative channel widths in SPECTRAL_WINDOW table."
 	     << LogIO::POST;
 	  negChanWidthWarned = True;
 	}
@@ -4742,8 +4751,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    }
 	  }
 	  if(negativeWidths && !negChanWidthWarned){
-	    os << LogIO::WARN
-	       << "Encountered negative channel widths in SPECTRAL_WINDOW table. Will ignore sign."
+	    os << LogIO::NORMAL
+	       << " *** Encountered negative channel widths in SPECTRAL_WINDOW table."
 	       << LogIO::POST;
 	    negChanWidthWarned = True;
 	  }

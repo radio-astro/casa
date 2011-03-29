@@ -1589,6 +1589,8 @@ ms::cvelfreqs(const std::vector<int>& spwids,
     if(!detached()){
     
       *itsLog << LogOrigin("ms", "cvelfreqs");
+
+      *itsLog << LogIO::NORMAL << "Calculating grid ..." << LogIO::POST;
       
       Vector<Double> newCHAN_FREQ; 
       Vector<Double> newCHAN_WIDTH;
@@ -1787,6 +1789,7 @@ ms::cvelfreqs(const std::vector<int>& spwids,
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
+
   return rval;
 }
 
