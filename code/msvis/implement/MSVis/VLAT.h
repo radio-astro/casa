@@ -268,7 +268,7 @@ public:
 	static void debugBlock ();
 	static void debugUnblock ();
 
-	static const Bool loggingInitialized_p;
+	static Bool loggingInitialized_p;
 	static Int logLevel_p;
 
 protected:

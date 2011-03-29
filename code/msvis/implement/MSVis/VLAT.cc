@@ -81,8 +81,8 @@ ROVisibilityIteratorAsyncImpl::ROVisibilityIteratorAsyncImpl ()
 //  **************************
 
 //Semaphore VlaData::debugBlockSemaphore_p (0); // used to block a thread for debugging
-const Bool VlaData::loggingInitialized_p = initializeLogging();
-Int VlaData::logLevel_p = 1;
+Bool VlaData::loggingInitialized_p = False;
+Int VlaData::logLevel_p = -1;
 
 VlaData::VlaData (Int maxNBuffers)
  : MaxNBuffers_p (maxNBuffers)
@@ -91,6 +91,10 @@ VlaData::VlaData (Int maxNBuffers)
     sweepTerminationRequested_p = False;
     viResetComplete_p = False;
     viResetRequested_p = False;
+
+    if (logLevel_p < 0){
+        loggingInitialized_p = initializeLogging();
+    }
 }
 
 VlaData::~VlaData ()
