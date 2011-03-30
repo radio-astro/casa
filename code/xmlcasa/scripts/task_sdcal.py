@@ -14,7 +14,7 @@ from sdbaseline import sdbaseline
 
 #def sdcal(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, average, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, kernel, kwidth, maskmode, order, interactive, masklist, thresh, avg_limit, edge, outfile, outform, overwrite, plotlevel):
 #def sdcal(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, average, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, kernel, kwidth, maskmode, order, verify, masklist, thresh, avg_limit, edge, outfile, outform, overwrite, plotlevel):
-def sdcal(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, average, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, kernel, kwidth, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, minnwave, maxnwave, clipthresh, clipniter, verifycal, verifysm, verifybl, verbosebl, outfile, outform, overwrite, plotlevel):
+def sdcal(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, average, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, kernel, kwidth, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, nwave, maxwavelength, clipthresh, clipniter, verifycal, verifysm, verifybl, verbosebl, outfile, outform, overwrite, plotlevel):
 
         a=inspect.stack()
         stacklevel=0
@@ -133,7 +133,7 @@ def sdcal(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, ca
               tmpoutfile = sdbaselineout
               #sdbaseline.defaults()
 #              sdbaseline(sdfile=tmpsdfile, maskmode=maskmode,order=order,interactive=interactive,masklist=masklist, thresh=thresh, avg_limit=avg_limit, edge=edge, outfile=tmpoutfile, outform=outform, overwrite=True, plotlevel=plotlevel)
-              sdbaseline(sdfile=tmpsdfile,antenna=antenna,masklist=masklist,maskmode=maskmode,thresh=thresh,avg_limit=avg_limit,edge=edge,blfunc=blfunc,order=order,npiece=npiece,minnwave=minnwave,maxnwave=maxnwave,clipthresh=clipthresh,clipniter=clipniter,verify=verifybl,verbose=verbosebl,outfile=tmpoutfile,outform=outform,overwrite=True,plotlevel=plotlevel)
+              sdbaseline(sdfile=tmpsdfile,antenna=antenna,masklist=masklist,maskmode=maskmode,thresh=thresh,avg_limit=avg_limit,edge=edge,blfunc=blfunc,order=order,npiece=npiece,nwave=nwave,maxwavelength=maxwavelength,clipthresh=clipthresh,clipniter=clipniter,verify=verifybl,verbose=verbosebl,outfile=tmpoutfile,outform=outform,overwrite=True,plotlevel=plotlevel)
             else:
               #print "No baseline subtraction was applied..."
               #print ""
@@ -164,7 +164,7 @@ def _reset_inputs(param=None):
 g
         '''
 #        arg_names=['sdfile','fluxunit','telescopeparm','specunit','frame','doppler','calmode','scanlist','field','iflist','pollist', 'scanaverage','timeaverage','tweight', 'polaverage','pweight', 'kernel','kwidth','tau','maskmode','order','interactive','masklist','outfile','outform','overwrite','plotlevel','thresh','avg_limit','edge']
-        arg_names=['sdfile','fluxunit','telescopeparm','specunit','frame','doppler','calmode','scanlist','field','iflist','pollist', 'scanaverage','timeaverage','tweight', 'polaverage','pweight', 'kernel','kwidth','tau','masklist','maskmode','thresh','avg_limit','edge','blfunc','order','npiece','minnwave','maxnwave','clipthresh','clipniter','verify','verbose','outfile','outform','overwrite','plotlevel']
+        arg_names=['sdfile','fluxunit','telescopeparm','specunit','frame','doppler','calmode','scanlist','field','iflist','pollist', 'scanaverage','timeaverage','tweight', 'polaverage','pweight', 'kernel','kwidth','tau','masklist','maskmode','thresh','avg_limit','edge','blfunc','order','npiece','nwave','maxwavelength','clipthresh','clipniter','verify','verbose','outfile','outform','overwrite','plotlevel']
         a=inspect.stack()
         stacklevel=0
         for k in range(len(a)):

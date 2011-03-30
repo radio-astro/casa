@@ -231,14 +231,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>2</value>
     </param>
 
-    <param type="int" name="minnwave" subparam="true">
-            <description>minumum sinusoidal wave number in the spectral window</description>
-            <value>0</value>
+    <param type="any" name="nwave" subparam="true">
+            <description>wave numbers used for fitting (e.g. 3 or [0,1,2])</description>
+	    <value type="int">3</value>
     </param>
 
-    <param type="int" name="maxnwave" subparam="true">
-            <description>maximum sinusoidal wave number in the spectral window</description>
-            <value>3</value>
+    <param type="double" name="maxwavelength" subparam="true">
+            <description>the longest sinusoidal wavelength in unit of sw width</description>
+            <value>1.0</value>
     </param>
 
     <param type="double" name="clipthresh" subparam="true">
@@ -360,8 +360,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 			<default param="clipniter"><value>1</value></default>
 	        </equals>
                 <equals value="sinusoid">
-			<default param="minnwave"><value>0</value></default>
-			<default param="maxnwave"><value>3</value></default>
+			<default param="nwave"><value type="int">3</value></default>
+			<default param="maxwavelength"><value>1.0</value></default>
 			<default param="clipthresh"><value>3.0</value></default>
 			<default param="clipniter"><value>1</value></default>
 	        </equals>
@@ -544,12 +544,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  npiece -- number of the element polynomials of cubic spline curve
                          options: (int) (&lt;0 turns off baseline fitting)
                          default: 2
-                 minnwave -- minimum wave number of sinusoid in the spectral window
-                         options: (int) (&lt;0 turns off baseline fitting)
-                         default: 0
-                 maxnwave -- maximum wave number of sinusoid in the spectral window
-                         options: (int)
+                 nwave -- wave number(s) of sinusoid for fitting.
+                         both integer (for the maximum one) and list (for all) 
+                         can be used. Zero means constant term. 
                          default: 3
+                         example: 4 uses sinusoids with wave numbers from 0 to 4,
+                                    i.e. 0, 1, 2, 3, and 4.
+                                  [1,8] uses sinusoids with wave numbers 1 and 8.
+                 maxwavelength -- the longest sinusoidal wavelength in unit of 
+                         spectral window width.
+                         default: 1.0
                  clipthresh -- clipping threshold for iterative spline fitting
                          default: 3
                  clipniter -- maximum number of iteration in spline fitting
