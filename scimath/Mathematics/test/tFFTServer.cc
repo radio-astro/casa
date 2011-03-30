@@ -1432,6 +1432,28 @@ public:
       aflags(IPosition(2,1,8)) = True;
       aflags(IPosition(2,1,9)) = True;
 
+      Array<Bool> aflags2(IPosition(2,2,10));
+      aflags2(IPosition(2,0,0)) = True;
+      aflags2(IPosition(2,0,1)) = True;
+      aflags2(IPosition(2,0,2)) = True;
+      aflags2(IPosition(2,0,3)) = True;
+      aflags2(IPosition(2,0,4)) = True;
+      aflags2(IPosition(2,0,5)) = True;
+      aflags2(IPosition(2,0,6)) = False;
+      aflags2(IPosition(2,0,7)) = False;
+      aflags2(IPosition(2,0,8)) = True;
+      aflags2(IPosition(2,0,9)) = True;
+      aflags2(IPosition(2,1,0)) = True;
+      aflags2(IPosition(2,1,1)) = True;
+      aflags2(IPosition(2,1,2)) = True;
+      aflags2(IPosition(2,1,3)) = True;
+      aflags2(IPosition(2,1,4)) = True;
+      aflags2(IPosition(2,1,5)) = True;
+      aflags2(IPosition(2,1,6)) = False;
+      aflags2(IPosition(2,1,7)) = False;
+      aflags2(IPosition(2,1,8)) = True;
+      aflags2(IPosition(2,1,9)) = True;
+
       Array<S> b(IPosition(2,10,2));
       b(IPosition(2,0,0)) = Complex(0.,0.);
       b(IPosition(2,1,0)) = Complex(1.,0.);
@@ -1630,6 +1652,49 @@ public:
       expflagsd(IPosition(2,1,8)) = True;
       expflagsd(IPosition(2,1,9)) = False;
 
+      Array<Bool> expflagse(IPosition(2,2,10));
+      expflagse(IPosition(2,0,0)) = True;
+      expflagse(IPosition(2,0,1)) = True;
+      expflagse(IPosition(2,0,2)) = False;
+      expflagse(IPosition(2,0,3)) = False;
+      expflagse(IPosition(2,0,4)) = True;
+      expflagse(IPosition(2,0,5)) = False;
+      expflagse(IPosition(2,0,6)) = False;
+      expflagse(IPosition(2,0,7)) = True;
+      expflagse(IPosition(2,0,8)) = False;
+      expflagse(IPosition(2,0,9)) = False;
+      expflagse(IPosition(2,1,0)) = True;
+      expflagse(IPosition(2,1,1)) = True;
+      expflagse(IPosition(2,1,2)) = False;
+      expflagse(IPosition(2,1,3)) = False;
+      expflagse(IPosition(2,1,4)) = True;
+      expflagse(IPosition(2,1,5)) = False;
+      expflagse(IPosition(2,1,6)) = False;
+      expflagse(IPosition(2,1,7)) = True;
+      expflagse(IPosition(2,1,8)) = False;
+      expflagse(IPosition(2,1,9)) = False;
+
+      Array<Bool> expflagse2(IPosition(2,2,10));
+      expflagse2(IPosition(2,0,0)) = True;
+      expflagse2(IPosition(2,0,1)) = True;
+      expflagse2(IPosition(2,0,2)) = True;
+      expflagse2(IPosition(2,0,3)) = True;
+      expflagse2(IPosition(2,0,4)) = True;
+      expflagse2(IPosition(2,0,5)) = False;
+      expflagse2(IPosition(2,0,6)) = False;
+      expflagse2(IPosition(2,0,7)) = False;
+      expflagse2(IPosition(2,0,8)) = True;
+      expflagse2(IPosition(2,0,9)) = False;
+      expflagse2(IPosition(2,1,0)) = True;
+      expflagse2(IPosition(2,1,1)) = True;
+      expflagse2(IPosition(2,1,2)) = True;
+      expflagse2(IPosition(2,1,3)) = True;
+      expflagse2(IPosition(2,1,4)) = True;
+      expflagse2(IPosition(2,1,5)) = False;
+      expflagse2(IPosition(2,1,6)) = False;
+      expflagse2(IPosition(2,1,7)) = False;
+      expflagse2(IPosition(2,1,8)) = True;
+      expflagse2(IPosition(2,1,9)) = False;
 
 #if PERFORMANCE_TEST
     iterations = 10;
@@ -1775,6 +1840,89 @@ public:
 	  }
 	}
       }
+
+      cout << "--- left-shift by 1.5 channels in first axis with flags partially set -----------" << endl;
+
+      whichAxis = 1;
+      relshift = -1.5/10.;
+
+      server.fftshift(outVal, outFlag, a, aflags, whichAxis, relshift, True, False);
+
+      {
+	for(uInt i=0; i<2; i++){
+	  for(uInt j=0; j<10; j++){
+	    cout << i << " " << j << " " << outVal(IPosition(2,i,j)) << endl;
+	    cout << "flag " << i << " " << j << " " << outFlag(IPosition(2,i,j)) << " " << expflagse(IPosition(2,i,j)) << endl;
+	    AlwaysAssert(outFlag(IPosition(2,i,j)) == expflagse(IPosition(2,i,j)), AipsError);
+	  }
+	}
+      }
+
+      cout << "--- left-shift by 0.25 channels in first axis with flags partially set -----------" << endl;
+
+      whichAxis = 1;
+      relshift = -0.25/10.;
+
+      server.fftshift(outVal, outFlag, a, aflags2, whichAxis, relshift, True, False);
+
+      {
+	for(uInt i=0; i<2; i++){
+	  for(uInt j=0; j<10; j++){
+	    cout << i << " " << j << " " << outVal(IPosition(2,i,j)) << endl;
+	    cout << "flag " << i << " " << j << " " << outFlag(IPosition(2,i,j)) << " " << expflagse2(IPosition(2,i,j)) << endl;
+	    AlwaysAssert(outFlag(IPosition(2,i,j)) == expflagse2(IPosition(2,i,j)), AipsError);
+	  }
+	}
+      }
+      cout << "--- left-shift by 0.5 channels in first axis with flags partially set -----------" << endl;
+
+      whichAxis = 1;
+      relshift = -0.5/10.;
+
+      server.fftshift(outVal, outFlag, a, aflags2, whichAxis, relshift, True, False);
+
+      {
+	for(uInt i=0; i<2; i++){
+	  for(uInt j=0; j<10; j++){
+	    cout << i << " " << j << " " << outVal(IPosition(2,i,j)) << endl;
+	    cout << "flag " << i << " " << j << " " << outFlag(IPosition(2,i,j)) << " " << expflagse2(IPosition(2,i,j)) << endl;
+	    AlwaysAssert(outFlag(IPosition(2,i,j)) == expflagse2(IPosition(2,i,j)), AipsError);
+	  }
+	}
+      }
+      cout << "--- left-shift by 0.55 channels in first axis with flags partially set -----------" << endl;
+
+      whichAxis = 1;
+      relshift = -0.55/10.;
+
+      server.fftshift(outVal, outFlag, a, aflags2, whichAxis, relshift, True, False);
+
+      {
+	for(uInt i=0; i<2; i++){
+	  for(uInt j=0; j<10; j++){
+	    cout << i << " " << j << " " << outVal(IPosition(2,i,j)) << endl;
+	    cout << "flag " << i << " " << j << " " << outFlag(IPosition(2,i,j)) << " " << expflagse2(IPosition(2,i,j)) << endl;
+	    AlwaysAssert(outFlag(IPosition(2,i,j)) == expflagse2(IPosition(2,i,j)), AipsError);
+	  }
+	}
+      }
+      cout << "--- left-shift by 0.75 channels in first axis with flags partially set -----------" << endl;
+
+      whichAxis = 1;
+      relshift = -0.75/10.;
+
+      server.fftshift(outVal, outFlag, a, aflags2, whichAxis, relshift, True, False);
+
+      {
+	for(uInt i=0; i<2; i++){
+	  for(uInt j=0; j<10; j++){
+	    cout << i << " " << j << " " << outVal(IPosition(2,i,j)) << endl;
+	    cout << "flag " << i << " " << j << " " << outFlag(IPosition(2,i,j)) << " " << expflagse2(IPosition(2,i,j)) << endl;
+	    AlwaysAssert(outFlag(IPosition(2,i,j)) == expflagse2(IPosition(2,i,j)), AipsError);
+	  }
+	}
+      }
+
 
 
     } // enf for it=0
