@@ -1262,6 +1262,141 @@ PlotMSFlagging::toRecord()).
 </method>
 
 
+
+<!--
+###############################################################################
+Grid Methods
+###############################################################################
+-->
+
+
+
+<method type="function" name="getGridMajorShown">
+  <keyword>getGridMajorShown</keyword>
+  <shortdescription>Gets state of visibililty of major grid lines</shortdescription>
+  <description />
+  <input>
+    <param type="int" name="plotIndex">
+      <description>the index of the plot to get the value for</description>
+      <value>0</value>
+    </param>
+  </input>
+  <example />
+  <returns type="bool">
+    <description>Boolean state of visibility</description>
+  </returns>
+</method>
+
+
+<method type="function" name="getGridMinorShown">
+  <keyword>getGridMinorShown</keyword>
+  <shortdescription>Gets state of visibililty of minor grid lines</shortdescription>
+  <description />
+  <input>
+    <param type="int" name="plotIndex">
+      <description>the index of the plot to get the value for</description>
+      <value>0</value>
+    </param>
+  </input>
+  <example />
+  <returns type="bool">
+    <description>Boolean state of visibility</description>
+  </returns>
+</method>
+
+
+<method type="function" name="getGridMajorWidth">
+  <keyword>getGridMajorWidth</keyword>
+  <shortdescription>Gets width of major grid lines</shortdescription>
+  <description />
+  <input>
+    <param type="int" name="plotIndex">
+      <description>the index of the plot to get the value for</description>
+      <value>1</value>
+    </param>
+  </input>
+  <example />
+  <returns type="int">
+    <description>Integer width, pixels</description>
+  </returns>
+</method>
+
+
+<method type="function" name="getGridMinorWidth">
+  <keyword>getGridMinorWidth</keyword>
+  <shortdescription>Gets width of minor grid lines</shortdescription>
+  <description />
+  <input>
+    <param type="int" name="plotIndex">
+      <description>the index of the plot to get the value for</description>
+      <value>1</value>
+    </param>
+  </input>
+  <example />
+  <returns type="int">
+    <description>Integer width, pixels</description>
+  </returns>
+</method>
+
+
+
+<method type="function" name="setGridParams">
+    <keyword>setGridParams</keyword>
+    <shortdescription>Set color, style for major and minor grid lines</shortdescription>
+    <description />
+    <input>
+        <param type="bool" name="showmajorgrid">
+          <description>Show major grid lines (horiz. and vert.)?</description>
+          <value>false</value>
+        </param>
+        <param type="int" name="majorwidth">
+          <description>Line width for major grid lines, pixels</description>
+          <value>1</value>
+        </param>
+        <param type="string" name="majorstyle">
+          <description>Line style for major grid lines</description>
+          <value>solid</value>
+        </param>
+        <param type="string" name="majorcolor">
+          <description>Color of major grid lines</description>
+          <value>B0B0B0</value>
+        </param>
+
+        <param type="bool" name="showminorgrid">
+          <description>Show minor grid lines (horiz. and vert.)?</description>
+          <value>false</value>
+        </param>
+        <param type="int" name="minorwidth">
+          <description>Line width for minor grid lines, pixels</description>
+          <value>1</value>
+        </param>
+        <param type="string" name="minorstyle">
+          <description>Line style for minor grid lines</description>
+          <value>solid</value>
+        </param>
+        <param type="string" name="minorcolor">
+          <description>Color of minor grid lines</description>
+          <value>C0CCE0</value>
+        </param>
+        
+        <param type="bool" name="updateImmediately">
+          <description>whether to apply this change immediately, IF the window is currently shown</description>
+          <value>true</value>
+        </param>
+        <param type="int" name="plotIndex">
+          <description>the index of the plot to apply this change</description>
+          <value>0</value>
+        </param>
+
+    </input>
+  <example />
+  <returns />
+</method>
+
+
+
+
+
 <!--
 ###############################################################################
 Execution Methods

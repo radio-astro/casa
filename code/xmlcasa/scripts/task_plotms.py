@@ -17,6 +17,8 @@ def plotms(vis=None,
            freqframe=None,restfreq=None,veldef=None,shift=None,
            extendflag=None,
            extcorr=None, extchannel=None,
+           showmajorgrid=None, majorwidth=None, majorstyle=None,  majorcolor=None,    
+           showminorgrid=None, minorwidth=None, minorstyle=None,  minorcolor=None,    
            plotfile=None, format=None,
            highres=None, interactive=None, overwrite=None,
            showgui=None
@@ -208,6 +210,11 @@ def plotms(vis=None,
         if extcorr:
             extcorrstr='all'
         pm.setFlagExtension(extendflag, extcorrstr, extchannel)
+        
+        
+        pm.setGridParams(showmajorgrid, majorwidth, majorstyle, majorcolor,
+                         showminorgrid, minorwidth, minorstyle, minorcolor)
+        
         # Update and show
         pm.update()
         if (showgui):

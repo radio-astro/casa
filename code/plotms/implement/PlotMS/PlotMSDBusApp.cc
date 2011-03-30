@@ -30,6 +30,7 @@
 #include <plotms/Gui/PlotMSPlotter.qo.h>
 #include <plotms/GuiTabs/PlotMSFlaggingTab.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
+#include <graphics/GenericPlotter/PlotOptions.h>
 
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
 
@@ -78,6 +79,14 @@ const String PlotMSDBusApp::PARAM_CANVASTITLE = "canvastitle";
 const String PlotMSDBusApp::PARAM_XAXISLABEL = "xaxislabel";
 const String PlotMSDBusApp::PARAM_YAXISLABEL = "yaxislabel";
 
+const String PlotMSDBusApp::PARAM_SHOWMAJORGRID  = "showmajorgrid";
+const String PlotMSDBusApp::PARAM_SHOWMINORGRID  = "showminorgrid";
+const String PlotMSDBusApp::PARAM_MAJORCOLOR  = "majorcolor";
+const String PlotMSDBusApp::PARAM_MINORCOLOR  = "minorcolor";
+const String PlotMSDBusApp::PARAM_MAJORSTYLE = "majorstyle";
+const String PlotMSDBusApp::PARAM_MINORSTYLE = "minorstyle";
+const String PlotMSDBusApp::PARAM_MAJORWIDTH = "majorwidth";
+const String PlotMSDBusApp::PARAM_MINORWIDTH = "minorwidth";
 
 
 const String PlotMSDBusApp::METHOD_GETLOGPARAMS = "getLogParams";
@@ -103,6 +112,23 @@ const String PlotMSDBusApp::METHOD_SAVE   = "save";
 const String PlotMSDBusApp::METHOD_ISDRAWING   = "isDrawing";
 const String PlotMSDBusApp::METHOD_ISCLOSED  = "isClosed";
 
+
+
+/* 
+ Determine line style enum from a given string.   
+ In other parts of CASA, in the , this is done - somewhere....? 
+ The reverse function, giving a string from the enum, is in casaqt/implement/QwtPlotter/QPOptions.h 
+*/
+
+static
+PlotLine::Style  StyleFromString(String s)   {
+    PlotLine::Style style = PlotLine::SOLID;  // default, if we can't decipher the given string
+    if (PMS::strEq(s, "dot", true))        style=PlotLine::DOTTED; 
+    else if (PMS::strEq(s, "dash", true))   style=PlotLine::DASHED; 
+    else if (PMS::strEq(s, "noline", true))  style=PlotLine::NOLINE; 
+    return style;
+}
+        
 
 
 
@@ -177,7 +203,8 @@ void PlotMSDBusApp::plotsChanged(const PlotMSPlotManager& manager) {
 void PlotMSDBusApp::dbusRunXmlMethod(
 	const String& methodName, const Record& parameters, Record& retValue,
 	const String& callerName, bool isAsync
-) {
+) 
+{
     // Common parameters: plot index.
     int index = -1;
     bool indexSet = parameters.isDefined(PARAM_PLOTINDEX) &&
@@ -295,6 +322,17 @@ void PlotMSDBusApp::dbusRunXmlMethod(
                 ret.define(PARAM_CANVASTITLE,  can->titleFormat().format);
                 ret.define(PARAM_XAXISLABEL,  can->xLabelFormat().format);
                 ret.define(PARAM_YAXISLABEL,  can->yLabelFormat().format);
+                ret.define(PARAM_SHOWMAJORGRID,  can->gridMajorShown());
+                ret.define(PARAM_SHOWMINORGRID,  can->gridMinorShown());
+                PlotLinePtr majplp = can->gridMajorLine();
+                PlotLinePtr minplp = can->gridMajorLine();
+                ret.define(PARAM_MAJORWIDTH,   (int)majplp->width() );
+                ret.define(PARAM_MAJORWIDTH,   (int)minplp->width() );
+                //ret.define(PARAM_MAJORSTYLE,    string from Style enum - see casaqt/implement/QwtPlotter/QPOptions.h  /// (int)majplp->style() );
+                // minor....
+                //ret.define(PARAM_MAJORCOLOR,  ..... 
+                // minor....
+                
             }
             
             if(ret.nfields() != 0) retValue.defineRecord(0, ret);
@@ -417,6 +455,72 @@ void PlotMSDBusApp::dbusRunXmlMethod(
             if (ok)  ppdisp->setColorize(a);
         }
 
+        
+        if (parameters.isDefined(PARAM_SHOWMAJORGRID)  && 
+           parameters.dataType(PARAM_SHOWMAJORGRID) == TpBool)   {
+            bool want = parameters.asBool(PARAM_SHOWMAJORGRID);
+            ppcan->showGridMajor(want);
+        }
+        
+        if (parameters.isDefined(PARAM_SHOWMINORGRID)  && 
+           parameters.dataType(PARAM_SHOWMINORGRID) == TpBool)   {
+            bool want = parameters.asBool(PARAM_SHOWMINORGRID);
+            ppcan->showGridMinor(want);
+        }
+        
+
+        if (parameters.isDefined(PARAM_MAJORCOLOR)  && 
+           parameters.dataType(PARAM_MAJORCOLOR) == TpString)   {
+            String ccc = parameters.asString(PARAM_MAJORCOLOR);
+            PlotLinePtr plp = ppcan->gridMajorLine() ;
+            plp->setColor(ccc);
+            ppcan->setGridMajorLine(plp);
+        }
+        
+        if (parameters.isDefined(PARAM_MINORCOLOR)  && 
+           parameters.dataType(PARAM_MINORCOLOR) == TpString)   {
+            String ccc = parameters.asString(PARAM_MINORCOLOR);
+            PlotLinePtr plp = ppcan->gridMinorLine() ;
+            plp->setColor(ccc);
+            ppcan->setGridMinorLine(plp);
+        }
+   
+        if (parameters.isDefined(PARAM_MAJORSTYLE)  && 
+           parameters.dataType(PARAM_MAJORSTYLE) == TpString)   {
+            String s = parameters.asString(PARAM_MAJORSTYLE);
+            PlotLinePtr plp = ppcan->gridMajorLine();
+            PlotLine::Style  style = StyleFromString(s);
+            plp->setStyle(style);
+            ppcan->setGridMajorLine(plp);
+        }
+        
+        if (parameters.isDefined(PARAM_MINORSTYLE)  && 
+           parameters.dataType(PARAM_MINORSTYLE) == TpString)   {
+            String s = parameters.asString(PARAM_MINORSTYLE);
+            PlotLinePtr plp = ppcan->gridMinorLine();
+            PlotLine::Style  style = StyleFromString(s);
+            plp->setStyle(style);
+            ppcan->setGridMinorLine(plp);
+        }
+        
+        if (parameters.isDefined(PARAM_MAJORWIDTH)  && 
+           parameters.dataType(PARAM_MAJORWIDTH) == TpInt)   {
+            int w = parameters.asInt(PARAM_MAJORWIDTH);
+            PlotLinePtr plp = ppcan->gridMajorLine();
+            plp->setWidth(w);
+            ppcan->setGridMajorLine(plp);
+        }
+        
+        if (parameters.isDefined(PARAM_MINORWIDTH)  && 
+           parameters.dataType(PARAM_MINORWIDTH) == TpInt)   {
+            int w = parameters.asInt(PARAM_MINORWIDTH);
+            PlotLinePtr plp = ppcan->gridMinorLine();
+            plp->setWidth(w);
+            ppcan->setGridMinorLine(plp);
+        }
+        
+        
+        
         
         if(updateImmediately && itsPlotms_.guiShown()) {
             if(resized) itsPlotms_.addSinglePlot(&ppp);
