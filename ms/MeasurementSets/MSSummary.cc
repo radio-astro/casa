@@ -326,8 +326,8 @@ void MSSummary::listHow (LogIO& os, Bool verbose) const
 	datetime.replace(25,timeref.length(),timeref);
 	datetime.replace(25+timeref.length(),1,")");
 	os << datetime;
-	os << "Scan  FldId FieldName     ObsMode    " 
-           <<"     nVis   Int(s)   SpwIds" << endl;
+	os << "Scan  FldId FieldName " 
+           <<"nVis   Int(s)   SpwIds      ScanIntent" << endl;
 
 	// Setup iteration over timestamps within this iteration:
 	Block<String> jcols(2);
@@ -477,19 +477,20 @@ void MSSummary::listHow (LogIO& os, Bool verbose) const
 	      if (name.length()>12) name.replace(11,1,'*');
 	      os.output().width(widthField); os << name.at(0,12);
               
-              // The Obsmode column can be empty only report them if it is not
-              String obsMode = "";
-              if (obsModes.size() > (unsigned int) 0) {
-                String obsMode=obsModes(laststids(0));
-              }
-              if (obsMode.length()>=widthObsMode) 
-                obsMode.replace(widthObsMode-2,1,'*');
-              os.output().width(widthObsMode); 
-              os << obsMode.at(0,widthObsMode-1);
 	      os.output().width(widthnrow); os << thisnrow;
 	      os.output().width(widthInttim); os << meanIntTim;
 	      os.output().width(widthLead); os << " ";
 	      os << spwids;
+              if (spwids.size() <= 9) {
+                os.output().width(28 - (3*spwids.size())); os << " ";
+              }
+              // The Obsmode column can be empty only report them if it is not
+              String obsMode = "";
+              if (obsModes.size() > (unsigned int) 0) {
+                obsMode=obsModes(laststids(0));
+              }
+              os << obsMode;
+
 	      os << endl;
 	      if(fillRecord && (recLength < maxRecLength))  {
 		Record scanRecord;
@@ -595,6 +596,15 @@ void MSSummary::listHow (LogIO& os, Bool verbose) const
 	os.output().width(widthInttim); os << meanIntTim;
 	os.output().width(widthLead);  os << "  ";
 	os << spwids;
+        if (spwids.size() <= 9) {
+          os.output().width(28 - (3*spwids.size())); os << " ";
+        }
+        // The Obsmode column can be empty only report them if it is not
+        String obsMode = "";
+        if (obsModes.size() > (unsigned int) 0) {
+          obsMode=obsModes(laststids(0));
+        }
+        os << obsMode;
 	os << endl;
 	if(fillRecord  && (recLength < maxRecLength)){
 	  Record scanRecord;
