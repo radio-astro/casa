@@ -343,12 +343,12 @@ void AMueller::corrupt(VisBuffer& vb)
   if(prtlev() > 3)
     os << LogIO::NORMAL << "  A::corrupt()" << LogIO::POST;
 
-  if(fitorder_p == 0){
-    // Initialize model data to zero, so corruption contains
-    //  only the AMueller solution
-    //  TBD: may wish to make this user togglable.
-    vb.setModelVisCube(Complex(0.0));
+  // Initialize model data to zero, so corruption contains
+  //  only the AMueller solution
+  //  TBD: may wish to make this user togglable.
+  vb.setModelVisCube(Complex(1000.0));
 
+  if(fitorder_p == 0){
     // Call general version:
     VisMueller::corrupt(vb);
   }

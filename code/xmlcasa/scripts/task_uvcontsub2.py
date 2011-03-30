@@ -48,8 +48,8 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
             # The split will reindex the spws.  Update spw and fitspw.
             # Do fitspw first because the spws in spw are supposed to be
             # a subset of the ones in fitspw.
-            casalog.post('split is being run internally, and the selected spws will be')
-            casalog.post('  renumbered to start from 0 in the output!')
+            casalog.post('split is being run internally, and the selected spws')
+            casalog.post('will be renumbered to start from 0 in the output!')
 
             # Initialize spwmap.
             spwmap = update_spw(tempspw, None)[1]
@@ -63,8 +63,8 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
         csvis = tempfile.mkdtemp(prefix=csvis.split('/')[-1], dir=workingdir)
 
         # ms does not have a colnames method, so open vis with tb even though
-        # it is already open with ms.  Note that both use nomodify=True, however,
-        # and no problem was revealed in testing.
+        # it is already open with ms.  Note that both use nomodify=True,
+        # however, and no problem was revealed in testing.
         tb.open(vis, nomodify=True)
         if 'CORRECTED_DATA' in tb.colnames():
             whichcol = 'CORRECTED_DATA'
@@ -146,7 +146,8 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
         #if parang: cb.setapply(type='P')
 
         # Set up the solve
-        amuellertab = tempfile.mkdtemp(prefix='Temp_contsub.tab', dir=workingdir)
+        amuellertab = tempfile.mkdtemp(prefix='Temp_contsub.tab',
+                                       dir=workingdir)
 
         cb.setsolve(type='A', t=solint, table=amuellertab, combine=combine,
                     fitorder=fitorder)

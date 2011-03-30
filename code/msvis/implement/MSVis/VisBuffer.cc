@@ -853,9 +853,13 @@ void VisBuffer::chanAveFlagCube(Cube<Bool>& flagcube, Int nChanOut,
 	while (chans[ichan] >= chanAveBounds_p(ochan, 0) &&
 	       chans[ichan] <= chanAveBounds_p(ochan, 1) &&
 	       ichan < nChan0) {
-	  for(Int icor = 0; icor < nCor; ++icor) 
-	    if(!flagcube(icor, ichan, row)) 
+	  for(Int icor = 0; icor < nCor; ++icor){
+            Double wt = doWtSp ? weightSpectrum()(icor, ochan, row) :
+                                 weightMat()(icor, row);
+
+	    if(!flagcube(icor, ichan, row) && wt > 0.0) 
 	      newFlag(icor, ochan, row) = False;
+          }
 	  ++ichan;
 	}
       }

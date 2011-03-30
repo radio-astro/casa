@@ -915,6 +915,11 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
   success &= copyState();
   timer.mark();
+  success &= copySyscal();
+  os << LogIO::DEBUG1
+     << "copySyscal took " << timer.real() << "s."
+     << LogIO::POST;
+  timer.mark();
   success &= copyWeather();
   os << LogIO::DEBUG1
      << "copyWeather took " << timer.real() << "s."
@@ -6926,6 +6931,77 @@ Bool SubMS::copyState()
     }
     return True;
   }
+
+Bool SubMS::copySyscal()
+{
+  // SYSCAL is allowed to not exist.
+  if(Table::isReadable(mssel_p.sysCalTableName())){
+    const MSSysCal& oldSysc = mssel_p.sysCal();
+
+    if(oldSysc.nrow() > 0){
+      // Add a SYSCAL subtable to msOut_p with 0 rows for now.
+      Table::TableOption option = Table::New;
+      TableDesc sysCalTD = MSSysCal::requiredTableDesc();
+      SetupNewTable sysCalSetup(msOut_p.sysCalTableName(), sysCalTD,
+                                option);
+      msOut_p.rwKeywordSet().defineTable(MS::keywordName(MS::SYSCAL),
+                                         Table(sysCalSetup, 0));
+      // update the references to the subtable keywords
+      msOut_p.initRefs();
+
+      // Could be declared as Table&.
+      MSSysCal& newSysc = msOut_p.sysCal();
+
+      LogIO os(LogOrigin("SubMS", "copySysCal()"));
+
+      uInt nAddedCols = addOptionalColumns(oldSysc, newSysc, true);
+      os << LogIO::DEBUG1 << "SYSCAL has " << nAddedCols
+         << " optional columns." << LogIO::POST;
+	
+      const ROMSSysCalColumns incols(oldSysc);
+      MSSysCalColumns outcols(newSysc);
+      outcols.setEpochRef(MEpoch::castType(incols.timeMeas().getMeasRef().getType()));
+	
+      if(!antennaSel_p && allEQ(spwRelabel_p, spw_p)){
+        TableCopy::copyRows(newSysc, oldSysc);
+      }
+      else{
+        if(!antennaSel_p){        // Prep antNewIndex_p.
+          antNewIndex_p.resize(mssel_p.antenna().nrow());
+          indgen(antNewIndex_p);
+        }
+      
+        const Vector<Int>& antIds = incols.antennaId().getColumn();
+        const Vector<Int>& spwIds = incols.spectralWindowId().getColumn();
+
+        // Copy selected rows.
+        uInt totNSyscals = antIds.nelements();
+        uInt totalSelSyscals = 0;
+        for(uInt k = 0; k < totNSyscals; ++k){
+          // antenna must be selected, and spwId must be -1 (any) or selected.
+          if(antNewIndex_p[antIds[k]] > -1 &&
+             (spwIds[k] < 0 || spwRelabel_p[spwIds[k]] > -1)){
+            //                  outtab   intab    outrow       inrow nrows
+            TableCopy::copyRows(newSysc, oldSysc, totalSelSyscals, k, 1, false);
+            ++totalSelSyscals;
+          }
+        }
+        newSysc.flush();
+
+        // Remap antenna and spw #s.
+        ScalarColumn<Int>& antCol = outcols.antennaId();
+        ScalarColumn<Int>& spwCol = outcols.spectralWindowId();
+
+        for(uInt k = 0; k < totalSelSyscals; ++k){
+          antCol.put(k, antNewIndex_p[antCol(k)]);
+          if(spwCol(k) > -1)
+            spwCol.put(k, spwRelabel_p[spwCol(k)]);
+        }
+      }
+    }
+  }
+  return True;
+}
 
 // writeDiffSpwShape() was the VisIter-using channel averager, which sounds
 // great, but:

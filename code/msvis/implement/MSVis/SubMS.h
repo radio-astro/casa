@@ -422,6 +422,7 @@ class SubMS
   Bool copyObservation();
   Bool copySource();
   Bool copyState();
+  Bool copySyscal();
   Bool copyWeather();
   Bool copyGenericSubtables();
 
