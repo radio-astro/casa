@@ -798,7 +798,7 @@ fftshift(Array<S> & outValues, Array<Bool> & outFlags,
 	 const Bool toFrequency){
 
   const IPosition arrayShape = cValues.shape();
-  const uInt vsize = arrayShape[whichAxis];
+  const Int vsize = arrayShape[whichAxis];
   const IPosition fArrayShape = inFlags.shape();
   AlwaysAssert(vsize > 0, AipsError);
   AlwaysAssert(arrayShape==fArrayShape, AipsError);
@@ -810,7 +810,7 @@ fftshift(Array<S> & outValues, Array<Bool> & outFlags,
   // relshift is the freq shift normalised to the bandwidth
   const Complex exponent =  2.*C::pi*Complex(0.,1.)*relshift; 
 
-  uInt numToFlag = ceil(vsize*abs(relshift));
+  Int numToFlag = ceil(vsize*abs(relshift));
       
   ArrayIterator<S> ait(outValues, IPosition(1,whichAxis), True); // axes are the cursor  
   ArrayIterator<Bool> fait(outFlags, IPosition(1,whichAxis), True); // axes are the cursor  
@@ -819,22 +819,22 @@ fftshift(Array<S> & outValues, Array<Bool> & outFlags,
     Array<Bool> flags = fait.array(); // reference
 
     // set flagged channels to zero
-    for(uInt i=0; i<vsize; i++){
-      if(flags(IPosition(1,i))!=goodIsTrue){ // this channel is OK
+    for(Int i=0; i<vsize; i++){
+      if(flags(IPosition(1,i))!=goodIsTrue){ // this channel is flagged
 	cv(IPosition(1,i)) = (S)0.; // set to zero if flagged
       }
     }
 
     // apply shift
     fft0(cv, toFrequency);
-    for(uInt i=0; i<vsize; i++){
+    for(Int i=0; i<vsize; i++){
       cv(IPosition(1,i)) *= exp(Double(i)*exponent);
     }
     fft0(cv, !toFrequency);
 
     // generate the new flags
     if(relshift>0.){
-      for(Int i=vsize-numToFlag; i>=0; i--){
+      for(Int i=vsize-1-numToFlag; i>=0; i--){
 	if( (flags(IPosition(1,i))!=goodIsTrue) && (i+numToFlag < vsize)){ // this channel is flagged
 	  flags(IPosition(1,i+numToFlag)) = !goodIsTrue;
 	  flags(IPosition(1,i)) = goodIsTrue;
@@ -851,12 +851,12 @@ fftshift(Array<S> & outValues, Array<Bool> & outFlags,
     }      
     // flag the edge channels which were wrapped by the shift
     if(relshift>0.){ // start at bottom
-      for(uInt i=0; i<numToFlag; i++){
+      for(Int i=0; i<numToFlag; i++){
 	flags(IPosition(1,i)) = !goodIsTrue;
       }
     }
     else{ // start at top
-      for(Int i=vsize-1; i>vsize-numToFlag; i--){
+      for(Int i=vsize-1; i>vsize-1-numToFlag; i--){
 	flags(IPosition(1,i)) = !goodIsTrue;
       }
     }      

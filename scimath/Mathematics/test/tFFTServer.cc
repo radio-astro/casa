@@ -1474,7 +1474,73 @@ public:
       expect(IPosition(2,1,6)) = Complex(50.,0.);	
       expect(IPosition(2,1,7)) = Complex(60.,0.);	
       expect(IPosition(2,1,8)) = Complex(70.,0.);	
-      expect(IPosition(2,1,9)) = Complex(80.,0.);  
+      expect(IPosition(2,1,9)) = Complex(80.,0.); 
+ 
+      Array<S> expectb(IPosition(2,2,10));
+      expectb(IPosition(2,0,0)) = Complex(9.,0.);	
+      expectb(IPosition(2,0,1)) = Complex(0.,0.); 	
+      expectb(IPosition(2,0,2)) = Complex(1.,0.); 	
+      expectb(IPosition(2,0,3)) = Complex(2.,0.); 	
+      expectb(IPosition(2,0,4)) = Complex(3.,0.); 	
+      expectb(IPosition(2,0,5)) = Complex(0.,0.); 	
+      expectb(IPosition(2,0,6)) = Complex(5.,0.); 	
+      expectb(IPosition(2,0,7)) = Complex(6.,0.); 	
+      expectb(IPosition(2,0,8)) = Complex(0.,0.); 	
+      expectb(IPosition(2,0,9)) = Complex(8.,0.); 	
+      expectb(IPosition(2,1,0)) = Complex(90.,0.); 	
+      expectb(IPosition(2,1,1)) = Complex(0.,0.); 	
+      expectb(IPosition(2,1,2)) = Complex(10.,0.);	
+      expectb(IPosition(2,1,3)) = Complex(20.,0.);	
+      expectb(IPosition(2,1,4)) = Complex(30.,0.);	
+      expectb(IPosition(2,1,5)) = Complex(0.,0.);	
+      expectb(IPosition(2,1,6)) = Complex(50.,0.);	
+      expectb(IPosition(2,1,7)) = Complex(60.,0.);	
+      expectb(IPosition(2,1,8)) = Complex(0.,0.);	
+      expectb(IPosition(2,1,9)) = Complex(80.,0.);  
+
+      Array<S> expectc(IPosition(2,2,10));
+      expectc(IPosition(2,0,0)) = Complex(1.,0.);
+      expectc(IPosition(2,0,1)) = Complex(2.,0.);
+      expectc(IPosition(2,0,2)) = Complex(3.,0.);
+      expectc(IPosition(2,0,3)) = Complex(4.,0.);
+      expectc(IPosition(2,0,4)) = Complex(5.,0.);
+      expectc(IPosition(2,0,5)) = Complex(6.,0.);
+      expectc(IPosition(2,0,6)) = Complex(7.,0.);
+      expectc(IPosition(2,0,7)) = Complex(8.,0.);
+      expectc(IPosition(2,0,8)) = Complex(9.,0.);
+      expectc(IPosition(2,0,9)) = Complex(0.,0.);
+      expectc(IPosition(2,1,0)) = Complex(10.,0.);
+      expectc(IPosition(2,1,1)) = Complex(20.,0.);
+      expectc(IPosition(2,1,2)) = Complex(30.,0.);
+      expectc(IPosition(2,1,3)) = Complex(40.,0.);
+      expectc(IPosition(2,1,4)) = Complex(50.,0.);
+      expectc(IPosition(2,1,5)) = Complex(60.,0.);
+      expectc(IPosition(2,1,6)) = Complex(70.,0.);
+      expectc(IPosition(2,1,7)) = Complex(80.,0.);
+      expectc(IPosition(2,1,8)) = Complex(90.,0.);
+      expectc(IPosition(2,1,9)) = Complex(0.,0.);
+
+      Array<S> expectd(IPosition(2,2,10));
+      expectd(IPosition(2,0,0)) = Complex(1.,0.);
+      expectd(IPosition(2,0,1)) = Complex(2.,0.);
+      expectd(IPosition(2,0,2)) = Complex(3.,0.);
+      expectd(IPosition(2,0,3)) = Complex(0.,0.);
+      expectd(IPosition(2,0,4)) = Complex(5.,0.);
+      expectd(IPosition(2,0,5)) = Complex(6.,0.);
+      expectd(IPosition(2,0,6)) = Complex(0.,0.);
+      expectd(IPosition(2,0,7)) = Complex(8.,0.);
+      expectd(IPosition(2,0,8)) = Complex(9.,0.);
+      expectd(IPosition(2,0,9)) = Complex(0.,0.);
+      expectd(IPosition(2,1,0)) = Complex(10.,0.);
+      expectd(IPosition(2,1,1)) = Complex(20.,0.);
+      expectd(IPosition(2,1,2)) = Complex(30.,0.);
+      expectd(IPosition(2,1,3)) = Complex(0.,0.);
+      expectd(IPosition(2,1,4)) = Complex(50.,0.);
+      expectd(IPosition(2,1,5)) = Complex(60.,0.);
+      expectd(IPosition(2,1,6)) = Complex(0.,0.);
+      expectd(IPosition(2,1,7)) = Complex(80.,0.);
+      expectd(IPosition(2,1,8)) = Complex(90.,0.);
+      expectd(IPosition(2,1,9)) = Complex(0.,0.);
 
       Array<Bool> expflags(IPosition(2,2,10));
       expflags(IPosition(2,0,0)) = False;
@@ -1520,32 +1586,57 @@ public:
       expflagsb(IPosition(2,1,8)) = True;
       expflagsb(IPosition(2,1,9)) = True;
 
-      Array<S> expectb(IPosition(2,2,10));
-      expectb(IPosition(2,0,0)) = Complex(9.,0.);	
-      expectb(IPosition(2,0,1)) = Complex(0.,0.); 	
-      expectb(IPosition(2,0,2)) = Complex(1.,0.); 	
-      expectb(IPosition(2,0,3)) = Complex(2.,0.); 	
-      expectb(IPosition(2,0,4)) = Complex(3.,0.); 	
-      expectb(IPosition(2,0,5)) = Complex(0.,0.); 	
-      expectb(IPosition(2,0,6)) = Complex(5.,0.); 	
-      expectb(IPosition(2,0,7)) = Complex(6.,0.); 	
-      expectb(IPosition(2,0,8)) = Complex(0.,0.); 	
-      expectb(IPosition(2,0,9)) = Complex(8.,0.); 	
-      expectb(IPosition(2,1,0)) = Complex(90.,0.); 	
-      expectb(IPosition(2,1,1)) = Complex(0.,0.); 	
-      expectb(IPosition(2,1,2)) = Complex(10.,0.);	
-      expectb(IPosition(2,1,3)) = Complex(20.,0.);	
-      expectb(IPosition(2,1,4)) = Complex(30.,0.);	
-      expectb(IPosition(2,1,5)) = Complex(0.,0.);	
-      expectb(IPosition(2,1,6)) = Complex(50.,0.);	
-      expectb(IPosition(2,1,7)) = Complex(60.,0.);	
-      expectb(IPosition(2,1,8)) = Complex(0.,0.);	
-      expectb(IPosition(2,1,9)) = Complex(80.,0.);  
+      Array<Bool> expflagsc(IPosition(2,2,10));
+      expflagsc(IPosition(2,0,0)) = True;
+      expflagsc(IPosition(2,0,1)) = True;
+      expflagsc(IPosition(2,0,2)) = True;
+      expflagsc(IPosition(2,0,3)) = False;
+      expflagsc(IPosition(2,0,4)) = True;
+      expflagsc(IPosition(2,0,5)) = True;
+      expflagsc(IPosition(2,0,6)) = False;
+      expflagsc(IPosition(2,0,7)) = True;
+      expflagsc(IPosition(2,0,8)) = True;
+      expflagsc(IPosition(2,0,9)) = False;
+      expflagsc(IPosition(2,1,0)) = True;
+      expflagsc(IPosition(2,1,1)) = True;
+      expflagsc(IPosition(2,1,2)) = True;
+      expflagsc(IPosition(2,1,3)) = False;
+      expflagsc(IPosition(2,1,4)) = True;
+      expflagsc(IPosition(2,1,5)) = True;
+      expflagsc(IPosition(2,1,6)) = False;
+      expflagsc(IPosition(2,1,7)) = True;
+      expflagsc(IPosition(2,1,8)) = True;
+      expflagsc(IPosition(2,1,9)) = False;
+
+      Array<Bool> expflagsd(IPosition(2,2,10));
+      expflagsd(IPosition(2,0,0)) = True;
+      expflagsd(IPosition(2,0,1)) = True;
+      expflagsd(IPosition(2,0,2)) = True;
+      expflagsd(IPosition(2,0,3)) = True;
+      expflagsd(IPosition(2,0,4)) = True;
+      expflagsd(IPosition(2,0,5)) = True;
+      expflagsd(IPosition(2,0,6)) = True;
+      expflagsd(IPosition(2,0,7)) = True;
+      expflagsd(IPosition(2,0,8)) = True;
+      expflagsd(IPosition(2,0,9)) = False;
+      expflagsd(IPosition(2,1,0)) = True;
+      expflagsd(IPosition(2,1,1)) = True;
+      expflagsd(IPosition(2,1,2)) = True;
+      expflagsd(IPosition(2,1,3)) = True;
+      expflagsd(IPosition(2,1,4)) = True;
+      expflagsd(IPosition(2,1,5)) = True;
+      expflagsd(IPosition(2,1,6)) = True;
+      expflagsd(IPosition(2,1,7)) = True;
+      expflagsd(IPosition(2,1,8)) = True;
+      expflagsd(IPosition(2,1,9)) = False;
+
 
 #if PERFORMANCE_TEST
     iterations = 10;
 #endif
     for (int it = 0; it < iterations; it++) {
+
+      cout << "--- right-shift by 1 channel in second axis -----------------------" << endl;
       
       uInt whichAxis = 1;
       Double relshift = 1./10.;
@@ -1564,7 +1655,25 @@ public:
 	}
       }
 
-      cout << "--------------------------" << endl;
+      cout << "--- two consecutive leftshifts by 0.5 channels in second axis -----------------------" << endl;
+
+      relshift = -0.5/10.;
+      inVal.assign(a);
+
+      server.fftshift(inVal, whichAxis, relshift, False);
+      server.fftshift(inVal, whichAxis, relshift, False); // two consecutive shifts should shift by 1 channel
+
+      {
+	for(uInt i=0; i<2; i++){
+	  for(uInt j=0; j<10; j++){
+	    DComplex diff = inVal(IPosition(2,i,j))-expectc(IPosition(2,i,j));
+	    cout << i << " " << j << " " << inVal(IPosition(2,i,j)) << " " << expectc(IPosition(2,i,j)) << endl;
+	    AlwaysAssert((abs(diff.real())<2E-5) && (abs(diff.imag())<1E-5), AipsError);
+	  }
+	}
+      }
+
+      cout << "--- rightshift by 1 channel in first axis -----------------------" << endl;
 
       whichAxis = 0;
       relshift = 1./10.;
@@ -1582,9 +1691,10 @@ public:
       }
 
 
-      cout << "--------------------------" << endl;
+      cout << "--- right-shift by 1 channel in first axis with flags all not set -----------------------" << endl;
 
       whichAxis = 1;
+      relshift = 1./10.;
       Array<S> outVal;
       Array<Bool> outFlag;
       Array<Bool> inFlags;
@@ -1605,10 +1715,10 @@ public:
 	}
       }
 
-      cout << "--------------------------" << endl;
+      cout << "--- right-shift by 1 channel in first axis with flags partially set -----------------------" << endl;
 
       whichAxis = 1;
-
+      relshift = 1./10.;
 
       server.fftshift(outVal, outFlag, a, aflags, whichAxis, relshift, True, False);
 
@@ -1620,6 +1730,48 @@ public:
 	    cout << "flag " << i << " " << j << " " << outFlag(IPosition(2,i,j)) << " " << expflags(IPosition(2,i,j)) << endl;
 	    AlwaysAssert((abs(diff.real())<1E-5) && (abs(diff.imag())<1E-5), AipsError);
 	    AlwaysAssert(outFlag(IPosition(2,i,j)) == expflags(IPosition(2,i,j)), AipsError);
+	  }
+	}
+      }
+
+      cout << "--- two consecutive left-shifts by 0.5 channels in first axis with flags not set -----------" << endl;
+
+      whichAxis = 1;
+      relshift = -0.5/10.;
+      inFlags = True;
+
+      server.fftshift(outVal, outFlag, a, inFlags, whichAxis, relshift, True, False);
+
+      inVal.assign(outVal);
+      server.fftshift(outVal, outFlag, inVal, inFlags, whichAxis, relshift, True, False);
+
+      {
+	for(uInt i=0; i<2; i++){
+	  for(uInt j=0; j<10; j++){
+	    DComplex diff = outVal(IPosition(2,i,j))-expectc(IPosition(2,i,j));
+	    cout << i << " " << j << " " << outVal(IPosition(2,i,j)) << " " << expectc(IPosition(2,i,j)) << endl;
+	    cout << "flag " << i << " " << j << " " << outFlag(IPosition(2,i,j)) << " " << expflagsd(IPosition(2,i,j)) << endl;
+	    AlwaysAssert((abs(diff.real())<2E-5) && (abs(diff.imag())<1E-5), AipsError);
+	    AlwaysAssert(outFlag(IPosition(2,i,j)) == expflagsd(IPosition(2,i,j)), AipsError);
+	  }
+	}
+      }
+
+      cout << "--- left-shift by 1 channel in first axis with flags partially set -----------" << endl;
+
+      whichAxis = 1;
+      relshift = -1./10.;
+
+      server.fftshift(outVal, outFlag, a, aflags, whichAxis, relshift, True, False);
+
+      {
+	for(uInt i=0; i<2; i++){
+	  for(uInt j=0; j<10; j++){
+	    DComplex diff = outVal(IPosition(2,i,j))-expectd(IPosition(2,i,j));
+	    cout << i << " " << j << " " << outVal(IPosition(2,i,j)) << " " << expectd(IPosition(2,i,j)) << endl;
+	    cout << "flag " << i << " " << j << " " << outFlag(IPosition(2,i,j)) << " " << expflagsc(IPosition(2,i,j)) << endl;
+	    AlwaysAssert((abs(diff.real())<2E-5) && (abs(diff.imag())<1E-5), AipsError);
+	    AlwaysAssert(outFlag(IPosition(2,i,j)) == expflagsc(IPosition(2,i,j)), AipsError);
 	  }
 	}
       }
