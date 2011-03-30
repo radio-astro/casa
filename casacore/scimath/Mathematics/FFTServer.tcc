@@ -811,42 +811,52 @@ fftshift(Array<S> & outValues, Array<Bool> & outFlags,
   const Complex exponent =  2.*C::pi*Complex(0.,1.)*relshift; 
 
   Int numToFlag = ceil(vsize*abs(relshift));
+  Int numToFlag2 = floor(vsize*abs(relshift));
+  Bool flagNeighbour = (numToFlag2<numToFlag);
       
   ArrayIterator<S> ait(outValues, IPosition(1,whichAxis), True); // axes are the cursor  
   ArrayIterator<Bool> fait(outFlags, IPosition(1,whichAxis), True); // axes are the cursor  
   while(!ait.pastEnd()){
     Array<S> cv = ait.array(); // reference
     Array<Bool> flags = fait.array(); // reference
-    Array<S> fFlags(flags.shape());
 
     // set flagged channels to zero
     for(Int i=0; i<vsize; i++){
       if(flags(IPosition(1,i))!=goodIsTrue){ // this channel is flagged
 	cv(IPosition(1,i)) = (S)0.; // set to zero if flagged
-	fFlags(IPosition(1,i)) = S(1.,0.); // float flags for latter FFT 
       }
     }
 
-    // apply shift to data and float flags
+    // apply shift
     fft0(cv, toFrequency);
-    fft0(fFlags, toFrequency);
     for(Int i=0; i<vsize; i++){
       cv(IPosition(1,i)) *= exp(Double(i)*exponent);
-      fFlags(IPosition(1,i)) *= exp(Double(i)*exponent);
     }
     fft0(cv, !toFrequency);
-    fft0(fFlags, !toFrequency);
 
-    // generate the new bool flags
-    for(Int i=0; i<vsize; i++){
-      if(abs(fFlags(IPosition(1,i)))>0.01){ // this channel should be flagged
-	flags(IPosition(1,i)) = !goodIsTrue; 
-      }
-      else{ // not
-	flags(IPosition(1,i)) = goodIsTrue; 
+    // generate the new flags
+    if(relshift>0.){
+      for(Int i=vsize-1-numToFlag; i>=0; i--){
+	if( (flags(IPosition(1,i))!=goodIsTrue) && (i+numToFlag < vsize)){ // this channel is flagged
+	  flags(IPosition(1,i+numToFlag)) = !goodIsTrue;
+	  flags(IPosition(1,i)) = goodIsTrue;
+	  if(flagNeighbour && i+numToFlag2>=0){
+	    flags(IPosition(1,i+numToFlag2)) = !goodIsTrue;
+	  }
+	}
       }
     }
-
+    else{
+      for(Int i=numToFlag; i<vsize; i++){
+	if( (flags(IPosition(1,i))!=goodIsTrue) && (0 <= i-numToFlag) ){ // this channel is flagged
+	  flags(IPosition(1,i-numToFlag)) = !goodIsTrue;
+	  flags(IPosition(1,i)) = goodIsTrue;
+	  if(flagNeighbour && i-numToFlag2<vsize){
+	    flags(IPosition(1,i-numToFlag2)) = !goodIsTrue;
+	  }
+	}
+      }
+    }      
     // flag the edge channels which were wrapped by the shift
     if(relshift>0.){ // start at bottom
       for(Int i=0; i<numToFlag; i++){
