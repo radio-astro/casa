@@ -93,14 +93,22 @@ ms::ms()
 ms::~ms()
 {
   try {
-     if(itsMS)
+     if(itsMS){
         delete itsMS;
-     if(itsSel)
+	itsMS = 0;
+     }
+     if(itsSel){
         delete itsSel;
-     if(itsFlag)
+	itsSel = 0;
+     }
+     if(itsFlag) {
         delete itsFlag;
-     if(itsLog)
+	itsFlag = 0;
+     }
+     if(itsLog){
         delete itsLog;
+	itsLog = 0;
+     }
    } catch (AipsError x) {
        *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
@@ -1557,6 +1565,8 @@ ms::cvelfreqs(const std::vector<int>& spwids,
     if(!detached()){
     
       *itsLog << LogOrigin("ms", "cvelfreqs");
+
+      *itsLog << LogIO::NORMAL << "Calculating grid ..." << LogIO::POST;
       
       Vector<Double> newCHAN_FREQ; 
       Vector<Double> newCHAN_WIDTH;
@@ -1755,6 +1765,7 @@ ms::cvelfreqs(const std::vector<int>& spwids,
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
+
   return rval;
 }
 
