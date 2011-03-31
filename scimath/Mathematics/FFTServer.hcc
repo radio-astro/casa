@@ -791,6 +791,11 @@ fftshift(Array<S> & outValues, Array<Bool> & outFlags,
 
   const IPosition arrayShape = cValues.shape();
   const Int vsize = arrayShape[whichAxis];
+
+  if(vsize<2){ // nothing to do
+    return;
+  }
+
   const IPosition fArrayShape = inFlags.shape();
   AlwaysAssert(vsize > 0, AipsError);
   AlwaysAssert(arrayShape==fArrayShape, AipsError);
@@ -812,11 +817,17 @@ fftshift(Array<S> & outValues, Array<Bool> & outFlags,
     Array<S> cv = ait.array(); // reference
     Array<Bool> flags = fait.array(); // reference
 
-    // set flagged channels to zero
-    for(Int i=0; i<vsize; i++){
+    // set flagged channels to average of neighbours to avoid ringing from sharp features
+    if(flags(IPosition(1,0))!=goodIsTrue){ // first channel is flagged 
+      cv(IPosition(1,0)) = cv(IPosition(1,1));
+    }
+    for(Int i=1; i<vsize-1; i++){
       if(flags(IPosition(1,i))!=goodIsTrue){ // this channel is flagged
-	cv(IPosition(1,i)) = (S)0.; // set to zero if flagged
+	cv(IPosition(1,i)) = (cv(IPosition(1,i-1))+cv(IPosition(1,i+1)))/2.; 
       }
+    }
+    if(flags(IPosition(1,vsize-1))!=goodIsTrue){ // last channel is flagged 
+      cv(IPosition(1,vsize-1)) = cv(IPosition(1,vsize-1));
     }
 
     // apply shift
