@@ -71,7 +71,7 @@ class cleanhelper_test(unittest.TestCase):
         refvals= ia.getchunk()
         ia.close()
         diff = refvals - maskvals
-        return (diff.all()==0) 
+        return (numpy.all(diff==0)) 
  
     def testDefineimages(self):
         """Cleanhelper defineimages test"""
@@ -161,8 +161,9 @@ class cleanhelper_test(unittest.TestCase):
     def testMakemaskimagebox(self):
         """Cleanhelper makemaskimage test: 2 boxes"""
         self.run_defineimages(sf=True)
+        print "int boxes"
         ibmask=[[100,85,120,95],[145,145,155,155]]
-        maskimage=self.imset.imagelist[0]+'.mask'
+        maskimage=self.imset.imagelist[0]+'.0.mask'
         self.imset.makemaskimage(outputmask=maskimage,imagename=self.imset.imagelist[0],maskobject=ibmask)
         self.assertTrue(os.path.exists(maskimage)," int box maskimage does not exist")
         #retval=self.comparemask(maskimg,self.refpath+'ref-'+maskimg)
@@ -171,6 +172,7 @@ class cleanhelper_test(unittest.TestCase):
         os.system('rm -rf ' + self.imset.imagelist[0]+'*')
         #
         retval=False
+	print "float box and int box"
         fibmask=[[100.0,85.0,120.0,95.0],[145,145,155,155]]
         self.imset.makemaskimage(outputmask=maskimage,imagename=self.imset.imagelist[0],maskobject=fibmask)
         self.assertTrue(os.path.exists(maskimage)," float +int box maskimage does not exist")
@@ -179,6 +181,7 @@ class cleanhelper_test(unittest.TestCase):
         os.system('rm -rf ' + self.imset.imagelist[0]+'*')
         #
         retval=False
+	print "numpy.int boxes"
         import numpy as np
         box1=[np.int_(i) for i in ibmask[0]] 
         box2=[np.int_(i) for i in ibmask[1]] 
@@ -190,6 +193,7 @@ class cleanhelper_test(unittest.TestCase):
         os.system('rm -rf ' + self.imset.imagelist[0]+'*')
         #
         retval=False
+	print "numpy.float boxes"
         box1=[np.float_(i) for i in fibmask[0]]
         box2=[np.float_(i) for i in fibmask[1]]
         numpyintmask=[box1,box2]
@@ -207,9 +211,8 @@ class cleanhelper_test(unittest.TestCase):
         maskimage=self.imset.imagelist[0]+'.mask'
         self.imset.makemaskimage(outputmask=maskimage,imagename=self.imset.imagelist[0],maskobject=boxfile)
         self.assertTrue(os.path.exists(maskimage)," boxfile  maskimage does not exist")
-        #retval=self.comparemask(maskimg,self.refpath+'ref-'+maskimg)
         retval=self.comparemask(maskimage, self.refpath+'ref-'+maskimage)
-        self.assertTrue(retval,"test on int box mask failed")
+        self.assertTrue(retval,"test on box mask failed")
         os.system('rm -rf ' + self.imset.imagelist[0]+'*')
         #
 
