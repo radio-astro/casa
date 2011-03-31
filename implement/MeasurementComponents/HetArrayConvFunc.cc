@@ -198,6 +198,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       for (uInt ii=0; ii < ndish; ++ii){
 	support=max((antMath_p[ii])->support(coords), support);
       }
+      support=min(Int(max(nx_p, ny_p)*1.2), support);
       convSize_p=support*convSampling;
       CompositeNumber cn(convSize_p);
       convSize_p=cn.nearestEven(convSize_p);
@@ -480,7 +481,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     convertArray(pixdepoint, thePix_p);
     if((pixdepoint(0) < 0) ||  pixdepoint(0) >= nx_p || pixdepoint(1) < 0 || 
        pixdepoint(1) >=ny_p){
-      cout << "in pix de point off " << pixdepoint << endl;
+      //cout << "in pix de point off " << pixdepoint << endl;
       return 2;
     }
     String pointingid=String::toString(pixdepoint(0))+"_"+String::toString(pixdepoint(1));

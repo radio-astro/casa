@@ -220,7 +220,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     //3 times the support size 
     if(!doneMainConv_p){
-      convSize_p=4*(sj_p->support(vb, coords))*convSampling;
+      convSize_p=4*(sj_p->support(vb, coords));
+      convSize_p=min(Int(max(nx_p, ny_p)*1.2), convSize_p)*convSampling;
     }
     
    
@@ -726,3 +727,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
 } //# NAMESPACE CASA - END
+
+
+
+
+
+
+
