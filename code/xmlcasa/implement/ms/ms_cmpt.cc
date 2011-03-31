@@ -1622,7 +1622,9 @@ ms::cvelfreqs(const std::vector<int>& spwids,
 	if(!theMS.combineSpws(spwidv,
 			      True, // dont't modify the MS
 			      oldCHAN_FREQ,
-			      oldCHAN_WIDTH)){
+			      oldCHAN_WIDTH,
+			      True // verbose
+			      )){
 	  *itsLog << LogIO::SEVERE << "Error combining SPWs." << LogIO::POST;
 	  return rval;
 	}	
@@ -1778,7 +1780,8 @@ ms::cvelfreqs(const std::vector<int>& spwids,
 			   width.toString(),
 			   restfreq.toString(), 
 			   outframe,
-			   veltype
+			   veltype,
+			   True // verbose
 			   );
       
       newCHAN_FREQ.tovector(rval);

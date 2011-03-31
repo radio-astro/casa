@@ -3702,7 +3702,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 			    const String& width,
 			    const String& restfreq, 
 			    const String& outframe,
-			    const String& veltype
+			    const String& veltype,
+			    Bool verbose
 			    ){
 
     Vector<Double> newChanLoBound; 
@@ -3794,7 +3795,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  absOldCHAN_WIDTH(i) = -oldCHAN_WIDTH(i);
 	}
       }
-      if(negativeWidths){
+      if(negativeWidths && verbose){
 	os << LogIO::NORMAL
 	   << " *** Encountered negative channel widths in input spectral window."
 	   << LogIO::POST;
@@ -3851,7 +3852,9 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       return False;
     }
     
-    os << LogIO::NORMAL << message << LogIO::POST;
+    if(verbose){
+      os << LogIO::NORMAL << message << LogIO::POST;
+    }
 
     // we have a useful set of channel boundaries
     uInt newNUM_CHAN = newChanLoBound.size();
@@ -4570,7 +4573,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
   Bool SubMS::combineSpws(const Vector<Int>& spwids,
 			  const Bool noModify,
 			  Vector<Double>& newCHAN_FREQ,
-			  Vector<Double>& newCHAN_WIDTH){
+			  Vector<Double>& newCHAN_WIDTH,
+			  Bool verbose){
     
     LogIO os(LogOrigin("SubMS", "combineSpws()"));
       
@@ -4615,8 +4619,10 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	}
       }
       if(spwsToCombine.size()<=1){
-	os << LogIO::NORMAL << "Less than two SPWs selected. No combination necessary."
-	   << LogIO::POST;
+	if(verbose){
+	  os << LogIO::NORMAL << "Less than two SPWs selected. No combination necessary."
+	     << LogIO::POST;
+	}
 	return True;
       }
       
@@ -4684,7 +4690,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    newCHAN_WIDTH(i) = -newCHAN_WIDTH(i);
 	  }
 	}
-	if(negativeWidths){
+	if(negativeWidths && verbose){
 	  os << LogIO::NORMAL
 	     << " *** Encountered negative channel widths in SPECTRAL_WINDOW table."
 	     << LogIO::POST;
@@ -4734,8 +4740,9 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	averageChanFrac.push_back(tvd);
       }
 
-      os << LogIO::NORMAL << "Original SPWs sorted by first (lowest) channel frequency:" << LogIO::POST;
-      {
+      if(verbose){
+	os << LogIO::NORMAL << "Original SPWs sorted by first (lowest) channel frequency:" << LogIO::POST;
+
 	ostringstream oss; // needed for iomanip functions
 	oss << "   SPW " << std::setw(3) << id0 << ": " << std::setw(5) << newNUM_CHAN 
 	    << " channels, first channel = " << std::setprecision(9) << std::setw(14) << std::scientific << newCHAN_FREQ(0) << " Hz";
@@ -4761,7 +4768,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	      newCHAN_WIDTHi(ii) = -newCHAN_WIDTHi(ii);
 	    }
 	  }
-	  if(negativeWidths && !negChanWidthWarned){
+	  if(negativeWidths && !negChanWidthWarned && verbose){
 	    os << LogIO::NORMAL
 	       << " *** Encountered negative channel widths in SPECTRAL_WINDOW table."
 	       << LogIO::POST;
@@ -4785,14 +4792,16 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	Vector<Double> newRESOLUTIONi(resolutionColr(idi));
 	//Double newTOTAL_BANDWIDTHi = totalBandwidthColr(idi);
 
-	ostringstream oss; // needed for iomanip functions
-	oss << "   SPW " << std::setw(3) << idi << ": " << std::setw(5) << newNUM_CHANi 
-	    << " channels, first channel = " << std::setprecision(9) << std::setw(14) << std::scientific << newCHAN_FREQi(0) << " Hz";
-	if(newNUM_CHANi>1){
-	  oss << ", last channel = " << std::setprecision(9) << std::setw(14) << std::scientific << newCHAN_FREQi(newNUM_CHANi-1) << " Hz";
+	if(verbose){
+	  ostringstream oss; // needed for iomanip functions
+	  oss << "   SPW " << std::setw(3) << idi << ": " << std::setw(5) << newNUM_CHANi 
+	      << " channels, first channel = " << std::setprecision(9) << std::setw(14) << std::scientific << newCHAN_FREQi(0) << " Hz";
+	  if(newNUM_CHANi>1){
+	    oss << ", last channel = " << std::setprecision(9) << std::setw(14) << std::scientific << newCHAN_FREQi(newNUM_CHANi-1) << " Hz";
+	  }
+	  os << LogIO::NORMAL << oss.str() << LogIO::POST;
 	}
-	os << LogIO::NORMAL << oss.str() << LogIO::POST;
-      
+
 	vector<Double> mergedChanFreq;
 	vector<Double> mergedChanWidth;
 	vector<Double> mergedEffBW;
@@ -5116,9 +5125,10 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       ArrayColumn<Double> resolutionCol = SPWCols.resolution(); 
       ScalarColumn<Double> totalBandwidthCol = SPWCols.totalBandwidth();
 
-
-      os << LogIO::NORMAL << "Combined SPW will have " << newNUM_CHAN << " channels. May change in later regridding." << LogIO::POST;
-
+      if(verbose){
+	os << LogIO::NORMAL << "Combined SPW will have " << newNUM_CHAN 
+	   << " channels. May change in later regridding." << LogIO::POST;
+      }
 
       // Create new row in the SPW table (with ID nextSPWId) by copying
       // all information from row theSPWId
@@ -5172,7 +5182,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  } // end for j
 	}// end for i
       }
-      else { // there is no source table
+      else if(verbose){ // there is no source table
 	os << LogIO::NORMAL << "Note: MS contains no SOURCE table ..." << LogIO::POST;
       }
 
@@ -5860,12 +5870,14 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       cout << "combineSpws progress: 100% processed." << endl;
       ////////////////////////////////////////////
 
-      os << LogIO::NORMAL << "Processed " << mainTabRowI << " original rows, wrote "
-	 << newMainTabRow << " new ones." << LogIO::POST;
+      if(verbose){
+	os << LogIO::NORMAL << "Processed " << mainTabRowI << " original rows, wrote "
+	   << newMainTabRow << " new ones." << LogIO::POST;
 
-      if(nIncompleteCoverage>0){
-	os << LogIO::WARN << "Incomplete coverage of combined SPW in " << nIncompleteCoverage
-	   << " of " <<  newMainTabRow << " output rows." <<  LogIO::POST;
+	if(nIncompleteCoverage>0){
+	  os << LogIO::WARN << "Incomplete coverage of combined SPW in " << nIncompleteCoverage
+	     << " of " <<  newMainTabRow << " output rows." <<  LogIO::POST;
+	}
       }
 
       newMain.flush(True); 
@@ -5906,7 +5918,9 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       mcd.rwKeywordSet().define("CHANNEL_SELECTION",selection);
     }
 
-    os << LogIO::NORMAL << "Spectral window combination complete." << LogIO::POST;
+    if(verbose){
+      os << LogIO::NORMAL << "Spectral window combination complete." << LogIO::POST;
+    }
 
     return True;
 

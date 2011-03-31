@@ -351,7 +351,8 @@ class SubMS
 			    const String& width,
 			    const String& restfreq, 
 			    const String& outframe,
-			    const String& veltype);
+			    const String& veltype,
+			    Bool verbose=False);
 
   // Support method for regridSpw():
   // if writeTables is False, the (const) input parameters are only verified, nothing is written;
@@ -396,13 +397,14 @@ class SubMS
   Bool combineSpws(const Vector<Int>& spwids,  // Vector<Int>(1,-1) means: use all SPWs
 		   const Bool noModify,   // if True, the MS will not be modified
 		   Vector<Double>& newCHAN_FREQ, // will return the grid of the resulting SPW
-		   Vector<Double>& newCHAN_WIDTH
+		   Vector<Double>& newCHAN_WIDTH,
+		   Bool verbose=False
 		   );
 
   Bool combineSpws(const Vector<Int>& spwids = Vector<Int>(1,-1)){  // Vector<Int>(1,-1) means: use all SPWs
     Vector<Double> temp1; 
     Vector<Double> temp2;
-    return combineSpws(spwids, False, temp1, temp2);
+    return combineSpws(spwids, False, temp1, temp2, True);
   }
 
  protected:

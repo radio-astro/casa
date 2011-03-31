@@ -9,7 +9,7 @@ import inspect
 def description():
     return "Test of the cvel() and clean() tasks: spectral regridding and transformation"
 
-pass_on = { "dataset_name" : "ANTEN_sort_hann_for_cvel_reg.ms" }
+pass_on = { "dataset_name" : "ANTEN_sort_hann_for_cvel_reg-thinned.ms" }
 
 a=inspect.stack()
 stacklevel=0
