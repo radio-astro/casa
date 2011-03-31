@@ -64,6 +64,7 @@ class sdstat_test(unittest.TestCase):
     # Line channels
     linechan0 = [[3999,4144]]
     linechan2 = [[2951,3088]]
+    #### Reference data (from ASAP r2084 + CASA r14498, Mar. 31, 2011)
     # Reference statistic values (masklist=[], invertmask=False)
     ref_allK = {'rms': [4.1249432563781738, 4.0882534980773926, 4.4454779624938965, 4.1502971649169922],
                 'min': [-6.5844717025756836, 0.6394113302230835, -92.782661437988281, 1.9847347736358643],
@@ -84,13 +85,13 @@ class sdstat_test(unittest.TestCase):
     minmaxchan_all = {'max_abscissa': {'value': array([   21.,  8177.,  8186.,  8159.]), 'unit': 'channel'},
                       'min_abscissa': {'value': array([   18.,     0.,  8187.,     0.]), 'unit': 'channel'}}
 
-    minmaxfreq_all = {'max_abscissa': {'value': array([ 45.46447576,  45.32569373,  44.0998926 ,  44.19101352]),
+    minmaxfreq_all = {'max_abscissa': {'value': array([ 45.46447881,  45.32569678,  44.09989566,  44.19101657]),
                                        'unit': 'GHz'},
-                      'min_abscissa': {'value': array([ 45.46445745,  45.27577941,  44.09989871,  44.14120908]),
+                      'min_abscissa': {'value': array([ 45.4644605 ,  45.27578247,  44.09990176,  44.14121213]),
                                        'unit': 'GHz'}}
-    minmaxvelo_all = {'max_abscissa': {'value': array([  169.91155668,  1084.52073872,  9162.86426427,  8562.3540936 ]),
+    minmaxvelo_all = {'max_abscissa': {'value': array([  169.89144245,  1084.50062449,  9162.84415004,  8562.33397937]),
                                        'unit': 'km/s'},
-                      'min_abscissa': {'value': array([  170.03224206,  1413.46885336,  9162.82403581,  8890.57809597]),
+                      'min_abscissa': {'value': array([  170.01212783,  1413.44873913,  9162.80392158,  8890.55798174]),
                                        'unit': 'km/s'}}
 
     # Reference line statistic values (masklist=linechan2, invertmask=False)
