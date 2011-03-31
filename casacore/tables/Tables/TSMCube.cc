@@ -1477,13 +1477,17 @@ void TSMCube::accessStrided (const IPosition& start, const IPosition& end,
                 sectionOffset += localSize;
             }
             for (j=1; j<nrdim_p; j++) {
-                dataOffset    += dataIncr(j);
-                sectionOffset += sectionIncr(j);
-                dataPos(j) += stride(j);
-                if (dataPos(j) <= endPixel(j)) {
-                    break;
-                }
-                dataPos(j) = startPixel(j);
+              // "Attempt to increment dataOffset below 0"
+              AlwaysAssert(dataIncr(j) >= 0 ||
+                           dataOffset >= static_cast<uInt>(-dataIncr(j)),
+                           DataManError);
+              dataOffset    += dataIncr(j);
+              sectionOffset += sectionIncr(j);
+              dataPos(j) += stride(j);
+              if (dataPos(j) <= endPixel(j)) {
+                break;
+              }
+              dataPos(j) = startPixel(j);
             }
             if (j == nrdim_p) {
                 break;
