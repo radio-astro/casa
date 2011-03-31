@@ -688,6 +688,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Int specAxis = -1;
 	Int stokesAxis = -1;
 	const uInt nAxes = wcsPtr[which].naxis;
+
+	if(nAxes>shape.size()){
+	  os << LogIO::NORMAL << "The WCS for this image contains " << nAxes - shape.size()
+	     << " degenerate axes." <<  LogIO::POST;
+	}
+	else if(nAxes<shape.size()){
+	  os << LogIO::WARN << "WCS does only provide information for "  
+	     << nAxes << " out of " << shape.size() << " axes of this image." 
+	     <<  LogIO::POST;
+	}	  
 //
 	Bool ok=True;
 	ok = addDirectionCoordinate (cSysTmp, dirAxes, wcsPtr[which], os);
@@ -938,13 +948,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Try to create StokesCoordinate
 
 	    stokesAxis = axes[0] - 1;              // 1 -> 0 rel
+	    uInt stokesAxisShape = 1;
+	    if(stokesAxis<shape.size()){
+	      stokesAxisShape = shape(stokesAxis);
+	    }
 	    Bool warnStokes = stokesFITSValue > 0;
 	    stokesFITSValue = -1;
 	    Vector<Int> stokes(1); stokes = 1;
 	    StokesCoordinate c(stokes);                  // No default constructor
 	    String errMsg;
 	    if (stokesCoordinateFromWCS (os, c, stokesFITSValue, errMsg, wcsDest, 
-					 shape(stokesAxis), warnStokes)) {
+					 stokesAxisShape, warnStokes)) {
 		cSys.addCoordinate(c);
 	    } else {
 		os << LogIO::WARN << errMsg << LogIO::POST;
@@ -978,7 +992,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	int alloc = 1;
 	int ierr = wcssub (alloc, &wcs, &nsub, axes.storage(), &wcsDest);
 
-	uInt nc = 0;
+	uInt nc = 1;
 	if(axes[0]-1<nChan.nelements()){
 	  nc = nChan(axes[0]-1); // the number of channels of the spectral axis
 	}
