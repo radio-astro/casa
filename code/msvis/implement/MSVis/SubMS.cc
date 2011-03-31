@@ -3017,24 +3017,30 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  }
 	  centerIsStart = False;
 	}
-	if((theRegridCenterF + theRegridBWF / 2.) -  (transNewXin[oldNUM_CHAN-1] + transCHAN_WIDTH[oldNUM_CHAN-1]/2.) > 1. ){ // 1 Hz tolerance
-	  oss << " *** Input spectral window exceeds upper end of original window. Adjusting to max. possible value." << endl;	  
-	  theRegridBWF = min((Double)fabs(transNewXin[oldNUM_CHAN-1] + transCHAN_WIDTH[oldNUM_CHAN-1]/2. - theRegridCenterF),
-			     (Double)fabs(theRegridCenterF - transNewXin[0] + transCHAN_WIDTH[0]/2.)) * 2.;
-	  if(theRegridBWF<transCHAN_WIDTH[0]){
-	    theRegridCenterF = (transNewXin[0]+transCHAN_WIDTH[oldNUM_CHAN-1]+transCHAN_WIDTH[oldNUM_CHAN-1]/2.-transCHAN_WIDTH[0]/2.)/2.;
-	    theRegridBWF = transCHAN_WIDTH[oldNUM_CHAN-1]-transNewXin[0]
-	      +transCHAN_WIDTH[oldNUM_CHAN-1]/2. + transCHAN_WIDTH[0]/2.;
+	{
+	  Double rangeTol = 1.; // Hz
+	  if((regridQuant=="vopt" || regridQuant=="wave")){ // i.e. if the center is the center w.r.t. wavelength
+	    rangeTol = transCHAN_WIDTH[0];
 	  }
-	}
-	if((theRegridCenterF - theRegridBWF/2.) - (transNewXin[0] - transCHAN_WIDTH[0]/2.) < -1. ){ // 1 Hz tolerance
-	  oss << " *** Input spectral window exceeds lower end of original window. Adjusting to max. possible value." << endl;
-	  theRegridBWF = min((Double)fabs(transNewXin[oldNUM_CHAN-1] + transCHAN_WIDTH[oldNUM_CHAN-1]/2. - theRegridCenterF),
-			     (Double)fabs(theRegridCenterF - transNewXin[0] + transCHAN_WIDTH[0]/2.)) * 2.;
-	  if(theRegridBWF<transCHAN_WIDTH[0]){
-	    theRegridCenterF = (transNewXin[0]+transCHAN_WIDTH[oldNUM_CHAN-1]+transCHAN_WIDTH[oldNUM_CHAN-1]/2.-transCHAN_WIDTH[0]/2.)/2.;
-	    theRegridBWF = transCHAN_WIDTH[oldNUM_CHAN-1]-transNewXin[0]
-	      +transCHAN_WIDTH[oldNUM_CHAN-1]/2. + transCHAN_WIDTH[0]/2.;
+	  if((theRegridCenterF + theRegridBWF / 2.) -  (transNewXin[oldNUM_CHAN-1] + transCHAN_WIDTH[oldNUM_CHAN-1]/2.) > rangeTol ){
+	    oss << " *** Input spectral window exceeds upper end of original window. Adjusting to max. possible value." << endl;	  
+	    theRegridBWF = min((Double)fabs(transNewXin[oldNUM_CHAN-1] + transCHAN_WIDTH[oldNUM_CHAN-1]/2. - theRegridCenterF),
+			       (Double)fabs(theRegridCenterF - transNewXin[0] + transCHAN_WIDTH[0]/2.)) * 2.;
+	    if(theRegridBWF<transCHAN_WIDTH[0]){
+	      theRegridCenterF = (transNewXin[0]+transCHAN_WIDTH[oldNUM_CHAN-1]+transCHAN_WIDTH[oldNUM_CHAN-1]/2.-transCHAN_WIDTH[0]/2.)/2.;
+	      theRegridBWF = transCHAN_WIDTH[oldNUM_CHAN-1]-transNewXin[0]
+		+transCHAN_WIDTH[oldNUM_CHAN-1]/2. + transCHAN_WIDTH[0]/2.;
+	    }
+	  }
+	  if((theRegridCenterF - theRegridBWF/2.) - (transNewXin[0] - transCHAN_WIDTH[0]/2.) < -rangeTol ){
+	    oss << " *** Input spectral window exceeds lower end of original window. Adjusting to max. possible value." << endl;
+	    theRegridBWF = min((Double)fabs(transNewXin[oldNUM_CHAN-1] + transCHAN_WIDTH[oldNUM_CHAN-1]/2. - theRegridCenterF),
+			       (Double)fabs(theRegridCenterF - transNewXin[0] + transCHAN_WIDTH[0]/2.)) * 2.;
+	    if(theRegridBWF<transCHAN_WIDTH[0]){
+	      theRegridCenterF = (transNewXin[0]+transCHAN_WIDTH[oldNUM_CHAN-1]+transCHAN_WIDTH[oldNUM_CHAN-1]/2.-transCHAN_WIDTH[0]/2.)/2.;
+	      theRegridBWF = transCHAN_WIDTH[oldNUM_CHAN-1]-transNewXin[0]
+		+transCHAN_WIDTH[oldNUM_CHAN-1]/2. + transCHAN_WIDTH[0]/2.;
+	    }
 	  }
 	}
       }

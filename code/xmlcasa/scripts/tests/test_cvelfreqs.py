@@ -17,7 +17,7 @@ import unittest
 # number of cases: 3 x 5 x 4 x 3 x 6 x 2 = 2160 !
 
 # Test Matrix covered so far:
-# mode = 'channel', 'optical velocity', 'frequency'
+# mode = 'channel', 'optical velocity', 'frequency', 'radio velocity'
 # spwids = [0], [1], [0,1], [1,2], [0,1,2]
 # nchan = -1, 10, 5, 6
 # start = 0, 1, 15 (equivalent freqs and velos)
@@ -1815,7 +1815,7 @@ class cvelfreqs_test(unittest.TestCase):
             os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/unittest/uvcontsub2/test_uvcontsub2.ms .')
             
     def tearDown(self):
-        os.system('rm -rf sample.ms sample2.ms sample3.ms sample4.ms')   
+        os.system('rm -rf sample.ms sample2.ms sample3.ms sample4.ms sampler.ms')   
         pass
 
     def test1(self):
@@ -2582,6 +2582,233 @@ class cvelfreqs_test(unittest.TestCase):
             print "Failed cases: ", failed
 
         self.assertEqual(myfailures,0)
+
+    def test9(self):
+
+        '''cvelfreqs 9: test reproducibility'''
+
+        global mytotal, myfailures, tests_to_do, failed
+
+        os.system('rm -rf sampler.ms')
+        shutil.copytree('test_uvcontsub2.ms','sampler.ms')
+        
+        tb.open('sampler.ms/SPECTRAL_WINDOW', nomodify=False)
+        # spw 0
+        spwid = 0
+        newnumchan = 11
+        newchanfreq = []
+        cw = 33.
+        newchanwidth = []
+        for i in range(0,newnumchan):
+            newchanfreq.append(1E10+i*cw)
+            newchanwidth.append(cw)
+            
+        print spwid,': ', newchanfreq
+        print '    ', newchanwidth
+            
+        tb.putcell('NUM_CHAN', spwid, newnumchan)
+        tb.putcell('CHAN_FREQ', spwid, newchanfreq)
+        tb.putcell('CHAN_WIDTH', spwid, newchanwidth)
+        tb.putcell('EFFECTIVE_BW', spwid, newchanwidth)
+        tb.putcell('RESOLUTION', spwid, newchanwidth)
+        tb.putcell('REF_FREQUENCY', spwid, newchanfreq[0])
+        tb.putcell('TOTAL_BANDWIDTH', spwid, abs(newchanfreq[-1]-newchanfreq[0])+abs(newchanwidth[0]))
+
+        lastfreq = newchanfreq[newnumchan-1]
+
+        # spw 1
+        spwid = 1
+        newnumchan = 11
+        newchanfreq = []
+        cw = 33.
+        newchanwidth = []
+        for i in range(0,newnumchan):
+            newchanfreq.append(lastfreq-cw/2.+i*cw) # intentional misalignment by half a channel
+            newchanwidth.append(cw)
+            
+        print spwid,': ', newchanfreq
+        print '    ', newchanwidth
+            
+        tb.putcell('NUM_CHAN', spwid, newnumchan)
+        tb.putcell('CHAN_FREQ', spwid, newchanfreq)
+        tb.putcell('CHAN_WIDTH', spwid, newchanwidth)
+        tb.putcell('EFFECTIVE_BW', spwid, newchanwidth)
+        tb.putcell('RESOLUTION', spwid, newchanwidth)
+        tb.putcell('REF_FREQUENCY', spwid, newchanfreq[0])
+        tb.putcell('TOTAL_BANDWIDTH', spwid, abs(newchanfreq[-1]-newchanfreq[0])+abs(newchanwidth[0]))
+
+        lastfreq = newchanfreq[newnumchan-1]
+
+        # spw 2
+        spwid = 2
+        newnumchan = 11
+        newchanfreq = []
+        cw = 33.
+        newchanwidth = []
+        for i in range(0,newnumchan):
+            newchanfreq.append(lastfreq - 0.3*cw +i*cw) # intentional misalignment by 0.3 channelwidths
+            newchanwidth.append(cw)
+            
+        print spwid,': ', newchanfreq
+        print '    ', newchanwidth
+            
+        tb.putcell('NUM_CHAN', spwid, newnumchan)
+        tb.putcell('CHAN_FREQ', spwid, newchanfreq)
+        tb.putcell('CHAN_WIDTH', spwid, newchanwidth)
+        tb.putcell('EFFECTIVE_BW', spwid, newchanwidth)
+        tb.putcell('RESOLUTION', spwid, newchanwidth)
+        tb.putcell('REF_FREQUENCY', spwid, newchanfreq[0])
+        tb.putcell('TOTAL_BANDWIDTH', spwid, abs(newchanfreq[-1]-newchanfreq[0])+abs(newchanwidth[0]))
+
+        tb.close()    
+
+        ##############################
+
+        ms.open('sampler.ms')
+
+        channelfreqs = ms.cvelfreqs(mode='channel', spwids=[0,1,2], start=1, width=2, nchan=10)
+        print "channel freqs ", channelfreqs 
+        frequencyfreqs = ms.cvelfreqs(mode='frequency', spwids=[0,1,2], start=str(1E9+60)+'Hz', width='100Hz', nchan=10)
+        print "frequency freqs ", frequencyfreqs
+        restfrqo =  (-1000./299792458.0 + 1.) * (1E10 + 10.)
+        opticalfreqs = ms.cvelfreqs(mode='velocity', veltype='optical', spwids=[0,1,2], start="-1001m/s", width='-2m/s', nchan=10, restfreq=restfrqo)
+        print "optical freqs ", opticalfreqs
+        restfrqr = (1E10 + 10.) / (1 - (-1000./299792458.0))
+        radiofreqs  = ms.cvelfreqs(mode='velocity', veltype='radio', spwids=[0,1,2], start="-1001m/s", width='-2m/s', nchan=10, restfreq=restfrqr)
+        print "radio freqs ", radiofreqs
+
+        ms.close()
+        
+        tb.open('sampler.ms/SPECTRAL_WINDOW', nomodify=False)
+        # spw 3, for channel mode
+        spwid = 3
+        newnumchan = 10
+        newchanfreq = channelfreqs
+        newchanwidth = []
+        for i in range(0,newnumchan-1):
+            newchanwidth.append(newchanfreq[i+1]-newchanfreq[i])
+        newchanwidth.append(newchanfreq[newnumchan-1]-newchanfreq[newnumchan-2])
+            
+        print spwid,': ', newchanfreq
+        print '    ', newchanwidth
+            
+        tb.putcell('NUM_CHAN', spwid, newnumchan)
+        tb.putcell('CHAN_FREQ', spwid, newchanfreq)
+        tb.putcell('CHAN_WIDTH', spwid, newchanwidth)
+        tb.putcell('EFFECTIVE_BW', spwid, newchanwidth)
+        tb.putcell('RESOLUTION', spwid, newchanwidth)
+        tb.putcell('REF_FREQUENCY', spwid, newchanfreq[0])
+        tb.putcell('TOTAL_BANDWIDTH', spwid, abs(newchanfreq[-1]-newchanfreq[0])+abs(newchanwidth[0]/2.)+abs(newchanwidth[-1]/2.))
+
+        # spw 4, for frequency mode
+        spwid = 4
+        newnumchan = 10
+        newchanfreq = frequencyfreqs
+        newchanwidth = []
+        for i in range(0,newnumchan-1):
+            newchanwidth.append(newchanfreq[i+1]-newchanfreq[i])
+        newchanwidth.append(newchanfreq[newnumchan-1]-newchanfreq[newnumchan-2])
+            
+        print spwid,': ', newchanfreq
+        print '    ', newchanwidth
+            
+        tb.putcell('NUM_CHAN', spwid, newnumchan)
+        tb.putcell('CHAN_FREQ', spwid, newchanfreq)
+        tb.putcell('CHAN_WIDTH', spwid, newchanwidth)
+        tb.putcell('EFFECTIVE_BW', spwid, newchanwidth)
+        tb.putcell('RESOLUTION', spwid, newchanwidth)
+        tb.putcell('REF_FREQUENCY', spwid, newchanfreq[0])
+        tb.putcell('TOTAL_BANDWIDTH', spwid, abs(newchanfreq[-1]-newchanfreq[0])+abs(newchanwidth[0]/2.)+abs(newchanwidth[-1]/2.))
+
+        # spw 5, for optical velocity mode
+        spwid = 5
+        newnumchan = 10
+        newchanfreq = opticalfreqs
+        newchanwidth = []
+        for i in range(0,newnumchan-1):
+            newchanwidth.append(newchanfreq[i+1]-newchanfreq[i])
+        newchanwidth.append(newchanfreq[newnumchan-1]-newchanfreq[newnumchan-2])
+            
+        print spwid,': ', newchanfreq
+        print '    ', newchanwidth
+            
+        tb.putcell('NUM_CHAN', spwid, newnumchan)
+        tb.putcell('CHAN_FREQ', spwid, newchanfreq)
+        tb.putcell('CHAN_WIDTH', spwid, newchanwidth)
+        tb.putcell('EFFECTIVE_BW', spwid, newchanwidth)
+        tb.putcell('RESOLUTION', spwid, newchanwidth)
+        tb.putcell('REF_FREQUENCY', spwid, newchanfreq[0])
+        tb.putcell('TOTAL_BANDWIDTH', spwid, abs(newchanfreq[-1]-newchanfreq[0])+abs(newchanwidth[0]/2.)+abs(newchanwidth[-1]/2.))
+
+        # spw 6, for radio velocity mode
+        spwid = 6
+        newnumchan = 10
+        newchanfreq = radiofreqs
+        newchanwidth = []
+        for i in range(0,newnumchan-1):
+            newchanwidth.append(newchanfreq[i+1]-newchanfreq[i])
+        newchanwidth.append(newchanfreq[newnumchan-1]-newchanfreq[newnumchan-2])
+            
+        print spwid,': ', newchanfreq
+        print '    ', newchanwidth
+            
+        tb.putcell('NUM_CHAN', spwid, newnumchan)
+        tb.putcell('CHAN_FREQ', spwid, newchanfreq)
+        tb.putcell('CHAN_WIDTH', spwid, newchanwidth)
+        tb.putcell('EFFECTIVE_BW', spwid, newchanwidth)
+        tb.putcell('RESOLUTION', spwid, newchanwidth)
+        tb.putcell('REF_FREQUENCY', spwid, newchanfreq[0])
+        tb.putcell('TOTAL_BANDWIDTH', spwid, abs(newchanfreq[-1]-newchanfreq[0])+abs(newchanwidth[0]/2.)+abs(newchanwidth[-1]/2.))
+
+        tb.close()
+
+        ##########################
+
+        ms.open('sampler.ms')
+
+        mytotal = 0
+        myfailures = 0
+        
+        newchannelfreqs = ms.cvelfreqs(mode='channel', spwids=[3])
+        newfrequencyfreqs = ms.cvelfreqs(mode='frequency', spwids=[4], start=str(1E9+60)+'Hz', width='100Hz', nchan=10)
+        newopticalfreqs = ms.cvelfreqs(mode='velocity', veltype='optical', spwids=[5], start="-1001m/s", width='-2m/s', nchan=10, restfreq=restfrqo)
+        newradiofreqs  = ms.cvelfreqs(mode='velocity', veltype='radio', spwids=[6], start="-1001m/s", width='-2m/s', nchan=10, restfreq=restfrqr)
+
+        ms.close()
+
+        if not (newchannelfreqs == channelfreqs):
+            print "channel output deviates: "
+            print newchannelfreqs
+            print "  expected was:"
+            print channelfreqs
+            myfailures = myfailures + 1
+        mytotal = mytotal + 1
+        if not (newfrequencyfreqs == frequencyfreqs):
+            print "frequency output deviates: "
+            print newfrequencyfreqs
+            print "  expected was:"
+            print frequencyfreqs
+            myfailures = myfailures + 1
+        mytotal = mytotal + 1
+        if not (newopticalfreqs == opticalfreqs):
+            print "optical output deviates: "
+            print newopticalfreqs
+            print "  expected was:"
+            print opticalfreqs
+            myfailures = myfailures + 1
+        mytotal = mytotal + 1
+        if not (newradiofreqs == radiofreqs):
+            print "radio output deviates: "
+            print newradiofreqs
+            print "  expected was:"
+            print radiofreqs
+            myfailures = myfailures + 1
+        mytotal = mytotal + 1
+
+        print myfailures, " failures in ", mytotal, " subtests."
+
+        self.assertEqual(myfailures,0)
+
 
 
 class cleanup(unittest.TestCase):
