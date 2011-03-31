@@ -49,6 +49,7 @@ test_sdbaseline			kana.sugi@nao.ac.jp
 test_sdlist                     kana.sugi@nao.ac.jp
 #test_sdplot                     kana.sugi@nao.ac.jp
 test_sdsave                     takeshi.nakazato@nao.ac.jp
+test_sdsmooth                   kana.sugi@nao.ac.jp
 test_sdstat                     kana.sugi@nao.ac.jp
 test_sdtpimaging                takeshi.nakazato@nao.ac.jp
 test_setjy			rreid@nrao.edu
