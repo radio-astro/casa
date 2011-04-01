@@ -95,10 +95,14 @@ def sdcal(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, ca
               #sdaverage(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, outfile=tmpoutfile, outform=outform, overwrite=True, plotlevel=plotlevel)
               sdaverage(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, verifycal, outfile=tmpoutfile, outform=outform, overwrite=True, plotlevel=plotlevel)
             else:
-            #print "Skipping calibration..."
+              plevel = plotlevel
+              if not average:
+                # still need to call sdaverage for unit conversion, etc.
+                plevel = 0
+                casalog.post( "Neither calibrated nor averaged..." )
               tmpoutfile = sdaverageout
-              sdaverage(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, outfile=tmpoutfile, outform=outform, overwrite=True, plotlevel=plotlevel)
-                
+              sdaverage(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, outfile=tmpoutfile, outform=outform, overwrite=True, plotlevel=plevel)
+
             #reset data selection
             tmpsdfile=tmpoutfile
             if not os.path.exists(tmpsdfile):
