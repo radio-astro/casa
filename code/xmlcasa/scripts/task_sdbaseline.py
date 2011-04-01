@@ -219,45 +219,44 @@ def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 		if (order < 0):
 			casalog.post('Negative order of baseline polynomial given. Exit without baselining.', priority = 'WARN')
 			return
-		
-		# Header data for saving parameters of baseline fit
-		header =  "Source Table: "+sdfile+"\n"
-		header += " Output File: "+project+"\n"
-		header += "   Flux Unit: "+s.get_fluxunit()+"\n"
-		header += "    Abscissa: "+s.get_unit()+"\n"
-		header += "    Function: "+blfunc+"\n"
-		if blfunc == 'poly':
-			header += "   Fit order: %d\n"%(order)
-		elif blfunc == 'cspline':
-			header += "      nPiece: %d\n"%(npiece)
-			header += "  clipThresh: %f\n"%(clipthresh)
-			header += "   clipNIter: %d\n"%(clipniter)
-		elif blfunc == 'sinusoid':
-			header += "       nWave: "+str(nwave)+"\n"
-			header += "  maxWaveLen: %d\n"%(maxwavelength)
-			header += "  clipThresh: %f\n"%(clipthresh)
-			header += "   clipNIter: %d\n"%(clipniter)
-		header += "   Mask mode: "+maskmode+"\n"
-		if maskmode == 'auto':
-			header += "   Threshold: %f\n"%(thresh)
-			header += "   avg_limit: %d\n"%(avg_limit)
-			header += "        Edge: "+str(edge)+"\n"
-		elif maskmode == 'list':
-			header += "   Fit Range: "+str(masklist)+"\n"
-		
-		blfile = project + "_blparam.txt"
-		blf = open(blfile, "w")
-		separator = "#"*60 + "\n"
-		blf.write(separator)
-		blf.write(header)
-		blf.write(separator)
-		blf.close()
 
-		
 		if verbose:
-			bloutfile = blfile
+			blfile = project + "_blparam.txt"
+			blf = open(blfile, "w")
+			
+			# Header data for saving parameters of baseline fit
+			header =  "Source Table: "+sdfile+"\n"
+			header += " Output File: "+project+"\n"
+			header += "   Flux Unit: "+s.get_fluxunit()+"\n"
+			header += "    Abscissa: "+s.get_unit()+"\n"
+			header += "    Function: "+blfunc+"\n"
+			if blfunc == 'poly':
+				header += "   Fit order: %d\n"%(order)
+			elif blfunc == 'cspline':
+				header += "      nPiece: %d\n"%(npiece)
+				header += "  clipThresh: %f\n"%(clipthresh)
+				header += "   clipNIter: %d\n"%(clipniter)
+			elif blfunc == 'sinusoid':
+				header += "       nWave: "+str(nwave)+"\n"
+				header += "  maxWaveLen: %d\n"%(maxwavelength)
+				header += "  clipThresh: %f\n"%(clipthresh)
+				header += "   clipNIter: %d\n"%(clipniter)
+			header += "   Mask mode: "+maskmode+"\n"
+			if maskmode == 'auto':
+				header += "   Threshold: %f\n"%(thresh)
+				header += "   avg_limit: %d\n"%(avg_limit)
+				header += "        Edge: "+str(edge)+"\n"
+			elif maskmode == 'list':
+				header += "   Fit Range: "+str(masklist)+"\n"
+		
+			separator = "#"*60 + "\n"
+			
+			blf.write(separator)
+			blf.write(header)
+			blf.write(separator)
+			blf.close()
 		else:
-			bloutfile = ""
+			blfile = ""
 		
 		nrow = s.nrow()
 
@@ -275,84 +274,79 @@ def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 				s.set_selection(sel)
 				del sel
 				casalog.post("working on IF"+sif)
+
+			msk = None
+			
 			if (maskmode == 'interact'):
-				new_mask=sd.interactivemask(scan=s)
+				new_mask = sd.interactivemask(scan=s)
 				if (len(lmask) > 0):
 					new_mask.set_basemask(masklist=lmask,invert=False)
 				new_mask.select_mask(once=False,showmask=True)
 
-				finish=raw_input("Press return to calculate statistics.\n")
+				finish = raw_input("Press return to calculate statistics.\n")
 				new_mask.finish_selection()
-			
-				msk=new_mask.get_mask()
+				
+				msk = new_mask.get_mask()
 				del new_mask
-				msks=s.get_masklist(msk)
+				msks = s.get_masklist(msk)
 				if len(msks) < 1:
 					casalog.post( 'No channel is selected. Exit without baselining.', priority = 'WARN' )
 					return
-			
+				
 				casalog.post( 'final mask list ('+s._getabcissalabel()+') ='+str(msks) )
 				#header += "   Fit Range: "+str(msks)+"\n"
 				del msks
-			
-				if (blfunc == 'poly'):
-					s.poly_baseline(mask=msk,order=order,plot=verify,outlog=verbose,blfile=bloutfile)
-				elif (blfunc == 'cspline'):
-					s.cspline_baseline(mask=msk,npiece=npiece,clipthresh=clipthresh,clipniter=clipniter,plot=verify,outlog=verbose,blfile=bloutfile)
-				elif (blfunc == 'sinusoid'):
-					s.sinusoid_baseline(mask=msk,nwave=nwave,maxwavelength=maxwavelength,clipthresh=clipthresh,clipniter=clipniter,plot=verify,outlog=verbose,blfile=bloutfile)
-				del msk
 			else:
-				basemask = None
-				if (len(lmask) > 0):
-					# Use baseline mask for regions to INCLUDE in baseline fit
-					# Create mask using list, e.g. masklist=[[500,3500],[5000,7500]]
-					basemask=s.create_mask(lmask)
-
-				if (maskmode == 'list'):
-					if (blfunc == 'poly'):
-						s.poly_baseline(mask=basemask,order=order,plot=verify,outlog=verbose,blfile=bloutfile)
-					elif (blfunc == 'cspline'):
-						s.cspline_baseline(mask=basemask,npiece=npiece,clipthresh=clipthresh,clipniter=clipniter,plot=verify,outlog=verbose,blfile=bloutfile)
-					elif (blfunc == 'sinusoid'):
-						s.sinusoid_baseline(mask=basemask,nwave=nwave,maxwavelength=maxwavelength,clipthresh=clipthresh,clipniter=clipniter,plot=verify,outlog=verbose,blfile=bloutfile)
-				elif (maskmode == 'auto'):
-					if (blfunc == 'poly'):
-						s.auto_poly_baseline(mask=basemask,order=order,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,outlog=verbose,blfile=bloutfile)
-					elif (blfunc == 'cspline'):
-						s.auto_cspline_baseline(mask=basemask,npiece=npiece,clipthresh=clipthresh,clipniter=clipniter,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,outlog=verbose,blfile=bloutfile)
-					elif (blfunc == 'sinusoid'):
-						s.auto_sinusoid_baseline(mask=basemask,nwave=nwave,maxwavelength=maxwavelength,clipthresh=clipthresh,clipniter=clipniter,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,outlog=verbose,blfile=bloutfile)
+				# Use baseline mask for regions to INCLUDE in baseline fit
+				# Create mask using list, e.g. masklist=[[500,3500],[5000,7500]]
+				if (len(lmask) > 0): msk = s.create_mask(lmask)
+			
 				
-				# the above 14 lines will eventually become like this:
-				#
-				#sbinfo = s.create_sbinfo(blfunc=blfunc,order=order,npiece=npiece,nwave=nwave,maxwavelength=maxwavelength,maskmode=maskmode,edge=edge,threshold=threshold,chan_avg_limit=chan_avg_limit,clipthresh=clipthresh,clipniter=clipniter)
-				#s.sub_baseline(mask=basemask,sbinfo=sbinfo,plot=verify,outlog=verbose,blfile=bloutfile)
-				#
-				# where
-				# sbinfo = {'function':fninfo, 'linefinder':lfinfo, 'iterativeclipping':icinfo}
-				# and
-				# fninfo should be one of the follows:
-				#     fninfo = {'type':'poly', 'params':{'order':order}}
-				#     fninfo = {'type':'cspline', 'params':{'npiece':npiece, 'clipthresh':clipthresh, 'clipniter':clipniter}}
-				#     fninfo = {'type':'sinusoid', 'params':{'nwave':nwave, 'maxwavelength':maxwavelength, 'clipthresh':clipthresh, 'clipniter':clipniter}}
-				# lfinfo should be one of the follows:
-				#     lfinfo = {'uselinefinder':True, 'edge':edge, 'threshold':thresh, 'chan_avg_limit':avg_limit}
-				#     lfinfo = {'uselinefinder':False}
-				# icinfo should be:
-				#     icinfo = {'clipthresh':clipthresh, 'clipniter':clipniter}
+			if (maskmode == 'auto'):
+				if (blfunc == 'poly'):
+					s.auto_poly_baseline(mask=msk,order=order,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,outlog=verbose,blfile=blfile)
+				elif (blfunc == 'cspline'):
+					s.auto_cspline_baseline(mask=msk,npiece=npiece,clipthresh=clipthresh,clipniter=clipniter,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,outlog=verbose,blfile=blfile)
+				elif (blfunc == 'sinusoid'):
+					s.auto_sinusoid_baseline(mask=msk,nwave=nwave,maxwavelength=maxwavelength,clipthresh=clipthresh,clipniter=clipniter,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,outlog=verbose,blfile=blfile)
+			else:
+				if (blfunc == 'poly'):
+					s.poly_baseline(mask=msk,order=order,plot=verify,outlog=verbose,blfile=blfile)
+				elif (blfunc == 'cspline'):
+					s.cspline_baseline(mask=msk,npiece=npiece,clipthresh=clipthresh,clipniter=clipniter,plot=verify,outlog=verbose,blfile=blfile)
+				elif (blfunc == 'sinusoid'):
+					s.sinusoid_baseline(mask=msk,nwave=nwave,maxwavelength=maxwavelength,clipthresh=clipthresh,clipniter=clipniter,plot=verify,outlog=verbose,blfile=blfile)
+				
+			# the above 14 lines will eventually shrink into the following 2 commands:
+			#
+			#sbinfo = s.create_sbinfo(blfunc=blfunc,order=order,npiece=npiece,nwave=nwave,maxwavelength=maxwavelength,\
+			#                         masklist=masklist,maskmode=maskmode,edge=edge,threshold=threshold,chan_avg_limit=chan_avg_limit,\
+			#                         clipthresh=clipthresh,clipniter=clipniter)
+			#s.sub_baseline(sbinfo=sbinfo,plot=verify,outlog=verbose,blfile=blfile)
+			#
+			# where
+			# sbinfo = {'func':funcinfo, 'mask':maskinfo, 'clip':clipinfo}
+			# and
+			# funcinfo should be one of the follows:
+			#     funcinfo = {'type':'poly', 'params':{'order':order}}
+			#     funcinfo = {'type':'cspline', 'params':{'npiece':npiece}}
+			#     funcinfo = {'type':'sspline', 'params':{'lambda':lambda}}
+			#     funcinfo = {'type':'sinusoid', 'params':{'nwave':nwave, 'maxwavelength':maxwavelength}}
+			# maskinfo should be one of the follows:
+			#     maskinfo = {'base':masklist, 'aux':{'type':'auto', 'params':{'edge':edge, 'threshold':thresh, 'chan_avg_limit':avg_limit}}}
+			#     maskinfo = {'base':masklist, 'aux':{'type':'list'}}
+			#     maskinfo = {'base':masklist, 'aux':{'type':'interactive'}}
+			# clipinfo should be:
+			#     clipinfo = {'clipthresh':clipthresh, 'clipniter':clipniter}
 			
-				del basemask
+			del msk
 			
-			if len(sif) > 0:
-				# reset selection
-				s.set_selection(basesel)
+			# reset selection
+			if len(sif) > 0: s.set_selection(basesel)
+
 		### END of IF for loop
 		del basesel
 
-		blf = open(blfile, "a")
-		blf.write("-"*60 + "\n")
-		
 		# Plot final spectrum
 		if ( abs(plotlevel) > 0 ):
 			# each IF is separate panel, pols stacked
@@ -385,84 +379,11 @@ def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 		if overwrite and os.path.exists(outfilename):
 			os.system('rm -rf %s' % outfilename)
 		
-		# to apply data selections by selector, make copy
-		# 2011/03/01 TN
-		# The issue was already fixed (Trac #181, r1727 in ASAP trunk)
-		#tmpscn=s.copy()
-		#tmpscn.save(spefile,outform,overwrite)
                 s.save(spefile,outform,overwrite)
-		if outform!='ASCII':
-			casalog.post( "Wrote output "+outform+" file "+spefile )
+		if outform != 'ASCII': casalog.post( "Wrote output "+outform+" file "+spefile )
 		
-		# Clean up scantable
-		#del s, tmpscn
                 del s
-		
-		blf.close()
-
 	
 	except Exception, instance:
 		casalog.post( str(instance), priority = 'ERROR' )
 		return
-
-
-### Format baseline parameters for output
-def _format_output(scan=None,pars=None,rms=None,masklists=None):
-	# Check input scantable
-	if not isinstance(scan, Scantable):
-		casalog.post( "Data is not scantable", priority = 'ERROR' )
-		return
-
-	nrow = scan.nrow()
-	
-	# Check baseline fit parameters
-	if not isinstance(pars,list):
-		casalog.post( "Invalid baseline parameters.", priority = 'ERROR' )
-		return
-	elif nrow != len(pars):
-		casalog.post( "Number of rows != baseline params sets.", priority = 'ERROR' )
-		return
-	# Check rms data
-	if isinstance(rms,list) and len(rms) == nrow: sflag=True
-	else:
-		casalog.post( "Invalid rms data", priority = 'ERROR' )
-		return
-	# Check masklists data
-	mflag=False
-	if masklists is None: mflag=False
-	elif isinstance(masklists,list) and len(masklists) == nrow:
-		mflag=True
-	else:
-		casalog.post( "Invalid masklists", priority = 'ERROR' )
-		return
-	
-	# Format data output
-	out = ""
-	sep = "-"*60+"\n"
-
-	for r in xrange(nrow):
-		out += sep
-		out+=" Scan[%d] Beam[%d] IF[%d] Pol[%d] Cycle[%d]: \n" % \
-			  (scan.getscan(r), scan.getbeam(r), scan.getif(r), \
-			   scan.getpol(r), scan.getcycle(r))
-		if mflag:
-			out += "Fitted range = "+str(masklists[r])+"\n"
-		out+="Baseline parameters\n"
-		if pars[r] is not None: 
-			cpars = pars[r]['params']
-			cfixed = pars[r]['fixed']
-			c = 0
-			for i in xrange(len(cpars)):
-				fix = ""
-				if len(cfixed) and cfixed[i]: fix = "(fixed)"
-				out += '  p%d%s= %3.6f,' % (c,fix,cpars[i])
-				c+=1
-			out = out[:-1]  # remove trailing ','
-			out+="\n"
-		else: out += '  Not fitted\n'
-		out += "Results of baseline fit\n"
-		if type(rms[r])==list:
-				out += "  rms = %3.6f\n" % (rms[r][0])
-		else:
-			out += "  rms = %3.6f\n" % (rms[r])
-	return out
