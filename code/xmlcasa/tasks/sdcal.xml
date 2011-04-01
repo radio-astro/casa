@@ -214,6 +214,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="string" name="blfunc">
 	    <description>baseline model function</description>
+            <value>poly</value>
 	    <allowed kind="enum">
 	        <value>poly</value>
 	        <value>cspline</value>
