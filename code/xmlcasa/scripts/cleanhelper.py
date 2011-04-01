@@ -1117,13 +1117,15 @@ class cleanhelper:
                            raise TypeError, 'Error reading worldbox file'      
                         #
                         refframe=self.csys['direction0']['conversionSystem']
+                        if refframe.find('_VLA')>0:
+                          refframe=refframe[0:refframe.find('_VLA')]
                         ra =[splitline[2],splitline[3]]
                         dec = [splitline[4],splitline[5]]
-
                         #set frames
                         obsdate=self.csys['obsdate']
                         me.doframe(me.epoch(obsdate['refer'], str(obsdate['m0']['value'])+obsdate['m0']['unit']))
                         me.doframe(me.observatory(self.csys['telescope']))
+                        #
                         if splitline[1]!=refframe: 
                             # coversion between different epoch (and to/from AZEL also)
                             radec0 = me.measure(me.direction(splitline[1],ra[0],dec[0]), refframe)
@@ -1140,6 +1142,8 @@ class cleanhelper:
                             for i in range(len(imstokes)):
                                 if st==imstokes[i]:
                                     stokes.append(str(i)+'pix')
+                                elif st.count('pix') > 0:
+                                    stokes.append(st)
                             if len(stokes)<=prevlen:
                                 #raise TypeError, "Stokes %s for the box boundaries is outside image" % st              
                                 self._casalog.post('Stokes %s for the box boundaries is outside image, -ignored' % st, 'WARN')              
