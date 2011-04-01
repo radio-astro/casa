@@ -176,7 +176,8 @@ private:
     Bool addDirectionCoordinate (CoordinateSystem& cSys, Vector<Int>& axes,
                                  const wcsprm& wcs, LogIO& os) const;
     Bool addSpectralCoordinate (CoordinateSystem& cSys, Int& axis,
-                                const wcsprm& wcs, LogIO& os, Vector<uInt> nChan=Vector<uInt>()) const;
+                                const wcsprm& wcs, const IPosition& shape, 
+				LogIO& os) const;
     Bool addStokesCoordinate (CoordinateSystem& cSys, Int& axis,  Int& stokesFITSValue,
                               const wcsprm& wcs, const IPosition& shape,
                               LogIO& os) const;
