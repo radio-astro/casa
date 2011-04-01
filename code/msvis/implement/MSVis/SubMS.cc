@@ -1871,7 +1871,13 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       // create the "partner" columns, i.e. rename the old array columns to old...
       // and create new empty columns with the original names to hold the regridded values
 
-      IPosition tileShape = MSTileLayout::tileShape(IPosition(2,1,xout[0].size()));
+      ROMSMainColumns mCols(ms_p);
+      Int nCorr = mCols.data().shape(0)(0); // the first dimension of DATA
+      IPosition dataShape(2, nCorr, xout[0].size());
+      Int obstype = 0; // default
+      ROMSObservationColumns obsCols(ms_p.observation());
+      String telescop = obsCols.telescopeName()(mCols.observationId()(0));
+      IPosition tileShape = MSTileLayout::tileShape(dataShape, obstype, telescop);
 
       createPartnerColumn(origMSTD, "CORRECTED_DATA", "oldCORRECTED_DATA", 3, tileShape);
       createPartnerColumn(origMSTD, "DATA", "oldDATA", 3, tileShape);
@@ -5318,7 +5324,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       // 6) MAIN
 
       ms_p.flush(True); // with fsync
-      
+
       Table newMain(TableCopy::makeEmptyTable( tempNewName,
 					       Record(),
 					       (Table) ms_p,
