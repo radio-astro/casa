@@ -37,6 +37,7 @@ class clean_test1(unittest.TestCase):
     img = 'cleantest1'
     img2 = '0-cleantest1'
     msk = 'cleantest1.in.mask'
+    boxmsk = 'cleantest1.box'
 
     def setUp(self):
         self.res = None
@@ -59,6 +60,21 @@ class clean_test1(unittest.TestCase):
         ia.close()
         return px['value']['value']
         
+    def compareimages(self,inimage,refimage):
+        """
+        compare the input image with reference image
+        return true if pix values are identical
+        usually useful for mask images
+        """
+        ia.open(inimage)
+        invals = ia.getchunk()
+        ia.close()
+        ia.open(refimage)
+        refvals= ia.getchunk()
+        ia.close()
+        diff = refvals - invals
+        return (numpy.all(diff==0))
+
     def test1(self):
         '''Clean 1: Default values'''
         self.res = clean()
@@ -363,8 +379,18 @@ class clean_test1(unittest.TestCase):
         self.assertEqual(self.res,None)
         # cleanup the copied ms
         os.system('rm -rf ' + self.msfile+'2')
+     
+    def test44(self):
+        '''Clean 44: Test user input mask from a boxfile'''
+        datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/'
+        refpath=datapath+'reference/'
+        shutil.copyfile(datapath+self.boxmsk, self.boxmsk)
+        self.res=clean(vis=self.msfile,imagename=self.img,mode='channel', mask=self.boxmsk)
+        self.assertEqual(self.res, None)
+        self.assertTrue(os.path.exists(self.img+'.image'))
+        self.assertTrue(self.compareimages(self.img+'.mask', refpath+'ref_cleantest1boxfile.mask'))
 
-
+ 
 class clean_test2(unittest.TestCase):
     
     # Input and output names
