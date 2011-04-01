@@ -93,6 +93,13 @@ template <class T> class LatticePADisplayData : public PrincipalAxesDD {
   virtual const uInt dataDim();
   virtual const T dataValue(IPosition pos);
   virtual const Unit dataUnit();
+
+  // Pure virtual function from DisplayData...
+  String dataType() const { return "image"; }
+  // Get image analyis about object...
+  virtual ImageAnalysis *imageanalysis( ) const;
+
+
   // left as pure virtual for implementation in concrete class
   virtual void setupElements() = 0;
   virtual void getMinAndMax();

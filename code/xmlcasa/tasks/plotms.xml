@@ -402,6 +402,80 @@ Flag Extension Parameters
     
 -->
 
+
+
+
+<!--
+###############################################################################
+Grid Parameters
+###############################################################################
+-->
+
+
+<param type="bool" name="showmajorgrid" subparam="false">
+    <description>Show major grid lines (horiz and vert.)</description>
+    <value>False</value>
+</param>
+
+<param type="int" name="majorwidth" subparam="true">
+    <description>Line width in pixels of major grid lines</description>
+    <value>1</value>
+</param>
+
+<param type="string" name="majorstyle" subparam="true">
+    <description>Major grid line style: solid dash dot none</description>
+    <allowed kind="enum">
+        <value />
+        <value>solid</value>
+        <value>dash</value>
+        <value>dot</value>
+        <value>none</value>
+    </allowed>
+</param>
+
+<param type="string" name="majorcolor" subparam="true">
+    <description>Color in hex code of major grid lines</description>
+    <value>B0B0B0</value>
+</param>
+
+
+
+<param type="bool" name="showminorgrid" subparam="false">
+    <description>Show minor grid lines (horiz and vert.)</description>
+    <value>False</value>
+</param>
+
+<param type="int" name="minorwidth" subparam="true">
+    <description>Line width in pixels of minor grid lines</description>
+    <value>1</value>
+</param>
+
+<param type="string" name="minorstyle" subparam="true">
+    <description>Minor grid line style: solid dash dot none</description>
+    <allowed kind="enum">
+        <value />
+        <value>solid</value>
+        <value>dash</value>
+        <value>dot</value>
+        <value>none</value>
+    </allowed>
+</param>
+
+<param type="string" name="minorcolor" subparam="true">
+    <description>Color in hex code of minor grid lines</description>
+    <value>D0D0D0</value>
+</param>
+
+
+
+<!--
+###############################################################################
+Export plot as image Parameters
+###############################################################################
+-->
+
+
+
     <param type="string" name="plotfile">
       <description>Name of plot file to save automatically.</description>
     </param>
@@ -751,6 +825,24 @@ Constraints
             <default param="interactive"><value type="bool">False</value></default>
             <default param="overwrite"><value type="bool">False</value></default>
         </notequals>
+    </when>
+
+    <when param="showmajorgrid">
+      <equals type="bool" value="False" />
+      <equals type="bool" value="True">
+        <default param="majorwidth"><value type="int" >0</value></default>
+        <default param="majorstyle"><value type="string" /></default>
+        <default param="majorcolor"><value type="string"></value></default>
+      </equals>
+    </when>
+
+    <when param="showminorgrid">
+      <equals type="bool" value="False" />
+      <equals type="bool" value="True">
+        <default param="minorwidth"><value type="int">0</value></default>
+        <default param="minorstyle"><value type="string" /></default>
+        <default param="minorcolor"><value type="string"></value></default>
+      </equals>
     </when>
 
 <!--    

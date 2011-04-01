@@ -30,7 +30,7 @@ flagautocorr(vis='ngc7538.ms')
 flagtime = time.time()
 print '--Setjy--'
 default('setjy')
-setjy(vis='ngc7538.ms',field='0') #set flux density for 1331+305 (3C286)
+setjy(vis='ngc7538.ms',field='0',standard='Perley-Taylor 99') #set flux density for 1331+305 (3C286)
 setjytime = time.time()
 print '--Gaincal--'
 default('gaincal')
@@ -65,11 +65,14 @@ default('split')
 split(vis='ngc7538.ms', outputvis='ngc7538_cal.split.ms',
 #      field=0,spw=0,nchan=62,start=0,step=1,datacolumn='MODEL_DATA')
 	field='0',spw='0:0~61', datacolumn='model')
+
 print '--Split (continuum)--'
 default('split')
+# This _averages_ 
 split(vis='ngc7538.ms', outputvis='ngc7538d.cont.ms',
       field='3',spw='0:2~56^55', datacolumn='corrected')
 	#,nchan=1,start=2,step=55,datacolumn='CORRECTED_DATA')
+
 print '--Split (mf cont,)--'
 default('split')
 split(vis='ngc7538.ms', outputvis='ngc7538.cont.ms',

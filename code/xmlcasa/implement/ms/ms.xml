@@ -742,67 +742,81 @@ the ms definition itself. -->
 
  
    <method type="function" name="open">
-   <shortdescription>Attach the ms tool to a measurement set table</shortdescription>
+     <shortdescription>Attach the ms tool to a measurement set table</shortdescription>
    
-  <keyword>open</keyword>
-  <input>
-    
-     <param type="string" direction="in" name="thems">
-     <description>Name of the measurement set table to open</description>
-     <value></value>
-     </param>
-    
-     <param type="bool" direction="in" name="nomodify">
-     <description>prevent changes to the measurement set</description>
-     <value>true</value>
-     </param>
-    
-     <param type="bool" direction="in" name="lock">
-     <description>lock the table for exclusive use by this tool</description>
-     <value>false</value>
-     </param>
-  </input>
-  <returns type="bool"/>
+     <keyword>open</keyword>
+     <input>
+       <param type="string" direction="in" name="thems">
+	 <description>Name of the measurement set table to open</description>
+	 <value></value>
+       </param>
 
-  <description>
-    Use this function when you have detached (using the
-    <link anchor="ms:ms.close.function">close</link> function) the ms tool from a
-    measurement set table and wish to reattach to another measurement
-    set table.  <!-- This is quicker than destroying the ms tool with the
-    <link anchor="ms:ms.done.function">done</link> function and starting up a new one as
-    the server does not have to be restarted.-->
-  </description>
-  <example>
+       <param type="bool" direction="in" name="nomodify">
+	 <description>prevent changes to the measurement set</description>
+	 <value>true</value>
+       </param>
     
-      ms.open('3C273XC1.MS')
-      ms.close()
-      ms.open("anotherms", nomodify=False, lock=False)
-    
-  </example>
-</method>
+       <param type="bool" direction="in" name="lock">
+	 <description>lock the table for exclusive use by this tool</description>
+	 <value>false</value>
+       </param>
+     </input>
+     <returns type="bool"/>
 
+     <description>
+       Use this function when you have detached (using the
+       <link anchor="ms:ms.close.function">close</link> function) the ms tool from a
+       measurement set table and wish to reattach to another measurement
+       set table.  <!-- This is quicker than destroying the ms tool with the
+			<link anchor="ms:ms.done.function">done</link> function and starting up a new one as
+			the server does not have to be restarted.-->
+     </description>
+     <example>
+    
+       ms.open('3C273XC1.MS')
+       ms.close()
+       ms.open("anotherms", nomodify=False, lock=False)
+    
+     </example>
+   </method>
+
+   <method type="function" name="reset">
+     <shortdescription>Re-attach the tool to the original MS.</shortdescription>
+   
+     <keyword>reset</keyword>
+     <description>
+       This function re-attaches the ms tool to the original MS,
+       effectively discarding any prior operations, in particular any
+       data selection operations
+       using <link anchor="ms:ms.msselection.function">msselect</link>
+       function.
+     </description>
+     <returns type="bool"/>
+     <example>
+     </example>
+   </method>
  
    <method type="function" name="close">
-   <shortdescription>Detach the ms tool from the measurement set table</shortdescription>
+     <shortdescription>Detach the ms tool from the measurement set table</shortdescription>
    
-  <keyword>close</keyword>
-  <description>
-    This function detaches the ms tool from the associated measurement
-    set table after flushing all the cached changes.  After calling
-    this function the ms tool is not associated with any measurement
-    set and using any function other than
-    <link anchor="ms:ms.open.function">open</link> or
-    <link anchor="ms:ms.fromfits.function">fromfits</link>
-    will result in an error message being sent to the logger.
+     <keyword>close</keyword>
+     <description>
+       This function detaches the ms tool from the associated measurement
+       set table after flushing all the cached changes.  After calling
+       this function the ms tool is not associated with any measurement
+       set and using any function other than
+       <link anchor="ms:ms.open.function">open</link> or
+       <link anchor="ms:ms.fromfits.function">fromfits</link>
+       will result in an error message being sent to the logger.
 
-    This function can be useful to avoid synchronization problems
-    which can occur when different processes have the same ms open.
-  </description>
-  <returns type="bool"/>
-  <example>
-    See the example for the <link anchor="ms:ms.open.function">open</link> function.
-  </example>
-</method>
+       This function can be useful to avoid synchronization problems
+       which can occur when different processes have the same ms open.
+     </description>
+     <returns type="bool"/>
+     <example>
+       See the example for the <link anchor="ms:ms.open.function">open</link> function.
+     </example>
+   </method>
 
  
    <method type="function" name="name">
@@ -1648,6 +1662,56 @@ Date/Time:                         RR:                      RL:                 
   </example>
 </method>
 
+   <method type="function" name="msselect">
+     <shortdescription>Use the MSSelection module for data selection.</shortdescription>
+     <keyword>msselect</keyword>
+     <input>
+       <param type="any" direction="in" name="items">
+	 <any type="record"/>
+	 <description>
+	   Record with fields contain the selection experessions. Keys
+	   recognized in the record are: "spw", "time", "field",
+	   "baseline", "scan", "scanintent", "polarization" and
+	   "uvdist".
+	 </description>
+       </param>	
+     </input>
+     <returns type="bool"/>
+     <description>
+       The details of selection expressions are desribed in the
+       <link anchor="http://casa.nrao.edu/other_doc.shtml">MSSelection Memo.</link>
+
+       Note that this function can be called multiple times but the
+       result is cumulative.  I.e. selection will work on the data
+       already selected from all previous calls of this function.  Use
+       the function reset() to reset all selections to NULL (original
+       database).
+     </description>
+     <example>
+       Watch this space...(or request the User Support Group to fill-in)
+     </example>
+   </method>
+
+   <method type="function" name="msselectedindices">
+     <shortdescription>
+       Return the selected indices of the MS database.  The keys in
+       the record are the same as those used in msselect function
+       (i.e. "spw", "time", "field", "baseline", "scan", "scanintent",
+       "polarization" and "uvdist").
+     </shortdescription>
+     <keyword>msselectedindices</keyword>
+     <input>
+     </input>
+     <returns type="any"><any type="record"/>record of indices selected</returns>
+     <description>
+       The return indices are the result of parsing the MSSelection
+       expressions provided in
+       the <link anchor="ms:ms.msselect.function">msselect</link>
+       function.
+     </description>
+     <example>
+     </example>
+   </method>
  
    <method type="function" name="select">
    <shortdescription>Select a subset of the measurement set.</shortdescription>
@@ -1931,7 +1995,7 @@ Date/Time:                         RR:                      RL:                 
 
      <param type="string" direction="in" name="interpolation">
      <description>
-      Name of the interpolation method (NEAREST, LINEAR, SPLINE, CUBIC) used in the regridding. 
+      Name of the interpolation method (NEAREST, LINEAR, SPLINE, CUBIC, FFTSHIFT) used in the regridding. 
       Flagging information is combined using "inclusive or". 
      </description>
      <value>LINEAR</value>
@@ -2080,7 +2144,7 @@ Date/Time:                         RR:                      RL:                 
      </param>
 
      <param type="string" direction="in" name="interp">
-     <description> interpolation method, default = linear
+     <description> interpolation method "nearest", "linear", "spline", "cubic", "fftshift", default = linear
      </description>
      <value>linear</value>
      </param>
@@ -2705,11 +2769,6 @@ for i in range(len(tcoord)):
      <param type="variant" name="subarray">
      <description>Limit data to specific (sub)array numbers.</description>
      <value></value>
-     </param>
-
-     <param type="bool" name="averchan">
-     <description>If true, step will be used to average channels.  Otherwise it will be used to skip channels.</description>
-     <value>true</value>
      </param>
 
      <param type="string" direction="in" name="combine">

@@ -24,7 +24,7 @@ import copy
 myname = 'cvel_regression'
 
 # default dataset name
-dataset_name_orig = 'ANTEN_sort_hann_for_cvel_reg.ms'
+dataset_name_orig = 'ANTEN_sort_hann_for_cvel_reg-thinned.ms'
 
 # get the dataset name from the wrapper if possible
 mydict = locals()

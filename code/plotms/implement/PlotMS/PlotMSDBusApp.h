@@ -85,12 +85,20 @@ public:
     static const String PARAM_EXPORT_FORMAT; //String
     static const String PARAM_EXPORT_HIGHRES; // bool
     static const String PARAM_EXPORT_INTERACTIVE; // bool
-    static const String PARAM_EXPORT_ASYNC; // bool
-    static const String PARAM_COLORIZE;  // bool
-    static const String PARAM_COLORAXIS;  // string
-    static const String PARAM_CANVASTITLE;     // string
-    static const String PARAM_XAXISLABEL;   // string
-    static const String PARAM_YAXISLABEL;   // string
+    static const String PARAM_EXPORT_ASYNC;  // bool
+    static const String PARAM_COLORIZE;      // bool
+    static const String PARAM_COLORAXIS;     // string
+    static const String PARAM_CANVASTITLE;    // string
+    static const String PARAM_XAXISLABEL;    // string
+    static const String PARAM_YAXISLABEL;    // string
+    static const String PARAM_SHOWMAJORGRID;  // bool
+    static const String PARAM_SHOWMINORGRID;  // bool
+    static const String PARAM_MAJORCOLOR;    // string
+    static const String PARAM_MINORCOLOR;    // string
+    static const String PARAM_MAJORSTYLE;    // string 
+    static const String PARAM_MINORSTYLE;    // string
+    static const String PARAM_MAJORWIDTH;    // int 
+    static const String PARAM_MINORWIDTH;    // int 
     // </group>
 
     // DBus method name for getting the log parameters, including: the sink

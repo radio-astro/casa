@@ -137,9 +137,9 @@ VisBuffer::copyCache (const VisBuffer & other)
     cacheCopyArray  (direction2OK_p, other.direction2OK_p, direction2_p, other.direction2_p);
     cacheCopyArray  (exposureOK_p, other.exposureOK_p, exposure_p, other.exposure_p);
     cacheCopyArray  (feed1OK_p, other.feed1OK_p, feed1_p, other.feed1_p);
-    cacheCopyArray  (feed1OK_p, other.feed1OK_p, feed1_p, other.feed1_p);
+    cacheCopyArray  (feed1_paOK_p, other.feed1_paOK_p, feed1_pa_p, other.feed1_pa_p);
     cacheCopyArray  (feed2OK_p, other.feed2OK_p, feed2_p, other.feed2_p);
-    cacheCopyArray  (feed2OK_p, other.feed2OK_p, feed2_p, other.feed2_p);
+    cacheCopyArray  (feed2_paOK_p, other.feed2_paOK_p, feed2_pa_p, other.feed2_pa_p);
     cacheCopyNormal (fieldIdOK_p, other.fieldIdOK_p, fieldId_p, other.fieldId_p);
     cacheCopyArray  (flagOK_p, other.flagOK_p, flag_p, other.flag_p);
     cacheCopyArray  (flagCategoryOK_p, other.flagCategoryOK_p, flagCategory_p, other.flagCategory_p);
@@ -303,6 +303,34 @@ VisBuffer::setAllCacheStatuses (bool status)
     weightMatOK_p = status;
     weightOK_p = status;
     weightSpectrumOK_p = status;
+}
+
+Cube<Complex>& VisBuffer::dataCube(const MS::PredefinedColumns whichcol)
+{
+  switch(whichcol){
+  case MS::DATA:
+    return visCube();
+  case MS::MODEL_DATA:
+    return modelVisCube();
+  case MS::CORRECTED_DATA:
+    return correctedVisCube();
+  default:
+    throw(AipsError(MS::columnName(whichcol) + " is not supported as a data Cube."));
+  }
+}
+
+const Cube<Complex>& VisBuffer::dataCube(const MS::PredefinedColumns whichcol) const
+{
+  switch(whichcol){
+  case MS::DATA:
+    return visCube();
+  case MS::MODEL_DATA:
+    return modelVisCube();
+  case MS::CORRECTED_DATA:
+    return correctedVisCube();
+  default:
+    throw(AipsError(MS::columnName(whichcol) + " is not supported as a data Cube."));
+  }
 }
 
 void VisBuffer::freqAverage()
@@ -762,8 +790,14 @@ void VisBuffer::channelAve(const Matrix<Int>& chanavebounds)
         for(uInt row = 0; row < nrows; ++row){
           for(uInt icor = 0; icor < nCor; ++icor){
             rowWtFac(icor, row) = 0.0;
-            for(Int ochan = 0; ochan < nChanOut; ++ochan)
-              rowWtFac(icor, row) += wtsp(icor, ochan, row);
+            for(Int ochan = 0; ochan < nChanOut; ++ochan){
+              Float oswt = wtsp(icor, ochan, row);       // output spectral
+                                                         // weight
+              if(oswt > 0.0)
+                rowWtFac(icor, row) += oswt;
+              else
+                flagCube()(icor, ochan, row) = True;
+            }
           }
         }
       }
@@ -819,9 +853,13 @@ void VisBuffer::chanAveFlagCube(Cube<Bool>& flagcube, Int nChanOut,
 	while (chans[ichan] >= chanAveBounds_p(ochan, 0) &&
 	       chans[ichan] <= chanAveBounds_p(ochan, 1) &&
 	       ichan < nChan0) {
-	  for(Int icor = 0; icor < nCor; ++icor) 
-	    if(!flagcube(icor, ichan, row)) 
+	  for(Int icor = 0; icor < nCor; ++icor){
+            Double wt = doWtSp ? weightSpectrum()(icor, ochan, row) :
+                                 weightMat()(icor, row);
+
+	    if(!flagcube(icor, ichan, row) && wt > 0.0) 
 	      newFlag(icor, ochan, row) = False;
+          }
 	  ++ichan;
 	}
       }

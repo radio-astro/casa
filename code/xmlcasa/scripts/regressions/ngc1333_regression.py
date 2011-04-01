@@ -345,8 +345,8 @@ if benchmarking:
 print '--Setjy--'
 default('setjy')
 
-setjy(vis=msfile1,field='0542+498_1',modimage=modelim) 
-setjy(vis=msfile1,field='0542+498_2',modimage=modelim)
+setjy(vis=msfile1,field='0542+498_1',modimage=modelim,standard='Perley-Taylor 99') 
+setjy(vis=msfile1,field='0542+498_2',modimage=modelim,standard='Perley-Taylor 99')
 
 # Record setjy completion time
 if benchmarking:
@@ -638,8 +638,8 @@ if benchmarking:
 print '--Setjy--'
 default('setjy')
 
-setjy(vis=msfile2,field='0542+498_1',modimage=modelim) 
-setjy(vis=msfile2,field='0542+498_2',modimage=modelim)
+setjy(vis=msfile2,field='0542+498_1',modimage=modelim,standard='Perley-Taylor 99')
+setjy(vis=msfile2,field='0542+498_2',modimage=modelim,standard='Perley-Taylor 99')
 
 # Record setjy completion time
 if benchmarking:

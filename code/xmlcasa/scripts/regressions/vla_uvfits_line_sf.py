@@ -151,9 +151,10 @@ pipeline.calibrate['listcal'] = {}
 pipeline.calibrate['verify'] = verify.calibrate
 pipeline.calibrate['fluxscale'] = {}
 pipeline.calibrate['setjy']['args'] = {'vis':'ngc5921.ms',
-		                 'field' : '1331+305*',
-				 'modimage' : ''
-		                }
+				       'field' : '1331+305*',
+				       'modimage' : '',
+				       'standard':'Perley-Taylor 99'
+				       }
 pipeline.calibrate['bandpass']['args'] = {'vis':'ngc5921.ms',
 		                    'caltable':'ngc5921.bcal',
 				    'gaintable' :'',

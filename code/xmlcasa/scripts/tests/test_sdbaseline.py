@@ -11,12 +11,13 @@ import listing
 from numpy import array
 
 asap_init()
+import asap as sd
 from sdbaseline import sdbaseline
 from sdstat import sdstat
 
 class sdbaseline_basictest(unittest.TestCase):
     """
-    Basic unit test for task sdbaseline. No interactive testing.
+    Basic unit tests for task sdbaseline. No interactive testing.
 
     The list of tests:
     test00   --- default parameters (raises an error)
@@ -35,6 +36,7 @@ class sdbaseline_basictest(unittest.TestCase):
     # Data path of input/output
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdbaseline/'
     # Input and output names
+    #sdfile = 'OrionS_rawACSmod_calTave.asap'
     sdfile = 'OrionS_rawACSmod_calave.asap'
     outroot = 'sdbaseline_test'
     blrefroot = datapath+'refblparam'
@@ -173,7 +175,7 @@ class sdbaseline_basictest(unittest.TestCase):
 
 class sdbaseline_masktest(unittest.TestCase):
     """
-    Unit test for task sdbaseline. Test various mask selections.
+    Unit tests for task sdbaseline. Test various mask selections.
     Polynominal baselining. No interactive testing.
 
     The list of tests:
@@ -194,11 +196,18 @@ class sdbaseline_masktest(unittest.TestCase):
     # Data path of input/output
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdbaseline/'
     # Input and output names
+    #sdfile = 'OrionS_rawACSmod_calTave.asap'
     sdfile = 'OrionS_rawACSmod_calave.asap'
     outroot = 'sdbaseline_masktest'
     blrefroot = datapath+'refblparam_mask'
     #strefroot = datapath+'refstats_mask'
     tid = None
+
+    # Channel range excluding bad edge
+    search = [[200,7599]]
+    # Baseline channels. should be identical to one selected by 'auto' mode
+    blchan0 = [[200,3979],[4152,7599]]
+    blchan2 = [[200,2959],[3120,7599]]
 
     # reference values for specunit='channel'
     ref_if02pol0 = {'rms': [0.42596656084060669, 0.20059973001480103],
@@ -213,20 +222,25 @@ class sdbaseline_masktest(unittest.TestCase):
     ref_if02pol0f = {'rms': [0.42488649487495422, 0.19945363700389862],
                      'min': [-19.564926147460938, -2.7968206405639648],
                      'max': [14.782135009765625, 2.0308547019958496],
-                     'sum': [39.382259368896484, 171.57220458984375],
-                     'mean': [0.0048074047081172466, 0.020943872630596161]}
+                     'sum': [45.82806396484375, 171.0570068359375],
+                     'mean':[0.0055942460894584656, 0.020880982279777527]}
+#                     'sum': [39.382259368896484, 171.57220458984375],
+#                     'mean': [0.0048074047081172466, 0.020943872630596161]}
     ref_if2pol0f = {'rms': 0.19945363700389862, 'min': -2.7968206405639648,
                     'max': 2.0308547019958496, 'sum': 171.57220458984375,
                     'mean': 0.020943872630596161}
-    # reference values for specunit='GHz'
     ref_if02pol0v = {'rms': [0.42596647143363953, 0.19845835864543915],
                      'min': [-19.415897369384766, -2.7794866561889648],
                      'max': [14.930398941040039, 2.0269484519958496],
-                     'sum': [18.462699890136719, 164.74856567382812],
-                     'mean': [0.0022537475451827049, 0.020110908895730972]}
+                     'sum': [18.465187072753906, 161.4881591796875],
+                     'mean': [0.0022540511563420296, 0.019712910056114197]}
+#                     'sum': [18.462699890136719, 164.74856567382812],
+#                     'mean': [0.0022537475451827049, 0.020110908895730972]}
     ref_if2pol0v = {'rms': 0.19845835864543915, 'min': -2.7794866561889648,
-                    'max': 2.0269484519958496, 'sum': 164.74856567382812,
-                    'mean': 0.020110908895730972}
+                    'max': 2.0269484519958496, 'sum': 161.4881591796875,
+                    'mean': 0.019712910056114197}
+#                    'max': 2.0269484519958496, 'sum': 164.74856567382812,
+#                    'mean': 0.020110908895730972}
     
     def setUp(self):
         if os.path.exists(self.sdfile):
@@ -248,9 +262,12 @@ class sdbaseline_masktest(unittest.TestCase):
         sdfile = self.sdfile
         outfile = self.outroot+self.tid+".asap"
         mode = "auto"
-        masklist = [[200.,7599]]
+        masklist = self.search
         iflist = [0,2]
         pollist=[0]
+
+        print "masklist =", masklist
+
         result = sdbaseline(sdfile=sdfile,maskmode=mode,masklist=masklist,
                             outfile=outfile,iflist=iflist,pollist=pollist)
         # sdbaseline returns None if it runs successfully
@@ -264,9 +281,12 @@ class sdbaseline_masktest(unittest.TestCase):
         sdfile = self.sdfile
         outfile = self.outroot+self.tid+".asap"
         mode = "list"
-        masklist = [[200,2959],[3120,7599]]
+        masklist = self.blchan2
         iflist = [2]
         pollist=[0]
+
+        print "masklist =", masklist
+
         result = sdbaseline(sdfile=sdfile,maskmode=mode,masklist=masklist,
                             outfile=outfile,iflist=iflist,pollist=pollist)
         # sdbaseline returns None if it runs successfully
@@ -280,9 +300,14 @@ class sdbaseline_masktest(unittest.TestCase):
         sdfile = self.sdfile
         outfile = self.outroot+self.tid+".asap"
         mode = "auto"
-        masklist = "0~2:200~7599"
+        #masklist = "0~2:200~7599"
         iflist = [0,2]
         pollist=[0]
+
+        searchrange = self._get_range_in_string(self.search[0])
+        masklist = "0~2:"+searchrange
+        print "masklist =", masklist
+
         result = sdbaseline(sdfile=sdfile,maskmode=mode,masklist=masklist,
                             outfile=outfile,iflist=iflist,pollist=pollist)
         # sdbaseline returns None if it runs successfully
@@ -296,9 +321,20 @@ class sdbaseline_masktest(unittest.TestCase):
         sdfile = self.sdfile
         outfile = self.outroot+self.tid+".asap"
         mode = "list"
-        masklist = "0:200~3979;4152~7599, 2:200~2959;3120~7599"
+        #masklist = "0:200~3979;4152~7599, 2:200~2959;3120~7599"
         iflist = [0,2]
         pollist=[0]
+
+        sblrange=[]
+        chanlist = (self.blchan0, self.blchan2)
+        for i in xrange(len(iflist)):
+            sblrange.append("")
+            for chanrange in chanlist[i]:
+                if len(sblrange[i]): sblrange[i] += ";"
+                sblrange[i] += self._get_range_in_string(chanrange)
+        masklist = "0:"+sblrange[0]+", 2:"+sblrange[1]
+        print "masklist =", masklist
+
         result = sdbaseline(sdfile=sdfile,maskmode=mode,masklist=masklist,
                             outfile=outfile,iflist=iflist,pollist=pollist)
         # sdbaseline returns None if it runs successfully
@@ -313,9 +349,13 @@ class sdbaseline_masktest(unittest.TestCase):
         outfile = self.outroot+self.tid+".asap"
         mode = "auto"
         specunit = "GHz"
-        masklist = [[44.0511472,44.0963125]]
+        #masklist = [[44.0511472,44.0963125]]
         iflist = [2]
         pollist=[0]
+
+        masklist = self._get_chanval(sdfile,self.search,specunit,spw=iflist[0],addedge=True)
+        print "masklist =", masklist
+
         result = sdbaseline(sdfile=sdfile,maskmode=mode,masklist=masklist,
                             outfile=outfile,iflist=iflist,pollist=pollist,
                             specunit=specunit)
@@ -331,9 +371,13 @@ class sdbaseline_masktest(unittest.TestCase):
         outfile = self.outroot+self.tid+".asap"
         mode = "list"
         specunit = "GHz"
-        masklist = [[44.0511472,44.0679889],[44.0689716,44.0963125]]
+        #masklist = [[44.0511472,44.0679889],[44.0689716,44.0963125]]
         iflist = [2]
         pollist=[0]
+
+        masklist = self._get_chanval(sdfile,self.blchan2,specunit,spw=iflist[0],addedge=True)
+        print "masklist =", masklist
+
         result = sdbaseline(sdfile=sdfile,maskmode=mode,masklist=masklist,
                             outfile=outfile,iflist=iflist,pollist=pollist,
                             specunit=specunit)
@@ -349,9 +393,21 @@ class sdbaseline_masktest(unittest.TestCase):
         outfile = self.outroot+self.tid+".asap"
         mode = "auto"
         specunit = "GHz"
-        masklist = "0:45.4655714~45.5107367, 2:44.0511472~44.0963125"
+        #masklist = "0:45.4655714~45.5107367, 2:44.0511472~44.0963125"
         iflist = [0,2]
         pollist=[0]
+
+        sblrange=[]
+        chanlist = (self.search, self.search)
+        for i in xrange(len(iflist)):
+            sblrange.append("")
+            mlist = self._get_chanval(sdfile,chanlist[i],specunit,spw=iflist[i],addedge=True)
+            for valrange in mlist:
+                if len(sblrange[i]): sblrange[i] += ";"
+                sblrange[i] += self._get_range_in_string(valrange)
+        masklist = "0:"+sblrange[0]+", 2:"+sblrange[1]
+        print "masklist =", masklist
+
         result = sdbaseline(sdfile=sdfile,maskmode=mode,masklist=masklist,
                             outfile=outfile,iflist=iflist,pollist=pollist,
                             specunit=specunit)
@@ -367,9 +423,21 @@ class sdbaseline_masktest(unittest.TestCase):
         outfile = self.outroot+self.tid+".asap"
         mode = "list"
         specunit = "GHz"
-        masklist = "0:45.4655714~45.4886394;45.4896954~45.5107367, 2:44.0511472~44.0679889;44.0689716~44.0963125"
+        #masklist = "0:45.4655714~45.4886394;45.4896954~45.5107367, 2:44.0511472~44.0679889;44.0689716~44.0963125"
         iflist = [0,2]
         pollist=[0]
+
+        sblrange=[]
+        chanlist = (self.blchan0, self.blchan2)
+        for i in xrange(len(iflist)):
+            sblrange.append("")
+            mlist = self._get_chanval(sdfile,chanlist[i],specunit,spw=iflist[i],addedge=True)
+            for valrange in mlist:
+                if len(sblrange[i]): sblrange[i] += ";"
+                sblrange[i] += self._get_range_in_string(valrange)
+        masklist = "0:"+sblrange[0]+", 2:"+sblrange[1]
+        print "masklist =", masklist
+
         result = sdbaseline(sdfile=sdfile,maskmode=mode,masklist=masklist,
                             outfile=outfile,iflist=iflist,pollist=pollist,
                             specunit=specunit)
@@ -385,9 +453,13 @@ class sdbaseline_masktest(unittest.TestCase):
         outfile = self.outroot+self.tid+".asap"
         mode = "auto"
         specunit = "km/s"
-        masklist = [[9186.458, 9484.109]]
+        #masklist = [[9186.458, 9484.109]]
         iflist = [2]
         pollist=[0]
+
+        masklist = self._get_chanval(sdfile,self.search,specunit,spw=iflist[0],addedge=True)
+        print "masklist =", masklist
+        
         result = sdbaseline(sdfile=sdfile,maskmode=mode,masklist=masklist,
                             outfile=outfile,iflist=iflist,pollist=pollist,
                             specunit=specunit)
@@ -403,9 +475,13 @@ class sdbaseline_masktest(unittest.TestCase):
         outfile = self.outroot+self.tid+".asap"
         mode = "list"
         specunit = "km/s"
-        masklist = [[9186.458, 9366.642],[9373.118, 9484.109]]
+        #masklist = [[9186.458, 9366.642],[9373.118, 9484.109]]
         iflist = [2]
         pollist=[0]
+
+        masklist = self._get_chanval(sdfile,self.blchan2,specunit,spw=iflist[0],addedge=True)
+        print "masklist =", masklist
+        
         result = sdbaseline(sdfile=sdfile,maskmode=mode,masklist=masklist,
                             outfile=outfile,iflist=iflist,pollist=pollist,
                             specunit=specunit)
@@ -421,9 +497,21 @@ class sdbaseline_masktest(unittest.TestCase):
         outfile = self.outroot+self.tid+".asap"
         mode = "auto"
         specunit = "km/s"
-        masklist = "0:-134.960~162.691, 2:9186.458~9484.109"
+        #masklist = "0:-134.960~162.691, 2:9186.458~9484.109"
         iflist = [0,2]
         pollist=[0]
+
+        sblrange=[]
+        chanlist = (self.search, self.search)
+        for i in xrange(len(iflist)):
+            sblrange.append("")
+            mlist = self._get_chanval(sdfile,chanlist[i],specunit,spw=iflist[i],addedge=True)
+            for valrange in mlist:
+                if len(sblrange[i]): sblrange[i] += ";"
+                sblrange[i] += self._get_range_in_string(valrange)
+        masklist = "0:"+sblrange[0]+", 2:"+sblrange[1]
+        print "masklist =", masklist
+
         result = sdbaseline(sdfile=sdfile,maskmode=mode,masklist=masklist,
                             outfile=outfile,iflist=iflist,pollist=pollist,
                             specunit=specunit)
@@ -439,9 +527,21 @@ class sdbaseline_masktest(unittest.TestCase):
         outfile = self.outroot+self.tid+".asap"
         mode = "list"
         specunit = "km/s"
-        masklist = "0:-134.960~3.708;10.667~162.691, 2:9373.118~9484.109;9186.458~9366.642"
+        #masklist = "0:-134.960~3.708;10.667~162.691, 2:9373.118~9484.109;9186.458~9366.642"
         iflist = [0,2]
         pollist=[0]
+
+        sblrange=[]
+        chanlist = (self.blchan0, self.blchan2)
+        for i in xrange(len(iflist)):
+            sblrange.append("")
+            mlist = self._get_chanval(sdfile,chanlist[i],specunit,spw=iflist[i],addedge=True)
+            for valrange in mlist:
+                if len(sblrange[i]): sblrange[i] += ";"
+                sblrange[i] += self._get_range_in_string(valrange)
+        masklist = "0:"+sblrange[0]+", 2:"+sblrange[1]
+        print "masklist =", masklist
+
         result = sdbaseline(sdfile=sdfile,maskmode=mode,masklist=masklist,
                             outfile=outfile,iflist=iflist,pollist=pollist,
                             specunit=specunit)
@@ -450,6 +550,31 @@ class sdbaseline_masktest(unittest.TestCase):
                          msg="The task returned '"+str(result)+"' instead of None")
         self._compareStats(self.ref_if02pol0v)
 
+
+    def _get_range_in_string(self,valrange):
+        if isinstance(valrange, list) or isinstance(valrange, tuple):
+            return str(valrange[0])+"~"+str(valrange[1])
+        else:
+            return False
+
+    def _get_chanval(self,file,chanrange,unit,spw=0,addedge=False):
+        mylist = []
+        scan = sd.scantable(file, average=False)
+        scan.set_unit(unit)
+        scan.set_selection(ifs=[spw])
+        chanval = scan._getabcissa(0)
+        edge = 0
+        if addedge:
+            # add 1/2 chan to both edges
+            nchan = len(chanval)
+            #edge = 0.0
+            edge = 0.5*abs(chanval[nchan-1]-chanval[0])/float(nchan-1)
+        for schan, echan in chanrange:
+            lval = max(chanval[schan],chanval[echan])
+            sval = min(chanval[schan],chanval[echan])
+            mylist.append([sval-edge,lval+edge])
+        del scan, nchan, edge, lval, sval
+        return mylist
 
     def _compareBLparam(self):
         # test if baseline parameters are equal to the reference values
@@ -467,6 +592,7 @@ class sdbaseline_masktest(unittest.TestCase):
     def _compareStats(self,reference):
         # test if the statistics of baselined spectra are equal to
         # the reference values
+        default(sdstat)
         outfile = self.outroot+self.tid+'.asap'
         self.assertTrue(os.path.exists(outfile))
         currstat = sdstat(sdfile=outfile)

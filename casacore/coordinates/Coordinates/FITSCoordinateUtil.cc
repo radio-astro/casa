@@ -483,25 +483,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         // by ObsInfo.
         vector<String> saveCards;
 	int nkeys = header.nelements();
-	Vector<uInt> nChan;
 	String all;
 	for (int i=0; i<nkeys; i++) {
             if (header[i].substr(0,7) == "OBSGEO-") {
                 saveCards.push_back (header[i]);
-            }
-            if (header[i].substr(0,5) == "NAXIS") {
-		if(header[i].substr(0,6) == "NAXIS "){
-		    uInt na = atoi(header[i].substr(10,20).c_str());
-		    nChan.resize(na);
-		    nChan = 0;
-		}
-		else {
-		    uInt j = atoi(header[i].substr(5,2).c_str())-1;
-		    if(j<nChan.nelements()){
-		        nChan(j) = atoi(header[i].substr(10,20).c_str()); // extract number
-			//cout << header[i] << "   nchan " << j << " " << nChan(j) << endl;
-		    }
-		}
             }
 	    int hsize = header[i].size();
 	    if (hsize >= 19 &&       // kludge changes 'RA--SIN ' to 'RA---SIN', etc.
@@ -688,6 +673,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Int specAxis = -1;
 	Int stokesAxis = -1;
 	const uInt nAxes = wcsPtr[which].naxis;
+
+	if(nAxes>shape.size()){
+	  os << LogIO::NORMAL << "The WCS for this image contains " << nAxes - shape.size()
+	     << " degenerate axes." <<  LogIO::POST;
+	}
+	else if(nAxes<shape.size()){
+	  os << LogIO::WARN << "WCS does only provide information for "  
+	     << nAxes << " out of " << shape.size() << " axes of this image." 
+	     <<  LogIO::POST;
+	}	  
 //
 	Bool ok=True;
 	ok = addDirectionCoordinate (cSysTmp, dirAxes, wcsPtr[which], os);
@@ -706,7 +701,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    return False;
 	}
 //
-	ok = addSpectralCoordinate (cSysTmp, specAxis, wcsPtr[which], os, nChan);
+	ok = addSpectralCoordinate (cSysTmp, specAxis, wcsPtr[which], shape, os);
 	if (!ok) {
 	    wcsvfree(&nwcs, &wcsPtr);
 	    return False;
@@ -938,13 +933,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Try to create StokesCoordinate
 
 	    stokesAxis = axes[0] - 1;              // 1 -> 0 rel
+	    uInt stokesAxisShape = 1;
+	    if(stokesAxis<shape.size()){
+	      stokesAxisShape = shape(stokesAxis);
+	    }
 	    Bool warnStokes = stokesFITSValue > 0;
 	    stokesFITSValue = -1;
 	    Vector<Int> stokes(1); stokes = 1;
 	    StokesCoordinate c(stokes);                  // No default constructor
 	    String errMsg;
 	    if (stokesCoordinateFromWCS (os, c, stokesFITSValue, errMsg, wcsDest, 
-					 shape(stokesAxis), warnStokes)) {
+					 stokesAxisShape, warnStokes)) {
 		cSys.addCoordinate(c);
 	    } else {
 		os << LogIO::WARN << errMsg << LogIO::POST;
@@ -964,8 +963,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool FITSCoordinateUtil::addSpectralCoordinate (CoordinateSystem& cSys, 
 						    Int& specAxis,
 						    const ::wcsprm& wcs,
-						    LogIO& os,
-						    Vector<uInt> nChan) const
+						    const IPosition& shape,
+						    LogIO& os) const
     {
 
         // Extract wcs structure pertaining to Spectral Coordinate
@@ -978,9 +977,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	int alloc = 1;
 	int ierr = wcssub (alloc, &wcs, &nsub, axes.storage(), &wcsDest);
 
-	uInt nc = 0;
-	if(axes[0]-1<nChan.nelements()){
-	  nc = nChan(axes[0]-1); // the number of channels of the spectral axis
+	uInt nc = 1;
+	if(axes[0]-1<shape.nelements()){
+	  nc = shape(axes[0]-1); // the number of channels of the spectral axis
 	}
 
 	Bool ok = True;

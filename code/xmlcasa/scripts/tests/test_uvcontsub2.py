@@ -28,11 +28,6 @@ class UVContChecker(SplitChecker):
     need_to_initialize = True
     records = {}
 
-    def initialize(self):
-        self.locms = self.inpms.split('/')[-1]
-        os.symlink(self.inpms, self.locms)
-        SplitChecker.initialize(self)
-    
     def do_split(self, corrsel):
         """
         This is only called do_split because it comes from SplitChecker.
@@ -41,19 +36,18 @@ class UVContChecker(SplitChecker):
         record = {}
         try:
             print "\nRunning uvcontsub2"
-            uvran = uvcontsub2(self.locms, fitspw='0:0~5;18~23',
+            uvran = uvcontsub2(self.inpms, fitspw='0:0~5;18~23',
                                fitorder=corrsel, want_cont=True,
                                async=False)
         except Exception, e:
             print "Error running uvcontsub2"
             raise e
         for spec in ('cont', 'contsub'):
-            specms = self.locms + '.' + spec
+            specms = self.inpms + '.' + spec
             tb.open(specms)
             record[spec] = tb.getcell('DATA', 52)
             tb.close()
             shutil.rmtree(specms)
-        os.unlink(self.locms)
         self.__class__.records[corrsel] = record
         return uvran
 
@@ -139,6 +133,43 @@ class fourth(UVContChecker):
                                0.00000+0.00000j,    0.00000+0.00000j,
                                0.00000+0.00000j,    0.00000+0.00000j]]),
                  0.0001)
+
+class combspw(UVContChecker):
+    inpms = uvcdatadir + 'combspw.ms'
+    corrsels = [0, 1]                    # fitorder, not corr selection.
+
+    def do_split(self, corrsel):
+        """
+        This is only called do_split because it comes from SplitChecker.
+        run_task (uvcontsub2 in this case) would have been a better name.
+        """
+        record = {}
+        try:
+            print "\nRunning uvcontsub2"
+            uvran = uvcontsub2(self.inpms, fitspw='1~10:5~122,15~22:5~122',
+                               spw='6~14', combine='spw',
+                               fitorder=corrsel, want_cont=False,
+                               async=False)
+        except Exception, e:
+            print "Error running uvcontsub2"
+            raise e
+        specms = self.inpms + '.contsub'
+        tb.open(specms)
+        record['contsub'] = tb.getcell('DATA', 52)[0][73]
+        tb.close()
+        shutil.rmtree(specms)
+        self.__class__.records[corrsel] = record
+        return uvran
+
+    def test_0ran(self):
+        """combspw fitorder=0 line estimate"""
+        check_eq(self.records[0]['contsub'], -6.99146+17.53703j,
+                 0.001)
+
+    def test_1ran(self):
+        """combspw fitorder=1 line estimate"""
+        check_eq(self.records[1]['contsub'], -6.25609+17.67916j,
+                 0.001)
         
 def suite():
-    return [zeroth, fourth]
+    return [zeroth, fourth, combspw]

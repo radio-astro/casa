@@ -138,7 +138,7 @@ public:
   //   (optionally for specific chan)
   void residuals(VisBuffer& vb, 
 		 Cube<Complex>& R,
-		 const Int& chan=-1);
+		 const Int chan=-1);
   
   // Calculate residuals and differentiated residuals
   //   (optionally for specific chan)

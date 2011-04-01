@@ -48,6 +48,7 @@
 #include <coordinates/Coordinates/StokesCoordinate.h>
 #include <coordinates/Coordinates/TabularCoordinate.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>    
+#include <images/Images/ImageAnalysis.h>
 #include <display/DisplayEvents/WCPositionEvent.h>
 #include <display/DisplayEvents/WCMotionEvent.h>
 #include <display/DisplayEvents/WCRefreshEvent.h>
@@ -2291,6 +2292,10 @@ PrincipalAxesDD::PrincipalAxesDD()
 
 PrincipalAxesDD::PrincipalAxesDD(const PrincipalAxesDD &) 
 {}
+
+ImageAnalysis *PrincipalAxesDD::create_image_analysis( ImageInterface<float> *img ) const {
+    return img ? new ImageAnalysis(img) : 0;
+}
 
 void PrincipalAxesDD::operator=(const PrincipalAxesDD &) 
 {}

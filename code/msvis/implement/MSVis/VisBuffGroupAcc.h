@@ -101,8 +101,12 @@ public:
   //   is applied that will mix them with the parallel hands
   void enforceSolveCorrWeights(const Bool phandonly=False);
 
-  // How many separate VisBuffers contained herein?
-  inline Int nBuf() { return nBuf_p; };
+  // How many separate VisBuffers are contained herein?
+  Int nBuf() const {return nBuf_p;}
+
+  Int nAnt() const {return nAnt_p;}
+  Int nSpw() const {return nSpw_p;}
+  Int nFld() const {return nFld_p;}
 
   // The global timestamp
   Double& globalTimeStamp() { return globalTimeStamp_p; };
@@ -111,6 +115,17 @@ public:
   CalVisBuffer& operator()(const Int& buf);
   CalVisBuffer& operator()(const Int& spw, const Int& fld);
 
+  // Return a map from row numbers in the VisBuffer returned by the above
+  // operator()s to row numbers in the corresponding input VisBuffer.  Only
+  // useful if there is exactly one corresponding input VisBuffer or you are
+  // sure that the last corresponding input VisBuffer will meet your
+  // needs (i.e. all the corresponding input VisBuffers had same set of
+  // antennas and the metadata you want also matches).  hurl controls whether
+  // an exception will be thrown if the number of VisBuffers that went into the
+  // output of operator() != 1.  Unfilled rows point to -1.
+  const Vector<Int>& outToInRow(const Int buf, const Bool hurl=true) const;
+  const Vector<Int>& outToInRow(const Int spw, const Int fld,
+                                const Bool hurl=true) const;
 private:
 
   // Prohibit in-public null constructor, copy constructor and assignment

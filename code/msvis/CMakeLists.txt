@@ -31,9 +31,11 @@ casa_add_library( msvis
   implement/MSVis/StokesVector.cc
   implement/MSVis/SubMS.cc
   implement/MSVis/UtilJ.cc
+  implement/MSVis/VBContinuumSubtractor.cc
   implement/MSVis/VisBuffAccumulator.cc
   implement/MSVis/VisBuffer.cc
   implement/MSVis/VisBufferAsync.cc
+  implement/MSVis/VisBufferAsyncWrapper.cc
   implement/MSVis/VisBufferUtil.cc
   implement/MSVis/VisBuffGroupAcc.cc
   implement/MSVis/VisibilityIterator.cc

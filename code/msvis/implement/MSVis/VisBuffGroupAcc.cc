@@ -179,15 +179,25 @@ CalVisBuffer& VisBuffGroupAcc::operator()(const Int& spw,const Int& fld)
     throw(AipsError("VisBuffGroupAcc: operator(spw,fld) index out-of-range."));
 }
 
+const Vector<Int>& VisBuffGroupAcc::outToInRow(const Int buf,
+                                               const Bool hurl) const
+{
+  if (buf > -1 && buf < nBuf_p)
+    return VBA_p[buf]->outToInRow(hurl);
+  else
+    throw(AipsError("VisBuffGroupAcc outToInRow: buf index out of range."));
+}
 
-
-//----------------------------------------------------------------------------
-
-//----------------------------------------------------------------------------
-
-  
-
-
+const Vector<Int>& VisBuffGroupAcc::outToInRow(const Int spw,
+                                               const Int fld,
+                                               const Bool hurl) const
+{
+  if (spw > -1 && fld > -1 && spwfldids_p(spw, fld) > 0)
+    return outToInRow(spwfldids_p(spw, fld), hurl);
+  else
+    throw(AipsError(
+        "VisBuffGroupAcc outToInRow: (spw, fld) index out of range."));
+}
 
 } //# NAMESPACE CASA - END
 

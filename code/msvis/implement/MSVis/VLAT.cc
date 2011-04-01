@@ -81,16 +81,20 @@ ROVisibilityIteratorAsyncImpl::ROVisibilityIteratorAsyncImpl ()
 //  **************************
 
 //Semaphore VlaData::debugBlockSemaphore_p (0); // used to block a thread for debugging
-const Bool VlaData::loggingInitialized_p = initializeLogging();
-Int VlaData::logLevel_p = 1;
+Bool VlaData::loggingInitialized_p = False;
+Int VlaData::logLevel_p = -1;
 
-VlaData::VlaData (Int nBuffers)
- : data_p (nBuffers, static_cast<VlaDatum *> (0))
+VlaData::VlaData (Int maxNBuffers)
+ : MaxNBuffers_p (maxNBuffers)
 {
     lookaheadTerminationRequested_p = False;
     sweepTerminationRequested_p = False;
     viResetComplete_p = False;
     viResetRequested_p = False;
+
+    if (logLevel_p < 0){
+        loggingInitialized_p = initializeLogging();
+    }
 }
 
 VlaData::~VlaData ()
@@ -99,9 +103,7 @@ VlaData::~VlaData ()
         Log (1, "VlaData stats:\n%s", stats_p.makeReport ().c_str());
     }
 
-    for (Data::iterator d = data_p.begin(); d != data_p.end(); d++){
-        delete (* d);
-    }
+    resetBufferData ();
 }
 
 void
@@ -151,20 +153,17 @@ VlaData::debugUnblock ()
 
 
 void
-VlaData::fillComplete ()
+VlaData::fillComplete (VlaDatum * datum)
 {
     MutexLocker ml (vlaDataMutex_p);
 
     stats_p.addEvent (Stats::Fill|Stats::End);
 
-    Int chunkNumber = data_p [fillIndex_p]->getChunkNumber();
-    Int subChunkNumber = data_p [fillIndex_p]->getSubChunkNumber();
+    data_p.push (datum);
 
-	Log (2, "VlaData::fillComplete on (%d,%d) at [%d]\n", chunkNumber, subChunkNumber, fillIndex_p);
+	Log (2, "VlaData::fillComplete on %s\n", datum->getSubChunkPair ().toString().c_str());
 
-	assert (fillIndex_p >= 0 && fillIndex_p < (int) data_p.size());
-
-	data_p [fillIndex_p]->fillComplete();
+	assert ((Int)data_p.size() <= MaxNBuffers_p);
 
 	vlaDataChanged_p.broadcast ();
 }
@@ -176,27 +175,25 @@ VlaData::fillStart (Int chunkNumber, Int subChunkNumber)
 
     stats_p.addEvent (Stats::Fill|Stats::Request);
 
-	VlaDatum * datum = getNextDatum (fillIndex_p);
+	while ((int) data_p.size() >= MaxNBuffers_p && ! sweepTerminationRequested_p){
+	    vlaDataChanged_p.wait (vlaDataMutex_p);
+	}
 
-	Log (2, "VlaData::fillStart on (%d,%d) at [%d]\n", chunkNumber, subChunkNumber, fillIndex_p);
+	VlaDatum * datum = new VlaDatum (chunkNumber, subChunkNumber);
+
+	Log (2, "VlaData::fillStart on %s\n", datum->getSubChunkPair().toString().c_str());
 
 	if (validChunks_p.empty() || validChunks_p.back() != chunkNumber)
 	    insertValidChunk (chunkNumber);
 
 	insertValidSubChunk (chunkNumber, subChunkNumber);
 
-	Bool hadToWait = False;
-
-	while (! datum->fillStart (chunkNumber, subChunkNumber) &&
-	       ! sweepTerminationRequested_p){
-	    hadToWait = True;
-	    vlaDataChanged_p.wait (vlaDataMutex_p);
-	}
-
     stats_p.addEvent (Stats::Fill|Stats::Begin);
 
-	if (sweepTerminationRequested_p)
+	if (sweepTerminationRequested_p){
+	    delete datum;
 	    datum = NULL; // datum may not be ready to fill and shouldn't be anyway
+	}
 
 	return datum;
 }
@@ -209,33 +206,10 @@ VlaData::getChannelSelection () const
     return channelSelection_p;
 }
 
-
-VlaDatum *
-VlaData::getNextDatum (Int & index)
-{
-    // Assumes caller has the mutex locked.
-
-	assert (index >= 0 && index < (int) data_p.size());
-
-	index = clock (index + 1, data_p.size());
-
-	VlaDatum * datum = data_p [index];
-
-	return datum;
-}
-
 void
 VlaData::initialize ()
 {
-	Int id = 0;
-	for (Data::iterator d = data_p.begin(); d != data_p.end(); d++){
-		* d = new VlaDatum (id);
-		(* d) -> initialize ();
-		Log (2, "VlaDatum [%d]: vb @ 0x%08x\n", id, (*d)->getVisBuffer (True));
-		id ++;
-	}
-
-	resetBufferRing ();
+	resetBufferData ();
 
     if (statsEnabled())
         stats_p.reserve (10000);
@@ -365,44 +339,48 @@ VlaData::isValidSubChunk (Int chunkNumber, Int subChunkNumber) const
 }
 
 void
-VlaData::readComplete ()
+VlaData::readComplete (Int chunkNumber, Int subChunkNumber)
 {
     MutexLocker ml (vlaDataMutex_p);
 
     stats_p.addEvent (Stats::End);
 
-	Log (2, "VlaData::readComplete on (%d,%d) at [%d]\n",
-	     data_p [readIndex_p]->getChunkNumber(),
-	     data_p [readIndex_p]->getSubChunkNumber(),
-	     readIndex_p);
-
-	assert (readIndex_p >= 0 && readIndex_p < (int) data_p.size());
-
-	data_p [readIndex_p]->readComplete();
-
-	vlaDataChanged_p.broadcast();
+	Log (2, "VlaData::readComplete on (%d,%d)\n", chunkNumber, subChunkNumber);
 }
 
-const VlaDatum *
+VisBufferAsync *
 VlaData::readStart (Int chunkNumber, Int subChunkNumber)
 {
     MutexLocker ml (vlaDataMutex_p);
 
     stats_p.addEvent (Stats::Request);
 
-	VlaDatum * datum = getNextDatum (readIndex_p);
+    // Wait for a subchunk's worth of data to be available.
 
-	Log (2, "VlaData::readStart on (%d, %d) at [%d]\n", chunkNumber, subChunkNumber, readIndex_p);
-
-	bool hadToWait = False;
-	while (! datum->readStart ()){
-	    hadToWait = True;
+	while (data_p.empty()){
 	    vlaDataChanged_p.wait(vlaDataMutex_p);
 	}
 
+	// Get the data off the queue and notify world of change in VlaData.
+
+	VlaDatum * datum = data_p.front();
+	data_p.pop ();
+	vlaDataChanged_p.broadcast ();
+
+	ThrowIf (! datum->isSubChunk (chunkNumber, subChunkNumber),
+	         utilj::format ("Reader wanted subchunk (%d,%d) while next subchunk is %s",
+	                        chunkNumber, subChunkNumber, datum->getSubChunkPair().toString().c_str()));
+
+	Log (2, "VlaData::readStart on (%d, %d)\n", chunkNumber, subChunkNumber);
+
     stats_p.addEvent (Stats::Begin);
 
-	return datum;
+    // Extract the VisBufferAsync enclosed in the datum for return to caller,
+    // then destroy the rest of the datum object
+
+    VisBufferAsync * vba = datum->releaseVisBufferAsync ();
+    delete datum;
+	return vba;
 }
 
 void
@@ -431,14 +409,19 @@ VlaData::requestViReset ()
 }
 
 void
-VlaData::resetBufferRing ()
+VlaData::resetBufferData ()
 {
-	fillIndex_p = data_p.size() - 1;
-	readIndex_p = data_p.size() - 1;
+    // Caller already has mutex locked.
 
-	for (Data::iterator d = data_p.begin(); d != data_p.end(); d++){
-		(* d) -> reset ();
+    // Flush any accumulated buffers
+
+	while (! data_p.empty()){
+		VlaDatum * datum = data_p.front();
+		data_p.pop ();
+		delete datum;
 	}
+
+	// Flush the chunk and subchunk indices
 
 	while (! validChunks_p.empty())
 	    validChunks_p.pop();
@@ -516,7 +499,7 @@ VlaData::waitForViReset()
         Log (1, "Carrying out VI reset\n")
         viResetRequested_p = False;
 
-        resetBufferRing ();
+        resetBufferData ();
 
         asyncio::RoviaModifiers roviaModifiersCopy;
         roviaModifiers_p.transfer (roviaModifiersCopy);
@@ -674,134 +657,52 @@ VlaData::Stats::OpStats::update (Int type, Double t)
 //	*                         *
 //  ***************************
 
-VlaDatum::VlaDatum (Int id)
-{
-	id_p = id;
-	state_p = Empty;
-    visBuffer_p = NULL;
-}
+VlaDatum::VlaDatum (Int chunkNumber, Int subChunkNumber)
+: chunkNumber_p (chunkNumber),
+  subChunkNumber_p (subChunkNumber),
+  visBuffer_p (new VisBufferAsync)
+{}
 
 VlaDatum::~VlaDatum()
 {
     delete visBuffer_p;
 }
 
-void
-VlaDatum::fillComplete ()
+SubChunkPair
+VlaDatum::getSubChunkPair () const
 {
-	assert (state_p == Filling);
-
-	state_p = Full;
-}
-
-Bool
-VlaDatum::fillStart (Int chunkNumber, Int subChunkNumber)
-{
-    // Caller has mutex locked.
-
-    assert (state_p != Filling);
-
-    bool fillStarted = False;
-
-    if (state_p == Empty){
-
-        // Change datum state to be Filling the expected
-        // chunk and subchunk
-
-        chunkNumber_p = chunkNumber;
-        subChunkNumber_p = subChunkNumber;
-        state_p = Filling;
-
-        fillStarted = True;
-    }
-
-	return fillStarted;
-}
-
-Int
-VlaDatum::getChunkNumber () const
-{
-	return chunkNumber_p;
-}
-
-Int
-VlaDatum::getId () const
-{
-    return id_p;
-}
-
-Int
-VlaDatum::getSubChunkNumber () const
-{
-	return subChunkNumber_p;
+	return SubChunkPair (chunkNumber_p, subChunkNumber_p);
 }
 
 VisBufferAsync *
-VlaDatum::getVisBuffer (Bool bypassAssert)
+VlaDatum::getVisBuffer ()
 {
-    assert (bypassAssert || state_p == Filling || state_p == Reading);
-
 	return visBuffer_p;
 }
 
-const VisBufferAsync *
-VlaDatum::getVisBuffer () const
-{
-    assert (state_p == Filling || state_p == Reading);
-
-    return visBuffer_p;
-}
-
-void
-VlaDatum::initialize ()
-{
-    visBuffer_p = new VisBufferAsync ();
-
-    reset ();
-}
+//const VisBufferAsync *
+//VlaDatum::getVisBuffer () const
+//{
+//    assert (state_p == Filling || state_p == Reading);
+//
+//    return visBuffer_p;
+//}
 
 Bool
-VlaDatum::isChunk (Int chunkNumber, Int subChunkNumber) const
+VlaDatum::isSubChunk (Int chunkNumber, Int subChunkNumber) const
 {
-    assert (state_p == Reading);
-
 	return chunkNumber == chunkNumber_p &&
 		   subChunkNumber == subChunkNumber_p;
 }
 
-void
-VlaDatum::readComplete ()
+VisBufferAsync *
+VlaDatum::releaseVisBufferAsync ()
 {
-	assert (state_p == Reading);
+    VisBufferAsync * vba = visBuffer_p;
+    visBuffer_p = NULL;
 
-	state_p = Empty;
+    return vba;
 }
-
-Bool
-VlaDatum::readStart ()
-{
-    Bool readStarted = False;
-
-    assert (state_p != Reading);
-
-    if (state_p == Full){
-
-        readStarted = True;
-        state_p = Reading;
-    }
-
-	return readStarted;
-}
-
-void
-VlaDatum::reset ()
-{
-	chunkNumber_p = -1;
-	state_p = Empty;
-	subChunkNumber_p = -1;
-	visBuffer_p->clear();
-}
-
 
 //  ***********************
 //	*                     *
@@ -833,6 +734,7 @@ VLAT::~VLAT ()
 		delete (* f);
 	}
 
+	delete visibilityIterator_p;
 }
 
 void
@@ -1002,13 +904,13 @@ VLAT::fillDatum (VlaDatum * datum)
     catch (...){
 
         if (fillerId == -1){
-            Log (1, "VLAT: Error while filling datum [%d] at 0x%08x, vb at 0x%08x; rethrowing\n",
-                 datum->getId(), datum, datum->getVisBuffer());
+            Log (1, "VLAT: Error while filling datum at 0x%08x, vb at 0x%08x; rethrowing\n",
+                 datum, datum->getVisBuffer());
         }
         else{
-            Log (1, "VLAT: Error while filling datum [%d] at 0x%08x, vb at 0x%08x; "
+            Log (1, "VLAT: Error while filling datum at 0x%08x, vb at 0x%08x; "
                  "fillingColumn='%s'; rethrowing\n",
-                 datum->getId(), datum, datum->getVisBuffer(),
+                 datum, datum->getVisBuffer(),
                  ROVisibilityIteratorAsync::prefetchColumnName (fillerId).c_str());
         }
 
@@ -1025,7 +927,7 @@ VLAT::fillDatumMiscellanyAfter (VlaDatum * datum)
 
 	datum->getVisBuffer()->setDataDescriptionId (visibilityIterator_p->getDataDescriptionId());
 
-	datum->getVisBuffer()->setRowIds (visibilityIterator_p->getRowIds());
+	//////////////datum->getVisBuffer()->setRowIds (visibilityIterator_p->getRowIds());
 
 	datum->getVisBuffer()->setNCoh(visibilityIterator_p->numberCoh ());
 
@@ -1050,7 +952,7 @@ VLAT::fillDatumMiscellanyBefore (VlaDatum * datum)
 {
 	datum->getVisBuffer()->setMeasurementSet (visibilityIterator_p->getMeasurementSet());
 	datum->getVisBuffer()->setMeasurementSetId (visibilityIterator_p->getMeasurementSetId(),
-			                                    datum->getSubChunkNumber() == 0);
+			                                    datum->getSubChunkPair().second == 0);
 
 	datum->getVisBuffer()->setNAntennas (visibilityIterator_p->getNAntennas ());
 	datum->getVisBuffer()->setMEpoch (visibilityIterator_p->getMEpoch ());
@@ -1161,7 +1063,7 @@ VLAT::isTerminated () const
 void *
 VLAT::run ()
 {
-	Log (1, "VLAT starting execution.\n");
+	Log (1, "VLAT starting execution; tid=%d\n", gettid());
 
     if (VlaData::loggingInitialized_p){
         Logger::get()->registerName ("VLAT");
@@ -1280,7 +1182,7 @@ VLAT::sweepVi ()
             if (vlaData_p->isSweepTerminationRequested())
                 goto done;
 
-            vlaData_p -> fillComplete ();
+            vlaData_p -> fillComplete (vlaDatum);
 
             if (vlaData_p->isSweepTerminationRequested())
                 goto done;

@@ -172,7 +172,7 @@ public:
   virtual void specify(const Record& specify);
 
   // Size up the solving arrays, etc.  (supports combine)
-  Int sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol);
+  virtual Int sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol);
 
   // Initialize internal shapes for solving
   void initSolve(VisSet& vs);
@@ -203,7 +203,9 @@ public:
   Bool syncSolveMeta(VisBuffer& vb, const Int& fieldId);
   Bool syncSolveMeta(VisBuffGroupAcc& vbga);
 
-  // Make vb phase-only
+  // If apmode() is "A", convert vb's visibilities to amp + 0i.
+  // If it is "P", convert them to phase + 0i.
+  // Otherwise (i.e. "AP"), leave them alone.
   virtual void enforceAPonData(VisBuffer& vb);
 
   // Verify VisBuffer data sufficient for solving (wts, etc.)
@@ -278,7 +280,7 @@ public:
 			 Matrix<Double>& fluxScaleFactor)=0;
 
   // Tell the CalSet to write a CalTable
-  void store();
+  virtual void store();
   void store(const String& tableName,const Bool& append);
 
   // Report state:
@@ -352,7 +354,7 @@ protected:
   void syncPar(const Int& spw, const Int& slot);
 
   // Set matrix channelization according to a VisSet
-  void setSolveChannelization(VisSet& vs);
+  virtual void setSolveChannelization(VisSet& vs);
 
   // Fill CalSet meta-data according to a VisSet
   void fillMetaData(VisSet& vs);
@@ -385,6 +387,8 @@ protected:
 
   // Check if a cal table is appropriate
   void verifyCalTable(const String& caltablename);
+
+  void sortVisSet(VisSet& vs, const Bool verbose=False);
 
   Int parType_;
   // Solution/Interpolation 

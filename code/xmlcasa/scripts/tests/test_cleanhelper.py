@@ -18,6 +18,7 @@ class cleanhelper_test(unittest.TestCase):
     # use simulated data with 3 point sources
     msfile = 'simptsrcs.ms'
     outlierfilename='outlier.txt'
+    boxfilename='cleanhelpertest-sf.box'
     imgname='cleanhelpertest'
     # some other fixed parameters
     imsize=[300,300]
@@ -34,6 +35,7 @@ class cleanhelper_test(unittest.TestCase):
     refpath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/cleanhelper/reference/'
     datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/cleanhelper/'
     outlierfile=datapath+outlierfilename 
+    boxfile=datapath+boxfilename
     res = None
 
     def setUp(self):
@@ -69,7 +71,7 @@ class cleanhelper_test(unittest.TestCase):
         refvals= ia.getchunk()
         ia.close()
         diff = refvals - maskvals
-        return (diff.all()==0) 
+        return (numpy.all(diff==0)) 
  
     def testDefineimages(self):
         """Cleanhelper defineimages test"""
@@ -142,7 +144,7 @@ class cleanhelper_test(unittest.TestCase):
           os.system('rm -rf ' + maskimg)
 
     def testMakemultifieldmaskboxfile(self):
-        """Cleanhelper makemultfieldmask2 test: boxes given as a boxfile"""
+        """Cleanhelper makemultfieldmask2 test: boxes given as a AIPS boxfile"""
         self.imset.maskimages={}
         self.run_defineimages()
         self.imset.makemultifieldmask2(maskobject=self.outlierfile)
@@ -159,8 +161,9 @@ class cleanhelper_test(unittest.TestCase):
     def testMakemaskimagebox(self):
         """Cleanhelper makemaskimage test: 2 boxes"""
         self.run_defineimages(sf=True)
+        print "int boxes"
         ibmask=[[100,85,120,95],[145,145,155,155]]
-        maskimage=self.imset.imagelist[0]+'.mask'
+        maskimage=self.imset.imagelist[0]+'.0.mask'
         self.imset.makemaskimage(outputmask=maskimage,imagename=self.imset.imagelist[0],maskobject=ibmask)
         self.assertTrue(os.path.exists(maskimage)," int box maskimage does not exist")
         #retval=self.comparemask(maskimg,self.refpath+'ref-'+maskimg)
@@ -169,6 +172,7 @@ class cleanhelper_test(unittest.TestCase):
         os.system('rm -rf ' + self.imset.imagelist[0]+'*')
         #
         retval=False
+	print "float box and int box"
         fibmask=[[100.0,85.0,120.0,95.0],[145,145,155,155]]
         self.imset.makemaskimage(outputmask=maskimage,imagename=self.imset.imagelist[0],maskobject=fibmask)
         self.assertTrue(os.path.exists(maskimage)," float +int box maskimage does not exist")
@@ -177,6 +181,7 @@ class cleanhelper_test(unittest.TestCase):
         os.system('rm -rf ' + self.imset.imagelist[0]+'*')
         #
         retval=False
+	print "numpy.int boxes"
         import numpy as np
         box1=[np.int_(i) for i in ibmask[0]] 
         box2=[np.int_(i) for i in ibmask[1]] 
@@ -188,6 +193,7 @@ class cleanhelper_test(unittest.TestCase):
         os.system('rm -rf ' + self.imset.imagelist[0]+'*')
         #
         retval=False
+	print "numpy.float boxes"
         box1=[np.float_(i) for i in fibmask[0]]
         box2=[np.float_(i) for i in fibmask[1]]
         numpyintmask=[box1,box2]
@@ -198,6 +204,17 @@ class cleanhelper_test(unittest.TestCase):
         os.system('rm -rf ' + self.imset.imagelist[0]+'*')
  
 
+    def testMakemaskimageboxfile(self):
+        """Cleanhelper makemaskimage test: make mask from boxfile ("worldbox")"""
+        self.run_defineimages(sf=True)
+        boxfile=self.boxfile
+        maskimage=self.imset.imagelist[0]+'.mask'
+        self.imset.makemaskimage(outputmask=maskimage,imagename=self.imset.imagelist[0],maskobject=boxfile)
+        self.assertTrue(os.path.exists(maskimage)," boxfile  maskimage does not exist")
+        retval=self.comparemask(maskimage, self.refpath+'ref-'+maskimage)
+        self.assertTrue(retval,"test on box mask failed")
+        os.system('rm -rf ' + self.imset.imagelist[0]+'*')
+        #
 
 def suite():
     return [cleanhelper_test]

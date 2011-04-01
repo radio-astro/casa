@@ -407,7 +407,7 @@ def analyseASDM(basename, caltablename0):
         print ">> Peak in calibrator image: "+str(peak[i])
         print ">> Dynamic range in calibrator image: "+str(peak[i]/rms[i])
 
-    reference_rms = [0.00163517, 0.00091714]
+    reference_rms = [0.0016516, 0.0009388]
     reference_peak = [1.00014091, 1.00002384]
 
     for i in range(2):

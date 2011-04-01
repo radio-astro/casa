@@ -372,6 +372,8 @@ field='1,3,4'     # note: field 1 is the source NGC 2403, and field 2 is
 spw='0:5~112'     # use spectral window 0 (which is the only one).  In that
                   # window, use channels 5 - 112 (ignoring edge channels)
 
+standard='Perley-Taylor 99'  # enforce the older standard
+
 saveinputs('setjy',prefix+'.saved.setjy')
 
 setjy()

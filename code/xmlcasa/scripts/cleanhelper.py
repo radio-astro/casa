@@ -2266,10 +2266,12 @@ class cleanhelper:
         newfreqs=ms.cvelfreqs(spwids=selspw,fieldids=selfield,mode=mode,nchan=nchan,
                               start=start,width=width,phasec=inphasec, restfreq=restf,
                               outframe=self.usespecframe,veltype=veltype)
-        if newfreqs[0]-newfreqs[1] < 0:
-          descendingnewfreqs=False
-        else:
-          descendingnewfreqs=True
+        descendingnewfreqs=False
+        if type(newfreqs)==list:
+          if newfreqs[0]-newfreqs[1] < 0:
+            descendingnewfreqs=False
+          else:
+            descendingnewfreqs=True
         if debug: print "Start, width after cvelfreqs =",start,width 
         if type(newfreqs)==list and len(newfreqs) ==0:
           raise TypeError, ("Output frequency grid cannot be calculated: "+

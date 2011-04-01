@@ -133,7 +133,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="interpolation" subparam="true">
-      <description>Spectral interpolation (nearest, linear, cubic)</description>
+      <description>Spectral interpolation (nearest, linear, cubic). Use nearest for mode=channel</description>
       <value>linear</value>
       <allowed kind="enum">
 	<value>nearest</value>
@@ -497,7 +497,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		<default param="width"><value>1</value>
                   <description>Width of output channel relative to MS channel (# to average)</description>
 		</default>
-		<default param="interpolation"><value type="string">linear</value></default>
+		<default param="interpolation"><value type="string">nearest</value></default>
 		<default param="chaniter"><value type='bool'>False</value></default>
 		<default param="outframe"><value type="string"></value></default>
 		<description>Velocity reference frame of output image; \'\' =input</description>
@@ -826,7 +826,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  mode='frequency', and increasing velocity for mode='velocity'. 
                interpolation -- Interpolation type for spectral gridding onto 
                  the uv-plane. Options: 'nearest', 'linear', or 'cubic'.
-                 default = 'linear'
+                 default = 'linear' 
+                 Note : 'linear' and 'cubic' interpolation requires data points on both
+                 sides of each image frequency. Errors are therefore possible at edge 
+                 channels, or near flagged data channels.
+                 For mode='channel', please use 'nearest'.
                chaniter -- specify how spectral CLEAN is performed, 
                  default: chaniter=False;
                  example: chaniter=True; step through channels 

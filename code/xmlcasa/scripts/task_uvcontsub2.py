@@ -48,18 +48,23 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
             # The split will reindex the spws.  Update spw and fitspw.
             # Do fitspw first because the spws in spw are supposed to be
             # a subset of the ones in fitspw.
-            casalog.post('split is being run internally, and the selected spws will be')
-            casalog.post('  renumbered to start from 0 in the output!')
-            myfitspw, spwmap = update_spw(fitspw, None)
-            myspw = update_spw(spw, spwmap)
+            casalog.post('split is being run internally, and the selected spws')
+            casalog.post('will be renumbered to start from 0 in the output!')
+
+            # Initialize spwmap.
+            spwmap = update_spw(tempspw, None)[1]
+
+            # Now get myfitspw.
+            myfitspw = update_spw(fitspw, spwmap)[0]
+            myspw = update_spw(spw, spwmap)[0]
 
         final_csvis = csvis
         workingdir = os.path.abspath(os.path.dirname(vis.rstrip('/')))
         csvis = tempfile.mkdtemp(prefix=csvis.split('/')[-1], dir=workingdir)
 
         # ms does not have a colnames method, so open vis with tb even though
-        # it is already open with ms.  Note that both use nomodify=True, however,
-        # and no problem was revealed in testing.
+        # it is already open with ms.  Note that both use nomodify=True,
+        # however, and no problem was revealed in testing.
         tb.open(vis, nomodify=True)
         if 'CORRECTED_DATA' in tb.colnames():
             whichcol = 'CORRECTED_DATA'
@@ -84,9 +89,9 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
         else:
             raise Exception, 'Visibility data set not found - please verify the name'
 
-        # for now, forbid requests for fitorder>0 
-        if (fitorder>0):
-            raise Exception, "Sorry, uvcontsub2 currently only supports fitorder=0."
+        ## for now, forbid requests for fitorder>0 
+        #if (fitorder>0):
+        #    raise Exception, "Sorry, uvcontsub2 currently only supports fitorder=0."
         
         # select the data for continuum subtraction
         cb.reset()
@@ -141,10 +146,11 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
         #if parang: cb.setapply(type='P')
 
         # Set up the solve
-        amuellertab = tempfile.mkdtemp(prefix='Temp_contsub.tab', dir=workingdir)
+        amuellertab = tempfile.mkdtemp(prefix='Temp_contsub.tab',
+                                       dir=workingdir)
 
-        cb.setsolve(type='A', t=solint, table=amuellertab, combine=combine)
-                    #fitorder=fitorder)
+        cb.setsolve(type='A', t=solint, table=amuellertab, combine=combine,
+                    fitorder=fitorder)
 
         # solve for the continuum
         cb.solve()

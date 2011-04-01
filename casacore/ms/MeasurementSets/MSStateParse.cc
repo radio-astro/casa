@@ -39,7 +39,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   //# Constructor
   MSStateParse::MSStateParse ()
-    : MSParse(), colName(MS::columnName(MS::FIELD_ID))
+    : MSParse(), colName(MS::columnName(MS::STATE_ID))
   {
     if (MSStateParse::node_p!=0x0) delete MSStateParse::node_p;
     MSStateParse::node_p=0x0;

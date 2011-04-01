@@ -455,6 +455,9 @@ public:
 
     // Returns the name/type of this shape, for displaying to the user.
     virtual String type() const = 0;
+    // Pure virtual function from DisplayData...
+    String dataType() const { return type( ); }
+    
     
     // Can be overridden by children.  Returns a one-word type.
     virtual String oneWordType() const { return type(); }

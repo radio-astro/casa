@@ -21,6 +21,7 @@ namespace casa {
 
 
 class VisBufferAsync;
+class VisBufferAsyncWrapper;
 class ROVisibilityIteratorAsyncImpl;
 class VlaDatum;
 
@@ -334,8 +335,8 @@ private:
     ROVisibilityIterator * linkedVisibilityIterator_p; // [use]
     PrefetchColumns prefetchColumns_p;
     Int subChunkNumber_p;
-    const VlaDatum * vlaDatum_p;
-    Stack<VisBufferAsync *> visBufferAsyncStack_p;
+    VisBufferAsync * visBufferAsync_p;
+    Stack<VisBufferAsyncWrapper *> vbaWrapperStack_p;
 
     void dumpPrefetchColumns () const;
 

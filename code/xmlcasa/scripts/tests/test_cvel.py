@@ -949,6 +949,27 @@ class cvel_test(unittest.TestCase):
         ret = verify_ms(outfile, 1, 10, 0)
         self.assertTrue(ret[0],ret[1])
 
+    def test48(self):
+        '''Cvel 48: test fftshift regridding: channel mode, width positive'''
+        myvis = vis_b
+        os.system('ln -sf ' + myvis + ' myinput.ms')
+        tb.open('myinput.ms/SPECTRAL_WINDOW')
+        a = tb.getcell('CHAN_FREQ')
+        b = numpy.array([a[1], a[2], a[3]])
+        tb.close()
+
+        rval = cvel(
+            vis = 'myinput.ms',
+            outputvis = outfile,
+            nchan = 3,
+            start = 1,
+            width = 1,
+            interpolation = 'fftshift'
+            )
+        self.assertNotEqual(rval,False)
+        ret = verify_ms(outfile, 1, 3, 0, b)
+        self.assertTrue(ret[0],ret[1])
+
 
 class cleanup(unittest.TestCase):
     def setUp(self):

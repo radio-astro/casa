@@ -45,9 +45,12 @@ test_plotants                   scastro@eso.org
 test_report                     jkern@eso.org
 test_rg_frombcs                 dmehring@nrao.edu
 test_slsearch                   dmehring@nrao.edu
+test_sdbaseline			kana.sugi@nao.ac.jp
 test_sdlist                     kana.sugi@nao.ac.jp
 #test_sdplot                     kana.sugi@nao.ac.jp
 test_sdsave                     takeshi.nakazato@nao.ac.jp
+test_sdsmooth                   kana.sugi@nao.ac.jp
+test_sdstat                     kana.sugi@nao.ac.jp
 test_sdtpimaging                takeshi.nakazato@nao.ac.jp
 test_setjy			rreid@nrao.edu
 test_smoothcal                  scastro@eso.org
@@ -59,3 +62,4 @@ test_uvcontsub2			rreid@nrao.edu
 test_vishead                    jkern@eso.org
 test_visstat                    jkern@eso.org
 test_vpmanager                  dpetry@eso.org
+test_simplecluster              hye@nrao.edu

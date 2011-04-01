@@ -676,9 +676,13 @@ String QPCanvas::axisLabel(PlotAxis axis) const {
 
 
 void QPCanvas::setAxisLabel(PlotAxis axis, const String& title) {
-    
+/*DSW HACK*/ /*no, won't compiel*/  // m_canvas.setColor(Qt::blue);
+
     m_canvas.setAxisTitle(QPOptions::axis(axis), title.c_str());
     m_canvas.enableAxis(QPOptions::axis(axis));
+QwtText t = m_canvas.axisTitle(QPOptions::axis(axis));
+t.setColor(Qt::black);
+
 }
 
 PlotFontPtr QPCanvas::axisFont(PlotAxis a) const {

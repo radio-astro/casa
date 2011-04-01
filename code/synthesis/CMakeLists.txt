@@ -49,6 +49,7 @@ casa_add_library( synthesis
   implement/MeasurementComponents/ClarkCleanImageSkyModel.cc
   implement/MeasurementComponents/CleanImageSkyModel.cc
   implement/MeasurementComponents/ComponentFTMachine.cc
+  implement/MeasurementComponents/ConvolutionFunction.cc
   implement/MeasurementComponents/ConvFuncDiskCache.cc
   implement/MeasurementComponents/ConvolutionFunction.cc
   implement/MeasurementComponents/CSCleanImageSkyModel.cc

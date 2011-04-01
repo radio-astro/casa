@@ -1523,40 +1523,7 @@ Int SolvableVisCal::sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol) {
   // Set Nominal per-spw channelization
   setSolveChannelization(vs);
 
-  // Interpret solution interval for the VisIter
-  Double iterInterval(max(interval(),DBL_MIN));
-  if (interval() < 0.0) {   // means no interval (infinite solint)
-    iterInterval=0.0;
-    interval()=DBL_MAX;
-  }
-
-  if (verby) {
-    cout << "solint = " << interval() << endl;
-    cout << boolalpha << "combscan() = " << combscan() << endl;
-    cout << boolalpha << "combfld()  = " << combfld() << endl;
-    cout << boolalpha << "combspw()  = " << combspw() << endl;
-  }
-
-  Int nsortcol(4+Int(!combscan()));  // include room for scan
-  Block<Int> columns(nsortcol);
-  Int i(0);
-  columns[i++]=MS::ARRAY_ID;
-  if (!combscan()) columns[i++]=MS::SCAN_NUMBER;  // force scan boundaries
-  if (!combfld()) columns[i++]=MS::FIELD_ID;      // force field boundaries
-  if (!combspw()) columns[i++]=MS::DATA_DESC_ID;  // force spw boundaries
-  columns[i++]=MS::TIME;
-  if (combspw() || combfld()) iterInterval=DBL_MIN;  // force per-timestamp chunks
-  if (combfld()) columns[i++]=MS::FIELD_ID;      // effectively ignore field boundaries
-  if (combspw()) columns[i++]=MS::DATA_DESC_ID;  // effectively ignore spw boundaries
-  
-  if (verby) {
-    cout << "Sort columns: ";
-    for (Int i=0;i<nsortcol;++i) 
-      cout << columns[i] << " ";
-    cout << endl;
-  }
-
-  vs.resetVisIter(columns,iterInterval);
+  sortVisSet(vs, verby);
   
   // Number of VisIter chunks per spw
   Vector<Int> nChunkPerSpw(vs.numberSpw(),0);
@@ -1712,20 +1679,8 @@ Int SolvableVisCal::sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol) {
 
 }
 
-
-
-
-
-
-
-Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Double>& solTimes) {
-
-  // New version that counts solutions (which may overlap in 
-  //   field and/or ddid) rather than chunks
-  LogIO os(LogOrigin("SVC", "sizeUpSim()", WHERE));
-
-  if (prtlev()>2) cout << "  SVC::sizeUpSim" << endl;
-  
+void SolvableVisCal::sortVisSet(VisSet& vs, const Bool verbose)
+{
   // Interpret solution interval for the VisIter
   Double iterInterval(max(interval(),DBL_MIN));
   if (interval() < 0.0) {   // means no interval (infinite solint)
@@ -1733,11 +1688,11 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
     interval()=DBL_MAX;
   }
 
-  if (prtlev()>2) {
+  if (verbose) {
     cout << "   interval() = " << interval() ;
-    cout << "   combscan() = " << combscan();
-    cout << "   combfld()  = " << combfld() ;
-    cout << "   combspw()  = " << combspw() ;
+    cout << boolalpha << "   combscan() = " << combscan();
+    cout << boolalpha << "   combfld()  = " << combfld() ;
+    cout << boolalpha << "   combspw()  = " << combspw() ;
   }
 
   Int nsortcol(4+Int(!combscan()));  // include room for scan
@@ -1752,7 +1707,7 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
   if (combfld()) columns[i++]=MS::FIELD_ID;      // effectively ignore field boundaries
   if (combspw()) columns[i++]=MS::DATA_DESC_ID;  // effectively ignore spw boundaries
   
-  if (prtlev()>2) {
+  if (verbose) {
     cout << " sort columns: ";
     for (Int i=0;i<nsortcol;++i) 
       cout << columns[i] << " ";
@@ -1761,8 +1716,19 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
 
   // this sets the vi to send chunks by iterInterval (e.g. integration time)
   // instead of default which would go until the scan changed
-  vs.resetVisIter(columns,iterInterval);
+  vs.resetVisIter(columns,iterInterval);  
+}
+
+Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Double>& solTimes) {
+
+  // New version that counts solutions (which may overlap in 
+  //   field and/or ddid) rather than chunks
+  LogIO os(LogOrigin("SVC", "sizeUpSim()", WHERE));
+
+  if (prtlev()>2) cout << "  SVC::sizeUpSim" << endl;
   
+  sortVisSet(vs, prtlev() > 2);
+
   VisIter& vi(vs.iter());
   vi.originChunks();
   vi.origin();

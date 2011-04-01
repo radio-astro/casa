@@ -139,10 +139,10 @@ print "--Setjy--"
 # Should say:
 ## 0518+165  spwid=  0  [I=3.688, Q=0, U=0, V=0] Jy, (Perley-Taylor 99)
 ## 0518+165  spwid=  1  [I=3.862, Q=0, U=0, V=0] Jy, (Perley-Taylor 99)
-setjy(vis=msnameB,field='0518+165',modimage=fluxcaldir+'3C138_C.im')
+setjy(vis=msnameB,field='0518+165',modimage=fluxcaldir+'3C138_C.im',standard='Perley-Taylor 99')
 ## 0134+329  spwid=  0  [I=5.405, Q=0, U=0, V=0] Jy, (Perley-Taylor 99)
 ## 0134+329  spwid=  0  [I=5.739, Q=0, U=0, V=0] Jy, (Perley-Taylor 99)
-setjy(vis=msnameB,field='0134+329',modimage=fluxcaldir+'3C48_C.im') 
+setjy(vis=msnameB,field='0134+329',modimage=fluxcaldir+'3C48_C.im',standard='Perley-Taylor 99') 
  
 #=====================================================================
 # Plot data and interactively edit 
@@ -343,8 +343,8 @@ listobs(vis=msnameC);
 #      by the VLA, with location set in B-config part of script
 #  NB: By default, the model for 0420+417 is a 1 Jy point source 
 print "--Setjy--"
-setjy(vis=msnameC,field='0518+165',modimage=fluxcaldir+'3C138_C.im'); 
-setjy(vis=msnameC,field='0134+329',modimage=fluxcaldir+'3C48_C.im'); 
+setjy(vis=msnameC,field='0518+165',modimage=fluxcaldir+'3C138_C.im',standard='Perley-Taylor 99'); 
+setjy(vis=msnameC,field='0134+329',modimage=fluxcaldir+'3C48_C.im',standard='Perley-Taylor 99');
  
 #=====================================================================
 # Plot data and interactively edit 

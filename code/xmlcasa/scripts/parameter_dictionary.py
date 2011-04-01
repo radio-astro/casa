@@ -184,32 +184,20 @@ class par(str):
 		"""
 
 	@staticmethod
-	def blmode():
+	def blfunc():
 		"""
-		blmode -- mode for baseline fitting
-		default: 'auto' for sdbaseline, 'none' for sdcal
-		options: 'auto', 'list', 'interact', 'none'(for sdcal)
-		example: blmode='auto' uses expandable parameters
-		in addition to blpoly to run linefinder
-		to determine line-free regions
-		USE WITH CARE! May need to tweak the parameters,
-		thresh, avg_limit, and edge.
-		blmode='interact' allows adding and deleting mask.
-		regions by drawing rectangles on the plot with mouse.
-		Draw a rectangle with LEFT-mouse to ADD the region to
-		the mask and with RIGHT-mouse to DELETE the region. 
+        	blfunc -- baseline model function
+		options: (str) 'poly','cspline','sinusoid'
+		default: 'poly'
+		example: blfunc='poly' uses a single polynomial line of 
+		any order which should be given as an expandable 
+		parameter 'order' to fit baseline. 
+		blfunc='cspline' uses a cubic spline function, a piecewise 
+		cubic polynomial having C2-continuity (i.e., the second 
+		derivative is continuous at the joining points). 
+		blfunc='sinusoid' uses a combination of sinusoidal curves. 
 		"""
 
-	@staticmethod
-	def blpoly():
-		"""
-		blpoly -- order of baseline polynomial
-		options: (int) (<0 turns off baseline fitting)
-		default: 5 for sdbaseline/sdcal, 1 for sdtpimaging
-		example: typically in range 2-9 (higher values
-		         seem to be needed for GBT)
-		"""
-		
 	@staticmethod
 	def box():
 		"""
@@ -418,11 +406,25 @@ class par(str):
 		"""
 
 	@staticmethod
+	def clipniter():
+		"""
+		clipniter -- maximum number of iteration in spline fitting
+		default: 1
+		"""
+
+	@staticmethod
 	def clipoutside():
 		"""
         	clipoutside -- Clip OUTSIDE the range ?
                 default: True
                 example: False -> flag data WITHIN the range.
+		"""
+
+	@staticmethod
+	def clipthresh():
+		"""
+		clipthresh -- clipping threshold for iterative spline fitting
+		default: 3
 		"""
 
 	@staticmethod
@@ -694,7 +696,7 @@ class par(str):
 	def field():
 		"""
 		field -- Select field using field id(s) or field name(s).
-		        [run listobs to obtain the list id's or names]
+		        [run listobs to obtain the list ids or names]
 	        default: 0  (for sdimaging)
 		         '' = all fields (for the other ASAP tasks)
 			 
@@ -1398,12 +1400,39 @@ class par(str):
 		default: 1.0 (1.0% of map size)
 		"""
 		
+	@staticmethod
+	def maskmode():
+		"""
+		maskmode -- mode for baseline fitting
+		default: 'auto' for sdbaseline, 'none' for sdcal
+		options: 'auto', 'list', 'interact', 'none'(for sdcal)
+		example: maskmode='auto' runs linefinder to detect line regions 
+		to be excluded from fitting. this mode requires three 
+		expandable parameters: thresh, avg_limit, and edge.
+		USE WITH CARE! May need to tweak the expandable parameters.
+		maskmode='list' uses the given masklist only: no additional 
+		masks applied.
+		maskmode='interact' allows users to manually modify the 
+		mask regions by dragging mouse on the spectrum plotter GUI.
+		use LEFT or RIGHT button to add or delete regions, 
+		respectively.
+		"""
+
         @staticmethod
         def maxpix():
                 """
                 maxpix -- Maximum pixel value
                 default: 0 = autoscale
                 """
+	
+        @staticmethod
+        def maxwavelength():
+		"""
+		maxwavelength -- the longest sinusoidal wavelength in unit of 
+		spectral window width.
+		default: 1.0
+		"""
+	
 	@staticmethod	
 	def merge():
 		"""
@@ -1704,6 +1733,14 @@ class par(str):
 		"""
 
 	@staticmethod
+	def npiece():
+		"""
+        	npiece -- number of the element polynomials of cubic spline curve
+		options: (int) (&lt;0 turns off baseline fitting)
+		default: 2
+		"""
+
+	@staticmethod
 	def npixels():
 		"""
         	--- superuniform/briggs weighting parameter
@@ -1723,6 +1760,18 @@ class par(str):
 		"""
 		
 	@staticmethod
+	def nwave():
+		"""
+		nwave -- wave number(s) of sinusoid for fitting.
+		both integer (for the maximum one) and list (for all) 
+		can be used. Zero means constant term. 
+		default: 3
+		example: 4 uses sinusoids with wave numbers from 0 to 4,
+		i.e. 0, 1, 2, 3, and 4.
+		[1,8] uses sinusoids with wave numbers 1 and 8.
+		"""
+
+	@staticmethod
 	def nxpanel():
 		""" Panel number in the x-direction: """
 
@@ -1741,6 +1790,16 @@ class par(str):
                 default: True;
 		"""
 
+	@staticmethod
+	def order():
+		"""
+		order -- order of baseline polynomial
+		options: (int) (<0 turns off baseline fitting)
+		default: 5 for sdbaseline/sdcal, 1 for sdtpimaging
+		example: typically in range 2-9 (higher values
+		         seem to be needed for GBT)
+		"""
+		
 	@staticmethod
 	def outfile():
 		"""
@@ -2100,10 +2159,10 @@ class par(str):
 	def region():
 		"""
 		region -- File path of a file containing an ImageRegion.
-		ImageRegion files can be created with the CASA viewer's
-		region manager, and typically have the suffix '.rgn'
+		ImageRegion files can be created with the region manager of CASA viewer,
+		and typically have the suffix '.rgn'
 		default: None
-		example: region="myimage.im.rgn"
+		example: region='myimage.im.rgn'
 		"""
 
 	@staticmethod
@@ -2275,6 +2334,14 @@ class par(str):
 		default:
 		example: sigmafile='myimage.weights'
 		"""		
+
+        @staticmethod
+        def singledish():
+                """
+                singledish -- Set True to write data as single-dish format (Scantable)
+                              default: False
+                              task: importasdm
+                """
 
 	@staticmethod
 	def smallscalebias():
@@ -2671,6 +2738,10 @@ class par(str):
 		"""
 		
 	@staticmethod
+	def unflag():
+		""" Option to unflag data rather than flag it (flagdata task): """
+
+	@staticmethod
 	def uvtaper():
 		"""
         	uvtaper -- Apply additional filtering/uv tapering of the visibilities.
@@ -2694,6 +2765,17 @@ class par(str):
 		See help par.selectdata for additional syntax.
 		"""
 
+        @staticmethod
+        def varlist():
+                """
+                varlist -- Dictionary of variables used in expr (mathematical
+                           expression) and their values. Keys must be coincide with
+                           variables used in expr. Values are substituted in each
+                           value in expr.
+                           default: {} (empty dictionary)
+                           task: sdmath
+                """
+
 	@staticmethod
 	def velocity():
 		"""
@@ -2704,7 +2786,20 @@ class par(str):
 
 	@staticmethod
 	def verbose():
-		""" List each observation in addition to the summary (True or False): """
+		"""
+		(for sdbaseline)
+		verbose -- output fitting results to logger and a file as well
+		default: True
+		example: If False, the fitting results including coefficients, 
+		residual rms, etc., are not output to either the CASA 
+		logger or a text file (&lt;outfile&gt;_blparam.txt), while 
+		the processing speed gets faster by a factor of about 20 percent
+		
+		---------------------------------------------------------------
+
+		(for others)
+		verbose -- List each observation in addition to the summary (True or False):
+		"""
 
 	@staticmethod
 	def verify():
@@ -2840,10 +2935,6 @@ class par(str):
 		"""
 
 	@staticmethod
-	def unflag():
-		""" Option to unflag data rather than flag it (flagdata task): """
-
-	@staticmethod
 	def yaxis():
 		""" 
                 xaxis -- Visibility file (MS) data to plot along the x-axis
@@ -2911,12 +3002,12 @@ class par(str):
            
                field -- The field names (sources) processed by the task or tool:
            
-                       field = ''             data for all field_id's
+                       field = ''             data for all field_ids
                        field = '1'            data for field_id = 1
                        field = 'P1151+3435'   data for field P1151+3435
-                       field = '2~4'          data for field_id's 2,3,4
-                       field = '2,3,4'        data for field_id's 2,3,4
-                       field = 'P11*,3,4~6'   data for field_id's 3,4,5,6 and any source name
+                       field = '2~4'          data for field_ids 2,3,4
+                       field = '2,3,4'        data for field_ids 2,3,4
+                       field = 'P11*,3,4~6'   data for field_ids 3,4,5,6 and any source name
                                               beginning with P11
                        field = '*11,8'        data for field_id 8 and any source ending with 11
            
@@ -2924,14 +3015,14 @@ class par(str):
            
                        spw = '0'              spectral window_id=0, all channels
                        spw = '0:0~63'         sp id=0, channels 0 to 63, INCLUSIVE.
-                       spw = '0,1,4~7'        sp id's=0,1,4,5,6,7, all channels
-                       spw = '*:3~64'         channels 3 through 64 for all sp id's
+                       spw = '0,1,4~7'        sp ids=0,1,4,5,6,7, all channels
+                       spw = '*:3~64'         channels 3 through 64 for all sp ids
                                               spw = ' :3~64' will NOT work.
-                       spw = '*:0;60~63'      channel 0 and channels 60,61,62,63 for all IF's 
+                       spw = '*:0;60~63'      channel 0 and channels 60,61,62,63 for all IFs 
                                               ';' needed to separate different channel ranges in one spw
                        spw = '0:34, 2:10~12,3~4:0~33'
                                               sp id=0, channel 34; sp id=2, channels 10,11,12;
-                                              sp id's 3 and 4, channels 0 through 33, inclusive.
+                                              sp ids 3 and 4, channels 0 through 33, inclusive.
            
                       There is also a skipping parameter, denoted by '^'
            
@@ -3034,22 +3125,3 @@ class par(str):
            
                         Not yet implemented.
                """
-
-        @staticmethod
-        def singledish():
-                """
-                singledish -- Set True to write data as single-dish format (Scantable)
-                              default: False
-                              task: importasdm
-                """
-
-        @staticmethod
-        def varlist():
-                """
-                varlist -- Dictionary of variables used in expr (mathematical
-                           expression) and their values. Keys must be coincide with
-                           variables used in expr. Values are substituted in each
-                           value in expr.
-                           default: {} (empty dictionary)
-                           task: sdmath
-                """

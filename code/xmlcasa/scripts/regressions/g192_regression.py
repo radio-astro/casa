@@ -29,7 +29,7 @@ flagautocorr(vis='g192_a.ms')
 flagtime = time.time()
 print '--Setjy--'
 default('setjy')
-setjy(vis='g192_a.ms',field='4') #set flux density for 1331+305 (3C286)
+setjy(vis='g192_a.ms',field='4',standard='Perley-Taylor 99') #set flux density for 1331+305 (3C286)
 setjytime = time.time()
 print '--Gaincal--'
 #Select data for gain calibrators and drop outer channesl that may bias the solution

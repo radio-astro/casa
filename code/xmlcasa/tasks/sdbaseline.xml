@@ -14,10 +14,10 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
   <description>ASAP SD calibration task (based on the ALMATST5 recommendations):
         fit/subtract a spectral baseline 
 
-        Modified (add parameters minnwave,maxnwave) 2011-03-15 WK
+        Modified (add parameters nwave,maxwavelength) 2011-03-29 WK
         Modified (rename parameter masking to maskmode) 2011-03-10 WK
         Modified (change parameter order to blfunc's subparam) 2011-02-25 WK
-        Modified (add parameter blfunc,npiece,clipthresh,clipniter) 2011-02-25 WK
+        Modified (add parameters blfunc,npiece,clipthresh,clipniter) 2011-02-25 WK
         Modified (rename parameters blmode,blpoly to masking,order, respectively) 2011-02-25 WK
         Modified (rename parameter interactive to verify) 2008-11-20 KS
         Modified (+interactive mask) 2008-08-20 KS
@@ -105,7 +105,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
     </param>
 
     <param type="string" name="maskmode">
-	    <description>mode of setting channel masks</description>
+	    <description>mode of setting additional channel masks</description>
 	    <allowed kind="enum">
 	        <value>auto</value>
 	        <value>list</value>
@@ -148,14 +148,14 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
             <value>2</value>
     </param>
 
-    <param type="int" name="minnwave" subparam="true">
-            <description>minumum sinusoidal wave number in the spectral window</description>
-            <value>0</value>
+    <param type="any" name="nwave" subparam="true">
+            <description>wave numbers used for fitting (e.g. 3 or [0,1,2])</description>
+	    <value type='int'>3</value>
     </param>
 
-    <param type="int" name="maxnwave" subparam="true">
-            <description>maximum sinusoidal wave number in the spectral window</description>
-            <value>3</value>
+    <param type="double" name="maxwavelength" subparam="true">
+            <description>the longest sinusoidal wavelength in unit of sw width</description>
+            <value>1.0</value>
     </param>
 
     <param type="double" name="clipthresh" subparam="true">
@@ -246,8 +246,8 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
 			<default param="clipniter"><value>1</value></default>
 	        </equals>
                 <equals value="sinusoid">
-			<default param="minnwave"><value>0</value></default>
-			<default param="maxnwave"><value>3</value></default>
+			<default param="nwave"><value type="int">3</value></default>
+			<default param="maxwavelength"><value>1.0</value></default>
 			<default param="clipthresh"><value>3.0</value></default>
 			<default param="clipniter"><value>1</value></default>
 	        </equals>
@@ -320,20 +320,21 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
                 default: [] (entire spectrum)
                 example: [[1000,3000],[5000,7000]]
                          '0:1000~3000;5000~7000, 1:200~350;450~600'
-                         if maskmode='auto' then this mask will be applied
-                         before fitting
-        maskmode -- mode of setting channel masks
+                         when maskmode is 'auto' or 'interact', this mask 
+                         will be applied first before fitting as base mask
+        maskmode -- mode of setting additional channel masks
                 options: (str) 'auto','list','interact'
                 default: 'auto'
-                example: maskmode='auto' uses expandable parameters 
-                         in addition to order to run linefinder
-                         to determine line-free regions
-                         USE WITH CARE! May need to tweak the parameters,
-                         thresh, avg_limit, and edge.
-                         maskmode='interact' allows adding and deleting mask 
-                         regions by drawing rectangles on the plot with mouse. 
-                         Draw a rectangle with LEFT-mouse to ADD the region to 
-                         the mask and with RIGHT-mouse to DELETE the region. 
+                example: maskmode='auto' runs linefinder to detect line regions 
+                         to be excluded from fitting. this mode requires three 
+                         expandable parameters: thresh, avg_limit, and edge.
+                         USE WITH CARE! May need to tweak the expandable parameters.
+                         maskmode='list' uses the given masklist only: no additional 
+                         masks applied.
+                         maskmode='interact' allows users to manually modify the 
+                         mask regions by dragging mouse on the spectrum plotter GUI.
+                         use LEFT or RIGHT button to add or delete regions, 
+                         respectively.
                
             &gt;&gt;&gt; maskmode expandable parameters
                  thresh -- S/N threshold for linefinder
@@ -371,12 +372,16 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
                  npiece -- number of the element polynomials of cubic spline curve
                          options: (int) (&lt;0 turns off baseline fitting)
                          default: 2
-                 minnwave -- minimum wave number of sinusoid in the spectral window
-                         options: (int) (&lt;0 turns off baseline fitting)
-                         default: 0
-                 maxnwave -- maximum wave number of sinusoid in the spectral window
-                         options: (int)
+                 nwave -- wave number(s) of sinusoid for fitting.
+                         both integer (for the maximum one) and list (for all) 
+                         can be used. Zero means constant term. 
                          default: 3
+                         example: 4 uses sinusoids with wave numbers from 0 to 4,
+                                    i.e. 0, 1, 2, 3, and 4.
+                                  [1,8] uses sinusoids with wave numbers 1 and 8.
+                 maxwavelength -- the longest sinusoidal wavelength in unit of 
+                         spectral window width.
+                         default: 1.0
                  clipthresh -- clipping threshold for iterative spline fitting
                          default: 3
                  clipniter -- maximum number of iteration in spline fitting

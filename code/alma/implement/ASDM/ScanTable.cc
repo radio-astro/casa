@@ -634,8 +634,13 @@ ScanRow* ScanTable::lookup(Tag execBlockId, int scanNumber, ArrayTime startTime,
     // Detect the XML header.
     string::size_type loc0 = mimeMsg.find(xmlPartMIMEHeader, 0);
     if ( loc0 == string::npos) {
-      throw ConversionException("Failed to detect the beginning of the XML header", "Scan");
+      // let's try with CRLFs
+      xmlPartMIMEHeader = "Content-ID: <header.xml>\r\n\r\n";
+      loc0 = mimeMsg.find(xmlPartMIMEHeader, 0);
+      if  ( loc0 == string::npos ) 
+	      throw ConversionException("Failed to detect the beginning of the XML header", "Scan");
     }
+
     loc0 += xmlPartMIMEHeader.size();
     
     // Look for the string announcing the binary part.

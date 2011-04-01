@@ -164,7 +164,7 @@ int main(int argc, char* argv[]) {
   //*itsLog << LogIO::NORMAL2 << "Sub MS created" << LogIO::POST;
 
   splitter.setmsselect(spwsel, t_field, t_antenna, t_scan, t_uvrange,
-		       t_taql, step, averchan, t_subarray, t_correlation);
+		       t_taql, step, t_subarray, t_correlation);
   splitter.selectTime(timebin, timerange);
   splitter.makeSubMS(outms, t_whichcol, t_tileshape, t_combine);
   //*itsLog << LogIO::NORMAL2 << "SubMS made" << LogIO::POST;

@@ -101,6 +101,9 @@ public:
   virtual String xAxisText(const WorldCanvas* wc=0) const;
   virtual String yAxisText(const WorldCanvas* wc=0) const;
       
+  // Pure virtual function from DisplayData...
+  String dataType() const { return "label"; }
+
 protected:
 
   // (Required) copy constructor.

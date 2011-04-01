@@ -104,7 +104,9 @@ const unsigned int plotms::LAUNCH_TOTAL_WAIT_US    = 5000000;
 #define GETSINGLEINT(METHOD, PKEY) GETSINGLE(METHOD, PKEY, TpInt, asInt, 0)
 
 #define GETSINGLEPLOTSTR(PKEY) GETSINGLEPLOT(PKEY, TpString, asString, "")
-#define GETSINGLEPLOTBOOL(PKEY) GETSINGLEPLOT(PKEY, TpBool,  asBool, "")
+#define GETSINGLEPLOTBOOL(PKEY) GETSINGLEPLOT(PKEY, TpBool,  asBool, false)
+#define GETSINGLEPLOTINT(PKEY) GETSINGLEPLOT(PKEY, TpInt,  asInt, 0)
+
 
 void plotms::setLogFilename(const std::string& logFilename) {
     if(app.dbusName( ).empty()) itsLogFilename_ = logFilename;
@@ -668,4 +670,63 @@ void plotms::setFlagging_(const PlotMSFlagging& flagging) {
             PlotMSDBusApp::METHOD_SETFLAGGING, params, true);
 }
 
+
+
+
+bool plotms::getGridMajorShown( const int plotIndex) 
+{
+    launchApp();
+    GETSINGLEPLOTBOOL(/*PARAM_*/SHOWMAJORGRID);
 }
+
+
+bool plotms::getGridMinorShown( const int plotIndex) 
+{
+    launchApp();
+    GETSINGLEPLOTBOOL(SHOWMINORGRID);
+}
+
+
+int plotms::getGridMajorWidth( const int plotIndex) 
+{
+    launchApp();
+    GETSINGLEPLOTINT(MAJORWIDTH);
+}
+
+
+int plotms::getGridMinorWidth( const int plotIndex) 
+{
+    launchApp();
+    GETSINGLEPLOTINT(MINORWIDTH);
+}
+
+
+
+void plotms::setGridParams(
+                const bool showmajorgrid,  const int majorwidth, const string& majorstyle,  const string &majorcolor,
+                const bool showminorgrid,  const int minorwidth, const string& minorstyle,  const string &minorcolor,
+                const bool updateImmediately, const int plotIndex) 
+{
+    launchApp();
+    
+    string smaj = majorstyle;
+    string smin = minorstyle;
+    if (smaj=="")   smaj="solid";
+    if (smin=="")   smin="solid";
+    
+    Record params;
+    params.define(PlotMSDBusApp::PARAM_SHOWMAJORGRID,  showmajorgrid);
+    params.define(PlotMSDBusApp::PARAM_MAJORWIDTH,  majorwidth);
+    params.define(PlotMSDBusApp::PARAM_MAJORSTYLE,  smaj);
+    params.define(PlotMSDBusApp::PARAM_MAJORCOLOR,  majorcolor);
+    params.define(PlotMSDBusApp::PARAM_SHOWMINORGRID,  showminorgrid);
+    params.define(PlotMSDBusApp::PARAM_MINORWIDTH,  minorwidth);
+    params.define(PlotMSDBusApp::PARAM_MINORSTYLE,  smin);
+    params.define(PlotMSDBusApp::PARAM_MINORCOLOR,  minorcolor);
+    params.define(PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY, updateImmediately);
+    params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);
+    QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName( ),
+            PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, true);    
+}
+
+}  // end namespace

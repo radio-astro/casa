@@ -66,19 +66,16 @@ ratedict={'G192': 634.9,'H121': 500.,'L02D': 500.,'NGC5921': 35.1,'NGC7538': 240
 for mysource in scriptlist:
 	execute_script='DO_'+mysource
 	if (eval(execute_script)):
-		print 'source ',mysource
-		#os.environ['CASAPATH']=pathname
-		execfile(str.lower(mysource)+'_regression.py')
-		scriptpass=regstate
-		scriptlog=outfile
-		scripttime=(endTime-startTime)
-		scriptrate=ratedict[mysource]/(endTime-startTime)
-#		print >>regfile,mysource+'\t'+str(scriptpass)+'\t'+str(scripttime)+'\t'+str(scriptrate)+'\t'+str(scriptlog)
-		print >>regfile,'%9s %6s %9s %9s %39s'%(mysource,scriptpass,scripttime,scriptrate,scriptlog)
-		# would like to concatenate script file at the end of report
-#		scriptfile=open(scriptlog,'r') 
-#		scriptfile.close() 
-
+		try:
+			print 'source ',mysource
+			execfile(str.lower(mysource)+'_regression.py')
+			scriptpass=regstate
+			scriptlog=outfile
+			scripttime=(endTime-startTime)
+			scriptrate=ratedict[mysource]/(endTime-startTime)
+			print >>regfile,'%9s %6s %9s %9s %39s'%(mysource,scriptpass,scripttime,scriptrate,scriptlog)
+		except:
+			print 'Test failed:', sys.exec_info()[0]
 
 regfile.close()
 

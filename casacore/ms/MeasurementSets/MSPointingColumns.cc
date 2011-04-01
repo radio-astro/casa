@@ -110,6 +110,8 @@ MDirection ROMSPointingColumns::sourceOffsetMeas(Int row,
 
   Int ROMSPointingColumns::pointingIndex(Int antenna, Double ptime, Int guessRow) const
 {
+  if((this->nrow()) < 1)
+    return -1;
   // return the first row matching the requirements
   const Int nrow = antennaId().nrow();
   //take up from where we left last time

@@ -76,7 +76,7 @@ endif()
 
 if( CMAKE_BUILD_TYPE STREQUAL Debug )
   add_definitions( -DAIPS_DEBUG )
-  set( CMAKE_CXX_FLAGS_DEBUG "-ggdb3 -O0" )
+  set( CMAKE_CXX_FLAGS_DEBUG "-ggdb3 -O0 -fno-omit-frame-pointer" )
 endif()
 
 if( NOT RE_CMAKE )
@@ -279,7 +279,7 @@ set( RE_CMAKE "YES" CACHE STRING "are we rerunning cmake?" FORCE )
 
 # Use htlatex, do not support latex2html
 find_program( LATEX2HTML_CONVERTER NAMES htlatex )
-set( LATEX2HTML_OPTIONS "htcasa,section+,next,p-width,5" 
+set( LATEX2HTML_OPTIONS "\\\"htcasa,section+,next,p-width,5\\\" \\\"\\\" \\\"-p\\\""
       CACHE STRING "LATEX2HTML_CONVERTER options" )
 
 # Use pdflatex
@@ -896,7 +896,7 @@ if( NOT BOOST_ROOT )
   set( BOOST_ROOT ${casa_packages} )
 endif()
 
-set( boost_components regex program_options filesystem )
+set( boost_components regex program_options filesystem thread)
 find_package( Boost REQUIRED ${boost_components} )
 
 if( NOT Boost_FOUND )

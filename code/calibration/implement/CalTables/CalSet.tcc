@@ -32,7 +32,6 @@
 #include <calibration/CalTables/SolvableVJTable.h>
 #include <calibration/CalTables/CalMainColumns2.h>
 
-#include <calibration/CalTables/CalDescColumns2.h>
 #include <calibration/CalTables/TimeVarVJDesc.h>
 #include <calibration/CalTables/SolvableVJDesc.h>
 #include <calibration/CalTables/SolvableVJMRec.h>

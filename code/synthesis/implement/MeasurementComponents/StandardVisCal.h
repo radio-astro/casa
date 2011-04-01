@@ -572,6 +572,9 @@ public:
   // Local M version only supports normalization
   virtual void globalPostSolveTinker();
 
+  // (At least?) one of the reasons it uses its own keep() is to store 0 to
+  // nChanPar() - 1 of solveCPar() on the channel axis, as opposed to just
+  // focusChan(). 
   virtual void keep(const Int& slot);
 
   virtual void createCorruptor(const VisIter& vi, const Record& simpar, const Int nSim);
