@@ -47,7 +47,7 @@ def sdcal(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, ca
                     raise Exception, s
 
 
-            if calmode != 'none': 
+            if calmode != 'none' or average: 
               if kernel =='none' and maskmode=='none':
                 sdaverageout = outfile
               else:
@@ -72,6 +72,7 @@ def sdcal(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, ca
                 else:
                   sdsmoothout = 'sdsmoothout.tmp'
                   tmpfilelist+=sdsmoothout+' '
+                  sdbaselineout = outfile
               else:
                 if maskmode != 'none':
                   sdbaselineout = outfile
