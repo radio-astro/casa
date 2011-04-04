@@ -93,6 +93,11 @@ class SubMS
 
  public:
 
+  enum RegriddingAlternatives {
+    useFFTShift = -100,   // needs input and output grid to have the same number of channels and be equidistant in freq.
+    useLinIntThenFFTShift // for the case the input grid is not equidistant in frequency but the output grid is
+  };
+
   SubMS(String& theMS, Table::TableOption option = Table::Old);
   
   // construct from an MS

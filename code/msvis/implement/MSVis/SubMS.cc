@@ -84,6 +84,7 @@
 #include <tables/Tables/TiledStManAccessor.h>
 #include <ms/MeasurementSets/MSTileLayout.h>
 #include <scimath/Mathematics/InterpolateArray1D.h>
+#include <scimath/Mathematics/FFTServer.h>
 #include <casa/sstream.h>
 #include <casa/iomanip.h>
 #include <functional>
@@ -1751,7 +1752,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     }	  
 
     // Set up a little database to keep track of which pairs (FieldId, SPWId) have already
-    // been dealt with and what paramters were used
+    // been dealt with and what parameters were used
 
     vector<Int> oldSpwId;
     vector<Int> oldFieldId;
@@ -1760,12 +1761,12 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     vector<Bool> transform;
     vector<MDirection> theFieldDirV;
     vector<MPosition> mObsPosV;
-    vector<MFrequency::Types> fromFrameTypeV;
-    vector<MFrequency::Ref> outFrameV;
-    vector< Vector<Double> > xold; 
-    vector< Vector<Double> > xout; 
-    vector< Vector<Double> > xin; 
-    vector< Int > method;
+    vector<MFrequency::Types> fromFrameTypeV; // original ref frame of the SPW
+    vector<MFrequency::Ref> outFrameV; // new ref frame
+    vector< Vector<Double> > xold; // the frequencies of the original SPW in the old ref frame
+    vector< Vector<Double> > xout; // the frequencies of the new SPW in the new ref frame
+    vector< Vector<Double> > xin;  // the frequencies of the old SPW in the new ref frame
+    vector< Int > method; // interpolation method cast to Int
     
 
     Bool msModified = False;
@@ -1996,6 +1997,10 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       progressStep = 0.2;
     }
 
+    // prepare some regridding prerequisites
+    FFTServer<Float, Complex> fFFTServer; // for fftshift, if needed
+ 
+    // start loop over main table
     for(uInt mainTabRowI=0; mainTabRowI<nMainTabRows; mainTabRowI++){
       
       uInt mainTabRow = sortedI(mainTabRowI); // i.e. mainTabRow is sorted in time
@@ -2048,11 +2053,14 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	Array<Complex> yin;
 	Array<Bool> yinFlags((*oldFLAGColP)(mainTabRow));
 	Array<Bool> yinFlagsUnsmoothed;
+	Array<Complex> yinIntermediate;
+	Array<Bool> yinFlagsIntermediate;
 	if(doHanningSmooth){
 	  yinFlagsUnsmoothed.assign(yinFlags);
 	}
 
 	Vector<Double> xindd(xold[iDone].size());
+	Double theShift = 0.;
 
 	if(transform[iDone]){
 
@@ -2061,18 +2069,28 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  Unit unit(String("Hz"));
 	  MFrequency::Convert freqTrans2(unit, fromFrame, outFrameV[iDone]);
 	
-	  // transform from this timestamp to the one of the output SPW
-	  for(uInt i=0; i<xindd.size(); i++){
-	    xindd[i] = freqTrans2(xold[iDone][i]).get(unit).getValue();
+	  if(method[iDone]==(Int)useFFTShift || method[iDone]==(Int)useLinIntThenFFTShift){
+	    uInt centerChan = xold[iDone].size()/2;
+	    theShift = freqTrans2(xold[iDone][centerChan]).get(unit).getValue() - xin[iDone][centerChan];
+	    //cout << "the shift " << theShift << endl;
+	    for(uInt i=0; i<xin[iDone].size(); i++){ // cannot use assign due to different data type
+	      xindd[i] = xin[iDone][i];
+	    }
 	  }
-// 	  if(mainTabRow==0){ // debug output
-// 	    Int i = 25;
-// 	    cout << "i " << i << " xin " << setprecision(9) << xin[iDone][i] << " xindd " << setprecision(9) << xindd[i] 
-// 		 << " xout " << setprecision(9) << xout[iDone][i] << endl;
-// 	    cout << "i " << i << " vradxin " << setprecision(9) << vrad(xin[iDone][i], regridVeloRestfrq) 
-// 		 << " vradxindd " << setprecision(9) << vrad(xindd[i], regridVeloRestfrq)  
-// 		 << " xout " << setprecision(9) << vrad(xout[iDone][i], regridVeloRestfrq) << endl;
-// 	  }
+	  else{
+	    // transform from this timestamp to the one of the output SPW
+	    for(uInt i=0; i<xindd.size(); i++){
+	      xindd[i] = freqTrans2(xold[iDone][i]).get(unit).getValue();
+	    }
+	    // 	  if(mainTabRow==0){ // debug output
+	    // 	    Int i = 25;
+	    // 	    cout << "i " << i << " xin " << setprecision(9) << xin[iDone][i] << " xindd " << setprecision(9) << xindd[i] 
+	    // 		 << " xout " << setprecision(9) << xout[iDone][i] << endl;
+	    // 	    cout << "i " << i << " vradxin " << setprecision(9) << vrad(xin[iDone][i], regridVeloRestfrq) 
+	    // 		 << " vradxindd " << setprecision(9) << vrad(xindd[i], regridVeloRestfrq)  
+	    // 		 << " xout " << setprecision(9) << vrad(xout[iDone][i], regridVeloRestfrq) << endl;
+	    // 	  }
+	  }
 	}
 	else{ // no additional transformation of input grid
 	  for(uInt i=0; i<xin[iDone].size(); i++){ // cannot use assign due to different data type
@@ -2080,16 +2098,28 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  }
 	}
 
-	if(method[iDone]==100){ // fftshift
-	  cout << "FFT shift not yet implemented. Will use linear interpolation." << endl;
-	  method[iDone] = (Int) InterpolateArray1D<Double,Complex>::linear;
+
+	Double relShift = 0.;
+	InterpolateArray1D<Double,Complex>::InterpolationMethod  methodC = InterpolateArray1D<Double,Complex>::linear; // the default
+	InterpolateArray1D<Double,Float>::InterpolationMethod  methodF = InterpolateArray1D<Double,Float>::linear;
+
+	if(fabs(theShift)>0. && 
+	   (method[iDone]==(Int)useFFTShift || method[iDone]==(Int)useLinIntThenFFTShift)
+	   ){
+	  // Note: fftshift is only used for the complex columns, linear interpol for the others
+	  Int endChan = xout[iDone].size()-1;
+	  if(endChan<=0){
+	    os << LogIO::SEVERE << "Internal error: Cannot regrid a single-channel SPW using FFTshift" << LogIO::POST;
+	    return 0;
+	  }
+	  Double chanWidth = xout[iDone][1] - xout[iDone][0];
+	  relShift = theShift/(xout[iDone][endChan] - xout[iDone][0] + chanWidth);
+	  //cout << "the relshift " << relShift << endl;
 	}
-
-	InterpolateArray1D<Double,Complex>::InterpolationMethod  methodC =
-	  (InterpolateArray1D<Double,Complex>::InterpolationMethod) method[iDone];
-	InterpolateArray1D<Double,Float>::InterpolationMethod  methodF =
-	  (InterpolateArray1D<Double,Float>::InterpolationMethod) method[iDone];
-
+	else{
+	  methodC = (InterpolateArray1D<Double,Complex>::InterpolationMethod) method[iDone];
+	  methodF = (InterpolateArray1D<Double,Float>::InterpolationMethod) method[iDone];
+	}
 
 	if(!CORRECTED_DATACol.isNull()){
 	  yin.assign((*oldCORRECTED_DATAColP)(mainTabRow));
@@ -2107,17 +2137,48 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 				     yinFlagsUnsmoothed, // the input flags
 				     False);  // for flagging: good is not true
 	  }
+	  
+	  if(method[iDone]==(Int)useLinIntThenFFTShift){
+	    // first interpolate to equidistant grid at initial timestamp
+	    InterpolateArray1D<Double,Complex>::interpolate(yinIntermediate, // the new visibilities
+							    yinFlagsIntermediate, // the new flags
+							    xout[iDone], // the new channel centers (for the output SPW timestamp)
+							    xindd, // the old channel centers 
+							    yin, // the old visibilities 
+							    yinFlags,// the old flags
+							    methodC, // the interpol method
+							    False, // for flagging: good is not true
+							    doExtrapolate // do not extrapolate
+							    );	    
+	    // shift from this timestamp to the output SPW timestamp
+	    fFFTServer.fftshift(yout, youtFlags, yinIntermediate, yinFlagsIntermediate, 
+				1, // axis 1 of the array is the polarisation axis 
+				relShift, 
+				False, // for flagging: good is not true 
+				False);
 
-	  InterpolateArray1D<Double,Complex>::interpolate(yout, // the new visibilities
-							  youtFlags, // the new flags
-							  xout[iDone], // the new channel centers
-							  xindd, // the old channel centers
-							  yin, // the old visibilities 
-							  yinFlags,// the old flags
-							  methodC, // the interpol method
-							  False, // for flagging: good is not true
-							  doExtrapolate // do not extrapolate
-							  );
+	  }
+	  else if(method[iDone]==(Int)useFFTShift){
+	    // shift from this timestamp to the output SPW timestamp
+	    fFFTServer.fftshift(yout, youtFlags, yin, yinFlags, 
+				1, // axis 1 of the array is the polarisation axis 
+				relShift, 
+				False, // for flagging: good is not true 
+				False);
+	  }
+	  else{
+	    InterpolateArray1D<Double,Complex>::interpolate(yout, // the new visibilities
+							    youtFlags, // the new flags
+							    xout[iDone], // the new channel centers
+							    xindd, // the old channel centers
+							    yin, // the old visibilities 
+							    yinFlags,// the old flags
+							    methodC, // the interpol method
+							    False, // for flagging: good is not true
+							    doExtrapolate // do not extrapolate
+							    );
+	  }
+
 	  CORRECTED_DATACol.put(mainTabRow, yout);
 	  if(!youtFlagsWritten){ 
 	    FLAGCol.put(mainTabRow, youtFlags);
@@ -2132,8 +2193,25 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
 	    Smooth<Complex>::hanning(yin, yinFlags, yinUnsmoothed, yinFlagsUnsmoothed, False);  
 	  }
-	  InterpolateArray1D<Double,Complex>::interpolate(yout, youtFlags, xout[iDone], xindd, 
-							  yin, yinFlags, methodC, False, doExtrapolate);
+
+	  if(method[iDone]==(Int)useLinIntThenFFTShift){
+	    InterpolateArray1D<Double,Complex>::interpolate(yinIntermediate, yinFlagsIntermediate, xout[iDone], 
+							    xindd, yin, yinFlags,
+							    methodC, False, doExtrapolate);	    
+	    fFFTServer.fftshift(yout, youtFlags, yinIntermediate, yinFlagsIntermediate, 
+				1, relShift, False, False);
+
+	  }
+	  else if(method[iDone]==(Int)useFFTShift){
+	    fFFTServer.fftshift(yout, youtFlags, yin, yinFlags, 
+				1, relShift, False, False);
+	  }
+	  else{
+	    InterpolateArray1D<Double,Complex>::interpolate(yout, youtFlags, xout[iDone], 
+							    xindd, yin, yinFlags,
+							    methodC, False, doExtrapolate);
+	  }
+
 	  DATACol.put(mainTabRow, yout);
 	  if(!youtFlagsWritten){ 
 	    FLAGCol.put(mainTabRow, youtFlags);
@@ -2148,15 +2226,47 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
 	    Smooth<Complex>::hanning(yin, yinFlags, yinUnsmoothed, yinFlagsUnsmoothed, False);  
 	  }
-	  InterpolateArray1D<Double,Complex>::interpolate(yout, youtFlags, xout[iDone], xindd, 
-							  yin, yinFlags, methodC, False, doExtrapolate);
+	  if(method[iDone]==(Int)useLinIntThenFFTShift){
+	    InterpolateArray1D<Double,Complex>::interpolate(yinIntermediate, yinFlagsIntermediate, xout[iDone], 
+							    xindd, yin, yinFlags,
+							    methodC, False, doExtrapolate);	    
+	    fFFTServer.fftshift(yout, youtFlags, yinIntermediate, yinFlagsIntermediate, 
+				1, relShift, False, False);
+
+	  }
+	  else if(method[iDone]==(Int)useFFTShift){
+	    fFFTServer.fftshift(yout, youtFlags, yin, yinFlags, 
+				1, relShift, False, False);
+	  }
+	  else{
+	    InterpolateArray1D<Double,Complex>::interpolate(yout, youtFlags, xout[iDone], 
+							    xindd, yin, yinFlags,
+							    methodC, False, doExtrapolate);
+	  }
+
 	  LAG_DATACol.put(mainTabRow, yout);
 	}
 	if(!MODEL_DATACol.isNull()){
 	  yin.assign((*oldMODEL_DATAColP)(mainTabRow));
 
-	  InterpolateArray1D<Double,Complex>::interpolate(yout, youtFlags, xout[iDone], xindd, 
-							  yin, yinFlags, methodC, False, doExtrapolate);
+	  if(method[iDone]==(Int)useLinIntThenFFTShift){
+	    InterpolateArray1D<Double,Complex>::interpolate(yinIntermediate, yinFlagsIntermediate, xout[iDone], 
+							    xindd, yin, yinFlags,
+							    methodC, False, doExtrapolate);	    
+	    fFFTServer.fftshift(yout, youtFlags, yinIntermediate, yinFlagsIntermediate, 
+				1, relShift, False, False);
+
+	  }
+	  else if(method[iDone]==(Int)useFFTShift){
+	    fFFTServer.fftshift(yout, youtFlags, yin, yinFlags, 
+				1, relShift, False, False);
+	  }
+	  else{
+	    InterpolateArray1D<Double,Complex>::interpolate(yout, youtFlags, xout[iDone], 
+							    xindd, yin, yinFlags,
+							    methodC, False, doExtrapolate);
+	  }
+
 	  MODEL_DATACol.put(mainTabRow, yout);
 	  if(!youtFlagsWritten){ 
 	    FLAGCol.put(mainTabRow, youtFlags);
@@ -4305,8 +4415,36 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	      methodName = "cubic spline";
 	    }
 	    else if(meth.contains("fft")){
-	      theMethod = 100;
-	      methodName = "fftshift";
+	      // check if input grid is equidistant in frequency
+	      Bool isEquidistant = True;
+	      Double sep = fabs(transCHAN_WIDTH(0));
+	      for(uInt i=1; i<transCHAN_WIDTH.size(); i++){
+		if((fabs(transCHAN_WIDTH(i)-transCHAN_WIDTH(i-1))>0.1)
+		   || fabs(fabs(transNewXin(i)-transNewXin(i-1))-sep)>0.1 ){
+		  isEquidistant = False;
+		  break;
+		}
+		sep = fabs(transNewXin(i)-transNewXin(i-1));
+	      }
+
+	      if(isEquidistant){
+		theMethod = (Int) useFFTShift;
+		methodName = "fftshift";
+	      }
+	      else{
+		theMethod = (Int) useLinIntThenFFTShift;
+		methodName = "fftshift (preceeded by a linear transform to make grid equidistant)";
+	      }
+	      // for this method to work, the output grid needs to be equidistant in frequency
+	      if(!(regridQuant=="freq" || regridQuant=="vrad" 
+		   || (regridQuant=="chan" && isEquidistant) // (chan equidistance depends on input grid) 
+		   )){
+		os << LogIO::SEVERE
+		   << "Parameter \"interpolation\" value \"" << meth << "\" requires an output grid equidistant in frequency."
+		   << endl << "Cannot proceed." 
+		   << LogIO::POST;
+		return False;
+	      }
 	    }
 	    else {
 	      if(!meth.contains("linear") && meth!=""){
@@ -4347,6 +4485,11 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    // we have a useful set of channel boundaries
 	    newNUM_CHAN = newChanLoBound.size();
 	    
+	    if(theMethod==(Int) useFFTShift
+	       && newNUM_CHAN != oldNUM_CHAN){ // need to preceede by lin interpol. after all
+	      theMethod = (Int) useLinIntThenFFTShift;
+	    }
+
 	    message = "input frame = " + MFrequency::showType(theOldRefFrame) 
 	      + ", output frame = " + MFrequency::showType(theFrame)
               + "\n" + message + " Interpolation Method = " + methodName;

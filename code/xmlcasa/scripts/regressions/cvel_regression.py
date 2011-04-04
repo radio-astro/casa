@@ -247,7 +247,7 @@ for frame in frames_to_do:
          mode='velocity',nchan=49,
          start=vradstart,
          width=vradwidth,
-         interpolation='linear',
+         interpolation='fftshift',
          phasecenter='J2000 12h01m53.13s -18d53m09.8s',
          restfreq=restfreqstr,
          outframe=frame,

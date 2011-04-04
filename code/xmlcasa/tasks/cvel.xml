@@ -22,9 +22,9 @@ feature (like 3-4 times the linewidth). This will minimize
 regridding artifacts in cvel.
 
 If cvel has already established the grid that is desired for the
-imaging, clean should be run with the default channel mode 
-(width=1) or with exactly the same frequency/velocity parameters 
-as used in cvel in order to avoid additional regridding in clean.
+imaging, clean should be run with exactly the same frequency/velocity 
+parameters as used in cvel in order to avoid additional regridding in 
+clean.
 
 Hanning smoothing is optionally offered in cvel, but tests have 
 shown that already the regridding process itself, if it involved 
@@ -395,9 +395,9 @@ feature (like 3-4 times the linewidth). This will minimize
 regridding artifacts in cvel.
 
 If cvel has already established the grid that is desired for the
-imaging, clean should be run with the default channel mode 
-(width=1) or with exactly the same frequency/velocity parameters 
-as used in cvel in order to avoid additional regridding in clean.
+imaging, clean should be run with exactly the same frequency/velocity 
+parameters as used in cvel in order to avoid additional regridding in 
+clean.
 
 Hanning smoothing is optionally offered in cvel, but tests have 
 shown that already the regridding process itself, if it involved 
