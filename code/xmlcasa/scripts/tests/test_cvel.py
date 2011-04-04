@@ -34,7 +34,7 @@ def verify_ms(msname, expnumspws, expnumchan, inspw, expchanfreqs=[]):
         msg = "Found "+ str(nc) +", expected "+str(expnumchan)+" channels in spw "+str(inspw)+" in "+msname
         return [False,msg]
     if not (dimdata == expnumchan):
-        msg = "Found "+ str(nc) +", expected "+str(expnumchan)+" channels in FLAG column in "+msname
+        msg = "Found "+ str(dimdata) +", expected "+str(expnumchan)+" channels in FLAG column in "+msname
         return [False,msg]
 
     if not (expchanfreqs==[]):
@@ -968,6 +968,143 @@ class cvel_test(unittest.TestCase):
             )
         self.assertNotEqual(rval,False)
         ret = verify_ms(outfile, 1, 3, 0, b)
+        self.assertTrue(ret[0],ret[1])
+
+    def test49(self):
+        '''Cvel 49: vopt mode with fftshit, expected error ...'''
+        myvis = vis_b
+        os.system('ln -sf ' + myvis + ' myinput.ms')
+        try:
+            rval = cvel(
+                vis = 'myinput.ms',
+                outputvis = outfile,
+                mode='velocity',
+                veltype='optical',
+                outframe = 'BARY',
+                interpolation = 'fftshift'
+                )
+            self.assertNotEqual(rval,False)
+            ret = verify_ms(outfile, 1, 2, 0)
+            self.assertTrue(ret[0],ret[1])
+        except:
+            print "*** Expected error ***"
+
+    def test50(self):
+        '''Cvel 50: test fftshift regridding: channel mode, width positive'''
+        myvis = vis_d
+        os.system('ln -sf ' + myvis + ' myinput.ms')
+
+        # get reference values by running cvel with linear interpol
+        cvel(
+            vis = 'myinput.ms',
+            outputvis = outfile,
+            spw = '0,1',
+            nchan = 150,
+            start = 10,
+            width = 1,
+            interpolation = 'linear',
+            outframe = 'CMB'
+            )
+        
+        tb.open(outfile+'/SPECTRAL_WINDOW')
+        a = tb.getcell('CHAN_FREQ')
+        b = numpy.array(a)
+        tb.close()
+
+        shutil.rmtree(outfile, ignore_errors=True)
+
+        rval = cvel(
+            vis = 'myinput.ms',
+            outputvis = outfile,
+            spw = '0,1',
+            nchan = 150,
+            start = 10,
+            width = 1,
+#            interpolation = 'linear',
+            interpolation = 'fftshift',
+            outframe = 'CMB'
+            )
+
+        self.assertNotEqual(rval,False)
+        ret = verify_ms(outfile, 1, 150, 0, b)
+        self.assertTrue(ret[0],ret[1])
+
+    def test51(self):
+        '''Cvel 51: test fftshift regridding: frequency mode, width positive'''
+        myvis = vis_d
+        os.system('ln -sf ' + myvis + ' myinput.ms')
+
+        # get reference values by running cvel with linear interpol
+        cvel(
+            mode = 'frequency',
+            vis = 'myinput.ms',
+            outputvis = outfile,
+            spw = '0,1',
+            nchan = 150,
+            interpolation = 'linear',
+            outframe = 'BARY'
+            )
+        
+        tb.open(outfile+'/SPECTRAL_WINDOW')
+        a = tb.getcell('CHAN_FREQ')
+        b = numpy.array(a)
+        tb.close()
+
+        shutil.rmtree(outfile, ignore_errors=True)
+
+        rval = cvel(
+            mode = 'frequency',
+            vis = 'myinput.ms',
+            outputvis = outfile,
+            spw = '0,1',
+            nchan = 150,
+            interpolation = 'fftshift',
+            outframe = 'BARY'
+            )
+
+        self.assertNotEqual(rval,False)
+        ret = verify_ms(outfile, 1, 150, 0, b)
+        self.assertTrue(ret[0],ret[1])
+
+    def test52(self):
+        '''Cvel 52: test fftshift regridding: radio velocity mode, width positive'''
+        myvis = vis_d
+        os.system('ln -sf ' + myvis + ' myinput.ms')
+
+        # get reference values by running cvel with linear interpol
+        cvel(
+            mode = 'velocity',
+            veltype = 'radio',
+            restfreq = '220398.676MHz',
+            vis = 'myinput.ms',
+            outputvis = outfile,
+            spw = '0,1',
+            nchan = 150,
+            interpolation = 'linear',
+            outframe = 'CMB'
+            )
+        
+        tb.open(outfile+'/SPECTRAL_WINDOW')
+        a = tb.getcell('CHAN_FREQ')
+        b = numpy.array(a)
+        tb.close()
+
+        shutil.rmtree(outfile, ignore_errors=True)
+
+        rval = cvel(
+            mode = 'velocity',
+            veltype = 'radio',
+            restfreq = '220398.676MHz',
+            vis = 'myinput.ms',
+            outputvis = outfile,
+            spw = '0,1',
+            nchan = 150,
+            interpolation = 'fftshift',
+            outframe = 'CMB'
+            )
+
+        self.assertNotEqual(rval,False)
+        ret = verify_ms(outfile, 1, 150, 0, b)
         self.assertTrue(ret[0],ret[1])
 
 

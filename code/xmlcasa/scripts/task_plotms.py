@@ -3,10 +3,8 @@ import time
 from taskinit import *
 
 def plotms(vis=None, 
-           title=None, xlabel=None, ylabel=None,
            xaxis=None, xdatacolumn=None, 
            yaxis=None, ydatacolumn=None,
-           colorize=None, coloraxis=None,
            selectdata=None, field=None, spw=None,
            timerange=None, uvrange=None, antenna=None, scan=None,
            correlation=None, array=None, msselect=None,
@@ -17,6 +15,8 @@ def plotms(vis=None,
            freqframe=None,restfreq=None,veldef=None,shift=None,
            extendflag=None,
            extcorr=None, extchannel=None,
+           colorize=None, coloraxis=None,
+           title=None, xlabel=None, ylabel=None,
            showmajorgrid=None, majorwidth=None, majorstyle=None,  majorcolor=None,    
            showminorgrid=None, minorwidth=None, minorstyle=None,  minorcolor=None,    
            plotfile=None, format=None,
@@ -44,23 +44,12 @@ def plotms(vis=None,
     Keyword arguments:
     vis -- input visibility dataset
            default: ''
-    title  -- title along top of plot (called "canvas" in some places)
-    xlabel, ylabel -- text to label horiz. and vert. axes, with formatting (%% and so on)
-    
     xaxis, yaxis -- what to plot on the two axes
                     default: '' (uses PlotMS defaults/current set).
-                    
-      &gt;&gt;&gt; xaxis, yaxis expandable parameters
+        &gt;&gt;&gt; xaxis, yaxis expandable parameters
         xdatacolumn, ydatacolumn -- which data column to use for data axes
                                     default: '' (uses PlotMS default/current
                                     set).
-    
-    colorize -- to color data points according to some quantity
-                default: false
-      &gt;&gt;&gt; colorize expandable parameters
-        coloraxis -- which data column ('axis') to use for colorizing
-                     default: ''  (ignored - same as colorizing off)
-    
     selectdata -- data selection parameters flag
                   (see help par.selectdata for more detailed information)
                   default: False
@@ -130,6 +119,16 @@ def plotms(vis=None,
                     default: False.
         showgui -- Whether or not to display the plotting GUI
                   default: True; example showgui=False
+
+    colorize -- to color data points according to some quantity
+                default: false
+      &gt;&gt;&gt; colorize expandable parameters
+        coloraxis -- which data column ('axis') to use for colorizing
+                     default: ''  (ignored - same as colorizing off)
+    
+    title  -- title along top of plot (called "canvas" in some places)
+    xlabel, ylabel -- text to label horiz. and vert. axes, with formatting (%% and so on)
+    
     """
     # Check if DISPLAY environment variable is set.
     if os.getenv('DISPLAY') == None:
@@ -169,15 +168,6 @@ def plotms(vis=None,
         # Set filename and axes
         pm.setPlotMSFilename(vis, False)
         pm.setPlotAxes(xaxis, yaxis, xdatacolumn, ydatacolumn, False)
-        pm.setTitle(title)
-        pm.setXAxisLabel(xlabel)
-        pm.setYAxisLabel(ylabel)
-
-
-        # Set colorizing parameters
-        pm.setColorizeFlag(colorize)
-        pm.setColorAxis(coloraxis)
-
         
         # Set selection
         if (selectdata):
@@ -211,9 +201,15 @@ def plotms(vis=None,
             extcorrstr='all'
         pm.setFlagExtension(extendflag, extcorrstr, extchannel)
         
-        
+
+        # Set various user-directed appearance parameters
+        pm.setTitle(title,False)
+        pm.setXAxisLabel(xlabel,False)
+        pm.setYAxisLabel(ylabel,False)
+        pm.setColorizeFlag(colorize,False)
+        pm.setColorAxis(coloraxis,False)
         pm.setGridParams(showmajorgrid, majorwidth, majorstyle, majorcolor,
-                         showminorgrid, minorwidth, minorstyle, minorcolor)
+                         showminorgrid, minorwidth, minorstyle, minorcolor,False)
         
         # Update and show
         pm.update()

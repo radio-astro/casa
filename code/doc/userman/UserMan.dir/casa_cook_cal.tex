@@ -3960,7 +3960,6 @@ run along increasing or decreasing values of frequency or velocity (ie
 if the cube is reversed or not). 
 
 
-
 The intent of {\tt cvel} regridding is to transform channel labels and
 the visibilities to a spectral reference frame which is appropriate
 for the science analysis, e.g. from TOPO to LSRK, e.g. to correct for
@@ -3974,10 +3973,9 @@ feature (like 3-4 channels per linewidth). This will minimize
 regridding artifacts in {\tt cvel}.  
 
 If {\tt cvel} has already established the grid that is desired for the
-imaging, {\tt clean} should be run with the default channel mode ({\tt
-  > width=1}) or with exactly the same frequency/velocity parameters
-as > used in {\tt cvel}. This will avoid additional regridding in {\tt
-  clean}. Hanning smoothing is optionally offered in {\tt cvel}, but
+imaging, {\tt clean} should be run with exactly the same frequency/velocity 
+parameters as > used in {\tt cvel}. This will avoid additional regridding 
+in {\tt clean}. Hanning smoothing is optionally offered in {\tt cvel}, but
 tests have shown that already the regridding process itself, if it
 involved a transformation from TOPO to a non-terrestrial reference
 frame, implies some smoothing (due to channel interpolation) such that
