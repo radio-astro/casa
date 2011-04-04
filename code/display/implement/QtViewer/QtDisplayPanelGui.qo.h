@@ -205,6 +205,7 @@ class QtDisplayPanelGui : public QtPanelBase,
  
   virtual void showImageProfile();
   virtual void hideImageProfile();
+  virtual void refreshImageProfile();
   
   virtual void hideAllSubwindows();
   virtual void hideImageMenus();

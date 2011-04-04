@@ -180,12 +180,7 @@ void QtCanvas::setDataRange()
     }
 
     QtPlotSettings settings;
-    if (zoomStack.size() > 0) {
-       settings.minX = zoomStack[curZoom].minX;
-       settings.maxX = zoomStack[curZoom].maxX;
-       settings.minY = zoomStack[curZoom].minY;
-       settings.maxY = zoomStack[curZoom].maxY;
-    }
+
     if (fabs(xmax - xmin) < 0.0001)
     {
         xmax = xmax + 0.00001;
@@ -205,8 +200,15 @@ void QtCanvas::setDataRange()
        settings.maxY = ymax;
     }
     settings.adjust();
-    setPlotSettings(settings);
 
+    if ( curZoom > 0 ) {
+	// if the canvas is zoomed, keep the zoom level, update unzoomed state...
+	zoomStack[0] = settings;
+	refreshPixmap();
+    } else {
+	// reset the canvas, zoom, etc.
+	setPlotSettings(settings);
+    }
 }
 
 void QtCanvas::clearData()
