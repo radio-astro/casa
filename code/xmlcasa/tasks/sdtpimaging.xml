@@ -162,12 +162,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                          already calibrated and want to do
                          plotting nd/or imaging 
   &gt;&gt;&gt; calmode='baseline' expandable parameters
-               masklist -- mask in numbers of rows from each edge of each scan to be included for baseline fitting
+               masklist -- mask in numbers of rows from each edge of each scan 
+                           to be included for baseline fitting
                  default: none
                  example: [30,30] or [30] 
-                          used first 30 rows and last 30 rows of each scan for the baseline 
+                          used first 30 rows and last 30 rows of each scan for 
+                          the baseline 
                blpoly -- polynomial order for the baseline fit
                  default: 1
+               backup -- set True to create backup for input data
+                 default: True
         flaglist -- list of scan numbers to flag (ranges can be accepted)  
                 default: [] (use all scans)
                 example: [[0,3],80]
@@ -186,7 +190,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                imagename -- output image name
                  default: none
                  example: 'mySDimage.im'
-               imsize -- x and y image size in pixels, symmetric for single value
+               imsize -- x and y image size in pixels, symmetric for single 
+                         value
                  default: [256,256]
                  example: imsize=200 (equivalent to [200,200])
                cell -- x and y cell size. default unit arcmin
@@ -196,58 +201,78 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                phasecenter -- image phase center: direction measure or fieldid 
                  default: 0
                  example: 'J2000 13h44m00 -17d02m00', 'AZEL -123d48m29 15d41m41'
-               ephemsrcname -- ephemeris source name to proper shifting to center on the moving source
-                               for imaging
+               ephemsrcname -- ephemeris source name to proper shifting to 
+                               center on the moving source for imaging
                  default: ''
-                          if the source name in the data matches one of the known solar objects by
-                          the system, this task automatically set the source name. 
+                          if the source name in the data matches one of the 
+                          known solar objects by the system, this task 
+                          automatically set the source name. 
                  example: 'moon' 
                pointingcolumn -- pointing data column to use
-                 option: 'direction', 'target', 'pointing_offset', 'source_offset', 'encoder' 
+                 option: 'direction', 'target', 'pointing_offset', 
+                         'source_offset', 'encoder' 
                  default: 'direction'
                gridfunction -- gridding function for imaging
-                 options: 'BOX' (Box-car), 'SF' (Spheroidal), 'PB' (Primary-beam)
+                 options: 'BOX' (Box-car), 'SF' (Spheroidal), 
+                          'PB' (Primary-beam)
                  default: 'BOX'
                  example: 'SF'
         plotlevel -- control for plotting of results
                 options: (int) 0=none, 1=some, 2=more, &lt;0=hardcopy
                 default: 0 (no plotting)
                 example: plotlevel&lt;0 as abs(plotlevel), e.g.
-                         -1: hardcopy plot (will be named &lt;sdfile&gt;_scans.eps)
-                          1: plot raw data, calibrated data (for calmode='baseline)
-                             plot raw or if exist calibrated data (for calmode='none')
-                          2: plot raw data, progressively display baseline fitting for each scan,
-                             and final calibrated data (for calmode='baseline')  
+                         -1: hardcopy plot 
+                             (will be named &lt;sdfile&gt;_scans.eps)
+                          1: plot raw data, calibrated data 
+                             (for calmode='baseline)
+                             plot raw or if exist calibrated data 
+                             (for calmode='none')
+                          2: plot raw data, progressively display baseline 
+                             fitting for each scan, and final calibrated data 
+                             (for calmode='baseline')  
 
 
         DESCRIPTION:
 
-        Task sdtpimaging performs data selection, calibration, and imaging for single-dish
-        totalpower raster scan data.  This is a still experimental task made to work 
-        mostly for the data taken at the ALMA Testing Facility (ATF) or OSF. Currently, 
-        this task directly accesses the Measurement Set data only because of the data access 
-        efficiency. So it differs from other single-dish tasks that mostly operate on the 
-        ASAP scantable data format.  By setting calmode='none', one can run sdtpimaging to 
-        plot the data (raw or calibrated, if exists) and further imaging by setting 
-        createimage=True. 
-        The calibration available at this moment is just a simple baseline subtraction for
-        each scan. The fitted regions set by masklist are the common for all the scans. 
-        Selection of the antennas can be made by setting antennaid(s) or antenna name(s)
-        in string (e.g. '0', '0,1', 'DV01',etc.). 
-        For baseline subtraction, it currently works properly for a single antenna selection. 
-        So a separate sdtpimaging task needs to be ran for each antenna.
-        It currently assumes that the data has a single spw(=0) and fieldid(=0).
-        By setting flaglist, one can set flag by scan numbers to be excluded from imaging.
-        (Note: 'scan numbers' are determined from state id and related to SUB_SCAN column 
-        in STATE subtable and not to SCAN_NUMBER in MS.) 
-        The selection of polarizations can be made by specifying the polarization name in stokes, 
-        such as 'XX' or 'YY' for linear polarizations. For example, with createimage=True,
-        stokes='XXYY' will produces an image cube with each plane contains the image of one of
-        the polarizations while stokes='' or stokes='I' will produces a 'total intensity' or 
-        Stokes I image. 
-        Among the imaging sub-parameters, ephemsrcname is used to set the name of 
-        a moving source such as planets to produce a stationary image (can be omitted), and 
-        pointingcolumn is used to specify which pointing data column to use for imaging. 
+        Task sdtpimaging performs data selection, calibration, and imaging for 
+        single-dish totalpower raster scan data.  This is a still experimental 
+        task made to work mostly for the data taken at the ALMA Testing 
+        Facility (ATF) or OSF. Currently, this task directly accesses the 
+        Measurement Set data only because of the data access efficiency. So it 
+        differs from other single-dish tasks that mostly operate on the ASAP 
+        scantable data format.  By setting calmode='none', one can run 
+        sdtpimaging to plot the data (raw or calibrated, if exists) and 
+        further imaging by setting createimage=True. 
+        
+        The calibration available at this moment is just a simple baseline 
+        subtraction for each scan. The fitted regions set by masklist are the 
+        common for all the scans. Selection of the antennas can be made by 
+        setting antennaid(s) or antenna name(s) in string (e.g. '0', '0,1', 
+        'DV01',etc.). 
+
+        For baseline subtraction, it currently works properly for a single 
+        antenna selection. So a separate sdtpimaging task needs to be ran for 
+        each antenna. It currently assumes that the data has a single spw(=0) 
+        and fieldid(=0). By setting flaglist, one can set flag by scan numbers 
+        to be excluded from imaging. (Note: 'scan numbers' are determined from 
+        state id and related to SUB_SCAN column in STATE subtable and not to 
+        SCAN_NUMBER in MS.) By default, baseline subtraction stage overwrites 
+        (FLOAT_)DATA column of input data. You can keep original data by 
+        setting backup parameter to True. In this case, the task make a copy 
+        of input data specified by sdfile parameter. Name of backup file is 
+        sdfile+'.sdtpimaging.bak.'+'(timestamp)'.  
+
+        The selection of polarizations can be made by specifying the 
+        polarization name in stokes, such as 'XX' or 'YY' for linear 
+        polarizations. For example, with createimage=True, stokes='XXYY' will 
+        produces an image cube with each plane contains the image of one of
+        the polarizations while stokes='' or stokes='I' will produces a 'total 
+        intensity' or Stokes I image. 
+
+        Among the imaging sub-parameters, ephemsrcname is used to set the name 
+        of a moving source such as planets to produce a stationary image (can 
+        be omitted), and pointingcolumn is used to specify which pointing data 
+        column to use for imaging. 
   </example>
 
 </task>

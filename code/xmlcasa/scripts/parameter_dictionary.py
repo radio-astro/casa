@@ -53,6 +53,13 @@ class par(str):
                                    autocorrelations.)
                 antenna='!ea03,ea12,ea17': all baselines except those that include
                                            EVLA antennas ea03, ea12, or ea17
+
+                ---
+                (for single dish tasks except for sdimaging and sdtpimaging)
+                antenna -- antenna name or id (only effective for MS input)
+                           antenna selection syntax doesn't work since current
+                           single dish tasks is not able to handle multiple
+                           antenna simultaneously
 		"""
 
 	@staticmethod
@@ -140,6 +147,12 @@ class par(str):
         	axis -- The moment axis (0-based)
                 default: 3 (spectral axis); example: axis=3
 		"""
+        @staticmethod
+        def backup():
+                """
+                backup -- set True to create backup for input data
+                default: True
+                """
 
 	@staticmethod
 	def bandname():
@@ -636,7 +649,7 @@ class par(str):
 		"""
 
 	@staticmethod
-	def ephemesrcname():
+	def ephemsrcname():
 		"""
 		ephemsrcname -- ephemeris source name for moving source
 		default: ''
@@ -2284,6 +2297,9 @@ class par(str):
 		"""
 		sdfile -- name of input SD dataset
 		default: ''
+                
+                For sdimaging and sdtpimaging tasks, specified data must be
+                in MS format. 
 		"""
 
 	@staticmethod
