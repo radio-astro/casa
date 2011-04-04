@@ -127,17 +127,17 @@ class sdsave_test0(unittest.TestCase):
             shutil.rmtree(self.sdfile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
-    def test00(self):
+    def test000(self):
         """Test 000: Default parameters"""
         self.res=sdsave()
         self.assertFalse(self.res)
         
-    def test01(self):
+    def test001(self):
         """Test 001: Time averaging without weight"""
         self.res=sdsave(sdfile=self.sdfile,timeaverage=True,outfile=self.outfile)
         self.assertFalse(self.res)        
 
-    def test02(self):
+    def test002(self):
         """Test 002: Polarization averaging without weight"""
         self.res=sdsave(sdfile=self.sdfile,polaverage=True,outfile=self.outfile)
         self.assertFalse(self.res)        
@@ -176,25 +176,25 @@ class sdsave_test1(unittest.TestCase,sdsave_test_base):
             shutil.rmtree(self.basefile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
-    def test00(self):
+    def test100(self):
         """Test 100: test to read scantable and to write as scantable"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile0,outform='ASAP')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile0))
 
-    def test01(self):
+    def test101(self):
         """Test 101: test to read scantable and to write as MS"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile1,outform='MS2')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile1))
         
-    def test02(self):
+    def test102(self):
         """Test 102: test to read scantable and to write as SDFITS"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile2,outform='SDFITS')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile2))
 
-    def test03(self):
+    def test103(self):
         """Test 103: test to read scantable and to write as ASCII"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile3,outform='ASCII')
         self.assertEqual(self.res,None)
@@ -235,25 +235,25 @@ class sdsave_test2(unittest.TestCase,sdsave_test_base):
             shutil.rmtree(self.basefile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
-    def test00(self):
+    def test200(self):
         """Test 200: test to read MS and to write as scantable"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile0,outform='ASAP')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile0))
         
-    def test01(self):
+    def test201(self):
         """Test 201: test to read MS and to write as MS"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile1,outform='MS2')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile1))
         
-    def test02(self):
+    def test202(self):
         """Test 202: test to read MS and to write as SDFITS"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile2,outform='SDFITS')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile2))
 
-    def test03(self):
+    def test203(self):
         """Test 203: test to read MS and to write as ASCII"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile3,outform='ASCII')
         self.assertEqual(self.res,None)
@@ -294,25 +294,25 @@ class sdsave_test3(unittest.TestCase,sdsave_test_base):
             shutil.rmtree(self.basefile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
-    def test00(self):
+    def test300(self):
         """Test 300: test to read ATNF SDFITS and to write as scantable"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile0,outform='ASAP')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile0))
 
-    def test01(self):
+    def test301(self):
         """Test 301: test to read ATNF SDFITS and to write as MS"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile1,outform='MS2')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile1))
         
-    def test02(self):
+    def test302(self):
         """Test 302: test to read ATNF SDFITS and to write as SDFITS"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile2,outform='SDFITS')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile2))
 
-    def test03(self):
+    def test303(self):
         """Test 303: test to read ATNF SDFITS and to write as ASCII"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile3,outform='ASCII')
         self.assertEqual(self.res,None)
@@ -348,26 +348,26 @@ class sdsave_test4(unittest.TestCase):
             os.system( 'rm -f '+self.sdfile )
         os.system( 'rm -rf '+self.prefix+'*' )
 
-    def test00(self):
+    def test400(self):
         """Test 400: test to read GBT SDFITS and to write as scantable"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile0,outform='ASAP')
         self.assertEqual(self.res,None)
         #self.assertTrue(self._compare(self.outfile0))
         self.assertTrue(self._compare())
 
-    def test01(self):
+    def test401(self):
         """Test 401: test to read GBT SDFITS and to write as MS"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile1,outform='MS2')
         self.assertEqual(self.res,None)
         #self.assertTrue(self._compare(self.outfile1))
         
-    def test02(self):
+    def test402(self):
         """Test 402: test to read GBT SDFITS and to write as SDFITS"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile2,outform='SDFITS')
         self.assertEqual(self.res,None)
         #self.assertTrue(self._compare(self.outfile2))
 
-    def test03(self):
+    def test403(self):
         """Test 403: test to read GBT SDFITS and to write as ASCII"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile3,outform='ASCII')
         self.assertEqual(self.res,None)
@@ -419,26 +419,26 @@ class sdsave_test5(unittest.TestCase):
             os.system( 'rm -f '+self.sdfile )
         os.system( 'rm -rf '+self.prefix+'*' )
 
-    def test00(self):
+    def test500(self):
         """Test 500: test to read NROFITS and to write as scantable"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile0,outform='ASAP')
         self.assertEqual(self.res,None)
         #self.assertTrue(self._compare(self.outfile0))
         self.assertTrue(self._compare())
 
-    def test01(self):
+    def test501(self):
         """Test 501: test to read NROFITS and to write as MS"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile1,outform='MS2')
         self.assertEqual(self.res,None)
         #self.assertTrue(self._compare(self.outfile1))
         
-    def test02(self):
+    def test502(self):
         """Test 502: test to read NROFITS and to write as SDFITS"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile2,outform='SDFITS')
         self.assertEqual(self.res,None)
         #self.assertTrue(self._compare(self.outfile2))
 
-    def test03(self):
+    def test503(self):
         """Test 503: test to read NROFITS and to write as ASCII"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile3,outform='ASCII')
         self.assertEqual(self.res,None)
@@ -460,6 +460,129 @@ class sdsave_test5(unittest.TestCase):
         return True        
 
 
+###
+# Test to read cross polarization data
+###
+class sdsave_test6(unittest.TestCase):
+    """
+    Read cross polarization data in MS format.
+    Save back to MS format, and check the result.
+    """
+    sdfile='crosspoltest.ms'
+    prefix='sdsaveTest6'
+    asapfile=prefix+'.asap'
+    outfile=prefix+'.ms'
+    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdsave/'
+    
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.sdfile)):
+            shutil.copytree(self.datapath+self.sdfile, self.sdfile)
+
+        default(sdsave)
+
+        # original spectral data
+        tb.open(self.sdfile)
+        self.sporg=tb.getcol('DATA')
+        tb.close()
+
+
+    def tearDown(self):
+        del self.sporg
+        if (os.path.exists(self.sdfile)):
+            os.system( 'rm -rf '+self.sdfile )
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def test600(self):
+        """Test 600: test to read cross polarization data"""
+        default(sdsave)
+        # read MS data and write out as ASAP format
+        sdsave(sdfile=self.sdfile,outfile=self.asapfile,outform='ASAP')
+        self.assertEqual(self._compareasap(),0)
+
+    def test601(self):
+        """Test 601: test to write cross polarization data"""
+        default(sdsave)
+        # read MS data and write out as MS format
+        sdsave(sdfile=self.sdfile,outfile=self.outfile,outform='MS2')
+        self.assertEqual(self._checkconj(),0)
+        self.assertEqual(self._comparems(),0)
+
+    def _checkconj(self):
+        """
+        Check if complex conjugate is valid.
+        """
+        tb.open(self.outfile)
+        sp=tb.getcol('DATA').transpose()[0].transpose() # [npol,nchan]
+        tb.close()
+
+        if not all(numpy.conj(sp[1]) == sp[2]):
+            print 'LR must be complex conjugate of RL'
+            return 1
+
+        return 0
+
+    def _comparems(self):
+        """
+        Check if input and output data is consistent or not.
+        """
+        tb.open(self.outfile)
+        sp=tb.getcol('DATA')
+        tb.close()
+        
+        # check if shape is same
+        if self.sporg.shape != sp.shape:
+            print 'shape of output spectra differ'
+            return 1
+
+        # check if spectral data is same
+        if not all(self.sporg.flatten()==sp.flatten()):
+            print 'output spectra differ'
+            return 2
+
+        return 0
+
+    def _compareasap(self):
+        """
+        Check if input and output data is consistent or not.
+        """
+        tb.open(self.asapfile)
+        tbsort=tb.query('',sortlist='POLNO')
+        sp=tbsort.getcol('SPECTRA').transpose() # [nrow,nchan]
+        tbsort.close()
+        del tbsort
+        tb.close()
+
+        sporg=self.sporg.transpose()[0].transpose() # [npol,nchan]
+
+        # check if shape is same
+        if sporg.shape != sp.shape:
+            print 'shape of output spectra differ'
+            return 1
+
+        # compare RR
+        if not all(numpy.real(sporg[0]) == sp[0]):
+            print 'RR spectra differ'
+            return 2
+
+        # compare LL
+        if not all(numpy.real(sporg[3]) == sp[1]):
+            print 'LL spectra differ'
+            return 3
+
+        # compare Re(RL)
+        if not all(numpy.real(sporg[1]) == sp[2]):
+            print 'Re(RL) spectra differ'
+            return 4
+
+        # compare Im(RL)
+        if not all(numpy.imag(sporg[1]) == sp[3]):
+            print 'Im(RL) spectra differ'
+            return 5
+
+        return 0
+
 def suite():
     return [sdsave_test0,sdsave_test1,sdsave_test2,
-            sdsave_test3,sdsave_test4,sdsave_test5]
+            sdsave_test3,sdsave_test4,sdsave_test5,
+            sdsave_test6]
