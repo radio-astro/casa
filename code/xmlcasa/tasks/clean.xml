@@ -932,9 +932,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                    possible using the right convolution of primary beams for
                    each baseline.
                scaletype -- Controls scaling of pixels in the image plane.
-                   (Not fully implemented...for now only controls 
- 		   what is seen if interactive=True...but in the future will 
- 		   control the image on which clean components are searched)
+                   (controls what is seen if interactive=True)
                    It does *not* affect the scaling of the *final* image -
                    that is done by pbcor.
                    default='SAULT'; example: scaletype='PBCOR'
@@ -945,6 +943,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                      'PBCOR' uses the SAULT scaling scheme for
  			     deconvolution, but if interactive=True shows the
  			     primary beam corrected image during interactive. 
+
+               flatnoise -- Controls whether searching for clean components is 
+                   done in a constant noise residual image (True) or in an optimal 
+                   signal-to-noise residual image (False) when ftmosaic='mosaic' is 
+                   chosen.
+                   default=True
 
   &gt;&gt;&gt; imagermode='csclean' expandable parameter(s): 
                Image using the Cotton-Schwab algorithm in between major cycles
