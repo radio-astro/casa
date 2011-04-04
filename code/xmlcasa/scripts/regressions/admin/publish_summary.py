@@ -207,10 +207,10 @@ class runTest:
                 # Report and deal with out of diskspace
                 #
                 space_left = commands.getoutput( \
-                    "df -k " + self.tester.workingDirectory + \
+                    "df -kP " + self.tester.workingDirectory + \
                     " | awk '{print $4}' | tail -1")
                 space_left_h = commands.getoutput( \
-                    "df -h " + self.tester.workingDirectory + \
+                    "df -hP " + self.tester.workingDirectory + \
                     " | awk '{print $4}' | tail -1")
                 space_used = commands.getoutput( \
                     "du -kc " + self.tester.workingDirectory + \
