@@ -1449,6 +1449,14 @@ model_pbcor_sum = 69.119642
 ## model_pbcor_sum = 62.5022
 ## # RR, 3/12/2011 - And now, mysteriously, they're back to their 1/19/2011 values.
 
+## RR, 3/25 - 4/3/2011, after clean was changed to used the center of output
+## channel frequencies, instead of center of the first input channel in each
+## output channel.
+clean_image_max = 1.4634
+clean_momentone_median = 425.6250
+clean_momentone_planezero = 690.6069
+clean_momentone_planelast = 121.6911
+
 canonical = {}
 canonical['exist'] = True
 
