@@ -885,7 +885,7 @@ VisBufferAsync::unsharedCopyPosition (const MPosition & position)
 }
 
 void
-VisBufferAsync::updateCoordInfo(const VisBuffer * other)
+VisBufferAsync::updateCoordInfo(const VisBuffer * other, const Bool dirDepend)
 {
     clear ();
     copyVector (other->antenna1_p, antenna1_p);
@@ -900,12 +900,20 @@ VisBufferAsync::updateCoordInfo(const VisBuffer * other)
     feed1OK_p = true;
     copyVector (other->feed2_p, feed2_p);
     feed2OK_p = true;
-    copyVector (other->feed1_pa_p, feed1_pa_p);
-    feed1_paOK_p = true;
-    copyVector (other->feed2_pa_p, feed2_pa_p);
-    feed2_paOK_p = true;
-    //copyVector (direction1_p);
-    //copyVector (direction2_p);
+    if(dirDepend){
+      copyVector (other->feed1_pa_p, feed1_pa_p);
+      feed1_paOK_p = true;
+      copyVector (other->feed2_pa_p, feed2_pa_p);
+      feed2_paOK_p = true;
+      //copyVector (direction1_p);
+      //copyVector (direction2_p);
+    }
+    else{
+      feed1_paOK_p=False; 
+      feed2_paOK_p=False;
+      direction1OK_p=False;
+      direction2OK_p=False;
+    }
 }
 
 
@@ -1081,3 +1089,5 @@ VisBufferAutoPtr::set (ROVisibilityIterator & rovi)
 
 
 } // end namespace casa
+
+
