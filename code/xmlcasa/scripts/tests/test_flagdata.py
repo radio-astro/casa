@@ -48,6 +48,21 @@ class test_base(unittest.TestCase):
         os.system('rm -rf ' + self.vis + '.flagversions')
         flagdata(vis=self.vis, unflag=True)
 
+    def setUp_flagdatatest_alma(self):
+        self.vis = "flagdatatest-alma.ms"
+
+        if os.path.exists(self.vis):
+            print "The MS is already around, just unflag"
+        else:
+            print "Moving data..."
+            os.system('cp -r ' + \
+                      os.environ.get('CASAPATH').split()[0] +
+                      "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
+
+        os.system('rm -rf ' + self.vis + '.flagversions')
+        flagdata(vis=self.vis, unflag=True)
+        
+
 
 class test_rfi(test_base):
     """Test of mode = 'rfi'"""
@@ -572,6 +587,20 @@ class test_selections(test_base):
         flagdata(vis=self.vis, array='0')
         test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 196434)
 
+class test_selections_alma(test_base):
+    # Test various selections for alma data 
+    # may be need to be merged with test_selections.
+
+    def setUp(self):
+        self.setUp_flagdatatest_alma()
+
+    def test_scanitent(self):
+        '''test scanintent selection'''
+        # flag POINTING CALIBRATION scans 
+        # (CALIBRATE_POINTING_.. from STATE table's OBS_MODE)
+        flagdata(vis=self.vis, scanintent='CAL*POINT*')
+        test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 377280, 26200)
+        
 
 # Dummy class which cleans up created files
 class cleanup(test_base):
@@ -590,6 +619,7 @@ class cleanup(test_base):
 
 def suite():
     return [test_selections,
+            test_selections_alma,
             test_statistics_queries,
             test_vector,
             test_vector_ngc5921,
