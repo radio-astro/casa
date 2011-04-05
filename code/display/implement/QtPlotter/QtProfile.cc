@@ -774,10 +774,15 @@ void QtProfile::wcChanged( const String c,
     //      << " coordinate=" << coordinate
     //	 << " coordinateType=" << coordinateType << endl;
 
+    last_event_cs.resize(c.size());
     last_event_cs = c;
+    last_event_px.resize(px.size());
     last_event_px = px;
+    last_event_py.resize(py.size());
     last_event_py = py;
+    last_event_wx.resize(wx.size());
     last_event_wx = wx;
+    last_event_wy.resize(wy.size());
     last_event_wy = wy;
 
     if (c != coordinate) {
