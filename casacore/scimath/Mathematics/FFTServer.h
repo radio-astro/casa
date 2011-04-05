@@ -363,6 +363,16 @@ public:
 		const Bool goodIsTrue=False,
 		const Bool toFrequency=True);
 
+  // N-D real->real FFT shift (FFT to complex - phase-mult - inverse FFT)
+  // with flagging.
+  // relshift is the freq shift normalised to the bandwidth.
+  // Only transform over selected dimension. Iterate over the others. 
+  void fftshift(Array<T> & outValues, Array<Bool> & outFlags,
+		const Array<T> & rValues, const Array<Bool>& inFlags,
+		const uInt& whichAxis, 
+		const Double& relshift, 
+		const Bool goodIsTrue=False);
+
 private:
   //# finds the shape of the output array when doing complex->real transforms
   IPosition determineShape(const IPosition & rShape, const Array<S> & cData);
