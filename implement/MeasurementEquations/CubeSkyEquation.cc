@@ -818,6 +818,7 @@ void  CubeSkyEquation::isLargeCube(ImageInterface<Complex>& theIm,
 void CubeSkyEquation::initializePutSlice(const VisBuffer& vb, 
 					 Int cubeSlice, Int nCubeSlice) {
   AlwaysAssert(ok(),AipsError);
+  Bool dirDep= (ej_ != NULL);
   for(Int model=0; model < (sm_->numberOfModels()) ; ++model){
     sliceCube(imPutSlice_p[model], model, cubeSlice, nCubeSlice, 0);
     weightSlice_p[model].resize();
@@ -826,11 +827,12 @@ void CubeSkyEquation::initializePutSlice(const VisBuffer& vb,
     }
     iftm_p[model]->initializeToSky(*(imPutSlice_p[model]),weightSlice_p[model],
 				   vb);
+    dirDep= dirDep || (ftm_p[model]->name() == "MosaicFT");
   }
   assertSkyJones(vb, -1);
   //vb_p is used to finalize things if vb has changed propoerties
   vb_p->assign(vb, False);
-  vb_p->updateCoordInfo(& vb);
+  vb_p->updateCoordInfo(& vb, dirDep);
 }
 
 void CubeSkyEquation::getCoverageImage(Int model, ImageInterface<Float>& im){
