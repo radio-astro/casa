@@ -2106,7 +2106,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	if(fabs(theShift)>0. && 
 	   (method[iDone]==(Int)useFFTShift || method[iDone]==(Int)useLinIntThenFFTShift)
 	   ){
-	  // Note: fftshift is only used for the complex columns, linear interpol for the others
 	  Int endChan = xout[iDone].size()-1;
 	  if(endChan<=0){
 	    os << LogIO::SEVERE << "Internal error: Cannot regrid a single-channel SPW using FFTshift" << LogIO::POST;
@@ -2277,6 +2276,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	// regrid the Float columns
 	Array<Float> yinf;
 	Array<Float> youtf;
+	Array<Float> fYinIntermediate;
 	if(!FLOAT_DATACol.isNull()){
 	  yinf.assign((*oldFLOAT_DATAColP)(mainTabRow));
 	  if(doHanningSmooth){
@@ -2285,8 +2285,24 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
 	    Smooth<Float>::hanning(yinf, yinFlags, yinfUnsmoothed, yinFlagsUnsmoothed, False);  
 	  }
-	  InterpolateArray1D<Double, Float>::interpolate(youtf, youtFlags, xout[iDone], xindd, 
-							 yinf, yinFlags, methodF, False, doExtrapolate);
+
+	  if(method[iDone]==(Int)useLinIntThenFFTShift){
+	    InterpolateArray1D<Double,Float>::interpolate(fYinIntermediate, yinFlagsIntermediate, xout[iDone], 
+							  xindd, yinf, yinFlags,
+							  methodF, False, doExtrapolate);	    
+	    fFFTServer.fftshift(youtf, youtFlags, fYinIntermediate, yinFlagsIntermediate, 
+				1, relShift, False);
+
+	  }
+	  else if(method[iDone]==(Int)useFFTShift){
+	    fFFTServer.fftshift(youtf, youtFlags, yinf, yinFlags, 
+				1, relShift, False);
+	  }
+	  else{
+	    InterpolateArray1D<Double, Float>::interpolate(youtf, youtFlags, xout[iDone], xindd, 
+							   yinf, yinFlags, methodF, False, doExtrapolate);
+	  }
+
 	  FLOAT_DATACol.put(mainTabRow, youtf);
 	  if(!youtFlagsWritten){ 
 	    FLAGCol.put(mainTabRow, youtFlags);
@@ -4486,7 +4502,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    newNUM_CHAN = newChanLoBound.size();
 	    
 	    if(theMethod==(Int) useFFTShift
-	       && newNUM_CHAN != oldNUM_CHAN){ // need to preceede by lin interpol. after all
+	       && newNUM_CHAN != oldNUM_CHAN){ // need to precede by lin. interpol. after all
 	      theMethod = (Int) useLinIntThenFFTShift;
 	    }
 
