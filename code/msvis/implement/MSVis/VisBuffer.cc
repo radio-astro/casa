@@ -1411,7 +1411,7 @@ Vector<uInt>& VisBuffer::rowIds()
 }
 
 
-void VisBuffer::updateCoordInfo(const VisBuffer * /*vb*/)
+void VisBuffer::updateCoordInfo(const VisBuffer *, const  Bool dirDependent )
 {
   antenna1();
   antenna2();
@@ -1424,10 +1424,12 @@ void VisBuffer::updateCoordInfo(const VisBuffer * /*vb*/)
   checkMSId();
   feed1();
   feed2();
-  feed1_pa();
-  feed2_pa();
-  direction1();
-  direction2();
+  if(dirDependent){
+    feed1_pa();
+    feed2_pa();
+    direction1();
+    direction2();
+  }
 }
 
 void VisBuffer::setVisCube(Complex c)

@@ -108,7 +108,7 @@ protected:
     void setSelectedSpectralWindows (const Vector<Int> & spectralWindows);
     void setTopoFreqs (const Vector<Double> & lsrFreq, const Vector<Double> & selFreq_p);
     void setVisibilityShape (const IPosition & pvisibilityShape);
-    void updateCoordInfo (const VisBuffer *);
+    void updateCoordInfo (const VisBuffer *, const Bool dirDependent=True);
 
     static MDirection unsharedCopyDirection (const MDirection & direction);
     static MEpoch unsharedCopyEpoch (const MEpoch & mEpoch);

@@ -610,8 +610,11 @@ public:
     // Update coordinate info - useful for copied VisBuffers that need
     // to retain some state for later reference.
     // Presently this fills antenna, array, field and spectralWindow ids, time,
-    // frequency and number of rows. Add more as needed.
-    virtual void updateCoordInfo(const VisBuffer * vb = NULL);
+    // frequency and number of rows. 
+    // if dirDependent is set to False the expensive direction dependent calculation of parallactic or direction of
+    // antenna from pointing table is avoided
+    //Add more as needed.
+    virtual void updateCoordInfo(const VisBuffer * vb = NULL, const Bool dirDependent=True);
 
     // Set the visibility to a constant, note that this only changes the buffer,
     // no values are written back to tables from here.
