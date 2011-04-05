@@ -15,6 +15,7 @@ def plotms(vis=None,
            freqframe=None,restfreq=None,veldef=None,shift=None,
            extendflag=None,
            extcorr=None, extchannel=None,
+           iteraxis=None,xselfscale=None,yselfscale=None,
            colorize=None, coloraxis=None,
            title=None, xlabel=None, ylabel=None,
            showmajorgrid=None, majorwidth=None, majorstyle=None,  majorcolor=None,    
@@ -202,12 +203,20 @@ def plotms(vis=None,
         pm.setFlagExtension(extendflag, extcorrstr, extchannel)
         
 
+        # Set stuff that informs the plot on additional axes
+        #  (iteration, colorization, etc.)
+        # (Iteration)
+        if (iteraxis==""):
+            xselfscale=yselfscale=False
+        pm.setPlotMSIterate(iteraxis,xselfscale,yselfscale,False);
+        # (Colorization)
+        pm.setColorizeFlag(colorize,False)
+        pm.setColorAxis(coloraxis,False)
+
         # Set various user-directed appearance parameters
         pm.setTitle(title,False)
         pm.setXAxisLabel(xlabel,False)
         pm.setYAxisLabel(ylabel,False)
-        pm.setColorizeFlag(colorize,False)
-        pm.setColorAxis(coloraxis,False)
         pm.setGridParams(showmajorgrid, majorwidth, majorstyle, majorcolor,
                          showminorgrid, minorwidth, minorstyle, minorcolor,False)
         

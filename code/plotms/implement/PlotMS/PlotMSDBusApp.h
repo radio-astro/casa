@@ -75,6 +75,7 @@ public:
     static const String PARAM_FILENAME; // String
     static const String PARAM_FLAGGING; // Record
     static const String PARAM_HEIGHT; // int or uInt
+    static const String PARAM_ITERATE; // Record (see PlotMSIterParam)
     static const String PARAM_PLOTINDEX; // int or uInt
     static const String PARAM_PRIORITY; // String
     static const String PARAM_SELECTION; // Record (see PlotMSSelection)

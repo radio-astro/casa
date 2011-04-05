@@ -60,6 +60,7 @@ const String PlotMSDBusApp::PARAM_DATACOLUMN_Y = "yDataColumn";
 const String PlotMSDBusApp::PARAM_FILENAME = "filename";
 const String PlotMSDBusApp::PARAM_FLAGGING = "flagging";
 const String PlotMSDBusApp::PARAM_HEIGHT = "height";
+const String PlotMSDBusApp::PARAM_ITERATE = "iterate";
 const String PlotMSDBusApp::PARAM_PLOTINDEX = "plotIndex";
 const String PlotMSDBusApp::PARAM_PRIORITY = "priority";
 const String PlotMSDBusApp::PARAM_SELECTION = "selection";
@@ -205,6 +206,9 @@ void PlotMSDBusApp::dbusRunXmlMethod(
 	const String& callerName, bool isAsync
 ) 
 {
+
+  //  cout << "PlotMSDBusApp::dbusRunXmlMethod: " << methodName << " by " << callerName << boolalpha << " " << isAsync << endl;
+
     // Common parameters: plot index.
     int index = -1;
     bool indexSet = parameters.isDefined(PARAM_PLOTINDEX) &&
@@ -293,7 +297,8 @@ void PlotMSDBusApp::dbusRunXmlMethod(
             const PMS_PP_Cache* c = p.typedGroup<PMS_PP_Cache>();
             const PMS_PP_Canvas* can = p.typedGroup<PMS_PP_Canvas>();            
             const PMS_PP_Display *disp = p.typedGroup<PMS_PP_Display>();
-            
+	    const PMS_PP_Iteration* iter = p.typedGroup<PMS_PP_Iteration>();
+
             Record ret;
             if(d != NULL) {
                 ret.define(PARAM_FILENAME, d->filename());
@@ -334,6 +339,10 @@ void PlotMSDBusApp::dbusRunXmlMethod(
                 // minor....
                 
             }
+	    if (iter != NULL) {
+                ret.defineRecord(PARAM_ITERATE, iter->iterParam().toRecord());
+	    }
+
             
             if(ret.nfields() != 0) retValue.defineRecord(0, ret);
         } else callError = true;
@@ -366,6 +375,11 @@ void PlotMSDBusApp::dbusRunXmlMethod(
             ppp.setGroup<PMS_PP_Canvas>();
             ppcan = ppp.typedGroup<PMS_PP_Canvas>();
         }
+        PMS_PP_Iteration* ppiter = ppp.typedGroup<PMS_PP_Iteration>();
+        if (ppiter == NULL) {
+            ppp.setGroup<PMS_PP_Iteration>();
+            ppiter = ppp.typedGroup<PMS_PP_Iteration>();
+        }
         
         
         if(parameters.isDefined(PARAM_FILENAME) &&
@@ -392,6 +406,14 @@ void PlotMSDBusApp::dbusRunXmlMethod(
             trans.fromRecord(parameters.asRecord(PARAM_TRANSFORMATIONS));
             ppdata->setTransformations(trans);
         }
+
+        if(parameters.isDefined(PARAM_ITERATE) &&
+           parameters.dataType(PARAM_ITERATE) == TpRecord) {
+            PlotMSIterParam iter = ppiter->iterParam();
+            iter.fromRecord(parameters.asRecord(PARAM_ITERATE));
+            ppiter->setIterParam(iter);
+        }
+
 
         
         bool ok;

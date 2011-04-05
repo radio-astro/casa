@@ -73,6 +73,9 @@ void closeApp();
 // Helper method for calling an async method.
 void callAsync(const String& methodName);
 
+// Helper method for realizing synchronous behavior
+void waitUntilIdle();
+
 // Helper method for setting the MS selection.
 void setPlotMSSelection_(const PlotMSSelection& selection,
         const bool updateImmediately, const int plotIndex);
@@ -85,5 +88,12 @@ void setPlotMSAveraging_(const PlotMSAveraging& averaging,
 void setPlotMSTransformations_(const PlotMSTransformations& trans,
         const bool updateImmediately, const int plotIndex);
 
+// Helper method for setting the iteration parameters
+void setPlotMSIterate_(const PlotMSIterParam& iter,
+        const bool updateImmediately, const int plotIndex);
+
 // Helper method for setting the flag extension.
 void setFlagging_(const PlotMSFlagging& flagging);
+
+// Bool that turns on iteration
+bool doIter_;

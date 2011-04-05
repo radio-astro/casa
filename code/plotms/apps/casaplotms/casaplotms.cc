@@ -220,7 +220,7 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
     }
     
     // WARNING ABOUT ITERATE being NEW
-    cout << "WARNING: Iteratable plots are currently experimental." << endl;
+    cout << "NB: Iteratable plots are currently experimental." << endl;
     
     // If run from casapy, don't let Ctrl-C kill the application.
     if(casapy) signal(SIGINT,SIG_IGN);
@@ -252,16 +252,15 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
     if(!casapy) plotmsapp.showGUI(true); // don't automatically show for casapy
     
     if (nopopups)
-		plotmsapp.its_want_avoid_popups = true;
-		
-		
-	// check for hackjob env var CASAPLOTMS_NOPOPUPS set to "yes" (or
-	// anything starting with 'Y')
-	const char *ev = getenv("CASAPLOTMS_NOPOPUPS");
-	if (ev && (ev[0]=='Y' || ev[0]=='y'))
-		plotmsapp.its_want_avoid_popups = true;
-		
-	
+      plotmsapp.its_want_avoid_popups = true;
+    
+    
+    // check for hackjob env var CASAPLOTMS_NOPOPUPS set to "yes" (or
+    // anything starting with 'Y')
+    const char *ev = getenv("CASAPLOTMS_NOPOPUPS");
+    if (ev && (ev[0]=='Y' || ev[0]=='y'))
+      plotmsapp.its_want_avoid_popups = true;
+    
     // Set up parameters for plot.
     PlotMSPlotParameters plotparams = iterPlot ?
             PlotMSIterPlot::makeParameters(&plotmsapp) :
