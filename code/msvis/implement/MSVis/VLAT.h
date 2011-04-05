@@ -30,6 +30,9 @@
 #define VLAT_H_
 
 #include "AsynchronousTools.h"
+#include "UtilJ.h"
+using casa::utilj::Times;
+using casa::utilj::DeltaTimes;
 #include "VisBuffer.h"
 #include "VisibilityIterator.h"
 #include "VisibilityIteratorAsync.h"
@@ -275,67 +278,30 @@ protected:
 
 private:
 
-	class Stats {
-	public:
-
-	    typedef enum {Request=1, Begin=2, End=4, Fill=8} Type;
-        enum {Wait,Operate,Cycle} ;
-
-	    Stats ();
-
-	    void addEvent (Int e);
-	    Bool isEnabled () const { return enabled_p;}
-	    String makeReport ();
-	    void reserve (Int size);
-
-	private:
-
-	    typedef boost::tuple <Int,Double> Event;
-	    typedef vector<Event> Events;
-
-	    class OpStats {
-	    public:
-
-	        OpStats ();
-
-	        Double & operator[] (Int i) { return events_p [i];}
-
-	        void accumulate (Double wait, Double operate, Double cycle);
-	        Double getAvg (Int i) { return (n_p != 0) ? sum_p [i] / n_p : 0;}
-	        Int getN () const { return n_p;}
-	        String format (Int component);
-            void update (Int type, Double t);
-
-            static Double dmax (Double a, Double b) { return max (a, b);}
-            static Double dmin (Double a, Double b) { return min (a, b);}
-
-	    private:
-
-	        vector<Double> events_p;
-	        vector<Double> max_p;
-	        vector<Double> min_p;
-	        Int n_p;
-	        vector<Double> ssq_p;
-	        vector<Double> sum_p;
-	    };
-
-	    Bool enabled_p;
-	    Events events_p;
-
-	};
-
-
     typedef queue<VlaDatum *> Data;
     typedef queue<Int> ValidChunks;
     typedef queue<SubChunkPair> ValidSubChunks;
 
     asyncio::ChannelSelection channelSelection_p; // last channels selected for the VI in use
-	Data    data_p;       // Buffer queue
+	Data       data_p;       // Buffer queue
+    Times      fill1_p;
+    Times      fill2_p;
+    Times      fill3_p;
+    DeltaTimes fillCycle_p;
+    DeltaTimes fillOperate_p;
+    DeltaTimes fillWait_p;
     volatile Bool lookaheadTerminationRequested_p;
     const Int MaxNBuffers_p;
+    Times      read1_p;
+    Times      read2_p;
+    Times      read3_p;
+    DeltaTimes readCycle_p;
+    DeltaTimes readOperate_p;
+    DeltaTimes readWait_p;
 	asyncio::RoviaModifiers roviaModifiers_p;
-	Stats   stats_p;
     volatile Bool sweepTerminationRequested_p;
+    Times timeStart_p;
+    Times timeStop_p;
 	volatile Bool viResetRequested_p;
     volatile Bool viResetComplete_p;
 	mutable ValidChunks validChunks_p;       // Queue of valid chunk numbers
@@ -344,6 +310,8 @@ private:
 	mutable Mutex vlaDataMutex_p;
 
     Int clock (Int arg, Int base);
+    String makeReport ();
+
     void resetBufferData ();
     Bool statsEnabled () const;
 	void terminateSweep ();

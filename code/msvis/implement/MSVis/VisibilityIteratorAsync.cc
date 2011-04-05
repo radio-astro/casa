@@ -227,8 +227,12 @@ ROVisibilityIteratorAsync::construct (const PrefetchColumns & prefetchColumns, I
          nReadAheadBuffers = getDefaultNBuffers ();
     }
 
+    // Create and initialize the shared data object VlaData
+
     impl_p->vlaData_p = new VlaData (nReadAheadBuffers);
     impl_p->vlaData_p->initialize ();
+
+    // Create the lookahead thread object
 
     impl_p->vlat_p = new VLAT (impl_p->vlaData_p);
 

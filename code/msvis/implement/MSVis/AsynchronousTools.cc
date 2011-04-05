@@ -20,6 +20,7 @@
 #include <sys/time.h>
 
 #include <casa/Exceptions/Error.h>
+#include <casa/Logging/LogIO.h>
 #include <boost/thread/once.hpp>
 
 #include "AsynchronousTools.h"
@@ -287,6 +288,10 @@ Logger::LoggerThread::log (const string & text)
 void *
 Logger::LoggerThread::run ()
 {
+    LogIO logIo (LogOrigin ("Logger::LoggerThread"));
+   	logIo << "starting execution; tid=" << gettid() << endl << LogIO::POST;
+
+
     try {
         // Determine where to write the logging info.  If nothing is specified or either "cerr" or
         // "stdout" are specified then use standard error.  If "cout" or "stdout" are specified then

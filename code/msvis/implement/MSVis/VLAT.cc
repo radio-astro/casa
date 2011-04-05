@@ -33,6 +33,7 @@
 #include "VLAT.h"
 #include "VisBufferAsync.h"
 #include "VisibilityIteratorAsync.h"
+#include <casa/Logging/LogIO.h>
 #include <casa/System/AipsrcValue.h>
 
 #include "AsynchronousTools.h"
@@ -48,7 +49,7 @@ using namespace casa::async;
 #include <boost/function.hpp>
 
 using namespace boost;
-
+using namespace casa::utilj;
 using namespace std;
 
 #include "UtilJ.h"
@@ -85,8 +86,15 @@ Bool VlaData::loggingInitialized_p = False;
 Int VlaData::logLevel_p = -1;
 
 VlaData::VlaData (Int maxNBuffers)
- : MaxNBuffers_p (maxNBuffers)
+ : fillCycle_p (True),
+   fillOperate_p (True),
+   fillWait_p (True),
+   MaxNBuffers_p (maxNBuffers),
+   readCycle_p (True),
+   readOperate_p (True),
+   readWait_p (True)
 {
+    timeStart_p = Times();
     lookaheadTerminationRequested_p = False;
     sweepTerminationRequested_p = False;
     viResetComplete_p = False;
@@ -99,8 +107,10 @@ VlaData::VlaData (Int maxNBuffers)
 
 VlaData::~VlaData ()
 {
-    if (stats_p.isEnabled()){
-        Log (1, "VlaData stats:\n%s", stats_p.makeReport ().c_str());
+    timeStop_p = Times();
+
+    if (statsEnabled()){
+        Log (1, "VlaData stats:\n%s", makeReport ().c_str());
     }
 
     resetBufferData ();
@@ -157,7 +167,12 @@ VlaData::fillComplete (VlaDatum * datum)
 {
     MutexLocker ml (vlaDataMutex_p);
 
-    stats_p.addEvent (Stats::Fill|Stats::End);
+    if (statsEnabled()){
+        fill3_p = Times();
+        fillWait_p += fill2_p - fill1_p;
+        fillOperate_p += fill3_p - fill2_p;
+        fillCycle_p += fill3_p - fill1_p;
+    }
 
     data_p.push (datum);
 
@@ -173,7 +188,7 @@ VlaData::fillStart (Int chunkNumber, Int subChunkNumber)
 {
     MutexLocker ml (vlaDataMutex_p);
 
-    stats_p.addEvent (Stats::Fill|Stats::Request);
+    statsEnabled () && (fill1_p = Times(), True);
 
 	while ((int) data_p.size() >= MaxNBuffers_p && ! sweepTerminationRequested_p){
 	    vlaDataChanged_p.wait (vlaDataMutex_p);
@@ -188,7 +203,7 @@ VlaData::fillStart (Int chunkNumber, Int subChunkNumber)
 
 	insertValidSubChunk (chunkNumber, subChunkNumber);
 
-    stats_p.addEvent (Stats::Fill|Stats::Begin);
+	statsEnabled () && (fill2_p = Times(), True);
 
 	if (sweepTerminationRequested_p){
 	    delete datum;
@@ -211,8 +226,6 @@ VlaData::initialize ()
 {
 	resetBufferData ();
 
-    if (statsEnabled())
-        stats_p.reserve (10000);
 }
 
 Bool
@@ -338,12 +351,44 @@ VlaData::isValidSubChunk (Int chunkNumber, Int subChunkNumber) const
 	return validSubChunk;
 }
 
+String
+VlaData::makeReport ()
+{
+    String report;
+
+    DeltaTimes duration = (timeStop_p - timeStart_p); // seconds
+    report += format ("\nLookahead Stats: nCycles=%d, duration=%.3f sec\n...\n",
+                      readWait_p.n(), duration.elapsed());
+    report += "...ReadWait:    " + readWait_p.formatAverage () + "\n";
+    report += "...ReadOperate: " + readOperate_p.formatAverage() + "\n";
+    report += "...ReadCycle:   " + readCycle_p.formatAverage() + "\n";
+
+    report += "...FillWait:    " + fillWait_p.formatAverage() + "\n";
+    report += "...FillOperate: " + fillOperate_p.formatAverage () + "\n";
+    report += "...FillCycle:   " + fillCycle_p.formatAverage () + "\n";
+
+    Double syncCycle = fillOperate_p.elapsedAvg() + readOperate_p.elapsedAvg();
+    Double asyncCycle = max (fillCycle_p.elapsedAvg(), readCycle_p.elapsedAvg());
+    report += format ("...Sync cycle would be %6.1f ms\n", syncCycle * 1000);
+    report += format ("...Speedup is %5.1f%%\n", (syncCycle / asyncCycle  - 1) * 100);
+    report += format ("...Total time savings estimate is %7.3f seconds\n", fillOperate_p.elapsed ());
+
+    return report;
+
+}
+
+
 void
 VlaData::readComplete (Int chunkNumber, Int subChunkNumber)
 {
     MutexLocker ml (vlaDataMutex_p);
 
-    stats_p.addEvent (Stats::End);
+    if (statsEnabled()){
+        read3_p = Times();
+        readWait_p += read2_p - read1_p;
+        readOperate_p += read3_p - read2_p;
+        readCycle_p += read3_p - read1_p;
+    }
 
 	Log (2, "VlaData::readComplete on (%d,%d)\n", chunkNumber, subChunkNumber);
 }
@@ -353,7 +398,7 @@ VlaData::readStart (Int chunkNumber, Int subChunkNumber)
 {
     MutexLocker ml (vlaDataMutex_p);
 
-    stats_p.addEvent (Stats::Request);
+    statsEnabled () && (read1_p = Times(), True);
 
     // Wait for a subchunk's worth of data to be available.
 
@@ -373,7 +418,7 @@ VlaData::readStart (Int chunkNumber, Int subChunkNumber)
 
 	Log (2, "VlaData::readStart on (%d, %d)\n", chunkNumber, subChunkNumber);
 
-    stats_p.addEvent (Stats::Begin);
+	statsEnabled () && (read2_p = Times(), True);
 
     // Extract the VisBufferAsync enclosed in the datum for return to caller,
     // then destroy the rest of the datum object
@@ -451,7 +496,6 @@ VlaData::statsEnabled () const
     return doStats;
 }
 
-
 void
 VlaData::storeChannelSelection (const asyncio::ChannelSelection & channelSelection)
 {
@@ -509,145 +553,6 @@ VlaData::waitForViReset()
 
         vlaDataChanged_p.broadcast();
         return make_pair (True, roviaModifiersCopy);
-    }
-}
-
-VlaData::Stats::Stats ()
-{
-    enabled_p = false;
-}
-
-void
-VlaData::Stats::addEvent (Int type)
-{
-    if (enabled_p){
-        struct timeval tVal;
-        gettimeofday (& tVal, NULL);
-
-        Double t = tVal.tv_sec + tVal.tv_usec * 1e-6;
-
-        events_p.push_back (Event (type, t));
-    }
-}
-
-
-String
-VlaData::Stats::makeReport ()
-{
-    String report;
-
-    if (enabled_p) {
-
-        OpStats readStats, fillStats;
-
-        for (Events::iterator event = events_p.begin(); event != events_p.end(); ++ event){
-
-            Int type = event->get<0>();
-
-            if ((type & Fill) != 0){
-                fillStats.update (type, event->get<1>());
-            }
-            else {
-                readStats.update (type, event->get<1>());
-            }
-        }
-
-        report += format ("\nLookahead Stats: nCycles=%d\n...\n", readStats.getN());
-        report += "...ReadWait:    " + readStats.format(Wait) + "\n";
-        report += "...ReadOperate: " + readStats.format(Operate) + "\n";
-        report += "...ReadCycle:   " + readStats.format(Cycle) + "\n";
-
-        report += "...FillWait:    " + fillStats.format(Wait) + "\n";
-        report += "...FillOperate: " + fillStats.format(Operate) + "\n";
-        report += "...FillCycle:   " + fillStats.format(Cycle) + "\n";
-
-        Double syncCycle = fillStats.getAvg (Operate) + readStats.getAvg (Operate);
-        report += format ("...Sync cycle would be %6.1f ms\n", syncCycle * 1000);
-        report += format ("...Speedup is %5.1f%%\n", (syncCycle / readStats.getAvg (Cycle) - 1) * 100);
-
-    }
-
-    return report;
-
-}
-
-void
-VlaData::Stats::reserve (Int size)
-{
-    events_p.reserve (size);
-    enabled_p = True;
-}
-
-VlaData::Stats::OpStats::OpStats ()
-: events_p (End + 1, 0),
-  max_p (3, -1E20),
-  min_p (3, 1E20),
-  n_p (0),
-  ssq_p (3, 0),
-  sum_p (3, 0)
-{}
-
-void
-VlaData::Stats::OpStats::accumulate (Double wait, Double operate, Double cycle)
-{
-    ++ n_p;
-    vector<Double> s (3);
-    s [Wait] = wait;
-    s [Operate] = operate;
-    s [Cycle] = cycle;
-
-    using namespace boost::lambda;
-    //using boost::lambda::_1;
-    //using boost::lambda::_2;
-
-    // Compute the sum for all periods.
-
-    transform (sum_p.begin(), sum_p.end(), s.begin(), sum_p.begin(), _1 + _2);
-
-    // Compute the sum of squares for all periods.
-
-    transform (ssq_p.begin(), ssq_p.end(), s.begin(), ssq_p.begin(), _1 + _2 * _2);
-
-    // Compute the min for all periods using simple wrapper of min function.
-
-    transform (min_p.begin(), min_p.end(), s.begin(), min_p.begin(), dmin);
-
-    // Compute the max for all periods using simple wrapper of max function.
-
-    transform (max_p.begin(), max_p.end(), s.begin(), max_p.begin(), dmax);
-}
-
-String
-VlaData::Stats::OpStats::format (Int component)
-{
-    Double avg = (n_p != 0) ? sum_p [component] / n_p : 0;
-    Double stdev = (n_p != 0) ? sqrt (ssq_p[component] / n_p - avg * avg) : 0;
-
-    String s = utilj::format ("avg=%6.1f ms, stdev=%6.1f, range=[%6.1f, %6.1f]", avg*1000, stdev * 1000,
-                              min_p[component] * 1000, max_p[component] * 1000);
-
-    return s;
-}
-
-
-void
-VlaData::Stats::OpStats::update (Int type, Double t)
-{
-    Int masked = type & (~Fill);
-
-    events_p [masked] = t;
-
-    if (masked == End){
-
-        Double wait = events_p [Begin] - events_p [Request];
-        Double operate = events_p [End] - events_p [Begin];
-        Double cycle = events_p [End] - events_p [Request];
-
-        accumulate (wait, operate, cycle);
-
-        events_p [Begin] = 0;
-        events_p [Request] = 0;
-        events_p [End] = 0;
     }
 }
 
@@ -1063,7 +968,9 @@ VLAT::isTerminated () const
 void *
 VLAT::run ()
 {
+    LogIO logIo (LogOrigin ("VLAT"));
 	Log (1, "VLAT starting execution; tid=%d\n", gettid());
+	logIo << "starting execution; tid=" << gettid() << endl << LogIO::POST;
 
     if (VlaData::loggingInitialized_p){
         Logger::get()->registerName ("VLAT");
@@ -1094,6 +1001,8 @@ VLAT::run ()
 
 		threadTerminated_p = true;
      	Log (1, "VLAT stopping execution.\n");
+     	logIo << "stopping execution normally; tid=" << gettid() << endl << LogIO::POST;
+
 		return NULL;
 
 	}
@@ -1103,6 +1012,7 @@ VLAT::run ()
 		cerr.flush();
 
      	Log (1, "VLAT caught exception: %s.\n", e.what());
+     	logIo << "caught exception; tid=" << gettid() << "-->" << e.what() << endl << LogIO::POST;
 
 		threadTerminated_p = true;
 		throw;
@@ -1113,6 +1023,7 @@ VLAT::run ()
 		cerr.flush();
 
      	Log (1, "VLAT caught unknown exception:\n");
+     	logIo << "caught unknown exception; tid=" << gettid() << endl << LogIO::POST;
 
 		threadTerminated_p = true;
 		throw;
