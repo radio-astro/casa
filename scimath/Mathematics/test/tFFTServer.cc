@@ -1696,6 +1696,73 @@ public:
       expflagse2(IPosition(2,1,8)) = True;
       expflagse2(IPosition(2,1,9)) = False;
 
+      Array<T> ra(IPosition(2,2,10));
+      ra(IPosition(2,0,0)) = 0.;
+      ra(IPosition(2,0,1)) = 1.;
+      ra(IPosition(2,0,2)) = 2.;
+      ra(IPosition(2,0,3)) = 3.;
+      ra(IPosition(2,0,4)) = 4.;
+      ra(IPosition(2,0,5)) = 5.;
+      ra(IPosition(2,0,6)) = 6.;
+      ra(IPosition(2,0,7)) = 7.;
+      ra(IPosition(2,0,8)) = 8.;
+      ra(IPosition(2,0,9)) = 9.;
+      ra(IPosition(2,1,0)) = 0.;
+      ra(IPosition(2,1,1)) = 10.;
+      ra(IPosition(2,1,2)) = 20.;
+      ra(IPosition(2,1,3)) = 30.;
+      ra(IPosition(2,1,4)) = 40.;
+      ra(IPosition(2,1,5)) = 50.;
+      ra(IPosition(2,1,6)) = 60.;
+      ra(IPosition(2,1,7)) = 70.;
+      ra(IPosition(2,1,8)) = 80.;
+      ra(IPosition(2,1,9)) = 90.;
+
+      Array<T> rexpect(IPosition(2,2,10));
+      rexpect(IPosition(2,0,0)) = 9.;	
+      rexpect(IPosition(2,0,1)) = 0.; 	
+      rexpect(IPosition(2,0,2)) = 1.; 	
+      rexpect(IPosition(2,0,3)) = 2.; 	
+      rexpect(IPosition(2,0,4)) = 3.; 	
+      rexpect(IPosition(2,0,5)) = 4.; 	
+      rexpect(IPosition(2,0,6)) = 5.; 	
+      rexpect(IPosition(2,0,7)) = 6.; 	
+      rexpect(IPosition(2,0,8)) = 7.; 	
+      rexpect(IPosition(2,0,9)) = 8.; 	
+      rexpect(IPosition(2,1,0)) = 90.; 	
+      rexpect(IPosition(2,1,1)) = 0.; 	
+      rexpect(IPosition(2,1,2)) = 10.;	
+      rexpect(IPosition(2,1,3)) = 20.;	
+      rexpect(IPosition(2,1,4)) = 30.;	
+      rexpect(IPosition(2,1,5)) = 40.;	
+      rexpect(IPosition(2,1,6)) = 50.;	
+      rexpect(IPosition(2,1,7)) = 60.;	
+      rexpect(IPosition(2,1,8)) = 70.;	
+      rexpect(IPosition(2,1,9)) = 80.; 
+ 
+      Array<T> rexpectb(IPosition(2,2,10));
+      rexpectb(IPosition(2,0,0)) = 9.;	
+      rexpectb(IPosition(2,0,1)) = 0.; 	
+      rexpectb(IPosition(2,0,2)) = 1.; 	
+      rexpectb(IPosition(2,0,3)) = 2.; 	
+      rexpectb(IPosition(2,0,4)) = 3.; 	
+      rexpectb(IPosition(2,0,5)) = 4.; 	
+      rexpectb(IPosition(2,0,6)) = 5.; 	
+      rexpectb(IPosition(2,0,7)) = 6.; 	
+      rexpectb(IPosition(2,0,8)) = 7.; 	
+      rexpectb(IPosition(2,0,9)) = 8.; 	
+      rexpectb(IPosition(2,1,0)) = 90.; 	
+      rexpectb(IPosition(2,1,1)) = 0.; 	
+      rexpectb(IPosition(2,1,2)) = 10.;	
+      rexpectb(IPosition(2,1,3)) = 20.;	
+      rexpectb(IPosition(2,1,4)) = 30.;	
+      rexpectb(IPosition(2,1,5)) = 40.;	
+      rexpectb(IPosition(2,1,6)) = 50.;	
+      rexpectb(IPosition(2,1,7)) = 60.;	
+      rexpectb(IPosition(2,1,8)) = 70.;	
+      rexpectb(IPosition(2,1,9)) = 80.;  
+
+
 #if PERFORMANCE_TEST
     iterations = 10;
 #endif
@@ -1923,6 +1990,46 @@ public:
 	}
       }
 
+      cout << "--- right-shift by 1 channel in first axis with flags all not set, real data ----------------" << endl;
+
+      whichAxis = 1;
+      relshift = 1./10.;
+      Array<T> routVal;
+      inFlags.assign(aflags);
+      inFlags = True;
+
+      server.fftshift(routVal, outFlag, ra, inFlags, whichAxis, relshift, True);
+
+      {
+	for(uInt i=0; i<2; i++){
+	  for(uInt j=0; j<10; j++){
+	    Double diff = routVal(IPosition(2,i,j))-rexpect(IPosition(2,i,j));
+	    cout << i << " " << j << " " << routVal(IPosition(2,i,j)) << " " << rexpect(IPosition(2,i,j)) << endl;
+	    cout << "flag " << i << " " << j << " " << outFlag(IPosition(2,i,j)) << " " << expflagsb(IPosition(2,i,j)) << endl;
+	    AlwaysAssert((fabs(diff)<1E-5), AipsError);
+	    AlwaysAssert(outFlag(IPosition(2,i,j)) == expflagsb(IPosition(2,i,j)), AipsError);
+	  }
+	}
+      }
+
+      cout << "--- right-shift by 1 channel in first axis with flags partially set, real data ----------------" << endl;
+
+      whichAxis = 1;
+      relshift = 1./10.;
+
+      server.fftshift(routVal, outFlag, ra, aflags, whichAxis, relshift, True);
+
+      {
+	for(uInt i=0; i<2; i++){
+	  for(uInt j=0; j<10; j++){
+	    Double diff = routVal(IPosition(2,i,j))-rexpectb(IPosition(2,i,j));
+	    cout << i << " " << j << " " << routVal(IPosition(2,i,j)) << " " << rexpectb(IPosition(2,i,j)) << endl;
+	    cout << "flag " << i << " " << j << " " << outFlag(IPosition(2,i,j)) << " " << expflags(IPosition(2,i,j)) << endl;
+	    AlwaysAssert(fabs(diff)<1E-5, AipsError);
+	    AlwaysAssert(outFlag(IPosition(2,i,j)) == expflags(IPosition(2,i,j)), AipsError);
+	  }
+	}
+      }
 
 
     } // enf for it=0
