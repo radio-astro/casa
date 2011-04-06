@@ -260,7 +260,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         (FLOAT_)DATA column of input data. You can keep original data by 
         setting backup parameter to True. In this case, the task make a copy 
         of input data specified by sdfile parameter. Name of backup file is 
-        sdfile+'.sdtpimaging.bak.'+'(timestamp)'.  
+        &lt;sdfile&gt;.sdtpimaging.bak.&lt;timestamp&gt;.  
 
         The selection of polarizations can be made by specifying the 
         polarization name in stokes, such as 'XX' or 'YY' for linear 
