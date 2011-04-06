@@ -981,15 +981,6 @@ PlotLogMessage* PlotMSIndexer::flagRange(const PlotMSFlagging& flagging,
   Timer flagtimer;
   flagtimer.mark();
 
-  /*  
-  return new PlotLogMessage(PMS::LOG_ORIGIN,
-			    flag ? PMS::LOG_ORIGIN_FLAG : PMS::LOG_ORIGIN_UNFLAG, 
-			    "**************************************\nFLAGGING HAS BEEN DISABLED TEMPORARILY DUE TO NEW INDEXER DEPLOYMENT!!!!!",
-			    flag ? PMS::LOG_EVENT_FLAG : PMS::LOG_EVENT_UNFLAG);
-     // Disabled 2000Jul31 (gmoellen)
-  */
-
-
   // List of flags
   Vector<Int> flagchunk(1000,-1),flagindex(1000,-1);
   
@@ -1000,7 +991,8 @@ PlotLogMessage* PlotMSIndexer::flagRange(const PlotMSFlagging& flagging,
   for(Int i = 0; i < n; i++) {      
 
     // The following sets currChunk_ and irel_ (as needed below)
-    if (!maskedAt(i)) {
+    if ((!maskedAt(i) && flag) ||    // not yet flagged and we are flagging
+	(maskedAt(i) && !flag) ) {   // already flagged and we are unflagging
 
       xAndYAt(i, thisx, thisy);
       
@@ -1029,28 +1021,35 @@ PlotLogMessage* PlotMSIndexer::flagRange(const PlotMSFlagging& flagging,
     }
   }
 
+  //  cout << "Found " << nFound << " points to " << (flag ? "flag." : "unflag.") << endl;
 
-  // Refresh the plot mask to reflect newly flagged data
-  //  TBD: only do chunks that need it!
-  plotmscache_->setPlotMask();
+  // Apply (un)flags only if some found
+  if (nFound>0) {
+    // Refresh the plot mask to reflect newly flagged data
+    //  TBD: only do chunks that need it!
+    plotmscache_->setPlotMask();
+    
+    //    cout << "Finished in-memory flagging." << endl;
+    
+    // shrink flag list to correct size
+    if(flagchunk.nelements() > uInt(nFound)) {
+      flagchunk.resize(nFound, True);
+      flagindex.resize(nFound, True);
+    }
+    
+    //    cout << "flagchunk = " << flagchunk << endl;
+    //    cout << "flagindex = " << flagindex << endl;
+    
+    // Set the flags in the MS
+    plotmscache_->flagToDisk(flagging, flagchunk, flagindex, flag,this);
+    
 
-  // cout << "Finished in-memory flagging." << endl;
-  
-  
-  // shrink flag list to correct size
-  if(flagchunk.nelements() > uInt(nFound)) {
-    flagchunk.resize(nFound, True);
-    flagindex.resize(nFound, True);
+    // Recompute ranges
+    computeRanges();
+
   }
-  
-  /*
-  cout << "flagchunk = " << flagchunk << endl;
-  cout << "flagindex = " << flagindex << endl;
-  */
-  
-  // Set the flags in the MS
-  plotmscache_->flagToDisk(flagging, flagchunk, flagindex, flag,this);
-  
+
+
   ss << (flag ? "FLAGGED " : "UNFLAGGED ") << nFound 
      << " points among " << n << " in "
      << flagtimer.all_usec()/1.0e6 << "s.";
@@ -1095,10 +1094,6 @@ String PlotMSIndexer::iterLabel() {
   }
 }
 		  
-
-  /*
-// Disabled 2009Jul31 (gmoellen)
-*/
 
 void PlotMSIndexer::flagInCache(const PlotMSFlagging& flagging,Bool flag) {
 

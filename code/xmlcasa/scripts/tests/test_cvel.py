@@ -980,6 +980,7 @@ class cvel_test(unittest.TestCase):
                 outputvis = outfile,
                 mode='velocity',
                 veltype='optical',
+                restfreq = '220398.676MHz',
                 outframe = 'BARY',
                 interpolation = 'fftshift'
                 )

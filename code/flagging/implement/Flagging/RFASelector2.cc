@@ -470,6 +470,16 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm) :
     addString(desc_str,String(RF_SCAN)+"="+ss);
     sel_scannumber -= (Int)indexingBase();
   }
+// parse input arguments: Scan intent
+  if ( fieldType(parm,RF_INTENT,TpInt,TpArrayInt))
+  {  
+    parm.get(RF_INTENT,sel_stateid);
+    String ss;
+    for( uInt i=0; i<sel_stateid.nelements(); i++) 
+      addString(ss,String::toString(sel_stateid(i)),",");
+    addString(desc_str,String(RF_INTENT)+"="+ss);
+    sel_stateid -= (Int)indexingBase();
+  }
 // parse input arguments: Array ID(s)
   if( fieldType(parm,RF_ARRAY,TpInt,TpArrayInt)) 
   {
@@ -893,6 +903,13 @@ Bool RFASelector::newChunk (Int &maxmem)
     if(verbose2) os<<"Array ID does not match in this chunk\n"<<LogIO::POST;
     return active=False;
   }
+  Vector<Int> tempstateid(0);
+  tempstateid = chunk.visIter().stateId(tempstateid);
+  if( tempstateid.nelements() && sel_stateid.nelements() && !find(dum,tempstateid[0],sel_stateid) )
+  {
+    if(verbose2) os<<"State ID does not match in this chunk\n"<<LogIO::POST;
+    return active=False;
+  }  
   /*
   Vector<Int> temp(0);
   temp = chunk.visIter().scan(temp);
@@ -1482,6 +1499,7 @@ const RecordInterface & RFASelector::getDefaults ()
     rec.define(RF_SHADOW,False);
     rec.define(RF_ELEVATION, False);
     rec.define(RF_SCAN,False);
+    rec.define(RF_INTENT,False);
     rec.define(RF_ARRAY,False);
     rec.define(RF_FEED,False);
     rec.define(RF_UVRANGE,False);
@@ -1509,6 +1527,7 @@ const RecordInterface & RFASelector::getDefaults ()
     rec.setComment(RF_SHADOW, "If T, flag shadowed antennas");
     rec.setComment(RF_ELEVATION, "If T, flag based on elevation");
     rec.setComment(RF_SCAN,"Restrict flagging to specific scans (integers)");
+    rec.setComment(RF_INTENT,"Restrict flagging to specific scan intent -corresponding state IDs (integers)");
     rec.setComment(RF_ARRAY,"Restrict flagging to specific array ids (integers)");
     rec.setComment(RF_FEED,"Restrict flagging to specific feeds (2,N array of integers)");
     rec.setComment(RF_UVRANGE,"Restrict flagging to specific uv-distance ranges in meters (2,N array of doubles )");

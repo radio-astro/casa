@@ -46,7 +46,7 @@ const unsigned int plotms::LAUNCH_TOTAL_WAIT_US    = 5000000;
 
 // Constructors/Destructors //
 
-  plotms::plotms() : itsWatcher_(this) { }
+  plotms::plotms() : itsWatcher_(this),doIter_(True) { }
 
   plotms::~plotms() { closeApp(); }
 
@@ -259,6 +259,30 @@ void plotms::setPlotMSTransformations(const std::string& freqframe,
     
     setPlotMSTransformations_(trans, updateImmediately, plotIndex);
 
+}
+
+void plotms::setPlotMSIterate(const std::string& iteraxis,
+			      const bool xselfscale,
+			      const bool yselfscale,
+			      const bool updateImmediately, 
+			      const int plotIndex) {
+
+    PlotMSIterParam iter;
+    
+    iter.setIterAxis(iteraxis);
+    if (iteraxis=="") {
+      iter.setXSelfScale(False);
+      iter.setYSelfScale(False);
+    }
+    else {
+      iter.setXSelfScale(xselfscale);
+      iter.setYSelfScale(yselfscale);
+    }
+
+    // Only if iteration enabled...
+    if (doIter_)
+      setPlotMSIterate_(iter, updateImmediately, plotIndex);
+   
 }
 
 void plotms::setPlotMSTransformationsRec(const record& transformations, 
@@ -510,7 +534,21 @@ record* plotms::getFlagExtension() {
 
 
 void plotms::update() {
-	callAsync(PlotMSDBusApp::METHOD_UPDATE);
+  callAsync(PlotMSDBusApp::METHOD_UPDATE);
+  //waitUntilIdle();
+}
+
+void plotms::waitUntilIdle() {
+
+  // Wait for it to have launched...
+  cout << "Running synchronously..." << flush;
+  bool idle = false;
+  while(!idle) {
+    usleep(500000);
+    idle=!this->isDrawing();
+  }
+  cout << "done." << endl;
+  return;
 }
 
 void plotms::show()   {
@@ -576,25 +614,34 @@ bool plotms::displaySet() {
 }
 
 void plotms::launchApp() {
+
     if(!app.dbusName( ).empty() || !displaySet()) return;
     
     // Launch PlotMS application with the DBus switch.
     pid_t pid = fork();
     if(pid == 0) {
+
         String file = itsLogFilename_.empty() ? "" :
                       PlotMSDBusApp::APP_LOGFILENAME_SWITCH + "=" +
                       itsLogFilename_;
         String filter = itsLogFilter_.empty() ? "" :
                         PlotMSDBusApp::APP_LOGFILTER_SWITCH + "=" +
                         itsLogFilter_;
-        
+	String iter="-iter";
+
+	// If user has turned off iter, be sure not to launch with it
+	if (!doIter_)
+	  iter="";
+
         execlp(PlotMSDBusApp::APP_NAME.c_str(),
                PlotMSDBusApp::APP_NAME.c_str(),
                PlotMSDBusApp::APP_CASAPY_SWITCH.c_str(),
+	       iter.c_str(),
                file.c_str(), filter.c_str(),
                NULL);
         
     } else {
+
         app.dbusName( ) = to_string(QtDBusApp::generateServiceName(app.getName( ),pid));
         
         // Wait for it to have launched...
@@ -657,6 +704,17 @@ void plotms::setPlotMSTransformations_(const PlotMSTransformations& trans,
     launchApp();
     Record params;
     params.defineRecord(PlotMSDBusApp::PARAM_TRANSFORMATIONS, trans.toRecord());
+    params.define(PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY, updateImmediately);
+    params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);
+    QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName( ),
+            PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, true);
+}
+
+void plotms::setPlotMSIterate_(const PlotMSIterParam& iter,
+			       const bool updateImmediately, const int plotIndex) {
+    launchApp();
+    Record params;
+    params.defineRecord(PlotMSDBusApp::PARAM_ITERATE, iter.toRecord());
     params.define(PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY, updateImmediately);
     params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);
     QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName( ),
@@ -728,5 +786,23 @@ void plotms::setGridParams(
     QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName( ),
             PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, true);    
 }
+
+// A _temporary_ method to enable turning off the iteration path
+bool plotms::enableIter(const bool enable) {
+
+  // Do something only if changing state
+  if (enable!=doIter_) {
+    cout << "Closing the plotms application to " << (enable ? "enable" : "disable") << " iteration." << endl;
+    closeApp();
+    doIter_=enable;
+  }
+  else
+    cout << "Interation is already " << (enable ? "enabled." : "disabled.") << endl;
+
+  return true;
+
+}
+
+
 
 }  // end namespace

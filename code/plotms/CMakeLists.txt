@@ -122,6 +122,7 @@ casa_add_library( plotms
   implement/PlotMS/PlotMSConstants.cc
   implement/PlotMS/PlotMSDBusApp.cc
   implement/PlotMS/PlotMSFlagging.cc
+  implement/PlotMS/PlotMSIterParam.cc
   implement/PlotMS/PlotMSLabelFormat.cc
   implement/PlotMS/PlotMSParameters.cc
   implement/PlotMS/PlotMSRegions.cc

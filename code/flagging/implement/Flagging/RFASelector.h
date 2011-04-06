@@ -124,7 +124,7 @@ protected:
 // selection arguments
   Matrix<Double> sel_freq,sel_time,sel_timerng,sel_uvrange;
   Matrix<Int>    sel_chan;
-  Vector<Int>    sel_corr,sel_spwid,sel_fieldid;
+  Vector<Int>    sel_corr,sel_spwid,sel_fieldid, sel_stateid;
   Vector<String>  sel_fieldnames;
   LogicalVector  sel_ifr,flagchan,sel_feed;
   Bool          sel_autocorr,unflag;

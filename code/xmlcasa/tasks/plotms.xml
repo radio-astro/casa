@@ -363,6 +363,36 @@ Flag Extension Parameters
 
 <!--
 ###############################################################################
+Iteration Parameters
+###############################################################################
+-->
+
+   <param type="string" name="iteraxis">
+      <description>the axis over which to iterate</description>
+      <value />
+      <allowed kind="enum">
+        <value />
+        <value>scan</value>
+        <value>field</value>
+        <value>spw</value>
+        <value>baseline</value>
+        <value>antenna</value>
+      </allowed>
+   </param>
+
+   <param type="bool" name="xselfscale" subparam="true">
+       <description>Self-scale X axis in each plot </description>
+       <value>False</value>
+   </param>
+
+   <param type="bool" name="yselfscale" subparam="true">
+       <description>Self-scale Y axis in each plot </description>
+       <value>False</value>
+   </param>
+
+
+<!--
+###############################################################################
 Colorization Parameters
 ###############################################################################
 -->
@@ -766,14 +796,6 @@ Constraints
       <equals value="flagrow"/>
     </when>
 
-    <when param="colorize">
-        <equals type="bool" value="False" />
-        <equals type="bool" value="True">
-            <default param="coloraxis"><value type="string" /></default>
-        </equals>
-    </when>
-
-
     <when param="selectdata">
       <equals type="bool" value="True">
         <default param="field"><value type="string" /></default>
@@ -825,7 +847,18 @@ Constraints
 -->
       </equals>
     </when>
-    
+    <when param="iteraxis">
+        <notequals type="string" value="">
+            <default param="xselfscale"><value>False</value></default>
+            <default param="yselfscale"><value>False</value></default>
+        </notequals>
+    </when>
+    <when param="colorize">
+        <equals type="bool" value="False" />
+        <equals type="bool" value="True">
+            <default param="coloraxis"><value type="string" /></default>
+        </equals>
+    </when>
     <when param="plotfile">
         <notequals type="string" value="">
             <default param="format"><value type="string"/></default>
@@ -969,6 +1002,14 @@ Constraints
                    default: False.
         extchannel -- extend flags based on channel?
 
+    iteraxis -- axis upon which iterate plots (one plot per page, for now)
+                default: '' (no iteration)
+                options: 'scan','field','spw','baseline','antenna',''
+      &gt;&gt;&gt; iteraxis expandable parameters
+        xselfscale -- If true, self-scale each iterated plot on the x axis
+        yselfscale -- If true, self-scale each iterated plot on the y axis
+                      default: false, which will scale all plots globally
+    
     colorize -- to color data points according to some quantity
                 default: false
       &gt;&gt;&gt; colorize expandable parameters

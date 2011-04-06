@@ -497,7 +497,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		<default param="width"><value>1</value>
                   <description>Width of output channel relative to MS channel (# to average)</description>
 		</default>
-		<default param="interpolation"><value type="string">nearest</value></default>
+		<default param="interpolation"><value type="string">linear</value></default>
 		<default param="chaniter"><value type='bool'>False</value></default>
 		<default param="outframe"><value type="string"></value></default>
 		<description>Velocity reference frame of output image; \'\' =input</description>

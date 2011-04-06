@@ -30,6 +30,7 @@
 #include <plotms/Plots/PlotMSPlotParameters.h>
 
 #include <plotms/PlotMS/PlotMSAveraging.h>
+#include <plotms/PlotMS/PlotMSIterParam.h>
 #include <plotms/PlotMS/PlotMSSelection.h>
 #include <plotms/PlotMS/PlotMSTransformations.h>
 #include <plotms/PlotMS/PlotMSLabelFormat.h>
@@ -1281,6 +1282,7 @@ public:
      bool operator== (const Group & other) const;
 
 
+  /* deprecated...
      bool enableIteration() const {
           return itsEnableIteration_;
      }
@@ -1290,79 +1292,123 @@ public:
                updated();
           }
      }
+  */
 
+     const PlotMSIterParam& iterParam() const {
+          return itsIterParam_;
+     }
+     void setIterParam(PlotMSIterParam iterparam) {
+       if (itsIterParam_ != iterparam) {
+	 itsIterParam_=iterparam;
+	 updated();
+       }
+     }
 
      PMS::Axis  iterationAxis() const {
-          return itsIterationAxis_;
+       //          return itsIterationAxis_;
+       return itsIterParam_.iterAxis();
      }
+
      void setIterationAxis (const PMS::Axis & value) {
-          if (itsIterationAxis_ != value) {
-               itsIterationAxis_ = value;
-               updated();
-          }
+       //          if (itsIterationAxis_ != value) {
+       //               itsIterationAxis_ = value;
+       if (iterationAxis()!=value) {
+	 itsIterParam_.setIterAxis(value);
+	 updated();
+       }
      }
 
 
      int numRows() const  {
-          return itsNumRows_;
+       return itsIterParam_.Ny();
      }
      void setNumRows(const int &value)  {
-          if (itsNumRows_ != value) {
-               itsNumRows_ = value;
-               updated();
-          }
+       if (numRows() != value) {
+	 itsIterParam_.setNy(value);
+	 updated();
+       }
      }
-
 
      int numColumns() const  {
-          return itsNumColumns_;
+       return itsIterParam_.Nx();
      }
      void setNumColumns(const int &value)  {
-          if (itsNumColumns_ != value) {
-               itsNumColumns_ = value;
-               updated();
-          }
+       if (numColumns() != value) {
+	 itsIterParam_.setNx(value);
+	 updated();
+       }
      }
 
      Bool globalXRange() const { 
-       return itsXAxisScaleMode_==PMS_PP_Iteration::GLOBAL; };
+       return !itsIterParam_.xSelfScale(); }
+
+       //       return itsXAxisScaleMode_==PMS_PP_Iteration::GLOBAL; };
 
      Bool globalYRange() const { 
-       return itsYAxisScaleMode_==PMS_PP_Iteration::GLOBAL; };
+       return !itsIterParam_.ySelfScale(); }
+  //       return itsYAxisScaleMode_==PMS_PP_Iteration::GLOBAL; };
 
      AxisScaleMode xAxisScaleMode() const {
-          return itsXAxisScaleMode_;
+       //          return itsXAxisScaleMode_;
+       return (itsIterParam_.xSelfScale() ? 
+	       PMS_PP_Iteration::SELF :
+	       PMS_PP_Iteration::GLOBAL);
      }
+
      void setXAxisScaleMode(AxisScaleMode value) {
-          if (itsXAxisScaleMode_ != value) {
-               itsXAxisScaleMode_ = value;
-               updated();
-          }
+       //          if (itsXAxisScaleMode_ != value) {
+       //               itsXAxisScaleMode_ = value;
+       if (xAxisScaleMode()!=value) {
+	 switch (value) {
+	 case PMS_PP_Iteration::SELF:
+	   itsIterParam_.setXSelfScale(True);
+	   break;
+	 case PMS_PP_Iteration::GLOBAL:
+	   itsIterParam_.setXSelfScale(False);
+	   break;
+	 }
+	 updated();
+       }
      }
 
 
      AxisScaleMode yAxisScaleMode() const {
-          return itsYAxisScaleMode_;
+       //          return itsYAxisScaleMode_;
+       return (itsIterParam_.ySelfScale() ? 
+	       PMS_PP_Iteration::SELF :
+	       PMS_PP_Iteration::GLOBAL);
+
      }
      void setYAxisScaleMode (AxisScaleMode value) {
-          if (itsYAxisScaleMode_ != value) {
-               itsYAxisScaleMode_ = value;
-               updated();
-          }
+       //          if (itsYAxisScaleMode_ != value) {
+       //               itsYAxisScaleMode_ = value;
+       if (yAxisScaleMode()!=value) {
+	 switch (value) {
+	 case PMS_PP_Iteration::SELF:
+	   itsIterParam_.setYSelfScale(True);
+	   break;
+	 case PMS_PP_Iteration::GLOBAL:
+	   itsIterParam_.setYSelfScale(False);
+	   break;
+	 }
+	 updated();
+       }
      }
 
-
 private:
-	 /* Parameters' values */
-     bool itsEnableIteration_;
+     /* Parameters' values */
+     PlotMSIterParam itsIterParam_;
+
+  /*
      PMS::Axis itsIterationAxis_;
-     int itsNumRows_;
-     int itsNumColumns_;
      AxisScaleMode itsXAxisScaleMode_;
      AxisScaleMode itsYAxisScaleMode_;
+  */
+     int itsNumRows_;
+     int itsNumColumns_;
 
      /* Key strings for Record */
-     static const String REC_ENABLEITERATION;
+     static const String REC_ITERPARAM;
      static const String REC_ITERATIONAXIS;
      static const String REC_NUMROWS;
      static const String REC_NUMCOLUMNS;

@@ -132,6 +132,10 @@ protected:
     // Overrides PlotMSPlot::constructorSetup().
     void constructorSetup();
 
+    // Clear the underlying data cache
+    virtual bool updateData() { itsCache2_.clear();  return True; };   
+
+
 private:    
     // Convenient access to single plot.
     MaskedScatterPlotPtr itsPlot_;

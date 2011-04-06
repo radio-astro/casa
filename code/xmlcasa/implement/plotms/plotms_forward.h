@@ -2,6 +2,7 @@
 
 #include <plotms/PlotMS/PlotMSAveraging.h>
 #include <plotms/PlotMS/PlotMSFlagging.h>
+#include <plotms/PlotMS/PlotMSIterParam.h>
 #include <plotms/PlotMS/PlotMSSelection.h>
 #include <plotms/PlotMS/PlotMSTransformations.h>
 #include <xmlcasa/utils/CasapyWatcher.h>

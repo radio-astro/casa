@@ -626,6 +626,52 @@ and/or show() is called.
   <returns />
 </method>
 
+<method type="function" name="setPlotMSIterate">
+  <keyword>setPlotMSIterate</keyword>
+  
+  <shortdescription>Sets the iteration parameters.</shortdescription>
+  
+  <description>
+Sets which meta-information axis over which to iterate the plots
+(scan, field, spw, baseline, antenna), and whether to self-scale 
+the axes of each plot or scale them globally.  (TBD: support for 
+specifying multiple plots per page will be added here)
+  </description>
+  
+  <input>
+    <param type="string" name="iteraxis">
+      <description>Axis over which to iterate (or none)</description>
+      <value />
+    </param>
+    
+    <param type="bool" name="xselfscale">
+      <description>Selfscale X axis</description>
+      <value>false</value>
+    </param>
+
+    <param type="bool" name="yselfscale">
+      <description>Selfscale Y axis</description>
+      <value>false</value>
+    </param>
+
+    <param type="bool" name="updateImmediately">
+      <description>whether to apply this change immediately, IF the window is currently shown</description>
+      <value>true</value>
+    </param>
+    
+    <param type="int" name="plotIndex">
+      <description>the index of the plot to apply this change</description>
+      <value>0</value>
+    </param>
+
+  </input>
+  
+  <example />
+  
+  <returns />
+</method>
+
+
 <method type="function" name="setPlotMSTransformationsRec">
   <keyword>setPlotMSTransformationsRec</keyword>
   
@@ -1515,6 +1561,26 @@ State Methods
   <returns type='bool'>
       <description>True if widget is closed, false if not</description>
   
+  </returns>
+</method>
+
+
+<method type="function" name="enableIter">
+  <keyword>enableIter</keyword>
+  
+  <shortdescription>A _temporary_ method to enable toggling the interation infrastructure</shortdescription>
+  
+  <description />
+  
+  <input>
+    <param type="bool" name="enable">
+      <description>If true, enable iteration, else disable.</description>
+    </param>
+  </input>
+  <example />
+  
+  <returns type="bool">
+    <description>True if save successful, false if not.</description>
   </returns>
 </method>
 

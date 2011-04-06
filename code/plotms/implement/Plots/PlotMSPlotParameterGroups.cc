@@ -1140,12 +1140,12 @@ void PMS_PP_Display::resizeVectors(unsigned int newSize)
 //////////////////////////////////
 
 // PMS_PP_Iteration record keys.
-const String PMS_PP_Iteration::REC_ENABLEITERATION = "enableIteration";
-const String PMS_PP_Iteration::REC_ITERATIONAXIS = "iterationAxis";
-const String PMS_PP_Iteration::REC_NUMROWS = "numRows";
-const String PMS_PP_Iteration::REC_NUMCOLUMNS = "numColumns";
-const String PMS_PP_Iteration::REC_XAXISSCALEMODE = "xAxisScaleMode";
-const String PMS_PP_Iteration::REC_YAXISSCALEMODE = "yAxisScaleMode";
+const String PMS_PP_Iteration::REC_ITERPARAM = "iterParam";
+//const String PMS_PP_Iteration::REC_ITERATIONAXIS = "iterationAxis";
+//const String PMS_PP_Iteration::REC_NUMROWS = "numRows";
+//const String PMS_PP_Iteration::REC_NUMCOLUMNS = "numColumns";
+//const String PMS_PP_Iteration::REC_XAXISSCALEMODE = "xAxisScaleMode";
+//const String PMS_PP_Iteration::REC_YAXISSCALEMODE = "yAxisScaleMode";
 
 PMS_PP_Iteration::PMS_PP_Iteration(PlotFactoryPtr factory) : PlotMSPlotParameters::Group(factory)
     {
@@ -1162,19 +1162,28 @@ PMS_PP_Iteration::~PMS_PP_Iteration() { }
 
 Record PMS_PP_Iteration::toRecord() const
     {
+      return itsIterParam_.toRecord();
+      /*
     Record rec;
-    rec.define(REC_ENABLEITERATION, itsEnableIteration_);
     rec.define(REC_ITERATIONAXIS, itsIterationAxis_);
-    rec.define(REC_NUMROWS, itsNumRows_);
-    rec.define(REC_NUMCOLUMNS, itsNumColumns_);
     rec.define(REC_XAXISSCALEMODE, itsXAxisScaleMode_);
     rec.define(REC_YAXISSCALEMODE, itsYAxisScaleMode_);
+    rec.define(REC_NUMROWS, itsNumRows_);
+    rec.define(REC_NUMCOLUMNS, itsNumColumns_);
     return rec;
+      */
     }
 
 void PMS_PP_Iteration::fromRecord(const Record& record)
-    {
-    bool valuesChanged = false;
+{
+  PlotMSIterParam tmp;
+  tmp.fromRecord(record);
+  if (tmp!=itsIterParam_) {
+    itsIterParam_=tmp;
+    updated();
+  }
+  
+  /*
     if (record.isDefined(REC_ENABLEITERATION) && record.dataType(REC_ENABLEITERATION) == TpBool && itsEnableIteration_ != record.asBool(REC_ENABLEITERATION))
         {
         itsEnableIteration_ = record.asBool(REC_ENABLEITERATION);
@@ -1206,7 +1215,8 @@ void PMS_PP_Iteration::fromRecord(const Record& record)
         valuesChanged = true;
         }
     if (valuesChanged) updated();
-    }
+  */
+}
 
 
 
@@ -1215,12 +1225,15 @@ PlotMSPlotParameters::Group& PMS_PP_Iteration::operator=(const Group& other)
     const PMS_PP_Iteration* o = dynamic_cast<const PMS_PP_Iteration*>(&other);
     if (o != NULL && *this != *o)
         {
+	  itsIterParam_ = o->itsIterParam_;
+	  /*
         itsEnableIteration_ = o->itsEnableIteration_;
         itsIterationAxis_ = o->itsIterationAxis_;
         itsNumRows_ = o->itsNumRows_;
         itsNumColumns_ = o->itsNumColumns_;
         itsXAxisScaleMode_ = o->itsXAxisScaleMode_;
         itsYAxisScaleMode_ = o->itsYAxisScaleMode_;
+	  */
         updated();
         }
     return *this;
@@ -1232,12 +1245,17 @@ bool PMS_PP_Iteration::operator==(const Group& other) const
     {
     const PMS_PP_Iteration* o = dynamic_cast<const PMS_PP_Iteration*>(&other);
     if (o == NULL) return false;
+    if (itsIterParam_ != o->itsIterParam_) return false;
+
+    /*
     if (itsEnableIteration_ != o->itsEnableIteration_) return false;
     if (itsIterationAxis_ != o->itsIterationAxis_) return false;
     if (itsNumRows_ != o->itsNumRows_) return false;
     if (itsNumColumns_ != o->itsNumColumns_) return false;
     if (itsXAxisScaleMode_ != o->itsXAxisScaleMode_) return false;
     if (itsYAxisScaleMode_ != o->itsYAxisScaleMode_) return false;
+    */
+
     return true;
     }
 
@@ -1245,6 +1263,8 @@ bool PMS_PP_Iteration::operator==(const Group& other) const
 
 void PMS_PP_Iteration::setDefaults()
     {
+      itsIterParam_.setDefaults();
+      /*
     itsEnableIteration_ = 0;
     itsIterationAxis_ = PMS::NONE;
     //    itsIterationAxis_ = PMS::SCAN;
@@ -1252,6 +1272,7 @@ void PMS_PP_Iteration::setDefaults()
     itsNumColumns_ = 1;
     itsXAxisScaleMode_ = GLOBAL;
     itsYAxisScaleMode_ = GLOBAL;
+      */
     }
 
 
