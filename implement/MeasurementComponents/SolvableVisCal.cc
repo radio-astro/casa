@@ -543,9 +543,15 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
     if (qsimint.isConform("s"))
       interval()=qsimint.get("s").getValue();
     else {
-      // assume seconds
-      interval()=qsimint.getValue();
-      simint()=simint()+"s";
+      if (qsimint.getUnit().length()==0) {
+	// when no units specified, assume seconds
+	// assume seconds
+	interval()=qsimint.getValue();
+	simint()=simint()+"s";
+      }
+      else
+	// unrecognized units:
+	throw(AipsError("Unrecognized units for simint (e.g., use 'min', not 'm', for minutes)"));
     }
   }
 
@@ -1005,6 +1011,7 @@ void SolvableVisCal::setSolve(const Record& solve)
   if (solve.isDefined("solint")) 
     solint()=solve.asString("solint");
 
+  // Handle solint format
   if (upcase(solint()).contains("INF") || solint()=="") {
     solint()="inf";
     interval()=-1.0;
@@ -1023,9 +1030,15 @@ void SolvableVisCal::setSolve(const Record& solve)
     if (qsolint.isConform("s"))
       interval()=qsolint.get("s").getValue();
     else {
-      // assume seconds
-      interval()=qsolint.getValue();
-      solint()=solint()+"s";
+      if (qsolint.getUnit().length()==0) {
+	// when no units specified, assume seconds
+	// assume seconds
+	interval()=qsolint.getValue();
+	solint()=solint()+"s";
+      }
+      else
+	// unrecognized units:
+	throw(AipsError("Unrecognized units for solint (e.g., use 'min', not 'm', for minutes)"));
     }
   }
   
