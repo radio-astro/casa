@@ -139,7 +139,7 @@ RegionShape::~RegionShape() { }
 
 // Public Methods //
 
-const Unit RegionShape::dataUnit() {
+const Unit RegionShape::dataUnit() const {
     if(m_isWorld) return UNIT;
     else return "_";
 }

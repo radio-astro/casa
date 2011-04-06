@@ -99,7 +99,10 @@ public:
   bool isDisplayable( ) const;
 
   // Return the data unit.
-  virtual const Unit dataUnit();
+  virtual const Unit dataUnit() const;
+  const IPosition dataShape() const { return IPosition( ); }
+  const uInt dataDim() const { return 0; }
+  std::vector<int> displayAxes( ) const { return std::vector<int>( ); }
 
   // Format the wedge value at the given world position.
   virtual String showValue(const Vector<Double> &world);

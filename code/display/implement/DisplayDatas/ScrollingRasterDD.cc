@@ -276,15 +276,15 @@ ScrollingRasterDD::~ScrollingRasterDD() {
   delete itsLatticeConcatPtr; itsLatticeConcatPtr = 0;
 }
 
-const IPosition ScrollingRasterDD::dataShape() {
+const IPosition ScrollingRasterDD::dataShape() const {
   return itsLatticeConcatPtr->shape();
 }
 
-const uInt ScrollingRasterDD::dataDim() {
+const uInt ScrollingRasterDD::dataDim() const {
   return itsLatticeConcatPtr->ndim();
 }
 
-const Unit ScrollingRasterDD::dataUnit(){
+const Unit ScrollingRasterDD::dataUnit() const {
   Unit JyPerBeam ("Jy/beam");
   return JyPerBeam;
 }

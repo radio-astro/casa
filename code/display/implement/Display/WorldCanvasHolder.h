@@ -226,6 +226,8 @@ class WorldCanvasHolder : public WCRefreshEH,
   // coordinate state.
   virtual Bool syncCSmaster(const WorldCanvasHolder* wch);
 
+  const std::list<DisplayData*> &displaylist( ) const
+	{ return itsDisplayList; }
 
 private: 
 
