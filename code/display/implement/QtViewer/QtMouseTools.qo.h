@@ -31,6 +31,7 @@
 
 #include <casa/aips.h>
 #include <display/DisplayEvents/MWCRTRegion.h>
+#include <display/DisplayEvents/MWCETRegion.h>
 #include <display/DisplayEvents/MWCPTRegion.h>
 #include <display/Display/PanelDisplay.h>
 #include <casa/Containers/Record.h>
@@ -109,6 +110,47 @@ class QtRTRegion: public QtMouseTool, public MWCRTRegion {
 };
 
 
+// <synopsis>
+// QtELRegion is the Ellipse Region mouse tool that sends a signal
+// when a new circle is ready.
+// </synopsis>
+class QtELRegion: public QtMouseTool, public MWCETRegion {
+
+  Q_OBJECT	//# Allows slot/signal definition.  Must only occur in
+		//# implement/.../*.h files; also, makefile must include
+		//# name of this file in 'mocs' section.
+
+ public:
+
+  QtELRegion(PanelDisplay* pd) : QtMouseTool(), MWCETRegion(), pd_(pd) {  }
+
+  ~QtELRegion() {  }
+
+  // Retrieve the current circular mouse region record and WCH, if any.
+  // (If nothing is ready, returns False -- be sure to check before using
+  // return parameters.  See implementation for mouseRegion Record format).
+  Bool getMouseRegion(Record& mouseRegion, WorldCanvasHolder*& wch);
+
+ signals:
+
+  // See regionReady() implementation for format of the record.  (For some
+  // uses, a connecting slot may be able to do without the WCH* parameter).
+  void mouseRegionReady(Record mouseRegion, WorldCanvasHolder*);
+  void echoClicked(Record);
+
+ protected:
+
+  // Signals mouseRegionReady with an appropriate Record, when
+  // called by base class in response to user selection with the mouse.
+  // See implementation for format of the record.
+  virtual void regionReady();
+
+  virtual void clicked(Int x, Int y);
+  virtual void doubleClicked(Int x, Int y);
+
+  PanelDisplay* pd_;	// (Kludge... zIndex inaccessible from WC...)
+
+};
 
 
 // <synopsis>

@@ -1376,6 +1376,13 @@ Bool QtDisplayData::printLayerStats(ImageRegion& imgReg) {
     catch(...){}
     //cout << "zIndex=" << zIndex << " hIndex=" << hIndex << endl;
     
+    String zUnit, zValue;
+    try {
+       zUnit = rec.subRecord("axislabelspectralunit").asString("value");
+    }
+    catch(...){}
+
+
     /*
     if (nAxes == 3 || hIndex == -1) {
         start(otherAxes[0]) = zIndex;
@@ -1453,7 +1460,7 @@ Bool QtDisplayData::printLayerStats(ImageRegion& imgReg) {
     stats.setList(True);
     String layerStats;
     Vector<String> nm = cs.worldAxisNames();
-    //cout << "nm=" << nm << endl;
+    //cout << "unit=" << zUnit << endl;
 
     Int zPos = -1;
     Int hPos = -1;
@@ -1474,9 +1481,13 @@ Bool QtDisplayData::printLayerStats(ImageRegion& imgReg) {
        tPix(zPos) = zIndex;
        if (!cs.toWorld(tWrld,tPix)) {
        } else {
-          zLabel = ((CoordinateSystem)cs).format(tStr, 
-                 Coordinate::DEFAULT, tWrld(zPos), zPos);
+    	   	   zLabel = ((CoordinateSystem)cs).format(tStr,
+    	   			   Coordinate::DEFAULT, tWrld(zPos), zPos);
           zLabel += tStr + "  ";
+          if (zUnit.length()>0){
+        	  zValue = "Spectral_Vale="+((CoordinateSystem)cs).format(zUnit,
+   	   			   Coordinate::DEFAULT, tWrld(zPos), zPos)+zUnit+ " ";
+          }
        }
     }
     if (hPos > -1) {
@@ -1487,6 +1498,10 @@ Bool QtDisplayData::printLayerStats(ImageRegion& imgReg) {
           hLabel = ((CoordinateSystem)cs).format(tStr, 
                  Coordinate::DEFAULT, tWrld(hPos), hPos);
           hLabel += tStr + "  ";
+          if (zUnit.length()>0){
+        	  zValue = "Spectral_Vale="+((CoordinateSystem)cs).format(zUnit,
+   	   			   Coordinate::DEFAULT, tWrld(zPos), zPos)+zUnit+ " ";
+          }
        }
     }
     //cout << "zLabel=" << zLabel << " hLabel=" << hLabel << endl;
@@ -1500,11 +1515,15 @@ Bool QtDisplayData::printLayerStats(ImageRegion& imgReg) {
        spCoord=cs.spectralCoordinate(spInd);
        spCoord.setVelocity();
        Double vel;
+       Double restFreq = spCoord.restFrequency();
        if (downcase(zaxis).contains("freq")) {
           if (spCoord.pixelToVelocity(vel, zIndex)) {
-             zLabel += "Velocity=" + String::toString(vel) + 
-                  "km/s  Frame=" + 
-                  MFrequency::showType(spCoord.frequencySystem()) + 
+        	  if (restFreq >0)
+        		  zLabel += "Velocity=" + String::toString(vel)+"km/s  ";
+        	  else
+        		  zLabel += zValue;
+
+        	  MFrequency::showType(spCoord.frequencySystem()) +
                   "  Doppler=" +
                   MDoppler::showType(spCoord.velocityDoppler()) + 
                   "  ";
@@ -1512,8 +1531,12 @@ Bool QtDisplayData::printLayerStats(ImageRegion& imgReg) {
        }
        if (downcase(haxis).contains("freq")) {
           if (spCoord.pixelToVelocity(vel, hIndex)) {
-             hLabel += "Velocity=" + String::toString(vel) + 
-                  "km/s  Frame=" + 
+        	  if (restFreq >0)
+        		  hLabel += "Velocity=" + String::toString(vel) + "km/s  ";
+        	  else
+        		  hLabel += zValue;
+
+        	  hLabel += "Frame=" +
                   MFrequency::showType(spCoord.frequencySystem()) + 
                   "  Doppler=" +
                   MDoppler::showType(spCoord.velocityDoppler()) + 

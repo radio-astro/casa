@@ -37,6 +37,7 @@
 #include <casa/Arrays/IPosition.h>
 #include <display/QtPlotter/QtCanvas.qo.h>
 #include <display/DisplayEvents/MWCCrosshairTool.h>
+#include <display/QtPlotter/QtMWCTools.qo.h>
 #include <display/Display/PanelDisplay.h>
 
 #include <images/Regions/ImageRegion.h>
@@ -104,7 +105,8 @@ public slots:
     void resetProfile(ImageInterface<Float>* img, const char *name = 0);
     void wcChanged( const String,
 		    const Vector<Double>, const Vector<Double>,
-		    const Vector<Double>, const Vector<Double> );
+		    const Vector<Double>, const Vector<Double>,
+		    const ProfileType);
     void redraw( );
     void changeAxis(String, String, String, std::vector<int> );
 

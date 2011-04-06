@@ -51,10 +51,10 @@ QtMouseToolBar::QtMouseToolBar(QtMouseToolState* msbtns, QtDisplayPanel* qdp,
 	// for this particular toolbar, not necessarily all tools).  
   
   if(qdp==0 || qdp->mouseToolNames().nelements()==0) {
-    tools.resize(8);
+    tools.resize(9);
     tools[0]=ZOOM;            tools[1]=PAN;       tools[2]=SHIFTSLOPE;
     tools[3]=BRIGHTCONTRAST;  tools[4]=POSITION;  tools[5]=RECTANGLE;
-    tools[6]=POLYGON;         tools[7]=POLYLINE;  }
+    tools[6]=ELLIPSE;         tools[7]=POLYGON;   tools[8]=POLYLINE;  }
   else tools = qdp->mouseToolNames();
 
   

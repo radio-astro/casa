@@ -752,6 +752,9 @@ public:
   
   //# QtRTRegion* rtregion_;
   QtRectTool* rtregion_;
+
+  // ellipse tool
+  QtEllipseTool *elregion_;
   
   //# MWCPTRegion* ptregion_;
   //# QtPTRegion* ptregion_;

@@ -39,6 +39,7 @@ namespace QtMouseToolNames {
   const String BRIGHTCONTRAST = "brightcontrast";
   const String POSITION =  "position";
   const String RECTANGLE = "rectangle";
+  const String ELLIPSE = "ellipse";
   const String POLYGON = "polygon";
   const String POLYLINE = "polyline";
   const String MULTICROSSHAIR = "multicrosshair";
@@ -49,16 +50,16 @@ namespace QtMouseToolNames {
   //# the final elements stand for "none" (or "invalid");
   
   const String tools[] = { ZOOM, PAN, SHIFTSLOPE, BRIGHTCONTRAST, POSITION,
-    RECTANGLE, POLYGON, POLYLINE, MULTICROSSHAIR, ANNOTATIONS, NONE };
+    RECTANGLE, ELLIPSE,  POLYGON, POLYLINE, MULTICROSSHAIR, ANNOTATIONS, NONE };
 
   const String longnames[] = { "Zooming", "Panning",
     "Colormap fiddling - shift/slope",
     "Colormap fiddling - brightness/contrast",
-    "Positioning", "Rectangle drawing", "Polygon drawing",
+    "Positioning", "Rectangle drawing", "Ellipse drawing", "Polygon drawing",
     "Polyline drawing", "Multipanel crosshair", "Annotations",  "" };
     
   const String iconnames[] = { "magnifyb", "handb", "arrowcrossb",
-   "brightcontrastb", "crosshairb", "rectregionb", "polyregionb",
+   "brightcontrastb", "crosshairb", "rectregionb", "ellregionb", "polyregionb",
    "polylineb",  "mpcrosshairb", "dontuseb",  "" };
     
   const String helptexts[] = {
@@ -82,6 +83,10 @@ namespace QtMouseToolNames {
     "\nUsehandles to resize.\nDouble click inside to execute."
     "\n<Esc> to cancel",
      
+    "Use the assigned mouse button to drag out an ellipse."
+    "\nUsehandles to resize.\nDouble click inside to execute."
+    "\n<Esc> to cancel",
+
     "Place polygon points by clicking the assigned mouse button."
     "\nDoubleclick on last point to finish polygon."
     "\nUse handles to resize."
@@ -105,7 +110,7 @@ namespace QtMouseToolNames {
 
 
 
-Int QtMouseToolState::mousebtns_[] =  { 1, 0, 2, 0, 0, 3, 0, 0, 0, 0,  0 };
+Int QtMouseToolState::mousebtns_[] =  { 1, 0, 2, 0, 0, 3, 0, 0, 0, 0, 0,  0 };
 
 
 void QtMouseToolState::chgMouseBtn(String tool, Int mousebtn) {

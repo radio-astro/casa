@@ -62,12 +62,43 @@ void QtPolyTool::updateRegion() {
   //  cout << "x=" << x(i) << " y=" << y(i) << endl;
   //} 
 
-  emit wcNotify( coordType, px, py, wx, wy );
+  emit wcNotify( coordType, px, py, wx, wy, POLYPROF);
 }
 
 void QtPolyTool::setCoordType(const String& t) {
     QtMWCTool::setCoordType(t);
     updateRegion( );
+}
+
+//////////////Ellipse tool//////////////////
+QtEllipseTool::QtEllipseTool(PanelDisplay *pd) : QtELRegion(pd)
+{
+  setObjectName("EllipseTool");
+}
+
+void QtEllipseTool::updateRegion() {
+  if (!itsCurrentWC) return;
+
+  //qDebug() << "ploy ready" << coordType.chars();
+  Vector<Double> wx;
+  Vector<Double> wy;
+  Vector<Double> px;
+  Vector<Double> py;
+  getWorldCoords(wx, wy);
+  getLinearCoords(px, py);
+  //Int nt;
+  //px.shape(nt);
+  //cout << "nt=" << nt << endl;
+  //for (Int i = 0; i << nt; i++) {
+  //  cout << "x=" << x(i) << " y=" << y(i) << endl;
+  //}
+
+  emit wcNotify( coordType, px, py, wx, wy, ELLPROF);
+}
+
+void QtEllipseTool::setCoordType(const String& t) {
+  QtMWCTool::setCoordType(t);
+  updateRegion( );
 }
 
 //////////////rect tool//////////////////
@@ -96,7 +127,7 @@ void QtRectTool::updateRegion() {
   pyy(0) = px(1); pyy(1) = py(1);
   //cout << "(" << xx(0) << "," << yy(0) << ")"
   //     << " (" << xx(1) << "," << yy(1) << ")" << endl;
-  emit wcNotify( coordType, pxx, pyy, wxx, wyy );
+  emit wcNotify( coordType, pxx, pyy, wxx, wyy, RECTPROF);
 }
 
 void QtRectTool::setCoordType(const String& t) {
@@ -127,7 +158,7 @@ void QtCrossTool::crosshairReady(const String &evtype) {
   Vector<Double> pyy(1);
   pxx[0]=px; 
   pyy[0]=py;
-  emit wcNotify( coordType, pxx, pyy, wxx, wyy );
+  emit wcNotify( coordType, pxx, pyy, wxx, wyy, SINGPROF);
 }
 
 void QtCrossTool::setCoordType(const String& t) {

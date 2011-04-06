@@ -42,6 +42,15 @@
 
 namespace casa {
 
+enum ProfileType
+{
+	UNKNPROF,
+	SINGPROF,
+	RECTPROF,
+	ELLPROF,
+	POLYPROF
+};
+
 class QtMWCTool
 {
 
@@ -77,11 +86,34 @@ public slots:
 signals:
   void wcNotify( const String c, 
 		 const Vector<Double> px, const Vector<Double> py,
-		 const Vector<Double> wx, const Vector<Double> wy );
+		 const Vector<Double> wx, const Vector<Double> wy,
+		 const ProfileType ptype);
 
 protected:
   virtual void updateRegion();
 
+};
+
+
+class QtEllipseTool: public QtELRegion,  public QtMWCTool
+{
+  Q_OBJECT
+
+public:
+  QtEllipseTool(PanelDisplay* pd);
+  virtual ~QtEllipseTool() {}
+
+public slots:
+  void setCoordType(const String& t);
+
+signals:
+  void wcNotify( const String c,
+		 const Vector<Double> px, const Vector<Double> py,
+		 const Vector<Double> wx, const Vector<Double> wy,
+		 const ProfileType ptype);
+
+protected:
+  virtual void updateRegion();
 };
 
 
@@ -99,7 +131,8 @@ public slots:
 signals:
   void wcNotify( const String c, 
 		 const Vector<Double> px, const Vector<Double> py,
-		 const Vector<Double> wx, const Vector<Double> wy );
+		 const Vector<Double> wx, const Vector<Double> wy,
+		 const ProfileType ptype);
 
 protected:
   virtual void updateRegion();
@@ -120,7 +153,8 @@ public slots:
 signals:
   void wcNotify( const String c, 
 		 const Vector<Double> px, const Vector<Double> py,
-		 const Vector<Double> wx, const Vector<Double> wy );
+		 const Vector<Double> wx, const Vector<Double> wy,
+		 const ProfileType ptype);
 
 
 };

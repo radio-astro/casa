@@ -198,15 +198,16 @@ void QtDisplayPanel::setupMouseTools_() {
  
   using namespace QtMouseToolNames;	// (See QtMouseToolState.qo.h)
   
-  mouseToolNames_.resize(8);
+  mouseToolNames_.resize(9);
   mouseToolNames_[0] = ZOOM;
   mouseToolNames_[1] = PAN;
   mouseToolNames_[2] = SHIFTSLOPE;
   mouseToolNames_[3] = BRIGHTCONTRAST;
   mouseToolNames_[4] = POSITION;
   mouseToolNames_[5] = RECTANGLE;
-  mouseToolNames_[6] = POLYGON;
-  mouseToolNames_[7] = POLYLINE;
+  mouseToolNames_[6] = ELLIPSE;
+  mouseToolNames_[7] = POLYGON;
+  mouseToolNames_[8] = POLYLINE;
 	// The canonical text-names of the mouse tools on this panel.
 	// These happen to be in QtMouseToolNames::toolIndex order,
 	// but that is not a requirement.  This order is returned by
@@ -224,6 +225,8 @@ void QtDisplayPanel::setupMouseTools_() {
   ptregion_  = new QtPolyTool(pd_);   pd_->addTool(POLYGON, ptregion_);
   //rtregion_  = new QtRTRegion(pd_);   pd_->addTool(RECTANGLE, rtregion_);
   rtregion_  = new QtRectTool(pd_);   pd_->addTool(RECTANGLE, rtregion_);
+
+  elregion_  = new QtEllipseTool(pd_);   pd_->addTool(ELLIPSE, elregion_);
 
   polyline_  = new MWCPolylineTool;   pd_->addTool(POLYLINE, polyline_);
   
@@ -243,12 +246,18 @@ void QtDisplayPanel::setupMouseTools_() {
   connect( rtregion_, SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),
 		        SLOT(mouseRegionReady_(Record, WorldCanvasHolder*)) );
   
+  connect( elregion_, SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),
+		        SLOT(mouseRegionReady_(Record, WorldCanvasHolder*)) );
+
   connect( ptregion_, SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),
 		        SLOT(mouseRegionReady_(Record, WorldCanvasHolder*)) );
   
   connect( rtregion_, SIGNAL(echoClicked(Record)),
 		        SLOT(clicked(Record)) );
   
+  connect( elregion_, SIGNAL(echoClicked(Record)),
+		        SLOT(clicked(Record)) );
+
   connect( ptregion_, SIGNAL(echoClicked(Record)),
 		        SLOT(clicked(Record)) );
   
@@ -309,7 +318,6 @@ void QtDisplayPanel::mouseRegionReady_(Record mouseRegion,
   //    serialized and saved as a file with saveLastRegion().
 
   emit mouseRegionReady(mouseRegion, wch);  // echo mouseTool signal.
-  
   Bool rgnSaved = False;
     
   for(ListIter<QtDisplayData*> qdds(qdds_); 
@@ -365,7 +373,7 @@ void QtDisplayPanel::mouseRegionReady_(Record mouseRegion,
         resetPTRegion();
     
     
-    delete imReg;  }  }  
+    delete imReg;  } }
 
     
 
