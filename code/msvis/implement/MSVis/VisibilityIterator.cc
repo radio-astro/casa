@@ -656,6 +656,16 @@ for (uInt k=0; k< columns.nelements(); ++k){
 	    ROTiledStManAccessor tacc=ROTiledStManAccessor(thems, 
 							   cdesc.dataManagerGroup());
 	    
+
+	    /*
+	    cerr << "Data man type " << cdesc.dataManagerType() << "  nhyper " <<
+	      tacc.nhypercubes() << " colname " << columns[k] << endl;
+
+	    for (uInt jj=0 ; jj <  tacc.nhypercubes(); ++jj){
+	      cerr << " bucket sizes " << tacc.getBucketSize(jj) << " cacheSize  " << tacc.getCacheSize(jj) << " hypercubeShape "<<
+		tacc.getHypercubeShape(jj) << endl;
+	    }
+	    */
 	    //One tile only for now ...seems to work faster
 	    tacc.clearCaches();
 	    Bool setCache=True;
@@ -664,7 +674,11 @@ for (uInt k=0; k< columns.nelements(); ++k){
 	    	setCache=False;
 	      }
 	    }
+	    if(useSlicer_p)
+	      setCache=True;
 	    ///If some bucketSize is 0...there is trouble in setting cache
+	    ///but if slicer is used it gushes anyways if one does not set cache
+	    ///need to fix the 0 bucket size in the filler anyways...then this is not needed
 	    if(setCache){
 	      if(tacc.nhypercubes() ==1){
 		tacc.setCacheSize (0, 1);
@@ -675,8 +689,8 @@ for (uInt k=0; k< columns.nelements(); ++k){
 	    }
 	    
 	  } catch (AipsError x) {
-	    // cerr << "Data man type " << dataManType << "  " << dataManType.contains("Tiled") << "  && " << (!String(cdesc.dataManagerGroup()).empty()) << endl;
-	    // cerr << "Failed to set settilecache due to " << x.getMesg() << " column " << columns[k]  <<endl;
+	    //  cerr << "Data man type " << dataManType << "  " << dataManType.contains("Tiled") << "  && " << (!String(cdesc.dataManagerGroup()).empty()) << endl;
+	    //  cerr << "Failed to set settilecache due to " << x.getMesg() << " column " << columns[k]  <<endl;
 	    //It failed so leave the caching as is
 	    continue;
 	  }
@@ -2925,3 +2939,6 @@ ROVisibilityIterator::AsyncEnabler::release ()
 }
 
 } //# NAMESPACE CASA - END
+
+
+
