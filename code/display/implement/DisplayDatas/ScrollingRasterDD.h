@@ -91,9 +91,9 @@ protected:
 
   virtual void recreateEmptyLattices(uInt changedScanNumber = 0);
 
-  virtual const IPosition dataShape();
-  virtual const uInt dataDim();
-  virtual const Unit dataUnit();
+  virtual const IPosition dataShape() const;
+  virtual const uInt dataDim() const;
+  virtual const Unit dataUnit() const;
   virtual void setupElements();
   virtual void getMinAndMax(); 
   virtual void updateLatticeStatistics();

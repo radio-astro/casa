@@ -257,7 +257,7 @@ LatticePADisplayData<T>::~LatticePADisplayData() {
 
 // Query the shape of the lattice
 template <class T>
-const IPosition LatticePADisplayData<T>::dataShape() {
+const IPosition LatticePADisplayData<T>::dataShape() const {
   if (!itsMaskedLatticePtr) {
     throw(AipsError("LatticePADisplayData<T>::dataShape - "
 		    "no lattice is available"));
@@ -267,7 +267,7 @@ const IPosition LatticePADisplayData<T>::dataShape() {
 
 // Query the dimension of the lattice
 template <class T>
-const uInt LatticePADisplayData<T>::dataDim() {
+const uInt LatticePADisplayData<T>::dataDim() const {
   if (!itsMaskedLatticePtr) {
     throw(AipsError("LatticePADisplayData<T>::dataDim - "
 		    "no lattice is available"));
@@ -315,7 +315,7 @@ const Bool LatticePADisplayData<T>::maskValue(const IPosition &pos) {
 
 // Query the units of the lattice values
 template <class T>
-const Unit LatticePADisplayData<T>::dataUnit() {
+const Unit LatticePADisplayData<T>::dataUnit() const {
   if (!itsMaskedLatticePtr) return Unit("");
     //    throw(AipsError("LatticePADisplayData<T>::dataUnit - "
     //	(dumb)	    "no lattice is available"));
@@ -460,8 +460,8 @@ Bool LatticePADisplayData<T>::setOptions(Record &rec, Record &recOut)
       }
       itsMaskedLatticePtr = new SubLattice<T>(ArrayLattice<T>(array));
       updateLatticeStatistics();
-      setAxes(displayAxes()(0), displayAxes()(1),
-	      displayAxes()(2), fixedPosition());
+      setAxes(displayAxes()[0], displayAxes()[1],
+	      displayAxes()[2], fixedPosition());
       getMinAndMax();
       fillRecOut = True;
       ret = True;
@@ -563,8 +563,8 @@ Bool LatticePADisplayData<T>::setOptions(Record &rec, Record &recOut)
 // Update other things
 
        updateLatticeStatistics();
-       setAxes(displayAxes()(0), displayAxes()(1),
-               displayAxes()(2), fixedPosition());
+       setAxes(displayAxes()[0], displayAxes()[1],
+               displayAxes()[2], fixedPosition());
        getMinAndMax();
        fillRecOut = True;
 

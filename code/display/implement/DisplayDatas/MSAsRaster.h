@@ -189,7 +189,10 @@ class MSAsRaster: public ActiveCaching2dDD {
 			      const Bool &displayAxesOnly = False);
 
   // get the Unit for displayed data values (visibilities)
-  virtual const Unit dataUnit();
+  virtual const Unit dataUnit() const;
+  const IPosition dataShape() const { return IPosition( ); }
+  const uInt dataDim() const { return 0; }
+  std::vector<int> displayAxes( ) const { return std::vector<int>( ); }
 
 
   // Return the type of this DisplayData.

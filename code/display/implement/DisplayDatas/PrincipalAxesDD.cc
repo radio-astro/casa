@@ -77,9 +77,9 @@ PrincipalAxesDD::PrincipalAxesDD(uInt xAxis, uInt yAxis,
   itsUsesAxisLabels(axisLabels)
 {
   itsDisplayAxes.resize(3);
-  itsDisplayAxes(0) = xAxis;
-  itsDisplayAxes(1) = yAxis;
-  itsDisplayAxes(2) = mAxis;
+  itsDisplayAxes[0] = xAxis;
+  itsDisplayAxes[1] = yAxis;
+  itsDisplayAxes[2] = mAxis;
 }
 
 // default destructor
@@ -297,7 +297,7 @@ String PrincipalAxesDD::showPosition(const Vector<Double> &world,
   }
   for (uInt i=0; i<n; i++) {
      if (displayAxesOnly) {
-        j = itsDisplayAxes(i);
+        j = itsDisplayAxes[i];
      } else {
         j = i;
      }
@@ -319,7 +319,7 @@ String PrincipalAxesDD::showPosition(const Vector<Double> &world,
   
   for (uInt i=0; i<n; i++) {
      if (displayAxesOnly) {
-        j = itsDisplayAxes(i);
+        j = itsDisplayAxes[i];
      } else {
         j = i;
      }
@@ -374,7 +374,7 @@ String PrincipalAxesDD::showPosition(const Vector<Double> &world,
      Bool firstline=True;
      for (uInt i=0; i<n; i++) {
         if (displayAxesOnly) {
-           j = itsDisplayAxes(i);
+           j = itsDisplayAxes[i];
         } else {
            j = i;
         }
@@ -434,7 +434,7 @@ String PrincipalAxesDD::showPosition(const Vector<Double> &world,
      }
      for (uInt i=0; i<n; i++) {
         if (displayAxesOnly) {
-           j = itsDisplayAxes(i);
+           j = itsDisplayAxes[i];
         } else {
            j = i;
         }
@@ -467,7 +467,7 @@ Bool PrincipalAxesDD::setActiveZIndex_(Int zindex) {
   
   // Keep itsFixedPosition(zAxis) in sync with latest zindex.
   
-  if( itsDisplayAxes.nelements()   > 2u &&
+  if( itsDisplayAxes.size() > 2u &&
       itsFixedPosition.nelements() > uInt(itsDisplayAxes[2]) ) {
     itsFixedPosition[itsDisplayAxes[2]] = zIndexConformed_? 
  					  activeZIndex_ : 0;  }
@@ -602,6 +602,36 @@ Double PrincipalAxesDD::getDataMax()
   return datamax;
 }
 
+bool PrincipalAxesDD::has_nonsingleton_nondegenerate_nondisplayed_axis( const DisplayData &other ) {
+    Vector<int> shape = other.dataShape( ).asVector( );
+    std::vector<int> display_axes = other.displayAxes( );
+    bool nondisplayed_nonsingleton_axis = false;
+    if ( shape(display_axes[2]) == 1 ) {
+	// If the "movie" axis is degenerate, check
+	// the remaining non-displayed axes...
+	for ( int x=0; x < shape.size(); ++x ) {
+	    bool found = false;
+	    // check to see if dimension 'x' of the data is
+	    // one of the displayed dimensions...
+	    for ( int y=0; y < display_axes.size(); ++y ) {
+		if ( display_axes[y] == x ) {
+		    found = true;
+		    break;
+		}
+	    }
+	    if ( ! found && shape[x] > 1 ) {
+		// if dimension 'x' is non-degenerate (and non-displayed), then we are done...
+		nondisplayed_nonsingleton_axis = true;
+		break;
+	    }
+	}
+    } else {
+	// If the "movie" axis is not degenerate, then we are done...
+	nondisplayed_nonsingleton_axis = true;
+    }
+    return nondisplayed_nonsingleton_axis;
+}
+
 Bool PrincipalAxesDD::sizeControl(WorldCanvasHolder &wch,
                                   AttributeBuffer &holderBuf) {
   // Set the World Canvas Coordinate state: the WC CS, draw area and
@@ -618,9 +648,26 @@ Bool PrincipalAxesDD::sizeControl(WorldCanvasHolder &wch,
   // allowed to change WC CS or axis codes.  We _would_ be allowed to alter
   // maximum zoom extents or, e.g., tweak the zoom window to align on pixel
   // boundaries, but this derivation does not.
-  
+
   if(!isCSmaster(&wch)) return False;
-  
+
+  // If the CSmaster has no nondegenerate, nondisplayed axes, assume that the
+  // user has *not* selected the display axes (because all the non-displayed
+  // axes are degenerate). Check to see if any other registered display datas
+  // have nondegenerate, nondisplayed axes. If one is found, allow it to
+  // become the CSmaster (by returning False)...
+  Vector<int> shape = dataShape( ).asVector( );
+  if ( has_nonsingleton_nondegenerate_nondisplayed_axis(*this) == false ) {
+	const std::list<DisplayData*> &dl = wch.displaylist( );
+	for ( std::list<DisplayData*>::const_iterator iter = dl.begin( );
+	      iter != dl.end( ); ++iter ) {
+	    DisplayData *dd = *iter;
+	    if ( has_nonsingleton_nondegenerate_nondisplayed_axis(*dd) ) {
+		return False;
+	    }
+	}
+  }
+
   
   // CS master is on offer; we will accept that role by returning True.
   // This means taking charge of setting the WC CS (and its 'axis codes'),
@@ -1026,9 +1073,9 @@ void PrincipalAxesDD::setAxes(const uInt xAxis,
   }
 //
   iAmRubbish = False;
-  itsDisplayAxes(0) = xAxis;
-  itsDisplayAxes(1) = yAxis;
-  itsDisplayAxes(2) = mAxis;
+  itsDisplayAxes[0] = xAxis;
+  itsDisplayAxes[1] = yAxis;
+  itsDisplayAxes[2] = mAxis;
   
   setup(fixedPos);	// a major part (along with worldToLin and pals)
   setupElements();	// of the ugliness mentioned below....
@@ -1220,7 +1267,7 @@ void PrincipalAxesDD::setup(IPosition fixedPos)
 	// (initialized to make compiler happy--should be reset below)
 
   for (uInt axis=0; axis<length; axis++) {
-    pixelAxis = itsDisplayAxes(axis);
+    pixelAxis = itsDisplayAxes[axis];
     itsTransPixelAxes(axis) = pixelAxis;
 
 //  Each pixel axis is guarenteed to have a world axis
@@ -1310,8 +1357,8 @@ void PrincipalAxesDD::setup(IPosition fixedPos)
 //  it to 0 whenever the axis is moved off-display -- the only time that
 //  fixedPos matters.  Formerly, this did help to cause a bug...).
 
-  itsFixedPosition(itsDisplayAxes(0)) = dataShape()(itsDisplayAxes(0)) / 2;
-  itsFixedPosition(itsDisplayAxes(1)) = dataShape()(itsDisplayAxes(1)) / 2;
+  itsFixedPosition(itsDisplayAxes[0]) = dataShape()(itsDisplayAxes[0]) / 2;
+  itsFixedPosition(itsDisplayAxes[1]) = dataShape()(itsDisplayAxes[1]) / 2;
   
   
   itsAddPixPos.resize(nPixelAxes);
@@ -1580,7 +1627,7 @@ Bool PrincipalAxesDD::findActiveImage(WorldCanvasHolder &wch) {
   
   // Keep itsFixedPosition(zAxis) in sync with latest zindex.
   
-  if( itsDisplayAxes.nelements()   > 2u &&
+  if( itsDisplayAxes.size() > 2u &&
       itsFixedPosition.nelements() > uInt(itsDisplayAxes[2]) ) {
     itsFixedPosition[itsDisplayAxes[2]] = activeZIndex_;  }
   

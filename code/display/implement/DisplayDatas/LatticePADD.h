@@ -89,10 +89,10 @@ template <class T> class LatticePADisplayData : public PrincipalAxesDD {
   virtual String showValue(const Vector<Double> &world);
 
   // required functions to help inherited "setup" amongst other things
-  virtual const IPosition dataShape();
-  virtual const uInt dataDim();
+  virtual const IPosition dataShape() const;
+  virtual const uInt dataDim() const;
   virtual const T dataValue(IPosition pos);
-  virtual const Unit dataUnit();
+  virtual const Unit dataUnit() const;
 
   // Pure virtual function from DisplayData...
   String dataType() const { return "image"; }

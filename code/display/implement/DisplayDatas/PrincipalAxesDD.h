@@ -204,7 +204,7 @@ class PrincipalAxesDD : public DisplayData {
     { return itsFixedPosition; }
 
   // Get the current display axis numbers
-  virtual Vector<Int> displayAxes() const 
+  virtual vector<int> displayAxes() const 
     { return itsDisplayAxes; }
 
   // Get the current setting of pixel treatment mode
@@ -260,6 +260,8 @@ class PrincipalAxesDD : public DisplayData {
   virtual void setNumImages(const uInt nimages)
     { itsNumImages = nimages; }
 
+  static bool has_nonsingleton_nondegenerate_nondisplayed_axis( const DisplayData &other );
+
   // Internal state
   Bool iAmRubbish;
 
@@ -280,9 +282,6 @@ class PrincipalAxesDD : public DisplayData {
   void setup(IPosition fixedPos);
 
   // functions need by above
-  virtual const IPosition dataShape() = 0;
-  virtual const uInt dataDim() = 0;
-  virtual const Unit dataUnit() = 0;
   virtual void setupElements();
   virtual void getMinAndMax() = 0;
 
@@ -337,7 +336,7 @@ class PrincipalAxesDD : public DisplayData {
   Int itsZAxisNum;
 
   // the x (0), y (1) and z/movie (2) axis numbers
-  Vector<Int> itsDisplayAxes;
+  vector<int> itsDisplayAxes;
 
   // Store options:
   // Axis selection ---

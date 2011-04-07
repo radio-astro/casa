@@ -29,6 +29,7 @@
 #define TRIALDISPLAY_PASSIVECACHINGDD_H
 
 #include <casa/aips.h>
+#include <casa/Arrays/IPosition.h>
 #include <display/DisplayDatas/CachingDisplayData.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -76,10 +77,13 @@ class PassiveCachingDD : public CachingDisplayData {
   // <group>
   virtual Vector<String> worldAxisNames();
   virtual Vector<String> worldAxisUnits();
-  virtual const Unit dataUnit() 
-    { return Unit("_"); }
   // </group>
   
+  const Unit dataUnit() const { return Unit("_"); }
+  const IPosition dataShape() const { return IPosition( ); }
+  const uInt dataDim() const { return 0; }
+  std::vector<int> displayAxes( ) const { return std::vector<int>( ); }
+
   // Return the number of display elements (ie. drawable images) in
   // this DisplayData.
   // <group>

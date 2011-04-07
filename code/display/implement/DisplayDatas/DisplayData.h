@@ -344,13 +344,10 @@ public:
   virtual bool isDisplayable( ) const { return true; }
 
   // Some routines that give info on the axes names, units etc. I am not sure
-  // this is the right way of doing it. Specifically I am not sure
-  // <src>dataUnit</src> belongs in this list (data units may not make sense
-  // for some kinds of DisplayData...).
+  // this is the right way of doing it.
   // <group>
   virtual Vector<String> worldAxisNames()  = 0;
   virtual Vector<String> worldAxisUnits()  = 0;
-  virtual const Unit dataUnit()  = 0;
   // </group>
 
   // Returns the number of elements in this DisplayData (mainly for movie
@@ -595,7 +592,12 @@ public:
   // Return the DisplayData type; used by the WorldCanvasHolder to
   // determine the order of drawing.
   virtual Display::DisplayDataType classType() = 0;
-  virtual String dataType() const = 0;
+
+  virtual String dataType( ) const = 0;
+  virtual const IPosition dataShape( ) const = 0;
+  virtual const uInt dataDim( ) const = 0;
+  virtual const Unit dataUnit( ) const = 0;
+  virtual std::vector<int> displayAxes( ) const = 0;
 
   // Get image analyis about images... for non-image
   // "DisplayData" this function will return null...

@@ -774,6 +774,12 @@ void QtProfile::wcChanged( const String c,
     //      << " coordinate=" << coordinate
     //	 << " coordinateType=" << coordinateType << endl;
 
+    last_event_cs = c;
+    last_event_px = px;
+    last_event_py = py;
+    last_event_wx = wx;
+    last_event_wy = wy;
+
     if (c != coordinate) {
        coordinate = c.chars();
        if (coordinate == "world")
@@ -1051,6 +1057,10 @@ void QtProfile::wcChanged( const String c,
     lastWY.assign(wyv);
     lastPX.assign(pxv);
     lastPY.assign(pyv);
+}
+
+void QtProfile::redraw( ) {
+    wcChanged( last_event_cs, last_event_px, last_event_py, last_event_wx, last_event_wy );
 }
 
 void QtProfile::changeAxis(String xa, String ya, String za, std::vector<int> ) {

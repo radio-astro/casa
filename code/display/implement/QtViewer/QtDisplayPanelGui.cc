@@ -1244,7 +1244,7 @@ void QtDisplayPanelGui::showImageProfile() {
                 connect(profile_,  SIGNAL(hideProfile()),
                                    SLOT(hideImageProfile()));
                 connect(qdp_,      SIGNAL(registrationChange()),
-                                   SLOT(hideImageProfile()));
+                                   SLOT(refreshImageProfile()));
                 connect(pdd, 
 			SIGNAL(axisChanged(String, String, String, std::vector<int> )),
                         profile_, 
@@ -1327,7 +1327,7 @@ void QtDisplayPanelGui::showImageProfile() {
 
               if (pdd->getAxisIndex(String("Spectral")) == -1) {
                   profileDD_ = 0;
-	          hideImageProfile();  
+	          refreshImageProfile();  
               }
               else {
 	          profileDD_ = pdd;
@@ -1361,6 +1361,22 @@ void QtDisplayPanelGui::hideImageProfile() {
     }
     profileDD_ = 0;
     
+}
+
+
+void QtDisplayPanelGui::refreshImageProfile() {
+    if(profile_) {
+	List<QtDisplayData*> rdds = qdp_->registeredDDs();
+	if ( rdds.len() > 0 ) {
+	    showImageProfile( );
+	    profile_->redraw( );
+	} else {
+	    profile_->hide();
+	    delete profile_;
+	    profile_ = 0;
+	    profileDD_ = 0;
+	}
+    }
 }
 
 

@@ -331,7 +331,10 @@ public:
     // PassiveCachingDD methods //
     
     // Implements PassiveCachingDD::dataUnit.
-    const Unit dataUnit();
+    const Unit dataUnit() const;
+    const IPosition dataShape() const { return IPosition( ); }
+    const uInt dataDim() const { return 0; }
+    std::vector<int> displayAxes( ) const { return std::vector<int>( ); }
 
     // Implements PassiveCachingDD::classType.
     Display::DisplayDataType classType();

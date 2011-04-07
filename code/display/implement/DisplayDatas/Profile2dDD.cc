@@ -161,8 +161,8 @@ Bool Profile2dDD::attachDD(LatticePADisplayData<Float>* pDD) {
   itsParamRegionYRadius->setMinimum(0);
   itsParamRegionXRadius->setDefaultValue(0);
   itsParamRegionYRadius->setDefaultValue(0);
-  itsParamRegionXRadius->setMaximum(pLat->shape()(itsDD->displayAxes()(0)));
-  itsParamRegionYRadius->setMaximum(pLat->shape()(itsDD->displayAxes()(1)));
+  itsParamRegionXRadius->setMaximum(pLat->shape()(itsDD->displayAxes()[0]));
+  itsParamRegionYRadius->setMaximum(pLat->shape()(itsDD->displayAxes()[1]));
   
   // Attach Profile2dDD as an event handler to the input
   // DisplayData itsDD
@@ -833,7 +833,7 @@ Bool Profile2dDD::getRegionProfile( Vector<Double> &fpixelBlc,
 // get the required slice from the data
 
   IPosition shape = itsDD->maskedLattice()->shape();
-  Vector<Int> axes = itsDD->displayAxes();
+  vector<int> axes = itsDD->displayAxes();
   IPosition start(shape.nelements()), end(shape.nelements());
 
   for (uInt i=0; i < shape.nelements(); i++) {
@@ -896,10 +896,10 @@ Bool Profile2dDD::getPointProfile(const Vector<Double> &world)
   if (itsDependentAxis == -1 && (regionXRadius() || regionYRadius())) {
     Vector<Double> fpixelBlc(fpixel.nelements()), fpixelTrc(fpixel.nelements());
     fpixelBlc = fpixel; fpixelTrc = fpixel;
-    fpixelBlc(itsDD->displayAxes()(0)) -= regionXRadius();
-    fpixelBlc(itsDD->displayAxes()(1)) -= regionYRadius();
-    fpixelTrc(itsDD->displayAxes()(0)) += regionXRadius();
-    fpixelTrc(itsDD->displayAxes()(1)) += regionYRadius();
+    fpixelBlc(itsDD->displayAxes()[0]) -= regionXRadius();
+    fpixelBlc(itsDD->displayAxes()[1]) -= regionYRadius();
+    fpixelTrc(itsDD->displayAxes()[0]) += regionXRadius();
+    fpixelTrc(itsDD->displayAxes()[1]) += regionYRadius();
     return getRegionProfile(fpixelBlc, fpixelTrc);
   } else {
     // this is definitely a single point profile, not a region profile.
@@ -924,7 +924,7 @@ Bool Profile2dDD::getPointProfile(const Vector<Double> &world)
   }
   // set up start position and shape to slice
   uInt length = fpixel.nelements();
-  Vector<Int> displayAxes = itsDD->displayAxes();
+  vector<int> displayAxes = itsDD->displayAxes();
   IPosition start(length), shape(itsDD->maskedLattice()->shape());
   for (uInt i=0; i< length; i++) {
     if (Int(i) == profileAxis()) {
@@ -980,14 +980,14 @@ Bool Profile2dDD::cropRegion(Vector<Double> &fpixelBlc,
   // Crop regions outside of shape boundary
   Int axis;
   for (uInt i=0; i < 2; i++) {
-    axis = itsDD->displayAxes()(i);
+    axis = itsDD->displayAxes()[i];
     if (fpixelBlc(axis) <= 0) fpixelBlc(axis) = 0;
     if (fpixelTrc(axis) <= 0) fpixelTrc(axis) = 0;
     if (fpixelBlc(axis) >= shape(axis)) fpixelBlc(axis) = shape(axis)-1;
     if (fpixelTrc(axis) >= shape(axis)) fpixelTrc(axis) = shape(axis)-1;
   }
-  if (fpixelBlc(itsDD->displayAxes()(0)) == fpixelTrc(itsDD->displayAxes()(0)) ||
-      fpixelBlc(itsDD->displayAxes()(1)) == fpixelTrc(itsDD->displayAxes()(1))) {
+  if (fpixelBlc(itsDD->displayAxes()[0]) == fpixelTrc(itsDD->displayAxes()[0]) ||
+      fpixelBlc(itsDD->displayAxes()[1]) == fpixelTrc(itsDD->displayAxes()[1])) {
     // the entire region is outside the image area.
     return False;
   }
@@ -1154,7 +1154,7 @@ void Profile2dDD::regionDimensions(Vector<Double> &regionBlc,
 
 const Int Profile2dDD::profileAxis() {
   if (itsDD) {
-    return itsDD->displayAxes()(2);
+    return itsDD->displayAxes()[2];
   } else {
     throw(AipsError("No data attached"));
   }

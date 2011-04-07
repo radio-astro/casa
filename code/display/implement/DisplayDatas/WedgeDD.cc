@@ -198,7 +198,7 @@ Bool WedgeDD::labelAxes(const WCRefreshEvent &ev) {
   return True;
 }
 
-const Unit WedgeDD::dataUnit() {
+const Unit WedgeDD::dataUnit() const {
   Unit unit(itsDataUnit);
   return unit;
 }

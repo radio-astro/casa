@@ -105,6 +105,7 @@ public slots:
     void wcChanged( const String,
 		    const Vector<Double>, const Vector<Double>,
 		    const Vector<Double>, const Vector<Double> );
+    void redraw( );
     void changeAxis(String, String, String, std::vector<int> );
 
     void overplot(QHash<QString, ImageInterface<float>*>);
@@ -161,6 +162,11 @@ private:
     QString region;
 
     QString getRaDec(double x, double y);
+
+    String last_event_cs;
+    Vector<Double> last_event_px, last_event_py;
+    Vector<Double> last_event_wx, last_event_wy;
+
 };
 
 }

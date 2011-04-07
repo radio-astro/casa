@@ -579,17 +579,19 @@ void ROVisibilityIterator::updateSlicer()
 			IPosition(1,(chanInc_p[spw]<=0)? 1 : chanInc_p[spw]));
   useSlicer_p=channelGroupSize_p<nChan_p;
 
-  if(msIter_p.newDataDescriptionId()){
-    setTileCache();
-  }
+  //if(msIter_p.newDataDescriptionId()){
+  setTileCache();
+    //}
 }
+
+
 
 void ROVisibilityIterator::setTileCache(){
   // This function sets the tile cache because of a feature in 
   // sliced data access that grows memory dramatically in some cases
   //  if(useSlicer_p){
   {
-    if(!msIter_p.newDataDescriptionId())
+    if(! (msIter_p.newDataDescriptionId() || msIter_p.newMS()) )
       return;
 
     const MeasurementSet& thems=msIter_p.ms();
@@ -602,12 +604,6 @@ void ROVisibilityIterator::setTileCache(){
     rowIds(rownums);
     uInt startrow = rownums[0];
 
-    /*
-    ROArrayColumn<Complex> colVis;
-    ROArrayColumn<Bool> colbool;
-    ROArrayColumn<Float> colfloat;
-    ROArrayColumn<Double> coldouble;
-    */
     Vector<String> columns(8);
     // complex
     columns(0)=MS::columnName(MS::DATA);
@@ -622,7 +618,7 @@ void ROVisibilityIterator::setTileCache(){
     // double
     columns(7)=MS::columnName(MS::UVW);
     //
-    for (uInt k=0; k< columns.nelements(); ++k){
+for (uInt k=0; k< columns.nelements(); ++k){
       if (cds.isDefined(columns(k))) {
 	const ColumnDesc& cdesc=cds[columns(k)];
 	String dataManType="";
@@ -660,38 +656,41 @@ void ROVisibilityIterator::setTileCache(){
 	    ROTiledStManAccessor tacc=ROTiledStManAccessor(thems, 
 							   cdesc.dataManagerGroup());
 	    
+
 	    /*
-	    //This is for the data columns, weight_spectrum and flag only 
-	    if((columns[k] != MS::columnName(MS::WEIGHT)) && 
-	    (columns[k] != MS::columnName(MS::UVW))){
-	    uInt nHyper = tacc.nhypercubes();
-	    // Find smallest tile shape
-	    Int lowestProduct = 0;
-	    Int lowestId = 0;
-	    Bool firstFound = False;
-	    for (uInt id=0; id < nHyper; id++) {
-	    Int product = tacc.getTileShape(id).product();
-	    if (product > 0 && (!firstFound || product < lowestProduct)) {
-	    lowestProduct = product;
-	    lowestId = id;
-	    if (!firstFound) firstFound = True;
+	    cerr << "Data man type " << cdesc.dataManagerType() << "  nhyper " <<
+	      tacc.nhypercubes() << " colname " << columns[k] << endl;
+
+	    for (uInt jj=0 ; jj <  tacc.nhypercubes(); ++jj){
+	      cerr << " bucket sizes " << tacc.getBucketSize(jj) << " cacheSize  " << tacc.getCacheSize(jj) << " hypercubeShape "<<
+		tacc.getHypercubeShape(jj) << endl;
 	    }
-	    }
-	    Int nchantile=tacc.getTileShape(lowestId)(1);
-	    if(nchantile > 0)
-	    nchantile=channelGroupSize_p/nchantile+1;
-	    if(nchantile<3)
-	    nchantile=10;
-	    
-	    
-	    tacc.setCacheSize (0, nchantile);
-	    }
-	    else
 	    */
 	    //One tile only for now ...seems to work faster
-	    tacc.setCacheSize (0, 1);
-	    tacc.setCacheSize (startrow, 1);
+	    tacc.clearCaches();
+	    Bool setCache=True;
+	    for (uInt jj=0 ; jj <  tacc.nhypercubes(); ++jj){
+	      if (tacc.getBucketSize(jj)==0){
+	    	setCache=False;
+	      }
+	    }
+	    if(useSlicer_p)
+	      setCache=True;
+	    ///If some bucketSize is 0...there is trouble in setting cache
+	    ///but if slicer is used it gushes anyways if one does not set cache
+	    ///need to fix the 0 bucket size in the filler anyways...then this is not needed
+	    if(setCache){
+	      if(tacc.nhypercubes() ==1){
+		tacc.setCacheSize (0, 1);
+	      }
+	      else{
+		tacc.setCacheSize (startrow, 1);
+	      }
+	    }
+	    
 	  } catch (AipsError x) {
+	    //  cerr << "Data man type " << dataManType << "  " << dataManType.contains("Tiled") << "  && " << (!String(cdesc.dataManagerGroup()).empty()) << endl;
+	    //  cerr << "Failed to set settilecache due to " << x.getMesg() << " column " << columns[k]  <<endl;
 	    //It failed so leave the caching as is
 	    continue;
 	  }
@@ -702,6 +701,7 @@ void ROVisibilityIterator::setTileCache(){
   }
   
 }
+
 
 /*
 void ROVisibilityIterator::setTileCache(){
@@ -764,7 +764,9 @@ void ROVisibilityIterator::setTileCache(){
 	  //tileshape(2)=tileshape(2)*8;
 	  //////////////
 	  //cout << tacc.cacheSize(0) << " nchantile "<< nchantile << " max cache size " << tacc.maximumCacheSize() << endl; 
-	  tacc.setCacheSize (0, tileshape, axisPath);
+	  tacc.clearCaches();
+	  tacc.setCacheSize (0, 1);
+	  //tacc.setCacheSize (0, tileshape, axisPath);
 	  //cout << k << "  " << columns(k) << " cache size  " <<  tacc.cacheSize(0) << endl;
 	  
 	}
@@ -2937,4 +2939,6 @@ ROVisibilityIterator::AsyncEnabler::release ()
 }
 
 } //# NAMESPACE CASA - END
+
+
 

@@ -4426,7 +4426,7 @@ String MSAsRaster::visMbLabel_() {
 
 
 
-const Unit MSAsRaster::dataUnit() {
+const Unit MSAsRaster::dataUnit() const {
   // For position tracking and color bar labelling -- Unit of the
   // displayed data values
   switch(curVisComp_) {
