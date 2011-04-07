@@ -508,8 +508,7 @@ Bool Imager::open(MeasurementSet& theMs, Bool /*compress*/, Bool useModelCol)
     this->lock();
     msname_p = ms_p->tableName();
     
-    os << LogIO::DEBUG1
-	   << "Opening MeasurementSet " << msname_p << LogIO::POST;
+    os << "Opening MeasurementSet " << msname_p << LogIO::POST;
 
     // Check for DATA or FLOAT_DATA column
     if(!ms_p->tableDesc().isColumn("DATA") && 
