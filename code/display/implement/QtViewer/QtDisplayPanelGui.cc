@@ -1356,7 +1356,7 @@ void QtDisplayPanelGui::showImageProfile() {
 
               if (pdd->getAxisIndex(String("Spectral")) == -1) {
                   profileDD_ = 0;
-	          refreshImageProfile();  
+	          hideImageProfile();  
               }
               else {
 	          profileDD_ = pdd;
