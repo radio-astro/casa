@@ -29,13 +29,6 @@ namespace casa {
 
 namespace utilj {
 
-DeltaTimes
-operator- (const Times & tLater, const Times & tEarlier)
-{
-    return DeltaTimes (tLater.elapsed() - tEarlier.elapsed(),
-                       tLater.cpu() - tEarlier.cpu());
-}
-
 String
 format (const char * formatString, ...)
 {
@@ -230,8 +223,15 @@ throwIfError (int errorCode, const String & prefix, const String & file, Int lin
 	}
 }
 
-DeltaTimes &
-DeltaTimes::operator += (const DeltaTimes & other)
+DeltaThreadTimes
+ThreadTimes::operator- (const ThreadTimes & tEarlier) const
+{
+    return DeltaThreadTimes (this->elapsed() - tEarlier.elapsed(),
+                             this->cpu() - tEarlier.cpu());
+}
+
+DeltaThreadTimes &
+DeltaThreadTimes::operator+= (const DeltaThreadTimes & other)
 {
     cpu_p += other.cpu();
     elapsed_p += other.elapsed();
@@ -251,7 +251,7 @@ DeltaTimes::operator += (const DeltaTimes & other)
 
 
 String
-DeltaTimes::formatAverage (const String & floatFormat,
+DeltaThreadTimes::formatAverage (const String & floatFormat,
                            Double scale,
                            const String & units) const // to convert to ms
 {
@@ -268,7 +268,7 @@ DeltaTimes::formatAverage (const String & floatFormat,
 }
 
 String
-DeltaTimes::formatStats (const String & floatFormat,
+DeltaThreadTimes::formatStats (const String & floatFormat,
                          Double scale,
                          const String & units) const  // to convert to ms
 {
@@ -294,8 +294,6 @@ DeltaTimes::formatStats (const String & floatFormat,
 
     return result;
 }
-
-
 
 AipsErrorTrace::AipsErrorTrace ( const String &msg, const String &filename, uInt lineNumber,
                                  Category c)

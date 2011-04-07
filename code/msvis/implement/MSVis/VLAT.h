@@ -31,8 +31,8 @@
 
 #include "AsynchronousTools.h"
 #include "UtilJ.h"
-using casa::utilj::Times;
-using casa::utilj::DeltaTimes;
+using casa::utilj::ThreadTimes;
+using casa::utilj::DeltaThreadTimes;
 #include "VisBuffer.h"
 #include "VisibilityIterator.h"
 #include "VisibilityIteratorAsync.h"
@@ -284,24 +284,24 @@ private:
 
     asyncio::ChannelSelection channelSelection_p; // last channels selected for the VI in use
 	Data       data_p;       // Buffer queue
-    Times      fill1_p;
-    Times      fill2_p;
-    Times      fill3_p;
-    DeltaTimes fillCycle_p;
-    DeltaTimes fillOperate_p;
-    DeltaTimes fillWait_p;
+    ThreadTimes      fill1_p;
+    ThreadTimes      fill2_p;
+    ThreadTimes      fill3_p;
+    DeltaThreadTimes fillCycle_p;
+    DeltaThreadTimes fillOperate_p;
+    DeltaThreadTimes fillWait_p;
     volatile Bool lookaheadTerminationRequested_p;
     const Int MaxNBuffers_p;
-    Times      read1_p;
-    Times      read2_p;
-    Times      read3_p;
-    DeltaTimes readCycle_p;
-    DeltaTimes readOperate_p;
-    DeltaTimes readWait_p;
+    ThreadTimes      read1_p;
+    ThreadTimes      read2_p;
+    ThreadTimes      read3_p;
+    DeltaThreadTimes readCycle_p;
+    DeltaThreadTimes readOperate_p;
+    DeltaThreadTimes readWait_p;
 	asyncio::RoviaModifiers roviaModifiers_p;
     volatile Bool sweepTerminationRequested_p;
-    Times timeStart_p;
-    Times timeStop_p;
+    ThreadTimes timeStart_p;
+    ThreadTimes timeStop_p;
 	volatile Bool viResetRequested_p;
     volatile Bool viResetComplete_p;
 	mutable ValidChunks validChunks_p;       // Queue of valid chunk numbers

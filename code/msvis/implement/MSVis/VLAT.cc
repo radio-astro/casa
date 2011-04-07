@@ -94,7 +94,7 @@ VlaData::VlaData (Int maxNBuffers)
    readOperate_p (True),
    readWait_p (True)
 {
-    timeStart_p = Times();
+    timeStart_p = ThreadTimes();
     lookaheadTerminationRequested_p = False;
     sweepTerminationRequested_p = False;
     viResetComplete_p = False;
@@ -107,7 +107,7 @@ VlaData::VlaData (Int maxNBuffers)
 
 VlaData::~VlaData ()
 {
-    timeStop_p = Times();
+    timeStop_p = ThreadTimes();
 
     if (statsEnabled()){
         Log (1, "VlaData stats:\n%s", makeReport ().c_str());
@@ -168,7 +168,7 @@ VlaData::fillComplete (VlaDatum * datum)
     MutexLocker ml (vlaDataMutex_p);
 
     if (statsEnabled()){
-        fill3_p = Times();
+        fill3_p = ThreadTimes();
         fillWait_p += fill2_p - fill1_p;
         fillOperate_p += fill3_p - fill2_p;
         fillCycle_p += fill3_p - fill1_p;
@@ -188,7 +188,7 @@ VlaData::fillStart (Int chunkNumber, Int subChunkNumber)
 {
     MutexLocker ml (vlaDataMutex_p);
 
-    statsEnabled () && (fill1_p = Times(), True);
+    statsEnabled () && (fill1_p = ThreadTimes(), True);
 
 	while ((int) data_p.size() >= MaxNBuffers_p && ! sweepTerminationRequested_p){
 	    vlaDataChanged_p.wait (vlaDataMutex_p);
@@ -203,7 +203,7 @@ VlaData::fillStart (Int chunkNumber, Int subChunkNumber)
 
 	insertValidSubChunk (chunkNumber, subChunkNumber);
 
-	statsEnabled () && (fill2_p = Times(), True);
+	statsEnabled () && (fill2_p = ThreadTimes(), True);
 
 	if (sweepTerminationRequested_p){
 	    delete datum;
@@ -356,7 +356,7 @@ VlaData::makeReport ()
 {
     String report;
 
-    DeltaTimes duration = (timeStop_p - timeStart_p); // seconds
+    DeltaThreadTimes duration = (timeStop_p - timeStart_p); // seconds
     report += format ("\nLookahead Stats: nCycles=%d, duration=%.3f sec\n...\n",
                       readWait_p.n(), duration.elapsed());
     report += "...ReadWait:    " + readWait_p.formatAverage () + "\n";
@@ -384,7 +384,7 @@ VlaData::readComplete (Int chunkNumber, Int subChunkNumber)
     MutexLocker ml (vlaDataMutex_p);
 
     if (statsEnabled()){
-        read3_p = Times();
+        read3_p = ThreadTimes();
         readWait_p += read2_p - read1_p;
         readOperate_p += read3_p - read2_p;
         readCycle_p += read3_p - read1_p;
@@ -398,7 +398,7 @@ VlaData::readStart (Int chunkNumber, Int subChunkNumber)
 {
     MutexLocker ml (vlaDataMutex_p);
 
-    statsEnabled () && (read1_p = Times(), True);
+    statsEnabled () && (read1_p = ThreadTimes(), True);
 
     // Wait for a subchunk's worth of data to be available.
 
@@ -418,7 +418,7 @@ VlaData::readStart (Int chunkNumber, Int subChunkNumber)
 
 	Log (2, "VlaData::readStart on (%d, %d)\n", chunkNumber, subChunkNumber);
 
-	statsEnabled () && (read2_p = Times(), True);
+	statsEnabled () && (read2_p = ThreadTimes(), True);
 
     // Extract the VisBufferAsync enclosed in the datum for return to caller,
     // then destroy the rest of the datum object

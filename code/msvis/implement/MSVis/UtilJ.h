@@ -92,15 +92,65 @@ void toStdError (const String & m, const String & prefix = "*E* ");
 void throwIf (Bool condition, const String & message, const String & file, Int line);
 void throwIfError (Int errorCode, const String & prefix, const String & file, Int line);
 
-class Times {
+// These two classes, Times and DeltaTimes should be moved out of this file and
+// into casacore/casa/OS.  In the meantime, an ifdef should keep the apple from
+// barfing.
+
+// <summary>
+
+// </summary>
+
+// <use visibility=local>   or   <use visibility=export>
+
+// <reviewed reviewer="" date="yyyy/mm/dd" tests="" demos="">
+// </reviewed>
+
+// <prerequisite>
+//   <li> SomeClass
+//   <li> SomeOtherClass
+//   <li> some concept
+// </prerequisite>
+//
+// <etymology>
+// </etymology>
+//
+// <synopsis>
+// </synopsis>
+//
+// <example>
+// </example>
+//
+// <motivation>
+// </motivation>
+//
+// <templating arg=T>
+//    <li>
+//    <li>
+// </templating>
+//
+// <thrown>
+//    <li>
+//    <li>
+// </thrown>
+//
+// <todo asof="yyyy/mm/dd">
+//   <li> add this feature
+//   <li> fix this bug
+//   <li> start discussion of this possible extension
+// </todo>
+
+class DeltaThreadTimes;
+
+class ThreadTimes {
 
 public:
 
-    Times () { * this = getTime();}
+    ThreadTimes () { * this = getTime();}
+
     Double cpu () const { return cpu_p;}
     Double elapsed () const { return elapsed_p;}
 
-    static Times
+    static ThreadTimes
     getTime (){
 
         struct timeval tVal;
@@ -110,15 +160,24 @@ public:
 
         //Double cpu = ((Double) clock ()) / CLOCKS_PER_SEC; // should be in seconds
 
+
+
+#if     defined (RUSAGE_THREAD)
+#warning "RUSAGE_THREAD defined"
         struct rusage usage;
 
         int failed = getrusage (RUSAGE_THREAD, & usage);
         assert (! failed);
 
         Double cpu = toSeconds (usage.ru_utime) + toSeconds (usage.ru_stime);
+#else
+        Double cpu = 0;
+#endif
 
-        return Times (elapsed, cpu);
+        return ThreadTimes (elapsed, cpu);
     }
+
+    DeltaThreadTimes operator- (const ThreadTimes & tEarlier) const;
 
     static Double
     toSeconds (const struct timeval & t)
@@ -131,17 +190,58 @@ protected:
     Double cpu_p;
     Double elapsed_p;
 
-    Times (Double elapsed, Double cpu) : cpu_p (cpu), elapsed_p (elapsed) {}
+    ThreadTimes (Double elapsed, Double cpu) : cpu_p (cpu), elapsed_p (elapsed) {}
 };
 
-class DeltaTimes : private Times {
+// <summary>
+// </summary>
 
-    friend DeltaTimes operator- (const Times & tLater, const Times & tEarlier);
+// <use visibility=local>   or   <use visibility=export>
+
+// <reviewed reviewer="" date="yyyy/mm/dd" tests="" demos="">
+// </reviewed>
+
+// <prerequisite>
+//   <li> SomeClass
+//   <li> SomeOtherClass
+//   <li> some concept
+// </prerequisite>
+//
+// <etymology>
+// </etymology>
+//
+// <synopsis>
+// </synopsis>
+//
+// <example>
+// </example>
+//
+// <motivation>
+// </motivation>
+//
+// <templating arg=T>
+//    <li>
+//    <li>
+// </templating>
+//
+// <thrown>
+//    <li>
+//    <li>
+// </thrown>
+//
+// <todo asof="yyyy/mm/dd">
+//   <li> add this feature
+//   <li> fix this bug
+//   <li> start discussion of this possible extension
+// </todo>
+class DeltaThreadTimes : private ThreadTimes {
+
+    friend class ThreadTimes;
 
 public:
 
-    DeltaTimes () : Times (0, 0), doStats_p (False), n_p (0) {}
-    explicit DeltaTimes (bool doStats) : Times (0,0), doStats_p (doStats), n_p (0)
+    DeltaThreadTimes () : ThreadTimes (0, 0), doStats_p (False), n_p (0) {}
+    explicit DeltaThreadTimes (bool doStats) : ThreadTimes (0,0), doStats_p (doStats), n_p (0)
     {
         cpuSsq_p = 0;
         cpuMin_p = 1e20;
@@ -151,11 +251,11 @@ public:
         elapsedMax_p = -1e20;
     }
 
-    DeltaTimes & operator += (const DeltaTimes & other);
+    DeltaThreadTimes & operator += (const DeltaThreadTimes & other);
 
-    Double cpu () const { return Times::cpu();}
+    Double cpu () const { return ThreadTimes::cpu();}
     Double cpuAvg () const { return n_p == 0 ? 0 : cpu() / n_p;}
-    Double elapsed () const { return Times::elapsed();}
+    Double elapsed () const { return ThreadTimes::elapsed();}
     Double elapsedAvg () const { return n_p == 0 ? 0 : elapsed() / n_p;}
     String formatAverage (const String & floatFormat = "%6.1f",
                           Double scale=1000.0,
@@ -167,7 +267,7 @@ public:
 
 protected:
 
-    DeltaTimes (Double elapsed, Double cpu) : Times (elapsed, cpu), n_p (0) {}
+    DeltaThreadTimes (Double elapsed, Double cpu) : ThreadTimes (elapsed, cpu), n_p (0) {}
 
 private:
 
@@ -181,7 +281,19 @@ private:
     Int n_p;
 };
 
-DeltaTimes operator- (const Times & tLater, const Times & tEarlier);
+// Global Functions
+
+// <linkfrom anchor=unique-string-within-this-file classes="class-1,...,class-n">
+//     <here> Global functions </here> for foo and bar.
+// </linkfrom>
+
+// A free function is provided that is useful for
+// go here...
+
+// <group name=accumulation>
+
+
+// </group>
 
 } // end namespace utilj
 

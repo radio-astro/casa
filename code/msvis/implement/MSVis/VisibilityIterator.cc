@@ -320,7 +320,8 @@ void ROVisibilityIterator::origin()
     curStartRow_p=0;
     freqCacheOK_p=False;
     flagOK_p = weightSpOK_p = False;
-    visOK_p.resize(3); visOK_p[0]=visOK_p[1]=visOK_p[2]=False;
+    visOK_p.resize(3);
+    visOK_p = False;
     floatDataCubeOK_p = False;
     setSelTable();
     attachColumns(attachTable());
@@ -382,9 +383,7 @@ void ROVisibilityIterator::advance()
 {
   newChanGroup_p=False;
   flagOK_p = False;
-  visOK_p[0] = False;
-  visOK_p[1] = False;
-  visOK_p[2] = False;
+  visOK_p = False;
   floatDataCubeOK_p = False;
   weightSpOK_p = False;
   curStartRow_p=curEndRow_p+1;

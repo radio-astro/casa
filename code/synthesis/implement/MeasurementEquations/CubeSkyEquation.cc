@@ -93,55 +93,6 @@ CubeSkyEquation::CubeSkyEquation(SkyModel& sm, ROVisibilityIterator& vi, FTMachi
   firstOneChangesPut_p(False),
   firstOneChangesGet_p(False)
 {
-
-    Block<Int> sort(0);
-    sort.resize(4);
-    sort[0] = MS::ARRAY_ID;
-    sort[1] = MS::FIELD_ID;
-    sort[2] = MS::DATA_DESC_ID;
-    sort[3] = MS::TIME;
-
-    // Create a visibility iterator.  If the
-
-    ROVIA::PrefetchColumns prefetchColumns =
-        ROVIA::prefetchColumns (ROVIA::Ant1,
-                                ROVIA::Ant2,
-                                ROVIA::ArrayId,
-                                ROVIA::CorrectedCube,
-                                ROVIA::CorrType,
-                                ROVIA::Direction1,
-                                ROVIA::Direction2,
-                                ROVIA::Feed1,
-                                ROVIA::Feed1_pa,
-                                ROVIA::Feed2,
-                                ROVIA::Feed2_pa,
-                                ROVIA::FieldId,
-                                ROVIA::FlagCube,
-                                ROVIA::FlagRow,
-                                ROVIA::Freq,
-                                ROVIA::ImagingWeight,
-                                ROVIA::LSRFreq,
-                                ROVIA::NChannel,
-                                ROVIA::NCorr,
-                                ROVIA::NRow,
-                                ROVIA::PhaseCenter,
-                                ROVIA::PolFrame,
-                                ROVIA::SpW,
-                                ROVIA::Time,
-                                ROVIA::Uvw,
-                                -1);
-
-//    if (vi.isAsyncEnabled () && ROVisibilityIteratorAsync::isAsynchronousIoEnabled()) {
-//
-//        rvi_p = ROVisibilityIteratorAsync::create (vi, prefetchColumns);
-////        if (dynamic_cast<VisibilityIterator *> (& vi) != NULL){
-////            dynamic_cast<ROVisibilityIteratorAsync *> (rvi_p) -> linkWithRovi (& vi);
-////        }
-//        destroyVisibilityIterator_p = True;
-//        vb_p.set (rvi_p); // replace existing VB with a potentially async one
-//
-//    }
-
     init(ft);
 }
 
