@@ -990,7 +990,7 @@ Block<uInt>  MSConcat::copyField(const MSField& otherFld) {
     fieldCols.referenceDirMeasCol().getMeasRef().getType());
   const MDirection::Types otherDirType = MDirection::castType(
     otherFieldCols.referenceDirMeasCol().getMeasRef().getType());
-  
+
   MDirection::Convert dirCtr;
   if (dirType != otherDirType) { // setup a converter
     dirCtr = MDirection::Convert(otherDirType, dirType);
@@ -1003,22 +1003,22 @@ Block<uInt>  MSConcat::copyField(const MSField& otherFld) {
   TableRow fldRow(fld);
   for (uInt f = 0; f < nFlds; f++) {
     delayDir = otherFieldCols.delayDirMeas(f);
-     phaseDir = otherFieldCols.phaseDirMeas(f);
-     refDir = otherFieldCols.referenceDirMeas(f);
-     if (dirType != otherDirType) {
-       delayDir = dirCtr(delayDir.getValue());
-       phaseDir = dirCtr(phaseDir.getValue());
-       refDir = dirCtr(refDir.getValue());
-     }
-
-     const Int newFld = 
-       fieldCols.matchDirection(refDir, delayDir, phaseDir, tolerance);
-     if (newFld >= 0) {
-       fldMap[f] = newFld;
-     } else { // need to add a new entry in the FIELD subtable
-       fldMap[f] = fld.nrow();
-       fld.addRow();
-       fldRow.putMatchingFields(fldMap[f], otherFldRow.get(f));
+    phaseDir = otherFieldCols.phaseDirMeas(f);
+    refDir = otherFieldCols.referenceDirMeas(f);
+    if (dirType != otherDirType) {
+      delayDir = dirCtr(delayDir.getValue());
+      phaseDir = dirCtr(phaseDir.getValue());
+      refDir = dirCtr(refDir.getValue());
+    }
+    
+    const Int newFld = 
+      fieldCols.matchDirection(refDir, delayDir, phaseDir, tolerance);
+    if (newFld >= 0) {
+      fldMap[f] = newFld;
+    } else { // need to add a new entry in the FIELD subtable
+      fldMap[f] = fld.nrow();
+      fld.addRow();
+      fldRow.putMatchingFields(fldMap[f], otherFldRow.get(f));
       if (dirType != otherDirType) {
  	DebugAssert(fieldCols.numPoly()(fldMap[f]) == 0, AipsError);
  	Vector<MDirection> vdir(1, refDir);
