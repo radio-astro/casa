@@ -277,14 +277,20 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
                     s._add_history( "sdflag", params ) 
 
 
+            anyflag = docmdflag
             if interactive:
                     guiflagger = flagplotter(visible=True)
                     guiflagger._plotter.legend(loc=1)
                     guiflagger.plot(s)
                     finish=raw_input("Press enter to finish interactive flagging:")
                     guiflagger._plotter.unmap()
+                    anyflag = (anyflag or guiflagger._ismodified)
                     guiflagger._plotter = None
                     del guiflagger
+
+            if not anyflag:
+                    del s, sel
+                    raise Exception, 'No flag operation. Finish without saving'
 
             if ( abs(plotlevel) > 0 ):
                     #Plot the result
