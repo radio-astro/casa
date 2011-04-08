@@ -82,6 +82,15 @@ namespace casa
       Bool b1=(fabs(d1-d2) < EPS)?True:False;
       return b1;
     }
+    template <class T>
+    inline void SETVEC(Vector<T>& lhs, const Vector<T>& rhs)
+    {lhs.resize(rhs.shape()); lhs = rhs;};
+    template <class T>
+    inline void SETVEC(Array<T>& lhs, const Array<T>& rhs)
+    {lhs.resize(rhs.shape()); lhs = rhs;};
+
+    template <class T>
+    T getenv(const char *name, const T defaultVal);
   }
 
   void getHADec(MeasurementSet& ms, const VisBuffer& vb, Double &HA, Double& RA, Double& Dec);
