@@ -35,14 +35,12 @@ def sdsmooth(sdfile, antenna, scanaverage, scanlist, field, iflist, pollist, ker
             s=sd.scantable(sdfile,average=scanaverage,antenna=antenna)
             if (isinstance(s,Scantable)):
                     stmp = s.copy()
-                    s=stmp.average_time(scanav=True)
+                    s=stmp.average_time(scanav=scanaverage)
             else:
                     raise Exception, 'sdfile=%s is not found' % sdfile
 
             if ( abs(plotlevel) > 1 ):
                     # print summary of input data
-                    #print "Initial Scantable:"
-                    #print s
                     casalog.post( "Initial Scantable:" )
                     casalog.post( s._summary() )
                     casalog.post( "--------------------------------------------------------------------------------" )
@@ -93,8 +91,6 @@ def sdsmooth(sdfile, antenna, scanaverage, scanlist, field, iflist, pollist, ker
                 s.set_selection(sel)
                 del sel
             except Exception, instance:
-                #print '***Error***',instance
-                #print 'No output written.'
                 casalog.post( str(instance), priority = 'ERROR' )
                 casalog.post( 'No output written.' )
                 return
@@ -117,12 +113,12 @@ def sdsmooth(sdfile, antenna, scanaverage, scanlist, field, iflist, pollist, ker
                                     # Hardcopy - currently no way w/o screen displayfirst
                                     pltfile=project+'_rawspec.eps'
                                     sd.plotter.save(pltfile)
-                    #print "Smoothing spectrum with kernel "+kernel
+
                     casalog.post( "Smoothing spectrum with kernel "+kernel )
-                    #s.smooth(kernel,kwidth,insitu=True)
-                    s.smooth(kernel,kwidth,plot=verify,insitu=True)
+                    s.smooth(kernel=kernel,width=kwidth,plot=verify,insitu=True)
+
                     if ( abs(plotlevel) > 0 ):
-                           # plot spectrum after smoothing
+                            # plot spectrum after smoothing
                             # each IF is separate panel, pols stacked
                             sd.plotter.set_mode(stacking='p',panelling='i')
                             sd.plotter.plot(s)
@@ -152,19 +148,13 @@ def sdsmooth(sdfile, antenna, scanaverage, scanlist, field, iflist, pollist, ker
             if overwrite and os.path.exists(outfilename):
                     os.system('rm -rf %s' % outfilename)
 
-            # when subset of the data selected by selector
-            # scantable.save() does not work well, so create a copy first
-            # before saving.
-            s2=s.copy()
-            s2.save(smfile,outform,overwrite)
+            s.save(smfile,outform,overwrite)
             if outform!='ASCII':
-                    #print "Writing output "+outform+" file "+smfile
                     casalog.post( "Writing output "+outform+" file "+smfile )
-            # Clean up scantable
-            del s, s2
+
+            del s
 
         except Exception, instance:
-                #print '***Error***',instance
                 casalog.post( str(instance), priority = 'ERROR' )
                 return
 

@@ -165,7 +165,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
 
     <param type="int" name="clipniter" subparam="true">
             <description>maximum number of iteration in spline fitting</description>
-            <value>1</value>
+            <value>0</value>
     </param>
 
     <param type="bool" name="verify">
@@ -243,13 +243,13 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
                 <equals value="cspline">
 			<default param="npiece"><value>2</value></default>
 			<default param="clipthresh"><value>3.0</value></default>
-			<default param="clipniter"><value>1</value></default>
+			<default param="clipniter"><value>0</value></default>
 	        </equals>
                 <equals value="sinusoid">
 			<default param="nwave"><value type="int">3</value></default>
 			<default param="maxwavelength"><value>1.0</value></default>
 			<default param="clipthresh"><value>3.0</value></default>
-			<default param="clipniter"><value>1</value></default>
+			<default param="clipniter"><value>0</value></default>
 	        </equals>
 	    </when>
     </constraints>
@@ -385,7 +385,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
                  clipthresh -- clipping threshold for iterative spline fitting
                          default: 3
                  clipniter -- maximum number of iteration in spline fitting
-                         default: 1
+                         default: 0 (no iteration)
         verify -- verify the results of baseline fitting
                 options: (bool) True,False
                 default: False
