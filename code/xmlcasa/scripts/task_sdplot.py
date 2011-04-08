@@ -233,14 +233,17 @@ def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
                            sd.plotter.plotpointing(s,plotfile)
                     else:
                            sd.plotter.plotpointing(s)
+                    del s
             elif plottype=='azel':
                     if plotfile != '': 
                            sd.plotter.plotazel(s,plotfile)
                     else:
                            sd.plotter.plotazel(s)
+                    del s
             elif plottype=='totalpower':
 		    asaplot=True
                     sd.plotter.plottp(s)
+                    del s
             else:
 		    asaplot=True
                     if s.nchan()==1:
@@ -252,9 +255,11 @@ def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
                            scave=sd.average_time(s,scanav=True)
                     else:
                            scave=s.copy()
+                    del s
 
                     if ( timeaverage ):
                             if tweight=='none':
+                                    del scave
                                     errmsg = "Please specify weight type of time averaging"
                                     raise Exception,errmsg
                             stave=sd.average_time(scave,scanav=False, weight=tweight)
@@ -262,6 +267,7 @@ def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
                             # Now average over polarization
                             if ( polaverage ):
                                     if pweight=='none':
+                                            del stave
                				    errmsg = "Please specify weight type of polarization averaging"
                                             raise Exception,errmsg
                                     np = stave.npol()
@@ -277,9 +283,10 @@ def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
                     else:
                             if ( polaverage ):
                                     if pweight=='none':
+                                            del scave
                   		            errmsg = "Please specify weight type of polarization averaging"
                                             raise Exception,errmsg
-                                    np = s.npol()
+                                    np = scave.npol()
                                     if ( np > 1 ):
                                             spave=scave.average_pol(weight=pweight)
                                     else:
@@ -302,6 +309,7 @@ def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
 		    refresh=False
                     #sd.plotter.plot(spave)
                     sd.plotter.set_data(spave,refresh=refresh)
+                    del spave
                     sd.plotter.set_mode(stacking=stack,panelling=panel,refresh=refresh)
 
 		    # Set colormap, linestyles, and linewidth of plots
@@ -409,6 +417,7 @@ def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
                                     # Plot up the selected part of the line catalog
                                     # use doppler offset
                                     sd.plotter.plot_lines(linc,doppler=linedop)
+                                    del linc
 
 	    # List observation header
 	    if header and (not plotstyle or margin==[]):
@@ -416,7 +425,7 @@ def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
 		    sd.plotter._plotter.figure.subplots_adjust(top=0.8)
 	    datname='Data File:     '+sdfile
 	    sd.plotter.print_header(plot=(header and asaplot),fontsize=headsize,
-				    logger=True,selstr=ssel,extrastr=datname)
+	                            logger=True,selstr=ssel,extrastr=datname)
 	    del ssel, datname
 
             # Hardcopy
@@ -425,9 +434,8 @@ def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
                     sd.plotter.save(plotfile)
 
             # Do some clean up
-            if plottype=='spectra': 
-                    del spave
-                    if dolinc: del linc
+            #import gc
+            #gc.collect()
 
             # DONE
 
