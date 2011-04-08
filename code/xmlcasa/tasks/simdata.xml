@@ -778,9 +778,31 @@ mosaic simulation task:
         ia.done()
 
     -------------------------------
-    Output produced:
+    Output produced: (not all will always exist, depending on input parameters)
     -------------------------------
+    project.skymodel = 4d input sky model image (optionally) scaled
+    project.skymodel.flat.regrid.conv = input sky regridded to match the output
+         image, and convolved with the output synthesized beam
+    project.skymodel.png = diagnostic figure of sky model with pointings
 
+    project.ptg.txt = list of mosaic pointings
+    project.quick.psf = psf calculated from uv coverage
+    project.ms = noise-free measurement set
+    project.noisy.ms = corrupted measurement set 
+    project.predict.png = diagnostic figure of uv coverage and visibilities
+
+    project.image = synthesized image
+    project.flux.pbcoverage = promary beam correction for mosaic image
+    project.residual = residual image after cleaning
+    project.clean.last = parameter file of what parameters were used in the
+         clean task
+    project.psf = synthesized beam calculated from weighted uv distribution
+    project.image.png = diagnostic figure of clean image and residual
+
+    project.fidelity = fidelity image
+    project.analysis.png = diagnostic figure of difference and fidelity
+
+    project.simdata.last = saved input parameters for simdata task
 
 </example>
 </task>
