@@ -117,7 +117,7 @@ class CubeSkyEquation : public SkyEquation {
   Block<CountedPtr<FTMachine> > ftm_p;
   Block<CountedPtr<FTMachine> > iftm_p;
 
-  DT aInitGrad, aGetChanSel, aCheckVisRows, aGetFreq, aOrigChunks, aVBInValid, aInitGetSlice, aInitPutSlice, aPutSlice, aFinalizeGetSlice, aFinalizePutSlice, aChangeStokes, aInitModel, aGetSlice, aSetModel, aGetRes, aExtra;
+  // DT aInitGrad, aGetChanSel, aCheckVisRows, aGetFreq, aOrigChunks, aVBInValid, aInitGetSlice, aInitPutSlice, aPutSlice, aFinalizeGetSlice, aFinalizePutSlice, aChangeStokes, aInitModel, aGetSlice, aSetModel, aGetRes, aExtra;
 
 };
 
