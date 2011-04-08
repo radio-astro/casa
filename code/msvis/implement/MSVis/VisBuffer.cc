@@ -53,7 +53,7 @@ VisBuffer::VisBuffer()
       twoWayConnection_p(False),
       visIter_p(static_cast<ROVisibilityIterator *>(0))
 {
-    validate();
+    invalidate();
     oldMSId_p = -1;
 }
 
