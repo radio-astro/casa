@@ -45,7 +45,7 @@
 #include <synthesis/MeasurementEquations/CubeSkyEquation.h>
 #include <synthesis/MeasurementComponents/SkyJones.h>
 #include <synthesis/MeasurementComponents/FTMachine.h>
-#include <synthesis/MeasurementComponents/GridFT.h>
+#include <synthesis/MeasurementComponents/rGridFT.h>
 #include <synthesis/MeasurementComponents/MosaicFT.h>
 #include <synthesis/MeasurementComponents/GridBoth.h>
 #include <synthesis/MeasurementComponents/WProjectFT.h>
@@ -67,6 +67,7 @@
 #include <msvis/MSVis/VisibilityIteratorAsync.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisBufferAsync.h>
+#include <synthesis/Utilities/ThreadTimers.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -179,6 +180,17 @@ void CubeSkyEquation::init(FTMachine& ft){
      for (Int k=1; k < (nmod); ++k){ 
       ftm_p[k]=new PBMosaicFT(static_cast<PBMosaicFT &>(*ft_));
       iftm_p[k]=new PBMosaicFT(static_cast<PBMosaicFT &>(*ift_));
+    }
+  }
+  else if (ft.name() == "rGridFT") {
+    ft_=new rGridFT(static_cast<rGridFT &>(ft));
+    ift_=new rGridFT(static_cast<rGridFT &>(ft));
+    // ftm_p[0]=CountedPtr<FTMachine>(ft_, False);
+    ftm_p[0]=ft_;
+    iftm_p[0]=ift_;
+    for (Int k=1; k < (nmod); ++k){ 
+      ftm_p[k]=new rGridFT(static_cast<rGridFT &>(*ft_));
+      iftm_p[k]=new rGridFT(static_cast<rGridFT &>(*ift_));
     }
   }
   else {
@@ -395,7 +407,6 @@ void CubeSkyEquation::makeMosaicPSF(PtrBlock<TempImage<Float> * >& psfs){
 
 void CubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
 
-
     Int nmodels=psfs.nelements();
     LogIO os(LogOrigin("CubeSkyEquation", "makeSimplePSF"));
     ft_->setNoPadding(noModelCol_p);
@@ -588,15 +599,19 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
         rvi_p = ROVisibilityIteratorAsync::create (* rvi_p, prefetchColumns);
         vb_p.set (rvi_p);  // detach from current vi
     }
-
+    //    Timers tInitGrad=Timers::getTime();
     sm_->initializeGradients();
     // Initialize
     //ROVisIter& vi=*rvi_p;
     //Lets get the channel selection for later use
+    //    Timers tGetChanSel=Timers::getTime();
     rvi_p->getChannelSelection(blockNumChanGroup_p, blockChanStart_p,
                                blockChanWidth_p, blockChanInc_p, blockSpw_p);
+    //    Timers tCheckVisRows=Timers::getTime();
     checkVisIterNumRows(*rvi_p);
     VisBufferAutoPtr vb (rvi_p);
+    //    Timers tVisAutoPtr=Timers::getTime();
+    
     /**** Do we need to do this
   if( (sm_->isEmpty(0))  && !initialized && !incremental){ 
     // We are at the begining with an empty model as starting point
@@ -611,10 +626,9 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
     Bool isEmpty=True;
     for (Int model=0; model < (sm_->numberOfModels());++model){
         isEmpty=isEmpty &&  sm_->isEmpty(model);
-
     }
-
     // Now do the images
+
     for (Int model=0;model< (sm_->numberOfModels()); ++model) {
         // Don't bother with empty images
         // Change the model polarization frame
@@ -631,6 +645,8 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
         scaleImage(model);
         // Reset the various SkyJones
     }
+    //    Timers tChangeStokes=Timers::getTime();
+
     ft_=&(*ftm_p[0]);
     resetSkyJones();
     firstOneChangesPut_p=False;
@@ -640,6 +656,11 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
 
     isLargeCube(sm_->cImage(0), nCubeSlice);
 
+    // aInitGrad += tGetChanSel - tInitGrad;
+    // aGetChanSel += tCheckVisRows - tGetChanSel;
+    // aCheckVisRows += tVisAutoPtr - tCheckVisRows;
+    // aChangeStokes += tChangeStokes - tVisAutoPtr;
+
     for (Int cubeSlice=0; cubeSlice< nCubeSlice; ++cubeSlice){
 
         //      vi.originChunks();
@@ -647,53 +668,86 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
         //sliceCube(imGetSlice_p, model, cubeSlice, nCubeSlice, 1);
         //Redo the channel selection in case of chunked cube to match
         //data needed for gridding.
+      //        Timers tGetFreqRange=Timers::getTime();
         changedVI= getFreqRange(*rvi_p, sm_->cImage(0).coordinates(),
                                 cubeSlice, nCubeSlice) || changedVI;
 
+	//	Timers tOrigChunks=Timers::getTime();
         rvi_p->originChunks();
         rvi_p->origin();
         Bool useCorrected= !(vb->msColumns().correctedData().isNull());
 
+	//	Timers tVBInValid=Timers::getTime();
         vb->invalidate();
+
+	//	Timers tInitGetSlice=Timers::getTime();
         if(!isEmpty){
             initializeGetSlice(* vb, 0, False, cubeSlice, nCubeSlice);
         }
+	//	Timers tInitPutSlice=Timers::getTime();
         initializePutSlice(* vb, cubeSlice, nCubeSlice);
+	//	Timers tDonePutSlice=Timers::getTime();
         Int cohDone=0;
         ProgressMeter pm(1.0, Double(vb->numberCoh()),
                          "Gridding residual",
                          "", "", "", True);
+	// aGetFreq += tOrigChunks - tGetFreqRange;
+	// aOrigChunks += tVBInValid - tOrigChunks;
+	// aVBInValid += tInitGetSlice - tVBInValid;
+	// aInitGetSlice += tInitPutSlice - tInitGetSlice;
+	// aInitPutSlice += tDonePutSlice - tInitPutSlice;
+
         for (rvi_p->originChunks();rvi_p->moreChunks();rvi_p->nextChunk()) {
             for (rvi_p->origin(); rvi_p->more(); (*rvi_p)++) {
+
+	      //	      Timers tInitModel=Timers::getTime();
                 if(!incremental && !predictedComp) {
                     //This here forces the modelVisCube shape and prevents reading model column
                     vb->setModelVisCube(Complex(0.0,0.0));
                 }
                 // get the model visibility and write it to the model MS
+		//	Timers tGetSlice=Timers::getTime();
+		//		Timers tgetSlice=Timers::getTime();
                 if(!isEmpty)
                     getSlice(* vb, (predictedComp || incremental), cubeSlice, nCubeSlice);
                 //saving the model for self-cal most probably
+		//	Timers tSetModel=Timers::getTime();
+		//		Timers tsetModel=Timers::getTime();
                 if(commitModel && !noModelCol_p)
                     wvi_p->setVis(vb->modelVisCube(),VisibilityIterator::Model);
                 // Now lets grid the -ve of residual
                 // use visCube if there is no correctedData
-                if(!useCorrected){
-                    vb->modelVisCube()-=vb->visCube();
-                }
-                else{
-                    vb->modelVisCube()-=vb->correctedVisCube();
-                }
+		//		Timers tGetRes=Timers::getTime();
+		if (!iftm_p[0]->canComputeResiduals())
+		  if(!useCorrected) vb->modelVisCube()-=vb->visCube();
+		  else              vb->modelVisCube()-=vb->correctedVisCube();
+		else
+		  iftm_p[0]->ComputeResiduals(*vb,useCorrected);
+
+
+		//		Timers tPutSlice = Timers::getTime();
                 putSlice(* vb, False, FTMachine::MODEL, cubeSlice, nCubeSlice);
                 cohDone+=vb->nRow();
                 pm.update(Double(cohDone));
-
+		// Timers tDoneGridding=Timers::getTime();
+		// aInitModel += tgetSlice - tInitModel;
+		// aGetSlice += tsetModel - tgetSlice;
+		// aSetModel += tGetRes - tsetModel;
+		// aGetRes += tPutSlice - tGetRes;
+		// aPutSlice += tDoneGridding - tPutSlice;
+		// aExtra += tDoneGridding - tInitModel;
             }
         }
 
+	//	Timers tFinalizeGetSlice=Timers::getTime();
         finalizeGetSlice();
         if(!incremental&&!initialized) initialized=True;
+	//	Timers tFinalizePutSlice=Timers::getTime();
         finalizePutSlice(* vb, cubeSlice, nCubeSlice);
-
+	//	Timers tDoneFinalizePutSlice=Timers::getTime();
+	
+	// aFinalizeGetSlice += tFinalizePutSlice - tFinalizeGetSlice;
+	// aFinalizePutSlice += tDoneFinalizePutSlice - tFinalizePutSlice;
     }
 
     for (Int model=0;model<sm_->numberOfModels();model++) {
@@ -718,7 +772,29 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
         delete rvi_p;        // kill the new vi
         rvi_p = oldRvi;      // make the old vi the current vi
     }
-
+   // cerr << "gradChiSq: "
+   // 	<< "InitGrad = " << aInitGrad.formatAverage().c_str() << " " 
+   // 	<< "GetChanSel = " << aGetChanSel.formatAverage().c_str() << " " 
+   // 	<< "ChangeStokes = " << aChangeStokes.formatAverage().c_str() << " " 
+   // 	<< "CheckVisRows = " << aCheckVisRows.formatAverage().c_str() << " " 
+   // 	<< "GetFreq = " << aGetFreq.formatAverage().c_str() << " " 
+   // 	<< "OrigChunks = " << aOrigChunks.formatAverage().c_str() << " " 
+   // 	<< "VBInValid = " << aVBInValid.formatAverage().c_str() << " " 
+   // 	<< "InitGetSlice = " << aInitGetSlice.formatAverage().c_str() << " " 
+   // 	<< "InitPutSlice = " << aInitPutSlice.formatAverage().c_str() << " " 
+   // 	<< "PutSlice = " << aPutSlice.formatAverage().c_str() << " " 
+   // 	<< "FinalGetSlice = " << aFinalizeGetSlice.formatAverage().c_str() << " " 
+   // 	<< "FinalPutSlice = " << aFinalizePutSlice.formatAverage().c_str() << " " 
+   // 	<< endl;
+   
+   // cerr << "VB loop: " 
+   // 	<< "InitModel = " << aInitModel.formatAverage().c_str() << " " 
+   // 	<< "GetSlice = " << aGetSlice.formatAverage().c_str() << " " 
+   // 	<< "SetModel = " << aSetModel.formatAverage().c_str() << " " 
+   // 	<< "GetRes = " << aGetRes.formatAverage().c_str() << " " 
+   // 	<< "PutSlice = " << aPutSlice.formatAverage().c_str() << " " 
+   // 	<< "Extra = " << aExtra.formatAverage().c_str() << " " 
+   // 	<< endl;
 }
 
 void  CubeSkyEquation::isLargeCube(ImageInterface<Complex>& theIm, 
