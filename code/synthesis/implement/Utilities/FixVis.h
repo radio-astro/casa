@@ -137,6 +137,7 @@ public:
   // fields are modified.
   Bool fixvis(const String& refcode, const String& dataColName);
   virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
+  virtual void ComputeResiduals(VisBuffer&vb, Bool useCorrected) {};
 
 private:
   // Interpret field indices (MSSelection)

@@ -28,7 +28,7 @@
 #define SYNTHESIS_CUBESKYEQUATION_H
 
 #include <synthesis/MeasurementEquations/SkyEquation.h>
-#include <synthesis/Utilities/ThreadTimers.h>
+//#include <synthesis/Utilities/ThreadTimers.h>
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN

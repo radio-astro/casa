@@ -84,6 +84,8 @@ public:
 
   virtual ~ThreadCoordinatorBase ();
 
+  void waitForWorkersToFinishTask ();
+
 protected:
 
   ThreadCoordinatorBase (Int nThreads, bool logStates);
@@ -93,7 +95,6 @@ protected:
   void getToWork ();
   virtual void installWorkInfo () = 0;
   bool waitForWork (const async::Thread * thisThread);
-  void waitForWorkersToFinishTask ();
   void waitForWorkersToReport ();
 
 
