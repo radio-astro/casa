@@ -67,7 +67,7 @@
 #include <msvis/MSVis/VisibilityIteratorAsync.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisBufferAsync.h>
-#include <synthesis/Utilities/ThreadTimers.h>
+//#include <synthesis/Utilities/ThreadTimers.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
