@@ -346,7 +346,7 @@ void AMueller::corrupt(VisBuffer& vb)
   // Initialize model data to zero, so corruption contains
   //  only the AMueller solution
   //  TBD: may wish to make this user togglable.
-  vb.setModelVisCube(Complex(1000.0));
+  vb.setModelVisCube(Complex(0.0));
 
   if(fitorder_p == 0){
     // Call general version:
@@ -375,6 +375,17 @@ void AMueller::corrupt(VisBuffer& vb)
     spwApplied_p[cspw] = True;
     // Restore user's calWt()
     calWt()=userCalWt; 
+  }
+
+  // DEBUGGING
+  //uInt nchan = vb.nChannel();
+  uInt nvbrow = vb.nRow();
+  for(uInt vbrow = 0; vbrow < nvbrow; ++vbrow){
+    if(!vb.flagCube()(0, 0, vbrow) && !vb.flagRow()[vbrow] &&
+       vb.modelVisCube()(0, 0, vbrow).real() > 3.95)
+      os << LogIO::WARN
+         << vbrow << ": " << vb.modelVisCube()(0, 0, vbrow)
+         << LogIO::POST;
   }
 }
 

@@ -425,8 +425,9 @@ class SubMS
   Bool fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames);
   Bool copyAntenna();
   Bool copyFeed();
-  Bool copyPointing();
   Bool copyObservation();
+  Bool copyPointing();
+  Bool copyProcessor();
   Bool copySource();
   Bool copyState();
   Bool copySyscal();

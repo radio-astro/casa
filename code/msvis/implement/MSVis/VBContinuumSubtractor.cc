@@ -410,6 +410,30 @@ Bool VBContinuumSubtractor::apply(VisBuffer& vb,
   
   uInt nchan = vb.nChannel();
   uInt nvbrow = vb.nRow();
+
+  // DEBUGGING
+  // os << LogIO::DEBUG1
+  //    << "nvbrow: " << nvbrow << ", nchan: " << nchan
+  //    << LogIO::POST;
+  // // Check coeffs.
+  // for(uInt vbrow = 0; vbrow < nvbrow; ++vbrow){
+  //   uInt blind = hashFunction(vb.antenna1()[vbrow],
+  //                             vb.antenna2()[vbrow]);
+
+  //   for(uInt corrind = 0; corrind < ncorr_p; ++corrind){
+  //     if(coeffsOK(corrind, 0, blind)){
+  //       Complex cont = coeffs(corrind, 0, blind);
+    
+  //       if(fabs(cont) < 0.001)
+  //         os << LogIO::WARN
+  //            << "cont(" << corrind << ", 0, " << blind << ") = "
+  //            << cont
+  //            << LogIO::POST;
+  //     }
+  //   }
+  // }
+  // END DEBUGGING
+
   Vector<Double> freqpow(fitorder_p + 1);           // sf**ordind
   freqpow[0] = 1.0;
   Vector<Double>& freq(vb.frequency());
@@ -433,13 +457,14 @@ Bool VBContinuumSubtractor::apply(VisBuffer& vb,
           if(doSubtraction)
             viscube(corrind, c, vbrow) -= cont;
           else
-            viscube(corrind, c, vbrow) = cont;
+            viscube(corrind, c, vbrow) = cont;            
 
           // TODO: Adjust WEIGHT_SPECTRUM (create if necessary?), WEIGHT, and
           // SIGMA.
         }
         else
           vb.flagCube()(corrind, c, vbrow) = true;
+        //vb.flag()(c, vbrow) = true;
       }
     }
   }

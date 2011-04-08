@@ -606,7 +606,8 @@ bool PrincipalAxesDD::has_nonsingleton_nondegenerate_nondisplayed_axis( const Di
     Vector<int> shape = other.dataShape( ).asVector( );
     std::vector<int> display_axes = other.displayAxes( );
     bool nondisplayed_nonsingleton_axis = false;
-    if ( shape(display_axes[2]) == 1 ) {
+    
+    if ( display_axes.size() > 2 && shape.size() > display_axes[2] && shape(display_axes[2]) == 1 ) {
 	// If the "movie" axis is degenerate, check
 	// the remaining non-displayed axes...
 	for ( int x=0; x < shape.size(); ++x ) {

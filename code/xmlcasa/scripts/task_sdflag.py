@@ -168,7 +168,7 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
                     masks = s.create_mask(maskflag)
 
             #for row in range(ns):
-            if ( abs(plotlevel) > 0 ):
+            if docmdflag and ( abs(plotlevel) > 0 ):
                     #sc=s.copy()
 		    # Plot final spectrum
                     np = nr
@@ -277,20 +277,27 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
                     s._add_history( "sdflag", params ) 
 
 
+            anyflag = docmdflag
             if interactive:
                     guiflagger = flagplotter(visible=True)
                     guiflagger._plotter.legend(loc=1)
                     guiflagger.plot(s)
                     finish=raw_input("Press enter to finish interactive flagging:")
                     guiflagger._plotter.unmap()
+                    anyflag = (anyflag or guiflagger._ismodified)
                     guiflagger._plotter = None
                     del guiflagger
+
+            if not anyflag:
+                    del s, sel
+                    raise Exception, 'No flag operation. Finish without saving'
 
             if ( abs(plotlevel) > 0 ):
                     #Plot the result
                     #print "Showing only the first spectrum..."
                     casalog.post( "Showing only the first spectrum..." )
-                    row=rowlist[0]
+                    #row=rowlist[0]
+                    row=0
                     if not myp or myp.is_dead:
                         if sd.rcParams['plotter.gui']:
                             from asap.asaplotgui import asaplotgui as asaplot
@@ -299,6 +306,7 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
                     myp = asaplot()
                     myp.hold()
                     myp.clear()
+                    colours = ["green","red","#dddddd","#777777"]
                     myp.palette(0,colours)
                     myp.set_panels()
                     myp.set_line(label="Spectrum after %s" % flgmode+'ging')
@@ -314,6 +322,7 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
                     #y = ma.masked_array(y,mask=logical_not(allmsk))
                     ym = ma.masked_array(y,mask=allmskarr)
                     myp.plot(x,ym)
+                    xlim=[min(x),max(x)]
                     myp.axes.set_xlim(xlim)
                     if ( plotlevel < 0 ):
                             # Hardcopy - currently no way w/o screen display first
@@ -322,7 +331,7 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
                     myp.release()
 
 
-           # Now save the spectrum and write out final ms
+            # Now save the spectrum and write out final ms
             if ( (outform == 'ASCII') or (outform == 'ascii') ):
                     outform = 'ASCII'
                     spefile = project + '_'

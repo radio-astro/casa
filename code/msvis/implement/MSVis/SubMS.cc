@@ -914,6 +914,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
      << "copyPointing took " << timer.real() << "s."
      << LogIO::POST;
 
+  success &= copyProcessor();
   success &= copyState();
   timer.mark();
   success &= copySyscal();
@@ -4516,7 +4517,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    newCHAN_WIDTH.resize(newNUM_CHAN);
 	    newRESOLUTION.resize(newNUM_CHAN);
  	    newEFFECTIVE_BW.resize(newNUM_CHAN);
-	    for(uInt i=0; i<newNUM_CHAN; i++){
+	    for(Int i=0; i<newNUM_CHAN; i++){
 	      newXout[i] = (newChanLoBound[i]+newChanHiBound[i])/2.;
 	      newCHAN_WIDTH[i] = newChanHiBound[i]-newChanLoBound[i];
 	      newRESOLUTION[i] = newCHAN_WIDTH[i]; // to be revisited
@@ -6886,6 +6887,9 @@ Bool SubMS::copyGenericSubtables(){
   // locking error will result.
   const TableRecord& outkws = msOut_p.keywordSet();
   for(uInt i = 0; i < outkws.nfields(); ++i){
+    // os << LogIO::DEBUG1
+    //    << "outkws.name(" << i << "): " << outkws.name(i)
+    //    << LogIO::POST;
     if(outkws.type(i) == TpTable && inkws.isDefined(outkws.name(i)))
       inkws.removeField(outkws.name(i));
   }
@@ -6936,6 +6940,17 @@ Bool SubMS::copyGenericSubtables(){
     return True;
   }
   
+  Bool SubMS::copyProcessor()
+  {  
+    const MSProcessor& oldProc = mssel_p.processor();
+    MSProcessor& newProc = msOut_p.processor();
+
+    TableCopy::copyRows(newProc, oldProc);
+    //W TableCopy::deepCopy(newProc, oldProc, false);
+    
+    return True;
+  }
+
 Bool SubMS::copyState()
 {  
   // STATE is allowed to not exist, even though it is not optional in the MS
@@ -7551,8 +7566,16 @@ Bool SubMS::doChannelMods(const Vector<MS::PredefinedColumns>& datacols)
       
         vb.channelAve(chanAveBounds[viIn.spectralWindow()]);
 
-        if(vb.flagCube().shape() != vb.visCube().shape())
-          throw(AipsError("Shape error after channel averaging!"));
+        if(nCmplx > 0){
+          if(vb.flagCube().shape() !=
+             vb.dataCube(cmplxColLabels[0]).shape())
+            throw(AipsError("Shape error after channel averaging!"));
+        }
+        else if(doFloat){
+          if(vb.flagCube().shape() != vb.floatDataCube().shape())
+            throw(AipsError("Shape error after channel averaging!"));
+        }
+        // else  we aren't doing anything, it seems.
 
         // Write the output.
         for(uInt colind = 0; colind < nCmplx; ++colind){

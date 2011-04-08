@@ -521,7 +521,6 @@ class split_test_cst(unittest.TestCase):
                                       0, 0, 0, 0, 0, 0, 0,
                                       0, 0, 0, 0, 0, 0, 0]))
         
-
 class split_test_state(unittest.TestCase):
     """
     Checks a simple copy of the STATE subtable.
@@ -563,6 +562,47 @@ class split_test_state(unittest.TestCase):
         Was the STATE subtable copied?
         """
         compare_tables(self.outms + '/STATE', self.inpms + '/STATE')
+
+class split_test_cavcd(unittest.TestCase):
+    """
+    Checks that the CORRECTED_DATA column can be channel averaged.
+    """
+    inpms = 'split/labelled_by_time+ichan.ms'    
+    outms = 'cavcd.ms'
+
+    def setUp(self):
+        try:
+            shutil.rmtree(self.outms, ignore_errors=True)
+        
+            if not os.path.exists(self.inpms):
+                # Copying is technically unnecessary for split,
+                # but self.inpms is shared by other tests, so making
+                # it readonly might break them.
+                shutil.copytree(datapath + self.inpms, self.inpms)
+                
+            print "\n\tSplitting", self.inpms
+            splitran = split(self.inpms, self.outms, datacolumn='corrected',
+                             field='', spw='', width=4,
+                             antenna='',
+                             timebin='0s', timerange='',
+                             scan='', array='', uvrange='',
+                             correlation='', async=False)
+        except Exception, e:
+            print "Error splitting", self.inpms, "to", self.outms
+            raise e
+
+    def tearDown(self):
+        shutil.rmtree(self.inpms, ignore_errors=True)
+        shutil.rmtree(self.outms, ignore_errors=True)
+
+    def test_cavcd(self):
+        """
+        Was the CORRECTED_DATA column channel averaged?
+        """
+        tb.open(self.outms)
+        cod = tb.getcell('DATA', 0)
+        tb.close()
+        check_eq(cod.shape, (1, 2))
 
 class split_test_genericsubtables(unittest.TestCase):
     """
@@ -1005,5 +1045,5 @@ def suite():
     return [split_test_tav, split_test_cav, split_test_cst, split_test_state,
             split_test_singchan, split_test_unorderedpolspw, split_test_blankov,
             split_test_tav_then_cvel, split_test_genericsubtables,
-            split_test_chanwidth, split_test_almapol]
+            split_test_chanwidth, split_test_cavcd, split_test_almapol]
     

@@ -243,7 +243,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="doubleArray" name="margin" subparam='true'>
-            <description>subplot margins in [left, bottom, right, top, horizontal space, vertical space]</description>
+            <description>subplot margins in figure coordinate</description>
             <value type="vector"></value>
     </param>
 
@@ -525,6 +525,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                           The order of elements should be:
                           [left, bottom, right, top, horizontal space btw panels,
                           vertical space btw panels]
+                        example: margin = [0.125, 0.1, 0.9, 0.9, 0.2, 0.2]
                 legendloc -- legend location on the axes (0-10)
                            options: (integer) 0 -10 
                                     see help of "sd.plotter.set_legend" for 

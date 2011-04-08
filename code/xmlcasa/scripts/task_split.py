@@ -85,6 +85,10 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
     
     if timebin == '0s':
         timebin = '-1s'
+
+    if '^' in spw:
+        casalog.post("The interpretation of ^n in split's spw strings has changed from 'average n' to 'skip n' channels!", 'WARN')
+        casalog.post("Watch for Slicer errors", 'WARN')
         
     if type(width) == str:
         try:
