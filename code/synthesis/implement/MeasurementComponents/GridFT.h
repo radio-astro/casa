@@ -42,6 +42,7 @@
 #include <scimath/Mathematics/ConvolveGridder.h>
 #include <lattices/Lattices/LatticeCache.h>
 #include <lattices/Lattices/ArrayLattice.h>
+//#include <synthesis/MeasurementComponents/SynthesisPeek.h>
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -216,6 +217,8 @@ public:
 
   virtual String name();
   virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
+  virtual void ComputeResiduals(VisBuffer&vb, Bool useCorrected) {};
+
 protected:
 
 
@@ -281,6 +284,8 @@ protected:
 
   //machine name
   String machineName_p;
+
+  //  casa::async::SynthesisAsyncPeek *peek;
 };
 
 } //# NAMESPACE CASA - END

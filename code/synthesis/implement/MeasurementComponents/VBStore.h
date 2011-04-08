@@ -38,23 +38,38 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     inline Int beginRow()          {return beginRow_p;}
     inline Int endRow()            {return endRow_p;}
     inline Bool dopsf()            {return dopsf_p;}
+    inline Bool useCorrected()     {return useCorrected_p;};
     Matrix<Double>& uvw()          {return uvw_p;};
     Vector<Bool>& rowFlag()        {return rowFlag_p;};
     Cube<Bool>& flagCube()         {return flagCube_p;};
     Matrix<Float>& imagingWeight() {return imagingWeight_p;};
     Cube<Complex>& visCube()       {return visCube_p;};
     Vector<Double>& freq()         {return freq_p;};
+    Cube<Complex>& modelCube()     {return modelCube_p;};
+    Cube<Complex>& correctedCube() {return correctedCube_p;};
 
     void reference(const VBStore& other)
     {
       nRow_p=other.nRow_p;  beginRow_p=other.beginRow_p; endRow_p=other.endRow_p;
       dopsf_p = other.dopsf_p;
+      useCorrected_p = other.useCorrected_p;
       uvw_p.reference(other.uvw_p);
       rowFlag_p.reference(other.rowFlag_p);
       flagCube_p.reference(other.flagCube_p);
       imagingWeight_p.reference(other.imagingWeight_p);
       visCube_p.reference(other.visCube_p);
       freq_p.reference(other.freq_p);
+      modelCube_p.reference(other.modelCube_p);
+      correctedCube_p.reference(other.correctedCube_p);
+
+      // nRow_p=other.nRow_p;  beginRow_p=other.beginRow_p; endRow_p=other.endRow_p;
+      // dopsf_p = other.dopsf_p;
+      // uvw_p.assign(other.uvw_p);
+      // rowFlag_p.assign(other.rowFlag_p);
+      // flagCube_p.assign(other.flagCube_p);
+      // imagingWeight_p.assign(other.imagingWeight_p);
+      // visCube_p.assign(other.visCube_p);
+      // freq_p.assign(other.freq_p);
     }
 
     Int nRow_p, beginRow_p, endRow_p;
@@ -62,9 +77,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<Bool> rowFlag_p;
     Cube<Bool> flagCube_p;
     Matrix<Float> imagingWeight_p;
-    Cube<Complex> visCube_p;
+    Cube<Complex> visCube_p, modelCube_p, correctedCube_p;
     Vector<Double> freq_p;
-    Bool dopsf_p;
+    Bool dopsf_p,useCorrected_p;
   };
 
 } //# NAMESPACE CASA - END

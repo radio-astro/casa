@@ -82,7 +82,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			   freqFrameValid_p(False), 
 			   freqInterpMethod_p(InterpolateArray1D<Double,Complex>::nearestNeighbour), 
 			   pointingDirCol_p("DIRECTION"),
-			   cfStokes_p(), cfCache_p(), cfs_p(), cfwts_p()
+			   cfStokes_p(), cfCache_p(), cfs_p(), cfwts_p(), canComputeResiduals_p(False)
   {
     spectralCoord_p=SpectralCoordinate();
     isIOnly=False;
@@ -99,7 +99,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     freqInterpMethod_p(InterpolateArray1D<Double,Complex>::nearestNeighbour), 
     pointingDirCol_p("DIRECTION"),
     cfStokes_p(), cfCache_p(cfcache), cfs_p(), cfwts_p(),
-    convFuncCtor_p(cf)
+    convFuncCtor_p(cf),canComputeResiduals_p(False)
   {
     spectralCoord_p=SpectralCoordinate();
     isIOnly=False;
@@ -174,6 +174,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       polInUse_p = other.polInUse_p;
       cfs_p = other.cfs_p;
       cfwts_p = other.cfwts_p;
+      canComputeResiduals_p = other.canComputeResiduals_p;
     };
     return *this;
   };

@@ -351,6 +351,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			     Bool Square=False);
     void correctAntiAliasing(Lattice<Complex>& cf);
     virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
+    virtual void ComputeResiduals(VisBuffer&vb, Bool useCorrected) {};
+
   protected:
     
     // Padding in FFT

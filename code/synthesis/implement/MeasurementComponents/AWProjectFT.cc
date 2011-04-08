@@ -2058,26 +2058,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // Set up VBStore object to point to the relavent info. of the VB.
     //
-    vbs.nRow = vb.nRow();
-    vbs.uvw.reference(uvw);
-    vbs.imagingWeight.reference(imagingweight);
-    vbs.visCube.reference(visData);
-    vbs.freq.reference(interpVisFreq_p);
+    vbs.nRow_p = vb.nRow();
+    vbs.beginRow_p = 0;
+    vbs.endRow_p = vbs.nRow_p;
+
+    vbs.uvw_p.reference(uvw);
+    vbs.imagingWeight_p.reference(imagingweight);
+    vbs.visCube_p.reference(visData);
+    vbs.freq_p.reference(interpVisFreq_p);
     //   vbs.rowFlag.resize(0); vbs.rowFlag = vb.flagRow();  
-    vbs.rowFlag.reference(vb.flagRow());
+    vbs.rowFlag_p.reference(vb.flagRow());
     if(!usezero_p) 
-      for (Int rownr=0; rownr<vbs.nRow; rownr++) 
-	if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) vbs.rowFlag(rownr)=True;
+      for (Int rownr=0; rownr<vbs.nRow_p; rownr++) 
+	if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) vbs.rowFlag_p(rownr)=True;
 
     // Really nice way of converting a Cube<Int> to Cube<Bool>.
     // However the VBS objects should ultimately be references
     // directly to bool cubes.
     //  vbs.rowFlag.resize(rowFlags.shape());  vbs.rowFlag  = False; vbs.rowFlag(rowFlags) = True;
-    vbs.flagCube.resize(flagCube.shape());  vbs.flagCube = False; vbs.flagCube(flagCube!=0) = True;
+    vbs.flagCube_p.resize(flagCube.shape());  vbs.flagCube_p = False; vbs.flagCube_p(flagCube!=0) = True;
     //
     // Set the convolution function for the re-sampler.
     // Here, rotate the conv. func. by the PA difference first.
     //
+    // CFStore::data is a CountedPtr.  The following allocation via
+    // "new" without explicit delete should not lead to memory leak.
     CFStore rotatedConvFunc; rotatedConvFunc.data=new Array<Complex>();
     // The everything else from cfs_p other than the data itself.
     rotatedConvFunc.set(cfs_p);

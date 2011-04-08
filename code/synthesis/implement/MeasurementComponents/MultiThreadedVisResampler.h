@@ -33,6 +33,7 @@
 #include <synthesis/MeasurementComponents/ResamplerWorklet.h>
 #include <synthesis/MeasurementComponents/CFStore.h>
 #include <synthesis/MeasurementComponents/VBStore.h>
+#include <synthesis/Utilities/ThreadTimers.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Vector.h>
@@ -40,16 +41,21 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogSink.h>
 #include <casa/Logging/LogMessage.h>
-#define DEFAULTNOOFCORES 7
-
+#define DEFAULTNOOFCORES -1
+#define FTMachineNumThreadsEnvVar "ftmachine_num_threads"
 namespace casa { //# NAMESPACE CASA - BEGIN
   class MultiThreadedVisibilityResampler
   {
   public: 
-    MultiThreadedVisibilityResampler():
+    
+     MultiThreadedVisibilityResampler():
       resamplers_p(), doubleGriddedData_p(), singleGriddedData_p(), 
       sumwt_p(), gridderWorklets_p(), vbsVec_p()
-    {nelements_p=DEFAULTNOOFCORES;};
+    {
+      nelements_p = SynthesisUtils::getenv(FTMachineNumThreadsEnvVar, 1);
+      if (nelements_p < 0) nelements_p = 1;
+      //      nelements_p=DEFAULTNOOFCORES;
+    };
 
     MultiThreadedVisibilityResampler(const Bool& doublePrecision, 
 				 const Int& n=DEFAULTNOOFCORES);
@@ -115,6 +121,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual void GridToData(VBStore& vbs, Array<Complex>& griddedData); 
     //    virtual void GridToData(VBStore& vbs, Array<Complex>& griddedData); 
 
+    virtual void ComputeResiduals(VBStore& vbs);
     //
     //------------------------------------------------------------------------------
     //----------------------------Private parts-------------------------------------
@@ -143,9 +150,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<CountedPtr<Matrix<Double> > > sumwt_p;
     Vector<CountedPtr<ResamplerWorklet> > gridderWorklets_p;
     Vector<VBStore> vbsVec_p;
-    ThreadCoordinator<Bool>* threadClerk_p;
+    //    CountedPtr<ThreadCoordinator<Bool> > threadClerk_p;
+    CountedPtr<ThreadCoordinator<Int> > threadClerk_p;
     Bool threadStarted_p;
-  };
+    DT tSetupG, tSendDataG, tWaitForWorkG, tOutsideG;
+    DT tSetupDG, tSendDataDG, tWaitForWorkDG, tOutsideDG;
+    Timers t4G_p,t4DG_p;
+    async::Mutex *mutexForResamplers_p;
+ };
 }; //# NAMESPACE CASA - END
 
 #endif // 

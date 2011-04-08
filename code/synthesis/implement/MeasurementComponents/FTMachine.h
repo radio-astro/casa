@@ -239,6 +239,8 @@ public:
   // term in the CFCache.
   virtual void setMiscInfo(const Int qualifier)=0;
 
+  virtual Bool canComputeResiduals() {return canComputeResiduals_p;};
+  virtual void ComputeResiduals(VisBuffer&vb, Bool useCorrected) = 0;
 protected:
 
   LogIO logIO_p;
@@ -348,6 +350,7 @@ protected:
   CountedPtr<CFCache> cfCache_p;
   CFStore cfs_p, cfwts_p;
   CountedPtr<ConvolutionFunction> convFuncCtor_p;
+  Bool canComputeResiduals_p;
  private:
   //Some temporary wasteful function for swapping axes because we don't 
   //Interpolation along the second axis...will need to implement 

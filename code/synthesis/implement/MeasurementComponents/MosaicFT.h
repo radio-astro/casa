@@ -224,6 +224,7 @@ public:
   //reset weight image
   virtual void reset();
   virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
+  virtual void ComputeResiduals(VisBuffer&vb, Bool useCorrected) {};
 
 protected:        
 
