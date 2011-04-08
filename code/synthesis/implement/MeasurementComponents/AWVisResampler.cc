@@ -80,13 +80,15 @@ namespace casa{
     // static Double tt=-1;
     // if (vbs.freq[0] != tt) {tt=vbs.freq[0];cerr << tt << endl;}
 
-    rbeg = 0;       rend = vbs.nRow;
+    rbeg = 0;       rend = vbs.nRow_p;
+    rbeg = vbs.beginRow_p;
+    rend = vbs.endRow_p;
     
     nx = grid.shape()[0]; ny = grid.shape()[1]; nw = cfShape[2];
     nGridPol = grid.shape()[2]; nGridChan = grid.shape()[3];
 
-    nDataPol  = vbs.flagCube.shape()[0];
-    nDataChan = vbs.flagCube.shape()[1];
+    nDataPol  = vbs.flagCube_p.shape()[0];
+    nDataChan = vbs.flagCube_p.shape()[1];
 
     sampling[0] = sampling[1] = convFuncStore_p.sampling[0];
     support(0) = convFuncStore_p.xSupport[0];
@@ -97,13 +99,13 @@ namespace casa{
     const Int *iPosPtr = igrdpos.getStorage(Dummy);
     register Complex* convFuncV=cfs.data->getStorage(Dummy);
       
-    register Double *freq=vbs.freq.getStorage(Dummy);
-    register Bool *rowFlag=vbs.rowFlag.getStorage(Dummy);
+    register Double *freq=vbs.freq_p.getStorage(Dummy);
+    register Bool *rowFlag=vbs.rowFlag_p.getStorage(Dummy);
 
-    Matrix<Float> imagingWeight(vbs.imagingWeight);
-    Cube<Complex> visCube(vbs.visCube);
-    Matrix<Double> uvw(vbs.uvw);
-    Cube<Bool> flagCube(vbs.flagCube);
+    Matrix<Float> imagingWeight(vbs.imagingWeight_p);
+    Cube<Complex> visCube(vbs.visCube_p);
+    Matrix<Double> uvw(vbs.uvw_p);
+    Cube<Bool> flagCube(vbs.flagCube_p);
     Vector<Int> gridInc, cfInc;
     //    cacheAxisIncrements(nx,ny,nGridPol, nGridChan);
     cacheAxisIncrements(grid.shape().asVector(), gridInc);
@@ -220,13 +222,15 @@ namespace casa{
       .referenceValue()(0);
 
     rbeg=0;
-    rend=vbs.nRow;
+    rend=vbs.nRow_p;
+    rbeg = vbs.beginRow_p;
+    rend = vbs.endRow_p;
     nx       = grid.shape()[0]; ny        = grid.shape()[1];
     nw       = cfShape[2];
     nGridPol = grid.shape()[2]; nGridChan = grid.shape()[3];
 
-    nDataPol  = vbs.flagCube.shape()[0];
-    nDataChan = vbs.flagCube.shape()[1];
+    nDataPol  = vbs.flagCube_p.shape()[0];
+    nDataChan = vbs.flagCube_p.shape()[1];
 
     sampling[0] = sampling[1] = convFuncStore_p.sampling[0];
     support(0) = convFuncStore_p.xSupport[0];
@@ -243,12 +247,12 @@ namespace casa{
     const Int *iPosPtr = igrdpos.getStorage(Dummy);
     Complex *convFunc=(*(convFuncStore_p.data)).getStorage(Dummy);
     Complex* convFuncV=convFuncStore_p.data->getStorage(Dummy);
-    Double *freq=vbs.freq.getStorage(Dummy);
-    Bool *rowFlag=vbs.rowFlag.getStorage(Dummy);
-    Matrix<Float> imagingWeight(vbs.imagingWeight);
-    Cube<Complex> visCube(vbs.visCube);
-    Matrix<Double> uvw(vbs.uvw);
-    Cube<Bool> flagCube(vbs.flagCube);
+    Double *freq=vbs.freq_p.getStorage(Dummy);
+    Bool *rowFlag=vbs.rowFlag_p.getStorage(Dummy);
+    Matrix<Float> imagingWeight(vbs.imagingWeight_p);
+    Cube<Complex> visCube(vbs.visCube_p);
+    Matrix<Double> uvw(vbs.uvw_p);
+    Cube<Bool> flagCube(vbs.flagCube_p);
     Vector<Int> gridInc, cfInc;
 
     //    cacheAxisIncrements(nx,ny,nGridPol, nGridChan);
