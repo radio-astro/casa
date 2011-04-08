@@ -4021,9 +4021,11 @@ const Vector<Double> &MeasTable::Planetary(MeasTable::Types which,
     LogIO os(LogOrigin("MeasTable",
 		       String("Planetary(MeasTable::Types, Double)"),
 		       WHERE));
-    os << String("Cannot find the planetary data table ") +
-      tnam[fil] << LogIO::EXCEPTION;
-  };
+    os << "Cannot find the planetary data for MeasJPL object number " << (Int) which
+       << " at UT day " << T << " in table "
+       << tnam[fil] << LogIO::WARN;
+    res = 0.;
+  }
   return res;
 }
 
