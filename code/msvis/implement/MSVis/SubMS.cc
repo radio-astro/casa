@@ -1595,18 +1595,71 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     ROScalarColumn<Double> time(fieldIn.time());
     
     String refstr;
+    String nameVarRefColDelayDir, nameVarRefColPhaseDir, nameVarRefColRefDir;
+
     // Need to correctly define the direction measures.
-    delayDir.keywordSet().asRecord("MEASINFO").get("Ref", refstr);
-    //  MDirection::getType(dir1, refstr);
-    msField.delayDir().rwKeywordSet().asrwRecord("MEASINFO").define("Ref",
-                                                                    refstr);
-    phaseDir.keywordSet().asRecord("MEASINFO").get("Ref", refstr);
-    msField.phaseDir().rwKeywordSet().asrwRecord("MEASINFO").define("Ref",
-                                                                    refstr);
-    refDir.keywordSet().asRecord("MEASINFO").get("Ref", refstr);
-    msField.referenceDir().rwKeywordSet().asrwRecord("MEASINFO").define("Ref",
-                                                                        refstr);
-    
+    // DelayDir
+    if(delayDir.keywordSet().asRecord("MEASINFO").isDefined("Ref")){
+      delayDir.keywordSet().asRecord("MEASINFO").get("Ref", refstr);
+      //  MDirection::getType(dir1, refstr);
+      msField.delayDir().rwKeywordSet().asrwRecord("MEASINFO").define("Ref",refstr);
+    }
+    if(delayDir.keywordSet().asRecord("MEASINFO").isDefined("VarRefCol")){ // it's a variable ref. column
+      delayDir.keywordSet().asRecord("MEASINFO").get("VarRefCol", refstr);
+      msField.delayDir().rwKeywordSet().asrwRecord("MEASINFO").define("VarRefCol",refstr);
+      nameVarRefColDelayDir = refstr;
+      Vector<String> refTypeV;
+      delayDir.keywordSet().asRecord("MEASINFO").get("TabRefTypes", refTypeV);
+      msField.delayDir().rwKeywordSet().asrwRecord("MEASINFO").define("TabRefTypes",refTypeV);      
+      Vector<uInt> refCodeV;
+      delayDir.keywordSet().asRecord("MEASINFO").get("TabRefCodes", refCodeV);
+      msField.delayDir().rwKeywordSet().asrwRecord("MEASINFO").define("TabRefCodes",refCodeV);      
+      Int refid=msField.delayDir().keywordSet().asRecord("MEASINFO").fieldNumber("Ref");
+      if(refid>=0){ // erase the redundant Ref keyword
+	msField.delayDir().rwKeywordSet().asrwRecord("MEASINFO").removeField(RecordFieldId(refid));
+      }
+    }
+    // PhaseDir
+    if(phaseDir.keywordSet().asRecord("MEASINFO").isDefined("Ref")){
+      phaseDir.keywordSet().asRecord("MEASINFO").get("Ref", refstr);
+      msField.phaseDir().rwKeywordSet().asrwRecord("MEASINFO").define("Ref", refstr);
+    }
+    if(phaseDir.keywordSet().asRecord("MEASINFO").isDefined("VarRefCol")){ // it's a variable ref. column
+      phaseDir.keywordSet().asRecord("MEASINFO").get("VarRefCol", refstr);
+      msField.phaseDir().rwKeywordSet().asrwRecord("MEASINFO").define("VarRefCol",refstr);
+      nameVarRefColPhaseDir = refstr;
+      Vector<String> refTypeV;
+      phaseDir.keywordSet().asRecord("MEASINFO").get("TabRefTypes", refTypeV);
+      msField.phaseDir().rwKeywordSet().asrwRecord("MEASINFO").define("TabRefTypes",refTypeV);      
+      Vector<uInt> refCodeV;
+      phaseDir.keywordSet().asRecord("MEASINFO").get("TabRefCodes", refCodeV);
+      msField.phaseDir().rwKeywordSet().asrwRecord("MEASINFO").define("TabRefCodes",refCodeV);      
+      Int refid=msField.phaseDir().keywordSet().asRecord("MEASINFO").fieldNumber("Ref");
+      if(refid>=0){
+	msField.phaseDir().rwKeywordSet().asrwRecord("MEASINFO").removeField(RecordFieldId(refid));
+      }
+    }
+    // ReferenceDir
+    if(refDir.keywordSet().asRecord("MEASINFO").isDefined("Ref")){
+      refDir.keywordSet().asRecord("MEASINFO").get("Ref", refstr);
+      msField.referenceDir().rwKeywordSet().asrwRecord("MEASINFO").define("Ref",refstr);
+    }
+    if(refDir.keywordSet().asRecord("MEASINFO").isDefined("VarRefCol")){ // it's a variable ref. column
+      refDir.keywordSet().asRecord("MEASINFO").get("VarRefCol", refstr);
+      msField.referenceDir().rwKeywordSet().asrwRecord("MEASINFO").define("VarRefCol",refstr);
+      nameVarRefColRefDir = refstr;
+      Vector<String> refTypeV;
+      refDir.keywordSet().asRecord("MEASINFO").get("TabRefTypes", refTypeV);
+      msField.referenceDir().rwKeywordSet().asrwRecord("MEASINFO").define("TabRefTypes",refTypeV);      
+      Vector<uInt> refCodeV;
+      refDir.keywordSet().asRecord("MEASINFO").get("TabRefCodes", refCodeV);
+      msField.referenceDir().rwKeywordSet().asrwRecord("MEASINFO").define("TabRefCodes",refCodeV);
+      Int refid=msField.referenceDir().keywordSet().asRecord("MEASINFO").fieldNumber("Ref");
+      if(refid>=0){
+	msField.referenceDir().rwKeywordSet().asrwRecord("MEASINFO").removeField(RecordFieldId(refid));
+      }
+    }
+
     // ...and the time measure...
     time.keywordSet().asRecord("MEASINFO").get("Ref", refstr);
     msField.time().rwKeywordSet().asrwRecord("MEASINFO").define("Ref", refstr);
@@ -1641,11 +1694,36 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       }
 
       if(nAddedCols > 0){
-        ROScalarColumn<Int> eID(fieldIn.ephemerisId());
 
-        for(uInt k = 0; k < fieldid_p.nelements(); ++k)
-          msField.ephemerisId().put(k, eID(fieldid_p[k]));
+        ROScalarColumn<Int> eID(fieldIn.ephemerisId());
+	if(!eID.isNull()){
+	  for(uInt k = 0; k < fieldid_p.nelements(); ++k)
+	    msField.ephemerisId().put(k, eID(fieldid_p[k]));
+	}
+
+	if(!nameVarRefColDelayDir.empty()){ // need to copy the reference column
+	  ROScalarColumn<Int>  dM(mssel_p.field(), nameVarRefColDelayDir);
+	  ScalarColumn<Int> cdMDirRef(msOut_p.field(), nameVarRefColDelayDir);
+	  for(uInt k = 0; k < fieldid_p.nelements(); ++k){
+	    cdMDirRef.put(k, dM(fieldid_p[k]));
+	  }
+	}
+	if(!nameVarRefColPhaseDir.empty()){ // need to copy the reference column
+	  ROScalarColumn<Int>  dM(mssel_p.field(), nameVarRefColPhaseDir);
+	  ScalarColumn<Int> cdMDirRef(msOut_p.field(), nameVarRefColPhaseDir);
+	  for(uInt k = 0; k < fieldid_p.nelements(); ++k){
+	    cdMDirRef.put(k, dM(fieldid_p[k]));
+	  }
+	}
+	if(!nameVarRefColRefDir.empty()){ // need to copy the reference column
+	  ROScalarColumn<Int>  dM(mssel_p.field(), nameVarRefColRefDir);
+	  ScalarColumn<Int> cdMDirRef(msOut_p.field(), nameVarRefColRefDir);
+	  for(uInt k = 0; k < fieldid_p.nelements(); ++k){
+	    cdMDirRef.put(k, dM(fieldid_p[k]));
+	  }
+	}
       }
+
     }
     catch(AipsError x){
       os << LogIO::EXCEPTION

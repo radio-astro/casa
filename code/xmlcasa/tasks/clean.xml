@@ -689,9 +689,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  field = '0~2'; field ids 0-2 for all input MSes
        spw -- Select spectral window/channels
                NOTE: channels de-selected here will contain all zeros if
-               selected by the parameter mode subparameters.    
-               Channel selection behaves differently in clean (e.g. The multiple
-               ranges are not supported yet).
+                         selected by the parameter mode subparameters.    
+                   ',' separates spws and spw-ranges
+                   ';' separates channels and channel-ranges
+                   ':' connects spws to channels      
+                   '~' indicates ranges
                default: ''=all spectral windows and channels
                  spw='0~2,4'; spectral windows 0,1,2,4 (all channels)
                  spw='0:5~61'; spw 0, channels 5 to 61
@@ -702,14 +704,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  For multiple MS input, a list of spw strings can be used:
                  spw=['0','0~3']; spw ids 0 for the first MS and 0-3 for the second
                  spw='0~3' spw ids 0-3 for all input MS
-                 <!-- COMMENTED OUT UNTIL PROPER PARSING OF CHANNEL SELECTION
-                 IS IMPLEMENTED -->
-			     <!-- multiple ranges do not work for 3.0.1
-                 spw='0:0~10;15~60'; spectral window 0 with channels 
-				    0-10,15-60
+                 spw='3:10~20;50~60' for multiple channel ranges within spw id 3
+                 spw='3:10~20;50~60,4:0~30' for different channel ranges for spw ids 3 and 4
                  spw='0:0~10,1:20~30,2:1;2;3'; spw 0, channels 0-10,
                       spw 1, channels 20-30, and spw 2, channels, 1,2 and 3
-                 -->
+                  
        selectdata -- Other data selection parameters
                default: True
 

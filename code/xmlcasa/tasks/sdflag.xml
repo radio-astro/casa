@@ -236,7 +236,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         (1) row based flagging by selecting 'panel' and (2) channel
         based flagging by selecting 'region's of channels on Flag plotter. 
         Note that the Flag plotter is loaded after carrying out the 
-        non-interactive flag operation if any specified.
+        non-interactive flag operation if any specified. See the cookbook for
+        details of how to select channel regions and spectra on the plotter.
 
         If plotlevel&gt;=1, the task asks you if you really apply the 
         flags before it is actually written to the data with a plot 

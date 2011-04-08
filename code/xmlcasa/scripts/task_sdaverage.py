@@ -35,8 +35,8 @@ def sdaverage(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler
                     s = "Output file '%s' exist." % (outfilename)
                     raise Exception, s
 
-
-            s=sd.scantable(sdfile,average=scanaverage,antenna=antenna)
+            #s=sd.scantable(sdfile,average=scanaverage,antenna=antenna)
+            s=sd.scantable(sdfile,average=False,antenna=antenna)
 
             if not isinstance(s,Scantable):
                     raise Exception, 'Scantable data %s, is not found'
@@ -262,7 +262,7 @@ def sdaverage(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler
                     if tweight=='none':
                             errmsg = "Please specify weight type of time averaging"
                             raise Exception,errmsg
-                    stave=sd.average_time(scal,weight=tweight,compel=averageall)
+                    stave=sd.average_time(scal,weight=tweight,scanav=scanaverage,compel=averageall)
                     del scal
                     # Now average over polarizations;
                     if ( polaverage ):
@@ -281,16 +281,18 @@ def sdaverage(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler
                             spave=stave.copy()
                     del stave
             else:
-                    if ( scanaverage ):
-                            # scan average if the input is a scantable
-                            spave=sd.average_time(scal,scanav=True)
-                            scal=spave.copy()
+                    #if ( scanaverage ):
+                    #        # scan average if the input is a scantable
+                    #        spave=sd.average_time(scal,weight=pweight,scanav=True)
+                    #        scal=spave.copy()
                     if ( polaverage ):
                             if pweight=='none':
                                     errmsg = "Please specify weight type of polarization averaging"
                                     raise Exception,errmsg
                             np = scal.npol()
                             if ( np > 1 ):
+                                    if not scanaverage:
+                                            scal=sd.average_time(scal,weight=pweight)
                                     spave=scal.average_pol(weight=pweight)
                             else:
                                     # only single polarization
@@ -298,7 +300,10 @@ def sdaverage(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler
                                     casalog.post( "Single polarization data - no need to average" )
                                     spave=scal.copy()
                     else:
-                            spave=scal.copy()
+                            if scanaverage:
+                                    spave=sd.average_time(scal,scanav=True)
+                            else:
+                                    spave=scal.copy()
                     del scal
 
             if ( abs(plotlevel) > 1 ):
