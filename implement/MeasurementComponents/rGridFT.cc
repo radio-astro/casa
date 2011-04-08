@@ -41,6 +41,7 @@
 #include <synthesis/MeasurementComponents/rGridFT.h>
 #include <synthesis/MeasurementComponents/Utils.h>
 #include <synthesis/MeasurementComponents/VisibilityResampler.h>
+#include <synthesis/MeasurementComponents/MultiThreadedVisResampler.h>
 #include <synthesis/MeasurementComponents/CFStore.h>
 #include <synthesis/MeasurementComponents/VBStore.h>
 #include <scimath/Mathematics/RigidVector.h>
@@ -75,7 +76,7 @@
 #include <casa/Utilities/CompositeNumber.h>
 #include <casa/OS/Timer.h>
 #include <casa/sstream.h>
-
+#define DORES True
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 rGridFT::rGridFT(Long icachesize, Int itilesize, String iconvType, Float padding,
@@ -84,9 +85,13 @@ rGridFT::rGridFT(Long icachesize, Int itilesize, String iconvType, Float padding
   gridder(0), isTiled(False), convType(iconvType),
   maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
   usezero_p(usezero), noPadding_p(False), usePut2_p(False), 
-  machineName_p("rGridFT"), visResampler_p()
+  machineName_p("rGridFT"), visResampler_p(useDoublePrec)
+
 {
+  logIO() << LogOrigin("rGridFT", "rGridFT")  << LogIO::NORMAL;
+  logIO() << "You are using a non-standard FTMachine" << LogIO::WARN << LogIO::POST;
   useDoubleGrid_p=useDoublePrec;  
+  canComputeResiduals_p=DORES;
 }
 
 rGridFT::rGridFT(Long icachesize, Int itilesize, String iconvType,
@@ -94,11 +99,14 @@ rGridFT::rGridFT(Long icachesize, Int itilesize, String iconvType,
 : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize),
   tilesize(itilesize), gridder(0), isTiled(False), convType(iconvType), maxAbsData(0.0), centerLoc(IPosition(4,0)),
   offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(False), 
-  usePut2_p(False), machineName_p("rGridFT"), visResampler_p()
+  usePut2_p(False), machineName_p("rGridFT"), visResampler_p(useDoublePrec)
 {
+  logIO() << LogOrigin("rGridFT", "rGridFT")  << LogIO::NORMAL;
+  logIO() << "You are using a non-standard FTMachine" << LogIO::WARN << LogIO::POST;
   mLocation_p=mLocation;
   tangentSpecified_p=False;
   useDoubleGrid_p=useDoublePrec;
+  canComputeResiduals_p=DORES;
 }
 
 rGridFT::rGridFT(Long icachesize, Int itilesize, String iconvType,
@@ -106,11 +114,14 @@ rGridFT::rGridFT(Long icachesize, Int itilesize, String iconvType,
 : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize),
   tilesize(itilesize), gridder(0), isTiled(False), convType(iconvType), maxAbsData(0.0), centerLoc(IPosition(4,0)),
   offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(False), 
-  usePut2_p(False), machineName_p("rGridFT"), visResampler_p()
+  usePut2_p(False), machineName_p("rGridFT"), visResampler_p(useDoublePrec)
 {
+  logIO() << LogOrigin("rGridFT", "rGridFT")  << LogIO::NORMAL;
+  logIO() << "You are using a non-standard FTMachine" << LogIO::WARN << LogIO::POST;
   mTangent_p=mTangent;
   tangentSpecified_p=True;
   useDoubleGrid_p=useDoublePrec;
+  canComputeResiduals_p=DORES;
 }
 
 rGridFT::rGridFT(Long icachesize, Int itilesize, String iconvType,
@@ -119,22 +130,28 @@ rGridFT::rGridFT(Long icachesize, Int itilesize, String iconvType,
 : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize),
   tilesize(itilesize), gridder(0), isTiled(False), convType(iconvType), maxAbsData(0.0), centerLoc(IPosition(4,0)),
   offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(False), 
-  usePut2_p(False),machineName_p("rGridFT"), visResampler_p()
+  usePut2_p(False),machineName_p("rGridFT"), visResampler_p(useDoublePrec)
 {
+  logIO() << LogOrigin("rGridFT", "rGridFT")  << LogIO::NORMAL;
+  logIO() << "You are using a non-standard FTMachine" << LogIO::WARN << LogIO::POST;
   mLocation_p=mLocation;
   mTangent_p=mTangent;
   tangentSpecified_p=True;
   useDoubleGrid_p=useDoublePrec;
+  canComputeResiduals_p=DORES;
 }
 
 rGridFT::rGridFT(const RecordInterface& stateRec)
-: FTMachine()
+  : FTMachine()
 {
   // Construct from the input state record
+  logIO() << LogOrigin("rGridFT", "rGridFT(RecordInterface)")  << LogIO::NORMAL;
+  logIO() << "You are using a non-standard FTMachine" << LogIO::WARN << LogIO::POST;
   String error;
-  if (!fromRecord(error, stateRec)) {
+  if (!fromRecord(error, stateRec)) 
     throw (AipsError("Failed to create gridder: " + error));
-  };
+  visResampler_p.init(useDoubleGrid_p);
+  canComputeResiduals_p=DORES;
 }
 
 //---------------------------------------------------------------------- 
@@ -177,8 +194,9 @@ rGridFT& rGridFT::operator=(const rGridFT& other)
 };
 
 //----------------------------------------------------------------------
-rGridFT::rGridFT(const rGridFT& other) : FTMachine(), machineName_p("rGridFT")
+  rGridFT::rGridFT(const rGridFT& other) : FTMachine(), machineName_p("rGridFT")
 {
+  //  visResampler_p.init(useDoubleGrid_p);
   operator=(other);
 }
 
@@ -186,7 +204,7 @@ rGridFT::rGridFT(const rGridFT& other) : FTMachine(), machineName_p("rGridFT")
 void rGridFT::init() {
 
   logIO() << LogOrigin("rGridFT", "init")  << LogIO::NORMAL;
-
+  canComputeResiduals_p = DORES;
   ok();
 
   /* hardwiring isTiled is False
@@ -416,6 +434,8 @@ void rGridFT::initializeToSky(ImageInterface<Complex>& iimage,
     arrayLattice = new ArrayLattice<Complex>(griddedData);
     lattice=arrayLattice;
   }
+  if(useDoubleGrid_p) visResampler_p.initializePutBuffers(griddedData2, sumWeight);
+  else                visResampler_p.initializePutBuffers(griddedData, sumWeight);
   //AlwaysAssert(lattice, AipsError);
 }
 
@@ -436,6 +456,8 @@ void rGridFT::finalizeToSky()
     imageCache->showCacheStatistics(o);
     logIO() << o.str() << LogIO::POST;
   }
+  if(useDoubleGrid_p) visResampler_p.GatherGrids(griddedData2, sumWeight);
+  else                visResampler_p.GatherGrids(griddedData, sumWeight);
 }
 
 
@@ -511,21 +533,24 @@ void rGridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   // Set up VBStore object to point to the relavent info. of the VB.
   VBStore vbs;
 
-  vbs.nRow = vb.nRow();
-  vbs.uvw.reference(uvw);
-  vbs.imagingWeight.reference(elWeight);
-  vbs.visCube.reference(data);
-  vbs.freq.reference(interpVisFreq_p);
-  vbs.rowFlag.resize(0); vbs.rowFlag = vb.flagRow();  
+  vbs.nRow_p = vb.nRow();
+  vbs.beginRow_p = 0;
+  vbs.endRow_p = vbs.nRow_p;
+
+  vbs.uvw_p.reference(uvw);
+  vbs.imagingWeight_p.reference(elWeight);
+  vbs.visCube_p.reference(data);
+  vbs.freq_p.reference(interpVisFreq_p);
+  vbs.rowFlag_p.resize(0); vbs.rowFlag_p = vb.flagRow();  
   if(!usezero_p) 
     for (Int rownr=startRow; rownr<=endRow; rownr++) 
-      if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) vbs.rowFlag(rownr)=True;
+      if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) vbs.rowFlag_p(rownr)=True;
 
   // Really nice way of converting a Cube<Int> to Cube<Bool>.
   // However the VBS objects should ultimately be references
   // directly to bool cubes.
   //  vbs.rowFlag.resize(rowFlags.shape());  vbs.rowFlag  = False; vbs.rowFlag(rowFlags) = True;
-  vbs.flagCube.resize(flags.shape());    vbs.flagCube = False; vbs.flagCube(flags!=0) = True;
+  vbs.flagCube_p.resize(flags.shape());    vbs.flagCube_p = False; vbs.flagCube_p(flags!=0) = True;
 
   visResampler_p.setParams(uvScale,uvOffset,dphase);
   visResampler_p.setMaps(chanMap, polMap);
@@ -582,20 +607,23 @@ void rGridFT::get(VisBuffer& vb, Int row)
   else 
     {
       VBStore vbs;
-      vbs.nRow = vb.nRow();
-      vbs.uvw.reference(uvw);
+      vbs.nRow_p = vb.nRow();
+      vbs.beginRow_p = 0;
+      vbs.endRow_p = vbs.nRow_p;
+
+      vbs.uvw_p.reference(uvw);
       //    vbs.imagingWeight.reference(elWeight);
-      vbs.visCube.reference(data);
-      vbs.freq.reference(interpVisFreq_p);
-      vbs.rowFlag.resize(0); vbs.rowFlag = vb.flagRow();  
+      vbs.visCube_p.reference(data);
+      vbs.freq_p.reference(interpVisFreq_p);
+      vbs.rowFlag_p.resize(0); vbs.rowFlag_p = vb.flagRow();  
       if(!usezero_p) 
 	for (Int rownr=startRow; rownr<=endRow; rownr++) 
-	  if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) vbs.rowFlag(rownr)=True;
+	  if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) vbs.rowFlag_p(rownr)=True;
 
       // Really nice way of converting a Cube<Int> to Cube<Bool>.
       // However these should ultimately be references directly to bool
       // cubes.
-      vbs.flagCube.resize(flags.shape());    vbs.flagCube = False; vbs.flagCube(flags!=0) = True;
+      vbs.flagCube_p.resize(flags.shape());    vbs.flagCube_p = False; vbs.flagCube_p(flags!=0) = True;
       //    vbs.rowFlag.resize(rowFlags.shape());  vbs.rowFlag  = False; vbs.rowFlag(rowFlags) = True;
       
       visResampler_p.setParams(uvScale,uvOffset,dphase);
@@ -935,6 +963,17 @@ String rGridFT::name(){
   return machineName_p;
 
 
+}
+
+void rGridFT::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
+{
+  VBStore vbs;
+  vbs.nRow_p = vb.nRow();
+  vbs.modelCube_p.reference(vb.modelVisCube());
+  if (useCorrected) vbs.correctedCube_p.reference(vb.correctedVisCube());
+  else vbs.visCube_p.reference(vb.visCube());
+  vbs.useCorrected_p = useCorrected;
+  visResampler_p.ComputeResiduals(vbs);
 }
 
 } //# NAMESPACE CASA - END

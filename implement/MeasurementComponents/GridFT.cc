@@ -73,7 +73,7 @@
 #include <casa/sstream.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
-
+  //  using namespace casa::async;
 GridFT::GridFT(Long icachesize, Int itilesize, String iconvType, Float padding,
 	       Bool usezero, Bool useDoublePrec)
 : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize), tilesize(itilesize),
@@ -83,6 +83,7 @@ GridFT::GridFT(Long icachesize, Int itilesize, String iconvType, Float padding,
   machineName_p("GridFT")
 {
   useDoubleGrid_p=useDoublePrec;  
+  //  peek=NULL;
 }
 
 GridFT::GridFT(Long icachesize, Int itilesize, String iconvType,
@@ -95,6 +96,7 @@ GridFT::GridFT(Long icachesize, Int itilesize, String iconvType,
   mLocation_p=mLocation;
   tangentSpecified_p=False;
   useDoubleGrid_p=useDoublePrec;
+  //  peek=NULL;
 }
 
 GridFT::GridFT(Long icachesize, Int itilesize, String iconvType,
@@ -107,6 +109,7 @@ GridFT::GridFT(Long icachesize, Int itilesize, String iconvType,
   mTangent_p=mTangent;
   tangentSpecified_p=True;
   useDoubleGrid_p=useDoublePrec;
+  //  peek=NULL;
 }
 
 GridFT::GridFT(Long icachesize, Int itilesize, String iconvType,
@@ -121,6 +124,7 @@ GridFT::GridFT(Long icachesize, Int itilesize, String iconvType,
   mTangent_p=mTangent;
   tangentSpecified_p=True;
   useDoubleGrid_p=useDoublePrec;
+  //  peek=NULL;
 }
 
 GridFT::GridFT(const RecordInterface& stateRec)
@@ -131,6 +135,7 @@ GridFT::GridFT(const RecordInterface& stateRec)
   if (!fromRecord(error, stateRec)) {
     throw (AipsError("Failed to create gridder: " + error));
   };
+  //  peek=NULL;
 }
 
 //---------------------------------------------------------------------- 
@@ -167,6 +172,7 @@ GridFT& GridFT::operator=(const GridFT& other)
     padding_p=other.padding_p;
     usezero_p=other.usezero_p;
     noPadding_p=other.noPadding_p;	
+    //    peek = other.peek;
   };
   return *this;
 };
@@ -183,6 +189,12 @@ void GridFT::init() {
   logIO() << LogOrigin("GridFT", "init")  << LogIO::NORMAL;
 
   ok();
+  // if (peek == NULL) 
+  //   {
+  //     // peek = new SynthesisAsyncPeek();
+  //     // peek->reset();
+  //     // peek->startThread();
+  //   }
 
   /* hardwiring isTiled is False
   // Padding is possible only for non-tiled processing
@@ -271,7 +283,7 @@ void GridFT::initializeToVis(ImageInterface<Complex>& iimage,
   ok();
 
   init();
-
+  //  peek->reset();
   // Initialize the maps for polarization and channel. These maps
   // translate visibility indices into image indices
   initMaps(vb);
@@ -416,6 +428,8 @@ void GridFT::finalizeToSky()
     imageCache->showCacheStatistics(o);
     logIO() << o.str() << LogIO::POST;
   }
+  //  peek->terminate();
+  //  peek->reset();
 }
 
 
@@ -520,8 +534,8 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 		 FTMachine::Type type, const Matrix<Float>& imwght)
 {
 
-
   gridOk(gridder->cSupport()(0));
+  //  peek->setVBPtr(&vb);
 
   //Check if ms has changed then cache new spw and chan selection
   if(vb.newMS())
@@ -540,7 +554,10 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 
   //No point in reading data if its not matching in frequency
   if(max(chanMap)==-1)
-    return;
+    {
+      //      peek->reset();
+      return;
+    }
 
   const Matrix<Float> *imagingweight;
   if(imwght.nelements()>0)
@@ -687,7 +704,7 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   if(!dopsf)
     data.freeStorage(datStorage, isCopy);
   elWeight.freeStorage(wgtStorage,iswgtCopy);
-
+  //  peek->reset();
 }
 
 

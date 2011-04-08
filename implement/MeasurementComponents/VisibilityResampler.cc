@@ -28,6 +28,8 @@
 
 #include <synthesis/MeasurementComponents/SynthesisError.h>
 #include <synthesis/MeasurementComponents/VisibilityResampler.h>
+#include <synthesis/MeasurementComponents/Utils.h>
+#include <msvis/MSVis/AsynchronousTools.h>
 #include <fstream>
 
 namespace casa{
@@ -36,14 +38,14 @@ namespace casa{
   //
   VisibilityResampler& VisibilityResampler::operator=(const VisibilityResampler& other)
   {
-    SETVEC(uvwScale_p, other.uvwScale_p);
-    SETVEC(offset_p, other.offset_p);
-    SETVEC(dphase_p, other.dphase_p);
-    SETVEC(chanMap_p, other.chanMap_p);
-    SETVEC(polMap_p, other.polMap_p);
+    SynthesisUtils::SETVEC(uvwScale_p, other.uvwScale_p);
+    SynthesisUtils::SETVEC(offset_p, other.offset_p);
+    SynthesisUtils::SETVEC(dphase_p, other.dphase_p);
+    SynthesisUtils::SETVEC(chanMap_p, other.chanMap_p);
+    SynthesisUtils::SETVEC(polMap_p, other.polMap_p);
 
     convFuncStore_p = other.convFuncStore_p;
-
+    myMutex_p = other.myMutex_p;
     return *this;
   }
   //
@@ -82,14 +84,14 @@ namespace casa{
     Double norm=0, wt, imgWt;
     Complex phasor, nvalue;
 
-    rbeg = 0;
-    rend = vbs.nRow;
-    
+    rbeg = vbs.beginRow_p;
+    rend = vbs.endRow_p;
+    //    cerr << rbeg << " " << rend << " " << vbs.nRow() << endl;
     nx       = grid.shape()[0]; ny        = grid.shape()[1];
     nGridPol = grid.shape()[2]; nGridChan = grid.shape()[3];
 
-    nDataPol  = vbs.flagCube.shape()[0];
-    nDataChan = vbs.flagCube.shape()[1];
+    nDataPol  = vbs.flagCube_p.shape()[0];
+    nDataChan = vbs.flagCube_p.shape()[1];
 
     sampling[0] = sampling[1] = convFuncStore_p.sampling[0];
     support(0) = convFuncStore_p.xSupport[0];
@@ -99,13 +101,13 @@ namespace casa{
     T __restrict__ *gridStore = grid.getStorage(gDummy);
     const Int * __restrict__ iPosPtr = igrdpos.getStorage(Dummy);
     Double *__restrict__ convFunc=(*(convFuncStore_p.rdata)).getStorage(Dummy);
-    Double * __restrict__ freq=vbs.freq.getStorage(Dummy);
-    Bool * __restrict__ rowFlag=vbs.rowFlag.getStorage(Dummy);
+    Double * __restrict__ freq=vbs.freq_p.getStorage(Dummy);
+    Bool * __restrict__ rowFlag=vbs.rowFlag_p.getStorage(Dummy);
 
-    Float * __restrict__ imagingWeight = vbs.imagingWeight.getStorage(Dummy);
-    Double * __restrict__ uvw = vbs.uvw.getStorage(Dummy);
-    Bool * __restrict__ flagCube = vbs.flagCube.getStorage(Dummy);
-    Complex * __restrict__ visCube = vbs.visCube.getStorage(Dummy);
+    Float * __restrict__ imagingWeight = vbs.imagingWeight_p.getStorage(Dummy);
+    Double * __restrict__ uvw = vbs.uvw_p.getStorage(Dummy);
+    Bool * __restrict__ flagCube = vbs.flagCube_p.getStorage(Dummy);
+    Complex * __restrict__ visCube = vbs.visCube_p.getStorage(Dummy);
     Double * __restrict__ scale = uvwScale_p.getStorage(Dummy);
     Double * __restrict__ offset = offset_p.getStorage(Dummy);
     Float * __restrict__ samplingPtr = sampling.getStorage(Dummy);
@@ -113,7 +115,7 @@ namespace casa{
     Int * __restrict__ locPtr=loc.getStorage(Dummy);
     Int * __restrict__ offPtr=off.getStorage(Dummy);
     Double * __restrict__ sumwtPtr = sumwt.getStorage(Dummy);
-    Int nDim = vbs.uvw.shape()[0];
+    Int nDim = vbs.uvw_p.shape()[0];
 
     cacheAxisIncrements(nx,ny,nGridPol, nGridChan);
 
@@ -202,13 +204,16 @@ namespace casa{
     Double norm=0, wt;
     Complex phasor, nvalue;
 
-    rbeg=0;
-    rend=vbs.nRow;
+    // rbeg=0;
+    // rend=vbs.nRow_p;
+    rbeg = vbs.beginRow_p;
+    rend = vbs.endRow_p;
+    //    cerr << rbeg << " " << rend << " " << vbs.nRow() << endl;
     nx       = grid.shape()[0]; ny        = grid.shape()[1];
     nGridPol = grid.shape()[2]; nGridChan = grid.shape()[3];
 
-    nDataPol  = vbs.flagCube.shape()[0];
-    nDataChan = vbs.flagCube.shape()[1];
+    nDataPol  = vbs.flagCube_p.shape()[0];
+    nDataChan = vbs.flagCube_p.shape()[1];
 
     sampling[0] = sampling[1] = convFuncStore_p.sampling[0];
     support(0) = convFuncStore_p.xSupport[0];
@@ -219,20 +224,20 @@ namespace casa{
     Vector<Int> igrdpos(4);
     const Int *__restrict__ iPosPtr = igrdpos.getStorage(Dummy);
     Double *__restrict__ convFunc=(*(convFuncStore_p.rdata)).getStorage(Dummy);
-    Double *__restrict__ freq=vbs.freq.getStorage(Dummy);
-    Bool *__restrict__ rowFlag=vbs.rowFlag.getStorage(Dummy);
+    Double *__restrict__ freq=vbs.freq_p.getStorage(Dummy);
+    Bool *__restrict__ rowFlag=vbs.rowFlag_p.getStorage(Dummy);
 
-    Float * __restrict__ imagingWeight = vbs.imagingWeight.getStorage(Dummy);
-    Double * __restrict__ uvw = vbs.uvw.getStorage(Dummy);
-    Bool * __restrict__ flagCube = vbs.flagCube.getStorage(Dummy);
-    Complex * __restrict__ visCube = vbs.visCube.getStorage(vbcDummy);
+    Float * __restrict__ imagingWeight = vbs.imagingWeight_p.getStorage(Dummy);
+    Double * __restrict__ uvw = vbs.uvw_p.getStorage(Dummy);
+    Bool * __restrict__ flagCube = vbs.flagCube_p.getStorage(Dummy);
+    Complex * __restrict__ visCube = vbs.visCube_p.getStorage(vbcDummy);
     Double * __restrict__ scale = uvwScale_p.getStorage(Dummy);
     Double * __restrict__ offset = offset_p.getStorage(Dummy);
     Float * __restrict__ samplingPtr = sampling.getStorage(Dummy);
     Double * __restrict__ posPtr=pos.getStorage(Dummy);
     Int * __restrict__ locPtr=loc.getStorage(Dummy);
     Int * __restrict__ offPtr=off.getStorage(Dummy);
-    Int nDim = vbs.uvw.shape()(0);
+    Int nDim = vbs.uvw_p.shape()(0);
 
     cacheAxisIncrements(nx,ny,nGridPol, nGridChan);
 
@@ -288,7 +293,7 @@ namespace casa{
       }
     }
     Complex *tt=(Complex *) visCube;
-    vbs.visCube.putStorage(tt,vbcDummy);
+    vbs.visCube_p.putStorage(tt,vbcDummy);
   }
   //
   //-----------------------------------------------------------------------------------
@@ -326,5 +331,50 @@ namespace casa{
       }
     else
       phasor=Complex(1.0);
+  }
+  void VisibilityResampler::ComputeResiduals(VBStore& vbs)
+  {
+    Int rbeg = vbs.beginRow_p, rend = vbs.endRow_p;
+    IPosition vbDataShape=vbs.modelCube_p.shape();
+    IPosition start(vbDataShape), last(vbDataShape);
+    start=0; start(2)=rbeg;
+    last(2)=rend; //last=last-1;
+
+    if (!vbs.useCorrected_p)
+      {
+	for(uInt ichan=start(0); ichan<last(0); ichan++)
+	  for(uInt ipol=start(1); ipol<last(1); ipol++)
+	    for(uInt irow=start(2); irow<last(2); irow++)
+	      vbs.modelCube_p(ichan,ipol,irow) = vbs.modelCube_p(ichan,ipol,irow) - vbs.visCube_p(ichan,ipol,irow);
+      }
+    else
+      {
+	for(uInt ichan=start(0); ichan<last(0); ichan++)
+	  for(uInt ipol=start(1); ipol<last(1); ipol++)
+	    for(uInt irow=start(2); irow<last(2); irow++)
+	      vbs.modelCube_p(ichan,ipol,irow) = vbs.modelCube_p(ichan,ipol,irow) - vbs.correctedCube_p(ichan,ipol,irow);
+      }
+      
+
+    // Slicer mySlice(start,last,Slicer::endIsLast);
+    // Cube<Complex> slicedModel, slicedData, slicedCorrected;
+    // if (!vbs.useCorrected_p) 
+    //   {
+    // 	{
+    // 	  async::MutexLocker tt(*myMutex_p);
+    // 	  slicedModel = Cube<Complex>(vbs.modelCube_p(mySlice));
+    // 	  slicedData = Cube<Complex>(vbs.visCube_p(mySlice));
+    // 	}
+    // 	slicedModel -= slicedData;
+    //   }
+    // else
+    //   {
+    // 	{
+    // 	  async::MutexLocker tt(*myMutex_p);
+    // 	  slicedModel = Cube<Complex>(vbs.modelCube_p(mySlice));
+    // 	  slicedCorrected = Cube<Complex>(vbs.correctedCube_p(mySlice));
+    // 	}
+    // 	slicedModel -= slicedCorrected;
+    //   }
   }
 };// end namespace casa

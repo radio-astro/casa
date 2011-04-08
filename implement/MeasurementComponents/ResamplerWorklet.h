@@ -54,13 +54,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ResamplerWorklet& operator=(const ResamplerWorklet& other);
 
     void setID(const Int& id) {myID_p=id;}
+    void initThread(Int& id, CountedPtr<ThreadCoordinator<Int> >& threadClerk,
+		    VisibilityResampler* resampler);
+    void initToVis(VBStore* vbs, Array<Complex>* skyFTGrid) ;
+    void initToSky(VBStore* vbs,Array<DComplex>* griddedData, Matrix<Double>* sumwt) ;
+    void initToSky(VBStore* vbs,Array<Complex>* griddedData, Matrix<Double>* sumwt) ;
+
     void init(Int& id, 
-	      ThreadCoordinator<Bool>* threadClerk,
+	      CountedPtr<ThreadCoordinator<Int> >& threadClerk,
 	      VisibilityResampler* resampler, VBStore* vbs,
 	      Array<DComplex>* griddedData, Matrix<Double>* sumwt,
 	      Array<Complex>* skyFTGrid=NULL);
     void init(Int& id, 
-	      ThreadCoordinator<Bool>* threadClerk,
+	      CountedPtr<ThreadCoordinator<Int> >& threadClerk,
 	      VisibilityResampler* resampler, VBStore* vbs,
 	      Array<Complex>* griddedData, Matrix<Double>* sumwt,
 	      Array<Complex>* skyFTGrid=NULL);
@@ -77,7 +83,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
   private:
     Int myID_p;
-    ThreadCoordinator<Bool> *myThreadClerk_p;
+    CountedPtr<ThreadCoordinator<Int> > myThreadClerk_p;
     VisibilityResampler *myResampler_p;
     VBStore* myVBStore_p;
     Array<DComplex>* myGriddedDataDouble_p;
