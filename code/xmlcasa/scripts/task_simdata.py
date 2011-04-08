@@ -43,6 +43,39 @@ def simdata(
             stacklevel=k
     myf=sys._getframe(stacklevel).f_globals
      
+    # create the utility object:
+    util=simutil(direction)  # this is the dir of the observation - could be ""
+    if verbose: util.verbose=True
+    msg=util.msg
+
+    # put output in directory called "project"
+    fileroot=project
+    if os.path.exists(fileroot):
+        if overwrite:
+            shutil.rmtree(fileroot)
+            os.mkdir(fileroot)
+        else:
+# this will break re-analysis of existing ms..
+#            timestr=time.strftime("%y%b%d_%H:%M:%S",time.gmtime(os.path.getctime(fileroot)))
+#            if os.path.exists(fileroot+"."+timestr):
+#                 msg("project exists and overwrite=F",priority="error")
+#                 return False
+#            else:
+#                shutil.move(fileroot,fileroot+"."+timestr)
+            #                os.mkdir(fileroot)
+            if (predict and os.path.exists(fileroot+"/"+project+".ms")):
+                msg(fileroot+"/"+project+".ms exists but overwrite=F",priority="error")
+                return False
+            if (image and os.path.exists(fileroot+"/"+project+".model")):
+                msg(fileroot+"/"+project+".model, image, and other imaging products exist but overwrite=F",priority="error")
+                return False
+            if (image and os.path.exists(fileroot+"/"+project+".fidelity")):
+                msg(fileroot+"/"+project+".fidelity and other analysis products exist but overwrite=F",priority="error")
+                return False
+    else:
+        os.mkdir(fileroot)
+
+
     saveinputs=myf['saveinputs']
     saveinputs('simdata',project+".simdata.last")
 
@@ -54,10 +87,6 @@ def simdata(
 
     # as of 20100507, newfig will delete the previous one
 
-    # create the utility object:
-    util=simutil(direction)  # this is the dir of the observation - could be ""
-    if verbose: util.verbose=True
-    msg=util.msg
     
     if type(skymodel)==type([]):
         skymodel=skymodel[0]
@@ -101,7 +130,7 @@ def simdata(
                 if os.path.exists(skymodel):
                     msg("When imaging from a previously predicted project, you should either set modifymodel=T with the same settings as before, or set modifymodel=F and skymodel=$project.skymodel.",priority="warn")
                     msg("Proceeding with "+project+".skymodel instead of "+skymodel,priority="warn")
-                    skymodel=project+".skymodel"
+                    skymodel=fileroot+"/"+project+".skymodel"
                 else:
                     msg("When imaging from a previously predicted project, you should either set modifymodel=T with the same settings as before, or set modifymodel=F and skymodel=$project.skymodel.",priority="error")
                     return False
@@ -115,9 +144,9 @@ def simdata(
                 # otherwise create $newmodel
                 default_model=project+".skymodel"
                 if skymodel==default_model:
-                    newmodel=project+".newmodel"
+                    newmodel=fileroot+"/"+project+".newmodel"
                 else:
-                    newmodel=default_model
+                    newmodel=fileroot+"/"+default_model
                 if os.path.exists(newmodel):
                     if overwrite:
                         shutil.rmtree(newmodel)
@@ -328,7 +357,7 @@ def simdata(
             pointings = util.calc_pointings2(pointingspacing,mapsize,maptype=maptype, direction=dir)
             nfld=len(pointings)
             etime = qa.convert(qa.quantity(integration),"s")['value']
-            ptgfile = project+".ptg.txt"
+            ptgfile = fileroot+"/"+project+".ptg.txt"
         else:
             if type(ptgfile)==type([]):
                 ptgfile=ptgfile[0]
@@ -397,7 +426,7 @@ def simdata(
             cl.done()
             cl.addcomponent(flux=calfluxjy,dir=caldirection,label="phase calibrator")
             # set reference freq to center freq of model
-            cl.rename(project+'.cal.cclist')
+            cl.rename(fileroot+"/"+project+'.cal.cclist')
             cl.done()
         else:
             docalibrator=False
@@ -412,7 +441,7 @@ def simdata(
         #if modifymodel or setpointings:
         if True: 
             if grfile:
-                file=project+".skymodel.png"
+                file=fileroot+"/"+project+".skymodel.png"
             else:
                 file=""                            
     
@@ -471,8 +500,8 @@ def simdata(
         # set up observatory, feeds, etc        
         quickpsf_current = False
 
-        msfile = project+'.ms'
-        sdmsfile = project+'.sd.ms'
+        msfile = fileroot+"/"+project+'.ms'
+        sdmsfile = fileroot+"/"+project+'.sd.ms'
         sd_any = False
         if predict:
             if not(predict_uv or predict_sd):
@@ -768,7 +797,7 @@ def simdata(
             ############################################
             # create figure 
             if grfile:            
-                file=project+".predict.png"
+                file=fileroot+"/"+project+".predict.png"
             else:
                 file=""
             if predict_uv:
@@ -816,13 +845,13 @@ def simdata(
                         msg("using default model cell "+qa.tos(model_cell[0])+" for PSF calculation",priority="warn")
                     im.defineimage(cellx=qa.tos(model_cell[0]))  
                     #im.makeimage(type='psf',image=project+".quick.psf")
-                    if os.path.exists(project+".quick.psf"):
-                        shutil.rmtree(project+".quick.psf")
-                    im.approximatepsf(psf=project+".quick.psf")
+                    if os.path.exists(fileroot+"/"+project+".quick.psf"):
+                        shutil.rmtree(fileroot+"/"+project+".quick.psf")
+                    im.approximatepsf(psf=fileroot+"/"+project+".quick.psf")
                     quickpsf_current=True
-                    beam=im.fitpsf(psf=project+".quick.psf")
+                    beam=im.fitpsf(psf=fileroot+"/"+project+".quick.psf")
                     im.done()
-                    ia.open(project+".quick.psf")
+                    ia.open(fileroot+"/"+project+".quick.psf")
                     beamcs=ia.coordsys()
                     beam_array=ia.getchunk(axes=[beamcs.findcoordinate("spectral")['pixel'],beamcs.findcoordinate("stokes")['pixel']],dropdeg=True)
                     pixsize=(qa.convert(qa.quantity(model_cell[0]),'arcsec')['value'])
@@ -849,8 +878,9 @@ def simdata(
             # if not predicting this time, but are imageing or analyzing, 
             # get telescopename from ms
             # KS - telescopename seems not used in image and analyze
-            if (image or analyze) and os.path.exists(project+'.ms'):
-                tb.open(project+".ms/OBSERVATION")
+            # RI - possibly indirectly, through the util() object 4/8/11; 
+            if (image or analyze) and os.path.exists(fileroot+"/"+project+'.ms'):
+                tb.open(fileroot+"/"+project+".ms/OBSERVATION")
                 n=tb.getcol("TELESCOPE_NAME")
                 telescopename=n[0]
                 util.telescopename=telescopename
@@ -861,7 +891,7 @@ def simdata(
         # noisify
 
         noise_any = False
-        msroot = project  # if leakage, can just copy from this project
+        msroot = fileroot+"/"+project  # if leakage, can just copy from this project
     
         if thermalnoise!="":
             knowntelescopes = ["ALMA", "ACA", "SMA", "EVLA", "VLA"]
@@ -1012,14 +1042,14 @@ def simdata(
 
         if leakage>0:
             noise_any=True
-            if msroot==project:
-                noisymsroot = project+".noisy"
+            if msroot==fileroot+"/"+project:
+                noisymsroot = fileroot+"/"+project+".noisy"
             else:
-                noisymsroot = project+".noisier"
+                noisymsroot = fileroot+"/"+project+".noisier"
             if os.path.exists(msroot+".sd.ms"):
                 msg("Can't corrupt SD data with polarization leakage",priority="warn")
-            if os.path.exists(msroot+".ms"):
-                msg('copying '+project+'.ms to ' + 
+            if os.path.exists(msfile):
+                msg('copying '+msfile+' to ' + 
                     noisymsroot+'.ms and adding polarization leakage',
                     origin="noise",priority="warn")
                 if os.path.exists(noisymsroot+".ms"):
@@ -1103,7 +1133,7 @@ def simdata(
                     msg("you are requesting to image $project[.sd].ms, but have created a corrupted $project.noisy[.sd].ms",priority="error");
                     msg("If you want to image the corrupted visibilites, you need to set vis=$project.noisy[.sd].ms in the image subtask",priority="error");
 
-                ms1=ms0.replace('$project',project)
+                ms1=fileroot+"/"+ms0.replace('$project',project)
                 if os.path.exists(ms1):
                     # check if the ms is tp data or not.
                     #if util.ismstp(ms1,halt=False) and tpset:
@@ -1203,7 +1233,7 @@ def simdata(
         outflat_current=False
         convsky_current=False
         beam_current=False
-        imagename=project
+        imagename=fileroot+"/"+project
 
         if image and len(mstoimage)>0:
             if not predict:
@@ -1264,17 +1294,17 @@ def simdata(
 
             # show model, convolved model, clean image, and residual 
             if grfile:            
-                file=project+".image.png"
+                file=fileroot+"/"+project+".image.png"
             else:
                 file=""
 
         # create fake model from components for analysis
         if components_only and (image or analyze):
-            newmodel=project+".compskymodel"
-            if not os.path.exists(project+".image"):
+            newmodel=fileroot+"/"+project+".compskymodel"
+            if not os.path.exists(imagename+".image"):
                 msg("must image before analyzing",priority="error")
                 return False
-            ia.imagecalc(pixels="'"+project+".image' * 0",outfile=newmodel,overwrite=True)
+            ia.imagecalc(pixels="'"+imagename+".image' * 0",outfile=newmodel,overwrite=True)
             ia.open(newmodel)
             cl.open(complist)
             ia.setbrightnessunit("Jy/pixel")
@@ -1282,7 +1312,7 @@ def simdata(
             modelcsys=ia.coordsys()
             modelshape=ia.shape()
 
-            modelflat=project+".compskymodel.flat"
+            modelflat=fileroot+"/"+project+".compskymodel.flat"
 
             # TODO should be able to simplify degen axes code using new
             # image anal tools.
@@ -1395,7 +1425,7 @@ def simdata(
 
 
             # what about the output image?
-            outim=project+".image"
+            outim=imagename+".image"
             if not os.path.exists(outim):
                 msg("output image"+str(outim)+" not found",priority="warn")
                 msg("you may need to run simdata.image, or if you deconvolved manually, rename your output to "+outim,priority="error")
@@ -1475,7 +1505,7 @@ def simdata(
                 showarray=False
             # need MS for showuv and showpsf
             if not (predict or image):
-                msfile = project+".ms"
+                msfile = filerot+"/"+project+".ms"
             if sd_only and os.path.exists(sdmsfile):
                 # use TP ms for UV plot if only SD sim, i.e.,
                 # image=sd_only=T or (image=F=predict_uv and predict_sd=T)
@@ -1502,7 +1532,7 @@ def simdata(
                     multi=[2,3,1]
                     
             if grfile:            
-                file=project+".analysis.png"
+                file=fileroot+"/"+project+".analysis.png"
             else:
                 file=""
 
@@ -1621,9 +1651,29 @@ def simdata(
 
 
 
-
-        # TODO cleanup - delete newmodel, newmodel.flat etc
-        # shutil.rmtree(modelflat)  
+        # cleanup - delete newmodel, newmodel.flat etc
+        if os.path.exists(modelflat):
+            shutil.rmtree(modelflat)  
+        if os.path.exists(modelflat+".regrid"):
+            shutil.rmtree(modelflat+".regrid")  
+#        if os.path.exists(modelflat+".regrid.conv"):
+#            shutil.rmtree(modelflat+".regrid.conv")  
+        if os.path.exists(imagename+".image.flat"):
+            shutil.rmtree(imagename+".image.flat")  
+        if os.path.exists(imagename+".residual.flat"):
+            shutil.rmtree(imagename+".residual.flat")  
+        if os.path.exists(imagename+".flux"):
+            shutil.rmtree(imagename+".flux")  
+        if os.path.exists(absdiff):
+            shutil.rmtree(absdiff)  
+        if os.path.exists(absconv):
+            shutil.rmtree(absconv)  
+#        if os.path.exists(imagename+".diff"):
+#            shutil.rmtree(imagename+".diff")  
+        if os.path.exists(fileroot+"/"+project+".noisy.T.cal"):
+            shutil.rmtree(fileroot+"/"+project+".noisy.T.cal")  
+        if os.path.exists(imagename+".quick.psf") and os.path.exists(imagename+".psf"):
+            shutil.rmtree(imagename+".quick.psf")  
 
 
     except TypeError, e:

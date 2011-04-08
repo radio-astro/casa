@@ -90,12 +90,12 @@ endProc = time.clock()
 
 test_name = """simdata observation of 30 Doradus"""
 
-ia.open(project + '.image')
+ia.open(project+"/"+project + '.image')
 hii_stats=ia.statistics(verbose=False,list=False)
 ia.close()
 
 
-ia.open(project + '.diff')
+ia.open(project+"/"+project + '.diff')
 hiidiff_stats=ia.statistics(verbose=False,list=False)
 ia.close()
 
@@ -121,7 +121,7 @@ reftol   = {'sum':  0.1,
 
 import datetime
 datestring = datetime.datetime.isoformat(datetime.datetime.today())
-outfile    = project + '.' + datestring + '.log'
+outfile    = project+"/"+project + '.' + datestring + '.log'
 logfile    = open(outfile, 'w')
 
 print 'Writing regression output to ' + outfile + "\n"
@@ -134,7 +134,7 @@ print >> logfile, loghdr
 print >> logfile,casa['build']
 
 # more info
-ms.open(project+".ms")
+ms.open(project+"/"+project+".ms")
 print >> logfile, "Noiseless MS, amp stats:"
 print >> logfile, ms.statistics('DATA','amp')
 print >> logfile, "Noiseless MS, phase stats:"
@@ -188,7 +188,7 @@ print >>logfile,'Wall processing  rate was: %8.3f MB/s.' % (17896.0 /
                                                             (endTime - startTime))
 
 ### Get last modification time of .ms.
-msfstat = os.stat(project+'.ms')
+msfstat = os.stat(project+"/"+project+'.ms')
 print >>logfile,'* Breakdown:                           *'
 print >>logfile,'*  generating visibilities took %8.3fs,' % (msfstat[8] - startTime)
 print >>logfile,'*  deconvolution with %d iterations took %8.3fs.' % ( niter,
