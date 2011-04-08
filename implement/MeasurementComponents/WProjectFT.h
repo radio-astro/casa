@@ -226,6 +226,7 @@ public:
   void setConvFunc(CountedPtr<WPConvFunc>& pbconvFunc);
   CountedPtr<WPConvFunc>& getConvFunc();
   virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
+  virtual void ComputeResiduals(VisBuffer&vb, Bool useCorrected) {};
 
 protected:
 

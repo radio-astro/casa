@@ -28,6 +28,7 @@
 
 #include <synthesis/MeasurementComponents/SynthesisError.h>
 #include <synthesis/Utilities/ThreadCoordinator.h>
+#include <synthesis/Utilities/ThreadTimers.h>
 #include <synthesis/MeasurementComponents/Utils.h>
 #include <synthesis/MeasurementComponents/VisibilityResampler.h>
 #include <synthesis/MeasurementComponents/MultiThreadedVisResampler.h>
@@ -47,21 +48,27 @@ namespace casa{
 						      const Bool& dopsf);
 
   MultiThreadedVisibilityResampler::MultiThreadedVisibilityResampler(const Bool& doublePrecision,
-							     const VisibilityResampler& visResampler, 
-							     const Int& n):
+								     const VisibilityResampler& visResampler, 
+								     const Int& n):
     resamplers_p(), doubleGriddedData_p(), singleGriddedData_p(), sumwt_p(), gridderWorklets_p(), 
     vbsVec_p(), threadClerk_p(NULL),threadStarted_p(False)
     {
-      nelements_p = n;
+      if (n < 0) nelements_p = SynthesisUtils::getenv(FTMachineNumThreadsEnvVar, n);
+      if (nelements_p < 0) nelements_p = 1;
       init(doublePrecision);
+      t4G_p=Timers::getTime();
+      t4DG_p=Timers::getTime();
     }
   MultiThreadedVisibilityResampler::MultiThreadedVisibilityResampler(const Bool& doublePrecision,
 							     const Int& n):
     resamplers_p(), doubleGriddedData_p(), singleGriddedData_p(), sumwt_p(), gridderWorklets_p(), 
-    vbsVec_p(), threadClerk_p(NULL),threadStarted_p(False)
+    vbsVec_p(), threadClerk_p(),threadStarted_p(False)
     {
-      nelements_p = n;
+      if (n < 0) nelements_p = SynthesisUtils::getenv(FTMachineNumThreadsEnvVar, n);
+      if (nelements_p < 0) nelements_p = 1;
       init(doublePrecision);
+      t4G_p=Timers::getTime();
+      t4DG_p=Timers::getTime();
     }
 
   MultiThreadedVisibilityResampler& MultiThreadedVisibilityResampler::operator=(const MultiThreadedVisibilityResampler& other)
@@ -69,13 +76,18 @@ namespace casa{
       nelements_p = other.nelements_p;
       doublePrecision_p=other.doublePrecision_p;
       SynthesisUtils::SETVEC(resamplers_p,other.resamplers_p);
-      SynthesisUtils::SETVEC(doubleGriddedData_p, other.doubleGriddedData_p);
-      SynthesisUtils::SETVEC(singleGriddedData_p,other.singleGriddedData_p);
-      SynthesisUtils::SETVEC(sumwt_p, other.sumwt_p);
+      // SynthesisUtils::SETVEC(doubleGriddedData_p, other.doubleGriddedData_p);
+      // SynthesisUtils::SETVEC(singleGriddedData_p,other.singleGriddedData_p);
+      // SynthesisUtils::SETVEC(sumwt_p, other.sumwt_p);
+      doubleGriddedData_p.reference(other.doubleGriddedData_p);
+      singleGriddedData_p.reference(other.singleGriddedData_p);
+      sumwt_p.reference(other.sumwt_p);
       SynthesisUtils::SETVEC(gridderWorklets_p, other.gridderWorklets_p);
       SynthesisUtils::SETVEC(vbsVec_p, other.vbsVec_p);
       threadClerk_p = other.threadClerk_p;
       threadStarted_p = other.threadStarted_p;
+      t4G_p=other.t4G_p;
+      t4DG_p=other.t4DG_p;
       return *this;
   }
 
@@ -88,20 +100,27 @@ namespace casa{
 
   void MultiThreadedVisibilityResampler::cleanup()
   {
-    threadClerk_p->getToWork(NULL); // Signal the threads to quit
-    delete threadClerk_p; threadClerk_p=NULL;
+    if (nelements() > 1)
+      threadClerk_p->getToWork(NULL); // Signal the threads to quit
+    //    delete threadClerk_p; threadClerk_p=NULL;
     vbsVec_p.resize(0);
     resamplers_p.resize(0);
     gridderWorklets_p.resize(0);
     sumwt_p.resize(0);
     doubleGriddedData_p.resize(0);
     singleGriddedData_p.resize(0);
+    delete mutexForResamplers_p;
   }
 
   void MultiThreadedVisibilityResampler::allocateBuffers()
   {
+    LogIO log_p(LogOrigin("MultiThreadedVisibilityResampler","allocateBuffers"));
+    Int totalMem=0;
     if (nelements() > 1)
       {
+	log_p << "Allocating buffers per thread.  No. of threads = " << nelements() << endl;
+	mutexForResamplers_p = new async::Mutex;
+
 	if (doublePrecision_p)  doubleGriddedData_p.resize(nelements());
 	else                    singleGriddedData_p.resize(nelements());
 
@@ -109,29 +128,32 @@ namespace casa{
 	sumwt_p.resize(nelements());
 	gridderWorklets_p.resize(nelements());
 	vbsVec_p.resize(nelements());
-	if (!threadClerk_p) threadClerk_p = new ThreadCoordinator<Bool>(nelements());
+	if (threadClerk_p.null()) threadClerk_p = new ThreadCoordinator<Int>(nelements());
 	for (Int i=0;i<nelements();i++)
 	  {
 	    resamplers_p[i] = new VisibilityResampler();
+	    resamplers_p[i]->setMutex(mutexForResamplers_p);
 	    gridderWorklets_p[i] = new ResamplerWorklet();
 	    if (doublePrecision_p) doubleGriddedData_p[i] = new Array<DComplex>;
 	    else	           singleGriddedData_p[i] = new Array<Complex>;
 	    sumwt_p[i] = new Matrix<Double>;
 	    if (!threadStarted_p)
 	      {
-		// totalMem += (*doubleGriddedData_p[i]).size()*sizeof(DComplex);
-		// totalMem += (*sumwt_p[i]).size()*sizeof(Double);
-		if (doublePrecision_p)
-		  (*gridderWorklets_p[i]).init(i, threadClerk_p,
-					       &(*resamplers_p[i]),
-					       &vbsVec_p[i], &(*doubleGriddedData_p[i]),
-					       &(*sumwt_p[i]));
-		else
-		  (*gridderWorklets_p[i]).init(i, threadClerk_p,
-					       &(*resamplers_p[i]),
-					       &vbsVec_p[i], &(*singleGriddedData_p[i]),
-					       &(*sumwt_p[i]));
+		if (doublePrecision_p) totalMem += (*doubleGriddedData_p[i]).size()*sizeof(DComplex);
+		else totalMem += (*singleGriddedData_p[i]).size()*sizeof(Complex);
+		totalMem += (*sumwt_p[i]).size()*sizeof(Double);
+		// if (doublePrecision_p)
+		//   (*gridderWorklets_p[i]).init(i, threadClerk_p,
+		// 			       &(*resamplers_p[i]),
+		// 			       &vbsVec_p[i], &(*doubleGriddedData_p[i]),
+		// 			       &(*sumwt_p[i]));
+		// else
+		//   (*gridderWorklets_p[i]).init(i, threadClerk_p,
+		// 			       &(*resamplers_p[i]),
+		// 			       &vbsVec_p[i], &(*singleGriddedData_p[i]),
+		// 			       &(*sumwt_p[i]));
 		  
+		(*gridderWorklets_p[i]).initThread(i, threadClerk_p, &(*resamplers_p[i]));
 		(*gridderWorklets_p[i]).startThread();
 	      }
 	  }
@@ -143,13 +165,13 @@ namespace casa{
 	resamplers_p[0] = new VisibilityResampler();
 	vbsVec_p.resize(1);
       }
-    
-
+    if (totalMem > 0)
+      log_p << "Total memory used in buffers for multi-threading: " << totalMem/(1024*1024) << " MB" << LogIO::POST;
   }
 
   void MultiThreadedVisibilityResampler::setParams(const Vector<Double>& uvwScale, 
-					       const Vector<Double>& offset,
-					       const Vector<Double>& dphase)
+						   const Vector<Double>& offset,
+						   const Vector<Double>& dphase)
   {for (Int i=0;i < nelements(); i++) resamplers_p[i]->setParams(uvwScale, offset, dphase);}
 
   void MultiThreadedVisibilityResampler::setMaps(const Vector<Int>& chanMap, 
@@ -173,7 +195,7 @@ namespace casa{
       }
     // cerr << "Total number of rows = " << nRows << endl;
     // for(Int i=0; i < nelements(); i++)
-    //   cerr << i << " " << vbStores[i].beginRow_p << " " << vbStores[i].endRow_p << endl;
+    //   cerr << i << " " << vbStores[i].endRow_p -vbStores[i].beginRow_p << endl;
   }
 
   void MultiThreadedVisibilityResampler::GatherGrids(Array<DComplex>& griddedData,
@@ -196,6 +218,18 @@ namespace casa{
 	    sumwt += *(sumwt_p[i]);
 	  }
       }
+    log_p << "Gridder timing: " 
+	  << "Setup = " << tSetupG.formatAverage().c_str() << " " 
+	  << "SendData = " << tSendDataG.formatAverage().c_str() << " " 
+	  << "WaitForWork = " << tWaitForWorkG.formatAverage().c_str() 
+	  << "Outside = " << tOutsideG.formatAverage().c_str() 
+	  << LogIO::POST;
+    log_p << "DGridder timing: "
+	  << "Setup = " << tSetupDG.formatAverage().c_str() << " " 
+	  << "SendData = " << tSendDataDG.formatAverage().c_str() << " " 
+	  << "WaitForWork = " << tWaitForWorkDG.formatAverage().c_str() 
+	  << "Outside = " << tOutsideDG.formatAverage().c_str() 
+	  << LogIO::POST;
   }
 
   void MultiThreadedVisibilityResampler::GatherGrids(Array<Complex>& griddedData,
@@ -221,8 +255,22 @@ namespace casa{
     	// if (!threadClerk_p) threadClerk_p = new ThreadCoordinator<Int>(nelements());
     	for(Int i=0; i<nelements(); i++)
     	  {
-    	    // Resize and copy
-    	    (*doubleGriddedData_p[i]).assign(griddedData);
+    	    // Resize and copy The following commented code attempts
+	    // to defeat the problem of false sharing, should it be
+	    // the bottlenec.
+	    // {
+	    //   Vector<Array<DComplex>* > tmp(5);
+	    //   for (Int j=0;j<5;j++) 
+	    // 	{
+	    // 	  (tmp[j]) = new Array<DComplex>;
+	    // 	  (tmp[j])->assign(griddedData);
+	    // 	}
+	    //   (*doubleGriddedData_p[i]).assign(griddedData);
+	    //   for (Int j=0;j<5;j++) delete tmp[j];
+	    // }
+
+	    // The following code relies on system memalloc
+	    (*doubleGriddedData_p[i]).assign(griddedData);
     	    (*sumwt_p[i]).assign(sumwt);
 	    if (!threadStarted_p)
 	      {
@@ -272,32 +320,38 @@ namespace casa{
 						      Matrix<Double>& sumwt,
 						      const Bool& dopsf)
   {
-    LogIO log_p(LogOrigin("MultiThreadedVisibilityResampler", "DataToGridImpl_p"));
-    //    Vector<VBStore> vbsVec(nelements());
+    //    LogIO log_p(LogOrigin("MultiThreadedVisibilityResampler", "DataToGridImpl_p"));
     scatter(vbsVec_p,vbs);
 
     if (nelements() == 1)
 	resamplers_p[0]->DataToGrid(griddedData, vbsVec_p[0], sumwt, dopsf);
     else
       {
-	Bool workRequestDataToGrid=True;
+	//	Bool workRequestDataToGrid=True;
+	Int workRequestDataToGrid=1;
+	Timers t1=Timers::getTime();
 	for(Int i=0; i < nelements(); i++) 
 	  {
 	    vbsVec_p[i].dopsf_p = dopsf;
-	    if (doublePrecision_p)
-	      (*gridderWorklets_p[i]).init(i, threadClerk_p,
-	    				   &(*resamplers_p[i]),
-	    				   &vbsVec_p[i], &(*doubleGriddedData_p[i]),
-	    				   &(*sumwt_p[i]));
-	    else
-	      (*gridderWorklets_p[i]).init(i, threadClerk_p,
-	    				   &(*resamplers_p[i]),
-	    				   &vbsVec_p[i], &(*singleGriddedData_p[i]),
-	    				   &(*sumwt_p[i]));
+	    if (doublePrecision_p) (*gridderWorklets_p[i]).initToSky(&vbsVec_p[i], &(*doubleGriddedData_p[i]),
+								     &(*sumwt_p[i]));
+	    else                    (*gridderWorklets_p[i]).initToSky(&vbsVec_p[i], &(*singleGriddedData_p[i]),
+								      &(*sumwt_p[i]));
 	  }
 
-	threadClerk_p->getToWork(&workRequestDataToGrid);
+	Timers t2=Timers::getTime();
+	//	threadClerk_p->getToWork(&workRequestDataToGrid);
+	threadClerk_p->giveWorkToWorkers(&workRequestDataToGrid);
+	Timers t3=Timers::getTime();
+	threadClerk_p->waitForWorkersToFinishTask();
+	Timers t4=Timers::getTime();
+
+	tSetupG       += t2-t1;
+	tSendDataG    += t3-t2;
+	tWaitForWorkG += t4-t3;
+	tOutsideG     += t1-t4G_p;
       }
+    t4G_p = Timers::getTime();
   }
   //
   //------------------------------------------------------------------------------
@@ -306,23 +360,55 @@ namespace casa{
   // Still single threaded...
   void MultiThreadedVisibilityResampler::GridToData(VBStore& vbs, Array<Complex>& griddedData) 
   {
+    //    LogIO log_p(LogOrigin("MultiThreadedVisibilityResampler", "GridToData"));
     scatter(vbsVec_p,vbs);
 
     if (nelements() == 1)
       resamplers_p[0]->GridToData(vbsVec_p[0],griddedData);
     else
       {
-    	Bool workRequestDataToGrid=False;
+	//    	Bool workRequestDataToGrid=False;
+    	Int workRequestDataToGrid=0;
+	Timers t1=Timers::getTime();
 	for(Int i=0; i < nelements(); i++) 
 	  {
+	    (*gridderWorklets_p[i]).initToVis(&vbsVec_p[i],&griddedData);
 	    // Need to break-up the init into things that required to
 	    // be init'ed for gridding and de-gridding.
-	    (*gridderWorklets_p[i]).init(i, threadClerk_p,
-					 &(*resamplers_p[i]),
-					 &vbsVec_p[i], &(*doubleGriddedData_p[i]),
-					 &(*sumwt_p[i]),&griddedData);
+	    // (*gridderWorklets_p[i]).init(i, threadClerk_p,
+	    // 				 &(*resamplers_p[i]),
+	    // 				 &vbsVec_p[i], &(*doubleGriddedData_p[i]),
+	    // 				 &(*sumwt_p[i]),&griddedData);
 	  }
-	threadClerk_p->getToWork(&workRequestDataToGrid);
+	Timers t2=Timers::getTime();
+	//	threadClerk_p->getToWork(&workRequestDataToGrid);
+	threadClerk_p->giveWorkToWorkers(&workRequestDataToGrid);
+	Timers t3=Timers::getTime();
+	threadClerk_p->waitForWorkersToFinishTask();
+	Timers t4=Timers::getTime();
+	tSetupDG += t2-t1;
+	tSendDataDG += t3-t2;
+	tWaitForWorkDG += t4-t3;
+	tOutsideDG += t1-t4DG_p;
+      }
+    t4DG_p = Timers::getTime();
+  }
+  //
+  //------------------------------------------------------------------------------
+  //
+  void MultiThreadedVisibilityResampler::ComputeResiduals(VBStore& vbs)
+  {
+    scatter(vbsVec_p,vbs);
+    if (nelements() == 1)
+      resamplers_p[0]->ComputeResiduals(vbsVec_p[0]);
+    else
+      {
+	Int workRequested=2;
+	for (Int i=0; i<nelements(); i++)
+	  (*gridderWorklets_p[i]).initToVis(&vbsVec_p[i],NULL);
+	threadClerk_p->giveWorkToWorkers(&workRequested);
+	threadClerk_p->waitForWorkersToFinishTask();
       }
   }
+
 };

@@ -349,6 +349,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       sensitivityPatternQualifier_p=qualifier;
       sensitivityPatternQualifierStr_p = "_tt"+String::toString(sensitivityPatternQualifier_p);
     }
+  virtual void ComputeResiduals(VisBuffer&vb, Bool useCorrected) {};
   protected:
     
     Int nint(Double val) {return Int(floor(val+0.5));};

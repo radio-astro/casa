@@ -450,6 +450,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Array<Float> polPlane0F, polPlane1F;
     Array<Complex> polPlane0C, polPlane1C;
 
+    //    StokesImageUtil::To(senLat, griddedWeights);
+
     senLat.getSlice(polPlane0F,slicePol0);
     senLat.getSlice(polPlane1F,slicePol1);
     wtLat.getSlice(polPlane0C, slicePol0);
@@ -1301,7 +1303,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//
 	// Receive the sum-of-weights in a dummy array.
 	Matrix<Double> uvwOrigin, dummyDataSumWeight(sumWeight.shape(),0.0);
-	vbs.uvw.reference(uvwOrigin); 
+	vbs.uvw_p.reference(uvwOrigin); 
 	visResampler_p.DataToGrid(avgAperture, vbs, dummyDataSumWeight, dopsf); 
 
 	// Get the griddedWeigths as a referenced array and use it to

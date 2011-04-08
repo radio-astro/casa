@@ -30,10 +30,12 @@
 #define SYNTHESIS_VISIBILITYRESAMPLER_H
 
 #include <synthesis/MeasurementComponents/CFStore.h>
+#include <synthesis/MeasurementComponents/Utils.h>
 #include <synthesis/MeasurementComponents/VBStore.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Vector.h>
+#include <msvis/MSVis/AsynchronousTools.h>
 
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogSink.h>
@@ -58,12 +60,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     virtual void setParams(const Vector<Double>& uvwScale, const Vector<Double>& offset,
 			   const Vector<Double>& dphase)
-    {SETVEC(uvwScale_p, uvwScale); SETVEC(offset_p, offset);SETVEC(dphase_p, dphase);};
+    {
+      // SynthesisUtils::SETVEC(uvwScale_p, uvwScale); 
+      // SynthesisUtils::SETVEC(offset_p, offset);
+      // SynthesisUtils::SETVEC(dphase_p, dphase);
+      uvwScale_p.reference(uvwScale);
+      offset_p.reference(offset);
+      dphase_p.reference(dphase);
+    };
 
     virtual void setMaps(const Vector<Int>& chanMap, const Vector<Int>& polMap)
-    {SETVEC(chanMap_p,chanMap);SETVEC(polMap_p,polMap);}
+    {
+      // SynthesisUtils::SETVEC(chanMap_p,chanMap);
+      // SynthesisUtils::SETVEC(polMap_p,polMap);
+      chanMap_p.reference(chanMap);
+      polMap_p.reference(polMap);
+    }
 
-    virtual void setConvFunc(const CFStore& cfs) {convFuncStore_p = cfs;};
+    virtual void setConvFunc(const CFStore& cfs) 
+    {
+      convFuncStore_p = cfs;
+    };
     //
     //------------------------------------------------------------------------------
     //
@@ -93,12 +110,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual void GridToData(VBStore& vbs,const Array<Complex>& griddedData); 
     //    virtual void GridToData(VBStore& vbs, Array<Complex>& griddedData); 
 
+    virtual void ComputeResiduals(VBStore& vbs);
+    virtual void setMutex(async::Mutex *mu) {myMutex_p = mu;};
     //
     //------------------------------------------------------------------------------
     //----------------------------Private parts-------------------------------------
     //------------------------------------------------------------------------------
     //
   private:
+    async::Mutex *myMutex_p;
     Vector<Double> uvwScale_p, offset_p, dphase_p;
     Vector<Int> chanMap_p, polMap_p;
     CFStore convFuncStore_p;
@@ -139,9 +159,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // Array assignment operator in CASACore requires lhs.nelements()
     // == 0 or lhs.nelements()=rhs.nelements()
-    template <class T>
-    inline void SETVEC(Vector<T>& lhs, const Vector<T>& rhs)
-    {lhs.resize(rhs.shape()); lhs = rhs;};
+    // template <class T>
+    // inline void SETVEC(Vector<T>& lhs, const Vector<T>& rhs)
+    // {lhs.resize(rhs.shape()); lhs = rhs;};
 
 
     //
@@ -151,7 +171,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // This is called less frequently.  Currently once per VisBuffer
     inline void cacheAxisIncrements(Int& n0, Int& n1, Int& n2, Int& n3)
-    {inc0_p=1, inc1_p=inc0_p*n0, inc2_p=inc1_p*n1, inc3_p=inc2_p*n2;}
+    {inc0_p=1, inc1_p=inc0_p*n0, inc2_p=inc1_p*n1, inc3_p=inc2_p*n2;(void)n3;}
 
 
     // The following two methods are called in the innermost loop.

@@ -31,6 +31,7 @@
 
 #include <synthesis/MeasurementComponents/FTMachine.h>
 #include <synthesis/MeasurementComponents/VisibilityResampler.h>
+#include <synthesis/MeasurementComponents/MultiThreadedVisResampler.h>
 #include <casa/Arrays/Matrix.h>
 #include <scimath/Mathematics/FFTServer.h>
 #include <msvis/MSVis/VisBuffer.h>
@@ -216,6 +217,9 @@ public:
   virtual void setNoPadding(Bool nopad){noPadding_p=nopad;};
 
   virtual String name();
+  virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
+  virtual void ComputeResiduals(VisBuffer&vb, Bool useCorrected);
+
 protected:
 
 
@@ -283,7 +287,8 @@ protected:
   String machineName_p;
 
   // VisibilityResampler - a.k.a the "gridder" object
-  VisibilityResampler visResampler_p;
+  //  VisibilityResampler visResampler_p;
+  MultiThreadedVisibilityResampler visResampler_p;
 };
 
 } //# NAMESPACE CASA - END

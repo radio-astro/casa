@@ -152,6 +152,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // {sensitivityPatternQualifier_p=qualifier;}
     //    {qualifier_p = qualifier;taylorQualifier_p = "_MFS_"+String::toString(qualifier_p)+"_";};
 
+  virtual void ComputeResiduals(VisBuffer&vb, Bool useCorrected) {};
   protected:
     void ftWeightImage(Lattice<Complex>& wtImage, 
 		       const Matrix<Float>& sumWt,
