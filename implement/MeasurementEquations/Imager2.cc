@@ -112,6 +112,7 @@
 #include <synthesis/MeasurementComponents/NNLSImageSkyModel.h>
 #include <synthesis/MeasurementComponents/WBCleanImageSkyModel.h>
 #include <synthesis/MeasurementComponents/GridBoth.h>
+#include <synthesis/MeasurementComponents/rGridFT.h>
 #include <synthesis/MeasurementComponents/MosaicFT.h>
 #include <synthesis/MeasurementComponents/WProjectFT.h>
 #include <synthesis/MeasurementComponents/nPBWProjectFT.h>
@@ -2647,6 +2648,37 @@ Bool Imager::createFTMachine()
     AlwaysAssert(cft_p, AipsError);
     
   }  
+  else if(ftmachine_p=="nift") {
+    os << LogIO::NORMAL // Loglevel INFO
+       << "Using FTMachine " << ftmachine_p << LogIO::POST
+       << "Performing interferometric gridding..."
+       << LogIO::POST;
+    os << LogIO::NORMAL1 // gridfunction_p is too cryptic for most users.
+       << "...with convolution function " << gridfunction_p << LogIO::POST;
+    // Now make the FTMachine
+    if(facets_p>1) {
+      os << LogIO::NORMAL // Loglevel INFO
+         << "Multi-facet Fourier transforms will use specified common tangent point:"
+	 << LogIO::POST;
+      os << LogIO::NORMAL << tangentPoint() << LogIO::POST; // Loglevel INFO
+      ft_p = new rGridFT(cache_p / 2, tile_p, gridfunction_p, mLocation_p,
+                        phaseCenter_p, padding, False, useDoublePrecGrid);
+      
+    }
+    else {
+      os << LogIO::DEBUG1
+         << "Single facet Fourier transforms will use image center as tangent points"
+	 << LogIO::POST;
+      ft_p = new rGridFT(cache_p/2, tile_p, gridfunction_p, mLocation_p,
+			padding, False, useDoublePrecGrid);
+
+    }
+    AlwaysAssert(ft_p, AipsError);
+    
+    cft_p = new SimpleComponentFTMachine();
+    AlwaysAssert(cft_p, AipsError);
+    
+  }
   else {
     os << LogIO::NORMAL // Loglevel INFO
        << "Performing interferometric gridding..."
@@ -4115,7 +4147,7 @@ Bool Imager::calcImFreqs(Vector<Double>& imgridfreqs,
     if (imgridfreqs(0)-imgridfreqs(1)>0) isDescendingNewData=True;
     //reverse frequency vector? 
     //evaluate reversing condition differ for chan mode from other modes
-    if(mode.contains('channel')) {
+    if(mode.contains("channel")) {
       if ((descendfreq && !isDescendingNewData && !isDescendingData) |
           (descendfreq && isDescendingNewData && isDescendingData) |
           (!descendfreq && !isDescendingNewData && isDescendingData)) {
