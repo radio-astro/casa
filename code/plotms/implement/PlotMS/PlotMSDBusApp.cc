@@ -89,6 +89,13 @@ const String PlotMSDBusApp::PARAM_MINORSTYLE = "minorstyle";
 const String PlotMSDBusApp::PARAM_MAJORWIDTH = "majorwidth";
 const String PlotMSDBusApp::PARAM_MINORWIDTH = "minorwidth";
 
+const String PlotMSDBusApp::PARAM_XAUTORANGE = "xautorange";
+const String PlotMSDBusApp::PARAM_XMIN = "xmin";
+const String PlotMSDBusApp::PARAM_XMAX = "xmax";
+const String PlotMSDBusApp::PARAM_YAUTORANGE = "yautorange";
+const String PlotMSDBusApp::PARAM_YMIN = "ymin";
+const String PlotMSDBusApp::PARAM_YMAX = "ymax";
+
 
 const String PlotMSDBusApp::METHOD_GETLOGPARAMS = "getLogParams";
 const String PlotMSDBusApp::METHOD_SETLOGPARAMS = "setLogParams";
@@ -352,6 +359,12 @@ void PlotMSDBusApp::dbusRunXmlMethod(
         bool resized = plotParameters(index);
         PlotMSPlotParameters& ppp = itsPlotParams_[index];
 
+        PMS_PP_Axes* ppaxes = ppp.typedGroup<PMS_PP_Axes>();
+        if (ppaxes == NULL) {
+            ppp.setGroup<PMS_PP_Axes>();
+            ppaxes = ppp.typedGroup<PMS_PP_Axes>();
+        }
+
         PMS_PP_MSData* ppdata = ppp.typedGroup<PMS_PP_MSData>();
         if (ppdata == NULL) {
             ppp.setGroup<PMS_PP_MSData>();
@@ -444,27 +457,84 @@ void PlotMSDBusApp::dbusRunXmlMethod(
 
         if(parameters.isDefined(PARAM_CANVASTITLE) &&
            parameters.dataType(PARAM_CANVASTITLE) == TpString)   {
-            PlotMSLabelFormat f = ppcan->titleFormat();
-            f.format =parameters.asString(PARAM_CANVASTITLE);
-            ppcan->setTitleFormat(f);
+              String S = parameters.asString(PARAM_CANVASTITLE);
+              PlotMSLabelFormat f = ppcan->titleFormat();
+              if (S.length()==0)    
+                f = PlotMSLabelFormat(PMS::DEFAULT_TITLE_FORMAT);
+              else   
+                f.format = S;
+              ppcan->setTitleFormat(f);
         }
+
 
         if(parameters.isDefined(PARAM_XAXISLABEL) &&
            parameters.dataType(PARAM_XAXISLABEL) == TpString)   {
-            PlotMSLabelFormat f = ppcan->xLabelFormat();
-            f.format =parameters.asString(PARAM_XAXISLABEL);
-            ppcan->setXLabelFormat(f);
-
+              String S = parameters.asString(PARAM_XAXISLABEL);
+              PlotMSLabelFormat f = ppcan->xLabelFormat();
+              if (S.length()==0)    
+                f = PlotMSLabelFormat(PMS::DEFAULT_CANVAS_AXIS_LABEL_FORMAT);
+              else
+                f.format = S;
+              ppcan->setXLabelFormat(f);
         }
+
 
         if(parameters.isDefined(PARAM_YAXISLABEL) &&
            parameters.dataType(PARAM_YAXISLABEL) == TpString)   {
-            PlotMSLabelFormat f = ppcan->yLabelFormat();
-            f.format =parameters.asString(PARAM_YAXISLABEL);
-            ppcan->setYLabelFormat(f);
+              String S = parameters.asString(PARAM_YAXISLABEL);
+              PlotMSLabelFormat f = ppcan->yLabelFormat();
+              if (S.length()==0)    
+                f = PlotMSLabelFormat(PMS::DEFAULT_CANVAS_AXIS_LABEL_FORMAT);
+              else
+                f.format = S;
+              ppcan->setYLabelFormat(f);
         }
 
 
+        if (parameters.isDefined(PARAM_XAUTORANGE)  &&
+            parameters.dataType(PARAM_XAUTORANGE)==TpBool)         {
+              bool wantauto = parameters.asBool(PARAM_XAUTORANGE);
+              bool havenumbers = 
+                    parameters.isDefined(PARAM_XMIN)           &&
+                    parameters.dataType(PARAM_XMIN)==TpDouble  &&  
+                    parameters.isDefined(PARAM_XMAX)           &&
+                    parameters.dataType(PARAM_XMAX)==TpDouble;   
+              prange_t  minmax = prange_t(0.0, 0.0);   // this signals auto-ranging
+              // Override default with specific numbers only if manual ranging requested,
+              // and given max is greater than the min.
+              if (!wantauto && havenumbers)   {
+                double xmin =parameters.asDouble(PARAM_XMIN) ;
+                double xmax =parameters.asDouble(PARAM_XMAX); 
+                if (xmax>xmin)       
+                    minmax = prange_t(xmin, xmax);
+              }
+              ppaxes->setXRange(!wantauto, minmax);
+        }
+
+
+        if (parameters.isDefined(PARAM_YAUTORANGE)  &&
+            parameters.dataType(PARAM_YAUTORANGE)==TpBool)   {
+              bool wantauto = parameters.asBool(PARAM_YAUTORANGE);
+              bool havenumbers = 
+                    parameters.isDefined(PARAM_YMIN)           &&
+                    parameters.dataType(PARAM_YMIN)==TpDouble  &&  
+                    parameters.isDefined(PARAM_YMAX)           &&
+                    parameters.dataType(PARAM_YMAX)==TpDouble;   
+              prange_t  minmax = prange_t(0.0, 0.0);   // this signals auto-ranging
+              // Override default with specific numbers only if manual ranging requested,
+              // and given max is greater than the min.
+              if (!wantauto && havenumbers)   {
+                double ymin =parameters.asDouble(PARAM_YMIN) ;
+                double ymax =parameters.asDouble(PARAM_YMAX);  
+                if (ymax>ymin)   
+                    minmax = prange_t(ymin, ymax);
+              }
+              ppaxes->setYRange(!wantauto, minmax);
+        }
+
+
+        
+        
         if(parameters.isDefined(PARAM_COLORIZE) &&
            parameters.dataType(PARAM_COLORIZE) == TpBool)   {
             bool want = parameters.asBool(PARAM_COLORIZE);
