@@ -297,8 +297,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         scanaverage -- average integrations within scans
                 options: (bool) True,False
                 default: False
-                example: if True, this happens in read-in
-                         For GBT, set False!
         timeaverage -- average times for multiple scan cycles
                 options: (bool) True,False
                 default: False

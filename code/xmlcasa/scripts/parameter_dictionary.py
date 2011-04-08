@@ -2279,8 +2279,6 @@ class par(str):
 		scanaverage -- average integrations within scans
                 options: (bool) True,False
                 default: False
-                example: if True, this happens in read-in
-                         For GBT, set False!
 		"""
 
 	@staticmethod
