@@ -71,9 +71,6 @@ casa_add_library( synthesis
  implement/MeasurementComponents/GlobalFTMachineCallbacks.cc
  implement/MeasurementComponents/GridBoth.cc
  implement/MeasurementComponents/GridFT.cc
- implement/MeasurementComponents/SynthesisPeek.cc
- implement/MeasurementComponents/PipeMgr.cc
- implement/MeasurementComponents/wait_for_activity.cc
  implement/MeasurementComponents/GSpline.cc
  implement/MeasurementComponents/HetArrayConvFunc.cc
  implement/MeasurementComponents/HogbomCleanImageSkyModel.cc
