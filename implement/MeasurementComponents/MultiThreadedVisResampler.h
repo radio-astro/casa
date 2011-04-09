@@ -33,7 +33,7 @@
 #include <synthesis/MeasurementComponents/ResamplerWorklet.h>
 #include <synthesis/MeasurementComponents/CFStore.h>
 #include <synthesis/MeasurementComponents/VBStore.h>
-#include <synthesis/Utilities/ThreadTimers.h>
+//#include <synthesis/Utilities/ThreadTimers.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Vector.h>
@@ -153,9 +153,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //    CountedPtr<ThreadCoordinator<Bool> > threadClerk_p;
     CountedPtr<ThreadCoordinator<Int> > threadClerk_p;
     Bool threadStarted_p;
-    DT tSetupG, tSendDataG, tWaitForWorkG, tOutsideG;
-    DT tSetupDG, tSendDataDG, tWaitForWorkDG, tOutsideDG;
-    Timers t4G_p,t4DG_p;
+    // DT tSetupG, tSendDataG, tWaitForWorkG, tOutsideG;
+    // DT tSetupDG, tSendDataDG, tWaitForWorkDG, tOutsideDG;
+    // Timers t4G_p,t4DG_p;
     async::Mutex *mutexForResamplers_p;
  };
 }; //# NAMESPACE CASA - END

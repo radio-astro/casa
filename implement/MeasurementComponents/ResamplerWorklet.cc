@@ -31,7 +31,7 @@
 #include <synthesis/MeasurementComponents/VisibilityResampler.h>
 #include <synthesis/MeasurementComponents/ResamplerWorklet.h>
 #include <synthesis/Utilities/ThreadCoordinator.h>
-#include <synthesis/Utilities/ThreadTimers.h>
+//#include <synthesis/Utilities/ThreadTimers.h>
 #include <fstream>
 #include <sys/syscall.h>
 
@@ -129,72 +129,72 @@ namespace casa{
     LogIO log_p(LogOrigin("ResamplerWorklet","run"));
 
     setPID();
-    DT tCycleG, tWaitG, tWorkG,tCycleDG, tWaitDG, tWorkDG, tWorkR, tWaitR, tCycleR;
+    //    DT tCycleG, tWaitG, tWorkG,tCycleDG, tWaitDG, tWorkDG, tWorkR, tWaitR, tCycleR;
 
     //    T t1,t2,t3;
     while(True)
       {
-	Timers t1 = Timers::getTime();
+	//	Timers t1 = Timers::getTime();
 	//	Bool *doDataToGrid;
 	Int *doDataToGrid;
 	doDataToGrid = myThreadClerk_p->waitForWork(this);
 	if (doDataToGrid == NULL) break;
 
-	Timers t2G=Timers::getTime();
-	Timers t2DG=Timers::getTime();
-	Timers t2R=Timers::getTime();
+	// Timers t2G=Timers::getTime();
+	// Timers t2DG=Timers::getTime();
+	// Timers t2R=Timers::getTime();
 	//	if (*doDataToGrid==True)   // Gridding work
 	if (*doDataToGrid==1)   // Gridding work
 	  {
-	    t2G=Timers::getTime();
+	    //	    t2G=Timers::getTime();
 	    myResampler_p->DataToGrid(*myGriddedDataDouble_p, *myVBStore_p, 
 				      *mySumWt_p, myVBStore_p->dopsf_p);
 	  }
 	else if (*doDataToGrid == 0)                      // De-gridding work
 	  {
-	    t2DG=Timers::getTime();
+	    //	    t2DG=Timers::getTime();
 	    myResampler_p->GridToData(*myVBStore_p, *mySkyFTGrid_p);
 	  }
 	else if (*doDataToGrid == 2)
 	  {
-	    t2R=Timers::getTime();
+	    //	    t2R=Timers::getTime();
 	    myResampler_p->ComputeResiduals(*myVBStore_p);
 	  }
 	  
-	Timers t3=Timers::getTime();
+	//	Timers t3=Timers::getTime();
 
-	if (*doDataToGrid==1)
-	  {
-	    tWaitG += t2G - t1;
-	    tWorkG += t3 - t2G;
-	    tCycleG += t3 - t1;
-	  }
-	else if (*doDataToGrid == 2)
-	  {
-	    tWaitDG += t2DG - t1;
-	    tWorkDG += t3 - t2DG;
-	    tCycleDG += t3 - t1;
-	  }
-	else
-	  {
-	    tWaitR += t2R - t1;
-	    tWorkR +=  t3 - t2R;
-	    tCycleR += t3 -t1;
-	  }
+	// if (*doDataToGrid==1)
+	//   {
+	//     tWaitG += t2G - t1;
+	//     tWorkG += t3 - t2G;
+	//     tCycleG += t3 - t1;
+	//   }
+	// else if (*doDataToGrid == 2)
+	//   {
+	//     tWaitDG += t2DG - t1;
+	//     tWorkDG += t3 - t2DG;
+	//     tCycleDG += t3 - t1;
+	//   }
+	// else
+	//   {
+	//     tWaitR += t2R - t1;
+	//     tWorkR +=  t3 - t2R;
+	//     tCycleR += t3 -t1;
+	//   }
       }
     log_p << "Alveeda from Workelet # " << myID_p << LogIO::POST;
-    log_p << "GWait="  << tWaitG.formatAverage().c_str() << " "
-	  << "GWork="  << tWorkG.formatAverage().c_str() << " "
-	  << "GTotal=" << tCycleG.formatAverage().c_str()
-	  << LogIO::POST;
-    log_p << "DGWait="  << tWaitDG.formatAverage().c_str() << " "
-	  << "DGWork="  << tWorkDG.formatAverage().c_str() << " "
-	  << "DGTotal=" << tCycleDG.formatAverage().c_str()
-	  << LogIO::POST;
-    log_p << "RWait="  << tWaitR.formatAverage().c_str() << " "
-	  << "RWork="  << tWorkR.formatAverage().c_str() << " "
-	  << "RTotal=" << tCycleR.formatAverage().c_str()
-	  << LogIO::POST;
+    // log_p << "GWait="  << tWaitG.formatAverage().c_str() << " "
+    // 	  << "GWork="  << tWorkG.formatAverage().c_str() << " "
+    // 	  << "GTotal=" << tCycleG.formatAverage().c_str()
+    // 	  << LogIO::POST;
+    // log_p << "DGWait="  << tWaitDG.formatAverage().c_str() << " "
+    // 	  << "DGWork="  << tWorkDG.formatAverage().c_str() << " "
+    // 	  << "DGTotal=" << tCycleDG.formatAverage().c_str()
+    // 	  << LogIO::POST;
+    // log_p << "RWait="  << tWaitR.formatAverage().c_str() << " "
+    // 	  << "RWork="  << tWorkR.formatAverage().c_str() << " "
+    // 	  << "RTotal=" << tCycleR.formatAverage().c_str()
+    // 	  << LogIO::POST;
     return NULL;
   }
 };
