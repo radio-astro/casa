@@ -45,7 +45,6 @@ casa_add_library( synthesis
  implement/MeasurementComponents/WProjectFT.cc
  implement/MeasurementComponents/rGridFT.cc
  implement/MeasurementComponents/MultiThreadedVisResampler.cc
- implement/Utilities/ThreadTimers.cc
  implement/MeasurementComponents/ResamplerWorklet.cc
  implement/MeasurementComponents/BeamCalc.cc
  implement/MeasurementComponents/BeamCalcParams.cc
