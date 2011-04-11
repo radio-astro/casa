@@ -663,7 +663,9 @@ Bool PrincipalAxesDD::sizeControl(WorldCanvasHolder &wch,
 	for ( std::list<DisplayData*>::const_iterator iter = dl.begin( );
 	      iter != dl.end( ); ++iter ) {
 	    DisplayData *dd = *iter;
-	    if ( has_nonsingleton_nondegenerate_nondisplayed_axis(*dd) ) {
+	    // Leaving out the 'dataType( )' check breaks "region in file" which using WCUnions to
+	    // draw region boxes... e.g. things with 'dataType( ) == "composite [rectangle]"...
+	    if ( dd->dataType() == "image" && has_nonsingleton_nondegenerate_nondisplayed_axis(*dd) ) {
 		return False;
 	    }
 	}
