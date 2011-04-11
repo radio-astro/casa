@@ -96,6 +96,7 @@ protected:
   virtual void installWorkInfo () = 0;
   bool waitForWork (const async::Thread * thisThread);
   void waitForWorkersToReport ();
+  Int nThreads_p;
 
 
 private:
@@ -103,7 +104,6 @@ private:
   boost::barrier * barrier_p;
   bool logStates_p;
   async::Mutex * mutex_p;
-  Int nThreads_p;
   volatile Int nThreadsAtBarrier_p;
   volatile Int nThreadsDispatched_p;
   volatile Bool readyForWork_p;
@@ -147,6 +147,8 @@ public:
         return result;
     }
 
+   void setNThreads(Int n) {nThreads_p=n;};
+   Int nThreads() {return nThreads_p;};
 protected:
 
     void
