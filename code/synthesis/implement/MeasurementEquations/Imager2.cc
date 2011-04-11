@@ -4115,7 +4115,7 @@ Bool Imager::calcImFreqs(Vector<Double>& imgridfreqs,
     if (imgridfreqs(0)-imgridfreqs(1)>0) isDescendingNewData=True;
     //reverse frequency vector? 
     //evaluate reversing condition differ for chan mode from other modes
-    if(mode.contains('channel')) {
+    if(mode.contains("channel")) {
       if ((descendfreq && !isDescendingNewData && !isDescendingData) |
           (descendfreq && isDescendingNewData && isDescendingData) |
           (!descendfreq && !isDescendingNewData && isDescendingData)) {
