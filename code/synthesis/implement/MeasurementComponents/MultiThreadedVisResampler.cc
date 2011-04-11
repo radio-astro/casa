@@ -51,7 +51,7 @@ namespace casa{
 								     const VisibilityResampler& visResampler, 
 								     const Int& n):
     resamplers_p(), doubleGriddedData_p(), singleGriddedData_p(), sumwt_p(), gridderWorklets_p(), 
-    vbsVec_p(), threadClerk_p(NULL),threadStarted_p(False)
+    vbsVec_p(), threadClerk_p(),threadStarted_p(False)
     {
       if (n < 0) nelements_p = SynthesisUtils::getenv(FTMachineNumThreadsEnvVar, n);
       if (nelements_p < 0) nelements_p = 1;
@@ -85,6 +85,7 @@ namespace casa{
       SynthesisUtils::SETVEC(gridderWorklets_p, other.gridderWorklets_p);
       SynthesisUtils::SETVEC(vbsVec_p, other.vbsVec_p);
       threadClerk_p = other.threadClerk_p;
+
       threadStarted_p = other.threadStarted_p;
       // t4G_p=other.t4G_p;
       // t4DG_p=other.t4DG_p;
@@ -100,16 +101,22 @@ namespace casa{
 
   void MultiThreadedVisibilityResampler::cleanup()
   {
-    if (nelements() > 1)
-      threadClerk_p->getToWork(NULL); // Signal the threads to quit
-    //    delete threadClerk_p; threadClerk_p=NULL;
-    vbsVec_p.resize(0);
-    resamplers_p.resize(0);
-    gridderWorklets_p.resize(0);
-    sumwt_p.resize(0);
-    doubleGriddedData_p.resize(0);
-    singleGriddedData_p.resize(0);
-    delete mutexForResamplers_p;
+    if ((nelements() > 1)  && (threadClerk_p->nThreads() > 0))
+      {
+	//      threadClerk_p->getToWork(NULL); // Signal the threads to quit
+	threadClerk_p->giveWorkToWorkers(NULL); // Signal the threads to quit
+	threadClerk_p->setNThreads(0);
+	//	if (!threadClerk_p.null()) {delete &(*threadClerk_p);}
+	vbsVec_p.resize(0);
+	resamplers_p.resize(0);
+	//    for(Int i=0; i<gridderWorklets_p.nelements(); i++) delete &(*gridderWorklets_p[i]);
+	gridderWorklets_p.resize(0);
+	sumwt_p.resize(0);
+	doubleGriddedData_p.resize(0);
+	singleGriddedData_p.resize(0);
+	nelements_p=0;
+	//    delete mutexForResamplers_p;
+      }
   }
 
   void MultiThreadedVisibilityResampler::allocateBuffers()
