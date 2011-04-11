@@ -296,11 +296,15 @@ split(vis='l.ms',outputvis='l1.ch3oh.split.ms',
       field='3',spw='11:0~511',datacolumn='corrected')
 default('split')
 split(vis='l.ms',outputvis='l1.3mmcont.split.ms',
-      field='3',spw='6:9~108^100,7:9~108^100,14:9~108^100,15:9~108^100,18:9~108^100,19:9~108^100',
+      field='3',
+      spw='6:9~108,7:9~108,14:9~108,15:9~108,18:9~108,19:9~108',
+      width=[100,100,100,100,100,100],
       datacolumn='corrected')
 default('split')
 split(vis='l.ms',outputvis='l1.1mmcont.split.ms',
-      field='3',spw='26:9~118^110,27:9~118^110,30:9~118^110,31:9~118^110',
+      field='3',
+      spw='26:9~118,27:9~118,30:9~118,31:9~118',
+      width=[110,110,110,110],
       datacolumn='corrected')
 default('split')
 split(vis='l.ms',outputvis='l1.1mmc34s5_4.split.ms',
@@ -465,7 +469,9 @@ correct3mmtime=time.time()
 print '--split calibrater--'
 default('split')
 split(vis='l2.ms',outputvis='l2.3mmconta.split.ms',
-      field='3',spw='6:10~109^100,7:10~109^100,14:10~109^100,15:10~109^100,18:10~109^100,19:10~109^100',
+      field='3',
+      spw='6:10~109,7:10~109,14:10~109,15:10~109,18:10~109,19:10~109',
+      width=[100,100,100,100,100,100],
       datacolumn='corrected')
 splitsrctime=time.time()
 
@@ -607,11 +613,15 @@ split(vis='l2.ms',outputvis='l2.ch3oh.split.ms',
       field='3',spw='11:0~511',datacolumn='corrected')
 default('split')
 split(vis='l2.ms',outputvis='l2.3mmcont.split.ms',
-      field='3',spw='6;7;14;15;18;19:9~108^100',
+      field='3',
+      spw='6:9~108,7:9~108,14:9~108,15:9~108,18:9~108,19:9~108',
+      width=[100,100,100,100,100,100],
       datacolumn='corrected')
 default('split')
 split(vis='l2.ms',outputvis='l2.1mmcont.split.ms',
-      field='3',spw='26;27;30;31:9~118^110',
+      field='3',
+      spw='26:9~118,27:9~118,30:9~118,31:9~118',
+      width=[110,110,110,110],
       datacolumn='corrected')
 default('split')
 split(vis='l2.ms',outputvis='l2.1mmc34s5_4.split.ms',
