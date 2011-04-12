@@ -5,6 +5,8 @@ from taskinit import *
 def plotms(vis=None, 
            xaxis=None, xdatacolumn=None, 
            yaxis=None, ydatacolumn=None,
+           xautorange=None, xmin=None, xmax=None,
+           yautorange=None, ymin=None, ymax=None,
            selectdata=None, field=None, spw=None,
            timerange=None, uvrange=None, antenna=None, scan=None,
            correlation=None, array=None, msselect=None,
@@ -218,8 +220,10 @@ def plotms(vis=None,
         pm.setXAxisLabel(xlabel,False)
         pm.setYAxisLabel(ylabel,False)
         pm.setGridParams(showmajorgrid, majorwidth, majorstyle, majorcolor,
-                         showminorgrid, minorwidth, minorstyle, minorcolor,False)
-        
+                         showminorgrid, minorwidth, minorstyle, minorcolor, False)
+        pm.setXRange(xautorange, xmin, xmax, False)
+        pm.setYRange(yautorange, ymin, ymax, False)
+
         # Update and show
         pm.update()
         if (showgui):

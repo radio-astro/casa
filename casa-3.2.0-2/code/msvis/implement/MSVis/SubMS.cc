@@ -2191,7 +2191,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    return 0;
 	  }
 	  Double chanWidth = xout[iDone][1] - xout[iDone][0];
-	  relShift = theShift/(xout[iDone][endChan] - xout[iDone][0] + chanWidth);
+	  relShift = -theShift/(xout[iDone][endChan] - xout[iDone][0] + chanWidth);
 	  //cout << "the relshift " << relShift << endl;
 	}
 	else{
