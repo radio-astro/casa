@@ -1103,6 +1103,70 @@ called.
 
 
 
+<method type="function" name="setXRange">
+  <keyword>setXRange</keyword>
+  <shortdescription>Set X axis for auto or manual, and the min/max values of x</shortdescription>
+
+  <input>
+    <param type="bool" name="xautorange">
+      <description>Automatically determine X axrangeis range?</description>
+      <value>true</value>
+    </param>
+    <param type="double" name="xmin">
+      <description>Minimum value of X</description>
+      <value>0</value>
+    </param>
+    <param type="double" name="xmax">
+      <description>Maximum value of X</description>
+      <value>0</value>
+    </param>
+    <param type="bool" name="updateImmediately">
+      <description>whether to apply this change immediately, IF the window is currently shown      </description>
+      <value>true</value>
+    </param>
+    <param type="int" name="plotIndex">
+      <description>the index of the plot to apply this change</description>
+      <value>0</value>
+    </param>
+  </input>
+  <example />
+  <returns />    
+</method>
+
+
+
+<method type="function" name="setYRange">
+  <keyword>setYRange</keyword>
+  <shortdescription>Set Y axis for auto or manual, and the min/max values of y</shortdescription>
+  <input>
+    <param type="bool" name="yautorange">
+      <description>Automatically determine X axis range?</description>
+      <value>true</value>
+    </param>
+    <param type="double" name="ymin">
+      <description>Minimum value of Y</description>
+      <value>0</value>
+    </param>
+    <param type="double" name="ymax">
+      <description>Maximum value of Y</description>
+      <value>0</value>
+    </param>
+    <param type="bool" name="updateImmediately">
+      <description>whether to apply this change immediately, IF the window is currently shown      </description>
+      <value>true</value>
+    </param>
+    <param type="int" name="plotIndex">
+      <description>the index of the plot to apply this change</description>
+      <value>0</value>
+    </param>
+  </input>
+  <example />
+  <returns />    
+</method>
+
+
+
+
 <!-- void plotms::setColorizeFlag(const bool colorize, const bool updateImmediately, const int plotIndex) -->
 <method type="function" name="setColorizeFlag">
   <keyword>setColorizeFlag</keyword>

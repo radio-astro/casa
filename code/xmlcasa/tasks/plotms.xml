@@ -144,6 +144,48 @@ MS Parameters
     </param>
 
 
+
+<!--
+###############################################################################
+Axis Range Parameters
+###############################################################################
+-->
+
+
+  <param type="bool" name="xautorange">
+    <description>Automatically set X axis range</description>
+    <value>True</value>
+  </param>
+
+    <param type="double" name="xmin" subparam="true">
+      <description>Low value of X</description>
+      <value>0</value>
+    </param>
+    <param type="double" name="xmax" subparam="true">
+      <description>High value of X</description>
+      <value>0</value>
+    </param>
+
+
+  <param type="bool" name="yautorange">
+    <description>Automatically set Y axis range</description>
+    <value>True</value>
+  </param>
+    
+    <param type="double" name="ymin" subparam="true">
+      <description>Low value of Y</description>
+      <value>0</value>
+    </param>
+    
+    <param type="double" name="ymax" subparam="true">
+      <description>High value of Y</description>
+      <value>0</value><!-- note to self: do not leave blank. -->
+    </param>
+
+
+
+
+
 <!--
 ###############################################################################
 MS Selection parameters
@@ -403,7 +445,7 @@ Colorization Parameters
     </param>
     
     <param type="string" name="coloraxis" subparam="true">
-        <description>which data column to use for colorizing</description>
+        <description>selects which data to use for colorizing</description>
         <value />
         <allowed kind="enum">
             <value />
@@ -472,7 +514,7 @@ Grid Parameters
 </param>
 
 <param type="string" name="majorcolor" subparam="true">
-    <description>Color in hex code of major grid lines</description>
+    <description>Color as name or hex code of major grid lines</description>
     <value>B0B0B0</value>
 </param>
 
@@ -500,7 +542,7 @@ Grid Parameters
 </param>
 
 <param type="string" name="minorcolor" subparam="true">
-    <description>Color in hex code of minor grid lines</description>
+    <description>Color as name or hex code of minor grid lines</description>
     <value>D0D0D0</value>
 </param>
 
@@ -728,6 +770,7 @@ Constraints
       <equals value="row"/>
       <equals value="flagrow"/>
     </when>
+
     
     <when param="yaxis">
       <equals type="string" value="" />
@@ -796,6 +839,25 @@ Constraints
       <equals value="flagrow"/>
     </when>
 
+
+
+    <when param="xautorange">
+        <equals type="bool" value="True" />
+        <equals type="bool" value="False">
+            <default param="xmin"><value type="double">0</value></default> 
+            <default param="xmax"><value type="double">0</value></default> 
+        </equals>
+    </when>
+
+    
+    <when param="yautorange">
+        <equals type="bool" value="True" />
+        <equals type="bool" value="False">
+            <default param="ymin"><value type="double">0</value></default>
+            <default param="ymax"><value type="double">0</value></default>
+        </equals>
+    </when>
+    
     <when param="selectdata">
       <equals type="bool" value="True">
         <default param="field"><value type="string" /></default>
@@ -1013,12 +1075,28 @@ Constraints
     colorize -- to color data points according to some quantity
                 default: false
       &gt;&gt;&gt; colorize expandable parameters
-        coloraxis -- which data column ('axis') to use for colorizing
-                     default: ''  (ignored - same as colorizing off)
+        coloraxis -- which data to use for colorizing
+           
     
     title  -- title along top of plot (called "canvas" in some places)
-    xlabel, ylabel -- text to label horiz. and vert. axes, with formatting (%% and so on)
     
+    xlabel -- text to label horizontal axis, with formatting using '%%' 
+    ylabel -- text to label horizontal axis, with formatting using '%%' 
+    
+    showmajorgrid  -- show major grid lines (horiz and vert.)
+                  default: False.
+      &gt;&gt;&gt;  major grid expandable parameters
+        majorwidth  -- line width in pixels of major grid lines
+        majorstyle  -- major grid line style: solid dash dot none
+        majorcolor  -- color in hex code of major grid lines
+
+    showminorgrid  -- show minor grid lines (horiz and vert.)
+                  default: False.
+      &gt;&gt;&gt;  minor grid expandable parameters
+        minorwidth  --  line width in pixels of minor grid lines
+        minorstyle  --  minor grid line style: solid dash dot none
+        minorcolor  --  color in hex code of minor grid lines
+
     plotfile -- name of plot file to save automatically
                 default: ''  (i.e., draw an interactive plot in the gui)
       &gt;&gt;&gt; plotfile expandable parameters 

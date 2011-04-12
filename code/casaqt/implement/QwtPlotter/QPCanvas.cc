@@ -153,7 +153,7 @@ QImage QPCanvas::produceHighResImage(
         bool &wasCanceled
         )   
 {
-
+printf("DSW TEST: ----->  produce high res image in qpcanvas, %dx%d\n", width, height);
     // make sure both width and height are set
     int widgetWidth  = width, 
         widgetHeight = height;
@@ -530,7 +530,9 @@ String QPCanvas::title() const {
     return m_canvas.title().text().toStdString(); }
 
 void QPCanvas::setTitle(const String& title) {
-    m_canvas.setTitle(title.c_str()); }
+    const char* c = title.c_str();   
+    m_canvas.setTitle(c); 
+}
 
 PlotFontPtr QPCanvas::titleFont() const {
     QwtText t = m_canvas.title();
