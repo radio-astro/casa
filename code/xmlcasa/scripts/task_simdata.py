@@ -77,7 +77,7 @@ def simdata(
 
 
     saveinputs=myf['saveinputs']
-    saveinputs('simdata',project+".simdata.last")
+    saveinputs('simdata',fileroot+"/"+project+".simdata.last")
 
 
 
