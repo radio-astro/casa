@@ -263,6 +263,7 @@ class par(str):
 			 'baseline', 'none' (for sdtpimaging)
 	        default: 'none'
 		example: choose 'none' if you have already calibrated
+                WARNING: 'fsotf' is not implemented yet
 		
 		-----------------------------------------------------------
 		
