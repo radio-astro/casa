@@ -2089,7 +2089,7 @@ class scantable(Scantable):
             maxwavelength: the longest sinusoidal wavelength. The
                            default is 1.0 (unit: spectral range). 
             clipthresh:    Clipping threshold. (default is 3.0, unit: sigma)
-            clipniter:     maximum number of iteration of 'clipthresh'-sigma clipping (default is 1)
+            clipniter:     maximum number of iteration of 'clipthresh'-sigma clipping (default is 0)
             plot:      *** CURRENTLY UNAVAILABLE, ALWAYS FALSE ***
                            plot the fit and the residual. In this each
                            indivual fit has to be approved, by typing 'y'
@@ -2127,7 +2127,7 @@ class scantable(Scantable):
         if nwave         is None: nwave         = 3
         if maxwavelength is None: maxwavelength = 1.0
         if clipthresh    is None: clipthresh    = 3.0
-        if clipniter     is None: clipniter     = 1
+        if clipniter     is None: clipniter     = 0
         if plot          is None: plot          = False
         if getresidual   is None: getresidual   = True
         if outlog        is None: outlog        = False
@@ -2185,7 +2185,7 @@ class scantable(Scantable):
             maxwavelength: the longest sinusoidal wavelength. The
                            default is 1.0 (unit: spectral range). 
             clipthresh:    Clipping threshold. (default is 3.0, unit: sigma)
-            clipniter:     maximum number of iteration of 'clipthresh'-sigma clipping (default is 1)
+            clipniter:     maximum number of iteration of 'clipthresh'-sigma clipping (default is 0)
             edge:          an optional number of channel to drop at
                            the edge of spectrum. If only one value is
                            specified, the same number will be dropped
@@ -2240,7 +2240,7 @@ class scantable(Scantable):
         if nwave          is None: nwave          = 3
         if maxwavelength  is None: maxwavelength  = 1.0
         if clipthresh     is None: clipthresh     = 3.0
-        if clipniter      is None: clipniter      = 1
+        if clipniter      is None: clipniter      = 0
         if edge           is None: edge           = (0,0)
         if threshold      is None: threshold      = 3
         if chan_avg_limit is None: chan_avg_limit = 1
@@ -2318,7 +2318,7 @@ class scantable(Scantable):
             mask:       An optional mask
             npiece:     Number of pieces. (default is 2)
             clipthresh: Clipping threshold. (default is 3.0, unit: sigma)
-            clipniter:  maximum number of iteration of 'clipthresh'-sigma clipping (default is 1)
+            clipniter:  maximum number of iteration of 'clipthresh'-sigma clipping (default is 0)
             plot:   *** CURRENTLY UNAVAILABLE, ALWAYS FALSE ***
                         plot the fit and the residual. In this each
                         indivual fit has to be approved, by typing 'y'
@@ -2354,7 +2354,7 @@ class scantable(Scantable):
         if mask        is None: mask        = [True for i in xrange(nchan)]
         if npiece      is None: npiece      = 2
         if clipthresh  is None: clipthresh  = 3.0
-        if clipniter   is None: clipniter   = 1
+        if clipniter   is None: clipniter   = 0
         if plot        is None: plot        = False
         if getresidual is None: getresidual = True
         if outlog      is None: outlog      = False
@@ -2399,7 +2399,7 @@ class scantable(Scantable):
             mask:       an optional mask retreived from scantable
             npiece:     Number of pieces. (default is 2)
             clipthresh: Clipping threshold. (default is 3.0, unit: sigma)
-            clipniter:  maximum number of iteration of 'clipthresh'-sigma clipping (default is 1)
+            clipniter:  maximum number of iteration of 'clipthresh'-sigma clipping (default is 0)
             edge:       an optional number of channel to drop at
                         the edge of spectrum. If only one value is
                         specified, the same number will be dropped
@@ -2454,7 +2454,7 @@ class scantable(Scantable):
         if mask           is None: mask           = [True for i in xrange(nchan)]
         if npiece         is None: npiece         = 2
         if clipthresh     is None: clipthresh     = 3.0
-        if clipniter      is None: clipniter      = 1
+        if clipniter      is None: clipniter      = 0
         if edge           is None: edge           = (0, 0)
         if threshold      is None: threshold      = 3
         if chan_avg_limit is None: chan_avg_limit = 1
