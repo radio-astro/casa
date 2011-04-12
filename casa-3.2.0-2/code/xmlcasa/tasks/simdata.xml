@@ -16,7 +16,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   <input>
     
     <param type="string" name="project">
-      <description>root for output file names</description>
+      <description>root prefix for output file names</description>
       <value>sim</value>
     </param>
     
@@ -39,7 +39,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="inbright" subparam='true'>
-       <description>set peak surface brightness e.g. "1.2Jy/pixel" or ""</description>
+       <description>scale surface brightness of brightest pixel e.g. "1.2Jy/pixel" or ""</description>
        <value type="string"></value>
     </param>
     <!-- TODO parse Jy/pixel, MJy/Sr, eventually K, etc -->
@@ -245,7 +245,7 @@ it'll do them for the same amount of time -->
 
     <param type="bool" name="image">
       <description>(re)image $project.ms to $project.image</description>
-      <value type="bool">True</value>
+      <value>True</value>
     </param>    
 
     <param type="string" name="vis" subparam='true'>
@@ -413,7 +413,7 @@ it'll do them for the same amount of time -->
 
     <param type="bool" name="overwrite">
       <description>overwrite files starting with $project</description>
-      <value>False</value>
+      <value>True</value>
     </param>
 
 
@@ -476,14 +476,14 @@ modifying the description doesn't work yet but its an improvement ticket.
 	  </default>
 	  <default param="mapsize" type="stringArray">
 	    <value type="vector">
-	      <value type="string">"1arcmin"</value>
-	      <value type="string">"1arcmin"</value>
+	      <value type="string">''</value>
+	      <value type="string">''</value>
 	    </value>
 	  </default>
 	  <default param="maptype" type="string">
 	    <value type="string">hexagonal</value>
 	  </default>
-	  <default param="pointingspacing"><value type="string">1arcmin</value></default>
+	  <default param="pointingspacing"><value type="string"></value></default>
 	</equals>
 	<equals type="bool" value="False">
 	  <default param="ptgfile"><value type="string">$project.ptg.txt</value></default>
@@ -529,7 +529,6 @@ modifying the description doesn't work yet but its an improvement ticket.
       </when>
       <!-- **********************************************************  -->
       <when param="image">
-	<equals type="bool" value="False"/>
 	<equals type="bool" value="True">
 	  <default param="vis"><value type="string">$project.ms</value></default>
 	  <default param="modelimage"><value type="string"></value></default>
@@ -544,6 +543,7 @@ modifying the description doesn't work yet but its an improvement ticket.
 	  <default param="outertaper"><value type="vector"><value></value></value></default>
 	  <default param="stokes"><value type="string">I</value></default>
 	</equals>
+	<equals type="bool" value="False"/>
       </when>
       <!-- **********************************************************  -->
       <when param="analyze">
@@ -710,7 +710,8 @@ mosaic simulation task:
        * if graphics selected, display the clean image and residual image
        * uses Cotton-Schwab clean for single fields and Mosaic gridding
          for multiple fields (with Clark PSF calculation in minor cycles).
-    ms -- the simulated interferometric MS, or total-power one, or both
+    vis -- the simulated interferometric MS, or total-power one, or both
+       ** use $project.noisy.ms if you have corrupted the MS
     modelimage -- prior (e.g. SD) image to be used in clean
     cell -- cell size e.g '10arcsec'.  "" defaults to the skymodel cell
     imsize -- image size in spatial pixels (x,y)
@@ -732,8 +733,10 @@ mosaic simulation task:
     showconvolved -- display sky model convolved with output beam 
     showclean -- display the synthesized image
     showresidual -- display the clean residual image (ignored in single dish simulation)
-    showdifference -- display difference image 
+    showdifference -- display difference between output cleaned image and 
+         input model sky image convolved with output synthesized beam
     showfidelity -- display fidelity image
+         fidelity = input/max( abs(input-output), 0.7*rms(output) )
     
 
 

@@ -868,7 +868,9 @@ class simutil:
             # http://www.eso.org/sci/facilities/alma/system/frontend/
             f0=[ 35, 75,110,145,185,230,345,409,675,867]
             # B9,10 are DSB
-            t0=[ 17, 30, 37, 51, 65, 83,147,196,175*pl.sqrt(2),230*pl.sqrt(2)]
+#            t0=[ 17, 30, 37, 51, 65, 83,147,196,175*pl.sqrt(2),230*pl.sqrt(2)]
+            # cycle 0 al's email 4/28/11
+            t0=[ 17, 30, 45, 51, 65, 55, 75, 196, 110*2, 230*2]
 
             flim=[31.3,950]
             if self.verbose: self.msg("using ALMA/ACA Rx specs",origin="noisetemp")
