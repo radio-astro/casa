@@ -60,7 +60,7 @@ MS Parameters
       <value>phase</value>
       <value>real</value>
       <value>imag</value><value>imaginary</value>
-      <value>wt</value>
+      <value>wt</value><value>weight</value>
       <value>imwt</value>
       <value>flag</value>
       <value>azimuth</value>
@@ -114,7 +114,7 @@ MS Parameters
       <value>phase</value>
       <value>real</value>
       <value>imag</value><value>imaginary</value>
-      <value>wt</value>
+      <value>wt</value><value>weight</value>
       <value>imwt</value>
       <value>flag</value>
       <value>azimuth</value>
@@ -751,6 +751,7 @@ Constraints
       <equals value="velocity"/>
        <equals value="vel"/>
       <equals value="wt"/>
+       <equals value="weight"/>
       <equals value="imwt"/>
       <equals value="flag"/>
       <equals value="azimuth"/>
@@ -988,10 +989,23 @@ Constraints
            default: ''
     xaxis, yaxis -- what to plot on the two axes
                     default: '' (uses PlotMS defaults/current set).
+                    valid values (alphabetical, = indicates synonyms): 
+                      'amp' = 'amplitude',  'ant',  'ant-azimuth',  'ant-elevation',  'antenna',
+                      'antenna1' = 'ant1',  'antenna2' = 'ant2',  'ant-hourang' = 'ant-hourangle',  
+                      'ant-parallacticangle' = 'ant-parang',  'azimuth',  'baseline',  
+                      'chan' = 'channel',  'corr' = 'correlation',  'elevation',  'field',
+                      'flag',  'flagrow',  'freq' = 'frequency',  'hourang' = 'hourangle',  
+                      'imag' = 'imaginary',  'imwt',   'parallacticangle' = 'parang',   
+                      'phase',  'real',  'row',  'scan',  'spw',  'time',  
+                      'timeint' = 'timeinterval' = 'time_interval', 
+                      'u',  'uvdist',  'uvdistl' = 'uvdist_l',  'v',  'velocityvel', 'w', 
+                      'weight' = 'wt'
+
       &gt;&gt;&gt; xaxis, yaxis expandable parameters
-        xdatacolumn, ydatacolumn -- which data column to use for data axes
-                                    default: '' (uses PlotMS default/current
-                                    set).
+        xdatacolumn, 
+        ydatacolumn  -- which data column to use for data axes
+                        default: '' (uses PlotMS default/current set).
+                        options:  'data',  'corrected' = 'corr',  'model', 'residual'                     
     
     selectdata -- data selection parameters flag
                   (see help par.selectdata for more detailed information)
@@ -1076,7 +1090,9 @@ Constraints
                 default: false
       &gt;&gt;&gt; colorize expandable parameters
         coloraxis -- which data to use for colorizing
-           
+                options (= indicates synonyms): 
+                    'scan',  'field',  'spw',  'antenna1' = 'ant1',  'antenna2' = 'ant2',
+                    'baseline',  'channel' = 'chan',  'corr' = 'correlation'
     
     title  -- title along top of plot (called "canvas" in some places)
     
