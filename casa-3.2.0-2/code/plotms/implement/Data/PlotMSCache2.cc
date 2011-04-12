@@ -89,6 +89,9 @@ PlotMSCache2::PlotMSCache2(PlotMSApp* parent):
 }
 
 PlotMSCache2::~PlotMSCache2() {
+
+  //  cout << "PMSC2::~PMSC2" << endl;
+
   // Deflate everything
   deleteIndexer();
   deletePlotMask();
@@ -326,8 +329,11 @@ void PlotMSCache2::load(const vector<PMS::Axis>& axes,
 }
 
 void PlotMSCache2::clear() {
-    deleteCache();
-    refTime_p=0.0;
+  //  cout << "PMSC2::clear()" << endl;
+  deleteIndexer();
+  deletePlotMask();
+  deleteCache();
+  refTime_p=0.0;
 }
 
 #define PMSC_DELETE(VAR)                                                \
