@@ -49,10 +49,12 @@ def plotms(vis=None,
            default: ''
     xaxis, yaxis -- what to plot on the two axes
                     default: '' (uses PlotMS defaults/current set).
+                    valid values (alphabetical, = indicates synonyms): 
         &gt;&gt;&gt; xaxis, yaxis expandable parameters
-        xdatacolumn, ydatacolumn -- which data column to use for data axes
-                                    default: '' (uses PlotMS default/current
-                                    set).
+        xdatacolumn, 
+        ydatacolumn -- which data column to use for data axes
+                       default: '' (uses PlotMS default/current set).
+                       
     selectdata -- data selection parameters flag
                   (see help par.selectdata for more detailed information)
                   default: False
@@ -144,7 +146,8 @@ def plotms(vis=None,
 
     try:            
         # Check synonyms
-
+        # format is:  synonym['new_term'] = 'existing_term', with 
+        # the existing term being what's coded in PlotMSConstants.h  (case insensitive)
         synonyms = {}
         synonyms['timeinterval'] = synonyms['timeint'] = 'time_interval'
         synonyms['chan'] = 'channel'
@@ -152,6 +155,7 @@ def plotms(vis=None,
         synonyms['vel'] = 'velocity'
         synonyms['correlation'] = 'corr'
         synonyms['ant1'] = 'antenna1'
+        synonyms['weight'] = 'wt'
         synonyms['ant2'] = 'antenna2'
         synonyms['uvdistl'] = 'uvdist_l'
         synonyms['amplitude'] = 'amp'
@@ -165,6 +169,11 @@ def plotms(vis=None,
         if(synonyms.has_key(xaxis)): xaxis = synonyms[xaxis]
         if(synonyms.has_key(yaxis)): yaxis = synonyms[yaxis]
         
+        # synonyms for data columns (only one, so just hardcode it)
+        if (xdatacolumn=='cor' or xdatacolumn=='corr'):  xdatacolumn='corrected'
+        if (ydatacolumn=='cor' or ydatacolumn=='corr'):  ydatacolumn='corrected'
+
+
         tp.setgui( showgui );
 
 
