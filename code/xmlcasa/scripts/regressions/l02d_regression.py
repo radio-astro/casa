@@ -722,8 +722,17 @@ srcch3oh=440.0
 srcc34s=311.370
 im3mm=0.02400
 im1mm=0.2226
-imch3oh=0.433
-imc34s=0.155
+#imch3oh=0.433
+#imc34s=0.155
+# New values for spectral line images
+# due to change in channelization specfication
+# Note: channel frequencies are also shifted w.r.t
+# the previous images due to this change
+# (in velo, the shift is +0.73km/s)
+# 04/11/2011 TT
+imch3oh=0.405
+imc34s=0.169
+
 
 diff_3mm=abs((src3mm-thistest_3mm)/src3mm)
 diff_1mm=abs((src1mm-thistest_1mm)/src1mm)
