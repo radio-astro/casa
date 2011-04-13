@@ -816,7 +816,7 @@ class simutil:
         obs =['ALMA','ACA','EVLA','VLA','SMA']
         d   =[ 12.   ,7.,   25.  , 25.  , 6. ]
         ds  =[ 0.75,  0.75, 0.364, 0.364,0.35] # subreflector size for ACA?
-        eps =[ 20.,   20.,  300,   300  ,15. ] # antenna surface accuracy
+        eps =[ 25.,   20.,  300,   300  ,15. ] # antenna surface accuracy
         
         cq  =[ 0.88, 0.88,  0.99,  0.79, 0.86] # correlator quantization eff
         # VLA includes additional waveguide loss from correlator loss of 0.809
