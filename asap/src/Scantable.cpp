@@ -2672,6 +2672,7 @@ std::string Scantable::formatBaselineParamsFooter(float rms, bool verbose) const
     for (int i = 0; i < 60; ++i) {
       oss << "-";
     }
+    oss << endl;
     oss << flush;
   }
 
