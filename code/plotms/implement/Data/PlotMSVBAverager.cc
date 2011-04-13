@@ -177,7 +177,7 @@ void PlotMSVBAverager::finalizeAverage()
     // Time:
     //    aveTime_p/=vbWtSum_p;
     //    avBuf_p.time()=aveTime_p;
-    avBuf_p.time()=timeRef_p+(maxTime_p-minTime_p)/2.0;  // must be center of the interval!
+    avBuf_p.time()=timeRef_p+(maxTime_p+minTime_p)/2.0;  // must be center of the interval!
     avBuf_p.timeInterval()=maxTime_p-minTime_p;
     avBuf_p.scan()=aveScan_p;
 

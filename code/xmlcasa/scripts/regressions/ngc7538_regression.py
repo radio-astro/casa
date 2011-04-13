@@ -63,31 +63,26 @@ correcttime = time.time()
 print '--Split (fluxcal data)--'
 default('split')
 split(vis='ngc7538.ms', outputvis='ngc7538_cal.split.ms',
-#      field=0,spw=0,nchan=62,start=0,step=1,datacolumn='MODEL_DATA')
-	field='0',spw='0:0~61', datacolumn='model')
+      field='0',spw='0:0~61', datacolumn='model')
 
 print '--Split (continuum)--'
 default('split')
 # This _averages_ 
 split(vis='ngc7538.ms', outputvis='ngc7538d.cont.ms',
-      field='3',spw='0:2~56^55', datacolumn='corrected')
-	#,nchan=1,start=2,step=55,datacolumn='CORRECTED_DATA')
+      field='3',spw='0:2~56',width=[55], datacolumn='corrected')
 
 print '--Split (mf cont,)--'
 default('split')
 split(vis='ngc7538.ms', outputvis='ngc7538.cont.ms',
-	field='3,4,5',spw='0:2~56^55', datacolumn='corrected')
-      #field=[3,4,5],spw=0,nchan=1,start=2,step=55,datacolumn='CORRECTED_DATA')
+	field='3,4,5',spw='0:2~56',width=[55], datacolumn='corrected')
 print '--Split (bandcal data)--'
 default('split')
 split(vis='ngc7538.ms', outputvis='2229.cont2.ms',
-#      field=1,spw=[0,1],nchan=1,start=2,step=55,datacolumn='CORRECTED_DATA')
-	field='1', spw='0:2~56^55,1:2~56^55', datacolumn='corrected')
+      field='1', spw='0:2~56,1:2~56',width=[55,55], datacolumn='corrected')
 splitcaltime = time.time()
 default('split')
 split(vis='ngc7538.ms',outputvis='ngc7538d.line.ms',
-#      field=3,spw=[0,1],nchan=55,start=2,step=1,datacolumn='CORRECTED_DATA')
-	field='3',spw='0:2~56,1:2~56',datacolumn='corrected')
+      field='3',spw='0:2~56,1:2~56',datacolumn='corrected')
 splitsrctime = time.time()
 
 print '--Clean cal--'

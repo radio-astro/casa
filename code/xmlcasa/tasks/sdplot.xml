@@ -569,29 +569,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         individual panels.  We recommend that you use scanlist, field,
         and iflist to give a single selection for each run.
 
-        This task adds an additional toolbar to Matplotlib plotter which
-        has five buttons, 'spec value', 'statistics', 'notaion', '+ page'
-        and 'Quit'.
-        When the 'spec value' button is pressed and activated, you can
-        display a spectral value on the toolbar along with mouse
-        movement. Click the LEFT-mouse button over a spectrum to select
-        it, and drag mouse in the panel to output the spectral value of
-        x-position of mouse cursor. The selection is released when you
-        release the mouse button.
-        When 'statistic' button is pressed and activated, you can get
-        statistic values of a channel region selected by mouse. Select a
-        rectangle region with LEFT/RIGHT-mouse to SELECT/EXCLUDE the
-        channel region to calculate statistics for the all spectra
-        plotted. The results are printed on the casapy console.
-        When 'notation' button is pressed and activated, you can
-        graphically add a text on a position of plot. Click the
-        LEFT-mouse on a position of plot to load notaion window, and
-        input a text to the textbox, select an anchor, and press 'print'
-        button to print it on the plot. Click RIGHT-mouse on a text and
-        cascade menu will let you select either delete or modify it.
-        When you select a panel parameter with more than 16 panels,
-        '+ page' button is activated and let you go through pages.
-        Press 'Quit' button to close the plotter.
+        This task adds an additional toolbar to Matplotlib plotter. 
+        See the cookbook for details of its capability.
 
         *** other plottype options ***
         Currently most of the parameters are ignored in these modes.

@@ -211,13 +211,15 @@ bool PlotMSIterPlot::parametersHaveChanged_(const PlotMSWatchedParameters& p,
             (updateFlag & PMS_PP::UPDATE_CANVAS) || 
             (updateFlag & PMS_PP::UPDATE_AXES) || !d->isSet();
     itsTCLParams_.updateDisplay = updateFlag & PMS_PP::UPDATE_DISPLAY;
+    //    itsTCLParams_.resetIter = updateFlag & PMS_PP::UPDATE_ITERATION;
     itsTCLParams_.endCacheLog = false;
     
     // Update cache if needed.
     if(d->isSet() && (updateFlag & PMS_PP::UPDATE_MSDATA ||
        updateFlag & PMS_PP::UPDATE_CACHE)) {
 
-        return !updateCache();
+      //      itsTCLParams_.resetIter=True;  // Force reset to first iteration
+      return !updateCache();
         
     } else {
 
@@ -314,7 +316,7 @@ bool PlotMSIterPlot::firstIter() {
   if (nIter>0 && iter_!=0) {
     detachFromCanvases();
     iter_=0;
-    cout << "Stepping to iteration = " << iter_ << " (of " << nIter << "): " << itsCache2_.indexer(iter_).iterLabel() << endl;
+    logIter(iter_,nIter);
     PlotMaskedPointDataPtr data(&(itsCache2_.indexer(iter_)), false);
     itsPlot_ = itsFactory_->maskedPlot(data);
     setColors();
@@ -346,7 +348,7 @@ bool PlotMSIterPlot::prevIter() {
   if (nIter>0 && iter_> 0) {
     detachFromCanvases();
     iter_-=1;
-    cout << "Stepping to iteration = " << iter_ << " (of " << nIter << "): " << itsCache2_.indexer(iter_).iterLabel() << endl;
+    logIter(iter_,nIter);
     PlotMaskedPointDataPtr data(&(itsCache2_.indexer(iter_)), false);
     itsPlot_ = itsFactory_->maskedPlot(data);
     setColors();
@@ -376,7 +378,7 @@ bool PlotMSIterPlot::nextIter() {
   if (nIter>0 && iter_<nIter-1) {
     detachFromCanvases();
     iter_+=1;
-    cout << "Stepping to iteration = " << iter_ << " (of " << nIter << "): " << itsCache2_.indexer(iter_).iterLabel() << endl;
+    logIter(iter_,nIter);
     PlotMaskedPointDataPtr data(&(itsCache2_.indexer(iter_)), false);
     itsPlot_ = itsFactory_->maskedPlot(data);
     setColors();
@@ -406,7 +408,7 @@ bool PlotMSIterPlot::lastIter() {
   if (nIter>0 && iter_!=(nIter-1)) {
     detachFromCanvases();
     iter_=nIter-1;
-    cout << "Stepping to iteration = " << iter_ << " (of " << nIter << "): " << itsCache2_.indexer(iter_).iterLabel() << endl;
+    logIter(iter_,nIter);
     PlotMaskedPointDataPtr data(&(itsCache2_.indexer(iter_)), false);
     itsPlot_ = itsFactory_->maskedPlot(data);
     setColors();
@@ -436,7 +438,7 @@ bool PlotMSIterPlot::resetIter() {
   if (itsCache2_.nIter()>0) {
     detachFromCanvases();
     iter_=0;
-    cout << "Reset to iteration = " << iter_ << " (of " << nIter << "): " << itsCache2_.indexer(iter_).iterLabel() << endl;
+    logIter(iter_,nIter);
     PlotMaskedPointDataPtr data(&(itsCache2_.indexer(iter_)), false);
     itsPlot_ = itsFactory_->maskedPlot(data);
     setColors();
@@ -597,42 +599,53 @@ bool PlotMSIterPlot::updateDisplay() {
 void PlotMSIterPlot::cacheLoaded_(bool wasCanceled) {
 
   /*
-  cout << " PMSIP::cacheLoaded_" << boolalpha << " wasCanceled=" << wasCanceled << " "
-       << "itsTCLParams_.updateCanvas=" << itsTCLParams_.updateCanvas << " "
-       << "itsTCLParams_.updateDisplay=" << itsTCLParams_.updateDisplay << " "
-       << "itsTCLParams_.releaseWhenDone=" << itsTCLParams_.releaseWhenDone << " "
-       << endl;
+  cout << " PMSIP::cacheLoaded_" << boolalpha << endl
+       << "  wasCanceled=" << wasCanceled << endl
+       << "  itsTCLParams_.updateCanvas=" << itsTCLParams_.updateCanvas << endl
+       << "  itsTCLParams_.updateDisplay=" << itsTCLParams_.updateDisplay << endl
+       << "  itsTCLParams_.releaseWhenDone=" << itsTCLParams_.releaseWhenDone << endl
+       << "  itsCache2_.cacheReady() = " << itsCache2_.cacheReady() 
+       << endl; 
   */
+
+  // Ensure we fail gracefully if cache loading yielded nothing
+  if (!itsCache2_.cacheReady()) {
+    detachFromCanvases();
+    initializePlot();
+    releaseDrawing();
+    return;
+  }
 
   // Make this more specific than canvas-triggered
   if (!wasCanceled && itsTCLParams_.updateCanvas) updateIndexing();
 
+  //  cout << "itsCache2_.nIter() = " << boolalpha << itsCache2_.nIter() << endl;
 
-  // Reset the iterator (conditions for this need refining)
+  // Reset the iterator (if data are new)
+  //  if (itsTCLParams_.resetIter)
   resetIter();
 
-    // Let the plot know that the data has been changed as needed, unless the
-    // thread was canceled.
-    if(wasCanceled) itsPlot_->dataChanged();
-    
-    // End cache log as needed.
-    if(itsTCLParams_.endCacheLog)
-        itsParent_->getLogger()->releaseMeasurement();
-    
-    // Update canvas as needed.
-    if(!wasCanceled && itsTCLParams_.updateCanvas) updateCanvas();
-    
-    // Update display as needed.
-    if(!wasCanceled && itsTCLParams_.updateDisplay) updateDisplay();
-    
-    // Release drawing if needed.
-    if(itsTCLParams_.releaseWhenDone) releaseDrawing();
-    
-    // Log number of points as needed.
-    if(!wasCanceled && itsTCLParams_.endCacheLog)
-      logPoints();
-
-
+  // Let the plot know that the data has been changed as needed, unless the
+  // thread was canceled.
+  if(wasCanceled) itsPlot_->dataChanged();
+  
+  // End cache log as needed.
+  if(itsTCLParams_.endCacheLog)
+    itsParent_->getLogger()->releaseMeasurement();
+  
+  // Update canvas as needed.
+  if(!wasCanceled && itsTCLParams_.updateCanvas) updateCanvas();
+  
+  // Update display as needed.
+  if(!wasCanceled && itsTCLParams_.updateDisplay) updateDisplay();
+  
+  // Release drawing if needed.
+  if(itsTCLParams_.releaseWhenDone) releaseDrawing();
+  
+  // Log number of points as needed.
+  if(!wasCanceled && itsTCLParams_.endCacheLog)
+    logPoints();
+  
 }
 
 void PlotMSIterPlot::setColors() {
@@ -663,6 +676,21 @@ void PlotMSIterPlot::logPoints() {
   itsParent_->getLogger()->postMessage(PMS::LOG_ORIGIN,
 				       PMS::LOG_ORIGIN_PLOT, ss.str(), PMS::LOG_EVENT_PLOT);
 }
+
+void PlotMSIterPlot::logIter(Int iter,Int nIter) {
+
+  if (nIter > 1) {
+    stringstream ss;
+    ss << "Stepping to iteration = " << iter 
+       << " (of " << nIter << "): " 
+       << itsCache2_.indexer(iter).iterLabel() << endl;
+    itsParent_->getLogger()->postMessage(PMS::LOG_ORIGIN,
+					 PMS::LOG_ORIGIN_PLOT, 
+					 ss.str(), 
+					 PMS::LOG_EVENT_PLOT);
+  }
+}
+
 
 
 }

@@ -68,13 +68,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="calmode">
-	    <description>SD calibration mode (ps,nod,fs,fsotf,none)</description>
+	    <description>SD calibration mode (ps,nod,fs,fsotf,quotient,none)</description>
 	    <value>none</value>
 	    <allowed kind="enum">
 	    <value>ps</value>
 	    <value>nod</value>
 	    <value>fs</value>
 	    <value>fsotf</value>
+            <value>quotient</value>
 	    <value>none</value>
     </allowed>
     </param>
@@ -269,6 +270,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 example: choose mode 'none' if you have
                          already calibrated and want to
                          try averaging
+                WARNING: 'fsotf' is not implemented yet
         scanlist -- list of scan numbers to process
                 default: [] (use all scans)
                 example: [21,22,23,24]

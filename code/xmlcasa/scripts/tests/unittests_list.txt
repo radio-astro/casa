@@ -45,6 +45,7 @@ test_plotants                   scastro@eso.org
 test_report                     jkern@eso.org
 test_rg_frombcs                 dmehring@nrao.edu
 test_slsearch                   dmehring@nrao.edu
+test_sdaverage                  takeshi.nakazato@nao.ac.jp
 test_sdbaseline			kana.sugi@nao.ac.jp
 test_sdcal                      kana.sugi@nao.ac.jp
 test_sdlist                     kana.sugi@nao.ac.jp

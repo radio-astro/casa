@@ -343,14 +343,16 @@ Bool VBContinuumSubtractor::areFreqsInBounds(VisBuffer& vb,
   Bool result = minfreq >= lofreq_p && maxfreq <= hifreq_p;
 
   if(squawk && !result){
-    LogIO os(LogOrigin("VBContinuumSubtractor", "areFreqsInBounds"));
+    // The truth was considered too alarming (CAS-1968).
+    // LogIO os(LogOrigin("VBContinuumSubtractor", "areFreqsInBounds"));
+    LogIO os(LogOrigin("VBContinuumSubtractor", "apply"));
 
     os << LogIO::WARN
-       << "The frequency range [" << 1.0e-9 * minfreq << ", "
-       << 1.0e-9 * maxfreq << "] (GHz) is outside\n"
-       << "the one used for the continuum fit: ["
+       << "Extrapolating to cover [" << 1.0e-9 * minfreq << ", "
+       << 1.0e-9 * maxfreq << "] (GHz).\n"
+       << "The frequency range used for the continuum fit was ["
        << 1.0e-9 * lofreq_p << ", "
-       << 1.0e-9 * hifreq_p << "] (GHz)"
+       << 1.0e-9 * hifreq_p << "] (GHz)."
        << LogIO::POST;
   }
   return result;

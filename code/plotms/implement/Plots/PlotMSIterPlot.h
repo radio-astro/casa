@@ -177,6 +177,9 @@ private:
     // Log the number of points plotted; 
     void logPoints();
     
+    // Log iteration info
+    void logIter(Int iter,Int nIter);
+
     // Post-thread methods for loading the cache.
     public:
 	static void cacheLoaded (void *obj, bool wasCanceled)
