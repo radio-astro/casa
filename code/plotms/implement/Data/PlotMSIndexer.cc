@@ -436,10 +436,13 @@ void PlotMSIndexer::setUpIndexing() {
   case PMS::ANTENNA: {
     nSegment_=0;
     for (Int ich=0;ich<nChunk();++ich)
-      for (Int ibl=0;ibl<chsh(2,ich);++ibl)
-	if ( (*(plotmscache_->antenna1_[ich]->data()+ibl) == iterValue_) ||
-	     (*(plotmscache_->antenna2_[ich]->data()+ibl) == iterValue_) )
-	  ++nSegment_;
+      // only check for non-empty chunks
+      if (plotmscache_->goodChunk(ich)) {
+	for (Int ibl=0;ibl<chsh(2,ich);++ibl)
+	  if ( (*(plotmscache_->antenna1_[ich]->data()+ibl) == iterValue_) ||
+	       (*(plotmscache_->antenna2_[ich]->data()+ibl) == iterValue_) )
+	    ++nSegment_;
+      }
     break;
   }
   default:
@@ -482,6 +485,11 @@ void PlotMSIndexer::setUpIndexing() {
   Int iseg(-1);
   Vector<Bool>& nAM(plotmscache_->netAxesMask_);
   for (Int ic=0;ic<nChunk();++ic) {
+
+    // skip this chunk if empty
+    if (!plotmscache_->goodChunk(ic))
+      continue;
+
     //    cout << "Cache chunk = " << ic << endl;
     //    cout << "plotmscache_->plmask_[ic]->shape() = " << plotmscache_->plmask_[ic]->shape() << endl;
     switch (iterAxis_) {
@@ -532,6 +540,16 @@ void PlotMSIndexer::setUpIndexing() {
       throw(AipsError("Unsupported iteration axis: "+PMS::axis(iterAxis_)));
       break;
     }
+  }
+
+  // Contract nSegment_ if we aren't using them all
+  if (iseg+1<nSegment_) {
+    nSegment_=iseg+1;
+    // (w/ copy)
+    nSegPoints_.resize(nSegment_,True);
+    nCumulPoints_.resize(nSegment_,True);
+    cacheChunk_.resize(nSegment_,True);
+    cacheOffset_.resize(nSegment_,True);
   }
 
   // Fill cumulative counter
@@ -619,6 +637,9 @@ void PlotMSIndexer::setMethod(PlotMSCache2MemPtr& getmethod,PMS::Axis axis) {
   case PMS::FREQUENCY:
     getmethod = &PlotMSCache2::getFreq;
     break;
+  case PMS::VELOCITY:
+    getmethod = &PlotMSCache2::getVel;
+    break;
   case PMS::CHANNEL:
     getmethod = &PlotMSCache2::getChan;
     break;
@@ -667,9 +688,25 @@ void PlotMSIndexer::setMethod(PlotMSCache2MemPtr& getmethod,PMS::Axis axis) {
   case PMS::FLAG:
     getmethod = &PlotMSCache2::getFlag;
     break;
-
   case PMS::FLAG_ROW:
     getmethod = &PlotMSCache2::getFlagRow;
+    break;
+
+  case PMS::WT:
+    getmethod = &PlotMSCache2::getWt;
+    break;
+
+  case PMS::AZ0:
+    getmethod = &PlotMSCache2::getAz0;
+    break;
+  case PMS::EL0:
+    getmethod = &PlotMSCache2::getEl0;
+    break;
+  case PMS::HA0:
+    getmethod = &PlotMSCache2::getHA0;
+    break;
+  case PMS::PA0:
+    getmethod = &PlotMSCache2::getPA0;
     break;
 
   case PMS::ANTENNA:
@@ -688,7 +725,8 @@ void PlotMSIndexer::setMethod(PlotMSCache2MemPtr& getmethod,PMS::Axis axis) {
     getmethod = &PlotMSCache2::getRow;
     break;
   default:
-    throw(AipsError("Help!"));
+    throw(AipsError("Can't find get method for "+PMS::axis(axis)+"."));
+    break;
   }
 
 }
@@ -728,6 +766,7 @@ void PlotMSIndexer::setIndexer(IndexerMethPtr& indexmethod,PMS::Axis axis) {
 
     // chan-dep
   case PMS::FREQUENCY:
+  case PMS::VELOCITY:
   case PMS::CHANNEL:
     indexmethod = &PlotMSIndexer::getIndex0100;
     break;
@@ -748,6 +787,14 @@ void PlotMSIndexer::setIndexer(IndexerMethPtr& indexmethod,PMS::Axis axis) {
   case PMS::W:
   case PMS::FLAG_ROW:
     indexmethod = &PlotMSIndexer::getIndex0010;
+    break;
+
+    // chunk-dep geometry
+  case PMS::AZ0:
+  case PMS::EL0:
+  case PMS::HA0:
+  case PMS::PA0:
+    indexmethod = &PlotMSIndexer::getIndex0000;
     break;
 
     // antenna-dep

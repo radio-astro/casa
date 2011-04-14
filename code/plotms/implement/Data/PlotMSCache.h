@@ -389,6 +389,7 @@ protected:
 
   // The fundamental meta-data cache
   Matrix<Int> chshapes_;
+  Vector<Bool> goodChunk_;
   Vector<Double> time_, timeIntr_;
   Vector<Int> field_, spw_, scan_;
   PtrBlock<Vector<uInt>*> row_;
