@@ -178,6 +178,8 @@ int main()
       cout << (Int)aa.antTypeFromName("PM01") << endl;
       cout << (Int)aa.antTypeFromName("CM01") << endl;
       cout << (Int)aa.antTypeFromName("XY01") << endl;
+      AlwaysAssert((Int)aa.antTypeFromName("XY01")==0,AipsError);
+      AlwaysAssert((Int)aa.antTypeFromName("DA02")==1,AipsError);
       cout << endl;   
       cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("DV01"),aa.antTypeFromName("DV02")) << endl;
       cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("DV01"),aa.antTypeFromName("DA02")) << endl;
@@ -208,53 +210,63 @@ int main()
       cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("XY01"),aa.antTypeFromName("PM02")) << endl;
       cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("XY01"),aa.antTypeFromName("CM02")) << endl;
       cout << aa.cFKeyFromAntennaTypes(aa.antTypeFromName("XY01"),aa.antTypeFromName("XY02")) << endl;
+      AlwaysAssert(aa.cFKeyFromAntennaTypes(aa.antTypeFromName("DV01"),aa.antTypeFromName("DA02"))==30002, AipsError);
+      AlwaysAssert(aa.cFKeyFromAntennaTypes(aa.antTypeFromName("DA01"),aa.antTypeFromName("XY02"))==20001, AipsError);
       cout << endl;
       Int c = aa.cFKeyFromAntennaTypes(aa.antTypeFromName("DV01"),aa.antTypeFromName("DV02"));
       Vector<ALMAAntennaType> a;
       a.assign( ALMAAperture::antennaTypesFromCFKey(c) );
       cout << (Int)a(0) << " ";
-      if(a.nelements()>1){
-	cout << (Int)a(1) << " (2) Error!" << endl;
-      }
-      else{
-	cout << " (2)" << endl;
-      }	
+      AlwaysAssert(a.nelements()==1, AipsError);
+      AlwaysAssert(a(0)==2, AipsError);
+
       c = aa.cFKeyFromAntennaTypes(aa.antTypeFromName("CM01"),aa.antTypeFromName("CM02"));
       a.assign( ALMAAperture::antennaTypesFromCFKey(c) );
-      cout << (Int)a(0) << " ";
-      if(a.nelements()>1){
-	cout << (Int)a(1) << " (3) Error!" << endl;
-      }
-      else{
-	cout << " (3)" << endl;
-      }	
+      AlwaysAssert(a.nelements()==1, AipsError);
+      AlwaysAssert(a(0)==3, AipsError);
+
       c = aa.cFKeyFromAntennaTypes(aa.antTypeFromName("DA01"),aa.antTypeFromName("DV02"));
       a.assign( ALMAAperture::antennaTypesFromCFKey(c) );
+      AlwaysAssert(a.nelements()==2, AipsError);
+      AlwaysAssert(a(0)==1, AipsError);
+      AlwaysAssert(a(1)==2, AipsError);
       cout << (Int)a(0) << " " << (Int)a(1) << " (1,2)" << endl;
       c = aa.cFKeyFromAntennaTypes(aa.antTypeFromName("DV02"),aa.antTypeFromName("DA01"));
       a.assign( ALMAAperture::antennaTypesFromCFKey(c) );
-      cout << (Int)a(0) << " " << (Int)a(1) << " (2,1)" << endl;
+      AlwaysAssert(a.nelements()==2, AipsError);
+      AlwaysAssert(a(0)==1, AipsError);
+      AlwaysAssert(a(1)==2, AipsError);
+      cout << (Int)a(0) << " " << (Int)a(1) << " (1,2)" << endl;
       c = aa.cFKeyFromAntennaTypes(aa.antTypeFromName("CM01"),aa.antTypeFromName("PM02"));
       a.assign( ALMAAperture::antennaTypesFromCFKey(c) );
+      AlwaysAssert(a.nelements()==2, AipsError);
+      AlwaysAssert(a(0)==3, AipsError);
+      AlwaysAssert(a(1)==4, AipsError);
       cout << (Int)a(0) << " " << (Int)a(1) << " (3,4)" << endl;
       c = aa.cFKeyFromAntennaTypes(aa.antTypeFromName("PM01"),aa.antTypeFromName("CM02"));
       a.assign( ALMAAperture::antennaTypesFromCFKey(c) );
-      cout << (Int)a(0) << " " << (Int)a(1) << " (4,3)" << endl;
+      AlwaysAssert(a.nelements()==2, AipsError);
+      AlwaysAssert(a(0)==3, AipsError);
+      AlwaysAssert(a(1)==4, AipsError);
+      cout << (Int)a(0) << " " << (Int)a(1) << " (3,4)" << endl;
       c = aa.cFKeyFromAntennaTypes(aa.antTypeFromName("XY"),aa.antTypeFromName("DV02"));
       a.assign( ALMAAperture::antennaTypesFromCFKey(c) );
+      AlwaysAssert(a.nelements()==2, AipsError);
+      AlwaysAssert(a(0)==0, AipsError);
+      AlwaysAssert(a(1)==2, AipsError);
       cout << (Int)a(0) << " " << (Int)a(1) << " (0,2)" << endl;
       c = aa.cFKeyFromAntennaTypes(aa.antTypeFromName("DV"),aa.antTypeFromName("XY02"));
       a.assign( ALMAAperture::antennaTypesFromCFKey(c) );
+      AlwaysAssert(a.nelements()==2, AipsError);
+      AlwaysAssert(a(0)==0, AipsError);
+      AlwaysAssert(a(1)==2, AipsError);
       cout << (Int)a(0) << " " << (Int)a(1) << " (2,0)" << endl;
       c = aa.cFKeyFromAntennaTypes(aa.antTypeFromName("ZZ"),aa.antTypeFromName("XY02"));
       a.assign( ALMAAperture::antennaTypesFromCFKey(c) );
-      cout << (Int)a(0) << " ";
-      if(a.nelements()>1){
-	cout << (Int)a(1) << " (0) Error!" << endl;
-      }
-      else{
-	cout << " (0)" << endl;
-      }	
+      AlwaysAssert(a.nelements()==1, AipsError);
+      AlwaysAssert(a(0)==0, AipsError);
+      cout << (Int)a(0) << " (0)" << endl;
+
       
       cout << endl;
       cout << ALMAAperture::antTypeStrFromType(aa.antTypeFromName("XY01")) << endl;
