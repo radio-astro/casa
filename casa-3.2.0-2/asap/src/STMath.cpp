@@ -305,8 +305,8 @@ STMath::average( const std::vector<CountedPtr<Scantable> >& in,
     }
     acc.reset();
   }
+
   if (rowstodelete.nelements() > 0) {
-    //cout << rowstodelete << endl;
     os << rowstodelete << LogIO::POST ;
     tout.removeRow(rowstodelete);
     if (tout.nrow() == 0) {
@@ -3193,7 +3193,7 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
 	stringstream taqlstream ;
 	taqlstream << "SELECT FROM $1 WHERE FREQ_ID IN [" ;
 	for ( uInt i = 0 ; i < freqidlist.size() ; i++ ) {
-	  taqlstream << i ;
+	  taqlstream << freqidlist[i] ;
 	  if ( i < freqidlist.size() - 1 )
 	    taqlstream << "," ;
 	  else
@@ -3398,8 +3398,8 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
 	  freqIDCol.attach( newin[tableid]->table(), "FREQ_ID" ) ;
 	  //os << "tableid = " << tableid << " rowid = " << rowid << ": " << LogIO::POST ;
 	  //os << "   regridChannel applied to " ;
-	  if ( tableid != reftable ) 
-	    refreqid = newin[tableid]->frequencies().addEntry( refpixref, refvalref, refinc ) ;
+	  //if ( tableid != reftable ) 
+          refreqid = newin[tableid]->frequencies().addEntry( refpixref, refvalref, refinc ) ;
 	  for ( uInt irow = 0 ; irow < newin[tableid]->table().nrow() ; irow++ ) {
 	    uInt tfreqid = freqIdVec[tableid][irow] ;
 	    if ( tfreqid == rowid ) {	  
