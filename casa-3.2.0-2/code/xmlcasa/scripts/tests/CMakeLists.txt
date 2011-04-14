@@ -62,6 +62,7 @@ casa_add_python( xmlcasa xmlcasa_tests_python python/${PYTHONV}/tests
   test_rg_frombcs.py
   test_sdaverage.py
   test_sdbaseline.py
+  test_sdimaging.py
   test_sdlist.py
   test_sdplot.py
   test_sdsave.py

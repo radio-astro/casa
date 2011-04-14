@@ -47,6 +47,7 @@ test_rg_frombcs                 dmehring@nrao.edu
 test_slsearch                   dmehring@nrao.edu
 test_sdaverage                  takeshi.nakazato@nao.ac.jp
 test_sdbaseline			kana.sugi@nao.ac.jp
+test_sdimaging                  takeshi.nakazato@nao.ac.jp
 test_sdlist                     kana.sugi@nao.ac.jp
 #test_sdplot                     kana.sugi@nao.ac.jp
 test_sdsave                     takeshi.nakazato@nao.ac.jp
