@@ -811,7 +811,9 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm) :
      !sel_clip.nelements() && 
      !sel_clip_row.nelements() && 
      !shadow && 
-     !elevation);
+     !elevation &&
+     !sel_stateid.nelements());
+     //!elevation);
   /*
   if (flag_everything)
   {
@@ -903,13 +905,14 @@ Bool RFASelector::newChunk (Int &maxmem)
     if(verbose2) os<<"Array ID does not match in this chunk\n"<<LogIO::POST;
     return active=False;
   }
-  Vector<Int> tempstateid(0);
-  tempstateid = chunk.visIter().stateId(tempstateid);
-  if( tempstateid.nelements() && sel_stateid.nelements() && !find(dum,tempstateid[0],sel_stateid) )
-  {
-    if(verbose2) os<<"State ID does not match in this chunk\n"<<LogIO::POST;
-    return active=False;
-  }  
+  //Vector<Int> tempstateid(0);
+  //tempstateid = chunk.visIter().stateId(tempstateid);
+  //if( tempstateid.nelements() && sel_stateid.nelements() && !find(dum,tempstateid[0],sel_stateid) )
+  //{
+  //  if(verbose2) os<<"State ID does not match in this chunk\n"<<LogIO::POST;
+  //  return active=False;
+  //}  
+  //
   /*
   Vector<Int> temp(0);
   temp = chunk.visIter().scan(temp);
@@ -1336,6 +1339,29 @@ RFA::IterMode RFASelector::iterTime (uInt it)
                       t0-dt0/2 < sc_time(row) && sc_time(row) < t0+dt0/2) {
                     cout << "                         MATCH!" << endl;
                   }
+              }
+          }
+      }
+      // scan intent based flagging (check match per antenna/baseline) 
+      if(sel_stateid.nelements()) {
+          const Vector<Int> &stateids( chunk.visBuf().stateId() );
+          //for (uInt i = 0; i < ifrs.nelements(); i++) {
+          //    for (uInt j = 0; j < sel_stateid.nelements(); j++) {
+          //        if( sel_stateid(j) == stateid0 )
+          for (uInt i = 0; i < stateids.nelements(); i++) {
+
+	      Bool inrange=False;
+	      uvdist = sqrt( uvw(i)(0)*uvw(i)(0) + uvw(i)(1)*uvw(i)(1) );
+	      for( uInt j=0; j<sel_uvrange.ncolumn(); j++) 
+	           if( uvdist >= sel_uvrange(0,j) && uvdist <= sel_uvrange(1,j) ) inrange |= True;
+
+              for (uInt j = 0; j < sel_stateid.nelements(); j++) {
+                  if( stateids(i) == sel_stateid(j) && 
+                      ifrs.nelements()==stateids.nelements() &&
+                      (!sel_ifr.nelements()||sel_ifr(ifrs(i))) &&
+                      (!sel_feed.nelements() || sel_feed(feeds(i))) &&
+                      (!sel_uvrange.nelements() || inrange ) )
+                      processRow(ifrs(i),it);
               }
           }
       }
