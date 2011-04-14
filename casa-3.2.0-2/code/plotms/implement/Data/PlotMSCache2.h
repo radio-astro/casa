@@ -86,6 +86,10 @@ public:
   // Report the data shapes
   inline Matrix<Int>& chunkShapes() {return chshapes_;};
 
+  // A chunk is good (T) if it contains data
+  //  (when averaging, some chunks may have nrows=0)
+  inline Bool goodChunk(Int ichunk) {return goodChunk_(ichunk); };
+
   // Is there a reference value for the specified axis?
   inline bool hasReferenceValue(PMS::Axis axis) { return (axis==PMS::TIME && cacheReady()); };
   inline double referenceValue(PMS::Axis axis) { return (hasReferenceValue(axis) ? refTime() : 0.0); };
@@ -166,7 +170,7 @@ public:
   inline Double getFlagRow(Int chnk,Int irel) { return *(flagrow_[chnk]->data()+irel); };
   inline Double getRow(Int chnk,Int irel) { return *(row_[chnk]->data()+irel); };
 
-  inline Double getImWt(Int chnk,Int irel) { return *(imwt_[chnk]->data()+irel); };
+  inline Double getWt(Int chnk,Int irel) { return *(wt_[chnk]->data()+irel); };
 
   // These are array-global (one value per chunk)
   inline Double getAz0(Int chnk,Int irel) { return az0_(chnk);  (void)irel; };
@@ -297,6 +301,7 @@ protected:
 
   // The fundamental meta-data cache
   Matrix<Int> chshapes_;
+  Vector<Bool> goodChunk_;
   Vector<Double> time_, timeIntr_;
   Vector<Int> field_, spw_, scan_;
   PtrBlock<Vector<uInt>*> row_;
@@ -316,7 +321,6 @@ protected:
   PtrBlock<Vector<Bool>*> flagrow_;
   
   PtrBlock<Array<Float>*> wt_;
-  PtrBlock<Array<Float>*> imwt_;
 
   PtrBlock<Vector<Float>*> parang_;
   PtrBlock<Vector<Int>*> antenna_;

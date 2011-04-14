@@ -447,8 +447,9 @@ void PlotMSCache2::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange, Bool glob
     */
 
     for (Int ich=0;ich<nChunk_;++ich)
-      for (Int ibl=0;ibl<chunkShapes()(2,ich);++ibl)
-	bslnMask(*(baseline_[ich]->data()+ibl))=True;
+      if (goodChunk_(ich))
+	for (Int ibl=0;ibl<chunkShapes()(2,ich);++ibl)
+	  bslnMask(*(baseline_[ich]->data()+ibl))=True;
     //    cout << "bslnMask = " << boolalpha << bslnMask << endl;
 
     // Remember only the occuring baseline indices
@@ -475,12 +476,13 @@ void PlotMSCache2::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange, Bool glob
     Vector<Bool> antMask(nAnt_,False);
     indgen(antList);
     for (Int ich=0;ich<nChunk_;++ich)
-      for (Int ibl=0;ibl<chunkShapes()(2,ich);++ibl) {
-	Int a1=*(antenna1_[ich]->data()+ibl);
-	Int a2=*(antenna2_[ich]->data()+ibl);
-	if (a1>-1) antMask(a1)=True;
-	if (a2>-1) antMask(a2)=True;
-      }
+      if (goodChunk_(ich))
+	for (Int ibl=0;ibl<chunkShapes()(2,ich);++ibl) {
+	  Int a1=*(antenna1_[ich]->data()+ibl);
+	  Int a2=*(antenna2_[ich]->data()+ibl);
+	  if (a1>-1) antMask(a1)=True;
+	  if (a2>-1) antMask(a2)=True;
+	}
     // Remember only the occuring antenna indices
     iterValues=antList(antMask).getCompressedArray();
     nIter=iterValues.nelements();
@@ -591,7 +593,6 @@ void PlotMSCache2::increaseChunks(Int nc) {
   flagrow_.resize(nChunk_,False,True);
 
   wt_.resize(nChunk_,False,True);
-  imwt_.resize(nChunk_,False,True);
 
   az0_.resize(nChunk_,True);
   el0_.resize(nChunk_,True);
@@ -625,7 +626,6 @@ void PlotMSCache2::increaseChunks(Int nc) {
     flag_[ic] = new Array<Bool>();
     flagrow_[ic] = new Vector<Bool>();
     wt_[ic] = new Matrix<Float>();
-    imwt_[ic] = new Matrix<Float>();
     antenna_[ic] = new Vector<Int>();
     az_[ic] = new Vector<Double>();
     el_[ic] = new Vector<Double>();
@@ -897,6 +897,8 @@ void PlotMSCache2::loadChunks(ROVisibilityIterator& vi,
 
   Int chunk = 0;
   chshapes_.resize(4,nChunk_);
+  goodChunk_.resize(nChunk_);
+  goodChunk_.set(False);
   double progress;
   for(vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
     for(vi.origin(); vi.more(); vi++) {
@@ -932,7 +934,8 @@ void PlotMSCache2::loadChunks(ROVisibilityIterator& vi,
       chshapes_(1,chunk)=vb.nChannel();
       chshapes_(2,chunk)=vb.nRow();
       chshapes_(3,chunk)=vi.numberAnt();
-      
+      goodChunk_(chunk)=True;
+
       for(unsigned int i = 0; i < loadAxes.size(); i++) {
 	//	cout << PMS::axis(loadAxes[i]) << " ";
 	loadAxis(vb, chunk, loadAxes[i], loadData[i]);
@@ -972,6 +975,8 @@ void PlotMSCache2::loadChunks(ROVisibilityIterator& vi,
   vbu_=VisBufferUtil(vb);
 
   chshapes_.resize(4,nChunk_);
+  goodChunk_.resize(nChunk_);
+  goodChunk_.set(False);
   double progress;
   vi.originChunks();
   vi.origin();
@@ -1058,20 +1063,30 @@ void PlotMSCache2::loadChunks(ROVisibilityIterator& vi,
     // The averaged VisBuffer
     VisBuffer& avb(pmsvba.aveVisBuff());
 
-    // Form Stokes parameters, if requested
-    if (transformations_.formStokes())
-      avb.formStokes();
+    // Only if the average yielded some data
+    if (avb.nRow()>0) {
 
-    // Cache the data shapes
-    chshapes_(0,chunk)=avb.nCorr();
-    chshapes_(1,chunk)=avb.nChannel();
-    chshapes_(2,chunk)=avb.nRow();
-    chshapes_(3,chunk)=vi.numberAnt();
-
-    for(unsigned int i = 0; i < loadAxes.size(); i++) {
-      loadAxis(avb, chunk, loadAxes[i], loadData[i]);
-    }
+      // Form Stokes parameters, if requested
+      if (transformations_.formStokes())
+	avb.formStokes();
       
+      // Cache the data shapes
+      chshapes_(0,chunk)=avb.nCorr();
+      chshapes_(1,chunk)=avb.nChannel();
+      chshapes_(2,chunk)=avb.nRow();
+      chshapes_(3,chunk)=vi.numberAnt();
+      goodChunk_(chunk)=True;
+
+      for(unsigned int i = 0; i < loadAxes.size(); i++) {
+	loadAxis(avb, chunk, loadAxes[i], loadData[i]);
+      }
+    }
+    else {
+      // no points in this chunk
+      goodChunk_(chunk)=False;
+      chshapes_.column(chunk)=0;
+    }
+
     // If a thread is given, update it.
     if(thread != NULL && (nChunk_ <= (int)THREAD_SEGMENT ||
 			  chunk % THREAD_SEGMENT == 0)) {
@@ -1079,6 +1094,10 @@ void PlotMSCache2::loadChunks(ROVisibilityIterator& vi,
       thread->setProgress((unsigned int)((progress * 100) + 0.5));
     }
   }
+
+  //  cout << boolalpha << "goodChunk_ = " << goodChunk_ << endl;
+
+
 }
 
 void PlotMSCache2::forceVBread(VisBuffer& vb,
@@ -1251,6 +1270,10 @@ void PlotMSCache2::setPlotMask() {
 
 
 void PlotMSCache2::setPlotMask(Int chunk) {
+
+  // Do nothing if chunk empty
+  if (!goodChunk_(chunk))
+    return;
 
   IPosition nsh(3,1,1,1),csh;
   
