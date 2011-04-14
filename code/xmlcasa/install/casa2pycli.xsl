@@ -177,6 +177,8 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 	    return False
 
 	try :
+          saveinputs = self.__globals__['saveinputs']
+          saveinputs(</xsl:text>&apos;<xsl:value-of select="$taskname"/>&apos;, &apos;<xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">.last&apos;, myparams, self.__globals__)
           if async :
 	    count = 0
 	    keybase =  time.strftime("%y%m%d.%H%M%S")
@@ -203,8 +205,6 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
               casalog.post('##########################################')
 </xsl:for-each>
 <xsl:text disable-output-escaping="yes">
-          saveinputs = self.__globals__['saveinputs']
-          saveinputs(</xsl:text>&apos;<xsl:value-of select="$taskname"/>&apos;, &apos;<xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">.last&apos;, myparams, self.__globals__)
 	except Exception, instance:
           if(self.__globals__.has_key('__rethrow_casa_exceptions') and self.__globals__['__rethrow_casa_exceptions']) :
              raise
