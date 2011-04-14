@@ -34,6 +34,7 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/Utilities/BinarySearch.h>
 #include <casa/Utilities/GenSort.h>
+#include <casa/iomanip.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -466,7 +467,10 @@ void InterpolateArray1D<Domain,Range>::interpolatePtr(PtrBlock<Range*>& yout,
 
 //    y1 + ((x_req-x1)/(x2-x1)) * (y2-y1);
 
-        if (frac!=0. && frac!=1.) {
+	Double xfrac = frac;
+
+        if (frac>1E-6 && frac<(1.-1E-6)) {
+	  //cout << "two: frac " << setprecision(12) << xfrac << endl;
 	  if (goodIsTrue) {
 	    for (Int j=0; j<ny; j++) {
 	      yout[i][j] = yin[ind1][j] + frac * (yin[ind2][j] - yin[ind1][j]);
@@ -482,12 +486,13 @@ void InterpolateArray1D<Domain,Range>::interpolatePtr(PtrBlock<Range*>& yout,
 	  }
         }
 	else{ // only one of the channels is involved
-	  if (frac==0.) {
+	  //cout << "one: frac "  << setprecision(12) << xfrac << endl;
+	  if (frac<=1E-6) {
 	    for (Int j=0; j<ny; j++) {
 	      yout[i][j] = yin[ind1][j];
 	      youtFlags[i][j] = (discard ? flag : yinFlags[ind1][j]);
 	    }
-	  } else { // frac == 1.
+	  } else { // frac >= 1.-1E-6
 	    for (Int j=0; j<ny; j++) {
 	      yout[i][j] = yin[ind2][j];
 	      youtFlags[i][j] = (discard ? flag :  yinFlags[ind2][j]);
