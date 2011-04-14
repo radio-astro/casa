@@ -2368,6 +2368,206 @@ class cleanhelper:
           if debug: print "setChan retwidth=",retwidth
         return retnchan, retstart, retwidth
 
+    def setChannelizeNonDefault(self, mode,spw,field,nchan,start,width,frame,
+                                veltype,phasec, restf):
+        """
+        Determine appropriate values for channelization
+        parameters when default values are used
+        for mode='velocity' or 'frequency' or 'channel'
+        This does not replaces setChannelization and make no use of ms.cvelfreqs.
+        """
+    
+    
+        #spw='0:1~4^2;10~12, ,1~3:3~10^3,4~6,*:7'
+        #vis='ngc5921/ngc5921.demo.ms'
+    
+        if type(spw)!=str:
+            spw=''
+    
+        if spw.strip()=='':
+            spw='*'
+    
+        freqs=set()
+        wset=[]
+        chunk=spw.split(',')
+        for i in xrange(len(chunk)):
+            #print chunk[i], '------'
+            ck=chunk[i].strip()
+            if len(ck)==0:
+                continue
+    
+            wc=ck.split(':')
+            window=wc[0].strip()
+    
+            if len(wc)==2:
+                sec=wc[1].split(';')
+                for k in xrange(len(sec)):
+                    chans=sec[k].strip()
+                    sep=chans.split('^')
+                    se=sep[0].strip()
+                    t=1
+                    if len(sep)==2:
+                        t=sep[1].strip()
+                    se=se.split('~')
+                    s=se[0].strip()
+                    if len(se)==2:
+                        e=se[1].strip() 
+                    else:
+                        e=-1
+                    wd=window.split('~')
+                    if len(wd)==2:
+                        wds=int(wd[0])
+                        wde=int(wd[1])
+                        for l in range(wds, wde):
+                            #print l, s, e, t
+                            wset.append([l, s, e, t])
+                    else:
+                        #print wd[0], s, e, t
+                        if e==-1:
+                            try:
+                                e=int(s)+1
+                            except:
+                                e=s
+                        wset.append([wd[0], s, e, t])
+            else:
+                win=window.split('~')
+                if len(win)==2:
+                    wds=int(win[0])
+                    wde=int(win[1])
+                    for l in range(wds, wde):
+                        #print l, 0, -1, 1
+                        wset.append([l, 0, -1, 1])
+                else:
+                    #print win[0], 0, -1, 1
+                    wset.append([win[0], 0, -1, 1])
+    
+        #print wset
+        for i in range(len(wset)):
+            for j in range(4):
+                try:
+                    wset[i][j]=int(wset[i][j])
+                except:
+                    wset[i][j]=-1
+        #print wset
+    
+        tb.open(self.vis[self.sortedvisindx[0]]+'/SPECTRAL_WINDOW')
+        nr=tb.nrows()
+        for i in range(len(wset)):
+            if wset[i][0]==-1:
+                w=range(nr)
+            elif wset[i][0]<nr:
+                w=[wset[i][0]]
+            else:
+                w=range(0)
+            for j in w:
+                chanfreqs=tb.getcell('CHAN_FREQ', j)
+                if wset[i][2]==-1:
+                    wset[i][2]=len(chanfreqs)
+                if wset[i][2]>len(chanfreqs):
+                    wset[i][2]=len(chanfreqs)
+                #print wset[i][1], wset[i][2], len(chanfreqs), wset[i][3]
+                for k in range(wset[i][1], wset[i][2], wset[i][3]):
+                    #print k
+                    freqs.add(chanfreqs[k]) 
+        tb.close()
+        freqs=list(freqs)
+        freqs.sort()
+        #print freqs
+    
+        if mode=='channel':
+            star=0
+            if type(start)==str:
+               try:
+                   star=int(start)
+               except:
+                   star=0
+            if type(start)==int:
+                star=start
+            if star>len(freqs) or star<0:
+                star=0
+ 
+            if nchan==-1:
+                nchan=len(freqs)
+    
+            widt=1
+            if type(width)==str:
+               try:
+                   widt=int(width)
+               except:
+                   widt=1
+            if type(width)==int:
+               widt=width
+            if widt==0:
+                widt=1
+            if widt>0:
+                nchan=max(min(int((len(freqs)-star)/widt), nchan), 1)
+            else:
+                nchan=max(min(int((-star)/widt), nchan), 1)
+                widt=-widt
+                star=max(star-nchan*widt, 0)
+       
+        if mode=='frequency':
+            star=freqs[0]
+            if type(start)!=str:
+                star=freqs[0]
+            else:
+                star=max(qa.quantity(start)['value'], freqs[0])
+
+            if nchan==-1:
+                nchan=len(freqs)
+    
+            widt=freqs[-1]
+            if len(freqs)>1:
+                for k in range(len(freqs)-1):
+                    widt=min(widt, freqs[k+1]-freqs[k])
+            if type(width)==str and width.strip()!='':
+                widt=qa.quantity(width)['value']
+    
+            if widt>0:
+                #print star, widt, (freqs[-1]-star)/widt
+                nchan=max(min(int((freqs[-1]-star)/widt), nchan), 1)
+            else:
+                nchan=max(min(int(freqs[0]-star)/widt, nchan), 1)
+                widt=-widt
+                star=max(star-nchan*widt, freqs[0])
+    
+            widt=str(widt)+'Hz'
+            star=str(star)+'Hz'
+    
+        if mode=='velocity':
+            beg1=self.convertvf(str(freqs[-1])+'Hz',frame,field,restf,veltype=veltype)
+            beg1=qa.quantity(beg1)['value']
+            end0=self.convertvf(str(freqs[0])+'Hz',frame,field,restf,veltype=veltype)
+            end0=qa.quantity(end0)['value']
+            star=beg1
+            if type(start)==str and start.strip()!='':
+                star=max(qa.quantity(start)['value'], star)
+                star=min(star, end0)
+            
+            #print beg1, star, end0
+
+            widt=end0-beg1
+            if len(freqs)>1:
+                for k in range(len(freqs)-1):
+                    st=self.convertvf(str(freqs[k])+'Hz',frame,field,restf,veltype=veltype)
+                    en=self.convertvf(str(freqs[k+1])+'Hz',frame,field,restf,veltype=veltype)
+                    widt=min(widt, qa.quantity(en)['value']-qa.quantity(st)['value'])
+            if type(width)==str and width.strip()!='':
+                widt=qa.quantity(width)['value']
+
+            #print widt
+            if widt>0:
+                nchan=max(min(int((end0-star)/widt), nchan), 1)
+                #star=0
+            else:
+                nchan=max(min(int((beg1-star)/widt), nchan), 1)
+                #widt=-widt
+
+            widt=str(widt)+'m/s'
+            star=str(star)+'m/s'
+    
+        return nchan, star, widt
+
     def convertframe(self,fin,frame,field):
         """
         convert freq frame in dataframe to specfied frame, assume fin in Hz

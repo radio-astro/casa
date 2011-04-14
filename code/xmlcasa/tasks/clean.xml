@@ -439,6 +439,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value>True</value>
     </param>
 <!--========================================================= -->
+     <param type="bool" name="allowchunk" subparam="false">
+      <description>Whether allowing to divide the big image cube by channel chunks </description>
+       <value>False</value>
+     </param>
+<!--========================================================= -->
     <constraints>
             <when param="selectdata">
 		  <equals type="bool" value="False"/>
