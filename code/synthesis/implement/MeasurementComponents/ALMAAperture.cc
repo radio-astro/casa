@@ -39,7 +39,7 @@
 namespace casa{
 
   AntennaResponses* ALMAAperture::aR_p = 0;
-  Bool ALMAAperture::orderMattersInCFKey = True;
+  Bool ALMAAperture::orderMattersInCFKey = False;
 
   ALMAAperture::ALMAAperture(): 
     ATerm(),
@@ -329,8 +329,6 @@ namespace casa{
 	Array<Complex> pB( respByPol(0)(polToDoIndex(iPol)).shape() );
 	Array<Complex> fact1( pB.shape() );
 	Array<Complex> fact2( pB.shape() );
-	Array<Complex> fact3( pB.shape() );
-	Array<Complex> fact4( pB.shape() );
 
 	// rotate the two factor arrays into the right PA
 	Double dAngleRad = getPA(vb);
@@ -349,11 +347,11 @@ namespace casa{
 	  break;
 	case 1: //XY
 	  fact1Index = 0;
-	  fact2Index = 2;
+	  fact2Index = 3;
 	  break;
 	case 2: //YX
-	  fact1Index = 1;
-	  fact2Index = 3;
+	  fact1Index = 3;
+	  fact2Index = 0;
 	  break;
 	case 3: //YY
 	  fact1Index = fact2Index = 3;
@@ -383,7 +381,7 @@ namespace casa{
 
 	// multiply EFPs (equivalent to convolution of AIFs) to get primary beam
 	if(doSquint){
-	  pB = fact1 * fact2;
+	  pB = fact1 * conj(fact2);
 	}
 	else{
 	  pB = abs(fact1) * abs(fact2);

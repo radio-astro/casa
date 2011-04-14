@@ -257,7 +257,7 @@ void LogModel::appendData(const QString &data)
 
 			if(items.size() == 3) {
 				QString message = items.at(2);
-				message.replace('\r','\n');
+				message.replace('\r','\n').truncate(2500);
 				columnData << message;
 				// qDebug() << message << "\t";
 			}
@@ -266,8 +266,7 @@ void LogModel::appendData(const QString &data)
 
 				// one quirk: multi-line messages are 'encoded' with \r
 				// in place of newline (\n) characters, we should put these back
-				message.replace('\r','\n');
-
+				message.replace('\r','\n').truncate(2500);
 				columnData << message;
 				// qDebug() << message << "\t";
 			}
