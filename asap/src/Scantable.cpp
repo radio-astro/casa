@@ -1555,17 +1555,13 @@ void asap::Scantable::regridChannel( int nChan, double dnu, int irow )
   //double pile = 0.0 ;
   int ichan = 0 ;
   double wsum = 0.0 ;
-  Vector<Float> z( nChan ) ;
-  z[0] = abcissa[0] - 0.5 * olddnu + 0.5 * dnu ;
-  for ( int ii = 1 ; ii < nChan ; ii++ )
-    z[ii] = z[ii-1] + dnu ;
   Vector<Float> zi( nChan+1 ) ;
   Vector<Float> yi( oldsize + 1 ) ;
-  zi[0] = z[0] - 0.5 * dnu ;
-  zi[1] = z[0] + 0.5 * dnu ;
+  zi[0] = abcissa[0] - 0.5 * olddnu ;
+  zi[1] = zi[1] + dnu ;
   for ( int ii = 2 ; ii < nChan ; ii++ )
-    zi[ii] = zi[ii-1] + dnu ;
-  zi[nChan] = z[nChan-1] + 0.5 * dnu ;
+    zi[ii] = zi[0] + dnu * ii ;
+  zi[nChan] = zi[nChan-1] + dnu ;
   yi[0] = abcissa[0] - 0.5 * olddnu ;
   yi[1] = abcissa[1] + 0.5 * olddnu ;
   for ( int ii = 2 ; ii < oldsize ; ii++ )
@@ -1614,7 +1610,8 @@ void asap::Scantable::regridChannel( int nChan, double dnu, int irow )
           break ;
         }
       }
-      newspec[ii] /= wsum ;
+      if ( wsum != 0.0 )
+        newspec[ii] /= wsum ;
       wsum = 0.0 ;
     }
   }
@@ -1661,7 +1658,8 @@ void asap::Scantable::regridChannel( int nChan, double dnu, int irow )
           break ;
         }
       }
-      newspec[ii] /= wsum ;
+      if ( wsum != 0.0 )
+        newspec[ii] /= wsum ;
       wsum = 0.0 ;
     }
   }

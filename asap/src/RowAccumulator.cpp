@@ -51,12 +51,14 @@ void RowAccumulator::reset(const uInt size, const uInt tsysSize)
 
   timeSum_ = 0.0;
   timeSumNoMask_ = 0.0;
+
+  initialized_ = False;
 }
 
 void RowAccumulator::initialize(const uInt size, const uInt tsysSize)
 {
-    reset(size, tsysSize);
-    initialized_ = True;
+  reset(size, tsysSize);
+  initialized_ = True;
 }
 
 void RowAccumulator::add(const Vector<Float>& v,
