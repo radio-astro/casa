@@ -6238,12 +6238,11 @@ bool ImageAnalysis::maketestimage(const String& outfile, const Bool overwrite,
 		const String& imagetype) {
 	bool rstat(false);
 	*itsLog << LogOrigin("ImageAnalysis", "maketestimage");
+	String var = EnvironmentVariable::get("CASAPATH");
+	if (var.empty()) {
+		var = EnvironmentVariable::get("AIPSPATH");
+	}
 	try {
-#ifdef CASA_USECASAPATH
-		String var (EnvironmentVariable::get("CASAPATH"));
-#else
-		String var(EnvironmentVariable::get("AIPSPATH"));
-#endif
 		if (!var.empty()) {
 			String fields[4];
 			Int num = split(var, fields, 4, String(" "));
@@ -6259,24 +6258,13 @@ bool ImageAnalysis::maketestimage(const String& outfile, const Bool overwrite,
 				Bool zeroblanks = False;
 				rstat = ImageAnalysis::imagefromfits(outfile, fitsfile,
 						whichrep, whichhdu, zeroblanks, overwrite);
-			} else {
-#ifdef CASA_USECASAPATH
-				*itsLog << LogIO::WARN
-				<< "Environment variable CASAPATH=["
-#else
-				*itsLog << LogIO::WARN << "Environment variable AIPSPATH=["
-#endif		
-						<< var << "] malformed." << LogIO::POST;
 			}
-		} else {
-#ifdef CASA_USECASAPATH
-			*itsLog << LogIO::WARN << "Environment variable CASAPATH undefined."
-			<< LogIO::POST;
-#else
-			*itsLog << LogIO::WARN
-					<< "Environment variable AIPSPATH undefined."
-					<< LogIO::POST;
-#endif
+			else {
+				*itsLog << LogIO::EXCEPTION << "Bad environment variable";
+			}
+		}
+		else {
+			*itsLog << LogIO::EXCEPTION << "Environment variable undefined, can't get data path";
 		}
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
