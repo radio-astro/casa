@@ -137,7 +137,6 @@ class CustomFlagToolbarCommon:
             for textobj in ax.texts:
                 if textobj.contains(event)[0]:
                     return True
-        #print "No text picked"
         return False
 
     ### Region/Panel selection & oparations
@@ -156,8 +155,6 @@ class CustomFlagToolbarCommon:
             asaplog.push(msg)
             asaplog.post('WARN')
             return
-        #print "add the region to selections"
-        #self._thisregion = {'axes': event.inaxes,'xs': event.xdata,
         self._thisregion = {'axes': event.inaxes,'xs': event.x,
                             'worldx': [event.xdata,event.xdata]}
         self.plotter._plotter.register('button_press',None)
@@ -166,20 +163,16 @@ class CustomFlagToolbarCommon:
 
     def _xspan_draw(self,event):
         if event.inaxes == self._thisregion['axes']:
-            #xnow = event.xdata
             xnow = event.x
             self.xdataold = xnow
         else:
             xnow = self.xdataold
         try: self.lastspan
         except AttributeError: pass
-        #else: self.lastspan.remove()
         else: self._remove_span(self.lastspan)
 
-        #self.lastspan = self._thisregion['axes'].axvspan(self._thisregion['xs'],xnow,facecolor='0.7')
-        self.lastspan = self._draw_span(self._thisregion['axes'],self._thisregion['xs'],xnow,fill="#555555",stipple="gray50")
-        #self.plotter._plotter.show(False)
-        #self.plotter._plotter.canvas.draw()
+        #self.lastspan = self._draw_span(self._thisregion['axes'],self._thisregion['xs'],xnow,fill="#555555",stipple="gray50")
+        self.lastspan = self._draw_span(self._thisregion['axes'],self._thisregion['xs'],xnow,fill="")
         del xnow
 
     def _draw_span(self,axes,x0,x1,**kwargs):
@@ -198,7 +191,6 @@ class CustomFlagToolbarCommon:
         try: self.lastspan
         except AttributeError: pass
         else:
-            #self.lastspan.remove()
             self._remove_span(self.lastspan)
             del self.lastspan
         if event.inaxes == self._thisregion['axes']:
@@ -210,7 +202,6 @@ class CustomFlagToolbarCommon:
         lregion = self._thisregion['worldx']
         pregion = self._thisregion['axes'].axvspan(lregion[0],lregion[1],
                                                    facecolor='0.7')
-        #self.plotter._plotter.show(False)
         self.plotter._plotter.canvas.draw()
         self._polygons.append(pregion)
         srow = self._getrownum(self._thisregion['axes'])
@@ -250,7 +241,6 @@ class CustomFlagToolbarCommon:
         #self.plotter._plotter.show(False)
         self.plotter._plotter.canvas.draw()
         asaplog.push("row "+str(irow)+" is selected")
-        #print "selected rows =",self._selpanels
         ## check for region selection of the spectra and overwrite it.
         ##!!!! currently disabled for consistency with flag tools !!!!
         #if self._selregions.has_key(srow):
@@ -301,7 +291,6 @@ class CustomFlagToolbarCommon:
                                    transform=ax.transAxes,visible=True)
                 self._polygons.append(ax.add_patch(shadow))
                 del ax,shadow
-        #self.plotter._plotter.show(False)
         self.plotter._plotter.canvas.draw()
         del regions,panels,strow,enrow
 
@@ -401,11 +390,7 @@ class CustomFlagToolbarCommon:
             asaplog.push(msg)
             asaplog.post('WARN')
             return
-        #print "Calculate statistics of selected region and spectra"
         self._selected_stats(rows=self._selpanels,regions=self._selregions)
-        #print "Statistics: "
-        #print "- rows: ",self._selpanels
-        #print "- regions:\n   ",self._selregions
         self._clearup_selections(refresh=True)
 
     @asaplog_post_dec
@@ -421,7 +406,6 @@ class CustomFlagToolbarCommon:
         if isinstance(rows,list) and len(rows) > 0:
             for irow in rows:
                 for stat in statstr:
-                    #statval[stat] = scan.stats(stat=stat,row=irow)[0]
                     statval[stat] = mathobj._statsrow(scan,[],stat,irow)[0]
                 self._print_stats(scan,irow,statval,statstr=statstr)
             del irow
@@ -436,7 +420,6 @@ class CustomFlagToolbarCommon:
                 irow = int(srow)
                 mask = scan.create_mask(masklist,invert=False,row=irow)
                 for stat in statstr:
-                    #statval[stat] = scan.stats(stat=stat,row=irow,mask = mask)[0]
                     statval[stat] = mathobj._statsrow(scan,mask,stat,irow)[0]
                 self._print_stats(scan,irow,statval,statstr=statstr,mask=masklist)
                 del irow, mask
@@ -480,7 +463,6 @@ class CustomFlagToolbarCommon:
     ### Page chages
     ### go to the previous page
     def prev_page(self):
-        #self.figmgr.toolbar.set_message('plotting the previous page')
         self._pause_buttons(operation="start",msg='plotting the previous page')
         self._clear_selection_plot(refresh=False)
         self._plot_page(pagemode="prev")
@@ -489,7 +471,6 @@ class CustomFlagToolbarCommon:
 
     ### go to the next page
     def next_page(self):
-        #self.figmgr.toolbar.set_message('plotting the next page')
         self._pause_buttons(operation="start",msg='plotting the next page')
         self._clear_selection_plot(refresh=False)
         self._plot_page(pagemode="next")
@@ -508,10 +489,7 @@ class CustomFlagToolbarCommon:
             
         self.plotter._plotter.hold()
         self.plotter._plotter.legend(1)
-        #if goback:
-        #    self._set_prevpage_counter()
         self._set_plot_counter(pagemode)
-        #self.plotter._plotter.clear()
         self.plotter._plot(self.plotter._data)
         self.set_pagecounter(self._get_pagenum())
         self.plotter._plotter.release()
@@ -757,7 +735,6 @@ class CustomFlagToolbarTkAgg(CustomFlagToolbarCommon, Tk.Frame):
 
     def quit(self):
         self.__disconnect_event()
-        #self.delete_bar()
         self.disable_button()
         self.figmgr.window.wm_withdraw()
 
