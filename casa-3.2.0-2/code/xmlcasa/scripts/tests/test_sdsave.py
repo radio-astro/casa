@@ -37,6 +37,11 @@ class sdsave_test_base:
     cycleno = None
     scanno = None
 
+    def _checkfile( self, name ):
+        isthere=os.path.exists(name)
+        self.assertEqual(isthere,True,
+                         msg='output file %s was not created because of the task failure'%(name))
+
     def _setAttributes(self):
         """
         Set summary string from the original data.
@@ -63,6 +68,7 @@ class sdsave_test_base:
            - check number of rows
            - check first spectrum
         """
+        self._checkfile(filename)
         [nrow,sp0] = self._get(filename)
         #casalog.post('nrow=%s'%nrow)
         #casalog.post('maxdiff=%s'%((abs(self.firstSpec-sp0)).max()))
