@@ -143,7 +143,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                     inf=''
                     for j in range(len(subimg)):
                         inf+=' '+subimg[j]+i   
-                    bigim=ia.imageconcat(outfile=bigimg+i, infiles=inf)
+                    bigim=ia.imageconcat(outfile=bigimg+i, infiles=inf, relax=True)
                     bigim.done()
                     ia.close()
                     os.system('rm -rf '+inf)
