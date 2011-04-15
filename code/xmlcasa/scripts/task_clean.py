@@ -114,7 +114,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                         st=str(st+k*ed)+'m/s'
                         
                     #print imname, tchan, st, localwidth 
-                    os.system('rm -rf '+imname+'*'
+                    os.system('rm -rf '+imname+'*')
                     clean(vis=vis,imagename=imname,outlierfile=outlierfile,field=field,
                           spw=spw,selectdata=selectdata,timerange=timerange,uvrange=uvrange,
                           antenna=antenna,scan=scan,mode=mode,gridmode=gridmode, 
