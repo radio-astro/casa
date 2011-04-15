@@ -107,15 +107,15 @@ private:
 		     const casa::Vector<casa::Float>& tsys,
 		     const casa::Double interval,
 		     const casa::Double time,
-		     const casa::Bool ignoreMask);
+		     const casa::Bool inverseMask);
   casa::Float getTotalWeight(const casa::MaskedArray<casa::Float>& data,
 			     const casa::Vector<casa::Float>& tsys,
 			     const casa::Double interval,
 			     const casa::Double time,
-			     const casa::Bool ignoreMask);
-  casa::Float addTsys(const casa::Vector<casa::Float>& v, casa::Bool ignoreMask);
-  casa::Float addInterval(casa::Double inter, casa::Bool ignoreMask);
-  void addTime(casa::Double t, casa::Bool ignoreMask);
+			     const casa::Bool inverseMask);
+  casa::Float addTsys(const casa::Vector<casa::Float>& v, casa::Bool inverseMask);
+  casa::Float addInterval(casa::Double inter, casa::Bool inverseMask);
+  void addTime(casa::Double t, casa::Bool inverseMask);
 
   WeightType weightType_;
   casa::Bool initialized_;

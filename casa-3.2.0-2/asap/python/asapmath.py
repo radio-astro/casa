@@ -1039,7 +1039,8 @@ def _array2dOp( scan, value, mode="ADD", tsys=False ):
             if len( value[irow] ) == 1:
                 stm._unaryop( s, value[irow][0], mode, tsys )
             else:
-                stm._arrayop( s, value[irow], mode, tsys, 'channel' )
+                #stm._arrayop( s, value[irow], mode, tsys, 'channel' )
+                stm._arrayop( s, value[irow], mode, tsys )
             s.set_selection()
             sel.reset()
         del sel

@@ -89,19 +89,18 @@ void RowAccumulator::doAddSpectrum(const Vector<Float>& v,
 				   const Vector<Float>& tsys,
 				   const Double interval,
 				   const Double time,
-				   const Bool ignoreMask)
+				   const Bool inverseMask)
 {
   Vector<Float> vUse = v.copy();
   Vector<Bool> mUse = m.copy();
-  if (ignoreMask) mUse = !mUse;
-
+  if (inverseMask) mUse = !mUse;
   MaskedArray<Float> vadd(vUse, mUse);
-  Float totalWeight = getTotalWeight(vadd, tsys, interval, time, ignoreMask);
+  Float totalWeight = getTotalWeight(vadd, tsys, interval, time, inverseMask);
   vadd *= totalWeight;
   MaskedArray<Float> wadd(Vector<Float>(mUse.nelements(), totalWeight), mUse);
   MaskedArray<uInt> inc(Vector<uInt>(mUse.nelements(), 1), mUse);
 
-  if (ignoreMask) {
+  if (inverseMask) {
     spectrumNoMask_ += vadd;
     weightSumNoMask_ += wadd;
     nNoMask_ += inc;
@@ -116,34 +115,33 @@ Float RowAccumulator::getTotalWeight(const MaskedArray<Float>& data,
 				     const Vector<Float>& tsys,
 				     const Double interval,
 				     const Double time,
-				     const Bool ignoreMask)
+				     const Bool inverseMask)
 {
   Float totalWeight = 1.0;
-
   Vector<Bool> m = data.getMask();
   if (!allEQ(m, False)) {  // only add these if not everything masked
-    totalWeight *= addTsys(tsys, ignoreMask);
-    totalWeight *= addInterval(interval, ignoreMask);
-    addTime(time, ignoreMask);
-  }
+    totalWeight *= addTsys(tsys, inverseMask);
+    totalWeight *= addInterval(interval, inverseMask);
+    addTime(time, inverseMask);
 
-  if (weightType_ == W_VAR) {
-    Float fac = 1.0/variance(data);
-    if (!ignoreMask && (m.nelements() == userMask_.nelements()))
-      fac = 1.0/variance(data(userMask_));
+    if (weightType_ == W_VAR) {
+      Float fac = 1.0/variance(data);
+      if (!inverseMask && (m.nelements() == userMask_.nelements()))
+	fac = 1.0/variance(data(userMask_));
 
-    totalWeight *= fac;
+      totalWeight *= fac;
+    }
   }
 
   return totalWeight;
 }
 
-Float RowAccumulator::addTsys(const Vector<Float>& v, Bool ignoreMask)
+Float RowAccumulator::addTsys(const Vector<Float>& v, Bool inverseMask)
 {
   // @fixme this assume tsys is the same for all channels
 
   Float w = 1.0;
-  if (ignoreMask) {
+  if (inverseMask) {
     tsysSumNoMask_ += v[0];
   } else {
     tsysSum_ += v[0];
@@ -154,19 +152,19 @@ Float RowAccumulator::addTsys(const Vector<Float>& v, Bool ignoreMask)
   return w;
 }
 
-void RowAccumulator::addTime(Double t, Bool ignoreMask)
+void RowAccumulator::addTime(Double t, Bool inverseMask)
 {
-  if (ignoreMask) {
+  if (inverseMask) {
     timeSumNoMask_ += t;
   } else {
     timeSum_ += t;
   }
 }
 
-Float RowAccumulator::addInterval(Double inter, Bool ignoreMask)
+Float RowAccumulator::addInterval(Double inter, Bool inverseMask)
 {
   Float w = 1.0;
-  if (ignoreMask) {
+  if (inverseMask) {
     intervalSumNoMask_ += inter;
   } else {
     intervalSum_ += inter;
