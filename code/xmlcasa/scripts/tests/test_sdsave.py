@@ -68,7 +68,6 @@ class sdsave_test_base:
            - check number of rows
            - check first spectrum
         """
-        self._checkfile(filename)
         [nrow,sp0] = self._get(filename)
         #casalog.post('nrow=%s'%nrow)
         #casalog.post('maxdiff=%s'%((abs(self.firstSpec-sp0)).max()))
@@ -86,6 +85,7 @@ class sdsave_test_base:
         extension=st[-1]
         #casalog.post('filename='+filename)
         if extension == 'asap' or extension == 'ms' or extension == 'fits':
+            self._checkfile(filename)
             s=sd.scantable(filename,False)
             n=s.nrow()
             sp=numpy.array(s._getspectrum(0))
@@ -95,6 +95,7 @@ class sdsave_test_base:
             wcout=commands.getoutput('ls '+st[0]+'*.txt'+' | wc')
             n=int(wcout.split()[0])*self.npol
             filein=st[0]+'_SCAN%d_CYCLE%d_IF%d.txt'%(self.scanno,self.cycleno,self.ifno)
+            self._checkfile(filein)
             f=open(filein)
             sp=[]
             line = f.readline()
