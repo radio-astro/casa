@@ -30,7 +30,16 @@ class sdaverage_unittest_base:
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdaverage/'
     tolerance=1.0e-15
 
+    def _checkfile( self, name ):
+        isthere=os.path.exists(name)
+        self.assertEqual(isthere,True,
+                         msg='output file %s was not created because of the task failure'%(name))
+        
+
     def _getspectra( self, name ):
+        isthere=os.path.exists(name)
+        self.assertEqual(isthere,True,
+                         msg='file %s does not exist'%(name))        
         tb.open(name)
         sp=tb.getcol('SPECTRA').transpose()
         tb.close()
@@ -58,6 +67,7 @@ class sdaverage_caltest_base(sdaverage_unittest_base):
     postfix='.cal.asap'
 
     def _comparecal( self, name ):
+        self._checkfile(name)
         sp=self._getspectra(name)
         spref=self._getspectra(self.reffile)
 
@@ -85,6 +95,9 @@ class sdaverage_avetest_base(sdaverage_unittest_base):
         return substr.split(',')
 
     def _getrefdata( self, name ):
+        isthere=os.path.exists(name)
+        self.assertEqual(isthere,True,
+                         msg='file %s does not exist'%(name))
         f=open(name)
         lines=f.readlines()
         f.close
@@ -120,6 +133,7 @@ class sdaverage_avetest_base(sdaverage_unittest_base):
     
 
     def _compare( self, name1, name2 ):
+        self._checkfile(name1)
         sp=self._getspectra( name1 )
         (scan0,pol0,sp0)=self._getrefdata( name2 )
 
