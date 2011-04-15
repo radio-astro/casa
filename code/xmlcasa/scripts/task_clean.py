@@ -68,17 +68,17 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
             
 
             av=cu.hostinfo()['memory']['available']
-            casalog.post('mem available: '+str(av/1024)+'M')
+            casalog.post('mem available: '+str(int(av/1024))+'M')
 
             freemem=commands.getoutput("free")
             for line in freemem.splitlines():
                 if line.startswith('Mem'):
                     av=float(line.split()[3])/1024
                     break
-            casalog.post('mem free: '+str(av)+'M')
+            casalog.post('mem free: '+str(int(av))+'M')
 
             nd=volumn/1024./1024.*9
-            casalog.post('mem needed for single chunck clean: '+str(nd)+'M')
+            casalog.post('mem needed for single chunck clean: '+str(int(nd))+'M')
 
             chunk=1
             tchan=npage
@@ -114,6 +114,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                         st=str(st+k*ed)+'m/s'
                         
                     #print imname, tchan, st, localwidth 
+                    os.system('rm -rf '+imname+'*'
                     clean(vis=vis,imagename=imname,outlierfile=outlierfile,field=field,
                           spw=spw,selectdata=selectdata,timerange=timerange,uvrange=uvrange,
                           antenna=antenna,scan=scan,mode=mode,gridmode=gridmode, 
@@ -136,13 +137,16 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                           allowchunk=False)
                     subimg.append(imname)
 
-                casalog.post('concate '+imname+'_* to '+bigimg)   
-                for i in ['.image', '.flux', '.model', '.psf', 
-                          '.residual', '.mask']:
-                    bigim=ia.imageconcat(outfile=bigimage+i, 
-                             infiles=bigimage+'_*'+i)
+                for i in ['.image', '.flux', '.model', '.psf', '.residual', '.mask']:
+                    casalog.post('concate '+bigimg+'_*'+i+' to '+bigimg+i)   
+                    os.system('rm -rf '+bigimg+i)
+                    inf=''
+                    for j in range(len(subimg)):
+                        inf+=' '+subimg[j]+i   
+                    bigim=ia.imageconcat(outfile=bigimg+i, infiles=inf)
                     bigim.done()
-                ia.close()
+                    ia.close()
+                    os.system('rm -rf '+inf)
 
                 return    
             else:
