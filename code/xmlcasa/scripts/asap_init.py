@@ -53,3 +53,7 @@ def asap_init():
     myf['sdimaging']=sdimaging
     myf['sdimprocess']=sdimprocess
 
+    print ""
+    print "*** Notice: Name changes of some major SD task parameters, "
+    print "***         including 'sdfile' to 'infile', will become effective "
+    print "***         on and after the next release of casapy-test."
