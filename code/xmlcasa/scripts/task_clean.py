@@ -18,6 +18,151 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
     #Python script
     
     casalog.origin('clean')
+    casalog.post('nchan='+str(nchan)+' start='+str(start)+' width='+str(width))  
+
+    #######################################################################  
+    #
+    # start of the big cube treatment
+    #
+    #######################################################################  
+    #paralist=[vis, imagename,outlierfile, field, spw, selectdata, \
+    #         timerange, uvrange, antenna, scan, mode, gridmode, \
+    #         wprojplanes, facets, cfcache, painc, epjtable, \
+    #         interpolation, niter, gain, threshold, psfmode, \
+    #         imagermode, ftmachine, mosweight, scaletype, multiscale, \
+    #         negcomponent, smallscalebias, interactive, mask, nchan, \
+    #         start, width, outframe, veltype, imsize, cell, \
+    #         phasecenter, restfreq, stokes, weighting, \
+    #         robust, uvtaper, outertaper, innertaper, modelimage, \
+    #         restoringbeam, pbcor, minpb, calready, noise, npixels, \
+    #         npercycle, cyclefactor, cyclespeedup, nterms, reffreq, \
+    #         chaniter, flatnoise, allowchunk]
+    #print paralist
+
+    if allowchunk and (mode=='velocity' or mode=='frequency' or mode=='channel') \
+       and not interactive:
+
+	casalog.post('analysing intended channalization...')
+        imCln=imtool.create()
+        imset=cleanhelper(imCln, vis, (calready or mosweight), casalog)
+
+        (npage, localstart, localwidth)=imset.setChannelizeNonDefault(mode,
+                spw, field,nchan,start,width,outframe,veltype,phasecenter, restfreq)
+	casalog.post('start='+str(localstart)+' width='+str(localwidth)+' nchan='+str(npage))
+        del imCln
+ 
+        try: 
+            # estimate the size of the image
+    
+            import commands
+    
+            nstokes=len(stokes)
+            casalog.post('imsize='+str(imsize)+' nstokes='+str(nstokes))
+
+            if len(imsize)==1:
+                npixel=imsize[0]*imsize[0]
+            else:
+                npixel=imsize[0]*imsize[1]
+    
+            volumn=4*nstokes*npage*npixel
+            
+
+            av=cu.hostinfo()['memory']['available']
+            casalog.post('mem available: '+str(av/1024)+'M')
+
+            freemem=commands.getoutput("free")
+            for line in freemem.splitlines():
+                if line.startswith('Mem'):
+                    av=float(line.split()[3])/1024
+                    break
+            casalog.post('mem free: '+str(av)+'M')
+
+            nd=volumn/1024./1024.*9
+            casalog.post('mem needed for single chunck clean: '+str(nd)+'M')
+
+            chunk=1
+            tchan=npage
+            fa=2.5
+            if not av/nd>fa:
+                tchan=npage*av/nd/fa
+                chunk=math.ceil(npage/tchan)
+                tchan=int(math.floor(npage/chunk))
+                chunk=int(chunk)
+                #print 'tchan', tchan, ' chunk', chunk
+
+            if chunk>1 and tchan<npage:
+                casalog.post('will clean the cube in '+str(chunk)+' chunks')
+                bigimg=imagename
+                ta=qa.quantity(str(localstart))
+                wd=qa.quantity(str(localwidth))
+                subimg=[]
+                for k in range(chunk):
+                    st=0
+                    bg=k*tchan
+                    ed=bg+tchan-1
+                    imname=bigimg+'_'+str(bg)+'-'+str(ed)
+                    if mode=='channel':
+                        st=localstart+k*tchan
+                        ed=st+tchan-1
+                    if mode=='frequency':
+                        st=qa.convert(ta, 'Hz')['value']
+                        ed=qa.convert(wd, 'Hz')['value']
+                        st=str(st+k*tchan*ed)+'Hz'
+                    if mode=='velocity':
+                        st=qa.convert(ta, 'm/s')['value']
+                        ed=qa.convert(wd, 'm/s')['value']
+                        st=str(st+k*ed)+'m/s'
+                        
+                    #print imname, tchan, st, localwidth 
+                    clean(vis=vis,imagename=imname,outlierfile=outlierfile,field=field,
+                          spw=spw,selectdata=selectdata,timerange=timerange,uvrange=uvrange,
+                          antenna=antenna,scan=scan,mode=mode,gridmode=gridmode, 
+                          wprojplanes=wprojplanes,facets=facets,cfcache=cfcache,painc=painc,
+                          epjtable=epjtable,interpolation=interpolation,niter=niter,
+                          gain=gain,
+                          threshold=threshold,psfmode=psfmode,imagermode=imagermode, 
+                          ftmachine=ftmachine,mosweight=mosweight,scaletype=scaletype,
+                          multiscale=multiscale,negcomponent=negcomponent,
+                          smallscalebias=smallscalebias,interactive=interactive,
+                          mask=mask,nchan=tchan,start=st,width=localwidth,outframe=outframe,
+                          veltype=veltype,imsize=imsize,cell=cell,phasecenter=phasecenter,
+                          restfreq=restfreq,stokes=stokes,weighting=weighting,
+                          robust=robust,uvtaper=uvtaper,outertaper=outertaper,
+                          innertaper=innertaper,modelimage=modelimage,
+                          restoringbeam=restoringbeam,pbcor=pbcor,minpb=minpb,
+                          calready=calready,noise=noise,npixels=npixels,npercycle=npercycle,
+                          cyclefactor=cyclefactor,cyclespeedup=cyclespeedup,nterms=nterms,
+                          reffreq=reffreq,chaniter=chaniter,flatnoise=flatnoise,
+                          allowchunk=False)
+                    subimg.append(imname)
+
+                casalog.post('concate '+imname+'_* to '+bigimg)   
+                for i in ['.image', '.flux', '.model', '.psf', 
+                          '.residual', '.mask']:
+                    bigim=ia.imageconcat(outfile=bigimage+i, 
+                             infiles=bigimage+'_*'+i)
+                    bigim.done()
+                ia.close()
+
+                return    
+            else:
+                casalog.post('will clean the cube in a single chunk')
+                nchan=npage
+                start=localstart
+                width=localwidth
+        except:
+            raise
+
+    else: 
+        casalog.post('Use default channelization for clean')
+    #######################################################################  
+    #
+    # end of big cube treatment
+    #
+    #######################################################################  
+
+
+    casalog.post('clean image: '+imagename) 
 
 
     applyoffsets=False;
@@ -68,124 +213,6 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
         ###if mosweight use scratch columns as there in no
         ###mosweight available for no scratch column /readonly ms yet
         imset=cleanhelper(imCln, vis, (calready or mosweight), casalog)
-
-        #######################################################################  
-        #
-        # start of the big cube treatment
-        #
-        #######################################################################  
-    
-        if allowchunk and (mode=='velocity' or mode=='frequency' or mode=='channel') \
-           and not interactive:
-    
-    	    casalog.post('analysing intended channalization...')
-            (npage, localstart, localwidth)=imset.setChannelizeNonDefault(mode,
-                    spw, field,nchan,start,width,outframe,veltype,phasecenter, restfreq)
-    	    casalog.post('start='+str(localstart)+' width='+str(localwidth)+' nchan='+str(npage))
-    
-            try: 
-                # estimate the size of the image
-        
-                import commands
-        
-                nstokes=len(stokes)
-                casalog.post('imsize='+str(imsize)+' nstokes='+str(nstokes))
-    
-                if len(imsize)==1:
-                    npixel=imsize[0]*imsize[0]
-                else:
-                    npixel=imsize[0]*imsize[1]
-        
-                volumn=4*nstokes*npage*npixel
-                
-
-                av=cu.hostinfo()['memory']['available']
-                casalog.post('mem available: '+str(av)+'M')
-
-                freemem=commands.getoutput("free")
-                for line in freemem.splitlines():
-                    if line.startswith('Mem'):
-                        av=float(line.split()[3])/1024
-                        break
-                casalog.post('mem free: '+str(av)+'M')
-
-                nd=volumn/1024./1024.*6
-                casalog.post('mem needed for single chunck clean: '+str(nd)+'M')
-    
-                chunk=1
-                tchan=npage
-                fa=2.
-                if not av/nd>fa:
-                    tchan=npage*av/nd/fa
-                    chunk=math.ceil(npage/tchan)
-                    tchan=int(math.floor(npage/chunk))
-                    chunk=int(chunk)
-                    #print 'tchan', tchan, ' chunk', chunk
-    
-                if chunk>1 and tchan<npage:
-                    casalog.post('will clean the cube in '+str(chunk)+' chunks')
-                    bigimg=imagename
-                    ta=qa.quantity(str(localstart))
-                    wd=qa.quantity(str(localwidth))
-                    for k in range(chunk):
-                        st=0
-                        bg=k*tchan
-                        ed=bg+tchan-1
-                        imname=bigimg+'_'+str(bg)+'-'+str(ed)
-                        if mode=='channel':
-                            st=localstart+k*tchan
-                            ed=st+tchan-1
-                        if mode=='frequency':
-                            st=qa.convert(ta, 'Hz')['value']
-                            ed=qa.convert(wd, 'Hz')['value']
-                            st=str(st+k*tchan*ed)+'Hz'
-                        if mode=='velocity':
-                            st=qa.convert(ta, 'm/s')['value']
-                            ed=qa.convert(wd, 'm/s')['value']
-                            st=str(st+k*ed)+'m/s'
-                            
-                        #print imname, tchan, st, localwidth 
-                        clean(vis=vis,imagename=imname,outlierfile=outlierfile,field=field,
-                              spw=spw,selectdata=selectdata,timerange=timerange,uvrange=uvrange,
-                              antenna=antenna,scan=scan,mode=mode,gridmode=gridmode, 
-                              wprojplanes=wprojplanes,facets=facets,cfcache=cfcache,painc=painc,
-                              epjtable=epjtable,interpolation=interpolation,niter=niter,
-                              gain=gain,
-                              threshold=threshold,psfmode=psfmode,imagermode=imagermode, 
-                              ftmachine=ftmachine,mosweight=mosweight,scaletype=scaletype,
-                              multiscale=multiscale,negcomponent=negcomponent,
-                              smallscalebias=smallscalebias,interactive=interactive,
-                              mask=mask,nchan=tchan,start=st,width=localwidth,outframe=outframe,
-                              veltype=veltype,imsize=imsize,cell=cell,phasecenter=phasecenter,
-                              restfreq=restfreq,stokes=stokes,weighting=weighting,
-                              robust=robust,uvtaper=uvtaper,outertaper=outertaper,
-                              innertaper=innertaper,modelimage=modelimage,
-                              restoringbeam=restoringbeam,pbcor=pbcor,minpb=minpb,
-                              calready=calready,noise=noise,npixels=npixel,npercycle=npercycle,
-                              cyclefactor=cyclefactor,cyclespeedup=cyclespeedup,nterms=nterms,
-                              reffreq=reffreq,chaniter=chaniter,flatnoise=flatnoise,
-                              allowchunk=False)
-                        casalog.post('concate '+imname+' to '+bigimg)   
-
-                    return    
-                else:
-                    casalog.post('will clean the cube in a single chunk')
-                    nchan=npage
-                    start=localstart
-                    width=localwidth
-            except:
-                raise
-    
-        else: 
-            casalog.post('Use default channelization for clean')
-        #######################################################################  
-        #
-        # end of big cube treatment
-        #
-        #######################################################################  
-
-
-        casalog.post('clean image: '+imagename) 
 
         # multims input only (do sorting of vis list based on spw)
         if  type(vis)==list: imset.sortvislist(spw,mode,width)
