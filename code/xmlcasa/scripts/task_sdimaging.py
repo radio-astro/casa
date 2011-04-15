@@ -163,7 +163,9 @@ def sdimaging(sdfile, specunit, restfreq, scanlist, field, spw, antenna, stokes,
             if dochannelmap:
                 im.defineimage(mode=mode, nx=nx, ny=ny, cellx=cellx, celly=celly, nchan=nchan, start=startval, step=stepval, restfreq=restfreq, phasecenter=phasecenter, spw=spwid, stokes=stokes, movingsource=ephemsrcname)
             else:
-                im.defineimage(mode=mode, nx=nx, ny=ny, cellx=cellx, celly=celly, phasecenter=phasecenter, spw=spwid, restfreq=restfreq, stokes=stokes, movingsource=ephemsrcname)
+                if mode!='channel':
+                    casalog.post('Setting imaging mode as \'channel\'','INFO')
+                im.defineimage(mode='channel', nx=nx, ny=ny, cellx=cellx, celly=celly, phasecenter=phasecenter, spw=spwid, restfreq=restfreq, stokes=stokes, movingsource=ephemsrcname)
             im.setoptions(ftmachine='sd', gridfunction=gridfunction)
             im.setsdoptions(pointingcolumntouse=pointingcolumn)
             im.makeimage(type='singledish', image=imagename)

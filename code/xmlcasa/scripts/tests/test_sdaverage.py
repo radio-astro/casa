@@ -403,6 +403,52 @@ class sdaverage_test4(sdaverage_caltest_base,unittest.TestCase):
 ###
 # Test ALMA position switch calibration
 ###
+class sdaverage_test5(sdaverage_caltest_base,unittest.TestCase):
+    """
+    Test ALMA position switch calibration (OTF raster with OFF scan)
+    
+    Data is taken from uid___A002_X8ae1b_X1 (DV01) and created by 
+    the following script:
+
+    asap_init()
+    sd.splitant('uid___A002_X8ae1b_X1') # to split data by antenna
+    s=sd.scantable('uid___A002_X8ae1b.DV01.asap',average=False)
+    sel=sd.selector()
+    sel.set_ifs([2])
+    sel.set_cycles([20,118,205])
+    s.set_selection(sel)
+    s.save('calpsALMA.asap','ASAP')
+
+    """
+    # Input and output names
+    rawfile='calpsALMA.asap'
+    reffile='calpsALMA.cal.asap'
+    prefix='sdaverageTest5'
+    calmode='ps'
+
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.rawfile)):
+            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+        if (not os.path.exists(self.reffile)):
+            shutil.copytree(self.datapath+self.reffile, self.reffile)
+
+        default(sdaverage)
+
+    def tearDown(self):
+        if (os.path.exists(self.rawfile)):
+            shutil.rmtree(self.rawfile)
+        if (os.path.exists(self.reffile)):
+            shutil.rmtree(self.reffile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def test500(self):
+        """Test 500: test to calibrate data (ALMA position switch)"""
+        outname=self.prefix+self.postfix
+        self.res=sdaverage(sdfile=self.rawfile,calmode=self.calmode,outfile=outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal(outname)
 
 
 ###
@@ -610,7 +656,6 @@ class sdaverage_test8(sdaverage_avetest_base,unittest.TestCase):
        - calibration + polarization average
        - time average + polarzation average
        - channelrange parameter
-       - averageall parameter 
        
     """
     # Input and output names
@@ -696,9 +741,57 @@ class sdaverage_test8(sdaverage_avetest_base,unittest.TestCase):
 
         del s0,s1
 
+###
+# Test averageall parameter
+###
+class sdaverage_test9(sdaverage_avetest_base,unittest.TestCase):
+    """
+    Test averageall parameter that forces to average spectra with
+    different spectral resolution.
+
+    Here, test to average the following two spectra that have same
+    frequency in band center.
+
+       - nchan = 8192, resolution = 6104.23 Hz
+       - nchan = 8192, resolution = 12208.5 Hz
+       
+    """
+    # Input and output names
+    rawfile='averageall.asap'
+    prefix='sdaverageTest9'
+    reffiles=['averageall.ref']
+
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.rawfile)):
+            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+        for reffile in self.reffiles:
+            if (not os.path.exists(reffile)):
+                shutil.copyfile(self.datapath+reffile, reffile)
+
+        default(sdaverage)
+
+    def tearDown(self):
+        if (os.path.exists(self.rawfile)):
+            shutil.rmtree(self.rawfile)
+        for reffile in self.reffiles:
+            if (os.path.exists(reffile)):
+                os.remove(reffile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def test900(self):
+        """Test 900: test averageall parameter"""
+        outname=self.prefix+self.postfix
+        self.res=sdaverage(sdfile=self.rawfile,scanaverage=False,timeaverage=True,tweight='tintsys',averageall=True,polaverage=False,outfile=outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during averaging')
+        self._compare(outname,self.reffiles[0])
+        
+
 
 def suite():
     return [sdaverage_test0, sdaverage_test1,
             sdaverage_test2, sdaverage_test3,
-            sdaverage_test4, sdaverage_test6,
-            sdaverage_test7, sdaverage_test8]
+            sdaverage_test4, sdaverage_test5,
+            sdaverage_test6, sdaverage_test7,
+            sdaverage_test8, sdaverage_test9]
