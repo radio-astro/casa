@@ -76,7 +76,13 @@ class sdimaging_unittest_base:
                 'trc': numpy.array([74, 74,  0,  0], dtype=numpy.int32),
                 'trcf': '17:03:03.151, +61.19.10.757, I, 1.419395e+09Hz'}
 
+    def _checkfile( self, name ):
+        isthere=os.path.exists(name)
+        self.assertEqual(isthere,True,
+                         msg='output file %s was not created because of the task failure'%(name))
+
     def _checkshape(self,name,nx,ny,npol,nchan):
+        self._checkfile(name)
         ia.open(name)
         imshape=ia.shape()
         ia.close()
@@ -90,6 +96,7 @@ class sdimaging_unittest_base:
                     msg='nchan does not match')
         
     def _checkstats(self,name,ref):
+        self._checkfile(name)
         ia.open(name)
         stats=ia.statistics()
         ia.close()
