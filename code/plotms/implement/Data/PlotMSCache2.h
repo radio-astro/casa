@@ -46,6 +46,37 @@ namespace casa {
 class PlotMSApp;
 class PlotMSIndexer;
 
+class PMSCacheVolMeter {
+
+public:
+
+  // Constructor/Destructor
+  PMSCacheVolMeter();
+  PMSCacheVolMeter(const MeasurementSet& ms, const PlotMSAveraging ave);
+  ~PMSCacheVolMeter();
+
+  // add in via a VisBuffer
+  void add(const VisBuffer& vb);
+
+  // add in via counts
+  void add(Int DDID,Int nRows);
+
+  // evaluate the volume for specified axes, and complain if 
+  String evalVolume(map<PMS::Axis,Bool> axes,Vector<Bool> axesmask);
+
+private:
+
+  // The number of DATA_DESCRIPTIONs
+  Int nDDID_;
+
+  // Counters
+  Vector<Long> nPerDDID_,nRowsPerDDID_,nChanPerDDID_,nCorrPerDDID_;
+
+  // The number of antennas (max)
+  Int nAnt_;
+
+};
+
 class PlotMSCache2 {
     
     // Friend class declarations.
@@ -208,6 +239,9 @@ protected:
   void countChunks(ROVisibilityIterator& vi, Vector<Int>& nIterPerAve,  // supports time-averaging 
 		   const PlotMSAveraging& averaging,PlotMSCacheThread* thread);
 
+  // Trap attempt to use to much memory (too many points)
+  void trapExcessVolume(map<PMS::Axis,Bool> pendingLoadAxes);
+
   // Loop over VisIter, filling the cache
   void loadChunks(ROVisibilityIterator& vi,
 		  const vector<PMS::Axis> loadAxes,
@@ -238,6 +272,9 @@ protected:
   
   // Set the net axes mask (defines how to collapse flags for the chosen plot axes)
   void setAxesMask(PMS::Axis axis,Vector<Bool>& axismask);
+
+  // Return the net axes mask for the currently set plot axes
+  Vector<Bool> netAxesMask(PMS::Axis xaxis,PMS::Axis yaxis);
 
   // Derive the plot mask by appropriately collapsing the flags
   void setPlotMask();           // all chunks
@@ -365,6 +402,9 @@ protected:
 
   // VisBufferUtil for freq/vel calculations
   VisBufferUtil vbu_;
+
+  // Volume meter for volume calculation
+  PMSCacheVolMeter vm_;
 
     
 };
