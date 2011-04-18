@@ -2290,6 +2290,7 @@ class cleanhelper:
         # set output number of channels
         if nchan ==1:
           retnchan=1
+          newfreqs=[newfreqs]
         else:
           if type(newfreqs)==list:
             retnchan=len(newfreqs)
