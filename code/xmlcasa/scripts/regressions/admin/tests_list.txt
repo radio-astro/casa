@@ -27,7 +27,7 @@ ghii2_regression                rindebet nrao.edu
 h121                            gmoellen aoc.nrao.edu
 ic2233                          kgolap aoc.nrao.edu
 imagepoltest_regression         rreid nrao.edu
-imagetest_regression            dpetry eso.org
+imagetest_regression            dmehring nrao.edu
 irc_cs_task_regression          takeshi.nakazato nao.ac.jp 
 irc_hc3n_task_regression        takeshi.nakazato nao.ac.jp
 l02d                            gmoellen aoc.nrao.edu
