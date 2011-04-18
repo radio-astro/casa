@@ -22,7 +22,7 @@ endif (ENABLE_SHARED)
 # Casacore uses longlong, so no warnings for it.
 if (NOT CMAKE_CXX_FLAGS)
 ##    set (CMAKE_CXX_FLAGS "-W -Wall -Wpointer-arith -pedantic -Wno-long-long")
-    set (CMAKE_CXX_FLAGS "-W -Wall")
+    set (CMAKE_CXX_FLAGS "-W -Wall -fno-omit-frame-pointer")
 endif (NOT CMAKE_CXX_FLAGS)
 if( CMAKE_SYSTEM MATCHES ^Darwin-10 )
 	add_definitions( -DCASA_NOTAPE )
