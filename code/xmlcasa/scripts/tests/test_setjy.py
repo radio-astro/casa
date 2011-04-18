@@ -220,6 +220,96 @@ class Uranus(SplitChecker):
         check_eq(self.records['']['long4'], numpy.array([[ 2.82068014+0.j],
                                                          [ 2.82068014+0.j]]),
                  0.0001)
+
+class ScaleUranusByChan(SplitChecker):
+    need_to_initialize = True
+    inpms = 'unittest/setjy/2528.ms'  # Uranus again
+    corrsels = ['']
+    records = {}
+
+    def do_split(self, corrsel):
+        """
+        Doesn't really run split; just setjy.
+        """
+        record = {}
+
+        # Paranoia: check that inpms doesn't already have MODEL_DATA.
+        # Otherwise, we could mistake old results for new ones.  That could be
+        # fixed by splitting out DATA, but inpms is not supposed to require
+        # that.
+        tb.open(self.inpms)
+        cols = tb.colnames()
+        tb.close()
+        if 'MODEL_DATA' in cols:
+            raise ValueError, "The input MS, " + inpms + " already has a MODEL_DATA col"
+
+        try:
+            print "\nRunning setjy(field='Uranus')."
+            sjran = setjy(self.inpms, field='Uranus', spw='', modimage='',
+                          scalebychan=True, fluxdensity=-1,
+                          standard='Butler-JPL-Horizons 2010', async=False)
+        except Exception, e:
+            print "Error running setjy(field='Uranus')"
+            raise e
+        try:
+            tb.open(self.inpms)
+            cols = tb.colnames()
+            if 'MODEL_DATA' not in cols:
+                raise AssertionError, "setjy(field='Uranus') did not add a MODEL_DATA column"
+        except AssertionError, e:
+            raise e
+        else:
+            record['wvr'] = tb.getcell('MODEL_DATA', 0)
+            record['auto1'] = tb.getcell('MODEL_DATA', 18)
+            record['long1'] = tb.getcell('MODEL_DATA', 19)
+            record['auto4'] = tb.getcell('MODEL_DATA', 2)
+            record['long4'] = tb.getcell('MODEL_DATA', 3)
+        finally:
+            tb.close()
+        self.__class__.records[corrsel] = record
+        return sjran
+
+    def test_wvr(self):
+        """WVR spw with scalebychan"""
+        check_eq(self.records['']['wvr'], numpy.array([[25.951+0.j,
+                                                        26.901+0.j]]),
+                 0.003)
+    def test_auto1(self):
+        """Zero spacing of spw 1 with scalebychan"""
+        # 8 (decreasing freq!) chans, XX & YY.
+        check_eq(self.records['']['auto1'],
+                 numpy.array([[65.53865814+0.j, 65.46551514+0.j,
+                               65.39238739+0.j, 65.31927490+0.j,
+                               65.24617004+0.j, 65.17308807+0.j,
+                               65.10002136+0.j, 65.02696228+0.j],
+                              [65.53865814+0.j, 65.46551514+0.j,
+                               65.39238739+0.j, 65.31927490+0.j,
+                               65.24617004+0.j, 65.17308807+0.j,
+                               65.10002136+0.j, 65.02696228+0.j]]),
+                 0.0001)
+    def test_long1(self):
+        """Long spacing of spw 1 with scalebychan"""
+        check_eq(self.records['']['long1'],
+                 numpy.array([[4.91202736+0.j, 4.95130348+0.j,
+                               4.99054718+0.j, 5.02975798+0.j,
+                               5.06893539+0.j, 5.10807943+0.j,
+                               5.14718962+0.j, 5.18626642+0.j],
+                              [4.91202736+0.j, 4.95130348+0.j,
+                               4.99054718+0.j, 5.02975798+0.j,
+                               5.06893539+0.j, 5.10807943+0.j,
+                               5.14718962+0.j, 5.18626642+0.j]]),
+                 0.0001)
+    # spw 4 only has 1 chan, so it should be the same as without scalebychan.
+    def test_auto4(self):
+        """Zero spacing of spw 4 with scalebychan"""
+        check_eq(self.records['']['auto4'], numpy.array([[ 69.381073+0.j],
+                                                         [ 69.381073+0.j]]),
+                 0.0001)
+    def test_long4(self):
+        """Long spacing of spw 4 with scalebychan"""
+        check_eq(self.records['']['long4'], numpy.array([[ 2.82068014+0.j],
+                                                         [ 2.82068014+0.j]]),
+                 0.0001)
             
 def suite():
-    return [setjy_test_modimage, Uranus]
+    return [setjy_test_modimage, Uranus, ScaleUranusByChan]

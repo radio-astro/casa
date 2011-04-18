@@ -154,9 +154,6 @@
                calculated on a per channel basis. If False then it only one
                fluxdensity value is given per spw
 
-               NOTE: It does not yet work with Solar System flux density
-                     calibrators (standard = 'Butler-JPL-Horizons 2010').
-
        fluxdensity -- Specified flux density [I,Q,U,V] in Jy
                default: -1, uses [1,0,0,0] flux density for all sources,
                   except for 3C286, 3C48 and 3C147, which use standard flux
