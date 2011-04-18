@@ -43,52 +43,52 @@ class sdtpimaging_test0(unittest.TestCase):
             shutil.rmtree(self.sdfile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
-    def sdtpimaging_test000(self):
+    def test000(self):
         """Test 000: Default parameters"""
         self.res=sdtpimaging()
         self.assertFalse(self.res)
         
-    def sdtpimaging_test001(self):
+    def test001(self):
         """Test 001: Bad antenna id"""
         self.res=sdtpimaging(sdfile=self.sdfile,antenna='99')
         self.assertFalse(self.res)        
 
-    def sdtpimaging_test002(self):
+    def test002(self):
         """Test 002: Bad stokes string"""
         self.res=sdtpimaging(sdfile=self.sdfile,stokes='J')
         self.assertFalse(self.res)
         
-    def sdtpimaging_test003(self):
+    def test003(self):
         """Test 003: Try to create image without output image name"""
         self.res=sdtpimaging(sdfile=self.sdfile,createimage=True,imagename='')
         self.assertFalse(self.res)
 
-    def sdtpimaging_test004(self):
+    def test004(self):
         """Test 004: Negative imsize"""
         self.res=sdtpimaging(sdfile=self.sdfile,createimage=True,imagename=self.outimage,imsize=[-1])
         self.assertFalse(self.res)
 
-    def sdtpimaging_test005(self):
+    def test005(self):
         """Test 005: Negative cell size"""
         self.res=sdtpimaging(sdfile=self.sdfile,createimage=True,imagename=self.outimage,cell=[-1])
         self.assertFalse(self.res)
 
-    def sdtpimaging_test006(self):
+    def test006(self):
         """Test 006: Bad phase center string"""
         self.res=sdtpimaging(sdfile=self.sdfile,createimage=True,imagename=self.outimage,phasecenter='XXX')
         self.assertFalse(self.res)
 
-    def sdtpimaging_test007(self):
+    def test007(self):
         """Test 007: Bad pointing column name"""
         self.res=sdtpimaging(sdfile=self.sdfile,createimage=True,imagename=self.outimage,pointingcolumn='XXX')
         self.assertFalse(self.res)
 
-    def sdtpimaging_test008(self):
+    def test008(self):
         """Test 008: Unexisting grid function"""
         self.res=sdtpimaging(sdfile=self.sdfile,createimage=True,imagename=self.outimage,gridfunction='XXX')
         self.assertFalse(self.res)
  
-    def sdtpimaging_test009(self):
+    def test009(self):
         """Test 009: Invalid calmode"""
         self.res=sdtpimaging(sdfile=self.sdfile,calmode='ps')
         self.assertFalse(self.res)
@@ -138,7 +138,7 @@ class sdtpimaging_test1(unittest.TestCase):
         casalog.post( 'maxdiff=%s'%maxdiff )
         return maxdiff
 
-    def sdtpimaging_test100(self):
+    def test100(self):
         """Test 100: test to image data without spatial baseline subtraction"""
         self.res=sdtpimaging(sdfile=self.sdfile,calmode='none',stokes='XX',createimage=True,imagename=self.outimage,imsize=[64],cell=['15arcsec'],phasecenter='J2000 05h35m07s -5d21m00s',pointingcolumn='direction',gridfunction='SF')
         self.assertEqual(self.res,None)
@@ -195,7 +195,7 @@ class sdtpimaging_test2(unittest.TestCase):
         casalog.post( 'maxdiff=%s'%maxdiff )
         return maxdiff
 
-    def sdtpimaging_test200(self):
+    def test200(self):
         """Test 200: test to image data without spatial baseline subtraction"""
         self.res=sdtpimaging(sdfile=self.sdfile,calmode='baseline',masklist=[10,10],blpoly=1,stokes='XX',createimage=True,imagename=self.outimage,imsize=[64],cell=['15arcsec'],phasecenter='J2000 05h35m07s -5d21m00s',pointingcolumn='direction',gridfunction='SF')
         self.assertEqual(self.res,None)

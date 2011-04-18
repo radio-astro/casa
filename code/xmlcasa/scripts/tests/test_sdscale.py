@@ -150,24 +150,24 @@ class sdscale_test0(unittest.TestCase,sdscale_unittest_base):
             shutil.rmtree(self.rawfile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
-    def sdscale_test000(self):
+    def test000(self):
         """Test 000: Default parameters"""
         res=sdscale()
         self.assertFalse(res)        
 
-    def sdscale_test001(self):
+    def test001(self):
         """Test 001: Existing outfile with overwrite=False"""
         os.system('cp -r %s %s'%(self.rawfile,self.outfile))
         res=sdscale(sdfile=self.rawfile,outfile=self.outfile)
         self.assertFalse(res)
 
-    def sdscale_test002(self):
+    def test002(self):
         """Test 002: Bad shaped factor"""
         factor = [2.0,3.0]
         res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=False,outfile=self.outfile)
         self.assertFalse(res)
         
-    def sdscale_test003(self):
+    def test003(self):
         """Test 003: Vector factor for scalar Tsys"""
         factor=[1.0,2.0,3.0,4.0]
         res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=True,outfile=self.outfile)
@@ -208,7 +208,7 @@ class sdscale_test1(unittest.TestCase,sdscale_unittest_base):
             shutil.rmtree(self.rawfile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
-    def sdscale_test100(self):
+    def test100(self):
         """Test 100: scalar factor with Tsys scaling"""
         factor = 2.0
         scaletsys=True
@@ -217,7 +217,7 @@ class sdscale_test1(unittest.TestCase,sdscale_unittest_base):
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
-    def sdscale_test101(self):
+    def test101(self):
         """Test 101: scalar factor without Tsys scaling"""
         factor = 2.0
         scaletsys=False
@@ -226,7 +226,7 @@ class sdscale_test1(unittest.TestCase,sdscale_unittest_base):
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
-    def sdscale_test102(self):
+    def test102(self):
         """Test 102: 1D array factor with Tsys scaling"""
         factor = [2.0,3.0,4.0,5.0]
         scaletsys=True
@@ -235,7 +235,7 @@ class sdscale_test1(unittest.TestCase,sdscale_unittest_base):
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
-    def sdscale_test103(self):
+    def test103(self):
         """Test 103: 1D array factor without Tsys scaling"""
         factor = [2.0,3.0,4.0,5.0]
         scaletsys=False
@@ -244,7 +244,7 @@ class sdscale_test1(unittest.TestCase,sdscale_unittest_base):
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
-    def sdscale_test104(self):
+    def test104(self):
         """Test 104: 2D array ([nrow,1]) factor with Tsys scaling"""
         factor = [[2.0],[3.0]]
         scaletsys=True
@@ -253,7 +253,7 @@ class sdscale_test1(unittest.TestCase,sdscale_unittest_base):
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
-    def sdscale_test105(self):
+    def test105(self):
         """Test 105: 2D array ([nrow,1]) factor without Tsys scaling"""
         factor = [[2.0],[3.0]]
         scaletsys=False
@@ -262,7 +262,7 @@ class sdscale_test1(unittest.TestCase,sdscale_unittest_base):
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
-    def sdscale_test106(self):
+    def test106(self):
         """Test 106: 2D array ([nrow,nchan]) factor with Tsys scaling"""
         factor = [[2.0,4.0,6.0,8.0],[3.0,5.0,7.0,9.0]]
         scaletsys=True
@@ -271,7 +271,7 @@ class sdscale_test1(unittest.TestCase,sdscale_unittest_base):
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
-    def sdscale_test107(self):
+    def test107(self):
         """Test 107: 2D array ([nrow,nchan]) factor without Tsys scaling"""
         factor = [[2.0,4.0,6.0,8.0],[3.0,5.0,7.0,9.0]]
         scaletsys=False
@@ -316,7 +316,7 @@ class sdscale_test2(unittest.TestCase,sdscale_unittest_base):
             shutil.rmtree(self.rawfile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
-    def sdscale_test200(self):
+    def test200(self):
         """Test 200: scalar factor with Tsys scaling"""
         factor = 2.0
         scaletsys=True
@@ -325,7 +325,7 @@ class sdscale_test2(unittest.TestCase,sdscale_unittest_base):
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
-    def sdscale_test201(self):
+    def test201(self):
         """Test 201: scalar factor without Tsys scaling"""
         factor = 2.0
         scaletsys=False
@@ -334,14 +334,14 @@ class sdscale_test2(unittest.TestCase,sdscale_unittest_base):
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
         
-    def sdscale_test202(self):
+    def test202(self):
         """Test 202: 1D array factor with Tsys scaling (must fail)"""
         factor = [2.0,3.0,4.0,5.0]
         scaletsys=True
         res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertFalse(res)
 
-    def sdscale_test203(self):
+    def test203(self):
         """Test 203: 1D array factor without Tsys scaling"""
         factor = [2.0,3.0,4.0,5.0]
         scaletsys=False
@@ -350,7 +350,7 @@ class sdscale_test2(unittest.TestCase,sdscale_unittest_base):
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
-    def sdscale_test204(self):
+    def test204(self):
         """Test 204: 2D array ([nrow,1]) factor with Tsys scaling"""
         factor = [[2.0],[3.0]]
         scaletsys=True
@@ -359,7 +359,7 @@ class sdscale_test2(unittest.TestCase,sdscale_unittest_base):
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
-    def sdscale_test205(self):
+    def test205(self):
         """Test 205: 2D array ([nrow,1]) factor without Tsys scaling"""
         factor = [[2.0],[3.0]]
         scaletsys=False
@@ -368,14 +368,14 @@ class sdscale_test2(unittest.TestCase,sdscale_unittest_base):
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
-    def sdscale_test206(self):
+    def test206(self):
         """Test 206: 2D array ([nrow,nchan]) factor with Tsys scaling (must fail)"""
         factor = [[2.0,4.0,6.0,8.0],[3.0,5.0,7.0,9.0]]
         scaletsys=True
         res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertFalse(res)
 
-    def sdscale_test207(self):
+    def test207(self):
         """Test 207: 2D array ([nrow,nchan]) factor without Tsys scaling"""
         factor = [[2.0,4.0,6.0,8.0],[3.0,5.0,7.0,9.0]]
         scaletsys=False
@@ -419,7 +419,7 @@ class sdscale_test3(unittest.TestCase,sdscale_unittest_base):
             shutil.rmtree(self.rawfile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
-    def sdscale_test300(self):
+    def test300(self):
         """Test 300: scalar factor with Tsys scaling"""
         factor = 2.0
         scaletsys=True
@@ -428,7 +428,7 @@ class sdscale_test3(unittest.TestCase,sdscale_unittest_base):
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
-    def sdscale_test301(self):
+    def test301(self):
         """Test 301: scalar factor without Tsys scaling"""
         factor = 2.0
         scaletsys=False
@@ -437,21 +437,21 @@ class sdscale_test3(unittest.TestCase,sdscale_unittest_base):
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
         
-    def sdscale_test302(self):
+    def test302(self):
         """Test 302: 1D array factor with Tsys scaling (must fail)"""
         factor = [2.0,3.0,4.0,5.0]
         scaletsys=True
         res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertFalse(res)
 
-    def sdscale_test303(self):
+    def test303(self):
         """Test 303: 1D array factor without Tsys scaling (must fail)"""
         factor = [2.0,3.0,4.0,5.0]
         scaletsys=False
         res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertFalse(res)
 
-    def sdscale_test304(self):
+    def test304(self):
         """Test 304: 2D array ([nrow,1]) factor with Tsys scaling"""
         factor = [[2.0],[3.0]]
         scaletsys=True
@@ -460,7 +460,7 @@ class sdscale_test3(unittest.TestCase,sdscale_unittest_base):
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
-    def sdscale_test305(self):
+    def test305(self):
         """Test 305: 2D array ([nrow,1]) factor without Tsys scaling"""
         factor = [[2.0],[3.0]]
         scaletsys=False
@@ -469,7 +469,7 @@ class sdscale_test3(unittest.TestCase,sdscale_unittest_base):
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
-    def sdscale_test306(self):
+    def test306(self):
         """Test 306: 2D array ([nrow,nchan]) factor with Tsys scaling"""
         factor = [[2.0,4.0,6.0,8.0],[3.0]]
         scaletsys=True
@@ -478,7 +478,7 @@ class sdscale_test3(unittest.TestCase,sdscale_unittest_base):
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
-    def sdscale_test307(self):
+    def test307(self):
         """Test 307: 2D array ([nrow,nchan]) factor without Tsys scaling"""
         factor = [[2.0,4.0,6.0,8.0],[3.0]]
         scaletsys=False
@@ -523,7 +523,7 @@ class sdscale_test4(unittest.TestCase,sdscale_unittest_base):
             shutil.rmtree(self.rawfile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
-    def sdscale_test400(self):
+    def test400(self):
         """Test 400: scalar factor with Tsys scaling"""
         factor = 2.0
         scaletsys=True
@@ -532,7 +532,7 @@ class sdscale_test4(unittest.TestCase,sdscale_unittest_base):
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
-    def sdscale_test401(self):
+    def test401(self):
         """Test 401: scalar factor without Tsys scaling"""
         factor = 2.0
         scaletsys=False
@@ -541,21 +541,21 @@ class sdscale_test4(unittest.TestCase,sdscale_unittest_base):
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
-    def sdscale_test402(self):
+    def test402(self):
         """Test 402: 1D array factor with Tsys scaling (must fail)"""
         factor = [2.0,3.0,4.0,5.0]
         scaletsys=True
         res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertFalse(res)
 
-    def sdscale_test403(self):
+    def test403(self):
         """Test 403: 1D array factor without Tsys scaling (must fail)"""
         factor = [2.0,3.0,4.0,5.0]
         scaletsys=False
         res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertFalse(res)
 
-    def sdscale_test404(self):
+    def test404(self):
         """Test 404: 2D array ([nrow,1]) factor with Tsys scaling"""
         factor = [[2.0],[3.0]]
         scaletsys=True
@@ -564,7 +564,7 @@ class sdscale_test4(unittest.TestCase,sdscale_unittest_base):
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
-    def sdscale_test405(self):
+    def test405(self):
         """Test 405: 2D array ([nrow,1]) factor without Tsys scaling"""
         factor = [[2.0],[3.0]]
         scaletsys=False
@@ -573,7 +573,7 @@ class sdscale_test4(unittest.TestCase,sdscale_unittest_base):
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
-    def sdscale_test406(self):
+    def test406(self):
         """Test 406: 2D array ([nrow,nchan]) factor with Tsys scaling (must fail)"""
         factor = [[2.0,4.0,6.0,8.0],[3.0]]
         scaletsys=True
@@ -583,7 +583,7 @@ class sdscale_test4(unittest.TestCase,sdscale_unittest_base):
         #                 msg='Any error occurred during task execution')
         #self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
-    def sdscale_test407(self):
+    def test407(self):
         """Test 407: 2D array ([nrow,nchan]) factor without Tsys scaling"""
         factor = [[2.0,4.0,6.0,8.0],[3.0]]
         scaletsys=False
