@@ -21,7 +21,7 @@ import asap as sd
 # 
 
 ###
-# Base class for sdaverage unit test
+# Base class for sdscale unit test
 ###
 class sdscale_unittest_base:
     """
