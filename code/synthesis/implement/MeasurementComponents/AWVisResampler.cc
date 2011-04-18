@@ -36,19 +36,35 @@
 namespace casa{
   //
   //-----------------------------------------------------------------------------------
+  // Re-sample the griddedData on the VisBuffer (a.k.a gridding)
   //
-  AWVisResampler& AWVisResampler::operator=(const AWVisResampler& other)
-  {
-    SETVEC(uvwScale_p, other.uvwScale_p);
-    SETVEC(offset_p, other.offset_p);
-    SETVEC(dphase_p, other.dphase_p);
-    SETVEC(chanMap_p, other.chanMap_p);
-    SETVEC(polMap_p, other.polMap_p);
+  // Template instantiations for re-sampling onto a double precision
+  // or single precision grid.
+  //
+  template
+  void AWVisResampler::DataToGridImpl_p(Array<DComplex>& grid, VBStore& vbs, 
+					Matrix<Double>& sumwt,const Bool& dopsf,
+					CFStore& cfs) __restrict__;
+  template
+  void AWVisResampler::DataToGridImpl_p(Array<Complex>& grid, VBStore& vbs, 
+					Matrix<Double>& sumwt,const Bool& dopsf,
+					CFStore& cfs) __restrict__;
 
-    convFuncStore_p = other.convFuncStore_p;
+  //
+  //-----------------------------------------------------------------------------------
+  //
+  // AWVisResampler& AWVisResampler::operator=(const AWVisResampler& other)
+  // {
+  //   SETVEC(uvwScale_p, other.uvwScale_p);
+  //   SETVEC(offset_p, other.offset_p);
+  //   SETVEC(dphase_p, other.dphase_p);
+  //   SETVEC(chanMap_p, other.chanMap_p);
+  //   SETVEC(polMap_p, other.polMap_p);
 
-    return *this;
-  }
+  //   convFuncStore_p = other.convFuncStore_p;
+
+  //   return *this;
+  // }
   //
   //-----------------------------------------------------------------------------------
   // Template implementation for DataToGrid
@@ -95,12 +111,12 @@ namespace casa{
     support(1) = convFuncStore_p.ySupport[0];
 
     Bool Dummy;
-    register T *gridStore = grid.getStorage(Dummy);
+    T *gridStore = grid.getStorage(Dummy);
     const Int *iPosPtr = igrdpos.getStorage(Dummy);
-    register Complex* convFuncV=cfs.data->getStorage(Dummy);
+    const Complex* __restrict__ convFuncV=cfs.data->getStorage(Dummy);
       
-    register Double *freq=vbs.freq_p.getStorage(Dummy);
-    register Bool *rowFlag=vbs.rowFlag_p.getStorage(Dummy);
+    Double *freq=vbs.freq_p.getStorage(Dummy);
+    Bool *rowFlag=vbs.rowFlag_p.getStorage(Dummy);
 
     Matrix<Float> imagingWeight(vbs.imagingWeight_p);
     Cube<Complex> visCube(vbs.visCube_p);
@@ -160,6 +176,9 @@ namespace casa{
 		      if(dopsf)  nvalue=Complex(imagingWeight(ichan,irow));
 		      else	 nvalue=imagingWeight(ichan,irow)*
 		      		   (visCube(ipol,ichan,irow)*phasor);
+		      // if ((imagingWeight(ichan,irow) > 0.0) || (visCube(ipol,ichan,irow) > 0.0))
+		      // 	cerr << imagingWeight(ichan,irow) << " " << visCube(ipol,ichan,irow)
+		      // 	     << " " << irow << " " << ichan << " " << ipol << endl;
 		      // if(dopsf)  nvalue=Complex(*(imgWts_ptr + ichan + irow*nDataChan));
 		      // else	 nvalue= *(imgWts_ptr+ichan+irow*nDataChan)*
 		      // 		   (*(visCube_ptr+ipol+ichan*nDataPol+irow*nDataChan*nDataPol)*phasor);
@@ -246,7 +265,7 @@ namespace casa{
     Vector<Int> igrdpos(4);
     const Int *iPosPtr = igrdpos.getStorage(Dummy);
     Complex *convFunc=(*(convFuncStore_p.data)).getStorage(Dummy);
-    Complex* convFuncV=convFuncStore_p.data->getStorage(Dummy);
+    const Complex* __restrict__ convFuncV=convFuncStore_p.data->getStorage(Dummy);
     Double *freq=vbs.freq_p.getStorage(Dummy);
     Bool *rowFlag=vbs.rowFlag_p.getStorage(Dummy);
     Matrix<Float> imagingWeight(vbs.imagingWeight_p);
@@ -385,26 +404,10 @@ namespace casa{
 	      (out[1] >= 0) && (out[1] < size[1]));
     return onGrid;
   }
-  //
-  //-----------------------------------------------------------------------------------
-  // Re-sample the griddedData on the VisBuffer (a.k.a gridding)
-  //
-  // Template instantiations for re-sampling onto a double precision
-  // or single precision grid.
-  //
-  template
-  void AWVisResampler::DataToGridImpl_p(Array<DComplex>& grid, VBStore& vbs, 
-					Matrix<Double>& sumwt,const Bool& dopsf,
-					CFStore& cfs);
-  template
-  void AWVisResampler::DataToGridImpl_p(Array<Complex>& grid, VBStore& vbs, 
-					Matrix<Double>& sumwt,const Bool& dopsf,
-					CFStore& cfs);
-
   template 
-  void AWVisResampler::addTo4DArray(DComplex* store,const Int* iPos, const Vector<Int>& inc, 
-				    Complex& nvalue, Complex& wt);
+  void AWVisResampler::addTo4DArray(DComplex* __restrict__ & store,const Int* __restrict__ & iPos, const Vector<Int>& inc, 
+  				    Complex& nvalue, Complex& wt);
   template 
-  void AWVisResampler::addTo4DArray(Complex* store,const Int* iPos, const Vector<Int>& inc, 
-				    Complex& nvalue, Complex& wt);
+  void AWVisResampler::addTo4DArray(Complex* __restrict__ & store,const Int* __restrict__ & iPos, const Vector<Int>& inc, 
+  				    Complex& nvalue, Complex& wt);
 };// end namespace casa

@@ -29,7 +29,7 @@
 #ifndef SYNTHESIS_RESAMPLERWORKLET_H
 #define SYNTHESIS_RESAMPLERWORKLET_H
 
-#include <synthesis/MeasurementComponents/VisibilityResampler.h>
+#include <synthesis/MeasurementComponents/VisibilityResamplerBase.h>
 #include <synthesis/MeasurementComponents/VBStore.h>
 #include <synthesis/Utilities/ThreadCoordinator.h>
 #include <msvis/MSVis/AsynchronousTools.h>
@@ -49,25 +49,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
   public: 
     enum PGridderMode {DataToGrid=0, GridToData};
-    ResamplerWorklet();
-    virtual ~ResamplerWorklet(){}
+    ResamplerWorklet() {myGriddedDataDouble_p=NULL;myGriddedDataSingle_p=NULL;};
+    virtual ~ResamplerWorklet(){terminate();}
     ResamplerWorklet& operator=(const ResamplerWorklet& other);
 
     void setID(const Int& id) {myID_p=id;}
     void initThread(Int& id, CountedPtr<ThreadCoordinator<Int> >& threadClerk,
-		    VisibilityResampler* resampler);
-    void initToVis(VBStore* vbs, Array<Complex>* skyFTGrid) ;
+		    VisibilityResamplerBase* resampler);
+    void initToVis(VBStore* vbs, const Array<Complex>* skyFTGrid) ;
     void initToSky(VBStore* vbs,Array<DComplex>* griddedData, Matrix<Double>* sumwt) ;
     void initToSky(VBStore* vbs,Array<Complex>* griddedData, Matrix<Double>* sumwt) ;
 
     void init(Int& id, 
 	      CountedPtr<ThreadCoordinator<Int> >& threadClerk,
-	      VisibilityResampler* resampler, VBStore* vbs,
+	      VisibilityResamplerBase* resampler, VBStore* vbs,
 	      Array<DComplex>* griddedData, Matrix<Double>* sumwt,
 	      Array<Complex>* skyFTGrid=NULL);
     void init(Int& id, 
 	      CountedPtr<ThreadCoordinator<Int> >& threadClerk,
-	      VisibilityResampler* resampler, VBStore* vbs,
+	      VisibilityResamplerBase* resampler, VBStore* vbs,
 	      Array<Complex>* griddedData, Matrix<Double>* sumwt,
 	      Array<Complex>* skyFTGrid=NULL);
     void* run();
@@ -84,13 +84,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   private:
     Int myID_p;
     CountedPtr<ThreadCoordinator<Int> > myThreadClerk_p;
-    VisibilityResampler *myResampler_p;
+    VisibilityResamplerBase *myResampler_p;
     VBStore* myVBStore_p;
     Array<DComplex>* myGriddedDataDouble_p;
     Array<Complex>* myGriddedDataSingle_p;
     Matrix<Double>* mySumWt_p;
     pid_t myPID_p, myTID_p;
-    Array<Complex>* mySkyFTGrid_p;
+    const Array<Complex>* mySkyFTGrid_p;
     pid_t gettid_p () {return syscall (SYS_gettid);};
   };
 }; //# NAMESPACE CASA - END

@@ -79,13 +79,15 @@
 #define DORES True
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-rGridFT::rGridFT(Long icachesize, Int itilesize, String iconvType, Float padding,
-	       Bool usezero, Bool useDoublePrec)
+  rGridFT::rGridFT(Long icachesize, Int itilesize, 
+		   CountedPtr<VisibilityResamplerBase>& visResampler,
+		   String iconvType, Float padding,
+		 Bool usezero, Bool useDoublePrec)
 : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize), tilesize(itilesize),
   gridder(0), isTiled(False), convType(iconvType),
   maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
   usezero_p(usezero), noPadding_p(False), usePut2_p(False), 
-  machineName_p("rGridFT"), visResampler_p(useDoublePrec)
+  machineName_p("rGridFT"), visResampler_p(visResampler)//visResampler_p(useDoublePrec)
 
 {
   logIO() << LogOrigin("rGridFT", "rGridFT")  << LogIO::NORMAL;
@@ -94,12 +96,14 @@ rGridFT::rGridFT(Long icachesize, Int itilesize, String iconvType, Float padding
   canComputeResiduals_p=DORES;
 }
 
-rGridFT::rGridFT(Long icachesize, Int itilesize, String iconvType,
-	       MPosition mLocation, Float padding, Bool usezero, Bool useDoublePrec)
+  rGridFT::rGridFT(Long icachesize, Int itilesize, 
+		   CountedPtr<VisibilityResamplerBase>& visResampler,String iconvType,
+		   MPosition mLocation, Float padding, Bool usezero, 
+		   Bool useDoublePrec)
 : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize),
   tilesize(itilesize), gridder(0), isTiled(False), convType(iconvType), maxAbsData(0.0), centerLoc(IPosition(4,0)),
   offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(False), 
-  usePut2_p(False), machineName_p("rGridFT"), visResampler_p(useDoublePrec)
+  usePut2_p(False), machineName_p("rGridFT"), visResampler_p(visResampler)
 {
   logIO() << LogOrigin("rGridFT", "rGridFT")  << LogIO::NORMAL;
   logIO() << "You are using a non-standard FTMachine" << LogIO::WARN << LogIO::POST;
@@ -109,12 +113,14 @@ rGridFT::rGridFT(Long icachesize, Int itilesize, String iconvType,
   canComputeResiduals_p=DORES;
 }
 
-rGridFT::rGridFT(Long icachesize, Int itilesize, String iconvType,
-	       MDirection mTangent, Float padding, Bool usezero, Bool useDoublePrec)
+rGridFT::rGridFT(Long icachesize, Int itilesize, 
+		 CountedPtr<VisibilityResamplerBase>& visResampler, 
+		 String iconvType,
+		 MDirection mTangent, Float padding, Bool usezero, Bool useDoublePrec)
 : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize),
   tilesize(itilesize), gridder(0), isTiled(False), convType(iconvType), maxAbsData(0.0), centerLoc(IPosition(4,0)),
   offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(False), 
-  usePut2_p(False), machineName_p("rGridFT"), visResampler_p(useDoublePrec)
+  usePut2_p(False), machineName_p("rGridFT"), visResampler_p(visResampler)
 {
   logIO() << LogOrigin("rGridFT", "rGridFT")  << LogIO::NORMAL;
   logIO() << "You are using a non-standard FTMachine" << LogIO::WARN << LogIO::POST;
@@ -124,13 +130,14 @@ rGridFT::rGridFT(Long icachesize, Int itilesize, String iconvType,
   canComputeResiduals_p=DORES;
 }
 
-rGridFT::rGridFT(Long icachesize, Int itilesize, String iconvType,
-	       MPosition mLocation, MDirection mTangent, Float padding,
-	       Bool usezero, Bool useDoublePrec)
+rGridFT::rGridFT(Long icachesize, Int itilesize, 
+		 CountedPtr<VisibilityResamplerBase>& visResampler, 
+		 String iconvType, MPosition mLocation, MDirection mTangent, Float padding,
+		 Bool usezero, Bool useDoublePrec)
 : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize),
   tilesize(itilesize), gridder(0), isTiled(False), convType(iconvType), maxAbsData(0.0), centerLoc(IPosition(4,0)),
   offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(False), 
-  usePut2_p(False),machineName_p("rGridFT"), visResampler_p(useDoublePrec)
+  usePut2_p(False),machineName_p("rGridFT"), visResampler_p(visResampler)
 {
   logIO() << LogOrigin("rGridFT", "rGridFT")  << LogIO::NORMAL;
   logIO() << "You are using a non-standard FTMachine" << LogIO::WARN << LogIO::POST;
@@ -150,7 +157,7 @@ rGridFT::rGridFT(const RecordInterface& stateRec)
   String error;
   if (!fromRecord(error, stateRec)) 
     throw (AipsError("Failed to create gridder: " + error));
-  visResampler_p.init(useDoubleGrid_p);
+  visResampler_p->init(useDoubleGrid_p);
   canComputeResiduals_p=DORES;
 }
 
@@ -188,17 +195,21 @@ rGridFT& rGridFT::operator=(const rGridFT& other)
     padding_p=other.padding_p;
     usezero_p=other.usezero_p;
     noPadding_p=other.noPadding_p;
-    visResampler_p = other.visResampler_p;
+    visResampler_p = other.visResampler_p;//Copy the pointer
+    // Since visResampler_p is a CountedPtr, we need to clone it for
+    // new rGridFT( *ft) in CubeSkyEquation to work properly.
+    //visResampler_p=other.visResampler_p->clone();
+    *visResampler_p = *other.visResampler_p; // Call the appropriate operator=()
   };
   return *this;
 };
 
 //----------------------------------------------------------------------
   rGridFT::rGridFT(const rGridFT& other) : FTMachine(), machineName_p("rGridFT")
-{
-  //  visResampler_p.init(useDoubleGrid_p);
-  operator=(other);
-}
+  {
+    //  visResampler_p.init(useDoubleGrid_p);
+    operator=(other);
+  }
 
 //----------------------------------------------------------------------
 void rGridFT::init() {
@@ -260,7 +271,7 @@ void rGridFT::init() {
     
 
 
-  visResampler_p.setConvFunc(cfs_p);
+  visResampler_p->setConvFunc(cfs_p);
 
 
   // Set up image cache needed for gridding. For BOX-car convolution
@@ -313,7 +324,7 @@ void rGridFT::initializeToVis(ImageInterface<Complex>& iimage,
   // Initialize the maps for polarization and channel. These maps
   // translate visibility indices into image indices
   initMaps(vb);
-  visResampler_p.setMaps(chanMap, polMap);
+  visResampler_p->setMaps(chanMap, polMap);
 
   // Need to reset nx, ny for padding
   // Padding is possible only for non-tiled processing
@@ -405,7 +416,7 @@ void rGridFT::initializeToSky(ImageInterface<Complex>& iimage,
   // Initialize the maps for polarization and channel. These maps
   // translate visibility indices into image indices
   initMaps(vb);
-  visResampler_p.setMaps(chanMap, polMap);
+  visResampler_p->setMaps(chanMap, polMap);
 
 
   
@@ -434,8 +445,10 @@ void rGridFT::initializeToSky(ImageInterface<Complex>& iimage,
     arrayLattice = new ArrayLattice<Complex>(griddedData);
     lattice=arrayLattice;
   }
-  if(useDoubleGrid_p) visResampler_p.initializePutBuffers(griddedData2, sumWeight);
-  else                visResampler_p.initializePutBuffers(griddedData, sumWeight);
+  // if(useDoubleGrid_p) visResampler_p->initializePutBuffers(griddedData2, sumWeight);
+  // else                visResampler_p->initializePutBuffers(griddedData, sumWeight);
+  if(useDoubleGrid_p) visResampler_p->initializeToSky(griddedData2, sumWeight);
+  else                visResampler_p->initializeToSky(griddedData, sumWeight);
   //AlwaysAssert(lattice, AipsError);
 }
 
@@ -456,8 +469,10 @@ void rGridFT::finalizeToSky()
     imageCache->showCacheStatistics(o);
     logIO() << o.str() << LogIO::POST;
   }
-  if(useDoubleGrid_p) visResampler_p.GatherGrids(griddedData2, sumWeight);
-  else                visResampler_p.GatherGrids(griddedData, sumWeight);
+  // if(useDoubleGrid_p) visResampler_p->GatherGrids(griddedData2, sumWeight);
+  // else                visResampler_p->GatherGrids(griddedData, sumWeight);
+  if(useDoubleGrid_p) visResampler_p->finalizeToSky(griddedData2, sumWeight);
+  else                visResampler_p->finalizeToSky(griddedData, sumWeight);
 }
 
 
@@ -552,12 +567,12 @@ void rGridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   //  vbs.rowFlag.resize(rowFlags.shape());  vbs.rowFlag  = False; vbs.rowFlag(rowFlags) = True;
   vbs.flagCube_p.resize(flags.shape());    vbs.flagCube_p = False; vbs.flagCube_p(flags!=0) = True;
 
-  visResampler_p.setParams(uvScale,uvOffset,dphase);
-  visResampler_p.setMaps(chanMap, polMap);
+  visResampler_p->setParams(uvScale,uvOffset,dphase);
+  visResampler_p->setMaps(chanMap, polMap);
     
   //Double or single precision gridding.
-  if(useDoubleGrid_p) visResampler_p.DataToGrid(griddedData2, vbs, sumWeight, dopsf);
-  else                visResampler_p.DataToGrid(griddedData, vbs, sumWeight, dopsf); 
+  if(useDoubleGrid_p) visResampler_p->DataToGrid(griddedData2, vbs, sumWeight, dopsf);
+  else                visResampler_p->DataToGrid(griddedData, vbs, sumWeight, dopsf); 
 }
 
 
@@ -626,11 +641,11 @@ void rGridFT::get(VisBuffer& vb, Int row)
       vbs.flagCube_p.resize(flags.shape());    vbs.flagCube_p = False; vbs.flagCube_p(flags!=0) = True;
       //    vbs.rowFlag.resize(rowFlags.shape());  vbs.rowFlag  = False; vbs.rowFlag(rowFlags) = True;
       
-      visResampler_p.setParams(uvScale,uvOffset,dphase);
-      visResampler_p.setMaps(chanMap, polMap);
+      visResampler_p->setParams(uvScale,uvOffset,dphase);
+      visResampler_p->setMaps(chanMap, polMap);
 
       // De-gridding
-      visResampler_p.GridToData(vbs, griddedData);
+      visResampler_p->GridToData(vbs, griddedData);
     }
   interpolateFrequencyFromgrid(vb, data, FTMachine::MODEL);
 }
@@ -973,7 +988,7 @@ void rGridFT::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
   if (useCorrected) vbs.correctedCube_p.reference(vb.correctedVisCube());
   else vbs.visCube_p.reference(vb.visCube());
   vbs.useCorrected_p = useCorrected;
-  visResampler_p.ComputeResiduals(vbs);
+  visResampler_p->ComputeResiduals(vbs);
 }
 
 } //# NAMESPACE CASA - END

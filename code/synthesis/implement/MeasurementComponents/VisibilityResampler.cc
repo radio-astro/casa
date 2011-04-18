@@ -36,18 +36,18 @@ namespace casa{
   //
   //-----------------------------------------------------------------------------------
   //
-  VisibilityResampler& VisibilityResampler::operator=(const VisibilityResampler& other)
-  {
-    SynthesisUtils::SETVEC(uvwScale_p, other.uvwScale_p);
-    SynthesisUtils::SETVEC(offset_p, other.offset_p);
-    SynthesisUtils::SETVEC(dphase_p, other.dphase_p);
-    SynthesisUtils::SETVEC(chanMap_p, other.chanMap_p);
-    SynthesisUtils::SETVEC(polMap_p, other.polMap_p);
+  // VisibilityResampler& VisibilityResampler::operator=(const VisibilityResampler& other)
+  // {
+  //   SynthesisUtils::SETVEC(uvwScale_p, other.uvwScale_p);
+  //   SynthesisUtils::SETVEC(offset_p, other.offset_p);
+  //   SynthesisUtils::SETVEC(dphase_p, other.dphase_p);
+  //   SynthesisUtils::SETVEC(chanMap_p, other.chanMap_p);
+  //   SynthesisUtils::SETVEC(polMap_p, other.polMap_p);
 
-    convFuncStore_p = other.convFuncStore_p;
-    myMutex_p = other.myMutex_p;
-    return *this;
-  }
+  //   convFuncStore_p = other.convFuncStore_p;
+  //   myMutex_p = other.myMutex_p;
+  //   return *this;
+  // }
   //
   //-----------------------------------------------------------------------------------
   // Re-sample the griddedData on the VisBuffer (a.k.a gridding)
@@ -62,8 +62,8 @@ namespace casa{
   void VisibilityResampler::DataToGridImpl_p(Array<Complex>& grid, VBStore& vbs, 
   					     const Bool& dopsf,  Matrix<Double>& sumwt) __restrict__;
 
-  template void VisibilityResampler::addTo4DArray(DComplex* store,const Int* iPos, Complex& val, Double& wt) __restrict__;
-  template void VisibilityResampler::addTo4DArray(Complex* store,const Int* iPos, Complex& val, Double& wt) __restrict__;
+  // template void VisibilityResampler::addTo4DArray(DComplex* store,const Int* iPos, Complex& val, Double& wt) __restrict__;
+  // template void VisibilityResampler::addTo4DArray(Complex* store,const Int* iPos, Complex& val, Double& wt) __restrict__;
   //
   //-----------------------------------------------------------------------------------
   // Template implementation for DataToGrid
@@ -117,7 +117,8 @@ namespace casa{
     Double * __restrict__ sumwtPtr = sumwt.getStorage(Dummy);
     Int nDim = vbs.uvw_p.shape()[0];
 
-    cacheAxisIncrements(nx,ny,nGridPol, nGridChan);
+    //    cacheAxisIncrements(nx,ny,nGridPol, nGridChan);
+    cacheAxisIncrements(grid.shape().asVector());
 
     for(Int irow=rbeg; irow< rend; irow++){          // For all rows
       
@@ -239,7 +240,8 @@ namespace casa{
     Int * __restrict__ offPtr=off.getStorage(Dummy);
     Int nDim = vbs.uvw_p.shape()(0);
 
-    cacheAxisIncrements(nx,ny,nGridPol, nGridChan);
+    //    cacheAxisIncrements(nx,ny,nGridPol, nGridChan);
+    cacheAxisIncrements(grid.shape().asVector());
 
     for(Int irow=rbeg; irow<rend; irow++) {
       if(!rowFlag[irow]) {
@@ -298,40 +300,40 @@ namespace casa{
   //
   //-----------------------------------------------------------------------------------
   //
-  void VisibilityResampler::sgrid(Int& uvwDim,Double* __restrict__ pos, 
-				  Int* __restrict__ loc, 
-				  Int* __restrict__ off, 
-				  Complex& phasor, const Int& irow,
-				  // const Matrix<Double>& __restrict__ uvw, 
-				  const Double* __restrict__ uvw, 
-				  const Double& __restrict__ dphase, 
-				  const Double& __restrict__ freq, 
-				  const Double* __restrict__ scale, 
-				  const Double* __restrict__ offset,
-				  const Float* __restrict__ sampling) __restrict__ 
-				  // const Vector<Double>& __restrict__ scale, 
-				  // const Vector<Double>& __restrict__ offset,
-				  // const Vector<Float>& __restrict__ sampling) __restrict__ 
-  {
-    Double phase;
-    //    Int ndim=pos.shape()(0);
-    Int ndim=2;
+  // void VisibilityResampler::sgrid(Int& uvwDim,Double* __restrict__ pos, 
+  // 				  Int* __restrict__ loc, 
+  // 				  Int* __restrict__ off, 
+  // 				  Complex& phasor, const Int& irow,
+  // 				  // const Matrix<Double>& __restrict__ uvw, 
+  // 				  const Double* __restrict__ uvw, 
+  // 				  const Double& __restrict__ dphase, 
+  // 				  const Double& __restrict__ freq, 
+  // 				  const Double* __restrict__ scale, 
+  // 				  const Double* __restrict__ offset,
+  // 				  const Float* __restrict__ sampling) __restrict__ 
+  // 				  // const Vector<Double>& __restrict__ scale, 
+  // 				  // const Vector<Double>& __restrict__ offset,
+  // 				  // const Vector<Float>& __restrict__ sampling) __restrict__ 
+  // {
+  //   Double phase;
+  //   //    Int ndim=pos.shape()(0);
+  //   Int ndim=2;
 
-    for(Int idim=0;idim<ndim;idim++)
-      {
-	pos[idim]=scale[idim]*uvw[idim+irow*uvwDim]*freq/C::c+offset[idim];
-	loc[idim]=(Int)std::floor(pos[idim]+0.5);
-	off[idim]=(Int)std::floor(((loc[idim]-pos[idim])*sampling[idim])+0.5);
-      }
+  //   for(Int idim=0;idim<ndim;idim++)
+  //     {
+  // 	pos[idim]=scale[idim]*uvw[idim+irow*uvwDim]*freq/C::c+offset[idim];
+  // 	loc[idim]=(Int)std::floor(pos[idim]+0.5);
+  // 	off[idim]=(Int)std::floor(((loc[idim]-pos[idim])*sampling[idim])+0.5);
+  //     }
 
-    if (dphase != 0.0)
-      {
-	phase=-2.0*C::pi*dphase*freq/C::c;
-	phasor=Complex(cos(phase), sin(phase));
-      }
-    else
-      phasor=Complex(1.0);
-  }
+  //   if (dphase != 0.0)
+  //     {
+  // 	phase=-2.0*C::pi*dphase*freq/C::c;
+  // 	phasor=Complex(cos(phase), sin(phase));
+  //     }
+  //   else
+  //     phasor=Complex(1.0);
+  // }
   void VisibilityResampler::ComputeResiduals(VBStore& vbs)
   {
     Int rbeg = vbs.beginRow_p, rend = vbs.endRow_p;

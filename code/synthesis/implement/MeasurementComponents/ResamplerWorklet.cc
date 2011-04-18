@@ -36,7 +36,6 @@
 #include <sys/syscall.h>
 
 namespace casa{
-  ResamplerWorklet::ResamplerWorklet() {}
   ResamplerWorklet& ResamplerWorklet::operator=(const ResamplerWorklet& other)
   {
     myResampler_p = other.myResampler_p;
@@ -54,14 +53,14 @@ namespace casa{
   
   void ResamplerWorklet::initThread(Int& id, 
 				    CountedPtr<ThreadCoordinator<Int> >& threadClerk,
-				    VisibilityResampler* resampler)
+				    VisibilityResamplerBase* resampler)
   {
     //      LogIO log_p(LogOrigin("ResamplerWorklet","initThread"));
       setID(id);
       myThreadClerk_p = threadClerk;
       myResampler_p = resampler;
   }
-  void ResamplerWorklet::initToVis(VBStore* vbs, Array<Complex>* skyFTGrid) 
+  void ResamplerWorklet::initToVis(VBStore* vbs, const Array<Complex>* skyFTGrid) 
   {
     //    LogIO log_p(LogOrigin("ResamplerWorklet","initToVis"));
     myVBStore_p = vbs;
@@ -83,7 +82,7 @@ namespace casa{
   }
   void ResamplerWorklet::init(Int& id, 
 			      CountedPtr<ThreadCoordinator<Int> >& threadClerk,
-			      VisibilityResampler* resampler, VBStore* vbs,
+			      VisibilityResamplerBase* resampler, VBStore* vbs,
 			      Array<DComplex>* griddedData, Matrix<Double>* sumwt,
 			      Array<Complex>* skyFTGrid)
     {
@@ -100,7 +99,7 @@ namespace casa{
     };
   void ResamplerWorklet::init(Int& id, 
 			      CountedPtr<ThreadCoordinator<Int> >& threadClerk,
-			      VisibilityResampler* resampler, VBStore* vbs,
+			      VisibilityResamplerBase* resampler, VBStore* vbs,
 			      Array<Complex>* griddedData, Matrix<Double>* sumwt,
 			      Array<Complex>* skyFTGrid)
     {
@@ -132,11 +131,11 @@ namespace casa{
     //    DT tCycleG, tWaitG, tWorkG,tCycleDG, tWaitDG, tWorkDG, tWorkR, tWaitR, tCycleR;
 
     //    T t1,t2,t3;
+    Int *doDataToGrid;
     while(True)
       {
 	//	Timers t1 = Timers::getTime();
 	//	Bool *doDataToGrid;
-	Int *doDataToGrid;
 	doDataToGrid = myThreadClerk_p->waitForWork(this);
 	if (doDataToGrid == NULL) break;
 
@@ -147,8 +146,12 @@ namespace casa{
 	if (*doDataToGrid==1)   // Gridding work
 	  {
 	    //	    t2G=Timers::getTime();
-	    myResampler_p->DataToGrid(*myGriddedDataDouble_p, *myVBStore_p, 
-				      *mySumWt_p, myVBStore_p->dopsf_p);
+	    if (myGriddedDataDouble_p != NULL)
+	      myResampler_p->DataToGrid(*myGriddedDataDouble_p, *myVBStore_p, 
+					*mySumWt_p, myVBStore_p->dopsf_p);
+	    else
+	      myResampler_p->DataToGrid(*myGriddedDataSingle_p, *myVBStore_p, 
+					*mySumWt_p, myVBStore_p->dopsf_p);
 	  }
 	else if (*doDataToGrid == 0)                      // De-gridding work
 	  {
@@ -183,6 +186,9 @@ namespace casa{
 	//   }
       }
     log_p << "Alveeda from Workelet # " << myID_p << LogIO::POST;
+    //    doDataToGrid = myThreadClerk_p->waitForWork(this);
+    //    terminate();
+
     // log_p << "GWait="  << tWaitG.formatAverage().c_str() << " "
     // 	  << "GWork="  << tWorkG.formatAverage().c_str() << " "
     // 	  << "GTotal=" << tCycleG.formatAverage().c_str()

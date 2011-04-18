@@ -279,7 +279,7 @@ protected:
 
 
   // Sum of weights per polarization and per chan
-  Matrix<Double> sumWeight;
+  Matrix<Double> sumWeight, sumCFWeight;
 
   // Sizes
   Int nx, ny, npol, nchan, nvischan, nvispol;
