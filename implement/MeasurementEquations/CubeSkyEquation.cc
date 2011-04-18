@@ -46,10 +46,13 @@
 #include <synthesis/MeasurementComponents/SkyJones.h>
 #include <synthesis/MeasurementComponents/FTMachine.h>
 #include <synthesis/MeasurementComponents/rGridFT.h>
+#include <synthesis/MeasurementComponents/rGridFT.h>
 #include <synthesis/MeasurementComponents/MosaicFT.h>
 #include <synthesis/MeasurementComponents/GridBoth.h>
 #include <synthesis/MeasurementComponents/WProjectFT.h>
 #include <synthesis/MeasurementComponents/nPBWProjectFT.h>
+#include <synthesis/MeasurementComponents/AWProjectFT.h>
+#include <synthesis/MeasurementComponents/AWProjectWBFT.h>
 #include <synthesis/MeasurementComponents/PBMosaicFT.h>
 #include <synthesis/MeasurementComponents/WPConvFunc.h>
 #include <synthesis/MeasurementComponents/SimplePBConvFunc.h>
@@ -168,6 +171,44 @@ void CubeSkyEquation::init(FTMachine& ft){
      for (Int k=1; k < (nmod); ++k){ 
       ftm_p[k]=new nPBWProjectFT(static_cast<nPBWProjectFT &>(*ft_));
       iftm_p[k]=new nPBWProjectFT(static_cast<nPBWProjectFT &>(*ift_));
+    }
+  }
+  else if(ft.name()== "AWProjectFT"){
+     ft_=new AWProjectFT(static_cast<AWProjectFT &>(ft));
+     ift_=new AWProjectFT(static_cast<AWProjectFT &>(ft));
+     //     ift_=ft_;
+     ftm_p[0]=ft_;
+     iftm_p[0]=ift_;
+     if(nmod != (2 * sm_->numberOfTaylorTerms() - 1)) /* MFS */
+       throw(AipsError("No multifield with a-projection allowed"));
+     for (Int k=1; k < (nmod); ++k){ 
+      ftm_p[k]=new AWProjectFT(static_cast<AWProjectFT &>(*ft_));
+      iftm_p[k]=new AWProjectFT(static_cast<AWProjectFT &>(*ift_));
+      //      iftm_p[k]=ftm_p[k];
+    }
+  }
+  else if(ft.name()== "AWProjectWBFT"){
+     ft_=new AWProjectWBFT(static_cast<AWProjectWBFT &>(ft));
+     ift_=new AWProjectWBFT(static_cast<AWProjectWBFT &>(ft));
+     //     ift_=ft_;
+     ftm_p[0]=ft_;
+     iftm_p[0]=ift_;
+     // if(nmod != (2 * sm_->numberOfTaylorTerms() - 1)) /* MFS */
+     //   throw(AipsError("No multifield with a-projection allowed"));
+     for (Int k=1; k < (nmod); ++k){ 
+      ftm_p[k]=new AWProjectWBFT(static_cast<AWProjectWBFT &>(*ft_));
+      iftm_p[k]=new AWProjectWBFT(static_cast<AWProjectWBFT &>(*ift_));
+      if(sm_->numberOfTaylorTerms()>1) 
+	{
+	  for (Int model=0; model < (sm_->numberOfModels()) ; ++model)
+	    {
+	      ftm_p[model]->setMiscInfo(sm_->getTaylorIndex(model));
+	      iftm_p[model]->setMiscInfo(sm_->getTaylorIndex(model));
+	    }
+	}
+      //      iftm_p[k]=ftm_p[k];
+      // if (rvi_p != NULL) cerr << rvi_p->getMSSelectionObj(0).getChanList();
+      // if (wvi_p != NULL) cerr << rvi_p->getMSSelectionObj(0).getChanList();
     }
   }
   else if(ft.name()== "PBMosaicFT"){
@@ -852,6 +893,8 @@ void CubeSkyEquation::initializePutSlice(const VisBuffer& vb,
     if(nCubeSlice>1){
       iftm_p[model]->reset();
     }
+    /* MFS */
+    if(sm_->numberOfTaylorTerms()>1) ftm_p[model]->setMiscInfo(sm_->getTaylorIndex(model));
     iftm_p[model]->initializeToSky(*(imPutSlice_p[model]),weightSlice_p[model],
 				   vb);
     dirDep= dirDep || (ftm_p[model]->name() == "MosaicFT");
@@ -876,9 +919,8 @@ CubeSkyEquation::putSlice(const VisBuffer & vb, Bool dopsf, FTMachine::Type col,
     Int nRow=vb.nRow();
     internalChangesPut_p=False;  // Does this VB change inside itself?
     firstOneChangesPut_p=False;  // Has this VB changed from the previous one?
-    if((ftm_p[0]->name() != "MosaicFT") &&
-            (ftm_p[0]->name() != "PBWProjectFT")) {
-
+    if((ftm_p[0]->name() != "MosaicFT")    && (ftm_p[0]->name() != "PBWProjectFT") &&
+       (ftm_p[0]->name() != "AWProjectFT") && (ftm_p[0]->name() != "AWProjectWBFT")) {
         changedSkyJonesLogic(vb, firstOneChangesPut_p, internalChangesPut_p);
     }
     //First ft machine change should be indicative
@@ -910,6 +952,7 @@ CubeSkyEquation::putSlice(const VisBuffer & vb, Bool dopsf, FTMachine::Type col,
                 //if(sm_->getAlgorithm()=="MSMFS"){ /* MFS */
                 if(sm_->numberOfTaylorTerms()>1) { /* MFS */
                     calcVisWeights(vb,model);
+		    iftm_p[model]->setMiscInfo(sm_->getTaylorIndex(model));
                     iftm_p[model]->put(vb, row, dopsf, col, visweights_p);
                 }
                 else{
@@ -932,6 +975,7 @@ CubeSkyEquation::putSlice(const VisBuffer & vb, Bool dopsf, FTMachine::Type col,
             //if(sm_->getAlgorithm()=="MSMFS"){ /* MFS */
             if(sm_->numberOfTaylorTerms()>1) { /* MFS */
                 calcVisWeights(vb,model);
+		iftm_p[model]->setMiscInfo(sm_->getTaylorIndex(model));
                 iftm_p[model]->put(vb, -1, dopsf, col, visweights_p);
             }
             else{
@@ -944,6 +988,7 @@ CubeSkyEquation::putSlice(const VisBuffer & vb, Bool dopsf, FTMachine::Type col,
             //if(sm_->getAlgorithm()=="MSMFS"){ /* MFS */
             if(sm_->numberOfTaylorTerms()>1) { /* MFS */
                 calcVisWeights(vb,model);
+		iftm_p[model]->setMiscInfo(sm_->getTaylorIndex(model));
                 iftm_p[model]->put(vb, -1, dopsf, col, visweights_p);
             }
             else{
@@ -1016,6 +1061,7 @@ void CubeSkyEquation::initializeGetSlice(const VisBuffer& vb,
       }
     }
     sliceCube(imGetSlice_p[model], model, cubeSlice, nCubeSlice, 1);
+    if (sm_->numberOfTaylorTerms() > 1) ftm_p[model]->setMiscInfo(sm_->getTaylorIndex(model));
     ftm_p[model]->initializeToVis(*(imGetSlice_p[model]), vb);
   }
   ft_=&(*ftm_p[0]);
@@ -1090,10 +1136,11 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
   // avoid this if possible.
   internalChangesGet_p=False;  // Does this VB change inside itself?
   firstOneChangesGet_p=False;  // Has this VB changed from the previous one?
-  if((ftm_p[0]->name()!="MosaicFT") &&
-     (ftm_p[0]->name() != "PBWProjectFT")) {
+  if((ftm_p[0]->name() != "MosaicFT")    && (ftm_p[0]->name() != "PBWProjectFT") &&
+     (ftm_p[0]->name() != "AWProjectFT") && (ftm_p[0]->name() != "AWProjectWBFT")) {
     changedSkyJonesLogic(result, firstOneChangesGet_p, internalChangesGet_p);
-  } 
+  }
+
   if(internalChangesGet_p || internalChangesPut_p) {
     if(internalChangesPut_p)
       internalChangesPut_p=False;

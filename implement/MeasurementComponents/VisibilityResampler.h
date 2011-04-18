@@ -32,6 +32,7 @@
 #include <synthesis/MeasurementComponents/CFStore.h>
 #include <synthesis/MeasurementComponents/Utils.h>
 #include <synthesis/MeasurementComponents/VBStore.h>
+#include <synthesis/MeasurementComponents/VisibilityResamplerBase.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Vector.h>
@@ -42,21 +43,20 @@
 #include <casa/Logging/LogMessage.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
-  class VisibilityResampler
+  class VisibilityResampler: public VisibilityResamplerBase
   {
   public: 
-    VisibilityResampler(): 
-      uvwScale_p(), offset_p(), chanMap_p(), polMap_p(), convFuncStore_p()
-    {};
-    VisibilityResampler(const CFStore& cfs): 
-      uvwScale_p(), offset_p(), chanMap_p(), polMap_p(), convFuncStore_p()
-    {setConvFunc(cfs);};
+    VisibilityResampler(): VisibilityResamplerBase() {};
+    VisibilityResampler(const CFStore& cfs): VisibilityResamplerBase(cfs) {};
+    VisibilityResampler(const VisibilityResampler& other):VisibilityResamplerBase()    {copy(other);}
 
+    //    {setConvFunc(cfs);};
     virtual ~VisibilityResampler() {};
-    
 
-    VisibilityResampler& operator=(const VisibilityResampler& other);
+    //    VisibilityResampler& operator=(const VisibilityResampler& other);
 
+    virtual VisibilityResamplerBase* clone() 
+    {return new VisibilityResampler(*this);}
 
     virtual void setParams(const Vector<Double>& uvwScale, const Vector<Double>& offset,
 			   const Vector<Double>& dphase)
@@ -81,6 +81,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     {
       convFuncStore_p = cfs;
     };
+    virtual void setCFMaps(const Vector<Int>& cfMap, const Vector<Int>& conjCFMap) {};
     //
     //------------------------------------------------------------------------------
     //
@@ -90,16 +91,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // The first variant grids onto a double precision grid while the
     // second one does it on a single precision grid.
     //
-    virtual void DataToGrid(Array<DComplex>& griddedData,  
-			    VBStore& vbs, 
-			    Matrix<Double>& sumwt,
-			    const Bool& dopsf)
+    virtual void DataToGrid(Array<DComplex>& griddedData, VBStore& vbs, 
+			    Matrix<Double>& sumwt, const Bool& dopsf)
     {DataToGridImpl_p(griddedData, vbs, dopsf, sumwt);}
 
-    virtual void DataToGrid(Array<Complex>& griddedData, 
-			    VBStore& vbs, 
-    			    Matrix<Double>& sumwt,
-			    const Bool& dopsf)
+    virtual void DataToGrid(Array<Complex>& griddedData, VBStore& vbs, 
+    			    Matrix<Double>& sumwt, const Bool& dopsf)
     {DataToGridImpl_p(griddedData, vbs, dopsf, sumwt);}
 
     //
@@ -112,17 +109,33 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     virtual void ComputeResiduals(VBStore& vbs);
     virtual void setMutex(async::Mutex *mu) {myMutex_p = mu;};
+
+    // Genealogical baggage -- required for the
+    // MultiThreadedVisibilityResampler -- that everyone else has to
+    // carray around.
+    //
+    // These are no-ops for unithreaded samplers.
+    //
+    virtual void init(const Bool& doublePrecision) {};
+    virtual void GatherGrids(Array<DComplex>& griddedData, Matrix<Double>& sumwt) {};
+    virtual void GatherGrids(Array<Complex>& griddedData, Matrix<Double>& sumwt) {};
+    virtual void initializePutBuffers(const Array<DComplex>& griddedData,
+				      const Matrix<Double>& sumwt) {};
+    virtual void initializePutBuffers(const Array<Complex>& griddedData,
+				      const Matrix<Double>& sumwt) {};
+
+
     //
     //------------------------------------------------------------------------------
     //----------------------------Private parts-------------------------------------
     //------------------------------------------------------------------------------
     //
-  private:
+  protected:
     async::Mutex *myMutex_p;
-    Vector<Double> uvwScale_p, offset_p, dphase_p;
-    Vector<Int> chanMap_p, polMap_p;
-    CFStore convFuncStore_p;
-    Int inc0_p, inc1_p, inc2_p, inc3_p;
+    // Vector<Double> uvwScale_p, offset_p, dphase_p;
+    // Vector<Int> chanMap_p, polMap_p;
+    // CFStore convFuncStore_p;
+    //    Int inc0_p, inc1_p, inc2_p, inc3_p;
     //
     // Re-sample the griddedData on the VisBuffer (a.k.a de-gridding).
     //
@@ -136,6 +149,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // 	       const Vector<Double>& scale, const Vector<Double>& offset,
     // 	       const Vector<Float>& sampling);
 
+    /*
     void sgrid(Int& ndim, Double* pos, Int* loc, Int* off, 
     	       Complex& phasor, const Int& irow, const Double* uvw, 
     	       const Double& dphase, const Double& freq, 
@@ -184,6 +198,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		      const Int* __restrict__ iPos, 
 		      Complex& nvalue, Double& wt) __restrict__ 
     {store[iPos[0] + iPos[1]*inc1_p + iPos[2]*inc2_p +iPos[3]*inc3_p] += (nvalue*wt);}
+    */
   };
 }; //# NAMESPACE CASA - END
 

@@ -134,15 +134,15 @@ public:
   // mTangent is specified then the uvw rotation is done for
   // that location iso the image center.
   // <group>
-  rGridFT(Long cachesize, Int tilesize, String convType="SF",
-	 Float padding=1.0, Bool usezero=True, Bool useDoublePrec=False);
-  rGridFT(Long cachesize, Int tilesize, String convType,
+  rGridFT(Long cachesize, Int tilesize, CountedPtr<VisibilityResamplerBase>& visResampler,
+	  String convType="SF", Float padding=1.0, Bool usezero=True, Bool useDoublePrec=False);
+  rGridFT(Long cachesize, Int tilesize,  CountedPtr<VisibilityResamplerBase>& visResampler, String convType,
 	 MPosition mLocation, Float padding=1.0, Bool usezero=True, 
 	 Bool useDoublePrec=False);
-  rGridFT(Long cachesize, Int tilesize, String convType,
+  rGridFT(Long cachesize, Int tilesize,  CountedPtr<VisibilityResamplerBase>& visResampler,String convType,
 	 MDirection mTangent, Float padding=1.0, Bool usezero=True,
 	 Bool useDoublePrec=False);
-  rGridFT(Long cachesize, Int tilesize, String convType,
+  rGridFT(Long cachesize, Int tilesize,  CountedPtr<VisibilityResamplerBase>& visResampler,String convType,
 	 MPosition mLocation, MDirection mTangent, Float passing=1.0,
 	 Bool usezero=True, Bool useDoublePrec=False);
   // </group>
@@ -288,7 +288,8 @@ protected:
 
   // VisibilityResampler - a.k.a the "gridder" object
   //  VisibilityResampler visResampler_p;
-  MultiThreadedVisibilityResampler visResampler_p;
+  //  CountedPtr<MultiThreadedVisibilityResampler> visResampler_p;
+  CountedPtr<VisibilityResamplerBase> visResampler_p;
 };
 
 } //# NAMESPACE CASA - END

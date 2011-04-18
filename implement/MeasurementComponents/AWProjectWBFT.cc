@@ -27,6 +27,7 @@
 //# $Id$
 
 #include <synthesis/MeasurementComponents/AWProjectWBFT.h>
+#include <synthesis/MeasurementEquations/StokesImageUtil.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <scimath/Mathematics/FFTServer.h>
 #include <lattices/Lattices/LatticeFFT.h>
@@ -55,13 +56,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   AWProjectWBFT::AWProjectWBFT(Int nWPlanes, Long icachesize, 
 			       CountedPtr<CFCache>& cfcache,
 			       CountedPtr<ConvolutionFunction>& cf,
+			       CountedPtr<VisibilityResamplerBase>& visResampler,
 			       Bool applyPointingOffset,
 			       Bool doPBCorr,
 			       Int itilesize, 
 			       Float paSteps,
 			       Float pbLimit,
 			       Bool usezero)
-    : AWProjectFT(nWPlanes,icachesize,cfcache,cf,applyPointingOffset,doPBCorr,itilesize,pbLimit,usezero),
+    : AWProjectFT(nWPlanes,icachesize,cfcache,cf,visResampler,applyPointingOffset,doPBCorr,itilesize,pbLimit,usezero),
       avgPBReady_p(False),resetPBs_p(True),wtImageFTDone(False),fieldIds_p(0)
   {
     //
@@ -84,6 +86,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     hostRAM = hostRAM/(sizeof(Float)*2); // In complex pixels
     if (cachesize > hostRAM) cachesize=hostRAM;
 
+    //    visResampler_p->init(useDoubleGrid_p);
     lastPAUsedForWtImg = MAGICPAVALUE;
   }
   //
@@ -102,6 +105,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     maxConvSupport=-1;
     convSampling=OVERSAMPLING;
     convSize=CONVSIZE;
+    visResampler_p->init(useDoubleGrid_p);
   }
   //
   //---------------------------------------------------------------
@@ -127,6 +131,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	usezero_p       =   other.usezero_p;
 	doPBCorrection  =   other.doPBCorrection;
 	maxConvSupport  =   other.maxConvSupport;
+	//	visResampler_p=other.visResampler_p->clone();
     };
     return *this;
   };
@@ -290,7 +295,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if ((sumWt.shape().nelements() < 2) || 
 	(sumWt.shape()(0) != wtImage.shape()(2)) || 
 	(sumWt.shape()(1) != wtImage.shape()(3)))
-      log_l << "Sum of weights per poln and chan required" << LogIO::EXCEPTION;
+      log_l << "Sum of weights per poln and chan is required" << LogIO::EXCEPTION;
     Float sumWtVal=1.0;
 
     LatticeFFT::cfft2d(wtImage,False);
@@ -304,7 +309,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Copy one 2D plane at a time, normalizing by the sum of weights
     // and possibly 2D FFT.
     //
-    // Set up Lattice iteratos on wtImage and sensitivityImage
+    // Set up Lattice iterators on wtImage and sensitivityImage
     //
     IPosition axisPath(4, 0, 1, 2, 3);
     IPosition cursorShape(4, sizeX, sizeY, 1, 1);
@@ -334,6 +339,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	{
 	  Int pol=wtImIter.position()(2), chan=wtImIter.position()(3);
 	  if (doSumWtNorm) sumWtVal=sumWt(pol,chan);
+	  //	  cerr << sumWtVal << " " << max(wtImIter.rwCursor()) << endl;
 	  // wtImIter.rwCursor() = (wtImIter.rwCursor()
 	  // 			*Float(sizeX)*Float(sizeY)/sumWtVal);
 	
@@ -421,6 +427,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO log_l(LogOrigin("AWProjectWBFT", "makeSensitivityImage"));
 
 
+    // Matrix<Float> cfWts(sumWt.shape());
+    // convertArray(cfWts,sumCFWeight);
+    // ftWeightImage(wtImage, cfWts, doFFTNorm);
     ftWeightImage(wtImage, sumWt, doFFTNorm);
 
     sensitivityImage.resize(griddedWeights.shape()); 
@@ -449,20 +458,32 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Slicer slicePol0(start0,length), slicePol1(start1,length);
     Array<Float> polPlane0F, polPlane1F;
     Array<Complex> polPlane0C, polPlane1C;
-
+    
+    // Use StokesImageUtil to convert from Complex sensitivity pattern
+    // to real value image planes.
+    StokesImageUtil::To(sensitivityImage, griddedWeights);
+    //
+    // Copy the first plane of the sensitivity image (Stokes-I
+    // pattern) to all other planes.
+    //
     //    StokesImageUtil::To(senLat, griddedWeights);
 
     senLat.getSlice(polPlane0F,slicePol0);
-    senLat.getSlice(polPlane1F,slicePol1);
-    wtLat.getSlice(polPlane0C, slicePol0);
-    //    wtLat.getSlice(polPlane1C, slicePol1);
+    for (senImIter.reset();!senImIter.atEnd();senImIter++)
+      senImIter.rwMatrixCursor() = polPlane0F.nonDegenerate();
 
-    // abs(Array<Complex>&) also returns Array<Complex> instead of
-    // Array<Float>.  Hence the real(abs(...)).
-    //    polPlane0F = sqrt(real(abs(polPlane0C*polPlane1C)));
-    //    polPlane0F = (real(abs(polPlane0C)));
-    polPlane0F = real(polPlane0C);
-    polPlane1F = polPlane0F;
+
+    // senLat.getSlice(polPlane0F,slicePol0);
+    // senLat.getSlice(polPlane1F,slicePol1);
+    // wtLat.getSlice(polPlane0C, slicePol0);
+    // wtLat.getSlice(polPlane1C, slicePol1);
+
+    // // // abs(Array<Complex>&) also returns Array<Complex> instead of
+    // // // Array<Float>.  Hence the real(abs(...)).
+    // // //    polPlane0F = sqrt(real(abs(polPlane0C*polPlane1C)));
+    // // //    polPlane0F = (real(abs(polPlane0C)));
+    // polPlane0F = real(polPlane0C);
+    // polPlane1F = polPlane0F;
 
     cfCache_p->flush(sensitivityImage,sensitivityPatternQualifierStr_p);
 
@@ -494,6 +515,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     weights.resize(sumWeight.shape());
     convertArray(weights, sumWeight);//I suppose this converts a
+
 				     //Matrix<Double> (sumWeights) to
 				     //Matrix<Float> (weights).  Why
 				     //is this conversion required?
@@ -1224,6 +1246,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //	if(arrayLattice) delete arrayLattice; arrayLattice=0;
 	arrayLattice = new ArrayLattice<Complex>(griddedData);
 	lattice=arrayLattice;
+	visResampler_p->initializeToSky(griddedData, sumWeight);
       }
     //AlwaysAssert(lattice, AipsError);
     if (resetPBs_p)
@@ -1259,6 +1282,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     paChangeDetector.reset();
     cfCache_p->flush();
+    visResampler_p->finalizeToSky(griddedData, sumWeight);
   }
   //
   //---------------------------------------------------------------
@@ -1290,7 +1314,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// 				   *rotatedCFWts_l.data,0.0);
 
 	// Set rotatedCFWts_l object as the convolution function
-	visResampler_p.setConvFunc(rotatedCFWts_l);
+	visResampler_p->setConvFunc(rotatedCFWts_l);
 
 	// Make a temporary complex array to receive the gridded weights.
 	Array<Complex> avgAperture;
@@ -1302,9 +1326,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// the uv-grid.
 	//
 	// Receive the sum-of-weights in a dummy array.
-	Matrix<Double> uvwOrigin, dummyDataSumWeight(sumWeight.shape(),0.0);
+	Matrix<Double> uvwOrigin;//, dummyDataSumWeight(sumWeight.shape(),0.0);
 	vbs.uvw_p.reference(uvwOrigin); 
-	visResampler_p.DataToGrid(avgAperture, vbs, dummyDataSumWeight, dopsf); 
+	visResampler_p->DataToGrid(avgAperture, vbs, sumCFWeight, dopsf); 
 
 	// Get the griddedWeigths as a referenced array and use it to
 	// accumulate the latest gridded weights.

@@ -36,11 +36,11 @@
 #include <fstream>
 
 namespace casa{
-  // template 
-  // void MultiThreadedVisibilityResampler::DataToGridImpl_p(Array<Complex>& griddedData,  
-  // 						      VBStore& vbs, 
-  // 						      Matrix<Double>& sumwt,
-  // 						      const Bool& dopsf);
+  template 
+  void MultiThreadedVisibilityResampler::DataToGridImpl_p(Array<Complex>& griddedData,  
+  						      VBStore& vbs, 
+  						      Matrix<Double>& sumwt,
+  						      const Bool& dopsf);
   template 
   void MultiThreadedVisibilityResampler::DataToGridImpl_p(Array<DComplex>& griddedData,  
 						      VBStore& vbs, 
@@ -48,10 +48,10 @@ namespace casa{
 						      const Bool& dopsf);
 
   MultiThreadedVisibilityResampler::MultiThreadedVisibilityResampler(const Bool& doublePrecision,
-								     const VisibilityResampler& visResampler, 
+								     CountedPtr<VisibilityResamplerBase>& visResampler, 
 								     const Int& n):
     resamplers_p(), doubleGriddedData_p(), singleGriddedData_p(), sumwt_p(), gridderWorklets_p(), 
-    vbsVec_p(), threadClerk_p(),threadStarted_p(False)
+    vbsVec_p(), threadClerk_p(),threadStarted_p(False), visResamplerCtor_p(visResampler)
     {
       if (n < 0) nelements_p = SynthesisUtils::getenv(FTMachineNumThreadsEnvVar, n);
       if (nelements_p < 0) nelements_p = 1;
@@ -60,9 +60,9 @@ namespace casa{
       // t4DG_p=Timers::getTime();
     }
   MultiThreadedVisibilityResampler::MultiThreadedVisibilityResampler(const Bool& doublePrecision,
-							     const Int& n):
+								     const Int& n):
     resamplers_p(), doubleGriddedData_p(), singleGriddedData_p(), sumwt_p(), gridderWorklets_p(), 
-    vbsVec_p(), threadClerk_p(),threadStarted_p(False)
+    vbsVec_p(), threadClerk_p(),threadStarted_p(False), visResamplerCtor_p()
     {
       if (n < 0) nelements_p = SynthesisUtils::getenv(FTMachineNumThreadsEnvVar, n);
       if (nelements_p < 0) nelements_p = 1;
@@ -71,26 +71,29 @@ namespace casa{
       // t4DG_p=Timers::getTime();
     }
 
-  MultiThreadedVisibilityResampler& MultiThreadedVisibilityResampler::operator=(const MultiThreadedVisibilityResampler& other)
-    {
-      nelements_p = other.nelements_p;
-      doublePrecision_p=other.doublePrecision_p;
-      SynthesisUtils::SETVEC(resamplers_p,other.resamplers_p);
-      // SynthesisUtils::SETVEC(doubleGriddedData_p, other.doubleGriddedData_p);
-      // SynthesisUtils::SETVEC(singleGriddedData_p,other.singleGriddedData_p);
-      // SynthesisUtils::SETVEC(sumwt_p, other.sumwt_p);
-      doubleGriddedData_p.reference(other.doubleGriddedData_p);
-      singleGriddedData_p.reference(other.singleGriddedData_p);
-      sumwt_p.reference(other.sumwt_p);
-      SynthesisUtils::SETVEC(gridderWorklets_p, other.gridderWorklets_p);
-      SynthesisUtils::SETVEC(vbsVec_p, other.vbsVec_p);
-      threadClerk_p = other.threadClerk_p;
 
-      threadStarted_p = other.threadStarted_p;
-      // t4G_p=other.t4G_p;
-      // t4DG_p=other.t4DG_p;
-      return *this;
+  void MultiThreadedVisibilityResampler::copy(const MultiThreadedVisibilityResampler& other)
+  {
+    nelements_p = other.nelements_p;
+    doublePrecision_p=other.doublePrecision_p;
+    SynthesisUtils::SETVEC(resamplers_p,other.resamplers_p);
+    // SynthesisUtils::SETVEC(doubleGriddedData_p, other.doubleGriddedData_p);
+    // SynthesisUtils::SETVEC(singleGriddedData_p,other.singleGriddedData_p);
+    // SynthesisUtils::SETVEC(sumwt_p, other.sumwt_p);
+    doubleGriddedData_p.reference(other.doubleGriddedData_p);
+    singleGriddedData_p.reference(other.singleGriddedData_p);
+    sumwt_p.reference(other.sumwt_p);
+    SynthesisUtils::SETVEC(gridderWorklets_p, other.gridderWorklets_p);
+    SynthesisUtils::SETVEC(vbsVec_p, other.vbsVec_p);
+    threadClerk_p = other.threadClerk_p;
+    
+    threadStarted_p = other.threadStarted_p;
+    // t4G_p=other.t4G_p;
+    // t4DG_p=other.t4DG_p;
   }
+
+  MultiThreadedVisibilityResampler& MultiThreadedVisibilityResampler::operator=(const MultiThreadedVisibilityResampler& other)
+  { copy(other); return *this;}
 
   void MultiThreadedVisibilityResampler::init(const Bool& doublePrecision)
   {
@@ -125,8 +128,11 @@ namespace casa{
     Int totalMem=0;
     if (nelements() > 1)
       {
+	if (visResamplerCtor_p.null())
+	  log_p << "Internal Error: VisResampler Ctor not initialized" << LogIO::EXCEPTION;
+
 	log_p << "Allocating buffers per thread.  No. of threads = " << nelements() << endl;
-	mutexForResamplers_p = new async::Mutex;
+	//	mutexForResamplers_p = new async::Mutex;
 
 	if (doublePrecision_p)  doubleGriddedData_p.resize(nelements());
 	else                    singleGriddedData_p.resize(nelements());
@@ -138,8 +144,9 @@ namespace casa{
 	if (threadClerk_p.null()) threadClerk_p = new ThreadCoordinator<Int>(nelements());
 	for (Int i=0;i<nelements();i++)
 	  {
-	    resamplers_p[i] = new VisibilityResampler();
-	    resamplers_p[i]->setMutex(mutexForResamplers_p);
+	    //	    resamplers_p[i] = new VisibilityResampler();
+	    resamplers_p[i] = visResamplerCtor_p->clone();
+	    //	    resamplers_p[i]->setMutex(mutexForResamplers_p);
 	    gridderWorklets_p[i] = new ResamplerWorklet();
 	    if (doublePrecision_p) doubleGriddedData_p[i] = new Array<DComplex>;
 	    else	           singleGriddedData_p[i] = new Array<Complex>;
@@ -160,7 +167,8 @@ namespace casa{
 		// 			       &vbsVec_p[i], &(*singleGriddedData_p[i]),
 		// 			       &(*sumwt_p[i]));
 		  
-		(*gridderWorklets_p[i]).initThread(i, threadClerk_p, &(*resamplers_p[i]));
+		(*gridderWorklets_p[i]).initThread(i, threadClerk_p, 
+						   &(*resamplers_p[i]));
 		(*gridderWorklets_p[i]).startThread();
 	      }
 	  }
@@ -169,7 +177,8 @@ namespace casa{
     else
       {
 	resamplers_p.resize(1);
-	resamplers_p[0] = new VisibilityResampler();
+	//	resamplers_p[0] = new VisibilityResampler();
+	resamplers_p[0] = visResamplerCtor_p;
 	vbsVec_p.resize(1);
       }
     if (totalMem > 0)
@@ -182,8 +191,12 @@ namespace casa{
   {for (Int i=0;i < nelements(); i++) resamplers_p[i]->setParams(uvwScale, offset, dphase);}
 
   void MultiThreadedVisibilityResampler::setMaps(const Vector<Int>& chanMap, 
-					     const Vector<Int>& polMap)
+						 const Vector<Int>& polMap)
   {for (Int i=0;i < nelements(); i++) resamplers_p[i]->setMaps(chanMap, polMap);};
+
+  void MultiThreadedVisibilityResampler::setCFMaps(const Vector<Int>& cfMap, 
+						   const Vector<Int>& conjCFMap)
+  {for (Int i=0;i < nelements(); i++) resamplers_p[i]->setCFMaps(cfMap, conjCFMap);};
 
   void MultiThreadedVisibilityResampler::setConvFunc(const CFStore& cfs)
   {for (Int i=0;i < nelements(); i++) resamplers_p[i]->setConvFunc(cfs);};
@@ -208,7 +221,7 @@ namespace casa{
   void MultiThreadedVisibilityResampler::GatherGrids(Array<DComplex>& griddedData,
 						 Matrix<Double>& sumwt)
   {
-    LogIO log_p(LogOrigin("MultiThreadedVisibilityResampler","GatherGrids"));
+    LogIO log_p(LogOrigin("MultiThreadedVisibilityResampler(Double)","GatherGrids"));
     if (nelements() > 1)
       {
 	//	log_p << "Deleting thread clerk" << LogIO::POST;
@@ -242,12 +255,16 @@ namespace casa{
   void MultiThreadedVisibilityResampler::GatherGrids(Array<Complex>& griddedData,
 						 Matrix<Double>& sumwt)
   {
+    LogIO log_p(LogOrigin("MultiThreadedVisibilityResampler(Single)","GatherGrids"));
     if (nelements() > 1)
       {
+	log_p << "Gathering grids..." << LogIO::POST;
 	for(Int i=0;i<nelements(); i++)
 	  {
-	    griddedData += *singleGriddedData_p[i];
-	    sumwt += *sumwt_p[i];
+	    griddedData += *(singleGriddedData_p[i]);
+	    sumwt += *(sumwt_p[i]);
+	    // cerr << i << " " << max(*(singleGriddedData_p[i])) << " " << max(*(sumwt_p[i])) << endl;
+	    // cerr << max(griddedData) << " " << max(sumwt) << endl;
 	  }
       }
   }
@@ -304,6 +321,7 @@ namespace casa{
   void MultiThreadedVisibilityResampler::initializePutBuffers(const Array<Complex>& griddedData,
 							  const Matrix<Double>& sumwt)
   {
+    LogIO log_p(LogOrigin("MultiThreadedVisibilityResampler", "initializePutBuffers(Single)"));
     if (nelements() > 1)
       {
 	for(Int i=0; i<nelements(); i++)
@@ -365,7 +383,7 @@ namespace casa{
   //
   // Re-sample VisBuffer to a regular grid (griddedData) (a.k.a. de-gridding)
   // Still single threaded...
-  void MultiThreadedVisibilityResampler::GridToData(VBStore& vbs, Array<Complex>& griddedData) 
+  void MultiThreadedVisibilityResampler::GridToData(VBStore& vbs, const Array<Complex>& griddedData) 
   {
     //    LogIO log_p(LogOrigin("MultiThreadedVisibilityResampler", "GridToData"));
     scatter(vbsVec_p,vbs);

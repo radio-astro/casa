@@ -111,6 +111,7 @@
 #include <synthesis/MeasurementComponents/MSCleanImageSkyModel.h>
 #include <synthesis/MeasurementComponents/NNLSImageSkyModel.h>
 #include <synthesis/MeasurementComponents/WBCleanImageSkyModel.h>
+#include <synthesis/MeasurementComponents/MultiThreadedVisResampler.h>
 #include <synthesis/MeasurementComponents/GridBoth.h>
 #include <synthesis/MeasurementComponents/rGridFT.h>
 #include <synthesis/MeasurementComponents/MosaicFT.h>
@@ -123,6 +124,7 @@
 #include <synthesis/MeasurementComponents/VPSkyJones.h>
 #include <synthesis/MeasurementComponents/SynthesisError.h>
 #include <synthesis/MeasurementComponents/HetArrayConvFunc.h>
+#include <synthesis/MeasurementComponents/VisibilityResamplerBase.h>
 
 #include <synthesis/DataSampling/SynDataSampling.h>
 #include <synthesis/DataSampling/SDDataSampling.h>
@@ -185,6 +187,10 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <limits>
+
+#include <synthesis/MeasurementComponents/AWProjectFT.h>
+#include <synthesis/MeasurementComponents/AWProjectWBFT.h>
+#include <synthesis/MeasurementComponents/AWConvFunc.h>
 
 using namespace std;
 
@@ -2655,21 +2661,29 @@ Bool Imager::createFTMachine()
        << LogIO::POST;
     os << LogIO::NORMAL1 // gridfunction_p is too cryptic for most users.
        << "...with convolution function " << gridfunction_p << LogIO::POST;
+
+    // Make the re-gridder components.  Here, make the basic
+    // re-sampler.
+    CountedPtr<VisibilityResamplerBase> visResamplerCtor = new VisibilityResampler();
+    // Make the multi-threaded re-sampler and supply the basic
+    // re-sampler used in the worklet threads.
+    CountedPtr<VisibilityResamplerBase> mthVisResampler = new MultiThreadedVisibilityResampler(useDoublePrecGrid,
+											       visResamplerCtor);
     // Now make the FTMachine
     if(facets_p>1) {
       os << LogIO::NORMAL // Loglevel INFO
          << "Multi-facet Fourier transforms will use specified common tangent point:"
 	 << LogIO::POST;
       os << LogIO::NORMAL << tangentPoint() << LogIO::POST; // Loglevel INFO
-      ft_p = new rGridFT(cache_p / 2, tile_p, gridfunction_p, mLocation_p,
-                        phaseCenter_p, padding, False, useDoublePrecGrid);
+      ft_p = new rGridFT(cache_p / 2, tile_p, mthVisResampler, gridfunction_p, mLocation_p,
+			 phaseCenter_p, padding, False, useDoublePrecGrid);
       
     }
     else {
       os << LogIO::DEBUG1
          << "Single facet Fourier transforms will use image center as tangent points"
 	 << LogIO::POST;
-      ft_p = new rGridFT(cache_p/2, tile_p, gridfunction_p, mLocation_p,
+      ft_p = new rGridFT(cache_p/2, tile_p, mthVisResampler, gridfunction_p, mLocation_p,
 			padding, False, useDoublePrecGrid);
 
     }
@@ -2679,6 +2693,177 @@ Bool Imager::createFTMachine()
     AlwaysAssert(cft_p, AipsError);
     
   }
+  //===============================================================
+  // A-Projection FTMachine code start here
+  //===============================================================
+  else if (ftmachine_p == "wbawp"){
+
+    if (wprojPlanes_p<=1)
+      {
+	os << LogIO::NORMAL
+	   << "You are using wprojplanes=1. Doing co-planar imaging (no w-projection needed)" 
+	   << LogIO::POST;
+	os << LogIO::NORMAL << "Performing WBA-Projection" << LogIO::POST; // Loglevel PROGRESS
+      }
+    if((wprojPlanes_p>1)&&(wprojPlanes_p<64)) 
+      {
+	os << LogIO::WARN
+	   << "No. of w-planes set too low for W projection - recommend at least 128"
+	   << LogIO::POST;
+	os << LogIO::NORMAL << "Performing WBAW-Projection" << LogIO::POST; // Loglevel PROGRESS
+      }
+
+    // if(!gvp_p) 
+    //   {
+    // 	os << LogIO::NORMAL // Loglevel INFO
+    //        << "Using defaults for primary beams used in gridding" << LogIO::POST;
+    // 	gvp_p = new VPSkyJones(*ms_p, True, parAngleInc_p, squintType_p,
+    //                            skyPosThreshold_p);
+    //   }
+    useDoublePrecGrid=False;
+    cerr << "Forcing use of single precision grid for now...." << endl;
+    CountedPtr<ATerm> apertureFunction = createTelescopeATerm(*ms_p);
+    CountedPtr<ConvolutionFunction> awConvFunc = new AWConvFunc(apertureFunction);
+    CountedPtr<VisibilityResamplerBase> visResampler = new AWVisResampler();
+    CountedPtr<VisibilityResamplerBase> mthVisResampler = new MultiThreadedVisibilityResampler(useDoublePrecGrid,
+     											       visResampler);
+    CountedPtr<CFCache> cfcache = new CFCache();
+    cfcache->setCacheDir(cfCacheDirName_p.data());
+    cfcache->initCache();
+    ft_p = new AWProjectWBFT(wprojPlanes_p, cache_p/2, 
+			     cfcache, awConvFunc, mthVisResampler,//visResampler,
+			     /*True */doPointing, doPBCorr, 
+			     tile_p, paStep_p, pbLimit_p, True);
+    ((AWProjectWBFT *)ft_p)->setObservatoryLocation(mLocation_p);
+    //
+    // Explicit type casting of ft_p does not look good.  It does not
+    // pick up the setPAIncrement() method of PBWProjectFT without
+    // this
+    //
+    // os << LogIO::NORMAL << "Setting PA increment to " << parAngleInc_p.getValue("deg") << " deg" << endl;
+    ((AWProjectFT *)ft_p)->setPAIncrement(parAngleInc_p);
+
+    if (doPointing) 
+      {
+	try
+	  {
+	    // Warn users we are have temporarily disabled pointing cal
+	    //	    throw(AipsError("Pointing calibration temporarily disabled (gmoellen 06Nov20)."));
+	    //  TBD: Bring this up-to-date with new VisCal mechanisms
+	    VisSet elVS(*rvi_p);
+	    epJ = new EPJones(elVS, *ms_p);
+	    RecordDesc applyRecDesc;
+	    applyRecDesc.addField("table", TpString);
+	    applyRecDesc.addField("interp",TpString);
+	    Record applyRec(applyRecDesc);
+	    applyRec.define("table",epJTableName_p);
+	    applyRec.define("interp", "nearest");
+	    epJ->setApply(applyRec);
+	    ((AWProjectFT *)ft_p)->setEPJones(epJ);
+	  }
+	catch(AipsError& x)
+	  {
+	    //
+	    // Add some more useful info. to the message and translate
+	    // the generic AipsError exception object to a more specific
+	    // SynthesisError object.
+	    //
+	    String mesg = x.getMesg();
+	    mesg += ". Error in loading pointing offset table.";
+	    SynthesisError err(mesg);
+	    throw(err);
+	  }
+      }
+    AlwaysAssert(ft_p, AipsError);
+    cft_p = new SimpleComponentFTMachine();
+    AlwaysAssert(cft_p, AipsError);
+
+  }
+  else if (ftmachine_p == "awp")
+    {
+      if (wprojPlanes_p<=1)
+	{
+	  os << LogIO::NORMAL
+	     << "You are using wprojplanes=1. Doing co-planar imaging (no w-projection needed)" 
+	     << LogIO::POST;
+	  os << LogIO::NORMAL << "Performing A-Projection" << LogIO::POST; // Loglevel PROGRESS
+	}
+      if((wprojPlanes_p>1)&&(wprojPlanes_p<64)) 
+	{
+	  os << LogIO::WARN
+	     << "No. of w-planes set too low for W projection - recommend at least 128"
+	     << LogIO::POST;
+	  os << LogIO::NORMAL << "Performing AW-Projection"
+	     << LogIO::POST; // Loglevel PROGRESS
+	}
+      // if(!gvp_p) 
+      // 	{
+      // 	  os << LogIO::NORMAL // Loglevel INFO
+      // 	     << "Using defaults for primary beams used in gridding" << LogIO::POST;
+      // 	  gvp_p = new VPSkyJones(*ms_p, True, parAngleInc_p, squintType_p,
+      // 				 skyPosThreshold_p);
+      // 	}
+      //      CountedPtr<ATerm> evlaAperture = new EVLAAperture();
+      useDoublePrecGrid=False;
+      cerr << "Forcing use of single precision grid for now...." << endl;
+      CountedPtr<ATerm> apertureFunction = createTelescopeATerm(*ms_p);
+      CountedPtr<ConvolutionFunction> awConvFunc=new AWConvFunc(apertureFunction);
+      CountedPtr<VisibilityResamplerBase> visResampler = new AWVisResampler();
+      CountedPtr<VisibilityResamplerBase> mthVisResampler = new MultiThreadedVisibilityResampler(useDoublePrecGrid,
+												 visResampler);
+      CountedPtr<CFCache> cfcache=new CFCache();
+      cfcache->setCacheDir(cfCacheDirName_p.data());
+      cfcache->initCache();
+      ft_p = new AWProjectFT(wprojPlanes_p, cache_p/2,
+			     cfcache, awConvFunc, mthVisResampler,
+			     doPointing, doPBCorr,
+			     tile_p, pbLimit_p, True);
+      ((AWProjectFT *)ft_p)->setObservatoryLocation(mLocation_p);
+      //
+      // Explicit type casting of ft_p does not look good.  It does not
+      // pick up the setPAIncrement() method of PBWProjectFT without
+      // this
+      //
+      Quantity paInc(paStep_p,"deg");
+      // os << LogIO::NORMAL << "Setting PA increment to " 
+      // 	 << paInc.getValue("deg") << " deg" << endl;
+      ((AWProjectFT *)ft_p)->setPAIncrement(paInc);
+
+      if (doPointing) 
+	{
+	  try
+	    {
+	      VisSet elVS(*rvi_p);
+	      epJ = new EPJones(elVS, *ms_p);
+	      RecordDesc applyRecDesc;
+	      applyRecDesc.addField("table", TpString);
+	      applyRecDesc.addField("interp",TpString);
+	      Record applyRec(applyRecDesc);
+	      applyRec.define("table",epJTableName_p);
+	      applyRec.define("interp", "nearest");
+	      epJ->setApply(applyRec);
+	      ((AWProjectFT *)ft_p)->setEPJones(epJ);
+	  }
+	  catch(AipsError& x)
+	    {
+	      //
+	      // Add some more useful info. to the message and translate
+	      // the generic AipsError exception object to a more specific
+	      // SynthesisError object.
+	      //
+	      String mesg = x.getMesg();
+	      mesg += ". Error in loading pointing offset table.";
+	      SynthesisError err(mesg);
+	      throw(err);
+	    }
+	}
+      AlwaysAssert(ft_p, AipsError);
+      cft_p = new SimpleComponentFTMachine();
+      AlwaysAssert(cft_p, AipsError);
+    }
+  //===============================================================
+  // A-Projection FTMachine code end here
+  //===============================================================
   else {
     os << LogIO::NORMAL // Loglevel INFO
        << "Performing interferometric gridding..."
@@ -3987,6 +4172,20 @@ void Imager::setMosaicFTMachine(Bool useDoublePrec){
     static_cast<MosaicFT &>(*ft_p).setConvFunc(mospb);
   }
   
+}
+ATerm* Imager::createTelescopeATerm(MeasurementSet& ms)
+{
+  LogIO log_l(LogOrigin("Imager", "createTelescopeATerm"));
+  ROMSObservationColumns msoc(ms.observation());
+  String ObsName=msoc.telescopeName()(0);
+  if ((ObsName == "EVLA") || (ObsName == "VLA"))
+    return new EVLAAperture();
+  else
+    log_l << "Telescope name ('"+
+      ObsName+"') in the MS not recognized to create the telescope specific ATerm"
+	  << LogIO::EXCEPTION;
+
+  return NULL;
 }
 
 //use SubMS::calcChanFreqs to calculate spectral gridding 

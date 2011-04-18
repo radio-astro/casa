@@ -40,10 +40,12 @@
 #include <measures/Measures/MRadialVelocity.h>
 
 #include <synthesis/MeasurementComponents/CleanImageSkyModel.h>
+#include <synthesis/MeasurementComponents/EVLAAperture.h>
 #include <synthesis/MeasurementComponents/BeamSquint.h>
 #include <synthesis/MeasurementComponents/WFCleanImageSkyModel.h>
 #include <synthesis/MeasurementComponents/ClarkCleanImageSkyModel.h>
 #include <synthesis/MeasurementEquations/SkyEquation.h>
+#include <synthesis/MeasurementComponents/ATerm.h>
 #include <graphics/GenericPlotter/SimplePlotter.h>
 
 
@@ -692,6 +694,7 @@ protected:
 			 const Vector<String>& mask,
 			 const Vector<String>& fluxMask,
 			 const String complist="");
+  ATerm* createTelescopeATerm(MeasurementSet& ms);
   void destroySkyEquation();
 
   //add residual to the private vars or create residual images
