@@ -505,6 +505,8 @@ ROVisibilityIterator::getTopoFreqs(Vector<Double> & lsrFreq, Vector<Double> & se
     selFreq.assign (selFreq_p);
 }
 
+
+
 void ROVisibilityIterator::setState()
 {
   if (stateOk_p) return;
@@ -553,6 +555,13 @@ void ROVisibilityIterator::setState()
 
   stateOk_p=True;
 }
+
+const MSDerivedValues &
+ROVisibilityIterator::getMSD () const
+{
+    return msd_p;
+}
+
 
 void ROVisibilityIterator::updateSlicer()
 {
