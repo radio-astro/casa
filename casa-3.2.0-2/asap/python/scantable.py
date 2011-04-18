@@ -3183,6 +3183,12 @@ class scantable(Scantable):
             s = scantable(self._math._binaryop(self, other, "ADD"))
         elif isinstance(other, float):
             s = scantable(self._math._unaryop(self, other, "ADD", False))
+        elif isinstance(other, list) or isinstance(other, numpy.ndarray):
+            if isinstance(other[0], list) or isinstance(other[0], numpy.ndarray):
+                from asapmath import _array2dOp
+                s = _array2dOp( self.copy(), other, "ADD", False )
+            else:
+                s = scantable( self._math._arrayop( self.copy(), other, "ADD", False ) )
         else:
             raise TypeError("Other input is not a scantable or float value")
         s._add_history("operator +", varlist)
@@ -3199,6 +3205,12 @@ class scantable(Scantable):
             s = scantable(self._math._binaryop(self, other, "SUB"))
         elif isinstance(other, float):
             s = scantable(self._math._unaryop(self, other, "SUB", False))
+        elif isinstance(other, list) or isinstance(other, numpy.ndarray):
+            if isinstance(other[0], list) or isinstance(other[0], numpy.ndarray):
+                from asapmath import _array2dOp
+                s = _array2dOp( self.copy(), other, "SUB", False )
+            else:
+                s = scantable( self._math._arrayop( self.copy(), other, "SUB", False ) )
         else:
             raise TypeError("Other input is not a scantable or float value")
         s._add_history("operator -", varlist)
@@ -3215,6 +3227,12 @@ class scantable(Scantable):
             s = scantable(self._math._binaryop(self, other, "MUL"))
         elif isinstance(other, float):
             s = scantable(self._math._unaryop(self, other, "MUL", False))
+        elif isinstance(other, list) or isinstance(other, numpy.ndarray):
+            if isinstance(other[0], list) or isinstance(other[0], numpy.ndarray):
+                from asapmath import _array2dOp
+                s = _array2dOp( self.copy(), other, "MUL", False )
+            else:
+                s = scantable( self._math._arrayop( self.copy(), other, "MUL", False ) )
         else:
             raise TypeError("Other input is not a scantable or float value")
         s._add_history("operator *", varlist)
@@ -3234,6 +3252,12 @@ class scantable(Scantable):
             if other == 0.0:
                 raise ZeroDivisionError("Dividing by zero is not recommended")
             s = scantable(self._math._unaryop(self, other, "DIV", False))
+        elif isinstance(other, list) or isinstance(other, numpy.ndarray):
+            if isinstance(other[0], list) or isinstance(other[0], numpy.ndarray):
+                from asapmath import _array2dOp
+                s = _array2dOp( self.copy(), other, "DIV", False )
+            else:
+                s = scantable( self._math._arrayop( self.copy(), other, "DIV", False ) )
         else:
             raise TypeError("Other input is not a scantable or float value")
         s._add_history("operator /", varlist)

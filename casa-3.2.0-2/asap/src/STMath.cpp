@@ -491,13 +491,15 @@ CountedPtr< Scantable > STMath::unaryOperate( const CountedPtr< Scantable >& in,
   Table& tab = out->table();
   ArrayColumn<Float> specCol(tab,"SPECTRA");
   ArrayColumn<Float> tsysCol(tab,"TSYS");
+  if (mode=="DIV") val = 1.0/val ;
+  else if (mode=="SUB") val *= -1.0 ;
   for (uInt i=0; i<tab.nrow(); ++i) {
     Vector<Float> spec;
     Vector<Float> ts;
     specCol.get(i, spec);
     tsysCol.get(i, ts);
     if (mode == "MUL" || mode == "DIV") {
-      if (mode == "DIV") val = 1.0/val;
+      //if (mode == "DIV") val = 1.0/val;
       spec *= val;
       specCol.put(i, spec);
       if ( tsys ) {
@@ -505,7 +507,7 @@ CountedPtr< Scantable > STMath::unaryOperate( const CountedPtr< Scantable >& in,
         tsysCol.put(i, ts);
       }
     } else if ( mode == "ADD"  || mode == "SUB") {
-      if (mode == "SUB") val *= -1.0;
+      //if (mode == "SUB") val *= -1.0;
       spec += val;
       specCol.put(i, spec);
       if ( tsys ) {
@@ -586,13 +588,15 @@ CountedPtr< Scantable > STMath::arrayOperateChannel( const CountedPtr< Scantable
   Table& tab = out->table();
   ArrayColumn<Float> specCol(tab,"SPECTRA");
   ArrayColumn<Float> tsysCol(tab,"TSYS");
+  if (mode == "DIV") fact = (float)1.0 / fact;
+  else if (mode == "SUB") fact *= (float)-1.0 ;
   for (uInt i=0; i<tab.nrow(); ++i) {
     Vector<Float> spec;
     Vector<Float> ts;
     specCol.get(i, spec);
     tsysCol.get(i, ts);
     if (mode == "MUL" || mode == "DIV") {
-      if (mode == "DIV") fact = (float)1.0 / fact;
+      //if (mode == "DIV") fact = (float)1.0 / fact;
       spec *= fact;
       specCol.put(i, spec);
       if ( tsys ) {
@@ -600,7 +604,7 @@ CountedPtr< Scantable > STMath::arrayOperateChannel( const CountedPtr< Scantable
         tsysCol.put(i, ts);
       }
     } else if ( mode == "ADD"  || mode == "SUB") {
-      if (mode == "SUB") fact *= (float)-1.0 ;
+      //if (mode == "SUB") fact *= (float)-1.0 ;
       spec += fact;
       specCol.put(i, spec);
       if ( tsys ) {
