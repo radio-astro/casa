@@ -25,7 +25,7 @@ import asap as sd
 ###
 class sdmath_unittest_base:
     """
-    Base class for sdscale unit test
+    Base class for sdmath unit test
     """
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdmath/'
     
