@@ -778,10 +778,12 @@ namespace casa {
 	  
 	  Matrix<Complex> dat;
 	  Matrix<Bool> flagsm;
-	  if(datacolumn == "MODEL"){
+	  String dataColumn(datacolumn);
+	  dataColumn.upcase();
+	  if(dataColumn == "MODEL"){
 	    dat.reference(modelData()(iRow));
 	  }
-	  else if(datacolumn == "CORRECTED"){
+	  else if(dataColumn == "CORRECTED"){
 	    dat.reference(correctedData()(iRow));
 	  }
 	  else{
@@ -3489,17 +3491,20 @@ namespace casa {
     
     // check if datacolumn exists
     
-    if( (datacolumn == "CORRECTED" && !ms_p.tableDesc().isColumn("CORRECTED_DATA"))
-	|| (datacolumn == "MODEL" && !ms_p.tableDesc().isColumn("MODEL_DATA"))
-	|| (datacolumn == "DATA" && !ms_p.tableDesc().isColumn("DATA"))
+    String dataColumn(datacolumn);
+    dataColumn.upcase();
+
+    if( (dataColumn == "CORRECTED" && !ms_p.tableDesc().isColumn("CORRECTED_DATA"))
+	|| (dataColumn == "MODEL" && !ms_p.tableDesc().isColumn("MODEL_DATA"))
+	|| (dataColumn == "DATA" && !ms_p.tableDesc().isColumn("DATA"))
 	){
-      os << LogIO::SEVERE << "Error: column " << datacolumn << " does not exist in "
+      os << LogIO::SEVERE << "Error: column " << dataColumn << " does not exist in "
 	 << ms_p.tableName() << LogIO::POST;      
       return False;
     }
     else{
       if(verbosity_p>0){
-	os << LogIO::NORMAL << "Using column " << datacolumn << "." << LogIO::POST;      
+	os << LogIO::NORMAL << "Using column " << dataColumn << "." << LogIO::POST;      
       }
     }      
     
