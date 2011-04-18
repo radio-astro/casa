@@ -70,28 +70,28 @@ def ssoflux(vis=None,field=None,spw=None,modimage=None,fluxdensity=None,standard
        """
 
        try:
-
          casalog.origin('ssoflux')
+         casalog.post('ssoflux is no longer supported.  Use setjy.', 'SEVERE')
 
-         if ((type(vis)==str) & (os.path.exists(vis))):
-                     im.open(vis, usescratch=True)
-         else:
-                     raise Exception, 'Visibility data set not found - please verify the name'
+         ## if ((type(vis)==str) & (os.path.exists(vis))):
+         ##             im.open(vis, usescratch=True)
+         ## else:
+         ##             raise Exception, 'Visibility data set not found - please verify the name'
 
-         im.ssoflux(field=field,spw=spw,modimage=modimage,fluxdensity=fluxdensity,standard=standard)
-         im.close()
+         ## im.ssoflux(field=field,spw=spw,modimage=modimage,fluxdensity=fluxdensity,standard=standard)
+         ## im.close()
 
 
-              #write history
-         ms.open(vis,nomodify=False)
-         ms.writehistory(message='taskname = ssoflux',origin='ssoflux')
-         ms.writehistory(message='vis         = "'+str(vis)+'"',origin='ssoflux')
-         ms.writehistory(message='field       = "'+str(field)+'"',origin='ssoflux')
-         ms.writehistory(message='spw       = '+str(spw),origin='ssoflux')
-         ms.writehistory(message='modimage = '+str(modimage),origin='ssoflux')
-         ms.writehistory(message='fluxdensity = '+str(fluxdensity),origin='ssoflux')
-         ms.writehistory(message='standard    = "'+str(standard)+'"',origin='ssoflux')
-         ms.close()
+         ##      #write history
+         ## ms.open(vis,nomodify=False)
+         ## ms.writehistory(message='taskname = ssoflux',origin='ssoflux')
+         ## ms.writehistory(message='vis         = "'+str(vis)+'"',origin='ssoflux')
+         ## ms.writehistory(message='field       = "'+str(field)+'"',origin='ssoflux')
+         ## ms.writehistory(message='spw       = '+str(spw),origin='ssoflux')
+         ## ms.writehistory(message='modimage = '+str(modimage),origin='ssoflux')
+         ## ms.writehistory(message='fluxdensity = '+str(fluxdensity),origin='ssoflux')
+         ## ms.writehistory(message='standard    = "'+str(standard)+'"',origin='ssoflux')
+         ## ms.close()
 
        except Exception, instance:
               print '*** Error ***',instance
