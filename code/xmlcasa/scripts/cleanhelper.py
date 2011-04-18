@@ -2472,7 +2472,7 @@ class cleanhelper:
         tb.close()
         freqs=list(freqs)
         freqs.sort()
-        #print freqs
+        #print freqs[0], freqs[-1]
     
         if mode=='channel':
             star=0
@@ -2535,32 +2535,34 @@ class cleanhelper:
             star=str(star)+'Hz'
     
         if mode=='velocity':
-            beg1=self.convertvf(str(freqs[-1])+'Hz',frame,field,restf,veltype=veltype)
+            beg1=self.convertvf(str(freqs[0])+'Hz',frame,field,restf,veltype=veltype)
             beg1=qa.quantity(beg1)['value']
-            end0=self.convertvf(str(freqs[0])+'Hz',frame,field,restf,veltype=veltype)
+            end0=self.convertvf(str(freqs[-1])+'Hz',frame,field,restf,veltype=veltype)
             end0=qa.quantity(end0)['value']
             star=beg1
             if type(start)==str and start.strip()!='':
-                star=max(qa.quantity(start)['value'], star)
+                star=min(qa.quantity(start)['value'], star)
                 star=min(star, end0)
             
             #print beg1, star, end0
 
-            widt=end0-beg1
+            widt=-end0+beg1
             if len(freqs)>1:
                 for k in range(len(freqs)-1):
                     st=self.convertvf(str(freqs[k])+'Hz',frame,field,restf,veltype=veltype)
                     en=self.convertvf(str(freqs[k+1])+'Hz',frame,field,restf,veltype=veltype)
                     widt=min(widt, qa.quantity(en)['value']-qa.quantity(st)['value'])
+                widt=-abs(widt)
+
             if type(width)==str and width.strip()!='':
                 widt=qa.quantity(width)['value']
 
             #print widt
             if widt>0:
-                nchan=max(min(int((end0-star)/widt), nchan), 1)
+                nchan=max(min(int((beg1-star)/widt), nchan), 1)
                 #star=0
             else:
-                nchan=max(min(int((beg1-star)/widt), nchan), 1)
+                nchan=max(min(int((end0-star)/widt), nchan), 1)
                 #widt=-widt
 
             widt=str(widt)+'m/s'

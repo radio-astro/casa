@@ -111,9 +111,10 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                     if mode=='velocity':
                         st=qa.convert(ta, 'm/s')['value']
                         ed=qa.convert(wd, 'm/s')['value']
-                        st=str(st+k*ed)+'m/s'
+                        st=str(st+k*tchan*ed)+'m/s'
                         
                     #print imname, tchan, st, localwidth 
+
                     os.system('rm -rf '+imname+'*')
                     clean(vis=vis,imagename=imname,outlierfile=outlierfile,field=field,
                           spw=spw,selectdata=selectdata,timerange=timerange,uvrange=uvrange,
@@ -151,9 +152,10 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                 return    
             else:
                 casalog.post('will clean the cube in a single chunk')
-                nchan=npage
-                start=localstart
-                width=localwidth
+                #nchan=npage
+                #start=localstart
+                #width=localwidth
+                #let default channelization handles it its own way
         except:
             raise
 
