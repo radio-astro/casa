@@ -214,7 +214,7 @@ class sdscale_test1(unittest.TestCase,sdscale_unittest_base):
         scaletsys=True
         res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
-                         msg='Any error occurred during calibration')
+                         msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
     def test101(self):
@@ -223,7 +223,7 @@ class sdscale_test1(unittest.TestCase,sdscale_unittest_base):
         scaletsys=False
         res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
-                         msg='Any error occurred during calibration')
+                         msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
     def test102(self):
@@ -232,7 +232,7 @@ class sdscale_test1(unittest.TestCase,sdscale_unittest_base):
         scaletsys=True
         res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
-                         msg='Any error occurred during calibration')
+                         msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
     def test103(self):
@@ -241,7 +241,7 @@ class sdscale_test1(unittest.TestCase,sdscale_unittest_base):
         scaletsys=False
         res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
-                         msg='Any error occurred during calibration')
+                         msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
     def test104(self):
@@ -250,7 +250,7 @@ class sdscale_test1(unittest.TestCase,sdscale_unittest_base):
         scaletsys=True
         res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
-                         msg='Any error occurred during calibration')
+                         msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
     def test105(self):
@@ -259,7 +259,7 @@ class sdscale_test1(unittest.TestCase,sdscale_unittest_base):
         scaletsys=False
         res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
-                         msg='Any error occurred during calibration')
+                         msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
     def test106(self):
@@ -268,7 +268,7 @@ class sdscale_test1(unittest.TestCase,sdscale_unittest_base):
         scaletsys=True
         res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
-                         msg='Any error occurred during calibration')
+                         msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
     def test107(self):
@@ -277,7 +277,7 @@ class sdscale_test1(unittest.TestCase,sdscale_unittest_base):
         scaletsys=False
         res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
-                         msg='Any error occurred during calibration')
+                         msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
 ###
@@ -322,7 +322,7 @@ class sdscale_test2(unittest.TestCase,sdscale_unittest_base):
         scaletsys=True
         res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
-                         msg='Any error occurred during calibration')
+                         msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
     def test201(self):
@@ -331,7 +331,7 @@ class sdscale_test2(unittest.TestCase,sdscale_unittest_base):
         scaletsys=False
         res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
-                         msg='Any error occurred during calibration')
+                         msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
         
     def test202(self):
@@ -347,7 +347,7 @@ class sdscale_test2(unittest.TestCase,sdscale_unittest_base):
         scaletsys=False
         res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
-                         msg='Any error occurred during calibration')
+                         msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
     def test204(self):
@@ -356,7 +356,7 @@ class sdscale_test2(unittest.TestCase,sdscale_unittest_base):
         scaletsys=True
         res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
-                         msg='Any error occurred during calibration')
+                         msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
     def test205(self):
@@ -365,7 +365,7 @@ class sdscale_test2(unittest.TestCase,sdscale_unittest_base):
         scaletsys=False
         res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
-                         msg='Any error occurred during calibration')
+                         msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
     def test206(self):
@@ -381,7 +381,7 @@ class sdscale_test2(unittest.TestCase,sdscale_unittest_base):
         scaletsys=False
         res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
-                         msg='Any error occurred during calibration')
+                         msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
 ###
@@ -425,7 +425,7 @@ class sdscale_test3(unittest.TestCase,sdscale_unittest_base):
         scaletsys=True
         res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
-                         msg='Any error occurred during calibration')
+                         msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
     def test301(self):
@@ -434,7 +434,7 @@ class sdscale_test3(unittest.TestCase,sdscale_unittest_base):
         scaletsys=False
         res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
-                         msg='Any error occurred during calibration')
+                         msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
         
     def test302(self):
@@ -457,7 +457,7 @@ class sdscale_test3(unittest.TestCase,sdscale_unittest_base):
         scaletsys=True
         res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
-                         msg='Any error occurred during calibration')
+                         msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
     def test305(self):
@@ -466,7 +466,7 @@ class sdscale_test3(unittest.TestCase,sdscale_unittest_base):
         scaletsys=False
         res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
-                         msg='Any error occurred during calibration')
+                         msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
     def test306(self):
@@ -475,7 +475,7 @@ class sdscale_test3(unittest.TestCase,sdscale_unittest_base):
         scaletsys=True
         res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
-                         msg='Any error occurred during calibration')
+                         msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
     def test307(self):
@@ -484,7 +484,7 @@ class sdscale_test3(unittest.TestCase,sdscale_unittest_base):
         scaletsys=False
         res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
-                         msg='Any error occurred during calibration')
+                         msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
 ###
@@ -529,7 +529,7 @@ class sdscale_test4(unittest.TestCase,sdscale_unittest_base):
         scaletsys=True
         res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
-                         msg='Any error occurred during calibration')
+                         msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
     def test401(self):
@@ -538,7 +538,7 @@ class sdscale_test4(unittest.TestCase,sdscale_unittest_base):
         scaletsys=False
         res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
-                         msg='Any error occurred during calibration')
+                         msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
     def test402(self):
@@ -561,7 +561,7 @@ class sdscale_test4(unittest.TestCase,sdscale_unittest_base):
         scaletsys=True
         res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
-                         msg='Any error occurred during calibration')
+                         msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
     def test405(self):
@@ -570,7 +570,7 @@ class sdscale_test4(unittest.TestCase,sdscale_unittest_base):
         scaletsys=False
         res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
-                         msg='Any error occurred during calibration')
+                         msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
     def test406(self):
@@ -580,7 +580,7 @@ class sdscale_test4(unittest.TestCase,sdscale_unittest_base):
         res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertFalse(res)
         #self.assertEqual(res,None,
-        #                 msg='Any error occurred during calibration')
+        #                 msg='Any error occurred during task execution')
         #self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
     def test407(self):
@@ -589,7 +589,7 @@ class sdscale_test4(unittest.TestCase,sdscale_unittest_base):
         scaletsys=False
         res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
-                         msg='Any error occurred during calibration')
+                         msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
 
 
