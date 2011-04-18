@@ -70,18 +70,18 @@ class VpuContainer : public VisibilityProcessingUnit {
 
 public:
 
-    VpuContainer ();
+    VpuContainer (); // create Vpu with one input, Initial and no outputs
+    VpuContainer (const vector<VpuInput> & inputs>);
+    VpuContainer (const vector<VpuOutput> & outputs>);
+    VpuContainer (const vector<VpuInput> & inputs, const vector<VpuOutput> & outputs>);
+
     ~VpuContainer ();
 
     void add (VisibilityProcessingUnit * processor, bool doNotDestroy = False);
     void connect (VisibilityProcessingUnit * sourceProcessor,
-                  VisibilityProcessingUnit * sinkProcessor);
-    void connect (VisibilityProcessingUnit * sourceProcessor, Int sourceId,
-                  VisibilityProcessingUnit * sinkProcessor);
-    void connect (VisibilityProcessingUnit * sourceProcessor,
-                  VisibilityProcessingUnit * sinkProcessor, Int sinkId);
-    void connect (VisibilityProcessingUnit * sourceProcessor, Int sourceId,
-                 VisibilityProcessingUnit * sinkProcessor, Int sinkId);
+                  VisibilityProcessingUnit * sinkProcessor,
+                  VpuOutput & sourceOutput = NominalOutput,
+                  VpuInput & sinkInput = NominalInput);
 
 protected:
 

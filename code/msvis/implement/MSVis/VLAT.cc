@@ -828,11 +828,7 @@ VLAT::fillDatumMiscellanyAfter (VlaDatum * datum)
 {
 	datum->getVisBuffer()->setVisibilityShape (visibilityIterator_p->visibilityShape ());
 
-	datum->getVisBuffer()->setMSD (visibilityIterator_p->getMSD ());
-
 	datum->getVisBuffer()->setDataDescriptionId (visibilityIterator_p->getDataDescriptionId());
-
-	//////////////datum->getVisBuffer()->setRowIds (visibilityIterator_p->getRowIds());
 
 	datum->getVisBuffer()->setNCoh(visibilityIterator_p->numberCoh ());
 
@@ -850,6 +846,7 @@ VLAT::fillDatumMiscellanyAfter (VlaDatum * datum)
 
     fillLsrInfo (datum);
 
+	datum->getVisBuffer()->setMSD (visibilityIterator_p->getMSD ()); // ought to be last
 }
 
 void

@@ -798,7 +798,32 @@ VisBufferAsync::setModelVisCube(Complex c)
 void
 VisBufferAsync::setMSD (const MSDerivedValues & msd)
 {
-    * msd_p = msd;
+
+    msd_p->setEpoch (mEpoch_p);
+
+    if (newMS_p){
+        // set antennas
+
+        const Vector<MPosition> & antennaPositions = msd.getAntennaPositions();
+        Vector<MPosition> unsharedAntennaPositions (antennaPositions.nelements());
+
+        for (Vector<MPosition>::const_iterator ap = antennaPositions.begin();
+             ap != antennaPositions.end();
+             ap ++){
+
+            unsharedAntennaPositions = unsharedCopyPosition (* ap);
+
+        }
+
+        msd_p->setAntennaPositions (unsharedAntennaPositions);
+    }
+
+    msd_p->setObservatoryPosition (observatoryPosition_p);
+
+    msd_p->setFieldCenter (phaseCenter_p);
+
+    msd_p->setVelocityFrame (msd.getRadialVelocityType ());
+
 }
 
 
