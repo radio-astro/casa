@@ -33,6 +33,7 @@
 #include <components/ComponentModels/ComponentList.h>
 #include <components/ComponentModels/SkyComponent.h>
 #include <components/ComponentModels/ConstantSpectrum.h>
+#include <components/ComponentModels/TabularSpectrum.h>
 #include <components/ComponentModels/PointShape.h>
 #include <components/ComponentModels/DiskShape.h>
 #include <casa/BasicMath/Math.h>
@@ -83,6 +84,20 @@ Bool FluxStandard::compute (const String& sourceName, const MFrequency& mfreq,
   
   value = fluxes[0];
   error = errors[0];
+  return success;
+}
+
+Bool FluxStandard::compute(const String& sourceName, 
+                           const Vector<Vector<MFrequency> >& mfreqs,
+                           Vector<Vector<Flux<Double> > >& values,
+                           Vector<Vector<Flux<Double> > >& errors) const
+{
+  Bool success = True;
+  uInt nspws = mfreqs.nelements();
+
+  for(uInt spw = 0; spw < nspws; ++spw)
+    success &= compute(sourceName, mfreqs[spw], values[spw], errors[spw]);
+
   return success;
 }
 
@@ -186,58 +201,89 @@ Bool FluxStandard::compute(const String& sourceName,
 //                                           components were made.
 //
 Bool FluxStandard::computeCL(const String& sourceName,
-                             const Vector<MFrequency>& mfreqs,
+                             const Vector<Vector<MFrequency> >& mfreqs,
                              const MEpoch& mtime, const MDirection& position,
-                             const ConstantSpectrum& cspectrum,
-                             Vector<Flux<Double> >& values,
-                             Vector<Flux<Double> >& errors,
+                             Vector<Vector<Flux<Double> > >& values,
+                             Vector<Vector<Flux<Double> > >& errors,
                              Vector<String>& clpaths,
 			     const String& prefix) const
 {
   LogIO os(LogOrigin("FluxStandard", "computeCL"));
-  uInt nfreqs = mfreqs.nelements();
+  uInt nspws = mfreqs.nelements();
 
   if(itsFluxScale < FluxStandard::HAS_RESOLUTION_INFO){
     if(this->compute(sourceName, mfreqs, values, errors)){
       // Create a point component with the specified flux density.
       PointShape point(position);
 
-      for(uInt f = 0; f < nfreqs; ++f)
-        clpaths[f] = makeComponentList(sourceName, mfreqs[f], mtime, values[f],
-                                       point, cspectrum, prefix);
+      for(uInt spw = 0; spw < nspws; ++spw){
+        clpaths[spw] = makeComponentList(sourceName, mfreqs[spw], mtime,
+                                         values[spw], point, prefix);
+      }
     }
   }
   else if(itsFluxScale == FluxStandard::SS_JPL_BUTLER){
     FluxCalc_SS_JPL_Butler ssobj(sourceName, mtime);
     Double angdiam;
-    ComponentType::Shape cmpshape = ssobj.compute(values, errors, angdiam,
-                                                  mfreqs);
+
+    for(uInt spw = 0; spw < nspws; ++spw){
+      ComponentType::Shape cmpshape = ssobj.compute(values[spw], errors[spw], angdiam,
+                                                    mfreqs[spw]);
     
-    switch(cmpshape){
-    case ComponentType::DISK:
-      {
-        // Create a uniform disk component with the specified flux density.
-        DiskShape disk;
+      switch(cmpshape){
+      case ComponentType::DISK:
+        {
+          // Create a uniform disk component with the specified flux density.
+          DiskShape disk;
 
-        // Should we worry about tracking position?
-        disk.setRefDirection(position);
+          // Should we worry about tracking position?
+          disk.setRefDirection(position);
 
-        disk.setWidthInRad(angdiam, angdiam, 0.0);
+          disk.setWidthInRad(angdiam, angdiam, 0.0);
 
-        for(uInt f = 0; f < nfreqs; ++f)
-          clpaths[f] = makeComponentList(sourceName, mfreqs[f], mtime, values[f],
-                                         disk, cspectrum, prefix);
-        break;
+          clpaths[spw] = makeComponentList(sourceName, mfreqs[spw], mtime,
+                                           values[spw], disk, prefix);
+          break;
+        };
+      default: {
+        ostringstream oss;
+
+        oss << ComponentType::name(cmpshape) << " is not a supported component type.";
+        throw(AipsError(String(oss)));
       };
-    default: {
-      ostringstream oss;
-
-      oss << ComponentType::name(cmpshape) << " is not a supported component type.";
-      throw(AipsError(String(oss)));
-    };
-    };
+      };
+    }
   }
   return true;
+}
+
+String FluxStandard::makeComponentList(const String& sourceName,
+                                       const Vector<MFrequency>& mfreqs,
+                                       const MEpoch& mtime,
+                                       const Vector<Flux<Double> >& values,
+                                       const ComponentShape& cmp,
+				       const String& prefix)
+{
+  LogIO os(LogOrigin("FluxStandard", "makeComponentList"));
+  uInt nchans = mfreqs.nelements();
+
+  if(nchans > 1){
+    Vector<MVFrequency> freqvals(nchans);
+
+    for(uInt c = 0; c < nchans; ++c)
+      freqvals[c] = mfreqs[c].getValue();
+
+    TabularSpectrum ts(mfreqs[0], freqvals, values, mfreqs[0].getRef());
+          
+    return makeComponentList(sourceName, mfreqs[0], mtime,
+                             values[0], cmp, ts, prefix);
+  }
+  else{
+    ConstantSpectrum cspectrum;
+
+    return makeComponentList(sourceName, mfreqs[0], mtime,
+                             values[0], cmp, cspectrum, prefix);
+  }
 }
 
 String FluxStandard::makeComponentList(const String& sourceName,
@@ -245,7 +291,7 @@ String FluxStandard::makeComponentList(const String& sourceName,
                                        const MEpoch& mtime,
                                        const Flux<Double>& fluxval,
                                        const ComponentShape& cmp,
-                                       const ConstantSpectrum& cspectrum,
+                                       const SpectralModel& spectrum,
 				       const String& prefix)
 {
   LogIO os(LogOrigin("FluxStandard", "makeComponentList"));
@@ -270,13 +316,13 @@ String FluxStandard::makeComponentList(const String& sourceName,
   // If clpath already exists on disk, assume our work here is done, and don't
   // try to redo it.  It's not just laziness - it avoids collisions.
   // This happens when a continuum spw has the same center freq as a spectral
-  // spw.
+  // spw that is not being scaled by channel.
   File testExistence(clpath);
   if(!testExistence.isDirectory()){
     // Create a component list containing cmp, and force a call to its d'tor
     // using scoping rules.
     ComponentList cl;
-    SkyComponent skycomp(fluxval, cmp, cspectrum);
+    SkyComponent skycomp(fluxval, cmp, spectrum);
 	
     cl.add(skycomp);
     cl.rename(clpath, Table::New);

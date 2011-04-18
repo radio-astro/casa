@@ -57,7 +57,10 @@ TabularSpectrum::TabularSpectrum()
   DebugAssert(ok(), AipsError);
 }
 
-  TabularSpectrum::TabularSpectrum(const MFrequency& refFreq, Vector<MFrequency::MVType>& freq, Vector<Flux<Double> >& flux, const MFrequency::Ref& refFrame)
+TabularSpectrum::TabularSpectrum(const MFrequency& refFreq,
+                                 const Vector<MFrequency::MVType>& freq,
+                                 const Vector<Flux<Double> >& flux,
+                                 const MFrequency::Ref& refFrame)
   :SpectralModel(refFreq)
 {
 

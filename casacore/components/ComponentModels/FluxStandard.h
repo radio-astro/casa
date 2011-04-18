@@ -35,11 +35,11 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Forward declarations
-class String;           //#include <casa/BasicSL/String.h>
-class MDirection;       //#include <measures/Measures/MDirection.h>
-class MEpoch;           //#include <measures/Measures/MEpoch.h>
-class MFrequency;       //#include <measures/Measures/MFrequency.h>
-class ConstantSpectrum; //#include <components/ComponentModels/ConstantSpectrum.h>
+class String;        //#include <casa/BasicSL/String.h>
+class MDirection;    //#include <measures/Measures/MDirection.h>
+class MEpoch;        //#include <measures/Measures/MEpoch.h>
+class MFrequency;    //#include <measures/Measures/MFrequency.h>
+class SpectralModel; //#include <components/ComponentModels/SpectralModel.h>
 
 // <summary> 
 // FluxStandard: Compute flux densities for standard reference sources
@@ -127,6 +127,15 @@ class FluxStandard
 	       Vector<Flux<Double> >& values,
                Vector<Flux<Double> >& errors) const;
 
+  // Compute the flux densities and their uncertainties for a specified source
+  // for a set of sets of specified frequencies, i.e. mfreqs[spw] is a set of
+  // frequencies for channels in spectral window spw, and values and errors are
+  // arranged the same way.
+  Bool compute(const String& sourceName,
+               const Vector<Vector<MFrequency> >& mfreqs,
+               Vector<Vector<Flux<Double> > >& values,
+               Vector<Vector<Flux<Double> > >& errors) const;
+
   // Like compute, but it also saves a set of ComponentLists for the source to
   // disk and puts the paths (sourceName_mfreq_mtime.cl) in clnames, making it
   // suitable for resolved sources.
@@ -134,12 +143,11 @@ class FluxStandard
   // Solar System objects are typically resolved and variable!
   // The ComponentList names are formed from prefix, sourceName, the
   // frequencies, and times.
-  Bool computeCL(const String& sourceName, const Vector<MFrequency>& mfreqs,
+  Bool computeCL(const String& sourceName, const Vector<Vector<MFrequency> >& mfreqs,
                  const MEpoch& mtime, const MDirection& position,
-                 const ConstantSpectrum& cspectrum,
-                 Vector<Flux<Double> >& values, Vector<Flux<Double> >& errors,
-                 Vector<String>& clnames,
-		 const String& prefix="") const;
+                 Vector<Vector<Flux<Double> > >& values,
+                 Vector<Vector<Flux<Double> > >& errors,
+                 Vector<String>& clnames, const String& prefix="") const;
 
   // Take a component cmp and save it to a ComponentList on disk, returning the
   // pathname.  ("" if unsuccessful, sourceName_mfreqGHzDateTime.cl otherwise)
@@ -152,8 +160,17 @@ class FluxStandard
   static String makeComponentList(const String& sourceName, const MFrequency& mfreq,
                                   const MEpoch& mtime, const Flux<Double>& fluxval,
                                   const ComponentShape& cmp,
-                                  const ConstantSpectrum& cspectrum,
+                                  const SpectralModel& spectrum,
 				  const String& prefix="");
+
+  // Variation of the above that will fill a TabularSpectrum with mfreqs and
+  // values if appropriate.
+  static String makeComponentList(const String& sourceName,
+                                  const Vector<MFrequency>& mfreqs,
+                                  const MEpoch& mtime,
+                                  const Vector<Flux<Double> >& values,
+                                  const ComponentShape& cmp,
+                                  const String& prefix="");
 
   // Decode a string representation of the standard or catalog name
   static Bool matchStandard(const String& name, 
