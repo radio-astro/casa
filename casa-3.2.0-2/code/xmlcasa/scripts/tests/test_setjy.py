@@ -97,6 +97,7 @@ class setjy_test_modimage(CheckAfterImportuvfits):
             if do_scaling:
                 record['setjyran'] = setjy(vis=self.inpms, field=self.field,
                                            modimage=self.modelim,
+                                           standard='Perley-Taylor 99',
                                            async=False)
             else:
                 record['setjyran'] = setjy(vis=self.inpms, field=self.field,
@@ -134,8 +135,8 @@ class setjy_test_modimage(CheckAfterImportuvfits):
     def test_scaling(self):
         """modimage != '' and default fluxdensity -> scaling?"""
         try:
-            check_eq(self.records[True]['short'], 0.9111846, 0.025)
-            check_eq(self.records[True]['long'],  0.808885,  0.025)
+            check_eq(self.records[True]['short'], 0.911185, 0.025)
+            check_eq(self.records[True]['long'],  0.808885, 0.025)
         except Exception, e:
             print "results with scaling:", self.records[True]
             raise e
