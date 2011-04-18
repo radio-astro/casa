@@ -1478,8 +1478,8 @@ void TSMCube::accessStrided (const IPosition& start, const IPosition& end,
             }
             for (j=1; j<nrdim_p; j++) {
               // "Attempt to increment dataOffset below 0"
-              AlwaysAssert(dataIncr(j) >= 0 ||
-                           dataOffset >= static_cast<uInt>(-dataIncr(j)),
+              AlwaysAssert((dataIncr(j) >= 0) ||
+                           (dataOffset >= static_cast<uInt>(-dataIncr(j))),
                            DataManError);
               dataOffset    += dataIncr(j);
               sectionOffset += sectionIncr(j);

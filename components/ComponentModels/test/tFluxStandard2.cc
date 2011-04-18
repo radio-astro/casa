@@ -35,7 +35,6 @@
 //#include <casa/BasicMath/Math.h>
 #include <components/ComponentModels/ComponentList.h>
 #include <components/ComponentModels/TwoSidedShape.h>
-#include <components/ComponentModels/ConstantSpectrum.h>
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MFrequency.h>
@@ -91,12 +90,18 @@ int main(int argc, char* argv[])
     cout << "Found the Butler-JPL-Horizons 2010 flux density scale." << endl;
     FluxStandard fs(fluxScaleEnum);
 
-    const uInt nfreqs = 2;
-    Vector<MFrequency> freqs(nfreqs);
-    freqs[0] = MFrequency(Quantity(115.0, "GHz"));
-    freqs[1] = MFrequency(Quantity(345.0, "GHz"));
-    Vector<Flux<Double> > returnFluxes(nfreqs), returnFluxErrs(nfreqs);
-    Vector<String> tempCLs(nfreqs);
+    const uInt nspws = 2;
+    Vector<Vector<MFrequency> > spws(nspws);
+    spws[0].resize(1);
+    spws[1].resize(1);
+    spws[0][0] = MFrequency(Quantity(115.0, "GHz"));
+    spws[1][0] = MFrequency(Quantity(345.0, "GHz"));
+    Vector<Vector<Flux<Double> > > returnFluxes(nspws), returnFluxErrs(nspws);
+    returnFluxes[0].resize(1);
+    returnFluxes[1].resize(1);
+    returnFluxErrs[0].resize(1);
+    returnFluxErrs[1].resize(1);
+    Vector<String> tempCLs(nspws);
     
     const uInt nSSobjs = 10;
     Vector<String> objnames(nSSobjs);
@@ -164,9 +169,6 @@ int main(int argc, char* argv[])
     // Not tested; essentially a dummy.
     const MDirection fieldDir;
 
-    // Not yet tested; still a dummy.
-    ConstantSpectrum cspectrum;
-
     const Unit hertz("Hz");
 
     cout << "AIPSROOT: " << Aipsrc::aipsRoot() << endl;
@@ -194,17 +196,17 @@ int main(int argc, char* argv[])
       }      
     }
 
+    // Test 1 frequency per spw.
     for(uInt i = 0; i < nSSobjs; ++i){
-      if(fs.computeCL(objnames[i], freqs, mtime, fieldDir,
-		      cspectrum, returnFluxes, returnFluxErrs,
-		      tempCLs, 
+      if(fs.computeCL(objnames[i], spws, mtime, fieldDir,
+		      returnFluxes, returnFluxErrs, tempCLs, 
 		      "setjy_")){  // Unfortunately ".setjy" -> "setjy".
 	cout << objnames[i] << ':' << endl;
 	AlwaysAssert(Table::isReadable(tempCLs[0]), AipsError);
 	cout << "\tPassed component list existence test." << endl;
 
-        for(uInt freqInd = 0; freqInd < freqs.nelements(); ++freqInd){
-	  if(freqInd == 0){
+        for(uInt spwInd = 0; spwInd < spws.nelements(); ++spwInd){
+	  if(spwInd == 0){
 	    // cl should be temporary so tempCLs[0] can be deleted below
 	    ComponentList cl(tempCLs[0]);
 	    //const TwoSidedShape *csptr(cl.getShape(0));
@@ -216,18 +218,18 @@ int main(int argc, char* argv[])
 	    cout << "\tPassed angular diameter test." << endl;
 	  }
 
-	  returnFluxes[freqInd].value(fluxUsed); // Read this as fluxUsed = returnFlux.value();
+	  returnFluxes[spwInd][0].value(fluxUsed); // Read this as fluxUsed = returnFlux.value();
 	  cout << "\tcalculated flux density at "
-	       << 1.0e-9 * freqs[freqInd].get(hertz).getValue() << " GHz: "
+	       << 1.0e-9 * spws[spwInd][0].get(hertz).getValue() << " GHz: "
 	       << fluxUsed[0] << " Jy" << endl;
-	  AlwaysAssert(fabs(fluxUsed[0] / expfds[i][freqInd] - 1.0) < 0.001,
+	  AlwaysAssert(fabs(fluxUsed[0] / expfds[i][spwInd] - 1.0) < 0.001,
 	  	       AipsError);
 	  cout << "\tPassed flux density test." << endl;
-	  if(tempCLs[freqInd] != ""){
-	    if(Table::canDeleteTable(tempCLs[freqInd]))
-	      Table::deleteTable(tempCLs[freqInd]);
+	  if(tempCLs[spwInd] != ""){
+	    if(Table::canDeleteTable(tempCLs[spwInd]))
+	      Table::deleteTable(tempCLs[spwInd]);
 	    else
-	      cout << "Table::canDeleteTable(" << tempCLs[freqInd]
+	      cout << "Table::canDeleteTable(" << tempCLs[spwInd]
 		   << ") returned False" << endl;
 	  }	    
 	}
@@ -236,6 +238,57 @@ int main(int argc, char* argv[])
 	cout << "No ephemeris found for " << objnames[i] << " at MJD " << mjd << endl;
 	cout << "   ...not further tested." << endl;
       }
+    }
+
+    // Test 1 spw with 2 frequencies.
+    Vector<Vector<MFrequency> > onespw(1);
+    onespw[0].resize(2);
+    onespw[0][0] = spws[0][0];
+    onespw[0][1] = spws[1][0];
+    returnFluxes.resize(1);
+    returnFluxes[0].resize(2);
+    returnFluxErrs[0].resize(2);
+    tempCLs.resize(1);
+    if(fs.computeCL(objnames[0], onespw, mtime, fieldDir,
+                    returnFluxes, returnFluxErrs, tempCLs, 
+                    "setjy_")){  // Unfortunately ".setjy" -> "setjy".
+      cout << objnames[0] << ':' << endl;
+      AlwaysAssert(Table::isReadable(tempCLs[0]), AipsError);
+      cout << "\tPassed TabularSpectrum component list existence test." << endl;
+
+      {
+        ComponentList cl(tempCLs[0]);
+        cout << "\tcalculated major axis: "
+             << ((TwoSidedShape*)(cl.getShape(0)))->majorAxisInRad()
+             << " radians" << endl;
+        AlwaysAssert(fabs(((TwoSidedShape*)(cl.getShape(0)))->majorAxisInRad() /
+                          expads[0] - 1.0) < 0.001,
+                     AipsError);
+        cout << "\tPassed TabularSpectrum angular diameter test." << endl;
+
+        for(uInt freqInd = 0; freqInd < onespw[0].nelements(); ++freqInd){
+          // Read this as fluxUsed = returnFlux.value();
+          returnFluxes[0][freqInd].value(fluxUsed);
+
+          cout << "\tcalculated flux density at "
+               << 1.0e-9 * onespw[0][freqInd].get(hertz).getValue() << " GHz: "
+               << fluxUsed[0] << " Jy" << endl;
+          AlwaysAssert(fabs(fluxUsed[0] / expfds[0][freqInd] - 1.0) < 0.001,
+                       AipsError);
+          cout << "\tPassed TabularSpectrum flux density test." << endl;
+        }
+      }
+      if(tempCLs[0] != ""){
+        if(Table::canDeleteTable(tempCLs[0]))
+          Table::deleteTable(tempCLs[0]);
+        else
+          cout << "Table::canDeleteTable(" << tempCLs[0]
+               << ") returned False" << endl;
+      }
+    }
+    else{
+      cout << "No ephemeris found for " << objnames[0] << " at MJD " << mjd << endl;
+      cout << "   ...not further tested." << endl;
     }
   }
   catch (AipsError x) {
