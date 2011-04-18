@@ -828,7 +828,7 @@ VLAT::fillDatumMiscellanyAfter (VlaDatum * datum)
 {
 	datum->getVisBuffer()->setVisibilityShape (visibilityIterator_p->visibilityShape ());
 
-
+	datum->getVisBuffer()->setMSD (visibilityIterator_p->getMSD ());
 
 	datum->getVisBuffer()->setDataDescriptionId (visibilityIterator_p->getDataDescriptionId());
 

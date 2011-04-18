@@ -163,7 +163,6 @@ public:
 
 
 #if     defined (RUSAGE_THREAD)
-#warning "RUSAGE_THREAD defined"
         struct rusage usage;
 
         int failed = getrusage (RUSAGE_THREAD, & usage);

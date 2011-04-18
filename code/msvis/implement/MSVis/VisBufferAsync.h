@@ -100,6 +100,7 @@ protected:
     void setMeasurementSet (const MeasurementSet & ms);
     void setMeasurementSetId (Int id, bool isNew);
     void setMEpoch (const MEpoch & mEpoch);
+    void setMSD (const MSDerivedValues & msd);
     void setNAntennas (Int);
     void setNCoh (Int);
     void setReceptor0Angle (const Vector<Float> & receptor0Angle);
@@ -111,6 +112,7 @@ protected:
     void updateCoordInfo (const VisBuffer *, const Bool dirDependent=True);
 
     static MDirection unsharedCopyDirection (const MDirection & direction);
+    static void unsharedCopyDirectionVector (Vector<MDirection> & direction);
     static MEpoch unsharedCopyEpoch (const MEpoch & mEpoch);
     static MPosition unsharedCopyPosition (const MPosition & position);
 
@@ -126,6 +128,7 @@ private:
     MEpoch                         mEpoch_p;
     const MeasurementSet *         measurementSet_p;  // [use]
     mutable ROMSColumns *          msColumns_p; // [own]
+    MSDerivedValues *              msd_p; // [own]
     Int                            msID_p;
     Int                            nAntennas_p;
     Int                            nCoh_p;

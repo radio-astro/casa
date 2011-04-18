@@ -177,10 +177,10 @@ VisBufferAsync::azel(Double time) const
 {
     Vector<MDirection> azel;
 
-    MSDerivedValues msd;
-    msd.setMeasurementSet (* measurementSet_p);
+    //MSDerivedValues msd;
+    //msd.setMeasurementSet (* measurementSet_p);
 
-    ROVisibilityIteratorAsync::azelCalculate (time, msd, azel, nAntennas_p, mEpoch_p);
+    ROVisibilityIteratorAsync::azelCalculate (time, * msd_p, azel, nAntennas_p, mEpoch_p);
 
     return azel;
 }
@@ -189,11 +189,11 @@ MDirection
 VisBufferAsync::azel0(Double time) const
 {
     MDirection azel0;
-    MSDerivedValues msd;
-    msd.setMeasurementSet (* measurementSet_p);
+    //MSDerivedValues msd;
+    //msd.setMeasurementSet (* measurementSet_p);
 
 
-    ROVisibilityIteratorAsync::azel0Calculate (time, msd, azel0, mEpoch_p);
+    ROVisibilityIteratorAsync::azel0Calculate (time, * msd_p, azel0, mEpoch_p);
 
     return azel0;
 }
@@ -341,6 +341,7 @@ VisBufferAsync::construct ()
     msColumns_p = NULL;
     visIter_p = NULL;
     isFilling_p = False;
+    msd_p = new MSDerivedValues();
 
     clear ();
 }
@@ -489,10 +490,10 @@ VisBufferAsync::feed_pa(Double time) const
     }
     else{
 
-        MSDerivedValues msd;
-        msd.setMeasurementSet (* measurementSet_p);
+        //MSDerivedValues msd;
+        //msd.setMeasurementSet (* measurementSet_p);
 
-        feedpa.assign (ROVisibilityIteratorAsync::feed_paCalculate (time, msd, nAntennas_p,
+        feedpa.assign (ROVisibilityIteratorAsync::feed_paCalculate (time, * msd_p, nAntennas_p,
                                                                     mEpoch_p, receptor0Angle_p));
     }
 
@@ -521,14 +522,13 @@ VisBufferAsync::fillDirection1()
     VisBuffer::fillDirection1();
 
     // Now install unshared copies of the direction objects
-    //
-    // 3/29/11 Don't try to break the sharing and see if the new approach to
-    //         passing the VB one-way fixes the sharing problem this addresses
 
-    ////transform (direction1_p.begin(), direction1_p.end(), direction1_p.begin(), unsharedCopyDirection);
+    unsharedCopyDirectionVector (direction1_p);
 
     return direction1_p;
 }
+
+
 
 Vector<MDirection>&
 VisBufferAsync::fillDirection2()
@@ -538,11 +538,8 @@ VisBufferAsync::fillDirection2()
     VisBuffer::fillDirection2();
 
     // Now install unshared copies of the direction objects
-    //
-    // 3/29/11 Don't try to break the sharing and see if the new approach to
-    //         passing the VB one-way fixes the sharing problem this addresses
 
-    ////transform (direction2_p.begin(), direction2_p.end(), direction2_p.begin(), unsharedCopyDirection);
+    unsharedCopyDirectionVector (direction2_p);
 
     return direction2 ();
 }
@@ -565,10 +562,10 @@ VisBufferAsync::fillPhaseCenter()
 Double
 VisBufferAsync::hourang(Double time) const
 {
-    MSDerivedValues msd;
-    msd.setMeasurementSet (* measurementSet_p);
+    //MSDerivedValues msd;
+    //msd.setMeasurementSet (* measurementSet_p);
 
-    Double hourang = ROVisibilityIteratorAsync::hourangCalculate (time, msd, mEpoch_p);
+    Double hourang = ROVisibilityIteratorAsync::hourangCalculate (time, * msd_p, mEpoch_p);
 
     return hourang;
 }
@@ -679,10 +676,10 @@ VisBufferAsync::numberCoh () const
 Vector<Float>
 VisBufferAsync::parang(Double time) const
 {
-    MSDerivedValues msd;
-    msd.setMeasurementSet (* measurementSet_p);
+    //MSDerivedValues msd;
+    //msd.setMeasurementSet (* measurementSet_p);
 
-    Vector<Float> parang = ROVisibilityIteratorAsync::parangCalculate (time, msd, nAntennas_p, mEpoch_p);
+    Vector<Float> parang = ROVisibilityIteratorAsync::parangCalculate (time, * msd_p, nAntennas_p, mEpoch_p);
 
     return parang;
 }
@@ -690,10 +687,10 @@ VisBufferAsync::parang(Double time) const
 Float
 VisBufferAsync::parang0(Double time) const
 {
-    MSDerivedValues msd;
-    msd.setMeasurementSet (* measurementSet_p);
+    //MSDerivedValues msd;
+    //msd.setMeasurementSet (* measurementSet_p);
 
-    Float parang0 = ROVisibilityIteratorAsync::parang0Calculate (time, msd, mEpoch_p);
+    Float parang0 = ROVisibilityIteratorAsync::parang0Calculate (time, * msd_p, mEpoch_p);
 
     return parang0;
 }
@@ -798,6 +795,12 @@ VisBufferAsync::setModelVisCube(Complex c)
     modelVisCubeOK_p=True;
 }
 
+void
+VisBufferAsync::setMSD (const MSDerivedValues & msd)
+{
+    * msd_p = msd;
+}
+
 
 void
 VisBufferAsync::setNAntennas (Int nAntennas)
@@ -870,6 +873,51 @@ MDirection
 VisBufferAsync::unsharedCopyDirection (const MDirection & direction)
 {
     return asyncio::unsharedCopyMeasure (direction, & MeasureHolder::asMDirection);
+}
+
+void
+VisBufferAsync::unsharedCopyDirectionVector (Vector<MDirection> & direction)
+{
+    // The MDirection object consists of the actual direction a frame of reference
+    // object.  The direction component follows copy semnatics while the frame of
+    // reference uses a counter pointer and is shared across multiple MDirections.
+    // This causes problems now that values are being shared across threads.  Modify
+    // the direction vector so that the frame of reference object is only shared
+    // within this vector.  N.B., this could cause a problem if there is comparison
+    // between the reference frames of the two direction.  Each element doesn't get
+    // its own copy because the unsharing operation is klugy and somewhat compute
+    // intensive.
+
+    int nElements = direction.shape () [0];
+
+    if (nElements > 0){
+
+        // Take the first reference frame object, make an unshared copy and provide it to
+        // any of the other direction components which use the same reference.  If a
+        // direction uses a different reference give it its own unshared copy.
+
+        MeasRef<MDirection> uncleanRef = direction[0].getRef ();
+        MDirection cleanDirection = unsharedCopyDirection (direction[0]);
+        MeasRef<MDirection> cleanRef = cleanDirection.getRef ();
+            // Since cleanRef uses a counted pointer to an underlying object
+            // the above construction does not cause a dangling pointer problem.
+
+        for (int i = 0; i < nElements; i++){
+
+            // If this element of the direction uses the same reference as the
+            // original, then just install a reference to our "clean" reference.
+            // N.B., the == comparasion just compares the pointer to the underlying
+            // reference frame object!
+
+            if (uncleanRef == direction[i].getRef()){
+
+                direction[i].set (cleanRef);
+            }
+            else {
+                direction[i] = unsharedCopyDirection (direction[i]);
+            }
+        }
+    }
 }
 
 MEpoch

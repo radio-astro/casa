@@ -637,6 +637,8 @@ protected:
 
   vector<const MeasurementSet *> getMeasurementSets () const;
 
+  const MSDerivedValues & getMSD () const;
+
   // update the DATA slicer
   virtual void updateSlicer();
   // attach the column objects to the currently selected table
