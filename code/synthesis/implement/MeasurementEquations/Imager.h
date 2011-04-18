@@ -479,14 +479,6 @@ class Imager
 	     const Vector<Double>& fluxDensity, const String& standard, 
 	     const Bool chanDep=False);
 
-  // Temporary copy of setjy() while flux calibration with Solar System objects
-  // is being tested.
-  Bool ssoflux(const Vector<Int>& fieldid, 
-               const Vector<Int>& spectralwindowid, 
-               const String& fieldnames, const String& spwstring, 
-               const String& model,
-               const Vector<Double>& fluxDensity, const String& standard);
-
   // Make an empty image
   Bool make(const String& model);
 
