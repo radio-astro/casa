@@ -598,7 +598,7 @@ class test_selections_alma(test_base):
         '''test scanintent selection'''
         # flag POINTING CALIBRATION scans 
         # (CALIBRATE_POINTING_.. from STATE table's OBS_MODE)
-        flagdata(vis=self.vis, scanintent='CAL*POINT*')
+        flagdata(vis=self.vis, intent='CAL*POINT*')
         test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 377280, 26200)
         
 

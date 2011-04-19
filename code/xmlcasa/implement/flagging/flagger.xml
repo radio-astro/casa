@@ -136,8 +136,8 @@ All data selection parameters follow the ms-selection syntax.
      <value>""</value>
      </param>
 
-     <param type="string" name="scanintent">
-     <description>Scan intent : example : '*CAL*, *BAND*' </description>
+     <param type="string" name="intent">
+     <description>Observing intent : example : '*CAL*, *BAND*' </description>
      <value>""</value>
      </param>
 <!-- Selection parameters : end -->
@@ -206,8 +206,8 @@ Note that fg.setmanualflags() can be called multiple times before a call to fg.r
      <value>""</value>
      </param>
 
-     <param type="string" name="scanintent">
-     <description>Scan intent : example : '*CAL*, *BAND*' </description>
+     <param type="string" name="intent">
+     <description>Observing intent : example : '*CAL*, *BAND*' </description>
      <value>""</value>
      </param>
 <!-- Selection parameters : end -->
@@ -429,8 +429,8 @@ Defines data selection parameters.
      <value>""</value>
      </param>
 
-     <param type="string" name="scanintent">
-     <description>Scan intent : example : '*CAL*, *BAND*' </description>
+     <param type="string" name="intent">
+     <description>Observing intent : example : '*CAL*, *BAND*' </description>
      <value>""</value>
      </param>
 
@@ -505,8 +505,8 @@ Defines data selection parameters.
      <value>""</value>
      </param>
 
-     <param type="string" name="scanintent">
-     <description>Scan intent : example : '*CAL*, *BAND*' </description>
+     <param type="string" name="intent">
+     <description>Observing intent : example : '*CAL*, *BAND*' </description>
      <value>""</value>
      </param>
 
@@ -587,8 +587,8 @@ Flag summary.
      <value>""</value>
      </param>
 
-     <param type="string" name="scanintent">
-     <description>Scan intent : example : '*CAL*, *BAND*' </description>
+     <param type="string" name="intent">
+     <description>Observing intent : example : '*CAL*, *BAND*' </description>
      <value>""</value>
      </param>
 
@@ -659,8 +659,8 @@ Flag query
      <value>""</value>
      </param>
 
-     <param type="string" name="scanintent">
-     <description>Scan intent : example : '*CAL*, *BAND*' </description>
+     <param type="string" name="intent">
+     <description>Observing intent : example : '*CAL*, *BAND*' </description>
      <value>""</value>
      </param>
 
@@ -763,8 +763,8 @@ Extend flags along a specific direction.
      <value>""</value>
      </param>
 
-     <param type="string" name="scanintent">
-     <description>Scan intent : example : '*CAL*, *BAND*' </description>
+     <param type="string" name="intent">
+     <description>Observing intent : example : '*CAL*, *BAND*' </description>
      <value>""</value>
      </param>
 

@@ -95,8 +95,8 @@
                         <value type="string"></value>
                 </param>
 
-                <param type="any" name="scanintent" subparam="true">
-                        <description>Select data based on scan intent: \'\'==>all</description>
+                <param type="any" name="intent" subparam="true">
+                        <description>Select data based on observing intent: \'\'==>all</description>
                         <any type="variant" limittypes="string stringArray"/>
                         <value type="string"></value>
                 </param>
@@ -331,7 +331,7 @@
                                         <default param="timerange"><value type="string"></value></default>
                                         <default param="correlation"><value type="string"></value></default>
                                         <default param="scan"><value type="string"></value></default>
-                                        <default param="scanintent"><value type="string"></value></default>
+                                        <default param="intent"><value type="string"></value></default>
                                         <default param="feed"><value type="string"></value></default>
                                         <default param="array"><value type="string"></value></default>
                                         <default param="uvrange"><value type="string"></value></default>
@@ -550,8 +550,8 @@
                 timerange='09:44:00+00:13:00' #data 13 minutes after time
         scan -- Select data based on scan number
                 default: '' (all); example: scan='&gt;3'
-        scanintent -- Select data based on scan intent
-                default: '' (all); example: scanintent='*CAL*,*BAND*'
+        intent -- Select data based on observing intent
+                default: '' (all); example: intent='*CAL*,*BAND*'
         feed -- Selection based on the feed - NOT IMPLEMENTED YET
         array -- Selection based on the antenna array
 
