@@ -911,13 +911,20 @@ PlotLogMessage* PlotMSIndexer::locateRange(const Vector<PlotRegion>& regions,
 	    thisy > regions[j].bottom() && thisy < regions[j].top()) {
 	  nFound++;
 	  (m ? ++nFoundMasked : ++nFoundUnmasked);
-	  reportMeta(thisx, thisy, m, ss);
-	  ss << '\n';
+	  // only report first 1000, so logger isn't overloaded
+	  if (nFound<1001) {
+	    reportMeta(thisx, thisy, m, ss);
+	    ss << '\n';
+	  }
 	  break;
 	}
       }
     }
   }    
+
+  if (nFound>1000)
+    ss << "NB: Only first 1000 points reported above." << '\n';
+
   ss << "Found " << nFound << " points (";
   if (showUnflagged) ss << nFoundUnmasked << " unflagged" << (showFlagged ? ", " : "");
   if (showFlagged) ss << nFoundMasked << " flagged";
