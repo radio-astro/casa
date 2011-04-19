@@ -134,7 +134,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // member variable pbLimit_p).
     //
     inline virtual Float pbFunc(const Float& pbPixValue, const Float& pbLimit) 
-    {return  sqrt(pbPixValue);};
+    {Float tt=sqrt(pbPixValue);return  (abs(tt) >= pbLimit)?tt:1.0;};
 
     virtual void finalizeToSky();
     virtual void initializeToSky(ImageInterface<Complex>& image,  Matrix<Float>& weight,
