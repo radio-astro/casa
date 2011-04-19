@@ -64,7 +64,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			       Float pbLimit,
 			       Bool usezero)
     : AWProjectFT(nWPlanes,icachesize,cfcache,cf,visResampler,applyPointingOffset,doPBCorr,itilesize,pbLimit,usezero),
-      avgPBReady_p(False),resetPBs_p(True),wtImageFTDone(False),fieldIds_p(0)
+      avgPBReady_p(False),resetPBs_p(True),wtImageFTDone_p(False),fieldIds_p(0)
   {
     //
     // Set the function pointer for FORTRAN call for GCF services.  
@@ -131,6 +131,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	usezero_p       =   other.usezero_p;
 	doPBCorrection  =   other.doPBCorrection;
 	maxConvSupport  =   other.maxConvSupport;
+	avgPBReady_p    =   other.avgPBReady_p;
+	resetPBs_p      =   other.resetPBs_p;
+	wtImageFTDone_p =   other.wtImageFTDone_p;
 	//	visResampler_p=other.visResampler_p->clone();
     };
     return *this;
@@ -287,7 +290,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				    const Bool& doFFTNorm)
   {
     LogIO log_l(LogOrigin("AWProjectWBFT", "ftWeightImage"));
-    if (wtImageFTDone) return;
+    if (wtImageFTDone_p) return;
 
     Bool doSumWtNorm=True;
     if (sumWt.shape().nelements()==0) doSumWtNorm=False;
@@ -299,7 +302,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Float sumWtVal=1.0;
 
     LatticeFFT::cfft2d(wtImage,False);
-    wtImageFTDone=True;
+    wtImageFTDone_p=True;
 
     Int sizeX=wtImage.shape()(0), sizeY=wtImage.shape()(1);
 
@@ -431,7 +434,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // convertArray(cfWts,sumCFWeight);
     // ftWeightImage(wtImage, cfWts, doFFTNorm);
     ftWeightImage(wtImage, sumWt, doFFTNorm);
-
     sensitivityImage.resize(griddedWeights.shape()); 
     sensitivityImage.setCoordinateInfo(griddedWeights.coordinates());
 
@@ -478,10 +480,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // wtLat.getSlice(polPlane0C, slicePol0);
     // wtLat.getSlice(polPlane1C, slicePol1);
 
-    // // // abs(Array<Complex>&) also returns Array<Complex> instead of
-    // // // Array<Float>.  Hence the real(abs(...)).
-    // // //    polPlane0F = sqrt(real(abs(polPlane0C*polPlane1C)));
-    // // //    polPlane0F = (real(abs(polPlane0C)));
+    // // // // abs(Array<Complex>&) also returns Array<Complex> instead of
+    // // // // Array<Float>.  Hence the real(abs(...)).
+    // // // //    polPlane0F = sqrt(real(abs(polPlane0C*polPlane1C)));
+    // // // //    polPlane0F = (real(abs(polPlane0C)));
     // polPlane0F = real(polPlane0C);
     // polPlane1F = polPlane0F;
 
