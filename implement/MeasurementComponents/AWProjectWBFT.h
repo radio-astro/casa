@@ -166,7 +166,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				    const VisBuffer& vb, Bool& dopsf);
     //    virtual void resampleGridToData(VBStore& vbs, const VisBuffer& vb);
 
-    Bool avgPBReady_p,resetPBs_p, wtImageFTDone;
+    Bool avgPBReady_p,resetPBs_p, wtImageFTDone_p;
 
   private:
     Vector<Int> fieldIds_p;
