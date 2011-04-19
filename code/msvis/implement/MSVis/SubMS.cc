@@ -907,6 +907,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
   if(!copyFeed())         // Feed table writing has to be after antenna 
     return false;
 
+  success &= copyFlag_Cmd();
+
   success &= copyObservation();
   timer.mark();
   success &= copyPointing();
@@ -6891,6 +6893,75 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
     return True;
   }
   
+  Bool SubMS::copyFlag_Cmd(){
+    // Like POINTING, FLAG_CMD is supposed to exist but is allowed not to.
+    if(Table::isReadable(mssel_p.flagCmdTableName())){
+      // An attempt to select from FLAG_CMD by timerange.  Fails because the
+      // TEN refers to the main table, not FLAG_CMD.
+      // TableExprNode condition;
+
+      // if(timeRange_p != "" &&
+      // 	 msTimeGramParseCommand(&ms_p, timeRange_p, condition) == 0){
+      // 	const TableExprNode *timeNode = 0x0;
+	  
+      // 	timeNode = msTimeGramParseNode();
+      // 	if(timeNode && !timeNode->isNull())
+      // 	  condition = *timeNode;
+      // }
+
+      const MSFlagCmd& oldFlag_Cmd = mssel_p.flagCmd();
+
+      if(oldFlag_Cmd.nrow() > 0){
+	// Could be declared as Table&
+        MSFlagCmd& newFlag_Cmd = msOut_p.flagCmd();
+
+        LogIO os(LogOrigin("SubMS", "copyFlag_Cmd()"));
+
+        // Add optional columns if present in oldFlag_Cmd.
+        uInt nAddedCols = addOptionalColumns(oldFlag_Cmd, newFlag_Cmd, true);
+        os << LogIO::DEBUG1 << "FLAG_CMD has " << nAddedCols
+           << " optional columns." << LogIO::POST;
+	
+        const ROMSFlagCmdColumns oldFCs(oldFlag_Cmd);
+        MSFlagCmdColumns newFCs(newFlag_Cmd);
+        newFCs.setEpochRef(MEpoch::castType(oldFCs.timeMeas().getMeasRef().getType()));
+	
+        //if(!antennaSel_p && timeRange_p == ""){
+          TableCopy::copyRows(newFlag_Cmd, oldFlag_Cmd);
+        // }
+        // else{
+        //   const ROScalarColumn<Double>& time = oldFCs.time();
+
+	//   uInt nTRanges = selTimeRanges_p.ncolumn();
+
+	//   uInt outRow = 0;
+        //   for (uInt inRow = 0; inRow < antIds.nrow(); ++inRow){
+        //     Int newAntInd = antIds(inRow);
+	//     if(antennaSel_p)
+	//       newAntInd = antNewIndex_p[newAntInd];
+	//     Double t = time(inRow);
+	    
+        //     if(newAntInd > -1){
+	//       Bool matchT = false;
+	//       for(uInt tr = 0; tr < nTRanges; ++tr){
+	// 	if(t >= selTimeRanges_p(0, tr) && t <= selTimeRanges_p(1, tr)){
+	// 	  matchT = true;
+	// 	  break;
+	// 	}
+	//       }
+	      
+	//       if(matchT){
+	// 	TableCopy::copyRows(newFlag_Cmd, oldFlag_Cmd, outRow, inRow, 1, false);
+	// 	outants.put(outRow, newAntInd);
+	// 	++outRow;
+	//       }
+        //     }
+        //   }
+	//   newFlag_Cmd.flush();
+      }
+    }
+    return True;
+  }
   
   Bool SubMS::copySource(){
     //Source is an optional table, so it may not exist
