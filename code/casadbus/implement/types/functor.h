@@ -28,6 +28,7 @@
 
 #ifndef __casadbus_functor_h__
 #define __casadbus_functor_h__
+#include <casadbus/types/ptr.h>
 #include <string>
 #include <stdexcept>
 
@@ -89,96 +90,110 @@ namespace casa {
 		invocation_exception( ) : std::runtime_error( "functor/argument mismatch" ) { }
 	};
 
+	class f_ {
+	    public:
+		f_( ) { }
+		virtual void invoke( args *a ) = 0;
+		virtual ~f_( ) { }
+	};
 
 	class f {
 	    public:
-		f( ) { }
-		virtual void operator()( args *a ) = 0;
-		virtual void operator()( args &a ) = 0;
+		f( const f &other ) : ptr(other.ptr) { }
+		void operator()( args *a ) { ptr->invoke( a ); }
+		void operator()( args &a ) { ptr->invoke( &a ); }
+		std::string state( ) const { return ptr.state( ); }
 		virtual ~f( ) { }
+	    private:
+		f( );
+		f( f_ *p ) : ptr(p) { }
+		void operator=(const f &);
+		memory::cptr<f_> ptr;
+
+		template <class C> friend f make( C *o, void (C::*i)( ) );
+		template <class C, class P1> friend f make( C *o, void (C::*i)(P1) );
+		template <class C, class P1, class P2> friend f make( C *o, void (C::*i)(P1,P2) );
+		template <class C, class P1, class P2, class P3> friend f make( C *o, void (C::*i)(P1,P2,P3) );
+		template <class C, class P1, class P2, class P3, class P4> friend f make( C *o, void (C::*i)(P1,P2,P3,P4) );
 	};
 
-	template <class C> class f00 : public f {
+	
+	template <class C> class f00 : public f_ {
 	    public:
 		f00( C *o, void (C::*i)( ) ) : obj(o), impl(i) { }
-		void operator( )( ) { (*obj.*impl)( ); }
-		void operator( )( args *ga ) { (*this)( ); }
-		void operator( )( args &a ) { (*this)(&a); }
+		void invoke( ) { (*obj.*impl)( ); }
+		void invoke( args *ga ) { (*this)( ); }
 	    private:
 		C *obj;
 		void (C::*impl)( );
 	};
 
-	template <class C, class P1> class f01 : public f {
+	template <class C, class P1> class f01 : public f_ {
 	    public:
 		f01( C *o, void (C::*i)(P1) ) : obj(o), impl(i) { }
-		void operator( )( P1 a1 ) { (*obj.*impl)(a1); }
-		void operator( )( args *ga ) {
+		void invoke( P1 a1 ) { (*obj.*impl)(a1); }
+		void invoke( args *ga ) {
 		    args01<P1> *a = dynamic_cast<args01<P1>*>(ga);
 		    if ( a ) { (*this)(a->one()); }
 		    else { throw invocation_exception( ); }
 		}
-		void operator()( args &a ) { (*this)(&a); }
 	    private:
 		C *obj;
 		void (C::*impl)(P1);
 	};
 
-	template <class C, class P1, class P2> class f02 : public f {
+	template <class C, class P1, class P2> class f02 : public f_ {
 	    public:
 		f02( C *o, void (C::*i)(P1,P2) ) : obj(o), impl(i) { }
-		void operator( )( P1 a1, P2 a2 ) { (*obj.*impl)(a1,a2); }
-		void operator( )( args *ga ) {
+		void invoke( P1 a1, P2 a2 ) { (*obj.*impl)(a1,a2); }
+		void invoke( args *ga ) {
 		    args02<P1,P2> *a = dynamic_cast<args02<P1,P2>*>(ga);
-		    if ( a ) { (*this)(a->one(),a->two()); }
+		    if ( a ) { invoke(a->one(),a->two()); }
 		    else { throw invocation_exception( ); }
 		}
-		void operator()( args &a ) { (*this)(&a); }
 	    private:
 		C *obj;
 		void (C::*impl)(P1,P2);
 	};
 
-	template <class C, class P1, class P2, class P3> class f03 : public f {
+	template <class C, class P1, class P2, class P3> class f03 : public f_ {
 	    public:
 		f03( C *o, void (C::*i)(P1,P2,P3) ) : obj(o), impl(i) { }
-		void operator( )( P1 a1, P2 a2, P3 a3 ) { (*obj.*impl)(a1,a2,a3); }
-		void operator( )( args *ga ) {
+		void invoke( P1 a1, P2 a2, P3 a3 ) { (*obj.*impl)(a1,a2,a3); }
+		void invoke( args *ga ) {
 		    args03<P1,P2,P3> *a = dynamic_cast<args03<P1,P2,P3>*>(ga);
 		    if ( a ) { (*this)(a->one(),a->two(),a->three()); }
 		    else { throw invocation_exception( ); }
 		}
-		void operator()( args &a ) { (*this)(&a); }
 	    private:
 		C *obj;
 		void (C::*impl)(P1,P2,P3);
 	};
 
-	template <class C, class P1, class P2, class P3, class P4> class f04 : public f {
+	template <class C, class P1, class P2, class P3, class P4> class f04 : public f_ {
 	    public:
 		f04( C *o, void (C::*i)(P1,P2,P3,P4) ) : obj(o), impl(i) { }
-		void operator( )( P1 a1, P2 a2, P3 a3, P4 a4 ) { (*obj.*impl)(a1,a2,a3,a4); }
-		void operator( )( args *ga ) {
+		void invoke( P1 a1, P2 a2, P3 a3, P4 a4 ) { (*obj.*impl)(a1,a2,a3,a4); }
+		void invoke( args *ga ) {
 		    args04<P1,P2,P3,P4> *a = dynamic_cast<args04<P1,P2,P3,P4>*>(ga);
 		    if ( a ) { (*this)(a->one(),a->two(),a->three(),a->four()); }
 		    else { throw invocation_exception( ); }
 		}
-		void operator()( args &a ) { (*this)(&a); }
 	    private:
 		C *obj;
 		void (C::*impl)(P1,P2,P3,P4);
 	};
 
-	template <class C> functor::f *make( C *o, void (C::*i)( ) )
-		{ return new functor::f00<C>( o, i ); }
-	template <class C, class P1> functor::f *make( C *o, void (C::*i)(P1) )
-		{ return new functor::f01<C,P1>( o, i ); }
-	template <class C, class P1, class P2> functor::f *make( C *o, void (C::*i)(P1,P2) )
-		{ return new functor::f02<C,P1,P2>( o, i ); }
-	template <class C, class P1, class P2, class P3> functor::f *make( C *o, void (C::*i)(P1,P2,P3) )
-		{ return new functor::f03<C,P1,P2,P3>( o, i ); }
-	template <class C, class P1, class P2, class P3, class P4> functor::f *make( C *o, void (C::*i)(P1,P2,P3,P4) )
-		{ return new functor::f04<C,P1,P2,P3,P4>( o, i ); }
+	template <class C> f make( C *o, void (C::*i)( ) )
+		{ return f(new functor::f00<C>( o, i )); }
+	template <class C, class P1> f make( C *o, void (C::*i)(P1) )
+		{ return f(new functor::f01<C,P1>( o, i )); }
+	template <class C, class P1, class P2> f make( C *o, void (C::*i)(P1,P2) )
+		{ return f(new functor::f02<C,P1,P2>( o, i )); }
+	template <class C, class P1, class P2, class P3> f make( C *o, void (C::*i)(P1,P2,P3) )
+		{ return f(new functor::f03<C,P1,P2,P3>( o, i )); }
+	template <class C, class P1, class P2, class P3, class P4> f make( C *o, void (C::*i)(P1,P2,P3,P4) )
+		{ return f(new functor::f04<C,P1,P2,P3,P4>( o, i )); }
 
     }
 }
