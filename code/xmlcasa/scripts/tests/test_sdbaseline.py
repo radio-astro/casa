@@ -84,7 +84,6 @@ class sdbaseline_basictest(unittest.TestCase):
         self._compareStats(outfile,reference)
         #self._compareStats(outfile,self.strefroot+tid)
 
-
     def testbl02(self):
         """Test 2: maskmode = 'list' and masklist=[] (all channels)"""
         tid = "02"
@@ -625,5 +624,110 @@ class sdbaseline_masktest(unittest.TestCase):
                                 msg="'%s' of spectrum %s are different." % (stat, str(0)))
 
 
+class sdbaseline_functest(unittest.TestCase):
+    """
+    Unit tests for task sdbaseline. No interactive testing.
+
+    The list of tests:
+    testCSpline01  --- test cubic spline fitting with maskmode = 'list'
+    testCSpline02  --- test cubic spline fitting with maskmode = 'auto'
+    testSinusoid01 --- test sinusoidal fitting with maskmode = 'list'
+    testSinusoid02 --- test sinusoidal fitting with maskmode = 'auto'
+
+    Note: (1) the rms noise of input data is 1.0.
+          (2) the max_rms value comes from +3sigma level of Chi-square
+              distribution with freedom of (2048-38) for cspline, (2048-27)
+              for sinusoid, respectively.
+
+    created 19/04/2011 by Wataru Kawasaki
+    """
+    # Data path of input/output
+    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdbaseline/'
+    # Input and output names
+    sdfile_cspline  = 'Artificial_CubicSpline.asap'
+    sdfile_sinusoid = 'Artificial_Sinusoid.asap'
+    blparamfile_suffix = '_blparam.txt'
+    outroot = 'sdbaseline_test'
+    tid = None
+
+    def setUp(self):
+        if os.path.exists(self.sdfile_cspline):
+            shutil.rmtree(self.sdfile_cspline)
+        shutil.copytree(self.datapath+self.sdfile_cspline, self.sdfile_cspline)
+        if os.path.exists(self.sdfile_sinusoid):
+            shutil.rmtree(self.sdfile_sinusoid)
+        shutil.copytree(self.datapath+self.sdfile_sinusoid, self.sdfile_sinusoid)
+
+        default(sdbaseline)
+
+    def tearDown(self):
+        if os.path.exists(self.sdfile_cspline):
+            shutil.rmtree(self.sdfile_cspline)
+        if os.path.exists(self.sdfile_sinusoid):
+            shutil.rmtree(self.sdfile_sinusoid)
+
+    def testCSpline01(self):
+        """Test CSpline01: Cubic spline fitting with maskmode = 'list'"""
+        self.tid = "CSpline01"
+        sdfile = self.sdfile_cspline
+        mode = "list"
+        outfile = self.outroot+self.tid+".asap"
+        blparamfile = outfile+self.blparamfile_suffix
+        
+        result = sdbaseline(sdfile=sdfile,maskmode=mode,outfile=outfile,blfunc='cspline',npiece=35)
+        self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
+        self.checkRms(blparamfile, 1.038696)   #the actual rms should be 1.024480 though
+
+    def testCSpline02(self):
+        """Test CSpline02: Cubic spline fitting with maskmode = 'auto'"""
+        self.tid = "CSpline02"
+        sdfile = self.sdfile_cspline
+        mode = "auto"
+        outfile = self.outroot+self.tid+".asap"
+        blparamfile = outfile+self.blparamfile_suffix
+        
+        result = sdbaseline(sdfile=sdfile,maskmode=mode,outfile=outfile,blfunc='cspline',npiece=35)
+        self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
+        self.checkRms(blparamfile, 1.038696)   #the actual rms should be 1.024480 though
+
+    def testSinusoid01(self):
+        """Test Sinusoid01: Sinusoidal fitting with maskmode = 'list'"""
+        self.tid = "Sinusoid01"
+        sdfile = self.sdfile_sinusoid
+        mode = "list"
+        outfile = self.outroot+self.tid+".asap"
+        blparamfile = outfile+self.blparamfile_suffix
+        nwave = [0,1,2,3,4,6,8,10,12,14,16,18,20,22]
+        
+        result = sdbaseline(sdfile=sdfile,maskmode=mode,outfile=outfile,blfunc='sinusoid',nwave=nwave,maxwavelength=2.0)
+        self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
+        self.checkRms(blparamfile, 1.055071)   #the actual rms should be 1.00574 though
+
+    def testSinusoid02(self):
+        """Test Sinusoid02: Sinusoidal fitting with maskmode = 'auto'"""
+        self.tid = "Sinusoid02"
+        sdfile = self.sdfile_sinusoid
+        mode = "auto"
+        outfile = self.outroot+self.tid+".asap"
+        blparamfile = outfile+self.blparamfile_suffix
+        nwave = [0,1,2,3,4,6,8,10,12,14,16,18,20,22]
+        
+        result = sdbaseline(sdfile=sdfile,maskmode=mode,outfile=outfile,blfunc='sinusoid',nwave=nwave,maxwavelength=2.0)
+        self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
+        self.checkRms(blparamfile, 1.055071)   #the actual rms should be 1.00574 though
+
+    def checkRms(self, blparamfile, max_rms):
+        rms = 10000.0
+        for line in open(blparamfile,'r'):
+            items = line.split()
+            if (items[0] == 'rms') and (items[1] == '='):
+                rms = float(items[2])
+                break
+
+        self.assertTrue((rms <= max_rms), msg = "CSpline fitting failed.")
+
+
+
+
 def suite():
-    return [sdbaseline_basictest, sdbaseline_masktest]
+    return [sdbaseline_basictest, sdbaseline_masktest, sdbaseline_functest]
