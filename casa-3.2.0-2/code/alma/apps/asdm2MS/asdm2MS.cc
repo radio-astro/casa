@@ -3479,11 +3479,11 @@ int main(int argc, char *argv[]) {
 	    SubscanIntent subscanIntent = sscanR->getSubscanIntent();
 	    string obs_mode;
 	    if (scanIntent.size() > 0) {
-	      obs_mode = CScanIntent::name(scanIntent.at(0))+"_"+CSubscanIntent::name(subscanIntent);
+	      obs_mode = CScanIntent::name(scanIntent.at(0))+"#"+CSubscanIntent::name(subscanIntent);
 	      
 	      for (unsigned int iScanIntent = 1; iScanIntent < scanIntent.size(); iScanIntent++) {
 		obs_mode += ",";
-		obs_mode +=  CScanIntent::name(scanIntent.at(iScanIntent))+"."+CSubscanIntent::name(subscanIntent);
+		obs_mode +=  CScanIntent::name(scanIntent.at(iScanIntent))+"#"+CSubscanIntent::name(subscanIntent);
 	      }
 	    }
 	    
@@ -3494,8 +3494,8 @@ int main(int argc, char *argv[]) {
 		   ++iter) {
 		int retId = iter->second->addUniqueState(msState.sig,
 							 msState.ref,
-							 msState.cal,
-							 msState.load,
+							 0.0,      //msState.cal,
+							 0.0,      //msState.load,
 							 msState.subscanNum,
 							 obs_mode, //msState.obsMode.c_str(),
 							 false);
