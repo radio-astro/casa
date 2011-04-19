@@ -426,6 +426,7 @@ class SubMS
   Bool copyAntenna();
   Bool copyFeed();
   Bool copyFlag_Cmd();
+  Bool copyHistory();
   Bool copyObservation();
   Bool copyPointing();
   Bool copyProcessor();

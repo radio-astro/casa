@@ -909,6 +909,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
   success &= copyFlag_Cmd();
 
+  success &= copyHistory();
+
   success &= copyObservation();
   timer.mark();
   success &= copyPointing();
@@ -6960,6 +6962,27 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
 	//   newFlag_Cmd.flush();
       }
     }
+    return True;
+  }
+  
+  Bool SubMS::copyHistory(){
+    const MSHistory& oldHistory = mssel_p.history();
+
+    // Could be declared as Table&
+    MSHistory& newHistory = msOut_p.history();
+
+    LogIO os(LogOrigin("SubMS", "copyHistory()"));
+
+    // Add optional columns if present in oldHistory.
+    uInt nAddedCols = addOptionalColumns(oldHistory, newHistory, true);
+    os << LogIO::DEBUG1 << "HISTORY has " << nAddedCols
+       << " optional columns." << LogIO::POST;
+	
+    const ROMSHistoryColumns oldHCs(oldHistory);
+    MSHistoryColumns newHCs(newHistory);
+    newHCs.setEpochRef(MEpoch::castType(oldHCs.timeMeas().getMeasRef().getType()));
+	
+    TableCopy::copyRows(newHistory, oldHistory);
     return True;
   }
   
