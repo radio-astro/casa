@@ -15,7 +15,7 @@ def msmoments( msname, moments, antenna, field, spw, includemask, excludemask, o
 	ms.close()
         return retValue
     except Exception, instance:
-        ia.done()
+        ms.done()
 	print '*** Error ***',instance
 	raise Exception, instance
 	    

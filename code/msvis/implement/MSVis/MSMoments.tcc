@@ -397,7 +397,12 @@ Bool MSMoments<T>::createMoments(PtrBlock< MeasurementSet* >& outPt,
   TableRecord rec = desc.rwKeywordSet() ;
   String inUnit ;
   if ( rec.nfields() != 0 ) {
-    rec.get( rec.fieldNumber( "UNIT" ), inUnit ) ;
+    if ( rec.isDefined("UNIT") )
+      rec.get( rec.fieldNumber( "UNIT" ), inUnit ) ;
+    else if ( rec.isDefined("QuantumUnit") )
+      rec.get( rec.fieldNumber( "QuantumUnit" ), inUnit ) ;
+    else
+      inUnit = "K" ;
   }
   else {
     inUnit = "K" ;
