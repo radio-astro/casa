@@ -14,7 +14,7 @@ def flagdata(vis = None,
              timerange = None,
              correlation = None,
              scan = None,
-             scanintent = None,
+             intent = None,
              feed = None, array = None,
              clipexpr = None, clipminmax = None,
              clipcolumn = None, clipoutside = None, channelavg = None,
@@ -72,7 +72,7 @@ def flagdata(vis = None,
                                          timerange=timerange,
                                          correlation=correlation,
                                          scan=scan,
-                                         scanintent=scanintent,
+                                         intent=intent,
                                          feed=feed,
                                          array=array,
                                          uvrange=uvrange)
@@ -91,7 +91,7 @@ def flagdata(vis = None,
                                          timerange=timerange,
                                          correlation=correlation,
                                          scan=scan,
-                                         scanintent=scanintent,
+                                         intent=intent,
                                          feed=feed,
                                          array=array,
                                          uvrange=uvrange)
@@ -103,7 +103,7 @@ def flagdata(vis = None,
                                 array = array, \
                                 feed = feed, \
                                 scan = scan, \
-                                scanintent = scanintent, \
+                                intent = intent, \
                                 baseline = antenna, \
                                 uvrange = uvrange, \
                                 time = timerange, \
@@ -119,7 +119,7 @@ def flagdata(vis = None,
                                    array = array, \
                                    feed = feed, \
                                    scan = scan, \
-                                   scanintent = scanintent, \
+                                   intent = intent, \
                                    baseline = antenna, \
                                    uvrange = uvrange, \
                                    time = timerange, \
@@ -147,7 +147,7 @@ def flagdata(vis = None,
                                    array = array, \
                                    feed = feed, \
                                    scan = scan, \
-                                   scanintent = scanintent, \
+                                   intent = intent, \
                                    baseline = antenna, \
                                    uvrange = uvrange, \
                                    time = timerange, \
@@ -216,7 +216,7 @@ def flagdata(vis = None,
                                           array=array, \
                                           feed=feed, \
                                           scan=scan, \
-                                          scanintent=scanintent, \
+                                          intent=intent, \
                                           baseline=antenna, \
                                           uvrange=uvrange, \
                                           time=timerange, \
@@ -249,17 +249,9 @@ def flagdata(vis = None,
         
         #write history
         mslocal.open(vis,nomodify=False)
-        mslocal.writehistory(message='taskname=flagdata', origin='flagdata')
-        # Write the arguments.
-        for arg in flagdata.func_code.co_varnames[:flagdata.func_code.co_argcount]:
-                msg = "%-11s = " % arg
-                val = eval(arg)
-                if type(val) == str:
-                        msg += '"'
-                msg += str(val)
-                if type(val) == str:
-                        msg += '"'
-                mslocal.writehistory(message=msg, origin='flagdata')
+        mslocal.writehistory(message='taskname = flagdata', origin='flagdata')
+        mslocal.writehistory(message='vis      = "' + str(vis) + '"', origin='flagdata')
+        mslocal.writehistory(message='mode     = "' + str(mode) + '"', origin='flagdata')
         mslocal.close()
 
         return
@@ -271,9 +263,7 @@ def manualflag_quack(fglocal, mode, selectdata, flagbackup, **params):
         if debug: print params
 
         if not selectdata:
-                for k in ('antenna', 'timerange', 'correlation', 'scan',
-                          'scanintent', 'feed', 'array', 'uvrange'):
-                        params[k] = ''
+                params['antenna'] = params['timerange'] = params['correlation'] = params['scan'] = params['intent'] = params['feed'] = params['array'] = params['uvrange'] = ''
         
         vector_mode = False         # Are we in vector mode?
         vector_length = -1          # length of all vectors

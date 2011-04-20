@@ -206,13 +206,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="double" name="clipthresh" subparam="true">
-            <description>clipping threshold for iterative spline fitting</description>
+            <description>clipping threshold for iterative fitting</description>
             <value>3.0</value>
     </param>
 
     <param type="int" name="clipniter" subparam="true">
-            <description>maximum number of iteration in spline fitting</description>
-            <value>1</value>
+            <description>maximum iteration number</description>
+            <value>0</value>
     </param>
 
     <param type="any" name="masklist">
@@ -343,13 +343,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 <equals value="cspline">
 			<default param="npiece"><value>2</value></default>
 			<default param="clipthresh"><value>3.0</value></default>
-			<default param="clipniter"><value>1</value></default>
+			<default param="clipniter"><value>0</value></default>
 	        </equals>
                 <equals value="sinusoid">
 			<default param="nwave"><value type="int">3</value></default>
 			<default param="maxwavelength"><value>1.0</value></default>
 			<default param="clipthresh"><value>3.0</value></default>
-			<default param="clipniter"><value>1</value></default>
+			<default param="clipniter"><value>0</value></default>
 	        </equals>
 	    </when>
             <when param="maskmode">
@@ -510,10 +510,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  maxwavelength -- the longest sinusoidal wavelength in unit of 
                          spectral window width.
                          default: 1.0
-                 clipthresh -- clipping threshold for iterative spline fitting
+                 clipthresh -- clipping threshold for iterative fitting
                          default: 3
-                 clipniter -- maximum number of iteration in spline fitting
-                         default: 1
+                 clipniter -- maximum iteration number
+                         default: 0 (no iteration, i.e., no clipping)
 
         masklist -- list or string of mask regions to INCLUDE in BASELINE fit
                     a string masklist allows per IF selection of channels.
@@ -529,7 +529,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                          to be excluded from fitting. this mode requires three 
                          expandable parameters: thresh, avg_limit, and edge.
                          USE WITH CARE! May need to tweak the expandable parameters.
-                         maskmode='none' and 'list' uses the given masklist only: 
+                         maskmode='list' uses the given masklist only: 
                          no additional masks applied.
                          maskmode='interact' allows users to manually modify the 
                          mask regions by dragging mouse on the spectrum plotter GUI.

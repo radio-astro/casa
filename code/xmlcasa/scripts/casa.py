@@ -125,7 +125,6 @@ from flagdata import  flagdata
 from flagdata2 import  flagdata2
 from flagmanager import  flagmanager
 from fluxscale import  fluxscale
-from fringecal import  fringecal
 from ft import  ft
 from gaincal import  gaincal
 from gencal import  gencal

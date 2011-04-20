@@ -548,11 +548,15 @@ class cleanhelper:
                                 ia.calc(pixels='+ __tmp_mask')
                                 ia.done(verbose=False)
                                 ia.removefile('__tmp_mask')
-
-                        elif(commands.getoutput('file '+masklets).count('text')):
-                            masktext.append(masklets)
-                        else:
+                        # had a problem identifying text file conating 'C' as a text file
+                        # on OSX (on OSX, file command returns 'FORTRAN program') 
+                        #elif(commands.getoutput('file '+masklets).count('text')
+                        elif(commands.getoutput('file '+masklets).split(':')[-1].count('data')):
                             tablerecord.append(masklets)
+                        else:
+                            masktext.append(masklets)
+                        #else:
+                        #    tablerecord.append(masklets)
                             #raise TypeError, 'Can only read text mask files or mask images'
                     else:
                         raise TypeError, masklets+' seems to be non-existant'

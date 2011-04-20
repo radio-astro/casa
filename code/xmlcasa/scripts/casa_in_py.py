@@ -129,7 +129,6 @@ cu = __utilstool__.create()
 
 
 from imstat_pg import imstat_pg as imstat
-from fringecal_pg import fringecal_pg as fringecal
 from flagcmd_pg import flagcmd_pg as flagcmd
 from flagdata_pg import flagdata_pg as flagdata
 from flagdata2_pg import flagdata2_pg as flagdata2

@@ -159,12 +159,12 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
     </param>
 
     <param type="double" name="clipthresh" subparam="true">
-            <description>clipping threshold for iterative spline fitting</description>
+            <description>clipping threshold for iterative fitting</description>
             <value>3.0</value>
     </param>
 
     <param type="int" name="clipniter" subparam="true">
-            <description>maximum number of iteration in spline fitting</description>
+            <description>maximum iteration number</description>
             <value>0</value>
     </param>
 
@@ -382,10 +382,10 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
                  maxwavelength -- the longest sinusoidal wavelength in unit of 
                          spectral window width.
                          default: 1.0
-                 clipthresh -- clipping threshold for iterative spline fitting
+                 clipthresh -- clipping threshold for iterative fitting
                          default: 3
-                 clipniter -- maximum number of iteration in spline fitting
-                         default: 0 (no iteration)
+                 clipniter -- maximum iteration number
+                         default: 0 (no iteration, i.e., no clipping)
         verify -- verify the results of baseline fitting
                 options: (bool) True,False
                 default: False

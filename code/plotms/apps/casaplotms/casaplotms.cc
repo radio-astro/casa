@@ -220,7 +220,8 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
     }
     
     // WARNING ABOUT ITERATE being NEW
-    cout << "NB: Iteratable plots are currently experimental." << endl;
+    if (iterPlot)
+      cout << "NB: Iteratable plots are currently experimental." << endl;
     
     // If run from casapy, don't let Ctrl-C kill the application.
     if(casapy) signal(SIGINT,SIG_IGN);

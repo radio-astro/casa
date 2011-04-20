@@ -1146,6 +1146,16 @@ class par(str):
 		"""
 		
 	@staticmethod
+	def intent():
+                """
+                Observing intent (a.k.a "scan intent") to be processed
+                default: '' (all)
+                examples: intent='*BANDPASS*'  selects data labelled with BANDPASS intent
+                          intent='*POINTING*,*BAND*'  selects data labelled either with POINTING
+                                 or BAND
+                """  
+
+	@staticmethod
 	def interactive():
 		"""
 		(for sdflag)

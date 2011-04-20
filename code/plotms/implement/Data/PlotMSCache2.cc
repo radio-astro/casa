@@ -1068,7 +1068,6 @@ void PlotMSCache2::countChunks(ROVisibilityIterator& vi, Vector<Int>& nIterPerAv
 	// If we have accumulated enough info, poke the volume meter,
 	//  with the _previous_ info, and reset the ave'd row counter
 	if (ave>-1) {
-	  cout << "Poking volume meter w/ " << maxAveNRows << " rows in DDID = " << lastddid << "." << endl;
 	  vm_.add(lastddid,maxAveNRows);
 	  maxAveNRows=0;
 	}
@@ -1115,7 +1114,6 @@ void PlotMSCache2::countChunks(ROVisibilityIterator& vi, Vector<Int>& nIterPerAv
     }
   }
   // Add in the last iteration
-  cout << "Poking volume meter w/ " << maxAveNRows << " rows in DDID = " << lastddid << "." << endl;
   vm_.add(lastddid,maxAveNRows);
   
   Int nAve(ave+1);

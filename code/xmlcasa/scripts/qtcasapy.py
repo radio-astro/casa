@@ -317,7 +317,7 @@ def inp(taskname=None):
 
         try:
                 parameter_checktype(['taskname'],taskname,str)
-                parameter_checkmenu('taskname',taskname,['accum','bandpass','blcal','clean','contsub','correct','exportuvfits','feather','flagautocorr','flagdata','flagxy','fluxscale','fringecal','ft','gaincal','imhead','importvla','importasdm','importgmrt','importfits','importuvfits','clearcal','listhistory','listobs','makemask','mosaic','plotants','plotcal','plotxy','pointcal','smooth','setjy','split','uvmodelfit','viewer','browsetable','restore'])
+                parameter_checkmenu('taskname',taskname,['accum','bandpass','blcal','clean','contsub','correct','exportuvfits','feather','flagautocorr','flagdata','flagxy','fluxscale','ft','gaincal','imhead','importvla','importasdm','importgmrt','importfits','importuvfits','clearcal','listhistory','listobs','makemask','mosaic','plotants','plotcal','plotxy','pointcal','smooth','setjy','split','uvmodelfit','viewer','browsetable','restore'])
         except TypeError, e:
                 print "inp -- TypeError: ", e
                 return
@@ -551,24 +551,6 @@ def inp(taskname=None):
 		print 'transfer    = ',transfer,'\t# Transfer field name(s)'
 		print 'append      = ',append,'\t# Append solutions?'
 		print 'refspwmap   = ',refspwmap,'\t# Scale across spectral window boundaries'
-
-        if taskname=='fringecal':
-                print ''
-                print 'fringecal -- Calculate a baseline-based calibration solution (fringe):'
-                print ''
-                print 'vis         = "'+str(vis)+'"','\t# Name of input visibility file (MS)'
-                print 'caltable    = "'+str(caltable)+'"','\t# Name of output Gain calibration table'
-                print 'mode        = "'+str(mode)+'"','\t# Type of data selection (channel, velocity, none)'
-                print 'nchan       = ',nchan,'\t# Number of channels to select (mode=channel)'
-                print 'start       = ',start,'\t# Start channel, 0-relative'
-                print 'step        = ',step,'\t# Increment between channels/velocity'
-                print 'msselect    = "'+str(msselect)+'"','\t# Optional subset of data to select'
-                print 'gaincurve   = ',gaincurve,'\t# Apply VLA antenna gain curve correction'
-		print 'opacity     = ',opacity,'\t# Opacity correction to apply (nepers)'
-                print 'gaintable   = "'+str(gaintable)+'"','\t# Gain calibration solutions to apply'
-                print 'gainselect  = "'+str(gainselect)+'"','\t# Select subset of calibration solutions from gaintable'
-                print 'solint      = ',solint,'\t# Solution interval (sec)'
-                print 'refant      = ',refant,'\t# Reference Antenna'
 
 	if taskname=='ft':
 		print ''
@@ -892,7 +874,7 @@ def saveinputs(taskname=None,outfile=''):
 
         try:
                 parameter_checktype(['taskname','outfile'],[taskname,outfile],[str,str])
-                parameter_checkmenu('taskname',taskname,['accum','bandpass','blcal','browsetable','clean','contsub','correct','exportuvfits','feather','flagautocorr','flagdata','flagxy','fluxscale','fringecal','ft','gaincal','imhead','importvla','importasdm','importfits','importuvfits','clearcal','invert','listhistory','listobs','makemask','mosaic','plotants','plotcal','plotxy','pointcal','smooth','setjy','split','uvmodelfit','viewer'])
+                parameter_checkmenu('taskname',taskname,['accum','bandpass','blcal','browsetable','clean','contsub','correct','exportuvfits','feather','flagautocorr','flagdata','flagxy','fluxscale','ft','gaincal','imhead','importvla','importasdm','importfits','importuvfits','clearcal','invert','listhistory','listobs','makemask','mosaic','plotants','plotcal','plotxy','pointcal','smooth','setjy','split','uvmodelfit','viewer'])
         except TypeError, e:
                 print "saveinputs -- TypeError: ", e
                 return
@@ -1097,22 +1079,6 @@ def saveinputs(taskname=None,outfile=''):
                 print >>taskparameterfile, 'transfer    = ',transfer
 		print >>taskparameterfile, 'append      = ',append
 		print >>taskparameterfile, 'refspwmap   = ',refspwmap
-
-        if taskname=='fringecal':
-		print >>taskparameterfile, 'taskname    = "'+str(taskname)+'"'
-                print >>taskparameterfile, 'vis         = "'+str(vis)+'"'
-                print >>taskparameterfile, 'caltable    = "'+str(caltable)+'"'
-                print >>taskparameterfile, 'mode        = "'+str(mode)+'"'
-                print >>taskparameterfile, 'nchan       = ',nchan
-                print >>taskparameterfile, 'start       = ',start
-                print >>taskparameterfile, 'step        = ',step
-                print >>taskparameterfile, 'msselect    = "'+str(msselect)+'"'
-                print >>taskparameterfile, 'gaincurve   = ',gaincurve
-                print >>taskparameterfile, 'opacity     = ',opacity
-                print >>taskparameterfile, 'gaintable   = "'+str(gaintable)+'"'
-                print >>taskparameterfile, 'gainselect  = "'+str(gainselect)+'"'
-                print >>taskparameterfile, 'solint      = ',solint
-                print >>taskparameterfile, 'refant      = ',refant
 
         if taskname=='ft':
 		print >>taskparameterfile, 'taskname    = "'+str(taskname)+'"'
