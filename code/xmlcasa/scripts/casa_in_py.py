@@ -155,7 +155,7 @@ from uvmodelfit_pg import uvmodelfit_pg as uvmodelfit
 from clearcal_pg import clearcal_pg as clearcal
 from bandpass_pg import bandpass_pg as bandpass
 #from clearplot_pg import clearplot_pg as clearplot
-from listvis_pg import listvis_pg as listvis_cl
+from listvis_pg import listvis_pg as listvis
 from accum_pg import accum_pg as accum
 from concat_pg import concat_pg as concat
 from listobs_pg import listobs_pg as listobs
