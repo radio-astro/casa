@@ -74,9 +74,10 @@ class sdaverage_caltest_base(sdaverage_unittest_base):
         self._checkshape( sp, spref )
         
         for irow in xrange(sp.shape[0]):
-            retval=numpy.allclose(sp[irow],spref[irow])
+            retval=numpy.allclose(sp[irow],spref[irow],atol=1e-5)
+            diff=(abs(sp[irow]-spref[irow])).max()
             self.assertEqual( retval, True,
-                             msg='calibrated result is wrong (irow=%s)'%irow )
+                             msg='calibrated result is wrong (irow=%s): maxdiff=%s'%(irow,diff.max()) )
         del sp, spref
 
 ###

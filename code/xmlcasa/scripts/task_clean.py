@@ -561,7 +561,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
 		   else:
 		      raise Exception,'Model image(s) must be a string or a list of strings';
 		
-		casalog.post('Running MS-MFS with '+str(nterms)+' Taylor-terms on dataset : ' + vis);
+		casalog.post('Running MS-MFS with '+str(nterms)+' Taylor-terms on dataset : ' + str(vis));
             #####################################################################
             if len(multiscale) > 0:
                 imCln.setscales(scalemethod='uservector',

@@ -75,6 +75,7 @@ class sdimaging_unittest_base:
                 'sumsq': numpy.array([ 2.11668729]),
                 'trc': numpy.array([74, 74,  0,  0], dtype=numpy.int32),
                 'trcf': '17:03:03.151, +61.19.10.757, I, 1.419395e+09Hz'}
+    keys=['max','mean','min','npts','rms','blc','blcf','trc','trcf','sigma','sum','sumsq']
 
     def _checkfile( self, name ):
         isthere=os.path.exists(name)
@@ -100,12 +101,14 @@ class sdimaging_unittest_base:
         ia.open(name)
         stats=ia.statistics()
         ia.close()
-        for key in stats.keys():
+        #for key in stats.keys():
+        for key in self.keys:
             message='statistics \'%s\' does not match'%(key)
             if type(stats[key])==str:
                 self.assertEqual(stats[key],ref[key],
                                  msg=message)
             else:
+                #print stats[key]-ref[key]
                 ret=numpy.allclose(stats[key],ref[key])
                 self.assertEqual(ret,True,
                                  msg=message)

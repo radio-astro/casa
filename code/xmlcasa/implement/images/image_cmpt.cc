@@ -2933,6 +2933,7 @@ image::newimagefromimage(const std::string& infile, const std::string& outfile,
 			 const bool overwrite)
 {
   ::casac::image *outImg = 0;
+  Record *Region = 0;
   try {
     if (itsLog==0)
       itsLog=new LogIO();
@@ -2964,7 +2965,7 @@ image::newimagefromimage(const std::string& infile, const std::string& outfile,
       return outImg;
     }
 
-    Record *Region = toRecord(region);
+    Region = toRecord(region);
     ImageInterface<Float>* outIm =
       newImage->newimage(infile, outfile, *Region,mask, dropdeg, overwrite);
     delete Region;
@@ -2975,6 +2976,9 @@ image::newimagefromimage(const std::string& infile, const std::string& outfile,
       outImg = new ::casac::image();
     }
   } catch (AipsError x) {
+	  if (Region != 0) {
+		  delete Region;
+	  }
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
