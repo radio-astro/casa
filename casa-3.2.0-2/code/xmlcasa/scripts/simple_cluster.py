@@ -800,7 +800,7 @@ class simple_cluster:
                     eml=i.strip()
                 else:
                     jobname=i.strip()
-                    
+                
                 finish=True
                 for val in self._jobs.values():
                     if val['jobgroup']==i and not (val['status']=='done' or 
@@ -938,6 +938,33 @@ class simple_cluster:
                                         time.localtime(self._jobs[job]['start'])),
                            self._jobs[job]['short'],
                            self._jobs[job]['jobname'])
+
+    def get_jobId(self, status):
+        '''Get a list of jobs of the given status
+
+        Keyword arguments:
+        status -- the job status or the job title
+
+        Example:
+        CASA <2>: from simple_cluster import simple_cluster
+        CASA <3>: sl=simple_cluster()
+        CASA <4>: sl.init_cluster("my_cluster", "csplit")
+        CASA <5>: sl.simple_split('/lustre/casa-store/hye/10B-209a_5s.ms/', 
+                                  'you@nrao.edu:3rd split')
+        CASA <6>: sl.get_jobId('done')
+
+        '''
+
+        if not self._configdone:
+            return []
+        if len(self._jobs.keys())==0:
+            return [] 
+        else:
+            jobId=[] 
+            for job in self._jobs.keys():
+                if self._jobs[job]['status']==status:
+                    jobId.append(self._jobs[job]['jobname'])
+            return jobId
     
     def remove_record(self, jobname):
         '''Remove job execution status of a job.
@@ -1020,8 +1047,9 @@ class simple_cluster:
         self._jobs[job]['status']="scheduled"
         self._jobs[job]['engine']=id
         self._jobs[job]['jobname']=self._job_title
-        self._jobs[job]['jobgroup']=group.strip()
+        self._jobs[job]['jobgroup']=''
         self._job_title+=1
+        return self._job_title-1
     
     ###########################################################################
     ###   result processing functions
@@ -1751,6 +1779,9 @@ class simple_cluster:
             (sysname, nodename, release, version, machine)=os.uname()
             homedir = os.path.expanduser('~')
             msg=nodename+', '+str(ncpu)+', '+homedir
+            cdir=os.getcwd()
+            msg=nodename+', '+str(ncpu)+', '+cdir[:cdir.rfind('/')]
+            project=cdir[cdir.rfind('/')+1:]
             clusterfile='/tmp/default_cluster'
             f=open(clusterfile, 'w')
             f.write(msg)
@@ -1941,3 +1972,277 @@ class simple_cluster:
     #simple_clean(vis='/home/casa-dev-09/hye/pclean/sim100g_4chan15kRows.ms',
     #             nx=256, ny=256, mode='channel')
         
+
+
+###########################################################################
+###   job management classes
+###########################################################################
+
+class commandBuilder:
+    '''
+    Simple class to help with the building of the long strings needed to
+    execute a command.
+    '''
+    def __init__(self, commandName):
+        # TODO: Ensure that commandName is a string
+        self._commandName = commandName
+        self._argumentList = {}
+
+    def setArgument(self, argument, value):
+        # TODO: Ensure that the argumen is a string
+        self._argumentList[argument] = value
+
+    def getCommandString(self):
+        firstArgument = True
+        output = self._commandName + '('
+        for (arg,value) in self._argumentList.items():
+            if firstArgument:
+                firstArgument = False
+            else:
+                output += ', '
+            if isinstance(value, str):
+                output += ("%s = '%s'" % (arg, value))
+            else:
+                output += ("%s = " % arg) + str(value)
+        output += ')'
+        return output
+
+class JobData:
+    def __init__(self, commandLine, jobInfo = None):
+        self.commandLine = commandLine
+        self.jobInfo = jobInfo
+        self.completed = False
+        self.jobId     = None
+        self.engineId  = None
+
+class JobQueueManager:
+
+    def __init__(self, cluster):
+        self.__cluster=cluster
+        self.__pendingQueue = []
+        self.__completedQueue = []
+
+    def addJob(self, jobData):
+        # TODO Check the type of jobData
+        self.__pendingQueue.append(jobData)
+
+    def getCompletedJobs(self):
+        cmpt=0
+        for job in self.__completedQueue:
+            if job.completed==True:
+                cmpt+=1
+        if cmpt==len(self.__completedQueue):
+            return self.__completedQueue
+        ids=self.__cluster.get_jobId('done')
+        if len(ids)!=0:
+            completedJobs=[]
+            for job in self.__completedQueue:
+                if job.jobId in ids:
+                    job.completed=True
+                    completedJobs.append(job)
+            return completedJobs
+        else:
+            ids=self.__cluster.get_jobId('running')
+            for job in self.__completedQueue:
+                if job.jobId in ids:
+                   cmpt=-1
+            ids=self.__cluster.get_jobId('scheduled')
+            for job in self.__completedQueue:
+                if job.jobId in ids:
+                   cmpt=-2
+            if cmpt<0:
+                return []
+            for job in self.__completedQueue:
+                job.completed=True
+            return self.__completedQueue
+
+    def getUncompletedJobs(self):
+        cmpt=0
+        for job in self.__completedQueue:
+            if job.completed==True:
+                cmpt+=1
+        if cmpt==len(self.__completedQueue):
+            return []
+        ids=self.__cluster.get_jobId('done')
+        if len(ids)!=0:
+            uncompletedJobs=[]
+            for job in self.__completedQueue:
+                if not job.jobId in ids:
+                    uncompletedJobs.append(job)
+            return uncompletedJobs
+        else:
+            ids=self.__cluster.get_jobId('running')
+            for job in self.__completedQueue:
+                if job.jobId in ids:
+                   cmpt=-1
+            ids=self.__cluster.get_jobId('scheduled')
+            for job in self.__completedQueue:
+                if job.jobId in ids:
+                   cmpt=-2
+            if cmpt<0:
+                return self.__completedQueue 
+            for job in self.__completedQueue:
+                job.completed=True
+            return []
+        
+    def getAllJobs(self):
+        allJobs = []
+        for job in self.__completedQueue:
+            allJobs.append(job)
+        return allJobs
+
+    def executeQueue(self):
+        self.__pendingQueue.reverse()
+        engineList = self.__cluster.use_engines()
+
+        i=-1
+        while len(engineList) > 0 and len(self.__pendingQueue) > 0:
+            jd = self.__pendingQueue.pop()
+            #print "Starting: " + jd.commandLine
+            i=i+1
+            if i==len(engineList):
+                i=0
+            jd.jobId=self.__cluster.do_and_record(jd.commandLine, i)
+            jd.engineId=i
+            jd.completed=False
+            self.__completedQueue.append(jd)
+
+
+
+from collections import namedtuple
+import os
+class MultiMS:
+    MSEntry = namedtuple('MSEntry', 'use')
+    BoilerPlate ='''#!MultiMS Specification File: Version 1.0
+# This file includes the specification for a multiMS for reduction using CASA
+# Please do not modify the first line of this file.
+# Any line's beginning with a '#' are treated as comments
+# Processing is disabled for MS definition lines beginning with a '!'
+# All paths are considered relative to the location of this specification file
+''' 
+    def __init__(self, mmsName, mmsSpec=None, initialize = True):
+        self.__mmsName = mmsName
+        self.__entryDict={}
+        if initialize:
+            self.readSpec(mmsSpec)
+
+    def readSpec(self, mmsSpec = None):
+        fd = open(self.__createSpecFilename(mmsSpec), 'r')
+        self.__getVersion(fd)
+        for line in fd.readlines():
+            if line[0] == '#':
+                continue
+            if line[0] == '!':
+                self.addMS(line[1:].rstrip(), False)
+            else:
+                self.addMS(line.rstrip(), true)
+        fd.close()
+        print self.__entryDict
+
+
+    def writeSpec(self, mmsSpec = None):
+        fd = open(self.__createSpecFilename(mmsSpec), 'w')
+        fd.write(MultiMS.BoilerPlate)
+        for path in self.__getSortedEntries():
+            if not self.__entryDict[path].use:
+                fd.write('!')
+            fd.write(path +'\n')
+        fd.close()
+
+    def show(self):
+        print self.__entryDict
+
+    def addMS(self, msName, use=True):
+        '''
+        This method adds the specified MS to the MultiMS, the MS Name must
+        be unique or an exception in thrown.
+        '''
+        if msName in self.__entryDict:
+            # TODO raise an exception for duplicate entries
+            pass
+        self.__entryDict[msName] = MultiMS.MSEntry(use)
+
+    def rmMS(self, msName):
+        if msName not in self._entryDict:
+            # TODO raise an exception for non-existant entry
+            pass
+        self.__entryDict.pop(msName)
+
+    def writeFile(self, msgf):
+        f=open(msgf, 'w')
+        for entryKey in self.__getSortedEntries():
+            if self.__entryDict[entryKey].use:
+                f.write(self.__createPath(entryKey))
+                f.write('\n')
+        f.close()
+
+    def getMSPathList(self):
+        pathList = []
+        for entryKey in self.__getSortedEntries():
+            if self.__entryDict[entryKey].use:
+                pathList.append(self.__createPath(entryKey))
+        return pathList
+                       
+    def __getSortedEntries(self):
+        entryKeys = self.__entryDict.keys()
+        entryKeys.sort()
+        return entryKeys
+        
+    def __createSpecFilename(self, mmsSpec):
+        if mmsSpec is None:
+            mmsSpec = self.__mmsName.replace('.mms', '.mmsSpec')  
+        return self.__createPath(mmsSpec)
+
+    def __createPath(self, filename):
+        return "%s/%s" % (self.__mmsName, filename)
+
+    def __getVersion(self, fileDescriptor):
+        pass
+
+
+###########################################################################
+###   job management example
+###########################################################################
+#
+#from simple_cluster import *
+#
+#c=simple_cluster()
+#c.cold_start()
+#c.init_cluster('', '')
+#
+#option_ms='X306/X306.ms'
+#option_mmsName='X306.mms'
+#option_mmsSpec=None
+#
+#option_ms=os.path.abspath(option_ms)
+#
+#if not os.path.exists(option_mmsName):
+#    os.mkdir(option_mmsName)
+#
+#msFileRoot=option_mmsName.replace('.mms','')
+#
+#command=commandBuilder("split")
+#command.setArgument('vis', option_ms)
+#                   
+#jobManager=JobQueueManager(c)
+#for scan in range(5,10):
+#    command.setArgument('scan',str(scan))
+#    outputVis=msFileRoot + ('.%05d.ms' % scan)
+#    command.setArgument('outputvis', "%s/%s" % (option_mmsName,outputVis))
+#    #print command.getCommandString()
+#    jobManager.addJob(JobData(command.getCommandString(), outputVis))
+#
+#jobManager.executeQueue()
+#
+#
+#print 'after all jobs finished'
+#
+#mms=MultiMS(option_mmsName, option_mmsSpec, False)
+#for job in jobManager.getCompletedJobs():
+#    mms.addMS(job.jobInfo)
+#
+#mms.writeFile('myMms')
+#
+#mms=MultiMS(option_mmsName, option_mmsSpec)
+#print mms.getMSPathList()
+#
