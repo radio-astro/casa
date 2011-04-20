@@ -32,11 +32,8 @@ def sdsmooth(sdfile, antenna, scanaverage, scanlist, field, iflist, pollist, ker
                     s = "Output file '%s' exist." % (outfilename)
                     raise Exception, s
 
-            s=sd.scantable(sdfile,average=scanaverage,antenna=antenna)
-            if (isinstance(s,Scantable)):
-                    stmp = s.copy()
-                    s=stmp.average_time(scanav=scanaverage)
-            else:
+            s=sd.scantable(sdfile,average=False,antenna=antenna)
+            if not (isinstance(s,Scantable)):
                     raise Exception, 'sdfile=%s is not found' % sdfile
 
             if ( abs(plotlevel) > 1 ):
@@ -94,6 +91,12 @@ def sdsmooth(sdfile, antenna, scanaverage, scanlist, field, iflist, pollist, ker
                 casalog.post( str(instance), priority = 'ERROR' )
                 casalog.post( 'No output written.' )
                 return
+
+            #Average within each scan
+            if scanaverage:
+                    stmp = s.copy()
+                    s=stmp.average_time(scanav=True)
+                    del stmp
 
             # Smooth the spectrum
             if kernel=='' or kernel=='none':
