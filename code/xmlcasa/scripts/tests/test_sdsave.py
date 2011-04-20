@@ -37,6 +37,11 @@ class sdsave_test_base:
     cycleno = None
     scanno = None
 
+    def _checkfile( self, name ):
+        isthere=os.path.exists(name)
+        self.assertEqual(isthere,True,
+                         msg='output file %s was not created because of the task failure'%(name))
+
     def _setAttributes(self):
         """
         Set summary string from the original data.
@@ -80,6 +85,7 @@ class sdsave_test_base:
         extension=st[-1]
         #casalog.post('filename='+filename)
         if extension == 'asap' or extension == 'ms' or extension == 'fits':
+            self._checkfile(filename)
             s=sd.scantable(filename,False)
             n=s.nrow()
             sp=numpy.array(s._getspectrum(0))
@@ -89,6 +95,7 @@ class sdsave_test_base:
             wcout=commands.getoutput('ls '+st[0]+'*.txt'+' | wc')
             n=int(wcout.split()[0])*self.npol
             filein=st[0]+'_SCAN%d_CYCLE%d_IF%d.txt'%(self.scanno,self.cycleno,self.ifno)
+            self._checkfile(filein)
             f=open(filein)
             sp=[]
             line = f.readline()

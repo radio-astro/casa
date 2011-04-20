@@ -127,6 +127,7 @@ class sdtpimaging_test1(unittest.TestCase):
         os.system( 'rm -rf '+self.sdfile+'*' )
 
     def _compare(self):
+        self._checkfile(self.outimage)
         default(imval)
         refval=imval(imagename=self.refimage,box='-1,-1',stokes='XX')
         val=imval(imagename=self.outimage,box='-1,-1',stokes='XX')
@@ -142,6 +143,12 @@ class sdtpimaging_test1(unittest.TestCase):
         self.res=sdtpimaging(sdfile=self.sdfile,calmode='none',stokes='XX',createimage=True,imagename=self.outimage,imsize=[64],cell=['15arcsec'],phasecenter='J2000 05h35m07s -5d21m00s',pointingcolumn='direction',gridfunction='SF')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare() < 0.001)
+        
+    def _checkfile( self, name ):
+        isthere=os.path.exists(name)
+        self.assertEqual(isthere,True,
+                         msg='output file %s was not created because of the task failure'%(name))
+        
         
 ###
 # Test to image data with spatial baseline subtraction
@@ -176,6 +183,7 @@ class sdtpimaging_test2(unittest.TestCase):
         os.system( 'rm -rf '+self.sdfile+'*' )
 
     def _compare(self):
+        self._checkfile(self.outimage)
         default(imval)
         refval=imval(imagename=self.refimage,box='-1,-1',stokes='XX')
         val=imval(imagename=self.outimage,box='-1,-1',stokes='XX')
@@ -192,6 +200,11 @@ class sdtpimaging_test2(unittest.TestCase):
         self.res=sdtpimaging(sdfile=self.sdfile,calmode='baseline',masklist=[10,10],blpoly=1,stokes='XX',createimage=True,imagename=self.outimage,imsize=[64],cell=['15arcsec'],phasecenter='J2000 05h35m07s -5d21m00s',pointingcolumn='direction',gridfunction='SF')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare() < 0.001)
+        
+    def _checkfile( self, name ):
+        isthere=os.path.exists(name)
+        self.assertEqual(isthere,True,
+                         msg='output file %s was not created because of the task failure'%(name))
 
 
 def suite():
