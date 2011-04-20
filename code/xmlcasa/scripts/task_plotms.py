@@ -23,8 +23,8 @@ def plotms(vis=None,
            showmajorgrid=None, majorwidth=None, majorstyle=None,  majorcolor=None,    
            showminorgrid=None, minorwidth=None, minorstyle=None,  minorcolor=None,    
            plotfile=None, format=None,
-           highres=None, interactive=None, overwrite=None,
-           showgui=None
+           highres=None, interactive=None, overwrite=None  # ,
+           #           showgui=None    --- remove for 3.2 release, restore later
 ):
 
 # we'll add these later
@@ -174,7 +174,7 @@ def plotms(vis=None,
         if (ydatacolumn=='cor' or ydatacolumn=='corr'):  ydatacolumn='corrected'
 
 
-        tp.setgui( showgui );
+        tp.setgui( True );     ####  showgui );
 
 
         # Set filename and axes
