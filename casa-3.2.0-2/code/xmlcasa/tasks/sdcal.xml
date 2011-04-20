@@ -529,7 +529,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                          to be excluded from fitting. this mode requires three 
                          expandable parameters: thresh, avg_limit, and edge.
                          USE WITH CARE! May need to tweak the expandable parameters.
-                         maskmode='none' and 'list' uses the given masklist only: 
+                         maskmode='list' uses the given masklist only: 
                          no additional masks applied.
                          maskmode='interact' allows users to manually modify the 
                          mask regions by dragging mouse on the spectrum plotter GUI.
