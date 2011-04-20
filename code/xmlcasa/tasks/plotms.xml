@@ -590,12 +590,12 @@ Export plot as image Parameters
     Misc Parameters
 ###############################################################################
 -->
-
+<!-- remove for 3.2 release - restore when we know exactly how to make this work right
      <param type="bool" name="showgui">
          <description>Show GUI</description>
          <value>True</value>
      </param>
-
+-->
 
 
 
@@ -991,13 +991,13 @@ Constraints
                     default: '' (uses PlotMS defaults/current set).
                     valid values (alphabetical, = indicates synonyms): 
                       'amp' = 'amplitude',  'ant',  'ant-azimuth',  'ant-elevation',  'antenna',
-                      'antenna1' = 'ant1',  'antenna2' = 'ant2',  'ant-hourang' = 'ant-hourangle',  
-                      'ant-parallacticangle' = 'ant-parang',  'azimuth',  'baseline',  
-                      'chan' = 'channel',  'corr' = 'correlation',  'elevation',  'field',
-                      'flag',  'flagrow',  'freq' = 'frequency',  'hourang' = 'hourangle',  
-                      'imag' = 'imaginary',  'imwt',   'parallacticangle' = 'parang',   
-                      'phase',  'real',  'row',  'scan',  'spw',  'time',  
-                      'timeint' = 'timeinterval' = 'time_interval', 
+                      'antenna1' = 'ant1',  'antenna2' = 'ant2',  
+                      'ant-hourang' = 'ant-hourangle',  'ant-parallacticangle' = 'ant-parang',  
+                      'azimuth',  'baseline',  'chan' = 'channel',  'corr' = 'correlation',  
+                      'elevation',  'field',  'flag',  'flagrow',  'freq' = 'frequency',  
+                      'hourang' = 'hourangle',  'imag' = 'imaginary',  'imwt',   
+                      'parallacticangle' = 'parang',   'phase',  'real',  'row',  'scan',  
+                      'spw',  'time',  'timeint' = 'timeinterval' = 'time_interval', 
                       'u',  'uvdist',  'uvdistl' = 'uvdist_l',  'v',  'velocityvel', 'w', 
                       'weight' = 'wt'
 
