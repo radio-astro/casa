@@ -133,48 +133,48 @@ class sdimaging_test0(sdimaging_unittest_base,unittest.TestCase):
             shutil.rmtree(self.rawfile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
-    def test000(self):
+    def sdimaging_test000(self):
         """Test 000: Default parameters"""
         res=sdimaging()
         self.assertFalse(res)
 
-    def test001(self):
+    def sdimaging_test001(self):
         """Test001: Bad specunit"""
         res=sdimaging(sdfile=self.rawfile,specunit='frequency',imagename=self.imagename)
         self.assertFalse(res)
 
-    def test002(self):
+    def sdimaging_test002(self):
         """Test002: Bad field id"""
         imagename=self.prefix+self.postfix
         res=sdimaging(sdfile=self.rawfile,field=self.badid,imagename=self.imagename)
         self.assertFalse(res)
 
-    def test003(self):
+    def sdimaging_test003(self):
         """Test003: Bad spectral window id"""
         res=sdimaging(sdfile=self.rawfile,spw=self.badid,imagename=self.imagename)
         self.assertFalse(res)
 
-    def test004(self):
+    def sdimaging_test004(self):
         """Test004: Bad antenna id"""
         res=sdimaging(sdfile=self.rawfile,antenna=self.badid,imagename=self.imagename)
         self.assertFalse(res)
         
-    def test005(self):
+    def sdimaging_test005(self):
         """Test005: Bad stokes parameter"""
         res=sdimaging(sdfile=self.rawfile,stokes='BAD',imagename=self.imagename)
         self.assertFalse(res)
         
-    def test006(self):
+    def sdimaging_test006(self):
         """Test006: Bad gridfunction"""
         res=sdimaging(sdfile=self.rawfile,gridfunction='BAD',imagename=self.imagename)
         self.assertFalse(res)
 
-    def test007(self):
+    def sdimaging_test007(self):
         """Test007: Bad scanlist"""
         res=sdimaging(sdfile=self.rawfile,scanlist=[self.badid],imagename=self.imagename)
         self.assertFalse(res)
 
-    def test008(self):
+    def sdimaging_test008(self):
         """Test008: Existing imagename with overwrite=False"""
         f=open(self.imagename,'w')
         print >> f, 'existing file'
@@ -182,12 +182,12 @@ class sdimaging_test0(sdimaging_unittest_base,unittest.TestCase):
         res=sdimaging(sdfile=self.rawfile,imagename=self.imagename)
         self.assertFalse(res)
 
-    def test009(self):
+    def sdimaging_test009(self):
         """Test009: Bad phasecenter string"""
         res=sdimaging(sdfile=self.rawfile,imagename=self.imagename,cell=self.cell,imsize=self.imsize,phasecenter='This is bad')
         self.assertFalse(res)
 
-    def test010(self):
+    def sdimaging_test010(self):
         """Test010: Bad phasecenter reference (J2000 is assumed)"""
         refimage=self.imagename+'2'
         sdimaging(sdfile=self.rawfile,imagename=self.imagename,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter.replace('J2000','J3000'))
@@ -202,22 +202,22 @@ class sdimaging_test0(sdimaging_unittest_base,unittest.TestCase):
         #print ret
         self.assertTrue(ret)
 
-    def test011(self):
+    def sdimaging_test011(self):
         """Test011: Bad pointingcolumn name"""
         res=sdimaging(sdfile=self.rawfile,imagename=self.imagename,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,pointingcolumn='non_exist')
         self.assertFalse(res)
 
-    def test012(self):
+    def sdimaging_test012(self):
         """Test012: Bad imsize"""
         res=sdimaging(sdfile=self.rawfile,imagename=self.imagename,cell=self.cell,imsize=[0,0],phasecenter=self.phasecenter)
         self.assertFalse(res)
         
-    def test013(self):
+    def sdimaging_test013(self):
         """Test013: Bad cell size"""
         res=sdimaging(sdfile=self.rawfile,imagename=self.imagename,cell=[0.,0.],imsize=self.imsize,phasecenter=self.phasecenter)
         self.assertFalse(res)
 
-    def test014(self):
+    def sdimaging_test014(self):
         """Test014: Too fine resolution (smaller than original channel width"""
         res=sdimaging(sdfile=self.rawfile,specunit='GHz',imagename=self.imagename,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=True,nchan=10,start=1.4202,step=1.0e-10)
         self.assertFalse(res)
@@ -252,7 +252,7 @@ class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
             shutil.rmtree(self.rawfile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
-    def test100(self):
+    def sdimaging_test100(self):
         """Test 100: Integrated image (dochannelmap=False)"""
         res=sdimaging(sdfile=self.rawfile,specunit=self.mode,imagename=self.imagename,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=False)
         self.assertEqual(res,None,
@@ -261,7 +261,7 @@ class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
         refstats=self.statsinteg
         self._checkstats(self.imagename,refstats)
 
-    def test101(self):
+    def sdimaging_test101(self):
         """Test 101: Integrated image (dochannelmap=True,nchan=-1)"""
         res=sdimaging(sdfile=self.rawfile,specunit=self.mode,imagename=self.imagename,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=True,nchan=-1,start=0,step=1)
         self.assertEqual(res,None,
@@ -270,7 +270,7 @@ class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
         refstats=self.statsinteg
         self._checkstats(self.imagename,refstats)
         
-    def test102(self):
+    def sdimaging_test102(self):
         """Test 102: Full channel image"""
         tb.open(self.rawfile)
         if 'FLOAT_DATA' in tb.colnames():
@@ -300,7 +300,7 @@ class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
                   'trcf': '17:03:03.151, +61.19.10.757, I, 1.421893e+09Hz'}
         self._checkstats(self.imagename,refstats)
 
-    def test103(self):
+    def sdimaging_test103(self):
         """Test 103: Selected channel image"""
         nchan=40
         res=sdimaging(sdfile=self.rawfile,specunit=self.mode,imagename=self.imagename,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=True,nchan=nchan,start=400,step=10)
@@ -325,7 +325,7 @@ class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
                   'trcf': '17:03:03.151, +61.19.10.757, I, 1.42133e+09Hz'}
         self._checkstats(self.imagename,refstats)
 
-    def test104(self):
+    def sdimaging_test104(self):
         """Test 104: Box-car gridding"""
         nchan=40
         res=sdimaging(sdfile=self.rawfile,specunit=self.mode,imagename=self.imagename,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction='BOX',dochannelmap=True,nchan=nchan,start=400,step=10)
@@ -350,7 +350,7 @@ class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
                   'trcf': '17:03:03.151, +61.19.10.757, I, 1.42133e+09Hz'}
         self._checkstats(self.imagename,refstats)
 
-    def test105(self):
+    def sdimaging_test105(self):
         """Test 105: Prolate Spheroidal gridding"""
         nchan=40
         res=sdimaging(sdfile=self.rawfile,specunit=self.mode,imagename=self.imagename,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction='SF',dochannelmap=True,nchan=nchan,start=400,step=10)
@@ -375,7 +375,7 @@ class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
                   'trcf': '17:03:03.151, +61.19.10.757, I, 1.42133e+09Hz'}
         self._checkstats(self.imagename,refstats)
 
-    def test106(self):
+    def sdimaging_test106(self):
         """Test 106: Imaging two polarization separately (XX and YY, not Stokes I)"""
         nchan=40
         res=sdimaging(sdfile=self.rawfile,specunit=self.mode,stokes='XXYY',imagename=self.imagename,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction='PB',dochannelmap=True,nchan=nchan,start=400,step=10)
@@ -428,7 +428,7 @@ class sdimaging_test2(sdimaging_unittest_base,unittest.TestCase):
             shutil.rmtree(self.rawfile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
-    def test200(self):
+    def sdimaging_test200(self):
         """Test 200: Integrated image (dochannelmap=False)"""
         res=sdimaging(sdfile=self.rawfile,specunit=self.mode,imagename=self.imagename,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=False)
         self.assertEqual(res,None,
@@ -437,7 +437,7 @@ class sdimaging_test2(sdimaging_unittest_base,unittest.TestCase):
         refstats=self.statsinteg
         self._checkstats(self.imagename,refstats)
         
-    def test201(self):
+    def sdimaging_test201(self):
         """Test 201: Selected frequency image"""
         nchan=100
         res=sdimaging(sdfile=self.rawfile,specunit=self.mode,imagename=self.imagename,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=True,nchan=nchan,start=1.4202,step=1.0e-5)
@@ -462,7 +462,7 @@ class sdimaging_test2(sdimaging_unittest_base,unittest.TestCase):
                   'trcf': '17:03:03.151, +61.19.10.757, I, 1.42119e+09Hz'}
         self._checkstats(self.imagename,refstats)
         
-    def test202(self):
+    def sdimaging_test202(self):
         """Test 202: Selected frequency image with other frequency unit"""
         nchan=100
         res=sdimaging(sdfile=self.rawfile,specunit='MHz',imagename=self.imagename,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=True,nchan=nchan,start=1420.2,step=0.01)
@@ -514,7 +514,7 @@ class sdimaging_test3(sdimaging_unittest_base,unittest.TestCase):
             shutil.rmtree(self.rawfile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
-    def test300(self):
+    def sdimaging_test300(self):
         """Test 300: Integrated image (dochannelmap=False)"""
         res=sdimaging(sdfile=self.rawfile,specunit=self.mode,imagename=self.imagename,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=False)
         self.assertEqual(res,None,
@@ -523,7 +523,7 @@ class sdimaging_test3(sdimaging_unittest_base,unittest.TestCase):
         refstats=self.statsinteg
         self._checkstats(self.imagename,refstats)
         
-    def test301(self):
+    def sdimaging_test301(self):
         """Test 301: Selected velocity image"""
         nchan=100
         res=sdimaging(sdfile=self.rawfile,specunit=self.mode,imagename=self.imagename,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=True,nchan=nchan,start=-200.0,step=2.0)
@@ -548,7 +548,7 @@ class sdimaging_test3(sdimaging_unittest_base,unittest.TestCase):
                   'trcf': '17:03:03.151, +61.19.10.757, I, 1.420415e+09Hz'}
         self._checkstats(self.imagename,refstats)
 
-    def test302(self):
+    def sdimaging_test302(self):
         """Test 302: Selected velocity image (different rest frequency)"""
         nchan=100
         res=sdimaging(sdfile=self.rawfile,specunit=self.mode,restfreq='1.420GHz',imagename=self.imagename,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=True,nchan=nchan,start=-100.0,step=2.0)
