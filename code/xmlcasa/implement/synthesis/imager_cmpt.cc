@@ -1336,6 +1336,32 @@ imager::ssoflux(const ::casac::variant& field, const ::casac::variant& spw,
            << "ssoflux is no longer supported.  Use setjy."
            << LogIO::POST;
 
+   // if(hasValidMS_p){
+   //    try {
+   //      casa::String fieldnames="";
+   //      casa::Vector<Int> fieldIndex;
+   //      fieldnames=toCasaString(field);
+   //      if(fieldnames.contains(String("-"), -1)){
+   //        fieldnames="";
+   //        fieldIndex=Vector<Int>(1,-1);
+   //      }
+   //      casa::String spwstring="";
+   //      casa::Vector<Int> spwid;
+   //      spwstring=toCasaString(spw);
+   //      if(spwstring.contains(String("-"), -1)){
+   //        spwstring="";
+   //        spwid=Vector<Int>(1,-1);
+   //      }
+
+   //      rstat = itsImager->ssoflux(fieldIndex, spwid, fieldnames, spwstring, 
+   //                                 modimage,fluxdensity, standard);
+   //     } catch  (AipsError x) {
+   //        *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+   //        RETHROW(x);
+   //     }
+   //  } else {
+   //    *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
+   //  }
     return rstat;
 }
 

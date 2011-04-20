@@ -134,17 +134,17 @@ class sdsave_test0(unittest.TestCase):
             shutil.rmtree(self.sdfile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
-    def sdsave_test000(self):
+    def test000(self):
         """Test 000: Default parameters"""
         self.res=sdsave()
         self.assertFalse(self.res)
         
-    def sdsave_test001(self):
+    def test001(self):
         """Test 001: Time averaging without weight"""
         self.res=sdsave(sdfile=self.sdfile,timeaverage=True,outfile=self.outfile)
         self.assertFalse(self.res)        
 
-    def sdsave_test002(self):
+    def test002(self):
         """Test 002: Polarization averaging without weight"""
         self.res=sdsave(sdfile=self.sdfile,polaverage=True,outfile=self.outfile)
         self.assertFalse(self.res)        
@@ -183,25 +183,25 @@ class sdsave_test1(unittest.TestCase,sdsave_test_base):
             shutil.rmtree(self.basefile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
-    def sdsave_test100(self):
+    def test100(self):
         """Test 100: test to read scantable and to write as scantable"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile0,outform='ASAP')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile0))
 
-    def sdsave_test101(self):
+    def test101(self):
         """Test 101: test to read scantable and to write as MS"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile1,outform='MS2')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile1))
         
-    def sdsave_test102(self):
+    def test102(self):
         """Test 102: test to read scantable and to write as SDFITS"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile2,outform='SDFITS')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile2))
 
-    def sdsave_test103(self):
+    def test103(self):
         """Test 103: test to read scantable and to write as ASCII"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile3,outform='ASCII')
         self.assertEqual(self.res,None)
@@ -242,25 +242,25 @@ class sdsave_test2(unittest.TestCase,sdsave_test_base):
             shutil.rmtree(self.basefile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
-    def sdsave_test200(self):
+    def test200(self):
         """Test 200: test to read MS and to write as scantable"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile0,outform='ASAP')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile0))
         
-    def sdsave_test201(self):
+    def test201(self):
         """Test 201: test to read MS and to write as MS"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile1,outform='MS2')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile1))
         
-    def sdsave_test202(self):
+    def test202(self):
         """Test 202: test to read MS and to write as SDFITS"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile2,outform='SDFITS')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile2))
 
-    def sdsave_test203(self):
+    def test203(self):
         """Test 203: test to read MS and to write as ASCII"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile3,outform='ASCII')
         self.assertEqual(self.res,None)
@@ -301,25 +301,25 @@ class sdsave_test3(unittest.TestCase,sdsave_test_base):
             shutil.rmtree(self.basefile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
-    def sdsave_test300(self):
+    def test300(self):
         """Test 300: test to read ATNF SDFITS and to write as scantable"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile0,outform='ASAP')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile0))
 
-    def sdsave_test301(self):
+    def test301(self):
         """Test 301: test to read ATNF SDFITS and to write as MS"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile1,outform='MS2')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile1))
         
-    def sdsave_test302(self):
+    def test302(self):
         """Test 302: test to read ATNF SDFITS and to write as SDFITS"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile2,outform='SDFITS')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile2))
 
-    def sdsave_test303(self):
+    def test303(self):
         """Test 303: test to read ATNF SDFITS and to write as ASCII"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile3,outform='ASCII')
         self.assertEqual(self.res,None)
@@ -355,26 +355,26 @@ class sdsave_test4(unittest.TestCase):
             os.system( 'rm -f '+self.sdfile )
         os.system( 'rm -rf '+self.prefix+'*' )
 
-    def sdsave_test400(self):
+    def test400(self):
         """Test 400: test to read GBT SDFITS and to write as scantable"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile0,outform='ASAP')
         self.assertEqual(self.res,None)
         #self.assertTrue(self._compare(self.outfile0))
         self.assertTrue(self._compare())
 
-    def sdsave_test401(self):
+    def test401(self):
         """Test 401: test to read GBT SDFITS and to write as MS"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile1,outform='MS2')
         self.assertEqual(self.res,None)
         #self.assertTrue(self._compare(self.outfile1))
         
-    def sdsave_test402(self):
+    def test402(self):
         """Test 402: test to read GBT SDFITS and to write as SDFITS"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile2,outform='SDFITS')
         self.assertEqual(self.res,None)
         #self.assertTrue(self._compare(self.outfile2))
 
-    def sdsave_test403(self):
+    def test403(self):
         """Test 403: test to read GBT SDFITS and to write as ASCII"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile3,outform='ASCII')
         self.assertEqual(self.res,None)
@@ -426,26 +426,26 @@ class sdsave_test5(unittest.TestCase):
             os.system( 'rm -f '+self.sdfile )
         os.system( 'rm -rf '+self.prefix+'*' )
 
-    def sdsave_test500(self):
+    def test500(self):
         """Test 500: test to read NROFITS and to write as scantable"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile0,outform='ASAP')
         self.assertEqual(self.res,None)
         #self.assertTrue(self._compare(self.outfile0))
         self.assertTrue(self._compare())
 
-    def sdsave_test501(self):
+    def test501(self):
         """Test 501: test to read NROFITS and to write as MS"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile1,outform='MS2')
         self.assertEqual(self.res,None)
         #self.assertTrue(self._compare(self.outfile1))
         
-    def sdsave_test502(self):
+    def test502(self):
         """Test 502: test to read NROFITS and to write as SDFITS"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile2,outform='SDFITS')
         self.assertEqual(self.res,None)
         #self.assertTrue(self._compare(self.outfile2))
 
-    def sdsave_test503(self):
+    def test503(self):
         """Test 503: test to read NROFITS and to write as ASCII"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile3,outform='ASCII')
         self.assertEqual(self.res,None)
