@@ -2168,7 +2168,7 @@ class MultiMS:
             pass
         self.__entryDict.pop(msName)
 
-    def writeFile(msgf):
+    def writeFile(self, msgf):
         f=open(msgf, 'w')
         for entryKey in self.__getSortedEntries():
             if self.__entryDict[entryKey].use:
