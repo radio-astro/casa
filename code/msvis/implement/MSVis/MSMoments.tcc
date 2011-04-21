@@ -514,7 +514,11 @@ Bool MSMoments<T>::createMoments(PtrBlock< MeasurementSet* >& outPt,
     colDesc.setName( "FLOAT_DATA" ) ;
     if ( goodUnits ) {
       // TODO: Set unit for MS?
-      colDesc.rwKeywordSet().define( colDesc.rwKeywordSet().fieldNumber( "UNIT" ), momentUnits.getName() ) ;
+      //colDesc.rwKeywordSet().define( colDesc.rwKeywordSet().fieldNumber( "UNIT" ), momentUnits.getName() ) ;
+      if ( colDesc.rwKeywordSet().isDefined( "QuantumUnits" ) )
+        colDesc.rwKeywordSet().define( "QuantumUnits", momentUnits.getName() ) ;
+      else
+        colDesc.rwKeywordSet().define( "UNIT", momentUnits.getName() ) ;
     }
     else {
       if ( giveMessage ) {
