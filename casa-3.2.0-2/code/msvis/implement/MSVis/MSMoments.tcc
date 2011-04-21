@@ -515,10 +515,10 @@ Bool MSMoments<T>::createMoments(PtrBlock< MeasurementSet* >& outPt,
     if ( goodUnits ) {
       // TODO: Set unit for MS?
       //colDesc.rwKeywordSet().define( colDesc.rwKeywordSet().fieldNumber( "UNIT" ), momentUnits.getName() ) ;
-      if ( colDesc.rwKeywordSet().isDefined( "QuantumUnits" ) )
-        colDesc.rwKeywordSet().define( "QuantumUnits", momentUnits.getName() ) ;
-      else
+      if ( colDesc.rwKeywordSet().isDefined( "UNIT" ) )
         colDesc.rwKeywordSet().define( "UNIT", momentUnits.getName() ) ;
+      else
+        colDesc.rwKeywordSet().define( "QuantumUnits", momentUnits.getName() ) ;
     }
     else {
       if ( giveMessage ) {
