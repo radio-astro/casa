@@ -90,11 +90,11 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
 
   
   if(hasMask(0))
-    clean(image(0), residual(0), PSF(0), mask(0), gain(), numberIterations(),  
+    converged = clean(image(0), residual(0), PSF(0), mask(0), gain(), numberIterations(),  
 	  threshold(), cycleFactor_p, True, doPolJoint_p);
   else{
     ImageInterface<Float> *tmpMask=0;
-    clean(image(0), residual(0), PSF(0), *tmpMask, gain(), numberIterations(),  
+    converged = clean(image(0), residual(0), PSF(0), *tmpMask, gain(), numberIterations(),  
 	  threshold(), cycleFactor_p, False, doPolJoint_p);
   }
   modified_p=True;
