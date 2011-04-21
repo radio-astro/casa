@@ -16,20 +16,30 @@ import asap as sd
 
 # Unit test of sdtpimaging task.
 
+###
+# Base class for sdtpimaging unit test
+###
+class sdtpimaging_unittest_base:
+    """
+    Base class for sdtpimaging unit test.
+    """
+    taskname='sdtpimaging'
+    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdtpimaging/'
+
+
 
 ###
 # Test on bad parameter settings, data selection, ...
 ###
-class sdtpimaging_test0(unittest.TestCase):
+class sdtpimaging_test0(unittest.TestCase,sdtpimaging_unittest_base):
     """
     Test on bad parameter settings
     """
     # Input and output names
     sdfile='tpimaging.ms'
-    prefix='sdtpimaging.Test0'
+    prefix=sdtpimaging_unittest_base.taskname+'Test0'
     outfile=prefix+'.ms'
     outimage=prefix+'.im'
-    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdtpimaging/'
 
     def setUp(self):
         self.res=None
@@ -97,17 +107,16 @@ class sdtpimaging_test0(unittest.TestCase):
 ###
 # Test to image data without spatial baseline subtraction
 ###
-class sdtpimaging_test1(unittest.TestCase):
+class sdtpimaging_test1(unittest.TestCase,sdtpimaging_unittest_base):
     """
     Test to image data without spatial baseline subtraction
     """
     # Input and output names
     sdfile='tpimaging.ms'
-    prefix='sdtpimaging.Test1'
+    prefix=sdtpimaging_unittest_base.taskname+'Test1'
     outfile=prefix+'.ms'
     outimage=prefix+'.im'
     refimage='nobaseline.im'
-    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdtpimaging/'
 
     def setUp(self):
         self.res=None
@@ -153,17 +162,16 @@ class sdtpimaging_test1(unittest.TestCase):
 ###
 # Test to image data with spatial baseline subtraction
 ###
-class sdtpimaging_test2(unittest.TestCase):
+class sdtpimaging_test2(unittest.TestCase,sdtpimaging_unittest_base):
     """
     Test to image data with spatial baseline subtraction
     """
     # Input and output names
     sdfile='tpimaging.ms'
-    prefix='sdtpimaging.Test2'
+    prefix=sdtpimaging_unittest_base.taskname+'Test2'
     outfile=prefix+'.ms'
     outimage=prefix+'.im'
     refimage='dobaseline.im'
-    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdtpimaging/'
 
     def setUp(self):
         self.res=None

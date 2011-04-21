@@ -27,6 +27,7 @@ class sdmath_unittest_base:
     """
     Base class for sdmath unit test
     """
+    taskname='sdmath'
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdmath/'
     
     def _checkfile( self, name ):
@@ -123,7 +124,7 @@ class sdmath_test0(unittest.TestCase,sdmath_unittest_base):
     """
     # Input and output names
     rawfile='sdmath0.asap'
-    prefix='sdmathTest0'
+    prefix=sdmath_unittest_base.taskname+'Test0'
     outfile=prefix+'.asap'
 
     def setUp(self):
@@ -233,7 +234,7 @@ class sdmath_test1(unittest.TestCase,sdmath_unittest_base):
     """
     # Input and output names
     rawfile='sdmath0.asap'
-    prefix='sdmathTest2'
+    prefix=sdmath_unittest_base.taskname+'Test2'
     outfile=prefix+'.asap'
 
     def setUp(self):
@@ -457,7 +458,7 @@ class sdmath_test2(unittest.TestCase,sdmath_unittest_base):
     """
     # Input and output names
     rawfile='sdmath0.asap'
-    prefix='sdmathTest2'
+    prefix=sdmath_unittest_base.taskname+'Test2'
     outfile=prefix+'.asap'
     factor=[[0.1,0.3,0.5,0.7],[0.2,0.4,0.6,0.8]]
     datafile=prefix+'.dat'
@@ -543,7 +544,7 @@ class sdmath_test3(unittest.TestCase,sdmath_unittest_base):
     # Input and output names
     rawfile0='sdmath0.asap'
     rawfile1='sdmath1.asap'
-    prefix='sdmathTest3'
+    prefix=sdmath_unittest_base.taskname+'Test3'
     outfile=prefix+'.asap'
 
     def setUp(self):

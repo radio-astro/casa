@@ -24,6 +24,7 @@ class msmoments_unittest_base:
     """
     Base class for msmoments unit test
     """
+    taskname='msmoments'
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/msmoments/'
     place=5
     
@@ -75,7 +76,7 @@ class msmoments_test0(unittest.TestCase,msmoments_unittest_base):
     """
     # Input and output names
     rawfile='msmoments0.ms'
-    prefix='msmomentsTest0'
+    prefix=msmoments_unittest_base.taskname+'Test0'
     outfile=prefix+'.ms'
 
     def setUp(self):
@@ -189,7 +190,7 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
     """
     # Input and output names
     rawfile='msmoments0.ms'
-    prefix='msmomentsTest0'
+    prefix=msmoments_unittest_base.taskname+'Test1'
     outfile=prefix+'.ms'
 
     def setUp(self):
