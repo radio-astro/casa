@@ -236,8 +236,9 @@ def plotms(vis=None,
 
         # Update and show
         pm.update()
-        if (showgui):
-            pm.show()
+        #if (showgui):
+        #    pm.show()
+        pm.show()
         
         # write file if requested
         if(plotfile != ""):
