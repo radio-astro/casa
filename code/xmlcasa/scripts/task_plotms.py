@@ -49,7 +49,6 @@ def plotms(vis=None,
            default: ''
     xaxis, yaxis -- what to plot on the two axes
                     default: '' (uses PlotMS defaults/current set).
-                    valid values (alphabetical, = indicates synonyms): 
         &gt;&gt;&gt; xaxis, yaxis expandable parameters
         xdatacolumn, 
         ydatacolumn -- which data column to use for data axes
@@ -161,10 +160,12 @@ def plotms(vis=None,
         synonyms['amplitude'] = 'amp'
         synonyms['imaginary'] = 'imag'
         synonyms['ant'] = 'antenna'
-        synonyms['parallacticangle'] = 'parang'
+        synonyms['parallacticangle'] = 'parangle'
+        synonyms['parang'] = 'parangle'
         synonyms['hourangle'] = 'hourang'
         synonyms['ant-hourangle'] = 'ant-hourang'
         synonyms['ant-parallacticangle'] = 'ant-parang'
+        synonyms['ant-parangle'] = 'ant-parang'
         
         if(synonyms.has_key(xaxis)): xaxis = synonyms[xaxis]
         if(synonyms.has_key(yaxis)): yaxis = synonyms[yaxis]

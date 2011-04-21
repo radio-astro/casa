@@ -66,12 +66,12 @@ MS Parameters
       <value>azimuth</value>
       <value>elevation</value>
       <value>hourang</value><value>hourangle</value>
-      <value>parang</value><value>parallacticangle</value>
+      <value>parang</value><value>parangle</value><value>parallacticangle</value>
       <value>antenna</value><value>ant</value>
       <value>ant-azimuth</value>
       <value>ant-elevation</value>
       <value>ant-hourang</value><value>ant-hourangle</value>
-      <value>ant-parang</value><value>ant-parallacticangle</value>
+      <value>ant-parang</value><value>ant-parangle</value><value>ant-parallacticangle</value>
       <value>row</value>
       <value>flagrow</value>
     </allowed>
@@ -120,12 +120,12 @@ MS Parameters
       <value>azimuth</value>
       <value>elevation</value>
       <value>hourang</value><value>hourangle</value>
-      <value>parang</value><value>parallacticangle</value>
+      <value>parang</value><value>parangle</value><value>parallacticangle</value>
       <value>antenna</value><value>ant</value>
       <value>ant-azimuth</value>
       <value>ant-elevation</value>
       <value>ant-hourang</value><value>ant-hourangle</value>
-      <value>ant-parang</value><value>ant-parallacticangle</value>
+      <value>ant-parang</value><value>ant-parangle</value><value>ant-parallacticangle</value>
       <value>row</value>
       <value>flagrow</value>
     </allowed>  
@@ -759,6 +759,7 @@ Constraints
       <equals value="hourang"/>
        <equals value="hourangle"/>
       <equals value="parang"/>
+       <equals value="parangle"/>
        <equals value="parallacticangle"/>
       <equals value="antenna"/>
        <equals value="ant"/>
@@ -767,6 +768,7 @@ Constraints
       <equals value="ant-hourang"/>
        <equals value="ant-hourangle"/>
       <equals value="ant-parang"/>
+       <equals value="ant-parangle"/>
        <equals value="ant-parallacticangle"/>
       <equals value="row"/>
       <equals value="flagrow"/>
@@ -827,6 +829,7 @@ Constraints
       <equals value="hourang"/>
        <equals value="hourangle"/>
       <equals value="parang"/>
+       <equals value="parangle"/>
        <equals value="parallacticangle"/>
       <equals value="antenna"/>
        <equals value="ant"/>
@@ -835,6 +838,7 @@ Constraints
       <equals value="ant-hourang"/>
        <equals value="ant-hourangle"/>
       <equals value="ant-parang"/>
+       <equals value="ant-parangle"/>
        <equals value="ant-parallacticangle"/>
       <equals value="row"/>
       <equals value="flagrow"/>
@@ -992,11 +996,13 @@ Constraints
                     valid values (alphabetical, = indicates synonyms): 
                       'amp' = 'amplitude',  'ant',  'ant-azimuth',  'ant-elevation',  'antenna',
                       'antenna1' = 'ant1',  'antenna2' = 'ant2',  
-                      'ant-hourang' = 'ant-hourangle',  'ant-parallacticangle' = 'ant-parang',  
+                      'ant-hourang' = 'ant-hourangle',  
+                      'ant-parallacticangle' = 'ant-parangle' = 'ant-parang',  
                       'azimuth',  'baseline',  'chan' = 'channel',  'corr' = 'correlation',  
                       'elevation',  'field',  'flag',  'flagrow',  'freq' = 'frequency',  
                       'hourang' = 'hourangle',  'imag' = 'imaginary',  'imwt',   
-                      'parallacticangle' = 'parang',   'phase',  'real',  'row',  'scan',  
+                      'parallacticangle' = 'parangle' = 'parang',   'phase',  
+                      'real',  'row',  'scan',  
                       'spw',  'time',  'timeint' = 'timeinterval' = 'time_interval', 
                       'u',  'uvdist',  'uvdistl' = 'uvdist_l',  'v',  'velocityvel', 'w', 
                       'weight' = 'wt'
