@@ -65,10 +65,16 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
                         raise Exception, "sdimages allows only one input file for pressed-out method." 
                     else:
                         sdimages = sdimages[0]
+                if type(direction) == list:
+                    if len(direction) != 1:
+                        raise Exception, "direction allows only one direction for pressed-out method."
+                    else:
+                        direction = direction[0]
+                        
 
                 # mask
                 image = ia.newimagefromimage(infile=sdimages,outfile=tmpmskname)
-                imshape = ia.shape()
+                imshape = image.shape()
                 nx = imshape[0]
                 ny = imshape[1]
                 nchan = imshape[2]
@@ -156,7 +162,7 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
                 elif direction == 90.0:
                     fitaxis = 1
                 else:
-                    raise Exception, "Sorry, the task don't supports inclined scan with respect to horizontal or vertical axis, right now."
+                    raise Exception, "Sorry, the task don't support inclined scan with respect to horizontal or vertical axis, right now."
                 polyimage = convimage.fitpolynomial( fitfile=tmppolyname, axis=fitaxis, order=numpoly, overwrite=True )
                 polyimage = ia.newimage( tmppolyname )
 
@@ -431,7 +437,7 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
 
         except Exception, instance:
             casalog.post( str(instance), priority = 'ERROR' )
-            return
+            raise Exception, instance
         finally:
             if os.path.exists( tmpmskname ):
                  os.system( 'rm -rf %s' % tmpmskname )
