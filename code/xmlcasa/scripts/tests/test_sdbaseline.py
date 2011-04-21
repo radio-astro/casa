@@ -137,7 +137,8 @@ class sdbaseline_basictest(unittest.TestCase):
         print "Statistics of baselined spectra:\n",currstat
         print "Reference values:\n",refstat
         # compare statistic values
-        compstats = ['max','min','mean','sum','rms']
+        #compstats = ['max','min','mean','sum','rms']
+        compstats = ['max','min','rms']
         allowdiff = 0.01
         self.assertEqual(currstat['max_abscissa']['unit'],
                          refstat['max_abscissa']['unit'],
@@ -223,8 +224,6 @@ class sdbaseline_masktest(unittest.TestCase):
                      'max': [14.782135009765625, 2.0308547019958496],
                      'sum': [45.82806396484375, 171.0570068359375],
                      'mean':[0.0055942460894584656, 0.020880982279777527]}
-#                     'sum': [39.382259368896484, 171.57220458984375],
-#                     'mean': [0.0048074047081172466, 0.020943872630596161]}
     ref_if2pol0f = {'rms': 0.19945363700389862, 'min': -2.7968206405639648,
                     'max': 2.0308547019958496, 'sum': 171.57220458984375,
                     'mean': 0.020943872630596161}
@@ -233,13 +232,9 @@ class sdbaseline_masktest(unittest.TestCase):
                      'max': [14.930398941040039, 2.0269484519958496],
                      'sum': [18.465187072753906, 161.4881591796875],
                      'mean': [0.0022540511563420296, 0.019712910056114197]}
-#                     'sum': [18.462699890136719, 164.74856567382812],
-#                     'mean': [0.0022537475451827049, 0.020110908895730972]}
     ref_if2pol0v = {'rms': 0.19845835864543915, 'min': -2.7794866561889648,
                     'max': 2.0269484519958496, 'sum': 161.4881591796875,
                     'mean': 0.019712910056114197}
-#                    'max': 2.0269484519958496, 'sum': 164.74856567382812,
-#                    'mean': 0.020110908895730972}
     
     def setUp(self):
         if os.path.exists(self.sdfile):
@@ -609,7 +604,8 @@ class sdbaseline_masktest(unittest.TestCase):
         print "Statistics of baselined spectra:\n",currstat
         print "Reference values:\n",refstat
         # compare statistic values
-        compstats = ['max','min','mean','sum','rms']
+        #compstats = ['max','min','mean','sum','rms']
+        compstats = ['max','min','rms']
         allowdiff = 0.01
         if isinstance(refstat['max'],list):
             for i in xrange(len(refstat['max'])):
