@@ -104,11 +104,11 @@ class sdcal_test(unittest.TestCase):
         outfile = self.outroot+self.tid+'.asap'
         calmode = 'ps'
         kernel = 'hanning'
-        maskmode='auto'
+        blfunc='poly'
 
 
         result = sdcal(sdfile=sdfile,outfile=outfile,calmode=calmode,
-                       kernel=kernel,maskmode=maskmode)
+                       kernel=kernel,blfunc=blfunc)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         self.assertTrue(os.path.exists(outfile),
@@ -153,11 +153,6 @@ class sdcal_test(unittest.TestCase):
                        tau=0.0,
                        kernel='hanning',
                        kwidth=5,
-                       masklist=[],
-                       maskmode='auto',
-                       thresh=5.0,
-                       avg_limit=4,
-                       edge=[0],
                        blfunc='poly',
                        order=5,
                        npiece=2,
@@ -165,6 +160,11 @@ class sdcal_test(unittest.TestCase):
                        clipniter=1,
                        nwave=3,
                        maxwavelength=1.0,
+                       masklist=[],
+                       maskmode='auto',
+                       thresh=5.0,
+                       avg_limit=4,
+                       edge=[0],
                        verifycal=False,
                        verifysm=False,
                        verifybl=False,
@@ -242,9 +242,9 @@ class sdcal_test(unittest.TestCase):
         self.tid="07"
         sdfile = self.sdfile1
         outfile = self.outroot+self.tid+'.asap'
-        maskmode = 'auto'
+        blfunc = 'poly'
 
-        result = sdcal(sdfile=sdfile,outfile=outfile,maskmode=maskmode)
+        result = sdcal(sdfile=sdfile,outfile=outfile,blfunc=blfunc)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         self.assertTrue(os.path.exists(outfile),
@@ -264,10 +264,10 @@ class sdcal_test(unittest.TestCase):
         calmode = 'none'
         average = False
         kernel = 'hanning'
-        maskmode = 'auto'
+        blfunc = 'poly'
 
         result = sdcal(sdfile=sdfile,outfile=outfile,calmode=calmode,
-                       average=average,kernel=kernel,maskmode=maskmode)
+                       average=average,kernel=kernel,blfunc=blfunc)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         self.assertTrue(os.path.exists(outfile),
@@ -285,10 +285,10 @@ class sdcal_test(unittest.TestCase):
         outfile = self.outroot+self.tid+'.asap'
         calmode = 'ps'
         kernel = 'none'
-        maskmode = 'auto'
+        blfunc = 'poly'
 
         result = sdcal(sdfile=sdfile,outfile=outfile,calmode=calmode,
-                       kernel=kernel,maskmode=maskmode)
+                       kernel=kernel,blfunc=blfunc)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         self.assertTrue(os.path.exists(outfile),
@@ -307,10 +307,10 @@ class sdcal_test(unittest.TestCase):
         outfile = self.outroot+self.tid+'.asap'
         calmode = 'ps'
         kernel = 'hanning'
-        maskmode = 'none'
+        blfunc = 'none'
 
         result = sdcal(sdfile=sdfile,outfile=outfile,calmode=calmode,
-                       kernel=kernel,maskmode=maskmode)
+                       kernel=kernel,blfunc=blfunc)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         self.assertTrue(os.path.exists(outfile),
