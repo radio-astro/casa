@@ -27,6 +27,7 @@ class sdaverage_unittest_base:
     """
     Base class for sdaverage unit test
     """
+    taskname='sdaverage'
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdaverage/'
     tolerance=1.0e-15
 
@@ -170,7 +171,7 @@ class sdaverage_test0(sdaverage_unittest_base,unittest.TestCase):
     """
     # Input and output names
     rawfile='calpsGBT.asap'
-    prefix='sdaverageTest0'
+    prefix=sdaverage_unittest_base.taskname+'Test0'
     outfile=prefix+'.asap'
 
     def setUp(self):
@@ -238,7 +239,7 @@ class sdaverage_test1(sdaverage_caltest_base,unittest.TestCase):
     # Input and output names
     rawfile='calpsGBT.asap'
     reffile='calpsGBT.cal.asap'
-    prefix='sdaverageTest1'
+    prefix=sdaverage_unittest_base.taskname+'Test1'
     calmode='ps'
 
     def setUp(self):
@@ -289,7 +290,7 @@ class sdaverage_test2(sdaverage_caltest_base,unittest.TestCase):
     # Input and output names
     rawfile='calnodGBT.asap'
     reffile='calnodGBT.cal.asap'
-    prefix='sdaverageTest2'
+    prefix=sdaverage_unittest_base.taskname+'Test2'
     calmode='nod'
 
     def setUp(self):
@@ -340,7 +341,7 @@ class sdaverage_test3(sdaverage_caltest_base,unittest.TestCase):
     # Input and output names
     rawfile='calfsGBT.asap'
     reffile='calfsGBT.cal.asap'
-    prefix='sdaverageTest3'
+    prefix=sdaverage_unittest_base.taskname+'Test3'
     calmode='fs'
 
     def setUp(self):
@@ -388,7 +389,7 @@ class sdaverage_test4(sdaverage_caltest_base,unittest.TestCase):
     # Input and output names
     rawfile='quotient.asap'
     reffile='quotient.cal.asap'
-    prefix='sdaverageTest4'
+    prefix=sdaverage_unittest_base.taskname+'Test4'
     calmode='quotient'
 
     def setUp(self):
@@ -438,7 +439,7 @@ class sdaverage_test5(sdaverage_caltest_base,unittest.TestCase):
     # Input and output names
     rawfile='calpsALMA.asap'
     reffile='calpsALMA.cal.asap'
-    prefix='sdaverageTest5'
+    prefix=sdaverage_unittest_base.taskname+'Test5'
     calmode='ps'
 
     def setUp(self):
@@ -480,7 +481,7 @@ class sdaverage_test6(sdaverage_avetest_base,unittest.TestCase):
     """
     # Input and output names
     rawfile='calpsGBT.cal.asap'
-    prefix='sdaverageTest6'
+    prefix=sdaverage_unittest_base.taskname+'Test6'
     reffiles=['polaverage.ref0',
               'polaverage.ref1',
               'polaverage.ref2',
@@ -548,7 +549,7 @@ class sdaverage_test7(sdaverage_avetest_base,unittest.TestCase):
     """
     # Input and output names
     rawfile='calpsGBT.cal.asap'
-    prefix='sdaverageTest7'
+    prefix=sdaverage_unittest_base.taskname+'Test7'
     reffiles=['timeaverage.ref0',
               'timeaverage.ref1',
               'timeaverage.ref2',
@@ -676,7 +677,7 @@ class sdaverage_test8(sdaverage_avetest_base,unittest.TestCase):
     # Input and output names
     rawfile='calpsGBT.asap'
     calfile='calpsGBT.cal.asap'
-    prefix='sdaverageTest8'
+    prefix=sdaverage_unittest_base.taskname+'Test8'
     reffiles=['polaverage.ref2',
               'timeaverage.ref6',
               'timepolaverage.ref']
@@ -773,7 +774,7 @@ class sdaverage_test9(sdaverage_avetest_base,unittest.TestCase):
     """
     # Input and output names
     rawfile='averageall.asap'
-    prefix='sdaverageTest9'
+    prefix=sdaverage_unittest_base.taskname+'Test9'
     reffiles=['averageall.ref']
 
     def setUp(self):
