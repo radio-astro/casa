@@ -212,15 +212,34 @@ class sdbaseline_masktest(unittest.TestCase):
     blchan2 = [[200,2959],[3120,7599]]
 
     # reference values for specunit='channel'
-    ref_pol0if0 = {'linemaxpos': 4102.0, 'linesum': 835.4853515625,
-                   'linemax': 5.8808684349060059,
-                   'baserms': 4.2809243202209473,
-                   'basestd': 0.15682883560657501}
-    ref_pol0if2 = {'linemaxpos': 3045.0, 'linesum': 814.872314453125,
-                   'linemax': 6.3135685920715332,
-                   'baserms': 4.2830166816711426,
-                   'basestd': 0.13160674273967743}
-    
+    ref_pol0if0 =  {'linemaxpos': 4102.0, 'linesum': 103.81604766845703,
+                    'linemax': 1.6280698776245117,
+                    'baserms': 0.15021507441997528,
+                    'basestd': 0.15022546052932739}
+    ref_pol0if2 = {'linemaxpos': 3045.0, 'linesum': 127.79755401611328,
+                   'linemax': 2.0193681716918945,
+                   'baserms': 0.13134850561618805,
+                   'basestd': 0.1313575953245163}
+    # reference values for specunit='GHz'
+    ref_pol0if0f = {'linemaxpos': 4102.0, 'linesum': 101.49118804931641,
+                    'linemax': 1.6132903099060059,
+                    'baserms': 0.15236321091651917,
+                    'basestd': 0.15236999094486237}
+    ref_pol0if2f = {'linemaxpos': 3045.0, 'linesum': 129.6041259765625,
+                    'linemax': 2.0308537483215332,
+                    'baserms': 0.13158561289310455,
+                    'basestd': 0.13159450888633728}
+
+    # reference values for specunit='km/s'
+    ref_pol0if0v = {'linemaxpos': 4102.0, 'linesum': 103.81607055664062,
+                    'linemax': 1.6280698776245117,
+                    'baserms': 0.15021507441997528,
+                    'basestd': 0.15022547543048859}
+    ref_pol0if2v = {'linemaxpos': 3045.0, 'linesum': 128.9298095703125,
+                    'linemax': 2.0264592170715332,
+                    'baserms': 0.13150280714035034,
+                    'basestd': 0.13151165843009949}
+     
     def setUp(self):
         if os.path.exists(self.sdfile):
             shutil.rmtree(self.sdfile)
@@ -253,10 +272,10 @@ class sdbaseline_masktest(unittest.TestCase):
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF0
-        testval = self._getStats(sdfile,self.blchan0,0)
+        testval = self._getStats(outfile,self.blchan0,0)
         self._compareDictVal(testval,self.ref_pol0if0)
         # Compare IF2
-        testval = self._getStats(sdfile,self.blchan2,2)
+        testval = self._getStats(outfile,self.blchan2,2)
         self._compareDictVal(testval,self.ref_pol0if2)
 
     def testblmask02(self):
@@ -277,7 +296,7 @@ class sdbaseline_masktest(unittest.TestCase):
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF2
-        testval = self._getStats(sdfile,self.blchan2,2)
+        testval = self._getStats(outfile,self.blchan2,2)
         self._compareDictVal(testval,self.ref_pol0if2)
 
     def testblmask03(self):
@@ -300,10 +319,10 @@ class sdbaseline_masktest(unittest.TestCase):
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF0
-        testval = self._getStats(sdfile,self.blchan0,0)
+        testval = self._getStats(outfile,self.blchan0,0)
         self._compareDictVal(testval,self.ref_pol0if0)
         # Compare IF2
-        testval = self._getStats(sdfile,self.blchan2,2)
+        testval = self._getStats(outfile,self.blchan2,2)
         self._compareDictVal(testval,self.ref_pol0if2)
 
     def testblmask04(self):
@@ -332,10 +351,10 @@ class sdbaseline_masktest(unittest.TestCase):
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF0
-        testval = self._getStats(sdfile,self.blchan0,0)
+        testval = self._getStats(outfile,self.blchan0,0)
         self._compareDictVal(testval,self.ref_pol0if0)
         # Compare IF2
-        testval = self._getStats(sdfile,self.blchan2,2)
+        testval = self._getStats(outfile,self.blchan2,2)
         self._compareDictVal(testval,self.ref_pol0if2)
 
     def testblmask05(self):
@@ -359,8 +378,8 @@ class sdbaseline_masktest(unittest.TestCase):
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF2
-        testval = self._getStats(sdfile,self.blchan2,2)
-        self._compareDictVal(testval,self.ref_pol0if2)
+        testval = self._getStats(outfile,self.blchan2,2)
+        self._compareDictVal(testval,self.ref_pol0if2f)
 
     def testblmask06(self):
         """Mask test 6: test specunit='GHz' with masklist (list) and maskmode = 'list'"""
@@ -383,8 +402,8 @@ class sdbaseline_masktest(unittest.TestCase):
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF2
-        testval = self._getStats(sdfile,self.blchan2,2)
-        self._compareDictVal(testval,self.ref_pol0if2)
+        testval = self._getStats(outfile,self.blchan2,2)
+        self._compareDictVal(testval,self.ref_pol0if2f)
 
     def testblmask07(self):
         """Mask test 7: test specunit='GHz' with masklist (string) and maskmode = 'auto'"""
@@ -415,11 +434,11 @@ class sdbaseline_masktest(unittest.TestCase):
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF0
-        testval = self._getStats(sdfile,self.blchan0,0)
-        self._compareDictVal(testval,self.ref_pol0if0)
+        testval = self._getStats(outfile,self.blchan0,0)
+        self._compareDictVal(testval,self.ref_pol0if0f)
         # Compare IF2
-        testval = self._getStats(sdfile,self.blchan2,2)
-        self._compareDictVal(testval,self.ref_pol0if2)
+        testval = self._getStats(outfile,self.blchan2,2)
+        self._compareDictVal(testval,self.ref_pol0if2f)
 
     def testblmask08(self):
         """Mask test 8: test specunit='GHz' with masklist (string) and maskmode = 'list'"""
@@ -450,11 +469,11 @@ class sdbaseline_masktest(unittest.TestCase):
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF0
-        testval = self._getStats(sdfile,self.blchan0,0)
-        self._compareDictVal(testval,self.ref_pol0if0)
+        testval = self._getStats(outfile,self.blchan0,0)
+        self._compareDictVal(testval,self.ref_pol0if0f)
         # Compare IF2
-        testval = self._getStats(sdfile,self.blchan2,2)
-        self._compareDictVal(testval,self.ref_pol0if2)
+        testval = self._getStats(outfile,self.blchan2,2)
+        self._compareDictVal(testval,self.ref_pol0if2f)
 
     def testblmask09(self):
         """Mask test 9: test specunit='km/s' with masklist (list) and maskmode = 'auto'"""
@@ -477,8 +496,8 @@ class sdbaseline_masktest(unittest.TestCase):
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF2
-        testval = self._getStats(sdfile,self.blchan2,2)
-        self._compareDictVal(testval,self.ref_pol0if2)
+        testval = self._getStats(outfile,self.blchan2,2)
+        self._compareDictVal(testval,self.ref_pol0if2v)
 
     def testblmask10(self):
         """Mask test 10: test specunit='km/s' with masklist (list) and maskmode = 'list'"""
@@ -501,8 +520,8 @@ class sdbaseline_masktest(unittest.TestCase):
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF2
-        testval = self._getStats(sdfile,self.blchan2,2)
-        self._compareDictVal(testval,self.ref_pol0if2)
+        testval = self._getStats(outfile,self.blchan2,2)
+        self._compareDictVal(testval,self.ref_pol0if2v)
 
     def testblmask11(self):
         """Mask test 11: test specunit='km/s' with masklist (string) and maskmode = 'auto'"""
@@ -533,11 +552,11 @@ class sdbaseline_masktest(unittest.TestCase):
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF0
-        testval = self._getStats(sdfile,self.blchan0,0)
-        self._compareDictVal(testval,self.ref_pol0if0)
+        testval = self._getStats(outfile,self.blchan0,0)
+        self._compareDictVal(testval,self.ref_pol0if0v)
         # Compare IF2
-        testval = self._getStats(sdfile,self.blchan2,2)
-        self._compareDictVal(testval,self.ref_pol0if2)
+        testval = self._getStats(outfile,self.blchan2,2)
+        self._compareDictVal(testval,self.ref_pol0if2v)
 
     def testblmask12(self):
         """Mask test 12: test specunit='km/s' with masklist (string) and maskmode = 'list'"""
@@ -568,11 +587,11 @@ class sdbaseline_masktest(unittest.TestCase):
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF0
-        testval = self._getStats(sdfile,self.blchan0,0)
-        self._compareDictVal(testval,self.ref_pol0if0)
+        testval = self._getStats(outfile,self.blchan0,0)
+        self._compareDictVal(testval,self.ref_pol0if0v)
         # Compare IF2
-        testval = self._getStats(sdfile,self.blchan2,2)
-        self._compareDictVal(testval,self.ref_pol0if2)
+        testval = self._getStats(outfile,self.blchan2,2)
+        self._compareDictVal(testval,self.ref_pol0if2v)
 
 
     def _get_range_in_string(self,valrange):
@@ -620,6 +639,7 @@ class sdbaseline_masktest(unittest.TestCase):
         linechan = [basechan[0][1]+1,basechan[1][0]-1]
         scan = sd.scantable(filename,average=False)
         scan.set_selection(ifs=[ispw])
+        scan.set_unit('channel')
         linmsk = scan.create_mask(linechan)
         blmsk = scan.create_mask(basechan)
         # only the fist row is returned
