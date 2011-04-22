@@ -65,6 +65,7 @@ casa_add_python( xmlcasa xmlcasa_tests_python python/${PYTHONV}/tests
   test_sdbaseline.py
   test_sdcal.py
   test_sdfit.py
+  test_sdflag.py
   test_sdflagmanager.py
   test_sdimaging.py
   test_sdimprocess.py
