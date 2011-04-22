@@ -293,29 +293,35 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
                         maskw = 0.5 * nx * masks[i] 
                         for ix in range(nx):
                             for iy in range(ny):
-                                dd = abs( float(ix) - 0.5 * nx )
+                                dd = abs( float(ix) - 0.5 * (nx-1) )
                                 if dd < maskw:
                                     cosd = numpy.cos(0.5*numpy.pi*dd/maskw)
                                     weights[i][ix][iy] = 1.0 - cosd * cosd
+                                if weights[i][ix][iy] == 0.0:
+                                    weights[i][ix][iy] += eps*0.01
                     elif abs(numpy.cos(direction[i]*dtor)) < eps:
                         # direction is around 90 deg
                         maskw = 0.5 * ny * masks[i]
                         for ix in range(nx):
                             for iy in range(ny):
-                                dd = abs( float(iy) - 0.5 * ny )
+                                dd = abs( float(iy) - 0.5 * (ny-1) )
                                 if dd < maskw:
                                     cosd = numpy.cos(0.5*numpy.pi*dd/maskw)
                                     weights[i][ix][iy] = 1.0 - cosd * cosd
+                                if weights[i][ix][iy] == 0.0:
+                                    weights[i][ix][iy] += eps*0.01
                     else:
                         maskw = 0.5 * sqrt( nx * ny ) * masks[i]
                         for ix in range(nx):
                             for iy in range(ny):
                                 tand = numpy.tan((direction[i]-90.0)*dtor)
-                                dd = abs( ix * tand - iy - 0.5 * nx * tand + 0.5 * ny )
+                                dd = abs( ix * tand - iy - 0.5 * (nx-1) * tand + 0.5 * (ny-1) )
                                 dd = dd / sqrt( 1.0 + tand * tand )
                                 if dd < maskw:
                                     cosd = numpy.cos(0.5*numpy.pi*dd/maskw)
                                     weights[i][ix][iy] = 1.0 - cosd * cosd
+                                if weights[i][ix][iy] == 0.0:
+                                    weights[i][ix][iy] += eps*0.01 
                     # shift
                     xshift = -((ny-1)/2)
                     yshift = -((nx-1)/2)
