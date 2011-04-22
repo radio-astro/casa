@@ -659,12 +659,13 @@ class sdbaseline_masktest(unittest.TestCase):
         for stat, refval in refdict.iteritems():
             self.assertTrue(testdict.has_key(stat),
                             msg = "'%s' is not defined in the current run" % stat)
+            allowdiff = 0.01
             #print "Comparing '%s': %f (current run), %f (reference)" % \
             #      (stat,testdict[stat],refval)
-            self.assertAlmostEqual(testdict[stat],refval,\
-                                       places=places)
-
-
+            reldiff = (testdict[stat]-refval)/refval
+            self.assertTrue(reldiff < allowdiff,\
+                            msg="'%s' differs: %f (ref) != %f" % \
+                            (stat, refval, testdict[stat]))
 
 class sdbaseline_functest(unittest.TestCase):
     """
