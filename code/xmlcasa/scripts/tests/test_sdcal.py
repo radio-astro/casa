@@ -57,18 +57,28 @@ class sdcal_test(unittest.TestCase):
 
     def _row0_stats(self,file):
         scan = sd.scantable(file,average=False)
-        stats=["max","min","sum","rms","max_abc","min_abc"]
+        stats=["max","min","sum","rms","stddev","max_abc","min_abc"]
+        edge = 500
+        chanrange = [edge, scan.nchan()-edge-1]
+        mask = scan.create_mask(chanrange)
         statdict = {}
         for stat in stats:
-            statdict[stat] = scan.stats(stat,row=0)
+            statdict[stat] = scan.stats(stat,mask=mask,row=0)[0]
         del scan
         print "\nCurrent run: "+str(statdict)
         return statdict
 
     def _teststats0(self,teststat,refstat,places=4):
-        for stat, testval in teststat.iteritems():
-            self.assertAlmostEqual(testval[0],refstat[stat][0],places=places,
-                                   msg = "'%s' is not in allowed range" % stat)
+        for stat, refval in refstat.iteritems():
+            self.assertTrue(teststat.has_key(stat),
+                            msg = "'%s' is not defined in the current run" % stat)
+            allowdiff = 0.01
+            #print "Comparing '%s': %f (current run), %f (reference)" % \
+            #      (stat,testdict[stat],refval)
+            reldiff = (teststat[stat]-refval)/refval
+            self.assertTrue(reldiff < allowdiff,\
+                            msg="'%s' differs: %f (ref) != %f" % \
+                            (stat, refval, teststat[stat]))
 
     def test00(self):
         """Test 0: Default parameters (raises an errror)"""
@@ -87,9 +97,10 @@ class sdcal_test(unittest.TestCase):
                          msg="The task returned '"+str(result)+"' instead of None")
         self.assertTrue(os.path.exists(outfile),
                          msg="Output file '"+str(outfile)+"' doesn't exists")
-        refstat = {'rms': [0.62064331769943237], 'min': [0.0078176604583859444],
-                   'max_abc': [0.0], 'max': [28.165399551391602],
-                   'sum': [4133.86181640625], 'min_abc': [8189.0]}
+        refstat = {'rms': 0.55389463901519775, 'min': 0.26541909575462341,
+                   'max_abc': 773.0, 'max': 0.91243284940719604,
+                   'sum': 3802.1259765625, 'stddev': 0.16529126465320587,
+                   'min_abc': 7356.0}
         teststat = self._row0_stats(outfile)
         self._teststats0(teststat,refstat)
 
@@ -114,9 +125,10 @@ class sdcal_test(unittest.TestCase):
         self.assertTrue(os.path.exists(outfile),
                          msg="Output file '"+str(outfile)+"' doesn't exists")
 
-        refstat = {'rms': [0.28766980767250061], 'min': [-8.0161199569702148],
-                   'max_abc': [22.0], 'max': [5.4759273529052734],
-                   'sum': [-37.209835052490234], 'min_abc': [18.0]}
+        refstat = {'rms': 0.21985267102718353, 'min': -0.70194435119628906,
+                   'max_abc': 4093.0, 'max': 0.96840262413024902,
+                   'sum': 5.4850387573242188, 'stddev': 0.21986636519432068,
+                   'min_abc': 7623.0}
         teststat = self._row0_stats(outfile)
         self._teststats0(teststat,refstat)
         
@@ -190,9 +202,10 @@ class sdcal_test(unittest.TestCase):
                          msg="The task returned '"+str(result)+"' instead of None")
         self.assertTrue(os.path.exists(outfile),
                          msg="Output file '"+str(outfile)+"' doesn't exists")
-        refstat = {'rms': [2.1405680179595947], 'min': [-8.1819267272949219],
-                   'max_abc': [21.0], 'max': [9.528289794921875],
-                   'sum': [17313.1484375], 'min_abc': [18.0]}
+        refstat = {'rms': 2.1299083232879639, 'min': 1.2246102094650269,
+                   'max_abc': 4093.0, 'max': 3.1902554035186768,
+                   'sum': 15209.119140625, 'stddev': 0.25390961766242981,
+                   'min_abc': 7434.0}
         teststat = self._row0_stats(outfile)
         self._teststats0(teststat,refstat)
 
@@ -212,9 +225,10 @@ class sdcal_test(unittest.TestCase):
         self.assertTrue(os.path.exists(outfile),
                          msg="Output file '"+str(outfile)+"' doesn't exists")
 
-        refstat = {'rms': [4.1485457420349121], 'min': [-15.086404800415039],
-                   'max_abc': [21.0], 'max': [18.760025024414062],
-                   'sum': [33786.92578125], 'min_abc': [18.0]}
+        refstat = {'rms': 4.1353230476379395, 'min': 3.2386586666107178,
+                   'max_abc': 4093.0, 'max': 5.6874399185180664,
+                   'sum': 29690.876953125, 'stddev': 0.24056948721408844,
+                   'min_abc': 2452.0}
         teststat = self._row0_stats(outfile)
         self._teststats0(teststat,refstat)
 
@@ -231,9 +245,10 @@ class sdcal_test(unittest.TestCase):
         self.assertTrue(os.path.exists(outfile),
                          msg="Output file '"+str(outfile)+"' doesn't exists")
 
-        refstat = {'rms': [3.6091854572296143], 'min': [-10.078493118286133],
-                   'max_abc': [22.0], 'max': [12.754172325134277],
-                   'sum': [29296.841796875], 'min_abc': [18.0]}
+        refstat = {'rms': 3.5979659557342529, 'min': 2.3542881011962891,
+                   'max_abc': 4093.0, 'max': 5.2421674728393555,
+                   'sum': 25737.166015625, 'stddev': 0.37295544147491455,
+                   'min_abc': 6472.0}
         teststat = self._row0_stats(outfile)
         self._teststats0(teststat,refstat)
 
@@ -250,9 +265,10 @@ class sdcal_test(unittest.TestCase):
         self.assertTrue(os.path.exists(outfile),
                          msg="Output file '"+str(outfile)+"' doesn't exists")
 
-        refstat =  {'rms': [0.57502073049545288], 'min': [-17.474369049072266],
-                    'max_abc': [21.0], 'max': [12.495612144470215],
-                    'sum': [-36.998577117919922], 'min_abc': [18.0]}
+        refstat =  {'rms': 0.42929685115814209, 'min': -1.4878685474395752,
+                    'max_abc': 4093.0, 'max': 1.8000495433807373,
+                    'sum': 6.9646663665771484, 'stddev': 0.42932614684104919,
+                    'min_abc': 7434.0}
         teststat = self._row0_stats(outfile)
         self._teststats0(teststat,refstat)
 
@@ -272,9 +288,10 @@ class sdcal_test(unittest.TestCase):
                          msg="The task returned '"+str(result)+"' instead of None")
         self.assertTrue(os.path.exists(outfile),
                          msg="Output file '"+str(outfile)+"' doesn't exists")
-        refstat = {'rms': [0.48680263757705688], 'min': [-13.565079689025879],
-                   'max_abc': [22.0], 'max': [9.2665014266967773],
-                   'sum': [-62.971389770507812], 'min_abc': [18.0]}
+        refstat = {'rms': 0.37204021215438843, 'min': -1.1878492832183838,
+                   'max_abc': 4093.0, 'max': 1.6387548446655273,
+                   'sum': 9.2789239883422852, 'stddev': 0.3720642626285553,
+                   'min_abc': 7623.0}
         teststat = self._row0_stats(outfile)
         self._teststats0(teststat,refstat)
 
@@ -294,9 +311,10 @@ class sdcal_test(unittest.TestCase):
         self.assertTrue(os.path.exists(outfile),
                          msg="Output file '"+str(outfile)+"' doesn't exists")
 
-        refstat = {'rms': [0.33980178833007812], 'min': [-10.326268196105957],
-                   'max_abc': [21.0], 'max': [7.384131908416748],
-                   'sum': [-21.863819122314453], 'min_abc': [18.0]}
+        refstat = {'rms': 0.25368797779083252, 'min': -0.87923824787139893,
+                   'max_abc': 4093.0, 'max': 1.0637180805206299,
+                   'sum': 4.11566162109375, 'stddev': 0.25370475649833679,
+                   'min_abc': 7434.0}
         teststat = self._row0_stats(outfile)
         self._teststats0(teststat,refstat)
 
@@ -316,9 +334,10 @@ class sdcal_test(unittest.TestCase):
         self.assertTrue(os.path.exists(outfile),
                          msg="Output file '"+str(outfile)+"' doesn't exists")
 
-        refstat = {'rms': [2.1328039169311523], 'min': [-5.9557638168334961],
-                   'max_abc': [22.0], 'max': [7.5369243621826172],
-                   'sum': [17312.62890625], 'min_abc': [18.0]}
+        refstat = {'rms': 2.126171350479126, 'min': 1.3912382125854492,
+                   'max_abc': 4093.0, 'max': 3.0977959632873535,
+                   'sum': 15209.0869140625, 'stddev': 0.2203933447599411,
+                   'min_abc': 6472.0}
         teststat = self._row0_stats(outfile)
         self._teststats0(teststat,refstat)
 
