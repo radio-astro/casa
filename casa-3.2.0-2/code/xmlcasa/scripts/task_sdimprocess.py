@@ -98,7 +98,7 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
                                         else:
                                             if pixmsk[ix][iy] < thresh[0] or pixmsk[ix][iy] > thresh[1]:
                                                 pixmsk[ix][iy] = 0.0
-                            image.putchunk( pixmsk, [0,0,ichan,ipol] )
+                                image.putchunk( pixmsk, [0,0,ichan,ipol] )
                     elif len(imshape) == 3:
                         # no polarization axis
                         for ichan in range(nchan):
@@ -114,7 +114,7 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
                                     else:
                                         if pixmsk[ix][iy] < thresh[0] or pixmsk[ix][iy] > thresh[1]:
                                             pixmsk[ix][iy] = 0.0
-                        image.putchunk( pixorg, [0,0,ichan] )
+                            image.putchunk( pixmsk, [0,0,ichan] )
                      
 
                 # smoothing
@@ -174,15 +174,15 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
                     for ichan in range(nchan):
                         for ipol in range(npol):
                             pixorg = imageorg.getchunk( [0,0,ichan,ipol], [nx-1,ny-1,ichan,ipol])
-                            pixpol = polyimage.getchunk( [0,0,ichan], [nx-1,ny-1,ichan,ipol] )
-                            pixsub = pixorg - pixsmo
+                            pixpol = polyimage.getchunk( [0,0,ichan,ipol], [nx-1,ny-1,ichan,ipol] )
+                            pixsub = pixorg - pixpol
                             polyimage.putchunk( pixsub, [0,0,ichan,ipol] )
                 elif len(imshape) == 3:
                     # no polarization axis
                     for ichan in range(nchan):
                         pixorg = imageorg.getchunk( [0,0,ichan], [nx-1,ny-1,ichan])
-                        pixsmo = polyimage.getchunk( [0,0,ichan], [nx-1,ny-1,ichan] )
-                        pixsub = pixorg - pixsmo
+                        pixpol = polyimage.getchunk( [0,0,ichan], [nx-1,ny-1,ichan] )
+                        pixsub = pixorg - pixpol
                         polyimage.putchunk( pixsub, [0,0,ichan] )
 
                 # output
@@ -327,8 +327,6 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
                         tmp = weights[i,0:1].copy()
                         weights[i,0:nx-1] = weights[i,1:nx].copy()
                         weights[i,nx-1:nx] = tmp
-              
-         
 
                 # FFT
                 if len(imshape) == 4:
@@ -361,9 +359,9 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
                             realimage.putchunk( pixfft.real, [0,0,ichan] )
                             imagimage.putchunk( pixfft.imag, [0,0,ichan] )
                             del pixval, pixfft
-                        raelimage.close()
+                        realimage.close()
                         imagimage.close()
-                        
+                
                 # weighted mean
                 if len(imshape) == 4:
                     npol = imshape[3]
