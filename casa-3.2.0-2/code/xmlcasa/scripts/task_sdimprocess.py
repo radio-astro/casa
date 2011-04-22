@@ -222,7 +222,12 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
                 imshape = outimage.shape()
                 nx = imshape[0]
                 ny = imshape[1]
-                nchan = imshape[2]                
+                nchan = imshape[2]
+                tmp=[]
+                for i in xrange(len(sdimages)):
+                    tmp.append(numpy.zeros(imshape,dtype=float))
+                maskedpixel=numpy.array(tmp)
+                del tmp
 
                 # mask
                 for i in range(len(sdimages)):
@@ -245,12 +250,15 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
                                         for iy in range(pixmsk.shape[1]):
                                             if thresh[0] == nolimit:
                                                 if pixmsk[ix][iy] > thresh[1]:
+                                                    maskedpixel[i][ix][iy][ichan][ipol]=pixmsk[ix][iy]
                                                     pixmsk[ix][iy] = 0.0
                                             elif thresh[1] == nolimit:
                                                 if pixmsk[ix][iy] < thresh[0]:
+                                                    maskedpixel[i][ix][iy][ichan][ipol]=pixmsk[ix][iy]
                                                     pixmsk[ix][iy] = 0.0
                                             else:
                                                 if pixmsk[ix][iy] < thresh[0] or pixmsk[ix][iy] > thresh[1]:
+                                                    maskedpixel[i][ix][iy][ichan][ipol]=pixmsk[ix][iy]
                                                     pixmsk[ix][iy] = 0.0
                                     realimage.putchunk( pixmsk, [0,0,ichan,ipol] )
                             realimage.close()
@@ -264,15 +272,22 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
                                     for iy in range(pixmsk.shape[1]):
                                         if thresh[0] == nolimit:
                                             if pixmsk[ix][iy] > thresh[1]:
+                                                maskedpixel[i][ix][iy][ichan]=pixmsk[ix][iy]
                                                 pixmsk[ix][iy] = 0.0
                                         elif thresh[1] == nolimit:
                                             if pixmsk[ix][iy] < thresh[0]:
+                                                maskedpixel[i][ix][iy][ichan]=pixmsk[ix][iy]
                                                 pixmsk[ix][iy] = 0.0
                                         else:
                                             if pixmsk[ix][iy] < thresh[0] or pixmsk[ix][iy] > thresh[1]:
+                                                maskedpixel[i][ix][iy][ichan]=pixmsk[ix][iy]
                                                 pixmsk[ix][iy] = 0.0
-                                realimage.putchunk( pixorg, [0,0,ichan] )
+                                realimage.putchunk( pixmsk, [0,0,ichan] )
                             realimage.close()
+                maskedvalue=None
+                if any(maskedpixel.flatten()!=0.0):
+                        maskedvalue=maskedpixel.mean(axis=0)
+                del maskedpixel
 
                 # set weight factor
                 weights = numpy.ones( shape=(len(sdimages),nx,ny), dtype=float )
@@ -435,6 +450,8 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
                         pixifft = pixfft.reshape((nx,ny,1))
                         outimage.putchunk( pixifft.real, [0,0,ichan] )
                         del pixval, pixifft
+                if maskedvalue is not None:
+                    outimage.putchunk(outimage.getchunk()+maskedvalue)
                 realimage.close()
                 imagimage.close()
                 outimage.close()
