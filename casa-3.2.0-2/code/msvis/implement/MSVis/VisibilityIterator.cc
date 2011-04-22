@@ -600,9 +600,7 @@ void ROVisibilityIterator::setTileCache(){
     const ColumnDescSet& cds=thems.tableDesc().columnDescSet();
 
     // Get the first row number for this DDID.
-    Vector<uInt> rownums;
-    rowIds(rownums);
-    uInt startrow = rownums[0];
+    uInt startrow = msIter_p.table().rowNumbers()(0);
 
     Vector<String> columns(8);
     // complex
