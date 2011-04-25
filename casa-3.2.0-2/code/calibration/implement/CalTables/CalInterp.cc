@@ -305,7 +305,7 @@ Bool CalInterp::findSlot(const Double& time) {
       // Find index in timelist where time would be:
       slot=binarySearch(exactTime_,timelist,time,nTime(),0);
 
-    //    cout << "time = " << time << "  slot = " << slot << " nTime() = " << nTime() << endl; 
+    //    cout << "time = " << time << "  slot = " << slot << " nTime() = " << nTime() << endl;
     // If not already an exact match...
     if ( !exactTime_ ) {
 
@@ -345,6 +345,7 @@ void CalInterp::updTimeCoeff() {
     IPosition ip3s(3,nPar(),nChan(),nElem());
 
     tAC().resize(ip4s);
+    tOk().resize(); // ensure not referencing csParOK!
     tOk().resize(ip3s);
 
     if ( timeType()=="linear") 
@@ -414,7 +415,6 @@ void CalInterp::updTimeCoeff() {
 void CalInterp::interpTimeCalc(const Double& time) {
 
   if (verbose_) cout << "CalInterp::interpTimeCalc()" << endl;
-
 
   // TODO:
   //  a. Use matrix math instead of loops?  (tOk() usage?)
