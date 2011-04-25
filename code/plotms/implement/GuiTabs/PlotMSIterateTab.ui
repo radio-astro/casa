@@ -38,7 +38,7 @@ p, li { white-space: pre-wrap; }
      </property>
      <property name="sizeHint" stdset="0">
       <size>
-       <width>155</width>
+       <width>125</width>
        <height>20</height>
       </size>
      </property>
@@ -51,7 +51,7 @@ p, li { white-space: pre-wrap; }
      </property>
      <property name="minimumSize">
       <size>
-       <width>0</width>
+       <width>100</width>
        <height>120</height>
       </size>
      </property>
@@ -109,6 +109,12 @@ p, li { white-space: pre-wrap; }
      <property name="enabled">
       <bool>true</bool>
      </property>
+     <property name="minimumSize">
+      <size>
+       <width>100</width>
+       <height>120</height>
+      </size>
+     </property>
      <property name="toolTip">
       <string>&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
@@ -121,6 +127,9 @@ p, li { white-space: pre-wrap; }
      <layout class="QFormLayout" name="formLayout_2">
       <item row="0" column="0">
        <layout class="QVBoxLayout">
+        <property name="leftMargin">
+         <number>4</number>
+        </property>
         <item>
          <widget class="QRadioButton" name="HorizAxisRadio_common">
           <property name="text">
