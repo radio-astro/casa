@@ -262,7 +262,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_listvis.py
   scripts/taskmanager.py
   scripts/task_mosaic.py
-  scripts/task_peel.py
+#  scripts/task_peel.py
   scripts/task_plotants.py
   scripts/task_plotcal.py
   scripts/task_plotms.py
@@ -375,7 +375,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/listsdm.xml
   tasks/listvis.xml
   tasks/mosaic.xml
-  tasks/peel.xml
+#  tasks/peel.xml
   tasks/plotants.xml
   tasks/plotcal.xml
   tasks/plotms.xml
