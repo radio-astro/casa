@@ -39,6 +39,7 @@ test_imval                      dmehring@nrao.edu
 test_listhistory                scastro@eso.org
 #test_listvis                    scastro@eso.org
 test_measures			rreid@nrao.edu
+test_msmoments                  takeshi.nakazato@nao.ac.jp
 test_pcasa                      jkern@nrao.edu
 test_plotants                   scastro@eso.org
 #test_plotms                     dmehring@nrao.edu
@@ -49,6 +50,7 @@ test_sdaverage                  takeshi.nakazato@nao.ac.jp
 test_sdbaseline			kana.sugi@nao.ac.jp
 test_sdcal                      kana.sugi@nao.ac.jp
 test_sdimaging                  takeshi.nakazato@nao.ac.jp
+test_sdimprocess                takeshi.nakazato@nao.ac.jp
 test_sdlist                     kana.sugi@nao.ac.jp
 test_sdmath                     takeshi.nakazato@nao.ac.jp
 #test_sdplot                     kana.sugi@nao.ac.jp

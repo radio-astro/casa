@@ -222,7 +222,7 @@ class par(str):
 		ONLY pixel values acceptable at this time.
 		Default: none (all);
 		Example: box='0,0,50,50'
-		Example: box='[10,20,30,40];[100,100,150,150]'
+		Example: box='10,20,30,40,100,100,150,150'
 		"""
 
 	@staticmethod

@@ -2337,8 +2337,13 @@ class cleanhelper:
                 reverse=False
         if reverse:
            newfreqs.reverse()
-        if (start!="" and mode=='channel') or \
-           (start!="" and type(start)!=int and mode!='channel'):
+        #if (start!="" and mode=='channel') or \
+        #   (start!="" and type(start)!=int and mode!='channel'):
+        # for now to avoid inconsistency later in imagecoordinates2 call
+        # user's start parameter is preserved for channel mode only.
+        # (i.e. the current code may adjust start parameter for other modes but
+        # this probably needs to be changed, especially for multiple ms handling.)
+        if (start!="" and mode=='channel'):
           retstart=start
         else:
           # default cases

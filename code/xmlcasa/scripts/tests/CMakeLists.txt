@@ -55,6 +55,7 @@ casa_add_python( xmlcasa xmlcasa_tests_python python/${PYTHONV}/tests
   test_listhistory.py
   test_listvis.py
   test_measures.py
+  test_msmoments.py
   test_pcasa.py
   test_plotants.py
   test_plotms.py
@@ -63,8 +64,11 @@ casa_add_python( xmlcasa xmlcasa_tests_python python/${PYTHONV}/tests
   test_sdaverage.py
   test_sdbaseline.py
   test_sdcal.py
+  test_sdfit.py
+  test_sdflag.py
   test_sdflagmanager.py
   test_sdimaging.py
+  test_sdimprocess.py
   test_sdlist.py
   test_sdmath.py
   test_sdplot.py

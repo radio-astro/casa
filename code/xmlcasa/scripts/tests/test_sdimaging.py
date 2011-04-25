@@ -52,6 +52,7 @@ class sdimaging_unittest_base:
     Furthermore, SYSCAL and POINTING tables are downsized.
     
     """
+    taskname='sdimaging'
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdimaging/'
     rawfile='sdimaging.ms'
     postfix='.im'
@@ -121,7 +122,7 @@ class sdimaging_test0(sdimaging_unittest_base,unittest.TestCase):
     Test on bad parameter setting
     """
     # Input and output names
-    prefix='sdaverageTest0'
+    prefix=sdimaging_unittest_base.taskname+'Test0'
     badid=99
     imagename=prefix+sdimaging_unittest_base.postfix
 
@@ -240,7 +241,7 @@ class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
        
     """
     # Input and output names
-    prefix='sdaverageTest1'
+    prefix=sdimaging_unittest_base.taskname+'Test1'
     imagename=prefix+sdimaging_unittest_base.postfix
     mode='channel'
 
@@ -416,7 +417,7 @@ class sdimaging_test2(sdimaging_unittest_base,unittest.TestCase):
        
     """
     # Input and output names
-    prefix='sdaverageTest2'
+    prefix=sdimaging_unittest_base.taskname+'Test2'
     imagename=prefix+sdimaging_unittest_base.postfix
     mode='GHz'
 
@@ -502,7 +503,7 @@ class sdimaging_test3(sdimaging_unittest_base,unittest.TestCase):
        
     """
     # Input and output names
-    prefix='sdaverageTest3'
+    prefix=sdimaging_unittest_base.taskname+'Test3'
     imagename=prefix+sdimaging_unittest_base.postfix
     mode='km/s'
 

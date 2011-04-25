@@ -24,11 +24,13 @@ import asap as sd
 ###
 # Base class for all testing classes
 ###
-class sdsave_test_base:
+class sdsave_unittest_base:
     """
     Base class for testing classes.
     Implements several methods to compare the results.
     """
+    taskname='sdsave'
+    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdsave/'
     basefile='OrionS_rawACSmod_cal2123.asap'
     summaryStr = None
     firstSpec = None
@@ -112,15 +114,14 @@ class sdsave_test_base:
 ###
 # Test on bad parameter settings, data selection, data averaging, ...
 ###
-class sdsave_test0(unittest.TestCase):
+class sdsave_test0(unittest.TestCase,sdsave_unittest_base):
     """
     Test on data selection, data averaging...
     """
     # Input and output names
     sdfile='OrionS_rawACSmod_cal2123.asap'
-    prefix='sdsaveTest0'
+    prefix=sdsave_unittest_base.taskname+'Test0'
     outfile=prefix+'.asap'
-    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdsave/'
 
     def setUp(self):
         self.res=None
@@ -153,18 +154,17 @@ class sdsave_test0(unittest.TestCase):
 ###
 # Test to read scantable and write various types of format
 ###
-class sdsave_test1(unittest.TestCase,sdsave_test_base):
+class sdsave_test1(unittest.TestCase,sdsave_unittest_base):
     """
     Read scantable data, write various types of format.
     """
     # Input and output names
     sdfile='OrionS_rawACSmod_cal2123.asap'
-    prefix='sdsaveTest1'
+    prefix=sdsave_unittest_base.taskname+'Test1'
     outfile0=prefix+'.asap'
     outfile1=prefix+'.ms'
     outfile2=prefix+'.fits'
     outfile3=prefix
-    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdsave/'
 
     def setUp(self):
         self.res=None
@@ -211,18 +211,17 @@ class sdsave_test1(unittest.TestCase,sdsave_test_base):
 ###
 # Test to read MS and write various types of format
 ###
-class sdsave_test2(unittest.TestCase,sdsave_test_base):
+class sdsave_test2(unittest.TestCase,sdsave_unittest_base):
     """
     Read MS data, write various types of format.
     """
     # Input and output names
     sdfile='OrionS_rawACSmod_cal2123.ms'
-    prefix='sdsaveTest2'
+    prefix=sdsave_unittest_base.taskname+'Test2'
     outfile0=prefix+'.asap'
     outfile1=prefix+'.ms'
     outfile2=prefix+'.fits'
     outfile3=prefix
-    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdsave/'
 
     def setUp(self):
         self.res=None
@@ -270,18 +269,17 @@ class sdsave_test2(unittest.TestCase,sdsave_test_base):
 ###
 # Test to read ATNF SDFITS and write various types of format
 ###
-class sdsave_test3(unittest.TestCase,sdsave_test_base):
+class sdsave_test3(unittest.TestCase,sdsave_unittest_base):
     """
     Read ATNF SDFITS data, write various types of format.
     """
     # Input and output names
     sdfile='OrionS_rawACSmod_cal2123.fits'
-    prefix='sdsaveTest3'
+    prefix=sdsave_unittest_base.taskname+'Test3'
     outfile0=prefix+'.asap'
     outfile1=prefix+'.ms'
     outfile2=prefix+'.fits'
     outfile3=prefix
-    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdsave/'
 
     def setUp(self):
         self.res=None
@@ -329,18 +327,17 @@ class sdsave_test3(unittest.TestCase,sdsave_test_base):
 ###
 # Test to read GBT SDFITS and write various types of format
 ###
-class sdsave_test4(unittest.TestCase):
+class sdsave_test4(unittest.TestCase,sdsave_unittest_base):
     """
     Read GBT SDFITS data, write various types of format.
     """
     # Input and output names
     sdfile='AGBT06A_sliced.fits'
-    prefix='sdsaveTest4'
+    prefix=sdsave_unittest_base.taskname+'Test4'
     outfile0=prefix+'.asap'
     outfile1=prefix+'.ms'
     outfile2=prefix+'.fits'
     outfile3=prefix
-    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdsave/'
 
     def setUp(self):
         self.res=None
@@ -400,18 +397,17 @@ class sdsave_test4(unittest.TestCase):
 ###
 # Test to read NROFITS and write various types of format
 ###
-class sdsave_test5(unittest.TestCase):
+class sdsave_test5(unittest.TestCase,sdsave_unittest_base):
     """
     Read NROFITS data, write various types of format.
     """
     # Input and output names
     sdfile='B68test.nro'
-    prefix='sdsaveTest5'
+    prefix=sdsave_unittest_base.taskname+'Test5'
     outfile0=prefix+'.asap'
     outfile1=prefix+'.ms'
     outfile2=prefix+'.fits'
     outfile3=prefix
-    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdsave/'
 
     def setUp(self):
         self.res=None

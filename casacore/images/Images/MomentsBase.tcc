@@ -729,7 +729,7 @@ Bool MomentsBase<T>::setOutThings(String& suffix,
       temp = imageUnits.getName();
       goodUnits = goodImageUnits;
    } else if (moment == MAXIMUM_COORDINATE) {
-      suffix = ".maximum_Coord";
+      suffix = ".maximum_coord";
       temp = momentAxisUnits;
       if (convertToVelocity) temp = String("km/s");
       goodUnits = goodAxisUnits;

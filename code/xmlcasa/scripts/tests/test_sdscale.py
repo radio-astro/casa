@@ -27,6 +27,7 @@ class sdscale_unittest_base:
     """
     Base class for sdscale unit test
     """
+    taskname='sdscale'
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdscale/'
     
     def _checkfile( self, name ):
@@ -135,7 +136,7 @@ class sdscale_test0(unittest.TestCase,sdscale_unittest_base):
     """
     # Input and output names
     rawfile='sdscale1.asap'
-    prefix='sdscaleTest0'
+    prefix=sdscale_unittest_base.taskname+'Test0'
     outfile=prefix+'.asap'
 
     def setUp(self):
@@ -193,7 +194,7 @@ class sdscale_test1(unittest.TestCase,sdscale_unittest_base):
     """
     # Input and output names
     rawfile='sdscale0.asap'
-    prefix='sdscaleTest1'
+    prefix=sdscale_unittest_base.taskname+'Test1'
     outfile=prefix+'.asap'
     
     def setUp(self):
@@ -301,7 +302,7 @@ class sdscale_test2(unittest.TestCase,sdscale_unittest_base):
     """
     # Input and output names
     rawfile='sdscale1.asap'
-    prefix='sdscaleTest2'
+    prefix=sdscale_unittest_base.taskname+'Test2'
     outfile=prefix+'.asap'
     
     def setUp(self):
@@ -404,7 +405,7 @@ class sdscale_test3(unittest.TestCase,sdscale_unittest_base):
     """
     # Input and output names
     rawfile='sdscale2.asap'
-    prefix='sdscaleTest3'
+    prefix=sdscale_unittest_base.taskname+'Test3'
     outfile=prefix+'.asap'
     
     def setUp(self):
@@ -508,7 +509,7 @@ class sdscale_test4(unittest.TestCase,sdscale_unittest_base):
     """
     # Input and output names
     rawfile='sdscale3.asap'
-    prefix='sdscaleTest4'
+    prefix=sdscale_unittest_base.taskname+'Test4'
     outfile=prefix+'.asap'
     
     def setUp(self):
